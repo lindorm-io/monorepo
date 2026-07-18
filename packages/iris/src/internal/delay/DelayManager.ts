@@ -1,8 +1,8 @@
 import type { ILogger } from "@lindorm/logger";
-import { randomId } from "@lindorm/random";
-import type { IrisEnvelope } from "../types/iris-envelope.js";
+import { lindormId } from "@lindorm/random";
 import type { IDelayStore } from "../../interfaces/IrisDelayStore.js";
 import type { DelayedEntry } from "../../types/delay.js";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
 import type { DelayManagerOptions } from "./types.js";
 
 export class DelayManager {
@@ -25,7 +25,7 @@ export class DelayManager {
     delayMs: number,
     destinationTopic?: string,
   ): Promise<string> {
-    const id = randomId({ namespace: "dly", length: 16 });
+    const id = lindormId({ namespace: "dly", length: 16 });
     const deliverAt = Date.now() + delayMs;
 
     await this.store.schedule({ id, envelope, topic, deliverAt, destinationTopic });

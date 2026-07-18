@@ -1,25 +1,14 @@
+import { ms } from "@lindorm/date";
+import { LindormError } from "@lindorm/errors";
 import type { IIrisMessageBus, IIrisSource, IIrisWorkerQueue } from "@lindorm/iris";
 import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
+import { lindormId } from "@lindorm/random";
 import type { ClassLike, Constructor, Dict } from "@lindorm/types";
 import EventEmitter from "events";
-import { ms } from "@lindorm/date";
-import { LindormError } from "@lindorm/errors";
-import { randomId } from "@lindorm/random";
 import type { HermesViewEntity } from "../entities/HermesViewEntity.js";
 import { ChecksumError, HandlerNotRegisteredError } from "../errors/index.js";
 import type { IHermes } from "../interfaces/IHermes.js";
-import type { HermesEventName } from "../types/hermes-event-name.js";
-import type { AggregateIdentifier } from "../types/aggregate-identifier.js";
-import type { AggregateState } from "../types/aggregate-state.js";
-import type { ChecksumMode, HermesOptions } from "../types/hermes-options.js";
-import type { HermesStatus } from "../types/hermes-status.js";
-import type {
-  ReplayHandle,
-  ReplayOptions,
-  ReplayProgress,
-} from "../types/replay-types.js";
-import type { SagaState } from "../types/saga-state.js";
 import {
   AggregateDomain,
   ChecksumDomain,
@@ -41,6 +30,17 @@ import {
 } from "../internal/messages/index.js";
 import { HermesRegistry, HermesScanner } from "../internal/registry/index.js";
 import { assertChecksum, extractDto } from "../internal/utils/index.js";
+import type { AggregateIdentifier } from "../types/aggregate-identifier.js";
+import type { AggregateState } from "../types/aggregate-state.js";
+import type { HermesEventName } from "../types/hermes-event-name.js";
+import type { ChecksumMode, HermesOptions } from "../types/hermes-options.js";
+import type { HermesStatus } from "../types/hermes-status.js";
+import type {
+  ReplayHandle,
+  ReplayOptions,
+  ReplayProgress,
+} from "../types/replay-types.js";
+import type { SagaState } from "../types/saga-state.js";
 import { HermesSession } from "./HermesSession.js";
 
 const DEFAULT_NAMESPACE = "hermes";
@@ -227,7 +227,7 @@ export class Hermes implements IHermes {
     }
 
     const aggregate: AggregateIdentifier = {
-      id: options.id || randomId({ namespace: "agg" }),
+      id: options.id || lindormId({ namespace: "agg" }),
       name: commandHandler.aggregate.name,
       namespace: commandHandler.aggregate.namespace,
     };
@@ -236,7 +236,7 @@ export class Hermes implements IHermes {
     const { data: dtoData } = extractDto(command);
     const { correlationId, delay, meta = {} } = options;
 
-    const id = randomId({ namespace: "cmd" });
+    const id = lindormId({ namespace: "cmd" });
 
     const message = this.commandQueue.create({
       id,

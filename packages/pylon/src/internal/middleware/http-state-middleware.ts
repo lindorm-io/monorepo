@@ -1,4 +1,4 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import type { Environment } from "@lindorm/types";
 import type { AppConfig, PylonHttpMiddleware } from "../../types/index.js";
 import { buildClientContext } from "../utils/build-client-context.js";
@@ -37,13 +37,13 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
           (name) => ctx.get(name) || undefined,
         ),
         metadata: {
-          id: ctx.get("x-request-id") || randomId({ namespace: "req", length: 16 }),
+          id: ctx.get("x-request-id") || lindormId({ namespace: "req", length: 16 }),
           correlationId:
-            ctx.get("x-correlation-id") || randomId({ namespace: "cor", length: 16 }),
+            ctx.get("x-correlation-id") || lindormId({ namespace: "cor", length: 16 }),
           date: requestDate ? new Date(requestDate) : new Date(),
           environment: (ctx.get("x-environment") as Environment) || "unknown",
           origin: ctx.get("x-origin") || ctx.get("origin") || null,
-          responseId: randomId({ namespace: "res", length: 16 }),
+          responseId: lindormId({ namespace: "res", length: 16 }),
           sessionId: ctx.get("x-session-id") || null,
         },
         origin: ctx.request.origin || `${ctx.protocol}://${ctx.host}`,

@@ -1,4 +1,4 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import { randomUUID } from "node:crypto";
 import { extname } from "path";
 import { uploadInvalidFilename } from "./upload-error.js";
@@ -20,7 +20,7 @@ export const buildUploadFilename = (
 
   switch (naming) {
     case "random":
-      return `${randomId({ namespace: "f", length: 32 })}${ext}`;
+      return `${lindormId({ namespace: "f", length: 32 })}${ext}`;
 
     case "uuid":
       return `${randomUUID()}${ext}`;

@@ -1,15 +1,15 @@
-import { randomId } from "@lindorm/random";
-import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store.js";
-import type { IrisEnvelope } from "../../../types/iris-envelope.js";
-import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
-import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
-import { dispatchToSubscribers } from "../utils/dispatch-to-subscribers.js";
-import { dispatchToConsumers } from "../utils/dispatch-to-consumers.js";
-import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
+import { lindormId } from "@lindorm/random";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
 } from "../../../classes/DriverStreamPipelineBase.js";
+import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
+import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store.js";
+import { dispatchToConsumers } from "../utils/dispatch-to-consumers.js";
+import { dispatchToSubscribers } from "../utils/dispatch-to-subscribers.js";
+import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 
 export type MemoryStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
   store: MemorySharedState;
@@ -46,7 +46,7 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
 
     this.running = true;
     this.paused = false;
-    this.consumerTag = randomId({ namespace: "con", length: 16 });
+    this.consumerTag = lindormId({ namespace: "con", length: 16 });
 
     this.store.subscriptions.push({
       topic: subscribeTopic,

@@ -11,7 +11,7 @@ import {
 import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
 import { DuplicateKeyError } from "@lindorm/proteus";
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import type { ClassLike, Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import {
@@ -378,7 +378,7 @@ export class AggregateDomain {
     for (let i = 0; i < causationEvents.length; i++) {
       const event = causationEvents[i];
       const record = new EventRecord();
-      record.id = event.id ?? randomId({ namespace: "evt" });
+      record.id = event.id ?? lindormId({ namespace: "evt" });
       event.id = record.id;
       record.aggregateId = model.id;
       record.aggregateName = model.name;

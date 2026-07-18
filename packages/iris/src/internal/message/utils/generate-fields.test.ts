@@ -1,6 +1,6 @@
-import type { MetaGenerated, MessageMetadata } from "../types/metadata.js";
-import { generateFields } from "./generate-fields.js";
 import { describe, expect, it } from "vitest";
+import type { MessageMetadata, MetaGenerated } from "../types/metadata.js";
+import { generateFields } from "./generate-fields.js";
 
 const mockMetadata = (
   generated: Array<
@@ -195,7 +195,7 @@ describe("generateFields", () => {
       expect(message.id).toMatch(/^u_[A-Za-z0-9]{32}$/);
     });
 
-    it("should propagate randomId's throw for an invalid namespace", () => {
+    it("should propagate lindormId's throw for an invalid namespace", () => {
       const metadata = mockMetadata([
         {
           key: "id",

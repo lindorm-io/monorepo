@@ -1,4 +1,4 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import type {
   CreateNatsConsumerOptions,
   NatsConsumerLoop,
@@ -24,7 +24,7 @@ export const createNatsConsumer = async (
     maxDeliver,
   } = options;
 
-  const consumerTag = randomId({ namespace: "con", length: 16 });
+  const consumerTag = lindormId({ namespace: "con", length: 16 });
 
   // Ensure the durable consumer exists
   if (!ensuredConsumers.has(consumerName)) {

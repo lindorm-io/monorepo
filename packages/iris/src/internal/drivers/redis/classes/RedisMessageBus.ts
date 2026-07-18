@@ -1,21 +1,21 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
-import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { RedisSharedState } from "../types/redis-types.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import {
   DriverMessageBusBase,
   type DriverMessageBusBaseOptions,
 } from "../../../classes/DriverMessageBusBase.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
-import { publishRedisMessages } from "../utils/publish-redis-messages.js";
-import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
+import type { RedisSharedState } from "../types/redis-types.js";
 import { createConsumerLoop } from "../utils/create-consumer-loop.js";
-import { resolveStreamKey } from "../utils/resolve-stream-key.js";
+import { publishRedisMessages } from "../utils/publish-redis-messages.js";
 import { resolveGroupName } from "../utils/resolve-group-name.js";
+import { resolveStreamKey } from "../utils/resolve-stream-key.js";
 import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
+import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
 
 export type RedisMessageBusOptions<M extends IMessage> =
   DriverMessageBusBaseOptions<M> & {
@@ -103,7 +103,7 @@ export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
         type: "subscribe",
       });
     } else {
-      groupName = `${this.state.prefix}.sub.ephemeral.${randomId({ length: 16 })}`;
+      groupName = `${this.state.prefix}.sub.ephemeral.${lindormId({ length: 16 })}`;
     }
 
     const wrappedCallback = wrapRedisConsumer(
@@ -155,7 +155,7 @@ export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
 
     if (this.metadata.broadcast) {
       const broadcastStreamKey = resolveBroadcastDestination(streamKey, true, ":");
-      const broadcastGroupName = `${this.state.prefix}.bc.ephemeral.${randomId({ length: 16 })}`;
+      const broadcastGroupName = `${this.state.prefix}.bc.ephemeral.${lindormId({ length: 16 })}`;
 
       broadcastLoop = await createConsumerLoop({
         publishConnection: this.state.publishConnection,

@@ -1,16 +1,16 @@
+import { LindormError } from "@lindorm/errors";
 import type { IIrisWorkerQueue } from "@lindorm/iris";
 import type { ILogger } from "@lindorm/logger";
+import { lindormId } from "@lindorm/random";
 import type { ClassLike, Constructor, Dict } from "@lindorm/types";
-import { LindormError } from "@lindorm/errors";
-import { randomId } from "@lindorm/random";
 import { HandlerNotRegisteredError } from "../errors/index.js";
 import type { IHermesSession } from "../interfaces/IHermesSession.js";
-import type { AggregateIdentifier } from "../types/aggregate-identifier.js";
-import type { HermesStatus } from "../types/hermes-status.js";
 import type { ViewDomain } from "../internal/domains/index.js";
 import type { HermesCommandMessage } from "../internal/messages/index.js";
 import type { HermesRegistry } from "../internal/registry/index.js";
 import { extractDto } from "../internal/utils/index.js";
+import type { AggregateIdentifier } from "../types/aggregate-identifier.js";
+import type { HermesStatus } from "../types/hermes-status.js";
 
 type StatusRef = { current: HermesStatus };
 
@@ -70,7 +70,7 @@ export class HermesSession implements IHermesSession {
     }
 
     const aggregate: AggregateIdentifier = {
-      id: options.id || randomId({ namespace: "agg" }),
+      id: options.id || lindormId({ namespace: "agg" }),
       name: commandHandler.aggregate.name,
       namespace: commandHandler.aggregate.namespace,
     };
@@ -79,7 +79,7 @@ export class HermesSession implements IHermesSession {
     const { data: dtoData } = extractDto(command);
     const { correlationId, delay, meta = {} } = options;
 
-    const id = randomId({ namespace: "cmd" });
+    const id = lindormId({ namespace: "cmd" });
 
     const message = this.commandQueue.create({
       id,

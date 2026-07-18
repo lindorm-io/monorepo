@@ -1,12 +1,12 @@
+import { describe, expect, test } from "vitest";
 import { isLindormId } from "./is-lindorm-id.js";
 import { LINDORM_ID_PATTERN } from "./lindorm-id-pattern.js";
-import { randomId, type RandomIdLength } from "./random-id.js";
+import { lindormId, type LindormIdLength } from "./lindorm-id.js";
 import { randomUUID } from "./random-uuid.js";
-import { describe, expect, test } from "vitest";
 
-// Every length the generator can mint. Typed as RandomIdLength so the list cannot
+// Every length the generator can mint. Typed as LindormIdLength so the list cannot
 // silently fall behind the union.
-const LENGTHS: Array<RandomIdLength> = [
+const LENGTHS: Array<LindormIdLength> = [
   16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64,
 ];
 
@@ -17,19 +17,19 @@ describe("isLindormId", () => {
 
   test("should accept a real bare id", () => {
     for (let i = 0; i < 100; i++) {
-      expect(isLindormId(randomId())).toBe(true);
+      expect(isLindormId(lindormId())).toBe(true);
     }
   });
 
   test("should accept a real namespaced id", () => {
     for (let i = 0; i < 100; i++) {
-      expect(isLindormId(randomId("client"))).toBe(true);
+      expect(isLindormId(lindormId("client"))).toBe(true);
     }
   });
 
   test.each(LENGTHS)("should accept a real id of length %i", (length) => {
-    expect(isLindormId(randomId({ length }))).toBe(true);
-    expect(isLindormId(randomId({ namespace: "Ns0", length }))).toBe(true);
+    expect(isLindormId(lindormId({ length }))).toBe(true);
+    expect(isLindormId(lindormId({ namespace: "Ns0", length }))).toBe(true);
   });
 
   test("should reject a body below the minimum length", () => {

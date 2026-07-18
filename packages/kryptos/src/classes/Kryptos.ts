@@ -1,7 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { expiresAt, getUnixTime, isAfter, isBefore, isEqual } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import { omitEmpty, omitUndefined } from "@lindorm/utils";
 import { KryptosError } from "../errors/index.js";
 import type { IKryptos } from "../interfaces/index.js";
@@ -41,8 +41,8 @@ import type {
   KryptosKey,
   KryptosKeys,
   KryptosOperation,
-  KryptosSettings,
   KryptosPem,
+  KryptosSettings,
   KryptosString,
   KryptosType,
   KryptosUse,
@@ -678,7 +678,7 @@ export class Kryptos implements IKryptos {
   private resolveId(): string {
     switch (this._type) {
       case "oct":
-        return randomId({ namespace: "key", length: 16 });
+        return lindormId({ namespace: "key", length: 16 });
 
       case "AKP":
       case "EC":

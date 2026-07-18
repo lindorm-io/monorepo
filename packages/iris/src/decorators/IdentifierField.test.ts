@@ -1,10 +1,10 @@
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { MessageManager } from "../internal/message/classes/MessageManager.js";
+import { getMessageMetadata } from "../internal/message/metadata/get-message-metadata.js";
+import { clearRegistry } from "../internal/message/metadata/registry.js";
 import { Generated } from "./Generated.js";
 import { IdentifierField } from "./IdentifierField.js";
 import { Message } from "./Message.js";
-import { getMessageMetadata } from "../internal/message/metadata/get-message-metadata.js";
-import { MessageManager } from "../internal/message/classes/MessageManager.js";
-import { clearRegistry } from "../internal/message/metadata/registry.js";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("IdentifierField", () => {
   beforeEach(() => {
@@ -85,7 +85,7 @@ describe("IdentifierField", () => {
     expect(msg.id).toMatch(/^u_[A-Za-z0-9]{32}$/);
   });
 
-  it("should propagate randomId's throw for an invalid namespace", () => {
+  it("should propagate lindormId's throw for an invalid namespace", () => {
     @Message({ name: "IdentifierBadNamespaceMsg" })
     class IdentifierBadNamespaceMsg {
       @IdentifierField()

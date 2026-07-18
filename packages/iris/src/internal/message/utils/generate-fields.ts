@@ -1,10 +1,9 @@
-import { randomId, randomUUID } from "@lindorm/random";
-import { randomInt, randomBytes } from "crypto";
-import type { MetaGenerated } from "../types/metadata.js";
-import type { MessageMetadata } from "../types/metadata.js";
+import { lindormId, randomUUID } from "@lindorm/random";
+import { randomBytes, randomInt } from "crypto";
+import type { MessageMetadata, MetaGenerated } from "../types/metadata.js";
 
-type RandomIdLength =
-  NonNullable<Parameters<typeof randomId>[0]> extends infer A
+type LindormIdLength =
+  NonNullable<Parameters<typeof lindormId>[0]> extends infer A
     ? A extends { length?: infer L }
       ? L
       : never
@@ -19,11 +18,11 @@ const generateValue = (gen: MetaGenerated): unknown => {
 
     case "lindorm_id":
       return gen.namespace != null || gen.length != null
-        ? randomId({
+        ? lindormId({
             namespace: gen.namespace ?? undefined,
-            length: (gen.length ?? undefined) as RandomIdLength | undefined,
+            length: (gen.length ?? undefined) as LindormIdLength | undefined,
           })
-        : randomId();
+        : lindormId();
 
     case "date":
       return new Date();

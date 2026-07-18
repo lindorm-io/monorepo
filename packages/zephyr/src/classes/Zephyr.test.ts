@@ -1,14 +1,14 @@
+import { io as _io } from "socket.io-client";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { ZephyrError } from "../errors/ZephyrError.js";
 import type { ZephyrMiddleware } from "../types/context.js";
 import type { ZephyrSettings } from "../types/options.js";
-import { io as _io } from "socket.io-client";
 import { Zephyr } from "./Zephyr.js";
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("@lindorm/random", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@lindorm/random")>()),
   randomUUID: vi.fn().mockReturnValue("mock-uuid"),
-  randomId: vi.fn().mockReturnValue("mock-uuid"),
+  lindormId: vi.fn().mockReturnValue("mock-uuid"),
 }));
 
 const mockSocket = {

@@ -1,8 +1,8 @@
-import { randomId as _randomId } from "@lindorm/random";
+import { lindormId as _lindormId } from "@lindorm/random";
 import MockDate from "mockdate";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import { getAuthorization as _getAuthorization } from "../utils/get-authorization.js";
 import { createHttpStateMiddleware } from "./http-state-middleware.js";
-import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -10,7 +10,7 @@ MockDate.set(MockedDate);
 vi.mock("@lindorm/random");
 vi.mock("../utils/get-authorization.js");
 
-const randomId = _randomId as Mock;
+const lindormId = _lindormId as Mock;
 const getAuthorization = _getAuthorization as Mock;
 
 describe("createHttpStateMiddleware", async () => {
@@ -53,7 +53,7 @@ describe("createHttpStateMiddleware", async () => {
       }
     });
 
-    randomId.mockImplementation(
+    lindormId.mockImplementation(
       ({ namespace }: { namespace: string }) => `${namespace}_0000000000000000`,
     );
     getAuthorization.mockReturnValue({ type: "Bearer", value: "token" });

@@ -7,7 +7,7 @@ import {
   isObject,
   isString,
 } from "@lindorm/is";
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import type { Dict } from "@lindorm/types";
 import {
   assertValidErrorType,
@@ -76,7 +76,7 @@ export class LindormError extends Error {
     const { id, code, data = {}, debug = {}, status, support, title } = options;
     const destruct = LindormError.destruct(options.error);
 
-    this.id = id ?? destruct.id ?? randomId({ namespace: "err", length: 16 });
+    this.id = id ?? destruct.id ?? lindormId({ namespace: "err", length: 16 });
     this.code = code ?? destruct?.code ?? null;
     this.data = { ...destruct.data, ...data };
     this.debug = { ...destruct.debug, ...debug };

@@ -1,10 +1,10 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import type { Constructor, DeepPartial } from "@lindorm/types";
 import { randomBytes, randomInt, randomUUID } from "crypto";
 import type { IEntity } from "../../../interfaces/index.js";
 import { EntityManagerError } from "../errors/EntityManagerError.js";
-import type { MetaGenerated } from "../types/metadata.js";
 import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
+import type { MetaGenerated } from "../types/metadata.js";
 
 export const generateValue = (config: MetaGenerated): any => {
   if (config.generator) {
@@ -32,7 +32,7 @@ export const generateValue = (config: MetaGenerated): any => {
     }
 
     case "lindorm_id":
-      return randomId({
+      return lindormId({
         namespace: config.namespace ?? undefined,
         length: (config.length ?? 24) as 24,
       });

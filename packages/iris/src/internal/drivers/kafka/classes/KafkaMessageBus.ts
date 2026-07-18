@@ -1,6 +1,11 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
+import {
+  DriverMessageBusBase,
+  type DriverMessageBusBaseOptions,
+} from "../../../classes/DriverMessageBusBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type {
@@ -8,22 +13,17 @@ import type {
   KafkaEachMessagePayload,
   KafkaSharedState,
 } from "../types/kafka-types.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import {
-  DriverMessageBusBase,
-  type DriverMessageBusBaseOptions,
-} from "../../../classes/DriverMessageBusBase.js";
-import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
-import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
 import { getOrCreatePooledConsumer } from "../utils/create-kafka-consumer.js";
-import { releasePooledConsumer } from "../utils/stop-kafka-consumer.js";
-import { resolveTopicName } from "../utils/resolve-topic-name.js";
+import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
 import { resolveGroupId } from "../utils/resolve-group-id.js";
 import { resolveRetryTopicName } from "../utils/resolve-retry-topic.js";
+import { resolveTopicName } from "../utils/resolve-topic-name.js";
 import {
   ensureRetryTopicAttached,
   releaseRetryConsumer,
 } from "../utils/retry-topic-consumer.js";
+import { releasePooledConsumer } from "../utils/stop-kafka-consumer.js";
+import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
 
 export type KafkaMessageBusOptions<M extends IMessage> =
   DriverMessageBusBaseOptions<M> & {
@@ -106,7 +106,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
         generation: this.state.resetGeneration,
       });
     } else {
-      groupId = `${this.state.prefix}.sub.ephemeral.${randomId({ length: 16 })}`;
+      groupId = `${this.state.prefix}.sub.ephemeral.${lindormId({ length: 16 })}`;
     }
 
     const getConsumer = (): KafkaConsumer => {
@@ -158,7 +158,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     // Broadcast consumer: unique group per consumer on a separate broadcast
     // topic so every consumer independently receives every broadcast message.
     const broadcastTopic = `${kafkaTopic}.broadcast`;
-    const broadcastGroupId = `${groupId}.bc.${randomId({ length: 16 })}`;
+    const broadcastGroupId = `${groupId}.bc.${lindormId({ length: 16 })}`;
     const broadcastRetryTopic = resolveRetryTopicName(broadcastTopic, broadcastGroupId);
 
     const getBroadcastConsumer = (): KafkaConsumer => {

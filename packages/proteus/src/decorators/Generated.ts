@@ -1,7 +1,7 @@
-import type { RandomIdOptions } from "@lindorm/random";
+import type { LindormIdOptions } from "@lindorm/random";
+import { stageGenerated } from "../internal/entity/metadata/stage-metadata.js";
 import type { GeneratedDecoratorOptions } from "../internal/entity/types/decorators.js";
 import type { MetaGeneratedStrategy } from "../internal/entity/types/metadata.js";
-import { stageGenerated } from "../internal/entity/metadata/stage-metadata.js";
 
 type GeneratedDecorator = (
   _target: undefined,
@@ -27,7 +27,7 @@ export function Generated(): GeneratedDecorator;
 export function Generated(generator: () => unknown): GeneratedDecorator;
 export function Generated(
   strategy: "lindorm_id",
-  options?: RandomIdOptions,
+  options?: LindormIdOptions,
 ): GeneratedDecorator;
 export function Generated(
   strategy: MetaGeneratedStrategy,

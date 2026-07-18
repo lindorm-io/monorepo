@@ -1,12 +1,12 @@
 import type { ILogger } from "@lindorm/logger";
-import { randomId } from "@lindorm/random";
-import type { IrisEnvelope } from "../types/iris-envelope.js";
+import { lindormId } from "@lindorm/random";
 import type { IDeadLetterStore } from "../../interfaces/IrisDeadLetterStore.js";
 import type {
   DeadLetterEntry,
   DeadLetterFilterOptions,
   DeadLetterListOptions,
 } from "../../types/dead-letter.js";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
 import type { DeadLetterManagerOptions } from "./types.js";
 
 export class DeadLetterManager {
@@ -19,7 +19,7 @@ export class DeadLetterManager {
   }
 
   async send(envelope: IrisEnvelope, topic: string, error: Error): Promise<string> {
-    const id = randomId({ namespace: "dlq", length: 16 });
+    const id = lindormId({ namespace: "dlq", length: 16 });
 
     const entry: DeadLetterEntry = {
       id,

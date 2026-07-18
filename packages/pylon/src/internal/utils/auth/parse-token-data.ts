@@ -1,7 +1,7 @@
 import { AegisError, type IAegis, isParsedJwt } from "@lindorm/aegis";
 import { type ReadableTime, ms } from "@lindorm/date";
+import { lindormId } from "@lindorm/random";
 import type { OpenIdAuthorizeResponseQuery, OpenIdTokenResponse } from "@lindorm/types";
-import { randomId } from "@lindorm/random";
 import { CannotEstablishSessionIdentity } from "../../../errors/index.js";
 import type { IPylonSession } from "../../../interfaces/index.js";
 
@@ -22,7 +22,7 @@ export const parseTokenData = async (
   const now = new Date();
 
   const session: IPylonSession = {
-    id: randomId({ namespace: "def" }),
+    id: lindormId({ namespace: "def" }),
     accessToken: "",
     expiresAt: null,
     issuedAt: now,

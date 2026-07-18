@@ -1,28 +1,28 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import {
+  DriverStreamPipelineBase,
+  type DriverStreamPipelineBaseOptions,
+} from "../../../classes/DriverStreamPipelineBase.js";
+import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import type {
   KafkaConsumer,
   KafkaEachMessagePayload,
   KafkaSharedState,
 } from "../types/kafka-types.js";
-import type { IrisEnvelope } from "../../../types/iris-envelope.js";
-import type { MessageMetadata } from "../../../message/types/metadata.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
-import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
-import { resolveTopicName } from "../utils/resolve-topic-name.js";
-import { resolveRetryTopicName } from "../utils/resolve-retry-topic.js";
-import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
 import { createKafkaConsumer } from "../utils/create-kafka-consumer.js";
-import { stopKafkaConsumer } from "../utils/stop-kafka-consumer.js";
+import { resolveRetryTopicName } from "../utils/resolve-retry-topic.js";
+import { resolveTopicName } from "../utils/resolve-topic-name.js";
 import {
   ensureRetryTopicAttached,
   releaseRetryConsumer,
 } from "../utils/retry-topic-consumer.js";
+import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
+import { stopKafkaConsumer } from "../utils/stop-kafka-consumer.js";
 import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
-import {
-  DriverStreamPipelineBase,
-  type DriverStreamPipelineBaseOptions,
-} from "../../../classes/DriverStreamPipelineBase.js";
 
 export type KafkaStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
   state: KafkaSharedState;
@@ -72,7 +72,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     const inputMetadata = getMessageMetadata(this.inputClass);
     const subscribeTopic = this.inputTopic ?? resolveDefaultTopic(inputMetadata);
     const kafkaTopic = resolveTopicName(this.state.prefix, subscribeTopic);
-    this.groupId = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
+    this.groupId = `${this.state.prefix}.pipeline.${lindormId({ length: 16 })}`;
     this.retryTopic = resolveRetryTopicName(kafkaTopic, this.groupId);
 
     this.running = true;
@@ -149,7 +149,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
 
     // Create a new group so messages published during the pause window
     // are skipped — only new messages after resume are processed.
-    this.groupId = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
+    this.groupId = `${this.state.prefix}.pipeline.${lindormId({ length: 16 })}`;
     this.retryTopic = resolveRetryTopicName(kafkaTopic, this.groupId);
 
     const consumerRef: { consumer?: KafkaConsumer } = {};

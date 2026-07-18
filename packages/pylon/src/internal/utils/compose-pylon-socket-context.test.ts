@@ -1,9 +1,9 @@
-import { composePylonSocketContextBase } from "./compose-pylon-socket-context.js";
 import { describe, expect, test, vi } from "vitest";
+import { composePylonSocketContextBase } from "./compose-pylon-socket-context.js";
 
-// randomId is called internally; mock it for deterministic snapshots
+// lindormId is called internally; mock it for deterministic snapshots
 vi.mock("@lindorm/random", () => ({
-  randomId: ({ namespace }: { namespace: string }) => `${namespace}_0000000000000000`,
+  lindormId: ({ namespace }: { namespace: string }) => `${namespace}_0000000000000000`,
 }));
 
 describe("composePylonSocketContextBase", () => {

@@ -1,17 +1,17 @@
-import { randomId } from "@lindorm/random";
 import type { ILogger } from "@lindorm/logger";
+import { lindormId } from "@lindorm/random";
 import type { Constructor } from "@lindorm/types";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
+import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { RedisSharedState } from "../types/redis-types.js";
-import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
+import { createConsumerLoop } from "../utils/create-consumer-loop.js";
 import { resolveStreamKey } from "../utils/resolve-stream-key.js";
 import { serializeStreamFields } from "../utils/serialize-stream-fields.js";
-import { xaddToStream } from "../utils/xadd-to-stream.js";
-import { createConsumerLoop } from "../utils/create-consumer-loop.js";
 import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
+import { xaddToStream } from "../utils/xadd-to-stream.js";
 
 export type RedisRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
   state: RedisSharedState;
@@ -34,12 +34,12 @@ export class RedisRpcClient<
   constructor(options: RedisRpcClientOptions<Req, Res>) {
     super(options, "RedisRpcClient");
     this.state = options.state;
-    this.replyStreamKey = `${this.state.prefix}:rpc:reply:${randomId({ length: 16 })}`;
+    this.replyStreamKey = `${this.state.prefix}:rpc:reply:${lindormId({ length: 16 })}`;
   }
 
   async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
-    const correlationId = randomId({ namespace: "cor", length: 16 });
+    const correlationId = lindormId({ namespace: "cor", length: 16 });
 
     if (!this.state.publishConnection) {
       throw new IrisDriverError("Cannot send RPC request: connection is not available", {
@@ -111,7 +111,7 @@ export class RedisRpcClient<
   }
 
   private async doEnsureReplyConsumer(): Promise<void> {
-    this.replyGroupName = `${this.state.prefix}.rpc.reply.${randomId({ length: 16 })}`;
+    this.replyGroupName = `${this.state.prefix}.rpc.reply.${lindormId({ length: 16 })}`;
 
     const loop = await createConsumerLoop({
       publishConnection: this.state.publishConnection!,

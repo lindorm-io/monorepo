@@ -1,16 +1,16 @@
-import { randomId } from "@lindorm/random";
 import type { ILogger } from "@lindorm/logger";
+import { lindormId } from "@lindorm/random";
 import type { Constructor } from "@lindorm/types";
 import type { ConsumeMessage } from "amqplib";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { IrisSerializationError } from "../../../../errors/IrisSerializationError.js";
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
+import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import { prepareInbound } from "../../../message/utils/prepare-inbound.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
-import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
 import { buildAmqpHeaders } from "../utils/build-amqp-headers.js";
 import { parseAmqpHeaders } from "../utils/parse-amqp-headers.js";
 
@@ -61,7 +61,7 @@ export class RabbitRpcClient<
 
   async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
-    const correlationId = randomId({ namespace: "cor", length: 16 });
+    const correlationId = lindormId({ namespace: "cor", length: 16 });
 
     const publishChannel = this.state.publishChannel;
     if (!publishChannel) {

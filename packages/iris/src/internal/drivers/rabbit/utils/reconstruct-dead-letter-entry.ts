@@ -1,5 +1,5 @@
+import { lindormId } from "@lindorm/random";
 import type amqplib from "amqplib";
-import { randomId } from "@lindorm/random";
 import type { DeadLetterEntry } from "../../../../types/dead-letter.js";
 
 const headerString = (value: unknown): string | undefined => {
@@ -24,7 +24,7 @@ export const reconstructDeadLetterEntry = (msg: amqplib.GetMessage): DeadLetterE
     : (msg.properties.timestamp ?? Date.now());
 
   return {
-    id: msg.properties.messageId ?? randomId({ namespace: "dlq", length: 16 }),
+    id: msg.properties.messageId ?? lindormId({ namespace: "dlq", length: 16 }),
     envelope: {
       topic,
       payload: msg.content,

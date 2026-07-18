@@ -1,6 +1,6 @@
 /**
  * The single source of truth for the lindorm id format. Both the generator
- * (`randomId`) and the validator (`LINDORM_ID_PATTERN` / `isLindormId`) are built
+ * (`lindormId`) and the validator (`LINDORM_ID_PATTERN` / `isLindormId`) are built
  * from these constants, so a validator can never drift from the ids it validates.
  */
 
@@ -9,7 +9,7 @@ export const ID_ALPHABET =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 /**
- * Bounds of the `RandomIdLength` union (16 | 20 | … | 64). The pattern accepts
+ * Bounds of the `LindormIdLength` union (16 | 20 | … | 64). The pattern accepts
  * 16-64 continuously — a deliberate superset of the generator's step-4 union, so
  * an id remains valid if the union ever gains a step.
  */

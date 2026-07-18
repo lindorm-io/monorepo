@@ -1,25 +1,25 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type {
   ConsumeEnvelope,
   ConsumeOptions,
   PublishOptions,
 } from "../../../../types/index.js";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
-import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { RedisSharedState } from "../types/redis-types.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import {
   DriverWorkerQueueBase,
   type DriverWorkerQueueBaseOptions,
 } from "../../../classes/DriverWorkerQueueBase.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
-import { publishRedisMessages } from "../utils/publish-redis-messages.js";
-import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
+import type { RedisSharedState } from "../types/redis-types.js";
 import { createConsumerLoop } from "../utils/create-consumer-loop.js";
-import { resolveStreamKey } from "../utils/resolve-stream-key.js";
+import { publishRedisMessages } from "../utils/publish-redis-messages.js";
 import { resolveGroupName } from "../utils/resolve-group-name.js";
+import { resolveStreamKey } from "../utils/resolve-stream-key.js";
 import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
+import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
 
 export type RedisWorkerQueueOptions<M extends IMessage> =
   DriverWorkerQueueBaseOptions<M> & {
@@ -150,7 +150,7 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     let broadcastLoop: Awaited<ReturnType<typeof createConsumerLoop>> | undefined;
     if (this.metadata.broadcast) {
       const broadcastStreamKey = `${streamKey}:broadcast`;
-      const broadcastGroupName = `${groupName}.bc.${randomId({ length: 16 })}`;
+      const broadcastGroupName = `${groupName}.bc.${lindormId({ length: 16 })}`;
 
       broadcastLoop = await createConsumerLoop({
         publishConnection: this.state.publishConnection,

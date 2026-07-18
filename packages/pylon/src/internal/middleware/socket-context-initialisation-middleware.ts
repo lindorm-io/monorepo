@@ -1,6 +1,6 @@
 import { isObject } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import type { Environment } from "@lindorm/types";
 import type { PylonSocketMiddleware } from "../../types/index.js";
 import { buildClientContext } from "../utils/build-client-context.js";
@@ -18,7 +18,7 @@ const extractCorrelationId = (ctx: any): string => {
   ) {
     return ctx.data.correlationId;
   }
-  return randomId({ namespace: "cor", length: 16 });
+  return lindormId({ namespace: "cor", length: 16 });
 };
 
 export const createSocketContextInitialisationMiddleware = (

@@ -1,19 +1,19 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type {
   ConsumeEnvelope,
   ConsumeOptions,
   PublishOptions,
 } from "../../../../types/index.js";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
-import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { MemorySharedState } from "../types/memory-store.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import {
   DriverWorkerQueueBase,
   type DriverWorkerQueueBaseOptions,
 } from "../../../classes/DriverWorkerQueueBase.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
+import type { MemorySharedState } from "../types/memory-store.js";
 import { publishMessages } from "../utils/publish-messages.js";
 import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 
@@ -77,7 +77,7 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
       });
     }
 
-    const consumerTag = randomId({ namespace: "con", length: 16 });
+    const consumerTag = lindormId({ namespace: "con", length: 16 });
     this.ownedConsumerTags.add(consumerTag);
 
     const wrappedCallback = wrapConsumerCallback(

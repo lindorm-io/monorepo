@@ -1,3 +1,11 @@
+import { ClientError } from "@lindorm/errors";
+import type { ILogger } from "@lindorm/logger";
+import { composeMiddleware } from "@lindorm/middleware";
+import { lindormId } from "@lindorm/random";
+import type { RetryConfig } from "@lindorm/retry";
+import type { Dict, HttpMethod } from "@lindorm/types";
+import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
+import type { IConduit } from "../interfaces/index.js";
 import {
   CONDUIT_RESPONSE,
   REPLACE_URL,
@@ -12,24 +20,16 @@ import { defaultRetryCallback } from "../internal/utils/default-retry-callback.j
 import { defaultValidateStatus } from "../internal/utils/default-validate-status.js";
 import { getOrigin } from "../internal/utils/get-origin.js";
 import { resolveCached } from "../internal/utils/resolve-cached.js";
-import { ClientError } from "@lindorm/errors";
-import type { ILogger } from "@lindorm/logger";
-import { composeMiddleware } from "@lindorm/middleware";
-import { randomId } from "@lindorm/random";
-import type { RetryConfig } from "@lindorm/retry";
-import type { Dict, HttpMethod } from "@lindorm/types";
-import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
-import type { IConduit } from "../interfaces/index.js";
 import type {
   ConduitAppContext,
-  ConduitContext,
-  ConduitMiddleware,
-  ConduitSettings,
-  ConduitResponse,
   ConduitConfigContext,
+  ConduitContext,
   ConduitMethodOptions,
+  ConduitMiddleware,
   ConduitRequestContext,
   ConduitRequestOptions,
+  ConduitResponse,
+  ConduitSettings,
   RetryCallback,
 } from "../types/index.js";
 
@@ -305,8 +305,8 @@ export class Conduit implements IConduit {
       form,
       headers: { ...this.headers, ...headers },
       metadata: {
-        correlationId: randomId({ namespace: "cor", length: 16 }),
-        requestId: randomId({ namespace: "req", length: 16 }),
+        correlationId: lindormId({ namespace: "cor", length: 16 }),
+        requestId: lindormId({ namespace: "req", length: 16 }),
         sessionId: null,
       },
       onDownloadProgress,

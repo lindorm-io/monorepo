@@ -1,4 +1,4 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import { createHash } from "node:crypto";
 import { createReadStream, createWriteStream } from "node:fs";
 import { link, rename, unlink } from "node:fs/promises";
@@ -28,7 +28,7 @@ export const copyToTemp = async (
 ): Promise<CopyToTempResult> => {
   const tempPath = join(
     targetDir,
-    `.upload-${randomId({ namespace: "tmp", length: 32 })}`,
+    `.upload-${lindormId({ namespace: "tmp", length: 32 })}`,
   );
   const hash = computeHash ? createHash("sha256") : null;
 

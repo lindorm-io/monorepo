@@ -1,6 +1,6 @@
 import { ClientError, ServerError, generateSupport } from "@lindorm/errors";
 import { isNumber, isString } from "@lindorm/is";
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import { RedirectError } from "../../errors/index.js";
 import type { PylonHttpMiddleware } from "../../types/index.js";
 import { deriveChallenge } from "../utils/challenge/derive-challenge.js";
@@ -51,7 +51,7 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
             version: ctx.state?.app?.version,
           },
           error: {
-            id: err.id ?? randomId({ namespace: "err", length: 16 }),
+            id: err.id ?? lindormId({ namespace: "err", length: 16 }),
             name: err.name ?? "Error",
             title: err.title ?? "Error",
             message: err.message,
@@ -72,7 +72,7 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
           version: ctx.state?.app?.version,
         },
         error: {
-          id: err.id ?? randomId({ namespace: "err", length: 16 }),
+          id: err.id ?? lindormId({ namespace: "err", length: 16 }),
           name: "UnexpectedException",
           title: "Unexpected Exception",
           message: "An unexpected exception occurred while handling thrown error",

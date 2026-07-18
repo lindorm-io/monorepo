@@ -1,5 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type {
   CreateKafkaConsumerOptions,
   GetOrCreatePooledConsumerOptions,
@@ -9,7 +10,6 @@ import type {
   KafkaEachMessagePayload,
   KafkaPooledConsumer,
 } from "../types/kafka-types.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { ensureKafkaTopic } from "./ensure-kafka-topic.js";
 
 export type { CreateKafkaConsumerOptions, GetOrCreatePooledConsumerOptions };
@@ -189,7 +189,7 @@ export const createKafkaConsumer = async (
     await seekConsumerToEnd(kafka, consumer, [topic]);
   }
 
-  const consumerTag = reuseConsumerTag ?? randomId({ namespace: "con", length: 16 });
+  const consumerTag = reuseConsumerTag ?? lindormId({ namespace: "con", length: 16 });
 
   return {
     consumerTag,
@@ -217,7 +217,7 @@ export const getOrCreatePooledConsumer = async (
     );
   }
 
-  const consumerTag = randomId({ namespace: "con", length: 16 });
+  const consumerTag = lindormId({ namespace: "con", length: 16 });
   const existing = state.consumerPool.get(groupId);
 
   if (existing) {

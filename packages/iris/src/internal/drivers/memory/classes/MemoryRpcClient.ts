@@ -1,11 +1,11 @@
-import { randomId } from "@lindorm/random";
 import type { ILogger } from "@lindorm/logger";
+import { lindormId } from "@lindorm/random";
 import type { Constructor } from "@lindorm/types";
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
-import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
+import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { MemorySharedState } from "../types/memory-store.js";
 
 export type MemoryRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
@@ -30,7 +30,7 @@ export class MemoryRpcClient<
 
   async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
-    const correlationId = randomId({ namespace: "cor", length: 16 });
+    const correlationId = lindormId({ namespace: "cor", length: 16 });
 
     const { envelope, topic } = await this.prepareRequestEnvelope(message);
     envelope.replyTo = "__rpc_reply__";

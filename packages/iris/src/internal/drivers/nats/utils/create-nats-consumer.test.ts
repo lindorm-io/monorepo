@@ -1,8 +1,8 @@
-import { createNatsConsumer } from "./create-nats-consumer.js";
 import { describe, expect, it, vi } from "vitest";
+import { createNatsConsumer } from "./create-nats-consumer.js";
 
 vi.mock("@lindorm/random", async () => ({
-  randomId: vi.fn().mockReturnValue("con_mockconsumer01"),
+  lindormId: vi.fn().mockReturnValue("con_mockconsumer01"),
 }));
 
 const createMockLogger = () => ({

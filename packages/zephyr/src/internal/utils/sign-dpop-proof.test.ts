@@ -1,8 +1,8 @@
-import { signDpopProof, toPublicJwk } from "./sign-dpop-proof.js";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { signDpopProof, toPublicJwk } from "./sign-dpop-proof.js";
 
 vi.mock("@lindorm/random", () => ({
-  randomId: vi.fn(() => "dpo_0000000000000000"),
+  lindormId: vi.fn(() => "dpo_0000000000000000"),
 }));
 
 const decodePart = (part: string): Record<string, unknown> =>

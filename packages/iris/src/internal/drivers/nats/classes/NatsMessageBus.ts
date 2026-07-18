@@ -1,22 +1,22 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
-import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { NatsConsumerLoop, NatsSharedState } from "../types/nats-types.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import {
   DriverMessageBusBase,
   type DriverMessageBusBaseOptions,
 } from "../../../classes/DriverMessageBusBase.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
-import { publishNatsMessages } from "../utils/publish-nats-messages.js";
-import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
+import type { NatsConsumerLoop, NatsSharedState } from "../types/nats-types.js";
 import { createNatsConsumer } from "../utils/create-nats-consumer.js";
-import { resolveSubject } from "../utils/resolve-subject.js";
+import { publishNatsMessages } from "../utils/publish-nats-messages.js";
 import { resolveConsumerName } from "../utils/resolve-consumer-name.js";
 import { resolveMaxDeliver } from "../utils/resolve-max-deliver.js";
+import { resolveSubject } from "../utils/resolve-subject.js";
 import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
+import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
 
 export type NatsMessageBusOptions<M extends IMessage> = DriverMessageBusBaseOptions<M> & {
   state: NatsSharedState;
@@ -104,7 +104,7 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
       });
     } else {
       consumerName =
-        `${this.state.prefix}_sub_ephemeral_${randomId({ length: 16 })}`.replace(
+        `${this.state.prefix}_sub_ephemeral_${lindormId({ length: 16 })}`.replace(
           /[^a-zA-Z0-9_-]/g,
           "_",
         );
@@ -166,7 +166,7 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
     if (this.metadata.broadcast) {
       const broadcastSubject = resolveBroadcastDestination(subject, true, ".");
       const broadcastConsumerName =
-        `${this.state.prefix}_bc_ephemeral_${randomId({ length: 16 })}`.replace(
+        `${this.state.prefix}_bc_ephemeral_${lindormId({ length: 16 })}`.replace(
           /[^a-zA-Z0-9_-]/g,
           "_",
         );

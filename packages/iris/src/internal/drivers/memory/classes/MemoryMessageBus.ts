@@ -1,13 +1,13 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
-import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { MemorySharedState } from "../types/memory-store.js";
 import {
   DriverMessageBusBase,
   type DriverMessageBusBaseOptions,
 } from "../../../classes/DriverMessageBusBase.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { MemorySharedState } from "../types/memory-store.js";
 import { publishMessages } from "../utils/publish-messages.js";
 import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 
@@ -57,7 +57,7 @@ export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<M
       return;
     }
 
-    const consumerTag = randomId({ namespace: "con", length: 16 });
+    const consumerTag = lindormId({ namespace: "con", length: 16 });
     this.ownedConsumerTags.add(consumerTag);
 
     const wrappedCallback = wrapConsumerCallback(

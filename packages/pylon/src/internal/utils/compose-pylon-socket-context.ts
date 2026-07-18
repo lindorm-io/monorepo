@@ -1,6 +1,6 @@
 import { changeKeys } from "@lindorm/case";
 import { isObject } from "@lindorm/is";
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import type {
   IoServer,
   PylonEnvelopeHeader,
@@ -49,7 +49,7 @@ export const composePylonSocketContextBase = (
     data: args,
     envelope,
     event: options.event,
-    eventId: randomId({ namespace: "sev", length: 16 }),
+    eventId: lindormId({ namespace: "sev", length: 16 }),
     header,
     io: { app: io, socket },
     nack: rawAck

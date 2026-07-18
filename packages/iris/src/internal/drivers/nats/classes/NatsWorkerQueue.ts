@@ -1,26 +1,26 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type {
   ConsumeEnvelope,
   ConsumeOptions,
   PublishOptions,
 } from "../../../../types/index.js";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
-import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { NatsSharedState } from "../types/nats-types.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import {
   DriverWorkerQueueBase,
   type DriverWorkerQueueBaseOptions,
 } from "../../../classes/DriverWorkerQueueBase.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
-import { publishNatsMessages } from "../utils/publish-nats-messages.js";
-import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
+import type { NatsSharedState } from "../types/nats-types.js";
 import { createNatsConsumer } from "../utils/create-nats-consumer.js";
-import { resolveSubject } from "../utils/resolve-subject.js";
+import { publishNatsMessages } from "../utils/publish-nats-messages.js";
 import { resolveConsumerName } from "../utils/resolve-consumer-name.js";
 import { resolveMaxDeliver } from "../utils/resolve-max-deliver.js";
+import { resolveSubject } from "../utils/resolve-subject.js";
 import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
+import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
 
 export type NatsWorkerQueueOptions<M extends IMessage> =
   DriverWorkerQueueBaseOptions<M> & {
@@ -158,7 +158,7 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
     let broadcastConsumerName: string | undefined;
     if (this.metadata.broadcast) {
       const broadcastSubject = `${subject}.broadcast`;
-      broadcastConsumerName = `${consumerName}_bc_${randomId({ length: 16 })}`.replace(
+      broadcastConsumerName = `${consumerName}_bc_${lindormId({ length: 16 })}`.replace(
         /[^a-zA-Z0-9_-]/g,
         "_",
       );

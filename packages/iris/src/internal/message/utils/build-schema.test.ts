@@ -1,9 +1,8 @@
-import { randomId, randomUUID } from "@lindorm/random";
-import { z } from "zod";
-import { buildSchema } from "./build-schema.js";
-import type { MetaField } from "../types/metadata.js";
-import type { MessageMetadata } from "../types/metadata.js";
+import { lindormId, randomUUID } from "@lindorm/random";
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
+import type { MessageMetadata, MetaField } from "../types/metadata.js";
+import { buildSchema } from "./build-schema.js";
 
 const makeField = (overrides: Partial<MetaField> = {}): MetaField => ({
   key: "testField",
@@ -109,10 +108,10 @@ describe("buildSchema", () => {
       );
       // Snapshot a fixed id — a generated one would churn the snapshot every run.
       expect(parse(schema, { id: "aZ09aZ09aZ09aZ09aZ09aZ09" })).toMatchSnapshot();
-      expect(parse(schema, { id: randomId() }).success).toBe(true);
-      expect(parse(schema, { id: randomId("user") }).success).toBe(true);
-      expect(parse(schema, { id: randomId({ length: 16 }) }).success).toBe(true);
-      expect(parse(schema, { id: randomId({ length: 64 }) }).success).toBe(true);
+      expect(parse(schema, { id: lindormId() }).success).toBe(true);
+      expect(parse(schema, { id: lindormId("user") }).success).toBe(true);
+      expect(parse(schema, { id: lindormId({ length: 16 }) }).success).toBe(true);
+      expect(parse(schema, { id: lindormId({ length: 64 }) }).success).toBe(true);
     });
 
     it("should reject a malformed lindorm_id", () => {
@@ -143,7 +142,7 @@ describe("buildSchema", () => {
       );
       expect(parse(optional, {}).success).toBe(true);
       expect(parse(optional, { id: null }).success).toBe(false);
-      expect(parse(optional, { id: randomId() }).success).toBe(true);
+      expect(parse(optional, { id: lindormId() }).success).toBe(true);
     });
 
     it("should create an array validator", () => {

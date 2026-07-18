@@ -1,8 +1,8 @@
 import { AegisError } from "@lindorm/aegis";
 import MockDate from "mockdate";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { CannotEstablishSessionIdentity } from "../../../errors/index.js";
 import { parseTokenData } from "./parse-token-data.js";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -14,7 +14,7 @@ vi.mock("crypto", async () => ({
 
 vi.mock("@lindorm/random", async () => ({
   ...(await vi.importActual<typeof import("@lindorm/random")>("@lindorm/random")),
-  randomId: vi.fn(() => "def_0000000000000000"),
+  lindormId: vi.fn(() => "def_0000000000000000"),
 }));
 
 const createJwtVerifyResult = (overrides: Record<string, any> = {}) => ({

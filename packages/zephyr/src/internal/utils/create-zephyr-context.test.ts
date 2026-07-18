@@ -1,9 +1,9 @@
-import { createZephyrContext } from "./create-zephyr-context.js";
 import { describe, expect, it, vi } from "vitest";
+import { createZephyrContext } from "./create-zephyr-context.js";
 
 vi.mock("@lindorm/random", () => ({
   randomUUID: vi.fn().mockReturnValue("mock-uuid"),
-  randomId: vi.fn().mockReturnValue("mock-uuid"),
+  lindormId: vi.fn().mockReturnValue("mock-uuid"),
 }));
 
 describe("createZephyrContext", () => {

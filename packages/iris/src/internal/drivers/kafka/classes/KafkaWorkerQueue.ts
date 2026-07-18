@@ -1,34 +1,34 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type {
   ConsumeEnvelope,
   ConsumeOptions,
   PublishOptions,
 } from "../../../../types/index.js";
+import {
+  DriverWorkerQueueBase,
+  type DriverWorkerQueueBaseOptions,
+} from "../../../classes/DriverWorkerQueueBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
+import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import type {
   KafkaConsumer,
   KafkaEachMessagePayload,
   KafkaSharedState,
 } from "../types/kafka-types.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import {
-  DriverWorkerQueueBase,
-  type DriverWorkerQueueBaseOptions,
-} from "../../../classes/DriverWorkerQueueBase.js";
-import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
-import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
-import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
 import { getOrCreatePooledConsumer } from "../utils/create-kafka-consumer.js";
-import { releasePooledConsumer } from "../utils/stop-kafka-consumer.js";
-import { resolveTopicName } from "../utils/resolve-topic-name.js";
+import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
 import { resolveGroupId } from "../utils/resolve-group-id.js";
 import { resolveRetryTopicName } from "../utils/resolve-retry-topic.js";
+import { resolveTopicName } from "../utils/resolve-topic-name.js";
 import {
   ensureRetryTopicAttached,
   releaseRetryConsumer,
 } from "../utils/retry-topic-consumer.js";
+import { releasePooledConsumer } from "../utils/stop-kafka-consumer.js";
+import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
 
 export type KafkaWorkerQueueOptions<M extends IMessage> =
   DriverWorkerQueueBaseOptions<M> & {
@@ -199,7 +199,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     let broadcastGroupId: string | undefined;
     if (this.metadata.broadcast) {
       broadcastTopic = `${kafkaTopic}.broadcast`;
-      broadcastGroupId = `${groupId}.bc.${randomId({ length: 16 })}`;
+      broadcastGroupId = `${groupId}.bc.${lindormId({ length: 16 })}`;
       broadcastRetryTopic = resolveRetryTopicName(broadcastTopic, broadcastGroupId);
 
       const resolvedBroadcastGroupId = broadcastGroupId;

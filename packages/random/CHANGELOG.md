@@ -12,13 +12,13 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Features
 
 - migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
-- **random:** validate namespace is alphanumeric; export RandomIdOptions/RandomIdLength ([16cd52d](https://github.com/lindorm-io/monorepo/commit/16cd52d27dba8d5446e3ce5162acad884f0f38f5))
+- **random:** validate namespace is alphanumeric; export LindormIdOptions/LindormIdLength ([16cd52d](https://github.com/lindorm-io/monorepo/commit/16cd52d27dba8d5446e3ce5162acad884f0f38f5))
 
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/random@0.3.2...@lindorm/random@0.4.0) (2026-06-19)
 
 ### Features
 
-- **random:** validate namespace is alphanumeric; export RandomIdOptions/RandomIdLength ([05b8fb9](https://github.com/lindorm-io/monorepo/commit/05b8fb9bf2304d81b864e2e9b75c1b3412d6c8be))
+- **random:** validate namespace is alphanumeric; export LindormIdOptions/LindormIdLength ([05b8fb9](https://github.com/lindorm-io/monorepo/commit/05b8fb9bf2304d81b864e2e9b75c1b3412d6c8be))
 
 ## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/random@0.3.1...@lindorm/random@0.3.2) (2026-06-05)
 

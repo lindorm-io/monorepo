@@ -1,5 +1,5 @@
+import { lindormId } from "@lindorm/random";
 import { hkdfSync } from "crypto";
-import { randomId } from "@lindorm/random";
 import { KryptosError } from "../../../errors/index.js";
 import type { KryptosBuffer, KryptosFromDerive } from "../../../types/index.js";
 import { isKryptos } from "../is-kryptos.js";
@@ -83,7 +83,7 @@ export const createDerFromDerive = (options: KryptosFromDerive): KryptosBuffer =
         ? options.id
         : options.path
           ? keyIdFromBytes(idSeed)
-          : randomId({ namespace: "key", length: 16 });
+          : lindormId({ namespace: "key", length: 16 });
 
       return {
         id,

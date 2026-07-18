@@ -1,23 +1,23 @@
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
+import {
+  DriverStreamPipelineBase,
+  type DriverStreamPipelineBaseOptions,
+} from "../../../classes/DriverStreamPipelineBase.js";
+import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import type {
   RedisConsumeOutcome,
   RedisSharedState,
   RedisStreamEntry,
 } from "../types/redis-types.js";
-import type { IrisEnvelope } from "../../../types/iris-envelope.js";
-import type { MessageMetadata } from "../../../message/types/metadata.js";
-import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
-import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import { createConsumerLoop } from "../utils/create-consumer-loop.js";
 import { resolveStreamKey } from "../utils/resolve-stream-key.js";
 import { serializeStreamFields } from "../utils/serialize-stream-fields.js";
-import { xaddToStream } from "../utils/xadd-to-stream.js";
-import { createConsumerLoop } from "../utils/create-consumer-loop.js";
 import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
 import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
-import {
-  DriverStreamPipelineBase,
-  type DriverStreamPipelineBaseOptions,
-} from "../../../classes/DriverStreamPipelineBase.js";
+import { xaddToStream } from "../utils/xadd-to-stream.js";
 
 export type RedisStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
   state: RedisSharedState;
@@ -53,7 +53,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
     const inputMetadata = getMessageMetadata(this.inputClass);
     const subscribeTopic = this.inputTopic ?? resolveDefaultTopic(inputMetadata);
     const streamKey = resolveStreamKey(this.state.prefix, subscribeTopic);
-    this.groupName = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
+    this.groupName = `${this.state.prefix}.pipeline.${lindormId({ length: 16 })}`;
 
     this.running = true;
     this.paused = false;
@@ -108,7 +108,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
 
     // Create a new group starting at "$" so messages published during
     // the pause window are skipped — only new messages after resume.
-    this.groupName = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
+    this.groupName = `${this.state.prefix}.pipeline.${lindormId({ length: 16 })}`;
 
     const loop = await createConsumerLoop({
       publishConnection: this.state.publishConnection!,

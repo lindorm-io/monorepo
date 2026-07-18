@@ -5,7 +5,7 @@ import {
 } from "../constants/id-format.js";
 
 /**
- * Matches the output of `randomId`: an optional alphanumeric namespace joined with
+ * Matches the output of `lindormId`: an optional alphanumeric namespace joined with
  * "_", followed by a base62 body of 16-64 characters. Derived from the generator's
  * own alphabet and length bounds — see `constants/id-format.ts`.
  */

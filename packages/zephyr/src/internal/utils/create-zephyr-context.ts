@@ -1,5 +1,5 @@
 import type { ILogger } from "@lindorm/logger";
-import { randomId } from "@lindorm/random";
+import { lindormId } from "@lindorm/random";
 import type { AppContext, ZephyrContext } from "../../types/context.js";
 
 type CreateContextArgs = {
@@ -18,8 +18,8 @@ export const createZephyrContext = (args: CreateContextArgs): ZephyrContext => {
     event,
     logger,
     metadata: {
-      correlationId: randomId({ namespace: "cor", length: 16 }),
-      requestId: randomId({ namespace: "req", length: 16 }),
+      correlationId: lindormId({ namespace: "cor", length: 16 }),
+      requestId: lindormId({ namespace: "req", length: 16 }),
     },
     outgoing: {
       data: incoming ? {} : (data ?? {}),

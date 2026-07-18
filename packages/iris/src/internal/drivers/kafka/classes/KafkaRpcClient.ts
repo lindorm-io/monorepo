@@ -1,18 +1,18 @@
-import { randomId } from "@lindorm/random";
 import type { ILogger } from "@lindorm/logger";
+import { lindormId } from "@lindorm/random";
 import type { Constructor } from "@lindorm/types";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
+import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { KafkaSharedState } from "../types/kafka-types.js";
-import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
-import { resolveTopicName } from "../utils/resolve-topic-name.js";
-import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
-import { parseKafkaMessage } from "../utils/parse-kafka-message.js";
 import { createKafkaConsumer } from "../utils/create-kafka-consumer.js";
 import { deleteKafkaTopicFromState } from "../utils/delete-kafka-topic.js";
 import { ensureKafkaTopicFromState } from "../utils/ensure-kafka-topic.js";
+import { parseKafkaMessage } from "../utils/parse-kafka-message.js";
+import { resolveTopicName } from "../utils/resolve-topic-name.js";
+import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
 import { stopKafkaConsumer } from "../utils/stop-kafka-consumer.js";
 
 export type KafkaRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
@@ -36,12 +36,12 @@ export class KafkaRpcClient<
   constructor(options: KafkaRpcClientOptions<Req, Res>) {
     super(options, "KafkaRpcClient");
     this.state = options.state;
-    this.replyTopic = `${this.state.prefix}.rpc.reply.${randomId({ length: 16 })}`;
+    this.replyTopic = `${this.state.prefix}.rpc.reply.${lindormId({ length: 16 })}`;
   }
 
   async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
-    const correlationId = randomId({ namespace: "cor", length: 16 });
+    const correlationId = lindormId({ namespace: "cor", length: 16 });
 
     if (!this.state.producer) {
       throw new IrisDriverError("Cannot send RPC request: producer is not connected", {
@@ -111,7 +111,7 @@ export class KafkaRpcClient<
       );
     }
 
-    const replyGroupId = `${this.state.prefix}.rpc.reply.${randomId({ length: 16 })}`;
+    const replyGroupId = `${this.state.prefix}.rpc.reply.${lindormId({ length: 16 })}`;
 
     // Pre-create the dynamic reply topic before subscribing
     await ensureKafkaTopicFromState(this.state, this.replyTopic, this.logger);
