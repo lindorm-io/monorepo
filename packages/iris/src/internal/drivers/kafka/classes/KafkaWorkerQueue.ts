@@ -1,11 +1,7 @@
 import { lindormId } from "@lindorm/random";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
-import type {
-  ConsumeEnvelope,
-  ConsumeOptions,
-  PublishOptions,
-} from "../../../../types/index.js";
+import type { ConsumeEnvelope, PublishOptions } from "../../../../types/index.js";
 import {
   DriverWorkerQueueBase,
   type DriverWorkerQueueBaseOptions,
@@ -48,11 +44,13 @@ type OwnedConsumer = {
   broadcastGroupId?: string;
 };
 
-export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M> {
+export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
+  M,
+  OwnedConsumer
+> {
   private readonly state: KafkaSharedState;
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
-  private readonly ownedConsumers: Map<string, Array<OwnedConsumer>> = new Map();
 
   constructor(options: KafkaWorkerQueueOptions<M>) {
     super(options);
@@ -78,30 +76,10 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     );
   }
 
-  async consume(
-    queueOrOptions: string | ConsumeOptions<M> | Array<ConsumeOptions<M>>,
-    callback?: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
-  ): Promise<void> {
-    if (Array.isArray(queueOrOptions)) {
-      for (const opt of queueOrOptions) {
-        await this.consume(opt);
-      }
-      return;
-    }
-
-    const queue =
-      typeof queueOrOptions === "string" ? queueOrOptions : queueOrOptions.queue;
-    const cb = typeof queueOrOptions === "string" ? callback : queueOrOptions.callback;
-
-    if (!cb) {
-      throw new IrisDriverError("consume() requires a callback", {
-        code: "consume_callback_required",
-        title: "Consume Callback Required",
-        details:
-          "consume() was called without a callback function to handle delivered messages.",
-      });
-    }
-
+  protected async consumeOne(
+    queue: string,
+    cb: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
+  ): Promise<OwnedConsumer> {
     if (!this.state.kafka) {
       throw new IrisDriverError("Cannot consume: Kafka client is not connected", {
         code: "connection_unavailable",
@@ -141,11 +119,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     // very onMessage it is wrapped in — only ever read at retry time.
     const onMessageRef: { current?: (p: KafkaEachMessagePayload) => Promise<void> } = {};
     const onMessage = wrapKafkaConsumer(
-      {
-        prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
-        afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
-        onConsumeError: (err, msg) => this.onConsumeError(err, msg),
-      },
+      this.consumerHooks(),
       cb,
       this.state,
       this.metadata,
@@ -224,12 +198,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
         current?: (p: KafkaEachMessagePayload) => Promise<void>;
       } = {};
       const broadcastOnMessage = wrapKafkaConsumer(
-        {
-          prepareForConsume: (payload, headers) =>
-            this.prepareForConsume(payload, headers),
-          afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
-          onConsumeError: (err, msg) => this.onConsumeError(err, msg),
-        },
+        this.consumerHooks(),
         cb,
         this.state,
         this.metadata,
@@ -271,8 +240,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       });
     }
 
-    const existing = this.ownedConsumers.get(queue) ?? [];
-    existing.push({
+    return {
       mainConsumerTag,
       broadcastConsumerTag,
       kafkaTopic,
@@ -281,11 +249,10 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       broadcastRetryTopic,
       groupId,
       broadcastGroupId,
-    });
-    this.ownedConsumers.set(queue, existing);
+    };
   }
 
-  private async releaseConsumer(consumer: OwnedConsumer): Promise<void> {
+  protected async teardownConsumer(consumer: OwnedConsumer): Promise<void> {
     await releasePooledConsumer({
       state: this.state,
       groupId: consumer.groupId,
@@ -326,26 +293,5 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       );
       if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
     }
-  }
-
-  async unconsume(queue: string): Promise<void> {
-    const consumers = this.ownedConsumers.get(queue);
-    if (!consumers || consumers.length === 0) return;
-
-    for (const consumer of consumers) {
-      await this.releaseConsumer(consumer);
-    }
-
-    this.ownedConsumers.delete(queue);
-  }
-
-  async unconsumeAll(): Promise<void> {
-    for (const [, consumers] of this.ownedConsumers) {
-      for (const consumer of consumers) {
-        await this.releaseConsumer(consumer);
-      }
-    }
-
-    this.ownedConsumers.clear();
   }
 }

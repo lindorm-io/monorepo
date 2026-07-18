@@ -1,11 +1,7 @@
 import { lindormId } from "@lindorm/random";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
-import type {
-  ConsumeEnvelope,
-  ConsumeOptions,
-  PublishOptions,
-} from "../../../../types/index.js";
+import type { ConsumeEnvelope, PublishOptions } from "../../../../types/index.js";
 import {
   DriverWorkerQueueBase,
   type DriverWorkerQueueBaseOptions,
@@ -35,11 +31,13 @@ type OwnedConsumer = {
   groupName: string;
 };
 
-export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M> {
+export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
+  M,
+  OwnedConsumer
+> {
   private readonly state: RedisSharedState;
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
-  private readonly ownedConsumers: Map<string, Array<OwnedConsumer>> = new Map();
 
   constructor(options: RedisWorkerQueueOptions<M>) {
     super(options);
@@ -65,30 +63,10 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     );
   }
 
-  async consume(
-    queueOrOptions: string | ConsumeOptions<M> | Array<ConsumeOptions<M>>,
-    callback?: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
-  ): Promise<void> {
-    if (Array.isArray(queueOrOptions)) {
-      for (const opt of queueOrOptions) {
-        await this.consume(opt);
-      }
-      return;
-    }
-
-    const queue =
-      typeof queueOrOptions === "string" ? queueOrOptions : queueOrOptions.queue;
-    const cb = typeof queueOrOptions === "string" ? callback : queueOrOptions.callback;
-
-    if (!cb) {
-      throw new IrisDriverError("consume() requires a callback", {
-        code: "consume_callback_required",
-        title: "Consume Callback Required",
-        details:
-          "consume() was called without a callback function to handle delivered messages.",
-      });
-    }
-
+  protected async consumeOne(
+    queue: string,
+    cb: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
+  ): Promise<OwnedConsumer> {
     if (!this.state.publishConnection) {
       throw new IrisDriverError("Cannot consume: connection is not available", {
         code: "connection_unavailable",
@@ -109,11 +87,7 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     });
 
     const wrappedCallback = wrapRedisConsumer(
-      {
-        prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
-        afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
-        onConsumeError: (err, msg) => this.onConsumeError(err, msg),
-      },
+      this.consumerHooks(),
       cb,
       this.state,
       this.metadata,
@@ -173,60 +147,31 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       });
     }
 
-    const existing = this.ownedConsumers.get(queue) ?? [];
-    existing.push({
-      mainConsumerTag: mainLoop.consumerTag,
-      broadcastConsumerTag: broadcastLoop?.consumerTag,
-      streamKey,
-      groupName,
-    });
-    this.ownedConsumers.set(queue, existing);
-
     // Wait until the loops are blocking for new messages before returning,
     // so callers can publish immediately after consume() resolves.
     const ready = [mainLoop.ready];
     if (broadcastLoop) ready.push(broadcastLoop.ready);
     await Promise.all(ready);
+
+    return {
+      mainConsumerTag: mainLoop.consumerTag,
+      broadcastConsumerTag: broadcastLoop?.consumerTag,
+      streamKey,
+      groupName,
+    };
   }
 
-  async unconsume(queue: string): Promise<void> {
-    const consumers = this.ownedConsumers.get(queue);
-    if (!consumers || consumers.length === 0) return;
+  protected async teardownConsumer(consumer: OwnedConsumer): Promise<void> {
+    const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
+      (t): t is string => Boolean(t),
+    );
+    for (const tag of tags) {
+      await stopConsumerLoop(this.state, tag);
 
-    for (const consumer of consumers) {
-      const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
-        (t): t is string => Boolean(t),
+      const idx = this.state.consumerRegistrations.findIndex(
+        (r) => r.consumerTag === tag,
       );
-      for (const tag of tags) {
-        await stopConsumerLoop(this.state, tag);
-
-        const idx = this.state.consumerRegistrations.findIndex(
-          (r) => r.consumerTag === tag,
-        );
-        if (idx !== -1) this.state.consumerRegistrations.splice(idx, 1);
-      }
+      if (idx !== -1) this.state.consumerRegistrations.splice(idx, 1);
     }
-
-    this.ownedConsumers.delete(queue);
-  }
-
-  async unconsumeAll(): Promise<void> {
-    for (const [, consumers] of this.ownedConsumers) {
-      for (const consumer of consumers) {
-        const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
-          (t): t is string => Boolean(t),
-        );
-        for (const tag of tags) {
-          await stopConsumerLoop(this.state, tag);
-
-          const idx = this.state.consumerRegistrations.findIndex(
-            (r) => r.consumerTag === tag,
-          );
-          if (idx !== -1) this.state.consumerRegistrations.splice(idx, 1);
-        }
-      }
-    }
-
-    this.ownedConsumers.clear();
   }
 }

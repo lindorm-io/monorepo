@@ -10,11 +10,7 @@ import { BeforeConsume } from "../../decorators/BeforeConsume.js";
 import { AfterConsume } from "../../decorators/AfterConsume.js";
 import { OnConsumeError } from "../../decorators/OnConsumeError.js";
 import type { IMessage, IMessageSubscriber } from "../../interfaces/index.js";
-import type {
-  ConsumeEnvelope,
-  ConsumeOptions,
-  PublishOptions,
-} from "../../types/index.js";
+import type { ConsumeEnvelope, PublishOptions } from "../../types/index.js";
 import { clearRegistry } from "../message/metadata/registry.js";
 import {
   DriverWorkerQueueBase,
@@ -72,7 +68,18 @@ class SimpleWqMessage {
 
 // --- Concrete test subclass ---
 
-class TestWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M> {
+type TestHandle = { queue: string };
+
+class TestWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M, TestHandle> {
+  // Records every consumeOne / teardownConsumer call so the lifted template
+  // (array normalization, callback guard, per-queue bookkeeping, teardown
+  // loops) can be asserted without a real broker.
+  public readonly consumed: Array<{
+    queue: string;
+    callback: (message: M, envelope: ConsumeEnvelope) => Promise<void>;
+  }> = [];
+  public readonly torndown: Array<TestHandle> = [];
+
   public constructor(options: DriverWorkerQueueBaseOptions<M>) {
     super(options);
   }
@@ -82,14 +89,21 @@ class TestWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M> {
     _options?: PublishOptions,
   ): Promise<void> {}
 
-  public async consume(
-    _queueOrOptions: string | ConsumeOptions<M>,
-    _callback?: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
-  ): Promise<void> {}
+  protected async consumeOne(
+    queue: string,
+    callback: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
+  ): Promise<TestHandle> {
+    this.consumed.push({ queue, callback });
+    return { queue };
+  }
 
-  public async unconsume(_queue: string): Promise<void> {}
+  protected async teardownConsumer(consumer: TestHandle): Promise<void> {
+    this.torndown.push(consumer);
+  }
 
-  public async unconsumeAll(): Promise<void> {}
+  public get ownedKeys(): Array<string> {
+    return [...this.ownedConsumers.keys()];
+  }
 
   public testPrepareForPublish(message: M) {
     return this.prepareForPublish(message);
@@ -384,6 +398,81 @@ describe("DriverWorkerQueueBase", () => {
       );
       await queue.testAfterConsumeSuccess(consumed);
       await queue.testOnConsumeError(new Error("test"), consumed);
+    });
+  });
+
+  describe("consume/unconsume lifecycle (template method)", () => {
+    const cb = async () => {};
+
+    it("normalizes an array to one consumeOne per element", async () => {
+      const queue = createQueue(SimpleWqMessage);
+
+      await queue.consume([
+        { queue: "a", callback: cb },
+        { queue: "b", callback: cb },
+      ]);
+
+      expect(queue.consumed.map((c) => c.queue)).toEqual(["a", "b"]);
+      expect(queue.ownedKeys).toEqual(["a", "b"]);
+    });
+
+    it("normalizes the (name, callback) overload to a consumeOne call", async () => {
+      const queue = createQueue(SimpleWqMessage);
+
+      await queue.consume("a", cb);
+
+      expect(queue.consumed).toHaveLength(1);
+      expect(queue.consumed[0].queue).toBe("a");
+      expect(queue.consumed[0].callback).toBe(cb);
+    });
+
+    it("throws when neither the options nor the overload supplies a callback", async () => {
+      const queue = createQueue(SimpleWqMessage);
+
+      await expect(queue.consume("a")).rejects.toThrow();
+      expect(queue.consumed).toHaveLength(0);
+    });
+
+    it("appends multiple consumers competing on the same queue under one key", async () => {
+      const queue = createQueue(SimpleWqMessage);
+
+      await queue.consume("a", cb);
+      await queue.consume("a", cb);
+
+      expect(queue.ownedKeys).toEqual(["a"]);
+      expect(queue.consumed).toHaveLength(2);
+    });
+
+    it("tears down and forgets only the addressed queue on unconsume", async () => {
+      const queue = createQueue(SimpleWqMessage);
+
+      await queue.consume("a", cb);
+      await queue.consume("b", cb);
+
+      await queue.unconsume("a");
+
+      expect(queue.torndown).toEqual([{ queue: "a" }]);
+      expect(queue.ownedKeys).toEqual(["b"]);
+    });
+
+    it("is a no-op when unconsuming an unknown queue", async () => {
+      const queue = createQueue(SimpleWqMessage);
+
+      await expect(queue.unconsume("missing")).resolves.toBeUndefined();
+      expect(queue.torndown).toHaveLength(0);
+    });
+
+    it("tears down every consumer and clears the map on unconsumeAll", async () => {
+      const queue = createQueue(SimpleWqMessage);
+
+      await queue.consume("a", cb);
+      await queue.consume("a", cb);
+      await queue.consume("b", cb);
+
+      await queue.unconsumeAll();
+
+      expect(queue.torndown.map((h) => h.queue)).toEqual(["a", "a", "b"]);
+      expect(queue.ownedKeys).toEqual([]);
     });
   });
 });

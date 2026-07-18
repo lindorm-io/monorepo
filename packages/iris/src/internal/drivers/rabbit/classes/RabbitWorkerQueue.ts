@@ -1,9 +1,5 @@
 import type { IMessage } from "../../../../interfaces/index.js";
-import type {
-  ConsumeEnvelope,
-  ConsumeOptions,
-  PublishOptions,
-} from "../../../../types/index.js";
+import type { ConsumeEnvelope, PublishOptions } from "../../../../types/index.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import {
@@ -28,9 +24,11 @@ type OwnedConsumer = {
   routingKey: string;
 };
 
-export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M> {
+export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
+  M,
+  OwnedConsumer
+> {
   private readonly state: RabbitSharedState;
-  private readonly ownedConsumers: Map<string, Array<OwnedConsumer>> = new Map();
 
   constructor(options: RabbitWorkerQueueOptions<M>) {
     super(options);
@@ -53,30 +51,10 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     );
   }
 
-  async consume(
-    queueOrOptions: string | ConsumeOptions<M> | Array<ConsumeOptions<M>>,
-    callback?: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
-  ): Promise<void> {
-    if (Array.isArray(queueOrOptions)) {
-      for (const opt of queueOrOptions) {
-        await this.consume(opt);
-      }
-      return;
-    }
-
-    const queue =
-      typeof queueOrOptions === "string" ? queueOrOptions : queueOrOptions.queue;
-    const cb = typeof queueOrOptions === "string" ? callback : queueOrOptions.callback;
-
-    if (!cb) {
-      throw new IrisDriverError("consume() requires a callback", {
-        code: "consume_callback_required",
-        title: "Consume Callback Required",
-        details:
-          "consume() was called without a callback function to handle delivered messages.",
-      });
-    }
-
+  protected async consumeOne(
+    queue: string,
+    cb: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
+  ): Promise<OwnedConsumer> {
     const channel = this.state.consumeChannel;
     if (!channel) {
       throw new IrisDriverError("Cannot consume: consume channel is not available", {
@@ -121,11 +99,7 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     }
 
     const wrappedCallback = wrapRabbitConsumer(
-      {
-        prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
-        afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
-        onConsumeError: (err, msg) => this.onConsumeError(err, msg),
-      },
+      this.consumerHooks(),
       cb,
       this.state,
       this.metadata,
@@ -134,10 +108,6 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     );
 
     const { consumerTag } = await channel.consume(queueName, wrappedCallback);
-
-    const existing = this.ownedConsumers.get(queue) ?? [];
-    existing.push({ consumerTag, queueName, routingKey });
-    this.ownedConsumers.set(queue, existing);
 
     this.state.consumerRegistrations.push({
       queue: queueName,
@@ -155,68 +125,33 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
             },
           },
     });
+
+    return { consumerTag, queueName, routingKey };
   }
 
-  async unconsume(queue: string): Promise<void> {
-    const consumers = this.ownedConsumers.get(queue);
-    if (!consumers || consumers.length === 0) return;
-
+  protected async teardownConsumer(consumer: OwnedConsumer): Promise<void> {
     const channel = this.state.consumeChannel;
 
-    for (const consumer of consumers) {
-      if (channel) {
-        try {
-          await channel.unbindQueue(
-            consumer.queueName,
-            this.state.exchange,
-            consumer.routingKey,
-          );
-        } catch {
-          // Queue may already be gone
-        }
-        try {
-          await channel.cancel(consumer.consumerTag);
-        } catch {
-          // Consumer may already be cancelled
-        }
+    if (channel) {
+      try {
+        await channel.unbindQueue(
+          consumer.queueName,
+          this.state.exchange,
+          consumer.routingKey,
+        );
+      } catch {
+        // Queue may already be gone
+      }
+      try {
+        await channel.cancel(consumer.consumerTag);
+      } catch {
+        // Consumer may already be cancelled
       }
       this.state.assertedQueues.delete(consumer.queueName);
-      this.state.consumerRegistrations = this.state.consumerRegistrations.filter(
-        (r) => r.consumerTag !== consumer.consumerTag,
-      );
     }
 
-    this.ownedConsumers.delete(queue);
-  }
-
-  async unconsumeAll(): Promise<void> {
-    const channel = this.state.consumeChannel;
-
-    for (const [, consumers] of this.ownedConsumers) {
-      for (const consumer of consumers) {
-        if (channel) {
-          try {
-            await channel.unbindQueue(
-              consumer.queueName,
-              this.state.exchange,
-              consumer.routingKey,
-            );
-          } catch {
-            // Queue may already be gone
-          }
-          try {
-            await channel.cancel(consumer.consumerTag);
-          } catch {
-            // Consumer may already be cancelled
-          }
-          this.state.assertedQueues.delete(consumer.queueName);
-        }
-        this.state.consumerRegistrations = this.state.consumerRegistrations.filter(
-          (r) => r.consumerTag !== consumer.consumerTag,
-        );
-      }
-    }
-
-    this.ownedConsumers.clear();
+    this.state.consumerRegistrations = this.state.consumerRegistrations.filter(
+      (r) => r.consumerTag !== consumer.consumerTag,
+    );
   }
 }

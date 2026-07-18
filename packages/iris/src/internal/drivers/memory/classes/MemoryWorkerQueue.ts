@@ -1,11 +1,6 @@
 import { lindormId } from "@lindorm/random";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
-import type {
-  ConsumeEnvelope,
-  ConsumeOptions,
-  PublishOptions,
-} from "../../../../types/index.js";
+import type { ConsumeEnvelope, PublishOptions } from "../../../../types/index.js";
 import {
   DriverWorkerQueueBase,
   type DriverWorkerQueueBaseOptions,
@@ -24,11 +19,17 @@ export type MemoryWorkerQueueOptions<M extends IMessage> =
     deadLetterManager?: DeadLetterManager;
   };
 
-export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M> {
+type OwnedConsumer = {
+  consumerTag: string;
+};
+
+export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
+  M,
+  OwnedConsumer
+> {
   private readonly store: MemorySharedState;
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
-  private readonly ownedConsumerTags: Set<string> = new Set();
 
   constructor(options: MemoryWorkerQueueOptions<M>) {
     super(options);
@@ -53,40 +54,15 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     );
   }
 
-  async consume(
-    queueOrOptions: string | ConsumeOptions<M> | Array<ConsumeOptions<M>>,
-    callback?: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
-  ): Promise<void> {
-    if (Array.isArray(queueOrOptions)) {
-      for (const opt of queueOrOptions) {
-        await this.consume(opt);
-      }
-      return;
-    }
-
-    const queue =
-      typeof queueOrOptions === "string" ? queueOrOptions : queueOrOptions.queue;
-    const cb = typeof queueOrOptions === "string" ? callback : queueOrOptions.callback;
-
-    if (!cb) {
-      throw new IrisDriverError("consume() requires a callback", {
-        code: "consume_callback_required",
-        title: "Consume Callback Required",
-        details:
-          "consume() was called without a callback function to handle delivered messages.",
-      });
-    }
-
+  protected async consumeOne(
+    queue: string,
+    callback: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
+  ): Promise<OwnedConsumer> {
     const consumerTag = lindormId({ namespace: "con", length: 16 });
-    this.ownedConsumerTags.add(consumerTag);
 
     const wrappedCallback = wrapConsumerCallback(
-      {
-        prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
-        afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
-        onConsumeError: (err, msg) => this.onConsumeError(err, msg),
-      },
-      cb,
+      this.consumerHooks(),
+      callback,
       this.store,
       this.metadata,
       this.logger,
@@ -99,29 +75,14 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
       callback: wrappedCallback,
       consumerTag,
     });
+
+    return { consumerTag };
   }
 
-  async unconsume(queue: string): Promise<void> {
-    const toRemove: Array<number> = [];
-
-    for (let i = 0; i < this.store.consumers.length; i++) {
-      const consumer = this.store.consumers[i];
-      if (consumer.queue !== queue) continue;
-      if (!this.ownedConsumerTags.has(consumer.consumerTag)) continue;
-      toRemove.push(i);
-    }
-
-    for (let i = toRemove.length - 1; i >= 0; i--) {
-      const consumer = this.store.consumers[toRemove[i]];
-      this.ownedConsumerTags.delete(consumer.consumerTag);
-      this.store.consumers.splice(toRemove[i], 1);
-    }
-  }
-
-  async unconsumeAll(): Promise<void> {
-    this.store.consumers = this.store.consumers.filter(
-      (consumer) => !this.ownedConsumerTags.has(consumer.consumerTag),
+  protected async teardownConsumer(consumer: OwnedConsumer): Promise<void> {
+    const index = this.store.consumers.findIndex(
+      (c) => c.consumerTag === consumer.consumerTag,
     );
-    this.ownedConsumerTags.clear();
+    if (index !== -1) this.store.consumers.splice(index, 1);
   }
 }
