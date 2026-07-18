@@ -8,52 +8,28 @@ on:
 permissions:
   contents: read
 
+# Kafka stays weekly — too slow/janky for the PR matrix. It runs as a normal
+# `test:tck:kafka` (part of the TCK banner conceptually), just on a schedule.
+# `composed` brings up the broker from docker-compose.kafka.yml.
+
 jobs:
-  test-weekly:
-    name: Test (weekly)
+  tck-kafka:
+    name: TCK — iris / kafka
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-
-    services:
-      kafka:
-        image: apache/kafka:3.9.0
-        ports:
-          - 9092:9092
-        env:
-          KAFKA_NODE_ID: 1
-          KAFKA_PROCESS_ROLES: broker,controller
-          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://localhost:9093
-          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
-          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-        options: >-
-          --health-cmd "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"
-          --health-interval 5s
-          --health-timeout 10s
-          --health-retries 15
-
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
           node-version: 25.x
           cache: npm
-
       - name: Install
         run: npm ci
-
       - name: Build
         run: npm run build
-
-      - name: Test (weekly)
-        run: npm run test:weekly
+      - name: Test (tck — kafka)
+        run: npm --prefix packages/iris run test:tck:kafka
