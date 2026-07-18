@@ -12,6 +12,7 @@ import type { KafkaSharedState } from "../drivers/kafka/types/kafka-types.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import { tckCapabilities } from "../__fixtures__/tck/tck-capabilities.js";
 import { describe, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 60_000 });
@@ -31,26 +32,22 @@ const createMockLogger = () => ({
 const factory: TckDriverFactory = {
   driver: "kafka",
   timeoutMs: 8000,
-  capabilities: {
-    workerQueue: true,
-    rpc: true,
-    rpcFastFail: false,
-    stream: true,
-    delay: true,
-    retry: true,
-    retryProducerAuthoritative: true,
-    // Per-group retry topics route each retry to only the failing group (M1
-    // kafka slice), so kafka now satisfies the retry-fanout contract.
-    retryConsumerTargeted: true,
-    deadLetter: true,
-    broadcast: true,
-    encryption: true,
-    compression: true,
-    strictOrdering: false,
-    evenDistribution: false,
-    exactlyOnce: false,
-    priority: false,
-  },
+  // Runtime flags read from the driver's own declaration (source.capabilities);
+  // only the test-only observability knobs are hand-declared here.
+  capabilities: tckCapabilities(
+    {
+      driver: "kafka",
+      brokers: ["localhost:9092"],
+      logger: createMockLogger() as any,
+      messages: [],
+    },
+    {
+      strictOrdering: false,
+      evenDistribution: false,
+      exactlyOnce: false,
+      priority: false,
+    },
+  ),
   async setup(messages: Array<Constructor<IMessage>>): Promise<TckDriverHandle> {
     const logger = createMockLogger();
     const prefix = `iris-tck-${randomUUID().slice(0, 8)}`;

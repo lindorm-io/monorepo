@@ -964,6 +964,37 @@ new IrisSource({
 });
 ```
 
+## Driver Capabilities
+
+Every driver declares its honest runtime capabilities, surfaced on the source as
+`source.capabilities`. Query it to branch on what the active driver actually
+supports — the same declaration the conformance suite (TCK) gates on, so it never
+drifts from real behaviour. It is available before `connect()` (resolved from the
+driver type) and delegates to the live driver once connected.
+
+```typescript
+const source = new IrisSource({ driver: "kafka", brokers, logger, messages });
+
+if (source.capabilities.rpcFastFail) {
+  // safe to rely on an immediate rejection for an unroutable RPC request
+}
+```
+
+| capability                   | memory | rabbit | kafka | nats | redis | meaning                                                                                                         |
+| ---------------------------- | :----: | :----: | :---: | :--: | :---: | --------------------------------------------------------------------------------------------------------------- |
+| `workerQueue`                |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Competing-consumer worker queue                                                                                 |
+| `rpc`                        |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | RPC request/response                                                                                            |
+| `rpcFastFail`                |   ✓    |   ✓    |   ✗   |  ✓   |   ✗   | Unroutable RPC rejects immediately instead of hanging to the timeout                                            |
+| `stream`                     |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Stream processor/pipeline                                                                                       |
+| `delay`                      |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Delayed publish                                                                                                 |
+| `retry`                      |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Retry with backoff                                                                                              |
+| `retryProducerAuthoritative` |   ✓    |   ✓    |   ✓   |  ✗   |   ✓   | Wire `maxRetries` bounds redelivery even against a divergent consumer `@Retry` (NATS' ceiling is consumer-side) |
+| `retryConsumerTargeted`      |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | A retry reaches only the failing consumer, never the fan-out peers                                              |
+| `deadLetter`                 |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Dead letter queue                                                                                               |
+| `broadcast`                  |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Broadcast to all consumers                                                                                      |
+| `encryption`                 |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | `@Encrypted` via Amphora                                                                                        |
+| `compression`                |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | `@Compressed`                                                                                                   |
+
 ## Persistence (Delay and Dead Letter Stores)
 
 Configure where delayed deliveries and dead-lettered envelopes are kept. These are used by drivers that don't already provide native primitives for them.

@@ -3,6 +3,7 @@ import type {
   DeadLetterEntry,
   DeadLetterFilterOptions,
   DeadLetterListOptions,
+  IrisCapabilities,
   IrisConnectionState,
   IrisEvents,
   MessageScannerInput,
@@ -15,6 +16,12 @@ import type { IIrisSession } from "./IrisSession.js";
 
 export interface IIrisSource extends IIrisMessagingProvider {
   readonly messages: ReadonlyArray<Constructor<IMessage>>;
+
+  /**
+   * The active driver's runtime capabilities — queryable before connect (resolved
+   * from the driver type) and delegated to the live driver once connected.
+   */
+  readonly capabilities: IrisCapabilities;
 
   addMessages(input: MessageScannerInput): void;
   addSubscriber(subscriber: IMessageSubscriber): void;

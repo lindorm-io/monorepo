@@ -3,6 +3,7 @@ import type {
   DeadLetterEntry,
   DeadLetterFilterOptions,
   DeadLetterListOptions,
+  IrisCapabilities,
   IrisConnectionState,
   IrisEvents,
 } from "../types/index.js";
@@ -16,6 +17,9 @@ import type { IMessage } from "./Message.js";
 import type { IMessageSubscriber } from "./MessageSubscriber.js";
 
 export interface IIrisDriver {
+  /** The driver's honest runtime capabilities — the single source of truth. */
+  readonly capabilities: IrisCapabilities;
+
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   drain(timeout?: number): Promise<void>;

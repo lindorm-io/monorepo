@@ -11,11 +11,13 @@ import type {
   IMessageSubscriber,
 } from "../../../../interfaces/index.js";
 import type {
+  IrisCapabilities,
   IrisConnectionState,
   IrisEvents,
   IrisHookMeta,
   NatsConnectionOptions,
 } from "../../../../types/index.js";
+import { NATS_CAPABILITIES } from "../nats-capabilities.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type {
   DeadLetterEntry,
@@ -61,6 +63,7 @@ export type NatsDriverOptions = {
 };
 
 export class NatsDriver implements IIrisDriver {
+  readonly capabilities: IrisCapabilities = NATS_CAPABILITIES;
   private readonly logger: ILogger;
   private readonly meta: IrisHookMeta | undefined;
   private readonly encryption: MessageEncryptionContext | undefined;

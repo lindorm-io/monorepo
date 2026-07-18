@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
 import type { IIrisSource, IMessage } from "../interfaces/index.js";
-import type { IrisConnectionState } from "../types/index.js";
+import type { IrisCapabilities, IrisConnectionState } from "../types/index.js";
 import { _createMockIrisSession } from "./create-mock-iris-session.js";
 import { _createMockMessageBus } from "./create-mock-message-bus.js";
 import { _createMockPublisher } from "./create-mock-publisher.js";
@@ -27,6 +27,23 @@ export const _createMockIrisSource = (mockFn: () => any): IIrisSource => {
   return {
     driver: "memory" as const,
     messages: [] as ReadonlyArray<Constructor<IMessage>>,
+    // Permissive default: the mock advertises full support so consumer tests
+    // that branch on a capability don't have to opt in. Override on the returned
+    // object when a test needs a driver that lacks a capability.
+    capabilities: {
+      workerQueue: true,
+      rpc: true,
+      rpcFastFail: true,
+      stream: true,
+      delay: true,
+      retry: true,
+      retryProducerAuthoritative: true,
+      retryConsumerTargeted: true,
+      deadLetter: true,
+      broadcast: true,
+      encryption: true,
+      compression: true,
+    } satisfies IrisCapabilities,
 
     addMessages: mockFn(),
     hasMessage: returns(true),

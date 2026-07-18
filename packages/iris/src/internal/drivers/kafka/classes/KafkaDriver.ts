@@ -11,11 +11,13 @@ import type {
   IMessageSubscriber,
 } from "../../../../interfaces/index.js";
 import type {
+  IrisCapabilities,
   IrisConnectionState,
   IrisEvents,
   IrisHookMeta,
   KafkaConnectionOptions,
 } from "../../../../types/index.js";
+import { KAFKA_CAPABILITIES } from "../kafka-capabilities.js";
 import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
@@ -63,6 +65,7 @@ export type KafkaDriverOptions = {
 };
 
 export class KafkaDriver implements IIrisDriver {
+  readonly capabilities: IrisCapabilities = KAFKA_CAPABILITIES;
   private readonly logger: ILogger;
   private readonly meta: IrisHookMeta | undefined;
   private readonly encryption: MessageEncryptionContext | undefined;

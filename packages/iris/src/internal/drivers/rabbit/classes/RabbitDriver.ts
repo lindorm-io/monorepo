@@ -12,11 +12,13 @@ import type {
   IMessageSubscriber,
 } from "../../../../interfaces/index.js";
 import type {
+  IrisCapabilities,
   IrisConnectionState,
   IrisEvents,
   IrisHookMeta,
   RabbitConnectionOptions,
 } from "../../../../types/index.js";
+import { RABBIT_CAPABILITIES } from "../rabbit-capabilities.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type {
   DeadLetterEntry,
@@ -51,6 +53,7 @@ export type RabbitDriverOptions = {
 };
 
 export class RabbitDriver implements IIrisDriver {
+  readonly capabilities: IrisCapabilities = RABBIT_CAPABILITIES;
   private readonly logger: ILogger;
   private readonly meta: IrisHookMeta | undefined;
   private readonly encryption: MessageEncryptionContext | undefined;

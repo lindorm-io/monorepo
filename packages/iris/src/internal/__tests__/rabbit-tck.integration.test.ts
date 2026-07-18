@@ -11,6 +11,7 @@ import type { RabbitDriver } from "../drivers/rabbit/classes/RabbitDriver.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import { tckCapabilities } from "../__fixtures__/tck/tck-capabilities.js";
 import { waitFor } from "../__fixtures__/tck/wait.js";
 import { describe, vi } from "vitest";
 
@@ -30,24 +31,22 @@ const createMockLogger = () => ({
 
 const factory: TckDriverFactory = {
   driver: "rabbit",
-  capabilities: {
-    workerQueue: true,
-    rpc: true,
-    rpcFastFail: true,
-    stream: true,
-    delay: true,
-    retry: true,
-    retryProducerAuthoritative: true,
-    retryConsumerTargeted: true,
-    deadLetter: true,
-    broadcast: true,
-    encryption: true,
-    compression: true,
-    strictOrdering: false,
-    evenDistribution: false,
-    exactlyOnce: false,
-    priority: true,
-  },
+  // Runtime flags read from the driver's own declaration (source.capabilities);
+  // only the test-only observability knobs are hand-declared here.
+  capabilities: tckCapabilities(
+    {
+      driver: "rabbit",
+      url: "amqp://localhost:5672",
+      logger: createMockLogger() as any,
+      messages: [],
+    },
+    {
+      strictOrdering: false,
+      evenDistribution: false,
+      exactlyOnce: false,
+      priority: true,
+    },
+  ),
   async setup(messages: Array<Constructor<IMessage>>): Promise<TckDriverHandle> {
     const logger = createMockLogger();
     const exchange = `iris-tck-${randomUUID().slice(0, 8)}`;

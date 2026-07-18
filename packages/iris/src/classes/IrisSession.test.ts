@@ -1,4 +1,5 @@
 import type { IIrisDriver } from "../interfaces/IrisDriver.js";
+import { driverCapabilities } from "../internal/drivers/driver-capabilities.js";
 import { createDefaultIrisHookMeta } from "../types/iris-hook-meta.js";
 import { IrisSession, type IrisSessionOptions } from "./IrisSession.js";
 import { describe, expect, it, vi } from "vitest";
@@ -16,6 +17,7 @@ const createMockLogger = () => ({
 });
 
 const createMockDriver = (): IIrisDriver => ({
+  capabilities: driverCapabilities("memory"),
   connect: vi.fn(),
   disconnect: vi.fn(),
   drain: vi.fn().mockResolvedValue(undefined),

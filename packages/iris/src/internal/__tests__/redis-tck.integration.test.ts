@@ -15,6 +15,7 @@ import type { RedisSharedState } from "../drivers/redis/types/redis-types.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import { tckCapabilities } from "../__fixtures__/tck/tck-capabilities.js";
 import { waitFor } from "../__fixtures__/tck/wait.js";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
@@ -35,27 +36,22 @@ const createMockLogger = () => ({
 const factory: TckDriverFactory = {
   driver: "redis",
   timeoutMs: 10000,
-  capabilities: {
-    workerQueue: true,
-    rpc: true,
-    rpcFastFail: false,
-    stream: true,
-    delay: true,
-    retry: true,
-    retryProducerAuthoritative: true,
-    // M1 slice 2: PEL-retain + native delivery-count retries keep a retry
-    // targeted to the failing consumer's group (see wrap-redis-consumer /
-    // create-consumer-loop), so redis now satisfies the retry-fanout contract.
-    retryConsumerTargeted: true,
-    deadLetter: true,
-    broadcast: true,
-    encryption: true,
-    compression: true,
-    strictOrdering: false,
-    evenDistribution: false,
-    exactlyOnce: false,
-    priority: false,
-  },
+  // Runtime flags read from the driver's own declaration (source.capabilities);
+  // only the test-only observability knobs are hand-declared here.
+  capabilities: tckCapabilities(
+    {
+      driver: "redis",
+      url: "redis://localhost:6379",
+      logger: createMockLogger() as any,
+      messages: [],
+    },
+    {
+      strictOrdering: false,
+      evenDistribution: false,
+      exactlyOnce: false,
+      priority: false,
+    },
+  ),
   async setup(messages: Array<Constructor<IMessage>>): Promise<TckDriverHandle> {
     const logger = createMockLogger();
     const prefix = `iris-tck-${randomUUID().slice(0, 8)}`;

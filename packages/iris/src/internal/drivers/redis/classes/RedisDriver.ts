@@ -13,11 +13,13 @@ import type {
   IMessageSubscriber,
 } from "../../../../interfaces/index.js";
 import type {
+  IrisCapabilities,
   IrisConnectionState,
   IrisEvents,
   IrisHookMeta,
   RedisConnectionOptions,
 } from "../../../../types/index.js";
+import { REDIS_CAPABILITIES } from "../redis-capabilities.js";
 import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type {
@@ -61,6 +63,7 @@ export type RedisDriverOptions = {
 };
 
 export class RedisDriver implements IIrisDriver {
+  readonly capabilities: IrisCapabilities = REDIS_CAPABILITIES;
   private readonly logger: ILogger;
   private readonly meta: IrisHookMeta | undefined;
   private readonly encryption: MessageEncryptionContext | undefined;

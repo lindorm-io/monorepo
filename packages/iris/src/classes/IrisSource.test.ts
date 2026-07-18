@@ -10,6 +10,7 @@ import { IrisNotSupportedError } from "../errors/IrisNotSupportedError.js";
 import { IrisSourceError } from "../errors/IrisSourceError.js";
 import type { IMessageSubscriber } from "../interfaces/index.js";
 import type { IIrisDriver } from "../interfaces/IrisDriver.js";
+import { driverCapabilities } from "../internal/drivers/driver-capabilities.js";
 import type { IrisSourceOptions, IrisSourceOptionsBase } from "../types/index.js";
 import { TEST_KEY_ENC_MESSAGE, TEST_KEY_ENV_KEK } from "../internal/__fixtures__/keys.js";
 import { clearRegistry } from "../internal/message/metadata/registry.js";
@@ -93,6 +94,7 @@ const createMockLogger = () => ({
 });
 
 const createMockDriver = (): IIrisDriver => ({
+  capabilities: driverCapabilities("memory"),
   connect: vi.fn(),
   disconnect: vi.fn(),
   drain: vi.fn().mockResolvedValue(undefined),

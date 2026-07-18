@@ -10,6 +10,7 @@ import type { MemoryDriver } from "../drivers/memory/classes/MemoryDriver.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import { tckCapabilities } from "../__fixtures__/tck/tck-capabilities.js";
 import { describe, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 30_000 });
@@ -28,24 +29,12 @@ const createMockLogger = () => ({
 
 const factory: TckDriverFactory = {
   driver: "memory",
-  capabilities: {
-    workerQueue: true,
-    rpc: true,
-    rpcFastFail: true,
-    stream: true,
-    delay: true,
-    retry: true,
-    retryProducerAuthoritative: true,
-    retryConsumerTargeted: true,
-    deadLetter: true,
-    broadcast: true,
-    encryption: true,
-    compression: true,
-    strictOrdering: true,
-    evenDistribution: true,
-    exactlyOnce: true,
-    priority: false,
-  },
+  // Runtime flags read from the driver's own declaration (source.capabilities);
+  // only the test-only observability knobs are hand-declared here.
+  capabilities: tckCapabilities(
+    { driver: "memory", logger: createMockLogger() as any, messages: [] },
+    { strictOrdering: true, evenDistribution: true, exactlyOnce: true, priority: false },
+  ),
   async setup(messages: Array<Constructor<IMessage>>): Promise<TckDriverHandle> {
     const logger = createMockLogger();
 

@@ -19,6 +19,7 @@ import type {
   DeadLetterEntry,
   DeadLetterFilterOptions,
   DeadLetterListOptions,
+  IrisCapabilities,
   IrisConnectionState,
   IrisDriverType,
   IrisEvents,
@@ -27,6 +28,7 @@ import type {
   MessageScannerInput,
   SessionOptions,
 } from "../types/index.js";
+import { driverCapabilities } from "../internal/drivers/driver-capabilities.js";
 import { createDefaultIrisHookMeta } from "../types/iris-hook-meta.js";
 import type { DeadLetterManager } from "../internal/dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../internal/delay/DelayManager.js";
@@ -128,6 +130,12 @@ export class IrisSource implements IIrisSource {
 
   get driver(): IrisDriverType {
     return this._driverType;
+  }
+
+  get capabilities(): IrisCapabilities {
+    // Delegates to the live driver once connected; before connect it resolves
+    // from the driver type — both return the same per-driver constant.
+    return this._driver?.capabilities ?? driverCapabilities(this._driverType);
   }
 
   get messages(): ReadonlyArray<Constructor<IMessage>> {

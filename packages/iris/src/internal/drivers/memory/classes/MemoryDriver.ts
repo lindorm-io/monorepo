@@ -11,10 +11,12 @@ import type {
   IMessageSubscriber,
 } from "../../../../interfaces/index.js";
 import type {
+  IrisCapabilities,
   IrisConnectionState,
   IrisEvents,
   IrisHookMeta,
 } from "../../../../types/index.js";
+import { MEMORY_CAPABILITIES } from "../memory-capabilities.js";
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import type {
   DeadLetterEntry,
@@ -45,6 +47,7 @@ export type MemoryDriverOptions = {
 };
 
 export class MemoryDriver implements IIrisDriver {
+  readonly capabilities: IrisCapabilities = MEMORY_CAPABILITIES;
   private readonly logger: ILogger;
   private readonly meta: IrisHookMeta | undefined;
   private readonly encryption: MessageEncryptionContext | undefined;
