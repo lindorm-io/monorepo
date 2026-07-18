@@ -44,11 +44,13 @@ type OwnedSubscription = {
   broadcastGroupId: string;
 };
 
-export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M> {
+export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<
+  M,
+  OwnedSubscription
+> {
   private readonly state: KafkaSharedState;
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
-  private readonly ownedSubscriptions: Map<string, OwnedSubscription> = new Map();
 
   constructor(options: KafkaMessageBusOptions<M>) {
     super(options);
@@ -74,16 +76,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     );
   }
 
-  async subscribe(
-    options: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
-  ): Promise<void> {
-    if (Array.isArray(options)) {
-      for (const opt of options) {
-        await this.subscribe(opt);
-      }
-      return;
-    }
-
+  protected async subscribeOne(options: SubscribeOptions<M>): Promise<OwnedSubscription> {
     if (!this.state.kafka) {
       throw new IrisDriverError("Cannot subscribe: Kafka client is not connected", {
         code: "connection_unavailable",
@@ -129,11 +122,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     // point it is fully constructed.
     const onMessageRef: { current?: (p: KafkaEachMessagePayload) => Promise<void> } = {};
     const onMessage = wrapKafkaConsumer(
-      {
-        prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
-        afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
-        onConsumeError: (err, msg) => this.onConsumeError(err, msg),
-      },
+      this.consumerHooks(),
       options.callback,
       this.state,
       this.metadata,
@@ -181,11 +170,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       current?: (p: KafkaEachMessagePayload) => Promise<void>;
     } = {};
     const broadcastOnMessage = wrapKafkaConsumer(
-      {
-        prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
-        afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
-        onConsumeError: (err, msg) => this.onConsumeError(err, msg),
-      },
+      this.consumerHooks(),
       options.callback,
       this.state,
       this.metadata,
@@ -246,8 +231,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       fromBeginning: false,
     });
 
-    const tagKey = `${options.topic}:${options.queue ?? ""}`;
-    this.ownedSubscriptions.set(tagKey, {
+    return {
       mainConsumerTag,
       broadcastConsumerTag,
       topic: options.topic,
@@ -257,10 +241,10 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       broadcastRetryTopic,
       groupId,
       broadcastGroupId,
-    });
+    };
   }
 
-  private async releaseSubscription(sub: OwnedSubscription): Promise<void> {
+  protected async teardownSubscription(sub: OwnedSubscription): Promise<void> {
     await releasePooledConsumer({
       state: this.state,
       groupId: sub.groupId,
@@ -293,23 +277,5 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       );
       if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
     }
-  }
-
-  async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
-    const tagKey = `${options.topic}:${options.queue ?? ""}`;
-    const sub = this.ownedSubscriptions.get(tagKey);
-
-    if (!sub) return;
-
-    await this.releaseSubscription(sub);
-    this.ownedSubscriptions.delete(tagKey);
-  }
-
-  async unsubscribeAll(): Promise<void> {
-    for (const [, sub] of this.ownedSubscriptions) {
-      await this.releaseSubscription(sub);
-    }
-
-    this.ownedSubscriptions.clear();
   }
 }

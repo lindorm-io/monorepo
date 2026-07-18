@@ -18,11 +18,17 @@ export type MemoryMessageBusOptions<M extends IMessage> =
     deadLetterManager?: DeadLetterManager;
   };
 
-export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<M> {
+type OwnedSubscription = {
+  consumerTag: string;
+};
+
+export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<
+  M,
+  OwnedSubscription
+> {
   private readonly store: MemorySharedState;
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
-  private readonly ownedConsumerTags: Set<string> = new Set();
 
   constructor(options: MemoryMessageBusOptions<M>) {
     super(options);
@@ -47,25 +53,11 @@ export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     );
   }
 
-  async subscribe(
-    options: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
-  ): Promise<void> {
-    if (Array.isArray(options)) {
-      for (const opt of options) {
-        await this.subscribe(opt);
-      }
-      return;
-    }
-
+  protected async subscribeOne(options: SubscribeOptions<M>): Promise<OwnedSubscription> {
     const consumerTag = lindormId({ namespace: "con", length: 16 });
-    this.ownedConsumerTags.add(consumerTag);
 
     const wrappedCallback = wrapConsumerCallback(
-      {
-        prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
-        afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
-        onConsumeError: (err, msg) => this.onConsumeError(err, msg),
-      },
+      this.consumerHooks(),
       options.callback,
       this.store,
       this.metadata,
@@ -79,30 +71,14 @@ export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<M
       callback: wrappedCallback,
       consumerTag,
     });
+
+    return { consumerTag };
   }
 
-  async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
-    const toRemove: Array<number> = [];
-
-    for (let i = 0; i < this.store.subscriptions.length; i++) {
-      const sub = this.store.subscriptions[i];
-      if (sub.topic !== options.topic) continue;
-      if (options.queue !== undefined && sub.queue !== options.queue) continue;
-      if (!this.ownedConsumerTags.has(sub.consumerTag)) continue;
-      toRemove.push(i);
-    }
-
-    for (let i = toRemove.length - 1; i >= 0; i--) {
-      const sub = this.store.subscriptions[toRemove[i]];
-      this.ownedConsumerTags.delete(sub.consumerTag);
-      this.store.subscriptions.splice(toRemove[i], 1);
-    }
-  }
-
-  async unsubscribeAll(): Promise<void> {
-    this.store.subscriptions = this.store.subscriptions.filter(
-      (sub) => !this.ownedConsumerTags.has(sub.consumerTag),
+  protected async teardownSubscription(sub: OwnedSubscription): Promise<void> {
+    const index = this.store.subscriptions.findIndex(
+      (s) => s.consumerTag === sub.consumerTag,
     );
-    this.ownedConsumerTags.clear();
+    if (index !== -1) this.store.subscriptions.splice(index, 1);
   }
 }

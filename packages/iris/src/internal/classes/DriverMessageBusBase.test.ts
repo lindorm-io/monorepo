@@ -72,7 +72,15 @@ class SimpleBusMessage {
 
 // --- Concrete test subclass ---
 
-class TestMessageBus<M extends IMessage> extends DriverMessageBusBase<M> {
+type TestHandle = { topic: string; queue?: string };
+
+class TestMessageBus<M extends IMessage> extends DriverMessageBusBase<M, TestHandle> {
+  // Records every subscribeOne / teardownSubscription call so the lifted
+  // template (array normalization, tagKey bookkeeping, teardown loops) can be
+  // asserted without a real broker.
+  public readonly subscribed: Array<SubscribeOptions<M>> = [];
+  public readonly torndown: Array<TestHandle> = [];
+
   public constructor(options: DriverMessageBusBaseOptions<M>) {
     super(options);
   }
@@ -82,11 +90,18 @@ class TestMessageBus<M extends IMessage> extends DriverMessageBusBase<M> {
     _options?: PublishOptions,
   ): Promise<void> {}
 
-  public async subscribe(_options: SubscribeOptions<M>): Promise<void> {}
+  protected async subscribeOne(options: SubscribeOptions<M>): Promise<TestHandle> {
+    this.subscribed.push(options);
+    return { topic: options.topic, queue: options.queue };
+  }
 
-  public async unsubscribe(_options: { topic: string; queue?: string }): Promise<void> {}
+  protected async teardownSubscription(handle: TestHandle): Promise<void> {
+    this.torndown.push(handle);
+  }
 
-  public async unsubscribeAll(): Promise<void> {}
+  public get ownedKeys(): Array<string> {
+    return [...this.ownedSubscriptions.keys()];
+  }
 
   // Expose protected methods for testing
   public testPrepareForPublish(message: M) {
@@ -516,6 +531,60 @@ describe("DriverMessageBusBase", () => {
       await bus.testAfterConsumeSuccess(consumed);
       await bus.testOnConsumeError(new Error("test"), consumed);
       // No throw means all optional callbacks were safely skipped
+    });
+  });
+
+  describe("subscribe/unsubscribe lifecycle (template method)", () => {
+    it("normalizes an array to one subscribeOne per element", async () => {
+      const bus = createBus(SimpleBusMessage);
+
+      await bus.subscribe([
+        { topic: "A", callback: async () => {} },
+        { topic: "B", queue: "q", callback: async () => {} },
+      ]);
+
+      expect(bus.subscribed.map((o) => o.topic)).toEqual(["A", "B"]);
+      expect(bus.ownedKeys).toEqual(["A:", "B:q"]);
+    });
+
+    it("records each subscription under its topic:queue key", async () => {
+      const bus = createBus(SimpleBusMessage);
+
+      await bus.subscribe({ topic: "A", callback: async () => {} });
+      await bus.subscribe({ topic: "A", queue: "q1", callback: async () => {} });
+
+      expect(bus.ownedKeys).toEqual(["A:", "A:q1"]);
+    });
+
+    it("tears down and forgets only the addressed subscription on unsubscribe", async () => {
+      const bus = createBus(SimpleBusMessage);
+
+      await bus.subscribe({ topic: "A", callback: async () => {} });
+      await bus.subscribe({ topic: "A", queue: "q1", callback: async () => {} });
+
+      await bus.unsubscribe({ topic: "A", queue: "q1" });
+
+      expect(bus.torndown).toEqual([{ topic: "A", queue: "q1" }]);
+      expect(bus.ownedKeys).toEqual(["A:"]);
+    });
+
+    it("is a no-op when unsubscribing an unknown subscription", async () => {
+      const bus = createBus(SimpleBusMessage);
+
+      await expect(bus.unsubscribe({ topic: "missing" })).resolves.toBeUndefined();
+      expect(bus.torndown).toHaveLength(0);
+    });
+
+    it("tears down every subscription and clears the map on unsubscribeAll", async () => {
+      const bus = createBus(SimpleBusMessage);
+
+      await bus.subscribe({ topic: "A", callback: async () => {} });
+      await bus.subscribe({ topic: "B", queue: "q", callback: async () => {} });
+
+      await bus.unsubscribeAll();
+
+      expect(bus.torndown.map((h) => h.topic)).toEqual(["A", "B"]);
+      expect(bus.ownedKeys).toEqual([]);
     });
   });
 });

@@ -23,9 +23,11 @@ type OwnedSubscription = {
   routingKey: string;
 };
 
-export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M> {
+export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<
+  M,
+  OwnedSubscription
+> {
   private readonly state: RabbitSharedState;
-  private readonly ownedSubscriptions: Map<string, OwnedSubscription> = new Map();
 
   constructor(options: RabbitMessageBusOptions<M>) {
     super(options);
@@ -48,16 +50,7 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     );
   }
 
-  async subscribe(
-    options: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
-  ): Promise<void> {
-    if (Array.isArray(options)) {
-      for (const opt of options) {
-        await this.subscribe(opt);
-      }
-      return;
-    }
-
+  protected async subscribeOne(options: SubscribeOptions<M>): Promise<OwnedSubscription> {
     const channel = this.state.consumeChannel;
     if (!channel) {
       throw new IrisDriverError("Cannot subscribe: consume channel is not available", {
@@ -100,11 +93,7 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     }
 
     const wrappedCallback = wrapRabbitConsumer(
-      {
-        prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
-        afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
-        onConsumeError: (err, msg) => this.onConsumeError(err, msg),
-      },
+      this.consumerHooks(),
       options.callback,
       this.state,
       this.metadata,
@@ -113,9 +102,6 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     );
 
     const { consumerTag } = await channel.consume(queueName, wrappedCallback);
-
-    const tagKey = `${options.topic}:${options.queue ?? ""}`;
-    this.ownedSubscriptions.set(tagKey, { consumerTag, queueName, routingKey });
 
     this.state.consumerRegistrations.push({
       queue: queueName,
@@ -132,14 +118,11 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
           }
         : { exclusive: true, autoDelete: true },
     });
+
+    return { consumerTag, queueName, routingKey };
   }
 
-  async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
-    const tagKey = `${options.topic}:${options.queue ?? ""}`;
-    const sub = this.ownedSubscriptions.get(tagKey);
-
-    if (!sub) return;
-
+  protected async teardownSubscription(sub: OwnedSubscription): Promise<void> {
     const channel = this.state.consumeChannel;
     if (channel) {
       // Unbind before cancelling so the exchange stops routing to this
@@ -159,34 +142,8 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     }
 
     this.state.assertedQueues.delete(sub.queueName);
-    this.ownedSubscriptions.delete(tagKey);
     this.state.consumerRegistrations = this.state.consumerRegistrations.filter(
       (r) => r.consumerTag !== sub.consumerTag,
     );
-  }
-
-  async unsubscribeAll(): Promise<void> {
-    const channel = this.state.consumeChannel;
-
-    for (const [, sub] of this.ownedSubscriptions) {
-      if (channel) {
-        try {
-          await channel.unbindQueue(sub.queueName, this.state.exchange, sub.routingKey);
-        } catch {
-          // Queue may already be gone
-        }
-        try {
-          await channel.cancel(sub.consumerTag);
-        } catch {
-          // Consumer may already be cancelled
-        }
-      }
-      this.state.assertedQueues.delete(sub.queueName);
-      this.state.consumerRegistrations = this.state.consumerRegistrations.filter(
-        (r) => r.consumerTag !== sub.consumerTag,
-      );
-    }
-
-    this.ownedSubscriptions.clear();
   }
 }

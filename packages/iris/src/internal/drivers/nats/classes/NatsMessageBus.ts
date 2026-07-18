@@ -32,6 +32,11 @@ type OwnedConsumer = {
 
 type OwnedSubscription = OwnedConsumer & {
   /**
+   * True for a no-queue (ephemeral) subscription: teardown must delete the
+   * server-side consumer, which a durable queue subscription must not.
+   */
+  ephemeral: boolean;
+  /**
    * Present only for @Broadcast message types: a second consumer on the
    * `${subject}.broadcast` subject with its own unique ephemeral consumer, so
    * this subscriber receives every broadcast independently (published messages
@@ -41,12 +46,13 @@ type OwnedSubscription = OwnedConsumer & {
   broadcast?: OwnedConsumer;
 };
 
-export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> {
+export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<
+  M,
+  OwnedSubscription
+> {
   private readonly state: NatsSharedState;
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
-  private readonly ownedSubscriptions: Map<string, OwnedSubscription> = new Map();
-  private readonly ephemeralTags: Set<string> = new Set();
 
   constructor(options: NatsMessageBusOptions<M>) {
     super(options);
@@ -72,16 +78,7 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
     );
   }
 
-  async subscribe(
-    options: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
-  ): Promise<void> {
-    if (Array.isArray(options)) {
-      for (const opt of options) {
-        await this.subscribe(opt);
-      }
-      return;
-    }
-
+  protected async subscribeOne(options: SubscribeOptions<M>): Promise<OwnedSubscription> {
     if (!this.state.js || !this.state.jsm) {
       throw new IrisDriverError("Cannot subscribe: connection is not available", {
         code: "connection_unavailable",
@@ -111,11 +108,7 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
     }
 
     const wrappedCallback = wrapNatsConsumer(
-      {
-        prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
-        afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
-        onConsumeError: (err, msg) => this.onConsumeError(err, msg),
-      },
+      this.consumerHooks(),
       options.callback,
       this.state,
       this.metadata,
@@ -154,6 +147,7 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
       consumerTag: loop.consumerTag,
       subject,
       consumerName,
+      ephemeral: !options.queue,
     };
 
     // For @Broadcast message types, publish routes every message to the
@@ -203,25 +197,15 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
       };
     }
 
-    const tagKey = `${options.topic}:${options.queue ?? ""}`;
-    this.ownedSubscriptions.set(tagKey, owned);
-
-    if (!options.queue) {
-      this.ephemeralTags.add(tagKey);
-    }
-
     await loop.ready;
     // Await the broadcast fetch loop too so a publish immediately after
     // subscribe is seen by this consumer.
     if (broadcastLoop) await broadcastLoop.ready;
+
+    return owned;
   }
 
-  async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
-    const tagKey = `${options.topic}:${options.queue ?? ""}`;
-    const sub = this.ownedSubscriptions.get(tagKey);
-
-    if (!sub) return;
-
+  protected async teardownSubscription(sub: OwnedSubscription): Promise<void> {
     await stopNatsConsumer(this.state, sub.consumerTag);
 
     const regIdx = this.state.consumerRegistrations.findIndex(
@@ -229,34 +213,11 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
     );
     if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
 
-    if (this.ephemeralTags.has(tagKey)) {
+    if (sub.ephemeral) {
       await this.deleteEphemeralConsumer(sub.consumerName);
-      this.ephemeralTags.delete(tagKey);
     }
 
     if (sub.broadcast) await this.teardownBroadcast(sub.broadcast);
-
-    this.ownedSubscriptions.delete(tagKey);
-  }
-
-  async unsubscribeAll(): Promise<void> {
-    for (const [tagKey, sub] of this.ownedSubscriptions) {
-      await stopNatsConsumer(this.state, sub.consumerTag);
-
-      const regIdx = this.state.consumerRegistrations.findIndex(
-        (r) => r.consumerTag === sub.consumerTag,
-      );
-      if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
-
-      if (this.ephemeralTags.has(tagKey)) {
-        await this.deleteEphemeralConsumer(sub.consumerName);
-      }
-
-      if (sub.broadcast) await this.teardownBroadcast(sub.broadcast);
-    }
-
-    this.ephemeralTags.clear();
-    this.ownedSubscriptions.clear();
   }
 
   /**
