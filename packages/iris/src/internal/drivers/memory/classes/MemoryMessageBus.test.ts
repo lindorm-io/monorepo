@@ -103,6 +103,7 @@ const createBus = <M extends IMessage>(target: new () => M) => {
   const bus = new MemoryMessageBus<M>({
     target: target as any,
     logger: logger as any,
+    driverType: "memory",
     getSubscribers: () => [],
     store,
     deadLetterManager,
@@ -289,12 +290,14 @@ describe("MemoryMessageBus", () => {
       const bus1 = new MemoryMessageBus({
         target: TckBusBasic as any,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
       const bus2 = new MemoryMessageBus({
         target: TckBusBasic as any,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
@@ -366,12 +369,14 @@ describe("MemoryMessageBus", () => {
       const bus1 = new MemoryMessageBus({
         target: TckBusBasic as any,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
       const bus2 = new MemoryMessageBus({
         target: TckBusBasic as any,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
@@ -608,6 +613,7 @@ describe("MemoryMessageBus", () => {
         const bus = new MemoryMessageBus({
           target: TckBusNoDeadLetter as any,
           logger: logger as any,
+          driverType: "memory",
           getSubscribers: () => [],
           store,
           deadLetterManager,

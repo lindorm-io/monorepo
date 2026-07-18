@@ -33,7 +33,7 @@ const factory: TckDriverFactory = {
   // only the test-only observability knobs are hand-declared here.
   capabilities: tckCapabilities(
     { driver: "memory", logger: createMockLogger() as any, messages: [] },
-    { strictOrdering: true, evenDistribution: true, exactlyOnce: true, priority: false },
+    { strictOrdering: true, evenDistribution: true, exactlyOnce: true },
   ),
   async setup(messages: Array<Constructor<IMessage>>): Promise<TckDriverHandle> {
     const logger = createMockLogger();

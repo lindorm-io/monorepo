@@ -1,12 +1,14 @@
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MemorySharedState } from "../types/memory-store.js";
-import { DriverPublisherBase } from "../../../classes/DriverPublisherBase.js";
+import {
+  DriverPublisherBase,
+  type DriverPublisherBaseOptions,
+} from "../../../classes/DriverPublisherBase.js";
 import { publishMessages } from "../utils/publish-messages.js";
 
-export type MemoryPublisherOptions<M extends IMessage> = DriverBaseOptions<M> & {
+export type MemoryPublisherOptions<M extends IMessage> = DriverPublisherBaseOptions<M> & {
   store: MemorySharedState;
   delayManager?: DelayManager;
 };
@@ -29,6 +31,8 @@ export class MemoryPublisher<M extends IMessage> extends DriverPublisherBase<M> 
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.store,
       { delayManager: this.delayManager },

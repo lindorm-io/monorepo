@@ -1,19 +1,22 @@
 import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MemorySharedState } from "../types/memory-store.js";
-import { DriverMessageBusBase } from "../../../classes/DriverMessageBusBase.js";
+import {
+  DriverMessageBusBase,
+  type DriverMessageBusBaseOptions,
+} from "../../../classes/DriverMessageBusBase.js";
 import { publishMessages } from "../utils/publish-messages.js";
 import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 
-export type MemoryMessageBusOptions<M extends IMessage> = DriverBaseOptions<M> & {
-  store: MemorySharedState;
-  delayManager?: DelayManager;
-  deadLetterManager?: DeadLetterManager;
-};
+export type MemoryMessageBusOptions<M extends IMessage> =
+  DriverMessageBusBaseOptions<M> & {
+    store: MemorySharedState;
+    delayManager?: DelayManager;
+    deadLetterManager?: DeadLetterManager;
+  };
 
 export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<M> {
   private readonly store: MemorySharedState;
@@ -36,6 +39,8 @@ export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<M
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.store,
       { delayManager: this.delayManager },

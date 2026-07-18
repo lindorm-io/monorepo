@@ -22,8 +22,8 @@ import type { DeadLetterEntry } from "../../../types/dead-letter.js";
  *
  * The observability knobs describe whether a broker HAPPENS to preserve a
  * delivery property under test — not a queryable driver capability a consumer
- * would branch on — so they stay in the TCK layer. `priority` is likewise
- * test-only for now (native ordering support is a separate capability slice).
+ * would branch on — so they stay in the TCK layer. (Priority ordering is now a
+ * real runtime capability, `IrisCapabilities.priority`, not a test-only knob.)
  */
 export type TckCapabilities = IrisCapabilities & {
   // ─── Delivery-guarantee capabilities (test-observability only) ────────────────
@@ -47,14 +47,6 @@ export type TckCapabilities = IrisCapabilities & {
    * delivery and may redeliver on rebalancing or ack timing.
    */
   exactlyOnce: boolean;
-  /**
-   * Higher-priority messages are delivered before lower-priority messages that
-   * are already waiting in the queue. Only brokers with native priority-queue
-   * support honor @Priority / the `priority` publish option (currently RabbitMQ
-   * via `x-max-priority`). Memory/Kafka/NATS/Redis treat priority as advisory
-   * metadata only and deliver in publish order.
-   */
-  priority: boolean;
 };
 
 export type TckDriverHandle = {

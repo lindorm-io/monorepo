@@ -70,6 +70,7 @@ const createBus = (stateOverrides?: Partial<RabbitSharedState>) => {
   const bus = new RabbitMessageBus<TckRabbitBusBasic>({
     target: TckRabbitBusBasic as any,
     logger: createMockLogger() as any,
+    driverType: "rabbit",
     getSubscribers: () => [],
     state,
   });

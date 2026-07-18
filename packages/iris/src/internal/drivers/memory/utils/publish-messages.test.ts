@@ -28,6 +28,7 @@ const makeDriver = (
   const calls = { prepared: [] as Array<IMessage>, completed: [] as Array<IMessage> };
   return {
     metadata,
+    warnPriorityUnsupportedOnce: vi.fn(),
     calls,
     prepareForPublish: vi.fn(async (message: IMessage): Promise<OutboundPayload> => {
       calls.prepared.push(message);

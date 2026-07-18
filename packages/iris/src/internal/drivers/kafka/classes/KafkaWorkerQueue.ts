@@ -5,7 +5,6 @@ import type {
   ConsumeOptions,
   PublishOptions,
 } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type {
@@ -14,7 +13,10 @@ import type {
   KafkaSharedState,
 } from "../types/kafka-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import {
+  DriverWorkerQueueBase,
+  type DriverWorkerQueueBaseOptions,
+} from "../../../classes/DriverWorkerQueueBase.js";
 import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
 import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
@@ -28,11 +30,12 @@ import {
   releaseRetryConsumer,
 } from "../utils/retry-topic-consumer.js";
 
-export type KafkaWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
-  state: KafkaSharedState;
-  delayManager?: DelayManager;
-  deadLetterManager?: DeadLetterManager;
-};
+export type KafkaWorkerQueueOptions<M extends IMessage> =
+  DriverWorkerQueueBaseOptions<M> & {
+    state: KafkaSharedState;
+    delayManager?: DelayManager;
+    deadLetterManager?: DeadLetterManager;
+  };
 
 type OwnedConsumer = {
   mainConsumerTag: string;
@@ -66,6 +69,8 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.state,
       this.logger,

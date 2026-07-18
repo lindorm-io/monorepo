@@ -5,6 +5,8 @@ import type { IrisCapabilities } from "../../../types/index.js";
  * cheap unroutable-destination signal, so an unhandled RPC request rejects only
  * when the timeout elapses. Retry is producer-authoritative and — via PEL-retain
  * plus native delivery-count retries — targeted to the failing consumer group.
+ * Redis Streams have no priority-queue primitive, so `priority` is a no-op:
+ * entries are delivered in stream (publish) order regardless.
  */
 export const REDIS_CAPABILITIES: IrisCapabilities = {
   workerQueue: true,
@@ -19,4 +21,5 @@ export const REDIS_CAPABILITIES: IrisCapabilities = {
   broadcast: true,
   encryption: true,
   compression: true,
+  priority: false,
 };

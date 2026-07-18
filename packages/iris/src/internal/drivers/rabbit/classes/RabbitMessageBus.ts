@@ -1,18 +1,21 @@
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import { DriverMessageBusBase } from "../../../classes/DriverMessageBusBase.js";
+import {
+  DriverMessageBusBase,
+  type DriverMessageBusBaseOptions,
+} from "../../../classes/DriverMessageBusBase.js";
 import { publishRabbitMessages } from "../utils/publish-messages.js";
 import { wrapRabbitConsumer } from "../utils/wrap-rabbit-consumer.js";
 import { resolveQueueName } from "../utils/resolve-queue-name.js";
 import { sanitizeRoutingKey } from "../utils/sanitize-routing-key.js";
 import { RABBIT_MAX_PRIORITY } from "../utils/rabbit-constants.js";
 
-export type RabbitMessageBusOptions<M extends IMessage> = DriverBaseOptions<M> & {
-  state: RabbitSharedState;
-};
+export type RabbitMessageBusOptions<M extends IMessage> =
+  DriverMessageBusBaseOptions<M> & {
+    state: RabbitSharedState;
+  };
 
 type OwnedSubscription = {
   consumerTag: string;
@@ -37,6 +40,8 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.state,
       this.logger,

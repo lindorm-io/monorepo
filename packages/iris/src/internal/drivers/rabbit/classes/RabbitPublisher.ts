@@ -1,11 +1,13 @@
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
-import { DriverPublisherBase } from "../../../classes/DriverPublisherBase.js";
+import {
+  DriverPublisherBase,
+  type DriverPublisherBaseOptions,
+} from "../../../classes/DriverPublisherBase.js";
 import { publishRabbitMessages } from "../utils/publish-messages.js";
 
-export type RabbitPublisherOptions<M extends IMessage> = DriverBaseOptions<M> & {
+export type RabbitPublisherOptions<M extends IMessage> = DriverPublisherBaseOptions<M> & {
   state: RabbitSharedState;
 };
 
@@ -25,6 +27,8 @@ export class RabbitPublisher<M extends IMessage> extends DriverPublisherBase<M> 
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.state,
       this.logger,

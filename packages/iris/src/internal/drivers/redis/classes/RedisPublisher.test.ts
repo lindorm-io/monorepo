@@ -51,6 +51,7 @@ const createPublisher = (opts?: { subscribers?: Array<IMessageSubscriber> }) => 
   const publisher = new RedisPublisher<TckRedisPubBasic>({
     target: TckRedisPubBasic as any,
     logger: createMockLogger() as any,
+    driverType: "redis",
     getSubscribers: () => opts?.subscribers ?? [],
     state,
     delayManager: undefined,

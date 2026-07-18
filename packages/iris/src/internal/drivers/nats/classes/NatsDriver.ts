@@ -376,6 +376,7 @@ export class NatsDriver implements IIrisDriver {
   createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
     return new NatsPublisher<M>({
       target,
+      driverType: "nats",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,
@@ -388,6 +389,7 @@ export class NatsDriver implements IIrisDriver {
   createMessageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
     return new NatsMessageBus<M>({
       target,
+      driverType: "nats",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,
@@ -401,6 +403,7 @@ export class NatsDriver implements IIrisDriver {
   createWorkerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
     return new NatsWorkerQueue<M>({
       target,
+      driverType: "nats",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,

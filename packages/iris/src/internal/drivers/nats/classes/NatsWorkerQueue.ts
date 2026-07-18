@@ -5,12 +5,14 @@ import type {
   ConsumeOptions,
   PublishOptions,
 } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { NatsSharedState } from "../types/nats-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import {
+  DriverWorkerQueueBase,
+  type DriverWorkerQueueBaseOptions,
+} from "../../../classes/DriverWorkerQueueBase.js";
 import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import { publishNatsMessages } from "../utils/publish-nats-messages.js";
 import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
@@ -20,11 +22,12 @@ import { resolveConsumerName } from "../utils/resolve-consumer-name.js";
 import { resolveMaxDeliver } from "../utils/resolve-max-deliver.js";
 import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
 
-export type NatsWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
-  state: NatsSharedState;
-  delayManager?: DelayManager;
-  deadLetterManager?: DeadLetterManager;
-};
+export type NatsWorkerQueueOptions<M extends IMessage> =
+  DriverWorkerQueueBaseOptions<M> & {
+    state: NatsSharedState;
+    delayManager?: DelayManager;
+    deadLetterManager?: DeadLetterManager;
+  };
 
 type OwnedConsumer = {
   mainConsumerTag: string;
@@ -55,6 +58,8 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.state,
       this.logger,

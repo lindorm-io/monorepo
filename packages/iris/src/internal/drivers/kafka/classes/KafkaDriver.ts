@@ -462,6 +462,7 @@ export class KafkaDriver implements IIrisDriver {
   createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
     return new KafkaPublisher<M>({
       target,
+      driverType: "kafka",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,
@@ -474,6 +475,7 @@ export class KafkaDriver implements IIrisDriver {
   createMessageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
     return new KafkaMessageBus<M>({
       target,
+      driverType: "kafka",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,
@@ -487,6 +489,7 @@ export class KafkaDriver implements IIrisDriver {
   createWorkerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
     return new KafkaWorkerQueue<M>({
       target,
+      driverType: "kafka",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,

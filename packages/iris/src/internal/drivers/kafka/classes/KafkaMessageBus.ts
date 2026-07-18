@@ -1,7 +1,6 @@
 import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type {
@@ -10,7 +9,10 @@ import type {
   KafkaSharedState,
 } from "../types/kafka-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import { DriverMessageBusBase } from "../../../classes/DriverMessageBusBase.js";
+import {
+  DriverMessageBusBase,
+  type DriverMessageBusBaseOptions,
+} from "../../../classes/DriverMessageBusBase.js";
 import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
 import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
 import { getOrCreatePooledConsumer } from "../utils/create-kafka-consumer.js";
@@ -23,11 +25,12 @@ import {
   releaseRetryConsumer,
 } from "../utils/retry-topic-consumer.js";
 
-export type KafkaMessageBusOptions<M extends IMessage> = DriverBaseOptions<M> & {
-  state: KafkaSharedState;
-  delayManager?: DelayManager;
-  deadLetterManager?: DeadLetterManager;
-};
+export type KafkaMessageBusOptions<M extends IMessage> =
+  DriverMessageBusBaseOptions<M> & {
+    state: KafkaSharedState;
+    delayManager?: DelayManager;
+    deadLetterManager?: DeadLetterManager;
+  };
 
 type OwnedSubscription = {
   mainConsumerTag: string;
@@ -62,6 +65,8 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.state,
       this.logger,

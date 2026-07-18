@@ -2,9 +2,9 @@ import type { IrisCapabilities } from "../../../types/index.js";
 
 /**
  * RabbitMQ honours every runtime capability: native TTL+DLX delay/retry/dead
- * letter, RPC with mandatory-return fast-fail, producer-authoritative retry, and
- * per-queue targeted redelivery. (Native `x-max-priority` ordering is a separate
- * capability tracked outside this promoted set.)
+ * letter, RPC with mandatory-return fast-fail, producer-authoritative retry,
+ * per-queue targeted redelivery, and native `x-max-priority` ordering — the only
+ * driver that reorders delivery by message priority.
  */
 export const RABBIT_CAPABILITIES: IrisCapabilities = {
   workerQueue: true,
@@ -19,4 +19,5 @@ export const RABBIT_CAPABILITIES: IrisCapabilities = {
   broadcast: true,
   encryption: true,
   compression: true,
+  priority: true,
 };

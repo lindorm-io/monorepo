@@ -1,12 +1,14 @@
 import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { NatsConsumerLoop, NatsSharedState } from "../types/nats-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import { DriverMessageBusBase } from "../../../classes/DriverMessageBusBase.js";
+import {
+  DriverMessageBusBase,
+  type DriverMessageBusBaseOptions,
+} from "../../../classes/DriverMessageBusBase.js";
 import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
 import { publishNatsMessages } from "../utils/publish-nats-messages.js";
 import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
@@ -16,7 +18,7 @@ import { resolveConsumerName } from "../utils/resolve-consumer-name.js";
 import { resolveMaxDeliver } from "../utils/resolve-max-deliver.js";
 import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
 
-export type NatsMessageBusOptions<M extends IMessage> = DriverBaseOptions<M> & {
+export type NatsMessageBusOptions<M extends IMessage> = DriverMessageBusBaseOptions<M> & {
   state: NatsSharedState;
   delayManager?: DelayManager;
   deadLetterManager?: DeadLetterManager;
@@ -61,6 +63,8 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.state,
       this.logger,

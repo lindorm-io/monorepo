@@ -14,6 +14,7 @@ export type PublishDriverLike<M extends IMessage> = {
   prepareForPublish: (message: M) => Promise<OutboundPayload>;
   completePublish: (message: M) => Promise<void>;
   metadata: MessageMetadata;
+  warnPriorityUnsupportedOnce: (priority: number) => void;
 };
 
 export type PreparedMessage<M extends IMessage> = {
@@ -32,6 +33,7 @@ export const preparePublishBatch = async <M extends IMessage>(
 ): Promise<Array<PreparedMessage<M>>> => {
   const arr = Array.isArray(messages) ? messages : [messages];
   const priority = resolvePriority(options, driver.metadata);
+  driver.warnPriorityUnsupportedOnce(priority);
   const expiry = resolveExpiry(options, driver.metadata);
   const delay = resolveDelay(options, driver.metadata);
 

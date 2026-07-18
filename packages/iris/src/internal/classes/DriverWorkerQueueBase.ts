@@ -2,12 +2,15 @@ import type { IIrisWorkerQueue, IMessage } from "../../interfaces/index.js";
 import type {
   ConsumeEnvelope,
   ConsumeOptions,
+  IrisDriverType,
   PublishOptions,
 } from "../../types/index.js";
 import { DriverBase } from "./DriverBase.js";
 import type { DriverBaseOptions } from "./DriverBase.js";
 
-export type DriverWorkerQueueBaseOptions<M extends IMessage> = DriverBaseOptions<M>;
+export type DriverWorkerQueueBaseOptions<M extends IMessage> = DriverBaseOptions<M> & {
+  driverType: IrisDriverType;
+};
 
 export abstract class DriverWorkerQueueBase<M extends IMessage>
   extends DriverBase<M>

@@ -82,6 +82,7 @@ const createBus = () => {
   const bus = new NatsMessageBus<TckNatsBusBasic>({
     target: TckNatsBusBasic as any,
     logger: createMockLogger() as any,
+    driverType: "nats",
     getSubscribers: () => [],
     state,
   });

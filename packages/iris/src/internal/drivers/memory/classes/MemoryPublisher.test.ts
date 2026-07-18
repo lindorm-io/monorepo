@@ -71,6 +71,7 @@ const createPublisher = <M extends IMessage>(
   const publisher = new MemoryPublisher<M>({
     target,
     logger: createMockLogger() as any,
+    driverType: "memory",
     getSubscribers: () => subscribers,
     store,
     delayManager: opts?.delayManager,

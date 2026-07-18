@@ -44,7 +44,6 @@ const factory: TckDriverFactory = {
       strictOrdering: false,
       evenDistribution: false,
       exactlyOnce: false,
-      priority: true,
     },
   ),
   async setup(messages: Array<Constructor<IMessage>>): Promise<TckDriverHandle> {

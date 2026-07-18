@@ -89,6 +89,7 @@ const createQueue = () => {
   const queue = new NatsWorkerQueue<TckNatsWqBasic>({
     target: TckNatsWqBasic as any,
     logger: createMockLogger() as any,
+    driverType: "nats",
     getSubscribers: () => [],
     state,
   });
@@ -100,6 +101,7 @@ const createBroadcastQueue = () => {
   const queue = new NatsWorkerQueue<TckNatsWqBroadcast>({
     target: TckNatsWqBroadcast as any,
     logger: createMockLogger() as any,
+    driverType: "nats",
     getSubscribers: () => [],
     state,
   });

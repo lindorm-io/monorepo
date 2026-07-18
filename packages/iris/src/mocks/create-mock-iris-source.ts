@@ -43,6 +43,7 @@ export const _createMockIrisSource = (mockFn: () => any): IIrisSource => {
       broadcast: true,
       encryption: true,
       compression: true,
+      priority: true,
     } satisfies IrisCapabilities,
 
     addMessages: mockFn(),

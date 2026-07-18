@@ -4,7 +4,7 @@ import type { TckCapabilities } from "./types.js";
 
 type TestOnlyCapabilities = Pick<
   TckCapabilities,
-  "strictOrdering" | "evenDistribution" | "exactlyOnce" | "priority"
+  "strictOrdering" | "evenDistribution" | "exactlyOnce"
 >;
 
 /**

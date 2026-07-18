@@ -4,10 +4,12 @@ import type {
   ConsumeOptions,
   PublishOptions,
 } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import {
+  DriverWorkerQueueBase,
+  type DriverWorkerQueueBaseOptions,
+} from "../../../classes/DriverWorkerQueueBase.js";
 import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import { publishRabbitMessages } from "../utils/publish-messages.js";
 import { wrapRabbitConsumer } from "../utils/wrap-rabbit-consumer.js";
@@ -15,9 +17,10 @@ import { resolveQueueName } from "../utils/resolve-queue-name.js";
 import { sanitizeRoutingKey } from "../utils/sanitize-routing-key.js";
 import { RABBIT_MAX_PRIORITY } from "../utils/rabbit-constants.js";
 
-export type RabbitWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
-  state: RabbitSharedState;
-};
+export type RabbitWorkerQueueOptions<M extends IMessage> =
+  DriverWorkerQueueBaseOptions<M> & {
+    state: RabbitSharedState;
+  };
 
 type OwnedConsumer = {
   consumerTag: string;
@@ -42,6 +45,8 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.state,
       this.logger,

@@ -29,6 +29,7 @@ const makeDriver = (
   const calls = { prepared: [] as Array<IMessage>, completed: [] as Array<IMessage> };
   return {
     metadata,
+    warnPriorityUnsupportedOnce: vi.fn(),
     calls,
     prepareForPublish: vi.fn(async (message: IMessage): Promise<OutboundPayload> => {
       calls.prepared.push(message);
@@ -139,5 +140,29 @@ describe("preparePublishBatch", () => {
     const result = await preparePublishBatch(msg, undefined, driver);
 
     expect(result[0].message).toBe(msg);
+  });
+
+  it("notifies the driver of the resolved priority once per batch", async () => {
+    const metadata = makeMetadata("TestMessage", { priority: 5 });
+    const driver = makeDriver(metadata);
+    const messages = [makeMessage("Test1"), makeMessage("Test2")];
+
+    await preparePublishBatch(messages, { priority: 8 }, driver);
+
+    // Priority is resolved once for the whole batch (publish option wins over
+    // metadata) and the driver is notified once — this is the hook the priority
+    // no-op warning is fired from.
+    expect(driver.warnPriorityUnsupportedOnce).toHaveBeenCalledTimes(1);
+    expect(driver.warnPriorityUnsupportedOnce).toHaveBeenCalledWith(8);
+  });
+
+  it("notifies the driver with priority 0 when none is set (so it can no-op)", async () => {
+    const metadata = makeMetadata("TestMessage");
+    const driver = makeDriver(metadata);
+    const msg = makeMessage("TestMessage");
+
+    await preparePublishBatch(msg, undefined, driver);
+
+    expect(driver.warnPriorityUnsupportedOnce).toHaveBeenCalledWith(0);
   });
 });

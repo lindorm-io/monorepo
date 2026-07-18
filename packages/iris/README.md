@@ -994,6 +994,7 @@ if (source.capabilities.rpcFastFail) {
 | `broadcast`                  |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Broadcast to all consumers                                                                                      |
 | `encryption`                 |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | `@Encrypted` via Amphora                                                                                        |
 | `compression`                |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | `@Compressed`                                                                                                   |
+| `priority`                   |   ✗    |   ✓    |   ✗   |  ✗   |   ✗   | `@Priority` reorders delivery (native `x-max-priority`). Elsewhere a no-op — FIFO order; publishing one warns   |
 
 ## Persistence (Delay and Dead Letter Stores)
 

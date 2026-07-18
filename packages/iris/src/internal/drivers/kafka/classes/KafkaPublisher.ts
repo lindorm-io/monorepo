@@ -1,12 +1,14 @@
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { KafkaSharedState } from "../types/kafka-types.js";
-import { DriverPublisherBase } from "../../../classes/DriverPublisherBase.js";
+import {
+  DriverPublisherBase,
+  type DriverPublisherBaseOptions,
+} from "../../../classes/DriverPublisherBase.js";
 import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
 
-export type KafkaPublisherOptions<M extends IMessage> = DriverBaseOptions<M> & {
+export type KafkaPublisherOptions<M extends IMessage> = DriverPublisherBaseOptions<M> & {
   state: KafkaSharedState;
   delayManager?: DelayManager;
 };
@@ -29,6 +31,8 @@ export class KafkaPublisher<M extends IMessage> extends DriverPublisherBase<M> {
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.state,
       this.logger,

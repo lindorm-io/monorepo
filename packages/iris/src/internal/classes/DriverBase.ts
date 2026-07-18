@@ -1,6 +1,7 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IMessage, IMessageSubscriber } from "../../interfaces/index.js";
+import type { IrisDriverType } from "../../types/index.js";
 import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
 import { createDefaultIrisHookMeta } from "../../types/iris-hook-meta.js";
 import type { MessageMetadata } from "../message/types/metadata.js";
@@ -9,6 +10,7 @@ import { getMessageMetadata } from "../message/metadata/get-message-metadata.js"
 import { prepareOutbound } from "../message/utils/prepare-outbound.js";
 import type { OutboundPayload } from "../message/utils/prepare-outbound.js";
 import { prepareInbound } from "../message/utils/prepare-inbound.js";
+import { driverCapabilities } from "../drivers/driver-capabilities.js";
 import type { MessageEncryptionContext } from "../message/types/encryption-context.js";
 
 export type DriverBaseOptions<M extends IMessage> = {
@@ -17,6 +19,13 @@ export type DriverBaseOptions<M extends IMessage> = {
   meta?: IrisHookMeta;
   encryption?: MessageEncryptionContext;
   getSubscribers: () => Array<IMessageSubscriber>;
+  /**
+   * The active driver type, used to resolve `IrisCapabilities` for runtime
+   * capability warnings (e.g. priority no-op). Present on the publish-capable
+   * bases (publisher / message-bus / worker-queue); absent where no such warning
+   * applies.
+   */
+  driverType?: IrisDriverType;
 };
 
 export abstract class DriverBase<M extends IMessage> {
@@ -27,6 +36,8 @@ export abstract class DriverBase<M extends IMessage> {
   protected readonly meta: IrisHookMeta;
   protected readonly encryption: MessageEncryptionContext | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
+  private readonly driverType: IrisDriverType | undefined;
+  private priorityWarned = false;
 
   protected constructor(options: DriverBaseOptions<M>, loggerLabel: string) {
     this.target = options.target;
@@ -41,6 +52,24 @@ export abstract class DriverBase<M extends IMessage> {
     this.meta = resolvedMeta;
     this.encryption = options.encryption;
     this.getSubscribers = options.getSubscribers;
+    this.driverType = options.driverType;
+  }
+
+  /**
+   * Warn — once per instance — when a message is published with a non-default
+   * priority on a driver that does not honour priority ordering. Without this the
+   * priority is a silent no-op: the consumer receives FIFO order and never learns
+   * the driver ignored it. Called from the shared publish path once per batch.
+   */
+  warnPriorityUnsupportedOnce(priority: number): void {
+    if (priority === 0 || this.priorityWarned || !this.driverType) return;
+    if (driverCapabilities(this.driverType).priority) return;
+
+    this.priorityWarned = true;
+    this.logger.warn(
+      `priority is set but the ${this.driverType} driver does not honor message priority; delivery order is unaffected`,
+      { driver: this.driverType, priority },
+    );
   }
 
   create(options?: Partial<M>): M {

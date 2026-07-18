@@ -1,12 +1,14 @@
 import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { RedisSharedState } from "../types/redis-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import { DriverMessageBusBase } from "../../../classes/DriverMessageBusBase.js";
+import {
+  DriverMessageBusBase,
+  type DriverMessageBusBaseOptions,
+} from "../../../classes/DriverMessageBusBase.js";
 import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
 import { publishRedisMessages } from "../utils/publish-redis-messages.js";
 import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
@@ -15,11 +17,12 @@ import { resolveStreamKey } from "../utils/resolve-stream-key.js";
 import { resolveGroupName } from "../utils/resolve-group-name.js";
 import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
 
-export type RedisMessageBusOptions<M extends IMessage> = DriverBaseOptions<M> & {
-  state: RedisSharedState;
-  delayManager?: DelayManager;
-  deadLetterManager?: DeadLetterManager;
-};
+export type RedisMessageBusOptions<M extends IMessage> =
+  DriverMessageBusBaseOptions<M> & {
+    state: RedisSharedState;
+    delayManager?: DelayManager;
+    deadLetterManager?: DeadLetterManager;
+  };
 
 type OwnedConsumer = {
   consumerTag: string;
@@ -60,6 +63,8 @@ export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.state,
       this.logger,

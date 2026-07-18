@@ -5,21 +5,24 @@ import type {
   ConsumeOptions,
   PublishOptions,
 } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MemorySharedState } from "../types/memory-store.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import {
+  DriverWorkerQueueBase,
+  type DriverWorkerQueueBaseOptions,
+} from "../../../classes/DriverWorkerQueueBase.js";
 import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import { publishMessages } from "../utils/publish-messages.js";
 import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 
-export type MemoryWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
-  store: MemorySharedState;
-  delayManager?: DelayManager;
-  deadLetterManager?: DeadLetterManager;
-};
+export type MemoryWorkerQueueOptions<M extends IMessage> =
+  DriverWorkerQueueBaseOptions<M> & {
+    store: MemorySharedState;
+    delayManager?: DelayManager;
+    deadLetterManager?: DeadLetterManager;
+  };
 
 export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M> {
   private readonly store: MemorySharedState;
@@ -42,6 +45,8 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.store,
       { delayManager: this.delayManager },

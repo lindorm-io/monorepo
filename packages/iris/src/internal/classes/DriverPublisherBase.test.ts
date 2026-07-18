@@ -91,6 +91,7 @@ const createPublisher = <M extends IMessage>(
   new TestPublisher<M>({
     target,
     logger: createMockLogger() as any,
+    driverType: "memory",
     getSubscribers: () => subscribers,
   });
 
@@ -218,6 +219,57 @@ describe("DriverPublisherBase", () => {
       await pub.testCompletePublish(msg);
 
       expect(callOrder).toMatchSnapshot();
+    });
+  });
+
+  describe("warnPriorityUnsupportedOnce", () => {
+    const createWithLogger = (driverType: "memory" | "rabbit") => {
+      const logger = createMockLogger();
+      const pub = new TestPublisher<PubTestMessage>({
+        target: PubTestMessage,
+        logger: logger as any,
+        driverType,
+        getSubscribers: () => [],
+      });
+      return { pub, logger };
+    };
+
+    it("warns once when a non-default priority is published on a driver that ignores priority", () => {
+      const { pub, logger } = createWithLogger("memory");
+
+      pub.warnPriorityUnsupportedOnce(7);
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
+        "priority is set but the memory driver does not honor message priority; delivery order is unaffected",
+        { driver: "memory", priority: 7 },
+      );
+    });
+
+    it("warns only once across repeated publishes (deduped per instance)", () => {
+      const { pub, logger } = createWithLogger("memory");
+
+      pub.warnPriorityUnsupportedOnce(7);
+      pub.warnPriorityUnsupportedOnce(9);
+      pub.warnPriorityUnsupportedOnce(3);
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not warn for the default priority of 0", () => {
+      const { pub, logger } = createWithLogger("memory");
+
+      pub.warnPriorityUnsupportedOnce(0);
+
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it("does not warn on a driver that honors priority (rabbit)", () => {
+      const { pub, logger } = createWithLogger("rabbit");
+
+      pub.warnPriorityUnsupportedOnce(9);
+
+      expect(logger.warn).not.toHaveBeenCalled();
     });
   });
 });

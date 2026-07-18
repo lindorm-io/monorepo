@@ -128,6 +128,7 @@ const createBus = <M extends IMessage>(
   new TestMessageBus<M>({
     target,
     logger: createMockLogger() as any,
+    driverType: "memory",
     getSubscribers: () => subscribers,
   });
 

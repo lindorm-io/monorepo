@@ -74,4 +74,19 @@ export type IrisCapabilities = {
   encryption: boolean;
   /** Compression via @Compressed */
   compression: boolean;
+  /**
+   * Message priority reorders delivery: a higher-priority message is delivered
+   * before a lower-priority message already waiting in the queue.
+   *
+   * True only for drivers with a native priority-queue primitive — currently
+   * RabbitMQ, whose consuming queues are declared with `x-max-priority` so the
+   * broker dispatches by `properties.priority`.
+   *
+   * False for memory, Kafka, NATS, and Redis: they have no priority-queue
+   * concept, so `@Priority` / the `priority` publish option is carried on the
+   * envelope as advisory metadata but does NOT reorder delivery — those drivers
+   * deliver in publish (FIFO) order regardless. Publishing a non-default priority
+   * on such a driver logs a one-time warning that the priority is a no-op.
+   */
+  priority: boolean;
 };

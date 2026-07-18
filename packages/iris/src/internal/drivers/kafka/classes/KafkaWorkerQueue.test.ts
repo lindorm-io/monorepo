@@ -94,6 +94,7 @@ const createQueue = () => {
   const queue = new KafkaWorkerQueue<TckKafkaWqBasic>({
     target: TckKafkaWqBasic as any,
     logger: createMockLogger() as any,
+    driverType: "kafka",
     getSubscribers: () => [],
     state,
   });
@@ -105,6 +106,7 @@ const createBroadcastQueue = () => {
   const queue = new KafkaWorkerQueue<TckKafkaWqBroadcast>({
     target: TckKafkaWqBroadcast as any,
     logger: createMockLogger() as any,
+    driverType: "kafka",
     getSubscribers: () => [],
     state,
   });

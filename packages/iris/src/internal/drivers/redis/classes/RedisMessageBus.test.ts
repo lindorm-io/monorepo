@@ -73,6 +73,7 @@ const createBus = () => {
   const bus = new RedisMessageBus<TckRedisBusBasic>({
     target: TckRedisBusBasic as any,
     logger: createMockLogger() as any,
+    driverType: "redis",
     getSubscribers: () => [],
     state,
   });

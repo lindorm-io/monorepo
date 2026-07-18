@@ -64,6 +64,7 @@ const createPublisher = (opts?: { subscribers?: Array<IMessageSubscriber> }) => 
   const publisher = new NatsPublisher<TckNatsPubBasic>({
     target: TckNatsPubBasic as any,
     logger: createMockLogger() as any,
+    driverType: "nats",
     getSubscribers: () => opts?.subscribers ?? [],
     state,
     delayManager: undefined,

@@ -56,6 +56,7 @@ const createPublisher = (opts?: { subscribers?: Array<IMessageSubscriber> }) => 
   const publisher = new KafkaPublisher<TckKafkaPubBasic>({
     target: TckKafkaPubBasic as any,
     logger: createMockLogger() as any,
+    driverType: "kafka",
     getSubscribers: () => opts?.subscribers ?? [],
     state,
     delayManager: undefined,

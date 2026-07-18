@@ -5,12 +5,14 @@ import type {
   ConsumeOptions,
   PublishOptions,
 } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { RedisSharedState } from "../types/redis-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
-import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import {
+  DriverWorkerQueueBase,
+  type DriverWorkerQueueBaseOptions,
+} from "../../../classes/DriverWorkerQueueBase.js";
 import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import { publishRedisMessages } from "../utils/publish-redis-messages.js";
 import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
@@ -19,11 +21,12 @@ import { resolveStreamKey } from "../utils/resolve-stream-key.js";
 import { resolveGroupName } from "../utils/resolve-group-name.js";
 import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
 
-export type RedisWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
-  state: RedisSharedState;
-  delayManager?: DelayManager;
-  deadLetterManager?: DeadLetterManager;
-};
+export type RedisWorkerQueueOptions<M extends IMessage> =
+  DriverWorkerQueueBaseOptions<M> & {
+    state: RedisSharedState;
+    delayManager?: DelayManager;
+    deadLetterManager?: DeadLetterManager;
+  };
 
 type OwnedConsumer = {
   mainConsumerTag: string;
@@ -53,6 +56,8 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.state,
       this.logger,

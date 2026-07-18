@@ -53,6 +53,7 @@ const createPublisher = (stateOverrides?: Partial<RabbitSharedState>) => {
   const publisher = new RabbitPublisher<TckRabbitPubBasic>({
     target: TckRabbitPubBasic as any,
     logger: createMockLogger() as any,
+    driverType: "rabbit",
     getSubscribers: () => [],
     state,
   });

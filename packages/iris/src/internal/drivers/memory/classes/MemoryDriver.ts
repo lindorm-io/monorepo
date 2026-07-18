@@ -212,6 +212,7 @@ export class MemoryDriver implements IIrisDriver {
   createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
     return new MemoryPublisher<M>({
       target,
+      driverType: "memory",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,
@@ -224,6 +225,7 @@ export class MemoryDriver implements IIrisDriver {
   createMessageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
     return new MemoryMessageBus<M>({
       target,
+      driverType: "memory",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,
@@ -237,6 +239,7 @@ export class MemoryDriver implements IIrisDriver {
   createWorkerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
     return new MemoryWorkerQueue<M>({
       target,
+      driverType: "memory",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,

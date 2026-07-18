@@ -58,6 +58,7 @@ const createWorkerQueue = <M extends IMessage>(
   const wq = new MemoryWorkerQueue<M>({
     target,
     logger: logger as any,
+    driverType: "memory",
     getSubscribers: () => [],
     store,
     deadLetterManager,
@@ -119,12 +120,14 @@ describe("MemoryWorkerQueue", () => {
       const wq1 = new MemoryWorkerQueue({
         target: TckWqBasic,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
       const wq2 = new MemoryWorkerQueue({
         target: TckWqBasic,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
@@ -150,18 +153,21 @@ describe("MemoryWorkerQueue", () => {
       const wq1 = new MemoryWorkerQueue({
         target: TckWqBasic,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
       const wq2 = new MemoryWorkerQueue({
         target: TckWqBasic,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
       const wq3 = new MemoryWorkerQueue({
         target: TckWqBasic,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
@@ -192,12 +198,14 @@ describe("MemoryWorkerQueue", () => {
       const wq1 = new MemoryWorkerQueue({
         target: TckWqBroadcast,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
       const wq2 = new MemoryWorkerQueue({
         target: TckWqBroadcast,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
@@ -375,12 +383,14 @@ describe("MemoryWorkerQueue", () => {
       const wq1 = new MemoryWorkerQueue({
         target: TckWqBasic,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
       const wq2 = new MemoryWorkerQueue({
         target: TckWqBasic,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
@@ -424,12 +434,14 @@ describe("MemoryWorkerQueue", () => {
       const wq1 = new MemoryWorkerQueue({
         target: TckWqBasic,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });
       const wq2 = new MemoryWorkerQueue({
         target: TckWqBasic,
         logger: createMockLogger() as any,
+        driverType: "memory",
         getSubscribers: () => [],
         store,
       });

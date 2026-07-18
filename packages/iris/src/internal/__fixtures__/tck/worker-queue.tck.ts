@@ -419,6 +419,35 @@ export const workerQueueSuite = (
         expect(received[1]).toBe("prio-high");
         expect(received[2]).toBe("prio-low");
       });
+    } else {
+      test("priority is a no-op — delivery is NOT reordered on a driver without priority queues", async () => {
+        const handle = getHandle();
+        const wq = handle.workerQueue(messages.TckBasicMessage);
+        const received: Array<string> = [];
+
+        await wq.consume("TckBasicMessage", async (msg) => {
+          received.push((msg as any).body as string);
+        });
+
+        // Publish low(1) then high(9). A driver that honours priority (rabbit,
+        // above) would reorder to high-first; a driver that does NOT must treat
+        // priority as advisory metadata and never reorder by it.
+        await wq.publish(wq.create({ body: "prio-low" } as any), { priority: 1 });
+        await wq.publish(wq.create({ body: "prio-high" } as any), { priority: 9 });
+
+        await waitFor(() => received.length >= 2, timeoutMs);
+
+        // Priority is a no-op, not a drop: both messages are delivered.
+        expect(received.slice().sort()).toEqual(["prio-high", "prio-low"]);
+
+        if (caps?.strictOrdering) {
+          // Where delivery order is deterministic (memory), prove the STRONG
+          // negative: publish (FIFO) order is preserved — the exact opposite of
+          // the rabbit priority reordering above, never high-before-low.
+          expect(received[0]).toBe("prio-low");
+          expect(received[1]).toBe("prio-high");
+        }
+      });
     }
 
     test("publish and consume same message type on different worker queue instances", async () => {

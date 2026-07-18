@@ -134,6 +134,7 @@ const createQueue = <M extends IMessage>(
   new TestWorkerQueue<M>({
     target,
     logger: createMockLogger() as any,
+    driverType: "memory",
     getSubscribers: () => subscribers,
   });
 

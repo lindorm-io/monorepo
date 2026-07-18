@@ -80,6 +80,7 @@ const createQueue = () => {
   const queue = new RedisWorkerQueue<TckRedisWqBasic>({
     target: TckRedisWqBasic as any,
     logger: createMockLogger() as any,
+    driverType: "redis",
     getSubscribers: () => [],
     state,
   });
@@ -91,6 +92,7 @@ const createBroadcastQueue = () => {
   const queue = new RedisWorkerQueue<TckRedisWqBroadcast>({
     target: TckRedisWqBroadcast as any,
     logger: createMockLogger() as any,
+    driverType: "redis",
     getSubscribers: () => [],
     state,
   });

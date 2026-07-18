@@ -401,6 +401,7 @@ export class RedisDriver implements IIrisDriver {
   createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
     return new RedisPublisher<M>({
       target,
+      driverType: "redis",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,
@@ -413,6 +414,7 @@ export class RedisDriver implements IIrisDriver {
   createMessageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
     return new RedisMessageBus<M>({
       target,
+      driverType: "redis",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,
@@ -426,6 +428,7 @@ export class RedisDriver implements IIrisDriver {
   createWorkerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
     return new RedisWorkerQueue<M>({
       target,
+      driverType: "redis",
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,

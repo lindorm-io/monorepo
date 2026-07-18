@@ -70,6 +70,7 @@ const createQueue = (stateOverrides?: Partial<RabbitSharedState>) => {
   const queue = new RabbitWorkerQueue<TckRabbitWqBasic>({
     target: TckRabbitWqBasic as any,
     logger: createMockLogger() as any,
+    driverType: "rabbit",
     getSubscribers: () => [],
     state,
   });

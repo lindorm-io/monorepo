@@ -1,12 +1,14 @@
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions } from "../../../../types/index.js";
-import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { RedisSharedState } from "../types/redis-types.js";
-import { DriverPublisherBase } from "../../../classes/DriverPublisherBase.js";
+import {
+  DriverPublisherBase,
+  type DriverPublisherBaseOptions,
+} from "../../../classes/DriverPublisherBase.js";
 import { publishRedisMessages } from "../utils/publish-redis-messages.js";
 
-export type RedisPublisherOptions<M extends IMessage> = DriverBaseOptions<M> & {
+export type RedisPublisherOptions<M extends IMessage> = DriverPublisherBaseOptions<M> & {
   state: RedisSharedState;
   delayManager?: DelayManager;
 };
@@ -29,6 +31,8 @@ export class RedisPublisher<M extends IMessage> extends DriverPublisherBase<M> {
         prepareForPublish: (msg) => this.prepareForPublish(msg),
         completePublish: (msg) => this.completePublish(msg),
         metadata: this.metadata,
+        warnPriorityUnsupportedOnce: (priority) =>
+          this.warnPriorityUnsupportedOnce(priority),
       },
       this.state,
       this.logger,

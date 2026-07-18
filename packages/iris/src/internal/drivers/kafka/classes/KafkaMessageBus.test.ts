@@ -87,6 +87,7 @@ const createBus = () => {
   const bus = new KafkaMessageBus<TckKafkaBusBasic>({
     target: TckKafkaBusBasic as any,
     logger: createMockLogger() as any,
+    driverType: "kafka",
     getSubscribers: () => [],
     state,
   });
