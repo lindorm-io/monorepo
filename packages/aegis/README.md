@@ -218,9 +218,11 @@ These do not need a key or amphora.
 Aegis.isJwt(token);
 Aegis.isJws(token);
 Aegis.isJwe(token);
+Aegis.isJose(token); // any JOSE token (JWT, JWS, or JWE)
+Aegis.isCose(token); // a COSE token (CWT / bare COSE object) — the other wire family
 
-Aegis.header(token); // decode the JOSE protected header
-Aegis.decode(token); // auto-detect, decode without verifying
+Aegis.header(token); // decode the header (JOSE segment, or the COSE protected map)
+Aegis.decode(token); // auto-detect (JOSE or COSE), decode without verifying
 Aegis.parse(token); // auto-detect (JWT or JWS), validate structure
 
 Aegis.parseUserinfo(claims); // → AegisUserinfo
@@ -341,12 +343,13 @@ const { token } = await aegis.mint(
   { format: "cose" },
 );
 
+// Verify never needs to be told the wire format — it detects COSE vs JOSE from
+// the token itself, so the same call verifies a CWT or a JWT of the same profile.
 const verified = await aegis.verify("access_token", token, {
-  format: "cose",
   audience: "https://api.example.com",
 });
 
-// …or let aegis auto-detect it (no profile, no format flag — integrity only):
+// …or without a profile — auto-detected, integrity only:
 const smart = await aegis.verify(token);
 ```
 
@@ -369,6 +372,18 @@ await aegis.mint("access_token", content, { format: "cose", proprietary: false }
 ```
 
 Either way the signature itself is plain RFC 9052 — verified in interop tests against `@auth0/cose` and `cose-js`.
+
+### Opaque handles (raw COSE sign)
+
+`aegis.sign({ format: "cose", payload })` is the profile-less sibling of the raw JWS `sign` — it secures an arbitrary CBOR claims map as a `COSE_Sign1` CWT. Because the token is base64url CBOR with no JOSE dot structure, a consumer cannot split it and read it as a JWT: it is an **opaque handle** (e.g. an internal reference `{ tid, sec }` signed with an unpublished key). The payload MUST be a plain object — a pre-serialised string/Buffer is a JWS-only shape and is rejected (`cose_payload_not_object`); `typ` derives from the bare `tokenType`. `verify` auto-detects it like any COSE token.
+
+```typescript
+const { token } = await aegis.sign({
+  format: "cose",
+  payload: { tid: "ref-1", sec: "…" },
+  tokenType: "access_token",
+});
+```
 
 ### CoseKit
 

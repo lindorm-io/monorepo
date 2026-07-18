@@ -34,7 +34,8 @@ import type {
   IAegisJws,
   IAegisJwt,
 } from "../interfaces/index.js";
-import { coseTyp } from "../internal/cose/cose-typ.js";
+import { coseTyp, coseTypFromTokenType } from "../internal/cose/cose-typ.js";
+import { isCose } from "../internal/cose/is-cose.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import {
   registerProfile as registerProfileFn,
@@ -98,6 +99,7 @@ import type {
   VerifyJwtOptions,
 } from "../types/index.js";
 import { CoseKit } from "./CoseKit.js";
+import { CwtKit, type CwtDecoded } from "./CwtKit.js";
 import { JoseKit } from "./JoseKit.js";
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
@@ -269,6 +271,13 @@ export class Aegis implements IAegis {
   // public static
 
   static header(token: string): TokenHeaderClaims {
+    // A COSE token carries its header in the COSE protected map, not a JOSE segment;
+    // read the same alg / kid / typ off the CWT.
+    if (Aegis.isCose(token)) {
+      const { algorithm, kid, typ } = CwtKit.decode(Buffer.from(token, "base64url"));
+      return { alg: algorithm as TokenHeaderClaims["alg"], kid, typ };
+    }
+
     const [header] = token.split(".");
     return decodeJoseHeader(header);
   }
@@ -285,7 +294,25 @@ export class Aegis implements IAegis {
     return JwtKit.isJwt(jwt);
   }
 
-  static decode<T extends DecodedJwe | DecodedJws | DecodedJwt>(token: string): T {
+  // The JOSE-family umbrella and the counterpart to `isCose`: true for any JOSE
+  // token (a JWE, JWS, or JWT), so a caller can gate the two wire families without
+  // spelling out the three JOSE forms.
+  static isJose(token: string): boolean {
+    return Aegis.isJwe(token) || Aegis.isJws(token) || Aegis.isJwt(token);
+  }
+
+  static isCose(token: string): boolean {
+    // The cheap gate: a JOSE token is dot-delimited, a COSE token never is — so a
+    // dotted token bails before any CBOR work. Otherwise it is base64url CBOR, and
+    // the tag decides.
+    if (token.includes(".")) return false;
+
+    return isCose(Buffer.from(token, "base64url"));
+  }
+
+  static decode<T extends DecodedJwe | DecodedJws | DecodedJwt | CwtDecoded>(
+    token: string,
+  ): T {
     if (Aegis.isJwe(token)) {
       return JweKit.decode(token) as T;
     }
@@ -294,6 +321,12 @@ export class Aegis implements IAegis {
     }
     if (Aegis.isJwt(token)) {
       return JwtKit.decode(token) as T;
+    }
+    // A COSE token has no JOSE dot structure — decode it as a CWT. The result is the
+    // header metadata (kid / alg / typ); a CWT's claims come from `verify`, since a
+    // COSE payload is only meaningful once its integrity is checked.
+    if (Aegis.isCose(token)) {
+      return CwtKit.decode(Buffer.from(token, "base64url")) as T;
     }
     throw new AegisError("Invalid token type", {
       code: "unsupported_token_type",
@@ -456,6 +489,13 @@ export class Aegis implements IAegis {
   // private sign tiers
 
   private async signRaw(input: RawSignInput): Promise<SignedJws> {
+    // Encoding seam, mirroring mintProfile: the COSE path is a separate encoder
+    // that secures the payload as a CBOR CWT instead of a JWS. Everything above
+    // is encoding-neutral.
+    if (selectEncoder(input.format).format === "cose") {
+      return this.signRawCose(input);
+    }
+
     // A Buffer/string payload is opaque and passes through untouched; a plain
     // object is pruned of empty claims at this emission boundary (default
     // `"empty"`) before it is serialised, matching the JWT/CWT wires.
@@ -472,6 +512,35 @@ export class Aegis implements IAegis {
       key: input.key,
       tokenType: input.tokenType,
     });
+  }
+
+  // Raw COSE sign — the profile-less sibling of signRaw's JWS path. Secures an
+  // arbitrary CBOR claims map as a COSE_Sign1 CWT (the same encoder mintCose
+  // uses), typ derived straight from the bare `tokenType`. The point is an
+  // opaque handle: a base64url CBOR blob a consumer cannot split on dots and
+  // read as a JWT. The signing key is resolved exactly as the JWS path does, so
+  // a per-call `key` predicate selects it (e.g. an internal, unpublished key).
+  private async signRawCose(input: RawSignInput): Promise<SignedJws> {
+    // A COSE token secures a CBOR claims MAP; a pre-serialised string/Buffer has
+    // no CWT structure to secure. That is valid only for the JOSE path, so it is
+    // a caller error here rather than a silent reinterpretation.
+    if (isString(input.payload) || isBuffer(input.payload)) {
+      throw new AegisError("A COSE payload must be a claims object", {
+        code: "cose_payload_not_object",
+        title: "COSE Payload Not An Object",
+        details:
+          "sign({ format: 'cose' }) secures a CBOR claims map, so its payload must be a plain object; a string or Buffer payload is only valid for the default JWS format.",
+      });
+    }
+
+    const kryptos = await this.resolveSignKey({ key: input.key });
+
+    const token = this.coseKit.sign(kryptos, input.payload, {
+      typ: coseTypFromTokenType(input.tokenType),
+      omit: input.omit,
+    });
+
+    return { objectId: input.objectId, token: token.toString("base64url") };
   }
 
   private async mintProfile(
@@ -757,8 +826,10 @@ export class Aegis implements IAegis {
     token: string,
     options: ProfileVerifyOptions,
   ): Promise<T> {
-    // Encoding seam: dispatch on the per-call format (P4 fills the COSE arm).
-    if (selectEncoder(options.format).format === "cose") {
+    // Encoding seam — AUTO-DETECTED, never told. Verify reads the format off the
+    // token: a COSE token verifies as a CWT, a JOSE token as a JWT/JWE. (mint chooses
+    // its output format; verify only ever inspects an existing one.)
+    if (Aegis.isCose(token)) {
       return this.verifyCose<T>(name, token, options);
     }
 
@@ -771,7 +842,6 @@ export class Aegis implements IAegis {
       audience: _audience,
       issuer: _issuer,
       clockTolerance: _ct,
-      format: _format,
       ...rest
     } = options;
 

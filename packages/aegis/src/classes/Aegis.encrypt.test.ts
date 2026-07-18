@@ -164,12 +164,15 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       expect(Buffer.from(token, "base64url").subarray(0, 2).toString("hex")).toBe("d83d");
     });
 
-    test("verifying a JWT as format cose is rejected (not valid CBOR)", async () => {
+    test("a JWT is auto-detected as JOSE, never misread as COSE", async () => {
       const { token } = await aegis.mint("access_token", content);
 
+      // verify is not told a format — it detects one. A JWT is not COSE, so it routes
+      // to the JOSE path and verifies normally (the old "force cose on a JWT" is gone).
+      expect(Aegis.isCose(token)).toBe(false);
       await expect(
-        aegis.verify("access_token", token, { audience: RESOURCE, format: "cose" }),
-      ).rejects.toMatchObject({ code: "cbor_decode_failed" });
+        aegis.verify("access_token", token, { audience: RESOURCE }),
+      ).resolves.toBeDefined();
     });
 
     test("format jwt (default) is unaffected on mint and verify", async () => {
@@ -179,7 +182,6 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
       const parsed = await aegis.verify("access_token", token, {
         audience: RESOURCE,
-        format: "jwt",
       });
 
       expect(parsed.decoded.payload).toMatchObject({ sub: "user-1" });

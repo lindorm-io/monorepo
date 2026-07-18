@@ -7,6 +7,7 @@ import {
   computeCoseKeyThumbprint,
   computeCoseKeyThumbprintUri,
 } from "../internal/cose/cose-key-thumbprint.js";
+import { isCose } from "../internal/cose/is-cose.js";
 import { COSE_HEADER, COSE_TAG } from "../internal/cose/structures.js";
 import type { OmitMode } from "../internal/utils/apply-omit.js";
 import { CweKit } from "./CweKit.js";
@@ -94,12 +95,7 @@ export class CoseKit {
    * is safe to probe an unknown token with.
    */
   isCose(token: Buffer): boolean {
-    try {
-      const tag = innerCose(decodeCbor(token))?.tag;
-      return tag === COSE_TAG.sign1 || tag === COSE_TAG.mac0 || tag === COSE_TAG.encrypt0;
-    } catch {
-      return false;
-    }
+    return isCose(token);
   }
 
   /** True if the COSE token is an encrypted CWT (COSE_Encrypt0, tag 16). */

@@ -42,7 +42,6 @@ describe("Aegis — COSE", () => {
     expect(bytes.subarray(0, 2).toString("hex")).toBe("d83d");
 
     const verified = (await aegis.verify("access_token", token, {
-      format: "cose",
       audience: "https://rs.lindorm.io/",
     })) as unknown as { claims: Record<string, unknown> };
 
@@ -72,7 +71,6 @@ describe("Aegis — COSE", () => {
     expect(CwtKit.decode(bytes).algorithm).toBe("HS256"); // COSE_Mac0, not Sign1
 
     const verified = (await macAegis.verify("id_token", token, {
-      format: "cose",
       audience: "client-1",
     })) as unknown as { claims: Record<string, unknown> };
 
@@ -120,7 +118,6 @@ describe("Aegis — COSE", () => {
     expect(CwtKit.decode(Buffer.from(token, "base64url")).algorithm).toBe("HS256");
 
     const verified = (await macAegis.verify("id_token", token, {
-      format: "cose",
       audience: "client-1",
     })) as unknown as { claims: Record<string, unknown> };
     expect(verified.claims.subject).toBe("u");
@@ -146,7 +143,6 @@ describe("Aegis — COSE", () => {
     expect(bytes[0]).toBe(0xd0);
 
     const verified = (await encAegis.verify("id_token", token, {
-      format: "cose",
       audience: "client-1",
     })) as unknown as { claims: Record<string, unknown> };
 
@@ -190,9 +186,143 @@ describe("Aegis — COSE", () => {
 
     await expect(
       aegis.verify("access_token", token, {
-        format: "cose",
         audience: "https://other.lindorm.io/",
       }),
     ).rejects.toThrow();
+  });
+
+  describe("raw sign — the opaque handle (no profile)", () => {
+    test("signs an arbitrary map as a COSE CWT, not a JOSE token", async () => {
+      const { token } = await aegis.sign({
+        payload: { tid: "at_abc", sec: "s3cr3t" },
+        tokenType: "access_token",
+        format: "cose",
+      });
+
+      // The whole point: no JOSE dot structure, so a consumer cannot split it
+      // and read it as a JWT — it is base64url CBOR carrying the CWT tag (61).
+      expect(token.includes(".")).toBe(false);
+      const bytes = Buffer.from(token, "base64url");
+      expect(bytes.subarray(0, 2).toString("hex")).toBe("d83d");
+
+      // The typ is `at+cwt`, not `at+jws` — the media type names it a CWT.
+      expect(CwtKit.decode(bytes).typ).toBe("application/at+cwt");
+    });
+
+    test("round-trips the raw payload through verify", async () => {
+      const { token } = await aegis.sign({
+        payload: { tid: "at_abc", sec: "s3cr3t" },
+        tokenType: "access_token",
+        format: "cose",
+      });
+
+      const verified = (await aegis.verify(token)) as unknown as {
+        claims: Record<string, unknown>;
+      };
+
+      // The lookup coordinates come back verbatim — nothing but what we signed.
+      expect(verified.claims.tid).toBe("at_abc");
+      expect(verified.claims.sec).toBe("s3cr3t");
+    });
+
+    test("stamps rt+cwt for a refresh handle", async () => {
+      const { token } = await aegis.sign({
+        payload: { cid: "rtc_abc", gen: 1, sec: "s3cr3t" },
+        tokenType: "refresh_token",
+        format: "cose",
+      });
+
+      expect(CwtKit.decode(Buffer.from(token, "base64url")).typ).toBe(
+        "application/rt+cwt",
+      );
+    });
+
+    test("rejects a string payload — a CWT secures a claims map", async () => {
+      await expect(
+        aegis.sign({ payload: "not-a-map", tokenType: "access_token", format: "cose" }),
+      ).rejects.toThrow(AegisError);
+    });
+
+    test("still signs a JWS when no format is given (default unchanged)", async () => {
+      const { token } = await aegis.sign({
+        payload: { tid: "at_abc", sec: "s3cr3t" },
+        tokenType: "access_token",
+      });
+
+      // Three base64url segments — the JOSE default is untouched.
+      expect(token.split(".")).toHaveLength(3);
+    });
+  });
+
+  describe("the static inspectors gate JOSE vs COSE automatically", () => {
+    const coseToken = async (): Promise<string> => {
+      const { token } = await aegis.sign({
+        payload: { tid: "at_abc", sec: "s3cr3t" },
+        tokenType: "access_token",
+        format: "cose",
+      });
+      return token;
+    };
+
+    const jwsToken = async (): Promise<string> => {
+      const { token } = await aegis.sign({
+        payload: { tid: "at_abc" },
+        tokenType: "access_token",
+      });
+      return token;
+    };
+
+    test("isCose and isJose are exact counterparts across the two wire families", async () => {
+      const cose = await coseToken();
+      const jose = await jwsToken();
+
+      expect(Aegis.isCose(cose)).toBe(true);
+      expect(Aegis.isJose(cose)).toBe(false);
+
+      // The dot check short-circuits a JOSE token before any CBOR work.
+      expect(Aegis.isCose(jose)).toBe(false);
+      expect(Aegis.isJose(jose)).toBe(true);
+
+      // Garbage is neither.
+      expect(Aegis.isCose("not a token")).toBe(false);
+      expect(Aegis.isJose("not a token")).toBe(false);
+    });
+
+    test("decode digs the header metadata out of a COSE token", async () => {
+      const decoded = Aegis.decode(await coseToken()) as {
+        typ?: string;
+        kid?: string;
+        algorithm?: string;
+      };
+
+      // No "Invalid token type" throw — decode routes COSE to the CWT decoder and
+      // returns the header (typ / kid / alg), the pre-verify metadata.
+      expect(decoded.typ).toBe("application/at+cwt");
+      expect(decoded.kid).toEqual(expect.any(String));
+      expect(decoded.algorithm).toBe("ES512");
+    });
+
+    test("header returns the same shape for a COSE token as for a JOSE one", async () => {
+      const header = Aegis.header(await coseToken());
+
+      expect(header.typ).toBe("application/at+cwt");
+      expect(header.alg).toBe("ES512");
+      expect(header.kid).toEqual(expect.any(String));
+    });
+
+    test("verify auto-detects a COSE token with no format told", async () => {
+      const { token } = await aegis.mint(
+        "access_token",
+        { subject: "u", audience: ["https://rs.lindorm.io/"], clientId: "c" },
+        { format: "cose" },
+      );
+
+      // The whole point: the caller does NOT pass a format — verify reads it off the token.
+      const verified = (await aegis.verify("access_token", token, {
+        audience: "https://rs.lindorm.io/",
+      })) as unknown as { claims: Record<string, unknown> };
+
+      expect(verified.claims.subject).toBe("u");
+    });
   });
 });

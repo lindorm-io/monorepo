@@ -267,11 +267,9 @@ export type ProfileVerifyOptions = VerifyJwtOptions & {
   audience: string;
   issuer?: string;
   clockTolerance?: number;
-  /**
-   * Per-call wire encoder (the COSE seam, T6). Defaults to `"jwt"`; `"cose"`
-   * throws `NotSupportedError` until the CBOR/CWT decoder lands.
-   */
-  format?: TokenFormat;
+  // No `format` — unlike mint, verify is NOT told the wire encoding. It detects
+  // COSE vs JOSE from the token itself (`Aegis.isCose`), so a caller never has to
+  // know, or match, a token's format to verify it.
 };
 
 /**
@@ -281,6 +279,13 @@ export type ProfileVerifyOptions = VerifyJwtOptions & {
 export type RawSignInput = {
   bindCertificate?: BindCertificateMode;
   contentType?: string;
+  /**
+   * Wire encoding. `"jwt"` (default) signs a JWS — the payload passes through as bytes.
+   * `"cose"` signs a secured CWT (COSE_Sign1) over the CBOR-encoded payload, which MUST
+   * then be a plain object; the token is base64url CBOR with no JOSE dot structure, so it
+   * cannot be mistaken for — or parsed as — a JWT. `verify` auto-detects either format.
+   */
+  format?: TokenFormat;
   header?: TokenEncryptOrSignOptions;
   objectId?: string;
   payload: Buffer | string | Dict;

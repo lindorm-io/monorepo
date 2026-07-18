@@ -60,8 +60,19 @@ export const encodeCwtClaims = (
  * their JOSE wire name; that jose -> domain remap and the verbatim custom
  * passthrough happen here.
  */
-export const decodeCwtClaims = (map: Map<unknown, unknown>): Dict => {
-  const joseKeyed = CWT_CLAIMS_KIT.decode("map", map as Map<number | string, unknown>);
+export const decodeCwtClaims = (map: Map<unknown, unknown> | Dict): Dict => {
+  // The byte decoder runs `preferMap: false`, which keeps the top CWT map a `Map`
+  // only while it has integer keys — the usual case, since registered claims carry
+  // integer labels. A CWT whose claims are ALL custom (string-keyed) — e.g. an
+  // opaque handle `{tid, sec}` — has no integer key, so it decodes as a plain
+  // object instead. Normalise it back to a Map here (top level only; nested claim
+  // objects stay plain, as intended) so the claim mapper always sees a Map.
+  const asMap: Map<number | string, unknown> =
+    map instanceof Map
+      ? (map as Map<number | string, unknown>)
+      : new Map(Object.entries(map));
+
+  const joseKeyed = CWT_CLAIMS_KIT.decode("map", asMap);
 
   const common: Dict = {};
 

@@ -37,7 +37,6 @@ describe("Aegis — omit (compact-by-default)", () => {
   // absent claim really is absent (no defaulting).
   const coseClaims = async (token: string): Promise<Record<string, unknown>> => {
     const verified = (await aegis.verify("access_token", token, {
-      format: "cose",
       audience: "https://rs.lindorm.io/",
     })) as unknown as { claims: Record<string, unknown> };
     return verified.claims;
@@ -196,7 +195,6 @@ describe("Aegis — omit (compact-by-default)", () => {
       { format: "cose" },
     );
     const verified = (await aegis.verify("logout_token", cwt.token, {
-      format: "cose",
       audience: "client-1",
     })) as unknown as { claims: Record<string, unknown> };
     expect(verified.claims.events).toEqual(events);

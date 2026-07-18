@@ -199,7 +199,6 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       await expect(
         aegis.verify("security_event", token, {
           audience: "https://receiver",
-          format: "cose",
         }),
       ).resolves.toMatchObject({
         claims: {
