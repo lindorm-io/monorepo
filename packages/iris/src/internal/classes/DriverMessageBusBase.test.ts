@@ -10,7 +10,11 @@ import { BeforeConsume } from "../../decorators/BeforeConsume.js";
 import { AfterConsume } from "../../decorators/AfterConsume.js";
 import { OnConsumeError } from "../../decorators/OnConsumeError.js";
 import type { IMessage, IMessageSubscriber } from "../../interfaces/index.js";
-import type { PublishOptions, SubscribeOptions } from "../../types/index.js";
+import type {
+  IrisDriverType,
+  PublishOptions,
+  SubscribeOptions,
+} from "../../types/index.js";
 import { clearRegistry } from "../message/metadata/registry.js";
 import {
   DriverMessageBusBase,
@@ -436,6 +440,62 @@ describe("DriverMessageBusBase", () => {
       await bus.testCompletePublish(msg);
 
       expect(callOrder).toMatchSnapshot();
+    });
+  });
+
+  describe("warnPriorityUnsupportedOnce (C2 priority no-op warning)", () => {
+    // The behavioural negative (priority does NOT reorder) is asserted in the
+    // worker-queue TCK on every non-priority driver. This proves the OTHER half
+    // of the documented no-op contract: the operator is warned once, so the
+    // silent-no-op cannot regress unnoticed. Unit-level (not TCK) because it needs
+    // a logger spy the driver harnesses do not expose, and the warn is a pure
+    // function of driverType + priority.
+    const makeBus = (driverType: IrisDriverType) => {
+      const logger = createMockLogger();
+      const bus = new TestMessageBus<SimpleBusMessage>({
+        target: SimpleBusMessage,
+        logger: logger as any,
+        driverType,
+        getSubscribers: () => [],
+      });
+      return { bus, logger };
+    };
+
+    it("warns when a non-default priority is published on a driver without priority queues", () => {
+      const { bus, logger } = makeBus("memory");
+
+      bus.warnPriorityUnsupportedOnce(5);
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("does not honor message priority"),
+        expect.objectContaining({ driver: "memory", priority: 5 }),
+      );
+    });
+
+    it("warns only ONCE per instance across repeated non-default priorities", () => {
+      const { bus, logger } = makeBus("memory");
+
+      bus.warnPriorityUnsupportedOnce(5);
+      bus.warnPriorityUnsupportedOnce(9);
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+    });
+
+    it("does NOT warn for the default priority (0)", () => {
+      const { bus, logger } = makeBus("memory");
+
+      bus.warnPriorityUnsupportedOnce(0);
+
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it("does NOT warn on a driver that natively honors priority (rabbit)", () => {
+      const { bus, logger } = makeBus("rabbit");
+
+      bus.warnPriorityUnsupportedOnce(9);
+
+      expect(logger.warn).not.toHaveBeenCalled();
     });
   });
 

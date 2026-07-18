@@ -8,8 +8,10 @@
 // queue-targeted fix): the failing consumer sees the redelivery; every other
 // consumer sees the message exactly once.
 //
-// Gated on caps.retryConsumerTargeted (memory/nats/rabbit true; kafka/redis
-// false until their targeted-retry slices land).
+// Gated on caps.retryConsumerTargeted (true on every driver: memory in-process,
+// NATS server-redelivery, Rabbit per-queue, and Kafka/Redis after their
+// targeted-retry slices landed). The runTck gate self-corrects if any driver
+// flips it false — the suite simply would not run there.
 //
 // Uses REAL timers with small delays (50ms @Retry) for cross-driver portability.
 
