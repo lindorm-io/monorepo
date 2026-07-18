@@ -13,7 +13,7 @@ import {
 @Entity()
 export class DataAuditLog {
   @PrimaryKeyField()
-  @Generated("lindorm_id", { namespace: "dau" })
+  @Generated("lindorm_id", { namespace: "aud" })
   id!: string;
 
   @CreateDateField()
