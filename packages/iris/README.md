@@ -224,6 +224,15 @@ await pipeline.stop();
 
 The builder also exposes `flatMap((msg) => Array<T>)` and `batch(size, { timeout? })` between `from(...)` and `to(...)`.
 
+**Stream contract (uniform across every driver).** A pipeline is a **live transform**, not a historical backfill:
+
+- It processes only messages published **after `start()`** — there is **no replay** of earlier messages (`capabilities.streamReplay` is `false` on every driver; all drivers join an ephemeral consumer group at the live tail).
+- Offsets are **not durable** (`capabilities.streamDurableOffset` is `false` everywhere): stopping/restarting a pipeline rejoins at the tail, so messages published while it was down are not delivered on restart.
+- A non-batched stage is **at-least-once** — a throwing stage redelivers (bounded by the input's `@Retry`) and dead-letters on exhaustion. A batched pipeline (`.batch(...)`) is **at-most-once across the buffering window**: messages buffered but not yet flushed are lost if the process dies mid-window.
+- The **memory** driver is additionally **lossy on pause** (nothing is retained while paused).
+
+Query `source.capabilities.stream` / `streamReplay` / `streamDurableOffset` rather than assuming `stream: true` implies replay or durable resumption.
+
 ## Field Types
 
 `@Field()` accepts the following type identifiers:
@@ -985,7 +994,9 @@ if (source.capabilities.rpcFastFail) {
 | `workerQueue`                |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Competing-consumer worker queue                                                                                 |
 | `rpc`                        |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | RPC request/response                                                                                            |
 | `rpcFastFail`                |   ✓    |   ✓    |   ✗   |  ✓   |   ✗   | Unroutable RPC rejects immediately instead of hanging to the timeout                                            |
-| `stream`                     |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Stream processor/pipeline                                                                                       |
+| `stream`                     |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Stream processor/pipeline — live transform, at-most-once across a batch window (see Stream contract above)      |
+| `streamReplay`               |   ✗    |   ✗    |   ✗   |  ✗   |   ✗   | Replay messages published before `start()` — no driver (all join an ephemeral group at the live tail)           |
+| `streamDurableOffset`        |   ✗    |   ✗    |   ✗   |  ✗   |   ✗   | Durable stream offsets so a restarted pipeline resumes where it left off — no driver                            |
 | `delay`                      |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Delayed publish                                                                                                 |
 | `retry`                      |   ✓    |   ✓    |   ✓   |  ✓   |   ✓   | Retry with backoff                                                                                              |
 | `retryProducerAuthoritative` |   ✓    |   ✓    |   ✓   |  ✗   |   ✓   | Wire `maxRetries` bounds redelivery even against a divergent consumer `@Retry` (NATS' ceiling is consumer-side) |

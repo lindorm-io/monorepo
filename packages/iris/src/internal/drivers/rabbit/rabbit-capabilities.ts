@@ -11,6 +11,8 @@ export const RABBIT_CAPABILITIES: IrisCapabilities = {
   rpc: true,
   rpcFastFail: true,
   stream: true,
+  streamReplay: false,
+  streamDurableOffset: false,
   delay: true,
   retry: true,
   retryProducerAuthoritative: true,

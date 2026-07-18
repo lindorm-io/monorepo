@@ -25,8 +25,35 @@ export type IrisCapabilities = {
    * when the timeout elapses (IrisTimeoutError).
    */
   rpcFastFail: boolean;
-  /** Stream processor/pipeline */
+  /**
+   * Stream processor/pipeline (`source.stream()`).
+   *
+   * The stream contract is UNIFORM across every driver: a live-transform of
+   * messages arriving after the pipeline starts, at-most-once, over an ephemeral
+   * consumer group — see `streamReplay` and `streamDurableOffset`, both false
+   * everywhere. A batched pipeline (`.batch(...)`) is at-most-once across the
+   * buffering window: messages buffered but not yet flushed are lost if the
+   * process dies mid-window. The memory driver is additionally lossy on pause
+   * (nothing is retained while paused).
+   */
   stream: boolean;
+  /**
+   * The stream can REPLAY messages published before the pipeline started (or
+   * re-read from an earlier position). False on every driver: all stream
+   * consumers join an ephemeral group positioned at the live tail, so only
+   * messages published after `start()` are seen — a pipeline is a live transform,
+   * never a historical backfill. Declared so a consumer queries this rather than
+   * assuming `stream: true` implies replay.
+   */
+  streamReplay: boolean;
+  /**
+   * Stream consumer offsets are tracked DURABLY, so a restarted pipeline resumes
+   * where it left off without reprocessing or skipping. False on every driver:
+   * the ephemeral group is discarded on stop/restart, so a new pipeline rejoins
+   * at the live tail (messages published while it was down are not delivered).
+   * Declared so a consumer queries this rather than assuming durable offsets.
+   */
+  streamDurableOffset: boolean;
   /** Delayed publish */
   delay: boolean;
   /** Retry with backoff */

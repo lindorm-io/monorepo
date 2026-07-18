@@ -13,6 +13,8 @@ export const NATS_CAPABILITIES: IrisCapabilities = {
   rpc: true,
   rpcFastFail: true,
   stream: true,
+  streamReplay: false,
+  streamDurableOffset: false,
   delay: true,
   retry: true,
   retryProducerAuthoritative: false,

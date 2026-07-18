@@ -29,12 +29,17 @@ export const _createMockIrisSource = (mockFn: () => any): IIrisSource => {
     messages: [] as ReadonlyArray<Constructor<IMessage>>,
     // Permissive default: the mock advertises full support so consumer tests
     // that branch on a capability don't have to opt in. Override on the returned
-    // object when a test needs a driver that lacks a capability.
+    // object when a test needs a driver that lacks a capability. The exceptions
+    // are streamReplay / streamDurableOffset — no real driver offers them, so the
+    // mock stays honest (false) rather than advertising a stream feature that
+    // exists nowhere.
     capabilities: {
       workerQueue: true,
       rpc: true,
       rpcFastFail: true,
       stream: true,
+      streamReplay: false,
+      streamDurableOffset: false,
       delay: true,
       retry: true,
       retryProducerAuthoritative: true,

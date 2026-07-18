@@ -13,6 +13,8 @@ export const KAFKA_CAPABILITIES: IrisCapabilities = {
   rpc: true,
   rpcFastFail: false,
   stream: true,
+  streamReplay: false,
+  streamDurableOffset: false,
   delay: true,
   retry: true,
   retryProducerAuthoritative: true,

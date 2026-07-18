@@ -18,6 +18,17 @@ export const streamSuite = (
       await getHandle().clear();
     });
 
+    // ─── Uniform stream contract (C3) ────────────────────────────────────────
+    // The stream capability is one boolean but hides a uniform contract: NO
+    // driver offers replay or durable offsets (all join an ephemeral group at
+    // the live tail). Negative-assert the sub-capabilities so a driver cannot
+    // silently start claiming a stream guarantee it does not provide.
+    test("no driver claims stream replay or durable offsets (uniform ephemeral contract)", () => {
+      expect(caps?.stream).toBe(true);
+      expect(caps?.streamReplay).toBe(false);
+      expect(caps?.streamDurableOffset).toBe(false);
+    });
+
     test("from -> filter -> to: filters messages", async () => {
       const handle = getHandle();
       const { TckStreamInput, TckStreamOutput } = messages;
