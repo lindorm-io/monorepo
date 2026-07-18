@@ -46,6 +46,7 @@ import {
   PrimaryKey,
   PrimaryKeyField,
   ReadOnly,
+  RelationId,
   ScopeField,
   Transform,
   TypedJson,
@@ -610,6 +611,9 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @OneToMany(() => TckFkNullifyChild, "parent")
     nullifyChildren!: TckFkNullifyChild[];
+
+    @OneToMany(() => TckFkAutoNullableChild, "parent")
+    autoNullableChildren!: TckFkAutoNullableChild[];
   }
 
   @Entity({ name: "TckFkCascadeChild" })
@@ -654,6 +658,27 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Nullable()
     @Field("uuid")
+    parentId!: string | null;
+  }
+
+  // Nullable AUTO-FK: @Nullable sits on the OWNING relation (NOT on a @Field), so the
+  // auto-generated FK column is created NULLABLE. Unlike TckFkNullifyChild above, there
+  // is NO explicit @Field FK column — the FK column is projected entirely from the
+  // relation. @RelationId exposes that auto-FK value read-only (auto-detected single FK,
+  // no @Field, skipped from writes) for round-trip assertions.
+  @Entity({ name: "TckFkAutoNullableChild" })
+  class TckFkAutoNullableChild {
+    @PrimaryKeyField() @Generated("uuid") id!: string;
+    @VersionField() version!: number;
+    @CreateDateField() createdAt!: Date;
+    @UpdateDateField() updatedAt!: Date;
+    @Field("string") value!: string;
+
+    @Nullable()
+    @ManyToOne(() => TckFkParent, "autoNullableChildren")
+    parent!: TckFkParent | null;
+
+    @RelationId<TckFkAutoNullableChild>("parent")
     parentId!: string | null;
   }
 
@@ -1396,6 +1421,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckFkCascadeChild,
     TckFkRestrictChild,
     TckFkNullifyChild,
+    TckFkAutoNullableChild,
     TckCascadeParent,
     TckCascadeChild,
     TckVehicle,

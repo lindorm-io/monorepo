@@ -130,6 +130,7 @@ const runTckForNaming = (
     entities.TckFkCascadeChild,
     entities.TckFkRestrictChild,
     entities.TckFkNullifyChild,
+    entities.TckFkAutoNullableChild,
     entities.TckCascadeParent,
     entities.TckCascadeChild,
     entities.TckArrayHolder,

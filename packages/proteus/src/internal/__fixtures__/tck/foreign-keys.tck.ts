@@ -13,8 +13,13 @@ export const foreignKeysSuite = (
   entities: TckEntities,
 ) => {
   describe("Foreign Keys", () => {
-    const { TckFkParent, TckFkCascadeChild, TckFkRestrictChild, TckFkNullifyChild } =
-      entities;
+    const {
+      TckFkParent,
+      TckFkCascadeChild,
+      TckFkRestrictChild,
+      TckFkNullifyChild,
+      TckFkAutoNullableChild,
+    } = entities;
 
     beforeEach(async () => {
       await getHandle().clear();
@@ -65,6 +70,39 @@ export const foreignKeysSuite = (
 
       expect(child.id).toBeDefined();
       expect(child.parentId).toBeNull();
+    });
+
+    // Nullable AUTO-FK (distinct from TckFkNullifyChild's explicit @Nullable @Field FK):
+    // @Nullable sits on the OWNING relation, so the auto-generated FK column must be
+    // created NULLABLE in the real DDL. If it weren't, postgres/mysql would reject an
+    // insert that omits the relation with a NOT NULL violation.
+    test("insert child WITHOUT the nullable auto-FK relation succeeds and round-trips null", async () => {
+      const childRepo = getHandle().repository(TckFkAutoNullableChild);
+
+      // No `parent` relation set at all — the auto-FK column must accept NULL.
+      const child = await childRepo.insert({ value: "auto-no-parent" });
+
+      expect(child.id).toBeDefined();
+      expect(child.parentId).toBeNull();
+
+      const reloaded = await childRepo.findOne({ id: child.id });
+      expect(reloaded).not.toBeNull();
+      expect(reloaded?.parentId).toBeNull();
+      expect(reloaded?.parent ?? null).toBeNull();
+    });
+
+    test("insert child WITH the nullable auto-FK relation populates and round-trips the auto-FK", async () => {
+      const parentRepo = getHandle().repository(TckFkParent);
+      const childRepo = getHandle().repository(TckFkAutoNullableChild);
+
+      const parent = await parentRepo.insert({ name: "AutoNullableParent" });
+      // Set the relation OBJECT (no explicit FK column exists) → FK derived from relation.
+      const child = await childRepo.insert({ value: "auto-with-parent", parent });
+
+      expect(child.parentId).toBe(parent.id);
+
+      const reloaded = await childRepo.findOne({ id: child.id });
+      expect(reloaded?.parentId).toBe(parent.id);
     });
 
     test("delete(criteria) parent with ON DELETE CASCADE removes children", async () => {
