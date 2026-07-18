@@ -11,6 +11,7 @@ import type { DeadLetterManager } from "../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../delay/DelayManager.js";
 import type { MessageEncryptionContext } from "../message/types/encryption-context.js";
 import type { PipelineStage } from "../types/pipeline-stage.js";
+import type { DriverStreamPipelineBaseOptions } from "./DriverStreamPipelineBase.js";
 
 export type DriverStreamProcessorBaseOptions<State> = {
   state: State;
@@ -22,6 +23,16 @@ export type DriverStreamProcessorBaseOptions<State> = {
   inputTopic?: string;
   deadLetterManager?: DeadLetterManager;
   delayManager?: DelayManager;
+};
+
+/**
+ * The fully-resolved option set handed to a driver's `buildPipeline` hook once
+ * the terminal `to()` call has collapsed the builder chain. It is the pipeline
+ * base's option shape plus the driver-specific shared `state`, so a driver whose
+ * pipeline ctor matches exactly can forward it verbatim.
+ */
+export type StreamPipelineBuildOptions<State> = DriverStreamPipelineBaseOptions & {
+  state: State;
 };
 
 export abstract class DriverStreamProcessorBase<
@@ -74,23 +85,28 @@ export abstract class DriverStreamProcessorBase<
     };
   }
 
-  protected abstract createSelf(
+  /**
+   * Clone this processor with the forked options. Every driver's processor is
+   * constructed identically from `DriverStreamProcessorBaseOptions`, so the base
+   * re-instantiates the concrete subclass via its own constructor — no per-driver
+   * override is needed.
+   */
+  protected createSelf(
     options: DriverStreamProcessorBaseOptions<State>,
-  ): DriverStreamProcessorBase<State, Pipeline, any, any>;
+  ): DriverStreamProcessorBase<State, Pipeline, any, any> {
+    const Ctor = this.constructor as new (
+      options: DriverStreamProcessorBaseOptions<State>,
+    ) => DriverStreamProcessorBase<State, Pipeline, any, any>;
+    return new Ctor(options);
+  }
 
-  protected abstract createPipeline(options: {
-    state: State;
-    logger: ILogger;
-    stages: Array<PipelineStage>;
-    inputClass?: Constructor<IMessage>;
-    inputTopic?: string;
-    outputClass: Constructor<IMessage>;
-    outputTopic?: string;
-    meta?: IrisHookMeta;
-    encryption?: MessageEncryptionContext;
-    deadLetterManager?: DeadLetterManager;
-    delayManager?: DelayManager;
-  }): Pipeline;
+  /**
+   * Construct the driver's concrete `*StreamPipeline` from the resolved build
+   * options. This is the only per-driver seam: the driver names its pipeline
+   * class and adapts the option shape (e.g. memory renames `state`→`store`,
+   * rabbit drops the Iris managers in favour of native DLX/TTL).
+   */
+  protected abstract buildPipeline(options: StreamPipelineBuildOptions<State>): Pipeline;
 
   from<T extends IMessage>(
     inputClass: Constructor<T>,
@@ -144,7 +160,7 @@ export abstract class DriverStreamProcessorBase<
   }
 
   to(outputClass: new (...args: any[]) => Out, options?: { topic?: string }): Pipeline {
-    return this.createPipeline({
+    return this.buildPipeline({
       state: this.state,
       logger: this.logger,
       stages: this.stages,

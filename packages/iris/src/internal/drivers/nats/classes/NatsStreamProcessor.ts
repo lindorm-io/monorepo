@@ -1,15 +1,9 @@
-import type { ILogger } from "@lindorm/logger";
-import type { Constructor } from "@lindorm/types";
 import type { IMessage } from "../../../../interfaces/index.js";
-import type { IrisHookMeta } from "../../../../types/index.js";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
-import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { NatsSharedState } from "../types/nats-types.js";
-import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
-import type { PipelineStage } from "../../../types/pipeline-stage.js";
 import {
   DriverStreamProcessorBase,
   type DriverStreamProcessorBaseOptions,
+  type StreamPipelineBuildOptions,
 } from "../../../classes/DriverStreamProcessorBase.js";
 import { NatsStreamPipeline } from "./NatsStreamPipeline.js";
 
@@ -20,37 +14,9 @@ export class NatsStreamProcessor<
   In extends IMessage = IMessage,
   Out extends IMessage = IMessage,
 > extends DriverStreamProcessorBase<NatsSharedState, NatsStreamPipeline, In, Out> {
-  protected createSelf(
-    options: DriverStreamProcessorBaseOptions<NatsSharedState>,
-  ): NatsStreamProcessor<any, any> {
-    return new NatsStreamProcessor(options);
-  }
-
-  protected createPipeline(options: {
-    state: NatsSharedState;
-    logger: ILogger;
-    stages: Array<PipelineStage>;
-    inputClass?: Constructor<IMessage>;
-    inputTopic?: string;
-    outputClass: Constructor<IMessage>;
-    outputTopic?: string;
-    meta?: IrisHookMeta;
-    encryption?: MessageEncryptionContext;
-    deadLetterManager?: DeadLetterManager;
-    delayManager?: DelayManager;
-  }): NatsStreamPipeline {
-    return new NatsStreamPipeline({
-      state: options.state,
-      logger: options.logger,
-      stages: options.stages,
-      inputClass: options.inputClass,
-      inputTopic: options.inputTopic,
-      outputClass: options.outputClass,
-      outputTopic: options.outputTopic,
-      meta: options.meta,
-      encryption: options.encryption,
-      deadLetterManager: options.deadLetterManager,
-      delayManager: options.delayManager,
-    });
+  protected buildPipeline(
+    options: StreamPipelineBuildOptions<NatsSharedState>,
+  ): NatsStreamPipeline {
+    return new NatsStreamPipeline(options);
   }
 }

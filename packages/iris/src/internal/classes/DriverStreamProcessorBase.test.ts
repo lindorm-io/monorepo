@@ -1,14 +1,11 @@
-import type { ILogger } from "@lindorm/logger";
-import type { Constructor } from "@lindorm/types";
 import type { IIrisStreamPipeline, IMessage } from "../../interfaces/index.js";
-import type { PipelineStage } from "../types/pipeline-stage.js";
 import { Field } from "../../decorators/Field.js";
 import { Message } from "../../decorators/Message.js";
 import { clearRegistry } from "../message/metadata/registry.js";
 import { IrisNotSupportedError } from "../../errors/IrisNotSupportedError.js";
 import {
   DriverStreamProcessorBase,
-  type DriverStreamProcessorBaseOptions,
+  type StreamPipelineBuildOptions,
 } from "./DriverStreamProcessorBase.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
@@ -48,23 +45,7 @@ class TestStreamProcessor<
   In extends IMessage = IMessage,
   Out extends IMessage = IMessage,
 > extends DriverStreamProcessorBase<MockState, MockPipeline, In, Out> {
-  protected createSelf(
-    options: DriverStreamProcessorBaseOptions<MockState>,
-  ): TestStreamProcessor<any, any> {
-    return new TestStreamProcessor(options);
-  }
-
-  protected createPipeline(options: {
-    state: MockState;
-    logger: ILogger;
-    stages: Array<PipelineStage>;
-    inputClass?: Constructor<IMessage>;
-    inputTopic?: string;
-    outputClass: Constructor<IMessage>;
-    outputTopic?: string;
-    context?: unknown;
-    amphora?: unknown;
-  }): MockPipeline {
+  protected buildPipeline(options: StreamPipelineBuildOptions<MockState>): MockPipeline {
     return new MockPipeline(options);
   }
 }
@@ -167,13 +148,13 @@ describe("DriverStreamProcessorBase", () => {
   });
 
   describe("to()", () => {
-    it("should return pipeline from createPipeline", () => {
+    it("should return pipeline from buildPipeline", () => {
       const processor = createProcessor();
       const pipeline = processor.from(TckBaseIn).to(TckBaseOut as any);
       expect(pipeline).toBeInstanceOf(MockPipeline);
     });
 
-    it("should pass all options to createPipeline", () => {
+    it("should pass all options to buildPipeline", () => {
       const processor = createProcessor();
       const pipeline = processor
         .from(TckBaseIn, { topic: "in-topic" })

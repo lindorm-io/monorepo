@@ -1,15 +1,9 @@
-import type { ILogger } from "@lindorm/logger";
-import type { Constructor } from "@lindorm/types";
 import type { IMessage } from "../../../../interfaces/index.js";
-import type { IrisHookMeta } from "../../../../types/index.js";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
-import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
-import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
-import type { PipelineStage } from "../../../types/pipeline-stage.js";
 import {
   DriverStreamProcessorBase,
   type DriverStreamProcessorBaseOptions,
+  type StreamPipelineBuildOptions,
 } from "../../../classes/DriverStreamProcessorBase.js";
 import { RabbitStreamPipeline } from "./RabbitStreamPipeline.js";
 
@@ -20,37 +14,12 @@ export class RabbitStreamProcessor<
   In extends IMessage = IMessage,
   Out extends IMessage = IMessage,
 > extends DriverStreamProcessorBase<RabbitSharedState, RabbitStreamPipeline, In, Out> {
-  protected createSelf(
-    options: DriverStreamProcessorBaseOptions<RabbitSharedState>,
-  ): RabbitStreamProcessor<any, any> {
-    return new RabbitStreamProcessor(options);
-  }
-
-  protected createPipeline(options: {
-    state: RabbitSharedState;
-    logger: ILogger;
-    stages: Array<PipelineStage>;
-    inputClass?: Constructor<IMessage>;
-    inputTopic?: string;
-    outputClass: Constructor<IMessage>;
-    outputTopic?: string;
-    meta?: IrisHookMeta;
-    encryption?: MessageEncryptionContext;
-    // Accepted for override-compatibility with the base; RabbitMQ uses native
-    // DLX/TTL for retry + dead-letter, so no Iris managers are threaded through.
-    deadLetterManager?: DeadLetterManager;
-    delayManager?: DelayManager;
-  }): RabbitStreamPipeline {
-    return new RabbitStreamPipeline({
-      state: options.state,
-      logger: options.logger,
-      stages: options.stages,
-      inputClass: options.inputClass,
-      inputTopic: options.inputTopic,
-      outputClass: options.outputClass,
-      outputTopic: options.outputTopic,
-      meta: options.meta,
-      encryption: options.encryption,
-    });
+  protected buildPipeline(
+    options: StreamPipelineBuildOptions<RabbitSharedState>,
+  ): RabbitStreamPipeline {
+    // RabbitMQ uses native DLX/TTL for retry + dead-letter, so the Iris
+    // dead-letter/delay managers are intentionally not threaded into the pipeline.
+    const { deadLetterManager, delayManager, ...pipelineOptions } = options;
+    return new RabbitStreamPipeline(pipelineOptions);
   }
 }
