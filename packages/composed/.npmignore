@@ -3,7 +3,10 @@
 /src
 
 docker-compose.yml
-jest.config.mjs
+
 tsconfig.build.json
 tsconfig.build.tsbuildinfo
 tsconfig.json
+
+vitest.config.mjs
+vitest.config.smoke.mjs

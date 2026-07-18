@@ -2,8 +2,18 @@
 /node_modules
 /src
 
+docker-compose.kafka.yml
+docker-compose.nats.yml
+docker-compose.rabbit.yml
+docker-compose.redis.yml
 docker-compose.yml
-jest.config.mjs
+
 tsconfig.build.json
 tsconfig.build.tsbuildinfo
 tsconfig.json
+
+vitest.config.mjs
+vitest.integration.mjs
+vitest.setup.ts
+vitest.tck.mjs
+vitest.unit.mjs

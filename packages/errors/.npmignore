@@ -1,7 +1,9 @@
+/example
 /node_modules
 /src
 
-jest.config.mjs
 tsconfig.build.json
 tsconfig.build.tsbuildinfo
 tsconfig.json
+
+vitest.config.mjs

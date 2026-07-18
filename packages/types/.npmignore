@@ -2,8 +2,6 @@
 /node_modules
 /src
 
-docker-compose.yml
-jest.config.mjs
 tsconfig.build.json
 tsconfig.build.tsbuildinfo
 tsconfig.json

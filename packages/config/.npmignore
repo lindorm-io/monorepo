@@ -1,10 +1,10 @@
-/config
 /example
 /node_modules
 /src
+/config
 
-docker-compose.yml
-jest.config.mjs
 tsconfig.build.json
 tsconfig.build.tsbuildinfo
 tsconfig.json
+
+vitest.config.mjs
