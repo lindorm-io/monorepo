@@ -1,5 +1,7 @@
 import { isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
+import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
+import { AegisError } from "../../errors/index.js";
 import type {
   CertificateHeaderFields,
   DecodedTokenHeader,
@@ -7,130 +9,135 @@ import type {
   RawTokenHeaderClaims,
   TokenHeaderOptions,
 } from "../../types/index.js";
+import {
+  type HeaderSpec,
+  headerByDomain,
+  headerByWire,
+  READ_HEADER_SPECS,
+  WRITE_HEADER_SPECS,
+} from "../header/header-registry.js";
 import { getBaseFormat } from "./compute-typ-header.js";
 
+/**
+ * The header translator (the header-side twin of `claims/translate.ts`): the ONE
+ * place the JOSE wire<->domain header NAME map is applied, driven entirely by
+ * `HEADER_REGISTRY`. Both directions — `domain -> wire` (write, {@link mapTokenHeader})
+ * and `wire -> domain` (read, {@link parseTokenHeader}) — are a single pass over
+ * the registry; the per-field switches and object literals that used to live here
+ * are gone. The registry's `HeaderValueKind` drives the value shaping below.
+ */
+
+// --- `crit` member remap (the one member-transforming parameter) ------------
+
+/** Remap `crit` members DOMAIN -> WIRE; unregistered members pass through. */
+const criticalToWire = (members: unknown): Array<string> | undefined => {
+  if (!Array.isArray(members)) return undefined;
+  return members.map((member): string => headerByDomain(member)?.wire ?? member).sort();
+};
+
+/** Remap `crit` members WIRE -> DOMAIN; unregistered members pass through. */
+const criticalToDomain = (members: unknown): Array<string> => {
+  if (!Array.isArray(members)) return [];
+  return members.map((member): string => headerByWire(member)?.domain ?? member).sort();
+};
+
+// --- value shaping (registry `HeaderValueKind` dispatch) --------------------
+
+/**
+ * Shape a header value for the WIRE: read it from the domain-keyed source, apply
+ * the kind's defensive guard, and return `undefined` for a missing or
+ * wrongly-typed value (dropped downstream by `omitUndefined`). Buffer fields
+ * (iv/p2s/tag) pass through as Buffers; `encodeJoseHeader` base64url-encodes them.
+ */
+const encodeHeaderValue = (spec: HeaderSpec, source: Dict): unknown => {
+  const value = source[spec.domain];
+  switch (spec.value) {
+    case "critical":
+      return criticalToWire(value);
+    case "string":
+      return isString(value) ? value : undefined;
+    case "url":
+      return isUrlLike(value) ? value : undefined;
+    case "number":
+      return isFinite(value) ? value : undefined;
+    case "jwk":
+      return isObject(value) ? value : undefined;
+    case "buffer":
+      return value;
+    case "array":
+      return Array.isArray(value) ? value : undefined;
+    default: {
+      const exhaustive: never = spec.value;
+      throw new AegisError("Unhandled header value kind", {
+        code: "token_header_unhandled_value_kind",
+        data: { wire: spec.wire, domain: spec.domain, value: String(exhaustive) },
+        title: "Token Header Unhandled Value Kind",
+        details:
+          "The header registry produced a value kind the encoder does not handle; a HeaderSpec value kind is missing an encode branch.",
+      });
+    }
+  }
+};
+
+/**
+ * Shape a header value for the DOMAIN header: the parser copies the wire value
+ * verbatim, except `crit`, whose members are remapped wire -> domain.
+ */
+const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
+  switch (spec.value) {
+    case "critical":
+      return criticalToDomain(decoded.crit);
+    case "string":
+    case "url":
+    case "number":
+    case "jwk":
+    case "buffer":
+    case "array":
+      return decoded[spec.wire];
+    default: {
+      const exhaustive: never = spec.value;
+      throw new AegisError("Unhandled header value kind", {
+        code: "token_header_unhandled_value_kind",
+        data: { wire: spec.wire, domain: spec.domain, value: String(exhaustive) },
+        title: "Token Header Unhandled Value Kind",
+        details:
+          "The header registry produced a value kind the parser does not handle; a HeaderSpec value kind is missing a decode branch.",
+      });
+    }
+  }
+};
+
+/**
+ * Map domain header options (+ the kit-resolved cert fields) to the raw JOSE wire
+ * header. The cert fields (`x5c`/`x5t#S256`) are `provenance: "key"` params the
+ * kit derives from the kryptos, so they are folded into the domain-keyed source
+ * (their `CertificateHeaderFields` keys already equal their domain names).
+ */
 export const mapTokenHeader = (
   options: TokenHeaderOptions,
   cert: CertificateHeaderFields = {},
 ): RawTokenHeaderClaims => {
-  const crit = options.critical
-    ?.map((key): string => {
-      switch (key) {
-        case "algorithm":
-          return "alg";
-        case "contentType":
-          return "cty";
-        case "encryption":
-          return "enc";
-        case "headerType":
-          return "typ";
-        case "jwk":
-          return "jwk";
-        case "jwksUri":
-          return "jku";
-        case "keyId":
-          return "kid";
-        case "objectId":
-          return "oid";
-        case "pbkdfIterations":
-          return "p2c";
-        case "pbkdfSalt":
-          return "p2s";
-        case "initialisationVector":
-          return "iv";
-        case "publicEncryptionJwk":
-          return "epk";
-        case "publicEncryptionTag":
-          return "tag";
-        default:
-          return key; // Pass through unknown params for rejection by the Kit class
-      }
-    })
-    .sort();
+  const source: Dict = { ...options, x5c: cert.x5c, x5tS256: cert.x5tS256 };
 
-  return omitUndefined({
-    alg: options.algorithm,
-    crit,
-    cty: options.contentType,
-    enc: isString(options.encryption) ? options.encryption : undefined,
-    epk: isObject(options.publicEncryptionJwk) ? options.publicEncryptionJwk : undefined,
-    iv: options.initialisationVector,
-    jku: isUrlLike(options.jwksUri) ? options.jwksUri : undefined,
-    jwk: isObject(options.jwk) ? options.jwk : undefined,
-    kid: options.keyId,
-    oid: isString(options.objectId) ? options.objectId : undefined,
-    p2c: isFinite(options.pbkdfIterations) ? options.pbkdfIterations : undefined,
-    p2s: options.pbkdfSalt,
-    tag: options.publicEncryptionTag,
-    typ: options.headerType,
-    x5c: Array.isArray(cert.x5c) ? cert.x5c : undefined,
-    "x5t#S256": isString(cert.x5tS256) ? cert.x5tS256 : undefined,
-  });
+  const raw: Dict = {};
+  for (const spec of WRITE_HEADER_SPECS) {
+    raw[spec.wire] = encodeHeaderValue(spec, source);
+  }
+
+  return omitUndefined(raw) as RawTokenHeaderClaims;
 };
 
 export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader>(
   decoded: DecodedTokenHeader,
 ): T => {
-  const critical =
-    (decoded.crit
-      ?.map((key): string => {
-        switch (key) {
-          case "alg":
-            return "algorithm";
-          case "cty":
-            return "contentType";
-          case "enc":
-            return "encryption";
-          case "epk":
-            return "publicEncryptionJwk";
-          case "iv":
-            return "initialisationVector";
-          case "jku":
-            return "jwksUri";
-          case "jwk":
-            return "jwk";
-          case "kid":
-            return "keyId";
-          case "oid":
-            return "objectId";
-          case "p2c":
-            return "pbkdfIterations";
-          case "p2s":
-            return "pbkdfSalt";
-          case "tag":
-            return "publicEncryptionTag";
-          case "typ":
-            return "headerType";
-          case "x5c":
-            return "x5c";
-          case "x5t":
-            return "x5t";
-          case "x5t#S256":
-            return "x5tS256";
-          default:
-            return key; // Pass through unknown params for rejection by the Kit class
-        }
-      })
-      .sort() as ParsedTokenHeader["critical"]) ?? [];
+  const result: Dict = {};
+  for (const spec of READ_HEADER_SPECS) {
+    result[spec.domain] = decodeHeaderValue(spec, decoded as Dict);
+  }
 
-  return omitUndefined({
-    algorithm: decoded.alg,
-    baseFormat: getBaseFormat(decoded.typ),
-    contentType: decoded.cty,
-    critical,
-    encryption: decoded.enc,
-    headerType: decoded.typ,
-    initialisationVector: decoded.iv,
-    jwk: decoded.jwk,
-    jwksUri: decoded.jku,
-    keyId: decoded.kid,
-    objectId: decoded.oid,
-    pbkdfIterations: decoded.p2c,
-    pbkdfSalt: decoded.p2s,
-    publicEncryptionJwk: decoded.epk,
-    publicEncryptionTag: decoded.tag,
-    x5c: decoded.x5c,
-    x5t: decoded.x5t,
-    x5tS256: decoded["x5t#S256"],
-  }) as T;
+  // `baseFormat` is DERIVED from `typ` (not a wire parameter of its own), so it
+  // is set outside the registry pass. Kits may override it after parsing.
+  result.baseFormat = getBaseFormat(decoded.typ);
+
+  return omitUndefined(result) as T;
 };
