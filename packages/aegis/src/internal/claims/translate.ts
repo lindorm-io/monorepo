@@ -5,7 +5,7 @@ import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { AegisError } from "../../errors/index.js";
 import type { ActClaim, ActClaimWire, ConfirmationClaim } from "../../types/index.js";
-import { type ClaimSpec, CLAIM_REGISTRY, specByDomain } from "./registry.js";
+import { type ClaimSpec, CLAIM_REGISTRY, specByDomain, specsWith } from "./registry.js";
 
 /**
  * The ONE claim translator (DESIGN §3). It consolidates the mappers that existed
@@ -138,9 +138,13 @@ const toConfirmation = (value: unknown): ConfirmationClaim | undefined => {
 
 // Claims whose "array" value is space-delimited-string-tolerant on read (they
 // accept `"a b"` and split it); the other array claims (`amr`, `entitlements`,
-// `groups`, `afr`, `authorization_details`) take arrays only. Mirrors the
-// per-claim decoder split in extract-claims.ts EXACTLY.
-const STRING_ARRAY_DOMAINS = new Set(["roles", "scope", "permissions", "conformsTo"]);
+// `groups`, `afr`, …) take arrays only. DERIVED from the registry `array: "spaced"`
+// marks — the single source of truth — not a hand-maintained list.
+const STRING_ARRAY_DOMAINS = new Set(
+  specsWith("array")
+    .filter((spec) => spec.array === "spaced")
+    .map((spec) => spec.domain),
+);
 
 // -----------------------------------------------------------------------------
 

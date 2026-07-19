@@ -199,6 +199,74 @@ describe("CLAIM_REGISTRY", () => {
     expect(new Set(profileDomains)).toEqual(new Set(Object.keys(PROFILE_FIELDS)));
   });
 
+  test('the "array" read-split marks are populated exactly (spaced vs strict)', () => {
+    const spaced = CLAIM_REGISTRY.filter((s) => s.array === "spaced").map(
+      (s) => s.domain,
+    );
+    const strict = CLAIM_REGISTRY.filter((s) => s.array === "strict").map(
+      (s) => s.domain,
+    );
+
+    expect(new Set(spaced)).toEqual(
+      new Set(["scope", "roles", "permissions", "conformsTo"]),
+    );
+    expect(new Set(strict)).toEqual(
+      new Set([
+        "authMethods",
+        "authFactor",
+        "entitlements",
+        "groups",
+        "preferredAccessibility",
+      ]),
+    );
+  });
+
+  test('the "array" mark is on value:"array" claims only, and every one except audience declares it', () => {
+    for (const spec of CLAIM_REGISTRY) {
+      if (spec.array === undefined) continue;
+      expect(
+        spec.value,
+        `${spec.domain} has an array mark but is not value:"array"`,
+      ).toBe("array");
+    }
+    for (const spec of CLAIM_REGISTRY) {
+      if (spec.value !== "array") continue;
+      if (spec.domain === "audience") {
+        // RFC 7519 aud is string-OR-array — its own decoder, no read-split mark.
+        expect(spec.array, "audience must not carry an array mark").toBeUndefined();
+        continue;
+      }
+      expect(
+        spec.array,
+        `${spec.domain} (value:"array") must declare a read-split mark`,
+      ).toBeDefined();
+    }
+  });
+
+  test("the temporal claim set + directions are populated exactly", () => {
+    const temporal = CLAIM_REGISTRY.filter((s) => s.temporal !== undefined).map((s) => ({
+      domain: s.domain,
+      direction: s.temporal,
+    }));
+
+    // Order is registry declaration order (exp, nbf, iat, auth_time).
+    expect(temporal).toEqual([
+      { domain: "expiresAt", direction: "future" },
+      { domain: "notBefore", direction: "past" },
+      { domain: "issuedAt", direction: "past" },
+      { domain: "authTime", direction: "past" },
+    ]);
+  });
+
+  test('a temporal mark implies value:"date"; updatedAt is date but NOT temporal', () => {
+    for (const spec of CLAIM_REGISTRY) {
+      if (spec.temporal === undefined) continue;
+      expect(spec.value, `${spec.domain} is temporal but not value:"date"`).toBe("date");
+    }
+    expect(specByDomain("updatedAt")?.value).toBe("date");
+    expect(specByDomain("updatedAt")?.temporal).toBeUndefined();
+  });
+
   test("every entry declares exactly one category", () => {
     const valid = new Set(["claims", "profile", "sensitive"]);
     for (const spec of CLAIM_REGISTRY) {

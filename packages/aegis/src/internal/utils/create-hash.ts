@@ -18,7 +18,7 @@ const createHashBuffer = (algorithm: ShaAlgorithm, data: string): Buffer =>
 
 const getLeftHalf = (buffer: Buffer): Buffer => buffer.subarray(0, buffer.length / 2);
 
-const createHash = (algorithm: KryptosAlgorithm, data: string): string => {
+export const createHash = (algorithm: KryptosAlgorithm, data: string): string => {
   const sha = shaAlgorithm(algorithm);
   const buffer = createHashBuffer(sha, data);
   const left = getLeftHalf(buffer);

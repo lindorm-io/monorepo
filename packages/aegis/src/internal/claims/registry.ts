@@ -55,6 +55,19 @@ export type ClaimValueKind =
  */
 export type ClaimCategory = "claims" | "profile" | "sensitive";
 
+export type TemporalClaimSpec = {
+  /**
+   * VALIDATION-temporal direction — set ONLY on the time claims the verifier
+   * range-checks against "now", the single source of truth for the temporal
+   * matcher set. NOT every `value: "date"` claim: `updatedAt` is a date but a
+   * profile timestamp, not validation-temporal, so it carries no mark.
+   *   - `"past"`    must not be in the future (value <= now + tolerance):
+   *                 `nbf`/`iat`/`auth_time`.
+   *   - `"future"`  must not be in the past (value >= now - tolerance): `exp`.
+   */
+  temporal?: "past" | "future";
+};
+
 export type ClaimSpec = {
   /** Common-layer key (the domain vocabulary). */
   domain: string;
@@ -83,7 +96,19 @@ export type ClaimSpec = {
    * as their real string). Omitted for open-valued claims.
    */
   values?: Readonly<Record<string, number>>;
-};
+  /**
+   * How an array claim tolerates a scalar on READ — meaningful ONLY on
+   * `value: "array"` entries, the single source of truth for the read-side split:
+   *   - `"spaced"`  a space-delimited STRING is accepted and SPLIT into the array
+   *                 (`"a b"` -> `["a","b"]`): `roles`/`scope`/`permissions`/
+   *                 `conformsTo`.
+   *   - `"strict"`  arrays ONLY; a scalar decodes to `undefined`: `amr`/`afr`/
+   *                 `entitlements`/`groups`/`preferredAccessibility`.
+   * `audience` is the deliberate exception (no mark): RFC 7519 `aud` is
+   * string-OR-array, so a scalar wraps to a single-element array (its own decoder).
+   */
+  array?: "spaced" | "strict";
+} & TemporalClaimSpec;
 
 // First private-use COSE label is the first integer below the -65536 boundary.
 // Claims with no registered CWT label but a long JOSE name (≥ 5 chars) get a
@@ -101,9 +126,30 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
   { domain: "issuer", jose: "iss", cose: 1, value: "text", category: "claims" },
   { domain: "subject", jose: "sub", cose: 2, value: "text", category: "claims" },
   { domain: "audience", jose: "aud", cose: 3, value: "array", category: "claims" },
-  { domain: "expiresAt", jose: "exp", cose: 4, value: "date", category: "claims" },
-  { domain: "notBefore", jose: "nbf", cose: 5, value: "date", category: "claims" },
-  { domain: "issuedAt", jose: "iat", cose: 6, value: "date", category: "claims" },
+  {
+    domain: "expiresAt",
+    jose: "exp",
+    cose: 4,
+    value: "date",
+    category: "claims",
+    temporal: "future",
+  },
+  {
+    domain: "notBefore",
+    jose: "nbf",
+    cose: 5,
+    value: "date",
+    category: "claims",
+    temporal: "past",
+  },
+  {
+    domain: "issuedAt",
+    jose: "iat",
+    cose: 6,
+    value: "date",
+    category: "claims",
+    temporal: "past",
+  },
   // CWT cti (RFC 8392 label 7)
   {
     domain: "tokenId",
@@ -116,7 +162,14 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
   // RFC 8747
   { domain: "confirmation", jose: "cnf", cose: 8, value: "bespoke", category: "claims" },
   // RFC 8693
-  { domain: "scope", jose: "scope", cose: 9, value: "array", category: "claims" },
+  {
+    domain: "scope",
+    jose: "scope",
+    cose: 9,
+    value: "array",
+    category: "claims",
+    array: "spaced",
+  },
 
   // --- (b) No registered integer label AND a short JOSE name (≤ 4 chars):
   //     string-keyed in CBOR (interoperable; the string key is the smaller
@@ -129,7 +182,14 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "text",
     category: "claims",
   },
-  { domain: "authMethods", jose: "amr", cose: null, value: "array", category: "claims" },
+  {
+    domain: "authMethods",
+    jose: "amr",
+    cose: null,
+    value: "array",
+    category: "claims",
+    array: "strict",
+  },
   {
     domain: "authorizedParty",
     jose: "azp",
@@ -184,7 +244,14 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "int",
     category: "claims",
   },
-  { domain: "authFactor", jose: "afr", cose: null, value: "array", category: "claims" },
+  {
+    domain: "authFactor",
+    jose: "afr",
+    cose: null,
+    value: "array",
+    category: "claims",
+    array: "strict",
+  },
   { domain: "sessionHint", jose: "sih", cose: null, value: "text", category: "claims" },
   { domain: "subjectHint", jose: "suh", cose: null, value: "text", category: "claims" },
 
@@ -222,6 +289,7 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: P(4),
     value: "date",
     category: "claims",
+    temporal: "past",
   },
   // RFC 9396
   {
@@ -245,15 +313,31 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: P(7),
     value: "array",
     category: "claims",
+    array: "strict",
   },
-  { domain: "groups", jose: "groups", cose: P(8), value: "array", category: "claims" },
-  { domain: "roles", jose: "roles", cose: P(9), value: "array", category: "claims" },
+  {
+    domain: "groups",
+    jose: "groups",
+    cose: P(8),
+    value: "array",
+    category: "claims",
+    array: "strict",
+  },
+  {
+    domain: "roles",
+    jose: "roles",
+    cose: P(9),
+    value: "array",
+    category: "claims",
+    array: "spaced",
+  },
   {
     domain: "permissions",
     jose: "permissions",
     cose: P(10),
     value: "array",
     category: "claims",
+    array: "spaced",
   },
   {
     domain: "clientId",
@@ -294,6 +378,7 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: P(15),
     value: "array",
     category: "claims",
+    array: "spaced",
   },
 
   // --- SENSITIVE identity claims (government-issued personal identifiers) ---
@@ -476,6 +561,7 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: P(43),
     value: "array",
     category: "profile",
+    array: "strict",
   },
   {
     domain: "preferredName",
@@ -557,3 +643,18 @@ export const specByCose = (cose: number): ClaimSpec | undefined => byCose.get(co
  */
 export const specByCoseName = (coseName: string): ClaimSpec | undefined =>
   byCoseName.get(coseName);
+
+/**
+ * The registry SUBSET carrying an optional mark, narrowed so the mark is REQUIRED
+ * on each returned spec — the one canonical way to derive a mark-based claim set.
+ * `specsWith("temporal")` yields specs whose `temporal` is `"past" | "future"`
+ * (never `undefined`), so a caller iterates type-safely with no null-check and an
+ * exhaustive `switch` on the mark; `specsWith("array")` narrows `array` likewise.
+ * Registry declaration order is preserved.
+ */
+export const specsWith = <K extends keyof ClaimSpec>(
+  mark: K,
+): ReadonlyArray<ClaimSpec & Required<Pick<ClaimSpec, K>>> =>
+  CLAIM_REGISTRY.filter(
+    (spec): spec is ClaimSpec & Required<Pick<ClaimSpec, K>> => spec[mark] !== undefined,
+  );
