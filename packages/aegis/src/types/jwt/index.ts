@@ -6,6 +6,7 @@ export * from "./jwt-kit.js";
 export * from "./jwt-parse.js";
 export * from "./narrowed-jwt.js";
 export * from "./jwt-sign.js";
+export * from "./jwt-wire-claims.js";
 export * from "./profile.js";
 export * from "./jwt-validate.js";
 export * from "./jwt-verify.js";

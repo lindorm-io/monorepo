@@ -91,6 +91,15 @@ export type TokenHeaderOptions = {
   pbkdfSalt?: Buffer;
   publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionTag?: Buffer;
+  // --- Full RFC-registered set: the remaining user-supplyable JOSE header
+  //     parameters. Carried verbatim under their registered wire names (like
+  //     `x5c`/`x5t#S256` in the parsed header), for RFC 7515/7516/7518
+  //     completeness. Additive — no encoder consumes them yet.
+  x5u?: string; // RFC 7515 §4.1.5 — X.509 URL
+  x5t?: string; // RFC 7515 §4.1.7 — X.509 certificate SHA-1 thumbprint (base64url)
+  zip?: string; // RFC 7516 §4.1.3 — compression algorithm ("DEF" is the only registered value)
+  apu?: string; // RFC 7518 §4.6.1.2 — ECDH-ES Agreement PartyUInfo (base64url)
+  apv?: string; // RFC 7518 §4.6.1.3 — ECDH-ES Agreement PartyVInfo (base64url)
 };
 
 export type CertificateHeaderFields = {
