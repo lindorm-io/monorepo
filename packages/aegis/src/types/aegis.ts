@@ -67,30 +67,28 @@ export type AegisEncKey = AmphoraKeySelector<AegisEncPredicate> & {
 };
 
 /**
- * The read side, signatures. The key is resolved from the token's own `kid`, so
- * a predicate cannot be a QUERY here — but it is exactly right as a CHECK,
- * applied to the resolved key before any signature is touched. That closes the
- * RFC 8725 §3.1 hole: without it, an attacker who can name any `kid` in the
- * vault picks the verification key's class.
+ * The read side, signatures. Selection is driven by the token's own `kid`, so a
+ * `predicate` cannot be a QUERY here — it is a CHECK, applied to the resolved
+ * key before any signature is touched. That closes the RFC 8725 §3.1 hole:
+ * without it, an attacker who can name any `kid` in the vault picks the
+ * verification key's class.
  *
- * ⚠ DELIBERATELY NOT an `AmphoraKeySelector` — do not "harmonise" it with the
- * other three. It carries no `kryptos` because no verification path supplies
- * one: every key a token can be verified against is either a vault resident or
- * a JWKS key amphora already holds, and the verifier's only header input is
- * `kid`. Adding the field would create surface that nothing honours.
+ * `kryptos` is the read-side twin of `AegisSignKey.kryptos`: a key supplied
+ * outright to verify a signature made by a key that is NOT a vault resident —
+ * the RFC 7523 `client_secret_jwt` assertion, MACed (`HS256`) with a client
+ * secret the verifier holds out-of-band. The vault is skipped; the FLOOR is
+ * not, which is what makes injection safe rather than an escape hatch.
  *
- * (The reason is scope, NOT that a caller-supplied verification key is itself
- * unsafe — a key handed over by trusted application code is not the
- * header-embedded-key attack class, which is about trusting `jwk` / `jku` /
- * `x5u` FROM THE TOKEN. The one case that would justify the field is
- * `client_secret_jwt`: verifying a client assertion MACed with a client secret
- * that is not in the vault. That is its own slice — it needs the resolver's
- * kid-match guard on the verify path and a wired-through per-call option. Until
- * then this stays a CHECK only.)
+ * This is NOT the header-embedded-key attack class — that is about trusting
+ * `jwk` / `jku` / `x5u` FROM THE TOKEN. A key handed over by trusted application
+ * code is not token-controlled; the verifier's only header input remains `kid`,
+ * used as a lookup into the vault, never as a key itself. When the token DOES
+ * name a `kid`, a supplied key that names a different one is a caller error, not
+ * a silent fallback (`resolveKey` throws `verify_key_mismatch`). A kid-less
+ * assertion — the usual `client_secret_jwt` shape — is verified by the injected
+ * key alone.
  */
-export type AegisVerifyKey = {
-  predicate?: AegisSignPredicate;
-};
+export type AegisVerifyKey = AmphoraKeySelector<AegisSignPredicate>;
 
 /**
  * The read side, ciphertext. Unlike verify this IS a full selector: `kryptos`
@@ -121,7 +119,7 @@ export type AegisSettings = {
   sign?: AegisSignKey;
   /** Deployment encryption policy — a QUERY over the vault. */
   encrypt?: AegisEncKey;
-  /** Deployment verification policy — a CHECK on the key the token names. */
+  /** Deployment verification policy — a CHECK on the key the token names, or a key supplied outright. */
   verify?: AegisVerifyKey;
   /** Deployment decryption policy — a CHECK on the key the token names. */
   decrypt?: AegisDecryptKey;

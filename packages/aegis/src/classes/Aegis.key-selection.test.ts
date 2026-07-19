@@ -7,6 +7,7 @@ import MockDate from "mockdate";
 import {
   TEST_EC_KEY_ENC,
   TEST_EC_KEY_SIG,
+  TEST_OCT_KEY_SIG,
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_ENC,
 } from "../__fixtures__/keys.js";
@@ -323,6 +324,57 @@ describe("Aegis key selection", () => {
         });
 
         expect(parsed.payload).toBe("data");
+      });
+    });
+
+    describe("jws.verify(token, { key: { kryptos } }) — RFC 7523 client_secret_jwt", () => {
+      test("verifies a JWS signed by a key the vault never held (an injected client secret)", async () => {
+        // The oct key is a client secret held out-of-band — an HS256 MAC key,
+        // never a vault resident. It signs the assertion and verifies it.
+        await expect(amphora.findById(TEST_OCT_KEY_SIG.id)).rejects.toThrow();
+
+        const { token } = await aegis.jws.sign("assertion", {
+          key: { kryptos: TEST_OCT_KEY_SIG },
+        });
+
+        // Without the key, verify resolves the token's kid against the vault —
+        // which does not hold it — and fails; the header-named key is never
+        // trusted as a key source (RFC 8725 §3.1).
+        const notFound = await aegis.jws.verify(token).catch((err: Error) => err);
+        expect(notFound).toBeInstanceOf(AegisError);
+        expect((notFound as AegisError).code).toBe("verify_key_not_found");
+
+        // Injecting the same secret verifies it — the client_secret_jwt case.
+        const parsed = await aegis.jws.verify(token, {
+          key: { kryptos: TEST_OCT_KEY_SIG },
+        });
+        expect(parsed.payload).toBe("assertion");
+      });
+
+      test("an injected key whose kid does NOT match the token throws, never silently works", async () => {
+        const { token } = await aegis.jws.sign("assertion", {
+          key: { kryptos: TEST_OCT_KEY_SIG },
+        });
+
+        // A different key (same class, so it clears the sig floor) that names
+        // another kid: selection is driven by the token's own kid, so a key
+        // naming a different one is a caller error — the guard fires before the
+        // signature is touched, even though the shared secret would verify.
+        const other = KryptosKit.clone(TEST_OCT_KEY_SIG, {
+          id: "9a8b7c6d-0000-4000-8000-00000000000b",
+        });
+
+        const error = await aegis.jws
+          .verify(token, { key: { kryptos: other } })
+          .catch((err: Error) => err);
+
+        expect(error).toBeInstanceOf(AegisError);
+        expect((error as AegisError).code).toBe("verify_key_mismatch");
+        expect((error as AegisError).data).toMatchObject({
+          kid: TEST_OCT_KEY_SIG.id,
+          suppliedKid: other.id,
+          operation: "verify",
+        });
       });
     });
 

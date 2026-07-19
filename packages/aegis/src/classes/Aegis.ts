@@ -120,7 +120,7 @@ import type {
   VerifyJwtOptions,
 } from "../types/index.js";
 import { CoseKit } from "./CoseKit.js";
-import { CwtKit, type CwtDecoded } from "./CwtKit.js";
+import { type CwtDecoded, CwtKit } from "./CwtKit.js";
 import { JoseKit } from "./JoseKit.js";
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
@@ -1129,23 +1129,25 @@ export class Aegis implements IAegis {
 
   // The deployment/per-call verify policy joins the FLOOR rather than the
   // selector: selection here is driven by the token's own `kid`, so the policy
-  // has to be a CHECK on the resolved key to bite at all. There is no kid-less
-  // case: a token with no `kid` is rejected by `resolveKey` (a token must not be
-  // able to steer key selection by its own `alg` — RFC 8725 §3.1), and verify
-  // has no injectable-key escape hatch by design — that is deferred to the
-  // future `client_secret_jwt` slice (see the `AegisVerifyKey` type comment).
-  // The `selector` below is therefore dead for resolution; it stays only to
-  // record the `alg` the token declared.
+  // has to be a CHECK on the resolved key to bite at all. The one kid-less case
+  // is an injected `kryptos` — verify's escape hatch for a signature made by a
+  // key that is not a vault resident (an RFC 7523 `client_secret_jwt` assertion
+  // MACed with a client secret; see the `AegisVerifyKey` type comment). Absent
+  // an injected key a kid-less token is rejected by `resolveKey` — a token must
+  // not steer key selection by its own `alg` (RFC 8725 §3.1). The `selector`
+  // below is dead for resolution; it stays only to record the `alg` the token
+  // declared.
   private resolveVerifyKey(
     id: string | undefined,
     algorithm: KryptosSigAlgorithm | undefined,
     verify?: AegisVerifyKey,
   ): Promise<IKryptos> {
     return resolveKey({
+      id,
       amphora: this.amphora,
       floor: applyKeyFloor(VERIFY_FLOOR, this.verifyKey.predicate, verify?.predicate),
       selector: { algorithm },
-      id,
+      kryptos: verify?.kryptos ?? this.verifyKey.kryptos,
       logger: this.logger,
       operation: "verify",
     });

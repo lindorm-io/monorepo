@@ -38,9 +38,10 @@ export type VerifyJwtOptions = JwtClaimMatchers & {
   tokenType?: TokenType;
   /**
    * Per-call verification key policy — a CHECK on the key the token's `kid`
-   * names, applied before the signature is checked. Not a claim matcher:
-   * `createJwtVerify` skips it, and `JwtKit` (which is handed an explicit key)
-   * ignores it entirely.
+   * names, applied before the signature is checked, or a `kryptos` supplied
+   * outright for a signature made by a key not in the vault (RFC 7523
+   * `client_secret_jwt`). Not a claim matcher: `createJwtVerify` skips it, and
+   * `JwtKit` (which is handed an explicit key) ignores it entirely.
    */
   key?: AegisVerifyKey;
   /**

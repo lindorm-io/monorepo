@@ -95,11 +95,12 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
   // newest vault key of the class the artifact chose for itself. That is an
   // undocumented fallback the design forbids: an artifact must not steer key
   // selection by class (RFC 8725 §3.1). So on the read side a missing kid is a
-  // throw, not a query. (Decrypt keeps its escape hatch: an injected `kryptos`
-  // — resolved above — is honoured before this gate is reached. Verify has no
-  // key option by design; its injectable-key case is deferred to the future
-  // `client_secret_jwt` slice.) The WRITE side (sign/encrypt) is legitimately
-  // selector-driven with no kid and is unchanged.
+  // throw, not a query. (Both read ops keep an escape hatch: an injected
+  // `kryptos` — resolved above — is honoured before this gate is reached.
+  // Decrypt uses it for ciphertext written to a non-vault key; verify for a
+  // signature made by one — the RFC 7523 `client_secret_jwt` assertion.) The
+  // WRITE side (sign/encrypt) is legitimately selector-driven with no kid and
+  // is unchanged.
   const isReadOp = operation === "verify" || operation === "decrypt";
 
   if (!options.kryptos && !id && isReadOp) {
@@ -108,7 +109,7 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
       data: { operation, profile },
       title: "Read Key Has No Kid",
       details:
-        "This artifact carries no `kid` header and no key was supplied for the operation, so aegis will not search the vault by the algorithm the artifact declares — an artifact must not steer key selection by class (RFC 8725 §3.1). Supply the key the artifact names via its `kid`, or (decrypt only) an explicit key.",
+        "This artifact carries no `kid` header and no key was supplied for the operation, so aegis will not search the vault by the algorithm the artifact declares — an artifact must not steer key selection by class (RFC 8725 §3.1). Supply the key the artifact names via its `kid`, or supply the key explicitly (verify / decrypt).",
     });
   }
 

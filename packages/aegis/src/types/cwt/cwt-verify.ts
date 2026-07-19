@@ -9,8 +9,10 @@ import type { JwtClaimMatchers } from "../jwt/jwt-claim-matchers.js";
  */
 export type VerifyCwtOptions = JwtClaimMatchers & {
   /**
-   * Per-call verification key policy — a CHECK on the key the CWT's `kid` names.
-   * Consumed by `Aegis`, which resolves the key by kid.
+   * Per-call verification key policy — a CHECK on the key the CWT's `kid` names,
+   * or a `kryptos` supplied outright for a signature made by a key not in the
+   * vault (RFC 7523 `client_secret_jwt`). Consumed by `Aegis`, which resolves
+   * the key by kid.
    */
   key?: AegisVerifyKey;
   /**

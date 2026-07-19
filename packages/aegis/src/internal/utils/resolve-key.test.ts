@@ -224,7 +224,7 @@ describe("resolveKey", () => {
   // token's OWN declared `alg` — an undocumented fallback the design forbids
   // (RFC 8725 §3.1). On the read side a missing kid is a throw, not a query.
   describe("the read side refuses a kid-less vault search", () => {
-    test("a kid-less VERIFY throws — there is no verify escape hatch", async () => {
+    test("a kid-less VERIFY with NO injected key throws — the vault is not searched by the token's alg", async () => {
       amphora.add(TEST_EC_KEY_SIG); // a candidate the alg-search would have found
 
       const error = await resolveKey({
@@ -242,6 +242,22 @@ describe("resolveKey", () => {
         operation: "verify",
         profile: "access_token",
       });
+    });
+
+    test("a kid-less VERIFY WITH an injected key SUCCEEDS — verify's escape hatch (RFC 7523 client_secret_jwt)", async () => {
+      // A client assertion MACed (HS256) with a client secret the verifier holds
+      // out-of-band carries no `kid` to resolve; the injected key is honoured
+      // before the kid-less gate is reached. The vault never held the secret.
+      const kryptos = await resolveKey({
+        amphora,
+        floor: VERIFY_FLOOR,
+        selector: { algorithm: "HS256" },
+        kryptos: CLIENT_SECRET,
+        logger,
+        operation: "verify",
+      });
+
+      expect(kryptos).toBe(CLIENT_SECRET);
     });
 
     test("a kid-less DECRYPT with no injected key throws", async () => {
