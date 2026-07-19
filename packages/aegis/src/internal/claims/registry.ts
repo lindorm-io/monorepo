@@ -527,6 +527,19 @@ const byDomain = new Map<string, ClaimSpec>(
 const byJose = new Map<string, ClaimSpec>(
   CLAIM_REGISTRY.map((spec) => [spec.jose, spec]),
 );
+// Integer COSE label -> spec. Only claims carrying an integer label (registered
+// or private-use) are keyed; string-keyed claims (`cose: null`) are absent.
+const byCose = new Map<number, ClaimSpec>(
+  CLAIM_REGISTRY.filter(
+    (spec): spec is ClaimSpec & { cose: number } => spec.cose !== null,
+  ).map((spec) => [spec.cose, spec]),
+);
+// COSE string name -> spec. The COSE name equals the JOSE name unless the
+// registry declares a divergent `coseName` (RFC 8392 `jti` -> `cti`), so this
+// keys every claim by its effective COSE string name.
+const byCoseName = new Map<string, ClaimSpec>(
+  CLAIM_REGISTRY.map((spec) => [spec.coseName ?? spec.jose, spec]),
+);
 
 /** Resolve a claim spec by its domain name (or `undefined` if not registered). */
 export const specByDomain = (domain: string): ClaimSpec | undefined =>
@@ -534,3 +547,13 @@ export const specByDomain = (domain: string): ClaimSpec | undefined =>
 
 /** Resolve a claim spec by its JOSE wire name. */
 export const specByJose = (jose: string): ClaimSpec | undefined => byJose.get(jose);
+
+/** Resolve a claim spec by its integer COSE label (or `undefined`). */
+export const specByCose = (cose: number): ClaimSpec | undefined => byCose.get(cose);
+
+/**
+ * Resolve a claim spec by its COSE string name — the `coseName` where the
+ * registry declares one (`cti`), else the JOSE name (`iss`, `exp`, …).
+ */
+export const specByCoseName = (coseName: string): ClaimSpec | undefined =>
+  byCoseName.get(coseName);

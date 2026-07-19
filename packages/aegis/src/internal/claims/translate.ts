@@ -1,0 +1,264 @@
+import { camelCase, snakeCase, snakeKeys } from "@lindorm/case";
+import { getUnixTime } from "@lindorm/date";
+import { isArray, isFinite, isObject, isString } from "@lindorm/is";
+import type { Dict } from "@lindorm/types";
+import { omitUndefined } from "@lindorm/utils";
+import type { ActClaim, ActClaimWire, ConfirmationClaim } from "../../types/index.js";
+import { type ClaimSpec, CLAIM_REGISTRY, specByDomain } from "./registry.js";
+
+/**
+ * The ONE `jose <-> domain` claim translator (DESIGN §3). It consolidates the
+ * three mappers that exist today — `map-content-to-claims.ts` (domain -> jose,
+ * write), `extract-claims.ts` `extractDomainClaims` (jose/camel -> domain, read),
+ * and the `domain <-> jose` remap loops around `CWT_CLAIMS_KIT` in
+ * `cwt-claims.ts` — into a single registry-driven pair.
+ *
+ * It is the ONLY domain-aware claim code: both the JOSE and the COSE format
+ * paths meet here. Value transforms come from the registry's `ClaimValueKind`; a
+ * small co-located BESPOKE builder table (below) holds the per-claim shapes
+ * (`cnf`, `act`/`may_act`, `sub_id`, `events`, `authorization_details`, the OIDC
+ * hashes). All case/name conversion is Aegis-side (R18): a registered claim
+ * takes the explicit registry path (name + value transform); anything NOT in the
+ * registry is a custom claim whose KEY case flips mechanically (snake on write,
+ * camel on read) with its value untouched.
+ *
+ * Hash DERIVATION is NOT here (it needs the signing algorithm and stays in
+ * `assemble-common-claims.ts`); the translator only maps the already-derived
+ * `accessTokenHash` -> `at_hash`, so it is fully mechanical and algorithm-free.
+ *
+ * UNWIRED in this phase: nothing calls it yet (the three mappers still run in
+ * the real mint/verify paths). Parity tests prove it reproduces them exactly.
+ */
+
+// --- Bespoke builders (write side), lifted from map-content-to-claims.ts -----
+
+// RFC 8693 act / may_act: recursively map the camelCase domain shape to the wire.
+const actClaimToWire = (claim: ActClaim): ActClaimWire =>
+  omitUndefined({
+    sub: claim.subject,
+    iss: claim.issuer,
+    aud: claim.audience,
+    client_id: claim.clientId,
+    act: isObject(claim.act) ? actClaimToWire(claim.act) : undefined,
+  });
+
+// RFC 7800 cnf: map the camelCase confirmation to the wire member names. An
+// all-empty confirmation collapses to `undefined` (dropped), matching the mint
+// mapper's `cnf && Object.keys(cnf).length > 0 ? cnf : undefined`.
+const confirmationToWire = (claim: ConfirmationClaim): Dict | undefined => {
+  const cnf = omitUndefined({
+    jkt: claim.thumbprint,
+    "x5t#S256": claim.mtlsCertThumbprint,
+    jwk: claim.key,
+    kid: claim.keyId,
+    jku: claim.jwkSetUri,
+  });
+
+  return Object.keys(cnf).length > 0 ? cnf : undefined;
+};
+
+// --- Value decoders (read side), lifted from extract-claims.ts ----------------
+
+const toDate = (value: unknown): Date | undefined => {
+  if (value instanceof Date) return value;
+  if (isFinite(value)) return new Date(value * 1000);
+  return undefined;
+};
+
+const toStringArray = (value: unknown): Array<string> | undefined => {
+  if (isArray(value)) return value as Array<string>;
+  if (isString(value)) return value.split(" ").filter(Boolean);
+  return undefined;
+};
+
+const toAudience = (value: unknown): Array<string> | undefined => {
+  if (isArray(value)) return value as Array<string>;
+  if (isString(value)) return [value];
+  return undefined;
+};
+
+// Recursively normalise an act-claim, accepting camelCase and snake at every level.
+const toActClaim = (value: unknown): ActClaim | undefined => {
+  if (!isObject(value)) return undefined;
+  const v = value;
+  const result: ActClaim = omitUndefined({
+    subject: isString(v.subject) ? v.subject : isString(v.sub) ? v.sub : undefined,
+    issuer: isString(v.issuer) ? v.issuer : isString(v.iss) ? v.iss : undefined,
+    audience: toAudience(v.audience ?? v.aud),
+    clientId: isString(v.clientId)
+      ? v.clientId
+      : isString(v.client_id)
+        ? v.client_id
+        : undefined,
+    act: toActClaim(v.act),
+  });
+  return Object.keys(result).length > 0 ? result : undefined;
+};
+
+// RFC 7800 confirmation — inner keys are wire-form (`jkt`, `jwk`, `kid`,
+// `x5t#S256`, `jku`), but consumers may pass the camelCase domain form already.
+const toConfirmation = (value: unknown): ConfirmationClaim | undefined => {
+  if (!isObject(value)) return undefined;
+  const v = value;
+  const result: ConfirmationClaim = omitUndefined({
+    thumbprint: isString(v.thumbprint)
+      ? v.thumbprint
+      : isString(v.jkt)
+        ? v.jkt
+        : undefined,
+    mtlsCertThumbprint: isString(v.mtlsCertThumbprint)
+      ? v.mtlsCertThumbprint
+      : isString(v["x5t#S256"])
+        ? v["x5t#S256"]
+        : undefined,
+    key: isObject(v.key)
+      ? (v.key as ConfirmationClaim["key"])
+      : isObject(v.jwk)
+        ? (v.jwk as ConfirmationClaim["key"])
+        : undefined,
+    keyId: isString(v.keyId) ? v.keyId : isString(v.kid) ? v.kid : undefined,
+    jwkSetUri: isString(v.jwkSetUri) ? v.jwkSetUri : isString(v.jku) ? v.jku : undefined,
+  });
+  return Object.keys(result).length > 0 ? result : undefined;
+};
+
+// Claims whose "array" value is space-delimited-string-tolerant on read (they
+// accept `"a b"` and split it); the other array claims (`amr`, `entitlements`,
+// `groups`, `afr`, `authorization_details`) take arrays only. Mirrors the
+// per-claim decoder split in extract-claims.ts EXACTLY.
+const STRING_ARRAY_DOMAINS = new Set(["roles", "scope", "permissions", "conformsTo"]);
+// OIDC hash claims are `bespoke` in the registry but plain strings on both wires.
+const HASH_DOMAINS = new Set(["accessTokenHash", "codeHash", "stateHash"]);
+
+// -----------------------------------------------------------------------------
+
+const encodeBespoke = (domain: string, value: unknown): unknown => {
+  if (HASH_DOMAINS.has(domain)) return value; // already-derived b64url string
+  if (domain === "confirmation") {
+    return isObject(value) ? confirmationToWire(value as ConfirmationClaim) : undefined;
+  }
+  if (domain === "act" || domain === "mayAct") {
+    return isObject(value) ? actClaimToWire(value as ActClaim) : undefined;
+  }
+  if (domain === "subjectId" || domain === "events") {
+    return isObject(value) ? value : undefined;
+  }
+  if (domain === "authorizationDetails") {
+    return isArray(value) ? value : undefined;
+  }
+  // Nested profile objects (`address`) snake their inner keys, matching the
+  // current `snakeKeys(profile)` write path; other bespoke values pass through.
+  if (isObject(value)) return snakeKeys(value);
+  return value;
+};
+
+// Encode ONE registered claim's value to its JOSE wire form per the registry.
+const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
+  switch (spec.value) {
+    case "text":
+    case "int":
+    case "array":
+    case "bool":
+      return value;
+    case "date":
+      return value instanceof Date ? getUnixTime(value) : undefined;
+    case "bstr":
+      return value; // JOSE keeps the string; only COSE turns cti into bytes
+    case "bespoke":
+      return encodeBespoke(spec.domain, value);
+  }
+};
+
+/**
+ * Domain-keyed common claims -> JOSE-keyed wire dict. Registered claims map to
+ * `spec.jose` with their value encoded per `spec.value`; unregistered custom
+ * claims keep their value and flip their KEY to snake_case (R18). Undefined
+ * results (an absent value, an empty `cnf`) are dropped.
+ */
+export const domainToJose = (common: Dict): Dict => {
+  const wire: Dict = {};
+
+  for (const [key, value] of Object.entries(common)) {
+    if (value === undefined) continue;
+
+    const spec = specByDomain(key);
+    if (spec) {
+      const encoded = encodeValue(spec, value);
+      if (encoded !== undefined) wire[spec.jose] = encoded;
+    } else {
+      wire[snakeCase(key)] = value;
+    }
+  }
+
+  return wire;
+};
+
+export type JoseToDomainResult = {
+  claims: Dict;
+  custom: Dict;
+};
+
+// Decode ONE registered claim's value from its wire form to the domain form,
+// reproducing extract-claims.ts's per-claim decoders exactly for the claims it
+// extracts, and decoding the remaining registered claims by their value kind.
+const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
+  if (spec.domain === "audience") return toAudience(value);
+  if (STRING_ARRAY_DOMAINS.has(spec.domain)) return toStringArray(value);
+  if (spec.domain === "act" || spec.domain === "mayAct") return toActClaim(value);
+  if (spec.domain === "confirmation") return toConfirmation(value);
+  if (spec.domain === "subjectId") return isObject(value) ? value : undefined;
+  if (spec.domain === "authorizationDetails") return isArray(value) ? value : undefined;
+  if (HASH_DOMAINS.has(spec.domain)) return isString(value) ? value : undefined;
+
+  switch (spec.value) {
+    case "text":
+      return isString(value) ? value : undefined;
+    case "int":
+      return isFinite(value) ? value : undefined;
+    case "date":
+      return toDate(value);
+    case "array":
+      return isArray(value) ? value : undefined; // amr, entitlements, groups, afr
+    case "bool":
+      return value;
+    case "bstr":
+      return isString(value) ? value : undefined; // jti
+    case "bespoke":
+      return value; // events, address, … carried verbatim
+  }
+};
+
+/**
+ * JOSE/camel-keyed wire dict -> `{ claims, custom }`. Registered claims resolve
+ * to `spec.domain` with their value decoded, tolerating either the wire name or
+ * the camelCase domain name in the input (domain form takes precedence, matching
+ * `extractDomainClaims`). Unregistered keys flip to camelCase into `custom` with
+ * their value untouched.
+ *
+ * The `{ claims, custom }` two-bucket split is the Phase-2 shape; splitting
+ * `profile` / `sensitive` off `claims` is registry-category-driven and lands in
+ * a later phase.
+ */
+export const joseToDomain = (wire: Dict): JoseToDomainResult => {
+  const consumed = new Set<string>();
+  const claims: Dict = {};
+
+  for (const spec of CLAIM_REGISTRY) {
+    // Domain (camel) form takes precedence over the wire name, per extract-claims.
+    const key =
+      spec.domain in wire ? spec.domain : spec.jose in wire ? spec.jose : undefined;
+    if (key === undefined) continue;
+
+    consumed.add(key);
+    const decoded = decodeValue(spec, wire[key]);
+    if (decoded !== undefined) claims[spec.domain] = decoded;
+  }
+
+  const custom: Dict = {};
+  for (const [key, value] of Object.entries(wire)) {
+    if (consumed.has(key)) continue;
+    custom[camelCase(key)] = value;
+  }
+
+  return { claims: omitUndefined(claims), custom };
+};

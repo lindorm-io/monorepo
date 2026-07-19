@@ -1,0 +1,90 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`domainToJose — write parity with mapContentToClaims > the full domain vocabulary maps to an IDENTICAL wire dict 1`] = `
+{
+  "aal": 2,
+  "acr": "urn:acr:high",
+  "act": {
+    "act": {
+      "sub": "root-actor",
+    },
+    "client_id": "c-2",
+    "iss": "https://delegator/",
+    "sub": "actor",
+  },
+  "afr": [
+    "knowledge",
+  ],
+  "amr": [
+    "pwd",
+    "otp",
+  ],
+  "at_hash": "B7p8o12G5vm-9CEZGSanwzMw-leqyauPjU1ebdjBHYw",
+  "aud": [
+    "https://rs.lindorm.io/",
+  ],
+  "auth_time": 1704095700,
+  "authorization_details": [
+    {
+      "amount": 10,
+      "type": "payment",
+    },
+  ],
+  "azp": "client-1",
+  "c_hash": "ZQuiERTfQKTNlhWJVtabaG57OZx3qJIpYSxP1K96j7E",
+  "client_id": "client-1",
+  "cnf": {
+    "jkt": "jkt-1",
+    "kid": "kid-1",
+  },
+  "conforms_to": [
+    "urn:lindorm:profile:fapi",
+  ],
+  "entitlements": [
+    "e1",
+  ],
+  "events": {
+    "urn:lindorm:event:rtbf": {},
+  },
+  "exp": 1704099600,
+  "fal": 1,
+  "groups": [
+    "g1",
+  ],
+  "gty": "authorization_code",
+  "ial": 3,
+  "iat": 1704096000,
+  "iss": "https://issuer.lindorm.io/",
+  "jti": "jti-1",
+  "loa": 3,
+  "may_act": {
+    "sub": "may-actor",
+  },
+  "nbf": 1704095940,
+  "nonce": "n-1",
+  "permissions": [
+    "read",
+  ],
+  "roles": [
+    "admin",
+  ],
+  "s_hash": "dVhomogT530ZL5uCydDavDSoQtJ2KMnAsb7cS78Obbc",
+  "scope": [
+    "read",
+    "write",
+  ],
+  "sid": "sid-1",
+  "sih": "sih-1",
+  "sub": "user-1",
+  "sub_id": {
+    "format": "iss_sub",
+    "iss": "https://i/",
+    "sub": "u",
+  },
+  "suh": "suh-1",
+  "tenant_id": "tenant-1",
+  "txn": "txn-1",
+  "vot": "P1.Cc",
+  "vtm": "https://vtm/",
+}
+`;
