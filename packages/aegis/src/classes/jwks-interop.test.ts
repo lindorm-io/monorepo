@@ -2,14 +2,14 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createLocalJWKSet, importJWK, jwtVerify } from "jose";
 import { describe, expect, test } from "vitest";
-import { JwtKit } from "../src/classes/JwtKit.js";
-import { defaultProfile } from "../src/internal/profiles/definitions/default.js";
-import { buildProfileClaims } from "../src/internal/utils/build-profile-claims.js";
+import { JwtKit } from "./JwtKit.js";
+import { defaultProfile } from "../internal/profiles/definitions/default.js";
+import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import {
   computeTypHeader,
   extractTypPrefix,
-} from "../src/internal/utils/compute-typ-header.js";
-import type { SignContent } from "../src/types/index.js";
+} from "../internal/utils/compute-typ-header.js";
+import type { SignContent } from "../types/index.js";
 
 // The FOREIGN-CLIENT BOUNDARY. Every other suite we own verifies lindorm tokens
 // with lindorm code, which never round-trips a JWK through WebCrypto's key-usage

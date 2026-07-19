@@ -2,14 +2,14 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { importJWK, jwtVerify, SignJWT } from "jose";
 import jsonwebtoken, { type JwtPayload } from "jsonwebtoken";
-import { JwtKit } from "../src/classes/JwtKit.js";
-import { buildProfileClaims } from "../src/internal/utils/build-profile-claims.js";
+import { JwtKit } from "./JwtKit.js";
+import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import {
   computeTypHeader,
   extractTypPrefix,
-} from "../src/internal/utils/compute-typ-header.js";
-import { defaultProfile } from "../src/internal/profiles/definitions/default.js";
-import type { SignContent } from "../src/types/index.js";
+} from "../internal/utils/compute-typ-header.js";
+import { defaultProfile } from "../internal/profiles/definitions/default.js";
+import type { SignContent } from "../types/index.js";
 import { describe, expect, test } from "vitest";
 
 // The wire kit is TRANSFORM-FREE: it injects no iss/iat/jti/nbf. The historical
