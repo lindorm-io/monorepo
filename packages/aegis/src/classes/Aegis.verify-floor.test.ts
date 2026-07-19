@@ -218,15 +218,17 @@ describe("Aegis profiled verify floor (§4.4)", () => {
         events: { "urn:lindorm:event:test": {} },
       });
 
-      // JOSE parse is domain-keyed: `subjectId` (wire `sub_id`, RFC 9493) is
-      // domain-extracted onto `payload`, while `events` stays a custom claim
-      // under `payload.claims` (only subjectId is domain-extracted from SetClaims).
+      // JOSE parse is domain-keyed via the registry-complete `joseToDomain`
+      // translator (Phase 4): both `subjectId` (wire `sub_id`, RFC 9493) AND
+      // `events` (wire `events`, RFC 8417) are registered, so both are
+      // domain-extracted onto `payload` — `events` no longer falls through to
+      // the custom `payload.claims` bag.
       await expect(
         aegis.verify("security_event", token, { audience: "https://receiver" }),
       ).resolves.toMatchObject({
         payload: {
           subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
-          claims: { events: { "urn:lindorm:event:test": {} } },
+          events: { "urn:lindorm:event:test": {} },
         },
       });
     });

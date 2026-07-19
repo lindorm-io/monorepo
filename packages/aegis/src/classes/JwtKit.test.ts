@@ -342,7 +342,7 @@ describe("JwtKit", () => {
           authTime: new Date("2022-01-01T08:00:00.000Z"),
           authorizedParty: "6099162c-3853-5a28-ade1-7f354b68b54b",
           claims: {
-            test_claim: "test_value",
+            testClaim: "test_value",
           },
           clientId: "1782154a-385a-56cc-b504-380f0ba4c012",
           codeHash: "fIneZFxzOJe9_Wsdzc1yaLDmSDkYjy9_G6XDDDLbEos",
@@ -518,7 +518,7 @@ describe("JwtKit", () => {
           authTime: new Date("2022-01-01T08:00:00.000Z"),
           authorizedParty: "6099162c-3853-5a28-ade1-7f354b68b54b",
           claims: {
-            test_claim: "test_value",
+            testClaim: "test_value",
           },
           clientId: "1782154a-385a-56cc-b504-380f0ba4c012",
           codeHash: "fIneZFxzOJe9_Wsdzc1yaLDmSDkYjy9_G6XDDDLbEos",
@@ -1377,8 +1377,8 @@ describe("JwtKit", () => {
         email: "jonn@example.com",
       });
       expect(parsed.payload.claims).toEqual({
-        my_app_flag: "enabled",
-        some_custom_thing: 42,
+        myAppFlag: "enabled",
+        someCustomThing: 42,
       });
     });
 
@@ -1397,10 +1397,11 @@ describe("JwtKit", () => {
       expect(decoded.payload).toMatchObject({ my_app_flag: "enabled" });
       expect(decoded.payload.myAppFlag).toBeUndefined();
 
-      // Read side is untouched this phase (camelCase-on-read is Phase 4), so the
-      // parsed custom bucket carries the wire key verbatim.
+      // Read side now mirrors write (Phase 4): `joseToDomain` flips the
+      // unregistered custom key back to camelCase, so the parsed custom bucket
+      // surfaces `myAppFlag` — a clean camelCase round-trip.
       const parsed = kit.verify(token);
-      expect(parsed.payload.claims).toEqual({ my_app_flag: "enabled" });
+      expect(parsed.payload.claims).toEqual({ myAppFlag: "enabled" });
     });
 
     test("a malicious x5u in the header must not be fetched or used to verify the token", () => {

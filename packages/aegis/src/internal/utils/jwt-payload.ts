@@ -13,12 +13,11 @@ import type {
   SignJwtOptions,
   TokenProfile,
 } from "../../types/index.js";
-import { domainToJose } from "../claims/translate.js";
+import { domainToJose, joseToDomain } from "../claims/translate.js";
 import { B64U } from "../constants/format.js";
 import { applyOmit, type OmitMode } from "./apply-omit.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { extractAegisProfile } from "./extract-aegis-profile.js";
-import { extractDomainClaims } from "./extract-claims.js";
 import { extractSensitiveIdentity } from "./extract-sensitive-identity.js";
 
 type Config = {
@@ -164,17 +163,31 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
     });
   }
 
-  const { claims: domain, rest } = extractDomainClaims(decoded);
-  const { profile, rest: afterProfile } = extractAegisProfile(rest);
-  const { sensitiveIdentity, rest: customClaims } =
-    extractSensitiveIdentity(afterProfile);
+  // The ONE `jose -> domain` translator (registry-complete): registered claims
+  // resolve to their domain names — surfacing `txn`->`transactionId` / `events`
+  // that the old `extractDomainClaims` left in the custom bag — and unregistered
+  // custom claims flip snake_case -> camelCase into `custom` (R18).
+  const { claims: domain, custom } = joseToDomain(decoded);
+
+  // AegisProfile fields are REGISTERED (registry category "profile"), so the
+  // translator now resolves them into `domain` (camelCased) rather than leaving
+  // them among the leftovers. Bucket them off `domain` — extractAegisProfile
+  // matches the camelCase domain names and strips them from the domain rest.
+  // (Registry-category-driven read-bucketing lands in a later phase; this keeps
+  // the existing `profile` bucket behaviour intact meanwhile.)
+  const { profile, rest: domainRest } = extractAegisProfile(domain);
+
+  // AegisSensitiveIdentity still travels as the single nested `sensitive_identity`
+  // claim (unregistered until the flat-wire correction lands), so it stays in
+  // `custom` (camelCased to `sensitiveIdentity`); bucket it off there.
+  const { sensitiveIdentity, rest: customClaims } = extractSensitiveIdentity(custom);
 
   // ParsedJwtPayload keeps set-valued arrays non-optional with [] defaults.
   // Only `iss` is required at parse (validated above); every other scalar
   // claim is optional — subject/tokenId stay undefined when absent
   // (omitUndefined strips them), never a fabricated "unknown".
   return omitUndefined({
-    ...domain,
+    ...domainRest,
     // Required field (validated above — iss checked)
     issuer: domain.issuer!,
     // Optional — an absent exp (SET) / iat leaves them undefined (omitUndefined strips)

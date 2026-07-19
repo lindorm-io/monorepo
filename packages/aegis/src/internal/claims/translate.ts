@@ -128,8 +128,6 @@ const toConfirmation = (value: unknown): ConfirmationClaim | undefined => {
 // `groups`, `afr`, `authorization_details`) take arrays only. Mirrors the
 // per-claim decoder split in extract-claims.ts EXACTLY.
 const STRING_ARRAY_DOMAINS = new Set(["roles", "scope", "permissions", "conformsTo"]);
-// OIDC hash claims are `bespoke` in the registry but plain strings on both wires.
-const HASH_DOMAINS = new Set(["accessTokenHash", "codeHash", "stateHash"]);
 
 // -----------------------------------------------------------------------------
 
@@ -225,18 +223,45 @@ export type JoseToDomainResult = {
   custom: Dict;
 };
 
-// Decode ONE registered claim's value from its wire form to the domain form,
-// reproducing extract-claims.ts's per-claim decoders exactly for the claims it
-// extracts, and decoding the remaining registered claims by their value kind.
-const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
-  if (spec.domain === "audience") return toAudience(value);
-  if (STRING_ARRAY_DOMAINS.has(spec.domain)) return toStringArray(value);
-  if (spec.domain === "act" || spec.domain === "mayAct") return toActClaim(value);
-  if (spec.domain === "confirmation") return toConfirmation(value);
-  if (spec.domain === "subjectId") return isObject(value) ? value : undefined;
-  if (spec.domain === "authorizationDetails") return isArray(value) ? value : undefined;
-  if (HASH_DOMAINS.has(spec.domain)) return isString(value) ? value : undefined;
+// Dispatch ONE `bespoke` claim's value to its per-claim DOMAIN decoder, keyed by
+// the domain name — the read-side twin of `encodeBespoke`. Every `value:
+// "bespoke"` registry entry is enumerated here; an unhandled bespoke domain is a
+// registry/translator drift and throws loudly (the house exhaustive-switch idiom).
+const decodeBespoke = (domain: string, value: unknown): unknown => {
+  switch (domain) {
+    case "accessTokenHash":
+    case "codeHash":
+    case "stateHash":
+      return isString(value) ? value : undefined; // b64url hash string
+    case "confirmation":
+      return toConfirmation(value);
+    case "act":
+    case "mayAct":
+      return toActClaim(value);
+    case "subjectId":
+      return isObject(value) ? value : undefined;
+    case "authorizationDetails":
+      return isArray(value) ? value : undefined;
+    case "events":
+    case "address":
+      return value; // SET events map / address object carried verbatim
+    default:
+      throw new AegisError("Unhandled bespoke claim domain", {
+        code: "translate_unhandled_bespoke_domain",
+        data: { domain },
+        title: "Unhandled Bespoke Claim Domain",
+        details:
+          "The claim registry declared a bespoke claim the translator has no decoder for.",
+      });
+  }
+};
 
+// Decode ONE registered claim's value from its wire form to the domain form
+// (exhaustive over ClaimValueKind; an unknown kind throws), reproducing
+// extract-claims.ts's per-claim decoders exactly. The `array` case refines by
+// domain (audience wraps a scalar, the space-delimited set splits a string, the
+// rest take arrays only); `bespoke` dispatches to the per-claim decoder table.
+const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
   switch (spec.value) {
     case "text":
       return isString(value) ? value : undefined;
@@ -244,14 +269,26 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
       return isFinite(value) ? value : undefined;
     case "date":
       return toDate(value);
-    case "array":
-      return isArray(value) ? value : undefined; // amr, entitlements, groups, afr
     case "bool":
       return value;
     case "bstr":
       return isString(value) ? value : undefined; // jti
+    case "array":
+      if (spec.domain === "audience") return toAudience(value);
+      if (STRING_ARRAY_DOMAINS.has(spec.domain)) return toStringArray(value);
+      return isArray(value) ? value : undefined; // amr, entitlements, groups, afr
     case "bespoke":
-      return value; // events, address, … carried verbatim
+      return decodeBespoke(spec.domain, value);
+    default: {
+      const exhaustive: never = spec.value;
+      throw new AegisError("Unhandled claim value kind", {
+        code: "translate_unhandled_value_kind",
+        data: { kind: String(exhaustive) },
+        title: "Unhandled Claim Value Kind",
+        details:
+          "The claim registry declared a value kind the translator has no decoder for.",
+      });
+    }
   }
 };
 
