@@ -38,15 +38,36 @@ export type ClaimValueKind =
   | "text" // string scalar (iss, sub, acr…)
   | "int" // plain number, no transform (loa…)
   | "date" // NumericDate: domain Date <-> wire/COSE Unix-seconds int (exp, iat, nbf, auth_time)
+  | "bool" // boolean scalar (national_identity_number_verified…)
   | "array" // array of strings (aud, scope, roles…)
   | "bstr" // byte string on the COSE wire (cti…)
   | "bespoke"; // needs a per-claim builder (cnf, hashes, act, sub_id, events…)
+
+/**
+ * Which read-side bucket a claim belongs to. Every registry entry declares
+ * exactly one:
+ *   - `"claims"`   — the standard/protocol claim set (RFC / OIDC top-level).
+ *   - `"profile"`  — the OIDC Core §5.1 profile set (`AegisProfile`).
+ *   - `"sensitive"`— government-issued personal identifiers (`AegisSensitive`).
+ * A claim NOT in the registry buckets to `custom` — so `custom` is the ABSENCE
+ * of an entry, never a category value. Metadata only — no code reads it yet
+ * (read-side bucketing lands in a later phase).
+ */
+export type ClaimCategory = "claims" | "profile" | "sensitive";
 
 export type ClaimSpec = {
   /** Common-layer key (the domain vocabulary). */
   domain: string;
   /** JOSE wire claim name. */
   jose: string;
+  /**
+   * COSE/CWT string name, present ONLY when it differs from `jose` (RFC 8392's
+   * registered set diverges only at `jti` → `cti`). Absent ⇒ the COSE name
+   * equals `jose`. This is the source of truth for the JOSE↔COSE NAME
+   * divergence set (drives `CwtWireClaims` and the `cose-names` bridge); the
+   * numeric label lives in `cose`, the string name here.
+   */
+  coseName?: string;
   /**
    * COSE/CWT map key. A number is an integer label (RFC-registered, or a
    * private-use `< -65536` label chosen when the byte-size rule favours it).
@@ -55,6 +76,8 @@ export type ClaimSpec = {
    */
   cose: number | null;
   value: ClaimValueKind;
+  /** Read-side bucket (exactly one per entry). See {@link ClaimCategory}. */
+  category: ClaimCategory;
   /**
    * Closed-enum value→digit map for COSE (non-lossy: unknown values are written
    * as their real string). Omitted for open-valued claims.
@@ -75,36 +98,95 @@ const P = (n: number): number => -65537 - n;
  */
 export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
   // --- (a) RFC 8392 standard CWT claims (registered integer labels 1–9) ---
-  { domain: "issuer", jose: "iss", cose: 1, value: "text" },
-  { domain: "subject", jose: "sub", cose: 2, value: "text" },
-  { domain: "audience", jose: "aud", cose: 3, value: "array" },
-  { domain: "expiresAt", jose: "exp", cose: 4, value: "date" },
-  { domain: "notBefore", jose: "nbf", cose: 5, value: "date" },
-  { domain: "issuedAt", jose: "iat", cose: 6, value: "date" },
-  { domain: "tokenId", jose: "jti", cose: 7, value: "bstr" }, // CWT cti
-  { domain: "confirmation", jose: "cnf", cose: 8, value: "bespoke" }, // RFC 8747
-  { domain: "scope", jose: "scope", cose: 9, value: "array" }, // RFC 8693
+  { domain: "issuer", jose: "iss", cose: 1, value: "text", category: "claims" },
+  { domain: "subject", jose: "sub", cose: 2, value: "text", category: "claims" },
+  { domain: "audience", jose: "aud", cose: 3, value: "array", category: "claims" },
+  { domain: "expiresAt", jose: "exp", cose: 4, value: "date", category: "claims" },
+  { domain: "notBefore", jose: "nbf", cose: 5, value: "date", category: "claims" },
+  { domain: "issuedAt", jose: "iat", cose: 6, value: "date", category: "claims" },
+  // CWT cti (RFC 8392 label 7)
+  {
+    domain: "tokenId",
+    jose: "jti",
+    coseName: "cti",
+    cose: 7,
+    value: "bstr",
+    category: "claims",
+  },
+  // RFC 8747
+  { domain: "confirmation", jose: "cnf", cose: 8, value: "bespoke", category: "claims" },
+  // RFC 8693
+  { domain: "scope", jose: "scope", cose: 9, value: "array", category: "claims" },
 
   // --- (b) No registered integer label AND a short JOSE name (≤ 4 chars):
   //     string-keyed in CBOR (interoperable; the string key is the smaller
   //     encoding). Includes the standards-based assurance levels
   //     (ISO/IEC 29115 / NIST SP 800-63A/B/C) and the short lindorm hints.
-  { domain: "authContextClassReference", jose: "acr", cose: null, value: "text" },
-  { domain: "authMethods", jose: "amr", cose: null, value: "array" },
-  { domain: "authorizedParty", jose: "azp", cose: null, value: "text" },
-  { domain: "vectorOfTrust", jose: "vot", cose: null, value: "text" },
-  { domain: "vectorTrustMark", jose: "vtm", cose: null, value: "text" },
-  { domain: "act", jose: "act", cose: null, value: "bespoke" }, // RFC 8693
-  { domain: "grantType", jose: "gty", cose: null, value: "text" },
-  { domain: "sessionId", jose: "sid", cose: null, value: "text" }, // OIDC front-channel logout
-  { domain: "transactionId", jose: "txn", cose: null, value: "text" }, // RFC 8417 txn
-  { domain: "levelOfAssurance", jose: "loa", cose: null, value: "int" }, // ISO/IEC 29115
-  { domain: "authenticatorAssuranceLevel", jose: "aal", cose: null, value: "int" }, // NIST SP 800-63B
-  { domain: "identityAssuranceLevel", jose: "ial", cose: null, value: "int" }, // NIST SP 800-63A
-  { domain: "federationAssuranceLevel", jose: "fal", cose: null, value: "int" }, // NIST SP 800-63C
-  { domain: "authFactor", jose: "afr", cose: null, value: "array" },
-  { domain: "sessionHint", jose: "sih", cose: null, value: "text" },
-  { domain: "subjectHint", jose: "suh", cose: null, value: "text" },
+  {
+    domain: "authContextClassReference",
+    jose: "acr",
+    cose: null,
+    value: "text",
+    category: "claims",
+  },
+  { domain: "authMethods", jose: "amr", cose: null, value: "array", category: "claims" },
+  {
+    domain: "authorizedParty",
+    jose: "azp",
+    cose: null,
+    value: "text",
+    category: "claims",
+  },
+  { domain: "vectorOfTrust", jose: "vot", cose: null, value: "text", category: "claims" },
+  {
+    domain: "vectorTrustMark",
+    jose: "vtm",
+    cose: null,
+    value: "text",
+    category: "claims",
+  },
+  // RFC 8693
+  { domain: "act", jose: "act", cose: null, value: "bespoke", category: "claims" },
+  { domain: "grantType", jose: "gty", cose: null, value: "text", category: "claims" },
+  // OIDC front-channel logout
+  { domain: "sessionId", jose: "sid", cose: null, value: "text", category: "claims" },
+  // RFC 8417 txn
+  { domain: "transactionId", jose: "txn", cose: null, value: "text", category: "claims" },
+  // ISO/IEC 29115
+  {
+    domain: "levelOfAssurance",
+    jose: "loa",
+    cose: null,
+    value: "int",
+    category: "claims",
+  },
+  // NIST SP 800-63B
+  {
+    domain: "authenticatorAssuranceLevel",
+    jose: "aal",
+    cose: null,
+    value: "int",
+    category: "claims",
+  },
+  // NIST SP 800-63A
+  {
+    domain: "identityAssuranceLevel",
+    jose: "ial",
+    cose: null,
+    value: "int",
+    category: "claims",
+  },
+  // NIST SP 800-63C
+  {
+    domain: "federationAssuranceLevel",
+    jose: "fal",
+    cose: null,
+    value: "int",
+    category: "claims",
+  },
+  { domain: "authFactor", jose: "afr", cose: null, value: "array", category: "claims" },
+  { domain: "sessionHint", jose: "sih", cose: null, value: "text", category: "claims" },
+  { domain: "subjectHint", jose: "suh", cose: null, value: "text", category: "claims" },
 
   // --- (c) No registered integer label but a long JOSE name (≥ 5 chars):
   //     a private-use integer label (5 bytes) beats the string key (name + 1).
@@ -112,36 +194,331 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
   //     off-platform (proprietary:false) — NEVER dropped.
   // OIDC `nonce` is NOT CWT label 10 (that is EAT `eat_nonce`, RFC 9711); it is
   // a request-binding text string with no registered CWT label.
-  { domain: "accessTokenHash", jose: "at_hash", cose: P(0), value: "bespoke" },
-  { domain: "codeHash", jose: "c_hash", cose: P(1), value: "bespoke" },
-  { domain: "stateHash", jose: "s_hash", cose: P(2), value: "bespoke" },
-  { domain: "nonce", jose: "nonce", cose: P(3), value: "text" },
-  { domain: "authTime", jose: "auth_time", cose: P(4), value: "date" },
+  {
+    domain: "accessTokenHash",
+    jose: "at_hash",
+    cose: P(0),
+    value: "bespoke",
+    category: "claims",
+  },
+  {
+    domain: "codeHash",
+    jose: "c_hash",
+    cose: P(1),
+    value: "bespoke",
+    category: "claims",
+  },
+  {
+    domain: "stateHash",
+    jose: "s_hash",
+    cose: P(2),
+    value: "bespoke",
+    category: "claims",
+  },
+  { domain: "nonce", jose: "nonce", cose: P(3), value: "text", category: "claims" },
+  {
+    domain: "authTime",
+    jose: "auth_time",
+    cose: P(4),
+    value: "date",
+    category: "claims",
+  },
+  // RFC 9396
   {
     domain: "authorizationDetails",
     jose: "authorization_details",
     cose: P(5),
     value: "bespoke",
-  }, // RFC 9396
-  { domain: "mayAct", jose: "may_act", cose: P(6), value: "bespoke" }, // RFC 8693
-  { domain: "entitlements", jose: "entitlements", cose: P(7), value: "array" },
-  { domain: "groups", jose: "groups", cose: P(8), value: "array" },
-  { domain: "roles", jose: "roles", cose: P(9), value: "array" },
-  { domain: "permissions", jose: "permissions", cose: P(10), value: "array" },
-  { domain: "clientId", jose: "client_id", cose: P(11), value: "text" },
+    category: "claims",
+  },
+  // RFC 8693
+  {
+    domain: "mayAct",
+    jose: "may_act",
+    cose: P(6),
+    value: "bespoke",
+    category: "claims",
+  },
+  {
+    domain: "entitlements",
+    jose: "entitlements",
+    cose: P(7),
+    value: "array",
+    category: "claims",
+  },
+  { domain: "groups", jose: "groups", cose: P(8), value: "array", category: "claims" },
+  { domain: "roles", jose: "roles", cose: P(9), value: "array", category: "claims" },
+  {
+    domain: "permissions",
+    jose: "permissions",
+    cose: P(10),
+    value: "array",
+    category: "claims",
+  },
+  {
+    domain: "clientId",
+    jose: "client_id",
+    cose: P(11),
+    value: "text",
+    category: "claims",
+  },
 
   // --- SET claims (RFC 8417 / RFC 9493). Emitted by mint but NOT extracted
   //     into DomainClaims (they are SET-token-specific), so they live in the
   //     registry but not in extract-claims FIELD_KEYS.
-  { domain: "subjectId", jose: "sub_id", cose: P(12), value: "bespoke" }, // RFC 9493
-  { domain: "events", jose: "events", cose: P(13), value: "bespoke" }, // RFC 8417 SET events
+  // RFC 9493
+  {
+    domain: "subjectId",
+    jose: "sub_id",
+    cose: P(12),
+    value: "bespoke",
+    category: "claims",
+  },
+  // RFC 8417 SET events
+  { domain: "events", jose: "events", cose: P(13), value: "bespoke", category: "claims" },
 
-  { domain: "tenantId", jose: "tenant_id", cose: P(14), value: "text" },
+  {
+    domain: "tenantId",
+    jose: "tenant_id",
+    cose: P(14),
+    value: "text",
+    category: "claims",
+  },
 
   // RS-facing posture signal (token-claims.md §2/§3): the profiles the token's
   // issuing client clears above the `permissive` floor. Long JOSE name, no
   // registered CWT label ⇒ private-use label (append-only: never renumber).
-  { domain: "conformsTo", jose: "conforms_to", cose: P(15), value: "array" },
+  {
+    domain: "conformsTo",
+    jose: "conforms_to",
+    cose: P(15),
+    value: "array",
+    category: "claims",
+  },
+
+  // --- SENSITIVE identity claims (government-issued personal identifiers) ---
+  //     The `AegisSensitive` set: national identity / social-security numbers
+  //     and their OIDC §5.1 verified flags. `category: "sensitive"` so read-side
+  //     bucketing (Phase 13) honours them ONLY on an encrypted token (OIDC Core
+  //     §13.3). Long JOSE names ⇒ private-use labels (append-only). No code
+  //     reads the category yet — pure metadata this phase.
+  {
+    domain: "nationalIdentityNumber",
+    jose: "national_identity_number",
+    cose: P(16),
+    value: "text",
+    category: "sensitive",
+  },
+  {
+    domain: "nationalIdentityNumberVerified",
+    jose: "national_identity_number_verified",
+    cose: P(17),
+    value: "bool",
+    category: "sensitive",
+  },
+  {
+    domain: "socialSecurityNumber",
+    jose: "social_security_number",
+    cose: P(18),
+    value: "text",
+    category: "sensitive",
+  },
+  {
+    domain: "socialSecurityNumberVerified",
+    jose: "social_security_number_verified",
+    cose: P(19),
+    value: "bool",
+    category: "sensitive",
+  },
+
+  // --- OIDC §5.1 PROFILE claims (the `AegisProfile` set) ---
+  //     Personalization / contact-card fields. `category: "profile"` so read-side
+  //     bucketing (a later phase) can collect them into `VerifiedToken.profile`.
+  //     `value` is DERIVED from the AegisProfile field type (string→text,
+  //     boolean→bool, number-NumericDate→date, string[]→array, nested object→
+  //     bespoke). Long JOSE names ⇒ private-use labels (append-only after P(19));
+  //     the 4-char `name` stays string-keyed (cose:null) per the byte-rule. No
+  //     code reads the category yet — pure metadata this phase. NOTE: the OIDC
+  //     `profile` URL claim registers under domain/jose "profile"; that is the
+  //     CLAIM name and is distinct from the `category: "profile"` bucket.
+  {
+    domain: "address",
+    jose: "address",
+    cose: P(20),
+    value: "bespoke",
+    category: "profile",
+  },
+  { domain: "email", jose: "email", cose: P(21), value: "text", category: "profile" },
+  {
+    domain: "emailVerified",
+    jose: "email_verified",
+    cose: P(22),
+    value: "bool",
+    category: "profile",
+  },
+  {
+    domain: "phoneNumber",
+    jose: "phone_number",
+    cose: P(23),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "phoneNumberVerified",
+    jose: "phone_number_verified",
+    cose: P(24),
+    value: "bool",
+    category: "profile",
+  },
+  { domain: "picture", jose: "picture", cose: P(25), value: "text", category: "profile" },
+  {
+    domain: "birthdate",
+    jose: "birthdate",
+    cose: P(26),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "familyName",
+    jose: "family_name",
+    cose: P(27),
+    value: "text",
+    category: "profile",
+  },
+  { domain: "gender", jose: "gender", cose: P(28), value: "text", category: "profile" },
+  {
+    domain: "givenName",
+    jose: "given_name",
+    cose: P(29),
+    value: "text",
+    category: "profile",
+  },
+  { domain: "locale", jose: "locale", cose: P(30), value: "text", category: "profile" },
+  {
+    domain: "middleName",
+    jose: "middle_name",
+    cose: P(31),
+    value: "text",
+    category: "profile",
+  },
+  // "name" is 4 chars ⇒ string-keyed (the string key is the smaller CBOR encoding).
+  { domain: "name", jose: "name", cose: null, value: "text", category: "profile" },
+  {
+    domain: "nickname",
+    jose: "nickname",
+    cose: P(32),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "preferredUsername",
+    jose: "preferred_username",
+    cose: P(33),
+    value: "text",
+    category: "profile",
+  },
+  // OIDC `profile` URL claim — the CLAIM named "profile" (distinct from the bucket).
+  { domain: "profile", jose: "profile", cose: P(34), value: "text", category: "profile" },
+  // `updatedAt` is a NumericDate (number seconds) ⇒ "date", per the derive-from-type rule.
+  {
+    domain: "updatedAt",
+    jose: "updated_at",
+    cose: P(35),
+    value: "date",
+    category: "profile",
+  },
+  { domain: "website", jose: "website", cose: P(36), value: "text", category: "profile" },
+  {
+    domain: "zoneinfo",
+    jose: "zoneinfo",
+    cose: P(37),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "displayName",
+    jose: "display_name",
+    cose: P(38),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "honorific",
+    jose: "honorific",
+    cose: P(39),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "legalName",
+    jose: "legal_name",
+    cose: P(40),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "legalNameVerified",
+    jose: "legal_name_verified",
+    cose: P(41),
+    value: "bool",
+    category: "profile",
+  },
+  {
+    domain: "namingSystem",
+    jose: "naming_system",
+    cose: P(42),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "preferredAccessibility",
+    jose: "preferred_accessibility",
+    cose: P(43),
+    value: "array",
+    category: "profile",
+  },
+  {
+    domain: "preferredName",
+    jose: "preferred_name",
+    cose: P(44),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "pronouns",
+    jose: "pronouns",
+    cose: P(45),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "department",
+    jose: "department",
+    cose: P(46),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "jobTitle",
+    jose: "job_title",
+    cose: P(47),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "occupation",
+    jose: "occupation",
+    cose: P(48),
+    value: "text",
+    category: "profile",
+  },
+  {
+    domain: "organization",
+    jose: "organization",
+    cose: P(49),
+    value: "text",
+    category: "profile",
+  },
 ];
 
 const byDomain = new Map<string, ClaimSpec>(

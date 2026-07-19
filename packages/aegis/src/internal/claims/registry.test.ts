@@ -1,6 +1,56 @@
 import { describe, expect, test } from "vitest";
+import type { AegisProfile, AegisSensitiveIdentity } from "../../types/index.js";
 import { DOMAIN_CLAIM_KEYS } from "../utils/extract-claims.js";
 import { CLAIM_REGISTRY, specByDomain, specByJose } from "./registry.js";
+
+// Witness whose keys ARE the AegisSensitiveIdentity field set. Typed as
+// `Record<keyof AegisSensitiveIdentity, true>`, so adding OR removing a field
+// from AegisSensitiveIdentity forces this to change (compile error) — the
+// registry `sensitive` marks are then checked against these keys at runtime.
+const SENSITIVE_IDENTITY_FIELDS: Record<keyof AegisSensitiveIdentity, true> = {
+  nationalIdentityNumber: true,
+  nationalIdentityNumberVerified: true,
+  socialSecurityNumber: true,
+  socialSecurityNumberVerified: true,
+};
+
+// Witness whose keys ARE the AegisProfile field set. Typed as
+// `Record<keyof AegisProfile, true>`, so adding OR removing a field from
+// AegisProfile forces this to change (compile error) — the registry `profile`
+// marks are then checked against these keys at runtime.
+const PROFILE_FIELDS: Record<keyof AegisProfile, true> = {
+  address: true,
+  email: true,
+  emailVerified: true,
+  phoneNumber: true,
+  phoneNumberVerified: true,
+  picture: true,
+  birthdate: true,
+  familyName: true,
+  gender: true,
+  givenName: true,
+  locale: true,
+  middleName: true,
+  name: true,
+  nickname: true,
+  preferredUsername: true,
+  profile: true,
+  updatedAt: true,
+  website: true,
+  zoneinfo: true,
+  displayName: true,
+  honorific: true,
+  legalName: true,
+  legalNameVerified: true,
+  namingSystem: true,
+  preferredAccessibility: true,
+  preferredName: true,
+  pronouns: true,
+  department: true,
+  jobTitle: true,
+  occupation: true,
+  organization: true,
+};
 
 describe("CLAIM_REGISTRY", () => {
   test("every domain claim from extract-claims FIELD_KEYS is in the registry", () => {
@@ -107,6 +157,53 @@ describe("CLAIM_REGISTRY", () => {
     // private-use label, but never the registered EAT label 10.
     expect(specByDomain("nonce")?.cose).not.toBe(10);
     expect(CLAIM_REGISTRY.some((spec) => spec.cose === 10)).toBe(false);
+  });
+
+  test("coseName is present exactly for the JOSE↔COSE name divergences (RFC 8392: jti↔cti)", () => {
+    // A coseName, where present, must actually diverge from the JOSE name —
+    // absence means "COSE name == JOSE name" (the common case), so a coseName
+    // equal to jose would be a redundant, wrong entry.
+    for (const spec of CLAIM_REGISTRY) {
+      if (spec.coseName === undefined) continue;
+      expect(
+        spec.coseName,
+        `${spec.domain} coseName "${spec.coseName}" must differ from jose "${spec.jose}"`,
+      ).not.toBe(spec.jose);
+    }
+
+    // The FULL divergence set, derived from the registry and grounded in RFC
+    // 8392's registered CWT claim names: today the only JOSE↔COSE name
+    // divergence is jti↔cti. Adding a wrong/extra coseName fails here.
+    const divergences = CLAIM_REGISTRY.filter(
+      (spec) => spec.coseName && spec.coseName !== spec.jose,
+    ).map((spec) => ({ domain: spec.domain, jose: spec.jose, coseName: spec.coseName }));
+
+    expect(divergences).toEqual([{ domain: "tokenId", jose: "jti", coseName: "cti" }]);
+  });
+
+  test('category "sensitive" claims match the AegisSensitiveIdentity field set', () => {
+    const sensitiveDomains = CLAIM_REGISTRY.filter(
+      (spec) => spec.category === "sensitive",
+    ).map((spec) => spec.domain);
+
+    expect(new Set(sensitiveDomains)).toEqual(
+      new Set(Object.keys(SENSITIVE_IDENTITY_FIELDS)),
+    );
+  });
+
+  test('category "profile" claims match the AegisProfile field set', () => {
+    const profileDomains = CLAIM_REGISTRY.filter(
+      (spec) => spec.category === "profile",
+    ).map((spec) => spec.domain);
+
+    expect(new Set(profileDomains)).toEqual(new Set(Object.keys(PROFILE_FIELDS)));
+  });
+
+  test("every entry declares exactly one category", () => {
+    const valid = new Set(["claims", "profile", "sensitive"]);
+    for (const spec of CLAIM_REGISTRY) {
+      expect(valid.has(spec.category), `${spec.domain} has invalid category`).toBe(true);
+    }
   });
 
   test("lookups resolve by domain and jose", () => {

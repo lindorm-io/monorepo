@@ -74,6 +74,7 @@ const fieldForClaim = (spec: ClaimSpec): CborField => {
     case "int":
     case "array":
     case "date":
+    case "bool":
       return { ...base, kind: spec.value as CborValueKind };
     case "bstr":
       return { ...base, kind: "bespoke", encode: encodeCti, decode: decodeCti };
