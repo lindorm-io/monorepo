@@ -2,21 +2,20 @@ import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import { describe, expect, test } from "vitest";
 import { extractDomainClaims } from "../utils/extract-claims.js";
-import { mapContentToClaims } from "../utils/map-content-to-claims.js";
 import type { TokenProfile } from "../../types/index.js";
 import { assembleCommonClaims } from "../utils/assemble-common-claims.js";
 import { domainToJose, joseToDomain } from "./translate.js";
 
-// Freeze time so the two mappers' independent `expires("1h")` / `new Date()`
-// calls resolve to the same instant (byte-identical parity, not a race).
+// Freeze time so the `expires("1h")` / `new Date()` calls resolve to a stable
+// instant (the pinned snapshot, not a race).
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
 const ALGORITHM = "ES512" as const;
 
 // A policy-FREE profile: no auto-injection, no required/forbidden, per-token
 // issuer, no lifetime. With it, `assembleCommonClaims` performs ONLY the domain
-// envelope resolution + hash derivation that `mapContentToClaims` also does, so
-// `domainToJose(common)` and `mapContentToClaims(content, options)` must agree.
+// envelope resolution + hash derivation, so `domainToJose(common)` is the pure
+// content -> wire map (pinned by the snapshot below).
 const permissiveProfile: TokenProfile = {
   name: "parity",
   typ: { presence: "none" },
@@ -33,8 +32,8 @@ const permissiveProfile: TokenProfile = {
 
 const assembleCtx = { algorithm: ALGORITHM, issuer: null };
 
-describe("domainToJose — write parity with mapContentToClaims", () => {
-  test("the full domain vocabulary maps to an IDENTICAL wire dict", () => {
+describe("domainToJose — content -> wire mapping", () => {
+  test("the full domain vocabulary maps to the expected wire dict", () => {
     const content: Dict = {
       // std envelope
       issuer: "https://issuer.lindorm.io/",
@@ -88,38 +87,20 @@ describe("domainToJose — write parity with mapContentToClaims", () => {
     };
     const options = { tokenId: "jti-1", issuedAt: new Date("2024-01-01T08:00:00.000Z") };
 
-    const wireFromMapper = mapContentToClaims(
-      { algorithm: ALGORITHM },
-      content as never,
-      options,
-    );
     const common = assembleCommonClaims(assembleCtx, permissiveProfile, content, options);
 
-    expect(domainToJose(common)).toEqual(wireFromMapper);
     expect(domainToJose(common)).toMatchSnapshot();
   });
 
-  test("an all-empty confirmation collapses to no cnf (parity)", () => {
+  test("an all-empty confirmation collapses to no cnf", () => {
     const content: Dict = { subject: "s", confirmation: {} };
-    const wireFromMapper = mapContentToClaims(
-      { algorithm: ALGORITHM },
-      content as never,
-      {},
-    );
     const common = assembleCommonClaims(assembleCtx, permissiveProfile, content, {});
 
     expect(domainToJose(common).cnf).toBeUndefined();
-    expect(wireFromMapper.cnf).toBeUndefined();
-    expect(domainToJose(common)).toEqual(wireFromMapper);
   });
 
   test("no expires ⇒ no exp; explicit envelope honoured, never invented", () => {
     const content: Dict = { subject: "s" };
-    const wireFromMapper = mapContentToClaims(
-      { algorithm: ALGORITHM },
-      content as never,
-      {},
-    );
     const common = assembleCommonClaims(assembleCtx, permissiveProfile, content, {});
 
     const wire = domainToJose(common);
@@ -127,7 +108,7 @@ describe("domainToJose — write parity with mapContentToClaims", () => {
     expect(wire.iat).toBeUndefined();
     expect(wire.jti).toBeUndefined();
     expect(wire.nbf).toBeUndefined();
-    expect(wire).toEqual(wireFromMapper);
+    expect(wire.sub).toBe("s");
   });
 
   test("registered profile/sensitive claims map by the registry, matching snakeKeys", () => {

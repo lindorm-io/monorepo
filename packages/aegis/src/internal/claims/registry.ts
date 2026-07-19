@@ -64,8 +64,8 @@ export type ClaimSpec = {
    * COSE/CWT string name, present ONLY when it differs from `jose` (RFC 8392's
    * registered set diverges only at `jti` → `cti`). Absent ⇒ the COSE name
    * equals `jose`. This is the source of truth for the JOSE↔COSE NAME
-   * divergence set (drives `CwtWireClaims` and the `cose-names` bridge); the
-   * numeric label lives in `cose`, the string name here.
+   * divergence set: `domainToCose`/`coseToDomain` emit/look up this name, and it
+   * drives `CwtWireClaims`. The numeric label lives in `cose`, the string name here.
    */
   coseName?: string;
   /**

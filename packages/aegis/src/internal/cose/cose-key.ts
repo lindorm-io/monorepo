@@ -87,42 +87,49 @@ export const coseKeyToJwk = (key: Map<number, unknown>): Dict => {
 };
 
 /**
- * Encode the domain confirmation to a COSE cnf map (RFC 8747): an embedded
- * public key -> COSE_Key (member 1), a key id -> kid (member 3). The
- * thumbprint-only forms (`jkt`/`x5t#S256`/`jku`) have no COSE cnf representation
- * (jkt ≠ ckt) and are rejected.
+ * Encode the JOSE `cnf` to a COSE cnf map (RFC 8747): an embedded public key
+ * (`jwk`) -> COSE_Key (member 1), a key id (`kid`) -> kid (member 3). Since Phase
+ * 5 the translator (`domainToCose`) already mapped the domain confirmation to its
+ * JOSE `cnf` member names, so this accepts `{ jwk, kid, jkt, x5t#S256, jku }` (the
+ * JOSE cnf), NOT the domain `{ key, keyId, thumbprint }`. The thumbprint-only
+ * forms (`jkt`/`x5t#S256`/`jku`) have no COSE cnf representation (jkt ≠ ckt) and
+ * are rejected.
  */
-export const encodeCnf = (confirmation: Dict): Map<number, unknown> => {
-  const cnf = new Map<number, unknown>();
+export const encodeCnf = (cnf: Dict): Map<number, unknown> => {
+  const out = new Map<number, unknown>();
 
-  if (confirmation.key && typeof confirmation.key === "object") {
-    cnf.set(1, jwkToCoseKey(confirmation.key as Dict));
+  if (cnf.jwk && typeof cnf.jwk === "object") {
+    out.set(1, jwkToCoseKey(cnf.jwk as Dict));
   }
-  if (typeof confirmation.keyId === "string") {
-    cnf.set(3, Buffer.from(confirmation.keyId, "utf8"));
+  if (typeof cnf.kid === "string") {
+    out.set(3, Buffer.from(cnf.kid, "utf8"));
   }
 
-  if (cnf.size === 0) {
+  if (out.size === 0) {
     throw new AegisError("Confirmation has no COSE-representable member", {
       code: "cose_cnf_unsupported",
       title: "COSE Confirmation Unsupported",
       details:
-        "Only an embedded key (-> COSE_Key) or keyId (-> kid) can go in a COSE cnf; jkt/x5t#S256/jku have no COSE form (jkt ≠ ckt).",
+        "Only an embedded key (jwk -> COSE_Key) or kid (-> kid) can go in a COSE cnf; jkt/x5t#S256/jku have no COSE form (jkt ≠ ckt).",
     });
   }
 
-  return cnf;
+  return out;
 };
 
-/** Decode a COSE cnf map back to the domain confirmation. */
+/**
+ * Decode a COSE cnf map back to the JOSE `cnf` shape (`{ jwk, kid }`) — the read
+ * twin of {@link encodeCnf}. `coseToDomain` then maps it to the domain
+ * confirmation, exactly as the JOSE path's `joseToDomain` does.
+ */
 export const decodeCnf = (cnf: Map<number, unknown>): Dict => {
-  const confirmation: Dict = {};
+  const out: Dict = {};
 
   const coseKey = cnf.get(1);
-  if (coseKey instanceof Map) confirmation.key = coseKeyToJwk(coseKey);
+  if (coseKey instanceof Map) out.jwk = coseKeyToJwk(coseKey);
 
   const kid = cnf.get(3);
-  if (kid instanceof Uint8Array) confirmation.keyId = Buffer.from(kid).toString("utf8");
+  if (kid instanceof Uint8Array) out.kid = Buffer.from(kid).toString("utf8");
 
-  return confirmation;
+  return out;
 };

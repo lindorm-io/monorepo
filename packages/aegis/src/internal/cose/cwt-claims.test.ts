@@ -1,13 +1,26 @@
+import type { Dict } from "@lindorm/types";
 import { describe, expect, test } from "vitest";
 import { AegisError } from "../../errors/index.js";
+import { coseToDomain, domainToCose } from "../claims/translate.js";
 import { decodeCbor, encodeCbor } from "./cbor.js";
-import { decodeCwtClaims, encodeCwtClaims } from "./cwt-claims.js";
+import { decodeCwtClaims, type EncodeCwtOptions, encodeCwtClaims } from "./cwt-claims.js";
 
 const AT_HASH = "LXEWQrcmsEQBYnyp-6wy9chTD7GQPMTbAiWHF5IaSIE"; // 32-byte b64url
 
+// Since Phase 5 `encodeCwtClaims`/`decodeCwtClaims` are the CODEC boundary (wire
+// in / wire out); the domain <-> wire translation is `domainToCose`/`coseToDomain`.
+// These helpers exercise the full domain round-trip the codec sits inside.
+const encode = (common: Dict, options?: EncodeCwtOptions) =>
+  encodeCwtClaims(domainToCose(common), options);
+
+const decodeToDomain = (map: Map<unknown, unknown> | Dict): Dict => {
+  const { claims, custom } = coseToDomain(decodeCwtClaims(map));
+  return { ...claims, ...custom };
+};
+
 describe("encodeCwtClaims", () => {
   test("maps domain claims to CWT integer labels / string keys", () => {
-    const map = encodeCwtClaims({
+    const map = encode({
       issuer: "https://issuer/",
       subject: "u1",
       audience: ["https://rs/"],
@@ -32,21 +45,19 @@ describe("encodeCwtClaims", () => {
   });
 
   test("encodes OIDC hash claims as byte strings", () => {
-    const map = encodeCwtClaims({ accessTokenHash: AT_HASH });
+    const map = encode({ accessTokenHash: AT_HASH });
     const bytes = map.get(-65537 - 0) as Uint8Array; // at_hash private-use label
     expect(Buffer.isBuffer(bytes) || bytes instanceof Uint8Array).toBe(true);
     expect(Buffer.from(bytes).length).toBe(32);
   });
 
   test("keeps custom passthrough claims under their literal key", () => {
-    const map = encodeCwtClaims({ token_introspection: { active: true } });
+    const map = encode({ token_introspection: { active: true } });
     expect(map.get("token_introspection")).toEqual({ active: true });
   });
 
   test("defers structured claims (cnf) with a clear error", () => {
-    expect(() => encodeCwtClaims({ confirmation: { thumbprint: "x" } })).toThrow(
-      AegisError,
-    );
+    expect(() => encode({ confirmation: { thumbprint: "x" } })).toThrow(AegisError);
   });
 });
 
@@ -54,7 +65,7 @@ describe("proprietary encoding", () => {
   const act = { subject: "actor", issuer: "https://delegator/", clientId: "c-2" };
 
   test("act is compact integer-keyed by default (proprietary)", () => {
-    const map = encodeCwtClaims({ act });
+    const map = encode({ act });
     const encodedAct = map.get("act") as Map<number, unknown>;
     expect(encodedAct).toBeInstanceOf(Map);
     expect(encodedAct.get(1)).toBe("https://delegator/"); // issuer reuses CWT iss
@@ -63,17 +74,24 @@ describe("proprietary encoding", () => {
   });
 
   test("act is interoperable string-keyed when proprietary:false", () => {
-    const map = encodeCwtClaims({ act }, { proprietary: false });
-    expect(map.get("act")).toEqual(act); // the plain object
+    const map = encode({ act }, { proprietary: false });
+    // The interoperable object now carries RFC 8693 wire member names
+    // (sub/iss/client_id), the translator's `act` shape — NOT the lindorm domain
+    // names it emitted before the Phase-5 collapse onto the ONE translator.
+    expect(map.get("act")).toEqual({
+      sub: "actor",
+      iss: "https://delegator/",
+      client_id: "c-2",
+    });
   });
 
   test("private-use claims degrade to their JOSE string key off-platform (never dropped)", () => {
     const withTenant = { issuer: "https://i/", tenantId: "t-1" };
     // On-platform: compact private-use integer label.
-    expect(encodeCwtClaims(withTenant).get(-65537 - 14)).toBe("t-1"); // tenant_id private label
-    expect(encodeCwtClaims(withTenant).has("tenant_id")).toBe(false);
+    expect(encode(withTenant).get(-65537 - 14)).toBe("t-1"); // tenant_id private label
+    expect(encode(withTenant).has("tenant_id")).toBe(false);
     // Off-platform: degraded to the JOSE string key — NOT dropped.
-    const off = encodeCwtClaims(withTenant, { proprietary: false });
+    const off = encode(withTenant, { proprietary: false });
     expect(off.has(-65537 - 14)).toBe(false);
     expect(off.get("tenant_id")).toBe("t-1");
     expect(off.get(1)).toBe("https://i/"); // iss kept
@@ -88,7 +106,7 @@ describe("proprietary encoding", () => {
     };
 
     for (const proprietary of [true, false]) {
-      const map = encodeCwtClaims(claims, { proprietary });
+      const map = encode(claims, { proprietary });
       // No private integer labels — these have no registered CWT label.
       expect(map.has(-65537)).toBe(false);
       // Always string-keyed under their JOSE name.
@@ -103,7 +121,7 @@ describe("proprietary encoding", () => {
     const subjectId = { format: "iss_sub", iss: "https://i/", sub: "u" };
 
     // On-platform: keyed by the private-use label P(12); value is the compact map.
-    const map = encodeCwtClaims({ subjectId });
+    const map = encode({ subjectId });
     const compact = map.get(-65537 - 12) as Map<number, unknown>;
     expect(map.has("sub_id")).toBe(false);
     expect(compact).toBeInstanceOf(Map);
@@ -112,15 +130,15 @@ describe("proprietary encoding", () => {
     expect(compact.get(2)).toBe("u"); // sub reuses CWT label 2
 
     // Off-platform: keyed by the JOSE string name; value is the plain object.
-    const off = encodeCwtClaims({ subjectId }, { proprietary: false });
+    const off = encode({ subjectId }, { proprietary: false });
     expect(off.has(-65537 - 12)).toBe(false);
     expect(off.get("sub_id")).toEqual(subjectId);
   });
 
   test("compact act round-trips through CBOR", () => {
     const claims = { issuer: "https://i/", act }; // issuer (label 1) keeps the top a Map
-    const bytes = encodeCbor(encodeCwtClaims(claims));
-    const decoded = decodeCwtClaims(
+    const bytes = encodeCbor(encode(claims));
+    const decoded = decodeToDomain(
       decodeCbor<Map<unknown, unknown>>(bytes, { preferMap: false }),
     );
     expect(decoded).toEqual(claims);
@@ -142,8 +160,8 @@ describe("CWT claims round-trip (domain -> CBOR -> domain)", () => {
       levelOfAssurance: 3,
     };
 
-    const bytes = encodeCbor(encodeCwtClaims(common));
-    const decoded = decodeCwtClaims(decodeCbor<Map<unknown, unknown>>(bytes));
+    const bytes = encodeCbor(encode(common));
+    const decoded = decodeToDomain(decodeCbor<Map<unknown, unknown>>(bytes));
 
     expect(decoded).toEqual(common);
   });
@@ -167,7 +185,7 @@ describe("CWT claims round-trip (domain -> CBOR -> domain)", () => {
   };
 
   test("reclassified claims round-trip on-platform (integer labels)", () => {
-    const map = encodeCwtClaims(reclassified);
+    const map = encode(reclassified);
     // On-platform: long claims are integer-keyed; short claims string-keyed.
     expect(map.get(-65537 - 3)).toBe("n-123"); // nonce
     expect(map.get(-65537 - 11)).toBe("client-1"); // client_id
@@ -175,12 +193,12 @@ describe("CWT claims round-trip (domain -> CBOR -> domain)", () => {
     expect(map.get("loa")).toBe(3); // string-keyed
     expect(map.get("acr")).toBe("urn:acr:high"); // string-keyed
 
-    const decoded = decodeCwtClaims(decodeCbor<Map<unknown, unknown>>(encodeCbor(map)));
+    const decoded = decodeToDomain(decodeCbor<Map<unknown, unknown>>(encodeCbor(map)));
     expect(decoded).toEqual(reclassified);
   });
 
   test("reclassified claims round-trip off-platform (JOSE string keys, never dropped)", () => {
-    const map = encodeCwtClaims(reclassified, { proprietary: false });
+    const map = encode(reclassified, { proprietary: false });
     // Off-platform: the long claims degrade to their JOSE string keys.
     expect(map.has(-65537 - 3)).toBe(false);
     expect(map.get("nonce")).toBe("n-123");
@@ -189,7 +207,7 @@ describe("CWT claims round-trip (domain -> CBOR -> domain)", () => {
     expect(map.get("loa")).toBe(3); // unchanged
     expect(map.get("acr")).toBe("urn:acr:high"); // unchanged
 
-    const decoded = decodeCwtClaims(
+    const decoded = decodeToDomain(
       decodeCbor<Map<unknown, unknown>>(encodeCbor(map), { preferMap: false }),
     );
     expect(decoded).toEqual(reclassified);

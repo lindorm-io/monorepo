@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`domainToJose — write parity with mapContentToClaims > the full domain vocabulary maps to an IDENTICAL wire dict 1`] = `
+exports[`domainToJose — content -> wire mapping > the full domain vocabulary maps to the expected wire dict 1`] = `
 {
   "aal": 2,
   "acr": "urn:acr:high",

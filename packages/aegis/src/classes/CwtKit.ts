@@ -2,6 +2,7 @@ import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
 import { AegisError } from "../errors/index.js";
+import { coseToDomain, domainToCose } from "../internal/claims/translate.js";
 import { coseLabelToAlg } from "../internal/cose/alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { encodeCwtClaims, decodeCwtClaims } from "../internal/cose/cwt-claims.js";
@@ -33,7 +34,15 @@ export type CwtSignOptions = {
 };
 
 export type CwtVerifyResult = {
+  /** The domain-keyed claims (custom claims camelCased), the verified token payload. */
   claims: Dict;
+  /**
+   * The COSE-name-keyed WIRE claims (the codec output before `coseToDomain`), fed
+   * to the temporal/matcher predicate — `exp`/`nbf`/`iat`/`iss`/`aud`/… share the
+   * JOSE names, so the JOSE verify predicate applies to it unchanged (no domain
+   * re-keying). Temporal claims are `Date`s here (the codec's "date" kind).
+   */
+  wire: Dict;
   protectedHeader: Map<number, unknown>;
   typ: string | undefined;
 };
@@ -74,11 +83,12 @@ export class CwtKit {
     const mac = this.kryptos.type === "oct";
     this.logger.debug(`Minting CWT (${mac ? "COSE_Mac0" : "COSE_Sign1"})`, { options });
 
-    // Emission boundary: prune empty claims off the domain dict just before it
-    // is encoded, so the CWT stays compact and byte-consistent with the JOSE
-    // wire, which prunes the same way (see applyOmit).
+    // Emission boundary: prune empty claims off the domain dict, then translate
+    // domain -> COSE wire (the ONE translator, single pass) just before encoding,
+    // so the CWT stays compact and byte-consistent with the JOSE wire, which prunes
+    // the same way (see applyOmit).
     const payload = encodeCbor(
-      encodeCwtClaims(applyOmit(common, options.omit), {
+      encodeCwtClaims(domainToCose(applyOmit(common, options.omit)), {
         proprietary: options.proprietary,
       }),
     );
@@ -104,13 +114,18 @@ export class CwtKit {
 
     // preferMap:false so nested claim objects (act, sub_id, events, custom)
     // decode as plain objects; the top CWT map has integer keys so it stays a Map.
-    const claims = decodeCwtClaims(
+    // The codec yields the COSE-name-keyed WIRE; `coseToDomain` maps it to domain
+    // (the read twin of the sign-side `domainToCose`), converging with the JOSE
+    // path (custom claims camelCased, txn/events extracted).
+    const wire = decodeCwtClaims(
       decodeCbor<Map<unknown, unknown>>(payload, { preferMap: false }),
     );
+    const { claims, custom } = coseToDomain(wire);
     const typ = protectedHeader.get(COSE_HEADER.typ);
 
     return {
-      claims,
+      claims: { ...claims, ...custom },
+      wire,
       protectedHeader,
       typ: typeof typ === "string" ? typ : undefined,
     };

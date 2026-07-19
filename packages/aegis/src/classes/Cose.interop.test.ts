@@ -10,13 +10,25 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { IKryptos } from "@lindorm/kryptos";
 import coseJs from "cose-js";
 import { describe, expect, test } from "vitest";
+import type { Dict } from "@lindorm/types";
 import { TEST_EC_KEY_SIG, TEST_OKP_KEY_SIG } from "../__fixtures__/keys.js";
+import { coseToDomain, domainToCose } from "../internal/claims/translate.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { decodeCwtClaims, encodeCwtClaims } from "../internal/cose/cwt-claims.js";
 import { COSE_TAG } from "../internal/cose/structures.js";
 import { CwtKit } from "./CwtKit.js";
 
 const logger = createMockLogger();
+
+// Since Phase 5 `encodeCwtClaims`/`decodeCwtClaims` are the CODEC boundary; the
+// domain <-> wire translation is `domainToCose`/`coseToDomain`. These helpers
+// exercise the full domain round-trip the reference verifiers sit inside.
+const encodeClaims = (common: Dict) => encodeCwtClaims(domainToCose(common));
+
+const decodeClaims = (map: Map<unknown, unknown> | Dict): Dict => {
+  const { claims, custom } = coseToDomain(decodeCwtClaims(map));
+  return { ...claims, ...custom };
+};
 
 // Only registered / interoperable claims — no lindorm-proprietary ones — so the
 // round-trip is apples-to-apples with what a stock COSE/CWT verifier decodes.
@@ -66,7 +78,7 @@ describe("COSE interop — @auth0/cose", () => {
       ).resolves.toBeUndefined();
 
       // …and the verified payload decodes back to our domain claims.
-      const claims = decodeCwtClaims(
+      const claims = decodeClaims(
         decodeCbor<Map<unknown, unknown>>(Buffer.from(sign1.payload), {
           preferMap: false,
         }),
@@ -95,7 +107,7 @@ describe("COSE interop — @auth0/cose", () => {
 
   describe("an @auth0/cose COSE_Sign1 verifies in our CwtKit", () => {
     test.each(cases)("$name", async ({ kryptos, alg }) => {
-      const payload = Buffer.from(encodeCbor(encodeCwtClaims(common)));
+      const payload = Buffer.from(encodeCbor(encodeClaims(common)));
 
       const sign1 = await Sign1.sign(
         new ProtectedHeaders([[Headers.Algorithm, alg]]),
@@ -139,14 +151,14 @@ describe("COSE interop — cose-js", () => {
       ecRawKey(kryptos, "public"),
     );
 
-    const claims = decodeCwtClaims(
+    const claims = decodeClaims(
       decodeCbor<Map<unknown, unknown>>(Buffer.from(payload), { preferMap: false }),
     );
     expect(claims).toEqual(common);
   });
 
   test("a cose-js COSE_Sign1 verifies in our CwtKit", async () => {
-    const payload = Buffer.from(encodeCbor(encodeCwtClaims(common)));
+    const payload = Buffer.from(encodeCbor(encodeClaims(common)));
 
     // A single signer object (not an array) makes cose-js emit a COSE_Sign1.
     const bare = await coseJs.sign.create(
@@ -180,6 +192,21 @@ const fullCommon = {
   token_introspection: { active: true }, // unknown custom claim
 };
 
+// What `CwtKit.verify` resolves for `fullCommon`: registered claims to their
+// domain names, and — since Phase 5 converged COSE with the JOSE read path — the
+// unknown `token_introspection` custom claim camelCased to `tokenIntrospection`.
+const fullCommonDecoded = {
+  ...common,
+  levelOfAssurance: 3,
+  tenantId: "tenant-7",
+  accessTokenHash: AT_HASH,
+  act: { subject: "actor", issuer: "https://delegator/", clientId: "c-2" },
+  subjectId: { format: "iss_sub", iss: "https://i/", sub: "u" },
+  authorizationDetails: [{ type: "payment" }],
+  confirmation: { keyId: "proof-key-1" },
+  tokenIntrospection: { active: true },
+};
+
 describe("COSE interop — custom logic does not break the token", () => {
   // The CWT payload is opaque to the COSE layer, so a reference verifier need
   // not understand our proprietary claims — it must only NOT throw: verify the
@@ -202,9 +229,9 @@ describe("COSE interop — custom logic does not break the token", () => {
     expect(map.get(-65551)).toBe("tenant-7"); // tenantId — private-use label P(14)
     expect(map.get("act")).toBeInstanceOf(Map); // compact act — a valid CBOR sub-map
 
-    // …and the whole thing still round-trips losslessly on our side.
+    // …and the whole thing still round-trips on our side (custom claim camelCased).
     expect(new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).verify(token).claims).toEqual(
-      fullCommon,
+      fullCommonDecoded,
     );
   });
 
@@ -216,7 +243,7 @@ describe("COSE interop — custom logic does not break the token", () => {
   });
 
   test("a reference-signed COSE_Sign1 over our proprietary payload round-trips in us", async () => {
-    const payload = Buffer.from(encodeCbor(encodeCwtClaims(fullCommon)));
+    const payload = Buffer.from(encodeCbor(encodeClaims(fullCommon)));
 
     const sign1 = await Sign1.sign(
       new ProtectedHeaders([[Headers.Algorithm, Algorithms.ES512]]),
@@ -231,7 +258,7 @@ describe("COSE interop — custom logic does not break the token", () => {
     );
 
     expect(new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).verify(cwt).claims).toEqual(
-      fullCommon,
+      fullCommonDecoded,
     );
   });
 
@@ -257,7 +284,13 @@ describe("COSE interop — custom logic does not break the token", () => {
     expect(map.get("loa")).toBe(3); // standards-based, string-keyed both ways
     expect(map.has(-65551)).toBe(false); // tenantId no longer integer-keyed
     expect(map.get("tenant_id")).toBe("tenant-7"); // degraded to JOSE string key, NOT dropped
-    expect(map.get("act")).toEqual(fullCommon.act); // act is now a string-keyed object
-    expect(map.get("sub_id")).toEqual(fullCommon.subjectId); // sub_id too
+    // act is now a string-keyed object carrying the RFC 8693 wire member names
+    // (the translator's `act` shape) rather than the lindorm domain names.
+    expect(map.get("act")).toEqual({
+      sub: "actor",
+      iss: "https://delegator/",
+      client_id: "c-2",
+    });
+    expect(map.get("sub_id")).toEqual(fullCommon.subjectId); // sub_id too (already wire-shaped)
   });
 });

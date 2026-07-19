@@ -103,9 +103,11 @@ describe("Aegis — omit (compact-by-default)", () => {
       });
       const claims = await coseClaims(token);
 
-      expect(claims.empty_list).toEqual([]);
-      expect(claims.empty_text).toBe("");
-      expect(claims.empty_obj).toEqual({});
+      // COSE custom claims are camelCased on read (converged with the JOSE domain
+      // path since Phase 5); the raw JOSE WIRE above still shows the snake keys.
+      expect(claims.emptyList).toEqual([]);
+      expect(claims.emptyText).toBe("");
+      expect(claims.emptyObj).toEqual({});
       expect(claims.kept).toBe("yes");
     });
 
@@ -119,8 +121,15 @@ describe("Aegis — omit (compact-by-default)", () => {
       const wire = joseWire(jwt.token);
       const claims = await coseClaims(cwt.token);
 
-      for (const key of ["empty_list", "empty_text", "empty_obj", "kept"]) {
-        expect(key in wire).toBe(key in claims);
+      // JOSE wire is snake (raw wire); COSE claims are the camelCased domain read.
+      const keys: Array<[string, string]> = [
+        ["empty_list", "emptyList"],
+        ["empty_text", "emptyText"],
+        ["empty_obj", "emptyObj"],
+        ["kept", "kept"],
+      ];
+      for (const [wireKey, domainKey] of keys) {
+        expect(wireKey in wire).toBe(domainKey in claims);
       }
     });
   });

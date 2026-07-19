@@ -23,8 +23,11 @@ const decodeCti = (wire: unknown): string =>
   Buffer.from(wire as Uint8Array).toString("utf8");
 
 // The value-shaping half of a claim whose registry kind is "bespoke", keyed by its
-// domain name: hashes fold into cbor's bstr kind; the structured claims delegate to
-// their COSE helpers. `act`/`mayAct`/`subjectId` switch compact-vs-interoperable on
+// domain name. Since Phase 5 the translator (`domainToCose`) delivers ALREADY-WIRE
+// values, so these handlers do CBOR byte/structure concerns ONLY: hashes fold into
+// cbor's bstr kind; `cnf` accepts the JOSE `cnf` (`jkt`/`jwk`/`kid`) the translator
+// built and turns it into a COSE cnf map (encodeCnf); `act`/`mayAct` accept the
+// wire act (`sub`/`iss`/`aud`/`client_id`) and switch compact-vs-interoperable on
 // the encode `proprietary` option; the rest are carried verbatim.
 const shapeByDomain = (domain: string): Partial<CborField> => {
   if (HASH_DOMAINS.has(domain)) return { kind: "bstr", encoding: "b64u" };
@@ -59,13 +62,18 @@ const shapeByDomain = (domain: string): Partial<CborField> => {
   return { kind: "bespoke", encode: (value) => value, decode: (value) => value };
 };
 
-// The wire key is the JOSE name; the label is the registered / private-use integer
-// where one exists, else the JOSE string (labels:"mixed"). A private-use label
-// (< -65536) is proprietary: compact integer on-platform, JOSE string off-platform.
+// The codec KEYS by the COSE name (`spec.coseName ?? spec.jose`) — the vocabulary
+// `domainToCose`/`coseToDomain` speak, so a name-diverging claim is looked up under
+// its COSE name (`cti`, not `jti`); the on-wire label is unchanged (`cti` keeps
+// integer label 7), so the bytes stay identical. The label is the registered /
+// private-use integer where one exists, else the wire string (labels:"mixed"). A
+// private-use label (< -65536) is proprietary: compact integer on-platform, string
+// key off-platform.
 const fieldForClaim = (spec: ClaimSpec): CborField => {
+  const wireKey = spec.coseName ?? spec.jose;
   const base = {
-    key: spec.jose,
-    label: spec.cose ?? spec.jose,
+    key: wireKey,
+    label: spec.cose ?? wireKey,
     proprietary: typeof spec.cose === "number" && spec.cose < -65536,
   };
 

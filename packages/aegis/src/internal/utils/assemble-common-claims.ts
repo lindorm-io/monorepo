@@ -10,7 +10,7 @@ import type {
   TokenProfile,
 } from "../../types/index.js";
 import { CLAIM_REGISTRY } from "../claims/registry.js";
-import { enforceProfilePolicy } from "./build-profile-claims.js";
+import { enforceProfilePolicy } from "./enforce-profile-policy.js";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
 import { generateTokenId } from "./generate-token-id.js";
 
@@ -34,10 +34,10 @@ export type AssembleCommonContext = {
  * domain `confirmation`/`act` objects, computed hash strings).
  *
  * It does NOT encode to any wire format — the JOSE encoder maps this to wire
- * claims via the existing `mapContentToClaims` (fed the resolved envelope), and
- * the COSE encoder will map it via the claim registry. This is the structural
- * guard against rebuilding a JOSE-in-CBOR shim: business logic lives here, in
- * domain terms, and translation happens only at the encoder edges.
+ * claims via `domainToJose`, and the COSE encoder via `domainToCose` (the ONE
+ * registry-driven translator). This is the structural guard against rebuilding a
+ * JOSE-in-CBOR shim: business logic lives here, in domain terms, and translation
+ * happens only at the encoder edges.
  */
 export const assembleCommonClaims = (
   ctx: AssembleCommonContext,
@@ -48,8 +48,8 @@ export const assembleCommonClaims = (
   const now = ctx.now ?? new Date();
 
   // Envelope resolution in DOMAIN form (Date / string values), honouring the
-  // profile's auto-injection. Mirrors the wire envelope logic in
-  // build-profile-claims, but stays domain-shaped.
+  // profile's auto-injection, then translated to the wire by `domainToJose` /
+  // `domainToCose`.
   const optIssuedAt = isDate(options.issuedAt) ? options.issuedAt : undefined;
   const issuedAt = profile.autoInject.iat ? (optIssuedAt ?? now) : optIssuedAt;
 

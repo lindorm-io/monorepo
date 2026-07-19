@@ -2,36 +2,29 @@ import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { AegisError } from "../../errors/index.js";
 import type { VerifyJwtOptions } from "../../types/index.js";
-import { specByDomain } from "../claims/registry.js";
 import { createJwtVerify } from "./jwt-verify.js";
 import { validate } from "./validate.js";
-
-// Re-key the DOMAIN-keyed CWT claims to their JOSE names so the SAME matcher the
-// JOSE path builds (createJwtVerify) applies unchanged. Temporal claims decode
-// to `Date`s (the "date" value kind), exactly as JwtKit.verify's `withDates`
-// carries them, so the range predicates compare Date-to-Date either way.
-const toJoseKeyed = (claims: Dict): Dict => {
-  const out: Dict = {};
-  for (const [domain, value] of Object.entries(claims)) {
-    const spec = specByDomain(domain);
-    out[spec ? spec.jose : domain] = value;
-  }
-  return out;
-};
 
 /**
  * Validate a decoded CWT's standard claims exactly as `jwt.verify` validates a
  * JWT: `exp` presence policy, then the range checks (exp/nbf/iat with clock
  * tolerance) and any verifier-supplied claim matchers (iss/aud/sub/…), reusing
- * the JOSE verify predicate on the re-keyed claim map.
+ * the JOSE verify predicate.
+ *
+ * The input is the CWT's COSE-name-keyed WIRE (`CwtVerifyResult.wire`). The
+ * temporal + matcher claims (`exp`/`nbf`/`iat`/`iss`/`aud`/`sub`/…) share the JOSE
+ * names, so the JOSE predicate applies to it directly — no domain re-keying. The
+ * only name-diverging claim (`cti`) is not a temporal/matcher claim, so it is
+ * irrelevant here. Temporal claims are `Date`s (the codec's "date" kind), exactly
+ * as JwtKit.verify carries them, so the range predicates compare Date-to-Date.
  */
 export const validateCwtClaims = (
-  claims: Dict,
+  wire: Dict,
   algorithm: KryptosAlgorithm,
   verify: VerifyJwtOptions,
   clockTolerance: number,
 ): void => {
-  const payload = toJoseKeyed(claims);
+  const payload = wire;
 
   // `exp` presence is POLICY (default "required"). Surface a dedicated,
   // self-describing code rather than the generic claims-invalid one.

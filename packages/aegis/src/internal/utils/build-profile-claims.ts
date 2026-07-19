@@ -2,16 +2,10 @@ import { expires, getUnixTime } from "@lindorm/date";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
-import { JwtError } from "../../errors/index.js";
-import type {
-  InvalidEntry,
-  SignContent,
-  SignContext,
-  SignJwtOptions,
-  TokenProfile,
-} from "../../types/index.js";
+import type { SignContent, SignJwtOptions, TokenProfile } from "../../types/index.js";
+import { domainToJose } from "../claims/translate.js";
+import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { generateTokenId } from "./generate-token-id.js";
-import { mapContentToClaims } from "./map-content-to-claims.js";
 
 /**
  * Mint-time facts the profile engine needs that the content does not carry:
@@ -25,55 +19,28 @@ export type BuildProfileContext = {
   now?: Date;
 };
 
-const enforcePolicy = (profile: TokenProfile, claims: Dict, ctx: SignContext): void => {
-  const invalid: Array<InvalidEntry> = [];
-
-  for (const key of profile.required) {
-    if (claims[key] === undefined) {
-      invalid.push({ key, message: `Required claim "${key}" is missing` });
-    }
-  }
-
-  for (const key of profile.forbidden) {
-    if (claims[key] !== undefined) {
-      invalid.push({ key, message: `Forbidden claim "${key}" is present` });
-    }
-  }
-
-  for (const group of profile.atLeastOneOf) {
-    if (!group.some((key) => claims[key] !== undefined)) {
-      invalid.push({
-        key: group.join("|"),
-        message: `At least one of [${group.join(", ")}] is required`,
-      });
-    }
-  }
-
-  for (const { claim, when } of profile.requiredWhen) {
-    if (claims[claim] === undefined && when(claims, ctx)) {
-      invalid.push({
-        key: claim,
-        message: `Conditionally required claim "${claim}" is missing`,
-      });
-    }
-  }
-
-  if (invalid.length > 0) {
-    throw new JwtError("Invalid token", {
-      code: "jwt_claims_invalid",
-      data: { invalid },
-      debug: { invalid, profile: profile.name },
-      title: "JWT Claims Invalid",
-      details:
-        "The assembled claims do not satisfy the profile's required/forbidden/conditional rules.",
-    });
-  }
+// The policy-FREE profile the wire mapping runs under: no auto-injection, no
+// required/forbidden, per-token issuer, no lifetime. `assembleCommonClaims` under
+// it does ONLY the domain envelope resolution + hash derivation, so `domainToJose`
+// of the result is the pure content -> wire map this builder then injects onto.
+const RAW_PROFILE: TokenProfile = {
+  name: "raw",
+  typ: { presence: "none" },
+  required: [],
+  forbidden: [],
+  requiredWhen: [],
+  atLeastOneOf: [],
+  autoInject: { iat: false, jti: false, nbf: false, iss: false },
+  issuer: "per-token",
+  lifetime: null,
+  encryptable: false,
+  validate: () => [],
 };
 
 /**
  * Applies a profile's policy on top of the policy-free domain mapping:
  *
- *   1. map domain → wire (`mapContentToClaims`),
+ *   1. map domain → wire (`domainToJose` of the policy-free common claims),
  *   2. auto-inject `iat`/`jti`/`nbf`/`iss` per `profile.autoInject`,
  *   3. derive `exp` from `profile.lifetime` (when the content did not set
  *      `expires`; `lifetime: null` means "no exp"),
@@ -91,10 +58,15 @@ export const buildProfileClaims = <C extends Dict = Dict>(
   const now = ctx.now ?? new Date();
   const nowUnix = getUnixTime(now);
 
-  const mapped = mapContentToClaims(
-    { algorithm: ctx.algorithm },
-    content as any,
-    options,
+  // Content -> wire via the ONE translator (policy-free): the domain envelope +
+  // hash derivation from `assembleCommonClaims`, mapped by `domainToJose`.
+  const mapped = domainToJose(
+    assembleCommonClaims(
+      { algorithm: ctx.algorithm, issuer: null },
+      RAW_PROFILE,
+      content,
+      options,
+    ),
   );
 
   const iat = profile.autoInject.iat ? (mapped.iat ?? nowUnix) : mapped.iat;
@@ -146,5 +118,3 @@ const resolveIssuer = (
 
   return ctx.issuer ?? (mapped.iss as string | undefined);
 };
-
-export { enforcePolicy as enforceProfilePolicy };

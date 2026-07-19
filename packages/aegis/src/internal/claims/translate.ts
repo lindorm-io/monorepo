@@ -8,11 +8,20 @@ import type { ActClaim, ActClaimWire, ConfirmationClaim } from "../../types/inde
 import { type ClaimSpec, CLAIM_REGISTRY, specByDomain } from "./registry.js";
 
 /**
- * The ONE `jose <-> domain` claim translator (DESIGN §3). It consolidates the
- * three mappers that exist today — `map-content-to-claims.ts` (domain -> jose,
- * write), `extract-claims.ts` `extractDomainClaims` (jose/camel -> domain, read),
- * and the `domain <-> jose` remap loops around `CWT_CLAIMS_KIT` in
- * `cwt-claims.ts` — into a single registry-driven pair.
+ * The ONE claim translator (DESIGN §3). It consolidates the mappers that existed
+ * before — `map-content-to-claims.ts` (domain -> jose, write), `extract-claims.ts`
+ * `extractDomainClaims` (jose/camel -> domain, read), and the `domain <-> jose`
+ * remap loops around `CWT_CLAIMS_KIT` in `cwt-claims.ts` — into a single
+ * registry-driven, single-PASS pair per direction.
+ *
+ * Four public functions over TWO parameterized cores (write / read). The ONLY
+ * thing that varies between the JOSE and COSE variants is the wire NAME emitted
+ * or looked up — `spec.jose` for JOSE, `spec.coseName ?? spec.jose` for COSE
+ * (the RFC 8392 divergence set, today just `jti` <-> `cti`). The VALUE transforms
+ * are identical at the translator level (only the downstream CWT codec turns the
+ * jose-shaped values into COSE labels / CBOR bytes). So `domainToCose` is a
+ * single registry pass emitting COSE names — never `domainToJose` + a separate
+ * rename — which is what subsumes the old `cose-names.ts` name bridge.
  *
  * It is the ONLY domain-aware claim code: both the JOSE and the COSE format
  * paths meet here. Value transforms come from the registry's `ClaimValueKind`; a
@@ -26,10 +35,14 @@ import { type ClaimSpec, CLAIM_REGISTRY, specByDomain } from "./registry.js";
  * Hash DERIVATION is NOT here (it needs the signing algorithm and stays in
  * `assemble-common-claims.ts`); the translator only maps the already-derived
  * `accessTokenHash` -> `at_hash`, so it is fully mechanical and algorithm-free.
- *
- * UNWIRED in this phase: nothing calls it yet (the three mappers still run in
- * the real mint/verify paths). Parity tests prove it reproduces them exactly.
  */
+
+// The wire-name selector — the ONE parameter that separates the JOSE and COSE
+// variants of both cores. COSE uses the registry's `coseName` where it diverges
+// (`jti` -> `cti`), else the JOSE name.
+type NameSelector = (spec: ClaimSpec) => string;
+const joseName: NameSelector = (spec) => spec.jose;
+const coseName: NameSelector = (spec) => spec.coseName ?? spec.jose;
 
 // --- Bespoke builders (write side), lifted from map-content-to-claims.ts -----
 
@@ -195,12 +208,13 @@ const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
 };
 
 /**
- * Domain-keyed common claims -> JOSE-keyed wire dict. Registered claims map to
- * `spec.jose` with their value encoded per `spec.value`; unregistered custom
- * claims keep their value and flip their KEY to snake_case (R18). Undefined
- * results (an absent value, an empty `cnf`) are dropped.
+ * The write core (domain -> wire), single-pass over the claims. Registered
+ * claims map to the selected wire NAME with their value encoded per `spec.value`;
+ * unregistered custom claims keep their value and flip their KEY to snake_case
+ * (R18). Undefined results (an absent value, an empty `cnf`) are dropped. The
+ * VALUE encoding is identical for JOSE and COSE — only `nameOf` differs.
  */
-export const domainToJose = (common: Dict): Dict => {
+const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
   const wire: Dict = {};
 
   for (const [key, value] of Object.entries(common)) {
@@ -209,7 +223,7 @@ export const domainToJose = (common: Dict): Dict => {
     const spec = specByDomain(key);
     if (spec) {
       const encoded = encodeValue(spec, value);
-      if (encoded !== undefined) wire[spec.jose] = encoded;
+      if (encoded !== undefined) wire[nameOf(spec)] = encoded;
     } else {
       wire[snakeCase(key)] = value;
     }
@@ -218,10 +232,24 @@ export const domainToJose = (common: Dict): Dict => {
   return wire;
 };
 
+/** Domain-keyed common claims -> JOSE-keyed wire dict. */
+export const domainToJose = (common: Dict): Dict => domainToWire(common, joseName);
+
+/**
+ * Domain-keyed common claims -> COSE-name-keyed wire dict (a single registry
+ * pass, NOT `domainToJose` + rename). Identical to `domainToJose` except that a
+ * name-diverging claim emits its COSE name (`jti` -> `cti`); the value shapes are
+ * the same jose-shaped values the CWT codec then turns into labels + CBOR bytes.
+ */
+export const domainToCose = (common: Dict): Dict => domainToWire(common, coseName);
+
 export type JoseToDomainResult = {
   claims: Dict;
   custom: Dict;
 };
+
+/** COSE read result — same two-bucket shape as {@link JoseToDomainResult}. */
+export type CoseToDomainResult = JoseToDomainResult;
 
 // Dispatch ONE `bespoke` claim's value to its per-claim DOMAIN decoder, keyed by
 // the domain name — the read-side twin of `encodeBespoke`. Every `value:
@@ -293,24 +321,23 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
 };
 
 /**
- * JOSE/camel-keyed wire dict -> `{ claims, custom }`. Registered claims resolve
- * to `spec.domain` with their value decoded, tolerating either the wire name or
- * the camelCase domain name in the input (domain form takes precedence, matching
- * `extractDomainClaims`). Unregistered keys flip to camelCase into `custom` with
- * their value untouched.
- *
- * The `{ claims, custom }` two-bucket split is the Phase-2 shape; splitting
- * `profile` / `sensitive` off `claims` is registry-category-driven and lands in
- * a later phase.
+ * The read core (wire -> `{ claims, custom }`), single-pass over the registry.
+ * Registered claims resolve to `spec.domain` with their value decoded, tolerating
+ * either the selected wire name or the camelCase domain name in the input (domain
+ * form takes precedence, matching `extractDomainClaims`). Unregistered keys flip
+ * to camelCase into `custom` with their value untouched. The VALUE decoding is
+ * identical for JOSE and COSE — only `nameOf` differs (`iss`/`exp`/… agree, so
+ * only a name-diverging claim like `cti` is looked up differently).
  */
-export const joseToDomain = (wire: Dict): JoseToDomainResult => {
+const wireToDomain = (wire: Dict, nameOf: NameSelector): JoseToDomainResult => {
   const consumed = new Set<string>();
   const claims: Dict = {};
 
   for (const spec of CLAIM_REGISTRY) {
+    const wireName = nameOf(spec);
     // Domain (camel) form takes precedence over the wire name, per extract-claims.
     const key =
-      spec.domain in wire ? spec.domain : spec.jose in wire ? spec.jose : undefined;
+      spec.domain in wire ? spec.domain : wireName in wire ? wireName : undefined;
     if (key === undefined) continue;
 
     consumed.add(key);
@@ -326,3 +353,21 @@ export const joseToDomain = (wire: Dict): JoseToDomainResult => {
 
   return { claims: omitUndefined(claims), custom };
 };
+
+/**
+ * JOSE/camel-keyed wire dict -> `{ claims, custom }`.
+ *
+ * The `{ claims, custom }` two-bucket split is the Phase-2 shape; splitting
+ * `profile` / `sensitive` off `claims` is registry-category-driven and lands in
+ * a later phase.
+ */
+export const joseToDomain = (wire: Dict): JoseToDomainResult =>
+  wireToDomain(wire, joseName);
+
+/**
+ * COSE-name-keyed wire dict (the CWT codec's `decode("map")` output) -> `{ claims,
+ * custom }`. The read twin of `domainToCose`: a single registry pass that reads a
+ * name-diverging claim under its COSE name (`cti` -> `tokenId`).
+ */
+export const coseToDomain = (wire: Dict): CoseToDomainResult =>
+  wireToDomain(wire, coseName);

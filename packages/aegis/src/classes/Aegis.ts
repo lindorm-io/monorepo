@@ -299,10 +299,10 @@ export class Aegis implements IAegis {
     if (!token.includes(".")) {
       const bytes = Buffer.from(token, "base64url");
       if (this.coseKit.isCose(bytes)) {
-        const { claims, decoded } = await this.coseVerifyCore(bytes);
+        const { claims, wire, decoded } = await this.coseVerifyCore(bytes);
         if (options) {
           validateCwtClaims(
-            claims,
+            wire,
             decoded.algorithm as KryptosAlgorithm,
             options,
             this.clockTolerance,
@@ -661,9 +661,9 @@ export class Aegis implements IAegis {
       verify.key,
     );
 
-    const { claims } = this.coseKit.verify(kryptos, bytes);
+    const { claims, wire } = this.coseKit.verify(kryptos, bytes);
 
-    validateCwtClaims(claims, kryptos.algorithm, verify, this.clockTolerance);
+    validateCwtClaims(wire, kryptos.algorithm, verify, this.clockTolerance);
 
     return {
       claims: claims as C,
@@ -974,9 +974,9 @@ export class Aegis implements IAegis {
 
     const decoded = this.coseKit.decode(bytes);
     const kryptos = await this.resolveVerifyKey(decoded.kid, undefined);
-    const { claims, typ } = this.coseKit.verify(kryptos, bytes);
+    const { claims, wire, typ } = this.coseKit.verify(kryptos, bytes);
 
-    return { claims, decoded, typ };
+    return { claims, wire, decoded, typ };
   }
 
   // Resolve the recipient encryption key for both the JOSE (JWE) and COSE
