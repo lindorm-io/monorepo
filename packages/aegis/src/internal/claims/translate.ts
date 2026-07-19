@@ -3,6 +3,7 @@ import { getUnixTime } from "@lindorm/date";
 import { isArray, isFinite, isObject, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
+import { AegisError } from "../../errors/index.js";
 import type { ActClaim, ActClaimWire, ConfirmationClaim } from "../../types/index.js";
 import { type ClaimSpec, CLAIM_REGISTRY, specByDomain } from "./registry.js";
 
@@ -132,27 +133,43 @@ const HASH_DOMAINS = new Set(["accessTokenHash", "codeHash", "stateHash"]);
 
 // -----------------------------------------------------------------------------
 
+// Dispatch ONE `bespoke` claim's value to its per-claim JOSE builder, keyed by
+// the domain name. Every `value: "bespoke"` registry entry is enumerated here;
+// an unhandled bespoke domain is a registry/translator drift and throws loudly
+// (the house exhaustive-switch idiom).
 const encodeBespoke = (domain: string, value: unknown): unknown => {
-  if (HASH_DOMAINS.has(domain)) return value; // already-derived b64url string
-  if (domain === "confirmation") {
-    return isObject(value) ? confirmationToWire(value as ConfirmationClaim) : undefined;
+  switch (domain) {
+    case "accessTokenHash":
+    case "codeHash":
+    case "stateHash":
+      return value; // already-derived b64url string
+    case "confirmation":
+      return isObject(value) ? confirmationToWire(value as ConfirmationClaim) : undefined;
+    case "act":
+    case "mayAct":
+      return isObject(value) ? actClaimToWire(value as ActClaim) : undefined;
+    case "subjectId":
+    case "events":
+      return isObject(value) ? value : undefined;
+    case "authorizationDetails":
+      return isArray(value) ? value : undefined;
+    case "address":
+      // Nested profile object: snake its inner keys, matching the previous
+      // `snakeKeys(profile)` write path.
+      return isObject(value) ? snakeKeys(value) : value;
+    default:
+      throw new AegisError("Unhandled bespoke claim domain", {
+        code: "translate_unhandled_bespoke_domain",
+        data: { domain },
+        title: "Unhandled Bespoke Claim Domain",
+        details:
+          "The claim registry declared a bespoke claim the translator has no builder for.",
+      });
   }
-  if (domain === "act" || domain === "mayAct") {
-    return isObject(value) ? actClaimToWire(value as ActClaim) : undefined;
-  }
-  if (domain === "subjectId" || domain === "events") {
-    return isObject(value) ? value : undefined;
-  }
-  if (domain === "authorizationDetails") {
-    return isArray(value) ? value : undefined;
-  }
-  // Nested profile objects (`address`) snake their inner keys, matching the
-  // current `snakeKeys(profile)` write path; other bespoke values pass through.
-  if (isObject(value)) return snakeKeys(value);
-  return value;
 };
 
-// Encode ONE registered claim's value to its JOSE wire form per the registry.
+// Encode ONE registered claim's value to its JOSE wire form per the registry's
+// value kind (exhaustive over ClaimValueKind; an unknown kind throws).
 const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
   switch (spec.value) {
     case "text":
@@ -166,6 +183,16 @@ const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
       return value; // JOSE keeps the string; only COSE turns cti into bytes
     case "bespoke":
       return encodeBespoke(spec.domain, value);
+    default: {
+      const exhaustive: never = spec.value;
+      throw new AegisError("Unhandled claim value kind", {
+        code: "translate_unhandled_value_kind",
+        data: { kind: String(exhaustive) },
+        title: "Unhandled Claim Value Kind",
+        details:
+          "The claim registry declared a value kind the translator has no encoder for.",
+      });
+    }
   }
 };
 

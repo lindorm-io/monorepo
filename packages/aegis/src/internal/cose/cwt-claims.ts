@@ -1,3 +1,4 @@
+import { snakeCase } from "@lindorm/case";
 import type { Dict } from "@lindorm/types";
 import { specByDomain, specByJose } from "../claims/registry.js";
 import { CWT_CLAIMS_KIT } from "./cwt-spec.js";
@@ -24,8 +25,10 @@ export type EncodeCwtOptions = {
  *
  * The registry-driven mapping is the `@lindorm/cbor` codec (map mode); the codec
  * keys fields by their JOSE wire name, so known claims are remapped domain -> jose
- * here, and unregistered custom claims — which the codec's spec does not know — are
- * merged in under their literal key.
+ * here (VALUES stay domain-shaped — the codec applies the COSE value transforms,
+ * and the JOSE `cnf`/`act`/`sub_id` collapse is Phase 5). Unregistered custom
+ * claims — which the codec's spec does not know — are merged in under their key,
+ * snake_cased to match the JOSE translator's R18 rule (`domainToJose`).
  */
 export const encodeCwtClaims = (
   common: Dict,
@@ -39,7 +42,7 @@ export const encodeCwtClaims = (
 
     const spec = specByDomain(domain);
     if (spec) known[spec.jose] = value;
-    else custom.push([domain, value]);
+    else custom.push([snakeCase(domain), value]);
   }
 
   const map = CWT_CLAIMS_KIT.encode("map", known, {

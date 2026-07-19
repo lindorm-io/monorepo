@@ -11,8 +11,10 @@ import {
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_SIG,
 } from "../__fixtures__/keys.js";
+import { isObject } from "@lindorm/is";
 import { createJoseSignature } from "../internal/utils/jose-signature.js";
-import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
+import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
+import { domainToJose } from "../internal/claims/translate.js";
 import { defaultProfile } from "../internal/profiles/definitions/default.js";
 import type { SignContent, SignJwtContent, SignJwtOptions } from "../types/index.js";
 import { JwtKit } from "./JwtKit.js";
@@ -32,11 +34,18 @@ const signDefault = (
   content: SignContent,
   options: SignJwtOptions = {},
 ) => {
-  const claims = buildProfileClaims(
+  // Mirror aegis.mint("default", …): assemble the domain common layer, then
+  // translate to JOSE wire via the ONE translator — profile claims join the
+  // domain layer so domainToJose owns their casing (R18); the kit signs the
+  // fully-wire-cased dict.
+  const common = assembleCommonClaims(
     { algorithm: kit.algorithm, issuer },
     defaultProfile,
     content,
     options,
+  );
+  const claims = domainToJose(
+    isObject(content.profile) ? { ...common, ...content.profile } : common,
   );
   return kit.signClaims(claims, content as SignJwtContent, options);
 };
@@ -1371,6 +1380,27 @@ describe("JwtKit", () => {
         my_app_flag: "enabled",
         some_custom_thing: 42,
       });
+    });
+
+    // R18: the kit makes NO case decision — domainToJose snake_cases a custom
+    // key Aegis-side before it reaches the wire. This is the ONE intended
+    // behaviour change vs the old verbatim custom-claim spread.
+    test("snake_cases a camelCase custom claim on the wire (R18)", () => {
+      const { token } = signDefault(kit, issuer, {
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+        claims: { myAppFlag: "enabled" },
+      });
+
+      const decoded = JwtKit.decode(token);
+      expect(decoded.payload).toMatchObject({ my_app_flag: "enabled" });
+      expect(decoded.payload.myAppFlag).toBeUndefined();
+
+      // Read side is untouched this phase (camelCase-on-read is Phase 4), so the
+      // parsed custom bucket carries the wire key verbatim.
+      const parsed = kit.verify(token);
+      expect(parsed.payload.claims).toEqual({ my_app_flag: "enabled" });
     });
 
     test("a malicious x5u in the header must not be fetched or used to verify the token", () => {

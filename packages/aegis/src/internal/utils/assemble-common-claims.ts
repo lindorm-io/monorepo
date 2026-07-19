@@ -85,12 +85,17 @@ export const assembleCommonClaims = (
       ? createStateHash(ctx.algorithm, content.authState)
       : undefined;
 
-  // Registry-driven pick of the domain claim fields present on the content
-  // (content uses domain names). Non-claim inputs (`expires`, `accessToken`,
-  // `profile`, `sensitiveIdentity`, `tokenType`…) are not registry domains, so
-  // they are excluded.
+  // Registry-driven pick of the standard-claim domain fields present on the
+  // content (content uses domain names). Non-claim inputs (`expires`,
+  // `accessToken`, `tokenType`…) are not registry domains, so they are excluded.
+  // Only `category: "claims"` is picked from the top level: profile/sensitive
+  // claims arrive in the `content.profile` / `content.sensitiveIdentity`
+  // containers, NOT as top-level fields — and the OIDC `profile` URL claim
+  // (registry domain `profile`) would otherwise collide with the `content.profile`
+  // container object, leaking it onto the wire as a nested `profile` claim.
   const picked: Dict = {};
   for (const spec of CLAIM_REGISTRY) {
+    if (spec.category !== "claims") continue;
     const value = (content as Dict)[spec.domain];
     if (value !== undefined) picked[spec.domain] = value;
   }

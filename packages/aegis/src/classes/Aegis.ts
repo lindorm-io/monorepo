@@ -16,7 +16,7 @@ import {
   VERIFY_FLOOR,
 } from "@lindorm/amphora";
 import { getUnixTime } from "@lindorm/date";
-import { isBuffer, isDate, isString } from "@lindorm/is";
+import { isBuffer, isDate, isObject, isString } from "@lindorm/is";
 import type {
   IKryptos,
   KryptosAlgorithm,
@@ -48,7 +48,7 @@ import {
 import { applyOmit } from "../internal/utils/apply-omit.js";
 import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
 import { assembleCwtClaims } from "../internal/utils/assemble-cwt-claims.js";
-import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
+import { domainToJose } from "../internal/claims/translate.js";
 import { enforceVerifyFloor } from "../internal/utils/enforce-verify-floor.js";
 import { extractDomainClaims } from "../internal/utils/extract-claims.js";
 import { decodeJoseHeader } from "../internal/utils/jose-header.js";
@@ -801,24 +801,14 @@ export class Aegis implements IAegis {
       algorithm: kryptos.algorithm as any,
     });
 
-    // JOSE wire claims: the existing wire mapper, fed the envelope ALREADY
-    // resolved on the common layer (iss/iat/jti/nbf/exp) so the signed token
-    // matches the validated common layer exactly — one source of truth, and
-    // byte-identical to the pre-rebase output.
-    const claims = buildProfileClaims(
-      { algorithm: kryptos.algorithm, issuer: this.issuer },
-      profile,
-      {
-        ...signContent,
-        notBefore: common.notBefore as Date | undefined,
-        issuer: common.issuer as string | undefined,
-        expires: common.expiresAt as Date | undefined,
-      } as SignContent,
-      {
-        ...(options.sign ?? {}),
-        issuedAt: common.issuedAt as Date | undefined,
-        tokenId: common.tokenId as string | undefined,
-      },
+    // JOSE wire claims via the ONE translator. `common` already carries the
+    // resolved envelope (iss/iat/jti/nbf/exp) and the custom claims, so the
+    // signed token matches the validated common layer exactly — one source of
+    // truth. Profile claims join the domain layer so `domainToJose` maps them
+    // by the registry (identical wire to the previous `snakeKeys(profile)`
+    // spread); the emit boundary no longer makes a case decision (R18).
+    const claims = domainToJose(
+      isObject(signContent.profile) ? { ...common, ...signContent.profile } : common,
     );
 
     // A profile typ value stamps the header verbatim (e.g. `at+jwt`) — for
