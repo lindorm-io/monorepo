@@ -5,6 +5,10 @@ import { describe, expect, test } from "vitest";
 import { JwtKit } from "../src/classes/JwtKit.js";
 import { defaultProfile } from "../src/internal/profiles/definitions/default.js";
 import { buildProfileClaims } from "../src/internal/utils/build-profile-claims.js";
+import {
+  computeTypHeader,
+  extractTypPrefix,
+} from "../src/internal/utils/compute-typ-header.js";
 import type { SignContent } from "../src/types/index.js";
 
 // The FOREIGN-CLIENT BOUNDARY. Every other suite we own verifies lindorm tokens
@@ -31,7 +35,9 @@ const signDefault = (kit: JwtKit, content: SignContent) => {
     defaultProfile,
     content,
   );
-  return kit.signClaims(claims, content as any);
+  return kit.sign(claims, {
+    typ: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),
+  });
 };
 
 // Exactly how amphora assembles the published JWKS (Amphora.refreshJwks).
@@ -47,9 +53,9 @@ describe("JWKS interop: published JWKS <-> jose (WebCrypto)", () => {
   ])("$name", ({ algorithm }) => {
     test("a foreign RP verifies an aegis token against our published JWKS", async () => {
       const kryptos = KryptosKit.generate.auto({ algorithm });
-      const kit = new JwtKit({ issuer: ISSUER, logger, kryptos });
+      const kit = new JwtKit({ logger, kryptos });
 
-      const { token } = signDefault(kit, {
+      const token = signDefault(kit, {
         expires: "1h",
         subject: SUBJECT,
         tokenType: "access_token",
@@ -101,9 +107,9 @@ describe("JWKS interop: published JWKS <-> jose (WebCrypto)", () => {
   test("a multi-key JWKS resolves the right key by kid", async () => {
     const signing = KryptosKit.generate.auto({ algorithm: "ES256" });
     const other = KryptosKit.generate.auto({ algorithm: "RS256" });
-    const kit = new JwtKit({ issuer: ISSUER, logger, kryptos: signing });
+    const kit = new JwtKit({ logger, kryptos: signing });
 
-    const { token } = signDefault(kit, {
+    const token = signDefault(kit, {
       expires: "1h",
       subject: SUBJECT,
       tokenType: "access_token",

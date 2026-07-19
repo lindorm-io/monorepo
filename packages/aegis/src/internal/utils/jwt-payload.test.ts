@@ -3,8 +3,8 @@ import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
 import { JwtKit } from "../../classes/JwtKit.js";
-import type { SignJwtContent } from "../../types/index.js";
-import { parseTokenPayload } from "./jwt-payload.js";
+import { buildSignedJwt, parseTokenPayload } from "./jwt-payload.js";
+import { parseJwtToDomain } from "./parse-jwt.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
@@ -79,30 +79,49 @@ describe("parseTokenPayload", () => {
   });
 });
 
-describe("JwtKit.parse (iat presence)", () => {
+describe("buildSignedJwt (domain sugar over the wire kit's { token })", () => {
+  const token = "header.payload.signature";
+
+  test("derives the expiry bundle from the wire exp and tokenId from jti", () => {
+    expect(buildSignedJwt(token, { exp: 1704099600, jti: "jti-1" }, "obj-1")).toEqual({
+      expiresAt: new Date("2024-01-01T09:00:00.000Z"),
+      expiresIn: 3600,
+      expiresOn: 1704099600,
+      objectId: "obj-1",
+      token,
+      tokenId: "jti-1",
+    });
+  });
+
+  test("leaves the expiry bundle and tokenId undefined when exp/jti are absent", () => {
+    expect(buildSignedJwt(token, { sub: "s" }, undefined)).toEqual({
+      expiresAt: undefined,
+      expiresIn: undefined,
+      expiresOn: undefined,
+      objectId: undefined,
+      token,
+      tokenId: undefined,
+    });
+  });
+});
+
+describe("parseJwtToDomain (iat presence)", () => {
   let kit: JwtKit;
 
   beforeEach(() => {
     kit = new JwtKit({
-      issuer: ISSUER,
       logger: createMockLogger(),
       kryptos: TEST_EC_KEY_SIG,
     });
   });
 
-  // signClaims signs the wire claims verbatim (no auto-injection), so it is the
-  // way to put an iat-less assertion on the wire; typ "JWT" is what RFC 7523
-  // assertions carry when they carry one at all.
-  const assertionContent: SignJwtContent = {
-    expires: "2m",
-    subject: "client-1",
-    tokenType: "client_assertion",
-  };
-
+  // The transform-free kit signs the wire claims verbatim (no auto-injection),
+  // so it is the way to put an iat-less assertion on the wire; typ "JWT" is what
+  // RFC 7523 assertions carry when they carry one at all.
   test("should parse a signed client assertion that omits iat", () => {
-    const { token } = kit.signClaims(assertionClaims, assertionContent, { typ: "JWT" });
+    const token = kit.sign(assertionClaims);
 
-    const { payload } = JwtKit.parse(token);
+    const { payload } = parseJwtToDomain(token);
 
     expect(payload.issuedAt).toBeUndefined();
     expect(payload).toMatchObject({
@@ -115,13 +134,9 @@ describe("JwtKit.parse (iat presence)", () => {
   });
 
   test("should parse a signed token that carries iat", () => {
-    const { token } = kit.signClaims(
-      { ...assertionClaims, iat: 1704096000 },
-      assertionContent,
-      { typ: "JWT" },
-    );
+    const token = kit.sign({ ...assertionClaims, iat: 1704096000 });
 
-    const { payload } = JwtKit.parse(token);
+    const { payload } = parseJwtToDomain(token);
 
     expect(payload.issuedAt).toEqual(new Date("2024-01-01T08:00:00.000Z"));
   });

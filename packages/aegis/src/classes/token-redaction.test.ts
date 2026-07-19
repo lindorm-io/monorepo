@@ -4,7 +4,7 @@ import MockDate from "mockdate";
 import { TEST_EC_KEY_ENC, TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { defaultProfile } from "../internal/profiles/definitions/default.js";
-import type { SignContent, SignJwtContent } from "../types/index.js";
+import type { SignContent } from "../types/index.js";
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
 import { JwtKit } from "./JwtKit.js";
@@ -108,8 +108,9 @@ describe("token redaction", () => {
 
     let kit: JwtKit;
 
-    // JwtKit.sign is policy-free and injects no envelope claims; verify requires an iss.
-    // Mint through the default profile, exactly as aegis.mint("default", …) does.
+    // The wire kit is transform-free; assemble the default-profile wire claims
+    // Aegis-side (exactly as aegis.mint("default", …) does) and hand the finished
+    // dict to the kit.
     const sign = (content: SignContent) => {
       const claims = buildProfileClaims(
         { algorithm: kit.algorithm, issuer },
@@ -117,15 +118,15 @@ describe("token redaction", () => {
         content,
         {},
       );
-      return kit.signClaims(claims, content as SignJwtContent, {});
+      return kit.sign(claims);
     };
 
     beforeEach(() => {
-      kit = new JwtKit({ issuer, logger, kryptos: TEST_EC_KEY_SIG });
+      kit = new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
     });
 
     test("should log a signed token without its signature", () => {
-      const { token } = sign({ expires: "1h", subject: "subject" });
+      const token = sign({ expires: "1h", subject: "subject" });
       const [header, payload, signature] = token.split(".");
 
       expect(signature).toBeTruthy();
@@ -134,7 +135,7 @@ describe("token redaction", () => {
     });
 
     test("should log a verified token without its signature", () => {
-      const { token } = sign({ expires: "1h", subject: "subject" });
+      const token = sign({ expires: "1h", subject: "subject" });
       const [header, payload, signature] = token.split(".");
 
       logs = [];
@@ -144,22 +145,8 @@ describe("token redaction", () => {
       expect(logged()).not.toContain(signature);
     });
 
-    test("should log a dpop proof from verify options without its signature", () => {
-      const { token } = sign({ expires: "1h", subject: "subject" });
-      const proof = sign({ expires: "1h", subject: "proof" }).token;
-      const [, , proofSignature] = proof.split(".");
-
-      logs = [];
-
-      // The proof is rejected (the token is not DPoP-bound), but "Verifying token" has
-      // already logged the options — which is where the raw proof used to leak.
-      expect(() => kit.verify(token, { dpopProof: proof })).toThrow();
-
-      expect(logged()).not.toContain(proofSignature);
-    });
-
     test("should not carry the signature in the signature_invalid error payload", () => {
-      const { token } = sign({ expires: "1h", subject: "subject" });
+      const token = sign({ expires: "1h", subject: "subject" });
       const [header, payload, signature] = token.split(".");
 
       const tampered = `${header}.${payload}.${signature.slice(0, -4)}beef`;
@@ -174,39 +161,19 @@ describe("token redaction", () => {
       }
     });
 
-    // Aegis refuses to put a government identifier on the wire in clear — it forces
-    // encryption and omits the claim when no recipient key resolves. Logging the same
-    // number in cleartext would walk straight around that guarantee.
-    test("should never log a sensitive identity number", () => {
-      const nationalIdentityNumber = "19900101-1234";
-
-      kit.sign({
-        subject: "sub-1",
-        expires: "1h",
-        tokenType: "id_token",
-        sensitiveIdentity: {
-          nationalIdentityNumber,
-          nationalIdentityNumberVerified: true,
-        },
-      });
-
-      expect(logged()).not.toContain(nationalIdentityNumber);
-      expect(logged()).toContain("[Filtered]");
-      // the assurance flag is not a secret and is what you debug against
-      expect(logged()).toContain("nationalIdentityNumberVerified");
-    });
-
+    // Aegis refuses to put a government identifier on the wire in clear. Even
+    // when the sensitive-identity envelope reaches the wire kit (assembled
+    // Aegis-side into the `sensitive_identity` claim), the kit must redact it
+    // from its debug log.
     test("should never log a sensitive identity number staged as a wire claim", () => {
       const socialSecurityNumber = "078-05-1120";
 
-      kit.signClaims(
-        {
-          sub: "sub-1",
-          exp: 1704099600,
-          sensitive_identity: { social_security_number: socialSecurityNumber },
-        },
-        { subject: "sub-1", expires: "1h", tokenType: "id_token" },
-      );
+      kit.sign({
+        iss: issuer,
+        sub: "sub-1",
+        exp: 1704099600,
+        sensitive_identity: { social_security_number: socialSecurityNumber },
+      });
 
       expect(logged()).not.toContain(socialSecurityNumber);
       expect(logged()).toContain("[Filtered]");

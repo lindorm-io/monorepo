@@ -57,6 +57,7 @@ import {
   type IntrospectClaimsInput,
   parseIntrospection,
 } from "../internal/utils/parse-introspection.js";
+import { parseJwtToDomain } from "../internal/utils/parse-jwt.js";
 import {
   parseUserinfo,
   type UserinfoClaimsInput,
@@ -166,7 +167,6 @@ export class Aegis implements IAegis {
       clockTolerance: this.clockTolerance,
       dpopMaxSkew: this.dpopMaxSkew,
       encryption: this.encryption,
-      issuer: this.issuer ?? undefined,
       logger: this.logger,
     });
   }
@@ -396,7 +396,7 @@ export class Aegis implements IAegis {
 
   static parse<T extends ParsedJwt | ParsedJws<any>>(token: string): T {
     if (Aegis.isJwt(token)) {
-      return JwtKit.parse(token) as T;
+      return parseJwtToDomain(token) as T;
     }
     if (Aegis.isJws(token)) {
       return JwsKit.parse(token) as T;

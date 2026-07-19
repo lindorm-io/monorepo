@@ -1,61 +1,60 @@
-import { expires } from "@lindorm/date";
-import { isFinite } from "@lindorm/is";
+import { B64 } from "@lindorm/b64";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { Dict } from "@lindorm/types";
+import type { Dict, Predicate } from "@lindorm/types";
 import { sanitiseToken } from "@lindorm/utils";
+import { B64U } from "../internal/constants/format.js";
 import {
   redactSensitiveIdentity,
   redactVerifyOptions,
 } from "../internal/utils/redact-sensitive-identity.js";
 import { JwtError } from "../errors/index.js";
 import {
-  computeTypHeader,
+  buildMediaType,
   decodeTokenTypeFromTyp,
 } from "../internal/utils/compute-typ-header.js";
-import { extractTokenDelegation } from "../internal/utils/extract-token-delegation.js";
-import { validateActor } from "../internal/utils/validate-actor.js";
 import { validateCrit } from "../internal/utils/validate-crit.js";
-import { verifyDpopProof } from "../internal/utils/verify-dpop-proof.js";
 import type { IJwtKit } from "../interfaces/index.js";
 import type {
   CertBindingMode,
   DecodedJwt,
   JwtKitSettings,
-  ParsedJwt,
+  JwtWireClaims,
   ParsedJwtHeader,
-  ParsedJwtPayload,
-  SignJwtContent,
-  SignJwtOptions,
-  SignedJwt,
+  ParsedJwtWire,
+  SignJwtWireOptions,
   TokenHeaderOptions,
-  ValidateJwtOptions,
-  VerifyJwtOptions,
+  VerifyJwtWireOptions,
 } from "../types/index.js";
+import { applyOmit } from "../internal/utils/apply-omit.js";
 import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
 import {
   createJoseSignature,
   verifyJoseSignature,
 } from "../internal/utils/jose-signature.js";
-import { createJwtValidate } from "../internal/utils/jwt-validate.js";
-import {
-  decodeJwtPayload,
-  encodeClaimsPayload,
-  encodeJwtPayload,
-  parseTokenPayload,
-} from "../internal/utils/jwt-payload.js";
-import { createJwtVerify } from "../internal/utils/jwt-verify.js";
+import { decodeJwtPayload } from "../internal/utils/jwt-payload.js";
+import { createTemporalMatchers } from "../internal/utils/jwt-temporal-matchers.js";
 import { parseTokenHeader } from "../internal/utils/token-header.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import { validate } from "../internal/utils/validate.js";
 
-const DEFAULT_DPOP_MAX_SKEW = 60;
-
+/**
+ * The standalone WIRE JWT kit — a jose/jsonwebtoken-parity signer/verifier.
+ *
+ * It speaks ONLY the wire: `sign` serializes an already-jose-keyed claim dict
+ * verbatim (R18 — no envelope injection, no hash derivation, no case/name
+ * mapping); `verify` validates the structural + prudent SECURITY invariants
+ * (crit, typ well-formedness, algorithm-match, signature, cert-binding, temporal
+ * range with clock tolerance — R10) plus a caller-supplied wire `assert`
+ * predicate, and returns the native WIRE payload (`sub`/`exp`, not
+ * `subject`/`expiresAt`). All DOMAIN policy — claim translation, named matchers,
+ * exp PRESENCE, actor/delegation, DPoP proof, profiles — lives on the Aegis
+ * verify path, never here.
+ */
 export class JwtKit implements IJwtKit {
   private readonly certBindingMode: CertBindingMode;
   private readonly clockTolerance: number;
-  private readonly dpopMaxSkew: number;
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
 
@@ -65,7 +64,6 @@ export class JwtKit implements IJwtKit {
 
     this.certBindingMode = options.certBindingMode ?? "strict";
     this.clockTolerance = options.clockTolerance ?? 0;
-    this.dpopMaxSkew = options.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW;
   }
 
   get algorithm(): IKryptos["algorithm"] {
@@ -73,108 +71,35 @@ export class JwtKit implements IJwtKit {
   }
 
   /**
-   * Policy-free domain-mapper sign (T1). Maps the domain vocabulary to wire
-   * claims and signs. It injects NO envelope claims (`iat`/`jti`/`nbf`/`iss`),
-   * requires nothing, and throws nothing for a missing `iss`/`sub`/`exp`. Use
-   * `aegis.mint("default", content)` for the historical auto-injecting floor.
+   * TRANSFORM-FREE sign (R18): serialize the already-wire jose-keyed `claims`
+   * dict verbatim (modulo the `omit` knob) and secure it. Injects NO envelope
+   * claims (`iat`/`jti`/`nbf`/`iss`), derives no hash, maps no case or name — the
+   * Aegis claim assembly owns all of that. Returns JUST the token; the expiry/id
+   * conveniences are DOMAIN sugar, derived Aegis-side. The kit constructs the
+   * full `typ` media type from the `options.typ` PREFIX (it knows its format).
    */
   sign<C extends Dict = Dict>(
-    content: SignJwtContent<C>,
-    options: SignJwtOptions = {},
-  ): SignedJwt {
+    claims: JwtWireClaims & C,
+    options: SignJwtWireOptions = {},
+  ): string {
     this.logger.debug("Signing token", {
-      content: redactSensitiveIdentity(content),
-      options,
-    });
-
-    const { expiresAt, expiresIn, expiresOn, payload, tokenId } = encodeJwtPayload<C>(
-      { algorithm: this.kryptos.algorithm },
-      content,
-      options,
-    );
-
-    return this.signEncodedPayload(payload, {
-      bindCertificate: options.bindCertificate,
-      expiresAt,
-      expiresIn,
-      expiresOn,
-      header: options.header,
-      objectId: options.objectId,
-      tokenId,
-      tokenType: content.tokenType,
-    });
-  }
-
-  /**
-   * Sign an already-assembled set of wire claims. Used by the profiled
-   * signing path, where policy (auto-injection / required / forbidden) has
-   * already been applied by `buildProfileClaims`. The profile/sensitive-
-   * identity/custom-claims envelope is spread here.
-   */
-  signClaims<C extends Dict = Dict>(
-    claims: Dict,
-    content: SignJwtContent<C>,
-    options: SignJwtOptions = {},
-  ): SignedJwt {
-    this.logger.debug("Signing claims", {
       claims: redactSensitiveIdentity(claims),
       options,
     });
 
-    const { payload, tokenId } = encodeClaimsPayload<C>(claims, content, options.omit);
-
-    const expiry =
-      isFinite(claims.exp as number) && content.expires
-        ? expires(content.expires)
-        : undefined;
-
-    return this.signEncodedPayload(payload, {
-      bindCertificate: options.bindCertificate,
-      expiresAt: expiry?.expiresAt,
-      expiresIn: expiry?.expiresIn,
-      expiresOn: isFinite(claims.exp as number) ? (claims.exp as number) : undefined,
-      header: options.header,
-      objectId: options.objectId,
-      tokenId,
-      tokenType: content.tokenType,
-      typ: options.typ,
-    });
-  }
-
-  private signEncodedPayload(
-    payload: string,
-    meta: {
-      bindCertificate?: SignJwtOptions["bindCertificate"];
-      expiresAt: Date | undefined;
-      expiresIn: number | undefined;
-      expiresOn: number | undefined;
-      header?: TokenHeaderOptions;
-      objectId: string | undefined;
-      tokenId: string | undefined;
-      tokenType: SignJwtContent["tokenType"] | undefined;
-      typ?: string | null;
-    },
-  ): SignedJwt {
-    // An explicit `typ` (from a profile) wins; `null` omits the header;
-    // otherwise derive it from the bare tokenType (raw / default path).
-    const headerType =
-      meta.typ === null
-        ? undefined
-        : meta.typ !== undefined
-          ? meta.typ
-          : computeTypHeader(meta.tokenType, "jwt");
+    const payload = B64.encode(JSON.stringify(applyOmit(claims, options.omit)), B64U);
 
     const headerOptions: TokenHeaderOptions = {
-      ...(meta.header ?? {}),
+      ...(options.header ?? {}),
       algorithm: this.kryptos.algorithm,
       contentType: "application/json",
-      headerType,
+      headerType: buildMediaType(options.typ, "jwt"),
       jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
-      objectId: meta.objectId,
+      objectId: options.objectId,
     };
 
-    const cert = resolveCertBinding(this.kryptos, meta.bindCertificate);
+    const cert = resolveCertBinding(this.kryptos, options.bindCertificate);
 
     const header = encodeJoseHeader(headerOptions, cert);
 
@@ -188,30 +113,74 @@ export class JwtKit implements IJwtKit {
 
     this.logger.debug("Token signed", { token: sanitiseToken(token) });
 
-    return {
-      expiresAt: meta.expiresAt,
-      expiresIn: meta.expiresIn,
-      expiresOn: meta.expiresOn,
-      objectId: meta.objectId,
-      token,
-      tokenId: meta.tokenId,
-    };
+    return token;
   }
 
+  /**
+   * WIRE verify: crit + typ well-formedness + algorithm-match + signature +
+   * cert-binding + temporal range (R10, validated-if-present) + the caller
+   * `assert` predicate. A kid fail-fast short-circuits before the signature
+   * cycle. Returns the native WIRE payload; NO named matchers, NO exp presence,
+   * NO actor/DPoP — those are the Aegis verify path's job.
+   */
   verify<C extends Dict = Dict>(
     token: string,
-    verify: VerifyJwtOptions = {},
-  ): ParsedJwt<C> {
+    assert?: Predicate<JwtWireClaims & C>,
+    options: VerifyJwtWireOptions = {},
+  ): ParsedJwtWire<C> {
     this.logger.debug("Verifying token", {
       token: sanitiseToken(token),
-      verify: redactVerifyOptions(verify),
+      options: redactVerifyOptions(options),
     });
 
-    const parsed = JwtKit.parse<C>(token, { typPresence: verify.typPresence });
+    const decoded = JwtKit.decode<C>(token);
+
+    // kid fail-fast: a token that names a kid different from the configured key
+    // cannot verify, so reject it before the (expensive) signature cycle. Via
+    // Aegis the handed key already matches; this protects the standalone case.
+    if (decoded.header.kid && this.kryptos.id && decoded.header.kid !== this.kryptos.id) {
+      throw new JwtError("Invalid token", {
+        code: "jwt_kid_mismatch",
+        data: { kid: decoded.header.kid },
+        debug: { expected: this.kryptos.id },
+        title: "JWT Kid Mismatch",
+        details:
+          "The token's kid names a different key than the one configured on this kit, so it cannot be verified here.",
+      });
+    }
+
+    // typ well-formedness (folded from the removed `parse`): a PRESENT typ must
+    // be a JWT media type so a JWS/JWE cannot be verified as a JWT. A typ-LESS
+    // token is accepted here — presence requiredness is a DOMAIN/profile policy.
+    const typ = decoded.header.typ;
+    if (typ !== undefined && typ !== "JWT" && !typ.endsWith("+jwt")) {
+      throw new JwtError("Invalid token", {
+        code: "jwt_invalid_typ",
+        data: { typ },
+        title: "JWT Invalid Typ",
+        details:
+          "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be verified as a JWT.",
+      });
+    }
+
+    const critError = validateCrit(decoded.header);
+    if (critError) {
+      throw new JwtError(`Invalid crit header: ${critError}`, {
+        code: "jwt_invalid_crit",
+        data: { crit: decoded.header.crit },
+        title: "JWT Invalid Crit",
+        details:
+          "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
+      });
+    }
+
+    const header = parseTokenHeader<ParsedJwtHeader>(decoded.header);
+    header.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
+    header.baseFormat = "JWT";
 
     // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
-    if (parsed.header.critical?.length) {
-      for (const param of parsed.header.critical) {
+    if (header.critical?.length) {
+      for (const param of header.critical) {
         throw new JwtError(`Unsupported critical header parameter: ${param}`, {
           code: "jwt_unsupported_crit_param",
           data: { param },
@@ -222,10 +191,10 @@ export class JwtKit implements IJwtKit {
       }
     }
 
-    if (this.kryptos.algorithm !== parsed.header.algorithm) {
+    if (this.kryptos.algorithm !== header.algorithm) {
       throw new JwtError("Invalid token", {
         code: "jwt_algorithm_mismatch",
-        data: { algorithm: parsed.header.algorithm },
+        data: { algorithm: header.algorithm },
         debug: { expected: this.kryptos.algorithm },
         title: "JWT Algorithm Mismatch",
         details:
@@ -233,16 +202,17 @@ export class JwtKit implements IJwtKit {
       });
     }
 
-    if (verify.tokenType !== undefined) {
-      const expectedTyp = computeTypHeader(verify.tokenType, "jwt");
-      if (parsed.decoded.header.typ !== expectedTyp) {
+    // typ assertion: the kit builds the expected media type from the PREFIX
+    // (the Aegis path derives the prefix from the domain tokenType).
+    if (options.typ !== undefined) {
+      const expected = buildMediaType(options.typ, "jwt");
+      if (typ !== expected) {
         throw new JwtError("Invalid token", {
           code: "jwt_typ_mismatch",
-          data: { typ: parsed.decoded.header.typ },
-          debug: { expected: expectedTyp },
+          data: { typ },
+          debug: { expected },
           title: "JWT Typ Mismatch",
-          details:
-            "The header typ does not match the typ expected for the requested tokenType during verification.",
+          details: "The header typ does not match the typ expected during verification.",
         });
       }
     }
@@ -259,107 +229,43 @@ export class JwtKit implements IJwtKit {
       });
     }
 
-    // Content tamper check: this runs AFTER signature verification has
-    // already succeeded with the amphora-sourced kryptos. It is NOT a key
-    // selection step. Header cert fields remain forbidden as key sources
-    // — see the SECURITY INVARIANT in Aegis.kryptosSig.
+    // Content tamper check: runs AFTER signature verification with the
+    // configured kryptos. NOT a key selection step — header cert fields are
+    // never trusted as key sources (see the SECURITY INVARIANT in Aegis).
     verifyCertBinding({
-      header: {
-        x5tS256: parsed.header.x5tS256,
-      },
+      header: { x5tS256: header.x5tS256 },
       kryptos: this.kryptos,
       logger: this.logger,
-      mode: this.certBindingMode,
+      mode: options.certBindingMode ?? this.certBindingMode,
     });
 
-    const predicate = createJwtVerify(
-      this.kryptos.algorithm,
-      verify,
-      this.clockTolerance,
-    );
-
-    const {
-      decoded: { payload },
-    } = parsed;
-
+    // Temporal range (R10) — every temporal claim validated IF PRESENT — plus
+    // the caller's wire `assert` predicate, in one pass over the Date-lifted
+    // wire payload.
+    const clockTolerance = options.clockTolerance ?? this.clockTolerance;
     const withDates = {
-      ...payload,
-      exp: payload.exp ? new Date(payload.exp * 1000) : undefined,
-      iat: payload.iat ? new Date(payload.iat * 1000) : undefined,
-      nbf: payload.nbf ? new Date(payload.nbf * 1000) : undefined,
-      auth_time: payload.auth_time ? new Date(payload.auth_time * 1000) : undefined,
+      ...decoded.payload,
+      exp: decoded.payload.exp ? new Date(decoded.payload.exp * 1000) : undefined,
+      iat: decoded.payload.iat ? new Date(decoded.payload.iat * 1000) : undefined,
+      nbf: decoded.payload.nbf ? new Date(decoded.payload.nbf * 1000) : undefined,
+      auth_time: decoded.payload.auth_time
+        ? new Date(decoded.payload.auth_time * 1000)
+        : undefined,
     };
 
-    // `exp` presence is POLICY (default "required"). The createJwtVerify matcher
-    // already fails a required-but-absent exp, but only as a generic
-    // jwt_claims_invalid; surface the dedicated, self-describing code instead so
-    // callers keying on it keep working. `"optional"` (profiled SETs) skips this.
-    if (verify.expPresence !== "optional" && withDates.exp === undefined) {
-      throw new JwtError("Missing claim: exp", {
-        code: "jwt_missing_claim_exp",
-        title: "JWT Missing Claim Exp",
-        details:
-          'The token has no exp claim, but exp is required for this verification (expPresence is not "optional").',
-      });
-    }
-
-    try {
-      validate(withDates, predicate);
-    } catch (err) {
-      throw new JwtError("Invalid token", {
-        code: "jwt_claims_invalid",
-        data: { invalid: (err as any).data?.invalid },
-        debug: { invalid: (err as any).debug?.invalid },
-        title: "JWT Claims Invalid",
-        details:
-          "One or more claims (such as exp, nbf, iat, or a verifier-supplied claim) failed the validation predicate.",
-      });
-    }
-
-    const actorError = validateActor(parsed.delegation, verify.actor);
-    if (actorError) {
-      throw new JwtError(actorError.message, {
-        code: "jwt_actor_not_allowed",
-        debug: actorError.debug,
-        title: "JWT Actor Not Allowed",
-        details:
-          "The token's act delegation chain does not satisfy the expected actor supplied to verify.",
-      });
-    }
-
-    const boundThumbprint = parsed.payload.confirmation?.thumbprint;
-
-    if (verify.dpopProof !== undefined) {
-      if (!boundThumbprint) {
-        throw new JwtError("Invalid token: DPoP proof provided but token is not bound", {
-          code: "jwt_dpop_token_not_bound",
-          debug: { confirmation: parsed.payload.confirmation },
-          title: "JWT DPoP Token Not Bound",
-          details:
-            "A DPoP proof was supplied but the token carries no cnf.jkt thumbprint, so it cannot be DPoP-bound.",
-        });
-      }
-      parsed.dpop = verifyDpopProof({
-        proof: verify.dpopProof,
-        accessToken: token,
-        expectedThumbprint: boundThumbprint,
-        dpopMaxSkew: this.dpopMaxSkew,
-      });
-    } else if (boundThumbprint && !verify.trustBoundThumbprint) {
-      throw new JwtError(
-        "Invalid token: token is DPoP-bound but no DPoP proof was provided",
-        {
-          code: "jwt_dpop_proof_required",
-          title: "JWT DPoP Proof Required",
-          details:
-            "The token carries a cnf.jkt thumbprint, so a matching DPoP proof must be supplied unless trustBoundThumbprint is set.",
-        },
-      );
-    }
+    validate(withDates, {
+      ...createTemporalMatchers(clockTolerance),
+      ...(assert ?? {}),
+    } as Predicate<Dict>);
 
     this.logger.debug("Token verified");
 
-    return parsed;
+    return {
+      decoded,
+      header,
+      payload: decoded.payload as JwtWireClaims & C,
+      token,
+    };
   }
 
   // public static
@@ -386,71 +292,5 @@ export class JwtKit implements IJwtKit {
       payload: decodeJwtPayload<C>(payload),
       signature,
     };
-  }
-
-  /**
-   * `typPresence` (default `"required"`): a typ-less token is rejected unless
-   * the caller opts in with `"optional"` — profiled verify does, because the
-   * profile floor owns the real presence policy (RFC 7519 §5.1 makes typ
-   * optional on the wire). Direct callers keep the strict RFC 8725
-   * explicit-typing default. A PRESENT typ must always be a JWT media type,
-   * so a JWS/JWE cannot be parsed as a JWT.
-   */
-  static parse<C extends Dict = Dict>(
-    token: string,
-    options: Pick<VerifyJwtOptions, "typPresence"> = {},
-  ): ParsedJwt<C> {
-    const decoded = JwtKit.decode<C>(token);
-
-    const typ = decoded.header.typ;
-    if (typ === undefined) {
-      if (options.typPresence !== "optional") {
-        throw new JwtError("Invalid token", {
-          code: "jwt_invalid_typ",
-          data: { typ },
-          title: "JWT Invalid Typ",
-          details:
-            "Header typ is absent; a typ of JWT or a <type>+jwt media type is required to parse as a JWT.",
-        });
-      }
-    } else if (typ !== "JWT" && !typ.endsWith("+jwt")) {
-      throw new JwtError("Invalid token", {
-        code: "jwt_invalid_typ",
-        data: { typ },
-        title: "JWT Invalid Typ",
-        details:
-          "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be parsed as a JWT.",
-      });
-    }
-
-    const critError = validateCrit(decoded.header);
-    if (critError) {
-      throw new JwtError(`Invalid crit header: ${critError}`, {
-        code: "jwt_invalid_crit",
-        data: { crit: decoded.header.crit },
-        title: "JWT Invalid Crit",
-        details:
-          "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
-      });
-    }
-
-    const header = parseTokenHeader<ParsedJwtHeader>(decoded.header);
-    header.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
-    header.baseFormat = "JWT";
-
-    const payload = parseTokenPayload<C>(decoded.payload);
-
-    const delegation = extractTokenDelegation(decoded.payload as { act?: any });
-
-    return { decoded, delegation, header, payload, token };
-  }
-
-  static validate<C extends Dict = Dict>(
-    payload: ParsedJwtPayload<C>,
-    options: ValidateJwtOptions,
-  ): void {
-    const operators = createJwtValidate(options);
-
-    validate(payload, operators);
   }
 }

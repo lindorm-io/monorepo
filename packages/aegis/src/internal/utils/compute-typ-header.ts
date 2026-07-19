@@ -16,6 +16,46 @@ const FORMAT_SUFFIX: Record<KitFormat, string> = {
   jwe: "+jwe",
 };
 
+/**
+ * Construct the FULL media type from a bare TYP PREFIX — the kit owns this
+ * because it knows its own format. `"at"` → `application/at+jwt`; an
+ * absent/empty prefix → the bare conventional form (`"JWT"`). No short-name
+ * lookup and no domain knowledge: the tokenType→prefix mapping is Aegis-side.
+ */
+export const buildMediaType = (
+  prefix: string | undefined | null,
+  kitFormat: KitFormat,
+): string =>
+  prefix
+    ? `application/${prefix}${FORMAT_SUFFIX[kitFormat]}`
+    : FORMAT_FALLBACK[kitFormat];
+
+/**
+ * The inverse of {@link buildMediaType} — reduce a full media type to its bare
+ * prefix for handing to the wire kit (which re-wraps it). The bare conventional
+ * form (`"JWT"`) and an absent typ reduce to `undefined`. Anything that is not a
+ * conventional or `application/<prefix>+<fmt>` typ is a bug.
+ */
+export const extractTypPrefix = (
+  fullTyp: string | undefined,
+  kitFormat: KitFormat = "jwt",
+): string | undefined => {
+  if (!fullTyp || fullTyp === FORMAT_FALLBACK[kitFormat]) return undefined;
+
+  const suffix = FORMAT_SUFFIX[kitFormat];
+  if (fullTyp.endsWith(suffix)) {
+    return fullTyp.slice(0, -suffix.length).replace(/^application\//, "");
+  }
+
+  throw new AegisError(`Unexpected typ header: ${fullTyp}`, {
+    code: "invalid_typ_header_value",
+    data: { typ: fullTyp },
+    title: "Invalid Typ Header Value",
+    details:
+      "A typ header must be the bare conventional form (JWT) or an application/<prefix>+<format> media type.",
+  });
+};
+
 export const computeTypHeader = (
   tokenType: TokenType | undefined,
   kitFormat: KitFormat,

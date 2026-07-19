@@ -54,7 +54,7 @@ export const createIdentityMatchers = (
     if (key === "dpopProof") continue;
     // trustBoundThumbprint is a binary flag consumed by each Kit directly
     if (key === "trustBoundThumbprint") continue;
-    // typPresence governs the JOSE typ gate in JwtKit.parse directly
+    // typPresence governs the JOSE typ gate on the Aegis verify path directly
     if (key === "typPresence") continue;
     // expPresence governs the exp matcher above, not a per-claim equality check
     if (key === "expPresence") continue;

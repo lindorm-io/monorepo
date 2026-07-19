@@ -193,7 +193,7 @@ describe("Aegis profiles", () => {
 
       expect(payload).toMatchObject({ loa: 3, aal: 2, ial: 3 });
 
-      const parsed = JwtKit.parse(token);
+      const parsed = Aegis.parse(token);
       expect(parsed.payload).toMatchObject({
         levelOfAssurance: 3,
         authenticatorAssuranceLevel: 2,
@@ -225,7 +225,7 @@ describe("Aegis profiles", () => {
 
       expect(payload).toMatchObject({ loa: 4, aal: 3, ial: 2, fal: 1 });
 
-      const parsed = JwtKit.parse(token);
+      const parsed = Aegis.parse(token);
       expect(parsed.payload).toMatchObject({
         levelOfAssurance: 4,
         authenticatorAssuranceLevel: 3,

@@ -1,21 +1,20 @@
 import { B64 } from "@lindorm/b64";
 import { snakeKeys } from "@lindorm/case";
-import { expires } from "@lindorm/date";
-import { isFinite, isObject, isString } from "@lindorm/is";
+import { isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
+import { getUnixTime } from "@lindorm/date";
 import { JwtError } from "../../errors/index.js";
 import type {
   JwtClaims,
   ParsedJwtPayload,
   SignJwtContent,
   SignJwtOptions,
+  SignedJwt,
   TokenProfile,
 } from "../../types/index.js";
 import { domainToJose, joseToDomain } from "../claims/translate.js";
-import { B64U } from "../constants/format.js";
-import { applyOmit, type OmitMode } from "./apply-omit.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { extractAegisProfile } from "./extract-aegis-profile.js";
 import { extractSensitiveIdentity } from "./extract-sensitive-identity.js";
@@ -48,61 +47,34 @@ const RAW_JWT_PROFILE: TokenProfile = {
 
 type DecodeClaims<C extends Dict = Dict> = JwtClaims & C;
 
-type Result = {
-  expiresAt: Date | undefined;
-  expiresIn: number | undefined;
-  expiresOn: number | undefined;
-  payload: string;
-  tokenId: string | undefined;
-};
-
 /**
- * Base64url-encode a set of ALREADY-TRANSLATED JOSE wire claims as the JWT
- * payload. Profile and custom claims now flow through `domainToJose` into
- * `claims` (R18 — the translator owns all name/case conversion), so the only
- * thing spread here is the sensitive-identity envelope, which still travels as
- * a single nested top-level claim. Shared by the policy-free `encodeJwtPayload`
- * and the profiled signing path.
+ * The AegisSensitiveIdentity wire envelope: a single nested top-level claim
+ * (`sensitive_identity`, snake-cased) so the encryption boundary is visible on
+ * the wire — relying parties MUST only honour it when the ID token arrived
+ * JWE-encrypted (OIDC Core §13.3). Flattening it (driven off the registry
+ * `sensitive` category) is Phase 13.
  */
-export const encodeClaimsPayload = <C extends Dict = Dict>(
-  claims: Dict,
-  content: Pick<SignJwtContent<C>, "sensitiveIdentity">,
-  omit?: OmitMode,
-): { payload: string; tokenId: string | undefined } => {
-  // AegisSensitiveIdentity travels as a single nested top-level claim
-  // (sensitive_identity) so the encryption boundary is visible on the wire.
-  // Relying parties MUST only honour this claim when the ID token arrived
-  // JWE-encrypted (OIDC Core §13.3). Flattening it onto the wire (and driving
-  // it off the registry `sensitive` category) is Phase 13.
-  const sensitiveIdentityWire = isObject(content.sensitiveIdentity)
+const sensitiveIdentityWire = (
+  content: Pick<SignJwtContent, "sensitiveIdentity">,
+): Dict =>
+  isObject(content.sensitiveIdentity)
     ? { sensitive_identity: snakeKeys(content.sensitiveIdentity) }
     : {};
 
-  // Emission boundary: the assembled wire dict is pruned of empty claims just
-  // before it is serialised, so the JWT stays compact and consistent with the
-  // COSE wire, which prunes the same way (see applyOmit). `"empty"` is default.
-  const payload = B64.encode(
-    JSON.stringify(applyOmit({ ...claims, ...sensitiveIdentityWire }, omit)),
-    B64U,
-  );
-
-  return { payload, tokenId: isString(claims.jti) ? claims.jti : undefined };
-};
-
 /**
- * Policy-free payload encoding for the raw domain-mapper tier. Assembles the
- * DOMAIN-keyed common claims (under the policy-free {@link RAW_JWT_PROFILE}:
- * envelope resolution + hash derivation, no auto-injection), merges the profile
- * claims into that domain layer, and translates the whole set to JOSE wire via
- * the ONE `domainToJose` translator — so name/case conversion (registered,
- * profile, and custom claims alike) is owned Aegis-side, not at the emit
- * boundary. The expiry bundle is only computed when `content.expires` is present.
+ * Assemble the full JOSE WIRE claim dict for the policy-free raw JWT tier
+ * (`aegis.jwt.sign`). Resolves the DOMAIN-keyed common claims (envelope +
+ * hash derivation, no auto-injection, under {@link RAW_JWT_PROFILE}), merges the
+ * profile claims into that domain layer, translates the whole set to JOSE wire
+ * via the ONE `domainToJose` translator (R18 — Aegis owns all name/case
+ * conversion), and spreads the sensitive-identity envelope. The TRANSFORM-FREE
+ * `JwtKit.sign` then serializes the returned dict verbatim.
  */
-export const encodeJwtPayload = <C extends Dict = Dict>(
+export const assembleJwtWireClaims = <C extends Dict = Dict>(
   config: Config,
   content: SignJwtContent<C>,
   options: SignJwtOptions,
-): Result => {
+): Dict => {
   const common = assembleCommonClaims(
     { algorithm: config.algorithm, issuer: null },
     RAW_JWT_PROFILE,
@@ -110,22 +82,45 @@ export const encodeJwtPayload = <C extends Dict = Dict>(
     options,
   );
 
-  // Profile claims join the domain layer so `domainToJose` maps them by the
-  // registry (identical wire to the previous `snakeKeys(profile)` spread).
   const claims = domainToJose(
     isObject(content.profile) ? { ...common, ...content.profile } : common,
   );
 
-  const { payload, tokenId } = encodeClaimsPayload<C>(claims, content, options.omit);
+  return { ...claims, ...sensitiveIdentityWire(content) };
+};
 
-  const expiry = content.expires ? expires(content.expires) : undefined;
+/**
+ * Spread the sensitive-identity envelope onto an already-assembled wire claim
+ * dict (the profiled `mint` path, whose `claims` are translated Aegis-side but
+ * do not yet carry the sensitive-identity nesting).
+ */
+export const withSensitiveIdentity = (
+  claims: Dict,
+  content: Pick<SignJwtContent, "sensitiveIdentity">,
+): Dict => ({ ...claims, ...sensitiveIdentityWire(content) });
+
+/**
+ * Enrich the wire kit's bare `{ token }` into the domain `SignedJwt` — the
+ * DOMAIN sugar the transform-free kit no longer computes. The expiry bundle is
+ * derived from the wire `exp`, the `tokenId` from the wire `jti`.
+ */
+export const buildSignedJwt = (
+  token: string,
+  claims: Dict,
+  objectId: string | undefined,
+): SignedJwt => {
+  const expiresOn =
+    typeof claims.exp === "number" && Number.isFinite(claims.exp)
+      ? claims.exp
+      : undefined;
 
   return {
-    expiresAt: expiry?.expiresAt,
-    expiresIn: expiry?.expiresIn,
-    expiresOn: isFinite(claims.exp) ? claims.exp : undefined,
-    payload,
-    tokenId,
+    expiresAt: expiresOn !== undefined ? new Date(expiresOn * 1000) : undefined,
+    expiresIn: expiresOn !== undefined ? expiresOn - getUnixTime(new Date()) : undefined,
+    expiresOn,
+    objectId,
+    token,
+    tokenId: typeof claims.jti === "string" ? claims.jti : undefined,
   };
 };
 

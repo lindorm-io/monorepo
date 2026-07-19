@@ -4,20 +4,27 @@ import { importJWK, jwtVerify, SignJWT } from "jose";
 import jsonwebtoken, { type JwtPayload } from "jsonwebtoken";
 import { JwtKit } from "../src/classes/JwtKit.js";
 import { buildProfileClaims } from "../src/internal/utils/build-profile-claims.js";
+import {
+  computeTypHeader,
+  extractTypPrefix,
+} from "../src/internal/utils/compute-typ-header.js";
 import { defaultProfile } from "../src/internal/profiles/definitions/default.js";
 import type { SignContent } from "../src/types/index.js";
 import { describe, expect, test } from "vitest";
 
-// JwtKit.sign is policy-free (T1): it injects no iss/iat/jti/nbf. The historical
-// auto-injecting floor now lives in the `default` profile. Interop "aegis sign"
-// cases assemble default-profile claims (iss/iat/jti/nbf/exp) and sign them.
+// The wire kit is TRANSFORM-FREE: it injects no iss/iat/jti/nbf. The historical
+// auto-injecting floor lives in the `default` profile. Interop "aegis sign"
+// cases assemble default-profile claims (iss/iat/jti/nbf/exp) Aegis-side and
+// hand the finished wire dict to the kit.
 const signDefault = (kit: JwtKit, issuer: string, content: SignContent) => {
   const claims = buildProfileClaims(
     { algorithm: kit.algorithm, issuer },
     defaultProfile,
     content,
   );
-  return kit.signClaims(claims, content as any);
+  return kit.sign(claims, {
+    typ: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),
+  });
 };
 
 // ---------------------------------------------------------------------------
@@ -60,9 +67,9 @@ describe("JWT interop: aegis <-> jose", () => {
   ])("$name", ({ createKey, asymmetric }) => {
     test("aegis sign -> jose verify", async () => {
       const kryptos = createKey();
-      const kit = new JwtKit({ issuer: ISSUER, logger, kryptos });
+      const kit = new JwtKit({ logger, kryptos });
 
-      const { token } = signDefault(kit, ISSUER, {
+      const token = signDefault(kit, ISSUER, {
         expires: "1h",
         subject: SUBJECT,
         tokenType: "access_token",
@@ -83,7 +90,7 @@ describe("JWT interop: aegis <-> jose", () => {
 
     test("jose sign -> aegis verify", async () => {
       const kryptos = createKey();
-      const kit = new JwtKit({ issuer: ISSUER, logger, kryptos });
+      const kit = new JwtKit({ logger, kryptos });
 
       // jose needs private key for signing
       const jwk = kryptos.export("jwk");
@@ -99,10 +106,10 @@ describe("JWT interop: aegis <-> jose", () => {
 
       const result = kit.verify(token);
 
-      expect(result.payload.issuer).toBe(ISSUER);
-      expect(result.payload.subject).toBe(SUBJECT);
+      expect(result.payload.iss).toBe(ISSUER);
+      expect(result.payload.sub).toBe(SUBJECT);
       expect(result.header.tokenType).toBe("access_token");
-      expect(result.payload.expiresAt).toBeInstanceOf(Date);
+      expect(result.payload.exp).toEqual(expect.any(Number));
     });
   });
 });
@@ -115,9 +122,9 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
   describe("RS256", () => {
     test("aegis sign -> jsonwebtoken verify", () => {
       const kryptos = createRsaSigKey();
-      const kit = new JwtKit({ issuer: ISSUER, logger, kryptos });
+      const kit = new JwtKit({ logger, kryptos });
 
-      const { token } = signDefault(kit, ISSUER, {
+      const token = signDefault(kit, ISSUER, {
         expires: "1h",
         subject: SUBJECT,
         tokenType: "access_token",
@@ -137,7 +144,7 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
     test("jsonwebtoken sign -> aegis verify", () => {
       const kryptos = createRsaSigKey();
-      const kit = new JwtKit({ issuer: ISSUER, logger, kryptos });
+      const kit = new JwtKit({ logger, kryptos });
 
       const { privateKey } = kryptos.export("pem");
 
@@ -151,8 +158,8 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       const result = kit.verify(token);
 
-      expect(result.payload.issuer).toBe(ISSUER);
-      expect(result.payload.subject).toBe(SUBJECT);
+      expect(result.payload.iss).toBe(ISSUER);
+      expect(result.payload.sub).toBe(SUBJECT);
       expect(result.header.tokenType).toBe("access_token");
     });
   });
@@ -160,9 +167,9 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
   describe("HS256", () => {
     test("aegis sign -> jsonwebtoken verify", () => {
       const kryptos = createOctSigKey();
-      const kit = new JwtKit({ issuer: ISSUER, logger, kryptos });
+      const kit = new JwtKit({ logger, kryptos });
 
-      const { token } = signDefault(kit, ISSUER, {
+      const token = signDefault(kit, ISSUER, {
         expires: "1h",
         subject: SUBJECT,
         tokenType: "access_token",
@@ -180,7 +187,7 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
     test("jsonwebtoken sign -> aegis verify", () => {
       const kryptos = createOctSigKey();
-      const kit = new JwtKit({ issuer: ISSUER, logger, kryptos });
+      const kit = new JwtKit({ logger, kryptos });
 
       const { privateKey } = kryptos.export("der");
 
@@ -194,8 +201,8 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       const result = kit.verify(token);
 
-      expect(result.payload.issuer).toBe(ISSUER);
-      expect(result.payload.subject).toBe(SUBJECT);
+      expect(result.payload.iss).toBe(ISSUER);
+      expect(result.payload.sub).toBe(SUBJECT);
       expect(result.header.tokenType).toBe("access_token");
     });
   });

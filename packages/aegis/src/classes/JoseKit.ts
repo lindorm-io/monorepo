@@ -16,16 +16,27 @@ import type {
   SignedJwt,
   VerifyJwtOptions,
 } from "../types/index.js";
+import {
+  computeTypHeader,
+  extractTypPrefix,
+} from "../internal/utils/compute-typ-header.js";
+import {
+  assembleJwtWireClaims,
+  buildSignedJwt,
+  withSensitiveIdentity,
+} from "../internal/utils/jwt-payload.js";
+import { verifyJwtToDomain } from "../internal/utils/verify-jwt.js";
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
 import { JwtKit } from "./JwtKit.js";
+
+const DEFAULT_DPOP_MAX_SKEW = 60;
 
 export type JoseKitSettings = {
   certBindingMode: CertBindingMode;
   clockTolerance: number;
   dpopMaxSkew: number | undefined;
   encryption: KryptosEncryption;
-  issuer: string | undefined;
   logger: ILogger;
 };
 
@@ -41,7 +52,6 @@ export class JoseKit {
   private readonly clockTolerance: number;
   private readonly dpopMaxSkew: number | undefined;
   private readonly encryption: KryptosEncryption;
-  private readonly issuer: string | undefined;
   private readonly logger: ILogger;
 
   constructor(options: JoseKitSettings) {
@@ -49,7 +59,6 @@ export class JoseKit {
     this.clockTolerance = options.clockTolerance;
     this.dpopMaxSkew = options.dpopMaxSkew;
     this.encryption = options.encryption;
-    this.issuer = options.issuer;
     this.logger = options.logger;
   }
 
@@ -82,12 +91,37 @@ export class JoseKit {
     return this.jwe(kryptos).decrypt(jwe);
   }
 
+  /**
+   * The raw `aegis.jwt.sign` path: translate the DOMAIN content to the JOSE wire
+   * dict Aegis-side (R18), then hand the fully-cased dict to the TRANSFORM-FREE
+   * kit. An explicit `options.typ` wins; otherwise the typ is derived from the
+   * domain `tokenType`.
+   */
   signJwt<T extends Dict = Dict>(
     kryptos: IKryptos,
     content: SignJwtContent<T>,
     options: SignJwtOptions = {},
   ): SignedJwt {
-    return this.jwt(kryptos).sign(content, options);
+    const claims = assembleJwtWireClaims<T>(
+      { algorithm: kryptos.algorithm },
+      content,
+      options,
+    );
+
+    // The domain full typ (explicit / tokenType-derived), reduced to the bare
+    // prefix the wire kit re-wraps into `application/<prefix>+jwt`.
+    const fullTyp =
+      options.typ != null ? options.typ : computeTypHeader(content.tokenType, "jwt");
+
+    const token = this.jwt(kryptos).sign(claims, {
+      bindCertificate: options.bindCertificate,
+      header: options.header,
+      objectId: options.objectId,
+      omit: options.omit,
+      typ: extractTypPrefix(fullTyp),
+    });
+
+    return buildSignedJwt(token, claims, options.objectId);
   }
 
   verifyJwt<T extends Dict = Dict>(
@@ -95,16 +129,38 @@ export class JoseKit {
     jwt: string,
     options: VerifyJwtOptions = {},
   ): ParsedJwt<T> {
-    return this.jwt(kryptos).verify(jwt, options);
+    return verifyJwtToDomain<T>(this.jwt(kryptos), jwt, options, {
+      clockTolerance: this.clockTolerance,
+      dpopMaxSkew: this.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW,
+    });
   }
 
+  /**
+   * The profiled `mint` path: `claims` are ALREADY the translated JOSE wire dict
+   * (Aegis assembled + validated them); only the sensitive-identity envelope is
+   * spread here before the transform-free kit serializes. The typ is the
+   * profile's mandated value, or the tokenType-derived default.
+   */
   signClaims<C extends Dict = Dict>(
     kryptos: IKryptos,
     claims: Dict,
     content: SignJwtContent<C>,
     options: SignJwtOptions = {},
   ): SignedJwt {
-    return this.jwt(kryptos).signClaims(claims, content, options);
+    const wireClaims = withSensitiveIdentity(claims, content);
+
+    const fullTyp =
+      options.typ != null ? options.typ : computeTypHeader(content.tokenType, "jwt");
+
+    const token = this.jwt(kryptos).sign(wireClaims, {
+      bindCertificate: options.bindCertificate,
+      header: options.header,
+      objectId: options.objectId,
+      omit: options.omit,
+      typ: extractTypPrefix(fullTyp),
+    });
+
+    return buildSignedJwt(token, wireClaims, options.objectId);
   }
 
   // private
@@ -130,8 +186,6 @@ export class JoseKit {
     return new JwtKit({
       certBindingMode: this.certBindingMode,
       clockTolerance: this.clockTolerance,
-      dpopMaxSkew: this.dpopMaxSkew,
-      issuer: this.issuer,
       kryptos,
       logger: this.logger,
     });
