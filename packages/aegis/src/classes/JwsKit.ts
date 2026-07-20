@@ -24,7 +24,7 @@ import type {
   DecodedJws,
   JwsKitSettings,
   ParsedJws,
-  ParsedJwsHeader,
+  SignedJoseHeader,
   SignJwsOptions,
   SignedJws,
   DomainTokenHeaderOptions,
@@ -205,7 +205,7 @@ export class JwsKit implements IJwsKit {
       });
     }
 
-    const header = parseTokenHeader<ParsedJwsHeader>(decoded.header);
+    const header = parseTokenHeader<SignedJoseHeader>(decoded.header);
     header.tokenType = decodeTokenTypeFromTyp(typ, "jws");
     header.baseFormat = "JWS";
 

@@ -6,7 +6,7 @@ import type { DomainClaims } from "../../internal/utils/extract-claims.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { TokenFormat } from "../../internal/utils/select-encoder.js";
 import type { AegisSignKey } from "../aegis.js";
-import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header.js";
+import type { TokenSignEnvelope } from "../header.js";
 import type { JweEncryptOptions } from "../jwe/jwe-encrypt.js";
 import type { SignJwtContent, SignJwtOptions } from "./jwt-sign.js";
 import type { VerifyJwtOptions } from "./jwt-verify.js";
@@ -310,14 +310,7 @@ export type ProfileVerifyOptions = VerifyJwtOptions & {
  * Raw / wire tier input. `payload` is a wire-literal. `aegis.sign` accepts a
  * plain object too and JSON-stringifies it before delegating to the JWS path.
  */
-export type RawSignInput = {
-  bindCertificate?: BindCertificateMode;
-  /**
-   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
-   * cert is bound. Default `true`. Independent of `bindCertificate`; the read side
-   * never verifies SHA-1.
-   */
-  certificateThumbprintSha1?: boolean;
+export type RawSignInput = TokenSignEnvelope & {
   contentType?: string;
   /**
    * Wire encoding. `"jws"`/`"jwt"` (default) signs a JWS — the payload passes through as
@@ -327,17 +320,8 @@ export type RawSignInput = {
    * The `cws` namespace is the ergonomic surface over `sign({ format: "cws" })`.
    */
   format?: TokenFormat;
-  header?: TokenEncryptOrSignOptions;
-  objectId?: string;
   payload: Buffer | string | Dict;
   /** Per-call signing key policy. */
   key?: AegisSignKey;
-  /**
-   * How empty claims are pruned before signing, applied only when `payload` is
-   * a plain object (a Buffer/string payload is opaque and passes through
-   * untouched). `"empty"` (default) drops null/empty-string/empty-array/
-   * empty-object recursively; `"undefined"` drops only undefined.
-   */
-  omit?: OmitMode;
   tokenType?: TokenType;
 };

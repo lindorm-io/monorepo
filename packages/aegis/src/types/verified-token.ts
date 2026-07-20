@@ -8,13 +8,13 @@ import type { ParsedDpopProof } from "./jwt/jwt-dpop.js";
 import type { TokenProfile } from "./jwt/profile.js";
 
 /**
- * The unified domain result types (DESIGN §4). ADDITIVE for now — declared here,
- * but NOT yet returned by `verify`/`parse`/`decrypt` (that swap is Phase 19).
- * They describe the domain surface's ONE result shape, uniform across all six
- * token formats: domain-keyed claims (never wire names), a full-breadth domain
- * header, and the logical read-side buckets (`claims`/`custom`/`profile`/
- * `sensitive`) that categorise flat wire claims by registry category on read.
- * The buckets have NO wire representation (D2) — they exist only on the result.
+ * The unified domain result types (DESIGN §4) — the shape `verify`/`decrypt` NOW
+ * return (the Phase 19 swap has shipped). They describe the domain surface's ONE
+ * result shape, uniform across all six token formats: domain-keyed claims (never
+ * wire names), a full-breadth domain header, and the logical read-side buckets
+ * (`claims`/`custom`/`profile`/`sensitive`) that categorise flat wire claims by
+ * registry category on read. The buckets have NO wire representation (D2) — they
+ * exist only on the result.
  */
 
 /**

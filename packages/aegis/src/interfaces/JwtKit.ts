@@ -1,7 +1,7 @@
 import type { Dict, Predicate } from "@lindorm/types";
 import type {
   JwtWireClaims,
-  ParsedJwtWire,
+  ParsedJwt,
   SignJwtWireOptions,
   VerifyJwtWireOptions,
 } from "../types/index.js";
@@ -15,5 +15,5 @@ export interface IJwtKit {
     token: string,
     assert?: Predicate<JwtWireClaims & C>,
     options?: VerifyJwtWireOptions,
-  ): ParsedJwtWire<C>;
+  ): ParsedJwt<C>;
 }

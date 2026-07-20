@@ -1,9 +1,10 @@
 /**
  * A COSE token carries its header in the COSE protected/unprotected maps, not a
- * JOSE segment, so the parsed header is the same alg / kid / typ triple read off
- * the CWS — the COSE analogue of `ParsedJwsHeader`.
+ * JOSE segment, so the parsed header is the alg / kid / typ triple read off the
+ * COSE structure. Shared by both COSE parse results — the opaque `ParsedCws` and
+ * the claims-bearing `ParsedCwt` — the COSE analogue of `SignedJoseHeader`.
  */
-export type ParsedCwsHeader = {
+export type ParsedCoseHeader = {
   alg: string | undefined;
   kid: string | undefined;
   typ: string | undefined;
@@ -16,7 +17,7 @@ export type ParsedCwsHeader = {
  * secured), NOT a decoded claim map. A claim-bearing COSE token is a CWT (`cwt`).
  */
 export type ParsedCws = {
-  header: ParsedCwsHeader;
+  header: ParsedCoseHeader;
   raw: Buffer;
   token: string;
 };

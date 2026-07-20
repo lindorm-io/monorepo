@@ -12,9 +12,8 @@ import type {
   SetClaims,
   StdClaims,
 } from "../claims/index.js";
-import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { AegisSignKey } from "../aegis.js";
-import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header.js";
+import type { TokenSignEnvelope } from "../header.js";
 
 export type SignJwtContent<C extends Dict = Dict> = Omit<
   StdClaims,
@@ -39,30 +38,15 @@ export type SignJwtContent<C extends Dict = Dict> = Omit<
     tokenType: "Bearer" | "DPoP" | "N_A" | (string & {});
   };
 
-export type SignJwtOptions = {
+export type SignJwtOptions = TokenSignEnvelope & {
   accessTokenHash?: string;
-  bindCertificate?: BindCertificateMode;
-  /**
-   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
-   * cert is bound. Default `true` (older-client compat). Independent of
-   * `bindCertificate`; the read side never verifies SHA-1.
-   */
-  certificateThumbprintSha1?: boolean;
   codeHash?: string;
-  header?: TokenEncryptOrSignOptions;
   issuedAt?: Date;
-  objectId?: string;
   /**
    * Per-call signing key policy. Ignored by `JwtKit`, which is handed an
    * explicit key; consumed by `Aegis`, which resolves one.
    */
   key?: AegisSignKey;
-  /**
-   * How empty claims are pruned before signing. `"empty"` (default) drops
-   * null/empty-string/empty-array/empty-object recursively; `"undefined"` drops
-   * only undefined.
-   */
-  omit?: OmitMode;
   stateHash?: string;
   tokenId?: string;
   /**

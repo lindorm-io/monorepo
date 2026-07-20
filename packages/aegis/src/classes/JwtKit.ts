@@ -32,8 +32,8 @@ import type {
   DecodedJwt,
   JwtKitSettings,
   JwtWireClaims,
-  ParsedJwtHeader,
-  ParsedJwtWire,
+  ParsedJwt,
+  SignedJoseHeader,
   SignJwtWireOptions,
   DomainTokenHeaderOptions,
   VerifyJwtWireOptions,
@@ -131,7 +131,7 @@ export class JwtKit implements IJwtKit {
     token: string,
     assert?: Predicate<JwtWireClaims & C>,
     options: VerifyJwtWireOptions = {},
-  ): ParsedJwtWire<C> {
+  ): ParsedJwt<C> {
     this.logger.debug("Verifying token", {
       token: sanitiseToken(token),
       options: redactVerifyOptions(options),
@@ -178,7 +178,7 @@ export class JwtKit implements IJwtKit {
       });
     }
 
-    const header = parseTokenHeader<ParsedJwtHeader>(decoded.header);
+    const header = parseTokenHeader<SignedJoseHeader>(decoded.header);
     header.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
     header.baseFormat = "JWT";
 

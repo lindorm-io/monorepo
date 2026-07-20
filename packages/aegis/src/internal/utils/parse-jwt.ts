@@ -1,7 +1,7 @@
 import type { Dict } from "@lindorm/types";
 import { JwtKit } from "../../classes/JwtKit.js";
 import { JwtError } from "../../errors/index.js";
-import type { ParsedJwtHeader, VerifiedToken } from "../../types/index.js";
+import type { SignedJoseHeader, VerifiedToken } from "../../types/index.js";
 import { decodeTokenTypeFromTyp } from "./compute-typ-header.js";
 import { extractTokenDelegation } from "./extract-token-delegation.js";
 import { buildDomainClaims } from "./jwt-payload.js";
@@ -44,7 +44,7 @@ export const parseJwtToDomain = <C extends Dict = Dict>(
     });
   }
 
-  const header = parseTokenHeader<ParsedJwtHeader>(decoded.header);
+  const header = parseTokenHeader<SignedJoseHeader>(decoded.header);
   header.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
   header.baseFormat = "JWT";
 

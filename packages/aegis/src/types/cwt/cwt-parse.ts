@@ -1,15 +1,5 @@
+import type { ParsedCoseHeader } from "../cws/cws-parse.js";
 import type { CwtWireClaims } from "./cwt-wire-claims.js";
-
-/**
- * A CWT carries its header in the COSE protected/unprotected maps — the same
- * alg / kid / typ triple as a raw COSE_Sign1. The COSE analogue of
- * `ParsedJwtHeader`.
- */
-export type ParsedCwtHeader = {
-  alg: string | undefined;
-  kid: string | undefined;
-  typ: string | undefined;
-};
 
 /**
  * The NATIVE WIRE result of verifying a generic CWT (`cwt.verify` / `cwm.verify`)
@@ -19,7 +9,7 @@ export type ParsedCwtHeader = {
  * surface (`aegis.verify`), never on this raw namespace.
  */
 export type ParsedCwt<C extends CwtWireClaims = CwtWireClaims> = {
-  header: ParsedCwtHeader;
+  header: ParsedCoseHeader;
   payload: C;
   token: string;
 };
