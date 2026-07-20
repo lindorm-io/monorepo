@@ -6285,6 +6285,7 @@ exports[`Kryptos (AKP) > to > should return json 1`] = `
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
   "certificateThumbprint": null,
+  "certificateThumbprintSha1": null,
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,

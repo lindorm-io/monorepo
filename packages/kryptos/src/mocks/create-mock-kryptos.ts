@@ -36,6 +36,7 @@ export const _createMockKryptos = (
     // must stay consistent with the mock's declared type ("EC" ⇒ asymmetric).
     algClass: "asymmetric",
     certificateThumbprint: null,
+    certificateThumbprintSha1: null,
     expiresIn: 999999999,
     hasCertificate: false,
     hasPrivateKey: true,

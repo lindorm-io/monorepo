@@ -25,7 +25,10 @@ import { parseX509Certificate } from "../internal/utils/x509/parse-certificate.j
 import { parseX509 } from "../internal/utils/x509/parse-x509.js";
 import { verifyX509Chain } from "../internal/utils/x509/verify-chain.js";
 import { x509PublicKeyMatches } from "../internal/utils/x509/x509-public-key-matches.js";
-import { x5tS256 as x5tS256Thumbprint } from "../internal/utils/x509/x509-thumbprints.js";
+import {
+  x5tS1 as x5tS1Thumbprint,
+  x5tS256 as x5tS256Thumbprint,
+} from "../internal/utils/x509/x509-thumbprints.js";
 import type {
   KryptosAlgClass,
   KryptosAlgorithm,
@@ -356,6 +359,11 @@ export class Kryptos implements IKryptos {
     return x5tS256Thumbprint(this._certificateChain[0]);
   }
 
+  get certificateThumbprintSha1(): string | null {
+    if (!this._certificateChain || this._certificateChain.length === 0) return null;
+    return x5tS1Thumbprint(this._certificateChain[0]);
+  }
+
   verifyCertificate(options: { trustAnchors: string | Array<string> }): void {
     this.assertNotDisposed();
 
@@ -550,6 +558,7 @@ export class Kryptos implements IKryptos {
       algorithm: this.algorithm,
       certificateChain: this.certificateChain,
       certificateThumbprint: this.certificateThumbprint,
+      certificateThumbprintSha1: this.certificateThumbprintSha1,
       createdAt: this.createdAt,
       curve: this.curve,
       encryption: this.encryption,

@@ -12,6 +12,8 @@ import {
   TEST_X509_RSA_LEAF_PUBLIC_KEY_B64,
 } from "../__fixtures__/x509.js";
 import { KryptosError } from "../errors/index.js";
+import { parseX509 } from "../internal/utils/x509/parse-x509.js";
+import { x5tS1 } from "../internal/utils/x509/x509-thumbprints.js";
 import { Kryptos } from "./Kryptos.js";
 import { describe, expect, test } from "vitest";
 
@@ -46,9 +48,31 @@ describe("Kryptos (X.509)", () => {
 
       expect(kryptos.certificateChain).toMatchSnapshot();
       expect(kryptos.certificateThumbprint).toMatchSnapshot();
+      expect(kryptos.certificateThumbprintSha1).toMatchSnapshot();
       expect(kryptos.certificateChain).toHaveLength(3);
       expect(kryptos.hasCertificate).toBe(true);
       expect(kryptos.certificate).not.toBeNull();
+    });
+
+    test("certificateThumbprintSha1 is the base64url SHA-1 of the leaf DER", () => {
+      const kryptos = new Kryptos({
+        ...baseEcOptions,
+        certificateChain: [
+          TEST_X509_LEAF_PEM,
+          TEST_X509_INTERMEDIATE_PEM,
+          TEST_X509_ROOT_PEM,
+        ],
+      });
+
+      const [leaf] = parseX509(TEST_X509_LEAF_PEM);
+
+      expect(kryptos.certificateThumbprintSha1).toBe(x5tS1(leaf));
+    });
+
+    test("certificateThumbprintSha1 is null on a chain-less kryptos", () => {
+      const kryptos = new Kryptos(baseEcOptions);
+
+      expect(kryptos.certificateThumbprintSha1).toBeNull();
     });
 
     test("accepts a chain in base64-DER form (no PEM wrapper)", () => {

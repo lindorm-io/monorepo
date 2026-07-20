@@ -44,6 +44,7 @@ export type KryptosMetadata = {
   // Asymmetric or symmetric, derived from `type` — see `Kryptos.algClass`.
   algClass: KryptosAlgClass;
   certificateThumbprint: string | null;
+  certificateThumbprintSha1: string | null;
   expiresIn: number;
   hasCertificate: boolean;
   hasPrivateKey: boolean;

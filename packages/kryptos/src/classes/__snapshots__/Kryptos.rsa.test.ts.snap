@@ -3026,6 +3026,7 @@ exports[`Kryptos (RSA) > to > should return json 1`] = `
   "algorithm": "RS512",
   "certificateChain": [],
   "certificateThumbprint": null,
+  "certificateThumbprintSha1": null,
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,
