@@ -7,15 +7,34 @@ import {
   computeCoseKeyThumbprintUri,
   type CoseThumbprintHash,
 } from "../internal/cose/cose-key-thumbprint.js";
+import { coseToDomain, domainToCose } from "../internal/claims/translate.js";
 import { isCose } from "../internal/cose/is-cose.js";
 import { COSE_TAG } from "../internal/cose/structures.js";
 import { coseByJose } from "../internal/header/header-registry.js";
+import { AegisError } from "../errors/index.js";
 import type { OmitMode } from "../internal/utils/apply-omit.js";
 import { CweKit } from "./CweKit.js";
-import { CwtKit, type CwtDecoded, type CwtVerifyResult } from "./CwtKit.js";
+import { CwmKit } from "./CwmKit.js";
+import { CwtKit, type CwtDecoded } from "./CwtKit.js";
 
 export type CoseKitSettings = {
   logger: ILogger;
+  /** Clock skew tolerance (seconds) threaded to the in-kit temporal check. */
+  clockTolerance: number;
+};
+
+export type CoseVerifyResult = {
+  /** The DOMAIN-keyed claims (custom claims camelCased), the verified payload. */
+  claims: Dict;
+  /**
+   * The COSE-name-keyed WIRE claims (the kit output before `coseToDomain`), fed
+   * to the Aegis identity/presence validation — `exp`/`nbf`/`iss`/`aud`/… share
+   * the JOSE names, so the JOSE matchers apply to it unchanged. Temporal claims
+   * are `Date`s here (the codec's "date" kind).
+   */
+  wire: Dict;
+  protectedHeader: Map<number, unknown>;
+  typ: string | undefined;
 };
 
 export type CoseMintOptions = {
@@ -46,28 +65,72 @@ const innerCose = (value: unknown): Tag | undefined => {
 };
 
 /**
- * The COSE format facade — the COSE analogue of JoseKit. Aegis
- * hands it the resolved key + the DOMAIN-keyed common claims and gets back / in
- * a COSE token, so Aegis itself never touches the COSE wire kits.
+ * The COSE format facade — the COSE analogue of JoseKit, and the domain⇆wire
+ * BOUNDARY (R18): Aegis hands it the resolved key + the DOMAIN-keyed common
+ * claims and gets back / in a COSE token, so the wire kits below stay
+ * transform-free. It translates domain→COSE wire on the way in (`domainToCose`)
+ * and COSE wire→domain on the way out (`coseToDomain`).
  *
- * It issues signed (COSE_Sign1) and MAC'd (COSE_Mac0) CWTs — chosen by key type
- * inside CwtKit — and wraps them in a COSE_Encrypt0 for sign-then-encrypt.
+ * It DISPATCHES the integrity split off the resolved key's `algClass`: an
+ * asymmetric key mints/verifies via `CwtKit` (COSE_Sign1), a symmetric `oct` key
+ * via `CwmKit` (COSE_Mac0). Sign-then-encrypt wraps the secured CWT in a
+ * COSE_Encrypt0 (`CweKit`).
  */
 export class CoseKit {
   private readonly logger: ILogger;
+  private readonly clockTolerance: number;
 
   constructor(options: CoseKitSettings) {
     this.logger = options.logger.child(["CoseKit"]);
+    this.clockTolerance = options.clockTolerance;
   }
 
   /** Mint a secured CWT (COSE_Sign1 or COSE_Mac0) from the domain-keyed claims. */
   sign(kryptos: IKryptos, common: Dict, options: CoseMintOptions = {}): Buffer {
-    return new CwtKit({ kryptos, logger: this.logger }).sign(common, options);
+    return this.claimsKit(kryptos).sign(domainToCose(common), {
+      typ: options.typ,
+      proprietary: options.proprietary,
+      omit: options.omit,
+    });
   }
 
   /** Verify a CWT with an already-resolved key; returns the domain-keyed claims. */
-  verify(kryptos: IKryptos, token: Buffer): CwtVerifyResult {
-    return new CwtKit({ kryptos, logger: this.logger }).verify(token);
+  verify(kryptos: IKryptos, token: Buffer): CoseVerifyResult {
+    const { claims: wire, protectedHeader, typ } = this.claimsKit(kryptos).verify(token);
+
+    const { claims, custom } = coseToDomain(wire);
+
+    return { claims: { ...claims, ...custom }, wire, protectedHeader, typ };
+  }
+
+  // The RESOLVED key's algClass picks the claims kit — the COSE integrity split
+  // (CwtKit = Sign1/asymmetric, CwmKit = Mac0/symmetric); each kit re-asserts its
+  // own class, so a mis-dispatch throws rather than mis-securing.
+  private claimsKit(kryptos: IKryptos): CwtKit | CwmKit {
+    switch (kryptos.algClass) {
+      case "asymmetric":
+        return new CwtKit({
+          kryptos,
+          logger: this.logger,
+          clockTolerance: this.clockTolerance,
+        });
+      case "symmetric":
+        return new CwmKit({
+          kryptos,
+          logger: this.logger,
+          clockTolerance: this.clockTolerance,
+        });
+      default: {
+        const exhaustive: never = kryptos.algClass;
+        throw new AegisError("Unhandled COSE key class", {
+          code: "cose_unhandled_alg_class",
+          data: { algClass: String(exhaustive) },
+          title: "Unhandled COSE Key Class",
+          details:
+            "The resolved key's algClass is neither asymmetric nor symmetric, so no COSE claims kit applies.",
+        });
+      }
+    }
   }
 
   /** Decode the COSE headers (kid/alg/typ) WITHOUT verifying, for key resolution. */

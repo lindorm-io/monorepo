@@ -6,6 +6,7 @@ import { Tag } from "../internal/cose/cbor.js";
 import {
   coseLabelToEnc,
   encToCoseLabel,
+  isOfficialCoseEnc,
   tagBytesForEncryption,
 } from "../internal/cose/enc-labels.js";
 import {
@@ -29,6 +30,14 @@ export type CweKitSettings = {
 
 export type CweEncryptOptions = {
   typ?: string;
+  /**
+   * Allow a lindorm-proprietary (private-use) COSE encryption label (default
+   * `false`). When `false` the content encryption MUST carry an OFFICIAL
+   * COSE-RFC label or `encrypt` throws (D5 interop gate); when `true` a
+   * private-use encryption such as AES-CBC-HMAC is permitted. Decrypt is always
+   * lenient.
+   */
+  proprietary?: boolean;
 };
 
 export type CweDecryptResult = {
@@ -69,6 +78,23 @@ export class CweKit {
 
   encrypt(payload: Buffer, options: CweEncryptOptions = {}): Tag {
     this.logger.debug("Encrypting COSE_Encrypt0", { options });
+
+    // Interop gate (D5): a non-proprietary encrypt refuses an encryption with no
+    // OFFICIAL COSE-RFC registration (the AES-CBC-HMAC family) so the token stays
+    // interoperable. A missing encryption still falls through to encToCoseLabel's
+    // own throw below.
+    if (!options.proprietary && this.encryption && !isOfficialCoseEnc(this.encryption)) {
+      throw new AegisError(
+        `Encryption "${this.encryption}" has no official COSE registration`,
+        {
+          code: "cose_enc_not_registered",
+          data: { encryption: this.encryption },
+          title: "COSE Encryption Not Registered",
+          details:
+            "In interoperable (non-proprietary) mode the content encryption must carry an official COSE-RFC label; the AES-CBC-HMAC family is private-use and requires proprietary mode.",
+        },
+      );
+    }
 
     const protectedMap = new Map<number, unknown>();
     protectedMap.set(coseByJose("alg"), encToCoseLabel(this.encryption));

@@ -1,21 +1,33 @@
+import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { AegisError } from "../errors/index.js";
-import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../__fixtures__/keys.js";
+import {
+  TEST_EC_KEY_SIG,
+  TEST_OCT_KEY_SIG,
+  TEST_OKP_KEY_SIG,
+} from "../__fixtures__/keys.js";
 import { CwtKit } from "./CwtKit.js";
 
-const common = {
-  issuer: "https://issuer.lindorm.io/",
-  subject: "user-1",
-  audience: ["https://rs.lindorm.io/"],
-  expiresAt: new Date(1700003600 * 1000),
-  issuedAt: new Date(1700000000 * 1000),
-  tokenId: "the-jti",
-  clientId: "client-1",
+MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
+
+// The kit is WIRE-ONLY and TRANSFORM-FREE: `sign` serializes an already
+// COSE-name-keyed claim dict verbatim; `verify` returns the native WIRE payload
+// (`sub`/`cti`, not the domain `subject`/`tokenId`). The domain⇆wire translation
+// is the Aegis-side CoseKit boundary, never the kit.
+const wire = {
+  iss: "https://issuer.lindorm.io/",
+  sub: "user-1",
+  aud: ["https://rs.lindorm.io/"],
+  exp: 1704099600, // 2024-01-01T09:00:00Z — future of the mocked 08:00
+  iat: 1704092400, // 2024-01-01T06:00:00Z — past
+  cti: "the-cti",
+  client_id: "client-1",
   scope: ["read", "write"],
 };
 
-describe("CwtKit (COSE_Sign1)", () => {
+describe("CwtKit (COSE_Sign1, asymmetric)", () => {
   let kit: CwtKit;
 
   beforeEach(() => {
@@ -23,88 +35,128 @@ describe("CwtKit (COSE_Sign1)", () => {
   });
 
   test("mints a CWT tagged with the CWT tag (61 = 0xd83d)", () => {
-    const token = kit.sign(common, { typ: "application/at+cwt" });
+    const token = kit.sign(wire, { typ: "application/at+cwt" });
     expect(Buffer.isBuffer(token)).toBe(true);
     // CBOR tag 61 = 0xd8 0x3d
     expect(token.subarray(0, 2).toString("hex")).toBe("d83d");
   });
 
-  test("round-trips the domain claims through sign -> verify", () => {
-    const token = kit.sign(common, { typ: "application/at+cwt" });
-    const { claims, typ } = kit.verify(token);
+  test("round-trips the WIRE claims through sign -> verify (no domain translation)", () => {
+    const { claims, typ } = kit.verify(kit.sign(wire, { typ: "application/at+cwt" }));
 
-    expect(claims).toEqual(common);
+    // WIRE names only — jose/cose keys, NOT domain (`issuer`/`subject`/`tokenId`).
+    expect(claims.iss).toBe("https://issuer.lindorm.io/");
+    expect(claims.sub).toBe("user-1");
+    expect(claims.aud).toEqual(["https://rs.lindorm.io/"]);
+    expect(claims.cti).toBe("the-cti");
+    expect(claims.client_id).toBe("client-1");
+    expect(claims.scope).toEqual(["read", "write"]);
+    // Temporal claims decode to Dates (the codec's "date" kind).
+    expect(claims.exp).toEqual(new Date(1704099600 * 1000));
+    expect(claims.iat).toEqual(new Date(1704092400 * 1000));
     expect(typ).toBe("application/at+cwt");
   });
 
   test("decode exposes kid / alg / typ without verifying", () => {
-    const token = kit.sign(common, { typ: "application/at+cwt" });
-    const decoded = CwtKit.decode(token);
+    const decoded = CwtKit.decode(kit.sign(wire, { typ: "application/at+cwt" }));
 
     expect(decoded.kid).toBe(TEST_EC_KEY_SIG.id);
     expect(decoded.algorithm).toBe("ES512"); // TEST_EC_KEY_SIG is P-521
     expect(decoded.typ).toBe("application/at+cwt");
   });
 
-  test("round-trips structured claims (act, sub_id, events, authorization_details)", () => {
-    const withStructured = {
-      ...common,
-      act: { subject: "actor-1", issuer: "https://delegator/" },
-      subjectId: { format: "iss_sub", iss: "https://issuer/", sub: "u" },
-      events: { "urn:lindorm:event:test": {} },
-      authorizationDetails: [{ type: "payment_initiation", amount: 100 }],
-    };
-
-    const { claims } = kit.verify(kit.sign(withStructured));
-
-    expect(claims).toEqual(withStructured);
-  });
-
-  test("round-trips a cnf confirmation key via COSE_Key", () => {
-    const X = "LXEWQrcmsEQBYnyp-6wy9chTD7GQPMTbAiWHF5IaSIE"; // 32-byte b64url
-    const confirmation = { key: { kty: "EC", crv: "P-256", x: X, y: X } };
-
-    const { claims } = kit.verify(kit.sign({ ...common, confirmation }));
-
-    expect(claims.confirmation).toEqual(confirmation);
-  });
-
   test("rejects a tampered payload", () => {
-    const token = kit.sign(common);
+    const token = kit.sign(wire);
     token[token.length - 5] ^= 0xff; // flip a signature byte
     expect(() => kit.verify(token)).toThrow(AegisError);
   });
-});
 
-describe("CwtKit (COSE_Mac0, symmetric oct key)", () => {
-  let kit: CwtKit;
+  describe("integrity gate — COSE_Sign1 requires an asymmetric key", () => {
+    test("throws when handed a symmetric (oct) key", () => {
+      expect(
+        () => new CwtKit({ logger: createMockLogger(), kryptos: TEST_OCT_KEY_SIG }),
+      ).toThrow(AegisError);
+    });
 
-  beforeEach(() => {
-    kit = new CwtKit({ logger: createMockLogger(), kryptos: TEST_OCT_KEY_SIG });
+    test("the throw carries the cwt_requires_asymmetric_key code", () => {
+      const error = (() => {
+        try {
+          new CwtKit({ logger: createMockLogger(), kryptos: TEST_OCT_KEY_SIG });
+        } catch (err) {
+          return err as AegisError;
+        }
+      })();
+
+      expect(error?.code).toBe("cwt_requires_asymmetric_key");
+    });
   });
 
-  test("MACs an oct-key CWT as a COSE_Mac0 (HS256), tagged 61", () => {
-    const token = kit.sign(common, { typ: "application/at+cwt" });
+  test("kid fail-fast — a token naming a different kid throws cwt_kid_mismatch", () => {
+    const token = kit.sign(wire);
+    const otherKit = new CwtKit({
+      logger: createMockLogger(),
+      kryptos: TEST_OKP_KEY_SIG, // asymmetric, different id
+    });
 
-    // CBOR tag 61 = 0xd8 0x3d wraps the inner COSE_Mac0.
-    expect(token.subarray(0, 2).toString("hex")).toBe("d83d");
+    const error = (() => {
+      try {
+        otherKit.verify(token);
+      } catch (err) {
+        return err as AegisError;
+      }
+    })();
 
-    const decoded = CwtKit.decode(token);
-    expect(decoded.algorithm).toBe("HS256"); // HMAC -> COSE_Mac0, never Sign1
-    expect(decoded.kid).toBe(TEST_OCT_KEY_SIG.id);
-    expect(decoded.typ).toBe("application/at+cwt");
+    expect(error?.code).toBe("cwt_kid_mismatch");
   });
 
-  test("round-trips the domain claims through tag -> verify", () => {
-    const { claims, typ } = kit.verify(kit.sign(common, { typ: "application/at+cwt" }));
+  describe("proprietary alg gate (D5)", () => {
+    // ML-DSA (post-quantum) is asymmetric — a valid COSE_Sign1 key — but has no
+    // official COSE registration, so a non-proprietary sign refuses it. The gate
+    // runs through signCwt -> CwsKit; verify stays lenient.
+    const mldsa = KryptosKit.generate.sig.akp({ algorithm: "ML-DSA-44" });
 
-    expect(claims).toEqual(common);
-    expect(typ).toBe("application/at+cwt");
+    test("non-proprietary sign refuses an ML-DSA key", () => {
+      const mldsaKit = new CwtKit({ logger: createMockLogger(), kryptos: mldsa });
+
+      const error = (() => {
+        try {
+          mldsaKit.sign(wire, { typ: "application/at+cwt" });
+        } catch (err) {
+          return err as AegisError;
+        }
+      })();
+
+      expect(error?.code).toBe("cose_alg_not_registered");
+    });
+
+    test("proprietary sign allows ML-DSA and round-trips the WIRE claims", () => {
+      const mldsaKit = new CwtKit({ logger: createMockLogger(), kryptos: mldsa });
+
+      const { claims } = mldsaKit.verify(
+        mldsaKit.sign(wire, { typ: "application/at+cwt", proprietary: true }),
+      );
+
+      expect(claims.iss).toBe("https://issuer.lindorm.io/");
+      expect(claims.cti).toBe("the-cti");
+    });
   });
 
-  test("rejects a tampered payload", () => {
-    const token = kit.sign(common);
-    token[token.length - 5] ^= 0xff; // flip a MAC byte
-    expect(() => kit.verify(token)).toThrow(AegisError);
+  describe("temporal-in-kit (R10)", () => {
+    // The wire kit range-checks exp/nbf/iat against "now" with clock tolerance,
+    // validated IF PRESENT — exactly as JwtKit does.
+    test("rejects an expired token (exp in the past)", () => {
+      const token = kit.sign({ ...wire, exp: 1704092400 }); // 06:00, now is 08:00
+      expect(() => kit.verify(token)).toThrow(/Invalid token/);
+    });
+
+    test("accepts an expired token within clock tolerance", () => {
+      const tolerant = new CwtKit({
+        logger: createMockLogger(),
+        kryptos: TEST_EC_KEY_SIG,
+        clockTolerance: 7200,
+      });
+      const token = tolerant.sign({ ...wire, exp: 1704092400 });
+      expect(() => tolerant.verify(token)).not.toThrow();
+    });
   });
 });

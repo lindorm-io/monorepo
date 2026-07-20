@@ -2,21 +2,21 @@ import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { AegisError } from "../../errors/index.js";
 import type { VerifyJwtOptions } from "../../types/index.js";
-import { createJwtVerify } from "./jwt-verify.js";
+import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { validate } from "./validate.js";
 
 /**
- * Validate a decoded CWT's standard claims exactly as `jwt.verify` validates a
- * JWT: `exp` presence policy, then the range checks (exp/nbf/iat with clock
- * tolerance) and any verifier-supplied claim matchers (iss/aud/sub/…), reusing
- * the JOSE verify predicate.
+ * Validate a decoded CWT's standard claims exactly as the Aegis JOSE verify half
+ * does: `exp` presence policy, then the named identity matchers (iss/aud/sub/…),
+ * reusing the JOSE identity builder. The temporal RANGE (exp/nbf/iat with clock
+ * tolerance) is checked IN THE KIT now (`CwtKit`/`CwmKit`.verify, Phase 9 R10),
+ * so this layer is identity-only — the exact COSE mirror of `verifyJwtToDomain`.
  *
- * The input is the CWT's COSE-name-keyed WIRE (`CwtVerifyResult.wire`). The
- * temporal + matcher claims (`exp`/`nbf`/`iat`/`iss`/`aud`/`sub`/…) share the JOSE
- * names, so the JOSE predicate applies to it directly — no domain re-keying. The
- * only name-diverging claim (`cti`) is not a temporal/matcher claim, so it is
- * irrelevant here. Temporal claims are `Date`s (the codec's "date" kind), exactly
- * as JwtKit.verify carries them, so the range predicates compare Date-to-Date.
+ * The input is the CWT's COSE-name-keyed WIRE (`CoseVerifyResult.wire`). The
+ * matcher claims (`exp`/`iss`/`aud`/`sub`/…) share the JOSE names, so the JOSE
+ * matchers apply directly — no domain re-keying. The only name-diverging claim
+ * (`cti`) is not a matcher claim, so it is irrelevant here. Temporal claims are
+ * `Date`s (the codec's "date" kind), so the exp lower-bound compares Date-to-Date.
  */
 export const validateCwtClaims = (
   wire: Dict,
@@ -37,10 +37,10 @@ export const validateCwtClaims = (
     });
   }
 
-  const predicate = createJwtVerify(algorithm, verify, clockTolerance);
+  const predicate = createIdentityMatchers(algorithm, verify, clockTolerance);
 
   try {
-    validate(payload, predicate);
+    validate(payload, predicate as never);
   } catch (err) {
     throw new AegisError("Invalid token", {
       code: "cwt_claims_invalid",

@@ -147,12 +147,16 @@ export class Aegis implements IAegis {
     this.logger = options.logger.child(["AegisKit"]);
     this.amphora = options.amphora;
     this.issuer = options.issuer ?? this.amphora.domain;
-    this.coseKit = new CoseKit({ logger: this.logger });
 
     this.certBindingMode = options.certBindingMode ?? "strict";
     this.clockTolerance = options.clockTolerance ?? 0;
     this.dpopMaxSkew = options.dpopMaxSkew;
     this.encryption = options.encryption ?? "A256GCM";
+
+    this.coseKit = new CoseKit({
+      logger: this.logger,
+      clockTolerance: this.clockTolerance,
+    });
 
     // The DEPLOYMENT's key policy. Aegis ships no default selector of its own:
     // it does not know a deployment's `purpose` taxonomy, and amphora already

@@ -1,10 +1,11 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { AegisError } from "../errors/index.js";
-import { algToCoseLabel } from "../internal/cose/alg-labels.js";
+import { algToCoseLabel, isOfficialCoseAlg } from "../internal/cose/alg-labels.js";
 import { Tag } from "../internal/cose/cbor.js";
 import {
   COSE_TAG,
+  buildMacStructure,
   buildSigStructure,
   decodeProtectedHeader,
   encodeProtectedHeader,
@@ -20,37 +21,45 @@ export type CwsKitSettings = {
 export type CwsSignOptions = {
   /** COSE `typ` header (label 16, RFC 9596) — the profile's COSE media type. */
   typ?: string;
+  /**
+   * Allow a lindorm-proprietary (private-use) COSE algorithm label (default
+   * `false`). When `false` the signing algorithm MUST carry an OFFICIAL COSE-RFC
+   * label or `sign` throws (D5 interop gate); when `true` a private-use alg such
+   * as ML-DSA is permitted. Read/verify is always lenient.
+   */
+  proprietary?: boolean;
 };
 
 export type CwsVerifyResult = {
   payload: Buffer;
   protectedHeader: Map<number, unknown>;
-  unprotected: Map<number, unknown>;
 };
 
-const unwrapSign1 = (value: unknown): Array<unknown> => {
-  const contents =
-    value instanceof Tag && value.tag === COSE_TAG.sign1 ? value.contents : value;
+const unwrapStructure = (value: unknown, tag: number, label: string): Array<unknown> => {
+  const contents = value instanceof Tag && value.tag === tag ? value.contents : value;
   if (!Array.isArray(contents) || contents.length !== 4) {
-    throw new AegisError("Malformed COSE_Sign1", {
+    throw new AegisError(`Malformed ${label}`, {
       code: "cose_malformed",
-      title: "Malformed COSE_Sign1",
-      details:
-        "A COSE_Sign1 must be a 4-element array [protected, unprotected, payload, signature].",
+      title: `Malformed ${label}`,
+      details: `A ${label} must be a 4-element array [protected, unprotected, payload, signature/tag].`,
     });
   }
   return contents;
 };
 
 /**
- * COSE_Sign1 (RFC 9052 §4.4) — the COSE analogue of JwsKit. Signs/verifies a
- * payload with a single signer, producing/consuming a CBOR tag-18 structure.
- * The signature is computed over `Sig_structure` with the SAME primitive the
- * JOSE path uses (SignatureKit, raw r‖s for ECDSA), so no new crypto.
+ * The sole opaque COSE signer — the opaque sibling of `JwsKit`. It operates on an
+ * opaque `Buffer` payload + the COSE STRUCTURE (a `Tag`), with no claim
+ * knowledge; the CBOR encode/decode (and any outer CWT tag 61) is owned by the
+ * layer above.
  *
- * Operates on the COSE_Sign1 STRUCTURE (a `Tag`), not bytes — the CBOR
- * encode/decode (and any outer CWT tag 61) is owned by the layer above
- * (CwtKit), so the same Sign1 can be tagged or embedded.
+ * It GATES on the key's `algClass` itself (RFC 9052): an asymmetric key produces
+ * a COSE_Sign1 (tag 18) over `Sig_structure` with the SAME primitive the JOSE ES*
+ * path uses (raw r‖s), a symmetric `oct` key produces a COSE_Mac0 (tag 17) over
+ * `MAC_structure` with the SAME HMAC primitive the JOSE HS* path uses — HMAC is a
+ * MAC algorithm, never a Sign1 signature. One kit covers both because the opaque
+ * payload has no claims layer to specialise; the claims split (`CwtKit` Sign1 /
+ * `CwmKit` Mac0) sits one layer up.
  */
 export class CwsKit {
   private readonly kryptos: IKryptos;
@@ -62,12 +71,65 @@ export class CwsKit {
   }
 
   sign(payload: Buffer, options: CwsSignOptions = {}): Tag {
+    // Interop gate (D5): a non-proprietary sign refuses an algorithm with no
+    // OFFICIAL COSE-RFC registration (e.g. ML-DSA) so the token stays
+    // interoperable. Runs before the Sign1/Mac0 split — it applies to both.
+    if (!options.proprietary && !isOfficialCoseAlg(this.kryptos.algorithm)) {
+      throw new AegisError(
+        `Algorithm "${this.kryptos.algorithm}" has no official COSE registration`,
+        {
+          code: "cose_alg_not_registered",
+          data: { algorithm: this.kryptos.algorithm },
+          title: "COSE Algorithm Not Registered",
+          details:
+            "In interoperable (non-proprietary) mode the signing algorithm must carry an official COSE-RFC label; ML-DSA and other private-use algorithms require proprietary mode.",
+        },
+      );
+    }
+
+    switch (this.kryptos.algClass) {
+      case "asymmetric":
+        return this.signSign1(payload, options);
+      case "symmetric":
+        return this.macMac0(payload, options);
+      default: {
+        const exhaustive: never = this.kryptos.algClass;
+        throw new AegisError("Unhandled COSE key class", {
+          code: "cose_unhandled_alg_class",
+          data: { algClass: String(exhaustive) },
+          title: "Unhandled COSE Key Class",
+          details:
+            "The resolved key's algClass is neither asymmetric nor symmetric, so no COSE integrity structure applies.",
+        });
+      }
+    }
+  }
+
+  verify(structure: unknown): CwsVerifyResult {
+    switch (this.kryptos.algClass) {
+      case "asymmetric":
+        return this.verifySign1(structure);
+      case "symmetric":
+        return this.verifyMac0(structure);
+      default: {
+        const exhaustive: never = this.kryptos.algClass;
+        throw new AegisError("Unhandled COSE key class", {
+          code: "cose_unhandled_alg_class",
+          data: { algClass: String(exhaustive) },
+          title: "Unhandled COSE Key Class",
+          details:
+            "The resolved key's algClass is neither asymmetric nor symmetric, so no COSE integrity structure applies.",
+        });
+      }
+    }
+  }
+
+  // private — COSE_Sign1 (RFC 9052 §4.4)
+
+  private signSign1(payload: Buffer, options: CwsSignOptions): Tag {
     this.logger.debug("Signing COSE_Sign1", { options });
 
-    const protectedMap = new Map<number, unknown>();
-    protectedMap.set(coseByJose("alg"), algToCoseLabel(this.kryptos.algorithm));
-    if (options.typ !== undefined) protectedMap.set(coseByJose("typ"), options.typ);
-    const protectedHeader = encodeProtectedHeader(protectedMap);
+    const protectedHeader = this.protectedHeader(options);
 
     // kid travels UNprotected — it is read to resolve the verification key
     // before the signature is checked (amphora kid-only resolution).
@@ -82,13 +144,12 @@ export class CwsKit {
     return new Tag(COSE_TAG.sign1, [protectedHeader, unprotected, payload, signature]);
   }
 
-  verify(sign1: unknown): CwsVerifyResult {
-    const [protectedHeader, unprotected, payload, signature] = unwrapSign1(sign1) as [
-      Uint8Array,
-      Map<number, unknown>,
-      Uint8Array,
-      Uint8Array,
-    ];
+  private verifySign1(structure: unknown): CwsVerifyResult {
+    const [protectedHeader, , payload, signature] = unwrapStructure(
+      structure,
+      COSE_TAG.sign1,
+      "COSE_Sign1",
+    ) as [Uint8Array, unknown, Uint8Array, Uint8Array];
 
     const toBeSigned = buildSigStructure(
       Buffer.from(protectedHeader),
@@ -110,17 +171,62 @@ export class CwsKit {
     return {
       payload: Buffer.from(payload),
       protectedHeader: decodeProtectedHeader(protectedHeader),
-      unprotected,
     };
   }
 
-  /**
-   * Read the `kid` (unprotected, label 4) from a COSE_Sign1 structure WITHOUT
-   * verifying — so the caller can resolve the verification key first.
-   */
-  static peekKid(sign1: unknown): string | undefined {
-    const [, unprotected] = unwrapSign1(sign1) as [unknown, Map<number, unknown>];
-    const kid = unprotected.get(coseByJose("kid"));
-    return kid instanceof Uint8Array ? Buffer.from(kid).toString("utf8") : undefined;
+  // private — COSE_Mac0 (RFC 9052 §6.2)
+
+  private macMac0(payload: Buffer, options: CwsSignOptions): Tag {
+    this.logger.debug("MAC'ing COSE_Mac0", { options });
+
+    const protectedHeader = this.protectedHeader(options);
+
+    const unprotected = new Map<number, unknown>();
+    unprotected.set(coseByJose("kid"), Buffer.from(this.kryptos.id, "utf8"));
+
+    const toBeMaced = buildMacStructure(protectedHeader, payload);
+    const tag = new SignatureKit({ kryptos: this.kryptos }).sign(toBeMaced);
+
+    return new Tag(COSE_TAG.mac0, [protectedHeader, unprotected, payload, tag]);
+  }
+
+  private verifyMac0(structure: unknown): CwsVerifyResult {
+    const [protectedHeader, , payload, tag] = unwrapStructure(
+      structure,
+      COSE_TAG.mac0,
+      "COSE_Mac0",
+    ) as [Uint8Array, unknown, Uint8Array, Uint8Array];
+
+    const toBeMaced = buildMacStructure(
+      Buffer.from(protectedHeader),
+      Buffer.from(payload),
+    );
+    const valid = new SignatureKit({ kryptos: this.kryptos }).verify(
+      toBeMaced,
+      Buffer.from(tag),
+    );
+
+    if (!valid) {
+      throw new AegisError("Invalid COSE_Mac0 tag", {
+        code: "cose_mac_invalid",
+        title: "Invalid COSE MAC",
+        details:
+          "The COSE_Mac0 authentication tag did not verify against the resolved key.",
+      });
+    }
+
+    return {
+      payload: Buffer.from(payload),
+      protectedHeader: decodeProtectedHeader(protectedHeader),
+    };
+  }
+
+  // private — shared
+
+  private protectedHeader(options: CwsSignOptions): Buffer {
+    const protectedMap = new Map<number, unknown>();
+    protectedMap.set(coseByJose("alg"), algToCoseLabel(this.kryptos.algorithm));
+    if (options.typ !== undefined) protectedMap.set(coseByJose("typ"), options.typ);
+    return encodeProtectedHeader(protectedMap);
   }
 }

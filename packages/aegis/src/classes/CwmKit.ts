@@ -1,106 +1,77 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
+import type { Predicate } from "@lindorm/types";
 import { AegisError } from "../errors/index.js";
-import { algToCoseLabel } from "../internal/cose/alg-labels.js";
-import { Tag } from "../internal/cose/cbor.js";
 import {
-  COSE_TAG,
-  buildMacStructure,
-  decodeProtectedHeader,
-  encodeProtectedHeader,
-} from "../internal/cose/structures.js";
-import { coseByJose } from "../internal/header/header-registry.js";
-import { SignatureKit } from "./SignatureKit.js";
+  type CwtDecoded,
+  type CwtSignOptions,
+  type CwtVerifyOptions,
+  type CwtVerifyResult,
+  decodeCwt,
+  signCwt,
+  verifyCwt,
+} from "../internal/cose/cwt-token.js";
+import type { CwtWireClaims } from "../types/index.js";
 
 export type CwmKitSettings = {
   kryptos: IKryptos;
   logger: ILogger;
-};
-
-export type CwmTagOptions = {
-  typ?: string;
-};
-
-export type CwmVerifyResult = {
-  payload: Buffer;
-  protectedHeader: Map<number, unknown>;
-};
-
-const unwrapMac0 = (value: unknown): Array<unknown> => {
-  const contents =
-    value instanceof Tag && value.tag === COSE_TAG.mac0 ? value.contents : value;
-  if (!Array.isArray(contents) || contents.length !== 4) {
-    throw new AegisError("Malformed COSE_Mac0", {
-      code: "cose_malformed",
-      title: "Malformed COSE_Mac0",
-      details:
-        "A COSE_Mac0 must be a 4-element array [protected, unprotected, payload, tag].",
-    });
-  }
-  return contents;
+  /** Clock skew tolerance (seconds) for the in-kit temporal range check. */
+  clockTolerance?: number;
 };
 
 /**
- * COSE_Mac0 (RFC 9052 §6.2) — symmetric authentication with a shared key. Uses
- * HMAC (COSE algs 5/6/7) over `MAC_structure` via the same SignatureKit the
- * JOSE HS* path uses; no AES-MAC, no new primitives. For same-party
- * (issuer == verifier) tokens.
+ * CWT (RFC 8392) as a COSE_Mac0 — the symmetric twin of `CwtKit`. Same wire-only
+ * thin shape (transform-free `sign`, structural `verify` with kid fail-fast and
+ * temporal-in-kit R10), but the integrity structure is a MAC, not a signature.
+ *
+ * INTEGRITY GATE (Bit 9): `CwmKit` is COSE_Mac0 and requires a SYMMETRIC `oct`
+ * key — it throws on an asymmetric one (that is `CwtKit`'s COSE_Sign1). Aegis
+ * dispatches the two off the RESOLVED key's `algClass`.
  */
 export class CwmKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
+  private readonly clockTolerance: number;
 
   constructor(options: CwmKitSettings) {
-    this.kryptos = options.kryptos;
-    this.logger = options.logger.child(["CwmKit"]);
-  }
-
-  tag(payload: Buffer, options: CwmTagOptions = {}): Tag {
-    this.logger.debug("MAC'ing COSE_Mac0", { options });
-
-    const protectedMap = new Map<number, unknown>();
-    protectedMap.set(coseByJose("alg"), algToCoseLabel(this.kryptos.algorithm));
-    if (options.typ !== undefined) protectedMap.set(coseByJose("typ"), options.typ);
-    const protectedHeader = encodeProtectedHeader(protectedMap);
-
-    const unprotected = new Map<number, unknown>();
-    unprotected.set(coseByJose("kid"), Buffer.from(this.kryptos.id, "utf8"));
-
-    const toBeMaced = buildMacStructure(protectedHeader, payload);
-    const tag = new SignatureKit({ kryptos: this.kryptos }).sign(toBeMaced);
-
-    return new Tag(COSE_TAG.mac0, [protectedHeader, unprotected, payload, tag]);
-  }
-
-  verify(mac0: unknown): CwmVerifyResult {
-    const [protectedHeader, , payload, tag] = unwrapMac0(mac0) as [
-      Uint8Array,
-      unknown,
-      Uint8Array,
-      Uint8Array,
-    ];
-
-    const toBeMaced = buildMacStructure(
-      Buffer.from(protectedHeader),
-      Buffer.from(payload),
-    );
-    const valid = new SignatureKit({ kryptos: this.kryptos }).verify(
-      toBeMaced,
-      Buffer.from(tag),
-    );
-
-    if (!valid) {
-      throw new AegisError("Invalid COSE_Mac0 tag", {
-        code: "cose_mac_invalid",
-        title: "Invalid COSE MAC",
+    if (options.kryptos.algClass !== "symmetric") {
+      throw new AegisError("CwmKit requires a symmetric key", {
+        code: "cwm_requires_symmetric_key",
+        data: { algClass: options.kryptos.algClass },
+        title: "CwmKit Requires Symmetric Key",
         details:
-          "The COSE_Mac0 authentication tag did not verify against the resolved key.",
+          "CwmKit issues COSE_Mac0 CWTs, which require a symmetric oct key; an asymmetric key must use CwtKit (COSE_Sign1).",
       });
     }
 
-    return {
-      payload: Buffer.from(payload),
-      protectedHeader: decodeProtectedHeader(protectedHeader),
-    };
+    this.kryptos = options.kryptos;
+    this.logger = options.logger.child(["CwmKit"]);
+    this.clockTolerance = options.clockTolerance ?? 0;
+  }
+
+  sign<C extends CwtWireClaims = CwtWireClaims>(
+    claims: C,
+    options: CwtSignOptions = {},
+  ): Buffer {
+    return signCwt(this.kryptos, this.logger, claims, options);
+  }
+
+  verify<C extends CwtWireClaims = CwtWireClaims>(
+    token: Buffer,
+    assert?: Predicate<C>,
+    options: CwtVerifyOptions = {},
+  ): CwtVerifyResult<C> {
+    return verifyCwt<C>(this.kryptos, this.logger, {
+      format: "cwm",
+      token,
+      assert,
+      clockTolerance: options.clockTolerance ?? this.clockTolerance,
+      options,
+    });
+  }
+
+  static decode(token: Buffer): CwtDecoded {
+    return decodeCwt(token);
   }
 }

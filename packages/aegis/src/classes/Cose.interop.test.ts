@@ -9,6 +9,7 @@ import {
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { IKryptos } from "@lindorm/kryptos";
 import coseJs from "cose-js";
+import MockDate from "mockdate";
 import { describe, expect, test } from "vitest";
 import type { Dict } from "@lindorm/types";
 import { TEST_EC_KEY_SIG, TEST_OKP_KEY_SIG } from "../__fixtures__/keys.js";
@@ -17,6 +18,10 @@ import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { decodeCwtClaims, encodeCwtClaims } from "../internal/cose/cwt-claims.js";
 import { COSE_TAG } from "../internal/cose/structures.js";
 import { CwtKit } from "./CwtKit.js";
+
+// Between the fixtures' issuedAt (1700000000) and expiresAt (1700003600), so the
+// in-kit temporal check (Phase 9 R10) accepts the round-tripped tokens.
+MockDate.set(new Date(1700001000 * 1000));
 
 const logger = createMockLogger();
 
@@ -28,6 +33,18 @@ const encodeClaims = (common: Dict) => encodeCwtClaims(domainToCose(common));
 const decodeClaims = (map: Map<unknown, unknown> | Dict): Dict => {
   const { claims, custom } = coseToDomain(decodeCwtClaims(map));
   return { ...claims, ...custom };
+};
+
+// The kit is WIRE-ONLY now: it takes/returns COSE-name-keyed claims. These
+// helpers put the domain⇆wire translation (the Aegis-side CoseKit boundary)
+// around it so the interop fixtures stay expressed in domain terms.
+const signDomain = (kryptos: IKryptos, common: Dict, options: Dict = {}): Buffer =>
+  new CwtKit({ kryptos, logger }).sign(domainToCose(common), options);
+
+const verifyDomain = (kryptos: IKryptos, cwt: Buffer): Dict => {
+  const { claims } = new CwtKit({ kryptos, logger }).verify(cwt);
+  const { claims: domain, custom } = coseToDomain(claims);
+  return { ...domain, ...custom };
 };
 
 // Only registered / interoperable claims — no lindorm-proprietary ones — so the
@@ -70,7 +87,7 @@ describe("COSE interop — @auth0/cose", () => {
 
   describe("our CWT verifies in @auth0/cose", () => {
     test.each(cases)("$name", async ({ kryptos, alg }) => {
-      const token = new CwtKit({ kryptos, logger }).sign(common);
+      const token = signDomain(kryptos, common);
       const sign1 = Sign1.decode(toBareSign1(token));
 
       await expect(
@@ -88,7 +105,7 @@ describe("COSE interop — @auth0/cose", () => {
   });
 
   test("tolerates a proprietary CWT typ (application/at+cwt) without throwing", async () => {
-    const token = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(common, {
+    const token = signDomain(TEST_EC_KEY_SIG, common, {
       typ: "application/at+cwt",
     });
 
@@ -123,8 +140,7 @@ describe("COSE interop — @auth0/cose", () => {
         ),
       );
 
-      const { claims } = new CwtKit({ kryptos, logger }).verify(cwt);
-      expect(claims).toEqual(common);
+      expect(verifyDomain(kryptos, cwt)).toEqual(common);
     });
   });
 });
@@ -143,7 +159,7 @@ describe("COSE interop — cose-js", () => {
   const kryptos = TEST_EC_KEY_SIG; // ES512 / P-521
 
   test("our CWT verifies in cose-js", async () => {
-    const token = new CwtKit({ kryptos, logger }).sign(common);
+    const token = signDomain(kryptos, common);
 
     // cose-js returns the verified payload (or throws on a bad signature).
     const payload = await coseJs.sign.verify(
@@ -169,8 +185,7 @@ describe("COSE interop — cose-js", () => {
 
     const cwt = Buffer.from(encodeCbor(new Tag(COSE_TAG.cwt, decodeCbor(bare))));
 
-    const { claims } = new CwtKit({ kryptos, logger }).verify(cwt);
-    expect(claims).toEqual(common);
+    expect(verifyDomain(kryptos, cwt)).toEqual(common);
   });
 });
 
@@ -213,7 +228,7 @@ describe("COSE interop — custom logic does not break the token", () => {
   // signature, decode the envelope, and hand back the opaque payload. The
   // payload stays well-formed CBOR with the standard labels intact.
   test("our full proprietary CWT verifies in @auth0/cose without throwing", async () => {
-    const token = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(fullCommon);
+    const token = signDomain(TEST_EC_KEY_SIG, fullCommon);
     const sign1 = Sign1.decode(toBareSign1(token));
 
     await expect(

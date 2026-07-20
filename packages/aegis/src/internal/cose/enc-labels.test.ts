@@ -22,15 +22,35 @@ describe("enc-labels", () => {
     expect(coseLabelToEnc(label)).toBe(enc);
   });
 
-  test("rejects an unsupported encryption / label", () => {
-    expect(() => encToCoseLabel("A128CBC-HS256" as never)).toThrow(AegisError);
+  // The AES-CBC-HMAC family has no OFFICIAL COSE registration; it maps to a
+  // private-use label (< -65536) so a proprietary COSE_Encrypt0 round-trips.
+  const cbcPairs = [
+    ["A128CBC-HS256", -65537],
+    ["A192CBC-HS384", -65538],
+    ["A256CBC-HS512", -65539],
+  ] as const;
+
+  test.each(cbcPairs)(
+    "%s <-> private-use COSE label %i round-trips (proprietary)",
+    (enc, label) => {
+      expect(encToCoseLabel(enc)).toBe(label);
+      expect(coseLabelToEnc(label)).toBe(enc);
+    },
+  );
+
+  test("rejects a missing encryption / an unknown label", () => {
+    expect(() => encToCoseLabel(undefined)).toThrow(AegisError);
+    expect(() => encToCoseLabel(null)).toThrow(AegisError);
     expect(() => coseLabelToEnc(999)).toThrow(AegisError);
   });
 
-  test("tag length follows the algorithm (GCM/CCM-128 = 16, CCM-64 = 8)", () => {
+  test("tag length follows the algorithm (GCM/CCM-128 = 16, CCM-64 = 8, CBC-HS = key size)", () => {
     expect(tagBytesForEncryption("A256GCM")).toBe(16);
     expect(tagBytesForEncryption("AES-CCM-16-128-256")).toBe(16);
     expect(tagBytesForEncryption("AES-CCM-16-64-128")).toBe(8);
     expect(tagBytesForEncryption("AES-CCM-64-64-256")).toBe(8);
+    expect(tagBytesForEncryption("A128CBC-HS256")).toBe(16);
+    expect(tagBytesForEncryption("A192CBC-HS384")).toBe(24);
+    expect(tagBytesForEncryption("A256CBC-HS512")).toBe(32);
   });
 });

@@ -135,8 +135,10 @@ describe("Aegis — COSE namespaces", () => {
       // Advance past the 09:00 expiry.
       MockDate.set(new Date("2024-01-01T10:00:00.000Z"));
 
+      // The exp RANGE is now range-checked IN THE KIT (Phase 9 R10, exactly as
+      // JwtKit does), so the expiry surfaces as the wire "Invalid token" throw.
       await expect(aegis.cwt.verify(token, { audience: "aud-1" })).rejects.toThrow(
-        AegisError,
+        /Invalid token/,
       );
     });
 
