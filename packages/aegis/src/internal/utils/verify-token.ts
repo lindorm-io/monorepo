@@ -5,6 +5,7 @@ import { JwsKit } from "../../classes/JwsKit.js";
 import { JwtKit } from "../../classes/JwtKit.js";
 import { AegisError } from "../../errors/index.js";
 import type { ParsedJws, ParsedJwt, VerifyJwtOptions } from "../../types/index.js";
+import { isCose } from "../cose/is-cose.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { coseVerifyCore } from "./cose-verify-core.js";
 import { validateCwtClaims } from "./validate-cwt-claims.js";
@@ -40,7 +41,7 @@ export const verifyToken = async <T extends ParsedJwt | ParsedJws<any>>({
 
   if (!token.includes(".")) {
     const bytes = Buffer.from(token, "base64url");
-    if (deps.coseKit.isCose(bytes)) {
+    if (isCose(bytes)) {
       const { claims, wire, decoded } = await coseVerifyCore({ input: bytes, deps });
       if (options) {
         validateCwtClaims(

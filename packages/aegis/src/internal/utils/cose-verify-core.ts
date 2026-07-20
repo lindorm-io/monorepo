@@ -1,3 +1,10 @@
+import { CwtKit } from "../../classes/CwtKit.js";
+import {
+  decodeEncryptedCoseKid,
+  decryptCose,
+  isEncryptedCose,
+} from "../cose/cose-encryption.js";
+import { verifyCose } from "../cose/verify-cose.js";
 import type { AegisDeps } from "./aegis-deps.js";
 
 /**
@@ -15,17 +22,22 @@ export const coseVerifyCore = async ({
 }) => {
   let bytes = input;
 
-  if (deps.coseKit.isEncrypted(bytes)) {
+  if (isEncryptedCose(bytes)) {
     const encKryptos = await deps.resolveDecryptKey(
-      deps.coseKit.decodeEncryptedKid(bytes),
+      decodeEncryptedCoseKid(bytes),
       undefined,
     );
-    bytes = deps.coseKit.decrypt(encKryptos, bytes);
+    bytes = decryptCose({ kryptos: encKryptos, logger: deps.logger, token: bytes });
   }
 
-  const decoded = deps.coseKit.decode(bytes);
+  const decoded = CwtKit.decode(bytes);
   const kryptos = await deps.resolveVerifyKey(decoded.kid, undefined);
-  const { claims, wire, typ } = deps.coseKit.verify(kryptos, bytes);
+  const { claims, wire, typ } = verifyCose({
+    kryptos,
+    logger: deps.logger,
+    token: bytes,
+    clockTolerance: deps.clockTolerance,
+  });
 
   return { claims, wire, decoded, typ };
 };

@@ -19,18 +19,22 @@ const decodeToDomain = (map: Map<unknown, unknown> | Dict): Dict => {
 };
 
 describe("encodeCwtClaims", () => {
-  test("maps domain claims to CWT integer labels / string keys", () => {
-    const map = encode({
-      issuer: "https://issuer/",
-      subject: "u1",
-      audience: ["https://rs/"],
-      expiresAt: new Date(1700003600 * 1000),
-      issuedAt: new Date(1700000000 * 1000),
-      tokenId: "the-jti",
-      scope: ["read", "write"],
-      clientId: "client-1", // no CWT label but ≥ 5 chars -> private-use integer
-      levelOfAssurance: 3, // no CWT label, ≤ 4 chars -> string key
-    });
+  test("maps domain claims to CWT integer labels / string keys (proprietary)", () => {
+    // On-platform (proprietary:true) uses the compact private-use integer labels.
+    const map = encode(
+      {
+        issuer: "https://issuer/",
+        subject: "u1",
+        audience: ["https://rs/"],
+        expiresAt: new Date(1700003600 * 1000),
+        issuedAt: new Date(1700000000 * 1000),
+        tokenId: "the-jti",
+        scope: ["read", "write"],
+        clientId: "client-1", // no CWT label but ≥ 5 chars -> private-use integer
+        levelOfAssurance: 3, // no CWT label, ≤ 4 chars -> string key
+      },
+      { proprietary: true },
+    );
 
     expect(map.get(1)).toBe("https://issuer/"); // iss
     expect(map.get(2)).toBe("u1"); // sub
@@ -45,7 +49,7 @@ describe("encodeCwtClaims", () => {
   });
 
   test("encodes OIDC hash claims as byte strings", () => {
-    const map = encode({ accessTokenHash: AT_HASH });
+    const map = encode({ accessTokenHash: AT_HASH }, { proprietary: true });
     const bytes = map.get(-65537 - 0) as Uint8Array; // at_hash private-use label
     expect(Buffer.isBuffer(bytes) || bytes instanceof Uint8Array).toBe(true);
     expect(Buffer.from(bytes).length).toBe(32);
@@ -64,8 +68,8 @@ describe("encodeCwtClaims", () => {
 describe("proprietary encoding", () => {
   const act = { subject: "actor", issuer: "https://delegator/", clientId: "c-2" };
 
-  test("act is compact integer-keyed by default (proprietary)", () => {
-    const map = encode({ act });
+  test("act is compact integer-keyed under proprietary:true", () => {
+    const map = encode({ act }, { proprietary: true });
     const encodedAct = map.get("act") as Map<number, unknown>;
     expect(encodedAct).toBeInstanceOf(Map);
     expect(encodedAct.get(1)).toBe("https://delegator/"); // issuer reuses CWT iss
@@ -73,8 +77,8 @@ describe("proprietary encoding", () => {
     expect(encodedAct.get(4)).toBe("c-2"); // clientId — lindorm label
   });
 
-  test("act is interoperable string-keyed when proprietary:false", () => {
-    const map = encode({ act }, { proprietary: false });
+  test("act is interoperable string-keyed by default (proprietary:false)", () => {
+    const map = encode({ act }); // default is interoperable (D5)
     // The interoperable object now carries RFC 8693 wire member names
     // (sub/iss/client_id), the translator's `act` shape — NOT the lindorm domain
     // names it emitted before the Phase-5 collapse onto the ONE translator.
@@ -87,11 +91,12 @@ describe("proprietary encoding", () => {
 
   test("private-use claims degrade to their JOSE string key off-platform (never dropped)", () => {
     const withTenant = { issuer: "https://i/", tenantId: "t-1" };
-    // On-platform: compact private-use integer label.
-    expect(encode(withTenant).get(-65537 - 14)).toBe("t-1"); // tenant_id private label
-    expect(encode(withTenant).has("tenant_id")).toBe(false);
-    // Off-platform: degraded to the JOSE string key — NOT dropped.
-    const off = encode(withTenant, { proprietary: false });
+    // On-platform (proprietary:true): compact private-use integer label.
+    const on = encode(withTenant, { proprietary: true });
+    expect(on.get(-65537 - 14)).toBe("t-1"); // tenant_id private label
+    expect(on.has("tenant_id")).toBe(false);
+    // Default (interoperable, D5): degraded to the JOSE string key — NOT dropped.
+    const off = encode(withTenant);
     expect(off.has(-65537 - 14)).toBe(false);
     expect(off.get("tenant_id")).toBe("t-1");
     expect(off.get(1)).toBe("https://i/"); // iss kept
@@ -120,8 +125,9 @@ describe("proprietary encoding", () => {
   test("sub_id is compact integer-keyed under a private-use label by default, JOSE string-keyed object when proprietary:false", () => {
     const subjectId = { format: "iss_sub", iss: "https://i/", sub: "u" };
 
-    // On-platform: keyed by the private-use label P(12); value is the compact map.
-    const map = encode({ subjectId });
+    // On-platform (proprietary:true): keyed by the private-use label P(12); value
+    // is the compact map.
+    const map = encode({ subjectId }, { proprietary: true });
     const compact = map.get(-65537 - 12) as Map<number, unknown>;
     expect(map.has("sub_id")).toBe(false);
     expect(compact).toBeInstanceOf(Map);
@@ -137,7 +143,7 @@ describe("proprietary encoding", () => {
 
   test("compact act round-trips through CBOR", () => {
     const claims = { issuer: "https://i/", act }; // issuer (label 1) keeps the top a Map
-    const bytes = encodeCbor(encode(claims));
+    const bytes = encodeCbor(encode(claims, { proprietary: true }));
     const decoded = decodeToDomain(
       decodeCbor<Map<unknown, unknown>>(bytes, { preferMap: false }),
     );
@@ -185,7 +191,7 @@ describe("CWT claims round-trip (domain -> CBOR -> domain)", () => {
   };
 
   test("reclassified claims round-trip on-platform (integer labels)", () => {
-    const map = encode(reclassified);
+    const map = encode(reclassified, { proprietary: true });
     // On-platform: long claims are integer-keyed; short claims string-keyed.
     expect(map.get(-65537 - 3)).toBe("n-123"); // nonce
     expect(map.get(-65537 - 11)).toBe("client-1"); // client_id

@@ -3,7 +3,9 @@ import { isDate, isString } from "@lindorm/is";
 import { omitUndefined } from "@lindorm/utils";
 import { AegisError } from "../../errors/index.js";
 import type { ProfileMintOptions, SignContent, SignedJwt } from "../../types/index.js";
+import { encryptCose } from "../cose/cose-encryption.js";
 import { coseTyp } from "../cose/cose-typ.js";
+import { signCose } from "../cose/sign-cose.js";
 import { resolveProfile } from "../profiles/registry.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
@@ -74,7 +76,10 @@ export const mintCoseToken = async ({
     algorithm: kryptos.algorithm as any,
   });
 
-  let token = deps.coseKit.sign(kryptos, common, {
+  let token = signCose({
+    kryptos,
+    logger: deps.logger,
+    common,
     typ: coseTyp(profile.typ),
     proprietary: options.proprietary,
     omit: options.omit,
@@ -82,9 +87,13 @@ export const mintCoseToken = async ({
 
   // Sign-then-encrypt: the inner secured CWT is the COSE_Encrypt0 plaintext.
   if (encKryptos) {
-    token = deps.coseKit.encrypt(encKryptos, token, {
+    token = encryptCose({
+      kryptos: encKryptos,
+      logger: deps.logger,
+      inner: token,
       typ: coseTyp(profile.typ),
       encryption: options.encrypt?.key?.encryption ?? deps.encryption,
+      proprietary: options.proprietary,
     });
   }
 

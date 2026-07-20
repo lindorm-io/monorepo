@@ -23,8 +23,8 @@ import { COSE_TAG, decodeProtectedHeader } from "./structures.js";
  *
  * Everything here speaks the WIRE (COSE-name-keyed) claim dict — `cti`, not the
  * domain `tokenId` — exactly as `JwtKit` speaks the JOSE wire. The domain⇆wire
- * translation is the Aegis-side `CoseKit` boundary (the COSE twin of the JOSE
- * `JoseKit` seam), never the kit.
+ * translation is the Aegis-side `signCose`/`verifyCose` boundary (the COSE twin
+ * of the JOSE `signJwtWire` seam), never the kit.
  */
 
 /** The two claims-kit formats, used to namespace the structural error codes. */
@@ -35,11 +35,11 @@ export type CwtSignOptions = {
   typ?: string;
   /**
    * Allow lindorm-proprietary COSE encodings. Threaded to BOTH the interop alg
-   * gate and the claim codec, each keeping its own default when omitted: the alg
-   * gate is STRICT by default (a private-use signing algorithm such as ML-DSA is
-   * refused unless `true`, D5), while the claim codec defaults to compact
-   * private-use integer labels (set `false` for interoperable string keys).
-   * Verify is always lenient. See `encodeCwtClaims`.
+   * gate and the claim codec, which now share ONE default when omitted (D5):
+   * interoperable. The alg gate is STRICT (a private-use signing algorithm such
+   * as ML-DSA is refused unless `true`) and the claim codec emits private-use
+   * claims under their JOSE string key (set `true` for the compact private-use
+   * integer labels). Verify is always lenient. See `encodeCwtClaims`.
    */
   proprietary?: boolean;
   /**
@@ -86,7 +86,7 @@ const unwrapCwt = (value: unknown): unknown =>
  * dict verbatim (modulo the `omit` knob) into a CWT claims map, secure it with a
  * COSE structure (Sign1/Mac0 chosen by the key class inside `CwsKit`), and wrap
  * the result in the CWT tag (61). Injects NO envelope claims, derives no hash,
- * maps no name or case — the Aegis-side `CoseKit` owns all of that.
+ * maps no name or case — the Aegis-side `signCose` owns all of that.
  */
 export const signCwt = (
   kryptos: IKryptos,
@@ -97,9 +97,10 @@ export const signCwt = (
   logger.debug("Minting CWT", { options });
 
   // The single `proprietary` flag threads to BOTH the claim codec and the CwsKit
-  // alg gate. Each applies its own established default when it is omitted: the
-  // codec keeps its compact-label default (`?? true`), while the alg gate is
-  // strict by default (an omitted flag is falsy, so a private-use alg is refused).
+  // alg gate, which now agree on the omitted default (D5): interoperable. The
+  // codec emits private-use claims under their JOSE string key (`?? false`), and
+  // the alg gate is strict (an omitted flag is falsy, so a private-use alg is
+  // refused) — an on-platform token sets `proprietary: true` for both.
   const payload = encodeCbor(
     encodeCwtClaims(applyOmit(claims, options.omit), {
       proprietary: options.proprietary,

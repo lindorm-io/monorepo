@@ -37,15 +37,26 @@ import type {
   IAegisJws,
   IAegisJwt,
 } from "../interfaces/index.js";
+import {
+  decodeEncryptedCoseKid,
+  decryptCose,
+  encryptCose,
+} from "../internal/cose/cose-encryption.js";
 import { coseTypFromTokenType } from "../internal/cose/cose-typ.js";
 import { isCose } from "../internal/cose/is-cose.js";
+import { signCose } from "../internal/cose/sign-cose.js";
+import { verifyCose } from "../internal/cose/verify-cose.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import { registerProfile as registerProfileFn } from "../internal/profiles/registry.js";
 import type { AegisDeps } from "../internal/utils/aegis-deps.js";
 import { assembleCwtClaims } from "../internal/utils/assemble-cwt-claims.js";
+import { encryptJwe } from "../internal/utils/encrypt-jwe.js";
 import { decodeJoseHeader } from "../internal/utils/jose-header.js";
+import { assembleJwtWireClaims } from "../internal/utils/jwt-payload.js";
 import { createJwtValidate } from "../internal/utils/jwt-validate.js";
 import { mintToken } from "../internal/utils/mint-token.js";
+import { signJwtWire } from "../internal/utils/sign-jwt-wire.js";
+import { verifyJwtToDomain } from "../internal/utils/verify-jwt.js";
 import {
   type IntrospectClaimsInput,
   parseIntrospection,
@@ -114,12 +125,12 @@ import type {
   VerifyJwsOptions,
   VerifyJwtOptions,
 } from "../types/index.js";
-import { CoseKit } from "./CoseKit.js";
 import { type CwtDecoded, CwtKit } from "./CwtKit.js";
-import { JoseKit } from "./JoseKit.js";
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
 import { JwtKit } from "./JwtKit.js";
+
+const DEFAULT_DPOP_MAX_SKEW = 60;
 
 export class Aegis implements IAegis {
   readonly issuer: string | null;
@@ -127,13 +138,11 @@ export class Aegis implements IAegis {
   private readonly amphora: IAmphora;
   private readonly certBindingMode: CertificateBindingMode;
   private readonly clockTolerance: number;
-  private readonly coseKit: CoseKit;
   private readonly decryptKey: AegisDecryptKey;
   private readonly deps: AegisDeps;
   private readonly dpopMaxSkew: number | undefined;
   private readonly encryptKey: AegisEncKey;
   private readonly encryption: KryptosEncryption;
-  private readonly joseKit: JoseKit;
   private readonly logger: ILogger;
   private readonly signKey: AegisSignKey;
   private readonly verifyKey: AegisVerifyKey;
@@ -148,11 +157,6 @@ export class Aegis implements IAegis {
     this.dpopMaxSkew = options.dpopMaxSkew;
     this.encryption = options.encryption ?? "A256GCM";
 
-    this.coseKit = new CoseKit({
-      logger: this.logger,
-      clockTolerance: this.clockTolerance,
-    });
-
     // The DEPLOYMENT's key policy. Aegis ships no default selector of its own:
     // it does not know a deployment's `purpose` taxonomy, and amphora already
     // filters `publish: true` by default, so there is nothing to duplicate.
@@ -161,24 +165,18 @@ export class Aegis implements IAegis {
     this.verifyKey = options.verify ?? {};
     this.decryptKey = options.decrypt ?? {};
 
-    this.joseKit = new JoseKit({
-      certBindingMode: this.certBindingMode,
-      clockTolerance: this.clockTolerance,
-      dpopMaxSkew: this.dpopMaxSkew,
-      encryption: this.encryption,
-      logger: this.logger,
-    });
-
     // The verb-surface pipeline bodies live in `internal/utils/*`; Aegis assembles
-    // the state + collaborators they need once and delegates. The key resolvers
-    // close over `amphora` (they stay on the class); the kit façades and the
-    // raw-namespace operations are threaded through until Phases 11/12 remove them.
+    // the state + JOSE/COSE config they need once and delegates. The kit façades
+    // are gone (Phase 11): the utils build the wire kits directly from the
+    // resolved key + this config. The key resolvers close over `amphora` (they
+    // stay on the class); the raw-namespace operations are threaded through until
+    // Phase 12 removes them.
     this.deps = {
       issuer: this.issuer,
+      certBindingMode: this.certBindingMode,
       clockTolerance: this.clockTolerance,
       encryption: this.encryption,
-      joseKit: this.joseKit,
-      coseKit: this.coseKit,
+      logger: this.logger,
       resolveSignKey: (options, profile) => this.resolveSignKey(options, profile),
       resolveVerifyKey: (id, algorithm, verify) =>
         this.resolveVerifyKey(id, algorithm, verify),
@@ -453,7 +451,14 @@ export class Aegis implements IAegis {
   ): Promise<EncryptedJwe> {
     const kryptos = await this.resolveEncryptKey(options.key);
 
-    return this.joseKit.encryptJwe(kryptos, data, options, options.key?.encryption);
+    return encryptJwe({
+      kryptos,
+      data,
+      options,
+      encryption: options.key?.encryption ?? this.encryption,
+      certBindingMode: this.certBindingMode,
+      logger: this.logger,
+    });
   }
 
   private async jweDecrypt(
@@ -468,7 +473,12 @@ export class Aegis implements IAegis {
       options.key,
     );
 
-    return this.joseKit.decryptJwe(kryptos, jwe);
+    return new JweKit({
+      certBindingMode: this.certBindingMode,
+      encryption: this.encryption,
+      kryptos,
+      logger: this.logger,
+    }).decrypt(jwe);
   }
 
   // private jws
@@ -479,7 +489,11 @@ export class Aegis implements IAegis {
   ): Promise<SignedJws> {
     const kryptos = await this.resolveSignKey(options);
 
-    return this.joseKit.signJws(kryptos, data, options);
+    return new JwsKit({
+      certBindingMode: this.certBindingMode,
+      kryptos,
+      logger: this.logger,
+    }).sign(data, options);
   }
 
   private async jwsVerify<T extends JwsContent>(
@@ -494,7 +508,11 @@ export class Aegis implements IAegis {
       options.key,
     );
 
-    return this.joseKit.verifyJws(kryptos, jws);
+    return new JwsKit({
+      certBindingMode: this.certBindingMode,
+      kryptos,
+      logger: this.logger,
+    }).verify(jws);
   }
 
   // private jwt
@@ -505,7 +523,21 @@ export class Aegis implements IAegis {
   ): Promise<SignedJwt> {
     const kryptos = await this.resolveSignKey(options);
 
-    return this.joseKit.signJwt(kryptos, content, options);
+    const claims = assembleJwtWireClaims<T>(
+      { algorithm: kryptos.algorithm },
+      content,
+      options,
+    );
+
+    return signJwtWire({
+      kryptos,
+      wireClaims: claims,
+      content,
+      options,
+      certBindingMode: this.certBindingMode,
+      clockTolerance: this.clockTolerance,
+      logger: this.logger,
+    });
   }
 
   // private cwe — the COSE_Encrypt0 mirror of jwe. Resolves the recipient key
@@ -519,9 +551,13 @@ export class Aegis implements IAegis {
     const kryptos = await this.resolveEncryptKey(options.key);
 
     const inner = isBuffer(data) ? data : Buffer.from(data, "utf8");
-    const token = this.coseKit.encrypt(kryptos, inner, {
+    const token = encryptCose({
+      kryptos,
+      logger: this.logger,
+      inner,
       typ: options.typ,
       encryption: options.key?.encryption ?? this.encryption,
+      proprietary: options.proprietary,
     });
 
     return { token: token.toString("base64url") };
@@ -534,12 +570,15 @@ export class Aegis implements IAegis {
     const bytes = Buffer.from(token, "base64url");
 
     const kryptos = await this.resolveDecryptKey(
-      this.coseKit.decodeEncryptedKid(bytes),
+      decodeEncryptedCoseKid(bytes),
       undefined,
       options.key,
     );
 
-    return { payload: this.coseKit.decrypt(kryptos, bytes), token };
+    return {
+      payload: decryptCose({ kryptos, logger: this.logger, token: bytes }),
+      token,
+    };
   }
 
   // private cws — the raw COSE_Sign1 mirror of jws. `cwsSign` reuses the SAME raw
@@ -562,7 +601,7 @@ export class Aegis implements IAegis {
     options: VerifyCwsOptions = {},
   ): Promise<ParsedCws<T>> {
     const bytes = Buffer.from(token, "base64url");
-    const decoded = this.coseKit.decode(bytes);
+    const decoded = CwtKit.decode(bytes);
 
     const kryptos = await this.resolveVerifyKey(
       decoded.kid,
@@ -570,7 +609,12 @@ export class Aegis implements IAegis {
       options.key,
     );
 
-    const { claims } = this.coseKit.verify(kryptos, bytes);
+    const { claims } = verifyCose({
+      kryptos,
+      logger: this.logger,
+      token: bytes,
+      clockTolerance: this.clockTolerance,
+    });
 
     return {
       claims: claims as T,
@@ -580,9 +624,9 @@ export class Aegis implements IAegis {
   }
 
   // private cwt — the generic-CWT mirror of the generic jwt (jwt.sign /
-  // joseKit.signJwt). Policy-free: it maps the standard-claim content to the
+  // signJwtWire). Policy-free: it maps the standard-claim content to the
   // domain-keyed claims (via the shared claim registry) and secures them with
-  // coseKit.sign — the SAME primitive mintCose uses, minus the profile floor and
+  // signCose — the SAME primitive mintCose uses, minus the profile floor and
   // auto-injection. Verify mirrors jwtVerify: decode, resolve, verify, then
   // validate the standard claims (exp/nbf/iss/aud) with the JOSE verify matcher.
 
@@ -594,7 +638,10 @@ export class Aegis implements IAegis {
 
     const common = assembleCwtClaims({ issuer: this.issuer }, content, options);
 
-    const token = this.coseKit.sign(kryptos, common, {
+    const token = signCose({
+      kryptos,
+      logger: this.logger,
+      common,
       typ: options.typ ?? coseTypFromTokenType(content.tokenType),
       proprietary: options.proprietary,
       omit: options.omit,
@@ -618,7 +665,7 @@ export class Aegis implements IAegis {
     verify: VerifyCwtOptions = {},
   ): Promise<ParsedCwt<C>> {
     const bytes = Buffer.from(token, "base64url");
-    const decoded = this.coseKit.decode(bytes);
+    const decoded = CwtKit.decode(bytes);
 
     const kryptos = await this.resolveVerifyKey(
       decoded.kid,
@@ -626,7 +673,12 @@ export class Aegis implements IAegis {
       verify.key,
     );
 
-    const { claims, wire } = this.coseKit.verify(kryptos, bytes);
+    const { claims, wire } = verifyCose({
+      kryptos,
+      logger: this.logger,
+      token: bytes,
+      clockTolerance: this.clockTolerance,
+    });
 
     validateCwtClaims(wire, kryptos.algorithm, verify, this.clockTolerance);
 
@@ -662,7 +714,10 @@ export class Aegis implements IAegis {
 
     const kryptos = await this.resolveSignKey({ key: input.key });
 
-    const token = this.coseKit.sign(kryptos, input.payload, {
+    const token = signCose({
+      kryptos,
+      logger: this.logger,
+      common: input.payload,
       typ: coseTypFromTokenType(input.tokenType),
       omit: input.omit,
     });
@@ -701,7 +756,20 @@ export class Aegis implements IAegis {
       verify.key,
     );
 
-    return this.joseKit.verifyJwt(kryptos, jwt, verify);
+    return verifyJwtToDomain(
+      new JwtKit({
+        certBindingMode: this.certBindingMode,
+        clockTolerance: this.clockTolerance,
+        kryptos,
+        logger: this.logger,
+      }),
+      jwt,
+      verify,
+      {
+        clockTolerance: this.clockTolerance,
+        dpopMaxSkew: this.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW,
+      },
+    );
   }
 
   // private kryptos

@@ -15,7 +15,11 @@ import type { Dict } from "@lindorm/types";
 import { TEST_EC_KEY_SIG, TEST_OKP_KEY_SIG } from "../__fixtures__/keys.js";
 import { coseToDomain, domainToCose } from "../internal/claims/translate.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
-import { decodeCwtClaims, encodeCwtClaims } from "../internal/cose/cwt-claims.js";
+import {
+  decodeCwtClaims,
+  type EncodeCwtOptions,
+  encodeCwtClaims,
+} from "../internal/cose/cwt-claims.js";
 import { COSE_TAG } from "../internal/cose/structures.js";
 import { CwtKit } from "./CwtKit.js";
 
@@ -28,7 +32,8 @@ const logger = createMockLogger();
 // Since Phase 5 `encodeCwtClaims`/`decodeCwtClaims` are the CODEC boundary; the
 // domain <-> wire translation is `domainToCose`/`coseToDomain`. These helpers
 // exercise the full domain round-trip the reference verifiers sit inside.
-const encodeClaims = (common: Dict) => encodeCwtClaims(domainToCose(common));
+const encodeClaims = (common: Dict, options?: EncodeCwtOptions) =>
+  encodeCwtClaims(domainToCose(common), options);
 
 const decodeClaims = (map: Map<unknown, unknown> | Dict): Dict => {
   const { claims, custom } = coseToDomain(decodeCwtClaims(map));
@@ -36,8 +41,8 @@ const decodeClaims = (map: Map<unknown, unknown> | Dict): Dict => {
 };
 
 // The kit is WIRE-ONLY now: it takes/returns COSE-name-keyed claims. These
-// helpers put the domain⇆wire translation (the Aegis-side CoseKit boundary)
-// around it so the interop fixtures stay expressed in domain terms.
+// helpers put the domain⇆wire translation (the Aegis-side signCose/verifyCose
+// boundary) around it so the interop fixtures stay expressed in domain terms.
 const signDomain = (kryptos: IKryptos, common: Dict, options: Dict = {}): Buffer =>
   new CwtKit({ kryptos, logger }).sign(domainToCose(common), options);
 
@@ -228,7 +233,8 @@ describe("COSE interop — custom logic does not break the token", () => {
   // signature, decode the envelope, and hand back the opaque payload. The
   // payload stays well-formed CBOR with the standard labels intact.
   test("our full proprietary CWT verifies in @auth0/cose without throwing", async () => {
-    const token = signDomain(TEST_EC_KEY_SIG, fullCommon);
+    // The compact private-use labels are the on-platform (proprietary) encoding.
+    const token = signDomain(TEST_EC_KEY_SIG, fullCommon, { proprietary: true });
     const sign1 = Sign1.decode(toBareSign1(token));
 
     await expect(
@@ -245,20 +251,20 @@ describe("COSE interop — custom logic does not break the token", () => {
     expect(map.get("act")).toBeInstanceOf(Map); // compact act — a valid CBOR sub-map
 
     // …and the whole thing still round-trips on our side (custom claim camelCased).
-    expect(new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).verify(token).claims).toEqual(
-      fullCommonDecoded,
-    );
+    expect(verifyDomain(TEST_EC_KEY_SIG, token)).toEqual(fullCommonDecoded);
   });
 
   test("our full proprietary CWT verifies in cose-js without throwing", async () => {
-    const token = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(fullCommon);
+    const token = signDomain(TEST_EC_KEY_SIG, fullCommon, { proprietary: true });
     await expect(
       coseJs.sign.verify(toBareSign1(token), ecRawKey(TEST_EC_KEY_SIG, "public")),
     ).resolves.toBeDefined();
   });
 
   test("a reference-signed COSE_Sign1 over our proprietary payload round-trips in us", async () => {
-    const payload = Buffer.from(encodeCbor(encodeClaims(fullCommon)));
+    const payload = Buffer.from(
+      encodeCbor(encodeClaims(fullCommon, { proprietary: true })),
+    );
 
     const sign1 = await Sign1.sign(
       new ProtectedHeaders([[Headers.Algorithm, Algorithms.ES512]]),
@@ -272,15 +278,11 @@ describe("COSE interop — custom logic does not break the token", () => {
       ),
     );
 
-    expect(new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).verify(cwt).claims).toEqual(
-      fullCommonDecoded,
-    );
+    expect(verifyDomain(TEST_EC_KEY_SIG, cwt)).toEqual(fullCommonDecoded);
   });
 
   test("proprietary:false yields an interoperable payload that still verifies", async () => {
-    const token = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(fullCommon, {
-      proprietary: false,
-    });
+    const token = signDomain(TEST_EC_KEY_SIG, fullCommon, { proprietary: false });
     const sign1 = Sign1.decode(toBareSign1(token));
 
     await expect(

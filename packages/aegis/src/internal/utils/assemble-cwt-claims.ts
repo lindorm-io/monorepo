@@ -29,7 +29,7 @@ const ENVELOPE_DOMAINS: ReadonlySet<string> = new Set([
 /**
  * Policy-free standard-claim assembly for the generic CWT — the COSE analogue of
  * `assembleJwtWireClaims`. Maps the standard-claim content to the DOMAIN-keyed dict
- * `coseKit.sign` encodes (which the claim registry turns into CWT labels). It
+ * `signCose` encodes (which the claim registry turns into CWT labels). It
  * injects NO envelope claims (no `iat`/`jti`/`nbf` auto-injection) and enforces
  * no profile policy; the deployment `issuer` is used only to default `iss` when
  * the content does not carry one (RFC 8392 makes every claim optional).

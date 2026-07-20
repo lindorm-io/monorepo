@@ -17,6 +17,13 @@ export type CweEncryptOptions = {
   key?: AegisEncKey;
   /** COSE `typ` header (label 16) stamped on the COSE_Encrypt0. */
   typ?: string;
+  /**
+   * Allow a lindorm-proprietary (private-use) COSE content encryption (default
+   * `false`). When `false` the encryption MUST carry an OFFICIAL COSE-RFC label
+   * or `encrypt` throws (D5 interop gate); when `true` a private-use encryption
+   * such as AES-CBC-HMAC is permitted. Decrypt is always lenient.
+   */
+  proprietary?: boolean;
 };
 
 export type EncryptedCwe = {

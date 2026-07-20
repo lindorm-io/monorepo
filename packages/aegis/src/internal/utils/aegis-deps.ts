@@ -4,12 +4,12 @@ import type {
   KryptosEncryption,
   KryptosSigAlgorithm,
 } from "@lindorm/kryptos";
-import type { CoseKit } from "../../classes/CoseKit.js";
-import type { JoseKit } from "../../classes/JoseKit.js";
+import type { ILogger } from "@lindorm/logger";
 import type {
   AegisDecryptKey,
   AegisEncKey,
   AegisVerifyKey,
+  CertificateBindingMode,
   DecryptedJwe,
   JweDecryptOptions,
   JwsContent,
@@ -31,19 +31,20 @@ import type {
  * to each util, so the pipeline bodies live in `internal/utils/*` and the class
  * keeps only state + interface + delegation.
  *
- * Phase-10 shape: the key resolvers close over `amphora` and stay on `Aegis`;
- * the two kit façades (`joseKit`/`coseKit`) and the raw-namespace operations
- * (`verifyJwt`/`verifyJws`/`decryptJwe`/`signJws`/`signRawCose`) are threaded
- * through here because they still live on `Aegis` (the façade drop is Phase 11,
- * the raw-namespace extraction is Phase 12).
+ * Phase-11 shape: the two kit façades are GONE — the verb utils build the wire
+ * kits directly from the resolved key + this bundle's JOSE/COSE config
+ * (`certBindingMode`/`clockTolerance`/`encryption`/`logger`). The key resolvers
+ * close over `amphora` and stay on `Aegis`; the raw-namespace operations
+ * (`verifyJwt`/`verifyJws`/`decryptJwe`/`signJws`/`signRawCose`) are still
+ * threaded through here because they live on `Aegis` (the raw-namespace
+ * extraction is Phase 12).
  */
 export type AegisDeps = {
   issuer: string | null;
+  certBindingMode: CertificateBindingMode;
   clockTolerance: number;
   encryption: KryptosEncryption;
-
-  joseKit: JoseKit;
-  coseKit: CoseKit;
+  logger: ILogger;
 
   resolveSignKey: (
     options: SignJwsOptions | SignJwtOptions,

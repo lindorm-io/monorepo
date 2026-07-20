@@ -21,7 +21,7 @@ npm install @lindorm/amphora @lindorm/logger
 Aegis exposes two layers:
 
 - **`Aegis`** — async façade that resolves keys from an `IAmphora` key store and delegates to the kit classes. Use this when you want JWT/JWS/JWE or COSE/CWT operations driven by a managed key store with `kid`-based lookup.
-- **Kit classes** (`JwtKit`, `JwsKit`, `JweKit`, `SignatureKit`, plus the `CoseKit` COSE facade) — synchronous, single-key primitives. You supply an `IKryptos` key directly. Use these when you already have the key in hand and don't need the Amphora layer.
+- **Kit classes** (`JwtKit`, `JwsKit`, `JweKit`, `SignatureKit`) — synchronous, single-key primitives. You supply an `IKryptos` key directly. Use these when you already have the key in hand and don't need the Amphora layer.
 
 The `Aegis` instance methods are async because they perform key lookups. All kit instance methods are synchronous.
 
@@ -432,19 +432,6 @@ const parsed = await aegis.cwt.verify(cwt.token, {
 const cwe = await aegis.cwe.encrypt("secret"); // string or Buffer
 const { payload } = await aegis.cwe.decrypt(cwe.token); // Buffer
 ```
-
-### CoseKit
-
-`CoseKit` is the synchronous facade behind the COSE path (the COSE analogue of the JOSE kits). It also exposes the **COSE Key Thumbprint** (`ckt`, RFC 9679):
-
-```typescript
-import { CoseKit } from "@lindorm/aegis";
-
-const ckt = CoseKit.thumbprint(kryptos); // raw SHA-256 digest bytes
-const uri = CoseKit.thumbprintUri(kryptos); // urn:ietf:params:oauth:ckt:sha-256:…
-```
-
-> The `ckt` is **not** the same value as `kryptos.thumbprint` (the RFC 7638 `jkt`): the `ckt` hashes the deterministic-CBOR COSE_Key, the `jkt` hashes the canonical JSON JWK, so the same key has two different fingerprints. They are not interchangeable in a key-binding check.
 
 ## Sign content shape
 

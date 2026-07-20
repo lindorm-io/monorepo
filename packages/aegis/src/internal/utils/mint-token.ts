@@ -11,8 +11,11 @@ import { domainToJose } from "../claims/translate.js";
 import { resolveProfile } from "../profiles/registry.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
+import { encryptJwe } from "./encrypt-jwe.js";
+import { withSensitiveIdentity } from "./jwt-payload.js";
 import { mintCoseToken } from "./mint-cose-token.js";
 import { selectEncoder } from "./select-encoder.js";
+import { signJwtWire } from "./sign-jwt-wire.js";
 import { validateProfileClaims } from "./validate-profile-claims.js";
 
 /**
@@ -114,11 +117,19 @@ export const mintToken = async ({
   // only). Presence `none` means "none mandated": fall back to the
   // tokenType-derived default (bare `JWT` when no tokenType), which JwtKit
   // requires as a header floor.
-  const signed = deps.joseKit.signClaims(kryptos, claims, signContent as SignJwtContent, {
-    ...(options.sign ?? {}),
-    // mint's own `omit` controls the wire; a per-sign omit is a fallback.
-    omit: options.omit ?? options.sign?.omit,
-    ...(profile.typ.presence !== "none" ? { typ: profile.typ.value } : {}),
+  const signed = signJwtWire({
+    kryptos,
+    wireClaims: withSensitiveIdentity(claims, signContent as SignJwtContent),
+    content: signContent as SignJwtContent,
+    options: {
+      ...(options.sign ?? {}),
+      // mint's own `omit` controls the wire; a per-sign omit is a fallback.
+      omit: options.omit ?? options.sign?.omit,
+      ...(profile.typ.presence !== "none" ? { typ: profile.typ.value } : {}),
+    },
+    certBindingMode: deps.certBindingMode,
+    clockTolerance: deps.clockTolerance,
+    logger: deps.logger,
   });
 
   if (!encKryptos) {
@@ -130,12 +141,13 @@ export const mintToken = async ({
   // (set automatically by JweKit.encrypt from the inner-token shape). The
   // read side (verify recursion) decrypts then verifies the inner JWT,
   // applying the profile floor to the inner claims/typ.
-  const { token } = deps.joseKit.encryptJwe(
-    encKryptos,
-    signed.token,
-    {},
-    options.encrypt?.key?.encryption,
-  );
+  const { token } = encryptJwe({
+    kryptos: encKryptos,
+    data: signed.token,
+    encryption: options.encrypt?.key?.encryption ?? deps.encryption,
+    certBindingMode: deps.certBindingMode,
+    logger: deps.logger,
+  });
 
   return { ...signed, token };
 };
