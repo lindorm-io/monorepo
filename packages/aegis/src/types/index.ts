@@ -9,6 +9,7 @@ export * from "./jwt/index.js";
 export * from "./aegis.js";
 export * from "./aes.js";
 export * from "./domain-assert.js";
+export * from "./encrypt.js";
 export * from "./header.js";
 export * from "./kit.js";
 export * from "./level-of-assurance.js";

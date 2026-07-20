@@ -45,6 +45,8 @@ import {
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import { registerProfile as registerProfileFn } from "../internal/profiles/registry.js";
 import type { AegisDeps } from "../internal/utils/aegis-deps.js";
+import { decryptToken } from "../internal/utils/decrypt-token.js";
+import { encryptToken } from "../internal/utils/encrypt-token.js";
 import { decodeJoseHeader } from "../internal/utils/jose-header.js";
 import { createJwtValidate } from "../internal/utils/jwt-validate.js";
 import { mintToken } from "../internal/utils/mint-token.js";
@@ -96,8 +98,13 @@ import type {
   DecodedJwt,
   DecryptedCwe,
   DecryptedJwe,
+  DecryptedToken,
+  DecryptOptions,
+  EncryptData,
   EncryptedCwe,
   EncryptedJwe,
+  EncryptedToken,
+  EncryptOptions,
   JweDecryptOptions,
   JweEncryptOptions,
   JwsContent,
@@ -247,6 +254,21 @@ export class Aegis implements IAegis {
 
   sign(input: RawSignInput): Promise<SignedJws> {
     return signToken({ input, deps: this.deps });
+  }
+
+  // The domain confidentiality surface (§5e), the mirror of `sign`: NO inner
+  // signature (sender auth is `mint(profile, content, { encrypt })`, read with
+  // `verify`). `encrypt` translates domain claims to the wire then seals them in
+  // a JWE/CWE; `decrypt` reverses it with NO signature check.
+  encrypt(data: EncryptData, options: EncryptOptions = {}): Promise<EncryptedToken> {
+    return encryptToken({ data, options, deps: this.deps });
+  }
+
+  decrypt<C extends Dict = Dict>(
+    token: string,
+    options: DecryptOptions = {},
+  ): Promise<DecryptedToken<C>> {
+    return decryptToken<C>({ token, options, deps: this.deps });
   }
 
   mint<P extends keyof ProfileContent>(

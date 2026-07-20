@@ -15,8 +15,13 @@ import type {
   CwsContent,
   DecryptedCwe,
   DecryptedJwe,
+  DecryptedToken,
+  DecryptOptions,
+  EncryptData,
   EncryptedCwe,
   EncryptedJwe,
+  EncryptedToken,
+  EncryptOptions,
   ParsedCws,
   ParsedCwt,
   JweDecryptOptions,
@@ -146,6 +151,13 @@ export interface IAegis {
   registerProfile(profile: TokenProfile): void;
 
   sign(input: RawSignInput): Promise<SignedJws>;
+
+  encrypt(data: EncryptData, options?: EncryptOptions): Promise<EncryptedToken>;
+
+  decrypt<C extends Dict = Dict>(
+    token: string,
+    options?: DecryptOptions,
+  ): Promise<DecryptedToken<C>>;
 
   mint<P extends keyof ProfileContent>(
     profile: P,
