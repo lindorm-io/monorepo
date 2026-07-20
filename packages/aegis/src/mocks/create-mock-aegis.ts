@@ -59,9 +59,11 @@ export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => 
     },
 
     verify: resolves({
-      decoded: {},
+      format: "jwt",
       header: {},
-      payload: { subject: "verified_subject" },
+      claims: { subject: "verified_subject" },
+      custom: {},
+      token: "mocked_token",
     }),
   } as unknown as IAegis;
 };
