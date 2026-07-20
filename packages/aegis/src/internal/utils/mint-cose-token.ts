@@ -1,5 +1,5 @@
 import { getUnixTime } from "@lindorm/date";
-import { isDate, isString } from "@lindorm/is";
+import { isDate, isObject, isString } from "@lindorm/is";
 import { omitUndefined } from "@lindorm/utils";
 import { AegisError } from "../../errors/index.js";
 import type { ProfileMintOptions, SignContent, SignedJwt } from "../../types/index.js";
@@ -45,22 +45,21 @@ export const mintCoseToken = async ({
   }
 
   // Encryption fires when the profile is encryptable AND either an explicit
-  // `encrypt` option is supplied OR the content carries `sensitive_identity`.
+  // `encrypt` option is supplied OR the content carries `sensitive` fields.
   // COSE_Encrypt0 is direct AEAD, so the recipient key is a symmetric enc key.
-  const hasSensitiveIdentity = content.sensitiveIdentity != null;
+  const hasSensitive = content.sensitive != null;
   const explicitEncrypt = options.encrypt !== undefined;
-  const wantsEncryption =
-    profile.encryptable && (explicitEncrypt || hasSensitiveIdentity);
+  const wantsEncryption = profile.encryptable && (explicitEncrypt || hasSensitive);
 
   const encKryptos = wantsEncryption
     ? await deps.resolveEncKey(options.encrypt?.key, explicitEncrypt)
     : undefined;
 
-  // `sensitive_identity` MUST NOT travel in cleartext: if it cannot be
-  // encrypted, strip it before securing the CWT so it is omitted entirely.
+  // The sensitive fields MUST NOT travel in cleartext: if they cannot be
+  // encrypted, strip them before securing the CWT so they are omitted entirely.
   const signContent =
-    hasSensitiveIdentity && !encKryptos
-      ? (omitUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
+    hasSensitive && !encKryptos
+      ? (omitUndefined({ ...content, sensitive: undefined }) as SignContent)
       : content;
 
   const kryptos = await deps.resolveSignKey(options.sign ?? {}, profile);
@@ -76,10 +75,17 @@ export const mintCoseToken = async ({
     algorithm: kryptos.algorithm as any,
   });
 
+  // Merge the FLAT sensitive claims into the domain layer so `domainToCose`
+  // emits each as its individual CWT label (not a nested wrapper). Kept off the
+  // policy-validated `common` above — sensitive fields carry no profile policy.
+  const commonWithSensitive = isObject(signContent.sensitive)
+    ? { ...common, ...signContent.sensitive }
+    : common;
+
   let token = signCose({
     kryptos,
     logger: deps.logger,
-    common,
+    common: commonWithSensitive,
     typ: coseTyp(profile.typ),
     proprietary: options.proprietary,
     omit: options.omit,

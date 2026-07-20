@@ -30,6 +30,10 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
   token: string,
   options: VerifyJwtOptions,
   config: Config,
+  // Whether the JWT was the inner token of an ENCRYPTED outer (jwe). Drives the
+  // read-side sensitive-claim gate: sensitive claims (OIDC Core §13.3) surface
+  // only when this is true, and are suppressed otherwise.
+  encrypted: boolean,
 ): ParsedJwt<C> => {
   // The kit asserts the header typ from a bare PREFIX it re-wraps; Aegis derives
   // that prefix from the domain `tokenType`.
@@ -56,7 +60,7 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
 
   // Translate to the domain shape (also enforces the `iss` presence gate) and
   // summarise the delegation chain from the wire `act` claim.
-  const payload = parseTokenPayload<C>(decoded.payload);
+  const payload = parseTokenPayload<C>(decoded.payload, encrypted);
   const delegation = extractTokenDelegation(decoded.payload as { act?: any });
 
   const parsed: ParsedJwt<C> = { decoded, delegation, header, payload, token };

@@ -3,6 +3,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TEST_EC_KEY_ENC, TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
+import type { AegisSensitive } from "../types/index.js";
 import { AegisError } from "../errors/index.js";
 import { Aegis } from "./Aegis.js";
 import { JweKit } from "./JweKit.js";
@@ -108,35 +109,38 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
     });
   });
 
-  describe("sensitive_identity (A5)", () => {
+  describe("sensitive (A5 / Phase 13 flat-wire correction)", () => {
+    // The mint content input is `sensitive`, typed AegisSensitive (was the
+    // nested `sensitiveIdentity`).
+    const sensitive: AegisSensitive = {
+      nationalIdentityNumber: "ABC-123",
+      nationalIdentityNumberVerified: true,
+    };
     const content = {
       subject: "user-1",
       audience: ["client-1"],
-      sensitiveIdentity: {
-        nationalIdentityNumber: "ABC-123",
-        nationalIdentityNumberVerified: true,
-      },
+      sensitive,
     };
 
-    test("emits sensitive_identity inside the JWE when an enc key is resolvable", async () => {
+    test("emits sensitive claims FLAT (individual wire keys, no wrapper) inside the JWE", async () => {
       amphora.add(TEST_EC_KEY_ENC);
 
       const { token } = await aegis.mint("id_token", content);
 
-      // Encryption was forced by sensitive_identity even without an explicit
+      // Encryption was forced by the sensitive fields even without an explicit
       // encrypt option.
       expect(JweKit.isJwe(token)).toBe(true);
 
       const decrypted = await aegis.jwe.decrypt(token);
       const { payload } = JwtKit.decode(decrypted.payload);
 
-      expect(payload.sensitive_identity).toMatchObject({
-        national_identity_number: "ABC-123",
-        national_identity_number_verified: true,
-      });
+      // FLAT individual claims — NOT a nested `sensitive_identity` wrapper.
+      expect(payload.national_identity_number).toBe("ABC-123");
+      expect(payload.national_identity_number_verified).toBe(true);
+      expect(payload.sensitive_identity).toBeUndefined();
     });
 
-    test("omits sensitive_identity (no encryption) when no enc key is resolvable", async () => {
+    test("omits the sensitive claims (no encryption) when no enc key is resolvable", async () => {
       // No enc key in the amphora.
       const { token } = await aegis.mint("id_token", content);
 
@@ -144,7 +148,60 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       expect(JweKit.isJwe(token)).toBe(false);
 
       const { payload } = JwtKit.decode(token);
+      expect(payload.national_identity_number).toBeUndefined();
       expect(payload.sensitive_identity).toBeUndefined();
+    });
+
+    test("HONORS sensitive claims into the sensitive bucket on an encrypted round-trip", async () => {
+      amphora.add(TEST_EC_KEY_ENC);
+
+      const { token } = await aegis.mint("id_token", content);
+      const parsed = await aegis.verify("id_token", token, { audience: "client-1" });
+
+      expect(parsed.payload.sensitiveIdentity).toMatchObject({
+        nationalIdentityNumber: "ABC-123",
+        nationalIdentityNumberVerified: true,
+      });
+    });
+
+    test("SUPPRESSES flat sensitive claims carried by an UNENCRYPTED token", async () => {
+      // A raw JWT that carries the sensitive fields FLAT in cleartext — the read
+      // side must refuse to surface them (OIDC Core §13.3).
+      const { token } = await aegis.jwt.sign({
+        issuer: ISSUER,
+        subject: "user-1",
+        expires: "1h",
+        tokenType: "N_A",
+        sensitive,
+      });
+
+      expect(JwtKit.isJwt(token)).toBe(true);
+
+      const parsed = await aegis.jwt.verify(token);
+
+      // Not in the sensitive bucket, and not leaked into any claim bucket.
+      expect(parsed.payload.sensitiveIdentity).toBeUndefined();
+      expect((parsed.payload as Record<string, unknown>).nationalIdentityNumber).toBe(
+        undefined,
+      );
+      expect(parsed.payload.claims).not.toHaveProperty("nationalIdentityNumber");
+    });
+
+    test("parse (unverified) also suppresses flat sensitive claims", async () => {
+      const { token } = await aegis.jwt.sign({
+        issuer: ISSUER,
+        subject: "user-1",
+        expires: "1h",
+        tokenType: "N_A",
+        sensitive,
+      });
+
+      const parsed = Aegis.parse(token);
+
+      expect(parsed.payload.sensitiveIdentity).toBeUndefined();
+      expect((parsed.payload as Record<string, unknown>).nationalIdentityNumber).toBe(
+        undefined,
+      );
     });
   });
 

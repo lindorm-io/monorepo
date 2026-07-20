@@ -14,10 +14,15 @@ export const rawVerifyJwt = async <T extends Dict = Dict>({
   jwt,
   verify = {},
   deps,
+  encrypted = false,
 }: {
   jwt: string;
   verify?: VerifyJwtOptions;
   deps: AegisDeps;
+  // Set by the caller (verifyToken) when this JWT is the inner token of a
+  // decrypted JWE — the outer format was encrypted. A directly-verified JWT
+  // (`aegis.jwt.verify`) is unencrypted, so sensitive claims are suppressed.
+  encrypted?: boolean;
 }): Promise<ParsedJwt<T>> => {
   const decode = JwtKit.decode(jwt);
 
@@ -40,5 +45,6 @@ export const rawVerifyJwt = async <T extends Dict = Dict>({
       clockTolerance: deps.clockTolerance,
       dpopMaxSkew: deps.dpopMaxSkew,
     },
+    encrypted,
   );
 };

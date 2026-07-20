@@ -8,6 +8,7 @@ import type { ParsedJws, ParsedJwt, VerifyJwtOptions } from "../../types/index.j
 import { isCose } from "../cose/is-cose.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { coseVerifyCore } from "./cose-verify-core.js";
+import { extractSensitiveClaims } from "./extract-sensitive-claims.js";
 import { rawDecryptJwe } from "./raw-decrypt-jwe.js";
 import { rawVerifyJws } from "./raw-verify-jws.js";
 import { rawVerifyJwt } from "./raw-verify-jwt.js";
@@ -26,17 +27,26 @@ export const verifyToken = async <T extends ParsedJwt | ParsedJws<any>>({
   token,
   options,
   deps,
+  encrypted = false,
 }: {
   token: string;
   options?: VerifyJwtOptions;
   deps: AegisDeps;
+  // True once an encrypting outer (jwe) has been peeled: the inner token was
+  // delivered encrypted, so sensitive claims (OIDC Core §13.3) may surface.
+  encrypted?: boolean;
 }): Promise<T> => {
   if (JwtKit.isJwt(token)) {
-    return (await rawVerifyJwt({ jwt: token, verify: options, deps })) as T;
+    return (await rawVerifyJwt({ jwt: token, verify: options, deps, encrypted })) as T;
   }
   if (JweKit.isJwe(token)) {
     const decrypt = await rawDecryptJwe({ jwe: token, deps });
-    return await verifyToken<T>({ token: decrypt.payload, options, deps });
+    return await verifyToken<T>({
+      token: decrypt.payload,
+      options,
+      deps,
+      encrypted: true,
+    });
   }
   if (JwsKit.isJws(token)) {
     return (await rawVerifyJws({ jws: token, deps })) as T;
@@ -45,7 +55,12 @@ export const verifyToken = async <T extends ParsedJwt | ParsedJws<any>>({
   if (!token.includes(".")) {
     const bytes = Buffer.from(token, "base64url");
     if (isCose(bytes)) {
-      const { claims, wire, decoded } = await coseVerifyCore({ input: bytes, deps });
+      const {
+        claims: coseClaims,
+        wire,
+        decoded,
+        encrypted: coseEncrypted,
+      } = await coseVerifyCore({ input: bytes, deps });
       if (options) {
         validateCwtClaims(
           wire,
@@ -54,6 +69,9 @@ export const verifyToken = async <T extends ParsedJwt | ParsedJws<any>>({
           deps.clockTolerance,
         );
       }
+      // §13.3 gate: COSE carries sensitive claims FLAT (no bucket) — keep them
+      // on an encrypted CWT (cwe), strip them on an unencrypted one.
+      const claims = coseEncrypted ? coseClaims : extractSensitiveClaims(coseClaims).rest;
       return {
         claims,
         header: { alg: decoded.algorithm, kid: decoded.kid, typ: decoded.typ },

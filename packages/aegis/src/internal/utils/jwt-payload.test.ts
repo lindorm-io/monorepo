@@ -21,14 +21,14 @@ const assertionClaims = {
 
 describe("parseTokenPayload", () => {
   test("should parse an RFC 7523 client assertion with no iat", () => {
-    const payload = parseTokenPayload(assertionClaims);
+    const payload = parseTokenPayload(assertionClaims, false);
 
     expect(payload.issuedAt).toBeUndefined();
     expect(payload).toMatchSnapshot();
   });
 
   test("should parse a token with an iat", () => {
-    const payload = parseTokenPayload({ ...assertionClaims, iat: 1704096000 });
+    const payload = parseTokenPayload({ ...assertionClaims, iat: 1704096000 }, false);
 
     expect(payload.issuedAt).toEqual(new Date("2024-01-01T08:00:00.000Z"));
     expect(payload).toMatchSnapshot();
@@ -39,7 +39,7 @@ describe("parseTokenPayload", () => {
   test("should parse a token with no exp (expiresAt undefined)", () => {
     const { exp: _exp, ...withoutExp } = assertionClaims;
 
-    const payload = parseTokenPayload(withoutExp);
+    const payload = parseTokenPayload(withoutExp, false);
 
     expect(payload.expiresAt).toBeUndefined();
     expect(payload).toMatchSnapshot();
@@ -48,7 +48,7 @@ describe("parseTokenPayload", () => {
   // subject/tokenId are OPTIONAL — an absent sub/jti stays undefined, never a
   // fabricated "unknown" sentinel. Only iss is structurally required at parse.
   test("should leave subject and tokenId undefined when sub/jti are absent", () => {
-    const payload = parseTokenPayload({ iss: "client-1", exp: 1704096120 });
+    const payload = parseTokenPayload({ iss: "client-1", exp: 1704096120 }, false);
 
     expect(payload.subject).toBeUndefined();
     expect(payload.tokenId).toBeUndefined();
@@ -58,14 +58,14 @@ describe("parseTokenPayload", () => {
   test("should reject a token with no iss", () => {
     const { iss: _iss, ...withoutIss } = assertionClaims;
 
-    expect(() => parseTokenPayload(withoutIss)).toThrow(
+    expect(() => parseTokenPayload(withoutIss, false)).toThrow(
       expect.objectContaining({ code: "jwt_missing_claim_iss" }),
     );
   });
 
   // The #15 bug: `isString("")` is true, so an empty issuer slipped through.
   test("should reject a token with an empty-string iss", () => {
-    expect(() => parseTokenPayload({ ...assertionClaims, iss: "" })).toThrow(
+    expect(() => parseTokenPayload({ ...assertionClaims, iss: "" }, false)).toThrow(
       expect.objectContaining({ code: "jwt_missing_claim_iss" }),
     );
   });
@@ -73,9 +73,39 @@ describe("parseTokenPayload", () => {
   // ...but an opaque client_id issuer (RFC 7523 client assertion) is NOT a URI and
   // must still parse — the gate is non-empty, not URI.
   test("should accept an opaque client_id issuer", () => {
-    expect(parseTokenPayload({ ...assertionClaims, iss: "client-1" }).issuer).toBe(
+    expect(parseTokenPayload({ ...assertionClaims, iss: "client-1" }, false).issuer).toBe(
       "client-1",
     );
+  });
+
+  // OIDC Core §13.3 honour-only-when-encrypted: the FLAT sensitive claims are
+  // registered (registry `category: "sensitive"`), so they resolve into the
+  // domain layer like any other claim — but they only reach the sensitive bucket
+  // when the token was encrypted.
+  const withSensitive = {
+    ...assertionClaims,
+    national_identity_number: "19900101-1234",
+    national_identity_number_verified: true,
+  };
+
+  test("HONORS flat sensitive claims into the sensitive bucket when encrypted=true", () => {
+    const payload = parseTokenPayload(withSensitive, true);
+
+    expect(payload.sensitiveIdentity).toEqual({
+      nationalIdentityNumber: "19900101-1234",
+      nationalIdentityNumberVerified: true,
+    });
+    // Never leaked into the standard/custom buckets.
+    expect(payload).not.toHaveProperty("nationalIdentityNumber");
+    expect(payload.claims).not.toHaveProperty("nationalIdentityNumber");
+  });
+
+  test("SUPPRESSES flat sensitive claims entirely when encrypted=false", () => {
+    const payload = parseTokenPayload(withSensitive, false);
+
+    expect(payload.sensitiveIdentity).toBeUndefined();
+    expect(payload).not.toHaveProperty("nationalIdentityNumber");
+    expect(payload.claims).not.toHaveProperty("nationalIdentityNumber");
   });
 });
 

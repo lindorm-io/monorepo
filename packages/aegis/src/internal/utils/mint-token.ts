@@ -12,7 +12,7 @@ import { resolveProfile } from "../profiles/registry.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { encryptJwe } from "./encrypt-jwe.js";
-import { withSensitiveIdentity } from "./jwt-payload.js";
+import { withSensitiveDomain } from "./jwt-payload.js";
 import { mintCoseToken } from "./mint-cose-token.js";
 import { selectEncoder } from "./select-encoder.js";
 import { signJwtWire } from "./sign-jwt-wire.js";
@@ -64,27 +64,26 @@ export const mintToken = async ({
 
   // T5 — resolve the recipient (client) enc key when encryption is in play.
   // Encryption fires when the profile is encryptable AND either an explicit
-  // `encrypt` option is supplied OR the content carries `sensitive_identity`
+  // `encrypt` option is supplied OR the content carries `sensitive` fields
   // (forced within id_token). When no enc key is resolvable, encryption is
-  // skipped and any `sensitive_identity` is omitted (never emitted in clear).
-  const hasSensitiveIdentity = content.sensitiveIdentity != null;
+  // skipped and any sensitive fields are omitted (never emitted in clear).
+  const hasSensitive = content.sensitive != null;
   const explicitEncrypt = options.encrypt !== undefined;
-  const wantsEncryption =
-    profile.encryptable && (explicitEncrypt || hasSensitiveIdentity);
+  const wantsEncryption = profile.encryptable && (explicitEncrypt || hasSensitive);
 
   // When the caller explicitly asked for encryption, a missing enc key is a
-  // hard error. When encryption is forced ONLY by `sensitive_identity`, a
-  // missing key is tolerated — the claim is omitted instead (see below).
+  // hard error. When encryption is forced ONLY by the sensitive fields, a
+  // missing key is tolerated — they are omitted instead (see below).
   const encKryptos = wantsEncryption
     ? await deps.resolveEncKey(options.encrypt?.key, explicitEncrypt)
     : undefined;
 
-  // `sensitive_identity` MUST NOT travel in cleartext. If it cannot be
-  // encrypted (profile not encryptable, or no enc key resolvable), strip it
-  // from the content before signing so the claim is omitted entirely.
+  // The sensitive fields MUST NOT travel in cleartext. If they cannot be
+  // encrypted (profile not encryptable, or no enc key resolvable), strip them
+  // from the content before signing so they are omitted entirely.
   const signContent =
-    hasSensitiveIdentity && !encKryptos
-      ? (omitUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
+    hasSensitive && !encKryptos
+      ? (omitUndefined({ ...content, sensitive: undefined }) as SignContent)
       : content;
 
   // Assemble + validate on the DOMAIN-keyed common layer: presence/forbid/
@@ -105,11 +104,15 @@ export const mintToken = async ({
   // JOSE wire claims via the ONE translator. `common` already carries the
   // resolved envelope (iss/iat/jti/nbf/exp) and the custom claims, so the
   // signed token matches the validated common layer exactly — one source of
-  // truth. Profile claims join the domain layer so `domainToJose` maps them
-  // by the registry (identical wire to the previous `snakeKeys(profile)`
-  // spread); the emit boundary no longer makes a case decision (R18).
+  // truth. Profile + FLAT sensitive claims join the domain layer so
+  // `domainToJose` maps each by the registry (the sensitive fields become their
+  // individual wire claims, not a nested wrapper); the emit boundary makes no
+  // case decision (R18).
   const claims = domainToJose(
-    isObject(signContent.profile) ? { ...common, ...signContent.profile } : common,
+    withSensitiveDomain(
+      isObject(signContent.profile) ? { ...common, ...signContent.profile } : common,
+      signContent,
+    ),
   );
 
   // A profile typ value stamps the header verbatim (e.g. `at+jwt`) — for
@@ -119,7 +122,7 @@ export const mintToken = async ({
   // requires as a header floor.
   const signed = signJwtWire({
     kryptos,
-    wireClaims: withSensitiveIdentity(claims, signContent as SignJwtContent),
+    wireClaims: claims,
     content: signContent as SignJwtContent,
     options: {
       ...(options.sign ?? {}),

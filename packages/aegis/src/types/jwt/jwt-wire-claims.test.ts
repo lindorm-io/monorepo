@@ -11,11 +11,11 @@ import type { JwtClaims } from "../claims/jwt/jwt-claims.js";
  *      (`date`/`int`→number, `array`→Array<string>, `text`/`bstr`→string,
  *      `bool`→boolean; `bespoke` = per-claim object shape, not uniformly typed).
  *
- * The witness below is `Record<keyof JwtClaims, ClaimValueKind | null>`, so a
- * claim added to / removed from `JwtClaims` breaks compilation. `null` marks the
- * one member that is NOT a flat registry claim — the legacy nested
- * `sensitive_identity` claim (Phase 13 flattens it); everything else is
- * runtime-checked against the registry.
+ * The witness below is `Record<keyof JwtClaims, ClaimValueKind>`, so a claim
+ * added to / removed from `JwtClaims` breaks compilation. Every member is a flat
+ * registry claim (`category: "claims"`); the sensitive identity claims travel
+ * FLAT too but are `category: "sensitive"`, a separate bucket, so they are NOT
+ * `JwtClaims` members.
  *
  * `satisfies` (not a type annotation) is deliberate: it enforces exact-key
  * coverage of `keyof JwtClaims` yet PRESERVES each entry's literal kind, so the
@@ -71,17 +71,15 @@ const JWT_CLAIMS_WIRE_KINDS = {
   sih: "text",
   suh: "text",
   tenant_id: "text",
-  // Legacy nested PII claim — NOT a flat registry claim (Phase 13 flattens it).
-  sensitive_identity: null,
-} satisfies Record<keyof JwtClaims, ClaimValueKind | null>;
+} satisfies Record<keyof JwtClaims, ClaimValueKind>;
 
 // --- Compile-time binding: witness kind -> actual JwtClaims member type ------
 //
 // `Related<A, B>` is `true` when A and B overlap in EITHER direction — lenient
 // enough to accept the narrowed enums (`loa: 1|2|3|4` vs `number`) and the
 // `Array<string> | string` conveniences (`scope`/`roles`), yet it rejects a
-// fundamentally wrong shape (`exp: string`). `bespoke`/`null` are skipped (no
-// uniform wire type). If any claim's type drifts from its declared kind the
+// fundamentally wrong shape (`exp: string`). `bespoke` is skipped (no uniform
+// wire type). If any claim's type drifts from its declared kind the
 // mapped type below yields that claim's key instead of `never`, and the final
 // assignment fails to compile — naming the offending claim.
 type Related<A, B> = [A] extends [B] ? true : [B] extends [A] ? true : false;
@@ -117,25 +115,15 @@ describe("JwtWireClaims / JwtClaims drift guard", () => {
     CLAIMS_REGISTRY.filter((spec) => spec.category === "claims").map((spec) => spec.jose),
   );
 
-  test("registered JwtClaims keys == registry category:claims jose names", () => {
-    const witnessRegisteredKeys = new Set(
-      (Object.keys(JWT_CLAIMS_WIRE_KINDS) as Array<keyof JwtClaims>).filter(
-        (key) => JWT_CLAIMS_WIRE_KINDS[key] !== null,
-      ),
+  test("JwtClaims keys == registry category:claims jose names", () => {
+    const witnessKeys = new Set(
+      Object.keys(JWT_CLAIMS_WIRE_KINDS) as Array<keyof JwtClaims>,
     );
-    expect(witnessRegisteredKeys).toEqual(registeredClaimsJose);
-  });
-
-  test("the only non-registry JwtClaims member is the legacy nested sensitive_identity", () => {
-    const nested = (Object.keys(JWT_CLAIMS_WIRE_KINDS) as Array<keyof JwtClaims>).filter(
-      (key) => JWT_CLAIMS_WIRE_KINDS[key] === null,
-    );
-    expect(new Set(nested)).toEqual(new Set(["sensitive_identity"]));
+    expect(witnessKeys).toEqual(registeredClaimsJose);
   });
 
   test("each JwtClaims member's declared wire kind matches its registry value kind", () => {
     for (const [jose, kind] of Object.entries(JWT_CLAIMS_WIRE_KINDS)) {
-      if (kind === null) continue;
       const spec = claimByJose(jose);
       expect(spec, `no registry entry for jose "${jose}"`).toBeDefined();
       expect(spec?.value, `wire-kind drift for jose "${jose}"`).toBe(kind);

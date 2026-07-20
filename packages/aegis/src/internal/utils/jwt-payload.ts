@@ -1,5 +1,4 @@
 import { B64 } from "@lindorm/b64";
-import { snakeKeys } from "@lindorm/case";
 import { isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
@@ -17,7 +16,7 @@ import type {
 import { domainToJose, joseToDomain } from "../claims/translate.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { extractAegisProfile } from "./extract-aegis-profile.js";
-import { extractSensitiveIdentity } from "./extract-sensitive-identity.js";
+import { extractSensitiveClaims } from "./extract-sensitive-claims.js";
 
 type Config = {
   algorithm: KryptosAlgorithm;
@@ -48,27 +47,26 @@ const RAW_JWT_PROFILE: TokenProfile = {
 type DecodeClaims<C extends Dict = Dict> = JwtClaims & C;
 
 /**
- * The AegisSensitiveIdentity wire envelope: a single nested top-level claim
- * (`sensitive_identity`, snake-cased) so the encryption boundary is visible on
- * the wire — relying parties MUST only honour it when the ID token arrived
- * JWE-encrypted (OIDC Core §13.3). Flattening it (driven off the registry
- * `sensitive` category) is Phase 13.
+ * Merge the FLAT sensitive-identity fields (registry `category: "sensitive"`)
+ * into the DOMAIN layer so `domainToJose` maps each to its individual wire claim
+ * (`nationalIdentityNumber` -> `national_identity_number`, …). They are ordinary
+ * registered claims — NOT nested under a wrapper (OIDC Core §13.3 is enforced by
+ * the mint encryption-forcing + the read-side honor-only-when-encrypted gate,
+ * not by a wire envelope).
  */
-const sensitiveIdentityWire = (
-  content: Pick<SignJwtContent, "sensitiveIdentity">,
-): Dict =>
-  isObject(content.sensitiveIdentity)
-    ? { sensitive_identity: snakeKeys(content.sensitiveIdentity) }
-    : {};
+export const withSensitiveDomain = (
+  domain: Dict,
+  content: Pick<SignJwtContent, "sensitive">,
+): Dict => (isObject(content.sensitive) ? { ...domain, ...content.sensitive } : domain);
 
 /**
  * Assemble the full JOSE WIRE claim dict for the policy-free raw JWT tier
  * (`aegis.jwt.sign`). Resolves the DOMAIN-keyed common claims (envelope +
  * hash derivation, no auto-injection, under {@link RAW_JWT_PROFILE}), merges the
- * profile claims into that domain layer, translates the whole set to JOSE wire
- * via the ONE `domainToJose` translator (R18 — Aegis owns all name/case
- * conversion), and spreads the sensitive-identity envelope. The TRANSFORM-FREE
- * `JwtKit.sign` then serializes the returned dict verbatim.
+ * profile + FLAT sensitive claims into that domain layer, then translates the
+ * whole set to JOSE wire via the ONE `domainToJose` translator (R18 — Aegis owns
+ * all name/case conversion). The TRANSFORM-FREE `JwtKit.sign` then serializes the
+ * returned dict verbatim.
  */
 export const assembleJwtWireClaims = <C extends Dict = Dict>(
   config: Config,
@@ -82,22 +80,13 @@ export const assembleJwtWireClaims = <C extends Dict = Dict>(
     options,
   );
 
-  const claims = domainToJose(
+  const domain = withSensitiveDomain(
     isObject(content.profile) ? { ...common, ...content.profile } : common,
+    content,
   );
 
-  return { ...claims, ...sensitiveIdentityWire(content) };
+  return domainToJose(domain);
 };
-
-/**
- * Spread the sensitive-identity envelope onto an already-assembled wire claim
- * dict (the profiled `mint` path, whose `claims` are translated Aegis-side but
- * do not yet carry the sensitive-identity nesting).
- */
-export const withSensitiveIdentity = (
-  claims: Dict,
-  content: Pick<SignJwtContent, "sensitiveIdentity">,
-): Dict => ({ ...claims, ...sensitiveIdentityWire(content) });
 
 /**
  * Enrich the wire kit's bare `{ token }` into the domain `SignedJwt` — the
@@ -142,6 +131,7 @@ export const decodeJwtPayload = <C extends Dict = Dict<never>>(
  */
 export const parseTokenPayload = <C extends Dict = Dict<never>>(
   decoded: DecodeClaims<C>,
+  encrypted: boolean,
 ): ParsedJwtPayload<C> => {
   // `iss` must be a NON-EMPTY string. Not a URI: this shared gate also parses RFC
   // 7523 client assertions, whose `iss` is the client_id (an opaque string, not a
@@ -165,17 +155,18 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
   const { claims: domain, custom } = joseToDomain(decoded);
 
   // AegisProfile fields are REGISTERED (registry category "profile"), so the
-  // translator now resolves them into `domain` (camelCased) rather than leaving
-  // them among the leftovers. Bucket them off `domain` — extractAegisProfile
-  // matches the camelCase domain names and strips them from the domain rest.
-  // (Registry-category-driven read-bucketing lands in a later phase; this keeps
-  // the existing `profile` bucket behaviour intact meanwhile.)
-  const { profile, rest: domainRest } = extractAegisProfile(domain);
+  // translator resolves them into `domain` (camelCased). Bucket them off —
+  // extractAegisProfile matches the camelCase domain names and strips them.
+  const { profile, rest: afterProfile } = extractAegisProfile(domain);
 
-  // AegisSensitiveIdentity still travels as the single nested `sensitive_identity`
-  // claim (unregistered until the flat-wire correction lands), so it stays in
-  // `custom` (camelCased to `sensitiveIdentity`); bucket it off there.
-  const { sensitiveIdentity, rest: customClaims } = extractSensitiveIdentity(custom);
+  // Sensitive-category claims (registry `category: "sensitive"`) travel FLAT and
+  // resolve into `domain` like any other registered claim. Partition them off by
+  // category, then honour OIDC Core §13.3: SURFACE them into the sensitive bucket
+  // ONLY when the outer token was encrypted (jwe/cwe); on an unencrypted token
+  // they are SUPPRESSED — stripped from `domainRest` here and never re-attached,
+  // so a flat sensitive claim in cleartext reaches no bucket at all.
+  const { sensitive, rest: domainRest } = extractSensitiveClaims(afterProfile);
+  const sensitiveIdentity = encrypted ? sensitive : undefined;
 
   // ParsedJwtPayload keeps set-valued arrays non-optional with [] defaults.
   // Only `iss` is required at parse (validated above); every other scalar
@@ -201,6 +192,6 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
     tokenId: domain.tokenId,
     profile,
     sensitiveIdentity,
-    claims: customClaims as C,
+    claims: custom as C,
   });
 };

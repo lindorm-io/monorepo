@@ -2,7 +2,7 @@ import type { Expiry } from "@lindorm/date";
 import type { Dict } from "@lindorm/types";
 import type {
   AegisProfile,
-  AegisSensitiveIdentity,
+  AegisSensitive,
   LindormClaims,
   OAuthClaims,
   OidcClaims,
@@ -34,7 +34,7 @@ export type SignJwtContent<C extends Dict = Dict> = Omit<
     expires: Expiry;
     issuer?: string;
     profile?: AegisProfile;
-    sensitiveIdentity?: AegisSensitiveIdentity;
+    sensitive?: AegisSensitive;
     subject: string;
     tokenType: "Bearer" | "DPoP" | "N_A" | (string & {});
   };

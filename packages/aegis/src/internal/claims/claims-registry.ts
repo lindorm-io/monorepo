@@ -50,8 +50,9 @@ export type ClaimValueKind =
  *   - `"profile"`  — the OIDC Core §5.1 profile set (`AegisProfile`).
  *   - `"sensitive"`— government-issued personal identifiers (`AegisSensitive`).
  * A claim NOT in the registry buckets to `custom` — so `custom` is the ABSENCE
- * of an entry, never a category value. Metadata only — no code reads it yet
- * (read-side bucketing lands in a later phase).
+ * of an entry, never a category value. The `"sensitive"` category is read at
+ * runtime (extract-sensitive-claims.ts) to gate the §13.3 honour-only-when-
+ * encrypted read behaviour; `"profile"` still buckets via extract-aegis-profile.
  */
 export type ClaimCategory = "claims" | "profile" | "sensitive";
 
@@ -383,10 +384,11 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
 
   // --- SENSITIVE identity claims (government-issued personal identifiers) ---
   //     The `AegisSensitive` set: national identity / social-security numbers
-  //     and their OIDC §5.1 verified flags. `category: "sensitive"` so read-side
-  //     bucketing (Phase 13) honours them ONLY on an encrypted token (OIDC Core
-  //     §13.3). Long JOSE names ⇒ private-use labels (append-only). No code
-  //     reads the category yet — pure metadata this phase.
+  //     and their OIDC §5.1 verified flags. They travel FLAT on the wire; the
+  //     `category: "sensitive"` mark drives read-side bucketing — the sensitive
+  //     claims are honoured ONLY on an encrypted token (jwe/cwe) and suppressed
+  //     otherwise (OIDC Core §13.3; extract-sensitive-claims.ts). Long JOSE names
+  //     ⇒ private-use labels (append-only).
   {
     domain: "nationalIdentityNumber",
     jose: "national_identity_number",

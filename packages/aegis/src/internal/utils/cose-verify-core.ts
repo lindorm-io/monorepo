@@ -22,7 +22,12 @@ export const coseVerifyCore = async ({
 }) => {
   let bytes = input;
 
-  if (isEncryptedCose(bytes)) {
+  // Whether the outer COSE was a COSE_Encrypt0 (cwe). Drives the read-side
+  // sensitive-claim gate: sensitive claims (OIDC Core §13.3) surface only from
+  // an encrypted CWT, and are suppressed on an unencrypted one.
+  const encrypted = isEncryptedCose(bytes);
+
+  if (encrypted) {
     const encKryptos = await deps.resolveDecryptKey(
       decodeEncryptedCoseKid(bytes),
       undefined,
@@ -39,5 +44,5 @@ export const coseVerifyCore = async ({
     clockTolerance: deps.clockTolerance,
   });
 
-  return { claims, wire, decoded, typ };
+  return { claims, wire, decoded, typ, encrypted };
 };

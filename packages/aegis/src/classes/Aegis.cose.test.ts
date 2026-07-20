@@ -150,6 +150,59 @@ describe("Aegis — COSE", () => {
     expect(verified.claims.issuer).toBe("https://test.lindorm.io/");
   });
 
+  describe("sensitive claims (Phase 13 flat-wire correction, COSE)", () => {
+    test("HONORS flat sensitive claims on an encrypted CWE round-trip", async () => {
+      const logger = createMockLogger();
+      const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+      const encAegis = new Aegis({ amphora, logger });
+      await amphora.setup();
+      amphora.add(TEST_EC_KEY_SIG); // signs the inner CWT
+      amphora.add(TEST_OCT_KEY_ENC); // COSE_Encrypt0 recipient key
+
+      const { token } = await encAegis.mint(
+        "id_token",
+        {
+          subject: "user-1",
+          audience: ["client-1"],
+          clientId: "client-1",
+          sensitive: {
+            nationalIdentityNumber: "ABC-123",
+            nationalIdentityNumberVerified: true,
+          },
+        },
+        { format: "cwt", encrypt: {} },
+      );
+
+      // Encrypted outer (COSE_Encrypt0, tag 16 = 0xd0).
+      expect(Buffer.from(token, "base64url")[0]).toBe(0xd0);
+
+      const verified = (await encAegis.verify("id_token", token, {
+        audience: "client-1",
+      })) as unknown as { claims: Record<string, unknown> };
+
+      // COSE has no sensitive BUCKET — the claims stay FLAT in `claims`.
+      expect(verified.claims.nationalIdentityNumber).toBe("ABC-123");
+      expect(verified.claims.nationalIdentityNumberVerified).toBe(true);
+    });
+
+    test("SUPPRESSES flat sensitive claims carried by an UNENCRYPTED CWT", async () => {
+      // A raw (unencrypted) CWT that carries the sensitive fields FLAT.
+      const { token } = await aegis.cwt.sign({
+        subject: "user-1",
+        expires: "1h",
+        sensitive: {
+          nationalIdentityNumber: "ABC-123",
+          nationalIdentityNumberVerified: true,
+        },
+      });
+
+      const verified = await aegis.cwt.verify(token);
+
+      // Suppressed — not surfaced on the unencrypted CWT.
+      expect(verified.claims).not.toHaveProperty("nationalIdentityNumber");
+    });
+  });
+
   test("explicit encryption on a non-encryptable profile is rejected", async () => {
     await expect(
       aegis.mint(

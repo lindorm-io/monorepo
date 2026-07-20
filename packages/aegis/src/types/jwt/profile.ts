@@ -85,7 +85,7 @@ export type IdTokenContent = Required<Pick<SignContent, "subject" | "audience">>
       | "authorizedParty"
       | "vectorOfTrust"
       | "vectorTrustMark"
-      | "sensitiveIdentity"
+      | "sensitive"
       | "profile"
       | "expires"
     >

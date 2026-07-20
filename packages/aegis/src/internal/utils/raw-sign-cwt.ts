@@ -6,6 +6,7 @@ import { coseTypFromTokenType } from "../cose/cose-typ.js";
 import { signCose } from "../cose/sign-cose.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { assembleCwtClaims } from "./assemble-cwt-claims.js";
+import { withSensitiveDomain } from "./jwt-payload.js";
 
 /**
  * The raw CWT sign namespace (`aegis.cwt.sign`) — the generic-CWT mirror of the
@@ -25,7 +26,12 @@ export const rawSignCwt = async <C extends Dict = Dict>({
 }): Promise<SignedCwt> => {
   const kryptos = await deps.resolveSignKey({ key: options.key });
 
-  const common = assembleCwtClaims({ issuer: deps.issuer }, content, options);
+  // Merge the FLAT sensitive claims into the domain layer so `domainToCose`
+  // emits each as its individual CWT label — symmetric with `aegis.jwt.sign`.
+  const common = withSensitiveDomain(
+    assembleCwtClaims({ issuer: deps.issuer }, content, options),
+    content,
+  );
 
   const token = signCose({
     kryptos,

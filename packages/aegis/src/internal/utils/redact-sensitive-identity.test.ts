@@ -8,29 +8,26 @@ const NIN = "19900101-1234";
 const SSN = "078-05-1120";
 
 describe("redactSensitiveIdentity", () => {
-  test("filters the domain identity numbers and keeps the verified flags", () => {
+  test("filters the FLAT wire identity numbers and keeps the verified flags", () => {
     expect(
       redactSensitiveIdentity({
-        subject: "sub-1",
-        sensitiveIdentity: {
-          nationalIdentityNumber: NIN,
-          nationalIdentityNumberVerified: true,
-          socialSecurityNumber: SSN,
-          socialSecurityNumberVerified: false,
-        },
+        sub: "sub-1",
+        national_identity_number: NIN,
+        national_identity_number_verified: true,
+        social_security_number: SSN,
+        social_security_number_verified: false,
       }),
     ).toMatchSnapshot();
   });
 
-  test("filters the wire identity numbers and keeps the verified flags", () => {
+  test("filters the FLAT camelCase domain identity numbers too", () => {
     expect(
       redactSensitiveIdentity({
-        sub: "sub-1",
-        sensitive_identity: {
-          national_identity_number: NIN,
-          national_identity_number_verified: true,
-          social_security_number: SSN,
-        },
+        subject: "sub-1",
+        nationalIdentityNumber: NIN,
+        nationalIdentityNumberVerified: true,
+        socialSecurityNumber: SSN,
+        socialSecurityNumberVerified: false,
       }),
     ).toMatchSnapshot();
   });
@@ -38,8 +35,8 @@ describe("redactSensitiveIdentity", () => {
   test("never emits the identity numbers", () => {
     const serialised = JSON.stringify(
       redactSensitiveIdentity({
-        sensitiveIdentity: { nationalIdentityNumber: NIN, socialSecurityNumber: SSN },
-        sensitive_identity: { national_identity_number: NIN },
+        nationalIdentityNumber: NIN,
+        social_security_number: SSN,
       }),
     );
 
@@ -47,20 +44,22 @@ describe("redactSensitiveIdentity", () => {
     expect(serialised).not.toContain(SSN);
   });
 
-  test("leaves a payload without sensitive identity untouched", () => {
+  test("leaves a payload without an identity number untouched", () => {
     const payload = { subject: "sub-1", scope: "openid" };
 
     expect(redactSensitiveIdentity(payload)).toBe(payload);
   });
 
-  test("tolerates a null sensitive identity", () => {
-    expect(
-      redactSensitiveIdentity({ subject: "sub-1", sensitiveIdentity: null }),
-    ).toMatchSnapshot();
+  test("leaves a payload carrying only a verified flag untouched", () => {
+    const payload = { subject: "sub-1", national_identity_number_verified: true };
+
+    expect(redactSensitiveIdentity(payload)).toBe(payload);
   });
 
-  test("tolerates a non-object sensitive identity", () => {
-    expect(redactSensitiveIdentity({ sensitiveIdentity: "nonsense" })).toMatchSnapshot();
+  test("tolerates a null identity number", () => {
+    expect(
+      redactSensitiveIdentity({ subject: "sub-1", nationalIdentityNumber: null }),
+    ).toMatchSnapshot();
   });
 });
 

@@ -162,9 +162,9 @@ describe("token redaction", () => {
     });
 
     // Aegis refuses to put a government identifier on the wire in clear. Even
-    // when the sensitive-identity envelope reaches the wire kit (assembled
-    // Aegis-side into the `sensitive_identity` claim), the kit must redact it
-    // from its debug log.
+    // when a FLAT sensitive-identity claim reaches the wire kit (assembled
+    // Aegis-side as an individual `social_security_number` claim), the kit must
+    // redact it from its debug log.
     test("should never log a sensitive identity number staged as a wire claim", () => {
       const socialSecurityNumber = "078-05-1120";
 
@@ -172,7 +172,7 @@ describe("token redaction", () => {
         iss: issuer,
         sub: "sub-1",
         exp: 1704099600,
-        sensitive_identity: { social_security_number: socialSecurityNumber },
+        social_security_number: socialSecurityNumber,
       });
 
       expect(logged()).not.toContain(socialSecurityNumber);

@@ -492,9 +492,9 @@ export class Aegis implements IAegis {
 
   // Resolve the recipient encryption key for both the JOSE (JWE) and COSE
   // (COSE_Encrypt0) paths. A missing key is a hard error only when the caller
-  // explicitly asked to encrypt; when forced only by `sensitive_identity` it is
-  // tolerated — encryption is skipped and the claim is omitted rather than
-  // leaked in cleartext (token-claims.md:98).
+  // explicitly asked to encrypt; when forced only by the sensitive fields it is
+  // tolerated — encryption is skipped and they are omitted rather than leaked in
+  // cleartext (token-claims.md:98).
   private async resolveEncKey(
     encrypt: AegisEncKey | undefined,
     required: boolean,

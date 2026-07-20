@@ -89,8 +89,9 @@ export const assembleCommonClaims = (
   // content (content uses domain names). Non-claim inputs (`expires`,
   // `accessToken`, `tokenType`…) are not registry domains, so they are excluded.
   // Only `category: "claims"` is picked from the top level: profile/sensitive
-  // claims arrive in the `content.profile` / `content.sensitiveIdentity`
-  // containers, NOT as top-level fields — and the OIDC `profile` URL claim
+  // claims arrive in the `content.profile` / `content.sensitive` containers,
+  // merged into the domain layer at the encoder edge — NOT as top-level fields —
+  // and the OIDC `profile` URL claim
   // (registry domain `profile`) would otherwise collide with the `content.profile`
   // container object, leaking it onto the wire as a nested `profile` claim.
   const picked: Dict = {};

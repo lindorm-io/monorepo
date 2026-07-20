@@ -4,6 +4,7 @@ import { CwtKit } from "../../classes/CwtKit.js";
 import type { ParsedCwt, VerifyCwtOptions } from "../../types/index.js";
 import { verifyCose } from "../cose/verify-cose.js";
 import type { AegisDeps } from "./aegis-deps.js";
+import { extractSensitiveClaims } from "./extract-sensitive-claims.js";
 import { validateCwtClaims } from "./validate-cwt-claims.js";
 
 /**
@@ -38,8 +39,12 @@ export const rawVerifyCwt = async <C extends Dict = Dict>({
 
   validateCwtClaims(wire, kryptos.algorithm, verify, deps.clockTolerance);
 
+  // A raw CWT is a bare COSE_Sign1 — unencrypted by definition (COSE_Encrypt0 is
+  // the `cwe` namespace). So flat sensitive claims are SUPPRESSED (OIDC §13.3).
+  const { rest } = extractSensitiveClaims(claims);
+
   return {
-    claims: claims as C,
+    claims: rest as C,
     header: { alg: decoded.algorithm, kid: decoded.kid, typ: decoded.typ },
     token,
   };

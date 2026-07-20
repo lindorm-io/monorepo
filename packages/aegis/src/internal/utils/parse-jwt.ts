@@ -45,7 +45,9 @@ export const parseJwtToDomain = <C extends Dict = Dict>(token: string): ParsedJw
   header.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
   header.baseFormat = "JWT";
 
-  const payload = parseTokenPayload<C>(decoded.payload);
+  // A parseable JWT is unencrypted (parse throws on jwe), so sensitive claims
+  // are suppressed — the read-side §13.3 gate.
+  const payload = parseTokenPayload<C>(decoded.payload, false);
   const delegation = extractTokenDelegation(decoded.payload as { act?: any });
 
   return { decoded, delegation, header, payload, token };

@@ -53,8 +53,8 @@ export const assembleCwtClaims = (
 
   // Registry-driven pick of the non-envelope domain claims present on the
   // content (scope, roles, clientId, …). Non-claim inputs (`expires`, `profile`,
-  // `sensitiveIdentity`, `tokenType`…) are not registry domains, so they are
-  // excluded, exactly as assembleCommonClaims does for the profiled path.
+  // `sensitive`, `tokenType`…) are not registry domains, so they are excluded,
+  // exactly as assembleCommonClaims does for the profiled path.
   const picked: Dict = {};
   for (const spec of CLAIMS_REGISTRY) {
     if (ENVELOPE_DOMAINS.has(spec.domain)) continue;
