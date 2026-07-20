@@ -1,4 +1,5 @@
 import { Amphora, type IAmphora } from "@lindorm/amphora";
+import { B64 } from "@lindorm/b64";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
@@ -109,6 +110,28 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       await expect(
         aegis.mint("id_token", content, { encrypt: {} }),
       ).rejects.toBeInstanceOf(Error);
+    });
+
+    test("threads ECDH-ES party info from the encrypt wrapper onto the outer JWE", async () => {
+      amphora.add(TEST_EC_KEY_ENC); // ECDH-ES recipient key
+
+      const partyProducer = B64.encode(Buffer.from("producer"), "b64u");
+      const partyRecipient = B64.encode(Buffer.from("recipient"), "b64u");
+
+      const { token } = await aegis.mint("id_token", content, {
+        encrypt: { partyProducer, partyRecipient },
+      });
+
+      // The outer JWE carries apu/apv, proving mint's sign-then-encrypt step
+      // forwarded the wrapper's party info to JweKit.encrypt.
+      const { header } = JweKit.decode(token);
+      expect(header.apu).toBe(partyProducer);
+      expect(header.apv).toBe(partyRecipient);
+
+      // The token still decrypt-then-verifies to the inner claims (the KDF
+      // re-derives from the on-wire apu/apv on the read side).
+      const parsed = await aegis.verify("id_token", token, { audience: "client-1" });
+      expect(parsed.wire?.payload).toMatchObject({ iss: ISSUER, sub: "user-1" });
     });
   });
 

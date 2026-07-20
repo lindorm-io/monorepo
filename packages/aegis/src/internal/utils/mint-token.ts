@@ -151,6 +151,12 @@ export const mintToken = async ({
   const { token } = encryptJwe({
     kryptos: encKryptos,
     data: signed.token,
+    // Forward the ECDH-ES party info (RFC 7518 §4.6) from the encrypt wrapper;
+    // JweKit gates/strips it (ECDH-ES only), so it is inert for other algorithms.
+    options: {
+      partyProducer: options.encrypt?.partyProducer,
+      partyRecipient: options.encrypt?.partyRecipient,
+    },
     encryption: options.encrypt?.key?.encryption ?? deps.encryption,
     certBindingMode: deps.certBindingMode,
     certificateThumbprintSha1:

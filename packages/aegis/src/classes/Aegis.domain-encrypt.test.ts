@@ -1,4 +1,5 @@
 import { Amphora, type IAmphora } from "@lindorm/amphora";
+import { B64 } from "@lindorm/b64";
 import type { ILogger } from "@lindorm/logger";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
@@ -7,6 +8,7 @@ import {
   TEST_EC_KEY_ENC,
   TEST_EC_KEY_SIG,
   TEST_OCT_KEY_ENC,
+  TEST_RSA_KEY_ENC,
 } from "../__fixtures__/keys.js";
 import { CweError } from "../errors/index.js";
 import { Aegis } from "./Aegis.js";
@@ -148,6 +150,54 @@ describe("Aegis — domain encrypt / decrypt (§5e)", () => {
           key: { encryption: "A128CBC-HS256" },
         }),
       ).rejects.toThrow(CweError);
+    });
+  });
+
+  // The domain surface must reach ECDH-ES party info (RFC 7518 §4.6) down to
+  // `JweKit.encrypt` — previously only `aegis.jwe.encrypt` could set apu/apv.
+  describe("ECDH-ES party info (apu/apv) on the domain surface", () => {
+    const partyProducer = B64.encode(Buffer.from("producer"), "b64u");
+    const partyRecipient = B64.encode(Buffer.from("recipient"), "b64u");
+
+    test("threads partyProducer/partyRecipient to the wire AND the KDF on an ECDH-ES key", async () => {
+      const encrypted = await aegis.encrypt(claims, {
+        format: "jwe",
+        key: { predicate: { id: TEST_EC_KEY_ENC.id } },
+        partyProducer,
+        partyRecipient,
+      });
+
+      // The base64url party info rides the protected header (apu/apv), proving
+      // the two params were plumbed through encryptToken → JweKit.encrypt.
+      const { header } = JweKit.decode(encrypted.token);
+      expect(header.apu).toBe(partyProducer);
+      expect(header.apv).toBe(partyRecipient);
+
+      // A successful round-trip with NON-empty apu/apv proves the KDF consumed
+      // them on encrypt: decrypt unconditionally re-derives from the on-wire
+      // apu/apv, so a mismatch (KDF ignored on encrypt) would fail the AEAD.
+      const decrypted = await aegis.decrypt(encrypted.token);
+      expect(decrypted.claims).toEqual({ subject: "user-1", audience: ["client-1"] });
+      expect(decrypted.custom).toEqual({ tenant: "acme" });
+    });
+
+    test("strips party info for a non-ECDH-ES (RSA-OAEP) key — never on the wire", async () => {
+      amphora.add(TEST_RSA_KEY_ENC); // scoped here: keeps the default enc-key pool unambiguous elsewhere
+
+      const encrypted = await aegis.encrypt(claims, {
+        format: "jwe",
+        key: { predicate: { id: TEST_RSA_KEY_ENC.id } },
+        partyProducer,
+        partyRecipient,
+      });
+
+      const { header } = JweKit.decode(encrypted.token);
+      expect(header.apu).toBeUndefined();
+      expect(header.apv).toBeUndefined();
+
+      // The token still decrypts — the stripped party info is a no-op.
+      const decrypted = await aegis.decrypt(encrypted.token);
+      expect(decrypted.claims).toEqual({ subject: "user-1", audience: ["client-1"] });
     });
   });
 });

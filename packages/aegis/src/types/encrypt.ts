@@ -29,6 +29,21 @@ export type EncryptOptions = {
   omit?: OmitMode;
   /** Caller-supplyable wire header fields. */
   header?: TokenEncryptOrSignOptions;
+  /**
+   * ECDH-ES Agreement PartyUInfo (RFC 7518 §4.6.1.2) — the base64url producer
+   * identity. Consumed by the Concat-KDF AND emitted on the protected header
+   * (`apu`) ONLY when the recipient key is an ECDH-ES algorithm; supplied for any
+   * other algorithm (including the `cwe` path) it is stripped (not fed to the KDF,
+   * not emitted).
+   */
+  partyProducer?: string;
+  /**
+   * ECDH-ES Agreement PartyVInfo (RFC 7518 §4.6.1.3) — the base64url recipient
+   * identity. Same ECDH-ES gate/strip semantics as {@link partyProducer}; on the
+   * read side a decrypt configured with `partyRecipient` verifies the incoming
+   * `apv` matches it.
+   */
+  partyRecipient?: string;
   bindCertificate?: BindCertificateMode;
   /**
    * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a

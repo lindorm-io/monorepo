@@ -53,6 +53,8 @@ export const encryptToken = async ({
         options: {
           bindCertificate: options.bindCertificate,
           header: options.header,
+          partyProducer: options.partyProducer,
+          partyRecipient: options.partyRecipient,
           tokenType: options.type,
         },
         encryption,
