@@ -180,8 +180,8 @@ const toConfirmation = (value: unknown): ConfirmationClaim | undefined => {
  * parser did not consume. Consumers that need to further partition
  * (e.g. extract AegisProfile fields) operate on the leftover dict.
  *
- * Used by parseTokenPayload, parseIntrospection, and parseUserinfo to
- * avoid duplicating the field-by-field mapping.
+ * Used by parseTokenPayload and verifyProfileToken to avoid duplicating the
+ * field-by-field mapping.
  */
 export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
   const consumed = new Set<string>();

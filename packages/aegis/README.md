@@ -247,8 +247,8 @@ Aegis.header(token); // decode the header (JOSE segment, or the COSE protected m
 Aegis.decode(token); // auto-detect (JOSE or COSE), decode without verifying
 Aegis.parse(token); // auto-detect (JWT or JWS), validate structure
 
-Aegis.parseUserinfo(claims); // → AegisUserinfo
-Aegis.parseIntrospection(claims); // → AegisIntrospection
+Aegis.toDomain(wire); // wire claim dict → { claims, custom } domain claims
+Aegis.toWire(claims); // domain claims → JOSE-keyed wire dict
 Aegis.validateClaims(claims, matchers); // throws on mismatch
 ```
 
@@ -476,8 +476,7 @@ domain name (`authorizationDetails`) is translated to the registered wire name
 (`authorization_details`) on sign and back on parse. The array **contents travel
 verbatim** — type-specific inner fields (e.g. `instructedAmount`,
 `creditorAccount`) are never key-converted, so camelCase fields defined by a
-detail's own spec are preserved exactly. The claim also surfaces from
-`parseIntrospection` (RFC 9396 §9).
+detail's own spec are preserved exactly.
 
 ```typescript
 kit.sign({

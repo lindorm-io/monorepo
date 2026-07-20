@@ -50,15 +50,7 @@ import { encryptToken } from "../internal/utils/encrypt-token.js";
 import { decodeJoseHeader } from "../internal/utils/jose-header.js";
 import { createJwtValidate } from "../internal/utils/jwt-validate.js";
 import { mintToken } from "../internal/utils/mint-token.js";
-import {
-  type IntrospectClaimsInput,
-  parseIntrospection,
-} from "../internal/utils/parse-introspection.js";
 import { parseToken } from "../internal/utils/parse-token.js";
-import {
-  parseUserinfo,
-  type UserinfoClaimsInput,
-} from "../internal/utils/parse-userinfo.js";
 import { rawDecryptAes } from "../internal/utils/raw-decrypt-aes.js";
 import { rawDecryptCwe } from "../internal/utils/raw-decrypt-cwe.js";
 import { rawDecryptJwe } from "../internal/utils/raw-decrypt-jwe.js";
@@ -81,10 +73,8 @@ import { verifyToken } from "../internal/utils/verify-token.js";
 import type {
   AegisDecryptKey,
   AegisEncKey,
-  AegisIntrospection,
   AegisSettings,
   AegisSignKey,
-  AegisUserinfo,
   AegisVerifyKey,
   AesDecryptOptions,
   AesEncryptOptions,
@@ -426,21 +416,13 @@ export class Aegis implements IAegis {
     return parseToken<T>(token);
   }
 
-  static parseUserinfo(data: UserinfoClaimsInput): AegisUserinfo {
-    return parseUserinfo(data);
-  }
-
-  static parseIntrospection(data: IntrospectClaimsInput): AegisIntrospection {
-    return parseIntrospection(data);
-  }
-
   /**
    * Validate a flat claim dict against a JwtClaimMatchers-style declarative
    * matcher. Throws LindormError("Invalid token") with details about every
    * failing key when the claims don't match.
    *
-   * Works on any flat claim source — ParsedJwtPayload, AegisIntrospection,
-   * AegisUserinfo, or any structurally-compatible dict.
+   * Works on any flat claim source — a ParsedJwtPayload or any
+   * structurally-compatible dict.
    */
   static validateClaims(claims: Dict, matchers: ValidateJwtOptions): void {
     const predicate = createJwtValidate(matchers);
