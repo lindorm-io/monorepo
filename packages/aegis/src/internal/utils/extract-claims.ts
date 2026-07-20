@@ -1,6 +1,11 @@
 import { isArray, isFinite, isObject, isString } from "@lindorm/is";
 import type { AuthorizationDetail, Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
+import {
+  CLAIMS_REGISTRY,
+  type ClaimSpec,
+  type ClaimSubset,
+} from "../claims/claims-registry.js";
 import type { ActClaim } from "../../types/claims/act-claim.js";
 import type { ConfirmationClaim } from "../../types/claims/confirmation-claim.js";
 import type { DelegationClaims } from "../../types/claims/delegation-claims.js";
@@ -37,74 +42,31 @@ export type ExtractClaimsResult = {
   rest: Dict;
 };
 
-// Map of every domain field name to the set of input keys we recognise for
-// it. The first matching key in the input is used. Both camelCase (already
-// parsed / conduit-transformed) and snake/wire forms are listed where they
-// differ.
-//
-// Recursive claims (act, mayAct, confirmation) are handled separately
-// because their inner shapes also need name-translation.
-const FIELD_KEYS: Record<string, ReadonlyArray<string>> = {
-  // StdClaims
-  subject: ["subject", "sub"],
-  expiresAt: ["expiresAt", "exp"],
-  issuedAt: ["issuedAt", "iat"],
-  notBefore: ["notBefore", "nbf"],
-  issuer: ["issuer", "iss"],
-  audience: ["audience", "aud"],
-  tokenId: ["tokenId", "jti"],
+// FIELD_KEYS / RFC8693_KEYS / POP_KEYS are DERIVED from the claim registry's
+// `subset` marks — the single source of truth — never hand-maintained. For each
+// claim the recognised input keys are its domain (camelCase) name and its JOSE
+// (snake/wire) name, deduped where they coincide (`nonce`, `scope`, `act`, …);
+// the first matching key in the input is used. Listing both lets us accept input
+// that is already parsed / conduit-transformed (camelCase) OR raw wire (snake).
+// The three subsets are disjoint (each claim carries at most one `subset` mark):
+//   - `FIELD_KEYS`    the flat `"core"` field set.
+//   - `RFC8693_KEYS`  the recursive delegation claims (`act`/`mayAct`) — their
+//                     own key set so we can also strip them from leftover `rest`.
+//   - `POP_KEYS`      the recursive confirmation claim.
+const acceptedKeys = (spec: ClaimSpec): ReadonlyArray<string> =>
+  spec.domain === spec.jose ? [spec.domain] : [spec.domain, spec.jose];
 
-  // OidcClaims
-  accessTokenHash: ["accessTokenHash", "at_hash"],
-  authContextClassReference: ["authContextClassReference", "acr"],
-  authMethods: ["authMethods", "amr"],
-  authorizedParty: ["authorizedParty", "azp"],
-  authTime: ["authTime", "auth_time"],
-  codeHash: ["codeHash", "c_hash"],
-  nonce: ["nonce"],
-  stateHash: ["stateHash", "s_hash"],
-  vectorOfTrust: ["vectorOfTrust", "vot"],
-  vectorTrustMark: ["vectorTrustMark", "vtm"],
+const keysForSubset = (subset: ClaimSubset): Record<string, ReadonlyArray<string>> =>
+  Object.fromEntries(
+    CLAIMS_REGISTRY.filter((spec) => spec.subset === subset).map((spec) => [
+      spec.domain,
+      acceptedKeys(spec),
+    ]),
+  );
 
-  // OAuthClaims (RFC 9068)
-  entitlements: ["entitlements"],
-  groups: ["groups"],
-  roles: ["roles"],
-
-  // RarClaims (RFC 9396)
-  authorizationDetails: ["authorizationDetails", "authorization_details"],
-
-  // LindormClaims
-  authenticatorAssuranceLevel: ["authenticatorAssuranceLevel", "aal"],
-  authFactor: ["authFactor", "afr"],
-  clientId: ["clientId", "client_id"],
-  conformsTo: ["conformsTo", "conforms_to"],
-  federationAssuranceLevel: ["federationAssuranceLevel", "fal"],
-  grantType: ["grantType", "gty"],
-  identityAssuranceLevel: ["identityAssuranceLevel", "ial"],
-  levelOfAssurance: ["levelOfAssurance", "loa"],
-  permissions: ["permissions"],
-  scope: ["scope"],
-  sessionHint: ["sessionHint", "sih"],
-  sessionId: ["sessionId", "sid"],
-  subjectHint: ["subjectHint", "suh"],
-  tenantId: ["tenantId", "tenant_id"],
-
-  // SetClaims (RFC 9493) — mirrors the COSE decoder, which restores the
-  // domain key; without this the JOSE path leaves `sub_id` wire-keyed.
-  subjectId: ["subjectId", "sub_id"],
-};
-
-// Recursive claim extractors get their own key sets so we can also strip
-// them from the leftover `rest`.
-const RFC8693_KEYS = {
-  act: ["act"],
-  mayAct: ["mayAct", "may_act"],
-} as const;
-
-const POP_KEYS = {
-  confirmation: ["confirmation", "cnf"],
-} as const;
+const FIELD_KEYS: Record<string, ReadonlyArray<string>> = keysForSubset("core");
+const RFC8693_KEYS: Record<string, ReadonlyArray<string>> = keysForSubset("rfc8693");
+const POP_KEYS: Record<string, ReadonlyArray<string>> = keysForSubset("pop");
 
 const toDate = (value: unknown): Date | undefined => {
   if (value instanceof Date) return value;

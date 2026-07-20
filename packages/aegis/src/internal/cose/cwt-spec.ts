@@ -1,7 +1,11 @@
 import type { CborField, CborValueKind } from "@lindorm/cbor";
 import { CborKit } from "@lindorm/cbor";
 import type { Dict } from "@lindorm/types";
-import { CLAIMS_REGISTRY, type ClaimSpec } from "../claims/claims-registry.js";
+import {
+  CLAIMS_REGISTRY,
+  type ClaimSpec,
+  claimsWith,
+} from "../claims/claims-registry.js";
 import { decodeActCompact, encodeActCompact } from "./act-claim.js";
 import { decodeCnf, encodeCnf } from "./cose-key.js";
 import { decodeSubIdCompact, encodeSubIdCompact } from "./sub-id-claim.js";
@@ -13,9 +17,20 @@ import { decodeSubIdCompact, encodeSubIdCompact } from "./sub-id-claim.js";
 // preferMap) stays in cbor.ts, fed the map this kit produces.
 
 // OIDC hash claims: b64url string <-> COSE byte string (cbor's native bstr kind;
-// "b64u" is the same url-safe alphabet as the constant B64U).
-const HASH_DOMAINS = new Set(["accessTokenHash", "codeHash", "stateHash"]);
-const ACT_DOMAINS = new Set(["act", "mayAct"]);
+// "b64u" is the same url-safe alphabet as the constant B64U). DERIVED from the
+// registry `bespoke` sub-kinds — the single source of truth — never hardcoded:
+// `"hash"` are the OIDC hashes (at_hash/c_hash/s_hash), `"act"` the RFC 8693
+// delegation claims (act/may_act).
+const HASH_DOMAINS = new Set(
+  claimsWith("bespoke")
+    .filter((spec) => spec.bespoke === "hash")
+    .map((spec) => spec.domain),
+);
+const ACT_DOMAINS = new Set(
+  claimsWith("bespoke")
+    .filter((spec) => spec.bespoke === "act")
+    .map((spec) => spec.domain),
+);
 
 // cti (RFC 8392 label 7): the token id string is carried as its raw UTF-8 bytes.
 const encodeCti = (value: unknown): Buffer => Buffer.from(String(value), "utf8");

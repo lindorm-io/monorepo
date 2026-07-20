@@ -6,9 +6,10 @@
  * encoder maps `domain → cose`. Keeping it in one table is the anti-drift
  * mechanism: a claim is defined exactly once.
  *
- * Provenance: the `domain ↔ jose` half mirrors `extract-claims.ts` `FIELD_KEYS`
- * (the existing source of truth for wire↔domain) — a drift-guard test asserts
- * they stay in sync.
+ * Provenance: the registry is the SOURCE OF TRUTH for the `domain ↔ jose` set —
+ * `extract-claims.ts` derives its `FIELD_KEYS`/`RFC8693_KEYS`/`POP_KEYS` from the
+ * `subset` marks below, and a drift-guard test freezes the old lists and asserts
+ * the derived sets still equal them.
  *
  * --- The COSE map-key rule (byte-size minimisation) ---
  *
@@ -42,6 +43,41 @@ export type ClaimValueKind =
   | "array" // array of strings (aud, scope, roles…)
   | "bstr" // byte string on the COSE wire (cti…)
   | "bespoke"; // needs a per-claim builder (cnf, hashes, act, sub_id, events…)
+
+/**
+ * Sub-kind of a `value: "bespoke"` claim — the discriminator that tells the
+ * translator (encode/decode) and the COSE byte-shaper WHICH per-claim builder a
+ * bespoke claim uses. Present EXACTLY on `value: "bespoke"` entries (a drift
+ * guard asserts the iff). Claims sharing a builder share a sub-kind:
+ *   - `"hash"`         the OIDC hashes (`at_hash`/`c_hash`/`s_hash`): a b64url
+ *                      string on JOSE, a COSE byte string.
+ *   - `"confirmation"` RFC 7800 `cnf` (proof-of-possession key).
+ *   - `"act"`          RFC 8693 delegation `act`/`may_act` (recursive actor).
+ *   - `"subId"`        RFC 9493 `sub_id` subject identifier.
+ *   - `"events"`       RFC 8417 SET `events` map (carried verbatim).
+ *   - `"authDetails"`  RFC 9396 `authorization_details` array (carried verbatim).
+ *   - `"address"`      OIDC §5.1 `address` (nested object; snake its inner keys).
+ */
+export type BespokeKind =
+  | "hash"
+  | "confirmation"
+  | "act"
+  | "subId"
+  | "events"
+  | "authDetails"
+  | "address";
+
+/**
+ * Read-side SUBSET a claim belongs to — the curated extraction groups that
+ * `extract-claims.ts` derives (`FIELD_KEYS`/`RFC8693_KEYS`/`POP_KEYS`). The three
+ * are DISJOINT (a claim is in at most one), so a single mark suffices; a claim in
+ * NONE (SET-only `events`, `txn`, the profile and sensitive sets) carries no mark
+ * and is not extracted into `DomainClaims`.
+ *   - `"core"`     the flat `FIELD_KEYS` field set (StdClaims & OidcClaims & …).
+ *   - `"rfc8693"`  the recursive delegation claims (`act`/`mayAct`).
+ *   - `"pop"`      the recursive confirmation claim (`confirmation`).
+ */
+export type ClaimSubset = "core" | "rfc8693" | "pop";
 
 /**
  * Which read-side bucket a claim belongs to. Every registry entry declares
@@ -90,8 +126,22 @@ export type ClaimSpec = {
    */
   cose: number | null;
   value: ClaimValueKind;
+  /**
+   * Bespoke sub-kind — REQUIRED on and ONLY on `value: "bespoke"` entries (drift
+   * guard: `bespoke` present iff `value === "bespoke"`). The single source of
+   * truth the translator's bespoke encode/decode switch and the COSE byte-shaper
+   * (`HASH_DOMAINS`/`ACT_DOMAINS`) dispatch on. See {@link BespokeKind}.
+   */
+  bespoke?: BespokeKind;
   /** Read-side bucket (exactly one per entry). See {@link ClaimCategory}. */
   category: ClaimCategory;
+  /**
+   * Read-side extraction subset — the source of truth for extract-claims'
+   * `FIELD_KEYS`/`RFC8693_KEYS`/`POP_KEYS`. Absent ⇒ the claim is not extracted
+   * into `DomainClaims` (SET-only `events`/`txn`, profile, sensitive). See
+   * {@link ClaimSubset}.
+   */
+  subset?: ClaimSubset;
   /**
    * Closed-enum value→digit map for COSE (non-lossy: unknown values are written
    * as their real string). Omitted for open-valued claims.
@@ -124,9 +174,30 @@ const P = (n: number): number => -65537 - n;
  */
 export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
   // --- (a) RFC 8392 standard CWT claims (registered integer labels 1–9) ---
-  { domain: "issuer", jose: "iss", cose: 1, value: "text", category: "claims" },
-  { domain: "subject", jose: "sub", cose: 2, value: "text", category: "claims" },
-  { domain: "audience", jose: "aud", cose: 3, value: "array", category: "claims" },
+  {
+    domain: "issuer",
+    jose: "iss",
+    cose: 1,
+    value: "text",
+    category: "claims",
+    subset: "core",
+  },
+  {
+    domain: "subject",
+    jose: "sub",
+    cose: 2,
+    value: "text",
+    category: "claims",
+    subset: "core",
+  },
+  {
+    domain: "audience",
+    jose: "aud",
+    cose: 3,
+    value: "array",
+    category: "claims",
+    subset: "core",
+  },
   {
     domain: "expiresAt",
     jose: "exp",
@@ -134,6 +205,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "date",
     category: "claims",
     temporal: "future",
+    subset: "core",
   },
   {
     domain: "notBefore",
@@ -142,6 +214,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "date",
     category: "claims",
     temporal: "past",
+    subset: "core",
   },
   {
     domain: "issuedAt",
@@ -150,6 +223,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "date",
     category: "claims",
     temporal: "past",
+    subset: "core",
   },
   // CWT cti (RFC 8392 label 7)
   {
@@ -159,9 +233,18 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: 7,
     value: "bstr",
     category: "claims",
+    subset: "core",
   },
   // RFC 8747
-  { domain: "confirmation", jose: "cnf", cose: 8, value: "bespoke", category: "claims" },
+  {
+    domain: "confirmation",
+    jose: "cnf",
+    cose: 8,
+    value: "bespoke",
+    bespoke: "confirmation",
+    category: "claims",
+    subset: "pop",
+  },
   // RFC 8693
   {
     domain: "scope",
@@ -170,6 +253,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "array",
     category: "claims",
     array: "spaced",
+    subset: "core",
   },
 
   // --- (b) No registered integer label AND a short JOSE name (≤ 4 chars):
@@ -182,6 +266,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: null,
     value: "text",
     category: "claims",
+    subset: "core",
   },
   {
     domain: "authMethods",
@@ -190,6 +275,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "array",
     category: "claims",
     array: "strict",
+    subset: "core",
   },
   {
     domain: "authorizedParty",
@@ -197,22 +283,59 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: null,
     value: "text",
     category: "claims",
+    subset: "core",
   },
-  { domain: "vectorOfTrust", jose: "vot", cose: null, value: "text", category: "claims" },
+  {
+    domain: "vectorOfTrust",
+    jose: "vot",
+    cose: null,
+    value: "text",
+    category: "claims",
+    subset: "core",
+  },
   {
     domain: "vectorTrustMark",
     jose: "vtm",
     cose: null,
     value: "text",
     category: "claims",
+    subset: "core",
   },
   // RFC 8693
-  { domain: "act", jose: "act", cose: null, value: "bespoke", category: "claims" },
-  { domain: "grantType", jose: "gty", cose: null, value: "text", category: "claims" },
+  {
+    domain: "act",
+    jose: "act",
+    cose: null,
+    value: "bespoke",
+    bespoke: "act",
+    category: "claims",
+    subset: "rfc8693",
+  },
+  {
+    domain: "grantType",
+    jose: "gty",
+    cose: null,
+    value: "text",
+    category: "claims",
+    subset: "core",
+  },
   // OIDC front-channel logout
-  { domain: "sessionId", jose: "sid", cose: null, value: "text", category: "claims" },
-  // RFC 8417 txn
-  { domain: "transactionId", jose: "txn", cose: null, value: "text", category: "claims" },
+  {
+    domain: "sessionId",
+    jose: "sid",
+    cose: null,
+    value: "text",
+    category: "claims",
+    subset: "core",
+  },
+  // RFC 8417 txn — emitted but NOT extracted into DomainClaims (no subset mark).
+  {
+    domain: "transactionId",
+    jose: "txn",
+    cose: null,
+    value: "text",
+    category: "claims",
+  },
   // ISO/IEC 29115
   {
     domain: "levelOfAssurance",
@@ -220,6 +343,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: null,
     value: "int",
     category: "claims",
+    subset: "core",
   },
   // NIST SP 800-63B
   {
@@ -228,6 +352,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: null,
     value: "int",
     category: "claims",
+    subset: "core",
   },
   // NIST SP 800-63A
   {
@@ -236,6 +361,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: null,
     value: "int",
     category: "claims",
+    subset: "core",
   },
   // NIST SP 800-63C
   {
@@ -244,6 +370,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: null,
     value: "int",
     category: "claims",
+    subset: "core",
   },
   {
     domain: "authFactor",
@@ -252,9 +379,24 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "array",
     category: "claims",
     array: "strict",
+    subset: "core",
   },
-  { domain: "sessionHint", jose: "sih", cose: null, value: "text", category: "claims" },
-  { domain: "subjectHint", jose: "suh", cose: null, value: "text", category: "claims" },
+  {
+    domain: "sessionHint",
+    jose: "sih",
+    cose: null,
+    value: "text",
+    category: "claims",
+    subset: "core",
+  },
+  {
+    domain: "subjectHint",
+    jose: "suh",
+    cose: null,
+    value: "text",
+    category: "claims",
+    subset: "core",
+  },
 
   // --- (c) No registered integer label but a long JOSE name (≥ 5 chars):
   //     a private-use integer label (5 bytes) beats the string key (name + 1).
@@ -267,23 +409,36 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     jose: "at_hash",
     cose: P(0),
     value: "bespoke",
+    bespoke: "hash",
     category: "claims",
+    subset: "core",
   },
   {
     domain: "codeHash",
     jose: "c_hash",
     cose: P(1),
     value: "bespoke",
+    bespoke: "hash",
     category: "claims",
+    subset: "core",
   },
   {
     domain: "stateHash",
     jose: "s_hash",
     cose: P(2),
     value: "bespoke",
+    bespoke: "hash",
     category: "claims",
+    subset: "core",
   },
-  { domain: "nonce", jose: "nonce", cose: P(3), value: "text", category: "claims" },
+  {
+    domain: "nonce",
+    jose: "nonce",
+    cose: P(3),
+    value: "text",
+    category: "claims",
+    subset: "core",
+  },
   {
     domain: "authTime",
     jose: "auth_time",
@@ -291,6 +446,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "date",
     category: "claims",
     temporal: "past",
+    subset: "core",
   },
   // RFC 9396
   {
@@ -298,7 +454,9 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     jose: "authorization_details",
     cose: P(5),
     value: "bespoke",
+    bespoke: "authDetails",
     category: "claims",
+    subset: "core",
   },
   // RFC 8693
   {
@@ -306,7 +464,9 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     jose: "may_act",
     cose: P(6),
     value: "bespoke",
+    bespoke: "act",
     category: "claims",
+    subset: "rfc8693",
   },
   {
     domain: "entitlements",
@@ -315,6 +475,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "array",
     category: "claims",
     array: "strict",
+    subset: "core",
   },
   {
     domain: "groups",
@@ -323,6 +484,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "array",
     category: "claims",
     array: "strict",
+    subset: "core",
   },
   {
     domain: "roles",
@@ -331,6 +493,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "array",
     category: "claims",
     array: "spaced",
+    subset: "core",
   },
   {
     domain: "permissions",
@@ -339,6 +502,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "array",
     category: "claims",
     array: "spaced",
+    subset: "core",
   },
   {
     domain: "clientId",
@@ -346,21 +510,31 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: P(11),
     value: "text",
     category: "claims",
+    subset: "core",
   },
 
-  // --- SET claims (RFC 8417 / RFC 9493). Emitted by mint but NOT extracted
-  //     into DomainClaims (they are SET-token-specific), so they live in the
-  //     registry but not in extract-claims FIELD_KEYS.
+  // --- SET claims (RFC 8417 / RFC 9493). `subjectId` (RFC 9493) IS extracted
+  //     (subset "core"); `events` is SET-token-specific and NOT extracted, so it
+  //     carries no subset mark.
   // RFC 9493
   {
     domain: "subjectId",
     jose: "sub_id",
     cose: P(12),
     value: "bespoke",
+    bespoke: "subId",
     category: "claims",
+    subset: "core",
   },
   // RFC 8417 SET events
-  { domain: "events", jose: "events", cose: P(13), value: "bespoke", category: "claims" },
+  {
+    domain: "events",
+    jose: "events",
+    cose: P(13),
+    value: "bespoke",
+    bespoke: "events",
+    category: "claims",
+  },
 
   {
     domain: "tenantId",
@@ -368,6 +542,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     cose: P(14),
     value: "text",
     category: "claims",
+    subset: "core",
   },
 
   // RS-facing posture signal (token-claims.md §2/§3): the profiles the token's
@@ -380,6 +555,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "array",
     category: "claims",
     array: "spaced",
+    subset: "core",
   },
 
   // --- SENSITIVE identity claims (government-issued personal identifiers) ---
@@ -433,6 +609,7 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     jose: "address",
     cose: P(20),
     value: "bespoke",
+    bespoke: "address",
     category: "profile",
   },
   { domain: "email", jose: "email", cose: P(21), value: "text", category: "profile" },

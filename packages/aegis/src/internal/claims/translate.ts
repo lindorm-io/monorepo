@@ -154,37 +154,36 @@ const STRING_ARRAY_DOMAINS = new Set(
 // -----------------------------------------------------------------------------
 
 // Dispatch ONE `bespoke` claim's value to its per-claim JOSE builder, keyed by
-// the domain name. Every `value: "bespoke"` registry entry is enumerated here;
-// an unhandled bespoke domain is a registry/translator drift and throws loudly
-// (the house exhaustive-switch idiom).
-const encodeBespoke = (domain: string, value: unknown): unknown => {
-  switch (domain) {
-    case "accessTokenHash":
-    case "codeHash":
-    case "stateHash":
+// the registry `spec.bespoke` sub-kind. Every {@link BespokeKind} is enumerated
+// here; an unhandled sub-kind (the `undefined` fall-through of a registry/
+// translator drift) throws loudly (the house exhaustive-switch idiom).
+const encodeBespoke = (spec: ClaimSpec, value: unknown): unknown => {
+  switch (spec.bespoke) {
+    case "hash":
       return value; // already-derived b64url string
     case "confirmation":
       return isObject(value) ? confirmationToWire(value as ConfirmationClaim) : undefined;
     case "act":
-    case "mayAct":
       return isObject(value) ? actClaimToWire(value as ActClaim) : undefined;
-    case "subjectId":
+    case "subId":
     case "events":
       return isObject(value) ? value : undefined;
-    case "authorizationDetails":
+    case "authDetails":
       return isArray(value) ? value : undefined;
     case "address":
       // Nested profile object: snake its inner keys, matching the previous
       // `snakeKeys(profile)` write path.
       return isObject(value) ? snakeKeys(value) : value;
-    default:
-      throw new AegisDomainError("Unhandled bespoke claim domain", {
+    default: {
+      const exhaustive: undefined = spec.bespoke;
+      throw new AegisDomainError("Unhandled bespoke claim sub-kind", {
         code: "translate_unhandled_bespoke_domain",
-        data: { domain },
-        title: "Unhandled Bespoke Claim Domain",
+        data: { domain: spec.domain, bespoke: String(exhaustive) },
+        title: "Unhandled Bespoke Claim Sub-Kind",
         details:
           "The claim registry declared a bespoke claim the translator has no builder for.",
       });
+    }
   }
 };
 
@@ -202,7 +201,7 @@ const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
     case "bstr":
       return value; // JOSE keeps the string; only COSE turns cti into bytes
     case "bespoke":
-      return encodeBespoke(spec.domain, value);
+      return encodeBespoke(spec, value);
     default: {
       const exhaustive: never = spec.value;
       throw new AegisDomainError("Unhandled claim value kind", {
@@ -261,35 +260,35 @@ export type JoseToDomainResult = {
 export type CoseToDomainResult = JoseToDomainResult;
 
 // Dispatch ONE `bespoke` claim's value to its per-claim DOMAIN decoder, keyed by
-// the domain name — the read-side twin of `encodeBespoke`. Every `value:
-// "bespoke"` registry entry is enumerated here; an unhandled bespoke domain is a
-// registry/translator drift and throws loudly (the house exhaustive-switch idiom).
-const decodeBespoke = (domain: string, value: unknown): unknown => {
-  switch (domain) {
-    case "accessTokenHash":
-    case "codeHash":
-    case "stateHash":
+// the registry `spec.bespoke` sub-kind — the read-side twin of `encodeBespoke`.
+// Every {@link BespokeKind} is enumerated here; an unhandled sub-kind (the
+// `undefined` fall-through of a registry/translator drift) throws loudly (the
+// house exhaustive-switch idiom).
+const decodeBespoke = (spec: ClaimSpec, value: unknown): unknown => {
+  switch (spec.bespoke) {
+    case "hash":
       return isString(value) ? value : undefined; // b64url hash string
     case "confirmation":
       return toConfirmation(value);
     case "act":
-    case "mayAct":
       return toActClaim(value);
-    case "subjectId":
+    case "subId":
       return isObject(value) ? value : undefined;
-    case "authorizationDetails":
+    case "authDetails":
       return isArray(value) ? value : undefined;
     case "events":
     case "address":
       return value; // SET events map / address object carried verbatim
-    default:
-      throw new AegisDomainError("Unhandled bespoke claim domain", {
+    default: {
+      const exhaustive: undefined = spec.bespoke;
+      throw new AegisDomainError("Unhandled bespoke claim sub-kind", {
         code: "translate_unhandled_bespoke_domain",
-        data: { domain },
-        title: "Unhandled Bespoke Claim Domain",
+        data: { domain: spec.domain, bespoke: String(exhaustive) },
+        title: "Unhandled Bespoke Claim Sub-Kind",
         details:
           "The claim registry declared a bespoke claim the translator has no decoder for.",
       });
+    }
   }
 };
 
@@ -315,7 +314,7 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
       if (STRING_ARRAY_DOMAINS.has(spec.domain)) return toStringArray(value);
       return isArray(value) ? value : undefined; // amr, entitlements, groups, afr
     case "bespoke":
-      return decodeBespoke(spec.domain, value);
+      return decodeBespoke(spec, value);
     default: {
       const exhaustive: never = spec.value;
       throw new AegisDomainError("Unhandled claim value kind", {

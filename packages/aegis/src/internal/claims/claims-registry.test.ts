@@ -288,4 +288,135 @@ describe("CLAIM_REGISTRY", () => {
       expect(spec.cose > 0 || spec.cose < -65536).toBe(true);
     }
   });
+
+  // --- Bespoke sub-kind drift guards ---------------------------------------
+
+  test('the "bespoke" sub-kind mark is present iff value === "bespoke"', () => {
+    for (const spec of CLAIMS_REGISTRY) {
+      expect(
+        spec.bespoke !== undefined,
+        `${spec.domain}: bespoke mark must be present iff value:"bespoke"`,
+      ).toBe(spec.value === "bespoke");
+    }
+  });
+
+  test("every bespoke claim maps to its frozen sub-kind (builder)", () => {
+    // Frozen domain -> sub-kind mapping: claims sharing a builder share a
+    // sub-kind (act+mayAct -> "act", the three OIDC hashes -> "hash"). A future
+    // registry edit that re-routes a claim to a different builder fails here.
+    const FROZEN_BESPOKE: Record<string, string> = {
+      confirmation: "confirmation",
+      act: "act",
+      mayAct: "act",
+      accessTokenHash: "hash",
+      codeHash: "hash",
+      stateHash: "hash",
+      authorizationDetails: "authDetails",
+      subjectId: "subId",
+      events: "events",
+      address: "address",
+    };
+
+    const actual = Object.fromEntries(
+      CLAIMS_REGISTRY.filter((spec) => spec.bespoke !== undefined).map((spec) => [
+        spec.domain,
+        spec.bespoke,
+      ]),
+    );
+
+    expect(actual).toEqual(FROZEN_BESPOKE);
+  });
+
+  test("HASH_DOMAINS / ACT_DOMAINS derive from the registry to their frozen sets", () => {
+    // cwt-spec.ts derives these two COSE byte-shaping sets from the `bespoke`
+    // sub-kind. Freeze the previously-hardcoded literals and assert the
+    // registry-derived sets still equal them (byte-shaping must not drift).
+    const FROZEN_HASH_DOMAINS = ["accessTokenHash", "codeHash", "stateHash"];
+    const FROZEN_ACT_DOMAINS = ["act", "mayAct"];
+
+    const hashDomains = CLAIMS_REGISTRY.filter((spec) => spec.bespoke === "hash").map(
+      (spec) => spec.domain,
+    );
+    const actDomains = CLAIMS_REGISTRY.filter((spec) => spec.bespoke === "act").map(
+      (spec) => spec.domain,
+    );
+
+    expect(new Set(hashDomains)).toEqual(new Set(FROZEN_HASH_DOMAINS));
+    expect(new Set(actDomains)).toEqual(new Set(FROZEN_ACT_DOMAINS));
+  });
+
+  // --- Subset-membership drift guards --------------------------------------
+
+  test("the three extraction subsets derive to their frozen membership", () => {
+    // Freeze the previously-hardcoded FIELD_KEYS / RFC8693_KEYS / POP_KEYS from
+    // extract-claims.ts. DOMAIN_CLAIM_KEYS is now DERIVED from the registry's
+    // `subset` marks; asserting it equals the frozen merge proves the derivation
+    // is byte-identical to the old hand-maintained lists (both key sets AND the
+    // per-claim accepted-name arrays, in [domain, jose] order).
+    const FROZEN_FIELD_KEYS: Record<string, ReadonlyArray<string>> = {
+      subject: ["subject", "sub"],
+      expiresAt: ["expiresAt", "exp"],
+      issuedAt: ["issuedAt", "iat"],
+      notBefore: ["notBefore", "nbf"],
+      issuer: ["issuer", "iss"],
+      audience: ["audience", "aud"],
+      tokenId: ["tokenId", "jti"],
+      accessTokenHash: ["accessTokenHash", "at_hash"],
+      authContextClassReference: ["authContextClassReference", "acr"],
+      authMethods: ["authMethods", "amr"],
+      authorizedParty: ["authorizedParty", "azp"],
+      authTime: ["authTime", "auth_time"],
+      codeHash: ["codeHash", "c_hash"],
+      nonce: ["nonce"],
+      stateHash: ["stateHash", "s_hash"],
+      vectorOfTrust: ["vectorOfTrust", "vot"],
+      vectorTrustMark: ["vectorTrustMark", "vtm"],
+      entitlements: ["entitlements"],
+      groups: ["groups"],
+      roles: ["roles"],
+      authorizationDetails: ["authorizationDetails", "authorization_details"],
+      authenticatorAssuranceLevel: ["authenticatorAssuranceLevel", "aal"],
+      authFactor: ["authFactor", "afr"],
+      clientId: ["clientId", "client_id"],
+      conformsTo: ["conformsTo", "conforms_to"],
+      federationAssuranceLevel: ["federationAssuranceLevel", "fal"],
+      grantType: ["grantType", "gty"],
+      identityAssuranceLevel: ["identityAssuranceLevel", "ial"],
+      levelOfAssurance: ["levelOfAssurance", "loa"],
+      permissions: ["permissions"],
+      scope: ["scope"],
+      sessionHint: ["sessionHint", "sih"],
+      sessionId: ["sessionId", "sid"],
+      subjectHint: ["subjectHint", "suh"],
+      tenantId: ["tenantId", "tenant_id"],
+      subjectId: ["subjectId", "sub_id"],
+    };
+    const FROZEN_RFC8693_KEYS: Record<string, ReadonlyArray<string>> = {
+      act: ["act"],
+      mayAct: ["mayAct", "may_act"],
+    };
+    const FROZEN_POP_KEYS: Record<string, ReadonlyArray<string>> = {
+      confirmation: ["confirmation", "cnf"],
+    };
+
+    expect(DOMAIN_CLAIM_KEYS).toEqual({
+      ...FROZEN_FIELD_KEYS,
+      ...FROZEN_RFC8693_KEYS,
+      ...FROZEN_POP_KEYS,
+    });
+
+    // The disjoint `subset` marks partition those domains exactly as the frozen
+    // lists group them (registry-side view of the same fact).
+    const domainsWithSubset = (subset: string) =>
+      new Set(
+        CLAIMS_REGISTRY.filter((spec) => spec.subset === subset).map(
+          (spec) => spec.domain,
+        ),
+      );
+    expect(domainsWithSubset("core")).toEqual(new Set(Object.keys(FROZEN_FIELD_KEYS)));
+    expect(domainsWithSubset("rfc8693")).toEqual(
+      new Set(Object.keys(FROZEN_RFC8693_KEYS)),
+    );
+    expect(domainsWithSubset("pop")).toEqual(new Set(Object.keys(FROZEN_POP_KEYS)));
+  });
 });
