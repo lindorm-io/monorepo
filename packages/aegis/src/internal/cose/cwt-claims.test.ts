@@ -77,8 +77,17 @@ describe("proprietary encoding", () => {
     expect(encodedAct.get(4)).toBe("c-2"); // clientId — lindorm label
   });
 
-  test("act is interoperable string-keyed by default (proprietary:false)", () => {
-    const map = encode({ act }); // default is interoperable (D5)
+  test("act is compact integer-keyed by default (proprietary defaults true)", () => {
+    const map = encode({ act }); // default is now proprietary/compact
+    const encodedAct = map.get("act") as Map<number, unknown>;
+    expect(encodedAct).toBeInstanceOf(Map);
+    expect(encodedAct.get(1)).toBe("https://delegator/"); // issuer reuses CWT iss
+    expect(encodedAct.get(2)).toBe("actor"); // subject reuses CWT sub
+    expect(encodedAct.get(4)).toBe("c-2"); // clientId — lindorm label
+  });
+
+  test("act is interoperable string-keyed under proprietary:false", () => {
+    const map = encode({ act }, { proprietary: false }); // opt into interop
     // The interoperable object now carries RFC 8693 wire member names
     // (sub/iss/client_id), the translator's `act` shape — NOT the lindorm domain
     // names it emitted before the Phase-5 collapse onto the ONE translator.
@@ -89,14 +98,14 @@ describe("proprietary encoding", () => {
     });
   });
 
-  test("private-use claims degrade to their JOSE string key off-platform (never dropped)", () => {
+  test("private-use claims are compact by default, degrade to their JOSE string key under proprietary:false (never dropped)", () => {
     const withTenant = { issuer: "https://i/", tenantId: "t-1" };
-    // On-platform (proprietary:true): compact private-use integer label.
-    const on = encode(withTenant, { proprietary: true });
+    // Default (proprietary): compact private-use integer label.
+    const on = encode(withTenant);
     expect(on.get(-65537 - 14)).toBe("t-1"); // tenant_id private label
     expect(on.has("tenant_id")).toBe(false);
-    // Default (interoperable, D5): degraded to the JOSE string key — NOT dropped.
-    const off = encode(withTenant);
+    // Interoperable (proprietary:false): degraded to the JOSE string key — NOT dropped.
+    const off = encode(withTenant, { proprietary: false });
     expect(off.has(-65537 - 14)).toBe(false);
     expect(off.get("tenant_id")).toBe("t-1");
     expect(off.get(1)).toBe("https://i/"); // iss kept

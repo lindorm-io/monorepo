@@ -77,35 +77,39 @@ describe("CweKit (COSE_Encrypt0) — AES-CCM", () => {
   });
 });
 
-describe("CweKit — proprietary alg/enc gate (D5)", () => {
+describe("CweKit — proprietary alg/enc gate", () => {
   // The AES-CBC-HMAC family (RFC 7518 §5.2.3) has NO official COSE registration —
-  // it is private-use. Non-proprietary encrypt refuses it; proprietary allows it.
+  // it is private-use. Proprietary is the DEFAULT, so it is allowed unless the
+  // caller opts into interop mode (`proprietary: false`), which refuses it.
   const CBC = ["A128CBC-HS256", "A192CBC-HS384", "A256CBC-HS512"] as const;
 
-  test.each(CBC)("non-proprietary encrypt refuses %s (no official COSE label)", (enc) => {
-    const kryptos = KryptosKit.generate.enc.oct({ algorithm: "dir", encryption: enc });
-    const kit = new CweKit({ kryptos, logger: createMockLogger() });
+  test.each(CBC)(
+    "interoperable encrypt (proprietary:false) refuses %s (no official COSE label)",
+    (enc) => {
+      const kryptos = KryptosKit.generate.enc.oct({ algorithm: "dir", encryption: enc });
+      const kit = new CweKit({ kryptos, logger: createMockLogger() });
 
-    const error = (() => {
-      try {
-        kit.encrypt(Buffer.from("the cwt claims bytes"));
-      } catch (err) {
-        return err as AegisError;
-      }
-    })();
+      const error = (() => {
+        try {
+          kit.encrypt(Buffer.from("the cwt claims bytes"), { proprietary: false });
+        } catch (err) {
+          return err as AegisError;
+        }
+      })();
 
-    expect(error).toBeInstanceOf(AegisError);
-    expect(error?.code).toBe("cose_enc_not_registered");
-  });
+      expect(error).toBeInstanceOf(AegisError);
+      expect(error?.code).toBe("cose_enc_not_registered");
+    },
+  );
 
   test.each(CBC)(
-    "proprietary encrypt allows %s and round-trips (tag length %s)",
+    "default (proprietary) encrypt allows %s and round-trips (tag length %s)",
     (enc) => {
       const kryptos = KryptosKit.generate.enc.oct({ algorithm: "dir", encryption: enc });
       const kit = new CweKit({ kryptos, logger: createMockLogger() });
       const payload = Buffer.from("the cwt claims bytes");
 
-      const encrypt0 = kit.encrypt(payload, { proprietary: true });
+      const encrypt0 = kit.encrypt(payload);
       const decoded = decodeCbor(encodeCbor(encrypt0));
 
       // Decrypt is ALWAYS lenient — it reads the private-use label back with no

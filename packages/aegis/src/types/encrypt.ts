@@ -38,8 +38,8 @@ export type EncryptOptions = {
   certificateThumbprintSha1?: boolean;
   /**
    * Allow a lindorm-proprietary (private-use) COSE content encryption on the
-   * `cwe` path (default `false`, D5 interop gate); threaded to `CweKit.encrypt`.
-   * A no-op on the `jwe` path.
+   * `cwe` path (default `true`); set `false` for the strict interop gate.
+   * Threaded to `CweKit.encrypt`. A no-op on the `jwe` path.
    */
   proprietary?: boolean;
 };

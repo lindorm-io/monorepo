@@ -109,18 +109,19 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
     expect(error?.code).toBe("cwt_kid_mismatch");
   });
 
-  describe("proprietary alg gate (D5)", () => {
+  describe("proprietary alg gate", () => {
     // ML-DSA (post-quantum) is asymmetric — a valid COSE_Sign1 key — but has no
-    // official COSE registration, so a non-proprietary sign refuses it. The gate
-    // runs through signCwt -> CwsKit; verify stays lenient.
+    // official COSE registration. Proprietary is the DEFAULT, so a plain sign
+    // allows it; only an explicit interop sign (`proprietary: false`) refuses it.
+    // The gate runs through signCwt -> CwsKit; verify stays lenient.
     const mldsa = KryptosKit.generate.sig.akp({ algorithm: "ML-DSA-44" });
 
-    test("non-proprietary sign refuses an ML-DSA key", () => {
+    test("interoperable sign (proprietary:false) refuses an ML-DSA key", () => {
       const mldsaKit = new CwtKit({ logger: createMockLogger(), kryptos: mldsa });
 
       const error = (() => {
         try {
-          mldsaKit.sign(wire, { typ: "application/at+cwt" });
+          mldsaKit.sign(wire, { typ: "application/at+cwt", proprietary: false });
         } catch (err) {
           return err as AegisError;
         }
@@ -129,11 +130,11 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
       expect(error?.code).toBe("cose_alg_not_registered");
     });
 
-    test("proprietary sign allows ML-DSA and round-trips the WIRE claims", () => {
+    test("default (proprietary) sign allows ML-DSA and round-trips the WIRE claims", () => {
       const mldsaKit = new CwtKit({ logger: createMockLogger(), kryptos: mldsa });
 
       const { claims } = mldsaKit.verify(
-        mldsaKit.sign(wire, { typ: "application/at+cwt", proprietary: true }),
+        mldsaKit.sign(wire, { typ: "application/at+cwt" }),
       );
 
       expect(claims.iss).toBe("https://issuer.lindorm.io/");

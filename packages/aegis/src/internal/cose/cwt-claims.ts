@@ -4,14 +4,14 @@ import { CWT_CLAIMS_KIT } from "./cwt-spec.js";
 
 export type EncodeCwtOptions = {
   /**
-   * Use compact private-use integer COSE labels (default `false` — D5: the
-   * non-proprietary default MUST be fully interoperable). When `false` (default)
-   * a claim with a private-use label (`< -65536`) is emitted under its JOSE
-   * string key (never dropped) and the structured `act`/`subjectId` are emitted
-   * as interoperable string-keyed objects. Set `true` for on-platform tokens —
-   * those claims are keyed by their compact private-use integer label instead,
-   * and `act`/`subjectId` use their compact integer-keyed form. The flag only
-   * chooses digit-vs-string; no claim is ever omitted.
+   * Use compact private-use integer COSE labels (default `true` — lindorm-native
+   * compact is the default; strict COSE-RFC interoperability is opt-in). When
+   * omitted (or `true`) a claim with a private-use label (`< -65536`) is keyed by
+   * its compact private-use integer label and the structured `act`/`subjectId`
+   * use their compact integer-keyed form. Set `false` for off-platform tokens —
+   * those claims degrade to their JOSE string key (never dropped) and
+   * `act`/`subjectId` are emitted as interoperable string-keyed objects. The flag
+   * only chooses digit-vs-string; no claim is ever omitted.
    */
   proprietary?: boolean;
 };
@@ -35,7 +35,7 @@ export const encodeCwtClaims = (
   options: EncodeCwtOptions = {},
 ): Map<number | string, unknown> => {
   const map = CWT_CLAIMS_KIT.encode("map", wire, {
-    proprietary: options.proprietary ?? false,
+    proprietary: options.proprietary ?? true,
   });
 
   // Unregistered custom claims are unknown to the codec spec, so it never emits

@@ -47,11 +47,12 @@ export type CwtSignOptions = {
   typ?: string;
   /**
    * Allow lindorm-proprietary COSE encodings. Threaded to BOTH the interop alg
-   * gate and the claim codec, which now share ONE default when omitted (D5):
-   * interoperable. The alg gate is STRICT (a private-use signing algorithm such
-   * as ML-DSA is refused unless `true`) and the claim codec emits private-use
-   * claims under their JOSE string key (set `true` for the compact private-use
-   * integer labels). Verify is always lenient. See `encodeCwtClaims`.
+   * gate and the claim codec, which share ONE default when omitted: proprietary.
+   * When omitted (or `true`) the alg gate is OFF (a private-use signing algorithm
+   * such as ML-DSA is permitted) and the claim codec emits compact private-use
+   * integer labels. Set `false` for strict interoperability — the alg gate
+   * refuses a private-use alg and the codec degrades private-use claims to their
+   * JOSE string key. Verify is always lenient. See `encodeCwtClaims`.
    */
   proprietary?: boolean;
   /**
@@ -109,10 +110,10 @@ export const signCwt = (
   logger.debug("Minting CWT", { options });
 
   // The single `proprietary` flag threads to BOTH the claim codec and the CwsKit
-  // alg gate, which now agree on the omitted default (D5): interoperable. The
-  // codec emits private-use claims under their JOSE string key (`?? false`), and
-  // the alg gate is strict (an omitted flag is falsy, so a private-use alg is
-  // refused) — an on-platform token sets `proprietary: true` for both.
+  // alg gate, which agree on the omitted default: proprietary. The codec emits
+  // compact private-use integer labels (`?? true`) and the alg gate is OFF (only
+  // an explicit `proprietary: false` refuses a private-use alg) — an off-platform
+  // interoperable token sets `proprietary: false` for both.
   const payload = encodeCbor(
     encodeCwtClaims(applyOmit(claims, options.omit), {
       proprietary: options.proprietary,

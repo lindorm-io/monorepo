@@ -32,10 +32,10 @@ export type CweEncryptOptions = {
   typ?: string;
   /**
    * Allow a lindorm-proprietary (private-use) COSE encryption label (default
-   * `false`). When `false` the content encryption MUST carry an OFFICIAL
-   * COSE-RFC label or `encrypt` throws (D5 interop gate); when `true` a
-   * private-use encryption such as AES-CBC-HMAC is permitted. Decrypt is always
-   * lenient.
+   * `true`). When omitted (or `true`) a private-use encryption such as
+   * AES-CBC-HMAC is permitted; set `false` for strict COSE-RFC interoperability,
+   * where the content encryption MUST carry an OFFICIAL COSE-RFC label or
+   * `encrypt` throws (the interop gate). Decrypt is always lenient.
    */
   proprietary?: boolean;
 };
@@ -79,11 +79,16 @@ export class CweKit {
   encrypt(payload: Buffer, options: CweEncryptOptions = {}): Tag {
     this.logger.debug("Encrypting COSE_Encrypt0", { options });
 
-    // Interop gate (D5): a non-proprietary encrypt refuses an encryption with no
-    // OFFICIAL COSE-RFC registration (the AES-CBC-HMAC family) so the token stays
-    // interoperable. A missing encryption still falls through to encToCoseLabel's
-    // own throw below.
-    if (!options.proprietary && this.encryption && !isOfficialCoseEnc(this.encryption)) {
+    // Interop gate: proprietary is the default, so a private-use encryption (the
+    // AES-CBC-HMAC family) is allowed unless the caller EXPLICITLY opts into
+    // interoperable mode (`proprietary: false`), which refuses an encryption with
+    // no OFFICIAL COSE-RFC registration. A missing encryption still falls through
+    // to encToCoseLabel's own throw below.
+    if (
+      options.proprietary === false &&
+      this.encryption &&
+      !isOfficialCoseEnc(this.encryption)
+    ) {
       throw new CweError(
         `Encryption "${this.encryption}" has no official COSE registration`,
         {

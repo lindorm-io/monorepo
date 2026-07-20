@@ -119,21 +119,22 @@ describe("Aegis — domain encrypt / decrypt (§5e)", () => {
     });
   });
 
-  describe("proprietary threads to the CWE content encryption (D5)", () => {
-    test("a non-COSE-RFC encryption is rejected unless proprietary is set", async () => {
-      // AES-CBC-HMAC has no official COSE registration — the interop gate throws.
+  describe("proprietary threads to the CWE content encryption", () => {
+    test("a non-COSE-RFC encryption is rejected only under explicit proprietary:false", async () => {
+      // AES-CBC-HMAC has no official COSE registration — the interop gate throws
+      // only when the caller opts into interoperable mode (proprietary:false).
       await expect(
         aegis.encrypt(claims, {
           format: "cwe",
           key: { encryption: "A128CBC-HS256" },
+          proprietary: false,
         }),
       ).rejects.toMatchObject({ code: "cose_enc_not_registered" });
 
-      // proprietary allows it, and it still round-trips.
+      // Proprietary is the default, so it is allowed, and it still round-trips.
       const encrypted = await aegis.encrypt(claims, {
         format: "cwe",
         key: { encryption: "A128CBC-HS256" },
-        proprietary: true,
       });
       const decrypted = await aegis.decrypt(encrypted.token);
 
@@ -146,6 +147,7 @@ describe("Aegis — domain encrypt / decrypt (§5e)", () => {
         aegis.encrypt("opaque", {
           format: "cwe",
           key: { encryption: "A128CBC-HS256" },
+          proprietary: false,
         }),
       ).rejects.toThrow(CweError);
     });

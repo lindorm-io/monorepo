@@ -19,9 +19,10 @@ export type CweEncryptOptions = {
   typ?: string;
   /**
    * Allow a lindorm-proprietary (private-use) COSE content encryption (default
-   * `false`). When `false` the encryption MUST carry an OFFICIAL COSE-RFC label
-   * or `encrypt` throws (D5 interop gate); when `true` a private-use encryption
-   * such as AES-CBC-HMAC is permitted. Decrypt is always lenient.
+   * `true`). When omitted (or `true`) a private-use encryption such as
+   * AES-CBC-HMAC is permitted; set `false` for strict COSE-RFC interoperability,
+   * where the encryption MUST carry an OFFICIAL COSE-RFC label or `encrypt`
+   * throws (the interop gate). Decrypt is always lenient.
    */
   proprietary?: boolean;
 };
