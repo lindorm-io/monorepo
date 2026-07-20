@@ -37,6 +37,8 @@ export type AegisDeps = {
   clockTolerance: number;
   dpopMaxSkew: number;
   encryption: KryptosEncryption;
+  /** This recipient's ECDH-ES identity (base64url `apv`) for read-side verification. */
+  partyRecipient: string | undefined;
   logger: ILogger;
 
   resolveSignKey: (

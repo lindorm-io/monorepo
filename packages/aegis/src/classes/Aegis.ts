@@ -144,6 +144,7 @@ export class Aegis implements IAegis {
   private readonly encryptKey: AegisEncKey;
   private readonly encryption: KryptosEncryption;
   private readonly logger: ILogger;
+  private readonly partyRecipient: string | undefined;
   private readonly signKey: AegisSignKey;
   private readonly verifyKey: AegisVerifyKey;
 
@@ -159,6 +160,7 @@ export class Aegis implements IAegis {
     this.clockTolerance = options.clockTolerance ?? 0;
     this.dpopMaxSkew = options.dpopMaxSkew;
     this.encryption = options.encryption ?? "A256GCM";
+    this.partyRecipient = options.partyRecipient;
 
     // The DEPLOYMENT's key policy. Aegis ships no default selector of its own:
     // it does not know a deployment's `purpose` taxonomy, and amphora already
@@ -181,6 +183,7 @@ export class Aegis implements IAegis {
       clockTolerance: this.clockTolerance,
       dpopMaxSkew: this.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW,
       encryption: this.encryption,
+      partyRecipient: this.partyRecipient,
       logger: this.logger,
       resolveSignKey: (options, profile) => this.resolveSignKey(options, profile),
       resolveVerifyKey: (id, algorithm, verify) =>

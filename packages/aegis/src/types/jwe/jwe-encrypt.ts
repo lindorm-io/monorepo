@@ -18,6 +18,20 @@ export type JweEncryptOptions = {
    */
   key?: AegisEncKey;
   objectId?: string;
+  /**
+   * ECDH-ES Agreement PartyUInfo (RFC 7518 §4.6.1.2) — the base64url producer
+   * identity. Consumed by the Concat-KDF AND emitted on the protected header
+   * (`apu`) ONLY when the recipient key is an ECDH-ES algorithm; supplied for any
+   * other algorithm it is stripped (not fed to the KDF, not emitted).
+   */
+  partyProducer?: string;
+  /**
+   * ECDH-ES Agreement PartyVInfo (RFC 7518 §4.6.1.3) — the base64url recipient
+   * identity. Same ECDH-ES gate/strip semantics as {@link partyProducer}; on the
+   * read side a JweKit configured with `partyRecipient` verifies the incoming
+   * `apv` matches it.
+   */
+  partyRecipient?: string;
   tokenType?: TokenType;
 };
 

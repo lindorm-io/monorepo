@@ -1,7 +1,11 @@
 import { AesKit } from "@lindorm/aes";
 import { B64 } from "@lindorm/b64";
 import { isString } from "@lindorm/is";
-import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import {
+  ECDH_ES_ALGORITHMS,
+  type IKryptos,
+  type KryptosEncryption,
+} from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { sanitiseToken } from "@lindorm/utils";
 import { JweError } from "../errors/index.js";
@@ -16,6 +20,7 @@ import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { parseTokenHeader } from "../internal/utils/token-header.js";
 import { validateCrit } from "../internal/utils/validate-crit.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
+import { verifyPartyBinding } from "../internal/utils/verify-party-binding.js";
 import type {
   CertificateBindingMode,
   DecodedJwe,
@@ -34,12 +39,21 @@ export class JweKit implements IJweKit {
   private readonly encryption: KryptosEncryption;
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
+  private readonly partyRecipient: string | undefined;
 
   constructor(options: JweKitSettings) {
     this.logger = options.logger.child(["JweKit"]);
     this.kryptos = options.kryptos;
     this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
     this.certBindingMode = options.certBindingMode ?? "strict";
+    this.partyRecipient = options.partyRecipient;
+  }
+
+  // RFC 7518 §4.6 — the apu/apv Concat-KDF OtherInfo is meaningful ONLY for the
+  // ECDH-ES key-management family (direct + the `+A*KW` variants). Every other
+  // algorithm ignores it, so caller-supplied party info is stripped there.
+  private get isEcdhEs(): boolean {
+    return (ECDH_ES_ALGORITHMS as ReadonlyArray<string>).includes(this.kryptos.algorithm);
   }
 
   encrypt(data: string, options: JweEncryptOptions = {}): EncryptedJwe {
@@ -49,8 +63,17 @@ export class JweKit implements IJweKit {
 
     const objectId = options.objectId;
 
+    // ECDH-ES party info (RFC 7518 §4.6): gated on the algorithm. For an ECDH-ES
+    // key the caller-supplied base64url apu/apv are decoded into the Concat-KDF
+    // AND kept on the protected header (so they land in the AAD); for any other
+    // algorithm they are stripped — neither fed to the KDF nor emitted.
+    const partyProducer = this.isEcdhEs ? options.partyProducer : undefined;
+    const partyRecipient = this.isEcdhEs ? options.partyRecipient : undefined;
+    const apu = partyProducer ? B64.toBuffer(partyProducer, B64U) : undefined;
+    const apv = partyRecipient ? B64.toBuffer(partyRecipient, B64U) : undefined;
+
     // Step 1: Prepare encryption (key management only — no content encrypted yet)
-    const prepared = kit.prepareEncryption();
+    const prepared = kit.prepareEncryption({ apu, apv });
 
     // Step 2: Build the protected header with key management output
     // RFC 7515 Section 4.1.11: crit MUST NOT include registered Header Parameter names.
@@ -70,6 +93,8 @@ export class JweKit implements IJweKit {
       jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
       objectId,
+      partyProducer,
+      partyRecipient,
       pbkdfIterations: prepared.headerParams.pbkdfIterations,
       pbkdfSalt: prepared.headerParams.pbkdfSalt,
       publicEncryptionJwk: prepared.headerParams.publicEncryptionJwk,
@@ -192,6 +217,26 @@ export class JweKit implements IJweKit {
       }
     }
 
+    // ECDH-ES party info (RFC 7518 §4.6): the recipient MUST re-derive with the
+    // on-wire apu/apv or the Concat-KDF yields a different key and AEAD fails.
+    // When this kit carries a partyRecipient identity, reject an ECDH-ES token
+    // whose apv does not match up front — an actionable rejection instead of an
+    // opaque GCM error (the apv is already AAD-bound, so this is defense-in-depth).
+    // Recipient addressing is an ECDH-ES concept, so it is enforced only there —
+    // a non-ECDH-ES algorithm has no apv channel to verify.
+    if (this.isEcdhEs) {
+      verifyPartyBinding({
+        expected: this.partyRecipient,
+        actual: header.partyRecipient,
+      });
+    }
+    const apu = header.partyProducer
+      ? B64.toBuffer(header.partyProducer, B64U)
+      : undefined;
+    const apv = header.partyRecipient
+      ? B64.toBuffer(header.partyRecipient, B64U)
+      : undefined;
+
     // Reconstruct AAD from the encoded protected header per RFC 7516 Section 5.1 step 14
     const [headerB64] = token.split(".");
     const aad = Buffer.from(headerB64, "ascii");
@@ -215,6 +260,8 @@ export class JweKit implements IJweKit {
     const payload = kit.decrypt(
       {
         algorithm: header.algorithm,
+        apu,
+        apv,
         authTag,
         content,
         contentType: "text/plain",

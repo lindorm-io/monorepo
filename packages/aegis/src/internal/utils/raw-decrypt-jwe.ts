@@ -29,5 +29,6 @@ export const rawDecryptJwe = async ({
     encryption: deps.encryption,
     kryptos,
     logger: deps.logger,
+    partyRecipient: deps.partyRecipient,
   }).decrypt(jwe);
 };

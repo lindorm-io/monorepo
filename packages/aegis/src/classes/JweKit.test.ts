@@ -1,4 +1,10 @@
-import { type KryptosAlgorithm, KryptosKit } from "@lindorm/kryptos";
+import { B64 } from "@lindorm/b64";
+import {
+  ECDH_ES_ALGORITHMS,
+  type EcdhEsAlgorithm,
+  type KryptosAlgorithm,
+  KryptosKit,
+} from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
@@ -542,6 +548,98 @@ describe("JweKit", () => {
 
       expect(() => kit.decrypt(modifiedToken)).toThrow(
         "Compressed JWE payloads are not supported",
+      );
+    });
+  });
+
+  describe("apu/apv (ECDH-ES party info)", () => {
+    const partyProducer = B64.encode(Buffer.from("producer"), "b64u");
+    const partyRecipient = B64.encode(Buffer.from("recipient"), "b64u");
+
+    // Every ECDH-ES key-management variant threads apu/apv into the Concat-KDF
+    // AND keeps them on the protected header, so the round-trip must succeed and
+    // the on-wire apu/apv must survive to the decrypted header.
+    test.each(ECDH_ES_ALGORITHMS as ReadonlyArray<EcdhEsAlgorithm>)(
+      "should carry partyProducer/partyRecipient through a %s round-trip",
+      (algorithm) => {
+        const kryptos = KryptosKit.generate.enc.ec({ algorithm });
+        const jweKit = new JweKit({ logger, kryptos });
+
+        const { token } = jweKit.encrypt("data", { partyProducer, partyRecipient });
+
+        // The base64url party info rides the protected header (apu/apv).
+        expect(JweKit.decode(token).header.apu).toBe(partyProducer);
+        expect(JweKit.decode(token).header.apv).toBe(partyRecipient);
+
+        const decrypted = jweKit.decrypt(token);
+        expect(decrypted.payload).toBe("data");
+        expect(decrypted.header.partyProducer).toBe(partyProducer);
+        expect(decrypted.header.partyRecipient).toBe(partyRecipient);
+      },
+    );
+
+    test("should still round-trip an ECDH-ES token WITHOUT party info (KDF apu/apv default empty)", () => {
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES" });
+      const jweKit = new JweKit({ logger, kryptos });
+
+      const { token } = jweKit.encrypt("data");
+
+      expect(JweKit.decode(token).header.apu).toBeUndefined();
+      expect(JweKit.decode(token).header.apv).toBeUndefined();
+      expect(jweKit.decrypt(token).payload).toBe("data");
+    });
+
+    test("should STRIP party info for a non-ECDH-ES algorithm (not on the wire, not in the KDF)", () => {
+      // dir (OCT) is not an ECDH-ES algorithm: supplied party info must be
+      // dropped — neither emitted on the header nor fed to the key derivation.
+      const jweKit = new JweKit({ logger, kryptos: TEST_OCT_KEY_ENC });
+
+      const { token } = jweKit.encrypt("data", { partyProducer, partyRecipient });
+
+      expect(JweKit.decode(token).header.apu).toBeUndefined();
+      expect(JweKit.decode(token).header.apv).toBeUndefined();
+
+      const decrypted = jweKit.decrypt(token);
+      expect(decrypted.payload).toBe("data");
+      expect(decrypted.header.partyProducer).toBeUndefined();
+      expect(decrypted.header.partyRecipient).toBeUndefined();
+    });
+
+    test("should decrypt when the configured partyRecipient matches the token apv", () => {
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES" });
+      const encryptKit = new JweKit({ logger, kryptos });
+      const decryptKit = new JweKit({ logger, kryptos, partyRecipient });
+
+      const { token } = encryptKit.encrypt("data", { partyProducer, partyRecipient });
+
+      expect(decryptKit.decrypt(token).payload).toBe("data");
+    });
+
+    test("should REJECT when the configured partyRecipient does not match the token apv", () => {
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES" });
+      const encryptKit = new JweKit({ logger, kryptos });
+      const decryptKit = new JweKit({
+        logger,
+        kryptos,
+        partyRecipient: B64.encode(Buffer.from("someone-else"), "b64u"),
+      });
+
+      const { token } = encryptKit.encrypt("data", { partyProducer, partyRecipient });
+
+      expect(() => decryptKit.decrypt(token)).toThrow(
+        "token not addressed to this recipient",
+      );
+    });
+
+    test("should REJECT an ECDH-ES token that omits apv when a partyRecipient is configured", () => {
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES" });
+      const encryptKit = new JweKit({ logger, kryptos });
+      const decryptKit = new JweKit({ logger, kryptos, partyRecipient });
+
+      const { token } = encryptKit.encrypt("data");
+
+      expect(() => decryptKit.decrypt(token)).toThrow(
+        "token not addressed to this recipient",
       );
     });
   });
