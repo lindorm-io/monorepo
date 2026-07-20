@@ -24,7 +24,7 @@ import type {
   EncryptedJwe,
   JweEncryptOptions,
   JweKitSettings,
-  TokenHeaderOptions,
+  DomainTokenHeaderOptions,
 } from "../types/index.js";
 import { JwsKit } from "./JwsKit.js";
 import { JwtKit } from "./JwtKit.js";
@@ -59,7 +59,7 @@ export class JweKit implements IJweKit {
     // Omit crit entirely when there are no extension params.
     const critical: Array<string> = [];
 
-    const headerOptions: TokenHeaderOptions = {
+    const headerOptions: DomainTokenHeaderOptions = {
       ...(options.header ?? {}),
       algorithm: this.kryptos.algorithm,
       contentType: this.contentType(data),

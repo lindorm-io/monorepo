@@ -4,14 +4,13 @@ import { TOKEN_HEADER_ALGORITHMS } from "../constants/header.js";
 import { AegisError } from "../../errors/index.js";
 import type {
   CertificateHeaderFields,
-  DecodedTokenHeader,
-  TokenHeaderClaims,
-  TokenHeaderOptions,
+  WireTokenHeader,
+  DomainTokenHeaderOptions,
 } from "../../types/index.js";
 import { mapTokenHeader } from "./token-header.js";
 
 export const encodeJoseHeader = (
-  options: TokenHeaderOptions,
+  options: DomainTokenHeaderOptions,
   cert?: CertificateHeaderFields,
 ): string => {
   if (!options.algorithm) {
@@ -49,10 +48,10 @@ export const encodeJoseHeader = (
   const raw = mapTokenHeader(options, cert);
 
   // Convert Buffer fields (iv, p2s, tag) to base64url strings for JSON serialization.
-  // RawTokenHeaderClaims uses Buffer for these fields; TokenHeaderClaims uses string.
-  // alg is required in TokenHeaderClaims but optional in RawTokenHeaderClaims —
+  // WireTokenHeaderOptions uses Buffer for these fields; WireTokenHeader uses string.
+  // alg is required in WireTokenHeader but optional in WireTokenHeaderOptions —
   // we've already validated options.algorithm above so raw.alg is guaranteed to be set.
-  const claims: TokenHeaderClaims = {
+  const claims: WireTokenHeader = {
     ...raw,
     alg: options.algorithm,
     iv: raw.iv ? B64.encode(raw.iv, B64U) : undefined,
@@ -63,9 +62,9 @@ export const encodeJoseHeader = (
   return B64.encode(JSON.stringify(claims), B64U);
 };
 
-export const decodeJoseHeader = (header: string): DecodedTokenHeader => {
+export const decodeJoseHeader = (header: string): WireTokenHeader => {
   const string = B64.toString(header);
-  const json = JSON.parse(string) as Partial<TokenHeaderClaims>;
+  const json = JSON.parse(string) as Partial<WireTokenHeader>;
 
   if (!json.alg || typeof json.alg !== "string") {
     throw new AegisError("Missing or invalid token header: alg", {
@@ -99,5 +98,5 @@ export const decodeJoseHeader = (header: string): DecodedTokenHeader => {
   }
   // Pass through as-is; individual Kit classes validate specific values if needed
 
-  return json as DecodedTokenHeader;
+  return json as WireTokenHeader;
 };

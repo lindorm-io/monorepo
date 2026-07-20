@@ -112,7 +112,7 @@ import type {
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
-  TokenHeaderClaims,
+  WireTokenHeader,
   TokenProfile,
   ValidateJwtOptions,
   VerifyCwsOptions,
@@ -327,12 +327,12 @@ export class Aegis implements IAegis {
 
   // public static
 
-  static header(token: string): TokenHeaderClaims {
+  static header(token: string): WireTokenHeader {
     // A COSE token carries its header in the COSE protected map, not a JOSE segment;
     // read the same alg / kid / typ off the CWT.
     if (Aegis.isCose(token)) {
       const { algorithm, kid, typ } = CwtKit.decode(Buffer.from(token, "base64url"));
-      return { alg: algorithm as TokenHeaderClaims["alg"], kid, typ };
+      return { alg: algorithm as WireTokenHeader["alg"], kid, typ };
     }
 
     const [header] = token.split(".");

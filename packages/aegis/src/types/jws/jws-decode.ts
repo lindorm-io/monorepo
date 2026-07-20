@@ -1,7 +1,7 @@
-import type { TokenHeaderClaims } from "../header.js";
+import type { WireTokenHeader } from "../header.js";
 
 export type DecodedJws = {
-  header: TokenHeaderClaims;
+  header: WireTokenHeader;
   payload: string;
   signature: string;
 };

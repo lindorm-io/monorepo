@@ -14,7 +14,7 @@
  * rather than iterating curated direction-scoped subsets. The registry no longer
  * carries a per-entry direction flag — every registered parameter flows through
  * the codec in both directions. The drift-guard test binds the domain names to
- * `ParsedTokenHeader` and the JOSE names to `TokenHeaderClaims`, so a rename on
+ * `DomainTokenHeader` and the JOSE names to `WireTokenHeader`, so a rename on
  * either side fails the build instead of silently drifting. `internal/cose/*`
  * resolves its integer labels from here via `coseByJose`.
  */
@@ -39,7 +39,7 @@ export type HeaderValueKind =
  * Where a header parameter's value comes from — design metadata mirroring the
  * Bit-1 analysis (unread by the codec, exactly parallel to the claim registry's
  * `category`). It records which parameters a caller may legitimately set:
- *   - `"option"`   — user-supplyable via `TokenHeaderOptions`.
+ *   - `"option"`   — user-supplyable via `DomainTokenHeaderOptions`.
  *   - `"key"`      — kit-derived from the signing/encrypting kryptos (alg, kid,
  *                    x5t#S256, x5c).
  *   - `"computed"` — produced by the crypto operation itself (epk, iv, tag, p2s).

@@ -4,10 +4,10 @@ import { omitUndefined } from "@lindorm/utils";
 import { AegisError } from "../../errors/index.js";
 import type {
   CertificateHeaderFields,
-  DecodedTokenHeader,
-  ParsedTokenHeader,
-  RawTokenHeaderClaims,
-  TokenHeaderOptions,
+  WireTokenHeader,
+  DomainTokenHeader,
+  WireTokenHeaderOptions,
+  DomainTokenHeaderOptions,
 } from "../../types/index.js";
 import {
   type HeaderSpec,
@@ -116,9 +116,9 @@ const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
  * their domain names).
  */
 export const mapTokenHeader = (
-  options: TokenHeaderOptions,
+  options: DomainTokenHeaderOptions,
   cert: CertificateHeaderFields = {},
-): RawTokenHeaderClaims => {
+): WireTokenHeaderOptions => {
   const source: Dict = {
     ...options,
     certificateChain: cert.certificateChain,
@@ -144,11 +144,11 @@ export const mapTokenHeader = (
     raw[jose] = value;
   }
 
-  return omitUndefined(raw) as RawTokenHeaderClaims;
+  return omitUndefined(raw) as WireTokenHeaderOptions;
 };
 
-export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader>(
-  decoded: DecodedTokenHeader,
+export const parseTokenHeader = <T extends DomainTokenHeader = DomainTokenHeader>(
+  decoded: WireTokenHeader,
 ): T => {
   // Single pass over the decoded wire claims; an unregistered wire key is dropped.
   const result: Dict = {};

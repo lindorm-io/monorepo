@@ -1,14 +1,10 @@
-import type {
-  DecodedTokenHeader,
-  TokenHeaderClaims,
-  TokenHeaderOptions,
-} from "../../types/index.js";
+import type { WireTokenHeader, DomainTokenHeaderOptions } from "../../types/index.js";
 import { mapTokenHeader, parseTokenHeader } from "./token-header.js";
 import { describe, expect, test } from "vitest";
 
 describe("data-driven header codec", () => {
   test("the full RFC set (x5t/x5u/zip/apu/apv) round-trips map -> parse", () => {
-    const options: TokenHeaderOptions = {
+    const options: DomainTokenHeaderOptions = {
       algorithm: "ES512",
       headerType: "JWS",
       keyId: "test-key-id",
@@ -19,7 +15,7 @@ describe("data-driven header codec", () => {
       partyRecipient: "party-v-info",
     };
 
-    const raw = mapTokenHeader(options) as TokenHeaderClaims;
+    const raw = mapTokenHeader(options) as WireTokenHeader;
 
     expect(raw.x5t).toBe("cert-sha1-thumbprint");
     expect(raw.x5u).toBe("https://example.com/certs");
@@ -27,7 +23,7 @@ describe("data-driven header codec", () => {
     expect(raw.apu).toBe("party-u-info");
     expect(raw.apv).toBe("party-v-info");
 
-    const parsed = parseTokenHeader(raw as DecodedTokenHeader);
+    const parsed = parseTokenHeader(raw as WireTokenHeader);
 
     expect(parsed.certificateThumbprintSha1).toBe("cert-sha1-thumbprint");
     expect(parsed.certificateUrl).toBe("https://example.com/certs");
@@ -39,7 +35,7 @@ describe("data-driven header codec", () => {
   test("emitted JSON keys are jose-alphabetical (canonical, byte-order-load-bearing)", () => {
     // The source is deliberately NOT in jose order; the encoder must re-sort so the
     // signed-header bytes stay canonical regardless of caller insertion order.
-    const options: TokenHeaderOptions = {
+    const options: DomainTokenHeaderOptions = {
       zip: "DEF",
       keyId: "test-key-id",
       algorithm: "ES512",
@@ -60,7 +56,7 @@ describe("data-driven header codec", () => {
       headerType: "JWS",
       keyId: "test-key-id",
       notAHeader: "should-be-dropped",
-    } as TokenHeaderOptions;
+    } as DomainTokenHeaderOptions;
 
     const raw = mapTokenHeader(options) as Record<string, unknown>;
 
@@ -74,7 +70,7 @@ describe("data-driven header codec", () => {
       typ: "JWS",
       kid: "test-key-id",
       not_a_header: "should-be-dropped",
-    } as unknown as DecodedTokenHeader;
+    } as unknown as WireTokenHeader;
 
     const parsed = parseTokenHeader(decoded) as Record<string, unknown>;
 
@@ -86,7 +82,7 @@ describe("data-driven header codec", () => {
 describe("parseTokenHeader", () => {
   describe("critical parameter handling", () => {
     test("should preserve known critical parameters", () => {
-      const decoded: DecodedTokenHeader = {
+      const decoded: WireTokenHeader = {
         alg: "ES512",
         typ: "JWS",
         crit: ["alg", "typ", "kid"],
@@ -99,7 +95,7 @@ describe("parseTokenHeader", () => {
     });
 
     test("should preserve unknown critical parameters", () => {
-      const decoded: DecodedTokenHeader = {
+      const decoded: WireTokenHeader = {
         alg: "ES512",
         typ: "JWS",
         crit: ["unknownParam", "anotherUnknown"],
@@ -113,7 +109,7 @@ describe("parseTokenHeader", () => {
     });
 
     test("should preserve mixed known and unknown critical parameters", () => {
-      const decoded: DecodedTokenHeader = {
+      const decoded: WireTokenHeader = {
         alg: "ES512",
         typ: "JWS",
         crit: ["alg", "unknownParam", "kid"],
@@ -127,7 +123,7 @@ describe("parseTokenHeader", () => {
     });
 
     test("should handle empty critical array", () => {
-      const decoded: DecodedTokenHeader = {
+      const decoded: WireTokenHeader = {
         alg: "ES512",
         typ: "JWS",
         crit: [],
@@ -140,7 +136,7 @@ describe("parseTokenHeader", () => {
     });
 
     test("should handle missing critical field", () => {
-      const decoded: DecodedTokenHeader = {
+      const decoded: WireTokenHeader = {
         alg: "ES512",
         typ: "JWS",
         kid: "test-key-id",
@@ -152,7 +148,7 @@ describe("parseTokenHeader", () => {
     });
 
     test("should sort critical parameters alphabetically", () => {
-      const decoded: DecodedTokenHeader = {
+      const decoded: WireTokenHeader = {
         alg: "ES512",
         typ: "JWS",
         crit: ["zulu", "alpha", "bravo"],

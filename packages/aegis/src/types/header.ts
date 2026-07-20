@@ -7,10 +7,20 @@ import type {
 
 export type TokenHeaderAlgorithm = (typeof TOKEN_HEADER_ALGORITHMS)[number];
 
-export type TokenHeaderType = (typeof TOKEN_HEADER_TYPES)[number] | (string & {});
+/** The closed base token format set — derived from the constant (no duplicate literal). */
+export type BaseTokenFormat = (typeof TOKEN_HEADER_TYPES)[number]; // "JWE" | "JWS" | "JWT"
 
-// https://www.rfc-editor.org/rfc/rfc7515.html#section-4.1
-export type TokenHeaderClaims = {
+/** The `typ` header value: a base format, or any other registered media type (e.g. "at+jwt"). */
+export type TokenHeaderType = BaseTokenFormat | (string & {});
+
+// --- WIRE (JOSE-named) — ONE canonical type; the rest derive from it ---------
+
+/**
+ * THE wire type: the serialized JOSE protected header (RFC 7515 §4.1). Byte
+ * fields (iv/p2s/tag) are base64url strings and `alg` is fixed — this is the
+ * shape actually decoded off the wire.
+ */
+export type WireTokenHeader = {
   alg: TokenHeaderAlgorithm; // algorithm
   apu?: string; // ecdh-es party u info
   apv?: string; // ecdh-es party v info
@@ -26,7 +36,7 @@ export type TokenHeaderClaims = {
   p2c?: number; // p2c
   p2s?: string; // p2s
   tag?: string; // public encryption tag
-  typ?: string; // header type (optional per RFC 7515 Section 4.1.9)
+  typ?: string; // header type (optional per RFC 7515 §4.1.9)
   x5c?: Array<string>;
   x5t?: string;
   "x5t#S256"?: string;
@@ -34,35 +44,30 @@ export type TokenHeaderClaims = {
   zip?: string; // compression algorithm
 };
 
-export type RawTokenHeaderClaims = {
+/**
+ * The pre-serialization wire header — DERIVED from {@link WireTokenHeader}: `alg`
+ * is not yet fixed, the byte fields are still raw Buffers (base64url-encoded
+ * downstream), and `typ` is the open header-type union.
+ */
+export type WireTokenHeaderOptions = Omit<
+  WireTokenHeader,
+  "alg" | "iv" | "p2s" | "tag" | "typ"
+> & {
   alg?: TokenHeaderAlgorithm;
-  apu?: string;
-  apv?: string;
-  crit?: Array<string>;
-  cty?: string;
-  enc?: KryptosEncryption;
-  epk?: PublicEncryptionJwk;
   iv?: Buffer;
-  jku?: string;
-  jwk?: KryptosJwk;
-  kid?: string;
-  oid?: string;
-  p2c?: number;
   p2s?: Buffer;
   tag?: Buffer;
   typ?: TokenHeaderType;
-  x5c?: Array<string>;
-  x5t?: string;
-  "x5t#S256"?: string;
-  x5u?: string;
-  zip?: string;
 };
 
-export type DecodedTokenHeader = TokenHeaderClaims;
+// --- DOMAIN (aegis-named) — ONE canonical type; the rest derive from it ------
 
-export type BaseTokenFormat = "JWT" | "JWS" | "JWE";
-
-export type ParsedTokenHeader = {
+/**
+ * THE domain type: the parsed header in aegis domain vocabulary. Byte fields
+ * are decoded strings; `algorithm` and `critical` are always present, the rest
+ * may be `undefined`.
+ */
+export type DomainTokenHeader = {
   algorithm: TokenHeaderAlgorithm;
   baseFormat: BaseTokenFormat | undefined;
   certificateChain: Array<string> | undefined;
@@ -88,43 +93,45 @@ export type ParsedTokenHeader = {
   zip: string | undefined;
 };
 
-export type TokenHeaderOptions = {
-  algorithm?: TokenHeaderAlgorithm;
-  // RFC 7515 §4.1.7 — X.509 certificate SHA-1 thumbprint (base64url); wire `x5t`.
-  certificateThumbprintSha1?: string;
-  // RFC 7515 §4.1.5 — X.509 URL; wire `x5u`.
-  certificateUrl?: string;
-  contentType?: string;
-  critical?: Array<string>;
-  encryption?: KryptosEncryption;
+/**
+ * Caller-supplyable header options — DERIVED from {@link DomainTokenHeader}:
+ * every field optional, MINUS the fields the kit derives/computes rather than
+ * the caller setting (baseFormat, tokenType, cert chain + SHA-256 thumbprint).
+ * The byte fields are raw Buffers on the way in, and `headerType` is open.
+ */
+export type DomainTokenHeaderOptions = Partial<
+  Omit<
+    DomainTokenHeader,
+    | "baseFormat"
+    | "tokenType"
+    | "certificateChain"
+    | "certificateThumbprint"
+    | "headerType"
+    | "initialisationVector"
+    | "pbkdfSalt"
+    | "publicEncryptionTag"
+  >
+> & {
   headerType?: TokenHeaderType;
   initialisationVector?: Buffer;
-  jwk?: KryptosJwk;
-  jwksUri?: string;
-  keyId?: string;
-  objectId?: string;
-  partyProducer?: string; // apu — RFC 7518 §4.6.1.2 ECDH-ES Agreement PartyUInfo (base64url)
-  partyRecipient?: string; // apv — RFC 7518 §4.6.1.3 ECDH-ES Agreement PartyVInfo (base64url)
-  pbkdfIterations?: number;
   pbkdfSalt?: Buffer;
-  publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionTag?: Buffer;
-  zip?: string; // RFC 7516 §4.1.3 — compression algorithm ("DEF" is the only registered value)
 };
 
-export type CertificateHeaderFields = {
-  certificateChain?: Array<string>;
-  certificateThumbprint?: string;
-};
+/** The cert-binding output — DERIVED from {@link DomainTokenHeader}. */
+export type CertificateHeaderFields = Partial<
+  Pick<DomainTokenHeader, "certificateChain" | "certificateThumbprint">
+>;
 
-export type TokenEncryptOrSignOptions = Pick<TokenHeaderOptions, "jwk">;
+export type TokenEncryptOrSignOptions = Pick<DomainTokenHeaderOptions, "jwk">;
 
 export type BindCertificateMode = "thumbprint" | "chain" | "none";
 
 export type CertificateBindingMode = "strict" | "lax";
 
-export type RefinedTokenHeader<A> = Omit<
-  ParsedTokenHeader,
+/** A {@link DomainTokenHeader} refined once the token's alg/format/typ are known. */
+export type RefinedDomainTokenHeader<A> = Omit<
+  DomainTokenHeader,
   "algorithm" | "baseFormat" | "headerType"
 > & {
   algorithm: A;

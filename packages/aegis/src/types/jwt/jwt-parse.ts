@@ -12,12 +12,12 @@ import type {
   SetClaims,
   StdClaims,
 } from "../claims/index.js";
-import type { RefinedTokenHeader } from "../header.js";
+import type { RefinedDomainTokenHeader } from "../header.js";
 import type { DecodedJwt } from "./jwt-decode.js";
 import type { TokenDelegation } from "./jwt-delegation.js";
 import type { ParsedDpopProof } from "./jwt-dpop.js";
 
-export type ParsedJwtHeader = RefinedTokenHeader<KryptosSigAlgorithm>;
+export type ParsedJwtHeader = RefinedDomainTokenHeader<KryptosSigAlgorithm>;
 
 export type ParsedJwtPayload<C extends Dict = Dict> = StdClaims &
   OidcClaims &

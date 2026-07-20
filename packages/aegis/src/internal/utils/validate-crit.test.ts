@@ -1,8 +1,8 @@
-import type { DecodedTokenHeader } from "../../types/header.js";
+import type { WireTokenHeader } from "../../types/header.js";
 import { validateCrit } from "./validate-crit.js";
 import { describe, expect, test } from "vitest";
 
-const base: DecodedTokenHeader = {
+const base: WireTokenHeader = {
   alg: "ES256",
   typ: "JWT",
 };
@@ -17,28 +17,28 @@ describe("validateCrit", () => {
       ...base,
       crit: ["my_ext"],
       my_ext: "value",
-    } as unknown as DecodedTokenHeader;
+    } as unknown as WireTokenHeader;
 
     expect(validateCrit(header)).toBeNull();
   });
 
   test("rejects empty crit array", () => {
-    const header = { ...base, crit: [] } as DecodedTokenHeader;
+    const header = { ...base, crit: [] } as WireTokenHeader;
     expect(validateCrit(header)).toMatch(/empty/);
   });
 
   test("rejects crit containing a non-string", () => {
-    const header = { ...base, crit: [42] } as unknown as DecodedTokenHeader;
+    const header = { ...base, crit: [42] } as unknown as WireTokenHeader;
     expect(validateCrit(header)).toMatch(/must be strings/);
   });
 
   test("rejects crit containing an IANA-registered param (alg)", () => {
-    const header = { ...base, crit: ["alg"] } as DecodedTokenHeader;
+    const header = { ...base, crit: ["alg"] } as WireTokenHeader;
     expect(validateCrit(header)).toMatch(/IANA-registered/);
   });
 
   test("rejects crit containing an IANA-registered param (kid)", () => {
-    const header = { ...base, crit: ["kid"] } as DecodedTokenHeader;
+    const header = { ...base, crit: ["kid"] } as WireTokenHeader;
     expect(validateCrit(header)).toMatch(/IANA-registered/);
   });
 
@@ -47,12 +47,12 @@ describe("validateCrit", () => {
       ...base,
       crit: ["b64"],
       b64: false,
-    } as unknown as DecodedTokenHeader;
+    } as unknown as WireTokenHeader;
     expect(validateCrit(header)).toMatch(/IANA-registered/);
   });
 
   test("rejects crit listing a name that is not present in the header", () => {
-    const header = { ...base, crit: ["missing_param"] } as DecodedTokenHeader;
+    const header = { ...base, crit: ["missing_param"] } as WireTokenHeader;
     expect(validateCrit(header)).toMatch(/not present/);
   });
 
@@ -65,7 +65,7 @@ describe("validateCrit", () => {
       ...base,
       crit: ["oid"],
       oid: "some-id",
-    } as unknown as DecodedTokenHeader;
+    } as unknown as WireTokenHeader;
 
     // `oid` is NOT in the IANA registry (it's a Lindorm extension), and it
     // exists in the header, so validateCrit accepts it at the RFC level.

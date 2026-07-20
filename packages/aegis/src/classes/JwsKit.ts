@@ -27,7 +27,7 @@ import type {
   ParsedJwsHeader,
   SignJwsOptions,
   SignedJws,
-  TokenHeaderOptions,
+  DomainTokenHeaderOptions,
 } from "../types/index.js";
 
 export class JwsKit implements IJwsKit {
@@ -46,7 +46,7 @@ export class JwsKit implements IJwsKit {
 
     const objectId = options.objectId;
 
-    const headerOptions: TokenHeaderOptions = {
+    const headerOptions: DomainTokenHeaderOptions = {
       ...(options.header ?? {}),
       algorithm: this.kryptos.algorithm,
       contentType: options.contentType

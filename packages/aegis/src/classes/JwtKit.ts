@@ -35,7 +35,7 @@ import type {
   ParsedJwtHeader,
   ParsedJwtWire,
   SignJwtWireOptions,
-  TokenHeaderOptions,
+  DomainTokenHeaderOptions,
   VerifyJwtWireOptions,
 } from "../types/index.js";
 
@@ -89,7 +89,7 @@ export class JwtKit implements IJwtKit {
 
     const payload = B64.encode(JSON.stringify(applyOmit(claims, options.omit)), B64U);
 
-    const headerOptions: TokenHeaderOptions = {
+    const headerOptions: DomainTokenHeaderOptions = {
       ...(options.header ?? {}),
       algorithm: this.kryptos.algorithm,
       contentType: "application/json",

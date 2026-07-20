@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { ParsedTokenHeader, TokenHeaderClaims } from "../../types/index.js";
+import type { DomainTokenHeader, WireTokenHeader } from "../../types/index.js";
 import {
   HEADER_REGISTRY,
   headerByCose,
@@ -8,14 +8,14 @@ import {
   coseByJose,
 } from "./header-registry.js";
 
-// Witness whose keys ARE the DOMAIN fields of ParsedTokenHeader — every field
+// Witness whose keys ARE the DOMAIN fields of DomainTokenHeader — every field
 // EXCEPT the two that have no wire parameter: `baseFormat` (DERIVED from `typ`)
 // and `tokenType` (set by the kit after parsing). Typed as a `Record<..., true>`,
-// so adding OR removing a ParsedTokenHeader field forces this witness to change
+// so adding OR removing a DomainTokenHeader field forces this witness to change
 // (compile error), which then forces the registry to change (the runtime checks
 // below). This is the both-directions type binding.
 const PARSED_DOMAIN_FIELDS: Record<
-  Exclude<keyof ParsedTokenHeader, "baseFormat" | "tokenType">,
+  Exclude<keyof DomainTokenHeader, "baseFormat" | "tokenType">,
   true
 > = {
   algorithm: true,
@@ -41,10 +41,10 @@ const PARSED_DOMAIN_FIELDS: Record<
   zip: true,
 };
 
-// Witness whose keys ARE the wire keys of TokenHeaderClaims (RFC 7515 §4.1). Same
-// type-binding trick: a wire rename in TokenHeaderClaims forces this to change,
+// Witness whose keys ARE the wire keys of WireTokenHeader (RFC 7515 §4.1). Same
+// type-binding trick: a wire rename in WireTokenHeader forces this to change,
 // forcing a registry entry to match.
-const TOKEN_HEADER_WIRE: Record<keyof TokenHeaderClaims, true> = {
+const TOKEN_HEADER_WIRE: Record<keyof WireTokenHeader, true> = {
   alg: true,
   apu: true,
   apv: true,
@@ -94,19 +94,19 @@ describe("HEADER_REGISTRY", () => {
     expect(headerByJose("crit")?.domain).toBe("critical");
   });
 
-  test("the registry DOMAIN set EQUALS the ParsedTokenHeader domain fields (no read drift)", () => {
+  test("the registry DOMAIN set EQUALS the DomainTokenHeader domain fields (no read drift)", () => {
     // Both directions: an extra/renamed registry domain is absent from the witness
     // (fails), a missing one leaves a witness key uncovered (fails). Non-vacuous.
     const domains = HEADER_REGISTRY.map((s) => s.domain);
     expect(new Set(domains)).toEqual(new Set(Object.keys(PARSED_DOMAIN_FIELDS)));
   });
 
-  test("the registry WIRE set EQUALS the TokenHeaderClaims wire keys (no write drift)", () => {
+  test("the registry WIRE set EQUALS the WireTokenHeader wire keys (no write drift)", () => {
     const jose = HEADER_REGISTRY.map((s) => s.jose);
     expect(new Set(jose)).toEqual(new Set(Object.keys(TOKEN_HEADER_WIRE)));
   });
 
-  test("every TokenHeaderClaims wire key resolves to a registry entry", () => {
+  test("every WireTokenHeader wire key resolves to a registry entry", () => {
     for (const wire of Object.keys(TOKEN_HEADER_WIRE)) {
       expect(
         headerByJose(wire),
@@ -115,7 +115,7 @@ describe("HEADER_REGISTRY", () => {
     }
   });
 
-  test("every ParsedTokenHeader domain field resolves to a registry entry", () => {
+  test("every DomainTokenHeader domain field resolves to a registry entry", () => {
     for (const domain of Object.keys(PARSED_DOMAIN_FIELDS)) {
       expect(
         headerByDomain(domain),

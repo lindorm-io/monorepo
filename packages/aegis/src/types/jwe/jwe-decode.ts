@@ -1,7 +1,7 @@
-import type { TokenHeaderClaims } from "../header.js";
+import type { WireTokenHeader } from "../header.js";
 
 export type DecodedJwe = {
-  header: TokenHeaderClaims;
+  header: WireTokenHeader;
   publicEncryptionKey: string | undefined;
   initialisationVector: string;
   content: string;
