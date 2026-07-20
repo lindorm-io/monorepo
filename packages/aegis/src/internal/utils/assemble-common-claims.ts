@@ -9,9 +9,9 @@ import type {
   SignJwtOptions,
   TokenProfile,
 } from "../../types/index.js";
-import { CLAIM_REGISTRY } from "../claims/registry.js";
-import { enforceProfilePolicy } from "./enforce-profile-policy.js";
+import { CLAIMS_REGISTRY } from "../claims/claims-registry.js";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
+import { enforceProfilePolicy } from "./enforce-profile-policy.js";
 import { generateTokenId } from "./generate-token-id.js";
 
 /**
@@ -94,7 +94,7 @@ export const assembleCommonClaims = (
   // (registry domain `profile`) would otherwise collide with the `content.profile`
   // container object, leaking it onto the wire as a nested `profile` claim.
   const picked: Dict = {};
-  for (const spec of CLAIM_REGISTRY) {
+  for (const spec of CLAIMS_REGISTRY) {
     if (spec.category !== "claims") continue;
     const value = (content as Dict)[spec.domain];
     if (value !== undefined) picked[spec.domain] = value;

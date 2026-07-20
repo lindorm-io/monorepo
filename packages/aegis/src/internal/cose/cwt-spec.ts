@@ -1,7 +1,7 @@
-import { CborKit } from "@lindorm/cbor";
 import type { CborField, CborValueKind } from "@lindorm/cbor";
+import { CborKit } from "@lindorm/cbor";
 import type { Dict } from "@lindorm/types";
-import { CLAIM_REGISTRY, type ClaimSpec } from "../claims/registry.js";
+import { CLAIMS_REGISTRY, type ClaimSpec } from "../claims/claims-registry.js";
 import { decodeActCompact, encodeActCompact } from "./act-claim.js";
 import { decodeCnf, encodeCnf } from "./cose-key.js";
 import { decodeSubIdCompact, encodeSubIdCompact } from "./sub-id-claim.js";
@@ -94,5 +94,5 @@ const fieldForClaim = (spec: ClaimSpec): CborField => {
 export const CWT_CLAIMS_KIT = new CborKit({
   labels: "mixed",
   mode: "lax",
-  fields: CLAIM_REGISTRY.map(fieldForClaim),
+  fields: CLAIMS_REGISTRY.map(fieldForClaim),
 });

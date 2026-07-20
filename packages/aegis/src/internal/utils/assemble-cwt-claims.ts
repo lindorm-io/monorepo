@@ -3,7 +3,7 @@ import { isArray, isDate, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import type { SignCwtContent, SignCwtOptions } from "../../types/index.js";
-import { CLAIM_REGISTRY } from "../claims/registry.js";
+import { CLAIMS_REGISTRY } from "../claims/claims-registry.js";
 
 /**
  * Mint-time facts the content does not carry: the platform `issuer` (the `iss`
@@ -56,7 +56,7 @@ export const assembleCwtClaims = (
   // `sensitiveIdentity`, `tokenType`…) are not registry domains, so they are
   // excluded, exactly as assembleCommonClaims does for the profiled path.
   const picked: Dict = {};
-  for (const spec of CLAIM_REGISTRY) {
+  for (const spec of CLAIMS_REGISTRY) {
     if (ENVELOPE_DOMAINS.has(spec.domain)) continue;
     const value = (content as Dict)[spec.domain];
     if (value !== undefined) picked[spec.domain] = value;

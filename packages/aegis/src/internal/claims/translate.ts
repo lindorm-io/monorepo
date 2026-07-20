@@ -5,7 +5,12 @@ import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { AegisError } from "../../errors/index.js";
 import type { ActClaim, ActClaimWire, ConfirmationClaim } from "../../types/index.js";
-import { type ClaimSpec, CLAIM_REGISTRY, specByDomain, specsWith } from "./registry.js";
+import {
+  type ClaimSpec,
+  CLAIMS_REGISTRY,
+  claimByDomain,
+  claimsWith,
+} from "./claims-registry.js";
 
 /**
  * The ONE claim translator (DESIGN §3). It consolidates the mappers that existed
@@ -141,7 +146,7 @@ const toConfirmation = (value: unknown): ConfirmationClaim | undefined => {
 // `groups`, `afr`, …) take arrays only. DERIVED from the registry `array: "spaced"`
 // marks — the single source of truth — not a hand-maintained list.
 const STRING_ARRAY_DOMAINS = new Set(
-  specsWith("array")
+  claimsWith("array")
     .filter((spec) => spec.array === "spaced")
     .map((spec) => spec.domain),
 );
@@ -224,7 +229,7 @@ const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
   for (const [key, value] of Object.entries(common)) {
     if (value === undefined) continue;
 
-    const spec = specByDomain(key);
+    const spec = claimByDomain(key);
     if (spec) {
       const encoded = encodeValue(spec, value);
       if (encoded !== undefined) wire[nameOf(spec)] = encoded;
@@ -337,7 +342,7 @@ const wireToDomain = (wire: Dict, nameOf: NameSelector): JoseToDomainResult => {
   const consumed = new Set<string>();
   const claims: Dict = {};
 
-  for (const spec of CLAIM_REGISTRY) {
+  for (const spec of CLAIMS_REGISTRY) {
     const wireName = nameOf(spec);
     // Domain (camel) form takes precedence over the wire name, per extract-claims.
     const key =

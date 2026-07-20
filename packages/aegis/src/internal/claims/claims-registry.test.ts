@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { AegisProfile, AegisSensitiveIdentity } from "../../types/index.js";
 import { DOMAIN_CLAIM_KEYS } from "../utils/extract-claims.js";
-import { CLAIM_REGISTRY, specByDomain, specByJose } from "./registry.js";
+import { CLAIMS_REGISTRY, claimByDomain, claimByJose } from "./claims-registry.js";
 
 // Witness whose keys ARE the AegisSensitiveIdentity field set. Typed as
 // `Record<keyof AegisSensitiveIdentity, true>`, so adding OR removing a field
@@ -56,7 +56,7 @@ describe("CLAIM_REGISTRY", () => {
   test("every domain claim from extract-claims FIELD_KEYS is in the registry", () => {
     for (const domain of Object.keys(DOMAIN_CLAIM_KEYS)) {
       expect(
-        specByDomain(domain),
+        claimByDomain(domain),
         `missing registry entry for "${domain}"`,
       ).toBeDefined();
     }
@@ -66,7 +66,7 @@ describe("CLAIM_REGISTRY", () => {
     // The registry is a SUPERSET of extract-claims: it also covers SET claims
     // (sub_id/events/txn) that mint emits but parsing does not extract. For the
     // overlapping claims, the jose name must agree with extract-claims.
-    for (const spec of CLAIM_REGISTRY) {
+    for (const spec of CLAIMS_REGISTRY) {
       const acceptedNames = DOMAIN_CLAIM_KEYS[spec.domain];
       if (acceptedNames === undefined) continue; // SET-only claim, not extracted
       expect(
@@ -77,17 +77,17 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   test("domain names are unique", () => {
-    const domains = CLAIM_REGISTRY.map((s) => s.domain);
+    const domains = CLAIMS_REGISTRY.map((s) => s.domain);
     expect(new Set(domains).size).toBe(domains.length);
   });
 
   test("jose names are unique", () => {
-    const jose = CLAIM_REGISTRY.map((s) => s.jose);
+    const jose = CLAIMS_REGISTRY.map((s) => s.jose);
     expect(new Set(jose).size).toBe(jose.length);
   });
 
   test("cose labels are unique where present", () => {
-    const labels = CLAIM_REGISTRY.map((s) => s.cose).filter(
+    const labels = CLAIMS_REGISTRY.map((s) => s.cose).filter(
       (c): c is number => c !== null,
     );
     expect(new Set(labels).size).toBe(labels.length);
@@ -105,7 +105,7 @@ describe("CLAIM_REGISTRY", () => {
   // The byte-size rule: a private-use label is 5 bytes; an N-char string key is
   // N + 1 bytes; so the integer is chosen only when it saves bytes (name ≥ 5).
   test("every private-use label (< -65536) has a JOSE name of length ≥ 5", () => {
-    for (const spec of CLAIM_REGISTRY) {
+    for (const spec of CLAIMS_REGISTRY) {
       if (spec.cose === null || spec.cose >= -65536) continue;
       expect(
         spec.jose.length,
@@ -115,7 +115,7 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   test("every non-registered short claim (JOSE name ≤ 4 chars) is string-keyed (cose:null)", () => {
-    for (const spec of CLAIM_REGISTRY) {
+    for (const spec of CLAIMS_REGISTRY) {
       // Registered standard CWT labels (1–9) are exempt from the byte-size rule.
       if (spec.cose !== null && spec.cose >= -65536) continue;
       if (spec.jose.length > 4) continue;
@@ -127,7 +127,7 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   test("registered labels (not private-use) are in the standard CWT range", () => {
-    for (const spec of CLAIM_REGISTRY) {
+    for (const spec of CLAIMS_REGISTRY) {
       if (spec.cose === null || spec.cose < -65536) continue;
       expect(spec.cose).toBeGreaterThanOrEqual(-65536);
     }
@@ -135,35 +135,35 @@ describe("CLAIM_REGISTRY", () => {
 
   test("standards-based assurance levels are string-keyed (cose:null)", () => {
     for (const domain of STANDARDS_BASED_ASSURANCE) {
-      const spec = specByDomain(domain);
+      const spec = claimByDomain(domain);
       expect(spec?.cose, `${domain} must be string-keyed`).toBeNull();
     }
   });
 
   test("the standard CWT labels are correct (RFC 8392 / IANA)", () => {
-    expect(specByDomain("issuer")?.cose).toBe(1);
-    expect(specByDomain("subject")?.cose).toBe(2);
-    expect(specByDomain("audience")?.cose).toBe(3);
-    expect(specByDomain("expiresAt")?.cose).toBe(4);
-    expect(specByDomain("notBefore")?.cose).toBe(5);
-    expect(specByDomain("issuedAt")?.cose).toBe(6);
-    expect(specByDomain("tokenId")?.cose).toBe(7); // cti
-    expect(specByDomain("confirmation")?.cose).toBe(8);
-    expect(specByDomain("scope")?.cose).toBe(9);
+    expect(claimByDomain("issuer")?.cose).toBe(1);
+    expect(claimByDomain("subject")?.cose).toBe(2);
+    expect(claimByDomain("audience")?.cose).toBe(3);
+    expect(claimByDomain("expiresAt")?.cose).toBe(4);
+    expect(claimByDomain("notBefore")?.cose).toBe(5);
+    expect(claimByDomain("issuedAt")?.cose).toBe(6);
+    expect(claimByDomain("tokenId")?.cose).toBe(7); // cti
+    expect(claimByDomain("confirmation")?.cose).toBe(8);
+    expect(claimByDomain("scope")?.cose).toBe(9);
   });
 
   test("OIDC nonce is NOT mapped to CWT label 10 (eat_nonce)", () => {
     // nonce has no registered CWT label; its name is ≥ 5 chars so it gets a
     // private-use label, but never the registered EAT label 10.
-    expect(specByDomain("nonce")?.cose).not.toBe(10);
-    expect(CLAIM_REGISTRY.some((spec) => spec.cose === 10)).toBe(false);
+    expect(claimByDomain("nonce")?.cose).not.toBe(10);
+    expect(CLAIMS_REGISTRY.some((spec) => spec.cose === 10)).toBe(false);
   });
 
   test("coseName is present exactly for the JOSE↔COSE name divergences (RFC 8392: jti↔cti)", () => {
     // A coseName, where present, must actually diverge from the JOSE name —
     // absence means "COSE name == JOSE name" (the common case), so a coseName
     // equal to jose would be a redundant, wrong entry.
-    for (const spec of CLAIM_REGISTRY) {
+    for (const spec of CLAIMS_REGISTRY) {
       if (spec.coseName === undefined) continue;
       expect(
         spec.coseName,
@@ -174,7 +174,7 @@ describe("CLAIM_REGISTRY", () => {
     // The FULL divergence set, derived from the registry and grounded in RFC
     // 8392's registered CWT claim names: today the only JOSE↔COSE name
     // divergence is jti↔cti. Adding a wrong/extra coseName fails here.
-    const divergences = CLAIM_REGISTRY.filter(
+    const divergences = CLAIMS_REGISTRY.filter(
       (spec) => spec.coseName && spec.coseName !== spec.jose,
     ).map((spec) => ({ domain: spec.domain, jose: spec.jose, coseName: spec.coseName }));
 
@@ -182,7 +182,7 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   test('category "sensitive" claims match the AegisSensitiveIdentity field set', () => {
-    const sensitiveDomains = CLAIM_REGISTRY.filter(
+    const sensitiveDomains = CLAIMS_REGISTRY.filter(
       (spec) => spec.category === "sensitive",
     ).map((spec) => spec.domain);
 
@@ -192,7 +192,7 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   test('category "profile" claims match the AegisProfile field set', () => {
-    const profileDomains = CLAIM_REGISTRY.filter(
+    const profileDomains = CLAIMS_REGISTRY.filter(
       (spec) => spec.category === "profile",
     ).map((spec) => spec.domain);
 
@@ -200,10 +200,10 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   test('the "array" read-split marks are populated exactly (spaced vs strict)', () => {
-    const spaced = CLAIM_REGISTRY.filter((s) => s.array === "spaced").map(
+    const spaced = CLAIMS_REGISTRY.filter((s) => s.array === "spaced").map(
       (s) => s.domain,
     );
-    const strict = CLAIM_REGISTRY.filter((s) => s.array === "strict").map(
+    const strict = CLAIMS_REGISTRY.filter((s) => s.array === "strict").map(
       (s) => s.domain,
     );
 
@@ -222,14 +222,14 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   test('the "array" mark is on value:"array" claims only, and every one except audience declares it', () => {
-    for (const spec of CLAIM_REGISTRY) {
+    for (const spec of CLAIMS_REGISTRY) {
       if (spec.array === undefined) continue;
       expect(
         spec.value,
         `${spec.domain} has an array mark but is not value:"array"`,
       ).toBe("array");
     }
-    for (const spec of CLAIM_REGISTRY) {
+    for (const spec of CLAIMS_REGISTRY) {
       if (spec.value !== "array") continue;
       if (spec.domain === "audience") {
         // RFC 7519 aud is string-OR-array — its own decoder, no read-split mark.
@@ -244,7 +244,7 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   test("the temporal claim set + directions are populated exactly", () => {
-    const temporal = CLAIM_REGISTRY.filter((s) => s.temporal !== undefined).map((s) => ({
+    const temporal = CLAIMS_REGISTRY.filter((s) => s.temporal !== undefined).map((s) => ({
       domain: s.domain,
       direction: s.temporal,
     }));
@@ -259,31 +259,31 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   test('a temporal mark implies value:"date"; updatedAt is date but NOT temporal', () => {
-    for (const spec of CLAIM_REGISTRY) {
+    for (const spec of CLAIMS_REGISTRY) {
       if (spec.temporal === undefined) continue;
       expect(spec.value, `${spec.domain} is temporal but not value:"date"`).toBe("date");
     }
-    expect(specByDomain("updatedAt")?.value).toBe("date");
-    expect(specByDomain("updatedAt")?.temporal).toBeUndefined();
+    expect(claimByDomain("updatedAt")?.value).toBe("date");
+    expect(claimByDomain("updatedAt")?.temporal).toBeUndefined();
   });
 
   test("every entry declares exactly one category", () => {
     const valid = new Set(["claims", "profile", "sensitive"]);
-    for (const spec of CLAIM_REGISTRY) {
+    for (const spec of CLAIMS_REGISTRY) {
       expect(valid.has(spec.category), `${spec.domain} has invalid category`).toBe(true);
     }
   });
 
   test("lookups resolve by domain and jose", () => {
-    expect(specByDomain("issuer")?.jose).toBe("iss");
-    expect(specByJose("iss")?.domain).toBe("issuer");
+    expect(claimByDomain("issuer")?.jose).toBe("iss");
+    expect(claimByJose("iss")?.domain).toBe("issuer");
   });
 
   test("every COSE label is a registered integer or a private-use label", () => {
     // The IANA CWT allocation policy: registered labels are positive; the
     // lindorm private-use labels are < -65536. The reserved specification-required
     // band in between is never squatted. (A `null` cose is string-keyed.)
-    for (const spec of CLAIM_REGISTRY) {
+    for (const spec of CLAIMS_REGISTRY) {
       if (spec.cose === null) continue;
       expect(spec.cose > 0 || spec.cose < -65536).toBe(true);
     }

@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import { specByCoseName } from "../claims/registry.js";
+import { claimByCoseName } from "../claims/claims-registry.js";
 import { CWT_CLAIMS_KIT } from "./cwt-spec.js";
 
 export type EncodeCwtOptions = {
@@ -41,7 +41,7 @@ export const encodeCwtClaims = (
   // them — add them under their literal wire key (present-only, matching the codec).
   for (const [key, value] of Object.entries(wire)) {
     if (value === undefined) continue;
-    if (specByCoseName(key)) continue;
+    if (claimByCoseName(key)) continue;
     map.set(key, value);
   }
 

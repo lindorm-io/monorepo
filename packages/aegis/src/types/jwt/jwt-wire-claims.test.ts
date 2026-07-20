@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import type { ClaimValueKind } from "../../internal/claims/registry.js";
-import { CLAIM_REGISTRY, specByJose } from "../../internal/claims/registry.js";
+import type { ClaimValueKind } from "../../internal/claims/claims-registry.js";
+import { CLAIMS_REGISTRY, claimByJose } from "../../internal/claims/claims-registry.js";
 import type { JwtClaims } from "../claims/jwt/jwt-claims.js";
 
 /**
@@ -114,7 +114,7 @@ void _noJwtClaimTypeDrift;
 
 describe("JwtWireClaims / JwtClaims drift guard", () => {
   const registeredClaimsJose = new Set(
-    CLAIM_REGISTRY.filter((spec) => spec.category === "claims").map((spec) => spec.jose),
+    CLAIMS_REGISTRY.filter((spec) => spec.category === "claims").map((spec) => spec.jose),
   );
 
   test("registered JwtClaims keys == registry category:claims jose names", () => {
@@ -136,7 +136,7 @@ describe("JwtWireClaims / JwtClaims drift guard", () => {
   test("each JwtClaims member's declared wire kind matches its registry value kind", () => {
     for (const [jose, kind] of Object.entries(JWT_CLAIMS_WIRE_KINDS)) {
       if (kind === null) continue;
-      const spec = specByJose(jose);
+      const spec = claimByJose(jose);
       expect(spec, `no registry entry for jose "${jose}"`).toBeDefined();
       expect(spec?.value, `wire-kind drift for jose "${jose}"`).toBe(kind);
     }

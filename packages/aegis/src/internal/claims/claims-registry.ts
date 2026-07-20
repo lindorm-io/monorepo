@@ -121,7 +121,7 @@ const P = (n: number): number => -65537 - n;
  * The registry. Order groups by COSE-key category for readability; lookups are
  * by the derived maps below, not by position.
  */
-export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
+export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
   // --- (a) RFC 8392 standard CWT claims (registered integer labels 1–9) ---
   { domain: "issuer", jose: "iss", cose: 1, value: "text", category: "claims" },
   { domain: "subject", jose: "sub", cose: 2, value: "text", category: "claims" },
@@ -608,15 +608,15 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
 ];
 
 const byDomain = new Map<string, ClaimSpec>(
-  CLAIM_REGISTRY.map((spec) => [spec.domain, spec]),
+  CLAIMS_REGISTRY.map((spec) => [spec.domain, spec]),
 );
 const byJose = new Map<string, ClaimSpec>(
-  CLAIM_REGISTRY.map((spec) => [spec.jose, spec]),
+  CLAIMS_REGISTRY.map((spec) => [spec.jose, spec]),
 );
 // Integer COSE label -> spec. Only claims carrying an integer label (registered
 // or private-use) are keyed; string-keyed claims (`cose: null`) are absent.
 const byCose = new Map<number, ClaimSpec>(
-  CLAIM_REGISTRY.filter(
+  CLAIMS_REGISTRY.filter(
     (spec): spec is ClaimSpec & { cose: number } => spec.cose !== null,
   ).map((spec) => [spec.cose, spec]),
 );
@@ -624,24 +624,24 @@ const byCose = new Map<number, ClaimSpec>(
 // registry declares a divergent `coseName` (RFC 8392 `jti` -> `cti`), so this
 // keys every claim by its effective COSE string name.
 const byCoseName = new Map<string, ClaimSpec>(
-  CLAIM_REGISTRY.map((spec) => [spec.coseName ?? spec.jose, spec]),
+  CLAIMS_REGISTRY.map((spec) => [spec.coseName ?? spec.jose, spec]),
 );
 
 /** Resolve a claim spec by its domain name (or `undefined` if not registered). */
-export const specByDomain = (domain: string): ClaimSpec | undefined =>
+export const claimByDomain = (domain: string): ClaimSpec | undefined =>
   byDomain.get(domain);
 
 /** Resolve a claim spec by its JOSE wire name. */
-export const specByJose = (jose: string): ClaimSpec | undefined => byJose.get(jose);
+export const claimByJose = (jose: string): ClaimSpec | undefined => byJose.get(jose);
 
 /** Resolve a claim spec by its integer COSE label (or `undefined`). */
-export const specByCose = (cose: number): ClaimSpec | undefined => byCose.get(cose);
+export const claimByCose = (cose: number): ClaimSpec | undefined => byCose.get(cose);
 
 /**
  * Resolve a claim spec by its COSE string name — the `coseName` where the
  * registry declares one (`cti`), else the JOSE name (`iss`, `exp`, …).
  */
-export const specByCoseName = (coseName: string): ClaimSpec | undefined =>
+export const claimByCoseName = (coseName: string): ClaimSpec | undefined =>
   byCoseName.get(coseName);
 
 /**
@@ -652,9 +652,9 @@ export const specByCoseName = (coseName: string): ClaimSpec | undefined =>
  * exhaustive `switch` on the mark; `specsWith("array")` narrows `array` likewise.
  * Registry declaration order is preserved.
  */
-export const specsWith = <K extends keyof ClaimSpec>(
+export const claimsWith = <K extends keyof ClaimSpec>(
   mark: K,
 ): ReadonlyArray<ClaimSpec & Required<Pick<ClaimSpec, K>>> =>
-  CLAIM_REGISTRY.filter(
+  CLAIMS_REGISTRY.filter(
     (spec): spec is ClaimSpec & Required<Pick<ClaimSpec, K>> => spec[mark] !== undefined,
   );

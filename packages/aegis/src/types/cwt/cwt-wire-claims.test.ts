@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { CLAIM_REGISTRY } from "../../internal/claims/registry.js";
+import { CLAIMS_REGISTRY } from "../../internal/claims/claims-registry.js";
 import type { JwtWireClaims } from "../jwt/jwt-wire-claims.js";
 import type { CwtWireClaims } from "./cwt-wire-claims.js";
 
@@ -53,7 +53,7 @@ void _noCwtDivergenceDrift;
 
 describe("CwtWireClaims drift guard", () => {
   test("witness divergences == registry coseName divergences", () => {
-    const registryDivergences = CLAIM_REGISTRY.filter(
+    const registryDivergences = CLAIMS_REGISTRY.filter(
       (spec) => spec.coseName && spec.coseName !== spec.jose,
     ).map((spec) => `${spec.jose}->${spec.coseName}`);
 
@@ -65,7 +65,7 @@ describe("CwtWireClaims drift guard", () => {
   });
 
   test("the only JOSE↔COSE name divergence is RFC 8392 jti↔cti", () => {
-    const registryDivergences = CLAIM_REGISTRY.filter(
+    const registryDivergences = CLAIMS_REGISTRY.filter(
       (spec) => spec.coseName && spec.coseName !== spec.jose,
     ).map((spec) => ({ jose: spec.jose, coseName: spec.coseName }));
 

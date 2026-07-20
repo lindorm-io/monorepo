@@ -4,7 +4,7 @@ import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { PredicateOperator } from "@lindorm/types";
 import { JwtError } from "../../errors/index.js";
 import type { JwtClaims, VerifyJwtOptions } from "../../types/index.js";
-import { specByDomain } from "../claims/registry.js";
+import { claimByDomain } from "../claims/claims-registry.js";
 import { createHash } from "./create-hash.js";
 
 /**
@@ -68,7 +68,7 @@ export const createIdentityMatchers = (
     // has no claim to build a predicate for and throws (the exhaustive-mapping
     // throwing default the `mapVerify` switch used to provide).
     const hash = HASH_MATCHERS[key];
-    const spec = specByDomain(key);
+    const spec = claimByDomain(key);
     const mapped = hash?.jose ?? (spec?.jose as keyof JwtClaims | undefined);
 
     if (mapped === undefined) {

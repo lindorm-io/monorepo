@@ -2,7 +2,7 @@ import { addSeconds, subSeconds } from "@lindorm/date";
 import type { PredicateOperator } from "@lindorm/types";
 import { AegisError } from "../../errors/index.js";
 import type { JwtClaims } from "../../types/index.js";
-import { specsWith } from "../claims/registry.js";
+import { claimsWith } from "../claims/claims-registry.js";
 
 /**
  * The VALIDATION-temporal claims and their direction, DERIVED from the registry
@@ -12,7 +12,7 @@ import { specsWith } from "../claims/registry.js";
  * `"past" | "future"` (never `undefined`). (Phase 8's in-kit temporal check
  * derives from the same set.)
  */
-const TEMPORAL_SPECS = specsWith("temporal");
+const TEMPORAL_SPECS = claimsWith("temporal");
 
 /**
  * The clock-tolerant range bound for a temporal direction (exhaustive; an
