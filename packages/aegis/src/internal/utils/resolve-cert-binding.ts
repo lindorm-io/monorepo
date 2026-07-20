@@ -5,6 +5,7 @@ import type { BindCertificateMode, CertificateHeaderFields } from "../../types/i
 export const resolveCertBinding = (
   kryptos: IKryptos,
   mode: BindCertificateMode | undefined,
+  certificateThumbprintSha1?: boolean,
 ): CertificateHeaderFields | undefined => {
   const resolved: BindCertificateMode =
     mode === "none"
@@ -30,6 +31,14 @@ export const resolveCertBinding = (
   const fields: CertificateHeaderFields = {
     certificateThumbprint: kryptos.certificateThumbprint ?? undefined,
   };
+
+  // The SHA-1 thumbprint (`x5t`) is an INDEPENDENT emission gate, NOT a
+  // `BindCertificateMode` — it rides along whenever a cert is bound and the
+  // boolean resolves true (the default). It is a legacy-compat convenience for
+  // older clients; the read side NEVER verifies it (only `x5t#S256` binds).
+  if (certificateThumbprintSha1 ?? true) {
+    fields.certificateThumbprintSha1 = kryptos.certificateThumbprintSha1 ?? undefined;
+  }
 
   if (resolved === "chain") {
     fields.certificateChain =

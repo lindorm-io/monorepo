@@ -134,6 +134,7 @@ export const mintToken = async ({
       ...(profile.typ.presence !== "none" ? { typ: profile.typ.value } : {}),
     },
     certBindingMode: deps.certBindingMode,
+    certificateThumbprintSha1: deps.certificateThumbprintSha1,
     clockTolerance: deps.clockTolerance,
     logger: deps.logger,
   });
@@ -152,6 +153,8 @@ export const mintToken = async ({
     data: signed.token,
     encryption: options.encrypt?.key?.encryption ?? deps.encryption,
     certBindingMode: deps.certBindingMode,
+    certificateThumbprintSha1:
+      options.encrypt?.certificateThumbprintSha1 ?? deps.certificateThumbprintSha1,
     logger: deps.logger,
   });
 

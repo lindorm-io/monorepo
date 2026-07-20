@@ -34,6 +34,7 @@ export const signToken = async ({
     data: payload,
     options: {
       bindCertificate: input.bindCertificate,
+      certificateThumbprintSha1: input.certificateThumbprintSha1,
       contentType: input.contentType,
       header: input.header,
       objectId: input.objectId,

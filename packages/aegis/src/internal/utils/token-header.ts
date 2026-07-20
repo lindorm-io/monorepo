@@ -110,10 +110,10 @@ const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
 
 /**
  * Map domain header options (+ the kit-resolved cert fields) to the raw JOSE wire
- * header. The cert fields (`certificateChain`/`certificateThumbprint`) are
- * `provenance: "key"` params the kit derives from the kryptos, so they are folded
- * into the domain-keyed source (their `CertificateHeaderFields` keys already equal
- * their domain names).
+ * header. The cert fields (`certificateChain`/`certificateThumbprint`/
+ * `certificateThumbprintSha1`) are `provenance: "key"` params the kit derives from
+ * the kryptos, so they are folded into the domain-keyed source (their
+ * `CertificateHeaderFields` keys already equal their domain names).
  */
 export const mapTokenHeader = (
   options: DomainTokenHeaderOptions,
@@ -123,6 +123,7 @@ export const mapTokenHeader = (
     ...options,
     certificateChain: cert.certificateChain,
     certificateThumbprint: cert.certificateThumbprint,
+    certificateThumbprintSha1: cert.certificateThumbprintSha1,
   };
 
   // Single pass over the domain-keyed source; an unregistered key is dropped

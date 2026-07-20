@@ -4,6 +4,13 @@ import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header.j
 
 export type SignJwsOptions = {
   bindCertificate?: BindCertificateMode;
+  /**
+   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside the SHA-256 one
+   * whenever a cert is bound. Default `true` (older-client compat). Independent
+   * of `bindCertificate` — it only gates the extra `x5t` emission; the read side
+   * never verifies SHA-1.
+   */
+  certificateThumbprintSha1?: boolean;
   contentType?: string;
   header?: TokenEncryptOrSignOptions;
   objectId?: string;

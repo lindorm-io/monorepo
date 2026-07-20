@@ -106,6 +106,7 @@ export type DomainTokenHeaderOptions = Partial<
     | "tokenType"
     | "certificateChain"
     | "certificateThumbprint"
+    | "certificateThumbprintSha1"
     | "headerType"
     | "initialisationVector"
     | "pbkdfSalt"
@@ -120,7 +121,10 @@ export type DomainTokenHeaderOptions = Partial<
 
 /** The cert-binding output — DERIVED from {@link DomainTokenHeader}. */
 export type CertificateHeaderFields = Partial<
-  Pick<DomainTokenHeader, "certificateChain" | "certificateThumbprint">
+  Pick<
+    DomainTokenHeader,
+    "certificateChain" | "certificateThumbprint" | "certificateThumbprintSha1"
+  >
 >;
 
 export type TokenEncryptOrSignOptions = Pick<DomainTokenHeaderOptions, "jwk">;

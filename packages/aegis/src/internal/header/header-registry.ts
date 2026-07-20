@@ -119,16 +119,18 @@ export const HEADER_REGISTRY: ReadonlyArray<HeaderSpec> = [
     value: "array",
     provenance: "key",
   },
-  // RFC 7515 §4.1.7 — X.509 certificate SHA-1 thumbprint (base64url). COSE label
-  // 34 (RFC 9360) is present for RFC completeness, but COSE's x5t is a
-  // `COSE_CertHash` structure (`[algId, hashValue]`), NOT a plain relabel of
-  // JOSE's base64url thumbprint — no COSE kit emits it under that label.
+  // RFC 7515 §4.1.7 — X.509 certificate SHA-1 thumbprint (base64url). Kit-derived
+  // from the signing/encrypting kryptos (like `x5t#S256`), auto-emitted whenever a
+  // cert is bound; the write side gates it behind a boolean, the read side never
+  // verifies it. COSE label 34 (RFC 9360) is present for RFC completeness, but
+  // COSE's x5t is a `COSE_CertHash` structure (`[algId, hashValue]`), NOT a plain
+  // relabel of JOSE's base64url thumbprint — no COSE kit emits it under that label.
   {
     domain: "certificateThumbprintSha1",
     jose: "x5t",
     cose: 34,
     value: "string",
-    provenance: "option",
+    provenance: "key",
   },
   {
     domain: "certificateThumbprint",

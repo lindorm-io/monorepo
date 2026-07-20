@@ -8,14 +8,17 @@ describe("data-driven header codec", () => {
       algorithm: "ES512",
       headerType: "JWS",
       keyId: "test-key-id",
-      certificateThumbprintSha1: "cert-sha1-thumbprint",
       certificateUrl: "https://example.com/certs",
       zip: "DEF",
       partyProducer: "party-u-info",
       partyRecipient: "party-v-info",
     };
 
-    const raw = mapTokenHeader(options) as WireTokenHeader;
+    // `x5t` is kit-derived (provenance: "key"), so it arrives via the cert
+    // argument, not the caller-supplyable options — mirroring `x5t#S256`/`x5c`.
+    const raw = mapTokenHeader(options, {
+      certificateThumbprintSha1: "cert-sha1-thumbprint",
+    }) as WireTokenHeader;
 
     expect(raw.x5t).toBe("cert-sha1-thumbprint");
     expect(raw.x5u).toBe("https://example.com/certs");

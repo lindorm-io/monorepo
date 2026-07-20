@@ -24,6 +24,7 @@ export const rawEncryptJwe = async ({
     options,
     encryption: options.key?.encryption ?? deps.encryption,
     certBindingMode: deps.certBindingMode,
+    certificateThumbprintSha1: deps.certificateThumbprintSha1,
     logger: deps.logger,
   });
 };

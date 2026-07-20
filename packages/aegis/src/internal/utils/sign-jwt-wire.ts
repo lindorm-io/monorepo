@@ -25,6 +25,7 @@ export const signJwtWire = ({
   content,
   options,
   certBindingMode,
+  certificateThumbprintSha1,
   clockTolerance,
   logger,
 }: {
@@ -33,6 +34,8 @@ export const signJwtWire = ({
   content: Pick<SignJwtContent, "tokenType">;
   options: SignJwtOptions;
   certBindingMode: CertificateBindingMode;
+  /** Resolved deployment default for the SHA-1 thumbprint (`x5t`) emission gate. */
+  certificateThumbprintSha1: boolean;
   clockTolerance: number;
   logger: ILogger;
 }): SignedJwt => {
@@ -43,6 +46,8 @@ export const signJwtWire = ({
     wireClaims,
     {
       bindCertificate: options.bindCertificate,
+      certificateThumbprintSha1:
+        options.certificateThumbprintSha1 ?? certificateThumbprintSha1,
       header: options.header,
       objectId: options.objectId,
       omit: options.omit,

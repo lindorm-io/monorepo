@@ -76,7 +76,11 @@ export class JweKit implements IJweKit {
       publicEncryptionTag: prepared.headerParams.publicEncryptionTag,
     };
 
-    const cert = resolveCertBinding(this.kryptos, options.bindCertificate);
+    const cert = resolveCertBinding(
+      this.kryptos,
+      options.bindCertificate,
+      options.certificateThumbprintSha1,
+    );
 
     // Step 3: Encode header as base64url
     const header = encodeJoseHeader(headerOptions, cert);

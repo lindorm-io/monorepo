@@ -31,6 +31,12 @@ export type EncryptOptions = {
   header?: TokenEncryptOrSignOptions;
   bindCertificate?: BindCertificateMode;
   /**
+   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
+   * cert is bound. Default `true`. Independent of `bindCertificate`; the read side
+   * never verifies SHA-1.
+   */
+  certificateThumbprintSha1?: boolean;
+  /**
    * Allow a lindorm-proprietary (private-use) COSE content encryption on the
    * `cwe` path (default `false`, D5 interop gate); threaded to `CweKit.encrypt`.
    * A no-op on the `jwe` path.

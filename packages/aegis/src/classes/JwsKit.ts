@@ -60,7 +60,11 @@ export class JwsKit implements IJwsKit {
       objectId,
     };
 
-    const cert = resolveCertBinding(this.kryptos, options.bindCertificate);
+    const cert = resolveCertBinding(
+      this.kryptos,
+      options.bindCertificate,
+      options.certificateThumbprintSha1,
+    );
 
     const header = encodeJoseHeader(headerOptions, cert);
 

@@ -111,6 +111,13 @@ export type AegisSettings = {
   issuer?: string;
 
   certBindingMode?: CertificateBindingMode;
+  /**
+   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` on every
+   * cert-bound token this deployment signs/encrypts. Default `true` (older-client
+   * compat). A per-call sign/mint/encrypt option overrides it. The read side never
+   * verifies SHA-1 — this is a write-side emission gate only.
+   */
+  certificateThumbprintSha1?: boolean;
   clockTolerance?: number;
   dpopMaxSkew?: number;
   encryption?: KryptosEncryption;

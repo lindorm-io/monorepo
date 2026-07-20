@@ -126,7 +126,9 @@ describe("HEADER_REGISTRY", () => {
 
   test("key-provenance params are exactly the kryptos-derived set", () => {
     const key = HEADER_REGISTRY.filter((s) => s.provenance === "key").map((s) => s.jose);
-    expect(new Set(key)).toEqual(new Set(["alg", "kid", "x5t#S256", "x5c"]));
+    // `x5t` (SHA-1 thumbprint) is now kit-derived like `x5t#S256`/`x5c` — the
+    // write side gates its emission behind a boolean, no longer caller-supplied.
+    expect(new Set(key)).toEqual(new Set(["alg", "kid", "x5t", "x5t#S256", "x5c"]));
   });
 
   test("computed-provenance params are exactly the crypto-produced set", () => {
@@ -144,9 +146,10 @@ describe("HEADER_REGISTRY", () => {
   });
 
   test("the full RFC-registered additive set is present as normal option entries", () => {
-    // The 5 formerly-inert additions are now first-class entries: caller-supplyable
-    // strings that the codec wires in both directions.
-    for (const wire of ["x5u", "x5t", "zip", "apu", "apv"]) {
+    // The formerly-inert additions are first-class entries: caller-supplyable
+    // strings that the codec wires in both directions. (`x5t` left this set — it
+    // is now `provenance: "key"`, kit-derived from the cert.)
+    for (const wire of ["x5u", "zip", "apu", "apv"]) {
       const spec = headerByJose(wire);
       expect(spec, `missing RFC param "${wire}"`).toBeDefined();
       expect(spec?.value).toBe("string");

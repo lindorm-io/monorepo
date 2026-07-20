@@ -4,6 +4,12 @@ import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header.j
 
 export type JweEncryptOptions = {
   bindCertificate?: BindCertificateMode;
+  /**
+   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
+   * cert is bound. Default `true`. Independent of `bindCertificate`; the read side
+   * never verifies SHA-1.
+   */
+  certificateThumbprintSha1?: boolean;
   header?: TokenEncryptOrSignOptions;
   /**
    * Per-call encryption (recipient) key policy. Ignored by `JweKit`, which is

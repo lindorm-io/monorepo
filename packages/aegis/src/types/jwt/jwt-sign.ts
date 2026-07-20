@@ -42,6 +42,12 @@ export type SignJwtContent<C extends Dict = Dict> = Omit<
 export type SignJwtOptions = {
   accessTokenHash?: string;
   bindCertificate?: BindCertificateMode;
+  /**
+   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
+   * cert is bound. Default `true` (older-client compat). Independent of
+   * `bindCertificate`; the read side never verifies SHA-1.
+   */
+  certificateThumbprintSha1?: boolean;
   codeHash?: string;
   header?: TokenEncryptOrSignOptions;
   issuedAt?: Date;

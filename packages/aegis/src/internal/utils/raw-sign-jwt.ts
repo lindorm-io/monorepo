@@ -33,6 +33,7 @@ export const rawSignJwt = async <T extends Dict = Dict>({
     content,
     options,
     certBindingMode: deps.certBindingMode,
+    certificateThumbprintSha1: deps.certificateThumbprintSha1,
     clockTolerance: deps.clockTolerance,
     logger: deps.logger,
   });

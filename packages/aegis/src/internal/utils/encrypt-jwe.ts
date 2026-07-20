@@ -20,6 +20,7 @@ export const encryptJwe = ({
   options,
   encryption,
   certBindingMode,
+  certificateThumbprintSha1,
   logger,
 }: {
   kryptos: IKryptos;
@@ -27,9 +28,12 @@ export const encryptJwe = ({
   options?: JweEncryptOptions;
   encryption: KryptosEncryption;
   certBindingMode: CertificateBindingMode;
+  /** Resolved deployment default for the SHA-1 thumbprint (`x5t`) emission gate. */
+  certificateThumbprintSha1: boolean;
   logger: ILogger;
 }): EncryptedJwe =>
-  new JweKit({ certBindingMode, encryption, kryptos, logger }).encrypt(
-    data,
-    options ?? {},
-  );
+  new JweKit({ certBindingMode, encryption, kryptos, logger }).encrypt(data, {
+    ...(options ?? {}),
+    certificateThumbprintSha1:
+      options?.certificateThumbprintSha1 ?? certificateThumbprintSha1,
+  });

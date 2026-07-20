@@ -18,6 +18,12 @@ import type { JwtWireClaims } from "./jwt-wire-claims.js";
  */
 export type SignJwtWireOptions = {
   bindCertificate?: BindCertificateMode;
+  /**
+   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
+   * cert is bound. Default `true`. Independent of `bindCertificate`; the read side
+   * never verifies SHA-1.
+   */
+  certificateThumbprintSha1?: boolean;
   header?: TokenEncryptOrSignOptions;
   objectId?: string;
   omit?: OmitMode;

@@ -57,6 +57,7 @@ export const encryptToken = async ({
         },
         encryption,
         certBindingMode: deps.certBindingMode,
+        certificateThumbprintSha1: deps.certificateThumbprintSha1,
         logger: deps.logger,
       });
 

@@ -103,7 +103,7 @@ describe("Aegis cert binding", () => {
       amphora.add(buildCertBoundKryptos());
     });
 
-    test("sign with bindCertificate: 'thumbprint' stamps x5t#S256, no x5c, no x5t", async () => {
+    test("sign with bindCertificate: 'thumbprint' stamps x5t#S256 + x5t (default), no x5c", async () => {
       const { token } = await aegis.mint("default", signContent, {
         sign: { bindCertificate: "thumbprint" },
       });
@@ -120,11 +120,12 @@ describe("Aegis cert binding", () => {
 
       expect(stripped).toMatchSnapshot();
       expect(stripped["x5t#S256"]).toEqual(expect.any(String));
-      expect(stripped.x5t).toBeUndefined();
+      // SHA-1 thumbprint (`x5t`) rides along by default, equal to the kryptos getter.
+      expect(stripped.x5t).toBe(buildCertBoundKryptos().certificateThumbprintSha1);
       expect(stripped.x5c).toBeUndefined();
     });
 
-    test("sign with bindCertificate: 'chain' stamps x5c + x5t#S256, no x5t", async () => {
+    test("sign with bindCertificate: 'chain' stamps x5c + x5t#S256 + x5t (default)", async () => {
       const { token } = await aegis.mint("default", signContent, {
         sign: { bindCertificate: "chain" },
       });
@@ -143,10 +144,10 @@ describe("Aegis cert binding", () => {
       expect(Array.isArray(stripped.x5c)).toBe(true);
       expect(stripped.x5c).toHaveLength(3);
       expect(stripped["x5t#S256"]).toEqual(expect.any(String));
-      expect(stripped.x5t).toBeUndefined();
+      expect(stripped.x5t).toBe(buildCertBoundKryptos().certificateThumbprintSha1);
     });
 
-    test("sign omitted on cert-bearing kryptos stamps thumbprint by default", async () => {
+    test("sign omitted on cert-bearing kryptos stamps thumbprint + x5t by default", async () => {
       const { token } = await aegis.mint("default", signContent);
 
       const decoded = JwtKit.decode(token);
@@ -161,8 +162,49 @@ describe("Aegis cert binding", () => {
 
       expect(stripped).toMatchSnapshot();
       expect(stripped["x5t#S256"]).toEqual(expect.any(String));
-      expect(stripped.x5t).toBeUndefined();
+      expect(stripped.x5t).toBe(buildCertBoundKryptos().certificateThumbprintSha1);
       expect(stripped.x5c).toBeUndefined();
+    });
+
+    test("certificateThumbprintSha1: false suppresses x5t (x5t#S256 unaffected)", async () => {
+      const { token } = await aegis.mint("default", signContent, {
+        sign: { bindCertificate: "thumbprint", certificateThumbprintSha1: false },
+      });
+
+      const decoded = JwtKit.decode(token);
+      expect(decoded.header).not.toHaveProperty("x5t");
+      expect((decoded.header as any)["x5t#S256"]).toEqual(expect.any(String));
+    });
+
+    test("deployment-level certificateThumbprintSha1: false suppresses x5t by default", async () => {
+      const localLogger = createMockLogger();
+      const localAmphora = new Amphora({
+        domain: "https://test.lindorm.io/",
+        logger: localLogger,
+      });
+      const localAegis = new Aegis({
+        amphora: localAmphora,
+        logger: localLogger,
+        certificateThumbprintSha1: false,
+      });
+      await localAmphora.setup();
+      localAmphora.add(buildCertBoundKryptos());
+
+      const { token } = await localAegis.mint("default", signContent, {
+        sign: { bindCertificate: "thumbprint" },
+      });
+
+      const decoded = JwtKit.decode(token);
+      expect(decoded.header).not.toHaveProperty("x5t");
+      expect((decoded.header as any)["x5t#S256"]).toEqual(expect.any(String));
+
+      // A per-call override wins over the deployment default.
+      const { token: reenabled } = await localAegis.mint("default", signContent, {
+        sign: { bindCertificate: "thumbprint", certificateThumbprintSha1: true },
+      });
+      expect((JwtKit.decode(reenabled).header as any).x5t).toBe(
+        buildCertBoundKryptos().certificateThumbprintSha1,
+      );
     });
 
     test("sign with bindCertificate: 'none' on cert-bearing kryptos stamps nothing", async () => {

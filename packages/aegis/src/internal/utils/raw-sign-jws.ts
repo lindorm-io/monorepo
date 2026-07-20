@@ -22,5 +22,9 @@ export const rawSignJws = async <T extends JwsContent>({
     certBindingMode: deps.certBindingMode,
     kryptos,
     logger: deps.logger,
-  }).sign(data, options);
+  }).sign(data, {
+    ...options,
+    certificateThumbprintSha1:
+      options.certificateThumbprintSha1 ?? deps.certificateThumbprintSha1,
+  });
 };

@@ -136,6 +136,7 @@ export class Aegis implements IAegis {
 
   private readonly amphora: IAmphora;
   private readonly certBindingMode: CertificateBindingMode;
+  private readonly certificateThumbprintSha1: boolean;
   private readonly clockTolerance: number;
   private readonly decryptKey: AegisDecryptKey;
   private readonly deps: AegisDeps;
@@ -152,6 +153,9 @@ export class Aegis implements IAegis {
     this.issuer = options.issuer ?? this.amphora.domain;
 
     this.certBindingMode = options.certBindingMode ?? "strict";
+    // Default TRUE: a cert-bound token carries `x5t` for older clients unless the
+    // deployment (or a per-call option) opts out. Write-side emission gate only.
+    this.certificateThumbprintSha1 = options.certificateThumbprintSha1 ?? true;
     this.clockTolerance = options.clockTolerance ?? 0;
     this.dpopMaxSkew = options.dpopMaxSkew;
     this.encryption = options.encryption ?? "A256GCM";
@@ -173,6 +177,7 @@ export class Aegis implements IAegis {
     this.deps = {
       issuer: this.issuer,
       certBindingMode: this.certBindingMode,
+      certificateThumbprintSha1: this.certificateThumbprintSha1,
       clockTolerance: this.clockTolerance,
       dpopMaxSkew: this.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW,
       encryption: this.encryption,
