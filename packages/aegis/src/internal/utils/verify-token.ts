@@ -8,6 +8,9 @@ import type { ParsedJws, ParsedJwt, VerifyJwtOptions } from "../../types/index.j
 import { isCose } from "../cose/is-cose.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { coseVerifyCore } from "./cose-verify-core.js";
+import { rawDecryptJwe } from "./raw-decrypt-jwe.js";
+import { rawVerifyJws } from "./raw-verify-jws.js";
+import { rawVerifyJwt } from "./raw-verify-jwt.js";
 import { validateCwtClaims } from "./validate-cwt-claims.js";
 
 /**
@@ -29,14 +32,14 @@ export const verifyToken = async <T extends ParsedJwt | ParsedJws<any>>({
   deps: AegisDeps;
 }): Promise<T> => {
   if (JwtKit.isJwt(token)) {
-    return (await deps.verifyJwt(token, options)) as T;
+    return (await rawVerifyJwt({ jwt: token, verify: options, deps })) as T;
   }
   if (JweKit.isJwe(token)) {
-    const decrypt = await deps.decryptJwe(token);
+    const decrypt = await rawDecryptJwe({ jwe: token, deps });
     return await verifyToken<T>({ token: decrypt.payload, options, deps });
   }
   if (JwsKit.isJws(token)) {
-    return (await deps.verifyJws(token)) as T;
+    return (await rawVerifyJws({ jws: token, deps })) as T;
   }
 
   if (!token.includes(".")) {

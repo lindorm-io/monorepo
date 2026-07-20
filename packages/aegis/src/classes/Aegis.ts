@@ -1,10 +1,9 @@
-import {
-  type AesContent,
-  type AesDecryptionRecord,
-  type AesEncryptionRecord,
-  AesKit,
-  type SerialisedAesDecryption,
-  type SerialisedAesEncryption,
+import type {
+  AesContent,
+  AesDecryptionRecord,
+  AesEncryptionRecord,
+  SerialisedAesDecryption,
+  SerialisedAesEncryption,
 } from "@lindorm/aes";
 import {
   applyKeyFloor,
@@ -15,8 +14,7 @@ import {
   SIGN_FLOOR,
   VERIFY_FLOOR,
 } from "@lindorm/amphora";
-import { getUnixTime } from "@lindorm/date";
-import { isBuffer, isDate, isString } from "@lindorm/is";
+import { isString } from "@lindorm/is";
 import type {
   IKryptos,
   KryptosEncAlgorithm,
@@ -37,26 +35,13 @@ import type {
   IAegisJws,
   IAegisJwt,
 } from "../interfaces/index.js";
-import {
-  decodeEncryptedCoseKid,
-  decryptCose,
-  encryptCose,
-} from "../internal/cose/cose-encryption.js";
-import { coseTypFromTokenType } from "../internal/cose/cose-typ.js";
 import { isCose } from "../internal/cose/is-cose.js";
-import { signCose } from "../internal/cose/sign-cose.js";
-import { verifyCose } from "../internal/cose/verify-cose.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import { registerProfile as registerProfileFn } from "../internal/profiles/registry.js";
 import type { AegisDeps } from "../internal/utils/aegis-deps.js";
-import { assembleCwtClaims } from "../internal/utils/assemble-cwt-claims.js";
-import { encryptJwe } from "../internal/utils/encrypt-jwe.js";
 import { decodeJoseHeader } from "../internal/utils/jose-header.js";
-import { assembleJwtWireClaims } from "../internal/utils/jwt-payload.js";
 import { createJwtValidate } from "../internal/utils/jwt-validate.js";
 import { mintToken } from "../internal/utils/mint-token.js";
-import { signJwtWire } from "../internal/utils/sign-jwt-wire.js";
-import { verifyJwtToDomain } from "../internal/utils/verify-jwt.js";
 import {
   type IntrospectClaimsInput,
   parseIntrospection,
@@ -66,9 +51,22 @@ import {
   parseUserinfo,
   type UserinfoClaimsInput,
 } from "../internal/utils/parse-userinfo.js";
+import { rawDecryptAes } from "../internal/utils/raw-decrypt-aes.js";
+import { rawDecryptCwe } from "../internal/utils/raw-decrypt-cwe.js";
+import { rawDecryptJwe } from "../internal/utils/raw-decrypt-jwe.js";
+import { rawEncryptAes } from "../internal/utils/raw-encrypt-aes.js";
+import { rawEncryptCwe } from "../internal/utils/raw-encrypt-cwe.js";
+import { rawEncryptJwe } from "../internal/utils/raw-encrypt-jwe.js";
+import { rawSignCws } from "../internal/utils/raw-sign-cws.js";
+import { rawSignCwt } from "../internal/utils/raw-sign-cwt.js";
+import { rawSignJws } from "../internal/utils/raw-sign-jws.js";
+import { rawSignJwt } from "../internal/utils/raw-sign-jwt.js";
+import { rawVerifyCws } from "../internal/utils/raw-verify-cws.js";
+import { rawVerifyCwt } from "../internal/utils/raw-verify-cwt.js";
+import { rawVerifyJws } from "../internal/utils/raw-verify-jws.js";
+import { rawVerifyJwt } from "../internal/utils/raw-verify-jwt.js";
 import { resolveKey } from "../internal/utils/resolve-key.js";
 import { signToken } from "../internal/utils/sign-token.js";
-import { validateCwtClaims } from "../internal/utils/validate-cwt-claims.js";
 import { validate as validateClaims } from "../internal/utils/validate.js";
 import { verifyProfileToken } from "../internal/utils/verify-profile-token.js";
 import { verifyToken } from "../internal/utils/verify-token.js";
@@ -165,29 +163,26 @@ export class Aegis implements IAegis {
     this.verifyKey = options.verify ?? {};
     this.decryptKey = options.decrypt ?? {};
 
-    // The verb-surface pipeline bodies live in `internal/utils/*`; Aegis assembles
-    // the state + JOSE/COSE config they need once and delegates. The kit façades
-    // are gone (Phase 11): the utils build the wire kits directly from the
-    // resolved key + this config. The key resolvers close over `amphora` (they
-    // stay on the class); the raw-namespace operations are threaded through until
-    // Phase 12 removes them.
+    // Every pipeline body — the verb surface AND the raw namespaces — lives in
+    // `internal/utils/*`; Aegis assembles the state + JOSE/COSE config they need
+    // once and delegates. The kit façades are gone (Phase 11): the utils build
+    // the wire kits directly from the resolved key + this config. The key
+    // resolvers close over `amphora`, so they stay on the class and reach the
+    // utils through this bundle.
     this.deps = {
       issuer: this.issuer,
       certBindingMode: this.certBindingMode,
       clockTolerance: this.clockTolerance,
+      dpopMaxSkew: this.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW,
       encryption: this.encryption,
       logger: this.logger,
       resolveSignKey: (options, profile) => this.resolveSignKey(options, profile),
       resolveVerifyKey: (id, algorithm, verify) =>
         this.resolveVerifyKey(id, algorithm, verify),
+      resolveEncryptKey: (encrypt) => this.resolveEncryptKey(encrypt),
       resolveDecryptKey: (id, algorithm, decrypt) =>
         this.resolveDecryptKey(id, algorithm, decrypt),
       resolveEncKey: (encrypt, required) => this.resolveEncKey(encrypt, required),
-      verifyJwt: (jwt, verify) => this.jwtVerify(jwt, verify),
-      verifyJws: (jws, options) => this.jwsVerify(jws, options),
-      decryptJwe: (jwe, options) => this.jweDecrypt(jwe, options),
-      signJws: (data, options) => this.jwsSign(data, options),
-      signRawCose: (input) => this.signRawCose(input),
     };
   }
 
@@ -394,335 +389,105 @@ export class Aegis implements IAegis {
     validateClaims(claims, predicate);
   }
 
-  // private aes
+  // private raw namespaces — each a ONE-LINE delegator to its
+  // `internal/utils/raw-*` body. The bodies (key-resolve → kit → native wire)
+  // moved out in Phase 12; the class keeps only the namespace signatures the
+  // `IAegis*` interfaces bind to.
 
-  // The AES path resolves its key exactly like JWE / COSE do — same resolver,
-  // same floor, same deployment-⊕-per-call selector merge. Without the per-call
-  // `key` a deployment could only ever hold ONE opinion about encryption, and a
-  // pylon's cookie would be sealed with whatever the deployment-wide enc policy
-  // picked (in practice the published token key) while the internal `dir` key
-  // that exists for the job went unused.
-  private async aesEncrypt(
+  // private aes
+  private aesEncrypt(
     data: AesContent,
     modeOrOptions?: "cbor" | "record" | "serialised" | AesEncryptOptions,
     maybeOptions?: AesEncryptOptions,
   ): Promise<string | AesEncryptionRecord | SerialisedAesEncryption> {
-    // The 2nd arg is EITHER the output mode (a string) OR the options object.
-    // When it is a string the 3rd arg carries the options; otherwise the 2nd is
-    // the options and the mode defaults to `"cbor"`.
-    const mode = isString(modeOrOptions) ? modeOrOptions : "cbor";
-    const options = isString(modeOrOptions) ? maybeOptions : modeOrOptions;
-
-    const kryptos = await this.resolveEncryptKey(options?.key);
-    const kit = new AesKit({
-      encryption: options?.key?.encryption ?? this.encryption,
-      kryptos,
-    });
-
-    return kit.encrypt(data, mode as "cbor");
+    return rawEncryptAes({ data, modeOrOptions, maybeOptions, deps: this.deps });
   }
 
-  // The ciphertext names its own key, so `findById` — deliberately unfiltered —
-  // still decrypts what an expired or since-internalised key sealed. A key the
-  // vault never held is the one case that lookup cannot serve, so an injected
-  // `kryptos` short-circuits it; the floor still applies, and a supplied key
-  // that names a different kid than the ciphertext throws (`resolveKey`).
-  private async aesDecrypt<T extends AesContent = string>(
+  private aesDecrypt<T extends AesContent = string>(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
     options?: AesDecryptOptions,
   ): Promise<T> {
-    const parsed = AesKit.parse(data);
-
-    const kryptos = await this.resolveDecryptKey(
-      parsed.keyId,
-      parsed.algorithm as KryptosEncAlgorithm | undefined,
-      options?.key,
-    );
-    const kit = new AesKit({ encryption: this.encryption, kryptos });
-
-    return kit.decrypt<T>(data);
+    return rawDecryptAes<T>({ data, options, deps: this.deps });
   }
 
   // private jwe
-
-  private async jweEncrypt(
+  private jweEncrypt(
     data: string,
     options: JweEncryptOptions = {},
   ): Promise<EncryptedJwe> {
-    const kryptos = await this.resolveEncryptKey(options.key);
-
-    return encryptJwe({
-      kryptos,
-      data,
-      options,
-      encryption: options.key?.encryption ?? this.encryption,
-      certBindingMode: this.certBindingMode,
-      logger: this.logger,
-    });
+    return rawEncryptJwe({ data, options, deps: this.deps });
   }
 
-  private async jweDecrypt(
+  private jweDecrypt(
     jwe: string,
     options: JweDecryptOptions = {},
   ): Promise<DecryptedJwe> {
-    const decode = JweKit.decode(jwe);
-
-    const kryptos = await this.resolveDecryptKey(
-      decode.header.kid,
-      decode.header.alg as KryptosEncAlgorithm,
-      options.key,
-    );
-
-    return new JweKit({
-      certBindingMode: this.certBindingMode,
-      encryption: this.encryption,
-      kryptos,
-      logger: this.logger,
-    }).decrypt(jwe);
+    return rawDecryptJwe({ jwe, options, deps: this.deps });
   }
 
   // private jws
-
-  private async jwsSign<T extends JwsContent>(
+  private jwsSign<T extends JwsContent>(
     data: T,
     options: SignJwsOptions = {},
   ): Promise<SignedJws> {
-    const kryptos = await this.resolveSignKey(options);
-
-    return new JwsKit({
-      certBindingMode: this.certBindingMode,
-      kryptos,
-      logger: this.logger,
-    }).sign(data, options);
+    return rawSignJws<T>({ data, options, deps: this.deps });
   }
 
-  private async jwsVerify<T extends JwsContent>(
+  private jwsVerify<T extends JwsContent>(
     jws: string,
     options: VerifyJwsOptions = {},
   ): Promise<ParsedJws<T>> {
-    const decode = JwsKit.decode(jws);
-
-    const kryptos = await this.resolveVerifyKey(
-      decode.header.kid,
-      decode.header.alg as KryptosSigAlgorithm,
-      options.key,
-    );
-
-    return new JwsKit({
-      certBindingMode: this.certBindingMode,
-      kryptos,
-      logger: this.logger,
-    }).verify(jws);
+    return rawVerifyJws<T>({ jws, options, deps: this.deps });
   }
 
   // private jwt
-
-  private async jwtSign<T extends Dict = Dict>(
+  private jwtSign<T extends Dict = Dict>(
     content: SignJwtContent<T>,
     options: SignJwtOptions = {},
   ): Promise<SignedJwt> {
-    const kryptos = await this.resolveSignKey(options);
-
-    const claims = assembleJwtWireClaims<T>(
-      { algorithm: kryptos.algorithm },
-      content,
-      options,
-    );
-
-    return signJwtWire({
-      kryptos,
-      wireClaims: claims,
-      content,
-      options,
-      certBindingMode: this.certBindingMode,
-      clockTolerance: this.clockTolerance,
-      logger: this.logger,
-    });
+    return rawSignJwt<T>({ content, options, deps: this.deps });
   }
 
-  // private cwe — the COSE_Encrypt0 mirror of jwe. Resolves the recipient key
-  // exactly as jweEncrypt/jweDecrypt do; COSE_Encrypt0 is direct AEAD, so the key
-  // is a symmetric enc key (no key-wrapping).
-
-  private async cweEncrypt(
+  // private cwe
+  private cweEncrypt(
     data: CweContent,
     options: CweEncryptOptions = {},
   ): Promise<EncryptedCwe> {
-    const kryptos = await this.resolveEncryptKey(options.key);
-
-    const inner = isBuffer(data) ? data : Buffer.from(data, "utf8");
-    const token = encryptCose({
-      kryptos,
-      logger: this.logger,
-      inner,
-      typ: options.typ,
-      encryption: options.key?.encryption ?? this.encryption,
-      proprietary: options.proprietary,
-    });
-
-    return { token: token.toString("base64url") };
+    return rawEncryptCwe({ data, options, deps: this.deps });
   }
 
-  private async cweDecrypt(
+  private cweDecrypt(
     token: string,
     options: CweDecryptOptions = {},
   ): Promise<DecryptedCwe> {
-    const bytes = Buffer.from(token, "base64url");
-
-    const kryptos = await this.resolveDecryptKey(
-      decodeEncryptedCoseKid(bytes),
-      undefined,
-      options.key,
-    );
-
-    return {
-      payload: decryptCose({ kryptos, logger: this.logger, token: bytes }),
-      token,
-    };
+    return rawDecryptCwe({ token, options, deps: this.deps });
   }
 
-  // private cws — the raw COSE_Sign1 mirror of jws. `cwsSign` reuses the SAME raw
-  // COSE signer the `sign({ format: "cws" })` mechanism dispatches to; the
-  // namespace is the ergonomic surface over it (as jws coexists with sign).
-  // `cwsVerify` mirrors jwsVerify: decode the kid, resolve the verify key, verify.
-
+  // private cws
   private cwsSign(data: CwsContent, options: SignCwsOptions = {}): Promise<SignedCws> {
-    return this.signRawCose({
-      payload: data,
-      key: options.key,
-      objectId: options.objectId,
-      omit: options.omit,
-      tokenType: options.tokenType,
-    });
+    return rawSignCws({ data, options, deps: this.deps });
   }
 
-  private async cwsVerify<T extends Dict = Dict>(
+  private cwsVerify<T extends Dict = Dict>(
     token: string,
     options: VerifyCwsOptions = {},
   ): Promise<ParsedCws<T>> {
-    const bytes = Buffer.from(token, "base64url");
-    const decoded = CwtKit.decode(bytes);
-
-    const kryptos = await this.resolveVerifyKey(
-      decoded.kid,
-      decoded.algorithm as KryptosSigAlgorithm,
-      options.key,
-    );
-
-    const { claims } = verifyCose({
-      kryptos,
-      logger: this.logger,
-      token: bytes,
-      clockTolerance: this.clockTolerance,
-    });
-
-    return {
-      claims: claims as T,
-      header: { alg: decoded.algorithm, kid: decoded.kid, typ: decoded.typ },
-      token,
-    };
+    return rawVerifyCws<T>({ token, options, deps: this.deps });
   }
 
-  // private cwt — the generic-CWT mirror of the generic jwt (jwt.sign /
-  // signJwtWire). Policy-free: it maps the standard-claim content to the
-  // domain-keyed claims (via the shared claim registry) and secures them with
-  // signCose — the SAME primitive mintCose uses, minus the profile floor and
-  // auto-injection. Verify mirrors jwtVerify: decode, resolve, verify, then
-  // validate the standard claims (exp/nbf/iss/aud) with the JOSE verify matcher.
-
-  private async cwtSign<C extends Dict = Dict>(
+  // private cwt
+  private cwtSign<C extends Dict = Dict>(
     content: SignCwtContent<C>,
     options: SignCwtOptions = {},
   ): Promise<SignedCwt> {
-    const kryptos = await this.resolveSignKey({ key: options.key });
-
-    const common = assembleCwtClaims({ issuer: this.issuer }, content, options);
-
-    const token = signCose({
-      kryptos,
-      logger: this.logger,
-      common,
-      typ: options.typ ?? coseTypFromTokenType(content.tokenType),
-      proprietary: options.proprietary,
-      omit: options.omit,
-    });
-
-    const expiresAt = isDate(common.expiresAt) ? common.expiresAt : undefined;
-    const expiresOn = expiresAt ? getUnixTime(expiresAt) : undefined;
-
-    return {
-      token: token.toString("base64url"),
-      expiresAt,
-      expiresIn: expiresOn ? expiresOn - getUnixTime(new Date()) : undefined,
-      expiresOn,
-      objectId: options.objectId,
-      tokenId: isString(common.tokenId) ? common.tokenId : undefined,
-    };
+    return rawSignCwt<C>({ content, options, deps: this.deps });
   }
 
-  private async cwtVerify<C extends Dict = Dict>(
+  private cwtVerify<C extends Dict = Dict>(
     token: string,
     verify: VerifyCwtOptions = {},
   ): Promise<ParsedCwt<C>> {
-    const bytes = Buffer.from(token, "base64url");
-    const decoded = CwtKit.decode(bytes);
-
-    const kryptos = await this.resolveVerifyKey(
-      decoded.kid,
-      decoded.algorithm as KryptosSigAlgorithm,
-      verify.key,
-    );
-
-    const { claims, wire } = verifyCose({
-      kryptos,
-      logger: this.logger,
-      token: bytes,
-      clockTolerance: this.clockTolerance,
-    });
-
-    validateCwtClaims(wire, kryptos.algorithm, verify, this.clockTolerance);
-
-    return {
-      claims: claims as C,
-      header: { alg: decoded.algorithm, kid: decoded.kid, typ: decoded.typ },
-      token,
-    };
-  }
-
-  // private sign tiers
-
-  // Raw COSE sign — the profile-less sibling of the `sign` JWS path (the
-  // `signToken` util). Secures an arbitrary CBOR claims map as a COSE_Sign1 CWT
-  // (the same encoder mintCose uses), typ derived straight from the bare
-  // `tokenType`. Shared between the `sign` verb (via `deps.signRawCose`) and the
-  // raw `cws.sign` namespace, so it stays on the class. The point is an
-  // opaque handle: a base64url CBOR blob a consumer cannot split on dots and
-  // read as a JWT. The signing key is resolved exactly as the JWS path does, so
-  // a per-call `key` predicate selects it (e.g. an internal, unpublished key).
-  private async signRawCose(input: RawSignInput): Promise<SignedJws> {
-    // A COSE token secures a CBOR claims MAP; a pre-serialised string/Buffer has
-    // no CWT structure to secure. That is valid only for the JOSE path, so it is
-    // a caller error here rather than a silent reinterpretation.
-    if (isString(input.payload) || isBuffer(input.payload)) {
-      throw new AegisError("A COSE payload must be a claims object", {
-        code: "cose_payload_not_object",
-        title: "COSE Payload Not An Object",
-        details:
-          "sign({ format: 'cose' }) secures a CBOR claims map, so its payload must be a plain object; a string or Buffer payload is only valid for the default JWS format.",
-      });
-    }
-
-    const kryptos = await this.resolveSignKey({ key: input.key });
-
-    const token = signCose({
-      kryptos,
-      logger: this.logger,
-      common: input.payload,
-      typ: coseTypFromTokenType(input.tokenType),
-      omit: input.omit,
-    });
-
-    return { objectId: input.objectId, token: token.toString("base64url") };
+    return rawVerifyCwt<C>({ token, verify, deps: this.deps });
   }
 
   // Resolve the recipient encryption key for both the JOSE (JWE) and COSE
@@ -744,32 +509,12 @@ export class Aegis implements IAegis {
     }
   }
 
-  private async jwtVerify<T extends Dict = Dict>(
+  // private jwt verify
+  private jwtVerify<T extends Dict = Dict>(
     jwt: string,
     verify: VerifyJwtOptions = {},
   ): Promise<ParsedJwt<T>> {
-    const decode = JwtKit.decode(jwt);
-
-    const kryptos = await this.resolveVerifyKey(
-      decode.header.kid,
-      decode.header.alg as KryptosSigAlgorithm,
-      verify.key,
-    );
-
-    return verifyJwtToDomain(
-      new JwtKit({
-        certBindingMode: this.certBindingMode,
-        clockTolerance: this.clockTolerance,
-        kryptos,
-        logger: this.logger,
-      }),
-      jwt,
-      verify,
-      {
-        clockTolerance: this.clockTolerance,
-        dpopMaxSkew: this.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW,
-      },
-    );
+    return rawVerifyJwt<T>({ jwt, verify, deps: this.deps });
   }
 
   // private kryptos

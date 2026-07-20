@@ -6,6 +6,7 @@ import { resolveProfile } from "../profiles/registry.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { enforceVerifyFloor } from "./enforce-verify-floor.js";
 import { extractDomainClaims } from "./extract-claims.js";
+import { rawVerifyJwt } from "./raw-verify-jwt.js";
 import { verifyCoseToken } from "./verify-cose-token.js";
 import { verifyToken } from "./verify-token.js";
 
@@ -52,7 +53,11 @@ export const verifyProfileToken = async <T extends ParsedJwt | ParsedJws<any>>({
   // an absent typ there). Direct jwt.verify callers keep the strict default.
   const parsed = JweKit.isJwe(token)
     ? await verifyToken<ParsedJwt>({ token, options: { ...rest, expPresence }, deps })
-    : await deps.verifyJwt(token, { ...rest, typPresence: "optional", expPresence });
+    : await rawVerifyJwt({
+        jwt: token,
+        verify: { ...rest, typPresence: "optional", expPresence },
+        deps,
+      });
 
   const expectedIssuer =
     options.issuer ??

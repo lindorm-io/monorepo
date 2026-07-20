@@ -2,6 +2,8 @@ import { isBuffer, isString } from "@lindorm/is";
 import type { RawSignInput, SignedJws } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { applyOmit } from "./apply-omit.js";
+import { rawSignCose } from "./raw-sign-cose.js";
+import { rawSignJws } from "./raw-sign-jws.js";
 import { selectEncoder } from "./select-encoder.js";
 
 /**
@@ -20,7 +22,7 @@ export const signToken = async ({
   deps: AegisDeps;
 }): Promise<SignedJws> => {
   if (selectEncoder(input.format).format === "cws") {
-    return deps.signRawCose(input);
+    return rawSignCose({ input, deps });
   }
 
   const payload =
@@ -28,12 +30,16 @@ export const signToken = async ({
       ? input.payload
       : JSON.stringify(applyOmit(input.payload, input.omit));
 
-  return deps.signJws(payload, {
-    bindCertificate: input.bindCertificate,
-    contentType: input.contentType,
-    header: input.header,
-    objectId: input.objectId,
-    key: input.key,
-    tokenType: input.tokenType,
+  return rawSignJws({
+    data: payload,
+    options: {
+      bindCertificate: input.bindCertificate,
+      contentType: input.contentType,
+      header: input.header,
+      objectId: input.objectId,
+      key: input.key,
+      tokenType: input.tokenType,
+    },
+    deps,
   });
 };
