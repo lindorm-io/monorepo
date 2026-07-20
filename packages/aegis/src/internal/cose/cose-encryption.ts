@@ -21,8 +21,7 @@ const innerCose = (value: unknown): Tag | undefined => {
 /**
  * Wrap already-secured CWT bytes in a bare COSE_Encrypt0 (sign-then-encrypt) —
  * the inner CWT bytes are the plaintext. `proprietary` threads the interop
- * encryption gate (default proprietary: a private-use AES-CBC-HMAC is allowed;
- * only an explicit `proprietary: false` enforces strict COSE-RFC labels).
+ * encryption gate (a private-use AES-CBC-HMAC needs it; default strict).
  */
 export const encryptCose = ({
   kryptos,

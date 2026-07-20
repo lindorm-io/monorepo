@@ -438,10 +438,10 @@ The COSE structure follows the key and the profile:
 
 The COSE `typ` header carries the CWT media type — `application/at+cwt`, `application/secevent+cwt`, etc. (the JWT path's `application/at+jwt` family with the `+jwt` suffix swapped for `+cwt`; bare `JWT` → `application/cwt`, the one IANA-registered CWT type).
 
-By default the claims use lindorm-proprietary compact encodings (integer-keyed `act` / `sub_id`, private-use labels for lindorm-only claims). Pass `proprietary: false` to emit a fully interoperable, string-keyed payload that a stock COSE/CWT verifier reads, at the cost of larger tokens:
+By default the claims are fully interoperable — a string-keyed payload that a stock COSE/CWT verifier reads, with the strict alg/enc interop gate ON. Pass `proprietary: true` for the lindorm-native compact encodings (integer-keyed `act` / `sub_id`, private-use labels for lindorm-only claims, gate off), at the benefit of smaller tokens:
 
 ```typescript
-await aegis.mint("access_token", content, { format: "cwt", proprietary: false });
+await aegis.mint("access_token", content, { format: "cwt", proprietary: true });
 ```
 
 Either way the signature itself is plain RFC 9052 — verified in interop tests against `@auth0/cose` and `cose-js`.

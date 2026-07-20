@@ -60,18 +60,17 @@ describe("CwsKit — symmetric key produces a COSE_Mac0 (tag 17)", () => {
   });
 });
 
-describe("CwsKit — proprietary alg gate", () => {
+describe("CwsKit — proprietary alg gate (D5)", () => {
   // ML-DSA (post-quantum, AKP) is a reachable kryptos signing algorithm with NO
-  // official COSE registration — private-use. Proprietary is the DEFAULT, so it
-  // is allowed unless the caller opts into interop mode (`proprietary: false`),
-  // which refuses it; verify is always lenient.
+  // official COSE registration — private-use. Non-proprietary sign refuses it;
+  // proprietary allows it, and verify is always lenient.
   const kryptos = KryptosKit.generate.sig.akp({ algorithm: "ML-DSA-44" });
   const kit = new CwsKit({ kryptos, logger: createMockLogger() });
 
-  test("interoperable sign (proprietary:false) refuses ML-DSA (no official COSE label)", () => {
+  test("non-proprietary sign refuses ML-DSA (no official COSE label)", () => {
     const error = (() => {
       try {
-        kit.sign(Buffer.from("the cwt claims bytes"), { proprietary: false });
+        kit.sign(Buffer.from("the cwt claims bytes"));
       } catch (err) {
         return err as AegisError;
       }
@@ -81,10 +80,10 @@ describe("CwsKit — proprietary alg gate", () => {
     expect(error?.code).toBe("cose_alg_not_registered");
   });
 
-  test("default (proprietary) sign allows ML-DSA and round-trips through verify", () => {
+  test("proprietary sign allows ML-DSA and round-trips through verify", () => {
     const payload = Buffer.from("the cwt claims bytes");
 
-    const sign1 = kit.sign(payload);
+    const sign1 = kit.sign(payload, { proprietary: true });
     expect(sign1.tag).toBe(COSE_TAG.sign1);
     // The private-use ML-DSA alg label sits below the COSE private-use floor.
     const protectedHeader = decodeCbor<Map<number, unknown>>(

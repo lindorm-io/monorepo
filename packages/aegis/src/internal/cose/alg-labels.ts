@@ -32,9 +32,9 @@ const JOSE_TO_COSE_OFFICIAL: Readonly<Record<string, number>> = {
 /**
  * PRIVATE-USE COSE labels (< -65536, RFC 9052 §8) for kryptos signing algorithms
  * with no OFFICIAL COSE-RFC registration in our map — currently the ML-DSA
- * (post-quantum) family. Emitted under proprietary mode, which is the DEFAULT;
- * only an explicit `proprietary: false` interop gate refuses them. The lenient
- * read path maps them back so a proprietary CWT still round-trips.
+ * (post-quantum) family. Emitted ONLY under proprietary mode (the interop gate
+ * refuses them by default); the lenient read path maps them back so a
+ * proprietary CWT still round-trips.
  */
 const JOSE_TO_COSE_PRIVATE: Readonly<Partial<Record<KryptosAlgorithm, number>>> = {
   "ML-DSA-44": -65537,
@@ -49,9 +49,9 @@ const COSE_TO_JOSE: Readonly<Record<number, string>> = Object.fromEntries(
 );
 
 /**
- * Interop gate: true iff the algorithm has an OFFICIAL (non-private-use) COSE
- * label, i.e. it is COSE-RFC compliant. A `sign` in explicit interoperable mode
- * (`proprietary: false`) refuses anything this returns `false` for.
+ * Interop gate (D5): true iff the algorithm has an OFFICIAL (non-private-use)
+ * COSE label, i.e. it is COSE-RFC compliant. A non-proprietary `sign` refuses
+ * anything this returns `false` for.
  */
 export const isOfficialCoseAlg = (algorithm: KryptosAlgorithm): boolean =>
   algorithm in JOSE_TO_COSE_OFFICIAL;

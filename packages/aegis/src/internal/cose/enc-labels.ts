@@ -30,10 +30,8 @@ const ENC_TO_COSE_OFFICIAL: Readonly<Partial<Record<KryptosEncryption, number>>>
 /**
  * PRIVATE-USE COSE labels (< -65536, RFC 9052 §8) for kryptos encryptions with
  * no OFFICIAL COSE-RFC registration — the AES-CBC-HMAC (RFC 7518 §5.2.3) family,
- * which COSE never registered. Emitted under proprietary mode, which is the
- * DEFAULT; only an explicit `proprietary: false` interop gate refuses them. The
- * lenient decrypt path maps them back so a proprietary COSE_Encrypt0 still
- * round-trips.
+ * which COSE never registered. Emitted ONLY under proprietary mode; the lenient
+ * decrypt path maps them back so a proprietary COSE_Encrypt0 still round-trips.
  */
 const ENC_TO_COSE_PRIVATE: Readonly<Partial<Record<KryptosEncryption, number>>> = {
   "A128CBC-HS256": -65537,
@@ -66,9 +64,9 @@ export const tagBytesForEncryption = (encryption: KryptosEncryption): number => 
 };
 
 /**
- * Interop gate: true iff the encryption has an OFFICIAL (non-private-use) COSE
- * label, i.e. it is COSE-RFC compliant. An `encrypt` in explicit interoperable
- * mode (`proprietary: false`) refuses anything this returns `false` for.
+ * Interop gate (D5): true iff the encryption has an OFFICIAL (non-private-use)
+ * COSE label, i.e. it is COSE-RFC compliant. A non-proprietary `encrypt` refuses
+ * anything this returns `false` for.
  */
 export const isOfficialCoseEnc = (encryption: KryptosEncryption): boolean =>
   encryption in ENC_TO_COSE_OFFICIAL;

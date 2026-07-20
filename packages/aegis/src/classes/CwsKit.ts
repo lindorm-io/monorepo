@@ -23,10 +23,9 @@ export type CwsSignOptions = {
   typ?: string;
   /**
    * Allow a lindorm-proprietary (private-use) COSE algorithm label (default
-   * `true`). When omitted (or `true`) a private-use alg such as ML-DSA is
-   * permitted; set `false` for strict COSE-RFC interoperability, where the
-   * signing algorithm MUST carry an OFFICIAL COSE-RFC label or `sign` throws (the
-   * interop gate). Read/verify is always lenient.
+   * `false`). When `false` the signing algorithm MUST carry an OFFICIAL COSE-RFC
+   * label or `sign` throws (D5 interop gate); when `true` a private-use alg such
+   * as ML-DSA is permitted. Read/verify is always lenient.
    */
   proprietary?: boolean;
 };
@@ -72,11 +71,10 @@ export class CwsKit {
   }
 
   sign(payload: Buffer, options: CwsSignOptions = {}): Tag {
-    // Interop gate: proprietary is the default, so a private-use algorithm (e.g.
-    // ML-DSA) is allowed unless the caller EXPLICITLY opts into interoperable
-    // mode (`proprietary: false`), which refuses an algorithm with no OFFICIAL
-    // COSE-RFC registration. Runs before the Sign1/Mac0 split — applies to both.
-    if (options.proprietary === false && !isOfficialCoseAlg(this.kryptos.algorithm)) {
+    // Interop gate (D5): a non-proprietary sign refuses an algorithm with no
+    // OFFICIAL COSE-RFC registration (e.g. ML-DSA) so the token stays
+    // interoperable. Runs before the Sign1/Mac0 split — it applies to both.
+    if (!options.proprietary && !isOfficialCoseAlg(this.kryptos.algorithm)) {
       throw new CwsError(
         `Algorithm "${this.kryptos.algorithm}" has no official COSE registration`,
         {
