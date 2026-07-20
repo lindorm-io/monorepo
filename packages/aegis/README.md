@@ -1,6 +1,6 @@
 # @lindorm/aegis
 
-JOSE token operations for JWT, JWS, and JWE backed by an Amphora key store.
+Token operations for JWT, JWS, JWE and their COSE counterparts (CWT / CWS / CWE), backed by an Amphora key store.
 
 ## Installation
 
@@ -18,12 +18,16 @@ npm install @lindorm/amphora @lindorm/logger
 
 ## Overview
 
-Aegis exposes two layers:
+`Aegis` is an async façade over an `IAmphora` key store — it resolves keys by `kid` and runs the operation. It offers **two surfaces**, and the difference is the return shape:
 
-- **`Aegis`** — async façade that resolves keys from an `IAmphora` key store and delegates to the kit classes. Use this when you want JWT/JWS/JWE or COSE/CWT operations driven by a managed key store with `kid`-based lookup.
-- **Kit classes** (`JwtKit`, `JwsKit`, `JweKit`, `SignatureKit`) — synchronous, single-key primitives. You supply an `IKryptos` key directly. Use these when you already have the key in hand and don't need the Amphora layer.
+- **Domain verbs** — `aegis.sign` / `mint` / `encrypt` / `verify` / `decrypt` / `parse`. These speak the aegis domain vocabulary. `verify` returns a unified `VerifiedToken`: domain-keyed claims split into buckets — `.claims` (registered), `.custom` (everything else), plus `.profile` / `.sensitive` — a domain `.header`, and a `.format` discriminant. **No `.payload`.**
+- **Wire namespaces** — `aegis.jwt` / `jws` / `jwe` / `cwt` / `cwm` / `cws` / `cwe`. Each resolves the key then delegates to its kit and returns the kit's **native wire shape** — a `.payload` with wire claim names (`sub` / `exp` / `jti`, never `subject` / `expiresAt` / `tokenId`), exactly what a standalone JOSE / COSE library returns.
 
-The `Aegis` instance methods are async because they perform key lookups. All kit instance methods are synchronous.
+The same token reads either way: `aegis.jwt.verify(t)` hands you the raw wire; `aegis.verify(t)` hands you the domain `VerifiedToken`.
+
+**Kit classes** (`JwtKit`, `JwsKit`, `JweKit`, `SignatureKit`) are the synchronous, single-key wire primitives underneath. You supply an `IKryptos` key directly and get the native wire shape back — no Amphora, no domain translation. Use these when you already hold the key.
+
+`Aegis` instance methods are async (they perform key lookups); all kit instance methods are synchronous.
 
 ## Aegis
 
@@ -133,7 +137,9 @@ const aegis = new Aegis({
 });
 ```
 
-### Namespaced operations
+### Namespaced operations (wire surface)
+
+Each namespace resolves the key by `kid`, delegates to its kit, and returns the kit's **native wire shape** — `.payload` carries wire claim names. Named identity matchers, DPoP, actor chains and domain translation live on `aegis.verify`, not here.
 
 ```typescript
 const signed = await aegis.jwt.sign({
@@ -145,38 +151,41 @@ const signed = await aegis.jwt.sign({
   claims: { role: "admin" },
 });
 
-const parsed = await aegis.jwt.verify(signed.token, {
-  audience: "https://api.example.com",
-  scope: ["read"],
-});
+const parsed = await aegis.jwt.verify(signed.token);
+// parsed.payload → { sub: "user-123", exp: 1737000000, aud: [...], scope: [...] }  (WIRE names)
+// parsed.header, parsed.decoded, parsed.token
 
 const jws = await aegis.jws.sign("payload");
 const verifiedJws = await aegis.jws.verify(jws.token);
+// verifiedJws.payload === "payload"  (opaque)
 
 const jwe = await aegis.jwe.encrypt("secret");
-const decrypted = await aegis.jwe.decrypt(jwe.token);
+const decrypted = await aegis.jwe.decrypt(jwe.token); // opaque bytes out
 ```
 
-The COSE namespaces `cws` / `cwe` / `cwt` are the wire-for-wire COSE counterparts of `jws` / `jwe` / `jwt` — same surface, same key resolution, CBOR wire (see [COSE / CWT](#cose--cwt)):
+The COSE namespaces `cwt` / `cwm` / `cws` / `cwe` are the wire-for-wire COSE counterparts — same surface, same key resolution, CBOR wire (see [COSE / CWT](#cose--cwt)). The claims-bearing CWT splits by integrity structure: `cwt` is a `COSE_Sign1` (asymmetric key), `cwm` is a `COSE_Mac0` (symmetric key):
 
 ```typescript
-// cws — raw COSE_Sign1, the COSE mirror of jws (secures a CBOR claims map)
-const cws = await aegis.cws.sign({ tid: "at_abc" }, { tokenType: "access_token" });
-const parsedCws = await aegis.cws.verify(cws.token);
-
-// cwe — COSE_Encrypt0, the COSE mirror of jwe (direct AEAD to a symmetric enc key)
-const cwe = await aegis.cwe.encrypt("secret");
-const decryptedCwe = await aegis.cwe.decrypt(cwe.token); // { payload: Buffer }
-
-// cwt — generic CWT with standard claims, the COSE mirror of jwt
+// cwt — generic CWT, COSE_Sign1 (asymmetric), the COSE mirror of jwt
 const cwt = await aegis.cwt.sign({
   subject: "user-123",
   audience: ["https://api.example.com"],
   expires: "1h",
 });
-const parsedCwt = await aegis.cwt.verify(cwt.token, {
-  audience: "https://api.example.com",
-});
+const parsedCwt = await aegis.cwt.verify(cwt.token);
+// parsedCwt.payload → COSE-name-keyed wire ({ cti, exp, ... }); parsedCwt.header, .token
+
+// cwm — the same, as a COSE_Mac0 (symmetric key)
+const cwm = await aegis.cwm.sign({ subject: "user-123", expires: "1h" });
+const parsedCwm = await aegis.cwm.verify(cwm.token);
+
+// cws — raw COSE_Sign1, the opaque COSE mirror of jws
+const cws = await aegis.cws.sign({ tid: "at_abc" }, { tokenType: "access_token" });
+const parsedCws = await aegis.cws.verify(cws.token); // { header, raw: Buffer, token }
+
+// cwe — COSE_Encrypt0, the COSE mirror of jwe (direct AEAD to a symmetric enc key)
+const cwe = await aegis.cwe.encrypt("secret");
+const decryptedCwe = await aegis.cwe.decrypt(cwe.token); // { payload: Buffer }
 ```
 
 ### AES helpers
@@ -224,12 +233,32 @@ const plain = await aegis.aes.decrypt(encoded, { key: { kryptos: detached } });
 
 ### Universal verification
 
-`aegis.verify` auto-detects JWT, JWS, and JWE compact serialisations. JWE inputs are decrypted first, then the inner payload is re-verified. A COSE token (base64url CBOR, no JOSE dot structure) is also auto-detected and its integrity verified — see [COSE / CWT](#cose--cwt).
+`aegis.verify(token, options?)` auto-detects the format — JWT, JWS, JWE, or any COSE token (base64url CBOR, no JOSE dot structure) — and returns the unified domain `VerifiedToken`. A JWE / CWE is decrypted first, then its inner MUST be a signed token (an unsigned encrypted claims set throws `verify_requires_signature` — read those with `aegis.decrypt`). The result is therefore **always** signature-verified.
 
 ```typescript
 const result = await aegis.verify(anyToken, {
   audience: "https://api.example.com",
 });
+
+result.format; // "jwt" | "jws" | "jwe" | "cwt" | "cwm" | "cws" | "cwe"
+result.claims.subject; // domain-keyed registered claims
+result.custom; // non-registered claims
+result.header.tokenType; // domain-keyed header
+// jws/cws carry empty claims/custom and deliver the opaque payload on result.raw
+```
+
+### Encryption
+
+`aegis.encrypt` / `aegis.decrypt` are the confidentiality mirror of `sign` — pure encryption with **no inner signature** (for sender authentication, `mint(profile, content, { encrypt })` and read it back with `verify`). `encrypt` translates a domain claims set to the wire and seals it in a JWE (or a `COSE_Encrypt0` with `format: "cwe"`); an opaque `Buffer` / `string` passes through untouched. `decrypt` reverses it with **no signature check**, returning a `DecryptedToken`.
+
+```typescript
+const enc = await aegis.encrypt({ subject: "user-123", tenantId: "t-1" });
+// → { format: "jwe", token }
+
+const dec = await aegis.decrypt(enc.token);
+// → { format: "jwe", claims: { subject, tenantId }, custom, header, token }
+
+const cwe = await aegis.encrypt(data, { format: "cwe" }); // COSE_Encrypt0 instead
 ```
 
 ### Static helpers
@@ -241,50 +270,46 @@ Aegis.isJwt(token);
 Aegis.isJws(token);
 Aegis.isJwe(token);
 Aegis.isJose(token); // any JOSE token (JWT, JWS, or JWE)
-Aegis.isCose(token); // a COSE token (CWT / bare COSE object) — the other wire family
 
-Aegis.header(token); // decode the header (JOSE segment, or the COSE protected map)
-Aegis.decode(token); // auto-detect (JOSE or COSE), decode without verifying
-Aegis.parse(token); // auto-detect (JWT or JWS), validate structure
+Aegis.isCose(token); // any COSE token — the other wire family
+Aegis.isCwt(token); // COSE_Sign1 CWT (asymmetric)
+Aegis.isCwm(token); // COSE_Mac0 CWT (symmetric)
+Aegis.isCws(token); // opaque COSE_Sign1
+Aegis.isCwe(token); // COSE_Encrypt0
+
+Aegis.parse(token); // auto-detect JWT/JWS → VerifiedToken (unverified, keyless); THROWS on JWE/CWE
 
 Aegis.toDomain(wire); // wire claim dict → { claims, custom } domain claims
 Aegis.toWire(claims); // domain claims → JOSE-keyed wire dict
-Aegis.validateClaims(claims, matchers); // throws on mismatch
+Aegis.assert(claims, matchers); // throws on mismatch
 ```
+
+`Aegis.header` and `Aegis.decode` are gone — read a verified token's `.header`, or use `aegis.<fmt>.decode` for a known format and `aegis.parse` for an unknown one.
 
 ## JwtKit
 
-Synchronous JWT sign and verify against a single `IKryptos` key.
+Synchronous, **wire-level** JWT sign and verify against a single `IKryptos` key. The kit is transform-free: it puts the exact claim names it is handed onto the wire and returns the exact names it read off it — no auto `iat` / `jti` / `nbf`, no domain translation, no named matchers. That is the `Aegis` layer's job.
 
 ```typescript
 import { JwtKit } from "@lindorm/aegis";
 
-const kit = new JwtKit({
-  issuer: "https://example.com",
-  kryptos,
-  logger,
-  clockTolerance: 30, // seconds, optional
-});
+const kit = new JwtKit({ kryptos, logger, clockTolerance: 30 });
 
-const signed = kit.sign({
-  expires: "1h",
-  subject: "user-123",
-  tokenType: "access_token",
-  audience: ["https://api.example.com"],
-  claims: { role: "admin" },
-});
-// → { token, expiresAt, expiresIn, expiresOn, objectId, tokenId }
+const token = kit.sign({
+  iss: "https://example.com",
+  sub: "user-123",
+  exp: Math.floor(Date.now() / 1000) + 3600,
+  jti: "tok-1",
+}); // → the compact JWT string
 
-const parsed = kit.verify(signed.token, {
-  audience: "https://api.example.com",
-  scope: ["read"],
-});
+const parsed = kit.verify(token, (claims) => claims.iss === "https://example.com");
+// parsed.payload → wire claims ({ iss, sub, exp, jti }); parsed.header, .decoded, .token
 
 JwtKit.isJwt(token);
-JwtKit.decode(token);
-JwtKit.parse(token);
-JwtKit.validate(payload, matchers);
+JwtKit.decode(token); // wire segments, no verification
 ```
+
+`verify` runs crit, typ well-formedness, algorithm-match, signature, cert-binding, reserved-claim type checks, and the temporal range (`exp` / `nbf` / `iat`, validated if present) — plus the optional `assert` predicate over the wire claims.
 
 ## JwsKit
 
@@ -356,15 +381,18 @@ const formatted = kit.format(signature); // string
 
 ## COSE / CWT
 
-COSE mirrors JOSE across the board. The `cws` / `cwe` / `cwt` namespaces are the wire-for-wire counterparts of `jws` / `jwe` / `jwt`, and every token profile can be issued as a CBOR Web Token (CWT, RFC 8392) instead of a JWT by passing `format: "cwt"` to `mint` — the same profile, the same domain claims, the same validation floor, only the wire encoding differs. The token is returned as a base64url string.
+COSE mirrors JOSE across the board. The `cwt` / `cwm` / `cws` / `cwe` namespaces are the wire-for-wire counterparts of the JOSE family, and every token profile can be issued as a CBOR Web Token (CWT, RFC 8392) instead of a JWT by passing `format: "cwt"` to `mint` — the same profile, the same domain claims, the same validation floor, only the wire encoding differs. The token is returned as a base64url string.
 
 | JOSE         | COSE         | What                                      |
 | ------------ | ------------ | ----------------------------------------- |
 | `jws`        | `cws`        | Raw signature over a payload (COSE_Sign1) |
 | `jwe`        | `cwe`        | Encryption (COSE_Encrypt0, direct AEAD)   |
-| `jwt`        | `cwt`        | Standard-claim token (CWT)                |
+| `jwt`        | `cwt`        | Standard-claim token, signed (COSE_Sign1) |
+| `jwt` (HS\*) | `cwm`        | Standard-claim token, MAC'd (COSE_Mac0)   |
 | `mint` `jwt` | `mint` `cwt` | Profiled token (`format: "cwt"`)          |
 | `sign` `jws` | `sign` `cws` | Opaque handle (`format: "cws"`)           |
+
+The claims-bearing CWT is split by integrity structure: `cwt` is a `COSE_Sign1` gated to an **asymmetric** key, `cwm` is a `COSE_Mac0` gated to a **symmetric** key. `mint` / `aegis.verify` pick the right one automatically from the resolved key's class; the raw namespaces (`aegis.cwt` / `aegis.cwm`) each reject the wrong key class.
 
 ```typescript
 const { token } = await aegis.mint(
@@ -387,9 +415,9 @@ const smart = await aegis.verify(token);
 
 The COSE structure follows the key and the profile:
 
-- **Signed** — an asymmetric key produces a `COSE_Sign1` (the default).
-- **MAC'd** — a symmetric `oct` key produces a `COSE_Mac0` (HMAC is a MAC algorithm, never a `COSE_Sign1` signature). The same `algClass` policy applies as for JWTs.
-- **Encrypted** — an encryptable profile minted with `encrypt` (or carrying `sensitive_identity`) is sign-then-encrypted into a `COSE_Encrypt0`. Direct AES-GCM and AES-CCM (all eight RFC 9053 variants) are supported.
+- **Signed** — an asymmetric key produces a `COSE_Sign1` (the `cwt` namespace; the default).
+- **MAC'd** — a symmetric `oct` key produces a `COSE_Mac0` (the `cwm` namespace — HMAC is a MAC algorithm, never a `COSE_Sign1` signature). The same `algClass` policy applies as for JWTs.
+- **Encrypted** — an encryptable profile minted with `encrypt` (or carrying `sensitive` fields) is sign-then-encrypted into a `COSE_Encrypt0`. Direct AES-GCM and AES-CCM (all eight RFC 9053 variants) are supported.
 
 ### `typ` and proprietary encoding
 
@@ -412,12 +440,12 @@ const { token } = await aegis.cws.sign(
   { tid: "ref-1", sec: "…" },
   { tokenType: "access_token" },
 );
-const parsed = await aegis.cws.verify(token); // { claims, header, token }
+const parsed = await aegis.cws.verify(token); // { header, raw: Buffer, token } — opaque
 ```
 
-### Generic CWT and COSE encryption (`cwt` / `cwe`)
+### Generic CWT and COSE encryption (`cwt` / `cwm` / `cwe`)
 
-`cwt` is the COSE mirror of the generic `jwt`: `cwt.sign` secures a standard-claim CWT (no profile floor, no auto-injection), and `cwt.verify` validates the standard claims (`exp`/`nbf`/`iss`/`aud`) exactly as `jwt.verify` validates a JWT. `cwe` is the COSE mirror of `jwe` — direct AEAD to a symmetric `use:"enc"` key (`COSE_Encrypt0`), returning the plaintext as raw bytes.
+`cwt` is the COSE mirror of the generic `jwt`: `cwt.sign` secures a standard-claim CWT (no profile floor, no auto-injection), and `cwt.verify` validates it structurally + temporally (`exp` / `nbf`) exactly as `jwt.verify` validates a JWT, returning the COSE-name-keyed wire payload (`cti` / `exp`). `cwm` is the same over a symmetric key (`COSE_Mac0`). `cwe` is the COSE mirror of `jwe` — direct AEAD to a symmetric `use:"enc"` key (`COSE_Encrypt0`), returning the plaintext as raw bytes.
 
 ```typescript
 const cwt = await aegis.cwt.sign({
@@ -425,9 +453,8 @@ const cwt = await aegis.cwt.sign({
   audience: ["https://api.example.com"],
   expires: "1h",
 });
-const parsed = await aegis.cwt.verify(cwt.token, {
-  audience: "https://api.example.com",
-}); // rejects an expired or wrong-audience CWT
+const parsed = await aegis.cwt.verify(cwt.token);
+// parsed.payload → COSE-name-keyed wire ({ cti, exp, ... }); rejects an expired CWT
 
 const cwe = await aegis.cwe.encrypt("secret"); // string or Buffer
 const { payload } = await aegis.cwe.decrypt(cwe.token); // Buffer
@@ -443,14 +470,14 @@ const { payload } = await aegis.cwe.decrypt(cwe.token); // Buffer
   subject: string;              // required
   tokenType: string;            // required, e.g. "access_token"
 
-  audience?: string[];
+  audience?: Array<string>;
   claims?: Record<string, any>; // arbitrary custom claims
-  scope?: string[];
-  permissions?: string[];
-  roles?: string[];
-  groups?: string[];
-  entitlements?: string[];
-  authorizationDetails?: AuthorizationDetail[]; // RFC 9396 (RAR) — see below
+  scope?: Array<string>;
+  permissions?: Array<string>;
+  roles?: Array<string>;
+  groups?: Array<string>;
+  entitlements?: Array<string>;
+  authorizationDetails?: Array<AuthorizationDetail>; // RFC 9396 (RAR) — see below
   clientId?: string;
   grantType?: string;
   tenantId?: string;
@@ -459,8 +486,8 @@ const { payload } = await aegis.cwe.decrypt(cwe.token); // Buffer
   notBefore?: Date;
   authTime?: Date;
   authContextClassReference?: string;
-  authFactor?: string[];
-  authMethods?: string[];
+  authFactor?: Array<string>;
+  authMethods?: Array<string>;
   authorizedParty?: string;
   levelOfAssurance?: number;
   sessionHint?: string;
@@ -479,7 +506,7 @@ verbatim** — type-specific inner fields (e.g. `instructedAmount`,
 detail's own spec are preserved exactly.
 
 ```typescript
-kit.sign({
+await aegis.jwt.sign({
   expires: "1h",
   subject: "user-123",
   tokenType: "access_token",
@@ -496,10 +523,10 @@ kit.sign({
 
 ## Verify options
 
-`VerifyJwtOptions` extends the claim matcher set. Each field accepts either a literal value or a `PredicateOperator` for flexible matching:
+`VerifyJwtOptions` extends the claim matcher set, applied by the **domain** `aegis.verify` (the wire namespaces resolve the key and check structure/temporal only — named matchers, DPoP and actor chains are the domain surface's job). Each field accepts either a literal value or a `PredicateOperator` for flexible matching:
 
 ```typescript
-await aegis.jwt.verify(token, {
+await aegis.verify(token, {
   audience: "https://api.example.com",
   scope: ["read", "write"], // array contains
   tokenType: "access_token",
@@ -517,17 +544,26 @@ Additional verify options:
 
 ## Type guards
 
-```typescript
-import { isParsedJwt, isParsedJws } from "@lindorm/aegis";
+`aegis.verify` returns a single `VerifiedToken` — discriminate on `.format` (and read `.raw` for the opaque `jws` / `cws`), no guard needed:
 
-const parsed = await aegis.verify(token);
-if (isParsedJwt(parsed)) {
-  /* parsed.payload typed as ParsedJwtPayload */
-}
-if (isParsedJws(parsed)) {
-  /* parsed.payload typed as Buffer | string */
+```typescript
+const v = await aegis.verify(token);
+if (v.format === "jws" || v.format === "cws") {
+  // v.raw holds the opaque payload; v.claims / v.custom are empty
 }
 ```
+
+For a raw string, `isJwtToken` / `isJwsToken` test the wire shape without an `Aegis` instance (they never throw):
+
+```typescript
+import { isJwtToken, isJwsToken } from "@lindorm/aegis";
+
+if (isJwtToken(token)) {
+  /* a well-formed JWT string */
+}
+```
+
+`isParsedJwt` / `isParsedJws` narrow a raw wire result (`aegis.jwt.verify` / `aegis.jws.verify`) by its `.header.baseFormat` when you hold a union of the two.
 
 ## Errors
 
