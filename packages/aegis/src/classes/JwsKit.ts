@@ -3,19 +3,9 @@ import { isBuffer, isString } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { sanitiseToken } from "@lindorm/utils";
-import { B64U } from "../internal/constants/format.js";
 import { JwsError } from "../errors/index.js";
 import type { IJwsKit } from "../interfaces/index.js";
-import type {
-  CertBindingMode,
-  DecodedJws,
-  JwsKitSettings,
-  ParsedJws,
-  ParsedJwsHeader,
-  SignJwsOptions,
-  SignedJws,
-  TokenHeaderOptions,
-} from "../types/index.js";
+import { B64U } from "../internal/constants/format.js";
 import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
@@ -25,13 +15,23 @@ import {
   createJoseSignature,
   verifyJoseSignature,
 } from "../internal/utils/jose-signature.js";
-import { parseTokenHeader } from "../internal/utils/token-header.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
-import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
+import { parseTokenHeader } from "../internal/utils/token-header.js";
 import { validateCrit } from "../internal/utils/validate-crit.js";
+import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
+import type {
+  CertificateBindingMode,
+  DecodedJws,
+  JwsKitSettings,
+  ParsedJws,
+  ParsedJwsHeader,
+  SignJwsOptions,
+  SignedJws,
+  TokenHeaderOptions,
+} from "../types/index.js";
 
 export class JwsKit implements IJwsKit {
-  private readonly certBindingMode: CertBindingMode;
+  private readonly certBindingMode: CertificateBindingMode;
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
 
@@ -126,7 +126,7 @@ export class JwsKit implements IJwsKit {
     // INVARIANT in Aegis.kryptosSig.
     verifyCertBinding({
       header: {
-        x5tS256: parsed.header.x5tS256,
+        certificateThumbprint: parsed.header.certificateThumbprint,
       },
       kryptos: this.kryptos,
       logger: this.logger,

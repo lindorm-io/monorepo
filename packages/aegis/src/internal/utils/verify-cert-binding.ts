@@ -1,13 +1,13 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { AegisError } from "../../errors/index.js";
-import type { CertBindingMode } from "../../types/index.js";
+import type { CertificateBindingMode } from "../../types/index.js";
 
 type VerifyCertBindingOptions = {
-  header: { x5tS256: string | undefined };
+  header: { certificateThumbprint: string | undefined };
   kryptos: IKryptos;
   logger: ILogger;
-  mode: CertBindingMode;
+  mode: CertificateBindingMode;
 };
 
 // POST-VERIFY CONTENT TAMPER CHECK.
@@ -35,7 +35,7 @@ export const verifyCertBinding = ({
   logger,
   mode,
 }: VerifyCertBindingOptions): void => {
-  if (header.x5tS256 === undefined) return;
+  if (header.certificateThumbprint === undefined) return;
 
   if (kryptos.certificateThumbprint === null) {
     if (mode === "strict") {
@@ -57,12 +57,12 @@ export const verifyCertBinding = ({
     return;
   }
 
-  if (header.x5tS256 !== kryptos.certificateThumbprint) {
+  if (header.certificateThumbprint !== kryptos.certificateThumbprint) {
     throw new AegisError("signing certificate thumbprint mismatch", {
       code: "cert_binding_thumbprint_mismatch",
       debug: {
         expected: kryptos.certificateThumbprint,
-        received: header.x5tS256,
+        received: header.certificateThumbprint,
       },
       title: "Cert Binding Thumbprint Mismatch",
       details:

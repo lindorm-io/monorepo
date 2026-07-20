@@ -8,15 +8,9 @@ export const COSE_TAG = {
   cwt: 61,
 } as const;
 
-/** COSE header parameter labels (IANA COSE Header Parameters). */
-export const COSE_HEADER = {
-  alg: 1,
-  crit: 2,
-  contentType: 3,
-  kid: 4,
-  iv: 5,
-  typ: 16, // RFC 9596
-} as const;
+// The COSE header parameter labels formerly hand-keyed here now live in the
+// single header registry (`internal/header/header-registry.ts`); the kits
+// resolve them via `coseByJose`, so the integers are defined exactly once.
 
 const EMPTY = Buffer.alloc(0);
 

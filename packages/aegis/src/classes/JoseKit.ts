@@ -1,8 +1,18 @@
 import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
+import {
+  computeTypHeader,
+  extractTypPrefix,
+} from "../internal/utils/compute-typ-header.js";
+import {
+  assembleJwtWireClaims,
+  buildSignedJwt,
+  withSensitiveIdentity,
+} from "../internal/utils/jwt-payload.js";
+import { verifyJwtToDomain } from "../internal/utils/verify-jwt.js";
 import type {
-  CertBindingMode,
+  CertificateBindingMode,
   DecryptedJwe,
   EncryptedJwe,
   JweEncryptOptions,
@@ -16,16 +26,6 @@ import type {
   SignedJwt,
   VerifyJwtOptions,
 } from "../types/index.js";
-import {
-  computeTypHeader,
-  extractTypPrefix,
-} from "../internal/utils/compute-typ-header.js";
-import {
-  assembleJwtWireClaims,
-  buildSignedJwt,
-  withSensitiveIdentity,
-} from "../internal/utils/jwt-payload.js";
-import { verifyJwtToDomain } from "../internal/utils/verify-jwt.js";
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
 import { JwtKit } from "./JwtKit.js";
@@ -33,7 +33,7 @@ import { JwtKit } from "./JwtKit.js";
 const DEFAULT_DPOP_MAX_SKEW = 60;
 
 export type JoseKitSettings = {
-  certBindingMode: CertBindingMode;
+  certBindingMode: CertificateBindingMode;
   clockTolerance: number;
   dpopMaxSkew: number | undefined;
   encryption: KryptosEncryption;
@@ -48,7 +48,7 @@ export type JoseKitSettings = {
  * itself never constructs the JOSE wire kits.
  */
 export class JoseKit {
-  private readonly certBindingMode: CertBindingMode;
+  private readonly certBindingMode: CertificateBindingMode;
   private readonly clockTolerance: number;
   private readonly dpopMaxSkew: number | undefined;
   private readonly encryption: KryptosEncryption;

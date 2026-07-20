@@ -3,12 +3,13 @@ import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import {
-  type CoseThumbprintHash,
   computeCoseKeyThumbprint,
   computeCoseKeyThumbprintUri,
+  type CoseThumbprintHash,
 } from "../internal/cose/cose-key-thumbprint.js";
 import { isCose } from "../internal/cose/is-cose.js";
-import { COSE_HEADER, COSE_TAG } from "../internal/cose/structures.js";
+import { COSE_TAG } from "../internal/cose/structures.js";
+import { coseByJose } from "../internal/header/header-registry.js";
 import type { OmitMode } from "../internal/utils/apply-omit.js";
 import { CweKit } from "./CweKit.js";
 import { CwtKit, type CwtDecoded, type CwtVerifyResult } from "./CwtKit.js";
@@ -109,7 +110,7 @@ export class CoseKit {
     const unprotected = Array.isArray(cose?.contents)
       ? (cose.contents[1] as Map<number, unknown>)
       : undefined;
-    const kid = unprotected?.get(COSE_HEADER.kid);
+    const kid = unprotected?.get(coseByJose("kid"));
     return kid instanceof Uint8Array ? Buffer.from(kid).toString("utf8") : undefined;
   }
 

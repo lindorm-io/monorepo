@@ -28,11 +28,11 @@ export const resolveCertBinding = (
   }
 
   const fields: CertificateHeaderFields = {
-    x5tS256: kryptos.certificateThumbprint ?? undefined,
+    certificateThumbprint: kryptos.certificateThumbprint ?? undefined,
   };
 
   if (resolved === "chain") {
-    fields.x5c =
+    fields.certificateChain =
       kryptos.certificateChain.length > 0 ? kryptos.certificateChain : undefined;
   }
 

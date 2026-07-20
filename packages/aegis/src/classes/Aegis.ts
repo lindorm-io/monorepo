@@ -38,6 +38,7 @@ import type {
   IAegisJws,
   IAegisJwt,
 } from "../interfaces/index.js";
+import { domainToJose } from "../internal/claims/translate.js";
 import { coseTyp, coseTypFromTokenType } from "../internal/cose/cose-typ.js";
 import { isCose } from "../internal/cose/is-cose.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
@@ -48,7 +49,6 @@ import {
 import { applyOmit } from "../internal/utils/apply-omit.js";
 import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
 import { assembleCwtClaims } from "../internal/utils/assemble-cwt-claims.js";
-import { domainToJose } from "../internal/claims/translate.js";
 import { enforceVerifyFloor } from "../internal/utils/enforce-verify-floor.js";
 import { extractDomainClaims } from "../internal/utils/extract-claims.js";
 import { decodeJoseHeader } from "../internal/utils/jose-header.js";
@@ -77,7 +77,7 @@ import type {
   AegisVerifyKey,
   AesDecryptOptions,
   AesEncryptOptions,
-  CertBindingMode,
+  CertificateBindingMode,
   CweContent,
   CweDecryptOptions,
   CweEncryptOptions,
@@ -131,7 +131,7 @@ export class Aegis implements IAegis {
   readonly issuer: string | null;
 
   private readonly amphora: IAmphora;
-  private readonly certBindingMode: CertBindingMode;
+  private readonly certBindingMode: CertificateBindingMode;
   private readonly clockTolerance: number;
   private readonly coseKit: CoseKit;
   private readonly decryptKey: AegisDecryptKey;

@@ -240,7 +240,7 @@ describe("Aegis cert binding", () => {
       expect(() =>
         verifyCertBinding({
           header: {
-            x5tS256: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+            certificateThumbprint: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
           },
           kryptos,
           logger,
@@ -330,7 +330,7 @@ describe("Aegis cert binding", () => {
       expect(() =>
         verifyCertBinding({
           header: {
-            x5tS256: "abc",
+            certificateThumbprint: "abc",
           },
           kryptos,
           logger,
@@ -465,7 +465,7 @@ describe("Aegis cert binding", () => {
       expect(() =>
         verifyCertBinding({
           header: {
-            x5tS256: "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+            certificateThumbprint: "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
           },
           kryptos: certKryptos,
           logger,

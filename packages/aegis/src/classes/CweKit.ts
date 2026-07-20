@@ -9,12 +9,12 @@ import {
   tagBytesForEncryption,
 } from "../internal/cose/enc-labels.js";
 import {
-  COSE_HEADER,
   COSE_TAG,
   buildEncStructure,
   decodeProtectedHeader,
   encodeProtectedHeader,
 } from "../internal/cose/structures.js";
+import { coseByJose } from "../internal/header/header-registry.js";
 
 export type CweKitSettings = {
   kryptos: IKryptos;
@@ -71,8 +71,8 @@ export class CweKit {
     this.logger.debug("Encrypting COSE_Encrypt0", { options });
 
     const protectedMap = new Map<number, unknown>();
-    protectedMap.set(COSE_HEADER.alg, encToCoseLabel(this.encryption));
-    if (options.typ !== undefined) protectedMap.set(COSE_HEADER.typ, options.typ);
+    protectedMap.set(coseByJose("alg"), encToCoseLabel(this.encryption));
+    if (options.typ !== undefined) protectedMap.set(coseByJose("typ"), options.typ);
     const protectedHeader = encodeProtectedHeader(protectedMap);
 
     const aad = buildEncStructure(protectedHeader);
@@ -82,8 +82,8 @@ export class CweKit {
     }).encryptContent(payload, { aad });
 
     const unprotected = new Map<number, unknown>();
-    unprotected.set(COSE_HEADER.iv, iv);
-    unprotected.set(COSE_HEADER.kid, Buffer.from(this.kryptos.id, "utf8"));
+    unprotected.set(coseByJose("iv"), iv);
+    unprotected.set(coseByJose("kid"), Buffer.from(this.kryptos.id, "utf8"));
 
     return new Tag(COSE_TAG.encrypt0, [
       protectedHeader,
@@ -99,7 +99,7 @@ export class CweKit {
       Uint8Array,
     ];
 
-    const ivValue = unprotected.get(COSE_HEADER.iv);
+    const ivValue = unprotected.get(coseByJose("iv"));
     if (!(ivValue instanceof Uint8Array)) {
       throw new AegisError("COSE_Encrypt0 is missing its IV", {
         code: "cose_malformed",
@@ -112,7 +112,7 @@ export class CweKit {
     // protected header (label 1) rather than the key. It also fixes the tag
     // length (GCM/CCM-128 = 16 bytes, CCM-64 = 8).
     const decodedProtected = decodeProtectedHeader(protectedHeader);
-    const encryption = coseLabelToEnc(decodedProtected.get(COSE_HEADER.alg) as number);
+    const encryption = coseLabelToEnc(decodedProtected.get(coseByJose("alg")) as number);
 
     // COSE ciphertext = ciphertext ‖ tag (the tag is the trailing bytes).
     const ct = Buffer.from(coseCiphertext);

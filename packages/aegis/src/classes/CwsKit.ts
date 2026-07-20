@@ -4,12 +4,12 @@ import { AegisError } from "../errors/index.js";
 import { algToCoseLabel } from "../internal/cose/alg-labels.js";
 import { Tag } from "../internal/cose/cbor.js";
 import {
-  COSE_HEADER,
   COSE_TAG,
   buildSigStructure,
   decodeProtectedHeader,
   encodeProtectedHeader,
 } from "../internal/cose/structures.js";
+import { coseByJose } from "../internal/header/header-registry.js";
 import { SignatureKit } from "./SignatureKit.js";
 
 export type CwsKitSettings = {
@@ -65,14 +65,14 @@ export class CwsKit {
     this.logger.debug("Signing COSE_Sign1", { options });
 
     const protectedMap = new Map<number, unknown>();
-    protectedMap.set(COSE_HEADER.alg, algToCoseLabel(this.kryptos.algorithm));
-    if (options.typ !== undefined) protectedMap.set(COSE_HEADER.typ, options.typ);
+    protectedMap.set(coseByJose("alg"), algToCoseLabel(this.kryptos.algorithm));
+    if (options.typ !== undefined) protectedMap.set(coseByJose("typ"), options.typ);
     const protectedHeader = encodeProtectedHeader(protectedMap);
 
     // kid travels UNprotected — it is read to resolve the verification key
     // before the signature is checked (amphora kid-only resolution).
     const unprotected = new Map<number, unknown>();
-    unprotected.set(COSE_HEADER.kid, Buffer.from(this.kryptos.id, "utf8"));
+    unprotected.set(coseByJose("kid"), Buffer.from(this.kryptos.id, "utf8"));
 
     const toBeSigned = buildSigStructure(protectedHeader, payload);
     const signature = new SignatureKit({ kryptos: this.kryptos, raw: true }).sign(
@@ -120,7 +120,7 @@ export class CwsKit {
    */
   static peekKid(sign1: unknown): string | undefined {
     const [, unprotected] = unwrapSign1(sign1) as [unknown, Map<number, unknown>];
-    const kid = unprotected.get(COSE_HEADER.kid);
+    const kid = unprotected.get(coseByJose("kid"));
     return kid instanceof Uint8Array ? Buffer.from(kid).toString("utf8") : undefined;
   }
 }

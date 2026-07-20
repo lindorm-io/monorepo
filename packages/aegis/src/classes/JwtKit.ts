@@ -3,20 +3,32 @@ import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict, Predicate } from "@lindorm/types";
 import { sanitiseToken } from "@lindorm/utils";
-import { B64U } from "../internal/constants/format.js";
-import {
-  redactSensitiveIdentity,
-  redactVerifyOptions,
-} from "../internal/utils/redact-sensitive-identity.js";
 import { JwtError } from "../errors/index.js";
+import type { IJwtKit } from "../interfaces/index.js";
+import { B64U } from "../internal/constants/format.js";
+import { applyOmit } from "../internal/utils/apply-omit.js";
 import {
   buildMediaType,
   decodeTokenTypeFromTyp,
 } from "../internal/utils/compute-typ-header.js";
+import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
+import {
+  createJoseSignature,
+  verifyJoseSignature,
+} from "../internal/utils/jose-signature.js";
+import { decodeJwtPayload } from "../internal/utils/jwt-payload.js";
+import { createTemporalMatchers } from "../internal/utils/jwt-temporal-matchers.js";
+import {
+  redactSensitiveIdentity,
+  redactVerifyOptions,
+} from "../internal/utils/redact-sensitive-identity.js";
+import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
+import { parseTokenHeader } from "../internal/utils/token-header.js";
 import { validateCrit } from "../internal/utils/validate-crit.js";
-import type { IJwtKit } from "../interfaces/index.js";
+import { validate } from "../internal/utils/validate.js";
+import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
-  CertBindingMode,
+  CertificateBindingMode,
   DecodedJwt,
   JwtKitSettings,
   JwtWireClaims,
@@ -26,18 +38,6 @@ import type {
   TokenHeaderOptions,
   VerifyJwtWireOptions,
 } from "../types/index.js";
-import { applyOmit } from "../internal/utils/apply-omit.js";
-import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
-import {
-  createJoseSignature,
-  verifyJoseSignature,
-} from "../internal/utils/jose-signature.js";
-import { decodeJwtPayload } from "../internal/utils/jwt-payload.js";
-import { createTemporalMatchers } from "../internal/utils/jwt-temporal-matchers.js";
-import { parseTokenHeader } from "../internal/utils/token-header.js";
-import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
-import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
-import { validate } from "../internal/utils/validate.js";
 
 /**
  * The standalone WIRE JWT kit — a jose/jsonwebtoken-parity signer/verifier.
@@ -53,7 +53,7 @@ import { validate } from "../internal/utils/validate.js";
  * verify path, never here.
  */
 export class JwtKit implements IJwtKit {
-  private readonly certBindingMode: CertBindingMode;
+  private readonly certBindingMode: CertificateBindingMode;
   private readonly clockTolerance: number;
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
@@ -233,7 +233,7 @@ export class JwtKit implements IJwtKit {
     // configured kryptos. NOT a key selection step — header cert fields are
     // never trusted as key sources (see the SECURITY INVARIANT in Aegis).
     verifyCertBinding({
-      header: { x5tS256: header.x5tS256 },
+      header: { certificateThumbprint: header.certificateThumbprint },
       kryptos: this.kryptos,
       logger: this.logger,
       mode: options.certBindingMode ?? this.certBindingMode,

@@ -4,11 +4,20 @@ import { isString } from "@lindorm/is";
 import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { sanitiseToken } from "@lindorm/utils";
-import { B64U } from "../internal/constants/format.js";
 import { JweError } from "../errors/index.js";
 import type { IJweKit } from "../interfaces/index.js";
+import { B64U } from "../internal/constants/format.js";
+import {
+  computeTypHeader,
+  decodeTokenTypeFromTyp,
+} from "../internal/utils/compute-typ-header.js";
+import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
+import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
+import { parseTokenHeader } from "../internal/utils/token-header.js";
+import { validateCrit } from "../internal/utils/validate-crit.js";
+import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
-  CertBindingMode,
+  CertificateBindingMode,
   DecodedJwe,
   DecryptedJwe,
   DecryptedJweHeader,
@@ -17,20 +26,11 @@ import type {
   JweKitSettings,
   TokenHeaderOptions,
 } from "../types/index.js";
-import {
-  computeTypHeader,
-  decodeTokenTypeFromTyp,
-} from "../internal/utils/compute-typ-header.js";
-import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
-import { parseTokenHeader } from "../internal/utils/token-header.js";
-import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
-import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
-import { validateCrit } from "../internal/utils/validate-crit.js";
 import { JwsKit } from "./JwsKit.js";
 import { JwtKit } from "./JwtKit.js";
 
 export class JweKit implements IJweKit {
-  private readonly certBindingMode: CertBindingMode;
+  private readonly certBindingMode: CertificateBindingMode;
   private readonly encryption: KryptosEncryption;
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
@@ -234,7 +234,7 @@ export class JweKit implements IJweKit {
     // See the SECURITY INVARIANT in Aegis.kryptosSig.
     verifyCertBinding({
       header: {
-        x5tS256: header.x5tS256,
+        certificateThumbprint: header.certificateThumbprint,
       },
       kryptos: this.kryptos,
       logger: this.logger,

@@ -5,13 +5,10 @@ import { AegisError } from "../errors/index.js";
 import { coseToDomain, domainToCose } from "../internal/claims/translate.js";
 import { coseLabelToAlg } from "../internal/cose/alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
-import { encodeCwtClaims, decodeCwtClaims } from "../internal/cose/cwt-claims.js";
+import { decodeCwtClaims, encodeCwtClaims } from "../internal/cose/cwt-claims.js";
+import { COSE_TAG, decodeProtectedHeader } from "../internal/cose/structures.js";
+import { coseByJose } from "../internal/header/header-registry.js";
 import { applyOmit, type OmitMode } from "../internal/utils/apply-omit.js";
-import {
-  COSE_HEADER,
-  COSE_TAG,
-  decodeProtectedHeader,
-} from "../internal/cose/structures.js";
 import { CwmKit } from "./CwmKit.js";
 import { CwsKit } from "./CwsKit.js";
 
@@ -121,7 +118,7 @@ export class CwtKit {
       decodeCbor<Map<unknown, unknown>>(payload, { preferMap: false }),
     );
     const { claims, custom } = coseToDomain(wire);
-    const typ = protectedHeader.get(COSE_HEADER.typ);
+    const typ = protectedHeader.get(coseByJose("typ"));
 
     return {
       claims: { ...claims, ...custom },
@@ -150,9 +147,9 @@ export class CwtKit {
     const [protectedBstr, unprotected] = contents as [Uint8Array, Map<number, unknown>];
     const protectedHeader = decodeProtectedHeader(protectedBstr);
 
-    const kidValue = unprotected.get(COSE_HEADER.kid);
-    const algLabel = protectedHeader.get(COSE_HEADER.alg);
-    const typ = protectedHeader.get(COSE_HEADER.typ);
+    const kidValue = unprotected.get(coseByJose("kid"));
+    const algLabel = protectedHeader.get(coseByJose("alg"));
+    const typ = protectedHeader.get(coseByJose("typ"));
 
     return {
       cose,

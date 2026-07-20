@@ -2,7 +2,7 @@ import type { Dict } from "@lindorm/types";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type {
   BindCertificateMode,
-  CertBindingMode,
+  CertificateBindingMode,
   TokenEncryptOrSignOptions,
 } from "../header.js";
 import type { DecodedJwt } from "./jwt-decode.js";
@@ -35,7 +35,7 @@ export type SignJwtWireOptions = {
  * no named domain matchers, no presence policy (those live Aegis-side).
  */
 export type VerifyJwtWireOptions = {
-  certBindingMode?: CertBindingMode;
+  certBindingMode?: CertificateBindingMode;
   clockTolerance?: number;
   /**
    * Assert the header `typ` equals the media type the kit builds from this

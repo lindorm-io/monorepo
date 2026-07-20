@@ -2,7 +2,7 @@ import type { AmphoraKeySelector, AmphoraQuery, IAmphora } from "@lindorm/amphor
 import type { KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Predicate } from "@lindorm/types";
-import type { CertBindingMode } from "./header.js";
+import type { CertificateBindingMode } from "./header.js";
 
 /**
  * The key attributes a caller may select on.
@@ -110,7 +110,7 @@ export type AegisSettings = {
   logger: ILogger;
   issuer?: string;
 
-  certBindingMode?: CertBindingMode;
+  certBindingMode?: CertificateBindingMode;
   clockTolerance?: number;
   dpopMaxSkew?: number;
   encryption?: KryptosEncryption;

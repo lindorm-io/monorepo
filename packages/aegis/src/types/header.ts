@@ -12,6 +12,8 @@ export type TokenHeaderType = (typeof TOKEN_HEADER_TYPES)[number] | (string & {}
 // https://www.rfc-editor.org/rfc/rfc7515.html#section-4.1
 export type TokenHeaderClaims = {
   alg: TokenHeaderAlgorithm; // algorithm
+  apu?: string; // ecdh-es party u info
+  apv?: string; // ecdh-es party v info
   crit?: Array<string>;
   cty?: string; // content type
   enc?: KryptosEncryption; // encryption
@@ -28,10 +30,14 @@ export type TokenHeaderClaims = {
   x5c?: Array<string>;
   x5t?: string;
   "x5t#S256"?: string;
+  x5u?: string; // x.509 url
+  zip?: string; // compression algorithm
 };
 
 export type RawTokenHeaderClaims = {
   alg?: TokenHeaderAlgorithm;
+  apu?: string;
+  apv?: string;
   crit?: Array<string>;
   cty?: string;
   enc?: KryptosEncryption;
@@ -48,6 +54,8 @@ export type RawTokenHeaderClaims = {
   x5c?: Array<string>;
   x5t?: string;
   "x5t#S256"?: string;
+  x5u?: string;
+  zip?: string;
 };
 
 export type DecodedTokenHeader = TokenHeaderClaims;
@@ -57,6 +65,10 @@ export type BaseTokenFormat = "JWT" | "JWS" | "JWE";
 export type ParsedTokenHeader = {
   algorithm: TokenHeaderAlgorithm;
   baseFormat: BaseTokenFormat | undefined;
+  certificateChain: Array<string> | undefined;
+  certificateThumbprint: string | undefined;
+  certificateThumbprintSha1: string | undefined;
+  certificateUrl: string | undefined;
   contentType: string | undefined;
   critical: Array<string>;
   encryption: KryptosEncryption | undefined;
@@ -66,18 +78,22 @@ export type ParsedTokenHeader = {
   jwksUri: string | undefined;
   keyId: string | undefined;
   objectId: string | undefined;
+  partyProducer: string | undefined; // apu — ECDH-ES Agreement PartyUInfo
+  partyRecipient: string | undefined; // apv — ECDH-ES Agreement PartyVInfo
   pbkdfIterations: number | undefined;
   pbkdfSalt: string | undefined;
   publicEncryptionJwk: PublicEncryptionJwk | undefined;
   publicEncryptionTag: string | undefined;
   tokenType: string | undefined;
-  x5c: Array<string> | undefined;
-  x5t: string | undefined;
-  x5tS256: string | undefined;
+  zip: string | undefined;
 };
 
 export type TokenHeaderOptions = {
   algorithm?: TokenHeaderAlgorithm;
+  // RFC 7515 §4.1.7 — X.509 certificate SHA-1 thumbprint (base64url); wire `x5t`.
+  certificateThumbprintSha1?: string;
+  // RFC 7515 §4.1.5 — X.509 URL; wire `x5u`.
+  certificateUrl?: string;
   contentType?: string;
   critical?: Array<string>;
   encryption?: KryptosEncryption;
@@ -87,31 +103,25 @@ export type TokenHeaderOptions = {
   jwksUri?: string;
   keyId?: string;
   objectId?: string;
+  partyProducer?: string; // apu — RFC 7518 §4.6.1.2 ECDH-ES Agreement PartyUInfo (base64url)
+  partyRecipient?: string; // apv — RFC 7518 §4.6.1.3 ECDH-ES Agreement PartyVInfo (base64url)
   pbkdfIterations?: number;
   pbkdfSalt?: Buffer;
   publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionTag?: Buffer;
-  // --- Full RFC-registered set: the remaining user-supplyable JOSE header
-  //     parameters. Carried verbatim under their registered wire names (like
-  //     `x5c`/`x5t#S256` in the parsed header), for RFC 7515/7516/7518
-  //     completeness. Additive — no encoder consumes them yet.
-  x5u?: string; // RFC 7515 §4.1.5 — X.509 URL
-  x5t?: string; // RFC 7515 §4.1.7 — X.509 certificate SHA-1 thumbprint (base64url)
   zip?: string; // RFC 7516 §4.1.3 — compression algorithm ("DEF" is the only registered value)
-  apu?: string; // RFC 7518 §4.6.1.2 — ECDH-ES Agreement PartyUInfo (base64url)
-  apv?: string; // RFC 7518 §4.6.1.3 — ECDH-ES Agreement PartyVInfo (base64url)
 };
 
 export type CertificateHeaderFields = {
-  x5c?: Array<string>;
-  x5tS256?: string;
+  certificateChain?: Array<string>;
+  certificateThumbprint?: string;
 };
 
 export type TokenEncryptOrSignOptions = Pick<TokenHeaderOptions, "jwk">;
 
 export type BindCertificateMode = "thumbprint" | "chain" | "none";
 
-export type CertBindingMode = "strict" | "lax";
+export type CertificateBindingMode = "strict" | "lax";
 
 export type RefinedTokenHeader<A> = Omit<
   ParsedTokenHeader,

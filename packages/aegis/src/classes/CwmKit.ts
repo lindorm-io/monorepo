@@ -4,12 +4,12 @@ import { AegisError } from "../errors/index.js";
 import { algToCoseLabel } from "../internal/cose/alg-labels.js";
 import { Tag } from "../internal/cose/cbor.js";
 import {
-  COSE_HEADER,
   COSE_TAG,
   buildMacStructure,
   decodeProtectedHeader,
   encodeProtectedHeader,
 } from "../internal/cose/structures.js";
+import { coseByJose } from "../internal/header/header-registry.js";
 import { SignatureKit } from "./SignatureKit.js";
 
 export type CwmKitSettings = {
@@ -59,12 +59,12 @@ export class CwmKit {
     this.logger.debug("MAC'ing COSE_Mac0", { options });
 
     const protectedMap = new Map<number, unknown>();
-    protectedMap.set(COSE_HEADER.alg, algToCoseLabel(this.kryptos.algorithm));
-    if (options.typ !== undefined) protectedMap.set(COSE_HEADER.typ, options.typ);
+    protectedMap.set(coseByJose("alg"), algToCoseLabel(this.kryptos.algorithm));
+    if (options.typ !== undefined) protectedMap.set(coseByJose("typ"), options.typ);
     const protectedHeader = encodeProtectedHeader(protectedMap);
 
     const unprotected = new Map<number, unknown>();
-    unprotected.set(COSE_HEADER.kid, Buffer.from(this.kryptos.id, "utf8"));
+    unprotected.set(coseByJose("kid"), Buffer.from(this.kryptos.id, "utf8"));
 
     const toBeMaced = buildMacStructure(protectedHeader, payload);
     const tag = new SignatureKit({ kryptos: this.kryptos }).sign(toBeMaced);
