@@ -13,6 +13,7 @@ import type {
   CweDecryptOptions,
   CweEncryptOptions,
   CwsContent,
+  CwtWireClaims,
   DecryptedCwe,
   DecryptedJwe,
   DecryptedToken,
@@ -27,7 +28,7 @@ import type {
   JweDecryptOptions,
   JweEncryptOptions,
   JwsContent,
-  NarrowedJwt,
+  NarrowedToken,
   ParsedJws,
   ParsedJwt,
   ProfileContent,
@@ -46,6 +47,7 @@ import type {
   SignedJws,
   SignedJwt,
   TokenProfile,
+  VerifiedToken,
   VerifyCwsOptions,
   VerifyCwtOptions,
   VerifyJwsOptions,
@@ -99,10 +101,7 @@ export interface IAegisCwe {
 
 export interface IAegisCws {
   sign(data: CwsContent, options?: SignCwsOptions): Promise<SignedCws>;
-  verify<T extends Dict = Dict>(
-    token: string,
-    options?: VerifyCwsOptions,
-  ): Promise<ParsedCws<T>>;
+  verify(token: string, options?: VerifyCwsOptions): Promise<ParsedCws>;
 }
 
 export interface IAegisCwt {
@@ -110,7 +109,20 @@ export interface IAegisCwt {
     content: SignCwtContent<C>,
     options?: SignCwtOptions,
   ): Promise<SignedCwt>;
-  verify<C extends Dict = Dict>(
+  verify<C extends CwtWireClaims = CwtWireClaims>(
+    token: string,
+    verify?: VerifyCwtOptions,
+  ): Promise<ParsedCwt<C>>;
+}
+
+// The COSE_Mac0 (symmetric) claims twin of `IAegisCwt` (D6). Same ergonomic
+// surface; only the integrity structure differs (a MAC, not a signature).
+export interface IAegisCwm {
+  sign<C extends Dict = Dict>(
+    content: SignCwtContent<C>,
+    options?: SignCwtOptions,
+  ): Promise<SignedCwt>;
+  verify<C extends CwtWireClaims = CwtWireClaims>(
     token: string,
     verify?: VerifyCwtOptions,
   ): Promise<ParsedCwt<C>>;
@@ -141,6 +153,7 @@ export interface IAegis {
   aes: IAegisAes;
 
   cwe: IAegisCwe;
+  cwm: IAegisCwm;
   cws: IAegisCws;
   cwt: IAegisCwt;
 
@@ -174,15 +187,14 @@ export interface IAegis {
     profile: P,
     token: string,
     options?: ProfileVerifyOptions,
-  ): Promise<NarrowedJwt<BuiltInProfiles[P]>>;
-  verify<T extends ParsedJwt>(
+  ): Promise<NarrowedToken<BuiltInProfiles[P]>>;
+  verify(
     profile: string & {},
     token: string,
     options: ProfileVerifyOptions,
-  ): Promise<T>;
-  verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
-  verify<T extends ParsedJws<any>>(token: string): Promise<T>;
-  verify<T extends ParsedJwt>(token: string, options?: VerifyJwtOptions): Promise<T>;
-  verify<T extends ParsedCws<any>>(token: string): Promise<T>;
-  verify<T extends ParsedCwt>(token: string, options?: VerifyCwtOptions): Promise<T>;
+  ): Promise<VerifiedToken>;
+  verify<C extends Dict = Dict>(
+    token: string,
+    options?: VerifyJwtOptions,
+  ): Promise<VerifiedToken<C>>;
 }

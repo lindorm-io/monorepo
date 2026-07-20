@@ -215,7 +215,7 @@ describe("Aegis profiles", () => {
       expect(payload).toMatchObject({ loa: 3, aal: 2, ial: 3 });
 
       const parsed = Aegis.parse(token);
-      expect(parsed.payload).toMatchObject({
+      expect(parsed.claims).toMatchObject({
         levelOfAssurance: 3,
         authenticatorAssuranceLevel: 2,
         identityAssuranceLevel: 3,
@@ -247,7 +247,7 @@ describe("Aegis profiles", () => {
       expect(payload).toMatchObject({ loa: 4, aal: 3, ial: 2, fal: 1 });
 
       const parsed = Aegis.parse(token);
-      expect(parsed.payload).toMatchObject({
+      expect(parsed.claims).toMatchObject({
         levelOfAssurance: 4,
         authenticatorAssuranceLevel: 3,
         identityAssuranceLevel: 2,

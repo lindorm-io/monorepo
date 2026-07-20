@@ -107,7 +107,7 @@ describe("assembleCommonClaims", () => {
 
     test("throws when a forbidden domain claim is present", () => {
       // a profile that forbids `nonce` (domain) with nonce supplied
-      const forbidsNonce = { ...accessTokenProfile, forbidden: ["nonce"] };
+      const forbidsNonce = { ...accessTokenProfile, forbidden: ["nonce"] as const };
       expect(() =>
         assembleCommonClaims(ctx, forbidsNonce, {
           subject: "u",

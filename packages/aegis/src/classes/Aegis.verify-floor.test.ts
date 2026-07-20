@@ -72,7 +72,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     await expect(
       aegis.verify("access_token", token, { audience: RESOURCE }),
     ).resolves.toMatchObject({
-      payload: { subject: "user-1" },
+      claims: { subject: "user-1" },
     });
   });
 
@@ -145,10 +145,10 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     );
   });
 
-  test("raw jwt.verify rejects a validly-signed typ-less JWT (strict default)", async () => {
-    // Regression pin for direct callers (e.g. pylon token middleware): only
-    // profiled verify opts into typPresence "optional" — the raw path keeps
-    // parse-time explicit typing (RFC 8725) as its typ gate.
+  test("raw jwt.verify ACCEPTS a typ-less JWT (typ presence is a profile/domain policy now)", async () => {
+    // The raw kit keeps only typ WELL-FORMEDNESS-if-present (D3): typ presence is
+    // a profile / domain policy, not a raw-kit gate. So the raw wire surface
+    // accepts a typ-less signed token and returns its native WIRE payload.
     const token = craftToken(wireHeader, {
       ...perTokenPayload,
       iss: ISSUER,
@@ -156,9 +156,9 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       aud: [RESOURCE],
     });
 
-    await expect(aegis.jwt.verify(token)).rejects.toThrow(
-      expect.objectContaining({ code: "jwt_invalid_typ" }),
-    );
+    const parsed = await aegis.jwt.verify(token);
+    expect(parsed.payload.iss).toBe(ISSUER);
+    expect(parsed.header.headerType).toBeUndefined();
   });
 
   describe("mint → profiled verify round trips", () => {
@@ -168,7 +168,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       await expect(
         aegis.verify("access_token", token, { audience: RESOURCE }),
       ).resolves.toMatchObject({
-        payload: { subject: "user-1", clientId: "client-1" },
+        claims: { subject: "user-1", clientId: "client-1" },
       });
     });
 
@@ -181,7 +181,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       await expect(
         aegis.verify("id_token", token, { audience: "client-1" }),
       ).resolves.toMatchObject({
-        payload: { subject: "user-1", issuer: ISSUER },
+        claims: { subject: "user-1", issuer: ISSUER },
       });
     });
 
@@ -226,7 +226,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       await expect(
         aegis.verify("security_event", token, { audience: "https://receiver" }),
       ).resolves.toMatchObject({
-        payload: {
+        claims: {
           subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
           events: { "urn:lindorm:event:test": {} },
         },
@@ -247,16 +247,16 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       );
 
     test("profile-less verify REJECTS an exp-less token by default (clear error)", async () => {
-      await expect(aegis.jwt.verify(explessToken())).rejects.toThrow(
+      await expect(aegis.verify(explessToken())).rejects.toThrow(
         expect.objectContaining({ code: "jwt_missing_claim_exp" }),
       );
     });
 
     test("profile-less verify ACCEPTS an exp-less token with expPresence 'optional'", async () => {
       await expect(
-        aegis.jwt.verify(explessToken(), { expPresence: "optional" }),
+        aegis.verify(explessToken(), { expPresence: "optional" }),
       ).resolves.toMatchObject({
-        payload: { subject: "user-1", issuer: ISSUER },
+        claims: { subject: "user-1", issuer: ISSUER },
       });
     });
 
@@ -296,7 +296,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       await expect(
         aegis.verify("delegation", token, { audience: ISSUER, issuer: "client-1" }),
       ).resolves.toMatchObject({
-        payload: { issuer: "client-1", subject: "customer-sub" },
+        claims: { issuer: "client-1", subject: "customer-sub" },
       });
     });
 
@@ -313,9 +313,9 @@ describe("Aegis profiled verify floor (§4.4)", () => {
         issuer: "client-1",
       });
 
-      expect(parsed.payload.issuedAt).toBeUndefined();
+      expect(parsed.claims.issuedAt).toBeUndefined();
       expect(parsed).toMatchObject({
-        payload: { issuer: "client-1", subject: "client-1", tokenId: "token-1" },
+        claims: { issuer: "client-1", subject: "client-1", tokenId: "token-1" },
       });
     });
 

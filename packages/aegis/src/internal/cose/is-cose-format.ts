@@ -56,9 +56,20 @@ const SIGNED_STRUCTURE = (bytes: Buffer): boolean => {
 const hasSuffix = (typ: string | undefined, media: string, suffix: string): boolean =>
   typ === media || (typeof typ === "string" && typ.endsWith(suffix));
 
-/** A claims-bearing CWT (COSE_Sign1/Mac0 with a `application/cwt` / `+cwt` typ). */
+/**
+ * A claims-bearing CWT signed with COSE_Sign1 (D6). `cwt` and `cwm` are disjoint
+ * by STRUCTURE — a CWT is COSE_Sign1 (tag 18, asymmetric), a CWM is COSE_Mac0
+ * (tag 17, symmetric) — so `isCwt` requires Sign1 exactly; a Mac0 with a `+cwt`
+ * typ is a CWM, not a CWT.
+ */
 export const isCwt = (bytes: Buffer): boolean =>
-  SIGNED_STRUCTURE(bytes) && hasSuffix(coseTyp(bytes), "application/cwt", "+cwt");
+  structureTag(bytes) === COSE_TAG.sign1 &&
+  hasSuffix(coseTyp(bytes), "application/cwt", "+cwt");
+
+/** A claims-bearing CWM MAC'd with COSE_Mac0 (D6) — the symmetric CWT twin. */
+export const isCwm = (bytes: Buffer): boolean =>
+  structureTag(bytes) === COSE_TAG.mac0 &&
+  hasSuffix(coseTyp(bytes), "application/cwt", "+cwt");
 
 /** An opaque signed CWS (COSE_Sign1/Mac0 with a `application/cws` / `+cws` typ). */
 export const isCws = (bytes: Buffer): boolean =>

@@ -9,13 +9,14 @@ import { assembleCwtClaims } from "./assemble-cwt-claims.js";
 import { withSensitiveDomain } from "./jwt-payload.js";
 
 /**
- * The raw CWT sign namespace (`aegis.cwt.sign`) — the generic-CWT mirror of the
- * generic `jwt.sign`. Policy-free: maps the standard-claim content to the
- * domain-keyed claims (via the shared claim registry) and secures them with
- * `signCose` — the SAME primitive `mintCoseToken` uses, minus the profile floor
- * and auto-injection.
+ * The raw CWM sign namespace (`aegis.cwm.sign`) — the COSE_Mac0 (symmetric) twin
+ * of `aegis.cwt.sign`. Identical policy-free assembly; only the integrity
+ * structure differs (a MAC, not a signature). A CWM shares the CWT media type
+ * (`application/cwt` / `+cwt`) — the STRUCTURE (Mac0 vs Sign1) is what tells `cwm`
+ * apart from `cwt` (D6). A symmetric key is required; an asymmetric one throws
+ * via the kit gate (that is `aegis.cwt.sign`).
  */
-export const rawSignCwt = async <C extends Dict = Dict>({
+export const rawSignCwm = async <C extends Dict = Dict>({
   content,
   options = {},
   deps,
@@ -26,15 +27,11 @@ export const rawSignCwt = async <C extends Dict = Dict>({
 }): Promise<SignedCwt> => {
   const kryptos = await deps.resolveSignKey({ key: options.key });
 
-  // Merge the FLAT sensitive claims into the domain layer so `domainToCose`
-  // emits each as its individual CWT label — symmetric with `aegis.jwt.sign`.
   const common = withSensitiveDomain(
     assembleCwtClaims({ issuer: deps.issuer }, content, options),
     content,
   );
 
-  // The raw `cwt` namespace is COSE_Sign1 (asymmetric); a symmetric key throws
-  // via the kit gate — the symmetric COSE_Mac0 twin is the `cwm` namespace.
   const token = signCose({
     kryptos,
     logger: deps.logger,
@@ -42,7 +39,7 @@ export const rawSignCwt = async <C extends Dict = Dict>({
     typ: options.typ ?? coseTypFromTokenType(content.tokenType),
     proprietary: options.proprietary,
     omit: options.omit,
-    format: "cwt",
+    format: "cwm",
   });
 
   const expiresAt = isDate(common.expiresAt) ? common.expiresAt : undefined;

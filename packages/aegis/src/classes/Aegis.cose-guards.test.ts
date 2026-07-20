@@ -34,10 +34,12 @@ describe("Aegis — COSE format guards", () => {
 
     // CWT — a real claims-bearing COSE_Sign1 (typ `<type>+cwt`).
     cwt = (
-      await aegis.cwt.sign(
-        { subject: "user-1", audience: ["https://rs.lindorm.io/"], expires: "1h" },
-        { tokenType: "access_token" },
-      )
+      await aegis.cwt.sign({
+        subject: "user-1",
+        audience: ["https://rs.lindorm.io/"],
+        expires: "1h",
+        tokenType: "access_token",
+      })
     ).token;
 
     // CWE — a COSE_Encrypt0 (structural).

@@ -5,7 +5,7 @@
  * JOSE- or COSE-specific assumptions. The format selected here is the only
  * place a concrete wire format is bound, dispatched by mintProfile/verifyProfile.
  */
-export type TokenFormat = "jws" | "jwt" | "cws" | "cwt";
+export type TokenFormat = "jws" | "jwt" | "cws" | "cwt" | "cwm";
 
 export type SelectedEncoder = {
   format: TokenFormat;

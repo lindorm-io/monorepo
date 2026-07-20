@@ -39,3 +39,18 @@ export const coseTypFromTokenType = (tokenType: TokenType | undefined): string =
 
   return jose.endsWith("+jwt") ? `${jose.slice(0, -4)}+cwt` : "application/cwt";
 };
+
+/**
+ * The COSE `typ` for the OPAQUE (CWS) sign path, derived straight from a bare
+ * `tokenType`. The CWS twin of {@link coseTypFromTokenType}: same short-name
+ * derivation, but the structured suffix is `+cws` (RFC 9596) and the bare
+ * fallback is `application/cws` — so an opaque COSE signed token is recognised as
+ * a CWS (`isCws`) and NEVER as a CWT (`isCwt`). This is the Phase-16 emission fix:
+ * a CWS was byte-identical to a CWT (`+cwt`) because it routed through the claims
+ * codec; it now emits its own `+cws` media type.
+ */
+export const coseTypCwsFromTokenType = (tokenType: TokenType | undefined): string => {
+  const jose = computeTypHeader(tokenType, "jwt");
+
+  return jose.endsWith("+jwt") ? `${jose.slice(0, -4)}+cws` : "application/cws";
+};

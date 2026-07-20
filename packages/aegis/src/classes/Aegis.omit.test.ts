@@ -3,8 +3,8 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
-import type { DecodedJwt } from "../types/index.js";
 import { Aegis } from "./Aegis.js";
+import { JwtKit } from "./JwtKit.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
@@ -31,15 +31,20 @@ describe("Aegis — omit (compact-by-default)", () => {
   // The raw JOSE payload — bypasses the parse-side array defaulting so we see
   // exactly what reached the wire.
   const joseWire = (token: string): Record<string, unknown> =>
-    (Aegis.decode(token) as DecodedJwt).payload as Record<string, unknown>;
+    JwtKit.decode(token).payload as Record<string, unknown>;
 
   // The COSE claims, domain-keyed; custom claims pass through verbatim, so an
   // absent claim really is absent (no defaulting).
   const coseClaims = async (token: string): Promise<Record<string, unknown>> => {
     const verified = (await aegis.verify("access_token", token, {
       audience: "https://rs.lindorm.io/",
-    })) as unknown as { claims: Record<string, unknown> };
-    return verified.claims;
+    })) as unknown as {
+      claims: Record<string, unknown>;
+      custom: Record<string, unknown>;
+    };
+    // The domain result splits registered `claims` from the `custom` bucket; the
+    // omit vocabulary here is CUSTOM claims, so merge both for the presence check.
+    return { ...verified.claims, ...verified.custom };
   };
 
   const CONTENT = {

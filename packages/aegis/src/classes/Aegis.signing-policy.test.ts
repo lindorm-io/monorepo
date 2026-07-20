@@ -237,7 +237,7 @@ describe("Aegis signing policy", () => {
         key: { predicate: { algClass: "asymmetric" } },
       });
 
-      expect(parsed.payload.subject).toBe("s");
+      expect(parsed.payload.sub).toBe("s");
     });
   });
 });

@@ -4,6 +4,7 @@ import MockDate from "mockdate";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG, TEST_OCT_KEY_ENC } from "../__fixtures__/keys.js";
 import { AegisError } from "../errors/index.js";
+import { decodeCbor } from "../internal/cose/cbor.js";
 import { Aegis } from "./Aegis.js";
 
 const MOCKED = new Date("2024-01-01T08:00:00.000Z");
@@ -28,8 +29,8 @@ describe("Aegis — COSE namespaces", () => {
     MockDate.set(MOCKED);
   });
 
-  describe("cws — raw COSE_Sign1 (mirror of jws)", () => {
-    test("signs an opaque claims map and round-trips it through verify", async () => {
+  describe("cws — opaque COSE_Sign1 (mirror of jws)", () => {
+    test("signs an opaque map and round-trips its raw bytes through verify", async () => {
       const signed = await aegis.cws.sign(
         { tid: "at_abc", sec: "s3cr3t" },
         { tokenType: "access_token", objectId: "obj-1" },
@@ -43,10 +44,13 @@ describe("Aegis — COSE namespaces", () => {
 
       const parsed = await aegis.cws.verify(signed.token);
 
-      expect(parsed.claims.tid).toBe("at_abc");
-      expect(parsed.claims.sec).toBe("s3cr3t");
+      // A CWS is OPAQUE — the verified payload is the raw CBOR bytes, not a
+      // decoded claim map. It emits the `+cws` media type so it is a CWS, not a CWT.
+      const map = decodeCbor(parsed.raw, { preferMap: false }) as Record<string, unknown>;
+      expect(map.tid).toBe("at_abc");
+      expect(map.sec).toBe("s3cr3t");
       expect(parsed.header.alg).toBe("ES512");
-      expect(parsed.header.typ).toBe("application/at+cwt");
+      expect(parsed.header.typ).toBe("application/at+cws");
       expect(parsed.header.kid).toEqual(expect.any(String));
       expect(parsed.token).toBe(signed.token);
     });
@@ -104,12 +108,14 @@ describe("Aegis — COSE namespaces", () => {
         audience: "https://rs.lindorm.io/",
       });
 
-      expect(parsed.claims.subject).toBe("user-1");
-      expect(parsed.claims.issuer).toBe("https://test.lindorm.io/"); // defaulted from deployment
-      expect(parsed.claims.audience).toEqual(["https://rs.lindorm.io/"]);
-      expect(parsed.claims.scope).toEqual(["read", "write"]);
-      expect(parsed.claims.tokenId).toBe("jti-1");
-      expect(parsed.claims.expiresAt).toBeInstanceOf(Date);
+      // The raw cwt namespace returns the NATIVE WIRE payload — COSE-name-keyed
+      // (`sub`/`aud`/`cti`, temporal as Dates), NOT the domain buckets.
+      expect(parsed.payload.sub).toBe("user-1");
+      expect(parsed.payload.iss).toBe("https://test.lindorm.io/"); // defaulted from deployment
+      expect(parsed.payload.aud).toEqual(["https://rs.lindorm.io/"]);
+      expect(parsed.payload.scope).toEqual(["read", "write"]);
+      expect(parsed.payload.cti).toBe("jti-1");
+      expect(parsed.payload.exp).toBeInstanceOf(Date);
       expect(parsed.header.alg).toBe("ES512");
     });
 
@@ -120,8 +126,10 @@ describe("Aegis — COSE namespaces", () => {
         expires: "1h",
       });
 
+      // Named matchers are a DOMAIN concern — the raw `cwt.verify` returns native
+      // wire without them, so the audience check runs on the `aegis.verify` surface.
       await expect(
-        aegis.cwt.verify(token, { audience: "https://other.lindorm.io/" }),
+        aegis.verify(token, { audience: "https://other.lindorm.io/" }),
       ).rejects.toThrow(AegisError);
     });
 
@@ -145,7 +153,9 @@ describe("Aegis — COSE namespaces", () => {
     test("rejects a CWT with no exp when expPresence is required (default)", async () => {
       const { token } = await aegis.cwt.sign({ subject: "u", audience: ["aud-1"] });
 
-      const error = await aegis.cwt
+      // exp PRESENCE is a DOMAIN policy — enforced on the `aegis.verify` surface,
+      // not the raw wire `cwt.verify` (which only range-checks a PRESENT exp).
+      const error = await aegis
         .verify(token, { audience: "aud-1" })
         .catch((err: Error) => err);
 
@@ -161,24 +171,27 @@ describe("Aegis — COSE namespaces", () => {
         expPresence: "optional",
       });
 
-      expect(parsed.claims.subject).toBe("u");
+      expect(parsed.payload.sub).toBe("u");
     });
   });
 
   describe("top-level verify auto-detects the COSE wire", () => {
-    test("verify(token) types a raw COSE_Sign1 as a ParsedCws (no validation)", async () => {
+    test("verify(token) reads an opaque CWS as raw bytes (empty domain)", async () => {
       const { token } = await aegis.cws.sign(
         { tid: "at_abc" },
         { tokenType: "access_token" },
       );
 
       const parsed = (await aegis.verify(token)) as unknown as {
-        claims: Record<string, unknown>;
-        header: { typ?: string };
+        format: string;
+        raw: Buffer;
+        header: { headerType?: string };
       };
 
-      expect(parsed.claims.tid).toBe("at_abc");
-      expect(parsed.header.typ).toBe("application/at+cwt");
+      expect(parsed.format).toBe("cws");
+      const map = decodeCbor(parsed.raw, { preferMap: false }) as Record<string, unknown>;
+      expect(map.tid).toBe("at_abc");
+      expect(parsed.header.headerType).toBe("application/at+cws");
     });
 
     test("verify(token, options) validates a generic CWT's standard claims", async () => {

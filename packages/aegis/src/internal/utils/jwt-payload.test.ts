@@ -3,7 +3,7 @@ import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
 import { JwtKit } from "../../classes/JwtKit.js";
-import { buildSignedJwt, parseTokenPayload } from "./jwt-payload.js";
+import { buildDomainClaims, buildSignedJwt } from "./jwt-payload.js";
 import { parseJwtToDomain } from "./parse-jwt.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
@@ -19,63 +19,60 @@ const assertionClaims = {
   jti: "assertion-1",
 };
 
-describe("parseTokenPayload", () => {
-  test("should parse an RFC 7523 client assertion with no iat", () => {
-    const payload = parseTokenPayload(assertionClaims, false);
+describe("buildDomainClaims", () => {
+  test("should build domain buckets for an RFC 7523 client assertion with no iat", () => {
+    const { claims } = buildDomainClaims(assertionClaims, false);
 
-    expect(payload.issuedAt).toBeUndefined();
-    expect(payload).toMatchSnapshot();
+    expect(claims.issuedAt).toBeUndefined();
+    expect(claims).toMatchSnapshot();
   });
 
-  test("should parse a token with an iat", () => {
-    const payload = parseTokenPayload({ ...assertionClaims, iat: 1704096000 }, false);
+  test("should decode iat to a Date", () => {
+    const { claims } = buildDomainClaims({ ...assertionClaims, iat: 1704096000 }, false);
 
-    expect(payload.issuedAt).toEqual(new Date("2024-01-01T08:00:00.000Z"));
-    expect(payload).toMatchSnapshot();
+    expect(claims.issuedAt).toEqual(new Date("2024-01-01T08:00:00.000Z"));
   });
 
   // exp PRESENCE is policy (verify floor / expPresence), not structure: an
-  // RFC 8417 / SSF security_event SET carries no exp yet must parse.
-  test("should parse a token with no exp (expiresAt undefined)", () => {
+  // RFC 8417 / SSF security_event SET carries no exp yet must build.
+  test("should build with no exp (expiresAt undefined)", () => {
     const { exp: _exp, ...withoutExp } = assertionClaims;
 
-    const payload = parseTokenPayload(withoutExp, false);
+    const { claims } = buildDomainClaims(withoutExp, false);
 
-    expect(payload.expiresAt).toBeUndefined();
-    expect(payload).toMatchSnapshot();
+    expect(claims.expiresAt).toBeUndefined();
   });
 
-  // subject/tokenId are OPTIONAL — an absent sub/jti stays undefined, never a
-  // fabricated "unknown" sentinel. Only iss is structurally required at parse.
+  // subject/tokenId are OPTIONAL — an absent sub/jti stays undefined. Only iss is
+  // structurally required.
   test("should leave subject and tokenId undefined when sub/jti are absent", () => {
-    const payload = parseTokenPayload({ iss: "client-1", exp: 1704096120 }, false);
+    const { claims } = buildDomainClaims({ iss: "client-1", exp: 1704096120 }, false);
 
-    expect(payload.subject).toBeUndefined();
-    expect(payload.tokenId).toBeUndefined();
-    expect(payload).toMatchSnapshot();
+    expect(claims.subject).toBeUndefined();
+    expect(claims.tokenId).toBeUndefined();
   });
 
-  test("should reject a token with no iss", () => {
+  test("should reject a payload with no iss", () => {
     const { iss: _iss, ...withoutIss } = assertionClaims;
 
-    expect(() => parseTokenPayload(withoutIss, false)).toThrow(
+    expect(() => buildDomainClaims(withoutIss, false)).toThrow(
       expect.objectContaining({ code: "jwt_missing_claim_iss" }),
     );
   });
 
   // The #15 bug: `isString("")` is true, so an empty issuer slipped through.
-  test("should reject a token with an empty-string iss", () => {
-    expect(() => parseTokenPayload({ ...assertionClaims, iss: "" }, false)).toThrow(
+  test("should reject a payload with an empty-string iss", () => {
+    expect(() => buildDomainClaims({ ...assertionClaims, iss: "" }, false)).toThrow(
       expect.objectContaining({ code: "jwt_missing_claim_iss" }),
     );
   });
 
   // ...but an opaque client_id issuer (RFC 7523 client assertion) is NOT a URI and
-  // must still parse — the gate is non-empty, not URI.
+  // must still build — the gate is non-empty, not URI.
   test("should accept an opaque client_id issuer", () => {
-    expect(parseTokenPayload({ ...assertionClaims, iss: "client-1" }, false).issuer).toBe(
-      "client-1",
-    );
+    expect(
+      buildDomainClaims({ ...assertionClaims, iss: "client-1" }, false).claims.issuer,
+    ).toBe("client-1");
   });
 
   // OIDC Core §13.3 honour-only-when-encrypted: the FLAT sensitive claims are
@@ -89,23 +86,23 @@ describe("parseTokenPayload", () => {
   };
 
   test("HONORS flat sensitive claims into the sensitive bucket when encrypted=true", () => {
-    const payload = parseTokenPayload(withSensitive, true);
+    const { claims, custom, sensitive } = buildDomainClaims(withSensitive, true);
 
-    expect(payload.sensitiveIdentity).toEqual({
+    expect(sensitive).toEqual({
       nationalIdentityNumber: "19900101-1234",
       nationalIdentityNumberVerified: true,
     });
     // Never leaked into the standard/custom buckets.
-    expect(payload).not.toHaveProperty("nationalIdentityNumber");
-    expect(payload.claims).not.toHaveProperty("nationalIdentityNumber");
+    expect(claims).not.toHaveProperty("nationalIdentityNumber");
+    expect(custom).not.toHaveProperty("nationalIdentityNumber");
   });
 
   test("SUPPRESSES flat sensitive claims entirely when encrypted=false", () => {
-    const payload = parseTokenPayload(withSensitive, false);
+    const { claims, custom, sensitive } = buildDomainClaims(withSensitive, false);
 
-    expect(payload.sensitiveIdentity).toBeUndefined();
-    expect(payload).not.toHaveProperty("nationalIdentityNumber");
-    expect(payload.claims).not.toHaveProperty("nationalIdentityNumber");
+    expect(sensitive).toBeUndefined();
+    expect(claims).not.toHaveProperty("nationalIdentityNumber");
+    expect(custom).not.toHaveProperty("nationalIdentityNumber");
   });
 });
 
@@ -151,10 +148,10 @@ describe("parseJwtToDomain (iat presence)", () => {
   test("should parse a signed client assertion that omits iat", () => {
     const token = kit.sign(assertionClaims);
 
-    const { payload } = parseJwtToDomain(token);
+    const { claims } = parseJwtToDomain(token);
 
-    expect(payload.issuedAt).toBeUndefined();
-    expect(payload).toMatchObject({
+    expect(claims.issuedAt).toBeUndefined();
+    expect(claims).toMatchObject({
       issuer: "client-1",
       subject: "client-1",
       audience: [ISSUER],
@@ -166,8 +163,8 @@ describe("parseJwtToDomain (iat presence)", () => {
   test("should parse a signed token that carries iat", () => {
     const token = kit.sign({ ...assertionClaims, iat: 1704096000 });
 
-    const { payload } = parseJwtToDomain(token);
+    const { claims } = parseJwtToDomain(token);
 
-    expect(payload.issuedAt).toEqual(new Date("2024-01-01T08:00:00.000Z"));
+    expect(claims.issuedAt).toEqual(new Date("2024-01-01T08:00:00.000Z"));
   });
 });

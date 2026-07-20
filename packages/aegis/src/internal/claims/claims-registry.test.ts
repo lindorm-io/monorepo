@@ -1,13 +1,13 @@
 import { describe, expect, test } from "vitest";
-import type { AegisProfile, AegisSensitiveIdentity } from "../../types/index.js";
+import type { AegisProfile, AegisSensitive } from "../../types/index.js";
 import { DOMAIN_CLAIM_KEYS } from "../utils/extract-claims.js";
 import { CLAIMS_REGISTRY, claimByDomain, claimByJose } from "./claims-registry.js";
 
-// Witness whose keys ARE the AegisSensitiveIdentity field set. Typed as
-// `Record<keyof AegisSensitiveIdentity, true>`, so adding OR removing a field
-// from AegisSensitiveIdentity forces this to change (compile error) — the
+// Witness whose keys ARE the AegisSensitive field set. Typed as
+// `Record<keyof AegisSensitive, true>`, so adding OR removing a field
+// from AegisSensitive forces this to change (compile error) — the
 // registry `sensitive` marks are then checked against these keys at runtime.
-const SENSITIVE_IDENTITY_FIELDS: Record<keyof AegisSensitiveIdentity, true> = {
+const SENSITIVE_IDENTITY_FIELDS: Record<keyof AegisSensitive, true> = {
   nationalIdentityNumber: true,
   nationalIdentityNumberVerified: true,
   socialSecurityNumber: true,
@@ -181,7 +181,7 @@ describe("CLAIM_REGISTRY", () => {
     expect(divergences).toEqual([{ domain: "tokenId", jose: "jti", coseName: "cti" }]);
   });
 
-  test('category "sensitive" claims match the AegisSensitiveIdentity field set', () => {
+  test('category "sensitive" claims match the AegisSensitive field set', () => {
     const sensitiveDomains = CLAIMS_REGISTRY.filter(
       (spec) => spec.category === "sensitive",
     ).map((spec) => spec.domain);

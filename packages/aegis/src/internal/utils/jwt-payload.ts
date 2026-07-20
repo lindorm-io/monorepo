@@ -2,18 +2,19 @@ import { B64 } from "@lindorm/b64";
 import { isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
-import { omitUndefined } from "@lindorm/utils";
 import { getUnixTime } from "@lindorm/date";
 import { JwtError } from "../../errors/index.js";
 import type {
+  AegisProfile,
+  AegisSensitive,
   JwtClaims,
-  ParsedJwtPayload,
   SignJwtContent,
   SignJwtOptions,
   SignedJwt,
   TokenProfile,
 } from "../../types/index.js";
 import { domainToJose, joseToDomain } from "../claims/translate.js";
+import type { DomainClaims } from "./extract-claims.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { extractAegisProfile } from "./extract-aegis-profile.js";
 import { extractSensitiveClaims } from "./extract-sensitive-claims.js";
@@ -118,80 +119,64 @@ export const decodeJwtPayload = <C extends Dict = Dict<never>>(
 ): DecodeClaims<C> => JSON.parse(B64.toString(payload)) as DecodeClaims<C>;
 
 /**
- * The shared parse gate. Only `iss` is STRUCTURALLY enforced here. `exp` is
- * deliberately NOT required at parse: an RFC 8417 / SSF `security_event` SET
- * carries no `exp` at all (`lifetime: null`), yet must parse — `exp` PRESENCE
- * is POLICY, enforced by the verify floor (finite-lifetime profiles) and by the
- * profile-less `expPresence` matcher (default `"required"`), not by the
- * structural parser. `iat` is likewise NOT required: RFC 7523 §3 makes `exp`
- * mandatory on a client assertion but `iat` only OPTIONAL, so a conformant
- * assertion omitting it must still parse. `iat`/`exp` presence policy belongs
- * to the profile floor (`profile.required`, `profile.lifetime`) or to the
- * caller, not to the parser.
+ * The domain-keyed READ buckets carried by a {@link VerifiedToken} for a JWT/CWT:
+ * the registered `claims` (minus profile/sensitive), the non-domain `custom`
+ * bucket, the `profile` bag, and the `sensitive` bag (surfaced only when the
+ * outer token was encrypted).
  */
-export const parseTokenPayload = <C extends Dict = Dict<never>>(
-  decoded: DecodeClaims<C>,
+export type DomainBuckets<C extends Dict = Dict> = {
+  claims: DomainClaims;
+  custom: C;
+  profile: AegisProfile | undefined;
+  sensitive: AegisSensitive | undefined;
+};
+
+/**
+ * Build the DOMAIN buckets for a `VerifiedToken.claims`/`custom`/`profile`/
+ * `sensitive` from a WIRE (jose-keyed) claim payload. The shared read gate: only
+ * `iss` is STRUCTURALLY enforced. `exp` is deliberately NOT required here — an
+ * RFC 8417 / SSF `security_event` SET carries no `exp` (`lifetime: null`), yet
+ * must verify; `exp` PRESENCE is POLICY (the verify floor / `expPresence`
+ * matcher), not a structural read. `iat` is likewise NOT required (RFC 7523 §3
+ * makes it optional on a client assertion).
+ */
+export const buildDomainClaims = <C extends Dict = Dict>(
+  wire: Dict,
   encrypted: boolean,
-): ParsedJwtPayload<C> => {
-  // `iss` must be a NON-EMPTY string. Not a URI: this shared gate also parses RFC
+): DomainBuckets<C> => {
+  // `iss` must be a NON-EMPTY string. Not a URI: this shared gate also reads RFC
   // 7523 client assertions, whose `iss` is the client_id (an opaque string, not a
-  // URL/URN), and per-token profiles like delegation. The platform-issuer URI/exact
-  // match is enforced higher up (enforceVerifyFloor checks the token's `iss`
-  // against the configured issuer for `issuer: "platform"` profiles). The only bug
-  // here was `isString("")` passing — an empty issuer is rejected now.
-  if (!isString(decoded.iss) || decoded.iss.length === 0) {
+  // URL/URN). The platform-issuer exact match is enforced higher up
+  // (enforceVerifyFloor for `issuer: "platform"` profiles).
+  if (!isString(wire.iss) || wire.iss.length === 0) {
     throw new JwtError("Missing claim: iss", {
       code: "jwt_missing_claim_iss",
       title: "JWT Missing Claim ISS",
       details:
-        "The payload has no non-empty string iss claim, which is required to parse a JWT.",
+        "The payload has no non-empty string iss claim, which is required to verify a JWT.",
     });
   }
 
   // The ONE `jose -> domain` translator (registry-complete): registered claims
-  // resolve to their domain names — surfacing `txn`->`transactionId` / `events`
-  // that the old `extractDomainClaims` left in the custom bag — and unregistered
-  // custom claims flip snake_case -> camelCase into `custom` (R18).
-  const { claims: domain, custom } = joseToDomain(decoded);
+  // resolve to their domain names, unregistered custom claims flip snake_case ->
+  // camelCase into `custom` (R18).
+  const { claims: domainAll, custom } = joseToDomain(wire);
 
-  // AegisProfile fields are REGISTERED (registry category "profile"), so the
-  // translator resolves them into `domain` (camelCased). Bucket them off —
-  // extractAegisProfile matches the camelCase domain names and strips them.
-  const { profile, rest: afterProfile } = extractAegisProfile(domain);
+  // AegisProfile fields are REGISTERED, so the translator resolves them into the
+  // domain layer (camelCased). Bucket them off.
+  const { profile, rest: afterProfile } = extractAegisProfile(domainAll);
 
-  // Sensitive-category claims (registry `category: "sensitive"`) travel FLAT and
-  // resolve into `domain` like any other registered claim. Partition them off by
-  // category, then honour OIDC Core §13.3: SURFACE them into the sensitive bucket
-  // ONLY when the outer token was encrypted (jwe/cwe); on an unencrypted token
-  // they are SUPPRESSED — stripped from `domainRest` here and never re-attached,
-  // so a flat sensitive claim in cleartext reaches no bucket at all.
-  const { sensitive, rest: domainRest } = extractSensitiveClaims(afterProfile);
-  const sensitiveIdentity = encrypted ? sensitive : undefined;
+  // Sensitive-category claims travel FLAT and resolve into the domain layer like
+  // any other registered claim. Partition them off, then honour OIDC Core §13.3:
+  // SURFACE them into the `sensitive` bucket ONLY when the outer token was
+  // encrypted (jwe/cwe); on an unencrypted token they are SUPPRESSED — stripped
+  // from `claims` and never re-attached.
+  const { sensitive, rest: claims } = extractSensitiveClaims(afterProfile);
 
-  // ParsedJwtPayload keeps set-valued arrays non-optional with [] defaults.
-  // Only `iss` is required at parse (validated above); every other scalar
-  // claim is optional — subject/tokenId stay undefined when absent
-  // (omitUndefined strips them), never a fabricated "unknown".
-  return omitUndefined({
-    ...domainRest,
-    // Required field (validated above — iss checked)
-    issuer: domain.issuer!,
-    // Optional — an absent exp (SET) / iat leaves them undefined (omitUndefined strips)
-    expiresAt: domain.expiresAt,
-    issuedAt: domain.issuedAt,
-    // Non-optional arrays default to []
-    audience: domain.audience ?? [],
-    authMethods: domain.authMethods ?? [],
-    entitlements: domain.entitlements ?? [],
-    groups: domain.groups ?? [],
-    permissions: domain.permissions ?? [],
-    roles: domain.roles ?? [],
-    scope: domain.scope ?? [],
-    // Optional strings — undefined when the claim is absent (no sentinel)
-    subject: domain.subject,
-    tokenId: domain.tokenId,
+  return {
+    claims: claims as DomainClaims,
+    custom: custom as C,
     profile,
-    sensitiveIdentity,
-    claims: custom as C,
-  });
+    sensitive: encrypted ? sensitive : undefined,
+  };
 };

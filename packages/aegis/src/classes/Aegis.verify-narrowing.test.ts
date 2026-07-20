@@ -40,23 +40,23 @@ describe("Aegis profiled verify narrowing", () => {
 
     const parsed = await aegis.verify("access_token", token, { audience: RESOURCE });
 
-    expectTypeOf(parsed).toHaveProperty("payload");
+    expectTypeOf(parsed).toHaveProperty("claims");
 
     // access_token.required lists subject / expiresAt / issuedAt / tokenId, all
     // proven present by enforceVerifyFloor — so the type strips their `| undefined`.
-    expectTypeOf(parsed.payload.subject).toEqualTypeOf<string>();
-    expectTypeOf(parsed.payload.tokenId).toEqualTypeOf<string>();
-    expectTypeOf(parsed.payload.expiresAt).toEqualTypeOf<Date>();
-    expectTypeOf(parsed.payload.issuedAt).toEqualTypeOf<Date>();
+    expectTypeOf(parsed.claims.subject).toEqualTypeOf<string>();
+    expectTypeOf(parsed.claims.tokenId).toEqualTypeOf<string>();
+    expectTypeOf(parsed.claims.expiresAt).toEqualTypeOf<Date>();
+    expectTypeOf(parsed.claims.issuedAt).toEqualTypeOf<Date>();
 
     // Runtime side: the narrowed claims really are present.
-    expect(parsed.payload.subject).toBe("user-1");
-    expect(parsed.payload.tokenId).toEqual(expect.any(String));
-    expect(parsed.payload.expiresAt).toBeInstanceOf(Date);
-    expect(parsed.payload.issuedAt).toBeInstanceOf(Date);
+    expect(parsed.claims.subject).toBe("user-1");
+    expect(parsed.claims.tokenId).toEqual(expect.any(String));
+    expect(parsed.claims.expiresAt).toBeInstanceOf(Date);
+    expect(parsed.claims.issuedAt).toBeInstanceOf(Date);
 
     // No non-null assertion needed — a plain `string` binding compiles.
-    const subject: string = parsed.payload.subject;
+    const subject: string = parsed.claims.subject;
     expect(subject).toBe("user-1");
   });
 
@@ -74,11 +74,11 @@ describe("Aegis profiled verify narrowing", () => {
       audience: "https://receiver",
     });
 
-    expectTypeOf(parsed.payload.subject).toEqualTypeOf<string | undefined>();
-    expectTypeOf(parsed.payload.expiresAt).toEqualTypeOf<Date | undefined>();
+    expectTypeOf(parsed.claims.subject).toEqualTypeOf<string | undefined>();
+    expectTypeOf(parsed.claims.expiresAt).toEqualTypeOf<Date | undefined>();
 
     // @ts-expect-error — subject is nullable here, so a `string` binding is unsound.
-    const _bad: string = parsed.payload.subject;
+    const _bad: string = parsed.claims.subject;
     void _bad;
   });
 
@@ -93,7 +93,7 @@ describe("Aegis profiled verify narrowing", () => {
     // so the parsed payload keeps every optional claim optional.
     const parsed = await aegis.verify<ParsedJwt>(token, { audience: RESOURCE });
 
-    expectTypeOf(parsed.payload.subject).toEqualTypeOf<string | undefined>();
-    expectTypeOf(parsed.payload.expiresAt).toEqualTypeOf<Date | undefined>();
+    expectTypeOf(parsed.claims.subject).toEqualTypeOf<string | undefined>();
+    expectTypeOf(parsed.claims.expiresAt).toEqualTypeOf<Date | undefined>();
   });
 });

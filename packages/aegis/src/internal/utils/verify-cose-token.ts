@@ -1,17 +1,19 @@
+import type { ProfileVerifyOptions, VerifiedToken } from "../../types/index.js";
 import { coseTyp } from "../cose/cose-typ.js";
 import { resolveProfile } from "../profiles/registry.js";
-import type { ParsedJws, ParsedJwt, ProfileVerifyOptions } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
+import { buildCoseVerifiedToken } from "./build-cose-verified-token.js";
 import { coseVerifyCore } from "./cose-verify-core.js";
 import { enforceVerifyFloor } from "./enforce-verify-floor.js";
-import { extractSensitiveClaims } from "./extract-sensitive-claims.js";
 
 /**
  * Profiled COSE verify: the COSE sibling of the JOSE `verifyProfileToken` path.
- * Verify the CWT's integrity (via `coseVerifyCore`) then apply the profile floor
- * against the profile's expected COSE typ + issuer.
+ * Verify the CWT/CWM integrity (via `coseVerifyCore`), apply the profile floor
+ * against the profile's expected COSE typ + issuer, then assemble the unified
+ * {@link VerifiedToken}. A COSE_Encrypt0 (cwe) outer reports `format: "cwe"` with
+ * the inner claims-format under `inner`.
  */
-export const verifyCoseToken = async <T extends ParsedJwt | ParsedJws<any>>({
+export const verifyCoseToken = async ({
   name,
   token,
   options,
@@ -21,9 +23,9 @@ export const verifyCoseToken = async <T extends ParsedJwt | ParsedJws<any>>({
   token: string;
   options: ProfileVerifyOptions;
   deps: AegisDeps;
-}): Promise<T> => {
+}): Promise<VerifiedToken> => {
   const profile = resolveProfile(name);
-  const { claims, decoded, typ, encrypted } = await coseVerifyCore({
+  const { claims, wire, decoded, typ, encrypted } = await coseVerifyCore({
     input: Buffer.from(token, "base64url"),
     deps,
   });
@@ -41,10 +43,11 @@ export const verifyCoseToken = async <T extends ParsedJwt | ParsedJws<any>>({
     profile,
   });
 
-  // §13.3 gate: surface FLAT sensitive claims only from an encrypted CWT (cwe);
-  // strip them on an unencrypted one. Run after the floor (which is unaffected
-  // by sensitive claims — no profile requires or forbids one).
-  const surfaced = encrypted ? claims : extractSensitiveClaims(claims).rest;
+  const verified = buildCoseVerifiedToken({ wire, decoded, token, encrypted });
 
-  return { claims: surfaced, header: decoded } as unknown as T;
+  // A COSE_Encrypt0 (cwe) wrapped a signed inner CWT/CWM: report the OUTER `cwe`
+  // format with the inner claims-format under `inner`.
+  return encrypted
+    ? { ...verified, format: "cwe", inner: verified.format as VerifiedToken["inner"] }
+    : verified;
 };

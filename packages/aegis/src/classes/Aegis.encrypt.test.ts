@@ -51,14 +51,17 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
       const parsed = await aegis.verify("id_token", token, { audience: "client-1" });
 
-      expect(parsed.decoded.payload).toMatchObject({
+      expect(parsed.wire?.payload).toMatchObject({
         iss: ISSUER,
         sub: "user-1",
         aud: ["client-1"],
       });
+      // The outer wire is a JWE; the signed inner is a JWT.
+      expect(parsed.format).toBe("jwe");
+      expect(parsed.inner).toBe("jwt");
       // The profile floor runs on the INNER token: its typ is bare `JWT`,
       // not the outer JWE wrapper.
-      expect(parsed.decoded.header.typ).toBe("JWT");
+      expect(parsed.header.headerType).toBe("JWT");
     });
 
     test("the inner signed token keeps the profile typ", async () => {
@@ -158,15 +161,15 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       const { token } = await aegis.mint("id_token", content);
       const parsed = await aegis.verify("id_token", token, { audience: "client-1" });
 
-      expect(parsed.payload.sensitiveIdentity).toMatchObject({
+      expect(parsed.sensitive).toMatchObject({
         nationalIdentityNumber: "ABC-123",
         nationalIdentityNumberVerified: true,
       });
     });
 
     test("SUPPRESSES flat sensitive claims carried by an UNENCRYPTED token", async () => {
-      // A raw JWT that carries the sensitive fields FLAT in cleartext — the read
-      // side must refuse to surface them (OIDC Core §13.3).
+      // A raw JWT that carries the sensitive fields FLAT in cleartext — the DOMAIN
+      // read side must refuse to surface them (OIDC Core §13.3).
       const { token } = await aegis.jwt.sign({
         issuer: ISSUER,
         subject: "user-1",
@@ -177,14 +180,12 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
       expect(JwtKit.isJwt(token)).toBe(true);
 
-      const parsed = await aegis.jwt.verify(token);
+      const parsed = await aegis.verify(token);
 
       // Not in the sensitive bucket, and not leaked into any claim bucket.
-      expect(parsed.payload.sensitiveIdentity).toBeUndefined();
-      expect((parsed.payload as Record<string, unknown>).nationalIdentityNumber).toBe(
-        undefined,
-      );
-      expect(parsed.payload.claims).not.toHaveProperty("nationalIdentityNumber");
+      expect(parsed.sensitive).toBeUndefined();
+      expect(parsed.claims).not.toHaveProperty("nationalIdentityNumber");
+      expect(parsed.custom).not.toHaveProperty("nationalIdentityNumber");
     });
 
     test("parse (unverified) also suppresses flat sensitive claims", async () => {
@@ -198,10 +199,9 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
       const parsed = Aegis.parse(token);
 
-      expect(parsed.payload.sensitiveIdentity).toBeUndefined();
-      expect((parsed.payload as Record<string, unknown>).nationalIdentityNumber).toBe(
-        undefined,
-      );
+      expect(parsed.sensitive).toBeUndefined();
+      expect(parsed.claims).not.toHaveProperty("nationalIdentityNumber");
+      expect(parsed.custom).not.toHaveProperty("nationalIdentityNumber");
     });
   });
 
@@ -241,7 +241,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
         audience: RESOURCE,
       });
 
-      expect(parsed.decoded.payload).toMatchObject({ sub: "user-1" });
+      expect(parsed.wire?.payload).toMatchObject({ sub: "user-1" });
     });
   });
 });

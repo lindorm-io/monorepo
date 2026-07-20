@@ -13,7 +13,7 @@ export type ValidateProfileContext = {
  * Runs a profile's structural validation against the DOMAIN-keyed common layer:
  *
  *   1. `profile.rules` — flat structural rules as a `Predicate<DomainClaims>`,
- *      evaluated with the SAME matcher (`Predicated`) `assert`/`validateClaims`
+ *      evaluated with the SAME matcher (`Predicated`) `assert`/`Aegis.assert`
  *      use; a mismatch names the failing claim keys,
  *   2. the crypto floor (`profile.algClass` via `algPermitted`),
  *   3. `profile.validate` — the imperative escape hatch for recursive /

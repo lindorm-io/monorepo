@@ -14,10 +14,10 @@ import { JwtKit } from "./JwtKit.js";
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
 // The DOMAIN verify policy the thinned JwtKit no longer owns — named-claim
-// matchers, exp/typ presence, actor/delegation, DPoP — now runs on the Aegis
-// verify path (verifyJwtToDomain). These tests exercise it through
-// `aegis.jwt.verify`, the raw JWT surface.
-describe("Aegis jwt.verify — relocated domain policy", () => {
+// matchers, exp/typ presence, actor/delegation, DPoP — runs on the DOMAIN verify
+// path (`aegis.verify` → `verifyJwtToken`), returning a `VerifiedToken`. The raw
+// `aegis.jwt.verify` surface is wire-only now (no domain policy).
+describe("Aegis verify — relocated domain policy", () => {
   const issuer = "https://test.lindorm.io/";
 
   let logger: ILogger;
@@ -44,22 +44,20 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
     test("audience string verifier matches a multi-value aud array", async () => {
       const { token } = await mint({ ...baseContent, audience: ["saga", "mimir"] });
 
-      await expect(aegis.jwt.verify(token, { audience: "saga" })).resolves.toBeDefined();
-      await expect(aegis.jwt.verify(token, { audience: "mimir" })).resolves.toBeDefined();
-      await expect(aegis.jwt.verify(token, { audience: "elsewhere" })).rejects.toThrow();
+      await expect(aegis.verify(token, { audience: "saga" })).resolves.toBeDefined();
+      await expect(aegis.verify(token, { audience: "mimir" })).resolves.toBeDefined();
+      await expect(aegis.verify(token, { audience: "elsewhere" })).rejects.toThrow();
     });
 
     test("audience array verifier requires every listed audience to be present", async () => {
       const { token } = await mint({ ...baseContent, audience: ["saga", "mimir"] });
 
       await expect(
-        aegis.jwt.verify(token, { audience: ["saga", "mimir"] }),
+        aegis.verify(token, { audience: ["saga", "mimir"] }),
       ).resolves.toBeDefined();
+      await expect(aegis.verify(token, { audience: ["saga"] })).resolves.toBeDefined();
       await expect(
-        aegis.jwt.verify(token, { audience: ["saga"] }),
-      ).resolves.toBeDefined();
-      await expect(
-        aegis.jwt.verify(token, { audience: ["saga", "elsewhere"] }),
+        aegis.verify(token, { audience: ["saga", "elsewhere"] }),
       ).rejects.toThrow();
     });
 
@@ -78,7 +76,7 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
       const { token } = await mint(content);
 
       await expect(
-        aegis.jwt.verify(token, {
+        aegis.verify(token, {
           accessToken: content.accessToken,
           audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
           authCode: content.authCode,
@@ -98,7 +96,7 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
       });
 
       await expect(
-        aegis.jwt.verify(token, { accessToken: "a-different-access-token" }),
+        aegis.verify(token, { accessToken: "a-different-access-token" }),
       ).rejects.toThrow();
     });
   });
@@ -126,20 +124,23 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
     };
 
     test("rejects a token with no exp when expPresence is required (default)", async () => {
-      await expect(aegis.jwt.verify(signExpLess())).rejects.toThrow(/exp/);
+      await expect(aegis.verify(signExpLess())).rejects.toThrow(/exp/);
     });
 
     test("accepts a token with no exp when expPresence is optional", async () => {
       await expect(
-        aegis.jwt.verify(signExpLess(), { expPresence: "optional" }),
+        aegis.verify(signExpLess(), { expPresence: "optional" }),
       ).resolves.toBeDefined();
     });
 
-    test("rejects a typ-less token when typPresence is required (default)", async () => {
-      const error = await aegis.jwt
-        .verify(signTypLess(), { expPresence: "optional" })
-        .catch((err: { code?: string }) => err);
-      expect((error as { code?: string }).code).toBe("jwt_invalid_typ");
+    // The raw kit keeps only typ WELL-FORMEDNESS-if-present (typ presence is a
+    // domain/profile policy). So `aegis.jwt.verify` ACCEPTS a typ-less signed
+    // token and returns its native WIRE shape — no typ-presence rejection here.
+    test("raw jwt.verify accepts a typ-less token (typ presence is not a raw concern)", async () => {
+      const parsed = await aegis.jwt.verify(signTypLess());
+      expect(parsed.payload.iss).toBe(issuer);
+      expect(parsed.payload.sub).toBe("s");
+      expect(parsed.header.headerType).toBeUndefined();
     });
   });
 
@@ -147,10 +148,10 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
     test("resolves subject and issuer on the domain payload", async () => {
       const { token } = await mint(baseContent);
 
-      const parsed = await aegis.jwt.verify(token);
+      const parsed = await aegis.verify(token);
 
-      expect(parsed.payload.subject).toBe("3f2ae79d-f1d1-556b-a8bc-305e6b2334ad");
-      expect(parsed.payload.issuer).toBe(issuer);
+      expect(parsed.claims.subject).toBe("3f2ae79d-f1d1-556b-a8bc-305e6b2334ad");
+      expect(parsed.claims.issuer).toBe(issuer);
       expect(parsed.delegation).toEqual({
         actorChain: [],
         currentActor: undefined,
@@ -166,12 +167,12 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
         claims: { myAppFlag: "enabled", someCustomThing: 42 },
       });
 
-      const parsed = await aegis.jwt.verify(token, { typPresence: "optional" });
-      expect(parsed.payload.profile).toEqual({
+      const parsed = await aegis.verify(token, { typPresence: "optional" });
+      expect(parsed.profile).toEqual({
         givenName: "Jonn",
         email: "jonn@example.com",
       });
-      expect(parsed.payload.claims).toEqual({
+      expect(parsed.custom).toEqual({
         myAppFlag: "enabled",
         someCustomThing: 42,
       });
@@ -181,41 +182,41 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
   describe("actor verification", () => {
     test("delegation is empty when act claim is absent", async () => {
       const { token } = await mint(baseContent);
-      const parsed = await aegis.jwt.verify(token);
+      const parsed = await aegis.verify(token);
 
-      expect(parsed.delegation.isDelegated).toBe(false);
-      expect(parsed.delegation.currentActor).toBeUndefined();
-      expect(parsed.delegation.actorChain).toEqual([]);
+      expect(parsed.delegation!.isDelegated).toBe(false);
+      expect(parsed.delegation!.currentActor).toBeUndefined();
+      expect(parsed.delegation!.actorChain).toEqual([]);
     });
 
     test("delegation reflects a single-level act claim", async () => {
       const { token } = await mint({ ...baseContent, act: { subject: "service-1" } });
-      const parsed = await aegis.jwt.verify(token);
+      const parsed = await aegis.verify(token);
 
-      expect(parsed.delegation.isDelegated).toBe(true);
-      expect(parsed.delegation.currentActor).toBe("service-1");
-      expect(parsed.delegation.actorChain).toEqual([{ subject: "service-1" }]);
+      expect(parsed.delegation!.isDelegated).toBe(true);
+      expect(parsed.delegation!.currentActor).toBe("service-1");
+      expect(parsed.delegation!.actorChain).toEqual([{ subject: "service-1" }]);
     });
 
     test("actor.required throws when no act claim is present", async () => {
       const { token } = await mint(baseContent);
-      await expect(
-        aegis.jwt.verify(token, { actor: { required: true } }),
-      ).rejects.toThrow(/act claim/);
+      await expect(aegis.verify(token, { actor: { required: true } })).rejects.toThrow(
+        /act claim/,
+      );
     });
 
     test("actor.required passes when act is present", async () => {
       const { token } = await mint({ ...baseContent, act: { subject: "service-1" } });
       await expect(
-        aegis.jwt.verify(token, { actor: { required: true } }),
+        aegis.verify(token, { actor: { required: true } }),
       ).resolves.toBeDefined();
     });
 
     test("actor.forbidden throws when act is present", async () => {
       const { token } = await mint({ ...baseContent, act: { subject: "service-1" } });
-      await expect(
-        aegis.jwt.verify(token, { actor: { forbidden: true } }),
-      ).rejects.toThrow(/non-delegated/);
+      await expect(aegis.verify(token, { actor: { forbidden: true } })).rejects.toThrow(
+        /non-delegated/,
+      );
     });
 
     test("actor.allowedActors ($in) accepts a chain of whitelisted subjects", async () => {
@@ -224,7 +225,7 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
         act: { subject: "service-1", act: { subject: "service-2" } },
       });
       await expect(
-        aegis.jwt.verify(token, {
+        aegis.verify(token, {
           actor: { allowedActors: { subject: { $in: ["service-1", "service-2"] } } },
         }),
       ).resolves.toBeDefined();
@@ -236,7 +237,7 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
         act: { subject: "service-1", act: { subject: "rogue" } },
       });
       await expect(
-        aegis.jwt.verify(token, {
+        aegis.verify(token, {
           actor: { allowedActors: { subject: { $in: ["service-1"] } } },
         }),
       ).rejects.toThrow(/not allowed/);
@@ -248,7 +249,7 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
         act: { subject: "service-1", act: { subject: "rogue" } },
       });
       await expect(
-        aegis.jwt.verify(token, {
+        aegis.verify(token, {
           actor: { allowedActors: { subject: "service-1" }, actorScope: "current" },
         }),
       ).resolves.toBeDefined();
@@ -260,7 +261,7 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
         act: { subject: "rogue-1", act: { subject: "rogue-2" } },
       });
       await expect(
-        aegis.jwt.verify(token, {
+        aegis.verify(token, {
           actor: { allowedActors: { subject: "gateway" }, actorScope: "some" },
         }),
       ).rejects.toThrow(/no actor in the chain/i);
@@ -274,9 +275,9 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
           act: { subject: "service-2", act: { subject: "service-3" } },
         },
       });
-      await expect(
-        aegis.jwt.verify(token, { actor: { maxChainDepth: 2 } }),
-      ).rejects.toThrow(/maximum depth/);
+      await expect(aegis.verify(token, { actor: { maxChainDepth: 2 } })).rejects.toThrow(
+        /maximum depth/,
+      );
     });
   });
 
@@ -319,7 +320,7 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
       });
       const proof = signDpopProof(token);
 
-      const parsed = await aegis.jwt.verify(token, { dpopProof: proof });
+      const parsed = await aegis.verify(token, { dpopProof: proof });
 
       expect(parsed.dpop).toEqual({
         thumbprint: proofThumbprint,
@@ -339,7 +340,7 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
         confirmation: { thumbprint: proofThumbprint },
       });
 
-      await expect(aegis.jwt.verify(token)).rejects.toThrow(
+      await expect(aegis.verify(token)).rejects.toThrow(
         /token is DPoP-bound but no DPoP proof was provided/,
       );
     });
@@ -348,7 +349,7 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
       const { token } = await mint({ ...baseContent, tokenType: "access_token" });
       const proof = signDpopProof(token);
 
-      await expect(aegis.jwt.verify(token, { dpopProof: proof })).rejects.toThrow(
+      await expect(aegis.verify(token, { dpopProof: proof })).rejects.toThrow(
         /DPoP proof provided but token is not bound/,
       );
     });
@@ -361,7 +362,7 @@ describe("Aegis jwt.verify — relocated domain policy", () => {
       });
       const proof = signDpopProof(token);
 
-      await expect(aegis.jwt.verify(token, { dpopProof: proof })).rejects.toThrow(
+      await expect(aegis.verify(token, { dpopProof: proof })).rejects.toThrow(
         /thumbprint does not match cnf\.jkt/,
       );
     });

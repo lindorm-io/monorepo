@@ -23,12 +23,11 @@ import type {
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
-import { sanitiseToken } from "@lindorm/utils";
-import { AegisError } from "../errors/index.js";
 import type {
   IAegis,
   IAegisAes,
   IAegisCwe,
+  IAegisCwm,
   IAegisCws,
   IAegisCwt,
   IAegisJwe,
@@ -39,6 +38,7 @@ import { domainToJose, joseToDomain } from "../internal/claims/translate.js";
 import { isCose } from "../internal/cose/is-cose.js";
 import {
   isCwe as isCweBytes,
+  isCwm as isCwmBytes,
   isCws as isCwsBytes,
   isCwt as isCwtBytes,
 } from "../internal/cose/is-cose-format.js";
@@ -47,7 +47,6 @@ import { registerProfile as registerProfileFn } from "../internal/profiles/regis
 import type { AegisDeps } from "../internal/utils/aegis-deps.js";
 import { decryptToken } from "../internal/utils/decrypt-token.js";
 import { encryptToken } from "../internal/utils/encrypt-token.js";
-import { decodeJoseHeader } from "../internal/utils/jose-header.js";
 import { createJwtValidate } from "../internal/utils/jwt-validate.js";
 import { mintToken } from "../internal/utils/mint-token.js";
 import { parseToken } from "../internal/utils/parse-token.js";
@@ -57,17 +56,19 @@ import { rawDecryptJwe } from "../internal/utils/raw-decrypt-jwe.js";
 import { rawEncryptAes } from "../internal/utils/raw-encrypt-aes.js";
 import { rawEncryptCwe } from "../internal/utils/raw-encrypt-cwe.js";
 import { rawEncryptJwe } from "../internal/utils/raw-encrypt-jwe.js";
+import { rawSignCwm } from "../internal/utils/raw-sign-cwm.js";
 import { rawSignCws } from "../internal/utils/raw-sign-cws.js";
 import { rawSignCwt } from "../internal/utils/raw-sign-cwt.js";
 import { rawSignJws } from "../internal/utils/raw-sign-jws.js";
 import { rawSignJwt } from "../internal/utils/raw-sign-jwt.js";
+import { rawVerifyCwm } from "../internal/utils/raw-verify-cwm.js";
 import { rawVerifyCws } from "../internal/utils/raw-verify-cws.js";
 import { rawVerifyCwt } from "../internal/utils/raw-verify-cwt.js";
 import { rawVerifyJws } from "../internal/utils/raw-verify-jws.js";
 import { rawVerifyJwt } from "../internal/utils/raw-verify-jwt.js";
 import { resolveKey } from "../internal/utils/resolve-key.js";
 import { signToken } from "../internal/utils/sign-token.js";
-import { validate as validateClaims } from "../internal/utils/validate.js";
+import { validate } from "../internal/utils/validate.js";
 import { verifyProfileToken } from "../internal/utils/verify-profile-token.js";
 import { verifyToken } from "../internal/utils/verify-token.js";
 import type {
@@ -83,9 +84,7 @@ import type {
   CweDecryptOptions,
   CweEncryptOptions,
   CwsContent,
-  DecodedJwe,
-  DecodedJws,
-  DecodedJwt,
+  CwtWireClaims,
   DecryptedCwe,
   DecryptedJwe,
   DecryptedToken,
@@ -98,7 +97,7 @@ import type {
   JweDecryptOptions,
   JweEncryptOptions,
   JwsContent,
-  NarrowedJwt,
+  NarrowedToken,
   ParsedCws,
   ParsedCwt,
   ParsedJws,
@@ -118,15 +117,14 @@ import type {
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
-  WireTokenHeader,
   TokenProfile,
   ValidateJwtOptions,
+  VerifiedToken,
   VerifyCwsOptions,
   VerifyCwtOptions,
   VerifyJwsOptions,
   VerifyJwtOptions,
 } from "../types/index.js";
-import { type CwtDecoded, CwtKit } from "./CwtKit.js";
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
 import { JwtKit } from "./JwtKit.js";
@@ -200,6 +198,13 @@ export class Aegis implements IAegis {
     return {
       encrypt: this.cweEncrypt.bind(this),
       decrypt: this.cweDecrypt.bind(this),
+    };
+  }
+
+  get cwm(): IAegisCwm {
+    return {
+      sign: this.cwmSign.bind(this),
+      verify: this.cwmVerify.bind(this),
     };
   }
 
@@ -283,22 +288,23 @@ export class Aegis implements IAegis {
     profile: P,
     token: string,
     options?: ProfileVerifyOptions,
-  ): Promise<NarrowedJwt<BuiltInProfiles[P]>>;
-  verify<T extends ParsedJwt>(
+  ): Promise<NarrowedToken<BuiltInProfiles[P]>>;
+  verify(
     profile: string & {},
     token: string,
     options: ProfileVerifyOptions,
-  ): Promise<T>;
-  verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
-  verify<T extends ParsedJws<any>>(token: string): Promise<T>;
-  verify<T extends ParsedJwt>(token: string, options?: VerifyJwtOptions): Promise<T>;
-  async verify<T extends ParsedJwt | ParsedJws<any>>(
+  ): Promise<VerifiedToken>;
+  verify<C extends Dict = Dict>(
+    token: string,
+    options?: VerifyJwtOptions,
+  ): Promise<VerifiedToken<C>>;
+  async verify(
     tokenOrProfile: string,
     optionsOrToken?: VerifyJwtOptions | string,
     profileOptions?: ProfileVerifyOptions,
-  ): Promise<T> {
+  ): Promise<VerifiedToken> {
     if (isString(optionsOrToken)) {
-      return verifyProfileToken<T>({
+      return verifyProfileToken({
         name: tokenOrProfile,
         token: optionsOrToken,
         options: profileOptions ?? ({} as ProfileVerifyOptions),
@@ -306,7 +312,7 @@ export class Aegis implements IAegis {
       });
     }
 
-    return verifyToken<T>({
+    return verifyToken({
       token: tokenOrProfile,
       options: optionsOrToken,
       deps: this.deps,
@@ -314,18 +320,6 @@ export class Aegis implements IAegis {
   }
 
   // public static
-
-  static header(token: string): WireTokenHeader {
-    // A COSE token carries its header in the COSE protected map, not a JOSE segment;
-    // read the same alg / kid / typ off the CWT.
-    if (Aegis.isCose(token)) {
-      const { algorithm, kid, typ } = CwtKit.decode(Buffer.from(token, "base64url"));
-      return { alg: algorithm as WireTokenHeader["alg"], kid, typ };
-    }
-
-    const [header] = token.split(".");
-    return decodeJoseHeader(header);
-  }
 
   static isJwe(jwe: string): boolean {
     return JweKit.isJwe(jwe);
@@ -364,6 +358,12 @@ export class Aegis implements IAegis {
     return isCwtBytes(Buffer.from(token, "base64url"));
   }
 
+  static isCwm(token: string): boolean {
+    if (token.includes(".")) return false;
+
+    return isCwmBytes(Buffer.from(token, "base64url"));
+  }
+
   static isCws(token: string): boolean {
     if (token.includes(".")) return false;
 
@@ -385,35 +385,11 @@ export class Aegis implements IAegis {
 
   static toDomain = joseToDomain;
 
-  static decode<T extends DecodedJwe | DecodedJws | DecodedJwt | CwtDecoded>(
-    token: string,
-  ): T {
-    if (Aegis.isJwe(token)) {
-      return JweKit.decode(token) as T;
-    }
-    if (Aegis.isJws(token)) {
-      return JwsKit.decode(token) as T;
-    }
-    if (Aegis.isJwt(token)) {
-      return JwtKit.decode(token) as T;
-    }
-    // A COSE token has no JOSE dot structure — decode it as a CWT. The result is the
-    // header metadata (kid / alg / typ); a CWT's claims come from `verify`, since a
-    // COSE payload is only meaningful once its integrity is checked.
-    if (Aegis.isCose(token)) {
-      return CwtKit.decode(Buffer.from(token, "base64url")) as T;
-    }
-    throw new AegisError("Invalid token type", {
-      code: "unsupported_token_type",
-      debug: { token: sanitiseToken(token) },
-      title: "Unsupported Token Type",
-      details:
-        "The token is not a recognised JWT, JWE, or JWS, so Aegis cannot select a kit to decode it.",
-    });
-  }
+  // `Aegis.decode` is DROPPED (Bit 2) — use `aegis.<fmt>.decode` for a known
+  // format, or `aegis.parse` for an unknown one.
 
-  static parse<T extends ParsedJwt | ParsedJws<any>>(token: string): T {
-    return parseToken<T>(token);
+  static parse<C extends Dict = Dict>(token: string): VerifiedToken<C> {
+    return parseToken<C>(token);
   }
 
   /**
@@ -424,9 +400,9 @@ export class Aegis implements IAegis {
    * Works on any flat claim source — a ParsedJwtPayload or any
    * structurally-compatible dict.
    */
-  static validateClaims(claims: Dict, matchers: ValidateJwtOptions): void {
+  static assert(claims: Dict, matchers: ValidateJwtOptions): void {
     const predicate = createJwtValidate(matchers);
-    validateClaims(claims, predicate);
+    validate(claims, predicate);
   }
 
   // private raw namespaces — each a ONE-LINE delegator to its
@@ -508,11 +484,8 @@ export class Aegis implements IAegis {
     return rawSignCws({ data, options, deps: this.deps });
   }
 
-  private cwsVerify<T extends Dict = Dict>(
-    token: string,
-    options: VerifyCwsOptions = {},
-  ): Promise<ParsedCws<T>> {
-    return rawVerifyCws<T>({ token, options, deps: this.deps });
+  private cwsVerify(token: string, options: VerifyCwsOptions = {}): Promise<ParsedCws> {
+    return rawVerifyCws({ token, options, deps: this.deps });
   }
 
   // private cwt
@@ -523,11 +496,26 @@ export class Aegis implements IAegis {
     return rawSignCwt<C>({ content, options, deps: this.deps });
   }
 
-  private cwtVerify<C extends Dict = Dict>(
+  private cwtVerify<C extends CwtWireClaims = CwtWireClaims>(
     token: string,
     verify: VerifyCwtOptions = {},
   ): Promise<ParsedCwt<C>> {
     return rawVerifyCwt<C>({ token, verify, deps: this.deps });
+  }
+
+  // private cwm (COSE_Mac0 / symmetric twin of cwt)
+  private cwmSign<C extends Dict = Dict>(
+    content: SignCwtContent<C>,
+    options: SignCwtOptions = {},
+  ): Promise<SignedCwt> {
+    return rawSignCwm<C>({ content, options, deps: this.deps });
+  }
+
+  private cwmVerify<C extends CwtWireClaims = CwtWireClaims>(
+    token: string,
+    verify: VerifyCwtOptions = {},
+  ): Promise<ParsedCwt<C>> {
+    return rawVerifyCwm<C>({ token, verify, deps: this.deps });
   }
 
   // Resolve the recipient encryption key for both the JOSE (JWE) and COSE

@@ -35,7 +35,7 @@ describe("COSE sign-then-encrypt", () => {
   const enc = KryptosKit.generate.enc.oct({ algorithm: "dir", encryption: "A256GCM" });
 
   test("round-trips through decrypt + verify", () => {
-    const inner = signCose({ kryptos: TEST_EC_KEY_SIG, logger, common });
+    const inner = signCose({ kryptos: TEST_EC_KEY_SIG, logger, common, format: "cwt" });
     expect(isEncryptedCose(inner)).toBe(false); // a bare signed CWT (COSE_Sign1)
 
     const encrypted = encryptCose({ kryptos: enc, logger, inner });

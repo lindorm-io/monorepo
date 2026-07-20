@@ -1,6 +1,6 @@
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
-import type { AegisSensitiveIdentity } from "../../types/index.js";
+import type { AegisSensitive } from "../../types/index.js";
 import { CLAIMS_REGISTRY } from "../claims/claims-registry.js";
 
 // The DOMAIN names of the sensitive-category claims, DERIVED from the registry
@@ -22,7 +22,7 @@ const SENSITIVE_DOMAINS: ReadonlyArray<string> = CLAIMS_REGISTRY.filter(
  */
 export const extractSensitiveClaims = (
   domain: Dict,
-): { sensitive: AegisSensitiveIdentity | undefined; rest: Dict } => {
+): { sensitive: AegisSensitive | undefined; rest: Dict } => {
   const collected: Dict = {};
   const rest: Dict = { ...domain };
 
@@ -37,9 +37,7 @@ export const extractSensitiveClaims = (
 
   return {
     sensitive:
-      Object.keys(sensitive).length > 0
-        ? (sensitive as AegisSensitiveIdentity)
-        : undefined,
+      Object.keys(sensitive).length > 0 ? (sensitive as AegisSensitive) : undefined,
     rest,
   };
 };

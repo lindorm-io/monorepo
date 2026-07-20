@@ -228,7 +228,7 @@ export type TokenProfile<
   /**
    * Flat structural rules expressed as a `Predicate<DomainClaims>` over the
    * DOMAIN-keyed common layer — the SAME predicate vocabulary `assert` /
-   * matchers / `validateClaims` use. `validateProfileClaims` evaluates it and
+   * matchers / `Aegis.assert` use. `validateProfileClaims` evaluates it and
    * throws `jwt_claims_invalid` on a mismatch. Only rules a flat predicate can
    * express live here (`issUri`, `audSingleResource`); genuinely recursive or
    * cross-field rules (`crossField`, `actChainShape`, `cnfShape`, `subIdShape`,

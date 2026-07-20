@@ -9,7 +9,7 @@ const URI = /^[a-z][a-z0-9+.-]*:/i;
 /**
  * `iss`, when present, must be a URI-shaped string (RFC 7519 §4.1.1 — the
  * platform always emits a URL issuer). Expressed as a flat predicate so the
- * profile rule vocabulary unifies with `assert` / matchers / `validateClaims`.
+ * profile rule vocabulary unifies with `assert` / matchers / `Aegis.assert`.
  * The `$or` with `$exists:false` keeps the "only when present" semantics —
  * presence is the `required` floor's job.
  */

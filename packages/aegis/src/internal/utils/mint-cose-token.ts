@@ -82,6 +82,12 @@ export const mintCoseToken = async ({
     ? { ...common, ...signContent.sensitive }
     : common;
 
+  // D6: the WRITE path selects the COSE kit by the explicit format (`cwt` =
+  // COSE_Sign1 / asymmetric, `cwm` = COSE_Mac0 / symmetric). `mintToken` routes
+  // both here; the kit's class gate is the backstop, so `format: "cwt"` with a
+  // symmetric key throws instead of silently MAC-ing.
+  const format = options.format === "cwm" ? "cwm" : "cwt";
+
   let token = signCose({
     kryptos,
     logger: deps.logger,
@@ -89,6 +95,7 @@ export const mintCoseToken = async ({
     typ: coseTyp(profile.typ),
     proprietary: options.proprietary,
     omit: options.omit,
+    format,
   });
 
   // Sign-then-encrypt: the inner secured CWT is the COSE_Encrypt0 plaintext.

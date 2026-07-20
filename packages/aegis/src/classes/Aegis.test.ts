@@ -166,26 +166,15 @@ describe("Aegis", () => {
         objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
       },
-      delegation: {
-        actorChain: [],
-        currentActor: undefined,
-        isDelegated: false,
-      },
+      // The raw namespace returns the NATIVE WIRE shape: `.payload` is wire-keyed
+      // (`sub`/`exp`), NOT the domain buckets. Domain claims are `aegis.verify`.
       payload: {
-        audience: [],
-        authMethods: [],
-        claims: {},
-        entitlements: [],
-        expiresAt: new Date("2024-01-01T09:00:00.000Z"),
-        groups: [],
-        issuedAt: new Date("2024-01-01T08:00:00.000Z"),
-        issuer: "https://test.lindorm.io/",
-        notBefore: new Date("2024-01-01T08:00:00.000Z"),
-        permissions: [],
-        roles: [],
-        scope: [],
-        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-        tokenId: expect.any(String),
+        exp: 1704099600,
+        iat: 1704096000,
+        iss: "https://test.lindorm.io/",
+        jti: expect.any(String),
+        nbf: 1704096000,
+        sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       },
       token: res.token,
     });
@@ -201,7 +190,7 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.verify(jwe.token)).resolves.toEqual(
-      expect.objectContaining({ payload: "data" }),
+      expect.objectContaining({ format: "jwe", inner: "jws", raw: "data" }),
     );
   });
 
@@ -218,10 +207,12 @@ describe("Aegis", () => {
 
     await expect(aegis.verify(jwe.token)).resolves.toEqual(
       expect.objectContaining({
+        format: "jwe",
+        inner: "jwt",
         header: expect.objectContaining({
           tokenType: "test_token",
         }),
-        payload: expect.objectContaining({
+        claims: expect.objectContaining({
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         }),
       }),
@@ -234,7 +225,7 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.verify(jws.token)).resolves.toEqual(
-      expect.objectContaining({ payload: "data" }),
+      expect.objectContaining({ format: "jws", raw: "data" }),
     );
   });
 
@@ -247,10 +238,11 @@ describe("Aegis", () => {
 
     await expect(aegis.verify(jwt.token)).resolves.toEqual(
       expect.objectContaining({
+        format: "jwt",
         header: expect.objectContaining({
           tokenType: "test_token",
         }),
-        payload: expect.objectContaining({
+        claims: expect.objectContaining({
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         }),
       }),
@@ -291,7 +283,7 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.verify(res.token)).resolves.toEqual(
-      expect.objectContaining({ payload: "raw-data" }),
+      expect.objectContaining({ format: "jws", raw: "raw-data" }),
     );
   });
 
@@ -299,7 +291,7 @@ describe("Aegis", () => {
     const res = await aegis.sign({ payload: { hello: "world" } });
 
     await expect(aegis.verify(res.token)).resolves.toEqual(
-      expect.objectContaining({ payload: JSON.stringify({ hello: "world" }) }),
+      expect.objectContaining({ format: "jws", raw: JSON.stringify({ hello: "world" }) }),
     );
   });
 

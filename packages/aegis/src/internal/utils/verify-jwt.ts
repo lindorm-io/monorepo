@@ -1,42 +1,60 @@
+import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
+import { JwtKit } from "../../classes/JwtKit.js";
 import { AegisDomainError } from "../../errors/index.js";
-import type { JwtKit } from "../../classes/JwtKit.js";
-import type { ParsedJwt, VerifyJwtOptions } from "../../types/index.js";
+import type { VerifiedToken, VerifyJwtOptions } from "../../types/index.js";
+import type { AegisDeps } from "./aegis-deps.js";
 import { computeTypHeader, extractTypPrefix } from "./compute-typ-header.js";
 import { extractTokenDelegation } from "./extract-token-delegation.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
-import { parseTokenPayload } from "./jwt-payload.js";
+import { buildDomainClaims } from "./jwt-payload.js";
 import { validate } from "./validate.js";
 import { validateActor } from "./validate-actor.js";
 import { verifyDpopProof } from "./verify-dpop-proof.js";
 
-type Config = {
-  clockTolerance: number;
-  dpopMaxSkew: number;
-};
-
 /**
- * The Aegis DOMAIN verify half (R16 seed — Unit C lifts this into `verifyToken`).
+ * The domain JWT verify (`aegis.verify(token)` JWT branch → `VerifiedToken`).
  *
- * The wire `JwtKit.verify` has already run the structural + prudent SECURITY
- * checks (crit, typ well-formedness, algorithm-match, signature, cert-binding,
- * temporal range). This layer adds the DOMAIN policy the thinned kit no longer
- * owns: the claim translation to the domain shape, the named-claim identity
- * matchers, `exp` PRESENCE requiredness, actor/delegation, and the DPoP proof —
- * so `aegis.verify` resolves the SAME domain result the fat kit used to.
+ * Resolves the verify key by `kid` (per-call `key` injection preserved), runs the
+ * wire `JwtKit.verify` (crit, typ well-formedness, algorithm-match, signature,
+ * cert-binding, temporal range — R10), then adds the DOMAIN policy the thinned kit
+ * no longer owns: typ/exp PRESENCE, the named-claim identity matchers, actor /
+ * delegation, and the DPoP proof — and ASSEMBLES the unified `VerifiedToken`
+ * (domain `claims`/`custom`/`profile`/`sensitive` buckets + full-breadth domain
+ * `header` + the untranslated `wire.payload`). Format is always `"jwt"` here; the
+ * `verifyToken` JWE branch overrides it to `"jwe"` + `inner` when the JWT was a
+ * decrypted inner token.
  */
-export const verifyJwtToDomain = <C extends Dict = Dict>(
-  kit: JwtKit,
-  token: string,
-  options: VerifyJwtOptions,
-  config: Config,
+export const verifyJwtToken = async <C extends Dict = Dict>({
+  token,
+  options = {},
+  deps,
+  encrypted = false,
+}: {
+  token: string;
+  options?: VerifyJwtOptions;
+  deps: AegisDeps;
   // Whether the JWT was the inner token of an ENCRYPTED outer (jwe). Drives the
-  // read-side sensitive-claim gate: sensitive claims (OIDC Core §13.3) surface
-  // only when this is true, and are suppressed otherwise.
-  encrypted: boolean,
-): ParsedJwt<C> => {
-  // The kit asserts the header typ from a bare PREFIX it re-wraps; Aegis derives
-  // that prefix from the domain `tokenType`.
+  // read-side sensitive-claim gate (OIDC Core §13.3).
+  encrypted?: boolean;
+}): Promise<VerifiedToken<C>> => {
+  const decode = JwtKit.decode(token);
+
+  const kryptos = await deps.resolveVerifyKey(
+    decode.header.kid,
+    decode.header.alg as KryptosSigAlgorithm,
+    options.key,
+  );
+
+  const kit = new JwtKit({
+    certBindingMode: deps.certBindingMode,
+    clockTolerance: deps.clockTolerance,
+    kryptos,
+    logger: deps.logger,
+  });
+
+  // The kit asserts the header typ from a bare PREFIX it re-wraps; derive that
+  // prefix from the domain `tokenType`.
   const wire = kit.verify<C>(token, undefined, {
     typ:
       options.tokenType !== undefined
@@ -58,14 +76,12 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
     });
   }
 
-  // Translate to the domain shape (also enforces the `iss` presence gate) and
-  // summarise the delegation chain from the wire `act` claim.
-  const payload = parseTokenPayload<C>(decoded.payload, encrypted);
+  // Domain buckets (enforces the `iss` presence gate) + the delegation summary.
+  const { claims, custom, profile, sensitive } = buildDomainClaims<C>(
+    decoded.payload,
+    encrypted,
+  );
   const delegation = extractTokenDelegation(decoded.payload as { act?: any });
-
-  const parsed: ParsedJwt<C> = { decoded, delegation, header, payload, token };
-
-  const clockTolerance = config.clockTolerance;
 
   const withDates = {
     ...decoded.payload,
@@ -78,9 +94,8 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
   };
 
   // `exp` PRESENCE is policy (default "required"). Surface the dedicated code
-  // before the generic matcher pass so callers keying on it keep working;
-  // "optional" (profiled SETs) skips it. When present, the range was already
-  // checked by the kit's temporal matcher.
+  // before the generic matcher pass; "optional" (profiled SETs) skips it. When
+  // present, the range was already checked by the kit's temporal matcher.
   if (options.expPresence !== "optional" && withDates.exp === undefined) {
     throw new AegisDomainError("Missing claim: exp", {
       code: "jwt_missing_claim_exp",
@@ -90,12 +105,12 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
     });
   }
 
-  // Named-claim identity matchers (aud/iss/sub/hashes/…) built from the verify
-  // options — the AEGIS half of the old `createJwtVerify`.
+  // Named-claim identity matchers (aud/iss/sub/hashes/…) — the AEGIS half of the
+  // old `createJwtVerify`.
   try {
     validate(
       withDates,
-      createIdentityMatchers(kit.algorithm, options, clockTolerance) as never,
+      createIdentityMatchers(kit.algorithm, options, deps.clockTolerance) as never,
     );
   } catch (err) {
     throw new AegisDomainError("Invalid token", {
@@ -119,26 +134,27 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
     });
   }
 
-  const boundThumbprint = payload.confirmation?.thumbprint;
+  const boundThumbprint = claims.confirmation?.thumbprint;
 
+  let dpop;
   if (options.dpopProof !== undefined) {
     if (!boundThumbprint) {
       throw new AegisDomainError(
         "Invalid token: DPoP proof provided but token is not bound",
         {
           code: "jwt_dpop_token_not_bound",
-          debug: { confirmation: payload.confirmation },
+          debug: { confirmation: claims.confirmation },
           title: "JWT DPoP Token Not Bound",
           details:
             "A DPoP proof was supplied but the token carries no cnf.jkt thumbprint, so it cannot be DPoP-bound.",
         },
       );
     }
-    parsed.dpop = verifyDpopProof({
+    dpop = verifyDpopProof({
       proof: options.dpopProof,
       accessToken: token,
       expectedThumbprint: boundThumbprint,
-      dpopMaxSkew: config.dpopMaxSkew,
+      dpopMaxSkew: deps.dpopMaxSkew,
     });
   } else if (boundThumbprint && !options.trustBoundThumbprint) {
     throw new AegisDomainError(
@@ -152,5 +168,16 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
     );
   }
 
-  return parsed;
+  return {
+    format: "jwt",
+    header,
+    claims,
+    custom,
+    profile,
+    sensitive,
+    delegation,
+    dpop,
+    wire: { payload: decoded.payload },
+    token,
+  };
 };

@@ -1,22 +1,25 @@
 import type { Dict } from "@lindorm/types";
-import { JwtError } from "../../errors/index.js";
-import type { ParsedJwt, ParsedJwtHeader } from "../../types/index.js";
 import { JwtKit } from "../../classes/JwtKit.js";
+import { JwtError } from "../../errors/index.js";
+import type { ParsedJwtHeader, VerifiedToken } from "../../types/index.js";
 import { decodeTokenTypeFromTyp } from "./compute-typ-header.js";
 import { extractTokenDelegation } from "./extract-token-delegation.js";
+import { buildDomainClaims } from "./jwt-payload.js";
 import { parseTokenHeader } from "./token-header.js";
-import { parseTokenPayload } from "./jwt-payload.js";
 import { validateCrit } from "./validate-crit.js";
 
 /**
- * The UNVERIFIED, keyless DOMAIN parse (Aegis.parse). Splits the wire segments,
- * enforces the structural invariants a JWT must satisfy to be READ as one (typ
- * well-formedness IF PRESENT, crit malformedness), and translates the wire
- * claims to the domain shape. It does NOT check the signature — that is
- * `verifyJwtToDomain`. `parse` remains an Aegis-domain method; the kit has no
- * `parse` (R15).
+ * The UNVERIFIED, keyless DOMAIN parse of a JWT (`aegis.parse`). Splits the wire
+ * segments, enforces the structural invariants a JWT must satisfy to be READ as
+ * one (typ well-formedness IF PRESENT, crit malformedness), and assembles the
+ * unified {@link VerifiedToken} (domain `claims`/`custom`/`profile` buckets + the
+ * untranslated `wire.payload`). It does NOT check the signature — that is
+ * `verifyJwtToken`. A parseable JWT is unencrypted, so sensitive claims are
+ * suppressed (§13.3).
  */
-export const parseJwtToDomain = <C extends Dict = Dict>(token: string): ParsedJwt<C> => {
+export const parseJwtToDomain = <C extends Dict = Dict>(
+  token: string,
+): VerifiedToken<C> => {
   const decoded = JwtKit.decode<C>(token);
 
   const typ = decoded.header.typ;
@@ -45,10 +48,21 @@ export const parseJwtToDomain = <C extends Dict = Dict>(token: string): ParsedJw
   header.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
   header.baseFormat = "JWT";
 
-  // A parseable JWT is unencrypted (parse throws on jwe), so sensitive claims
-  // are suppressed — the read-side §13.3 gate.
-  const payload = parseTokenPayload<C>(decoded.payload, false);
+  const { claims, custom, profile, sensitive } = buildDomainClaims<C>(
+    decoded.payload,
+    false,
+  );
   const delegation = extractTokenDelegation(decoded.payload as { act?: any });
 
-  return { decoded, delegation, header, payload, token };
+  return {
+    format: "jwt",
+    header,
+    claims,
+    custom,
+    profile,
+    sensitive,
+    delegation,
+    wire: { payload: decoded.payload },
+    token,
+  };
 };

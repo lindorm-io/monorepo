@@ -37,9 +37,12 @@ export const mintToken = async ({
   deps: AegisDeps;
 }): Promise<SignedJwt> => {
   // Encoding seam: dispatch on the per-call format. The profiled COSE path
-  // (`cwt`) is a separate encoder that consumes the same domain-keyed common
-  // claims; everything above this branch stays encoding-neutral.
-  if (selectEncoder(options.format).format === "cwt") {
+  // (`cwt` = COSE_Sign1, `cwm` = COSE_Mac0 — D6) is a separate encoder that
+  // consumes the same domain-keyed common claims; everything above this branch
+  // stays encoding-neutral. The kit within `mintCoseToken` is picked by the
+  // explicit format, not the resolved key's algClass.
+  const format = selectEncoder(options.format).format;
+  if (format === "cwt" || format === "cwm") {
     return mintCoseToken({ name, content, options, deps });
   }
 

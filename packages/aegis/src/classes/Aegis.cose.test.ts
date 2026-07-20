@@ -8,6 +8,7 @@ import {
   TEST_OCT_KEY_SIG,
 } from "../__fixtures__/keys.js";
 import { AegisError } from "../errors/index.js";
+import { decodeCbor } from "../internal/cose/cbor.js";
 import { CwtKit } from "./CwtKit.js";
 import { Aegis } from "./Aegis.js";
 
@@ -63,7 +64,7 @@ describe("Aegis — COSE", () => {
     const { token } = await macAegis.mint(
       "id_token",
       { subject: "user-1", audience: ["client-1"], clientId: "client-1" },
-      { format: "cwt" },
+      { format: "cwm" }, // D6: a symmetric key MACs via the explicit cwm format
     );
 
     const bytes = Buffer.from(token, "base64url");
@@ -112,7 +113,7 @@ describe("Aegis — COSE", () => {
     const { token } = await macAegis.mint(
       "id_token",
       { subject: "u", audience: ["client-1"] },
-      { format: "cwt" },
+      { format: "cwm" }, // D6: symmetric key → COSE_Mac0 via the explicit cwm format
     );
 
     expect(CwtKit.decode(Buffer.from(token, "base64url")).algorithm).toBe("HS256");
@@ -178,11 +179,12 @@ describe("Aegis — COSE", () => {
 
       const verified = (await encAegis.verify("id_token", token, {
         audience: "client-1",
-      })) as unknown as { claims: Record<string, unknown> };
+      })) as unknown as { sensitive: Record<string, unknown> };
 
-      // COSE has no sensitive BUCKET — the claims stay FLAT in `claims`.
-      expect(verified.claims.nationalIdentityNumber).toBe("ABC-123");
-      expect(verified.claims.nationalIdentityNumberVerified).toBe(true);
+      // Sensitive claims travel FLAT on the wire but are bucketed into the domain
+      // `sensitive` bag on read — surfaced here because the CWT was encrypted (CWE).
+      expect(verified.sensitive.nationalIdentityNumber).toBe("ABC-123");
+      expect(verified.sensitive.nationalIdentityNumberVerified).toBe(true);
     });
 
     test("SUPPRESSES flat sensitive claims carried by an UNENCRYPTED CWT", async () => {
@@ -196,10 +198,15 @@ describe("Aegis — COSE", () => {
         },
       });
 
-      const verified = await aegis.cwt.verify(token);
+      // The DOMAIN surface suppresses sensitive claims on an unencrypted token
+      // (§13.3); the raw `cwt.verify` would return them flat on the wire.
+      const verified = (await aegis.verify(token)) as unknown as {
+        claims: Record<string, unknown>;
+        sensitive: unknown;
+      };
 
-      // Suppressed — not surfaced on the unencrypted CWT.
       expect(verified.claims).not.toHaveProperty("nationalIdentityNumber");
+      expect(verified.sensitive).toBeUndefined();
     });
   });
 
@@ -245,7 +252,7 @@ describe("Aegis — COSE", () => {
   });
 
   describe("raw sign — the opaque handle (no profile)", () => {
-    test("signs an arbitrary map as a COSE CWT, not a JOSE token", async () => {
+    test("signs an arbitrary map as an OPAQUE COSE CWS, not a JOSE token", async () => {
       const { token } = await aegis.sign({
         payload: { tid: "at_abc", sec: "s3cr3t" },
         tokenType: "access_token",
@@ -258,11 +265,14 @@ describe("Aegis — COSE", () => {
       const bytes = Buffer.from(token, "base64url");
       expect(bytes.subarray(0, 2).toString("hex")).toBe("d83d");
 
-      // The typ is `at+cwt`, not `at+jws` — the media type names it a CWT.
-      expect(CwtKit.decode(bytes).typ).toBe("application/at+cwt");
+      // The typ is `at+cws`, not `at+cwt` — the media type names it an OPAQUE CWS
+      // (Phase-16 emission fix), so `isCws` recognises it and `isCwt` does not.
+      expect(CwtKit.decode(bytes).typ).toBe("application/at+cws");
+      expect(Aegis.isCws(token)).toBe(true);
+      expect(Aegis.isCwt(token)).toBe(false);
     });
 
-    test("round-trips the raw payload through verify", async () => {
+    test("round-trips the opaque raw payload through verify", async () => {
       const { token } = await aegis.sign({
         payload: { tid: "at_abc", sec: "s3cr3t" },
         tokenType: "access_token",
@@ -270,15 +280,22 @@ describe("Aegis — COSE", () => {
       });
 
       const verified = (await aegis.verify(token)) as unknown as {
-        claims: Record<string, unknown>;
+        format: string;
+        raw: Buffer;
       };
 
-      // The lookup coordinates come back verbatim — nothing but what we signed.
-      expect(verified.claims.tid).toBe("at_abc");
-      expect(verified.claims.sec).toBe("s3cr3t");
+      // A CWS is OPAQUE: the payload comes back as raw CBOR bytes beside an empty
+      // domain (the COSE twin of a JWS).
+      expect(verified.format).toBe("cws");
+      const map = decodeCbor(verified.raw, { preferMap: false }) as Record<
+        string,
+        unknown
+      >;
+      expect(map.tid).toBe("at_abc");
+      expect(map.sec).toBe("s3cr3t");
     });
 
-    test("stamps rt+cwt for a refresh handle", async () => {
+    test("stamps rt+cws for a refresh handle", async () => {
       const { token } = await aegis.sign({
         payload: { cid: "rtc_abc", gen: 1, sec: "s3cr3t" },
         tokenType: "refresh_token",
@@ -286,7 +303,7 @@ describe("Aegis — COSE", () => {
       });
 
       expect(CwtKit.decode(Buffer.from(token, "base64url")).typ).toBe(
-        "application/rt+cwt",
+        "application/rt+cws",
       );
     });
 
@@ -341,27 +358,9 @@ describe("Aegis — COSE", () => {
       expect(Aegis.isJose("not a token")).toBe(false);
     });
 
-    test("decode digs the header metadata out of a COSE token", async () => {
-      const decoded = Aegis.decode(await coseToken()) as {
-        typ?: string;
-        kid?: string;
-        algorithm?: string;
-      };
-
-      // No "Invalid token type" throw — decode routes COSE to the CWT decoder and
-      // returns the header (typ / kid / alg), the pre-verify metadata.
-      expect(decoded.typ).toBe("application/at+cwt");
-      expect(decoded.kid).toEqual(expect.any(String));
-      expect(decoded.algorithm).toBe("ES512");
-    });
-
-    test("header returns the same shape for a COSE token as for a JOSE one", async () => {
-      const header = Aegis.header(await coseToken());
-
-      expect(header.typ).toBe("application/at+cwt");
-      expect(header.alg).toBe("ES512");
-      expect(header.kid).toEqual(expect.any(String));
-    });
+    // `Aegis.decode` and `Aegis.header` are DROPPED (Bit 2/8) — the COSE header
+    // metadata is read via `CwtKit.decode` (raw) or off a verified token's
+    // `.header`. The static-inspector coverage below stays.
 
     test("verify auto-detects a COSE token with no format told", async () => {
       const { token } = await aegis.mint(

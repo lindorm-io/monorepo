@@ -17,8 +17,13 @@ import type { TokenProfile } from "./jwt/profile.js";
  * The buckets have NO wire representation (D2) — they exist only on the result.
  */
 
-/** The six token formats the domain surface discriminates on (`VerifiedToken.format`). */
-export type TokenFormatTag = "jwt" | "jws" | "jwe" | "cwt" | "cws" | "cwe";
+/**
+ * The token formats the domain surface discriminates on (`VerifiedToken.format`).
+ * COSE splits its claims-bearing CWT into `cwt` (COSE_Sign1 / asymmetric) and
+ * `cwm` (COSE_Mac0 / symmetric) — the read side reports which by the COSE
+ * structure tag (Sign1=18 ⇒ cwt, Mac0=17 ⇒ cwm), mirroring the D6 write split.
+ */
+export type TokenFormatTag = "jwt" | "jws" | "jwe" | "cwt" | "cwm" | "cws" | "cwe";
 
 /**
  * The domain-keyed header carried by every `VerifiedToken` (R9). This ADOPTS the
@@ -39,7 +44,7 @@ export type VerifiedTokenHeader = DomainTokenHeader;
 export type VerifiedToken<C extends Dict = Dict> = {
   format: TokenFormatTag;
   /** Set when `format` ∈ {jwe,cwe} wrapped a SIGNED inner token (any of the four). */
-  inner?: "jwt" | "cwt" | "jws" | "cws";
+  inner?: "jwt" | "cwt" | "cwm" | "jws" | "cws";
   /** EFFECTIVE (innermost) payload content type — how to read `raw`. */
   contentType?: string;
   header: VerifiedTokenHeader;
@@ -68,7 +73,7 @@ export type VerifiedToken<C extends Dict = Dict> = {
 export type DecryptedToken<C extends Dict = Dict> = {
   format: "jwe" | "cwe";
   /** Set when the decrypted plaintext is itself a nested token. */
-  inner?: "jwt" | "cwt" | "jws" | "cws";
+  inner?: "jwt" | "cwt" | "cwm" | "jws" | "cws";
   contentType?: string;
   header: VerifiedTokenHeader;
   claims: DomainClaims;
