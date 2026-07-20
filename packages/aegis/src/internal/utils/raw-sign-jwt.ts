@@ -1,40 +1,44 @@
-import type { Dict } from "@lindorm/types";
-import type { SignedJwt, SignJwtContent, SignJwtOptions } from "../../types/index.js";
+import { JwtKit } from "../../classes/JwtKit.js";
+import type {
+  AegisSignKey,
+  JwtWireClaims,
+  SignJwtWireOptions,
+  SignedJwt,
+} from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
-import { assembleJwtWireClaims } from "./jwt-payload.js";
-import { signJwtWire } from "./sign-jwt-wire.js";
+import { buildSignedJwt } from "./jwt-payload.js";
 
 /**
- * The raw JWT sign namespace (`aegis.jwt.sign`): resolve the signing key, map the
- * standard-claim content to the JOSE wire claims, and sign the JWT. The generic
- * counterpart of the profiled mint path (`mintToken`), minus the profile floor
- * and auto-injection.
+ * The raw JWT sign namespace (`aegis.jwt.sign`): resolve the signing key, then
+ * serialize the ALREADY-WIRE `JwtWireClaims` verbatim via the transform-free
+ * `JwtKit` (R18) — no domain translation, no envelope auto-injection (`iat`/
+ * `jti`/`nbf`/`iss`), no hash derivation. The domain sign path is `aegis.mint` /
+ * `aegis.sign`; this namespace is the wire-for-wire kit passthrough. The only
+ * delta over the standalone kit is Aegis-side key resolution.
  */
-export const rawSignJwt = async <T extends Dict = Dict>({
-  content,
+export const rawSignJwt = async <C extends JwtWireClaims = JwtWireClaims>({
+  claims,
   options = {},
   deps,
 }: {
-  content: SignJwtContent<T>;
-  options?: SignJwtOptions;
+  claims: C;
+  options?: SignJwtWireOptions & { key?: AegisSignKey };
   deps: AegisDeps;
 }): Promise<SignedJwt> => {
-  const kryptos = await deps.resolveSignKey(options);
+  const { key, certificateThumbprintSha1, ...rest } = options;
 
-  const claims = assembleJwtWireClaims<T>(
-    { algorithm: kryptos.algorithm },
-    content,
-    options,
-  );
+  const kryptos = await deps.resolveSignKey({ key });
 
-  return signJwtWire({
-    kryptos,
-    wireClaims: claims,
-    content,
-    options,
+  const token = new JwtKit({
     certBindingMode: deps.certBindingMode,
-    certificateThumbprintSha1: deps.certificateThumbprintSha1,
     clockTolerance: deps.clockTolerance,
+    kryptos,
     logger: deps.logger,
+  }).sign<C>(claims, {
+    ...rest,
+    certificateThumbprintSha1:
+      certificateThumbprintSha1 ?? deps.certificateThumbprintSha1,
   });
+
+  return buildSignedJwt(token, claims, options.objectId);
 };

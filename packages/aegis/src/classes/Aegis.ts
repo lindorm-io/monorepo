@@ -22,7 +22,7 @@ import type {
   KryptosSigAlgorithm,
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { Dict } from "@lindorm/types";
+import type { Dict, Predicate } from "@lindorm/types";
 import type {
   IAegis,
   IAegisAes,
@@ -97,6 +97,7 @@ import type {
   JweDecryptOptions,
   JweEncryptOptions,
   JwsContent,
+  JwtWireClaims,
   NarrowedToken,
   ParsedCws,
   ParsedCwt,
@@ -108,15 +109,14 @@ import type {
   RawSignInput,
   SignContent,
   SignCwsOptions,
-  SignCwtContent,
   SignCwtOptions,
   SignedCws,
   SignedCwt,
   SignedJws,
   SignedJwt,
   SignJwsOptions,
-  SignJwtContent,
   SignJwtOptions,
+  SignJwtWireOptions,
   TokenProfile,
   ValidateJwtOptions,
   VerifiedToken,
@@ -124,6 +124,7 @@ import type {
   VerifyCwtOptions,
   VerifyJwsOptions,
   VerifyJwtOptions,
+  VerifyJwtWireOptions,
 } from "../types/index.js";
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
@@ -465,11 +466,11 @@ export class Aegis implements IAegis {
   }
 
   // private jwt
-  private jwtSign<T extends Dict = Dict>(
-    content: SignJwtContent<T>,
-    options: SignJwtOptions = {},
+  private jwtSign<C extends JwtWireClaims = JwtWireClaims>(
+    claims: C,
+    options: SignJwtWireOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedJwt> {
-    return rawSignJwt<T>({ content, options, deps: this.deps });
+    return rawSignJwt<C>({ claims, options, deps: this.deps });
   }
 
   // private cwe
@@ -497,33 +498,35 @@ export class Aegis implements IAegis {
   }
 
   // private cwt
-  private cwtSign<C extends Dict = Dict>(
-    content: SignCwtContent<C>,
+  private cwtSign<C extends CwtWireClaims = CwtWireClaims>(
+    claims: C,
     options: SignCwtOptions = {},
   ): Promise<SignedCwt> {
-    return rawSignCwt<C>({ content, options, deps: this.deps });
+    return rawSignCwt<C>({ claims, options, deps: this.deps });
   }
 
   private cwtVerify<C extends CwtWireClaims = CwtWireClaims>(
     token: string,
-    verify: VerifyCwtOptions = {},
+    assert?: Predicate<C>,
+    options: VerifyCwtOptions = {},
   ): Promise<ParsedCwt<C>> {
-    return rawVerifyCwt<C>({ token, verify, deps: this.deps });
+    return rawVerifyCwt<C>({ token, assert, options, deps: this.deps });
   }
 
   // private cwm (COSE_Mac0 / symmetric twin of cwt)
-  private cwmSign<C extends Dict = Dict>(
-    content: SignCwtContent<C>,
+  private cwmSign<C extends CwtWireClaims = CwtWireClaims>(
+    claims: C,
     options: SignCwtOptions = {},
   ): Promise<SignedCwt> {
-    return rawSignCwm<C>({ content, options, deps: this.deps });
+    return rawSignCwm<C>({ claims, options, deps: this.deps });
   }
 
   private cwmVerify<C extends CwtWireClaims = CwtWireClaims>(
     token: string,
-    verify: VerifyCwtOptions = {},
+    assert?: Predicate<C>,
+    options: VerifyCwtOptions = {},
   ): Promise<ParsedCwt<C>> {
-    return rawVerifyCwm<C>({ token, verify, deps: this.deps });
+    return rawVerifyCwm<C>({ token, assert, options, deps: this.deps });
   }
 
   // Resolve the recipient encryption key for both the JOSE (JWE) and COSE
@@ -546,11 +549,12 @@ export class Aegis implements IAegis {
   }
 
   // private jwt verify
-  private jwtVerify<T extends Dict = Dict>(
+  private jwtVerify<C extends JwtWireClaims = JwtWireClaims>(
     jwt: string,
-    verify: VerifyJwtOptions = {},
-  ): Promise<ParsedJwt<T>> {
-    return rawVerifyJwt<T>({ jwt, verify, deps: this.deps });
+    assert?: Predicate<C>,
+    options: VerifyJwtWireOptions & { key?: AegisVerifyKey } = {},
+  ): Promise<ParsedJwt<C>> {
+    return rawVerifyJwt<C>({ jwt, assert, options, deps: this.deps });
   }
 
   // private kryptos

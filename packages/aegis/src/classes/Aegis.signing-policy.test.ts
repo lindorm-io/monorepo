@@ -109,15 +109,11 @@ describe("Aegis signing policy", () => {
         sign: { predicate: { algorithm: "EdDSA" } },
       });
 
-      const deployment = await aegis.jwt.sign({
-        subject: "s",
-        expires: "1h",
-        tokenType: "N_A",
-      });
+      const deployment = await aegis.jwt.sign({ sub: "s" });
       expect(JwtKit.decode(deployment.token).header.alg).toBe("EdDSA");
 
       const perCall = await aegis.jwt.sign(
-        { subject: "s", expires: "1h", tokenType: "N_A" },
+        { sub: "s" },
         { key: { predicate: { algorithm: "HS256" } } },
       );
       expect(JwtKit.decode(perCall.token).header.alg).toBe("HS256");
@@ -130,7 +126,7 @@ describe("Aegis signing policy", () => {
       const aegis = new Aegis({ amphora, logger });
 
       const { token } = await aegis.jwt.sign(
-        { subject: "s", expires: "1h", tokenType: "N_A" },
+        { sub: "s" },
         { key: { predicate: { id: TEST_OKP_KEY_SIG.id } } },
       );
 
@@ -146,7 +142,7 @@ describe("Aegis signing policy", () => {
       const aegis = new Aegis({ amphora, logger });
 
       const { token } = await aegis.jwt.sign(
-        { subject: "s", expires: "1h", tokenType: "N_A" },
+        { sub: "s" },
         { key: { predicate: { algorithm: { $in: FAPI_SIG_ALGS } } } },
       );
 
@@ -158,10 +154,7 @@ describe("Aegis signing policy", () => {
       const aegis = new Aegis({ amphora, logger });
 
       const error = await aegis.jwt
-        .sign(
-          { subject: "s", expires: "1h", tokenType: "N_A" },
-          { key: { predicate: { purpose: "none" } } },
-        )
+        .sign({ sub: "s" }, { key: { predicate: { purpose: "none" } } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
@@ -212,17 +205,17 @@ describe("Aegis signing policy", () => {
       });
 
       const error = await aegis.jwt
-        .verify(token, { key: { predicate: { algClass: "asymmetric" } } })
+        .verify(token, undefined, { key: { predicate: { algClass: "asymmetric" } } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
       expect((error as AegisError).code).toBe("verify_key_policy_violation");
     });
 
-    test("a conformant token still verifies, and `key` is not read as a claim matcher", async () => {
-      // Regression guard: `createJwtVerify` maps every unknown option key to a
-      // CLAIM and throws on one it cannot map. `key` must be skipped there,
-      // or supplying a key policy would reject every token.
+    test("a conformant token still verifies with a wire assert AND a key policy", async () => {
+      // The raw surface splits the two cleanly: the wire `assert` predicate
+      // (`{ sub: "s" }`) matches claims, the `key` option is the vault policy —
+      // they never collide, so a key policy does not reject a conformant token.
       amphora.add(TEST_EC_KEY_SIG);
       const aegis = new Aegis({ amphora, logger });
 
@@ -232,10 +225,11 @@ describe("Aegis signing policy", () => {
         tokenType: "N_A",
       });
 
-      const parsed = await aegis.jwt.verify(token, {
-        subject: "s",
-        key: { predicate: { algClass: "asymmetric" } },
-      });
+      const parsed = await aegis.jwt.verify(
+        token,
+        { sub: "s" },
+        { key: { predicate: { algClass: "asymmetric" } } },
+      );
 
       expect(parsed.payload.sub).toBe("s");
     });

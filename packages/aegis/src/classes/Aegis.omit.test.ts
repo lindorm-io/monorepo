@@ -140,11 +140,11 @@ describe("Aegis — omit (compact-by-default)", () => {
   });
 
   describe("direct jwt.sign — reads its own options.omit", () => {
+    // The raw wire surface takes JOSE-keyed claims verbatim; the custom claims
+    // sit FLAT on the payload (no `claims` wrapper, no domain translation).
     const signContent = {
-      subject: "user-1",
-      expires: "1h" as const,
-      tokenType: "Bearer" as const,
-      claims: CUSTOM,
+      sub: "user-1",
+      ...CUSTOM,
     };
 
     test("default drops empties", async () => {

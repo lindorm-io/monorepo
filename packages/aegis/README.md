@@ -139,21 +139,27 @@ const aegis = new Aegis({
 
 ### Namespaced operations (wire surface)
 
-Each namespace resolves the key by `kid`, delegates to its kit, and returns the kit's **native wire shape** — `.payload` carries wire claim names. Named identity matchers, DPoP, actor chains and domain translation live on `aegis.verify`, not here.
+Each namespace resolves the key by `kid`, delegates to its kit, and speaks **only the wire** — input AND output. `sign` takes an already-wire claim dict (JOSE names — `sub`/`exp`/`jti`) and serializes it **verbatim**: no domain translation, no envelope auto-injection (`iat`/`jti`/`nbf`/`iss`), no hash derivation. `verify` takes a positional wire `assert` predicate and returns the kit's native wire shape (`.payload` carries wire claim names). Named identity matchers, DPoP, actor chains, auto-injection and domain translation live on the domain verbs (`aegis.mint` / `aegis.verify`), not here.
 
 ```typescript
-const signed = await aegis.jwt.sign({
-  expires: "1h",
-  subject: "user-123",
-  tokenType: "access_token",
-  audience: ["https://api.example.com"],
-  scope: ["read", "write"],
-  claims: { role: "admin" },
-});
+const signed = await aegis.jwt.sign(
+  {
+    iss: "https://idp.example.com",
+    sub: "user-123",
+    aud: ["https://api.example.com"],
+    exp: 1737000000,
+    scope: ["read", "write"],
+    role: "admin", // custom claims sit flat on the payload
+  },
+  { typ: "at" }, // the `typ` PREFIX → `application/at+jwt`
+);
 
 const parsed = await aegis.jwt.verify(signed.token);
 // parsed.payload → { sub: "user-123", exp: 1737000000, aud: [...], scope: [...] }  (WIRE names)
 // parsed.header, parsed.decoded, parsed.token
+
+// matching is a positional WIRE assert predicate (no named domain matchers here):
+const checked = await aegis.jwt.verify(signed.token, { iss: "https://idp.example.com" });
 
 const jws = await aegis.jws.sign("payload");
 const verifiedJws = await aegis.jws.verify(jws.token);
@@ -166,17 +172,26 @@ const decrypted = await aegis.jwe.decrypt(jwe.token); // opaque bytes out
 The COSE namespaces `cwt` / `cwm` / `cws` / `cwe` are the wire-for-wire COSE counterparts — same surface, same key resolution, CBOR wire (see [COSE / CWT](#cose--cwt)). The claims-bearing CWT splits by integrity structure: `cwt` is a `COSE_Sign1` (asymmetric key), `cwm` is a `COSE_Mac0` (symmetric key):
 
 ```typescript
-// cwt — generic CWT, COSE_Sign1 (asymmetric), the COSE mirror of jwt
-const cwt = await aegis.cwt.sign({
-  subject: "user-123",
-  audience: ["https://api.example.com"],
-  expires: "1h",
-});
+// cwt — generic CWT, COSE_Sign1 (asymmetric), the COSE mirror of jwt.
+// Takes COSE-name-keyed WIRE claims verbatim (`cti`, not `jti`); `exp` a NumericDate.
+const cwt = await aegis.cwt.sign(
+  {
+    iss: "https://idp.example.com",
+    sub: "user-123",
+    aud: ["https://api.example.com"],
+    exp: 1737000000,
+  },
+  { typ: "application/at+cwt" },
+);
 const parsedCwt = await aegis.cwt.verify(cwt.token);
 // parsedCwt.payload → COSE-name-keyed wire ({ cti, exp, ... }); parsedCwt.header, .token
 
 // cwm — the same, as a COSE_Mac0 (symmetric key)
-const cwm = await aegis.cwm.sign({ subject: "user-123", expires: "1h" });
+const cwm = await aegis.cwm.sign({
+  iss: "https://idp.example.com",
+  sub: "user-123",
+  exp: 1737000000,
+});
 const parsedCwm = await aegis.cwm.verify(cwm.token);
 
 // cws — raw COSE_Sign1, the opaque COSE mirror of jws
@@ -445,14 +460,18 @@ const parsed = await aegis.cws.verify(token); // { header, raw: Buffer, token } 
 
 ### Generic CWT and COSE encryption (`cwt` / `cwm` / `cwe`)
 
-`cwt` is the COSE mirror of the generic `jwt`: `cwt.sign` secures a standard-claim CWT (no profile floor, no auto-injection), and `cwt.verify` validates it structurally + temporally (`exp` / `nbf`) exactly as `jwt.verify` validates a JWT, returning the COSE-name-keyed wire payload (`cti` / `exp`). `cwm` is the same over a symmetric key (`COSE_Mac0`). `cwe` is the COSE mirror of `jwe` — direct AEAD to a symmetric `use:"enc"` key (`COSE_Encrypt0`), returning the plaintext as raw bytes.
+`cwt` is the COSE mirror of the generic `jwt`: `cwt.sign` secures already-wire COSE-name-keyed claims verbatim (no domain translation, no auto-injection), and `cwt.verify` validates them structurally + temporally (`exp` / `nbf`) exactly as `jwt.verify` validates a JWT, returning the COSE-name-keyed wire payload (`cti` / `exp`). `cwm` is the same over a symmetric key (`COSE_Mac0`). `cwe` is the COSE mirror of `jwe` — direct AEAD to a symmetric `use:"enc"` key (`COSE_Encrypt0`), returning the plaintext as raw bytes.
 
 ```typescript
-const cwt = await aegis.cwt.sign({
-  subject: "user-123",
-  audience: ["https://api.example.com"],
-  expires: "1h",
-});
+const cwt = await aegis.cwt.sign(
+  {
+    iss: "https://idp.example.com",
+    sub: "user-123",
+    aud: ["https://api.example.com"],
+    exp: 1737000000,
+  },
+  { typ: "application/at+cwt" },
+);
 const parsed = await aegis.cwt.verify(cwt.token);
 // parsed.payload → COSE-name-keyed wire ({ cti, exp, ... }); rejects an expired CWT
 
@@ -460,9 +479,9 @@ const cwe = await aegis.cwe.encrypt("secret"); // string or Buffer
 const { payload } = await aegis.cwe.decrypt(cwe.token); // Buffer
 ```
 
-## Sign content shape
+## Sign content shape (domain surface)
 
-`SignJwtContent` accepts the standard, OIDC, OAuth, PoP, delegation, and Lindorm claim families plus:
+`SignJwtContent` is the DOMAIN content the verbs `aegis.mint` / `aegis.sign` accept (the raw `aegis.jwt.sign` takes wire claims). It carries the standard, OIDC, OAuth, PoP, delegation, and Lindorm claim families plus:
 
 ```typescript
 {
@@ -505,11 +524,12 @@ verbatim** — type-specific inner fields (e.g. `instructedAmount`,
 `creditorAccount`) are never key-converted, so camelCase fields defined by a
 detail's own spec are preserved exactly.
 
+The `authorizationDetails` → `authorization_details` name translation is a DOMAIN feature, so it runs on the verbs (`aegis.mint` / `aegis.sign`), not the raw wire `aegis.jwt.sign`:
+
 ```typescript
-await aegis.jwt.sign({
+await aegis.mint("access_token", {
   expires: "1h",
   subject: "user-123",
-  tokenType: "access_token",
   authorizationDetails: [
     {
       type: "payment_initiation",

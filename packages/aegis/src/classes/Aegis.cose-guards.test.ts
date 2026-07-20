@@ -32,14 +32,17 @@ describe("Aegis — COSE format guards", () => {
     amphora.add(TEST_EC_KEY_SIG); // ES512 signer
     amphora.add(TEST_OCT_KEY_ENC); // dir recipient for COSE_Encrypt0
 
-    // CWT — a real claims-bearing COSE_Sign1 (typ `<type>+cwt`).
+    // CWT — a real claims-bearing COSE_Sign1 (typ `<type>+cwt`). The raw namespace
+    // takes WIRE claims (COSE-name-keyed) and the full COSE media type verbatim.
     cwt = (
-      await aegis.cwt.sign({
-        subject: "user-1",
-        audience: ["https://rs.lindorm.io/"],
-        expires: "1h",
-        tokenType: "access_token",
-      })
+      await aegis.cwt.sign(
+        {
+          sub: "user-1",
+          aud: ["https://rs.lindorm.io/"],
+          exp: 1704099600,
+        },
+        { typ: "application/at+cwt" },
+      )
     ).token;
 
     // CWE — a COSE_Encrypt0 (structural).

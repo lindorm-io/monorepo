@@ -1,6 +1,5 @@
 import { B64 } from "@lindorm/b64";
 import { isObject, isString } from "@lindorm/is";
-import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { getUnixTime } from "@lindorm/date";
 import { JwtError } from "../../errors/index.js";
@@ -9,41 +8,12 @@ import type {
   AegisSensitive,
   JwtClaims,
   SignJwtContent,
-  SignJwtOptions,
   SignedJwt,
-  TokenProfile,
 } from "../../types/index.js";
-import { domainToJose, joseToDomain } from "../claims/translate.js";
+import { joseToDomain } from "../claims/translate.js";
 import type { DomainClaims } from "./extract-claims.js";
-import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { extractAegisProfile } from "./extract-aegis-profile.js";
 import { extractSensitiveClaims } from "./extract-sensitive-claims.js";
-
-type Config = {
-  algorithm: KryptosAlgorithm;
-};
-
-/**
- * The policy-FREE profile the raw domain-mapper tier assembles under: it
- * auto-injects nothing (`iat`/`jti`/`nbf`/`iss`), requires/forbids nothing,
- * sources `iss` per-token, and has no lifetime. Running `assembleCommonClaims`
- * with it performs ONLY the domain envelope resolution + hash derivation the
- * old `mapContentToClaims` did — so `domainToJose` of the result reproduces the
- * old wire claims exactly (proven by the translate parity tests).
- */
-const RAW_JWT_PROFILE: TokenProfile = {
-  name: "raw",
-  typ: { presence: "none" },
-  required: [],
-  forbidden: [],
-  requiredWhen: [],
-  atLeastOneOf: [],
-  autoInject: [],
-  issuer: "per-token",
-  lifetime: null,
-  encryptable: false,
-  validate: () => [],
-};
 
 type DecodeClaims<C extends Dict = Dict> = JwtClaims & C;
 
@@ -59,35 +29,6 @@ export const withSensitiveDomain = (
   domain: Dict,
   content: Pick<SignJwtContent, "sensitive">,
 ): Dict => (isObject(content.sensitive) ? { ...domain, ...content.sensitive } : domain);
-
-/**
- * Assemble the full JOSE WIRE claim dict for the policy-free raw JWT tier
- * (`aegis.jwt.sign`). Resolves the DOMAIN-keyed common claims (envelope +
- * hash derivation, no auto-injection, under {@link RAW_JWT_PROFILE}), merges the
- * profile + FLAT sensitive claims into that domain layer, then translates the
- * whole set to JOSE wire via the ONE `domainToJose` translator (R18 — Aegis owns
- * all name/case conversion). The TRANSFORM-FREE `JwtKit.sign` then serializes the
- * returned dict verbatim.
- */
-export const assembleJwtWireClaims = <C extends Dict = Dict>(
-  config: Config,
-  content: SignJwtContent<C>,
-  options: SignJwtOptions,
-): Dict => {
-  const common = assembleCommonClaims(
-    { algorithm: config.algorithm, issuer: null },
-    RAW_JWT_PROFILE,
-    content as SignJwtContent<C> & { claims?: Dict },
-    options,
-  );
-
-  const domain = withSensitiveDomain(
-    isObject(content.profile) ? { ...common, ...content.profile } : common,
-    content,
-  );
-
-  return domainToJose(domain);
-};
 
 /**
  * Enrich the wire kit's bare `{ token }` into the domain `SignedJwt` — the

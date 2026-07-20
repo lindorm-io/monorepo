@@ -5,8 +5,10 @@ import type {
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "@lindorm/aes";
-import type { Dict } from "@lindorm/types";
+import type { Dict, Predicate } from "@lindorm/types";
 import type {
+  AegisSignKey,
+  AegisVerifyKey,
   AesDecryptOptions,
   AesEncryptOptions,
   CweContent,
@@ -23,6 +25,7 @@ import type {
   EncryptedJwe,
   EncryptedToken,
   EncryptOptions,
+  JwtWireClaims,
   ParsedCws,
   ParsedCwt,
   JweDecryptOptions,
@@ -37,13 +40,11 @@ import type {
   RawSignInput,
   SignContent,
   SignCwsOptions,
-  SignCwtContent,
   SignCwtOptions,
   SignedCws,
   SignedCwt,
   SignJwsOptions,
-  SignJwtContent,
-  SignJwtOptions,
+  SignJwtWireOptions,
   SignedJws,
   SignedJwt,
   TokenProfile,
@@ -52,6 +53,7 @@ import type {
   VerifyCwtOptions,
   VerifyJwsOptions,
   VerifyJwtOptions,
+  VerifyJwtWireOptions,
 } from "../types/index.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 
@@ -105,26 +107,28 @@ export interface IAegisCws {
 }
 
 export interface IAegisCwt {
-  sign<C extends Dict = Dict>(
-    content: SignCwtContent<C>,
+  sign<C extends CwtWireClaims = CwtWireClaims>(
+    claims: C,
     options?: SignCwtOptions,
   ): Promise<SignedCwt>;
   verify<C extends CwtWireClaims = CwtWireClaims>(
     token: string,
-    verify?: VerifyCwtOptions,
+    assert?: Predicate<C>,
+    options?: VerifyCwtOptions,
   ): Promise<ParsedCwt<C>>;
 }
 
 // The COSE_Mac0 (symmetric) claims twin of `IAegisCwt` (D6). Same ergonomic
 // surface; only the integrity structure differs (a MAC, not a signature).
 export interface IAegisCwm {
-  sign<C extends Dict = Dict>(
-    content: SignCwtContent<C>,
+  sign<C extends CwtWireClaims = CwtWireClaims>(
+    claims: C,
     options?: SignCwtOptions,
   ): Promise<SignedCwt>;
   verify<C extends CwtWireClaims = CwtWireClaims>(
     token: string,
-    verify?: VerifyCwtOptions,
+    assert?: Predicate<C>,
+    options?: VerifyCwtOptions,
   ): Promise<ParsedCwt<C>>;
 }
 
@@ -137,14 +141,15 @@ export interface IAegisJws {
 }
 
 export interface IAegisJwt {
-  sign<T extends Dict = Dict>(
-    content: SignJwtContent<T>,
-    options?: SignJwtOptions,
+  sign<C extends JwtWireClaims = JwtWireClaims>(
+    claims: C,
+    options?: SignJwtWireOptions & { key?: AegisSignKey },
   ): Promise<SignedJwt>;
-  verify<T extends Dict = Dict>(
+  verify<C extends JwtWireClaims = JwtWireClaims>(
     token: string,
-    verify?: VerifyJwtOptions,
-  ): Promise<ParsedJwt<T>>;
+    assert?: Predicate<C>,
+    options?: VerifyJwtWireOptions & { key?: AegisVerifyKey },
+  ): Promise<ParsedJwt<C>>;
 }
 
 export interface IAegis {

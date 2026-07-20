@@ -85,17 +85,18 @@ describe("Aegis — COSE namespaces", () => {
     });
   });
 
-  describe("cwt — generic CWT with standard claims (mirror of jwt)", () => {
-    test("signs standard claims and validates them on verify", async () => {
+  describe("cwt — generic CWT with WIRE claims (mirror of jwt)", () => {
+    test("signs WIRE claims verbatim and returns the native wire payload on verify", async () => {
       const signed = await aegis.cwt.sign(
         {
-          subject: "user-1",
-          audience: ["https://rs.lindorm.io/"],
-          expires: "1h",
+          iss: "https://test.lindorm.io/",
+          sub: "user-1",
+          aud: ["https://rs.lindorm.io/"],
+          exp: 1704099600,
           scope: ["read", "write"],
-          tokenType: "access_token",
+          cti: "jti-1",
         },
-        { tokenId: "jti-1" },
+        { typ: "application/at+cwt" },
       );
 
       expect(signed.tokenId).toBe("jti-1");
@@ -104,14 +105,13 @@ describe("Aegis — COSE namespaces", () => {
       const bytes = Buffer.from(signed.token, "base64url");
       expect(bytes.subarray(0, 2).toString("hex")).toBe("d83d"); // CWT tag
 
-      const parsed = await aegis.cwt.verify(signed.token, {
-        audience: "https://rs.lindorm.io/",
-      });
+      const parsed = await aegis.cwt.verify(signed.token);
 
       // The raw cwt namespace returns the NATIVE WIRE payload — COSE-name-keyed
-      // (`sub`/`aud`/`cti`, temporal as Dates), NOT the domain buckets.
+      // (`sub`/`aud`/`cti`, temporal as Dates), NOT the domain buckets. `iss` is
+      // whatever the consumer put on the wire — the raw path never defaults it.
       expect(parsed.payload.sub).toBe("user-1");
-      expect(parsed.payload.iss).toBe("https://test.lindorm.io/"); // defaulted from deployment
+      expect(parsed.payload.iss).toBe("https://test.lindorm.io/");
       expect(parsed.payload.aud).toEqual(["https://rs.lindorm.io/"]);
       expect(parsed.payload.scope).toEqual(["read", "write"]);
       expect(parsed.payload.cti).toBe("jti-1");
@@ -119,59 +119,55 @@ describe("Aegis — COSE namespaces", () => {
       expect(parsed.header.alg).toBe("ES512");
     });
 
-    test("rejects a wrong audience", async () => {
+    test("a wire assert predicate rejects a non-matching claim", async () => {
       const { token } = await aegis.cwt.sign({
-        subject: "u",
-        audience: ["https://rs.lindorm.io/"],
-        expires: "1h",
+        iss: "https://test.lindorm.io/",
+        sub: "u",
+        aud: ["https://rs.lindorm.io/"],
+        exp: 1704099600,
       });
 
-      // Named matchers are a DOMAIN concern — the raw `cwt.verify` returns native
-      // wire without them, so the audience check runs on the `aegis.verify` surface.
+      // The raw surface matches WIRE claims via the positional `assert` predicate
+      // — no named domain matchers (those are the `aegis.verify` surface).
       await expect(
-        aegis.verify(token, { audience: "https://other.lindorm.io/" }),
-      ).rejects.toThrow(AegisError);
+        aegis.cwt.verify(token, { aud: ["https://other.lindorm.io/"] }),
+      ).rejects.toThrow(/Invalid token/);
     });
 
-    test("rejects an expired CWT (exp range-checked, like jwt)", async () => {
+    test("rejects an expired CWT (exp range-checked in the kit, like jwt)", async () => {
       const { token } = await aegis.cwt.sign({
-        subject: "u",
-        audience: ["aud-1"],
-        expires: "1h",
+        iss: "https://test.lindorm.io/",
+        sub: "u",
+        aud: ["aud-1"],
+        exp: 1704099600,
       });
 
       // Advance past the 09:00 expiry.
       MockDate.set(new Date("2024-01-01T10:00:00.000Z"));
 
-      // The exp RANGE is now range-checked IN THE KIT (Phase 9 R10, exactly as
+      // The exp RANGE is range-checked IN THE KIT (Phase 9 R10, exactly as
       // JwtKit does), so the expiry surfaces as the wire "Invalid token" throw.
-      await expect(aegis.cwt.verify(token, { audience: "aud-1" })).rejects.toThrow(
-        /Invalid token/,
-      );
+      await expect(aegis.cwt.verify(token)).rejects.toThrow(/Invalid token/);
     });
 
-    test("rejects a CWT with no exp when expPresence is required (default)", async () => {
-      const { token } = await aegis.cwt.sign({ subject: "u", audience: ["aud-1"] });
+    test("exp PRESENCE is a DOMAIN policy — the raw wire verify accepts a CWT with no exp", async () => {
+      const { token } = await aegis.cwt.sign({
+        iss: "https://test.lindorm.io/",
+        sub: "u",
+        aud: ["aud-1"],
+      });
 
-      // exp PRESENCE is a DOMAIN policy — enforced on the `aegis.verify` surface,
-      // not the raw wire `cwt.verify` (which only range-checks a PRESENT exp).
+      // The raw wire `cwt.verify` range-checks a PRESENT exp only, so a CWT with
+      // no exp verifies fine here.
+      const parsed = await aegis.cwt.verify(token);
+      expect(parsed.payload.sub).toBe("u");
+
+      // exp presence requiredness lives on the `aegis.verify` domain surface.
       const error = await aegis
         .verify(token, { audience: "aud-1" })
         .catch((err: Error) => err);
-
       expect(error).toBeInstanceOf(AegisError);
       expect((error as AegisError).code).toBe("cwt_missing_claim_exp");
-    });
-
-    test("accepts a CWT with no exp when expPresence is optional", async () => {
-      const { token } = await aegis.cwt.sign({ subject: "u", audience: ["aud-1"] });
-
-      const parsed = await aegis.cwt.verify(token, {
-        audience: "aud-1",
-        expPresence: "optional",
-      });
-
-      expect(parsed.payload.sub).toBe("u");
     });
   });
 
@@ -196,9 +192,10 @@ describe("Aegis — COSE namespaces", () => {
 
     test("verify(token, options) validates a generic CWT's standard claims", async () => {
       const { token } = await aegis.cwt.sign({
-        subject: "u",
-        audience: ["aud-1"],
-        expires: "1h",
+        iss: "https://test.lindorm.io/",
+        sub: "u",
+        aud: ["aud-1"],
+        exp: 1704099600,
       });
 
       const parsed = (await aegis.verify(token, { audience: "aud-1" })) as unknown as {

@@ -171,11 +171,13 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       // A raw JWT that carries the sensitive fields FLAT in cleartext — the DOMAIN
       // read side must refuse to surface them (OIDC Core §13.3).
       const { token } = await aegis.jwt.sign({
-        issuer: ISSUER,
-        subject: "user-1",
-        expires: "1h",
-        tokenType: "N_A",
-        sensitive,
+        iss: ISSUER,
+        sub: "user-1",
+        exp: 1704099600,
+        // The raw wire surface carries the sensitive fields FLAT under their
+        // individual wire claim names (no domain translation, no wrapper).
+        national_identity_number: "ABC-123",
+        national_identity_number_verified: true,
       });
 
       expect(JwtKit.isJwt(token)).toBe(true);
@@ -190,11 +192,13 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
     test("parse (unverified) also suppresses flat sensitive claims", async () => {
       const { token } = await aegis.jwt.sign({
-        issuer: ISSUER,
-        subject: "user-1",
-        expires: "1h",
-        tokenType: "N_A",
-        sensitive,
+        iss: ISSUER,
+        sub: "user-1",
+        exp: 1704099600,
+        // The raw wire surface carries the sensitive fields FLAT under their
+        // individual wire claim names (no domain translation, no wrapper).
+        national_identity_number: "ABC-123",
+        national_identity_number_verified: true,
       });
 
       const parsed = Aegis.parse(token);

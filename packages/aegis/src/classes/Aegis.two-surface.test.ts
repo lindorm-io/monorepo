@@ -125,7 +125,7 @@ describe("Aegis — the two surfaces (Phase 19)", () => {
       });
 
     test("aegis.jwt.verify (raw) verifies an external-key token via key injection", async () => {
-      const parsed = await aegis.jwt.verify(externalToken(), {
+      const parsed = await aegis.jwt.verify(externalToken(), undefined, {
         key: { kryptos: TEST_OCT_KEY_SIG },
       });
 

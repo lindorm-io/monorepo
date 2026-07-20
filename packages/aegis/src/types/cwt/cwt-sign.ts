@@ -1,27 +1,20 @@
-import type { Dict } from "@lindorm/types";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { AegisSignKey } from "../aegis.js";
-import type { SignJwtContent } from "../jwt/jwt-sign.js";
 
 /**
- * Generic CWT content — the standard RFC 8392 claim envelope plus the shared
- * domain vocabulary, all optional. The COSE analogue of `SignJwtContent` for the
- * policy-free `cwt.sign` path: no profile floor, no auto-injection. (The
- * profile-driven CWT — access_token / id_token / … — is `mint(name, content,
- * { format: "cwt" })`, not this surface.)
+ * Options for the raw wire CWT sign namespaces (`aegis.cwt.sign` /
+ * `aegis.cwm.sign`). The consumer hands ALREADY-WIRE `CwtWireClaims`
+ * (COSE-name-keyed: `iss`/`sub`/`exp`/`cti`), so these are pure wire knobs — no
+ * envelope, no auto-injection, no domain translation. The kit serializes the
+ * claims verbatim (modulo `omit`); the domain sign path is `aegis.mint`.
  */
-export type SignCwtContent<C extends Dict = Dict> = Partial<SignJwtContent<C>>;
-
 export type SignCwtOptions = {
   /**
    * Per-call signing key policy. Resolved by `Aegis` exactly as the JWT path
    * resolves it.
    */
   key?: AegisSignKey;
-  /** Envelope `iat`. Unlike a profile, the generic path never auto-injects it. */
-  issuedAt?: Date;
-  /** Envelope `cti`/`jti`. Never auto-generated on the generic path. */
-  tokenId?: string;
+  /** Carried onto the `SignedCwt` result for the caller's convenience; not a claim. */
   objectId?: string;
   /**
    * How empty claims are pruned before the CBOR is emitted. `"empty"` (default)
@@ -36,8 +29,8 @@ export type SignCwtOptions = {
    */
   proprietary?: boolean;
   /**
-   * COSE `typ` header (label 16). Defaults to the CWT media type derived from
-   * `content.tokenType` (`application/<type>+cwt`, or `application/cwt`).
+   * The full COSE `typ` media type (label 16), e.g. `application/at+cwt`. Handed
+   * to the kit verbatim — the raw namespace knows nothing of domain token types.
    */
   typ?: string;
 };
