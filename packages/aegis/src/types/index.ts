@@ -8,8 +8,10 @@ export * from "./jwt/index.js";
 
 export * from "./aegis.js";
 export * from "./aes.js";
+export * from "./domain-assert.js";
 export * from "./header.js";
 export * from "./kit.js";
 export * from "./level-of-assurance.js";
+export * from "./verified-token.js";
 
 export * from "./signature-kit.js";

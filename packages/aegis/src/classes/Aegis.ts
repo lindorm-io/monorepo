@@ -35,7 +35,13 @@ import type {
   IAegisJws,
   IAegisJwt,
 } from "../interfaces/index.js";
+import { domainToJose, joseToDomain } from "../internal/claims/translate.js";
 import { isCose } from "../internal/cose/is-cose.js";
+import {
+  isCwe as isCweBytes,
+  isCws as isCwsBytes,
+  isCwt as isCwtBytes,
+} from "../internal/cose/is-cose-format.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import { registerProfile as registerProfileFn } from "../internal/profiles/registry.js";
 import type { AegisDeps } from "../internal/utils/aegis-deps.js";
@@ -336,6 +342,36 @@ export class Aegis implements IAegis {
 
     return isCose(Buffer.from(token, "base64url"));
   }
+
+  // The COSE sub-format detectors, symmetric with isJwt/isJws/isJwe (Bit 8). A
+  // COSE token is never dot-delimited, so a dotted token bails cheaply; otherwise
+  // the COSE structure tag + typ decide (see `is-cose-format.ts`).
+  static isCwt(token: string): boolean {
+    if (token.includes(".")) return false;
+
+    return isCwtBytes(Buffer.from(token, "base64url"));
+  }
+
+  static isCws(token: string): boolean {
+    if (token.includes(".")) return false;
+
+    return isCwsBytes(Buffer.from(token, "base64url"));
+  }
+
+  static isCwe(token: string): boolean {
+    if (token.includes(".")) return false;
+
+    return isCweBytes(Buffer.from(token, "base64url"));
+  }
+
+  // The claim translator, exposed as the public vocabulary source of truth (Bit
+  // 8). These ARE the internal translator functions — pylon's relocated
+  // userinfo/introspection parsing and tyr build their claim mapping on them
+  // without re-deriving the registry. `toWire`: domain-keyed common claims →
+  // jose-keyed wire dict; `toDomain`: jose/camel-keyed wire → `{ claims, custom }`.
+  static toWire = domainToJose;
+
+  static toDomain = joseToDomain;
 
   static decode<T extends DecodedJwe | DecodedJws | DecodedJwt | CwtDecoded>(
     token: string,
