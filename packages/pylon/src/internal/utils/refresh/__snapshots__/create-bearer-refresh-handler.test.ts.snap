@@ -2,27 +2,25 @@
 
 exports[`createBearerRefreshHandler > capturedJkt (DPoP binding) > accepts refresh when new token has same cnf.jkt 1`] = `
 {
-  "header": {},
-  "payload": {
+  "claims": {
     "confirmation": {
       "thumbprint": "jkt-abc",
     },
     "expiresAt": 2026-04-11T13:00:00.000Z,
     "subject": "alice",
   },
+  "format": "jwt",
   "token": "new-jwt",
 }
 `;
 
 exports[`createBearerRefreshHandler > swaps bearer, updates getExpiresAt from expiresIn, clears authExpiredEmittedAt on valid refresh 1`] = `
 {
-  "header": {
-    "tokenType": "access_token",
-  },
-  "payload": {
+  "claims": {
     "expiresAt": 2026-04-11T13:30:00.000Z,
     "subject": "alice",
   },
+  "format": "jwt",
   "token": "new-jwt",
 }
 `;

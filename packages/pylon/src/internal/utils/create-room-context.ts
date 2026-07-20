@@ -74,7 +74,7 @@ export const createRoomContext = (
   const getPresenceRepo =
     presence && proteusSource ? createPresenceRepoFactory(proteusSource, logger) : null;
 
-  const userId = (socket.data as any)?.tokens?.accessToken?.payload?.subject ?? socket.id;
+  const userId = (socket.data as any)?.tokens?.accessToken?.claims?.subject ?? socket.id;
 
   return {
     join: async (room: string): Promise<void> => {

@@ -1,4 +1,4 @@
-import { JwtKit } from "@lindorm/aegis";
+import { Aegis } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { useValidation } from "./use-validation.js";
@@ -13,7 +13,7 @@ describe("useValidation", () => {
       logger: createMockLogger(),
       state: {
         tokens: {
-          jwt: { audience: "test-audience" },
+          jwt: { claims: { audience: "test-audience" } },
         },
       },
     };
@@ -21,7 +21,7 @@ describe("useValidation", () => {
   });
 
   test("should resolve when validation passes", async () => {
-    vi.spyOn(JwtKit, "validate").mockImplementation(() => undefined);
+    vi.spyOn(Aegis, "assert").mockImplementation(() => undefined);
 
     const middleware = useValidation("jwt", { audience: "test-audience" });
 
@@ -46,7 +46,7 @@ describe("useValidation", () => {
   });
 
   test("should throw ClientError 403 when validation fails", async () => {
-    vi.spyOn(JwtKit, "validate").mockImplementation(() => {
+    vi.spyOn(Aegis, "assert").mockImplementation(() => {
       throw new Error("audience mismatch");
     });
 

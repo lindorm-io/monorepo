@@ -1,5 +1,5 @@
-import type { ParsedJwtPayload } from "@lindorm/aegis";
-import { ClientError } from "@lindorm/errors";
+import { Aegis } from "@lindorm/aegis";
+import { ClientError, LindormError } from "@lindorm/errors";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type TokenOption = { token?: string };
@@ -28,19 +28,22 @@ export const useRoles = (...args: Array<string | TokenOption>): PylonMiddleware 
       });
     }
 
-    const payload = token.payload as ParsedJwtPayload;
-    const hasRole = required.some((r) => payload.roles.includes(r));
-
-    if (!hasRole) {
-      throw new ClientError("Insufficient roles", {
-        details: `Requires at least one of: ${required.join(", ")}`,
-        status: ClientError.Status.Forbidden,
-        code: "insufficient_roles",
-        type: "urn:lindorm:pylon:error:insufficient_roles",
-        title: "Insufficient Roles",
-        data: { required },
-        debug: { roles: payload.roles },
-      });
+    // OR logic — at least one required role must be present (`$overlap`).
+    try {
+      Aegis.assert(token.claims, { roles: { $overlap: required } });
+    } catch (err) {
+      if (err instanceof LindormError) {
+        throw new ClientError("Insufficient roles", {
+          details: `Requires at least one of: ${required.join(", ")}`,
+          status: ClientError.Status.Forbidden,
+          code: "insufficient_roles",
+          type: "urn:lindorm:pylon:error:insufficient_roles",
+          title: "Insufficient Roles",
+          data: { required },
+          debug: { roles: token.claims.roles },
+        });
+      }
+      throw err;
     }
 
     await next();

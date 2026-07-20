@@ -1,4 +1,3 @@
-import { isParsedJwt } from "@lindorm/aegis";
 import {
   Conduit,
   conduitBasicAuthMiddleware,
@@ -75,8 +74,8 @@ export const createClaimsClient = (
     if (token) {
       try {
         const verified = await ctx.aegis.verify(token);
-        if (isParsedJwt(verified)) {
-          const result = parseUserinfo(verified.payload);
+        if (verified.format === "jwt") {
+          const result = parseUserinfo(verified.wire?.payload ?? {});
           userinfoCache.set(cacheKey, result);
           return result;
         }
@@ -86,8 +85,8 @@ export const createClaimsClient = (
     } else {
       // Fast path: no-arg — use the parsed id_token from context if available.
       const idToken = ctx.state.tokens?.idToken;
-      if (idToken && isParsedJwt(idToken)) {
-        const result = parseUserinfo(idToken.payload);
+      if (idToken && idToken.format === "jwt") {
+        const result = parseUserinfo(idToken.wire?.payload ?? {});
         userinfoCache.set(cacheKey, result);
         return result;
       }
@@ -136,9 +135,8 @@ export const createClaimsClient = (
     if (token) {
       try {
         const verified = await ctx.aegis.verify(token);
-        if (isParsedJwt(verified)) {
-          const { claims: _, profile: __, ...rest } = verified.payload;
-          const result: PylonIntrospectionActive = { ...rest, active: true };
+        if (verified.format === "jwt") {
+          const result: PylonIntrospectionActive = { ...verified.claims, active: true };
           introspectCache.set(cacheKey, result);
           return result;
         }
@@ -148,12 +146,15 @@ export const createClaimsClient = (
     } else {
       // Fast path: no-arg — use the parsed access token from context if available.
       const accessTokenParsed = ctx.state.tokens?.accessToken;
-      if (accessTokenParsed && isParsedJwt(accessTokenParsed)) {
-        // ParsedJwtPayload has `claims` (custom claim bucket) and `profile`
-        // (extracted AegisProfile) which PylonIntrospectionActive does not
-        // model. `confirmation` IS part of PopClaims and passes through.
-        const { claims: _, profile: __, ...rest } = accessTokenParsed.payload;
-        const result: PylonIntrospectionActive = { ...rest, active: true };
+      if (accessTokenParsed && accessTokenParsed.format === "jwt") {
+        // The domain `claims` bucket holds only the registered claims — the
+        // custom-claim and profile buckets are kept separate on VerifiedToken,
+        // so introspection sees neither. `confirmation` IS a registered claim
+        // (PopClaims) and passes through.
+        const result: PylonIntrospectionActive = {
+          ...accessTokenParsed.claims,
+          active: true,
+        };
         introspectCache.set(cacheKey, result);
         return result;
       }

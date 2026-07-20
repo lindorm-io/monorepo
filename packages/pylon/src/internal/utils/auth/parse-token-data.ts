@@ -1,4 +1,4 @@
-import { AegisError, type IAegis, isParsedJwt } from "@lindorm/aegis";
+import { AegisError, type IAegis } from "@lindorm/aegis";
 import { type ReadableTime, ms } from "@lindorm/date";
 import { lindormId } from "@lindorm/random";
 import type { OpenIdAuthorizeResponseQuery, OpenIdTokenResponse } from "@lindorm/types";
@@ -38,13 +38,13 @@ export const parseTokenData = async (
     try {
       const verified = await aegis.verify(data.accessToken);
 
-      if (isParsedJwt(verified)) {
-        session.id = verified.payload.sessionId || session.id;
-        session.issuedAt = verified.payload.issuedAt ?? session.issuedAt;
-        session.expiresAt = verified.payload.expiresAt ?? session.expiresAt;
-        session.subject = verified.payload.subject || session.subject;
-        if (!session.scope.length && verified.payload.scope?.length) {
-          session.scope = verified.payload.scope;
+      if (verified.format === "jwt") {
+        session.id = verified.claims.sessionId || session.id;
+        session.issuedAt = verified.claims.issuedAt ?? session.issuedAt;
+        session.expiresAt = verified.claims.expiresAt ?? session.expiresAt;
+        session.subject = verified.claims.subject || session.subject;
+        if (!session.scope.length && verified.claims.scope?.length) {
+          session.scope = verified.claims.scope;
         }
       }
     } catch (err) {
@@ -79,12 +79,12 @@ export const parseTokenData = async (
     try {
       const verified = await aegis.verify(data.idToken);
 
-      if (isParsedJwt(verified)) {
-        session.id = verified.payload.sessionId || session.id;
-        session.issuedAt = verified.payload.issuedAt ?? session.issuedAt;
-        session.subject = verified.payload.subject || session.subject;
-        if (!session.scope.length && verified.payload.scope?.length) {
-          session.scope = verified.payload.scope;
+      if (verified.format === "jwt") {
+        session.id = verified.claims.sessionId || session.id;
+        session.issuedAt = verified.claims.issuedAt ?? session.issuedAt;
+        session.subject = verified.claims.subject || session.subject;
+        if (!session.scope.length && verified.claims.scope?.length) {
+          session.scope = verified.claims.scope;
         }
       }
     } catch (err) {

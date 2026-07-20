@@ -6,30 +6,36 @@ exports[`createTokenMiddleware > HTTP context > should throw ClientError 401 whe
 
 exports[`createTokenMiddleware > HTTP context > should verify token and write to ctx.state.tokens 1`] = `
 {
-  "decoded": {},
-  "header": {},
-  "payload": {
+  "claims": {
     "subject": "verified_subject",
   },
+  "custom": {},
+  "format": "jwt",
+  "header": {},
+  "token": "mocked_token",
 }
 `;
 
 exports[`createTokenMiddleware > Socket context > should verify token and write to both ctx.state.tokens and ctx.socket.data.tokens 1`] = `
 {
-  "decoded": {},
-  "header": {},
-  "payload": {
+  "claims": {
     "subject": "verified_subject",
   },
+  "custom": {},
+  "format": "jwt",
+  "header": {},
+  "token": "mocked_token",
 }
 `;
 
 exports[`createTokenMiddleware > Socket context > should verify token and write to both ctx.state.tokens and ctx.socket.data.tokens 2`] = `
 {
-  "decoded": {},
-  "header": {},
-  "payload": {
+  "claims": {
     "subject": "verified_subject",
   },
+  "custom": {},
+  "format": "jwt",
+  "header": {},
+  "token": "mocked_token",
 }
 `;

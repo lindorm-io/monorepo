@@ -681,7 +681,7 @@ import { useScope, useTenant } from "@lindorm/pylon";
 router.use(useTenant());
 
 // Or read from any object-path
-router.use(useTenant("state.tokens.apiKey.payload.tenantId", { required: true }));
+router.use(useTenant("state.tokens.apiKey.claims.tenantId", { required: true }));
 
 // Apply a Proteus filter on every query in the request
 router.use(useScope({ params: (ctx) => ({ tenantId: ctx.state.tenant }) }));
@@ -702,7 +702,7 @@ router.use(
   useRateLimit({
     window: "15m",
     max: 100,
-    key: (ctx) => ctx.state.tokens.accessToken?.payload.subject ?? "anon",
+    key: (ctx) => ctx.state.tokens.accessToken?.claims.subject ?? "anon",
     skip: (ctx) => false,
   }),
 );

@@ -18,7 +18,7 @@ describe("extractTokenFromSession", () => {
     aegis = {
       verify: vi.fn().mockResolvedValue({
         token: "session-jwt",
-        header: { baseFormat: "JWT" },
+        format: "jwt",
       }),
     };
   });
@@ -47,7 +47,7 @@ describe("extractTokenFromSession", () => {
   });
 
   test("returns null when verified token is not jwt kind", async () => {
-    aegis.verify.mockResolvedValue({ decoded: {}, header: { baseFormat: "JWS" } });
+    aegis.verify.mockResolvedValue({ format: "jws", raw: "opaque" });
     expect(await extractTokenFromSession(aegis, session)).toMatchSnapshot();
   });
 

@@ -116,7 +116,7 @@ describe("createRoomContext", () => {
     expect(ctx.presence).toBeUndefined();
   });
 
-  test("should use socket.data.tokens.accessToken.payload.subject as userId", async () => {
+  test("should use socket.data.tokens.accessToken.claims.subject as userId", async () => {
     const proteusSource = createMockProteusSource();
     const mockRepo = {
       findOneOrSave: vi.fn().mockResolvedValue(undefined),
@@ -128,7 +128,7 @@ describe("createRoomContext", () => {
     const socket = createMockSocket({
       data: {
         tokens: {
-          accessToken: { payload: { subject: "user-abc" } },
+          accessToken: { claims: { subject: "user-abc" } },
         },
       },
     });

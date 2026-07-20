@@ -1,4 +1,3 @@
-import { isParsedJwt } from "@lindorm/aegis";
 import {
   Conduit,
   conduitBearerAuthMiddleware,
@@ -154,9 +153,9 @@ export const createLoginCallbackHandler = (
       const verified = await ctx.aegis.verify(ctx.state.session.idToken);
 
       if (
-        isParsedJwt(verified) &&
+        verified.format === "jwt" &&
         cookie.nonce &&
-        cookie.nonce !== verified.payload.nonce
+        cookie.nonce !== verified.claims.nonce
       ) {
         throw new ClientError("Login nonce mismatch", {
           code: "login_nonce_mismatch",
@@ -165,7 +164,7 @@ export const createLoginCallbackHandler = (
           status: ClientError.Status.BadRequest,
           details:
             "The nonce in the returned id_token does not match the value stored in the login cookie (possible token replay)",
-          debug: { cookie: redactLoginCookie(cookie), nonce: verified.payload.nonce },
+          debug: { cookie: redactLoginCookie(cookie), nonce: verified.claims.nonce },
         });
       }
     }

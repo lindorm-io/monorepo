@@ -10,7 +10,7 @@ describe("usePermissions", () => {
       state: {
         tokens: {
           accessToken: {
-            payload: {
+            claims: {
               permissions: ["users:read", "users:write"],
               roles: [],
               scope: [],
@@ -69,7 +69,7 @@ describe("usePermissions", () => {
 
   test("should support custom token key via options", async () => {
     ctx.state.tokens.idToken = {
-      payload: {
+      claims: {
         permissions: ["profile:read"],
         roles: [],
         scope: [],

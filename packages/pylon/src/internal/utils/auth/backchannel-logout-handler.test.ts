@@ -8,18 +8,16 @@ describe("backchannelLogoutHandler", () => {
   beforeEach(() => {
     ctx = {
       aegis: {
-        jwt: {
-          verify: vi.fn().mockResolvedValue({
-            payload: {
-              claims: {
-                events: {
-                  "http://schemas.openid.net/event/backchannel-logout": {},
-                },
-              },
-              subject: "subject",
+        verify: vi.fn().mockResolvedValue({
+          custom: {
+            events: {
+              "http://schemas.openid.net/event/backchannel-logout": {},
             },
-          }),
-        },
+          },
+          claims: {
+            subject: "subject",
+          },
+        }),
       },
       data: {
         logoutToken: "logoutToken",
@@ -46,25 +44,24 @@ describe("backchannelLogoutHandler", () => {
   });
 
   test("should throw on invalid backchannel logout token", async () => {
-    ctx.aegis.jwt.verify = vi.fn().mockResolvedValue({
-      payload: {
-        claims: {
-          events: {},
-        },
+    ctx.aegis.verify = vi.fn().mockResolvedValue({
+      custom: {
+        events: {},
       },
+      claims: {},
     });
 
     await expect(backchannelLogoutHandler(ctx, vi.fn())).rejects.toThrow(ClientError);
   });
 
   test("should throw when the logout token carries no subject", async () => {
-    ctx.aegis.jwt.verify = vi.fn().mockResolvedValue({
-      payload: {
-        claims: {
-          events: {
-            "http://schemas.openid.net/event/backchannel-logout": {},
-          },
+    ctx.aegis.verify = vi.fn().mockResolvedValue({
+      custom: {
+        events: {
+          "http://schemas.openid.net/event/backchannel-logout": {},
         },
+      },
+      claims: {
         subject: undefined,
       },
     });

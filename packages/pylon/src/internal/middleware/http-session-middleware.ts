@@ -1,4 +1,4 @@
-import { AegisError, isParsedJwt } from "@lindorm/aegis";
+import { AegisError } from "@lindorm/aegis";
 import { ServerError } from "@lindorm/errors";
 import { omitUndefined } from "@lindorm/utils";
 import type { IPylonSession } from "../../interfaces/index.js";
@@ -95,7 +95,7 @@ export const createHttpSessionMiddleware = (
     if (ctx.state.session?.accessToken) {
       try {
         const verified = await ctx.aegis.verify(ctx.state.session.accessToken);
-        if (isParsedJwt(verified)) {
+        if (verified.format === "jwt") {
           ctx.state.tokens.accessToken = verified;
         }
       } catch (err) {
@@ -106,7 +106,7 @@ export const createHttpSessionMiddleware = (
     if (ctx.state.session?.idToken) {
       try {
         const verified = await ctx.aegis.verify(ctx.state.session.idToken);
-        if (isParsedJwt(verified)) {
+        if (verified.format === "jwt") {
           ctx.state.tokens.idToken = verified;
         }
       } catch (err) {

@@ -1,9 +1,4 @@
-import {
-  Aegis,
-  type IAegis,
-  type ParsedJwt,
-  type VerifyJwtOptions,
-} from "@lindorm/aegis";
+import { Aegis, type IAegis, type VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { assertDpopHandshakeMatch } from "../dpop/assert-dpop-handshake-match.js";
 import { createBearerRefreshHandler } from "../refresh/create-bearer-refresh-handler.js";
@@ -45,10 +40,8 @@ export const registerBearerHandshakeAuth = async ({
   // In "optional" mode a bearer-only token may still arrive alongside a
   // DPoP header (the client signed preemptively) — we accept the token as
   // a plain bearer and ignore the proof.
-  const preflight = Aegis.parse<ParsedJwt<any>>(token);
-  const preflightJkt = (preflight.payload as any).confirmation?.thumbprint as
-    | string
-    | undefined;
+  const preflight = Aegis.parse(token);
+  const preflightJkt = preflight.claims.confirmation?.thumbprint;
 
   const passDpopProof = preflightJkt && dpopMode !== "disabled" ? dpopProof : undefined;
 
@@ -58,9 +51,7 @@ export const registerBearerHandshakeAuth = async ({
     dpopProof: passDpopProof,
   });
 
-  const confirmedJkt = (verified.payload as any).confirmation?.thumbprint as
-    | string
-    | undefined;
+  const confirmedJkt = verified.claims.confirmation?.thumbprint;
 
   if (dpopMode === "required" && !confirmedJkt) {
     throw new ClientError("Missing DPoP binding", {
@@ -103,7 +94,7 @@ export const registerBearerHandshakeAuth = async ({
 
   const auth: PylonSocketAuth = {
     strategy: dpopValidated ? "dpop-bearer" : "bearer",
-    getExpiresAt: () => verified.payload.expiresAt ?? new Date(0),
+    getExpiresAt: () => verified.claims.expiresAt ?? new Date(0),
     refresh: async () => {},
     authExpiredEmittedAt: null,
   };
@@ -111,7 +102,7 @@ export const registerBearerHandshakeAuth = async ({
     aegis,
     capturedJkt,
     socket,
-    subject: verified.payload.subject,
+    subject: verified.claims.subject,
     verifyOptions: { tokenType: "access_token", ...verifyOptions },
   });
   socket.data.pylon.auth = auth;

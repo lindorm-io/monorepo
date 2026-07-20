@@ -98,7 +98,7 @@ export const createConnectionSessionMiddleware = <
     }
 
     const initialExpiresAt: Date =
-      session.expiresAt ?? parsedToken?.payload.expiresAt ?? new Date(0);
+      session.expiresAt ?? parsedToken?.claims.expiresAt ?? new Date(0);
 
     const refresh = createSessionRefreshHandler({
       aegis: ctx.aegis,

@@ -23,7 +23,7 @@ describe("createBearerRefreshHandler", () => {
 
     socket = {
       data: {
-        tokens: { bearer: { payload: { subject: "alice" } } },
+        tokens: { bearer: { claims: { subject: "alice" } } },
         pylon: { auth },
       },
     };
@@ -35,8 +35,8 @@ describe("createBearerRefreshHandler", () => {
 
   test("swaps bearer, updates getExpiresAt from expiresIn, clears authExpiredEmittedAt on valid refresh", async () => {
     (aegis.verify as Mock).mockResolvedValue({
-      payload: { subject: "alice", expiresAt: new Date("2026-04-11T13:30:00.000Z") },
-      header: { tokenType: "access_token" },
+      claims: { subject: "alice", expiresAt: new Date("2026-04-11T13:30:00.000Z") },
+      format: "jwt",
       token: "new-jwt",
     });
 
@@ -56,8 +56,8 @@ describe("createBearerRefreshHandler", () => {
 
   test("envelope expiresIn wins over parsed token exp", async () => {
     (aegis.verify as Mock).mockResolvedValue({
-      payload: { subject: "alice", expiresAt: new Date("2026-04-11T23:59:59.000Z") },
-      header: { tokenType: "access_token" },
+      claims: { subject: "alice", expiresAt: new Date("2026-04-11T23:59:59.000Z") },
+      format: "jwt",
       token: "new-jwt",
     });
 
@@ -75,8 +75,8 @@ describe("createBearerRefreshHandler", () => {
 
   test("throws when subject changes", async () => {
     (aegis.verify as Mock).mockResolvedValue({
-      payload: { subject: "bob", expiresAt: new Date() },
-      header: {},
+      claims: { subject: "bob", expiresAt: new Date() },
+      format: "jwt",
       token: "new-jwt",
     });
 
@@ -95,12 +95,12 @@ describe("createBearerRefreshHandler", () => {
   describe("capturedJkt (DPoP binding)", () => {
     test("accepts refresh when new token has same cnf.jkt", async () => {
       (aegis.verify as Mock).mockResolvedValue({
-        payload: {
+        claims: {
           subject: "alice",
           expiresAt: new Date("2026-04-11T13:00:00.000Z"),
           confirmation: { thumbprint: "jkt-abc" },
         },
-        header: {},
+        format: "jwt",
         token: "new-jwt",
       });
 
@@ -120,12 +120,12 @@ describe("createBearerRefreshHandler", () => {
 
     test("rejects refresh when new token has a different cnf.jkt", async () => {
       (aegis.verify as Mock).mockResolvedValue({
-        payload: {
+        claims: {
           subject: "alice",
           expiresAt: new Date(),
           confirmation: { thumbprint: "jkt-xyz" },
         },
-        header: {},
+        format: "jwt",
         token: "new-jwt",
       });
 
@@ -144,8 +144,8 @@ describe("createBearerRefreshHandler", () => {
 
     test("rejects refresh when new token is bearer-only (no cnf.jkt)", async () => {
       (aegis.verify as Mock).mockResolvedValue({
-        payload: { subject: "alice", expiresAt: new Date() },
-        header: {},
+        claims: { subject: "alice", expiresAt: new Date() },
+        format: "jwt",
         token: "new-jwt",
       });
 

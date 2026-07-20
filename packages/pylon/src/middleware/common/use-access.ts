@@ -1,4 +1,4 @@
-import { Aegis, isParsedJwt, type JwtClaimMatchers } from "@lindorm/aegis";
+import { Aegis, type JwtClaimMatchers } from "@lindorm/aegis";
 import { ClientError, LindormError } from "@lindorm/errors";
 import type { Dict } from "@lindorm/types";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
@@ -30,7 +30,7 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
     } else {
       const token = ctx.state.tokens[tokenKey];
 
-      if (!token || !isParsedJwt(token)) {
+      if (!token || token.format !== "jwt") {
         throw new ClientError("Token not found", {
           details: `Expected a parsed JWT at token [${tokenKey}] on context`,
           status: ClientError.Status.Unauthorized,
@@ -41,14 +41,14 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
         });
       }
 
-      claims = token.payload as Dict;
+      claims = token.claims as Dict;
     }
 
     try {
-      Aegis.validateClaims(claims, matchers);
+      Aegis.assert(claims, matchers);
     } catch (err) {
       if (err instanceof LindormError) {
-        // validateClaims keeps the failing claim VALUES in debug (not data); read
+        // assert keeps the failing claim VALUES in debug (not data); read
         // them from there for the server-only details, and expose only keys to the client.
         const invalid = (
           err.debug as { invalid?: Array<{ key: string; value: unknown }> }

@@ -54,8 +54,8 @@ describe("createAccessTokenMiddleware", () => {
         subject: "alice",
       };
       (ctx.aegis.verify as Mock).mockResolvedValue({
-        payload: { subject: "alice" },
-        header: { baseFormat: "JWT" },
+        claims: { subject: "alice" },
+        format: "jwt",
         token: "session-jwt",
       });
 
@@ -135,7 +135,8 @@ describe("createAccessTokenMiddleware", () => {
 
       (ctx.aegis.verify as Mock).mockResolvedValue({
         header: { tokenType: "access_token" },
-        payload: {
+        format: "jwt",
+        claims: {
           subject: "verified_subject",
           confirmation: { thumbprint: "proof-thumbprint" },
         },
@@ -182,7 +183,7 @@ describe("createAccessTokenMiddleware", () => {
 
   describe("Socket event fast path", () => {
     const makeCtx = (authOverride: any = {}): any => {
-      const parsedBearer = { payload: { subject: "alice" }, header: {}, token: "x" };
+      const parsedBearer = { claims: { subject: "alice" }, format: "jwt", token: "x" };
       return {
         aegis: createMockAegis(),
         logger: createMockLogger(),

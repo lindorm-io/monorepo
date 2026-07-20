@@ -51,7 +51,7 @@ export const createHandshakeTokenMiddleware = <
       const auth: PylonSocketAuth = {
         strategy: "session",
         getExpiresAt: () =>
-          source.session.expiresAt ?? parsed?.payload.expiresAt ?? new Date(0),
+          source.session.expiresAt ?? parsed?.claims.expiresAt ?? new Date(0),
         refresh: async () => {},
         authExpiredEmittedAt: null,
       };

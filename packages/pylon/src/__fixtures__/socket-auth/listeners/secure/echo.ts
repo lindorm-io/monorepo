@@ -5,7 +5,7 @@ export const secureEchoHandler = async (ctx: any) => {
     event: ctx.event,
     text: ctx.data?.text,
     authenticated: true,
-    subject: verified?.payload?.subject,
+    subject: verified?.claims?.subject,
     middlewareChain: ctx.state?.middlewareChain,
   });
 };

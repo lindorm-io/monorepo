@@ -26,8 +26,8 @@ describe("createLoginCallbackHandler", async () => {
     ctx = {
       aegis: {
         verify: vi.fn().mockResolvedValue({
-          header: { baseFormat: "JWT" },
-          payload: { nonce: "nonce" },
+          format: "jwt",
+          claims: { nonce: "nonce" },
         }),
       },
       auth: {
@@ -213,8 +213,8 @@ describe("createLoginCallbackHandler", async () => {
 
   test("should throw on invalid nonce", async () => {
     ctx.aegis.verify.mockResolvedValueOnce({
-      header: { baseFormat: "JWT" },
-      payload: { nonce: "wrong_nonce" },
+      format: "jwt",
+      claims: { nonce: "wrong_nonce" },
     });
 
     ctx.cookies.get.mockResolvedValueOnce({

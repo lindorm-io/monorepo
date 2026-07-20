@@ -161,8 +161,8 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
 
       const verified = (ctx as any).state.tokens.accessToken;
       ctx.logger.debug("Access token verification successful", {
-        subject: verified?.payload?.subject,
-        subjectHint: verified?.payload?.subjectHint,
+        subject: verified?.claims?.subject,
+        subjectHint: verified?.claims?.subjectHint,
         tokenType: verified?.header?.tokenType,
       });
     } catch (error: any) {

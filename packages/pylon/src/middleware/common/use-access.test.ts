@@ -19,8 +19,8 @@ describe("useAccess", () => {
       state: {
         tokens: {
           accessToken: {
-            header: { baseFormat: "JWT" },
-            payload: {
+            format: "jwt",
+            claims: {
               roles: ["user"],
               permissions: ["users:read"],
               scope: ["openid"],
@@ -159,8 +159,8 @@ describe("useAccess", () => {
   describe("custom token key", () => {
     test("should use token payload directly even when ctx.auth exists", async () => {
       ctx.state.tokens.idToken = {
-        header: { baseFormat: "JWT" },
-        payload: {
+        format: "jwt",
+        claims: {
           roles: ["viewer"],
           permissions: ["profile:read"],
           scope: ["openid"],

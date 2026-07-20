@@ -45,7 +45,7 @@ describe("httpSessionMiddleware", () => {
       },
       aegis: {
         aes: { encrypt: vi.fn(), decrypt: vi.fn() },
-        verify: vi.fn().mockResolvedValue({ payload: {}, header: { baseFormat: "JWT" } }),
+        verify: vi.fn().mockResolvedValue({ claims: {}, format: "jwt" }),
       },
       state: {
         metadata: {},

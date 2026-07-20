@@ -35,13 +35,13 @@ export const createTokenMiddleware =
         }
 
         if (token) {
-          const verified = await ctx.aegis.jwt.verify(token, options);
+          const verified = await ctx.aegis.verify(token, options);
 
           timer.debug("Token verified", { verified });
 
           ctx.logger.debug("Token verification successful", {
-            subject: verified.payload.subject,
-            subjectHint: verified.payload.subjectHint,
+            subject: verified.claims.subject,
+            subjectHint: verified.claims.subjectHint,
             tokenType: verified.header.tokenType,
           });
 

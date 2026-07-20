@@ -1,4 +1,4 @@
-import type { IAegis, ParsedJws, ParsedJwt } from "@lindorm/aegis";
+import type { IAegis, VerifiedToken } from "@lindorm/aegis";
 import type { IAmphora } from "@lindorm/amphora";
 import type { IConduit } from "@lindorm/conduit";
 import type { IHermesSession } from "@lindorm/hermes";
@@ -47,7 +47,7 @@ export type PylonState = {
   client: PylonClientContext;
   metadata: PylonMetadata;
   tenant?: string | null;
-  tokens: Dict<ParsedJwt | ParsedJws<any>>;
+  tokens: Dict<VerifiedToken>;
 };
 
 type Conduits = {

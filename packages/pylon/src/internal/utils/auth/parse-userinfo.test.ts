@@ -1,4 +1,4 @@
-import type { AegisProfile, ParsedJwtPayload } from "@lindorm/aegis";
+import type { AegisProfile } from "@lindorm/aegis";
 import { describe, expect, test } from "vitest";
 import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed.js";
 import { parseUserinfo, type UserinfoClaimsInput } from "./parse-userinfo.js";
@@ -67,8 +67,8 @@ describe("parseUserinfo", () => {
     });
   });
 
-  describe("ParsedJwtPayload input", () => {
-    test("should extract profile from ParsedJwtPayload", () => {
+  describe("domain payload input", () => {
+    test("should extract profile from a domain payload", () => {
       const profile: AegisProfile = {
         givenName: "Jane",
         familyName: "Smith",
@@ -91,17 +91,17 @@ describe("parseUserinfo", () => {
         roles: [],
         scope: ["openid", "profile"],
         tokenId: "tok-123",
-      } as unknown as ParsedJwtPayload;
+      } as unknown as UserinfoClaimsInput;
 
       const result = parseUserinfo(data);
 
       expect(result).toMatchSnapshot();
     });
 
-    test("should throw UserinfoEndpointFailed when subject is missing on ParsedJwtPayload", () => {
+    test("should throw UserinfoEndpointFailed when subject is missing on a domain payload", () => {
       const data = {
         profile: { givenName: "Jane" },
-      } as unknown as ParsedJwtPayload;
+      } as unknown as UserinfoClaimsInput;
 
       expect(() => parseUserinfo(data)).toThrow(UserinfoEndpointFailed);
       expect(() => parseUserinfo(data)).toThrow("Missing subject claim");

@@ -1,4 +1,4 @@
-import { AegisError, type IAegis, isParsedJwt } from "@lindorm/aegis";
+import { AegisError, type IAegis } from "@lindorm/aegis";
 import type { IPylonSession } from "../../../interfaces/index.js";
 import type { PylonSocket } from "../../../types/index.js";
 import { assertSessionStillValid } from "./assert-session-still-valid.js";
@@ -28,12 +28,12 @@ export const createSessionRefreshHandler = ({
 
     try {
       const verified = await aegis.verify(session.accessToken);
-      if (isParsedJwt(verified)) {
+      if (verified.format === "jwt") {
         socket.data.tokens.bearer = verified;
 
         const auth = socket.data.pylon.auth;
         if (auth) {
-          const expiresAt = verified.payload.expiresAt ?? new Date(0);
+          const expiresAt = verified.claims.expiresAt ?? new Date(0);
           auth.getExpiresAt = () => expiresAt;
           auth.authExpiredEmittedAt = null;
         }

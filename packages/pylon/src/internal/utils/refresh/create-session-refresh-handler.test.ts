@@ -13,8 +13,8 @@ describe("createSessionRefreshHandler", () => {
   beforeEach(() => {
     aegis = {
       verify: vi.fn().mockResolvedValue({
-        payload: { subject: "alice", expiresAt: parsedExp },
-        header: { baseFormat: "JWT" },
+        claims: { subject: "alice", expiresAt: parsedExp },
+        format: "jwt",
         token: "new-session-jwt",
       }),
     };

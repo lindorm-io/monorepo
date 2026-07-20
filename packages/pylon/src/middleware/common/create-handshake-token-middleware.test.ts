@@ -41,11 +41,11 @@ const makeCtx = (overrides: any = {}): any => {
 };
 
 const makeDpopVerifyResult = (overrides: any = {}) => ({
-  payload: {
+  claims: {
     subject: "alice",
     expiresAt: new Date("2026-04-11T12:05:00.000Z"),
     confirmation: { thumbprint: "jkt-abc" },
-    ...overrides.payload,
+    ...overrides.claims,
   },
   header: { tokenType: "access_token" },
   token: "jwt-token",
@@ -62,7 +62,7 @@ describe("createHandshakeTokenMiddleware", () => {
 
   beforeEach(() => {
     next = vi.fn();
-    (Aegis.parse as Mock).mockReset().mockReturnValue({ payload: {} });
+    (Aegis.parse as Mock).mockReset().mockReturnValue({ claims: {} });
   });
 
   describe("bearer path", () => {
@@ -72,7 +72,7 @@ describe("createHandshakeTokenMiddleware", () => {
 
       const exp = new Date("2026-04-11T12:05:00.000Z");
       (ctx.aegis.verify as Mock).mockResolvedValue({
-        payload: { subject: "alice", expiresAt: exp },
+        claims: { subject: "alice", expiresAt: exp },
         header: { tokenType: "access_token" },
         token: "jwt-token",
       });
@@ -109,7 +109,7 @@ describe("createHandshakeTokenMiddleware", () => {
 
         const initExp = new Date("2026-04-11T12:05:00.000Z");
         (ctx.aegis.verify as Mock).mockResolvedValueOnce({
-          payload: { subject: "alice", expiresAt: initExp },
+          claims: { subject: "alice", expiresAt: initExp },
           header: {},
           token: "jwt-token",
         });
@@ -118,7 +118,7 @@ describe("createHandshakeTokenMiddleware", () => {
         await mw(ctx, next);
 
         (ctx.aegis.verify as Mock).mockResolvedValueOnce({
-          payload: {
+          claims: {
             subject: "alice",
             expiresAt: new Date("2026-04-11T23:59:59.000Z"),
           },
@@ -148,7 +148,7 @@ describe("createHandshakeTokenMiddleware", () => {
       ctx.io.socket.handshake.auth.bearer = "jwt-token";
 
       (ctx.aegis.verify as Mock).mockResolvedValueOnce({
-        payload: { subject: "alice", expiresAt: new Date() },
+        claims: { subject: "alice", expiresAt: new Date() },
         header: {},
         token: "jwt-token",
       });
@@ -157,7 +157,7 @@ describe("createHandshakeTokenMiddleware", () => {
       await mw(ctx, next);
 
       (ctx.aegis.verify as Mock).mockResolvedValueOnce({
-        payload: { subject: "bob", expiresAt: new Date() },
+        claims: { subject: "bob", expiresAt: new Date() },
         header: {},
         token: "swap",
       });
@@ -181,8 +181,8 @@ describe("createHandshakeTokenMiddleware", () => {
     test("registers session strategy when socket.data.session present", async () => {
       const ctx = makeCtx({ data: { session } });
       (ctx.aegis.verify as Mock).mockResolvedValue({
-        payload: { subject: "alice", expiresAt: session.expiresAt },
-        header: { baseFormat: "JWT" },
+        claims: { subject: "alice", expiresAt: session.expiresAt },
+        format: "jwt",
         token: "session-jwt",
       });
 
@@ -217,8 +217,8 @@ describe("createHandshakeTokenMiddleware", () => {
     test("session refresh handler updates state from re-read session", async () => {
       const ctx = makeCtx({ data: { session } });
       (ctx.aegis.verify as Mock).mockResolvedValue({
-        payload: { subject: "alice", expiresAt: session.expiresAt },
-        header: { baseFormat: "JWT" },
+        claims: { subject: "alice", expiresAt: session.expiresAt },
+        format: "jwt",
         token: "session-jwt",
       });
 
@@ -241,8 +241,8 @@ describe("createHandshakeTokenMiddleware", () => {
       };
       const ctx = makeCtx({ data: { session: pastSession } });
       (ctx.aegis.verify as Mock).mockResolvedValue({
-        payload: { subject: "alice", expiresAt: pastSession.expiresAt },
-        header: { baseFormat: "JWT" },
+        claims: { subject: "alice", expiresAt: pastSession.expiresAt },
+        format: "jwt",
         token: "session-jwt",
       });
 
@@ -258,7 +258,7 @@ describe("createHandshakeTokenMiddleware", () => {
   describe("DPoP path", () => {
     const mockPreflightJkt = (jkt = "jkt-abc") => {
       (Aegis.parse as Mock).mockReturnValue({
-        payload: { confirmation: { thumbprint: jkt } },
+        claims: { confirmation: { thumbprint: jkt } },
       });
     };
 
@@ -277,7 +277,7 @@ describe("createHandshakeTokenMiddleware", () => {
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
         (ctx.aegis.verify as Mock).mockResolvedValue({
-          payload: { subject: "alice", expiresAt: new Date() },
+          claims: { subject: "alice", expiresAt: new Date() },
           header: {},
           token: "jwt-token",
           dpop: {
@@ -315,7 +315,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         (ctx.aegis.verify as Mock).mockResolvedValue({
-          payload: { subject: "alice", expiresAt: new Date() },
+          claims: { subject: "alice", expiresAt: new Date() },
           header: {},
           token: "jwt-token",
         });
@@ -344,7 +344,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         (ctx.aegis.verify as Mock).mockResolvedValue({
-          payload: {
+          claims: {
             subject: "alice",
             expiresAt: new Date(),
             confirmation: { thumbprint: "jkt-abc" },
@@ -382,7 +382,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         (ctx.aegis.verify as Mock).mockResolvedValue({
-          payload: {
+          claims: {
             subject: "alice",
             expiresAt: new Date(),
             confirmation: { thumbprint: "jkt-abc" },
@@ -414,7 +414,7 @@ describe("createHandshakeTokenMiddleware", () => {
         await installDpopHandshake(ctx);
 
         (ctx.aegis.verify as Mock).mockResolvedValueOnce({
-          payload: {
+          claims: {
             subject: "alice",
             expiresAt: new Date("2026-04-11T13:00:00.000Z"),
             confirmation: { thumbprint: "jkt-abc" },
@@ -436,7 +436,7 @@ describe("createHandshakeTokenMiddleware", () => {
         await installDpopHandshake(ctx);
 
         (ctx.aegis.verify as Mock).mockResolvedValueOnce({
-          payload: {
+          claims: {
             subject: "alice",
             expiresAt: new Date(),
             confirmation: { thumbprint: "jkt-xyz" },
@@ -458,7 +458,7 @@ describe("createHandshakeTokenMiddleware", () => {
         await installDpopHandshake(ctx);
 
         (ctx.aegis.verify as Mock).mockResolvedValueOnce({
-          payload: { subject: "alice", expiresAt: new Date() },
+          claims: { subject: "alice", expiresAt: new Date() },
           header: {},
           token: "new-jwt",
         });

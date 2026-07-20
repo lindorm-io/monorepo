@@ -2,11 +2,9 @@ import { ClientError } from "@lindorm/errors";
 import type { PylonHttpMiddleware } from "../../../types/index.js";
 
 export const backchannelLogoutHandler: PylonHttpMiddleware = async (ctx) => {
-  const verified = await ctx.aegis.jwt.verify(ctx.data.logoutToken);
+  const verified = await ctx.aegis.verify(ctx.data.logoutToken);
 
-  if (
-    !verified.payload.claims.events["http://schemas.openid.net/event/backchannel-logout"]
-  ) {
+  if (!verified.custom.events?.["http://schemas.openid.net/event/backchannel-logout"]) {
     throw new ClientError("Invalid backchannel logout token", {
       code: "invalid_backchannel_logout_token",
       title: "Invalid Backchannel Logout Token",
@@ -18,7 +16,7 @@ export const backchannelLogoutHandler: PylonHttpMiddleware = async (ctx) => {
     });
   }
 
-  if (!verified.payload.subject) {
+  if (!verified.claims.subject) {
     throw new ClientError("Invalid backchannel logout token", {
       code: "invalid_backchannel_logout_token",
       title: "Invalid Backchannel Logout Token",
@@ -30,7 +28,7 @@ export const backchannelLogoutHandler: PylonHttpMiddleware = async (ctx) => {
     });
   }
 
-  await ctx.session.logout(verified.payload.subject);
+  await ctx.session.logout(verified.claims.subject);
 
   ctx.body = undefined;
   ctx.status = 204;

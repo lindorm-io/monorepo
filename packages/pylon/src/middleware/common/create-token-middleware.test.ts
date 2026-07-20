@@ -29,7 +29,7 @@ describe("createTokenMiddleware", () => {
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
-      expect(ctx.aegis.jwt.verify).toHaveBeenCalledWith("token_value", options);
+      expect(ctx.aegis.verify).toHaveBeenCalledWith("token_value", options);
       expect(ctx.state.tokens.idToken).toMatchSnapshot();
     });
 
@@ -63,12 +63,12 @@ describe("createTokenMiddleware", () => {
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
-      expect(ctx.aegis.jwt.verify).not.toHaveBeenCalled();
+      expect(ctx.aegis.verify).not.toHaveBeenCalled();
       expect(ctx.state.tokens.idToken).toBeUndefined();
     });
 
     test("should throw ClientError 401 when verification fails", async () => {
-      ctx.aegis.jwt.verify.mockRejectedValue(new Error("invalid signature"));
+      ctx.aegis.verify.mockRejectedValue(new Error("invalid signature"));
 
       const middleware = createTokenMiddleware(options)("request.body.id_token");
 
@@ -100,7 +100,7 @@ describe("createTokenMiddleware", () => {
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
-      expect(ctx.aegis.jwt.verify).toHaveBeenCalledWith("token_value", options);
+      expect(ctx.aegis.verify).toHaveBeenCalledWith("token_value", options);
       expect(ctx.state.tokens.idToken).toMatchSnapshot();
       expect(ctx.io.socket.data.tokens.idToken).toMatchSnapshot();
     });

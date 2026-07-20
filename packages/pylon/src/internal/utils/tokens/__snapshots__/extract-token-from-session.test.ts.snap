@@ -12,9 +12,7 @@ exports[`extractTokenFromSession > returns null when verified token is not jwt k
 
 exports[`extractTokenFromSession > returns parsed token when session has accessToken 1`] = `
 {
-  "header": {
-    "baseFormat": "JWT",
-  },
+  "format": "jwt",
   "token": "session-jwt",
 }
 `;

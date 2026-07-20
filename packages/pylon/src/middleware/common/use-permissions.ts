@@ -1,5 +1,5 @@
-import type { ParsedJwtPayload } from "@lindorm/aegis";
-import { ClientError } from "@lindorm/errors";
+import { Aegis } from "@lindorm/aegis";
+import { ClientError, LindormError } from "@lindorm/errors";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type TokenOption = { token?: string };
@@ -28,18 +28,22 @@ export const usePermissions = (...args: Array<string | TokenOption>): PylonMiddl
       });
     }
 
-    const payload = token.payload as ParsedJwtPayload;
-    const missing = required.filter((p) => !payload.permissions.includes(p));
-
-    if (missing.length) {
-      throw new ClientError("Insufficient permissions", {
-        details: `Missing required permissions: ${missing.join(", ")}`,
-        status: ClientError.Status.Forbidden,
-        code: "insufficient_permissions",
-        type: "urn:lindorm:pylon:error:insufficient_permissions",
-        title: "Insufficient Permissions",
-        data: { required, missing },
-      });
+    // AND logic — every required permission must be present (`$all`).
+    try {
+      Aegis.assert(token.claims, { permissions: required });
+    } catch (err) {
+      if (err instanceof LindormError) {
+        const missing = required.filter((p) => !token.claims.permissions?.includes(p));
+        throw new ClientError("Insufficient permissions", {
+          details: `Missing required permissions: ${missing.join(", ")}`,
+          status: ClientError.Status.Forbidden,
+          code: "insufficient_permissions",
+          type: "urn:lindorm:pylon:error:insufficient_permissions",
+          title: "Insufficient Permissions",
+          data: { required, missing },
+        });
+      }
+      throw err;
     }
 
     await next();

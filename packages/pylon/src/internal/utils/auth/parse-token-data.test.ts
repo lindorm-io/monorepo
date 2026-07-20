@@ -18,22 +18,20 @@ vi.mock("@lindorm/random", async () => ({
 }));
 
 const createJwtVerifyResult = (overrides: Record<string, any> = {}) => ({
-  payload: {
+  format: "jwt" as const,
+  claims: {
     expiresAt: new Date("2024-01-02T08:00:00.000Z"),
     issuedAt: new Date("2024-01-01T08:00:00.000Z"),
     sessionId: "85924874-c05c-5574-ad85-0cf2cf39be95",
     subject: "4e294800-be7e-5954-b143-0ebdcf393906",
     ...overrides,
   },
-  header: { baseFormat: "JWT" as const },
-  decoded: {},
   token: "jwt-token",
 });
 
 const createJwsVerifyResult = () => ({
-  payload: "some-payload",
-  header: { baseFormat: "JWS" as const },
-  decoded: {},
+  format: "jws" as const,
+  raw: "some-payload",
   token: "jws-token",
 });
 

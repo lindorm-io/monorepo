@@ -24,10 +24,9 @@ describe("httpRequestLoggerMiddleware", () => {
     });
 
     token = new JwtKit({
-      issuer: "https://test.lindorm.io/",
       kryptos,
       logger: createMockLogger(),
-    }).sign({ expires: "1h", subject: "subject", tokenType: "access_token" }).token;
+    }).sign({ sub: "subject", exp: Math.floor(Date.now() / 1000) + 3600 }, { typ: "at" });
 
     [, , signature] = token.split(".");
 

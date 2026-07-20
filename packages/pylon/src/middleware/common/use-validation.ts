@@ -1,4 +1,4 @@
-import { JwtKit, type ValidateJwtOptions } from "@lindorm/aegis";
+import { Aegis, type ValidateJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import objectPath from "object-path";
 import type { PylonMiddleware } from "../../types/index.js";
@@ -24,7 +24,7 @@ export const useValidation = (
         });
       }
 
-      JwtKit.validate(token, options);
+      Aegis.assert(token.claims, options);
 
       timer.debug("Token validation successful");
     } catch (err: any) {

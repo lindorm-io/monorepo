@@ -50,9 +50,9 @@ export const createBearerRefreshHandler = ({
       trustBoundThumbprint: capturedJkt !== undefined,
     });
 
-    assertSubjectUnchanged(subject, verified.payload.subject);
+    assertSubjectUnchanged(subject, verified.claims.subject);
 
-    assertJktUnchanged(capturedJkt, (verified.payload as any).confirmation?.thumbprint);
+    assertJktUnchanged(capturedJkt, verified.claims.confirmation?.thumbprint);
 
     socket.data.tokens.bearer = verified;
 

@@ -1,4 +1,4 @@
-import type { ParsedJws, ParsedJwt } from "@lindorm/aegis";
+import type { VerifiedToken } from "@lindorm/aegis";
 import type { Dict } from "@lindorm/types";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type { AppState } from "../context/context-common.js";
@@ -29,7 +29,7 @@ export type PylonSocketPylonNamespace = {
 export type PylonSocketData = {
   app: AppState;
   client?: PylonClientContext;
-  tokens: Dict<ParsedJwt | ParsedJws<any>>;
+  tokens: Dict<VerifiedToken>;
   session?: IPylonSession | null;
   pylon: PylonSocketPylonNamespace;
 };

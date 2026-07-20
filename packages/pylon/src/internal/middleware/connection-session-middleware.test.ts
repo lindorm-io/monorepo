@@ -46,8 +46,8 @@ const buildCtx = (cookieHeader: string | undefined, kv?: any): any => {
       verify: vi.fn((token: string) =>
         Promise.resolve({
           token,
-          header: { baseFormat: "JWT" as const },
-          payload: {
+          format: "jwt" as const,
+          claims: {
             subject: "sub-1",
             expiresAt: new Date("2099-01-01T00:00:00.000Z"),
           },

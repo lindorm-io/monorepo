@@ -68,8 +68,8 @@ describe("createAuthClient", () => {
         state: {
           tokens: {
             accessToken: {
-              header: { baseFormat: "JWT" },
-              payload: {
+              format: "jwt",
+              claims: {
                 subject: "user-123",
                 issuer: "https://auth.example.com",
                 audience: ["https://api.example.com"],
@@ -81,13 +81,13 @@ describe("createAuthClient", () => {
                 permissions: ["read", "write"],
                 tenantId: "tenant-abc",
                 levelOfAssurance: 3,
-                claims: { custom: "value" },
                 confirmation: { thumbprint: "abc" },
-                profile: { email: "test@example.com" },
                 authMethods: [],
                 entitlements: [],
                 groups: [],
               },
+              custom: { custom: "value" },
+              profile: { email: "test@example.com" },
             },
           },
         },
@@ -106,9 +106,9 @@ describe("createAuthClient", () => {
       expect(result.scope).toEqual(["openid", "profile"]);
       expect(result.roles).toEqual(["admin"]);
       expect(result.levelOfAssurance).toBe(3);
-      // ParsedJwtPayload-only fields should NOT leak onto introspection.
-      // (PopClaims.confirmation IS part of AegisIntrospectionActive — it
-      //  passes through and is asserted separately in other tests.)
+      // The custom-claim and profile buckets live off the domain `claims`
+      // bucket, so they must NOT leak onto introspection. (PopClaims.confirmation
+      // IS a registered claim and passes through — asserted elsewhere.)
       expect((result as any).claims).toBeUndefined();
       expect((result as any).profile).toBeUndefined();
     });
@@ -193,8 +193,8 @@ describe("createAuthClient", () => {
         state: {
           tokens: {
             accessToken: {
-              header: { baseFormat: "JWT" },
-              payload: {
+              format: "jwt",
+              claims: {
                 subject: "user-123",
                 issuer: "https://auth.example.com",
                 audience: [],
@@ -207,10 +207,10 @@ describe("createAuthClient", () => {
                 authMethods: [],
                 entitlements: [],
                 groups: [],
-                claims: {},
                 confirmation: undefined,
-                profile: undefined,
               },
+              custom: {},
+              profile: undefined,
             },
           },
         },
@@ -302,11 +302,13 @@ describe("createAuthClient", () => {
         state: {
           tokens: {
             idToken: {
-              header: { baseFormat: "JWT" },
-              payload: {
-                sub: "user-123",
-                email: "test@example.com",
-                name: "Test User",
+              format: "jwt",
+              wire: {
+                payload: {
+                  sub: "user-123",
+                  email: "test@example.com",
+                  name: "Test User",
+                },
               },
             },
           },
@@ -362,8 +364,8 @@ describe("createAuthClient", () => {
         state: {
           tokens: {
             idToken: {
-              header: { baseFormat: "JWT" },
-              payload: { sub: "user-cache", name: "Cache" },
+              format: "jwt",
+              wire: { payload: { sub: "user-cache", name: "Cache" } },
             },
           },
         },
@@ -384,8 +386,8 @@ describe("createAuthClient", () => {
         state: { tokens: {} },
         aegis: {
           verify: vi.fn().mockResolvedValue({
-            header: { baseFormat: "JWT" },
-            payload: {
+            format: "jwt",
+            claims: {
               subject: "explicit-user",
               tenantId: "explicit-tenant",
               roles: ["admin"],
@@ -451,8 +453,8 @@ describe("createAuthClient", () => {
         state: { tokens: {} },
         aegis: {
           verify: vi.fn().mockResolvedValue({
-            header: { baseFormat: "JWT" },
-            payload: { subject: "cached-user" },
+            format: "jwt",
+            claims: { subject: "cached-user" },
           }),
         },
       });
@@ -473,12 +475,12 @@ describe("createAuthClient", () => {
           verify: vi
             .fn()
             .mockResolvedValueOnce({
-              header: { baseFormat: "JWT" },
-              payload: { subject: "user-a" },
+              format: "jwt",
+              claims: { subject: "user-a" },
             })
             .mockResolvedValueOnce({
-              header: { baseFormat: "JWT" },
-              payload: { subject: "user-b" },
+              format: "jwt",
+              claims: { subject: "user-b" },
             }),
         },
       });
@@ -499,10 +501,12 @@ describe("createAuthClient", () => {
         state: { tokens: {} },
         aegis: {
           verify: vi.fn().mockResolvedValue({
-            header: { baseFormat: "JWT" },
-            payload: {
-              subject: "explicit-user",
-              email: "explicit@example.com",
+            format: "jwt",
+            wire: {
+              payload: {
+                sub: "explicit-user",
+                email: "explicit@example.com",
+              },
             },
           }),
         },
