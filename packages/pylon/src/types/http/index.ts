@@ -6,5 +6,7 @@ export * from "./credentials.js";
 export * from "./http-callback.js";
 export * from "./parse-body.js";
 export * from "./pylon-auth-client.js";
+export * from "./pylon-introspection.js";
+export * from "./pylon-userinfo.js";
 export * from "./pylon-http-handler.js";
 export * from "./route.js";

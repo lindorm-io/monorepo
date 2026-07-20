@@ -1,10 +1,4 @@
-import {
-  Aegis,
-  type AegisIntrospection,
-  type AegisIntrospectionActive,
-  type AegisUserinfo,
-  isParsedJwt,
-} from "@lindorm/aegis";
+import { isParsedJwt } from "@lindorm/aegis";
 import {
   Conduit,
   conduitBasicAuthMiddleware,
@@ -43,9 +37,14 @@ import type {
   PylonAuthConfig,
   PylonContext,
   PylonHttpContext,
+  PylonIntrospection,
+  PylonIntrospectionActive,
+  PylonUserinfo,
   TokenRequest,
 } from "../../../types/index.js";
 import { getOpenIdConfiguration } from "./get-open-id-configuration.js";
+import { parseIntrospection } from "./parse-introspection.js";
+import { parseUserinfo } from "./parse-userinfo.js";
 
 // --- Claims client (works on both HTTP and socket) ---
 
@@ -64,10 +63,10 @@ export const createClaimsClient = (
 
   // Per-token caches: the empty string sentinel "" is the no-arg /
   // context-resolved-token entry. Explicit tokens are keyed by their value.
-  const userinfoCache = new Map<string, AegisUserinfo>();
-  const introspectCache = new Map<string, AegisIntrospection>();
+  const userinfoCache = new Map<string, PylonUserinfo>();
+  const introspectCache = new Map<string, PylonIntrospection>();
 
-  const userinfo = async (token?: string): Promise<AegisUserinfo> => {
+  const userinfo = async (token?: string): Promise<PylonUserinfo> => {
     const cacheKey = token ?? "";
     const cached = userinfoCache.get(cacheKey);
     if (cached) return cached;
@@ -77,7 +76,7 @@ export const createClaimsClient = (
       try {
         const verified = await ctx.aegis.verify(token);
         if (isParsedJwt(verified)) {
-          const result = Aegis.parseUserinfo(verified.payload);
+          const result = parseUserinfo(verified.payload);
           userinfoCache.set(cacheKey, result);
           return result;
         }
@@ -88,7 +87,7 @@ export const createClaimsClient = (
       // Fast path: no-arg — use the parsed id_token from context if available.
       const idToken = ctx.state.tokens?.idToken;
       if (idToken && isParsedJwt(idToken)) {
-        const result = Aegis.parseUserinfo(idToken.payload);
+        const result = parseUserinfo(idToken.payload);
         userinfoCache.set(cacheKey, result);
         return result;
       }
@@ -110,7 +109,7 @@ export const createClaimsClient = (
         middleware: [conduitBearerAuthMiddleware(accessToken)],
       });
 
-      const result = Aegis.parseUserinfo(data);
+      const result = parseUserinfo(data);
       userinfoCache.set(cacheKey, result);
       return result;
     } catch (error) {
@@ -128,7 +127,7 @@ export const createClaimsClient = (
     }
   };
 
-  const introspect = async (token?: string): Promise<AegisIntrospection> => {
+  const introspect = async (token?: string): Promise<PylonIntrospection> => {
     const cacheKey = token ?? "";
     const cached = introspectCache.get(cacheKey);
     if (cached) return cached;
@@ -139,7 +138,7 @@ export const createClaimsClient = (
         const verified = await ctx.aegis.verify(token);
         if (isParsedJwt(verified)) {
           const { claims: _, profile: __, ...rest } = verified.payload;
-          const result: AegisIntrospectionActive = { ...rest, active: true };
+          const result: PylonIntrospectionActive = { ...rest, active: true };
           introspectCache.set(cacheKey, result);
           return result;
         }
@@ -151,10 +150,10 @@ export const createClaimsClient = (
       const accessTokenParsed = ctx.state.tokens?.accessToken;
       if (accessTokenParsed && isParsedJwt(accessTokenParsed)) {
         // ParsedJwtPayload has `claims` (custom claim bucket) and `profile`
-        // (extracted AegisProfile) which AegisIntrospectionActive does not
+        // (extracted AegisProfile) which PylonIntrospectionActive does not
         // model. `confirmation` IS part of PopClaims and passes through.
         const { claims: _, profile: __, ...rest } = accessTokenParsed.payload;
-        const result: AegisIntrospectionActive = { ...rest, active: true };
+        const result: PylonIntrospectionActive = { ...rest, active: true };
         introspectCache.set(cacheKey, result);
         return result;
       }
@@ -183,7 +182,7 @@ export const createClaimsClient = (
         },
       );
 
-      const result = Aegis.parseIntrospection(data);
+      const result = parseIntrospection(data);
       introspectCache.set(cacheKey, result);
       return result;
     } catch (error) {

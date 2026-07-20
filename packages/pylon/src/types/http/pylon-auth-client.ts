@@ -1,4 +1,3 @@
-import type { AegisIntrospection, AegisUserinfo } from "@lindorm/aegis";
 import type {
   OpenIdAuthorizeRequestQuery,
   OpenIdLogoutRequest,
@@ -7,6 +6,8 @@ import type {
   OpenIdTokenResponse,
   PkceMethod,
 } from "@lindorm/types";
+import type { PylonIntrospection } from "./pylon-introspection.js";
+import type { PylonUserinfo } from "./pylon-userinfo.js";
 
 export type AuthorizeQuery = Partial<
   Omit<
@@ -45,8 +46,8 @@ export type TokenRequest = Omit<OpenIdTokenRequest, "clientId" | "clientSecret">
 
 // Claims resolution only — available on both HTTP and socket contexts.
 export type PylonAuthClaimsClient = {
-  introspect(token?: string): Promise<AegisIntrospection>;
-  userinfo(token?: string): Promise<AegisUserinfo>;
+  introspect(token?: string): Promise<PylonIntrospection>;
+  userinfo(token?: string): Promise<PylonUserinfo>;
 };
 
 // Full auth client — available on HTTP contexts only.

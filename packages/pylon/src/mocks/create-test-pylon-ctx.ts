@@ -1,4 +1,4 @@
-import type { AegisIntrospection, AegisUserinfo, IAegis } from "@lindorm/aegis";
+import type { IAegis } from "@lindorm/aegis";
 import type { IAmphora } from "@lindorm/amphora";
 import type { IConduit } from "@lindorm/conduit";
 import type { IHermesSession } from "@lindorm/hermes";
@@ -13,8 +13,10 @@ import type {
   PylonChallenge,
   PylonContext,
   PylonHttpContext,
+  PylonIntrospection,
   PylonIoContextHttp,
   PylonState,
+  PylonUserinfo,
 } from "../types/index.js";
 
 /**
@@ -104,8 +106,8 @@ export const _createTestPylonCtx = (
   };
 
   const auth: PylonAuthClaimsClient = {
-    introspect: resolves({ active: false } as AegisIntrospection),
-    userinfo: resolves({ subject: "test-actor" } as AegisUserinfo),
+    introspect: resolves({ active: false } as PylonIntrospection),
+    userinfo: resolves({ subject: "test-actor" } as PylonUserinfo),
   };
 
   const state = merge(
