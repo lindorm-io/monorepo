@@ -1,17 +1,18 @@
 import type { Dict } from "@lindorm/types";
 import { FILTERED, sanitiseToken } from "@lindorm/utils";
+import { CLAIMS_REGISTRY } from "../claims/claims-registry.js";
 
 // The identity numbers themselves — a personnummer / CPR / SSN — are the only
 // values that must never reach a log. The paired `*_verified` booleans are what
-// you debug an assurance decision against, so they stay. Both the FLAT wire
-// names and the camelCase domain names are covered so a payload logged in either
-// form is filtered.
-const NUMBER_KEYS = [
-  "nationalIdentityNumber",
-  "national_identity_number",
-  "socialSecurityNumber",
-  "social_security_number",
-];
+// you debug an assurance decision against, so they stay. DERIVED from the claim
+// registry: the sensitive-category claims whose VALUE is the number string
+// (`value: "text"`) — the `*_verified` flags are `value: "bool"` and so fall
+// out. Both the camelCase domain name and the FLAT JOSE wire name are covered so
+// a payload logged in either form is filtered. A drift-guard test pins the
+// derived set to the frozen key list.
+const NUMBER_KEYS: ReadonlyArray<string> = CLAIMS_REGISTRY.filter(
+  (spec) => spec.category === "sensitive" && spec.value === "text",
+).flatMap((spec) => [spec.domain, spec.jose]);
 
 /**
  * Redacts the mint-side payloads aegis logs at debug.
