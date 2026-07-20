@@ -2,7 +2,7 @@ import { applyKeyFloor, type AmphoraPredicate, type IAmphora } from "@lindorm/am
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { Predicated } from "@lindorm/utils";
-import { AegisError } from "../../errors/index.js";
+import { AegisKeyError } from "../../errors/index.js";
 import { describeKeyOperation, type KeyOperation } from "./describe-key-operation.js";
 
 export type ResolveKeyOptions = {
@@ -73,7 +73,7 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
   // supplied key would send the caller to a vault key that cannot possibly
   // work; preferring it would decrypt with the wrong key material.
   if (options.kryptos && id && options.kryptos.id !== id) {
-    throw new AegisError("Supplied key is not the key the artifact names", {
+    throw new AegisKeyError("Supplied key is not the key the artifact names", {
       code: `${operation}_key_mismatch`,
       data: { kid: id, suppliedKid: options.kryptos.id, operation },
       debug: { kryptos: options.kryptos.toJSON() },
@@ -104,7 +104,7 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
   const isReadOp = operation === "verify" || operation === "decrypt";
 
   if (!options.kryptos && !id && isReadOp) {
-    throw new AegisError("The artifact carries no key id and no key was supplied", {
+    throw new AegisKeyError("The artifact carries no key id and no key was supplied", {
       code: `${operation}_key_missing_kid`,
       data: { operation, profile },
       title: "Read Key Has No Kid",
@@ -124,7 +124,7 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
     options.kryptos ??
     (id
       ? await amphora.findById(id).catch((error: Error) => {
-          throw new AegisError(copy.notFound.message, {
+          throw new AegisKeyError(copy.notFound.message, {
             code: `${operation}_key_not_found`,
             data: { kid: id, profile },
             debug: { error: error.message },
@@ -133,7 +133,7 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
           });
         })
       : await amphora.find(query).catch((error: Error) => {
-          throw new AegisError(copy.notFound.message, {
+          throw new AegisKeyError(copy.notFound.message, {
             code: `${operation}_key_not_found`,
             data: { policy: query, profile },
             debug: { error: error.message },
@@ -144,7 +144,7 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
 
   // The FLOOR applies to the selected key, the pinned key AND the injected key.
   if (!Predicated.match(kryptos, floor)) {
-    throw new AegisError(copy.violation.message, {
+    throw new AegisKeyError(copy.violation.message, {
       code: `${operation}_key_policy_violation`,
       data: {
         kid: kryptos.id,

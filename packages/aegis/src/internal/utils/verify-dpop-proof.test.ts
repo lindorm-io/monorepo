@@ -2,7 +2,7 @@ import { B64 } from "@lindorm/b64";
 import { ShaKit } from "@lindorm/sha";
 import MockDate from "mockdate";
 import { TEST_AKP_KEY_SIG, TEST_RSA_KEY_SIG } from "../../__fixtures__/keys.js";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import { createJoseSignature } from "./jose-signature.js";
 import { verifyDpopProof } from "./verify-dpop-proof.js";
 import { describe, expect, test } from "vitest";
@@ -68,7 +68,7 @@ describe("verifyDpopProof", () => {
         expectedThumbprint,
         dpopMaxSkew: 60,
       }),
-    ).toThrow(JwtError);
+    ).toThrow(AegisDomainError);
   });
 
   test("should throw when header typ is not dpop+jwt", () => {

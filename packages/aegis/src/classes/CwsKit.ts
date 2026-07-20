@@ -1,6 +1,6 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import { AegisError } from "../errors/index.js";
+import { CwsError } from "../errors/index.js";
 import { algToCoseLabel, isOfficialCoseAlg } from "../internal/cose/alg-labels.js";
 import { Tag } from "../internal/cose/cbor.js";
 import {
@@ -38,7 +38,7 @@ export type CwsVerifyResult = {
 const unwrapStructure = (value: unknown, tag: number, label: string): Array<unknown> => {
   const contents = value instanceof Tag && value.tag === tag ? value.contents : value;
   if (!Array.isArray(contents) || contents.length !== 4) {
-    throw new AegisError(`Malformed ${label}`, {
+    throw new CwsError(`Malformed ${label}`, {
       code: "cose_malformed",
       title: `Malformed ${label}`,
       details: `A ${label} must be a 4-element array [protected, unprotected, payload, signature/tag].`,
@@ -75,7 +75,7 @@ export class CwsKit {
     // OFFICIAL COSE-RFC registration (e.g. ML-DSA) so the token stays
     // interoperable. Runs before the Sign1/Mac0 split — it applies to both.
     if (!options.proprietary && !isOfficialCoseAlg(this.kryptos.algorithm)) {
-      throw new AegisError(
+      throw new CwsError(
         `Algorithm "${this.kryptos.algorithm}" has no official COSE registration`,
         {
           code: "cose_alg_not_registered",
@@ -94,7 +94,7 @@ export class CwsKit {
         return this.macMac0(payload, options);
       default: {
         const exhaustive: never = this.kryptos.algClass;
-        throw new AegisError("Unhandled COSE key class", {
+        throw new CwsError("Unhandled COSE key class", {
           code: "cose_unhandled_alg_class",
           data: { algClass: String(exhaustive) },
           title: "Unhandled COSE Key Class",
@@ -113,7 +113,7 @@ export class CwsKit {
         return this.verifyMac0(structure);
       default: {
         const exhaustive: never = this.kryptos.algClass;
-        throw new AegisError("Unhandled COSE key class", {
+        throw new CwsError("Unhandled COSE key class", {
           code: "cose_unhandled_alg_class",
           data: { algClass: String(exhaustive) },
           title: "Unhandled COSE Key Class",
@@ -161,7 +161,7 @@ export class CwsKit {
     );
 
     if (!valid) {
-      throw new AegisError("Invalid COSE_Sign1 signature", {
+      throw new CwsError("Invalid COSE_Sign1 signature", {
         code: "cose_signature_invalid",
         title: "Invalid COSE Signature",
         details: "The COSE_Sign1 signature did not verify against the resolved key.",
@@ -207,7 +207,7 @@ export class CwsKit {
     );
 
     if (!valid) {
-      throw new AegisError("Invalid COSE_Mac0 tag", {
+      throw new CwsError("Invalid COSE_Mac0 tag", {
         code: "cose_mac_invalid",
         title: "Invalid COSE MAC",
         details:

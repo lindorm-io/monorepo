@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import { accessTokenProfile } from "../profiles/definitions/access-token.js";
 import { securityEventProfile } from "../profiles/definitions/security-event.js";
 import { validateProfileClaims } from "./validate-profile-claims.js";
@@ -39,7 +39,7 @@ describe("validateProfileClaims", () => {
         },
         { algorithm: "ES512" },
       ),
-    ).toThrow(JwtError);
+    ).toThrow(AegisDomainError);
   });
 
   const conformant = {
@@ -60,7 +60,7 @@ describe("validateProfileClaims", () => {
     // outright via `sign.kryptos`.
     expect(() =>
       validateProfileClaims(accessTokenProfile, conformant, { algorithm: "HS256" }),
-    ).toThrow(JwtError);
+    ).toThrow(AegisDomainError);
   });
 
   test("permits an asymmetric signing alg on an access token", () => {
@@ -72,7 +72,7 @@ describe("validateProfileClaims", () => {
   test("throws when the access token signing alg is none", () => {
     expect(() =>
       validateProfileClaims(accessTokenProfile, conformant, { algorithm: "none" }),
-    ).toThrow(JwtError);
+    ).toThrow(AegisDomainError);
   });
 
   test("permits a symmetric signing alg on a security event (SSF §4.1.1 / RFC 8417)", () => {
@@ -105,6 +105,6 @@ describe("validateProfileClaims", () => {
         },
         { algorithm: "ES512" },
       ),
-    ).toThrow(JwtError);
+    ).toThrow(AegisDomainError);
   });
 });

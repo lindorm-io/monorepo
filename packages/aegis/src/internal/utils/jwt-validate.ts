@@ -1,6 +1,6 @@
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
 import type { Dict, Predicate, PredicateOperator } from "@lindorm/types";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { ValidateJwtOptions } from "../../types/index.js";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
 
@@ -40,7 +40,7 @@ export const createJwtValidate = (validate: ValidateJwtOptions): Predicate<Dict>
       continue;
     }
 
-    throw new JwtError(`Unsupported value: ${value as any} for key: ${key}`, {
+    throw new AegisDomainError(`Unsupported value: ${value as any} for key: ${key}`, {
       code: "jwt_validate_unsupported_value",
       data: { key },
       title: "JWT Validate Unsupported Value",

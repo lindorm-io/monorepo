@@ -1,5 +1,5 @@
 import type { KryptosAlgClass, KryptosSigAlgorithm } from "@lindorm/kryptos";
-import { AegisError } from "../../../errors/index.js";
+import { AegisDomainError } from "../../../errors/index.js";
 import type { InvalidEntry } from "../../../types/index.js";
 
 const SYMMETRIC = new Set<string>(["HS256", "HS384", "HS512"]);
@@ -48,7 +48,7 @@ export const algPermitted = (
           ];
 
     default:
-      throw new AegisError(`Unsupported alg class: ${algClass as string}`, {
+      throw new AegisDomainError(`Unsupported alg class: ${algClass as string}`, {
         code: "unsupported_alg_class",
         data: { algClass },
         title: "Unsupported Alg Class",

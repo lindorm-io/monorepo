@@ -1,6 +1,6 @@
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { InvalidEntry, SignContext, TokenProfile } from "../../types/index.js";
 import { actChainShape } from "./rules/act-chain-shape.js";
 import { algPermitted } from "./rules/alg-permitted.js";
@@ -50,7 +50,7 @@ export const validateProfileClaims = (
   invalid.push(...profile.validate(claims, ctx));
 
   if (invalid.length > 0) {
-    throw new JwtError("Invalid token", {
+    throw new AegisDomainError("Invalid token", {
       code: "jwt_claims_invalid",
       data: { invalid },
       debug: { invalid, profile: profile.name },

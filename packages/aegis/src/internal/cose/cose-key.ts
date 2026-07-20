@@ -1,7 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import type { Dict } from "@lindorm/types";
 import { B64U } from "../constants/format.js";
-import { AegisError } from "../../errors/index.js";
+import { CoseError } from "../../errors/index.js";
 
 // COSE_Key parameter labels (RFC 9052 §7).
 const KEY = { kty: 1, kid: 2, alg: 3, crv: -1, x: -2, y: -3 } as const;
@@ -35,7 +35,7 @@ const COSE_TO_CRV: Readonly<Record<number, string>> = Object.fromEntries(
 );
 
 const unsupported = (detail: string): never => {
-  throw new AegisError("Unsupported COSE_Key", {
+  throw new CoseError("Unsupported COSE_Key", {
     code: "cose_key_unsupported",
     title: "Unsupported COSE Key",
     details: detail,
@@ -106,7 +106,7 @@ export const encodeCnf = (cnf: Dict): Map<number, unknown> => {
   }
 
   if (out.size === 0) {
-    throw new AegisError("Confirmation has no COSE-representable member", {
+    throw new CoseError("Confirmation has no COSE-representable member", {
       code: "cose_cnf_unsupported",
       title: "COSE Confirmation Unsupported",
       details:

@@ -1,6 +1,6 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import { AegisError } from "../../errors/index.js";
+import { AegisKeyError } from "../../errors/index.js";
 import type { CertificateBindingMode } from "../../types/index.js";
 
 type VerifyCertBindingOptions = {
@@ -39,7 +39,7 @@ export const verifyCertBinding = ({
 
   if (kryptos.certificateThumbprint === null) {
     if (mode === "strict") {
-      throw new AegisError(
+      throw new AegisKeyError(
         "token header x5t#S256 present but signing kryptos has no certificateChain",
         {
           code: "cert_binding_chain_missing",
@@ -58,7 +58,7 @@ export const verifyCertBinding = ({
   }
 
   if (header.certificateThumbprint !== kryptos.certificateThumbprint) {
-    throw new AegisError("signing certificate thumbprint mismatch", {
+    throw new AegisKeyError("signing certificate thumbprint mismatch", {
       code: "cert_binding_thumbprint_mismatch",
       debug: {
         expected: kryptos.certificateThumbprint,

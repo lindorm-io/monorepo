@@ -1,5 +1,5 @@
 import type { KryptosEncryption } from "@lindorm/kryptos";
-import { AegisError } from "../../errors/index.js";
+import { CoseError } from "../../errors/index.js";
 
 /**
  * COSE content-encryption algorithm labels (IANA COSE Algorithms / RFC 9053
@@ -81,7 +81,7 @@ export const encToCoseLabel = (
     ? (ENC_TO_COSE_OFFICIAL[encryption] ?? ENC_TO_COSE_PRIVATE[encryption])
     : undefined;
   if (label === undefined) {
-    throw new AegisError(`No COSE label for content encryption "${encryption}"`, {
+    throw new CoseError(`No COSE label for content encryption "${encryption}"`, {
       code: "cose_encryption_not_supported",
       data: { encryption },
       title: "COSE Encryption Not Supported",
@@ -94,7 +94,7 @@ export const encToCoseLabel = (
 export const coseLabelToEnc = (label: number): KryptosEncryption => {
   const encryption = COSE_TO_ENC[label];
   if (encryption === undefined) {
-    throw new AegisError(`No content encryption for COSE label "${label}"`, {
+    throw new CoseError(`No content encryption for COSE label "${label}"`, {
       code: "cose_encryption_not_supported",
       data: { label },
       title: "COSE Encryption Not Supported",

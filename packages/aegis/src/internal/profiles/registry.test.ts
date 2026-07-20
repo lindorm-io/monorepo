@@ -1,4 +1,4 @@
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { TokenProfile } from "../../types/index.js";
 import { registerProfile, resolveProfile } from "./registry.js";
 import { describe, expect, test } from "vitest";
@@ -13,7 +13,7 @@ describe("registry", () => {
   });
 
   test("throws for an unknown profile", () => {
-    expect(() => resolveProfile("does_not_exist")).toThrow(JwtError);
+    expect(() => resolveProfile("does_not_exist")).toThrow(AegisDomainError);
   });
 
   test("registers and resolves a custom profile", () => {

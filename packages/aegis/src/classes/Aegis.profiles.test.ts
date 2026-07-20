@@ -8,7 +8,7 @@ import {
   TEST_EC_KEY_SIG,
   TEST_OKP_KEY_SIG,
 } from "../__fixtures__/keys.js";
-import { AegisError, JwtError } from "../errors/index.js";
+import { AegisDomainError, AegisError } from "../errors/index.js";
 import { Aegis } from "./Aegis.js";
 import { JwtKit } from "./JwtKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
@@ -65,7 +65,7 @@ describe("Aegis profiles", () => {
           ...content,
           audience: [RESOURCE, "https://other"],
         }),
-      ).rejects.toThrow(JwtError);
+      ).rejects.toThrow(AegisDomainError);
     });
 
     test("refuses to mint when the vault holds no asymmetric signing key", async () => {
@@ -121,7 +121,7 @@ describe("Aegis profiles", () => {
     test("requires at_hash when an access token co-issues", async () => {
       await expect(
         aegis.mint("id_token", content, { context: { accessTokenIssued: true } }),
-      ).rejects.toThrow(JwtError);
+      ).rejects.toThrow(AegisDomainError);
     });
 
     test("EdDSA id token produces a SHA-512 256-bit at_hash", async () => {
@@ -209,7 +209,7 @@ describe("Aegis profiles", () => {
           clientId: "client-1",
           federationAssuranceLevel: 2,
         } as never),
-      ).rejects.toThrow(JwtError);
+      ).rejects.toThrow(AegisDomainError);
     });
 
     test("id_token mints and parses all four assurance levels", async () => {
@@ -261,13 +261,13 @@ describe("Aegis profiles", () => {
           audience: ["client-1"],
           events: content.events,
         } as never),
-      ).rejects.toThrow(JwtError);
+      ).rejects.toThrow(AegisDomainError);
     });
 
     test("rejects a forbidden nonce", async () => {
       await expect(
         aegis.mint("logout_token", { ...content, nonce: "n" } as never),
-      ).rejects.toThrow(JwtError);
+      ).rejects.toThrow(AegisDomainError);
     });
   });
 
@@ -292,7 +292,7 @@ describe("Aegis profiles", () => {
     test("rejects a forbidden sub", async () => {
       await expect(
         aegis.mint("security_event", { ...content, subject: "user-1" } as never),
-      ).rejects.toThrow(JwtError);
+      ).rejects.toThrow(AegisDomainError);
     });
 
     test("rejects a missing sub_id", async () => {
@@ -301,7 +301,7 @@ describe("Aegis profiles", () => {
           audience: ["https://receiver"],
           events: content.events,
         } as never),
-      ).rejects.toThrow(JwtError);
+      ).rejects.toThrow(AegisDomainError);
     });
   });
 

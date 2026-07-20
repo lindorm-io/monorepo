@@ -1,7 +1,7 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Predicate } from "@lindorm/types";
-import { AegisError } from "../errors/index.js";
+import { CwtError } from "../errors/index.js";
 import {
   type CwtDecoded,
   type CwtSignOptions,
@@ -48,7 +48,7 @@ export class CwtKit {
 
   constructor(options: CwtKitSettings) {
     if (options.kryptos.algClass !== "asymmetric") {
-      throw new AegisError("CwtKit requires an asymmetric key", {
+      throw new CwtError("CwtKit requires an asymmetric key", {
         code: "cwt_requires_asymmetric_key",
         data: { algClass: options.kryptos.algClass },
         title: "CwtKit Requires Asymmetric Key",

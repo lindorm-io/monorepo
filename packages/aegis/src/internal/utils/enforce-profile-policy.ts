@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { InvalidEntry, SignContext, TokenProfile } from "../../types/index.js";
 
 /**
@@ -47,7 +47,7 @@ export const enforceProfilePolicy = (
   }
 
   if (invalid.length > 0) {
-    throw new JwtError("Invalid token", {
+    throw new AegisDomainError("Invalid token", {
       code: "jwt_claims_invalid",
       data: { invalid },
       debug: { invalid, profile: profile.name },

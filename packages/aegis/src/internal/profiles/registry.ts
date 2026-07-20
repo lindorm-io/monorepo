@@ -1,5 +1,5 @@
 import type { TokenProfile } from "../../types/index.js";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import { accessTokenProfile } from "./definitions/access-token.js";
 import { defaultProfile } from "./definitions/default.js";
 import { delegationProfile } from "./definitions/delegation.js";
@@ -26,7 +26,7 @@ export const resolveProfile = (name: string): TokenProfile => {
   const profile = registry.get(name);
 
   if (!profile) {
-    throw new JwtError(`Unknown token profile: ${name}`, {
+    throw new AegisDomainError(`Unknown token profile: ${name}`, {
       code: "jwt_unknown_profile",
       data: { name },
       debug: { available: [...registry.keys()] },

@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { JwtKit } from "../../classes/JwtKit.js";
 import type { ParsedJwt, VerifyJwtOptions } from "../../types/index.js";
 import { computeTypHeader, extractTypPrefix } from "./compute-typ-header.js";
@@ -49,7 +49,7 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
   // typ PRESENCE policy (default "required") — the RFC 8725 explicit-typing
   // defense. Profiled verify relaxes to "optional" (the floor owns it).
   if (options.typPresence !== "optional" && decoded.header.typ === undefined) {
-    throw new JwtError("Invalid token", {
+    throw new AegisDomainError("Invalid token", {
       code: "jwt_invalid_typ",
       data: { typ: decoded.header.typ },
       title: "JWT Invalid Typ",
@@ -82,7 +82,7 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
   // "optional" (profiled SETs) skips it. When present, the range was already
   // checked by the kit's temporal matcher.
   if (options.expPresence !== "optional" && withDates.exp === undefined) {
-    throw new JwtError("Missing claim: exp", {
+    throw new AegisDomainError("Missing claim: exp", {
       code: "jwt_missing_claim_exp",
       title: "JWT Missing Claim Exp",
       details:
@@ -98,7 +98,7 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
       createIdentityMatchers(kit.algorithm, options, clockTolerance) as never,
     );
   } catch (err) {
-    throw new JwtError("Invalid token", {
+    throw new AegisDomainError("Invalid token", {
       code: "jwt_claims_invalid",
       data: { invalid: (err as any).data?.invalid },
       debug: { invalid: (err as any).debug?.invalid },
@@ -110,7 +110,7 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
 
   const actorError = validateActor(delegation, options.actor);
   if (actorError) {
-    throw new JwtError(actorError.message, {
+    throw new AegisDomainError(actorError.message, {
       code: "jwt_actor_not_allowed",
       debug: actorError.debug,
       title: "JWT Actor Not Allowed",
@@ -123,13 +123,16 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
 
   if (options.dpopProof !== undefined) {
     if (!boundThumbprint) {
-      throw new JwtError("Invalid token: DPoP proof provided but token is not bound", {
-        code: "jwt_dpop_token_not_bound",
-        debug: { confirmation: payload.confirmation },
-        title: "JWT DPoP Token Not Bound",
-        details:
-          "A DPoP proof was supplied but the token carries no cnf.jkt thumbprint, so it cannot be DPoP-bound.",
-      });
+      throw new AegisDomainError(
+        "Invalid token: DPoP proof provided but token is not bound",
+        {
+          code: "jwt_dpop_token_not_bound",
+          debug: { confirmation: payload.confirmation },
+          title: "JWT DPoP Token Not Bound",
+          details:
+            "A DPoP proof was supplied but the token carries no cnf.jkt thumbprint, so it cannot be DPoP-bound.",
+        },
+      );
     }
     parsed.dpop = verifyDpopProof({
       proof: options.dpopProof,
@@ -138,7 +141,7 @@ export const verifyJwtToDomain = <C extends Dict = Dict>(
       dpopMaxSkew: config.dpopMaxSkew,
     });
   } else if (boundThumbprint && !options.trustBoundThumbprint) {
-    throw new JwtError(
+    throw new AegisDomainError(
       "Invalid token: token is DPoP-bound but no DPoP proof was provided",
       {
         code: "jwt_dpop_proof_required",

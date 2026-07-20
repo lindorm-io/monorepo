@@ -19,7 +19,7 @@
  * resolves its integer labels from here via `coseByJose`.
  */
 
-import { AegisError } from "../../errors/index.js";
+import { CoseError } from "../../errors/index.js";
 
 /**
  * How a header parameter's VALUE is shaped, and (on the WRITE side) the defensive
@@ -182,7 +182,7 @@ export const coseByJose = (jose: string): number => {
   const label = byJose.get(jose)?.cose;
 
   if (label === undefined) {
-    throw new AegisError("No COSE label for header parameter", {
+    throw new CoseError("No COSE label for header parameter", {
       code: "header_no_cose_label",
       data: { jose },
       title: "No COSE Label For Header Parameter",

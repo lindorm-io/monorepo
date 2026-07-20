@@ -1,7 +1,7 @@
 import { AesKit } from "@lindorm/aes";
 import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import { AegisError } from "../errors/index.js";
+import { CweError } from "../errors/index.js";
 import { Tag } from "../internal/cose/cbor.js";
 import {
   coseLabelToEnc,
@@ -49,7 +49,7 @@ const unwrapEncrypt0 = (value: unknown): Array<unknown> => {
   const contents =
     value instanceof Tag && value.tag === COSE_TAG.encrypt0 ? value.contents : value;
   if (!Array.isArray(contents) || contents.length !== 3) {
-    throw new AegisError("Malformed COSE_Encrypt0", {
+    throw new CweError("Malformed COSE_Encrypt0", {
       code: "cose_malformed",
       title: "Malformed COSE_Encrypt0",
       details:
@@ -84,7 +84,7 @@ export class CweKit {
     // interoperable. A missing encryption still falls through to encToCoseLabel's
     // own throw below.
     if (!options.proprietary && this.encryption && !isOfficialCoseEnc(this.encryption)) {
-      throw new AegisError(
+      throw new CweError(
         `Encryption "${this.encryption}" has no official COSE registration`,
         {
           code: "cose_enc_not_registered",
@@ -127,7 +127,7 @@ export class CweKit {
 
     const ivValue = unprotected.get(coseByJose("iv"));
     if (!(ivValue instanceof Uint8Array)) {
-      throw new AegisError("COSE_Encrypt0 is missing its IV", {
+      throw new CweError("COSE_Encrypt0 is missing its IV", {
         code: "cose_malformed",
         title: "Malformed COSE_Encrypt0",
         details: "The unprotected header has no IV (label 5).",

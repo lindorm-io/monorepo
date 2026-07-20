@@ -1,7 +1,7 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Predicate } from "@lindorm/types";
-import { AegisError } from "../errors/index.js";
+import { CwmError } from "../errors/index.js";
 import {
   type CwtDecoded,
   type CwtSignOptions,
@@ -36,7 +36,7 @@ export class CwmKit {
 
   constructor(options: CwmKitSettings) {
     if (options.kryptos.algClass !== "symmetric") {
-      throw new AegisError("CwmKit requires a symmetric key", {
+      throw new CwmError("CwmKit requires a symmetric key", {
         code: "cwm_requires_symmetric_key",
         data: { algClass: options.kryptos.algClass },
         title: "CwmKit Requires Symmetric Key",

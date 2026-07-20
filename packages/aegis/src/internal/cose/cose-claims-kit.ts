@@ -2,7 +2,7 @@ import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CwmKit } from "../../classes/CwmKit.js";
 import { CwtKit } from "../../classes/CwtKit.js";
-import { AegisError } from "../../errors/index.js";
+import { CoseError } from "../../errors/index.js";
 
 /**
  * The COSE integrity split (Bit 9), dispatched off the RESOLVED key's `algClass`
@@ -27,7 +27,7 @@ export const selectCoseClaimsKit = ({
       return new CwmKit({ kryptos, logger, clockTolerance });
     default: {
       const exhaustive: never = kryptos.algClass;
-      throw new AegisError("Unhandled COSE key class", {
+      throw new CoseError("Unhandled COSE key class", {
         code: "cose_unhandled_alg_class",
         data: { algClass: String(exhaustive) },
         title: "Unhandled COSE Key Class",

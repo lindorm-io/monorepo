@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import { accessTokenProfile } from "../profiles/definitions/access-token.js";
 import { idTokenProfile } from "../profiles/definitions/id-token.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
@@ -78,7 +78,7 @@ describe("assembleCommonClaims", () => {
           audience: ["a"],
           clientId: "c",
         } as any),
-      ).toThrow(JwtError);
+      ).toThrow(AegisDomainError);
     });
 
     test("throws when a forbidden domain claim is present", () => {
@@ -91,7 +91,7 @@ describe("assembleCommonClaims", () => {
           clientId: "c",
           nonce: "n",
         } as any),
-      ).toThrow(JwtError);
+      ).toThrow(AegisDomainError);
     });
 
     test("passes when all required domain claims are present", () => {

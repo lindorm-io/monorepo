@@ -1,7 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { ShaKit } from "@lindorm/sha";
 import type { Dict } from "@lindorm/types";
-import { AegisError } from "../../errors/index.js";
+import { CoseError } from "../../errors/index.js";
 import { B64U } from "../constants/format.js";
 import { encodeCbor } from "./cbor.js";
 import { CRV_TO_COSE, KTY_TO_COSE } from "./cose-key.js";
@@ -28,7 +28,7 @@ const bstr = (value: unknown): Buffer => B64.toBuffer(String(value), B64U);
 const curveLabel = (jwk: Dict): number => {
   const label = CRV_TO_COSE[jwk.crv as string];
   if (label === undefined) {
-    throw new AegisError(`Unsupported curve "${jwk.crv}" for COSE Key Thumbprint`, {
+    throw new CoseError(`Unsupported curve "${jwk.crv}" for COSE Key Thumbprint`, {
       code: "cose_key_unsupported",
       data: { crv: jwk.crv },
       title: "Unsupported COSE Key",
@@ -69,7 +69,7 @@ const requiredCoseKey = (jwk: Dict): Map<number, unknown> => {
       map.set(-1, bstr(jwk.k));
       return map;
     default:
-      throw new AegisError(
+      throw new CoseError(
         `Cannot compute COSE Key Thumbprint: unsupported kty "${String(jwk.kty)}"`,
         {
           code: "cose_key_unsupported",

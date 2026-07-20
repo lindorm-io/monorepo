@@ -1,7 +1,7 @@
 import { getUnixTime } from "@lindorm/date";
 import { isDate, isObject, isString } from "@lindorm/is";
 import { omitUndefined } from "@lindorm/utils";
-import { AegisError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { ProfileMintOptions, SignContent, SignedJwt } from "../../types/index.js";
 import { encryptCose } from "../cose/cose-encryption.js";
 import { coseTyp } from "../cose/cose-typ.js";
@@ -35,7 +35,7 @@ export const mintCoseToken = async ({
   // Encryption is only meaningful for encryptable profiles; an encrypt option
   // on a non-encryptable profile is a caller error, not a silent no-op.
   if (options.encrypt !== undefined && !profile.encryptable) {
-    throw new AegisError("Encryption is not allowed for this profile", {
+    throw new AegisDomainError("Encryption is not allowed for this profile", {
       code: "encryption_not_allowed",
       data: { profile: profile.name },
       title: "Encryption Not Allowed",

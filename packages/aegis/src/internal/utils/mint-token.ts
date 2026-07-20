@@ -1,6 +1,6 @@
 import { isObject } from "@lindorm/is";
 import { omitUndefined } from "@lindorm/utils";
-import { AegisError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type {
   ProfileMintOptions,
   SignContent,
@@ -49,7 +49,7 @@ export const mintToken = async ({
   // Passing it for a non-encryptable profile (access_token / SET / logout /
   // erasure / DPoP) is a caller error, not a silent no-op.
   if (options.encrypt !== undefined && !profile.encryptable) {
-    throw new AegisError("Encryption is not allowed for this profile", {
+    throw new AegisDomainError("Encryption is not allowed for this profile", {
       code: "encryption_not_allowed",
       data: { profile: profile.name },
       title: "Encryption Not Allowed",

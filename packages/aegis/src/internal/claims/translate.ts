@@ -3,7 +3,7 @@ import { getUnixTime } from "@lindorm/date";
 import { isArray, isFinite, isObject, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
-import { AegisError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { ActClaim, ActClaimWire, ConfirmationClaim } from "../../types/index.js";
 import {
   type ClaimSpec,
@@ -178,7 +178,7 @@ const encodeBespoke = (domain: string, value: unknown): unknown => {
       // `snakeKeys(profile)` write path.
       return isObject(value) ? snakeKeys(value) : value;
     default:
-      throw new AegisError("Unhandled bespoke claim domain", {
+      throw new AegisDomainError("Unhandled bespoke claim domain", {
         code: "translate_unhandled_bespoke_domain",
         data: { domain },
         title: "Unhandled Bespoke Claim Domain",
@@ -205,7 +205,7 @@ const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
       return encodeBespoke(spec.domain, value);
     default: {
       const exhaustive: never = spec.value;
-      throw new AegisError("Unhandled claim value kind", {
+      throw new AegisDomainError("Unhandled claim value kind", {
         code: "translate_unhandled_value_kind",
         data: { kind: String(exhaustive) },
         title: "Unhandled Claim Value Kind",
@@ -283,7 +283,7 @@ const decodeBespoke = (domain: string, value: unknown): unknown => {
     case "address":
       return value; // SET events map / address object carried verbatim
     default:
-      throw new AegisError("Unhandled bespoke claim domain", {
+      throw new AegisDomainError("Unhandled bespoke claim domain", {
         code: "translate_unhandled_bespoke_domain",
         data: { domain },
         title: "Unhandled Bespoke Claim Domain",
@@ -318,7 +318,7 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
       return decodeBespoke(spec.domain, value);
     default: {
       const exhaustive: never = spec.value;
-      throw new AegisError("Unhandled claim value kind", {
+      throw new AegisDomainError("Unhandled claim value kind", {
         code: "translate_unhandled_value_kind",
         data: { kind: String(exhaustive) },
         title: "Unhandled Claim Value Kind",

@@ -2,7 +2,7 @@ import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict, Predicate } from "@lindorm/types";
 import { CwsKit } from "../../classes/CwsKit.js";
-import { AegisError } from "../../errors/index.js";
+import { CoseError, CwmError, CwtError } from "../../errors/index.js";
 import { coseByJose } from "../header/header-registry.js";
 import { applyOmit, type OmitMode } from "../utils/apply-omit.js";
 import { createTemporalMatchers } from "../utils/jwt-temporal-matchers.js";
@@ -29,6 +29,18 @@ import { COSE_TAG, decodeProtectedHeader } from "./structures.js";
 
 /** The two claims-kit formats, used to namespace the structural error codes. */
 export type CwtFormat = "cwt" | "cwm";
+
+/**
+ * The leaf error class for each claims-CWT format. The structural throws below
+ * are namespaced by `format` (`cwt_*`/`cwm_*`), so they land on the matching
+ * leaf (`CwtError`/`CwmError`) rather than the shared `CoseError` parent —
+ * exactly as `JwtKit` throws `JwtError`. A caller may still catch the whole
+ * family via `CoseError` (or `AegisError`).
+ */
+const CWT_ERROR: Record<CwtFormat, typeof CoseError> = {
+  cwt: CwtError,
+  cwm: CwmError,
+};
 
 export type CwtSignOptions = {
   /** The full COSE `typ` media type (label 16, RFC 9596), e.g. `application/at+cwt`. */
@@ -143,7 +155,7 @@ export const verifyCwt = <C extends CwtWireClaims = CwtWireClaims>(
   // verify, so reject it before the (expensive) signature cycle. Via Aegis the
   // handed key already matches; this protects the standalone case.
   if (decoded.kid && kryptos.id && decoded.kid !== kryptos.id) {
-    throw new AegisError("Invalid token", {
+    throw new CWT_ERROR[format]("Invalid token", {
       code: `${format}_kid_mismatch`,
       data: { kid: decoded.kid },
       debug: { expected: kryptos.id },
@@ -160,7 +172,7 @@ export const verifyCwt = <C extends CwtWireClaims = CwtWireClaims>(
   // a DOMAIN/profile policy.
   const typ = decoded.typ;
   if (typ !== undefined && typ !== "application/cwt" && !typ.endsWith("+cwt")) {
-    throw new AegisError("Invalid token", {
+    throw new CWT_ERROR[format]("Invalid token", {
       code: `${format}_invalid_typ`,
       data: { typ },
       title: "CWT Invalid Typ",
@@ -170,7 +182,7 @@ export const verifyCwt = <C extends CwtWireClaims = CwtWireClaims>(
   }
 
   if (options.typ !== undefined && typ !== options.typ) {
-    throw new AegisError("Invalid token", {
+    throw new CWT_ERROR[format]("Invalid token", {
       code: `${format}_typ_mismatch`,
       data: { typ },
       debug: { expected: options.typ },
@@ -180,7 +192,7 @@ export const verifyCwt = <C extends CwtWireClaims = CwtWireClaims>(
   }
 
   if (decoded.algorithm !== kryptos.algorithm) {
-    throw new AegisError("Invalid token", {
+    throw new CWT_ERROR[format]("Invalid token", {
       code: `${format}_algorithm_mismatch`,
       data: { algorithm: decoded.algorithm },
       debug: { expected: kryptos.algorithm },
@@ -227,7 +239,7 @@ export const decodeCwt = (token: Buffer): CwtDecoded => {
   const contents = cose instanceof Tag ? cose.contents : cose;
 
   if (!Array.isArray(contents) || contents.length < 2) {
-    throw new AegisError("Malformed CWT", {
+    throw new CoseError("Malformed CWT", {
       code: "cose_malformed",
       title: "Malformed CWT",
       details: "The CWT does not contain a recognisable COSE structure.",

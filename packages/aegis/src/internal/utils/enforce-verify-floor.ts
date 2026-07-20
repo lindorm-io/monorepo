@@ -1,6 +1,6 @@
 import { isArray } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { TokenProfile } from "../../types/index.js";
 
 export type VerifyFloorInput = {
@@ -27,8 +27,8 @@ const typMismatch = (
   decodedTyp: string | undefined,
   expected: string | undefined,
   profile: TokenProfile,
-): JwtError =>
-  new JwtError("Invalid token", {
+): AegisDomainError =>
+  new AegisDomainError("Invalid token", {
     code: "jwt_typ_mismatch",
     data: { typ: decodedTyp },
     debug: { expected, profile: profile.name },
@@ -74,7 +74,7 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
     }
 
     default:
-      throw new JwtError("Unsupported typ presence", {
+      throw new AegisDomainError("Unsupported typ presence", {
         code: "unsupported_typ_presence",
         data: { typ: profile.typ },
         debug: { profile: profile.name },
@@ -85,7 +85,7 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   }
 
   if (expectedIssuer !== undefined && payload.issuer !== expectedIssuer) {
-    throw new JwtError("Invalid token", {
+    throw new AegisDomainError("Invalid token", {
       code: "jwt_issuer_mismatch",
       data: { issuer: payload.issuer },
       debug: { expected: expectedIssuer, profile: profile.name },
@@ -98,7 +98,7 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   const audList = isArray(payload.audience) ? (payload.audience as Array<string>) : [];
 
   if (!audList.includes(audience)) {
-    throw new JwtError("Invalid token", {
+    throw new AegisDomainError("Invalid token", {
       code: "jwt_audience_mismatch",
       data: { audience: payload.audience },
       debug: { expected: audience, profile: profile.name },
@@ -109,7 +109,7 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   }
 
   if (profile.lifetime !== null && payload.expiresAt === undefined) {
-    throw new JwtError("Invalid token", {
+    throw new AegisDomainError("Invalid token", {
       code: "jwt_missing_claim_exp",
       debug: { profile: profile.name },
       title: "JWT Missing Claim Exp",
@@ -124,7 +124,7 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   });
 
   if (missing.length > 0) {
-    throw new JwtError("Invalid token", {
+    throw new AegisDomainError("Invalid token", {
       code: "jwt_required_claims_missing",
       data: { missing },
       debug: { missing, profile: profile.name },

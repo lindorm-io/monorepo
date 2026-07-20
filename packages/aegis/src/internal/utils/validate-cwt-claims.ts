@@ -1,6 +1,6 @@
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
-import { AegisError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { VerifyJwtOptions } from "../../types/index.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { validate } from "./validate.js";
@@ -29,7 +29,7 @@ export const validateCwtClaims = (
   // `exp` presence is POLICY (default "required"). Surface a dedicated,
   // self-describing code rather than the generic claims-invalid one.
   if (verify.expPresence !== "optional" && payload.exp === undefined) {
-    throw new AegisError("Missing claim: exp", {
+    throw new AegisDomainError("Missing claim: exp", {
       code: "cwt_missing_claim_exp",
       title: "CWT Missing Claim Exp",
       details:
@@ -42,7 +42,7 @@ export const validateCwtClaims = (
   try {
     validate(payload, predicate as never);
   } catch (err) {
-    throw new AegisError("Invalid token", {
+    throw new AegisDomainError("Invalid token", {
       code: "cwt_claims_invalid",
       data: { invalid: (err as any).data?.invalid },
       debug: { invalid: (err as any).debug?.invalid },

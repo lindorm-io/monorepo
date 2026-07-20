@@ -1,5 +1,5 @@
 import type { IKryptos } from "@lindorm/kryptos";
-import { AegisError } from "../../errors/index.js";
+import { AegisKeyError } from "../../errors/index.js";
 import type { BindCertificateMode, CertificateHeaderFields } from "../../types/index.js";
 
 export const resolveCertBinding = (
@@ -18,7 +18,7 @@ export const resolveCertBinding = (
   if (resolved === "none") return undefined;
 
   if (!kryptos.hasCertificate) {
-    throw new AegisError("bindCertificate requires kryptos with certificateChain", {
+    throw new AegisKeyError("bindCertificate requires kryptos with certificateChain", {
       code: "cert_binding_chain_required",
       debug: { kryptosId: kryptos.id, mode },
       title: "Cert Binding Chain Required",

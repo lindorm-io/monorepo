@@ -5,7 +5,7 @@ import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
-import { JwtError } from "../errors/index.js";
+import { AegisDomainError } from "../errors/index.js";
 import { B64U } from "../internal/constants/format.js";
 import { createJoseSignature } from "../internal/utils/jose-signature.js";
 import { Aegis } from "./Aegis.js";
@@ -81,7 +81,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
 
     await expect(
       aegis.verify("access_token", token, { audience: "https://wrong-rs" }),
-    ).rejects.toThrow(JwtError);
+    ).rejects.toThrow(AegisDomainError);
   });
 
   test("rejects a wrong issuer", async () => {
@@ -92,7 +92,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
         audience: RESOURCE,
         issuer: "https://not-the-issuer/",
       }),
-    ).rejects.toThrow(JwtError);
+    ).rejects.toThrow(AegisDomainError);
   });
 
   test("rejects a typ mismatch (id_token verified as access_token)", async () => {
@@ -103,7 +103,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
 
     await expect(
       aegis.verify("access_token", token, { audience: RESOURCE }),
-    ).rejects.toThrow(JwtError);
+    ).rejects.toThrow(AegisDomainError);
   });
 
   test("rejects an absent typ for a required-presence profile", async () => {

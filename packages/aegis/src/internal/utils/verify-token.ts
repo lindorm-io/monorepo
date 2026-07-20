@@ -3,7 +3,7 @@ import { sanitiseToken } from "@lindorm/utils";
 import { JweKit } from "../../classes/JweKit.js";
 import { JwsKit } from "../../classes/JwsKit.js";
 import { JwtKit } from "../../classes/JwtKit.js";
-import { AegisError } from "../../errors/index.js";
+import { AegisDomainError, AegisError } from "../../errors/index.js";
 import type { ParsedJws, ParsedJwt, VerifyJwtOptions } from "../../types/index.js";
 import { isCose } from "../cose/is-cose.js";
 import type { AegisDeps } from "./aegis-deps.js";
@@ -78,6 +78,21 @@ export const verifyToken = async <T extends ParsedJwt | ParsedJws<any>>({
         token,
       } as unknown as T;
     }
+  }
+
+  // `verify` = authenticity: it ALWAYS requires a signature. When an encrypting
+  // outer (jwe/cwe) has been peeled and the plaintext is NOT itself a signed
+  // token (JWT/JWS/COSE_Sign1) — a bare/unsigned claims set — the token cannot be
+  // sender-authenticated, so verify refuses it. Confidential-but-unsigned
+  // encrypted claims are read with `aegis.decrypt`, never `verify`.
+  if (encrypted) {
+    throw new AegisDomainError("Encrypted token does not contain a signed inner token", {
+      code: "verify_requires_signature",
+      debug: { token: sanitiseToken(token) },
+      title: "Verify Requires Signature",
+      details:
+        "aegis.verify requires sender authentication: a JWE/CWE must decrypt to a signed token (JWT, JWS, or COSE_Sign1). This encrypted token's plaintext is not signed — read confidential, unsigned encrypted claims with aegis.decrypt instead.",
+    });
   }
 
   throw new AegisError("Invalid token type", {

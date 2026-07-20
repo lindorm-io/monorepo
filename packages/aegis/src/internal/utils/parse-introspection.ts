@@ -1,7 +1,7 @@
 import { isBoolean, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
-import { AegisError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { AegisIntrospection } from "../../types/index.js";
 import { extractDomainClaims } from "./extract-claims.js";
 
@@ -15,7 +15,7 @@ export type IntrospectClaimsInput = Dict & {
 
 export const parseIntrospection = (data: IntrospectClaimsInput): AegisIntrospection => {
   if (!isBoolean(data.active)) {
-    throw new AegisError("Missing active claim", {
+    throw new AegisDomainError("Missing active claim", {
       code: "introspection_missing_active",
       title: "Introspection Missing Active",
       details:

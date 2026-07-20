@@ -1,5 +1,5 @@
 import { isBuffer, isString } from "@lindorm/is";
-import { AegisError } from "../../errors/index.js";
+import { CoseError } from "../../errors/index.js";
 import type { RawSignInput, SignedJws } from "../../types/index.js";
 import { coseTypFromTokenType } from "../cose/cose-typ.js";
 import { signCose } from "../cose/sign-cose.js";
@@ -26,7 +26,7 @@ export const rawSignCose = async ({
   // no CWT structure to secure. That is valid only for the JOSE path, so it is
   // a caller error here rather than a silent reinterpretation.
   if (isString(input.payload) || isBuffer(input.payload)) {
-    throw new AegisError("A COSE payload must be a claims object", {
+    throw new CoseError("A COSE payload must be a claims object", {
       code: "cose_payload_not_object",
       title: "COSE Payload Not An Object",
       details:

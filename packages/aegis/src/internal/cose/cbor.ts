@@ -6,7 +6,7 @@ import {
   encode,
 } from "cbor2";
 import { registerEncoder, writeUint8Array } from "cbor2/encoder";
-import { AegisError } from "../../errors/index.js";
+import { CoseError } from "../../errors/index.js";
 
 // cbor2 only treats a plain `Uint8Array` as a CBOR byte string; a Node `Buffer`
 // (a Uint8Array subclass) otherwise falls through to its `toJSON()` and encodes
@@ -52,7 +52,7 @@ export const encodeCbor = (value: unknown, options: CborEncodeOptions = {}): Buf
       encode(value, deterministic ? cdeEncodeOptions : defaultEncodeOptions),
     );
   } catch (error) {
-    throw new AegisError("Failed to encode value as CBOR", {
+    throw new CoseError("Failed to encode value as CBOR", {
       code: "cbor_encode_failed",
       title: "CBOR Encode Failed",
       details:
@@ -76,7 +76,7 @@ export const decodeCbor = <T = unknown>(
   try {
     return decode<T>(input, { ...defaultDecodeOptions, preferMap, rejectDuplicateKeys });
   } catch (error) {
-    throw new AegisError("Failed to decode CBOR", {
+    throw new CoseError("Failed to decode CBOR", {
       code: "cbor_decode_failed",
       title: "CBOR Decode Failed",
       details:

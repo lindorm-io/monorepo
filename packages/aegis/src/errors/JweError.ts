@@ -1,5 +1,5 @@
-import { LindormError } from "@lindorm/errors";
+import { JoseError } from "./JoseError.js";
 
-export class JweError extends LindormError {
+export class JweError extends JoseError {
   static readonly namespace = "aegis";
 }

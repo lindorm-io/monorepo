@@ -1,5 +1,5 @@
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
-import { AegisError } from "../../errors/index.js";
+import { CoseError } from "../../errors/index.js";
 
 /**
  * OFFICIAL JOSE algorithm name <-> COSE algorithm label (IANA COSE Algorithms
@@ -61,7 +61,7 @@ export const algToCoseLabel = (algorithm: KryptosAlgorithm): number => {
   const label = JOSE_TO_COSE_OFFICIAL[algorithm] ?? JOSE_TO_COSE_PRIVATE[algorithm];
 
   if (label === undefined) {
-    throw new AegisError(`No COSE algorithm label for "${algorithm}"`, {
+    throw new CoseError(`No COSE algorithm label for "${algorithm}"`, {
       code: "cose_algorithm_not_supported",
       data: { algorithm },
       title: "COSE Algorithm Not Supported",
@@ -78,7 +78,7 @@ export const coseLabelToAlg = (label: number): string => {
   const algorithm = COSE_TO_JOSE[label];
 
   if (algorithm === undefined) {
-    throw new AegisError(`No algorithm for COSE label "${label}"`, {
+    throw new CoseError(`No algorithm for COSE label "${label}"`, {
       code: "cose_algorithm_not_supported",
       data: { label },
       title: "COSE Algorithm Not Supported",

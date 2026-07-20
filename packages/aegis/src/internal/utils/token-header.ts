@@ -1,7 +1,7 @@
 import { isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
-import { AegisError } from "../../errors/index.js";
+import { JoseError } from "../../errors/index.js";
 import type {
   CertificateHeaderFields,
   WireTokenHeader,
@@ -69,7 +69,7 @@ const encodeHeaderValue = (spec: HeaderSpec, source: Dict): unknown => {
       return Array.isArray(value) ? value : undefined;
     default: {
       const exhaustive: never = spec.value;
-      throw new AegisError("Unhandled header value kind", {
+      throw new JoseError("Unhandled header value kind", {
         code: "token_header_unhandled_value_kind",
         data: { jose: spec.jose, domain: spec.domain, value: String(exhaustive) },
         title: "Token Header Unhandled Value Kind",
@@ -97,7 +97,7 @@ const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
       return decoded[spec.jose];
     default: {
       const exhaustive: never = spec.value;
-      throw new AegisError("Unhandled header value kind", {
+      throw new JoseError("Unhandled header value kind", {
         code: "token_header_unhandled_value_kind",
         data: { jose: spec.jose, domain: spec.domain, value: String(exhaustive) },
         title: "Token Header Unhandled Value Kind",

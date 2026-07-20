@@ -1,7 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { B64U } from "../constants/format.js";
 import { TOKEN_HEADER_ALGORITHMS } from "../constants/header.js";
-import { AegisError } from "../../errors/index.js";
+import { JoseError } from "../../errors/index.js";
 import type {
   CertificateHeaderFields,
   WireTokenHeader,
@@ -14,14 +14,14 @@ export const encodeJoseHeader = (
   cert?: CertificateHeaderFields,
 ): string => {
   if (!options.algorithm) {
-    throw new AegisError("Algorithm is required", {
+    throw new JoseError("Algorithm is required", {
       code: "jose_header_algorithm_required",
       title: "JOSE Header Algorithm Required",
       details: "No alg was provided, so the protected JOSE header cannot be encoded.",
     });
   }
   if (!TOKEN_HEADER_ALGORITHMS.includes(options.algorithm)) {
-    throw new AegisError(`Invalid algorithm: ${options.algorithm}`, {
+    throw new JoseError(`Invalid algorithm: ${options.algorithm}`, {
       code: "jose_header_invalid_algorithm",
       data: { algorithm: options.algorithm },
       title: "JOSE Header Invalid Algorithm",
@@ -30,14 +30,14 @@ export const encodeJoseHeader = (
     });
   }
   if (!options.headerType) {
-    throw new AegisError("Header type is required", {
+    throw new JoseError("Header type is required", {
       code: "jose_header_type_required",
       title: "JOSE Header Type Required",
       details: "No typ was provided, so the protected JOSE header cannot be encoded.",
     });
   }
   if (!options.keyId) {
-    throw new AegisError("Key ID is required", {
+    throw new JoseError("Key ID is required", {
       code: "jose_header_key_id_required",
       title: "JOSE Header Key ID Required",
       details:
@@ -67,7 +67,7 @@ export const decodeJoseHeader = (header: string): WireTokenHeader => {
   const json = JSON.parse(string) as Partial<WireTokenHeader>;
 
   if (!json.alg || typeof json.alg !== "string") {
-    throw new AegisError("Missing or invalid token header: alg", {
+    throw new JoseError("Missing or invalid token header: alg", {
       code: "jose_header_alg_invalid",
       title: "JOSE Header Alg Invalid",
       details: "The decoded JOSE header has no alg, or alg is not a string.",
@@ -79,7 +79,7 @@ export const decodeJoseHeader = (header: string): WireTokenHeader => {
   // before the kryptos-match check in the Kit — and with a clearer error
   // message than "algorithm mismatch".
   if (!(TOKEN_HEADER_ALGORITHMS as ReadonlyArray<string>).includes(json.alg)) {
-    throw new AegisError(`Unsupported algorithm: ${json.alg}`, {
+    throw new JoseError(`Unsupported algorithm: ${json.alg}`, {
       code: "jose_header_unsupported_algorithm",
       data: { alg: json.alg },
       title: "JOSE Header Unsupported Algorithm",
@@ -89,7 +89,7 @@ export const decodeJoseHeader = (header: string): WireTokenHeader => {
   }
   // typ is OPTIONAL per RFC 7515 Section 4.1.9
   if (json.typ !== undefined && typeof json.typ !== "string") {
-    throw new AegisError("Invalid token header: typ must be a string", {
+    throw new JoseError("Invalid token header: typ must be a string", {
       code: "jose_header_typ_invalid",
       title: "JOSE Header Typ Invalid",
       details:

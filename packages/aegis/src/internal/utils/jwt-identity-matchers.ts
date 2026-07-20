@@ -2,7 +2,7 @@ import { subSeconds } from "@lindorm/date";
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { PredicateOperator } from "@lindorm/types";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { JwtClaims, VerifyJwtOptions } from "../../types/index.js";
 import { claimByDomain } from "../claims/claims-registry.js";
 import { createHash } from "./create-hash.js";
@@ -72,7 +72,7 @@ export const createIdentityMatchers = (
     const mapped = hash?.jose ?? (spec?.jose as keyof JwtClaims | undefined);
 
     if (mapped === undefined) {
-      throw new JwtError(`Unsupported key: ${key} for JWT verification`, {
+      throw new AegisDomainError(`Unsupported key: ${key} for JWT verification`, {
         code: "jwt_verify_unsupported_key",
         data: { key },
         title: "JWT Verify Unsupported Key",
@@ -109,7 +109,7 @@ export const createIdentityMatchers = (
       continue;
     }
 
-    throw new JwtError(`Unsupported value: ${value as any} for key: ${key}`, {
+    throw new AegisDomainError(`Unsupported value: ${value as any} for key: ${key}`, {
       code: "jwt_verify_unsupported_value",
       data: { key },
       title: "JWT Verify Unsupported Value",

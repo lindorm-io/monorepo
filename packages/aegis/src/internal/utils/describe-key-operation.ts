@@ -1,4 +1,4 @@
-import { AegisError } from "../../errors/index.js";
+import { AegisKeyError } from "../../errors/index.js";
 
 export type KeyOperation = "sign" | "verify" | "encrypt" | "decrypt";
 
@@ -86,7 +86,7 @@ export const describeKeyOperation = (operation: KeyOperation): KeyOperationCopy 
       };
 
     default:
-      throw new AegisError(`Unsupported key operation: ${operation as string}`, {
+      throw new AegisKeyError(`Unsupported key operation: ${operation as string}`, {
         code: "unsupported_key_operation",
         data: { operation },
         title: "Unsupported Key Operation",

@@ -1,6 +1,6 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { ShaKit } from "@lindorm/sha";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { ParsedDpopProof } from "../../types/jwt/jwt-dpop.js";
 import { computeJwkThumbprint } from "./compute-jwk-thumbprint.js";
 import { decodeJoseHeader } from "./jose-header.js";
@@ -25,7 +25,7 @@ type DpopProofPayload = {
 
 const assertString = (value: unknown, claim: string): string => {
   if (typeof value !== "string" || value.length === 0) {
-    throw new JwtError(`Invalid DPoP proof: "${claim}" claim is required`, {
+    throw new AegisDomainError(`Invalid DPoP proof: "${claim}" claim is required`, {
       code: "jwt_dpop_claim_required",
       data: { claim },
       title: "JWT DPoP Claim Required",
@@ -41,7 +41,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
 
   const parts = proof.split(".");
   if (parts.length !== 3) {
-    throw new JwtError("Invalid DPoP proof: not a compact JWS", {
+    throw new AegisDomainError("Invalid DPoP proof: not a compact JWS", {
       code: "jwt_dpop_not_compact_jws",
       title: "JWT DPoP Not Compact JWS",
       details:
@@ -53,7 +53,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   const header = decodeJoseHeader(headerB64);
 
   if (header.typ !== "dpop+jwt") {
-    throw new JwtError("Invalid DPoP proof: header typ must be dpop+jwt", {
+    throw new AegisDomainError("Invalid DPoP proof: header typ must be dpop+jwt", {
       code: "jwt_dpop_invalid_typ",
       data: { typ: header.typ },
       title: "JWT DPoP Invalid Typ",
@@ -62,7 +62,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   }
 
   if (!header.jwk) {
-    throw new JwtError("Invalid DPoP proof: header jwk is required", {
+    throw new AegisDomainError("Invalid DPoP proof: header jwk is required", {
       code: "jwt_dpop_jwk_required",
       title: "JWT DPoP JWK Required",
       details:
@@ -77,7 +77,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   const thumbprint = computeJwkThumbprint(rawJwk);
 
   if (thumbprint !== expectedThumbprint) {
-    throw new JwtError("Invalid DPoP proof: thumbprint does not match cnf.jkt", {
+    throw new AegisDomainError("Invalid DPoP proof: thumbprint does not match cnf.jkt", {
       code: "jwt_dpop_thumbprint_mismatch",
       debug: { expected: expectedThumbprint, actual: thumbprint },
       title: "JWT DPoP Thumbprint Mismatch",
@@ -98,7 +98,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   } as Parameters<typeof KryptosKit.from.jwk>[0]);
 
   if (!verifyJoseSignature(proofKryptos, proof)) {
-    throw new JwtError("Invalid DPoP proof: signature verification failed", {
+    throw new AegisDomainError("Invalid DPoP proof: signature verification failed", {
       code: "jwt_dpop_signature_invalid",
       title: "JWT DPoP Signature Invalid",
       details:
@@ -113,7 +113,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   const httpUri = assertString(payload.htu, "htu");
 
   if (typeof payload.iat !== "number") {
-    throw new JwtError("Invalid DPoP proof: iat claim is required", {
+    throw new AegisDomainError("Invalid DPoP proof: iat claim is required", {
       code: "jwt_dpop_iat_required",
       title: "JWT DPoP IAT Required",
       details:
@@ -122,23 +122,29 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   }
   const now = Math.floor(Date.now() / 1000);
   if (Math.abs(now - payload.iat) > dpopMaxSkew) {
-    throw new JwtError("Invalid DPoP proof: iat is outside the allowed skew window", {
-      code: "jwt_dpop_iat_skew",
-      data: { iat: payload.iat, now, dpopMaxSkew },
-      title: "JWT DPoP IAT Skew",
-      details:
-        "The DPoP proof iat differs from the current time by more than the configured dpopMaxSkew window.",
-    });
+    throw new AegisDomainError(
+      "Invalid DPoP proof: iat is outside the allowed skew window",
+      {
+        code: "jwt_dpop_iat_skew",
+        data: { iat: payload.iat, now, dpopMaxSkew },
+        title: "JWT DPoP IAT Skew",
+        details:
+          "The DPoP proof iat differs from the current time by more than the configured dpopMaxSkew window.",
+      },
+    );
   }
 
   const expectedAth = ShaKit.S256(accessToken);
   if (payload.ath !== expectedAth) {
-    throw new JwtError("Invalid DPoP proof: ath does not match access token hash", {
-      code: "jwt_dpop_ath_mismatch",
-      title: "JWT DPoP ATH Mismatch",
-      details:
-        "The DPoP proof ath claim does not equal the SHA-256 hash of the presented access token.",
-    });
+    throw new AegisDomainError(
+      "Invalid DPoP proof: ath does not match access token hash",
+      {
+        code: "jwt_dpop_ath_mismatch",
+        title: "JWT DPoP ATH Mismatch",
+        details:
+          "The DPoP proof ath claim does not equal the SHA-256 hash of the presented access token.",
+      },
+    );
   }
 
   return {

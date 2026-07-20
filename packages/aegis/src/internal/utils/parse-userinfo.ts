@@ -1,6 +1,6 @@
 import { isObject, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
-import { AegisError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type { AegisProfile, AegisUserinfo } from "../../types/index.js";
 import { extractAegisProfile } from "./extract-aegis-profile.js";
 import { extractDomainClaims } from "./extract-claims.js";
@@ -28,7 +28,7 @@ export const parseUserinfo = (data: UserinfoClaimsInput): AegisUserinfo => {
   const profile = preExtractedProfile ?? extractedProfile;
 
   if (!isString(claims.subject)) {
-    throw new AegisError("Missing subject claim", {
+    throw new AegisDomainError("Missing subject claim", {
       code: "userinfo_missing_subject",
       title: "Userinfo Missing Subject",
       details:

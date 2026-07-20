@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { JwtError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import { accessTokenProfile } from "../profiles/definitions/access-token.js";
 import { defaultProfile } from "../profiles/definitions/default.js";
 import { delegationProfile } from "../profiles/definitions/delegation.js";
@@ -49,7 +49,7 @@ describe("enforceVerifyFloor", () => {
         ...base,
         payload: { ...validPayload, issuer: "https://other/" },
       }),
-    ).toThrow(JwtError);
+    ).toThrow(AegisDomainError);
   });
 
   test("rejects when aud does not contain self", () => {
@@ -58,7 +58,7 @@ describe("enforceVerifyFloor", () => {
         ...base,
         payload: { ...validPayload, audience: ["https://elsewhere"] },
       }),
-    ).toThrow(JwtError);
+    ).toThrow(AegisDomainError);
   });
 
   test("rejects a missing exp when the profile mandates a lifetime", () => {
