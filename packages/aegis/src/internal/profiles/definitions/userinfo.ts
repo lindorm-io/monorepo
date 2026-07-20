@@ -1,4 +1,5 @@
 import { defineProfile } from "../define-profile.js";
+import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
  * Signed UserInfo response JWT (OIDC Core §5.3.2 — no `typ` mandated).
@@ -12,12 +13,10 @@ export const userinfoProfile = defineProfile({
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],
-  autoInject: { iat: false, jti: false, nbf: false, iss: true },
+  autoInject: ["issuer"],
   issuer: "platform",
   lifetime: null,
   encryptable: true,
-  rules: {
-    issUri: true,
-  },
+  rules: ISSUER_IS_URI,
   validate: () => [],
 });

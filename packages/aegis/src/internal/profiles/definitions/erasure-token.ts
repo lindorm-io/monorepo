@@ -1,4 +1,7 @@
+import type { Dict } from "@lindorm/types";
+import { crossField, eventsShape } from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
+import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
  * Erasure token — `erasure+jwt` (E9; SET shape, webhook channel). REQUIRED:
@@ -22,14 +25,10 @@ export const erasureTokenProfile = defineProfile({
   forbidden: ["nonce"],
   requiredWhen: [],
   atLeastOneOf: [],
-  autoInject: { iat: true, jti: true, nbf: false, iss: true },
+  autoInject: ["issuedAt", "tokenId", "issuer"],
   issuer: "platform",
   lifetime: "2m",
   encryptable: false,
-  rules: {
-    issUri: true,
-    crossField: true,
-    eventsShape: true,
-  },
-  validate: () => [],
+  rules: ISSUER_IS_URI,
+  validate: (claims: Dict) => [...crossField(claims), ...eventsShape(claims)],
 });

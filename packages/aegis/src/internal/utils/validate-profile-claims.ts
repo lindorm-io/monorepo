@@ -1,27 +1,25 @@
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
-import type { Dict } from "@lindorm/types";
+import type { Dict, Predicate } from "@lindorm/types";
+import { Predicated } from "@lindorm/utils";
 import { AegisDomainError } from "../../errors/index.js";
 import type { InvalidEntry, SignContext, TokenProfile } from "../../types/index.js";
-import { actChainShape } from "./rules/act-chain-shape.js";
 import { algPermitted } from "./rules/alg-permitted.js";
-import { audSingleResource } from "./rules/aud-single-resource.js";
-import { cnfShape } from "./rules/cnf-shape.js";
-import { crossField } from "./rules/cross-field.js";
-import { eventsShape } from "./rules/events-shape.js";
-import { everyElementHasKey } from "./rules/every-element-has-key.js";
-import { issUri } from "./rules/iss-uri.js";
-import { subIdShape } from "./rules/sub-id-shape.js";
 
 export type ValidateProfileContext = {
   algorithm?: KryptosSigAlgorithm | "none";
 };
 
 /**
- * Runs the structural RFC + crypto rules a profile opts into (via
- * `profile.rules`/`profile.algClass`), then the profile's own `validate`, and
- * throws the existing `jwt_claims_invalid` error when any rule fails.
+ * Runs a profile's structural validation against the DOMAIN-keyed common layer:
  *
- * Pure composition over `internal/utils/rules/*` — NOT the predicate engine.
+ *   1. `profile.rules` — flat structural rules as a `Predicate<DomainClaims>`,
+ *      evaluated with the SAME matcher (`Predicated`) `assert`/`validateClaims`
+ *      use; a mismatch names the failing claim keys,
+ *   2. the crypto floor (`profile.algClass` via `algPermitted`),
+ *   3. `profile.validate` — the imperative escape hatch for recursive /
+ *      cross-field rules a flat predicate cannot express.
+ *
+ * Throws the existing `jwt_claims_invalid` error when any step fails.
  */
 export const validateProfileClaims = (
   profile: TokenProfile,
@@ -30,18 +28,9 @@ export const validateProfileClaims = (
 ): void => {
   const invalid: Array<InvalidEntry> = [];
 
-  const rules = profile.rules ?? {};
-
-  if (rules.issUri) invalid.push(...issUri(claims));
-  if (rules.crossField) invalid.push(...crossField(claims));
-  if (rules.audSingleResource) invalid.push(...audSingleResource(claims));
-  if (rules.authorizationDetailsType) {
-    invalid.push(...everyElementHasKey(claims, "authorizationDetails", "type"));
+  if (profile.rules) {
+    invalid.push(...matchRules(claims, profile.rules));
   }
-  if (rules.cnfShape) invalid.push(...cnfShape(claims));
-  if (rules.actChainShape) invalid.push(...actChainShape(claims));
-  if (rules.subIdShape) invalid.push(...subIdShape(claims));
-  if (rules.eventsShape) invalid.push(...eventsShape(claims));
 
   if (profile.algClass) {
     invalid.push(...algPermitted(ctx.algorithm, profile.algClass));
@@ -58,4 +47,34 @@ export const validateProfileClaims = (
       details: "The assembled claims do not satisfy the profile's RFC validation rules.",
     });
   }
+};
+
+/**
+ * Evaluate the flat rule predicate; on a mismatch, re-check each field key in
+ * isolation to report exactly which claim(s) failed (logical `$and`/`$or`/`$not`
+ * top-level keys, if any, collapse to a single `rules` entry). Mirrors the
+ * per-field diagnosis in `internal/utils/validate.ts`.
+ */
+const matchRules = (claims: Dict, rules: Predicate<Dict>): Array<InvalidEntry> => {
+  if (Predicated.match(claims, rules)) return [];
+
+  const invalid: Array<InvalidEntry> = [];
+
+  for (const [key, ops] of Object.entries(rules)) {
+    if (key.startsWith("$")) {
+      invalid.push({
+        key: "rules",
+        message: "The claims did not satisfy the profile rule predicate",
+      });
+      continue;
+    }
+    if (!Predicated.match({ [key]: claims[key] }, { [key]: ops } as Predicate<Dict>)) {
+      invalid.push({
+        key,
+        message: `Claim "${key}" did not satisfy the profile rule predicate`,
+      });
+    }
+  }
+
+  return invalid;
 };

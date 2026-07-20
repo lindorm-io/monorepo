@@ -1,4 +1,4 @@
-import type { TokenProfile } from "../../types/index.js";
+import type { ProfileClaimName, TokenProfile } from "../../types/index.js";
 
 /**
  * Identity factory that CAPTURES a profile's literal `required` tuple in the
@@ -7,6 +7,6 @@ import type { TokenProfile } from "../../types/index.js";
  * (no `as const` needed at the call site), which the verify overloads read to
  * narrow profile-guaranteed claims to non-optional. Runtime is pure identity.
  */
-export const defineProfile = <const R extends readonly string[]>(
+export const defineProfile = <const R extends ReadonlyArray<ProfileClaimName>>(
   profile: TokenProfile<R>,
 ): TokenProfile<R> => profile;

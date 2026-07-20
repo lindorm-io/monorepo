@@ -28,6 +28,8 @@ describe("validateProfileClaims", () => {
   });
 
   test("throws when the access token aud has multiple resources", () => {
+    // aud-single-resource is now a FLAT `rules` predicate (`{ $length: 1 }`),
+    // evaluated by the unified matcher — not a boolean-flag rule.
     expect(() =>
       validateProfileClaims(
         accessTokenProfile,
@@ -36,6 +38,65 @@ describe("validateProfileClaims", () => {
           audience: ["https://a", "https://b"],
           issuedAt: d(100),
           expiresAt: d(200),
+        },
+        { algorithm: "ES512" },
+      ),
+    ).toThrow(AegisDomainError);
+  });
+
+  test("throws when the issuer is not a URI (iss-uri flat predicate)", () => {
+    // iss-uri is a FLAT `rules` predicate (`{ issuer: { $regex } }`).
+    expect(() =>
+      validateProfileClaims(
+        accessTokenProfile,
+        {
+          issuer: "not a uri",
+          subject: "s",
+          audience: ["https://rs"],
+          clientId: "c",
+          issuedAt: d(100),
+          expiresAt: d(200),
+          tokenId: "j",
+        },
+        { algorithm: "ES512" },
+      ),
+    ).toThrow(AegisDomainError);
+  });
+
+  test("the iss-uri predicate only fires WHEN PRESENT ($exists:false branch)", () => {
+    // An absent issuer passes the rules predicate (presence is the `required`
+    // floor's concern, enforced separately by enforceProfilePolicy).
+    expect(() =>
+      validateProfileClaims(
+        accessTokenProfile,
+        {
+          subject: "s",
+          audience: ["https://rs"],
+          clientId: "c",
+          issuedAt: d(100),
+          expiresAt: d(200),
+          tokenId: "j",
+        },
+        { algorithm: "ES512" },
+      ),
+    ).not.toThrow();
+  });
+
+  test("runs the imperative validate() hook — rejects a malformed cnf", () => {
+    // cnf-shape stays in `validate()` (a flat predicate cannot express
+    // permitted-member closure + the 32-byte thumbprint check).
+    expect(() =>
+      validateProfileClaims(
+        accessTokenProfile,
+        {
+          issuer: "https://test.lindorm.io/",
+          subject: "s",
+          audience: ["https://rs"],
+          clientId: "c",
+          issuedAt: d(100),
+          expiresAt: d(200),
+          tokenId: "j",
+          confirmation: { thumbprint: "too-short" },
         },
         { algorithm: "ES512" },
       ),

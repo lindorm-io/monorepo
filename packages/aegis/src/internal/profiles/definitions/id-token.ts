@@ -1,6 +1,8 @@
 import type { Dict } from "@lindorm/types";
 import type { SignContext } from "../../../types/index.js";
+import { actChainShape, cnfShape, crossField } from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
+import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
  * ID token — bare `JWT` typ (OIDC ecosystem convention; OIDC Core §2).
@@ -22,15 +24,14 @@ export const idTokenProfile = defineProfile({
     },
   ],
   atLeastOneOf: [],
-  autoInject: { iat: true, jti: false, nbf: false, iss: true },
+  autoInject: ["issuedAt", "issuer"],
   issuer: "platform",
   lifetime: "1h",
   encryptable: true,
-  rules: {
-    issUri: true,
-    crossField: true,
-    cnfShape: true,
-    actChainShape: true,
-  },
-  validate: () => [],
+  rules: ISSUER_IS_URI,
+  validate: (claims: Dict) => [
+    ...crossField(claims),
+    ...cnfShape(claims),
+    ...actChainShape(claims),
+  ],
 });

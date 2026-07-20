@@ -15,7 +15,7 @@ const noInjectProfile: TokenProfile = {
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],
-  autoInject: { iat: false, jti: false, nbf: false, iss: false },
+  autoInject: [],
   issuer: "platform",
   lifetime: null,
   encryptable: false,

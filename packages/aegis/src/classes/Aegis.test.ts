@@ -311,7 +311,7 @@ describe("Aegis", () => {
       forbidden: [],
       requiredWhen: [],
       atLeastOneOf: [],
-      autoInject: { iat: true, jti: true, nbf: false, iss: true },
+      autoInject: ["issuedAt", "tokenId", "issuer"],
       issuer: "platform",
       lifetime: "1h",
       encryptable: false,

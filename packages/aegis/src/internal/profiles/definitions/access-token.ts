@@ -1,4 +1,12 @@
+import type { Dict } from "@lindorm/types";
+import {
+  actChainShape,
+  cnfShape,
+  crossField,
+  everyElementHasKey,
+} from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
+import { AUD_SINGLE_RESOURCE, ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
  * Access token — `at+jwt` (RFC 9068 §2.2). Server-signed. Never encryptable.
@@ -28,18 +36,16 @@ export const accessTokenProfile = defineProfile({
   forbidden: ["federationAssuranceLevel"],
   requiredWhen: [],
   atLeastOneOf: [],
-  autoInject: { iat: true, jti: true, nbf: false, iss: true },
+  autoInject: ["issuedAt", "tokenId", "issuer"],
   issuer: "platform",
   lifetime: "1h",
   encryptable: false,
   algClass: "asymmetric",
-  rules: {
-    issUri: true,
-    crossField: true,
-    audSingleResource: true,
-    authorizationDetailsType: true,
-    cnfShape: true,
-    actChainShape: true,
-  },
-  validate: () => [],
+  rules: { ...ISSUER_IS_URI, ...AUD_SINGLE_RESOURCE },
+  validate: (claims: Dict) => [
+    ...crossField(claims),
+    ...everyElementHasKey(claims, "authorizationDetails", "type"),
+    ...cnfShape(claims),
+    ...actChainShape(claims),
+  ],
 });

@@ -90,7 +90,7 @@ export const mintToken = async ({
   // conditional policy (inside assembleCommonClaims) + the structural RFC
   // rules (validateProfileClaims). Business logic lives in domain terms.
   const common = assembleCommonClaims(
-    { algorithm: kryptos.algorithm, issuer: deps.issuer },
+    { algorithm: kryptos.algorithm, issuer: deps.issuer, lifetime: options.lifetime },
     profile,
     signContent,
     { ...(options.sign ?? {}), context: options.context },

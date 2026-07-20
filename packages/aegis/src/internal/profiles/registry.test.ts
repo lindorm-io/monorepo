@@ -8,7 +8,7 @@ describe("registry", () => {
     expect(resolveProfile("default")).toMatchObject({
       name: "default",
       required: ["subject", "expiresAt"],
-      autoInject: { iat: true, jti: true, nbf: true, iss: true },
+      autoInject: ["issuedAt", "tokenId", "notBefore", "issuer"],
     });
   });
 
@@ -24,7 +24,7 @@ describe("registry", () => {
       forbidden: [],
       requiredWhen: [],
       atLeastOneOf: [],
-      autoInject: { iat: false, jti: false, nbf: false, iss: false },
+      autoInject: [],
       issuer: "platform",
       lifetime: null,
       encryptable: false,

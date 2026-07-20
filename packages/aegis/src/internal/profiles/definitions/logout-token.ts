@@ -1,4 +1,7 @@
+import type { Dict } from "@lindorm/types";
+import { crossField, eventsShape } from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
+import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
  * Logout token — `logout+jwt` (Back-Channel Logout §2.4; SET-shaped).
@@ -15,14 +18,10 @@ export const logoutTokenProfile = defineProfile({
   forbidden: ["nonce"],
   requiredWhen: [],
   atLeastOneOf: [["subject", "sessionId"]],
-  autoInject: { iat: true, jti: true, nbf: false, iss: true },
+  autoInject: ["issuedAt", "tokenId", "issuer"],
   issuer: "platform",
   lifetime: "2m",
   encryptable: false,
-  rules: {
-    issUri: true,
-    crossField: true,
-    eventsShape: true,
-  },
-  validate: () => [],
+  rules: ISSUER_IS_URI,
+  validate: (claims: Dict) => [...crossField(claims), ...eventsShape(claims)],
 });

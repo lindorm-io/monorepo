@@ -1,7 +1,8 @@
 import type { Expiry } from "@lindorm/date";
 import type { KryptosAlgClass } from "@lindorm/kryptos";
-import type { Dict } from "@lindorm/types";
+import type { Dict, Predicate } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
+import type { DomainClaims } from "../../internal/utils/extract-claims.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { TokenFormat } from "../../internal/utils/select-encoder.js";
 import type { AegisSignKey } from "../aegis.js";
@@ -150,19 +151,27 @@ export type InvalidEntry = {
 };
 
 /**
- * Declarative structural RFC rules a profile opts into. Each flag selects a
- * pure rule from `internal/utils/rules/` that `validateProfileClaims` runs.
+ * The DOMAIN claim keys a profile may name in its `required`/`forbidden`
+ * floor. It is `keyof DomainClaims` (so a typo in a domain claim name is a
+ * compile error) plus the two claims that live on the enforced common layer
+ * but are NOT members of the parsed `DomainClaims` type: `events` (a SET claim
+ * carried under its wire key, RFC 8417/9493) and `token_introspection` (the
+ * RFC 9701 introspection-response wrapper, a custom claim with no domain
+ * alias). Both are still domain vocabulary at mint — only their parse path
+ * differs — so listing them here keeps the floor strongly typed without a bare
+ * `string` escape hatch.
  */
-export type ProfileRules = {
-  actChainShape?: boolean;
-  audSingleResource?: boolean;
-  authorizationDetailsType?: boolean;
-  cnfShape?: boolean;
-  crossField?: boolean;
-  eventsShape?: boolean;
-  issUri?: boolean;
-  subIdShape?: boolean;
-};
+export type ProfileClaimName = keyof DomainClaims | "events" | "token_introspection";
+
+/**
+ * The envelope claims a profile may auto-generate at mint. Constrained to the
+ * four mint-GENERATABLE domain claims — replacing the previous
+ * `{ iat; jti; nbf; iss }` object whose WIRE names leaked into the profile
+ * descriptor. The mint pipeline maps each to its wire claim via the ONE
+ * translator (`issuedAt`→`iat`, `tokenId`→`jti`, `notBefore`→`nbf`,
+ * `issuer`→`iss`).
+ */
+export type AutoInjectableClaim = "issuedAt" | "tokenId" | "notBefore" | "issuer";
 
 /**
  * The profile's JOSE `typ` header policy — a discriminated union on `presence`:
@@ -185,22 +194,24 @@ export type TokenProfileTyp =
  * `buildProfileClaims` (presence/forbid/atLeastOneOf/requiredWhen) and
  * `validateProfileClaims` (structural RFC + crypto rules).
  */
-export type TokenProfile<R extends readonly string[] = readonly string[]> = {
+export type TokenProfile<
+  R extends ReadonlyArray<ProfileClaimName> = ReadonlyArray<ProfileClaimName>,
+> = {
   name: string;
   typ: TokenProfileTyp;
   required: R;
-  forbidden: Array<string>;
+  forbidden: ReadonlyArray<ProfileClaimName>;
   requiredWhen: Array<{
     claim: string;
     when: (claims: Dict, ctx: SignContext) => boolean;
   }>;
   atLeastOneOf: Array<Array<string>>;
-  autoInject: {
-    iat: boolean;
-    jti: boolean;
-    nbf: boolean;
-    iss: boolean;
-  };
+  /**
+   * The envelope claims mint auto-generates, by DOMAIN name. Membership is
+   * checked with `.includes(...)` in the mint pipeline (was a per-flag object;
+   * see {@link AutoInjectableClaim}).
+   */
+  autoInject: ReadonlyArray<AutoInjectableClaim>;
   issuer: "platform" | "per-token";
   lifetime?: Expiry | null;
   encryptable: boolean;
@@ -214,7 +225,22 @@ export type TokenProfile<R extends readonly string[] = readonly string[]> = {
    * HS*" is the whole algorithm space.
    */
   algClass?: KryptosAlgClass;
-  rules?: ProfileRules;
+  /**
+   * Flat structural rules expressed as a `Predicate<DomainClaims>` over the
+   * DOMAIN-keyed common layer — the SAME predicate vocabulary `assert` /
+   * matchers / `validateClaims` use. `validateProfileClaims` evaluates it and
+   * throws `jwt_claims_invalid` on a mismatch. Only rules a flat predicate can
+   * express live here (`issUri`, `audSingleResource`); genuinely recursive or
+   * cross-field rules (`crossField`, `actChainShape`, `cnfShape`, `subIdShape`,
+   * `eventsShape`, `authorizationDetails` element shape) stay in `validate`.
+   */
+  rules?: Predicate<DomainClaims>;
+  /**
+   * The imperative escape hatch for rules a flat predicate cannot express
+   * (recursive / cross-field / structured). Composed from the pure
+   * `internal/utils/rules/*` functions and run after `rules` by
+   * `validateProfileClaims`.
+   */
   validate: (claims: Dict, ctx: SignContext) => Array<InvalidEntry>;
 };
 
@@ -233,6 +259,13 @@ export type ProfileMintOptions = {
    * its presence forces encryption on.
    */
   encrypt?: JweEncryptOptions;
+  /**
+   * Per-call token lifetime, overriding the profile's default `lifetime`. An
+   * explicit `content.expires` (an absolute instant) still wins over this; with
+   * neither set the profile default applies, and a `null` profile default with
+   * no override yields no `exp`.
+   */
+  lifetime?: Expiry;
   context?: SignContext;
   /**
    * Per-call wire encoder. Defaults to `"jwt"` (a signed JWT); `"cwt"` mints the

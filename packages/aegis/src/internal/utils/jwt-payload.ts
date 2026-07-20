@@ -37,7 +37,7 @@ const RAW_JWT_PROFILE: TokenProfile = {
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],
-  autoInject: { iat: false, jti: false, nbf: false, iss: false },
+  autoInject: [],
   issuer: "per-token",
   lifetime: null,
   encryptable: false,

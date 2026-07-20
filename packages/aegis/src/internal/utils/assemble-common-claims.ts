@@ -1,4 +1,4 @@
-import { expires } from "@lindorm/date";
+import { expires, type Expiry } from "@lindorm/date";
 import { isDate, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
@@ -24,6 +24,12 @@ export type AssembleCommonContext = {
   algorithm: KryptosAlgorithm;
   issuer: string | null;
   now?: Date;
+  /**
+   * Per-call lifetime override (`ProfileMintOptions.lifetime`). Beats the
+   * profile's default `lifetime`; an explicit `content.expires` still wins over
+   * both.
+   */
+  lifetime?: Expiry;
 };
 
 /**
@@ -51,18 +57,27 @@ export const assembleCommonClaims = (
   // profile's auto-injection, then translated to the wire by `domainToJose` /
   // `domainToCose`.
   const optIssuedAt = isDate(options.issuedAt) ? options.issuedAt : undefined;
-  const issuedAt = profile.autoInject.iat ? (optIssuedAt ?? now) : optIssuedAt;
+  const issuedAt = profile.autoInject.includes("issuedAt")
+    ? (optIssuedAt ?? now)
+    : optIssuedAt;
 
   const contentNotBefore = isDate(content.notBefore) ? content.notBefore : undefined;
-  const notBefore = profile.autoInject.nbf ? (contentNotBefore ?? now) : contentNotBefore;
+  const notBefore = profile.autoInject.includes("notBefore")
+    ? (contentNotBefore ?? now)
+    : contentNotBefore;
 
   const optTokenId = isString(options.tokenId) ? options.tokenId : undefined;
-  const tokenId = profile.autoInject.jti ? (optTokenId ?? generateTokenId()) : optTokenId;
+  const tokenId = profile.autoInject.includes("tokenId")
+    ? (optTokenId ?? generateTokenId())
+    : optTokenId;
 
+  // Lifetime precedence: an explicit absolute `content.expires` wins, then the
+  // per-call `ctx.lifetime` override, then the profile default (`null` ⇒ no exp).
+  const lifetime = ctx.lifetime !== undefined ? ctx.lifetime : profile.lifetime;
   const expiresAt = content.expires
     ? expires(content.expires).expiresAt
-    : profile.lifetime != null
-      ? expires(profile.lifetime, now).expiresAt
+    : lifetime != null
+      ? expires(lifetime, now).expiresAt
       : undefined;
 
   const issuer = resolveIssuer(ctx, profile, content);
@@ -133,7 +148,7 @@ const resolveIssuer = (
   const contentIssuer = isString(content.issuer) ? content.issuer : undefined;
 
   if (profile.issuer === "per-token") return contentIssuer;
-  if (!profile.autoInject.iss) return contentIssuer;
+  if (!profile.autoInject.includes("issuer")) return contentIssuer;
 
   return ctx.issuer ?? contentIssuer;
 };

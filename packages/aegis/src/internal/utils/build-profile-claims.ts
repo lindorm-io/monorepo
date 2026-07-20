@@ -30,7 +30,7 @@ const RAW_PROFILE: TokenProfile = {
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],
-  autoInject: { iat: false, jti: false, nbf: false, iss: false },
+  autoInject: [],
   issuer: "per-token",
   lifetime: null,
   encryptable: false,
@@ -41,7 +41,8 @@ const RAW_PROFILE: TokenProfile = {
  * Applies a profile's policy on top of the policy-free domain mapping:
  *
  *   1. map domain → wire (`domainToJose` of the policy-free common claims),
- *   2. auto-inject `iat`/`jti`/`nbf`/`iss` per `profile.autoInject`,
+ *   2. auto-inject `issuedAt`/`tokenId`/`notBefore`/`issuer` per
+ *      `profile.autoInject` (domain names, mapped to `iat`/`jti`/`nbf`/`iss`),
  *   3. derive `exp` from `profile.lifetime` (when the content did not set
  *      `expires`; `lifetime: null` means "no exp"),
  *   4. apply the issuer source (`platform` vs `per-token`),
@@ -69,9 +70,15 @@ export const buildProfileClaims = <C extends Dict = Dict>(
     ),
   );
 
-  const iat = profile.autoInject.iat ? (mapped.iat ?? nowUnix) : mapped.iat;
-  const nbf = profile.autoInject.nbf ? (mapped.nbf ?? nowUnix) : mapped.nbf;
-  const jti = profile.autoInject.jti ? (mapped.jti ?? generateTokenId()) : mapped.jti;
+  const iat = profile.autoInject.includes("issuedAt")
+    ? (mapped.iat ?? nowUnix)
+    : mapped.iat;
+  const nbf = profile.autoInject.includes("notBefore")
+    ? (mapped.nbf ?? nowUnix)
+    : mapped.nbf;
+  const jti = profile.autoInject.includes("tokenId")
+    ? (mapped.jti ?? generateTokenId())
+    : mapped.jti;
 
   const exp =
     mapped.exp ??
@@ -112,7 +119,7 @@ const resolveIssuer = (
     return mapped.iss as string | undefined;
   }
 
-  if (!profile.autoInject.iss) {
+  if (!profile.autoInject.includes("issuer")) {
     return mapped.iss as string | undefined;
   }
 

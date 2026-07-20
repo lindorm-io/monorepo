@@ -1,4 +1,7 @@
+import type { Dict } from "@lindorm/types";
+import { eventsShape, subIdShape } from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
+import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
  * CAEP / Shared Signals event — `secevent+jwt` (RFC 8417 under SSF 1.0's SET
@@ -16,14 +19,10 @@ export const securityEventProfile = defineProfile({
   forbidden: ["subject", "expiresAt", "nonce"],
   requiredWhen: [],
   atLeastOneOf: [],
-  autoInject: { iat: true, jti: true, nbf: false, iss: true },
+  autoInject: ["issuedAt", "tokenId", "issuer"],
   issuer: "platform",
   lifetime: null,
   encryptable: false,
-  rules: {
-    issUri: true,
-    subIdShape: true,
-    eventsShape: true,
-  },
-  validate: () => [],
+  rules: ISSUER_IS_URI,
+  validate: (claims: Dict) => [...subIdShape(claims), ...eventsShape(claims)],
 });

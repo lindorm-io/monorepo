@@ -68,6 +68,27 @@ describe("Aegis profiles", () => {
       ).rejects.toThrow(AegisDomainError);
     });
 
+    test("auto-injects the domain envelope claims mapped to their wire names", async () => {
+      // The descriptor names domain claims (issuedAt/tokenId/issuer); the mint
+      // pipeline maps each to its wire claim via the ONE translator — the old
+      // WIRE-name leak (iat/jti/iss in autoInject) is gone.
+      const { token } = await aegis.mint("access_token", content);
+      const { payload } = JwtKit.decode(token);
+
+      expect(payload.iat).toBe(1704096000); // autoInject issuedAt → iat
+      expect(payload.iss).toBe(ISSUER); // autoInject issuer → iss
+      expect(typeof payload.jti).toBe("string"); // autoInject tokenId → jti
+      expect(payload.nbf).toBeUndefined(); // access_token does NOT auto-inject notBefore
+    });
+
+    test("a per-call lifetime override changes exp", async () => {
+      const { token } = await aegis.mint("access_token", content, { lifetime: "2h" });
+      const { payload } = JwtKit.decode(token);
+
+      // Default profile lifetime is 1h; the per-call override yields iat + 2h.
+      expect(payload.exp).toBe(1704096000 + 7200);
+    });
+
     test("refuses to mint when the vault holds no asymmetric signing key", async () => {
       // The access_token floor is a HARD `algClass: "asymmetric"`. A vault with
       // only an HS key can no longer mint a (forgeable) access token — it fails

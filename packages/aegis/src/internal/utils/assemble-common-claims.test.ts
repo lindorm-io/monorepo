@@ -46,6 +46,30 @@ describe("assembleCommonClaims", () => {
     expect(common.expiresAt).toBeInstanceOf(Date); // access_token lifetime "1h"
   });
 
+  test("applies the per-call lifetime override over the profile default", () => {
+    // access_token default lifetime is "1h"; the per-call override wins.
+    const common = assembleCommonClaims({ ...ctx, lifetime: "2h" }, accessTokenProfile, {
+      subject: "u",
+      audience: ["a"],
+      clientId: "c",
+    } as any);
+
+    const seconds = (common.expiresAt as Date).getTime() / 1000 - NOW.getTime() / 1000;
+    expect(Math.round(seconds)).toBe(7200);
+  });
+
+  test("content.expires still wins over the per-call lifetime override", () => {
+    const explicitExpiry = new Date(NOW.getTime() + 90 * 1000);
+    const common = assembleCommonClaims({ ...ctx, lifetime: "2h" }, accessTokenProfile, {
+      subject: "u",
+      audience: ["a"],
+      clientId: "c",
+      expires: explicitExpiry,
+    } as any);
+
+    expect(common.expiresAt).toEqual(explicitExpiry);
+  });
+
   test("computes OIDC hash claims under domain names", () => {
     const common = assembleCommonClaims(ctx, idTokenProfile, {
       subject: "user-1",

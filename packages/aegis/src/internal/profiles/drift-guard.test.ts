@@ -32,3 +32,25 @@ describe("profile content/descriptor drift guard", () => {
     });
   }
 });
+
+// The auto-injectable envelope claims, by DOMAIN name. A descriptor must never
+// name a WIRE claim here (the old `{ iat; jti; nbf; iss }` object leaked wire
+// names into the profile surface); the mint pipeline maps these to their wire
+// claims via the ONE translator.
+const AUTO_INJECTABLE = new Set(["issuedAt", "tokenId", "notBefore", "issuer"]);
+const WIRE_LEAK = new Set(["iat", "jti", "nbf", "iss"]);
+
+describe("autoInject is domain-named (no wire-name leak)", () => {
+  for (const name of Object.keys(REQUIRED_DOMAIN_KEYS).concat("default")) {
+    test(`${name}: every autoInject entry is a domain AutoInjectableClaim`, () => {
+      const profile = resolveProfile(name);
+
+      expect(Array.isArray(profile.autoInject)).toBe(true);
+
+      for (const claim of profile.autoInject) {
+        expect(AUTO_INJECTABLE.has(claim)).toBe(true);
+        expect(WIRE_LEAK.has(claim)).toBe(false);
+      }
+    });
+  }
+});

@@ -1,4 +1,7 @@
+import type { Dict } from "@lindorm/types";
+import { crossField } from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
+import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
  * JARM response JWT (ADR-0016 — no `typ` mandated). REQUIRED: iss, aud
@@ -13,13 +16,10 @@ export const jarmProfile = defineProfile({
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],
-  autoInject: { iat: true, jti: false, nbf: false, iss: true },
+  autoInject: ["issuedAt", "issuer"],
   issuer: "platform",
   lifetime: "10m",
   encryptable: true,
-  rules: {
-    issUri: true,
-    crossField: true,
-  },
-  validate: () => [],
+  rules: ISSUER_IS_URI,
+  validate: (claims: Dict) => crossField(claims),
 });

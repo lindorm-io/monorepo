@@ -1,3 +1,5 @@
+import type { Dict } from "@lindorm/types";
+import { crossField } from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
 
 /**
@@ -14,14 +16,12 @@ export const delegationProfile = defineProfile({
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],
-  autoInject: { iat: true, jti: true, nbf: false, iss: false },
+  autoInject: ["issuedAt", "tokenId"],
   issuer: "per-token",
   lifetime: "2m",
   encryptable: false,
   algClass: "asymmetric",
-  rules: {
-    issUri: false,
-    crossField: true,
-  },
-  validate: () => [],
+  // No `issUri` rule: the delegation issuer is the requesting client's
+  // `client_id` (per-token), NOT a URL.
+  validate: (claims: Dict) => crossField(claims),
 });

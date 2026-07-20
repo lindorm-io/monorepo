@@ -65,7 +65,7 @@ export const mintCoseToken = async ({
   const kryptos = await deps.resolveSignKey(options.sign ?? {}, profile);
 
   const common = assembleCommonClaims(
-    { algorithm: kryptos.algorithm, issuer: deps.issuer },
+    { algorithm: kryptos.algorithm, issuer: deps.issuer, lifetime: options.lifetime },
     profile,
     signContent,
     { ...(options.sign ?? {}), context: options.context },

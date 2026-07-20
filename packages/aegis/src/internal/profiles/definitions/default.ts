@@ -15,7 +15,7 @@ export const defaultProfile = defineProfile({
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],
-  autoInject: { iat: true, jti: true, nbf: true, iss: true },
+  autoInject: ["issuedAt", "tokenId", "notBefore", "issuer"],
   issuer: "platform",
   lifetime: null,
   encryptable: false,
