@@ -158,8 +158,10 @@ Throws `AesError("Invalid AES cipher")` when the decrypted payload does not matc
 
 Two-step encryption flow that splits key management from content encryption. Returns header parameters, the wrapped CEK (when applicable), and an `encrypt` closure that accepts plaintext (and optional `aad`).
 
+For the ECDH-ES family, pass the RFC 7518 §4.6 Concat-KDF `apu`/`apv` (Agreement PartyU/VInfo) as `Buffer`s; they are folded into the derived key. Ignored by every non-ECDH-ES algorithm.
+
 ```ts
-const prepared = aes.prepareEncryption();
+const prepared = aes.prepareEncryption(); // or: prepareEncryption({ apu, apv })
 
 const result = prepared.encrypt("payload", { aad: Buffer.from("ctx") });
 // result: { authTag, content, contentType, initialisationVector }

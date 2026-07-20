@@ -5,6 +5,10 @@ import type { PublicEncryptionJwk } from "../../types/types.js";
 export type PrepareEncryptionOptions = {
   encryption?: KryptosEncryption;
   kryptos: IKryptos;
+  // RFC 7518 §4.6 — ECDH-ES Concat-KDF OtherInfo (apu/apv). Forwarded to the
+  // key-derivation step; consumed only by the ECDH-ES paths.
+  apu?: Buffer;
+  apv?: Buffer;
 };
 
 export type EncryptContentOptions = {

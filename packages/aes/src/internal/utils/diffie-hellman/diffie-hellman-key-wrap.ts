@@ -13,6 +13,8 @@ import { keyUnwrap, keyWrap } from "../key-wrap/key-wrap.js";
 import { calculateSharedSecret, generateSharedSecret } from "./shared-secret.js";
 
 export const getDiffieHellmanKeyWrapEncryptionKey = ({
+  apu,
+  apv,
   encryption,
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
@@ -23,6 +25,8 @@ export const getDiffieHellmanKeyWrapEncryptionKey = ({
 
   const { derivedKey } = concatKdf({
     algorithm: kryptos.algorithm,
+    apu,
+    apv,
     keyLength: calculateKeyWrapSize(kryptos.algorithm),
     sharedSecret,
   });
@@ -43,6 +47,8 @@ export const getDiffieHellmanKeyWrapEncryptionKey = ({
 };
 
 export const getDiffieHellmanKeyWrapDecryptionKey = ({
+  apu,
+  apv,
   kryptos,
   publicEncryptionJwk,
   publicEncryptionIv,
@@ -62,6 +68,8 @@ export const getDiffieHellmanKeyWrapDecryptionKey = ({
 
   const { derivedKey } = concatKdf({
     algorithm: kryptos.algorithm,
+    apu,
+    apv,
     keyLength: calculateKeyWrapSize(kryptos.algorithm),
     sharedSecret,
   });

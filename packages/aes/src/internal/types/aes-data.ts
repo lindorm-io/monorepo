@@ -16,6 +16,10 @@ export type PrivateAesEncryptionOptions = AesEncryptionOptions & { kryptos: IKry
  */
 export type PrivateAesDecryptionOptions = {
   aad?: Buffer;
+  // RFC 7518 §4.6 — ECDH-ES Concat-KDF OtherInfo (apu/apv), sourced from the wire
+  // header on decrypt so the recipient re-derives the identical key.
+  apu?: Buffer;
+  apv?: Buffer;
   authTag: Buffer;
   content: Buffer;
   contentType?: AesContentType;

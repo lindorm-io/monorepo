@@ -55,6 +55,8 @@ export const decryptAes = <T extends AesContent = string>(
 ): T => {
   const {
     aad,
+    apu,
+    apv,
     authTag,
     content,
     contentType,
@@ -70,6 +72,8 @@ export const decryptAes = <T extends AesContent = string>(
   } = options;
 
   const { contentEncryptionKey } = getDecryptionKey({
+    apu,
+    apv,
     encryption,
     kryptos,
     pbkdfIterations,

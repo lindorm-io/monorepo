@@ -12,6 +12,11 @@ export type AesEncryptionOptions = {
 
 export type AesDecryptionRecord = {
   aad?: Buffer;
+  // RFC 7518 §4.6 — ECDH-ES Concat-KDF OtherInfo (apu/apv). Optional: only the
+  // ECDH-ES key-management algorithms carry them, and the record may be built
+  // from a wire header (e.g. a JWE) that supplied them.
+  apu?: Buffer;
+  apv?: Buffer;
   algorithm: KryptosAlgorithm;
   authTag: Buffer;
   content: Buffer;

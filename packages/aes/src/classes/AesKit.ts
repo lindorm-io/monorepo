@@ -203,9 +203,14 @@ export class AesKit implements IAesKit {
     }
   }
 
-  prepareEncryption(): PreparedEncryption {
+  prepareEncryption(options?: { apu?: Buffer; apv?: Buffer }): PreparedEncryption {
     try {
-      return prepareAesEncryption({ encryption: this.encryption, kryptos: this.kryptos });
+      return prepareAesEncryption({
+        apu: options?.apu,
+        apv: options?.apv,
+        encryption: this.encryption,
+        kryptos: this.kryptos,
+      });
     } catch (error) {
       if (error instanceof AesError) throw error;
       throw new AesError("AES prepare encryption failed", {

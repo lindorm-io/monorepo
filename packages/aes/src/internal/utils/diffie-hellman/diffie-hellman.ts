@@ -11,6 +11,8 @@ import { concatKdf } from "../key-derivation/concat-kdf.js";
 import { calculateSharedSecret, generateSharedSecret } from "./shared-secret.js";
 
 export const getDiffieHellmanEncryptionKey = ({
+  apu,
+  apv,
   encryption,
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
@@ -19,6 +21,8 @@ export const getDiffieHellmanEncryptionKey = ({
 
   const { derivedKey } = concatKdf({
     algorithm: encryption,
+    apu,
+    apv,
     keyLength,
     sharedSecret,
   });
@@ -30,6 +34,8 @@ export const getDiffieHellmanEncryptionKey = ({
 };
 
 export const getDiffieHellmanDecryptionKey = ({
+  apu,
+  apv,
   encryption,
   kryptos,
   publicEncryptionJwk,
@@ -55,6 +61,8 @@ export const getDiffieHellmanDecryptionKey = ({
 
   const { derivedKey } = concatKdf({
     algorithm: encryption,
+    apu,
+    apv,
     keyLength,
     sharedSecret,
   });

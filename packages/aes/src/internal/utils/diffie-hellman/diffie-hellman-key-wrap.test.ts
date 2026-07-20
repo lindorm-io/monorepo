@@ -196,6 +196,44 @@ describe("diffieHellman", () => {
     });
   });
 
+  describe("apu/apv", () => {
+    test("should consume apu/apv in the KEK derivation (matching unwraps, mismatch fails)", () => {
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES+A256KW" });
+      const apu = Buffer.from("producer");
+      const apv = Buffer.from("recipient");
+
+      const result = getDiffieHellmanKeyWrapEncryptionKey({
+        apu,
+        apv,
+        encryption: "A256GCM",
+        kryptos,
+      });
+
+      // Matching apu/apv derive the same KEK, so the CEK unwraps identically.
+      expect(
+        getDiffieHellmanKeyWrapDecryptionKey({
+          apu,
+          apv,
+          encryption: "A256GCM",
+          publicEncryptionJwk: result.publicEncryptionJwk,
+          publicEncryptionKey: result.publicEncryptionKey,
+          kryptos,
+        }),
+      ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
+
+      // Dropping apu/apv derives a different KEK -> the AES key-unwrap integrity
+      // check fails, proving the values reached the KDF.
+      expect(() =>
+        getDiffieHellmanKeyWrapDecryptionKey({
+          encryption: "A256GCM",
+          publicEncryptionJwk: result.publicEncryptionJwk,
+          publicEncryptionKey: result.publicEncryptionKey,
+          kryptos,
+        }),
+      ).toThrow();
+    });
+  });
+
   describe("OKP", () => {
     test("should return encryption keys with X25519 OKP and GCM KW", () => {
       const kryptos = KryptosKit.generate.enc.okp({

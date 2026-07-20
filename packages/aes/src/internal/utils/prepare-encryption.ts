@@ -8,7 +8,7 @@ import { getEncryptionKey } from "./get-key/get-encryption-key.js";
 export const prepareAesEncryption = (
   options: PrepareEncryptionOptions,
 ): PreparedEncryption => {
-  const { encryption = "A256GCM", kryptos } = options;
+  const { apu, apv, encryption = "A256GCM", kryptos } = options;
 
   const {
     contentEncryptionKey,
@@ -18,7 +18,7 @@ export const prepareAesEncryption = (
     publicEncryptionJwk,
     publicEncryptionKey,
     publicEncryptionTag,
-  } = getEncryptionKey({ encryption, kryptos });
+  } = getEncryptionKey({ apu, apv, encryption, kryptos });
 
   return {
     headerParams: {

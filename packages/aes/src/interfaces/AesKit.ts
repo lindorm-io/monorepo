@@ -64,5 +64,5 @@ export interface IAesKit {
   encryptContent(content: Buffer, options?: AesContentOptions): AesContentEncryption;
   decryptContent(input: AesContentDecryption): Buffer;
 
-  prepareEncryption(): PreparedEncryption;
+  prepareEncryption(options?: { apu?: Buffer; apv?: Buffer }): PreparedEncryption;
 }
