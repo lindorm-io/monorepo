@@ -16,17 +16,16 @@ import {
   VERIFY_FLOOR,
 } from "@lindorm/amphora";
 import { getUnixTime } from "@lindorm/date";
-import { isBuffer, isDate, isObject, isString } from "@lindorm/is";
+import { isBuffer, isDate, isString } from "@lindorm/is";
 import type {
   IKryptos,
-  KryptosAlgorithm,
   KryptosEncAlgorithm,
   KryptosEncryption,
   KryptosSigAlgorithm,
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
-import { omitUndefined, sanitiseToken } from "@lindorm/utils";
+import { sanitiseToken } from "@lindorm/utils";
 import { AegisError } from "../errors/index.js";
 import type {
   IAegis,
@@ -38,35 +37,30 @@ import type {
   IAegisJws,
   IAegisJwt,
 } from "../interfaces/index.js";
-import { domainToJose } from "../internal/claims/translate.js";
-import { coseTyp, coseTypFromTokenType } from "../internal/cose/cose-typ.js";
+import { coseTypFromTokenType } from "../internal/cose/cose-typ.js";
 import { isCose } from "../internal/cose/is-cose.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
-import {
-  registerProfile as registerProfileFn,
-  resolveProfile,
-} from "../internal/profiles/registry.js";
-import { applyOmit } from "../internal/utils/apply-omit.js";
-import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
+import { registerProfile as registerProfileFn } from "../internal/profiles/registry.js";
+import type { AegisDeps } from "../internal/utils/aegis-deps.js";
 import { assembleCwtClaims } from "../internal/utils/assemble-cwt-claims.js";
-import { enforceVerifyFloor } from "../internal/utils/enforce-verify-floor.js";
-import { extractDomainClaims } from "../internal/utils/extract-claims.js";
 import { decodeJoseHeader } from "../internal/utils/jose-header.js";
 import { createJwtValidate } from "../internal/utils/jwt-validate.js";
+import { mintToken } from "../internal/utils/mint-token.js";
 import {
   type IntrospectClaimsInput,
   parseIntrospection,
 } from "../internal/utils/parse-introspection.js";
-import { parseJwtToDomain } from "../internal/utils/parse-jwt.js";
+import { parseToken } from "../internal/utils/parse-token.js";
 import {
   parseUserinfo,
   type UserinfoClaimsInput,
 } from "../internal/utils/parse-userinfo.js";
 import { resolveKey } from "../internal/utils/resolve-key.js";
-import { selectEncoder } from "../internal/utils/select-encoder.js";
+import { signToken } from "../internal/utils/sign-token.js";
 import { validateCwtClaims } from "../internal/utils/validate-cwt-claims.js";
-import { validateProfileClaims } from "../internal/utils/validate-profile-claims.js";
 import { validate as validateClaims } from "../internal/utils/validate.js";
+import { verifyProfileToken } from "../internal/utils/verify-profile-token.js";
+import { verifyToken } from "../internal/utils/verify-token.js";
 import type {
   AegisDecryptKey,
   AegisEncKey,
@@ -135,6 +129,7 @@ export class Aegis implements IAegis {
   private readonly clockTolerance: number;
   private readonly coseKit: CoseKit;
   private readonly decryptKey: AegisDecryptKey;
+  private readonly deps: AegisDeps;
   private readonly dpopMaxSkew: number | undefined;
   private readonly encryptKey: AegisEncKey;
   private readonly encryption: KryptosEncryption;
@@ -173,6 +168,29 @@ export class Aegis implements IAegis {
       encryption: this.encryption,
       logger: this.logger,
     });
+
+    // The verb-surface pipeline bodies live in `internal/utils/*`; Aegis assembles
+    // the state + collaborators they need once and delegates. The key resolvers
+    // close over `amphora` (they stay on the class); the kit façades and the
+    // raw-namespace operations are threaded through until Phases 11/12 remove them.
+    this.deps = {
+      issuer: this.issuer,
+      clockTolerance: this.clockTolerance,
+      encryption: this.encryption,
+      joseKit: this.joseKit,
+      coseKit: this.coseKit,
+      resolveSignKey: (options, profile) => this.resolveSignKey(options, profile),
+      resolveVerifyKey: (id, algorithm, verify) =>
+        this.resolveVerifyKey(id, algorithm, verify),
+      resolveDecryptKey: (id, algorithm, decrypt) =>
+        this.resolveDecryptKey(id, algorithm, decrypt),
+      resolveEncKey: (encrypt, required) => this.resolveEncKey(encrypt, required),
+      verifyJwt: (jwt, verify) => this.jwtVerify(jwt, verify),
+      verifyJws: (jws, options) => this.jwsVerify(jws, options),
+      decryptJwe: (jwe, options) => this.jweDecrypt(jwe, options),
+      signJws: (data, options) => this.jwsSign(data, options),
+      signRawCose: (input) => this.signRawCose(input),
+    };
   }
 
   get aes(): IAegisAes {
@@ -229,7 +247,7 @@ export class Aegis implements IAegis {
   }
 
   sign(input: RawSignInput): Promise<SignedJws> {
-    return this.signRaw(input);
+    return signToken({ input, deps: this.deps });
   }
 
   mint<P extends keyof ProfileContent>(
@@ -247,7 +265,7 @@ export class Aegis implements IAegis {
     content: SignContent,
     options: ProfileMintOptions = {},
   ): Promise<SignedJwt> {
-    return this.mintProfile(profile, content, options);
+    return mintToken({ name: profile, content, options, deps: this.deps });
   }
 
   verify<P extends keyof BuiltInProfiles>(
@@ -269,63 +287,18 @@ export class Aegis implements IAegis {
     profileOptions?: ProfileVerifyOptions,
   ): Promise<T> {
     if (isString(optionsOrToken)) {
-      return this.verifyProfile<T>(
-        tokenOrProfile,
-        optionsOrToken,
-        profileOptions ?? ({} as ProfileVerifyOptions),
-      );
+      return verifyProfileToken<T>({
+        name: tokenOrProfile,
+        token: optionsOrToken,
+        options: profileOptions ?? ({} as ProfileVerifyOptions),
+        deps: this.deps,
+      });
     }
 
-    return this.verifySmart<T>(tokenOrProfile, optionsOrToken);
-  }
-
-  private async verifySmart<T extends ParsedJwt | ParsedJws<any>>(
-    token: string,
-    options?: VerifyJwtOptions,
-  ): Promise<T> {
-    if (Aegis.isJwt(token)) {
-      return (await this.jwtVerify(token, options)) as T;
-    }
-    if (Aegis.isJwe(token)) {
-      const decrypt = await this.jweDecrypt(token);
-      return await this.verifySmart(decrypt.payload, options);
-    }
-    if (Aegis.isJws(token)) {
-      return (await this.jwsVerify(token)) as T;
-    }
-
-    // A COSE token is base64url CBOR with no JOSE dot structure. Verify its
-    // integrity (decrypting a COSE_Encrypt0 if needed) and return the domain
-    // claims; like the profile-less JWT path, no profile floor is applied. With
-    // no options it types as a ParsedCws (raw COSE_Sign1); with verify options
-    // the standard claims are validated exactly as jwt.verify validates a JWT,
-    // typing as a ParsedCwt.
-    if (!token.includes(".")) {
-      const bytes = Buffer.from(token, "base64url");
-      if (this.coseKit.isCose(bytes)) {
-        const { claims, wire, decoded } = await this.coseVerifyCore(bytes);
-        if (options) {
-          validateCwtClaims(
-            wire,
-            decoded.algorithm as KryptosAlgorithm,
-            options,
-            this.clockTolerance,
-          );
-        }
-        return {
-          claims,
-          header: { alg: decoded.algorithm, kid: decoded.kid, typ: decoded.typ },
-          token,
-        } as unknown as T;
-      }
-    }
-
-    throw new AegisError("Invalid token type", {
-      code: "unsupported_token_type",
-      debug: { token: sanitiseToken(token) },
-      title: "Unsupported Token Type",
-      details:
-        "The token is not a recognised JWT, JWE, JWS, or COSE token, so Aegis cannot select a kit to verify it.",
+    return verifyToken<T>({
+      token: tokenOrProfile,
+      options: optionsOrToken,
+      deps: this.deps,
     });
   }
 
@@ -399,19 +372,7 @@ export class Aegis implements IAegis {
   }
 
   static parse<T extends ParsedJwt | ParsedJws<any>>(token: string): T {
-    if (Aegis.isJwt(token)) {
-      return parseJwtToDomain(token) as T;
-    }
-    if (Aegis.isJws(token)) {
-      return JwsKit.parse(token) as T;
-    }
-    throw new AegisError("Invalid token type", {
-      code: "unsupported_token_type",
-      debug: { token: sanitiseToken(token) },
-      title: "Unsupported Token Type",
-      details:
-        "The token is not a recognised JWT or JWS, so Aegis cannot select a kit to parse it.",
-    });
+    return parseToken<T>(token);
   }
 
   static parseUserinfo(data: UserinfoClaimsInput): AegisUserinfo {
@@ -678,36 +639,11 @@ export class Aegis implements IAegis {
 
   // private sign tiers
 
-  private async signRaw(input: RawSignInput): Promise<SignedJws> {
-    // Encoding seam, mirroring mintProfile: the raw COSE path (`cws`) is a
-    // separate encoder that secures the payload as a CBOR CWT (COSE_Sign1)
-    // instead of a JWS. Everything above is encoding-neutral. The `cws` namespace
-    // is the ergonomic surface over this same mechanism.
-    if (selectEncoder(input.format).format === "cws") {
-      return this.signRawCose(input);
-    }
-
-    // A Buffer/string payload is opaque and passes through untouched; a plain
-    // object is pruned of empty claims at this emission boundary (default
-    // `"empty"`) before it is serialised, matching the JWT/CWT wires.
-    const payload =
-      isString(input.payload) || isBuffer(input.payload)
-        ? input.payload
-        : JSON.stringify(applyOmit(input.payload, input.omit));
-
-    return this.jwsSign(payload, {
-      bindCertificate: input.bindCertificate,
-      contentType: input.contentType,
-      header: input.header,
-      objectId: input.objectId,
-      key: input.key,
-      tokenType: input.tokenType,
-    });
-  }
-
-  // Raw COSE sign — the profile-less sibling of signRaw's JWS path. Secures an
-  // arbitrary CBOR claims map as a COSE_Sign1 CWT (the same encoder mintCose
-  // uses), typ derived straight from the bare `tokenType`. The point is an
+  // Raw COSE sign — the profile-less sibling of the `sign` JWS path (the
+  // `signToken` util). Secures an arbitrary CBOR claims map as a COSE_Sign1 CWT
+  // (the same encoder mintCose uses), typ derived straight from the bare
+  // `tokenType`. Shared between the `sign` verb (via `deps.signRawCose`) and the
+  // raw `cws.sign` namespace, so it stays on the class. The point is an
   // opaque handle: a base64url CBOR blob a consumer cannot split on dots and
   // read as a JWT. The signing key is resolved exactly as the JWS path does, so
   // a per-call `key` predicate selects it (e.g. an internal, unpublished key).
@@ -734,255 +670,6 @@ export class Aegis implements IAegis {
     return { objectId: input.objectId, token: token.toString("base64url") };
   }
 
-  private async mintProfile(
-    name: string,
-    content: SignContent,
-    options: ProfileMintOptions,
-  ): Promise<SignedJwt> {
-    // Encoding seam: dispatch on the per-call format. The profiled COSE path
-    // (`cwt`) is a separate encoder that consumes the same domain-keyed common
-    // claims; everything above this branch stays encoding-neutral.
-    if (selectEncoder(options.format).format === "cwt") {
-      return this.mintCose(name, content, options);
-    }
-
-    const profile = resolveProfile(name);
-
-    // T5 — `options.encrypt` is only meaningful for encryptable profiles.
-    // Passing it for a non-encryptable profile (access_token / SET / logout /
-    // erasure / DPoP) is a caller error, not a silent no-op.
-    if (options.encrypt !== undefined && !profile.encryptable) {
-      throw new AegisError("Encryption is not allowed for this profile", {
-        code: "encryption_not_allowed",
-        data: { profile: profile.name },
-        title: "Encryption Not Allowed",
-        details:
-          "This token profile is not encryptable, so an encrypt option cannot be supplied; remove it or use an encryptable profile.",
-      });
-    }
-
-    // The profile's algClass is part of the signing FLOOR, so the right class of
-    // key is SELECTED here rather than the wrong one being caught afterwards.
-    const kryptos = await this.resolveSignKey(options.sign ?? {}, profile);
-
-    // T5 — resolve the recipient (client) enc key when encryption is in play.
-    // Encryption fires when the profile is encryptable AND either an explicit
-    // `encrypt` option is supplied OR the content carries `sensitive_identity`
-    // (forced within id_token). When no enc key is resolvable, encryption is
-    // skipped and any `sensitive_identity` is omitted (never emitted in clear).
-    const hasSensitiveIdentity = content.sensitiveIdentity != null;
-    const explicitEncrypt = options.encrypt !== undefined;
-    const wantsEncryption =
-      profile.encryptable && (explicitEncrypt || hasSensitiveIdentity);
-
-    // When the caller explicitly asked for encryption, a missing enc key is a
-    // hard error. When encryption is forced ONLY by `sensitive_identity`, a
-    // missing key is tolerated — the claim is omitted instead (see below).
-    const encKryptos = wantsEncryption
-      ? await this.resolveEncKey(options.encrypt?.key, explicitEncrypt)
-      : undefined;
-
-    // `sensitive_identity` MUST NOT travel in cleartext. If it cannot be
-    // encrypted (profile not encryptable, or no enc key resolvable), strip it
-    // from the content before signing so the claim is omitted entirely.
-    const signContent =
-      hasSensitiveIdentity && !encKryptos
-        ? (omitUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
-        : content;
-
-    // Assemble + validate on the DOMAIN-keyed common layer: presence/forbid/
-    // conditional policy (inside assembleCommonClaims) + the structural RFC
-    // rules (validateProfileClaims). Business logic lives in domain terms.
-    const common = assembleCommonClaims(
-      { algorithm: kryptos.algorithm, issuer: this.issuer },
-      profile,
-      signContent,
-      { ...(options.sign ?? {}), context: options.context },
-    );
-
-    validateProfileClaims(profile, common, {
-      ...(options.context ?? {}),
-      algorithm: kryptos.algorithm as any,
-    });
-
-    // JOSE wire claims via the ONE translator. `common` already carries the
-    // resolved envelope (iss/iat/jti/nbf/exp) and the custom claims, so the
-    // signed token matches the validated common layer exactly — one source of
-    // truth. Profile claims join the domain layer so `domainToJose` maps them
-    // by the registry (identical wire to the previous `snakeKeys(profile)`
-    // spread); the emit boundary no longer makes a case decision (R18).
-    const claims = domainToJose(
-      isObject(signContent.profile) ? { ...common, ...signContent.profile } : common,
-    );
-
-    // A profile typ value stamps the header verbatim (e.g. `at+jwt`) — for
-    // BOTH optional and required presence (presence is a verify-side knob
-    // only). Presence `none` means "none mandated": fall back to the
-    // tokenType-derived default (bare `JWT` when no tokenType), which JwtKit
-    // requires as a header floor.
-    const signed = this.joseKit.signClaims(
-      kryptos,
-      claims,
-      signContent as SignJwtContent,
-      {
-        ...(options.sign ?? {}),
-        // mint's own `omit` controls the wire; a per-sign omit is a fallback.
-        omit: options.omit ?? options.sign?.omit,
-        ...(profile.typ.presence !== "none" ? { typ: profile.typ.value } : {}),
-      },
-    );
-
-    if (!encKryptos) {
-      return signed;
-    }
-
-    // T5 — sign-then-encrypt. The inner signed JWT keeps the profile typ
-    // (`at+jwt` / bare `JWT`); the outer JWE carries `cty: application/jwt`
-    // (set automatically by JweKit.encrypt from the inner-token shape). The
-    // read side (verifySmart recursion) decrypts then verifies the inner JWT,
-    // applying the profile floor to the inner claims/typ.
-    const { token } = this.joseKit.encryptJwe(
-      encKryptos,
-      signed.token,
-      {},
-      options.encrypt?.key?.encryption,
-    );
-
-    return { ...signed, token };
-  }
-
-  // The COSE encoder. Consumes the SAME domain-keyed common claims
-  // (assembleCommonClaims) and profile validation as the JOSE path; only the
-  // wire encoding differs — a secured CWT (COSE_Sign1 / COSE_Mac0), optionally
-  // wrapped in a COSE_Encrypt0 (sign-then-encrypt), mirroring the JOSE
-  // sign-then-encrypt path. The token bytes are base64url-encoded so the
-  // string-token API is preserved.
-  private async mintCose(
-    name: string,
-    content: SignContent,
-    options: ProfileMintOptions,
-  ): Promise<SignedJwt> {
-    const profile = resolveProfile(name);
-
-    // Encryption is only meaningful for encryptable profiles; an encrypt option
-    // on a non-encryptable profile is a caller error, not a silent no-op.
-    if (options.encrypt !== undefined && !profile.encryptable) {
-      throw new AegisError("Encryption is not allowed for this profile", {
-        code: "encryption_not_allowed",
-        data: { profile: profile.name },
-        title: "Encryption Not Allowed",
-        details:
-          "This token profile is not encryptable, so an encrypt option cannot be supplied; remove it or use an encryptable profile.",
-      });
-    }
-
-    // Encryption fires when the profile is encryptable AND either an explicit
-    // `encrypt` option is supplied OR the content carries `sensitive_identity`.
-    // COSE_Encrypt0 is direct AEAD, so the recipient key is a symmetric enc key.
-    const hasSensitiveIdentity = content.sensitiveIdentity != null;
-    const explicitEncrypt = options.encrypt !== undefined;
-    const wantsEncryption =
-      profile.encryptable && (explicitEncrypt || hasSensitiveIdentity);
-
-    const encKryptos = wantsEncryption
-      ? await this.resolveEncKey(options.encrypt?.key, explicitEncrypt)
-      : undefined;
-
-    // `sensitive_identity` MUST NOT travel in cleartext: if it cannot be
-    // encrypted, strip it before securing the CWT so it is omitted entirely.
-    const signContent =
-      hasSensitiveIdentity && !encKryptos
-        ? (omitUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
-        : content;
-
-    const kryptos = await this.resolveSignKey(options.sign ?? {}, profile);
-
-    const common = assembleCommonClaims(
-      { algorithm: kryptos.algorithm, issuer: this.issuer },
-      profile,
-      signContent,
-      { ...(options.sign ?? {}), context: options.context },
-    );
-    validateProfileClaims(profile, common, {
-      ...(options.context ?? {}),
-      algorithm: kryptos.algorithm as any,
-    });
-
-    let token = this.coseKit.sign(kryptos, common, {
-      typ: coseTyp(profile.typ),
-      proprietary: options.proprietary,
-      omit: options.omit,
-    });
-
-    // Sign-then-encrypt: the inner secured CWT is the COSE_Encrypt0 plaintext.
-    if (encKryptos) {
-      token = this.coseKit.encrypt(encKryptos, token, {
-        typ: coseTyp(profile.typ),
-        encryption: options.encrypt?.key?.encryption ?? this.encryption,
-      });
-    }
-
-    const expiresAt = isDate(common.expiresAt) ? common.expiresAt : undefined;
-    const expiresOn = expiresAt ? getUnixTime(expiresAt) : undefined;
-
-    return {
-      token: token.toString("base64url"),
-      expiresAt,
-      expiresIn: expiresOn ? expiresOn - getUnixTime(new Date()) : undefined,
-      expiresOn,
-      objectId: undefined,
-      tokenId: isString(common.tokenId) ? common.tokenId : undefined,
-    };
-  }
-
-  private async verifyCose<T extends ParsedJwt | ParsedJws<any>>(
-    name: string,
-    token: string,
-    options: ProfileVerifyOptions,
-  ): Promise<T> {
-    const profile = resolveProfile(name);
-    const { claims, decoded, typ } = await this.coseVerifyCore(
-      Buffer.from(token, "base64url"),
-    );
-
-    const expectedIssuer =
-      options.issuer ??
-      (profile.issuer === "platform" ? (this.issuer ?? undefined) : undefined);
-
-    enforceVerifyFloor({
-      audience: options.audience,
-      decodedTyp: typ,
-      expectedTyp: coseTyp(profile.typ),
-      expectedIssuer,
-      payload: claims,
-      profile,
-    });
-
-    return { claims, header: decoded } as unknown as T;
-  }
-
-  // The integrity core shared by the profile (verifyCose) and profile-less
-  // (verifySmart) COSE paths: decrypt a COSE_Encrypt0 if present, then resolve
-  // the signing/MAC key by kid (kid-only, never a header-embedded key) and
-  // verify. The profile floor — if any — is applied by the caller.
-  private async coseVerifyCore(input: Buffer) {
-    let bytes = input;
-
-    if (this.coseKit.isEncrypted(bytes)) {
-      const encKryptos = await this.resolveDecryptKey(
-        this.coseKit.decodeEncryptedKid(bytes),
-        undefined,
-      );
-      bytes = this.coseKit.decrypt(encKryptos, bytes);
-    }
-
-    const decoded = this.coseKit.decode(bytes);
-    const kryptos = await this.resolveVerifyKey(decoded.kid, undefined);
-    const { claims, wire, typ } = this.coseKit.verify(kryptos, bytes);
-
-    return { claims, wire, decoded, typ };
-  }
-
   // Resolve the recipient encryption key for both the JOSE (JWE) and COSE
   // (COSE_Encrypt0) paths. A missing key is a hard error only when the caller
   // explicitly asked to encrypt; when forced only by `sensitive_identity` it is
@@ -1000,71 +687,6 @@ export class Aegis implements IAegis {
       }
       return undefined;
     }
-  }
-
-  private async verifyProfile<T extends ParsedJwt | ParsedJws<any>>(
-    name: string,
-    token: string,
-    options: ProfileVerifyOptions,
-  ): Promise<T> {
-    // Encoding seam — AUTO-DETECTED, never told. Verify reads the format off the
-    // token: a COSE token verifies as a CWT, a JOSE token as a JWT/JWE. (mint chooses
-    // its output format; verify only ever inspects an existing one.)
-    if (Aegis.isCose(token)) {
-      return this.verifyCose<T>(name, token, options);
-    }
-
-    const profile = resolveProfile(name);
-
-    // The typ is enforced by enforceVerifyFloor against profile.typ, so we do
-    // NOT also pass tokenType to the standard verify (which would compute its
-    // own typ expectation and could disagree).
-    const {
-      audience: _audience,
-      issuer: _issuer,
-      clockTolerance: _ct,
-      ...rest
-    } = options;
-
-    // A `lifetime: null` profile (RFC 8417 / SSF `security_event`, introspection,
-    // userinfo) mints tokens with NO exp, so its verify must tolerate an absent
-    // exp — the floor below owns the real presence policy. Finite-lifetime
-    // profiles stay `"required"` (belt-and-suspenders with the floor's exp check).
-    const expPresence = profile.lifetime === null ? "optional" : "required";
-
-    // The typ-sniffing dispatcher (verifySmart) cannot classify a typ-less
-    // JWS, but profiled verify knows the format from the profile — so only a
-    // JWE goes through verifySmart (decrypt + re-verify the inner JWT); bare
-    // tokens verify as JWTs directly, with `typPresence: "optional"` so a
-    // typ-less RFC 7523 client assertion reaches the floor, which owns the
-    // profile's typ presence policy (required-presence profiles still reject
-    // an absent typ there). Direct jwt.verify callers keep the strict default.
-    const parsed = Aegis.isJwe(token)
-      ? await this.verifySmart<ParsedJwt>(token, { ...rest, expPresence })
-      : await this.jwtVerify(token, { ...rest, typPresence: "optional", expPresence });
-
-    const expectedIssuer =
-      options.issuer ??
-      (profile.issuer === "platform" ? (this.issuer ?? undefined) : undefined);
-
-    // DOMAIN-keyed floor payload from the RAW wire claims, not parsed.payload:
-    // parseTokenPayload defaults absent set-valued claims to [] and nests
-    // custom claims under `claims`, which would defeat the floor's
-    // required-claims presence check. extractDomainClaims reports true wire
-    // presence and leaves non-domain claims flat in `rest`.
-    const { claims: domain, rest: custom } = extractDomainClaims(
-      parsed.decoded.payload as Dict,
-    );
-
-    enforceVerifyFloor({
-      audience: options.audience,
-      decodedTyp: parsed.decoded.header.typ,
-      expectedIssuer,
-      payload: { ...custom, ...domain },
-      profile,
-    });
-
-    return parsed as T;
   }
 
   private async jwtVerify<T extends Dict = Dict>(
