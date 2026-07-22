@@ -1,6 +1,6 @@
 import { TOKEN_TYPE_TO_SHORT_NAME, type TokenType } from "../../constants/token-type.js";
 import { AegisError } from "../../errors/index.js";
-import type { BaseTokenFormat } from "../../types/header.js";
+import type { BaseTokenFormat } from "../../types/header/header.js";
 
 export type KitFormat = "jwt" | "jws" | "jwe";
 

@@ -1,6 +1,6 @@
 import { Predicated } from "@lindorm/utils";
-import type { ActClaim } from "../../types/claims/act-claim.js";
-import type { TokenDelegation, VerifyActorOptions } from "../../types/jwt/index.js";
+import type { ActClaim } from "../../types/claims/domain/act-claim.js";
+import type { TokenDelegation, VerifyActorOptions } from "../../types/domain/index.js";
 
 export type ActorValidationError = {
   message: string;

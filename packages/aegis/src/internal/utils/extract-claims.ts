@@ -6,22 +6,22 @@ import {
   type ClaimSpec,
   type ClaimSubset,
 } from "../claims/claims-registry.js";
-import type { ActClaim } from "../../types/claims/act-claim.js";
-import type { ConfirmationClaim } from "../../types/claims/confirmation-claim.js";
-import type { DelegationClaims } from "../../types/claims/delegation-claims.js";
-import type { LindormClaims } from "../../types/claims/lindorm-claims.js";
-import type { OAuthClaims } from "../../types/claims/oauth-claims.js";
-import type { OidcClaims } from "../../types/claims/oidc-claims.js";
-import type { PopClaims } from "../../types/claims/pop-claims.js";
-import type { RarClaims } from "../../types/claims/rar-claims.js";
-import type { SetClaims } from "../../types/claims/set-claims.js";
-import type { StdClaims } from "../../types/claims/std-claims.js";
+import type { ActClaim } from "../../types/claims/domain/act-claim.js";
+import type { ConfirmationClaim } from "../../types/claims/domain/confirmation-claim.js";
+import type { DelegationClaims } from "../../types/claims/domain/delegation-claims.js";
+import type { LindormClaims } from "../../types/claims/domain/lindorm-claims.js";
+import type { OAuthClaims } from "../../types/claims/domain/oauth-claims.js";
+import type { OidcClaims } from "../../types/claims/domain/oidc-claims.js";
+import type { PopClaims } from "../../types/claims/domain/pop-claims.js";
+import type { RarClaims } from "../../types/claims/domain/rar-claims.js";
+import type { SetClaims } from "../../types/claims/domain/set-claims.js";
+import type { StdClaims } from "../../types/claims/domain/std-claims.js";
 import type {
   AuthenticatorAssuranceLevel,
   FederationAssuranceLevel,
   IdentityAssuranceLevel,
   LevelOfAssurance,
-} from "../../types/level-of-assurance.js";
+} from "../../types/claims/domain/level-of-assurance.js";
 import type { SubjectIdentifier } from "../claims/sub-id.js";
 
 // Unified domain claim set — RFC-grouped intersection that JWT parsing,

@@ -1,4 +1,2 @@
-export * from "./Aegis.js";
-export * from "./JweKit.js";
-export * from "./JwsKit.js";
-export * from "./JwtKit.js";
+export * from "./aegis/index.js";
+export * from "./kit/index.js";

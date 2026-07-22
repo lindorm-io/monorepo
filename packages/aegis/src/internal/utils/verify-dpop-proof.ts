@@ -1,7 +1,7 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { ShaKit } from "@lindorm/sha";
 import { AegisDomainError } from "../../errors/index.js";
-import type { ParsedDpopProof } from "../../types/jwt/jwt-dpop.js";
+import type { ParsedDpopProof } from "../../types/domain/jwt-dpop.js";
 import { computeJwkThumbprint } from "./compute-jwk-thumbprint.js";
 import { decodeJoseHeader } from "./jose-header.js";
 import { verifyJoseSignature } from "./jose-signature.js";
