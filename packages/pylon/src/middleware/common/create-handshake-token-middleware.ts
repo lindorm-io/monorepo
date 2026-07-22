@@ -1,4 +1,4 @@
-import type { VerifyJwtOptions } from "@lindorm/aegis";
+import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import {
   type HandshakeDpopMode,
@@ -13,7 +13,7 @@ import type {
   PylonSocketHandshakeContext,
 } from "../../types/index.js";
 
-type Options = Omit<VerifyJwtOptions, "issuer"> & {
+type Options = Omit<DomainAssert & VerifyOptions, "issuer"> & {
   issuer: string;
   dpop?: HandshakeDpopMode;
 };

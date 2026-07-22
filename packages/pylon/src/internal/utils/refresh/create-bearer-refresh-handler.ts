@@ -1,7 +1,8 @@
-import type { IAegis, VerifyJwtOptions } from "@lindorm/aegis";
+import type { DomainAssert, IAegis, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { isNumber, isObject, isString } from "@lindorm/is";
 import type { PylonSocket } from "../../../types/index.js";
+import { splitVerifyInput } from "../tokens/split-verify-input.js";
 import { assertJktUnchanged } from "./assert-jkt-unchanged.js";
 import { assertSubjectUnchanged } from "./assert-subject-unchanged.js";
 
@@ -10,7 +11,7 @@ type CreateBearerRefreshHandlerOptions = {
   capturedJkt?: string;
   socket: PylonSocket;
   subject: string | undefined;
-  verifyOptions: VerifyJwtOptions;
+  verifyOptions: DomainAssert & VerifyOptions;
 };
 
 export const createBearerRefreshHandler = ({
@@ -44,11 +45,13 @@ export const createBearerRefreshHandler = ({
     // do not re-present a DPoP proof per the socket-auth plan. Tell aegis to
     // trust the existing jkt binding for this verify call, then compare the
     // new token's cnf.jkt against the captured one below.
-    const verified = await aegis.verify(token, {
+    const { assert, options } = splitVerifyInput({
       tokenType: "access_token",
       ...verifyOptions,
       trustBoundThumbprint: capturedJkt !== undefined,
     });
+
+    const verified = await aegis.verify(token, assert, options);
 
     assertSubjectUnchanged(subject, verified.claims.subject);
 

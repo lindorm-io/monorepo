@@ -34,11 +34,11 @@ describe("createAccessTokenMiddleware", () => {
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
-      expect(ctx.aegis.verify).toHaveBeenCalledWith("jwt-token", {
-        tokenType: "access_token",
-        ...options,
-        dpopProof: undefined,
-      });
+      expect(ctx.aegis.verify).toHaveBeenCalledWith(
+        "jwt-token",
+        { ...options },
+        { tokenType: "access_token", dpopProof: undefined },
+      );
       expect(ctx.state.tokens.accessToken).toMatchSnapshot();
       expect(next).toHaveBeenCalledTimes(1);
     });
@@ -82,6 +82,7 @@ describe("createAccessTokenMiddleware", () => {
 
       expect(ctx.aegis.verify).toHaveBeenCalledWith(
         "jwt-token",
+        { ...options },
         expect.objectContaining({ tokenType: "access_token" }),
       );
     });
@@ -154,11 +155,11 @@ describe("createAccessTokenMiddleware", () => {
       const middleware = createAccessTokenMiddleware(options);
       await middleware(ctx, next);
 
-      expect(ctx.aegis.verify).toHaveBeenCalledWith("jwt-token", {
-        tokenType: "access_token",
-        ...options,
-        dpopProof: "proof-jwt",
-      });
+      expect(ctx.aegis.verify).toHaveBeenCalledWith(
+        "jwt-token",
+        { ...options },
+        { tokenType: "access_token", dpopProof: "proof-jwt" },
+      );
       expect(ctx.state.tokens.accessToken).toMatchSnapshot();
     });
 

@@ -1,9 +1,9 @@
-import { Aegis, type JwtClaimMatchers } from "@lindorm/aegis";
+import { Aegis, type DomainAssert } from "@lindorm/aegis";
 import { ClientError, LindormError } from "@lindorm/errors";
 import type { Dict } from "@lindorm/types";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
-export type UseAccessOptions = JwtClaimMatchers & {
+export type UseAccessOptions = DomainAssert & {
   token?: string;
 };
 

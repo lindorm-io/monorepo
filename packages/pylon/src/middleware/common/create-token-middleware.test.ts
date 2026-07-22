@@ -29,7 +29,11 @@ describe("createTokenMiddleware", () => {
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
-      expect(ctx.aegis.verify).toHaveBeenCalledWith("token_value", options);
+      expect(ctx.aegis.verify).toHaveBeenCalledWith(
+        "token_value",
+        { issuer: "issuer" },
+        {},
+      );
       expect(ctx.state.tokens.idToken).toMatchSnapshot();
     });
 
@@ -100,7 +104,11 @@ describe("createTokenMiddleware", () => {
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
-      expect(ctx.aegis.verify).toHaveBeenCalledWith("token_value", options);
+      expect(ctx.aegis.verify).toHaveBeenCalledWith(
+        "token_value",
+        { issuer: "issuer" },
+        {},
+      );
       expect(ctx.state.tokens.idToken).toMatchSnapshot();
       expect(ctx.io.socket.data.tokens.idToken).toMatchSnapshot();
     });

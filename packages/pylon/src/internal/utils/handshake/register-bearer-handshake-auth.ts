@@ -1,7 +1,13 @@
-import { Aegis, type IAegis, type VerifyJwtOptions } from "@lindorm/aegis";
+import {
+  Aegis,
+  type DomainAssert,
+  type IAegis,
+  type VerifyOptions,
+} from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { assertDpopHandshakeMatch } from "../dpop/assert-dpop-handshake-match.js";
 import { createBearerRefreshHandler } from "../refresh/create-bearer-refresh-handler.js";
+import { splitVerifyInput } from "../tokens/split-verify-input.js";
 import type { PylonSocket, PylonSocketAuth } from "../../../types/index.js";
 
 export type HandshakeDpopMode = "required" | "optional" | "disabled";
@@ -12,7 +18,7 @@ type RegisterBearerHandshakeAuthOptions = {
   dpopProof: string | undefined;
   socket: PylonSocket;
   token: string;
-  verifyOptions: VerifyJwtOptions;
+  verifyOptions: DomainAssert & VerifyOptions;
 };
 
 export const registerBearerHandshakeAuth = async ({
@@ -45,11 +51,13 @@ export const registerBearerHandshakeAuth = async ({
 
   const passDpopProof = preflightJkt && dpopMode !== "disabled" ? dpopProof : undefined;
 
-  const verified = await aegis.verify(token, {
+  const { assert, options } = splitVerifyInput({
     tokenType: "access_token",
     ...verifyOptions,
     dpopProof: passDpopProof,
   });
+
+  const verified = await aegis.verify(token, assert, options);
 
   const confirmedJkt = verified.claims.confirmation?.thumbprint;
 

@@ -1,19 +1,28 @@
 import { isSocketContext } from "../../internal/utils/is-context.js";
-import type { VerifyJwtOptions } from "@lindorm/aegis";
+import { splitVerifyInput } from "../../internal/utils/tokens/split-verify-input.js";
+import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
 import { sanitiseToken } from "@lindorm/utils";
 import objectPath from "object-path";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
-type Options = Omit<VerifyJwtOptions, "issuer"> & {
+type Options = Omit<DomainAssert & VerifyOptions, "issuer"> & {
   contextKey: string;
   issuer: string;
 };
 
-export const createTokenMiddleware =
-  <C extends PylonContext = PylonContext>(options: Options) =>
-  (path: string, optional: boolean = false): PylonMiddleware<C> =>
+export const createTokenMiddleware = <C extends PylonContext = PylonContext>(
+  options: Options,
+) => {
+  // `contextKey` is a pylon routing key, not a verify input; the rest is the
+  // matcher/knob bag routed to the reshaped `aegis.verify(token, assert, opts)`.
+  const { contextKey: _contextKey, ...verifyInput } = options;
+  const { assert, options: verifyOptions } = splitVerifyInput(
+    verifyInput as DomainAssert & VerifyOptions,
+  );
+
+  return (path: string, optional: boolean = false): PylonMiddleware<C> =>
     async function tokenMiddleware(ctx, next): Promise<void> {
       const timer = ctx.logger.timer();
 
@@ -35,7 +44,7 @@ export const createTokenMiddleware =
         }
 
         if (token) {
-          const verified = await ctx.aegis.verify(token, options);
+          const verified = await ctx.aegis.verify(token, assert, verifyOptions);
 
           timer.debug("Token verified", { verified });
 
@@ -68,3 +77,4 @@ export const createTokenMiddleware =
 
       await next();
     };
+};

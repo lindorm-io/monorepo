@@ -80,10 +80,11 @@ describe("createHandshakeTokenMiddleware", () => {
       const mw = createHandshakeTokenMiddleware(options);
       await mw(ctx, next);
 
-      expect(ctx.aegis.verify).toHaveBeenCalledWith("jwt-token", {
-        tokenType: "access_token",
-        ...options,
-      });
+      expect(ctx.aegis.verify).toHaveBeenCalledWith(
+        "jwt-token",
+        { ...options },
+        { tokenType: "access_token", dpopProof: undefined },
+      );
       expect(ctx.io.socket.data.tokens.bearer).toMatchSnapshot();
       expect(ctx.io.socket.data.pylon.auth.strategy).toBe("bearer");
       expect(ctx.io.socket.data.pylon.auth.getExpiresAt()).toEqual(exp);
@@ -300,11 +301,11 @@ describe("createHandshakeTokenMiddleware", () => {
         const mw = createHandshakeTokenMiddleware({ ...options, dpop: "required" });
         await mw(ctx, next);
 
-        expect(ctx.aegis.verify).toHaveBeenCalledWith("jwt-token", {
-          tokenType: "access_token",
-          ...options,
-          dpopProof: "proof-jwt",
-        });
+        expect(ctx.aegis.verify).toHaveBeenCalledWith(
+          "jwt-token",
+          { ...options },
+          { tokenType: "access_token", dpopProof: "proof-jwt" },
+        );
         expect(ctx.io.socket.data.pylon.auth.strategy).toBe("dpop-bearer");
         expect(next).toHaveBeenCalledTimes(1);
       });
