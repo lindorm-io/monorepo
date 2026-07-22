@@ -2,16 +2,18 @@ import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Predicate } from "@lindorm/types";
 import { CwmError } from "../errors/index.js";
+import type { ICwmKit } from "../interfaces/index.js";
 import {
   type CwtDecoded,
   type CwtSignOptions,
   type CwtVerifyOptions,
   type CwtVerifyResult,
   decodeCwt,
+  decodeCwtWire,
   signCwt,
   verifyCwt,
 } from "../internal/cose/cwt-token.js";
-import type { CwtWireClaims } from "../types/index.js";
+import type { CwtWireClaims, DecodedSignedToken } from "../types/index.js";
 
 export type CwmKitSettings = {
   kryptos: IKryptos;
@@ -29,7 +31,7 @@ export type CwmKitSettings = {
  * key — it throws on an asymmetric one (that is `CwtKit`'s COSE_Sign1). Aegis
  * dispatches the two off the RESOLVED key's `algClass`.
  */
-export class CwmKit {
+export class CwmKit implements ICwmKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
   private readonly clockTolerance: number;
@@ -69,6 +71,16 @@ export class CwmKit {
       clockTolerance: options.clockTolerance ?? this.clockTolerance,
       options,
     });
+  }
+
+  /**
+   * WIRE decode (no MAC check): the unified wire header (protected + unprotected
+   * COSE maps merged, integer labels translated to their JOSE wire names) + the
+   * cleartext WIRE claim payload. The uniform primitive shared with
+   * `JwtKit`/`CwtKit` decode.
+   */
+  decode<C extends CwtWireClaims = CwtWireClaims>(token: Buffer): DecodedSignedToken<C> {
+    return decodeCwtWire<C>(token);
   }
 
   static decode(token: Buffer): CwtDecoded {

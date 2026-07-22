@@ -4,10 +4,11 @@ import type { Dict, Predicate } from "@lindorm/types";
 import { CwsKit } from "../../classes/CwsKit.js";
 import { CoseError, CwmError, CwtError } from "../../errors/index.js";
 import { coseByJose } from "../header/header-registry.js";
+import { mergeCoseWireHeader } from "../header/merge-cose-wire-header.js";
 import { applyOmit, type OmitMode } from "../utils/apply-omit.js";
 import { createTemporalMatchers } from "../utils/jwt-temporal-matchers.js";
 import { validate } from "../utils/validate.js";
-import type { CwtWireClaims } from "../../types/index.js";
+import type { CwtWireClaims, DecodedSignedToken } from "../../types/index.js";
 import { coseLabelToAlg } from "./alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "./cbor.js";
 import { decodeCwtClaims, encodeCwtClaims } from "./cwt-claims.js";
@@ -228,6 +229,49 @@ export const verifyCwt = <C extends CwtWireClaims = CwtWireClaims>(
     protectedHeader,
     typ: typeof protectedTyp === "string" ? protectedTyp : undefined,
   };
+};
+
+/**
+ * Decode a CWT to its unified WIRE view WITHOUT verifying — the shared body of
+ * `CwtKit.decode`/`CwmKit.decode` (COSE_Sign1 ≡ COSE_Mac0 here). Merges the
+ * protected + unprotected COSE header maps into ONE {@link WireTokenHeader}
+ * (integer labels translated to their JOSE wire names), and decodes the CBOR
+ * claims payload into the COSE-name-keyed WIRE claim map — NO signature/MAC
+ * check, NO domain translation. Mirrors `JwtKit.decode`.
+ */
+export const decodeCwtWire = <C extends CwtWireClaims = CwtWireClaims>(
+  token: Buffer,
+): DecodedSignedToken<C> => {
+  const cose = unwrapCwt(decodeCbor(token));
+  const contents = cose instanceof Tag ? cose.contents : cose;
+
+  if (!Array.isArray(contents) || contents.length < 3) {
+    throw new CoseError("Malformed CWT", {
+      code: "cose_malformed",
+      title: "Malformed CWT",
+      details: "The CWT does not contain a recognisable COSE structure.",
+    });
+  }
+
+  const [protectedBstr, unprotected, payloadBstr] = contents as [
+    Uint8Array,
+    Map<number, unknown> | undefined,
+    Uint8Array,
+  ];
+
+  const header = mergeCoseWireHeader(
+    decodeProtectedHeader(protectedBstr),
+    unprotected instanceof Map ? unprotected : undefined,
+    "sig",
+  );
+
+  // The payload byte string is the CBOR-encoded claims map; decode it exactly as
+  // `verifyCwt` does (preferMap:false so nested claim objects are plain objects).
+  const payload = decodeCwtClaims(
+    decodeCbor<Map<unknown, unknown>>(Buffer.from(payloadBstr), { preferMap: false }),
+  );
+
+  return { header, payload: payload as C };
 };
 
 /**

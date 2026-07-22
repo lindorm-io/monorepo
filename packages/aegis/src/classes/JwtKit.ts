@@ -30,6 +30,7 @@ import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
   CertificateBindingMode,
   DecodedJwt,
+  DecodedJwtToken,
   JwtKitSettings,
   JwtWireClaims,
   ParsedJwt,
@@ -270,6 +271,17 @@ export class JwtKit implements IJwtKit {
       payload: decoded.payload as JwtWireClaims & C,
       token,
     };
+  }
+
+  /**
+   * WIRE decode (no signature check): the unified wire header (the single JOSE
+   * protected header) + the cleartext JWT claim payload. The uniform primitive
+   * shared with `CwtKit`/`CwmKit` decode — read the structure without verifying.
+   */
+  decode<C extends Dict = Dict>(token: string): DecodedJwtToken<C> {
+    const { header, payload } = JwtKit.decode<C>(token);
+
+    return { header, payload };
   }
 
   // public static

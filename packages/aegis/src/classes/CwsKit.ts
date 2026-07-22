@@ -1,8 +1,9 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CwsError } from "../errors/index.js";
+import type { ICwsKit } from "../interfaces/index.js";
 import { algToCoseLabel, isOfficialCoseAlg } from "../internal/cose/alg-labels.js";
-import { Tag } from "../internal/cose/cbor.js";
+import { Tag, decodeCbor } from "../internal/cose/cbor.js";
 import {
   COSE_TAG,
   buildMacStructure,
@@ -11,6 +12,8 @@ import {
   encodeProtectedHeader,
 } from "../internal/cose/structures.js";
 import { coseByJose } from "../internal/header/header-registry.js";
+import { mergeCoseWireHeader } from "../internal/header/merge-cose-wire-header.js";
+import type { DecodedOpaqueToken } from "../types/index.js";
 import { SignatureKit } from "./SignatureKit.js";
 
 export type CwsKitSettings = {
@@ -61,13 +64,53 @@ const unwrapStructure = (value: unknown, tag: number, label: string): Array<unkn
  * payload has no claims layer to specialise; the claims split (`CwtKit` Sign1 /
  * `CwmKit` Mac0) sits one layer up.
  */
-export class CwsKit {
+export class CwsKit implements ICwsKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
 
   constructor(options: CwsKitSettings) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CwsKit"]);
+  }
+
+  /**
+   * WIRE decode (no signature/MAC check): decode the CBOR-encoded COSE token
+   * (COSE_Sign1 tag 18 or COSE_Mac0 tag 17, tagged or bare), merge its protected
+   * + unprotected header maps into ONE {@link DecodedOpaqueToken} wire header
+   * (integer labels translated to their JOSE wire names), and surface the opaque
+   * payload bytes. The uniform primitive shared with `JwsKit` decode.
+   */
+  decode(token: Buffer): DecodedOpaqueToken {
+    const value = decodeCbor(token);
+    const contents =
+      value instanceof Tag &&
+      (value.tag === COSE_TAG.sign1 || value.tag === COSE_TAG.mac0)
+        ? value.contents
+        : value;
+
+    if (!Array.isArray(contents) || contents.length !== 4) {
+      throw new CwsError("Malformed COSE structure", {
+        code: "cose_malformed",
+        title: "Malformed COSE Structure",
+        details:
+          "A COSE_Sign1/COSE_Mac0 must be a 4-element array [protected, unprotected, payload, signature/tag].",
+      });
+    }
+
+    const [protectedBstr, unprotected, payload] = contents as [
+      Uint8Array,
+      Map<number, unknown> | undefined,
+      Uint8Array,
+    ];
+
+    return {
+      header: mergeCoseWireHeader(
+        decodeProtectedHeader(protectedBstr),
+        unprotected instanceof Map ? unprotected : undefined,
+        "sig",
+      ),
+      payload: Buffer.from(payload),
+    };
   }
 
   sign(payload: Buffer, options: CwsSignOptions = {}): Tag {

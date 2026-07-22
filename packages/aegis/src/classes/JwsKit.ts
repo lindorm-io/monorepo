@@ -22,6 +22,7 @@ import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
   CertificateBindingMode,
   DecodedJws,
+  DecodedOpaqueToken,
   JwsKitSettings,
   ParsedJws,
   SignedJoseHeader,
@@ -140,6 +141,20 @@ export class JwsKit implements IJwsKit {
     this.logger.debug("Token verified");
 
     return parsed;
+  }
+
+  /**
+   * WIRE decode (no signature check): the unified wire header (the single JOSE
+   * protected header) + the opaque payload bytes (the base64url payload segment
+   * decoded to raw bytes). The uniform primitive shared with `CwsKit` decode.
+   */
+  decode(token: string): DecodedOpaqueToken {
+    const [header, payload] = token.split(".");
+
+    return {
+      header: decodeJoseHeader(header),
+      payload: B64.toBuffer(payload, B64U),
+    };
   }
 
   // public static

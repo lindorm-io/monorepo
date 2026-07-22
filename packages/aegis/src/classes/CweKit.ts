@@ -2,7 +2,8 @@ import { AesKit } from "@lindorm/aes";
 import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CweError } from "../errors/index.js";
-import { Tag } from "../internal/cose/cbor.js";
+import type { ICweKit } from "../interfaces/index.js";
+import { Tag, decodeCbor } from "../internal/cose/cbor.js";
 import {
   coseLabelToEnc,
   encToCoseLabel,
@@ -16,6 +17,8 @@ import {
   encodeProtectedHeader,
 } from "../internal/cose/structures.js";
 import { coseByJose } from "../internal/header/header-registry.js";
+import { mergeCoseWireHeader } from "../internal/header/merge-cose-wire-header.js";
+import type { DecodedEncryptedToken } from "../types/index.js";
 
 export type CweKitSettings = {
   kryptos: IKryptos;
@@ -65,7 +68,7 @@ const unwrapEncrypt0 = (value: unknown): Array<unknown> => {
  * the IV travels unprotected (label 5), and the COSE ciphertext is `ct‖tag`.
  * AES-GCM and AES-CCM (the tag length comes from the algorithm).
  */
-export class CweKit {
+export class CweKit implements ICweKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
   private readonly encryption: KryptosEncryption | undefined;
@@ -155,5 +158,29 @@ export class CweKit {
     });
 
     return { payload, protectedHeader: decodedProtected };
+  }
+
+  /**
+   * WIRE decode (no decryption): decode the CBOR-encoded COSE_Encrypt0 (tag 16,
+   * tagged or bare), merge its protected + unprotected header maps into ONE
+   * {@link DecodedEncryptedToken} wire header (integer labels translated to
+   * their JOSE wire names — the content-encryption label lands on `enc`). The
+   * ciphertext stays encrypted; reading it needs the key (that is `decrypt`).
+   * The uniform primitive shared with `JweKit` decode.
+   */
+  decode(token: Buffer): DecodedEncryptedToken {
+    const [protectedBstr, unprotected] = unwrapEncrypt0(decodeCbor(token)) as [
+      Uint8Array,
+      Map<number, unknown> | undefined,
+      Uint8Array,
+    ];
+
+    return {
+      header: mergeCoseWireHeader(
+        decodeProtectedHeader(protectedBstr),
+        unprotected instanceof Map ? unprotected : undefined,
+        "enc",
+      ),
+    };
   }
 }

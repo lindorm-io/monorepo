@@ -1,5 +1,6 @@
 import type { Dict, Predicate } from "@lindorm/types";
 import type {
+  DecodedJwtToken,
   JwtWireClaims,
   ParsedJwt,
   SignJwtWireOptions,
@@ -16,4 +17,9 @@ export interface IJwtKit {
     assert?: Predicate<JwtWireClaims & C>,
     options?: VerifyJwtWireOptions,
   ): ParsedJwt<C>;
+  /**
+   * WIRE-only read (no signature check): the unified wire header + the cleartext
+   * JWT claim payload. Uniform with `CwtKit`/`CwmKit` decode.
+   */
+  decode<C extends Dict = Dict>(token: string): DecodedJwtToken<C>;
 }

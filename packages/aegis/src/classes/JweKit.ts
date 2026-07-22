@@ -24,6 +24,7 @@ import { verifyPartyBinding } from "../internal/utils/verify-party-binding.js";
 import type {
   CertificateBindingMode,
   DecodedJwe,
+  DecodedEncryptedToken,
   DecryptedJwe,
   DecryptedJweHeader,
   EncryptedJwe,
@@ -295,6 +296,17 @@ export class JweKit implements IJweKit {
     this.logger.debug("Token decrypted");
 
     return { header, payload, decoded, token };
+  }
+
+  /**
+   * WIRE decode (no decryption): the unified wire header ONLY — the single JOSE
+   * protected header (compact JWE carries no per-recipient unprotected header,
+   * so the merge is that one header). The content stays ciphertext; reading it
+   * needs the key (that is `decrypt`). The uniform primitive shared with
+   * `CweKit` decode.
+   */
+  decode(token: string): DecodedEncryptedToken {
+    return { header: JweKit.decode(token).header };
   }
 
   // public static

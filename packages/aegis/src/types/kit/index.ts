@@ -6,6 +6,7 @@ export * from "./cws-verify.js";
 export * from "./cwt-parse.js";
 export * from "./cwt-sign.js";
 export * from "./cwt-verify.js";
+export * from "./decoded.js";
 export * from "./jwe-decode.js";
 export * from "./jwe-decrypt.js";
 export * from "./jwe-encrypt.js";
