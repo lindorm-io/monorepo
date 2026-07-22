@@ -1,7 +1,8 @@
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
+import { omitUndefined } from "@lindorm/utils";
 import { AegisDomainError } from "../../errors/index.js";
-import type { VerifyJwtOptions } from "../../types/index.js";
+import type { DomainAssert, VerifyOptions } from "../../types/index.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { validate } from "./validate.js";
 
@@ -21,14 +22,15 @@ import { validate } from "./validate.js";
 export const validateCwtClaims = (
   wire: Dict,
   algorithm: KryptosAlgorithm,
-  verify: VerifyJwtOptions,
+  assert: DomainAssert | undefined,
+  options: VerifyOptions,
   clockTolerance: number,
 ): void => {
   const payload = wire;
 
   // `exp` presence is POLICY (default "required"). Surface a dedicated,
   // self-describing code rather than the generic claims-invalid one.
-  if (verify.expPresence !== "optional" && payload.exp === undefined) {
+  if (options.expPresence !== "optional" && payload.exp === undefined) {
     throw new AegisDomainError("Missing claim: exp", {
       code: "cwt_missing_claim_exp",
       title: "CWT Missing Claim Exp",
@@ -37,7 +39,21 @@ export const validateCwtClaims = (
     });
   }
 
-  const predicate = createIdentityMatchers(algorithm, verify, clockTolerance);
+  // The matcher bag is the domain `assert` merged with the three hash-derive
+  // inputs lifted from verify OPTIONS — identical to the JOSE half.
+  const matchers = omitUndefined({
+    ...assert,
+    accessToken: options.accessToken,
+    authCode: options.authCode,
+    authState: options.authState,
+  });
+
+  const predicate = createIdentityMatchers(
+    algorithm,
+    matchers,
+    clockTolerance,
+    options.expPresence,
+  );
 
   try {
     validate(payload, predicate as never);

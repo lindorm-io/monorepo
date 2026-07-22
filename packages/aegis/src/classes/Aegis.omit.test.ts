@@ -36,7 +36,7 @@ describe("Aegis — omit (compact-by-default)", () => {
   // The COSE claims, domain-keyed; custom claims pass through verbatim, so an
   // absent claim really is absent (no defaulting).
   const coseClaims = async (token: string): Promise<Record<string, unknown>> => {
-    const verified = (await aegis.verify("access_token", token, {
+    const verified = (await aegis.verify("access_token", token, undefined, {
       audience: "https://rs.lindorm.io/",
     })) as unknown as {
       claims: Record<string, unknown>;
@@ -208,7 +208,7 @@ describe("Aegis — omit (compact-by-default)", () => {
       { audience: ["client-1"], subject: "user-1", events },
       { format: "cwt" },
     );
-    const verified = (await aegis.verify("logout_token", cwt.token, {
+    const verified = (await aegis.verify("logout_token", cwt.token, undefined, {
       audience: "client-1",
     })) as unknown as { claims: Record<string, unknown> };
     expect(verified.claims.events).toEqual(events);

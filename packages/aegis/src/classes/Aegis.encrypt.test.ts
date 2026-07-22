@@ -50,7 +50,9 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
       const { token } = await aegis.mint("id_token", content, { encrypt: {} });
 
-      const parsed = await aegis.verify("id_token", token, { audience: "client-1" });
+      const parsed = await aegis.verify("id_token", token, undefined, {
+        audience: "client-1",
+      });
 
       expect(parsed.wire?.payload).toMatchObject({
         iss: ISSUER,
@@ -130,7 +132,9 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
       // The token still decrypt-then-verifies to the inner claims (the KDF
       // re-derives from the on-wire apu/apv on the read side).
-      const parsed = await aegis.verify("id_token", token, { audience: "client-1" });
+      const parsed = await aegis.verify("id_token", token, undefined, {
+        audience: "client-1",
+      });
       expect(parsed.wire?.payload).toMatchObject({ iss: ISSUER, sub: "user-1" });
     });
   });
@@ -182,7 +186,9 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       amphora.add(TEST_EC_KEY_ENC);
 
       const { token } = await aegis.mint("id_token", content);
-      const parsed = await aegis.verify("id_token", token, { audience: "client-1" });
+      const parsed = await aegis.verify("id_token", token, undefined, {
+        audience: "client-1",
+      });
 
       expect(parsed.sensitive).toMatchObject({
         nationalIdentityNumber: "ABC-123",
@@ -255,7 +261,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       // to the JOSE path and verifies normally (the old "force cose on a JWT" is gone).
       expect(Aegis.isCose(token)).toBe(false);
       await expect(
-        aegis.verify("access_token", token, { audience: RESOURCE }),
+        aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
       ).resolves.toBeDefined();
     });
 
@@ -264,7 +270,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
       expect(JwtKit.isJwt(token)).toBe(true);
 
-      const parsed = await aegis.verify("access_token", token, {
+      const parsed = await aegis.verify("access_token", token, undefined, {
         audience: RESOURCE,
       });
 

@@ -1,9 +1,9 @@
 import { subSeconds } from "@lindorm/date";
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
-import type { PredicateOperator } from "@lindorm/types";
+import type { Dict, PredicateOperator } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
-import type { JwtClaims, VerifyJwtOptions } from "../../types/index.js";
+import type { JwtClaims } from "../../types/index.js";
 import { claimByDomain } from "../claims/claims-registry.js";
 import { createHash } from "./create-hash.js";
 
@@ -22,10 +22,16 @@ const HASH_MATCHERS: Readonly<Record<string, { jose: keyof JwtClaims }>> = {
 };
 
 /**
- * Identity/presence matcher builder (the AEGIS half — Phase 8 relocates this into
- * Aegis). Builds the named-claim matchers (`aud`/`iss`/`sub`/`nonce`/hashes/…)
- * from the verifier-supplied options, and layers the `exp` PRESENCE requiredness
- * on top of the temporal range (see `createTemporalMatchers`).
+ * Identity/presence matcher builder (the AEGIS half). Builds the wire-keyed
+ * named-claim predicate (`aud`/`iss`/`sub`/`nonce`/hashes/…) from the resolved
+ * `assert` matcher bag, and layers the `exp` PRESENCE requiredness on top of the
+ * temporal range.
+ *
+ * The input `matchers` is a CLEAN claim-matcher bag — the domain `assert`
+ * (named-8 + folded-14 equality claims) merged with the three hash-derive inputs
+ * (`accessToken`/`authCode`/`authState`) lifted from verify OPTIONS. It carries
+ * no verify knobs (those never reach here), so there is nothing to skip; every
+ * key maps to a JOSE claim via the registry (or the hash table).
  *
  * `exp` PRESENCE is policy (default `"required"`). When required, the matcher
  * drops the `$exists: false` escape so a missing exp FAILS the predicate; when
@@ -36,32 +42,17 @@ const HASH_MATCHERS: Readonly<Record<string, { jose: keyof JwtClaims }>> = {
  */
 export const createIdentityMatchers = (
   algorithm: KryptosAlgorithm,
-  verify: VerifyJwtOptions,
+  matchers: Dict,
   clockTolerance: number,
+  expPresence?: "required" | "optional",
 ): Partial<Record<keyof JwtClaims, PredicateOperator<any>>> => {
   const predicate: Partial<Record<keyof JwtClaims, PredicateOperator<any>>> = {};
 
-  if (verify.expPresence !== "optional") {
+  if (expPresence !== "optional") {
     predicate.exp = { $gte: subSeconds(new Date(), clockTolerance) };
   }
 
-  for (const [key, value] of Object.entries(verify)) {
-    // tokenType is validated against the JOSE `typ` header by each Kit directly
-    if (key === "tokenType") continue;
-    // actor is validated against the parsed TokenDelegation by each Kit directly
-    if (key === "actor") continue;
-    // dpopProof is validated against the cnf.jkt claim by each Kit directly
-    if (key === "dpopProof") continue;
-    // trustBoundThumbprint is a binary flag consumed by each Kit directly
-    if (key === "trustBoundThumbprint") continue;
-    // typPresence governs the JOSE typ gate on the Aegis verify path directly
-    if (key === "typPresence") continue;
-    // expPresence governs the exp matcher above, not a per-claim equality check
-    if (key === "expPresence") continue;
-    // key is the key-selection policy, consumed by Aegis when it resolves the
-    // verification key — not a claim matcher, and never present on the payload
-    if (key === "key") continue;
-
+  for (const [key, value] of Object.entries(matchers)) {
     // The wire (JOSE) name comes from the registry — the single source of truth
     // for the domain->wire claim-name map. The three hash-derive matchers are the
     // sole exception (they compute a hash, not a name lookup). An unmapped key
@@ -109,7 +100,7 @@ export const createIdentityMatchers = (
       continue;
     }
 
-    throw new AegisDomainError(`Unsupported value: ${value as any} for key: ${key}`, {
+    throw new AegisDomainError(`Unsupported value: ${value} for key: ${key}`, {
       code: "jwt_verify_unsupported_value",
       data: { key },
       title: "JWT Verify Unsupported Value",

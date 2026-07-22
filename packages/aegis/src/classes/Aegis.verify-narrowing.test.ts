@@ -38,7 +38,9 @@ describe("Aegis profiled verify narrowing", () => {
       clientId: "client-1",
     });
 
-    const parsed = await aegis.verify("access_token", token, { audience: RESOURCE });
+    const parsed = await aegis.verify("access_token", token, undefined, {
+      audience: RESOURCE,
+    });
 
     expectTypeOf(parsed).toHaveProperty("claims");
 
@@ -70,7 +72,7 @@ describe("Aegis profiled verify narrowing", () => {
       events: { "urn:lindorm:event:test": {} },
     });
 
-    const parsed = await aegis.verify("security_event", token, {
+    const parsed = await aegis.verify("security_event", token, undefined, {
       audience: "https://receiver",
     });
 

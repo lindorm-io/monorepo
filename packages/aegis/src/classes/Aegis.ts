@@ -89,6 +89,7 @@ import type {
   DecryptedJwe,
   DecryptedToken,
   DecryptOptions,
+  DomainAssert,
   EncryptData,
   EncryptedCwe,
   EncryptedJwe,
@@ -123,8 +124,8 @@ import type {
   VerifyCwsOptions,
   VerifyCwtOptions,
   VerifyJwsOptions,
-  VerifyJwtOptions,
   VerifyJwtWireOptions,
+  VerifyOptions,
 } from "../types/index.js";
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
@@ -296,26 +297,34 @@ export class Aegis implements IAegis {
   verify<P extends keyof BuiltInProfiles>(
     profile: P,
     token: string,
-    options?: ProfileVerifyOptions,
+    assert: DomainAssert | undefined,
+    options: ProfileVerifyOptions,
   ): Promise<NarrowedToken<BuiltInProfiles[P]>>;
   verify(
     profile: string & {},
     token: string,
+    assert: DomainAssert | undefined,
     options: ProfileVerifyOptions,
   ): Promise<VerifiedToken>;
   verify<C extends Dict = Dict>(
     token: string,
-    options?: VerifyJwtOptions,
+    assert?: DomainAssert,
+    options?: VerifyOptions,
   ): Promise<VerifiedToken<C>>;
   async verify(
     tokenOrProfile: string,
-    optionsOrToken?: VerifyJwtOptions | string,
+    assertOrToken?: DomainAssert | string,
+    optionsOrAssert?: DomainAssert | VerifyOptions,
     profileOptions?: ProfileVerifyOptions,
   ): Promise<VerifiedToken> {
-    if (isString(optionsOrToken)) {
+    // Profiled overload: the 2nd positional is the token (a string); the 3rd is
+    // the optional `assert`, the 4th the profile options. Non-profiled: the 2nd
+    // positional is the optional `assert` object, the 3rd the verify options.
+    if (isString(assertOrToken)) {
       return verifyProfileToken({
         name: tokenOrProfile,
-        token: optionsOrToken,
+        token: assertOrToken,
+        assert: optionsOrAssert as DomainAssert | undefined,
         options: profileOptions ?? ({} as ProfileVerifyOptions),
         deps: this.deps,
       });
@@ -323,7 +332,8 @@ export class Aegis implements IAegis {
 
     return verifyToken({
       token: tokenOrProfile,
-      options: optionsOrToken,
+      assert: assertOrToken,
+      options: optionsOrAssert as VerifyOptions | undefined,
       deps: this.deps,
     });
   }
@@ -402,11 +412,12 @@ export class Aegis implements IAegis {
   }
 
   /**
-   * Validate a flat claim dict against a JwtClaimMatchers-style declarative
-   * matcher. Throws LindormError("Invalid token") with details about every
-   * failing key when the claims don't match.
+   * Validate a flat claim dict against a {@link DomainAssert}-based declarative
+   * matcher ({@link ValidateJwtOptions} adds the `algorithm`/`tokenType` knobs
+   * and the hash-derive inputs). Throws LindormError("Invalid token") with
+   * details about every failing key when the claims don't match.
    *
-   * Works on any flat claim source — a ParsedJwtPayload or any
+   * Works on any flat claim source — a parsed domain claim set or any
    * structurally-compatible dict.
    */
   static assert(claims: Dict, matchers: ValidateJwtOptions): void {

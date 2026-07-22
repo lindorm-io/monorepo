@@ -42,7 +42,7 @@ describe("Aegis — COSE", () => {
     const bytes = Buffer.from(token, "base64url");
     expect(bytes.subarray(0, 2).toString("hex")).toBe("d83d");
 
-    const verified = (await aegis.verify("access_token", token, {
+    const verified = (await aegis.verify("access_token", token, undefined, {
       audience: "https://rs.lindorm.io/",
     })) as unknown as { claims: Record<string, unknown> };
 
@@ -71,7 +71,7 @@ describe("Aegis — COSE", () => {
     expect(bytes.subarray(0, 2).toString("hex")).toBe("d83d"); // CWT tag
     expect(CwtKit.decode(bytes).algorithm).toBe("HS256"); // COSE_Mac0, not Sign1
 
-    const verified = (await macAegis.verify("id_token", token, {
+    const verified = (await macAegis.verify("id_token", token, undefined, {
       audience: "client-1",
     })) as unknown as { claims: Record<string, unknown> };
 
@@ -118,7 +118,7 @@ describe("Aegis — COSE", () => {
 
     expect(CwtKit.decode(Buffer.from(token, "base64url")).algorithm).toBe("HS256");
 
-    const verified = (await macAegis.verify("id_token", token, {
+    const verified = (await macAegis.verify("id_token", token, undefined, {
       audience: "client-1",
     })) as unknown as { claims: Record<string, unknown> };
     expect(verified.claims.subject).toBe("u");
@@ -143,7 +143,7 @@ describe("Aegis — COSE", () => {
     const bytes = Buffer.from(token, "base64url");
     expect(bytes[0]).toBe(0xd0);
 
-    const verified = (await encAegis.verify("id_token", token, {
+    const verified = (await encAegis.verify("id_token", token, undefined, {
       audience: "client-1",
     })) as unknown as { claims: Record<string, unknown> };
 
@@ -177,7 +177,7 @@ describe("Aegis — COSE", () => {
       // Encrypted outer (COSE_Encrypt0, tag 16 = 0xd0).
       expect(Buffer.from(token, "base64url")[0]).toBe(0xd0);
 
-      const verified = (await encAegis.verify("id_token", token, {
+      const verified = (await encAegis.verify("id_token", token, undefined, {
         audience: "client-1",
       })) as unknown as { sensitive: Record<string, unknown> };
 
@@ -245,7 +245,7 @@ describe("Aegis — COSE", () => {
     );
 
     await expect(
-      aegis.verify("access_token", token, {
+      aegis.verify("access_token", token, undefined, {
         audience: "https://other.lindorm.io/",
       }),
     ).rejects.toThrow();
@@ -370,7 +370,7 @@ describe("Aegis — COSE", () => {
       );
 
       // The whole point: the caller does NOT pass a format — verify reads it off the token.
-      const verified = (await aegis.verify("access_token", token, {
+      const verified = (await aegis.verify("access_token", token, undefined, {
         audience: "https://rs.lindorm.io/",
       })) as unknown as { claims: Record<string, unknown> };
 

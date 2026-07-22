@@ -1,5 +1,9 @@
 import { JweKit } from "../../classes/JweKit.js";
-import type { ProfileVerifyOptions, VerifiedToken } from "../../types/index.js";
+import type {
+  DomainAssert,
+  ProfileVerifyOptions,
+  VerifiedToken,
+} from "../../types/index.js";
 import { isCose } from "../cose/is-cose.js";
 import { resolveProfile } from "../profiles/registry.js";
 import type { AegisDeps } from "./aegis-deps.js";
@@ -20,11 +24,13 @@ import { verifyToken } from "./verify-token.js";
 export const verifyProfileToken = async ({
   name,
   token,
+  assert,
   options,
   deps,
 }: {
   name: string;
   token: string;
+  assert?: DomainAssert;
   options: ProfileVerifyOptions;
   deps: AegisDeps;
 }): Promise<VerifiedToken> => {
@@ -36,7 +42,9 @@ export const verifyProfileToken = async ({
 
   // The typ is enforced by enforceVerifyFloor against profile.typ, so we do NOT
   // also pass tokenType to the standard verify (which would compute its own typ
-  // expectation and could disagree).
+  // expectation and could disagree). `audience`/`issuer` are consumed by the
+  // floor below; `rest` is the pure verify-knob set (the claim matchers are the
+  // separate `assert` argument).
   const { audience: _audience, issuer: _issuer, clockTolerance: _ct, ...rest } = options;
 
   // A `lifetime: null` profile (RFC 8417 / SSF `security_event`, introspection,
@@ -49,9 +57,10 @@ export const verifyProfileToken = async ({
   // client assertion reaches the floor (which owns the profile's typ presence
   // policy). Direct jwt.verify callers keep the strict default.
   const verified = JweKit.isJwe(token)
-    ? await verifyToken({ token, options: { ...rest, expPresence }, deps })
+    ? await verifyToken({ token, assert, options: { ...rest, expPresence }, deps })
     : await verifyJwtToken({
         token,
+        assert,
         options: { ...rest, typPresence: "optional", expPresence },
         deps,
       });

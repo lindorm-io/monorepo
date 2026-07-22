@@ -1,6 +1,5 @@
 export * from "./domain-assert.js";
 export * from "./encrypt.js";
-export * from "./jwt-claim-matchers.js";
 export * from "./jwt-delegation.js";
 export * from "./jwt-dpop.js";
 export * from "./jwt-sign.js";

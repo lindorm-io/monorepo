@@ -9,7 +9,7 @@ import type { AegisSignKey } from "../aegis.js";
 import type { TokenSignEnvelope } from "../header/header.js";
 import type { JweEncryptOptions } from "../kit/jwe-encrypt.js";
 import type { SignJwtContent, SignJwtOptions } from "../domain/jwt-sign.js";
-import type { VerifyJwtOptions } from "../domain/jwt-verify.js";
+import type { VerifyOptions } from "../domain/jwt-verify.js";
 
 /**
  * The single domain vocabulary every profile draws from. All keys are
@@ -292,12 +292,13 @@ export type ProfileMintOptions = {
 };
 
 /**
- * Options for profiled verify. Beyond the standard verify matchers, the floor
+ * Options for profiled verify. Beyond the standard verify knobs, the floor
  * (§4.4) needs the verifier's own identity (`audience`) to assert the token's
  * `aud` contains self. `issuer` may override the configured/profile issuer
- * source (per-token profiles).
+ * source (per-token profiles). Declarative claim matching beyond the floor is
+ * the separate positional `assert` ({@link DomainAssert}) argument.
  */
-export type ProfileVerifyOptions = VerifyJwtOptions & {
+export type ProfileVerifyOptions = VerifyOptions & {
   audience: string;
   issuer?: string;
   clockTolerance?: number;

@@ -2,7 +2,6 @@ import type { Predicate } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
 import type { AegisVerifyKey } from "../aegis.js";
 import type { ActClaim } from "../claims/domain/act-claim.js";
-import type { JwtClaimMatchers } from "./jwt-claim-matchers.js";
 
 // How `allowedActors` is applied to the token's actor chain:
 // - "every"   (default) every actor in the chain must match the predicate.
@@ -22,7 +21,16 @@ export type VerifyActorOptions = {
   maxChainDepth?: number;
 };
 
-export type VerifyJwtOptions = JwtClaimMatchers & {
+/**
+ * The verify-time KNOBS for `aegis.verify(token, assert, options)` — format
+ * agnostic (JOSE + COSE share it). No claim matchers live here anymore: the
+ * declarative claim assertions moved to the positional {@link DomainAssert}
+ * argument. What stays are the structural/policy knobs plus the three
+ * hash-DERIVE inputs (`accessToken`/`authCode`/`authState`) — verify-time
+ * at_hash/c_hash/s_hash checks, computed (not name-mapped), so they belong with
+ * verify options, not the claim matchers.
+ */
+export type VerifyOptions = {
   actor?: VerifyActorOptions;
   dpopProof?: string;
   /**
@@ -62,4 +70,20 @@ export type VerifyJwtOptions = JwtClaimMatchers & {
    * value is always range-checked (with clock tolerance) regardless of this option.
    */
   expPresence?: "required" | "optional";
+  /**
+   * The access token whose SHA left-half must equal the token's `at_hash`
+   * (OIDC Core §3.1.3.6). Hashed with the token's signing algorithm at verify
+   * time, not compared literally.
+   */
+  accessToken?: string;
+  /**
+   * The authorization code whose SHA left-half must equal the token's `c_hash`
+   * (OIDC Core §3.3.2.11). Hashed at verify time.
+   */
+  authCode?: string;
+  /**
+   * The state whose SHA left-half must equal the token's `s_hash`
+   * (OIDC financial-grade). Hashed at verify time.
+   */
+  authState?: string;
 };

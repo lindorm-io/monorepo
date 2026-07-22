@@ -2,10 +2,8 @@ import type { Predicate, PredicateOperator } from "@lindorm/types";
 import type { DomainClaims } from "../../internal/utils/extract-claims.js";
 
 /**
- * The trimmed domain matcher set (DESIGN §6 — the 25 → 8 audit). ADDITIVE for
- * now: declared here, but not yet consumed by `verify` (Phase 19). It is the
- * successor to {@link import("./jwt/jwt-claim-matchers.js").JwtClaimMatchers},
- * which stays until the swap.
+ * The trimmed domain matcher set (DESIGN §6 — the 25 → 8 audit). This is the
+ * `assert` matcher vocabulary consumed by `aegis.verify(token, assert, options)`.
  *
  * Only the eight claims that earn a NAMED slot through NON-equality semantics
  * survive as matchers:
@@ -17,12 +15,14 @@ import type { DomainClaims } from "../../internal/utils/extract-claims.js";
  *   array-contains: a bare `string`/`Array<string>` requires ALL listed values
  *   present; a `PredicateOperator` (`{ $in }`) matches any.
  *
- * The other ~14 former matchers (`authContextClassReference`, `authorizedParty`,
+ * The other 14 former matchers (`authContextClassReference`, `authorizedParty`,
  * `grantType`, `nonce`, `levelOfAssurance`, `vectorOfTrust`, `vectorTrustMark`,
  * `authTime`, `clientId`, `subject`, `subjectHint`, `tenantId`, `authFactor`,
  * `sessionHint`) are plain-equality claims and fold into the free
- * {@link DomainAssert} predicate. The three verify-time derive-inputs
- * (`accessToken`, `authCode`, `authState`) move to verify OPTIONS.
+ * {@link DomainAssert} predicate — each is a `keyof DomainClaims`, so
+ * `Predicate<Omit<DomainClaims, keyof DomainClaimMatchers>>` types them. The
+ * three verify-time derive-inputs (`accessToken`, `authCode`, `authState`) move
+ * to verify OPTIONS ({@link import("./jwt-verify.js").VerifyOptions}).
  */
 export type DomainClaimMatchers = {
   audience?: string;

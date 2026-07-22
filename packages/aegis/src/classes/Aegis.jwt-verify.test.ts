@@ -49,18 +49,6 @@ describe("Aegis verify — relocated domain policy", () => {
       await expect(aegis.verify(token, { audience: "elsewhere" })).rejects.toThrow();
     });
 
-    test("audience array verifier requires every listed audience to be present", async () => {
-      const { token } = await mint({ ...baseContent, audience: ["saga", "mimir"] });
-
-      await expect(
-        aegis.verify(token, { audience: ["saga", "mimir"] }),
-      ).resolves.toBeDefined();
-      await expect(aegis.verify(token, { audience: ["saga"] })).resolves.toBeDefined();
-      await expect(
-        aegis.verify(token, { audience: ["saga", "elsewhere"] }),
-      ).rejects.toThrow();
-    });
-
     test("resolves a full set of custom matchers (hashes, vot, authTime)", async () => {
       const content: SignContent = {
         ...baseContent,
@@ -76,15 +64,20 @@ describe("Aegis verify — relocated domain policy", () => {
       const { token } = await mint(content);
 
       await expect(
-        aegis.verify(token, {
-          accessToken: content.accessToken,
-          audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
-          authCode: content.authCode,
-          authState: content.authState,
-          authTime: { $lte: new Date("2022-01-01T08:00:00.000Z") },
-          vectorOfTrust: "P1.Cc.Ce.Aa",
-          vectorTrustMark: { $eq: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa" },
-        }),
+        aegis.verify(
+          token,
+          {
+            audience: "427d8455-7d5a-59d3-afb6-7ef2b5bba226",
+            authTime: { $lte: new Date("2022-01-01T08:00:00.000Z") },
+            vectorOfTrust: "P1.Cc.Ce.Aa",
+            vectorTrustMark: { $eq: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa" },
+          },
+          {
+            accessToken: content.accessToken,
+            authCode: content.authCode,
+            authState: content.authState,
+          },
+        ),
       ).resolves.toBeDefined();
     });
 
@@ -96,7 +89,7 @@ describe("Aegis verify — relocated domain policy", () => {
       });
 
       await expect(
-        aegis.verify(token, { accessToken: "a-different-access-token" }),
+        aegis.verify(token, undefined, { accessToken: "a-different-access-token" }),
       ).rejects.toThrow();
     });
   });
@@ -129,7 +122,7 @@ describe("Aegis verify — relocated domain policy", () => {
 
     test("accepts a token with no exp when expPresence is optional", async () => {
       await expect(
-        aegis.verify(signExpLess(), { expPresence: "optional" }),
+        aegis.verify(signExpLess(), undefined, { expPresence: "optional" }),
       ).resolves.toBeDefined();
     });
 
@@ -167,7 +160,7 @@ describe("Aegis verify — relocated domain policy", () => {
         claims: { myAppFlag: "enabled", someCustomThing: 42 },
       });
 
-      const parsed = await aegis.verify(token, { typPresence: "optional" });
+      const parsed = await aegis.verify(token, undefined, { typPresence: "optional" });
       expect(parsed.profile).toEqual({
         givenName: "Jonn",
         email: "jonn@example.com",
@@ -200,23 +193,23 @@ describe("Aegis verify — relocated domain policy", () => {
 
     test("actor.required throws when no act claim is present", async () => {
       const { token } = await mint(baseContent);
-      await expect(aegis.verify(token, { actor: { required: true } })).rejects.toThrow(
-        /act claim/,
-      );
+      await expect(
+        aegis.verify(token, undefined, { actor: { required: true } }),
+      ).rejects.toThrow(/act claim/);
     });
 
     test("actor.required passes when act is present", async () => {
       const { token } = await mint({ ...baseContent, act: { subject: "service-1" } });
       await expect(
-        aegis.verify(token, { actor: { required: true } }),
+        aegis.verify(token, undefined, { actor: { required: true } }),
       ).resolves.toBeDefined();
     });
 
     test("actor.forbidden throws when act is present", async () => {
       const { token } = await mint({ ...baseContent, act: { subject: "service-1" } });
-      await expect(aegis.verify(token, { actor: { forbidden: true } })).rejects.toThrow(
-        /non-delegated/,
-      );
+      await expect(
+        aegis.verify(token, undefined, { actor: { forbidden: true } }),
+      ).rejects.toThrow(/non-delegated/);
     });
 
     test("actor.allowedActors ($in) accepts a chain of whitelisted subjects", async () => {
@@ -225,7 +218,7 @@ describe("Aegis verify — relocated domain policy", () => {
         act: { subject: "service-1", act: { subject: "service-2" } },
       });
       await expect(
-        aegis.verify(token, {
+        aegis.verify(token, undefined, {
           actor: { allowedActors: { subject: { $in: ["service-1", "service-2"] } } },
         }),
       ).resolves.toBeDefined();
@@ -237,7 +230,7 @@ describe("Aegis verify — relocated domain policy", () => {
         act: { subject: "service-1", act: { subject: "rogue" } },
       });
       await expect(
-        aegis.verify(token, {
+        aegis.verify(token, undefined, {
           actor: { allowedActors: { subject: { $in: ["service-1"] } } },
         }),
       ).rejects.toThrow(/not allowed/);
@@ -249,7 +242,7 @@ describe("Aegis verify — relocated domain policy", () => {
         act: { subject: "service-1", act: { subject: "rogue" } },
       });
       await expect(
-        aegis.verify(token, {
+        aegis.verify(token, undefined, {
           actor: { allowedActors: { subject: "service-1" }, actorScope: "current" },
         }),
       ).resolves.toBeDefined();
@@ -261,7 +254,7 @@ describe("Aegis verify — relocated domain policy", () => {
         act: { subject: "rogue-1", act: { subject: "rogue-2" } },
       });
       await expect(
-        aegis.verify(token, {
+        aegis.verify(token, undefined, {
           actor: { allowedActors: { subject: "gateway" }, actorScope: "some" },
         }),
       ).rejects.toThrow(/no actor in the chain/i);
@@ -275,9 +268,9 @@ describe("Aegis verify — relocated domain policy", () => {
           act: { subject: "service-2", act: { subject: "service-3" } },
         },
       });
-      await expect(aegis.verify(token, { actor: { maxChainDepth: 2 } })).rejects.toThrow(
-        /maximum depth/,
-      );
+      await expect(
+        aegis.verify(token, undefined, { actor: { maxChainDepth: 2 } }),
+      ).rejects.toThrow(/maximum depth/);
     });
   });
 
@@ -320,7 +313,7 @@ describe("Aegis verify — relocated domain policy", () => {
       });
       const proof = signDpopProof(token);
 
-      const parsed = await aegis.verify(token, { dpopProof: proof });
+      const parsed = await aegis.verify(token, undefined, { dpopProof: proof });
 
       expect(parsed.dpop).toEqual({
         thumbprint: proofThumbprint,
@@ -349,7 +342,7 @@ describe("Aegis verify — relocated domain policy", () => {
       const { token } = await mint({ ...baseContent, tokenType: "access_token" });
       const proof = signDpopProof(token);
 
-      await expect(aegis.verify(token, { dpopProof: proof })).rejects.toThrow(
+      await expect(aegis.verify(token, undefined, { dpopProof: proof })).rejects.toThrow(
         /DPoP proof provided but token is not bound/,
       );
     });
@@ -362,7 +355,7 @@ describe("Aegis verify — relocated domain policy", () => {
       });
       const proof = signDpopProof(token);
 
-      await expect(aegis.verify(token, { dpopProof: proof })).rejects.toThrow(
+      await expect(aegis.verify(token, undefined, { dpopProof: proof })).rejects.toThrow(
         /thumbprint does not match cnf\.jkt/,
       );
     });

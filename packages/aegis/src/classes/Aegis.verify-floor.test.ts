@@ -70,7 +70,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     const { token } = await mintAccessToken();
 
     await expect(
-      aegis.verify("access_token", token, { audience: RESOURCE }),
+      aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
     ).resolves.toMatchObject({
       claims: { subject: "user-1" },
     });
@@ -80,7 +80,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     const { token } = await mintAccessToken();
 
     await expect(
-      aegis.verify("access_token", token, { audience: "https://wrong-rs" }),
+      aegis.verify("access_token", token, undefined, { audience: "https://wrong-rs" }),
     ).rejects.toThrow(AegisDomainError);
   });
 
@@ -88,7 +88,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     const { token } = await mintAccessToken();
 
     await expect(
-      aegis.verify("access_token", token, {
+      aegis.verify("access_token", token, undefined, {
         audience: RESOURCE,
         issuer: "https://not-the-issuer/",
       }),
@@ -102,7 +102,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     });
 
     await expect(
-      aegis.verify("access_token", token, { audience: RESOURCE }),
+      aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
     ).rejects.toThrow(AegisDomainError);
   });
 
@@ -116,7 +116,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     });
 
     await expect(
-      aegis.verify("access_token", token, { audience: RESOURCE }),
+      aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
     ).rejects.toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
   });
 
@@ -136,7 +136,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     );
 
     await expect(
-      aegis.verify("access_token", token, { audience: RESOURCE }),
+      aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
     ).rejects.toThrow(
       expect.objectContaining({
         code: "jwt_required_claims_missing",
@@ -166,7 +166,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       const { token } = await mintAccessToken();
 
       await expect(
-        aegis.verify("access_token", token, { audience: RESOURCE }),
+        aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
       ).resolves.toMatchObject({
         claims: { subject: "user-1", clientId: "client-1" },
       });
@@ -179,7 +179,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       });
 
       await expect(
-        aegis.verify("id_token", token, { audience: "client-1" }),
+        aegis.verify("id_token", token, undefined, { audience: "client-1" }),
       ).resolves.toMatchObject({
         claims: { subject: "user-1", issuer: ISSUER },
       });
@@ -197,7 +197,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       );
 
       await expect(
-        aegis.verify("security_event", token, {
+        aegis.verify("security_event", token, undefined, {
           audience: "https://receiver",
         }),
       ).resolves.toMatchObject({
@@ -224,7 +224,9 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       // domain-extracted onto `payload` — `events` no longer falls through to
       // the custom `payload.claims` bag.
       await expect(
-        aegis.verify("security_event", token, { audience: "https://receiver" }),
+        aegis.verify("security_event", token, undefined, {
+          audience: "https://receiver",
+        }),
       ).resolves.toMatchObject({
         claims: {
           subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
@@ -254,7 +256,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
 
     test("profile-less verify ACCEPTS an exp-less token with expPresence 'optional'", async () => {
       await expect(
-        aegis.verify(explessToken(), { expPresence: "optional" }),
+        aegis.verify(explessToken(), undefined, { expPresence: "optional" }),
       ).resolves.toMatchObject({
         claims: { subject: "user-1", issuer: ISSUER },
       });
@@ -277,7 +279,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       );
 
       await expect(
-        aegis.verify("access_token", token, { audience: RESOURCE }),
+        aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
       ).rejects.toThrow(expect.objectContaining({ code: "jwt_missing_claim_exp" }));
     });
   });
@@ -294,7 +296,10 @@ describe("Aegis profiled verify floor (§4.4)", () => {
 
       // jti auto-injected at mint; the floor's required-claims check passes.
       await expect(
-        aegis.verify("delegation", token, { audience: ISSUER, issuer: "client-1" }),
+        aegis.verify("delegation", token, undefined, {
+          audience: ISSUER,
+          issuer: "client-1",
+        }),
       ).resolves.toMatchObject({
         claims: { issuer: "client-1", subject: "customer-sub" },
       });
@@ -308,7 +313,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       const { iat: _iat, ...withoutIat } = perTokenPayload;
       const token = craftToken(delegationHeader, withoutIat);
 
-      const parsed = await aegis.verify("delegation", token, {
+      const parsed = await aegis.verify("delegation", token, undefined, {
         audience: ISSUER,
         issuer: "client-1",
       });
@@ -324,7 +329,10 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       const token = craftToken(delegationHeader, withoutJti);
 
       await expect(
-        aegis.verify("delegation", token, { audience: ISSUER, issuer: "client-1" }),
+        aegis.verify("delegation", token, undefined, {
+          audience: ISSUER,
+          issuer: "client-1",
+        }),
       ).rejects.toThrow(
         expect.objectContaining({
           code: "jwt_required_claims_missing",
@@ -337,7 +345,10 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       const token = craftToken(delegationHeader, { ...perTokenPayload, jti: "" });
 
       await expect(
-        aegis.verify("delegation", token, { audience: ISSUER, issuer: "client-1" }),
+        aegis.verify("delegation", token, undefined, {
+          audience: ISSUER,
+          issuer: "client-1",
+        }),
       ).rejects.toThrow(expect.objectContaining({ code: "jwt_required_claims_missing" }));
     });
   });

@@ -134,7 +134,7 @@ describe("Aegis — the two surfaces (Phase 19)", () => {
     });
 
     test("aegis.verify (domain) verifies an external-key token via key injection", async () => {
-      const verified = await aegis.verify(externalToken(), {
+      const verified = await aegis.verify(externalToken(), undefined, {
         key: { kryptos: TEST_OCT_KEY_SIG },
       });
 
@@ -175,7 +175,9 @@ describe("Aegis — cwm explicit format (D6)", () => {
     // CWT tag (61) framing, HS256 (a MAC, not a signature).
     expect(Buffer.from(token, "base64url").subarray(0, 2).toString("hex")).toBe("d83d");
 
-    const verified = await aegis.verify("id_token", token, { audience: "client-1" });
+    const verified = await aegis.verify("id_token", token, undefined, {
+      audience: "client-1",
+    });
     expect(verified.claims.subject).toBe("user-1");
   });
 

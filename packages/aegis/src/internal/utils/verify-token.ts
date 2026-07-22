@@ -5,7 +5,7 @@ import { JweKit } from "../../classes/JweKit.js";
 import { JwsKit } from "../../classes/JwsKit.js";
 import { JwtKit } from "../../classes/JwtKit.js";
 import { AegisDomainError, AegisError } from "../../errors/index.js";
-import type { VerifiedToken, VerifyJwtOptions } from "../../types/index.js";
+import type { DomainAssert, VerifiedToken, VerifyOptions } from "../../types/index.js";
 import { isCose } from "../cose/is-cose.js";
 import { isCws as isCwsBytes } from "../cose/is-cose-format.js";
 import type { AegisDeps } from "./aegis-deps.js";
@@ -27,25 +27,28 @@ import { verifyJwtToken } from "./verify-jwt.js";
  */
 export const verifyToken = async <C extends Dict = Dict>({
   token,
+  assert,
   options,
   deps,
   encrypted = false,
 }: {
   token: string;
-  options?: VerifyJwtOptions;
+  assert?: DomainAssert;
+  options?: VerifyOptions;
   deps: AegisDeps;
   // True once an encrypting outer (jwe/cwe) has been peeled: the inner token was
   // delivered encrypted, so sensitive claims (OIDC Core §13.3) may surface.
   encrypted?: boolean;
 }): Promise<VerifiedToken<C>> => {
   if (JwtKit.isJwt(token)) {
-    return verifyJwtToken<C>({ token, options, deps, encrypted });
+    return verifyJwtToken<C>({ token, assert, options, deps, encrypted });
   }
 
   if (JweKit.isJwe(token)) {
     const decrypt = await rawDecryptJwe({ jwe: token, deps });
     const inner = await verifyToken<C>({
       token: decrypt.payload,
+      assert,
       options,
       deps,
       encrypted: true,
@@ -98,11 +101,12 @@ export const verifyToken = async <C extends Dict = Dict>({
         input: bytes,
         deps,
       });
-      if (options) {
+      if (options || assert) {
         validateCwtClaims(
           wire,
           decoded.algorithm as KryptosAlgorithm,
-          options,
+          assert,
+          options ?? {},
           deps.clockTolerance,
         );
       }

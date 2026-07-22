@@ -1,8 +1,9 @@
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
+import { omitUndefined } from "@lindorm/utils";
 import { JwtKit } from "../../classes/JwtKit.js";
 import { AegisDomainError } from "../../errors/index.js";
-import type { VerifiedToken, VerifyJwtOptions } from "../../types/index.js";
+import type { DomainAssert, VerifiedToken, VerifyOptions } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { computeTypHeader, extractTypPrefix } from "./compute-typ-header.js";
 import { extractTokenDelegation } from "./extract-token-delegation.js";
@@ -27,12 +28,14 @@ import { verifyDpopProof } from "./verify-dpop-proof.js";
  */
 export const verifyJwtToken = async <C extends Dict = Dict>({
   token,
+  assert,
   options = {},
   deps,
   encrypted = false,
 }: {
   token: string;
-  options?: VerifyJwtOptions;
+  assert?: DomainAssert;
+  options?: VerifyOptions;
   deps: AegisDeps;
   // Whether the JWT was the inner token of an ENCRYPTED outer (jwe). Drives the
   // read-side sensitive-claim gate (OIDC Core §13.3).
@@ -106,11 +109,23 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   }
 
   // Named-claim identity matchers (aud/iss/sub/hashes/…) — the AEGIS half of the
-  // old `createJwtVerify`.
+  // old `createJwtVerify`. The matcher bag is the domain `assert` merged with the
+  // three hash-derive inputs lifted from verify OPTIONS.
+  const matchers = omitUndefined({
+    ...assert,
+    accessToken: options.accessToken,
+    authCode: options.authCode,
+    authState: options.authState,
+  });
   try {
     validate(
       withDates,
-      createIdentityMatchers(kit.algorithm, options, deps.clockTolerance) as never,
+      createIdentityMatchers(
+        kit.algorithm,
+        matchers,
+        deps.clockTolerance,
+        options.expPresence,
+      ) as never,
     );
   } catch (err) {
     throw new AegisDomainError("Invalid token", {

@@ -20,6 +20,7 @@ import type {
   DecryptedJwe,
   DecryptedToken,
   DecryptOptions,
+  DomainAssert,
   EncryptData,
   EncryptedCwe,
   EncryptedJwe,
@@ -52,8 +53,8 @@ import type {
   VerifyCwsOptions,
   VerifyCwtOptions,
   VerifyJwsOptions,
-  VerifyJwtOptions,
   VerifyJwtWireOptions,
+  VerifyOptions,
 } from "../../types/index.js";
 import type { BuiltInProfiles } from "../../internal/profiles/built-in-profiles.js";
 
@@ -191,15 +192,18 @@ export interface IAegis {
   verify<P extends keyof BuiltInProfiles>(
     profile: P,
     token: string,
-    options?: ProfileVerifyOptions,
+    assert: DomainAssert | undefined,
+    options: ProfileVerifyOptions,
   ): Promise<NarrowedToken<BuiltInProfiles[P]>>;
   verify(
     profile: string & {},
     token: string,
+    assert: DomainAssert | undefined,
     options: ProfileVerifyOptions,
   ): Promise<VerifiedToken>;
   verify<C extends Dict = Dict>(
     token: string,
-    options?: VerifyJwtOptions,
+    assert?: DomainAssert,
+    options?: VerifyOptions,
   ): Promise<VerifiedToken<C>>;
 }

@@ -248,7 +248,7 @@ const plain = await aegis.aes.decrypt(encoded, { key: { kryptos: detached } });
 
 ### Universal verification
 
-`aegis.verify(token, options?)` auto-detects the format — JWT, JWS, JWE, or any COSE token (base64url CBOR, no JOSE dot structure) — and returns the unified domain `VerifiedToken`. A JWE / CWE is decrypted first, then its inner MUST be a signed token (an unsigned encrypted claims set throws `verify_requires_signature` — read those with `aegis.decrypt`). The result is therefore **always** signature-verified.
+`aegis.verify(token, assert?, options?)` auto-detects the format — JWT, JWS, JWE, or any COSE token (base64url CBOR, no JOSE dot structure) — and returns the unified domain `VerifiedToken`. A JWE / CWE is decrypted first, then its inner MUST be a signed token (an unsigned encrypted claims set throws `verify_requires_signature` — read those with `aegis.decrypt`). The result is therefore **always** signature-verified.
 
 ```typescript
 const result = await aegis.verify(anyToken, {
@@ -388,7 +388,7 @@ const formatted = kit.format(signature); // string
 
 ## Token profiles
 
-`aegis.mint(profile, content)` and `aegis.verify(profile, token, options)` apply a named token profile (`access_token`, `id_token`, `delegation`, …) on top of the standard JOSE operations.
+`aegis.mint(profile, content)` and `aegis.verify(profile, token, assert?, options)` apply a named token profile (`access_token`, `id_token`, `delegation`, …) on top of the standard JOSE operations. The floor's `audience` / `issuer` live in the profile `options` (the fourth argument); extra claim matchers go in the optional `assert` (third).
 
 **`typ` presence.** Each profile declares a `typ` policy: `required` (the header must carry exactly the profile's typ) or `none` (no typ mandated). Mint always stamps the profile's typ value — presence only governs verify.
 
@@ -418,7 +418,7 @@ const { token } = await aegis.mint(
 
 // Verify never needs to be told the wire format — it detects COSE vs JOSE from
 // the token itself, so the same call verifies a CWT or a JWT of the same profile.
-const verified = await aegis.verify("access_token", token, {
+const verified = await aegis.verify("access_token", token, undefined, {
   audience: "https://api.example.com",
 });
 
@@ -541,26 +541,50 @@ await aegis.mint("access_token", {
 });
 ```
 
-## Verify options
+## Verify: assert + options
 
-`VerifyJwtOptions` extends the claim matcher set, applied by the **domain** `aegis.verify` (the wire namespaces resolve the key and check structure/temporal only — named matchers, DPoP and actor chains are the domain surface's job). Each field accepts either a literal value or a `PredicateOperator` for flexible matching:
+`aegis.verify(token, assert?, options?)` splits the domain verify into two
+positional arguments (the wire namespaces resolve the key and check
+structure/temporal only — named matchers, DPoP and actor chains are the domain
+surface's job):
+
+- **`assert`** (`DomainAssert`) — the declarative claim matcher. Eight named
+  matchers earn non-equality semantics (`audience` is contains-self; `scope` /
+  `authMethods` / `roles` / `permissions` / `groups` / `entitlements` are
+  array-contains; `issuer` is identity). Every other domain claim folds into a
+  free predicate, each field accepting a literal value or a `PredicateOperator`.
+- **`options`** (`VerifyOptions`) — the verify KNOBS (format-agnostic).
 
 ```typescript
-await aegis.verify(token, {
-  audience: "https://api.example.com",
-  scope: ["read", "write"], // array contains
-  tokenType: "access_token",
-  subject: { $in: ["user-1", "user-2"] },
-  levelOfAssurance: { $gte: 2 },
-  authTime: { $gte: new Date("2024-01-01") },
-});
+await aegis.verify(
+  token,
+  {
+    audience: "https://api.example.com", // aud contains-self
+    scope: ["read", "write"], // array contains (all)
+    subject: { $in: ["user-1", "user-2"] },
+    levelOfAssurance: { $gte: 2 },
+    authTime: { $gte: new Date("2024-01-01") },
+  },
+  {
+    tokenType: "access_token",
+    accessToken: "the-presented-access-token", // at_hash check
+  },
+);
 ```
 
-Additional verify options:
+`VerifyOptions` fields:
 
+- `tokenType` — asserts the JOSE `typ` / COSE type
+- `accessToken` / `authCode` / `authState` — verify-time `at_hash` / `c_hash` /
+  `s_hash` checks (the source value is hashed with the token's algorithm)
 - `actor` — controls token-delegation (`act`) chain enforcement
 - `dpopProof` — when present, the verifier requires a `cnf.jkt` binding and validates the supplied DPoP proof
 - `trustBoundThumbprint` — when `true`, allow a bound token without an inline DPoP proof (for cases where the binding is enforced out-of-band)
+- `key` — per-call verification key policy; `typPresence` / `expPresence` — presence policy for the `typ` / `exp` claims
+
+For a **profiled** verify the audience/issuer floor lives in the options object,
+so the assert is the (optional) third argument and options the fourth:
+`aegis.verify("access_token", token, assert?, { audience })`.
 
 ## Type guards
 
