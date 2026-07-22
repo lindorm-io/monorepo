@@ -30,7 +30,7 @@ export const rawVerifyJwt = async <C extends JwtWireClaims = JwtWireClaims>({
   options?: VerifyJwtWireOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
 }): Promise<ParsedJwt<C>> => {
-  const decode = JwtKit.decode(jwt);
+  const decode = JwtKit.decodeSegments(jwt);
 
   const kryptos = await deps.resolveVerifyKey(
     decode.header.kid,

@@ -16,7 +16,7 @@ export const rawVerifyJws = async <T extends JwsContent>({
   options?: VerifyJwsOptions;
   deps: AegisDeps;
 }): Promise<ParsedJws<T>> => {
-  const decode = JwsKit.decode(jws);
+  const decode = JwsKit.decodeSegments(jws);
 
   const kryptos = await deps.resolveVerifyKey(
     decode.header.kid,

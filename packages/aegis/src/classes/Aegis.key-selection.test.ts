@@ -84,7 +84,7 @@ describe("Aegis key selection", () => {
 
       const { token } = await aegis.jws.sign("data");
 
-      expect(JwsKit.decode(token).header.kid).toBe(TEST_EC_KEY_SIG.id);
+      expect(JwsKit.decodeSegments(token).header.kid).toBe(TEST_EC_KEY_SIG.id);
     });
   });
 
@@ -194,7 +194,7 @@ describe("Aegis key selection", () => {
         key: { predicate: { algorithm: undefined } },
       });
 
-      expect(JwsKit.decode(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
+      expect(JwsKit.decodeSegments(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
     });
 
     test("a selector cannot smuggle `use: enc` past the sign floor", async () => {
@@ -208,7 +208,7 @@ describe("Aegis key selection", () => {
         key: { predicate: { use: "enc" } as AegisSignPredicate },
       });
 
-      expect(JwsKit.decode(token).header.kid).toBe(TEST_EC_KEY_SIG.id);
+      expect(JwsKit.decodeSegments(token).header.kid).toBe(TEST_EC_KEY_SIG.id);
     });
   });
 
@@ -392,8 +392,8 @@ describe("Aegis key selection", () => {
           key: { predicate: { type: "EC" } },
         });
 
-        expect(JweKit.decode(token).header.kid).toBe(TEST_EC_KEY_ENC.id);
-        expect(JweKit.decode(token).header.kid).not.toBe(TEST_RSA_KEY_ENC.id);
+        expect(JweKit.decodeSegments(token).header.kid).toBe(TEST_EC_KEY_ENC.id);
+        expect(JweKit.decodeSegments(token).header.kid).not.toBe(TEST_RSA_KEY_ENC.id);
       });
 
       test("an injected key seals it even though the vault never held it, and round-trips back", async () => {
@@ -403,7 +403,7 @@ describe("Aegis key selection", () => {
           key: { kryptos: TEST_RSA_KEY_ENC },
         });
 
-        expect(JweKit.decode(token).header.kid).toBe(TEST_RSA_KEY_ENC.id);
+        expect(JweKit.decodeSegments(token).header.kid).toBe(TEST_RSA_KEY_ENC.id);
 
         const decrypted = await aegis.jwe.decrypt(token, {
           key: { kryptos: TEST_RSA_KEY_ENC },

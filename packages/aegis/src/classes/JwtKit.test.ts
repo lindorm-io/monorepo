@@ -158,7 +158,7 @@ describe("JwtKit", () => {
         tokenType: "test_token",
       });
 
-      const { header } = JwtKit.decode(token);
+      const { header } = JwtKit.decodeSegments(token);
       expect(header).not.toHaveProperty("oid");
     });
 
@@ -173,7 +173,7 @@ describe("JwtKit", () => {
         alreadyCamel: 42,
       });
 
-      const { payload } = JwtKit.decode(token);
+      const { payload } = JwtKit.decodeSegments(token);
       expect(payload).toEqual({
         iss: issuer,
         sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -186,14 +186,14 @@ describe("JwtKit", () => {
     test("constructs the full media type from a typ PREFIX; absent/null floors to JWT", () => {
       // "at" (prefix) → application/at+jwt (the kit knows its format).
       const withTyp = kit.sign({ iss: issuer, exp: 1704099600 }, { typ: "at" });
-      expect(JwtKit.decode(withTyp).header.typ).toBe("application/at+jwt");
+      expect(JwtKit.decodeSegments(withTyp).header.typ).toBe("application/at+jwt");
 
       // A JWT always carries a typ header, so null/absent floors to "JWT".
       const nullTyp = kit.sign({ iss: issuer, exp: 1704099600 }, { typ: null });
-      expect(JwtKit.decode(nullTyp).header.typ).toBe("JWT");
+      expect(JwtKit.decodeSegments(nullTyp).header.typ).toBe("JWT");
 
       const bare = kit.sign({ iss: issuer, exp: 1704099600 });
-      expect(JwtKit.decode(bare).header.typ).toBe("JWT");
+      expect(JwtKit.decodeSegments(bare).header.typ).toBe("JWT");
     });
 
     test("should carry authorization_details (RFC 9396) verbatim on the wire", () => {
@@ -270,7 +270,7 @@ describe("JwtKit", () => {
 
       // The tokenId is a domain convenience the wire kit no longer returns; read
       // it back off the wire jti.
-      const tokenId = JwtKit.decode(token).payload.jti;
+      const tokenId = JwtKit.decodeSegments(token).payload.jti;
 
       const wirePayload = {
         acr: "test_auth_context_class",
@@ -471,7 +471,7 @@ describe("JwtKit", () => {
     test("rejects a present typ that is not a JWT media type", () => {
       // Craft a header with a non-JWT typ (the sign floor would never emit one).
       const token = kit.sign({ iss: issuer, sub: "s", exp: 1704099600 });
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(
         JSON.stringify({ ...decoded.header, typ: "not-a-jwt-typ" }),
@@ -487,7 +487,7 @@ describe("JwtKit", () => {
       // Strip the typ header entirely — the wire kit tolerates a typ-less token;
       // presence is enforced Aegis-side.
       const token = kit.sign({ iss: issuer, sub: "s", exp: 1704099600 });
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       const { typ: _typ, ...headerNoTyp } = decoded.header;
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerNoTyp))
@@ -509,7 +509,7 @@ describe("JwtKit", () => {
         tokenType: "test_token",
       });
 
-      expect(JwtKit.decode(token)).toEqual({
+      expect(JwtKit.decodeSegments(token)).toEqual({
         header: {
           alg: "ES512",
           cty: "application/json",
@@ -542,7 +542,7 @@ describe("JwtKit", () => {
         const {
           signature,
           payload: { jti },
-        } = JwtKit.decode(token);
+        } = JwtKit.decodeSegments(token);
 
         expect(jsonwebtoken.decode(token, { complete: true })).toEqual({
           header: {
@@ -573,7 +573,7 @@ describe("JwtKit", () => {
 
         const {
           payload: { jti },
-        } = JwtKit.decode(token);
+        } = JwtKit.decodeSegments(token);
 
         const { privateKey } = TEST_EC_KEY_SIG.export("pem");
 
@@ -596,7 +596,7 @@ describe("JwtKit", () => {
           tokenType: "test_token",
         });
 
-        const decoded = JwtKit.decode(token);
+        const decoded = JwtKit.decodeSegments(token);
 
         const { privateKey } = TEST_OCT_KEY_SIG.export("der");
 
@@ -621,7 +621,7 @@ describe("JwtKit", () => {
 
         const {
           payload: { jti },
-        } = JwtKit.decode(token);
+        } = JwtKit.decodeSegments(token);
 
         const { publicKey } = TEST_RSA_KEY_SIG.export("pem");
 
@@ -705,7 +705,7 @@ describe("JwtKit", () => {
       // Craft a well-formed header with a non-registered crit parameter that
       // is actually present. Aegis should reject because the extension is
       // unknown to it, even though the header itself is RFC-compliant.
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       const headerWithCrit = {
         ...decoded.header,
         crit: ["lindorm_ext"],
@@ -730,7 +730,7 @@ describe("JwtKit", () => {
         tokenType: "test_token",
       });
 
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       const headerWithCrit = { ...decoded.header, crit: ["missing_ext"] };
 
       const parts = token.split(".");
@@ -749,7 +749,7 @@ describe("JwtKit", () => {
         tokenType: "test_token",
       });
 
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       const headerWithCrit = { ...decoded.header, crit: ["alg"] };
 
       const parts = token.split(".");
@@ -768,7 +768,7 @@ describe("JwtKit", () => {
         tokenType: "test_token",
       });
 
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       const headerWithCrit = { ...decoded.header, crit: [] };
 
       const parts = token.split(".");
@@ -803,7 +803,7 @@ describe("JwtKit", () => {
         tokenType: "test_token",
       });
 
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       const headerWithJwk = {
         ...decoded.header,
         jwk: {
@@ -830,7 +830,7 @@ describe("JwtKit", () => {
         tokenType: "test_token",
       });
 
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       const headerWithX5c = {
         ...decoded.header,
         x5c: ["MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA"],
@@ -852,7 +852,7 @@ describe("JwtKit", () => {
         tokenType: "test_token",
       });
 
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       const headerWithX5u = {
         ...decoded.header,
         x5u: "https://attacker.example/evil-cert.pem",
@@ -886,7 +886,7 @@ describe("JwtKit", () => {
         { tokenId: "stable-token-id" },
       );
 
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       expect(decoded.payload).toMatchSnapshot("wire payload — jkt only");
     });
 
@@ -908,7 +908,7 @@ describe("JwtKit", () => {
         { tokenId: "stable-token-id-full" },
       );
 
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       expect(decoded.payload).toMatchSnapshot("wire payload — full cnf");
     });
 
@@ -919,7 +919,7 @@ describe("JwtKit", () => {
         tokenType: "access_token",
       });
 
-      const decoded = JwtKit.decode(token);
+      const decoded = JwtKit.decodeSegments(token);
       expect(decoded.payload).not.toHaveProperty("cnf");
     });
   });

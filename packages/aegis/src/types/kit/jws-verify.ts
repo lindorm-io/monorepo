@@ -1,4 +1,4 @@
-import type { AegisVerifyKey } from "../aegis.js";
+import type { AegisVerifyKey } from "../keys/key-selectors.js";
 
 export type VerifyJwsOptions = {
   /**

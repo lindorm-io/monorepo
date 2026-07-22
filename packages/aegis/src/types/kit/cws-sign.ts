@@ -1,7 +1,7 @@
 import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
-import type { AegisSignKey } from "../aegis.js";
+import type { AegisSignKey } from "../keys/key-selectors.js";
 
 /**
  * The payload a raw CWS secures. Unlike raw JWS (`JwsContent = Buffer | string`,

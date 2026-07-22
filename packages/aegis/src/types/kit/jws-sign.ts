@@ -1,6 +1,9 @@
 import type { TokenType } from "../../constants/token-type.js";
-import type { AegisSignKey } from "../aegis.js";
-import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header/header.js";
+import type { AegisSignKey } from "../keys/key-selectors.js";
+import type {
+  BindCertificateMode,
+  TokenEncryptOrSignOptions,
+} from "../header/domain-header.js";
 
 export type SignJwsOptions = {
   bindCertificate?: BindCertificateMode;

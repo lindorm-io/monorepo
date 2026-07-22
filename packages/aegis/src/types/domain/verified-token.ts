@@ -2,9 +2,8 @@ import type { Dict } from "@lindorm/types";
 import type { DomainClaims } from "../../internal/utils/extract-claims.js";
 import type { AegisProfile } from "../claims/domain/aegis-profile.js";
 import type { AegisSensitive } from "../claims/domain/aegis-sensitive.js";
-import type { DomainTokenHeader } from "../header/header.js";
-import type { TokenDelegation } from "./jwt-delegation.js";
-import type { ParsedDpopProof } from "./jwt-dpop.js";
+import type { DomainTokenHeader } from "../header/domain-header.js";
+import type { ParsedDpopProof, TokenDelegation } from "./delegation.js";
 import type { TokenProfile } from "../profile/profile.js";
 
 /**
@@ -60,38 +59,6 @@ export type VerifiedToken<C extends Dict = Dict> = {
   raw?: Buffer | string;
   /** The untranslated jose-keyed wire payload, for pass-through / re-emit. */
   wire?: { payload: Dict };
-  token: string;
-};
-
-/**
- * The `aegis.decrypt` result (Bit 3/4) — CONFIDENTIAL but NOT sender-authenticated:
- * a decrypted claims set (or opaque plaintext) with no inner signature checked.
- * Same domain shape as {@link VerifiedToken}, minus the authenticity guarantee
- * (no `profile`/`sensitive`/`delegation`/`dpop` sugar, which the verify pipeline
- * derives). Always an encrypted outer format.
- */
-export type DecryptedToken<C extends Dict = Dict> = {
-  format: "jwe" | "cwe";
-  /** Set when the decrypted plaintext is itself a nested token. */
-  inner?: "jwt" | "cwt" | "cwm" | "jws" | "cws";
-  contentType?: string;
-  header: VerifiedTokenHeader;
-  claims: DomainClaims;
-  custom: C;
-  raw?: Buffer | string;
-  wire?: { payload: Dict };
-  token: string;
-};
-
-/**
- * The `aegis.encrypt` result (§5e) — the confidentiality counterpart of
- * `SignedJws`. `aegis.encrypt` produces an encrypted outer format (a JWE or a
- * COSE_Encrypt0), so the only surface is the `format` discriminant plus the wire
- * token; there are NO domain claims on the WRITE side (the caller supplied
- * them). The read counterpart is {@link DecryptedToken}.
- */
-export type EncryptedToken = {
-  format: "jwe" | "cwe";
   token: string;
 };
 

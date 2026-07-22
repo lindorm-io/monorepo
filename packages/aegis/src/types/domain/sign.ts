@@ -12,8 +12,8 @@ import type {
   SetClaims,
   StdClaims,
 } from "../claims/domain/index.js";
-import type { AegisSignKey } from "../aegis.js";
-import type { TokenSignEnvelope } from "../header/header.js";
+import type { AegisSignKey } from "../keys/key-selectors.js";
+import type { TokenSignEnvelope } from "../header/domain-header.js";
 
 export type SignJwtContent<C extends Dict = Dict> = Omit<
   StdClaims,

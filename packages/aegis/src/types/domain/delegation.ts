@@ -1,3 +1,14 @@
+import type { ActClaim } from "../claims/domain/act-claim.js";
+
+// Delegation summary derived from the token's `act` claim chain.
+// Subject lives on the payload (payload.subject). This type focuses
+// purely on "how is the token being used" — the actor chain and its state.
+export type TokenDelegation = {
+  currentActor: string | undefined;
+  actorChain: Array<ActClaim>;
+  isDelegated: boolean;
+};
+
 // Parsed representation of a verified RFC 9449 DPoP proof JWT.
 // Populated on the outer ParsedJwt wrapper when the verifier is given a
 // `dpopProof` input. Request-context fields (`httpMethod`, `httpUri`) are

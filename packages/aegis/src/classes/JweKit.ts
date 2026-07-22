@@ -145,7 +145,7 @@ export class JweKit implements IJweKit {
 
     this.logger.debug("Decrypting token", { token: sanitiseToken(token) });
 
-    const decoded = JweKit.decode(token);
+    const decoded = JweKit.decodeSegments(token);
 
     const typ = decoded.header.typ;
     if (typ !== "JWE" && !(typeof typ === "string" && typ.endsWith("+jwe"))) {
@@ -306,7 +306,7 @@ export class JweKit implements IJweKit {
    * `CweKit` decode.
    */
   decode(token: string): DecodedEncryptedToken {
-    return { header: JweKit.decode(token).header };
+    return { header: JweKit.decodeSegments(token).header };
   }
 
   // public static
@@ -325,7 +325,7 @@ export class JweKit implements IJweKit {
     }
   }
 
-  static decode(jwe: string): DecodedJwe {
+  static decodeSegments(jwe: string): DecodedJwe {
     const parts = jwe.split(".");
     if (parts.length !== 5) {
       throw new JweError("Invalid JWE format: expected 5 parts", {

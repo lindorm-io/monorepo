@@ -1,6 +1,6 @@
 import type { Predicate } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
-import type { AegisVerifyKey } from "../aegis.js";
+import type { AegisVerifyKey } from "../keys/key-selectors.js";
 import type { ActClaim } from "../claims/domain/act-claim.js";
 
 // How `allowedActors` is applied to the token's actor chain:

@@ -177,7 +177,7 @@ export class JwsKit implements IJwsKit {
     }
   }
 
-  static decode(jws: string): DecodedJws {
+  static decodeSegments(jws: string): DecodedJws {
     const [header, payload, signature] = jws.split(".");
     const decodedHeader = decodeJoseHeader(header);
 
@@ -192,7 +192,7 @@ export class JwsKit implements IJwsKit {
   }
 
   static parse<T extends Buffer | string>(token: string): ParsedJws<T> {
-    const decoded = JwsKit.decode(token);
+    const decoded = JwsKit.decodeSegments(token);
 
     const typ = decoded.header.typ;
     if (

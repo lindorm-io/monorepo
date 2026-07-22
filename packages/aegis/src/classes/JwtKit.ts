@@ -138,7 +138,7 @@ export class JwtKit implements IJwtKit {
       options: redactVerifyOptions(options),
     });
 
-    const decoded = JwtKit.decode<C>(token);
+    const decoded = JwtKit.decodeSegments<C>(token);
 
     // kid fail-fast: a token that names a kid different from the configured key
     // cannot verify, so reject it before the (expensive) signature cycle. Via
@@ -279,7 +279,7 @@ export class JwtKit implements IJwtKit {
    * shared with `CwtKit`/`CwmKit` decode — read the structure without verifying.
    */
   decode<C extends Dict = Dict>(token: string): DecodedJwtToken<C> {
-    const { header, payload } = JwtKit.decode<C>(token);
+    const { header, payload } = JwtKit.decodeSegments<C>(token);
 
     return { header, payload };
   }
@@ -300,7 +300,7 @@ export class JwtKit implements IJwtKit {
     }
   }
 
-  static decode<C extends Dict = Dict>(jwt: string): DecodedJwt<C> {
+  static decodeSegments<C extends Dict = Dict>(jwt: string): DecodedJwt<C> {
     const [header, payload, signature] = jwt.split(".");
 
     return {

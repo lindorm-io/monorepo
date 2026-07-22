@@ -1,4 +1,4 @@
-import type { WireTokenHeader } from "../../types/header/header.js";
+import type { WireTokenHeader } from "../../types/header/wire-header.js";
 import { validateCrit } from "./validate-crit.js";
 import { describe, expect, test } from "vitest";
 

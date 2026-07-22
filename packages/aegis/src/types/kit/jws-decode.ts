@@ -1,4 +1,4 @@
-import type { WireTokenHeader } from "../header/header.js";
+import type { WireTokenHeader } from "../header/wire-header.js";
 
 export type DecodedJws = {
   header: WireTokenHeader;

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { TokenProfile } from "../profile/profile.js";
+import type { DecryptedToken } from "./decrypted-token.js";
 import type {
-  DecryptedToken,
   NarrowedToken,
   VerifiedToken,
   VerifiedTokenHeader,

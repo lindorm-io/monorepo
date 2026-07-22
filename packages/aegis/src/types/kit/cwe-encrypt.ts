@@ -1,4 +1,4 @@
-import type { AegisEncKey } from "../aegis.js";
+import type { AegisEncKey } from "../keys/key-selectors.js";
 
 /**
  * The plaintext a COSE_Encrypt0 protects. COSE encrypts bytes, so a `Buffer`

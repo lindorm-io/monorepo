@@ -375,7 +375,7 @@ describe("JweKit", () => {
         objectId: "e5d4ed15-3350-4fdc-a9cf-d8270d637e99",
       });
 
-      expect(JweKit.decode(token)).toEqual({
+      expect(JweKit.decodeSegments(token)).toEqual({
         authTag: expect.any(String),
         content: expect.any(String),
         header: {
@@ -451,7 +451,7 @@ describe("JweKit", () => {
       // Well-formed header with a non-registered crit parameter that is
       // present. Aegis should still reject — it doesn't implement any
       // extension parameters.
-      const decoded = JweKit.decode(token);
+      const decoded = JweKit.decodeSegments(token);
       const headerWithCrit = {
         ...decoded.header,
         crit: ["lindorm_ext"],
@@ -474,7 +474,7 @@ describe("JweKit", () => {
         objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
       });
 
-      const decoded = JweKit.decode(token);
+      const decoded = JweKit.decodeSegments(token);
       const headerWithCrit = { ...decoded.header, crit: ["missing_ext"] };
 
       const parts = token.split(".");
@@ -491,7 +491,7 @@ describe("JweKit", () => {
         objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
       });
 
-      const decoded = JweKit.decode(token);
+      const decoded = JweKit.decodeSegments(token);
       const headerWithCrit = { ...decoded.header, crit: ["enc"] };
 
       const parts = token.split(".");
@@ -508,7 +508,7 @@ describe("JweKit", () => {
         objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
       });
 
-      const decoded = JweKit.decode(token);
+      const decoded = JweKit.decodeSegments(token);
       const headerWithCrit = { ...decoded.header, crit: [] };
 
       const parts = token.split(".");
@@ -537,7 +537,7 @@ describe("JweKit", () => {
 
       // Splice zip: "DEF" into the protected header to simulate an attacker
       // attempting to compress-then-encrypt. Aegis must reject this outright.
-      const decoded = JweKit.decode(token);
+      const decoded = JweKit.decodeSegments(token);
       const headerWithZip = { ...decoded.header, zip: "DEF" };
 
       const parts = token.split(".");
@@ -568,8 +568,8 @@ describe("JweKit", () => {
         const { token } = jweKit.encrypt("data", { partyProducer, partyRecipient });
 
         // The base64url party info rides the protected header (apu/apv).
-        expect(JweKit.decode(token).header.apu).toBe(partyProducer);
-        expect(JweKit.decode(token).header.apv).toBe(partyRecipient);
+        expect(JweKit.decodeSegments(token).header.apu).toBe(partyProducer);
+        expect(JweKit.decodeSegments(token).header.apv).toBe(partyRecipient);
 
         const decrypted = jweKit.decrypt(token);
         expect(decrypted.payload).toBe("data");
@@ -584,8 +584,8 @@ describe("JweKit", () => {
 
       const { token } = jweKit.encrypt("data");
 
-      expect(JweKit.decode(token).header.apu).toBeUndefined();
-      expect(JweKit.decode(token).header.apv).toBeUndefined();
+      expect(JweKit.decodeSegments(token).header.apu).toBeUndefined();
+      expect(JweKit.decodeSegments(token).header.apv).toBeUndefined();
       expect(jweKit.decrypt(token).payload).toBe("data");
     });
 
@@ -596,8 +596,8 @@ describe("JweKit", () => {
 
       const { token } = jweKit.encrypt("data", { partyProducer, partyRecipient });
 
-      expect(JweKit.decode(token).header.apu).toBeUndefined();
-      expect(JweKit.decode(token).header.apv).toBeUndefined();
+      expect(JweKit.decodeSegments(token).header.apu).toBeUndefined();
+      expect(JweKit.decodeSegments(token).header.apv).toBeUndefined();
 
       const decrypted = jweKit.decrypt(token);
       expect(decrypted.payload).toBe("data");

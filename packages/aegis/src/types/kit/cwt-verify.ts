@@ -1,4 +1,4 @@
-import type { AegisVerifyKey } from "../aegis.js";
+import type { AegisVerifyKey } from "../keys/key-selectors.js";
 
 /**
  * Options for the raw wire CWT verify namespaces (`aegis.cwt.verify` /

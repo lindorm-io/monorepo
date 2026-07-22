@@ -20,7 +20,7 @@ import { validateCrit } from "./validate-crit.js";
 export const parseJwtToDomain = <C extends Dict = Dict>(
   token: string,
 ): ParsedToken<C> => {
-  const decoded = JwtKit.decode<C>(token);
+  const decoded = JwtKit.decodeSegments<C>(token);
 
   const typ = decoded.header.typ;
   if (typ !== undefined && typ !== "JWT" && !typ.endsWith("+jwt")) {

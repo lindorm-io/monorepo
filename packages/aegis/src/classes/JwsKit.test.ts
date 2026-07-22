@@ -45,7 +45,7 @@ describe("JwsKit", () => {
 
       expect(objectId).toBeUndefined();
 
-      const { header } = JwsKit.decode(token);
+      const { header } = JwsKit.decodeSegments(token);
       expect(header).not.toHaveProperty("oid");
     });
   });
@@ -161,7 +161,7 @@ describe("JwsKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(JwsKit.decode(token)).toEqual({
+      expect(JwsKit.decodeSegments(token)).toEqual({
         header: {
           alg: "ES512",
           cty: "text/plain; charset=utf-8",
@@ -180,7 +180,7 @@ describe("JwsKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(JwsKit.decode(token)).toEqual({
+      expect(JwsKit.decodeSegments(token)).toEqual({
         header: {
           alg: "ES512",
           cty: "application/octet-stream",
@@ -273,7 +273,7 @@ describe("JwsKit", () => {
       // parameter 'lindorm_ext' is not IANA-registered and is present in
       // the header, so it passes RFC 7515 §4.1.11 well-formedness. Aegis
       // should still reject it because it does not understand the extension.
-      const decoded = JwsKit.decode(token);
+      const decoded = JwsKit.decodeSegments(token);
       const headerWithCrit = {
         ...decoded.header,
         crit: ["lindorm_ext"],
@@ -298,7 +298,7 @@ describe("JwsKit", () => {
 
       // crit lists 'missing_ext' but the header does not contain it — violates
       // RFC 7515 §4.1.11 well-formedness rules.
-      const decoded = JwsKit.decode(token);
+      const decoded = JwsKit.decodeSegments(token);
       const headerWithCrit = {
         ...decoded.header,
         crit: ["missing_ext"],
@@ -319,7 +319,7 @@ describe("JwsKit", () => {
       });
 
       // crit must not contain registered params per RFC 7515 §4.1.11.
-      const decoded = JwsKit.decode(token);
+      const decoded = JwsKit.decodeSegments(token);
       const headerWithCrit = { ...decoded.header, crit: ["alg"] };
 
       const parts = token.split(".");
@@ -336,7 +336,7 @@ describe("JwsKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      const decoded = JwsKit.decode(token);
+      const decoded = JwsKit.decodeSegments(token);
       const headerWithCrit = { ...decoded.header, crit: [] };
 
       const parts = token.split(".");

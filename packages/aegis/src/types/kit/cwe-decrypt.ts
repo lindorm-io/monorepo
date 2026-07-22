@@ -1,4 +1,4 @@
-import type { AegisDecryptKey } from "../aegis.js";
+import type { AegisDecryptKey } from "../keys/key-selectors.js";
 
 export type CweDecryptOptions = {
   /**

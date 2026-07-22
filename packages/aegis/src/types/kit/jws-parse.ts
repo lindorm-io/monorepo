@@ -1,4 +1,4 @@
-import type { SignedJoseHeader } from "../header/header.js";
+import type { SignedJoseHeader } from "../header/domain-header.js";
 import type { DecodedJws } from "./jws-decode.js";
 
 export type ParsedJws<T extends Buffer | string> = {

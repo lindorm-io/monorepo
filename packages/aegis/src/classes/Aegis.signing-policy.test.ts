@@ -58,8 +58,8 @@ describe("Aegis signing policy", () => {
         sign: { key: { kryptos: CLIENT_SECRET } },
       });
 
-      expect(JwtKit.decode(token).header.alg).toBe("HS256");
-      expect(JwtKit.decode(token).header.kid).toBe(CLIENT_SECRET.id);
+      expect(JwtKit.decodeSegments(token).header.alg).toBe("HS256");
+      expect(JwtKit.decodeSegments(token).header.kid).toBe(CLIENT_SECRET.id);
     });
 
     test("is REJECTED for an access_token — injection is not an escape hatch", async () => {
@@ -94,7 +94,7 @@ describe("Aegis signing policy", () => {
         sign: { key: { kryptos: CLIENT_SECRET } },
       });
 
-      expect(JwtKit.decode(token).header.alg).toBe("HS256");
+      expect(JwtKit.decodeSegments(token).header.alg).toBe("HS256");
     });
   });
 
@@ -110,13 +110,13 @@ describe("Aegis signing policy", () => {
       });
 
       const deployment = await aegis.jwt.sign({ sub: "s" });
-      expect(JwtKit.decode(deployment.token).header.alg).toBe("EdDSA");
+      expect(JwtKit.decodeSegments(deployment.token).header.alg).toBe("EdDSA");
 
       const perCall = await aegis.jwt.sign(
         { sub: "s" },
         { key: { predicate: { algorithm: "HS256" } } },
       );
-      expect(JwtKit.decode(perCall.token).header.alg).toBe("HS256");
+      expect(JwtKit.decodeSegments(perCall.token).header.alg).toBe("HS256");
     });
 
     test("a per-call predicate pins a key by id", async () => {
@@ -130,7 +130,7 @@ describe("Aegis signing policy", () => {
         { key: { predicate: { id: TEST_OKP_KEY_SIG.id } } },
       );
 
-      expect(JwtKit.decode(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
+      expect(JwtKit.decodeSegments(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
     });
 
     test("an allowlist selects with $in — the FAPI case", async () => {
@@ -146,7 +146,7 @@ describe("Aegis signing policy", () => {
         { key: { predicate: { algorithm: { $in: FAPI_SIG_ALGS } } } },
       );
 
-      expect(JwtKit.decode(token).header.alg).toBe("EdDSA");
+      expect(JwtKit.decodeSegments(token).header.alg).toBe("EdDSA");
     });
 
     test("a selector that matches nothing throws, never falls back", async () => {

@@ -1,6 +1,6 @@
 import type { KryptosEncAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
-import type { AegisDecryptKey } from "../aegis.js";
-import type { RefinedDomainTokenHeader } from "../header/header.js";
+import type { AegisDecryptKey } from "../keys/key-selectors.js";
+import type { RefinedDomainTokenHeader } from "../header/domain-header.js";
 import type { DecodedJwe } from "./jwe-decode.js";
 
 export type JweDecryptOptions = {

@@ -1,4 +1,7 @@
-import type { CertificateBindingMode, TokenSignEnvelope } from "../header/header.js";
+import type {
+  CertificateBindingMode,
+  TokenSignEnvelope,
+} from "../header/domain-header.js";
 
 /**
  * Options for the TRANSFORM-FREE wire `JwtKit.sign` (R18). The kit serializes the

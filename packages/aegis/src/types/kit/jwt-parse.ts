@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { SignedJoseHeader } from "../header/header.js";
+import type { SignedJoseHeader } from "../header/domain-header.js";
 import type { DecodedJwt } from "./jwt-decode.js";
 import type { JwtWireClaims } from "../claims/wire/jwt-wire-claims.js";
 

@@ -31,7 +31,7 @@ describe("Aegis — omit (compact-by-default)", () => {
   // The raw JOSE payload — bypasses the parse-side array defaulting so we see
   // exactly what reached the wire.
   const joseWire = (token: string): Record<string, unknown> =>
-    JwtKit.decode(token).payload as Record<string, unknown>;
+    JwtKit.decodeSegments(token).payload as Record<string, unknown>;
 
   // The COSE claims, domain-keyed; custom claims pass through verbatim, so an
   // absent claim really is absent (no defaulting).

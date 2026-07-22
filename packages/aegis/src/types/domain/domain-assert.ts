@@ -22,7 +22,7 @@ import type { DomainClaims } from "../../internal/utils/extract-claims.js";
  * {@link DomainAssert} predicate — each is a `keyof DomainClaims`, so
  * `Predicate<Omit<DomainClaims, keyof DomainClaimMatchers>>` types them. The
  * three verify-time derive-inputs (`accessToken`, `authCode`, `authState`) move
- * to verify OPTIONS ({@link import("./jwt-verify.js").VerifyOptions}).
+ * to verify OPTIONS ({@link import("./verify.js").VerifyOptions}).
  */
 export type DomainClaimMatchers = {
   audience?: string;

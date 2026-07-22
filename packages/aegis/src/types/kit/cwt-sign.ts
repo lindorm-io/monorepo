@@ -1,5 +1,5 @@
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
-import type { AegisSignKey } from "../aegis.js";
+import type { AegisSignKey } from "../keys/key-selectors.js";
 
 /**
  * Options for the raw wire CWT sign namespaces (`aegis.cwt.sign` /

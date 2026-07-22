@@ -16,7 +16,7 @@ export const rawDecryptJwe = async ({
   options?: JweDecryptOptions;
   deps: AegisDeps;
 }): Promise<DecryptedJwe> => {
-  const decode = JweKit.decode(jwe);
+  const decode = JweKit.decodeSegments(jwe);
 
   const kryptos = await deps.resolveDecryptKey(
     decode.header.kid,

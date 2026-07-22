@@ -2,8 +2,11 @@ import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { DomainClaims } from "../../internal/utils/extract-claims.js";
-import type { AegisDecryptKey, AegisEncKey } from "../aegis.js";
-import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header/header.js";
+import type { AegisDecryptKey, AegisEncKey } from "../keys/key-selectors.js";
+import type {
+  BindCertificateMode,
+  TokenEncryptOrSignOptions,
+} from "../header/domain-header.js";
 
 /**
  * The `aegis.encrypt` input (§5e) — the mirror of `sign`'s payload. A plain
