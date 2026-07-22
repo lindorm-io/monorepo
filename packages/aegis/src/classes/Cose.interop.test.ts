@@ -6,6 +6,7 @@ import {
   Sign1,
   UnprotectedHeaders,
 } from "@auth0/cose";
+import { B64 } from "@lindorm/b64";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { IKryptos } from "@lindorm/kryptos";
 import coseJs from "cose-js";
@@ -14,13 +15,15 @@ import { describe, expect, test } from "vitest";
 import type { Dict } from "@lindorm/types";
 import { TEST_EC_KEY_SIG, TEST_OKP_KEY_SIG } from "../__fixtures__/keys.js";
 import { coseToDomain, domainToCose } from "../internal/claims/translate.js";
+import { algToCoseLabel } from "../internal/cose/alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import {
   decodeCwtClaims,
   type EncodeCwtOptions,
   encodeCwtClaims,
 } from "../internal/cose/cwt-claims.js";
-import { COSE_TAG } from "../internal/cose/structures.js";
+import { COSE_TAG, encodeProtectedHeader } from "../internal/cose/structures.js";
+import { coseByJose } from "../internal/header/header-registry.js";
 import { CwtKit } from "./CwtKit.js";
 
 // Between the fixtures' issuedAt (1700000000) and expiresAt (1700003600), so the
@@ -309,5 +312,117 @@ describe("COSE interop — custom logic does not break the token", () => {
       client_id: "c-2",
     });
     expect(map.get("sub_id")).toEqual(fullCommon.subjectId); // sub_id too (already wire-shaped)
+  });
+});
+
+// A FOREIGN COSE_Sign1 may carry protected-header parameters our own kits never
+// emit (crit / x5chain / x5t CertHash). `decode` must shape each into the JOSE
+// WIRE vocabulary, NOT leave the raw COSE structures on the header. These build a
+// raw Sign1 by hand (labels our kits don't write) and decode it via `CwtKit`.
+describe("COSE decode — foreign header parameters shape to the JOSE wire form", () => {
+  const kit = () => new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
+
+  // Wrap a hand-built COSE_Sign1 body ([protected, unprotected, payload, sig]) as
+  // our `Tag(61, Tag(18, [...]))` CWT so `CwtKit.decode` reads it.
+  const asCwt = (body: Array<unknown>): Buffer =>
+    Buffer.from(encodeCbor(new Tag(COSE_TAG.cwt, new Tag(COSE_TAG.sign1, body))));
+
+  const der1 = Buffer.from("308201aa30820192a0030201", "hex");
+  const der2 = Buffer.from("308200bb30820188a0030202", "hex");
+
+  const foreignBody = (protectedMap: Map<number, unknown>): Array<unknown> => [
+    encodeProtectedHeader(protectedMap),
+    new Map(),
+    Buffer.from(encodeCbor(encodeClaims(common))),
+    Buffer.alloc(0), // signature — decode never checks it
+  ];
+
+  test("crit label array decodes to JOSE wire-name strings (ints mapped, strings kept)", () => {
+    const decoded = kit().decode(
+      asCwt(
+        foreignBody(
+          new Map<number, unknown>([
+            [coseByJose("alg"), algToCoseLabel("ES512")],
+            // crit members: label 33 (x5c), label 3 (cty), and a bare string ext.
+            [coseByJose("crit"), [33, 3, "custom-ext"]],
+          ]),
+        ),
+      ),
+    );
+
+    expect(decoded.header.crit).toEqual(["x5c", "cty", "custom-ext"]);
+  });
+
+  test("x5chain bstr chain decodes to an Array<base64-string> (standard base64)", () => {
+    const decoded = kit().decode(
+      asCwt(
+        foreignBody(
+          new Map<number, unknown>([
+            [coseByJose("alg"), algToCoseLabel("ES512")],
+            [33, [der1, der2]], // x5chain — RFC 9360 label 33
+          ]),
+        ),
+      ),
+    );
+
+    // Standard base64 (RFC 7515 §4.1.6), NOT base64url — matches JOSE x5c.
+    expect(decoded.header.x5c).toEqual([B64.encode(der1), B64.encode(der2)]);
+  });
+
+  test("a single x5chain bstr (one cert) still decodes to a one-element Array", () => {
+    const decoded = kit().decode(
+      asCwt(
+        foreignBody(
+          new Map<number, unknown>([
+            [coseByJose("alg"), algToCoseLabel("ES512")],
+            [33, der1], // COSE allows a lone bstr for a single-cert chain
+          ]),
+        ),
+      ),
+    );
+
+    expect(decoded.header.x5c).toEqual([B64.encode(der1)]);
+  });
+
+  test("x5t (label 34) is ABSENT — its COSE_CertHash has no faithful JOSE-wire form", () => {
+    const decoded = kit().decode(
+      asCwt(
+        foreignBody(
+          new Map<number, unknown>([
+            [coseByJose("alg"), algToCoseLabel("ES512")],
+            // COSE x5t is a CertHash `[algId, hashValue]`, structurally different
+            // from JOSE's base64url thumbprint string — the registry leaves label
+            // 34 unmapped, so decode SKIPS it rather than mis-shaping it.
+            [34, [-16, Buffer.from("deadbeefcafe", "hex")]],
+          ]),
+        ),
+      ),
+    );
+
+    expect(decoded.header.x5t).toBeUndefined();
+  });
+
+  test("a detached / nil payload is rejected with the clean Malformed CWT error", () => {
+    const body: Array<unknown> = [
+      encodeProtectedHeader(
+        new Map<number, unknown>([[coseByJose("alg"), algToCoseLabel("ES512")]]),
+      ),
+      new Map(),
+      null, // detached payload — legal COSE, but there are no claims to decode
+      Buffer.alloc(0),
+    ];
+
+    expect(() => kit().decode(asCwt(body))).toThrow(/Malformed CWT/);
+  });
+
+  test("an aegis-minted CWT is unaffected — it emits none of these parameters", () => {
+    const decoded = kit().decode(signDomain(TEST_EC_KEY_SIG, common));
+
+    expect(decoded.header.crit).toBeUndefined();
+    expect(decoded.header.x5c).toBeUndefined();
+    expect(decoded.header.x5t).toBeUndefined();
+    // …the standard parameters our kits DO emit are shaped as before.
+    expect(decoded.header.alg).toBe("ES512");
+    expect(decoded.header.kid).toBe(TEST_EC_KEY_SIG.id);
   });
 });

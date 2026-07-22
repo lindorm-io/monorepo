@@ -40,9 +40,13 @@ export type DecodedOpaqueToken = {
 };
 
 /**
- * An ENCRYPTED token decoded to its unified wire header ONLY — JWE ≡ CWE. The
- * content stays ciphertext (it needs the key — that is `decrypt`), so there is
- * no payload here; decode merely surfaces the merged header.
+ * An ENCRYPTED token decoded to its unified wire header ONLY — JWE and CWE. The
+ * content stays ciphertext (it needs the key — that is `decrypt`), so there is no
+ * payload here; decode merely surfaces the merged header. JWE and CWE share this
+ * ONE result type but their headers are structurally SIMILAR, not identical: a
+ * JWE protected header carries a key-management `alg` alongside the content `enc`,
+ * whereas a COSE_Encrypt0 carries only `enc` (label 1 is the AEAD, there is no
+ * key-management `alg`) — so `alg` is present for JWE and absent for CWE.
  */
 export type DecodedEncryptedToken = {
   header: WireTokenHeader;

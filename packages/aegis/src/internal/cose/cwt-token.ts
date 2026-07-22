@@ -256,8 +256,19 @@ export const decodeCwtWire = <C extends CwtWireClaims = CwtWireClaims>(
   const [protectedBstr, unprotected, payloadBstr] = contents as [
     Uint8Array,
     Map<number, unknown> | undefined,
-    Uint8Array,
+    Uint8Array | null | undefined,
   ];
+
+  // A COSE_Sign1/Mac0 may carry a DETACHED (nil) payload — legal COSE, but there
+  // are then no claims to decode. Reject it with the clean structural error rather
+  // than letting `Buffer.from(null)` throw a raw, confusing TypeError.
+  if (payloadBstr == null) {
+    throw new CoseError("Malformed CWT", {
+      code: "cose_malformed",
+      title: "Malformed CWT",
+      details: "The CWT has a detached or nil payload, so its claims cannot be decoded.",
+    });
+  }
 
   const header = mergeCoseWireHeader(
     decodeProtectedHeader(protectedBstr),

@@ -4,7 +4,7 @@ import { JweKit } from "../../classes/JweKit.js";
 import { JwsKit } from "../../classes/JwsKit.js";
 import { JwtKit } from "../../classes/JwtKit.js";
 import { AegisDomainError, AegisError } from "../../errors/index.js";
-import type { VerifiedToken } from "../../types/index.js";
+import type { ParsedToken } from "../../types/index.js";
 import { isEncryptedCose } from "../cose/cose-encryption.js";
 import { isCose } from "../cose/is-cose.js";
 import { parseJwtToDomain } from "./parse-jwt.js";
@@ -18,12 +18,13 @@ const isEncryptedCoseToken = (token: string): boolean => {
 
 /**
  * The keyless domain parse (`aegis.parse`): decode + domain-translate a JWT or
- * JWS into the unified {@link VerifiedToken} WITHOUT any signature check. An
+ * JWS into the unified {@link ParsedToken} WITHOUT any signature check. An
  * encrypted token — a JWE or a CWE (COSE_Encrypt0) — is REJECTED: its claims are
  * unreadable without the decryption key (`parse_requires_decrypt`). An
- * unrecognised token throws.
+ * unrecognised token throws. The result is UNVERIFIED — no `dpop` (a verify-only
+ * field) is ever populated here.
  */
-export const parseToken = <C extends Dict = Dict>(token: string): VerifiedToken<C> => {
+export const parseToken = <C extends Dict = Dict>(token: string): ParsedToken<C> => {
   if (JwtKit.isJwt(token)) {
     return parseJwtToDomain<C>(token);
   }

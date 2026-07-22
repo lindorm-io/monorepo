@@ -17,10 +17,44 @@ export type CoseAlgKind = "sig" | "enc";
 const ALG_LABEL = coseByJose("alg");
 
 /**
+ * Translate a COSE `crit` (label 2) array into its JOSE wire form: each member is
+ * an integer header LABEL (or a tstr), so an integer is mapped to its JOSE wire
+ * NAME via the header registry (`headerByCose`) — the COSE twin of the JOSE crit
+ * member remap. An unregistered integer has no wire name, so it is stringified;
+ * a string member is already a name and passes through. Order is preserved to
+ * mirror the raw JOSE wire header (which carries `crit` verbatim).
+ */
+const coseCritToWire = (value: unknown): unknown => {
+  if (!Array.isArray(value)) return value;
+  return value.map((member): string =>
+    typeof member === "number"
+      ? (headerByCose(member)?.jose ?? String(member))
+      : String(member),
+  );
+};
+
+/**
+ * Translate a COSE `x5c` (label 33, RFC 9360 x5chain) into its JOSE wire form:
+ * COSE carries the certificate chain as `bstr` (one cert) or `Array<bstr>` (a
+ * chain) of DER bytes, whereas JOSE `x5c` is always `Array<base64-string>`. So
+ * normalise to an array and base64-encode (standard base64, per RFC 7515 §4.1.6 —
+ * NOT base64url) each byte string. A non-bstr value is left untouched.
+ */
+const coseX5cToWire = (value: unknown): unknown => {
+  const members = Array.isArray(value) ? value : [value];
+  if (!members.every((member) => member instanceof Uint8Array)) return value;
+  return members.map((cert): string => B64.encode(cert));
+};
+
+/**
  * Shape ONE COSE header value into its JOSE wire form: the `alg` label integer
  * becomes its string algorithm name, byte strings (`kid`) become their utf-8
- * text, and the base64url byte fields (`iv`/`p2s`/`tag`) become base64url
- * strings — the exact representation a decoded JOSE header carries.
+ * text, the base64url byte fields (`iv`/`p2s`/`tag`) become base64url strings,
+ * `crit`'s member labels become their JOSE wire names, and `x5c`'s DER byte
+ * strings become standard base64 — the exact representation a decoded JOSE header
+ * carries. (`x5t` is deliberately UNREGISTERED for COSE — its COSE form is a
+ * `COSE_CertHash` structure, not a base64url thumbprint relabel — so it never
+ * reaches this shaper; see the header registry.)
  */
 const coseValueToWire = (jose: string, value: unknown): unknown => {
   switch (jose) {
@@ -32,6 +66,10 @@ const coseValueToWire = (jose: string, value: unknown): unknown => {
     case "p2s":
     case "tag":
       return value instanceof Uint8Array ? B64.encode(Buffer.from(value), B64U) : value;
+    case "crit":
+      return coseCritToWire(value);
+    case "x5c":
+      return coseX5cToWire(value);
     default:
       return value;
   }

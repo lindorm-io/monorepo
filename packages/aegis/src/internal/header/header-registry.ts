@@ -122,13 +122,15 @@ export const HEADER_REGISTRY: ReadonlyArray<HeaderSpec> = [
   // RFC 7515 §4.1.7 — X.509 certificate SHA-1 thumbprint (base64url). Kit-derived
   // from the signing/encrypting kryptos (like `x5t#S256`), auto-emitted whenever a
   // cert is bound; the write side gates it behind a boolean, the read side never
-  // verifies it. COSE label 34 (RFC 9360) is present for RFC completeness, but
-  // COSE's x5t is a `COSE_CertHash` structure (`[algId, hashValue]`), NOT a plain
-  // relabel of JOSE's base64url thumbprint — no COSE kit emits it under that label.
+  // verifies it. Intentionally has NO `cose` label: COSE's x5t (label 34, RFC 9360)
+  // is a `COSE_CertHash` structure (`[algId, hashValue]`), NOT a plain relabel of
+  // JOSE's base64url thumbprint, so there is no faithful JOSE-wire representation.
+  // Leaving it unmapped means `headerByCose(34)` is undefined, so a foreign COSE
+  // token's x5t CertHash is SKIPPED on decode rather than silently mis-shaped into
+  // a bogus string.
   {
     domain: "certificateThumbprintSha1",
     jose: "x5t",
-    cose: 34,
     value: "string",
     provenance: "key",
   },

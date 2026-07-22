@@ -104,6 +104,7 @@ import type {
   ParsedCwt,
   ParsedJws,
   ParsedJwt,
+  ParsedToken,
   ProfileContent,
   ProfileMintOptions,
   ProfileVerifyOptions,
@@ -407,7 +408,7 @@ export class Aegis implements IAegis {
   // `Aegis.decode` is DROPPED (Bit 2) — use `aegis.<fmt>.decode` for a known
   // format, or `aegis.parse` for an unknown one.
 
-  static parse<C extends Dict = Dict>(token: string): VerifiedToken<C> {
+  static parse<C extends Dict = Dict>(token: string): ParsedToken<C> {
     return parseToken<C>(token);
   }
 
