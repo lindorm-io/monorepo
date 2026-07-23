@@ -26,7 +26,10 @@ describe("httpRequestLoggerMiddleware", () => {
     token = new JwtKit({
       kryptos,
       logger: createMockLogger(),
-    }).sign({ sub: "subject", exp: Math.floor(Date.now() / 1000) + 3600 }, { typ: "at" });
+    }).sign(
+      { sub: "subject", exp: Math.floor(Date.now() / 1000) + 3600 },
+      { tokenType: "at" },
+    );
 
     [, , signature] = token.split(".");
 
