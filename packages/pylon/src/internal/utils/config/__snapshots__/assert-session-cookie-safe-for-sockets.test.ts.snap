@@ -8,6 +8,10 @@ exports[`assertSessionCookieSafeForSockets > should throw with actionable error 
   "details": "options.cors.allowOrigins cannot be '*' when options.session is set. Cookie-mode socket auth is Cross-Site WebSocket Hijacking (CSWSH) vulnerable without an explicit origin allowlist.",
   "errors": [],
   "id": Any<String>,
+  "lineage": [
+    "PylonError",
+    "LindormError",
+  ],
   "name": "PylonError",
   "status": -1,
   "support": Any<String>,

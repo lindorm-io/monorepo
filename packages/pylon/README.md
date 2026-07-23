@@ -736,7 +736,9 @@ router.get(
 // Scope a private cache by tenant instead of the request actor.
 router.get(
   "/dashboard",
-  useCache("30s", "private", { actor: (ctx) => ctx.state.tokens.accessToken.claims.tid }),
+  useCache("30s", "private", {
+    actor: (ctx) => ctx.state.tokens.accessToken.claims.tenantId,
+  }),
   useHandler(dashboard),
 );
 ```
