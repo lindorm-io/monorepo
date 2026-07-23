@@ -35,14 +35,14 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
   });
 
   test("mints a CWT tagged with the CWT tag (61 = 0xd83d)", () => {
-    const token = kit.sign(wire, { typ: "application/at+cwt" });
+    const token = kit.sign(wire, { tokenType: "at" });
     expect(Buffer.isBuffer(token)).toBe(true);
     // CBOR tag 61 = 0xd8 0x3d
     expect(token.subarray(0, 2).toString("hex")).toBe("d83d");
   });
 
   test("round-trips the WIRE claims through sign -> verify (no domain translation)", () => {
-    const { claims, typ } = kit.verify(kit.sign(wire, { typ: "application/at+cwt" }));
+    const { payload: claims, header } = kit.verify(kit.sign(wire, { tokenType: "at" }));
 
     // WIRE names only — jose/cose keys, NOT domain (`issuer`/`subject`/`tokenId`).
     expect(claims.iss).toBe("https://issuer.lindorm.io/");
@@ -54,11 +54,11 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
     // Temporal claims decode to Dates (the codec's "date" kind).
     expect(claims.exp).toEqual(new Date(1704099600 * 1000));
     expect(claims.iat).toEqual(new Date(1704092400 * 1000));
-    expect(typ).toBe("application/at+cwt");
+    expect(header.typ).toBe("application/at+cwt");
   });
 
   test("decode exposes kid / alg / typ without verifying", () => {
-    const decoded = CwtKit.decode(kit.sign(wire, { typ: "application/at+cwt" }));
+    const decoded = CwtKit.decode(kit.sign(wire, { tokenType: "at" }));
 
     expect(decoded.kid).toBe(TEST_EC_KEY_SIG.id);
     expect(decoded.algorithm).toBe("ES512"); // TEST_EC_KEY_SIG is P-521
@@ -120,7 +120,7 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
 
       const error = (() => {
         try {
-          mldsaKit.sign(wire, { typ: "application/at+cwt" });
+          mldsaKit.sign(wire, { tokenType: "at" });
         } catch (err) {
           return err as AegisError;
         }
@@ -132,12 +132,44 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
     test("proprietary sign allows ML-DSA and round-trips the WIRE claims", () => {
       const mldsaKit = new CwtKit({ logger: createMockLogger(), kryptos: mldsa });
 
-      const { claims } = mldsaKit.verify(
-        mldsaKit.sign(wire, { typ: "application/at+cwt", proprietary: true }),
+      const { payload: claims } = mldsaKit.verify(
+        mldsaKit.sign(wire, { tokenType: "at", proprietary: true }),
       );
 
       expect(claims.iss).toBe("https://issuer.lindorm.io/");
       expect(claims.cti).toBe("the-cti");
+    });
+  });
+
+  describe("caller-controlled protected / unprotected header bags", () => {
+    test("header params land protected, unprotected params unprotected — both merge on verify", () => {
+      const x5u = "https://certs.lindorm.io/leaf.pem";
+      const { header } = kit.verify(
+        kit.sign(wire, {
+          tokenType: "at",
+          header: { cty: "application/example" },
+          unprotected: { x5u },
+        }),
+      );
+
+      expect(header.cty).toBe("application/example");
+      expect(header.x5u).toBe(x5u);
+      // The always-present derived params are still there.
+      expect(header.typ).toBe("application/at+cwt");
+      expect(header.alg).toBe("ES512");
+      expect(header.kid).toBe(TEST_EC_KEY_SIG.id);
+    });
+
+    test("a derived param (alg) smuggled into the bag throws cose_reserved_header", () => {
+      const error = (() => {
+        try {
+          kit.sign(wire, { header: { alg: "ES256" } as never });
+        } catch (err) {
+          return err as AegisError;
+        }
+      })();
+
+      expect(error?.code).toBe("cose_reserved_header");
     });
   });
 
@@ -157,6 +189,31 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
       });
       const token = tolerant.sign({ ...wire, exp: 1704092400 });
       expect(() => tolerant.verify(token)).not.toThrow();
+    });
+  });
+
+  // R10 temporal overrides — mocked "now" is 2024-01-01T08:00:00Z (unix 1704096000).
+  describe("temporal overrides (R10 — currentDate / maxTokenAge)", () => {
+    test("currentDate overrides now: an expired CWT verifies against a past currentDate", () => {
+      // iat 06:00, exp 07:30 — expired against the mocked 08:00 now.
+      const token = kit.sign({ ...wire, iat: 1704088800, exp: 1704094200 });
+      expect(() => kit.verify(token)).toThrow();
+
+      // Against a currentDate of 07:00 the exp (07:30) is still in the future and
+      // the iat (06:00) is still in the past, so the token verifies.
+      expect(() =>
+        kit.verify(token, undefined, { currentDate: new Date(1704092400 * 1000) }),
+      ).not.toThrow();
+    });
+
+    test("maxTokenAge accepts a fresh iat and rejects a stale one", () => {
+      // iat 60s ago (07:59).
+      const fresh = kit.sign({ ...wire, iat: 1704095940, exp: 1704099600 });
+      expect(() => kit.verify(fresh, undefined, { maxTokenAge: 300 })).not.toThrow();
+
+      // iat 10 minutes ago (07:50) — older than the 5-minute maxTokenAge.
+      const stale = kit.sign({ ...wire, iat: 1704095400, exp: 1704099600 });
+      expect(() => kit.verify(stale, undefined, { maxTokenAge: 300 })).toThrow();
     });
   });
 });

@@ -31,80 +31,49 @@ describe("JweKit", () => {
 
   describe("encrypt", () => {
     test("should encrypt data using EC", () => {
-      expect(kit.encrypt("data")).toEqual({
-        token: expect.any(String),
-      });
+      expect(kit.encrypt("data")).toEqual(expect.any(String));
     });
 
     test("should encrypt data using OCT", () => {
       kit = new JweKit({ logger, kryptos: TEST_OCT_KEY_ENC });
 
-      expect(kit.encrypt("data")).toEqual({
-        token: expect.any(String),
-      });
+      expect(kit.encrypt("data")).toEqual(expect.any(String));
     });
 
     test("should encrypt data using OKP", () => {
       kit = new JweKit({ logger, kryptos: TEST_OKP_KEY_ENC });
 
-      expect(kit.encrypt("data")).toEqual({
-        token: expect.any(String),
-      });
+      expect(kit.encrypt("data")).toEqual(expect.any(String));
     });
 
     test("should encrypt data using RSA", () => {
       kit = new JweKit({ logger, kryptos: TEST_RSA_KEY_ENC });
 
-      expect(kit.encrypt("data")).toEqual({
-        token: expect.any(String),
-      });
+      expect(kit.encrypt("data")).toEqual(expect.any(String));
     });
   });
 
   describe("decrypt", () => {
     test("should decrypt data using EC", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
       expect(kit.decrypt(token)).toEqual({
-        decoded: {
-          authTag: expect.any(String),
-          content: expect.any(String),
-          header: {
-            alg: "ECDH-ES",
-            cty: "text/plain; charset=utf-8",
-            enc: "A256GCM",
-            epk: {
-              crv: "P-521",
-              kty: "EC",
-              x: expect.any(String),
-              y: expect.any(String),
-            },
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
-            oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
-            typ: "JWE",
-          },
-          initialisationVector: expect.any(String),
-          publicEncryptionKey: undefined,
-        },
         header: {
-          algorithm: "ECDH-ES",
-          baseFormat: "JWE",
-          contentType: "text/plain; charset=utf-8",
-          critical: [],
-          encryption: "A256GCM",
-          headerType: "JWE",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
-          objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
-          publicEncryptionJwk: {
+          alg: "ECDH-ES",
+          cty: "text/plain",
+          enc: "A256GCM",
+          epk: {
             crv: "P-521",
             kty: "EC",
             x: expect.any(String),
             y: expect.any(String),
           },
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
+          oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+          typ: "JWE",
         },
         payload: "data",
         token,
@@ -114,36 +83,19 @@ describe("JweKit", () => {
     test("should decrypt data using OCT dir", () => {
       kit = new JweKit({ logger, kryptos: TEST_OCT_KEY_ENC });
 
-      const { token } = kit.encrypt("data", {
-        objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+      const token = kit.encrypt("data", {
+        header: { oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6" },
       });
 
       expect(kit.decrypt(token)).toEqual({
-        decoded: {
-          authTag: expect.any(String),
-          content: expect.any(String),
-          header: {
-            alg: "dir",
-            cty: "text/plain; charset=utf-8",
-            enc: "A256GCM",
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "ae26175f-961d-5947-8318-6299e4576b83",
-            oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
-            typ: "JWE",
-          },
-          initialisationVector: expect.any(String),
-          publicEncryptionKey: undefined,
-        },
         header: {
-          algorithm: "dir",
-          baseFormat: "JWE",
-          contentType: "text/plain; charset=utf-8",
-          critical: [],
-          encryption: "A256GCM",
-          headerType: "JWE",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "ae26175f-961d-5947-8318-6299e4576b83",
-          objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+          alg: "dir",
+          cty: "text/plain",
+          enc: "A256GCM",
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "ae26175f-961d-5947-8318-6299e4576b83",
+          oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+          typ: "JWE",
         },
         payload: "data",
         token,
@@ -158,36 +110,19 @@ describe("JweKit", () => {
 
       kit = new JweKit({ logger, kryptos });
 
-      const { token } = kit.encrypt("data", {
-        objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+      const token = kit.encrypt("data", {
+        header: { oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6" },
       });
 
       expect(kit.decrypt(token)).toEqual({
-        decoded: {
-          authTag: expect.any(String),
-          content: expect.any(String),
-          header: {
-            alg: "A128KW",
-            cty: "text/plain; charset=utf-8",
-            enc: "A256GCM",
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: kryptos.id,
-            oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
-            typ: "JWE",
-          },
-          initialisationVector: expect.any(String),
-          publicEncryptionKey: expect.any(String),
-        },
         header: {
-          algorithm: "A128KW",
-          baseFormat: "JWE",
-          contentType: "text/plain; charset=utf-8",
-          critical: [],
-          encryption: "A256GCM",
-          headerType: "JWE",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: kryptos.id,
-          objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+          alg: "A128KW",
+          cty: "text/plain",
+          enc: "A256GCM",
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: kryptos.id,
+          oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+          typ: "JWE",
         },
         payload: "data",
         token,
@@ -199,38 +134,20 @@ describe("JweKit", () => {
 
       kit = new JweKit({ logger, kryptos });
 
-      const { token } = kit.encrypt("data", {
-        objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+      const token = kit.encrypt("data", {
+        header: { oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6" },
       });
 
       expect(kit.decrypt(token)).toEqual({
-        decoded: {
-          authTag: expect.any(String),
-          content: expect.any(String),
-          header: {
-            alg: "PBES2-HS512+A256KW",
-            cty: "text/plain; charset=utf-8",
-            enc: "A256GCM",
-            kid: kryptos.id,
-            oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
-            p2c: expect.any(Number),
-            p2s: expect.any(String),
-            typ: "JWE",
-          },
-          initialisationVector: expect.any(String),
-          publicEncryptionKey: expect.any(String),
-        },
         header: {
-          algorithm: "PBES2-HS512+A256KW",
-          baseFormat: "JWE",
-          contentType: "text/plain; charset=utf-8",
-          critical: [],
-          encryption: "A256GCM",
-          headerType: "JWE",
-          keyId: kryptos.id,
-          objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
-          pbkdfIterations: expect.any(Number),
-          pbkdfSalt: expect.any(String),
+          alg: "PBES2-HS512+A256KW",
+          cty: "text/plain",
+          enc: "A256GCM",
+          kid: kryptos.id,
+          oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+          p2c: expect.any(Number),
+          p2s: expect.any(String),
+          typ: "JWE",
         },
         payload: "data",
         token,
@@ -242,38 +159,20 @@ describe("JweKit", () => {
 
       kit = new JweKit({ logger, kryptos });
 
-      const { token } = kit.encrypt("data", {
-        objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+      const token = kit.encrypt("data", {
+        header: { oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6" },
       });
 
       expect(kit.decrypt(token)).toEqual({
-        decoded: {
-          authTag: expect.any(String),
-          content: expect.any(String),
-          header: {
-            alg: "A128GCMKW",
-            cty: "text/plain; charset=utf-8",
-            enc: "A256GCM",
-            iv: expect.any(String),
-            kid: kryptos.id,
-            oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
-            tag: expect.any(String),
-            typ: "JWE",
-          },
-          initialisationVector: expect.any(String),
-          publicEncryptionKey: expect.any(String),
-        },
         header: {
-          algorithm: "A128GCMKW",
-          baseFormat: "JWE",
-          contentType: "text/plain; charset=utf-8",
-          critical: [],
-          encryption: "A256GCM",
-          headerType: "JWE",
-          initialisationVector: expect.any(String),
-          keyId: kryptos.id,
-          objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
-          publicEncryptionTag: expect.any(String),
+          alg: "A128GCMKW",
+          cty: "text/plain",
+          enc: "A256GCM",
+          iv: expect.any(String),
+          kid: kryptos.id,
+          oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+          tag: expect.any(String),
+          typ: "JWE",
         },
         payload: "data",
         token,
@@ -283,46 +182,24 @@ describe("JweKit", () => {
     test("should decrypt data using OKP", () => {
       kit = new JweKit({ logger, kryptos: TEST_OKP_KEY_ENC });
 
-      const { token } = kit.encrypt("data", {
-        objectId: "540061f3-aea2-4625-b034-c48a7a9ac114",
+      const token = kit.encrypt("data", {
+        header: { oid: "540061f3-aea2-4625-b034-c48a7a9ac114" },
       });
 
       expect(kit.decrypt(token)).toEqual({
-        decoded: {
-          authTag: expect.any(String),
-          content: expect.any(String),
-          header: {
-            alg: "ECDH-ES",
-            cty: "text/plain; charset=utf-8",
-            enc: "A256GCM",
-            epk: {
-              crv: "X25519",
-              kty: "OKP",
-              x: expect.any(String),
-            },
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "035f7f00-8101-5387-a935-e92f57347309",
-            oid: "540061f3-aea2-4625-b034-c48a7a9ac114",
-            typ: "JWE",
-          },
-          initialisationVector: expect.any(String),
-          publicEncryptionKey: undefined,
-        },
         header: {
-          algorithm: "ECDH-ES",
-          baseFormat: "JWE",
-          contentType: "text/plain; charset=utf-8",
-          critical: [],
-          encryption: "A256GCM",
-          headerType: "JWE",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "035f7f00-8101-5387-a935-e92f57347309",
-          objectId: "540061f3-aea2-4625-b034-c48a7a9ac114",
-          publicEncryptionJwk: {
+          alg: "ECDH-ES",
+          cty: "text/plain",
+          enc: "A256GCM",
+          epk: {
             crv: "X25519",
             kty: "OKP",
             x: expect.any(String),
           },
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "035f7f00-8101-5387-a935-e92f57347309",
+          oid: "540061f3-aea2-4625-b034-c48a7a9ac114",
+          typ: "JWE",
         },
         payload: "data",
         token,
@@ -332,36 +209,19 @@ describe("JweKit", () => {
     test("should decrypt data using RSA", () => {
       kit = new JweKit({ logger, kryptos: TEST_RSA_KEY_ENC });
 
-      const { token } = kit.encrypt("data", {
-        objectId: "a152d3f3-4e4b-46ea-ac6f-ae54e0e79090",
+      const token = kit.encrypt("data", {
+        header: { oid: "a152d3f3-4e4b-46ea-ac6f-ae54e0e79090" },
       });
 
       expect(kit.decrypt(token)).toEqual({
-        decoded: {
-          authTag: expect.any(String),
-          content: expect.any(String),
-          header: {
-            alg: "RSA-OAEP-256",
-            cty: "text/plain; charset=utf-8",
-            enc: "A256GCM",
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "20b09138-bab7-54ce-a491-1f4ba52e3d4e",
-            oid: "a152d3f3-4e4b-46ea-ac6f-ae54e0e79090",
-            typ: "JWE",
-          },
-          initialisationVector: expect.any(String),
-          publicEncryptionKey: expect.any(String),
-        },
         header: {
-          algorithm: "RSA-OAEP-256",
-          baseFormat: "JWE",
-          contentType: "text/plain; charset=utf-8",
-          critical: [],
-          encryption: "A256GCM",
-          headerType: "JWE",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "20b09138-bab7-54ce-a491-1f4ba52e3d4e",
-          objectId: "a152d3f3-4e4b-46ea-ac6f-ae54e0e79090",
+          alg: "RSA-OAEP-256",
+          cty: "text/plain",
+          enc: "A256GCM",
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "20b09138-bab7-54ce-a491-1f4ba52e3d4e",
+          oid: "a152d3f3-4e4b-46ea-ac6f-ae54e0e79090",
+          typ: "JWE",
         },
         payload: "data",
         token,
@@ -371,8 +231,8 @@ describe("JweKit", () => {
 
   describe("decode", () => {
     test("should decode data", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "e5d4ed15-3350-4fdc-a9cf-d8270d637e99",
+      const token = kit.encrypt("data", {
+        header: { oid: "e5d4ed15-3350-4fdc-a9cf-d8270d637e99" },
       });
 
       expect(JweKit.decodeSegments(token)).toEqual({
@@ -380,7 +240,7 @@ describe("JweKit", () => {
         content: expect.any(String),
         header: {
           alg: "ECDH-ES",
-          cty: "text/plain; charset=utf-8",
+          cty: "text/plain",
           enc: "A256GCM",
           epk: {
             crv: "P-521",
@@ -434,7 +294,7 @@ describe("JweKit", () => {
 
         const jweKit = new JweKit({ logger, kryptos });
 
-        const { token } = jweKit.encrypt("data");
+        const token = jweKit.encrypt("data");
 
         expect(jweKit.decrypt(token)).toBeDefined();
       },
@@ -444,8 +304,8 @@ describe("JweKit", () => {
 
   describe("critical header parameter rejection", () => {
     test("should reject RFC-valid token with an extension critical parameter aegis does not implement", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
       // Well-formed header with a non-registered crit parameter that is
@@ -470,8 +330,8 @@ describe("JweKit", () => {
     });
 
     test("should reject malformed crit listing a parameter not present in the header", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
       const decoded = JweKit.decodeSegments(token);
@@ -487,8 +347,8 @@ describe("JweKit", () => {
     });
 
     test("should reject crit containing an IANA-registered parameter name", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
       const decoded = JweKit.decodeSegments(token);
@@ -504,8 +364,8 @@ describe("JweKit", () => {
     });
 
     test("should reject crit that is an empty array", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
       const decoded = JweKit.decodeSegments(token);
@@ -521,8 +381,8 @@ describe("JweKit", () => {
     });
 
     test("should accept token with empty critical array", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
       expect(() => kit.decrypt(token)).not.toThrow();
@@ -531,8 +391,8 @@ describe("JweKit", () => {
 
   describe("zip (compression) rejection", () => {
     test("rejects a JWE with zip: DEF to prevent compression oracle attacks", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
       // Splice zip: "DEF" into the protected header to simulate an attacker
@@ -565,7 +425,7 @@ describe("JweKit", () => {
         const kryptos = KryptosKit.generate.enc.ec({ algorithm });
         const jweKit = new JweKit({ logger, kryptos });
 
-        const { token } = jweKit.encrypt("data", { partyProducer, partyRecipient });
+        const token = jweKit.encrypt("data", { partyProducer, partyRecipient });
 
         // The base64url party info rides the protected header (apu/apv).
         expect(JweKit.decodeSegments(token).header.apu).toBe(partyProducer);
@@ -573,8 +433,8 @@ describe("JweKit", () => {
 
         const decrypted = jweKit.decrypt(token);
         expect(decrypted.payload).toBe("data");
-        expect(decrypted.header.partyProducer).toBe(partyProducer);
-        expect(decrypted.header.partyRecipient).toBe(partyRecipient);
+        expect(decrypted.header.apu).toBe(partyProducer);
+        expect(decrypted.header.apv).toBe(partyRecipient);
       },
     );
 
@@ -582,7 +442,7 @@ describe("JweKit", () => {
       const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES" });
       const jweKit = new JweKit({ logger, kryptos });
 
-      const { token } = jweKit.encrypt("data");
+      const token = jweKit.encrypt("data");
 
       expect(JweKit.decodeSegments(token).header.apu).toBeUndefined();
       expect(JweKit.decodeSegments(token).header.apv).toBeUndefined();
@@ -594,15 +454,15 @@ describe("JweKit", () => {
       // dropped — neither emitted on the header nor fed to the key derivation.
       const jweKit = new JweKit({ logger, kryptos: TEST_OCT_KEY_ENC });
 
-      const { token } = jweKit.encrypt("data", { partyProducer, partyRecipient });
+      const token = jweKit.encrypt("data", { partyProducer, partyRecipient });
 
       expect(JweKit.decodeSegments(token).header.apu).toBeUndefined();
       expect(JweKit.decodeSegments(token).header.apv).toBeUndefined();
 
       const decrypted = jweKit.decrypt(token);
       expect(decrypted.payload).toBe("data");
-      expect(decrypted.header.partyProducer).toBeUndefined();
-      expect(decrypted.header.partyRecipient).toBeUndefined();
+      expect(decrypted.header.apu).toBeUndefined();
+      expect(decrypted.header.apv).toBeUndefined();
     });
 
     test("should decrypt when the configured partyRecipient matches the token apv", () => {
@@ -610,7 +470,7 @@ describe("JweKit", () => {
       const encryptKit = new JweKit({ logger, kryptos });
       const decryptKit = new JweKit({ logger, kryptos, partyRecipient });
 
-      const { token } = encryptKit.encrypt("data", { partyProducer, partyRecipient });
+      const token = encryptKit.encrypt("data", { partyProducer, partyRecipient });
 
       expect(decryptKit.decrypt(token).payload).toBe("data");
     });
@@ -624,7 +484,7 @@ describe("JweKit", () => {
         partyRecipient: B64.encode(Buffer.from("someone-else"), "b64u"),
       });
 
-      const { token } = encryptKit.encrypt("data", { partyProducer, partyRecipient });
+      const token = encryptKit.encrypt("data", { partyProducer, partyRecipient });
 
       expect(() => decryptKit.decrypt(token)).toThrow(
         "token not addressed to this recipient",
@@ -636,7 +496,7 @@ describe("JweKit", () => {
       const encryptKit = new JweKit({ logger, kryptos });
       const decryptKit = new JweKit({ logger, kryptos, partyRecipient });
 
-      const { token } = encryptKit.encrypt("data");
+      const token = encryptKit.encrypt("data");
 
       expect(() => decryptKit.decrypt(token)).toThrow(
         "token not addressed to this recipient",
@@ -646,38 +506,35 @@ describe("JweKit", () => {
 
   describe("tokenType round-trip", () => {
     test("should surface tokenType on decrypted header when signed with it", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
         tokenType: "logout_token",
       });
 
       const decrypted = kit.decrypt(token);
 
-      expect(decrypted.header.headerType).toBe("application/logout+jwe");
-      expect(decrypted.header.tokenType).toBe("logout_token");
+      expect(decrypted.header.typ).toBe("application/logout_token+jwe");
     });
 
     test("should surface erasure_token on decrypted header when signed with it", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
         tokenType: "erasure_token",
       });
 
       const decrypted = kit.decrypt(token);
 
-      expect(decrypted.header.headerType).toBe("application/erasure+jwe");
-      expect(decrypted.header.tokenType).toBe("erasure_token");
+      expect(decrypted.header.typ).toBe("application/erasure_token+jwe");
     });
 
     test("should leave tokenType undefined when not supplied", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
       const decrypted = kit.decrypt(token);
 
-      expect(decrypted.header.headerType).toBe("JWE");
-      expect(decrypted.header.tokenType).toBeUndefined();
+      expect(decrypted.header.typ).toBe("JWE");
     });
   });
 });

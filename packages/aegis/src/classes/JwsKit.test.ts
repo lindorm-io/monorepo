@@ -21,29 +21,21 @@ describe("JwsKit", () => {
     test("should sign token with plain text data", () => {
       expect(
         kit.sign("test data in plain text", {
-          objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+          header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
         }),
-      ).toEqual({
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-        token: expect.any(String),
-      });
+      ).toEqual(expect.any(String));
     });
 
     test("should sign token with buffer data", () => {
       expect(
         kit.sign(Buffer.from("test data in buffer", "utf8"), {
-          objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+          header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
         }),
-      ).toEqual({
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-        token: expect.any(String),
-      });
+      ).toEqual(expect.any(String));
     });
 
     test("should sign token without objectId and omit oid from header", () => {
-      const { token, objectId } = kit.sign("test data in plain text");
-
-      expect(objectId).toBeUndefined();
+      const token = kit.sign("test data in plain text");
 
       const { header } = JwsKit.decodeSegments(token);
       expect(header).not.toHaveProperty("oid");
@@ -52,32 +44,18 @@ describe("JwsKit", () => {
 
   describe("verify", () => {
     test("should verify token with plain text data", () => {
-      const { token } = kit.sign("test data in plain text", {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      const token = kit.sign("test data in plain text", {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
       expect(kit.verify(token)).toEqual({
-        decoded: {
-          header: {
-            alg: "ES512",
-            cty: "text/plain; charset=utf-8",
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-            typ: "JWS",
-          },
-          payload: "test data in plain text",
-          signature: expect.any(String),
-        },
         header: {
-          algorithm: "ES512",
-          baseFormat: "JWS",
-          contentType: "text/plain; charset=utf-8",
-          critical: [],
-          headerType: "JWS",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-          objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+          alg: "ES512",
+          cty: "text/plain",
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+          typ: "JWS",
         },
         payload: "test data in plain text",
         token,
@@ -85,32 +63,18 @@ describe("JwsKit", () => {
     });
 
     test("should verify token with buffer data", () => {
-      const { token } = kit.sign(Buffer.from("test data in buffer", "utf8"), {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      const token = kit.sign(Buffer.from("test data in buffer", "utf8"), {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
       expect(kit.verify(token)).toEqual({
-        decoded: {
-          header: {
-            alg: "ES512",
-            cty: "application/octet-stream",
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-            typ: "JWS",
-          },
-          payload: "dGVzdCBkYXRhIGluIGJ1ZmZlcg",
-          signature: expect.any(String),
-        },
         header: {
-          algorithm: "ES512",
-          baseFormat: "JWS",
-          contentType: "application/octet-stream",
-          critical: [],
-          headerType: "JWS",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-          objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+          alg: "ES512",
+          cty: "application/octet-stream",
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+          typ: "JWS",
         },
         payload: Buffer.from("test data in buffer", "utf8"),
         token,
@@ -118,66 +82,65 @@ describe("JwsKit", () => {
     });
   });
 
-  describe("tokenType round-trip", () => {
-    test("should surface tokenType on verified header when signed with it", () => {
-      const { token } = kit.sign("test data", {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-        tokenType: "refresh_token",
+  describe("typ round-trip (wire header)", () => {
+    test("should surface the media-type typ on the verified WIRE header", () => {
+      const token = kit.sign("test data", {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
+        tokenType: "rt",
       });
 
       const parsed = kit.verify(token);
 
-      expect(parsed.header.headerType).toBe("application/rt+jws");
-      expect(parsed.header.tokenType).toBe("refresh_token");
+      expect(parsed.header.typ).toBe("application/rt+jws");
     });
 
-    test("should round-trip a custom tokenType", () => {
-      const { token } = kit.sign("test data", {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+    test("should round-trip a custom tokenType as its media-type typ", () => {
+      const token = kit.sign("test data", {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
         tokenType: "my_custom_thing",
       });
 
       const parsed = kit.verify(token);
 
-      expect(parsed.header.headerType).toBe("application/my_custom_thing+jws");
-      expect(parsed.header.tokenType).toBe("my_custom_thing");
+      expect(parsed.header.typ).toBe("application/my_custom_thing+jws");
     });
 
-    test("should leave tokenType undefined when not supplied on sign", () => {
-      const { token } = kit.sign("test data", {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+    test("should floor to the bare JWS typ when no tokenType is supplied on sign", () => {
+      const token = kit.sign("test data", {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
       const parsed = kit.verify(token);
 
-      expect(parsed.header.headerType).toBe("JWS");
-      expect(parsed.header.tokenType).toBeUndefined();
+      expect(parsed.header.typ).toBe("JWS");
     });
   });
 
   describe("decode", () => {
     test("should decode token with plain text data", () => {
-      const { token } = kit.sign("test data in plain text", {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      const token = kit.sign("test data in plain text", {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
+      // decodeSegments now surfaces the RAW base64url payload (reconstruction is
+      // deferred to verify/decode, which read the cty).
       expect(JwsKit.decodeSegments(token)).toEqual({
         header: {
           alg: "ES512",
-          cty: "text/plain; charset=utf-8",
+          cty: "text/plain",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
           oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
           typ: "JWS",
         },
-        payload: "test data in plain text",
+        payload: "dGVzdCBkYXRhIGluIHBsYWluIHRleHQ",
         signature: expect.any(String),
       });
     });
 
     test("should decode token with buffer data", () => {
-      const { token } = kit.sign(Buffer.from("test data in buffer", "utf8"), {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      const token = kit.sign(Buffer.from("test data in buffer", "utf8"), {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
       expect(JwsKit.decodeSegments(token)).toEqual({
@@ -195,78 +158,10 @@ describe("JwsKit", () => {
     });
   });
 
-  describe("parse", () => {
-    test("should parse token with plain text data", () => {
-      const { token } = kit.sign("test data in plain text", {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-      });
-
-      expect(JwsKit.parse(token)).toEqual({
-        decoded: {
-          header: {
-            alg: "ES512",
-            cty: "text/plain; charset=utf-8",
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-            typ: "JWS",
-          },
-          payload: "test data in plain text",
-          signature: expect.any(String),
-        },
-        header: {
-          algorithm: "ES512",
-          baseFormat: "JWS",
-          contentType: "text/plain; charset=utf-8",
-          critical: [],
-          headerType: "JWS",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-          objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-        },
-        payload: "test data in plain text",
-        token,
-      });
-    });
-
-    test("should parse token with buffer data", () => {
-      const { token } = kit.sign(Buffer.from("test data in buffer", "utf8"), {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-      });
-
-      expect(JwsKit.parse(token)).toEqual({
-        decoded: {
-          header: {
-            alg: "ES512",
-            cty: "application/octet-stream",
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-            typ: "JWS",
-          },
-          payload: "dGVzdCBkYXRhIGluIGJ1ZmZlcg",
-          signature: expect.any(String),
-        },
-        header: {
-          algorithm: "ES512",
-          baseFormat: "JWS",
-          contentType: "application/octet-stream",
-          critical: [],
-          headerType: "JWS",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-          objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-        },
-        payload: Buffer.from("test data in buffer", "utf8"),
-        token,
-      });
-    });
-  });
-
   describe("critical header parameter rejection", () => {
     test("should reject RFC-valid token with an extension critical parameter aegis does not implement", () => {
-      const { token } = kit.sign("test data", {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      const token = kit.sign("test data", {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
       // Craft a malicious header with a well-formed crit: the extension
@@ -292,8 +187,8 @@ describe("JwsKit", () => {
     });
 
     test("should reject malformed crit listing a parameter not present in the header", () => {
-      const { token } = kit.sign("test data", {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      const token = kit.sign("test data", {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
       // crit lists 'missing_ext' but the header does not contain it — violates
@@ -314,8 +209,8 @@ describe("JwsKit", () => {
     });
 
     test("should reject crit containing an IANA-registered parameter name", () => {
-      const { token } = kit.sign("test data", {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      const token = kit.sign("test data", {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
       // crit must not contain registered params per RFC 7515 §4.1.11.
@@ -332,8 +227,8 @@ describe("JwsKit", () => {
     });
 
     test("should reject crit that is an empty array", () => {
-      const { token } = kit.sign("test data", {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      const token = kit.sign("test data", {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
       const decoded = JwsKit.decodeSegments(token);
@@ -349,8 +244,8 @@ describe("JwsKit", () => {
     });
 
     test("should accept token with empty critical array", () => {
-      const { token } = kit.sign("test data", {
-        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      const token = kit.sign("test data", {
+        header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
       expect(() => kit.verify(token)).not.toThrow();

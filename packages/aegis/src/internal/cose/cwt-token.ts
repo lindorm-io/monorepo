@@ -5,10 +5,17 @@ import { CwsKit } from "../../classes/CwsKit.js";
 import { CoseError, CwmError, CwtError } from "../../errors/index.js";
 import { coseByJose } from "../header/header-registry.js";
 import { mergeCoseWireHeader } from "../header/merge-cose-wire-header.js";
-import { applyOmit, type OmitMode } from "../utils/apply-omit.js";
+import { applyOmit } from "../utils/apply-omit.js";
+import { buildMediaType } from "../utils/compute-typ-header.js";
 import { createTemporalMatchers } from "../utils/jwt-temporal-matchers.js";
 import { validate } from "../utils/validate.js";
-import type { CwtWireClaims, DecodedSignedToken } from "../../types/index.js";
+import type {
+  CwtClaimsWire,
+  DecodedStructuredToken,
+  SignStructuredTokenOptions,
+  VerifiedStructuredToken,
+  VerifyStructuredTokenOptions,
+} from "../../types/index.js";
 import { coseLabelToAlg } from "./alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "./cbor.js";
 import { decodeCwtClaims, encodeCwtClaims } from "./cwt-claims.js";
@@ -43,45 +50,6 @@ const CWT_ERROR: Record<CwtFormat, typeof CoseError> = {
   cwm: CwmError,
 };
 
-export type CwtSignOptions = {
-  /** The full COSE `typ` media type (label 16, RFC 9596), e.g. `application/at+cwt`. */
-  typ?: string;
-  /**
-   * Allow lindorm-proprietary COSE encodings. Threaded to BOTH the interop alg
-   * gate and the claim codec, which now share ONE default when omitted (D5):
-   * interoperable. The alg gate is STRICT (a private-use signing algorithm such
-   * as ML-DSA is refused unless `true`) and the claim codec emits private-use
-   * claims under their JOSE string key (set `true` for the compact private-use
-   * integer labels). Verify is always lenient. See `encodeCwtClaims`.
-   */
-  proprietary?: boolean;
-  /**
-   * How empty claims are pruned before encoding. `"empty"` (default) drops
-   * null/empty-string/empty-array/empty-object recursively; `"undefined"` drops
-   * only undefined. Kept identical to the JOSE wire so a CWT and a JWT minted
-   * from the same claims agree on what is present.
-   */
-  omit?: OmitMode;
-};
-
-export type CwtVerifyOptions = {
-  /** When set, the token's `typ` must equal this exact media type. */
-  typ?: string;
-  /** Clock skew tolerance (seconds) for the in-kit temporal range check. */
-  clockTolerance?: number;
-};
-
-export type CwtVerifyResult<C extends CwtWireClaims = CwtWireClaims> = {
-  /**
-   * The COSE-name-keyed WIRE claims (`iss`/`exp`/`cti`/…) the codec decoded —
-   * NO domain translation. Temporal claims (`exp`/`nbf`/`iat`) are `Date`s (the
-   * codec's "date" kind), the same form `JwtKit`'s temporal check consumes.
-   */
-  claims: C;
-  protectedHeader: Map<number, unknown>;
-  typ: string | undefined;
-};
-
 export type CwtDecoded = {
   /** The COSE structure inside the CWT (a COSE_Sign1 or COSE_Mac0 Tag). */
   cose: unknown;
@@ -104,8 +72,9 @@ const unwrapCwt = (value: unknown): unknown =>
 export const signCwt = (
   kryptos: IKryptos,
   logger: ILogger,
+  format: CwtFormat,
   claims: Dict,
-  options: CwtSignOptions,
+  options: SignStructuredTokenOptions,
 ): Buffer => {
   logger.debug("Minting CWT", { options });
 
@@ -120,13 +89,20 @@ export const signCwt = (
     }),
   );
 
-  const cose = new CwsKit({ kryptos, logger }).sign(payload, {
-    typ: options.typ,
+  // `CwsKit.sign` returns the BARE encoded COSE_Sign1/Mac0 bytes; decode them back
+  // to the COSE structure to frame it in the outer CWT tag (61). Verify accepts
+  // tagged or untagged. The `typFormat` tells the shared opaque signer to stamp the
+  // CWT media-type family (`+cwt`), not the opaque `+cws` one; the `tokenType`
+  // prefix is threaded through and the kit computes the full media type.
+  const cose = new CwsKit({ kryptos, logger, typFormat: format }).sign(payload, {
+    tokenType: options.tokenType,
     proprietary: options.proprietary,
+    header: options.header,
+    unprotected: options.unprotected,
   });
 
   // Always emit the CWT tag (61); verify accepts tagged or untagged.
-  return encodeCbor(new Tag(COSE_TAG.cwt, cose));
+  return encodeCbor(new Tag(COSE_TAG.cwt, decodeCbor(cose)));
 };
 
 /**
@@ -137,17 +113,17 @@ export const signCwt = (
  * over the WIRE claims. Returns the native WIRE payload; NO named matchers, NO
  * exp presence, NO domain translation — those are the Aegis verify path's job.
  */
-export const verifyCwt = <C extends CwtWireClaims = CwtWireClaims>(
+export const verifyCwt = <C extends Dict = Dict>(
   kryptos: IKryptos,
   logger: ILogger,
   params: {
     format: CwtFormat;
     token: Buffer;
-    assert?: Predicate<C>;
+    assert?: Predicate<CwtClaimsWire & C>;
     clockTolerance: number;
-    options: CwtVerifyOptions;
+    options: VerifyStructuredTokenOptions;
   },
-): CwtVerifyResult<C> => {
+): VerifiedStructuredToken<CwtClaimsWire & C, Buffer> => {
   const { format, token, assert, clockTolerance, options } = params;
 
   const decoded = decodeCwt(token);
@@ -182,14 +158,19 @@ export const verifyCwt = <C extends CwtWireClaims = CwtWireClaims>(
     });
   }
 
-  if (options.typ !== undefined && typ !== options.typ) {
-    throw new CWT_ERROR[format]("Invalid token", {
-      code: `${format}_typ_mismatch`,
-      data: { typ },
-      debug: { expected: options.typ },
-      title: "CWT Typ Mismatch",
-      details: "The header typ does not match the typ expected during verification.",
-    });
+  // typ match: the kit builds the expected media type from the bare PREFIX it
+  // re-wraps (the Aegis path derives the prefix from the domain tokenType).
+  if (options.tokenType !== undefined) {
+    const expected = buildMediaType(options.tokenType, format);
+    if (typ !== expected) {
+      throw new CWT_ERROR[format]("Invalid token", {
+        code: `${format}_typ_mismatch`,
+        data: { typ },
+        debug: { expected },
+        title: "CWT Typ Mismatch",
+        details: "The header typ does not match the typ expected during verification.",
+      });
+    }
   }
 
   if (decoded.algorithm !== kryptos.algorithm) {
@@ -203,8 +184,9 @@ export const verifyCwt = <C extends CwtWireClaims = CwtWireClaims>(
     });
   }
 
-  const cose = unwrapCwt(decodeCbor(token));
-  const { payload, protectedHeader } = new CwsKit({ kryptos, logger }).verify(cose);
+  // R2: `CwsKit.verify` takes the ENCODED bytes and strips the outer CWT tag (61)
+  // itself; hand it the token verbatim.
+  const { payload, header } = new CwsKit({ kryptos, logger }).verify(token);
 
   // preferMap:false so nested claim objects (act, sub_id, events, custom) decode
   // as plain objects; the top CWT map keeps integer keys so it stays a Map. The
@@ -214,20 +196,19 @@ export const verifyCwt = <C extends CwtWireClaims = CwtWireClaims>(
   );
 
   // Temporal range (R10) — every temporal claim validated IF PRESENT — plus the
-  // caller's wire `assert`, in one pass over the Date-typed wire claims.
+  // caller's wire `assert`, in one pass over the Date-typed wire claims. `now` and
+  // the stale-iat bound honour the per-call currentDate/maxTokenAge overrides.
   validate(wire, {
-    ...createTemporalMatchers(clockTolerance),
+    ...createTemporalMatchers(clockTolerance, options.currentDate, options.maxTokenAge),
     ...(assert ?? {}),
   } as Predicate<Dict>);
 
   logger.debug("CWT verified");
 
-  const protectedTyp = protectedHeader.get(coseByJose("typ"));
-
   return {
-    claims: wire as C,
-    protectedHeader,
-    typ: typeof protectedTyp === "string" ? protectedTyp : undefined,
+    header,
+    payload: wire as CwtClaimsWire & C,
+    token,
   };
 };
 
@@ -239,9 +220,9 @@ export const verifyCwt = <C extends CwtWireClaims = CwtWireClaims>(
  * claims payload into the COSE-name-keyed WIRE claim map — NO signature/MAC
  * check, NO domain translation. Mirrors `JwtKit.decode`.
  */
-export const decodeCwtWire = <C extends CwtWireClaims = CwtWireClaims>(
+export const decodeCwtWire = <C extends Dict = Dict>(
   token: Buffer,
-): DecodedSignedToken<C> => {
+): DecodedStructuredToken<CwtClaimsWire & C> => {
   const cose = unwrapCwt(decodeCbor(token));
   const contents = cose instanceof Tag ? cose.contents : cose;
 
@@ -282,7 +263,7 @@ export const decodeCwtWire = <C extends CwtWireClaims = CwtWireClaims>(
     decodeCbor<Map<unknown, unknown>>(Buffer.from(payloadBstr), { preferMap: false }),
   );
 
-  return { header, payload: payload as C };
+  return { header, payload: payload as CwtClaimsWire & C, token };
 };
 
 /**

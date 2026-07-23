@@ -1,17 +1,20 @@
 import type {
   DecodedEncryptedToken,
-  DecryptedJwe,
-  EncryptedJwe,
+  DecryptedEncryptedToken,
   JweEncryptOptions,
+  TokenContent,
 } from "../../types/index.js";
 
 export interface IJweKit {
-  encrypt(data: string, options?: JweEncryptOptions): EncryptedJwe;
-  decrypt(token: string): DecryptedJwe;
+  /** Encrypt arbitrary content; the cty is negotiated. Returns the BARE compact JWE. */
+  encrypt(data: TokenContent, options?: JweEncryptOptions): string;
+  decrypt<T extends TokenContent = Buffer>(
+    token: string,
+  ): DecryptedEncryptedToken<T, string>;
   /**
    * WIRE-only read (no decryption): the unified wire header (protected +
    * unprotected merged) ONLY — the content stays ciphertext. Uniform with
    * `CweKit` decode.
    */
-  decode(token: string): DecodedEncryptedToken;
+  decode(token: string): DecodedEncryptedToken<string>;
 }

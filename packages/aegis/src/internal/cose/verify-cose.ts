@@ -14,7 +14,6 @@ export type CoseVerifyResult = {
    * are `Date`s here (the codec's "date" kind).
    */
   wire: Dict;
-  protectedHeader: Map<number, unknown>;
   typ: string | undefined;
 };
 
@@ -30,19 +29,25 @@ export const verifyCose = ({
   logger,
   token,
   clockTolerance,
+  currentDate,
+  maxTokenAge,
 }: {
   kryptos: IKryptos;
   logger: ILogger;
   token: Buffer;
   clockTolerance?: number;
+  /** Override "now" for the in-kit temporal range check (R10). Per-call only. */
+  currentDate?: Date;
+  /** Reject a token whose `iat` is older than this many seconds (R10). Per-call only. */
+  maxTokenAge?: number;
 }): CoseVerifyResult => {
-  const {
-    claims: wire,
-    protectedHeader,
-    typ,
-  } = selectCoseClaimsKit({ kryptos, logger, clockTolerance }).verify(token);
+  const { payload: wire, header } = selectCoseClaimsKit({
+    kryptos,
+    logger,
+    clockTolerance,
+  }).verify(token, undefined, { clockTolerance, currentDate, maxTokenAge });
 
   const { claims, custom } = coseToDomain(wire);
 
-  return { claims: { ...claims, ...custom }, wire, protectedHeader, typ };
+  return { claims: { ...claims, ...custom }, wire, typ: header.typ };
 };

@@ -96,7 +96,17 @@ export const HEADER_REGISTRY: ReadonlyArray<HeaderSpec> = [
   { domain: "jwksUri", jose: "jku", value: "url", provenance: "option" },
   { domain: "jwk", jose: "jwk", value: "jwk", provenance: "option" },
   { domain: "keyId", jose: "kid", cose: 4, value: "string", provenance: "key" },
-  { domain: "objectId", jose: "oid", value: "string", provenance: "option" },
+  // `oid` (lindorm object id) has no IANA COSE label, so it rides COSE under a
+  // lindorm PRIVATE-USE header-parameter label (RFC 9052 §16.3 private use,
+  // < -65536). Chosen well clear of the private-use CLAIM/enc label band
+  // (-65537…) so a grep never confuses a header label with a claim/enc label.
+  {
+    domain: "objectId",
+    jose: "oid",
+    cose: -70000,
+    value: "string",
+    provenance: "option",
+  },
   { domain: "pbkdfIterations", jose: "p2c", value: "number", provenance: "option" },
   { domain: "pbkdfSalt", jose: "p2s", value: "buffer", provenance: "computed" },
   {

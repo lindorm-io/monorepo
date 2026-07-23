@@ -7,10 +7,7 @@ import { JwtError } from "../errors/index.js";
 import type { IJwtKit } from "../interfaces/index.js";
 import { B64U } from "../internal/constants/format.js";
 import { applyOmit } from "../internal/utils/apply-omit.js";
-import {
-  buildMediaType,
-  decodeTokenTypeFromTyp,
-} from "../internal/utils/compute-typ-header.js";
+import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
 import {
   createJoseSignature,
@@ -23,22 +20,32 @@ import {
   redactVerifyOptions,
 } from "../internal/utils/redact-sensitive-identity.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
-import { parseTokenHeader } from "../internal/utils/token-header.js";
 import { validateCrit } from "../internal/utils/validate-crit.js";
 import { validate } from "../internal/utils/validate.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
+import { wireHeaderToDomainOptions } from "../internal/utils/wire-header-to-domain.js";
 import type {
   CertificateBindingMode,
-  DecodedJwt,
-  DecodedJwtToken,
+  DecodedStructuredToken,
   JwtKitSettings,
-  JwtWireClaims,
-  ParsedJwt,
-  SignedJoseHeader,
-  SignJwtWireOptions,
+  JwtClaimsWire,
+  VerifiedStructuredToken,
+  SignStructuredTokenOptions,
   DomainTokenHeaderOptions,
-  VerifyJwtWireOptions,
+  VerifyStructuredTokenOptions,
+  WireTokenHeader,
 } from "../types/index.js";
+
+/**
+ * The JWT wire segments decoded from a compact token — the header, cleartext
+ * claims, and the raw signature. An internal helper shape (the verify result no
+ * longer surfaces a `decoded` sub-object).
+ */
+type DecodedJwtSegments<C extends Dict = Dict> = {
+  header: WireTokenHeader;
+  payload: JwtClaimsWire & C;
+  signature: string;
+};
 
 /**
  * The standalone WIRE JWT kit — a jose/jsonwebtoken-parity signer/verifier.
@@ -80,8 +87,8 @@ export class JwtKit implements IJwtKit {
    * full `typ` media type from the `options.typ` PREFIX (it knows its format).
    */
   sign<C extends Dict = Dict>(
-    claims: JwtWireClaims & C,
-    options: SignJwtWireOptions = {},
+    claims: JwtClaimsWire & C,
+    options: SignStructuredTokenOptions = {},
   ): string {
     this.logger.debug("Signing token", {
       claims: redactSensitiveIdentity(claims),
@@ -91,13 +98,12 @@ export class JwtKit implements IJwtKit {
     const payload = B64.encode(JSON.stringify(applyOmit(claims, options.omit)), B64U);
 
     const headerOptions: DomainTokenHeaderOptions = {
-      ...(options.header ?? {}),
-      algorithm: this.kryptos.algorithm,
       contentType: "application/json",
-      headerType: buildMediaType(options.typ, "jwt"),
+      ...wireHeaderToDomainOptions(options.header),
+      algorithm: this.kryptos.algorithm,
+      headerType: buildMediaType(options.tokenType, "jwt"),
       jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
-      objectId: options.objectId,
     };
 
     const cert = resolveCertBinding(
@@ -130,9 +136,9 @@ export class JwtKit implements IJwtKit {
    */
   verify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<JwtWireClaims & C>,
-    options: VerifyJwtWireOptions = {},
-  ): ParsedJwt<C> {
+    assert?: Predicate<JwtClaimsWire & C>,
+    options: VerifyStructuredTokenOptions = {},
+  ): VerifiedStructuredToken<JwtClaimsWire & C, string> {
     this.logger.debug("Verifying token", {
       token: sanitiseToken(token),
       options: redactVerifyOptions(options),
@@ -179,13 +185,9 @@ export class JwtKit implements IJwtKit {
       });
     }
 
-    const header = parseTokenHeader<SignedJoseHeader>(decoded.header);
-    header.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
-    header.baseFormat = "JWT";
-
     // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
-    if (header.critical?.length) {
-      for (const param of header.critical) {
+    if (decoded.header.crit?.length) {
+      for (const param of decoded.header.crit) {
         throw new JwtError(`Unsupported critical header parameter: ${param}`, {
           code: "jwt_unsupported_crit_param",
           data: { param },
@@ -196,10 +198,10 @@ export class JwtKit implements IJwtKit {
       }
     }
 
-    if (this.kryptos.algorithm !== header.algorithm) {
+    if (this.kryptos.algorithm !== decoded.header.alg) {
       throw new JwtError("Invalid token", {
         code: "jwt_algorithm_mismatch",
-        data: { algorithm: header.algorithm },
+        data: { algorithm: decoded.header.alg },
         debug: { expected: this.kryptos.algorithm },
         title: "JWT Algorithm Mismatch",
         details:
@@ -209,8 +211,8 @@ export class JwtKit implements IJwtKit {
 
     // typ assertion: the kit builds the expected media type from the PREFIX
     // (the Aegis path derives the prefix from the domain tokenType).
-    if (options.typ !== undefined) {
-      const expected = buildMediaType(options.typ, "jwt");
+    if (options.tokenType !== undefined) {
+      const expected = buildMediaType(options.tokenType, "jwt");
       if (typ !== expected) {
         throw new JwtError("Invalid token", {
           code: "jwt_typ_mismatch",
@@ -238,7 +240,7 @@ export class JwtKit implements IJwtKit {
     // configured kryptos. NOT a key selection step — header cert fields are
     // never trusted as key sources (see the SECURITY INVARIANT in Aegis).
     verifyCertBinding({
-      header: { certificateThumbprint: header.certificateThumbprint },
+      header: { certificateThumbprint: decoded.header["x5t#S256"] },
       kryptos: this.kryptos,
       logger: this.logger,
       mode: options.certBindingMode ?? this.certBindingMode,
@@ -259,16 +261,15 @@ export class JwtKit implements IJwtKit {
     };
 
     validate(withDates, {
-      ...createTemporalMatchers(clockTolerance),
+      ...createTemporalMatchers(clockTolerance, options.currentDate, options.maxTokenAge),
       ...(assert ?? {}),
     } as Predicate<Dict>);
 
     this.logger.debug("Token verified");
 
     return {
-      decoded,
-      header,
-      payload: decoded.payload as JwtWireClaims & C,
+      header: decoded.header,
+      payload: decoded.payload,
       token,
     };
   }
@@ -278,10 +279,12 @@ export class JwtKit implements IJwtKit {
    * protected header) + the cleartext JWT claim payload. The uniform primitive
    * shared with `CwtKit`/`CwmKit` decode — read the structure without verifying.
    */
-  decode<C extends Dict = Dict>(token: string): DecodedJwtToken<C> {
+  decode<C extends Dict = Dict>(
+    token: string,
+  ): DecodedStructuredToken<JwtClaimsWire & C, string> {
     const { header, payload } = JwtKit.decodeSegments<C>(token);
 
-    return { header, payload };
+    return { header, payload, token };
   }
 
   // public static
@@ -300,12 +303,12 @@ export class JwtKit implements IJwtKit {
     }
   }
 
-  static decodeSegments<C extends Dict = Dict>(jwt: string): DecodedJwt<C> {
+  static decodeSegments<C extends Dict = Dict>(jwt: string): DecodedJwtSegments<C> {
     const [header, payload, signature] = jwt.split(".");
 
     return {
       header: decodeJoseHeader(header),
-      payload: decodeJwtPayload<C>(payload),
+      payload: decodeJwtPayload<C>(payload) as JwtClaimsWire & C,
       signature,
     };
   }

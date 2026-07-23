@@ -30,7 +30,7 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
   });
 
   test("MACs a CWT tagged with the CWT tag (61 = 0xd83d), HS256", () => {
-    const token = kit.sign(wire, { typ: "application/at+cwt" });
+    const token = kit.sign(wire, { tokenType: "at" });
 
     expect(token.subarray(0, 2).toString("hex")).toBe("d83d");
     const decoded = CwmKit.decode(token);
@@ -40,7 +40,7 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
   });
 
   test("round-trips the WIRE claims through sign -> verify (no domain translation)", () => {
-    const { claims, typ } = kit.verify(kit.sign(wire, { typ: "application/at+cwt" }));
+    const { payload: claims, header } = kit.verify(kit.sign(wire, { tokenType: "at" }));
 
     expect(claims.iss).toBe("https://issuer.lindorm.io/");
     expect(claims.sub).toBe("user-1");
@@ -49,7 +49,7 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
     expect(claims.client_id).toBe("client-1");
     expect(claims.exp).toEqual(new Date(1704099600 * 1000));
     expect(claims.iat).toEqual(new Date(1704092400 * 1000));
-    expect(typ).toBe("application/at+cwt");
+    expect(header.typ).toBe("application/at+cwt");
   });
 
   test("rejects a tampered payload", () => {

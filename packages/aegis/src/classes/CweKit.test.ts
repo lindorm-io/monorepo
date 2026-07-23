@@ -2,7 +2,9 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { describe, expect, test } from "vitest";
 import { AegisError } from "../errors/index.js";
-import { decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
+import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
+import { coseByJose } from "../internal/header/header-registry.js";
+import { decodeProtectedHeader } from "../internal/cose/structures.js";
 import { CweKit } from "./CweKit.js";
 
 describe("CweKit (COSE_Encrypt0)", () => {
@@ -15,22 +17,97 @@ describe("CweKit (COSE_Encrypt0)", () => {
   test("round-trips a payload through encrypt -> CBOR -> decrypt", () => {
     const payload = Buffer.from("the cwt claims bytes");
 
-    const encrypt0 = kit.encrypt(payload, { typ: "application/at+cwt" });
-    const decoded = decodeCbor(encodeCbor(encrypt0));
-    const { payload: out, protectedHeader } = kit.decrypt(decoded);
+    const token = kit.encrypt(payload, { tokenType: "at" });
+    const { payload: out, header } = kit.decrypt(token);
 
     expect(out.equals(payload)).toBe(true);
-    expect(protectedHeader.get(1)).toBe(3); // A256GCM label
+    expect(header.enc).toBe("A256GCM"); // A256GCM wire enc name
   });
 
   test("rejects tampered ciphertext", () => {
-    const encrypt0 = kit.encrypt(Buffer.from("secret payload"));
+    const encrypt0 = decodeCbor<Tag>(kit.encrypt(Buffer.from("secret payload")));
     const arr = encrypt0.contents as Array<Buffer>;
     const tampered = Buffer.from(arr[2]);
     tampered[0] ^= 0xff;
     arr[2] = tampered;
 
-    expect(() => kit.decrypt(encrypt0)).toThrow();
+    expect(() => kit.decrypt(encodeCbor(encrypt0))).toThrow();
+  });
+});
+
+describe("CweKit — caller-controlled protected / unprotected header bags", () => {
+  const kryptos = KryptosKit.generate.enc.oct({
+    algorithm: "dir",
+    encryption: "A256GCM",
+  });
+  const kit = new CweKit({ kryptos, logger: createMockLogger() });
+  const x5u = "https://certs.lindorm.io/leaf.pem";
+
+  const codeOf = (fn: () => unknown): string | number | null | undefined => {
+    try {
+      fn();
+    } catch (err) {
+      return (err as AegisError).code;
+    }
+    return undefined;
+  };
+
+  test("places header params protected and unprotected params unprotected", () => {
+    const token = kit.encrypt(Buffer.from("secret"), {
+      header: { cty: "application/example" },
+      unprotected: { x5u },
+    });
+
+    const { header } = kit.decrypt(token);
+    expect(header.cty).toBe("application/example");
+    expect(header.x5u).toBe(x5u);
+    // enc (label 1, kit-computed) + kid + iv are always present.
+    expect(header.enc).toBe("A256GCM");
+    expect(header.kid).toBe(kryptos.id);
+    expect(header.iv).toEqual(expect.any(String));
+
+    const [protectedBstr, unprotected] = decodeCbor<Tag>(token).contents as [
+      Buffer,
+      Map<number, unknown>,
+    ];
+    const protectedMap = decodeProtectedHeader(protectedBstr);
+    expect(protectedMap.has(coseByJose("cty"))).toBe(true);
+    expect(protectedMap.has(coseByJose("alg"))).toBe(true); // enc sits on label 1
+    expect(unprotected.has(coseByJose("x5u"))).toBe(true);
+    expect(unprotected.has(coseByJose("iv"))).toBe(true);
+    expect(unprotected.has(coseByJose("kid"))).toBe(true);
+  });
+
+  test("throws when the computed iv is smuggled into the unprotected bag", () => {
+    expect(
+      codeOf(() =>
+        kit.encrypt(Buffer.from("secret"), {
+          unprotected: { iv: Buffer.from("nope") } as never,
+        }),
+      ),
+    ).toBe("cose_reserved_header");
+  });
+
+  test("throws when a crit-listed param is placed unprotected", () => {
+    expect(
+      codeOf(() =>
+        kit.encrypt(Buffer.from("secret"), {
+          header: { crit: ["cty"] },
+          unprotected: { cty: "application/example" },
+        }),
+      ),
+    ).toBe("cose_crit_param_unprotected");
+  });
+
+  test("throws when the same param is set in both bags", () => {
+    expect(
+      codeOf(() =>
+        kit.encrypt(Buffer.from("secret"), {
+          header: { cty: "a" },
+          unprotected: { cty: "b" },
+        }),
+      ),
+    ).toBe("cose_duplicate_header");
   });
 });
 
@@ -53,9 +130,8 @@ describe("CweKit (COSE_Encrypt0) — AES-CCM", () => {
     const kit = new CweKit({ kryptos, logger: createMockLogger() });
     const payload = Buffer.from("the cwt claims bytes");
 
-    const encrypt0 = kit.encrypt(payload, { typ: "application/at+cwt" });
-    const decoded = decodeCbor(encodeCbor(encrypt0));
-    const { payload: out } = kit.decrypt(decoded);
+    const token = kit.encrypt(payload, { tokenType: "at" });
+    const { payload: out } = kit.decrypt(token);
 
     expect(out.equals(payload)).toBe(true);
   });
@@ -67,13 +143,13 @@ describe("CweKit (COSE_Encrypt0) — AES-CCM", () => {
     });
     const kit = new CweKit({ kryptos, logger: createMockLogger() });
 
-    const encrypt0 = kit.encrypt(Buffer.from("secret payload"));
+    const encrypt0 = decodeCbor<Tag>(kit.encrypt(Buffer.from("secret payload")));
     const arr = encrypt0.contents as Array<Buffer>;
     const tampered = Buffer.from(arr[2]);
     tampered[0] ^= 0xff;
     arr[2] = tampered;
 
-    expect(() => kit.decrypt(encrypt0)).toThrow();
+    expect(() => kit.decrypt(encodeCbor(encrypt0))).toThrow();
   });
 });
 
@@ -105,16 +181,15 @@ describe("CweKit — proprietary alg/enc gate (D5)", () => {
       const kit = new CweKit({ kryptos, logger: createMockLogger() });
       const payload = Buffer.from("the cwt claims bytes");
 
-      const encrypt0 = kit.encrypt(payload, { proprietary: true });
-      const decoded = decodeCbor(encodeCbor(encrypt0));
+      const token = kit.encrypt(payload, { proprietary: true });
 
       // Decrypt is ALWAYS lenient — it reads the private-use label back with no
       // proprietary flag and reconstructs the plaintext (correct tag slice).
-      const { payload: out, protectedHeader } = kit.decrypt(decoded);
+      const { payload: out, header } = kit.decrypt(token);
 
       expect(out.equals(payload)).toBe(true);
-      // The private-use CBC-HMAC label sits below the COSE private-use floor.
-      expect(protectedHeader.get(1)).toBeLessThan(-65536);
+      // The private-use CBC-HMAC encryption round-trips to its wire enc name.
+      expect(header.enc).toBe(enc);
     },
   );
 

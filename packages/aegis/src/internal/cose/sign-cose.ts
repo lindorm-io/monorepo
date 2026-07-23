@@ -20,7 +20,7 @@ export const signCose = ({
   kryptos,
   logger,
   common,
-  typ,
+  tokenType,
   proprietary,
   omit,
   format,
@@ -28,7 +28,8 @@ export const signCose = ({
   kryptos: IKryptos;
   logger: ILogger;
   common: Dict;
-  typ?: string;
+  /** The bare TYPE PREFIX; the kit builds `application/<prefix>+cwt` (or bare cwt). */
+  tokenType?: string;
   proprietary?: boolean;
   omit?: OmitMode;
   format: "cwt" | "cwm";
@@ -36,5 +37,5 @@ export const signCose = ({
   const kit =
     format === "cwm" ? new CwmKit({ kryptos, logger }) : new CwtKit({ kryptos, logger });
 
-  return kit.sign(domainToCose(common), { typ, proprietary, omit });
+  return kit.sign(domainToCose(common), { tokenType, proprietary, omit });
 };

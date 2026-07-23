@@ -162,6 +162,15 @@ describe("HEADER_REGISTRY", () => {
     expect(headerByDomain("objectId")?.provenance).toBe("option");
   });
 
+  test("oid rides COSE under a lindorm private-use header label (< -65536, round-trips)", () => {
+    // oid has no IANA COSE label, so it carries a lindorm private-use label so it
+    // can ride the COSE header/unprotected bags at all (ruling 3). It MUST be in
+    // the private-use band and round-trip through the label maps.
+    const label = coseByJose("oid");
+    expect(label).toBeLessThan(-65536);
+    expect(headerByCose(label)).toBe(headerByJose("oid"));
+  });
+
   test("the COSE labels the kits emit resolve to their exact IANA integers", () => {
     // The 6 labels the CWS/CWM/CWE/CWT kits actually put on the wire. These
     // integers are byte-load-bearing: a drift here moves every COSE snapshot.

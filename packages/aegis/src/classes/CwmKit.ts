@@ -1,19 +1,22 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { Predicate } from "@lindorm/types";
+import type { Dict, Predicate } from "@lindorm/types";
 import { CwmError } from "../errors/index.js";
 import type { ICwmKit } from "../interfaces/index.js";
 import {
   type CwtDecoded,
-  type CwtSignOptions,
-  type CwtVerifyOptions,
-  type CwtVerifyResult,
   decodeCwt,
   decodeCwtWire,
   signCwt,
   verifyCwt,
 } from "../internal/cose/cwt-token.js";
-import type { CwtWireClaims, DecodedSignedToken } from "../types/index.js";
+import type {
+  CwtClaimsWire,
+  DecodedStructuredToken,
+  SignStructuredTokenOptions,
+  VerifiedStructuredToken,
+  VerifyStructuredTokenOptions,
+} from "../types/index.js";
 
 export type CwmKitSettings = {
   kryptos: IKryptos;
@@ -52,18 +55,18 @@ export class CwmKit implements ICwmKit {
     this.clockTolerance = options.clockTolerance ?? 0;
   }
 
-  sign<C extends CwtWireClaims = CwtWireClaims>(
-    claims: C,
-    options: CwtSignOptions = {},
+  sign<C extends Dict = Dict>(
+    claims: CwtClaimsWire & C,
+    options: SignStructuredTokenOptions = {},
   ): Buffer {
-    return signCwt(this.kryptos, this.logger, claims, options);
+    return signCwt(this.kryptos, this.logger, "cwm", claims, options);
   }
 
-  verify<C extends CwtWireClaims = CwtWireClaims>(
+  verify<C extends Dict = Dict>(
     token: Buffer,
-    assert?: Predicate<C>,
-    options: CwtVerifyOptions = {},
-  ): CwtVerifyResult<C> {
+    assert?: Predicate<CwtClaimsWire & C>,
+    options: VerifyStructuredTokenOptions = {},
+  ): VerifiedStructuredToken<CwtClaimsWire & C, Buffer> {
     return verifyCwt<C>(this.kryptos, this.logger, {
       format: "cwm",
       token,
@@ -79,7 +82,9 @@ export class CwmKit implements ICwmKit {
    * cleartext WIRE claim payload. The uniform primitive shared with
    * `JwtKit`/`CwtKit` decode.
    */
-  decode<C extends CwtWireClaims = CwtWireClaims>(token: Buffer): DecodedSignedToken<C> {
+  decode<C extends Dict = Dict>(
+    token: Buffer,
+  ): DecodedStructuredToken<CwtClaimsWire & C> {
     return decodeCwtWire<C>(token);
   }
 

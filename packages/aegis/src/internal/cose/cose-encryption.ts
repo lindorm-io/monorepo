@@ -2,7 +2,7 @@ import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CweKit } from "../../classes/CweKit.js";
 import { coseByJose } from "../header/header-registry.js";
-import { Tag, decodeCbor, encodeCbor } from "./cbor.js";
+import { Tag, decodeCbor } from "./cbor.js";
 import { COSE_TAG } from "./structures.js";
 
 /**
@@ -27,23 +27,32 @@ export const encryptCose = ({
   kryptos,
   logger,
   inner,
-  typ,
+  tokenType,
+  cty,
   encryption,
   proprietary,
 }: {
   kryptos: IKryptos;
   logger: ILogger;
   inner: Buffer;
-  typ?: string;
+  /** The bare TYPE PREFIX; `CweKit` builds `application/<prefix>+cwe` (or bare cwe). */
+  tokenType?: string;
+  /**
+   * The content type (label 3) of the COSE_Encrypt0 plaintext. For a NESTED signed
+   * token (sign-then-encrypt) this is `application/cwt` so the read side round-trips
+   * the plaintext to the inner CWT/CWM bytes; omitted for opaque data, which floors
+   * to the inferred `application/octet-stream`.
+   */
+  cty?: string;
   encryption?: KryptosEncryption;
   proprietary?: boolean;
 }): Buffer => {
-  const encrypt0 = new CweKit({ kryptos, logger, encryption }).encrypt(inner, {
-    typ,
+  // `CweKit.encrypt` returns the BARE encoded COSE_Encrypt0 bytes.
+  return new CweKit({ kryptos, logger, encryption }).encrypt(inner, {
+    tokenType,
     proprietary,
+    ...(cty ? { header: { cty } } : {}),
   });
-
-  return Buffer.from(encodeCbor(encrypt0));
 };
 
 /** Decrypt a COSE_Encrypt0 to its inner (secured) CWT bytes. */
@@ -56,8 +65,9 @@ export const decryptCose = ({
   logger: ILogger;
   token: Buffer;
 }): Buffer => {
-  const cose = innerCose(decodeCbor(token));
-  const { payload } = new CweKit({ kryptos, logger }).decrypt(cose);
+  // R2: `CweKit.decrypt` takes the ENCODED bytes and strips the outer CWT tag (61)
+  // itself; hand it the token verbatim.
+  const { payload } = new CweKit({ kryptos, logger }).decrypt(token);
   return payload;
 };
 

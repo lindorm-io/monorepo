@@ -1,6 +1,4 @@
-import type { TokenType } from "../../constants/token-type.js";
 import type { TokenProfileTyp } from "../../types/index.js";
-import { computeTypHeader } from "../utils/compute-typ-header.js";
 
 /**
  * Map a profile's JOSE `typ` to the COSE `typ` (label 16, RFC 9596). A COSE
@@ -24,33 +22,4 @@ export const coseTyp = (typ: TokenProfileTyp): string | undefined => {
   if (typ.presence === "none") return undefined;
   if (typ.value.endsWith("+jwt")) return `${typ.value.slice(0, -4)}+cwt`;
   return "application/cwt";
-};
-
-/**
- * The COSE `typ` for the RAW (profile-less) sign path, derived straight from a bare
- * `tokenType`. Reuses `computeTypHeader` — so a token type's validation (no whitespace,
- * no `+`, no empty string) and its short-name lookup are shared with the JOSE path — then
- * swaps the structured `+jwt` suffix for `+cwt`. A type with no structured JOSE form (a
- * bare `JWT`, or no `tokenType` at all) becomes the one registered CWT media type,
- * `application/cwt`, mirroring `coseTyp`'s fallback.
- */
-export const coseTypFromTokenType = (tokenType: TokenType | undefined): string => {
-  const jose = computeTypHeader(tokenType, "jwt");
-
-  return jose.endsWith("+jwt") ? `${jose.slice(0, -4)}+cwt` : "application/cwt";
-};
-
-/**
- * The COSE `typ` for the OPAQUE (CWS) sign path, derived straight from a bare
- * `tokenType`. The CWS twin of {@link coseTypFromTokenType}: same short-name
- * derivation, but the structured suffix is `+cws` (RFC 9596) and the bare
- * fallback is `application/cws` — so an opaque COSE signed token is recognised as
- * a CWS (`isCws`) and NEVER as a CWT (`isCwt`). This is the Phase-16 emission fix:
- * a CWS was byte-identical to a CWT (`+cwt`) because it routed through the claims
- * codec; it now emits its own `+cws` media type.
- */
-export const coseTypCwsFromTokenType = (tokenType: TokenType | undefined): string => {
-  const jose = computeTypHeader(tokenType, "jwt");
-
-  return jose.endsWith("+jwt") ? `${jose.slice(0, -4)}+cws` : "application/cws";
 };

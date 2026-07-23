@@ -1,10 +1,11 @@
-import type { Predicate } from "@lindorm/types";
+import type { Dict, Predicate } from "@lindorm/types";
 import type {
-  CwtSignOptions,
-  CwtVerifyOptions,
-  CwtVerifyResult,
-} from "../../internal/cose/cwt-token.js";
-import type { CwtWireClaims, DecodedSignedToken } from "../../types/index.js";
+  CwtClaimsWire,
+  DecodedStructuredToken,
+  SignStructuredTokenOptions,
+  VerifiedStructuredToken,
+  VerifyStructuredTokenOptions,
+} from "../../types/index.js";
 
 /**
  * The COSE_Sign1 claims kit — the COSE analogue of {@link IJwtKit}. Wire-only:
@@ -12,14 +13,14 @@ import type { CwtWireClaims, DecodedSignedToken } from "../../types/index.js";
  * decode (unified wire header + cleartext wire claims, no signature check).
  */
 export interface ICwtKit {
-  sign<C extends CwtWireClaims = CwtWireClaims>(
-    claims: C,
-    options?: CwtSignOptions,
+  sign<C extends Dict = Dict>(
+    claims: CwtClaimsWire & C,
+    options?: SignStructuredTokenOptions,
   ): Buffer;
-  verify<C extends CwtWireClaims = CwtWireClaims>(
+  verify<C extends Dict = Dict>(
     token: Buffer,
-    assert?: Predicate<C>,
-    options?: CwtVerifyOptions,
-  ): CwtVerifyResult<C>;
-  decode<C extends CwtWireClaims = CwtWireClaims>(token: Buffer): DecodedSignedToken<C>;
+    assert?: Predicate<CwtClaimsWire & C>,
+    options?: VerifyStructuredTokenOptions,
+  ): VerifiedStructuredToken<CwtClaimsWire & C>;
+  decode<C extends Dict = Dict>(token: Buffer): DecodedStructuredToken<CwtClaimsWire & C>;
 }

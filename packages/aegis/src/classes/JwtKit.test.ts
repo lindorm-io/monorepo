@@ -46,10 +46,10 @@ const signDefault = (
     isObject(content.profile) ? { ...common, ...content.profile } : common,
   );
   return kit.sign(claims, {
-    objectId: options.objectId,
+    header: options.header,
     omit: options.omit,
     // The kit takes a bare prefix and re-wraps it into the full media type.
-    typ: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),
+    tokenType: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),
   });
 };
 
@@ -75,7 +75,7 @@ describe("JwtKit", () => {
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
             tokenType: "test_token",
           },
-          { objectId: "test-object-id" },
+          { header: { oid: "test-object-id" } },
         ),
       ).toEqual(expect.any(String));
     });
@@ -92,7 +92,7 @@ describe("JwtKit", () => {
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
             tokenType: "test_token",
           },
-          { objectId: "test-object-id" },
+          { header: { oid: "test-object-id" } },
         ),
       ).toEqual(expect.any(String));
     });
@@ -109,7 +109,7 @@ describe("JwtKit", () => {
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
             tokenType: "test_token",
           },
-          { objectId: "test-object-id" },
+          { header: { oid: "test-object-id" } },
         ),
       ).toEqual(expect.any(String));
     });
@@ -126,7 +126,7 @@ describe("JwtKit", () => {
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
             tokenType: "test_token",
           },
-          { objectId: "test-object-id" },
+          { header: { oid: "test-object-id" } },
         ),
       ).toEqual(expect.any(String));
     });
@@ -142,7 +142,7 @@ describe("JwtKit", () => {
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
           tokenType: "test_token",
         },
-        { objectId: "test-object-id" },
+        { header: { oid: "test-object-id" } },
       );
 
       expect(signed).toEqual(expect.any(String));
@@ -185,11 +185,14 @@ describe("JwtKit", () => {
 
     test("constructs the full media type from a typ PREFIX; absent/null floors to JWT", () => {
       // "at" (prefix) → application/at+jwt (the kit knows its format).
-      const withTyp = kit.sign({ iss: issuer, exp: 1704099600 }, { typ: "at" });
+      const withTyp = kit.sign({ iss: issuer, exp: 1704099600 }, { tokenType: "at" });
       expect(JwtKit.decodeSegments(withTyp).header.typ).toBe("application/at+jwt");
 
       // A JWT always carries a typ header, so null/absent floors to "JWT".
-      const nullTyp = kit.sign({ iss: issuer, exp: 1704099600 }, { typ: null });
+      const nullTyp = kit.sign(
+        { iss: issuer, exp: 1704099600 },
+        { tokenType: undefined },
+      );
       expect(JwtKit.decodeSegments(nullTyp).header.typ).toBe("JWT");
 
       const bare = kit.sign({ iss: issuer, exp: 1704099600 });
@@ -305,26 +308,12 @@ describe("JwtKit", () => {
       };
 
       expect(kit.verify(token)).toEqual({
-        decoded: {
-          header: {
-            alg: "ES512",
-            cty: "application/json",
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: TEST_EC_KEY_SIG.id,
-            typ: "application/test_token+jwt",
-          },
-          payload: wirePayload,
-          signature: expect.any(String),
-        },
         header: {
-          algorithm: "ES512",
-          baseFormat: "JWT",
-          critical: [],
-          contentType: "application/json",
-          headerType: "application/test_token+jwt",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: TEST_EC_KEY_SIG.id,
-          tokenType: "test_token",
+          alg: "ES512",
+          cty: "application/json",
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: TEST_EC_KEY_SIG.id,
+          typ: "application/test_token+jwt",
         },
         payload: wirePayload,
         token,
@@ -460,12 +449,15 @@ describe("JwtKit", () => {
     test("rejects a token whose typ does not match the options.typ prefix", () => {
       // Prefix "at" → header application/at+jwt; verify asserts against the same
       // media type the kit builds from the given prefix.
-      const token = kit.sign({ iss: issuer, sub: "s", exp: 1704099600 }, { typ: "at" });
+      const token = kit.sign(
+        { iss: issuer, sub: "s", exp: 1704099600 },
+        { tokenType: "at" },
+      );
 
-      expect(codeOf(() => kit.verify(token, undefined, { typ: "rt" }))).toBe(
+      expect(codeOf(() => kit.verify(token, undefined, { tokenType: "rt" }))).toBe(
         "jwt_typ_mismatch",
       );
-      expect(() => kit.verify(token, undefined, { typ: "at" })).not.toThrow();
+      expect(() => kit.verify(token, undefined, { tokenType: "at" })).not.toThrow();
     });
 
     test("rejects a present typ that is not a JWT media type", () => {
@@ -921,6 +913,39 @@ describe("JwtKit", () => {
 
       const decoded = JwtKit.decodeSegments(token);
       expect(decoded.payload).not.toHaveProperty("cnf");
+    });
+  });
+
+  // R10 temporal overrides — the mocked "now" is 2024-01-01T08:00:00Z (unix
+  // 1704096000). `currentDate` replaces that instant; `maxTokenAge` bounds `iat`.
+  describe("temporal overrides (R10 — currentDate / maxTokenAge)", () => {
+    test("currentDate overrides now: a token expired vs the real clock verifies against a past currentDate", () => {
+      // exp at 07:00 — one hour BEFORE the mocked 08:00 now, so it is expired.
+      const token = kit.sign({ iss: issuer, exp: 1704092400 });
+
+      // Against the real (mocked) now the token is rejected …
+      expect(() => kit.verify(token)).toThrow();
+
+      // … but against a currentDate of 06:30 the exp (07:00) is still in the
+      // future, so the same token verifies.
+      expect(() =>
+        kit.verify(token, undefined, { currentDate: new Date(1704090600 * 1000) }),
+      ).not.toThrow();
+    });
+
+    test("maxTokenAge accepts a fresh iat and rejects a stale one", () => {
+      // iat 60s ago (07:59), exp in the future (09:00).
+      const fresh = kit.sign({ iss: issuer, iat: 1704095940, exp: 1704099600 });
+      expect(() => kit.verify(fresh, undefined, { maxTokenAge: 300 })).not.toThrow();
+
+      // iat 10 minutes ago (07:50) — older than the 5-minute maxTokenAge.
+      const stale = kit.sign({ iss: issuer, iat: 1704095400, exp: 1704099600 });
+      expect(() => kit.verify(stale, undefined, { maxTokenAge: 300 })).toThrow();
+    });
+
+    test("maxTokenAge requires iat to be present", () => {
+      const noIat = kit.sign({ iss: issuer, exp: 1704099600 });
+      expect(() => kit.verify(noIat, undefined, { maxTokenAge: 300 })).toThrow();
     });
   });
 });

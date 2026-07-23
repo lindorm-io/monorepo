@@ -1,9 +1,9 @@
 import { AesKit } from "@lindorm/aes";
 import { B64 } from "@lindorm/b64";
-import { isString } from "@lindorm/is";
 import {
   ECDH_ES_ALGORITHMS,
   type IKryptos,
+  type KryptosEncAlgorithm,
   type KryptosEncryption,
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
@@ -11,29 +11,35 @@ import { sanitiseToken } from "@lindorm/utils";
 import { JweError } from "../errors/index.js";
 import type { IJweKit } from "../interfaces/index.js";
 import { B64U } from "../internal/constants/format.js";
-import {
-  computeTypHeader,
-  decodeTokenTypeFromTyp,
-} from "../internal/utils/compute-typ-header.js";
+import { buildMediaType } from "../internal/utils/compute-typ-header.js";
+import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
 import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { parseTokenHeader } from "../internal/utils/token-header.js";
 import { validateCrit } from "../internal/utils/validate-crit.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import { verifyPartyBinding } from "../internal/utils/verify-party-binding.js";
+import { wireHeaderToDomainOptions } from "../internal/utils/wire-header-to-domain.js";
 import type {
   CertificateBindingMode,
-  DecodedJwe,
   DecodedEncryptedToken,
-  DecryptedJwe,
-  DecryptedJweHeader,
-  EncryptedJwe,
+  DecryptedEncryptedToken,
   JweEncryptOptions,
   JweKitSettings,
+  DomainTokenHeader,
   DomainTokenHeaderOptions,
+  TokenContent,
+  WireTokenHeader,
 } from "../types/index.js";
-import { JwsKit } from "./JwsKit.js";
-import { JwtKit } from "./JwtKit.js";
+
+/** The JWE wire segments decoded from a compact token (internal helper shape). */
+type DecodedJweSegments = {
+  header: WireTokenHeader;
+  publicEncryptionKey: string | undefined;
+  initialisationVector: string;
+  content: string;
+  authTag: string;
+};
 
 export class JweKit implements IJweKit {
   private readonly certBindingMode: CertificateBindingMode;
@@ -57,12 +63,20 @@ export class JweKit implements IJweKit {
     return (ECDH_ES_ALGORITHMS as ReadonlyArray<string>).includes(this.kryptos.algorithm);
   }
 
-  encrypt(data: string, options: JweEncryptOptions = {}): EncryptedJwe {
+  /**
+   * Encrypt the payload and return the BARE compact JWE token string — nothing
+   * else. The `objectId`/format sugar is DOMAIN enrichment built Aegis-side.
+   */
+  encrypt(data: TokenContent, options: JweEncryptOptions = {}): string {
     const kit = new AesKit({ encryption: this.encryption, kryptos: this.kryptos });
 
     this.logger.debug("Encrypting token", { options });
 
-    const objectId = options.objectId;
+    // Serialise to bytes via the shared codec and hand the OPAQUE bytes to the
+    // AEAD (the AES layer treats them as octet). The cty defaults to the inferred
+    // JS type; a caller `header.cty` (e.g. `JWT` for a nested token) wins. The cty
+    // rides the AAD-protected protected header so decrypt round-trips the type.
+    const { bytes, contentType } = serialiseContent(data, options.header?.cty);
 
     // ECDH-ES party info (RFC 7518 §4.6): gated on the algorithm. For an ECDH-ES
     // key the caller-supplied base64url apu/apv are decoded into the Concat-KDF
@@ -84,16 +98,17 @@ export class JweKit implements IJweKit {
     const critical: Array<string> = [];
 
     const headerOptions: DomainTokenHeaderOptions = {
-      ...(options.header ?? {}),
+      // Default cty by inferred content type; a caller `header.cty` (folded in via
+      // the spread) wins as the WIRE label.
+      contentType,
+      ...wireHeaderToDomainOptions(options.header),
       algorithm: this.kryptos.algorithm,
-      contentType: this.contentType(data),
       ...(critical.length ? { critical } : {}),
       encryption: this.encryption,
-      headerType: computeTypHeader(options.tokenType, "jwe"),
+      headerType: buildMediaType(options.tokenType, "jwe"),
       initialisationVector: prepared.headerParams.publicEncryptionIv,
       jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
-      objectId,
       partyProducer,
       partyRecipient,
       pbkdfIterations: prepared.headerParams.pbkdfIterations,
@@ -114,8 +129,8 @@ export class JweKit implements IJweKit {
     // Step 4: Compute AAD from the encoded protected header per RFC 7516 Section 5.1 step 14
     const aad = Buffer.from(header, "ascii");
 
-    // Step 5: Encrypt content with AAD
-    const { authTag, content, initialisationVector } = prepared.encrypt(data, { aad });
+    // Step 5: Encrypt the already-serialised OPAQUE bytes with AAD
+    const { authTag, content, initialisationVector } = prepared.encrypt(bytes, { aad });
 
     if (!authTag) {
       throw new JweError("Missing auth tag", {
@@ -137,10 +152,12 @@ export class JweKit implements IJweKit {
 
     this.logger.debug("Token encrypted", { token: sanitiseToken(token) });
 
-    return { token };
+    return token;
   }
 
-  decrypt(token: string): DecryptedJwe {
+  decrypt<T extends TokenContent = Buffer>(
+    token: string,
+  ): DecryptedEncryptedToken<T, string> {
     const kit = new AesKit({ encryption: this.encryption, kryptos: this.kryptos });
 
     this.logger.debug("Decrypting token", { token: sanitiseToken(token) });
@@ -192,8 +209,10 @@ export class JweKit implements IJweKit {
       });
     }
 
-    const header = parseTokenHeader<DecryptedJweHeader>(decoded.header);
-    header.tokenType = decodeTokenTypeFromTyp(typ, "jwe");
+    // Parse to the DOMAIN header for the decryption crypto (algorithm, enc,
+    // party info, pbkdf/public-encryption params); the RESULT carries the WIRE
+    // header (R1), so `decoded.header` is what is returned.
+    const header: DomainTokenHeader = parseTokenHeader(decoded.header);
 
     if (header.encryption !== this.encryption) {
       throw new JweError("Unexpected encryption", {
@@ -258,14 +277,16 @@ export class JweKit implements IJweKit {
       ? B64.toBuffer(header.publicEncryptionTag)
       : undefined;
 
-    const payload = kit.decrypt(
+    // Decrypt to the OPAQUE plaintext bytes (the AES layer treats the content as
+    // octet); the JOSE cty — not the AES content type — drives reconstruction.
+    const plaintext = kit.decrypt<Buffer>(
       {
-        algorithm: header.algorithm,
+        algorithm: header.algorithm as KryptosEncAlgorithm,
         apu,
         apv,
         authTag,
         content,
-        contentType: "text/plain",
+        contentType: "application/octet-stream",
         encryption: this.encryption,
         initialisationVector,
         keyId: header.keyId ?? this.kryptos.id,
@@ -279,6 +300,11 @@ export class JweKit implements IJweKit {
       },
       { aad },
     );
+
+    // Reconstruct-by-cty is SAFE: AES-GCM authenticated decryption (the AAD covers
+    // the header carrying the cty) has already succeeded above. Absent/unknown cty
+    // falls back to the raw Buffer.
+    const payload = reconstructContent<T>(plaintext, decoded.header.cty);
 
     // Content tamper check: runs AFTER decryption has succeeded (AES-GCM
     // authenticated decryption validates AAD over the header). NOT a key
@@ -295,7 +321,7 @@ export class JweKit implements IJweKit {
 
     this.logger.debug("Token decrypted");
 
-    return { header, payload, decoded, token };
+    return { header: decoded.header, payload, token };
   }
 
   /**
@@ -305,8 +331,8 @@ export class JweKit implements IJweKit {
    * needs the key (that is `decrypt`). The uniform primitive shared with
    * `CweKit` decode.
    */
-  decode(token: string): DecodedEncryptedToken {
-    return { header: JweKit.decodeSegments(token).header };
+  decode(token: string): DecodedEncryptedToken<string> {
+    return { header: JweKit.decodeSegments(token).header, token };
   }
 
   // public static
@@ -325,7 +351,7 @@ export class JweKit implements IJweKit {
     }
   }
 
-  static decodeSegments(jwe: string): DecodedJwe {
+  static decodeSegments(jwe: string): DecodedJweSegments {
     const parts = jwe.split(".");
     if (parts.length !== 5) {
       throw new JweError("Invalid JWE format: expected 5 parts", {
@@ -345,31 +371,5 @@ export class JweKit implements IJweKit {
       content,
       authTag,
     };
-  }
-
-  // private
-
-  private contentType(input: string): string {
-    if (JwsKit.isJws(input)) {
-      return "application/jws";
-    }
-
-    if (JwtKit.isJwt(input)) {
-      return "application/jwt";
-    }
-
-    if (input.startsWith("{") && input.endsWith("}")) {
-      return "application/json";
-    }
-
-    if (input.startsWith("[") && input.endsWith("]")) {
-      return "application/json";
-    }
-
-    if (isString(input)) {
-      return "text/plain; charset=utf-8";
-    }
-
-    return "application/unknown";
   }
 }

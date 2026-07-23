@@ -6,57 +6,46 @@ import type {
   SerialisedAesEncryption,
 } from "@lindorm/aes";
 import type { Dict, Predicate } from "@lindorm/types";
+import type { BuiltInProfiles } from "../../internal/profiles/built-in-profiles.js";
+import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type {
+  AegisDecryptKey,
+  AegisEncKey,
   AegisSignKey,
   AegisVerifyKey,
   AesDecryptOptions,
   AesEncryptOptions,
-  CweContent,
-  CweDecryptOptions,
   CweEncryptOptions,
-  CwsContent,
-  CwtWireClaims,
-  DecryptedCwe,
-  DecryptedJwe,
+  CwtClaimsWire,
+  DecryptedEncryptedToken,
   DecryptedToken,
   DecryptOptions,
+  DecryptTokenOptions,
   DomainAssert,
   EncryptData,
-  EncryptedCwe,
-  EncryptedJwe,
   EncryptedToken,
   EncryptOptions,
-  JwtWireClaims,
-  ParsedCws,
-  ParsedCwt,
-  JweDecryptOptions,
   JweEncryptOptions,
-  JwsContent,
+  JwtClaimsWire,
   NarrowedToken,
-  ParsedJws,
-  ParsedJwt,
   ProfileContent,
   ProfileMintOptions,
   ProfileVerifyOptions,
   RawSignInput,
   SignContent,
-  SignCwsOptions,
-  SignCwtOptions,
-  SignedCws,
   SignedCwt,
-  SignJwsOptions,
-  SignJwtWireOptions,
-  SignedJws,
   SignedJwt,
+  SignStructuredTokenOptions,
+  SignUnstructuredTokenOptions,
+  TokenContent,
   TokenProfile,
+  VerifiedStructuredToken,
   VerifiedToken,
-  VerifyCwsOptions,
-  VerifyCwtOptions,
-  VerifyJwsOptions,
-  VerifyJwtWireOptions,
+  VerifiedUnstructuredToken,
   VerifyOptions,
+  VerifyStructuredTokenOptions,
+  VerifyUnstructuredTokenOptions,
 } from "../../types/index.js";
-import type { BuiltInProfiles } from "../../internal/profiles/built-in-profiles.js";
 
 /**
  * The AES surface takes the SAME key selector as every other aegis operation:
@@ -89,8 +78,14 @@ export interface IAegisAes {
 }
 
 export interface IAegisJwe {
-  encrypt(data: string, options?: JweEncryptOptions): Promise<EncryptedJwe>;
-  decrypt(token: string, options?: JweDecryptOptions): Promise<DecryptedJwe>;
+  encrypt(
+    data: TokenContent,
+    options?: JweEncryptOptions & { key?: AegisEncKey },
+  ): Promise<EncryptedToken>;
+  decrypt<T extends TokenContent = Buffer>(
+    token: string,
+    options?: DecryptTokenOptions & { key?: AegisDecryptKey },
+  ): Promise<DecryptedEncryptedToken<T, string>>;
 }
 
 // The COSE namespace family — the wire-for-wire COSE counterpart of the JOSE
@@ -98,59 +93,74 @@ export interface IAegisJwe {
 // COSE_Sign1), `cwt` mirrors `jwt` (generic CWT with standard claims). Same
 // ergonomic surface, same key resolution; only the wire encoding differs.
 export interface IAegisCwe {
-  encrypt(data: CweContent, options?: CweEncryptOptions): Promise<EncryptedCwe>;
-  decrypt(token: string, options?: CweDecryptOptions): Promise<DecryptedCwe>;
+  encrypt(
+    data: TokenContent,
+    options?: CweEncryptOptions & { key?: AegisEncKey },
+  ): Promise<EncryptedToken>;
+  decrypt<T extends TokenContent = Buffer>(
+    token: string,
+    options?: DecryptTokenOptions & { key?: AegisDecryptKey },
+  ): Promise<DecryptedEncryptedToken<T, Buffer>>;
 }
 
 export interface IAegisCws {
-  sign(data: CwsContent, options?: SignCwsOptions): Promise<SignedCws>;
-  verify(token: string, options?: VerifyCwsOptions): Promise<ParsedCws>;
+  sign(
+    data: TokenContent,
+    options?: SignUnstructuredTokenOptions & { key?: AegisSignKey; omit?: OmitMode },
+  ): Promise<SignedCwt>;
+  verify<T extends TokenContent = Buffer>(
+    token: string,
+    options?: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey },
+  ): Promise<VerifiedUnstructuredToken<T, Buffer>>;
 }
 
 export interface IAegisCwt {
-  sign<C extends CwtWireClaims = CwtWireClaims>(
-    claims: C,
-    options?: SignCwtOptions,
+  sign<C extends Dict = Dict>(
+    claims: CwtClaimsWire & C,
+    options?: SignStructuredTokenOptions & { key?: AegisSignKey },
   ): Promise<SignedCwt>;
-  verify<C extends CwtWireClaims = CwtWireClaims>(
+  verify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<C>,
-    options?: VerifyCwtOptions,
-  ): Promise<ParsedCwt<C>>;
+    assert?: Predicate<CwtClaimsWire & C>,
+    options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey },
+  ): Promise<VerifiedStructuredToken<CwtClaimsWire & C>>;
 }
 
 // The COSE_Mac0 (symmetric) claims twin of `IAegisCwt` (D6). Same ergonomic
 // surface; only the integrity structure differs (a MAC, not a signature).
 export interface IAegisCwm {
-  sign<C extends CwtWireClaims = CwtWireClaims>(
-    claims: C,
-    options?: SignCwtOptions,
+  sign<C extends Dict = Dict>(
+    claims: CwtClaimsWire & C,
+    options?: SignStructuredTokenOptions & { key?: AegisSignKey },
   ): Promise<SignedCwt>;
-  verify<C extends CwtWireClaims = CwtWireClaims>(
+  verify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<C>,
-    options?: VerifyCwtOptions,
-  ): Promise<ParsedCwt<C>>;
+    assert?: Predicate<CwtClaimsWire & C>,
+    options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey },
+  ): Promise<VerifiedStructuredToken<CwtClaimsWire & C>>;
 }
 
 export interface IAegisJws {
-  sign<T extends JwsContent>(data: T, options?: SignJwsOptions): Promise<SignedJws>;
-  verify<T extends JwsContent>(
+  sign(
+    data: TokenContent,
+    options?: SignUnstructuredTokenOptions & { key?: AegisSignKey },
+  ): Promise<SignedJwt>;
+  verify<T extends TokenContent = Buffer>(
     token: string,
-    options?: VerifyJwsOptions,
-  ): Promise<ParsedJws<T>>;
+    options?: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey },
+  ): Promise<VerifiedUnstructuredToken<T, string>>;
 }
 
 export interface IAegisJwt {
-  sign<C extends JwtWireClaims = JwtWireClaims>(
-    claims: C,
-    options?: SignJwtWireOptions & { key?: AegisSignKey },
+  sign<C extends Dict = Dict>(
+    claims: JwtClaimsWire & C,
+    options?: SignStructuredTokenOptions & { key?: AegisSignKey },
   ): Promise<SignedJwt>;
-  verify<C extends JwtWireClaims = JwtWireClaims>(
+  verify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<C>,
-    options?: VerifyJwtWireOptions & { key?: AegisVerifyKey },
-  ): Promise<ParsedJwt<C>>;
+    assert?: Predicate<JwtClaimsWire & C>,
+    options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey },
+  ): Promise<VerifiedStructuredToken<JwtClaimsWire & C, string>>;
 }
 
 export interface IAegis {
@@ -169,7 +179,7 @@ export interface IAegis {
 
   registerProfile(profile: TokenProfile): void;
 
-  sign(input: RawSignInput): Promise<SignedJws>;
+  sign(input: RawSignInput): Promise<SignedJwt>;
 
   encrypt(data: EncryptData, options?: EncryptOptions): Promise<EncryptedToken>;
 

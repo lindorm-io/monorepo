@@ -3,7 +3,7 @@ import type { ILogger } from "@lindorm/logger";
 import { CwsError } from "../errors/index.js";
 import type { ICwsKit } from "../interfaces/index.js";
 import { algToCoseLabel, isOfficialCoseAlg } from "../internal/cose/alg-labels.js";
-import { Tag, decodeCbor } from "../internal/cose/cbor.js";
+import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import {
   COSE_TAG,
   buildMacStructure,
@@ -11,31 +11,31 @@ import {
   decodeProtectedHeader,
   encodeProtectedHeader,
 } from "../internal/cose/structures.js";
+import { buildCoseHeaders } from "../internal/header/build-cose-headers.js";
 import { coseByJose } from "../internal/header/header-registry.js";
 import { mergeCoseWireHeader } from "../internal/header/merge-cose-wire-header.js";
-import type { DecodedOpaqueToken } from "../types/index.js";
+import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
+import { buildMediaType, type KitFormat } from "../internal/utils/compute-typ-header.js";
+import type {
+  DecodedUnstructuredToken,
+  SignUnstructuredTokenOptions,
+  TokenContent,
+  VerifiedUnstructuredToken,
+  WireTokenHeader,
+} from "../types/index.js";
 import { SignatureKit } from "./SignatureKit.js";
 
 export type CwsKitSettings = {
   kryptos: IKryptos;
   logger: ILogger;
-};
-
-export type CwsSignOptions = {
-  /** COSE `typ` header (label 16, RFC 9596) — the profile's COSE media type. */
-  typ?: string;
   /**
-   * Allow a lindorm-proprietary (private-use) COSE algorithm label (default
-   * `false`). When `false` the signing algorithm MUST carry an OFFICIAL COSE-RFC
-   * label or `sign` throws (D5 interop gate); when `true` a private-use alg such
-   * as ML-DSA is permitted. Read/verify is always lenient.
+   * The COSE media-type FAMILY the kit stamps on `typ` (label 16), built from the
+   * `tokenType` prefix: `"cws"` (default) → `application/<prefix>+cws` so a direct
+   * opaque token is recognised as a CWS; `"cwt"`/`"cwm"` → `application/<prefix>+cwt`
+   * for the CWT/CWM claims kits that delegate the COSE signing here. The signer is
+   * otherwise format-agnostic — only the media-type family differs.
    */
-  proprietary?: boolean;
-};
-
-export type CwsVerifyResult = {
-  payload: Buffer;
-  protectedHeader: Map<number, unknown>;
+  typFormat?: Extract<KitFormat, "cws" | "cwt" | "cwm">;
 };
 
 const unwrapStructure = (value: unknown, tag: number, label: string): Array<unknown> => {
@@ -67,10 +67,12 @@ const unwrapStructure = (value: unknown, tag: number, label: string): Array<unkn
 export class CwsKit implements ICwsKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
+  private readonly typFormat: Extract<KitFormat, "cws" | "cwt" | "cwm">;
 
   constructor(options: CwsKitSettings) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CwsKit"]);
+    this.typFormat = options.typFormat ?? "cws";
   }
 
   /**
@@ -80,7 +82,9 @@ export class CwsKit implements ICwsKit {
    * (integer labels translated to their JOSE wire names), and surface the opaque
    * payload bytes. The uniform primitive shared with `JwsKit` decode.
    */
-  decode(token: Buffer): DecodedOpaqueToken {
+  decode<T extends TokenContent = Buffer>(
+    token: Buffer,
+  ): DecodedUnstructuredToken<T, Buffer> {
     const value = decodeCbor(token);
     const contents =
       value instanceof Tag &&
@@ -103,17 +107,29 @@ export class CwsKit implements ICwsKit {
       Uint8Array,
     ];
 
+    const header = mergeCoseWireHeader(
+      decodeProtectedHeader(protectedBstr),
+      unprotected instanceof Map ? unprotected : undefined,
+      "sig",
+    );
+
     return {
-      header: mergeCoseWireHeader(
-        decodeProtectedHeader(protectedBstr),
-        unprotected instanceof Map ? unprotected : undefined,
-        "sig",
-      ),
-      payload: Buffer.from(payload),
+      header,
+      payload: reconstructContent<T>(Buffer.from(payload), header.cty),
+      token,
     };
   }
 
-  sign(payload: Buffer, options: CwsSignOptions = {}): Tag {
+  /**
+   * Sign the OPAQUE content and return the BARE encoded COSE token — the
+   * CBOR-encoded COSE_Sign1 (asymmetric) or COSE_Mac0 (symmetric) bytes, nothing
+   * else. COSE_Sign1 signs a `bstr`, so any content is faithful: the cty is
+   * inferred (Dict→json, string→text, Buffer→octet), the bytes are serialised via
+   * the shared codec, and the cty (label 3) rides the protected header so verify
+   * round-trips the JS type. The outer CWT tag (61) framing is a concern of the
+   * layer above.
+   */
+  sign(content: TokenContent, options: SignUnstructuredTokenOptions = {}): Buffer {
     // Interop gate (D5): a non-proprietary sign refuses an algorithm with no
     // OFFICIAL COSE-RFC registration (e.g. ML-DSA) so the token stays
     // interoperable. Runs before the Sign1/Mac0 split — it applies to both.
@@ -130,11 +146,15 @@ export class CwsKit implements ICwsKit {
       );
     }
 
+    // The cty defaults to the inferred type; a caller `header.cty` wins as the
+    // WIRE label (label 3).
+    const { bytes, contentType } = serialiseContent(content, options.header?.cty);
+
     switch (this.kryptos.algClass) {
       case "asymmetric":
-        return this.signSign1(payload, options);
+        return encodeCbor(this.signSign1(bytes, contentType, options));
       case "symmetric":
-        return this.macMac0(payload, options);
+        return encodeCbor(this.macMac0(bytes, contentType, options));
       default: {
         const exhaustive: never = this.kryptos.algClass;
         throw new CwsError("Unhandled COSE key class", {
@@ -148,12 +168,21 @@ export class CwsKit implements ICwsKit {
     }
   }
 
-  verify(structure: unknown): CwsVerifyResult {
+  verify<T extends TokenContent = Buffer>(
+    token: Buffer,
+  ): VerifiedUnstructuredToken<T, Buffer> {
+    // R2: the kit takes the ENCODED bytes and decodes internally (parallel to the
+    // JOSE kits + to `sign` returning bytes). Strip an optional outer CWT tag (61)
+    // to reach the COSE_Sign1/Mac0 the algClass split verifies.
+    const decoded = decodeCbor(token);
+    const structure =
+      decoded instanceof Tag && decoded.tag === COSE_TAG.cwt ? decoded.contents : decoded;
+
     switch (this.kryptos.algClass) {
       case "asymmetric":
-        return this.verifySign1(structure);
+        return this.verifySign1<T>(structure, token);
       case "symmetric":
-        return this.verifyMac0(structure);
+        return this.verifyMac0<T>(structure, token);
       default: {
         const exhaustive: never = this.kryptos.algClass;
         throw new CwsError("Unhandled COSE key class", {
@@ -169,15 +198,14 @@ export class CwsKit implements ICwsKit {
 
   // private — COSE_Sign1 (RFC 9052 §4.4)
 
-  private signSign1(payload: Buffer, options: CwsSignOptions): Tag {
+  private signSign1(
+    payload: Buffer,
+    contentType: string,
+    options: SignUnstructuredTokenOptions,
+  ): Tag {
     this.logger.debug("Signing COSE_Sign1", { options });
 
-    const protectedHeader = this.protectedHeader(options);
-
-    // kid travels UNprotected — it is read to resolve the verification key
-    // before the signature is checked (amphora kid-only resolution).
-    const unprotected = new Map<number, unknown>();
-    unprotected.set(coseByJose("kid"), Buffer.from(this.kryptos.id, "utf8"));
+    const { protectedHeader, unprotected } = this.buildHeaders(contentType, options);
 
     const toBeSigned = buildSigStructure(protectedHeader, payload);
     const signature = new SignatureKit({ kryptos: this.kryptos, raw: true }).sign(
@@ -187,8 +215,11 @@ export class CwsKit implements ICwsKit {
     return new Tag(COSE_TAG.sign1, [protectedHeader, unprotected, payload, signature]);
   }
 
-  private verifySign1(structure: unknown): CwsVerifyResult {
-    const [protectedHeader, , payload, signature] = unwrapStructure(
+  private verifySign1<T extends TokenContent = Buffer>(
+    structure: unknown,
+    token: Buffer,
+  ): VerifiedUnstructuredToken<T, Buffer> {
+    const [protectedHeader, unprotected, payload, signature] = unwrapStructure(
       structure,
       COSE_TAG.sign1,
       "COSE_Sign1",
@@ -211,21 +242,30 @@ export class CwsKit implements ICwsKit {
       });
     }
 
+    const header = mergeCoseWireHeader(
+      decodeProtectedHeader(protectedHeader),
+      unprotected instanceof Map ? unprotected : undefined,
+      "sig",
+    );
+
+    // Reconstruct-by-cty is SAFE: the signature is verified above, BEFORE parsing.
     return {
-      payload: Buffer.from(payload),
-      protectedHeader: decodeProtectedHeader(protectedHeader),
+      payload: reconstructContent<T>(Buffer.from(payload), header.cty),
+      header,
+      token,
     };
   }
 
   // private — COSE_Mac0 (RFC 9052 §6.2)
 
-  private macMac0(payload: Buffer, options: CwsSignOptions): Tag {
+  private macMac0(
+    payload: Buffer,
+    contentType: string,
+    options: SignUnstructuredTokenOptions,
+  ): Tag {
     this.logger.debug("MAC'ing COSE_Mac0", { options });
 
-    const protectedHeader = this.protectedHeader(options);
-
-    const unprotected = new Map<number, unknown>();
-    unprotected.set(coseByJose("kid"), Buffer.from(this.kryptos.id, "utf8"));
+    const { protectedHeader, unprotected } = this.buildHeaders(contentType, options);
 
     const toBeMaced = buildMacStructure(protectedHeader, payload);
     const tag = new SignatureKit({ kryptos: this.kryptos }).sign(toBeMaced);
@@ -233,8 +273,11 @@ export class CwsKit implements ICwsKit {
     return new Tag(COSE_TAG.mac0, [protectedHeader, unprotected, payload, tag]);
   }
 
-  private verifyMac0(structure: unknown): CwsVerifyResult {
-    const [protectedHeader, , payload, tag] = unwrapStructure(
+  private verifyMac0<T extends TokenContent = Buffer>(
+    structure: unknown,
+    token: Buffer,
+  ): VerifiedUnstructuredToken<T, Buffer> {
+    const [protectedHeader, unprotected, payload, tag] = unwrapStructure(
       structure,
       COSE_TAG.mac0,
       "COSE_Mac0",
@@ -258,18 +301,66 @@ export class CwsKit implements ICwsKit {
       });
     }
 
+    const header = mergeCoseWireHeader(
+      decodeProtectedHeader(protectedHeader),
+      unprotected instanceof Map ? unprotected : undefined,
+      "sig",
+    );
+
+    // Reconstruct-by-cty is SAFE: the MAC is verified above, BEFORE parsing.
     return {
-      payload: Buffer.from(payload),
-      protectedHeader: decodeProtectedHeader(protectedHeader),
+      payload: reconstructContent<T>(Buffer.from(payload), header.cty),
+      header,
+      token,
     };
   }
 
   // private — shared
 
-  private protectedHeader(options: CwsSignOptions): Buffer {
+  /**
+   * Build the COSE_Sign1/Mac0 protected + unprotected header maps. `alg` is
+   * derived onto the protected map and `kid` onto the unprotected map (COSE
+   * convention: kid is an advisory routing hint read to resolve the verification
+   * key before the signature is checked); the caller's `header`/`unprotected`
+   * bags are then translated and merged under the reserved-param / crit / no-dup
+   * rules. Scalar `typ` is sugar for `header.typ` (an explicit `header.typ` wins).
+   * `contentType` is the codec-inferred cty (label 3) default — a caller
+   * `header.cty` wins as the WIRE label.
+   */
+  private buildHeaders(
+    contentType: string,
+    options: SignUnstructuredTokenOptions,
+  ): {
+    protectedHeader: Buffer;
+    unprotected: Map<number, unknown>;
+  } {
     const protectedMap = new Map<number, unknown>();
     protectedMap.set(coseByJose("alg"), algToCoseLabel(this.kryptos.algorithm));
-    if (options.typ !== undefined) protectedMap.set(coseByJose("typ"), options.typ);
-    return encodeProtectedHeader(protectedMap);
+
+    const unprotected = new Map<number, unknown>();
+    unprotected.set(coseByJose("kid"), Buffer.from(this.kryptos.id, "utf8"));
+
+    // `typ` (label 16) is the kit-computed media type from the `tokenType` PREFIX
+    // (the media-type family is this kit's `typFormat`); it is NOT settable via the
+    // header bag (KitOwned). `cty` (label 3) defaults to the inferred content type
+    // and lands in the PROTECTED map; a caller `header.cty` wins. The caller's
+    // protected bag adds around them.
+    const header: Partial<WireTokenHeader> = {
+      typ: buildMediaType(options.tokenType, this.typFormat),
+      cty: contentType,
+      ...options.header,
+    };
+
+    const { protectedEntries, unprotectedEntries } = buildCoseHeaders({
+      reserved: new Set([coseByJose("alg"), coseByJose("kid")]),
+      header,
+      unprotected: options.unprotected,
+      error: CwsError,
+    });
+
+    for (const [label, value] of protectedEntries) protectedMap.set(label, value);
+    for (const [label, value] of unprotectedEntries) unprotected.set(label, value);
+
+    return { protectedHeader: encodeProtectedHeader(protectedMap), unprotected };
   }
 }
