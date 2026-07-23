@@ -6,18 +6,26 @@ import { CoseError } from "../../errors/index.js";
 // COSE_Key parameter labels (RFC 9052 §7).
 const KEY = { kty: 1, kid: 2, alg: 3, crv: -1, x: -2, y: -3 } as const;
 
-// kty labels (JWK kty -> COSE). JWK "EC" is COSE "EC2" (2).
+// AKP (Algorithm Key Pair) key parameter labels (RFC 9964 §5): the raw ML-DSA
+// public key `pub` and 32-byte seed `priv`, both `bstr`. The integer labels
+// (-1/-2) coincide with the EC2/OKP crv/x labels but are kty-scoped, so they
+// carry a different meaning under kty 7.
+const AKP = { pub: -1, priv: -2 } as const;
+
+// kty labels (JWK kty -> COSE). JWK "EC" is COSE "EC2" (2); "AKP" is 7 (RFC 9964).
 export const KTY_TO_COSE: Readonly<Record<string, number>> = {
   OKP: 1,
   EC: 2,
   RSA: 3,
   oct: 4,
+  AKP: 7,
 };
 const COSE_TO_KTY: Readonly<Record<number, string>> = {
   1: "OKP",
   2: "EC",
   3: "RSA",
   4: "oct",
+  7: "AKP",
 };
 
 // Elliptic curve labels (RFC 9053 §7.1).
@@ -43,9 +51,9 @@ const unsupported = (detail: string): never => {
 };
 
 /**
- * Convert a public JWK to a COSE_Key map (RFC 9052 §7). EC2 and OKP public keys
- * are supported (the common proof-of-possession key types); RSA/oct cnf keys
- * are not yet handled.
+ * Convert a JWK to a COSE_Key map (RFC 9052 §7). EC2 and OKP public keys and AKP
+ * (RFC 9964 ML-DSA — `pub`, optional `priv` seed) keys are supported; RSA/oct
+ * cnf keys are not yet handled.
  */
 export const jwkToCoseKey = (jwk: Dict): Map<number, unknown> => {
   const ktyLabel = KTY_TO_COSE[jwk.kty as string];
@@ -64,7 +72,14 @@ export const jwkToCoseKey = (jwk: Dict): Map<number, unknown> => {
     return key;
   }
 
-  return unsupported("Only EC2 and OKP COSE_Key conversion is supported.");
+  if (jwk.kty === "AKP") {
+    if (typeof jwk.pub !== "string") unsupported("AKP COSE_Key requires a 'pub' member.");
+    key.set(AKP.pub, B64.toBuffer(jwk.pub as string, B64U));
+    if (typeof jwk.priv === "string") key.set(AKP.priv, B64.toBuffer(jwk.priv, B64U));
+    return key;
+  }
+
+  return unsupported("Only EC2, OKP, and AKP COSE_Key conversion is supported.");
 };
 
 /** Convert a COSE_Key map back to a public JWK. */
@@ -83,7 +98,17 @@ export const coseKeyToJwk = (key: Map<number, unknown>): Dict => {
     return jwk;
   }
 
-  return unsupported("Only EC2 and OKP COSE_Key conversion is supported.");
+  if (kty === "AKP") {
+    const pub = key.get(AKP.pub);
+    if (!(pub instanceof Uint8Array))
+      unsupported("AKP COSE_Key requires a 'pub' member.");
+    jwk.pub = B64.encode(Buffer.from(pub as Uint8Array), B64U);
+    const priv = key.get(AKP.priv);
+    if (priv instanceof Uint8Array) jwk.priv = B64.encode(Buffer.from(priv), B64U);
+    return jwk;
+  }
+
+  return unsupported("Only EC2, OKP, and AKP COSE_Key conversion is supported.");
 };
 
 /**

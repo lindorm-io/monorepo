@@ -1,7 +1,9 @@
+import { B64 } from "@lindorm/b64";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createLocalJWKSet, importJWK, jwtVerify } from "jose";
 import { describe, expect, test } from "vitest";
+import { B64U } from "../internal/constants/format.js";
 import { JwtKit } from "./JwtKit.js";
 import { defaultProfile } from "../internal/profiles/definitions/default.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
@@ -101,6 +103,64 @@ describe("JWKS interop: published JWKS <-> jose (WebCrypto)", () => {
       expect("key_ops" in jwk).toBe(false);
       expect(jwk.use).toBe("enc");
       await expect(importJWK(jwk as never, algorithm)).resolves.toBeDefined();
+    });
+  });
+
+  // RFC 9964 registers ML-DSA (AKP) for JOSE. Its published JWK is a DIFFERENT
+  // shape than EC/RSA/OKP — `kty: "AKP"` with a single base64url `pub` (no x/y,
+  // no crv) — so it gets its own block. This is the JOSE twin of the COSE
+  // cose-key AKP encoding (cose-key.test.ts). We prove the published public JWK
+  // is conformant and that a foreign RP (real `jose` on WebCrypto) verifies an
+  // aegis ML-DSA token against it, i.e. pure-ML-DSA/empty-ctx interop on the
+  // JOSE wire.
+  describe.each([
+    { name: "AKP / ML-DSA-44", algorithm: "ML-DSA-44" as const },
+    { name: "AKP / ML-DSA-65", algorithm: "ML-DSA-65" as const },
+    { name: "AKP / ML-DSA-87", algorithm: "ML-DSA-87" as const },
+  ])("$name", ({ algorithm }) => {
+    test("a foreign RP verifies an aegis ML-DSA token against our published JWKS", async () => {
+      const kryptos = KryptosKit.generate.sig.akp({ algorithm });
+      const kit = new JwtKit({ logger, kryptos });
+
+      const token = signDefault(kit, {
+        expires: "1h",
+        subject: SUBJECT,
+        tokenType: "access_token",
+      });
+
+      const jwks = createLocalJWKSet(publishedJwks(kryptos) as never);
+
+      const result = await jwtVerify(token, jwks);
+
+      expect(result.payload.iss).toBe(ISSUER);
+      expect(result.payload.sub).toBe(SUBJECT);
+      expect(result.protectedHeader.alg).toBe(algorithm);
+      expect(result.protectedHeader.kid).toBe(kryptos.id);
+    });
+
+    test("the published public AKP JWK is kty:AKP with pub, no priv, no key_ops", async () => {
+      const kryptos = KryptosKit.generate.sig.akp({ algorithm });
+
+      const jwk = kryptos.toJWK("public") as Record<string, unknown>;
+
+      expect(jwk.kty).toBe("AKP");
+      expect(jwk.alg).toBe(algorithm);
+      expect(typeof jwk.pub).toBe("string");
+      expect("priv" in jwk).toBe(false);
+      expect("key_ops" in jwk).toBe(false);
+
+      // Imports cleanly into real jose (WebCrypto), so any mainstream RP can use
+      // it to verify.
+      await expect(importJWK(jwk as never, algorithm)).resolves.toBeDefined();
+    });
+
+    test("the private AKP JWK priv is the RFC 9964 32-byte seed", () => {
+      const kryptos = KryptosKit.generate.sig.akp({ algorithm });
+
+      const priv = (kryptos.toJWK("private") as Record<string, unknown>).priv as string;
+
+      // RFC 9964: the AKP private key `priv` is the 32-byte ML-DSA seed.
+      expect(B64.toBuffer(priv, B64U).length).toBe(32);
     });
   });
 

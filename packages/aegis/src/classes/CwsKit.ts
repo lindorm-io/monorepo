@@ -131,8 +131,11 @@ export class CwsKit implements ICwsKit {
    */
   sign(content: TokenContent, options: SignUnstructuredTokenOptions = {}): Buffer {
     // Interop gate (D5): a non-proprietary sign refuses an algorithm with no
-    // OFFICIAL COSE-RFC registration (e.g. ML-DSA) so the token stays
-    // interoperable. Runs before the Sign1/Mac0 split — it applies to both.
+    // OFFICIAL COSE-RFC registration so the token stays interoperable. Runs
+    // before the Sign1/Mac0 split — it applies to both. Every current kryptos
+    // signing algorithm is official (ML-DSA joined via RFC 9964), so this guards
+    // only a future private-use algorithm; the enc-side (AES-CBC-HMAC) gate is
+    // the reachable twin of this mechanism.
     if (!options.proprietary && !isOfficialCoseAlg(this.kryptos.algorithm)) {
       throw new CwsError(
         `Algorithm "${this.kryptos.algorithm}" has no official COSE registration`,
@@ -141,7 +144,7 @@ export class CwsKit implements ICwsKit {
           data: { algorithm: this.kryptos.algorithm },
           title: "COSE Algorithm Not Registered",
           details:
-            "In interoperable (non-proprietary) mode the signing algorithm must carry an official COSE-RFC label; ML-DSA and other private-use algorithms require proprietary mode.",
+            "In interoperable (non-proprietary) mode the signing algorithm must carry an official COSE-RFC label; a private-use algorithm requires proprietary mode.",
         },
       );
     }

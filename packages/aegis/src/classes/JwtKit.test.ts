@@ -1,4 +1,5 @@
 import { B64 } from "@lindorm/b64";
+import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import * as jsonwebtoken from "jsonwebtoken";
@@ -918,6 +919,38 @@ describe("JwtKit", () => {
 
   // R10 temporal overrides — the mocked "now" is 2024-01-01T08:00:00Z (unix
   // 1704096000). `currentDate` replaces that instant; `maxTokenAge` bounds `iat`.
+  // The JOSE twin of the CwsKit COSE-label assertion (CwsKit.test.ts): ML-DSA
+  // (post-quantum, AKP) is IANA-registered for JOSE by RFC 9964, where the JWS
+  // `alg` is the EXACT string "ML-DSA-44"/"ML-DSA-65"/"ML-DSA-87" (the analogue
+  // of the COSE labels -48/-49/-50). A round-trip proves aegis both emits the
+  // conformant header and verifies its own signature; the decode reads the
+  // compact-JWS protected header off the wire to assert the exact alg string.
+  describe("ML-DSA is RFC 9964 JOSE (exact alg header)", () => {
+    const cases = [["ML-DSA-44"], ["ML-DSA-65"], ["ML-DSA-87"]] as const;
+
+    test.each(cases)(
+      "%s signs with the exact alg header and round-trips",
+      (algorithm) => {
+        const akpKit = new JwtKit({
+          logger,
+          kryptos: KryptosKit.generate.sig.akp({ algorithm }),
+        });
+
+        const token = akpKit.sign({
+          iss: issuer,
+          sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+          exp: 1704099600,
+        });
+
+        // The wire protected header carries the exact RFC 9964 alg string.
+        expect(JwtKit.decodeSegments(token).header.alg).toBe(algorithm);
+
+        // Self round-trip: the ML-DSA signature verifies against the key.
+        expect(() => akpKit.verify(token)).not.toThrow();
+      },
+    );
+  });
+
   describe("temporal overrides (R10 — currentDate / maxTokenAge)", () => {
     test("currentDate overrides now: a token expired vs the real clock verifies against a past currentDate", () => {
       // exp at 07:00 — one hour BEFORE the mocked 08:00 now, so it is expired.

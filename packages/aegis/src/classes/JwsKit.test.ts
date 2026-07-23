@@ -1,3 +1,4 @@
+import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
@@ -155,6 +156,47 @@ describe("JwsKit", () => {
         payload: "dGVzdCBkYXRhIGluIGJ1ZmZlcg",
         signature: expect.any(String),
       });
+    });
+  });
+
+  // The opaque/unstructured JWS twin of the JwtKit ML-DSA coverage: RFC 9964
+  // registers ML-DSA for JOSE, so an AKP kryptos produces a conformant compact
+  // JWS with the exact "ML-DSA-44"/"ML-DSA-65"/"ML-DSA-87" alg string, and the
+  // opaque payload round-trips through sign -> verify.
+  describe("ML-DSA (RFC 9964) opaque JWS", () => {
+    const cases = [["ML-DSA-44"], ["ML-DSA-65"], ["ML-DSA-87"]] as const;
+
+    test.each(cases)(
+      "%s signs with the exact alg header and round-trips",
+      (algorithm) => {
+        const akpKit = new JwsKit({
+          logger: createMockLogger(),
+          kryptos: KryptosKit.generate.sig.akp({ algorithm }),
+        });
+
+        const token = akpKit.sign("post-quantum payload");
+
+        expect(JwsKit.decodeSegments(token).header.alg).toBe(algorithm);
+
+        expect(akpKit.verify(token).payload).toBe("post-quantum payload");
+      },
+    );
+
+    test("rejects a tampered ML-DSA signature", () => {
+      const akpKit = new JwsKit({
+        logger: createMockLogger(),
+        kryptos: KryptosKit.generate.sig.akp({ algorithm: "ML-DSA-65" }),
+      });
+
+      const token = akpKit.sign("authentic payload");
+      const [header, payload, signature] = token.split(".");
+
+      // Flip the first signature byte; the mutated compact token must not verify.
+      const raw = Buffer.from(signature, "base64url");
+      raw[0] ^= 0xff;
+      const tampered = [header, payload, raw.toString("base64url")].join(".");
+
+      expect(() => akpKit.verify(tampered)).toThrow();
     });
   });
 

@@ -374,6 +374,50 @@ describe("Aegis profiles", () => {
     });
   });
 
+  // The domain-surface proof that AKP (ML-DSA, RFC 9964) works end to end: an
+  // amphora holding only an ML-DSA key mints AND verifies through the full Aegis
+  // pipeline (key resolved by kid on the JOSE path), and the served JWKS carries
+  // the AKP public JWK. This is the JOSE twin of the COSE AKP cose-key coverage.
+  describe("ML-DSA end-to-end (RFC 9964)", () => {
+    let akpAmphora: IAmphora;
+    let akpAegis: Aegis;
+
+    beforeEach(async () => {
+      akpAmphora = new Amphora({ domain: ISSUER, logger });
+      await akpAmphora.setup();
+      akpAmphora.add(TEST_AKP_KEY_SIG);
+      akpAegis = new Aegis({ amphora: akpAmphora, logger });
+    });
+
+    test("mints and verifies an access_token signed with an ML-DSA key", async () => {
+      const { token } = await akpAegis.mint("access_token", {
+        subject: "user-1",
+        audience: [RESOURCE],
+        clientId: "client-1",
+        scope: ["openid"],
+      });
+
+      // The wire alg header is the exact RFC 9964 JOSE string.
+      expect(JwtKit.decodeSegments(token).header.alg).toBe("ML-DSA-65");
+
+      // Full domain verify path resolves the AKP key by kid and validates.
+      const parsed = await akpAegis.verify(token);
+      expect(parsed.claims).toMatchObject({ subject: "user-1", clientId: "client-1" });
+    });
+
+    test("serves the ML-DSA public key in the JWKS as kty:AKP with pub, no priv", () => {
+      const served = akpAmphora.jwks.keys.find(
+        (key) => (key as Record<string, unknown>).kid === TEST_AKP_KEY_SIG.id,
+      ) as Record<string, unknown>;
+
+      expect(served).toBeDefined();
+      expect(served.kty).toBe("AKP");
+      expect(served.alg).toBe("ML-DSA-65");
+      expect(typeof served.pub).toBe("string");
+      expect("priv" in served).toBe(false);
+    });
+  });
+
   describe("delegation (per-token issuer)", () => {
     test("delegation uses the per-token issuer, not the platform issuer", async () => {
       const { token } = await aegis.mint("delegation", {

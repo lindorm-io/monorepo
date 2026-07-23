@@ -27,38 +27,29 @@ const JOSE_TO_COSE_OFFICIAL: Readonly<Record<string, number>> = {
   HS256: 5,
   HS384: 6,
   HS512: 7,
-};
-
-/**
- * PRIVATE-USE COSE labels (< -65536, RFC 9052 §8) for kryptos signing algorithms
- * with no OFFICIAL COSE-RFC registration in our map — currently the ML-DSA
- * (post-quantum) family. Emitted ONLY under proprietary mode (the interop gate
- * refuses them by default); the lenient read path maps them back so a
- * proprietary CWT still round-trips.
- */
-const JOSE_TO_COSE_PRIVATE: Readonly<Partial<Record<KryptosAlgorithm, number>>> = {
-  "ML-DSA-44": -65537,
-  "ML-DSA-65": -65538,
-  "ML-DSA-87": -65539,
+  // ML-DSA (RFC 9964 — IANA-registered, Recommended: Yes; pure ML-DSA)
+  "ML-DSA-44": -48,
+  "ML-DSA-65": -49,
+  "ML-DSA-87": -50,
 };
 
 const COSE_TO_JOSE: Readonly<Record<number, string>> = Object.fromEntries(
-  [...Object.entries(JOSE_TO_COSE_OFFICIAL), ...Object.entries(JOSE_TO_COSE_PRIVATE)].map(
-    ([alg, label]) => [label, alg],
-  ),
+  Object.entries(JOSE_TO_COSE_OFFICIAL).map(([alg, label]) => [label, alg]),
 );
 
 /**
  * Interop gate (D5): true iff the algorithm has an OFFICIAL (non-private-use)
  * COSE label, i.e. it is COSE-RFC compliant. A non-proprietary `sign` refuses
- * anything this returns `false` for.
+ * anything this returns `false` for. With ML-DSA now IANA-registered (RFC 9964),
+ * every kryptos signing/MAC algorithm is official — the sig gate no longer fires
+ * for any real key; the enc-side (AES-CBC-HMAC) gate still exercises the mechanism.
  */
 export const isOfficialCoseAlg = (algorithm: KryptosAlgorithm): boolean =>
   algorithm in JOSE_TO_COSE_OFFICIAL;
 
 /** The COSE integer label for a JOSE/kryptos signing or MAC algorithm. */
 export const algToCoseLabel = (algorithm: KryptosAlgorithm): number => {
-  const label = JOSE_TO_COSE_OFFICIAL[algorithm] ?? JOSE_TO_COSE_PRIVATE[algorithm];
+  const label = JOSE_TO_COSE_OFFICIAL[algorithm];
 
   if (label === undefined) {
     throw new CoseError(`No COSE algorithm label for "${algorithm}"`, {
@@ -66,7 +57,7 @@ export const algToCoseLabel = (algorithm: KryptosAlgorithm): number => {
       data: { algorithm },
       title: "COSE Algorithm Not Supported",
       details:
-        "This signing/MAC algorithm has no mapped COSE label; supported COSE algorithms are ES*/EdDSA/PS*/RS*/HS*.",
+        "This signing/MAC algorithm has no mapped COSE label; supported COSE algorithms are ES*/EdDSA/PS*/RS*/HS*/ML-DSA-*.",
     });
   }
 

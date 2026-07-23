@@ -159,40 +159,37 @@ describe("CwsKit — caller-controlled protected / unprotected header bags", () 
   });
 });
 
-describe("CwsKit — proprietary alg gate (D5)", () => {
-  // ML-DSA (post-quantum, AKP) is a reachable kryptos signing algorithm with NO
-  // official COSE registration — private-use. Non-proprietary sign refuses it;
-  // proprietary allows it, and verify is always lenient.
-  const kryptos = KryptosKit.generate.sig.akp({ algorithm: "ML-DSA-44" });
-  const kit = new CwsKit({ kryptos, logger: createMockLogger() });
+describe("CwsKit — ML-DSA is official COSE (RFC 9964)", () => {
+  // ML-DSA (post-quantum, AKP) is now IANA-registered (RFC 9964): ML-DSA-44 =
+  // -48, ML-DSA-65 = -49, ML-DSA-87 = -50. It is therefore interoperable by
+  // default — a plain (non-proprietary) sign is accepted and carries the official
+  // label on the wire. The proprietary interop gate no longer fires for any
+  // kryptos signing algorithm (every one is official); the AES-CBC-HMAC enc-side
+  // gate still exercises that mechanism (see CweKit.test.ts).
+  const cases = [
+    ["ML-DSA-44", -48],
+    ["ML-DSA-65", -49],
+    ["ML-DSA-87", -50],
+  ] as const;
 
-  test("non-proprietary sign refuses ML-DSA (no official COSE label)", () => {
-    const error = (() => {
-      try {
-        kit.sign(Buffer.from("the cwt claims bytes"));
-      } catch (err) {
-        return err as AegisError;
-      }
-    })();
+  test.each(cases)(
+    "%s signs interoperably (no proprietary flag) and carries label %s",
+    (algorithm, label) => {
+      const kryptos = KryptosKit.generate.sig.akp({ algorithm });
+      const kit = new CwsKit({ kryptos, logger: createMockLogger() });
+      const payload = Buffer.from("the cwt claims bytes");
 
-    expect(error).toBeInstanceOf(AegisError);
-    expect(error?.code).toBe("cose_alg_not_registered");
-  });
+      const bytes = kit.sign(payload);
+      const sign1 = decodeCbor<Tag>(bytes);
+      expect(sign1.tag).toBe(COSE_TAG.sign1);
 
-  test("proprietary sign allows ML-DSA and round-trips through verify", () => {
-    const payload = Buffer.from("the cwt claims bytes");
+      const protectedHeader = decodeCbor<Map<number, unknown>>(
+        (sign1.contents as Array<Buffer>)[0],
+      );
+      expect(protectedHeader.get(1)).toBe(label);
 
-    const bytes = kit.sign(payload, { proprietary: true });
-    const sign1 = decodeCbor<Tag>(bytes);
-    expect(sign1.tag).toBe(COSE_TAG.sign1);
-    // The private-use ML-DSA alg label sits below the COSE private-use floor.
-    const protectedHeader = decodeCbor<Map<number, unknown>>(
-      (sign1.contents as Array<Buffer>)[0],
-    );
-    expect(protectedHeader.get(1)).toBeLessThan(-65536);
-
-    // Verify is ALWAYS lenient — it reads the private-use label back with no flag.
-    const { payload: out } = kit.verify(bytes);
-    expect(out.equals(payload)).toBe(true);
-  });
+      const { payload: out } = kit.verify(bytes);
+      expect(out.equals(payload)).toBe(true);
+    },
+  );
 });
