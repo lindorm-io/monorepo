@@ -62,6 +62,7 @@ describe("Aegis", () => {
     });
 
     expect(res).toEqual({
+      format: "jws",
       objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
       token: expect.any(String),
     });
@@ -95,6 +96,7 @@ describe("Aegis", () => {
       expiresAt: new Date("2024-01-01T09:00:00.000Z"),
       expiresIn: 3600,
       expiresOn: 1704099600,
+      format: "jwt",
       objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       token: expect.any(String),
       tokenId: expect.any(String),
@@ -222,6 +224,7 @@ describe("Aegis", () => {
     const res = await aegis.sign({ payload: "raw-data" });
 
     expect(res).toEqual({
+      format: "jws",
       objectId: undefined,
       token: expect.any(String),
     });

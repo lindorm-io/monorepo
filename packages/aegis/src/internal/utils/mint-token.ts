@@ -4,7 +4,7 @@ import { AegisDomainError } from "../../errors/index.js";
 import type {
   ProfileMintOptions,
   SignContent,
-  SignedJwt,
+  SignedToken,
   SignJwtContent,
 } from "../../types/index.js";
 import { domainToJose } from "../claims/translate.js";
@@ -35,7 +35,7 @@ export const mintToken = async ({
   content: SignContent;
   options: ProfileMintOptions;
   deps: AegisDeps;
-}): Promise<SignedJwt> => {
+}): Promise<SignedToken> => {
   // Encoding seam: dispatch on the per-call format. The profiled COSE path
   // (`cwt` = COSE_Sign1, `cwm` = COSE_Mac0 — D6) is a separate encoder that
   // consumes the same domain-keyed common claims; everything above this branch
@@ -168,5 +168,7 @@ export const mintToken = async ({
     logger: deps.logger,
   });
 
-  return { ...signed, token };
+  // The OUTER wire is now a JWE (sign-then-encrypt): re-stamp `format` to mirror
+  // the read side, which reports the outer `jwe` with the signed inner under `inner`.
+  return { ...signed, token, format: "jwe" };
 };

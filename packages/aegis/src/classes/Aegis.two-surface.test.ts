@@ -85,12 +85,15 @@ describe("Aegis — the two surfaces (Phase 19)", () => {
     });
   });
 
-  describe("parse throws on an encrypted token (jwe AND cwe)", () => {
+  describe("parse REFUSES an encrypted token (jwe AND cwe)", () => {
+    // A JWE/CWE has no readable claims without the key — parse is keyless and
+    // unverified, so it throws `parse_requires_decrypt` rather than surfacing a
+    // partial result. The caller must use `aegis.decrypt`.
     test("parse throws parse_requires_decrypt on a JWE", async () => {
       amphora.add(TEST_OKP_KEY_ENC);
       const { token } = await aegis.encrypt("secret");
 
-      expect(() => Aegis.parse(token)).toThrow(
+      expect(() => aegis.parse(token)).toThrow(
         expect.objectContaining({ code: "parse_requires_decrypt" }),
       );
     });
@@ -106,7 +109,7 @@ describe("Aegis — the two surfaces (Phase 19)", () => {
       // Sanity: it is an encrypted COSE token, not a plain CWT.
       expect(Aegis.isCwe(token)).toBe(true);
 
-      expect(() => Aegis.parse(token)).toThrow(
+      expect(() => aegis.parse(token)).toThrow(
         expect.objectContaining({ code: "parse_requires_decrypt" }),
       );
     });

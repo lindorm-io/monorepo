@@ -3,7 +3,7 @@ import type { Dict } from "@lindorm/types";
 import { CwsKit } from "../../classes/CwsKit.js";
 import type {
   AegisSignKey,
-  SignedCwt,
+  SignedToken,
   TokenContent,
   WireProtectedHeader,
 } from "../../types/index.js";
@@ -47,7 +47,7 @@ export const rawSignCose = async ({
 }: {
   input: RawSignCoseInput;
   deps: AegisDeps;
-}): Promise<SignedCwt> => {
+}): Promise<SignedToken> => {
   const kryptos = await deps.resolveSignKey({ key: input.key });
 
   // Opaque content: an object payload is pruned of empty entries when an omit
@@ -71,5 +71,5 @@ export const rawSignCose = async ({
   // A CWS secures OPAQUE content (no wire-claim interpretation), so the
   // expiry/`tokenId` sugar is `undefined`; only `objectId` (from the header bag)
   // is carried.
-  return buildSignedCwt(token.toString("base64url"), {}, input.header?.oid);
+  return buildSignedCwt(token.toString("base64url"), {}, input.header?.oid, "cws");
 };

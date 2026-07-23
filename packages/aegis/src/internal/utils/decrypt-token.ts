@@ -15,8 +15,8 @@ import { decodeCwtClaims } from "../cose/cwt-claims.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import type { DomainClaims } from "./extract-claims.js";
 import { COSE_CLAIMS_TYP } from "./encrypt-token.js";
+import { joseDomainHeader } from "./jose-domain-header.js";
 import { rawDecryptJwe } from "./raw-decrypt-jwe.js";
-import { parseTokenHeader } from "./token-header.js";
 
 /**
  * The domain decrypt pipeline (`aegis.decrypt`) — CONFIDENTIALITY only, with NO
@@ -48,8 +48,11 @@ export const decryptToken = async <C extends Dict = Dict>({
     });
 
     // The kit returns the WIRE header (R1); the domain `DecryptedToken` carries
-    // the DOMAIN-named header, so translate here.
-    const header = parseTokenHeader(wireHeader);
+    // the DOMAIN-named header, so translate here. Route through `joseDomainHeader`
+    // (NOT bare `parseTokenHeader`) so `baseFormat: "JWE"` and the typ-derived
+    // `tokenType` are stamped — verify does the same, and a bare parse left
+    // `header.tokenType` permanently `undefined`.
+    const header = joseDomainHeader(wireHeader, "JWE");
 
     // A JWE tells a translated claims set from opaque plaintext by the
     // kit-computed `cty`: `aegis.encrypt` hands a claims set to JweKit as an

@@ -234,7 +234,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
         national_identity_number_verified: true,
       });
 
-      const parsed = Aegis.parse(token);
+      const parsed = aegis.parse(token);
 
       expect(parsed.sensitive).toBeUndefined();
       expect(parsed.claims).not.toHaveProperty("nationalIdentityNumber");

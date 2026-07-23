@@ -4,7 +4,7 @@ import type {
   AegisSignKey,
   JwtClaimsWire,
   SignStructuredTokenOptions,
-  SignedJwt,
+  SignedToken,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { buildSignedJwt } from "./jwt-payload.js";
@@ -14,7 +14,7 @@ import { buildSignedJwt } from "./jwt-payload.js";
  * serialize the ALREADY-WIRE `JwtClaimsWire` verbatim via the transform-free
  * `JwtKit` (R18) — no domain translation, no envelope auto-injection. The domain
  * sign path is `aegis.mint` / `aegis.sign`. `oid` (if wanted) rides the `header`
- * bag (ruling 3); the `SignedJwt.objectId` sugar reads it back off it.
+ * bag (ruling 3); the `SignedToken.objectId` sugar reads it back off it.
  */
 export const rawSignJwt = async <C extends Dict = Dict>({
   claims,
@@ -24,7 +24,7 @@ export const rawSignJwt = async <C extends Dict = Dict>({
   claims: JwtClaimsWire & C;
   options?: SignStructuredTokenOptions & { key?: AegisSignKey };
   deps: AegisDeps;
-}): Promise<SignedJwt> => {
+}): Promise<SignedToken> => {
   const { key, certificateThumbprintSha1, ...rest } = options;
 
   const kryptos = await deps.resolveSignKey({ key });
@@ -40,5 +40,5 @@ export const rawSignJwt = async <C extends Dict = Dict>({
       certificateThumbprintSha1 ?? deps.certificateThumbprintSha1,
   });
 
-  return buildSignedJwt(token, claims, options.header?.oid);
+  return buildSignedJwt(token, claims, options.header?.oid, "jwt");
 };

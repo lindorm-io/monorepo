@@ -12,6 +12,11 @@ export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => 
     m.mockResolvedValue(value);
     return m;
   };
+  const returns = (value: any) => {
+    const m = mockFn();
+    m.mockReturnValue(value);
+    return m;
+  };
 
   return {
     issuer: "https://test.lindorm.io/",
@@ -62,6 +67,15 @@ export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => 
       format: "jwt",
       header: {},
       claims: { subject: "verified_subject" },
+      custom: {},
+      token: "mocked_token",
+    }),
+
+    // parse is a SYNCHRONOUS keyless read — a plain mockReturnValue, not resolves.
+    parse: returns({
+      format: "jwt",
+      header: {},
+      claims: {},
       custom: {},
       token: "mocked_token",
     }),

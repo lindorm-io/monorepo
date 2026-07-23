@@ -110,10 +110,13 @@ describe("buildSignedJwt (domain sugar over the wire kit's { token })", () => {
   const token = "header.payload.signature";
 
   test("derives the expiry bundle from the wire exp and tokenId from jti", () => {
-    expect(buildSignedJwt(token, { exp: 1704099600, jti: "jti-1" }, "obj-1")).toEqual({
+    expect(
+      buildSignedJwt(token, { exp: 1704099600, jti: "jti-1" }, "obj-1", "jwt"),
+    ).toEqual({
       expiresAt: new Date("2024-01-01T09:00:00.000Z"),
       expiresIn: 3600,
       expiresOn: 1704099600,
+      format: "jwt",
       objectId: "obj-1",
       token,
       tokenId: "jti-1",
@@ -121,10 +124,11 @@ describe("buildSignedJwt (domain sugar over the wire kit's { token })", () => {
   });
 
   test("leaves the expiry bundle and tokenId undefined when exp/jti are absent", () => {
-    expect(buildSignedJwt(token, { sub: "s" }, undefined)).toEqual({
+    expect(buildSignedJwt(token, { sub: "s" }, undefined, "jws")).toEqual({
       expiresAt: undefined,
       expiresIn: undefined,
       expiresOn: undefined,
+      format: "jws",
       objectId: undefined,
       token,
       tokenId: undefined,

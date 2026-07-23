@@ -6,8 +6,7 @@ import type { DomainClaims } from "../../internal/utils/extract-claims.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { TokenFormat } from "../../internal/utils/select-encoder.js";
 import type { AegisEncKey, AegisSignKey } from "../keys/key-selectors.js";
-import type { BindCertificateMode } from "../header/domain-header.js";
-import type { WireProtectedHeader } from "../header/wire-envelope.js";
+import type { DomainTokenEnvelope } from "../domain/domain-envelope.js";
 import type { JweEncryptOptions } from "../kit/encrypted.js";
 import type { SignJwtOptions } from "../domain/sign.js";
 import type { VerifyOptions } from "../domain/verify.js";
@@ -187,21 +186,7 @@ export type ProfileVerifyOptions = VerifyOptions & {
  * Raw / wire tier input. `payload` is a wire-literal. `aegis.sign` accepts a
  * plain object too and JSON-stringifies it before delegating to the JWS path.
  */
-export type RawSignInput = {
-  bindCertificate?: BindCertificateMode;
-  /**
-   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
-   * cert is bound. Default `true` (older-client compat).
-   */
-  certificateThumbprintSha1?: boolean;
-  /** Caller-controlled PROTECTED wire header params (`oid` rides here, ruling 3). */
-  header?: WireProtectedHeader;
-  /**
-   * How empty claims are pruned before signing (a plain-object payload only).
-   * `"empty"` (default) drops null/empty recursively; `"undefined"` drops only
-   * undefined; inert for opaque Buffer/string payloads.
-   */
-  omit?: OmitMode;
+export type RawSignInput = DomainTokenEnvelope<AegisSignKey> & {
   contentType?: string;
   /**
    * Wire encoding. `"jws"`/`"jwt"` (default) signs a JWS — the payload passes through as
@@ -212,7 +197,5 @@ export type RawSignInput = {
    */
   format?: TokenFormat;
   payload: Buffer | string | Dict;
-  /** Per-call signing key policy. */
-  key?: AegisSignKey;
   tokenType?: TokenType;
 };

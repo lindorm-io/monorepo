@@ -4,7 +4,7 @@ import type {
   AegisSignKey,
   CwtClaimsWire,
   SignStructuredTokenOptions,
-  SignedCwt,
+  SignedToken,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { buildSignedCwt } from "./cwt-payload.js";
@@ -25,7 +25,7 @@ export const rawSignCwm = async <C extends Dict = Dict>({
   claims: CwtClaimsWire & C;
   options?: SignStructuredTokenOptions & { key?: AegisSignKey };
   deps: AegisDeps;
-}): Promise<SignedCwt> => {
+}): Promise<SignedToken> => {
   const kryptos = await deps.resolveSignKey({ key: options.key });
 
   const token = new CwmKit({ kryptos, logger: deps.logger }).sign<C>(claims, {
@@ -36,5 +36,5 @@ export const rawSignCwm = async <C extends Dict = Dict>({
     unprotected: options.unprotected,
   });
 
-  return buildSignedCwt(token.toString("base64url"), claims, options.header?.oid);
+  return buildSignedCwt(token.toString("base64url"), claims, options.header?.oid, "cwm");
 };

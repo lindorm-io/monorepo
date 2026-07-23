@@ -2,7 +2,11 @@ import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { TEST_EC_KEY_SIG, TEST_OCT_KEY_ENC } from "../__fixtures__/keys.js";
+import {
+  TEST_EC_KEY_SIG,
+  TEST_OCT_KEY_ENC,
+  TEST_OCT_KEY_SIG,
+} from "../__fixtures__/keys.js";
 import { AegisError } from "../errors/index.js";
 import { Aegis } from "./Aegis.js";
 
@@ -183,6 +187,80 @@ describe("Aegis — COSE namespaces", () => {
         .catch((err: Error) => err);
       expect(error).toBeInstanceOf(AegisError);
       expect((error as AegisError).code).toBe("cwt_missing_claim_exp");
+    });
+  });
+
+  // The COSE_Mac0 (symmetric) twin of `cwt`. It needs a SYMMETRIC signing key, so
+  // it runs on its own amphora (a second sig key on the shared one would make the
+  // keyless cwt/cws auto-selection non-deterministic).
+  describe("cwm — COSE_Mac0 with WIRE claims (symmetric twin of cwt)", () => {
+    let macAmphora: IAmphora;
+    let macAegis: Aegis;
+
+    const claims = {
+      iss: "https://test.lindorm.io/",
+      sub: "user-1",
+      aud: ["https://rs.lindorm.io/"],
+      exp: 1704099600,
+      cti: "jti-1",
+    };
+
+    beforeEach(async () => {
+      const logger = createMockLogger();
+      macAmphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+      macAegis = new Aegis({ amphora: macAmphora, logger });
+      await macAmphora.setup();
+      macAmphora.add(TEST_OCT_KEY_SIG); // HS* symmetric key → COSE_Mac0
+    });
+
+    test("MACs WIRE claims and round-trips them through verify (Mac0 path)", async () => {
+      const signed = await macAegis.cwm.sign(claims, { tokenType: "at" });
+
+      expect(signed.format).toBe("cwm");
+      expect(signed.tokenId).toBe("jti-1");
+      expect(signed.expiresOn).toBe(1704099600);
+
+      // The integrity structure is a COSE_Mac0 (tag 17), NOT a COSE_Sign1 — so the
+      // token reads as a CWM, never a CWT (the D6 structure discriminant).
+      expect(Aegis.isCwm(signed.token)).toBe(true);
+      expect(Aegis.isCwt(signed.token)).toBe(false);
+
+      const parsed = await macAegis.cwm.verify(signed.token);
+
+      // The raw cwm namespace returns the NATIVE WIRE payload (COSE-name-keyed),
+      // exactly like cwt — only the integrity structure differs.
+      expect(parsed.payload.sub).toBe("user-1");
+      expect(parsed.payload.iss).toBe("https://test.lindorm.io/");
+      expect(parsed.payload.aud).toEqual(["https://rs.lindorm.io/"]);
+      expect(parsed.payload.cti).toBe("jti-1");
+      expect(parsed.header.typ).toBe("application/at+cwt"); // CWM shares the CWT typ
+    });
+
+    test("a wire assert predicate rejects a non-matching claim", async () => {
+      const signed = await macAegis.cwm.sign(claims);
+
+      await expect(
+        macAegis.cwm.verify(signed.token, { aud: ["https://other.lindorm.io/"] }),
+      ).rejects.toThrow(/Invalid token/);
+    });
+
+    test("the symmetric gate rejects an asymmetric key (that is cwt.sign)", async () => {
+      // COSE_Mac0 is a MAC — an asymmetric key cannot MAC, so the kit gate throws
+      // instead of silently signing. The asymmetric twin is `aegis.cwt.sign`.
+      await expect(
+        macAegis.cwm.sign(claims, { key: { kryptos: TEST_EC_KEY_SIG } }),
+      ).rejects.toThrow();
+    });
+
+    test("top-level verify auto-detects the CWM and returns domain claims", async () => {
+      const signed = await macAegis.cwm.sign(claims);
+
+      const parsed = (await macAegis.verify(signed.token, {
+        audience: "https://rs.lindorm.io/",
+      })) as unknown as { format: string; claims: Record<string, unknown> };
+
+      expect(parsed.format).toBe("cwm");
+      expect(parsed.claims.subject).toBe("user-1");
     });
   });
 

@@ -1,7 +1,7 @@
 import type { Dict } from "@lindorm/types";
 import type {
+  DomainTokenHeader,
   VerifiedToken,
-  VerifiedTokenHeader,
   WireTokenHeader,
 } from "../../types/index.js";
 import { Tag } from "../cose/cbor.js";
@@ -41,7 +41,7 @@ export const coseDomainHeader = (triple: {
   alg?: string | undefined;
   kid?: string | undefined;
   typ?: string | undefined;
-}): VerifiedTokenHeader => {
+}): DomainTokenHeader => {
   const header = parseTokenHeader({
     alg: triple.alg,
     kid: triple.kid,

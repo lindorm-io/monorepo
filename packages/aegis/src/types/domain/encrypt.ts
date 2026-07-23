@@ -1,10 +1,8 @@
 import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
-import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { DomainClaims } from "../../internal/utils/extract-claims.js";
 import type { AegisDecryptKey, AegisEncKey } from "../keys/key-selectors.js";
-import type { BindCertificateMode } from "../header/domain-header.js";
-import type { WireProtectedHeader } from "../header/wire-envelope.js";
+import type { DomainTokenEnvelope } from "./domain-envelope.js";
 
 /**
  * The `aegis.encrypt` input (§5e) — the mirror of `sign`'s payload. A plain
@@ -19,17 +17,11 @@ export type EncryptData = (DomainClaims & Dict) | Buffer | string;
  * so `format` is only `jwe`/`cwe`. Encryption is pure confidentiality: there is
  * NO inner signature (sender auth ⇒ `mint(profile, content, { encrypt })`).
  */
-export type EncryptOptions = {
+export type EncryptOptions = DomainTokenEnvelope<AegisEncKey> & {
   /** Wire encoding — a JWE (default) or a COSE_Encrypt0 (`cwe`). */
   format?: "jwe" | "cwe";
-  /** Per-call recipient key policy; its `encryption` picks the content AEAD. */
-  key?: AegisEncKey;
   /** The domain token type stamped on the wire header (`typ`). */
   type?: TokenType;
-  /** How empty claims are pruned before encoding; ignored for opaque data. */
-  omit?: OmitMode;
-  /** Caller-supplyable PROTECTED wire header fields (`oid` rides here, ruling 3). */
-  header?: WireProtectedHeader;
   /**
    * ECDH-ES Agreement PartyUInfo (RFC 7518 §4.6.1.2) — the base64url producer
    * identity. Consumed by the Concat-KDF AND emitted on the protected header
@@ -45,13 +37,6 @@ export type EncryptOptions = {
    * `apv` matches it.
    */
   partyRecipient?: string;
-  bindCertificate?: BindCertificateMode;
-  /**
-   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
-   * cert is bound. Default `true`. Independent of `bindCertificate`; the read side
-   * never verifies SHA-1.
-   */
-  certificateThumbprintSha1?: boolean;
   /**
    * Allow a lindorm-proprietary (private-use) COSE content encryption on the
    * `cwe` path (default `false`, D5 interop gate); threaded to `CweKit.encrypt`.

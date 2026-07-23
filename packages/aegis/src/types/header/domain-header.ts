@@ -76,13 +76,3 @@ export type CertificateHeaderFields = Partial<
 export type BindCertificateMode = "thumbprint" | "chain" | "none";
 
 export type CertificateBindingMode = "strict" | "lax";
-
-/** A {@link DomainTokenHeader} refined once the token's alg/format/typ are known. */
-export type RefinedDomainTokenHeader<A> = Omit<
-  DomainTokenHeader,
-  "algorithm" | "baseFormat" | "headerType"
-> & {
-  algorithm: A;
-  baseFormat: BaseTokenFormat;
-  headerType: string;
-};

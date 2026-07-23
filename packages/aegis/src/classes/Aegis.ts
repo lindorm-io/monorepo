@@ -100,8 +100,7 @@ import type {
   ProfileVerifyOptions,
   RawSignInput,
   SignContent,
-  SignedCwt,
-  SignedJwt,
+  SignedToken,
   SignStructuredTokenOptions,
   SignUnstructuredTokenOptions,
   TokenContent,
@@ -244,7 +243,7 @@ export class Aegis implements IAegis {
     registerProfileFn(profile);
   }
 
-  sign(input: RawSignInput): Promise<SignedJwt> {
+  sign(input: RawSignInput): Promise<SignedToken> {
     return signToken({ input, deps: this.deps });
   }
 
@@ -263,21 +262,30 @@ export class Aegis implements IAegis {
     return decryptToken<C>({ token, options, deps: this.deps });
   }
 
+  // The KEYLESS, UNVERIFIED domain read of ALL seven wire formats. It touches no
+  // key: it decodes and domain-translates whatever is readable without one — a
+  // structured token's header + claims buckets, an unstructured token's header +
+  // opaque payload, an encrypted token's header alone. An INSTANCE verb (uniform
+  // with `verify`/`decrypt`), not a static, even though the decode needs no `deps`.
+  parse<C extends Dict = Dict>(token: string): ParsedToken<C> {
+    return parseToken<C>(token);
+  }
+
   mint<P extends keyof ProfileContent>(
     profile: P,
     content: ProfileContent[P],
     options?: ProfileMintOptions,
-  ): Promise<SignedJwt>;
+  ): Promise<SignedToken>;
   mint(
     profile: string & {},
     content: SignContent,
     options?: ProfileMintOptions,
-  ): Promise<SignedJwt>;
+  ): Promise<SignedToken>;
   mint(
     profile: string,
     content: SignContent,
     options: ProfileMintOptions = {},
-  ): Promise<SignedJwt> {
+  ): Promise<SignedToken> {
     return mintToken({ name: profile, content, options, deps: this.deps });
   }
 
@@ -392,11 +400,7 @@ export class Aegis implements IAegis {
   static toDomain = joseToDomain;
 
   // `Aegis.decode` is DROPPED (Bit 2) — use `aegis.<fmt>.decode` for a known
-  // format, or `aegis.parse` for an unknown one.
-
-  static parse<C extends Dict = Dict>(token: string): ParsedToken<C> {
-    return parseToken<C>(token);
-  }
+  // format, or the INSTANCE `aegis.parse` for an unknown one.
 
   /**
    * Validate a flat claim dict against a {@link DomainAssert}-based declarative
@@ -452,7 +456,7 @@ export class Aegis implements IAegis {
   private jwsSign(
     data: TokenContent,
     options: SignUnstructuredTokenOptions & { key?: AegisSignKey } = {},
-  ): Promise<SignedJwt> {
+  ): Promise<SignedToken> {
     return rawSignJws({ data, options, deps: this.deps });
   }
 
@@ -467,7 +471,7 @@ export class Aegis implements IAegis {
   private jwtSign<C extends Dict = Dict>(
     claims: JwtClaimsWire & C,
     options: SignStructuredTokenOptions & { key?: AegisSignKey } = {},
-  ): Promise<SignedJwt> {
+  ): Promise<SignedToken> {
     return rawSignJwt<C>({ claims, options, deps: this.deps });
   }
 
@@ -490,7 +494,7 @@ export class Aegis implements IAegis {
   private cwsSign(
     data: TokenContent,
     options: SignUnstructuredTokenOptions & { key?: AegisSignKey; omit?: OmitMode } = {},
-  ): Promise<SignedCwt> {
+  ): Promise<SignedToken> {
     return rawSignCws({ data, options, deps: this.deps });
   }
 
@@ -505,7 +509,7 @@ export class Aegis implements IAegis {
   private cwtSign<C extends Dict = Dict>(
     claims: CwtClaimsWire & C,
     options: SignStructuredTokenOptions & { key?: AegisSignKey } = {},
-  ): Promise<SignedCwt> {
+  ): Promise<SignedToken> {
     return rawSignCwt<C>({ claims, options, deps: this.deps });
   }
 
@@ -521,7 +525,7 @@ export class Aegis implements IAegis {
   private cwmSign<C extends Dict = Dict>(
     claims: CwtClaimsWire & C,
     options: SignStructuredTokenOptions & { key?: AegisSignKey } = {},
-  ): Promise<SignedCwt> {
+  ): Promise<SignedToken> {
     return rawSignCwm<C>({ claims, options, deps: this.deps });
   }
 

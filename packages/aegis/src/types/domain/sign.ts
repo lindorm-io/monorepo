@@ -12,12 +12,11 @@ import type {
   SetClaims,
   StdClaims,
 } from "../claims/domain/index.js";
-import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { AegisSignKey } from "../keys/key-selectors.js";
-import type { BindCertificateMode } from "../header/domain-header.js";
-import type { WireProtectedHeader } from "../header/wire-envelope.js";
+import type { DomainTokenEnvelope } from "./domain-envelope.js";
+import type { TokenFormatTag } from "./verified-token.js";
 
-export type SignJwtContent<C extends Dict = Dict> = Omit<
+export type SignJwtContent = Omit<
   StdClaims,
   "expiresAt" | "issuedAt" | "issuer" | "tokenId"
 > &
@@ -31,7 +30,7 @@ export type SignJwtContent<C extends Dict = Dict> = Omit<
     accessToken?: string;
     authCode?: string;
     authState?: string;
-    claims?: C;
+    claims?: Dict;
     expires: Expiry;
     issuer?: string;
     profile?: AegisProfile;
@@ -40,29 +39,10 @@ export type SignJwtContent<C extends Dict = Dict> = Omit<
     tokenType: "Bearer" | "DPoP" | "N_A" | (string & {});
   };
 
-export type SignJwtOptions = {
-  bindCertificate?: BindCertificateMode;
-  /**
-   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
-   * cert is bound. Default `true` (older-client compat).
-   */
-  certificateThumbprintSha1?: boolean;
-  /** Caller-controlled PROTECTED wire header params (`oid` rides here, ruling 3). */
-  header?: WireProtectedHeader;
-  /**
-   * How empty claims are pruned before signing. `"empty"` (default) drops
-   * null/empty-string/empty-array/empty-object recursively; `"undefined"` drops
-   * only undefined.
-   */
-  omit?: OmitMode;
+export type SignJwtOptions = DomainTokenEnvelope<AegisSignKey> & {
   accessTokenHash?: string;
   codeHash?: string;
   issuedAt?: Date;
-  /**
-   * Per-call signing key policy. Ignored by `JwtKit`, which is handed an
-   * explicit key; consumed by `Aegis`, which resolves one.
-   */
-  key?: AegisSignKey;
   stateHash?: string;
   tokenId?: string;
   /**
@@ -74,25 +54,20 @@ export type SignJwtOptions = {
   typ?: string | null;
 };
 
-export type SignedJwt = {
-  expiresAt: Date | undefined;
-  expiresIn: number | undefined;
-  expiresOn: number | undefined;
-  objectId: string | undefined;
-  token: string;
-  tokenId: string | undefined;
-};
-
 /**
- * The DOMAIN sugar the `aegis.cwt`/`aegis.cwm`/`aegis.cws` sign namespaces return
- * — the COSE twin of {@link SignedJwt}. `token` stays a base64url `string` (R4);
- * the wire kit's native `Buffer` is base64url-encoded so the string-token API is
- * uniform with the JOSE sign paths.
+ * The DOMAIN sugar every `aegis` sign/mint path returns — collapsed from the
+ * former byte-identical `SignedJwt` + `SignedCwt` into ONE type (both were
+ * `token: string`, so the JOSE/COSE split bought nothing). `token` is always a
+ * `string` (a COSE token is base64url-encoded — mint is opinionated). The
+ * `format` discriminant reports the wire the token actually is, mirroring the
+ * read side's `VerifiedToken.format` (a sign-then-encrypt result reports the
+ * OUTER `jwe`/`cwe`).
  */
-export type SignedCwt = {
+export type SignedToken = {
   expiresAt: Date | undefined;
   expiresIn: number | undefined;
   expiresOn: number | undefined;
+  format: TokenFormatTag;
   objectId: string | undefined;
   token: string;
   tokenId: string | undefined;

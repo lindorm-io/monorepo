@@ -6,13 +6,13 @@ import type {
   CertificateBindingMode,
   SignJwtContent,
   SignJwtOptions,
-  SignedJwt,
+  SignedToken,
 } from "../../types/index.js";
 import { computeTypHeader, extractTypPrefix } from "./compute-typ-header.js";
 import { buildSignedJwt } from "./jwt-payload.js";
 
 /**
- * Serialize an ALREADY-WIRE jose-keyed claim dict into a `SignedJwt` via the
+ * Serialize an ALREADY-WIRE jose-keyed claim dict into a `SignedToken` via the
  * transform-free `JwtKit` — the shared tail of the raw `aegis.jwt.sign` and the
  * profiled `mint` JOSE paths (formerly `JoseKit.signJwt`/`signClaims`). An
  * explicit `options.typ` wins; otherwise the typ is the tokenType-derived
@@ -38,7 +38,7 @@ export const signJwtWire = ({
   certificateThumbprintSha1: boolean;
   clockTolerance: number;
   logger: ILogger;
-}): SignedJwt => {
+}): SignedToken => {
   const fullTyp =
     options.typ != null ? options.typ : computeTypHeader(content.tokenType, "jwt");
 
@@ -54,5 +54,5 @@ export const signJwtWire = ({
     },
   );
 
-  return buildSignedJwt(token, wireClaims, options.header?.oid);
+  return buildSignedJwt(token, wireClaims, options.header?.oid, "jwt");
 };

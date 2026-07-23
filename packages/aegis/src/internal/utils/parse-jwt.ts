@@ -11,9 +11,8 @@ import { validateCrit } from "./validate-crit.js";
  * The UNVERIFIED, keyless DOMAIN parse of a JWT (`aegis.parse`). Splits the wire
  * segments, enforces the structural invariants a JWT must satisfy to be READ as
  * one (typ well-formedness IF PRESENT, crit malformedness), and assembles the
- * unified {@link ParsedToken} (domain `claims`/`custom`/`profile` buckets + the
- * untranslated `wire.payload`). It does NOT check the signature — that is
- * `verifyJwtToken` — so `dpop` is never populated. A parseable JWT is
+ * strict {@link ParsedToken} (domain `claims`/`custom`/`profile` buckets). It
+ * does NOT check the signature — that is `verifyJwtToken`. A parseable JWT is
  * unencrypted, so sensitive claims are suppressed (§13.3).
  */
 export const parseJwtToDomain = <C extends Dict = Dict>(
@@ -59,7 +58,6 @@ export const parseJwtToDomain = <C extends Dict = Dict>(
     profile,
     sensitive,
     delegation,
-    wire: { payload: decoded.payload },
     token,
   };
 };

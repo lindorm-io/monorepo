@@ -13,7 +13,7 @@ import type {
  * `encryption` is the resolved content-encryption AEAD (the caller's
  * `AegisEncKey.encryption` merged with the deployment default) — it picks the
  * cipher, never the key. Returns the BARE compact JWE token (the kit returns bare;
- * the domain `EncryptedToken`/`SignedJwt` sugar is built by the caller).
+ * the domain `EncryptedToken`/`SignedToken` sugar is built by the caller).
  */
 export const encryptJwe = ({
   kryptos,

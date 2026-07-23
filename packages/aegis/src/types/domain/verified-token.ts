@@ -25,14 +25,13 @@ import type { TokenProfile } from "../profile/profile.js";
 export type TokenFormatTag = "jwt" | "jws" | "jwe" | "cwt" | "cwm" | "cws" | "cwe";
 
 /**
- * The domain-keyed header carried by every `VerifiedToken` (R9). This ADOPTS the
- * existing full-breadth domain header ({@link DomainTokenHeader}) directly rather
- * than inventing a parallel vocabulary — the wire header is translated to these
- * domain names uniformly across JOSE and COSE, so a caller reads
- * `.header.tokenType` / `.header.keyId` / `.header.algorithm` the same way on a
- * JWT and a CWT (COSE-only-absent fields stay `undefined`).
+ * The STRUCTURED (claims-bearing) subset of {@link TokenFormatTag}: the formats
+ * that carry a readable claims layer — a JWT, a CWT (COSE_Sign1), and a CWM
+ * (COSE_Mac0). The opaque signed formats (jws/cws) and the encrypted ones
+ * (jwe/cwe) are excluded; only these three yield claims to a keyless read, so
+ * `aegis.parse` narrows its result `format` to this union.
  */
-export type VerifiedTokenHeader = DomainTokenHeader;
+export type StructuredFormat = "jwt" | "cwt" | "cwm";
 
 /**
  * The `aegis.verify` result — ALWAYS signature-verified (a JWE/CWE is decrypted
@@ -46,7 +45,14 @@ export type VerifiedToken<C extends Dict = Dict> = {
   inner?: "jwt" | "cwt" | "cwm" | "jws" | "cws";
   /** EFFECTIVE (innermost) payload content type — how to read `raw`. */
   contentType?: string;
-  header: VerifiedTokenHeader;
+  /**
+   * The domain-keyed header carried by every result (R9). ADOPTS the full-breadth
+   * {@link DomainTokenHeader} directly — the wire header is translated to these
+   * domain names uniformly across JOSE and COSE, so a caller reads
+   * `.header.tokenType` / `.header.keyId` / `.header.algorithm` the same way on a
+   * JWT and a CWT (COSE-only-absent fields stay `undefined`).
+   */
+  header: DomainTokenHeader;
   /** Domain-keyed registered claims; `{}` for jws/cws (opaque). */
   claims: DomainClaims;
   /** Non-domain (custom) claim bucket; `{}` for jws/cws. */

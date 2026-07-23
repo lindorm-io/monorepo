@@ -8,7 +8,8 @@ import type {
   AegisSensitive,
   AegisClaimsWire,
   SignJwtContent,
-  SignedJwt,
+  SignedToken,
+  TokenFormatTag,
 } from "../../types/index.js";
 import { joseToDomain } from "../claims/translate.js";
 import type { DomainClaims } from "./extract-claims.js";
@@ -31,15 +32,18 @@ export const withSensitiveDomain = (
 ): Dict => (isObject(content.sensitive) ? { ...domain, ...content.sensitive } : domain);
 
 /**
- * Enrich the wire kit's bare `{ token }` into the domain `SignedJwt` — the
+ * Enrich the wire kit's bare `{ token }` into the domain `SignedToken` — the
  * DOMAIN sugar the transform-free kit no longer computes. The expiry bundle is
- * derived from the wire `exp`, the `tokenId` from the wire `jti`.
+ * derived from the wire `exp`, the `tokenId` from the wire `jti`, and `format`
+ * records the JOSE wire the token is (`jwt`/`jws`; the mint sign-then-encrypt
+ * path re-stamps `jwe`).
  */
 export const buildSignedJwt = (
   token: string,
   claims: Dict,
   objectId: string | undefined,
-): SignedJwt => {
+  format: TokenFormatTag,
+): SignedToken => {
   const expiresOn =
     typeof claims.exp === "number" && Number.isFinite(claims.exp)
       ? claims.exp
@@ -49,6 +53,7 @@ export const buildSignedJwt = (
     expiresAt: expiresOn !== undefined ? new Date(expiresOn * 1000) : undefined,
     expiresIn: expiresOn !== undefined ? expiresOn - getUnixTime(new Date()) : undefined,
     expiresOn,
+    format,
     objectId,
     token,
     tokenId: typeof claims.jti === "string" ? claims.jti : undefined,

@@ -1,15 +1,12 @@
 import { describe, expect, test } from "vitest";
+import type { DomainTokenHeader } from "../header/domain-header.js";
 import type { TokenProfile } from "../profile/profile.js";
 import type { DecryptedToken } from "./decrypted-token.js";
-import type {
-  NarrowedToken,
-  VerifiedToken,
-  VerifiedTokenHeader,
-} from "./verified-token.js";
+import type { NarrowedToken, VerifiedToken } from "./verified-token.js";
 
-// A complete VerifiedTokenHeader (= the full-breadth domain header). Building the
+// A complete DomainTokenHeader (the full-breadth domain header). Building the
 // whole shape is the compile-check: every domain header field is accounted for.
-const header: VerifiedTokenHeader = {
+const header: DomainTokenHeader = {
   algorithm: "ES256",
   baseFormat: "JWT",
   certificateChain: undefined,

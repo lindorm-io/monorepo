@@ -1,6 +1,6 @@
 import type {
   AegisSignKey,
-  SignedCwt,
+  SignedToken,
   SignUnstructuredTokenOptions,
   TokenContent,
 } from "../../types/index.js";
@@ -23,7 +23,7 @@ export const rawSignCws = ({
   data: TokenContent;
   options?: SignUnstructuredTokenOptions & { key?: AegisSignKey; omit?: OmitMode };
   deps: AegisDeps;
-}): Promise<SignedCwt> =>
+}): Promise<SignedToken> =>
   rawSignCose({
     input: {
       payload: data,

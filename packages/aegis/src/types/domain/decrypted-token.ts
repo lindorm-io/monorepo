@@ -1,6 +1,6 @@
 import type { Dict } from "@lindorm/types";
 import type { DomainClaims } from "../../internal/utils/extract-claims.js";
-import type { VerifiedTokenHeader } from "./verified-token.js";
+import type { DomainTokenHeader } from "../header/domain-header.js";
 
 /**
  * The `aegis.decrypt` result (Bit 3/4) — CONFIDENTIAL but NOT sender-authenticated:
@@ -14,7 +14,7 @@ export type DecryptedToken<C extends Dict = Dict> = {
   /** Set when the decrypted plaintext is itself a nested token. */
   inner?: "jwt" | "cwt" | "cwm" | "jws" | "cws";
   contentType?: string;
-  header: VerifiedTokenHeader;
+  header: DomainTokenHeader;
   claims: DomainClaims;
   custom: C;
   raw?: Buffer | string;

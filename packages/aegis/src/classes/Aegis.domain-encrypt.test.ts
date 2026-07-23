@@ -53,10 +53,26 @@ describe("Aegis — domain encrypt / decrypt (§5e)", () => {
 
       expect(decrypted.format).toBe("jwe");
       expect(decrypted.contentType).toBe("application/json");
+      // The domain header is stamped `baseFormat: "JWE"` — decrypt routes the wire
+      // header through the SAME `joseDomainHeader` enrichment as verify, not a bare
+      // `parseTokenHeader` (which used to leave `baseFormat`/`tokenType` undefined).
+      expect(decrypted.header.baseFormat).toBe("JWE");
       // Registered claims land domain-keyed under `claims`; the unregistered
       // `tenant` lands under `custom` — no signature was checked.
       expect(decrypted.claims).toEqual({ subject: "user-1", audience: ["client-1"] });
       expect(decrypted.custom).toEqual({ tenant: "acme" });
+    });
+
+    test("decrypt derives header.tokenType from the wire typ (regression: was always undefined)", async () => {
+      const encrypted = await aegis.encrypt(claims, {
+        format: "jwe",
+        type: "access_token",
+      });
+
+      const decrypted = await aegis.decrypt(encrypted.token);
+
+      expect(decrypted.header.baseFormat).toBe("JWE");
+      expect(decrypted.header.tokenType).toBe("access_token");
     });
 
     test("round-trips an opaque string verbatim under `raw`", async () => {

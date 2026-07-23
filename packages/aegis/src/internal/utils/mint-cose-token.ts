@@ -2,7 +2,7 @@ import { getUnixTime } from "@lindorm/date";
 import { isDate, isObject, isString } from "@lindorm/is";
 import { omitUndefined } from "@lindorm/utils";
 import { AegisDomainError } from "../../errors/index.js";
-import type { ProfileMintOptions, SignContent, SignedJwt } from "../../types/index.js";
+import type { ProfileMintOptions, SignContent, SignedToken } from "../../types/index.js";
 import { encryptCose } from "../cose/cose-encryption.js";
 import { coseTyp } from "../cose/cose-typ.js";
 import { signCose } from "../cose/sign-cose.js";
@@ -30,7 +30,7 @@ export const mintCoseToken = async ({
   content: SignContent;
   options: ProfileMintOptions;
   deps: AegisDeps;
-}): Promise<SignedJwt> => {
+}): Promise<SignedToken> => {
   const profile = resolveProfile(name);
 
   // Encryption is only meaningful for encryptable profiles; an encrypt option
@@ -129,6 +129,9 @@ export const mintCoseToken = async ({
     expiresAt,
     expiresIn: expiresOn ? expiresOn - getUnixTime(new Date()) : undefined,
     expiresOn,
+    // The OUTER wire: a bare CWT/CWM, or a COSE_Encrypt0 (`cwe`) when
+    // sign-then-encrypted — mirroring the read side's outer-format report.
+    format: encKryptos ? "cwe" : format,
     objectId: undefined,
     tokenId: isString(common.tokenId) ? common.tokenId : undefined,
   };

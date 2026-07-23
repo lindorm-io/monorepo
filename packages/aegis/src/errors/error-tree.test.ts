@@ -2,15 +2,9 @@ import { LindormError } from "@lindorm/errors";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { describe, expect, test } from "vitest";
-import {
-  TEST_EC_KEY_ENC,
-  TEST_EC_KEY_SIG,
-  TEST_OCT_KEY_SIG,
-} from "../__fixtures__/keys.js";
+import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../__fixtures__/keys.js";
 import { CwmKit } from "../classes/CwmKit.js";
 import { CwtKit } from "../classes/CwtKit.js";
-import { JweKit } from "../classes/JweKit.js";
-import { parseToken } from "../internal/utils/parse-token.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { verifyToken } from "../internal/utils/verify-token.js";
 import {
@@ -205,24 +199,7 @@ describe("aegis error tree — real throw-site routing", () => {
     expect((caught as AegisKeyError).code).toBe("cert_binding_chain_required");
   });
 
-  // --- domain policy -> AegisDomainError (incl. the two new codes) ---
-
-  test("parse rejects a JWE with parse_requires_decrypt on AegisDomainError", () => {
-    const token = new JweKit({ logger, kryptos: TEST_EC_KEY_ENC }).encrypt("data");
-    expect(JweKit.isJwe(token)).toBe(true);
-
-    let caught: unknown;
-    try {
-      parseToken(token);
-    } catch (error) {
-      caught = error;
-    }
-    expect(caught).toBeInstanceOf(AegisDomainError);
-    expect(caught).toBeInstanceOf(AegisError);
-    expect(caught).not.toBeInstanceOf(JoseError);
-    expect(caught).not.toBeInstanceOf(AegisKeyError);
-    expect((caught as AegisDomainError).code).toBe("parse_requires_decrypt");
-  });
+  // --- domain policy -> AegisDomainError ---
 
   test("verify of an unsigned encrypted inner throws verify_requires_signature on AegisDomainError", async () => {
     // Once an encrypting outer has been peeled (`encrypted: true`) an inner that

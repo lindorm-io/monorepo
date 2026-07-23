@@ -1,8 +1,13 @@
 import { TOKEN_TYPE_TO_SHORT_NAME, type TokenType } from "../../constants/token-type.js";
 import { AegisError } from "../../errors/index.js";
+import type { TokenFormatTag } from "../../types/domain/verified-token.js";
 import type { BaseTokenFormat } from "../../types/header/wire-header.js";
 
-export type KitFormat = "jwt" | "jws" | "jwe" | "cwt" | "cwm" | "cws" | "cwe";
+/**
+ * The kit-tier format set — the SAME 7 members as the domain `TokenFormatTag`
+ * (F4: one canonical union, aliased here rather than re-spelled).
+ */
+export type KitFormat = TokenFormatTag;
 
 // The bare conventional form each kit format floors to when no prefix is given.
 // JOSE uses the abbreviated bare forms (RFC 7515 drops `application/`); COSE

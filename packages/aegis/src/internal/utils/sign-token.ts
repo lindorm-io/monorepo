@@ -1,5 +1,5 @@
 import { isBuffer, isString } from "@lindorm/is";
-import type { RawSignInput, SignedJwt } from "../../types/index.js";
+import type { RawSignInput, SignedToken } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { applyOmit } from "./apply-omit.js";
 import { domainTokenTypePrefix } from "./compute-typ-header.js";
@@ -23,7 +23,7 @@ export const signToken = async ({
 }: {
   input: RawSignInput;
   deps: AegisDeps;
-}): Promise<SignedJwt> => {
+}): Promise<SignedToken> => {
   const tokenType = domainTokenTypePrefix(input.tokenType);
 
   if (selectEncoder(input.format).format === "cws") {

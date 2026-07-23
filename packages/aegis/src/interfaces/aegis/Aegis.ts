@@ -28,13 +28,13 @@ import type {
   JweEncryptOptions,
   JwtClaimsWire,
   NarrowedToken,
+  ParsedToken,
   ProfileContent,
   ProfileMintOptions,
   ProfileVerifyOptions,
   RawSignInput,
   SignContent,
-  SignedCwt,
-  SignedJwt,
+  SignedToken,
   SignStructuredTokenOptions,
   SignUnstructuredTokenOptions,
   TokenContent,
@@ -107,7 +107,7 @@ export interface IAegisCws {
   sign(
     data: TokenContent,
     options?: SignUnstructuredTokenOptions & { key?: AegisSignKey; omit?: OmitMode },
-  ): Promise<SignedCwt>;
+  ): Promise<SignedToken>;
   verify<T extends TokenContent = Buffer>(
     token: string,
     options?: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey },
@@ -118,7 +118,7 @@ export interface IAegisCwt {
   sign<C extends Dict = Dict>(
     claims: CwtClaimsWire & C,
     options?: SignStructuredTokenOptions & { key?: AegisSignKey },
-  ): Promise<SignedCwt>;
+  ): Promise<SignedToken>;
   verify<C extends Dict = Dict>(
     token: string,
     assert?: Predicate<CwtClaimsWire & C>,
@@ -132,7 +132,7 @@ export interface IAegisCwm {
   sign<C extends Dict = Dict>(
     claims: CwtClaimsWire & C,
     options?: SignStructuredTokenOptions & { key?: AegisSignKey },
-  ): Promise<SignedCwt>;
+  ): Promise<SignedToken>;
   verify<C extends Dict = Dict>(
     token: string,
     assert?: Predicate<CwtClaimsWire & C>,
@@ -144,7 +144,7 @@ export interface IAegisJws {
   sign(
     data: TokenContent,
     options?: SignUnstructuredTokenOptions & { key?: AegisSignKey },
-  ): Promise<SignedJwt>;
+  ): Promise<SignedToken>;
   verify<T extends TokenContent = Buffer>(
     token: string,
     options?: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey },
@@ -155,7 +155,7 @@ export interface IAegisJwt {
   sign<C extends Dict = Dict>(
     claims: JwtClaimsWire & C,
     options?: SignStructuredTokenOptions & { key?: AegisSignKey },
-  ): Promise<SignedJwt>;
+  ): Promise<SignedToken>;
   verify<C extends Dict = Dict>(
     token: string,
     assert?: Predicate<JwtClaimsWire & C>,
@@ -179,7 +179,7 @@ export interface IAegis {
 
   registerProfile(profile: TokenProfile): void;
 
-  sign(input: RawSignInput): Promise<SignedJwt>;
+  sign(input: RawSignInput): Promise<SignedToken>;
 
   encrypt(data: EncryptData, options?: EncryptOptions): Promise<EncryptedToken>;
 
@@ -188,16 +188,25 @@ export interface IAegis {
     options?: DecryptOptions,
   ): Promise<DecryptedToken<C>>;
 
+  /**
+   * The KEYLESS, UNVERIFIED domain read of ALL seven wire formats: a structured
+   * token yields its header + claims buckets, an unstructured one its header +
+   * opaque payload, an encrypted one its header alone (the content is ciphertext).
+   * Every format ALWAYS yields the header; `dpop` (a verify-only artefact) never
+   * appears. Use `verify` for an authenticity guarantee.
+   */
+  parse<C extends Dict = Dict>(token: string): ParsedToken<C>;
+
   mint<P extends keyof ProfileContent>(
     profile: P,
     content: ProfileContent[P],
     options?: ProfileMintOptions,
-  ): Promise<SignedJwt>;
+  ): Promise<SignedToken>;
   mint(
     profile: string & {},
     content: SignContent,
     options?: ProfileMintOptions,
-  ): Promise<SignedJwt>;
+  ): Promise<SignedToken>;
 
   verify<P extends keyof BuiltInProfiles>(
     profile: P,
