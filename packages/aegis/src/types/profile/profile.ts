@@ -5,9 +5,10 @@ import type { TokenType } from "../../constants/token-type.js";
 import type { DomainClaims } from "../../internal/utils/extract-claims.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { TokenFormat } from "../../internal/utils/select-encoder.js";
-import type { AegisSignKey } from "../keys/key-selectors.js";
-import type { TokenSignEnvelope } from "../header/domain-header.js";
-import type { JweEncryptOptions } from "../kit/jwe-encrypt.js";
+import type { AegisEncKey, AegisSignKey } from "../keys/key-selectors.js";
+import type { BindCertificateMode } from "../header/domain-header.js";
+import type { WireProtectedHeader } from "../header/wire-envelope.js";
+import type { JweEncryptOptions } from "../kit/encrypted.js";
 import type { SignJwtOptions } from "../domain/sign.js";
 import type { VerifyOptions } from "../domain/verify.js";
 
@@ -133,7 +134,7 @@ export type ProfileMintOptions = {
    * with `{ key: { kryptos } }`. Only meaningful for an encryptable profile;
    * its presence forces encryption on.
    */
-  encrypt?: JweEncryptOptions;
+  encrypt?: JweEncryptOptions & { key?: AegisEncKey };
   /**
    * Per-call token lifetime, overriding the profile's default `lifetime`. An
    * explicit `content.expires` (an absolute instant) still wins over this; with
@@ -186,7 +187,21 @@ export type ProfileVerifyOptions = VerifyOptions & {
  * Raw / wire tier input. `payload` is a wire-literal. `aegis.sign` accepts a
  * plain object too and JSON-stringifies it before delegating to the JWS path.
  */
-export type RawSignInput = TokenSignEnvelope & {
+export type RawSignInput = {
+  bindCertificate?: BindCertificateMode;
+  /**
+   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
+   * cert is bound. Default `true` (older-client compat).
+   */
+  certificateThumbprintSha1?: boolean;
+  /** Caller-controlled PROTECTED wire header params (`oid` rides here, ruling 3). */
+  header?: WireProtectedHeader;
+  /**
+   * How empty claims are pruned before signing (a plain-object payload only).
+   * `"empty"` (default) drops null/empty recursively; `"undefined"` drops only
+   * undefined; inert for opaque Buffer/string payloads.
+   */
+  omit?: OmitMode;
   contentType?: string;
   /**
    * Wire encoding. `"jws"`/`"jwt"` (default) signs a JWS — the payload passes through as

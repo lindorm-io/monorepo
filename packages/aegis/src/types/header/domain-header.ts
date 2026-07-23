@@ -1,10 +1,5 @@
 import type { PublicEncryptionJwk } from "@lindorm/aes";
-import type {
-  KryptosEncryption,
-  KryptosJwk,
-  KryptosSigAlgorithm,
-} from "@lindorm/kryptos";
-import type { OmitMode } from "../../internal/utils/apply-omit.js";
+import type { KryptosEncryption, KryptosJwk } from "@lindorm/kryptos";
 import type {
   BaseTokenFormat,
   TokenHeaderAlgorithm,
@@ -78,8 +73,6 @@ export type CertificateHeaderFields = Partial<
   >
 >;
 
-export type TokenEncryptOrSignOptions = Pick<DomainTokenHeaderOptions, "jwk">;
-
 export type BindCertificateMode = "thumbprint" | "chain" | "none";
 
 export type CertificateBindingMode = "strict" | "lax";
@@ -92,36 +85,4 @@ export type RefinedDomainTokenHeader<A> = Omit<
   algorithm: A;
   baseFormat: BaseTokenFormat;
   headerType: string;
-};
-
-/**
- * The parsed header of a SIGNED JOSE token — a {@link DomainTokenHeader} refined
- * to a signature algorithm. A JWS and a JWT carry the identical header shape, so
- * both `ParsedJws.header` and `ParsedJwt.header` are this ONE type.
- */
-export type SignedJoseHeader = RefinedDomainTokenHeader<KryptosSigAlgorithm>;
-
-/**
- * The shared sign-time envelope cluster every sign-options type re-declares
- * (`SignJwtWireOptions`, `SignJwtOptions`, `RawSignInput`): the cert-binding
- * knobs, the extra header, the object id, and the empty-claim prune mode. Each
- * sign-options type intersects this base with its own extras.
- */
-export type TokenSignEnvelope = {
-  bindCertificate?: BindCertificateMode;
-  /**
-   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
-   * cert is bound. Default `true` (older-client compat). Independent of
-   * `bindCertificate`; the read side never verifies SHA-1.
-   */
-  certificateThumbprintSha1?: boolean;
-  header?: TokenEncryptOrSignOptions;
-  objectId?: string;
-  /**
-   * How empty claims are pruned before signing. `"empty"` (default) drops
-   * null/empty-string/empty-array/empty-object recursively; `"undefined"` drops
-   * only undefined. For an opaque Buffer/string payload this is inert (the bytes
-   * pass through untouched).
-   */
-  omit?: OmitMode;
 };

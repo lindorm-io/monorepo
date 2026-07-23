@@ -3,10 +3,8 @@ import type { TokenType } from "../../constants/token-type.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { DomainClaims } from "../../internal/utils/extract-claims.js";
 import type { AegisDecryptKey, AegisEncKey } from "../keys/key-selectors.js";
-import type {
-  BindCertificateMode,
-  TokenEncryptOrSignOptions,
-} from "../header/domain-header.js";
+import type { BindCertificateMode } from "../header/domain-header.js";
+import type { WireProtectedHeader } from "../header/wire-envelope.js";
 
 /**
  * The `aegis.encrypt` input (§5e) — the mirror of `sign`'s payload. A plain
@@ -30,8 +28,8 @@ export type EncryptOptions = {
   type?: TokenType;
   /** How empty claims are pruned before encoding; ignored for opaque data. */
   omit?: OmitMode;
-  /** Caller-supplyable wire header fields. */
-  header?: TokenEncryptOrSignOptions;
+  /** Caller-supplyable PROTECTED wire header fields (`oid` rides here, ruling 3). */
+  header?: WireProtectedHeader;
   /**
    * ECDH-ES Agreement PartyUInfo (RFC 7518 §4.6.1.2) — the base64url producer
    * identity. Consumed by the Concat-KDF AND emitted on the protected header

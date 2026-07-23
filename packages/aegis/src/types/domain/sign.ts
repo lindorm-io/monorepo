@@ -12,8 +12,10 @@ import type {
   SetClaims,
   StdClaims,
 } from "../claims/domain/index.js";
+import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { AegisSignKey } from "../keys/key-selectors.js";
-import type { TokenSignEnvelope } from "../header/domain-header.js";
+import type { BindCertificateMode } from "../header/domain-header.js";
+import type { WireProtectedHeader } from "../header/wire-envelope.js";
 
 export type SignJwtContent<C extends Dict = Dict> = Omit<
   StdClaims,
@@ -38,7 +40,21 @@ export type SignJwtContent<C extends Dict = Dict> = Omit<
     tokenType: "Bearer" | "DPoP" | "N_A" | (string & {});
   };
 
-export type SignJwtOptions = TokenSignEnvelope & {
+export type SignJwtOptions = {
+  bindCertificate?: BindCertificateMode;
+  /**
+   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
+   * cert is bound. Default `true` (older-client compat).
+   */
+  certificateThumbprintSha1?: boolean;
+  /** Caller-controlled PROTECTED wire header params (`oid` rides here, ruling 3). */
+  header?: WireProtectedHeader;
+  /**
+   * How empty claims are pruned before signing. `"empty"` (default) drops
+   * null/empty-string/empty-array/empty-object recursively; `"undefined"` drops
+   * only undefined.
+   */
+  omit?: OmitMode;
   accessTokenHash?: string;
   codeHash?: string;
   issuedAt?: Date;
@@ -59,6 +75,21 @@ export type SignJwtOptions = TokenSignEnvelope & {
 };
 
 export type SignedJwt = {
+  expiresAt: Date | undefined;
+  expiresIn: number | undefined;
+  expiresOn: number | undefined;
+  objectId: string | undefined;
+  token: string;
+  tokenId: string | undefined;
+};
+
+/**
+ * The DOMAIN sugar the `aegis.cwt`/`aegis.cwm`/`aegis.cws` sign namespaces return
+ * — the COSE twin of {@link SignedJwt}. `token` stays a base64url `string` (R4);
+ * the wire kit's native `Buffer` is base64url-encoded so the string-token API is
+ * uniform with the JOSE sign paths.
+ */
+export type SignedCwt = {
   expiresAt: Date | undefined;
   expiresIn: number | undefined;
   expiresOn: number | undefined;

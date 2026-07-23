@@ -32,6 +32,19 @@ export type VerifyActorOptions = {
  */
 export type VerifyOptions = {
   actor?: VerifyActorOptions;
+  /**
+   * Override "now" for the temporal range checks (R10). When set, `exp`/`nbf`/
+   * `iat` are validated against this instant instead of the real wall-clock — a
+   * token expired relative to a PAST `currentDate` still verifies. Threaded to the
+   * kit's temporal check AND the domain `exp`-presence lower bound. Per-call only.
+   */
+  currentDate?: Date;
+  /**
+   * Reject a token whose `iat` is older than this many seconds (R10). Adds an
+   * `iat >= now - maxTokenAge` lower bound (with clock tolerance) and requires
+   * `iat` to be present. Per-call only.
+   */
+  maxTokenAge?: number;
   dpopProof?: string;
   /**
    * When true, aegis will not raise an error if the token carries a

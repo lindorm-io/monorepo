@@ -4,24 +4,24 @@ import {
   CLAIMS_REGISTRY,
   claimByJose,
 } from "../../../internal/claims/claims-registry.js";
-import type { JwtClaims } from "./jwt-claims.js";
+import type { AegisClaimsWire } from "./aegis-claims-wire.js";
 
 /**
- * Drift guard (a): the REGISTERED members of `JwtClaims` (the wire intersection
- * behind `JwtWireClaims`) must stay in lock-step with `CLAIM_REGISTRY`:
+ * Drift guard (a): the REGISTERED members of `AegisClaimsWire` (the wire intersection
+ * behind `JwtClaimsWire`) must stay in lock-step with `CLAIM_REGISTRY`:
  *   1. their names == the registry `category:"claims"` jose names, and
  *   2. each TS member type matches its `ClaimValueKind` wire form
  *      (`date`/`int`→number, `array`→Array<string>, `text`/`bstr`→string,
  *      `bool`→boolean; `bespoke` = per-claim object shape, not uniformly typed).
  *
- * The witness below is `Record<keyof JwtClaims, ClaimValueKind>`, so a claim
- * added to / removed from `JwtClaims` breaks compilation. Every member is a flat
+ * The witness below is `Record<keyof AegisClaimsWire, ClaimValueKind>`, so a claim
+ * added to / removed from `AegisClaimsWire` breaks compilation. Every member is a flat
  * registry claim (`category: "claims"`); the sensitive identity claims travel
  * FLAT too but are `category: "sensitive"`, a separate bucket, so they are NOT
- * `JwtClaims` members.
+ * `AegisClaimsWire` members.
  *
  * `satisfies` (not a type annotation) is deliberate: it enforces exact-key
- * coverage of `keyof JwtClaims` yet PRESERVES each entry's literal kind, so the
+ * coverage of `keyof AegisClaimsWire` yet PRESERVES each entry's literal kind, so the
  * compile-time type binding below can read the per-claim kind.
  */
 const JWT_CLAIMS_WIRE_KINDS = {
@@ -74,9 +74,9 @@ const JWT_CLAIMS_WIRE_KINDS = {
   sih: "text",
   suh: "text",
   tenant_id: "text",
-} satisfies Record<keyof JwtClaims, ClaimValueKind>;
+} satisfies Record<keyof AegisClaimsWire, ClaimValueKind>;
 
-// --- Compile-time binding: witness kind -> actual JwtClaims member type ------
+// --- Compile-time binding: witness kind -> actual AegisClaimsWire member type ------
 //
 // `Related<A, B>` is `true` when A and B overlap in EITHER direction — lenient
 // enough to accept the narrowed enums (`loa: 1|2|3|4` vs `number`) and the
@@ -87,24 +87,27 @@ const JWT_CLAIMS_WIRE_KINDS = {
 // assignment fails to compile — naming the offending claim.
 type Related<A, B> = [A] extends [B] ? true : [B] extends [A] ? true : false;
 
-type ClaimTypeOk<J extends keyof JwtClaims, K> = K extends "date" | "int"
-  ? Related<number, NonNullable<JwtClaims[J]>>
+type ClaimTypeOk<J extends keyof AegisClaimsWire, K> = K extends "date" | "int"
+  ? Related<number, NonNullable<AegisClaimsWire[J]>>
   : K extends "array"
-    ? Related<Array<string>, NonNullable<JwtClaims[J]>>
+    ? Related<Array<string>, NonNullable<AegisClaimsWire[J]>>
     : K extends "text" | "bstr"
-      ? Related<string, NonNullable<JwtClaims[J]>>
+      ? Related<string, NonNullable<AegisClaimsWire[J]>>
       : K extends "bool"
-        ? Related<boolean, NonNullable<JwtClaims[J]>>
+        ? Related<boolean, NonNullable<AegisClaimsWire[J]>>
         : true;
 
-// `-?` strips the optional modifier every `JwtClaims` member carries; without
+// `-?` strips the optional modifier every `AegisClaimsWire` member carries; without
 // it the homomorphic mapped type stays optional and indexing injects `undefined`
 // into the union, masking the real result.
 type DriftingJwtClaims = {
-  [J in keyof JwtClaims]-?: ClaimTypeOk<J, (typeof JWT_CLAIMS_WIRE_KINDS)[J]> extends true
+  [J in keyof AegisClaimsWire]-?: ClaimTypeOk<
+    J,
+    (typeof JWT_CLAIMS_WIRE_KINDS)[J]
+  > extends true
     ? never
     : J;
-}[keyof JwtClaims];
+}[keyof AegisClaimsWire];
 
 // If a member type ever drifts from its wire kind, `DriftingJwtClaims` becomes
 // that claim's key and this assignment errors (surfacing the claim name).
@@ -113,19 +116,19 @@ const _noJwtClaimTypeDrift: [DriftingJwtClaims] extends [never]
   : DriftingJwtClaims = true;
 void _noJwtClaimTypeDrift;
 
-describe("JwtWireClaims / JwtClaims drift guard", () => {
+describe("JwtClaimsWire / AegisClaimsWire drift guard", () => {
   const registeredClaimsJose = new Set(
     CLAIMS_REGISTRY.filter((spec) => spec.category === "claims").map((spec) => spec.jose),
   );
 
-  test("JwtClaims keys == registry category:claims jose names", () => {
+  test("AegisClaimsWire keys == registry category:claims jose names", () => {
     const witnessKeys = new Set(
-      Object.keys(JWT_CLAIMS_WIRE_KINDS) as Array<keyof JwtClaims>,
+      Object.keys(JWT_CLAIMS_WIRE_KINDS) as Array<keyof AegisClaimsWire>,
     );
     expect(witnessKeys).toEqual(registeredClaimsJose);
   });
 
-  test("each JwtClaims member's declared wire kind matches its registry value kind", () => {
+  test("each AegisClaimsWire member's declared wire kind matches its registry value kind", () => {
     for (const [jose, kind] of Object.entries(JWT_CLAIMS_WIRE_KINDS)) {
       const spec = claimByJose(jose);
       expect(spec, `no registry entry for jose "${jose}"`).toBeDefined();

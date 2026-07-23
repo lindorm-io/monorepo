@@ -10,7 +10,7 @@ export type TokenDelegation = {
 };
 
 // Parsed representation of a verified RFC 9449 DPoP proof JWT.
-// Populated on the outer ParsedJwt wrapper when the verifier is given a
+// Populated on the domain `VerifiedToken` wrapper when the verifier is given a
 // `dpopProof` input. Request-context fields (`httpMethod`, `httpUri`) are
 // parsed from the proof but NOT compared against the HTTP request by
 // aegis — that comparison is the consumer's responsibility (pylon does
