@@ -4,6 +4,10 @@ import type { PublicEncryptionJwk } from "./types.js";
 
 export type AesEncryptionRecord = {
   algorithm: KryptosAlgorithm;
+  // RFC 7518 §4.6 — ECDH-ES Concat-KDF OtherInfo (apu/apv). Carried so the
+  // serialised/CBOR header can emit them and a recipient re-derives the CEK.
+  apu: Buffer | undefined;
+  apv: Buffer | undefined;
   authTag: Buffer;
   content: Buffer;
   contentType: AesContentType;

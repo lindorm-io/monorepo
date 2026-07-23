@@ -65,6 +65,34 @@ describe("aes-header", () => {
       expect(header.p2s).toEqual(expect.any(String));
     });
 
+    test("should build a header with ECDH-ES apu/apv (base64url-encoded)", () => {
+      const header = buildAesHeader({
+        algorithm: "ECDH-ES",
+        contentType: "text/plain",
+        encryption: "A256GCM",
+        keyId: "test-key-id",
+        apu: Buffer.from("Alice"),
+        apv: Buffer.from("Bob"),
+      });
+
+      expect(header.apu).toBe(B64.encode(Buffer.from("Alice"), "b64u"));
+      expect(header.apv).toBe(B64.encode(Buffer.from("Bob"), "b64u"));
+    });
+
+    test("should omit apu/apv when not supplied", () => {
+      const header = buildAesHeader({
+        algorithm: "ECDH-ES",
+        contentType: "text/plain",
+        encryption: "A256GCM",
+        keyId: "test-key-id",
+      });
+
+      expect(header.apu).toBeUndefined();
+      expect(header.apv).toBeUndefined();
+      expect(Object.keys(header)).not.toContain("apu");
+      expect(Object.keys(header)).not.toContain("apv");
+    });
+
     test("should build a header with GCMKW params", () => {
       const header = buildAesHeader({
         algorithm: "A128GCMKW",
@@ -115,6 +143,8 @@ describe("aes-header", () => {
     test("should round-trip a header with all fields", () => {
       const header = buildAesHeader({
         algorithm: "PBES2-HS256+A128KW",
+        apu: Buffer.from("Alice"),
+        apv: Buffer.from("Bob"),
         contentType: "application/json",
         encryption: "A128GCM",
         keyId: "test-key-id",
@@ -200,6 +230,38 @@ describe("aes-header", () => {
 
       expect(params.pbkdfIterations).toBe(10000);
       expect(params.pbkdfSalt).toEqual(salt);
+    });
+
+    test("should convert a header with ECDH-ES apu/apv back to buffers", () => {
+      const apu = Buffer.from("Alice");
+      const apv = Buffer.from("Bob");
+      const header = buildAesHeader({
+        algorithm: "ECDH-ES",
+        apu,
+        apv,
+        contentType: "text/plain",
+        encryption: "A256GCM",
+        keyId: "test-key-id",
+      });
+
+      const params = headerToDecryptionParams(header);
+
+      expect(params.apu).toEqual(apu);
+      expect(params.apv).toEqual(apv);
+    });
+
+    test("should leave apu/apv undefined when the header omits them", () => {
+      const header = buildAesHeader({
+        algorithm: "dir",
+        contentType: "text/plain",
+        encryption: "A256GCM",
+        keyId: "test-key-id",
+      });
+
+      const params = headerToDecryptionParams(header);
+
+      expect(params.apu).toBeUndefined();
+      expect(params.apv).toBeUndefined();
     });
 
     test("should convert a header with GCMKW params", () => {

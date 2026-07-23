@@ -40,6 +40,8 @@ export const _createMockAesKit = (mockFn: () => any, kryptos: IKryptos): IAesKit
         case "record":
           return {
             algorithm: "dir",
+            apu: undefined,
+            apv: undefined,
             authTag: Buffer.from("mock_tag"),
             content: Buffer.from(encoded),
             contentType: "text/plain" as const,

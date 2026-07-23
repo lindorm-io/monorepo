@@ -6,6 +6,11 @@ export type AesEncryptionMode = "cbor" | "record" | "serialised";
 
 export type AesEncryptionOptions = {
   aad?: Buffer;
+  // RFC 7518 §4.6 — ECDH-ES Concat-KDF OtherInfo (apu/apv). Optional; consumed
+  // only by the ECDH-ES key-agreement paths, and emitted on the header so the
+  // recipient re-derives the identical content encryption key.
+  apu?: Buffer;
+  apv?: Buffer;
   data: AesContent;
   encryption?: KryptosEncryption;
 };

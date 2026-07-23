@@ -9,6 +9,8 @@ describe("serialised-aes", () => {
     test("should convert AesEncryptionRecord to SerialisedAesEncryption with header-based format", () => {
       const input: AesEncryptionRecord = {
         algorithm: "PBES2-HS512+A256KW",
+        apu: undefined,
+        apv: undefined,
         authTag: Buffer.from("auth-tag-data"),
         content: Buffer.from("encrypted-content"),
         contentType: "text/plain",
@@ -51,6 +53,8 @@ describe("serialised-aes", () => {
     test("should handle undefined optional fields (dir mode)", () => {
       const input: AesEncryptionRecord = {
         algorithm: "dir",
+        apu: undefined,
+        apv: undefined,
         authTag: Buffer.from("auth-tag"),
         content: Buffer.from("content"),
         contentType: "application/json",
@@ -71,6 +75,47 @@ describe("serialised-aes", () => {
       expect(result.cek).toBeUndefined();
       expect(result.header).toEqual(expect.any(String));
       expect(result.v).toBe("1.0");
+    });
+
+    test("should forward ECDH-ES apu/apv from the record onto the header", () => {
+      const apu = Buffer.from("Alice");
+      const apv = Buffer.from("Bob");
+      const input: AesEncryptionRecord = {
+        algorithm: "ECDH-ES",
+        apu,
+        apv,
+        authTag: Buffer.from("auth-tag"),
+        content: Buffer.from("content"),
+        contentType: "text/plain",
+        encryption: "A256GCM",
+        initialisationVector: Buffer.from("iv-data-12ch"),
+        keyId: "key-123",
+        pbkdfIterations: undefined,
+        pbkdfSalt: undefined,
+        publicEncryptionIv: undefined,
+        publicEncryptionJwk: {
+          crv: "P-256",
+          kty: "EC",
+          x: "x-coordinate",
+          y: "y-coordinate",
+        },
+        publicEncryptionKey: undefined,
+        publicEncryptionTag: undefined,
+        version: "1.0",
+      };
+
+      const result = createSerialisedAesRecord(input);
+      const parsed = parseSerialisedAesRecord({
+        cek: result.cek,
+        ciphertext: result.ciphertext,
+        header: result.header,
+        iv: result.iv,
+        tag: result.tag,
+        v: result.v,
+      });
+
+      expect(parsed.apu).toEqual(apu);
+      expect(parsed.apv).toEqual(apv);
     });
   });
 

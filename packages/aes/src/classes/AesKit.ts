@@ -60,11 +60,14 @@ export class AesKit implements IAesKit {
     // The 2nd arg is EITHER the output mode (a string) OR the options object.
     // When it is omitted or an options object the mode defaults to "cbor".
     const mode = isString(modeOrOptions) ? modeOrOptions : "cbor";
+    const options = isString(modeOrOptions) ? _options : modeOrOptions;
 
     try {
       switch (mode) {
         case "cbor":
           return encryptCbor({
+            apu: options?.apu,
+            apv: options?.apv,
             data,
             encryption: this.encryption,
             kryptos: this.kryptos,
@@ -72,6 +75,8 @@ export class AesKit implements IAesKit {
 
         case "record":
           return encryptAes({
+            apu: options?.apu,
+            apv: options?.apv,
             data,
             encryption: this.encryption,
             kryptos: this.kryptos,
@@ -79,6 +84,8 @@ export class AesKit implements IAesKit {
 
         case "serialised":
           return encryptSerialised({
+            apu: options?.apu,
+            apv: options?.apv,
             data,
             encryption: this.encryption,
             kryptos: this.kryptos,

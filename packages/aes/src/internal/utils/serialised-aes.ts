@@ -36,6 +36,8 @@ export const createSerialisedAesRecord = (
 ): SerialisedAesEncryption => {
   const header = buildAesHeader({
     algorithm: data.algorithm,
+    apu: data.apu,
+    apv: data.apv,
     contentType: data.contentType,
     encryption: data.encryption,
     keyId: data.keyId,

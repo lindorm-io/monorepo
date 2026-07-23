@@ -8,6 +8,11 @@ import { validateAesVersion } from "./validate-version.js";
 
 export type AesHeaderInput = {
   algorithm: KryptosAlgorithm;
+  // RFC 7518 §4.6.1.2/§4.6.1.3 — ECDH-ES Concat-KDF OtherInfo (raw bytes; the
+  // header carries them base64url-encoded). Only the ECDH-ES key-agreement
+  // paths consume them, but a recipient MUST receive them to re-derive the CEK.
+  apu?: Buffer;
+  apv?: Buffer;
   contentType: AesContentType;
   encryption: KryptosEncryption;
   keyId: string;
@@ -20,6 +25,8 @@ export type AesHeaderInput = {
 
 export type AesHeader = {
   alg: KryptosAlgorithm;
+  apu?: string;
+  apv?: string;
   cty: AesContentType;
   enc: KryptosEncryption;
   epk?: PublicEncryptionJwk;
@@ -44,6 +51,8 @@ const sortKeys = <T extends Record<string, unknown>>(obj: T): T => {
 export const buildAesHeader = (options: AesHeaderInput): AesHeader =>
   sortKeys({
     alg: options.algorithm,
+    apu: options.apu ? B64.encode(options.apu, "b64u") : undefined,
+    apv: options.apv ? B64.encode(options.apv, "b64u") : undefined,
     cty: options.contentType,
     enc: options.encryption,
     epk: options.publicEncryptionJwk,
@@ -100,6 +109,8 @@ export const headerToDecryptionParams = (
   header: AesHeader,
 ): {
   algorithm: KryptosAlgorithm;
+  apu: Buffer | undefined;
+  apv: Buffer | undefined;
   contentType: AesContentType;
   encryption: KryptosEncryption;
   keyId: string;
@@ -111,6 +122,8 @@ export const headerToDecryptionParams = (
   version: string;
 } => ({
   algorithm: header.alg,
+  apu: header.apu ? B64.toBuffer(header.apu, "b64u") : undefined,
+  apv: header.apv ? B64.toBuffer(header.apv, "b64u") : undefined,
   contentType: header.cty,
   encryption: header.enc,
   keyId: header.kid,

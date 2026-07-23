@@ -12,8 +12,9 @@ import type { AesContentType } from "../../types/content.js";
 // - Map keys are ALWAYS unsigned integers (the labels below). Label 0 is the
 //   format version.
 // - `algorithm` / `encryption` / `contentType` are enumerable → integer codes;
-//   the IV / tag / ciphertext / wrapped-CEK / salt / public-encryption IV+tag are
-//   byte strings (raw bytes, no base64 text); `keyId` is free-form text; the
+//   the IV / tag / ciphertext / wrapped-CEK / salt / public-encryption IV+tag and
+//   the ECDH-ES agreement info (apu/apv) are byte strings (raw bytes, no base64
+//   text); `keyId` is free-form text; the
 //   PBKDF2 iteration count is a plain integer; the ephemeral public key (`epk`)
 //   is a self-describing sub-map (bespoke).
 // - Once a format version ships, existing assignments are FROZEN — extend, never
@@ -38,6 +39,8 @@ export const AES_CBOR_LABEL = {
   publicEncryptionIv: 14,
   publicEncryptionTag: 15,
   publicEncryptionJwk: 16,
+  apu: 17,
+  apv: 18,
 } as const;
 
 // --- Value enums -------------------------------------------------------------

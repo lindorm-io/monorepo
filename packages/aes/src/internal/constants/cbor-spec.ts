@@ -28,6 +28,9 @@ export type AesCborRecord = {
   publicEncryptionIv?: Buffer;
   publicEncryptionTag?: Buffer;
   publicEncryptionJwk?: PublicEncryptionJwk;
+  // RFC 7518 §4.6 — ECDH-ES Concat-KDF OtherInfo (apu/apv), raw bytes.
+  apu?: Buffer;
+  apv?: Buffer;
 };
 
 // The ephemeral public key (ECDH-ES family) is a small JWK — encoded as a
@@ -105,6 +108,8 @@ export const AES_CBOR_SPEC: CborSpec = {
       encode: encodeEpk,
       decode: decodeEpk,
     },
+    { key: "apu", label: AES_CBOR_LABEL.apu, kind: "bstr" },
+    { key: "apv", label: AES_CBOR_LABEL.apv, kind: "bstr" },
   ],
 };
 

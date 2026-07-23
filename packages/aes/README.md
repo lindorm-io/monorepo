@@ -52,6 +52,17 @@ aes.decrypt(record);
 aes.decrypt(serialised);
 ```
 
+For the ECDH-ES family, pass the RFC 7518 §4.6 Concat-KDF `apu`/`apv` (Agreement PartyU/VInfo) as `Buffer`s; they are folded into the derived key and carried on the header so the recipient re-derives it. Ignored by every non-ECDH-ES algorithm.
+
+```ts
+const serialised = aes.encrypt("secret", "serialised", {
+  apu: Buffer.from("Alice"),
+  apv: Buffer.from("Bob"),
+});
+
+aes.decrypt(serialised); // "secret" — apu/apv travel on the header
+```
+
 ### Encrypt any supported content
 
 ```ts
@@ -211,6 +222,8 @@ All output formats share a unified header — a JSON object containing the algor
 ```ts
 type AesHeader = {
   alg: KryptosAlgorithm; // key management algorithm
+  apu?: string; // ECDH-ES PartyUInfo (base64url, RFC 7518 §4.6)
+  apv?: string; // ECDH-ES PartyVInfo (base64url, RFC 7518 §4.6)
   cty: AesContentType; // content type
   enc: KryptosEncryption; // content encryption
   epk?: PublicEncryptionJwk; // ephemeral public key (ECDH)
@@ -232,7 +245,8 @@ header blob:
 ```
 { 0: version, 2: keyId, 3: algorithm, 6: encryption, 7: contentType,
   8: iv, 9: authTag, 10: ciphertext, 11: cek?, 12: p2c?, 13: p2s?,
-  14: publicEncryptionIv?, 15: publicEncryptionTag?, 16: epk? }
+  14: publicEncryptionIv?, 15: publicEncryptionTag?, 16: epk?,
+  17: apu?, 18: apv? }
 ```
 
 Integer map labels; `algorithm` / `encryption` / `contentType` are integer enum

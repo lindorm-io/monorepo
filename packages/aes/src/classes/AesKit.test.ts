@@ -134,6 +134,61 @@ describe("AesKit", () => {
     });
   });
 
+  describe("ECDH-ES apu/apv round-trip", () => {
+    let kryptos: IKryptos;
+    let aesKit: IAesKit;
+
+    beforeEach(() => {
+      kryptos = KryptosKit.generate.auto({ algorithm: "ECDH-ES" });
+      aesKit = new AesKit({ kryptos, encryption: "A256GCM" });
+    });
+
+    test.each<AesEncryptionMode>(["cbor", "record", "serialised"])(
+      "should encrypt with apu/apv and decrypt (mode: %s)",
+      (mode) => {
+        const encrypted = aesKit.encrypt("agreement", mode as any, {
+          apu: Buffer.from("Alice"),
+          apv: Buffer.from("Bob"),
+        });
+
+        expect(aesKit.decrypt(encrypted)).toEqual("agreement");
+      },
+    );
+
+    test("should carry apu/apv on the serialised header and re-derive the key", () => {
+      const apu = Buffer.from("Alice");
+      const apv = Buffer.from("Bob");
+
+      const encrypted = aesKit.encrypt("agreement", "serialised", { apu, apv });
+      const parsed = AesKit.parse(encrypted);
+
+      expect(parsed.apu).toEqual(apu);
+      expect(parsed.apv).toEqual(apv);
+      expect(aesKit.decrypt(encrypted)).toEqual("agreement");
+    });
+
+    test("should carry apu/apv on the cbor record and re-derive the key", () => {
+      const apu = Buffer.from("Alice");
+      const apv = Buffer.from("Bob");
+
+      const encrypted = aesKit.encrypt("agreement", "cbor", { apu, apv });
+      const parsed = AesKit.parse(encrypted);
+
+      expect(parsed.apu).toEqual(apu);
+      expect(parsed.apv).toEqual(apv);
+      expect(aesKit.decrypt(encrypted)).toEqual("agreement");
+    });
+
+    test("should round-trip without apu/apv (behaviour preserved)", () => {
+      const encrypted = aesKit.encrypt("agreement", "serialised");
+      const parsed = AesKit.parse(encrypted);
+
+      expect(parsed.apu).toBeUndefined();
+      expect(parsed.apv).toBeUndefined();
+      expect(aesKit.decrypt(encrypted)).toEqual("agreement");
+    });
+  });
+
   describe("Static method tests", () => {
     describe("contentType", () => {
       test("should return text/plain for string", () => {

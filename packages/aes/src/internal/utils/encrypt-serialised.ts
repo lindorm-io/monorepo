@@ -10,6 +10,8 @@ import { encryptAesContent } from "./encrypt-content.js";
 import { getEncryptionKey } from "./get-key/get-encryption-key.js";
 
 export type EncryptSerialisedOptions = {
+  apu?: Buffer;
+  apv?: Buffer;
   data: AesContent;
   encryption: KryptosEncryption;
   kryptos: IKryptos;
@@ -18,10 +20,10 @@ export type EncryptSerialisedOptions = {
 export const encryptSerialised = (
   options: EncryptSerialisedOptions,
 ): SerialisedAesEncryption => {
-  const { data, encryption, kryptos } = options;
+  const { apu, apv, data, encryption, kryptos } = options;
 
   // 1. Get encryption key (CEK + key management params)
-  const keyResult = getEncryptionKey({ encryption, kryptos });
+  const keyResult = getEncryptionKey({ apu, apv, encryption, kryptos });
 
   // 2. Generate IV before AAD computation
   const initialisationVector = getInitialisationVector(encryption);
@@ -30,6 +32,8 @@ export const encryptSerialised = (
   const contentType = calculateContentType(data);
   const header = buildAesHeader({
     algorithm: kryptos.algorithm,
+    apu,
+    apv,
     contentType,
     encryption,
     keyId: kryptos.id,

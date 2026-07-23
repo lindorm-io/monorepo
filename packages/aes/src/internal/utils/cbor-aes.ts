@@ -34,6 +34,8 @@ export const parseCborAesString = (data: string): ParsedAesDecryptionRecord => {
   return {
     aad,
     algorithm: decoded.algorithm,
+    apu: decoded.apu,
+    apv: decoded.apv,
     authTag,
     content,
     contentType: decoded.contentType,

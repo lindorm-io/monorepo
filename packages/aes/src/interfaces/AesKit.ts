@@ -10,6 +10,11 @@ import type { PreparedEncryption } from "../internal/types/prepared-encryption.j
 
 export type AesOperationOptions = {
   aad?: Buffer;
+  // RFC 7518 §4.6 — ECDH-ES Concat-KDF OtherInfo (apu/apv). Only the ECDH-ES
+  // key-agreement algorithms consume them; carried on the header so a recipient
+  // re-derives the identical content encryption key.
+  apu?: Buffer;
+  apv?: Buffer;
 };
 
 export type AesContentOptions = {

@@ -9,6 +9,8 @@ import { encryptAesContent } from "./encrypt-content.js";
 import { getEncryptionKey } from "./get-key/get-encryption-key.js";
 
 export type EncryptCborOptions = {
+  apu?: Buffer;
+  apv?: Buffer;
   data: AesContent;
   encryption: KryptosEncryption;
   kryptos: IKryptos;
@@ -25,10 +27,10 @@ export type EncryptCborOptions = {
  * fields (everything except iv / authTag / content), recomputed on decrypt.
  */
 export const encryptCbor = (options: EncryptCborOptions): string => {
-  const { data, encryption, kryptos } = options;
+  const { apu, apv, data, encryption, kryptos } = options;
 
   // 1. Get encryption key (CEK + key management params)
-  const keyResult = getEncryptionKey({ encryption, kryptos });
+  const keyResult = getEncryptionKey({ apu, apv, encryption, kryptos });
 
   // 2. Generate IV before AAD computation
   const initialisationVector = getInitialisationVector(encryption);
@@ -49,6 +51,8 @@ export const encryptCbor = (options: EncryptCborOptions): string => {
     publicEncryptionIv: keyResult.publicEncryptionIv,
     publicEncryptionTag: keyResult.publicEncryptionTag,
     publicEncryptionJwk: keyResult.publicEncryptionJwk,
+    apu,
+    apv,
   };
 
   // Present-only encoding drops the three undefined material fields, so this is

@@ -21,9 +21,9 @@ import { getEncryptionKey } from "./get-key/get-encryption-key.js";
 import { encryptAesContent } from "./encrypt-content.js";
 
 export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionRecord => {
-  const { aad, data, encryption = "A256GCM", kryptos } = options;
+  const { aad, apu, apv, data, encryption = "A256GCM", kryptos } = options;
 
-  const keyResult = getEncryptionKey({ encryption, kryptos });
+  const keyResult = getEncryptionKey({ apu, apv, encryption, kryptos });
 
   const { authTag, content, contentType, initialisationVector } = encryptAesContent({
     aad,
@@ -34,6 +34,8 @@ export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionR
 
   return {
     algorithm: kryptos.algorithm,
+    apu,
+    apv,
     authTag,
     content,
     contentType,
