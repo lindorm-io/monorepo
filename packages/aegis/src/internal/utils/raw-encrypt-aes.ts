@@ -36,5 +36,8 @@ export const rawEncryptAes = async ({
     kryptos,
   });
 
-  return kit.encrypt(data, mode as "cbor");
+  return kit.encrypt(data, mode as "cbor", {
+    apu: options?.apu,
+    apv: options?.apv,
+  });
 };

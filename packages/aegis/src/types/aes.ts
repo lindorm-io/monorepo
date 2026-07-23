@@ -6,6 +6,13 @@ export type AesEncryptOptions = {
    * key; its `encryption` picks the content-encryption AEAD.
    */
   key?: AegisEncKey;
+  /**
+   * RFC 7518 §4.6 — ECDH-ES Concat-KDF OtherInfo (apu/apv). Only the ECDH-ES
+   * key-agreement algorithms consume them; forwarded to `AesKit` and emitted on
+   * the AES header so the recipient re-derives the identical key.
+   */
+  apu?: Buffer;
+  apv?: Buffer;
 };
 
 export type AesDecryptOptions = {

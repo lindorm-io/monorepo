@@ -123,6 +123,22 @@ describe("Aegis AES key selection", () => {
       await expect(aegis.aes.decrypt(serialised)).resolves.toBe(PLAINTEXT);
     });
 
+    test("forwards ECDH-ES apu/apv onto the header and round-trips every mode", async () => {
+      const apu = Buffer.from("Alice");
+      const apv = Buffer.from("Bob");
+
+      const cbor = await aegis.aes.encrypt(PLAINTEXT, "cbor", { apu, apv });
+      const serialised = await aegis.aes.encrypt(PLAINTEXT, "serialised", { apu, apv });
+
+      expect(AesKit.parse(cbor).apu).toEqual(apu);
+      expect(AesKit.parse(cbor).apv).toEqual(apv);
+      expect(AesKit.parse(serialised).apu).toEqual(apu);
+      expect(AesKit.parse(serialised).apv).toEqual(apv);
+
+      await expect(aegis.aes.decrypt(cbor)).resolves.toBe(PLAINTEXT);
+      await expect(aegis.aes.decrypt(serialised)).resolves.toBe(PLAINTEXT);
+    });
+
     test("honours the deployment encrypt policy", async () => {
       const deployment = new Aegis({
         amphora,
