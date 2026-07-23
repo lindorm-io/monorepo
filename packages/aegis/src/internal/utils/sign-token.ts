@@ -1,7 +1,8 @@
 import { isBuffer, isString } from "@lindorm/is";
-import type { RawSignInput, SignedJws } from "../../types/index.js";
+import type { RawSignInput, SignedJwt } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { applyOmit } from "./apply-omit.js";
+import { domainTokenTypePrefix } from "./compute-typ-header.js";
 import { rawSignCose } from "./raw-sign-cose.js";
 import { rawSignJws } from "./raw-sign-jws.js";
 import { selectEncoder } from "./select-encoder.js";
@@ -12,7 +13,9 @@ import { selectEncoder } from "./select-encoder.js";
  * CBOR CWT (COSE_Sign1) instead of a JWS. Everything above is encoding-neutral.
  * A Buffer/string payload is opaque and passes through untouched; a plain object
  * is pruned of empty claims at this emission boundary (default `"empty"`) before
- * it is serialised, matching the JWT/CWT wires.
+ * it is serialised, matching the JWT/CWT wires. The DOMAIN `tokenType` enum is
+ * translated to the bare kit PREFIX, and the caller's `contentType` folds into
+ * the wire `header.cty` (ruling: contentType → header.cty, oid → header bag).
  */
 export const signToken = async ({
   input,
@@ -20,9 +23,20 @@ export const signToken = async ({
 }: {
   input: RawSignInput;
   deps: AegisDeps;
-}): Promise<SignedJws> => {
+}): Promise<SignedJwt> => {
+  const tokenType = domainTokenTypePrefix(input.tokenType);
+
   if (selectEncoder(input.format).format === "cws") {
-    return rawSignCose({ input, deps });
+    return rawSignCose({
+      input: {
+        payload: input.payload,
+        key: input.key,
+        omit: input.omit,
+        tokenType,
+        header: input.header,
+      },
+      deps,
+    });
   }
 
   const payload =
@@ -35,11 +49,11 @@ export const signToken = async ({
     options: {
       bindCertificate: input.bindCertificate,
       certificateThumbprintSha1: input.certificateThumbprintSha1,
-      contentType: input.contentType,
-      header: input.header,
-      objectId: input.objectId,
+      header: input.contentType
+        ? { cty: input.contentType, ...input.header }
+        : input.header,
       key: input.key,
-      tokenType: input.tokenType,
+      tokenType,
     },
     deps,
   });

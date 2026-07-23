@@ -1,21 +1,29 @@
-import type { CweDecryptOptions, DecryptedCwe } from "../../types/index.js";
-import { decodeEncryptedCoseKid, decryptCose } from "../cose/cose-encryption.js";
+import { CweKit } from "../../classes/CweKit.js";
+import type {
+  AegisDecryptKey,
+  DecryptedEncryptedToken,
+  DecryptTokenOptions,
+  TokenContent,
+} from "../../types/index.js";
+import { decodeEncryptedCoseKid } from "../cose/cose-encryption.js";
 import type { AegisDeps } from "./aegis-deps.js";
 
 /**
  * The raw CWE decrypt namespace (`aegis.cwe.decrypt`) — the COSE_Encrypt0 mirror
  * of `jwe.decrypt`. Resolves the recipient key by the ciphertext's own `kid`,
- * then decrypts the COSE_Encrypt0.
+ * then decrypts the COSE_Encrypt0 via `CweKit` (which takes the ENCODED bytes and
+ * strips the outer CWT tag itself, R2) and returns its NATIVE WIRE result
+ * (`header`/`payload`/native `Buffer` `token`).
  */
-export const rawDecryptCwe = async ({
+export const rawDecryptCwe = async <T extends TokenContent = Buffer>({
   token,
   options = {},
   deps,
 }: {
   token: string;
-  options?: CweDecryptOptions;
+  options?: DecryptTokenOptions & { key?: AegisDecryptKey };
   deps: AegisDeps;
-}): Promise<DecryptedCwe> => {
+}): Promise<DecryptedEncryptedToken<T, Buffer>> => {
   const bytes = Buffer.from(token, "base64url");
 
   const kryptos = await deps.resolveDecryptKey(
@@ -24,8 +32,5 @@ export const rawDecryptCwe = async ({
     options.key,
   );
 
-  return {
-    payload: decryptCose({ kryptos, logger: deps.logger, token: bytes }),
-    token,
-  };
+  return new CweKit({ kryptos, logger: deps.logger }).decrypt<T>(bytes);
 };

@@ -1,21 +1,26 @@
 import type { KryptosEncAlgorithm } from "@lindorm/kryptos";
 import { JweKit } from "../../classes/JweKit.js";
-import type { DecryptedJwe, JweDecryptOptions } from "../../types/index.js";
+import type {
+  AegisDecryptKey,
+  DecryptedEncryptedToken,
+  DecryptTokenOptions,
+  TokenContent,
+} from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
 
 /**
  * The raw JWE decrypt namespace (`aegis.jwe.decrypt`): decode the wire header,
  * resolve the recipient key by the ciphertext's own `kid`, then decrypt.
  */
-export const rawDecryptJwe = async ({
+export const rawDecryptJwe = async <T extends TokenContent = Buffer>({
   jwe,
   options = {},
   deps,
 }: {
   jwe: string;
-  options?: JweDecryptOptions;
+  options?: DecryptTokenOptions & { key?: AegisDecryptKey };
   deps: AegisDeps;
-}): Promise<DecryptedJwe> => {
+}): Promise<DecryptedEncryptedToken<T, string>> => {
   const decode = JweKit.decodeSegments(jwe);
 
   const kryptos = await deps.resolveDecryptKey(
@@ -30,5 +35,5 @@ export const rawDecryptJwe = async ({
     kryptos,
     logger: deps.logger,
     partyRecipient: deps.partyRecipient,
-  }).decrypt(jwe);
+  }).decrypt<T>(jwe);
 };

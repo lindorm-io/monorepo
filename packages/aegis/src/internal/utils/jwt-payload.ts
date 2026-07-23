@@ -6,7 +6,7 @@ import { JwtError } from "../../errors/index.js";
 import type {
   AegisProfile,
   AegisSensitive,
-  JwtClaims,
+  AegisClaimsWire,
   SignJwtContent,
   SignedJwt,
 } from "../../types/index.js";
@@ -15,7 +15,7 @@ import type { DomainClaims } from "./extract-claims.js";
 import { extractAegisProfile } from "./extract-aegis-profile.js";
 import { extractSensitiveClaims } from "./extract-sensitive-claims.js";
 
-type DecodeClaims<C extends Dict = Dict> = JwtClaims & C;
+type DecodeClaims<C extends Dict = Dict> = AegisClaimsWire & C;
 
 /**
  * Merge the FLAT sensitive-identity fields (registry `category: "sensitive"`)

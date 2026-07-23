@@ -23,7 +23,7 @@ const signDefault = (kit: JwtKit, issuer: string, content: SignContent) => {
     content,
   );
   return kit.sign(claims, {
-    typ: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),
+    tokenType: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),
   });
 };
 
@@ -108,7 +108,7 @@ describe("JWT interop: aegis <-> jose", () => {
 
       expect(result.payload.iss).toBe(ISSUER);
       expect(result.payload.sub).toBe(SUBJECT);
-      expect(result.header.tokenType).toBe("access_token");
+      expect(result.header.typ).toBe("at+jwt");
       expect(result.payload.exp).toEqual(expect.any(Number));
     });
   });
@@ -160,7 +160,7 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       expect(result.payload.iss).toBe(ISSUER);
       expect(result.payload.sub).toBe(SUBJECT);
-      expect(result.header.tokenType).toBe("access_token");
+      expect(result.header.typ).toBe("at+jwt");
     });
   });
 
@@ -203,7 +203,7 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       expect(result.payload.iss).toBe(ISSUER);
       expect(result.payload.sub).toBe(SUBJECT);
-      expect(result.header.tokenType).toBe("access_token");
+      expect(result.header.typ).toBe("at+jwt");
     });
   });
 });

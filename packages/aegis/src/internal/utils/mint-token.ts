@@ -144,16 +144,20 @@ export const mintToken = async ({
   }
 
   // T5 — sign-then-encrypt. The inner signed JWT keeps the profile typ
-  // (`at+jwt` / bare `JWT`); the outer JWE carries `cty: application/jwt`
-  // (set automatically by JweKit.encrypt from the inner-token shape). The
-  // read side (verify recursion) decrypts then verifies the inner JWT,
-  // applying the profile floor to the inner claims/typ.
-  const { token } = encryptJwe({
+  // (`at+jwt` / bare `JWT`); the outer JWE carries `cty: JWT` (RFC 7519 §5.2),
+  // stamped EXPLICITLY here so caller-cty-wins overrides the string→text/plain
+  // inference the codec would otherwise apply to the compact JWS string. The read
+  // side (verify recursion) reconstructs the JWT cty to the inner token STRING,
+  // then decrypts-then-verifies it, applying the profile floor to the inner
+  // claims/typ.
+  const token = encryptJwe({
     kryptos: encKryptos,
     data: signed.token,
     // Forward the ECDH-ES party info (RFC 7518 §4.6) from the encrypt wrapper;
     // JweKit gates/strips it (ECDH-ES only), so it is inert for other algorithms.
+    // `header.cty: JWT` marks the plaintext as a nested JWT.
     options: {
+      header: { cty: "JWT" },
       partyProducer: options.encrypt?.partyProducer,
       partyRecipient: options.encrypt?.partyRecipient,
     },

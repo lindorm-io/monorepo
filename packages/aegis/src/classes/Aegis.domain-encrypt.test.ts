@@ -64,7 +64,7 @@ describe("Aegis — domain encrypt / decrypt (§5e)", () => {
       const decrypted = await aegis.decrypt(encrypted.token);
 
       expect(decrypted.raw).toBe("session-state-opaque");
-      expect(decrypted.contentType).toBe("text/plain; charset=utf-8");
+      expect(decrypted.contentType).toBe("text/plain");
       expect(decrypted.claims).toEqual({});
       expect(decrypted.custom).toEqual({});
     });

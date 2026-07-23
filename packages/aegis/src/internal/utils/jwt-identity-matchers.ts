@@ -3,7 +3,7 @@ import { isArray, isNumber, isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict, PredicateOperator } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
-import type { JwtClaims } from "../../types/index.js";
+import type { AegisClaimsWire } from "../../types/index.js";
 import { claimByDomain } from "../claims/claims-registry.js";
 import { createHash } from "./create-hash.js";
 
@@ -15,7 +15,7 @@ import { createHash } from "./create-hash.js";
  * not name-mapped. Every OTHER matcher key is a plain domain name the registry
  * owns, resolved via `specByDomain(key).jose`.
  */
-const HASH_MATCHERS: Readonly<Record<string, { jose: keyof JwtClaims }>> = {
+const HASH_MATCHERS: Readonly<Record<string, { jose: keyof AegisClaimsWire }>> = {
   accessToken: { jose: "at_hash" },
   authCode: { jose: "c_hash" },
   authState: { jose: "s_hash" },
@@ -45,11 +45,15 @@ export const createIdentityMatchers = (
   matchers: Dict,
   clockTolerance: number,
   expPresence?: "required" | "optional",
-): Partial<Record<keyof JwtClaims, PredicateOperator<any>>> => {
-  const predicate: Partial<Record<keyof JwtClaims, PredicateOperator<any>>> = {};
+  currentDate?: Date,
+): Partial<Record<keyof AegisClaimsWire, PredicateOperator<any>>> => {
+  const predicate: Partial<Record<keyof AegisClaimsWire, PredicateOperator<any>>> = {};
 
+  // The exp lower bound honours the same `currentDate` override (R10) as the kit's
+  // temporal check, so a token exp'd relative to a PAST currentDate is not then
+  // rejected here against the real wall-clock.
   if (expPresence !== "optional") {
-    predicate.exp = { $gte: subSeconds(new Date(), clockTolerance) };
+    predicate.exp = { $gte: subSeconds(currentDate ?? new Date(), clockTolerance) };
   }
 
   for (const [key, value] of Object.entries(matchers)) {
@@ -60,7 +64,7 @@ export const createIdentityMatchers = (
     // throwing default the `mapVerify` switch used to provide).
     const hash = HASH_MATCHERS[key];
     const spec = claimByDomain(key);
-    const mapped = hash?.jose ?? (spec?.jose as keyof JwtClaims | undefined);
+    const mapped = hash?.jose ?? (spec?.jose as keyof AegisClaimsWire | undefined);
 
     if (mapped === undefined) {
       throw new AegisDomainError(`Unsupported key: ${key} for JWT verification`, {

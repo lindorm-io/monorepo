@@ -15,9 +15,15 @@ import type { AegisDeps } from "./aegis-deps.js";
  */
 export const coseVerifyCore = async ({
   input,
+  currentDate,
+  maxTokenAge,
   deps,
 }: {
   input: Buffer;
+  /** Override "now" for the in-kit temporal range check (R10). Per-call only. */
+  currentDate?: Date;
+  /** Reject a token whose `iat` is older than this many seconds (R10). Per-call only. */
+  maxTokenAge?: number;
   deps: AegisDeps;
 }) => {
   let bytes = input;
@@ -42,6 +48,8 @@ export const coseVerifyCore = async ({
     logger: deps.logger,
     token: bytes,
     clockTolerance: deps.clockTolerance,
+    currentDate,
+    maxTokenAge,
   });
 
   return { claims, wire, decoded, typ, encrypted };

@@ -3,8 +3,8 @@ import type { ILogger } from "@lindorm/logger";
 import { JweKit } from "../../classes/JweKit.js";
 import type {
   CertificateBindingMode,
-  EncryptedJwe,
   JweEncryptOptions,
+  TokenContent,
 } from "../../types/index.js";
 
 /**
@@ -12,7 +12,8 @@ import type {
  * `JoseKit.encryptJwe`), built directly from the resolved key + JOSE config.
  * `encryption` is the resolved content-encryption AEAD (the caller's
  * `AegisEncKey.encryption` merged with the deployment default) — it picks the
- * cipher, never the key.
+ * cipher, never the key. Returns the BARE compact JWE token (the kit returns bare;
+ * the domain `EncryptedToken`/`SignedJwt` sugar is built by the caller).
  */
 export const encryptJwe = ({
   kryptos,
@@ -24,14 +25,14 @@ export const encryptJwe = ({
   logger,
 }: {
   kryptos: IKryptos;
-  data: string;
+  data: TokenContent;
   options?: JweEncryptOptions;
   encryption: KryptosEncryption;
   certBindingMode: CertificateBindingMode;
   /** Resolved deployment default for the SHA-1 thumbprint (`x5t`) emission gate. */
   certificateThumbprintSha1: boolean;
   logger: ILogger;
-}): EncryptedJwe =>
+}): string =>
   new JweKit({ certBindingMode, encryption, kryptos, logger }).encrypt(data, {
     ...(options ?? {}),
     certificateThumbprintSha1:

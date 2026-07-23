@@ -8,7 +8,7 @@ import {
   TEST_OCT_KEY_SIG,
 } from "../__fixtures__/keys.js";
 import { AegisError } from "../errors/index.js";
-import { decodeCbor } from "../internal/cose/cbor.js";
+import { CweKit } from "./CweKit.js";
 import { CwtKit } from "./CwtKit.js";
 import { Aegis } from "./Aegis.js";
 
@@ -142,6 +142,12 @@ describe("Aegis — COSE", () => {
     // bare CWT tag — the signed CWT is the encrypted plaintext.
     const bytes = Buffer.from(token, "base64url");
     expect(bytes[0]).toBe(0xd0);
+
+    // The outer COSE_Encrypt0 is stamped `cty: application/cwt` (RFC 8392,
+    // mirroring the JOSE `cty: JWT`) so the read side reconstructs the plaintext
+    // to the inner CWT BYTES rather than an opaque octet blob.
+    const { header } = new CweKit({ kryptos: TEST_OCT_KEY_ENC, logger }).decode(bytes);
+    expect(header.cty).toBe("application/cwt");
 
     const verified = (await encAegis.verify("id_token", token, undefined, {
       audience: "client-1",
@@ -281,18 +287,15 @@ describe("Aegis — COSE", () => {
 
       const verified = (await aegis.verify(token)) as unknown as {
         format: string;
-        raw: Buffer;
+        raw: Record<string, unknown>;
       };
 
-      // A CWS is OPAQUE: the payload comes back as raw CBOR bytes beside an empty
-      // domain (the COSE twin of a JWS).
+      // A CWS is OPAQUE: an object is negotiated via cty `application/json`, so it
+      // round-trips back to the same object beside an empty domain (the COSE twin
+      // of a JWS carrying arbitrary content).
       expect(verified.format).toBe("cws");
-      const map = decodeCbor(verified.raw, { preferMap: false }) as Record<
-        string,
-        unknown
-      >;
-      expect(map.tid).toBe("at_abc");
-      expect(map.sec).toBe("s3cr3t");
+      expect(verified.raw.tid).toBe("at_abc");
+      expect(verified.raw.sec).toBe("s3cr3t");
     });
 
     test("stamps rt+cws for a refresh handle", async () => {
@@ -307,10 +310,22 @@ describe("Aegis — COSE", () => {
       );
     });
 
-    test("rejects a string payload — a CWT secures a claims map", async () => {
-      await expect(
-        aegis.sign({ payload: "not-a-map", tokenType: "access_token", format: "cws" }),
-      ).rejects.toThrow(AegisError);
+    test("round-trips a string payload faithfully (opaque CWS, text/plain)", async () => {
+      const { token } = await aegis.sign({
+        payload: "not-a-map",
+        tokenType: "access_token",
+        format: "cws",
+      });
+
+      const verified = (await aegis.verify(token)) as unknown as {
+        format: string;
+        raw: string;
+      };
+
+      // A CWS is opaque like a JWS: a string round-trips verbatim (COSE_Sign1 signs
+      // a bstr, so there is no claims-map constraint).
+      expect(verified.format).toBe("cws");
+      expect(verified.raw).toBe("not-a-map");
     });
 
     test("still signs a JWS when no format is given (default unchanged)", async () => {

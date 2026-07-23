@@ -4,7 +4,7 @@ import type { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, expectTypeOf, test } from "vitest";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
-import type { ParsedJwt } from "../types/index.js";
+import type { JwtClaimsWire, VerifiedStructuredToken } from "../types/index.js";
 import { Aegis } from "./Aegis.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
@@ -91,9 +91,12 @@ describe("Aegis profiled verify narrowing", () => {
       clientId: "client-1",
     });
 
-    // The base (profile-less) overload returns ParsedJwt; no profile floor ran,
+    // The base (profile-less) overload returns VerifiedJwtWire; no profile floor ran,
     // so the parsed payload keeps every optional claim optional.
-    const parsed = await aegis.verify<ParsedJwt>(token, { audience: RESOURCE });
+    const parsed = await aegis.verify<VerifiedStructuredToken<JwtClaimsWire, string>>(
+      token,
+      { audience: RESOURCE },
+    );
 
     expectTypeOf(parsed.claims.subject).toEqualTypeOf<string | undefined>();
     expectTypeOf(parsed.claims.expiresAt).toEqualTypeOf<Date | undefined>();

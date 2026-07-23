@@ -34,15 +34,19 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       audience: ["client-1"],
     };
 
-    test("wraps an id_token in a JWE with cty application/jwt when encrypt is supplied", async () => {
+    test("wraps an id_token in a JWE stamped with the nested-token cty (RFC 7519 §5.2)", async () => {
       amphora.add(TEST_EC_KEY_ENC);
 
       const { token } = await aegis.mint("id_token", content, { encrypt: {} });
 
       expect(JweKit.isJwe(token)).toBe(true);
 
+      // Sign-then-encrypt: the inner is a compact JWS/JWT STRING. The outer JWE
+      // carries `cty: JWT` (RFC 7519 §5.2) — stamped explicitly so the read side
+      // reconstructs the plaintext back to the inner token string, not an opaque
+      // Buffer, and the verify recursion re-verifies it.
       const { header } = JweKit.decodeSegments(token);
-      expect(header.cty).toBe("application/jwt");
+      expect(header.cty).toBe("JWT");
     });
 
     test("round-trips through decrypt-then-verify to the inner claims", async () => {
@@ -72,7 +76,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
       const { token } = await aegis.mint("id_token", content, { encrypt: {} });
 
-      const decrypted = await aegis.jwe.decrypt(token);
+      const decrypted = await aegis.jwe.decrypt<string>(token);
       const { header } = JwtKit.decodeSegments(decrypted.payload);
 
       expect(header.typ).toBe("JWT");
@@ -161,7 +165,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       // encrypt option.
       expect(JweKit.isJwe(token)).toBe(true);
 
-      const decrypted = await aegis.jwe.decrypt(token);
+      const decrypted = await aegis.jwe.decrypt<string>(token);
       const { payload } = JwtKit.decodeSegments(decrypted.payload);
 
       // FLAT individual claims — NOT a nested `sensitive_identity` wrapper.

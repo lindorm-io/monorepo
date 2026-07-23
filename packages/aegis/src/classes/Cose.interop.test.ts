@@ -50,8 +50,8 @@ const signDomain = (kryptos: IKryptos, common: Dict, options: Dict = {}): Buffer
   new CwtKit({ kryptos, logger }).sign(domainToCose(common), options);
 
 const verifyDomain = (kryptos: IKryptos, cwt: Buffer): Dict => {
-  const { claims } = new CwtKit({ kryptos, logger }).verify(cwt);
-  const { claims: domain, custom } = coseToDomain(claims);
+  const { payload } = new CwtKit({ kryptos, logger }).verify(cwt);
+  const { claims: domain, custom } = coseToDomain(payload);
   return { ...domain, ...custom };
 };
 
@@ -114,7 +114,7 @@ describe("COSE interop — @auth0/cose", () => {
 
   test("tolerates a proprietary CWT typ (application/at+cwt) without throwing", async () => {
     const token = signDomain(TEST_EC_KEY_SIG, common, {
-      typ: "application/at+cwt",
+      tokenType: "at",
     });
 
     // Our mint stamped the full CWT media type…

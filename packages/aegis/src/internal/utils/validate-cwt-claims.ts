@@ -53,6 +53,7 @@ export const validateCwtClaims = (
     matchers,
     clockTolerance,
     options.expPresence,
+    options.currentDate,
   );
 
   try {

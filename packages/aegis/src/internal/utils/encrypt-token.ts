@@ -7,15 +7,21 @@ import { encryptCose } from "../cose/cose-encryption.js";
 import { encodeCwtClaims } from "../cose/cwt-claims.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { applyOmit } from "./apply-omit.js";
+import { domainTokenTypePrefix } from "./compute-typ-header.js";
 import { encryptJwe } from "./encrypt-jwe.js";
 
 /**
- * The COSE_Encrypt0 `typ` (label 16) stamped on a domain-CLAIMS `cwe`. It is the
- * read-side discriminant: `decryptToken` translates the plaintext back to domain
- * claims when the header carries this typ, and returns opaque bytes otherwise.
+ * The reserved `tokenType` PREFIX marking a domain-CLAIMS `cwe`. `CweKit` builds
+ * `application/claims+cwe` from it — the read-side discriminant: `decryptToken`
+ * translates the plaintext back to domain claims when the COSE_Encrypt0 header
+ * carries {@link COSE_CLAIMS_TYP}, and returns opaque bytes otherwise (opaque
+ * data with no `type` floors to the bare `application/cwe`, so it never collides).
  * A JWE tells the same two apart by the kit-computed `cty` (`application/json`).
  */
-export const COSE_CLAIMS_TYP = "application/cwt";
+const COSE_CLAIMS_PREFIX = "claims";
+
+/** The full COSE_Encrypt0 `typ` a domain-claims `cwe` carries (see above). */
+export const COSE_CLAIMS_TYP = "application/claims+cwe";
 
 /**
  * The domain encrypt pipeline (`aegis.encrypt`) — the mirror of `signToken`, but
@@ -41,13 +47,12 @@ export const encryptToken = async ({
 
   switch (format) {
     case "jwe": {
-      const payload = isString(data)
-        ? data
-        : isBuffer(data)
-          ? data.toString("utf8")
-          : JSON.stringify(domainToJose(applyOmit(data, options.omit)));
+      // Opaque bytes/string pass through untouched (JweKit stamps octet/text);
+      // a domain claims set is translated to the JOSE wire and handed over as an
+      // OBJECT so JweKit stamps `application/json` — the read-side discriminant.
+      const payload = opaque ? data : domainToJose(applyOmit(data, options.omit));
 
-      const { token } = encryptJwe({
+      const token = encryptJwe({
         kryptos,
         data: payload,
         options: {
@@ -55,7 +60,7 @@ export const encryptToken = async ({
           header: options.header,
           partyProducer: options.partyProducer,
           partyRecipient: options.partyRecipient,
-          tokenType: options.type,
+          tokenType: domainTokenTypePrefix(options.type),
         },
         encryption,
         certBindingMode: deps.certBindingMode,
@@ -83,9 +88,10 @@ export const encryptToken = async ({
         kryptos,
         logger: deps.logger,
         inner,
-        // A claims set is marked so decrypt can translate it back; opaque bytes
+        // A claims set is marked (via the reserved `claims` prefix →
+        // `application/claims+cwe`) so decrypt can translate it back; opaque bytes
         // keep the caller's `type` (if any) and are returned verbatim.
-        typ: opaque ? options.type : COSE_CLAIMS_TYP,
+        tokenType: opaque ? domainTokenTypePrefix(options.type) : COSE_CLAIMS_PREFIX,
         encryption,
         proprietary: options.proprietary,
       });

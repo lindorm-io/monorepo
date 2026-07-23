@@ -3,7 +3,6 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG, TEST_OCT_KEY_ENC } from "../__fixtures__/keys.js";
-import { encodeCbor } from "../internal/cose/cbor.js";
 import { domainToJose, joseToDomain } from "../internal/claims/translate.js";
 import { Aegis } from "./Aegis.js";
 import { CwsKit } from "./CwsKit.js";
@@ -41,7 +40,7 @@ describe("Aegis — COSE format guards", () => {
           aud: ["https://rs.lindorm.io/"],
           exp: 1704099600,
         },
-        { typ: "application/at+cwt" },
+        { tokenType: "at" },
       )
     ).token;
 
@@ -51,14 +50,9 @@ describe("Aegis — COSE format guards", () => {
     // CWS — an opaque signed COSE_Sign1 carrying a `<type>+cws` typ (the opaque
     // format the guard recognises, distinct from a claims CWT by its media type,
     // exactly as isJws distinguishes a `+jws` JWS from a `+jwt` JWT).
-    cws = Buffer.from(
-      encodeCbor(
-        new CwsKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(
-          Buffer.from("opaque payload"),
-          { typ: "application/example+cws" },
-        ),
-      ),
-    ).toString("base64url");
+    cws = new CwsKit({ kryptos: TEST_EC_KEY_SIG, logger })
+      .sign(Buffer.from("opaque payload"), { tokenType: "example" })
+      .toString("base64url");
   });
 
   test("isCwt — true for a CWT, false for JWT / CWS / CWE", () => {

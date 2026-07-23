@@ -44,7 +44,7 @@ describe("JWE interop: aegis <-> jose", () => {
       const kryptos = createOctKwKey();
       const kit = new JweKit({ logger, kryptos, encryption: "A128GCM" });
 
-      const { token } = kit.encrypt(PLAINTEXT);
+      const token = kit.encrypt(PLAINTEXT);
 
       const jwk = kryptos.export("jwk");
       const joseKey = await importJWK(jwk, "A128KW");
@@ -76,8 +76,8 @@ describe("JWE interop: aegis <-> jose", () => {
       const result = kit.decrypt(token);
 
       expect(result.payload).toBe(PLAINTEXT);
-      expect(result.header.algorithm).toBe("A128KW");
-      expect(result.header.encryption).toBe("A128GCM");
+      expect(result.header.alg).toBe("A128KW");
+      expect(result.header.enc).toBe("A128GCM");
     });
   });
 
@@ -90,7 +90,7 @@ describe("JWE interop: aegis <-> jose", () => {
       const kryptos = createOctKwKey();
       const kit = new JweKit({ logger, kryptos, encryption: "A256GCM" });
 
-      const { token } = kit.encrypt(PLAINTEXT);
+      const token = kit.encrypt(PLAINTEXT);
 
       const jwk = kryptos.export("jwk");
       const joseKey = await importJWK(jwk, "A128KW");
@@ -132,7 +132,7 @@ describe("JWE interop: aegis <-> jose", () => {
       const kryptos = createRsaOaepKey();
       const kit = new JweKit({ logger, kryptos, encryption: "A256GCM" });
 
-      const { token } = kit.encrypt(PLAINTEXT);
+      const token = kit.encrypt(PLAINTEXT);
 
       // jose needs private key for RSA decryption
       const jwk = kryptos.export("jwk");
@@ -167,8 +167,8 @@ describe("JWE interop: aegis <-> jose", () => {
       const result = kit.decrypt(token);
 
       expect(result.payload).toBe(PLAINTEXT);
-      expect(result.header.algorithm).toBe("RSA-OAEP-256");
-      expect(result.header.encryption).toBe("A256GCM");
+      expect(result.header.alg).toBe("RSA-OAEP-256");
+      expect(result.header.enc).toBe("A256GCM");
     });
   });
 
@@ -181,7 +181,7 @@ describe("JWE interop: aegis <-> jose", () => {
       const kryptos = createRsaOaepKey();
       const kit = new JweKit({ logger, kryptos, encryption: "A128CBC-HS256" });
 
-      const { token } = kit.encrypt(PLAINTEXT);
+      const token = kit.encrypt(PLAINTEXT);
 
       const jwk = kryptos.export("jwk");
       const joseKey = await importJWK(jwk, "RSA-OAEP-256");
@@ -213,7 +213,7 @@ describe("JWE interop: aegis <-> jose", () => {
       const result = kit.decrypt(token);
 
       expect(result.payload).toBe(PLAINTEXT);
-      expect(result.header.encryption).toBe("A128CBC-HS256");
+      expect(result.header.enc).toBe("A128CBC-HS256");
     });
   });
 
@@ -226,7 +226,7 @@ describe("JWE interop: aegis <-> jose", () => {
       const kryptos = createOctKwKey();
       const kit = new JweKit({ logger, kryptos, encryption: "A128CBC-HS256" });
 
-      const { token } = kit.encrypt(PLAINTEXT);
+      const token = kit.encrypt(PLAINTEXT);
 
       const jwk = kryptos.export("jwk");
       const joseKey = await importJWK(jwk, "A128KW");
@@ -257,7 +257,7 @@ describe("JWE interop: aegis <-> jose", () => {
       const result = kit.decrypt(token);
 
       expect(result.payload).toBe(PLAINTEXT);
-      expect(result.header.encryption).toBe("A128CBC-HS256");
+      expect(result.header.enc).toBe("A128CBC-HS256");
     });
   });
 
@@ -270,7 +270,7 @@ describe("JWE interop: aegis <-> jose", () => {
       const kryptos = createOctDirKey("A256GCM");
       const kit = new JweKit({ logger, kryptos, encryption: "A256GCM" });
 
-      const { token } = kit.encrypt(PLAINTEXT);
+      const token = kit.encrypt(PLAINTEXT);
 
       const jwk = kryptos.export("jwk");
       const joseKey = await importJWK(jwk, "dir");
@@ -302,8 +302,8 @@ describe("JWE interop: aegis <-> jose", () => {
       const result = kit.decrypt(token);
 
       expect(result.payload).toBe(PLAINTEXT);
-      expect(result.header.algorithm).toBe("dir");
-      expect(result.header.encryption).toBe("A256GCM");
+      expect(result.header.alg).toBe("dir");
+      expect(result.header.enc).toBe("A256GCM");
     });
   });
 
@@ -316,7 +316,7 @@ describe("JWE interop: aegis <-> jose", () => {
       const kryptos = createEcdhEsKey();
       const kit = new JweKit({ logger, kryptos, encryption: "A256GCM" });
 
-      const { token } = kit.encrypt(PLAINTEXT);
+      const token = kit.encrypt(PLAINTEXT);
 
       // jose needs private key for ECDH-ES decryption
       const jwk = kryptos.export("jwk");

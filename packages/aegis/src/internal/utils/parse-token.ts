@@ -7,6 +7,7 @@ import { AegisDomainError, AegisError } from "../../errors/index.js";
 import type { ParsedToken } from "../../types/index.js";
 import { isEncryptedCose } from "../cose/cose-encryption.js";
 import { isCose } from "../cose/is-cose.js";
+import { parseJwsToDomain } from "./parse-jws.js";
 import { parseJwtToDomain } from "./parse-jwt.js";
 
 // Is this an encrypted COSE token (a CWE)? Cheap dot-guard, then the CBOR probe.
@@ -30,15 +31,7 @@ export const parseToken = <C extends Dict = Dict>(token: string): ParsedToken<C>
   }
 
   if (JwsKit.isJws(token)) {
-    const parsed = JwsKit.parse(token);
-    return {
-      format: "jws",
-      header: parsed.header,
-      claims: {},
-      custom: {} as C,
-      raw: parsed.payload,
-      token,
-    };
+    return parseJwsToDomain<C>(token);
   }
 
   // `parse` is keyless + unverified — it CANNOT read an encrypted token, whose

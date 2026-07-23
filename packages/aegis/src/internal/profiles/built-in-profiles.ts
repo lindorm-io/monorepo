@@ -15,7 +15,7 @@ import type { userinfoProfile } from "./definitions/userinfo.js";
  * payload. The typed `verify` overload keys off this so
  * `aegis.verify("access_token", …)` returns a payload with non-optional
  * `subject`/`expiresAt`/… while a custom (runtime-registered) profile falls
- * through to the base {@link ParsedJwt}. Kept in lockstep with the registry's
+ * through to the base {@link VerifiedToken}. Kept in lockstep with the registry's
  * `registerProfile` calls.
  */
 export type BuiltInProfiles = {

@@ -28,49 +28,28 @@ describe("Aegis", () => {
 
   test("should sign and verify jwe", async () => {
     const res = await aegis.jwe.encrypt("data", {
-      objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",
+      header: { oid: "33100373-9769-4389-94dd-1b1d738f0fc4" },
     });
 
     expect(res).toEqual({
+      format: "jwe",
       token: expect.any(String),
     });
 
     await expect(aegis.jwe.decrypt(res.token)).resolves.toEqual({
-      decoded: {
-        authTag: expect.any(String),
-        content: expect.any(String),
-        header: {
-          alg: "ECDH-ES",
-          cty: "text/plain; charset=utf-8",
-          enc: "A256GCM",
-          epk: {
-            crv: "X25519",
-            kty: "OKP",
-            x: expect.any(String),
-          },
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
-          kid: "035f7f00-8101-5387-a935-e92f57347309",
-          oid: "33100373-9769-4389-94dd-1b1d738f0fc4",
-          typ: "JWE",
-        },
-        initialisationVector: expect.any(String),
-        publicEncryptionKey: undefined,
-      },
       header: {
-        algorithm: "ECDH-ES",
-        baseFormat: "JWE",
-        contentType: "text/plain; charset=utf-8",
-        critical: [],
-        encryption: "A256GCM",
-        headerType: "JWE",
-        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-        keyId: "035f7f00-8101-5387-a935-e92f57347309",
-        objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",
-        publicEncryptionJwk: {
+        alg: "ECDH-ES",
+        cty: "text/plain",
+        enc: "A256GCM",
+        epk: {
           crv: "X25519",
           kty: "OKP",
           x: expect.any(String),
         },
+        jku: "https://test.lindorm.io/.well-known/jwks.json",
+        kid: "035f7f00-8101-5387-a935-e92f57347309",
+        oid: "33100373-9769-4389-94dd-1b1d738f0fc4",
+        typ: "JWE",
       },
       payload: "data",
       token: res.token,
@@ -79,7 +58,7 @@ describe("Aegis", () => {
 
   test("should sign and verify jws", async () => {
     const res = await aegis.jws.sign("data", {
-      objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
+      header: { oid: "09172fab-dbff-40ef-bb86-94d9d4ed37dc" },
     });
 
     expect(res).toEqual({
@@ -88,27 +67,13 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.jws.verify(res.token)).resolves.toEqual({
-      decoded: {
-        header: {
-          alg: "ES512",
-          cty: "text/plain; charset=utf-8",
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
-          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-          oid: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
-          typ: "JWS",
-        },
-        payload: "data",
-        signature: expect.any(String),
-      },
       header: {
-        algorithm: "ES512",
-        baseFormat: "JWS",
-        contentType: "text/plain; charset=utf-8",
-        critical: [],
-        headerType: "JWS",
-        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-        keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-        objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
+        alg: "ES512",
+        cty: "text/plain",
+        jku: "https://test.lindorm.io/.well-known/jwks.json",
+        kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+        oid: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
+        typ: "JWS",
       },
       payload: "data",
       token: res.token,
@@ -123,7 +88,7 @@ describe("Aegis", () => {
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
       },
-      { sign: { objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad" } },
+      { sign: { header: { oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad" } } },
     );
 
     expect(res).toEqual({
@@ -136,38 +101,17 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.jwt.verify(res.token)).resolves.toEqual({
-      decoded: {
-        header: {
-          alg: "ES512",
-          cty: "application/json",
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
-          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-          oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          typ: "application/test_token+jwt",
-        },
-        payload: {
-          exp: 1704099600,
-          iat: 1704096000,
-          iss: "https://test.lindorm.io/",
-          jti: expect.any(String),
-          nbf: 1704096000,
-          sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-        },
-        signature: expect.any(String),
-      },
+      // The raw namespace returns the NATIVE WIRE shape: both `.header` (wire-named
+      // `alg`/`kid`/`typ`) and `.payload` (wire-keyed `sub`/`exp`) — NOT the domain
+      // header/buckets. The domain-named header + claims are `aegis.verify`.
       header: {
-        algorithm: "ES512",
-        baseFormat: "JWT",
-        contentType: "application/json",
-        critical: [],
-        headerType: "application/test_token+jwt",
-        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-        keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-        objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-        tokenType: "test_token",
+        alg: "ES512",
+        cty: "application/json",
+        jku: "https://test.lindorm.io/.well-known/jwks.json",
+        kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+        oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        typ: "application/test_token+jwt",
       },
-      // The raw namespace returns the NATIVE WIRE shape: `.payload` is wire-keyed
-      // (`sub`/`exp`), NOT the domain buckets. Domain claims are `aegis.verify`.
       payload: {
         exp: 1704099600,
         iat: 1704096000,
@@ -182,11 +126,11 @@ describe("Aegis", () => {
 
   test("should sign and verify jwe with jws", async () => {
     const jws = await aegis.jws.sign("data", {
-      objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
+      header: { oid: "09172fab-dbff-40ef-bb86-94d9d4ed37dc" },
     });
 
     const jwe = await aegis.jwe.encrypt(jws.token, {
-      objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",
+      header: { oid: "33100373-9769-4389-94dd-1b1d738f0fc4" },
     });
 
     await expect(aegis.verify(jwe.token)).resolves.toEqual(
@@ -202,7 +146,7 @@ describe("Aegis", () => {
     });
 
     const jwe = await aegis.jwe.encrypt(jwt.token, {
-      objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",
+      header: { oid: "33100373-9769-4389-94dd-1b1d738f0fc4" },
     });
 
     await expect(aegis.verify(jwe.token)).resolves.toEqual(
@@ -221,7 +165,7 @@ describe("Aegis", () => {
 
   test("should sign and verify jws", async () => {
     const jws = await aegis.jws.sign("data", {
-      objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
+      header: { oid: "09172fab-dbff-40ef-bb86-94d9d4ed37dc" },
     });
 
     await expect(aegis.verify(jws.token)).resolves.toEqual(

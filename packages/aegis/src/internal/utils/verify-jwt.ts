@@ -7,6 +7,7 @@ import type { DomainAssert, VerifiedToken, VerifyOptions } from "../../types/ind
 import type { AegisDeps } from "./aegis-deps.js";
 import { computeTypHeader, extractTypPrefix } from "./compute-typ-header.js";
 import { extractTokenDelegation } from "./extract-token-delegation.js";
+import { joseDomainHeader } from "./jose-domain-header.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { buildDomainClaims } from "./jwt-payload.js";
 import { validate } from "./validate.js";
@@ -58,14 +59,22 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
 
   // The kit asserts the header typ from a bare PREFIX it re-wraps; derive that
   // prefix from the domain `tokenType`.
-  const wire = kit.verify<C>(token, undefined, {
-    typ:
+  kit.verify<C>(token, undefined, {
+    currentDate: options.currentDate,
+    maxTokenAge: options.maxTokenAge,
+    tokenType:
       options.tokenType !== undefined
         ? extractTypPrefix(computeTypHeader(options.tokenType, "jwt"))
         : undefined,
   });
 
-  const { decoded, header } = wire;
+  // The kit verify no longer surfaces a `decoded` sub-object; the segments come
+  // from the cheap `decode` above (identical header + cleartext claims).
+  const decoded = decode;
+
+  // The raw kit verify returns the WIRE header; the domain `VerifiedToken` carries
+  // the DOMAIN-named header, so translate here (the JOSE twin of coseDomainHeader).
+  const header = joseDomainHeader(decoded.header, "JWT");
 
   // typ PRESENCE policy (default "required") — the RFC 8725 explicit-typing
   // defense. Profiled verify relaxes to "optional" (the floor owns it).
@@ -125,6 +134,7 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
         matchers,
         deps.clockTolerance,
         options.expPresence,
+        options.currentDate,
       ) as never,
     );
   } catch (err) {

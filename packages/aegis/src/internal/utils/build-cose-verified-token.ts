@@ -38,9 +38,9 @@ const coseTokenType = (typ: string | undefined): string | undefined => {
  * claims path and the opaque CWS path.
  */
 export const coseDomainHeader = (triple: {
-  alg: string | undefined;
-  kid: string | undefined;
-  typ: string | undefined;
+  alg?: string | undefined;
+  kid?: string | undefined;
+  typ?: string | undefined;
 }): VerifiedTokenHeader => {
   const header = parseTokenHeader({
     alg: triple.alg,

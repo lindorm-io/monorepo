@@ -2,18 +2,31 @@ import { TOKEN_TYPE_TO_SHORT_NAME, type TokenType } from "../../constants/token-
 import { AegisError } from "../../errors/index.js";
 import type { BaseTokenFormat } from "../../types/header/wire-header.js";
 
-export type KitFormat = "jwt" | "jws" | "jwe";
+export type KitFormat = "jwt" | "jws" | "jwe" | "cwt" | "cwm" | "cws" | "cwe";
 
+// The bare conventional form each kit format floors to when no prefix is given.
+// JOSE uses the abbreviated bare forms (RFC 7515 drops `application/`); COSE
+// (RFC 9596 → 9052 §3.1) keeps the full `application/...` media type, so its
+// fallback is `application/cwt|cws|cwe`. A `cwm` (COSE_Mac0) shares the CWT
+// media type — the STRUCTURE (Mac0 vs Sign1) is what tells `cwm` from `cwt`.
 const FORMAT_FALLBACK: Record<KitFormat, string> = {
   jwt: "JWT",
   jws: "JWS",
   jwe: "JWE",
+  cwt: "application/cwt",
+  cwm: "application/cwt",
+  cws: "application/cws",
+  cwe: "application/cwe",
 };
 
 const FORMAT_SUFFIX: Record<KitFormat, string> = {
   jwt: "+jwt",
   jws: "+jws",
   jwe: "+jwe",
+  cwt: "+cwt",
+  cwm: "+cwt",
+  cws: "+cws",
+  cwe: "+cwe",
 };
 
 /**
@@ -55,6 +68,19 @@ export const extractTypPrefix = (
       "A typ header must be the bare conventional form (JWT) or an application/<prefix>+<format> media type.",
   });
 };
+
+/**
+ * The DOMAIN enum → bare kit PREFIX bridge: translate a {@link TokenType} enum to
+ * the bare `typ` PREFIX the wire kits re-wrap (`access_token` → `"at"`; a type with
+ * no structured form, or `undefined`, → `undefined`). This is where the enum's
+ * validation + short-name lookup live now that the kits take a raw prefix — the
+ * Aegis-tier callers (sign/verify/encrypt domain paths) run it before handing a
+ * prefix to a kit. Format-agnostic (short-name lookup is the same for JOSE/COSE),
+ * so it derives via the `jwt` short-name table.
+ */
+export const domainTokenTypePrefix = (
+  tokenType: TokenType | undefined,
+): string | undefined => extractTypPrefix(computeTypHeader(tokenType, "jwt"), "jwt");
 
 export const computeTypHeader = (
   tokenType: TokenType | undefined,

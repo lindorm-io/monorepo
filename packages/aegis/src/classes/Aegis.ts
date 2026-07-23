@@ -43,6 +43,7 @@ import {
   isCwt as isCwtBytes,
 } from "../internal/cose/is-cose-format.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
+import type { OmitMode } from "../internal/utils/apply-omit.js";
 import { registerProfile as registerProfileFn } from "../internal/profiles/registry.js";
 import type { AegisDeps } from "../internal/utils/aegis-deps.js";
 import { decryptToken } from "../internal/utils/decrypt-token.js";
@@ -80,53 +81,38 @@ import type {
   AesDecryptOptions,
   AesEncryptOptions,
   CertificateBindingMode,
-  CweContent,
-  CweDecryptOptions,
   CweEncryptOptions,
-  CwsContent,
-  CwtWireClaims,
-  DecryptedCwe,
-  DecryptedJwe,
+  CwtClaimsWire,
+  DecryptedEncryptedToken,
   DecryptedToken,
   DecryptOptions,
+  DecryptTokenOptions,
   DomainAssert,
   EncryptData,
-  EncryptedCwe,
-  EncryptedJwe,
   EncryptedToken,
   EncryptOptions,
-  JweDecryptOptions,
   JweEncryptOptions,
-  JwsContent,
-  JwtWireClaims,
+  JwtClaimsWire,
   NarrowedToken,
-  ParsedCws,
-  ParsedCwt,
-  ParsedJws,
-  ParsedJwt,
   ParsedToken,
   ProfileContent,
   ProfileMintOptions,
   ProfileVerifyOptions,
   RawSignInput,
   SignContent,
-  SignCwsOptions,
-  SignCwtOptions,
-  SignedCws,
   SignedCwt,
-  SignedJws,
   SignedJwt,
-  SignJwsOptions,
-  SignJwtOptions,
-  SignJwtWireOptions,
+  SignStructuredTokenOptions,
+  SignUnstructuredTokenOptions,
+  TokenContent,
   TokenProfile,
   ValidateJwtOptions,
+  VerifiedStructuredToken,
   VerifiedToken,
-  VerifyCwsOptions,
-  VerifyCwtOptions,
-  VerifyJwsOptions,
-  VerifyJwtWireOptions,
+  VerifiedUnstructuredToken,
   VerifyOptions,
+  VerifyStructuredTokenOptions,
+  VerifyUnstructuredTokenOptions,
 } from "../types/index.js";
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
@@ -258,7 +244,7 @@ export class Aegis implements IAegis {
     registerProfileFn(profile);
   }
 
-  sign(input: RawSignInput): Promise<SignedJws> {
+  sign(input: RawSignInput): Promise<SignedJwt> {
     return signToken({ input, deps: this.deps });
   }
 
@@ -449,95 +435,101 @@ export class Aegis implements IAegis {
 
   // private jwe
   private jweEncrypt(
-    data: string,
-    options: JweEncryptOptions = {},
-  ): Promise<EncryptedJwe> {
+    data: TokenContent,
+    options: JweEncryptOptions & { key?: AegisEncKey } = {},
+  ): Promise<EncryptedToken> {
     return rawEncryptJwe({ data, options, deps: this.deps });
   }
 
-  private jweDecrypt(
+  private jweDecrypt<T extends TokenContent = Buffer>(
     jwe: string,
-    options: JweDecryptOptions = {},
-  ): Promise<DecryptedJwe> {
-    return rawDecryptJwe({ jwe, options, deps: this.deps });
+    options: DecryptTokenOptions & { key?: AegisDecryptKey } = {},
+  ): Promise<DecryptedEncryptedToken<T, string>> {
+    return rawDecryptJwe<T>({ jwe, options, deps: this.deps });
   }
 
   // private jws
-  private jwsSign<T extends JwsContent>(
-    data: T,
-    options: SignJwsOptions = {},
-  ): Promise<SignedJws> {
-    return rawSignJws<T>({ data, options, deps: this.deps });
+  private jwsSign(
+    data: TokenContent,
+    options: SignUnstructuredTokenOptions & { key?: AegisSignKey } = {},
+  ): Promise<SignedJwt> {
+    return rawSignJws({ data, options, deps: this.deps });
   }
 
-  private jwsVerify<T extends JwsContent>(
+  private jwsVerify<T extends TokenContent = Buffer>(
     jws: string,
-    options: VerifyJwsOptions = {},
-  ): Promise<ParsedJws<T>> {
+    options: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey } = {},
+  ): Promise<VerifiedUnstructuredToken<T, string>> {
     return rawVerifyJws<T>({ jws, options, deps: this.deps });
   }
 
   // private jwt
-  private jwtSign<C extends JwtWireClaims = JwtWireClaims>(
-    claims: C,
-    options: SignJwtWireOptions & { key?: AegisSignKey } = {},
+  private jwtSign<C extends Dict = Dict>(
+    claims: JwtClaimsWire & C,
+    options: SignStructuredTokenOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedJwt> {
     return rawSignJwt<C>({ claims, options, deps: this.deps });
   }
 
   // private cwe
   private cweEncrypt(
-    data: CweContent,
-    options: CweEncryptOptions = {},
-  ): Promise<EncryptedCwe> {
+    data: TokenContent,
+    options: CweEncryptOptions & { key?: AegisEncKey } = {},
+  ): Promise<EncryptedToken> {
     return rawEncryptCwe({ data, options, deps: this.deps });
   }
 
-  private cweDecrypt(
+  private cweDecrypt<T extends TokenContent = Buffer>(
     token: string,
-    options: CweDecryptOptions = {},
-  ): Promise<DecryptedCwe> {
-    return rawDecryptCwe({ token, options, deps: this.deps });
+    options: DecryptTokenOptions & { key?: AegisDecryptKey } = {},
+  ): Promise<DecryptedEncryptedToken<T, Buffer>> {
+    return rawDecryptCwe<T>({ token, options, deps: this.deps });
   }
 
   // private cws
-  private cwsSign(data: CwsContent, options: SignCwsOptions = {}): Promise<SignedCws> {
+  private cwsSign(
+    data: TokenContent,
+    options: SignUnstructuredTokenOptions & { key?: AegisSignKey; omit?: OmitMode } = {},
+  ): Promise<SignedCwt> {
     return rawSignCws({ data, options, deps: this.deps });
   }
 
-  private cwsVerify(token: string, options: VerifyCwsOptions = {}): Promise<ParsedCws> {
-    return rawVerifyCws({ token, options, deps: this.deps });
+  private cwsVerify<T extends TokenContent = Buffer>(
+    token: string,
+    options: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey } = {},
+  ): Promise<VerifiedUnstructuredToken<T, Buffer>> {
+    return rawVerifyCws<T>({ token, options, deps: this.deps });
   }
 
   // private cwt
-  private cwtSign<C extends CwtWireClaims = CwtWireClaims>(
-    claims: C,
-    options: SignCwtOptions = {},
+  private cwtSign<C extends Dict = Dict>(
+    claims: CwtClaimsWire & C,
+    options: SignStructuredTokenOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedCwt> {
     return rawSignCwt<C>({ claims, options, deps: this.deps });
   }
 
-  private cwtVerify<C extends CwtWireClaims = CwtWireClaims>(
+  private cwtVerify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<C>,
-    options: VerifyCwtOptions = {},
-  ): Promise<ParsedCwt<C>> {
+    assert?: Predicate<CwtClaimsWire & C>,
+    options: VerifyStructuredTokenOptions & { key?: AegisVerifyKey } = {},
+  ): Promise<VerifiedStructuredToken<CwtClaimsWire & C, Buffer>> {
     return rawVerifyCwt<C>({ token, assert, options, deps: this.deps });
   }
 
   // private cwm (COSE_Mac0 / symmetric twin of cwt)
-  private cwmSign<C extends CwtWireClaims = CwtWireClaims>(
-    claims: C,
-    options: SignCwtOptions = {},
+  private cwmSign<C extends Dict = Dict>(
+    claims: CwtClaimsWire & C,
+    options: SignStructuredTokenOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedCwt> {
     return rawSignCwm<C>({ claims, options, deps: this.deps });
   }
 
-  private cwmVerify<C extends CwtWireClaims = CwtWireClaims>(
+  private cwmVerify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<C>,
-    options: VerifyCwtOptions = {},
-  ): Promise<ParsedCwt<C>> {
+    assert?: Predicate<CwtClaimsWire & C>,
+    options: VerifyStructuredTokenOptions & { key?: AegisVerifyKey } = {},
+  ): Promise<VerifiedStructuredToken<CwtClaimsWire & C, Buffer>> {
     return rawVerifyCwm<C>({ token, assert, options, deps: this.deps });
   }
 
@@ -561,11 +553,11 @@ export class Aegis implements IAegis {
   }
 
   // private jwt verify
-  private jwtVerify<C extends JwtWireClaims = JwtWireClaims>(
+  private jwtVerify<C extends Dict = Dict>(
     jwt: string,
-    assert?: Predicate<C>,
-    options: VerifyJwtWireOptions & { key?: AegisVerifyKey } = {},
-  ): Promise<ParsedJwt<C>> {
+    assert?: Predicate<JwtClaimsWire & C>,
+    options: VerifyStructuredTokenOptions & { key?: AegisVerifyKey } = {},
+  ): Promise<VerifiedStructuredToken<JwtClaimsWire & C, string>> {
     return rawVerifyJwt<C>({ jwt, assert, options, deps: this.deps });
   }
 
@@ -591,7 +583,7 @@ export class Aegis implements IAegis {
   // lookup key into Amphora — never as a key itself.
 
   private resolveSignKey(
-    options: SignJwsOptions | SignJwtOptions,
+    options: { key?: AegisSignKey },
     profile?: TokenProfile,
   ): Promise<IKryptos> {
     return resolveKey({

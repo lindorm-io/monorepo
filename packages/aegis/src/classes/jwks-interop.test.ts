@@ -36,7 +36,7 @@ const signDefault = (kit: JwtKit, content: SignContent) => {
     content,
   );
   return kit.sign(claims, {
-    typ: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),
+    tokenType: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),
   });
 };
 

@@ -5,12 +5,18 @@ import { JweKit } from "../../classes/JweKit.js";
 import { JwsKit } from "../../classes/JwsKit.js";
 import { JwtKit } from "../../classes/JwtKit.js";
 import { AegisDomainError, AegisError } from "../../errors/index.js";
-import type { DomainAssert, VerifiedToken, VerifyOptions } from "../../types/index.js";
+import type {
+  DomainAssert,
+  TokenContent,
+  VerifiedToken,
+  VerifyOptions,
+} from "../../types/index.js";
 import { isCose } from "../cose/is-cose.js";
 import { isCws as isCwsBytes } from "../cose/is-cose-format.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { buildCoseVerifiedToken, coseDomainHeader } from "./build-cose-verified-token.js";
 import { coseVerifyCore } from "./cose-verify-core.js";
+import { joseDomainHeader } from "./jose-domain-header.js";
 import { rawDecryptJwe } from "./raw-decrypt-jwe.js";
 import { rawVerifyCws } from "./raw-verify-cws.js";
 import { rawVerifyJws } from "./raw-verify-jws.js";
@@ -45,7 +51,25 @@ export const verifyToken = async <C extends Dict = Dict>({
   }
 
   if (JweKit.isJwe(token)) {
-    const decrypt = await rawDecryptJwe({ jwe: token, deps });
+    const decrypt = await rawDecryptJwe<TokenContent>({ jwe: token, deps });
+
+    // verify = authenticity: the decrypted inner must be a SIGNED token, which is
+    // always a compact STRING. A reconstructed object (a bare claims set, cty
+    // application/json) or opaque Buffer is not sender-authenticated, so refuse it
+    // here — read confidential, unsigned encrypted claims with `aegis.decrypt`.
+    if (typeof decrypt.payload !== "string") {
+      throw new AegisDomainError(
+        "Encrypted token does not contain a signed inner token",
+        {
+          code: "verify_requires_signature",
+          debug: { token: sanitiseToken(token) },
+          title: "Verify Requires Signature",
+          details:
+            "aegis.verify requires sender authentication: a JWE must decrypt to a signed token (JWT or JWS). This JWE's plaintext is not a signed token — read confidential, unsigned encrypted claims with aegis.decrypt instead.",
+        },
+      );
+    }
+
     const inner = await verifyToken<C>({
       token: decrypt.payload,
       assert,
@@ -66,7 +90,9 @@ export const verifyToken = async <C extends Dict = Dict>({
     const parsed = await rawVerifyJws({ jws: token, deps });
     return {
       format: "jws",
-      header: parsed.header,
+      // The raw kit verify returns the WIRE header; the domain result carries the
+      // DOMAIN-named header (the JOSE twin of coseDomainHeader for the CWS path).
+      header: joseDomainHeader(parsed.header, "JWS"),
       claims: {},
       custom: {} as C,
       raw: parsed.payload,
@@ -87,7 +113,7 @@ export const verifyToken = async <C extends Dict = Dict>({
         header: coseDomainHeader(parsed.header),
         claims: {},
         custom: {} as C,
-        raw: parsed.raw,
+        raw: parsed.payload,
         token,
       };
     }
@@ -99,6 +125,8 @@ export const verifyToken = async <C extends Dict = Dict>({
         encrypted: coseEncrypted,
       } = await coseVerifyCore({
         input: bytes,
+        currentDate: options?.currentDate,
+        maxTokenAge: options?.maxTokenAge,
         deps,
       });
       if (options || assert) {

@@ -37,7 +37,7 @@ describe("token redaction", () => {
     });
 
     test("should log a signed token without its signature", () => {
-      const { token } = kit.sign("data");
+      const token = kit.sign("data");
       const [header, payload, signature] = token.split(".");
 
       expect(signature).toBeTruthy();
@@ -46,7 +46,7 @@ describe("token redaction", () => {
     });
 
     test("should log a verified token without its signature", () => {
-      const { token } = kit.sign("data");
+      const token = kit.sign("data");
       const [header, payload, signature] = token.split(".");
 
       logs = [];
@@ -57,7 +57,7 @@ describe("token redaction", () => {
     });
 
     test("should not carry the signature in the signature_invalid error payload", () => {
-      const { token } = kit.sign("data");
+      const token = kit.sign("data");
       const [header, payload, signature] = token.split(".");
 
       const tampered = `${header}.${payload}.${signature.slice(0, -4)}beef`;
@@ -81,7 +81,7 @@ describe("token redaction", () => {
     });
 
     test("should log an encrypted token as its protected header only", () => {
-      const { token } = kit.encrypt("data");
+      const token = kit.encrypt("data");
       const [protectedHeader, key, iv, content, tag] = token.split(".");
 
       expect(logged()).toContain(protectedHeader);
@@ -92,7 +92,7 @@ describe("token redaction", () => {
     });
 
     test("should log a decrypted token as its protected header only", () => {
-      const { token } = kit.encrypt("data");
+      const token = kit.encrypt("data");
       const [protectedHeader, , , content] = token.split(".");
 
       logs = [];

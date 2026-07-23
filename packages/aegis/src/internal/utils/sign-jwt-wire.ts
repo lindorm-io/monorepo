@@ -49,11 +49,10 @@ export const signJwtWire = ({
       certificateThumbprintSha1:
         options.certificateThumbprintSha1 ?? certificateThumbprintSha1,
       header: options.header,
-      objectId: options.objectId,
       omit: options.omit,
-      typ: extractTypPrefix(fullTyp),
+      tokenType: extractTypPrefix(fullTyp),
     },
   );
 
-  return buildSignedJwt(token, wireClaims, options.objectId);
+  return buildSignedJwt(token, wireClaims, options.header?.oid);
 };

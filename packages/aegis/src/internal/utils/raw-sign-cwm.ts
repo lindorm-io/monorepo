@@ -1,5 +1,11 @@
+import type { Dict } from "@lindorm/types";
 import { CwmKit } from "../../classes/CwmKit.js";
-import type { CwtWireClaims, SignCwtOptions, SignedCwt } from "../../types/index.js";
+import type {
+  AegisSignKey,
+  CwtClaimsWire,
+  SignStructuredTokenOptions,
+  SignedCwt,
+} from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { buildSignedCwt } from "./cwt-payload.js";
 
@@ -11,22 +17,24 @@ import { buildSignedCwt } from "./cwt-payload.js";
  * apart from `cwt` (D6). A symmetric key is required; an asymmetric one throws via
  * the kit gate (that is `aegis.cwt.sign`).
  */
-export const rawSignCwm = async <C extends CwtWireClaims = CwtWireClaims>({
+export const rawSignCwm = async <C extends Dict = Dict>({
   claims,
   options = {},
   deps,
 }: {
-  claims: C;
-  options?: SignCwtOptions;
+  claims: CwtClaimsWire & C;
+  options?: SignStructuredTokenOptions & { key?: AegisSignKey };
   deps: AegisDeps;
 }): Promise<SignedCwt> => {
   const kryptos = await deps.resolveSignKey({ key: options.key });
 
   const token = new CwmKit({ kryptos, logger: deps.logger }).sign<C>(claims, {
-    typ: options.typ,
+    tokenType: options.tokenType,
     proprietary: options.proprietary,
     omit: options.omit,
+    header: options.header,
+    unprotected: options.unprotected,
   });
 
-  return buildSignedCwt(token.toString("base64url"), claims, options.objectId);
+  return buildSignedCwt(token.toString("base64url"), claims, options.header?.oid);
 };

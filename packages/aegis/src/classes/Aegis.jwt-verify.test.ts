@@ -4,7 +4,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import { ShaKit } from "@lindorm/sha";
 import MockDate from "mockdate";
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG, TEST_RSA_KEY_SIG } from "../__fixtures__/keys.js";
 import { createJoseSignature } from "../internal/utils/jose-signature.js";
 import type { SignContent } from "../types/index.js";
@@ -133,7 +133,7 @@ describe("Aegis verify — relocated domain policy", () => {
       const parsed = await aegis.jwt.verify(signTypLess());
       expect(parsed.payload.iss).toBe(issuer);
       expect(parsed.payload.sub).toBe("s");
-      expect(parsed.header.headerType).toBeUndefined();
+      expect(parsed.header.typ).toBeUndefined();
     });
   });
 
@@ -358,6 +358,45 @@ describe("Aegis verify — relocated domain policy", () => {
       await expect(aegis.verify(token, undefined, { dpopProof: proof })).rejects.toThrow(
         /thumbprint does not match cnf\.jkt/,
       );
+    });
+  });
+
+  // R10 temporal overrides threaded end-to-end through the DOMAIN verify path
+  // (verifyJwtToken → kit temporal AND the identity-matcher exp bound).
+  describe("temporal overrides (R10 — currentDate / maxTokenAge)", () => {
+    afterEach(() => MockDate.set(new Date("2024-01-01T08:00:00.000Z")));
+
+    test("currentDate revives a token expired against the real clock", async () => {
+      const { token } = await mint(baseContent); // minted at 08:00, exp at 09:00
+
+      // Travel past the token's expiry.
+      MockDate.set(new Date("2024-01-01T10:00:00.000Z"));
+
+      // Against the real (travelled) clock the token is expired.
+      await expect(aegis.verify(token)).rejects.toThrow();
+
+      // A currentDate BEFORE expiry revives it — proving currentDate is threaded
+      // through BOTH the kit temporal check AND the domain exp matcher (if the
+      // matcher ignored currentDate it would reject against the 10:00 clock).
+      await expect(
+        aegis.verify(token, undefined, {
+          currentDate: new Date("2024-01-01T08:30:00.000Z"),
+        }),
+      ).resolves.toBeDefined();
+    });
+
+    test("maxTokenAge rejects a token whose iat is older than the bound", async () => {
+      const { token } = await mint(baseContent); // iat at 08:00
+
+      // Travel 10 minutes forward, so the token's iat is 600s old.
+      MockDate.set(new Date("2024-01-01T08:10:00.000Z"));
+
+      await expect(
+        aegis.verify(token, undefined, { maxTokenAge: 300 }),
+      ).rejects.toThrow();
+      await expect(
+        aegis.verify(token, undefined, { maxTokenAge: 900 }),
+      ).resolves.toBeDefined();
     });
   });
 });

@@ -54,7 +54,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
   describe("signed kits round-trip sign -> decode (no signature/MAC check)", () => {
     test("JwtKit.decode returns the unified wire header + cleartext claims", () => {
       const kit = new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
-      const token = kit.sign({ ...jwtWire, jti: "the-jti" }, { typ: "at" });
+      const token = kit.sign({ ...jwtWire, jti: "the-jti" }, { tokenType: "at" });
 
       const { header, payload } = kit.decode(token);
 
@@ -69,7 +69,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
 
     test("CwtKit.decode (COSE_Sign1) returns the unified wire header + cleartext claims", () => {
       const kit = new CwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
-      const token = kit.sign(cwtWire, { typ: "application/at+cwt" });
+      const token = kit.sign(cwtWire, { tokenType: "at" });
 
       const { header, payload } = kit.decode(token);
 
@@ -85,7 +85,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
 
     test("CwmKit.decode (COSE_Mac0) returns the unified wire header + cleartext claims", () => {
       const kit = new CwmKit({ logger, kryptos: TEST_OCT_KEY_SIG });
-      const token = kit.sign(cwtWire, { typ: "application/at+cwt" });
+      const token = kit.sign(cwtWire, { tokenType: "at" });
 
       const { header, payload } = kit.decode(token);
 
@@ -98,7 +98,8 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
 
     test("JwsKit.decode returns the unified wire header + opaque payload bytes", () => {
       const kit = new JwsKit({ logger, kryptos: TEST_EC_KEY_SIG });
-      const { token } = kit.sign("the opaque payload");
+      // A Buffer stays opaque (octet cty), so decode reconstructs it as a Buffer.
+      const token = kit.sign(Buffer.from("the opaque payload"));
 
       const { header, payload } = kit.decode(token);
 
@@ -111,7 +112,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
     test("CwsKit.decode returns the unified wire header + opaque payload bytes", () => {
       const kit = new CwsKit({ logger, kryptos: TEST_EC_KEY_SIG });
       const bytes = Buffer.from("the opaque payload");
-      const token = encodeCbor(kit.sign(bytes, { typ: "application/at+cws" }));
+      const token = kit.sign(bytes, { tokenType: "at" });
 
       const { header, payload } = kit.decode(token);
 
@@ -125,7 +126,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
   describe("COSE header MERGE + integer-label -> wire-name translation", () => {
     test("a CWT merges protected (alg/typ) + unprotected (kid) into ONE wire header", () => {
       const kit = new CwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
-      const { header } = kit.decode(kit.sign(cwtWire, { typ: "application/at+cwt" }));
+      const { header } = kit.decode(kit.sign(cwtWire, { tokenType: "at" }));
 
       // alg + typ come off the PROTECTED map, kid off the UNPROTECTED map — all
       // land on one header under their JOSE wire names.
@@ -163,9 +164,9 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
 
     test("a CWE maps the COSE_Encrypt0 content-encryption label (1) to `enc`", () => {
       const kit = new CweKit({ logger, kryptos: coseEncKey });
-      const token = encodeCbor(
-        kit.encrypt(Buffer.from("ciphertext-source"), { typ: "application/at+cwe" }),
-      );
+      const token = kit.encrypt(Buffer.from("ciphertext-source"), {
+        tokenType: "at",
+      });
 
       const { header } = kit.decode(token);
 
@@ -181,15 +182,17 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
   describe("uniform result shape across each format pair", () => {
     test("JWT ≡ CWT — same result keys, same shared claim keys", () => {
       const jwt = new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG }).decode(
-        new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG }).sign(jwtWire, { typ: "at" }),
+        new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG }).sign(jwtWire, {
+          tokenType: "at",
+        }),
       );
       const cwt = new CwtKit({ logger, kryptos: TEST_EC_KEY_SIG }).decode(
         new CwtKit({ logger, kryptos: TEST_EC_KEY_SIG }).sign(cwtWire, {
-          typ: "application/at+cwt",
+          tokenType: "at",
         }),
       );
 
-      expect(Object.keys(jwt).sort()).toEqual(["header", "payload"]);
+      expect(Object.keys(jwt).sort()).toEqual(["header", "payload", "token"]);
       expect(Object.keys(cwt).sort()).toEqual(Object.keys(jwt).sort());
 
       // Shared header wire keys.
@@ -209,13 +212,13 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       const bytes = Buffer.from("identical opaque payload");
 
       const jws = new JwsKit({ logger, kryptos: TEST_EC_KEY_SIG }).decode(
-        new JwsKit({ logger, kryptos: TEST_EC_KEY_SIG }).sign(bytes).token,
+        new JwsKit({ logger, kryptos: TEST_EC_KEY_SIG }).sign(bytes),
       );
       const cws = new CwsKit({ logger, kryptos: TEST_EC_KEY_SIG }).decode(
-        encodeCbor(new CwsKit({ logger, kryptos: TEST_EC_KEY_SIG }).sign(bytes)),
+        new CwsKit({ logger, kryptos: TEST_EC_KEY_SIG }).sign(bytes),
       );
 
-      expect(Object.keys(jws).sort()).toEqual(["header", "payload"]);
+      expect(Object.keys(jws).sort()).toEqual(["header", "payload", "token"]);
       expect(Object.keys(cws).sort()).toEqual(Object.keys(jws).sort());
 
       expect(Buffer.isBuffer(jws.payload)).toBe(true);
@@ -230,17 +233,16 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       const secret = "the-plaintext-secret-value";
 
       const jwe = new JweKit({ logger, kryptos: TEST_OCT_KEY_ENC }).decode(
-        new JweKit({ logger, kryptos: TEST_OCT_KEY_ENC }).encrypt(secret).token,
+        new JweKit({ logger, kryptos: TEST_OCT_KEY_ENC }).encrypt(secret),
       );
       const cwe = new CweKit({ logger, kryptos: coseEncKey }).decode(
-        encodeCbor(
-          new CweKit({ logger, kryptos: coseEncKey }).encrypt(Buffer.from(secret)),
-        ),
+        new CweKit({ logger, kryptos: coseEncKey }).encrypt(Buffer.from(secret)),
       );
 
-      // Both decode to the SAME result shape: the header only.
-      expect(Object.keys(jwe)).toEqual(["header"]);
-      expect(Object.keys(cwe)).toEqual(["header"]);
+      // Both decode to the SAME result shape: the header + the native token (the
+      // content stays ciphertext — never a plaintext payload field).
+      expect(Object.keys(jwe).sort()).toEqual(["header", "token"]);
+      expect(Object.keys(cwe).sort()).toEqual(["header", "token"]);
 
       // The content is ciphertext — the plaintext must not appear anywhere.
       expect(JSON.stringify(jwe)).not.toContain(secret);

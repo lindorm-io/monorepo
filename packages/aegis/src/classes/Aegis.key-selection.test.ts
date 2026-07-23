@@ -46,9 +46,13 @@ const foreignJwe = async (
   // (findById) and the DECRYPT_FLOOR post-checks the named key; it will NOT
   // search the vault by the JWE's declared `alg` (RFC 8725 §3.1). A kid-less
   // JWE is rejected outright with `decrypt_key_missing_kid`.
-  return new CompactEncrypt(new TextEncoder().encode(PLAINTEXT))
-    .setProtectedHeader({ alg, enc: "A256GCM", typ: "JWE", kid })
-    .encrypt(key);
+  return (
+    new CompactEncrypt(new TextEncoder().encode(PLAINTEXT))
+      // A conformant client declares the content type; aegis reads it back off the
+      // cty to reconstruct the plaintext as a string (an absent cty ⇒ opaque Buffer).
+      .setProtectedHeader({ alg, enc: "A256GCM", typ: "JWE", kid, cty: "text/plain" })
+      .encrypt(key)
+  );
 };
 
 describe("Aegis key selection", () => {

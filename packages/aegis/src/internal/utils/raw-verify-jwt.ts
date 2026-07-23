@@ -1,11 +1,11 @@
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
-import type { Predicate } from "@lindorm/types";
+import type { Dict, Predicate } from "@lindorm/types";
 import { JwtKit } from "../../classes/JwtKit.js";
 import type {
   AegisVerifyKey,
-  JwtWireClaims,
-  ParsedJwt,
-  VerifyJwtWireOptions,
+  JwtClaimsWire,
+  VerifiedStructuredToken,
+  VerifyStructuredTokenOptions,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
 
@@ -14,22 +14,21 @@ import type { AegisDeps } from "./aegis-deps.js";
  * resolve the verify key by its `kid` (never a header-embedded key) — with the
  * per-call `key` injection preserved for external keys (RFC 7523
  * `client_secret_jwt`) — then verify the JWT via the transform-free `JwtKit` and
- * return its NATIVE WIRE shape DIRECTLY (`.payload` wire-keyed `sub`/`exp`,
- * `.header`, `.decoded`, `.token`). Claim matching is the positional wire
- * `assert` predicate; NO domain translation, NO named matchers, NO DPoP/actor —
- * the domain result (`.claims`/`.custom`) is `aegis.verify`'s `VerifiedToken`.
+ * return its NATIVE WIRE shape DIRECTLY (`.payload` wire-keyed, `.header`,
+ * `.token`). Claim matching is the positional wire `assert` predicate; NO domain
+ * translation — the domain result (`.claims`/`.custom`) is `aegis.verify`.
  */
-export const rawVerifyJwt = async <C extends JwtWireClaims = JwtWireClaims>({
+export const rawVerifyJwt = async <C extends Dict = Dict>({
   jwt,
   assert,
   options = {},
   deps,
 }: {
   jwt: string;
-  assert?: Predicate<C>;
-  options?: VerifyJwtWireOptions & { key?: AegisVerifyKey };
+  assert?: Predicate<JwtClaimsWire & C>;
+  options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
-}): Promise<ParsedJwt<C>> => {
+}): Promise<VerifiedStructuredToken<JwtClaimsWire & C, string>> => {
   const decode = JwtKit.decodeSegments(jwt);
 
   const kryptos = await deps.resolveVerifyKey(
@@ -46,6 +45,8 @@ export const rawVerifyJwt = async <C extends JwtWireClaims = JwtWireClaims>({
   }).verify<C>(jwt, assert, {
     certBindingMode: options.certBindingMode,
     clockTolerance: options.clockTolerance,
-    typ: options.typ,
+    currentDate: options.currentDate,
+    maxTokenAge: options.maxTokenAge,
+    tokenType: options.tokenType,
   });
 };

@@ -27,6 +27,8 @@ export const verifyCoseToken = async ({
   const profile = resolveProfile(name);
   const { claims, wire, decoded, typ, encrypted } = await coseVerifyCore({
     input: Buffer.from(token, "base64url"),
+    currentDate: options.currentDate,
+    maxTokenAge: options.maxTokenAge,
     deps,
   });
 

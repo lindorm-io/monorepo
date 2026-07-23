@@ -169,7 +169,7 @@ describe("aegis error tree — real throw-site routing", () => {
 
   test("CwtKit kid fail-fast surfaces cwt_kid_mismatch on CwtError", () => {
     const signer = new CwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
-    const token = signer.sign({ sub: "user-1" }, { typ: "application/at+cwt" });
+    const token = signer.sign({ sub: "user-1" }, { tokenType: "at" });
 
     // A verifier whose configured key has a different id than the token's kid
     // must fail fast, before the signature cycle, with the leaf error.
@@ -208,7 +208,7 @@ describe("aegis error tree — real throw-site routing", () => {
   // --- domain policy -> AegisDomainError (incl. the two new codes) ---
 
   test("parse rejects a JWE with parse_requires_decrypt on AegisDomainError", () => {
-    const { token } = new JweKit({ logger, kryptos: TEST_EC_KEY_ENC }).encrypt("data");
+    const token = new JweKit({ logger, kryptos: TEST_EC_KEY_ENC }).encrypt("data");
     expect(JweKit.isJwe(token)).toBe(true);
 
     let caught: unknown;

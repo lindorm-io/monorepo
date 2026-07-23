@@ -8,10 +8,9 @@ import type { ILogger } from "@lindorm/logger";
 import type {
   AegisDecryptKey,
   AegisEncKey,
+  AegisSignKey,
   AegisVerifyKey,
   CertificateBindingMode,
-  SignJwsOptions,
-  SignJwtOptions,
   TokenProfile,
 } from "../../types/index.js";
 
@@ -42,7 +41,7 @@ export type AegisDeps = {
   logger: ILogger;
 
   resolveSignKey: (
-    options: SignJwsOptions | SignJwtOptions,
+    options: { key?: AegisSignKey },
     profile?: TokenProfile,
   ) => Promise<IKryptos>;
   resolveVerifyKey: (

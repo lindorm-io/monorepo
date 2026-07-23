@@ -343,7 +343,6 @@ const parsed = kit.verify<string>(signed.token);
 
 JwsKit.isJws(token);
 JwsKit.decode(token);
-JwsKit.parse(token);
 ```
 
 ## JweKit

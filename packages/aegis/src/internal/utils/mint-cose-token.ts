@@ -9,6 +9,7 @@ import { signCose } from "../cose/sign-cose.js";
 import { resolveProfile } from "../profiles/registry.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
+import { extractTypPrefix } from "./compute-typ-header.js";
 import { validateProfileClaims } from "./validate-profile-claims.js";
 
 /**
@@ -88,23 +89,33 @@ export const mintCoseToken = async ({
   // symmetric key throws instead of silently MAC-ing.
   const format = options.format === "cwm" ? "cwm" : "cwt";
 
+  // The kit builds the media type from the bare PREFIX; reduce the profile's full
+  // COSE typ (`application/at+cwt` / `application/cwt`) to that prefix.
+  const typPrefix = extractTypPrefix(coseTyp(profile.typ), format);
+
   let token = signCose({
     kryptos,
     logger: deps.logger,
     common: commonWithSensitive,
-    typ: coseTyp(profile.typ),
+    tokenType: typPrefix,
     proprietary: options.proprietary,
     omit: options.omit,
     format,
   });
 
-  // Sign-then-encrypt: the inner secured CWT is the COSE_Encrypt0 plaintext.
+  // Sign-then-encrypt: the inner secured CWT/CWM is the COSE_Encrypt0 plaintext.
+  // The outer COSE_Encrypt0's typ is cosmetic (the read path decrypts then verifies
+  // the inner token), so it carries the same profile prefix in the `+cwe` family;
+  // its `cty` (label 3) is stamped `application/cwt` (RFC 8392, mirroring the
+  // JOSE `cty: JWT`) so the read side reconstructs the plaintext to the inner
+  // token BYTES rather than the inferred octet blob.
   if (encKryptos) {
     token = encryptCose({
       kryptos: encKryptos,
       logger: deps.logger,
       inner: token,
-      typ: coseTyp(profile.typ),
+      tokenType: typPrefix,
+      cty: "application/cwt",
       encryption: options.encrypt?.key?.encryption ?? deps.encryption,
       proprietary: options.proprietary,
     });

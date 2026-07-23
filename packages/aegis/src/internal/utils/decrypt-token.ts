@@ -2,7 +2,7 @@ import type { Dict } from "@lindorm/types";
 import { sanitiseToken } from "@lindorm/utils";
 import { JweKit } from "../../classes/JweKit.js";
 import { AegisError } from "../../errors/index.js";
-import type { DecryptOptions, DecryptedToken } from "../../types/index.js";
+import type { DecryptOptions, DecryptedToken, TokenContent } from "../../types/index.js";
 import { coseToDomain, joseToDomain } from "../claims/translate.js";
 import { decodeCbor } from "../cose/cbor.js";
 import { readCoseEncryptHeader } from "../cose/cose-encrypt-header.js";
@@ -16,6 +16,7 @@ import type { AegisDeps } from "./aegis-deps.js";
 import type { DomainClaims } from "./extract-claims.js";
 import { COSE_CLAIMS_TYP } from "./encrypt-token.js";
 import { rawDecryptJwe } from "./raw-decrypt-jwe.js";
+import { parseTokenHeader } from "./token-header.js";
 
 /**
  * The domain decrypt pipeline (`aegis.decrypt`) — CONFIDENTIALITY only, with NO
@@ -37,20 +38,24 @@ export const decryptToken = async <C extends Dict = Dict>({
 }): Promise<DecryptedToken<C>> => {
   if (JweKit.isJwe(token)) {
     const {
-      header,
+      header: wireHeader,
       payload,
       token: echoed,
-    } = await rawDecryptJwe({
+    } = await rawDecryptJwe<TokenContent>({
       jwe: token,
       options: { key: options.key },
       deps,
     });
 
+    // The kit returns the WIRE header (R1); the domain `DecryptedToken` carries
+    // the DOMAIN-named header, so translate here.
+    const header = parseTokenHeader(wireHeader);
+
     // A JWE tells a translated claims set from opaque plaintext by the
-    // kit-computed `cty`: `aegis.encrypt` serialises a claims set as JSON, which
-    // JweKit stamps `application/json`.
+    // kit-computed `cty`: `aegis.encrypt` hands a claims set to JweKit as an
+    // object, which the codec stamps `application/json` and reconstructs to a Dict.
     if (header.contentType?.startsWith("application/json")) {
-      const { claims, custom } = joseToDomain(JSON.parse(payload));
+      const { claims, custom } = joseToDomain(payload as Dict);
       return {
         format: "jwe",
         header,
@@ -67,7 +72,7 @@ export const decryptToken = async <C extends Dict = Dict>({
       contentType: header.contentType,
       claims: {} as DomainClaims,
       custom: {} as C,
-      raw: payload,
+      raw: payload as Buffer | string,
       token: echoed,
     };
   }

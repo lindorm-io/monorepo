@@ -115,7 +115,7 @@ export type ClaimSpec = {
    * registered set diverges only at `jti` → `cti`). Absent ⇒ the COSE name
    * equals `jose`. This is the source of truth for the JOSE↔COSE NAME
    * divergence set: `domainToCose`/`coseToDomain` emit/look up this name, and it
-   * drives `CwtWireClaims`. The numeric label lives in `cose`, the string name here.
+   * drives `CwtClaimsWire`. The numeric label lives in `cose`, the string name here.
    */
   coseName?: string;
   /**
