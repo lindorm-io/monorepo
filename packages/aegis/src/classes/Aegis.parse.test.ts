@@ -135,8 +135,8 @@ describe("Aegis — parse (keyless, unverified)", () => {
     expect(parsed.claims.subject).toBe("user-1");
 
     // ...whereas verify DOES check and rejects it.
-    await expect(
-      aegis.verify(tampered, undefined, { audience: ISSUER }),
-    ).rejects.toBeInstanceOf(AegisError);
+    await expect(aegis.verify(tampered, { audience: ISSUER })).rejects.toBeInstanceOf(
+      AegisError,
+    );
   });
 });

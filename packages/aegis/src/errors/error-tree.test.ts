@@ -127,6 +127,55 @@ describe("aegis error tree (Bit 10)", () => {
   });
 });
 
+describe("aegis error tree — serialised lineage", () => {
+  // The instanceof tree is real at the type level, but a logged/serialised error
+  // only shows its leaf. `lineage` surfaces the class-ancestry chain (leaf-first,
+  // up to and including `LindormError`) so an operator reading logs sees the tree.
+  test("a JwtError serialises its full lineage leaf-first", () => {
+    expect(new JwtError("boom", { code: "x" }).lineage).toEqual([
+      "JwtError",
+      "JoseError",
+      "AegisError",
+      "LindormError",
+    ]);
+  });
+
+  test("a CwtError serialises its full lineage leaf-first", () => {
+    expect(new CwtError("boom", { code: "x" }).lineage).toEqual([
+      "CwtError",
+      "CoseError",
+      "AegisError",
+      "LindormError",
+    ]);
+  });
+
+  test("a policy sibling (AegisKeyError) lineage stops at its family root", () => {
+    expect(new AegisKeyError("boom", { code: "x" }).lineage).toEqual([
+      "AegisKeyError",
+      "AegisError",
+      "LindormError",
+    ]);
+  });
+
+  test("lineage lands in toJSON alongside type/code", () => {
+    const json = new JwtError("boom", { code: "x" }).toJSON();
+    expect(json.lineage).toEqual(["JwtError", "JoseError", "AegisError", "LindormError"]);
+  });
+
+  test("a thrown leaf carries its lineage through a catch", () => {
+    try {
+      throw new CwtError("boom", { code: "cwt_kid_mismatch" });
+    } catch (error) {
+      expect((error as CwtError).lineage).toEqual([
+        "CwtError",
+        "CoseError",
+        "AegisError",
+        "LindormError",
+      ]);
+    }
+  });
+});
+
 describe("aegis error tree — real throw-site routing", () => {
   const logger = createMockLogger();
 

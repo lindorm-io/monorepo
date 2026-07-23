@@ -16,7 +16,7 @@ import { parseCoseClaimsToDomain } from "./parse-cose-claims.js";
 import { parseJwtToDomain } from "./parse-jwt.js";
 
 const REQUIRES_CLAIMS_DETAILS =
-  "An opaque JWS/CWS is a signed blob with no claims layer, so aegis.parse (a claims reader) has nothing to return. Read it with aegis.jws.verify / aegis.cws.verify, or aegis.jws.decode / aegis.cws.decode for the raw payload.";
+  "An opaque JWS/CWS is a signed blob with no claims layer, so aegis.parse (a claims reader) has nothing to return. Read it with aegis.jws.verify / aegis.cws.verify.";
 
 const REQUIRES_DECRYPT_DETAILS =
   "aegis.parse is keyless and unverified, so it cannot read a JWE/CWE — its claims are encrypted. Use aegis.decrypt to read confidential claims, or aegis.verify for a sign-then-encrypt token.";
@@ -30,7 +30,7 @@ const REQUIRES_DECRYPT_DETAILS =
  * - STRUCTURED (jwt / cwt / cwm): the domain header + the claims buckets.
  * - UNSTRUCTURED (jws / cws): REJECTED — an opaque signed token carries no claims
  *   layer, so parse throws `parse_requires_claims`. Use `aegis.jws.verify` /
- *   `aegis.cws.verify` (or the raw `decode`) to read it.
+ *   `aegis.cws.verify` to read it.
  * - ENCRYPTED (jwe / cwe): REJECTED — the content is ciphertext, unreadable
  *   without the decryption key, so parse throws `parse_requires_decrypt`. Use
  *   `aegis.decrypt` (confidential) or `aegis.verify` (sign-then-encrypt).
