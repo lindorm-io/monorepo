@@ -1,4 +1,4 @@
-import type { IAegis, SignedJwt } from "@lindorm/aegis";
+import type { IAegis, SignedToken } from "@lindorm/aegis";
 import { SOCKET_AUTH_TEST_ISSUER } from "./shared.js";
 
 export type MintTestAccessTokenInput = {
@@ -11,7 +11,7 @@ export type MintTestAccessTokenResult = {
   token: string;
   expiresIn: number;
   expiresAt: Date;
-  signed: SignedJwt;
+  signed: SignedToken;
 };
 
 export const mintTestAccessToken = async (

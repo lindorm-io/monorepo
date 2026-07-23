@@ -1,17 +1,8 @@
-import { Aegis } from "@lindorm/aegis";
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createHandshakeTokenMiddleware } from "./create-handshake-token-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
-
-vi.mock("@lindorm/aegis", async () => ({
-  ...(await vi.importActual<typeof import("@lindorm/aegis")>("@lindorm/aegis")),
-  Aegis: {
-    ...(await vi.importActual<typeof import("@lindorm/aegis")>("@lindorm/aegis")).Aegis,
-    parse: vi.fn(),
-  },
-}));
 
 const options: any = { issuer: "https://test.lindorm.io/" };
 
@@ -62,7 +53,6 @@ describe("createHandshakeTokenMiddleware", () => {
 
   beforeEach(() => {
     next = vi.fn();
-    (Aegis.parse as Mock).mockReset().mockReturnValue({ claims: {} });
   });
 
   describe("bearer path", () => {
@@ -257,8 +247,10 @@ describe("createHandshakeTokenMiddleware", () => {
   });
 
   describe("DPoP path", () => {
-    const mockPreflightJkt = (jkt = "jkt-abc") => {
-      (Aegis.parse as Mock).mockReturnValue({
+    // `aegis.parse` is now an INSTANCE method (was the static `Aegis.parse`), so
+    // the preflight jkt is stubbed on the ctx's own mock aegis.
+    const mockPreflightJkt = (ctx: any, jkt = "jkt-abc") => {
+      (ctx.aegis.parse as Mock).mockReturnValue({
         claims: { confirmation: { thumbprint: jkt } },
       });
     };
@@ -292,8 +284,8 @@ describe("createHandshakeTokenMiddleware", () => {
       });
 
       test("accepts jkt-bound token + valid proof, strategy = dpop-bearer", async () => {
-        mockPreflightJkt();
         const ctx = makeCtx();
+        mockPreflightJkt(ctx);
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
         (ctx.aegis.verify as Mock).mockResolvedValue(makeDpopVerifyResult());
@@ -328,8 +320,8 @@ describe("createHandshakeTokenMiddleware", () => {
       });
 
       test("accepts jkt-bound token + valid proof, strategy = dpop-bearer", async () => {
-        mockPreflightJkt();
         const ctx = makeCtx();
+        mockPreflightJkt(ctx);
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
         (ctx.aegis.verify as Mock).mockResolvedValue(makeDpopVerifyResult());
@@ -341,8 +333,8 @@ describe("createHandshakeTokenMiddleware", () => {
       });
 
       test("rejects jkt-bound token without proof (strict per token)", async () => {
-        mockPreflightJkt();
         const ctx = makeCtx();
+        mockPreflightJkt(ctx);
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         (ctx.aegis.verify as Mock).mockResolvedValue({
           claims: {
@@ -359,8 +351,8 @@ describe("createHandshakeTokenMiddleware", () => {
       });
 
       test("rejects invalid DPoP proof (htu mismatch)", async () => {
-        mockPreflightJkt();
         const ctx = makeCtx();
+        mockPreflightJkt(ctx);
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
         (ctx.aegis.verify as Mock).mockResolvedValue(
@@ -379,8 +371,8 @@ describe("createHandshakeTokenMiddleware", () => {
 
     describe('dpop: "disabled"', () => {
       test("accepts jkt-bound token without proof as plain bearer", async () => {
-        mockPreflightJkt();
         const ctx = makeCtx();
+        mockPreflightJkt(ctx);
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         (ctx.aegis.verify as Mock).mockResolvedValue({
           claims: {
@@ -401,7 +393,7 @@ describe("createHandshakeTokenMiddleware", () => {
 
     describe("refresh handler with captured jkt", () => {
       const installDpopHandshake = async (ctx: any) => {
-        mockPreflightJkt();
+        mockPreflightJkt(ctx);
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
         (ctx.aegis.verify as Mock).mockResolvedValueOnce(makeDpopVerifyResult());

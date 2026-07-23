@@ -1,9 +1,4 @@
-import {
-  Aegis,
-  type DomainAssert,
-  type IAegis,
-  type VerifyOptions,
-} from "@lindorm/aegis";
+import type { DomainAssert, IAegis, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { assertDpopHandshakeMatch } from "../dpop/assert-dpop-handshake-match.js";
 import { createBearerRefreshHandler } from "../refresh/create-bearer-refresh-handler.js";
@@ -46,7 +41,7 @@ export const registerBearerHandshakeAuth = async ({
   // In "optional" mode a bearer-only token may still arrive alongside a
   // DPoP header (the client signed preemptively) — we accept the token as
   // a plain bearer and ignore the proof.
-  const preflight = Aegis.parse(token);
+  const preflight = aegis.parse(token);
   const preflightJkt = preflight.claims.confirmation?.thumbprint;
 
   const passDpopProof = preflightJkt && dpopMode !== "disabled" ? dpopProof : undefined;
