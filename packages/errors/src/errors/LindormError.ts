@@ -22,6 +22,7 @@ export type LindormErrorAttributes = {
   debug: Dict;
   details: string | null;
   errors: Array<string>;
+  lineage: Array<string>;
   message: string;
   name: string;
   stack: any;
@@ -54,6 +55,7 @@ export class LindormError extends Error {
   readonly debug: Dict;
   readonly details: string | null;
   readonly errors: Array<string>;
+  readonly lineage: Array<string>;
   readonly status: number;
   readonly support: string | null;
   readonly title: string | null;
@@ -64,6 +66,13 @@ export class LindormError extends Error {
     super(message);
 
     this.name = this.constructor.name;
+
+    // Class-ancestry chain of THIS instance, leaf-first: the constructor name,
+    // then each parent up to and including `LindormError` (e.g. a `JwtError`
+    // yields `["JwtError", "JoseError", "AegisError", "LindormError"]`). Derived
+    // from the prototype chain — independent of what `super` was called with — so
+    // an operator reading a serialised error sees the full tree, not only the leaf.
+    this.lineage = LindormError.deriveLineage(this.constructor);
 
     if (options.error?.stack) {
       this.stack = options.error.stack;
@@ -113,6 +122,7 @@ export class LindormError extends Error {
       debug: this.debug,
       details: this.details,
       errors: this.errors,
+      lineage: this.lineage,
       message: this.message,
       name: this.name,
       stack: this.stack,
@@ -125,6 +135,24 @@ export class LindormError extends Error {
   }
 
   // private static
+
+  private static deriveLineage(constructor: Function): Array<string> {
+    const lineage: Array<string> = [];
+
+    let current: any = constructor;
+
+    while (isFunction(current) && current !== Function.prototype) {
+      if (isString(current.name) && current.name.length > 0) {
+        lineage.push(current.name);
+      }
+
+      if (current === (LindormError as Function)) break;
+
+      current = Object.getPrototypeOf(current);
+    }
+
+    return lineage;
+  }
 
   private static destruct(error?: any): Partial<LindormErrorAttributes> {
     return {

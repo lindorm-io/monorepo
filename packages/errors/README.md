@@ -12,7 +12,7 @@ This package is **ESM-only**. Use `import` syntax — `require()` is not support
 
 ## Features
 
-- `LindormError` base class extending the native `Error`, carrying a UUID, optional code, separate `data` and `debug` dictionaries, details, support contact, title, status, and timestamp
+- `LindormError` base class extending the native `Error`, carrying a UUID, optional code, separate `data` and `debug` dictionaries, details, support contact, title, status, timestamp, and a `lineage` class-ancestry chain
 - Error wrapping that inherits id, code, data, debug, details, status, support, title, and timestamp from a wrapped `LindormError`, and accumulates a chain of `Name: message` strings in `errors`
 - `ClientError` subclass with HTTP 4xx status codes and matching titles, defaulting to `400 Bad Request`
 - `ServerError` subclass with HTTP 5xx status codes and matching titles, defaulting to `500 Internal Server Error`
@@ -53,6 +53,7 @@ The base class. Extends `Error` and adds the following readonly properties.
 | `debug`     | `Dict`                     | Internal debug data, merged with `debug` from a wrapped error |
 | `details`   | `string \| null`           | Long-form description                                         |
 | `errors`    | `Array<string>`            | Chain of `Name: message` strings from wrapped errors          |
+| `lineage`   | `Array<string>`            | Class-ancestry chain, leaf-first up to `LindormError`         |
 | `status`    | `number`                   | Defaults to `-1` on `LindormError`; subclasses set their own  |
 | `support`   | `string \| null`           | Support contact info                                          |
 | `title`     | `string \| null`           | Short title                                                   |
@@ -105,7 +106,7 @@ const error = new LindormError("Boom");
 error.toJSON();
 ```
 
-Returns a `LindormErrorAttributes` object with `id`, `code`, `data`, `debug`, `details`, `errors`, `message`, `name`, `stack`, `status`, `support`, `title`, and `timestamp`.
+Returns a `LindormErrorAttributes` object with `id`, `code`, `data`, `debug`, `details`, `errors`, `lineage`, `message`, `name`, `stack`, `status`, `support`, `title`, and `timestamp`.
 
 ## ClientError
 

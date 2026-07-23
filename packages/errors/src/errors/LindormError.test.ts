@@ -45,6 +45,7 @@ describe("LindormError", () => {
         debug: { value: "debug" },
         details: "details",
         errors: [],
+        lineage: ["LindormError"],
         id: "aaf972cc-6fbf-54c3-8706-2bea9fb0c1d4",
         message: "message",
         name: "LindormError",
@@ -103,6 +104,40 @@ describe("LindormError", () => {
       expect(new LindormError("message", { support: "CUSTOM-01" }).support).toBe(
         "CUSTOM-01",
       );
+    });
+  });
+
+  describe("lineage", () => {
+    class LevelOneError extends LindormError {}
+    class LevelTwoError extends LevelOneError {}
+    class LevelThreeError extends LevelTwoError {}
+
+    test("should be just LindormError for the base class", () => {
+      expect(new LindormError("message").lineage).toEqual(["LindormError"]);
+    });
+
+    test("should capture the full class-ancestry chain leaf-first", () => {
+      expect(new LevelThreeError("message").lineage).toEqual([
+        "LevelThreeError",
+        "LevelTwoError",
+        "LevelOneError",
+        "LindormError",
+      ]);
+    });
+
+    test("should stop at LindormError even for a shallow subclass", () => {
+      expect(new LevelOneError("message").lineage).toEqual([
+        "LevelOneError",
+        "LindormError",
+      ]);
+    });
+
+    test("should surface lineage in toJSON", () => {
+      expect(new LevelTwoError("message").toJSON().lineage).toEqual([
+        "LevelTwoError",
+        "LevelOneError",
+        "LindormError",
+      ]);
     });
   });
 
