@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`captureOutput > spawns with piped stdout and ignored stdin/stderr 1`] = `
+[
+  "docker",
+  [
+    "ps",
+  ],
+  {
+    "stdio": [
+      "ignore",
+      "pipe",
+      "ignore",
+    ],
+  },
+]
+`;

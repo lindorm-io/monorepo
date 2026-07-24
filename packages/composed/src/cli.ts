@@ -16,8 +16,13 @@ program
     "docker compose project name (isolates volumes/containers)",
   )
   .option("-v, --verbose", "verbose output", false)
-  .option("--build", "pass --build to docker compose up", false)
-  .option("--no-teardown", "skip docker compose down after command")
+  .option("-b, --build", "pass --build to docker compose up", false)
+  .option(
+    "-r, --reuse",
+    "attach to an already-running stack when all required host ports are served (implies no teardown); fail fast on a partial port conflict",
+    false,
+  )
+  .option("-T, --no-teardown", "skip docker compose down after command")
   .option("-k, --keep-volumes", "keep named volumes on teardown (skip --volumes)", false)
   .option(
     "-w, --wait-timeout <seconds>",
@@ -42,6 +47,7 @@ program
       build: options.build,
       teardown,
       keepVolumes: options.keepVolumes,
+      reuse: options.reuse,
       waitTimeout: options.waitTimeout,
       command,
       commandArgs: args,

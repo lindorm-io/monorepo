@@ -2,6 +2,7 @@ import type { ComposedOptions } from "../../types/index.js";
 import { composeDown } from "./compose-down.js";
 import { composeUp } from "./compose-up.js";
 import { composed } from "./composed.js";
+import { inspectServices } from "./inspect-services.js";
 import { resolveComposeFile } from "./resolve-compose-file.js";
 import { spawnCommand } from "./spawn-command.js";
 import {
@@ -19,6 +20,7 @@ vi.mock("./resolve-compose-file.js");
 vi.mock("./compose-up.js");
 vi.mock("./compose-down.js");
 vi.mock("./spawn-command.js");
+vi.mock("./inspect-services.js");
 
 const mockResolveComposeFile = resolveComposeFile as MockedFunction<
   typeof resolveComposeFile
@@ -26,6 +28,7 @@ const mockResolveComposeFile = resolveComposeFile as MockedFunction<
 const mockComposeUp = composeUp as MockedFunction<typeof composeUp>;
 const mockComposeDown = composeDown as MockedFunction<typeof composeDown>;
 const mockSpawnCommand = spawnCommand as MockedFunction<typeof spawnCommand>;
+const mockInspectServices = inspectServices as MockedFunction<typeof inspectServices>;
 
 const defaultOptions: ComposedOptions = {
   file: "docker-compose.yml",
@@ -34,6 +37,7 @@ const defaultOptions: ComposedOptions = {
   build: false,
   teardown: true,
   keepVolumes: false,
+  reuse: false,
   waitTimeout: 60,
   command: "jest",
   commandArgs: ["--runInBand"],
@@ -210,5 +214,84 @@ describe("composed", () => {
     const written = stdoutSpy.mock.calls.map((args) => String(args[0]));
     expect(written.some((line) => line.startsWith("Tearing down"))).toBe(false);
     expect(written.some((line) => line.startsWith("Teardown complete"))).toBe(false);
+  });
+
+  describe("reuse", () => {
+    const reuseOptions = { ...defaultOptions, reuse: true };
+
+    test("does not inspect services when reuse is off", async () => {
+      await composed(defaultOptions);
+
+      expect(mockInspectServices).not.toHaveBeenCalled();
+    });
+
+    test("attaches (no up, no teardown) when all required ports are already served", async () => {
+      mockInspectServices.mockResolvedValue({
+        required: [5672, 6379],
+        bound: new Map([
+          [5672, "root-rabbitmq-1"],
+          [6379, "root-redis-1"],
+        ]),
+        boundRequired: [5672, 6379],
+        status: "all",
+      });
+
+      const result = await composed(reuseOptions);
+
+      expect(result).toBe(0);
+      expect(mockComposeUp).not.toHaveBeenCalled();
+      expect(mockComposeDown).not.toHaveBeenCalled();
+      expect(mockSpawnCommand).toHaveBeenCalled();
+    });
+
+    test("prints a reuse notice in quiet mode with the served ports", async () => {
+      mockInspectServices.mockResolvedValue({
+        required: [5672],
+        bound: new Map([[5672, "root-rabbitmq-1"]]),
+        boundRequired: [5672],
+        status: "all",
+      });
+
+      await composed(reuseOptions);
+
+      const written = stdoutSpy.mock.calls.map((args) => String(args[0]));
+      expect(
+        written.some((line) => line.startsWith("Reusing already-running services")),
+      ).toBe(true);
+      expect(written).not.toContain("Starting services...\n");
+    });
+
+    test("fails fast with a naming message on a partial port conflict", async () => {
+      mockInspectServices.mockResolvedValue({
+        required: [5672, 6379],
+        bound: new Map([[5672, "root-rabbitmq-1"]]),
+        boundRequired: [5672],
+        status: "partial",
+      });
+
+      const result = await composed(reuseOptions);
+
+      expect(result).toBe(1);
+      expect(mockComposeUp).not.toHaveBeenCalled();
+      expect(mockSpawnCommand).not.toHaveBeenCalled();
+      expect(stderrSpy).toHaveBeenCalledWith(
+        expect.stringContaining("5672 (held by root-rabbitmq-1)"),
+      );
+    });
+
+    test("starts and tears down normally when no ports are bound", async () => {
+      mockInspectServices.mockResolvedValue({
+        required: [5672],
+        bound: new Map(),
+        boundRequired: [],
+        status: "none",
+      });
+
+      const result = await composed(reuseOptions);
+
+      expect(result).toBe(0);
+      expect(mockComposeUp).toHaveBeenCalled();
+      expect(mockComposeDown).toHaveBeenCalled();
+    });
   });
 });

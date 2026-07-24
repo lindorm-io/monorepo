@@ -20,6 +20,7 @@ This package is **ESM-only**. Use `import` syntax; `require()` will not work.
 - Propagates the spawned command's exit code (and signal, encoded as `128 + signal`) as the process exit code.
 - Quiet mode prints concise status lines with elapsed timings; verbose mode streams Docker output through.
 - Honours `--no-teardown` and the `COMPOSED_NO_TEARDOWN=1` environment variable to keep services running after the command exits.
+- `--reuse` (opt-in) attaches to an already-running stack when every host port the compose file publishes is already served — skipping `up` **and** teardown (leave-as-found). A partial port conflict fails fast with an actionable message naming the port and its holder.
 
 ## CLI Usage
 
@@ -49,15 +50,16 @@ Flags placed after `<command>` are forwarded to the command verbatim, so `compos
 
 ### CLI Options
 
-| Option                         | Default          | Description                                                                                                                                                                                                                                                     |
-| ------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `-f, --file <path>`            | auto-discover    | Path to the compose file. If omitted, looks for `docker-compose.yml` then `docker-compose.yaml` in the current working directory.                                                                                                                               |
-| `-p, --project <name>`         | Compose default  | Docker Compose project name (`docker compose -p`). Isolates containers/volumes into a namespace — e.g. run the same file as `<app>-test` so a test run never touches the dev stack's volumes. Default is Compose's own (the compose file's directory basename). |
-| `-v, --verbose`                | `false`          | Stream Docker stdout/stderr to the parent. When disabled, Docker output is buffered and only printed on failure.                                                                                                                                                |
-| `--build`                      | `false`          | Pass `--build` to `docker compose up`.                                                                                                                                                                                                                          |
-| `--no-teardown`                | teardown enabled | Skip `docker compose down` after the command exits.                                                                                                                                                                                                             |
-| `-k, --keep-volumes`           | `false`          | Keep named volumes on teardown — run `docker compose down` without `--volumes`. Use for long-lived dev services whose data must survive restarts; leave off for tests that want a clean slate.                                                                  |
-| `-w, --wait-timeout <seconds>` | `60`             | Timeout (in seconds) passed to `docker compose up --wait --wait-timeout`.                                                                                                                                                                                       |
+| Option                         | Default          | Description                                                                                                                                                                                                                                                        |
+| ------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `-f, --file <path>`            | auto-discover    | Path to the compose file. If omitted, looks for `docker-compose.yml` then `docker-compose.yaml` in the current working directory.                                                                                                                                  |
+| `-p, --project <name>`         | Compose default  | Docker Compose project name (`docker compose -p`). Isolates containers/volumes into a namespace — e.g. run the same file as `<app>-test` so a test run never touches the dev stack's volumes. Default is Compose's own (the compose file's directory basename).    |
+| `-v, --verbose`                | `false`          | Stream Docker stdout/stderr to the parent. When disabled, Docker output is buffered and only printed on failure.                                                                                                                                                   |
+| `-b, --build`                  | `false`          | Pass `--build` to `docker compose up`.                                                                                                                                                                                                                             |
+| `-r, --reuse`                  | `false`          | Attach to an already-running stack when **all** required host ports are already served — skips `up` and teardown (leave-as-found). A **partial** port conflict fails fast with a message naming the port and its holder; **no** ports bound starts fresh as usual. |
+| `-T, --no-teardown`            | teardown enabled | Skip `docker compose down` after the command exits.                                                                                                                                                                                                                |
+| `-k, --keep-volumes`           | `false`          | Keep named volumes on teardown — run `docker compose down` without `--volumes`. Use for long-lived dev services whose data must survive restarts; leave off for tests that want a clean slate.                                                                     |
+| `-w, --wait-timeout <seconds>` | `60`             | Timeout (in seconds) passed to `docker compose up --wait --wait-timeout`.                                                                                                                                                                                          |
 
 ### Environment Variables
 
@@ -68,7 +70,7 @@ Flags placed after `<command>` are forwarded to the command verbatim, so `compos
 ### Exit Codes
 
 - The exit code of the wrapped command is propagated as-is.
-- `1` if `docker compose up` fails.
+- `1` if `docker compose up` fails, or if `--reuse` hits a partial host-port conflict.
 - `127` if the wrapped command cannot be spawned (e.g. binary not found).
 - `128 + n` if the wrapped command is terminated by a signal, where `n` is `SIGHUP=1`, `SIGINT=2`, `SIGQUIT=3`, `SIGTERM=15`. Other signals fall back to `15`.
 
@@ -84,6 +86,7 @@ const options: ComposedOptions = {
   build: false,
   teardown: true,
   keepVolumes: false,
+  reuse: false,
   waitTimeout: 60,
   command: "vitest",
   commandArgs: ["run"],
@@ -111,6 +114,7 @@ interface ComposedOptions {
   build: boolean;
   teardown: boolean;
   keepVolumes: boolean;
+  reuse: boolean;
   waitTimeout: number;
   command: string;
   commandArgs: Array<string>;
@@ -125,6 +129,7 @@ interface ComposedOptions {
 | `build`       | When `true`, `--build` is passed to `docker compose up`.                                                                                                                               |
 | `teardown`    | When `true`, `docker compose down --remove-orphans --volumes` runs after the command exits (even on failure).                                                                          |
 | `keepVolumes` | When `true`, teardown runs `docker compose down` **without** `--volumes`, so named volumes survive. Ignored when `teardown` is `false`.                                                |
+| `reuse`       | When `true`, attach to an already-running stack if all published host ports are already served (skips `up` and teardown); fail fast on a partial conflict; start fresh if none bound.  |
 | `waitTimeout` | Seconds passed to `docker compose up --wait --wait-timeout`.                                                                                                                           |
 | `command`     | The command to spawn after services are healthy.                                                                                                                                       |
 | `commandArgs` | Argument array forwarded to `command`.                                                                                                                                                 |
