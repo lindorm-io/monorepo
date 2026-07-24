@@ -44,6 +44,10 @@ export class Amphora implements IAmphora {
 
     this.conduit = new Conduit({
       alias: "Amphora",
+      // SSRF hardening: do not follow redirects on external discovery/JWKS
+      // fetches by default. A `jwks_uri` vetted by a caller's egress guard could
+      // otherwise 302 to an internal host that is followed AFTER the check.
+      config: { maxRedirects: options.maxRedirects ?? 0 },
       logger: this.logger,
       middleware: [conduitChangeResponseDataMiddleware()],
       retryOptions: { maxAttempts: 3 },

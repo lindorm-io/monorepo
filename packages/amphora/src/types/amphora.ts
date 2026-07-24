@@ -33,6 +33,15 @@ export type AmphoraSettings = {
   external?: Array<AmphoraExternalSettings>;
   logger: ILogger;
   maxExternalKeys?: number;
+  /**
+   * Max HTTP redirects amphora follows when fetching an EXTERNAL provider's
+   * discovery / JWKS document. Defaults to `0`: a JWKS or OIDC discovery
+   * endpoint has no legitimate reason to redirect, and following one lets a
+   * `jwks_uri` that already passed a caller's SSRF egress guard 302 to an
+   * internal host AFTER the check (defeating the guard). Raise it only for a
+   * provider you explicitly trust to redirect.
+   */
+  maxRedirects?: number;
   refreshInterval?: number;
 };
 

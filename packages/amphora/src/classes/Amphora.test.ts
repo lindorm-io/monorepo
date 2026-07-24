@@ -324,6 +324,73 @@ describe("Amphora", () => {
       expect(nock.isDone()).toBe(true);
     });
 
+    test("does not follow a redirect on an external JWKS fetch (SSRF hardening)", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
+      // The external jwks_uri passed a caller's egress guard, then 302-redirects
+      // to an internal metadata host. With maxRedirects defaulting to 0 the
+      // redirect is NOT followed, so the internal host is never contacted.
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .reply(302, undefined, {
+          Location: "http://169.254.169.254/.well-known/jwks.json",
+        });
+
+      const internal = nock("http://169.254.169.254")
+        .get("/.well-known/jwks.json")
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      // The redirected-to key never loads (the fetch fails on the 302), and the
+      // internal interceptor is never consumed.
+      await expect(amphora.findById(TEST_EC_KEY_SIG.id)).rejects.toThrow();
+      expect(internal.isDone()).toBe(false);
+
+      nock.cleanAll();
+    });
+
+    test("follows a redirect when maxRedirects is explicitly raised", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .reply(302, undefined, {
+          Location: "https://external.lindorm.io/redirected/jwks.json",
+        });
+      nock("https://external.lindorm.io")
+        .get("/redirected/jwks.json")
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        maxRedirects: 1,
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await expect(amphora.findById(TEST_EC_KEY_SIG.id)).resolves.toEqual(
+        expect.objectContaining({ id: TEST_EC_KEY_SIG.id }),
+      );
+      expect(nock.isDone()).toBe(true);
+    });
+
     test("should throw from findByIdSync when setup not called with external providers", () => {
       amphora = new Amphora({
         domain: issuer,
