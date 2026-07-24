@@ -1,5 +1,5 @@
-import type { Base64Encoding } from "../types/index.js";
 import { decode, encodeBytes } from "../internal/index.js";
+import type { Base64Encoding } from "../types/index.js";
 
 export class B64 {
   static encode(input: Uint8Array | string, encoding: Base64Encoding = "base64"): string {
