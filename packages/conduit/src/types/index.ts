@@ -4,6 +4,7 @@ export * from "./circuit-breaker.js";
 export * from "./conduit.js";
 export * from "./context.js";
 export * from "./expected-response.js";
+export * from "./lookup.js";
 export * from "./overrides.js";
 export * from "./request.js";
 export * from "./response.js";

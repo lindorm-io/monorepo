@@ -3,6 +3,7 @@ import type { Dict, HttpMethod, Param, Query } from "@lindorm/types";
 import type { Readable } from "stream";
 import type { ConduitAdapter, ExpectedResponse } from "../types/index.js";
 import type { ConduitMiddleware } from "./conduit.js";
+import type { ConduitLookup } from "./lookup.js";
 import type { ConduitAxiosOverrides } from "./overrides.js";
 import type { OnRetryCallback, RetryCallback } from "./retry.js";
 
@@ -25,6 +26,8 @@ export type ConduitRequestOptions<
   filename?: string;
   form?: FormData;
   headers?: Dict<string>;
+  /** Per-request DNS resolver hook; overrides the Conduit-level `lookup`. */
+  lookup?: ConduitLookup;
   middleware?: Array<
     ConduitMiddleware<ResponseData, RequestBody, RequestParams, RequestQuery>
   >;

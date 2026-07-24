@@ -6,7 +6,7 @@ import {
   conduitChangeRequestQueryMiddleware,
   createConduitCacheMiddleware,
 } from "../middleware/index.js";
-import type { ConduitMiddleware } from "../types/index.js";
+import type { ConduitLookup, ConduitMiddleware } from "../types/index.js";
 import { Conduit } from "./Conduit.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -340,6 +340,47 @@ describe("Conduit", () => {
       // Second request is served from the client cache — nock is only hit once.
       const second = await conduit.get("/test/path", { middleware: [cache] });
       expect(second.cached).toBe("client");
+    });
+  });
+
+  describe("lookup (DNS hook)", () => {
+    // A throwing lookup proves the hook is actually threaded to the transport:
+    // the http adapter invokes it before any socket, so the request fails at
+    // resolution — no network is touched. maxAttempts:1 avoids retry delay.
+    const blocked = () =>
+      vi.fn<ConduitLookup>(async () => {
+        throw new Error("egress blocked");
+      });
+
+    test("forwards a Conduit-level lookup to the transport", async () => {
+      const lookup = blocked();
+      const conduit = new Conduit({ lookup, retryOptions: { maxAttempts: 1 } });
+
+      await expect(conduit.get("https://pinned.lindorm.io/x")).rejects.toThrow();
+      expect(lookup).toHaveBeenCalled();
+      expect(lookup.mock.calls[0]![0]).toBe("pinned.lindorm.io");
+    });
+
+    test("forwards a per-request lookup to the transport", async () => {
+      const lookup = blocked();
+      const conduit = new Conduit({ retryOptions: { maxAttempts: 1 } });
+
+      await expect(
+        conduit.get("https://pinned.lindorm.io/x", { lookup }),
+      ).rejects.toThrow();
+      expect(lookup).toHaveBeenCalled();
+    });
+
+    test("a per-request lookup overrides the Conduit-level one", async () => {
+      const appLevel = blocked();
+      const perRequest = blocked();
+      const conduit = new Conduit({ lookup: appLevel, retryOptions: { maxAttempts: 1 } });
+
+      await expect(
+        conduit.get("https://pinned.lindorm.io/x", { lookup: perRequest }),
+      ).rejects.toThrow();
+      expect(perRequest).toHaveBeenCalled();
+      expect(appLevel).not.toHaveBeenCalled();
     });
   });
 });

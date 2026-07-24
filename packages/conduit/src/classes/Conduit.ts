@@ -52,6 +52,8 @@ export class Conduit implements IConduit {
       validateStatus: defaultValidateStatus,
       withCredentials: options.withCredentials,
       ...(options.config ?? {}),
+      // The first-class `lookup` hook wins over any `config.lookup` in the bag.
+      ...(options.lookup !== undefined ? { lookup: options.lookup } : {}),
     };
 
     this.context = {
@@ -272,6 +274,7 @@ export class Conduit implements IConduit {
       filename,
       form,
       headers = {},
+      lookup,
       middleware = [],
       onDownloadProgress,
       onRetry,
@@ -296,6 +299,8 @@ export class Conduit implements IConduit {
         ...this.config,
         ...config,
         ...(adapter !== undefined ? { adapter } : {}),
+        // Per-request `lookup` overrides the Conduit-level one carried in `this.config`.
+        ...(lookup !== undefined ? { lookup } : {}),
         method: method.toUpperCase() as Uppercase<HttpMethod>,
         responseType: expectedResponse,
         timeout,
