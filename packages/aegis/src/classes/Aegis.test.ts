@@ -202,7 +202,7 @@ describe("Aegis", () => {
       tokenType: "test_token",
     });
 
-    const { payload } = JwtKit.decodeSegments(token);
+    const { payload } = JwtKit.decode(token);
 
     expect(payload).toEqual({
       exp: 1704099600,
@@ -262,7 +262,7 @@ describe("Aegis", () => {
       tokenType: "test_token",
     });
 
-    const { payload } = JwtKit.decodeSegments(token);
+    const { payload } = JwtKit.decode(token);
 
     expect(payload.sub).toBe("3f2ae79d-f1d1-556b-a8bc-305e6b2334ad");
     expect(payload.exp).toBe(1704099600);

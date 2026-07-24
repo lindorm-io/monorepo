@@ -60,9 +60,9 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
   test("decode exposes kid / alg / typ without verifying", () => {
     const decoded = CwtKit.decode(kit.sign(wire, { tokenType: "at" }));
 
-    expect(decoded.kid).toBe(TEST_EC_KEY_SIG.id);
-    expect(decoded.algorithm).toBe("ES512"); // TEST_EC_KEY_SIG is P-521
-    expect(decoded.typ).toBe("application/at+cwt");
+    expect(decoded.header.kid).toBe(TEST_EC_KEY_SIG.id);
+    expect(decoded.header.alg).toBe("ES512"); // TEST_EC_KEY_SIG is P-521
+    expect(decoded.header.typ).toBe("application/at+cwt");
   });
 
   test("rejects a tampered payload", () => {

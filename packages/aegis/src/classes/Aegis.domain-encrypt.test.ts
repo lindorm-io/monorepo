@@ -185,7 +185,7 @@ describe("Aegis — domain encrypt / decrypt (§5e)", () => {
 
       // The base64url party info rides the protected header (apu/apv), proving
       // the two params were plumbed through encryptToken → JweKit.encrypt.
-      const { header } = JweKit.decodeSegments(encrypted.token);
+      const { header } = JweKit.decode(encrypted.token);
       expect(header.apu).toBe(partyProducer);
       expect(header.apv).toBe(partyRecipient);
 
@@ -207,7 +207,7 @@ describe("Aegis — domain encrypt / decrypt (§5e)", () => {
         partyRecipient,
       });
 
-      const { header } = JweKit.decodeSegments(encrypted.token);
+      const { header } = JweKit.decode(encrypted.token);
       expect(header.apu).toBeUndefined();
       expect(header.apv).toBeUndefined();
 

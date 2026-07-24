@@ -29,7 +29,7 @@ export const rawVerifyJwt = async <C extends Dict = Dict>({
   options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
 }): Promise<VerifiedStructuredToken<JwtClaimsWire & C, string>> => {
-  const decode = JwtKit.decodeSegments(jwt);
+  const decode = JwtKit.decode(jwt);
 
   const kryptos = await deps.resolveVerifyKey(
     decode.header.kid,

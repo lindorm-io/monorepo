@@ -1,7 +1,6 @@
 import type { Dict, Predicate } from "@lindorm/types";
 import type {
   CwtClaimsWire,
-  DecodedStructuredToken,
   SignStructuredTokenOptions,
   VerifiedStructuredToken,
   VerifyStructuredTokenOptions,
@@ -9,8 +8,9 @@ import type {
 
 /**
  * The COSE_Sign1 claims kit — the COSE analogue of {@link IJwtKit}. Wire-only:
- * transform-free `sign`, structural `verify`, and a `decode` that mirrors JWT
- * decode (unified wire header + cleartext wire claims, no signature check).
+ * transform-free `sign` and structural `verify`. The keyless `decode` that mirrors
+ * JWT decode (unified wire header + cleartext wire claims, no signature check) is a
+ * static on the class, not an instance method.
  */
 export interface ICwtKit {
   sign<C extends Dict = Dict>(
@@ -22,5 +22,4 @@ export interface ICwtKit {
     assert?: Predicate<CwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions,
   ): VerifiedStructuredToken<CwtClaimsWire & C>;
-  decode<C extends Dict = Dict>(token: Buffer): DecodedStructuredToken<CwtClaimsWire & C>;
 }

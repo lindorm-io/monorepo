@@ -34,9 +34,9 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
 
     expect(token.subarray(0, 2).toString("hex")).toBe("d83d");
     const decoded = CwmKit.decode(token);
-    expect(decoded.algorithm).toBe("HS256"); // HMAC -> COSE_Mac0, never Sign1
-    expect(decoded.kid).toBe(kryptos.id);
-    expect(decoded.typ).toBe("application/at+cwt");
+    expect(decoded.header.alg).toBe("HS256"); // HMAC -> COSE_Mac0, never Sign1
+    expect(decoded.header.kid).toBe(kryptos.id);
+    expect(decoded.header.typ).toBe("application/at+cwt");
   });
 
   test("round-trips the WIRE claims through sign -> verify (no domain translation)", () => {

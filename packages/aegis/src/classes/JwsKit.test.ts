@@ -38,7 +38,7 @@ describe("JwsKit", () => {
     test("should sign token without objectId and omit oid from header", () => {
       const token = kit.sign("test data in plain text");
 
-      const { header } = JwsKit.decodeSegments(token);
+      const { header } = JwsKit.decode(token);
       expect(header).not.toHaveProperty("oid");
     });
   });
@@ -123,9 +123,9 @@ describe("JwsKit", () => {
         header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
-      // decodeSegments now surfaces the RAW base64url payload (reconstruction is
-      // deferred to verify/decode, which read the cty).
-      expect(JwsKit.decodeSegments(token)).toEqual({
+      // decode reconstructs the content from the cty (string for text/plain);
+      // signature is the raw b64url segment and token is the original compact.
+      expect(JwsKit.decode(token)).toEqual({
         header: {
           alg: "ES512",
           cty: "text/plain",
@@ -134,8 +134,9 @@ describe("JwsKit", () => {
           oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
           typ: "JWS",
         },
-        payload: "dGVzdCBkYXRhIGluIHBsYWluIHRleHQ",
+        payload: "test data in plain text",
         signature: expect.any(String),
+        token,
       });
     });
 
@@ -144,7 +145,7 @@ describe("JwsKit", () => {
         header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
-      expect(JwsKit.decodeSegments(token)).toEqual({
+      expect(JwsKit.decode(token)).toEqual({
         header: {
           alg: "ES512",
           cty: "application/octet-stream",
@@ -153,8 +154,9 @@ describe("JwsKit", () => {
           oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
           typ: "JWS",
         },
-        payload: "dGVzdCBkYXRhIGluIGJ1ZmZlcg",
+        payload: Buffer.from("test data in buffer", "utf8"),
         signature: expect.any(String),
+        token,
       });
     });
   });
@@ -176,7 +178,7 @@ describe("JwsKit", () => {
 
         const token = akpKit.sign("post-quantum payload");
 
-        expect(JwsKit.decodeSegments(token).header.alg).toBe(algorithm);
+        expect(JwsKit.decode(token).header.alg).toBe(algorithm);
 
         expect(akpKit.verify(token).payload).toBe("post-quantum payload");
       },
@@ -210,7 +212,7 @@ describe("JwsKit", () => {
       // parameter 'lindorm_ext' is not IANA-registered and is present in
       // the header, so it passes RFC 7515 §4.1.11 well-formedness. Aegis
       // should still reject it because it does not understand the extension.
-      const decoded = JwsKit.decodeSegments(token);
+      const decoded = JwsKit.decode(token);
       const headerWithCrit = {
         ...decoded.header,
         crit: ["lindorm_ext"],
@@ -235,7 +237,7 @@ describe("JwsKit", () => {
 
       // crit lists 'missing_ext' but the header does not contain it — violates
       // RFC 7515 §4.1.11 well-formedness rules.
-      const decoded = JwsKit.decodeSegments(token);
+      const decoded = JwsKit.decode(token);
       const headerWithCrit = {
         ...decoded.header,
         crit: ["missing_ext"],
@@ -256,7 +258,7 @@ describe("JwsKit", () => {
       });
 
       // crit must not contain registered params per RFC 7515 §4.1.11.
-      const decoded = JwsKit.decodeSegments(token);
+      const decoded = JwsKit.decode(token);
       const headerWithCrit = { ...decoded.header, crit: ["alg"] };
 
       const parts = token.split(".");
@@ -273,7 +275,7 @@ describe("JwsKit", () => {
         header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
-      const decoded = JwsKit.decodeSegments(token);
+      const decoded = JwsKit.decode(token);
       const headerWithCrit = { ...decoded.header, crit: [] };
 
       const parts = token.split(".");

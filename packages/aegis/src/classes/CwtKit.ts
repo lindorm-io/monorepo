@@ -3,13 +3,7 @@ import type { ILogger } from "@lindorm/logger";
 import type { Dict, Predicate } from "@lindorm/types";
 import { CwtError } from "../errors/index.js";
 import type { ICwtKit } from "../interfaces/index.js";
-import {
-  type CwtDecoded,
-  decodeCwt,
-  decodeCwtWire,
-  signCwt,
-  verifyCwt,
-} from "../internal/cose/cwt-token.js";
+import { decodeCwtWire, signCwt, verifyCwt } from "../internal/cose/cwt-token.js";
 import type {
   CwtClaimsWire,
   DecodedStructuredToken,
@@ -17,8 +11,6 @@ import type {
   VerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../types/index.js";
-
-export type { CwtDecoded } from "../internal/cose/cwt-token.js";
 
 export type CwtKitSettings = {
   kryptos: IKryptos;
@@ -86,16 +78,12 @@ export class CwtKit implements ICwtKit {
   /**
    * WIRE decode (no signature check): the unified wire header (protected +
    * unprotected COSE maps merged, integer labels translated to their JOSE wire
-   * names) + the cleartext WIRE claim payload. The uniform primitive shared with
-   * `JwtKit`/`CwmKit` decode.
+   * names) + the cleartext WIRE claim payload + the raw COSE signature bytes. The
+   * uniform primitive shared with `JwtKit`/`CwmKit` decode.
    */
-  decode<C extends Dict = Dict>(
+  static decode<C extends Dict = Dict>(
     token: Buffer,
   ): DecodedStructuredToken<CwtClaimsWire & C> {
     return decodeCwtWire<C>(token);
-  }
-
-  static decode(token: Buffer): CwtDecoded {
-    return decodeCwt(token);
   }
 }

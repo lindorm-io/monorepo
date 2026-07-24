@@ -27,25 +27,13 @@ import { wireHeaderToDomainOptions } from "../internal/utils/wire-header-to-doma
 import type {
   CertificateBindingMode,
   DecodedStructuredToken,
-  JwtKitSettings,
-  JwtClaimsWire,
-  VerifiedStructuredToken,
-  SignStructuredTokenOptions,
   DomainTokenHeaderOptions,
+  JwtClaimsWire,
+  JwtKitSettings,
+  SignStructuredTokenOptions,
+  VerifiedStructuredToken,
   VerifyStructuredTokenOptions,
-  WireTokenHeader,
 } from "../types/index.js";
-
-/**
- * The JWT wire segments decoded from a compact token — the header, cleartext
- * claims, and the raw signature. An internal helper shape (the verify result no
- * longer surfaces a `decoded` sub-object).
- */
-type DecodedJwtSegments<C extends Dict = Dict> = {
-  header: WireTokenHeader;
-  payload: JwtClaimsWire & C;
-  signature: string;
-};
 
 /**
  * The standalone WIRE JWT kit — a jose/jsonwebtoken-parity signer/verifier.
@@ -144,7 +132,7 @@ export class JwtKit implements IJwtKit {
       options: redactVerifyOptions(options),
     });
 
-    const decoded = JwtKit.decodeSegments<C>(token);
+    const decoded = JwtKit.decode<C>(token);
 
     // kid fail-fast: a token that names a kid different from the configured key
     // cannot verify, so reject it before the (expensive) signature cycle. Via
@@ -274,19 +262,6 @@ export class JwtKit implements IJwtKit {
     };
   }
 
-  /**
-   * WIRE decode (no signature check): the unified wire header (the single JOSE
-   * protected header) + the cleartext JWT claim payload. The uniform primitive
-   * shared with `CwtKit`/`CwmKit` decode — read the structure without verifying.
-   */
-  decode<C extends Dict = Dict>(
-    token: string,
-  ): DecodedStructuredToken<JwtClaimsWire & C, string> {
-    const { header, payload } = JwtKit.decodeSegments<C>(token);
-
-    return { header, payload, token };
-  }
-
   // public static
 
   static isJwt(jwt: string): boolean {
@@ -303,13 +278,21 @@ export class JwtKit implements IJwtKit {
     }
   }
 
-  static decodeSegments<C extends Dict = Dict>(jwt: string): DecodedJwtSegments<C> {
-    const [header, payload, signature] = jwt.split(".");
+  /**
+   * WIRE decode (no signature check): the unified wire header (the single JOSE
+   * protected header) + the cleartext JWT claim payload. The uniform primitive
+   * shared with `CwtKit`/`CwmKit` decode — read the structure without verifying.
+   */
+  static decode<C extends Dict = Dict>(
+    token: string,
+  ): DecodedStructuredToken<JwtClaimsWire & C, string> {
+    const [header, payload, signature] = token.split(".");
 
     return {
       header: decodeJoseHeader(header),
       payload: decodeJwtPayload<C>(payload) as JwtClaimsWire & C,
       signature,
+      token,
     };
   }
 }

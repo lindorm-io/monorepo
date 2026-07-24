@@ -1,5 +1,4 @@
 import type {
-  DecodedUnstructuredToken,
   SignUnstructuredTokenOptions,
   TokenContent,
   VerifiedUnstructuredToken,
@@ -13,11 +12,4 @@ export interface IJwsKit {
     token: string,
     options?: VerifyUnstructuredTokenOptions,
   ): VerifiedUnstructuredToken<T, string>;
-  /**
-   * WIRE-only read (no signature check): the unified wire header + the
-   * cty-reconstructed payload + the native token. Uniform with `CwsKit` decode.
-   */
-  decode<T extends TokenContent = Buffer>(
-    token: string,
-  ): DecodedUnstructuredToken<T, string>;
 }

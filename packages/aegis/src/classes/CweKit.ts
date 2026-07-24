@@ -212,8 +212,14 @@ export class CweKit implements ICweKit {
    * ciphertext stays encrypted; reading it needs the key (that is `decrypt`).
    * The uniform primitive shared with `JweKit` decode.
    */
-  decode(token: Buffer): DecodedEncryptedToken<Buffer> {
-    const [protectedBstr, unprotected] = unwrapEncrypt0(decodeCbor(token)) as [
+  static decode(token: Buffer): DecodedEncryptedToken<Buffer> {
+    // Strip an optional outer CWT tag (61) to reach the COSE_Encrypt0 — symmetric
+    // with `decrypt`, which strips it too. A bare, un-enveloped token passes
+    // through unchanged.
+    const decoded = decodeCbor(token);
+    const cose =
+      decoded instanceof Tag && decoded.tag === COSE_TAG.cwt ? decoded.contents : decoded;
+    const [protectedBstr, unprotected] = unwrapEncrypt0(cose) as [
       Uint8Array,
       Map<number, unknown> | undefined,
       Uint8Array,

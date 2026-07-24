@@ -19,25 +19,13 @@ import { wireHeaderToDomainOptions } from "../internal/utils/wire-header-to-doma
 import type {
   CertificateBindingMode,
   DecodedUnstructuredToken,
+  DomainTokenHeaderOptions,
   JwsKitSettings,
+  SignUnstructuredTokenOptions,
   TokenContent,
   VerifiedUnstructuredToken,
-  SignUnstructuredTokenOptions,
   VerifyUnstructuredTokenOptions,
-  DomainTokenHeaderOptions,
-  WireTokenHeader,
 } from "../types/index.js";
-
-/**
- * The JWS wire segments decoded from a compact token (internal helper shape).
- * `payload` is the RAW base64url segment — content reconstruction is deferred to
- * the caller (verify/decode) which reads the cty off the header.
- */
-type DecodedJwsSegments = {
-  header: WireTokenHeader;
-  payload: string;
-  signature: string;
-};
 
 export class JwsKit implements IJwsKit {
   private readonly certBindingMode: CertificateBindingMode;
@@ -100,7 +88,7 @@ export class JwsKit implements IJwsKit {
   ): VerifiedUnstructuredToken<T, string> {
     this.logger.debug("Verifying token", { token: sanitiseToken(token) });
 
-    const decoded = JwsKit.decodeSegments(token);
+    const decoded = JwsKit.decode<T>(token);
 
     // typ well-formedness: a PRESENT typ must be a JWS media type so a JWT/JWE
     // cannot be verified as a JWS. A typ-LESS token is accepted here — presence
@@ -178,35 +166,11 @@ export class JwsKit implements IJwsKit {
       mode: options.certBindingMode ?? this.certBindingMode,
     });
 
-    // Reconstruct-by-cty is SAFE here: the payload is signature-verified above,
-    // BEFORE it is parsed. Absent/unknown cty falls back to the raw Buffer.
-    const payload = reconstructContent<T>(
-      B64.toBuffer(decoded.payload, B64U),
-      decoded.header.cty,
-    );
-
+    // The payload was reconstructed by cty in `decode`; the signature is verified
+    // above, so the reconstructed content is now trustworthy.
     this.logger.debug("Token verified");
 
-    return { header: decoded.header, payload, token };
-  }
-
-  /**
-   * WIRE decode (no signature check): the unified wire header (the single JOSE
-   * protected header) + the cty-reconstructed payload + the native token. The
-   * uniform primitive shared with `CwsKit` decode. NO signature check — the
-   * payload is UNVERIFIED, so this is a keyless read only.
-   */
-  decode<T extends TokenContent = Buffer>(
-    token: string,
-  ): DecodedUnstructuredToken<T, string> {
-    const [header, payload] = token.split(".");
-    const decodedHeader = decodeJoseHeader(header);
-
-    return {
-      header: decodedHeader,
-      payload: reconstructContent<T>(B64.toBuffer(payload, B64U), decodedHeader.cty),
-      token,
-    };
+    return { header: decoded.header, payload: decoded.payload, token };
   }
 
   // public static
@@ -229,13 +193,17 @@ export class JwsKit implements IJwsKit {
     }
   }
 
-  static decodeSegments(jws: string): DecodedJwsSegments {
-    const [header, payload, signature] = jws.split(".");
+  static decode<T extends TokenContent = string>(
+    token: string,
+  ): DecodedUnstructuredToken<T, string> {
+    const [h, payload, signature] = token.split(".");
+    const header = decodeJoseHeader(h);
 
     return {
-      header: decodeJoseHeader(header),
-      payload,
+      header: header,
+      payload: reconstructContent<T>(B64.toBuffer(payload, B64U), header.cty),
       signature,
+      token,
     };
   }
 }

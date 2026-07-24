@@ -108,7 +108,7 @@ describe("Aegis cert binding", () => {
         sign: { bindCertificate: "thumbprint" },
       });
 
-      const decoded = JwtKit.decodeSegments(token);
+      const decoded = JwtKit.decode(token);
       const stripped = {
         alg: decoded.header.alg,
         kid: decoded.header.kid,
@@ -130,7 +130,7 @@ describe("Aegis cert binding", () => {
         sign: { bindCertificate: "chain" },
       });
 
-      const decoded = JwtKit.decodeSegments(token);
+      const decoded = JwtKit.decode(token);
       const stripped = {
         alg: decoded.header.alg,
         kid: decoded.header.kid,
@@ -150,7 +150,7 @@ describe("Aegis cert binding", () => {
     test("sign omitted on cert-bearing kryptos stamps thumbprint + x5t by default", async () => {
       const { token } = await aegis.mint("default", signContent);
 
-      const decoded = JwtKit.decodeSegments(token);
+      const decoded = JwtKit.decode(token);
       const stripped = {
         alg: decoded.header.alg,
         kid: decoded.header.kid,
@@ -171,7 +171,7 @@ describe("Aegis cert binding", () => {
         sign: { bindCertificate: "thumbprint", certificateThumbprintSha1: false },
       });
 
-      const decoded = JwtKit.decodeSegments(token);
+      const decoded = JwtKit.decode(token);
       expect(decoded.header).not.toHaveProperty("x5t");
       expect((decoded.header as any)["x5t#S256"]).toEqual(expect.any(String));
     });
@@ -194,7 +194,7 @@ describe("Aegis cert binding", () => {
         sign: { bindCertificate: "thumbprint" },
       });
 
-      const decoded = JwtKit.decodeSegments(token);
+      const decoded = JwtKit.decode(token);
       expect(decoded.header).not.toHaveProperty("x5t");
       expect((decoded.header as any)["x5t#S256"]).toEqual(expect.any(String));
 
@@ -202,7 +202,7 @@ describe("Aegis cert binding", () => {
       const { token: reenabled } = await localAegis.mint("default", signContent, {
         sign: { bindCertificate: "thumbprint", certificateThumbprintSha1: true },
       });
-      expect((JwtKit.decodeSegments(reenabled).header as any).x5t).toBe(
+      expect((JwtKit.decode(reenabled).header as any).x5t).toBe(
         buildCertBoundKryptos().certificateThumbprintSha1,
       );
     });
@@ -212,7 +212,7 @@ describe("Aegis cert binding", () => {
         sign: { bindCertificate: "none" },
       });
 
-      const decoded = JwtKit.decodeSegments(token);
+      const decoded = JwtKit.decode(token);
       expect(decoded.header).not.toHaveProperty("x5c");
       expect(decoded.header).not.toHaveProperty("x5t");
       expect(decoded.header).not.toHaveProperty("x5t#S256");
@@ -239,7 +239,7 @@ describe("Aegis cert binding", () => {
         sign: { bindCertificate: "thumbprint" },
       });
 
-      const decoded = JwtKit.decodeSegments(token);
+      const decoded = JwtKit.decode(token);
       const tampered = {
         ...decoded.header,
         "x5t#S256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -270,7 +270,7 @@ describe("Aegis cert binding", () => {
       const good = await aegis.mint("default", signContent, {
         sign: { bindCertificate: "thumbprint" },
       });
-      const decoded = JwtKit.decodeSegments(good.token);
+      const decoded = JwtKit.decode(good.token);
       const kryptos = buildCertBoundKryptos();
       expect(decoded.header["x5t#S256"]).toBe(kryptos.certificateThumbprint);
 
@@ -306,7 +306,7 @@ describe("Aegis cert binding", () => {
       // The invariant is that the malicious x5c did NOT succeed in
       // selecting itself as the key source.
       const { token } = await aegis.mint("default", signContent);
-      const decoded = JwtKit.decodeSegments(token);
+      const decoded = JwtKit.decode(token);
       const malicious = {
         ...decoded.header,
         x5c: ["MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA"],
@@ -342,7 +342,7 @@ describe("Aegis cert binding", () => {
       const { token } = await aegis.mint("default", signContent, {
         sign: { bindCertificate: "none" },
       });
-      const decoded = JwtKit.decodeSegments(token);
+      const decoded = JwtKit.decode(token);
       expect(decoded.header).not.toHaveProperty("x5c");
       expect(decoded.header).not.toHaveProperty("x5t");
       expect(decoded.header).not.toHaveProperty("x5t#S256");
@@ -352,7 +352,7 @@ describe("Aegis cert binding", () => {
 
     test("sign without bindCertificate succeeds (regression: base path unchanged)", async () => {
       const { token } = await aegis.mint("default", signContent);
-      const decoded = JwtKit.decodeSegments(token);
+      const decoded = JwtKit.decode(token);
       expect(decoded.header).not.toHaveProperty("x5c");
       expect(decoded.header).not.toHaveProperty("x5t");
       expect(decoded.header).not.toHaveProperty("x5t#S256");
@@ -521,7 +521,7 @@ describe("Aegis cert binding", () => {
       localAmphora.add(buildChainlessKryptos());
 
       const { token } = await localAegis.mint("default", signContent);
-      const decoded = JwtKit.decodeSegments(token);
+      const decoded = JwtKit.decode(token);
       expect(decoded.header).not.toHaveProperty("x5t#S256");
 
       await expect(localAegis.jwt.verify(token)).resolves.toBeDefined();

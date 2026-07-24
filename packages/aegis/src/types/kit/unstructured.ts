@@ -48,5 +48,6 @@ export type DecodedUnstructuredToken<
 > = {
   header: WireTokenHeader;
   payload: P;
+  signature: T;
   token: T;
 };

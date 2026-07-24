@@ -1,6 +1,6 @@
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import { CwsKit } from "../../classes/CwsKit.js";
-import { CwtKit } from "../../classes/CwtKit.js";
+import { decodeCwt } from "../cose/cwt-token.js";
 import type {
   AegisVerifyKey,
   TokenContent,
@@ -27,7 +27,7 @@ export const rawVerifyCws = async <T extends TokenContent = Buffer>({
   deps: AegisDeps;
 }): Promise<VerifiedUnstructuredToken<T, Buffer>> => {
   const bytes = Buffer.from(token, "base64url");
-  const decoded = CwtKit.decode(bytes);
+  const decoded = decodeCwt(bytes);
 
   const kryptos = await deps.resolveVerifyKey(
     decoded.kid,

@@ -78,14 +78,20 @@ export class CwsKit implements ICwsKit {
   /**
    * WIRE decode (no signature/MAC check): decode the CBOR-encoded COSE token
    * (COSE_Sign1 tag 18 or COSE_Mac0 tag 17, tagged or bare), merge its protected
-   * + unprotected header maps into ONE {@link DecodedOpaqueToken} wire header
-   * (integer labels translated to their JOSE wire names), and surface the opaque
-   * payload bytes. The uniform primitive shared with `JwsKit` decode.
+   * + unprotected header maps into ONE {@link DecodedUnstructuredToken} wire
+   * header (integer labels translated to their JOSE wire names), and surface the
+   * opaque payload bytes + the raw COSE signature/MAC bytes. The uniform
+   * primitive shared with `JwsKit` decode.
    */
-  decode<T extends TokenContent = Buffer>(
+  static decode<T extends TokenContent = Buffer>(
     token: Buffer,
   ): DecodedUnstructuredToken<T, Buffer> {
-    const value = decodeCbor(token);
+    // Strip an optional outer CWT tag (61) to reach the COSE_Sign1/Mac0 —
+    // symmetric with `verify`, which strips it too (aegis wraps every signed COSE
+    // token in the CWT tag). A bare, un-enveloped token passes through unchanged.
+    const decoded = decodeCbor(token);
+    const value =
+      decoded instanceof Tag && decoded.tag === COSE_TAG.cwt ? decoded.contents : decoded;
     const contents =
       value instanceof Tag &&
       (value.tag === COSE_TAG.sign1 || value.tag === COSE_TAG.mac0)
@@ -101,9 +107,10 @@ export class CwsKit implements ICwsKit {
       });
     }
 
-    const [protectedBstr, unprotected, payload] = contents as [
+    const [protectedBstr, unprotected, payload, signature] = contents as [
       Uint8Array,
       Map<number, unknown> | undefined,
+      Uint8Array,
       Uint8Array,
     ];
 
@@ -116,6 +123,7 @@ export class CwsKit implements ICwsKit {
     return {
       header,
       payload: reconstructContent<T>(Buffer.from(payload), header.cty),
+      signature: Buffer.from(signature),
       token,
     };
   }

@@ -42,7 +42,7 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   // read-side sensitive-claim gate (OIDC Core §13.3).
   encrypted?: boolean;
 }): Promise<VerifiedToken<C>> => {
-  const decode = JwtKit.decodeSegments(token);
+  const decode = JwtKit.decode(token);
 
   const kryptos = await deps.resolveVerifyKey(
     decode.header.kid,

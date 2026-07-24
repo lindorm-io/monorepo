@@ -21,7 +21,7 @@ export const rawVerifyJws = async <T extends TokenContent = Buffer>({
   options?: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
 }): Promise<VerifiedUnstructuredToken<T, string>> => {
-  const decode = JwsKit.decodeSegments(jws);
+  const decode = JwsKit.decode(jws);
 
   const kryptos = await deps.resolveVerifyKey(
     decode.header.kid,

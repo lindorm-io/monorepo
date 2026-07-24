@@ -75,5 +75,6 @@ export type DecodedStructuredToken<
 > = {
   header: WireTokenHeader;
   payload: C;
+  signature: T;
   token: T;
 };

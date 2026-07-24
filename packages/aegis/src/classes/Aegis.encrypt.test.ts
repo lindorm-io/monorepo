@@ -45,7 +45,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       // carries `cty: JWT` (RFC 7519 §5.2) — stamped explicitly so the read side
       // reconstructs the plaintext back to the inner token string, not an opaque
       // Buffer, and the verify recursion re-verifies it.
-      const { header } = JweKit.decodeSegments(token);
+      const { header } = JweKit.decode(token);
       expect(header.cty).toBe("JWT");
     });
 
@@ -77,7 +77,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       const { token } = await aegis.mint("id_token", content, { encrypt: {} });
 
       const decrypted = await aegis.jwe.decrypt<string>(token);
-      const { header } = JwtKit.decodeSegments(decrypted.payload);
+      const { header } = JwtKit.decode(decrypted.payload);
 
       expect(header.typ).toBe("JWT");
     });
@@ -130,7 +130,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
       // The outer JWE carries apu/apv, proving mint's sign-then-encrypt step
       // forwarded the wrapper's party info to JweKit.encrypt.
-      const { header } = JweKit.decodeSegments(token);
+      const { header } = JweKit.decode(token);
       expect(header.apu).toBe(partyProducer);
       expect(header.apv).toBe(partyRecipient);
 
@@ -166,7 +166,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       expect(JweKit.isJwe(token)).toBe(true);
 
       const decrypted = await aegis.jwe.decrypt<string>(token);
-      const { payload } = JwtKit.decodeSegments(decrypted.payload);
+      const { payload } = JwtKit.decode(decrypted.payload);
 
       // FLAT individual claims — NOT a nested `sensitive_identity` wrapper.
       expect(payload.national_identity_number).toBe("ABC-123");
@@ -181,7 +181,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       expect(JwtKit.isJwt(token)).toBe(true);
       expect(JweKit.isJwe(token)).toBe(false);
 
-      const { payload } = JwtKit.decodeSegments(token);
+      const { payload } = JwtKit.decode(token);
       expect(payload.national_identity_number).toBeUndefined();
       expect(payload.sensitive_identity).toBeUndefined();
     });

@@ -118,7 +118,7 @@ describe("COSE interop — @auth0/cose", () => {
     });
 
     // Our mint stamped the full CWT media type…
-    expect(CwtKit.decode(token).typ).toBe("application/at+cwt");
+    expect(CwtKit.decode(token).header.typ).toBe("application/at+cwt");
 
     // …and @auth0/cose still verifies it WITHOUT throwing: RFC 9596 says the
     // typ is passed through to the application, never validated by the library.
@@ -320,8 +320,6 @@ describe("COSE interop — custom logic does not break the token", () => {
 // WIRE vocabulary, NOT leave the raw COSE structures on the header. These build a
 // raw Sign1 by hand (labels our kits don't write) and decode it via `CwtKit`.
 describe("COSE decode — foreign header parameters shape to the JOSE wire form", () => {
-  const kit = () => new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
-
   // Wrap a hand-built COSE_Sign1 body ([protected, unprotected, payload, sig]) as
   // our `Tag(61, Tag(18, [...]))` CWT so `CwtKit.decode` reads it.
   const asCwt = (body: Array<unknown>): Buffer =>
@@ -338,7 +336,7 @@ describe("COSE decode — foreign header parameters shape to the JOSE wire form"
   ];
 
   test("crit label array decodes to JOSE wire-name strings (ints mapped, strings kept)", () => {
-    const decoded = kit().decode(
+    const decoded = CwtKit.decode(
       asCwt(
         foreignBody(
           new Map<number, unknown>([
@@ -354,7 +352,7 @@ describe("COSE decode — foreign header parameters shape to the JOSE wire form"
   });
 
   test("x5chain bstr chain decodes to an Array<base64-string> (standard base64)", () => {
-    const decoded = kit().decode(
+    const decoded = CwtKit.decode(
       asCwt(
         foreignBody(
           new Map<number, unknown>([
@@ -370,7 +368,7 @@ describe("COSE decode — foreign header parameters shape to the JOSE wire form"
   });
 
   test("a single x5chain bstr (one cert) still decodes to a one-element Array", () => {
-    const decoded = kit().decode(
+    const decoded = CwtKit.decode(
       asCwt(
         foreignBody(
           new Map<number, unknown>([
@@ -385,7 +383,7 @@ describe("COSE decode — foreign header parameters shape to the JOSE wire form"
   });
 
   test("x5t (label 34) is ABSENT — its COSE_CertHash has no faithful JOSE-wire form", () => {
-    const decoded = kit().decode(
+    const decoded = CwtKit.decode(
       asCwt(
         foreignBody(
           new Map<number, unknown>([
@@ -412,11 +410,11 @@ describe("COSE decode — foreign header parameters shape to the JOSE wire form"
       Buffer.alloc(0),
     ];
 
-    expect(() => kit().decode(asCwt(body))).toThrow(/Malformed CWT/);
+    expect(() => CwtKit.decode(asCwt(body))).toThrow(/Malformed CWT/);
   });
 
   test("an aegis-minted CWT is unaffected — it emits none of these parameters", () => {
-    const decoded = kit().decode(signDomain(TEST_EC_KEY_SIG, common));
+    const decoded = CwtKit.decode(signDomain(TEST_EC_KEY_SIG, common));
 
     expect(decoded.header.crit).toBeUndefined();
     expect(decoded.header.x5c).toBeUndefined();

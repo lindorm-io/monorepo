@@ -1,7 +1,6 @@
 import type { Dict, Predicate } from "@lindorm/types";
 import type {
   CwtClaimsWire,
-  DecodedStructuredToken,
   SignStructuredTokenOptions,
   VerifiedStructuredToken,
   VerifyStructuredTokenOptions,
@@ -9,8 +8,9 @@ import type {
 
 /**
  * The COSE_Mac0 claims kit — the symmetric twin of {@link ICwtKit}. Same
- * wire-only surface (transform-free `sign`, structural `verify`, JWT-uniform
- * `decode`); the integrity structure is a MAC rather than a signature.
+ * wire-only surface (transform-free `sign`, structural `verify`); the integrity
+ * structure is a MAC rather than a signature. The keyless `decode` is a static on
+ * the class, not an instance method.
  */
 export interface ICwmKit<C extends Dict = Dict> {
   sign(claims: CwtClaimsWire & C, options?: SignStructuredTokenOptions): Buffer;
@@ -19,5 +19,4 @@ export interface ICwmKit<C extends Dict = Dict> {
     assert?: Predicate<CwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions,
   ): VerifiedStructuredToken<CwtClaimsWire & C>;
-  decode(token: Buffer): DecodedStructuredToken<CwtClaimsWire & C>;
 }

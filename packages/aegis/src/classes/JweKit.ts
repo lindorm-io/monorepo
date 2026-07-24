@@ -162,7 +162,7 @@ export class JweKit implements IJweKit {
 
     this.logger.debug("Decrypting token", { token: sanitiseToken(token) });
 
-    const decoded = JweKit.decodeSegments(token);
+    const decoded = JweKit.splitCompact(token);
 
     const typ = decoded.header.typ;
     if (typ !== "JWE" && !(typeof typ === "string" && typ.endsWith("+jwe"))) {
@@ -324,17 +324,6 @@ export class JweKit implements IJweKit {
     return { header: decoded.header, payload, token };
   }
 
-  /**
-   * WIRE decode (no decryption): the unified wire header ONLY — the single JOSE
-   * protected header (compact JWE carries no per-recipient unprotected header,
-   * so the merge is that one header). The content stays ciphertext; reading it
-   * needs the key (that is `decrypt`). The uniform primitive shared with
-   * `CweKit` decode.
-   */
-  decode(token: string): DecodedEncryptedToken<string> {
-    return { header: JweKit.decodeSegments(token).header, token };
-  }
-
   // public static
 
   static isJwe(jwe: string): boolean {
@@ -351,7 +340,24 @@ export class JweKit implements IJweKit {
     }
   }
 
-  static decodeSegments(jwe: string): DecodedJweSegments {
+  /**
+   * WIRE decode (no decryption): the unified wire header ONLY — the single JOSE
+   * protected header (compact JWE carries no per-recipient unprotected header,
+   * so the merge is that one header). The content stays ciphertext; reading it
+   * needs the key (that is `decrypt`). The uniform primitive shared with
+   * `CweKit` decode.
+   */
+  static decode(token: string): DecodedEncryptedToken<string> {
+    return { header: JweKit.splitCompact(token).header, token };
+  }
+
+  // private static
+
+  /**
+   * Split a compact JWE into its five wire segments (the internal shape `decrypt`
+   * consumes). NOT public — the public keyless read is {@link JweKit.decode}.
+   */
+  private static splitCompact(jwe: string): DecodedJweSegments {
     const parts = jwe.split(".");
     if (parts.length !== 5) {
       throw new JweError("Invalid JWE format: expected 5 parts", {

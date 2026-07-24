@@ -234,10 +234,11 @@ export const decodeCwtWire = <C extends Dict = Dict>(
     });
   }
 
-  const [protectedBstr, unprotected, payloadBstr] = contents as [
+  const [protectedBstr, unprotected, payloadBstr, signature] = contents as [
     Uint8Array,
     Map<number, unknown> | undefined,
     Uint8Array | null | undefined,
+    Uint8Array | undefined,
   ];
 
   // A COSE_Sign1/Mac0 may carry a DETACHED (nil) payload — legal COSE, but there
@@ -263,7 +264,12 @@ export const decodeCwtWire = <C extends Dict = Dict>(
     decodeCbor<Map<unknown, unknown>>(Buffer.from(payloadBstr), { preferMap: false }),
   );
 
-  return { header, payload: payload as CwtClaimsWire & C, token };
+  return {
+    header,
+    payload: payload as CwtClaimsWire & C,
+    signature: signature ? Buffer.from(signature) : Buffer.alloc(0),
+    token,
+  };
 };
 
 /**

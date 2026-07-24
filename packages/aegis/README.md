@@ -319,7 +319,7 @@ Aegis.toWire(claims); // domain claims → JOSE-keyed wire dict
 Aegis.assert(claims, matchers); // throws on mismatch
 ```
 
-`Aegis.header` and `Aegis.decode` are gone — read a verified token's `.header`, use the keyless instance `aegis.parse` for an unknown structured token (above), or a kit instance's `.decode` when you hold the key.
+`Aegis.header` and `Aegis.decode` are gone — read a verified token's `.header`, use the keyless instance `aegis.parse` for an unknown structured token (above), or a kit's keyless static `.decode` (e.g. `JwtKit.decode`) for a known format.
 
 ## JwtKit
 
@@ -341,7 +341,7 @@ const parsed = kit.verify(token, { iss: "https://example.com" });
 // parsed.payload → wire claims ({ iss, sub, exp, jti }); parsed.header, parsed.token
 
 JwtKit.isJwt(token); // static
-kit.decode(token); // { header, payload, token } — no verification
+JwtKit.decode(token); // static → { header, payload, signature, token } — no verification
 ```
 
 `verify` runs crit, typ well-formedness, algorithm-match, signature, cert-binding, reserved-claim type checks, and the temporal range (`exp` / `nbf` / `iat`, validated if present) — plus the optional `assert` predicate over the wire claims.
@@ -362,7 +362,7 @@ const parsed = kit.verify<string>(token);
 // parsed.payload === "hello world" (the cty header round-trips the native type)
 
 JwsKit.isJws(token); // static
-kit.decode(token); // { header, payload, token } — no verification
+JwsKit.decode(token); // static → { header, payload, signature, token } — no verification
 ```
 
 ## JweKit
@@ -385,7 +385,7 @@ const decrypted = kit.decrypt<string>(token);
 // → { header, payload, token }
 
 JweKit.isJwe(token); // static
-kit.decode(token); // { header, token } — header only, no decryption
+JweKit.decode(token); // static → { header, token } — header only, no decryption
 ```
 
 Compressed payloads (`zip` header) are explicitly rejected.

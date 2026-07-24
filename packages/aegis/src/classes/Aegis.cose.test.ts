@@ -9,6 +9,7 @@ import {
 } from "../__fixtures__/keys.js";
 import { AegisError } from "../errors/index.js";
 import { CweKit } from "./CweKit.js";
+import { CwsKit } from "./CwsKit.js";
 import { CwtKit } from "./CwtKit.js";
 import { Aegis } from "./Aegis.js";
 
@@ -69,7 +70,7 @@ describe("Aegis — COSE", () => {
 
     const bytes = Buffer.from(token, "base64url");
     expect(bytes.subarray(0, 2).toString("hex")).toBe("d83d"); // CWT tag
-    expect(CwtKit.decode(bytes).algorithm).toBe("HS256"); // COSE_Mac0, not Sign1
+    expect(CwtKit.decode(bytes).header.alg).toBe("HS256"); // COSE_Mac0, not Sign1
 
     const verified = (await macAegis.verify("id_token", token, undefined, {
       audience: "client-1",
@@ -116,7 +117,7 @@ describe("Aegis — COSE", () => {
       { format: "cwm" }, // D6: symmetric key → COSE_Mac0 via the explicit cwm format
     );
 
-    expect(CwtKit.decode(Buffer.from(token, "base64url")).algorithm).toBe("HS256");
+    expect(CwtKit.decode(Buffer.from(token, "base64url")).header.alg).toBe("HS256");
 
     const verified = (await macAegis.verify("id_token", token, undefined, {
       audience: "client-1",
@@ -146,7 +147,7 @@ describe("Aegis — COSE", () => {
     // The outer COSE_Encrypt0 is stamped `cty: application/cwt` (RFC 8392,
     // mirroring the JOSE `cty: JWT`) so the read side reconstructs the plaintext
     // to the inner CWT BYTES rather than an opaque octet blob.
-    const { header } = new CweKit({ kryptos: TEST_OCT_KEY_ENC, logger }).decode(bytes);
+    const { header } = CweKit.decode(bytes);
     expect(header.cty).toBe("application/cwt");
 
     const verified = (await encAegis.verify("id_token", token, undefined, {
@@ -273,7 +274,9 @@ describe("Aegis — COSE", () => {
 
       // The typ is `at+cws`, not `at+cwt` — the media type names it an OPAQUE CWS
       // (Phase-16 emission fix), so `isCws` recognises it and `isCwt` does not.
-      expect(CwtKit.decode(bytes).typ).toBe("application/at+cws");
+      // A CWS is the CWT-tag-enveloped opaque COSE; the keyless `CwsKit.decode`
+      // strips the tag 61 envelope (symmetric with `verify`) and reads its header.
+      expect(CwsKit.decode(bytes).header.typ).toBe("application/at+cws");
       expect(Aegis.isCws(token)).toBe(true);
       expect(Aegis.isCwt(token)).toBe(false);
     });
@@ -305,7 +308,7 @@ describe("Aegis — COSE", () => {
         format: "cws",
       });
 
-      expect(CwtKit.decode(Buffer.from(token, "base64url")).typ).toBe(
+      expect(CwsKit.decode(Buffer.from(token, "base64url")).header.typ).toBe(
         "application/rt+cws",
       );
     });

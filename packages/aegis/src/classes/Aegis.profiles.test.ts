@@ -44,7 +44,7 @@ describe("Aegis profiles", () => {
 
     test("happy path produces a conformant application/at+jwt", async () => {
       const { token } = await aegis.mint("access_token", content);
-      const { header, payload } = JwtKit.decodeSegments(token);
+      const { header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/at+jwt");
       expect(payload).toMatchObject({
@@ -73,7 +73,7 @@ describe("Aegis profiles", () => {
       // pipeline maps each to its wire claim via the ONE translator — the old
       // WIRE-name leak (iat/jti/iss in autoInject) is gone.
       const { token } = await aegis.mint("access_token", content);
-      const { payload } = JwtKit.decodeSegments(token);
+      const { payload } = JwtKit.decode(token);
 
       expect(payload.iat).toBe(1704096000); // autoInject issuedAt → iat
       expect(payload.iss).toBe(ISSUER); // autoInject issuer → iss
@@ -83,7 +83,7 @@ describe("Aegis profiles", () => {
 
     test("a per-call lifetime override changes exp", async () => {
       const { token } = await aegis.mint("access_token", content, { lifetime: "2h" });
-      const { payload } = JwtKit.decodeSegments(token);
+      const { payload } = JwtKit.decode(token);
 
       // Default profile lifetime is 1h; the per-call override yields iat + 2h.
       expect(payload.exp).toBe(1704096000 + 7200);
@@ -121,7 +121,7 @@ describe("Aegis profiles", () => {
 
       const { token } = await aegis.mint("access_token", content);
 
-      expect(JwtKit.decodeSegments(token).header.alg).not.toBe("HS256");
+      expect(JwtKit.decode(token).header.alg).not.toBe("HS256");
     });
   });
 
@@ -133,7 +133,7 @@ describe("Aegis profiles", () => {
 
     test("happy path produces a bare JWT typ", async () => {
       const { token } = await aegis.mint("id_token", content);
-      const { header, payload } = JwtKit.decodeSegments(token);
+      const { header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("JWT");
       expect(payload).toMatchObject({ iss: ISSUER, sub: "user-1", aud: ["client-1"] });
@@ -155,7 +155,7 @@ describe("Aegis profiles", () => {
         ...content,
         accessToken: "the-access-token",
       });
-      const { payload } = JwtKit.decodeSegments(token);
+      const { payload } = JwtKit.decode(token);
 
       expect(shaAlgorithm("EdDSA")).toBe("SHA512");
       // SHA-512 left-most half = 256 bits = 32 bytes.
@@ -172,7 +172,7 @@ describe("Aegis profiles", () => {
         ...content,
         accessToken: "the-access-token",
       });
-      const { payload } = JwtKit.decodeSegments(token);
+      const { payload } = JwtKit.decode(token);
 
       expect(shaAlgorithm("ML-DSA-65")).toBe("SHA512");
       expect(B64.toBuffer(payload.at_hash as string, B64U).length).toBe(32);
@@ -193,7 +193,7 @@ describe("Aegis profiles", () => {
         ...content,
         accessToken: "the-access-token",
       });
-      const { payload } = JwtKit.decodeSegments(token);
+      const { payload } = JwtKit.decode(token);
 
       expect(shaAlgorithm("ES256")).toBe("SHA256");
       expect(B64.toBuffer(payload.at_hash as string, B64U).length).toBe(16);
@@ -210,7 +210,7 @@ describe("Aegis profiles", () => {
         authenticatorAssuranceLevel: 2,
         identityAssuranceLevel: 3,
       });
-      const { payload } = JwtKit.decodeSegments(token);
+      const { payload } = JwtKit.decode(token);
 
       expect(payload).toMatchObject({ loa: 3, aal: 2, ial: 3 });
 
@@ -242,7 +242,7 @@ describe("Aegis profiles", () => {
         identityAssuranceLevel: 2,
         federationAssuranceLevel: 1,
       });
-      const { payload } = JwtKit.decodeSegments(token);
+      const { payload } = JwtKit.decode(token);
 
       expect(payload).toMatchObject({ loa: 4, aal: 3, ial: 2, fal: 1 });
 
@@ -266,7 +266,7 @@ describe("Aegis profiles", () => {
 
     test("happy path produces a application/logout+jwt with events", async () => {
       const { token } = await aegis.mint("logout_token", content);
-      const { header, payload } = JwtKit.decodeSegments(token);
+      const { header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/logout+jwt");
       expect(payload).toMatchObject({
@@ -301,7 +301,7 @@ describe("Aegis profiles", () => {
 
     test("happy path produces a application/secevent+jwt with no exp/sub", async () => {
       const { token } = await aegis.mint("security_event", content);
-      const { header, payload } = JwtKit.decodeSegments(token);
+      const { header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/secevent+jwt");
       expect(payload.exp).toBeUndefined();
@@ -333,7 +333,7 @@ describe("Aegis profiles", () => {
         subject: "user-1",
         events: { "urn:lindorm:event:rtbf": { rtbf_request_id: "r-1" } },
       });
-      const { header, payload } = JwtKit.decodeSegments(token);
+      const { header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/erasure+jwt");
       expect(payload).toMatchObject({ sub: "user-1" });
@@ -347,7 +347,7 @@ describe("Aegis profiles", () => {
         audience: ["https://rs"],
         claims: { token_introspection: { active: true } },
       });
-      const { header, payload } = JwtKit.decodeSegments(token);
+      const { header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/token-introspection+jwt");
       expect(payload.token_introspection).toMatchObject({ active: true });
@@ -358,7 +358,7 @@ describe("Aegis profiles", () => {
         subject: "user-1",
         audience: ["client-1"],
       });
-      const { payload } = JwtKit.decodeSegments(token);
+      const { payload } = JwtKit.decode(token);
 
       expect(payload).toMatchObject({ sub: "user-1", aud: ["client-1"] });
     });
@@ -368,7 +368,7 @@ describe("Aegis profiles", () => {
         audience: ["client-1"],
         claims: { code: "abc", state: "xyz" },
       });
-      const { payload } = JwtKit.decodeSegments(token);
+      const { payload } = JwtKit.decode(token);
 
       expect(payload).toMatchObject({ code: "abc", state: "xyz", aud: ["client-1"] });
     });
@@ -398,7 +398,7 @@ describe("Aegis profiles", () => {
       });
 
       // The wire alg header is the exact RFC 9964 JOSE string.
-      expect(JwtKit.decodeSegments(token).header.alg).toBe("ML-DSA-65");
+      expect(JwtKit.decode(token).header.alg).toBe("ML-DSA-65");
 
       // Full domain verify path resolves the AKP key by kid and validates.
       const parsed = await akpAegis.verify(token);
@@ -425,7 +425,7 @@ describe("Aegis profiles", () => {
         subject: "customer-sub",
         audience: [ISSUER],
       });
-      const { header, payload } = JwtKit.decodeSegments(token);
+      const { header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/delegation+jwt");
       expect(payload.iss).toBe("client-1");

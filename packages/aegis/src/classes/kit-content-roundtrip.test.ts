@@ -37,7 +37,7 @@ describe("kit content round-trip (inferred cty)", () => {
     });
 
     test("Dict → decode (keyless) returns the same Dict", () => {
-      expect(kit.decode<Dict>(kit.sign(dict)).payload).toEqual(dict);
+      expect(JwsKit.decode<Dict>(kit.sign(dict)).payload).toEqual(dict);
     });
   });
 
@@ -57,7 +57,7 @@ describe("kit content round-trip (inferred cty)", () => {
     });
 
     test("Dict → decode (keyless) returns the same Dict", () => {
-      expect(kit.decode<Dict>(kit.sign(dict)).payload).toEqual(dict);
+      expect(CwsKit.decode<Dict>(kit.sign(dict)).payload).toEqual(dict);
     });
   });
 

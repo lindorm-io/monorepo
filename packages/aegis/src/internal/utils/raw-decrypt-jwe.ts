@@ -21,7 +21,7 @@ export const rawDecryptJwe = async <T extends TokenContent = Buffer>({
   options?: DecryptTokenOptions & { key?: AegisDecryptKey };
   deps: AegisDeps;
 }): Promise<DecryptedEncryptedToken<T, string>> => {
-  const decode = JweKit.decodeSegments(jwe);
+  const decode = JweKit.decode(jwe);
 
   const kryptos = await deps.resolveDecryptKey(
     decode.header.kid,
