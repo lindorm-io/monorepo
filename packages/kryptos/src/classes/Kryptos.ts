@@ -301,7 +301,7 @@ export class Kryptos implements IKryptos {
   //                                        cannot have signed anything, ever.
 
   get isPending(): boolean {
-    return isBefore(new Date(), this._notBefore);
+    return isAfter(this._notBefore, new Date());
   }
 
   get isActive(): boolean {
@@ -309,7 +309,7 @@ export class Kryptos implements IKryptos {
   }
 
   get isExpired(): boolean {
-    return isEqual(new Date(), this._expiresAt) || isAfter(new Date(), this._expiresAt);
+    return isEqual(this._expiresAt, new Date()) || isBefore(this._expiresAt, new Date());
   }
 
   get modulus(): RsaModulus | null {
