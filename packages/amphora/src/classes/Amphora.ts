@@ -48,6 +48,9 @@ export class Amphora implements IAmphora {
       // fetches by default. A `jwks_uri` vetted by a caller's egress guard could
       // otherwise 302 to an internal host that is followed AFTER the check.
       config: { maxRedirects: options.maxRedirects ?? 0 },
+      // The optional egress-vetting DNS resolver — pins the fetch to a validated
+      // IP (closes the connect-time re-resolve / DNS-rebinding gap).
+      lookup: options.lookup,
       logger: this.logger,
       middleware: [conduitChangeResponseDataMiddleware()],
       retryOptions: { maxAttempts: 3 },

@@ -360,6 +360,32 @@ describe("Amphora", () => {
       nock.cleanAll();
     });
 
+    test("routes external fetches through the supplied lookup (SSRF IP-pin)", async () => {
+      // A throwing lookup proves the fetch is pinned to the resolver: the http
+      // adapter invokes it before any socket, so no network is touched. The
+      // resolver is called with the jwks_uri host — a real egress lookup would
+      // validate that host's address and return the vetted IP.
+      const lookup = vi.fn(async (_hostname: string) => {
+        throw new Error("egress blocked");
+      });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        lookup,
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await expect(amphora.findById(TEST_EC_KEY_SIG.id)).rejects.toThrow();
+      expect(lookup).toHaveBeenCalled();
+      expect(lookup.mock.calls[0]![0]).toBe("external.lindorm.io");
+    });
+
     test("follows a redirect when maxRedirects is explicitly raised", async () => {
       const jwk = TEST_EC_KEY_SIG.toJWK("private");
       delete jwk.iss;

@@ -1,3 +1,4 @@
+import type { ConduitLookup } from "@lindorm/conduit";
 import type {
   IKryptos,
   KryptosAttributes,
@@ -32,6 +33,15 @@ export type AmphoraSettings = {
   environment?: Environment;
   external?: Array<AmphoraExternalSettings>;
   logger: ILogger;
+  /**
+   * DNS resolver hook for external discovery/JWKS fetches — forwarded to the
+   * internal Conduit's `lookup`. The seam for SSRF IP-pinning: supply a resolver
+   * that validates each resolved address against an egress policy and returns
+   * the vetted IP, so the fetch connects to exactly that address (closing the
+   * check-time/connect-time DNS-rebinding gap the `maxRedirects: 0` default does
+   * not). Omit for ordinary DNS. See {@link ConduitLookup}.
+   */
+  lookup?: ConduitLookup;
   maxExternalKeys?: number;
   /**
    * Max HTTP redirects amphora follows when fetching an EXTERNAL provider's
