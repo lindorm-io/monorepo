@@ -1,3 +1,4 @@
+export * from "./array-includes.js";
 export * from "./client-headers.js";
 export * from "./diff.js";
 export * from "./filter.js";
