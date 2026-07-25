@@ -67,15 +67,13 @@ describe("Pylon", () => {
     amphora = new Amphora({
       domain: "http://test.lindorm.io",
       logger,
-      external: [
-        {
-          openIdConfiguration: {
-            logoutEndpoint: "https://lindorm.eu.auth0.com/v2/logout",
-          },
-          openIdConfigurationUri:
-            "https://lindorm.eu.auth0.com/.well-known/openid-configuration",
+      idp: {
+        openIdConfiguration: {
+          logoutEndpoint: "https://lindorm.eu.auth0.com/v2/logout",
         },
-      ],
+        openIdConfigurationUri:
+          "https://lindorm.eu.auth0.com/.well-known/openid-configuration",
+      },
     });
 
     amphora.add(

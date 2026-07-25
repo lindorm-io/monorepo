@@ -13,10 +13,12 @@ describe("getOpenIdConfiguration", () => {
 
     ctx = {
       amphora: {
-        config: [
-          { issuer: "issuer", test: "test" },
-          { issuer: "other", test: "other" },
-        ],
+        idp: {
+          config: () => ({
+            issuer: "issuer",
+            openIdConfiguration: { issuer: "issuer", test: "test" },
+          }),
+        },
       },
     };
   });
@@ -32,5 +34,13 @@ describe("getOpenIdConfiguration", () => {
     config.issuer = "wrong";
 
     expect(() => getOpenIdConfiguration(ctx, config)).toThrow(ServerError);
+  });
+
+  test("propagates the throw when no idp is configured", () => {
+    ctx.amphora.idp.config = () => {
+      throw new Error("idp_not_configured");
+    };
+
+    expect(() => getOpenIdConfiguration(ctx, config)).toThrow();
   });
 });

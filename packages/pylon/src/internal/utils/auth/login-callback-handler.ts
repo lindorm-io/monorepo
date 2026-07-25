@@ -20,8 +20,11 @@ const resolveSubjectViaUserinfo = (
 ): ((accessToken: string) => Promise<string | null>) => {
   return async (accessToken: string) => {
     try {
-      const config = ctx.amphora.config.find((c) => c.userinfoEndpoint);
-      if (!config?.userinfoEndpoint) return null;
+      // The upstream IdP is the amphora `idp`; `config()` throws when none is set,
+      // caught below (subject-via-userinfo is a best-effort fallback).
+      const userinfoEndpoint =
+        ctx.amphora.idp.config().openIdConfiguration?.userinfoEndpoint;
+      if (!userinfoEndpoint) return null;
 
       const conduit = new Conduit({
         alias: "auth-userinfo",
@@ -33,7 +36,7 @@ const resolveSubjectViaUserinfo = (
         ],
       });
 
-      const { data } = await conduit.get<OpenIdClaims>(config.userinfoEndpoint, {
+      const { data } = await conduit.get<OpenIdClaims>(userinfoEndpoint, {
         middleware: [conduitBearerAuthMiddleware(accessToken)],
       });
 
