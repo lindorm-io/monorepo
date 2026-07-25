@@ -699,11 +699,50 @@ describe("Amphora", () => {
         ],
       });
 
-      expect(amphora.config).toEqual([]);
+      // Before setup the issuer sources are seeded but unresolved.
+      expect(
+        amphora.external.issuers().map((c) => ({
+          keyCount: c.keyCount,
+          lastRefresh: c.lastRefresh,
+        })),
+      ).toEqual([
+        { keyCount: 0, lastRefresh: null },
+        { keyCount: 0, lastRefresh: null },
+        { keyCount: 0, lastRefresh: null },
+      ]);
 
       await amphora.setup();
 
-      expect(amphora.config).toMatchSnapshot();
+      // After setup each source is resolved + enriched: issuer/jwksUri settled
+      // (from discovery where needed) and keyCount reflects the fetched keys.
+      expect(
+        amphora.external.issuers().map((c) => ({
+          issuer: c.issuer,
+          jwksUri: c.jwksUri,
+          keyCount: c.keyCount,
+        })),
+      ).toEqual([
+        {
+          issuer: "https://external.lindorm.io/",
+          jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          keyCount: 1,
+        },
+        {
+          issuer: "https://lindorm.eu.auth0.com/",
+          jwksUri: "https://lindorm.eu.auth0.com/.well-known/jwks.json",
+          keyCount: 2,
+        },
+        {
+          issuer: "https://lindorm.jp.auth0.io/",
+          jwksUri: "https://lindorm.jp.auth0.com/.well-known/jwks.json",
+          keyCount: 1,
+        },
+      ]);
+
+      // The eu.auth0 source discovered its full OpenID configuration (nested).
+      expect(amphora.external.issuers()[1]!.openIdConfiguration?.userinfoEndpoint).toBe(
+        "https://lindorm.eu.auth0.com/userinfo",
+      );
 
       expect(amphora.vault).toEqual(
         expect.arrayContaining([
@@ -988,11 +1027,11 @@ describe("Amphora", () => {
 
       await amphora.setup();
 
-      expect(amphora.config.length).toBe(1);
+      expect(amphora.external.issuers().length).toBe(1);
 
       await amphora.refresh();
 
-      expect(amphora.config.length).toBe(1);
+      expect(amphora.external.issuers().length).toBe(1);
     });
 
     test("should throw when all providers fail", async () => {
@@ -1415,7 +1454,22 @@ describe("Amphora", () => {
       expect(amphora.vault).toHaveLength(1);
     });
 
-    test("should not allow mutation of config via getter", async () => {
+    test("should not allow mutation of config via getter", () => {
+      // config is the service's own identity, derived from the domain.
+      expect(amphora.config).toEqual([
+        {
+          issuer,
+          jwksUri: new URL("/.well-known/jwks.json", issuer).toString(),
+        },
+      ]);
+
+      const config = amphora.config;
+      config.length = 0;
+
+      expect(amphora.config).toHaveLength(1);
+    });
+
+    test("should not allow mutation of external issuers via getter", async () => {
       const jwk = TEST_EC_KEY_SIG.toJWK("private");
       delete jwk.iss;
 
@@ -1437,10 +1491,10 @@ describe("Amphora", () => {
 
       await amphora.setup();
 
-      const config = amphora.config;
-      config.length = 0;
+      const issuers = amphora.external.issuers();
+      issuers.length = 0;
 
-      expect(amphora.config).toHaveLength(1);
+      expect(amphora.external.issuers()).toHaveLength(1);
     });
 
     test("should not allow mutation of jwks keys via getter", () => {
@@ -2036,6 +2090,564 @@ describe("Amphora", () => {
       expect(laxKeys).toHaveLength(1);
       expect(laxKeys[0]!.id).toBe(laxChainless.id);
       expect(strictKeys).toHaveLength(0);
+    });
+  });
+
+  describe("external facet — keys", () => {
+    test("external.add forces internal:false and does not stamp the amphora domain", () => {
+      const key = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "https://foreign.lindorm.io/",
+      });
+      expect(key.internal).toBe(true);
+
+      amphora.external.add(key);
+
+      const stored = amphora.findByIdSync(key.id);
+      expect(stored.internal).toBe(false);
+      // Foreign issuer preserved — never overwritten with the amphora domain.
+      expect(stored.issuer).toBe("https://foreign.lindorm.io/");
+    });
+
+    test("external.add accepts an array and never publishes foreign keys in our jwks", () => {
+      const a = KryptosKit.from.jwk({ ...TEST_EC_KEY_SIG.toJWK("public"), iss: issuer });
+      const b = KryptosKit.from.jwk(TEST_OKP_KEY_SIG.toJWK("public"));
+
+      amphora.external.add([a, b]);
+
+      expect(amphora.vault).toHaveLength(2);
+      // Even though `a` claims OUR issuer, it is external provenance, so it is
+      // never served as ours.
+      expect(amphora.jwks.keys.some((k) => k.kid === a.id)).toBe(false);
+    });
+
+    test("external.remove drops a key by id", () => {
+      const key = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "https://foreign.lindorm.io/",
+      });
+      amphora.external.add(key);
+      expect(amphora.vault.find((k) => k.id === key.id)).toBeDefined();
+
+      amphora.external.remove(key.id);
+      expect(amphora.vault.find((k) => k.id === key.id)).toBeUndefined();
+    });
+  });
+
+  describe("external facet — issuer sources", () => {
+    const jwksUri = "https://lazy.lindorm.io/.well-known/jwks.json";
+    const externalIssuer = "https://lazy.lindorm.io/";
+
+    const publicJwk = () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("public");
+      delete jwk.iss;
+      return jwk;
+    };
+
+    test("addIssuer registers lazily; refresh(issuer) loads it", async () => {
+      nock("https://lazy.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      await amphora.external.addIssuer({ issuer: externalIssuer, jwksUri });
+
+      // Registered, not yet fetched.
+      expect(amphora.external.issuers()).toHaveLength(1);
+      expect(amphora.external.issuers()[0]!.lastRefresh).toBeNull();
+      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
+
+      await amphora.external.refresh(externalIssuer);
+
+      expect(nock.isDone()).toBe(true);
+      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(1);
+      expect(amphora.external.issuers()[0]!.lastRefresh).toBeInstanceOf(Date);
+      expect(amphora.external.issuers()[0]!.keyCount).toBe(1);
+    });
+
+    test("addIssuer with load:true eager-fetches immediately", async () => {
+      nock("https://lazy.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      await amphora.external.addIssuer({ issuer: externalIssuer, jwksUri, load: true });
+
+      expect(nock.isDone()).toBe(true);
+      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(1);
+    });
+
+    test("removeIssuer drops the source and evicts its keys", async () => {
+      nock("https://lazy.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      await amphora.external.addIssuer({ issuer: externalIssuer, jwksUri, load: true });
+      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(1);
+
+      amphora.external.removeIssuer(externalIssuer);
+
+      expect(amphora.external.issuers()).toHaveLength(0);
+      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
+    });
+
+    test("refresh(issuer) is a no-op for an issuer with no source", async () => {
+      await expect(
+        amphora.external.refresh("https://unknown.lindorm.io/"),
+      ).resolves.toBeUndefined();
+    });
+
+    test("enriches an issuer-only source: discovery then jwks", async () => {
+      nock("https://enrich.lindorm.io")
+        .get("/.well-known/openid-configuration")
+        .times(1)
+        .reply(200, {
+          ...OPEN_ID_CONFIGURATION_RESPONSE,
+          issuer: "https://enrich.lindorm.io/",
+          jwks_uri: "https://enrich.lindorm.io/.well-known/jwks.json",
+        });
+
+      nock("https://enrich.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      await amphora.external.addIssuer({
+        issuer: "https://enrich.lindorm.io/",
+        load: true,
+      });
+
+      const [config] = amphora.external.issuers();
+      expect(config!.issuer).toBe("https://enrich.lindorm.io/");
+      expect(config!.jwksUri).toBe("https://enrich.lindorm.io/.well-known/jwks.json");
+      expect(config!.openIdConfiguration).not.toBeNull();
+      expect(config!.keyCount).toBe(1);
+      expect(nock.isDone()).toBe(true);
+    });
+  });
+
+  describe("external issuer validation (item 1)", () => {
+    test("rejects a non-URI issuer with external_issuer_not_uri", async () => {
+      try {
+        await amphora.external.addIssuer({
+          issuer: "not-a-uri",
+          jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
+          load: true,
+        });
+        fail("Expected addIssuer to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AmphoraError);
+        expect((error as AmphoraError).code).toBe("external_issuer_not_uri");
+      }
+    });
+
+    test("rejects a URN issuer without a jwksUri (cannot discover a URN)", async () => {
+      try {
+        await amphora.external.addIssuer({
+          issuer: "urn:lindorm:tyr:client:abc",
+          load: true,
+        });
+        fail("Expected addIssuer to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AmphoraError);
+        expect((error as AmphoraError).code).toBe("urn_issuer_requires_jwks_uri");
+      }
+    });
+
+    test("accepts a URN issuer WITH a jwksUri (the tyr client-cache shape)", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("public");
+      delete jwk.iss;
+
+      nock("https://urn-keys.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      await amphora.external.addIssuer({
+        issuer: "urn:lindorm:tyr:client:abc",
+        jwksUri: "https://urn-keys.lindorm.io/.well-known/jwks.json",
+        load: true,
+      });
+
+      expect(
+        amphora.vault.filter((k) => k.issuer === "urn:lindorm:tyr:client:abc"),
+      ).toHaveLength(1);
+    });
+
+    test("rejects a non-URI issuer on the LAZY path (no load) at registration", async () => {
+      // The default lazy path must validate at addIssuer time, NOT silently accept
+      // and only warn on a later refresh.
+      try {
+        await amphora.external.addIssuer({
+          issuer: "not-a-uri",
+          jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
+        });
+        fail("Expected addIssuer to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AmphoraError);
+        expect((error as AmphoraError).code).toBe("external_issuer_not_uri");
+      }
+      // The bad source was never registered.
+      expect(amphora.external.issuers()).toHaveLength(0);
+    });
+
+    test("idp.set rejects a non-URI issuer even when lazy", async () => {
+      try {
+        await amphora.idp.set({
+          issuer: "not-a-uri",
+          jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
+        });
+        fail("Expected idp.set to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AmphoraError);
+        expect((error as AmphoraError).code).toBe("external_issuer_not_uri");
+      }
+    });
+
+    test("construction rejects a non-URI external issuer up front", () => {
+      expect(
+        () =>
+          new Amphora({
+            logger: createMockLogger(),
+            external: [{ issuer: "not-a-uri", jwksUri: "https://x.lindorm.io/jwks" }],
+          }),
+      ).toThrow(AmphoraError);
+    });
+  });
+
+  describe("resolved issuer required + scope exclusivity", () => {
+    test("rejects a discovery doc that omits an issuer (external_issuer_unresolved)", async () => {
+      nock("https://noissuer.lindorm.io")
+        .get("/.well-known/openid-configuration")
+        .reply(200, { jwksUri: "https://noissuer.lindorm.io/.well-known/jwks.json" });
+
+      try {
+        await amphora.external.addIssuer({
+          openIdConfigurationUri:
+            "https://noissuer.lindorm.io/.well-known/openid-configuration",
+          load: true,
+        });
+        fail("Expected addIssuer to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AmphoraError);
+        expect((error as AmphoraError).code).toBe("external_issuer_unresolved");
+      }
+    });
+
+    test("addIssuer rejects an issuer already claimed by the idp", async () => {
+      await amphora.idp.set({
+        issuer: "https://up.lindorm.io/",
+        jwksUri: "https://up.lindorm.io/.well-known/jwks.json",
+      });
+
+      try {
+        await amphora.external.addIssuer({
+          issuer: "https://up.lindorm.io/",
+          jwksUri: "https://up.lindorm.io/.well-known/jwks.json",
+        });
+        fail("Expected addIssuer to throw");
+      } catch (error) {
+        expect((error as AmphoraError).code).toBe("issuer_scope_conflict");
+      }
+    });
+
+    test("idp.set rejects an issuer already claimed by an external provider", async () => {
+      await amphora.external.addIssuer({
+        issuer: "https://ext.lindorm.io/",
+        jwksUri: "https://ext.lindorm.io/.well-known/jwks.json",
+      });
+
+      try {
+        await amphora.idp.set({
+          issuer: "https://ext.lindorm.io/",
+          jwksUri: "https://ext.lindorm.io/.well-known/jwks.json",
+        });
+        fail("Expected idp.set to throw");
+      } catch (error) {
+        expect((error as AmphoraError).code).toBe("issuer_scope_conflict");
+      }
+    });
+
+    test("removeIssuer refuses the idp's issuer (use idp.clear)", async () => {
+      await amphora.idp.set({
+        issuer: "https://up.lindorm.io/",
+        jwksUri: "https://up.lindorm.io/.well-known/jwks.json",
+      });
+
+      try {
+        amphora.external.removeIssuer("https://up.lindorm.io/");
+        fail("Expected removeIssuer to throw");
+      } catch (error) {
+        expect((error as AmphoraError).code).toBe("remove_issuer_is_idp");
+      }
+    });
+  });
+
+  describe("granular find-miss refresh", () => {
+    const issuerA = "https://iss-a.lindorm.io/";
+    const issuerB = "https://iss-b.lindorm.io/";
+    const jwksA = "https://iss-a.lindorm.io/.well-known/jwks.json";
+    const jwksB = "https://iss-b.lindorm.io/.well-known/jwks.json";
+
+    test("find({id,issuer}) miss refetches ONLY that issuer, not all", async () => {
+      const v1 = { ...TEST_EC_KEY_SIG.toJWK("public"), kid: "a-v1" };
+      const v2 = { ...TEST_RSA_KEY_SIG.toJWK("public"), kid: "a-v2" };
+      const b = { ...TEST_OKP_KEY_SIG.toJWK("public"), kid: "b-1" };
+      delete v1.iss;
+      delete v2.iss;
+      delete b.iss;
+
+      // setup fetches A(v1) and B once each.
+      nock("https://iss-a.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [v1] });
+      nock("https://iss-b.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [b] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          { issuer: issuerA, jwksUri: jwksA },
+          { issuer: issuerB, jwksUri: jwksB },
+        ],
+      });
+
+      await amphora.setup();
+
+      // A rotates: a NEW kid appears on A only. B has NO further interceptor, so
+      // a refresh-all would fail on B — proving the miss refetched A alone.
+      nock("https://iss-a.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [v2] });
+
+      const found = await amphora.find({ id: "a-v2", issuer: issuerA });
+
+      expect(found.id).toBe("a-v2");
+      expect(found.issuer).toBe(issuerA);
+      expect(nock.isDone()).toBe(true);
+    });
+  });
+
+  describe("findById cross-issuer id collision", () => {
+    const issuerA = "https://iss-a.lindorm.io/";
+    const issuerB = "https://iss-b.lindorm.io/";
+
+    const seedCollision = async (logger = createMockLogger()) => {
+      // Two issuers serve the SAME kid — kid uniqueness is PER ISSUER, so both
+      // survive in the unified vault (eviction is by issuer, not by id).
+      const a = { ...TEST_EC_KEY_SIG.toJWK("public"), kid: "shared-kid" };
+      const b = { ...TEST_OKP_KEY_SIG.toJWK("public"), kid: "shared-kid" };
+      delete a.iss;
+      delete b.iss;
+
+      nock("https://iss-a.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [a] });
+      nock("https://iss-b.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [b] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger,
+        external: [
+          { issuer: issuerA, jwksUri: "https://iss-a.lindorm.io/.well-known/jwks.json" },
+          { issuer: issuerB, jwksUri: "https://iss-b.lindorm.io/.well-known/jwks.json" },
+        ],
+      });
+
+      await amphora.setup();
+    };
+
+    // OKP fixture is newer than the EC fixture (iat), so the iss-b key is the
+    // most-recent of the collision.
+    test("findById returns the most recent and warns, never throws or picks arbitrarily", async () => {
+      const logger = createMockLogger();
+      const child = createMockLogger();
+      vi.mocked(logger.child).mockReturnValue(child);
+
+      await seedCollision(logger);
+
+      const found = await amphora.findById("shared-kid");
+      expect(found.issuer).toBe(issuerB);
+
+      expect(child.warn).toHaveBeenCalledWith(
+        "Ambiguous findById: multiple keys share this id across issuers; returning most recent",
+        expect.objectContaining({
+          id: "shared-kid",
+          count: 2,
+          issuers: expect.arrayContaining([issuerA, issuerB]),
+        }),
+      );
+    });
+
+    test("findByIdSync applies the same most-recent rule", async () => {
+      await seedCollision();
+
+      expect(amphora.findByIdSync("shared-kid").issuer).toBe(issuerB);
+    });
+  });
+
+  describe("idp facet", () => {
+    const idpIssuer = "https://idp.lindorm.io/";
+    const idpJwksUri = "https://idp.lindorm.io/.well-known/jwks.json";
+
+    const publicJwk = () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("public");
+      delete jwk.iss;
+      return jwk;
+    };
+
+    test("idp.config() throws idp_not_configured when unset", () => {
+      try {
+        amphora.idp.config();
+        fail("Expected idp.config() to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AmphoraError);
+        expect((error as AmphoraError).code).toBe("idp_not_configured");
+      }
+    });
+
+    test("idp.set registers the upstream and loads its keys", async () => {
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri, load: true });
+
+      expect(amphora.idp.config().issuer).toBe(idpIssuer);
+      expect(amphora.idp.config().keyCount).toBe(1);
+      expect(amphora.vault.filter((k) => k.issuer === idpIssuer)).toHaveLength(1);
+    });
+
+    test("idp.set replaces the singleton and evicts the previous idp's keys", async () => {
+      nock("https://idp-a.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      await amphora.idp.set({
+        issuer: "https://idp-a.lindorm.io/",
+        jwksUri: "https://idp-a.lindorm.io/.well-known/jwks.json",
+        load: true,
+      });
+      expect(
+        amphora.vault.filter((k) => k.issuer === "https://idp-a.lindorm.io/"),
+      ).toHaveLength(1);
+
+      const jwkB = TEST_OKP_KEY_SIG.toJWK("public");
+      delete jwkB.iss;
+      nock("https://idp-b.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwkB] });
+
+      await amphora.idp.set({
+        issuer: "https://idp-b.lindorm.io/",
+        jwksUri: "https://idp-b.lindorm.io/.well-known/jwks.json",
+        load: true,
+      });
+
+      expect(amphora.idp.config().issuer).toBe("https://idp-b.lindorm.io/");
+      expect(
+        amphora.vault.filter((k) => k.issuer === "https://idp-a.lindorm.io/"),
+      ).toHaveLength(0);
+      expect(
+        amphora.vault.filter((k) => k.issuer === "https://idp-b.lindorm.io/"),
+      ).toHaveLength(1);
+    });
+
+    test("idp.clear evicts the idp keys and unsets config", async () => {
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri, load: true });
+
+      amphora.idp.clear();
+
+      expect(() => amphora.idp.config()).toThrow(AmphoraError);
+      expect(amphora.vault.filter((k) => k.issuer === idpIssuer)).toHaveLength(0);
+    });
+
+    test("idp.refresh refetches the upstream", async () => {
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(2)
+        .reply(200, { keys: [publicJwk()] });
+
+      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri, load: true });
+      await amphora.idp.refresh();
+
+      expect(nock.isDone()).toBe(true);
+      expect(amphora.vault.filter((k) => k.issuer === idpIssuer)).toHaveLength(1);
+    });
+
+    test("construction seeds the idp; setup loads it", async () => {
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        idp: { issuer: idpIssuer, jwksUri: idpJwksUri },
+      });
+
+      // Seeded (unresolved) before setup — config() does not throw.
+      expect(() => amphora.idp.config()).not.toThrow();
+      expect(amphora.idp.config().lastRefresh).toBeNull();
+
+      await amphora.setup();
+
+      expect(amphora.idp.config().keyCount).toBe(1);
+      expect(amphora.vault.filter((k) => k.issuer === idpIssuer)).toHaveLength(1);
+    });
+
+    test("top-level refresh() refetches the idp AND all external", async () => {
+      const extJwk = TEST_OKP_KEY_SIG.toJWK("public");
+      delete extJwk.iss;
+
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(2)
+        .reply(200, { keys: [publicJwk()] });
+      nock("https://ext.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(2)
+        .reply(200, { keys: [extJwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        idp: { issuer: idpIssuer, jwksUri: idpJwksUri },
+        external: [
+          {
+            issuer: "https://ext.lindorm.io/",
+            jwksUri: "https://ext.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await amphora.setup();
+      await amphora.refresh();
+
+      expect(nock.isDone()).toBe(true);
+      expect(amphora.vault.filter((k) => k.issuer === idpIssuer)).toHaveLength(1);
+      expect(
+        amphora.vault.filter((k) => k.issuer === "https://ext.lindorm.io/"),
+      ).toHaveLength(1);
     });
   });
 });

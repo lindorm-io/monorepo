@@ -8,12 +8,10 @@ import type {
 import type { ILogger } from "@lindorm/logger";
 import type { Environment, OpenIdConfiguration, Predicate } from "@lindorm/types";
 
-export type AmphoraConfig = Partial<OpenIdConfiguration> & {
+/** The service's OWN identity — minimal (it IS the issuer; it never discovers itself). */
+export type AmphoraInternalConfig = {
   issuer: string;
   jwksUri: string;
-  openIdConfigurationUri?: string;
-  trustAnchors?: string | Array<string>;
-  trustMode?: "strict" | "lax";
 };
 
 export type AmphoraExternalSettings = {
@@ -21,8 +19,31 @@ export type AmphoraExternalSettings = {
   jwksUri?: string;
   openIdConfiguration?: Partial<OpenIdConfiguration>;
   openIdConfigurationUri?: string;
+  /**
+   * Eager-fetch this issuer's keys on `addIssuer` / `idp.set` (await the fetch), vs
+   * lazy (registered now, fetched on the next refresh or the first `find`-miss).
+   * Default `false` (lazy) — the per-issuer miss-refresh makes first use cheap.
+   */
+  load?: boolean;
   trustAnchors?: string | Array<string>;
   trustMode?: "strict" | "lax";
+};
+
+/**
+ * A resolved + progressively-ENRICHED external issuer config — returned by
+ * `external.issuers()` and `idp.config()`. `input` keeps the original declared options
+ * verbatim (the source-of-truth for re-resolution); every other field is derived cache,
+ * re-resolved from `input` on refresh. `issuer` / `jwksUri` fill in from `input` OR a
+ * fetched discovery doc; `openIdConfiguration` is that fetched doc (NESTED, not flattened).
+ */
+export type AmphoraExternalConfig = {
+  input: AmphoraExternalSettings;
+  load: boolean;
+  issuer: string | null;
+  jwksUri: string | null;
+  openIdConfiguration: OpenIdConfiguration | null;
+  keyCount: number;
+  lastRefresh: Date | null;
 };
 
 export type AmphoraSettings = {
@@ -32,6 +53,8 @@ export type AmphoraSettings = {
   // non-Environment (foreign) OU, are unrestricted.
   environment?: Environment;
   external?: Array<AmphoraExternalSettings>;
+  /** The single UPSTREAM identity provider — a distinguished singleton external issuer. */
+  idp?: AmphoraExternalSettings;
   logger: ILogger;
   /**
    * DNS resolver hook for external discovery/JWKS fetches — forwarded to the
