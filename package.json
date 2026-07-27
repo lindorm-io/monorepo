@@ -25,6 +25,7 @@
     "@commitlint/cli": "20.5.0",
     "@commitlint/config-conventional": "20.5.0",
     "@eslint/js": "^10.0.1",
+    "@lindorm/composed": "^0.3.0",
     "@swc/core": "^1.15.30",
     "@types/fs-extra": "^11.0.4",
     "@types/jest": "^30.0.0",
