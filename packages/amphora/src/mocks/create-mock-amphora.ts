@@ -9,6 +9,7 @@ const MOCK_IDP_CONFIG: AmphoraExternalConfig = {
   openIdConfiguration: null,
   keyCount: 0,
   lastRefresh: null,
+  lastAccess: null,
 };
 
 export const _createMockAmphora = (mockFn: () => any): IAmphora => {

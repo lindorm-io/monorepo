@@ -31,7 +31,10 @@ export class AmphoraExternal implements IAmphoraExternal {
     this.state.assertIssuerScopeFree(source.issuer, "external");
 
     const config = seedExternalConfig(source);
-    this.state.externalConfigs.push(config);
+
+    // Register + enforce the `maxIssuers` cap (evicts the LRU external issuer on
+    // overflow). Registration stamps `lastAccess`, so this new issuer is safe.
+    this.state.addExternalConfig(config);
 
     // `load` eager-fetches now; lazy issuers wait for the next refresh or a
     // find-miss on their issuer.

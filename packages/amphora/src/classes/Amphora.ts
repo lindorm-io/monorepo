@@ -125,17 +125,24 @@ export class Amphora implements IAmphora {
 
     const filtered = this.state.filteredKeys(predicate);
 
-    if (filtered.length && !this.state.isStaleFor(predicate)) return filtered;
+    if (filtered.length && !this.state.isStaleFor(predicate)) {
+      this.state.markAccessed(filtered);
+      return filtered;
+    }
 
     if (this.state.hasExternal) await this.state.refreshFor(predicate);
 
-    return this.state.filteredKeys(predicate);
+    const refreshed = this.state.filteredKeys(predicate);
+    this.state.markAccessed(refreshed);
+    return refreshed;
   }
 
   filterSync(predicate: AmphoraPredicate): Array<IKryptos> {
     this.assertSetupForSync();
 
-    return this.state.filteredKeys(predicate);
+    const filtered = this.state.filteredKeys(predicate);
+    this.state.markAccessed(filtered);
+    return filtered;
   }
 
   async find(predicate: AmphoraPredicate): Promise<IKryptos> {
@@ -156,7 +163,10 @@ export class Amphora implements IAmphora {
 
   async findById(id: string): Promise<IKryptos> {
     const existing = this.state.findByIdMostRecent(id);
-    if (existing) return existing;
+    if (existing) {
+      this.state.markAccessed([existing]);
+      return existing;
+    }
 
     // No issuer to target — fall back to refreshing EVERYTHING fetched. This is
     // the expensive path, reinforcing "resolve a kid via find({ id, issuer })".
@@ -164,7 +174,10 @@ export class Amphora implements IAmphora {
       await this.refresh();
 
       const refreshed = this.state.findByIdMostRecent(id);
-      if (refreshed) return refreshed;
+      if (refreshed) {
+        this.state.markAccessed([refreshed]);
+        return refreshed;
+      }
     }
 
     throw new AmphoraError("Kryptos not found by id", {
@@ -179,7 +192,10 @@ export class Amphora implements IAmphora {
     this.assertSetupForSync();
 
     const existing = this.state.findByIdMostRecent(id);
-    if (existing) return existing;
+    if (existing) {
+      this.state.markAccessed([existing]);
+      return existing;
+    }
 
     throw new AmphoraError("Kryptos not found by id", {
       code: "kryptos_not_found_by_id_sync",
@@ -193,7 +209,10 @@ export class Amphora implements IAmphora {
     this.assertSetupForSync();
 
     const [key] = this.state.filteredKeys(predicate);
-    if (key) return key;
+    if (key) {
+      this.state.markAccessed([key]);
+      return key;
+    }
 
     throw new AmphoraError("Kryptos not found using query (sync, no refresh)", {
       code: "kryptos_not_found_by_query_sync",

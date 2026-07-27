@@ -28,6 +28,7 @@ export class AmphoraState {
   readonly domain: string | null;
   readonly environment: Environment | null;
   readonly maxExternalKeys: number;
+  readonly maxIssuers: number;
   readonly refreshInterval: number;
 
   vault: Array<IKryptos> = [];
@@ -48,6 +49,7 @@ export class AmphoraState {
     this.domain = options.domain ?? null;
     this.environment = options.environment ?? null;
     this.maxExternalKeys = options.maxExternalKeys ?? 100;
+    this.maxIssuers = options.maxIssuers ?? 1000;
     this.refreshInterval = options.refreshInterval ?? 300_000;
 
     if (options.idp) this.idpConfig = seedExternalConfig(options.idp);
@@ -113,6 +115,27 @@ export class AmphoraState {
     );
 
     return selected;
+  }
+
+  // LRU bookkeeping — bump the last-ACCESS time of every EXTERNAL issuer whose
+  // key was just RETURNED to a caller (find / filter hit). This is the signal
+  // `maxIssuers` eviction ranks by. The idp is deliberately not tracked: it is
+  // exempt from the cap, so its recency never matters. Capability PROBES
+  // (`canSign` etc.) go straight to `filteredKeys` and never reach here, so a
+  // probe does not count as use.
+  markAccessed(keys: Array<IKryptos>): void {
+    if (keys.length === 0 || this.externalConfigs.length === 0) return;
+
+    const now = new Date();
+
+    for (const key of keys) {
+      if (key.internal || !key.issuer) continue;
+
+      const config = this.externalConfigs.find(
+        (entry) => entry.issuer === key.issuer || entry.input.issuer === key.issuer,
+      );
+      if (config) config.lastAccess = now;
+    }
   }
 
   // staleness — per issuer when the predicate names one, else across all issuers.
@@ -283,6 +306,46 @@ export class AmphoraState {
   removeKey(id: string): void {
     this.vault = this.vault.filter((i) => i.id !== id);
     this.refreshJwks();
+  }
+
+  // Register a new EXTERNAL issuer source and enforce the cap. `lastAccess` is
+  // stamped now — registration counts as use, so a just-registered issuer is
+  // never the immediate eviction victim (only ever-idle peers are). The idp does
+  // NOT flow through here (it is a singleton on `idpConfig`, exempt from the cap).
+  addExternalConfig(config: AmphoraExternalConfig): void {
+    config.lastAccess = new Date();
+    this.externalConfigs.push(config);
+    this.enforceIssuerCap();
+  }
+
+  // Hard, deterministic bound on the number of EXTERNAL issuers — evict the
+  // least-recently-USED (smallest `lastAccess`; `null` = never used, sorts oldest)
+  // until at or under `maxIssuers`. Inline on registration overflow, no background
+  // sweeper. Correctness-safe: an evicted issuer re-registers + re-fetches on its
+  // next use. The idp is not in `externalConfigs`, so it is never a candidate.
+  private enforceIssuerCap(): void {
+    while (this.externalConfigs.length > this.maxIssuers) {
+      let victimIndex = 0;
+      let victimTime = Infinity;
+
+      this.externalConfigs.forEach((entry, index) => {
+        const time = entry.lastAccess ? entry.lastAccess.getTime() : 0;
+        if (time < victimTime) {
+          victimTime = time;
+          victimIndex = index;
+        }
+      });
+
+      const [victim] = this.externalConfigs.splice(victimIndex, 1);
+      const issuer = victim.issuer ?? victim.input.issuer ?? null;
+
+      this.logger.warn(
+        "Evicting least-recently-used external issuer (maxIssuers cap reached)",
+        { issuer, maxIssuers: this.maxIssuers, lastAccess: victim.lastAccess },
+      );
+
+      this.evictIssuer(issuer);
+    }
   }
 
   // Drop a foreign issuer's fetched keys — never our own (an env-imported key can

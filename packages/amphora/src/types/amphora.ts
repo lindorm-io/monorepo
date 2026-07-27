@@ -44,6 +44,11 @@ export type AmphoraExternalConfig = {
   openIdConfiguration: OpenIdConfiguration | null;
   keyCount: number;
   lastRefresh: Date | null;
+  // Last time a key from this issuer was RETURNED by a find/filter — the LRU
+  // signal for `maxIssuers` eviction. `null` until first use: a never-used
+  // external issuer is the first to be evicted under cap pressure. The idp is
+  // exempt from the cap, so its `lastAccess` is never consulted.
+  lastAccess: Date | null;
 };
 
 export type AmphoraSettings = {
@@ -66,6 +71,19 @@ export type AmphoraSettings = {
    */
   lookup?: ConduitLookup;
   maxExternalKeys?: number;
+  /**
+   * Hard cap on the number of EXTERNAL issuers held at once — the idp is EXEMPT
+   * (it is a distinguished singleton). Registering past the cap via
+   * `external.addIssuer` evicts the least-recently-USED external issuer inline
+   * (LRU by the last find/filter hit; a never-used issuer goes first). Eviction
+   * is correctness-safe — an evicted issuer re-registers and re-fetches on its
+   * next use. This bounds the vault against CLIENT-driven growth (e.g. one issuer
+   * per DCR `jwks_uri` client), which is the memory-exhaustion vector the cap
+   * closes; the trigger is `addIssuer` overflow, so operator-declared `external`
+   * from construction is never trimmed until dynamic registration begins.
+   * Defaults to 1000.
+   */
+  maxIssuers?: number;
   /**
    * Max HTTP redirects amphora follows when fetching an EXTERNAL provider's
    * discovery / JWKS document. Defaults to `0`: a JWKS or OIDC discovery

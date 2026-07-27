@@ -2227,6 +2227,170 @@ describe("Amphora", () => {
     });
   });
 
+  describe("maxIssuers cap (LRU eviction)", () => {
+    const publicJwk = () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("public");
+      delete jwk.iss;
+      return jwk;
+    };
+
+    const persistJwks = (host: string) =>
+      nock(`https://${host}.lindorm.io`)
+        .persist()
+        .get("/.well-known/jwks.json")
+        .reply(200, { keys: [publicJwk()] });
+
+    afterEach(() => {
+      nock.cleanAll();
+      MockDate.set(MockedDate);
+    });
+
+    test("default cap is 1000 — the 1001st external issuer evicts one (lazy)", async () => {
+      const instance = new Amphora({ domain: issuer, logger: createMockLogger() });
+
+      for (let i = 0; i < 1001; i++) {
+        await instance.external.addIssuer({
+          issuer: `https://issuer-${i}.lindorm.io/`,
+          jwksUri: `https://issuer-${i}.lindorm.io/.well-known/jwks.json`,
+        });
+      }
+
+      expect(instance.external.issuers()).toHaveLength(1000);
+      // Equal (frozen) lastAccess ⇒ the earliest-registered is evicted first.
+      expect(
+        instance.external
+          .issuers()
+          .some((c) => c.issuer === "https://issuer-0.lindorm.io/"),
+      ).toBe(false);
+    });
+
+    test("evicts the least-recently-USED external issuer on addIssuer overflow", async () => {
+      const instance = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        maxIssuers: 2,
+      });
+
+      persistJwks("a");
+      persistJwks("b");
+      persistJwks("c");
+
+      MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
+      await instance.external.addIssuer({
+        issuer: "https://a.lindorm.io/",
+        jwksUri: "https://a.lindorm.io/.well-known/jwks.json",
+        load: true,
+      });
+
+      MockDate.set(new Date("2024-01-01T08:00:01.000Z"));
+      await instance.external.addIssuer({
+        issuer: "https://b.lindorm.io/",
+        jwksUri: "https://b.lindorm.io/.well-known/jwks.json",
+        load: true,
+      });
+
+      // Use A — B is now the least-recently-used external issuer.
+      MockDate.set(new Date("2024-01-01T08:00:02.000Z"));
+      const key = await instance.find({ issuer: "https://a.lindorm.io/" });
+      expect(key.issuer).toBe("https://a.lindorm.io/");
+
+      // Registering C overflows the cap of 2 → B (LRU) is evicted, not A or C.
+      MockDate.set(new Date("2024-01-01T08:00:03.000Z"));
+      await instance.external.addIssuer({
+        issuer: "https://c.lindorm.io/",
+        jwksUri: "https://c.lindorm.io/.well-known/jwks.json",
+        load: true,
+      });
+
+      const issuers = instance.external.issuers().map((c) => c.issuer);
+      expect(issuers).toHaveLength(2);
+      expect(issuers).toContain("https://a.lindorm.io/");
+      expect(issuers).toContain("https://c.lindorm.io/");
+      expect(issuers).not.toContain("https://b.lindorm.io/");
+
+      // B's fetched keys are evicted from the vault; A's survive.
+      expect(instance.vault.some((k) => k.issuer === "https://b.lindorm.io/")).toBe(
+        false,
+      );
+      expect(instance.vault.some((k) => k.issuer === "https://a.lindorm.io/")).toBe(true);
+    });
+
+    test("the idp is exempt from the cap", async () => {
+      const instance = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        maxIssuers: 1,
+      });
+
+      await instance.idp.set({
+        issuer: "https://idp.lindorm.io/",
+        jwksUri: "https://idp.lindorm.io/.well-known/jwks.json",
+      });
+
+      await instance.external.addIssuer({
+        issuer: "https://a.lindorm.io/",
+        jwksUri: "https://a.lindorm.io/.well-known/jwks.json",
+      });
+      await instance.external.addIssuer({
+        issuer: "https://b.lindorm.io/",
+        jwksUri: "https://b.lindorm.io/.well-known/jwks.json",
+      });
+
+      // External capped at 1 → only the most recent external survives...
+      expect(instance.external.issuers().map((c) => c.issuer)).toEqual([
+        "https://b.lindorm.io/",
+      ]);
+      // ...but the idp is untouched.
+      expect(instance.idp.config().issuer).toBe("https://idp.lindorm.io/");
+    });
+
+    test("a never-used constructor external issuer is evicted before a freshly-registered one", async () => {
+      const instance = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        maxIssuers: 1,
+        external: [
+          {
+            issuer: "https://static.lindorm.io/",
+            jwksUri: "https://static.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      // Constructor-seeded issuer starts never-used.
+      expect(instance.external.issuers()[0]!.lastAccess).toBeNull();
+
+      await instance.external.addIssuer({
+        issuer: "https://dynamic.lindorm.io/",
+        jwksUri: "https://dynamic.lindorm.io/.well-known/jwks.json",
+      });
+
+      // null lastAccess sorts oldest → the static issuer is evicted first.
+      expect(instance.external.issuers().map((c) => c.issuer)).toEqual([
+        "https://dynamic.lindorm.io/",
+      ]);
+    });
+
+    test("find bumps the external issuer's lastAccess", async () => {
+      const instance = new Amphora({ domain: issuer, logger: createMockLogger() });
+
+      persistJwks("a");
+
+      await instance.external.addIssuer({
+        issuer: "https://a.lindorm.io/",
+        jwksUri: "https://a.lindorm.io/.well-known/jwks.json",
+        load: true,
+      });
+
+      MockDate.set(new Date("2024-01-01T09:00:00.000Z"));
+      await instance.find({ issuer: "https://a.lindorm.io/" });
+
+      expect(instance.external.issuers()[0]!.lastAccess).toEqual(
+        new Date("2024-01-01T09:00:00.000Z"),
+      );
+    });
+  });
+
   describe("external issuer validation (item 1)", () => {
     test("rejects a non-URI issuer with external_issuer_not_uri", async () => {
       try {
