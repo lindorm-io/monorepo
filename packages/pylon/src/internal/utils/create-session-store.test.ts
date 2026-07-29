@@ -17,12 +17,12 @@ import { beforeEach, describe, expect, test, type Mock } from "vitest";
 describe("createSessionStore", () => {
   let ctx: any;
   let session: IPylonSession;
-  let mockRepo: ReturnType<typeof createMockRepository>;
+  let mockRepo: Awaited<ReturnType<typeof createMockRepository>>;
 
-  beforeEach(() => {
-    mockRepo = createMockRepository();
+  beforeEach(async () => {
+    mockRepo = await createMockRepository();
 
-    const mockProteus = createMockProteusSource();
+    const mockProteus = await createMockProteusSource();
     mockProteus.repository.mockReturnValue(mockRepo);
 
     ctx = {

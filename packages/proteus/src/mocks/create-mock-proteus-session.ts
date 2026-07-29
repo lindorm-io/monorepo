@@ -1,55 +1,18 @@
+import type { ILogger } from "@lindorm/logger";
 import type { IProteusSession } from "../interfaces/ProteusSession.js";
-import { _createMockRepository } from "./create-mock-repository.js";
-import type { MockProteusRows } from "./mock-proteus-rows.js";
+import type { CreateMockProteusSettings } from "./create-mock-proteus-settings.js";
+import { createMemoryBackend } from "./mock-memory-backend.js";
 
-export const _createMockProteusSession = (
+/**
+ * Build a mock ProteusSession backed by the REAL in-memory driver. Repositories
+ * obtained from it delegate to the live memory driver, so writes round-trip and
+ * generated fields are minted faithfully. The backing source is connected and
+ * set up before the session is returned; seed rows the obvious way
+ * (`await session.repository(E).insert([...])`). Every method is a spy.
+ */
+export const _createMockProteusSession = async (
   mockFn: () => any,
-  rows?: MockProteusRows,
-): IProteusSession => {
-  const impl = (fn: any) => {
-    const m = mockFn();
-    m.mockImplementation(fn);
-    return m;
-  };
-  const returns = (value: any) => {
-    const m = mockFn();
-    m.mockReturnValue(value);
-    return m;
-  };
-  const resolves = (value: any) => {
-    const m = mockFn();
-    m.mockResolvedValue(value);
-    return m;
-  };
-
-  return {
-    namespace: null,
-    driverType: "memory",
-    log: {
-      info: mockFn(),
-      warn: mockFn(),
-      error: mockFn(),
-      debug: mockFn(),
-      verbose: mockFn(),
-      child: mockFn(),
-      time: mockFn(),
-    },
-
-    setFilterParams: mockFn(),
-    enableFilter: mockFn(),
-    disableFilter: mockFn(),
-    getFilterRegistry: returns(new Map()),
-
-    hasEntity: returns(true),
-
-    repository: impl((entity: any) =>
-      _createMockRepository(mockFn, rows ? (rows[entity?.name] ??= []) : undefined),
-    ),
-    queryBuilder: mockFn(),
-    client: mockFn(),
-    transaction: impl(async (cb: Function) => cb({})),
-    ping: resolves(true),
-
-    getEmitEntity: returns(mockFn()),
-  } as unknown as IProteusSession;
-};
+  createLogger: () => ILogger,
+  settings?: CreateMockProteusSettings,
+): Promise<IProteusSession> =>
+  (await createMemoryBackend(mockFn, createLogger, settings)).makeFacadeSession();

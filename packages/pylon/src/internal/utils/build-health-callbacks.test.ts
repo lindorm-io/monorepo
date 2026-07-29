@@ -12,7 +12,7 @@ describe("buildReadinessCallback", () => {
   });
 
   test("pings proteus + iris on every call", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     const iris = createMockIrisSource();
 
     const callback = buildReadinessCallback({ db: proteus, bus: iris })!;
@@ -25,7 +25,7 @@ describe("buildReadinessCallback", () => {
   });
 
   test("throws a 503 health_check_failed when a source ping returns false", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     proteus.ping.mockResolvedValue(false);
 
     const callback = buildReadinessCallback({ db: proteus })!;
@@ -55,7 +55,7 @@ describe("buildLivenessCallback", () => {
   });
 
   test("checks I/O once, then latches success and stops pinging", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     const iris = createMockIrisSource();
 
     const callback = buildLivenessCallback({ db: proteus, bus: iris })!;
@@ -69,7 +69,7 @@ describe("buildLivenessCallback", () => {
   });
 
   test("keeps checking until the first success, then latches", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     proteus.ping.mockResolvedValueOnce(false);
 
     const callback = buildLivenessCallback({ db: proteus })!;

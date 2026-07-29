@@ -98,7 +98,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
   let sessionEncKey: IKryptos;
   let tokenSigKey: IKryptos;
   let tokenEncKey: IKryptos;
-  let repository: ReturnType<typeof createMockRepository>;
+  let repository: Awaited<ReturnType<typeof createMockRepository>>;
 
   const buildCtx = (cookie = ""): Ctx => {
     const logger = createMockLogger();
@@ -131,7 +131,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     });
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
 
     amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
@@ -202,7 +202,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       tokenEncKey,
     ]);
 
-    repository = createMockRepository();
+    repository = await createMockRepository();
     (repository.upsert as Mock).mockImplementation(
       async (entity: IPylonSession) => entity,
     );
@@ -422,7 +422,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     // the cookie value is a sealed token that decrypts back to the session id.
     test("kv session — the cookie carries the (sealed) id, the record's tokens are sealed with the resolved session enc key", async () => {
       const ctx = buildCtx();
-      const kv = createMockProteusSource();
+      const kv = await createMockProteusSource();
       kv.repository.mockReturnValue(repository);
       ctx.kv = kv;
 

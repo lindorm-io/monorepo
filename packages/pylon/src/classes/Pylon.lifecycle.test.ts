@@ -8,14 +8,14 @@ import { Pylon } from "./Pylon.js";
 // The sources pylon is handed (db/kv/bus) must be connected on setup and
 // disconnected on teardown — symmetric, without the app touching them.
 describe("Pylon source lifecycle", () => {
-  let db: ReturnType<typeof createMockProteusSource>;
-  let kv: ReturnType<typeof createMockProteusSource>;
+  let db: Awaited<ReturnType<typeof createMockProteusSource>>;
+  let kv: Awaited<ReturnType<typeof createMockProteusSource>>;
   let bus: ReturnType<typeof createMockIrisSource>;
   let pylon: Pylon;
 
-  beforeEach(() => {
-    db = createMockProteusSource();
-    kv = createMockProteusSource();
+  beforeEach(async () => {
+    db = await createMockProteusSource();
+    kv = await createMockProteusSource();
     bus = createMockIrisSource();
 
     const logger = createMockLogger();

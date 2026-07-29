@@ -17,9 +17,9 @@ describe("httpSessionMiddleware", () => {
   let next: Next;
   let options: PylonSessionSettings;
 
-  beforeEach(() => {
-    const mockRepo = createMockRepository();
-    const mockProteus = createMockProteusSource();
+  beforeEach(async () => {
+    const mockRepo = await createMockRepository();
+    const mockProteus = await createMockProteusSource();
     mockProteus.repository.mockReturnValue(mockRepo);
 
     (mockRepo.insert as Mock).mockImplementation((s: any) => Promise.resolve(s));

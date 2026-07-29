@@ -193,8 +193,8 @@ describe("PylonIo (handshake chain)", () => {
     };
     const validCors = { allowOrigins: ["https://app.example.com"] };
 
-    const buildProteus = () => {
-      const mockRepo = createMockRepository();
+    const buildProteus = async () => {
+      const mockRepo = await createMockRepository();
       (mockRepo.findOne as Mock).mockResolvedValue({
         id: "sid-1",
         accessToken: "access_token",
@@ -207,7 +207,7 @@ describe("PylonIo (handshake chain)", () => {
       const mockSession = {
         repository: vi.fn().mockReturnValue(mockRepo),
       };
-      const mockProteus: any = createMockProteusSource();
+      const mockProteus: any = await createMockProteusSource();
       mockProteus.session = vi.fn().mockReturnValue(mockSession);
       return { mockProteus, mockRepo };
     };
@@ -277,7 +277,7 @@ describe("PylonIo (handshake chain)", () => {
     });
 
     test("should auto-wire session middleware into handshake chain", async () => {
-      const { mockProteus } = buildProteus();
+      const { mockProteus } = await buildProteus();
 
       const io = createPylonIo({
         cors: validCors,

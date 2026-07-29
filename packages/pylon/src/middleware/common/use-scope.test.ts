@@ -4,12 +4,12 @@ import { createTestPylonCtx } from "../../mocks/vitest.js";
 import { useScope } from "./use-scope.js";
 
 describe("useScope", () => {
-  let ctx: ReturnType<typeof createTestPylonCtx>;
+  let ctx: Awaited<ReturnType<typeof createTestPylonCtx>>;
   let next: Mock;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     next = vi.fn();
-    ctx = createTestPylonCtx({ state: { tenant: "tenant-abc" } });
+    ctx = await createTestPylonCtx({ state: { tenant: "tenant-abc" } });
   });
 
   test("should call db.setFilterParams with params from function", async () => {
@@ -21,7 +21,7 @@ describe("useScope", () => {
   });
 
   test("should throw ServerError when no db on context", async () => {
-    const noDbCtx = createTestPylonCtx({ db: null });
+    const noDbCtx = await createTestPylonCtx({ db: null });
 
     try {
       await useScope({ params: () => ({}) })(noDbCtx, next);

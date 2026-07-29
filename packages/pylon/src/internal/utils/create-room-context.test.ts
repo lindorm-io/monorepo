@@ -77,8 +77,8 @@ describe("createRoomContext", () => {
     expect(result).toEqual(["socket-a", "socket-b"]);
   });
 
-  test("should include presence function when proteusSource and presence are provided", () => {
-    const proteusSource = createMockProteusSource();
+  test("should include presence function when proteusSource and presence are provided", async () => {
+    const proteusSource = await createMockProteusSource();
 
     const ctx = createRoomContext({
       socket: createMockSocket() as any,
@@ -91,8 +91,8 @@ describe("createRoomContext", () => {
     expect(typeof ctx.presence).toBe("function");
   });
 
-  test("should not include presence when presence is false", () => {
-    const proteusSource = createMockProteusSource();
+  test("should not include presence when presence is false", async () => {
+    const proteusSource = await createMockProteusSource();
 
     const ctx = createRoomContext({
       socket: createMockSocket() as any,
@@ -117,7 +117,7 @@ describe("createRoomContext", () => {
   });
 
   test("should use socket.data.tokens.accessToken.claims.subject as userId", async () => {
-    const proteusSource = createMockProteusSource();
+    const proteusSource = await createMockProteusSource();
     const mockRepo = {
       findOneOrSave: vi.fn().mockResolvedValue(undefined),
     };
@@ -150,7 +150,7 @@ describe("createRoomContext", () => {
   });
 
   test("should fall back to socket.id when no accessToken subject", async () => {
-    const proteusSource = createMockProteusSource();
+    const proteusSource = await createMockProteusSource();
     const mockRepo = {
       findOneOrSave: vi.fn().mockResolvedValue(undefined),
     };
@@ -210,8 +210,8 @@ describe("createHttpRoomContext", () => {
     expect(result).toEqual(["socket-a", "socket-b"]);
   });
 
-  test("should include presence when proteusSource and presence are provided", () => {
-    const proteusSource = createMockProteusSource();
+  test("should include presence when proteusSource and presence are provided", async () => {
+    const proteusSource = await createMockProteusSource();
 
     const ctx = createHttpRoomContext({
       io: createMockIo() as any,
@@ -223,8 +223,8 @@ describe("createHttpRoomContext", () => {
     expect(typeof ctx.presence).toBe("function");
   });
 
-  test("should not include presence when presence is false", () => {
-    const proteusSource = createMockProteusSource();
+  test("should not include presence when presence is false", async () => {
+    const proteusSource = await createMockProteusSource();
 
     const ctx = createHttpRoomContext({
       io: createMockIo() as any,

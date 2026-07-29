@@ -11,7 +11,7 @@ import {
 
 export type { CreateTestPylonCtxOptions, TestPylonCtx } from "./create-test-pylon-ctx.js";
 
-export const createTestPylonCtx = (options?: CreateTestPylonCtxOptions) =>
+export const createTestPylonCtx = async (options?: CreateTestPylonCtxOptions) =>
   _createTestPylonCtx(
     {
       mockFn: jest.fn,
@@ -19,8 +19,8 @@ export const createTestPylonCtx = (options?: CreateTestPylonCtxOptions) =>
       amphora: createMockAmphora(),
       logger: createMockLogger(),
       conduit: createMockConduit(),
-      db: createMockProteusSession({}),
-      kv: createMockProteusSession({}),
+      db: await createMockProteusSession(),
+      kv: await createMockProteusSession(),
     },
     options,
   );

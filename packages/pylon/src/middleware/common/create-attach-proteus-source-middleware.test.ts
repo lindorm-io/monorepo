@@ -11,7 +11,7 @@ describe("createAttachProteusSourceMiddleware", () => {
   });
 
   test("should call next", async () => {
-    const source = createMockProteusSource();
+    const source = await createMockProteusSource();
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachProteusSourceMiddleware({ key: "db", source: source as any })(
@@ -23,7 +23,7 @@ describe("createAttachProteusSourceMiddleware", () => {
   });
 
   test("should lazily bind session to ctx[key] on first access", async () => {
-    const source = createMockProteusSource();
+    const source = await createMockProteusSource();
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachProteusSourceMiddleware({
@@ -49,7 +49,7 @@ describe("createAttachProteusSourceMiddleware", () => {
   });
 
   test("should cache session on second access", async () => {
-    const source = createMockProteusSource();
+    const source = await createMockProteusSource();
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachProteusSourceMiddleware({ key: "db", source: source as any })(
@@ -65,7 +65,7 @@ describe("createAttachProteusSourceMiddleware", () => {
   });
 
   test("should forward ctx.signal when context is HTTP", async () => {
-    const source = createMockProteusSource();
+    const source = await createMockProteusSource();
     const controller = new AbortController();
     const ctx: any = {
       logger: createMockLogger(),
@@ -86,7 +86,7 @@ describe("createAttachProteusSourceMiddleware", () => {
   });
 
   test("should pass signal undefined for socket (non-HTTP) context", async () => {
-    const source = createMockProteusSource();
+    const source = await createMockProteusSource();
     const ctx: any = { logger: createMockLogger(), event: "test:event" };
 
     await createAttachProteusSourceMiddleware({ key: "db", source: source as any })(
@@ -102,7 +102,7 @@ describe("createAttachProteusSourceMiddleware", () => {
   });
 
   test("should resolve actor via the actor callback and forward it in hook meta", async () => {
-    const source = createMockProteusSource();
+    const source = await createMockProteusSource();
     const actor = vi.fn().mockReturnValue("alice@test.com");
 
     const ctx: any = {
@@ -136,7 +136,7 @@ describe("createAttachProteusSourceMiddleware", () => {
   });
 
   test("should forward 'unknown' actor from the configured resolver into hook meta", async () => {
-    const source = createMockProteusSource();
+    const source = await createMockProteusSource();
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachProteusSourceMiddleware({

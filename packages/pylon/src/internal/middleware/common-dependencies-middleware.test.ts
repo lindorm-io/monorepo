@@ -16,7 +16,7 @@ describe("createDependenciesMiddleware", () => {
   });
 
   test("should lazily create proteus session on first access", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
 
     const middleware = createDependenciesMiddleware({ db: proteus as any });
 
@@ -40,7 +40,7 @@ describe("createDependenciesMiddleware", () => {
   });
 
   test("should forward ctx.signal to proteus.session when context is HTTP", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     const controller = new AbortController();
 
     const httpCtx: any = {
@@ -68,7 +68,7 @@ describe("createDependenciesMiddleware", () => {
   });
 
   test("should pass signal: undefined to proteus.session for socket (non-HTTP) context", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
 
     const socketCtx: any = {
       logger: createMockLogger(),
@@ -133,7 +133,7 @@ describe("createDependenciesMiddleware", () => {
   });
 
   test("should resolve actor from top-level resolver and forward it in hook meta", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     const iris = createMockIrisSource();
     const actor = vi.fn().mockReturnValue("alice@test.com");
 
@@ -180,7 +180,7 @@ describe("createDependenciesMiddleware", () => {
   });
 
   test("should memoise actor on ctx.state.actor across session creation", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     const iris = createMockIrisSource();
     const actor = vi.fn().mockReturnValue("alice@test.com");
 
@@ -218,7 +218,7 @@ describe("createDependenciesMiddleware", () => {
   });
 
   test("should store raw rateLimitKeyValue on context via symbol (lazy session)", async () => {
-    const rateLimitKeyValue = createMockProteusSource();
+    const rateLimitKeyValue = await createMockProteusSource();
 
     const middleware = createDependenciesMiddleware({
       rateLimitKeyValue: rateLimitKeyValue as any,
@@ -313,7 +313,7 @@ describe("createDependenciesMiddleware", () => {
     });
 
     test("should pass roomsKeyValue and roomsPresence to room context factory", async () => {
-      const roomsKeyValue = createMockProteusSource();
+      const roomsKeyValue = await createMockProteusSource();
 
       const socketCtx: any = {
         logger: createMockLogger(),

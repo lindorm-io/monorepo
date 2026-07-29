@@ -60,12 +60,12 @@ const buildCtx = (cookieHeader: string | undefined, kv?: any): any => {
 describe("createConnectionSessionMiddleware", () => {
   let next: Next;
   let options: PylonSessionSettings;
-  let mockRepo: ReturnType<typeof createMockRepository>;
-  let mockProteus: ReturnType<typeof createMockProteusSource>;
+  let mockRepo: Awaited<ReturnType<typeof createMockRepository>>;
+  let mockProteus: Awaited<ReturnType<typeof createMockProteusSource>>;
 
-  beforeEach(() => {
-    mockRepo = createMockRepository();
-    mockProteus = createMockProteusSource();
+  beforeEach(async () => {
+    mockRepo = await createMockRepository();
+    mockProteus = await createMockProteusSource();
     mockProteus.repository.mockReturnValue(mockRepo);
 
     (mockRepo.findOne as Mock).mockResolvedValue(buildSession());

@@ -31,7 +31,7 @@ describe("PylonHttp /health (liveness)", () => {
   });
 
   test("prefers a user-provided health callback over the auto-built one", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     const iris = createMockIrisSource();
     const health = vi.fn();
 
@@ -45,7 +45,7 @@ describe("PylonHttp /health (liveness)", () => {
   });
 
   test("skips the auto-check when callbacks.health is explicitly null", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
 
     const pylonHttp = await createPylonHttp({ db: proteus, callbacks: { health: null } });
 
@@ -55,7 +55,7 @@ describe("PylonHttp /health (liveness)", () => {
   });
 
   test("checks I/O once then latches — no re-ping on subsequent calls", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     const iris = createMockIrisSource();
 
     const pylonHttp = await createPylonHttp({ db: proteus, bus: iris });
@@ -69,7 +69,7 @@ describe("PylonHttp /health (liveness)", () => {
   });
 
   test("stays 503 until the first successful check, then latches healthy", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     proteus.ping.mockResolvedValueOnce(false);
 
     const pylonHttp = await createPylonHttp({ db: proteus });
@@ -97,7 +97,7 @@ describe("PylonHttp /ready (readiness)", () => {
   });
 
   test("pings proteus + iris on every call (reflects live state)", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     const iris = createMockIrisSource();
 
     const pylonHttp = await createPylonHttp({ db: proteus, bus: iris });
@@ -110,7 +110,7 @@ describe("PylonHttp /ready (readiness)", () => {
   });
 
   test("returns 503 when proteus ping returns false", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     proteus.ping.mockResolvedValue(false);
 
     const pylonHttp = await createPylonHttp({ db: proteus });
@@ -138,7 +138,7 @@ describe("PylonHttp /ready (readiness)", () => {
   });
 
   test("prefers a user-provided ready callback", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
     const ready = vi.fn();
 
     const pylonHttp = await createPylonHttp({ db: proteus, callbacks: { ready } });
@@ -150,7 +150,7 @@ describe("PylonHttp /ready (readiness)", () => {
   });
 
   test("skips the check when callbacks.ready is explicitly null", async () => {
-    const proteus = createMockProteusSource();
+    const proteus = await createMockProteusSource();
 
     const pylonHttp = await createPylonHttp({ db: proteus, callbacks: { ready: null } });
 

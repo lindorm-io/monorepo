@@ -1,69 +1,18 @@
+import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "../interfaces/ProteusSource.js";
-import { _createMockProteusSession } from "./create-mock-proteus-session.js";
-import { _createMockRepository } from "./create-mock-repository.js";
-import type { MockProteusRows } from "./mock-proteus-rows.js";
+import type { CreateMockProteusSettings } from "./create-mock-proteus-settings.js";
+import { createMemoryBackend } from "./mock-memory-backend.js";
 
-export const _createMockProteusSource = (
+/**
+ * Build a mock ProteusSource backed by the REAL in-memory driver. Repositories
+ * obtained directly off the source, or off a `session()` derived from it, share
+ * one in-memory store — so writes are visible through both. The source is
+ * connected and set up before it is returned; seed rows the obvious way
+ * (`await source.session().repository(E).insert([...])`). Every method is a spy.
+ */
+export const _createMockProteusSource = async (
   mockFn: () => any,
-  rows?: MockProteusRows,
-): IProteusSource => {
-  const impl = (fn: any) => {
-    const m = mockFn();
-    m.mockImplementation(fn);
-    return m;
-  };
-  const returns = (value: any) => {
-    const m = mockFn();
-    m.mockReturnValue(value);
-    return m;
-  };
-  const resolves = (value: any) => {
-    const m = mockFn();
-    m.mockResolvedValue(value);
-    return m;
-  };
-
-  return {
-    namespace: null,
-    driverType: "memory",
-    migrationsTable: undefined,
-    log: {
-      info: mockFn(),
-      warn: mockFn(),
-      error: mockFn(),
-      debug: mockFn(),
-      verbose: mockFn(),
-      child: mockFn(),
-      time: mockFn(),
-    },
-    breaker: null,
-
-    on: mockFn(),
-    off: mockFn(),
-    once: mockFn(),
-
-    session: impl(() => _createMockProteusSession(mockFn, rows)),
-    connect: mockFn(),
-    disconnect: mockFn(),
-    ping: resolves(true),
-    setup: mockFn(),
-
-    addEntities: mockFn(),
-    stageDecorator: mockFn(),
-    stageFieldDecorator: mockFn(),
-    getEntityMetadata: returns([]),
-    hasEntity: returns(true),
-
-    setFilterParams: mockFn(),
-    enableFilter: mockFn(),
-    disableFilter: mockFn(),
-    getFilterRegistry: returns(new Map()),
-
-    repository: impl((entity: any) =>
-      _createMockRepository(mockFn, rows ? (rows[entity?.name] ??= []) : undefined),
-    ),
-    queryBuilder: mockFn(),
-    client: mockFn(),
-    transaction: impl(async (cb: Function) => cb({})),
-  } as unknown as IProteusSource;
-};
+  createLogger: () => ILogger,
+  settings?: CreateMockProteusSettings,
+): Promise<IProteusSource> =>
+  (await createMemoryBackend(mockFn, createLogger, settings)).makeFacadeSource();

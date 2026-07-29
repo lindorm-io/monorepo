@@ -45,7 +45,7 @@ import { afterAll, beforeAll, describe, expect, test, vi, type Mock } from "vite
 
 const ALLOWED_ORIGIN = "http://allowed.test.lindorm.io";
 
-const buildInMemoryProteus = () => {
+const buildInMemoryProteus = async () => {
   const store = new Map<string, IPylonSession>();
 
   const repo = {
@@ -75,7 +75,7 @@ const buildInMemoryProteus = () => {
     ping: vi.fn().mockResolvedValue(true),
   } as any;
 
-  const source = createMockProteusSource();
+  const source = await createMockProteusSource();
   (source.session as Mock).mockImplementation(() => session);
 
   return { source, store };
@@ -111,7 +111,7 @@ describe("socket auth (session / cookie) e2e", () => {
       }),
     );
 
-    const inMemory = buildInMemoryProteus();
+    const inMemory = await buildInMemoryProteus();
     store = inMemory.store;
 
     pylon = new Pylon({

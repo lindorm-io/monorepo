@@ -4,15 +4,15 @@ import { createTestPylonCtx } from "../../mocks/vitest.js";
 import { useTenant } from "./use-tenant.js";
 
 describe("useTenant", () => {
-  let ctx: ReturnType<typeof createTestPylonCtx>;
+  let ctx: Awaited<ReturnType<typeof createTestPylonCtx>>;
   let introspect: Mock;
   let setFilterParams: Mock;
   let next: Mock;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     next = vi.fn();
 
-    ctx = createTestPylonCtx({
+    ctx = await createTestPylonCtx({
       state: {
         tokens: { accessToken: { payload: { tenantId: "tenant-abc" } } as any },
       },
@@ -118,7 +118,7 @@ describe("useTenant", () => {
   });
 
   test("should not call setFilterParams when no db on context", async () => {
-    const noDbCtx = createTestPylonCtx({
+    const noDbCtx = await createTestPylonCtx({
       state: {
         tokens: { accessToken: { payload: { tenantId: "tenant-abc" } } as any },
       },

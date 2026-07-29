@@ -1,27 +1,45 @@
-import { createMockProteusSource } from "./vitest.js";
 import { describe, expect, it, vi } from "vitest";
+import { Entity } from "../decorators/Entity.js";
+import { Field } from "../decorators/Field.js";
+import { Generated } from "../decorators/Generated.js";
+import { PrimaryKeyField } from "../decorators/PrimaryKeyField.js";
+import { createMockProteusSource } from "./vitest.js";
 
+@Entity({ name: "SourceMockTestEntity" })
 class TestEntity {
-  id!: string;
+  @PrimaryKeyField() @Generated("string") id!: string;
+}
+
+@Entity({ name: "SourceMockAlbum" })
+class Album {
+  @PrimaryKeyField() @Generated("string") id!: string;
+
+  @Field("string") artistId!: string;
 }
 
 describe("createMockProteusSource", () => {
-  it("should create a mock source with all methods as vi.fn()", () => {
-    const source = createMockProteusSource();
+  it("should create a mock source with all methods as vi.fn()", async () => {
+    const source = await createMockProteusSource();
 
-    expect(source).toMatchSnapshot();
+    // Snapshot the method surface WITHOUT `log`: the real mock logger records a
+    // `child(["ProteusSource"])` call — a ProteusSource internal detail that
+    // would make this snapshot brittle. Assert the logger is a real mock instead.
+    const { log: _log, ...surface } = source as any;
+    expect(surface).toMatchSnapshot();
+    expect(vi.isMockFunction(source.log.info)).toBe(true);
+    expect(vi.isMockFunction(source.log.child)).toBe(true);
   });
 
-  it("should have correct default properties", () => {
-    const source = createMockProteusSource();
+  it("should have correct default properties", async () => {
+    const source = await createMockProteusSource();
 
     expect(source.namespace).toBeNull();
     expect(source.driverType).toBe("memory");
     expect(source.migrationsTable).toBeUndefined();
   });
 
-  it("should return a mock repository from repository()", () => {
-    const source = createMockProteusSource();
+  it("should return a mock repository from repository()", async () => {
+    const source = await createMockProteusSource({ entities: [TestEntity] });
     const repo = source.repository(TestEntity);
 
     expect(repo).toBeDefined();
@@ -29,8 +47,8 @@ describe("createMockProteusSource", () => {
     expect(vi.isMockFunction(repo.find)).toBe(true);
   });
 
-  it("should return a new mock session from session()", () => {
-    const source = createMockProteusSource();
+  it("should return a new mock session from session()", async () => {
+    const source = await createMockProteusSource();
     const session = source.session();
 
     expect(session).toBeDefined();
@@ -41,63 +59,53 @@ describe("createMockProteusSource", () => {
   });
 
   it("should resolve true for ping()", async () => {
-    const source = createMockProteusSource();
+    const source = await createMockProteusSource();
 
     expect(await source.ping()).toBe(true);
   });
 
   it("should execute transaction callback", async () => {
-    const source = createMockProteusSource();
+    const source = await createMockProteusSource();
     const result = await source.transaction(async () => "done");
 
     expect(result).toBe("done");
   });
 
-  it("should return an empty map for getFilterRegistry()", () => {
-    const source = createMockProteusSource();
+  it("should return an empty map for getFilterRegistry()", async () => {
+    const source = await createMockProteusSource();
     const registry = source.getFilterRegistry();
 
     expect(registry).toBeInstanceOf(Map);
     expect(registry.size).toBe(0);
   });
 
-  it("should return true by default for hasEntity()", () => {
-    const source = createMockProteusSource();
+  it("should return true by default for hasEntity()", async () => {
+    const source = await createMockProteusSource({ entities: [TestEntity] });
 
     expect(source.hasEntity(TestEntity)).toBe(true);
   });
 
-  it("should serve seeded rows through both source and session repositories", async () => {
-    class Album {
-      id!: string;
-      artistId!: string;
-    }
+  it("should serve rows written through both source and session repositories", async () => {
+    const source = await createMockProteusSource({ entities: [Album] });
 
-    const rows = {
-      Album: [
-        { id: "alb_1", artistId: "art_1" },
-        { id: "alb_2", artistId: "art_1" },
-        { id: "alb_3", artistId: "art_2" },
-      ],
-    };
-    const source = createMockProteusSource(rows);
+    await source.repository(Album).insert([
+      { id: "alb_1", artistId: "art_1" },
+      { id: "alb_2", artistId: "art_1" },
+      { id: "alb_3", artistId: "art_2" },
+    ] as any);
 
     // Directly off the source.
-    expect(
-      await source.repository(Album).findPaginated(
-        { artistId: "art_1" } as any,
-        {
-          page: 1,
-          pageSize: 1,
-        } as any,
-      ),
-    ).toMatchObject({
-      total: 2,
-      data: [{ id: "alb_1", artistId: "art_1" }],
-      hasMore: true,
-    });
+    const page = await source.repository(Album).findPaginated(
+      { artistId: "art_1" } as any,
+      {
+        page: 1,
+        pageSize: 1,
+      } as any,
+    );
+    expect(page).toMatchObject({ total: 2, hasMore: true });
+    expect(page.data).toHaveLength(1);
 
-    // And through a session — the seed flows down.
+    // And through a session — the store flows down (shared driver store).
     const repo = source.session().repository(Album);
     expect(await repo.count({ artistId: "art_2" } as any)).toBe(1);
   });
