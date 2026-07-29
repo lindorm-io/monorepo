@@ -139,7 +139,7 @@ const keys = amphora.filterSync({ use: "enc" });
 
 ### Query format
 
-Queries are predicates over key attributes. Plain values are equality checks; MongoDB-style operators are supported for richer filters via `@lindorm/utils`.
+Queries are conditions over key attributes. Plain values are equality checks; MongoDB-style operators are supported for richer filters via `@lindorm/utils`.
 
 ```typescript
 await amphora.filter({ use: "sig", type: "EC" });
@@ -399,12 +399,12 @@ The returned object implements `IAmphora`, including the `external` and `idp` fa
 | `env(keys: string \| Array<string>): void`                  | Decode `kryptos:` strings and add them.                                             |
 | `setup(): Promise<void>`                                    | Resolve external configuration and load external JWKS. Idempotent and deduplicated. |
 | `refresh(): Promise<void>`                                  | Re-fetch external configuration and JWKS. Deduplicated.                             |
-| `find(query: AmphoraPredicate): Promise<IKryptos>`          | First match, refreshing external keys when needed. Throws if not found.             |
-| `findSync(query: AmphoraPredicate): IKryptos`               | First match against the local vault. Throws if not found.                           |
+| `find(query: AmphoraCondition): Promise<IKryptos>`          | First match, refreshing external keys when needed. Throws if not found.             |
+| `findSync(query: AmphoraCondition): IKryptos`               | First match against the local vault. Throws if not found.                           |
 | `findById(id: string): Promise<IKryptos>`                   | Lookup by id, refreshing if external providers are configured.                      |
 | `findByIdSync(id: string): IKryptos`                        | Lookup by id against the local vault only.                                          |
-| `filter(query: AmphoraPredicate): Promise<Array<IKryptos>>` | All matches, refreshing when needed.                                                |
-| `filterSync(query: AmphoraPredicate): Array<IKryptos>`      | All matches against the local vault.                                                |
+| `filter(query: AmphoraCondition): Promise<Array<IKryptos>>` | All matches, refreshing when needed.                                                |
+| `filterSync(query: AmphoraCondition): Array<IKryptos>`      | All matches against the local vault.                                                |
 | `canEncrypt(): boolean`                                     | Has any active key suitable for encryption.                                         |
 | `canDecrypt(): boolean`                                     | Has any active key suitable for decryption.                                         |
 | `canSign(): boolean`                                        | Has any active key suitable for signing.                                            |
@@ -458,7 +458,7 @@ import type {
   AmphoraInternalConfig,
   AmphoraJwks,
   AmphoraSettings,
-  AmphoraPredicate,
+  AmphoraCondition,
   AmphoraQuery,
   IAmphora,
   IAmphoraExternal,

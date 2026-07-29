@@ -4,7 +4,7 @@ import type {
   AmphoraExternalSettings,
   AmphoraInternalConfig,
   AmphoraJwks,
-  AmphoraPredicate,
+  AmphoraCondition,
 } from "../types/index.js";
 
 /**
@@ -47,12 +47,12 @@ export interface IAmphora {
 
   add(kryptos: Array<IKryptos> | IKryptos): void;
   env(keys: Array<string> | string): void;
-  filter(query: AmphoraPredicate): Promise<Array<IKryptos>>;
-  filterSync(query: AmphoraPredicate): Array<IKryptos>;
-  find(query: AmphoraPredicate): Promise<IKryptos>;
+  filter(query: AmphoraCondition): Promise<Array<IKryptos>>;
+  filterSync(query: AmphoraCondition): Array<IKryptos>;
+  find(query: AmphoraCondition): Promise<IKryptos>;
   findById(id: string): Promise<IKryptos>;
   findByIdSync(id: string): IKryptos;
-  findSync(query: AmphoraPredicate): IKryptos;
+  findSync(query: AmphoraCondition): IKryptos;
   refresh(): Promise<void>;
   setup(): Promise<void>;
 

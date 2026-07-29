@@ -1,41 +1,41 @@
 import { describe, expect, test } from "vitest";
-import type { AmphoraPredicate } from "../types/index.js";
-import { applyKeyFloor, mergePredicates } from "./merge-predicates.js";
+import type { AmphoraCondition } from "../types/index.js";
+import { applyKeyFloor, mergeConditions } from "./merge-conditions.js";
 
-describe("mergePredicates", () => {
+describe("mergeConditions", () => {
   test("merges layers, later wins", () => {
-    expect(mergePredicates({ algorithm: "ES256" }, { algorithm: "RS256" })).toEqual({
+    expect(mergeConditions({ algorithm: "ES256" }, { algorithm: "RS256" })).toEqual({
       algorithm: "RS256",
     });
   });
 
   test("a later layer's undefined does NOT erase an earlier layer's real value", () => {
     expect(
-      mergePredicates({ algorithm: "ES256" }, { algorithm: undefined }).algorithm,
+      mergeConditions({ algorithm: "ES256" }, { algorithm: undefined }).algorithm,
     ).toBe("ES256");
   });
 
   test("an undefined value is stripped, never surviving as match-all", () => {
-    expect(mergePredicates({ algorithm: undefined })).toEqual({});
-    expect("algorithm" in mergePredicates({ algorithm: undefined })).toBe(false);
+    expect(mergeConditions({ algorithm: undefined })).toEqual({});
+    expect("algorithm" in mergeConditions({ algorithm: undefined })).toBe(false);
   });
 
   test("skips undefined layers", () => {
-    expect(mergePredicates(undefined, { publish: false }, undefined)).toEqual({
+    expect(mergeConditions(undefined, { publish: false }, undefined)).toEqual({
       publish: false,
     });
   });
 
   test("returns a fresh object, mutating no layer", () => {
-    const first: AmphoraPredicate = { algorithm: "ES256" };
-    const merged = mergePredicates(first, { publish: false });
+    const first: AmphoraCondition = { algorithm: "ES256" };
+    const merged = mergeConditions(first, { publish: false });
 
     expect(merged).not.toBe(first);
     expect(first).toEqual({ algorithm: "ES256" });
   });
 
   test("returns an empty object for no layers", () => {
-    expect(mergePredicates()).toEqual({});
+    expect(mergeConditions()).toEqual({});
   });
 });
 
@@ -76,7 +76,7 @@ describe("applyKeyFloor", () => {
   });
 
   test("a per-call undefined does not erase a deployment allowlist under the floor", () => {
-    const deploymentAllowlist: AmphoraPredicate = {
+    const deploymentAllowlist: AmphoraCondition = {
       algorithm: { $in: ["ES256", "ES384"] },
     };
 

@@ -6,7 +6,7 @@ import type { Environment } from "@lindorm/types";
 import { AmphoraError } from "../../errors/index.js";
 import type {
   AmphoraExternalConfig,
-  AmphoraPredicate,
+  AmphoraCondition,
   AmphoraSettings,
 } from "../../types/index.js";
 import { createExternalConduit } from "../utils/create-external-conduit.js";
@@ -78,13 +78,13 @@ export class AmphoraState {
   // an EXTERNAL key (`internal: false`) never does. So the default gate hides only
   // INTERNAL unpublished keys — the KEK / CA / cookie / session hazard. A caller
   // that NAMES `publish` opts out of the default gate entirely.
-  filteredKeys(predicate: AmphoraPredicate): Array<IKryptos> {
+  filteredKeys(condition: AmphoraCondition): Array<IKryptos> {
     const active = this.vault.filter((i) => i.isActive);
 
-    const matched = Matcher.filter<IKryptos>(active, predicate);
+    const matched = Matcher.filter<IKryptos>(active, condition);
 
     const gated =
-      "publish" in predicate ? matched : matched.filter((i) => !i.internal || i.publish);
+      "publish" in condition ? matched : matched.filter((i) => !i.internal || i.publish);
 
     return gated.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
@@ -138,9 +138,9 @@ export class AmphoraState {
     }
   }
 
-  // staleness — per issuer when the predicate names one, else across all issuers.
-  isStaleFor(predicate: AmphoraPredicate): boolean {
-    const issuer = predicate.issuer;
+  // staleness — per issuer when the condition names one, else across all issuers.
+  isStaleFor(condition: AmphoraCondition): boolean {
+    const issuer = condition.issuer;
 
     if (typeof issuer === "string") {
       const entry = this.findEntry(issuer);
@@ -508,8 +508,8 @@ export class AmphoraState {
     return promise;
   }
 
-  refreshFor(predicate: AmphoraPredicate): Promise<void> {
-    const issuer = predicate.issuer;
+  refreshFor(condition: AmphoraCondition): Promise<void> {
+    const issuer = condition.issuer;
     return typeof issuer === "string" ? this.refreshIssuer(issuer) : this.refresh();
   }
 }

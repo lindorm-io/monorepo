@@ -5,7 +5,7 @@ import type { IAmphora, IAmphoraExternal, IAmphoraIdp } from "../interfaces/inde
 import type {
   AmphoraInternalConfig,
   AmphoraJwks,
-  AmphoraPredicate,
+  AmphoraCondition,
   AmphoraSettings,
 } from "../types/index.js";
 import { AmphoraExternal } from "../internal/classes/AmphoraExternal.js";
@@ -118,46 +118,46 @@ export class Amphora implements IAmphora {
     this.add(result);
   }
 
-  async filter(predicate: AmphoraPredicate): Promise<Array<IKryptos>> {
+  async filter(condition: AmphoraCondition): Promise<Array<IKryptos>> {
     if (!this.state.isSetup && this.state.hasExternal) {
       await this.setup();
     }
 
-    const filtered = this.state.filteredKeys(predicate);
+    const filtered = this.state.filteredKeys(condition);
 
-    if (filtered.length && !this.state.isStaleFor(predicate)) {
+    if (filtered.length && !this.state.isStaleFor(condition)) {
       this.state.markAccessed(filtered);
       return filtered;
     }
 
-    if (this.state.hasExternal) await this.state.refreshFor(predicate);
+    if (this.state.hasExternal) await this.state.refreshFor(condition);
 
-    const refreshed = this.state.filteredKeys(predicate);
+    const refreshed = this.state.filteredKeys(condition);
     this.state.markAccessed(refreshed);
     return refreshed;
   }
 
-  filterSync(predicate: AmphoraPredicate): Array<IKryptos> {
+  filterSync(condition: AmphoraCondition): Array<IKryptos> {
     this.assertSetupForSync();
 
-    const filtered = this.state.filteredKeys(predicate);
+    const filtered = this.state.filteredKeys(condition);
     this.state.markAccessed(filtered);
     return filtered;
   }
 
-  async find(predicate: AmphoraPredicate): Promise<IKryptos> {
-    const [key] = await this.filter(predicate);
+  async find(condition: AmphoraCondition): Promise<IKryptos> {
+    const [key] = await this.filter(condition);
     if (key) return key;
 
     throw new AmphoraError("Kryptos not found using query after refresh", {
       code: "kryptos_not_found_by_query_after_refresh",
       data: {
-        queryKeys: Object.keys(predicate),
+        queryKeys: Object.keys(condition),
         totalKeys: this.state.vault.length,
         activeKeys: this.state.vault.filter((i) => i.isActive).length,
       },
       title: "Kryptos Not Found By Query After Refresh",
-      details: `No active Kryptos matched the query (${Object.keys(predicate).join(", ")}) even after refreshing external providers. Verify the query and that a matching key exists.`,
+      details: `No active Kryptos matched the query (${Object.keys(condition).join(", ")}) even after refreshing external providers. Verify the query and that a matching key exists.`,
     });
   }
 
@@ -205,10 +205,10 @@ export class Amphora implements IAmphora {
     });
   }
 
-  findSync(predicate: AmphoraPredicate): IKryptos {
+  findSync(condition: AmphoraCondition): IKryptos {
     this.assertSetupForSync();
 
-    const [key] = this.state.filteredKeys(predicate);
+    const [key] = this.state.filteredKeys(condition);
     if (key) {
       this.state.markAccessed([key]);
       return key;
@@ -217,12 +217,12 @@ export class Amphora implements IAmphora {
     throw new AmphoraError("Kryptos not found using query (sync, no refresh)", {
       code: "kryptos_not_found_by_query_sync",
       data: {
-        queryKeys: Object.keys(predicate),
+        queryKeys: Object.keys(condition),
         totalKeys: this.state.vault.length,
         activeKeys: this.state.vault.filter((i) => i.isActive).length,
       },
       title: "Kryptos Not Found By Query (Sync)",
-      details: `No active Kryptos matched the query (${Object.keys(predicate).join(", ")}). Synchronous lookup does not refresh providers, so a matching key must already be loaded.`,
+      details: `No active Kryptos matched the query (${Object.keys(condition).join(", ")}). Synchronous lookup does not refresh providers, so a matching key must already be loaded.`,
     });
   }
 

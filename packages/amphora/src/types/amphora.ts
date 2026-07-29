@@ -97,7 +97,7 @@ export type AmphoraSettings = {
   refreshInterval?: number;
 };
 
-export type AmphoraPredicate = Condition<AmphoraQuery>;
+export type AmphoraCondition = Condition<AmphoraQuery>;
 
 /**
  * How a consumer NAMES the key it wants: an explicit key, or a query for one.
@@ -109,18 +109,18 @@ export type AmphoraPredicate = Condition<AmphoraQuery>;
  * - `kryptos` — a key supplied outright. Typically an env-imported KEK
  *   (`KryptosKit.env.import(process.env.KEK!)`), which is available at module
  *   load, so it can be handed to a decorator. It never came from the vault, so a
- *   `predicate` is meaningless for it — but the consuming library's FLOOR still
+ *   `condition` is meaningless for it — but the consuming library's FLOOR still
  *   applies, which is what makes an injected key safe rather than an escape hatch.
- * - `predicate` — which of the vault's keys.
+ * - `condition` — which of the vault's keys.
  *
- * `TPredicate` is narrowed by each consumer to exclude the attributes IT owns as
+ * `TCondition` is narrowed by each consumer to exclude the attributes IT owns as
  * a floor (aegis excludes `use` / `hasPrivateKey`; the at-rest encryption
  * libraries do the same), so a caller cannot express — let alone widen — an
  * invariant the library is responsible for.
  */
-export type AmphoraKeySelector<TPredicate = AmphoraPredicate> = {
+export type AmphoraKeySelector<TCondition = AmphoraCondition> = {
   kryptos?: IKryptos;
-  predicate?: TPredicate;
+  condition?: TCondition;
 };
 
 export type AmphoraQuery = Pick<
@@ -135,7 +135,7 @@ export type AmphoraQuery = Pick<
   | "hasPublicKey"
   | "internal"
   // The lifetime states — pending → active → expired — so a consumer can state a
-  // TIME policy as a predicate. `filteredKeys` already drops inactive keys from a
+  // TIME policy as a condition. `filteredKeys` already drops inactive keys from a
   // QUERY, but `findById` is unfiltered by design and an injected key never
   // touches the vault at all: without these, neither could be time-checked.
   | "isActive"

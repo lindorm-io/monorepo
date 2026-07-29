@@ -1,4 +1,4 @@
-import type { AmphoraPredicate } from "../types/index.js";
+import type { AmphoraCondition } from "../types/index.js";
 
 /**
  * The canonical key-operation FLOORS — the single copy shared across the whole
@@ -32,7 +32,7 @@ import type { AmphoraPredicate } from "../types/index.js";
  *     definitionally self-encryption — a proteus column, an iris message, a pylon
  *     cookie — sealed by a key they must reopen themselves. They add
  *     `hasPrivateKey` on top of SEAL. aegis at+jwt does the same by hand (a
- *     per-call predicate), because there the encrypter is also the recipient.
+ *     per-call condition), because there the encrypter is also the recipient.
  *   - `hasPublicKey` is never an encrypt floor: an oct key has no public half
  *     (its secret lives in the private slot), so requiring one would exclude
  *     every `dir` / `A*KW` / PBES2 key and break symmetric encryption outright.
@@ -41,23 +41,23 @@ import type { AmphoraPredicate } from "../types/index.js";
  * secret half, whether you sealed it to yourself or someone sealed it to you.
  */
 
-export const SIGN_FLOOR: AmphoraPredicate = {
+export const SIGN_FLOOR: AmphoraCondition = {
   use: "sig",
   hasPrivateKey: true,
   isActive: true,
 };
 
-export const VERIFY_FLOOR: AmphoraPredicate = { use: "sig", isPending: false };
+export const VERIFY_FLOOR: AmphoraCondition = { use: "sig", isPending: false };
 
-export const SEAL_FLOOR: AmphoraPredicate = { use: "enc", isActive: true };
+export const SEAL_FLOOR: AmphoraCondition = { use: "enc", isActive: true };
 
-export const ENVELOPE_FLOOR: AmphoraPredicate = {
+export const ENVELOPE_FLOOR: AmphoraCondition = {
   use: "enc",
   hasPrivateKey: true,
   isActive: true,
 };
 
-export const DECRYPT_FLOOR: AmphoraPredicate = {
+export const DECRYPT_FLOOR: AmphoraCondition = {
   use: "enc",
   hasPrivateKey: true,
   isPending: false,
