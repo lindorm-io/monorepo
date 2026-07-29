@@ -139,7 +139,7 @@ export class MySqlRepository<
   async find(
     criteria?: Predicate<E>,
     options?: FindOptions<E>,
-    _scope: QueryScope = "multiple",
+    scope: QueryScope = "multiple",
   ): Promise<Array<E>> {
     if (options?.relations) {
       validateRelationNames(this.metadata, options.relations as Array<string>);
@@ -147,7 +147,7 @@ export class MySqlRepository<
 
     const hiddenSelect = filterHiddenSelections(
       this.metadata,
-      ["multiple"],
+      [scope],
       (options?.select as Array<string>) ?? null,
     );
     const effectiveOptions = hiddenSelect
@@ -157,7 +157,7 @@ export class MySqlRepository<
     const entities = await this.executor.executeFind(
       criteria ?? ({} as Predicate<E>),
       effectiveOptions ?? {},
-      _scope,
+      scope,
     );
 
     if (this.hasAsyncRelationIds || this.hasRelationCounts) {
@@ -171,11 +171,11 @@ export class MySqlRepository<
     }
 
     if (this.hasEmbeddedLists) {
-      await this.loadAllEmbeddedLists(entities, this.client, _scope);
+      await this.loadAllEmbeddedLists(entities, this.client, scope);
     }
 
     for (const entity of entities) {
-      this.applyLazyRelations(entity, _scope);
+      this.applyLazyRelations(entity, scope);
       await this.entityManager.afterLoad(entity);
       await this.fireSubscriber(
         "afterLoad",

@@ -6,6 +6,7 @@ import {
   Entity,
   Field,
   Generated,
+  Hide,
   ManyToOne,
   Nullable,
   OneToMany,
@@ -122,6 +123,45 @@ class RepoLindormIdItem {
   name!: string;
 }
 
+@Entity({ name: "RepoHideScoped" })
+class RepoHideScoped {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  name!: string;
+
+  @Hide()
+  @Field("string")
+  hiddenBoth!: string;
+
+  @Hide("single")
+  @Field("string")
+  hiddenSingle!: string;
+
+  @Hide("multiple")
+  @Field("string")
+  hiddenMultiple!: string;
+}
+
+// Multiple-hidden only, with no bare/single-hidden field. This matters because the
+// base findOne pre-filters with ["single"]: when an entity HAS a single/bare-hidden
+// field, that pre-filter emits an explicit `select` that short-circuits find()'s own
+// hidden filter — masking find()'s scope. With ONLY a multiple-hidden field the
+// pre-filter is a no-op, so findOne reaches find() with no select and find()'s scope
+// (single) is what decides whether the multiple-hidden field survives. This is the
+// entity that actually exercises — and guards — the find() scope fix.
+@Entity({ name: "RepoHideMultipleOnly" })
+class RepoHideMultipleOnly {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  name!: string;
+
+  @Hide("multiple")
+  @Field("string")
+  hiddenMultiple!: string;
+}
+
 // ─── Setup ────────────────────────────────────────────────────────────────────
 
 let source: ProteusSource;
@@ -130,6 +170,8 @@ let itemRepo: IProteusRepository<RepoTestItem>;
 let softRepo: IProteusRepository<RepoSoftItem>;
 let readonlyRepo: IProteusRepository<RepoReadonlyScoped>;
 let lindormIdRepo: IProteusRepository<RepoLindormIdItem>;
+let hideRepo: IProteusRepository<RepoHideScoped>;
+let multiOnlyRepo: IProteusRepository<RepoHideMultipleOnly>;
 
 beforeAll(async () => {
   source = new ProteusSource({
@@ -140,6 +182,8 @@ beforeAll(async () => {
       RepoSoftItem,
       RepoReadonlyScoped,
       RepoLindormIdItem,
+      RepoHideScoped,
+      RepoHideMultipleOnly,
     ],
     logger: createMockLogger(),
   });
@@ -151,6 +195,8 @@ beforeAll(async () => {
   softRepo = source.repository(RepoSoftItem);
   readonlyRepo = source.repository(RepoReadonlyScoped);
   lindormIdRepo = source.repository(RepoLindormIdItem);
+  hideRepo = source.repository(RepoHideScoped);
+  multiOnlyRepo = source.repository(RepoHideMultipleOnly);
 });
 
 afterAll(async () => {
@@ -163,6 +209,8 @@ beforeEach(async () => {
   await softRepo.clear();
   await readonlyRepo.clear();
   await lindormIdRepo.clear();
+  await hideRepo.clear();
+  await multiOnlyRepo.clear();
 });
 
 // ─── create ───────────────────────────────────────────────────────────────────
@@ -478,6 +526,102 @@ describe("MemoryRepository @ReadOnly operation scopes", () => {
     const refetched = await readonlyRepo.findOneOrFail({ id: inserted.id });
     expect(refetched.updateReadonly).toBe("viaUpsert");
     expect(refetched.name).toBe("n2");
+  });
+});
+
+// ─── @Hide scope matrix ─────────────────────────────────────────────────────────
+
+describe("MemoryRepository @Hide query-scope matrix", () => {
+  const seed = () =>
+    hideRepo.insert(
+      hideRepo.create({
+        name: "visible",
+        hiddenBoth: "both",
+        hiddenSingle: "single",
+        hiddenMultiple: "multiple",
+      }),
+    );
+
+  test("findOne resolves multiple-hidden fields but strips single/both-hidden", async () => {
+    const inserted = await seed();
+
+    const found = await hideRepo.findOne({ id: inserted.id });
+
+    expect(found).not.toBeNull();
+    expect(found!.name).toBe("visible");
+    expect(found!.hiddenBoth).toBeUndefined();
+    expect(found!.hiddenSingle).toBeUndefined();
+    // The bug: @Hide("multiple") was wrongly stripped on findOne too.
+    expect(found!.hiddenMultiple).toBe("multiple");
+  });
+
+  test("find resolves single-hidden fields but strips multiple/both-hidden", async () => {
+    const inserted = await seed();
+
+    const [found] = await hideRepo.find({ id: inserted.id });
+
+    expect(found).toBeDefined();
+    expect(found.name).toBe("visible");
+    expect(found.hiddenBoth).toBeUndefined();
+    expect(found.hiddenSingle).toBe("single");
+    expect(found.hiddenMultiple).toBeUndefined();
+  });
+
+  test("explicit select overrides the hidden filter on findOne", async () => {
+    const inserted = await seed();
+
+    const found = await hideRepo.findOne(
+      { id: inserted.id },
+      { select: ["id", "hiddenBoth", "hiddenSingle", "hiddenMultiple"] },
+    );
+
+    expect(found).not.toBeNull();
+    expect(found!.hiddenBoth).toBe("both");
+    expect(found!.hiddenSingle).toBe("single");
+    expect(found!.hiddenMultiple).toBe("multiple");
+  });
+
+  test("explicit select overrides the hidden filter on find", async () => {
+    const inserted = await seed();
+
+    const [found] = await hideRepo.find(
+      { id: inserted.id },
+      { select: ["id", "hiddenBoth", "hiddenSingle", "hiddenMultiple"] },
+    );
+
+    expect(found).toBeDefined();
+    expect(found.hiddenBoth).toBe("both");
+    expect(found.hiddenSingle).toBe("single");
+    expect(found.hiddenMultiple).toBe("multiple");
+  });
+
+  // Genuine guard for the find() scope fix. On RepoHideMultipleOnly the base
+  // findOne pre-filter is a no-op (no single/bare-hidden field), so findOne reaches
+  // find() with no explicit select and find()'s own scope decides the projection.
+  // With the buggy hardcoded ["multiple"] this multiple-hidden field is wrongly
+  // stripped on findOne; with the fixed [scope]="single" it is resolved.
+  test("findOne resolves a multiple-hidden field even when no pre-filter select is emitted", async () => {
+    const inserted = await multiOnlyRepo.insert(
+      multiOnlyRepo.create({ name: "visible", hiddenMultiple: "multiple" }),
+    );
+
+    const found = await multiOnlyRepo.findOne({ id: inserted.id });
+
+    expect(found).not.toBeNull();
+    expect(found!.name).toBe("visible");
+    expect(found!.hiddenMultiple).toBe("multiple");
+  });
+
+  test("find still strips a multiple-hidden field on the multiple-only entity", async () => {
+    const inserted = await multiOnlyRepo.insert(
+      multiOnlyRepo.create({ name: "visible", hiddenMultiple: "multiple" }),
+    );
+
+    const [found] = await multiOnlyRepo.find({ id: inserted.id });
+
+    expect(found).toBeDefined();
+    expect(found.name).toBe("visible");
+    expect(found.hiddenMultiple).toBeUndefined();
   });
 });
 

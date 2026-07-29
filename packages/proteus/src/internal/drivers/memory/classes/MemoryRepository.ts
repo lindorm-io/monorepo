@@ -115,7 +115,7 @@ export class MemoryRepository<
   async find(
     criteria?: Predicate<E>,
     options?: FindOptions<E>,
-    _scope: QueryScope = "multiple",
+    scope: QueryScope = "multiple",
   ): Promise<Array<E>> {
     guardFindSortKey(options);
 
@@ -125,7 +125,7 @@ export class MemoryRepository<
 
     const hiddenSelect = filterHiddenSelections(
       this.metadata,
-      ["multiple"],
+      [scope],
       (options?.select as Array<string>) ?? null,
     );
     const effectiveOptions = hiddenSelect
@@ -142,18 +142,14 @@ export class MemoryRepository<
     }
 
     if (this.hasEmbeddedLists) {
-      this.loadAllEmbeddedLists(entities, this.store, _scope);
+      this.loadAllEmbeddedLists(entities, this.store, scope);
     }
 
     for (const entity of entities) {
       if (this.hasEagerRelations || options?.relations) {
-        await this.loadEagerRelations(
-          entity,
-          _scope,
-          options?.relations as Array<string>,
-        );
+        await this.loadEagerRelations(entity, scope, options?.relations as Array<string>);
       }
-      this.applyLazyRelations(entity, _scope);
+      this.applyLazyRelations(entity, scope);
       await this.entityManager.afterLoad(entity);
       await this.fireSubscriber("afterLoad", this.buildSubscriberEvent(entity));
     }
