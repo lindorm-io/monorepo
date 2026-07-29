@@ -1,7 +1,7 @@
+import { Matcher } from "@lindorm/match";
 import { applyKeyFloor, VERIFY_FLOOR, type IAmphora } from "@lindorm/amphora";
 import { ClientError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
-import { Predicated } from "@lindorm/utils";
 import type { PylonVerifyKey } from "../../../types/index.js";
 
 /**
@@ -37,7 +37,7 @@ export const resolveCookieVerificationKey = (
   // `{ x: undefined }` predicate from erasing a constraint.
   const floor = applyKeyFloor(VERIFY_FLOOR, key?.predicate);
 
-  if (!Predicated.match(kryptos, floor)) {
+  if (!Matcher.match(kryptos, floor)) {
     throw new ClientError("Cookie key violates the verification floor", {
       code: "invalid_cookie_key",
       title: "Invalid Cookie Key",

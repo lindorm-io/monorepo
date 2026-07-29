@@ -1,7 +1,7 @@
+import { Matcher } from "@lindorm/match";
 import { applyKeyFloor, SIGN_FLOOR, type IAmphora } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
-import { Predicated } from "@lindorm/utils";
 import type { PylonSignKey } from "../../../types/index.js";
 
 /**
@@ -65,7 +65,7 @@ export const resolveCookieSigningKey = async (
     }
   }
 
-  if (!Predicated.match(kryptos, SIGN_FLOOR)) {
+  if (!Matcher.match(kryptos, SIGN_FLOOR)) {
     throw new ServerError("Cookie signing key violates the signing floor", {
       code: "cookie_signing_key_policy_violation",
       title: "Cookie Signing Key Policy Violation",

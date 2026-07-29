@@ -1,3 +1,4 @@
+import { Matcher } from "@lindorm/match";
 import { VERIFY_FLOOR } from "@lindorm/amphora";
 import { SignatureKit } from "@lindorm/aegis";
 import { snakeKeys } from "@lindorm/case";
@@ -5,7 +6,6 @@ import { ClientError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
 import { ShaKit } from "@lindorm/sha";
 import type { Dict, DsaEncoding, ShaAlgorithm } from "@lindorm/types";
-import { Predicated } from "@lindorm/utils";
 import type { BinaryToTextEncoding } from "crypto";
 import { z } from "zod";
 import type { PylonHttpContext, PylonHttpMiddleware } from "../../types/index.js";
@@ -93,7 +93,7 @@ const verifySignature = <C extends PylonHttpContext = PylonHttpContext>(
   // request could be "verified" against an `enc` key or a not-yet-valid key. An
   // EXPIRED key must still verify a request it signed while valid, but a key
   // whose `notBefore` has not passed cannot have signed anything, ever.
-  if (!Predicated.match(kryptos, VERIFY_FLOOR)) {
+  if (!Matcher.match(kryptos, VERIFY_FLOOR)) {
     throw new ClientError("Signed request names a key that cannot verify it", {
       status: ClientError.Status.Unauthorized,
       code: "invalid_signed_request_key",

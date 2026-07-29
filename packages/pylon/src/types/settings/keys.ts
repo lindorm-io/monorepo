@@ -1,6 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { AmphoraKeySelector, AmphoraQuery } from "@lindorm/amphora";
 import type { KryptosEncryption } from "@lindorm/kryptos";
-import type { Predicate } from "@lindorm/types";
 
 /**
  * The key attributes a pylon deployment may select on.
@@ -28,7 +28,7 @@ type PylonKeyAttributes = Pick<
   | "type"
 >;
 
-export type PylonKeyPredicate = Predicate<PylonKeyAttributes>;
+export type PylonKeyPredicate = Condition<PylonKeyAttributes>;
 
 /**
  * Selects the key that SIGNS cookies.

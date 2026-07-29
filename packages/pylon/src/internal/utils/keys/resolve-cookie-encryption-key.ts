@@ -1,7 +1,7 @@
+import { Matcher } from "@lindorm/match";
 import { applyKeyFloor, ENVELOPE_FLOOR, type IAmphora } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
-import { Predicated } from "@lindorm/utils";
 import type { PylonEncKey } from "../../../types/index.js";
 
 /**
@@ -65,7 +65,7 @@ export const resolveCookieEncryptionKey = async (
     }
   }
 
-  if (!Predicated.match(kryptos, ENVELOPE_FLOOR)) {
+  if (!Matcher.match(kryptos, ENVELOPE_FLOOR)) {
     throw new ServerError("Cookie encryption key violates the encryption floor", {
       code: "cookie_encryption_key_policy_violation",
       title: "Cookie Encryption Key Policy Violation",
