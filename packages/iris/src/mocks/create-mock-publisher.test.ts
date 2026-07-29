@@ -1,79 +1,66 @@
+import type { IMessage } from "../interfaces/index.js";
+import { Field } from "../decorators/Field.js";
+import { Message } from "../decorators/Message.js";
+import { createMockIrisSource } from "./vitest.js";
 import { createMockPublisher } from "./vitest.js";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-type TestMessage = { id: string; body: string };
+@Message({ name: "MockPublisherMessage" })
+class MockPublisherMessage implements IMessage {
+  @Field("string") body!: string;
+}
 
 describe("createMockPublisher", () => {
-  let mock: ReturnType<typeof createMockPublisher<TestMessage>>;
+  it("should really publish to a subscriber on the same source", async () => {
+    // A lone publisher has no subscribers — pair it with a bus on one source to
+    // prove the publish path delivers for real (shared in-memory store).
+    const source = await createMockIrisSource({ messages: [MockPublisherMessage] });
+    const bus = source.messageBus(MockPublisherMessage);
+    const publisher = source.publisher(MockPublisherMessage);
+    const received: Array<string> = [];
 
-  beforeEach(() => {
-    mock = createMockPublisher<TestMessage>();
+    await bus.subscribe({
+      topic: "MockPublisherMessage",
+      callback: async (message) => void received.push(message.body),
+    });
+
+    await publisher.publish(publisher.create({ body: "hello" }));
+
+    expect(received).toEqual(["hello"]);
   });
 
-  describe("create", () => {
-    it("should return empty object by default", () => {
-      expect(mock.create()).toMatchSnapshot();
-    });
+  it("should expose every method as a spy and record publish calls", async () => {
+    const publisher = await createMockPublisher(MockPublisherMessage);
 
-    it("should track calls", () => {
-      mock.create({ id: "1" });
-      expect(mock.create).toHaveBeenCalledWith({ id: "1" });
-    });
+    expect(vi.isMockFunction(publisher.create)).toBe(true);
+    expect(vi.isMockFunction(publisher.hydrate)).toBe(true);
+    expect(vi.isMockFunction(publisher.copy)).toBe(true);
+    expect(vi.isMockFunction(publisher.validate)).toBe(true);
+    expect(vi.isMockFunction(publisher.publish)).toBe(true);
+
+    const message = publisher.create({ body: "hello" });
+    await publisher.publish(message);
+    expect(publisher.publish).toHaveBeenCalledWith(message);
   });
 
-  describe("hydrate", () => {
-    it("should return data as message", () => {
-      const result = mock.hydrate({ id: "1", body: "hello" });
-      expect(result).toMatchSnapshot();
-    });
+  it("should build real message instances via create/hydrate/copy", async () => {
+    const publisher = await createMockPublisher(MockPublisherMessage);
+
+    expect(publisher.create({ body: "made" })).toBeInstanceOf(MockPublisherMessage);
+    expect(publisher.hydrate({ body: "hydrated" }).body).toBe("hydrated");
+
+    const original = publisher.create({ body: "orig" });
+    const copy = publisher.copy(original);
+    expect(copy).not.toBe(original);
+    expect(copy.body).toBe("orig");
   });
 
-  describe("copy", () => {
-    it("should return shallow copy", () => {
-      const original: TestMessage = { id: "1", body: "hello" };
-      const result = mock.copy(original);
-      expect(result).toEqual(original);
-      expect(result).not.toBe(original);
-    });
-  });
+  it("should let a default be overridden", async () => {
+    const publisher = await createMockPublisher(MockPublisherMessage);
+    publisher.publish.mockRejectedValueOnce(new Error("boom"));
 
-  describe("validate", () => {
-    it("should be a no-op", () => {
-      expect(() => mock.validate({ id: "1", body: "hello" })).not.toThrow();
-      expect(mock.validate).toHaveBeenCalledWith({ id: "1", body: "hello" });
-    });
-  });
-
-  describe("publish", () => {
-    it("should record a single message", async () => {
-      const msg: TestMessage = { id: "1", body: "hello" };
-      await mock.publish(msg);
-      expect(mock.published).toMatchSnapshot();
-      expect(mock.publish).toHaveBeenCalledWith(msg);
-    });
-
-    it("should record an array of messages", async () => {
-      const msgs: Array<TestMessage> = [
-        { id: "1", body: "a" },
-        { id: "2", body: "b" },
-      ];
-      await mock.publish(msgs);
-      expect(mock.published).toMatchSnapshot();
-    });
-
-    it("should accumulate across calls", async () => {
-      await mock.publish({ id: "1", body: "a" });
-      await mock.publish({ id: "2", body: "b" });
-      expect(mock.published).toHaveLength(2);
-    });
-  });
-
-  describe("clearPublished", () => {
-    it("should clear the published array", async () => {
-      await mock.publish({ id: "1", body: "hello" });
-      expect(mock.published).toHaveLength(1);
-      mock.clearPublished();
-      expect(mock.published).toHaveLength(0);
-    });
+    await expect(publisher.publish(publisher.create({ body: "x" }))).rejects.toThrow(
+      "boom",
+    );
   });
 });

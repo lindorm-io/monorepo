@@ -1,80 +1,83 @@
+import type { IMessage } from "../interfaces/index.js";
+import { Field } from "../decorators/Field.js";
+import { Message } from "../decorators/Message.js";
+import { IrisTransportError } from "../errors/IrisTransportError.js";
 import { createMockRpcClient } from "./vitest.js";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-type TestReq = { id: string; query: string };
-type TestRes = { id: string; result: string };
+@Message({ name: "MockRpcRequest" })
+class MockRpcRequest implements IMessage {
+  @Field("string") question!: string;
+}
+
+@Message({ name: "MockRpcResponse" })
+class MockRpcResponse implements IMessage {
+  @Field("string") answer!: string;
+}
+
+const makeRequest = (question: string): MockRpcRequest => {
+  const req = new MockRpcRequest();
+  req.question = question;
+  return req;
+};
 
 describe("createMockRpcClient", () => {
-  describe("with responseFactory", () => {
-    let mock: ReturnType<typeof createMockRpcClient<TestReq, TestRes>>;
+  it("should complete a real round-trip via the response factory", async () => {
+    const client = await createMockRpcClient(
+      MockRpcRequest,
+      MockRpcResponse,
+      (request) => {
+        const response = new MockRpcResponse();
+        response.answer = `answer to: ${request.question}`;
+        return response;
+      },
+    );
 
-    beforeEach(() => {
-      mock = createMockRpcClient<TestReq, TestRes>((req) => ({
-        id: req.id,
-        result: "response-for-" + req.query,
-      }));
-    });
+    const response = await client.request(makeRequest("what is 2+2?"));
 
-    describe("request", () => {
-      it("should call responseFactory and return result", async () => {
-        const result = await mock.request({ id: "1", query: "hello" });
-        expect(result).toMatchSnapshot();
-      });
-
-      it("should record requests", async () => {
-        await mock.request({ id: "1", query: "a" });
-        await mock.request({ id: "2", query: "b" });
-        expect(mock.requests).toMatchSnapshot();
-      });
-
-      it("should track call arguments", async () => {
-        const req: TestReq = { id: "1", query: "hello" };
-        await mock.request(req, { timeout: 5000 });
-        expect(mock.request).toHaveBeenCalledWith(req, { timeout: 5000 });
-      });
-    });
-
-    describe("clearRequests", () => {
-      it("should clear the requests array", async () => {
-        await mock.request({ id: "1", query: "hello" });
-        expect(mock.requests).toHaveLength(1);
-        mock.clearRequests();
-        expect(mock.requests).toHaveLength(0);
-      });
-    });
+    expect(response).toBeInstanceOf(MockRpcResponse);
+    expect(response.answer).toBe("answer to: what is 2+2?");
   });
 
-  describe("with async responseFactory", () => {
-    it("should handle async factory", async () => {
-      const mock = createMockRpcClient<TestReq, TestRes>(async (req) => ({
-        id: req.id,
-        result: "async-" + req.query,
-      }));
-      const result = await mock.request({ id: "1", query: "hello" });
-      expect(result).toMatchSnapshot();
-    });
+  it("should support an async response factory", async () => {
+    const client = await createMockRpcClient(
+      MockRpcRequest,
+      MockRpcResponse,
+      async (request) => {
+        const response = new MockRpcResponse();
+        response.answer = `async-${request.question}`;
+        return response;
+      },
+    );
+
+    const response = await client.request(makeRequest("hello"));
+
+    expect(response.answer).toBe("async-hello");
   });
 
-  describe("without responseFactory", () => {
-    it("should throw when request is called", async () => {
-      const mock = createMockRpcClient<TestReq, TestRes>();
-      await expect(mock.request({ id: "1", query: "hello" })).rejects.toThrow(
-        "MockRpcClient: no responseFactory provided — supply one via the constructor",
-      );
-    });
+  it("should record request calls on the spy", async () => {
+    const client = await createMockRpcClient(
+      MockRpcRequest,
+      MockRpcResponse,
+      (request) => {
+        const response = new MockRpcResponse();
+        response.answer = `answer to: ${request.question}`;
+        return response;
+      },
+    );
+    const request = makeRequest("hello");
 
-    it("should still record the request before throwing", async () => {
-      const mock = createMockRpcClient<TestReq, TestRes>();
-      await expect(mock.request({ id: "1", query: "hello" })).rejects.toThrow();
-      expect(mock.requests).toHaveLength(1);
-    });
+    await client.request(request, { timeout: 5000 });
+
+    expect(client.request).toHaveBeenCalledWith(request, { timeout: 5000 });
+    expect(vi.isMockFunction(client.close)).toBe(true);
   });
 
-  describe("close", () => {
-    it("should be a no-op", async () => {
-      const mock = createMockRpcClient<TestReq, TestRes>();
-      await mock.close();
-      expect(mock.close).toHaveBeenCalled();
-    });
+  it("should faithfully reject when no server is registered", async () => {
+    const client = await createMockRpcClient(MockRpcRequest, MockRpcResponse);
+
+    await expect(client.request(makeRequest("nobody home"))).rejects.toThrow(
+      IrisTransportError,
+    );
   });
 });

@@ -11,7 +11,7 @@ describe("createAttachIrisSourceMiddleware", () => {
   });
 
   test("should call next", async () => {
-    const source = createMockIrisSource();
+    const source = await createMockIrisSource();
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachIrisSourceMiddleware({ key: "bus", source: source as any })(
@@ -23,7 +23,7 @@ describe("createAttachIrisSourceMiddleware", () => {
   });
 
   test("should lazily bind session to ctx[key] on first access", async () => {
-    const source = createMockIrisSource();
+    const source = await createMockIrisSource();
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachIrisSourceMiddleware({ key: "analytics", source: source as any })(
@@ -48,7 +48,7 @@ describe("createAttachIrisSourceMiddleware", () => {
   });
 
   test("should never thread a signal key (iris has no AbortSignal)", async () => {
-    const source = createMockIrisSource();
+    const source = await createMockIrisSource();
     const controller = new AbortController();
     const ctx: any = {
       logger: createMockLogger(),
@@ -69,7 +69,7 @@ describe("createAttachIrisSourceMiddleware", () => {
   });
 
   test("should cache session on second access", async () => {
-    const source = createMockIrisSource();
+    const source = await createMockIrisSource();
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachIrisSourceMiddleware({ key: "bus", source: source as any })(
@@ -85,7 +85,7 @@ describe("createAttachIrisSourceMiddleware", () => {
   });
 
   test("should resolve actor via the actor callback and forward it in hook meta", async () => {
-    const source = createMockIrisSource();
+    const source = await createMockIrisSource();
     const actor = vi.fn().mockReturnValue("alice@test.com");
 
     const ctx: any = {
@@ -118,7 +118,7 @@ describe("createAttachIrisSourceMiddleware", () => {
   });
 
   test("should forward 'unknown' actor from the configured resolver into hook meta", async () => {
-    const source = createMockIrisSource();
+    const source = await createMockIrisSource();
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachIrisSourceMiddleware({

@@ -1,69 +1,82 @@
+import type { IMessage } from "../interfaces/index.js";
+import { Field } from "../decorators/Field.js";
+import { Message } from "../decorators/Message.js";
+import { MEMORY_CAPABILITIES } from "../internal/drivers/memory/memory-capabilities.js";
 import { createMockIrisSource } from "./vitest.js";
 import { describe, expect, it, vi } from "vitest";
 
+@Message({ name: "MockSourceMessage" })
+class MockSourceMessage implements IMessage {
+  @Field("string") body!: string;
+}
+
 describe("createMockIrisSource", () => {
-  it("should create a mock with default values", () => {
-    const mock = createMockIrisSource();
+  it("should create a memory-backed source with default capabilities", async () => {
+    const source = await createMockIrisSource();
 
-    expect(mock.driver).toBe("memory");
-    expect(mock.messages).toEqual([]);
+    expect(source.driver).toBe("memory");
+    expect(source.capabilities).toEqual(MEMORY_CAPABILITIES);
   });
 
-  it("should have all methods as vi.fn()", () => {
-    const mock = createMockIrisSource();
+  it("should deliver a real message through a bus off the source", async () => {
+    const source = await createMockIrisSource({ messages: [MockSourceMessage] });
+    const bus = source.messageBus(MockSourceMessage);
+    const received: Array<string> = [];
 
-    expect(vi.isMockFunction(mock.addMessages)).toBe(true);
-    expect(vi.isMockFunction(mock.hasMessage)).toBe(true);
-    expect(vi.isMockFunction(mock.addSubscriber)).toBe(true);
-    expect(vi.isMockFunction(mock.removeSubscriber)).toBe(true);
-    expect(vi.isMockFunction(mock.session)).toBe(true);
+    await bus.subscribe({
+      topic: "MockSourceMessage",
+      callback: async (message) => void received.push(message.body),
+    });
 
-    expect(vi.isMockFunction(mock.connect)).toBe(true);
-    expect(vi.isMockFunction(mock.disconnect)).toBe(true);
-    expect(vi.isMockFunction(mock.drain)).toBe(true);
-    expect(vi.isMockFunction(mock.ping)).toBe(true);
-    expect(vi.isMockFunction(mock.setup)).toBe(true);
-    expect(vi.isMockFunction(mock.getConnectionState)).toBe(true);
-    expect(vi.isMockFunction(mock.on)).toBe(true);
-    expect(vi.isMockFunction(mock.off)).toBe(true);
-    expect(vi.isMockFunction(mock.once)).toBe(true);
+    await bus.publish(bus.create({ body: "hello" }));
 
-    expect(vi.isMockFunction(mock.messageBus)).toBe(true);
-    expect(vi.isMockFunction(mock.publisher)).toBe(true);
-    expect(vi.isMockFunction(mock.workerQueue)).toBe(true);
-    expect(vi.isMockFunction(mock.stream)).toBe(true);
-    expect(vi.isMockFunction(mock.rpcClient)).toBe(true);
-    expect(vi.isMockFunction(mock.rpcServer)).toBe(true);
+    expect(received).toEqual(["hello"]);
   });
 
-  it("should return sensible defaults", () => {
-    const mock = createMockIrisSource();
+  it("should share the store between a session and the source", async () => {
+    const source = await createMockIrisSource({ messages: [MockSourceMessage] });
+    const session = source.session();
+    const received: Array<string> = [];
 
-    expect(mock.hasMessage({} as any)).toBe(true);
-    expect(mock.getConnectionState()).toBe("connected");
+    await session.messageBus(MockSourceMessage).subscribe({
+      topic: "MockSourceMessage",
+      callback: async (message) => void received.push(message.body),
+    });
+
+    await source
+      .messageBus(MockSourceMessage)
+      .publish(source.messageBus(MockSourceMessage).create({ body: "cross" }));
+
+    expect(received).toEqual(["cross"]);
+  });
+
+  it("should honour the capabilities override seam", async () => {
+    const source = await createMockIrisSource({ capabilities: { priority: true } });
+
+    expect(source.capabilities.priority).toBe(true);
+    // Untouched capabilities keep their real memory defaults.
+    expect(source.capabilities.streamReplay).toBe(false);
+  });
+
+  it("should expose spies and inert lifecycle methods", async () => {
+    const source = await createMockIrisSource();
+
+    expect(vi.isMockFunction(source.connect)).toBe(true);
+    expect(vi.isMockFunction(source.disconnect)).toBe(true);
+    expect(vi.isMockFunction(source.setup)).toBe(true);
+    expect(vi.isMockFunction(source.messageBus)).toBe(true);
+    expect(vi.isMockFunction(source.session)).toBe(true);
+
+    // Lifecycle spies are inert — calling them does not tear down the live driver.
+    await source.connect();
+    await source.setup();
+    expect(source.getConnectionState()).toBe("connected");
+    expect(source.connect).toHaveBeenCalledTimes(1);
   });
 
   it("should resolve ping to true", async () => {
-    const mock = createMockIrisSource();
+    const source = await createMockIrisSource();
 
-    await expect(mock.ping()).resolves.toBe(true);
-  });
-
-  it("should return sub-mocks from factory methods", () => {
-    const mock = createMockIrisSource();
-
-    expect(mock.messageBus({} as any)).toBeDefined();
-    expect(mock.publisher({} as any)).toBeDefined();
-    expect(mock.workerQueue({} as any)).toBeDefined();
-    expect(mock.rpcClient({} as any, {} as any)).toBeDefined();
-  });
-
-  it("should return a new mock session from session()", () => {
-    const mock = createMockIrisSource();
-    const session = mock.session();
-
-    expect(session).not.toBe(mock);
-    expect(session.driver).toBe("memory");
-    expect(vi.isMockFunction(session.ping)).toBe(true);
+    await expect(source.ping()).resolves.toBe(true);
   });
 });

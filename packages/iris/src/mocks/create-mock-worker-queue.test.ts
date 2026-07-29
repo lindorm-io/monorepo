@@ -1,102 +1,74 @@
+import type { IMessage } from "../interfaces/index.js";
+import { Field } from "../decorators/Field.js";
+import { Message } from "../decorators/Message.js";
 import { createMockWorkerQueue } from "./vitest.js";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-type TestMessage = { id: string; body: string };
+@Message({ name: "MockWorkerMessage" })
+class MockWorkerMessage implements IMessage {
+  @Field("string") data!: string;
+}
 
 describe("createMockWorkerQueue", () => {
-  let mock: ReturnType<typeof createMockWorkerQueue<TestMessage>>;
+  it("should deliver a published message to a real consumer", async () => {
+    const queue = await createMockWorkerQueue(MockWorkerMessage);
+    const received: Array<string> = [];
 
-  beforeEach(() => {
-    mock = createMockWorkerQueue<TestMessage>();
+    await queue.consume("MockWorkerMessage", async (message) => {
+      received.push(message.data);
+    });
+
+    await queue.publish(queue.create({ data: "task" }));
+
+    expect(received).toEqual(["task"]);
   });
 
-  describe("create", () => {
-    it("should return empty object by default", () => {
-      expect(mock.create()).toMatchSnapshot();
+  it("should round-robin across consumers in the same queue", async () => {
+    const queue = await createMockWorkerQueue(MockWorkerMessage);
+    const a: Array<string> = [];
+    const b: Array<string> = [];
+
+    await queue.consume({
+      queue: "MockWorkerMessage",
+      callback: async () => void a.push("a"),
     });
+    await queue.consume({
+      queue: "MockWorkerMessage",
+      callback: async () => void b.push("b"),
+    });
+
+    for (let i = 0; i < 4; i++) {
+      await queue.publish(queue.create({ data: `msg${i}` }));
+    }
+
+    expect(a).toHaveLength(2);
+    expect(b).toHaveLength(2);
   });
 
-  describe("hydrate", () => {
-    it("should return data as message", () => {
-      expect(mock.hydrate({ id: "1", body: "hello" })).toMatchSnapshot();
-    });
+  it("should stop delivering after unconsumeAll", async () => {
+    const queue = await createMockWorkerQueue(MockWorkerMessage);
+    const received: Array<string> = [];
+
+    await queue.consume(
+      "MockWorkerMessage",
+      async (message) => void received.push(message.data),
+    );
+    await queue.unconsumeAll();
+    await queue.publish(queue.create({ data: "task" }));
+
+    expect(received).toHaveLength(0);
   });
 
-  describe("copy", () => {
-    it("should return shallow copy", () => {
-      const original: TestMessage = { id: "1", body: "hello" };
-      const result = mock.copy(original);
-      expect(result).toEqual(original);
-      expect(result).not.toBe(original);
-    });
-  });
+  it("should expose every method as a spy and record publish calls", async () => {
+    const queue = await createMockWorkerQueue(MockWorkerMessage);
 
-  describe("validate", () => {
-    it("should be a no-op", () => {
-      expect(() => mock.validate({ id: "1", body: "hello" })).not.toThrow();
-    });
-  });
+    expect(vi.isMockFunction(queue.publish)).toBe(true);
+    expect(vi.isMockFunction(queue.consume)).toBe(true);
+    expect(vi.isMockFunction(queue.unconsume)).toBe(true);
+    expect(vi.isMockFunction(queue.unconsumeAll)).toBe(true);
 
-  describe("publish", () => {
-    it("should record a single message", async () => {
-      await mock.publish({ id: "1", body: "hello" });
-      expect(mock.published).toMatchSnapshot();
-    });
-
-    it("should record an array of messages", async () => {
-      await mock.publish([
-        { id: "1", body: "a" },
-        { id: "2", body: "b" },
-      ]);
-      expect(mock.published).toMatchSnapshot();
-    });
-  });
-
-  describe("consume", () => {
-    it("should accept a string queue name and callback", async () => {
-      const callback = vi.fn();
-      await mock.consume("my-queue", callback);
-      expect(mock.consume).toHaveBeenCalledWith("my-queue", callback);
-    });
-
-    it("should accept ConsumeOptions object", async () => {
-      const callback = vi.fn();
-      await mock.consume({ queue: "my-queue", callback });
-      expect(mock.consume).toHaveBeenCalledWith({
-        queue: "my-queue",
-        callback,
-      });
-    });
-
-    it("should accept an array of ConsumeOptions", async () => {
-      const callback = vi.fn();
-      await mock.consume([
-        { queue: "q1", callback },
-        { queue: "q2", callback },
-      ]);
-      expect(mock.consume).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("unconsume", () => {
-    it("should accept a queue name", async () => {
-      await mock.unconsume("my-queue");
-      expect(mock.unconsume).toHaveBeenCalledWith("my-queue");
-    });
-  });
-
-  describe("unconsumeAll", () => {
-    it("should be callable", async () => {
-      await mock.unconsumeAll();
-      expect(mock.unconsumeAll).toHaveBeenCalled();
-    });
-  });
-
-  describe("clearPublished", () => {
-    it("should clear the published array", async () => {
-      await mock.publish({ id: "1", body: "hello" });
-      mock.clearPublished();
-      expect(mock.published).toHaveLength(0);
-    });
+    const message = queue.create({ data: "task" });
+    await queue.publish(message);
+    expect(queue.publish).toHaveBeenCalledWith(message);
   });
 });

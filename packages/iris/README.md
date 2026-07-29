@@ -1164,11 +1164,13 @@ import {
 } from "@lindorm/iris/mocks/vitest";
 ```
 
+Every factory is spy-wrapped over the **real in-memory driver** — the one that actually delivers — so you assert real delivery, not a recorded list. The factories are **async** (they connect a live source first), and the bus/publisher/worker-queue/rpc factories take the `@Message` class the same way the real API does.
+
 ```typescript
-const source = createMockIrisSource();
+const source = await createMockIrisSource();
 
 await source.connect();
-expect(source.connect).toHaveBeenCalledTimes(1);
+expect(source.connect).toHaveBeenCalledTimes(1); // lifecycle spies are inert
 
 const bus = source.messageBus(OrderPlaced);
 const pub = source.publisher(OrderPlaced);
@@ -1176,24 +1178,41 @@ const queue = source.workerQueue(OrderPlaced);
 const rpc = source.rpcClient(GetPrice, PriceResponse);
 ```
 
-The bus, publisher, and worker-queue mocks expose a `published` array and a `clearPublished()` helper. The RPC client mock takes an optional response factory and exposes `requests` plus `clearRequests()`.
+Assert delivery by subscribing and publishing for real — memory delivery is awaited inline, so it is complete synchronously after `publish`:
 
 ```typescript
-const pub = createMockPublisher<OrderPlaced>();
-await pub.publish(pub.create({ orderId: "abc", total: 10 }));
-expect(pub.published).toHaveLength(1);
-pub.clearPublished();
+const bus = await createMockMessageBus(OrderPlaced);
+const received: Array<OrderPlaced> = [];
 
-const client = createMockRpcClient<GetPrice, PriceResponse>((req) => {
-  const res = new PriceResponse();
-  res.price = 42.0;
-  res.currency = "USD";
-  return res;
+await bus.subscribe({
+  topic: "OrderPlaced",
+  callback: async (message) => void received.push(message),
 });
-const res = await client.request(new GetPrice());
-expect(client.requests).toHaveLength(1);
-client.clearRequests();
+
+await bus.publish(bus.create({ orderId: "abc", total: 10 }));
+expect(received).toHaveLength(1); // really delivered
+
+// Every method is still a spy — assert the call, or override a default.
+expect(bus.publish).toHaveBeenCalledTimes(1);
 ```
+
+The RPC client only resolves once a server serves the same request/response pair. Pass a response factory to stand up a real server, so `request()` completes a genuine in-process round-trip; omit it and `request()` faithfully rejects with `IrisTransportError` (no handler):
+
+```typescript
+const client = await createMockRpcClient<GetPrice, PriceResponse>(
+  GetPrice,
+  PriceResponse,
+  (req) => {
+    const res = new PriceResponse();
+    res.price = 42.0;
+    return res;
+  },
+);
+const res = await client.request(new GetPrice());
+expect(client.request).toHaveBeenCalledTimes(1);
+```
+
+Pass `settings.capabilities` to override the advertised driver capabilities (default: the real `MEMORY_CAPABILITIES`) — e.g. `createMockIrisSource({ capabilities: { priority: true } })`.
 
 ## CLI
 

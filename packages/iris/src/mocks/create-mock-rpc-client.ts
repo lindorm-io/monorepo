@@ -1,51 +1,36 @@
-import { IrisValidationError } from "../errors/IrisValidationError.js";
-import type { IIrisRpcClient } from "../interfaces/IrisRpcClient.js";
-import type { IMessage } from "../interfaces/Message.js";
+import type { ILogger } from "@lindorm/logger";
+import type { Constructor } from "@lindorm/types";
+import type { IIrisRpcClient, IMessage } from "../interfaces/index.js";
+import type { CreateMockIrisSettings } from "./create-mock-iris-settings.js";
+import { createMemoryIrisBackend } from "./mock-memory-backend.js";
 
-export type RpcClientExtras<Req extends IMessage> = {
-  requests: Array<Req>;
-  clearRequests(): void;
-};
-
-export const _createMockRpcClient = <
+/**
+ * Build a mock RPC client backed by the REAL in-memory driver for the given
+ * request/response `@Message` classes.
+ *
+ * A memory RPC client only resolves once a server serves the same pair on the
+ * shared store. Pass `responseFactory` to stand up a real server that responds
+ * via the factory — then `request()` completes a genuine in-process round-trip
+ * and returns the factory's response. Without it, `request()` faithfully rejects
+ * with `IrisTransportError` (no handler registered).
+ *
+ * Every method stays a spy — assert `client.request.mock.calls`, or override any
+ * default with `mockResolvedValueOnce` etc.
+ */
+export const _createMockRpcClient = async <
   Req extends IMessage = IMessage,
   Res extends IMessage = IMessage,
 >(
   mockFn: () => any,
-  responseFactory?: (req: Req) => Res | Promise<Res>,
-): IIrisRpcClient<Req, Res> & RpcClientExtras<Req> => {
-  const requests: Array<Req> = [];
-  const impl = (fn: any) => {
-    const m = mockFn();
-    m.mockImplementation(fn);
-    return m;
-  };
-
-  return {
-    requests,
-
-    request: impl(async (message: Req): Promise<Res> => {
-      requests.push(message);
-
-      if (!responseFactory) {
-        throw new IrisValidationError(
-          "MockRpcClient: no responseFactory provided — supply one via the constructor",
-          {
-            code: "missing_response_factory",
-            title: "Missing Response Factory",
-            details:
-              "The mock RPC client needs a responseFactory to produce responses; pass one when creating the mock.",
-          },
-        );
-      }
-
-      return responseFactory(message);
-    }),
-
-    close: impl(async (): Promise<void> => {}),
-
-    clearRequests: (): void => {
-      requests.length = 0;
-    },
-  } as unknown as IIrisRpcClient<Req, Res> & RpcClientExtras<Req>;
+  createLogger: () => ILogger,
+  requestTarget: Constructor<Req>,
+  responseTarget: Constructor<Res>,
+  responseFactory?: (request: Req) => Res | Promise<Res>,
+  settings?: CreateMockIrisSettings,
+): Promise<IIrisRpcClient<Req, Res>> => {
+  const backend = await createMemoryIrisBackend(mockFn, createLogger, {
+    ...settings,
+    messages: [requestTarget, responseTarget, ...(settings?.messages ?? [])],
+  });
+  return backend.makeFacadeRpcClient(requestTarget, responseTarget, responseFactory);
 };

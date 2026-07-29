@@ -94,7 +94,7 @@ describe("createDependenciesMiddleware", () => {
   });
 
   test("should lazily create iris session on first access", async () => {
-    const iris = createMockIrisSource();
+    const iris = await createMockIrisSource();
 
     const middleware = createDependenciesMiddleware({ bus: iris as any });
 
@@ -134,7 +134,7 @@ describe("createDependenciesMiddleware", () => {
 
   test("should resolve actor from top-level resolver and forward it in hook meta", async () => {
     const proteus = await createMockProteusSource();
-    const iris = createMockIrisSource();
+    const iris = await createMockIrisSource();
     const actor = vi.fn().mockReturnValue("alice@test.com");
 
     const ctxWithState: any = {
@@ -181,7 +181,7 @@ describe("createDependenciesMiddleware", () => {
 
   test("should memoise actor on ctx.state.actor across session creation", async () => {
     const proteus = await createMockProteusSource();
-    const iris = createMockIrisSource();
+    const iris = await createMockIrisSource();
     const actor = vi.fn().mockReturnValue("alice@test.com");
 
     const ctxWithState: any = {

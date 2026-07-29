@@ -13,7 +13,7 @@ describe("buildReadinessCallback", () => {
 
   test("pings proteus + iris on every call", async () => {
     const proteus = await createMockProteusSource();
-    const iris = createMockIrisSource();
+    const iris = await createMockIrisSource();
 
     const callback = buildReadinessCallback({ db: proteus, bus: iris })!;
 
@@ -37,7 +37,7 @@ describe("buildReadinessCallback", () => {
   });
 
   test("throws when a source ping rejects", async () => {
-    const iris = createMockIrisSource();
+    const iris = await createMockIrisSource();
     iris.ping.mockRejectedValue(new Error("broker down"));
 
     const callback = buildReadinessCallback({ bus: iris })!;
@@ -56,7 +56,7 @@ describe("buildLivenessCallback", () => {
 
   test("checks I/O once, then latches success and stops pinging", async () => {
     const proteus = await createMockProteusSource();
-    const iris = createMockIrisSource();
+    const iris = await createMockIrisSource();
 
     const callback = buildLivenessCallback({ db: proteus, bus: iris })!;
 

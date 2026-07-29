@@ -32,7 +32,7 @@ describe("PylonHttp /health (liveness)", () => {
 
   test("prefers a user-provided health callback over the auto-built one", async () => {
     const proteus = await createMockProteusSource();
-    const iris = createMockIrisSource();
+    const iris = await createMockIrisSource();
     const health = vi.fn();
 
     const pylonHttp = await createPylonHttp({ db: proteus, iris, callbacks: { health } });
@@ -56,7 +56,7 @@ describe("PylonHttp /health (liveness)", () => {
 
   test("checks I/O once then latches — no re-ping on subsequent calls", async () => {
     const proteus = await createMockProteusSource();
-    const iris = createMockIrisSource();
+    const iris = await createMockIrisSource();
 
     const pylonHttp = await createPylonHttp({ db: proteus, bus: iris });
 
@@ -98,7 +98,7 @@ describe("PylonHttp /ready (readiness)", () => {
 
   test("pings proteus + iris on every call (reflects live state)", async () => {
     const proteus = await createMockProteusSource();
-    const iris = createMockIrisSource();
+    const iris = await createMockIrisSource();
 
     const pylonHttp = await createPylonHttp({ db: proteus, bus: iris });
 
@@ -124,7 +124,7 @@ describe("PylonHttp /ready (readiness)", () => {
   });
 
   test("returns 503 when iris ping rejects", async () => {
-    const iris = createMockIrisSource();
+    const iris = await createMockIrisSource();
     iris.ping.mockRejectedValue(new Error("broker down"));
 
     const pylonHttp = await createPylonHttp({ bus: iris });

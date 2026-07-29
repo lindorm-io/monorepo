@@ -1,37 +1,18 @@
+import type { ILogger } from "@lindorm/logger";
 import type { IIrisSession } from "../interfaces/index.js";
-import { _createMockMessageBus } from "./create-mock-message-bus.js";
-import { _createMockPublisher } from "./create-mock-publisher.js";
-import { _createMockRpcClient } from "./create-mock-rpc-client.js";
-import { _createMockWorkerQueue } from "./create-mock-worker-queue.js";
+import type { CreateMockIrisSettings } from "./create-mock-iris-settings.js";
+import { createMemoryIrisBackend } from "./mock-memory-backend.js";
 
-export const _createMockIrisSession = (mockFn: () => any): IIrisSession => {
-  const impl = (fn: any) => {
-    const m = mockFn();
-    m.mockImplementation(fn);
-    return m;
-  };
-  const returns = (value: any) => {
-    const m = mockFn();
-    m.mockReturnValue(value);
-    return m;
-  };
-  const resolves = (value: any) => {
-    const m = mockFn();
-    m.mockResolvedValue(value);
-    return m;
-  };
-
-  return {
-    driver: "memory" as const,
-
-    hasMessage: returns(true),
-    ping: resolves(true),
-
-    messageBus: impl(() => _createMockMessageBus(mockFn)),
-    publisher: impl(() => _createMockPublisher(mockFn)),
-    workerQueue: impl(() => _createMockWorkerQueue(mockFn)),
-    stream: mockFn(),
-    rpcClient: impl(() => _createMockRpcClient(mockFn)),
-    rpcServer: mockFn(),
-  } as unknown as IIrisSession;
-};
+/**
+ * Build a mock IrisSession backed by the REAL in-memory driver. Surfaces obtained
+ * from it delegate to the live memory driver, so a published message really
+ * reaches its subscribers. The backing source is connected and set up before the
+ * session is returned; assert via real delivery (subscribe, `await publish`,
+ * check the callback fired). Every method is a spy.
+ */
+export const _createMockIrisSession = async (
+  mockFn: () => any,
+  createLogger: () => ILogger,
+  settings?: CreateMockIrisSettings,
+): Promise<IIrisSession> =>
+  (await createMemoryIrisBackend(mockFn, createLogger, settings)).makeFacadeSession();

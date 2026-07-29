@@ -10,13 +10,13 @@ import { Pylon } from "./Pylon.js";
 describe("Pylon source lifecycle", () => {
   let db: Awaited<ReturnType<typeof createMockProteusSource>>;
   let kv: Awaited<ReturnType<typeof createMockProteusSource>>;
-  let bus: ReturnType<typeof createMockIrisSource>;
+  let bus: Awaited<ReturnType<typeof createMockIrisSource>>;
   let pylon: Pylon;
 
   beforeEach(async () => {
     db = await createMockProteusSource();
     kv = await createMockProteusSource();
-    bus = createMockIrisSource();
+    bus = await createMockIrisSource();
 
     const logger = createMockLogger();
 
