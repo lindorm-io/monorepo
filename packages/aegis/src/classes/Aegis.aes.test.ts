@@ -143,7 +143,7 @@ describe("Aegis AES key selection", () => {
       const deployment = new Aegis({
         amphora,
         logger,
-        encrypt: { predicate: { purpose: "cookie" } },
+        encrypt: { condition: { purpose: "cookie" } },
       });
 
       const encoded = await deployment.aes.encrypt(PLAINTEXT);
@@ -155,7 +155,7 @@ describe("Aegis AES key selection", () => {
   describe("per-call selector", () => {
     test("selects the cookie key over a NEWER published enc key", async () => {
       const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
-        key: { predicate: { purpose: "cookie" } },
+        key: { condition: { purpose: "cookie" } },
       });
 
       expect(AesKit.parse(encoded).keyId).toBe(COOKIE_KEY.id);
@@ -164,7 +164,7 @@ describe("Aegis AES key selection", () => {
 
     test("reaches the INTERNAL, unpublished cookie key — the pylon case", async () => {
       const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
-        key: { predicate: { purpose: "cookie", publish: false } },
+        key: { condition: { purpose: "cookie", publish: false } },
       });
 
       expect(AesKit.parse(encoded).keyId).toBe(INTERNAL_COOKIE_KEY.id);
@@ -178,12 +178,12 @@ describe("Aegis AES key selection", () => {
       const deployment = new Aegis({
         amphora,
         logger,
-        encrypt: { predicate: { purpose: "token" } },
+        encrypt: { condition: { purpose: "token" } },
       });
 
       const byDeployment = await deployment.aes.encrypt(PLAINTEXT);
       const byCall = await deployment.aes.encrypt(PLAINTEXT, "cbor", {
-        key: { predicate: { purpose: "cookie" } },
+        key: { condition: { purpose: "cookie" } },
       });
 
       expect(AesKit.parse(byDeployment).keyId).toBe(TOKEN_KEY.id);
@@ -194,20 +194,20 @@ describe("Aegis AES key selection", () => {
       const deployment = new Aegis({
         amphora,
         logger,
-        encrypt: { predicate: { purpose: "cookie", publish: false } },
+        encrypt: { condition: { purpose: "cookie", publish: false } },
       });
 
       // The caller names the algorithm; `purpose` and `publish` come from the
       // deployment, so the internal cookie key is still the one selected.
       const encoded = await deployment.aes.encrypt(PLAINTEXT, "cbor", {
-        key: { predicate: { algorithm: "dir" } },
+        key: { condition: { algorithm: "dir" } },
       });
 
       expect(AesKit.parse(encoded).keyId).toBe(INTERNAL_COOKIE_KEY.id);
     });
 
     test("carries through every output mode", async () => {
-      const options = { key: { predicate: { purpose: "cookie" } } };
+      const options = { key: { condition: { purpose: "cookie" } } };
 
       const record = await aegis.aes.encrypt(PLAINTEXT, "record", options);
       const serialised = await aegis.aes.encrypt(PLAINTEXT, "serialised", options);
@@ -230,7 +230,7 @@ describe("Aegis AES key selection", () => {
 
     test("a selector that matches nothing throws, never falls back", async () => {
       const error = await aegis.aes
-        .encrypt(PLAINTEXT, "cbor", { key: { predicate: { purpose: "none" } } })
+        .encrypt(PLAINTEXT, "cbor", { key: { condition: { purpose: "none" } } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
@@ -279,7 +279,7 @@ describe("Aegis AES key selection", () => {
       const deployment = new Aegis({
         amphora,
         logger,
-        encrypt: { predicate: { purpose: "token" } },
+        encrypt: { condition: { purpose: "token" } },
       });
 
       const encoded = await deployment.aes.encrypt(PLAINTEXT, "cbor", {

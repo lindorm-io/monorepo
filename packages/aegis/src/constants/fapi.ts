@@ -8,7 +8,7 @@ import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
  *
  * ```ts
  * await aegis.mint("id_token", content, {
- *   sign: { predicate: { algorithm: { $in: FAPI_SIG_ALGS } } },
+ *   sign: { condition: { algorithm: { $in: FAPI_SIG_ALGS } } },
  * });
  * ```
  */

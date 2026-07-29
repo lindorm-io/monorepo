@@ -87,7 +87,7 @@ describe("Aegis signing policy", () => {
       const aegis = new Aegis({
         amphora,
         logger,
-        sign: { predicate: { purpose: "token" } },
+        sign: { condition: { purpose: "token" } },
       });
 
       const { token } = await aegis.mint("id_token", ID_TOKEN, {
@@ -106,7 +106,7 @@ describe("Aegis signing policy", () => {
       const aegis = new Aegis({
         amphora,
         logger,
-        sign: { predicate: { algorithm: "EdDSA" } },
+        sign: { condition: { algorithm: "EdDSA" } },
       });
 
       const deployment = await aegis.jwt.sign({ sub: "s" });
@@ -114,12 +114,12 @@ describe("Aegis signing policy", () => {
 
       const perCall = await aegis.jwt.sign(
         { sub: "s" },
-        { key: { predicate: { algorithm: "HS256" } } },
+        { key: { condition: { algorithm: "HS256" } } },
       );
       expect(JwtKit.decode(perCall.token).header.alg).toBe("HS256");
     });
 
-    test("a per-call predicate pins a key by id", async () => {
+    test("a per-call condition pins a key by id", async () => {
       amphora.add(TEST_EC_KEY_SIG);
       amphora.add(TEST_OKP_KEY_SIG);
 
@@ -127,7 +127,7 @@ describe("Aegis signing policy", () => {
 
       const { token } = await aegis.jwt.sign(
         { sub: "s" },
-        { key: { predicate: { id: TEST_OKP_KEY_SIG.id } } },
+        { key: { condition: { id: TEST_OKP_KEY_SIG.id } } },
       );
 
       expect(JwtKit.decode(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
@@ -143,7 +143,7 @@ describe("Aegis signing policy", () => {
 
       const { token } = await aegis.jwt.sign(
         { sub: "s" },
-        { key: { predicate: { algorithm: { $in: FAPI_SIG_ALGS } } } },
+        { key: { condition: { algorithm: { $in: FAPI_SIG_ALGS } } } },
       );
 
       expect(JwtKit.decode(token).header.alg).toBe("EdDSA");
@@ -154,7 +154,7 @@ describe("Aegis signing policy", () => {
       const aegis = new Aegis({ amphora, logger });
 
       const error = await aegis.jwt
-        .sign({ sub: "s" }, { key: { predicate: { purpose: "none" } } })
+        .sign({ sub: "s" }, { key: { condition: { purpose: "none" } } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
@@ -174,14 +174,14 @@ describe("Aegis signing policy", () => {
       const { token } = await minter.mint(
         "default",
         { subject: "s", expires: "1h", tokenType: "N_A" },
-        { sign: { key: { predicate: { algorithm: "HS256" } } } },
+        { sign: { key: { condition: { algorithm: "HS256" } } } },
       );
 
       // The same vault, but a verifier that only accepts asymmetric signatures.
       const verifier = new Aegis({
         amphora,
         logger,
-        verify: { predicate: { algClass: "asymmetric" } },
+        verify: { condition: { algClass: "asymmetric" } },
       });
 
       const error = await verifier.jwt.verify(token).catch((err: Error) => err);
@@ -205,7 +205,7 @@ describe("Aegis signing policy", () => {
       });
 
       const error = await aegis.jwt
-        .verify(token, undefined, { key: { predicate: { algClass: "asymmetric" } } })
+        .verify(token, undefined, { key: { condition: { algClass: "asymmetric" } } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
@@ -228,7 +228,7 @@ describe("Aegis signing policy", () => {
       const parsed = await aegis.jwt.verify(
         token,
         { sub: "s" },
-        { key: { predicate: { algClass: "asymmetric" } } },
+        { key: { condition: { algClass: "asymmetric" } } },
       );
 
       expect(parsed.payload.sub).toBe("s");

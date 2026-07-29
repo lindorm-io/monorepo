@@ -10,7 +10,7 @@ import {
   applyKeyFloor,
   DECRYPT_FLOOR,
   type IAmphora,
-  mergePredicates,
+  mergeConditions,
   SEAL_FLOOR,
   SIGN_FLOOR,
   VERIFY_FLOOR,
@@ -568,14 +568,14 @@ export class Aegis implements IAegis {
 
   // private kryptos
   //
-  // Key selection is ONE mechanism — a predicate — doing two strictly separate
+  // Key selection is ONE mechanism — a condition — doing two strictly separate
   // jobs (only one of which survives key injection):
   //
   //   FLOOR    — policy. Aegis's invariants for the operation, plus the
   //              artifact's own opinion (profile.algClass). Enforced on EVERY
   //              key that reaches the crypto layer, however it got there.
   //   SELECTOR — a vault query. "Which of MY keys": the deployment default
-  //              merged with the per-call predicate, caller's key winning. It
+  //              merged with the per-call condition, caller's key winning. It
   //              is meaningless for a key that never came from the vault, so it
   //              is not applied to an injected key or to one named by a token.
   //
@@ -597,7 +597,7 @@ export class Aegis implements IAegis {
         ...SIGN_FLOOR,
         ...(profile?.algClass ? { algClass: profile.algClass } : {}),
       },
-      selector: mergePredicates(this.signKey.predicate, options.key?.predicate),
+      selector: mergeConditions(this.signKey.condition, options.key?.condition),
       kryptos: options.key?.kryptos ?? this.signKey.kryptos,
       logger: this.logger,
       operation: "sign",
@@ -623,7 +623,7 @@ export class Aegis implements IAegis {
     return resolveKey({
       id,
       amphora: this.amphora,
-      floor: applyKeyFloor(VERIFY_FLOOR, this.verifyKey.predicate, verify?.predicate),
+      floor: applyKeyFloor(VERIFY_FLOOR, this.verifyKey.condition, verify?.condition),
       selector: { algorithm },
       kryptos: verify?.kryptos ?? this.verifyKey.kryptos,
       logger: this.logger,
@@ -635,7 +635,7 @@ export class Aegis implements IAegis {
     return resolveKey({
       amphora: this.amphora,
       floor: SEAL_FLOOR,
-      selector: mergePredicates(this.encryptKey.predicate, encrypt?.predicate),
+      selector: mergeConditions(this.encryptKey.condition, encrypt?.condition),
       kryptos: encrypt?.kryptos ?? this.encryptKey.kryptos,
       logger: this.logger,
       operation: "encrypt",
@@ -657,7 +657,7 @@ export class Aegis implements IAegis {
   ): Promise<IKryptos> {
     return resolveKey({
       amphora: this.amphora,
-      floor: applyKeyFloor(DECRYPT_FLOOR, this.decryptKey.predicate, decrypt?.predicate),
+      floor: applyKeyFloor(DECRYPT_FLOOR, this.decryptKey.condition, decrypt?.condition),
       selector: { algorithm },
       kryptos: decrypt?.kryptos ?? this.decryptKey.kryptos,
       id,

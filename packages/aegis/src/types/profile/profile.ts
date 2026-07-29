@@ -129,8 +129,8 @@ export type ProfileMintOptions = {
   /**
    * The sign-then-encrypt wrapper: its envelope options and the recipient
    * (client) encryption key (`encrypt.key`). Pin it with
-   * `{ key: { predicate: { id } } }`, target a client with
-   * `{ key: { predicate: { ownerId: client.id } } }`, or supply one outright
+   * `{ key: { condition: { id } } }`, target a client with
+   * `{ key: { condition: { ownerId: client.id } } }`, or supply one outright
    * with `{ key: { kryptos } }`. Only meaningful for an encryptable profile;
    * its presence forces encryption on.
    */

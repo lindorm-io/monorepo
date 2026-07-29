@@ -55,7 +55,7 @@ import type {
  *
  * It exists because one Aegis serves a whole deployment: a pylon encrypts a
  * COOKIE with its internal `dir` key and an id_token to the CLIENT's key, and
- * only a per-call selector can tell those two apart — `{ predicate: { purpose:
+ * only a per-call selector can tell those two apart — `{ condition: { purpose:
  * "cookie", publish: false } }` reaches the internal key that exists for
  * exactly that job.
  */

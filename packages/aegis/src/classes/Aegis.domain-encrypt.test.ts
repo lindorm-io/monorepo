@@ -178,7 +178,7 @@ describe("Aegis — domain encrypt / decrypt (§5e)", () => {
     test("threads partyProducer/partyRecipient to the wire AND the KDF on an ECDH-ES key", async () => {
       const encrypted = await aegis.encrypt(claims, {
         format: "jwe",
-        key: { predicate: { id: TEST_EC_KEY_ENC.id } },
+        key: { condition: { id: TEST_EC_KEY_ENC.id } },
         partyProducer,
         partyRecipient,
       });
@@ -202,7 +202,7 @@ describe("Aegis — domain encrypt / decrypt (§5e)", () => {
 
       const encrypted = await aegis.encrypt(claims, {
         format: "jwe",
-        key: { predicate: { id: TEST_RSA_KEY_ENC.id } },
+        key: { condition: { id: TEST_RSA_KEY_ENC.id } },
         partyProducer,
         partyRecipient,
       });

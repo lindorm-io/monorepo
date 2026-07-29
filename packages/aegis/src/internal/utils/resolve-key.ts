@@ -1,5 +1,5 @@
 import { Matcher } from "@lindorm/match";
-import { applyKeyFloor, type AmphoraPredicate, type IAmphora } from "@lindorm/amphora";
+import { applyKeyFloor, type AmphoraCondition, type IAmphora } from "@lindorm/amphora";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { AegisKeyError } from "../../errors/index.js";
@@ -20,17 +20,17 @@ export type ResolveKeyOptions = {
    * selected from the vault, named by a token, or injected outright. This is
    * what makes key injection safe rather than an escape hatch.
    */
-  floor: AmphoraPredicate;
+  floor: AmphoraCondition;
 
   /**
    * QUERY. "Which of MY vault keys" — the deployment default merged with the
-   * per-call predicate (shallow; the caller's key wins).
+   * per-call condition (shallow; the caller's key wins).
    *
    * A key that never came from the vault cannot satisfy a vault query — a
    * client secret has no `purpose: "token"` — so the selector is deliberately
    * NOT applied to an injected `kryptos`, nor to a key resolved by `id`.
    */
-  selector?: AmphoraPredicate;
+  selector?: AmphoraCondition;
 
   /** A key supplied outright by the caller. Bypasses the vault — never the floor. */
   kryptos?: IKryptos;
@@ -53,7 +53,7 @@ export type ResolveKeyOptions = {
 
 /**
  * Resolve the key for one cryptographic operation, keeping the two jobs a
- * predicate can do strictly apart (only one of them survives key injection):
+ * condition can do strictly apart (only one of them survives key injection):
  *
  *   FLOOR    — policy. Checked on the key, whatever its provenance.
  *   SELECTOR — a vault query. Checked on nothing; it only ever selects.

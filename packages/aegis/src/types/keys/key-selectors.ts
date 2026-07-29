@@ -34,28 +34,28 @@ type AegisKeyAttributes = Pick<
  * algorithm is `{ algorithm: client.idTokenSignedResponseAlg }`; an allowlist
  * is `{ algorithm: { $in: [...] } }`.
  */
-export type AegisSignPredicate = Condition<AegisKeyAttributes>;
+export type AegisSignCondition = Condition<AegisKeyAttributes>;
 
 /** Selects an encryption / decryption key. Same attributes as the sign side. */
-export type AegisEncPredicate = Condition<AegisKeyAttributes>;
+export type AegisEncCondition = Condition<AegisKeyAttributes>;
 
 /**
  * Selects the signing key.
  *
  * `kryptos` is a key supplied outright — e.g. an OIDC client secret used as the
  * `HS256` MAC key for an id_token (Core §10.1). Never a vault resident, so the
- * SELECTOR (`predicate`) does not apply to it — but the profile FLOOR still
+ * SELECTOR (`condition`) does not apply to it — but the profile FLOOR still
  * does, which is what makes injection safe rather than an escape hatch.
  *
- * `predicate` is which of the vault's keys. Meaningless for an injected `kryptos`.
+ * `condition` is which of the vault's keys. Meaningless for an injected `kryptos`.
  */
-export type AegisSignKey = AmphoraKeySelector<AegisSignPredicate>;
+export type AegisSignKey = AmphoraKeySelector<AegisSignCondition>;
 
 /**
  * Selects the encryption (recipient) key. `kryptos` is a key supplied outright
  * — e.g. a client secret used as an `A128KW` wrap key.
  */
-export type AegisEncKey = AmphoraKeySelector<AegisEncPredicate> & {
+export type AegisEncKey = AmphoraKeySelector<AegisEncCondition> & {
   /**
    * The JWE / COSE / AES content-encryption AEAD (`A256GCM`, …). This picks the
    * CIPHER, never the key — it is not a selector, which is why it sits beside
@@ -66,7 +66,7 @@ export type AegisEncKey = AmphoraKeySelector<AegisEncPredicate> & {
 
 /**
  * The read side, signatures. Selection is driven by the token's own `kid`, so a
- * `predicate` cannot be a QUERY here — it is a CHECK, applied to the resolved
+ * `condition` cannot be a QUERY here — it is a CHECK, applied to the resolved
  * key before any signature is touched. That closes the RFC 8725 §3.1 hole:
  * without it, an attacker who can name any `kid` in the vault picks the
  * verification key's class.
@@ -86,7 +86,7 @@ export type AegisEncKey = AmphoraKeySelector<AegisEncPredicate> & {
  * assertion — the usual `client_secret_jwt` shape — is verified by the injected
  * key alone.
  */
-export type AegisVerifyKey = AmphoraKeySelector<AegisSignPredicate>;
+export type AegisVerifyKey = AmphoraKeySelector<AegisSignCondition>;
 
 /**
  * The read side, ciphertext. Unlike verify this IS a full selector: `kryptos`
@@ -101,4 +101,4 @@ export type AegisVerifyKey = AmphoraKeySelector<AegisSignPredicate>;
  * something else is a caller error, not a silent fallback: ciphertext can only
  * be read by the key it was written to.
  */
-export type AegisDecryptKey = AmphoraKeySelector<AegisEncPredicate>;
+export type AegisDecryptKey = AmphoraKeySelector<AegisEncCondition>;

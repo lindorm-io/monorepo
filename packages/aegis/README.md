@@ -44,20 +44,20 @@ const aegis = new Aegis({
   dpopMaxSkew: 60, // optional, in seconds (default 60)
 
   // Deployment key policy — see "Key selection" below.
-  sign: { predicate: { purpose: "token" } },
-  encrypt: { predicate: { purpose: "token" } },
+  sign: { condition: { purpose: "token" } },
+  encrypt: { condition: { purpose: "token" } },
 });
 ```
 
 ### Key selection
 
-Key selection is one mechanism — a **predicate** — doing two strictly separate jobs.
+Key selection is one mechanism — a **condition** — doing two strictly separate jobs.
 
 - **Floor** — policy. Aegis's invariant for the operation, plus the artifact's own
   opinion (a profile's `algClass`). Enforced on **every** key that reaches the crypto
   layer: selected from the vault, named by a token's `kid`, or supplied outright.
 - **Selector** — a vault query. "Which of _my_ keys." The deployment default merged
-  with the per-call predicate (shallow; the caller's key wins). It is meaningless for
+  with the per-call condition (shallow; the caller's key wins). It is meaningless for
   a key that never came from the vault, so it is **not** applied to a supplied key.
 
 The four floors are deliberately asymmetric:
@@ -78,7 +78,7 @@ There is **no ranking and no fallback**. A key satisfies the policy or it does n
 and a miss throws — falling back to a key the policy forbids is how an unverifiable
 token gets minted.
 
-Every selector is amphora's `AmphoraKeySelector` — `{ kryptos?, predicate? }`, the one
+Every selector is amphora's `AmphoraKeySelector` — `{ kryptos?, condition? }`, the one
 key-selection vocabulary across the toolkit — narrowed to the attributes aegis permits.
 `sign`, `encrypt` and `decrypt` take the full selector; `AegisEncKey` adds `encryption`,
 which picks the cipher rather than the key. **`verify` deliberately carries no
@@ -100,14 +100,14 @@ every key.
 // registered none it is `undefined`, which is stripped — the key then resolves
 // from the deployment default, NOT from "any key".
 await aegis.mint("id_token", content, {
-  sign: { key: { predicate: { algorithm: client.idTokenSignedResponseAlg } } },
+  sign: { key: { condition: { algorithm: client.idTokenSignedResponseAlg } } },
 });
 
 // FAPI is deployment policy, not a key property — aegis publishes the list.
 import { FAPI_SIG_ALGS } from "@lindorm/aegis";
 
 await aegis.mint("id_token", content, {
-  sign: { key: { predicate: { algorithm: { $in: FAPI_SIG_ALGS } } } },
+  sign: { key: { condition: { algorithm: { $in: FAPI_SIG_ALGS } } } },
 });
 
 // A key from outside the vault: an OIDC client secret IS the HS256 MAC key
@@ -127,13 +127,13 @@ await aegis.mint("id_token", content, {
   },
 });
 
-// The read side. Selection follows the token's own `kid`, so a predicate is a
+// The read side. Selection follows the token's own `kid`, so a condition is a
 // CHECK on the resolved key, applied before the signature is touched — a token
 // must not get to choose the class of key that verifies it (RFC 8725 §3.1).
 const aegis = new Aegis({
   amphora,
   logger,
-  verify: { predicate: { algClass: "asymmetric" } },
+  verify: { condition: { algClass: "asymmetric" } },
 });
 ```
 
@@ -236,7 +236,7 @@ key.
 // The internal cookie key. `publish: false` hides a key from SELECTION, not just
 // from publication, so reaching for it is an explicit opt-in.
 const cookie = await aegis.aes.encrypt(session, {
-  key: { predicate: { purpose: "cookie", publish: false } },
+  key: { condition: { purpose: "cookie", publish: false } },
 });
 
 // The ciphertext names its own key, so the read side needs no selector — the
