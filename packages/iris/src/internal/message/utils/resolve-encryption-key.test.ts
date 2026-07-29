@@ -49,7 +49,7 @@ describe("resolveEncryptionKey", () => {
   describe("the floor", () => {
     test("the vault WOULD hand out a signing key — this is what the floor is for", async () => {
       // Not a test of iris: a test of the ground truth iris stands on. The vault
-      // answers an unfloored consumer predicate with a SIGNING key, because it is
+      // answers an unfloored consumer condition with a SIGNING key, because it is
       // the newest match. Anything that queries amphora without pinning `use`
       // hands that key to its crypto layer.
       await expect(
@@ -63,7 +63,7 @@ describe("resolveEncryptionKey", () => {
       // returns it and hands it straight to an AesKit.
       const kryptos = await resolveEncryptionKey({
         amphora,
-        key: { predicate: { purpose: "message" } },
+        key: { condition: { purpose: "message" } },
       });
 
       expect(kryptos.id).toBe(TEST_KEY_ENC_MESSAGE.id);
@@ -75,7 +75,7 @@ describe("resolveEncryptionKey", () => {
       // the vault offers it first — `hasPrivateKey` is what refuses it.
       const kryptos = await resolveEncryptionKey({
         amphora,
-        key: { predicate: { purpose: "recipient", publish: true } },
+        key: { condition: { purpose: "recipient", publish: true } },
       });
 
       expect(kryptos.id).toBe(TEST_KEY_ENC_PUBLISHED.id);
@@ -100,15 +100,15 @@ describe("resolveEncryptionKey", () => {
       expect(error.code).toBe("encryption_key_policy_violation");
     });
 
-    test("a predicate carrying a floor key cannot override the floor", async () => {
-      // #8: `key.predicate` is duck-typed, so a config/JSON one can carry `use`.
+    test("a condition carrying a floor key cannot override the floor", async () => {
+      // #8: `key.condition` is duck-typed, so a config/JSON one can carry `use`.
       // The floor (`use: "enc"`) is applied LAST and wins the merge, so the
       // smuggled `use: "sig"` is overridden — the enc message key is selected,
       // never the newer sig message key.
       const kryptos = await resolveEncryptionKey({
         amphora,
         key: {
-          predicate: { purpose: "message", use: "sig" },
+          condition: { purpose: "message", use: "sig" },
         } as unknown as ResolveEncryptionKeyOptions["key"],
       });
 
@@ -121,7 +121,7 @@ describe("resolveEncryptionKey", () => {
       // the vault. The floor is the only thing between that and the crypto layer.
       const error = await rejection({
         amphora,
-        key: { predicate: { purpose: "message" } },
+        key: { condition: { purpose: "message" } },
         id: TEST_KEY_SIG_MESSAGE.id,
       });
 
@@ -132,14 +132,14 @@ describe("resolveEncryptionKey", () => {
 
   describe("the selector", () => {
     test("should select by purpose, not by recency", async () => {
-      // The `audit` KEK is the newer of the two. A purpose-scoped predicate must
+      // The `audit` KEK is the newer of the two. A purpose-scoped condition must
       // still get the key it asked for.
       await expect(
-        resolveEncryptionKey({ amphora, key: { predicate: { purpose: "message" } } }),
+        resolveEncryptionKey({ amphora, key: { condition: { purpose: "message" } } }),
       ).resolves.toMatchObject({ id: TEST_KEY_ENC_MESSAGE.id });
 
       await expect(
-        resolveEncryptionKey({ amphora, key: { predicate: { purpose: "audit" } } }),
+        resolveEncryptionKey({ amphora, key: { condition: { purpose: "audit" } } }),
       ).resolves.toMatchObject({ id: TEST_KEY_ENC_AUDIT.id });
     });
 
@@ -147,7 +147,7 @@ describe("resolveEncryptionKey", () => {
       await expect(
         resolveEncryptionKey({
           amphora,
-          key: { predicate: { id: TEST_KEY_ENC_AUDIT.id } },
+          key: { condition: { id: TEST_KEY_ENC_AUDIT.id } },
         }),
       ).resolves.toMatchObject({ id: TEST_KEY_ENC_AUDIT.id });
     });
@@ -157,7 +157,7 @@ describe("resolveEncryptionKey", () => {
       // is invisible until a caller asks for it by name.
       const error = await rejection({
         amphora,
-        key: { predicate: { purpose: "recipient" } },
+        key: { condition: { purpose: "recipient" } },
       });
 
       expect(error).toBeInstanceOf(IrisEncryptionError);
@@ -168,7 +168,7 @@ describe("resolveEncryptionKey", () => {
       await expect(
         resolveEncryptionKey({
           amphora,
-          key: { predicate: { purpose: "recipient", publish: true } },
+          key: { condition: { purpose: "recipient", publish: true } },
         }),
       ).resolves.toMatchObject({ id: TEST_KEY_ENC_PUBLISHED.id });
     });
@@ -176,7 +176,7 @@ describe("resolveEncryptionKey", () => {
     test("should throw when no key satisfies the policy", async () => {
       const error = await rejection({
         amphora,
-        key: { predicate: { purpose: "nonexistent" } },
+        key: { condition: { purpose: "nonexistent" } },
       });
 
       expect(error).toBeInstanceOf(IrisEncryptionError);
@@ -199,11 +199,11 @@ describe("resolveEncryptionKey", () => {
       ).resolves.toBe(TEST_KEY_ENV_KEK);
     });
 
-    test("should win over a predicate when both survive the merge", async () => {
+    test("should win over a condition when both survive the merge", async () => {
       await expect(
         resolveEncryptionKey({
           amphora,
-          key: { kryptos: TEST_KEY_ENV_KEK, predicate: { purpose: "message" } },
+          key: { kryptos: TEST_KEY_ENV_KEK, condition: { purpose: "message" } },
         }),
       ).resolves.toBe(TEST_KEY_ENV_KEK);
     });
@@ -308,7 +308,7 @@ describe("resolveEncryptionKey", () => {
       await expect(
         resolveEncryptionKey({
           amphora: rotatedVault,
-          key: { predicate: { purpose: rotated.purpose ?? undefined } },
+          key: { condition: { purpose: rotated.purpose ?? undefined } },
           id: rotated.id,
         }),
       ).resolves.toMatchObject({ id: rotated.id });
@@ -333,7 +333,7 @@ describe("resolveEncryptionKey", () => {
 
       const error = await rejection({
         amphora: pendingVault,
-        key: { predicate: { purpose: pending.purpose ?? undefined } },
+        key: { condition: { purpose: pending.purpose ?? undefined } },
         id: pending.id,
       });
 
@@ -346,7 +346,7 @@ describe("resolveEncryptionKey", () => {
   describe("a descriptor that names no key", () => {
     test.each([
       { name: "nothing at all", key: {} },
-      { name: "an empty predicate", key: { predicate: {} } },
+      { name: "an empty condition", key: { condition: {} } },
     ])("should refuse an unscoped lookup: $name", async ({ key }) => {
       const error = await rejection({ amphora, key });
 

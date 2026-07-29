@@ -4,7 +4,7 @@ import type { IrisEncryptionKey } from "../types/encryption.js";
 /**
  * Encrypts the message payload on the wire.
  *
- * The descriptor must NAME the key — `{ kryptos }` or `{ predicate }` — either
+ * The descriptor must NAME the key — `{ kryptos }` or `{ condition }` — either
  * here or as the `encryption` default on the source. A message that names no key
  * is refused when the source loads.
  *

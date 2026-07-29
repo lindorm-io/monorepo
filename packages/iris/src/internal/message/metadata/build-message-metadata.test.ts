@@ -32,7 +32,7 @@ const stabilize = (metadata: any) => ({
   })),
   topic: metadata.topic != null ? { callback: "[function]" } : null,
   encrypted:
-    metadata.encrypted != null ? { predicate: metadata.encrypted.predicate } : null,
+    metadata.encrypted != null ? { condition: metadata.encrypted.condition } : null,
 });
 
 describe("buildMessageMetadata", () => {
@@ -235,7 +235,7 @@ describe("buildMessageMetadata", () => {
     const childHook = () => {};
 
     @AbstractMessage()
-    @Encrypted({ predicate: { purpose: "message" } })
+    @Encrypted({ condition: { purpose: "message" } })
     @OnCreate(parentHook)
     class BaseMsg {
       @IdentifierField()
@@ -473,7 +473,7 @@ describe("buildMessageMetadata", () => {
 
   describe("singleton inheritance", () => {
     @AbstractMessage()
-    @Encrypted({ predicate: { encryption: "A256GCM" } })
+    @Encrypted({ condition: { encryption: "A256GCM" } })
     class EncryptedBase {
       @Field("string")
       data!: string;

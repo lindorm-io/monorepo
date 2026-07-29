@@ -28,7 +28,7 @@ export type ResolveEncryptionKeyOptions = {
 
 /**
  * Resolve the key for one message-encryption operation, keeping the two jobs a
- * predicate can do strictly apart (only one of them survives key injection):
+ * condition can do strictly apart (only one of them survives key injection):
  *
  *   FLOOR    — policy. Checked on the key, whatever its provenance.
  *   SELECTOR — a vault query. Checked on nothing; it only ever selects.
@@ -56,17 +56,17 @@ export const resolveEncryptionKey = async (
       code: "missing_encryption_key",
       title: "Missing Encryption Key",
       details:
-        "A message marked with @Encrypted must name its key — either a kryptos or a predicate, on the decorator or as the source-level encryption default. An unscoped lookup would select whatever key happens to be newest.",
+        "A message marked with @Encrypted must name its key — either a kryptos or a condition, on the decorator or as the source-level encryption default. An unscoped lookup would select whatever key happens to be newest.",
     });
   }
 
   // The selector applies to the vault query alone. An injected key and a key
   // named by an encrypted payload both come from outside it. The floor is
-  // applied LAST so it always wins the merge: `key.predicate` is duck-typed and
+  // applied LAST so it always wins the merge: `key.condition` is duck-typed and
   // could carry a floor key, which must never override the policy. Per-layer
-  // `undefined` stripping keeps a `{ x: undefined }` predicate from erasing the
+  // `undefined` stripping keeps a `{ x: undefined }` condition from erasing the
   // `ENCRYPTION_DEFAULT` (`publish: false`).
-  const query = applyKeyFloor(ENVELOPE_FLOOR, ENCRYPTION_DEFAULT, key.predicate);
+  const query = applyKeyFloor(ENVELOPE_FLOOR, ENCRYPTION_DEFAULT, key.condition);
 
   const kryptos = id
     ? // An injected key is typically an env KEK that was never added to the
@@ -89,7 +89,7 @@ export const resolveEncryptionKey = async (
           code: "encryption_key_not_found",
           title: "Encryption Key Not Found",
           details:
-            "No key in the Amphora satisfies the encryption policy for this message. Add a matching encryption key, or widen the @Encrypted predicate.",
+            "No key in the Amphora satisfies the encryption policy for this message. Add a matching encryption key, or widen the @Encrypted condition.",
           data: { policy: query },
           debug: { error: error.message },
         });

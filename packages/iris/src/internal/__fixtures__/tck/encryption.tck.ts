@@ -49,7 +49,7 @@ export const encryptionSuite = (
       // and a newer `purpose: "audit"` trap. A round-trip alone cannot tell them
       // apart — the wrong KEK decrypts its own ciphertext just fine — so this
       // asserts on the KEK actually selected to seal. If selection ever stops
-      // scoping by the message predicate, the newer trap wins and this goes RED.
+      // scoping by the message condition, the newer trap wins and this goes RED.
       const handle = getHandle();
       const bus = handle.messageBus(TckEncryptedMessage);
       const received: Array<any> = [];

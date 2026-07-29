@@ -7,7 +7,7 @@ exports[`buildMessageMetadata > abstract + concrete hierarchy > should inherit f
   "deadLetter": false,
   "delay": null,
   "encrypted": {
-    "predicate": {
+    "condition": {
       "purpose": "message",
     },
   },

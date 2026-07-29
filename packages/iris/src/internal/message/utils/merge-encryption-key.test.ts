@@ -4,27 +4,27 @@ import { mergeEncryptionKey } from "./merge-encryption-key.js";
 
 describe("mergeEncryptionKey", () => {
   test("falls back to the source default when the message names no key", () => {
-    expect(mergeEncryptionKey({}, { predicate: { purpose: "message" } })).toEqual({
-      predicate: { purpose: "message" },
+    expect(mergeEncryptionKey({}, { condition: { purpose: "message" } })).toEqual({
+      condition: { purpose: "message" },
     });
   });
 
-  test("an EMPTY predicate does not count as naming a key — the default still applies", () => {
+  test("an EMPTY condition does not count as naming a key — the default still applies", () => {
     expect(
-      mergeEncryptionKey({ predicate: {} }, { predicate: { purpose: "message" } }),
-    ).toEqual({ predicate: { purpose: "message" } });
+      mergeEncryptionKey({ condition: {} }, { condition: { purpose: "message" } }),
+    ).toEqual({ condition: { purpose: "message" } });
   });
 
   // The security property: the descriptor is resolved AS A WHOLE. A message that
-  // names a PREDICATE must not have a source-level KRYPTOS leak past it — that
+  // names a CONDITION must not have a source-level KRYPTOS leak past it — that
   // would seal the message with a key it never named.
-  test("a message predicate wins WHOLE — a source kryptos does not leak past it", () => {
+  test("a message condition wins WHOLE — a source kryptos does not leak past it", () => {
     const merged = mergeEncryptionKey(
-      { predicate: { purpose: "audit" } },
+      { condition: { purpose: "audit" } },
       { kryptos: TEST_KEY_ENV_KEK },
     );
 
-    expect(merged.predicate).toEqual({ purpose: "audit" });
+    expect(merged.condition).toEqual({ purpose: "audit" });
     expect(merged.kryptos).toBeUndefined();
   });
 

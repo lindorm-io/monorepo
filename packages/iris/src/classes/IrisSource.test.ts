@@ -53,7 +53,7 @@ class EncryptedTestMessage {
 }
 
 /** Names its own key — loads. */
-@Encrypted({ predicate: { purpose: "message" } })
+@Encrypted({ condition: { purpose: "message" } })
 @Message({ name: "KeyedEncryptedMessage" })
 class KeyedEncryptedMessage {
   @IdentifierField()

@@ -9,7 +9,7 @@ import type { MessageMetadata } from "../types/metadata.js";
 import { decompress } from "./compress.js";
 import { prepareOutbound } from "./prepare-outbound.js";
 
-const encrypted = { predicate: { purpose: "message" } };
+const encrypted = { condition: { purpose: "message" } };
 
 const baseMetadata: MessageMetadata = {
   target: class TestMsg {} as any,

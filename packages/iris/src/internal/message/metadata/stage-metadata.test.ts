@@ -175,7 +175,7 @@ describe("stage-metadata", () => {
 
     it("should set encrypted", () => {
       stageEncrypted(metadata, {
-        predicate: { algorithm: "dir", purpose: "message" },
+        condition: { algorithm: "dir", purpose: "message" },
       });
 
       expect(metadata.encrypted).toMatchSnapshot();

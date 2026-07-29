@@ -6,8 +6,8 @@ import { hasEncryptionKey } from "./has-encryption-key.js";
  * `encryption` default.
  *
  * The descriptor is resolved AS A WHOLE, not key by key: `kryptos` and
- * `predicate` are two ways of naming ONE key, not independent knobs. A key-wise
- * merge would let a source-level `kryptos` outrank a decorator's `predicate` —
+ * `condition` are two ways of naming ONE key, not independent knobs. A key-wise
+ * merge would let a source-level `kryptos` outrank a decorator's `condition` —
  * the message would be sealed with a key it never named, which is the exact
  * hazard this descriptor exists to close. So if the message NAMES a key it wins
  * entirely; otherwise the source default applies entirely.

@@ -40,7 +40,7 @@ describe("encryptPayload / decryptPayload", () => {
 
   describe("a key selected from the vault", () => {
     test("should round-trip a payload", async () => {
-      const encrypted = { predicate: { purpose: "message" } };
+      const encrypted = { condition: { purpose: "message" } };
 
       const token = await encryptPayload(data, context, encrypted);
 
@@ -50,7 +50,7 @@ describe("encryptPayload / decryptPayload", () => {
 
     test("should encrypt with the encryption key, never the newer signing key", async () => {
       const token = await encryptPayload(data, context, {
-        predicate: { purpose: "message" },
+        condition: { purpose: "message" },
       });
 
       expect(parseAes(token).keyId).toBe(TEST_KEY_ENC_MESSAGE.id);
@@ -58,7 +58,7 @@ describe("encryptPayload / decryptPayload", () => {
 
     test("should select the purpose it was given", async () => {
       const token = await encryptPayload(data, context, {
-        predicate: { purpose: "audit" },
+        condition: { purpose: "audit" },
       });
 
       expect(parseAes(token).keyId).toBe(TEST_KEY_ENC_AUDIT.id);
@@ -97,11 +97,11 @@ describe("encryptPayload / decryptPayload", () => {
       await expect(decryptPayload(token, context, {})).resolves.toEqual(data);
     });
 
-    test("should lose to the decorator's own predicate", async () => {
-      context = { amphora, key: { predicate: { purpose: "audit" } } };
+    test("should lose to the decorator's own condition", async () => {
+      context = { amphora, key: { condition: { purpose: "audit" } } };
 
       const token = await encryptPayload(data, context, {
-        predicate: { purpose: "message" },
+        condition: { purpose: "message" },
       });
 
       expect(parseAes(token).keyId).toBe(TEST_KEY_ENC_MESSAGE.id);
@@ -118,17 +118,17 @@ describe("encryptPayload / decryptPayload", () => {
 
     test("should throw when no amphora was configured", async () => {
       await expect(
-        encryptPayload(data, undefined, { predicate: { purpose: "message" } }),
+        encryptPayload(data, undefined, { condition: { purpose: "message" } }),
       ).rejects.toThrow(IrisNotSupportedError);
 
       await expect(
-        decryptPayload("token", undefined, { predicate: { purpose: "message" } }),
+        decryptPayload("token", undefined, { condition: { purpose: "message" } }),
       ).rejects.toThrow(IrisNotSupportedError);
     });
 
     test("should throw when the payload is not an aes token", async () => {
       await expect(
-        decryptPayload("not-a-token", context, { predicate: { purpose: "message" } }),
+        decryptPayload("not-a-token", context, { condition: { purpose: "message" } }),
       ).rejects.toThrow(IrisSerializationError);
     });
 
@@ -137,7 +137,7 @@ describe("encryptPayload / decryptPayload", () => {
 
       // A consumer that holds the vault but not the env KEK.
       const error = await decryptPayload(token, context, {
-        predicate: { purpose: "message" },
+        condition: { purpose: "message" },
       }).catch((e) => e);
 
       expect(error).toBeInstanceOf(IrisEncryptionError);

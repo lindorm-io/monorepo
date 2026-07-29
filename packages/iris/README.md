@@ -430,7 +430,7 @@ class TemporaryOffer {
 
 Encrypts the payload via `@lindorm/amphora` before publishing and decrypts on consume. Requires `amphora` on `IrisSource`.
 
-The descriptor must NAME the key — a `kryptos` outright, or a `predicate` that selects one from the vault. Either may come from the source-level `encryption` default instead. A message that names no key is refused when the source loads: an unscoped lookup selects whatever key happens to be newest, which is not a policy.
+The descriptor must NAME the key — a `kryptos` outright, or a `condition` that selects one from the vault. Either may come from the source-level `encryption` default instead. A message that names no key is refused when the source loads: an unscoped lookup selects whatever key happens to be newest, which is not a policy.
 
 ```typescript
 const KEK = KryptosKit.env.import(process.env.KEK!);
@@ -443,7 +443,7 @@ class SensitivePayload {
 }
 
 // Or describe one, and let the vault select it.
-@Encrypted({ predicate: { purpose: "pii" } })
+@Encrypted({ condition: { purpose: "pii" } })
 @Message()
 class MedicalRecord {
   @Field("object") data!: Record<string, unknown>;
@@ -457,16 +457,16 @@ const source = new IrisSource({
   driver: "memory",
   logger,
   amphora,
-  encryption: { predicate: { purpose: "message" } },
+  encryption: { condition: { purpose: "message" } },
 });
 ```
 
-**Argument:** `IrisEncryptionKey` — `{ kryptos?, predicate? }`.
+**Argument:** `IrisEncryptionKey` — `{ kryptos?, condition? }`.
 
-- `kryptos` — an `IKryptos` supplied outright. It never came from the vault, so a `predicate` is meaningless for it.
-- `predicate` — selects a vault key by `id`, `algorithm`, `curve`, `encryption`, `internal`, `issuer`, `ownerId`, `publish`, `purpose` or `type`, plus the standard `$eq`, `$in`, `$neq` operators.
+- `kryptos` — an `IKryptos` supplied outright. It never came from the vault, so a `condition` is meaningless for it.
+- `condition` — selects a vault key by `id`, `algorithm`, `curve`, `encryption`, `internal`, `issuer`, `ownerId`, `publish`, `purpose` or `type`, plus the standard `$eq`, `$in`, `$neq` operators.
 
-**The floor.** Iris pins `use: "enc"` and `hasPrivateKey: true` on every key that reaches the crypto layer — selected, injected, or named by an inbound payload's `kid`. Neither is expressible in the predicate, so neither can be widened. A signing key or a public-only key is refused with an `IrisEncryptionError`, not quietly used. `publish: false` is a _default_ rather than a floor (a message KEK never leaves the service), so a predicate that says otherwise wins.
+**The floor.** Iris pins `use: "enc"` and `hasPrivateKey: true` on every key that reaches the crypto layer — selected, injected, or named by an inbound payload's `kid`. Neither is expressible in the condition, so neither can be widened. A signing key or a public-only key is refused with an `IrisEncryptionError`, not quietly used. `publish: false` is a _default_ rather than a floor (a message KEK never leaves the service), so a condition that says otherwise wins.
 
 **The clock is on the floor too, and it is not symmetric.** Encrypting demands `isActive: true` — the key must be usable **now**, which is what stops an injected KEK from sealing a message after it has expired. Decrypting demands only `isPending: false`: an **expired** key must still open what it sealed while it was valid, or a rotation would strand every message already on the wire. A key whose `notBefore` has not passed cannot have sealed anything, and the payload chooses the `kid`, so it is refused on both sides.
 

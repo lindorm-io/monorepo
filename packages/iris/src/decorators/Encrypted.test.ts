@@ -11,8 +11,8 @@ describe("Encrypted", () => {
     expect(meta.encrypted).toMatchSnapshot();
   });
 
-  it("should stage a predicate", () => {
-    @Encrypted({ predicate: { purpose: "pii" } })
+  it("should stage a condition", () => {
+    @Encrypted({ condition: { purpose: "pii" } })
     class TestMsg {}
 
     const meta = (TestMsg as any)[Symbol.metadata];

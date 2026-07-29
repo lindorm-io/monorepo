@@ -4,7 +4,7 @@ import { TEST_KEY_ENC_AUDIT, TEST_KEY_ENC_MESSAGE } from "../keys.js";
 
 /**
  * The KEK the encryption suite expects every driver to seal with: the
- * `purpose: "message"` key the `@Encrypted({ predicate: { purpose: "message" } })`
+ * `purpose: "message"` key the `@Encrypted({ condition: { purpose: "message" } })`
  * message names.
  */
 export const TCK_INTENDED_KEK = TEST_KEY_ENC_MESSAGE;
@@ -14,7 +14,7 @@ export const TCK_INTENDED_KEK = TEST_KEY_ENC_MESSAGE;
  * encryption key with a private half (so it can both seal AND unseal, exactly
  * like the intended one), it is NEWER than the intended KEK, and it differs only
  * by `purpose` (`audit`, not `message`). That is what makes it dangerous: if key
- * selection ever stops scoping by the message's predicate, this newer key wins,
+ * selection ever stops scoping by the message's condition, this newer key wins,
  * the round-trip STILL goes green (a wrong-but-valid KEK seals and opens the
  * payload just fine), and only an assertion on the SEALED `kid` catches it. The
  * encryption suite makes that assertion.

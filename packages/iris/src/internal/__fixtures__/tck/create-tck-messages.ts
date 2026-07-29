@@ -172,7 +172,7 @@ export const createTckMessages = (hookLog: Array<string>) => {
   // PLAIN. The undeserializable (unencrypted-but-expected-encrypted) payload is a
   // poison pill: retrying is futile, so it must go straight to the dead letter —
   // never loop forever, never silently drop (H5).
-  @Encrypted({ predicate: { purpose: "message" } })
+  @Encrypted({ condition: { purpose: "message" } })
   @DeadLetter()
   @Message({ name: "TckStreamPoisonInput" })
   class TckStreamPoisonInput implements IMessage {
@@ -186,7 +186,7 @@ export const createTckMessages = (hookLog: Array<string>) => {
     @Field("integer") score!: number;
   }
 
-  @Encrypted({ predicate: { purpose: "message" } })
+  @Encrypted({ condition: { purpose: "message" } })
   @Message({ name: "TckEncryptedMessage" })
   class TckEncryptedMessage implements IMessage {
     @IdentifierField()

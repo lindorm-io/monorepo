@@ -33,7 +33,7 @@ type IrisEncryptionAttributes = Pick<
  * dedicated message KEK is `{ purpose: "message" }`; an allowlist is
  * `{ algorithm: { $in: [...] } }`.
  */
-export type IrisEncryptionPredicate = Condition<IrisEncryptionAttributes>;
+export type IrisEncryptionCondition = Condition<IrisEncryptionAttributes>;
 
 /**
  * How a message NAMES its encryption key: a key supplied outright, or a query
@@ -44,8 +44,8 @@ export type IrisEncryptionPredicate = Condition<IrisEncryptionAttributes>;
  * - `kryptos` — a key supplied outright. Typically an env-imported KEK
  *   (`KryptosKit.env.import(process.env.KEK!)`), which is available at module
  *   load, so it can be handed to a class decorator. It never came from the
- *   vault, so a `predicate` is meaningless for it — but the FLOOR still applies,
+ *   vault, so a `condition` is meaningless for it — but the FLOOR still applies,
  *   which is what makes injection safe rather than an escape hatch.
- * - `predicate` — which of the vault's keys.
+ * - `condition` — which of the vault's keys.
  */
-export type IrisEncryptionKey = AmphoraKeySelector<IrisEncryptionPredicate>;
+export type IrisEncryptionKey = AmphoraKeySelector<IrisEncryptionCondition>;

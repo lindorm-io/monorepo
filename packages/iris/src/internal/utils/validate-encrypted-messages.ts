@@ -44,7 +44,7 @@ export const validateEncryptedMessages = (
           code: "missing_encryption_key",
           title: "Missing Encryption Key",
           details:
-            "A registered message is marked with @Encrypted but names no key. Give the decorator a kryptos or a predicate — @Encrypted({ kryptos: KEK }) or @Encrypted({ predicate: { purpose: 'message' } }) — or set the encryption default on IrisSource. Without one the lookup is unscoped, and selects whatever key is newest.",
+            "A registered message is marked with @Encrypted but names no key. Give the decorator a kryptos or a condition — @Encrypted({ kryptos: KEK }) or @Encrypted({ condition: { purpose: 'message' } }) — or set the encryption default on IrisSource. Without one the lookup is unscoped, and selects whatever key is newest.",
           data: { message: metadata.message.name },
         },
       );

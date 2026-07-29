@@ -1,8 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Encrypted > should stage a predicate 1`] = `
+exports[`Encrypted > should stage a condition 1`] = `
 {
-  "predicate": {
+  "condition": {
     "purpose": "pii",
   },
 }

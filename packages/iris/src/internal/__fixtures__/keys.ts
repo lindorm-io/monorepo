@@ -30,7 +30,7 @@ export const TEST_KEY_ENC_AUDIT = KryptosKit.generate.enc.oct({
 
 /**
  * THE TRAP. A SIGNING key that is newer than every encryption key and answers
- * to the same consumer predicate. Before the floor, `find({ purpose: "message" })`
+ * to the same consumer condition. Before the floor, `find({ purpose: "message" })`
  * handed exactly this key to an `AesKit`.
  */
 export const TEST_KEY_SIG_MESSAGE = KryptosKit.generate.sig.oct({
