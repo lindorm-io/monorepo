@@ -18,6 +18,12 @@ export const applyAutoIncrement = (
     const current = store.incrementCounters.get(counterKey) ?? 0;
     const next = current + 1;
     store.incrementCounters.set(counterKey, next);
-    row[gen.key] = next;
+
+    // Mint the value in the PK column's DECLARED type: a `bigint` column must get
+    // a JS bigint. Storing a plain number would mismatch reads (which hydrate to
+    // bigint) and the strict-=== FK integrity check, so `findOne({ id: 2n })` and
+    // every cross-table bigint FK would falsely miss.
+    const field = metadata.fields?.find((f) => f.key === gen.key);
+    row[gen.key] = field?.type === "bigint" ? BigInt(next) : next;
   }
 };

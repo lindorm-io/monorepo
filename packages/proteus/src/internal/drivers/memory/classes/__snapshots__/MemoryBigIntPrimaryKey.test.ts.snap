@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`bigint auto-increment > mints a JS bigint (not a number) for a @Field('bigint') increment PK 1`] = `
+BigIntPkParent {
+  "children": [],
+  "id": 1n,
+  "name": "first",
+}
+`;
+
+exports[`bigint read paths > findOne matches a stored row by its bigint id (strict === on both sides) 1`] = `
+BigIntPkParent {
+  "children": undefined,
+  "id": 1n,
+  "name": "findable",
+}
+`;

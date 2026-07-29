@@ -1,3 +1,4 @@
+import { isBigInt, isNumber } from "@lindorm/is";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type { MemoryStore } from "../types/memory-store.js";
 import { applyAutoIncrement } from "./memory-auto-increment.js";
@@ -163,6 +164,41 @@ describe("applyAutoIncrement", () => {
       applyAutoIncrement(row, metadata, () => store);
 
       expect(row).toMatchSnapshot();
+    });
+  });
+
+  describe("bigint primary key column", () => {
+    const withField = (type: string): EntityMetadata =>
+      ({
+        entity: { name: "BigEntity" },
+        generated: [makeGenerated("increment", "id")],
+        fields: [{ key: "id", type }],
+      }) as unknown as EntityMetadata;
+
+    test("mints a JS bigint when the generated column type is bigint", () => {
+      const store = makeStore();
+      const row: Record<string, unknown> = {};
+
+      applyAutoIncrement(row, withField("bigint"), () => store);
+      applyAutoIncrement(
+        (row.next = {}) as Record<string, unknown>,
+        withField("bigint"),
+        () => store,
+      );
+
+      expect(row.id).toBe(1n);
+      expect(isBigInt(row.id)).toBe(true);
+      expect((row.next as any).id).toBe(2n);
+    });
+
+    test("still mints a number for a non-bigint (integer) column", () => {
+      const store = makeStore();
+      const row: Record<string, unknown> = {};
+
+      applyAutoIncrement(row, withField("integer"), () => store);
+
+      expect(row.id).toBe(1);
+      expect(isNumber(row.id)).toBe(true);
     });
   });
 

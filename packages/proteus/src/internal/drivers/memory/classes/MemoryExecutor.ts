@@ -1,4 +1,5 @@
 import type { IAmphora } from "@lindorm/amphora";
+import { isBigInt } from "@lindorm/is";
 import type { DeepPartial, Dict, Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
@@ -45,7 +46,17 @@ import {
 const serializePk = (
   entity: Record<string, unknown>,
   primaryKeys: Array<string>,
-): string => JSON.stringify(primaryKeys.map((k) => entity[k]));
+): string =>
+  // `JSON.stringify` throws on a BigInt, so a bigint PK (or FK-backed lookup) must
+  // be tagged to a string first — otherwise every update/save/destroy on a
+  // bigint-PK entity crashes. The `n` tag keeps a bigint key distinct from the
+  // equivalent string/number, and non-bigint values serialize exactly as before.
+  JSON.stringify(
+    primaryKeys.map((k) => {
+      const value = entity[k];
+      return isBigInt(value) ? `${value}n` : value;
+    }),
+  );
 
 const dehydrateToRow = (
   entity: IEntity,
