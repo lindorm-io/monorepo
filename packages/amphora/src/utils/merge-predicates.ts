@@ -6,7 +6,7 @@ import type { AmphoraPredicate } from "../types/index.js";
  * `undefined` values STRIPPED first. Stripping per-layer is load-bearing: a
  * later layer's `{ x: undefined }` must not erase an earlier layer's real `x`
  * (which is how a per-call undefined silently deletes a deployment allowlist),
- * and an `undefined` value must not survive to become match-all in `Predicated`.
+ * and an `undefined` value must not survive to become match-all in `Matcher`.
  */
 export const mergePredicates = (
   ...layers: Array<AmphoraPredicate | null | undefined>

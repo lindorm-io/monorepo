@@ -1,3 +1,4 @@
+import type { Condition } from "@lindorm/match";
 import type { ConduitLookup } from "@lindorm/conduit";
 import type {
   IKryptos,
@@ -6,7 +7,7 @@ import type {
   LindormJwk,
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { Environment, OpenIdConfiguration, Predicate } from "@lindorm/types";
+import type { Environment, OpenIdConfiguration } from "@lindorm/types";
 
 /** The service's OWN identity — minimal (it IS the issuer; it never discovers itself). */
 export type AmphoraInternalConfig = {
@@ -96,7 +97,7 @@ export type AmphoraSettings = {
   refreshInterval?: number;
 };
 
-export type AmphoraPredicate = Predicate<AmphoraQuery>;
+export type AmphoraPredicate = Condition<AmphoraQuery>;
 
 /**
  * How a consumer NAMES the key it wants: an explicit key, or a query for one.

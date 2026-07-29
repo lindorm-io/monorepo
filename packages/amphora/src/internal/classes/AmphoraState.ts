@@ -1,8 +1,8 @@
+import { Matcher } from "@lindorm/match";
 import type { Conduit } from "@lindorm/conduit";
 import { type IKryptos, KryptosKit, type LindormJwk } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Environment } from "@lindorm/types";
-import { Predicated } from "@lindorm/utils";
 import { AmphoraError } from "../../errors/index.js";
 import type {
   AmphoraExternalConfig,
@@ -81,7 +81,7 @@ export class AmphoraState {
   filteredKeys(predicate: AmphoraPredicate): Array<IKryptos> {
     const active = this.vault.filter((i) => i.isActive);
 
-    const matched = Predicated.filter<IKryptos>(active, predicate);
+    const matched = Matcher.filter<IKryptos>(active, predicate);
 
     const gated =
       "publish" in predicate ? matched : matched.filter((i) => !i.internal || i.publish);
@@ -370,7 +370,7 @@ export class AmphoraState {
 
     this.logger.silly("Refreshing JWKS");
 
-    this._jwks = Predicated.filter(this.vault, {
+    this._jwks = Matcher.filter(this.vault, {
       hasPublicKey: true,
       publish: true,
       isExpired: false,
