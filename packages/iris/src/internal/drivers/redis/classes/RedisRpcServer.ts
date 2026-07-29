@@ -13,7 +13,7 @@ import { xaddToStream } from "../utils/xadd-to-stream.js";
 import { createConsumerLoop } from "../utils/create-consumer-loop.js";
 import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
 
-export type RedisRpcServerOptions<Req extends IMessage, Res extends IMessage> = {
+export type RedisRpcServerSettings<Req extends IMessage, Res extends IMessage> = {
   state: RedisSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
@@ -29,7 +29,7 @@ export class RedisRpcServer<
   private readonly state: RedisSharedState;
   private readonly ownedConsumerTags: Map<string, string> = new Map();
 
-  constructor(options: RedisRpcServerOptions<Req, Res>) {
+  constructor(options: RedisRpcServerSettings<Req, Res>) {
     super(options, "RedisRpcServer");
     this.state = options.state;
   }

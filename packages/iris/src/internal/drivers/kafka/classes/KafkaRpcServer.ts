@@ -13,7 +13,7 @@ import { resolveGroupId } from "../utils/resolve-group-id.js";
 import { getOrCreatePooledConsumer } from "../utils/create-kafka-consumer.js";
 import { releasePooledConsumer } from "../utils/stop-kafka-consumer.js";
 
-export type KafkaRpcServerOptions<Req extends IMessage, Res extends IMessage> = {
+export type KafkaRpcServerSettings<Req extends IMessage, Res extends IMessage> = {
   state: KafkaSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
@@ -35,7 +35,7 @@ export class KafkaRpcServer<
   private readonly state: KafkaSharedState;
   private readonly ownedConsumers: Map<string, OwnedRpcConsumer> = new Map();
 
-  constructor(options: KafkaRpcServerOptions<Req, Res>) {
+  constructor(options: KafkaRpcServerSettings<Req, Res>) {
     super(options, "KafkaRpcServer");
     this.state = options.state;
   }

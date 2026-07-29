@@ -3,7 +3,7 @@ import type { IMessage } from "../../../../interfaces/index.js";
 import type { ConsumeEnvelope, PublishOptions } from "../../../../types/index.js";
 import {
   DriverWorkerQueueBase,
-  type DriverWorkerQueueBaseOptions,
+  type DriverWorkerQueueBaseSettings,
 } from "../../../classes/DriverWorkerQueueBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
@@ -12,8 +12,8 @@ import type { MemorySharedState } from "../types/memory-store.js";
 import { publishMessages } from "../utils/publish-messages.js";
 import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 
-export type MemoryWorkerQueueOptions<M extends IMessage> =
-  DriverWorkerQueueBaseOptions<M> & {
+export type MemoryWorkerQueueSettings<M extends IMessage> =
+  DriverWorkerQueueBaseSettings<M> & {
     store: MemorySharedState;
     delayManager?: DelayManager;
     deadLetterManager?: DeadLetterManager;
@@ -31,7 +31,7 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
 
-  constructor(options: MemoryWorkerQueueOptions<M>) {
+  constructor(options: MemoryWorkerQueueSettings<M>) {
     super(options);
     this.store = options.store;
     this.delayManager = options.delayManager;

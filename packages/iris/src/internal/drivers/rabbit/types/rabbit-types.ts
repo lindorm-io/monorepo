@@ -1,6 +1,6 @@
 import type { Channel, ChannelModel, ConfirmChannel, Options } from "amqplib";
 
-export type AmqpPublishConfig = {
+export type AmqpPublishParams = {
   properties: Options.Publish;
   routingKey: string;
 };

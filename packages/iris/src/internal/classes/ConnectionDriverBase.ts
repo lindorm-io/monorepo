@@ -23,9 +23,9 @@ import type {
   IrisHookMeta,
 } from "../../types/index.js";
 import type { MessageEncryptionContext } from "../message/types/encryption-context.js";
-import type { DriverBaseOptions } from "./DriverBase.js";
+import type { DriverBaseSettings } from "./DriverBase.js";
 
-export type ConnectionDriverBaseOptions = {
+export type ConnectionDriverBaseSettings = {
   /** The active driver type — stamped onto every pattern instance the factories create. */
   driverType: IrisDriverType;
   /** Logger label for the driver's child logger (e.g. `"RedisDriver"`). */
@@ -64,7 +64,7 @@ export abstract class ConnectionDriverBase implements IIrisDriver {
    */
   protected _reconnecting: Promise<void> | null = null;
 
-  protected constructor(options: ConnectionDriverBaseOptions) {
+  protected constructor(options: ConnectionDriverBaseSettings) {
     this.driverType = options.driverType;
     this.logger = options.logger.child([options.loggerLabel]);
     this.meta = options.meta;
@@ -211,7 +211,7 @@ export abstract class ConnectionDriverBase implements IIrisDriver {
    */
   protected sharedPatternOptions<M extends IMessage>(
     target: Constructor<M>,
-  ): DriverBaseOptions<M> & { driverType: IrisDriverType } {
+  ): DriverBaseSettings<M> & { driverType: IrisDriverType } {
     return {
       target,
       driverType: this.driverType,

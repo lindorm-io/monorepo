@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { RabbitDriver, type RabbitDriverOptions } from "./RabbitDriver.js";
+import { RabbitDriver, type RabbitDriverSettings } from "./RabbitDriver.js";
 import type { IrisConnectionState } from "../../../../types/index.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
@@ -81,8 +81,8 @@ const createMockLogger = () => ({
 });
 
 const createDriverOptions = (
-  overrides?: Partial<RabbitDriverOptions>,
-): RabbitDriverOptions => ({
+  overrides?: Partial<RabbitDriverSettings>,
+): RabbitDriverSettings => ({
   logger: createMockLogger() as any,
   getSubscribers: vi.fn().mockReturnValue([]),
   url: "amqp://localhost:5672",

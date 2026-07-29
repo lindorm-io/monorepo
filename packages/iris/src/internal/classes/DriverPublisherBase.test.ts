@@ -11,7 +11,7 @@ import type { PublishOptions } from "../../types/index.js";
 import { clearRegistry } from "../message/metadata/registry.js";
 import {
   DriverPublisherBase,
-  type DriverPublisherBaseOptions,
+  type DriverPublisherBaseSettings,
 } from "./DriverPublisherBase.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -54,7 +54,7 @@ class SimplePubMessage {
 // --- Concrete test subclass ---
 
 class TestPublisher<M extends IMessage> extends DriverPublisherBase<M> {
-  public constructor(options: DriverPublisherBaseOptions<M>) {
+  public constructor(options: DriverPublisherBaseSettings<M>) {
     super(options);
   }
 

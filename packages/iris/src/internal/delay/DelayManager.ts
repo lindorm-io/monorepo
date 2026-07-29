@@ -3,7 +3,7 @@ import { lindormId } from "@lindorm/random";
 import type { IDelayStore } from "../../interfaces/IrisDelayStore.js";
 import type { DelayedEntry } from "../../types/delay.js";
 import type { IrisEnvelope } from "../types/iris-envelope.js";
-import type { DelayManagerOptions } from "./types.js";
+import type { DelayManagerSettings } from "./types.js";
 
 export class DelayManager {
   private readonly store: IDelayStore;
@@ -13,7 +13,7 @@ export class DelayManager {
   private callback: ((entry: DelayedEntry) => Promise<void>) | null = null;
   private polling = false;
 
-  constructor(options: DelayManagerOptions) {
+  constructor(options: DelayManagerSettings) {
     this.store = options.store;
     this.logger = options.logger.child(["DelayManager"]);
     this.pollIntervalMs = options.pollIntervalMs ?? 100;

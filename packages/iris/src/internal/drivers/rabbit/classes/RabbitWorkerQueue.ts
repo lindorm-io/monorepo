@@ -4,7 +4,7 @@ import type { RabbitSharedState } from "../types/rabbit-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import {
   DriverWorkerQueueBase,
-  type DriverWorkerQueueBaseOptions,
+  type DriverWorkerQueueBaseSettings,
 } from "../../../classes/DriverWorkerQueueBase.js";
 import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import { publishRabbitMessages } from "../utils/publish-messages.js";
@@ -13,8 +13,8 @@ import { resolveQueueName } from "../utils/resolve-queue-name.js";
 import { sanitizeRoutingKey } from "../utils/sanitize-routing-key.js";
 import { RABBIT_MAX_PRIORITY } from "../utils/rabbit-constants.js";
 
-export type RabbitWorkerQueueOptions<M extends IMessage> =
-  DriverWorkerQueueBaseOptions<M> & {
+export type RabbitWorkerQueueSettings<M extends IMessage> =
+  DriverWorkerQueueBaseSettings<M> & {
     state: RabbitSharedState;
   };
 
@@ -30,7 +30,7 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
 > {
   private readonly state: RabbitSharedState;
 
-  constructor(options: RabbitWorkerQueueOptions<M>) {
+  constructor(options: RabbitWorkerQueueSettings<M>) {
     super(options);
     this.state = options.state;
   }

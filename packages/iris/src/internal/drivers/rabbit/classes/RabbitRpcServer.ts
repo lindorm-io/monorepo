@@ -12,7 +12,7 @@ import { parseAmqpHeaders } from "../utils/parse-amqp-headers.js";
 import { resolveQueueName } from "../utils/resolve-queue-name.js";
 import { sanitizeRoutingKey } from "../utils/sanitize-routing-key.js";
 
-export type RabbitRpcServerOptions<Req extends IMessage, Res extends IMessage> = {
+export type RabbitRpcServerSettings<Req extends IMessage, Res extends IMessage> = {
   state: RabbitSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
@@ -31,7 +31,7 @@ export class RabbitRpcServer<
     { consumerTag: string; queueName: string }
   > = new Map();
 
-  constructor(options: RabbitRpcServerOptions<Req, Res>) {
+  constructor(options: RabbitRpcServerSettings<Req, Res>) {
     super(options, "RabbitRpcServer");
     this.state = options.state;
   }

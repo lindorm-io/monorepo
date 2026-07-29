@@ -14,7 +14,7 @@ import type {
 import type {
   IrisCapabilities,
   IrisHookMeta,
-  RedisConnectionOptions,
+  RedisConnectionSettings,
 } from "../../../../types/index.js";
 import { REDIS_CAPABILITIES } from "../redis-capabilities.js";
 import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
@@ -45,13 +45,13 @@ const DEFAULT_PREFETCH = 10;
 const DEFAULT_BLOCK_MS = 5000;
 const DEFAULT_PREFIX = "iris";
 
-export type RedisDriverOptions = {
+export type RedisDriverSettings = {
   logger: ILogger;
   meta?: IrisHookMeta;
   encryption?: MessageEncryptionContext;
   getSubscribers: () => Array<IMessageSubscriber>;
   url?: string;
-  connection?: RedisConnectionOptions;
+  connection?: RedisConnectionSettings;
   prefix?: string;
   prefetch?: number;
   blockMs?: number;
@@ -67,7 +67,7 @@ export class RedisDriver extends ConnectionDriverBase {
   private readonly deadLetterManager: DeadLetterManager | undefined;
   private _deliberateDisconnect: boolean = false;
 
-  constructor(options: RedisDriverOptions, state?: RedisSharedState) {
+  constructor(options: RedisDriverSettings, state?: RedisSharedState) {
     super({
       driverType: "redis",
       loggerLabel: "RedisDriver",

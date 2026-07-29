@@ -10,10 +10,10 @@ import { sanitizeRoutingKey } from "../utils/sanitize-routing-key.js";
 import { wrapRabbitConsumer } from "../utils/wrap-rabbit-consumer.js";
 import {
   DriverStreamPipelineBase,
-  type DriverStreamPipelineBaseOptions,
+  type DriverStreamPipelineBaseSettings,
 } from "../../../classes/DriverStreamPipelineBase.js";
 
-export type RabbitStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
+export type RabbitStreamPipelineSettings = DriverStreamPipelineBaseSettings & {
   state: RabbitSharedState;
 };
 
@@ -24,7 +24,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
   private subscribedRoutingKey: string | null = null;
   private wrappedOnMessage: ((msg: ConsumeMessage | null) => Promise<void>) | null = null;
 
-  constructor(options: RabbitStreamPipelineOptions) {
+  constructor(options: RabbitStreamPipelineSettings) {
     super({
       ...options,
       logger: options.logger.child(["RabbitStreamPipeline"]),

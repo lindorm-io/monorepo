@@ -5,7 +5,7 @@ import { Message } from "../../decorators/Message.js";
 import { clearRegistry } from "../message/metadata/registry.js";
 import {
   DriverStreamPipelineBase,
-  type DriverStreamPipelineBaseOptions,
+  type DriverStreamPipelineBaseSettings,
 } from "./DriverStreamPipelineBase.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
@@ -42,7 +42,7 @@ class TestStreamPipeline extends DriverStreamPipelineBase {
     [];
   public doPauseConsumerCalls = 0;
 
-  public constructor(options: DriverStreamPipelineBaseOptions) {
+  public constructor(options: DriverStreamPipelineBaseSettings) {
     super(options);
   }
 

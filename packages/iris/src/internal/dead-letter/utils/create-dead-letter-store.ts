@@ -1,4 +1,4 @@
-import type { IrisPersistenceDeadLetterConfig } from "../../../types/source-options.js";
+import type { IrisPersistenceDeadLetterSettings } from "../../../types/source-options.js";
 import { IrisNotSupportedError } from "../../../errors/IrisNotSupportedError.js";
 import { IrisTransportError } from "../../../errors/IrisTransportError.js";
 import type { IDeadLetterStore } from "../../../interfaces/IrisDeadLetterStore.js";
@@ -6,7 +6,7 @@ import { MemoryDeadLetterStore } from "../MemoryDeadLetterStore.js";
 import { RedisDeadLetterStore } from "../RedisDeadLetterStore.js";
 
 export const createDeadLetterStore = async (
-  config?: IrisPersistenceDeadLetterConfig,
+  config?: IrisPersistenceDeadLetterSettings,
 ): Promise<IDeadLetterStore> => {
   if (!config || config.type === "memory") {
     return new MemoryDeadLetterStore();

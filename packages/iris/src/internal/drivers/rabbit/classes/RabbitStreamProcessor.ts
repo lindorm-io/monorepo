@@ -2,13 +2,13 @@ import type { IMessage } from "../../../../interfaces/index.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import {
   DriverStreamProcessorBase,
-  type DriverStreamProcessorBaseOptions,
+  type DriverStreamProcessorBaseSettings,
   type StreamPipelineBuildOptions,
 } from "../../../classes/DriverStreamProcessorBase.js";
 import { RabbitStreamPipeline } from "./RabbitStreamPipeline.js";
 
-export type RabbitStreamProcessorOptions =
-  DriverStreamProcessorBaseOptions<RabbitSharedState>;
+export type RabbitStreamProcessorSettings =
+  DriverStreamProcessorBaseSettings<RabbitSharedState>;
 
 export class RabbitStreamProcessor<
   In extends IMessage = IMessage,

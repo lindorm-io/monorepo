@@ -17,17 +17,17 @@ export type SessionOptions = {
   meta?: IrisHookMeta;
 };
 
-export type IrisPersistenceDelayConfig =
+export type IrisPersistenceDelaySettings =
   | { type: "memory"; pollIntervalMs?: number }
   | { type: "redis"; url: string; pollIntervalMs?: number }
   | { type: "custom"; store: IDelayStore; pollIntervalMs?: number };
 
-export type IrisPersistenceDeadLetterConfig =
+export type IrisPersistenceDeadLetterSettings =
   | { type: "memory" }
   | { type: "redis"; url: string }
   | { type: "custom"; store: IDeadLetterStore };
 
-export type IrisPersistenceOptions = {
+export type IrisPersistenceSettings = {
   /**
    * Where delayed deliveries AND retries-during-backoff are held.
    *
@@ -37,11 +37,11 @@ export type IrisPersistenceOptions = {
    * case. Configure a durable store (`{ type: "redis", url }` or a `custom`
    * `IDelayStore`) for at-least-once delay/retry across restarts.
    */
-  delay?: IrisPersistenceDelayConfig;
-  deadLetter?: IrisPersistenceDeadLetterConfig;
+  delay?: IrisPersistenceDelaySettings;
+  deadLetter?: IrisPersistenceDeadLetterSettings;
 };
 
-export type IrisSourceOptionsBase = {
+export type IrisSourceSettingsBase = {
   messages?: MessageScannerInput;
   meta?: IrisHookMeta;
   logger: ILogger;
@@ -57,14 +57,14 @@ export type IrisSourceOptionsBase = {
    */
   encryption?: IrisEncryptionKey;
 
-  persistence?: IrisPersistenceOptions;
+  persistence?: IrisPersistenceSettings;
 };
 
 /**
  * Optional driver-specific connection tuning for Kafka (curated from kafkajs KafkaConfig).
- * The primary connection target (brokers) lives at the top level of IrisKafkaOptions.
+ * The primary connection target (brokers) lives at the top level of IrisKafkaSettings.
  */
-export type KafkaConnectionOptions = {
+export type KafkaConnectionSettings = {
   clientId?: string;
   ssl?: boolean | ConnectionOptions;
   sasl?:
@@ -97,9 +97,9 @@ export type KafkaConnectionOptions = {
 
 /**
  * Optional driver-specific connection tuning for RabbitMQ (curated from amqplib Options.Connect).
- * The primary connection target (url) lives at the top level of IrisRabbitOptions.
+ * The primary connection target (url) lives at the top level of IrisRabbitSettings.
  */
-export type RabbitConnectionOptions = {
+export type RabbitConnectionSettings = {
   socketOptions?: {
     timeout?: number;
     keepAlive?: boolean;
@@ -116,9 +116,9 @@ export type RabbitConnectionOptions = {
 
 /**
  * Optional driver-specific connection tuning for Redis (curated from ioredis RedisOptions).
- * The primary connection target (url) lives at the top level of IrisRedisOptions.
+ * The primary connection target (url) lives at the top level of IrisRedisSettings.
  */
-export type RedisConnectionOptions = {
+export type RedisConnectionSettings = {
   host?: string;
   port?: number;
   password?: string;
@@ -133,18 +133,18 @@ export type RedisConnectionOptions = {
   retryStrategy?: (times: number) => number | null;
 };
 
-export type IrisRabbitOptions = IrisSourceOptionsBase & {
+export type IrisRabbitSettings = IrisSourceSettingsBase & {
   driver: "rabbit";
   url: string;
-  connection?: RabbitConnectionOptions;
+  connection?: RabbitConnectionSettings;
   exchange?: string;
   prefetch?: number;
 };
 
-export type IrisKafkaOptions = IrisSourceOptionsBase & {
+export type IrisKafkaSettings = IrisSourceSettingsBase & {
   driver: "kafka";
   brokers: Array<string>;
-  connection?: KafkaConnectionOptions;
+  connection?: KafkaConnectionSettings;
   prefix?: string;
   prefetch?: number;
   sessionTimeoutMs?: number;
@@ -153,9 +153,9 @@ export type IrisKafkaOptions = IrisSourceOptionsBase & {
 
 /**
  * Optional driver-specific connection tuning for NATS (curated from nats.js ConnectionOptions).
- * The primary connection target (servers) lives at the top level of IrisNatsOptions.
+ * The primary connection target (servers) lives at the top level of IrisNatsSettings.
  */
-export type NatsConnectionOptions = {
+export type NatsConnectionSettings = {
   token?: string;
   user?: string;
   pass?: string;
@@ -170,31 +170,31 @@ export type NatsConnectionOptions = {
   inboxPrefix?: string;
 };
 
-export type IrisNatsOptions = IrisSourceOptionsBase & {
+export type IrisNatsSettings = IrisSourceSettingsBase & {
   driver: "nats";
   servers: string | Array<string>;
-  connection?: NatsConnectionOptions;
+  connection?: NatsConnectionSettings;
   prefix?: string;
   prefetch?: number;
 };
 
-export type IrisRedisOptions = IrisSourceOptionsBase & {
+export type IrisRedisSettings = IrisSourceSettingsBase & {
   driver: "redis";
   url?: string;
-  connection?: RedisConnectionOptions;
+  connection?: RedisConnectionSettings;
   prefix?: string;
   prefetch?: number;
   blockMs?: number;
   maxStreamLength?: number | null;
 };
 
-export type IrisMemoryOptions = IrisSourceOptionsBase & {
+export type IrisMemorySettings = IrisSourceSettingsBase & {
   driver: "memory";
 };
 
-export type IrisSourceOptions =
-  | IrisRabbitOptions
-  | IrisKafkaOptions
-  | IrisNatsOptions
-  | IrisRedisOptions
-  | IrisMemoryOptions;
+export type IrisSourceSettings =
+  | IrisRabbitSettings
+  | IrisKafkaSettings
+  | IrisNatsSettings
+  | IrisRedisSettings
+  | IrisMemorySettings;

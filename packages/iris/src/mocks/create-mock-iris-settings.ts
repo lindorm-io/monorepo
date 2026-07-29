@@ -1,5 +1,5 @@
 import type { IrisCapabilities } from "../types/index.js";
-import type { IrisSourceOptionsBase } from "../types/source-options.js";
+import type { IrisSourceSettingsBase } from "../types/source-options.js";
 
 /**
  * Construction settings for the memory-backed iris mocks. Picks the real
@@ -14,5 +14,5 @@ import type { IrisSourceOptionsBase } from "../types/source-options.js";
  * test can flip `priority` on, or `rpc` off, without swapping the whole driver.
  */
 export type CreateMockIrisSettings = Partial<
-  Pick<IrisSourceOptionsBase, "messages" | "logger">
+  Pick<IrisSourceSettingsBase, "messages" | "logger">
 > & { capabilities?: Partial<IrisCapabilities> };

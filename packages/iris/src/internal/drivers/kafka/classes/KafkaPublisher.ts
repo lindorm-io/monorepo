@@ -4,20 +4,21 @@ import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { KafkaSharedState } from "../types/kafka-types.js";
 import {
   DriverPublisherBase,
-  type DriverPublisherBaseOptions,
+  type DriverPublisherBaseSettings,
 } from "../../../classes/DriverPublisherBase.js";
 import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
 
-export type KafkaPublisherOptions<M extends IMessage> = DriverPublisherBaseOptions<M> & {
-  state: KafkaSharedState;
-  delayManager?: DelayManager;
-};
+export type KafkaPublisherSettings<M extends IMessage> =
+  DriverPublisherBaseSettings<M> & {
+    state: KafkaSharedState;
+    delayManager?: DelayManager;
+  };
 
 export class KafkaPublisher<M extends IMessage> extends DriverPublisherBase<M> {
   private readonly state: KafkaSharedState;
   private readonly delayManager: DelayManager | undefined;
 
-  constructor(options: KafkaPublisherOptions<M>) {
+  constructor(options: KafkaPublisherSettings<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;

@@ -2,13 +2,13 @@ import type { IMessage } from "../../../../interfaces/index.js";
 import type { RedisSharedState } from "../types/redis-types.js";
 import {
   DriverStreamProcessorBase,
-  type DriverStreamProcessorBaseOptions,
+  type DriverStreamProcessorBaseSettings,
   type StreamPipelineBuildOptions,
 } from "../../../classes/DriverStreamProcessorBase.js";
 import { RedisStreamPipeline } from "./RedisStreamPipeline.js";
 
-export type RedisStreamProcessorOptions =
-  DriverStreamProcessorBaseOptions<RedisSharedState>;
+export type RedisStreamProcessorSettings =
+  DriverStreamProcessorBaseSettings<RedisSharedState>;
 
 export class RedisStreamProcessor<
   In extends IMessage = IMessage,

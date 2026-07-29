@@ -15,7 +15,7 @@ import { resolveTopicName } from "../utils/resolve-topic-name.js";
 import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
 import { stopKafkaConsumer } from "../utils/stop-kafka-consumer.js";
 
-export type KafkaRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
+export type KafkaRpcClientSettings<Req extends IMessage, Res extends IMessage> = {
   state: KafkaSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
@@ -32,7 +32,7 @@ export class KafkaRpcClient<
   private readonly replyTopic: string;
   private replyConsumerTag: string | null = null;
 
-  constructor(options: KafkaRpcClientOptions<Req, Res>) {
+  constructor(options: KafkaRpcClientSettings<Req, Res>) {
     super(options, "KafkaRpcClient");
     this.state = options.state;
     this.replyTopic = `${this.state.prefix}.rpc.reply.${lindormId({ length: 16 })}`;

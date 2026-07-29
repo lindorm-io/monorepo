@@ -4,7 +4,7 @@ import type { IMessage } from "../../../../interfaces/index.js";
 import type { ConsumeEnvelope, PublishOptions } from "../../../../types/index.js";
 import {
   DriverWorkerQueueBase,
-  type DriverWorkerQueueBaseOptions,
+  type DriverWorkerQueueBaseSettings,
 } from "../../../classes/DriverWorkerQueueBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
@@ -18,8 +18,8 @@ import { resolveSubject } from "../utils/resolve-subject.js";
 import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
 import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
 
-export type NatsWorkerQueueOptions<M extends IMessage> =
-  DriverWorkerQueueBaseOptions<M> & {
+export type NatsWorkerQueueSettings<M extends IMessage> =
+  DriverWorkerQueueBaseSettings<M> & {
     state: NatsSharedState;
     delayManager?: DelayManager;
     deadLetterManager?: DeadLetterManager;
@@ -41,7 +41,7 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
 
-  constructor(options: NatsWorkerQueueOptions<M>) {
+  constructor(options: NatsWorkerQueueSettings<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;

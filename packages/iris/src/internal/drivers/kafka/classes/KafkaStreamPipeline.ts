@@ -2,7 +2,7 @@ import { lindormId } from "@lindorm/random";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import {
   DriverStreamPipelineBase,
-  type DriverStreamPipelineBaseOptions,
+  type DriverStreamPipelineBaseSettings,
 } from "../../../classes/DriverStreamPipelineBase.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import type { MessageMetadata } from "../../../message/types/metadata.js";
@@ -24,7 +24,7 @@ import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
 import { stopKafkaConsumer } from "../utils/stop-kafka-consumer.js";
 import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
 
-export type KafkaStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
+export type KafkaStreamPipelineSettings = DriverStreamPipelineBaseSettings & {
   state: KafkaSharedState;
 };
 
@@ -34,7 +34,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
   private groupId: string | null = null;
   private retryTopic: string | null = null;
 
-  constructor(options: KafkaStreamPipelineOptions) {
+  constructor(options: KafkaStreamPipelineSettings) {
     super({
       ...options,
       logger: options.logger.child(["KafkaStreamPipeline"]),

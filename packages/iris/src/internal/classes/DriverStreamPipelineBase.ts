@@ -18,7 +18,7 @@ import { prepareInbound } from "../message/utils/prepare-inbound.js";
 import { resolveDefaultTopic } from "../message/utils/resolve-default-topic.js";
 import { buildEnvelope } from "../utils/build-envelope.js";
 
-export type DriverStreamPipelineBaseOptions = {
+export type DriverStreamPipelineBaseSettings = {
   logger: ILogger;
   stages: Array<PipelineStage>;
   inputClass?: Constructor<IMessage>;
@@ -49,7 +49,7 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
   protected batchTimer: ReturnType<typeof setTimeout> | null = null;
   protected _processingQueue: Promise<void> = Promise.resolve();
 
-  constructor(options: DriverStreamPipelineBaseOptions) {
+  constructor(options: DriverStreamPipelineBaseSettings) {
     this.logger = options.logger;
     this.stages = options.stages;
     this.inputClass = options.inputClass;

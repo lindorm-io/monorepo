@@ -12,7 +12,7 @@ import type {
 import type {
   IrisCapabilities,
   IrisHookMeta,
-  KafkaConnectionOptions,
+  KafkaConnectionSettings,
 } from "../../../../types/index.js";
 import { KAFKA_CAPABILITIES } from "../kafka-capabilities.js";
 import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
@@ -47,13 +47,13 @@ const DEFAULT_PREFIX = "iris";
 const DEFAULT_PREFETCH = 10;
 const DEFAULT_SESSION_TIMEOUT_MS = 30_000;
 
-export type KafkaDriverOptions = {
+export type KafkaDriverSettings = {
   logger: ILogger;
   meta?: IrisHookMeta;
   encryption?: MessageEncryptionContext;
   getSubscribers: () => Array<IMessageSubscriber>;
   brokers: Array<string>;
-  connection?: KafkaConnectionOptions;
+  connection?: KafkaConnectionSettings;
   prefix?: string;
   prefetch?: number;
   sessionTimeoutMs?: number;
@@ -70,7 +70,7 @@ export class KafkaDriver extends ConnectionDriverBase {
   private _deliberateDisconnect: boolean = false;
   private readonly _producerUnsubscribers: Array<() => void> = [];
 
-  constructor(options: KafkaDriverOptions, state?: KafkaSharedState) {
+  constructor(options: KafkaDriverSettings, state?: KafkaSharedState) {
     super({
       driverType: "kafka",
       loggerLabel: "KafkaDriver",

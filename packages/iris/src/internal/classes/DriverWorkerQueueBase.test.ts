@@ -14,7 +14,7 @@ import type { ConsumeEnvelope, PublishOptions } from "../../types/index.js";
 import { clearRegistry } from "../message/metadata/registry.js";
 import {
   DriverWorkerQueueBase,
-  type DriverWorkerQueueBaseOptions,
+  type DriverWorkerQueueBaseSettings,
 } from "./DriverWorkerQueueBase.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -80,7 +80,7 @@ class TestWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M, TestH
   }> = [];
   public readonly torndown: Array<TestHandle> = [];
 
-  public constructor(options: DriverWorkerQueueBaseOptions<M>) {
+  public constructor(options: DriverWorkerQueueBaseSettings<M>) {
     super(options);
   }
 

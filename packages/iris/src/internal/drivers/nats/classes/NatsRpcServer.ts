@@ -9,7 +9,7 @@ import { DriverRpcServerBase } from "../../../classes/DriverRpcServerBase.js";
 import { serializeNatsMessage } from "../utils/serialize-nats-message.js";
 import { parseNatsMessage } from "../utils/parse-nats-message.js";
 
-export type NatsRpcServerOptions<Req extends IMessage, Res extends IMessage> = {
+export type NatsRpcServerSettings<Req extends IMessage, Res extends IMessage> = {
   state: NatsSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
@@ -25,7 +25,7 @@ export class NatsRpcServer<
   private readonly state: NatsSharedState;
   private readonly ownedSubscriptions: Map<string, NatsSubscription> = new Map();
 
-  constructor(options: NatsRpcServerOptions<Req, Res>) {
+  constructor(options: NatsRpcServerSettings<Req, Res>) {
     super(options, "NatsRpcServer");
     this.state = options.state;
   }

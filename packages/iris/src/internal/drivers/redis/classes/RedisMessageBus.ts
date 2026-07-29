@@ -4,7 +4,7 @@ import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
 import {
   DriverMessageBusBase,
-  type DriverMessageBusBaseOptions,
+  type DriverMessageBusBaseSettings,
 } from "../../../classes/DriverMessageBusBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
@@ -17,8 +17,8 @@ import { resolveStreamKey } from "../utils/resolve-stream-key.js";
 import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
 import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
 
-export type RedisMessageBusOptions<M extends IMessage> =
-  DriverMessageBusBaseOptions<M> & {
+export type RedisMessageBusSettings<M extends IMessage> =
+  DriverMessageBusBaseSettings<M> & {
     state: RedisSharedState;
     delayManager?: DelayManager;
     deadLetterManager?: DeadLetterManager;
@@ -54,7 +54,7 @@ export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
 
-  constructor(options: RedisMessageBusOptions<M>) {
+  constructor(options: RedisMessageBusSettings<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;

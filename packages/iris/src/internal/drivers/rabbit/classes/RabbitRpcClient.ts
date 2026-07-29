@@ -16,7 +16,7 @@ import { parseAmqpHeaders } from "../utils/parse-amqp-headers.js";
 
 const REPLY_TO = "amq.rabbitmq.reply-to";
 
-export type RabbitRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
+export type RabbitRpcClientSettings<Req extends IMessage, Res extends IMessage> = {
   state: RabbitSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
@@ -54,7 +54,7 @@ export class RabbitRpcClient<
     );
   };
 
-  constructor(options: RabbitRpcClientOptions<Req, Res>) {
+  constructor(options: RabbitRpcClientSettings<Req, Res>) {
     super(options, "RabbitRpcClient");
     this.state = options.state;
   }

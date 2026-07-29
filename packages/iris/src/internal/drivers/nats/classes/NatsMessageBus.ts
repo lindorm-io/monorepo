@@ -4,7 +4,7 @@ import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
 import {
   DriverMessageBusBase,
-  type DriverMessageBusBaseOptions,
+  type DriverMessageBusBaseSettings,
 } from "../../../classes/DriverMessageBusBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
@@ -18,11 +18,12 @@ import { resolveSubject } from "../utils/resolve-subject.js";
 import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
 import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
 
-export type NatsMessageBusOptions<M extends IMessage> = DriverMessageBusBaseOptions<M> & {
-  state: NatsSharedState;
-  delayManager?: DelayManager;
-  deadLetterManager?: DeadLetterManager;
-};
+export type NatsMessageBusSettings<M extends IMessage> =
+  DriverMessageBusBaseSettings<M> & {
+    state: NatsSharedState;
+    delayManager?: DelayManager;
+    deadLetterManager?: DeadLetterManager;
+  };
 
 type OwnedConsumer = {
   consumerTag: string;
@@ -54,7 +55,7 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
 
-  constructor(options: NatsMessageBusOptions<M>) {
+  constructor(options: NatsMessageBusSettings<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;

@@ -8,7 +8,7 @@ import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { MemorySharedState } from "../types/memory-store.js";
 
-export type MemoryRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
+export type MemoryRpcClientSettings<Req extends IMessage, Res extends IMessage> = {
   store: MemorySharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
@@ -23,7 +23,7 @@ export class MemoryRpcClient<
 > extends DriverRpcClientBase<Req, Res> {
   private readonly store: MemorySharedState;
 
-  constructor(options: MemoryRpcClientOptions<Req, Res>) {
+  constructor(options: MemoryRpcClientSettings<Req, Res>) {
     super(options, "MemoryRpcClient");
     this.store = options.store;
   }

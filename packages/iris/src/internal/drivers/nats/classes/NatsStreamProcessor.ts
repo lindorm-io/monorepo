@@ -2,13 +2,13 @@ import type { IMessage } from "../../../../interfaces/index.js";
 import type { NatsSharedState } from "../types/nats-types.js";
 import {
   DriverStreamProcessorBase,
-  type DriverStreamProcessorBaseOptions,
+  type DriverStreamProcessorBaseSettings,
   type StreamPipelineBuildOptions,
 } from "../../../classes/DriverStreamProcessorBase.js";
 import { NatsStreamPipeline } from "./NatsStreamPipeline.js";
 
-export type NatsStreamProcessorOptions =
-  DriverStreamProcessorBaseOptions<NatsSharedState>;
+export type NatsStreamProcessorSettings =
+  DriverStreamProcessorBaseSettings<NatsSharedState>;
 
 export class NatsStreamProcessor<
   In extends IMessage = IMessage,

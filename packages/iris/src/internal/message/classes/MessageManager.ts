@@ -17,7 +17,7 @@ import { runHooksAsync, runHooksSync } from "../utils/run-hooks.js";
 
 const IDENTITY_DECORATORS = new Set(["IdentifierField", "TimestampField"]);
 
-export type MessageManagerOptions<M extends IMessage> = {
+export type MessageManagerSettings<M extends IMessage> = {
   target: Constructor<M>;
   meta?: IrisHookMeta;
   logger?: ILogger;
@@ -31,7 +31,7 @@ export class MessageManager<M extends IMessage> {
   private readonly logger: ILogger | undefined;
   private _schemaCache: z.ZodType | undefined;
 
-  constructor(options: MessageManagerOptions<M>) {
+  constructor(options: MessageManagerSettings<M>) {
     if (!options.target) {
       throw new IrisError("MessageManager requires a target constructor", {
         code: "missing_target_constructor",

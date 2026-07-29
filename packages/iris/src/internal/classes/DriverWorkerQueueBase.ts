@@ -8,9 +8,9 @@ import type {
 } from "../../types/index.js";
 import type { ConsumerCallbackHost } from "../utils/consume-message-core.js";
 import { DriverBase } from "./DriverBase.js";
-import type { DriverBaseOptions } from "./DriverBase.js";
+import type { DriverBaseSettings } from "./DriverBase.js";
 
-export type DriverWorkerQueueBaseOptions<M extends IMessage> = DriverBaseOptions<M> & {
+export type DriverWorkerQueueBaseSettings<M extends IMessage> = DriverBaseSettings<M> & {
   driverType: IrisDriverType;
 };
 
@@ -41,7 +41,7 @@ export abstract class DriverWorkerQueueBase<M extends IMessage, C = unknown>
 {
   protected readonly ownedConsumers: Map<string, Array<C>> = new Map();
 
-  protected constructor(options: DriverWorkerQueueBaseOptions<M>) {
+  protected constructor(options: DriverWorkerQueueBaseSettings<M>) {
     super(options, "WorkerQueue");
   }
 

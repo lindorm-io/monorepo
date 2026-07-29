@@ -17,7 +17,7 @@ import { buildEnvelope } from "../utils/build-envelope.js";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
-export type DriverRpcClientBaseOptions<Req extends IMessage, Res extends IMessage> = {
+export type DriverRpcClientBaseSettings<Req extends IMessage, Res extends IMessage> = {
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
@@ -45,7 +45,7 @@ export abstract class DriverRpcClientBase<
   protected readonly pendingRequests: Map<string, PendingRequest<Res>> = new Map();
 
   protected constructor(
-    options: DriverRpcClientBaseOptions<Req, Res>,
+    options: DriverRpcClientBaseSettings<Req, Res>,
     loggerLabel: string,
   ) {
     this.logger = options.logger.child([loggerLabel]);

@@ -7,13 +7,13 @@ import type {
   DeadLetterListOptions,
 } from "../../types/dead-letter.js";
 import type { IrisEnvelope } from "../types/iris-envelope.js";
-import type { DeadLetterManagerOptions } from "./types.js";
+import type { DeadLetterManagerSettings } from "./types.js";
 
 export class DeadLetterManager {
   private readonly store: IDeadLetterStore;
   private readonly logger: ILogger;
 
-  constructor(options: DeadLetterManagerOptions) {
+  constructor(options: DeadLetterManagerSettings) {
     this.store = options.store;
     this.logger = options.logger.child(["DeadLetterManager"]);
   }

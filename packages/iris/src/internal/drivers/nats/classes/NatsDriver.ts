@@ -12,7 +12,7 @@ import type {
 import type {
   IrisCapabilities,
   IrisHookMeta,
-  NatsConnectionOptions,
+  NatsConnectionSettings,
 } from "../../../../types/index.js";
 import { NATS_CAPABILITIES } from "../nats-capabilities.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
@@ -47,13 +47,13 @@ const resolveStreamName = (prefix: string): string => {
   return `IRIS_${prefix.toUpperCase().replace(/[^A-Z0-9_]/g, "_")}`;
 };
 
-export type NatsDriverOptions = {
+export type NatsDriverSettings = {
   logger: ILogger;
   meta?: IrisHookMeta;
   encryption?: MessageEncryptionContext;
   getSubscribers: () => Array<IMessageSubscriber>;
   servers: string | Array<string>;
-  connection?: NatsConnectionOptions;
+  connection?: NatsConnectionSettings;
   prefix?: string;
   prefetch?: number;
   delayManager?: DelayManager;
@@ -70,7 +70,7 @@ export class NatsDriver extends ConnectionDriverBase {
   private _deliberateDisconnect: boolean = false;
   private _statusMonitorAbort: AbortController | null = null;
 
-  constructor(options: NatsDriverOptions, state?: NatsSharedState) {
+  constructor(options: NatsDriverSettings, state?: NatsSharedState) {
     super({
       driverType: "nats",
       loggerLabel: "NatsDriver",

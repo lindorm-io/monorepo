@@ -3,7 +3,7 @@ import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
 import {
   DriverMessageBusBase,
-  type DriverMessageBusBaseOptions,
+  type DriverMessageBusBaseSettings,
 } from "../../../classes/DriverMessageBusBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
@@ -11,8 +11,8 @@ import type { MemorySharedState } from "../types/memory-store.js";
 import { publishMessages } from "../utils/publish-messages.js";
 import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 
-export type MemoryMessageBusOptions<M extends IMessage> =
-  DriverMessageBusBaseOptions<M> & {
+export type MemoryMessageBusSettings<M extends IMessage> =
+  DriverMessageBusBaseSettings<M> & {
     store: MemorySharedState;
     delayManager?: DelayManager;
     deadLetterManager?: DeadLetterManager;
@@ -30,7 +30,7 @@ export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
 
-  constructor(options: MemoryMessageBusOptions<M>) {
+  constructor(options: MemoryMessageBusSettings<M>) {
     super(options);
     this.store = options.store;
     this.delayManager = options.delayManager;

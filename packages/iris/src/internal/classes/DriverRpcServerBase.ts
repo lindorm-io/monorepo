@@ -13,7 +13,7 @@ import { resolveDefaultTopic } from "../message/utils/resolve-default-topic.js";
 import type { IrisEnvelope } from "../types/iris-envelope.js";
 import { buildEnvelope } from "../utils/build-envelope.js";
 
-export type DriverRpcServerBaseOptions<Req extends IMessage, Res extends IMessage> = {
+export type DriverRpcServerBaseSettings<Req extends IMessage, Res extends IMessage> = {
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
@@ -34,7 +34,7 @@ export abstract class DriverRpcServerBase<
   protected readonly registeredQueues: Set<string> = new Set();
 
   protected constructor(
-    options: DriverRpcServerBaseOptions<Req, Res>,
+    options: DriverRpcServerBaseSettings<Req, Res>,
     loggerLabel: string,
   ) {
     this.logger = options.logger.child([loggerLabel]);

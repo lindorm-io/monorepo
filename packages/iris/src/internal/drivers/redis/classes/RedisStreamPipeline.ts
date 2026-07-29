@@ -1,7 +1,7 @@
 import { lindormId } from "@lindorm/random";
 import {
   DriverStreamPipelineBase,
-  type DriverStreamPipelineBaseOptions,
+  type DriverStreamPipelineBaseSettings,
 } from "../../../classes/DriverStreamPipelineBase.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import type { MessageMetadata } from "../../../message/types/metadata.js";
@@ -19,7 +19,7 @@ import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
 import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
 import { xaddToStream } from "../utils/xadd-to-stream.js";
 
-export type RedisStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
+export type RedisStreamPipelineSettings = DriverStreamPipelineBaseSettings & {
   state: RedisSharedState;
 };
 
@@ -28,7 +28,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
   private consumerTag: string | null = null;
   private groupName: string | null = null;
 
-  constructor(options: RedisStreamPipelineOptions) {
+  constructor(options: RedisStreamPipelineSettings) {
     super({
       ...options,
       logger: options.logger.child(["RedisStreamPipeline"]),

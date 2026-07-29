@@ -4,11 +4,11 @@ import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { NatsSharedState } from "../types/nats-types.js";
 import {
   DriverPublisherBase,
-  type DriverPublisherBaseOptions,
+  type DriverPublisherBaseSettings,
 } from "../../../classes/DriverPublisherBase.js";
 import { publishNatsMessages } from "../utils/publish-nats-messages.js";
 
-export type NatsPublisherOptions<M extends IMessage> = DriverPublisherBaseOptions<M> & {
+export type NatsPublisherSettings<M extends IMessage> = DriverPublisherBaseSettings<M> & {
   state: NatsSharedState;
   delayManager?: DelayManager;
 };
@@ -17,7 +17,7 @@ export class NatsPublisher<M extends IMessage> extends DriverPublisherBase<M> {
   private readonly state: NatsSharedState;
   private readonly delayManager: DelayManager | undefined;
 
-  constructor(options: NatsPublisherOptions<M>) {
+  constructor(options: NatsPublisherSettings<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;

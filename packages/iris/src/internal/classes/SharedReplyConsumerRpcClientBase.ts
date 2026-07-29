@@ -1,7 +1,7 @@
 import type { IMessage } from "../../interfaces/index.js";
 import {
   DriverRpcClientBase,
-  type DriverRpcClientBaseOptions,
+  type DriverRpcClientBaseSettings,
 } from "./DriverRpcClientBase.js";
 
 /**
@@ -23,7 +23,7 @@ export abstract class SharedReplyConsumerRpcClientBase<
   private replyConsumerPromise: Promise<void> | null = null;
 
   protected constructor(
-    options: DriverRpcClientBaseOptions<Req, Res>,
+    options: DriverRpcClientBaseSettings<Req, Res>,
     loggerLabel: string,
   ) {
     super(options, loggerLabel);

@@ -2,13 +2,13 @@ import type { IMessage } from "../../../../interfaces/index.js";
 import type { MemorySharedState } from "../types/memory-store.js";
 import {
   DriverStreamProcessorBase,
-  type DriverStreamProcessorBaseOptions,
+  type DriverStreamProcessorBaseSettings,
   type StreamPipelineBuildOptions,
 } from "../../../classes/DriverStreamProcessorBase.js";
 import { MemoryStreamPipeline } from "./MemoryStreamPipeline.js";
 
-export type MemoryStreamProcessorOptions =
-  DriverStreamProcessorBaseOptions<MemorySharedState>;
+export type MemoryStreamProcessorSettings =
+  DriverStreamProcessorBaseSettings<MemorySharedState>;
 
 export class MemoryStreamProcessor<
   In extends IMessage = IMessage,

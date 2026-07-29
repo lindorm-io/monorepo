@@ -11,7 +11,7 @@ import { prepareOutbound } from "../message/utils/prepare-outbound.js";
 import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
 import {
   DriverRpcServerBase,
-  type DriverRpcServerBaseOptions,
+  type DriverRpcServerBaseSettings,
 } from "./DriverRpcServerBase.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -50,7 +50,7 @@ class TestRpcServer<
   public doServeSpy = vi.fn();
   public doUnserveSpy = vi.fn();
 
-  public constructor(options: DriverRpcServerBaseOptions<Req, Res>) {
+  public constructor(options: DriverRpcServerBaseSettings<Req, Res>) {
     super(options, "TestRpcServer");
   }
 

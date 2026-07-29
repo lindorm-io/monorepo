@@ -3,18 +3,19 @@ import type { PublishOptions } from "../../../../types/index.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import {
   DriverPublisherBase,
-  type DriverPublisherBaseOptions,
+  type DriverPublisherBaseSettings,
 } from "../../../classes/DriverPublisherBase.js";
 import { publishRabbitMessages } from "../utils/publish-messages.js";
 
-export type RabbitPublisherOptions<M extends IMessage> = DriverPublisherBaseOptions<M> & {
-  state: RabbitSharedState;
-};
+export type RabbitPublisherSettings<M extends IMessage> =
+  DriverPublisherBaseSettings<M> & {
+    state: RabbitSharedState;
+  };
 
 export class RabbitPublisher<M extends IMessage> extends DriverPublisherBase<M> {
   private readonly state: RabbitSharedState;
 
-  constructor(options: RabbitPublisherOptions<M>) {
+  constructor(options: RabbitPublisherSettings<M>) {
     super(options);
     this.state = options.state;
   }

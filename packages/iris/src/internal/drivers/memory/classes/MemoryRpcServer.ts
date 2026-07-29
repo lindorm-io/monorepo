@@ -6,7 +6,7 @@ import type { MessageEncryptionContext } from "../../../message/types/encryption
 import { DriverRpcServerBase } from "../../../classes/DriverRpcServerBase.js";
 import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store.js";
 
-export type MemoryRpcServerOptions<Req extends IMessage, Res extends IMessage> = {
+export type MemoryRpcServerSettings<Req extends IMessage, Res extends IMessage> = {
   store: MemorySharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
@@ -25,7 +25,7 @@ export class MemoryRpcServer<
     (envelope: MemoryEnvelope) => Promise<MemoryEnvelope>
   > = new Map();
 
-  constructor(options: MemoryRpcServerOptions<Req, Res>) {
+  constructor(options: MemoryRpcServerSettings<Req, Res>) {
     super(options, "MemoryRpcServer");
     this.store = options.store;
   }

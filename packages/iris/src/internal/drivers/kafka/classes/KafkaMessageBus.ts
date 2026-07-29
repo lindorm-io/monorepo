@@ -4,7 +4,7 @@ import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
 import {
   DriverMessageBusBase,
-  type DriverMessageBusBaseOptions,
+  type DriverMessageBusBaseSettings,
 } from "../../../classes/DriverMessageBusBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
@@ -25,8 +25,8 @@ import {
 import { releasePooledConsumer } from "../utils/stop-kafka-consumer.js";
 import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
 
-export type KafkaMessageBusOptions<M extends IMessage> =
-  DriverMessageBusBaseOptions<M> & {
+export type KafkaMessageBusSettings<M extends IMessage> =
+  DriverMessageBusBaseSettings<M> & {
     state: KafkaSharedState;
     delayManager?: DelayManager;
     deadLetterManager?: DeadLetterManager;
@@ -52,7 +52,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
 
-  constructor(options: KafkaMessageBusOptions<M>) {
+  constructor(options: KafkaMessageBusSettings<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;

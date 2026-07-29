@@ -18,7 +18,7 @@ import type {
 import { clearRegistry } from "../message/metadata/registry.js";
 import {
   DriverMessageBusBase,
-  type DriverMessageBusBaseOptions,
+  type DriverMessageBusBaseSettings,
 } from "./DriverMessageBusBase.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -81,7 +81,7 @@ class TestMessageBus<M extends IMessage> extends DriverMessageBusBase<M, TestHan
   public readonly subscribed: Array<SubscribeOptions<M>> = [];
   public readonly torndown: Array<TestHandle> = [];
 
-  public constructor(options: DriverMessageBusBaseOptions<M>) {
+  public constructor(options: DriverMessageBusBaseSettings<M>) {
     super(options);
   }
 

@@ -32,7 +32,7 @@ import { MemoryRpcServer } from "./MemoryRpcServer.js";
 import { MemoryStreamProcessor } from "./MemoryStreamProcessor.js";
 import { MemoryWorkerQueue } from "./MemoryWorkerQueue.js";
 
-export type MemoryDriverOptions = {
+export type MemoryDriverSettings = {
   logger: ILogger;
   meta?: IrisHookMeta;
   encryption?: MessageEncryptionContext;
@@ -47,7 +47,7 @@ export class MemoryDriver extends ConnectionDriverBase {
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
 
-  constructor(options: MemoryDriverOptions, store?: MemorySharedState) {
+  constructor(options: MemoryDriverSettings, store?: MemorySharedState) {
     super({
       driverType: "memory",
       loggerLabel: "MemoryDriver",

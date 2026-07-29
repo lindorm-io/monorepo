@@ -1,7 +1,7 @@
 import type { IIrisDriver } from "../interfaces/IrisDriver.js";
 import { driverCapabilities } from "../internal/drivers/driver-capabilities.js";
 import { createDefaultIrisHookMeta } from "../types/iris-hook-meta.js";
-import { IrisSession, type IrisSessionOptions } from "./IrisSession.js";
+import { IrisSession, type IrisSessionSettings } from "./IrisSession.js";
 import { describe, expect, it, vi } from "vitest";
 
 // --- Helpers ---
@@ -51,8 +51,8 @@ class FakeResponse {
 }
 
 const createSessionOptions = (
-  overrides: Partial<IrisSessionOptions> = {},
-): IrisSessionOptions => ({
+  overrides: Partial<IrisSessionSettings> = {},
+): IrisSessionSettings => ({
   logger: createMockLogger() as any,
   meta: createDefaultIrisHookMeta(),
   driver: createMockDriver(),

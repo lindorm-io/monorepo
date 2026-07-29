@@ -1,4 +1,4 @@
-import type { IrisPersistenceDelayConfig } from "../../../types/source-options.js";
+import type { IrisPersistenceDelaySettings } from "../../../types/source-options.js";
 import { IrisNotSupportedError } from "../../../errors/IrisNotSupportedError.js";
 import { IrisTransportError } from "../../../errors/IrisTransportError.js";
 import type { IDelayStore } from "../../../interfaces/IrisDelayStore.js";
@@ -6,7 +6,7 @@ import { MemoryDelayStore } from "../MemoryDelayStore.js";
 import { RedisDelayStore } from "../RedisDelayStore.js";
 
 export const createDelayStore = async (
-  config?: IrisPersistenceDelayConfig,
+  config?: IrisPersistenceDelaySettings,
 ): Promise<IDelayStore> => {
   if (!config || config.type === "memory") {
     return new MemoryDelayStore();

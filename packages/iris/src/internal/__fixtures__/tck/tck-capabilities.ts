@@ -1,5 +1,5 @@
 import { IrisSource } from "../../../classes/IrisSource.js";
-import type { IrisSourceOptions } from "../../../types/index.js";
+import type { IrisSourceSettings } from "../../../types/index.js";
 import type { TckCapabilities } from "./types.js";
 
 type TestOnlyCapabilities = Pick<
@@ -18,7 +18,7 @@ type TestOnlyCapabilities = Pick<
  * driver's honest declaration and cannot silently drift from what it supports.
  */
 export const tckCapabilities = (
-  options: IrisSourceOptions,
+  options: IrisSourceSettings,
   testOnly: TestOnlyCapabilities,
 ): TckCapabilities => ({
   ...new IrisSource(options).capabilities,

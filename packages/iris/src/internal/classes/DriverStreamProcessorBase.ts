@@ -11,9 +11,9 @@ import type { DeadLetterManager } from "../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../delay/DelayManager.js";
 import type { MessageEncryptionContext } from "../message/types/encryption-context.js";
 import type { PipelineStage } from "../types/pipeline-stage.js";
-import type { DriverStreamPipelineBaseOptions } from "./DriverStreamPipelineBase.js";
+import type { DriverStreamPipelineBaseSettings } from "./DriverStreamPipelineBase.js";
 
-export type DriverStreamProcessorBaseOptions<State> = {
+export type DriverStreamProcessorBaseSettings<State> = {
   state: State;
   logger: ILogger;
   stages?: Array<PipelineStage>;
@@ -31,7 +31,7 @@ export type DriverStreamProcessorBaseOptions<State> = {
  * base's option shape plus the driver-specific shared `state`, so a driver whose
  * pipeline ctor matches exactly can forward it verbatim.
  */
-export type StreamPipelineBuildOptions<State> = DriverStreamPipelineBaseOptions & {
+export type StreamPipelineBuildOptions<State> = DriverStreamPipelineBaseSettings & {
   state: State;
 };
 
@@ -51,7 +51,7 @@ export abstract class DriverStreamProcessorBase<
   protected readonly deadLetterManager: DeadLetterManager | undefined;
   protected readonly delayManager: DelayManager | undefined;
 
-  constructor(options: DriverStreamProcessorBaseOptions<State>) {
+  constructor(options: DriverStreamProcessorBaseSettings<State>) {
     this.state = options.state;
     this.logger = options.logger;
     this.stages = options.stages ?? [];
@@ -69,8 +69,8 @@ export abstract class DriverStreamProcessorBase<
    * the dead-letter/delay managers always propagate to the pipeline.
    */
   private forkOptions(
-    overrides: Partial<DriverStreamProcessorBaseOptions<State>>,
-  ): DriverStreamProcessorBaseOptions<State> {
+    overrides: Partial<DriverStreamProcessorBaseSettings<State>>,
+  ): DriverStreamProcessorBaseSettings<State> {
     return {
       state: this.state,
       logger: this.logger,
@@ -87,15 +87,15 @@ export abstract class DriverStreamProcessorBase<
 
   /**
    * Clone this processor with the forked options. Every driver's processor is
-   * constructed identically from `DriverStreamProcessorBaseOptions`, so the base
+   * constructed identically from `DriverStreamProcessorBaseSettings`, so the base
    * re-instantiates the concrete subclass via its own constructor — no per-driver
    * override is needed.
    */
   protected createSelf(
-    options: DriverStreamProcessorBaseOptions<State>,
+    options: DriverStreamProcessorBaseSettings<State>,
   ): DriverStreamProcessorBase<State, Pipeline, any, any> {
     const Ctor = this.constructor as new (
-      options: DriverStreamProcessorBaseOptions<State>,
+      options: DriverStreamProcessorBaseSettings<State>,
     ) => DriverStreamProcessorBase<State, Pipeline, any, any>;
     return new Ctor(options);
   }

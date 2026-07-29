@@ -13,7 +13,7 @@ import type {
 import type {
   IrisCapabilities,
   IrisHookMeta,
-  RabbitConnectionOptions,
+  RabbitConnectionSettings,
 } from "../../../../types/index.js";
 import { RABBIT_CAPABILITIES } from "../rabbit-capabilities.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
@@ -39,20 +39,20 @@ const DEFAULT_EXCHANGE = "iris";
 const RECONNECT_BASE_DELAY = 1000;
 const RECONNECT_MAX_DELAY = 30000;
 
-export type RabbitDriverOptions = {
+export type RabbitDriverSettings = {
   logger: ILogger;
   meta?: IrisHookMeta;
   encryption?: MessageEncryptionContext;
   getSubscribers: () => Array<IMessageSubscriber>;
   url: string;
-  connection?: RabbitConnectionOptions;
+  connection?: RabbitConnectionSettings;
   exchange?: string;
   prefetch?: number;
 };
 
 export class RabbitDriver extends ConnectionDriverBase {
   readonly capabilities: IrisCapabilities = RABBIT_CAPABILITIES;
-  private readonly connectionConfig: { url: string } & RabbitConnectionOptions;
+  private readonly connectionConfig: { url: string } & RabbitConnectionSettings;
   private readonly state: RabbitSharedState;
   private _deliberateDisconnect: boolean = false;
   private _reconnectAttempt: number = 0;
@@ -60,7 +60,7 @@ export class RabbitDriver extends ConnectionDriverBase {
   private _publishChannelOpen: boolean = false;
   private _consumeChannelOpen: boolean = false;
 
-  constructor(options: RabbitDriverOptions, state?: RabbitSharedState) {
+  constructor(options: RabbitDriverSettings, state?: RabbitSharedState) {
     super({
       driverType: "rabbit",
       loggerLabel: "RabbitDriver",

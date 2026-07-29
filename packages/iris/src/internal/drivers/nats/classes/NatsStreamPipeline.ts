@@ -2,7 +2,7 @@ import { lindormId } from "@lindorm/random";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import {
   DriverStreamPipelineBase,
-  type DriverStreamPipelineBaseOptions,
+  type DriverStreamPipelineBaseSettings,
 } from "../../../classes/DriverStreamPipelineBase.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import type { MessageMetadata } from "../../../message/types/metadata.js";
@@ -16,7 +16,7 @@ import { serializeNatsMessage } from "../utils/serialize-nats-message.js";
 import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
 import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
 
-export type NatsStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
+export type NatsStreamPipelineSettings = DriverStreamPipelineBaseSettings & {
   state: NatsSharedState;
 };
 
@@ -25,7 +25,7 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
   private consumerTag: string | null = null;
   private consumerName: string | null = null;
 
-  constructor(options: NatsStreamPipelineOptions) {
+  constructor(options: NatsStreamPipelineSettings) {
     super({
       ...options,
       logger: options.logger.child(["NatsStreamPipeline"]),

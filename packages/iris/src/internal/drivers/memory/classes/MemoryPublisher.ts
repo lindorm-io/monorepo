@@ -4,20 +4,21 @@ import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MemorySharedState } from "../types/memory-store.js";
 import {
   DriverPublisherBase,
-  type DriverPublisherBaseOptions,
+  type DriverPublisherBaseSettings,
 } from "../../../classes/DriverPublisherBase.js";
 import { publishMessages } from "../utils/publish-messages.js";
 
-export type MemoryPublisherOptions<M extends IMessage> = DriverPublisherBaseOptions<M> & {
-  store: MemorySharedState;
-  delayManager?: DelayManager;
-};
+export type MemoryPublisherSettings<M extends IMessage> =
+  DriverPublisherBaseSettings<M> & {
+    store: MemorySharedState;
+    delayManager?: DelayManager;
+  };
 
 export class MemoryPublisher<M extends IMessage> extends DriverPublisherBase<M> {
   private readonly store: MemorySharedState;
   private readonly delayManager: DelayManager | undefined;
 
-  constructor(options: MemoryPublisherOptions<M>) {
+  constructor(options: MemoryPublisherSettings<M>) {
     super(options);
     this.store = options.store;
     this.delayManager = options.delayManager;

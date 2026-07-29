@@ -12,7 +12,7 @@ import { serializeNatsMessage } from "../utils/serialize-nats-message.js";
 import { parseNatsMessage } from "../utils/parse-nats-message.js";
 import { prepareInbound } from "../../../message/utils/prepare-inbound.js";
 
-export type NatsRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
+export type NatsRpcClientSettings<Req extends IMessage, Res extends IMessage> = {
   state: NatsSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
@@ -27,7 +27,7 @@ export class NatsRpcClient<
 > extends DriverRpcClientBase<Req, Res> {
   private readonly state: NatsSharedState;
 
-  constructor(options: NatsRpcClientOptions<Req, Res>) {
+  constructor(options: NatsRpcClientSettings<Req, Res>) {
     super(options, "NatsRpcClient");
     this.state = options.state;
   }

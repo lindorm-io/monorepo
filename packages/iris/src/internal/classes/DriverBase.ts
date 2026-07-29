@@ -13,7 +13,7 @@ import { prepareInbound } from "../message/utils/prepare-inbound.js";
 import { driverCapabilities } from "../drivers/driver-capabilities.js";
 import type { MessageEncryptionContext } from "../message/types/encryption-context.js";
 
-export type DriverBaseOptions<M extends IMessage> = {
+export type DriverBaseSettings<M extends IMessage> = {
   target: Constructor<M>;
   logger: ILogger;
   meta?: IrisHookMeta;
@@ -39,7 +39,7 @@ export abstract class DriverBase<M extends IMessage> {
   private readonly driverType: IrisDriverType | undefined;
   private priorityWarned = false;
 
-  protected constructor(options: DriverBaseOptions<M>, loggerLabel: string) {
+  protected constructor(options: DriverBaseSettings<M>, loggerLabel: string) {
     this.target = options.target;
     this.metadata = getMessageMetadata(options.target);
     const resolvedMeta = options.meta ?? createDefaultIrisHookMeta();

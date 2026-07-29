@@ -24,7 +24,7 @@ import type {
   IrisDriverType,
   IrisEvents,
   IrisHookMeta,
-  IrisSourceOptions,
+  IrisSourceSettings,
   MessageScannerInput,
   SessionOptions,
 } from "../types/index.js";
@@ -42,7 +42,7 @@ import { IrisSession } from "./IrisSession.js";
 
 export class IrisSource implements IIrisSource {
   private _driver: IIrisDriver | undefined;
-  private readonly _options: IrisSourceOptions;
+  private readonly _options: IrisSourceSettings;
   private readonly _encryption: MessageEncryptionContext;
   private _delayManager: DelayManager | undefined;
   private _deadLetterManager: DeadLetterManager | undefined;
@@ -57,7 +57,7 @@ export class IrisSource implements IIrisSource {
   private _settingUpPromise: Promise<void> | null = null;
   private isSetUp = false;
 
-  constructor(options: IrisSourceOptions) {
+  constructor(options: IrisSourceSettings) {
     this._options = options;
     this._encryption = { amphora: options.amphora, key: options.encryption };
     this.logger = options.logger.child(["IrisSource"]);

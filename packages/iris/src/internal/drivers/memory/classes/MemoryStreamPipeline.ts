@@ -1,7 +1,7 @@
 import { lindormId } from "@lindorm/random";
 import {
   DriverStreamPipelineBase,
-  type DriverStreamPipelineBaseOptions,
+  type DriverStreamPipelineBaseSettings,
 } from "../../../classes/DriverStreamPipelineBase.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
@@ -11,7 +11,7 @@ import { dispatchToConsumers } from "../utils/dispatch-to-consumers.js";
 import { dispatchToSubscribers } from "../utils/dispatch-to-subscribers.js";
 import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 
-export type MemoryStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
+export type MemoryStreamPipelineSettings = DriverStreamPipelineBaseSettings & {
   store: MemorySharedState;
 };
 
@@ -19,7 +19,7 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
   private readonly store: MemorySharedState;
   private consumerTag: string | null = null;
 
-  constructor(options: MemoryStreamPipelineOptions) {
+  constructor(options: MemoryStreamPipelineSettings) {
     super({
       ...options,
       logger: options.logger.child(["MemoryStreamPipeline"]),

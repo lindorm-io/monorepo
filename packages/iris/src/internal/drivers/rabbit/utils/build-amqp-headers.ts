@@ -2,10 +2,10 @@ import type { Options } from "amqplib";
 import { RABBIT_HEADER_SPECS } from "../../../codec/envelope-field-table.js";
 import { encodeScalarHeaders } from "../../../codec/header-map-codec.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
-import type { AmqpPublishConfig } from "../types/rabbit-types.js";
+import type { AmqpPublishParams } from "../types/rabbit-types.js";
 import { sanitizeRoutingKey } from "./sanitize-routing-key.js";
 
-export type { AmqpPublishConfig };
+export type { AmqpPublishParams };
 
 export const buildAmqpHeaders = (
   envelope: IrisEnvelope,
@@ -16,7 +16,7 @@ export const buildAmqpHeaders = (
     messageId?: string;
     type?: string;
   },
-): AmqpPublishConfig => {
+): AmqpPublishParams => {
   // Every scalar except topic/priority/timestamp travels as an `x-iris-*` header
   // (via the shared codec) — including the full retry-policy set, so retry
   // policy is producer-authoritative (M2). topic/priority/timestamp ride the

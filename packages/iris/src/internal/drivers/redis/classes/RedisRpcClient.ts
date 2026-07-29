@@ -13,7 +13,7 @@ import { serializeStreamFields } from "../utils/serialize-stream-fields.js";
 import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
 import { xaddToStream } from "../utils/xadd-to-stream.js";
 
-export type RedisRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
+export type RedisRpcClientSettings<Req extends IMessage, Res extends IMessage> = {
   state: RedisSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
@@ -30,7 +30,7 @@ export class RedisRpcClient<
   private readonly replyStreamKey: string;
   private replyGroupName: string | null = null;
 
-  constructor(options: RedisRpcClientOptions<Req, Res>) {
+  constructor(options: RedisRpcClientSettings<Req, Res>) {
     super(options, "RedisRpcClient");
     this.state = options.state;
     this.replyStreamKey = `${this.state.prefix}:rpc:reply:${lindormId({ length: 16 })}`;

@@ -14,7 +14,7 @@ import { prepareOutbound } from "../message/utils/prepare-outbound.js";
 import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
 import {
   DriverRpcClientBase,
-  type DriverRpcClientBaseOptions,
+  type DriverRpcClientBaseSettings,
 } from "./DriverRpcClientBase.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -65,7 +65,7 @@ class TestRpcClient<
   public doRequestSpy = vi.fn();
   public doCloseSpy = vi.fn();
 
-  public constructor(options: DriverRpcClientBaseOptions<Req, Res>) {
+  public constructor(options: DriverRpcClientBaseSettings<Req, Res>) {
     super(options, "TestRpcClient");
   }
 

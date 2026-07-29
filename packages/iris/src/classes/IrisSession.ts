@@ -13,7 +13,7 @@ import type {
 } from "../interfaces/index.js";
 import type { IrisDriverType, IrisHookMeta } from "../types/index.js";
 
-export type IrisSessionOptions = {
+export type IrisSessionSettings = {
   logger: ILogger;
   meta: IrisHookMeta;
   driver: IIrisDriver;
@@ -27,7 +27,7 @@ export class IrisSession implements IIrisSession {
   private readonly _messages: Array<Constructor<IMessage>>;
   private readonly _meta: IrisHookMeta;
 
-  constructor(options: IrisSessionOptions) {
+  constructor(options: IrisSessionSettings) {
     this._driver = options.driver;
     this._driverType = options.driverType;
     this._messages = options.messages;
