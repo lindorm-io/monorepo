@@ -733,4 +733,43 @@ describe("Predicated", () => {
       ).toEqual([]);
     });
   });
+
+  // Ages: John(1)=30, Jane(2)=25, Quintin(3)=35, Alice(4)=28.
+  describe("operator conjunction (all operators in one object must hold)", () => {
+    test("ANDs $gt and $lt in a single operator object", () => {
+      // (26, 32) → 30 and 28 only. The first-operator-only bug would also
+      // include Quintin (35), which $lt: 32 must exclude.
+      expect(Predicated.filter(TEST_PEOPLE, { age: { $gt: 26, $lt: 32 } })).toEqual([
+        expect.objectContaining({ id: "1" }),
+        expect.objectContaining({ id: "4" }),
+      ]);
+    });
+
+    test("ANDs $gte and $lte in a single operator object", () => {
+      expect(Predicated.filter(TEST_PEOPLE, { age: { $gte: 28, $lte: 30 } })).toEqual([
+        expect.objectContaining({ id: "1" }),
+        expect.objectContaining({ id: "4" }),
+      ]);
+    });
+
+    test("a later operator can veto an earlier match ($gt passes, $eq fails)", () => {
+      expect(Predicated.filter(TEST_PEOPLE, { age: { $gt: 20, $eq: 25 } })).toEqual([
+        expect.objectContaining({ id: "2" }),
+      ]);
+    });
+  });
+
+  describe("$similar is unsupported for in-memory matching", () => {
+    test("throws instead of silently never matching", () => {
+      expect(() =>
+        Predicated.filter(TEST_PEOPLE, { name: { $similar: "John" } }),
+      ).toThrow(/in-memory/);
+    });
+
+    test("match() also throws", () => {
+      expect(() =>
+        Predicated.match(TEST_PEOPLE[0], { name: { $similar: "John" } }),
+      ).toThrow(/\$similar/);
+    });
+  });
 });
