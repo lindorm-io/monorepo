@@ -113,7 +113,7 @@ describe("verifyCookie", () => {
 
       await expect(
         verifyCookie(ctx, "name", "value", "signature", "token-kid", {
-          predicate: { purpose: "cookie" },
+          condition: { purpose: "cookie" },
         }),
       ).rejects.toThrow(ClientError);
 
@@ -125,7 +125,7 @@ describe("verifyCookie", () => {
 
       await expect(
         verifyCookie(ctx, "name", "value", "signature", "kid-1", {
-          predicate: { purpose: "cookie" },
+          condition: { purpose: "cookie" },
         }),
       ).resolves.toBeUndefined();
 

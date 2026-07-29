@@ -21,7 +21,7 @@ vi.mock("@lindorm/aegis", async () => ({
 // The deployment's selector. Pylon holds no opinion about which key signs a
 // cookie — this is what an app's `keys.cookie.signature` says.
 const COOKIE_KEY: PylonSignKey = {
-  predicate: { purpose: "cookie", publish: false },
+  condition: { purpose: "cookie", publish: false },
 };
 
 describe("signCookie", () => {
@@ -45,7 +45,7 @@ describe("signCookie", () => {
     });
   });
 
-  test("should query the vault with the floor merged under the deployment's predicate", async () => {
+  test("should query the vault with the floor merged under the deployment's condition", async () => {
     await signCookie(ctx, "value", COOKIE_KEY);
 
     expect(ctx.amphora.find).toHaveBeenCalledWith({
@@ -69,7 +69,7 @@ describe("signCookie", () => {
   });
 
   // The mocked-amphora tests above prove the SHAPE. These prove the SELECTION —
-  // against a real vault, with a real predicate, because the predicate is the
+  // against a real vault, with a real condition, because the condition is the
   // whole point: a mocked `find` cannot select the wrong key.
   describe("key selection (real vault)", () => {
     const older = new Date("2024-01-01T00:00:00.000Z");
@@ -87,7 +87,7 @@ describe("signCookie", () => {
       });
 
     // Deliberately NEWER than the cookie key. `amphora.find` returns the newest
-    // match, so if the predicate were vacuous this key would win — which is
+    // match, so if the condition were vacuous this key would win — which is
     // exactly the bug that existed: pylon was signing cookies with its
     // token-signing key, because token keys rotate every 6mo and cookie keys
     // yearly, making the token key almost always the newest sig key.
@@ -133,13 +133,13 @@ describe("signCookie", () => {
       amphora.add([sessionKey, internalCookieKey(), publishedTokenKey()]);
 
       const { kid } = await signCookie({ amphora }, "value", {
-        predicate: { purpose: "session", publish: false },
+        condition: { purpose: "session", publish: false },
       });
 
       expect(kid).toBe(sessionKey.id);
     });
 
-    test("the selected key satisfies the floor and the deployment's predicate", async () => {
+    test("the selected key satisfies the floor and the deployment's condition", async () => {
       amphora.add([internalCookieKey(), publishedTokenKey()]);
 
       const { kid } = await signCookie({ amphora }, "value", COOKIE_KEY);
@@ -158,7 +158,7 @@ describe("signCookie", () => {
       amphora.add([publishedTokenKey()]);
 
       await expect(signCookie({ amphora }, "value", COOKIE_KEY)).rejects.toThrow(
-        /No cookie signing key matches the configured predicate/,
+        /No cookie signing key matches the configured condition/,
       );
     });
 

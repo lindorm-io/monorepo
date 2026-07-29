@@ -110,7 +110,7 @@ describe("createSessionStore", () => {
     const ISSUER = "http://test.lindorm.io";
 
     const sessionKeys: PylonCookieSettings = {
-      encryption: { predicate: { purpose: "session", publish: false } },
+      encryption: { condition: { purpose: "session", publish: false } },
     };
 
     let amphora: IAmphora;
@@ -181,7 +181,7 @@ describe("createSessionStore", () => {
     // session sealed with the OLD key still decrypts after the change.
     test("a session sealed with the OLD key still decrypts", async () => {
       const stale = await realCtx.aegis.aes.encrypt(session.accessToken, {
-        key: { predicate: { purpose: "token" } },
+        key: { condition: { purpose: "token" } },
       });
 
       expect(AesKit.parse(stale).keyId).toBe(tokenKey.id);
@@ -199,7 +199,7 @@ describe("createSessionStore", () => {
     test("throws when the named session enc key is not in the vault", async () => {
       const store = createSessionStore({
         enabled: true,
-        encryption: { predicate: { purpose: "no-such-purpose" } },
+        encryption: { condition: { purpose: "no-such-purpose" } },
       });
 
       await expect(store!.set(realCtx, session)).rejects.toThrow();

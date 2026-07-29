@@ -13,7 +13,7 @@ export type PylonKeySelectors = {
 /**
  * The RESOLVED cookie key roles — internal only. `signature` and `encryption`
  * are the declared selectors; `verification` is DERIVED from the resolved
- * signature's predicate (see `resolveVerificationKey`), never declared.
+ * signature's condition (see `resolveVerificationKey`), never declared.
  */
 export type PylonResolvedKeys = {
   signature?: PylonSignKey;

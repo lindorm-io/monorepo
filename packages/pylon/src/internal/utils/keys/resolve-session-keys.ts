@@ -13,7 +13,7 @@ import type { PylonKeySelectors, PylonResolvedKeys } from "./types.js";
  * specifically).
  *
  * `signature` and `encryption` chain plainly: `session.<role> ?? cookies.<role>`.
- * No merging of predicates, no partial inheritance — a role is either the
+ * No merging of conditions, no partial inheritance — a role is either the
  * deployment's session choice or its cookie choice, never a blend of the two.
  *
  * `verification` does NOT chain plainly, because it is not independent of

@@ -40,7 +40,7 @@ describe("encryptCookie", () => {
   });
 
   const key: PylonEncKey = {
-    predicate: { purpose: "cookie", publish: false },
+    condition: { purpose: "cookie", publish: false },
   };
 
   test("resolves the named key and seals the value as an AES token with THAT key's kid", async () => {

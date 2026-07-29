@@ -17,7 +17,7 @@ import { createHttpSessionMiddleware } from "./http-session-middleware.js";
  * A deployment's two flat key scopes: `cookies` and `session`. Under the
  * settings-declare-keys / configured-key-⇒-default-on model, naming a role's key
  * is what turns it on — there are no `encrypted`/`signed` session booleans, and
- * verification is DERIVED from the signature predicate.
+ * verification is DERIVED from the signature condition.
  */
 type Keys = { cookie?: PylonCookieSettings; session?: PylonCookieSettings };
 
@@ -40,13 +40,13 @@ const OLDER = new Date("2024-01-01T00:00:00.000Z");
 const NEWER = new Date("2024-06-01T00:00:00.000Z");
 
 const COOKIE_KEYS: PylonCookieSettings = {
-  signature: { predicate: { purpose: "cookie", publish: false } },
-  encryption: { predicate: { purpose: "cookie", publish: false } },
+  signature: { condition: { purpose: "cookie", publish: false } },
+  encryption: { condition: { purpose: "cookie", publish: false } },
 };
 
 const SESSION_KEYS: PylonCookieSettings = {
-  signature: { predicate: { purpose: "session", publish: false } },
-  encryption: { predicate: { purpose: "session", publish: false } },
+  signature: { condition: { purpose: "session", publish: false } },
+  encryption: { condition: { purpose: "session", publish: false } },
 };
 
 const session = (): IPylonSession => ({
@@ -284,7 +284,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     // NEW cookie signing key is minted under the SAME purpose, so `find` starts
     // returning it. Live cookies signed by the previous key must keep working —
     // and they do, because a signature is resolved against the key the cookie's
-    // own `.kid` names, and the verification predicate matches a key CLASS, not
+    // own `.kid` names, and the verification condition matches a key CLASS, not
     // a kid.
     test("rotating the signing key does not invalidate live cookies", async () => {
       const before = buildCtx();
@@ -348,17 +348,17 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       );
     });
 
-    // An injected `kryptos` has no predicate to inherit. We do NOT synthesise one
+    // An injected `kryptos` has no condition to inherit. We do NOT synthesise one
     // from the key's attributes — the floor (`use: "sig"`) applies alone, and the
     // cookie's `.kid` names the key. Crucially the check does NOT fall through to
-    // the COOKIE predicate, which the injected session key would fail.
+    // the COOKIE condition, which the injected session key would fail.
     test("an injected `session.signature` kryptos verifies against the floor alone", async () => {
       const injected = KryptosKit.generate.auto({
         algorithm: "HS256",
         createdAt: OLDER,
         issuer: ISSUER,
         publish: false,
-        purpose: "ad-hoc-not-in-any-predicate",
+        purpose: "ad-hoc-not-in-any-condition",
       });
 
       amphora.add(injected);
@@ -466,7 +466,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     await expect(
       run(
         ctx,
-        { cookie: { signature: { predicate: { purpose: "no-such-purpose" } } } },
+        { cookie: { signature: { condition: { purpose: "no-such-purpose" } } } },
         { enabled: false },
         async () => {
           await ctx.session.set(session());
@@ -486,7 +486,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     await expect(
       run(
         ctx,
-        { cookie: { encryption: { predicate: { purpose: "no-such-purpose" } } } },
+        { cookie: { encryption: { condition: { purpose: "no-such-purpose" } } } },
         { enabled: false },
         async () => {
           await ctx.session.set(session());

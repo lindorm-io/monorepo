@@ -36,24 +36,24 @@ describe("resolveCookieSigningKey", () => {
     amphora.add(sig);
 
     const resolved = await resolveCookieSigningKey(amphora, {
-      predicate: { purpose: "cookie", publish: false },
+      condition: { purpose: "cookie", publish: false },
     });
 
     expect(resolved.id).toBe(sig.id);
   });
 
-  // #8: `key.predicate` is duck-typed, so a config/JSON one can carry a floor
+  // #8: `key.condition` is duck-typed, so a config/JSON one can carry a floor
   // key (`use`). The floor (`use: "sig"`) is applied LAST and wins the merge, so
   // the smuggled `use: "enc"` is overridden — the sig key is selected, never the
   // enc key (which would then fail the post-check floor and throw).
-  test("a predicate carrying a floor key cannot override the floor", async () => {
+  test("a condition carrying a floor key cannot override the floor", async () => {
     const sig = sigKey();
     const enc = encKey();
     amphora.add(enc);
     amphora.add(sig);
 
     const resolved = await resolveCookieSigningKey(amphora, {
-      predicate: { purpose: "cookie", publish: false, use: "enc" },
+      condition: { purpose: "cookie", publish: false, use: "enc" },
     } as unknown as PylonSignKey);
 
     expect(resolved.id).toBe(sig.id);

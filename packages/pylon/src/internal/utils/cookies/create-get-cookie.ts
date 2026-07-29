@@ -24,7 +24,7 @@ export type CreateGetCookieOptions = {
   parsed: Array<ParsedCookie>;
   /**
    * The ORDINARY-cookie signing selector. A configured signature turns
-   * verification ON by default, and its predicate IS the verification policy
+   * verification ON by default, and its condition IS the verification policy
    * (see `resolveVerificationKey`).
    */
   signature?: PylonSignKey;
@@ -95,7 +95,7 @@ export const createGetCookie = ({
     // Known minor limitation (accepted, not worked around): two reads of the same
     // cookie with two DIFFERENT verification SELECTORS in one request share a
     // value-policy slot, so the second reuses the first's already-verified value
-    // without re-applying the second selector's predicate. Verification does not
+    // without re-applying the second selector's condition. Verification does not
     // transform the value and the require-check still runs per-call, so this is
     // acceptable.
     const cacheKey = `${name}::enc=${encrypted ? 1 : 0}::codec=${opts.encoding ?? ""}`;

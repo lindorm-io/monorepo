@@ -10,8 +10,8 @@ export type PylonKryptosSettings = {
   /**
    * The at-rest KEK selector staged onto `Kryptos.privateKey` before the source
    * sets up. Proteus encrypts the stored private key on write and decrypts it
-   * transparently on read. Default `{ predicate: { purpose: "pylon:kek" } }` —
-   * the bootstrap key-encryption-key. Same `{ kryptos?, predicate? }` descriptor
+   * transparently on read. Default `{ condition: { purpose: "pylon:kek" } }` —
+   * the bootstrap key-encryption-key. Same `{ kryptos?, condition? }` descriptor
    * as every other key surface; `encryption` (the AEAD) is ignored on this path.
    */
   encryption?: PylonEncKey;
@@ -31,9 +31,9 @@ export type PylonWebhookSettings = {
    * before the source sets up. Proteus encrypts the stored secret on write and
    * decrypts it transparently on read — a subscription registers a PLAINTEXT
    * secret and dispatch reads it back in the clear (no manual decrypt). Default
-   * `{ predicate: { purpose: "pylon:kek" } }` — the same bootstrap KEK as kryptos;
+   * `{ condition: { purpose: "pylon:kek" } }` — the same bootstrap KEK as kryptos;
    * override it (e.g. its own `purpose`) for a separate blast radius. Same
-   * `{ kryptos?, predicate? }` descriptor as every other key surface;
+   * `{ kryptos?, condition? }` descriptor as every other key surface;
    * `encryption` (the AEAD) is ignored on this path.
    */
   encryption?: PylonEncKey;

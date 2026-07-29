@@ -41,7 +41,7 @@ export type PylonCookieAttributes = {
  * signing key is configured.
  *
  * There is no `verification` selector: verification is derived from the
- * `signature` selector's predicate (see `resolveVerificationKey`), never
+ * `signature` selector's condition (see `resolveVerificationKey`), never
  * declared.
  */
 export type PylonCookieSettings = Pick<

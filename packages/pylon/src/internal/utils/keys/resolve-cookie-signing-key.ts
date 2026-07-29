@@ -5,13 +5,13 @@ import type { IKryptos } from "@lindorm/kryptos";
 import type { PylonSignKey } from "../../../types/index.js";
 
 /**
- * Resolve the key that signs a cookie, keeping the two jobs a predicate can do
+ * Resolve the key that signs a cookie, keeping the two jobs a condition can do
  * strictly apart (only one of them survives key injection):
  *
  *   FLOOR     — policy. Checked on the key, whatever its provenance.
- *   PREDICATE — a vault query. Checked on nothing; it only ever selects.
+ *   CONDITION — a vault query. Checked on nothing; it only ever selects.
  *
- * An injected `kryptos` never came from the vault, so the predicate cannot apply
+ * An injected `kryptos` never came from the vault, so the condition cannot apply
  * to it — but the FLOOR does, or a key with no private half would be handed to
  * the signer. There is no fallback: a key either satisfies the policy or it does
  * not, and a miss is a throw.
@@ -28,22 +28,22 @@ export const resolveCookieSigningKey = async (
   amphora: IAmphora,
   key: PylonSignKey | undefined,
 ): Promise<IKryptos> => {
-  if (!key?.kryptos && !key?.predicate) {
+  if (!key?.kryptos && !key?.condition) {
     throw new ServerError("Cookie signing key is not configured", {
       code: "cookie_signing_key_not_configured",
       title: "Cookie Signing Key Not Configured",
       type: "urn:lindorm:pylon:error:cookie_signing_key_not_configured",
       details:
-        'A cookie was set with `signed: true`, but no cookie signing key is configured; name the key that signs cookies in the pylon options (`keys.cookie.signature`, e.g. `{ predicate: { purpose: "cookie", publish: false } }`). A session cookie chains to it — `keys.session.signature ?? keys.cookie.signature` — so naming the cookie key is what makes any cookie signable. Pylon will not guess one: the vault\'s default set is the published keys, so a guess would sign cookies with the JWKS token key.',
+        'A cookie was set with `signed: true`, but no cookie signing key is configured; name the key that signs cookies in the pylon options (`keys.cookie.signature`, e.g. `{ condition: { purpose: "cookie", publish: false } }`). A session cookie chains to it — `keys.session.signature ?? keys.cookie.signature` — so naming the cookie key is what makes any cookie signable. Pylon will not guess one: the vault\'s default set is the published keys, so a guess would sign cookies with the JWKS token key.',
       data: { floor: SIGN_FLOOR },
     });
   }
 
-  // The floor is applied LAST so it always wins the merge: `key.predicate` is
+  // The floor is applied LAST so it always wins the merge: `key.condition` is
   // duck-typed and could carry a floor key (e.g. `use`), which must never
   // override the policy. Per-layer `undefined` stripping keeps a
-  // `{ x: undefined }` predicate from becoming match-all.
-  const query = applyKeyFloor(SIGN_FLOOR, key.predicate);
+  // `{ x: undefined }` condition from becoming match-all.
+  const query = applyKeyFloor(SIGN_FLOOR, key.condition);
 
   let kryptos: IKryptos;
 
@@ -53,12 +53,12 @@ export const resolveCookieSigningKey = async (
     try {
       kryptos = await amphora.find(query);
     } catch (error) {
-      throw new ServerError("No cookie signing key matches the configured predicate", {
+      throw new ServerError("No cookie signing key matches the configured condition", {
         code: "cookie_signing_key_not_found",
         title: "Cookie Signing Key Not Found",
         type: "urn:lindorm:pylon:error:cookie_signing_key_not_found",
         details:
-          "The amphora holds no usable key matching the configured cookie signing key (`keys.cookie.signature`, or `keys.session.signature` for the session cookie); add the key to the vault (the kryptos rotation worker mints the keys it is given) or correct the predicate. Note that amphora queries the PUBLISHED set by default — an internal cookie key needs `publish: false`.",
+          "The amphora holds no usable key matching the configured cookie signing key (`keys.cookie.signature`, or `keys.session.signature` for the session cookie); add the key to the vault (the kryptos rotation worker mints the keys it is given) or correct the condition. Note that amphora queries the PUBLISHED set by default — an internal cookie key needs `publish: false`.",
         data: { query },
         debug: { error: (error as Error).message },
       });

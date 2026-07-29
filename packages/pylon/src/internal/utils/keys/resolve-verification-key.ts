@@ -5,16 +5,16 @@ import type { PylonSignKey, PylonVerifyKey } from "../../../types/index.js";
  *
  * Verification asks: *is the key that signed this cookie one of the keys I would
  * have signed it with?* That question IS the signing policy — so the signing
- * selector's `predicate` becomes the verification predicate. There is no
+ * selector's `condition` becomes the verification condition. There is no
  * `verification` selector to declare: naming the `signature` is naming the read
  * policy too.
  *
  * A signature short-circuits BEFORE the fallback is consulted, so a scope that
  * signs with its own key owns its read policy too — even when that signature is
- * an injected `kryptos` with no predicate to inherit. That case yields
- * `{ predicate: undefined }` (the floor `use: "sig"` alone), NOT `undefined`:
+ * an injected `kryptos` with no condition to inherit. That case yields
+ * `{ condition: undefined }` (the floor `use: "sig"` alone), NOT `undefined`:
  * the result is consumed as `<scope policy> ?? <deployment default>`, so an
- * absent policy would fall through to the fallback's predicate — which the
+ * absent policy would fall through to the fallback's condition — which the
  * injected key, chosen outside it, would fail. The floor alone is a POLICY, not
  * the lack of one.
  *
@@ -26,5 +26,5 @@ export const resolveVerificationKey = (
 ): PylonVerifyKey | undefined => {
   const resolved = signature ?? fallback;
 
-  return resolved ? { predicate: resolved.predicate } : undefined;
+  return resolved ? { condition: resolved.condition } : undefined;
 };

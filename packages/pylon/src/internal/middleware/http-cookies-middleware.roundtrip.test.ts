@@ -229,7 +229,7 @@ describe("httpCookiesMiddleware round-trip", () => {
     amphora.add(cookieKey);
 
     const keys: PylonCookieSettings = {
-      encryption: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { condition: { purpose: "cookie", publish: false } },
     };
 
     // Large enough that the sealed token overflows the chunk threshold.

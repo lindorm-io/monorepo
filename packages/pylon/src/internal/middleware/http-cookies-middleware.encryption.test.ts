@@ -45,7 +45,7 @@ const publishedTokenEncKey = (): IKryptos =>
   });
 
 const keys: PylonCookieSettings = {
-  encryption: { predicate: { purpose: "cookie", publish: false } },
+  encryption: { condition: { purpose: "cookie", publish: false } },
 };
 
 const buildCtx = (amphora: IAmphora, cookieHeader = "") => {
@@ -115,7 +115,7 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
 
     // Exactly what the old code produced: the published token enc key.
     const stale = await writeCtx.aegis.aes.encrypt("old_value", {
-      key: { predicate: { purpose: "token" } },
+      key: { condition: { purpose: "token" } },
     });
 
     expect(AesKit.parse(stale).keyId).toBe(tokenKey.id);
@@ -138,7 +138,7 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
 
     await expect(
       createHttpCookiesMiddleware({
-        encryption: { predicate: { purpose: "no-such-purpose" } },
+        encryption: { condition: { purpose: "no-such-purpose" } },
       })(ctx as any, async () => {
         await (ctx as any).cookies.set("sid", "secret_value", { encryption: true });
       }),

@@ -38,8 +38,8 @@ const cookieEncKey = (): IKryptos =>
   });
 
 const keys: PylonCookieSettings = {
-  signature: { predicate: { purpose: "cookie", publish: false } },
-  encryption: { predicate: { purpose: "cookie", publish: false } },
+  signature: { condition: { purpose: "cookie", publish: false } },
+  encryption: { condition: { purpose: "cookie", publish: false } },
 };
 
 const buildCtx = (amphora: IAmphora, cookieHeader = "") => {

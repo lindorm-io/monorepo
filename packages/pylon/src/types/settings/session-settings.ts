@@ -12,7 +12,7 @@ import type { PylonEncKey, PylonSignKey } from "./keys.js";
  * `session.<role> ?? cookies.<role>` (see `resolveSessionKeys`). Name only
  * `cookies` and one set of keys does everything; name `session` keys too and the
  * session cookie is signed / sealed with its OWN key. Verification is derived
- * from the resolved `signature` predicate, never declared.
+ * from the resolved `signature` condition, never declared.
  */
 export type PylonSessionSettings = Pick<
   PylonCookieAttributes,

@@ -23,8 +23,8 @@ const verifyCookie = _verifyCookie as Mock;
 
 // What a deployment's flat `cookies` selectors say. Pylon guesses none of it.
 const cookieKeys: PylonCookieSettings = {
-  signature: { predicate: { purpose: "cookie", publish: false } },
-  encryption: { predicate: { purpose: "cookie", publish: false } },
+  signature: { condition: { purpose: "cookie", publish: false } },
+  encryption: { condition: { purpose: "cookie", publish: false } },
 };
 
 describe("httpCookiesMiddleware", async () => {
@@ -142,7 +142,7 @@ describe("httpCookiesMiddleware", async () => {
     );
   });
 
-  test("should derive the verification key from the configured signature predicate", async () => {
+  test("should derive the verification key from the configured signature condition", async () => {
     next.mockImplementation(async () => {
       await ctx.cookies.get("cookie_name", { signed: true });
     });
@@ -154,7 +154,7 @@ describe("httpCookiesMiddleware", async () => {
       })(ctx, next),
     ).resolves.toBeUndefined();
 
-    // Verification is DERIVED from the signing selector's predicate — there is no
+    // Verification is DERIVED from the signing selector's condition — there is no
     // separate verification selector.
     expect(verifyCookie).toHaveBeenCalledWith(
       ctx,
@@ -162,7 +162,7 @@ describe("httpCookiesMiddleware", async () => {
       "Y29va2llX3ZhbHVl",
       "cookie_signature",
       "cookie_kid",
-      { predicate: cookieKeys.signature!.predicate },
+      { condition: cookieKeys.signature!.condition },
     );
   });
 

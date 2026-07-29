@@ -32,10 +32,10 @@ export const resolveCookieVerificationKey = (
   const kryptos = amphora.findByIdSync(kid);
 
   // The floor is applied LAST so it always wins: this floor is the CHECK on the
-  // key the cookie names, and a duck-typed `key.predicate` must never override
+  // key the cookie names, and a duck-typed `key.condition` must never override
   // the deployment policy. Per-layer `undefined` stripping keeps a
-  // `{ x: undefined }` predicate from erasing a constraint.
-  const floor = applyKeyFloor(VERIFY_FLOOR, key?.predicate);
+  // `{ x: undefined }` condition from erasing a constraint.
+  const floor = applyKeyFloor(VERIFY_FLOOR, key?.condition);
 
   if (!Matcher.match(kryptos, floor)) {
     throw new ClientError("Cookie key violates the verification floor", {

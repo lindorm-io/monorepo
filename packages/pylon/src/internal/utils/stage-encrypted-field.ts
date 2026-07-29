@@ -3,13 +3,13 @@ import type { PylonEncKey } from "../../types/index.js";
 
 /**
  * A `PylonEncKey` as a proteus at-rest key selector. Both are the shared
- * `{ kryptos?, predicate? }` descriptor, so the mapping is a pass-through; the
+ * `{ kryptos?, condition? }` descriptor, so the mapping is a pass-through; the
  * AEAD `encryption` is meaningless on the `@Encrypted` KEK path (proteus owns
  * the cipher there) and is dropped.
  */
 const toProteusEncryptionKey = (key: PylonEncKey): ProteusEncryptionKey => ({
   kryptos: key.kryptos,
-  predicate: key.predicate as ProteusEncryptionKey["predicate"],
+  condition: key.condition as ProteusEncryptionKey["condition"],
 });
 
 /**

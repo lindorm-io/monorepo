@@ -31,7 +31,7 @@ import { PylonIo } from "./PylonIo.js";
 // private keys and webhook client secrets alike (the webhook key does not
 // rotate, so it needs no separate purpose). A deployment can still override
 // `kryptos.encryption` / `webhook.encryption` for blast-radius separation.
-const DEFAULT_KEK: PylonEncKey = { predicate: { purpose: "pylon:kek" } };
+const DEFAULT_KEK: PylonEncKey = { condition: { purpose: "pylon:kek" } };
 
 export class Pylon<
   E extends PylonEventMap = PylonEventMap,

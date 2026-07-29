@@ -28,7 +28,7 @@ type PylonKeyAttributes = Pick<
   | "type"
 >;
 
-export type PylonKeyPredicate = Condition<PylonKeyAttributes>;
+export type PylonKeyCondition = Condition<PylonKeyAttributes>;
 
 /**
  * Selects the key that SIGNS cookies.
@@ -36,15 +36,15 @@ export type PylonKeyPredicate = Condition<PylonKeyAttributes>;
  * `kryptos` is a key supplied outright — e.g. an env-imported cookie secret that
  * never reaches the vault. It skips the vault query, never the floor.
  *
- * `predicate` is which of the vault's keys. ⚠ Amphora's default query is the
+ * `condition` is which of the vault's keys. ⚠ Amphora's default query is the
  * PUBLISHED set, so an internal cookie key needs `publish: false` to be
  * reachable at all.
  */
-export type PylonSignKey = AmphoraKeySelector<PylonKeyPredicate>;
+export type PylonSignKey = AmphoraKeySelector<PylonKeyCondition>;
 
 /**
  * The read side, cookie signatures. The key is resolved from the cookie's own
- * `.kid`, so a predicate cannot be a QUERY here — but it is exactly right as a
+ * `.kid`, so a condition cannot be a QUERY here — but it is exactly right as a
  * CHECK, applied to the resolved key before any signature is touched. Without
  * it, a client that can name any kid in the vault picks the class of key its
  * cookie is verified against.
@@ -54,14 +54,14 @@ export type PylonSignKey = AmphoraKeySelector<PylonKeyPredicate>;
  * aegis's `AegisVerifyKey`.
  */
 export type PylonVerifyKey = {
-  predicate?: PylonKeyPredicate;
+  condition?: PylonKeyCondition;
 };
 
 /**
  * Selects the key that ENCRYPTS a cookie value or a stored session's tokens.
  * Handed to `aegis.aes.encrypt`, which owns the encryption floor (`use: "enc"`).
  */
-export type PylonEncKey = AmphoraKeySelector<PylonKeyPredicate> & {
+export type PylonEncKey = AmphoraKeySelector<PylonKeyCondition> & {
   /**
    * The AES content-encryption AEAD (`A256GCM`, …). This picks the CIPHER, never
    * the key — it is not a selector, which is why it sits beside the shared

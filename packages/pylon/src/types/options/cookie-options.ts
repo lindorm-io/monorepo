@@ -27,10 +27,10 @@ export type PylonGetCookieOptions = Pick<PylonCookieAttributes, "encoding"> & {
    * Whether — and against which key — THIS cookie's signature is verified,
    * checked on the key its `.kid` names before the signature is trusted.
    *
-   * - `true` ⇒ verify with the deployment `cookies.signature` predicate.
-   * - a selector ⇒ verify against that key's predicate.
+   * - `true` ⇒ verify with the deployment `cookies.signature` condition.
+   * - a selector ⇒ verify against that key's condition.
    * - `false` ⇒ not verified.
-   * - absent ⇒ verified iff `cookies.signature` is named (its predicate is the
+   * - absent ⇒ verified iff `cookies.signature` is named (its condition is the
    *   verification policy).
    *
    * The read side of DECRYPTION takes no key — ciphertext names its own.

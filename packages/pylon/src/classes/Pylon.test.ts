@@ -295,12 +295,12 @@ describe("Pylon", () => {
       environment: "test",
 
       // The deployment SAYS which key does what, per feature. Pylon guesses none
-      // of it — and `publish: false` is load-bearing in every predicate: amphora's
+      // of it — and `publish: false` is load-bearing in every condition: amphora's
       // default query is the PUBLISHED set, so an internal key is otherwise
       // unreachable. A configured key ⇒ that role is on by default.
       cookies: {
-        signature: { predicate: { purpose: "cookie", publish: false } },
-        encryption: { predicate: { purpose: "cookie", publish: false } },
+        signature: { condition: { purpose: "cookie", publish: false } },
+        encryption: { condition: { purpose: "cookie", publish: false } },
       },
 
       routes: [{ path: "/test", router }],
@@ -312,7 +312,7 @@ describe("Pylon", () => {
       // CHAINS to the cookie signature above (and verification derives from it).
       session: {
         enabled: true,
-        encryption: { predicate: { purpose: "session", publish: false } },
+        encryption: { condition: { purpose: "session", publish: false } },
       },
       version: "0.0.1",
     });

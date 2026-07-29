@@ -23,7 +23,7 @@ import { verifyCookie } from "../cookies/verify-cookie.js";
  * only `isPending: false`, so a rotation never logs out a live session.
  */
 describe("the cookie time floor", () => {
-  const COOKIE_KEY: PylonSignKey = { predicate: { purpose: "cookie", publish: false } };
+  const COOKIE_KEY: PylonSignKey = { condition: { purpose: "cookie", publish: false } };
 
   const cookieKey = (notBefore?: Date, expiresAt?: Date): IKryptos =>
     KryptosKit.generate.auto({

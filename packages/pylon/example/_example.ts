@@ -71,10 +71,10 @@ export const EXAMPLE_PYLON = new Pylon({
   //
   // No `session` keys: a session IS a cookie, and every session role chains to
   // its `cookies` counterpart — so this vault's two cookie keys do everything.
-  // No `verification` either: it derives from the signing predicate.
+  // No `verification` either: it derives from the signing condition.
   cookies: {
-    signature: { predicate: { purpose: "cookie", publish: false } },
-    encryption: { predicate: { purpose: "cookie", publish: false } },
+    signature: { condition: { purpose: "cookie", publish: false } },
+    encryption: { condition: { purpose: "cookie", publish: false } },
   },
 
   name: "@lindorm/pylon",

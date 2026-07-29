@@ -50,32 +50,32 @@ describe("resolveCookieEncryptionKey", () => {
     });
   });
 
-  test("throws when the selector carries neither kryptos nor predicate", async () => {
+  test("throws when the selector carries neither kryptos nor condition", async () => {
     await expect(
       resolveCookieEncryptionKey(amphora, {} as PylonEncKey),
     ).rejects.toMatchObject({ code: "cookie_encryption_key_not_configured" });
   });
 
   describe("key selection (real vault)", () => {
-    test("selects the internal cookie enc key the predicate names, NOT the newer published token key", async () => {
+    test("selects the internal cookie enc key the condition names, NOT the newer published token key", async () => {
       const cookieKey = cookieEncKey();
       const tokenKey = publishedTokenEncKey();
 
       amphora.add([cookieKey, tokenKey]);
 
       const resolved = await resolveCookieEncryptionKey(amphora, {
-        predicate: { purpose: "cookie", publish: false },
+        condition: { purpose: "cookie", publish: false },
       });
 
       expect(resolved.id).toBe(cookieKey.id);
       expect(resolved.id).not.toBe(tokenKey.id);
     });
 
-    test("the selected key satisfies the envelope floor and the predicate", async () => {
+    test("the selected key satisfies the envelope floor and the condition", async () => {
       amphora.add([cookieEncKey(), publishedTokenEncKey()]);
 
       const resolved = await resolveCookieEncryptionKey(amphora, {
-        predicate: { purpose: "cookie", publish: false },
+        condition: { purpose: "cookie", publish: false },
       });
 
       expect(resolved.use).toBe("enc");
@@ -98,12 +98,12 @@ describe("resolveCookieEncryptionKey", () => {
 
     // Fail LOUDLY: a named key the vault does not hold must not degrade into
     // "whatever enc key is newest".
-    test("throws when no key matches the configured predicate", async () => {
+    test("throws when no key matches the configured condition", async () => {
       amphora.add([publishedTokenEncKey()]);
 
       await expect(
         resolveCookieEncryptionKey(amphora, {
-          predicate: { purpose: "cookie", publish: false },
+          condition: { purpose: "cookie", publish: false },
         }),
       ).rejects.toMatchObject({ code: "cookie_encryption_key_not_found" });
     });
