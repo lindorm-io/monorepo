@@ -1,5 +1,5 @@
 import type { AmphoraKeySelector, AmphoraQuery } from "@lindorm/amphora";
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 
 /**
  * The attributes a consumer may select a message-encryption key by.
@@ -33,7 +33,7 @@ type IrisEncryptionAttributes = Pick<
  * dedicated message KEK is `{ purpose: "message" }`; an allowlist is
  * `{ algorithm: { $in: [...] } }`.
  */
-export type IrisEncryptionPredicate = Predicate<IrisEncryptionAttributes>;
+export type IrisEncryptionPredicate = Condition<IrisEncryptionAttributes>;
 
 /**
  * How a message NAMES its encryption key: a key supplied outright, or a query

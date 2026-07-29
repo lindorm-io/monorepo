@@ -5,7 +5,7 @@ import {
   type IAmphora,
 } from "@lindorm/amphora";
 import type { IKryptos } from "@lindorm/kryptos";
-import { Predicated } from "@lindorm/utils";
+import { Matcher } from "@lindorm/match";
 import { IrisEncryptionError } from "../../../errors/IrisEncryptionError.js";
 import type { IrisEncryptionKey } from "../../../types/encryption.js";
 import { ENCRYPTION_DEFAULT } from "../../constants/key-floor.js";
@@ -96,7 +96,7 @@ export const resolveEncryptionKey = async (
       })));
 
   // The FLOOR applies to the selected key, the pinned key AND the injected key.
-  if (!Predicated.match(kryptos, floor)) {
+  if (!Matcher.match(kryptos, floor)) {
     throw new IrisEncryptionError(
       decrypting
         ? "Decryption key violates the iris key floor"
