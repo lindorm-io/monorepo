@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { ILogger } from "@lindorm/logger";
-import type { Constructor, DeepPartial, Predicate } from "@lindorm/types";
+import type { Constructor, DeepPartial } from "@lindorm/types";
 import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError.js";
 import type {
   IEntity,
@@ -132,11 +133,11 @@ export abstract class DriverRepositoryBase<
   protected abstract softDestroyOne(entity: E): Promise<void>;
   protected abstract upsertOne(entity: E, options?: UpsertOptions<E>): Promise<E>;
   abstract find(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: FindOptions<E>,
     _scope?: QueryScope,
   ): Promise<Array<E>>;
-  abstract versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>>;
+  abstract versions(criteria: Condition<E>, options?: FindOptions<E>): Promise<Array<E>>;
   abstract cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>>;
   abstract clear(options?: ClearOptions): Promise<void>;
   protected abstract buildLazyLoader(): LazyRelationLoader;
@@ -179,7 +180,7 @@ export abstract class DriverRepositoryBase<
   protected abstract executeAggregate(
     type: AggregateFunction,
     field: keyof E,
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
   ): Promise<number | null>;
   protected abstract isDuplicateKeyError(error: unknown): boolean;
 
@@ -199,18 +200,18 @@ export abstract class DriverRepositoryBase<
 
   // ─── Queries ──────────────────────────────────────────────────────
 
-  async count(criteria?: Predicate<E>, options?: FindOptions<E>): Promise<number> {
-    return this.executor.executeCount(criteria ?? ({} as Predicate<E>), options ?? {});
+  async count(criteria?: Condition<E>, options?: FindOptions<E>): Promise<number> {
+    return this.executor.executeCount(criteria ?? ({} as Condition<E>), options ?? {});
   }
 
-  async exists(criteria: Predicate<E>, options?: FindOptions<E>): Promise<boolean> {
+  async exists(criteria: Condition<E>, options?: FindOptions<E>): Promise<boolean> {
     if (options && Object.keys(options).length > 0) {
       return (await this.executor.executeCount(criteria, options)) > 0;
     }
     return this.executor.executeExists(criteria);
   }
 
-  async findOne(criteria: Predicate<E>, options?: FindOptions<E>): Promise<E | null> {
+  async findOne(criteria: Condition<E>, options?: FindOptions<E>): Promise<E | null> {
     const hiddenSelect = filterHiddenSelections(
       this.metadata,
       ["single"],
@@ -228,7 +229,7 @@ export abstract class DriverRepositoryBase<
     return results[0] ?? null;
   }
 
-  async findOneOrFail(criteria: Predicate<E>, options?: FindOptions<E>): Promise<E> {
+  async findOneOrFail(criteria: Condition<E>, options?: FindOptions<E>): Promise<E> {
     const entity = await this.findOne(criteria, options);
     if (!entity) {
       throw new ProteusRepositoryError(
@@ -246,7 +247,7 @@ export abstract class DriverRepositoryBase<
   }
 
   async findAndCount(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: FindOptions<E>,
   ): Promise<[Array<E>, number]> {
     const countOptions: FindOptions<E> | undefined = options
@@ -263,7 +264,7 @@ export abstract class DriverRepositoryBase<
   }
 
   async findOneOrSave(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     entity: O | E,
     options?: Omit<FindOptions<E>, "snapshot">,
   ): Promise<E> {
@@ -276,7 +277,7 @@ export abstract class DriverRepositoryBase<
   }
 
   async findPaginated(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: FindPaginatedOptions<E>,
   ): Promise<FindPaginatedResult<E>> {
     // Offset pagination sorts with `order`, not `orderBy` (the keyset key).
@@ -328,7 +329,7 @@ export abstract class DriverRepositoryBase<
    * must enforce scope independently via @ScopeField auto-filter.
    */
   async paginate(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: PaginateOptions<E>,
   ): Promise<PaginateResult<E>> {
     if (!options) {
@@ -367,7 +368,7 @@ export abstract class DriverRepositoryBase<
 
     // Fetch N+1 to determine if there are more pages
     const rows = await this.executePaginateFind(
-      criteria ?? ({} as Predicate<E>),
+      criteria ?? ({} as Condition<E>),
       keysetEntries,
       cursorValues,
       isBackward,
@@ -415,12 +416,12 @@ export abstract class DriverRepositoryBase<
    * Execute the paginate data fetch. Composes user criteria with keyset
    * predicate (via $gt/$lt) and delegates to find().
    *
-   * The default implementation uses Predicate operators which work for SQL
+   * The default implementation uses Condition operators which work for SQL
    * drivers. The Memory driver overrides this to use in-memory comparison
-   * since Predicated.match does not support $gt/$lt on string/Date types.
+   * since Matcher.match does not support $gt/$lt on string/Date types.
    */
   protected async executePaginateFind(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     keysetEntries: Array<KeysetOrderEntry>,
     cursorValues: Array<unknown> | null,
     isBackward: boolean,
@@ -428,7 +429,7 @@ export abstract class DriverRepositoryBase<
     limit: number,
     options: PaginateOptions<E>,
   ): Promise<Array<E>> {
-    let compositeCriteria: Predicate<E> = criteria;
+    let compositeCriteria: Condition<E> = criteria;
 
     if (cursorValues) {
       const keysetPredicate = buildKeysetPredicate<E>(
@@ -437,7 +438,7 @@ export abstract class DriverRepositoryBase<
         isBackward,
       );
       if (Object.keys(criteria).length > 0) {
-        compositeCriteria = { $and: [criteria, keysetPredicate] } as Predicate<E>;
+        compositeCriteria = { $and: [criteria, keysetPredicate] } as Condition<E>;
       } else {
         compositeCriteria = keysetPredicate;
       }
@@ -544,7 +545,7 @@ export abstract class DriverRepositoryBase<
   // ─── Increments / Decrements ──────────────────────────────────────
 
   async increment(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -554,7 +555,7 @@ export abstract class DriverRepositoryBase<
   }
 
   async decrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -565,13 +566,13 @@ export abstract class DriverRepositoryBase<
 
   // ─── With Criteria ────────────────────────────────────────────────
 
-  async delete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async delete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "delete");
 
     await this.executor.executeDelete(criteria, options);
   }
 
-  async updateMany(criteria: Predicate<E>, update: DeepPartial<E>): Promise<void> {
+  async updateMany(criteria: Condition<E>, update: DeepPartial<E>): Promise<void> {
     guardAppendOnly(this.metadata, "updateMany");
 
     if (this.entityManager.updateStrategy === "version") {
@@ -615,7 +616,7 @@ export abstract class DriverRepositoryBase<
    * and therefore does NOT fire per-entity lifecycle hooks (@BeforeSoftDestroy, etc.)
    * or subscriber events. Use softDestroy() for per-entity lifecycle support.
    */
-  async softDelete(criteria: Predicate<E>, _options?: DeleteOptions): Promise<void> {
+  async softDelete(criteria: Condition<E>, _options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "softDelete");
     guardDeleteDateField(this.metadata, "softDelete");
     await this.executor.executeSoftDelete(criteria);
@@ -628,7 +629,7 @@ export abstract class DriverRepositoryBase<
    * and therefore does NOT fire per-entity lifecycle hooks (@BeforeRestore, etc.)
    * or subscriber events. Use individual entity restore workflows for per-entity lifecycle support.
    */
-  async restore(criteria: Predicate<E>, _options?: DeleteOptions): Promise<void> {
+  async restore(criteria: Condition<E>, _options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "restore");
     guardDeleteDateField(this.metadata, "restore");
     await this.executor.executeRestore(criteria);
@@ -636,7 +637,7 @@ export abstract class DriverRepositoryBase<
 
   // ─── TTL / Expiry ─────────────────────────────────────────────────
 
-  async ttl(criteria: Predicate<E>, _options?: FindOptions<E>): Promise<number> {
+  async ttl(criteria: Condition<E>, _options?: FindOptions<E>): Promise<number> {
     guardExpiryDateField(this.metadata, "ttl");
 
     const seconds = await this.executor.executeTtl(criteria);
@@ -684,19 +685,19 @@ export abstract class DriverRepositoryBase<
 
   // ─── Aggregates ───────────────────────────────────────────────────
 
-  async sum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async sum(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
     return this.executeAggregate("sum", field, criteria);
   }
 
-  async average(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async average(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
     return this.executeAggregate("avg", field, criteria);
   }
 
-  async minimum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async minimum(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
     return this.executeAggregate("min", field, criteria);
   }
 
-  async maximum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async maximum(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
     return this.executeAggregate("max", field, criteria);
   }
 

@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { compileDeleteExpired as sharedCompileDeleteExpired } from "../../../../utils/sql/compile-delete-expired.js";
@@ -39,7 +40,7 @@ export const compileUpdate = <E extends IEntity>(
   sharedCompileUpdate(entity, metadata, mysqlDialect, deps, namespace, amphora);
 
 export const compileUpdateMany = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   update: DeepPartial<E>,
   metadata: EntityMetadata,
   namespace?: string | null,
@@ -56,13 +57,13 @@ export const compileUpdateMany = <E extends IEntity>(
   );
 
 export const compileSoftDelete = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   metadata: EntityMetadata,
   namespace?: string | null,
 ): CompiledSql => sharedCompileSoftDelete(criteria, metadata, mysqlDialect, namespace);
 
 export const compileRestore = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   metadata: EntityMetadata,
   namespace?: string | null,
 ): CompiledSql => sharedCompileRestore(criteria, metadata, mysqlDialect, namespace);

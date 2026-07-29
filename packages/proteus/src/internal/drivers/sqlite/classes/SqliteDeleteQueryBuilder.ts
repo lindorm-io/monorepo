@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type {
   IEntity,
   IDeleteQueryBuilder,
@@ -35,17 +35,17 @@ export class SqliteDeleteQueryBuilder<
     this.isSoft = soft ?? false;
   }
 
-  where(criteria: Predicate<E>): this {
+  where(criteria: Condition<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }

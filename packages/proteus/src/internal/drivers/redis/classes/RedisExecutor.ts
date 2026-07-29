@@ -1,5 +1,7 @@
+import type { Condition } from "@lindorm/match";
+import { Matcher } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
-import type { DeepPartial, Dict, Predicate } from "@lindorm/types";
+import type { DeepPartial, Dict } from "@lindorm/types";
 import type { ILogger } from "@lindorm/logger";
 import type { Redis } from "ioredis";
 import type { IEntity } from "../../../../interfaces/index.js";
@@ -7,7 +9,6 @@ import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor
 import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
 import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
-import { Predicated } from "@lindorm/utils";
 import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
 import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
@@ -26,7 +27,7 @@ import { buildScanPattern } from "../utils/build-scan-pattern.js";
 import { dehydrateToRow } from "../utils/dehydrate-entity.js";
 // deserializeHash parses array/json/object fields from JSON strings to native JS
 // types via JSON.parse (see coerceFromString). This happens BEFORE any criteria
-// matching (matchesRow/Predicated.filter), so complex predicate operators like
+// matching (matchesRow/Matcher.filter), so complex predicate operators like
 // $all, $has, $overlap work correctly on deserialized values.
 import { deserializeHash } from "../utils/deserialize-hash.js";
 import { extractExactPk } from "../utils/is-pk-exact.js";
@@ -194,7 +195,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Delete ───────────────────────────────────────────────────────────
 
-  async executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     guardEmptyCriteria(criteria, "delete", RedisDriverError);
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
@@ -230,7 +231,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Soft Delete ──────────────────────────────────────────────────────
 
-  async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
+  async executeSoftDelete(criteria: Condition<E>): Promise<void> {
     // F-001: Guard against soft-deleting an entity that has no @DeleteDate field
     if (!this.deleteFieldKey) {
       throw new RedisDriverError(
@@ -266,7 +267,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Restore ──────────────────────────────────────────────────────────
 
-  async executeRestore(criteria: Predicate<E>): Promise<void> {
+  async executeRestore(criteria: Condition<E>): Promise<void> {
     // F-001: Guard against restoring an entity that has no @DeleteDate field
     if (!this.deleteFieldKey) {
       throw new RedisDriverError(
@@ -341,7 +342,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── TTL ──────────────────────────────────────────────────────────────
 
-  async executeTtl(criteria: Predicate<E>): Promise<number | null> {
+  async executeTtl(criteria: Condition<E>): Promise<number | null> {
     if (!this.expiryFieldKey) return null;
 
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
@@ -379,7 +380,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Find ─────────────────────────────────────────────────────────────
 
   async executeFind(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     options: FindOptions<E>,
     _operationScope?: QueryScope,
   ): Promise<Array<E>> {
@@ -418,7 +419,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
     // 3. Apply criteria predicate filter (always — PK-exact may have additional non-PK criteria)
     if (Object.keys(criteria).length > 0) {
-      rows = Predicated.filter(rows as Array<Record<string, unknown>>, criteria);
+      rows = Matcher.filter(rows as Array<Record<string, unknown>>, criteria);
     }
 
     // Apply ordering
@@ -445,7 +446,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Count ────────────────────────────────────────────────────────────
 
-  async executeCount(criteria: Predicate<E>, options: FindOptions<E>): Promise<number> {
+  async executeCount(criteria: Condition<E>, options: FindOptions<E>): Promise<number> {
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
     // F-028: PK-exact optimization — avoid full SCAN when counting by PK
     const pkValues = extractExactPk(criteria, this.metadata.primaryKeys);
@@ -484,7 +485,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
     // 3. Apply criteria predicate filter
     if (Object.keys(criteria).length > 0) {
-      rows = Predicated.filter(rows as Array<Record<string, unknown>>, criteria);
+      rows = Matcher.filter(rows as Array<Record<string, unknown>>, criteria);
     }
 
     return rows.length;
@@ -492,7 +493,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Exists ───────────────────────────────────────────────────────────
 
-  async executeExists(criteria: Predicate<E>): Promise<boolean> {
+  async executeExists(criteria: Condition<E>): Promise<boolean> {
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
     const pkValues = extractExactPk(criteria, this.metadata.primaryKeys);
 
@@ -548,7 +549,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Increment ────────────────────────────────────────────────────────
 
   async executeIncrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -606,7 +607,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Decrement ────────────────────────────────────────────────────────
 
   async executeDecrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -682,7 +683,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Update Many ──────────────────────────────────────────────────────
 
   async executeUpdateMany(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     update: DeepPartial<E>,
     options?: { systemFilters?: boolean },
   ): Promise<number> {
@@ -945,7 +946,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
    * Returns array of Redis keys ready for pipeline operations.
    */
   private async resolveKeys(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     limit?: number,
   ): Promise<Array<string>> {
     const pkValues = extractExactPk(criteria, this.metadata.primaryKeys);
@@ -971,7 +972,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
    * their discriminator partition regardless of soft-delete state).
    */
   private async scanAndFilterWithDiscriminator(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
   ): Promise<Array<{ key: string; row: Dict }>> {
     const pattern = buildScanPattern(this.storageMetadata, this.namespace);
     const keys = await scanEntityKeys(this.client, pattern);
@@ -1020,7 +1021,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
    * Returns matched key-row pairs for pipeline operations.
    */
   private async scanAndFilter(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
   ): Promise<Array<{ key: string; row: Dict }>> {
     const pattern = buildScanPattern(this.storageMetadata, this.namespace);
     const keys = await scanEntityKeys(this.client, pattern);
@@ -1062,7 +1063,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
    * F-037: Filter ordering standardized to: version → system → criteria.
    */
   private async scanAndFilterWithSystemFilters(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
   ): Promise<Array<{ key: string; row: Dict }>> {
     const pattern = buildScanPattern(this.storageMetadata, this.namespace);
     const keys = await scanEntityKeys(this.client, pattern);

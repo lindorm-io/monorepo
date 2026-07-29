@@ -1,6 +1,7 @@
+import type { Condition } from "@lindorm/match";
 import type { Redis } from "ioredis";
 import type { ILogger } from "@lindorm/logger";
-import type { Constructor, DeepPartial, Predicate } from "@lindorm/types";
+import type { Constructor, DeepPartial } from "@lindorm/types";
 import type {
   IEntity,
   IProteusCursor,
@@ -107,7 +108,7 @@ export class RedisRepository<
   // ─── Abstract: find / versions ────────────────────────────────────
 
   async find(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: FindOptions<E>,
     scope: QueryScope = "multiple",
   ): Promise<Array<E>> {
@@ -127,7 +128,7 @@ export class RedisRepository<
       : options;
 
     const entities = await this.executor.executeFind(
-      criteria ?? ({} as Predicate<E>),
+      criteria ?? ({} as Condition<E>),
       effectiveOptions ?? {},
     );
 
@@ -147,7 +148,7 @@ export class RedisRepository<
     return entities;
   }
 
-  async versions(_criteria: Predicate<E>, _options?: FindOptions<E>): Promise<Array<E>> {
+  async versions(_criteria: Condition<E>, _options?: FindOptions<E>): Promise<Array<E>> {
     throw new NotSupportedError(
       "Redis driver does not support versioned entities. Use a SQL or Memory driver for version history.",
       {
@@ -163,7 +164,7 @@ export class RedisRepository<
 
   /**
    * The Redis driver uses in-memory keyset filtering like the Memory driver
-   * because the executor does client-side filtering with Predicated.match,
+   * because the executor does client-side filtering with Matcher.match,
    * which does not support comparison operators on string types.
    *
    * NOTE: O(N) memory per page — when a cursor is provided, all matching rows
@@ -172,7 +173,7 @@ export class RedisRepository<
    * client-side filtering drivers.
    */
   protected override async executePaginateFind(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     keysetEntries: Array<KeysetOrderEntry>,
     cursorValues: Array<unknown> | null,
     isBackward: boolean,
@@ -229,7 +230,7 @@ export class RedisRepository<
       return new RedisCursor<E>(entities);
     }
 
-    const entities = await this.executor.executeFind({} as Predicate<E>, findOptions);
+    const entities = await this.executor.executeFind({} as Condition<E>, findOptions);
     return new RedisCursor<E>(entities);
   }
 
@@ -782,7 +783,7 @@ export class RedisRepository<
   protected async executeAggregate(
     type: AggregateFunction,
     field: keyof E,
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
   ): Promise<number | null> {
     const entities = await this.find(criteria);
     if (entities.length === 0) return null;

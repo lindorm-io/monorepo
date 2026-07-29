@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
 import { createEmptyState } from "../../../classes/QueryBuilder.js";
@@ -36,7 +36,7 @@ export type CompiledSql = {
 };
 
 export const compileExists = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   metadata: EntityMetadata,
   dialect: SqlDialect,
   deps: CompileExistsDeps,

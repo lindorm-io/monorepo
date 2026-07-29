@@ -152,7 +152,7 @@ export const compileWhereWithFilters = <E extends IEntity>(
 
 /**
  * Append filter predicates (system + user-defined) to the WHERE clause.
- * Each resolved filter is compiled as a Predicate and ANDed in.
+ * Each resolved filter is compiled as a Condition and ANDed in.
  */
 const appendFilters = (
   current: string,

@@ -1,6 +1,8 @@
+import type { Condition } from "@lindorm/match";
+import { Matcher } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
-import type { DeepPartial, Dict, Predicate } from "@lindorm/types";
+import type { DeepPartial, Dict } from "@lindorm/types";
 import type {
   IEntity,
   IDeleteQueryBuilder,
@@ -16,7 +18,6 @@ import { QueryBuilder } from "../../../../classes/QueryBuilder.js";
 import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
 import { guardMemoryLockMode } from "../utils/guard-memory-lock-mode.js";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
-import { Predicated } from "@lindorm/utils";
 import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
 import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
@@ -365,7 +366,7 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     const metaFilters = resolveFilters(resolveMetaFilters, new Map(), systemOverrides);
     const allFilters = [...metaFilters, ...this.state.resolvedFilters];
     for (const filter of allFilters) {
-      rows = Predicated.filter(rows, filter.predicate);
+      rows = Matcher.filter(rows, filter.predicate);
     }
 
     // Save the post-system-filter base set for OR predicates (F2 fix)
@@ -375,10 +376,10 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     for (const entry of this.state.predicates) {
       const flatPredicate = flattenEmbeddedCriteria(entry.predicate, this.metadata);
       if (entry.conjunction === "and") {
-        rows = Predicated.filter(rows, flatPredicate);
+        rows = Matcher.filter(rows, flatPredicate);
       } else {
         // OR: union with matching rows from the filtered base set (not raw table)
-        const orRows = Predicated.filter(baseRows, flatPredicate);
+        const orRows = Matcher.filter(baseRows, flatPredicate);
         const existing = new Set(rows);
         for (const row of orRows) {
           if (!existing.has(row)) {
@@ -564,7 +565,7 @@ class MemoryUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
   private readonly getTable: () => MemoryTable;
   private readonly metadata: EntityMetadata;
   private updateData: DeepPartial<E> | null = null;
-  private predicates: Array<{ predicate: Predicate<E>; conjunction: "and" | "or" }> = [];
+  private predicates: Array<{ predicate: Condition<E>; conjunction: "and" | "or" }> = [];
 
   constructor(getTable: () => MemoryTable, metadata: EntityMetadata) {
     this.getTable = getTable;
@@ -576,17 +577,17 @@ class MemoryUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
     return this;
   }
 
-  where(criteria: Predicate<E>): this {
+  where(criteria: Condition<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
@@ -631,7 +632,7 @@ class MemoryUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
       : generateAutoFilters(this.metadata.fields);
     const resolved = resolveFilters(updateMetaFilters, new Map(), undefined);
     for (const filter of resolved) {
-      rows = Predicated.filter(rows, filter.predicate);
+      rows = Matcher.filter(rows, filter.predicate);
     }
 
     for (const row of rows) {
@@ -656,11 +657,11 @@ class MemoryUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
   private matchesPredicates(row: Record<string, unknown>): boolean {
     if (this.predicates.length === 0) return true;
     const flat0 = flattenEmbeddedCriteria(this.predicates[0].predicate, this.metadata);
-    let result = Predicated.match(row, flat0);
+    let result = Matcher.match(row, flat0);
     for (let i = 1; i < this.predicates.length; i++) {
       const { predicate, conjunction } = this.predicates[i];
       const flatP = flattenEmbeddedCriteria(predicate, this.metadata);
-      const m = Predicated.match(row, flatP);
+      const m = Matcher.match(row, flatP);
       result = conjunction === "or" ? result || m : result && m;
     }
     return result;
@@ -673,7 +674,7 @@ class MemoryDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
   private readonly metadata: EntityMetadata;
   private readonly namespace: string | null;
   private readonly soft: boolean;
-  private predicates: Array<{ predicate: Predicate<E>; conjunction: "and" | "or" }> = [];
+  private predicates: Array<{ predicate: Condition<E>; conjunction: "and" | "or" }> = [];
 
   constructor(
     getTable: () => MemoryTable,
@@ -689,17 +690,17 @@ class MemoryDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
     this.soft = soft;
   }
 
-  where(criteria: Predicate<E>): this {
+  where(criteria: Condition<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
@@ -747,7 +748,7 @@ class MemoryDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
       // Apply resolved system filters (includes __softDelete)
       let passesFilters = true;
       for (const filter of resolved) {
-        if (!Predicated.match(row, filter.predicate)) {
+        if (!Matcher.match(row, filter.predicate)) {
           passesFilters = false;
           break;
         }
@@ -799,11 +800,11 @@ class MemoryDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
   private matchesPredicates(row: Record<string, unknown>): boolean {
     if (this.predicates.length === 0) return true;
     const flat0 = flattenEmbeddedCriteria(this.predicates[0].predicate, this.metadata);
-    let result = Predicated.match(row, flat0);
+    let result = Matcher.match(row, flat0);
     for (let i = 1; i < this.predicates.length; i++) {
       const { predicate, conjunction } = this.predicates[i];
       const flatP = flattenEmbeddedCriteria(predicate, this.metadata);
-      const m = Predicated.match(row, flatP);
+      const m = Matcher.match(row, flatP);
       result = conjunction === "or" ? result || m : result && m;
     }
     return result;

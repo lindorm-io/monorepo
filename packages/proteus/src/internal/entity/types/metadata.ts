@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { IKryptos } from "@lindorm/kryptos";
-import type { Constructor, Dict, Predicate } from "@lindorm/types";
+import type { Constructor, Dict } from "@lindorm/types";
 import type { z } from "zod";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { ProteusEncryptionPredicate } from "../../../types/encryption.js";
@@ -352,7 +353,7 @@ export type MetaEmbeddedList = {
 
 export type MetaFilter = {
   name: string;
-  condition: Predicate<Dict>;
+  condition: Condition<Dict>;
   default: boolean;
 };
 

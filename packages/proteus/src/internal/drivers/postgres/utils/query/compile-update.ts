@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import {
@@ -30,7 +31,7 @@ export const compileUpdate = <E extends IEntity>(
   sharedCompileUpdate(entity, metadata, postgresDialect, deps, namespace, amphora);
 
 export const compileUpdateMany = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   update: DeepPartial<E>,
   metadata: EntityMetadata,
   namespace?: string | null,

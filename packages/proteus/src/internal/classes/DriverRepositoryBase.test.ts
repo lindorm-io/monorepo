@@ -1,3 +1,4 @@
+import type { Condition } from "@lindorm/match";
 import {
   beforeEach,
   describe,
@@ -86,7 +87,7 @@ vi.mock("../utils/pagination/extract-cursor-values.js", () => ({
 // ─── Imports after vi.mock ──────────────────────────────────────────────────
 
 import type { ILogger } from "@lindorm/logger";
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 import type { Constructor } from "@lindorm/types";
 import { EntityManager } from "../entity/classes/EntityManager.js";
 import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";

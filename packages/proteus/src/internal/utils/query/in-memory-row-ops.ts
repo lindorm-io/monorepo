@@ -1,12 +1,13 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import { Matcher } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import type { ResolvedFilter } from "./resolve-filters.js";
-import { Predicated } from "@lindorm/utils";
 
 /**
  * Test whether a single row matches a predicate criteria.
  */
-export const matchesRow = (row: Dict, criteria: Predicate<any>): boolean =>
-  Predicated.match(row as Record<string, unknown>, criteria);
+export const matchesRow = (row: Dict, criteria: Condition<any>): boolean =>
+  Matcher.match(row as Record<string, unknown>, criteria);
 
 /**
  * Project a row down to the selected field keys.
@@ -22,14 +23,14 @@ export const applySelect = (row: Dict, selections: Array<string> | null): Dict =
 };
 
 /**
- * Apply resolved filter predicates to rows using Predicated.filter.
+ * Apply resolved filter predicates to rows using Matcher.filter.
  */
 export const applyResolvedFilters = (
   rows: Array<Dict>,
   filters: Array<ResolvedFilter>,
 ): Array<Dict> => {
   for (const filter of filters) {
-    rows = Predicated.filter(rows as Array<Record<string, unknown>>, filter.predicate);
+    rows = Matcher.filter(rows as Array<Record<string, unknown>>, filter.predicate);
   }
   return rows;
 };

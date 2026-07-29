@@ -1,4 +1,5 @@
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { DeepPartial } from "@lindorm/types";
 import type {
   ClearOptions,
   CursorOptions,
@@ -33,23 +34,23 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
   // Queries
 
   /** Count entities matching the given criteria. */
-  count(criteria?: Predicate<E>, options?: FindOptions<E>): Promise<number>;
+  count(criteria?: Condition<E>, options?: FindOptions<E>): Promise<number>;
   /** Check whether at least one entity matches the given criteria. */
-  exists(criteria: Predicate<E>, options?: FindOptions<E>): Promise<boolean>;
+  exists(criteria: Condition<E>, options?: FindOptions<E>): Promise<boolean>;
   /** Find all entities matching the given criteria. */
-  find(criteria?: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>>;
+  find(criteria?: Condition<E>, options?: FindOptions<E>): Promise<Array<E>>;
   /** Find all entities matching the given criteria and return the total count alongside. */
   findAndCount(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: FindOptions<E>,
   ): Promise<[Array<E>, number]>;
   /** Find a single entity matching the criteria, or `null` if none exists. */
-  findOne(criteria: Predicate<E>, options?: FindOptions<E>): Promise<E | null>;
+  findOne(criteria: Condition<E>, options?: FindOptions<E>): Promise<E | null>;
   /** Find a single entity matching the criteria. Throws if none exists. */
-  findOneOrFail(criteria: Predicate<E>, options?: FindOptions<E>): Promise<E>;
+  findOneOrFail(criteria: Condition<E>, options?: FindOptions<E>): Promise<E>;
   /** Find a single entity matching the criteria, or insert the given entity if none exists. */
   findOneOrSave(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     entity: O | E,
     options?: Omit<FindOptions<E>, "snapshot">,
   ): Promise<E>;
@@ -85,16 +86,16 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
   // Increments and Decrements
 
   /** Atomically increment a numeric field on all entities matching the criteria. */
-  increment(criteria: Predicate<E>, property: keyof E, value: number): Promise<void>;
+  increment(criteria: Condition<E>, property: keyof E, value: number): Promise<void>;
   /** Atomically decrement a numeric field on all entities matching the criteria. */
-  decrement(criteria: Predicate<E>, property: keyof E, value: number): Promise<void>;
+  decrement(criteria: Condition<E>, property: keyof E, value: number): Promise<void>;
 
   // With Criteria
 
   /** Delete all entities matching the criteria (criteria-based, no entity instances needed). */
-  delete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void>;
+  delete(criteria: Condition<E>, options?: DeleteOptions): Promise<void>;
   /** Update fields on all entities matching the criteria. */
-  updateMany(criteria: Predicate<E>, update: DeepPartial<E>): Promise<void>;
+  updateMany(criteria: Condition<E>, update: DeepPartial<E>): Promise<void>;
 
   // With Soft Deletes
 
@@ -109,7 +110,7 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
    * and therefore does NOT fire per-entity lifecycle hooks (@BeforeSoftDestroy, etc.)
    * or subscriber events. Use softDestroy() for per-entity lifecycle support.
    */
-  softDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void>;
+  softDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void>;
   /**
    * Restore soft-deleted entities matching the criteria by clearing their delete date.
    *
@@ -117,28 +118,28 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
    * and therefore does NOT fire per-entity lifecycle hooks (@BeforeRestore, etc.)
    * or subscriber events. Use individual entity restore workflows for per-entity lifecycle support.
    */
-  restore(criteria: Predicate<E>, options?: DeleteOptions): Promise<void>;
+  restore(criteria: Condition<E>, options?: DeleteOptions): Promise<void>;
 
   // With Versioning
 
   /** Retrieve all historical versions of entities matching the criteria (temporal tables). */
-  versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>>;
+  versions(criteria: Condition<E>, options?: FindOptions<E>): Promise<Array<E>>;
 
   // Aggregates
 
   /** Compute the sum of a numeric field across matching entities. */
-  sum(field: keyof E, criteria?: Predicate<E>): Promise<number | null>;
+  sum(field: keyof E, criteria?: Condition<E>): Promise<number | null>;
   /** Compute the average of a numeric field across matching entities. */
-  average(field: keyof E, criteria?: Predicate<E>): Promise<number | null>;
+  average(field: keyof E, criteria?: Condition<E>): Promise<number | null>;
   /** Find the minimum value of a field across matching entities. */
-  minimum(field: keyof E, criteria?: Predicate<E>): Promise<number | null>;
+  minimum(field: keyof E, criteria?: Condition<E>): Promise<number | null>;
   /** Find the maximum value of a field across matching entities. */
-  maximum(field: keyof E, criteria?: Predicate<E>): Promise<number | null>;
+  maximum(field: keyof E, criteria?: Condition<E>): Promise<number | null>;
 
   // With Expiry
 
   /** Return the remaining time-to-live in milliseconds for an entity with an expiry date. */
-  ttl(criteria: Predicate<E>, options?: FindOptions<E>): Promise<number>;
+  ttl(criteria: Condition<E>, options?: FindOptions<E>): Promise<number>;
   /** Delete all entities whose expiry date has passed. */
   deleteExpired(): Promise<void>;
 
@@ -155,7 +156,7 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
    * @param options   Pagination direction, page size, cursor, and sort order
    */
   paginate(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: PaginateOptions<E>,
   ): Promise<PaginateResult<E>>;
 
@@ -169,7 +170,7 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
    * @param options   FindPaginatedOptions — use `page` and `pageSize` to control pagination
    */
   findPaginated(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: FindPaginatedOptions<E>,
   ): Promise<FindPaginatedResult<E>>;
 

@@ -1,6 +1,7 @@
+import type { Condition } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
 import type { ClientSession, Db, Document, Filter } from "mongodb";
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
@@ -226,7 +227,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Delete ───────────────────────────────────────────────────────────
 
-  async executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     this.checkSignal();
     guardEmptyCriteria(criteria, "delete", MongoDriverError);
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
@@ -254,7 +255,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Soft Delete ──────────────────────────────────────────────────────
 
-  async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
+  async executeSoftDelete(criteria: Condition<E>): Promise<void> {
     this.checkSignal();
     if (!this.deleteFieldKey) {
       throw new MongoDriverError(
@@ -288,7 +289,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Restore ──────────────────────────────────────────────────────────
 
-  async executeRestore(criteria: Predicate<E>): Promise<void> {
+  async executeRestore(criteria: Condition<E>): Promise<void> {
     this.checkSignal();
     if (!this.deleteFieldKey) {
       throw new MongoDriverError(
@@ -342,7 +343,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── TTL ──────────────────────────────────────────────────────────────
 
-  async executeTtl(criteria: Predicate<E>): Promise<number | null> {
+  async executeTtl(criteria: Condition<E>): Promise<number | null> {
     this.checkSignal();
     if (!this.expiryFieldKey) return null;
 
@@ -382,7 +383,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Find ─────────────────────────────────────────────────────────────
 
   async executeFind(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     options: FindOptions<E>,
     _operationScope?: QueryScope,
   ): Promise<Array<E>> {
@@ -443,7 +444,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Count ────────────────────────────────────────────────────────────
 
-  async executeCount(criteria: Predicate<E>, options: FindOptions<E>): Promise<number> {
+  async executeCount(criteria: Condition<E>, options: FindOptions<E>): Promise<number> {
     this.checkSignal();
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
@@ -464,7 +465,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Exists ───────────────────────────────────────────────────────────
 
-  async executeExists(criteria: Predicate<E>): Promise<boolean> {
+  async executeExists(criteria: Condition<E>): Promise<boolean> {
     this.checkSignal();
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
@@ -487,7 +488,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Increment ────────────────────────────────────────────────────────
 
   async executeIncrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -510,7 +511,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Decrement ────────────────────────────────────────────────────────
 
   async executeDecrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -597,7 +598,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Update Many ──────────────────────────────────────────────────────
 
   async executeUpdateMany(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     update: DeepPartial<E>,
     options?: { systemFilters?: boolean },
   ): Promise<number> {

@@ -1,7 +1,8 @@
+import type { Condition } from "@lindorm/match";
 import type { ICircuitBreaker } from "@lindorm/breaker";
 import { CircuitOpenError as BreakerCircuitOpenError } from "@lindorm/breaker";
 import { AbortError } from "@lindorm/errors";
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 import { CircuitOpenError } from "../../errors/CircuitOpenError.js";
 import type { IEntity } from "../../interfaces/Entity.js";
 import type { DeleteOptions, FindOptions } from "../../types/index.js";
@@ -29,43 +30,43 @@ export class BreakerExecutor<E extends IEntity> implements IRepositoryExecutor<E
   executeUpdate = (entity: E, operation?: ReadOnlyOperation): Promise<E> =>
     this.run(() => this.inner.executeUpdate(entity, operation));
 
-  executeDelete = (criteria: Predicate<E>, options?: DeleteOptions): Promise<void> =>
+  executeDelete = (criteria: Condition<E>, options?: DeleteOptions): Promise<void> =>
     this.run(() => this.inner.executeDelete(criteria, options));
 
-  executeSoftDelete = (criteria: Predicate<E>): Promise<void> =>
+  executeSoftDelete = (criteria: Condition<E>): Promise<void> =>
     this.run(() => this.inner.executeSoftDelete(criteria));
 
-  executeRestore = (criteria: Predicate<E>): Promise<void> =>
+  executeRestore = (criteria: Condition<E>): Promise<void> =>
     this.run(() => this.inner.executeRestore(criteria));
 
   executeDeleteExpired = (): Promise<void> =>
     this.run(() => this.inner.executeDeleteExpired());
 
-  executeTtl = (criteria: Predicate<E>): Promise<number | null> =>
+  executeTtl = (criteria: Condition<E>): Promise<number | null> =>
     this.run(() => this.inner.executeTtl(criteria));
 
   executeFind = (
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     options: FindOptions<E>,
     operationScope?: QueryScope,
   ): Promise<Array<E>> =>
     this.run(() => this.inner.executeFind(criteria, options, operationScope));
 
-  executeCount = (criteria: Predicate<E>, options: FindOptions<E>): Promise<number> =>
+  executeCount = (criteria: Condition<E>, options: FindOptions<E>): Promise<number> =>
     this.run(() => this.inner.executeCount(criteria, options));
 
-  executeExists = (criteria: Predicate<E>): Promise<boolean> =>
+  executeExists = (criteria: Condition<E>): Promise<boolean> =>
     this.run(() => this.inner.executeExists(criteria));
 
   executeIncrement = (
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> =>
     this.run(() => this.inner.executeIncrement(criteria, property, value));
 
   executeDecrement = (
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> =>
@@ -75,7 +76,7 @@ export class BreakerExecutor<E extends IEntity> implements IRepositoryExecutor<E
     this.run(() => this.inner.executeInsertBulk(entities));
 
   executeUpdateMany = (
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     update: DeepPartial<E>,
     options?: { systemFilters?: boolean },
   ): Promise<number> =>

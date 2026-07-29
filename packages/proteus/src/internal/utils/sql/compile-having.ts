@@ -1,11 +1,12 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
 import type { PredicateEntry, RawWhereEntry } from "../../types/query.js";
 import type { SqlDialect } from "./sql-dialect.js";
 
 export type CompilePredicateFn = (
-  predicate: Predicate<Dict>,
+  predicate: Condition<Dict>,
   metadata: EntityMetadata,
   tableAlias: string,
   params: Array<unknown>,
@@ -27,7 +28,7 @@ export const compileHaving = <E extends IEntity>(
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
     const compiled = compilePredicate(
-      entry.predicate as Predicate<Dict>,
+      entry.predicate as Condition<Dict>,
       metadata,
       tableAlias,
       params,

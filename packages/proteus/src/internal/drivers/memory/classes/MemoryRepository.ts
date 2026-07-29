@@ -1,4 +1,5 @@
-import type { Constructor, DeepPartial, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Constructor, DeepPartial } from "@lindorm/types";
 import type {
   IEntity,
   IProteusCursor,
@@ -113,7 +114,7 @@ export class MemoryRepository<
   // ─── Abstract: find / versions ────────────────────────────────────
 
   async find(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: FindOptions<E>,
     scope: QueryScope = "multiple",
   ): Promise<Array<E>> {
@@ -133,7 +134,7 @@ export class MemoryRepository<
       : options;
 
     const entities = await this.executor.executeFind(
-      criteria ?? ({} as Predicate<E>),
+      criteria ?? ({} as Condition<E>),
       effectiveOptions ?? {},
     );
 
@@ -157,7 +158,7 @@ export class MemoryRepository<
     return entities;
   }
 
-  async versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>> {
+  async versions(criteria: Condition<E>, options?: FindOptions<E>): Promise<Array<E>> {
     guardVersionFields(this.metadata, "versions");
 
     const entities = await this.executor.executeFind(criteria, {
@@ -192,13 +193,13 @@ export class MemoryRepository<
 
   // ─── Override: executePaginateFind ──────────────────────────────────
   //
-  // The Memory driver cannot use Predicate-based keyset WHERE ($gt/$lt on strings)
-  // because Predicated.match does not support comparison operators on string types.
+  // The Memory driver cannot use Condition-based keyset WHERE ($gt/$lt on strings)
+  // because Matcher.match does not support comparison operators on string types.
   // Instead, we fetch all matching rows with ordering, then filter in-memory using
   // a comparison function that handles all comparable types.
 
   protected override async executePaginateFind(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     keysetEntries: Array<KeysetOrderEntry>,
     cursorValues: Array<unknown> | null,
     isBackward: boolean,
@@ -249,7 +250,7 @@ export class MemoryRepository<
       return new MemoryCursor<E>(entities);
     }
 
-    const entities = await this.executor.executeFind({} as Predicate<E>, findOptions);
+    const entities = await this.executor.executeFind({} as Condition<E>, findOptions);
     if (this.hasEmbeddedLists) {
       this.loadAllEmbeddedLists(entities, this.store, "multiple");
     }
@@ -752,7 +753,7 @@ export class MemoryRepository<
   protected async executeAggregate(
     type: AggregateFunction,
     field: keyof E,
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
   ): Promise<number | null> {
     const entities = await this.find(criteria);
     if (entities.length === 0) return null;

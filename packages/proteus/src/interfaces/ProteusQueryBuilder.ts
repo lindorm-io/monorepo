@@ -1,4 +1,5 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import type { IncludeOptions, SqlFragment, WindowSpec } from "../internal/types/query.js";
 import type { IDeleteQueryBuilder } from "./DeleteQueryBuilder.js";
 import type { IEntity } from "./Entity.js";
@@ -15,11 +16,11 @@ export interface IProteusQueryBuilder<E extends IEntity> {
   // Filtering
 
   /** Set the WHERE clause using a predicate object. */
-  where(criteria: Predicate<E>): this;
+  where(criteria: Condition<E>): this;
   /** Append an AND condition to the WHERE clause. */
-  andWhere(criteria: Predicate<E>): this;
+  andWhere(criteria: Condition<E>): this;
   /** Append an OR condition to the WHERE clause. */
-  orWhere(criteria: Predicate<E>): this;
+  orWhere(criteria: Condition<E>): this;
 
   // Raw WHERE
 
@@ -49,11 +50,11 @@ export interface IProteusQueryBuilder<E extends IEntity> {
   /** Group results by one or more fields. */
   groupBy(...fields: Array<keyof E>): this;
   /** Set the HAVING clause using a predicate object. */
-  having(criteria: Predicate<E>): this;
+  having(criteria: Condition<E>): this;
   /** Append an AND condition to the HAVING clause. */
-  andHaving(criteria: Predicate<E>): this;
+  andHaving(criteria: Condition<E>): this;
   /** Append an OR condition to the HAVING clause. */
-  orHaving(criteria: Predicate<E>): this;
+  orHaving(criteria: Condition<E>): this;
   /** Set the HAVING clause using a raw SQL fragment. */
   havingRaw(fragment: SqlFragment): this;
   /** Append a raw AND condition to the HAVING clause. */

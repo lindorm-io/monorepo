@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { ILogger } from "@lindorm/logger";
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 import type { ICacheAdapter } from "../../interfaces/CacheAdapter.js";
 import type {
   IEntity,
@@ -106,7 +107,7 @@ export class CachingRepository<
     this.inner.validate(entity);
   }
 
-  async ttl(criteria: Predicate<E>, options?: FindOptions<E>): Promise<number> {
+  async ttl(criteria: Condition<E>, options?: FindOptions<E>): Promise<number> {
     return this.inner.ttl(criteria, options);
   }
 
@@ -119,29 +120,29 @@ export class CachingRepository<
   }
 
   async paginate(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: PaginateOptions<E>,
   ): Promise<PaginateResult<E>> {
     return this.inner.paginate(criteria, options);
   }
 
-  async versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>> {
+  async versions(criteria: Condition<E>, options?: FindOptions<E>): Promise<Array<E>> {
     return this.inner.versions(criteria, options);
   }
 
-  async sum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async sum(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
     return this.inner.sum(field, criteria);
   }
 
-  async average(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async average(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
     return this.inner.average(field, criteria);
   }
 
-  async minimum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async minimum(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
     return this.inner.minimum(field, criteria);
   }
 
-  async maximum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async maximum(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
     return this.inner.maximum(field, criteria);
   }
 
@@ -161,13 +162,13 @@ export class CachingRepository<
 
   // ─── Category A: Cache-aside reads ──────────────────────────────────
 
-  async find(criteria?: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>> {
+  async find(criteria?: Condition<E>, options?: FindOptions<E>): Promise<Array<E>> {
     return this.cachedEntities("find", criteria, options, () =>
       this.inner.find(criteria, options),
     );
   }
 
-  async findOne(criteria: Predicate<E>, options?: FindOptions<E>): Promise<E | null> {
+  async findOne(criteria: Condition<E>, options?: FindOptions<E>): Promise<E | null> {
     const results = await this.cachedEntities(
       "findOne",
       criteria,
@@ -178,7 +179,7 @@ export class CachingRepository<
     return results[0] ?? null;
   }
 
-  async findOneOrFail(criteria: Predicate<E>, options?: FindOptions<E>): Promise<E> {
+  async findOneOrFail(criteria: Condition<E>, options?: FindOptions<E>): Promise<E> {
     const entity = await this.findOne(criteria, options);
     if (!entity) {
       throw new ProteusRepositoryError(`Entity "${this.entityName}" not found`, {
@@ -193,7 +194,7 @@ export class CachingRepository<
   }
 
   async findAndCount(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: FindOptions<E>,
   ): Promise<[Array<E>, number]> {
     return this.cachedTuple("findAndCount", criteria, options, () =>
@@ -201,20 +202,20 @@ export class CachingRepository<
     );
   }
 
-  async count(criteria?: Predicate<E>, options?: FindOptions<E>): Promise<number> {
+  async count(criteria?: Condition<E>, options?: FindOptions<E>): Promise<number> {
     return this.cachedScalar("count", criteria, options, () =>
       this.inner.count(criteria, options),
     );
   }
 
-  async exists(criteria: Predicate<E>, options?: FindOptions<E>): Promise<boolean> {
+  async exists(criteria: Condition<E>, options?: FindOptions<E>): Promise<boolean> {
     return this.cachedScalar("exists", criteria, options, () =>
       this.inner.exists(criteria, options),
     );
   }
 
   async findPaginated(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: FindPaginatedOptions<E>,
   ): Promise<FindPaginatedResult<E>> {
     const page = options?.page ?? 1;
@@ -253,7 +254,7 @@ export class CachingRepository<
   }
 
   async findOneOrSave(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     entity: O | E,
     options?: Omit<FindOptions<E>, "snapshot">,
   ): Promise<E> {
@@ -318,28 +319,28 @@ export class CachingRepository<
     return result;
   }
 
-  async delete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async delete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     await this.inner.delete(criteria, options);
     await this.invalidate();
   }
 
-  async softDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async softDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     await this.inner.softDelete(criteria, options);
     await this.invalidate();
   }
 
-  async restore(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async restore(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     await this.inner.restore(criteria, options);
     await this.invalidate();
   }
 
-  async updateMany(criteria: Predicate<E>, update: DeepPartial<E>): Promise<void> {
+  async updateMany(criteria: Condition<E>, update: DeepPartial<E>): Promise<void> {
     await this.inner.updateMany(criteria, update);
     await this.invalidate();
   }
 
   async increment(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -348,7 +349,7 @@ export class CachingRepository<
   }
 
   async decrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -385,7 +386,7 @@ export class CachingRepository<
 
   private async cachedEntities(
     operation: string,
-    criteria: Predicate<E> | undefined,
+    criteria: Condition<E> | undefined,
     options: FindOptions<E> | undefined,
     fetchFn: () => Promise<Array<E>>,
     scopes: Array<QueryScope> = ["multiple"],
@@ -437,7 +438,7 @@ export class CachingRepository<
 
   private async cachedTuple(
     operation: string,
-    criteria: Predicate<E> | undefined,
+    criteria: Condition<E> | undefined,
     options: FindOptions<E> | undefined,
     fetchFn: () => Promise<[Array<E>, number]>,
     scopes: Array<QueryScope> = ["multiple"],
@@ -498,7 +499,7 @@ export class CachingRepository<
 
   private async cachedScalar<T extends number | boolean>(
     operation: string,
-    criteria: Predicate<E> | undefined,
+    criteria: Condition<E> | undefined,
     options: FindOptions<E> | undefined,
     fetchFn: () => Promise<T>,
   ): Promise<T> {
@@ -600,7 +601,7 @@ export class CachingRepository<
 
   private buildKey(
     operation: string,
-    criteria: Predicate<E> | undefined,
+    criteria: Condition<E> | undefined,
     options: FindOptions<E> | undefined,
   ): string {
     return buildCacheKey({

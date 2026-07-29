@@ -7,7 +7,7 @@ import type { KeysetOrderEntry } from "./build-keyset-order.js";
  * For ordered columns (a ASC, b DESC) seeking AFTER cursor values (c, d):
  *   row => (row.a > c) || (row.a === c && row.b < d)
  *
- * This is used by the Memory driver because Predicated.match does not support
+ * This is used by the Memory driver because Matcher.match does not support
  * $gt/$lt on string types (only number and Date). The in-memory filter handles
  * all comparable types: string, number, Date, boolean.
  *

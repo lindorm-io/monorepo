@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { createEmptyState } from "../../../../../classes/QueryBuilder.js";
@@ -13,7 +13,7 @@ import { compileWhereWithFilters } from "./compile-system-filters.js";
 import { resolveTableName } from "./resolve-table-name.js";
 
 export const compileIncrement = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   property: keyof E,
   value: number,
   metadata: EntityMetadata,

@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { createEmptyState } from "../../../../../classes/QueryBuilder.js";
@@ -18,7 +18,7 @@ import { removeTableAlias } from "./compile-helpers.js";
  * by child-table columns.
  */
 export const compileIncrement = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   property: keyof E,
   value: number,
   metadata: EntityMetadata,

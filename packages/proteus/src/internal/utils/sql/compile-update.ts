@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
@@ -118,7 +119,7 @@ export const compileUpdate = <E extends IEntity>(
  * UPDATE ... INNER JOIN (MySQL), or WHERE pk IN (subquery) (SQLite).
  */
 export const compileUpdateMany = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   update: DeepPartial<E>,
   metadata: EntityMetadata,
   dialect: SqlDialect,
@@ -243,7 +244,7 @@ export const compileUpdateMany = <E extends IEntity>(
  * PK join conditions link root and child tables.
  */
 const compileJoinedUpdateManyFrom = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   update: DeepPartial<E>,
   metadata: EntityMetadata,
   dialect: SqlDialect,
@@ -332,7 +333,7 @@ const compileJoinedUpdateManyFrom = <E extends IEntity>(
  *   UPDATE root AS t0 INNER JOIN child AS t1 ON t0.id = t1.id SET t0.col=?, t1.col=? WHERE ...
  */
 const compileJoinedUpdateManyMultiTable = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   update: DeepPartial<E>,
   metadata: EntityMetadata,
   dialect: SqlDialect,
@@ -417,7 +418,7 @@ const compileJoinedUpdateManyMultiTable = <E extends IEntity>(
  *   UPDATE target SET col = ? WHERE pk IN (SELECT t0.pk FROM target AS t0 INNER JOIN other AS t1 ON ... WHERE ...)
  */
 const compileJoinedUpdateManySubquery = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   update: DeepPartial<E>,
   metadata: EntityMetadata,
   dialect: SqlDialect,

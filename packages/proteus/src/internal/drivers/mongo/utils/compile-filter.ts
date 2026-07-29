@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { Filter, Document } from "mongodb";
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
@@ -218,7 +219,7 @@ const compileValue = (
  * - Decimal field comparisons via $expr + $toDouble
  */
 export const compileFilter = <E extends Dict = Dict>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   metadata: EntityMetadata,
 ): Filter<Document> => {
   const filter: Filter<Document> = {};
@@ -226,7 +227,7 @@ export const compileFilter = <E extends Dict = Dict>(
 
   for (const [key, value] of Object.entries(criteria as Record<string, unknown>)) {
     if (key === "$and") {
-      const subConditions = (value as Array<Predicate<E>>).map((c) =>
+      const subConditions = (value as Array<Condition<E>>).map((c) =>
         compileFilter(c, metadata),
       );
       andConditions.push({ $and: subConditions });
@@ -234,7 +235,7 @@ export const compileFilter = <E extends Dict = Dict>(
     }
 
     if (key === "$or") {
-      const subConditions = (value as Array<Predicate<E>>).map((c) =>
+      const subConditions = (value as Array<Condition<E>>).map((c) =>
         compileFilter(c, metadata),
       );
       andConditions.push({ $or: subConditions });
@@ -269,7 +270,7 @@ export const compileFilter = <E extends Dict = Dict>(
  * (soft-delete, named filters, scope).
  */
 export const compileFilterWithSystem = <E extends Dict = Dict>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   metadata: EntityMetadata,
   filterRegistry: FilterRegistry,
   options: {

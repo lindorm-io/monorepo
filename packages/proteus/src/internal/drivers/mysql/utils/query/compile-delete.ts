@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
@@ -23,7 +23,7 @@ import { compileJoinedChildDelete as sharedCompileJoinedChildDelete } from "../.
  * Child table rows are removed by FK CASCADE.
  */
 export const compileDelete = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   metadata: EntityMetadata,
   namespace?: string | null,
   options?: { skipJoinedContext?: boolean },
@@ -72,7 +72,7 @@ export const compileDelete = <E extends IEntity>(
 };
 
 export const compileJoinedChildDelete = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   metadata: EntityMetadata,
   namespace?: string | null,
 ): CompiledSql | null =>

@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { FindOptions } from "../../../types/index.js";
 import type { PaginateOptions } from "../../../types/paginate-options.js";
@@ -10,15 +10,15 @@ import { buildKeysetFilterMemory } from "./build-keyset-filter-memory.js";
  * Callback matching the `find` method signature on Memory/Redis repositories.
  */
 export type InMemoryFindFn<E extends IEntity> = (
-  criteria?: Predicate<E>,
+  criteria?: Condition<E>,
   options?: FindOptions<E>,
   scope?: QueryScope,
 ) => Promise<Array<E>>;
 
 /**
  * Shared in-memory keyset pagination logic used by both the Memory and Redis
- * drivers. These drivers cannot use Predicate-based keyset WHERE ($gt/$lt)
- * because their executors use Predicated.match, which does not support
+ * drivers. These drivers cannot use Condition-based keyset WHERE ($gt/$lt)
+ * because their executors use Matcher.match, which does not support
  * comparison operators on string types.
  *
  * Instead, when a cursor is present we fetch all matching rows with ordering,
@@ -35,7 +35,7 @@ export type InMemoryFindFn<E extends IEntity> = (
  */
 export const executePaginateFindInMemory = async <E extends IEntity>(
   find: InMemoryFindFn<E>,
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   keysetEntries: Array<KeysetOrderEntry>,
   cursorValues: Array<unknown> | null,
   isBackward: boolean,

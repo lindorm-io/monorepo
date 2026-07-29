@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 
 /**
  * Check if a query predicate is a simple PK equality lookup.
@@ -8,7 +8,7 @@ import type { Predicate } from "@lindorm/types";
  * Returns null otherwise — meaning the query requires a SCAN.
  */
 export const extractExactPk = (
-  criteria: Predicate<any>,
+  criteria: Condition<any>,
   primaryKeys: Array<string>,
 ): Array<unknown> | null => {
   if (!criteria || typeof criteria !== "object") return null;

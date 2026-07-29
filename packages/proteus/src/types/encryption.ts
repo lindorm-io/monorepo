@@ -1,5 +1,5 @@
+import type { Condition } from "@lindorm/match";
 import type { AmphoraKeySelector, AmphoraQuery } from "@lindorm/amphora";
-import type { Predicate } from "@lindorm/types";
 
 /**
  * The key attributes a consumer may select an at-rest encryption key by.
@@ -31,7 +31,7 @@ type ProteusEncryptionAttributes = Pick<
  * `{ id }`; a KEK minted by a scaffold is `{ purpose: "pylon:kek" }`; an
  * allowlist is `{ algorithm: { $in: [...] } }`.
  */
-export type ProteusEncryptionPredicate = Predicate<ProteusEncryptionAttributes>;
+export type ProteusEncryptionPredicate = Condition<ProteusEncryptionAttributes>;
 
 /**
  * How an `@Encrypted` field NAMES its key: an explicit key, or a query for one.

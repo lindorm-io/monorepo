@@ -1,4 +1,5 @@
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { DeepPartial } from "@lindorm/types";
 import type { IEntity } from "./Entity.js";
 import type { WriteResult } from "./InsertQueryBuilder.js";
 
@@ -10,11 +11,11 @@ export interface IUpdateQueryBuilder<E extends IEntity> {
   /** Set the columns and values to update. */
   set(data: DeepPartial<E>): this;
   /** Set the WHERE clause for the update. **Required** — empty predicates throw. */
-  where(criteria: Predicate<E>): this;
+  where(criteria: Condition<E>): this;
   /** Append an AND condition to the WHERE clause. */
-  andWhere(criteria: Predicate<E>): this;
+  andWhere(criteria: Condition<E>): this;
   /** Append an OR condition to the WHERE clause. */
-  orWhere(criteria: Predicate<E>): this;
+  orWhere(criteria: Condition<E>): this;
   /** Request specific fields (or `"*"`) to be returned from the updated rows. */
   returning(...fields: Array<keyof E | "*">): this;
   /** Execute the UPDATE and return the write result. */

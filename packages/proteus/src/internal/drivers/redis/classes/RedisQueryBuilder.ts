@@ -1,6 +1,8 @@
+import type { Condition } from "@lindorm/match";
+import { Matcher } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
-import type { DeepPartial, Dict, Predicate } from "@lindorm/types";
+import type { DeepPartial, Dict } from "@lindorm/types";
 import type { Redis } from "ioredis";
 import type {
   IEntity,
@@ -16,7 +18,6 @@ import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import { QueryBuilder } from "../../../../classes/QueryBuilder.js";
 import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
-import { Predicated } from "@lindorm/utils";
 import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
 import { resolveFilters } from "../../../utils/query/resolve-filters.js";
@@ -479,7 +480,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     );
     const allFilters = [...metaFilters, ...this.state.resolvedFilters];
     for (const filter of allFilters) {
-      rows = Predicated.filter(rows as Array<Record<string, unknown>>, filter.predicate);
+      rows = Matcher.filter(rows as Array<Record<string, unknown>>, filter.predicate);
     }
 
     // Save the post-system-filter base set for OR predicates
@@ -489,11 +490,11 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     for (const entry of this.state.predicates) {
       const flatPredicate = flattenEmbeddedCriteria<E>(entry.predicate, this.metadata);
       if (entry.conjunction === "and") {
-        rows = Predicated.filter(rows as Array<Record<string, unknown>>, flatPredicate);
+        rows = Matcher.filter(rows as Array<Record<string, unknown>>, flatPredicate);
       } else {
         // OR: union with matching rows from the filtered base set.
         // Use index-based dedup to avoid object-identity fragility with Set.has().
-        const orRows = Predicated.filter(
+        const orRows = Matcher.filter(
           baseRows as Array<Record<string, unknown>>,
           flatPredicate,
         );
@@ -767,7 +768,7 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
   private readonly logger: ILogger | undefined;
   private readonly amphora: IAmphora | undefined;
   private updateData: DeepPartial<E> | null = null;
-  private predicates: Array<{ predicate: Predicate<E>; conjunction: "and" | "or" }> = [];
+  private predicates: Array<{ predicate: Condition<E>; conjunction: "and" | "or" }> = [];
 
   constructor(
     client: Redis,
@@ -791,17 +792,17 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
     return this;
   }
 
-  where(criteria: Predicate<E>): this {
+  where(criteria: Condition<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
@@ -860,7 +861,7 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
     if (resolved.length > 0) {
       let filteredRows = keyRowPairs.map((p) => p.row);
       for (const filter of resolved) {
-        filteredRows = Predicated.filter(
+        filteredRows = Matcher.filter(
           filteredRows as Array<Record<string, unknown>>,
           filter.predicate,
         );
@@ -929,11 +930,11 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
   private matchesPredicates(row: Record<string, unknown>): boolean {
     if (this.predicates.length === 0) return true;
     const flat0 = flattenEmbeddedCriteria<E>(this.predicates[0].predicate, this.metadata);
-    let result = Predicated.match(row, flat0);
+    let result = Matcher.match(row, flat0);
     for (let i = 1; i < this.predicates.length; i++) {
       const { predicate, conjunction } = this.predicates[i];
       const flatPred = flattenEmbeddedCriteria<E>(predicate, this.metadata);
-      const m = Predicated.match(row, flatPred);
+      const m = Matcher.match(row, flatPred);
       result = conjunction === "or" ? result || m : result && m;
     }
     return result;
@@ -949,7 +950,7 @@ class RedisDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
   private readonly filterRegistry: FilterRegistry;
   private readonly logger: ILogger | undefined;
   private readonly amphora: IAmphora | undefined;
-  private predicates: Array<{ predicate: Predicate<E>; conjunction: "and" | "or" }> = [];
+  private predicates: Array<{ predicate: Condition<E>; conjunction: "and" | "or" }> = [];
 
   constructor(
     client: Redis,
@@ -970,17 +971,17 @@ class RedisDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
     this.amphora = amphora;
   }
 
-  where(criteria: Predicate<E>): this {
+  where(criteria: Condition<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
@@ -1037,7 +1038,7 @@ class RedisDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
     if (resolved.length > 0) {
       let filteredRows = keyRowPairs.map((p) => p.row);
       for (const filter of resolved) {
-        filteredRows = Predicated.filter(
+        filteredRows = Matcher.filter(
           filteredRows as Array<Record<string, unknown>>,
           filter.predicate,
         );
@@ -1116,11 +1117,11 @@ class RedisDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
   private matchesPredicates(row: Record<string, unknown>): boolean {
     if (this.predicates.length === 0) return true;
     const flat0 = flattenEmbeddedCriteria<E>(this.predicates[0].predicate, this.metadata);
-    let result = Predicated.match(row, flat0);
+    let result = Matcher.match(row, flat0);
     for (let i = 1; i < this.predicates.length; i++) {
       const { predicate, conjunction } = this.predicates[i];
       const flatPred = flattenEmbeddedCriteria<E>(predicate, this.metadata);
-      const m = Predicated.match(row, flatPred);
+      const m = Matcher.match(row, flatPred);
       result = conjunction === "or" ? result || m : result && m;
     }
     return result;

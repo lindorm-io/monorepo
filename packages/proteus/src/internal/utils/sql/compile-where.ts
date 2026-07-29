@@ -1,5 +1,6 @@
+import type { Condition, ConditionOperator } from "@lindorm/match";
 import { isObject } from "@lindorm/is";
-import type { Dict, Predicate, PredicateOperator } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../types/query.js";
@@ -78,7 +79,7 @@ export const compileWhere = <E extends IEntity>(
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
     const compiled = compilePredicate(
-      entry.predicate as Predicate<Dict>,
+      entry.predicate as Condition<Dict>,
       metadata,
       tableAlias,
       params,
@@ -100,7 +101,7 @@ export const compileWhere = <E extends IEntity>(
 };
 
 export const compilePredicate = (
-  predicate: Predicate<Dict>,
+  predicate: Condition<Dict>,
   metadata: EntityMetadata,
   tableAlias: string | null,
   params: Array<unknown>,
@@ -113,7 +114,7 @@ export const compilePredicate = (
     const subClauses = predicate.$and
       .map((sub) =>
         compilePredicate(
-          sub as Predicate<Dict>,
+          sub as Condition<Dict>,
           metadata,
           tableAlias,
           params,
@@ -131,7 +132,7 @@ export const compilePredicate = (
     const subClauses = predicate.$or
       .map((sub) =>
         compilePredicate(
-          sub as Predicate<Dict>,
+          sub as Condition<Dict>,
           metadata,
           tableAlias,
           params,
@@ -147,7 +148,7 @@ export const compilePredicate = (
 
   if (predicate.$not) {
     const sub = compilePredicate(
-      predicate.$not as Predicate<Dict>,
+      predicate.$not as Condition<Dict>,
       metadata,
       tableAlias,
       params,
@@ -188,7 +189,7 @@ export const compilePredicate = (
           parts.push(
             ...compileOperator(
               qualifiedChildCol,
-              childValue as PredicateOperator<unknown>,
+              childValue as ConditionOperator<unknown>,
               params,
               childField,
               childField.key,
@@ -216,7 +217,7 @@ export const compilePredicate = (
     }
 
     if (isObject(value) && !(value instanceof RegExp)) {
-      const ops = value as PredicateOperator<unknown>;
+      const ops = value as ConditionOperator<unknown>;
       const field = metadata.fields.find((f) => f.key === key) ?? null;
       const operatorClauses = compileOperator(
         qualifiedCol,
@@ -240,7 +241,7 @@ export const compilePredicate = (
 
 const compileOperator = (
   qualifiedCol: string,
-  ops: PredicateOperator<unknown>,
+  ops: ConditionOperator<unknown>,
   params: Array<unknown>,
   field: MetaField | null,
   fieldKey: string,

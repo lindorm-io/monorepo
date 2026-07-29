@@ -1,4 +1,5 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
 
@@ -10,21 +11,21 @@ const isPredicateOperator = (value: Dict): boolean =>
   );
 
 export const flattenEmbeddedCriteria = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   metadata: EntityMetadata,
-): Predicate<E> => {
+): Condition<E> => {
   const result: Dict = {};
 
   for (const [key, value] of Object.entries(criteria as Dict)) {
     // Handle logical operators recursively
     if (key === "$and" || key === "$or") {
-      result[key] = (value as Array<Predicate<E>>).map((sub) =>
+      result[key] = (value as Array<Condition<E>>).map((sub) =>
         flattenEmbeddedCriteria(sub, metadata),
       );
       continue;
     }
     if (key === "$not") {
-      result[key] = flattenEmbeddedCriteria(value as Predicate<E>, metadata);
+      result[key] = flattenEmbeddedCriteria(value as Condition<E>, metadata);
       continue;
     }
 
@@ -49,5 +50,5 @@ export const flattenEmbeddedCriteria = <E extends IEntity>(
     result[key] = value;
   }
 
-  return result as Predicate<E>;
+  return result as Condition<E>;
 };

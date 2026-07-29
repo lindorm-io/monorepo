@@ -1,4 +1,5 @@
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { DeepPartial } from "@lindorm/types";
 import type { DeleteOptions, FindOptions } from "../../types/index.js";
 import type { IEntity } from "../../interfaces/Entity.js";
 import type { QueryScope, ReadOnlyOperation } from "../entity/types/metadata.js";
@@ -13,31 +14,31 @@ export interface IRepositoryExecutor<E extends IEntity> {
    * pre-merging the retained values instead.
    */
   executeUpdate(entity: E, operation?: ReadOnlyOperation): Promise<E>;
-  executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void>;
-  executeSoftDelete(criteria: Predicate<E>): Promise<void>;
-  executeRestore(criteria: Predicate<E>): Promise<void>;
+  executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void>;
+  executeSoftDelete(criteria: Condition<E>): Promise<void>;
+  executeRestore(criteria: Condition<E>): Promise<void>;
   executeDeleteExpired(): Promise<void>;
-  executeTtl(criteria: Predicate<E>): Promise<number | null>;
+  executeTtl(criteria: Condition<E>): Promise<number | null>;
   executeFind(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     options: FindOptions<E>,
     operationScope?: QueryScope,
   ): Promise<Array<E>>;
-  executeCount(criteria: Predicate<E>, options: FindOptions<E>): Promise<number>;
-  executeExists(criteria: Predicate<E>): Promise<boolean>;
+  executeCount(criteria: Condition<E>, options: FindOptions<E>): Promise<number>;
+  executeExists(criteria: Condition<E>): Promise<boolean>;
   executeIncrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void>;
   executeDecrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void>;
   executeInsertBulk(entities: Array<E>): Promise<Array<E>>;
   executeUpdateMany(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     update: DeepPartial<E>,
     options?: { systemFilters?: boolean },
   ): Promise<number>;

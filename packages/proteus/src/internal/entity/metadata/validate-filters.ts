@@ -1,13 +1,14 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import { EntityMetadataError } from "../errors/EntityMetadataError.js";
 import type { MetaField, MetaFilter } from "../types/metadata.js";
 
 /**
- * Extract all field-key references from a Predicate tree.
+ * Extract all field-key references from a Condition tree.
  * Skips operator keys ($eq, $gt, $and, $or, $not, etc.) and
  * param-placeholder values ("$paramName").
  */
-const extractFieldKeys = (predicate: Predicate<Dict>): Set<string> => {
+const extractFieldKeys = (predicate: Condition<Dict>): Set<string> => {
   const keys = new Set<string>();
 
   const walk = (obj: unknown): void => {

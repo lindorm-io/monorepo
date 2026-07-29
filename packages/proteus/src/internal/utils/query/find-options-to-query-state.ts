@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { FindOptions, OrderValue } from "../../../types/index.js";
 import type { EntityMetadata, QueryScope } from "../../entity/types/metadata.js";
@@ -10,7 +10,7 @@ import { resolveFilters } from "./resolve-filters.js";
 import { resolveIncludeStrategy } from "./resolve-include-strategy.js";
 
 export const findOptionsToQueryState = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   options: FindOptions<E>,
   metadata?: EntityMetadata,
   operationScope: QueryScope = "multiple",

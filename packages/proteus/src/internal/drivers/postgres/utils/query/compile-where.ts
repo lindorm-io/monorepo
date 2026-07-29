@@ -1,4 +1,5 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../../../types/query.js";
@@ -28,7 +29,7 @@ export const compileWhere = <E extends IEntity>(
   );
 
 export const compilePredicate = (
-  predicate: Predicate<Dict>,
+  predicate: Condition<Dict>,
   metadata: EntityMetadata,
   tableAlias: string | null,
   params: Array<unknown>,

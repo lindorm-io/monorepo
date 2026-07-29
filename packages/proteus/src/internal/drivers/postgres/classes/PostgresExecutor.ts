@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
@@ -130,7 +131,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     return hydrateReturning<E>(result.rows[0], this.metadata, { amphora: this.amphora });
   }
 
-  async executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     guardEmptyCriteria(criteria, "delete", PostgresExecutorError);
 
     // For joined inheritance children, explicitly delete child table rows first.
@@ -166,13 +167,13 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     await this.client.query(text, params);
   }
 
-  async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
+  async executeSoftDelete(criteria: Condition<E>): Promise<void> {
     guardEmptyCriteria(criteria, "soft delete", PostgresExecutorError);
     const { text, params } = compileSoftDelete(criteria, this.metadata, this.namespace);
     await this.client.query(text, params);
   }
 
-  async executeRestore(criteria: Predicate<E>): Promise<void> {
+  async executeRestore(criteria: Condition<E>): Promise<void> {
     guardEmptyCriteria(criteria, "restore", PostgresExecutorError);
     const { text, params } = compileRestore(criteria, this.metadata, this.namespace);
     await this.client.query(text, params);
@@ -186,7 +187,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     await this.client.query(text, params);
   }
 
-  async executeTtl(criteria: Predicate<E>): Promise<number | null> {
+  async executeTtl(criteria: Condition<E>): Promise<number | null> {
     const expiryField = this.metadata.fields.find((f) => f.decorator === "ExpiryDate");
     if (!expiryField) return null;
 
@@ -219,7 +220,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
   }
 
   async executeFind(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     options: FindOptions<E>,
     operationScope: QueryScope = "multiple",
   ): Promise<Array<E>> {
@@ -258,7 +259,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     return entities;
   }
 
-  async executeCount(criteria: Predicate<E>, options: FindOptions<E>): Promise<number> {
+  async executeCount(criteria: Condition<E>, options: FindOptions<E>): Promise<number> {
     const state = findOptionsToQueryState(
       criteria,
       options,
@@ -276,14 +277,14 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     return Number(result.rows[0]?.count ?? 0);
   }
 
-  async executeExists(criteria: Predicate<E>): Promise<boolean> {
+  async executeExists(criteria: Condition<E>): Promise<boolean> {
     const { text, params } = compileExists(criteria, this.metadata, this.namespace);
     const result = await this.client.query(text, params);
     return result.rows[0]?.exists === true;
   }
 
   async executeIncrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -298,7 +299,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
   }
 
   async executeDecrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -338,7 +339,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
   }
 
   async executeUpdateMany(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     update: DeepPartial<E>,
   ): Promise<number> {
     const { text, params } = compileUpdateMany(

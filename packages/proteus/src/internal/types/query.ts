@@ -1,11 +1,12 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../interfaces/index.js";
 import type { LockMode, OrderValue } from "../../types/find-options.js";
 import type { RelationStrategy } from "../entity/types/metadata.js";
 import type { ResolvedFilter } from "../utils/query/resolve-filters.js";
 
 export type PredicateEntry<E extends IEntity> = {
-  predicate: Predicate<E>;
+  predicate: Condition<E>;
   conjunction: "and" | "or";
 };
 
@@ -14,13 +15,13 @@ export type IncludeOptions =
       required?: true;
       strategy?: "join";
       select?: Array<string>;
-      where?: Predicate<Dict>;
+      where?: Condition<Dict>;
     }
   | {
       required?: false;
       strategy?: RelationStrategy;
       select?: Array<string>;
-      where?: Predicate<Dict>;
+      where?: Condition<Dict>;
     };
 
 export type IncludeSpec = {
@@ -28,7 +29,7 @@ export type IncludeSpec = {
   required: boolean;
   strategy: RelationStrategy;
   select: Array<string> | null;
-  where: Predicate<Dict> | null;
+  where: Condition<Dict> | null;
 };
 
 // --- Raw SQL ---

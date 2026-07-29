@@ -1,6 +1,6 @@
+import { Matcher } from "@lindorm/match";
 import { applyKeyFloor, ENVELOPE_FLOOR, type IAmphora } from "@lindorm/amphora";
 import type { IKryptos } from "@lindorm/kryptos";
-import { Predicated } from "@lindorm/utils";
 import { ProteusError } from "../../../errors/index.js";
 import { ENCRYPTION_DEFAULT } from "../../constants/key-floor.js";
 import type { MetaEncrypted } from "../types/metadata.js";
@@ -51,7 +51,7 @@ export const resolveEncryptionKey = (
     }
   }
 
-  if (!Predicated.match(kryptos, ENVELOPE_FLOOR)) {
+  if (!Matcher.match(kryptos, ENVELOPE_FLOOR)) {
     throw new ProteusError(
       `Encryption key for field "${fieldKey}" on entity "${entityName}" violates the encryption floor`,
       {

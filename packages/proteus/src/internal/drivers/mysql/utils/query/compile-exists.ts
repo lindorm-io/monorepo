@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { compileExists as shared } from "../../../../utils/sql/compile-exists.js";
@@ -12,7 +12,7 @@ import { resolveTableName } from "./resolve-table-name.js";
 import type { CompiledSql } from "./compiled-sql.js";
 
 export const compileExists = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   metadata: EntityMetadata,
   namespace?: string | null,
 ): CompiledSql =>

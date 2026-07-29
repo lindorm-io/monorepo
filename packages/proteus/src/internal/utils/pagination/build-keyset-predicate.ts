@@ -1,10 +1,10 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { KeysetOrderEntry } from "./build-keyset-order.js";
 
 /**
- * Build a Predicate implementing keyset (seek) pagination using boolean
- * expansion. Works with both SQL (compile-where) and memory (Predicated.match).
+ * Build a Condition implementing keyset (seek) pagination using boolean
+ * expansion. Works with both SQL (compile-where) and memory (Matcher.match).
  *
  * For ordered columns (a ASC, b DESC) seeking AFTER cursor values (c, d):
  *   { $or: [
@@ -22,25 +22,25 @@ import type { KeysetOrderEntry } from "./build-keyset-order.js";
  * @param entries   Keyset order entries (column + direction)
  * @param values    Cursor values aligned with entries
  * @param backward  If true, flip comparison operators (for last/before)
- * @returns Predicate that filters rows past the cursor boundary
+ * @returns Condition that filters rows past the cursor boundary
  */
 export const buildKeysetPredicate = <E extends IEntity>(
   entries: Array<KeysetOrderEntry>,
   values: Array<unknown>,
   backward: boolean,
-): Predicate<E> => {
-  if (entries.length === 0) return {} as Predicate<E>;
+): Condition<E> => {
+  if (entries.length === 0) return {} as Condition<E>;
 
-  const disjuncts: Array<Predicate<E>> = [];
+  const disjuncts: Array<Condition<E>> = [];
 
   for (let depth = 0; depth < entries.length; depth++) {
-    const conjuncts: Array<Predicate<E>> = [];
+    const conjuncts: Array<Condition<E>> = [];
 
     // Equality prefix: columns 0..depth-1
     for (let i = 0; i < depth; i++) {
       conjuncts.push({
         [entries[i].column]: values[i],
-      } as Predicate<E>);
+      } as Condition<E>);
     }
 
     // Strict inequality at position `depth`
@@ -48,12 +48,12 @@ export const buildKeysetPredicate = <E extends IEntity>(
     const op = getComparisonOp(entry.direction, backward);
     conjuncts.push({
       [entry.column]: { [op]: values[depth] },
-    } as Predicate<E>);
+    } as Condition<E>);
 
     if (conjuncts.length === 1) {
       disjuncts.push(conjuncts[0]);
     } else {
-      disjuncts.push({ $and: conjuncts } as Predicate<E>);
+      disjuncts.push({ $and: conjuncts } as Condition<E>);
     }
   }
 
@@ -61,7 +61,7 @@ export const buildKeysetPredicate = <E extends IEntity>(
     return disjuncts[0];
   }
 
-  return { $or: disjuncts } as Predicate<E>;
+  return { $or: disjuncts } as Condition<E>;
 };
 
 /**

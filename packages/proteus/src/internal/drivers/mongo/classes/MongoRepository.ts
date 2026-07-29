@@ -1,6 +1,7 @@
+import type { Condition } from "@lindorm/match";
 import type { Db, ClientSession } from "mongodb";
 import type { ILogger } from "@lindorm/logger";
-import type { Constructor, DeepPartial, Predicate } from "@lindorm/types";
+import type { Constructor, DeepPartial } from "@lindorm/types";
 import type {
   IEntity,
   IProteusCursor,
@@ -114,7 +115,7 @@ export class MongoRepository<
   // ─── Abstract: find / versions ────────────────────────────────────
 
   async find(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: FindOptions<E>,
     scope: QueryScope = "multiple",
   ): Promise<Array<E>> {
@@ -134,7 +135,7 @@ export class MongoRepository<
       : options;
 
     const entities = await this.executor.executeFind(
-      criteria ?? ({} as Predicate<E>),
+      criteria ?? ({} as Condition<E>),
       effectiveOptions ?? {},
     );
 
@@ -163,7 +164,7 @@ export class MongoRepository<
    * Version-keyed entities store all versions as separate rows in the
    * main collection (differentiated by composite PK: id + versionId).
    */
-  async versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>> {
+  async versions(criteria: Condition<E>, options?: FindOptions<E>): Promise<Array<E>> {
     guardVersionFields(this.metadata, "versions");
 
     const entities = await this.executor.executeFind(criteria, {
@@ -199,7 +200,7 @@ export class MongoRepository<
   // ─── Override: executePaginateFind ──────────────────────────────────
 
   protected override async executePaginateFind(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     keysetEntries: Array<KeysetOrderEntry>,
     cursorValues: Array<unknown> | null,
     isBackward: boolean,
@@ -235,7 +236,7 @@ export class MongoRepository<
     const collection = this.db.collection(collectionName);
 
     // Build filter
-    const criteria = effectiveOptions?.where ?? ({} as Predicate<E>);
+    const criteria = effectiveOptions?.where ?? ({} as Condition<E>);
     const filter = compileFilterWithSystem(criteria, this.metadata, new Map(), {
       withDeleted: effectiveOptions?.withDeleted,
     });
@@ -757,13 +758,13 @@ export class MongoRepository<
   protected async executeAggregate(
     type: AggregateFunction,
     field: keyof E,
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
   ): Promise<number | null> {
     const collectionName = resolveCollectionName(this.metadata);
     const collection = this.db.collection(collectionName);
 
     const flatCriteria = flattenEmbeddedCriteria(
-      criteria ?? ({} as Predicate<E>),
+      criteria ?? ({} as Condition<E>),
       this.metadata,
     );
     const filter = compileFilterWithSystem(flatCriteria, this.metadata, new Map());

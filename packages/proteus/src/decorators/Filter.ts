@@ -1,4 +1,5 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import { stageFilter } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
@@ -8,11 +9,11 @@ export type FilterDecoratorOptions = {
   /** Unique name for this filter (e.g. "active", "tenant"). */
   name: string;
   /**
-   * Filter condition using Predicate operators.
+   * Filter condition using Condition operators.
    * Use `"$paramName"` string placeholders for parameterized values
    * that are resolved at query time via `setFilterParams()` or `FindOptions.filters`.
    */
-  condition: Predicate<Dict>;
+  condition: Condition<Dict>;
   /**
    * When `true`, the filter is auto-enabled on every query.
    * When `false` (default), the filter must be explicitly enabled per query.

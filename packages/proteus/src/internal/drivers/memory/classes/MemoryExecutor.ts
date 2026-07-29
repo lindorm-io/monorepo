@@ -1,6 +1,8 @@
+import type { Condition } from "@lindorm/match";
+import { Matcher } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
 import { isBigInt } from "@lindorm/is";
-import type { DeepPartial, Dict, Predicate } from "@lindorm/types";
+import type { DeepPartial, Dict } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
@@ -11,7 +13,6 @@ import type {
 } from "../../../entity/types/metadata.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
-import { Predicated } from "@lindorm/utils";
 import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
 import {
@@ -268,7 +269,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return hydrateFromRow<E>(structuredClone(merged), this.metadata, this.amphora);
   }
 
-  async executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     guardEmptyCriteria(criteria, "delete", MemoryDriverError);
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
@@ -323,7 +324,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     }
   }
 
-  async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
+  async executeSoftDelete(criteria: Condition<E>): Promise<void> {
     guardEmptyCriteria(criteria, "soft delete", MemoryDriverError);
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
@@ -341,7 +342,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     }
   }
 
-  async executeRestore(criteria: Predicate<E>): Promise<void> {
+  async executeRestore(criteria: Condition<E>): Promise<void> {
     guardEmptyCriteria(criteria, "restore", MemoryDriverError);
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
@@ -401,7 +402,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     }
   }
 
-  async executeTtl(criteria: Predicate<E>): Promise<number | null> {
+  async executeTtl(criteria: Condition<E>): Promise<number | null> {
     const expiryField = this.metadata.fields.find((f) => f.decorator === "ExpiryDate");
     if (!expiryField) return null;
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
@@ -423,7 +424,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeFind(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     options: FindOptions<E>,
     _operationScope?: QueryScope,
   ): Promise<Array<E>> {
@@ -469,7 +470,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     // Apply predicate filter
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
     if (Object.keys(flatCriteria).length > 0) {
-      rows = Predicated.filter(rows, flatCriteria);
+      rows = Matcher.filter(rows, flatCriteria);
     }
 
     // Apply system + user-defined @Filter predicates (includes __softDelete, __scope)
@@ -513,7 +514,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     );
   }
 
-  async executeCount(criteria: Predicate<E>, options: FindOptions<E>): Promise<number> {
+  async executeCount(criteria: Condition<E>, options: FindOptions<E>): Promise<number> {
     const table = this.getTable();
     let rows = [...table.values()];
 
@@ -528,7 +529,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     // Apply predicate filter
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
     if (Object.keys(flatCriteria).length > 0) {
-      rows = Predicated.filter(rows, flatCriteria);
+      rows = Matcher.filter(rows, flatCriteria);
     }
 
     // Apply system + user-defined @Filter predicates (includes __softDelete, __scope)
@@ -550,7 +551,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return rows.length;
   }
 
-  async executeExists(criteria: Predicate<E>): Promise<boolean> {
+  async executeExists(criteria: Condition<E>): Promise<boolean> {
     const table = this.getTable();
     let rows = [...table.values()];
 
@@ -578,7 +579,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeIncrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -596,7 +597,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeDecrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -624,7 +625,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeUpdateMany(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     update: DeepPartial<E>,
     options?: { systemFilters?: boolean },
   ): Promise<number> {

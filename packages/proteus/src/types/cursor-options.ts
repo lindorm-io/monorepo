@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../interfaces/Entity.js";
 
 /**
@@ -6,7 +6,7 @@ import type { IEntity } from "../interfaces/Entity.js";
  */
 export type CursorOptions<E extends IEntity> = {
   /** Filter predicate for entities yielded by the cursor. */
-  where?: Predicate<E>;
+  where?: Condition<E>;
   /** Sort order for the cursor results. */
   orderBy?: Partial<Record<keyof E, "ASC" | "DESC">>;
   /** Number of rows fetched per network round-trip. */

@@ -1,7 +1,7 @@
+import { Matcher } from "@lindorm/match";
 import { DECRYPT_FLOOR, type IAmphora } from "@lindorm/amphora";
 import { parseAes } from "@lindorm/aes";
 import type { IKryptos } from "@lindorm/kryptos";
-import { Predicated } from "@lindorm/utils";
 import { ProteusError } from "../../../errors/index.js";
 import type { MetaEncrypted } from "../types/metadata.js";
 
@@ -54,7 +54,7 @@ export const resolveDecryptionKey = (
     );
   }
 
-  if (!Predicated.match(kryptos, DECRYPT_FLOOR)) {
+  if (!Matcher.match(kryptos, DECRYPT_FLOOR)) {
     throw new ProteusError(
       `Decryption key for field "${fieldKey}" on entity "${entityName}" violates the decryption floor`,
       {

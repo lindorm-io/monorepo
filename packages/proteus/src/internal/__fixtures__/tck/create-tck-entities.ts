@@ -859,7 +859,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     isIndoor!: boolean;
   }
 
-  // ─── Complex Predicate Test Entities ──────────────────────────────
+  // ─── Complex Condition Test Entities ──────────────────────────────
 
   @Entity({ name: "TckArrayHolder" })
   class TckArrayHolder {

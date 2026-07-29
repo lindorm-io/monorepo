@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
@@ -128,7 +129,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return hydrateReturning<E>(rows[0], this.metadata, { amphora: this.amphora });
   }
 
-  async executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     guardEmptyCriteria(criteria, "delete", SqliteExecutorError);
 
     // For joined inheritance children, explicitly delete child table rows first.
@@ -164,13 +165,13 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     this.client.run(text, params);
   }
 
-  async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
+  async executeSoftDelete(criteria: Condition<E>): Promise<void> {
     guardEmptyCriteria(criteria, "soft delete", SqliteExecutorError);
     const { text, params } = compileSoftDelete(criteria, this.metadata, this.namespace);
     this.client.run(text, params);
   }
 
-  async executeRestore(criteria: Predicate<E>): Promise<void> {
+  async executeRestore(criteria: Condition<E>): Promise<void> {
     guardEmptyCriteria(criteria, "restore", SqliteExecutorError);
     const { text, params } = compileRestore(criteria, this.metadata, this.namespace);
     this.client.run(text, params);
@@ -184,7 +185,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     this.client.run(text, params);
   }
 
-  async executeTtl(criteria: Predicate<E>): Promise<number | null> {
+  async executeTtl(criteria: Condition<E>): Promise<number | null> {
     const expiryField = this.metadata.fields.find((f) => f.decorator === "ExpiryDate");
     if (!expiryField) return null;
 
@@ -217,7 +218,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeFind(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     options: FindOptions<E>,
     operationScope: QueryScope = "multiple",
   ): Promise<Array<E>> {
@@ -256,7 +257,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return entities;
   }
 
-  async executeCount(criteria: Predicate<E>, options: FindOptions<E>): Promise<number> {
+  async executeCount(criteria: Condition<E>, options: FindOptions<E>): Promise<number> {
     const state = findOptionsToQueryState(
       criteria,
       options,
@@ -274,7 +275,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return Number((row as any)?.count ?? 0);
   }
 
-  async executeExists(criteria: Predicate<E>): Promise<boolean> {
+  async executeExists(criteria: Condition<E>): Promise<boolean> {
     const { text, params } = compileExists(criteria, this.metadata, this.namespace);
     const row = this.client.get(text, params);
     // safeIntegers mode returns the flag as BigInt; Number() normalises both.
@@ -282,7 +283,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeIncrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -297,7 +298,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeDecrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -336,7 +337,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeUpdateMany(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     update: DeepPartial<E>,
   ): Promise<number> {
     const { text, params } = compileUpdateMany(

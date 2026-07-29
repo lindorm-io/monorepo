@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
@@ -177,7 +178,7 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     }
   }
 
-  async executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     guardEmptyCriteria(criteria, "delete", MySqlExecutorError);
 
     try {
@@ -222,7 +223,7 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     }
   }
 
-  async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
+  async executeSoftDelete(criteria: Condition<E>): Promise<void> {
     guardEmptyCriteria(criteria, "soft delete", MySqlExecutorError);
     try {
       const { text, params } = compileSoftDelete(criteria, this.metadata, this.namespace);
@@ -237,7 +238,7 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     }
   }
 
-  async executeRestore(criteria: Predicate<E>): Promise<void> {
+  async executeRestore(criteria: Condition<E>): Promise<void> {
     guardEmptyCriteria(criteria, "restore", MySqlExecutorError);
     try {
       const { text, params } = compileRestore(criteria, this.metadata, this.namespace);
@@ -269,7 +270,7 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     }
   }
 
-  async executeTtl(criteria: Predicate<E>): Promise<number | null> {
+  async executeTtl(criteria: Condition<E>): Promise<number | null> {
     const expiryField = this.metadata.fields.find((f) => f.decorator === "ExpiryDate");
     if (!expiryField) return null;
 
@@ -316,7 +317,7 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   }
 
   async executeFind(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     options: FindOptions<E>,
     operationScope: QueryScope = "multiple",
   ): Promise<Array<E>> {
@@ -364,7 +365,7 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     }
   }
 
-  async executeCount(criteria: Predicate<E>, options: FindOptions<E>): Promise<number> {
+  async executeCount(criteria: Condition<E>, options: FindOptions<E>): Promise<number> {
     try {
       const state = findOptionsToQueryState(
         criteria,
@@ -391,7 +392,7 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     }
   }
 
-  async executeExists(criteria: Predicate<E>): Promise<boolean> {
+  async executeExists(criteria: Condition<E>): Promise<boolean> {
     try {
       const { text, params } = compileExists(criteria, this.metadata, this.namespace);
       const { rows } = await this.client.query(text, params);
@@ -407,7 +408,7 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   }
 
   async executeIncrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -431,7 +432,7 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   }
 
   async executeDecrement(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     property: keyof E,
     value: number,
   ): Promise<void> {
@@ -569,7 +570,7 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   }
 
   async executeUpdateMany(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     update: DeepPartial<E>,
   ): Promise<number> {
     try {

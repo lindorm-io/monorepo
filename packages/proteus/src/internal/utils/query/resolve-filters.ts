@@ -1,4 +1,5 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import type { MetaFilter } from "../../entity/types/metadata.js";
 import type { FilterRegistry } from "./filter-registry.js";
 import { ProteusError } from "../../../errors/index.js";
@@ -8,7 +9,7 @@ import { ProteusError } from "../../../errors/index.js";
  */
 export type ResolvedFilter = {
   name: string;
-  predicate: Predicate<Dict>;
+  predicate: Condition<Dict>;
 };
 
 /**
@@ -43,10 +44,10 @@ const conditionRequiresParams = (cond: unknown): boolean => {
  * (that is not an operator like `$eq`) is treated as a param reference.
  */
 const substituteParams = (
-  cond: Predicate<Dict>,
+  cond: Condition<Dict>,
   params: Dict<unknown>,
   filterName: string,
-): Predicate<Dict> => {
+): Condition<Dict> => {
   const walk = (obj: unknown): unknown => {
     if (obj === null || obj === undefined) return obj;
 
@@ -84,7 +85,7 @@ const substituteParams = (
     return obj;
   };
 
-  return walk(cond) as Predicate<Dict>;
+  return walk(cond) as Condition<Dict>;
 };
 
 /**

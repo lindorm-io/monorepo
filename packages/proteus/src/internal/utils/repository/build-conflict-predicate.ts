@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../interfaces/index.js";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
@@ -7,7 +7,7 @@ export const buildConflictPredicate = <E extends IEntity>(
   entity: E,
   metadata: EntityMetadata,
   conflictOn: Array<keyof E>,
-): Predicate<E> => {
+): Condition<E> => {
   const predicate: Record<string, unknown> = {};
 
   for (const key of conflictOn) {
@@ -29,5 +29,5 @@ export const buildConflictPredicate = <E extends IEntity>(
     predicate[key as string] = value;
   }
 
-  return predicate as Predicate<E>;
+  return predicate as Condition<E>;
 };

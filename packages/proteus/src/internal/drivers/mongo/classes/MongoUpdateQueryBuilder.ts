@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { ClientSession, Db, Document, Filter } from "mongodb";
-import type { DeepPartial, Predicate } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { IUpdateQueryBuilder } from "../../../../interfaces/UpdateQueryBuilder.js";
 import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder.js";
@@ -23,7 +24,7 @@ export class MongoUpdateQueryBuilder<
   private readonly metadata: EntityMetadata;
   private readonly session: ClientSession | undefined;
   private updateData: DeepPartial<E> | null = null;
-  private predicates: Array<{ predicate: Predicate<E>; conjunction: "and" | "or" }> = [];
+  private predicates: Array<{ predicate: Condition<E>; conjunction: "and" | "or" }> = [];
 
   constructor(db: Db, metadata: EntityMetadata, session?: ClientSession) {
     this.db = db;
@@ -36,17 +37,17 @@ export class MongoUpdateQueryBuilder<
     return this;
   }
 
-  where(criteria: Predicate<E>): this {
+  where(criteria: Condition<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Condition<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }

@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { createEmptyState } from "../../../../../classes/QueryBuilder.js";
@@ -19,7 +19,7 @@ import { resolveTableName } from "./resolve-table-name.js";
  * but only for single-table deletes. For joined inheritance, a CTE approach is used.
  */
 export const compileDeleteWithLimit = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   limit: number,
   metadata: EntityMetadata,
   namespace?: string | null,

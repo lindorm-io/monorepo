@@ -1,4 +1,5 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import { ProteusError } from "../errors/index.js";
 import type {
   IDeleteQueryBuilder,
@@ -38,19 +39,19 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
    * Sets the WHERE clause. Replaces any previously set predicates.
    * Use `.andWhere()` or `.orWhere()` to append additional conditions.
    */
-  where(criteria: Predicate<E>): this {
+  where(criteria: Condition<E>): this {
     this.state.predicates = [{ predicate: criteria, conjunction: "and" }];
     this.state.subqueryPredicates = [];
     this.state.rawWhere = [];
     return this;
   }
 
-  andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Condition<E>): this {
     this.state.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Condition<E>): this {
     this.state.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
@@ -169,17 +170,17 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     return this;
   }
 
-  having(criteria: Predicate<E>): this {
+  having(criteria: Condition<E>): this {
     this.state.having = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  andHaving(criteria: Predicate<E>): this {
+  andHaving(criteria: Condition<E>): this {
     this.state.having.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  orHaving(criteria: Predicate<E>): this {
+  orHaving(criteria: Condition<E>): this {
     this.state.having.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
@@ -348,7 +349,7 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
   }
 
   /**
-   * Creates a shallow copy of the current state. Predicate objects are shared
+   * Creates a shallow copy of the current state. Condition objects are shared
    * by reference -- callers must treat predicates as immutable after cloning.
    */
   protected cloneState(): QueryState<E> {

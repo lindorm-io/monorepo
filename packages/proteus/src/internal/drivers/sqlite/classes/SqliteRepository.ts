@@ -1,6 +1,7 @@
+import type { Condition } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
-import type { Constructor, DeepPartial, Dict, Predicate } from "@lindorm/types";
+import type { Constructor, DeepPartial, Dict } from "@lindorm/types";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
 import type {
   IEntity,
@@ -137,7 +138,7 @@ export class SqliteRepository<
   // ─── Abstract: find / versions ────────────────────────────────────
 
   async find(
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
     options?: FindOptions<E>,
     scope: QueryScope = "multiple",
   ): Promise<Array<E>> {
@@ -155,7 +156,7 @@ export class SqliteRepository<
       : options;
 
     const entities = await this.executor.executeFind(
-      criteria ?? ({} as Predicate<E>),
+      criteria ?? ({} as Condition<E>),
       effectiveOptions ?? {},
       scope,
     );
@@ -186,7 +187,7 @@ export class SqliteRepository<
     return entities;
   }
 
-  async versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>> {
+  async versions(criteria: Condition<E>, options?: FindOptions<E>): Promise<Array<E>> {
     guardVersionFields(this.metadata, "versions");
 
     const entities = await this.executor.executeFind(
@@ -227,7 +228,7 @@ export class SqliteRepository<
 
   // ─── Override: SQLite error wrapping ──────────────────────────────
 
-  override async delete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  override async delete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     try {
       if (options?.limit) {
         await this.executor.executeDelete(criteria, options);
@@ -242,7 +243,7 @@ export class SqliteRepository<
   }
 
   override async updateMany(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     update: DeepPartial<E>,
   ): Promise<void> {
     if (this.entityManager.updateStrategy === "version") {
@@ -272,7 +273,7 @@ export class SqliteRepository<
   }
 
   override async softDelete(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     _options?: DeleteOptions,
   ): Promise<void> {
     guardDeleteDateField(this.metadata, "softDelete");
@@ -289,7 +290,7 @@ export class SqliteRepository<
   }
 
   override async restore(
-    criteria: Predicate<E>,
+    criteria: Condition<E>,
     _options?: DeleteOptions,
   ): Promise<void> {
     guardDeleteDateField(this.metadata, "restore");
@@ -1149,7 +1150,7 @@ export class SqliteRepository<
   protected async executeAggregate(
     type: AggregateFunction,
     field: keyof E,
-    criteria?: Predicate<E>,
+    criteria?: Condition<E>,
   ): Promise<number | null> {
     const sqliteType = SQLITE_AGGREGATE_MAP[type];
 

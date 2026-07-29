@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../types/query.js";
@@ -17,7 +17,7 @@ import type { SqlDialect } from "./sql-dialect.js";
  * (e.g. `synchronize: false` in production with manual migrations).
  */
 export const compileJoinedChildDelete = <E extends IEntity>(
-  criteria: Predicate<E>,
+  criteria: Condition<E>,
   metadata: EntityMetadata,
   dialect: SqlDialect,
   namespace?: string | null,
