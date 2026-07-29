@@ -150,7 +150,7 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
     // turns that role ON — a plain `set()` is signed and sealed, the matching
     // `get()` verifies and opens it. There is no `signed`/`encrypted` boolean
     // and no `verification` selector: verification is derived from the
-    // `signature` predicate in code, never declared here. Pylon holds no
+    // `signature` condition in code, never declared here. Pylon holds no
     // opinion on your `purpose` taxonomy — these selectors SELECT the purposes
     // the kryptos-rotation worker MINTS, so the two must stay in lockstep.
     //
@@ -159,12 +159,12 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
     // the JWKS token key would be selected instead.
     lines.push(`  cookies: {`);
     lines.push(`    // Signed + sealed with the internal cookie key; verification is`);
-    lines.push(`    // derived from the signature predicate (code, not config).`);
+    lines.push(`    // derived from the signature condition (code, not config).`);
     lines.push(
-      `    signature: { predicate: { purpose: "pylon:cookie", publish: false } },`,
+      `    signature: { condition: { purpose: "pylon:cookie", publish: false } },`,
     );
     lines.push(
-      `    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },`,
+      `    encryption: { condition: { purpose: "pylon:cookie", publish: false } },`,
     );
     lines.push(`  },`);
   }
@@ -206,10 +206,10 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
     if (primaryExists) {
       lines.push(`    // Session's own keys — separate blast radius from other cookies.`);
       lines.push(
-        `    signature: { predicate: { purpose: "pylon:session", publish: false } },`,
+        `    signature: { condition: { purpose: "pylon:session", publish: false } },`,
       );
       lines.push(
-        `    encryption: { predicate: { purpose: "pylon:session", publish: false } },`,
+        `    encryption: { condition: { purpose: "pylon:session", publish: false } },`,
       );
     }
     lines.push(`    httpOnly: true,`);

@@ -950,9 +950,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
   bus: rabbit,
@@ -969,8 +969,8 @@ export const pylon = new Pylon({
     kv: redis,
     name: "sid",
     // Session's own keys — separate blast radius from other cookies.
-    signature: { predicate: { purpose: "pylon:session", publish: false } },
-    encryption: { predicate: { purpose: "pylon:session", publish: false } },
+    signature: { condition: { purpose: "pylon:session", publish: false } },
+    encryption: { condition: { purpose: "pylon:session", publish: false } },
     httpOnly: true,
     sameSite: "lax",
     secure: false, // TODO: flip to true in production (behind HTTPS)
@@ -1179,9 +1179,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
   rateLimit: {
@@ -2942,9 +2942,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
   bus: kafka,
@@ -3034,9 +3034,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: memoryKv,
   setup: async () => {
@@ -3071,9 +3071,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   bus: redisBus,
   queue: { enabled: true },
@@ -3108,9 +3108,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   setup: async () => {
     await redis.connect();
@@ -3143,9 +3143,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
   session: {
@@ -3153,8 +3153,8 @@ export const pylon = new Pylon({
     kv: redis,
     name: "sid",
     // Session's own keys — separate blast radius from other cookies.
-    signature: { predicate: { purpose: "pylon:session", publish: false } },
-    encryption: { predicate: { purpose: "pylon:session", publish: false } },
+    signature: { condition: { purpose: "pylon:session", publish: false } },
+    encryption: { condition: { purpose: "pylon:session", publish: false } },
     httpOnly: true,
     sameSite: "lax",
     secure: false, // TODO: flip to true in production (behind HTTPS)
@@ -3214,9 +3214,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
   bus: rabbit,
@@ -3255,9 +3255,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redisKv,
   bus: redisBus,
@@ -3295,9 +3295,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   bus: rabbit,
   queue: { enabled: true },
@@ -3340,9 +3340,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   bus: rabbit,
   queue: { enabled: true },
@@ -3377,9 +3377,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   setup: async () => {
     await postgres.connect();
@@ -3439,9 +3439,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   setup: async () => {
     await redis.connect();
@@ -3527,9 +3527,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
   rateLimit: {
@@ -3571,9 +3571,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   rateLimit: {
     enabled: true,
@@ -3614,9 +3614,9 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
   session: {
@@ -3624,8 +3624,8 @@ export const pylon = new Pylon({
     kv: redis,
     name: "sid",
     // Session's own keys — separate blast radius from other cookies.
-    signature: { predicate: { purpose: "pylon:session", publish: false } },
-    encryption: { predicate: { purpose: "pylon:session", publish: false } },
+    signature: { condition: { purpose: "pylon:session", publish: false } },
+    encryption: { condition: { purpose: "pylon:session", publish: false } },
     httpOnly: true,
     sameSite: "lax",
     secure: false, // TODO: flip to true in production (behind HTTPS)
@@ -3714,17 +3714,17 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   cookies: {
     // Signed + sealed with the internal cookie key; verification is
-    // derived from the signature predicate (code, not config).
-    signature: { predicate: { purpose: "pylon:cookie", publish: false } },
-    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },
+    // derived from the signature condition (code, not config).
+    signature: { condition: { purpose: "pylon:cookie", publish: false } },
+    encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   session: {
     enabled: true,
     kv: postgres,
     name: "sid",
     // Session's own keys — separate blast radius from other cookies.
-    signature: { predicate: { purpose: "pylon:session", publish: false } },
-    encryption: { predicate: { purpose: "pylon:session", publish: false } },
+    signature: { condition: { purpose: "pylon:session", publish: false } },
+    encryption: { condition: { purpose: "pylon:session", publish: false } },
     httpOnly: true,
     sameSite: "lax",
     secure: false, // TODO: flip to true in production (behind HTTPS)
