@@ -43,7 +43,7 @@ const jsonReviver = (_key: string, value: unknown): unknown => {
 
 // ─── Options ─────────────────────────────────────────────────────────────
 
-export type CachingRepositoryOptions<E extends IEntity> = {
+export type CachingRepositorySettings<E extends IEntity> = {
   inner: IProteusRepository<E>;
   adapter: ICacheAdapter;
   metadata: EntityMetadata;
@@ -71,7 +71,7 @@ export class CachingRepository<
   private readonly hasLazyRelations: boolean;
   private readonly inflight = new Map<string, Promise<unknown>>();
 
-  constructor(options: CachingRepositoryOptions<E>) {
+  constructor(options: CachingRepositorySettings<E>) {
     this.inner = options.inner as IProteusRepository<E, O>;
     this.adapter = options.adapter;
     this.metadata = options.metadata;

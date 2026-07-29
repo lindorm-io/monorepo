@@ -6,7 +6,7 @@ import type { PostgresQueryClient } from "../drivers/postgres/types/postgres-que
 import { SqliteMigrationManager } from "../drivers/sqlite/classes/SqliteMigrationManager.js";
 import type { SqliteQueryClient } from "../drivers/sqlite/types/sqlite-query-client.js";
 import type { IMigrationManager } from "../interfaces/MigrationManager.js";
-import type { MigrationTableOptions } from "../types/migration.js";
+import type { MigrationTableSettings } from "../types/migration.js";
 import type { PoolClient } from "pg";
 import type { ProteusSource } from "../../classes/ProteusSource.js";
 import { ProteusError } from "../../errors/ProteusError.js";
@@ -73,7 +73,7 @@ export const withMigrationManager = async (
   }
 
   const logger = source.log.child(["MigrationManager"]);
-  const tableOptions: MigrationTableOptions | undefined = source.migrationsTable
+  const tableOptions: MigrationTableSettings | undefined = source.migrationsTable
     ? { table: source.migrationsTable }
     : undefined;
 

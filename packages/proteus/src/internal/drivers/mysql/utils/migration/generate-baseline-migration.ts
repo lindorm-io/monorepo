@@ -5,7 +5,7 @@ import { computeHash } from "../../../../utils/migration/compute-hash.js";
 import { loadMigrations } from "../../../../utils/migration/load-migrations.js";
 import { writeMigrationFile } from "../../../../utils/migration/write-migration-file.js";
 import type { MysqlDbSnapshot } from "../../types/db-snapshot.js";
-import type { MysqlMigrationTableOptions } from "../../types/migration.js";
+import type { MysqlMigrationTableSettings } from "../../types/migration.js";
 import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
 import { diffSchema } from "../sync/diff-schema.js";
 import { introspectSchema } from "../sync/introspect-schema.js";
@@ -22,7 +22,7 @@ export type GenerateMysqlBaselineOptions = {
   name?: string;
   directory: string;
   timestamp?: Date;
-  tableOptions?: MysqlMigrationTableOptions;
+  tableOptions?: MysqlMigrationTableSettings;
   logger?: import("@lindorm/logger").ILogger;
 };
 

@@ -17,7 +17,7 @@ import type {
   MetaFieldDecorator,
   MetaRelation,
 } from "../types/metadata.js";
-import type { EntityManagerOptions, GetIncrementFn } from "../types/entity-manager.js";
+import type { EntityManagerSettings, GetIncrementFn } from "../types/entity-manager.js";
 import type { ProteusHookMeta } from "../../../types/proteus-hook-meta.js";
 import { defaultCloneEntity } from "../utils/default-clone-entity.js";
 import { defaultCreateEntity } from "../utils/default-create-entity.js";
@@ -52,7 +52,7 @@ export class EntityManager<
   readonly metadata: EntityMetadata<TExtra, TDecorator>;
   readonly updateStrategy: UpdateStrategy;
 
-  constructor(options: EntityManagerOptions<E>) {
+  constructor(options: EntityManagerSettings<E>) {
     if (!options.target) {
       throw new EntityManagerError("EntityManager requires a target constructor", {
         code: "missing_target",

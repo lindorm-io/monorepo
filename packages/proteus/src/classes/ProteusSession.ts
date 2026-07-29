@@ -24,7 +24,7 @@ import {
   disableFilter as disableFilterUtil,
 } from "../internal/utils/query/filter-registry.js";
 
-export type ProteusSessionOptions = {
+export type ProteusSessionSettings = {
   source: IProteusSource;
   logger: ILogger;
   meta: ProteusHookMeta;
@@ -59,7 +59,7 @@ export class ProteusSession implements IProteusSession {
   private readonly parentEmitEntity: EntityEmitFn;
   private readonly _signal: AbortSignal | undefined;
 
-  constructor(options: ProteusSessionOptions) {
+  constructor(options: ProteusSessionSettings) {
     this.source = options.source;
     this._driver = options.driver;
     this.logger = options.logger;

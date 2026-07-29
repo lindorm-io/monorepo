@@ -81,7 +81,7 @@ export type WithImplicitTransaction<E extends IEntity> = <T>(
   }) => Promise<T>,
 ) => Promise<T>;
 
-export type SqliteRepositoryOptions<E extends IEntity> = {
+export type SqliteRepositorySettings<E extends IEntity> = {
   target: Constructor<E>;
   metadata?: EntityMetadata;
   executor: IRepositoryExecutor<E>;
@@ -113,7 +113,7 @@ export class SqliteRepository<
   private readonly hasEmbeddedLists: boolean;
   private readonly amphora: IAmphora | undefined;
 
-  constructor(options: SqliteRepositoryOptions<E>) {
+  constructor(options: SqliteRepositorySettings<E>) {
     super({
       target: options.target,
       metadata: options.metadata,

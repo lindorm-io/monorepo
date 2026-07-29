@@ -87,7 +87,7 @@ export type CreateCursorClient = () => Promise<{
   release: () => void;
 }>;
 
-export type PostgresRepositoryOptions<E extends IEntity> = {
+export type PostgresRepositorySettings<E extends IEntity> = {
   target: Constructor<E>;
   metadata?: EntityMetadata;
   executor: IRepositoryExecutor<E>;
@@ -121,7 +121,7 @@ export class PostgresRepository<
   private readonly hasEmbeddedLists: boolean;
   private readonly amphora: IAmphora | undefined;
 
-  constructor(options: PostgresRepositoryOptions<E>) {
+  constructor(options: PostgresRepositorySettings<E>) {
     super({
       target: options.target,
       metadata: options.metadata,

@@ -14,7 +14,7 @@ import type {
 } from "../../../interfaces/ProteusDriver.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
-  ProteusMemoryOptions,
+  ProteusMemorySettings,
   TransactionCallback,
   TransactionOptions,
 } from "../../../../types/index.js";
@@ -80,7 +80,7 @@ export class MemoryDriver implements IProteusDriver {
   private signal: AbortSignal | undefined;
 
   constructor(
-    _options: ProteusMemoryOptions,
+    _options: ProteusMemorySettings,
     logger: ILogger,
     namespace: string | null,
     resolveMetadata: MetadataResolver,

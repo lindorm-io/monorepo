@@ -6,7 +6,7 @@ import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
  * Options when providing a pre-existing ioredis client.
  * The adapter does NOT own this client and will NOT call quit() on it.
  */
-export type RedisCacheAdapterClientOptions = {
+export type RedisCacheAdapterClientSettings = {
   client: Redis;
   keyPrefix?: string;
   scanCount?: number;
@@ -17,7 +17,7 @@ export type RedisCacheAdapterClientOptions = {
  * Provide either `url` or individual connection fields.
  * Call `adapter.disconnect()` (or let ProteusSource.disconnect() handle it) to quit the connection.
  */
-export type RedisCacheAdapterConnectionOptions = {
+export type RedisCacheAdapterConnectionSettings = {
   client?: never;
   url?: string;
   host?: string;
@@ -31,9 +31,9 @@ export type RedisCacheAdapterConnectionOptions = {
 };
 
 /** Options for the Redis-backed cache adapter. Pass either an existing client or connection details. */
-export type RedisCacheAdapterOptions =
-  | RedisCacheAdapterClientOptions
-  | RedisCacheAdapterConnectionOptions;
+export type RedisCacheAdapterSettings =
+  | RedisCacheAdapterClientSettings
+  | RedisCacheAdapterConnectionSettings;
 
 /**
  * Lua script that atomically scans and unlinks keys matching a pattern.
@@ -106,12 +106,12 @@ return total
  */
 export class RedisCacheAdapter implements ICacheAdapter {
   private readonly _client: Redis | undefined;
-  private readonly _connectionOptions: RedisCacheAdapterConnectionOptions | undefined;
+  private readonly _connectionOptions: RedisCacheAdapterConnectionSettings | undefined;
   private _ownedClientPromise: Promise<Redis> | undefined;
   private readonly keyPrefix: string;
   private readonly scanCount: number;
 
-  constructor(options: RedisCacheAdapterOptions) {
+  constructor(options: RedisCacheAdapterSettings) {
     this.keyPrefix = options.keyPrefix ?? "";
     this.scanCount = options.scanCount ?? 500;
 

@@ -55,7 +55,7 @@ import { compileSort } from "../utils/compile-sort.js";
 import { compileProjection } from "../utils/compile-projection.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
 
-export type MongoRepositoryOptions<E extends IEntity> = {
+export type MongoRepositorySettings<E extends IEntity> = {
   target: Constructor<E>;
   executor: IRepositoryExecutor<E>;
   queryBuilderFactory: () => IProteusQueryBuilder<E>;
@@ -81,7 +81,7 @@ export class MongoRepository<
   private readonly joinTableOps: JoinTableOps;
   private readonly session: ClientSession | undefined;
 
-  constructor(options: MongoRepositoryOptions<E>) {
+  constructor(options: MongoRepositorySettings<E>) {
     super({
       target: options.target,
       executor: options.executor,

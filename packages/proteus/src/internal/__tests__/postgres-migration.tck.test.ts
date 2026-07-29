@@ -16,7 +16,7 @@ import { mockScannerImport } from "../../__fixtures__/mock-scanner-import.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import { MigrationManager } from "../drivers/postgres/classes/MigrationManager.js";
 import type { PostgresQueryClient } from "../drivers/postgres/types/postgres-query-client.js";
-import type { MigrationTableOptions } from "../drivers/postgres/types/migration.js";
+import type { MigrationTableSettings } from "../drivers/postgres/types/migration.js";
 import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";
 import {
   createMigrationTckEntities,
@@ -36,7 +36,7 @@ const PG_CONNECTION = "postgres://root:example@localhost:5432/default";
 let client: PostgresQueryClient;
 let raw: Client;
 let schema: string;
-let tableOptions: MigrationTableOptions;
+let tableOptions: MigrationTableSettings;
 let logger: ILogger;
 const entities: MigrationTckEntities = createMigrationTckEntities();
 

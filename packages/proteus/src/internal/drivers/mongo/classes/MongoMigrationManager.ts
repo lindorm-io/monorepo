@@ -32,7 +32,7 @@ import {
   markMigrationRolledBack,
 } from "../utils/migration/migration-tracking.js";
 
-export type MongoMigrationManagerOptions = {
+export type MongoMigrationManagerSettings = {
   client: MongoClient;
   db: Db;
   directory: string;
@@ -51,7 +51,7 @@ export class MongoMigrationManager implements IMigrationManager {
   private readonly tableName: string | undefined;
   private cachedIsReplicaSet: boolean | null;
 
-  constructor(options: MongoMigrationManagerOptions) {
+  constructor(options: MongoMigrationManagerSettings) {
     this.client = options.client;
     this.db = options.db;
     this.directory = options.directory;

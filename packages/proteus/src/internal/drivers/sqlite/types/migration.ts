@@ -5,7 +5,7 @@ export type {
   MigrationRecord,
   MigrationApplyResult,
   MigrationStatus,
-  MigrationTableOptions as SqliteMigrationTableOptions,
+  MigrationTableSettings as SqliteMigrationTableSettings,
   SqlMigrationInterface as MigrationInterface,
 } from "../../../types/migration.js";
 

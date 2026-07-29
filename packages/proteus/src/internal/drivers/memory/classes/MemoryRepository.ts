@@ -64,7 +64,7 @@ export type WithImplicitTransaction<E extends IEntity> = <T>(
   }) => Promise<T>,
 ) => Promise<T>;
 
-export type MemoryRepositoryOptions<E extends IEntity> = {
+export type MemoryRepositorySettings<E extends IEntity> = {
   target: Constructor<E>;
   executor: IRepositoryExecutor<E>;
   queryBuilderFactory: () => IProteusQueryBuilder<E>;
@@ -87,7 +87,7 @@ export class MemoryRepository<
   private readonly hasEagerRelations: boolean;
   private readonly hasEmbeddedLists: boolean;
 
-  constructor(options: MemoryRepositoryOptions<E>) {
+  constructor(options: MemoryRepositorySettings<E>) {
     super({
       target: options.target,
       executor: options.executor,

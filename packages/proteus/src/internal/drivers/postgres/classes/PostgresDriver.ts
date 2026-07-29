@@ -11,7 +11,7 @@ import type {
 } from "../../../interfaces/ProteusDriver.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
-  ProteusPostgresOptions,
+  ProteusPostgresSettings,
   TransactionCallback,
   TransactionOptions,
 } from "../../../../types/index.js";
@@ -60,7 +60,7 @@ import { TransactionContext } from "./TransactionContext.js";
 const DEFAULT_SYNC_LOCK_TIMEOUT_MS = 10_000;
 
 export class PostgresDriver implements IProteusDriver {
-  private readonly options: ProteusPostgresOptions;
+  private readonly options: ProteusPostgresSettings;
   private readonly logger: ILogger;
   private readonly namespace: string | null;
   private readonly resolveMetadata: MetadataResolver;
@@ -73,7 +73,7 @@ export class PostgresDriver implements IProteusDriver {
   private connectingPromise: Promise<void> | null = null;
 
   constructor(
-    options: ProteusPostgresOptions,
+    options: ProteusPostgresSettings,
     logger: ILogger,
     namespace: string | null,
     resolveMetadata: MetadataResolver,

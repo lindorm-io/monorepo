@@ -17,7 +17,7 @@ import type { SqliteDbSnapshot } from "../types/db-snapshot.js";
 import type {
   MigrationApplyResult,
   MigrationRecord,
-  SqliteMigrationTableOptions,
+  SqliteMigrationTableSettings,
 } from "../types/migration.js";
 import type { SqliteQueryClient } from "../types/sqlite-query-client.js";
 import {
@@ -40,20 +40,20 @@ import { projectDesiredSchemaSqlite } from "../utils/sync/project-desired-schema
 
 const EMPTY_SNAPSHOT: SqliteDbSnapshot = { tables: new Map() };
 
-export type SqliteMigrationManagerOptions = {
+export type SqliteMigrationManagerSettings = {
   client: SqliteQueryClient;
   directory: string;
   logger: ILogger;
-  tableOptions?: SqliteMigrationTableOptions;
+  tableOptions?: SqliteMigrationTableSettings;
 };
 
 export class SqliteMigrationManager implements IMigrationManager {
   private readonly client: SqliteQueryClient;
   private readonly directory: string;
   private readonly logger: ILogger;
-  private readonly tableOptions: SqliteMigrationTableOptions | undefined;
+  private readonly tableOptions: SqliteMigrationTableSettings | undefined;
 
-  constructor(options: SqliteMigrationManagerOptions) {
+  constructor(options: SqliteMigrationManagerSettings) {
     this.client = options.client;
     this.directory = options.directory;
     this.logger = options.logger;

@@ -5,7 +5,7 @@ import type {
   MigrationInterface,
   MigrationQueryContext,
   MigrationQueryRunner,
-  MysqlMigrationTableOptions,
+  MysqlMigrationTableSettings,
 } from "../../types/migration.js";
 import {
   ensureMigrationTable,
@@ -77,7 +77,7 @@ export const executeMigrationUp = async (
   client: MysqlQueryClient,
   migration: MigrationInterface,
   metadata: { name: string; checksum: string },
-  tableOptions?: MysqlMigrationTableOptions,
+  tableOptions?: MysqlMigrationTableSettings,
   namespace?: string | null,
 ): Promise<ExecuteMigrationResult> => {
   await ensureMigrationTable(client, tableOptions);
@@ -145,7 +145,7 @@ export const executeMigrationDown = async (
   client: MysqlQueryClient,
   migration: MigrationInterface,
   metadata: { name: string },
-  tableOptions?: MysqlMigrationTableOptions,
+  tableOptions?: MysqlMigrationTableSettings,
   namespace?: string | null,
 ): Promise<ExecuteMigrationResult> => {
   await ensureMigrationTable(client, tableOptions);

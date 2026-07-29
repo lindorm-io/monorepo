@@ -1,9 +1,9 @@
 import { PostgresMigrationError } from "../../errors/PostgresMigrationError.js";
 import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
-import type { MigrationRecord, MigrationTableOptions } from "../../types/migration.js";
+import type { MigrationRecord, MigrationTableSettings } from "../../types/migration.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 
-const getQualifiedTable = (options?: MigrationTableOptions): string =>
+const getQualifiedTable = (options?: MigrationTableSettings): string =>
   quoteQualifiedName(options?.schema ?? "public", options?.table ?? "proteus_migrations");
 
 type MigrationRow = {
@@ -28,7 +28,7 @@ const toRecord = (row: MigrationRow): MigrationRecord => ({
 
 export const ensureMigrationTable = async (
   client: PostgresQueryClient,
-  options?: MigrationTableOptions,
+  options?: MigrationTableSettings,
 ): Promise<void> => {
   const schema = quoteIdentifier(options?.schema ?? "public");
   const qt = getQualifiedTable(options);
@@ -49,7 +49,7 @@ export const ensureMigrationTable = async (
 
 export const getAppliedMigrations = async (
   client: PostgresQueryClient,
-  options?: MigrationTableOptions,
+  options?: MigrationTableSettings,
 ): Promise<Array<MigrationRecord>> => {
   const qt = getQualifiedTable(options);
   const { rows } = await client.query<MigrationRow>(
@@ -63,7 +63,7 @@ export const getAppliedMigrations = async (
 
 export const getAllMigrationRecords = async (
   client: PostgresQueryClient,
-  options?: MigrationTableOptions,
+  options?: MigrationTableSettings,
 ): Promise<Array<MigrationRecord>> => {
   const qt = getQualifiedTable(options);
   const { rows } = await client.query<MigrationRow>(
@@ -76,7 +76,7 @@ export const getAllMigrationRecords = async (
 
 export const getPartiallyAppliedMigrations = async (
   client: PostgresQueryClient,
-  options?: MigrationTableOptions,
+  options?: MigrationTableSettings,
 ): Promise<Array<MigrationRecord>> => {
   const qt = getQualifiedTable(options);
   const { rows } = await client.query<MigrationRow>(
@@ -97,7 +97,7 @@ export const insertMigrationRecord = async (
     createdAt: Date;
     startedAt: Date;
   },
-  options?: MigrationTableOptions,
+  options?: MigrationTableSettings,
 ): Promise<void> => {
   const qt = getQualifiedTable(options);
   await client.query(
@@ -116,7 +116,7 @@ export const insertMigrationRecord = async (
 export const deleteMigrationRecord = async (
   client: PostgresQueryClient,
   id: string,
-  options?: MigrationTableOptions,
+  options?: MigrationTableSettings,
 ): Promise<void> => {
   const qt = getQualifiedTable(options);
   await client.query(`DELETE FROM ${qt} WHERE "id" = $1`, [id]);
@@ -125,7 +125,7 @@ export const deleteMigrationRecord = async (
 export const markMigrationFinished = async (
   client: PostgresQueryClient,
   id: string,
-  options?: MigrationTableOptions,
+  options?: MigrationTableSettings,
 ): Promise<void> => {
   const qt = getQualifiedTable(options);
   const { rowCount } = await client.query(
@@ -146,7 +146,7 @@ export const markMigrationFinished = async (
 export const markMigrationRolledBack = async (
   client: PostgresQueryClient,
   id: string,
-  options?: MigrationTableOptions,
+  options?: MigrationTableSettings,
 ): Promise<void> => {
   const qt = getQualifiedTable(options);
   const { rowCount } = await client.query(

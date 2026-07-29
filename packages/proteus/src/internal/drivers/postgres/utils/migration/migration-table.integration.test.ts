@@ -3,7 +3,7 @@ import { randomBytes, randomUUID } from "crypto";
 import { Client } from "pg";
 import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client.js";
 import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
-import type { MigrationTableOptions } from "../../types/migration.js";
+import type { MigrationTableSettings } from "../../types/migration.js";
 import {
   deleteMigrationRecord,
   ensureMigrationTable,
@@ -16,7 +16,7 @@ import {
 let client: PostgresQueryClient;
 let raw: Client;
 let schema: string;
-let tableOptions: MigrationTableOptions;
+let tableOptions: MigrationTableSettings;
 
 beforeAll(async () => {
   ({ client, raw } = await createTestPgClient());
@@ -64,7 +64,7 @@ describe("migration-table (integration)", () => {
     });
 
     it("should support custom schema and table name", async () => {
-      const customOptions: MigrationTableOptions = { schema, table: "custom_tracking" };
+      const customOptions: MigrationTableSettings = { schema, table: "custom_tracking" };
       await ensureMigrationTable(client, customOptions);
 
       const { rows } = await raw.query(

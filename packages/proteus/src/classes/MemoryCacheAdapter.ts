@@ -4,7 +4,7 @@ import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
 /**
  * Options for the in-memory cache adapter.
  */
-export type MemoryCacheAdapterOptions = {
+export type MemoryCacheAdapterSettings = {
   /** Maximum number of entries before LRU eviction kicks in. Defaults to 1000. */
   maxEntries?: number;
 };
@@ -26,7 +26,7 @@ export class MemoryCacheAdapter implements ICacheAdapter {
   private readonly map = new Map<string, CacheEntry>();
   private readonly maxEntries: number;
 
-  constructor(options: MemoryCacheAdapterOptions = {}) {
+  constructor(options: MemoryCacheAdapterSettings = {}) {
     this.maxEntries = options.maxEntries ?? 1000;
   }
 

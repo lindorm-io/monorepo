@@ -2,7 +2,10 @@ import { ShaKit } from "@lindorm/sha";
 import { randomBytes, randomUUID } from "crypto";
 import { Client } from "pg";
 import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client.js";
-import type { MigrationInterface, MigrationTableOptions } from "../../types/migration.js";
+import type {
+  MigrationInterface,
+  MigrationTableSettings,
+} from "../../types/migration.js";
 import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 import { executeMigrationDown, executeMigrationUp } from "./execute-migration.js";
 import { getAllMigrationRecords } from "./migration-table.js";
@@ -11,7 +14,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 let client: PostgresQueryClient;
 let raw: Client;
 let schema: string;
-let tableOptions: MigrationTableOptions;
+let tableOptions: MigrationTableSettings;
 
 const computeHash = (m: MigrationInterface): string =>
   ShaKit.S256(m.up.toString() + "\n---\n" + m.down.toString());

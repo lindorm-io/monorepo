@@ -6,7 +6,7 @@ export type {
   MigrationInterface,
 } from "../../../types/migration.js";
 
-export type MongoMigrationTableOptions = {
+export type MongoMigrationTableSettings = {
   table?: string;
 };
 

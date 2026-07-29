@@ -54,7 +54,7 @@ export type MigrationRecord = {
   rolledBackAt: Date | null;
 };
 
-export type MigrationTableOptions = {
+export type MigrationTableSettings = {
   table?: string;
 };
 

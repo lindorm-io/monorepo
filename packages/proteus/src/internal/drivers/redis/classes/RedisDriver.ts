@@ -16,7 +16,7 @@ import type {
 } from "../../../interfaces/ProteusDriver.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
-  ProteusRedisOptions,
+  ProteusRedisSettings,
   TransactionCallback,
   TransactionOptions,
 } from "../../../../types/index.js";
@@ -64,7 +64,7 @@ export class RedisDriver implements IProteusDriver {
   private signal: AbortSignal | undefined;
 
   constructor(
-    options: ProteusRedisOptions,
+    options: ProteusRedisSettings,
     logger: ILogger,
     namespace: string | null,
     resolveMetadata: MetadataResolver,

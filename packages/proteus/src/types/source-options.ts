@@ -15,7 +15,7 @@ import type { EntityScannerInput } from "./scanner.js";
  * All fields from CircuitBreakerSettings are available except `name`
  * (auto-generated from the driver type).
  */
-export type ProteusBreakerOptions = Partial<Omit<CircuitBreakerSettings, "name">>;
+export type ProteusBreakerSettings = Partial<Omit<CircuitBreakerSettings, "name">>;
 
 /**
  * Control how entity field names are transformed to database column names.
@@ -29,7 +29,7 @@ export type NamingStrategy = "snake" | "camel" | "none";
 /**
  * Configure query-level caching for a ProteusSource.
  */
-export type ProteusCacheConfig = {
+export type ProteusCacheSettings = {
   /** Cache adapter implementation (e.g. MemoryCacheAdapter). */
   adapter: ICacheAdapter;
   /** Default TTL applied to all cached queries unless overridden per-query. */
@@ -39,11 +39,11 @@ export type ProteusCacheConfig = {
 /**
  * Shared configuration fields for all ProteusSource drivers.
  */
-export type ProteusSourceOptionsBase = {
+export type ProteusSourceSettingsBase = {
   /** Entity classes or glob patterns to register with this source. */
   entities?: EntityScannerInput<IEntity>;
   /** Enable query caching with the given adapter and default TTL. */
-  cache?: ProteusCacheConfig;
+  cache?: ProteusCacheSettings;
   /** Default request-scoped hook metadata. Overridden per-request via session(). */
   meta?: ProteusHookMeta;
   /** Naming strategy for column name transformation. Defaults to `"none"`. */
@@ -66,18 +66,18 @@ export type ProteusSourceOptionsBase = {
    *
    * - `true` — enabled with driver-appropriate defaults (default for network drivers)
    * - `false` — disabled
-   * - `ProteusBreakerOptions` — enabled with custom overrides
+   * - `ProteusBreakerSettings` — enabled with custom overrides
    *
    * Automatically disabled for `memory` and `sqlite` drivers (no network I/O).
    */
-  breaker?: boolean | ProteusBreakerOptions;
+  breaker?: boolean | ProteusBreakerSettings;
 };
 
 /**
  * Schema management options for drivers that support DDL migrations
  * and automatic schema synchronization (SQL drivers, MongoDB).
  */
-export type SchemaManagementOptions = {
+export type SchemaManagementSettings = {
   /** File paths or glob patterns for migration files. */
   migrations?: Array<string>;
   /** Custom table name for the migrations ledger. Defaults to driver convention. */
@@ -94,14 +94,14 @@ export type SchemaManagementOptions = {
 };
 
 /** In-memory driver has no external configuration. */
-export type MemoryConfig = {
+export type MemorySettings = {
   driver: "memory";
 };
 
 /**
  * Driver configuration for MongoDB.
  */
-export type MongoConfig = {
+export type MongoSettings = {
   driver: "mongo";
   url?: string;
   host?: string;
@@ -118,7 +118,7 @@ export type MongoConfig = {
 /**
  * Driver configuration for MySQL.
  */
-export type MysqlConfig = {
+export type MysqlSettings = {
   driver: "mysql";
   url?: string;
   host?: string;
@@ -153,7 +153,7 @@ export type MysqlConfig = {
 /**
  * Driver configuration for PostgreSQL.
  */
-export type PostgresConfig = {
+export type PostgresSettings = {
   driver: "postgres";
   url?: string;
   host?: string;
@@ -195,7 +195,7 @@ export type PostgresConfig = {
 /**
  * Driver configuration for Redis.
  */
-export type RedisConfig = {
+export type RedisSettings = {
   driver: "redis";
   url?: string;
   host?: string;
@@ -228,7 +228,7 @@ export type RedisConfig = {
 /**
  * Driver configuration for SQLite.
  */
-export type SqliteConfig = {
+export type SqliteSettings = {
   driver: "sqlite";
   /** Path to the SQLite database file. Use `:memory:` for an in-memory database. */
   filename: string;
@@ -243,40 +243,40 @@ export type SqliteConfig = {
 };
 
 /** ProteusSource options for the in-memory driver. */
-export type ProteusMemoryOptions = ProteusSourceOptionsBase & MemoryConfig;
+export type ProteusMemorySettings = ProteusSourceSettingsBase & MemorySettings;
 
 /** ProteusSource options for the MongoDB driver. */
-export type ProteusMongoOptions = ProteusSourceOptionsBase &
-  SchemaManagementOptions &
-  MongoConfig;
+export type ProteusMongoSettings = ProteusSourceSettingsBase &
+  SchemaManagementSettings &
+  MongoSettings;
 
 /** ProteusSource options for the MySQL driver. */
-export type ProteusMysqlOptions = ProteusSourceOptionsBase &
-  SchemaManagementOptions &
-  MysqlConfig;
+export type ProteusMysqlSettings = ProteusSourceSettingsBase &
+  SchemaManagementSettings &
+  MysqlSettings;
 
 /** ProteusSource options for the PostgreSQL driver. */
-export type ProteusPostgresOptions = ProteusSourceOptionsBase &
-  SchemaManagementOptions &
-  PostgresConfig;
+export type ProteusPostgresSettings = ProteusSourceSettingsBase &
+  SchemaManagementSettings &
+  PostgresSettings;
 
 /** ProteusSource options for the Redis driver. */
-export type ProteusRedisOptions = ProteusSourceOptionsBase & RedisConfig;
+export type ProteusRedisSettings = ProteusSourceSettingsBase & RedisSettings;
 
 /** ProteusSource options for the SQLite driver. */
-export type ProteusSqliteOptions = ProteusSourceOptionsBase &
-  SchemaManagementOptions &
-  SqliteConfig;
+export type ProteusSqliteSettings = ProteusSourceSettingsBase &
+  SchemaManagementSettings &
+  SqliteSettings;
 
 /**
  * Union of all driver-specific ProteusSource option types.
  *
  * Pass to `new ProteusSource(options)` — the `driver` field determines which backend is used.
  */
-export type ProteusSourceOptions =
-  | ProteusMemoryOptions
-  | ProteusMongoOptions
-  | ProteusMysqlOptions
-  | ProteusPostgresOptions
-  | ProteusRedisOptions
-  | ProteusSqliteOptions;
+export type ProteusSourceSettings =
+  | ProteusMemorySettings
+  | ProteusMongoSettings
+  | ProteusMysqlSettings
+  | ProteusPostgresSettings
+  | ProteusRedisSettings
+  | ProteusSqliteSettings;

@@ -19,7 +19,7 @@ import type { IEntity } from "../../interfaces/index.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import { MemoryCacheAdapter } from "../../classes/MemoryCacheAdapter.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
-import type { NamingStrategy, ProteusCacheConfig } from "../../types/source-options.js";
+import type { NamingStrategy, ProteusCacheSettings } from "../../types/source-options.js";
 import {
   createTckAmphora,
   TCK_ENCRYPTION,
@@ -63,7 +63,7 @@ const factory: TckDriverFactory = {
     const filename = join(tmpdir(), `proteus-tck-${naming}-${randomUUID()}.db`);
 
     // Fresh cache adapter per source build so each (re)connect starts cold.
-    const cacheConfig = (): ProteusCacheConfig | undefined =>
+    const cacheConfig = (): ProteusCacheSettings | undefined =>
       cache ? { adapter: new MemoryCacheAdapter(), ttl: "5 minutes" } : undefined;
 
     const makeSource = (): ProteusSource =>

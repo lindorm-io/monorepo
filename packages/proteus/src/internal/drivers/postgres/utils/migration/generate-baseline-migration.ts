@@ -6,7 +6,7 @@ import type {
   SerializedMigration,
   SerializeMigrationOptions,
 } from "./serialize-migration.js";
-import type { MigrationTableOptions } from "../../types/migration.js";
+import type { MigrationTableSettings } from "../../types/migration.js";
 import { computeHash } from "../../../../utils/migration/compute-hash.js";
 import { loadMigrations } from "./load-migrations.js";
 import { introspectSchema } from "../sync/introspect-schema.js";
@@ -24,7 +24,7 @@ export type GenerateBaselineMigrationOptions = {
   name?: string;
   directory: string;
   timestamp?: Date;
-  tableOptions?: MigrationTableOptions;
+  tableOptions?: MigrationTableSettings;
   logger?: import("@lindorm/logger").ILogger;
 };
 

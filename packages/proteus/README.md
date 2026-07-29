@@ -2524,7 +2524,7 @@ import {
 } from "@lindorm/proteus/mocks/jest";
 ```
 
-Each factory resolves to a `Mocked<...>` (vitest) or `jest.Mocked<...>` (jest) implementation of the corresponding interface. Construction settings are `Partial<Pick<ProteusSourceOptionsBase, "entities" | "logger" | "namespace">>` — pass decorated entity classes (or glob directories) in `entities`; `driver` is fixed to `"memory"`.
+Each factory resolves to a `Mocked<...>` (vitest) or `jest.Mocked<...>` (jest) implementation of the corresponding interface. Construction settings are `Partial<Pick<ProteusSourceSettingsBase, "entities" | "logger" | "namespace">>` — pass decorated entity classes (or glob directories) in `entities`; `driver` is fixed to `"memory"`.
 
 ### Seeding rows
 

@@ -81,7 +81,7 @@ export type WithImplicitTransaction<E extends IEntity> = <T>(
   }) => Promise<T>,
 ) => Promise<T>;
 
-export type MySqlRepositoryOptions<E extends IEntity> = {
+export type MySqlRepositorySettings<E extends IEntity> = {
   target: Constructor<E>;
   metadata?: EntityMetadata;
   executor: IRepositoryExecutor<E>;
@@ -113,7 +113,7 @@ export class MySqlRepository<
   private readonly hasEmbeddedLists: boolean;
   private readonly amphora: IAmphora | undefined;
 
-  constructor(options: MySqlRepositoryOptions<E>) {
+  constructor(options: MySqlRepositorySettings<E>) {
     super({
       target: options.target,
       metadata: options.metadata,

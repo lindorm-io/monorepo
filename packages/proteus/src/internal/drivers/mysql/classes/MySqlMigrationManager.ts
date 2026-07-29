@@ -16,7 +16,7 @@ import { MySqlMigrationError } from "../errors/MySqlMigrationError.js";
 import type {
   MigrationApplyResult,
   MigrationRecord,
-  MysqlMigrationTableOptions,
+  MysqlMigrationTableSettings,
 } from "../types/migration.js";
 import type { MysqlQueryClient } from "../types/mysql-query-client.js";
 import {
@@ -35,12 +35,12 @@ import {
   markMigrationRolledBack,
 } from "../utils/migration/migration-table.js";
 
-export type MySqlMigrationManagerOptions = {
+export type MySqlMigrationManagerSettings = {
   client: MysqlQueryClient;
   directory: string;
   logger: ILogger;
   namespace?: string | null;
-  tableOptions?: MysqlMigrationTableOptions;
+  tableOptions?: MysqlMigrationTableSettings;
 };
 
 export class MySqlMigrationManager implements IMigrationManager {
@@ -48,10 +48,10 @@ export class MySqlMigrationManager implements IMigrationManager {
   private readonly directory: string;
   private readonly logger: ILogger;
   private readonly namespace: string | null;
-  private readonly tableOptions: MysqlMigrationTableOptions | undefined;
+  private readonly tableOptions: MysqlMigrationTableSettings | undefined;
   private readonly lockName: string;
 
-  constructor(options: MySqlMigrationManagerOptions) {
+  constructor(options: MySqlMigrationManagerSettings) {
     this.client = options.client;
     this.directory = options.directory;
     this.logger = options.logger;

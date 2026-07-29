@@ -2,11 +2,11 @@ import { MySqlMigrationError } from "../../errors/MySqlMigrationError.js";
 import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
 import type {
   MigrationRecord,
-  MysqlMigrationTableOptions,
+  MysqlMigrationTableSettings,
 } from "../../types/migration.js";
 import { quoteIdentifier } from "../quote-identifier.js";
 
-const getQuotedTable = (options?: MysqlMigrationTableOptions): string =>
+const getQuotedTable = (options?: MysqlMigrationTableSettings): string =>
   quoteIdentifier(options?.table ?? "proteus_migrations");
 
 type MigrationRow = {
@@ -39,7 +39,7 @@ const toRecord = (row: MigrationRow): MigrationRecord => ({
 
 export const ensureMigrationTable = async (
   client: MysqlQueryClient,
-  options?: MysqlMigrationTableOptions,
+  options?: MysqlMigrationTableSettings,
 ): Promise<void> => {
   const qt = getQuotedTable(options);
 
@@ -58,7 +58,7 @@ export const ensureMigrationTable = async (
 
 export const getAppliedMigrations = async (
   client: MysqlQueryClient,
-  options?: MysqlMigrationTableOptions,
+  options?: MysqlMigrationTableSettings,
 ): Promise<Array<MigrationRecord>> => {
   const qt = getQuotedTable(options);
   const { rows } = await client.query<MigrationRow>(
@@ -72,7 +72,7 @@ export const getAppliedMigrations = async (
 
 export const getPartiallyAppliedMigrations = async (
   client: MysqlQueryClient,
-  options?: MysqlMigrationTableOptions,
+  options?: MysqlMigrationTableSettings,
 ): Promise<Array<MigrationRecord>> => {
   const qt = getQuotedTable(options);
   const { rows } = await client.query<MigrationRow>(
@@ -86,7 +86,7 @@ export const getPartiallyAppliedMigrations = async (
 
 export const getAllMigrationRecords = async (
   client: MysqlQueryClient,
-  options?: MysqlMigrationTableOptions,
+  options?: MysqlMigrationTableSettings,
 ): Promise<Array<MigrationRecord>> => {
   const qt = getQuotedTable(options);
   const { rows } = await client.query<MigrationRow>(
@@ -106,7 +106,7 @@ export const insertMigrationRecord = async (
     createdAt: Date;
     startedAt: Date;
   },
-  options?: MysqlMigrationTableOptions,
+  options?: MysqlMigrationTableSettings,
 ): Promise<void> => {
   const qt = getQuotedTable(options);
   await client.query(
@@ -125,7 +125,7 @@ export const insertMigrationRecord = async (
 export const deleteMigrationRecord = async (
   client: MysqlQueryClient,
   id: string,
-  options?: MysqlMigrationTableOptions,
+  options?: MysqlMigrationTableSettings,
 ): Promise<void> => {
   const qt = getQuotedTable(options);
   await client.query(`DELETE FROM ${qt} WHERE \`id\` = ?`, [id]);
@@ -134,7 +134,7 @@ export const deleteMigrationRecord = async (
 export const markMigrationFinished = async (
   client: MysqlQueryClient,
   id: string,
-  options?: MysqlMigrationTableOptions,
+  options?: MysqlMigrationTableSettings,
 ): Promise<void> => {
   const qt = getQuotedTable(options);
   const { rowCount } = await client.query(
@@ -155,7 +155,7 @@ export const markMigrationFinished = async (
 export const markMigrationFailed = async (
   client: MysqlQueryClient,
   id: string,
-  options?: MysqlMigrationTableOptions,
+  options?: MysqlMigrationTableSettings,
 ): Promise<void> => {
   const qt = getQuotedTable(options);
   await client.query(`UPDATE ${qt} SET \`finished_at\` = NULL WHERE \`id\` = ?`, [id]);
@@ -164,7 +164,7 @@ export const markMigrationFailed = async (
 export const markMigrationRolledBack = async (
   client: MysqlQueryClient,
   id: string,
-  options?: MysqlMigrationTableOptions,
+  options?: MysqlMigrationTableSettings,
 ): Promise<void> => {
   const qt = getQuotedTable(options);
   const { rowCount } = await client.query(

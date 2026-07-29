@@ -5,7 +5,7 @@ export type {
   MigrationRecord,
   MigrationApplyResult,
   MigrationStatus,
-  MigrationTableOptions as MysqlMigrationTableOptions,
+  MigrationTableSettings as MysqlMigrationTableSettings,
   SqlMigrationInterface as MigrationInterface,
 } from "../../../types/migration.js";
 

@@ -1,4 +1,4 @@
-import type { ProteusSourceOptionsBase } from "../types/source-options.js";
+import type { ProteusSourceSettingsBase } from "../types/source-options.js";
 
 /**
  * Construction settings for the memory-backed proteus mocks. Picks the three
@@ -10,5 +10,5 @@ import type { ProteusSourceOptionsBase } from "../types/source-options.js";
  * sets the schema/prefix.
  */
 export type CreateMockProteusSettings = Partial<
-  Pick<ProteusSourceOptionsBase, "entities" | "logger" | "namespace">
+  Pick<ProteusSourceSettingsBase, "entities" | "logger" | "namespace">
 >;

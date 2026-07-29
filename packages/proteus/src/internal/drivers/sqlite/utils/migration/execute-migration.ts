@@ -4,7 +4,7 @@ import type {
   MigrationInterface,
   MigrationQueryContext,
   MigrationQueryRunner,
-  SqliteMigrationTableOptions,
+  SqliteMigrationTableSettings,
 } from "../../types/migration.js";
 import {
   deleteMigrationRecord,
@@ -56,7 +56,7 @@ export const executeMigrationUp = async (
   client: SqliteQueryClient,
   migration: MigrationInterface,
   metadata: { name: string; checksum: string },
-  tableOptions?: SqliteMigrationTableOptions,
+  tableOptions?: SqliteMigrationTableSettings,
 ): Promise<ExecuteMigrationResult> => {
   await ensureMigrationTable(client, tableOptions);
 
@@ -105,7 +105,7 @@ export const executeMigrationDown = async (
   client: SqliteQueryClient,
   migration: MigrationInterface,
   metadata: { name: string },
-  tableOptions?: SqliteMigrationTableOptions,
+  tableOptions?: SqliteMigrationTableSettings,
 ): Promise<ExecuteMigrationResult> => {
   await ensureMigrationTable(client, tableOptions);
 

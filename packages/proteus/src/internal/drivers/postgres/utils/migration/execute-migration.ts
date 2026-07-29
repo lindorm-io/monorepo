@@ -4,7 +4,7 @@ import type {
   MigrationInterface,
   MigrationQueryContext,
   MigrationQueryRunner,
-  MigrationTableOptions,
+  MigrationTableSettings,
 } from "../../types/migration.js";
 import {
   deleteMigrationRecord,
@@ -48,7 +48,7 @@ export const executeMigrationUp = async (
   client: PostgresQueryClient,
   migration: MigrationInterface,
   metadata: { name: string; checksum: string },
-  tableOptions?: MigrationTableOptions,
+  tableOptions?: MigrationTableSettings,
 ): Promise<ExecuteMigrationResult> => {
   await ensureMigrationTable(client, tableOptions);
 
@@ -97,7 +97,7 @@ export const executeMigrationDown = async (
   client: PostgresQueryClient,
   migration: MigrationInterface,
   metadata: { name: string },
-  tableOptions?: MigrationTableOptions,
+  tableOptions?: MigrationTableSettings,
 ): Promise<ExecuteMigrationResult> => {
   await ensureMigrationTable(client, tableOptions);
 

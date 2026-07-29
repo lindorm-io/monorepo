@@ -2,11 +2,11 @@ import { SqliteMigrationError } from "../../errors/SqliteMigrationError.js";
 import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
 import type {
   MigrationRecord,
-  SqliteMigrationTableOptions,
+  SqliteMigrationTableSettings,
 } from "../../types/migration.js";
 import { quoteIdentifier } from "../quote-identifier.js";
 
-const getQuotedTable = (options?: SqliteMigrationTableOptions): string =>
+const getQuotedTable = (options?: SqliteMigrationTableSettings): string =>
   quoteIdentifier(options?.table ?? "proteus_migrations");
 
 type MigrationRow = {
@@ -31,7 +31,7 @@ const toRecord = (row: MigrationRow): MigrationRecord => ({
 
 export const ensureMigrationTable = async (
   client: SqliteQueryClient,
-  options?: SqliteMigrationTableOptions,
+  options?: SqliteMigrationTableSettings,
 ): Promise<void> => {
   const qt = getQuotedTable(options);
 
@@ -50,7 +50,7 @@ export const ensureMigrationTable = async (
 
 export const getAppliedMigrations = async (
   client: SqliteQueryClient,
-  options?: SqliteMigrationTableOptions,
+  options?: SqliteMigrationTableSettings,
 ): Promise<Array<MigrationRecord>> => {
   const qt = getQuotedTable(options);
   const rows = client.all(
@@ -64,7 +64,7 @@ export const getAppliedMigrations = async (
 
 export const getPartiallyAppliedMigrations = async (
   client: SqliteQueryClient,
-  options?: SqliteMigrationTableOptions,
+  options?: SqliteMigrationTableSettings,
 ): Promise<Array<MigrationRecord>> => {
   const qt = getQuotedTable(options);
   const rows = client.all(
@@ -78,7 +78,7 @@ export const getPartiallyAppliedMigrations = async (
 
 export const getAllMigrationRecords = async (
   client: SqliteQueryClient,
-  options?: SqliteMigrationTableOptions,
+  options?: SqliteMigrationTableSettings,
 ): Promise<Array<MigrationRecord>> => {
   const qt = getQuotedTable(options);
   const rows = client.all(
@@ -98,7 +98,7 @@ export const insertMigrationRecord = async (
     createdAt: Date;
     startedAt: Date;
   },
-  options?: SqliteMigrationTableOptions,
+  options?: SqliteMigrationTableSettings,
 ): Promise<void> => {
   const qt = getQuotedTable(options);
   client.run(
@@ -123,7 +123,7 @@ export const insertMigrationRecord = async (
 export const deleteMigrationRecord = async (
   client: SqliteQueryClient,
   id: string,
-  options?: SqliteMigrationTableOptions,
+  options?: SqliteMigrationTableSettings,
 ): Promise<void> => {
   const qt = getQuotedTable(options);
   client.run(`DELETE FROM ${qt} WHERE "id" = ?`, [id]);
@@ -132,7 +132,7 @@ export const deleteMigrationRecord = async (
 export const markMigrationFinished = async (
   client: SqliteQueryClient,
   id: string,
-  options?: SqliteMigrationTableOptions,
+  options?: SqliteMigrationTableSettings,
 ): Promise<void> => {
   const qt = getQuotedTable(options);
   const { changes } = client.run(`UPDATE ${qt} SET "finished_at" = ? WHERE "id" = ?`, [
@@ -152,7 +152,7 @@ export const markMigrationFinished = async (
 export const markMigrationRolledBack = async (
   client: SqliteQueryClient,
   id: string,
-  options?: SqliteMigrationTableOptions,
+  options?: SqliteMigrationTableSettings,
 ): Promise<void> => {
   const qt = getQuotedTable(options);
   const { changes } = client.run(

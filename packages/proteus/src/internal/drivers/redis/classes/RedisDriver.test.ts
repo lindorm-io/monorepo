@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
-import type { ProteusRedisOptions } from "../../../../types/index.js";
+import type { ProteusRedisSettings } from "../../../../types/index.js";
 import type { MetadataResolver } from "../../../interfaces/ProteusDriver.js";
 import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
 import { RedisDriverError } from "../errors/RedisDriverError.js";
@@ -91,8 +91,8 @@ const createBaseMetadata = (): EntityMetadata => ({
 });
 
 const createOptions = (
-  overrides?: Partial<ProteusRedisOptions>,
-): ProteusRedisOptions => ({
+  overrides?: Partial<ProteusRedisSettings>,
+): ProteusRedisSettings => ({
   driver: "redis",
   host: "localhost",
   port: 6379,
@@ -101,7 +101,7 @@ const createOptions = (
 });
 
 const createDriver = (
-  overrides?: Partial<ProteusRedisOptions>,
+  overrides?: Partial<ProteusRedisSettings>,
   resolveMetadata?: MetadataResolver,
 ): { driver: RedisDriver; logger: ILogger } => {
   const logger = createMockLogger();
@@ -139,7 +139,7 @@ describe("RedisDriver", () => {
 
     test("connects with URL when provided", async () => {
       const logger = createMockLogger();
-      const options: ProteusRedisOptions = {
+      const options: ProteusRedisSettings = {
         driver: "redis",
         url: "redis://localhost:6379/0",
         logger,

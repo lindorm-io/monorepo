@@ -7,7 +7,7 @@ import type {
 } from "../../../interfaces/ProteusDriver.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
-  ProteusSqliteOptions,
+  ProteusSqliteSettings,
   TransactionCallback,
   TransactionOptions,
 } from "../../../../types/index.js";
@@ -42,7 +42,7 @@ import { SqliteRepository, type WithImplicitTransaction } from "./SqliteReposito
 import { SqliteTransactionContext } from "./SqliteTransactionContext.js";
 
 export class SqliteDriver implements IProteusDriver {
-  private readonly options: ProteusSqliteOptions;
+  private readonly options: ProteusSqliteSettings;
   private readonly logger: ILogger;
   private readonly namespace: string | null;
   private readonly resolveMetadata: MetadataResolver;
@@ -53,7 +53,7 @@ export class SqliteDriver implements IProteusDriver {
   private signal: AbortSignal | undefined;
 
   constructor(
-    options: ProteusSqliteOptions,
+    options: ProteusSqliteSettings,
     logger: ILogger,
     namespace: string | null,
     resolveMetadata: MetadataResolver,

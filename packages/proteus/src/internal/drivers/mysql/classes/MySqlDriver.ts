@@ -9,7 +9,7 @@ import type {
 } from "../../../interfaces/ProteusDriver.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
-  ProteusMysqlOptions,
+  ProteusMysqlSettings,
   TransactionCallback,
   TransactionOptions,
 } from "../../../../types/index.js";
@@ -54,7 +54,7 @@ import {
 } from "../utils/abort.js";
 
 export class MySqlDriver implements IProteusDriver {
-  private readonly options: ProteusMysqlOptions;
+  private readonly options: ProteusMysqlSettings;
   private readonly logger: ILogger;
   private readonly namespace: string | null;
   private readonly resolveMetadata: MetadataResolver;
@@ -67,7 +67,7 @@ export class MySqlDriver implements IProteusDriver {
   private signal: AbortSignal | undefined;
 
   constructor(
-    options: ProteusMysqlOptions,
+    options: ProteusMysqlSettings,
     logger: ILogger,
     namespace: string | null,
     resolveMetadata: MetadataResolver,

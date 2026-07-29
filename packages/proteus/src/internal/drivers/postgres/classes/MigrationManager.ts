@@ -10,7 +10,7 @@ import { computeHash } from "../../../utils/migration/compute-hash.js";
 import { validateMigrationDriver } from "../../../utils/migration/validate-migration-driver.js";
 import type { ILogger } from "@lindorm/logger";
 import { PostgresMigrationError } from "../errors/PostgresMigrationError.js";
-import type { MigrationApplyResult, MigrationTableOptions } from "../types/migration.js";
+import type { MigrationApplyResult, MigrationTableSettings } from "../types/migration.js";
 import type { PostgresQueryClient } from "../types/postgres-query-client.js";
 import { withAdvisoryLock } from "../utils/advisory-lock.js";
 import {
@@ -42,22 +42,22 @@ import { resolvePending } from "../utils/migration/resolve-pending.js";
 // Advisory lock key pair for migration operations (distinct from sync key)
 const MIGRATION_LOCK_KEY1 = 0x50524f54; // "PROT" in hex
 
-export type MigrationManagerOptions = {
+export type MigrationManagerSettings = {
   client: PostgresQueryClient;
   directory: string;
   logger: ILogger;
   namespace?: string | null;
-  tableOptions?: MigrationTableOptions;
+  tableOptions?: MigrationTableSettings;
 };
 
 export class MigrationManager implements IMigrationManager {
   private readonly client: PostgresQueryClient;
   private readonly directory: string;
   private readonly logger: ILogger;
-  private readonly tableOptions: MigrationTableOptions | undefined;
+  private readonly tableOptions: MigrationTableSettings | undefined;
   private readonly lockKey2: number;
 
-  constructor(options: MigrationManagerOptions) {
+  constructor(options: MigrationManagerSettings) {
     this.client = options.client;
     this.directory = options.directory;
     this.logger = options.logger;

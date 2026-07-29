@@ -22,7 +22,7 @@ import type {
 } from "../../../interfaces/ProteusDriver.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
-  ProteusMongoOptions,
+  ProteusMongoSettings,
   TransactionCallback,
   TransactionOptions,
 } from "../../../../types/index.js";
@@ -56,7 +56,7 @@ import { introspectIndexes } from "../utils/sync/introspect-indexes.js";
 import { projectDesiredIndexes } from "../utils/sync/project-desired-indexes.js";
 
 export class MongoDriver implements IProteusDriver {
-  private readonly options: ProteusMongoOptions;
+  private readonly options: ProteusMongoSettings;
   private readonly logger: ILogger;
   private readonly namespace: string | null;
   private readonly resolveMetadata: MetadataResolver;
@@ -83,7 +83,7 @@ export class MongoDriver implements IProteusDriver {
   private signal: AbortSignal | undefined;
 
   constructor(
-    options: ProteusMongoOptions,
+    options: ProteusMongoSettings,
     logger: ILogger,
     namespace: string | null,
     resolveMetadata: MetadataResolver,

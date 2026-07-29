@@ -22,11 +22,11 @@ import type {
   EntityEmitFn,
   EntityScannerInput,
   NamingStrategy,
-  ProteusBreakerOptions,
+  ProteusBreakerSettings,
   ProteusEncryptionKey,
   ProteusHookMeta,
   ProteusSourceEventMap,
-  ProteusSourceOptions,
+  ProteusSourceSettings,
   TransactionCallback,
   TransactionOptions,
 } from "../types/index.js";
@@ -91,7 +91,7 @@ export type SessionOptions = {
 export class ProteusSource implements IProteusSource {
   private _driver: IProteusDriver | undefined;
   private readonly _breaker: ICircuitBreaker | null;
-  private readonly _options: ProteusSourceOptions;
+  private readonly _options: ProteusSourceSettings;
   private readonly _amphora: IAmphora | undefined;
   private readonly logger: ILogger;
   private readonly meta: ProteusHookMeta;
@@ -116,7 +116,7 @@ export class ProteusSource implements IProteusSource {
   // reads this store lazily at resolve time (see createMetadataResolver).
   private readonly _stagedFieldEncryptions: Array<StagedFieldEncryption> = [];
 
-  constructor(options: ProteusSourceOptions) {
+  constructor(options: ProteusSourceSettings) {
     this._options = options;
     this._amphora = options.amphora;
     this.logger = options.logger.child(["ProteusSource"]);
@@ -649,14 +649,14 @@ export class ProteusSource implements IProteusSource {
     return this._breaker;
   }
 
-  private createBreaker(options: ProteusSourceOptions): ICircuitBreaker | null {
+  private createBreaker(options: ProteusSourceSettings): ICircuitBreaker | null {
     // No breaker for drivers without network I/O
     if (options.driver === "memory" || options.driver === "sqlite") return null;
 
     // Explicitly disabled
     if (options.breaker === false) return null;
 
-    const userOpts: ProteusBreakerOptions =
+    const userOpts: ProteusBreakerSettings =
       typeof options.breaker === "object" ? options.breaker : {};
 
     const breakerOptions: CircuitBreakerSettings = {

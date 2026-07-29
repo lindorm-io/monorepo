@@ -5,7 +5,7 @@ import type { ProteusHookMeta } from "../../../types/proteus-hook-meta.js";
 
 export type GetIncrementFn = (key: string) => Promise<number>;
 
-export type EntityManagerOptions<E extends IEntity> = {
+export type EntityManagerSettings<E extends IEntity> = {
   meta?: ProteusHookMeta;
   getNextIncrement?: GetIncrementFn;
   logger?: ILogger;

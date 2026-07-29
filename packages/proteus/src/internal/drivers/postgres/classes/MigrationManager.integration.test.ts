@@ -9,7 +9,7 @@ import { mockScannerImport } from "../../../../__fixtures__/mock-scanner-import.
 import { hashNamespaceToInt32 } from "../../../utils/advisory-lock-name.js";
 import { createTestPgClient } from "../../../__fixtures__/create-test-pg-client.js";
 import type { PostgresQueryClient } from "../types/postgres-query-client.js";
-import type { MigrationTableOptions } from "../types/migration.js";
+import type { MigrationTableSettings } from "../types/migration.js";
 import { withAdvisoryLock } from "../utils/advisory-lock.js";
 import { getAllMigrationRecords } from "../utils/migration/migration-table.js";
 import { MigrationManager } from "./MigrationManager.js";
@@ -24,7 +24,7 @@ let MIGRATION_LOCK_KEY2: number;
 let client: PostgresQueryClient;
 let raw: Client;
 let schema: string;
-let tableOptions: MigrationTableOptions;
+let tableOptions: MigrationTableSettings;
 let dir: string;
 let logger: ILogger;
 
@@ -90,7 +90,7 @@ const writeFailingMig = async (
   await writeFile(join(directory, filename), content, "utf-8");
 };
 
-const createManager = (directory?: string, opts?: MigrationTableOptions) =>
+const createManager = (directory?: string, opts?: MigrationTableSettings) =>
   new MigrationManager({
     client,
     directory: directory ?? dir,
@@ -564,7 +564,7 @@ describe("MigrationManager (integration)", () => {
 
   describe("custom tableOptions", () => {
     it("should use custom schema and table for tracking", async () => {
-      const customOpts: MigrationTableOptions = { schema, table: "custom_mig_tbl" };
+      const customOpts: MigrationTableSettings = { schema, table: "custom_mig_tbl" };
 
       await writeMig(
         dir,

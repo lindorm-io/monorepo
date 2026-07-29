@@ -56,7 +56,7 @@ import { scanEntityKeys } from "../utils/scan-entity-keys.js";
 import { deserializeHash } from "../utils/deserialize-hash.js";
 import { resolveStorageMetadata } from "../../../entity/utils/resolve-storage-metadata.js";
 
-export type RedisRepositoryOptions<E extends IEntity> = {
+export type RedisRepositorySettings<E extends IEntity> = {
   target: Constructor<E>;
   executor: IRepositoryExecutor<E>;
   queryBuilderFactory: () => IProteusQueryBuilder<E>;
@@ -77,7 +77,7 @@ export class RedisRepository<
   private readonly hasEagerRelations: boolean;
   private readonly hasReadonlyUpdateFields: boolean;
 
-  constructor(options: RedisRepositoryOptions<E>) {
+  constructor(options: RedisRepositorySettings<E>) {
     super({
       target: options.target,
       executor: options.executor,

@@ -21,7 +21,7 @@ export type LoadedMigration = {
 };
 
 // Postgres-specific: table options include schema
-export type MigrationTableOptions = {
+export type MigrationTableSettings = {
   schema?: string;
   table?: string;
 };
