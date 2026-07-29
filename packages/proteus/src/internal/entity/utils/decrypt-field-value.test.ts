@@ -23,7 +23,7 @@ const createAmphora = (...keys: Array<ReturnType<typeof createKek>>) => {
   return amphora;
 };
 
-const VAULT: MetaEncrypted = { kryptos: null, predicate: { purpose: "kek" } };
+const VAULT: MetaEncrypted = { kryptos: null, condition: { purpose: "kek" } };
 
 describe("decryptFieldValue", () => {
   test("should decrypt a previously encrypted string", () => {
@@ -74,7 +74,7 @@ describe("decryptFieldValue", () => {
   // consulting it on the read side, such a column encrypts fine and then fails to
   // decrypt forever.
   test("should decrypt with an injected kryptos that is absent from the vault", () => {
-    const injected: MetaEncrypted = { kryptos: createKek(), predicate: null };
+    const injected: MetaEncrypted = { kryptos: createKek(), condition: null };
     const amphora = createAmphora();
 
     const cipher = encryptFieldValue("secret", injected, amphora, "f", "E");
@@ -90,7 +90,7 @@ describe("decryptFieldValue", () => {
 
     const cipher = encryptFieldValue("legacy", VAULT, amphora, "f", "E");
 
-    const injected: MetaEncrypted = { kryptos: createKek(), predicate: null };
+    const injected: MetaEncrypted = { kryptos: createKek(), condition: null };
     expect(decryptFieldValue(cipher, injected, amphora, "f", "E")).toBe("legacy");
   });
 
@@ -187,7 +187,7 @@ describe("decryptFieldValue", () => {
       const key = createKek();
       const cipher = encryptFieldValue(
         "value",
-        { kryptos: key, predicate: null },
+        { kryptos: key, condition: null },
         createAmphora(),
         "f",
         "E",
@@ -212,7 +212,7 @@ describe("decryptFieldValue", () => {
       const key = createKek();
       const cipher = encryptFieldValue(
         "value",
-        { kryptos: key, predicate: null },
+        { kryptos: key, condition: null },
         createAmphora(),
         "f",
         "E",
@@ -223,7 +223,7 @@ describe("decryptFieldValue", () => {
       expect(() =>
         decryptFieldValue(
           cipher,
-          { kryptos: pending, predicate: null },
+          { kryptos: pending, condition: null },
           createAmphora(),
           "f",
           "E",
@@ -239,7 +239,7 @@ describe("decryptFieldValue", () => {
       const key = createKek();
       const cipher = encryptFieldValue(
         "value",
-        { kryptos: key, predicate: null },
+        { kryptos: key, condition: null },
         createAmphora(),
         "f",
         "E",

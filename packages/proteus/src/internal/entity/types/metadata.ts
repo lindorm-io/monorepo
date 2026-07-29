@@ -3,7 +3,7 @@ import type { IKryptos } from "@lindorm/kryptos";
 import type { Constructor, Dict } from "@lindorm/types";
 import type { z } from "zod";
 import type { IEntity } from "../../../interfaces/index.js";
-import type { ProteusEncryptionPredicate } from "../../../types/encryption.js";
+import type { ProteusEncryptionCondition } from "../../../types/encryption.js";
 import type { IndexDirection } from "../../types/types.js";
 import type { MetaInheritance } from "./inheritance.js";
 
@@ -104,12 +104,12 @@ export type MetaTransform = {
 /**
  * A fully-resolved at-rest encryption key selector. The decorator's descriptor
  * merged with the source-level default (the decorator wins) — so no use-time
- * consumer re-derives it, and exactly one of `kryptos` / `predicate` being
+ * consumer re-derives it, and exactly one of `kryptos` / `condition` being
  * present is a source-load invariant rather than a write-time surprise.
  */
 export type MetaEncrypted = {
   kryptos: IKryptos | null;
-  predicate: ProteusEncryptionPredicate | null;
+  condition: ProteusEncryptionCondition | null;
 };
 
 /**

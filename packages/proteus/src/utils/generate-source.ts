@@ -27,7 +27,7 @@ export type GenerateSourceOptions = {
    * fields on registered entities encrypt/decrypt transparently.
    *
    * The vault alone is not enough: every `@Encrypted` field must also NAME its
-   * key, via `@Encrypted({ kryptos | predicate })` or the source's `encryption`
+   * key, via `@Encrypted({ kryptos | condition })` or the source's `encryption`
    * option. The generator does not guess one — a `purpose` is deployment policy,
    * and guessing it is how a column lands on the wrong key.
    */

@@ -24,7 +24,7 @@ describe("validateEncryptedFields", () => {
     const metadata = createMetadata([
       makeField("id"),
       makeField("secret", {
-        encrypted: { kryptos: null, predicate: { purpose: "kek" } },
+        encrypted: { kryptos: null, condition: { purpose: "kek" } },
       }),
     ]);
     expect(() => validateEncryptedFields([metadata], amphora)).not.toThrow();
@@ -34,7 +34,7 @@ describe("validateEncryptedFields", () => {
     const metadata = createMetadata([
       makeField("id"),
       makeField("secret", {
-        encrypted: { kryptos: null, predicate: { purpose: "kek" } },
+        encrypted: { kryptos: null, condition: { purpose: "kek" } },
       }),
     ]);
     expect(() => validateEncryptedFields([metadata], undefined)).toThrow(ProteusError);
@@ -46,7 +46,7 @@ describe("validateEncryptedFields", () => {
   test("should throw when @Encrypted used on primary key field", () => {
     const amphora = createMockAmphora();
     const metadata = createMetadata([
-      makeField("id", { encrypted: { kryptos: null, predicate: { purpose: "kek" } } }),
+      makeField("id", { encrypted: { kryptos: null, condition: { purpose: "kek" } } }),
     ]);
     expect(() => validateEncryptedFields([metadata], amphora)).toThrow(ProteusError);
     expect(() => validateEncryptedFields([metadata], amphora)).toThrow(
@@ -60,7 +60,7 @@ describe("validateEncryptedFields", () => {
       makeField("id"),
       makeField("version", {
         decorator: "Version",
-        encrypted: { kryptos: null, predicate: { purpose: "kek" } },
+        encrypted: { kryptos: null, condition: { purpose: "kek" } },
       }),
     ]);
     expect(() => validateEncryptedFields([metadata], amphora)).toThrow(ProteusError);
@@ -75,7 +75,7 @@ describe("validateEncryptedFields", () => {
       makeField("id"),
       makeField("createdAt", {
         decorator: "CreateDate",
-        encrypted: { kryptos: null, predicate: { purpose: "kek" } },
+        encrypted: { kryptos: null, condition: { purpose: "kek" } },
       }),
     ]);
     expect(() => validateEncryptedFields([metadata], amphora)).toThrow(ProteusError);
@@ -90,7 +90,7 @@ describe("validateEncryptedFields", () => {
       makeField("id"),
       makeField("updatedAt", {
         decorator: "UpdateDate",
-        encrypted: { kryptos: null, predicate: { purpose: "kek" } },
+        encrypted: { kryptos: null, condition: { purpose: "kek" } },
       }),
     ]);
     expect(() => validateEncryptedFields([metadata], amphora)).toThrow(ProteusError);
@@ -105,7 +105,7 @@ describe("validateEncryptedFields", () => {
       makeField("id"),
       makeField("deletedAt", {
         decorator: "DeleteDate",
-        encrypted: { kryptos: null, predicate: { purpose: "kek" } },
+        encrypted: { kryptos: null, condition: { purpose: "kek" } },
       }),
     ]);
     expect(() => validateEncryptedFields([metadata], amphora)).toThrow(ProteusError);
@@ -120,7 +120,7 @@ describe("validateEncryptedFields", () => {
       makeField("id"),
       makeField("expiresAt", {
         decorator: "ExpiryDate",
-        encrypted: { kryptos: null, predicate: { purpose: "kek" } },
+        encrypted: { kryptos: null, condition: { purpose: "kek" } },
       }),
     ]);
     expect(() => validateEncryptedFields([metadata], amphora)).toThrow(ProteusError);
@@ -135,7 +135,7 @@ describe("validateEncryptedFields", () => {
       makeField("id"),
       makeField("versionStart", {
         decorator: "VersionStartDate",
-        encrypted: { kryptos: null, predicate: { purpose: "kek" } },
+        encrypted: { kryptos: null, condition: { purpose: "kek" } },
       }),
     ]);
     expect(() => validateEncryptedFields([metadata], amphora)).toThrow(ProteusError);
@@ -150,7 +150,7 @@ describe("validateEncryptedFields", () => {
       makeField("id"),
       makeField("versionEnd", {
         decorator: "VersionEndDate",
-        encrypted: { kryptos: null, predicate: { purpose: "kek" } },
+        encrypted: { kryptos: null, condition: { purpose: "kek" } },
       }),
     ]);
     expect(() => validateEncryptedFields([metadata], amphora)).toThrow(ProteusError);
@@ -165,7 +165,7 @@ describe("validateEncryptedFields", () => {
       makeField("id"),
       makeField("computed", {
         computed: "col_a + col_b",
-        encrypted: { kryptos: null, predicate: { purpose: "kek" } },
+        encrypted: { kryptos: null, condition: { purpose: "kek" } },
       }),
     ]);
     expect(() => validateEncryptedFields([metadata], amphora)).toThrow(ProteusError);
@@ -179,7 +179,7 @@ describe("validateEncryptedFields", () => {
       const amphora = createMockAmphora();
       const metadata = createMetadata([
         makeField("id"),
-        makeField("secret", { encrypted: { kryptos: null, predicate: null } }),
+        makeField("secret", { encrypted: { kryptos: null, condition: null } }),
       ]);
 
       expect(() => validateEncryptedFields([metadata], amphora)).toThrow(ProteusError);
@@ -196,7 +196,7 @@ describe("validateEncryptedFields", () => {
       });
       const metadata = createMetadata([
         makeField("id"),
-        makeField("secret", { encrypted: { kryptos, predicate: null } }),
+        makeField("secret", { encrypted: { kryptos, condition: null } }),
       ]);
 
       expect(() => validateEncryptedFields([metadata], amphora)).not.toThrow();

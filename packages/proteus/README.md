@@ -262,7 +262,7 @@ All drivers accept these base options:
 | `naming`     | `"snake" \| "camel" \| "none"` | Column name strategy (default: `"none"`)              |
 | `cache`      | `{ adapter, ttl? }`            | Query caching configuration                           |
 | `amphora`    | `IAmphora`                     | Key store for `@Encrypted` fields                     |
-| `encryption` | `{ kryptos?, predicate? }`     | Default key for `@Encrypted` fields                   |
+| `encryption` | `{ kryptos?, condition? }`     | Default key for `@Encrypted` fields                   |
 | `meta`       | `ProteusHookMeta`              | Default request-scoped hook metadata                  |
 | `breaker`    | `boolean \| BreakerOptions`    | Circuit breaker for network drivers (default enabled) |
 | `logger`     | `ILogger`                      | **Required.** Logger instance                         |
@@ -1062,7 +1062,7 @@ The key is always **named**, never guessed — see [Field-Level Encryption](#fie
 ssn!: string;
 
 // Or query the vault for one.
-@Encrypted({ predicate: { purpose: "pii", ownerId: "userId" } })
+@Encrypted({ condition: { purpose: "pii", ownerId: "userId" } })
 @Field("json")
 medicalRecord!: Record<string, unknown>;
 
@@ -1072,7 +1072,7 @@ medicalRecord!: Record<string, unknown>;
 token!: string;
 ```
 
-**Options:** `{ kryptos?, predicate? }` — `predicate` selects on `{ id, algorithm, curve, encryption, internal, issuer, ownerId, publish, purpose, type }`.
+**Options:** `{ kryptos?, condition? }` — `condition` selects on `{ id, algorithm, curve, encryption, internal, issuer, ownerId, publish, purpose, type }`.
 
 #### `@Hide`
 
@@ -2260,7 +2260,7 @@ class Patient {
 new ProteusSource({
   driver: "postgres",
   amphora,
-  encryption: { predicate: { purpose: "pylon:kek" } },
+  encryption: { condition: { purpose: "pylon:kek" } },
   entities: [Patient],
   logger,
 });
@@ -2272,8 +2272,8 @@ A decorator that names its own key overrides the source default. A field that na
 
 | Where                                          | Meaning                                                             |
 | ---------------------------------------------- | ------------------------------------------------------------------- |
-| `encryption: { predicate }` on `ProteusSource` | Default for every `@Encrypted` field on the source                  |
-| `@Encrypted({ predicate })`                    | Query the vault for this field's key — overrides the source default |
+| `encryption: { condition }` on `ProteusSource` | Default for every `@Encrypted` field on the source                  |
+| `@Encrypted({ condition })`                    | Query the vault for this field's key — overrides the source default |
 | `@Encrypted({ kryptos })`                      | Hand the key over outright — overrides the source default           |
 
 `kryptos` on a decorator is deliberate: a KEK is typically an env key, so it is available at class-definition time.
@@ -2290,13 +2290,13 @@ An injected key is not required to be a vault resident — it is consulted on th
 
 ### The floor
 
-Whatever names the key, proteus enforces the minimum that makes at-rest encryption possible. The floor is not expressible in a predicate, so it cannot be widened:
+Whatever names the key, proteus enforces the minimum that makes at-rest encryption possible. The floor is not expressible in a condition, so it cannot be widened:
 
 | Attribute             | Kind        | Why                                                                                                 |
 | --------------------- | ----------- | --------------------------------------------------------------------------------------------------- |
 | `use: "enc"`          | **Floor**   | A signing key must never encrypt a column.                                                          |
 | `hasPrivateKey: true` | **Floor**   | At-rest encryption runs in both directions. A public-only key encrypts and can never decrypt again. |
-| `publish: false`      | **Default** | A KEK never leaves the service — but `publish` is your policy, so your predicate wins.              |
+| `publish: false`      | **Default** | A KEK never leaves the service — but `publish` is your policy, so your condition wins.              |
 
 A key that violates the floor — including one passed as `kryptos` — throws.
 

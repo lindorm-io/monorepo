@@ -45,7 +45,7 @@ export const encryptionSuite = (
         // per @Encrypted field via `findSync`; the id it returns is the kid
         // AesKit embeds in the column. Spying on the vault the source encrypts
         // through proves every field was sealed with the intended KEK. If
-        // selection ever stops scoping by the predicate, the newer trap wins and
+        // selection ever stops scoping by the condition, the newer trap wins and
         // this goes RED, while the plain round-trips stay green.
         const handle = getHandle();
         const repo = handle.repository(TckEncrypted);
@@ -129,7 +129,7 @@ export const encryptionSuite = (
 
     // ─── Per-source Staged @Encrypted Selector ─────────────────────────
     // Proves `source.stageFieldDecorator(TckStagedEncrypted, "stagedSecret",
-    // Encrypted, { predicate: { purpose: "proteus:tck:staged" } })` — wired into
+    // Encrypted, { condition: { purpose: "proteus:tck:staged" } })` — wired into
     // every driver harness BEFORE setup() — OVERRIDES the source-level encryption
     // default per field, at rest. `stagedSecret` must seal with the STAGED KEK;
     // its bare sibling `defaultSecret` must keep sealing with the source-default

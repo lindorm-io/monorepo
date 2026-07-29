@@ -3,7 +3,7 @@ import type { ProteusEncryptionKey } from "../../../types/encryption.js";
 import type { EntityMetadata, MetaEncrypted } from "../types/metadata.js";
 
 const isBare = (encrypted: MetaEncrypted): boolean =>
-  isNull(encrypted.kryptos) && isNull(encrypted.predicate);
+  isNull(encrypted.kryptos) && isNull(encrypted.condition);
 
 /**
  * Fill every bare `@Encrypted()` field with the source-level `encryption`
@@ -11,8 +11,8 @@ const isBare = (encrypted: MetaEncrypted): boolean =>
  * metadata is shared across sources, and each source may declare a different KEK.
  *
  * The default applies to the descriptor AS A WHOLE, not key by key: `kryptos` and
- * `predicate` are two ways of naming ONE key, not independent knobs. A key-wise
- * merge would let a source-level `kryptos` outrank a decorator's `predicate` —
+ * `condition` are two ways of naming ONE key, not independent knobs. A key-wise
+ * merge would let a source-level `kryptos` outrank a decorator's `condition` —
  * the field would silently encrypt with a key it never asked for, which is the
  * exact hazard this descriptor exists to close.
  */
@@ -22,7 +22,7 @@ export const applyEncryptionDefault = (
 ): EntityMetadata => {
   const fallback: MetaEncrypted = {
     kryptos: encryption?.kryptos ?? null,
-    predicate: encryption?.predicate ?? null,
+    condition: encryption?.condition ?? null,
   };
 
   if (isBare(fallback)) return metadata;

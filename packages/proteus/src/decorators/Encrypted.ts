@@ -8,7 +8,7 @@ import type { ProteusEncryptionKey } from "../types/encryption.js";
  * The key is NAMED, never guessed: either handed over outright
  * (`@Encrypted({ kryptos: KEK })` — a KEK is typically an env key, so it is
  * available at class-definition time) or queried for
- * (`@Encrypted({ predicate: { purpose: "pylon:kek" } })`). Leave the decorator
+ * (`@Encrypted({ condition: { purpose: "pylon:kek" } })`). Leave the decorator
  * bare and the source-level `encryption` default supplies it — declare the KEK
  * once on the source and every `@Encrypted()` field follows it.
  *

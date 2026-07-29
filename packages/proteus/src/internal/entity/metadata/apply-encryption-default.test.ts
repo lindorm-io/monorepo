@@ -15,52 +15,52 @@ const createMetadata = (fields: Array<ReturnType<typeof makeField>>): EntityMeta
 describe("applyEncryptionDefault", () => {
   test("should return metadata untouched when there is no default", () => {
     const metadata = createMetadata([
-      makeField("secret", { encrypted: { kryptos: null, predicate: null } }),
+      makeField("secret", { encrypted: { kryptos: null, condition: null } }),
     ]);
 
     expect(applyEncryptionDefault(metadata, undefined)).toBe(metadata);
     expect(applyEncryptionDefault(metadata, {})).toBe(metadata);
   });
 
-  test("should fill a bare @Encrypted field with the default predicate", () => {
+  test("should fill a bare @Encrypted field with the default condition", () => {
     const metadata = createMetadata([
-      makeField("secret", { encrypted: { kryptos: null, predicate: null } }),
+      makeField("secret", { encrypted: { kryptos: null, condition: null } }),
     ]);
 
     const resolved = applyEncryptionDefault(metadata, {
-      predicate: { purpose: "pylon:kek" },
+      condition: { purpose: "pylon:kek" },
     });
 
     expect(resolved.fields[0].encrypted).toEqual({
       kryptos: null,
-      predicate: { purpose: "pylon:kek" },
+      condition: { purpose: "pylon:kek" },
     });
   });
 
   test("should fill a bare @Encrypted field with the default kryptos", () => {
     const metadata = createMetadata([
-      makeField("secret", { encrypted: { kryptos: null, predicate: null } }),
+      makeField("secret", { encrypted: { kryptos: null, condition: null } }),
     ]);
 
     const resolved = applyEncryptionDefault(metadata, { kryptos: KEK });
 
-    expect(resolved.fields[0].encrypted).toEqual({ kryptos: KEK, predicate: null });
+    expect(resolved.fields[0].encrypted).toEqual({ kryptos: KEK, condition: null });
   });
 
   test("should not override a decorator that names its own key", () => {
     const metadata = createMetadata([
       makeField("secret", {
-        encrypted: { kryptos: null, predicate: { purpose: "field:kek" } },
+        encrypted: { kryptos: null, condition: { purpose: "field:kek" } },
       }),
     ]);
 
     const resolved = applyEncryptionDefault(metadata, { kryptos: KEK });
 
     // Descriptor-wise, not key-wise: a key-wise merge would leave the source KEK
-    // in place and let it outrank the predicate the decorator asked for.
+    // in place and let it outrank the condition the decorator asked for.
     expect(resolved.fields[0].encrypted).toEqual({
       kryptos: null,
-      predicate: { purpose: "field:kek" },
+      condition: { purpose: "field:kek" },
     });
   });
 
@@ -74,11 +74,11 @@ describe("applyEncryptionDefault", () => {
 
   test("should not mutate the original metadata", () => {
     const metadata = createMetadata([
-      makeField("secret", { encrypted: { kryptos: null, predicate: null } }),
+      makeField("secret", { encrypted: { kryptos: null, condition: null } }),
     ]);
 
     applyEncryptionDefault(metadata, { kryptos: KEK });
 
-    expect(metadata.fields[0].encrypted).toEqual({ kryptos: null, predicate: null });
+    expect(metadata.fields[0].encrypted).toEqual({ kryptos: null, condition: null });
   });
 });

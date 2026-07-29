@@ -129,7 +129,7 @@ const mergeFieldModifiers = <TDecorator extends MetaFieldDecorator>(
     if (modifier.encrypted != null)
       field.encrypted = {
         kryptos: modifier.encrypted.kryptos,
-        predicate: modifier.encrypted.predicate,
+        condition: modifier.encrypted.condition,
       };
     if (modifier.typedJson != null) {
       const name = modifier.typedJson.name;

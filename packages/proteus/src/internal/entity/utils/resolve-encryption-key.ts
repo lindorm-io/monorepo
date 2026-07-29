@@ -7,12 +7,12 @@ import type { MetaEncrypted } from "../types/metadata.js";
 
 /**
  * Resolve the key that encrypts one `@Encrypted` field, keeping the two jobs a
- * predicate can do strictly apart (only one of them survives key injection):
+ * condition can do strictly apart (only one of them survives key injection):
  *
  *   FLOOR     — policy. Checked on the key, whatever its provenance.
- *   PREDICATE — a vault query. Checked on nothing; it only ever selects.
+ *   CONDITION — a vault query. Checked on nothing; it only ever selects.
  *
- * An injected `kryptos` never came from the vault, so the predicate cannot apply
+ * An injected `kryptos` never came from the vault, so the condition cannot apply
  * to it — but the FLOOR does, or a signing key handed to `@Encrypted({ kryptos })`
  * would happily encrypt the database. There is no fallback: a key either
  * satisfies the policy or it does not, and a miss is a throw.
@@ -23,12 +23,12 @@ export const resolveEncryptionKey = (
   fieldKey: string,
   entityName: string,
 ): IKryptos => {
-  // The floor is applied LAST so it always wins the merge: the predicate is
+  // The floor is applied LAST so it always wins the merge: the condition is
   // duck-typed and could carry a floor key (e.g. `use`), which must never
   // override the policy. `ENCRYPTION_DEFAULT` (`publish: false`) is only a
-  // default, so the caller's predicate still wins over it; per-layer `undefined`
-  // stripping keeps a `{ x: undefined }` predicate from erasing that default.
-  const query = applyKeyFloor(ENVELOPE_FLOOR, ENCRYPTION_DEFAULT, encrypted.predicate);
+  // default, so the caller's condition still wins over it; per-layer `undefined`
+  // stripping keeps a `{ x: undefined }` condition from erasing that default.
+  const query = applyKeyFloor(ENVELOPE_FLOOR, ENCRYPTION_DEFAULT, encrypted.condition);
 
   let kryptos: IKryptos;
 
@@ -43,7 +43,7 @@ export const resolveEncryptionKey = (
         {
           code: "encryption_key_not_found",
           title: "Encryption Key Not Found",
-          details: `The amphora holds no usable encryption key matching the predicate declared for field "${fieldKey}" on entity "${entityName}"; add the key to the vault or correct the predicate.`,
+          details: `The amphora holds no usable encryption key matching the condition declared for field "${fieldKey}" on entity "${entityName}"; add the key to the vault or correct the condition.`,
           data: { entity: entityName, field: fieldKey, query },
           debug: { error: (error as Error).message },
         },

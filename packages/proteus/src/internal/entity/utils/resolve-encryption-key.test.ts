@@ -27,11 +27,11 @@ const resolve = (encrypted: MetaEncrypted, amphora: Amphora) =>
   resolveEncryptionKey(encrypted, amphora, "secret", "TestEntity");
 
 describe("resolveEncryptionKey", () => {
-  describe("predicate", () => {
+  describe("condition", () => {
     // THE HAZARD. A pylon vault holds at least two internal encryption keys: the
     // KEK (minted once, at scaffold) and the `dir` cookie key (rotated yearly, so
     // almost always the newer of the two). An unscoped lookup takes "any internal
-    // enc key, newest first" — i.e. the cookie key. The predicate is what pins it.
+    // enc key, newest first" — i.e. the cookie key. The condition is what pins it.
     test("should select the named key, not the newer internal enc key", () => {
       const kek = createEncKey("pylon:kek");
       const cookie = createEncKey("cookie");
@@ -42,7 +42,7 @@ describe("resolveEncryptionKey", () => {
       const amphora = createAmphora(kek, cookie);
 
       const resolved = resolve(
-        { kryptos: null, predicate: { purpose: "pylon:kek" } },
+        { kryptos: null, condition: { purpose: "pylon:kek" } },
         amphora,
       );
 
@@ -56,30 +56,30 @@ describe("resolveEncryptionKey", () => {
       // Amphora's own filter defaults to `publish: true` — without proteus's
       // `publish: false` default the KEK would be invisible.
       expect(
-        resolve({ kryptos: null, predicate: { purpose: "pylon:kek" } }, amphora).id,
+        resolve({ kryptos: null, condition: { purpose: "pylon:kek" } }, amphora).id,
       ).toBe(kek.id);
     });
 
-    test("should let the predicate override the publish default", () => {
+    test("should let the condition override the publish default", () => {
       const published = createEncKey("shared", true);
       const amphora = createAmphora(published);
 
       expect(
         resolve(
-          { kryptos: null, predicate: { purpose: "shared", publish: true } },
+          { kryptos: null, condition: { purpose: "shared", publish: true } },
           amphora,
         ).id,
       ).toBe(published.id);
     });
 
-    test("should throw when no key matches the predicate", () => {
+    test("should throw when no key matches the condition", () => {
       const amphora = createAmphora(createEncKey("cookie"));
 
       expect(() =>
-        resolve({ kryptos: null, predicate: { purpose: "pylon:kek" } }, amphora),
+        resolve({ kryptos: null, condition: { purpose: "pylon:kek" } }, amphora),
       ).toThrow(ProteusError);
       expect(() =>
-        resolve({ kryptos: null, predicate: { purpose: "pylon:kek" } }, amphora),
+        resolve({ kryptos: null, condition: { purpose: "pylon:kek" } }, amphora),
       ).toThrow('No encryption key matches field "secret" on entity "TestEntity"');
     });
   });
@@ -94,12 +94,12 @@ describe("resolveEncryptionKey", () => {
       const amphora = createAmphora(sig);
 
       expect(() =>
-        resolve({ kryptos: null, predicate: { purpose: "pylon:kek" } }, amphora),
+        resolve({ kryptos: null, condition: { purpose: "pylon:kek" } }, amphora),
       ).toThrow('No encryption key matches field "secret" on entity "TestEntity"');
     });
 
     // A public-only key (a recipient key from someone's JWKS) could encrypt a
-    // column and then never open it again. A published predicate is the case that
+    // column and then never open it again. A published condition is the case that
     // needs the floor: `publish` is a DEFAULT, so a caller may set `publish: true`
     // and reach the published set — where remotely-fetched, public-only keys live.
     // Only `hasPrivateKey` stands between them and an unopenable column.
@@ -116,18 +116,18 @@ describe("resolveEncryptionKey", () => {
 
       const amphora = createAmphora(publicOnly);
 
-      // The predicate matches it on every attribute a consumer can express — so
+      // The condition matches it on every attribute a consumer can express — so
       // the ONLY thing rejecting it is the floor's `hasPrivateKey`.
       expect(() =>
-        resolve({ kryptos: null, predicate: { type: "EC", publish: false } }, amphora),
+        resolve({ kryptos: null, condition: { type: "EC", publish: false } }, amphora),
       ).toThrow('No encryption key matches field "secret" on entity "TestEntity"');
     });
 
-    // #8: a predicate is duck-typed, so a config/JSON one can carry a floor key
+    // #8: a condition is duck-typed, so a config/JSON one can carry a floor key
     // (`use`) the type forbids. The floor is applied LAST, so it wins the merge
     // and the smuggled `use: "sig"` is overridden — the enc key is selected, not
     // the sig key (which would then fail the post-check floor).
-    test("a predicate carrying a floor key cannot override the floor", () => {
+    test("a condition carrying a floor key cannot override the floor", () => {
       const enc = createEncKey("pylon:kek");
       const sig = KryptosKit.generate.sig.oct({
         algorithm: "HS256",
@@ -139,10 +139,10 @@ describe("resolveEncryptionKey", () => {
       const resolved = resolve(
         {
           kryptos: null,
-          predicate: {
+          condition: {
             purpose: "pylon:kek",
             use: "sig",
-          } as unknown as MetaEncrypted["predicate"],
+          } as unknown as MetaEncrypted["condition"],
         },
         amphora,
       );
@@ -157,10 +157,10 @@ describe("resolveEncryptionKey", () => {
       });
       const amphora = createAmphora(createEncKey("pylon:kek"));
 
-      expect(() => resolve({ kryptos: sig, predicate: null }, amphora)).toThrow(
+      expect(() => resolve({ kryptos: sig, condition: null }, amphora)).toThrow(
         ProteusError,
       );
-      expect(() => resolve({ kryptos: sig, predicate: null }, amphora)).toThrow(
+      expect(() => resolve({ kryptos: sig, condition: null }, amphora)).toThrow(
         'Encryption key for field "secret" on entity "TestEntity" violates the encryption floor',
       );
     });
@@ -174,7 +174,7 @@ describe("resolveEncryptionKey", () => {
       const publicOnly = KryptosKit.from.jwk(asymmetric.toJWK("public"));
       const amphora = createAmphora();
 
-      expect(() => resolve({ kryptos: publicOnly, predicate: null }, amphora)).toThrow(
+      expect(() => resolve({ kryptos: publicOnly, condition: null }, amphora)).toThrow(
         'Encryption key for field "secret" on entity "TestEntity" violates the encryption floor',
       );
     });
@@ -195,7 +195,7 @@ describe("resolveEncryptionKey", () => {
       const expired = detached(new Date("2020-01-01"), new Date("2021-01-01"));
 
       expect(() =>
-        resolve({ kryptos: expired, predicate: null }, createAmphora()),
+        resolve({ kryptos: expired, condition: null }, createAmphora()),
       ).toThrow(
         'Encryption key for field "secret" on entity "TestEntity" violates the encryption floor',
       );
@@ -205,7 +205,7 @@ describe("resolveEncryptionKey", () => {
       const pending = detached(new Date("2099-01-01"), new Date("2100-01-01"));
 
       expect(() =>
-        resolve({ kryptos: pending, predicate: null }, createAmphora()),
+        resolve({ kryptos: pending, condition: null }, createAmphora()),
       ).toThrow(
         'Encryption key for field "secret" on entity "TestEntity" violates the encryption floor',
       );
@@ -226,13 +226,13 @@ describe("resolveEncryptionKey", () => {
       );
 
       expect(
-        resolve({ kryptos: null, predicate: { purpose: "env:kek" } }, amphora).purpose,
+        resolve({ kryptos: null, condition: { purpose: "env:kek" } }, amphora).purpose,
       ).toBe("env:kek");
 
       vi.setSystemTime(new Date("2026-06-01T00:00:00.000Z"));
 
       expect(() =>
-        resolve({ kryptos: null, predicate: { purpose: "env:kek" } }, amphora),
+        resolve({ kryptos: null, condition: { purpose: "env:kek" } }, amphora),
       ).toThrow('No encryption key matches field "secret" on entity "TestEntity"');
     });
   });
@@ -242,18 +242,18 @@ describe("resolveEncryptionKey", () => {
       const injected = createEncKey("env:kek");
       const amphora = createAmphora();
 
-      expect(resolve({ kryptos: injected, predicate: null }, amphora).id).toBe(
+      expect(resolve({ kryptos: injected, condition: null }, amphora).id).toBe(
         injected.id,
       );
     });
 
-    test("should prefer the injected key over the predicate", () => {
+    test("should prefer the injected key over the condition", () => {
       const kek = createEncKey("pylon:kek");
       const injected = createEncKey("env:kek");
       const amphora = createAmphora(kek);
 
       expect(
-        resolve({ kryptos: injected, predicate: { purpose: "pylon:kek" } }, amphora).id,
+        resolve({ kryptos: injected, condition: { purpose: "pylon:kek" } }, amphora).id,
       ).toBe(injected.id);
     });
   });

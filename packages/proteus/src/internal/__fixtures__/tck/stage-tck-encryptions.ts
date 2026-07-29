@@ -9,7 +9,7 @@ import type { Constructor } from "@lindorm/types";
 import type { ProteusSource } from "../../../classes/ProteusSource.js";
 import { Encrypted } from "../../../decorators/Encrypted.js";
 import type { IEntity } from "../../../interfaces/index.js";
-import { TCK_STAGED_PREDICATE } from "./create-tck-amphora.js";
+import { TCK_STAGED_CONDITION } from "./create-tck-amphora.js";
 
 /**
  * Override `TckStagedEncrypted.stagedSecret`'s @Encrypted selector on THIS source
@@ -30,6 +30,6 @@ export const stageTckEncryptions = (
   if (!target) return;
 
   source.stageFieldDecorator(target, "stagedSecret", Encrypted, {
-    predicate: { ...TCK_STAGED_PREDICATE },
+    condition: { ...TCK_STAGED_CONDITION },
   });
 };

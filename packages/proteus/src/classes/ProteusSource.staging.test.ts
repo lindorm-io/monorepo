@@ -69,14 +69,14 @@ describe("ProteusSource staging", () => {
       const source = track(newSource([StagingOverride]));
 
       source.stageFieldDecorator(StagingOverride, "secret", Encrypted, {
-        predicate: { purpose: "x" },
+        condition: { purpose: "x" },
       });
 
       const field = metadataFor(source, StagingOverride).fields.find(
         (f) => f.key === "secret",
       )!;
 
-      expect(field.encrypted).toEqual({ kryptos: null, predicate: { purpose: "x" } });
+      expect(field.encrypted).toEqual({ kryptos: null, condition: { purpose: "x" } });
     });
 
     test("staged selector outranks the source-level encryption default", () => {
@@ -96,12 +96,12 @@ describe("ProteusSource staging", () => {
           entities: [StagingPrecedence] as never,
           logger: createMockLogger(),
           synchronize: true,
-          encryption: { predicate: { purpose: "source-default" } },
+          encryption: { condition: { purpose: "source-default" } },
         }),
       );
 
       source.stageFieldDecorator(StagingPrecedence, "secret", Encrypted, {
-        predicate: { purpose: "staged" },
+        condition: { purpose: "staged" },
       });
 
       const field = metadataFor(source, StagingPrecedence).fields.find(
@@ -111,7 +111,7 @@ describe("ProteusSource staging", () => {
       // staged > source `encryption` default.
       expect(field.encrypted).toEqual({
         kryptos: null,
-        predicate: { purpose: "staged" },
+        condition: { purpose: "staged" },
       });
     });
 
@@ -128,10 +128,10 @@ describe("ProteusSource staging", () => {
       const source = track(newSource([StagingReplace]));
 
       source.stageFieldDecorator(StagingReplace, "secret", Encrypted, {
-        predicate: { purpose: "first" },
+        condition: { purpose: "first" },
       });
       source.stageFieldDecorator(StagingReplace, "secret", Encrypted, {
-        predicate: { purpose: "second" },
+        condition: { purpose: "second" },
       });
 
       const field = metadataFor(source, StagingReplace).fields.find(
@@ -140,7 +140,7 @@ describe("ProteusSource staging", () => {
 
       expect(field.encrypted).toEqual({
         kryptos: null,
-        predicate: { purpose: "second" },
+        condition: { purpose: "second" },
       });
     });
   });
@@ -160,10 +160,10 @@ describe("ProteusSource staging", () => {
       const sourceB = track(newSource([StagingShared]));
 
       sourceA.stageFieldDecorator(StagingShared, "secret", Encrypted, {
-        predicate: { purpose: "a" },
+        condition: { purpose: "a" },
       });
       sourceB.stageFieldDecorator(StagingShared, "secret", Encrypted, {
-        predicate: { purpose: "b" },
+        condition: { purpose: "b" },
       });
 
       const fieldA = metadataFor(sourceA, StagingShared).fields.find(
@@ -174,15 +174,15 @@ describe("ProteusSource staging", () => {
       )!;
 
       // Each source carries its OWN selector — neither leaked into the other.
-      expect(fieldA.encrypted).toEqual({ kryptos: null, predicate: { purpose: "a" } });
-      expect(fieldB.encrypted).toEqual({ kryptos: null, predicate: { purpose: "b" } });
+      expect(fieldA.encrypted).toEqual({ kryptos: null, condition: { purpose: "a" } });
+      expect(fieldB.encrypted).toEqual({ kryptos: null, condition: { purpose: "b" } });
 
       // The shared base metadata (what a fresh, un-staged source resolves) is
       // still the bare marker — no staging mutated Entity[Symbol.metadata].
       const shared = getEntityMetadata(StagingShared).fields.find(
         (f) => f.key === "secret",
       )!;
-      expect(shared.encrypted).toEqual({ kryptos: null, predicate: null });
+      expect(shared.encrypted).toEqual({ kryptos: null, condition: null });
     });
 
     test("with no staging the fast path returns the SHARED metadata object (no needless copy)", () => {
@@ -216,7 +216,7 @@ describe("ProteusSource staging", () => {
 
       const error = getThrown(() =>
         source.stageFieldDecorator(StagingAfterSetup, "name", Encrypted, {
-          predicate: { purpose: "x" },
+          condition: { purpose: "x" },
         }),
       );
 

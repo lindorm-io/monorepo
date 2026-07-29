@@ -31,7 +31,7 @@ type ProteusEncryptionAttributes = Pick<
  * `{ id }`; a KEK minted by a scaffold is `{ purpose: "pylon:kek" }`; an
  * allowlist is `{ algorithm: { $in: [...] } }`.
  */
-export type ProteusEncryptionPredicate = Condition<ProteusEncryptionAttributes>;
+export type ProteusEncryptionCondition = Condition<ProteusEncryptionAttributes>;
 
 /**
  * How an `@Encrypted` field NAMES its key: an explicit key, or a query for one.
@@ -39,12 +39,12 @@ export type ProteusEncryptionPredicate = Condition<ProteusEncryptionAttributes>;
  * - `kryptos` — a key supplied outright. A KEK is typically an env key
  *   (`KryptosKit.env.import(process.env.KEK!)`), which is available at class
  *   definition time, so it can be handed straight to the decorator. It never
- *   came from the vault, so a `predicate` is meaningless for it — but the FLOOR
+ *   came from the vault, so a `condition` is meaningless for it — but the FLOOR
  *   still applies, which is what makes injection safe rather than an escape hatch.
- * - `predicate` — which of the vault's keys.
+ * - `condition` — which of the vault's keys.
  *
  * One of them is REQUIRED, from the decorator or the source-level default —
  * enforced when the source loads. There is no unscoped lookup: "which key
  * encrypts my database" must not have an implicit answer.
  */
-export type ProteusEncryptionKey = AmphoraKeySelector<ProteusEncryptionPredicate>;
+export type ProteusEncryptionKey = AmphoraKeySelector<ProteusEncryptionCondition>;

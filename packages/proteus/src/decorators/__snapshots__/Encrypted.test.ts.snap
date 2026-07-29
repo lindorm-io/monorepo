@@ -10,7 +10,7 @@ exports[`Encrypted > should match full metadata snapshot for entity with encrypt
   "entity": {
     "comment": null,
     "decorator": "Entity",
-    "name": "EncryptedWithPredicate",
+    "name": "EncryptedWithCondition",
     "named": true,
     "namespace": null,
   },
@@ -55,10 +55,10 @@ exports[`Encrypted > should match full metadata snapshot for entity with encrypt
       "default": null,
       "embedded": null,
       "encrypted": {
-        "kryptos": null,
-        "predicate": {
+        "condition": {
           "purpose": "pii",
         },
+        "kryptos": null,
       },
       "enum": null,
       "hideOn": [],
@@ -111,26 +111,26 @@ exports[`Encrypted > should match full metadata snapshot for entity with encrypt
 
 exports[`Encrypted > should stage a bare descriptor when no options are provided 1`] = `
 {
+  "condition": null,
   "kryptos": null,
-  "predicate": null,
 }
 `;
 
-exports[`Encrypted > should stage a predicate with multiple keys 1`] = `
+exports[`Encrypted > should stage a condition with multiple keys 1`] = `
 {
-  "kryptos": null,
-  "predicate": {
+  "condition": {
     "id": "key-id",
     "purpose": "pii",
   },
+  "kryptos": null,
 }
 `;
 
-exports[`Encrypted > should stage the predicate 1`] = `
+exports[`Encrypted > should stage the condition 1`] = `
 {
-  "kryptos": null,
-  "predicate": {
+  "condition": {
     "purpose": "pii",
   },
+  "kryptos": null,
 }
 `;

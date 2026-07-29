@@ -23,20 +23,20 @@ class EncryptedNoOptions {
   secret!: string;
 }
 
-@Entity({ name: "EncryptedWithPredicate" })
-class EncryptedWithPredicate {
+@Entity({ name: "EncryptedWithCondition" })
+class EncryptedWithCondition {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
-  @Encrypted({ predicate: { purpose: "pii" } })
+  @Encrypted({ condition: { purpose: "pii" } })
   @Field("string")
   ssn!: string;
 }
 
-@Entity({ name: "EncryptedMultiplePredicateKeys" })
-class EncryptedMultiplePredicateKeys {
+@Entity({ name: "EncryptedMultipleConditionKeys" })
+class EncryptedMultipleConditionKeys {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
-  @Encrypted({ predicate: { id: "key-id", purpose: "pii" } })
+  @Encrypted({ condition: { id: "key-id", purpose: "pii" } })
   @Field("string")
   data!: string;
 }
@@ -50,11 +50,11 @@ class EncryptedWithKryptos {
   token!: string;
 }
 
-@Entity({ name: "EncryptedEmptyPredicate" })
-class EncryptedEmptyPredicate {
+@Entity({ name: "EncryptedEmptyCondition" })
+class EncryptedEmptyCondition {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
-  @Encrypted({ predicate: {} })
+  @Encrypted({ condition: {} })
   @Field("string")
   data!: string;
 }
@@ -74,14 +74,14 @@ describe("Encrypted", () => {
     expect(field.encrypted).toMatchSnapshot();
   });
 
-  test("should stage the predicate", () => {
-    const meta = getEntityMetadata(EncryptedWithPredicate);
+  test("should stage the condition", () => {
+    const meta = getEntityMetadata(EncryptedWithCondition);
     const field = meta.fields.find((f) => f.key === "ssn")!;
     expect(field.encrypted).toMatchSnapshot();
   });
 
-  test("should stage a predicate with multiple keys", () => {
-    const meta = getEntityMetadata(EncryptedMultiplePredicateKeys);
+  test("should stage a condition with multiple keys", () => {
+    const meta = getEntityMetadata(EncryptedMultipleConditionKeys);
     const field = meta.fields.find((f) => f.key === "data")!;
     expect(field.encrypted).toMatchSnapshot();
   });
@@ -89,17 +89,17 @@ describe("Encrypted", () => {
   test("should stage an injected kryptos", () => {
     const meta = getEntityMetadata(EncryptedWithKryptos);
     const field = meta.fields.find((f) => f.key === "token")!;
-    expect(field.encrypted).toEqual({ kryptos: KEK, predicate: null });
+    expect(field.encrypted).toEqual({ kryptos: KEK, condition: null });
   });
 
-  // An empty predicate is not a predicate — `find({})` is the unscoped "newest
+  // An empty condition is not a condition — `find({})` is the unscoped "newest
   // internal enc key" lookup this decorator exists to forbid. So `{}` normalises
   // to a bare descriptor: the field then takes the source default or throws
   // `unnamed_encryption_key` at load, exactly as a bare `@Encrypted()` does.
-  test("should stage an empty predicate as a BARE descriptor, not a key", () => {
-    const meta = getEntityMetadata(EncryptedEmptyPredicate);
+  test("should stage an empty condition as a BARE descriptor, not a key", () => {
+    const meta = getEntityMetadata(EncryptedEmptyCondition);
     const field = meta.fields.find((f) => f.key === "data")!;
-    expect(field.encrypted).toEqual({ kryptos: null, predicate: null });
+    expect(field.encrypted).toEqual({ kryptos: null, condition: null });
   });
 
   test("should default encrypted to null when not decorated", () => {
@@ -109,7 +109,7 @@ describe("Encrypted", () => {
   });
 
   test("should match full metadata snapshot for entity with encrypted field", () => {
-    const meta = getEntityMetadata(EncryptedWithPredicate);
+    const meta = getEntityMetadata(EncryptedWithCondition);
     expect(meta).toMatchSnapshot();
   });
 });

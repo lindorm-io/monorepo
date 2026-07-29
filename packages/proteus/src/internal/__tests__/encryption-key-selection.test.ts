@@ -65,7 +65,7 @@ class BareEncrypted implements IEntity {
 class ScopedEncrypted implements IEntity {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
-  @Encrypted({ predicate: { purpose: "pylon:kek" } })
+  @Encrypted({ condition: { purpose: "pylon:kek" } })
   @Field("string")
   secret!: string;
 }
@@ -169,7 +169,7 @@ describe("encryption key selection", () => {
 
   test("should use the source-level default when the decorator is bare", async () => {
     const src = await createSource([BareEncrypted], {
-      predicate: { purpose: "pylon:kek" },
+      condition: { purpose: "pylon:kek" },
     });
     const repository = src.repository(BareEncrypted);
 
@@ -186,7 +186,7 @@ describe("encryption key selection", () => {
 
   test("should let a decorator descriptor override the source-level default", async () => {
     const src = await createSource([ScopedEncrypted], {
-      predicate: { purpose: "cookie" },
+      condition: { purpose: "cookie" },
     });
     const repository = src.repository(ScopedEncrypted);
 

@@ -23,9 +23,9 @@ const createAmphora = (...keys: Array<ReturnType<typeof createKek>>) => {
   return amphora;
 };
 
-const selector = (predicate: MetaEncrypted["predicate"]): MetaEncrypted => ({
+const selector = (condition: MetaEncrypted["condition"]): MetaEncrypted => ({
   kryptos: null,
-  predicate,
+  condition,
 });
 
 describe("encryptFieldValue", () => {
@@ -60,7 +60,7 @@ describe("encryptFieldValue", () => {
 
     const result = encryptFieldValue(
       "test value",
-      { kryptos: kek, predicate: null },
+      { kryptos: kek, condition: null },
       amphora,
       "field",
       "Entity",
@@ -69,14 +69,14 @@ describe("encryptFieldValue", () => {
     expect(parseAes(result).keyId).toBe(kek.id);
   });
 
-  test("should prefer an injected kryptos over the vault predicate", () => {
+  test("should prefer an injected kryptos over the vault condition", () => {
     const vaultKey = createKek();
     const injected = createKek();
     const amphora = createAmphora(vaultKey);
 
     const result = encryptFieldValue(
       "test value",
-      { kryptos: injected, predicate: { purpose: "kek" } },
+      { kryptos: injected, condition: { purpose: "kek" } },
       amphora,
       "field",
       "Entity",
@@ -118,7 +118,7 @@ describe("encryptFieldValue", () => {
     ).toThrow(ProteusError);
   });
 
-  test("should throw with entity/field context when no key matches the predicate", () => {
+  test("should throw with entity/field context when no key matches the condition", () => {
     const amphora = createAmphora();
 
     expect(() =>
@@ -142,7 +142,7 @@ describe("encryptFieldValue", () => {
     expect(() =>
       encryptFieldValue(
         "value",
-        { kryptos: sigKey, predicate: null },
+        { kryptos: sigKey, condition: null },
         amphora,
         "badField",
         "BadEntity",

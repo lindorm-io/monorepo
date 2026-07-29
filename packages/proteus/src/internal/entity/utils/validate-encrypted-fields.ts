@@ -76,19 +76,19 @@ export const validateEncryptedFields = (
       }
 
       // The field must NAME its key — outright (`kryptos`) or as a query
-      // (`predicate`) — from the decorator or the source-level `encryption`
+      // (`condition`) — from the decorator or the source-level `encryption`
       // default, which is already folded in by the time metadata reaches here.
       // Without one the lookup would degrade to "any internal encryption key,
       // newest first": in a vault that also holds a yearly-rotated cookie key,
       // that IS the cookie key. "Which key encrypts my database" must not have
       // an implicit answer — so fail at source load, not on the first write.
-      if (isNull(field.encrypted.kryptos) && isNull(field.encrypted.predicate)) {
+      if (isNull(field.encrypted.kryptos) && isNull(field.encrypted.condition)) {
         throw new ProteusError(
           `Entity "${metadata.entity.name}" has @Encrypted field "${field.key}" but names no encryption key`,
           {
             code: "unnamed_encryption_key",
             title: "Unnamed Encryption Key",
-            details: `Field "${field.key}" on entity "${metadata.entity.name}" must name its at-rest encryption key: pass @Encrypted({ kryptos }) or @Encrypted({ predicate }), or declare a default with the ProteusSource "encryption" option.`,
+            details: `Field "${field.key}" on entity "${metadata.entity.name}" must name its at-rest encryption key: pass @Encrypted({ kryptos }) or @Encrypted({ condition }), or declare a default with the ProteusSource "encryption" option.`,
             data: { entity: metadata.entity.name, field: field.key },
           },
         );
