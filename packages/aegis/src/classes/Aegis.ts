@@ -1,3 +1,4 @@
+import type { Condition } from "@lindorm/match";
 import type {
   AesContent,
   AesDecryptionRecord,
@@ -22,7 +23,7 @@ import type {
   KryptosSigAlgorithm,
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import type {
   IAegis,
   IAegisAes,
@@ -515,7 +516,7 @@ export class Aegis implements IAegis {
 
   private cwtVerify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<CwtClaimsWire & C>,
+    assert?: Condition<CwtClaimsWire & C>,
     options: VerifyStructuredTokenOptions & { key?: AegisVerifyKey } = {},
   ): Promise<VerifiedStructuredToken<CwtClaimsWire & C, Buffer>> {
     return rawVerifyCwt<C>({ token, assert, options, deps: this.deps });
@@ -531,7 +532,7 @@ export class Aegis implements IAegis {
 
   private cwmVerify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<CwtClaimsWire & C>,
+    assert?: Condition<CwtClaimsWire & C>,
     options: VerifyStructuredTokenOptions & { key?: AegisVerifyKey } = {},
   ): Promise<VerifiedStructuredToken<CwtClaimsWire & C, Buffer>> {
     return rawVerifyCwm<C>({ token, assert, options, deps: this.deps });
@@ -559,7 +560,7 @@ export class Aegis implements IAegis {
   // private jwt verify
   private jwtVerify<C extends Dict = Dict>(
     jwt: string,
-    assert?: Predicate<JwtClaimsWire & C>,
+    assert?: Condition<JwtClaimsWire & C>,
     options: VerifyStructuredTokenOptions & { key?: AegisVerifyKey } = {},
   ): Promise<VerifiedStructuredToken<JwtClaimsWire & C, string>> {
     return rawVerifyJwt<C>({ jwt, assert, options, deps: this.deps });

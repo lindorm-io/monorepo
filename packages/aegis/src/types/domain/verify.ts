@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { TokenType } from "../../constants/token-type.js";
 import type { AegisVerifyKey } from "../keys/key-selectors.js";
 import type { ActClaim } from "../claims/domain/act-claim.js";
@@ -16,7 +16,7 @@ export type ActorScope = "every" | "current" | "some";
 export type VerifyActorOptions = {
   required?: boolean;
   forbidden?: boolean;
-  allowedActors?: Predicate<ActClaim>;
+  allowedActors?: Condition<ActClaim>;
   actorScope?: ActorScope;
   maxChainDepth?: number;
 };

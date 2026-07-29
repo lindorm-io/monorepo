@@ -1,6 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { AmphoraKeySelector, AmphoraQuery } from "@lindorm/amphora";
 import type { KryptosEncryption } from "@lindorm/kryptos";
-import type { Predicate } from "@lindorm/types";
 
 /**
  * The key attributes a caller may select on.
@@ -34,10 +34,10 @@ type AegisKeyAttributes = Pick<
  * algorithm is `{ algorithm: client.idTokenSignedResponseAlg }`; an allowlist
  * is `{ algorithm: { $in: [...] } }`.
  */
-export type AegisSignPredicate = Predicate<AegisKeyAttributes>;
+export type AegisSignPredicate = Condition<AegisKeyAttributes>;
 
 /** Selects an encryption / decryption key. Same attributes as the sign side. */
-export type AegisEncPredicate = Predicate<AegisKeyAttributes>;
+export type AegisEncPredicate = Condition<AegisKeyAttributes>;
 
 /**
  * Selects the signing key.

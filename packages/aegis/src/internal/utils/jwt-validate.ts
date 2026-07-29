@@ -1,12 +1,13 @@
+import type { Condition, ConditionOperator } from "@lindorm/match";
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
-import type { Dict, Predicate, PredicateOperator } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
 import type { ValidateJwtOptions } from "../../types/index.js";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
 
-export const createJwtValidate = (validate: ValidateJwtOptions): Predicate<Dict> => {
+export const createJwtValidate = (validate: ValidateJwtOptions): Condition<Dict> => {
   const algorithm = validate.algorithm;
-  const predicate: Predicate<Dict> = {};
+  const predicate: Condition<Dict> = {};
 
   for (const [key, value] of Object.entries(validate)) {
     if (key === "algorithm") continue;
@@ -36,7 +37,7 @@ export const createJwtValidate = (validate: ValidateJwtOptions): Predicate<Dict>
       continue;
     }
     if (isObject(value)) {
-      predicate[key] = value as PredicateOperator<any>;
+      predicate[key] = value as ConditionOperator<any>;
       continue;
     }
 

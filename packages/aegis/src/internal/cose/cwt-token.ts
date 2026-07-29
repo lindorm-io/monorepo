@@ -1,6 +1,7 @@
+import type { Condition } from "@lindorm/match";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { CwsKit } from "../../classes/CwsKit.js";
 import { CoseError, CwmError, CwtError } from "../../errors/index.js";
 import { coseByJose } from "../header/header-registry.js";
@@ -119,7 +120,7 @@ export const verifyCwt = <C extends Dict = Dict>(
   params: {
     format: CwtFormat;
     token: Buffer;
-    assert?: Predicate<CwtClaimsWire & C>;
+    assert?: Condition<CwtClaimsWire & C>;
     clockTolerance: number;
     options: VerifyStructuredTokenOptions;
   },
@@ -201,7 +202,7 @@ export const verifyCwt = <C extends Dict = Dict>(
   validate(wire, {
     ...createTemporalMatchers(clockTolerance, options.currentDate, options.maxTokenAge),
     ...(assert ?? {}),
-  } as Predicate<Dict>);
+  } as Condition<Dict>);
 
   logger.debug("CWT verified");
 

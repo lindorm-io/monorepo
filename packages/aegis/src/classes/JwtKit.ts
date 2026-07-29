@@ -1,7 +1,8 @@
+import type { Condition } from "@lindorm/match";
 import { B64 } from "@lindorm/b64";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { sanitiseToken } from "@lindorm/utils";
 import { JwtError } from "../errors/index.js";
 import type { IJwtKit } from "../interfaces/index.js";
@@ -124,7 +125,7 @@ export class JwtKit implements IJwtKit {
    */
   verify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<JwtClaimsWire & C>,
+    assert?: Condition<JwtClaimsWire & C>,
     options: VerifyStructuredTokenOptions = {},
   ): VerifiedStructuredToken<JwtClaimsWire & C, string> {
     this.logger.debug("Verifying token", {
@@ -251,7 +252,7 @@ export class JwtKit implements IJwtKit {
     validate(withDates, {
       ...createTemporalMatchers(clockTolerance, options.currentDate, options.maxTokenAge),
       ...(assert ?? {}),
-    } as Predicate<Dict>);
+    } as Condition<Dict>);
 
     this.logger.debug("Token verified");
 

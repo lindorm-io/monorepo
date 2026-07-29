@@ -1,5 +1,5 @@
+import type { ConditionOperator } from "@lindorm/match";
 import { addSeconds, subSeconds } from "@lindorm/date";
-import type { PredicateOperator } from "@lindorm/types";
 import { AegisError } from "../../errors/index.js";
 import type { AegisClaimsWire } from "../../types/index.js";
 import { claimsWith } from "../claims/claims-registry.js";
@@ -26,7 +26,7 @@ const temporalBound = (
   direction: "past" | "future",
   clockTolerance: number,
   now: Date,
-): PredicateOperator<any> => {
+): ConditionOperator<any> => {
   switch (direction) {
     case "past":
       return { $lte: addSeconds(now, clockTolerance) };
@@ -66,9 +66,9 @@ export const createTemporalMatchers = (
   clockTolerance: number,
   currentDate?: Date,
   maxTokenAge?: number,
-): Partial<Record<keyof AegisClaimsWire, PredicateOperator<any>>> => {
+): Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> => {
   const now = currentDate ?? new Date();
-  const predicate: Partial<Record<keyof AegisClaimsWire, PredicateOperator<any>>> = {};
+  const predicate: Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> = {};
 
   for (const spec of TEMPORAL_SPECS) {
     predicate[spec.jose as keyof AegisClaimsWire] = {

@@ -1,4 +1,5 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import type {
   JwtClaimsWire,
   SignStructuredTokenOptions,
@@ -13,7 +14,7 @@ export interface IJwtKit {
   ): string;
   verify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<JwtClaimsWire & C>,
+    assert?: Condition<JwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions,
   ): VerifiedStructuredToken<JwtClaimsWire & C, string>;
 }

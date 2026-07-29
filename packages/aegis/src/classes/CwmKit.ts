@@ -1,6 +1,7 @@
+import type { Condition } from "@lindorm/match";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { CwmError } from "../errors/index.js";
 import type { ICwmKit } from "../interfaces/index.js";
 import { decodeCwtWire, signCwt, verifyCwt } from "../internal/cose/cwt-token.js";
@@ -58,7 +59,7 @@ export class CwmKit implements ICwmKit {
 
   verify<C extends Dict = Dict>(
     token: Buffer,
-    assert?: Predicate<CwtClaimsWire & C>,
+    assert?: Condition<CwtClaimsWire & C>,
     options: VerifyStructuredTokenOptions = {},
   ): VerifiedStructuredToken<CwtClaimsWire & C, Buffer> {
     return verifyCwt<C>(this.kryptos, this.logger, {

@@ -1,5 +1,5 @@
+import type { ConditionOperator } from "@lindorm/match";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
-import type { PredicateOperator } from "@lindorm/types";
 import type { DomainAssert } from "./domain-assert.js";
 
 // The declarative matcher for `Aegis.assert` (and the hash-derive `accessToken`/
@@ -8,7 +8,7 @@ import type { DomainAssert } from "./domain-assert.js";
 // extra knobs the flat-dict applier honours.
 export type ValidateJwtOptions = DomainAssert & {
   algorithm?: KryptosAlgorithm;
-  tokenType?: string | PredicateOperator<string>;
+  tokenType?: string | ConditionOperator<string>;
   accessToken?: string;
   authCode?: string;
   authState?: string;

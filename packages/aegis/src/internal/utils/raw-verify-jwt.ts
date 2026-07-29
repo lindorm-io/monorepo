@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { JwtKit } from "../../classes/JwtKit.js";
 import type {
   AegisVerifyKey,
@@ -25,7 +26,7 @@ export const rawVerifyJwt = async <C extends Dict = Dict>({
   deps,
 }: {
   jwt: string;
-  assert?: Predicate<JwtClaimsWire & C>;
+  assert?: Condition<JwtClaimsWire & C>;
   options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
 }): Promise<VerifiedStructuredToken<JwtClaimsWire & C, string>> => {

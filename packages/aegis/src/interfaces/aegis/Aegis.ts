@@ -1,3 +1,4 @@
+import type { Condition } from "@lindorm/match";
 import type {
   AesContent,
   AesDecryptionRecord,
@@ -5,7 +6,7 @@ import type {
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "@lindorm/aes";
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import type { BuiltInProfiles } from "../../internal/profiles/built-in-profiles.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type {
@@ -121,7 +122,7 @@ export interface IAegisCwt {
   ): Promise<SignedToken>;
   verify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<CwtClaimsWire & C>,
+    assert?: Condition<CwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey },
   ): Promise<VerifiedStructuredToken<CwtClaimsWire & C>>;
 }
@@ -135,7 +136,7 @@ export interface IAegisCwm {
   ): Promise<SignedToken>;
   verify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<CwtClaimsWire & C>,
+    assert?: Condition<CwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey },
   ): Promise<VerifiedStructuredToken<CwtClaimsWire & C>>;
 }
@@ -158,7 +159,7 @@ export interface IAegisJwt {
   ): Promise<SignedToken>;
   verify<C extends Dict = Dict>(
     token: string,
-    assert?: Predicate<JwtClaimsWire & C>,
+    assert?: Condition<JwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey },
   ): Promise<VerifiedStructuredToken<JwtClaimsWire & C, string>>;
 }

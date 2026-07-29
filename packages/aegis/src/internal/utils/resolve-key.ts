@@ -1,7 +1,7 @@
+import { Matcher } from "@lindorm/match";
 import { applyKeyFloor, type AmphoraPredicate, type IAmphora } from "@lindorm/amphora";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import { Predicated } from "@lindorm/utils";
 import { AegisKeyError } from "../../errors/index.js";
 import { describeKeyOperation, type KeyOperation } from "./describe-key-operation.js";
 
@@ -143,7 +143,7 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
         }));
 
   // The FLOOR applies to the selected key, the pinned key AND the injected key.
-  if (!Predicated.match(kryptos, floor)) {
+  if (!Matcher.match(kryptos, floor)) {
     throw new AegisKeyError(copy.violation.message, {
       code: `${operation}_key_policy_violation`,
       data: {

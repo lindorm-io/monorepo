@@ -1,7 +1,8 @@
+import type { ConditionOperator } from "@lindorm/match";
 import { subSeconds } from "@lindorm/date";
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
-import type { Dict, PredicateOperator } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
 import type { AegisClaimsWire } from "../../types/index.js";
 import { claimByDomain } from "../claims/claims-registry.js";
@@ -46,8 +47,8 @@ export const createIdentityMatchers = (
   clockTolerance: number,
   expPresence?: "required" | "optional",
   currentDate?: Date,
-): Partial<Record<keyof AegisClaimsWire, PredicateOperator<any>>> => {
-  const predicate: Partial<Record<keyof AegisClaimsWire, PredicateOperator<any>>> = {};
+): Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> => {
+  const predicate: Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> = {};
 
   // The exp lower bound honours the same `currentDate` override (R10) as the kit's
   // temporal check, so a token exp'd relative to a PAST currentDate is not then
@@ -100,7 +101,7 @@ export const createIdentityMatchers = (
       continue;
     }
     if (isObject(value)) {
-      predicate[mapped] = value as PredicateOperator<any>;
+      predicate[mapped] = value as ConditionOperator<any>;
       continue;
     }
 

@@ -1,5 +1,6 @@
+import type { Condition } from "@lindorm/match";
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { CwmKit } from "../../classes/CwmKit.js";
 import { decodeCwt } from "../cose/cwt-token.js";
 import type {
@@ -25,7 +26,7 @@ export const rawVerifyCwm = async <C extends Dict = Dict>({
   deps,
 }: {
   token: string;
-  assert?: Predicate<CwtClaimsWire & C>;
+  assert?: Condition<CwtClaimsWire & C>;
   options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
 }): Promise<VerifiedStructuredToken<CwtClaimsWire & C, Buffer>> => {

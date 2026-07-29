@@ -1,6 +1,7 @@
+import type { Condition } from "@lindorm/match";
+import { Matcher } from "@lindorm/match";
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
-import type { Dict, Predicate } from "@lindorm/types";
-import { Predicated } from "@lindorm/utils";
+import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
 import type { InvalidEntry, SignContext, TokenProfile } from "../../types/index.js";
 import { algPermitted } from "./rules/alg-permitted.js";
@@ -12,8 +13,8 @@ export type ValidateProfileContext = {
 /**
  * Runs a profile's structural validation against the DOMAIN-keyed common layer:
  *
- *   1. `profile.rules` — flat structural rules as a `Predicate<DomainClaims>`,
- *      evaluated with the SAME matcher (`Predicated`) `assert`/`Aegis.assert`
+ *   1. `profile.rules` — flat structural rules as a `Condition<DomainClaims>`,
+ *      evaluated with the SAME matcher (`Matcher`) `assert`/`Aegis.assert`
  *      use; a mismatch names the failing claim keys,
  *   2. the crypto floor (`profile.algClass` via `algPermitted`),
  *   3. `profile.validate` — the imperative escape hatch for recursive /
@@ -55,8 +56,8 @@ export const validateProfileClaims = (
  * top-level keys, if any, collapse to a single `rules` entry). Mirrors the
  * per-field diagnosis in `internal/utils/validate.ts`.
  */
-const matchRules = (claims: Dict, rules: Predicate<Dict>): Array<InvalidEntry> => {
-  if (Predicated.match(claims, rules)) return [];
+const matchRules = (claims: Dict, rules: Condition<Dict>): Array<InvalidEntry> => {
+  if (Matcher.match(claims, rules)) return [];
 
   const invalid: Array<InvalidEntry> = [];
 
@@ -68,7 +69,7 @@ const matchRules = (claims: Dict, rules: Predicate<Dict>): Array<InvalidEntry> =
       });
       continue;
     }
-    if (!Predicated.match({ [key]: claims[key] }, { [key]: ops } as Predicate<Dict>)) {
+    if (!Matcher.match({ [key]: claims[key] }, { [key]: ops } as Condition<Dict>)) {
       invalid.push({
         key,
         message: `Claim "${key}" did not satisfy the profile rule predicate`,

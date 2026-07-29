@@ -1,6 +1,7 @@
+import type { Condition } from "@lindorm/match";
 import type { Expiry } from "@lindorm/date";
 import type { KryptosAlgClass } from "@lindorm/kryptos";
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
 import type { DomainClaims } from "../../internal/utils/extract-claims.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
@@ -101,7 +102,7 @@ export type TokenProfile<
    */
   algClass?: KryptosAlgClass;
   /**
-   * Flat structural rules expressed as a `Predicate<DomainClaims>` over the
+   * Flat structural rules expressed as a `Condition<DomainClaims>` over the
    * DOMAIN-keyed common layer — the SAME predicate vocabulary `assert` /
    * matchers / `Aegis.assert` use. `validateProfileClaims` evaluates it and
    * throws `jwt_claims_invalid` on a mismatch. Only rules a flat predicate can
@@ -109,7 +110,7 @@ export type TokenProfile<
    * cross-field rules (`crossField`, `actChainShape`, `cnfShape`, `subIdShape`,
    * `eventsShape`, `authorizationDetails` element shape) stay in `validate`.
    */
-  rules?: Predicate<DomainClaims>;
+  rules?: Condition<DomainClaims>;
   /**
    * The imperative escape hatch for rules a flat predicate cannot express
    * (recursive / cross-field / structured). Composed from the pure

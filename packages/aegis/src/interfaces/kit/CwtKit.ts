@@ -1,4 +1,5 @@
-import type { Dict, Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import type {
   CwtClaimsWire,
   SignStructuredTokenOptions,
@@ -19,7 +20,7 @@ export interface ICwtKit {
   ): Buffer;
   verify<C extends Dict = Dict>(
     token: Buffer,
-    assert?: Predicate<CwtClaimsWire & C>,
+    assert?: Condition<CwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions,
   ): VerifiedStructuredToken<CwtClaimsWire & C>;
 }

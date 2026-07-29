@@ -1,4 +1,4 @@
-import type { Predicate } from "@lindorm/types";
+import type { Condition } from "@lindorm/match";
 import type { DomainClaims } from "../../utils/extract-claims.js";
 
 // RFC 3986 scheme prefix: `scheme:` where scheme starts with a letter and is
@@ -13,7 +13,7 @@ const URI = /^[a-z][a-z0-9+.-]*:/i;
  * The `$or` with `$exists:false` keeps the "only when present" semantics —
  * presence is the `required` floor's job.
  */
-export const ISSUER_IS_URI: Predicate<DomainClaims> = {
+export const ISSUER_IS_URI: Condition<DomainClaims> = {
   issuer: { $or: [{ $exists: false }, { $regex: URI }] },
 };
 
@@ -22,6 +22,6 @@ export const ISSUER_IS_URI: Predicate<DomainClaims> = {
  * resource (emitted as an array-of-one on the wire). "Only when present" via
  * the `$or`; the multi/empty cases fail `$length: 1`.
  */
-export const AUD_SINGLE_RESOURCE: Predicate<DomainClaims> = {
+export const AUD_SINGLE_RESOURCE: Condition<DomainClaims> = {
   audience: { $or: [{ $exists: false }, { $length: 1 }] },
 };

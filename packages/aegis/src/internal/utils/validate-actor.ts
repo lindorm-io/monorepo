@@ -1,4 +1,4 @@
-import { Predicated } from "@lindorm/utils";
+import { Matcher } from "@lindorm/match";
 import type { ActClaim } from "../../types/claims/domain/act-claim.js";
 import type { TokenDelegation, VerifyActorOptions } from "../../types/domain/index.js";
 
@@ -35,7 +35,7 @@ export const validateActor = (
     switch (scope) {
       case "current": {
         const current = delegation.actorChain[0];
-        if (!current || !Predicated.match(current, predicate)) {
+        if (!current || !Matcher.match(current, predicate)) {
           // The actor identifier is kept in debug, never in the client-facing message.
           return {
             message: "Actor not allowed",
@@ -46,7 +46,7 @@ export const validateActor = (
       }
 
       case "some": {
-        if (!delegation.actorChain.some((entry) => Predicated.match(entry, predicate))) {
+        if (!delegation.actorChain.some((entry) => Matcher.match(entry, predicate))) {
           return { message: "No actor in the chain matches the allowed predicate" };
         }
         break;
@@ -55,7 +55,7 @@ export const validateActor = (
       case "every":
       default: {
         for (const entry of delegation.actorChain) {
-          if (!Predicated.match(entry, predicate)) {
+          if (!Matcher.match(entry, predicate)) {
             return { message: "Actor not allowed", debug: { actor: entry } };
           }
         }
