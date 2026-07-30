@@ -12,7 +12,7 @@ export type SagaPendingMessage = {
   delay?: number;
 };
 
-export type SagaModelOptions<S extends Dict = Dict> = {
+export type SagaModelSettings<S extends Dict = Dict> = {
   id: string;
   name: string;
   namespace: string;
@@ -40,7 +40,7 @@ export class SagaModel<S extends Dict = Dict> {
   private _revision: number;
   private _state: S;
 
-  constructor(options: SagaModelOptions<S>, deps: SagaModelDeps) {
+  constructor(options: SagaModelSettings<S>, deps: SagaModelDeps) {
     this.logger = deps.logger.child(["SagaModel"]);
     this.registry = deps.registry;
 

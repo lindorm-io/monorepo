@@ -27,7 +27,7 @@ import { causationExists, loadSaga, clearMessages } from "../stores/index.js";
 import { SagaModel } from "./saga-model.js";
 import type { SagaPendingMessage } from "./saga-model.js";
 
-export type SagaDomainOptions = {
+export type SagaDomainSettings = {
   registry: HermesRegistry;
   proteusSource: IProteusSource;
   eventBus: IIrisMessageBus<HermesEventMessage>;
@@ -57,7 +57,7 @@ export class SagaDomain {
   private readonly errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
   private readonly causationExpiryMs: number;
 
-  constructor(options: SagaDomainOptions) {
+  constructor(options: SagaDomainSettings) {
     this.eventEmitter = new EventEmitter();
     this.logger = options.logger.child(["SagaDomain"]);
     this.registry = options.registry;

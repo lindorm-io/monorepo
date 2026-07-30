@@ -6,7 +6,7 @@ export type { AggregateState } from "./aggregate-state.js";
 export type { SagaDispatchOptions } from "./dispatch-options.js";
 export type { ErrorDispatchOptions } from "./error-dispatch-options.js";
 export type { HermesEventName } from "./hermes-event-name.js";
-export type { ChecksumMode, HermesOptions } from "./hermes-options.js";
+export type { ChecksumMode, HermesSettings } from "./hermes-options.js";
 export type { HermesStatus } from "./hermes-status.js";
 export type { ReplayHandle, ReplayOptions, ReplayProgress } from "./replay-types.js";
 export type { SagaErrorCtx } from "./saga-error-ctx.js";

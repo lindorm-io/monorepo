@@ -1,7 +1,7 @@
 // Main class
 export { Hermes } from "./classes/Hermes.js";
 export { HermesSession } from "./classes/HermesSession.js";
-export type { HermesSessionOptions } from "./classes/HermesSession.js";
+export type { HermesSessionSettings } from "./classes/HermesSession.js";
 
 // Base entity
 export { HermesViewEntity } from "./entities/HermesViewEntity.js";
@@ -71,7 +71,7 @@ export type {
   ChecksumMode,
   ErrorDispatchOptions,
   HermesEventName,
-  HermesOptions,
+  HermesSettings,
   HermesStatus,
   ReplayHandle,
   ReplayOptions,

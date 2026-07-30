@@ -7,7 +7,7 @@ import type { HermesScannerInput } from "../internal/registry/types.js";
 
 export type ChecksumMode = "strict" | "warn";
 
-export type HermesOptions = {
+export type HermesSettings = {
   proteus: IProteusSource;
   viewSources?: Array<IProteusSource>;
   iris: IIrisSource;

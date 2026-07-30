@@ -2,13 +2,13 @@ import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { HermesStatus } from "../types/hermes-status.js";
 import { HermesSession } from "./HermesSession.js";
-import type { HermesSessionOptions } from "./HermesSession.js";
+import type { HermesSessionSettings } from "./HermesSession.js";
 import { describe, expect, it, vi } from "vitest";
 
 // Minimal stubs for the dependencies HermesSession actually uses
 const createOptions = (
-  overrides: Partial<HermesSessionOptions> = {},
-): HermesSessionOptions => ({
+  overrides: Partial<HermesSessionSettings> = {},
+): HermesSessionSettings => ({
   logger: createMockLogger(),
   statusRef: { current: "ready" },
   registry: {

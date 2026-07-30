@@ -27,7 +27,7 @@ import type {
 import { causationExists } from "../stores/index.js";
 import { applyUpcasters } from "../utils/index.js";
 
-export type ViewDomainOptions = {
+export type ViewDomainSettings = {
   registry: HermesRegistry;
   proteusSource: IProteusSource;
   viewSources: Map<string, IProteusSource>;
@@ -57,7 +57,7 @@ export class ViewDomain {
   private readonly errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
   private readonly causationExpiryMs: number;
 
-  constructor(options: ViewDomainOptions) {
+  constructor(options: ViewDomainSettings) {
     this.eventEmitter = new EventEmitter();
     this.logger = options.logger.child(["ViewDomain"]);
     this.registry = options.registry;

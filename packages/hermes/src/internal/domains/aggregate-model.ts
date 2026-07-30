@@ -12,7 +12,7 @@ import type { RegisteredAggregate, HandlerRegistration } from "../registry/index
 import { HermesEventMessage } from "../messages/index.js";
 import { applyUpcasters, extractDto } from "../utils/index.js";
 
-export type AggregateModelOptions = {
+export type AggregateModelSettings = {
   id: string;
   name: string;
   namespace: string;
@@ -44,7 +44,7 @@ export class AggregateModel<S extends Dict = Dict> {
   private _numberOfLoadedEvents: number;
   private _state: S;
 
-  constructor(options: AggregateModelOptions) {
+  constructor(options: AggregateModelSettings) {
     this.logger = options.logger.child(["AggregateModel"]);
     this.registry = options.registry;
 

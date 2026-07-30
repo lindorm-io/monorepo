@@ -12,7 +12,7 @@ import { HermesErrorMessage } from "../messages/index.js";
 import type { HermesRegistry } from "../registry/index.js";
 import { findChecksum, insertChecksum } from "../stores/index.js";
 
-export type ChecksumDomainOptions = {
+export type ChecksumDomainSettings = {
   registry: HermesRegistry;
   proteus: IProteusSource;
   iris: {
@@ -32,7 +32,7 @@ export class ChecksumDomain {
   private readonly eventBus: IIrisMessageBus<HermesEventMessage>;
   private readonly errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
 
-  constructor(options: ChecksumDomainOptions) {
+  constructor(options: ChecksumDomainSettings) {
     this.eventEmitter = new EventEmitter();
     this.logger = options.logger.child(["ChecksumDomain"]);
     this.registry = options.registry;

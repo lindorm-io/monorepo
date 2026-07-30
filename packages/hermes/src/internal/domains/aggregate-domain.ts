@@ -49,7 +49,7 @@ import {
 } from "../utils/index.js";
 import { AggregateModel } from "./aggregate-model.js";
 
-export type AggregateDomainOptions = {
+export type AggregateDomainSettings = {
   registry: HermesRegistry;
   proteus: IProteusSource;
   iris: {
@@ -76,7 +76,7 @@ export class AggregateDomain {
   private readonly encryptionEncryption: KryptosEncryption;
   private readonly checksumMode: ChecksumMode;
 
-  constructor(options: AggregateDomainOptions) {
+  constructor(options: AggregateDomainSettings) {
     this.logger = options.logger.child(["AggregateDomain"]);
     this.registry = options.registry;
     this.proteus = options.proteus;

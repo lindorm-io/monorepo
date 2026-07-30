@@ -14,7 +14,7 @@ import type { HermesStatus } from "../types/hermes-status.js";
 
 type StatusRef = { current: HermesStatus };
 
-export type HermesSessionOptions = {
+export type HermesSessionSettings = {
   logger: ILogger;
   statusRef: StatusRef;
   registry: HermesRegistry;
@@ -35,7 +35,7 @@ export class HermesSession implements IHermesSession {
   private readonly viewDomain: ViewDomain;
   private readonly commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
 
-  constructor(options: HermesSessionOptions) {
+  constructor(options: HermesSessionSettings) {
     this.logger = options.logger.child(["HermesSession"]);
     this._statusRef = options.statusRef;
     this.registry = options.registry;

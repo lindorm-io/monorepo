@@ -33,7 +33,7 @@ import { assertChecksum, extractDto } from "../internal/utils/index.js";
 import type { AggregateIdentifier } from "../types/aggregate-identifier.js";
 import type { AggregateState } from "../types/aggregate-state.js";
 import type { HermesEventName } from "../types/hermes-event-name.js";
-import type { ChecksumMode, HermesOptions } from "../types/hermes-options.js";
+import type { ChecksumMode, HermesSettings } from "../types/hermes-options.js";
 import type { HermesStatus } from "../types/hermes-status.js";
 import type {
   ReplayHandle,
@@ -61,7 +61,7 @@ export class Hermes implements IHermes {
   private readonly proteus: IProteusSource;
   private readonly viewSourceMap: Map<string, IProteusSource>;
   private readonly iris: IIrisSource;
-  private readonly options: HermesOptions;
+  private readonly options: HermesSettings;
 
   private registry!: HermesRegistry;
   private aggregateDomain!: AggregateDomain;
@@ -76,7 +76,7 @@ export class Hermes implements IHermes {
 
   private readonly _statusRef: StatusRef;
 
-  constructor(options: HermesOptions) {
+  constructor(options: HermesSettings) {
     this.logger = options.logger.child(["Hermes"]);
     this.namespace = options.namespace ?? DEFAULT_NAMESPACE;
     this.checksumMode = options.checksumMode ?? "warn";
