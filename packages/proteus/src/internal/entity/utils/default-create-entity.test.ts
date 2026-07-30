@@ -119,7 +119,113 @@ class CreateEntityM2MArticle {
   tags!: CreateEntityM2MTag[];
 }
 
+@Entity({ name: "CreateEntityArrays" })
+class CreateEntityArrays {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("array")
+  tags!: Array<string>;
+
+  @Nullable()
+  @Field("array")
+  labels!: Array<string> | null;
+
+  @Default(() => ["seed"])
+  @Field("array")
+  seeded!: Array<string>;
+}
+
+@Entity({ name: "CreateEntityObjects" })
+class CreateEntityObjects {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("object")
+  meta!: Record<string, unknown>;
+
+  @Nullable()
+  @Field("object")
+  settings!: Record<string, unknown> | null;
+
+  @Default(() => ({ seeded: true }))
+  @Field("object")
+  seeded!: Record<string, unknown>;
+}
+
 describe("defaultCreateEntity", () => {
+  test("should default an omitted non-nullable array to an empty array", () => {
+    const entity = defaultCreateEntity(CreateEntityArrays, {});
+    expect(entity.tags).toEqual([]);
+  });
+
+  test("should give two instances distinct array references", () => {
+    const a = defaultCreateEntity(CreateEntityArrays, {});
+    const b = defaultCreateEntity(CreateEntityArrays, {});
+
+    expect(a.tags).not.toBe(b.tags);
+
+    a.tags.push("mutated");
+
+    expect(a.tags).toEqual(["mutated"]);
+    expect(b.tags).toEqual([]);
+  });
+
+  test("should round-trip an explicit empty array", () => {
+    const entity = defaultCreateEntity(CreateEntityArrays, { tags: [] });
+    expect(entity.tags).toEqual([]);
+  });
+
+  test("should round-trip a populated array unchanged", () => {
+    const entity = defaultCreateEntity(CreateEntityArrays, { tags: ["a", "b"] });
+    expect(entity.tags).toEqual(["a", "b"]);
+  });
+
+  test("should leave an omitted @Nullable array as null", () => {
+    const entity = defaultCreateEntity(CreateEntityArrays, {});
+    expect(entity.labels).toBeNull();
+  });
+
+  test("should honour an explicit @Default over the empty-array zero-value", () => {
+    const entity = defaultCreateEntity(CreateEntityArrays, {});
+    expect(entity.seeded).toEqual(["seed"]);
+  });
+
+  test("should default an omitted non-nullable object to an empty object", () => {
+    const entity = defaultCreateEntity(CreateEntityObjects, {});
+    expect(entity.meta).toEqual({});
+  });
+
+  test("should give two instances distinct object references", () => {
+    const a = defaultCreateEntity(CreateEntityObjects, {});
+    const b = defaultCreateEntity(CreateEntityObjects, {});
+
+    expect(a.meta).not.toBe(b.meta);
+
+    a.meta.mutated = true;
+
+    expect(a.meta).toEqual({ mutated: true });
+    expect(b.meta).toEqual({});
+  });
+
+  test("should round-trip an explicit empty object", () => {
+    const entity = defaultCreateEntity(CreateEntityObjects, { meta: {} });
+    expect(entity.meta).toEqual({});
+  });
+
+  test("should round-trip a populated object unchanged", () => {
+    const entity = defaultCreateEntity(CreateEntityObjects, { meta: { a: 1, b: 2 } });
+    expect(entity.meta).toEqual({ a: 1, b: 2 });
+  });
+
+  test("should leave an omitted @Nullable object as null", () => {
+    const entity = defaultCreateEntity(CreateEntityObjects, {});
+    expect(entity.settings).toBeNull();
+  });
+
+  test("should honour an explicit @Default over the empty-object zero-value", () => {
+    const entity = defaultCreateEntity(CreateEntityObjects, {});
+    expect(entity.seeded).toEqual({ seeded: true });
+  });
+
   test("should create entity with default values", () => {
     const post = defaultCreateEntity(CreateEntityPost, {});
     expect(post).toBeInstanceOf(CreateEntityPost);

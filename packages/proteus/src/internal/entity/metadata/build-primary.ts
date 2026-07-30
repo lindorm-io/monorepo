@@ -669,6 +669,25 @@ export const buildPrimaryMetadata = <
     }
   }
 
+  // A non-nullable array/object container zero-coerces to its empty value (`[]`
+  // / `{}`), mirroring how a non-nullable boolean coerces to `false`. Staged
+  // here — after @Nullable has been merged, so `nullable` is final — as a
+  // per-instance factory so create() and clone() each get a distinct container
+  // (never a shared reference), parse-field produces it for omitted values, and
+  // validate sees a populated container. Only when the author set no explicit
+  // @Default; @Nullable containers keep defaulting to / permitting null. A
+  // function default is skipped by DDL generation, so the underlying NOT NULL
+  // column stays DEFAULT-less. `json` is intentionally excluded — the line is
+  // drawn at the two container types with an unambiguous empty zero-value.
+  for (const field of fields) {
+    if (field.embedded || field.nullable || field.default !== null) continue;
+    if (field.type === "array") {
+      field.default = () => [];
+    } else if (field.type === "object") {
+      field.default = () => ({});
+    }
+  }
+
   validateFields(target.name, fields);
 
   const primaryKeys = primaryK.map((pk) => pk.key);

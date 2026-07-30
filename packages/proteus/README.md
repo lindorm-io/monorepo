@@ -787,6 +787,8 @@ tags!: string[];
 
 **Arguments:** `(type: MetaFieldType, options?: { name?: string, arrayType?: MetaFieldType })`.
 
+A non-nullable `array` or `object` field with no `@Default` zero-coerces to its empty container — `[]` / `{}` — mirroring how a non-nullable `boolean` coerces to `false`. Omitting it on `create()` / `insert()` yields the empty container, never `null`; add `@Nullable()` for a field that should default to / permit `null`, or `@Default(...)` for a different seed. `json` is deliberately excluded (no unambiguous empty zero-value). Enforcing that a container is actually supplied is an application concern, not an ORM one.
+
 #### `@PrimaryKeyField`
 
 Shorthand combining `@Field` and `@PrimaryKey`. Declares the column type and marks the

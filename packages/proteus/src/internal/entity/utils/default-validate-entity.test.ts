@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { defaultCreateEntity } from "./default-create-entity.js";
 import { defaultValidateEntity } from "./default-validate-entity.js";
 import { Embeddable } from "../../../decorators/Embeddable.js";
 import { Embedded } from "../../../decorators/Embedded.js";
@@ -680,5 +681,103 @@ describe("defaultValidateEntity — lindorm_id", () => {
 
   test("should throw for a uuid", () => {
     expect(() => validate("550e8400-e29b-41d4-a716-446655440000")).toThrow();
+  });
+});
+
+// ─── Non-nullable array zero-value ──────────────────────────────────────────────
+
+@Entity({ name: "ValidateEntityArrays" })
+class ValidateEntityArrays {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("array")
+  tags!: Array<string>;
+
+  @Nullable()
+  @Field("array")
+  labels!: Array<string> | null;
+}
+
+@Entity({ name: "ValidateEntityObjects" })
+class ValidateEntityObjects {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("object")
+  meta!: Record<string, unknown>;
+
+  @Nullable()
+  @Field("object")
+  settings!: Record<string, unknown> | null;
+}
+
+describe("defaultValidateEntity — non-nullable array zero-value", () => {
+  test("create() populates a non-nullable array with the empty-array default", () => {
+    // The metadata factory default resolves at create time (before the id is
+    // generated), so assert the array value directly on the created entity.
+    const entity = defaultCreateEntity(ValidateEntityArrays, {});
+    expect(entity.tags).toEqual([]);
+    expect(entity.labels).toBeNull();
+  });
+
+  test("passes when a non-nullable array holds the empty-array zero-value", () => {
+    const entity = {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      tags: [],
+      labels: null,
+    } as ValidateEntityArrays;
+    expect(() => defaultValidateEntity(ValidateEntityArrays, entity)).not.toThrow();
+  });
+
+  test("permits a null @Nullable array", () => {
+    const entity = {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      tags: [],
+      labels: null,
+    } as ValidateEntityArrays;
+    expect(() => defaultValidateEntity(ValidateEntityArrays, entity)).not.toThrow();
+  });
+
+  test("rejects a null non-nullable array", () => {
+    const entity = {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      tags: null,
+      labels: null,
+    } as unknown as ValidateEntityArrays;
+    expect(() => defaultValidateEntity(ValidateEntityArrays, entity)).toThrow();
+  });
+});
+
+describe("defaultValidateEntity — non-nullable object zero-value", () => {
+  test("create() populates a non-nullable object with the empty-object default", () => {
+    const entity = defaultCreateEntity(ValidateEntityObjects, {});
+    expect(entity.meta).toEqual({});
+    expect(entity.settings).toBeNull();
+  });
+
+  test("passes when a non-nullable object holds the empty-object zero-value", () => {
+    const entity = {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      meta: {},
+      settings: null,
+    } as ValidateEntityObjects;
+    expect(() => defaultValidateEntity(ValidateEntityObjects, entity)).not.toThrow();
+  });
+
+  test("permits a null @Nullable object", () => {
+    const entity = {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      meta: {},
+      settings: null,
+    } as ValidateEntityObjects;
+    expect(() => defaultValidateEntity(ValidateEntityObjects, entity)).not.toThrow();
+  });
+
+  test("rejects a null non-nullable object", () => {
+    const entity = {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      meta: null,
+      settings: null,
+    } as unknown as ValidateEntityObjects;
+    expect(() => defaultValidateEntity(ValidateEntityObjects, entity)).toThrow();
   });
 });

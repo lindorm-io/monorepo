@@ -23,6 +23,7 @@ import { AbstractEntity } from "../../../decorators/AbstractEntity.js";
 import { AppendOnly } from "../../../decorators/AppendOnly.js";
 import { Cache } from "../../../decorators/Cache.js";
 import { Computed } from "../../../decorators/Computed.js";
+import { Default } from "../../../decorators/Default.js";
 import { DefaultOrder } from "../../../decorators/DefaultOrder.js";
 import { DeleteDateField } from "../../../decorators/DeleteDateField.js";
 import { Embeddable } from "../../../decorators/Embeddable.js";
@@ -507,5 +508,142 @@ describe("buildPrimaryMetadata — @AppendOnly contradictory decorators", () => 
     const meta = buildPrimaryMetadata(BpAppendOnlyClean);
     expect(meta.appendOnly).toBe(true);
     expect(meta.entity.name).toBe("BpAppendOnlyClean");
+  });
+});
+
+// ─── Non-nullable array zero-value default ──────────────────────────────────────
+
+describe("buildPrimaryMetadata — non-nullable array default", () => {
+  test("stages a per-instance factory default of [] for a non-nullable array", () => {
+    @Entity({ name: "BpArrayDefault" })
+    class BpArrayDefault {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @Field("array")
+      tags!: Array<string>;
+    }
+
+    const meta = buildPrimaryMetadata(BpArrayDefault);
+    const field = meta.fields.find((f) => f.key === "tags")!;
+
+    expect(typeof field.default).toBe("function");
+
+    const first = (field.default as () => Array<unknown>)();
+    const second = (field.default as () => Array<unknown>)();
+
+    expect(first).toEqual([]);
+    expect(second).toEqual([]);
+    // Per-instance: never a shared reference.
+    expect(first).not.toBe(second);
+  });
+
+  test("leaves a @Nullable array defaulting to null (no factory)", () => {
+    @Entity({ name: "BpNullableArray" })
+    class BpNullableArray {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @Nullable()
+      @Field("array")
+      tags!: Array<string> | null;
+    }
+
+    const meta = buildPrimaryMetadata(BpNullableArray);
+    const field = meta.fields.find((f) => f.key === "tags")!;
+
+    expect(field.nullable).toBe(true);
+    expect(field.default).toBeNull();
+  });
+
+  test("does not override an explicit @Default on a non-nullable array", () => {
+    const seed = () => ["seed"];
+
+    @Entity({ name: "BpArrayExplicitDefault" })
+    class BpArrayExplicitDefault {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @Default(seed)
+      @Field("array")
+      tags!: Array<string>;
+    }
+
+    const meta = buildPrimaryMetadata(BpArrayExplicitDefault);
+    const field = meta.fields.find((f) => f.key === "tags")!;
+
+    expect(field.default).toBe(seed);
+  });
+
+  test("stages a per-instance factory default of {} for a non-nullable object", () => {
+    @Entity({ name: "BpObjectDefault" })
+    class BpObjectDefault {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @Field("object")
+      meta!: Record<string, unknown>;
+    }
+
+    const built = buildPrimaryMetadata(BpObjectDefault);
+    const field = built.fields.find((f) => f.key === "meta")!;
+
+    expect(typeof field.default).toBe("function");
+
+    const first = (field.default as () => Record<string, unknown>)();
+    const second = (field.default as () => Record<string, unknown>)();
+
+    expect(first).toEqual({});
+    expect(second).toEqual({});
+    // Per-instance: never a shared reference.
+    expect(first).not.toBe(second);
+  });
+
+  test("leaves a @Nullable object defaulting to null (no factory)", () => {
+    @Entity({ name: "BpNullableObject" })
+    class BpNullableObject {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @Nullable()
+      @Field("object")
+      meta!: Record<string, unknown> | null;
+    }
+
+    const built = buildPrimaryMetadata(BpNullableObject);
+    const field = built.fields.find((f) => f.key === "meta")!;
+
+    expect(field.nullable).toBe(true);
+    expect(field.default).toBeNull();
+  });
+
+  test("does not override an explicit @Default on a non-nullable object", () => {
+    const seed = () => ({ seeded: true });
+
+    @Entity({ name: "BpObjectExplicitDefault" })
+    class BpObjectExplicitDefault {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @Default(seed)
+      @Field("object")
+      meta!: Record<string, unknown>;
+    }
+
+    const built = buildPrimaryMetadata(BpObjectExplicitDefault);
+    const field = built.fields.find((f) => f.key === "meta")!;
+
+    expect(field.default).toBe(seed);
+  });
+
+  test("leaves a non-nullable json field defaulting to null (json is excluded)", () => {
+    @Entity({ name: "BpJsonNoDefault" })
+    class BpJsonNoDefault {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @Field("json")
+      payload!: unknown;
+    }
+
+    const built = buildPrimaryMetadata(BpJsonNoDefault);
+    const field = built.fields.find((f) => f.key === "payload")!;
+
+    // json is deliberately NOT a container zero-value type — non-nullable and
+    // no @Default, yet the staging loop leaves its default null.
+    expect(field.default).toBeNull();
   });
 });
