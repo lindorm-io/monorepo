@@ -7,6 +7,12 @@ import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
 // unknown claim). The two aegis surfaces are disjoint, so the partition is exact.
 const VERIFY_OPTION_KEYS: ReadonlyArray<string> = [
   "actor",
+  "currentDate",
+  "maxTokenAge",
+  "verifyExpiration",
+  "verifyNotBefore",
+  "verifyIssuedAt",
+  "verifyAuthTime",
   "dpopProof",
   "trustBoundThumbprint",
   "tokenType",
