@@ -57,20 +57,49 @@ const temporalBound = (
  * gains a LOWER bound — `iat >= now - maxTokenAge - clockTolerance` — and becomes
  * REQUIRED (a token with no `iat` cannot prove its age), rejecting a stale token.
  *
- * `exp` PRESENCE requiredness is NOT decided here — that is policy owned by the
- * identity/presence builder (`createIdentityMatchers`), which drops the
- * `$exists: false` escape on `exp` when a token must carry one. This builder only
- * supplies the clock-tolerant range bound.
+ * `exp` PRESENCE requiredness is NOT decided here — presence is a DOMAIN policy
+ * (`expPresence`, enforced Aegis-side). This builder is the SINGLE authority on
+ * the temporal RANGE.
+ *
+ * Each registry temporal claim's range bound can be individually skipped by its
+ * per-call flag (`verifyExpiration`/`verifyNotBefore`/`verifyIssuedAt`/
+ * `verifyAuthTime`, default `true`). A flag set to `false` drops that claim's
+ * bound entirely — the claim is then neither range-checked nor required here, so
+ * an EXPIRED token verifies while its PRESENCE stays governed by the domain. The
+ * `maxTokenAge` iat bound is INDEPENDENT of `verifyIssuedAt`: it still applies
+ * its own lower bound + presence even when the iat range flag is `false`.
  */
-export const createTemporalMatchers = (
-  clockTolerance: number,
-  currentDate?: Date,
-  maxTokenAge?: number,
-): Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> => {
+export const createTemporalMatchers = ({
+  clockTolerance,
+  currentDate,
+  maxTokenAge,
+  verifyExpiration,
+  verifyNotBefore,
+  verifyIssuedAt,
+  verifyAuthTime,
+}: {
+  clockTolerance: number;
+  currentDate?: Date;
+  maxTokenAge?: number;
+  verifyExpiration?: boolean;
+  verifyNotBefore?: boolean;
+  verifyIssuedAt?: boolean;
+  verifyAuthTime?: boolean;
+}): Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> => {
   const now = currentDate ?? new Date();
   const predicate: Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> = {};
 
+  // Wire claim → its range flag being explicitly OFF. Only the four registry
+  // temporal claims carry a flag; any other temporal claim is always bounded.
+  const skipByClaim: Partial<Record<keyof AegisClaimsWire, boolean>> = {
+    exp: verifyExpiration === false,
+    nbf: verifyNotBefore === false,
+    iat: verifyIssuedAt === false,
+    auth_time: verifyAuthTime === false,
+  };
+
   for (const spec of TEMPORAL_SPECS) {
+    if (skipByClaim[spec.jose as keyof AegisClaimsWire]) continue;
     predicate[spec.jose as keyof AegisClaimsWire] = {
       $or: [{ $exists: false }, temporalBound(spec.temporal, clockTolerance, now)],
     };

@@ -250,7 +250,15 @@ export class JwtKit implements IJwtKit {
     };
 
     validate(withDates, {
-      ...createTemporalMatchers(clockTolerance, options.currentDate, options.maxTokenAge),
+      ...createTemporalMatchers({
+        clockTolerance,
+        currentDate: options.currentDate,
+        maxTokenAge: options.maxTokenAge,
+        verifyExpiration: options.verifyExpiration,
+        verifyNotBefore: options.verifyNotBefore,
+        verifyIssuedAt: options.verifyIssuedAt,
+        verifyAuthTime: options.verifyAuthTime,
+      }),
       ...(assert ?? {}),
     } as Condition<Dict>);
 

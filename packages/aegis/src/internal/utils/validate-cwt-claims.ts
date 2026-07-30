@@ -14,22 +14,21 @@ import { validate } from "./validate.js";
  * so this layer is identity-only — the exact COSE mirror of `verifyJwtToDomain`.
  *
  * The input is the CWT's COSE-name-keyed WIRE (`CoseVerifyResult.wire`). The
- * matcher claims (`exp`/`iss`/`aud`/`sub`/…) share the JOSE names, so the JOSE
+ * matcher claims (`iss`/`aud`/`sub`/…) share the JOSE names, so the JOSE identity
  * matchers apply directly — no domain re-keying. The only name-diverging claim
- * (`cti`) is not a matcher claim, so it is irrelevant here. Temporal claims are
- * `Date`s (the codec's "date" kind), so the exp lower-bound compares Date-to-Date.
+ * (`cti`) is not a matcher claim, so it is irrelevant here.
  */
 export const validateCwtClaims = (
   wire: Dict,
   algorithm: KryptosAlgorithm,
   assert: DomainAssert | undefined,
   options: VerifyOptions,
-  clockTolerance: number,
 ): void => {
   const payload = wire;
 
   // `exp` presence is POLICY (default "required"). Surface a dedicated,
-  // self-describing code rather than the generic claims-invalid one.
+  // self-describing code rather than the generic claims-invalid one. The exp
+  // RANGE (and its per-claim skip flags) is checked in the kit, not here.
   if (options.expPresence !== "optional" && payload.exp === undefined) {
     throw new AegisDomainError("Missing claim: exp", {
       code: "cwt_missing_claim_exp",
@@ -48,13 +47,7 @@ export const validateCwtClaims = (
     authState: options.authState,
   });
 
-  const predicate = createIdentityMatchers(
-    algorithm,
-    matchers,
-    clockTolerance,
-    options.expPresence,
-    options.currentDate,
-  );
+  const predicate = createIdentityMatchers(algorithm, matchers);
 
   try {
     validate(payload, predicate as never);

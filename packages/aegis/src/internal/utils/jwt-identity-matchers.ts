@@ -1,5 +1,4 @@
 import type { ConditionOperator } from "@lindorm/match";
-import { subSeconds } from "@lindorm/date";
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
@@ -23,39 +22,24 @@ const HASH_MATCHERS: Readonly<Record<string, { jose: keyof AegisClaimsWire }>> =
 };
 
 /**
- * Identity/presence matcher builder (the AEGIS half). Builds the wire-keyed
- * named-claim predicate (`aud`/`iss`/`sub`/`nonce`/hashes/…) from the resolved
- * `assert` matcher bag, and layers the `exp` PRESENCE requiredness on top of the
- * temporal range.
+ * Identity matcher builder (the AEGIS half). Builds the wire-keyed named-claim
+ * predicate (`aud`/`iss`/`sub`/`nonce`/hashes/…) from the resolved `assert`
+ * matcher bag. IDENTITY-ONLY: it owns no temporal concern. The temporal RANGE
+ * (exp/nbf/iat/auth_time, with clock tolerance and the per-claim skip flags)
+ * is the kit's sole responsibility (`createTemporalMatchers`); `exp` PRESENCE is
+ * a domain policy enforced separately (`expPresence`, at the verify sites).
  *
  * The input `matchers` is a CLEAN claim-matcher bag — the domain `assert`
  * (named-8 + folded-14 equality claims) merged with the three hash-derive inputs
  * (`accessToken`/`authCode`/`authState`) lifted from verify OPTIONS. It carries
  * no verify knobs (those never reach here), so there is nothing to skip; every
  * key maps to a JOSE claim via the registry (or the hash table).
- *
- * `exp` PRESENCE is policy (default `"required"`). When required, the matcher
- * drops the `$exists: false` escape so a missing exp FAILS the predicate; when
- * optional an absent exp is tolerated (SSF SETs). The clock-tolerant lower bound
- * mirrors the temporal builder — when exp IS present its value is range-checked
- * either way. `iat`/`nbf`/`auth_time` keep their `$exists: false` unconditionally
- * (owned by the temporal builder) — those claims are genuinely optional.
  */
 export const createIdentityMatchers = (
   algorithm: KryptosAlgorithm,
   matchers: Dict,
-  clockTolerance: number,
-  expPresence?: "required" | "optional",
-  currentDate?: Date,
 ): Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> => {
   const predicate: Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> = {};
-
-  // The exp lower bound honours the same `currentDate` override (R10) as the kit's
-  // temporal check, so a token exp'd relative to a PAST currentDate is not then
-  // rejected here against the real wall-clock.
-  if (expPresence !== "optional") {
-    predicate.exp = { $gte: subSeconds(currentDate ?? new Date(), clockTolerance) };
-  }
 
   for (const [key, value] of Object.entries(matchers)) {
     // The wire (JOSE) name comes from the registry — the single source of truth

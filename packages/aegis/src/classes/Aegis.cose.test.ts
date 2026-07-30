@@ -1,7 +1,7 @@
 import { Amphora } from "@lindorm/amphora";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   TEST_EC_KEY_SIG,
   TEST_OCT_KEY_ENC,
@@ -393,6 +393,99 @@ describe("Aegis — COSE", () => {
       })) as unknown as { claims: Record<string, unknown> };
 
       expect(verified.claims.subject).toBe("u");
+    });
+  });
+
+  // The COSE/CWT mirror of the per-claim temporal-skip flags. A flag=false drops
+  // only that claim's RANGE bound in the shared in-kit temporal check; the CWT exp
+  // PRESENCE gate and identity matchers stay enforced.
+  describe("temporal-skip flags (COSE / CWT mirror)", () => {
+    const issuer = "https://test.lindorm.io/";
+    const nowSec = () => Math.floor(Date.now() / 1000);
+
+    afterEach(() => MockDate.set(new Date("2024-01-01T08:00:00.000Z")));
+
+    // A raw CWT signed straight through the wire kit with the amphora key, so aegis
+    // resolves it by kid on the profile-less COSE verify path.
+    const signCwtWire = (claims: Record<string, unknown>) =>
+      new CwtKit({ logger: createMockLogger(), kryptos: TEST_EC_KEY_SIG })
+        .sign({ iss: issuer, sub: "s", ...claims })
+        .toString("base64url");
+
+    test("expired CWT: rejected by default, accepted with verifyExpiration:false", async () => {
+      const { token } = await aegis.mint(
+        "access_token",
+        {
+          subject: "user-1",
+          audience: ["https://rs.lindorm.io/"],
+          clientId: "client-1",
+          scope: ["read"],
+          expires: "1h",
+        },
+        { format: "cwt" },
+      );
+
+      MockDate.set(new Date("2024-01-01T10:00:00.000Z")); // past exp
+
+      await expect(
+        aegis.verify("access_token", token, undefined, {
+          audience: "https://rs.lindorm.io/",
+        }),
+      ).rejects.toThrow();
+
+      await expect(
+        aegis.verify("access_token", token, undefined, {
+          audience: "https://rs.lindorm.io/",
+          verifyExpiration: false,
+        }),
+      ).resolves.toBeDefined();
+    });
+
+    test("verifyExpiration:false still rejects an aud mismatch", async () => {
+      const { token } = await aegis.mint(
+        "access_token",
+        {
+          subject: "user-1",
+          audience: ["https://rs.lindorm.io/"],
+          clientId: "client-1",
+          scope: ["read"],
+          expires: "1h",
+        },
+        { format: "cwt" },
+      );
+
+      MockDate.set(new Date("2024-01-01T10:00:00.000Z"));
+
+      await expect(
+        aegis.verify("access_token", token, undefined, {
+          audience: "https://elsewhere.lindorm.io/",
+          verifyExpiration: false,
+        }),
+      ).rejects.toThrow();
+    });
+
+    test("presence is independent: verifyExpiration:false + expPresence required rejects an exp-less CWT", async () => {
+      const token = signCwtWire({}); // no exp
+
+      await expect(
+        aegis.verify(token, undefined, { verifyExpiration: false }),
+      ).rejects.toMatchObject({ code: "cwt_missing_claim_exp" });
+
+      await expect(
+        aegis.verify(token, undefined, {
+          verifyExpiration: false,
+          expPresence: "optional",
+        }),
+      ).resolves.toBeDefined();
+    });
+
+    test("verifyNotBefore:false accepts a not-yet-valid (future nbf) CWT", async () => {
+      const token = signCwtWire({ exp: nowSec() + 7200, nbf: nowSec() + 3600 });
+
+      await expect(aegis.verify(token)).rejects.toThrow();
+      await expect(
+        aegis.verify(token, undefined, { verifyNotBefore: false }),
+      ).resolves.toBeDefined();
     });
   });
 });

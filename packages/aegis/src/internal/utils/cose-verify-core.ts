@@ -17,6 +17,10 @@ export const coseVerifyCore = async ({
   input,
   currentDate,
   maxTokenAge,
+  verifyExpiration,
+  verifyNotBefore,
+  verifyIssuedAt,
+  verifyAuthTime,
   deps,
 }: {
   input: Buffer;
@@ -24,6 +28,14 @@ export const coseVerifyCore = async ({
   currentDate?: Date;
   /** Reject a token whose `iat` is older than this many seconds (R10). Per-call only. */
   maxTokenAge?: number;
+  /** Range-check `exp` (default true). false ⇒ an EXPIRED CWT still verifies. */
+  verifyExpiration?: boolean;
+  /** Range-check `nbf` (default true). */
+  verifyNotBefore?: boolean;
+  /** Range-check `iat` (default true). */
+  verifyIssuedAt?: boolean;
+  /** Range-check `auth_time` (default true). */
+  verifyAuthTime?: boolean;
   deps: AegisDeps;
 }) => {
   let bytes = input;
@@ -50,6 +62,10 @@ export const coseVerifyCore = async ({
     clockTolerance: deps.clockTolerance,
     currentDate,
     maxTokenAge,
+    verifyExpiration,
+    verifyNotBefore,
+    verifyIssuedAt,
+    verifyAuthTime,
   });
 
   return { claims, wire, decoded, typ, encrypted };

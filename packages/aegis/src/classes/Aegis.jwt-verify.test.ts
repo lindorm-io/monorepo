@@ -376,8 +376,8 @@ describe("Aegis verify — relocated domain policy", () => {
       await expect(aegis.verify(token)).rejects.toThrow();
 
       // A currentDate BEFORE expiry revives it — proving currentDate is threaded
-      // through BOTH the kit temporal check AND the domain exp matcher (if the
-      // matcher ignored currentDate it would reject against the 10:00 clock).
+      // into the kit's (now sole) temporal range check (if it ignored currentDate
+      // it would reject against the 10:00 clock).
       await expect(
         aegis.verify(token, undefined, {
           currentDate: new Date("2024-01-01T08:30:00.000Z"),
@@ -396,6 +396,126 @@ describe("Aegis verify — relocated domain policy", () => {
       ).rejects.toThrow();
       await expect(
         aegis.verify(token, undefined, { maxTokenAge: 900 }),
+      ).resolves.toBeDefined();
+    });
+  });
+
+  // Per-claim temporal-skip flags (id_token_hint, OIDC Core §3.1.2.1). A flag set
+  // to `false` drops ONLY that claim's RANGE bound; signature, iss/aud, and exp
+  // PRESENCE stay enforced. Tokens carrying arbitrary temporal claims are signed
+  // straight through the wire kit with the amphora key so aegis resolves by kid.
+  describe("temporal-skip flags (verifyExpiration / verifyNotBefore / verifyIssuedAt / verifyAuthTime)", () => {
+    afterEach(() => MockDate.set(new Date("2024-01-01T08:00:00.000Z")));
+
+    const nowSec = () => Math.floor(Date.now() / 1000);
+
+    const signWire = (claims: Record<string, unknown>) =>
+      new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG }).sign({
+        iss: issuer,
+        sub: "s",
+        ...claims,
+      });
+
+    test("expired token: rejected by default, accepted with verifyExpiration:false", async () => {
+      const token = signWire({ exp: nowSec() - 3600 }); // expired an hour ago
+
+      await expect(aegis.verify(token)).rejects.toThrow();
+      await expect(
+        aegis.verify(token, undefined, { verifyExpiration: false }),
+      ).resolves.toBeDefined();
+    });
+
+    test("verifyExpiration:false still rejects a signature-tampered token", async () => {
+      const token = signWire({ exp: nowSec() - 3600 });
+      // Corrupt the signature segment: the token still decodes, but the signature
+      // no longer verifies — the flag must not weaken authenticity.
+      const [header, payload, signature] = token.split(".");
+      const tampered = `${header}.${payload}.${signature.slice(0, -1)}${
+        signature.slice(-1) === "A" ? "B" : "A"
+      }`;
+
+      await expect(
+        aegis.verify(tampered, undefined, { verifyExpiration: false }),
+      ).rejects.toMatchObject({ code: "jwt_signature_invalid" });
+    });
+
+    test("verifyExpiration:false still rejects an aud mismatch", async () => {
+      const token = signWire({ exp: nowSec() - 3600, aud: ["saga"] });
+
+      await expect(
+        aegis.verify(token, { audience: "elsewhere" }, { verifyExpiration: false }),
+      ).rejects.toThrow();
+      await expect(
+        aegis.verify(token, { audience: "saga" }, { verifyExpiration: false }),
+      ).resolves.toBeDefined();
+    });
+
+    test("verifyExpiration:false still rejects an iss mismatch", async () => {
+      const token = signWire({ exp: nowSec() - 3600 });
+
+      await expect(
+        aegis.verify(
+          token,
+          { issuer: "https://attacker.example/" },
+          { verifyExpiration: false },
+        ),
+      ).rejects.toThrow();
+    });
+
+    test("presence is independent: verifyExpiration:false + expPresence required rejects an exp-less token", async () => {
+      const token = signWire({}); // no exp at all
+
+      await expect(
+        aegis.verify(token, undefined, { verifyExpiration: false }),
+      ).rejects.toMatchObject({ code: "jwt_missing_claim_exp" });
+
+      // Presence is the only gate left — relaxing it lets the exp-less token through.
+      await expect(
+        aegis.verify(token, undefined, {
+          verifyExpiration: false,
+          expPresence: "optional",
+        }),
+      ).resolves.toBeDefined();
+    });
+
+    test("verifyNotBefore:false accepts a not-yet-valid (future nbf) token", async () => {
+      const token = signWire({ exp: nowSec() + 7200, nbf: nowSec() + 3600 });
+
+      await expect(aegis.verify(token)).rejects.toThrow();
+      await expect(
+        aegis.verify(token, undefined, { verifyNotBefore: false }),
+      ).resolves.toBeDefined();
+    });
+
+    test("verifyIssuedAt:false accepts a future-iat token", async () => {
+      const token = signWire({ exp: nowSec() + 7200, iat: nowSec() + 3600 });
+
+      await expect(aegis.verify(token)).rejects.toThrow();
+      await expect(
+        aegis.verify(token, undefined, { verifyIssuedAt: false }),
+      ).resolves.toBeDefined();
+    });
+
+    test("verifyAuthTime:false accepts a future auth_time token", async () => {
+      const token = signWire({ exp: nowSec() + 7200, auth_time: nowSec() + 3600 });
+
+      await expect(aegis.verify(token)).rejects.toThrow();
+      await expect(
+        aegis.verify(token, undefined, { verifyAuthTime: false }),
+      ).resolves.toBeDefined();
+    });
+
+    test("maxTokenAge stays enforced independently of verifyIssuedAt:false", async () => {
+      // iat 600s old; exp still valid.
+      const token = signWire({ exp: nowSec() + 3600, iat: nowSec() - 600 });
+
+      // verifyIssuedAt:false drops the iat UPPER bound, but an explicit maxTokenAge
+      // applies its own lower bound + presence regardless.
+      await expect(
+        aegis.verify(token, undefined, { verifyIssuedAt: false, maxTokenAge: 300 }),
+      ).rejects.toThrow();
+      await expect(
+        aegis.verify(token, undefined, { verifyIssuedAt: false, maxTokenAge: 900 }),
       ).resolves.toBeDefined();
     });
   });

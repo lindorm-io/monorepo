@@ -42,9 +42,37 @@ export type VerifyOptions = {
   /**
    * Reject a token whose `iat` is older than this many seconds (R10). Adds an
    * `iat >= now - maxTokenAge` lower bound (with clock tolerance) and requires
-   * `iat` to be present. Per-call only.
+   * `iat` to be present. Per-call only. Independent of {@link verifyIssuedAt}:
+   * an explicit `maxTokenAge` still applies its own bound + presence even when
+   * `verifyIssuedAt` is `false`.
    */
   maxTokenAge?: number;
+  /**
+   * Range-check `exp`. Default `true`. `false` ⇒ an EXPIRED token still
+   * verifies (its `exp` value is not bounded). Presence is independent — with
+   * `expPresence: "required"` an exp-LESS token is still rejected, only the
+   * VALUE is not range-checked. Signature/`iss`/`aud`/`nonce`/hashes stay
+   * enforced. Drives OIDC `id_token_hint` (OIDC Core §3.1.2.1): the OP must
+   * verify a previously-issued id_token's signature but MUST accept an expired
+   * one.
+   */
+  verifyExpiration?: boolean;
+  /**
+   * Range-check `nbf`. Default `true`. `false` ⇒ a not-yet-valid token still
+   * verifies (its `nbf` value is not bounded).
+   */
+  verifyNotBefore?: boolean;
+  /**
+   * Range-check `iat`. Default `true`. `false` ⇒ the `iat` upper bound is not
+   * applied. An explicit {@link maxTokenAge} still enforces its own iat bound.
+   */
+  verifyIssuedAt?: boolean;
+  /**
+   * Range-check `auth_time`. Default `true`. `false` ⇒ `auth_time` is not
+   * bounded. `auth_time` is a "past" claim so it never blocks a historical
+   * token; the flag exists for symmetry with the other temporal claims.
+   */
+  verifyAuthTime?: boolean;
   dpopProof?: string;
   /**
    * When true, aegis will not raise an error if the token carries a

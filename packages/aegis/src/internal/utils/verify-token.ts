@@ -127,6 +127,10 @@ export const verifyToken = async <C extends Dict = Dict>({
         input: bytes,
         currentDate: options?.currentDate,
         maxTokenAge: options?.maxTokenAge,
+        verifyExpiration: options?.verifyExpiration,
+        verifyNotBefore: options?.verifyNotBefore,
+        verifyIssuedAt: options?.verifyIssuedAt,
+        verifyAuthTime: options?.verifyAuthTime,
         deps,
       });
       if (options || assert) {
@@ -135,7 +139,6 @@ export const verifyToken = async <C extends Dict = Dict>({
           decoded.algorithm as KryptosAlgorithm,
           assert,
           options ?? {},
-          deps.clockTolerance,
         );
       }
 

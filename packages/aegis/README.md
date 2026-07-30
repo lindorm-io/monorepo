@@ -601,6 +601,8 @@ await aegis.verify(
 - `dpopProof` — when present, the verifier requires a `cnf.jkt` binding and validates the supplied DPoP proof
 - `trustBoundThumbprint` — when `true`, allow a bound token without an inline DPoP proof (for cases where the binding is enforced out-of-band)
 - `key` — per-call verification key policy; `typPresence` / `expPresence` — presence policy for the `typ` / `exp` claims
+- `currentDate` — override "now" for the temporal range checks (a token expired against the real clock still verifies against a past `currentDate`); `maxTokenAge` — reject a token whose `iat` is older than N seconds (adds an independent `iat` lower bound + presence)
+- `verifyExpiration` / `verifyNotBefore` / `verifyIssuedAt` / `verifyAuthTime` — per-claim temporal RANGE toggles, default `true`. Setting one to `false` skips ONLY that claim's range bound. `verifyExpiration: false` verifies an EXPIRED token (OIDC `id_token_hint`, Core §3.1.2.1: the OP must verify the signature but accept an expired id_token). Presence is independent — `expPresence: "required"` still rejects an exp-LESS token. Signature, `iss` / `aud` / `nonce` and the `*_hash` checks stay enforced; `maxTokenAge` still applies even with `verifyIssuedAt: false`
 
 For a **profiled** verify the audience/issuer floor lives in the options object,
 so the assert is the (optional) third argument and options the fourth:

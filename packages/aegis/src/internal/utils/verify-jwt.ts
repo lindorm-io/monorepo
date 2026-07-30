@@ -62,6 +62,10 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   kit.verify<C>(token, undefined, {
     currentDate: options.currentDate,
     maxTokenAge: options.maxTokenAge,
+    verifyExpiration: options.verifyExpiration,
+    verifyNotBefore: options.verifyNotBefore,
+    verifyIssuedAt: options.verifyIssuedAt,
+    verifyAuthTime: options.verifyAuthTime,
     tokenType:
       options.tokenType !== undefined
         ? extractTypPrefix(computeTypHeader(options.tokenType, "jwt"))
@@ -127,16 +131,7 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
     authState: options.authState,
   });
   try {
-    validate(
-      withDates,
-      createIdentityMatchers(
-        kit.algorithm,
-        matchers,
-        deps.clockTolerance,
-        options.expPresence,
-        options.currentDate,
-      ) as never,
-    );
+    validate(withDates, createIdentityMatchers(kit.algorithm, matchers) as never);
   } catch (err) {
     throw new AegisDomainError("Invalid token", {
       code: "jwt_claims_invalid",

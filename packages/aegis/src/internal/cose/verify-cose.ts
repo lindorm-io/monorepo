@@ -31,6 +31,10 @@ export const verifyCose = ({
   clockTolerance,
   currentDate,
   maxTokenAge,
+  verifyExpiration,
+  verifyNotBefore,
+  verifyIssuedAt,
+  verifyAuthTime,
 }: {
   kryptos: IKryptos;
   logger: ILogger;
@@ -40,12 +44,28 @@ export const verifyCose = ({
   currentDate?: Date;
   /** Reject a token whose `iat` is older than this many seconds (R10). Per-call only. */
   maxTokenAge?: number;
+  /** Range-check `exp` (default true). false ⇒ an EXPIRED CWT still verifies. */
+  verifyExpiration?: boolean;
+  /** Range-check `nbf` (default true). */
+  verifyNotBefore?: boolean;
+  /** Range-check `iat` (default true). */
+  verifyIssuedAt?: boolean;
+  /** Range-check `auth_time` (default true). */
+  verifyAuthTime?: boolean;
 }): CoseVerifyResult => {
   const { payload: wire, header } = selectCoseClaimsKit({
     kryptos,
     logger,
     clockTolerance,
-  }).verify(token, undefined, { clockTolerance, currentDate, maxTokenAge });
+  }).verify(token, undefined, {
+    clockTolerance,
+    currentDate,
+    maxTokenAge,
+    verifyExpiration,
+    verifyNotBefore,
+    verifyIssuedAt,
+    verifyAuthTime,
+  });
 
   const { claims, custom } = coseToDomain(wire);
 

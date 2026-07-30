@@ -200,7 +200,15 @@ export const verifyCwt = <C extends Dict = Dict>(
   // caller's wire `assert`, in one pass over the Date-typed wire claims. `now` and
   // the stale-iat bound honour the per-call currentDate/maxTokenAge overrides.
   validate(wire, {
-    ...createTemporalMatchers(clockTolerance, options.currentDate, options.maxTokenAge),
+    ...createTemporalMatchers({
+      clockTolerance,
+      currentDate: options.currentDate,
+      maxTokenAge: options.maxTokenAge,
+      verifyExpiration: options.verifyExpiration,
+      verifyNotBefore: options.verifyNotBefore,
+      verifyIssuedAt: options.verifyIssuedAt,
+      verifyAuthTime: options.verifyAuthTime,
+    }),
     ...(assert ?? {}),
   } as Condition<Dict>);
 

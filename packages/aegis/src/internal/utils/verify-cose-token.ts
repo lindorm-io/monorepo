@@ -29,6 +29,10 @@ export const verifyCoseToken = async ({
     input: Buffer.from(token, "base64url"),
     currentDate: options.currentDate,
     maxTokenAge: options.maxTokenAge,
+    verifyExpiration: options.verifyExpiration,
+    verifyNotBefore: options.verifyNotBefore,
+    verifyIssuedAt: options.verifyIssuedAt,
+    verifyAuthTime: options.verifyAuthTime,
     deps,
   });
 

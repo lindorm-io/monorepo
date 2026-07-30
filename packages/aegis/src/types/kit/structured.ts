@@ -37,9 +37,21 @@ export type VerifyStructuredTokenOptions = {
   /**
    * Reject a token whose `iat` is older than this many seconds (R10). Adds an
    * `iat >= now - maxTokenAge` lower bound (with clock tolerance) and requires
-   * `iat` to be present. Per-call only.
+   * `iat` to be present. Per-call only. Independent of {@link verifyIssuedAt}.
    */
   maxTokenAge?: number;
+  /**
+   * Range-check `exp`. Default `true`. `false` ⇒ the `exp` range bound is
+   * skipped, so an EXPIRED token verifies. Presence is a domain concern and is
+   * not affected here.
+   */
+  verifyExpiration?: boolean;
+  /** Range-check `nbf`. Default `true`. `false` ⇒ the `nbf` bound is skipped. */
+  verifyNotBefore?: boolean;
+  /** Range-check `iat`. Default `true`. `false` ⇒ the `iat` upper bound is skipped. */
+  verifyIssuedAt?: boolean;
+  /** Range-check `auth_time`. Default `true`. `false` ⇒ the `auth_time` bound is skipped. */
+  verifyAuthTime?: boolean;
   /**
    * Assert the header `typ` equals the media type the kit builds from this bare
    * PREFIX (`"at"` → `application/at+jwt` / `application/at+cwt`). Aegis derives
