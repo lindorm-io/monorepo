@@ -519,4 +519,100 @@ describe("Aegis verify — relocated domain policy", () => {
       ).resolves.toBeDefined();
     });
   });
+
+  // Regression (bug fixed 2026-07): the RAW `aegis.jwt.verify` wrapper
+  // (internal/utils/raw-verify-jwt.ts) once MANUALLY enumerated the options it
+  // forwarded to `JwtKit.verify`, so the per-claim temporal-skip flags were
+  // SILENTLY DROPPED — `aegis.jwt.verify(token, assert, { verifyExpiration: false })`
+  // on an expired token still failed temporally. The fix forwards STRUCTURALLY
+  // (`const { key, ...verifyOptions } = options`). These exercise the raw path
+  // directly (NOT the `aegis.verify` domain path the block above covers).
+  describe("raw jwt.verify forwards verify options structurally (regression)", () => {
+    afterEach(() => MockDate.set(new Date("2024-01-01T08:00:00.000Z")));
+
+    const nowSec = () => Math.floor(Date.now() / 1000);
+
+    const signWire = (claims: Record<string, unknown>) =>
+      new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG }).sign({
+        iss: issuer,
+        sub: "s",
+        ...claims,
+      });
+
+    test("expired token: raw verify rejects by default, resolves with verifyExpiration:false", async () => {
+      const token = signWire({ exp: nowSec() - 3600 }); // expired an hour ago
+
+      // Default: the present exp is range-checked in the kit → temporal failure.
+      await expect(aegis.jwt.verify(token)).rejects.toThrow();
+
+      // The regression assertion: without the structural forward the flag is
+      // dropped and this still rejects.
+      const parsed = await aegis.jwt.verify(token, undefined, {
+        verifyExpiration: false,
+      });
+      expect(parsed.payload.sub).toBe("s");
+    });
+
+    test("verifyExpiration:false still verifies the signature on the raw path", async () => {
+      const token = signWire({ exp: nowSec() - 3600 });
+      // Corrupt only the signature segment: the token still decodes, but no longer
+      // verifies — skipping the exp RANGE must not weaken authenticity.
+      const [header, payload, signature] = token.split(".");
+      const tampered = `${header}.${payload}.${signature.slice(0, -1)}${
+        signature.slice(-1) === "A" ? "B" : "A"
+      }`;
+
+      await expect(
+        aegis.jwt.verify(tampered, undefined, { verifyExpiration: false }),
+      ).rejects.toThrow();
+    });
+
+    test("verifyNotBefore:false: raw verify rejects a future-nbf token by default, resolves with the flag", async () => {
+      const token = signWire({ exp: nowSec() + 7200, nbf: nowSec() + 3600 });
+
+      await expect(aegis.jwt.verify(token)).rejects.toThrow();
+      const parsed = await aegis.jwt.verify(token, undefined, {
+        verifyNotBefore: false,
+      });
+      expect(parsed.payload.sub).toBe("s");
+    });
+
+    test("verifyIssuedAt:false: raw verify rejects a future-iat token by default, resolves with the flag", async () => {
+      const token = signWire({ exp: nowSec() + 7200, iat: nowSec() + 3600 });
+
+      await expect(aegis.jwt.verify(token)).rejects.toThrow();
+      const parsed = await aegis.jwt.verify(token, undefined, {
+        verifyIssuedAt: false,
+      });
+      expect(parsed.payload.sub).toBe("s");
+    });
+
+    test("verifyAuthTime:false: raw verify rejects a future-auth_time token by default, resolves with the flag", async () => {
+      const token = signWire({ exp: nowSec() + 7200, auth_time: nowSec() + 3600 });
+
+      await expect(aegis.jwt.verify(token)).rejects.toThrow();
+      const parsed = await aegis.jwt.verify(token, undefined, {
+        verifyAuthTime: false,
+      });
+      expect(parsed.payload.sub).toBe("s");
+    });
+
+    // A NON-flag option (currentDate) also reaches the kit through the raw path —
+    // proves the fix forwards the whole options struct, not just the four flags.
+    test("currentDate reaches the kit through the raw path", async () => {
+      const token = signWire({ exp: nowSec() + 3600 }); // exp at 09:00
+
+      MockDate.set(new Date("2024-01-01T10:00:00.000Z")); // travel past expiry
+
+      // Against the travelled clock the token is expired.
+      await expect(aegis.jwt.verify(token)).rejects.toThrow();
+
+      // A currentDate BEFORE expiry revives it — only possible if currentDate is
+      // forwarded to the kit's temporal range check.
+      const parsed = await aegis.jwt.verify(token, undefined, {
+        currentDate: new Date("2024-01-01T08:30:00.000Z"),
+      });
+      expect(parsed.payload.sub).toBe("s");
+    });
+  });
 });

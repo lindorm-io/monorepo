@@ -30,12 +30,17 @@ export const rawVerifyJwt = async <C extends Dict = Dict>({
   options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
 }): Promise<VerifiedStructuredToken<JwtClaimsWire & C, string>> => {
+  // `key` is the aegis-only external-key injection (resolves the kryptos); every
+  // other field IS the kit's VerifyStructuredTokenOptions and is forwarded
+  // structurally, so a new verify option threads through with no change here.
+  const { key, ...verifyOptions } = options;
+
   const decode = JwtKit.decode(jwt);
 
   const kryptos = await deps.resolveVerifyKey(
     decode.header.kid,
     decode.header.alg as KryptosSigAlgorithm,
-    options.key,
+    key,
   );
 
   return new JwtKit({
@@ -43,11 +48,5 @@ export const rawVerifyJwt = async <C extends Dict = Dict>({
     clockTolerance: deps.clockTolerance,
     kryptos,
     logger: deps.logger,
-  }).verify<C>(jwt, assert, {
-    certBindingMode: options.certBindingMode,
-    clockTolerance: options.clockTolerance,
-    currentDate: options.currentDate,
-    maxTokenAge: options.maxTokenAge,
-    tokenType: options.tokenType,
-  });
+  }).verify<C>(jwt, assert, verifyOptions);
 };

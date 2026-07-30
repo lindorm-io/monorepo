@@ -188,6 +188,31 @@ describe("Aegis — COSE namespaces", () => {
       expect(error).toBeInstanceOf(AegisError);
       expect((error as AegisError).code).toBe("cwt_missing_claim_exp");
     });
+
+    // Regression (bug fixed 2026-07): the RAW `aegis.cwt.verify` wrapper
+    // (internal/utils/raw-verify-cwt.ts) once MANUALLY enumerated the options it
+    // forwarded to `CwtKit.verify`, silently DROPPING the per-claim temporal-skip
+    // flags. The fix forwards STRUCTURALLY (`const { key, ...verifyOptions }`).
+    test("raw cwt.verify: expired token rejected by default, accepted with verifyExpiration:false", async () => {
+      const { token } = await aegis.cwt.sign({
+        iss: "https://test.lindorm.io/",
+        sub: "u",
+        aud: ["aud-1"],
+        exp: 1704099600, // 09:00
+      });
+
+      // Advance past the 09:00 expiry.
+      MockDate.set(new Date("2024-01-01T10:00:00.000Z"));
+
+      await expect(aegis.cwt.verify(token)).rejects.toThrow(/Invalid token/);
+
+      // The regression assertion: the flag must reach the kit and drop the exp
+      // RANGE bound — without the structural forward this still rejects.
+      const parsed = await aegis.cwt.verify(token, undefined, {
+        verifyExpiration: false,
+      });
+      expect(parsed.payload.sub).toBe("u");
+    });
   });
 
   // The COSE_Mac0 (symmetric) twin of `cwt`. It needs a SYMMETRIC signing key, so
@@ -261,6 +286,26 @@ describe("Aegis — COSE namespaces", () => {
 
       expect(parsed.format).toBe("cwm");
       expect(parsed.claims.subject).toBe("user-1");
+    });
+
+    // Regression (bug fixed 2026-07): the RAW `aegis.cwm.verify` wrapper
+    // (internal/utils/raw-verify-cwm.ts) once MANUALLY enumerated the options it
+    // forwarded to `CwmKit.verify`, silently DROPPING the per-claim temporal-skip
+    // flags. The fix forwards STRUCTURALLY (`const { key, ...verifyOptions }`).
+    test("raw cwm.verify: expired token rejected by default, accepted with verifyExpiration:false", async () => {
+      const signed = await macAegis.cwm.sign(claims); // exp 1704099600 (09:00)
+
+      // Advance past the 09:00 expiry.
+      MockDate.set(new Date("2024-01-01T10:00:00.000Z"));
+
+      await expect(macAegis.cwm.verify(signed.token)).rejects.toThrow(/Invalid token/);
+
+      // The regression assertion: the flag must reach the kit and drop the exp
+      // RANGE bound — without the structural forward this still rejects.
+      const parsed = await macAegis.cwm.verify(signed.token, undefined, {
+        verifyExpiration: false,
+      });
+      expect(parsed.payload.sub).toBe("user-1");
     });
   });
 
