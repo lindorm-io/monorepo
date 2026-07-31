@@ -18,7 +18,7 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
-    "example": "tsx example/string.ts",
+    "example": "tsx example/random-string.ts",
     "example:id": "tsx example/random-id.ts",
     "example:number": "tsx example/random-number.ts",
     "example:string": "tsx example/random-string.ts",
