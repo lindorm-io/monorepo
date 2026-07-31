@@ -3,9 +3,9 @@ import { type IKryptos, type KryptosDB, KryptosKit } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
 import type { Constructor } from "@lindorm/types";
-import { type CreateLindormWorkerOptions, LindormWorker } from "@lindorm/worker";
+import { type CreateLindormWorkerSettings, LindormWorker } from "@lindorm/worker";
 
-type Options = CreateLindormWorkerOptions & {
+type Options = CreateLindormWorkerSettings & {
   amphora: IAmphora;
   logger: ILogger;
   db: IProteusSource;

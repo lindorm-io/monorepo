@@ -1,9 +1,9 @@
 import type { ILogger } from "@lindorm/logger";
 import type { IEntity, IProteusSource } from "@lindorm/proteus";
 import type { Constructor } from "@lindorm/types";
-import { type CreateLindormWorkerOptions, LindormWorker } from "@lindorm/worker";
+import { type CreateLindormWorkerSettings, LindormWorker } from "@lindorm/worker";
 
-type Options = CreateLindormWorkerOptions & {
+type Options = CreateLindormWorkerSettings & {
   logger: ILogger;
   db: IProteusSource;
   targets: Array<Constructor<IEntity>>;

@@ -4,20 +4,7 @@ import type { RetryOptions } from "@lindorm/retry";
 import type { LindormWorkerCallback, LindormWorkerErrorCallback } from "./context.js";
 import type { LindormWorkerListenerConfig } from "./listener.js";
 
-export type LindormWorkerConfig = {
-  alias: string;
-  callback: LindormWorkerCallback;
-  callbackTimeout?: ReadableTime | number;
-  cron?: string;
-  errorCallback?: LindormWorkerErrorCallback;
-  interval?: ReadableTime | number;
-  listeners?: Array<LindormWorkerListenerConfig>;
-  jitter?: ReadableTime | number;
-  retry?: RetryOptions;
-  timezone?: string;
-};
-
-export type CreateLindormWorkerOptions = {
+export type CreateLindormWorkerSettings = {
   callbackTimeout?: ReadableTime | number;
   cron?: string;
   interval?: ReadableTime | number;

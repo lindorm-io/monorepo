@@ -9,7 +9,7 @@ import {
 import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
 import type { Constructor } from "@lindorm/types";
-import { type CreateLindormWorkerOptions, LindormWorker } from "@lindorm/worker";
+import { type CreateLindormWorkerSettings, LindormWorker } from "@lindorm/worker";
 
 type KeyOption = Pick<
   KryptosAuto,
@@ -21,7 +21,7 @@ type KeyOption = Pick<
   expiry?: ReadableTime;
 };
 
-type Options = CreateLindormWorkerOptions & {
+type Options = CreateLindormWorkerSettings & {
   expiry?: ReadableTime;
   /**
    * The keys this deployment mints and rotates. There is NO default set: the

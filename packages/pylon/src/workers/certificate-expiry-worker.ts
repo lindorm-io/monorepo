@@ -2,9 +2,9 @@ import type { IAmphora } from "@lindorm/amphora";
 import { add, duration, type ReadableTime } from "@lindorm/date";
 import { describeCertificate, type DescribedX509Certificate } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import { type CreateLindormWorkerOptions, LindormWorker } from "@lindorm/worker";
+import { type CreateLindormWorkerSettings, LindormWorker } from "@lindorm/worker";
 
-type Options = CreateLindormWorkerOptions & {
+type Options = CreateLindormWorkerSettings & {
   amphora: IAmphora;
   logger: ILogger;
   // Time-to-expiry thresholds. A cert at or past `errorThreshold` (or already
