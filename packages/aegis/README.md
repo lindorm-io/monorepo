@@ -139,7 +139,7 @@ const aegis = new Aegis({
 
 ### Namespaced operations (wire surface)
 
-Each namespace resolves the key by `kid`, delegates to its kit, and speaks **only the wire** — input AND output. `sign` takes an already-wire claim dict (JOSE names — `sub`/`exp`/`jti`) and serializes it **verbatim**: no domain translation, no envelope auto-injection (`iat`/`jti`/`nbf`/`iss`), no hash derivation. `verify` takes a positional wire `assert` predicate and returns the kit's native wire shape (`.payload` carries wire claim names). Named identity matchers, DPoP, actor chains, auto-injection and domain translation live on the domain verbs (`aegis.mint` / `aegis.verify`), not here.
+Each namespace resolves the key by `kid`, delegates to its kit, and speaks **only the wire** — input AND output. `sign` takes an already-wire claim dict (JOSE names — `sub`/`exp`/`jti`) and serializes it **verbatim**: no domain translation, no envelope auto-injection (`iat`/`jti`/`nbf`/`iss`), no hash derivation. `verify` takes a positional wire `assert` condition and returns the kit's native wire shape (`.payload` carries wire claim names). Named identity matchers, DPoP, actor chains, auto-injection and domain translation live on the domain verbs (`aegis.mint` / `aegis.verify`), not here.
 
 ```typescript
 const signed = await aegis.jwt.sign(
@@ -158,7 +158,7 @@ const parsed = await aegis.jwt.verify(signed.token);
 // parsed.payload → { sub: "user-123", exp: 1737000000, aud: [...], scope: [...] }  (WIRE names)
 // parsed.header (WireTokenHeader), parsed.token
 
-// matching is a positional WIRE assert predicate (no named domain matchers here):
+// matching is a positional WIRE assert condition (no named domain matchers here):
 const checked = await aegis.jwt.verify(signed.token, { iss: "https://idp.example.com" });
 
 const jws = await aegis.jws.sign("payload");
@@ -344,7 +344,7 @@ JwtKit.isJwt(token); // static
 JwtKit.decode(token); // static → { header, payload, signature, token } — no verification
 ```
 
-`verify` runs crit, typ well-formedness, algorithm-match, signature, cert-binding, reserved-claim type checks, and the temporal range (`exp` / `nbf` / `iat`, validated if present) — plus the optional `assert` predicate over the wire claims.
+`verify` runs crit, typ well-formedness, algorithm-match, signature, cert-binding, reserved-claim type checks, and the temporal range (`exp` / `nbf` / `iat`, validated if present) — plus the optional `assert` condition over the wire claims.
 
 ## JwsKit
 
@@ -572,7 +572,7 @@ surface's job):
   matchers earn non-equality semantics (`audience` is contains-self; `scope` /
   `authMethods` / `roles` / `permissions` / `groups` / `entitlements` are
   array-contains; `issuer` is identity). Every other domain claim folds into a
-  free predicate, each field accepting a literal value or a `PredicateOperator`.
+  free condition, each field accepting a literal value or a `ConditionOperator`.
 - **`options`** (`VerifyOptions`) — the verify KNOBS (format-agnostic).
 
 ```typescript
