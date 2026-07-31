@@ -2737,8 +2737,11 @@ export const subscribeSample = async (): Promise<void> => {
   await bus.subscribe({
     topic: "SampleMessage",
     queue: "sample-queue",
-    callback: async (msg) => {
-      logger.info("Received sample message", { message: msg });
+    callback: async (msg, envelope) => {
+      logger.info("Received sample message", {
+        topic: envelope.topic,
+        correlationId: envelope.correlationId,
+      });
     },
   });
 };
@@ -2770,8 +2773,11 @@ export const subscribeSample = async (): Promise<void> => {
   await bus.subscribe({
     topic: "SampleMessage",
     queue: "sample-queue",
-    callback: async (msg) => {
-      logger.info("Received sample message", { message: msg });
+    callback: async (msg, envelope) => {
+      logger.info("Received sample message", {
+        topic: envelope.topic,
+        correlationId: envelope.correlationId,
+      });
     },
   });
 };
@@ -2803,8 +2809,11 @@ export const subscribeSample = async (): Promise<void> => {
   await bus.subscribe({
     topic: "SampleMessage",
     queue: "sample-queue",
-    callback: async (msg) => {
-      logger.info("Received sample message", { message: msg });
+    callback: async (msg, envelope) => {
+      logger.info("Received sample message", {
+        topic: envelope.topic,
+        correlationId: envelope.correlationId,
+      });
     },
   });
 };
@@ -2836,8 +2845,11 @@ export const subscribeSample = async (): Promise<void> => {
   await bus.subscribe({
     topic: "SampleMessage",
     queue: "sample-queue",
-    callback: async (msg) => {
-      logger.info("Received sample message", { message: msg });
+    callback: async (msg, envelope) => {
+      logger.info("Received sample message", {
+        topic: envelope.topic,
+        correlationId: envelope.correlationId,
+      });
     },
   });
 };
