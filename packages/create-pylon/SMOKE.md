@@ -1,6 +1,6 @@
 # Smoke test
 
-The `@lindorm/create-pylon` unit test suite covers every scaffold write path and CLI orchestration step — 87 tests, 65 snapshots — but it doesn't verify that the generated project actually compiles against the real `@lindorm/*` packages. This is the canonical manual check before a release.
+The `@lindorm/create-pylon` unit test suite covers every scaffold write path and CLI orchestration step — 201 tests, 121 snapshots — but it doesn't verify that the generated project actually compiles against the real `@lindorm/*` packages. This is the canonical manual check before a release.
 
 ## Recipe
 
@@ -8,7 +8,7 @@ The monorepo has npm workspaces configured at root (`"workspaces": ["packages/*"
 
 ```bash
 # 1. Build create-pylon
-cd /Users/jonn/Projects/lindorm-monorepo/packages/create-pylon
+cd /Users/jonn/Projects/lindorm/lindorm-monorepo/packages/create-pylon
 npm run build
 
 # 2. Scaffold INTO the workspace glob (picks a representative combo)
@@ -17,7 +17,7 @@ npm run build
 #    root instead, the project lands at <root>/pylon-smoke (outside the
 #    workspace) and npm install pulls from the registry — defeating the
 #    smoke test's purpose.
-cd /Users/jonn/Projects/lindorm-monorepo/packages
+cd /Users/jonn/Projects/lindorm/lindorm-monorepo/packages
 node ./create-pylon/dist/cli.js pylon-smoke
 
 # → answer prompts. A typical "flex everything" combo:
@@ -34,7 +34,7 @@ npx tsc --noEmit
 echo "exit=$?"   # must be 0
 
 # 4. Clean up
-cd /Users/jonn/Projects/lindorm-monorepo
+cd /Users/jonn/Projects/lindorm/lindorm-monorepo
 rm -rf packages/pylon-smoke
 npm install   # restores root node_modules after the scratch scaffold
 ```
@@ -45,30 +45,48 @@ For scripted smoke tests (CI, batch runs across combos), bypass the prompts by c
 
 ```js
 // .scratch/smoke.mjs
-import { scaffold } from "/Users/jonn/Projects/lindorm-monorepo/packages/create-pylon/dist/index.js";
+import { scaffold } from "/Users/jonn/Projects/lindorm/lindorm-monorepo/packages/create-pylon/dist/index.js";
 import {
   installDependencies,
   installDevDependencies,
-} from "/Users/jonn/Projects/lindorm-monorepo/packages/create-pylon/dist/install.js";
+} from "/Users/jonn/Projects/lindorm/lindorm-monorepo/packages/create-pylon/dist/install.js";
 import {
   runIrisGenerateSampleMessage,
   runIrisInit,
   runProteusGenerateSampleEntity,
   runProteusInit,
-} from "/Users/jonn/Projects/lindorm-monorepo/packages/create-pylon/dist/drivers.js";
+} from "/Users/jonn/Projects/lindorm/lindorm-monorepo/packages/create-pylon/dist/drivers.js";
 import { resolve } from "path";
 import { existsSync, rmSync } from "fs";
 
-const projectDir = resolve("/Users/jonn/Projects/lindorm-monorepo/packages/pylon-smoke");
+const projectDir = resolve(
+  "/Users/jonn/Projects/lindorm/lindorm-monorepo/packages/pylon-smoke",
+);
 if (existsSync(projectDir)) rmSync(projectDir, { recursive: true, force: true });
 
 const answers = {
   projectName: "pylon-smoke",
   projectDir,
-  features: { http: true, socket: true, webhooks: true, audit: true },
-  proteusDriver: "postgres",
-  irisDriver: "redis",
-  workers: ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"],
+  issuer: "https://pylon-smoke.example.com",
+  features: {
+    http: true,
+    socket: true,
+    webhooks: true,
+    audit: true,
+    session: false,
+    auth: false,
+    rateLimit: false,
+  },
+  // Driver picks are role-based: `db` (DbDriver), `kv` (KvDriver), `bus` (IrisDriver).
+  db: "postgres",
+  kv: "none",
+  bus: "redis",
+  workers: [
+    "amphora-entity-sync",
+    "certificate-expiry",
+    "expiry-cleanup",
+    "kryptos-rotation",
+  ],
 };
 
 await scaffold(answers);
@@ -84,17 +102,22 @@ await installDependencies(projectDir, [
   "@lindorm/iris",
   "ioredis",
 ]);
+// The repo is on vitest — no jest / ts-jest. These mirror BASE_DEV_DEPENDENCIES.
 await installDevDependencies(projectDir, [
+  "@lindorm/scaffold",
   "@lindorm/worker",
   "@types/node",
-  "@types/jest",
   "@types/pg",
-  "jest",
-  "ts-jest",
+  "@types/supertest",
+  "globals",
+  "mockdate",
+  "nock",
+  "supertest",
   "tsx",
   "typescript",
+  "vitest",
 ]);
-await runProteusInit(projectDir, "postgres");
+await runProteusInit(projectDir, { db: "postgres", kv: "none" });
 await runProteusGenerateSampleEntity(projectDir);
 await runIrisInit(projectDir, "redis");
 await runIrisGenerateSampleMessage(projectDir);
