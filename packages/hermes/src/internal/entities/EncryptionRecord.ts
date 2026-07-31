@@ -42,6 +42,15 @@ export class EncryptionRecord {
   @Field("string")
   keyType: string = "";
 
+  /**
+   * The per-aggregate DEK, stored UNWRAPPED by design (crypto-shred material):
+   * deleting this row makes the aggregate's encrypted events unrecoverable, which
+   * IS the GDPR erasure guarantee. Because the key is plaintext, at-rest
+   * CONFIDENTIALITY against a single-store dump holds ONLY when Hermes is
+   * configured with a separate `encryptionSource` (routing this record to a
+   * different store than the event ciphertext); with the default (same store as
+   * EventRecord), erasure is guaranteed but a full dump yields ciphertext + key.
+   */
   @Field("text")
   privateKey: string = "";
 

@@ -553,7 +553,7 @@ A guard violation throws the corresponding `Aggregate*`/`Saga*`/`View*` error (s
 
 ## Forgettable aggregates
 
-Annotate an aggregate with `@Forgettable()` to opt into per-aggregate event-payload encryption. When an aggregate is destroyed and the encryption key is purged, the persisted event payloads become unrecoverable, satisfying GDPR-style erasure requirements.
+Annotate an aggregate with `@Forgettable()` to opt into per-aggregate event-payload encryption. Each forgettable aggregate gets its own data-encryption key (DEK), stored **unwrapped** in an `EncryptionRecord` row. Deleting that row makes the aggregate's encrypted event payloads permanently unrecoverable — that row-delete **is** the GDPR-style erasure guarantee (crypto-shredding).
 
 ```ts
 import { Forgettable } from "@lindorm/hermes";
@@ -567,6 +567,20 @@ export class CustomerAggregate {
 ```
 
 Configure `HermesOptions.encryption` to control the JWE algorithm and content-encryption used for the per-aggregate encryption keys; both fields fall back to safe defaults (`"dir"` and `"A256GCM"`) when omitted.
+
+### Separating the DEK from the ciphertext
+
+By default the DEK lives in the same `proteus` source as the event ciphertext, so a single-store dump yields both the ciphertext and the key that unlocks it. Erasure still holds, but at-rest confidentiality against a full dump does not. Set `HermesOptions.encryptionSource` to route `EncryptionRecord` to a separate Proteus source; a dump of either store alone is then insufficient — ciphertext and key no longer travel together. Erasure semantics are unchanged (delete the row to forget). When omitted, `encryptionSource` defaults to `proteus` and behaviour is identical to before.
+
+```ts
+const hermes = new Hermes({
+  proteus: eventStore, // holds EventRecord (ciphertext)
+  encryptionSource: keyStore, // holds EncryptionRecord (the DEK)
+  iris,
+  modules,
+  logger,
+});
+```
 
 ## Error handling
 
@@ -603,17 +617,18 @@ await hermes.teardown();
 
 ### `HermesOptions`
 
-| Option            | Type                                                                  | Required | Description                                                                        |
-| ----------------- | --------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------- |
-| `proteus`         | `IProteusSource`                                                      | yes      | Primary persistence source (event store, sagas, default view source).              |
-| `iris`            | `IIrisSource`                                                         | yes      | Messaging source (command queue, event bus, error queue, timeout queue).           |
-| `modules`         | `Array<Constructor \| string>`                                        | yes      | Class constructors and/or directory paths to scan.                                 |
-| `logger`          | `ILogger`                                                             | yes      | Logger instance; per-message child loggers are created automatically.              |
-| `viewSources`     | `Array<IProteusSource>`                                               | no       | Additional Proteus sources for views routed via `@View(..., ..., "<driverType>")`. |
-| `namespace`       | `string`                                                              | no       | Default namespace for handlers without `@Namespace(...)`. Defaults to `"hermes"`.  |
-| `encryption`      | `{ algorithm?: KryptosEncAlgorithm; encryption?: KryptosEncryption }` | no       | Encryption settings used by `@Forgettable()` aggregates.                           |
-| `checksumMode`    | `"strict" \| "warn"`                                                  | no       | How to react to a checksum mismatch. Defaults to `"warn"`.                         |
-| `causationExpiry` | `ReadableTime`                                                        | no       | Causation record TTL (for example `"30 days"`). Defaults to `"30 Days"`.           |
+| Option             | Type                                                                  | Required | Description                                                                                                                                                   |
+| ------------------ | --------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `proteus`          | `IProteusSource`                                                      | yes      | Primary persistence source (event store, sagas, default view source).                                                                                         |
+| `iris`             | `IIrisSource`                                                         | yes      | Messaging source (command queue, event bus, error queue, timeout queue).                                                                                      |
+| `modules`          | `Array<Constructor \| string>`                                        | yes      | Class constructors and/or directory paths to scan.                                                                                                            |
+| `logger`           | `ILogger`                                                             | yes      | Logger instance; per-message child loggers are created automatically.                                                                                         |
+| `viewSources`      | `Array<IProteusSource>`                                               | no       | Additional Proteus sources for views routed via `@View(..., ..., "<driverType>")`.                                                                            |
+| `encryptionSource` | `IProteusSource`                                                      | no       | Separate source for the per-aggregate DEK (`EncryptionRecord`). Defaults to `proteus`; a distinct source keeps ciphertext and key out of a single-store dump. |
+| `namespace`        | `string`                                                              | no       | Default namespace for handlers without `@Namespace(...)`. Defaults to `"hermes"`.                                                                             |
+| `encryption`       | `{ algorithm?: KryptosEncAlgorithm; encryption?: KryptosEncryption }` | no       | Encryption settings used by `@Forgettable()` aggregates.                                                                                                      |
+| `checksumMode`     | `"strict" \| "warn"`                                                  | no       | How to react to a checksum mismatch. Defaults to `"warn"`.                                                                                                    |
+| `causationExpiry`  | `ReadableTime`                                                        | no       | Causation record TTL (for example `"30 days"`). Defaults to `"30 Days"`.                                                                                      |
 
 ### Lifecycle
 

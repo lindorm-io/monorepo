@@ -3,6 +3,8 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusSource } from "@lindorm/proteus";
 import { randomUUID } from "crypto";
 import { createChecksum } from "../internal/utils/index.js";
+import { EncryptionRecord, EventRecord } from "../internal/entities/index.js";
+import { HermesCommandMessage } from "../internal/messages/index.js";
 import {
   createTestIrisSource,
   createTestProteusSource,
@@ -1382,6 +1384,141 @@ describe("Hermes", () => {
       });
 
       expect(entity).toBeNull();
+    });
+  });
+
+  // -- Encryption source routing (DEK / ciphertext store separation) --
+
+  describe("encryption source routing", () => {
+    // Drives a forgettable-aggregate create through the wired-up private
+    // AggregateDomain (the memory Iris driver can't route hermes.command()
+    // end-to-end -- see the note above the "command" describe block).
+    const runForgettableCreate = async (
+      hermes: Hermes,
+      aggregateId: string,
+      input: string,
+    ): Promise<void> => {
+      const registry = (hermes as any).registry;
+      const aggregateDomain = (hermes as any).aggregateDomain;
+      const agg = registry.getAggregate("billing", "test_forgettable_aggregate");
+      const handler = agg.commandHandlers.find(
+        (h: any) => registry.getCommand(h.trigger).name === "test_command_create",
+      );
+
+      vi.spyOn((hermes as any).eventBus, "publish").mockResolvedValue(undefined);
+
+      const msg = new HermesCommandMessage();
+      msg.id = randomUUID();
+      msg.aggregate = {
+        id: aggregateId,
+        name: "test_forgettable_aggregate",
+        namespace: "billing",
+      };
+      msg.name = "test_command_create";
+      msg.version = 1;
+      msg.causationId = msg.id;
+      msg.correlationId = null;
+      msg.data = { input };
+      msg.meta = { origin: "test" };
+      msg.timestamp = new Date();
+
+      await aggregateDomain.handleCommand(msg, agg, handler);
+    };
+
+    // Returns the DEK rows for the aggregate, or [] if EncryptionRecord is not
+    // even registered on that source (which is itself proof of separation).
+    const findDekIn = async (
+      source: ProteusSource,
+      aggregateId: string,
+    ): Promise<Array<EncryptionRecord>> => {
+      try {
+        return await source.repository(EncryptionRecord).find({
+          aggregateId,
+          aggregateName: "test_forgettable_aggregate",
+          aggregateNamespace: "billing",
+        });
+      } catch {
+        return [];
+      }
+    };
+
+    it("should store the DEK in a distinct encryptionSource and ciphertext in proteus", async () => {
+      const proteus = createTestProteusSource();
+      const encryptionSource = createTestProteusSource();
+      const iris = createTestIrisSource();
+      await proteus.connect();
+      await encryptionSource.connect();
+      await iris.connect();
+
+      const hermes = new Hermes({
+        proteus,
+        encryptionSource,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+
+      const aggregateId = randomUUID();
+      await runForgettableCreate(hermes, aggregateId, "top-secret");
+
+      // DEK lives in the separate key store...
+      const dekInKeyStore = await findDekIn(encryptionSource, aggregateId);
+      expect(dekInKeyStore).toHaveLength(1);
+      expect(dekInKeyStore[0].privateKey).toBeTruthy();
+
+      // ...and is absent from the event store, so a proteus-only dump has no key.
+      const dekInEventStore = await findDekIn(proteus, aggregateId);
+      expect(dekInEventStore).toHaveLength(0);
+
+      // Ciphertext lives in the event store.
+      const events = await proteus.repository(EventRecord).find({
+        aggregateId,
+        aggregateName: "test_forgettable_aggregate",
+        aggregateNamespace: "billing",
+      });
+      expect(events).toHaveLength(1);
+      expect(events[0].encrypted).toBe(true);
+      expect(events[0].data).not.toEqual({ input: "top-secret" });
+
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
+      await encryptionSource.disconnect();
+    });
+
+    it("should default the DEK to proteus when encryptionSource is omitted", async () => {
+      const { proteus, iris } = await createConnectedSources();
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+
+      const aggregateId = randomUUID();
+      await runForgettableCreate(hermes, aggregateId, "default-secret");
+
+      // With no separate source, the DEK is co-located in proteus (unchanged).
+      const dek = await findDekIn(proteus, aggregateId);
+      expect(dek).toHaveLength(1);
+      expect(dek[0].privateKey).toBeTruthy();
+
+      const events = await proteus.repository(EventRecord).find({
+        aggregateId,
+        aggregateName: "test_forgettable_aggregate",
+        aggregateNamespace: "billing",
+      });
+      expect(events).toHaveLength(1);
+      expect(events[0].encrypted).toBe(true);
+
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
     });
   });
 });

@@ -59,6 +59,7 @@ export class Hermes implements IHermes {
   private readonly checksumMode: ChecksumMode;
 
   private readonly proteus: IProteusSource;
+  private readonly encryptionSource: IProteusSource;
   private readonly viewSourceMap: Map<string, IProteusSource>;
   private readonly iris: IIrisSource;
   private readonly options: HermesSettings;
@@ -84,6 +85,7 @@ export class Hermes implements IHermes {
     this.options = options;
 
     this.proteus = options.proteus;
+    this.encryptionSource = options.encryptionSource ?? options.proteus;
     this.iris = options.iris;
 
     this.viewSourceMap = new Map();
@@ -734,13 +736,12 @@ export class Hermes implements IHermes {
   private registerEntities(): void {
     this.logger.debug("Registering internal entities with proteus");
 
-    this.proteus.addEntities([
-      EventRecord,
-      SagaRecord,
-      CausationRecord,
-      ChecksumRecord,
-      EncryptionRecord,
-    ]);
+    this.proteus.addEntities([EventRecord, SagaRecord, CausationRecord, ChecksumRecord]);
+
+    // The per-aggregate DEK (EncryptionRecord) lives on its own source when
+    // `encryptionSource` is configured; by default it is `proteus`, so this
+    // registers it exactly once on the main source (never double-registered).
+    this.encryptionSource.addEntities([EncryptionRecord]);
 
     const viewSourcesWithCausation = new Set<IProteusSource>();
 
@@ -780,11 +781,22 @@ export class Hermes implements IHermes {
   private async setupSources(): Promise<void> {
     this.logger.debug("Setting up proteus sources");
 
+    const setUp = new Set<IProteusSource>();
+
     await this.proteus.setup();
+    setUp.add(this.proteus);
 
     for (const [driverType, source] of this.viewSourceMap) {
       this.logger.debug("Setting up view source", { driverType });
       await source.setup();
+      setUp.add(source);
+    }
+
+    // Set up the DEK source only if it is a distinct instance -- when it equals
+    // `proteus` or one of the view sources it has already been set up above.
+    if (!setUp.has(this.encryptionSource)) {
+      this.logger.debug("Setting up encryption source");
+      await this.encryptionSource.setup();
     }
   }
 
@@ -809,6 +821,7 @@ export class Hermes implements IHermes {
     this.aggregateDomain = new AggregateDomain({
       registry: this.registry,
       proteus: this.proteus,
+      encryptionSource: this.encryptionSource,
       iris: {
         commandQueue: this.commandQueue,
         eventBus: this.eventBus,

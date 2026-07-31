@@ -1081,6 +1081,131 @@ describe("AggregateDomain", () => {
     loadEncryptionKeySpy.mockRestore();
   });
 
+  // -- Erasure (crypto-shred): deleting the DEK row drops encrypted events --
+
+  it("should drop encrypted events without throwing after the DEK row is erased", async () => {
+    const aggregateId = randomUUID();
+    const aggregate = {
+      id: aggregateId,
+      name: "test_forgettable_aggregate",
+      namespace: "billing",
+    };
+    const createHandler = findCommandHandler(forgettableAggregate, "test_command_create");
+
+    const cmd = createCommandMsg(
+      "test_command_create",
+      { input: "forget-me" },
+      { aggregate },
+    );
+    await handleCommand(cmd, forgettableAggregate, createHandler);
+
+    // Before erasure: the encrypted event decrypts and rehydrates state.
+    const before = await domain.inspect(aggregate);
+    expect(before.numberOfLoadedEvents).toBe(1);
+    expect(before.state).toEqual({ create: "forget-me" });
+
+    // Crypto-shred: delete the EncryptionRecord row (this IS the GDPR erasure).
+    const encRepo = proteus.repository(EncryptionRecord);
+    await encRepo.delete({
+      aggregateId,
+      aggregateName: "test_forgettable_aggregate",
+      aggregateNamespace: "billing",
+    });
+
+    const encRemaining = await encRepo.find({
+      aggregateId,
+      aggregateName: "test_forgettable_aggregate",
+      aggregateNamespace: "billing",
+    });
+    expect(encRemaining).toHaveLength(0);
+
+    // After erasure: encrypted events are DROPPED (unreadable), and NO throw.
+    const after = await domain.inspect(aggregate);
+    expect(after.numberOfLoadedEvents).toBe(0);
+    expect(after.state).toEqual({});
+
+    // The ciphertext row still exists on disk but is now permanently unrecoverable.
+    const eventRepo = proteus.repository(EventRecord);
+    const events = await eventRepo.find({
+      aggregateId,
+      aggregateName: "test_forgettable_aggregate",
+      aggregateNamespace: "billing",
+    });
+    expect(events).toHaveLength(1);
+    expect(events[0].encrypted).toBe(true);
+    expect(events[0].data).not.toEqual({ input: "forget-me" });
+  });
+
+  // -- Separate encryption source: DEK routes to a distinct store --
+
+  it("should route the DEK to a distinct encryptionSource, keeping ciphertext separate", async () => {
+    const encryptionSource = createTestProteusSource();
+    encryptionSource.addEntities([EncryptionRecord]);
+    await encryptionSource.connect();
+    await encryptionSource.setup();
+
+    const cmdQueue = iris.workerQueue(HermesCommandMessage);
+    const routedEventBus = iris.messageBus(HermesEventMessage);
+    const errQueue = iris.workerQueue(HermesErrorMessage);
+    vi.spyOn(routedEventBus, "publish").mockResolvedValue(undefined);
+
+    const routedDomain = new AggregateDomain({
+      registry,
+      proteus,
+      encryptionSource,
+      iris: { commandQueue: cmdQueue, eventBus: routedEventBus, errorQueue: errQueue },
+      logger,
+    });
+
+    const aggregateId = randomUUID();
+    const aggregate = {
+      id: aggregateId,
+      name: "test_forgettable_aggregate",
+      namespace: "billing",
+    };
+    const handler = findCommandHandler(forgettableAggregate, "test_command_create");
+
+    const cmd = createCommandMsg(
+      "test_command_create",
+      { input: "routed-secret" },
+      { aggregate },
+    );
+    await (routedDomain as any).handleCommand(cmd, forgettableAggregate, handler);
+
+    // DEK landed in the separate encryptionSource...
+    const routedEnc = await encryptionSource.repository(EncryptionRecord).find({
+      aggregateId,
+      aggregateName: "test_forgettable_aggregate",
+      aggregateNamespace: "billing",
+    });
+    expect(routedEnc).toHaveLength(1);
+    expect(routedEnc[0].privateKey).toBeTruthy();
+
+    // ...and NOT in the main proteus store (ciphertext store).
+    const mainEnc = await proteus.repository(EncryptionRecord).find({
+      aggregateId,
+      aggregateName: "test_forgettable_aggregate",
+      aggregateNamespace: "billing",
+    });
+    expect(mainEnc).toHaveLength(0);
+
+    // The ciphertext EventRecord stays in the main proteus store.
+    const events = await proteus.repository(EventRecord).find({
+      aggregateId,
+      aggregateName: "test_forgettable_aggregate",
+      aggregateNamespace: "billing",
+    });
+    expect(events).toHaveLength(1);
+    expect(events[0].encrypted).toBe(true);
+
+    // The routed domain can still decrypt by reading the DEK from encryptionSource.
+    const model = await routedDomain.inspect(aggregate);
+    expect(model.numberOfLoadedEvents).toBe(1);
+    expect(model.state).toEqual({ create: "routed-secret" });
+
+    await encryptionSource.disconnect();
+  });
+
   // -- MEDIUM: Default encryption options with non-default values --
 
   it("should use non-default encryption options when provided", async () => {

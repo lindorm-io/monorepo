@@ -52,6 +52,8 @@ import { AggregateModel } from "./aggregate-model.js";
 export type AggregateDomainSettings = {
   registry: HermesRegistry;
   proteus: IProteusSource;
+  /** Source holding the per-aggregate DEK (EncryptionRecord). Defaults to `proteus`. */
+  encryptionSource?: IProteusSource;
   iris: {
     commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
     eventBus: IIrisMessageBus<HermesEventMessage>;
@@ -69,6 +71,7 @@ export class AggregateDomain {
   private readonly logger: ILogger;
   private readonly registry: HermesRegistry;
   private readonly proteus: IProteusSource;
+  private readonly encryptionSource: IProteusSource;
   private readonly commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
   private readonly eventBus: IIrisMessageBus<HermesEventMessage>;
   private readonly errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
@@ -80,6 +83,7 @@ export class AggregateDomain {
     this.logger = options.logger.child(["AggregateDomain"]);
     this.registry = options.registry;
     this.proteus = options.proteus;
+    this.encryptionSource = options.encryptionSource ?? options.proteus;
     this.commandQueue = options.iris.commandQueue;
     this.eventBus = options.iris.eventBus;
     this.errorQueue = options.iris.errorQueue;
@@ -567,7 +571,7 @@ export class AggregateDomain {
   private async loadEncryptionKey(
     identifier: AggregateIdentifier,
   ): Promise<AesKit | null> {
-    const encRepo = this.proteus.repository(EncryptionRecord);
+    const encRepo = this.encryptionSource.repository(EncryptionRecord);
     const record = await findEncryptionKey(
       encRepo,
       identifier.id,
@@ -605,7 +609,7 @@ export class AggregateDomain {
     const { algorithm, privateKey, publicKey, type, curve, encryption } =
       kryptos.export("b64");
 
-    const encRepo = this.proteus.repository(EncryptionRecord);
+    const encRepo = this.encryptionSource.repository(EncryptionRecord);
     const record = new EncryptionRecord();
     record.aggregateId = identifier.id;
     record.aggregateName = identifier.name;
