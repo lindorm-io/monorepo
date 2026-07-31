@@ -4,8 +4,8 @@ import { CwsKit } from "../../classes/CwsKit.js";
 import type {
   AegisSignKey,
   SignedToken,
+  SignUnstructuredTokenOptions,
   TokenContent,
-  WireProtectedHeader,
 } from "../../types/index.js";
 import { Tag, decodeCbor, encodeCbor } from "../cose/cbor.js";
 import { COSE_TAG } from "../cose/structures.js";
@@ -16,18 +16,19 @@ import type { AegisDeps } from "./aegis-deps.js";
 
 /**
  * The wire-tier input to the raw opaque COSE signer — the content, the resolved
- * key policy, the empty-claim prune mode (applied to an object payload only), the
- * bare `tokenType` PREFIX (the DOMAIN `aegis.sign` path translates its enum to a
- * prefix; the `aegis.cws.sign` namespace hands one directly), and the wire header
- * bag (`oid` rides here).
+ * key policy, and the empty-claim prune mode (applied to an object payload only),
+ * intersected with the kit's `SignUnstructuredTokenOptions` wire envelope
+ * (`tokenType` PREFIX, `header`/`unprotected` bags, `proprietary`). The envelope
+ * is forwarded STRUCTURALLY to `CwsKit.sign`, so a new kit sign option threads
+ * through unchanged (`oid` rides the `header` bag). The DOMAIN `aegis.sign` path
+ * translates its `tokenType` enum to a prefix; the `aegis.cws.sign` namespace
+ * hands the envelope straight through.
  */
 export type RawSignCoseInput = {
   payload: TokenContent;
   key?: AegisSignKey;
   omit?: OmitMode;
-  tokenType?: string;
-  header?: WireProtectedHeader;
-};
+} & SignUnstructuredTokenOptions;
 
 /**
  * Raw OPAQUE COSE sign — the profile-less sibling of the `sign` JWS path (the
@@ -48,21 +49,22 @@ export const rawSignCose = async ({
   input: RawSignCoseInput;
   deps: AegisDeps;
 }): Promise<SignedToken> => {
-  const kryptos = await deps.resolveSignKey({ key: input.key });
+  // `payload`/`key`/`omit` are the aegis-side concerns; `signOptions` is exactly
+  // the kit's `SignUnstructuredTokenOptions` and is forwarded STRUCTURALLY to
+  // `CwsKit.sign`, so a new kit sign option (e.g. `proprietary`/`unprotected`)
+  // threads through with no change here.
+  const { payload, key, omit, ...signOptions } = input;
+
+  const kryptos = await deps.resolveSignKey({ key });
 
   // Opaque content: an object payload is pruned of empty entries when an omit
   // mode is set (matching the sign/mint wires); a string/Buffer is opaque and
   // passes through untouched. `CwsKit.sign` owns the cty codec + COSE_Sign1/Mac0
   // split off the key class; the outer CWT tag (61) frames it.
   const content =
-    isBuffer(input.payload) || isString(input.payload)
-      ? input.payload
-      : applyOmit(input.payload as Dict, input.omit);
+    isBuffer(payload) || isString(payload) ? payload : applyOmit(payload as Dict, omit);
 
-  const cose = new CwsKit({ kryptos, logger: deps.logger }).sign(content, {
-    tokenType: input.tokenType,
-    header: input.header,
-  });
+  const cose = new CwsKit({ kryptos, logger: deps.logger }).sign(content, signOptions);
 
   // `CwsKit.sign` returns the BARE encoded COSE bytes; decode back to frame the
   // structure in the outer CWT tag (61).
@@ -71,5 +73,5 @@ export const rawSignCose = async ({
   // A CWS secures OPAQUE content (no wire-claim interpretation), so the
   // expiry/`tokenId` sugar is `undefined`; only `objectId` (from the header bag)
   // is carried.
-  return buildSignedCwt(token.toString("base64url"), {}, input.header?.oid, "cws");
+  return buildSignedCwt(token.toString("base64url"), {}, signOptions.header?.oid, "cws");
 };

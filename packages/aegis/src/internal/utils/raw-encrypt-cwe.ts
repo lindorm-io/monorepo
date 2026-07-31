@@ -24,18 +24,19 @@ export const rawEncryptCwe = async ({
   options?: CweEncryptOptions & { key?: AegisEncKey };
   deps: AegisDeps;
 }): Promise<EncryptedToken> => {
-  const kryptos = await deps.resolveEncryptKey(options.key);
+  // `key` is the aegis-only recipient-key selector (resolves the kryptos and
+  // feeds the kit's `encryption`); every other field IS the kit's
+  // `CweEncryptOptions` and is forwarded structurally, so a new encrypt option
+  // threads through with no change here.
+  const { key, ...rest } = options;
+
+  const kryptos = await deps.resolveEncryptKey(key);
 
   const token = new CweKit({
     kryptos,
     logger: deps.logger,
-    encryption: options.key?.encryption ?? deps.encryption,
-  }).encrypt(data, {
-    tokenType: options.tokenType,
-    header: options.header,
-    unprotected: options.unprotected,
-    proprietary: options.proprietary,
-  });
+    encryption: key?.encryption ?? deps.encryption,
+  }).encrypt(data, rest);
 
   return { format: "cwe", token: token.toString("base64url") };
 };

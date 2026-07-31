@@ -22,13 +22,20 @@ export const rawEncryptJwe = async ({
   options?: JweEncryptOptions & { key?: AegisEncKey };
   deps: AegisDeps;
 }): Promise<EncryptedToken> => {
-  const kryptos = await deps.resolveEncryptKey(options.key);
+  // `key` is the aegis-only recipient-key selector (resolves the kryptos and
+  // feeds the kit's `encryption`); every other field IS the kit's
+  // `JweEncryptOptions` and is forwarded structurally (`encryptJwe` spreads it
+  // onto `JweKit.encrypt`), so a new encrypt option threads through with no
+  // change here — and `key` never leaks onto the wire options.
+  const { key, ...rest } = options;
+
+  const kryptos = await deps.resolveEncryptKey(key);
 
   const token = encryptJwe({
     kryptos,
     data,
-    options,
-    encryption: options.key?.encryption ?? deps.encryption,
+    options: rest,
+    encryption: key?.encryption ?? deps.encryption,
     certBindingMode: deps.certBindingMode,
     certificateThumbprintSha1: deps.certificateThumbprintSha1,
     logger: deps.logger,

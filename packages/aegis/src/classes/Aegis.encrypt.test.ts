@@ -143,6 +143,37 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
     });
   });
 
+  // Regression companion to the raw verify fix: the RAW `aegis.jwe.encrypt`
+  // wrapper (internal/utils/raw-encrypt-jwe.ts) now destructures the aegis-only
+  // `key` selector OUT and forwards the remaining options STRUCTURALLY to
+  // `JweKit.encrypt` (via `encryptJwe`), so a new encrypt option threads through
+  // and `key` never leaks onto the wire options.
+  describe("raw jwe.encrypt forwards options structurally", () => {
+    test("forwards JWE encrypt options (partyProducer/partyRecipient) to the kit", async () => {
+      amphora.add(TEST_EC_KEY_ENC); // ECDH-ES recipient key
+
+      const partyProducer = B64.encode(Buffer.from("producer"), "b64u");
+      const partyRecipient = B64.encode(Buffer.from("recipient"), "b64u");
+
+      const { token } = await aegis.jwe.encrypt("opaque-payload", {
+        tokenType: "at",
+        partyProducer,
+        partyRecipient,
+      });
+
+      // apu/apv on the wire prove the raw wrapper forwarded the party info to
+      // JweKit.encrypt; typ proves tokenType threaded through the same rest.
+      const { header } = JweKit.decode(token);
+      expect(header.apu).toBe(partyProducer);
+      expect(header.apv).toBe(partyRecipient);
+      expect(header.typ).toBe("application/at+jwe");
+
+      // The token still round-trips through the raw decrypt path.
+      const decrypted = await aegis.jwe.decrypt<string>(token);
+      expect(decrypted.payload).toBe("opaque-payload");
+    });
+  });
+
   describe("sensitive (A5 / Phase 13 flat-wire correction)", () => {
     // The mint content input is `sensitive`, typed AegisSensitive (was the
     // nested `sensitiveIdentity`).

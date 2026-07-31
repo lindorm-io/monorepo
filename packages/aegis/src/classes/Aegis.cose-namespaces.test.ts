@@ -79,6 +79,26 @@ describe("Aegis — COSE namespaces", () => {
       expect(parsed.payload.equals(Buffer.from("deadbeef", "hex"))).toBe(true);
       expect(parsed.header.cty).toBe("application/octet-stream");
     });
+
+    // Regression: the RAW `aegis.cws.sign` wrapper (via `rawSignCws` →
+    // `rawSignCose`) once forwarded only a hand-picked subset (`tokenType`/
+    // `header`), silently DROPPING `unprotected` (and `proprietary`) — the
+    // `RawSignCoseInput` now carries the full `SignUnstructuredTokenOptions`
+    // envelope, forwarded STRUCTURALLY to `CwsKit.sign`. This test FAILS without
+    // the fix (the unprotected param never reaches the wire).
+    test("raw cws.sign: forwards a kit sign option (unprotected) to the kit", async () => {
+      const x5u = "https://certs.lindorm.io/leaf.pem";
+
+      const signed = await aegis.cws.sign(
+        { tid: "at_abc" },
+        { tokenType: "at", unprotected: { x5u } },
+      );
+
+      const parsed = await aegis.cws.verify<Record<string, unknown>>(signed.token);
+
+      expect(parsed.header.x5u).toBe(x5u);
+      expect(parsed.header.typ).toBe("application/at+cws");
+    });
   });
 
   describe("cwe — COSE_Encrypt0 (mirror of jwe)", () => {
@@ -101,6 +121,25 @@ describe("Aegis — COSE namespaces", () => {
       const { token } = await aegis.cwe.encrypt(secret);
       const { payload } = await aegis.cwe.decrypt(token);
       expect(payload.equals(secret)).toBe(true);
+    });
+
+    // Regression: the RAW `aegis.cwe.encrypt` wrapper (internal/utils/
+    // raw-encrypt-cwe.ts) once MANUALLY enumerated the options forwarded to
+    // `CweKit.encrypt`, so a NEW encrypt option would be silently dropped. The
+    // fix forwards STRUCTURALLY (`const { key, ...rest }`). Asserts a kit encrypt
+    // option (`unprotected`) reaches the wire via the raw path.
+    test("raw cwe.encrypt: forwards a kit encrypt option (unprotected) to the kit", async () => {
+      const x5u = "https://certs.lindorm.io/leaf.pem";
+
+      const { token } = await aegis.cwe.encrypt("hello cose", {
+        tokenType: "at",
+        unprotected: { x5u },
+      });
+
+      const { header } = await aegis.cwe.decrypt(token);
+
+      expect(header.x5u).toBe(x5u);
+      expect(header.typ).toBe("application/at+cwe");
     });
   });
 
@@ -213,6 +252,32 @@ describe("Aegis — COSE namespaces", () => {
       });
       expect(parsed.payload.sub).toBe("u");
     });
+
+    // Regression companion to the verify fix: the RAW `aegis.cwt.sign` wrapper
+    // (internal/utils/raw-sign-cwt.ts) once MANUALLY enumerated the options it
+    // forwarded to `CwtKit.sign`, so a NEW sign option would be silently dropped.
+    // The fix forwards STRUCTURALLY (`const { key, ...rest }`). Asserts a kit
+    // sign option (`unprotected`) reaches the wire via the raw path.
+    test("raw cwt.sign: forwards a kit sign option (unprotected) to the kit", async () => {
+      const x5u = "https://certs.lindorm.io/leaf.pem";
+
+      const { token } = await aegis.cwt.sign(
+        {
+          iss: "https://test.lindorm.io/",
+          sub: "u",
+          aud: ["aud-1"],
+          exp: 1704099600,
+        },
+        { tokenType: "at", unprotected: { x5u } },
+      );
+
+      const parsed = await aegis.cwt.verify(token);
+
+      // The unprotected header param must survive the raw forward and merge on
+      // verify — without the structural forward a future option is dropped here.
+      expect(parsed.header.x5u).toBe(x5u);
+      expect(parsed.header.typ).toBe("application/at+cwt");
+    });
   });
 
   // The COSE_Mac0 (symmetric) twin of `cwt`. It needs a SYMMETRIC signing key, so
@@ -306,6 +371,25 @@ describe("Aegis — COSE namespaces", () => {
         verifyExpiration: false,
       });
       expect(parsed.payload.sub).toBe("user-1");
+    });
+
+    // Regression companion to the verify fix: the RAW `aegis.cwm.sign` wrapper
+    // (internal/utils/raw-sign-cwm.ts) once MANUALLY enumerated the options it
+    // forwarded to `CwmKit.sign`, so a NEW sign option would be silently dropped.
+    // The fix forwards STRUCTURALLY (`const { key, ...rest }`). Asserts a kit sign
+    // option (`unprotected`) reaches the wire via the raw path.
+    test("raw cwm.sign: forwards a kit sign option (unprotected) to the kit", async () => {
+      const x5u = "https://certs.lindorm.io/leaf.pem";
+
+      const signed = await macAegis.cwm.sign(claims, {
+        tokenType: "at",
+        unprotected: { x5u },
+      });
+
+      const parsed = await macAegis.cwm.verify(signed.token);
+
+      expect(parsed.header.x5u).toBe(x5u);
+      expect(parsed.header.typ).toBe("application/at+cwt"); // CWM shares the CWT typ
     });
   });
 

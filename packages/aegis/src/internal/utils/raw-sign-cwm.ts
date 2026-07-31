@@ -26,15 +26,14 @@ export const rawSignCwm = async <C extends Dict = Dict>({
   options?: SignStructuredTokenOptions & { key?: AegisSignKey };
   deps: AegisDeps;
 }): Promise<SignedToken> => {
-  const kryptos = await deps.resolveSignKey({ key: options.key });
+  // `key` is the aegis-only signing-key selector (resolves the kryptos); every
+  // other field IS the kit's `SignStructuredTokenOptions` and is forwarded
+  // structurally, so a new sign option threads through with no change here.
+  const { key, ...rest } = options;
 
-  const token = new CwmKit({ kryptos, logger: deps.logger }).sign<C>(claims, {
-    tokenType: options.tokenType,
-    proprietary: options.proprietary,
-    omit: options.omit,
-    header: options.header,
-    unprotected: options.unprotected,
-  });
+  const kryptos = await deps.resolveSignKey({ key });
 
-  return buildSignedCwt(token.toString("base64url"), claims, options.header?.oid, "cwm");
+  const token = new CwmKit({ kryptos, logger: deps.logger }).sign<C>(claims, rest);
+
+  return buildSignedCwt(token.toString("base64url"), claims, rest.header?.oid, "cwm");
 };
