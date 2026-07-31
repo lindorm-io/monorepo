@@ -95,9 +95,9 @@ console.log(AES_KEY_LENGTH_A256GCM); // 32
 ### OpenID Connect types
 
 - Request shapes: `OpenIdAuthorizeRequestQuery`, `OpenIdBackchannelAuthenticationRequest`, `OpenIdIntrospectRequest`, `OpenIdLogoutRequest`, `OpenIdRevokeRequest`, `OpenIdTokenRequest`
-- Response shapes: `OpenIdAuthorizeResponseQuery`, `OpenIdIntrospectResponse`, `OpenIdJwksResponse`, `OpenIdTokenResponse`, `OpenIdConfiguration`, `OpenIdConfigurationResponse`, `OpenIdErrorResponse`
+- Response shapes: `OpenIdAuthorizeResponseQuery`, `OpenIdIntrospectResponse`, `OpenIdJwksResponse`, `OpenIdTokenResponse`, `OpenIdErrorResponse`
 - Claims and value objects: `OpenIdClaims`, `OpenIdTokenClaims`, `OpenIdAddress`, `OpenIdGeoLocation`, `OpenIdIdentityProvider`, `OpenIdInstantMessaging`, `OpenIdSocialNetwork`, `OpenIdTokenExchangeAct`
-- Enumerations: `OpenIdBackchannelTokenDeliveryMode`, `OpenIdClientProfile`, `OpenIdClientType`, `OpenIdCodeChallengeMethod`, `OpenIdDisplayMode`, `OpenIdErrorCode`, `OpenIdGrantType`, `OpenIdPromptMode`, `OpenIdResponseMode`, `OpenIdResponseType`, `OpenIdScope`, `OpenIdSubjectType`, `OpenIdTokenAuthMethod`, `OpenIdTokenHeaderType`, `OpenIdTokenType`
+- Enumerations: `OpenIdClientProfile`, `OpenIdClientType`, `OpenIdCodeChallengeMethod`, `OpenIdDisplayMode`, `OpenIdErrorCode`, `OpenIdGrantType`, `OpenIdPromptMode`, `OpenIdResponseMode`, `OpenIdResponseType`, `OpenIdScope`, `OpenIdTokenType`
 
 ### AES types and constants
 
