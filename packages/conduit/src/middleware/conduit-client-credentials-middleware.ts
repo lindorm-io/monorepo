@@ -2,12 +2,7 @@ import { buildDpopProof } from "../internal/build-dpop-proof.js";
 import { BadGatewayError, InternalServerError } from "@lindorm/errors";
 import { isArray, isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
-import type {
-  Dict,
-  DpopSigner,
-  OpenIdConfigurationResponse,
-  OpenIdTokenResponse,
-} from "@lindorm/types";
+import type { Dict, DpopSigner, OpenIdTokenResponse } from "@lindorm/types";
 import { Conduit } from "../classes/index.js";
 import type { ConduitMiddleware, ConduitRequestOptions } from "../types/index.js";
 import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware.js";
@@ -51,6 +46,16 @@ type CacheItem = {
 };
 
 export type ConduitClientCredentialsCache = Array<CacheItem>;
+
+/**
+ * The ONLY part of the issuer's OIDC discovery document this middleware reads.
+ * Responses are camelised by `conduitChangeResponseDataMiddleware("camel")`, so
+ * the wire name is the snake_case one in the comment.
+ */
+type PartialOpenIdConfiguration = {
+  /** wire: `token_endpoint` */
+  tokenEndpoint: string;
+};
 
 export type ConduitClientCredentialsMiddlewareFactory = (
   options?: ConduitClientCredentialsOptions,
@@ -141,7 +146,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
       if (!tokenUri) {
         const {
           data: { tokenEndpoint },
-        } = await client.get<OpenIdConfigurationResponse>(OIDCONF);
+        } = await client.get<PartialOpenIdConfiguration>(OIDCONF);
 
         tokenUri = tokenEndpoint;
 
