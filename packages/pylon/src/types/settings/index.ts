@@ -3,7 +3,6 @@ export * from "./cookie-settings.js";
 export * from "./cors.js";
 export * from "./feature-settings.js";
 export * from "./keys.js";
-export * from "./open-id-configuration.js";
 export * from "./pylon-settings.js";
 export * from "./security-txt.js";
 export * from "./session-settings.js";

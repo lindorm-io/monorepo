@@ -23,7 +23,6 @@ import type {
 import type { PylonEventMap } from "../socket/pylon-event-map.js";
 import type { PylonCookieSettings } from "./cookie-settings.js";
 import type { PylonCorsSettings } from "./cors.js";
-import type { PylonOpenIdConfigurationSettings } from "./open-id-configuration.js";
 import type { PylonParseBodySettings } from "../http/parse-body.js";
 import type {
   PylonAuditSettings,
@@ -96,7 +95,6 @@ export type PylonHttpSettings<C extends PylonHttpContext = PylonHttpContext> =
     routes?: string | PylonHttpRouters<C> | Array<string | PylonHttpRouters<C>>;
     maxRequestAge?: ReadableTime;
     minRequestAge?: ReadableTime;
-    openIdConfiguration?: Partial<PylonOpenIdConfigurationSettings>;
     parseBody?: PylonParseBodySettings;
     proxy?: boolean;
     securityTxt?: PylonSecurityTxt;

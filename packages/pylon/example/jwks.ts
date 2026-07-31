@@ -13,7 +13,7 @@ const amphora = new Amphora({
   external: [
     {
       issuer: "http://external.lindorm.io",
-      openIdConfigurationUri: "http://localhost:3001/.well-known/openid-configuration",
+      jwksUri: "http://localhost:3001/.well-known/jwks.json",
     },
   ],
 });
@@ -58,9 +58,6 @@ const externalPylon = new Pylon({
 
   environment: "test",
   name: "pretend-external-server",
-  openIdConfiguration: {
-    jwksUri: "http://localhost:3001/.well-known/jwks.json",
-  },
   port: 3001,
   version: "0.0.0",
 });

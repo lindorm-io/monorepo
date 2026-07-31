@@ -1,10 +1,11 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createWellKnownRouter > openid-configuration > should return openid configuration with domain replaced 1`] = `
+exports[`createWellKnownRouter > oauth-protected-resource > should return RFC 9728 protected resource metadata 1`] = `
 {
-  "authorization_endpoint": "https://test.lindorm.io/auth",
-  "issuer": "https://test.lindorm.io",
-  "token_endpoint": "https://origin.lindorm.io/token",
+  "authorization_servers": [
+    "https://auth.lindorm.io",
+  ],
+  "resource": "https://test.lindorm.io",
 }
 `;
 
@@ -14,7 +15,5 @@ exports[`createWellKnownRouter > should create a router with expected routes 1`]
   "/jwks.json",
   "/oauth-protected-resource",
   "/right-to-be-forgotten",
-  "/oauth-authorization-server",
-  "/openid-configuration",
 ]
 `;

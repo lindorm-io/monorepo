@@ -65,7 +65,7 @@ For scaffolding a new project, see `@lindorm/create-pylon` (`npm create @lindorm
 - Audit logging — request-level via Iris, optional entity-change tracking via Proteus listeners
 - Webhook subscriptions with `none` / `auth_headers` / `basic` / `client_credentials` auth and automatic suspension on repeated failures
 - Built-in workers for Kryptos key rotation, Amphora key sync, and expiry cleanup, plus a `pylon` CLI to generate routes, listeners, middleware, handlers, and workers
-- Auto-mounted endpoints for `/health` (liveness), `/ready` (readiness), `/.well-known/jwks.json`, `/.well-known/openid-configuration`, `/.well-known/oauth-authorization-server`, `/.well-known/oauth-protected-resource`, `/.well-known/right-to-be-forgotten`, `/.well-known/change-password`, and (opt-in) `/.well-known/security.txt`
+- Auto-mounted endpoints for `/health` (liveness), `/ready` (readiness), `/.well-known/jwks.json`, `/.well-known/oauth-protected-resource`, `/.well-known/right-to-be-forgotten`, `/.well-known/change-password`, and (opt-in) `/.well-known/security.txt`
 
 ## Core concepts
 
@@ -1155,6 +1155,38 @@ const app2 = new Pylon({
   // …
 });
 ```
+
+## Well-known endpoints
+
+Mounted under `/.well-known`:
+
+| Route                           | Description                                                                                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /jwks.json`                | The published JWKS, served straight from the Amphora                                                                                        |
+| `GET /oauth-protected-resource` | RFC 9728 protected resource metadata: `{ resource: <domain>, authorization_servers: [<auth.issuer>] }`. Requires `domain` and `auth.issuer` |
+| `GET /right-to-be-forgotten`    | Bearer-authorized erasure hook — invokes `callbacks.rightToBeForgotten`, returns `204`                                                      |
+| `GET /change-password`          | Redirects to `changePasswordUri`                                                                                                            |
+| `GET /security.txt`             | Opt-in — rendered from `securityTxt`                                                                                                        |
+
+Pylon does **not** serve a discovery document. A discovery document is derived from what a service actually implements — its policy registry, its served keys, its implemented grants — so an authorization server owns and mounts its own `/.well-known` router:
+
+```typescript
+import { Pylon, PylonRouter } from "@lindorm/pylon";
+
+const wellKnown = new PylonRouter();
+
+wellKnown.get("/openid-configuration", async (ctx) => {
+  ctx.body = buildDiscoveryDocument(ctx);
+  ctx.status = 200;
+});
+
+const app = new Pylon({
+  routes: [{ path: "/.well-known", router: wellKnown }],
+  // …
+});
+```
+
+Explicit routers fall through cleanly alongside pylon's own well-known routes.
 
 ## Logging & redaction
 

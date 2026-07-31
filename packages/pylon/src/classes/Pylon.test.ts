@@ -305,7 +305,6 @@ describe("Pylon", () => {
 
       routes: [{ path: "/test", router }],
       name: "@lindorm/pylon",
-      openIdConfiguration: { jwksUri: "http://test.lindorm.io/.well-known/jwks.json" },
       parseBody: { formidable: true },
       port: 55555,
       // The session cookie SEALS with its own key. Signature is unnamed, so it
@@ -444,14 +443,14 @@ describe("Pylon", () => {
     expect(kids).not.toContain("257ba848-a577-5c3f-9bdc-ff3ef3f69fa0");
   });
 
-  test("should return well-known openid-configuration", async () => {
+  test("should return well-known oauth-protected-resource", async () => {
     const response = await request(pylon.callback)
-      .get("/.well-known/openid-configuration")
+      .get("/.well-known/oauth-protected-resource")
       .expect(200);
 
     expect(response.body).toEqual({
-      issuer: "http://test.lindorm.io",
-      jwks_uri: "http://test.lindorm.io/.well-known/jwks.json",
+      resource: "http://test.lindorm.io",
+      authorization_servers: ["https://lindorm.eu.auth0.com/"],
     });
   });
 

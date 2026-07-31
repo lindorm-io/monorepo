@@ -1,7 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { isString, isUrlLike } from "@lindorm/is";
-import type { OpenIdConfiguration } from "@lindorm/types";
-import { omitUndefined, sortKeys } from "@lindorm/utils";
+import { isUrlLike } from "@lindorm/is";
 import { PylonRouter } from "../../classes/index.js";
 import type { PylonHttpContext, PylonHttpSettings } from "../../types/index.js";
 import { assertSecurityTxtOptions } from "./assert-security-txt-options.js";
@@ -32,6 +30,17 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
   });
 
   router.get("/oauth-protected-resource", async (ctx) => {
+    if (!isUrlLike(options.domain)) {
+      throw new ClientError("Domain is not configured", {
+        code: "domain_not_configured",
+        title: "Domain Not Configured",
+        details:
+          "This server has no domain configured to use as its resource identifier.",
+        type: "urn:lindorm:pylon:error:domain_not_configured",
+        status: ClientError.Status.NotFound,
+      });
+    }
+
     if (!isUrlLike(options.auth?.issuer)) {
       throw new ClientError("Auth issuer is not configured", {
         code: "auth_issuer_not_configured",
@@ -42,7 +51,14 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
         status: ClientError.Status.NotFound,
       });
     }
-    ctx.body = [options.auth.issuer];
+
+    // RFC 9728 §2 — protected resource metadata. `resource` (this server's own
+    // resource identifier) is the only REQUIRED member; `authorization_servers`
+    // lists the issuers that can mint tokens for it. Wire names stay snake_case.
+    ctx.body = {
+      resource: options.domain,
+      authorization_servers: [options.auth.issuer],
+    };
     ctx.status = 200;
   });
 
@@ -74,45 +90,6 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
     router.get("/security.txt", async (ctx) => {
       ctx.type = "text/plain; charset=utf-8";
       ctx.body = body;
-      ctx.status = 200;
-    });
-  }
-
-  if (options.openIdConfiguration) {
-    const openIdConfiguration = sortKeys(
-      omitUndefined({
-        ...(options.domain && { issuer: options.domain }),
-        ...options.openIdConfiguration,
-      }),
-    );
-
-    const getOpenIdConfig = (ctx: C): Partial<OpenIdConfiguration> => {
-      const result = { ...openIdConfiguration };
-
-      for (const [key, value] of Object.entries(result)) {
-        if (isString(value) && value.includes("<DOMAIN>")) {
-          (result as any)[key] = value.replace("<DOMAIN>", ctx.state.app.domain);
-          continue;
-        }
-      }
-
-      for (const [key, value] of Object.entries(result)) {
-        if (isString(value) && value.includes("<ORIGIN>")) {
-          (result as any)[key] = value.replace("<ORIGIN>", ctx.state.origin);
-          continue;
-        }
-      }
-
-      return result;
-    };
-
-    router.get("/oauth-authorization-server", async (ctx) => {
-      ctx.body = getOpenIdConfig(ctx);
-      ctx.status = 200;
-    });
-
-    router.get("/openid-configuration", async (ctx) => {
-      ctx.body = getOpenIdConfig(ctx);
       ctx.status = 200;
     });
   }

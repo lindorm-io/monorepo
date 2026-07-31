@@ -12,10 +12,7 @@ describe("createWellKnownRouter", () => {
     maxRequestAge: 30000,
     name: "test-service",
     version: "1.0.0",
-    openIdConfiguration: {
-      authorization_endpoint: "<DOMAIN>/auth",
-      token_endpoint: "<ORIGIN>/token",
-    },
+    auth: { issuer: "https://auth.lindorm.io" },
   };
 
   test("should create a router with expected routes", () => {
@@ -78,27 +75,38 @@ describe("createWellKnownRouter", () => {
     });
   });
 
-  describe("openid-configuration", () => {
-    test("should return openid configuration with domain replaced", async () => {
-      const router = createWellKnownRouter(defaultOptions);
-      const layer = router.stack.find((l) => l.path === "/openid-configuration");
+  describe("oauth-protected-resource", () => {
+    const invoke = async (options: any): Promise<any> => {
+      const router = createWellKnownRouter(options);
+      const layer = router.stack.find((l) => l.path === "/oauth-protected-resource");
 
-      const ctx: any = {
-        body: null,
-        status: 0,
-        state: {
-          app: { domain: "https://test.lindorm.io" },
-          origin: "https://origin.lindorm.io",
-        },
-      };
+      const ctx: any = { body: null, status: 0 };
       const next = vi.fn();
 
       for (const mw of layer!.stack) {
         await mw(ctx, next);
       }
 
+      return ctx;
+    };
+
+    test("should return RFC 9728 protected resource metadata", async () => {
+      const ctx = await invoke(defaultOptions);
+
       expect(ctx.status).toBe(200);
       expect(ctx.body).toMatchSnapshot();
+    });
+
+    test("should throw ClientError when domain is not configured", async () => {
+      await expect(invoke({ ...defaultOptions, domain: undefined })).rejects.toThrow(
+        ClientError,
+      );
+    });
+
+    test("should throw ClientError when auth issuer is not configured", async () => {
+      await expect(invoke({ ...defaultOptions, auth: undefined })).rejects.toThrow(
+        ClientError,
+      );
     });
   });
 
