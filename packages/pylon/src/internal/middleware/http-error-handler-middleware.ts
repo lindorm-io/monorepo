@@ -19,6 +19,9 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
         if (isNumber(err.code) || (isString(err.code) && err.code.length)) {
           url.searchParams.append("error", String(err.code));
         }
+        if (err.details?.length) {
+          url.searchParams.append("error_description", err.details);
+        }
         if (err.uri?.length) {
           url.searchParams.append("error_uri", err.uri);
         }
@@ -27,6 +30,9 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
         }
         if (err.state?.length) {
           url.searchParams.append("state", err.state);
+        }
+        if (err.issuer?.length) {
+          url.searchParams.append("iss", err.issuer);
         }
 
         ctx.redirect(url.toString());

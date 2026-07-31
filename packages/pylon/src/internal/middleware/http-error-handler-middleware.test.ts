@@ -223,6 +223,53 @@ describe("httpErrorHandlerMiddleware", () => {
     expect(headers).toEqual({});
   });
 
+  test("should emit error_description and iss on a redirect error when present", async () => {
+    ctx.redirect = vi.fn();
+
+    const next = () =>
+      Promise.reject(
+        new RedirectError("redirect", {
+          redirect: "https://lindorm.io/callback",
+          code: "access_denied",
+          details: "The resource owner denied the request",
+          uri: "https://lindorm.io/errors/access_denied",
+          support: "support_ref",
+          state: "state_value",
+          issuer: "https://lindorm.io",
+          status: ClientError.Status.Forbidden,
+        }),
+      );
+
+    await httpErrorHandlerMiddleware(ctx, next);
+
+    expect(ctx.redirect).toHaveBeenCalledTimes(1);
+    expect(ctx.redirect.mock.calls[0][0]).toMatchSnapshot();
+  });
+
+  test("should omit error_description and iss on a redirect error when absent", async () => {
+    ctx.redirect = vi.fn();
+
+    const next = () =>
+      Promise.reject(
+        new RedirectError("redirect", {
+          redirect: "https://lindorm.io/callback",
+          code: "access_denied",
+          uri: "https://lindorm.io/errors/access_denied",
+          support: "support_ref",
+          state: "state_value",
+          status: ClientError.Status.Forbidden,
+        }),
+      );
+
+    await httpErrorHandlerMiddleware(ctx, next);
+
+    const url = ctx.redirect.mock.calls[0][0];
+
+    expect(url).not.toContain("error_description");
+    expect(url).not.toContain("iss=");
+    expect(url).toMatchSnapshot();
+  });
+
   test("should handle exceptions", async () => {
     const next = () =>
       Promise.reject(new RedirectError("error message", { redirect: "error" }));

@@ -1214,7 +1214,7 @@ Pylon catches the throw in the built-in `httpErrorHandlerMiddleware`, derives th
 }
 ```
 
-Throwing a `RedirectError` instead emits a redirect with `error`, `error_uri`, `support`, and `state` query parameters appended to its `redirect` URL.
+Throwing a `RedirectError` instead emits a redirect with `error` (`code`), `error_description` (the error's `details`), `error_uri` (`uri`), `support`, `state`, and `iss` (the `issuer` prop; RFC 9207) query parameters appended to its `redirect` URL. `error_description`, `error_uri`, `state`, and `iss` are only emitted when the error carries them.
 
 ### Authentication challenges
 

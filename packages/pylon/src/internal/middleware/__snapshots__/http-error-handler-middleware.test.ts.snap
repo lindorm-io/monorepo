@@ -18,8 +18,12 @@ exports[`httpErrorHandlerMiddleware > should derive a dpop challenge on a 401 1`
 }
 `;
 
+exports[`httpErrorHandlerMiddleware > should emit error_description and iss on a redirect error when present 1`] = `"https://lindorm.io/callback?error=access_denied&error_description=The+resource+owner+denied+the+request&error_uri=https%3A%2F%2Flindorm.io%2Ferrors%2Faccess_denied&support=support_ref&state=state_value&iss=https%3A%2F%2Flindorm.io"`;
+
 exports[`httpErrorHandlerMiddleware > should not overwrite a challenge the handler set explicitly 1`] = `
 {
   "www-authenticate": "Bearer realm="lindorm.io", error="insufficient_scope"",
 }
 `;
+
+exports[`httpErrorHandlerMiddleware > should omit error_description and iss on a redirect error when absent 1`] = `"https://lindorm.io/callback?error=access_denied&error_uri=https%3A%2F%2Flindorm.io%2Ferrors%2Faccess_denied&support=support_ref&state=state_value"`;
