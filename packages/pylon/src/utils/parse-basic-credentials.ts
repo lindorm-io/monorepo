@@ -12,13 +12,18 @@ export type BasicCredentials = {
  * header form-urlencodes `client_id` and `client_secret` before base64 encoding them, so
  * each half must be decoded independently.
  *
+ * Full `application/x-www-form-urlencoded` decode per §2.3.1: `+` is a space and `%XX` is a
+ * percent-escape. `decodeURIComponent` handles the `%XX` half but NOT `+`, so `+` is replaced
+ * with a space first.
+ *
  * A plain (non-OAuth) RFC 7617 password may legitimately contain a bare `%`, which is not
  * valid percent-encoding and makes `decodeURIComponent` throw. Such a half is kept verbatim
- * rather than rejected.
+ * rather than rejected. (A literal `+` in a plain password reads as a space — the same §2.3.1
+ * tradeoff already made for `%`-sequences; harmless for lindorm's base64url secrets.)
  */
 const decodeComponent = (value: string): string => {
   try {
-    return decodeURIComponent(value);
+    return decodeURIComponent(value.replace(/\+/g, " "));
   } catch {
     return value;
   }

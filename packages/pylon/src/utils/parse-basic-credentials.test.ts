@@ -22,6 +22,10 @@ describe("parseBasicCredentials", () => {
     ).toMatchSnapshot();
   });
 
+  test("should decode + as a space (form-urlencoded, RFC 6749 Section 2.3.1)", () => {
+    expect(parseBasicCredentials(encode("my+client:pa+ss word"))).toMatchSnapshot();
+  });
+
   test("should decode an urlencoded colon in the password without splitting on it", () => {
     expect(
       parseBasicCredentials(encode("client:secret%3Awith%3Acolons")),
