@@ -7,7 +7,7 @@ import type {
   LindormJwk,
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { Environment, OpenIdConfiguration } from "@lindorm/types";
+import type { Environment } from "@lindorm/types";
 
 /** The service's OWN identity — minimal (it IS the issuer; it never discovers itself). */
 export type AmphoraInternalConfig = {
@@ -15,10 +15,24 @@ export type AmphoraInternalConfig = {
   jwksUri: string;
 };
 
+/**
+ * The fetched OIDC discovery document. Amphora reads only `issuer` / `jwksUri`; every
+ * other field is preserved verbatim for downstream consumers (pylon's RP client), which
+ * is exactly what the index signature is for — narrowing this shape would silently drop
+ * the endpoints amphora never names. Responses are camelised by the external conduit,
+ * so the wire name is the snake_case one in each comment.
+ */
+export type PartialOpenIdConfiguration = {
+  /** wire: `issuer` */
+  issuer?: string;
+  /** wire: `jwks_uri` */
+  jwksUri?: string;
+} & { [key: string]: unknown };
+
 export type AmphoraExternalSettings = {
   issuer?: string;
   jwksUri?: string;
-  openIdConfiguration?: Partial<OpenIdConfiguration>;
+  openIdConfiguration?: PartialOpenIdConfiguration;
   openIdConfigurationUri?: string;
   /**
    * Eager-fetch this issuer's keys on `addIssuer` / `idp.set` (await the fetch), vs
@@ -42,7 +56,7 @@ export type AmphoraExternalConfig = {
   load: boolean;
   issuer: string | null;
   jwksUri: string | null;
-  openIdConfiguration: OpenIdConfiguration | null;
+  openIdConfiguration: PartialOpenIdConfiguration | null;
   keyCount: number;
   lastRefresh: Date | null;
   // Last time a key from this issuer was RETURNED by a find/filter — the LRU

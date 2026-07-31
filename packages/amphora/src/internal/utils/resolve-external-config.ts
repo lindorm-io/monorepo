@@ -1,10 +1,10 @@
 import type { Conduit } from "@lindorm/conduit";
 import { isUri, isUrlLike, isUrn } from "@lindorm/is";
-import type { OpenIdConfiguration, OpenIdConfigurationResponse } from "@lindorm/types";
 import { AmphoraError } from "../../errors/index.js";
 import type {
   AmphoraExternalConfig,
   AmphoraExternalSettings,
+  PartialOpenIdConfiguration,
 } from "../../types/index.js";
 import { seedExternalConfig } from "./seed-external-config.js";
 
@@ -29,14 +29,14 @@ export const resolveExternalConfig = async (
 
   // 1. An explicit discovery URI — fetch it, derive issuer + jwksUri from the doc.
   if (isUrlLike(input.openIdConfigurationUri)) {
-    const { data } = await conduit.get<OpenIdConfigurationResponse>(
+    const { data } = await conduit.get<PartialOpenIdConfiguration>(
       input.openIdConfigurationUri,
     );
 
-    const openIdConfiguration = {
+    const openIdConfiguration: PartialOpenIdConfiguration = {
       ...data,
       ...(input.openIdConfiguration ?? {}),
-    } as OpenIdConfiguration;
+    };
 
     // A RESOLVED external config MUST carry an issuer — OIDC Discovery mandates it,
     // and keys are scoped / verified (`jwk.iss`) / evicted by it. A doc that omits
@@ -68,7 +68,7 @@ export const resolveExternalConfig = async (
       ...base,
       issuer: input.issuer,
       jwksUri: input.jwksUri,
-      openIdConfiguration: (input.openIdConfiguration as OpenIdConfiguration) ?? null,
+      openIdConfiguration: input.openIdConfiguration ?? null,
     };
   }
 
@@ -78,12 +78,12 @@ export const resolveExternalConfig = async (
     const openIdConfigurationUri = new URL(OIDCONF, input.issuer).toString();
 
     const { data } =
-      await conduit.get<OpenIdConfigurationResponse>(openIdConfigurationUri);
+      await conduit.get<PartialOpenIdConfiguration>(openIdConfigurationUri);
 
-    const openIdConfiguration = {
+    const openIdConfiguration: PartialOpenIdConfiguration = {
       ...data,
       ...(input.openIdConfiguration ?? {}),
-    } as OpenIdConfiguration;
+    };
 
     return {
       ...base,

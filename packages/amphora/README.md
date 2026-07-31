@@ -237,16 +237,18 @@ An issuer source takes one of three forms (also acceptable in the `external` / `
 
 Each source also accepts:
 
-| Field                 | Type                           | Description                                                                                                                                   |
-| --------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `load`                | `boolean`                      | Eager-fetch this issuer's keys on `addIssuer` / `idp.set` (default `false` — lazy; fetched on the next refresh or a find-miss on its issuer). |
-| `openIdConfiguration` | `Partial<OpenIdConfiguration>` | Override or supplement values from the discovery document.                                                                                    |
-| `trustAnchors`        | `string \| Array<string>`      | PEM-encoded CA certificate(s) used to validate the certificate chains attached to fetched JWKs. See [Trust Anchors](#trust-anchors).          |
-| `trustMode`           | `"strict" \| "lax"`            | How to handle fetched keys without a certificate chain when `trustAnchors` is set. Default `"strict"`.                                        |
+| Field                 | Type                         | Description                                                                                                                                   |
+| --------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `load`                | `boolean`                    | Eager-fetch this issuer's keys on `addIssuer` / `idp.set` (default `false` — lazy; fetched on the next refresh or a find-miss on its issuer). |
+| `openIdConfiguration` | `PartialOpenIdConfiguration` | Override or supplement values from the discovery document.                                                                                    |
+| `trustAnchors`        | `string \| Array<string>`    | PEM-encoded CA certificate(s) used to validate the certificate chains attached to fetched JWKs. See [Trust Anchors](#trust-anchors).          |
+| `trustMode`           | `"strict" \| "lax"`          | How to handle fetched keys without a certificate chain when `trustAnchors` is set. Default `"strict"`.                                        |
 
 **An external issuer must be a URI** — a URL with an authority (`https://…`) or a URN (`urn:…`). A bare identifier throws `external_issuer_not_uri`; a URN has no authority to discover from, so a URN issuer with no explicit `jwksUri` throws `urn_issuer_requires_jwks_uri`.
 
 `external.issuers()` returns the resolved config per issuer: `input` (the declared options, verbatim), the settled `issuer` / `jwksUri`, the nested `openIdConfiguration` discovery doc, plus `keyCount`, `lastRefresh` (last fetch), and `lastAccess` (last find/filter hit — the LRU signal for `maxIssuers` eviction; `null` until first use).
+
+`PartialOpenIdConfiguration` names only the two fields amphora itself reads — `issuer` and `jwksUri` — and carries an index signature so every other field of the fetched document is preserved verbatim for downstream consumers (a relying party reads its endpoints off `idp.config().openIdConfiguration`).
 
 ### `amphora.idp` — the upstream identity provider
 
