@@ -5,6 +5,14 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.3.3...@lindorm/conduit@0.10.0) (2026-07-09)
 
+### Notes
+
+- **cache-middleware options reworked (0.x breaking).** The response cache config
+  changed from `{ maxAge, maxEntries }` to `{ driver?, maxAge, methods, respectCacheControl, offline }`.
+  Entry-count capping (`maxEntries`) moved onto the driver — `createMemoryCacheDriver(maxEntries)`.
+  The old options resolve silently to defaults on a clean install (no compile error),
+  so audit any `createConduitCacheMiddleware(...)` call passing `maxEntries`.
+
 ### Bug Fixes
 
 - **conduit:** add origin to RequestContext fixtures and fix breaker middleware test args ([d319108](https://github.com/lindorm-io/monorepo/commit/d31910835aaf8244a2ed9b657b9a1d665f8ecf5a))
