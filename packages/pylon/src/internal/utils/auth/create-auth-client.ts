@@ -15,7 +15,6 @@ import { PKCE } from "@lindorm/pkce";
 import type {
   OpenIdAuthorizeRequestQuery,
   OpenIdClaims,
-  OpenIdConfiguration,
   OpenIdIntrospectResponse,
   OpenIdLogoutRequest,
   OpenIdTokenRequest,
@@ -44,6 +43,7 @@ import type {
 import { getOpenIdConfiguration } from "./get-open-id-configuration.js";
 import { parseIntrospection } from "./parse-introspection.js";
 import { parseUserinfo } from "./parse-userinfo.js";
+import type { PartialOpenIdConfiguration } from "./types.js";
 
 // --- Claims client (works on both HTTP and socket) ---
 
@@ -51,7 +51,7 @@ type ClaimsClientOptions = {
   ctx: PylonContext;
   config: PylonAuthConfig;
   conduit: IConduit;
-  openid: OpenIdConfiguration;
+  openid: PartialOpenIdConfiguration;
   resolveAccessToken: () => string | null;
 };
 
@@ -176,7 +176,7 @@ export const createClaimsClient = (
 
     try {
       const { data } = await conduit.post<OpenIdIntrospectResponse>(
-        openid.introspectEndpoint,
+        openid.introspectionEndpoint,
         {
           body: { token: accessToken },
           middleware: [conduitBasicAuthMiddleware(config.clientId, config.clientSecret)],
@@ -193,8 +193,8 @@ export const createClaimsClient = (
           code: "introspect_endpoint_failed",
           title: "Introspect Endpoint Failed",
           details:
-            "The request to the IdP introspection endpoint did not complete successfully; see the introspectEndpoint in error data",
-          data: { introspectEndpoint: openid.introspectEndpoint },
+            "The request to the IdP introspection endpoint did not complete successfully; see the introspectionEndpoint in error data",
+          data: { introspectionEndpoint: openid.introspectionEndpoint },
           debug: { error },
         },
       );
@@ -333,7 +333,7 @@ export const createAuthClient = (
       state,
     };
 
-    const redirect = createUrl(openid.logoutEndpoint, {
+    const redirect = createUrl(openid.endSessionEndpoint, {
       query: sortKeys(merge(logoutRequest, input)),
       changeQueryCase: "snake",
     });

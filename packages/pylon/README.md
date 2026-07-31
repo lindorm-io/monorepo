@@ -889,6 +889,8 @@ const app = new Pylon({
 
 `ctx.auth.userinfo()` answers _who is this user?_ — it parses the id token locally when possible and falls back to the IdP's userinfo endpoint. `ctx.auth.introspect()` answers _is this token valid, what can it do, when does it expire?_.
 
+The relying party reads its endpoints off the upstream IdP's discovery document, fetched by `amphora.idp`. Six fields are used, by their RFC wire names: `authorization_endpoint`, `token_endpoint`, `token_endpoint_auth_methods_supported`, `userinfo_endpoint`, `introspection_endpoint` (RFC 7662) and `end_session_endpoint` (OIDC RP-Initiated Logout). An IdP that omits one can have it supplied through the `idp.openIdConfiguration` override on the Amphora, which is merged over the fetched document.
+
 ## Sessions
 
 `ctx.session` is an auth-focused store keyed by `id`, `accessToken`, `idToken?`, `refreshToken?`, `subject`, and `scope`. It is populated by Pylon's OIDC flow but the same shape works for any OAuth2 provider. It is **not** a general-purpose state bag — for anonymous data, use `ctx.cookies` directly or model the data as a domain entity.

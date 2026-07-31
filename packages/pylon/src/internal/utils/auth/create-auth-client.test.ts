@@ -54,8 +54,8 @@ describe("createAuthClient", () => {
 
     getOpenIdConfiguration.mockReturnValue({
       authorizationEndpoint: "https://auth.example.com/authorize",
-      introspectEndpoint: "https://auth.example.com/introspect",
-      logoutEndpoint: "https://auth.example.com/logout",
+      introspectionEndpoint: "https://auth.example.com/introspect",
+      endSessionEndpoint: "https://auth.example.com/end-session",
       tokenEndpoint: "https://auth.example.com/token",
       tokenEndpointAuthMethodsSupported: ["client_secret_basic"],
       userinfoEndpoint: "https://auth.example.com/userinfo",
@@ -538,6 +538,111 @@ describe("createAuthClient", () => {
       const result = await client.userinfo("opaque-explicit-token");
 
       expect(result.subject).toBe("endpoint-user");
+    });
+  });
+
+  // The discovery document is read by its RFC wire names — camelised, that is
+  // `introspection_endpoint` -> `introspectionEndpoint` and `end_session_endpoint`
+  // -> `endSessionEndpoint`. Reading a non-standard name silently yields
+  // `undefined` and the RP requests the wrong URL, so both are asserted.
+  describe("discovery endpoint names", () => {
+    test("should post introspection to the introspectionEndpoint", async () => {
+      const ctx = createCtx({
+        state: {
+          tokens: {},
+          session: { accessToken: "opaque-token-xyz" },
+        },
+      });
+
+      const client = createAuthClient(ctx as any, createConfig());
+      const conduitInstance = MockedConduit.mock.results[0].value;
+
+      conduitInstance.post.mockResolvedValue({
+        data: { active: false },
+      });
+
+      await client.introspect();
+
+      expect(conduitInstance.post).toHaveBeenCalledWith(
+        "https://auth.example.com/introspect",
+        expect.any(Object),
+      );
+    });
+
+    test("should name the introspectionEndpoint in the failure error data", async () => {
+      const ctx = createCtx({
+        state: {
+          tokens: {},
+          session: { accessToken: "opaque-token-xyz" },
+        },
+      });
+
+      const client = createAuthClient(ctx as any, createConfig());
+      const conduitInstance = MockedConduit.mock.results[0].value;
+
+      conduitInstance.post.mockRejectedValue(new Error("gateway down"));
+
+      await expect(client.introspect()).rejects.toThrow(IntrospectionEndpointFailed);
+
+      await expect(client.introspect()).rejects.toMatchObject({
+        data: { introspectionEndpoint: "https://auth.example.com/introspect" },
+      });
+    });
+
+    test("should redirect logout to the endSessionEndpoint", async () => {
+      const ctx = createCtx();
+
+      const client = createAuthClient(
+        ctx as any,
+        createConfig({ router: { pathPrefix: "/auth" } }),
+      );
+
+      const { redirect } = client.logout();
+
+      expect(redirect.origin + redirect.pathname).toBe(
+        "https://auth.example.com/end-session",
+      );
+    });
+
+    test("should redirect login to the authorizationEndpoint", async () => {
+      const ctx = createCtx();
+
+      const client = createAuthClient(
+        ctx as any,
+        createConfig({
+          router: {
+            pathPrefix: "/auth",
+            resourceKey: "resource",
+            authorize: {
+              codeChallengeMethod: "S256",
+              responseType: "code",
+              scope: ["openid"],
+            },
+          },
+        }),
+      );
+
+      const { redirect } = client.login();
+
+      expect(redirect.origin + redirect.pathname).toBe(
+        "https://auth.example.com/authorize",
+      );
+    });
+
+    test("should post the token request to the tokenEndpoint", async () => {
+      const ctx = createCtx();
+
+      const client = createAuthClient(ctx as any, createConfig());
+      const conduitInstance = MockedConduit.mock.results[0].value;
+
+      conduitInstance.post.mockResolvedValue({ data: { accessToken: "at" } });
+
+      await client.token({ grantType: "authorization_code", code: "code" } as any);
+
+      expect(conduitInstance.post).toHaveBeenCalledWith(
+        "https://auth.example.com/token",
+        expect.any(Object),
+      );
     });
   });
 });

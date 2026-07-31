@@ -5,6 +5,7 @@ import {
   conduitCorrelationMiddleware,
 } from "@lindorm/conduit";
 import { ClientError } from "@lindorm/errors";
+import { isString } from "@lindorm/is";
 import type { OpenIdAuthorizeResponseQuery, OpenIdClaims } from "@lindorm/types";
 import type {
   PylonAuthConfig,
@@ -21,10 +22,12 @@ const resolveSubjectViaUserinfo = (
   return async (accessToken: string) => {
     try {
       // The upstream IdP is the amphora `idp`; `config()` throws when none is set,
-      // caught below (subject-via-userinfo is a best-effort fallback).
+      // caught below (subject-via-userinfo is a best-effort fallback). Amphora types
+      // the discovery document loosely (it names only `issuer` / `jwksUri`), so the
+      // endpoint is narrowed here rather than asserted — wire: `userinfo_endpoint`.
       const userinfoEndpoint =
         ctx.amphora.idp.config().openIdConfiguration?.userinfoEndpoint;
-      if (!userinfoEndpoint) return null;
+      if (!isString(userinfoEndpoint)) return null;
 
       const conduit = new Conduit({
         alias: "auth-userinfo",
