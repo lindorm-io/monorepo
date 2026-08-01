@@ -14,19 +14,16 @@ This package is ESM-only. Use `import` syntax; `require` is not supported.
 
 - `Environment` — common runtime environment names.
 - `HttpMethod` — HTTP request methods.
-- `PkceMethod` — PKCE code challenge methods (RFC 7636).
 - `Priority` — Lindorm priority URNs for ordered work classification.
 
 ## Usage
 
 ```typescript
-import { Environment, HttpMethod, PkceMethod, Priority } from "@lindorm/enums";
+import { Environment, HttpMethod, Priority } from "@lindorm/enums";
 
 const env: Environment = Environment.Production;
 
 const method: HttpMethod = HttpMethod.Post;
-
-const challenge: PkceMethod = PkceMethod.S256;
 
 const priority: Priority = Priority.High;
 ```
@@ -66,13 +63,6 @@ const isMutation = (method: HttpMethod): boolean =>
 | `Patch`   | `"PATCH"`   |
 | `Options` | `"OPTIONS"` |
 | `Head`    | `"HEAD"`    |
-
-### `PkceMethod`
-
-| Member  | Value     |
-| ------- | --------- |
-| `Plain` | `"plain"` |
-| `S256`  | `"S256"`  |
 
 ### `Priority`
 
