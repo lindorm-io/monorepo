@@ -8,6 +8,8 @@ export type InstantMessaging = {
    * `signal` / `whatsapp` / `matrix`. NOT a vCard-style `type` (home/work).
    */
   provider: string;
+  /** wire: `url` — canonical link to the handle, e.g. a `t.me` / `wa.me` / `matrix.to` URL. */
+  url: string;
   /** wire: `username` */
   username: string;
 };

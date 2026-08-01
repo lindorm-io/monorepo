@@ -13,7 +13,12 @@ import type { SocialNetwork } from "./social-network.js";
  */
 type NewLindormClaims = {
   // accessibility
-  /** wire: `preferred_accessibility` */
+  /**
+   * wire: `preferred_accessibility` — deliberately an OPEN array of strings,
+   * not a closed enum: these are hints a front end applies automatically
+   * (contrast, motion, text size, …), so a deployment must be able to add its
+   * own without a toolkit release.
+   */
   preferredAccessibility: Array<string>;
 
   // auth
