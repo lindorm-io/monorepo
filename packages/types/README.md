@@ -22,7 +22,7 @@ This package has no runtime or peer dependencies.
 - `AbortSignal` companions: an `AbortReason` discriminated union and a `WithSignal<T>` mixin
 - A `DpopSigner` contract for RFC 9449 DPoP proofs that does not take a hard dependency on `node:crypto`
 - General TypeScript helpers (`DeepPartial<T>`, `Dict<T>`, `Optional<T, K>`, `Constructor<T>`, `ClassLike<T>`, `ReverseMap<T>`, `Function<T>`, `Header`, `Param`, `Query`)
-- String-literal enums: `Environment`, `HttpMethod`, `PkceMethod`, `Priority`
+- String-literal enums: `Environment`, `HttpMethod`, `Priority`
 - The `IKeyKit` interface used by signing and verification utilities
 
 ## Usage
@@ -141,7 +141,6 @@ console.log(AES_KEY_LENGTH_A256GCM); // 32
 
 - `Environment` — `production`, `staging`, `development`, `test`, `unknown`
 - `HttpMethod` — `Get`, `Post`, `Put`, `Delete`, `Patch`, `Options`, `Head`, plus their fully lowercased and fully uppercased variants
-- `PkceMethod` — `S256`, `plain`
 - `Priority` — `critical`, `high`, `medium`, `low`, `background`, `default`
 
 ## License
