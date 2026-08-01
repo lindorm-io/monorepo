@@ -15,7 +15,6 @@ This package has no runtime or peer dependencies.
 ## Features
 
 - JOSE-aligned JWK types: `Jwks`, `LindormJwks`, `JwksAlgorithm`, `JwksEncryptionAlgorithm`, `JwksSigningAlgorithm`, `JwksCurve`, `JwksKeyOps`, `JwksKeyType`, `JwksUse`
-- A catalogue of OpenID Connect request, response, claim, and enum types covering authorize, token, introspect, revoke, logout, backchannel authentication, and provider configuration flows
 - AES content-encryption algorithm tags and key-length constants (`AesEncryption`, `AesCbcEncryption`, `AesGcmEncryption`, `AES_ENCRYPTION_ALGORITHMS`, `AES_KEY_LENGTH_*`)
 - Generic crypto primitives: `KeyData`, `DsaEncoding`, `ShaAlgorithm`
 - Predicate generics (`Predicate<T>`, `RootPredicate<T>`, `PredicateOperator<T>`) used by repository drivers across the monorepo
@@ -34,7 +33,6 @@ import type {
   HttpMethod,
   IKeyKit,
   KeyData,
-  OpenIdTokenResponse,
   Predicate,
   WithSignal,
 } from "@lindorm/types";
@@ -42,10 +40,6 @@ import type {
 const sign: IKeyKit["sign"] = (data: KeyData) => Buffer.from(data);
 
 type FetchOptions = WithSignal<{ method: HttpMethod; body?: Dict }>;
-
-const fetchToken = async (opts: FetchOptions): Promise<OpenIdTokenResponse> => {
-  // ...
-};
 
 const adultUserQuery: Predicate<{ id: string; age: number }> = {
   age: { $gte: 18 },
@@ -91,13 +85,6 @@ console.log(AES_KEY_LENGTH_A256GCM); // 32
 - `JwksKeyOps` — `decrypt`, `deriveBits`, `deriveKey`, `encrypt`, `sign`, `unwrapKey`, `verify`, `wrapKey`
 - `JwksKeyType` — `EC`, `oct`, `OKP`, `RSA`
 - `JwksUse` — `enc`, `sig`
-
-### OpenID Connect types
-
-- Request shapes: `OpenIdAuthorizeRequestQuery`, `OpenIdLogoutRequest`, `OpenIdTokenRequest`
-- Response shapes: `OpenIdAuthorizeResponseQuery`, `OpenIdIntrospectResponse`, `OpenIdJwksResponse`, `OpenIdTokenResponse`
-- Claims and value objects: `OpenIdClaims`, `OpenIdAddress`, `OpenIdGeoLocation`, `OpenIdIdentityProvider`, `OpenIdInstantMessaging`, `OpenIdSocialNetwork`
-- Enumerations: `OpenIdCodeChallengeMethod`, `OpenIdDisplayMode`, `OpenIdGrantType`, `OpenIdPromptMode`, `OpenIdResponseMode`, `OpenIdResponseType`, `OpenIdScope`
 
 ### AES types and constants
 
