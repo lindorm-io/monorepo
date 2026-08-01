@@ -889,7 +889,18 @@ const app = new Pylon({
 
 `ctx.auth.userinfo()` answers _who is this user?_ — it parses the id token locally when possible and falls back to the IdP's userinfo endpoint. `ctx.auth.introspect()` answers _is this token valid, what can it do, when does it expire?_.
 
-The relying party reads its endpoints off the upstream IdP's discovery document, fetched by `amphora.idp`. Six fields are used, by their RFC wire names: `authorization_endpoint`, `token_endpoint`, `token_endpoint_auth_methods_supported`, `userinfo_endpoint`, `introspection_endpoint` (RFC 7662) and `end_session_endpoint` (OIDC RP-Initiated Logout). An IdP that omits one can have it supplied through the `idp.openIdConfiguration` override on the Amphora, which is merged over the fetched document.
+The relying party reads its endpoints off the upstream IdP's discovery document, fetched by `amphora.idp`. Six fields are used, by their RFC wire names — only the first two are required by the specs, and a real IdP does omit the rest (Auth0 publishes no `introspection_endpoint`):
+
+| Wire name                               | Spec level                                | Pylon behaviour when absent                                                                                 |
+| --------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `authorization_endpoint`                | REQUIRED (OIDC Discovery §3, RFC 8414 §2) | `openid_configuration_incomplete` — thrown when the document is adopted                                     |
+| `token_endpoint`                        | REQUIRED (OIDC Discovery §3, RFC 8414 §2) | `openid_configuration_incomplete` — thrown when the document is adopted                                     |
+| `userinfo_endpoint`                     | RECOMMENDED (OIDC Discovery §3)           | `idp_userinfo_endpoint_not_supported` — thrown by `ctx.auth.userinfo()` when it must call the IdP           |
+| `introspection_endpoint`                | OPTIONAL (RFC 8414 §2, RFC 7662)          | `idp_introspection_endpoint_not_supported` — thrown by `ctx.auth.introspect()` when it must call the IdP    |
+| `end_session_endpoint`                  | OPTIONAL (OIDC RP-Initiated Logout 1.0)   | `idp_end_session_endpoint_not_supported` — thrown by `ctx.auth.logout()`                                    |
+| `token_endpoint_auth_methods_supported` | OPTIONAL (OIDC Discovery §3, RFC 8414 §2) | Falls back to the spec default `["client_secret_basic"]` — the token request uses HTTP basic auth, no throw |
+
+The named errors are thrown at the point of use, so the local fast paths still work: `ctx.auth.userinfo()` and `ctx.auth.introspect()` only throw when they actually have to reach the IdP, and the login callback's best-effort subject lookup stays silent. An IdP that serves an endpoint without advertising it can have the field supplied through the `idp.openIdConfiguration` override on the Amphora, which is merged over the fetched document.
 
 ## Sessions
 

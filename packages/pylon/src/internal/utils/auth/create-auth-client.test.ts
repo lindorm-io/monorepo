@@ -1,5 +1,6 @@
 import { Aegis } from "@lindorm/aegis";
 import { Conduit } from "@lindorm/conduit";
+import { ServerError } from "@lindorm/errors";
 import { createAuthClient } from "./create-auth-client.js";
 import { getOpenIdConfiguration as _getOpenIdConfiguration } from "./get-open-id-configuration.js";
 import { IntrospectionEndpointFailed } from "../../../errors/IntrospectionEndpointFailed.js";
@@ -643,6 +644,222 @@ describe("createAuthClient", () => {
         "https://auth.example.com/token",
         expect.any(Object),
       );
+    });
+  });
+
+  // `userinfo_endpoint` is RECOMMENDED, `introspection_endpoint` and
+  // `end_session_endpoint` are OPTIONAL — a real IdP omits them (Auth0 publishes no
+  // introspection endpoint). The operation must fail by name, not request `undefined`.
+  describe("optional discovery endpoints", () => {
+    const omitFromConfiguration = (field: string) => {
+      const openid = {
+        authorizationEndpoint: "https://auth.example.com/authorize",
+        introspectionEndpoint: "https://auth.example.com/introspect",
+        endSessionEndpoint: "https://auth.example.com/end-session",
+        tokenEndpoint: "https://auth.example.com/token",
+        tokenEndpointAuthMethodsSupported: ["client_secret_basic"],
+        userinfoEndpoint: "https://auth.example.com/userinfo",
+      } as any;
+
+      delete openid[field];
+
+      getOpenIdConfiguration.mockReturnValue(openid);
+    };
+
+    test("should throw when the IdP publishes no userinfo endpoint", async () => {
+      omitFromConfiguration("userinfoEndpoint");
+
+      const ctx = createCtx({
+        state: { tokens: {}, session: { accessToken: "opaque-token-xyz" } },
+      });
+
+      const client = createAuthClient(ctx as any, createConfig());
+
+      await expect(client.userinfo()).rejects.toMatchObject({
+        code: "idp_userinfo_endpoint_not_supported",
+        type: "urn:lindorm:pylon:error:idp_userinfo_endpoint_not_supported",
+        status: 501,
+        data: { issuer: "https://auth.example.com" },
+      });
+    });
+
+    test("should call the userinfo endpoint when the IdP publishes one", async () => {
+      const ctx = createCtx({
+        state: { tokens: {}, session: { accessToken: "opaque-token-xyz" } },
+      });
+
+      const client = createAuthClient(ctx as any, createConfig());
+      const conduitInstance = MockedConduit.mock.results[0].value;
+
+      conduitInstance.get.mockResolvedValue({ data: { sub: "user-endpoint" } });
+
+      await expect(client.userinfo()).resolves.toMatchObject({
+        subject: "user-endpoint",
+      });
+
+      expect(conduitInstance.get).toHaveBeenCalledWith(
+        "https://auth.example.com/userinfo",
+        expect.any(Object),
+      );
+    });
+
+    test("should throw when the IdP publishes no introspection endpoint", async () => {
+      omitFromConfiguration("introspectionEndpoint");
+
+      const ctx = createCtx({
+        state: { tokens: {}, session: { accessToken: "opaque-token-xyz" } },
+      });
+
+      const client = createAuthClient(ctx as any, createConfig());
+
+      await expect(client.introspect()).rejects.toMatchObject({
+        code: "idp_introspection_endpoint_not_supported",
+        type: "urn:lindorm:pylon:error:idp_introspection_endpoint_not_supported",
+        status: 501,
+        data: { issuer: "https://auth.example.com" },
+      });
+    });
+
+    test("should call the introspection endpoint when the IdP publishes one", async () => {
+      const ctx = createCtx({
+        state: { tokens: {}, session: { accessToken: "opaque-token-xyz" } },
+      });
+
+      const client = createAuthClient(ctx as any, createConfig());
+      const conduitInstance = MockedConduit.mock.results[0].value;
+
+      conduitInstance.post.mockResolvedValue({ data: { active: false } });
+
+      await expect(client.introspect()).resolves.toEqual({ active: false });
+
+      expect(conduitInstance.post).toHaveBeenCalledWith(
+        "https://auth.example.com/introspect",
+        expect.any(Object),
+      );
+    });
+
+    test("should throw when the IdP publishes no end session endpoint", async () => {
+      omitFromConfiguration("endSessionEndpoint");
+
+      const ctx = createCtx();
+
+      const client = createAuthClient(
+        ctx as any,
+        createConfig({ router: { pathPrefix: "/auth" } }),
+      );
+
+      let error: any = null;
+      try {
+        client.logout();
+      } catch (err) {
+        error = err;
+      }
+
+      expect(error).toBeInstanceOf(ServerError);
+      expect(error.code).toBe("idp_end_session_endpoint_not_supported");
+      expect(error.type).toBe(
+        "urn:lindorm:pylon:error:idp_end_session_endpoint_not_supported",
+      );
+      expect(error.status).toBe(501);
+    });
+
+    test("should redirect to the end session endpoint when the IdP publishes one", async () => {
+      const ctx = createCtx();
+
+      const client = createAuthClient(
+        ctx as any,
+        createConfig({ router: { pathPrefix: "/auth" } }),
+      );
+
+      const { redirect } = client.logout();
+
+      expect(redirect.origin + redirect.pathname).toBe(
+        "https://auth.example.com/end-session",
+      );
+    });
+
+    test("should not throw for a missing userinfo endpoint on the id_token fast path", async () => {
+      omitFromConfiguration("userinfoEndpoint");
+
+      const ctx = createCtx({
+        state: {
+          tokens: {
+            idToken: { format: "jwt", wire: { payload: { sub: "user-fast" } } },
+          },
+        },
+      });
+
+      const client = createAuthClient(ctx as any, createConfig());
+
+      await expect(client.userinfo()).resolves.toMatchObject({
+        subject: "user-fast",
+      });
+    });
+  });
+
+  // OIDC Discovery §3 / RFC 8414 §2 — `token_endpoint_auth_methods_supported` is
+  // OPTIONAL, and when absent the spec default is `client_secret_basic`.
+  describe("token endpoint auth methods", () => {
+    const withAuthMethods = (methods?: Array<string>) => {
+      getOpenIdConfiguration.mockReturnValue({
+        authorizationEndpoint: "https://auth.example.com/authorize",
+        introspectionEndpoint: "https://auth.example.com/introspect",
+        endSessionEndpoint: "https://auth.example.com/end-session",
+        tokenEndpoint: "https://auth.example.com/token",
+        userinfoEndpoint: "https://auth.example.com/userinfo",
+        ...(methods ? { tokenEndpointAuthMethodsSupported: methods } : {}),
+      });
+    };
+
+    const tokenRequest = async () => {
+      const ctx = createCtx();
+      const client = createAuthClient(ctx as any, createConfig());
+      const conduitInstance = MockedConduit.mock.results[0].value;
+
+      conduitInstance.post.mockResolvedValue({ data: { accessToken: "at" } });
+
+      await client.token({ grantType: "authorization_code", code: "code" } as any);
+
+      return conduitInstance.post.mock.calls[0][1];
+    };
+
+    test("should default to client_secret_basic when the IdP advertises none", async () => {
+      withAuthMethods();
+
+      const options = await tokenRequest();
+
+      // Basic auth is applied via middleware, and the credentials stay out of the body.
+      expect(options.middleware).toHaveLength(1);
+      expect(options.body.clientId).toBeUndefined();
+      expect(options.body.clientSecret).toBeUndefined();
+
+      const middlewareCtx: any = { req: { headers: {} } };
+      await options.middleware[0](middlewareCtx, async () => {});
+
+      expect(middlewareCtx.req.headers.Authorization).toBe(
+        `Basic ${Buffer.from("client-id:client-secret").toString("base64")}`,
+      );
+    });
+
+    test("should use client_secret_post when the IdP advertises it", async () => {
+      withAuthMethods(["client_secret_post"]);
+
+      const options = await tokenRequest();
+
+      expect(options.middleware).toEqual([]);
+      expect(options.body).toMatchObject({
+        clientId: "client-id",
+        clientSecret: "client-secret",
+      });
+    });
+
+    test("should use client_secret_basic when the IdP advertises it", async () => {
+      withAuthMethods(["client_secret_basic"]);
+
+      const options = await tokenRequest();
+
+      expect(options.middleware).toHaveLength(1);
+      expect(options.body.clientId).toBeUndefined();
     });
   });
 });

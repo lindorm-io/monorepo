@@ -10,7 +10,7 @@ import {
 import { sec } from "@lindorm/date";
 import type { IConduit } from "@lindorm/conduit";
 import { ServerError } from "@lindorm/errors";
-import { isNumberString } from "@lindorm/is";
+import { isArray, isNumberString, isString } from "@lindorm/is";
 import { PKCE } from "@lindorm/pkce";
 import type {
   OpenIdAuthorizeRequestQuery,
@@ -44,6 +44,12 @@ import { getOpenIdConfiguration } from "./get-open-id-configuration.js";
 import { parseIntrospection } from "./parse-introspection.js";
 import { parseUserinfo } from "./parse-userinfo.js";
 import type { PartialOpenIdConfiguration } from "./types.js";
+
+/**
+ * OIDC Discovery §3 / RFC 8414 §2 — `token_endpoint_auth_methods_supported` is
+ * OPTIONAL, and when it is omitted the spec default is `client_secret_basic`.
+ */
+const DEFAULT_TOKEN_ENDPOINT_AUTH_METHODS: Array<string> = ["client_secret_basic"];
 
 // --- Claims client (works on both HTTP and socket) ---
 
@@ -100,6 +106,20 @@ export const createClaimsClient = (
         title: "Userinfo Access Token Missing",
         details:
           "No explicit token was provided and none could be resolved from the session, authorization header, or context",
+      });
+    }
+
+    // `userinfo_endpoint` is only RECOMMENDED (OIDC Discovery §3) — an OP that omits
+    // it cannot serve this call at all. Fail by name instead of requesting `undefined`.
+    if (!isString(openid.userinfoEndpoint)) {
+      throw new ServerError("IdP does not support the userinfo endpoint", {
+        code: "idp_userinfo_endpoint_not_supported",
+        title: "IdP Userinfo Endpoint Not Supported",
+        type: "urn:lindorm:pylon:error:idp_userinfo_endpoint_not_supported",
+        status: ServerError.Status.NotImplemented,
+        details:
+          "The upstream IdP's discovery document publishes no `userinfo_endpoint` (RECOMMENDED, not REQUIRED, by OIDC Discovery §3), so userinfo cannot be fetched from the IdP. Supply the endpoint through the amphora `idp.openIdConfiguration` override if the IdP serves one without advertising it.",
+        data: { issuer: config.issuer },
       });
     }
 
@@ -172,6 +192,20 @@ export const createClaimsClient = (
             "No explicit token was provided and none could be resolved from the session, authorization header, or context",
         },
       );
+    }
+
+    // `introspection_endpoint` is OPTIONAL (RFC 8414 §2) and real OPs omit it —
+    // Auth0 publishes none. Fail by name instead of posting to `undefined`.
+    if (!isString(openid.introspectionEndpoint)) {
+      throw new ServerError("IdP does not support the introspection endpoint", {
+        code: "idp_introspection_endpoint_not_supported",
+        title: "IdP Introspection Endpoint Not Supported",
+        type: "urn:lindorm:pylon:error:idp_introspection_endpoint_not_supported",
+        status: ServerError.Status.NotImplemented,
+        details:
+          "The upstream IdP's discovery document publishes no `introspection_endpoint` (OPTIONAL per RFC 8414), so the token cannot be introspected remotely. Use locally verifiable JWT access tokens, or supply the endpoint through the amphora `idp.openIdConfiguration` override.",
+        data: { issuer: config.issuer },
+      });
     }
 
     try {
@@ -320,6 +354,20 @@ export const createAuthClient = (
       });
     }
 
+    // `end_session_endpoint` is OPTIONAL (OIDC RP-Initiated Logout 1.0 §2) — an OP
+    // that omits it has no RP-initiated logout to redirect to.
+    if (!isString(openid.endSessionEndpoint)) {
+      throw new ServerError("IdP does not support the end session endpoint", {
+        code: "idp_end_session_endpoint_not_supported",
+        title: "IdP End Session Endpoint Not Supported",
+        type: "urn:lindorm:pylon:error:idp_end_session_endpoint_not_supported",
+        status: ServerError.Status.NotImplemented,
+        details:
+          "The upstream IdP's discovery document publishes no `end_session_endpoint` (OPTIONAL per OIDC RP-Initiated Logout 1.0), so the user cannot be redirected to the IdP for logout. Clear the local session only, or supply the endpoint through the amphora `idp.openIdConfiguration` override.",
+        data: { issuer: config.issuer },
+      });
+    }
+
     const { clientId } = config;
 
     const state = randomBytes(16).toString("base64url");
@@ -344,18 +392,20 @@ export const createAuthClient = (
   const token = async (input: TokenRequest): Promise<OpenIdTokenResponse> => {
     const { clientId, clientSecret } = config;
 
-    const clientPost = openid.tokenEndpointAuthMethodsSupported.includes(
-      "client_secret_post",
-    )
+    // Absent ⇒ the spec default, so an OP that advertises nothing still gets the
+    // basic-auth credentials it is entitled to expect.
+    const authMethods = isArray(openid.tokenEndpointAuthMethodsSupported)
+      ? openid.tokenEndpointAuthMethodsSupported
+      : DEFAULT_TOKEN_ENDPOINT_AUTH_METHODS;
+
+    const clientPost = authMethods.includes("client_secret_post")
       ? {
           clientId,
           clientSecret,
         }
       : null;
 
-    const middleware = openid.tokenEndpointAuthMethodsSupported.includes(
-      "client_secret_basic",
-    )
+    const middleware = authMethods.includes("client_secret_basic")
       ? [conduitBasicAuthMiddleware(clientId, clientSecret)]
       : [];
 
