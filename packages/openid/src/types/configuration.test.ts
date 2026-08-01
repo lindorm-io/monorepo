@@ -69,13 +69,44 @@ describe("Configuration", () => {
     expect(configuration).toMatchSnapshot();
   });
 
-  test("should serve the lindorm and vendor extension endpoints", () => {
+  test("should serve the lindorm extension endpoints", () => {
     const configuration: Configuration = {
       ...MINIMAL,
-      rightToBeForgottenEndpoint: "https://test.lindorm.io/oauth/right-to-be-forgotten",
-      tokenExchangeEndpoint: "https://test.lindorm.io/oauth/token-exchange",
-      mfaChallengeEndpoint: "https://test.lindorm.io/mfa/challenge",
+      gdprRightToErasureEndpoint: "https://test.lindorm.io/gdpr/erasure",
+      gdprRightOfAccessEndpoint: "https://test.lindorm.io/gdpr/disclosure",
+      gdprRightToDataPortabilityEndpoint: "https://test.lindorm.io/gdpr/portability",
       deviceAuthorizationEndpoint: "https://test.lindorm.io/oauth/device/code",
+    };
+
+    expect(configuration).toMatchSnapshot();
+  });
+
+  test("should reject the extension endpoints the design dropped", () => {
+    const forgotten: Configuration = {
+      ...MINIMAL,
+      // @ts-expect-error renamed to `gdpr_right_to_erasure_endpoint`
+      rightToBeForgottenEndpoint: "https://test.lindorm.io/oauth/right-to-be-forgotten",
+    };
+
+    const exchange: Configuration = {
+      ...MINIMAL,
+      // @ts-expect-error token exchange is a GRANT at the ordinary token endpoint
+      tokenExchangeEndpoint: "https://test.lindorm.io/oauth/token-exchange",
+    };
+
+    const mfa: Configuration = {
+      ...MINIMAL,
+      // @ts-expect-error `mfa_challenge_endpoint` is an auth0 vendor field, not ours
+      mfaChallengeEndpoint: "https://test.lindorm.io/mfa/challenge",
+    };
+
+    expect([forgotten, exchange, mfa]).toBeDefined();
+  });
+
+  test("should serve the draft authorization challenge endpoint", () => {
+    const configuration: Configuration = {
+      ...MINIMAL,
+      authorizationChallengeEndpoint: "https://test.lindorm.io/oauth/authorize-challenge",
     };
 
     expect(configuration).toMatchSnapshot();
