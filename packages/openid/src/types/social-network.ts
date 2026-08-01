@@ -3,8 +3,11 @@
  * `social_networks` scope. No RFC counterpart.
  */
 export type SocialNetwork = {
-  /** wire: `type` */
-  type: string;
+  /**
+   * wire: `provider` — the network the profile lives on, e.g. `mastodon` /
+   * `linkedin` / `bluesky`. NOT a vCard-style `type` (home/work).
+   */
+  provider: string;
   /** wire: `url` */
   url: string;
   /** wire: `username` */
