@@ -7,6 +7,7 @@ import type {
   LindormJwk,
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
+import type { Configuration } from "@lindorm/openid";
 import type { Environment } from "@lindorm/types";
 
 /** The service's OWN identity — minimal (it IS the issuer; it never discovers itself). */
@@ -15,24 +16,15 @@ export type AmphoraInternalConfig = {
   jwksUri: string;
 };
 
-/**
- * The fetched OIDC discovery document. Amphora reads only `issuer` / `jwksUri`; every
- * other field is preserved verbatim for downstream consumers (pylon's RP client), which
- * is exactly what the index signature is for — narrowing this shape would silently drop
- * the endpoints amphora never names. Responses are camelised by the external conduit,
- * so the wire name is the snake_case one in each comment.
- */
-export type PartialOpenIdConfiguration = {
-  /** wire: `issuer` */
-  issuer?: string;
-  /** wire: `jwks_uri` */
-  jwksUri?: string;
-} & { [key: string]: unknown };
-
 export type AmphoraExternalSettings = {
   issuer?: string;
   jwksUri?: string;
-  openIdConfiguration?: PartialOpenIdConfiguration;
+  /**
+   * Override or supplement values from the discovery document — a PARTIAL by
+   * design: an operator patching a single member (an endpoint the provider
+   * serves but does not advertise) supplies that member alone.
+   */
+  openIdConfiguration?: Partial<Configuration>;
   openIdConfigurationUri?: string;
   /**
    * Eager-fetch this issuer's keys on `addIssuer` / `idp.set` (await the fetch), vs
@@ -56,7 +48,19 @@ export type AmphoraExternalConfig = {
   load: boolean;
   issuer: string | null;
   jwksUri: string | null;
-  openIdConfiguration: PartialOpenIdConfiguration | null;
+  /**
+   * The fetched discovery document, merged with the declared override. PARTIAL:
+   * amphora neither validates it nor reads more than `issuer` / `jwksUri`, so
+   * claiming the members the specs mark REQUIRED would be a claim amphora has
+   * not checked. A consumer that needs a complete {@link Configuration}
+   * validates it at ITS boundary (pylon's `getOpenIdConfiguration` does exactly
+   * that, and throws `openid_configuration_incomplete` when it cannot).
+   *
+   * A non-standard member a provider emits survives at RUNTIME — the document
+   * is spread verbatim — but reading one is a deliberate, greppable cast: the
+   * `Configuration` shape is closed so a mistyped member cannot pass silently.
+   */
+  openIdConfiguration: Partial<Configuration> | null;
   keyCount: number;
   lastRefresh: Date | null;
   // Last time a key from this issuer was RETURNED by a find/filter — the LRU

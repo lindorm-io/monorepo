@@ -2,7 +2,7 @@ import type { Conduit } from "@lindorm/conduit";
 import { isArray, isString } from "@lindorm/is";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { OpenIdJwksResponse } from "@lindorm/types";
+import type { JwksResponse } from "@lindorm/openid";
 import { AmphoraError } from "../../errors/index.js";
 import type { AmphoraExternalConfig } from "../../types/index.js";
 
@@ -38,7 +38,7 @@ export const fetchExternalJwks = async (
 
   const {
     data: { keys },
-  } = await conduit.get<OpenIdJwksResponse>(config.jwksUri);
+  } = await conduit.get<JwksResponse>(config.jwksUri);
 
   if (keys.length === 0) {
     logger.warn("External JWKS response contains no keys", {

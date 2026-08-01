@@ -49,6 +49,7 @@
     "@lindorm/is": "^0.3.0",
     "@lindorm/kryptos": "^0.11.0",
     "@lindorm/match": "^0.0.0",
+    "@lindorm/openid": "^0.0.0",
     "@lindorm/types": "^0.10.0",
     "@lindorm/utils": "^0.10.0"
   },
