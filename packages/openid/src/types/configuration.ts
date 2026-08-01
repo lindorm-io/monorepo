@@ -24,17 +24,25 @@ import type { TokenEndpointAuthMethod } from "../enums/TokenEndpointAuthMethod.j
  */
 type LindormConfiguration = {
   /**
-   * wire: `right_to_be_forgotten_endpoint` — LINDORM EXTENSION, OPTIONAL.
-   * URL of the endpoint that erases a subject on request.
+   * wire: `gdpr_right_to_erasure_endpoint` — LINDORM EXTENSION (registry E9),
+   * OPTIONAL. Subject-initiated GDPR erasure (Art. 17). Present only when GDPR
+   * DSR is enabled.
    */
-  rightToBeForgottenEndpoint?: string;
+  gdprRightToErasureEndpoint?: string;
 
   /**
-   * wire: `token_exchange_endpoint` — LINDORM EXTENSION, OPTIONAL. RFC 8693
-   * itself exchanges tokens at the ordinary `token_endpoint`; this names a
-   * dedicated endpoint where a deployment separates the two.
+   * wire: `gdpr_right_of_access_endpoint` — LINDORM EXTENSION (registry E9),
+   * OPTIONAL. Subject-initiated GDPR data disclosure / right of access
+   * (Art. 15). Present only when GDPR DSR is enabled.
    */
-  tokenExchangeEndpoint?: string;
+  gdprRightOfAccessEndpoint?: string;
+
+  /**
+   * wire: `gdpr_right_to_data_portability_endpoint` — LINDORM EXTENSION
+   * (registry E9), OPTIONAL. Subject-initiated GDPR data portability
+   * (Art. 20). Present only when GDPR DSR is enabled.
+   */
+  gdprRightToDataPortabilityEndpoint?: string;
 };
 
 /**
@@ -138,6 +146,13 @@ type StandardConfiguration = {
 
   /** wire: `backchannel_authentication_endpoint` — OPTIONAL (OpenID CIBA Core 1.0 §4) */
   backchannelAuthenticationEndpoint?: string;
+
+  /**
+   * wire: `authorization_challenge_endpoint` — OPTIONAL
+   * (draft-ietf-oauth-first-party-apps). The browserless Authorization
+   * Challenge Endpoint for first-party native login.
+   */
+  authorizationChallengeEndpoint?: string;
 
   // ----------------------------------------------------- CLIENT AUTHENTICATION
 
