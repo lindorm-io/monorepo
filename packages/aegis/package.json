@@ -55,6 +55,7 @@
     "@lindorm/match": "^0.0.0",
     "@lindorm/oct": "^0.5.0",
     "@lindorm/okp": "^0.5.0",
+    "@lindorm/openid": "^0.0.0",
     "@lindorm/rsa": "^0.5.0",
     "@lindorm/sha": "^0.7.0",
     "@lindorm/types": "^0.10.0",

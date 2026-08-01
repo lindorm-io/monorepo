@@ -1,7 +1,7 @@
 // Aegis-owned profile claims. Inspired by the standard OIDC Core §5.1
 // profile claims (given_name, family_name, email, etc.) but extended with
 // Lindorm-specific personalization and contact-card fields. Aegis owns
-// this type fully; @lindorm/types/OpenIdClaims remains as a pure standards
+// this type fully; `Claims` from @lindorm/openid remains as a pure standards
 // reference for the unmodified OIDC Core spec.
 //
 // Scope: AegisProfile contains claims that are appropriate for inclusion

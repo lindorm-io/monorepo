@@ -1,4 +1,4 @@
-import type { AuthorizationDetail } from "@lindorm/types";
+import type { AuthorizationDetail } from "@lindorm/openid";
 
 // Wire form of RarClaims — RFC 9396. `authorization_details` is the
 // registered JWT/wire claim name. Contents are carried verbatim.

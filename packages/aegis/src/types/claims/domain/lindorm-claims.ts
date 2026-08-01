@@ -1,4 +1,4 @@
-import type { OpenIdGrantType, OpenIdScope } from "@lindorm/types";
+import type { GrantType, Scope } from "@lindorm/openid";
 import type {
   AuthenticatorAssuranceLevel,
   FederationAssuranceLevel,
@@ -31,11 +31,11 @@ export type LindormClaims = {
   // access token / introspection whenever non-empty. See `token-claims.md` §2/§3.
   conformsTo?: Array<string>;
   federationAssuranceLevel?: FederationAssuranceLevel;
-  grantType?: OpenIdGrantType;
+  grantType?: GrantType;
   identityAssuranceLevel?: IdentityAssuranceLevel;
   levelOfAssurance?: LevelOfAssurance;
   permissions?: Array<string>;
-  scope?: Array<OpenIdScope>;
+  scope?: Array<Scope>;
   sessionHint?: SessionHint;
   sessionId?: string;
   subjectHint?: SubjectHint;

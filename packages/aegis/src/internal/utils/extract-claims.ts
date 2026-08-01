@@ -1,5 +1,6 @@
 import { isArray, isFinite, isObject, isString } from "@lindorm/is";
-import type { AuthorizationDetail, Dict } from "@lindorm/types";
+import type { AuthorizationDetail } from "@lindorm/openid";
+import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import {
   CLAIMS_REGISTRY,
