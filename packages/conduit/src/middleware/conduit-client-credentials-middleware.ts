@@ -2,7 +2,8 @@ import { buildDpopProof } from "../internal/build-dpop-proof.js";
 import { BadGatewayError, InternalServerError } from "@lindorm/errors";
 import { isArray, isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
-import type { Dict, DpopSigner, OpenIdTokenResponse } from "@lindorm/types";
+import type { Configuration, TokenResponse } from "@lindorm/openid";
+import type { Dict, DpopSigner } from "@lindorm/types";
 import { Conduit } from "../classes/index.js";
 import type { ConduitMiddleware, ConduitRequestOptions } from "../types/index.js";
 import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware.js";
@@ -46,16 +47,6 @@ type CacheItem = {
 };
 
 export type ConduitClientCredentialsCache = Array<CacheItem>;
-
-/**
- * The ONLY part of the issuer's OIDC discovery document this middleware reads.
- * Responses are camelised by `conduitChangeResponseDataMiddleware("camel")`, so
- * the wire name is the snake_case one in the comment.
- */
-type PartialOpenIdConfiguration = {
-  /** wire: `token_endpoint` */
-  tokenEndpoint: string;
-};
 
 export type ConduitClientCredentialsMiddlewareFactory = (
   options?: ConduitClientCredentialsOptions,
@@ -144,9 +135,13 @@ export const conduitClientCredentialsMiddlewareFactory = (
       let tokenUri = cachedIssuer?.tokenUri ?? config.tokenUri ?? null;
 
       if (!tokenUri) {
+        // Responses are camelised by `conduitChangeResponseDataMiddleware("camel")`,
+        // so the document arrives in the shape of `Configuration`. The spec marks
+        // `token_endpoint` REQUIRED, but a real issuer can still omit it — hence the
+        // guard below.
         const {
           data: { tokenEndpoint },
-        } = await client.get<PartialOpenIdConfiguration>(OIDCONF);
+        } = await client.get<Configuration>(OIDCONF);
 
         tokenUri = tokenEndpoint;
 
@@ -206,7 +201,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
           }
         : null;
 
-      const { data } = await client.post<OpenIdTokenResponse>(tokenUri, {
+      const { data } = await client.post<TokenResponse>(tokenUri, {
         ...requestOptions,
         middleware: [
           ...(authLocation === "header"
