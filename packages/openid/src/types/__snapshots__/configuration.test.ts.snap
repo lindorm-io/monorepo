@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Configuration > should match snapshot for the spec-minimal document 1`] = `
+exports[`OpenIdConfiguration > should match snapshot for the spec-minimal document 1`] = `
 {
   "authorizationEndpoint": "https://test.lindorm.io/oauth/authorize",
   "idTokenSigningAlgValuesSupported": [
@@ -18,14 +18,14 @@ exports[`Configuration > should match snapshot for the spec-minimal document 1`]
 }
 `;
 
-exports[`Configuration > should satisfy the amphora issuer read 1`] = `
+exports[`OpenIdConfiguration > should satisfy the amphora issuer read 1`] = `
 [
   "https://test.lindorm.io",
   "https://test.lindorm.io/.well-known/jwks.json",
 ]
 `;
 
-exports[`Configuration > should satisfy the pylon relying-party read 1`] = `
+exports[`OpenIdConfiguration > should satisfy the pylon relying-party read 1`] = `
 {
   "optional": [
     undefined,
@@ -40,7 +40,7 @@ exports[`Configuration > should satisfy the pylon relying-party read 1`] = `
 }
 `;
 
-exports[`Configuration > should serve the RFC-correct endpoint names 1`] = `
+exports[`OpenIdConfiguration > should serve the RFC-correct endpoint names 1`] = `
 {
   "authorizationEndpoint": "https://test.lindorm.io/oauth/authorize",
   "endSessionEndpoint": "https://test.lindorm.io/oauth/end-session",
@@ -61,7 +61,7 @@ exports[`Configuration > should serve the RFC-correct endpoint names 1`] = `
 }
 `;
 
-exports[`Configuration > should serve the draft authorization challenge endpoint 1`] = `
+exports[`OpenIdConfiguration > should serve the draft authorization challenge endpoint 1`] = `
 {
   "authorizationChallengeEndpoint": "https://test.lindorm.io/oauth/authorize-challenge",
   "authorizationEndpoint": "https://test.lindorm.io/oauth/authorize",
@@ -80,7 +80,7 @@ exports[`Configuration > should serve the draft authorization challenge endpoint
 }
 `;
 
-exports[`Configuration > should serve the lindorm extension endpoints 1`] = `
+exports[`OpenIdConfiguration > should serve the lindorm extension endpoints 1`] = `
 {
   "authorizationEndpoint": "https://test.lindorm.io/oauth/authorize",
   "deviceAuthorizationEndpoint": "https://test.lindorm.io/oauth/device/code",

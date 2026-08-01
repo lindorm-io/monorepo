@@ -15,9 +15,9 @@ import { PKCE } from "@lindorm/pkce";
 import type {
   AuthorizeRequestQuery,
   Claims,
-  Configuration,
   IntrospectResponse,
   LogoutRequest,
+  OpenIdConfiguration,
   TokenEndpointAuthMethod,
   TokenResponse,
   TokenRequest as OpenIdTokenRequest,
@@ -60,7 +60,7 @@ type ClaimsClientOptions = {
   ctx: PylonContext;
   config: PylonAuthConfig;
   conduit: IConduit;
-  openid: Configuration;
+  openid: OpenIdConfiguration;
   resolveAccessToken: () => string | null;
 };
 

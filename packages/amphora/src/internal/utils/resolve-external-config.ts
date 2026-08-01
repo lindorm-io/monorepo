@@ -1,6 +1,6 @@
 import type { Conduit } from "@lindorm/conduit";
 import { isUri, isUrlLike, isUrn } from "@lindorm/is";
-import type { Configuration } from "@lindorm/openid";
+import type { OpenIdConfiguration } from "@lindorm/openid";
 import { AmphoraError } from "../../errors/index.js";
 import type {
   AmphoraExternalConfig,
@@ -32,11 +32,11 @@ export const resolveExternalConfig = async (
     // The fetched document is UNVALIDATED, so it is read as a partial: a remote
     // provider can omit anything, whatever the specs mandate. Every member it
     // does send is carried through the spread verbatim.
-    const { data } = await conduit.get<Partial<Configuration>>(
+    const { data } = await conduit.get<Partial<OpenIdConfiguration>>(
       input.openIdConfigurationUri,
     );
 
-    const openIdConfiguration: Partial<Configuration> = {
+    const openIdConfiguration: Partial<OpenIdConfiguration> = {
       ...data,
       ...(input.openIdConfiguration ?? {}),
     };
@@ -80,9 +80,10 @@ export const resolveExternalConfig = async (
   if (isUrlLike(input.issuer) && !isUrn(input.issuer)) {
     const openIdConfigurationUri = new URL(OIDCONF, input.issuer).toString();
 
-    const { data } = await conduit.get<Partial<Configuration>>(openIdConfigurationUri);
+    const { data } =
+      await conduit.get<Partial<OpenIdConfiguration>>(openIdConfigurationUri);
 
-    const openIdConfiguration: Partial<Configuration> = {
+    const openIdConfiguration: Partial<OpenIdConfiguration> = {
       ...data,
       ...(input.openIdConfiguration ?? {}),
     };

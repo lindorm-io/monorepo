@@ -6,13 +6,13 @@ import type {
   AuthorizeRequestQuery,
   AuthorizeResponseQuery,
   Claims,
-  Configuration,
   GeoLocation,
   IdentityProvider,
   InstantMessaging,
   IntrospectResponse,
   JwksResponse,
   LogoutRequest,
+  OpenIdConfiguration,
   SocialNetwork,
   TokenRequest,
   TokenResponse,
@@ -22,7 +22,8 @@ import type {
  * Every public TYPE reached through the root barrel. Types are erased at
  * runtime, so this declaration is the assertion — if a type stops being
  * exported (or is renamed back to an `OpenId*` name), this file stops
- * compiling.
+ * compiling. `OpenIdConfiguration` is the one principled `OpenId*` keeper —
+ * see the note on the type itself.
  */
 type PublicTypes = {
   address: Address;
@@ -30,13 +31,13 @@ type PublicTypes = {
   authorizeRequestQuery: AuthorizeRequestQuery;
   authorizeResponseQuery: AuthorizeResponseQuery;
   claims: Claims;
-  configuration: Configuration;
   geoLocation: GeoLocation;
   identityProvider: IdentityProvider;
   instantMessaging: InstantMessaging;
   introspectResponse: IntrospectResponse;
   jwksResponse: JwksResponse;
   logoutRequest: LogoutRequest;
+  openIdConfiguration: OpenIdConfiguration;
   socialNetwork: SocialNetwork;
   tokenRequest: TokenRequest;
   tokenResponse: TokenResponse;
@@ -54,13 +55,13 @@ describe("index", () => {
       "authorizeRequestQuery",
       "authorizeResponseQuery",
       "claims",
-      "configuration",
       "geoLocation",
       "identityProvider",
       "instantMessaging",
       "introspectResponse",
       "jwksResponse",
       "logoutRequest",
+      "openIdConfiguration",
       "socialNetwork",
       "tokenRequest",
       "tokenResponse",

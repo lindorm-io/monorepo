@@ -7,7 +7,7 @@ import type {
   LindormJwk,
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { Configuration } from "@lindorm/openid";
+import type { OpenIdConfiguration } from "@lindorm/openid";
 import type { Environment } from "@lindorm/types";
 
 /** The service's OWN identity — minimal (it IS the issuer; it never discovers itself). */
@@ -24,7 +24,7 @@ export type AmphoraExternalSettings = {
    * design: an operator patching a single member (an endpoint the provider
    * serves but does not advertise) supplies that member alone.
    */
-  openIdConfiguration?: Partial<Configuration>;
+  openIdConfiguration?: Partial<OpenIdConfiguration>;
   openIdConfigurationUri?: string;
   /**
    * Eager-fetch this issuer's keys on `addIssuer` / `idp.set` (await the fetch), vs
@@ -52,15 +52,15 @@ export type AmphoraExternalConfig = {
    * The fetched discovery document, merged with the declared override. PARTIAL:
    * amphora neither validates it nor reads more than `issuer` / `jwksUri`, so
    * claiming the members the specs mark REQUIRED would be a claim amphora has
-   * not checked. A consumer that needs a complete {@link Configuration}
+   * not checked. A consumer that needs a complete {@link OpenIdConfiguration}
    * validates it at ITS boundary (pylon's `getOpenIdConfiguration` does exactly
    * that, and throws `openid_configuration_incomplete` when it cannot).
    *
    * A non-standard member a provider emits survives at RUNTIME — the document
    * is spread verbatim — but reading one is a deliberate, greppable cast: the
-   * `Configuration` shape is closed so a mistyped member cannot pass silently.
+   * `OpenIdConfiguration` shape is closed so a mistyped member cannot pass silently.
    */
-  openIdConfiguration: Partial<Configuration> | null;
+  openIdConfiguration: Partial<OpenIdConfiguration> | null;
   keyCount: number;
   lastRefresh: Date | null;
   // Last time a key from this issuer was RETURNED by a find/filter — the LRU

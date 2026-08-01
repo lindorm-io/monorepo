@@ -2,7 +2,7 @@ import { buildDpopProof } from "../internal/build-dpop-proof.js";
 import { BadGatewayError, InternalServerError } from "@lindorm/errors";
 import { isArray, isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
-import type { Configuration, TokenResponse } from "@lindorm/openid";
+import type { OpenIdConfiguration, TokenResponse } from "@lindorm/openid";
 import type { Dict, DpopSigner } from "@lindorm/types";
 import { Conduit } from "../classes/index.js";
 import type { ConduitMiddleware, ConduitRequestOptions } from "../types/index.js";
@@ -136,12 +136,12 @@ export const conduitClientCredentialsMiddlewareFactory = (
 
       if (!tokenUri) {
         // Responses are camelised by `conduitChangeResponseDataMiddleware("camel")`,
-        // so the document arrives in the shape of `Configuration`. The spec marks
+        // so the document arrives in the shape of `OpenIdConfiguration`. The spec marks
         // `token_endpoint` REQUIRED, but a real issuer can still omit it — hence the
         // guard below.
         const {
           data: { tokenEndpoint },
-        } = await client.get<Configuration>(OIDCONF);
+        } = await client.get<OpenIdConfiguration>(OIDCONF);
 
         tokenUri = tokenEndpoint;
 

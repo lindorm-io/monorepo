@@ -26,7 +26,8 @@ npm install @lindorm/openid
 ## Naming
 
 - **The package is the namespace — no `OpenId` prefix.** `Scope`, `GrantType`, `Claims`,
-  `TokenResponse`, `Configuration`.
+  `TokenResponse`. The one deliberate exception is `OpenIdConfiguration`, where `OpenId` is the
+  document's proper noun rather than a namespace prefix — see [OpenIdConfiguration](#openidconfiguration).
 - **`Lindorm*` marks a lindorm extension of an RFC shape.** `Address` composes `LindormAddress`
   (the extra `careOf`) with `StandardAddress`; `Claims` composes `NewLindormClaims` +
   `ExtendingLindormClaims` + `StandardClaims`; `Scope` composes `LindormScope` with `StandardScope`.
@@ -70,9 +71,9 @@ Requests and responses: `AuthorizeRequestQuery` · `AuthorizeResponseQuery` · `
 Subject data: `Claims` · `Address` · `GeoLocation` · `IdentityProvider` · `InstantMessaging` ·
 `SocialNetwork`.
 
-### Configuration
+### OpenIdConfiguration
 
-`Configuration` is the provider metadata document — OIDC Discovery 1.0 §3 and RFC 8414 §2,
+`OpenIdConfiguration` is the provider metadata document — OIDC Discovery 1.0 §3 and RFC 8414 §2,
 camelised. **One type serves both directions**: a relying party reading a remote document, and a
 provider serving its own. That works because the requirement levels are the specs' own — the seven
 members OIDC Discovery marks REQUIRED are required here, everything else is optional and the reader
@@ -80,9 +81,9 @@ handles its absence at the point of use.
 
 ```typescript
 import { ResponseType, SubjectType } from "@lindorm/openid";
-import type { Configuration } from "@lindorm/openid";
+import type { OpenIdConfiguration } from "@lindorm/openid";
 
-const configuration: Configuration = {
+const configuration: OpenIdConfiguration = {
   issuer: "https://lindorm.io",
   authorizationEndpoint: "https://lindorm.io/oauth/authorize",
   tokenEndpoint: "https://lindorm.io/oauth/token",
@@ -94,7 +95,11 @@ const configuration: Configuration = {
 ```
 
 The shape is deliberately **closed** — no index signature. Excess-property checking is what catches
-a mistyped member when a provider builds its own document. Lindorm and vendor extension members
+a mistyped member when a provider builds its own document. The name keeps its `OpenId` prefix on
+purpose: the well-known URI is literally `/.well-known/openid-configuration`, the bare noun
+`Configuration` collided with unrelated `config` identifiers at every use site, and the
+spec-derived alternatives (`ProviderMetadata`, `AuthorizationServerMetadata`) each name only half
+the job — this one type also serves `/.well-known/oauth-authorization-server`. Lindorm and vendor extension members
 (`rightToBeForgottenEndpoint`, `tokenExchangeEndpoint`, `mfaChallengeEndpoint`) are grouped
 separately from the standard set.
 

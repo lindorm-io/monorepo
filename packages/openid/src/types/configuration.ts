@@ -22,7 +22,7 @@ import type { TokenEndpointAuthMethod } from "../enums/TokenEndpointAuthMethod.j
  * kept separate from the standard shape so a reader can always tell which half
  * of the document is spec and which half is ours.
  */
-type LindormConfiguration = {
+type LindormOpenIdConfiguration = {
   /**
    * wire: `gdpr_right_to_erasure_endpoint` — LINDORM EXTENSION (registry E9),
    * OPTIONAL. Subject-initiated GDPR erasure (Art. 17). Present only when GDPR
@@ -50,7 +50,7 @@ type LindormConfiguration = {
  * §3 (which is stricter than RFC 8414 §2 and therefore governs here); every
  * member carries its wire name, requirement level, and defining spec.
  */
-type StandardConfiguration = {
+type StandardOpenIdConfiguration = {
   // ---------------------------------------------------------------- REQUIRED
 
   /**
@@ -328,5 +328,24 @@ type StandardConfiguration = {
  * (`introspectEndpoint`, `logoutEndpoint`, `revokeEndpoint`). Non-standard
  * members a remote provider emits still survive at runtime; reading one is a
  * deliberate, greppable cast rather than silently-typed `unknown` everywhere.
+ *
+ * NAME — a DELIBERATE exception to this package's "the package is the
+ * namespace" rule (which is why `OpenIdScope` is `Scope`, `OpenIdGrantType` is
+ * `GrantType`, …). DO NOT "clean up" the prefix. Here `OpenId` is the
+ * document's PROPER NOUN, not a namespace: the well-known URI is literally
+ * `/.well-known/openid-configuration` and the whole ecosystem calls it "the
+ * openid-configuration". The bare noun `Configuration` was genuinely ambiguous
+ * at use sites — `get-open-id-configuration.ts` had `config: PylonAuthConfig`
+ * and `Configuration` in the same four-line signature — while every
+ * surrounding identifier already spells the full name (amphora's
+ * `openIdConfiguration` / `openIdConfigurationUri`, pylon's
+ * `getOpenIdConfiguration` and its `openid_configuration_not_found` /
+ * `openid_configuration_incomplete` error codes, tyr's own local type).
+ * Spec-derived names (`ProviderMetadata`, `AuthorizationServerMetadata`) were
+ * rejected because this ONE type serves BOTH `/.well-known/openid-configuration`
+ * (OIDC Discovery §3, "OpenID Provider Metadata") and
+ * `/.well-known/oauth-authorization-server` (RFC 8414 §2, "Authorization Server
+ * Metadata") — either spec's term mislabels half the job.
  */
-export type Configuration = LindormConfiguration & StandardConfiguration;
+export type OpenIdConfiguration = LindormOpenIdConfiguration &
+  StandardOpenIdConfiguration;

@@ -1,14 +1,14 @@
 import { describe, expect, test } from "vitest";
 import { ResponseType } from "../enums/ResponseType.js";
 import { SubjectType } from "../enums/SubjectType.js";
-import type { Configuration } from "./configuration.js";
+import type { OpenIdConfiguration } from "./configuration.js";
 
 /**
  * The minimum a spec-compliant provider MUST publish — OIDC Discovery §3.
  * That this compiles is the assertion: nothing beyond these seven members is
  * required, and none of them may be dropped.
  */
-const MINIMAL: Configuration = {
+const MINIMAL: OpenIdConfiguration = {
   issuer: "https://test.lindorm.io",
   authorizationEndpoint: "https://test.lindorm.io/oauth/authorize",
   tokenEndpoint: "https://test.lindorm.io/oauth/token",
@@ -18,7 +18,7 @@ const MINIMAL: Configuration = {
   idTokenSigningAlgValuesSupported: ["RS256"],
 };
 
-describe("Configuration", () => {
+describe("OpenIdConfiguration", () => {
   test("should match snapshot for the spec-minimal document", () => {
     expect(MINIMAL).toMatchSnapshot();
   });
@@ -26,19 +26,19 @@ describe("Configuration", () => {
   // TypeScript reports only the FIRST excess property of an object literal, so
   // each wrong wire name needs a literal of its own to be genuinely asserted.
   test("should reject the spec bugs the deleted type carried", () => {
-    const introspect: Configuration = {
+    const introspect: OpenIdConfiguration = {
       ...MINIMAL,
       // @ts-expect-error RFC 8414 §2 is `introspection_endpoint`, never `introspect_endpoint`
       introspectEndpoint: "https://test.lindorm.io/oauth/introspect",
     };
 
-    const logout: Configuration = {
+    const logout: OpenIdConfiguration = {
       ...MINIMAL,
       // @ts-expect-error OIDC RP-Initiated Logout is `end_session_endpoint`, not `logout_endpoint`
       logoutEndpoint: "https://test.lindorm.io/oauth/logout",
     };
 
-    const revoke: Configuration = {
+    const revoke: OpenIdConfiguration = {
       ...MINIMAL,
       // @ts-expect-error RFC 7009 is `revocation_endpoint`; there is no `revoke_endpoint`
       revokeEndpoint: "https://test.lindorm.io/oauth/revoke",
@@ -48,7 +48,7 @@ describe("Configuration", () => {
   });
 
   test("should reject the deleted subject type values", () => {
-    const configuration: Configuration = {
+    const configuration: OpenIdConfiguration = {
       ...MINIMAL,
 
       // @ts-expect-error OIDC Core §8 defines `pairwise` | `public`
@@ -59,7 +59,7 @@ describe("Configuration", () => {
   });
 
   test("should serve the RFC-correct endpoint names", () => {
-    const configuration: Configuration = {
+    const configuration: OpenIdConfiguration = {
       ...MINIMAL,
       introspectionEndpoint: "https://test.lindorm.io/oauth/introspection",
       endSessionEndpoint: "https://test.lindorm.io/oauth/end-session",
@@ -70,7 +70,7 @@ describe("Configuration", () => {
   });
 
   test("should serve the lindorm extension endpoints", () => {
-    const configuration: Configuration = {
+    const configuration: OpenIdConfiguration = {
       ...MINIMAL,
       gdprRightToErasureEndpoint: "https://test.lindorm.io/gdpr/erasure",
       gdprRightOfAccessEndpoint: "https://test.lindorm.io/gdpr/disclosure",
@@ -82,19 +82,19 @@ describe("Configuration", () => {
   });
 
   test("should reject the extension endpoints the design dropped", () => {
-    const forgotten: Configuration = {
+    const forgotten: OpenIdConfiguration = {
       ...MINIMAL,
       // @ts-expect-error renamed to `gdpr_right_to_erasure_endpoint`
       rightToBeForgottenEndpoint: "https://test.lindorm.io/oauth/right-to-be-forgotten",
     };
 
-    const exchange: Configuration = {
+    const exchange: OpenIdConfiguration = {
       ...MINIMAL,
       // @ts-expect-error token exchange is a GRANT at the ordinary token endpoint
       tokenExchangeEndpoint: "https://test.lindorm.io/oauth/token-exchange",
     };
 
-    const mfa: Configuration = {
+    const mfa: OpenIdConfiguration = {
       ...MINIMAL,
       // @ts-expect-error `mfa_challenge_endpoint` is an auth0 vendor field, not ours
       mfaChallengeEndpoint: "https://test.lindorm.io/mfa/challenge",
@@ -104,7 +104,7 @@ describe("Configuration", () => {
   });
 
   test("should serve the draft authorization challenge endpoint", () => {
-    const configuration: Configuration = {
+    const configuration: OpenIdConfiguration = {
       ...MINIMAL,
       authorizationChallengeEndpoint: "https://test.lindorm.io/oauth/authorize-challenge",
     };
