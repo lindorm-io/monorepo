@@ -9,7 +9,7 @@ import type {
 } from "../../../types/index.js";
 import { PROFILE_CLAIM_KEYS } from "./profile-claim-keys.js";
 
-// Permissive structural input — a consumer's OpenIdIntrospectResponse or a plain
+// Permissive structural input — a consumer's `IntrospectResponse` or a plain
 // JSON body from the introspection endpoint passes through without a cast.
 export type IntrospectClaimsInput = Dict & {
   active?: unknown;

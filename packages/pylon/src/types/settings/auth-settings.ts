@@ -1,18 +1,18 @@
 import type { ReadableTime } from "@lindorm/date";
-import type { PkceMethod } from "@lindorm/types";
 import type {
-  DeepPartial,
-  OpenIdPromptMode,
-  OpenIdResponseType,
-  OpenIdScope,
-} from "@lindorm/types";
+  CodeChallengeMethod,
+  PromptMode,
+  ResponseType,
+  Scope,
+} from "@lindorm/openid";
+import type { DeepPartial } from "@lindorm/types";
 
 export type PylonLoginCookie = {
-  codeChallengeMethod: PkceMethod;
+  codeChallengeMethod: CodeChallengeMethod;
   codeVerifier: string;
   nonce: string;
   redirectUri: string;
-  responseType: OpenIdResponseType;
+  responseType: ResponseType;
   scope: string;
   state: string;
 };
@@ -33,12 +33,12 @@ export type PylonAuthRefreshConfig = {
 
 export type PylonAuthAuthorizeConfig = {
   acrValues: string | null;
-  codeChallengeMethod: PkceMethod;
+  codeChallengeMethod: CodeChallengeMethod;
   maxAge: ReadableTime | null;
-  prompt: OpenIdPromptMode | null;
+  prompt: PromptMode | null;
   resource: string | null;
-  responseType: OpenIdResponseType;
-  scope: Array<OpenIdScope>;
+  responseType: ResponseType;
+  scope: Array<Scope>;
 };
 
 export type PylonAuthResourceKey = "resource" | "audience";

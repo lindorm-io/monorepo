@@ -1,17 +1,17 @@
 import type {
-  OpenIdAuthorizeRequestQuery,
-  OpenIdLogoutRequest,
-  OpenIdResponseType,
-  OpenIdTokenRequest,
-  OpenIdTokenResponse,
-  PkceMethod,
-} from "@lindorm/types";
+  AuthorizeRequestQuery,
+  CodeChallengeMethod,
+  LogoutRequest,
+  ResponseType,
+  TokenResponse,
+  TokenRequest as OpenIdTokenRequest,
+} from "@lindorm/openid";
 import type { PylonIntrospection } from "./pylon-introspection.js";
 import type { PylonUserinfo } from "./pylon-userinfo.js";
 
 export type AuthorizeQuery = Partial<
   Omit<
-    OpenIdAuthorizeRequestQuery,
+    AuthorizeRequestQuery,
     | "clientId"
     | "codeChallenge"
     | "codeChallengeMethod"
@@ -24,17 +24,17 @@ export type AuthorizeQuery = Partial<
 >;
 
 export type AuthorizeResult = {
-  codeChallengeMethod: PkceMethod;
+  codeChallengeMethod: CodeChallengeMethod;
   codeVerifier: string;
   nonce: string;
   redirect: URL;
-  responseType: OpenIdResponseType;
+  responseType: ResponseType;
   scope: string;
   state: string;
 };
 
 export type LogoutQuery = Partial<
-  Omit<OpenIdLogoutRequest, "clientId" | "postLogoutRedirectUri" | "state">
+  Omit<LogoutRequest, "clientId" | "postLogoutRedirectUri" | "state">
 >;
 
 export type LogoutResult = {
@@ -56,5 +56,5 @@ export type PylonAuthClaimsClient = {
 export type PylonAuthClient = PylonAuthClaimsClient & {
   login(query?: AuthorizeQuery): AuthorizeResult;
   logout(query?: LogoutQuery): LogoutResult;
-  token(body: TokenRequest): Promise<OpenIdTokenResponse>;
+  token(body: TokenRequest): Promise<TokenResponse>;
 };

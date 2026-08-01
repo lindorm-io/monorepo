@@ -1,11 +1,11 @@
 import { AegisError, type IAegis } from "@lindorm/aegis";
 import { type ReadableTime, ms } from "@lindorm/date";
 import { lindormId } from "@lindorm/random";
-import type { OpenIdAuthorizeResponseQuery, OpenIdTokenResponse } from "@lindorm/types";
+import type { AuthorizeResponseQuery, TokenResponse } from "@lindorm/openid";
 import { CannotEstablishSessionIdentity } from "../../../errors/index.js";
 import type { IPylonSession } from "../../../interfaces/index.js";
 
-type Data = OpenIdTokenResponse | OpenIdAuthorizeResponseQuery;
+type Data = TokenResponse | AuthorizeResponseQuery;
 
 type ParseTokenDataOptions = {
   resolveSubject?: (accessToken: string) => Promise<string | null>;
@@ -18,7 +18,7 @@ export const parseTokenData = async (
   data: Data,
   options?: ParseTokenDataOptions,
 ): Promise<IPylonSession> => {
-  const tdata = data as OpenIdTokenResponse;
+  const tdata = data as TokenResponse;
   const now = new Date();
 
   const session: IPylonSession = {

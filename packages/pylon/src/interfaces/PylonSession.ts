@@ -1,4 +1,4 @@
-import type { OpenIdScope } from "@lindorm/types";
+import type { Scope } from "@lindorm/openid";
 
 export interface IPylonSession {
   id: string;
@@ -7,6 +7,6 @@ export interface IPylonSession {
   idToken?: string;
   issuedAt: Date;
   refreshToken?: string;
-  scope: Array<OpenIdScope | string>;
+  scope: Array<Scope>;
   subject: string;
 }

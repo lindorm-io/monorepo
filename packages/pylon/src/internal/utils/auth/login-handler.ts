@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import type { OpenIdAuthorizeRequestQuery } from "@lindorm/types";
+import type { AuthorizeRequestQuery } from "@lindorm/openid";
 import { z } from "zod";
 import type {
   PylonAuthRouterConfig,
@@ -23,7 +23,7 @@ export const loginSchema = z.object({
 
 export const createLoginHandler = (
   routerConfig: PylonAuthRouterConfig,
-): PylonHttpMiddleware<PylonHttpContext<OpenIdAuthorizeRequestQuery>> =>
+): PylonHttpMiddleware<PylonHttpContext<AuthorizeRequestQuery>> =>
   async function loginHandler(ctx) {
     if (await ctx.cookies.get(routerConfig.cookies.logout, { signed: true })) {
       ctx.cookies.del(routerConfig.cookies.logout);

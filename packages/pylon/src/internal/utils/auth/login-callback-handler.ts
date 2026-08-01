@@ -6,7 +6,7 @@ import {
 } from "@lindorm/conduit";
 import { ClientError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
-import type { OpenIdAuthorizeResponseQuery, OpenIdClaims } from "@lindorm/types";
+import type { AuthorizeResponseQuery, Claims } from "@lindorm/openid";
 import type {
   PylonAuthConfig,
   PylonHttpContext,
@@ -39,7 +39,7 @@ const resolveSubjectViaUserinfo = (
         ],
       });
 
-      const { data } = await conduit.get<OpenIdClaims>(userinfoEndpoint, {
+      const { data } = await conduit.get<Claims>(userinfoEndpoint, {
         middleware: [conduitBearerAuthMiddleware(accessToken)],
       });
 
@@ -52,7 +52,7 @@ const resolveSubjectViaUserinfo = (
 
 export const createLoginCallbackHandler = (
   config: PylonAuthConfig,
-): PylonHttpMiddleware<PylonHttpContext<OpenIdAuthorizeResponseQuery>> => {
+): PylonHttpMiddleware<PylonHttpContext<AuthorizeResponseQuery>> => {
   const routerConfig = config.router!;
 
   return async function loginCallbackHandler(ctx) {

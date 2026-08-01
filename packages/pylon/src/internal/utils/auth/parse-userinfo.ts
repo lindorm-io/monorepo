@@ -5,7 +5,7 @@ import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed.j
 import type { PylonUserinfo } from "../../../types/index.js";
 import { PROFILE_CLAIM_KEYS } from "./profile-claim-keys.js";
 
-// Permissive structural input — a consumer's OpenIdClaims response, a raw JSON
+// Permissive structural input — a consumer's `Claims` response, a raw JSON
 // body from the userinfo endpoint, or a parsed id_token payload all pass through
 // without an explicit cast.
 export type UserinfoClaimsInput = Dict;

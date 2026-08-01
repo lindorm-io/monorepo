@@ -13,13 +13,15 @@ import { ServerError } from "@lindorm/errors";
 import { isArray, isNumberString, isString } from "@lindorm/is";
 import { PKCE } from "@lindorm/pkce";
 import type {
-  OpenIdAuthorizeRequestQuery,
-  OpenIdClaims,
-  OpenIdIntrospectResponse,
-  OpenIdLogoutRequest,
-  OpenIdTokenRequest,
-  OpenIdTokenResponse,
-} from "@lindorm/types";
+  AuthorizeRequestQuery,
+  Claims,
+  Configuration,
+  IntrospectResponse,
+  LogoutRequest,
+  TokenEndpointAuthMethod,
+  TokenResponse,
+  TokenRequest as OpenIdTokenRequest,
+} from "@lindorm/openid";
 import { createUrl } from "@lindorm/url";
 import { merge, sortKeys } from "@lindorm/utils";
 import { randomBytes } from "crypto";
@@ -43,13 +45,14 @@ import type {
 import { getOpenIdConfiguration } from "./get-open-id-configuration.js";
 import { parseIntrospection } from "./parse-introspection.js";
 import { parseUserinfo } from "./parse-userinfo.js";
-import type { PartialOpenIdConfiguration } from "./types.js";
 
 /**
  * OIDC Discovery §3 / RFC 8414 §2 — `token_endpoint_auth_methods_supported` is
  * OPTIONAL, and when it is omitted the spec default is `client_secret_basic`.
  */
-const DEFAULT_TOKEN_ENDPOINT_AUTH_METHODS: Array<string> = ["client_secret_basic"];
+const DEFAULT_TOKEN_ENDPOINT_AUTH_METHODS: Array<TokenEndpointAuthMethod> = [
+  "client_secret_basic",
+];
 
 // --- Claims client (works on both HTTP and socket) ---
 
@@ -57,7 +60,7 @@ type ClaimsClientOptions = {
   ctx: PylonContext;
   config: PylonAuthConfig;
   conduit: IConduit;
-  openid: PartialOpenIdConfiguration;
+  openid: Configuration;
   resolveAccessToken: () => string | null;
 };
 
@@ -124,7 +127,7 @@ export const createClaimsClient = (
     }
 
     try {
-      const { data } = await conduit.get<OpenIdClaims>(openid.userinfoEndpoint, {
+      const { data } = await conduit.get<Claims>(openid.userinfoEndpoint, {
         middleware: [conduitBearerAuthMiddleware(accessToken)],
       });
 
@@ -209,7 +212,7 @@ export const createClaimsClient = (
     }
 
     try {
-      const { data } = await conduit.post<OpenIdIntrospectResponse>(
+      const { data } = await conduit.post<IntrospectResponse>(
         openid.introspectionEndpoint,
         {
           body: { token: accessToken },
@@ -297,7 +300,7 @@ export const createAuthClient = (
     const nonce = randomBytes(16).toString("base64url");
     const state = randomBytes(16).toString("base64url");
 
-    const authorize: OpenIdAuthorizeRequestQuery = {
+    const authorize: AuthorizeRequestQuery = {
       clientId,
       nonce,
       redirectUri: new URL(
@@ -314,7 +317,7 @@ export const createAuthClient = (
       ...(prompt && { prompt }),
     };
 
-    const merged = merge<OpenIdAuthorizeRequestQuery>(authorize, input);
+    const merged = merge<AuthorizeRequestQuery>(authorize, input);
 
     // The config field is always named `resource`, but the wire param
     // is named per `resourceKey` — Auth0 tenants without the RFC 8707
@@ -372,7 +375,7 @@ export const createAuthClient = (
 
     const state = randomBytes(16).toString("base64url");
 
-    const logoutRequest: OpenIdLogoutRequest = {
+    const logoutRequest: LogoutRequest = {
       clientId,
       postLogoutRedirectUri: new URL(
         `${config.router.pathPrefix}/logout/callback`,
@@ -389,7 +392,7 @@ export const createAuthClient = (
     return { redirect, state };
   };
 
-  const token = async (input: TokenRequest): Promise<OpenIdTokenResponse> => {
+  const token = async (input: TokenRequest): Promise<TokenResponse> => {
     const { clientId, clientSecret } = config;
 
     // Absent ⇒ the spec default, so an OP that advertises nothing still gets the
@@ -415,7 +418,7 @@ export const createAuthClient = (
 
     const body = sortKeys(merge(tokenRequest, input));
 
-    const { data } = await conduit.post<OpenIdTokenResponse>(openid.tokenEndpoint, {
+    const { data } = await conduit.post<TokenResponse>(openid.tokenEndpoint, {
       body,
       middleware,
     });

@@ -1,13 +1,13 @@
 import type { IAmphora } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
+import type { Configuration } from "@lindorm/openid";
 import type { PylonAuthConfig } from "../../../types/index.js";
-import type { PartialOpenIdConfiguration } from "./types.js";
 
 export const getOpenIdConfiguration = (
   ctx: { amphora: IAmphora },
   config: PylonAuthConfig,
-): PartialOpenIdConfiguration => {
+): Configuration => {
   // The upstream IdP is the amphora `idp`; `config()` throws `idp_not_configured`
   // when none is set — trying to read a configuration that isn't there IS an error.
   const idp = ctx.amphora.idp.config();
@@ -45,9 +45,11 @@ export const getOpenIdConfiguration = (
     });
   }
 
-  // Amphora keeps the fetched document deliberately loose — it names only the two
-  // fields IT reads and preserves the rest through an index signature. This is the
-  // SINGLE choke-point where the RP claims the endpoints it needs, so the assertion
-  // stays here and no downstream reader repeats it.
-  return idp.openIdConfiguration as PartialOpenIdConfiguration;
+  // Amphora holds the fetched document as a `Partial<Configuration>` — it neither
+  // validates it nor reads more than `issuer` / `jwksUri`. This is the SINGLE
+  // choke-point where the RP validates it (the two REQUIRED members above) and
+  // adopts it as a `Configuration`, so the assertion stays here and no downstream
+  // reader repeats it. Every OPTIONAL endpoint stays optional and is handled at its
+  // point of use.
+  return idp.openIdConfiguration as Configuration;
 };
