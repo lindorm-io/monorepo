@@ -1,4 +1,4 @@
-import type { PkceMethod } from "@lindorm/types";
+import type { PkceMethod } from "../enums/index.js";
 import { createBaseHash as _createBaseHash } from "./create-base-hash.js";
 import { createPkce } from "./create-pkce.js";
 import { randomBaseString as _randomBaseString } from "./random-base-string.js";

@@ -1,4 +1,4 @@
-import type { PkceMethod } from "@lindorm/types";
+import type { PkceMethod } from "../enums/index.js";
 import { PkceError } from "../errors/index.js";
 import { verifyPkce } from "./verify-pkce.js";
 

@@ -24,7 +24,7 @@ PKCE.assert(challenge, verifier);
 
 ## Methods
 
-PKCE supports two challenge methods, identified by string literals:
+PKCE supports two challenge methods, named by the `PkceMethod` const (and its derived type):
 
 | Method  | Challenge derivation                             |
 | ------- | ------------------------------------------------ |
@@ -95,13 +95,14 @@ type PkceResult = {
 class PkceError extends LindormError {}
 ```
 
-| Export       | Kind  | Description                                                                                                                                   |
-| ------------ | ----- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PKCE`       | class | Static façade exposing `create`, `verify`, and `assert`.                                                                                      |
-| `PkceError`  | class | Thrown by `assert` on mismatch, and by `verify`/`assert` if an unsupported `method` is passed. Extends `LindormError` from `@lindorm/errors`. |
-| `PkceResult` | type  | Return shape of `PKCE.create`.                                                                                                                |
+| Export       | Kind        | Description                                                                                                                                   |
+| ------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PKCE`       | class       | Static façade exposing `create`, `verify`, and `assert`.                                                                                      |
+| `PkceError`  | class       | Thrown by `assert` on mismatch, and by `verify`/`assert` if an unsupported `method` is passed. Extends `LindormError` from `@lindorm/errors`. |
+| `PkceMethod` | const, type | The two RFC 7636 §4.2 methods — `PkceMethod.Plain` / `PkceMethod.S256`, and the derived `"plain" \| "S256"` type.                             |
+| `PkceResult` | type        | Return shape of `PKCE.create`.                                                                                                                |
 
-The `PkceMethod` type used by these signatures is the string literal `"S256" | "plain"` from `@lindorm/types`; it is not re-exported by this package.
+`PkceMethod` is this package's own vocabulary. `@lindorm/openid` carries a separate `CodeChallengeMethod` for the OAuth `code_challenge_method` wire parameter; the two hold the same values but are deliberately kept apart.
 
 ## License
 

@@ -1,4 +1,4 @@
-import type { PkceMethod } from "@lindorm/types";
+import type { PkceMethod } from "../enums/index.js";
 import { PkceError } from "../errors/index.js";
 import { createBaseHash } from "./create-base-hash.js";
 import { stringComparison } from "./string-comparison.js";
