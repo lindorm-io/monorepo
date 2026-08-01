@@ -35,12 +35,6 @@ type LindormConfiguration = {
    * dedicated endpoint where a deployment separates the two.
    */
   tokenExchangeEndpoint?: string;
-
-  /**
-   * wire: `mfa_challenge_endpoint` — VENDOR EXTENSION (Auth0), OPTIONAL. Read
-   * from upstream documents; lindorm does not serve it.
-   */
-  mfaChallengeEndpoint?: string;
 };
 
 /**
