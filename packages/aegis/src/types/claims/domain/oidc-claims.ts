@@ -1,4 +1,4 @@
-import type { AuthMethod } from "./auth-method.js";
+import type { AuthMethod } from "@lindorm/openid";
 
 // OpenID Connect Core 1.0 §2 — ID Token claims, domain form.
 export type OidcClaims = {

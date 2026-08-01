@@ -1,3 +1,4 @@
+export * from "./AuthMethod.js";
 export * from "./BackchannelTokenDeliveryMode.js";
 export * from "./ClaimType.js";
 export * from "./CodeChallengeMethod.js";

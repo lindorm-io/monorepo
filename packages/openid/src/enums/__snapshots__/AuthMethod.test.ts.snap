@@ -1,0 +1,35 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AuthMethod > should derive the type from the runtime values 1`] = `
+[
+  "pwd",
+  "otp",
+  "vendor:face_liveness",
+]
+`;
+
+exports[`AuthMethod > should match snapshot 1`] = `
+{
+  "Face": "face",
+  "Fingerprint": "fpt",
+  "GeoLocation": "geo",
+  "HardwareKey": "hwk",
+  "Iris": "iris",
+  "KnowledgeBased": "kba",
+  "MultipleChannel": "mca",
+  "MultipleFactor": "mfa",
+  "OneTimePassword": "otp",
+  "Password": "pwd",
+  "Pin": "pin",
+  "ProofOfPossession": "pop",
+  "Retina": "retina",
+  "RiskBased": "rba",
+  "SmartCard": "sc",
+  "Sms": "sms",
+  "SoftwareKey": "swk",
+  "Telephone": "tel",
+  "UserPresence": "user",
+  "Voice": "vbm",
+  "WindowsIntegrated": "wia",
+}
+`;

@@ -22,6 +22,7 @@ exports[`index > should export every public type 1`] = `
 
 exports[`index > should export every runtime value 1`] = `
 [
+  "AuthMethod",
   "BackchannelTokenDeliveryMode",
   "ClaimType",
   "CodeChallengeMethod",

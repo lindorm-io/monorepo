@@ -1,7 +1,6 @@
 export * from "./act-claim.js";
 export * from "./aegis-profile.js";
 export * from "./aegis-sensitive.js";
-export * from "./auth-method.js";
 export * from "./confirmation-claim.js";
 export * from "./delegation-claims.js";
 export * from "./level-of-assurance.js";
