@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ResponseType > should derive the type from the runtime values 1`] = `
+[
+  "code",
+  "id_token",
+  "urn:example:response-type",
+]
+`;
+
+exports[`ResponseType > should match snapshot 1`] = `
+{
+  "Code": "code",
+  "CodeIdToken": "code id_token",
+  "CodeIdTokenToken": "code id_token token",
+  "CodeToken": "code token",
+  "IdToken": "id_token",
+  "IdTokenToken": "id_token token",
+  "None": "none",
+  "Token": "token",
+}
+`;

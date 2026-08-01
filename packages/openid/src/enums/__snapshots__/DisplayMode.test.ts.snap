@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DisplayMode > should derive a closed type from the runtime values 1`] = `
+[
+  "page",
+  "wap",
+]
+`;
+
+exports[`DisplayMode > should match snapshot 1`] = `
+{
+  "Page": "page",
+  "Popup": "popup",
+  "Touch": "touch",
+  "Wap": "wap",
+}
+`;

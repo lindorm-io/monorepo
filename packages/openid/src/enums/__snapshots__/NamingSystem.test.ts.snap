@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`NamingSystem > should derive a closed type from the runtime values 1`] = `
+[
+  "given_family",
+  "family_given",
+]
+`;
+
+exports[`NamingSystem > should match snapshot 1`] = `
+{
+  "FamilyGiven": "family_given",
+  "GivenFamily": "given_family",
+}
+`;

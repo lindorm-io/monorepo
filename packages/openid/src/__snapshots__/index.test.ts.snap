@@ -1,0 +1,44 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`index > should export every public type 1`] = `
+[
+  "address",
+  "authorizationDetail",
+  "authorizeRequestQuery",
+  "authorizeResponseQuery",
+  "claims",
+  "configuration",
+  "geoLocation",
+  "identityProvider",
+  "instantMessaging",
+  "introspectResponse",
+  "jwksResponse",
+  "logoutRequest",
+  "socialNetwork",
+  "tokenRequest",
+  "tokenResponse",
+]
+`;
+
+exports[`index > should export every runtime value 1`] = `
+[
+  "BackchannelTokenDeliveryMode",
+  "ClaimType",
+  "CodeChallengeMethod",
+  "DisplayMode",
+  "GrantType",
+  "LindormScope",
+  "NamingSystem",
+  "PromptMode",
+  "ResponseMode",
+  "ResponseType",
+  "Scope",
+  "StandardScope",
+  "SubjectType",
+  "TokenEndpointAuthMethod",
+  "WELL_KNOWN_JWKS",
+  "WELL_KNOWN_OAUTH_AUTHORIZATION_SERVER",
+  "WELL_KNOWN_OAUTH_PROTECTED_RESOURCE",
+  "WELL_KNOWN_OPENID_CONFIGURATION",
+]
+`;

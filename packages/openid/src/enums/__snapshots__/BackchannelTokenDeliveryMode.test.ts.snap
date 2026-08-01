@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`BackchannelTokenDeliveryMode > should derive a closed type from the runtime values 1`] = `
+[
+  "poll",
+  "push",
+]
+`;
+
+exports[`BackchannelTokenDeliveryMode > should match snapshot 1`] = `
+{
+  "Ping": "ping",
+  "Poll": "poll",
+  "Push": "push",
+}
+`;

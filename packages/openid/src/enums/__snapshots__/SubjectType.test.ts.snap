@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SubjectType > should derive a closed type from the runtime values 1`] = `
+[
+  "pairwise",
+  "public",
+]
+`;
+
+exports[`SubjectType > should match snapshot 1`] = `
+{
+  "Pairwise": "pairwise",
+  "Public": "public",
+}
+`;

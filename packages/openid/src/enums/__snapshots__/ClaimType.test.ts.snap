@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ClaimType > should derive a closed type from the runtime values 1`] = `
+[
+  "normal",
+  "distributed",
+]
+`;
+
+exports[`ClaimType > should match snapshot 1`] = `
+{
+  "Aggregated": "aggregated",
+  "Distributed": "distributed",
+  "Normal": "normal",
+}
+`;

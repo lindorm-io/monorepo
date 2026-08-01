@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Scope > should derive the type from the runtime values 1`] = `
+[
+  "openid",
+  "work_profile",
+  "offline_access",
+  "urn:example:scope",
+]
+`;
+
+exports[`Scope > should match snapshot 1`] = `
+{
+  "Accessibility": "accessibility",
+  "Address": "address",
+  "Auth": "auth",
+  "Email": "email",
+  "GeoLocation": "geo_location",
+  "IdentityProviders": "identity_providers",
+  "InstantMessaging": "instant_messaging",
+  "Legal": "legal",
+  "NationalIdentityNumber": "national_identity_number",
+  "OfflineAccess": "offline_access",
+  "OpenId": "openid",
+  "Phone": "phone",
+  "Profile": "profile",
+  "SocialNetworks": "social_networks",
+  "SocialSecurityNumber": "social_security_number",
+  "WorkProfile": "work_profile",
+}
+`;

@@ -1,0 +1,21 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TokenEndpointAuthMethod > should derive the type from the runtime values 1`] = `
+[
+  "private_key_jwt",
+  "client_secret_basic",
+  "urn:example:auth-method",
+]
+`;
+
+exports[`TokenEndpointAuthMethod > should match snapshot 1`] = `
+{
+  "ClientSecretBasic": "client_secret_basic",
+  "ClientSecretJwt": "client_secret_jwt",
+  "ClientSecretPost": "client_secret_post",
+  "None": "none",
+  "PrivateKeyJwt": "private_key_jwt",
+  "SelfSignedTlsClientAuth": "self_signed_tls_client_auth",
+  "TlsClientAuth": "tls_client_auth",
+}
+`;

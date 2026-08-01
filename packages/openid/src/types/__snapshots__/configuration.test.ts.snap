@@ -1,0 +1,84 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Configuration > should match snapshot for the spec-minimal document 1`] = `
+{
+  "authorizationEndpoint": "https://test.lindorm.io/oauth/authorize",
+  "idTokenSigningAlgValuesSupported": [
+    "RS256",
+  ],
+  "issuer": "https://test.lindorm.io",
+  "jwksUri": "https://test.lindorm.io/.well-known/jwks.json",
+  "responseTypesSupported": [
+    "code",
+  ],
+  "subjectTypesSupported": [
+    "public",
+  ],
+  "tokenEndpoint": "https://test.lindorm.io/oauth/token",
+}
+`;
+
+exports[`Configuration > should satisfy the amphora issuer read 1`] = `
+[
+  "https://test.lindorm.io",
+  "https://test.lindorm.io/.well-known/jwks.json",
+]
+`;
+
+exports[`Configuration > should satisfy the pylon relying-party read 1`] = `
+{
+  "optional": [
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+  ],
+  "required": [
+    "https://test.lindorm.io/oauth/authorize",
+    "https://test.lindorm.io/oauth/token",
+  ],
+}
+`;
+
+exports[`Configuration > should serve the RFC-correct endpoint names 1`] = `
+{
+  "authorizationEndpoint": "https://test.lindorm.io/oauth/authorize",
+  "endSessionEndpoint": "https://test.lindorm.io/oauth/end-session",
+  "idTokenSigningAlgValuesSupported": [
+    "RS256",
+  ],
+  "introspectionEndpoint": "https://test.lindorm.io/oauth/introspection",
+  "issuer": "https://test.lindorm.io",
+  "jwksUri": "https://test.lindorm.io/.well-known/jwks.json",
+  "responseTypesSupported": [
+    "code",
+  ],
+  "revocationEndpoint": "https://test.lindorm.io/oauth/revocation",
+  "subjectTypesSupported": [
+    "public",
+  ],
+  "tokenEndpoint": "https://test.lindorm.io/oauth/token",
+}
+`;
+
+exports[`Configuration > should serve the lindorm and vendor extension endpoints 1`] = `
+{
+  "authorizationEndpoint": "https://test.lindorm.io/oauth/authorize",
+  "deviceAuthorizationEndpoint": "https://test.lindorm.io/oauth/device/code",
+  "idTokenSigningAlgValuesSupported": [
+    "RS256",
+  ],
+  "issuer": "https://test.lindorm.io",
+  "jwksUri": "https://test.lindorm.io/.well-known/jwks.json",
+  "mfaChallengeEndpoint": "https://test.lindorm.io/mfa/challenge",
+  "responseTypesSupported": [
+    "code",
+  ],
+  "rightToBeForgottenEndpoint": "https://test.lindorm.io/oauth/right-to-be-forgotten",
+  "subjectTypesSupported": [
+    "public",
+  ],
+  "tokenEndpoint": "https://test.lindorm.io/oauth/token",
+  "tokenExchangeEndpoint": "https://test.lindorm.io/oauth/token-exchange",
+}
+`;

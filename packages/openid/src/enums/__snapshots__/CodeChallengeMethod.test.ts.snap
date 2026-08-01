@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CodeChallengeMethod > should derive a closed type from the runtime values 1`] = `
+[
+  "S256",
+  "plain",
+]
+`;
+
+exports[`CodeChallengeMethod > should match snapshot 1`] = `
+{
+  "Plain": "plain",
+  "S256": "S256",
+}
+`;

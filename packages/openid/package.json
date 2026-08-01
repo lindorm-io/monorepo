@@ -1,0 +1,41 @@
+{
+  "name": "@lindorm/openid",
+  "version": "0.0.0",
+  "license": "AGPL-3.0-or-later",
+  "author": "Jonn Nilsson",
+  "repository": {
+    "url": "https://github.com/lindorm-io/monorepo",
+    "directory": "packages/openid"
+  },
+  "bugs": "https://github.com/lindorm-io/monorepo/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "build": "rimraf dist && tsc -b ./tsconfig.build.json",
+    "example": "tsx example",
+    "prettier": "prettier --write ./src/*",
+    "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:watch": "vitest",
+    "typecheck": "tsc",
+    "typecheck:watch": "tsc --watch",
+    "update": "ncu -i",
+    "update:auto": "ncu -u",
+    "verify": "npm run typecheck && npm run build && npm test"
+  },
+  "dependencies": {
+    "@lindorm/types": "^0.10.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  }
+}

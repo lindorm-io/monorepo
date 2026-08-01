@@ -1,0 +1,21 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ResponseMode > should derive the type from the runtime values 1`] = `
+[
+  "query",
+  "form_post",
+  "web_message",
+]
+`;
+
+exports[`ResponseMode > should match snapshot 1`] = `
+{
+  "FormPost": "form_post",
+  "FormPostJwt": "form_post.jwt",
+  "Fragment": "fragment",
+  "FragmentJwt": "fragment.jwt",
+  "Jwt": "jwt",
+  "Query": "query",
+  "QueryJwt": "query.jwt",
+}
+`;
