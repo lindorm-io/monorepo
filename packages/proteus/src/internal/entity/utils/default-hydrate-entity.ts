@@ -5,6 +5,7 @@ import type { ProteusHookMeta } from "../../../types/proteus-hook-meta.js";
 import type { EntityMetadata } from "../types/metadata.js";
 import { decryptFieldValue } from "./decrypt-field-value.js";
 import { deserialise } from "./deserialise.js";
+import { deserialiseForeignKey } from "./deserialise-foreign-key.js";
 import { resolvePropertyKey } from "./resolve-property-key.js";
 import { joinTypedJson, typedJsonMetaDictKey } from "./typed-json.js";
 import { runHooksSync } from "./run-hooks-sync.js";
@@ -25,7 +26,8 @@ export type HydrateOptions = {
  * - Absent fields (key not in data) are skipped entirely — not assigned to entity.
  * - Null values are preserved as-is — NOT passed through deserialise (prevents zero-coercion bug).
  * - Non-null values are coerced via deserialise(value, field.type).
- * - FK columns from owning relations are extracted via resolveJoinKeyValue.
+ * - FK columns from owning relations are extracted and coerced via
+ *   deserialiseForeignKey (they carry the referenced PK's type, not their own).
  * - Snapshot is stored by default (opt out with { snapshot: false }).
  * - OnHydrate hooks fire by default (opt out with { hooks: false }).
  */
@@ -122,7 +124,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
   for (const relation of metadata.relations) {
     if (!relation.joinKeys || relation.type === "ManyToMany") continue;
 
-    for (const [localKey] of Object.entries(relation.joinKeys)) {
+    for (const [localKey, foreignPk] of Object.entries(relation.joinKeys)) {
       // joinKeys keys are column names; map back to the entity property key
       // (diverges from the column under the snake strategy).
       const propertyKey = resolvePropertyKey(metadata, localKey);
@@ -130,11 +132,17 @@ export const defaultHydrateEntity = <E extends IEntity>(
       // Skip if already handled in the field loop (user-declared FK field)
       if (propertyKey in snapshotDict) continue;
 
+      // A projected FK has no MetaField of its own, so it must borrow the
+      // referenced PK's type — the same type the DDL gave the column.
       if (localKey in data) {
-        entity[propertyKey] = data[localKey] ?? null;
+        entity[propertyKey] = deserialiseForeignKey(data[localKey], relation, foreignPk);
         snapshotDict[propertyKey] = entity[propertyKey];
       } else if (propertyKey in data) {
-        entity[propertyKey] = data[propertyKey] ?? null;
+        entity[propertyKey] = deserialiseForeignKey(
+          data[propertyKey],
+          relation,
+          foreignPk,
+        );
         snapshotDict[propertyKey] = entity[propertyKey];
       }
     }
@@ -148,16 +156,30 @@ export const defaultHydrateEntity = <E extends IEntity>(
     // Only sync-hydrate owning *ToOne (joinKeys present, not M2M)
     if (!relation.joinKeys || relation.type === "ManyToMany") continue;
 
+    // A value read off `entity` was already typed by the loops above; one read
+    // straight out of `data` is still raw, so it needs the same referenced-PK
+    // deserialisation the projected FK column gets.
     const entries = Object.entries(relation.joinKeys);
     if (ri.column) {
-      // Explicit column — find the matching joinKey entry
-      const fkValue = entity[ri.column] ?? data[ri.column] ?? null;
-      entity[ri.key] = fkValue;
+      // Explicit column — find the matching joinKey entry. `column` may be
+      // authored as either the physical column or the entity property key.
+      const entry = entries.find(
+        ([localKey]) =>
+          localKey === ri.column || resolvePropertyKey(metadata, localKey) === ri.column,
+      );
+      entity[ri.key] =
+        entity[ri.column] ??
+        deserialiseForeignKey(data[ri.column], relation, entry?.[1] ?? null) ??
+        null;
     } else if (entries.length === 1) {
       // Auto-detect single FK
-      const [localKey] = entries[0];
+      const [localKey, foreignPk] = entries[0];
       const propertyKey = resolvePropertyKey(metadata, localKey);
-      entity[ri.key] = entity[propertyKey] ?? data[localKey] ?? data[propertyKey] ?? null;
+      entity[ri.key] =
+        entity[propertyKey] ??
+        deserialiseForeignKey(data[localKey], relation, foreignPk) ??
+        deserialiseForeignKey(data[propertyKey], relation, foreignPk) ??
+        null;
     }
     // Composite FK without explicit column — skip (user must specify column)
   }

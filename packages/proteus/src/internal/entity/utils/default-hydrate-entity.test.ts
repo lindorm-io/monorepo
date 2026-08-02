@@ -1,5 +1,6 @@
 import { makeField } from "../../__fixtures__/make-field.js";
-import type { EntityMetadata } from "../types/metadata.js";
+import { registerMetadataResolver } from "../metadata/foreign-metadata.js";
+import type { EntityMetadata, MetaRelation } from "../types/metadata.js";
 import { defaultHydrateEntity } from "./default-hydrate-entity.js";
 import { getSnapshot } from "./snapshot-store.js";
 import { describe, expect, test, vi } from "vitest";
@@ -39,6 +40,31 @@ const metadata = {
   primaryKeys: ["id"],
   hooks: [],
 } as unknown as EntityMetadata;
+
+class BigIntPkParent {}
+
+/**
+ * An owning relation to a bigint-PK parent, with a stub metadata resolver
+ * registered the way the source registers its own — so the FK loop can reach the
+ * referenced PK field's type.
+ */
+const makeBigIntParentRelation = (): MetaRelation => {
+  const relation = {
+    key: "parent",
+    type: "ManyToOne",
+    foreignConstructor: () => BigIntPkParent,
+    joinKeys: { parent_id: "id" },
+    options: { loading: { single: "ignore", multiple: "ignore" } },
+  } as unknown as MetaRelation;
+
+  registerMetadataResolver(
+    { relations: [relation] } as unknown as EntityMetadata,
+    () =>
+      ({ fields: [makeField("id", { type: "bigint" })] }) as unknown as EntityMetadata,
+  );
+
+  return relation;
+};
 
 describe("defaultHydrateEntity", () => {
   test("should create entity instance from target constructor", () => {
@@ -203,6 +229,59 @@ describe("defaultHydrateEntity", () => {
     const snap = getSnapshot(result);
     expect(snap).not.toBeNull();
     expect(snap!.authorId).toBe("user-1");
+  });
+
+  // A projected FK column (no @Field on the owning entity) carries the
+  // referenced PK's type — the same one the DDL widths it with. The driver's
+  // wire format must not leak through: postgres/mysql return BIGINT as a string.
+  test("should deserialise a projected FK using the referenced PK type", () => {
+    const metaWithBigIntFk = {
+      ...metadata,
+      relations: [makeBigIntParentRelation()],
+    } as unknown as EntityMetadata;
+
+    const result = defaultHydrateEntity(
+      { id: "abc", name: "Post", parent_id: "1" },
+      metaWithBigIntFk,
+    );
+
+    expect((result as any).parentId).toBe(BigInt(1));
+
+    // The snapshot must hold the DESERIALISED value, or change tracking sees a
+    // spurious string-vs-bigint diff on every read.
+    expect(getSnapshot(result)!.parentId).toBe(BigInt(1));
+  });
+
+  test("should keep a null projected FK null", () => {
+    const metaWithBigIntFk = {
+      ...metadata,
+      relations: [makeBigIntParentRelation()],
+    } as unknown as EntityMetadata;
+
+    const result = defaultHydrateEntity(
+      { id: "abc", name: "Post", parent_id: null },
+      metaWithBigIntFk,
+    );
+
+    expect((result as any).parentId).toBeNull();
+    expect(getSnapshot(result)!.parentId).toBeNull();
+  });
+
+  test("should deserialise a @RelationId from the referenced PK type", () => {
+    const relation = makeBigIntParentRelation();
+    const metaWithRelationId = {
+      ...metadata,
+      relations: [relation],
+      relationIds: [{ key: "parentRef", relationKey: "parent", column: null }],
+    } as unknown as EntityMetadata;
+
+    const result = defaultHydrateEntity(
+      { id: "abc", name: "Post", parent_id: "9" },
+      metaWithRelationId,
+      { snapshot: false },
+    );
+
+    expect((result as any).parentRef).toBe(BigInt(9));
   });
 
   test("should reconstruct embedded object from dotted-key data", () => {
