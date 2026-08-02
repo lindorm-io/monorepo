@@ -54,10 +54,12 @@ export const buildCacheKey = (input: BuildCacheKeyInput): string => {
   return `${ns}cache:${entityName}:${operation}:${hash}`;
 };
 
-export const buildCachePrefix = (
-  namespace: string | null,
-  entityName: string,
-): string => {
-  const ns = namespace ? `${namespace}:` : "";
-  return `${ns}cache:${entityName}:`;
-};
+/**
+ * The prefix EVERY cache key of a source lives under. Flushing this evicts the
+ * whole query cache for the namespace in one adapter round-trip.
+ */
+export const buildCacheRootPrefix = (namespace: string | null): string =>
+  namespace ? `${namespace}:cache:` : "cache:";
+
+export const buildCachePrefix = (namespace: string | null, entityName: string): string =>
+  `${buildCacheRootPrefix(namespace)}${entityName}:`;

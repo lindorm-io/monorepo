@@ -15,6 +15,7 @@ import type {
   TransactionOptions,
 } from "../types/index.js";
 import { CachingRepository } from "../internal/classes/CachingRepository.js";
+import { flushCache } from "../internal/utils/cache/flush-cache.js";
 import type { MetadataResolver } from "../internal/interfaces/ProteusDriver.js";
 import type { IProteusDriver } from "../internal/interfaces/ProteusDriver.js";
 import type { FilterRegistry } from "../internal/utils/query/filter-registry.js";
@@ -121,6 +122,28 @@ export class ProteusSession implements IProteusSession {
 
   async client<T>(): Promise<T> {
     return this._driver.acquireClient() as Promise<T>;
+  }
+
+  /**
+   * Evict cached queries for one entity, several entities, or — with no
+   * argument — the whole query cache of the parent source in a single
+   * round-trip. Sessions share the source's cache adapter and namespace, so a
+   * flush here is visible to every session of that source.
+   *
+   * Call this after raw `client()` SQL or `queryBuilder()` writes, which bypass
+   * the implicit invalidation that repository writes perform.
+   */
+  async flushCache(
+    target?: Constructor<IEntity> | Array<Constructor<IEntity>>,
+  ): Promise<void> {
+    return flushCache({
+      adapter: this.cacheAdapter,
+      namespace: this.source.namespace,
+      logger: this.logger,
+      resolveMetadata: this.resolveMetadata,
+      hasEntity: (entity) => this.source.hasEntity(entity),
+      target,
+    });
   }
 
   async transaction<T>(

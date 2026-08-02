@@ -1,0 +1,51 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`flushCache > adapter failure > should throw cache_flush_failed instead of swallowing like implicit invalidation 1`] = `
+{
+  "code": "cache_flush_failed",
+  "data": {
+    "prefixes": [
+      "cache:FlushUser:",
+    ],
+  },
+  "details": "The cache adapter rejected the flush; cached queries may still serve stale data.",
+  "errors": [
+    "Error: redis is down",
+  ],
+  "message": "Failed to flush the query cache",
+  "title": "Cache Flush Failed",
+  "type": "urn:lindorm:proteus:error:cache_flush_failed",
+}
+`;
+
+exports[`flushCache > array of entities > should flush one prefix per entity 1`] = `
+[
+  [
+    "cache:FlushUser:",
+  ],
+  [
+    "cache:FlushOrder:",
+  ],
+]
+`;
+
+exports[`flushCache > single entity > should flush only the entity's own cache prefix 1`] = `
+[
+  [
+    "cache:FlushUser:",
+  ],
+]
+`;
+
+exports[`flushCache > unregistered entity > should throw entity_not_registered rather than silently no-op 1`] = `
+{
+  "code": "entity_not_registered",
+  "data": {
+    "target": "FlushUnregistered",
+  },
+  "details": "Entity "FlushUnregistered" is not registered with this source; register it via the source's entities option or addEntities().",
+  "message": "Cannot flush the cache for entity "FlushUnregistered" — it is not registered with this source",
+  "title": "Entity Not Registered",
+  "type": "urn:lindorm:proteus:error:entity_not_registered",
+}
+`;

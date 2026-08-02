@@ -148,9 +148,11 @@ export class CachingRepository<
 
   /**
    * Returns the inner query builder directly. INSERT/UPDATE/DELETE statements
-   * executed through the query builder bypass cache invalidation. Call
-   * find/findOne after QB writes to get fresh data, or use the repository's
-   * write methods (insert, update, save, etc.) which handle invalidation.
+   * executed through the query builder bypass cache invalidation — the same
+   * write hole as raw `client()` SQL. After such a write, call
+   * `source.flushCache(Entity)` (or `session.flushCache(Entity)`) to evict the
+   * stale entries, or use the repository's write methods (insert, update, save,
+   * etc.) which handle invalidation implicitly.
    */
   queryBuilder(): IProteusQueryBuilder<E> {
     return this.inner.queryBuilder();

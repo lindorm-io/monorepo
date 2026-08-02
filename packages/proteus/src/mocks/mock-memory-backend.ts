@@ -135,6 +135,7 @@ export const createMemoryBackend = async (
         real.transaction(callback, options),
       ),
       ping: spyImpl(() => real.ping()),
+      flushCache: spyImpl((target?: any) => real.flushCache(target)),
 
       setFilterParams: spyImpl((name: string, params: any) =>
         real.setFilterParams(name, params),
@@ -169,6 +170,7 @@ export const createMemoryBackend = async (
       setup: mockFn(),
 
       ping: spyImpl(() => source.ping()),
+      flushCache: spyImpl((target?: any) => source.flushCache(target)),
 
       addEntities: spyImpl((entities: any) => source.addEntities(entities)),
       stageDecorator: spyImpl((Entity: any, Decorator: any, opts?: any) =>

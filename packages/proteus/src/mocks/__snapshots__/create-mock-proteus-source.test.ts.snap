@@ -10,6 +10,7 @@ exports[`createMockProteusSource > should create a mock source with all methods 
   "disconnect": [MockFunction],
   "driverType": "memory",
   "enableFilter": [MockFunction],
+  "flushCache": [MockFunction],
   "getEntityMetadata": [MockFunction],
   "getFilterRegistry": [MockFunction],
   "hasEntity": [MockFunction],

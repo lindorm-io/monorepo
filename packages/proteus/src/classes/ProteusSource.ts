@@ -50,6 +50,7 @@ import { clearPrimaryCache } from "../internal/entity/metadata/build-primary.js"
 import { clearMetadataCache } from "../internal/entity/metadata/registry.js";
 import { validateEncryptedFields } from "../internal/entity/utils/validate-encrypted-fields.js";
 import { applyNamingStrategy } from "../internal/utils/naming/apply-naming-strategy.js";
+import { flushCache } from "../internal/utils/cache/flush-cache.js";
 import type { MetaInheritance } from "../internal/entity/types/inheritance.js";
 import type {
   IProteusDriver,
@@ -634,6 +635,32 @@ export class ProteusSource implements IProteusSource {
   /** Acquire the underlying driver client (e.g. a pg PoolClient) for advanced use cases. */
   async client<T>(): Promise<T> {
     return this.requireDriver().acquireClient() as Promise<T>;
+  }
+
+  /**
+   * Evict cached queries for one entity, several entities, or — with no
+   * argument — the source's entire query cache in a single round-trip.
+   *
+   * Call this after any mutation the ORM cannot see: raw `client()` SQL and
+   * `queryBuilder()` writes bypass the implicit invalidation that repository
+   * writes perform, so reads keep serving stale rows until the TTL expires.
+   * Entities in an inheritance hierarchy are flushed together.
+   *
+   * A no-op (logged at `verbose`) when no cache adapter is configured. Throws
+   * `entity_not_registered` for an unregistered entity and `cache_flush_failed`
+   * if the adapter rejects.
+   */
+  async flushCache(
+    target?: Constructor<IEntity> | Array<Constructor<IEntity>>,
+  ): Promise<void> {
+    return flushCache({
+      adapter: this.cacheAdapter,
+      namespace: this._namespace,
+      logger: this.logger,
+      resolveMetadata: this.resolveMetadata,
+      hasEntity: (entity) => this.hasEntity(entity),
+      target,
+    });
   }
 
   /** Execute a callback within a database transaction. Commits on success, rolls back on error. */

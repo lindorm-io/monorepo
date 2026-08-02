@@ -2238,6 +2238,28 @@ const fresh = await repo.find({ status: "active" }, { cache: false });
 
 `cache: true` enables caching using the entity-level `@Cache` TTL or the source default; if no TTL is configured anywhere, caching is silently disabled (no indefinite caching).
 
+### Flushing the Cache
+
+Repository writes (`insert`, `update`, `save`, `delete`, …) invalidate the entity's cached queries automatically. Mutations that go around the ORM do **not** — raw `source.client()` SQL and `queryBuilder()` writes leave reads serving stale rows until the TTL expires. Flush explicitly after those:
+
+```typescript
+await source.flushCache(User); // one entity
+await source.flushCache([User, Order]); // several
+await source.flushCache(); // everything — one adapter round-trip
+
+await session.flushCache(User); // sessions share the source's adapter and namespace
+```
+
+- **Inheritance is expanded.** Each subtype caches under its own entity name even when the subtypes share a table, so flushing any participant flushes the whole hierarchy (root and all children).
+- **An unregistered entity throws** `entity_not_registered` — a typo must not silently no-op.
+- **No cache adapter configured is a no-op** (logged at `verbose`), so the same code runs with and without caching.
+- **An adapter failure throws** `cache_flush_failed`. This is deliberately unlike the implicit post-write invalidation, which only logs a warning: an explicit flush is the caller asserting "make reads correct now", so a resolved promise must not hide a still-stale cache.
+
+Adapter caveats:
+
+- `MemoryCacheAdapter` is per-process — flushing clears only the current process's cache. Other instances keep serving their own stale entries until the TTL expires. Use `RedisCacheAdapter` when more than one process must see the flush.
+- `RedisCacheAdapter.delByPrefix` uses a Lua `SCAN`, which in Redis Cluster only iterates the local node. The same limitation applies to `flushCache`; for Cluster deployments prefer `{hash-tag}` key prefixes or a dedicated invalidation strategy.
+
 ## Field-Level Encryption
 
 Values are encrypted before writing and decrypted after reading. Requires an `IAmphora` key store (peer dependency `@lindorm/amphora`).
@@ -2351,7 +2373,7 @@ router.get("/users", async (ctx) => {
 });
 ```
 
-Sessions are ephemeral. They expose only data-access methods (`repository`, `queryBuilder`, `client`, `transaction`, `ping`) plus the filter API — no lifecycle, event-subscription, or schema-management methods. Filter mutations on a session do not leak into the parent source.
+Sessions are ephemeral. They expose only data-access methods (`repository`, `queryBuilder`, `client`, `transaction`, `ping`, `flushCache`) plus the filter API — no lifecycle, event-subscription, or schema-management methods. Filter mutations on a session do not leak into the parent source.
 
 The `signal` option is propagated to in-flight queries — when aborted, Postgres queries are cancelled server-side.
 

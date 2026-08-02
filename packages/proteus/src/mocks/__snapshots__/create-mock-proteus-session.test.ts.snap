@@ -6,6 +6,7 @@ exports[`createMockProteusSession > should create a mock session with all method
   "disableFilter": [MockFunction],
   "driverType": "memory",
   "enableFilter": [MockFunction],
+  "flushCache": [MockFunction],
   "getEmitEntity": [MockFunction],
   "getFilterRegistry": [MockFunction],
   "hasEntity": [MockFunction],

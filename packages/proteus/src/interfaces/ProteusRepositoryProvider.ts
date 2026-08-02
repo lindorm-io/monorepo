@@ -28,6 +28,8 @@ export interface IProteusRepositoryProvider {
   ): Promise<T>;
   ping(): Promise<boolean>;
 
+  flushCache(target?: Constructor<IEntity> | Array<Constructor<IEntity>>): Promise<void>;
+
   setFilterParams(name: string, params: Dict<unknown>): void;
   enableFilter(name: string): void;
   disableFilter(name: string): void;
