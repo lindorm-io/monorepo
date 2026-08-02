@@ -1387,13 +1387,16 @@ pylon generate --help
 | `pylon generate middleware /v1/admin`                                                     | `./src/routes/v1/admin/_middleware.ts`                                        |
 | `pylon generate middleware -S chat`                                                       | `./src/listeners/chat/_middleware.ts`                                         |
 | `pylon generate handler getUser`                                                          | `./src/handlers/getUser.ts`                                                   |
-| `pylon generate worker HeartbeatWorker`                                                   | `./src/workers/heartbeat-worker.ts`                                           |
+| `pylon generate worker HeartbeatWorker`                                                   | `./src/workers/heartbeat-worker.ts` (INTERVAL)                                |
+| `pylon generate worker CleanupWorker --cron "0 3 * * *"`                                  | `./src/workers/cleanup-worker.ts` (CRON)                                      |
 | `pylon generate static /assets`                                                           | `./src/routes/assets.ts` (STATIC)                                             |
 | `pylon generate upload /assets`                                                           | `./src/routes/assets.ts` (UPLOAD)                                             |
 
 Each command accepts `-d, --directory <path>` to override the output directory and `--dry-run` to skip writing. When `--directory` is omitted, the output directory resolves from `lindorm.config.{ts,mjs}` (`pylon.routesDir` / `handlersDir` / `listenersDir` / `workersDir`) and falls back to the built-in default — see `@lindorm/scaffold`.
 
 `generate route --feature <name>` scaffolds a full slice instead of a bare route: one schema+handler file per HTTP method in the feature dir, named `<verb><Feature><RouteTail>` — the route tail is the last static path segment plus trailing params as `By<Param>`, so sibling routes within one feature never collide (`--feature user --path /v1/users/[id]` → `getUserUsersById`/`getUserUsersByIdSchema`, `createUserUsersById`/…; `--feature oauth --path /token` → `createOauthToken`) — plus a route file that wires each method as `[useSchema(...), useHandler(...)]`. The feature dir resolves from `pylon.featureDir` (default `./src/features`), the route dir from `pylon.routesDir`; both context-type and handler imports are computed relative to the standard `src/{routes,features,types}` layout. Use `-m/--methods` / `-p/--path` as flag alternatives to the positional args.
+
+`generate worker` scaffolds an interval worker (`export const INTERVAL = "5m"`) by default. Pass `--cron <expression>` to emit `export const CRON = "<expression>"` instead — never both, since the worker scanner requires exactly one of the two. The expression is validated before anything is written, so an invalid cron fails the command (also under `--dry-run`).
 
 `pylon config init` writes a default `lindorm.config.ts` (built from `@lindorm/scaffold`'s `defineConfig`) into the current directory. It refuses to overwrite an existing file unless `-f, --force` is passed, and `--dry-run` prints the path and content without writing.
 

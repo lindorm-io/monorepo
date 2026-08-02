@@ -68,6 +68,7 @@ export const registerGenerateCommands = (program: Command): void => {
     .alias("w")
     .description("Generate a worker file")
     .argument("[name]", "Worker name (e.g. HeartbeatWorker)")
+    .option("--cron <expression>", "Generate a cron worker instead of an interval worker")
     .option("-d, --directory <path>", "Output directory (defaults from lindorm.config)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateWorker);

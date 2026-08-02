@@ -60,6 +60,70 @@ describe("generateWorker", () => {
     expect(content).toMatchSnapshot();
   });
 
+  it("should generate cron file content matching snapshot", async () => {
+    await generateWorker("HeartbeatWorker", { cron: "0 0 * * *" });
+
+    const content = writeFile.mock.calls[0][1] as string;
+
+    expect(content).toMatchSnapshot();
+  });
+
+  it("should export CRON instead of INTERVAL when cron is provided", async () => {
+    await generateWorker("HeartbeatWorker", { cron: "*/5 * * * *" });
+
+    const content = writeFile.mock.calls[0][1] as string;
+
+    expect(content).toContain(`export const CRON = "*/5 * * * *";`);
+    expect(content).not.toContain("export const INTERVAL");
+  });
+
+  it("should export INTERVAL and no CRON when cron is absent", async () => {
+    await generateWorker("HeartbeatWorker", {});
+
+    const content = writeFile.mock.calls[0][1] as string;
+
+    expect(content).toContain(`export const INTERVAL = "5m";`);
+    expect(content).not.toContain("export const CRON");
+  });
+
+  it("should reject an invalid cron expression", async () => {
+    await expect(
+      generateWorker("HeartbeatWorker", { cron: "not-a-cron" }),
+    ).rejects.toThrow("Invalid cron expression: not-a-cron");
+  });
+
+  it("should reject an empty cron expression", async () => {
+    await expect(generateWorker("HeartbeatWorker", { cron: "" })).rejects.toThrow(
+      "Invalid cron expression:",
+    );
+  });
+
+  it("should not write files when the cron expression is invalid", async () => {
+    await expect(
+      generateWorker("HeartbeatWorker", { cron: "not-a-cron" }),
+    ).rejects.toThrow();
+
+    expect(mkdir).not.toHaveBeenCalled();
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it("should reject an invalid cron expression in dry-run mode", async () => {
+    await expect(
+      generateWorker("HeartbeatWorker", { cron: "not-a-cron", dryRun: true }),
+    ).rejects.toThrow("Invalid cron expression: not-a-cron");
+
+    expect(Logger.std.log).not.toHaveBeenCalled();
+  });
+
+  it("should log cron content in dry-run mode", async () => {
+    await generateWorker("HeartbeatWorker", { cron: "0 0 * * *", dryRun: true });
+
+    expect(Logger.std.log).toHaveBeenCalledWith(
+      expect.stringContaining(`export const CRON = "0 0 * * *";`),
+    );
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
   it("should handle already-kebab-case name", async () => {
     await generateWorker("heartbeat-worker", {});
 

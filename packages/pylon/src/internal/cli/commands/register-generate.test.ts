@@ -319,6 +319,13 @@ describe("registerGenerateCommands", () => {
       expect(opt).toBeDefined();
     });
 
+    it("should register --cron option on worker", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "worker")!;
+      const opt = cmd.options.find((o) => o.long === "--cron");
+      expect(opt).toBeDefined();
+      expect(opt!.required).toBe(true);
+    });
+
     it("should wire generateWorker as the action", async () => {
       mockGenerateWorker.mockResolvedValue(undefined);
 
@@ -346,6 +353,38 @@ describe("registerGenerateCommands", () => {
 
       const [name] = mockGenerateWorker.mock.calls[0];
       expect(name).toBe("HeartbeatWorker");
+    });
+
+    it("should pass cron option through", async () => {
+      mockGenerateWorker.mockResolvedValue(undefined);
+
+      await program.parseAsync([
+        "node",
+        "pylon",
+        "generate",
+        "worker",
+        "HeartbeatWorker",
+        "--cron",
+        "0 0 * * *",
+      ]);
+
+      const [, options] = mockGenerateWorker.mock.calls[0];
+      expect(options).toEqual(expect.objectContaining({ cron: "0 0 * * *" }));
+    });
+
+    it("should not set cron option when omitted", async () => {
+      mockGenerateWorker.mockResolvedValue(undefined);
+
+      await program.parseAsync([
+        "node",
+        "pylon",
+        "generate",
+        "worker",
+        "HeartbeatWorker",
+      ]);
+
+      const [, options] = mockGenerateWorker.mock.calls[0];
+      expect(options).not.toHaveProperty("cron");
     });
 
     it("should work with aliases", async () => {

@@ -1,4 +1,6 @@
 import { kebabCase } from "@lindorm/case";
+import { isCron } from "@lindorm/date";
+import { isUndefined } from "@lindorm/is";
 import { Logger } from "@lindorm/logger";
 import {
   LINDORM_CONFIG_DEFAULTS,
@@ -9,27 +11,35 @@ import { mkdir, writeFile } from "fs/promises";
 import { dirname, join, resolve } from "path";
 
 type GenerateWorkerOptions = {
+  cron?: string;
   directory?: string;
   dryRun?: boolean;
 };
 
-const workerTemplate = (): string => {
-  return [
+// The scanner throws unless EXACTLY one of INTERVAL / CRON is exported
+const workerTemplate = (cron: string | undefined): string =>
+  [
     `import type { LindormWorkerCallback } from "@lindorm/worker";`,
     ``,
     `export const CALLBACK: LindormWorkerCallback = async (ctx) => {`,
     `  ctx.logger.verbose("Worker executed");`,
     `};`,
     ``,
-    `export const INTERVAL = "5m";`,
+    isUndefined(cron)
+      ? `export const INTERVAL = "5m";`
+      : `export const CRON = "${cron}";`,
     ``,
   ].join("\n");
-};
 
 export const generateWorker = async (
   name: string | undefined,
   options: GenerateWorkerOptions,
 ): Promise<void> => {
+  if (!isUndefined(options.cron) && !isCron(options.cron)) {
+    // isCron narrows the failing branch to never — the raw value is still wanted
+    throw new Error(`Invalid cron expression: ${options.cron as string}`);
+  }
+
   if (!name) {
     const { input } = await import("@inquirer/prompts");
 
@@ -50,7 +60,7 @@ export const generateWorker = async (
   );
   const filename = `${kebabCase(name)}.ts`;
   const filepath = join(directory, filename);
-  const content = workerTemplate();
+  const content = workerTemplate(options.cron);
 
   if (options.dryRun) {
     Logger.std.log(`\nDry run — would create:\n`);
