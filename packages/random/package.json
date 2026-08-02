@@ -11,6 +11,12 @@
   "publishConfig": {
     "access": "public"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -31,11 +37,5 @@
     "update": "ncu -i",
     "update:auto": "ncu -u",
     "verify": "npm run typecheck && npm run build && npm test"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
   }
 }

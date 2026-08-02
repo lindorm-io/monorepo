@@ -11,14 +11,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "files": [
-    "dist"
-  ],
-  "bin": {
-    "kryptos": "dist/cli.js"
-  },
-  "type": "module",
-  "typings": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -37,6 +29,14 @@
       "default": "./dist/fixtures/index.js"
     }
   },
+  "bin": {
+    "kryptos": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "prettier": "prettier --write ./src/*",

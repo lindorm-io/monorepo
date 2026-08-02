@@ -1,5 +1,26 @@
 {
   "$schema": "./node_modules/syncpack/schema.json",
+  "sortFirst": [
+    "name",
+    "version",
+    "license",
+    "author",
+    "repository",
+    "bugs",
+    "engines",
+    "publishConfig",
+    "workspaces",
+    "exports",
+    "bin",
+    "files",
+    "type",
+    "typings",
+    "scripts",
+    "dependencies",
+    "devDependencies",
+    "peerDependencies",
+    "peerDependenciesMeta"
+  ],
   "versionGroups": [
     {
       "label": "Ignore workspace own version — lerna manages this",

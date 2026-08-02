@@ -11,6 +11,15 @@
   "publishConfig": {
     "access": "public"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "typewriter": "dist/cli.js"
+  },
   "files": [
     "dist"
   ],
@@ -28,9 +37,6 @@
     "update:auto": "ncu -u",
     "verify": "npm run typecheck && npm run build && npm test"
   },
-  "bin": {
-    "typewriter": "dist/cli.js"
-  },
   "dependencies": {
     "@lindorm/case": "^0.3.0",
     "@lindorm/is": "^0.3.0",
@@ -41,11 +47,5 @@
   },
   "devDependencies": {
     "zod": "^4.4.3"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
   }
 }

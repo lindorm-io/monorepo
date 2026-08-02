@@ -11,11 +11,21 @@
   "publishConfig": {
     "access": "public"
   },
-  "type": "module",
-  "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./mocks/vitest": {
+      "types": "./dist/mocks/vitest.d.ts",
+      "default": "./dist/mocks/vitest.js"
+    }
+  },
   "files": [
     "dist"
   ],
+  "type": "module",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "prettier": "prettier --write ./src/*",
@@ -32,15 +42,5 @@
     "@lindorm/errors": "^0.6.0",
     "@lindorm/is": "^0.3.0",
     "@lindorm/scanner": "^0.6.0"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./mocks/vitest": {
-      "types": "./dist/mocks/vitest.d.ts",
-      "default": "./dist/mocks/vitest.js"
-    }
   }
 }

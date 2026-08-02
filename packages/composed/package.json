@@ -11,20 +11,26 @@
   "publishConfig": {
     "access": "public"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "composed": "dist/cli.js"
+  },
   "files": [
     "dist"
   ],
   "type": "module",
   "typings": "dist/index.d.ts",
-  "bin": {
-    "composed": "dist/cli.js"
-  },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "prettier": "prettier --write ./src/*",
     "test": "vitest run",
-    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
     "test:smoke": "composed -r --file docker-compose.yml vitest run --config vitest.config.smoke.mjs",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
     "test:update": "vitest run -u",
     "test:watch": "vitest",
     "typecheck": "tsc",
@@ -39,11 +45,5 @@
   "devDependencies": {
     "@types/pg": "^8.18.0",
     "pg": "^8.20.0"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
   }
 }

@@ -5,6 +5,12 @@
   "author": "Jonn Nilsson",
   "repository": "https://github.com/lindorm-io/monorepo",
   "bugs": "https://github.com/lindorm-io/monorepo/issues",
+  "engines": {
+    "node": ">=24.13.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "lerna run build",
     "init": "tsx ./.scripts/initialise-package.ts && npm i",
@@ -15,8 +21,8 @@
     "sync:peers": "syncpack lint",
     "sync:peers:fix": "syncpack fix && syncpack fix",
     "test": "npm run test:unit && composed -r --file docker-compose.yml npm run test:integration",
-    "test:unit": "lerna run test:unit",
     "test:integration": "lerna run test:integration --concurrency 1",
+    "test:unit": "lerna run test:unit",
     "typecheck": "lerna run typecheck",
     "update": "ncu -i",
     "update:auto": "ncu -u && lerna run update:auto && npm install && npm audit fix"
@@ -55,11 +61,5 @@
     "typescript-eslint": "^8.58.0",
     "unplugin-swc": "^1.5.9",
     "vitest": "^4.1.4"
-  },
-  "engines": {
-    "node": ">=24.13.0"
-  },
-  "workspaces": [
-    "packages/*"
-  ]
+  }
 }

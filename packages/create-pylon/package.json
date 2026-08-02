@@ -8,21 +8,27 @@
     "directory": "packages/create-pylon"
   },
   "bugs": "https://github.com/lindorm-io/monorepo/issues",
+  "engines": {
+    "node": ">=24.13.0"
+  },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "bin": {
     "create-pylon": "dist/cli.js"
   },
-  "engines": {
-    "node": ">=24.13.0"
-  },
-  "type": "module",
-  "typings": "dist/index.d.ts",
   "files": [
     "dist",
     "templates"
   ],
+  "type": "module",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "prettier": "prettier --write ./src/*",
@@ -52,11 +58,5 @@
   },
   "devDependencies": {
     "@types/cross-spawn": "^6.0.6"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
   }
 }

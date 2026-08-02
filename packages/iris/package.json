@@ -11,14 +11,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "files": [
-    "dist"
-  ],
-  "bin": {
-    "iris": "dist/cli.js"
-  },
-  "type": "module",
-  "typings": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -37,17 +29,25 @@
       "default": "./dist/mocks/vitest.js"
     }
   },
+  "bin": {
+    "iris": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "prettier": "prettier --write ./src/*",
     "test": "composed -r --file docker-compose.yml vitest run",
-    "test:unit": "vitest run --config vitest.unit.mjs",
     "test:integration": "composed -r --file docker-compose.yml --project iris-integration vitest run --config vitest.integration.mjs",
-    "test:tck:nats": "composed -r --file docker-compose.nats.yml --project iris-tck-nats vitest run --config vitest.tck.mjs nats",
-    "test:tck:redis": "composed -r --file docker-compose.redis.yml --project iris-tck-redis vitest run --config vitest.tck.mjs redis",
-    "test:tck:rabbit": "composed -r --file docker-compose.rabbit.yml --project iris-tck-rabbit vitest run --config vitest.tck.mjs rabbit",
     "test:tck:kafka": "composed -r --file docker-compose.kafka.yml --project iris-tck-kafka vitest run --config vitest.tck.mjs kafka",
     "test:tck:memory": "vitest run --config vitest.tck.mjs memory",
+    "test:tck:nats": "composed -r --file docker-compose.nats.yml --project iris-tck-nats vitest run --config vitest.tck.mjs nats",
+    "test:tck:rabbit": "composed -r --file docker-compose.rabbit.yml --project iris-tck-rabbit vitest run --config vitest.tck.mjs rabbit",
+    "test:tck:redis": "composed -r --file docker-compose.redis.yml --project iris-tck-redis vitest run --config vitest.tck.mjs redis",
+    "test:unit": "vitest run --config vitest.unit.mjs",
     "test:update": "composed -r --file docker-compose.yml vitest run -u",
     "test:watch": "composed -r --file docker-compose.yml vitest",
     "typecheck": "tsc",
@@ -70,6 +70,17 @@
     "@lindorm/types": "^0.10.0",
     "@lindorm/utils": "^0.10.0",
     "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "@lindorm/amphora": "^0.7.0",
+    "@lindorm/kryptos": "^0.11.0",
+    "@lindorm/logger": "^0.7.0",
+    "@types/amqplib": "^0.10.8",
+    "amqplib": "^0.10.9",
+    "ioredis": "^5.10.0",
+    "kafkajs": "^2.2.4",
+    "nats": "^2.29.3",
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "@lindorm/amphora": ">=0.4.0",
@@ -100,16 +111,5 @@
     "nats": {
       "optional": true
     }
-  },
-  "devDependencies": {
-    "@lindorm/amphora": "^0.7.0",
-    "@lindorm/kryptos": "^0.11.0",
-    "@lindorm/logger": "^0.7.0",
-    "@types/amqplib": "^0.10.8",
-    "amqplib": "^0.10.9",
-    "ioredis": "^5.10.0",
-    "kafkajs": "^2.2.4",
-    "nats": "^2.29.3",
-    "zod": "^4.4.3"
   }
 }

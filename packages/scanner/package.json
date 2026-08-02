@@ -11,11 +11,17 @@
   "publishConfig": {
     "access": "public"
   },
-  "type": "module",
-  "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
+  "type": "module",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "example": "tsx example/index.ts",
@@ -36,11 +42,5 @@
   },
   "devDependencies": {
     "@lindorm/logger": "^0.7.0"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
   }
 }

@@ -11,20 +11,20 @@
   "publishConfig": {
     "access": "public"
   },
-  "files": [
-    "dist"
-  ],
-  "bin": {
-    "config": "dist/cli.js"
-  },
-  "type": "module",
-  "typings": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
+  "bin": {
+    "config": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "prettier": "prettier --write ./src/*",

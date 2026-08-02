@@ -11,14 +11,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "files": [
-    "dist"
-  ],
-  "bin": {
-    "pylon": "dist/cli.js"
-  },
-  "type": "module",
-  "typings": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -49,6 +41,14 @@
       "default": "./dist/scaffold.js"
     }
   },
+  "bin": {
+    "pylon": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "example": "tsx example/index.ts",
@@ -98,6 +98,24 @@
     "object-path": "^0.11.8",
     "socket.io": "^4.8.3"
   },
+  "devDependencies": {
+    "@lindorm/amphora": "^0.7.0",
+    "@lindorm/hermes": "^0.10.0",
+    "@lindorm/iris": "^0.7.0",
+    "@lindorm/logger": "^0.7.0",
+    "@lindorm/proteus": "^0.12.0",
+    "@lindorm/zephyr": "^0.5.0",
+    "@types/busboy": "^1.5.4",
+    "@types/co-body": "^6.1.3",
+    "@types/formidable": "^3.5.0",
+    "@types/ioredis": "^5.0.0",
+    "@types/keygrip": "^1.0.6",
+    "@types/koa": "^3.0.1",
+    "@types/koa-router": "^7.4.9",
+    "@types/object-path": "^0.11.4",
+    "socket.io-client": "^4.8.3",
+    "zod": "^4.4.3"
+  },
   "peerDependencies": {
     "@lindorm/amphora": ">=0.4.0",
     "@lindorm/hermes": ">=0.6.0",
@@ -116,23 +134,5 @@
     "@lindorm/proteus": {
       "optional": true
     }
-  },
-  "devDependencies": {
-    "@lindorm/amphora": "^0.7.0",
-    "@lindorm/hermes": "^0.10.0",
-    "@lindorm/iris": "^0.7.0",
-    "@lindorm/logger": "^0.7.0",
-    "@lindorm/proteus": "^0.12.0",
-    "@lindorm/zephyr": "^0.5.0",
-    "@types/busboy": "^1.5.4",
-    "@types/co-body": "^6.1.3",
-    "@types/formidable": "^3.5.0",
-    "@types/ioredis": "^5.0.0",
-    "@types/keygrip": "^1.0.6",
-    "@types/koa": "^3.0.1",
-    "@types/koa-router": "^7.4.9",
-    "@types/object-path": "^0.11.4",
-    "socket.io-client": "^4.8.3",
-    "zod": "^4.4.3"
   }
 }

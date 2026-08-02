@@ -11,6 +11,20 @@
   "publishConfig": {
     "access": "public"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./mocks/jest": {
+      "types": "./dist/mocks/jest.d.ts",
+      "default": "./dist/mocks/jest.js"
+    },
+    "./mocks/vitest": {
+      "types": "./dist/mocks/vitest.d.ts",
+      "default": "./dist/mocks/vitest.js"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -46,6 +60,10 @@
     "axios": "^1.15.0",
     "form-data": "^4.0.5"
   },
+  "devDependencies": {
+    "@lindorm/logger": "^0.7.0",
+    "zod": "^4.4.3"
+  },
   "peerDependencies": {
     "@lindorm/logger": ">=0.5.0",
     "zod": ">=4.3.6"
@@ -53,24 +71,6 @@
   "peerDependenciesMeta": {
     "@lindorm/logger": {
       "optional": true
-    }
-  },
-  "devDependencies": {
-    "@lindorm/logger": "^0.7.0",
-    "zod": "^4.4.3"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./mocks/jest": {
-      "types": "./dist/mocks/jest.d.ts",
-      "default": "./dist/mocks/jest.js"
-    },
-    "./mocks/vitest": {
-      "types": "./dist/mocks/vitest.d.ts",
-      "default": "./dist/mocks/vitest.js"
     }
   }
 }
