@@ -1,0 +1,56 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`lindormScopeSchema > should infer exactly the exported type 1`] = `
+[
+  "work_profile",
+  "work_profile",
+  "work_profile",
+]
+`;
+
+exports[`scopeSchema > should infer exactly the exported type 1`] = `
+[
+  "openid",
+  "openid",
+  "openid",
+]
+`;
+
+exports[`scopeSchema > should reject a deployment-defined scope 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "accessibility",
+      "auth",
+      "geo_location",
+      "identity_providers",
+      "instant_messaging",
+      "legal",
+      "national_identity_number",
+      "social_networks",
+      "social_security_number",
+      "work_profile",
+      "address",
+      "email",
+      "offline_access",
+      "openid",
+      "phone",
+      "profile"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"accessibility\\"|\\"auth\\"|\\"geo_location\\"|\\"identity_providers\\"|\\"instant_messaging\\"|\\"legal\\"|\\"national_identity_number\\"|\\"social_networks\\"|\\"social_security_number\\"|\\"work_profile\\"|\\"address\\"|\\"email\\"|\\"offline_access\\"|\\"openid\\"|\\"phone\\"|\\"profile\\""
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`standardScopeSchema > should infer exactly the exported type 1`] = `
+[
+  "offline_access",
+  "offline_access",
+  "offline_access",
+]
+`;

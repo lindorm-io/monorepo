@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`subjectTypeSchema > should infer exactly the exported type 1`] = `
+[
+  "public",
+  "public",
+  "public",
+]
+`;
+
+exports[`subjectTypeSchema > should reject an unlisted value 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "pairwise",
+      "public"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"pairwise\\"|\\"public\\""
+  }
+]],
+  "success": false,
+}
+`;

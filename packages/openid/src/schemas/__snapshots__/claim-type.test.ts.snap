@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`claimTypeSchema > should infer exactly the exported type 1`] = `
+[
+  "normal",
+  "normal",
+  "normal",
+]
+`;
+
+exports[`claimTypeSchema > should reject an unlisted value 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "normal",
+      "aggregated",
+      "distributed"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"normal\\"|\\"aggregated\\"|\\"distributed\\""
+  }
+]],
+  "success": false,
+}
+`;

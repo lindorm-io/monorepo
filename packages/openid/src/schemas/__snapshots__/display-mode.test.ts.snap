@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`displayModeSchema > should infer exactly the exported type 1`] = `
+[
+  "page",
+  "page",
+  "page",
+]
+`;
+
+exports[`displayModeSchema > should reject an unlisted value 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "page",
+      "popup",
+      "touch",
+      "wap"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"page\\"|\\"popup\\"|\\"touch\\"|\\"wap\\""
+  }
+]],
+  "success": false,
+}
+`;

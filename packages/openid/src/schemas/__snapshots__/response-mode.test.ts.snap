@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`responseModeSchema > should infer exactly the exported type 1`] = `
+[
+  "query",
+  "query",
+  "query",
+]
+`;
+
+exports[`responseModeSchema > should reject an unregistered mode 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "form_post",
+      "form_post.jwt",
+      "fragment",
+      "fragment.jwt",
+      "query",
+      "query.jwt",
+      "jwt"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"form_post\\"|\\"form_post.jwt\\"|\\"fragment\\"|\\"fragment.jwt\\"|\\"query\\"|\\"query.jwt\\"|\\"jwt\\""
+  }
+]],
+  "success": false,
+}
+`;

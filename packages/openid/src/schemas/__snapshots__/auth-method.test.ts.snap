@@ -1,0 +1,45 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`authMethodSchema > should infer exactly the exported type 1`] = `
+[
+  "pwd",
+  "pwd",
+  "pwd",
+]
+`;
+
+exports[`authMethodSchema > should reject an unlisted value 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "face",
+      "fpt",
+      "geo",
+      "hwk",
+      "iris",
+      "kba",
+      "mca",
+      "mfa",
+      "otp",
+      "pin",
+      "pop",
+      "pwd",
+      "rba",
+      "retina",
+      "sc",
+      "sms",
+      "swk",
+      "tel",
+      "user",
+      "vbm",
+      "wia"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"face\\"|\\"fpt\\"|\\"geo\\"|\\"hwk\\"|\\"iris\\"|\\"kba\\"|\\"mca\\"|\\"mfa\\"|\\"otp\\"|\\"pin\\"|\\"pop\\"|\\"pwd\\"|\\"rba\\"|\\"retina\\"|\\"sc\\"|\\"sms\\"|\\"swk\\"|\\"tel\\"|\\"user\\"|\\"vbm\\"|\\"wia\\""
+  }
+]],
+  "success": false,
+}
+`;

@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`codeChallengeMethodSchema > should infer exactly the exported type 1`] = `
+[
+  "S256",
+  "S256",
+  "S256",
+]
+`;
+
+exports[`codeChallengeMethodSchema > should reject an unlisted value 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "plain",
+      "S256"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"plain\\"|\\"S256\\""
+  }
+]],
+  "success": false,
+}
+`;

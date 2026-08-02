@@ -1,0 +1,33 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`grantTypeSchema > should infer exactly the exported type 1`] = `
+[
+  "authorization_code",
+  "authorization_code",
+  "authorization_code",
+]
+`;
+
+exports[`grantTypeSchema > should reject a vendor grant type 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "authorization_code",
+      "client_credentials",
+      "password",
+      "refresh_token",
+      "urn:ietf:params:oauth:grant-type:device_code",
+      "urn:ietf:params:oauth:grant-type:token-exchange",
+      "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      "urn:ietf:params:oauth:grant-type:saml2-bearer",
+      "urn:openid:params:grant-type:ciba"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"authorization_code\\"|\\"client_credentials\\"|\\"password\\"|\\"refresh_token\\"|\\"urn:ietf:params:oauth:grant-type:device_code\\"|\\"urn:ietf:params:oauth:grant-type:token-exchange\\"|\\"urn:ietf:params:oauth:grant-type:jwt-bearer\\"|\\"urn:ietf:params:oauth:grant-type:saml2-bearer\\"|\\"urn:openid:params:grant-type:ciba\\""
+  }
+]],
+  "success": false,
+}
+`;

@@ -1,0 +1,32 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`responseTypeSchema > should infer exactly the exported type 1`] = `
+[
+  "code",
+  "code",
+  "code",
+]
+`;
+
+exports[`responseTypeSchema > should reject an unlisted value 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "code",
+      "token",
+      "id_token",
+      "code id_token",
+      "code token",
+      "id_token token",
+      "code id_token token",
+      "none"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"code\\"|\\"token\\"|\\"id_token\\"|\\"code id_token\\"|\\"code token\\"|\\"id_token token\\"|\\"code id_token token\\"|\\"none\\""
+  }
+]],
+  "success": false,
+}
+`;

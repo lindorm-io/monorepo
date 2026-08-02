@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`backchannelTokenDeliveryModeSchema > should infer exactly the exported type 1`] = `
+[
+  "poll",
+  "poll",
+  "poll",
+]
+`;
+
+exports[`backchannelTokenDeliveryModeSchema > should reject an unlisted value 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "ping",
+      "poll",
+      "push"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"ping\\"|\\"poll\\"|\\"push\\""
+  }
+]],
+  "success": false,
+}
+`;

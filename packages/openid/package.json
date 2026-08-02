@@ -31,10 +31,25 @@
   "dependencies": {
     "@lindorm/types": "^0.10.0"
   },
+  "peerDependencies": {
+    "zod": ">=4.3.6"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "zod": "^4.4.3"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "default": "./dist/schemas/index.js"
     }
   }
 }

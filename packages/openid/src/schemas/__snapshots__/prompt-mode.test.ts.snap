@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`promptModeSchema > should infer exactly the exported type 1`] = `
+[
+  "login",
+  "login",
+  "login",
+]
+`;
+
+exports[`promptModeSchema > should reject an unlisted value 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "consent",
+      "create",
+      "login",
+      "select_account",
+      "none"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"consent\\"|\\"create\\"|\\"login\\"|\\"select_account\\"|\\"none\\""
+  }
+]],
+  "success": false,
+}
+`;

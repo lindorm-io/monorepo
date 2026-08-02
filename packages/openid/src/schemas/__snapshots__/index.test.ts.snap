@@ -1,0 +1,21 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`schemas/index > should export every schema 1`] = `
+[
+  "authMethodSchema",
+  "backchannelTokenDeliveryModeSchema",
+  "claimTypeSchema",
+  "codeChallengeMethodSchema",
+  "displayModeSchema",
+  "grantTypeSchema",
+  "lindormScopeSchema",
+  "namingSystemSchema",
+  "promptModeSchema",
+  "responseModeSchema",
+  "responseTypeSchema",
+  "scopeSchema",
+  "standardScopeSchema",
+  "subjectTypeSchema",
+  "tokenEndpointAuthMethodSchema",
+]
+`;

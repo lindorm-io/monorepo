@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`namingSystemSchema > should infer exactly the exported type 1`] = `
+[
+  "given_family",
+  "given_family",
+  "given_family",
+]
+`;
+
+exports[`namingSystemSchema > should reject an unlisted value 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "given_family",
+      "family_given"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"given_family\\"|\\"family_given\\""
+  }
+]],
+  "success": false,
+}
+`;
