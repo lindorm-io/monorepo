@@ -39,7 +39,6 @@
   },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
-    "example": "tsx example",
     "prettier": "prettier --write ./src/*",
     "test": "composed -r --file docker-compose.yml vitest run",
     "test:unit": "vitest run --config vitest.unit.mjs",

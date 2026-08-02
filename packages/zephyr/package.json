@@ -36,7 +36,6 @@
   },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
-    "example": "tsx example",
     "prettier": "prettier --write ./src/*",
     "test": "vitest run",
     "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
