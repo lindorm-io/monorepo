@@ -61,7 +61,8 @@ const JWT_CLAIMS_WIRE_KINDS = {
   txn: "text",
   // Lindorm assurance axes + proprietary hints
   aal: "int",
-  afr: "array",
+  afc: "array",
+  afr: "text",
   client_id: "text",
   conforms_to: "array",
   fal: "int",

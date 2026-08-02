@@ -143,7 +143,7 @@ const toConfirmation = (value: unknown): ConfirmationClaim | undefined => {
 
 // Claims whose "array" value is space-delimited-string-tolerant on read (they
 // accept `"a b"` and split it); the other array claims (`amr`, `entitlements`,
-// `groups`, `afr`, …) take arrays only. DERIVED from the registry `array: "spaced"`
+// `groups`, `afc`, …) take arrays only. DERIVED from the registry `array: "spaced"`
 // marks — the single source of truth — not a hand-maintained list.
 const STRING_ARRAY_DOMAINS = new Set(
   claimsWith("array")
@@ -312,7 +312,7 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
     case "array":
       if (spec.domain === "audience") return toAudience(value);
       if (STRING_ARRAY_DOMAINS.has(spec.domain)) return toStringArray(value);
-      return isArray(value) ? value : undefined; // amr, entitlements, groups, afr
+      return isArray(value) ? value : undefined; // amr, entitlements, groups, afc
     case "bespoke":
       return decodeBespoke(spec, value);
     default: {

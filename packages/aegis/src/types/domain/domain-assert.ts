@@ -17,9 +17,9 @@ import type { DomainClaims } from "../../internal/utils/extract-claims.js";
  *
  * The other 14 former matchers (`authContextClassReference`, `authorizedParty`,
  * `grantType`, `nonce`, `levelOfAssurance`, `vectorOfTrust`, `vectorTrustMark`,
- * `authTime`, `clientId`, `subject`, `subjectHint`, `tenantId`, `authFactor`,
- * `sessionHint`) are plain-equality claims and fold into the free
- * {@link DomainAssert} predicate — each is a `keyof DomainClaims`, so
+ * `authTime`, `clientId`, `subject`, `subjectHint`, `tenantId`,
+ * `authFactorReference`, `sessionHint`) are plain-equality claims and fold into
+ * the free {@link DomainAssert} predicate — each is a `keyof DomainClaims`, so
  * `Condition<Omit<DomainClaims, keyof DomainClaimMatchers>>` types them. The
  * three verify-time derive-inputs (`accessToken`, `authCode`, `authState`) move
  * to verify OPTIONS ({@link import("./verify.js").VerifyOptions}).

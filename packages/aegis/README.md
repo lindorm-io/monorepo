@@ -524,7 +524,8 @@ const { payload } = await aegis.cwe.decrypt(cwe.token); // Buffer
   notBefore?: Date;
   authTime?: Date;
   authContextClassReference?: string;
-  authFactor?: Array<string>;
+  authFactorReference?: string;      // afr — resolved factor: 1fa | 2fa | phr | phrh
+  authFactorCategories?: Array<string>; // afc — knowledge | possession | inherence
   authMethods?: Array<string>;
   authorizedParty?: string;
   levelOfAssurance?: number;

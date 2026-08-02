@@ -153,7 +153,7 @@ export type ClaimSpec = {
    *   - `"spaced"`  a space-delimited STRING is accepted and SPLIT into the array
    *                 (`"a b"` -> `["a","b"]`): `roles`/`scope`/`permissions`/
    *                 `conformsTo`.
-   *   - `"strict"`  arrays ONLY; a scalar decodes to `undefined`: `amr`/`afr`/
+   *   - `"strict"`  arrays ONLY; a scalar decodes to `undefined`: `amr`/`afc`/
    *                 `entitlements`/`groups`/`preferredAccessibility`.
    * `audience` is the deliberate exception (no mark): RFC 7519 `aud` is
    * string-OR-array, so a scalar wraps to a single-element array (its own decoder).
@@ -372,9 +372,20 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     category: "claims",
     subset: "core",
   },
+  // The resolved (primary) auth factor — ONE value (1fa/2fa/phr/phrh), not the
+  // categories it was made of; `afc` below carries those.
   {
-    domain: "authFactor",
+    domain: "authFactorReference",
     jose: "afr",
+    cose: null,
+    value: "text",
+    category: "claims",
+    subset: "core",
+  },
+  // PSD2 SCA categories (knowledge/possession/inherence) — the axes exercised.
+  {
+    domain: "authFactorCategories",
+    jose: "afc",
     cose: null,
     value: "array",
     category: "claims",

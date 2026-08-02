@@ -48,7 +48,8 @@ describe("domainToJose — content -> wire mapping", () => {
       groups: ["g1"],
       permissions: ["read"],
       entitlements: ["e1"],
-      authFactor: ["knowledge"],
+      authFactorCategories: ["knowledge", "possession"],
+      authFactorReference: "2fa",
       conformsTo: ["urn:lindorm:profile:fapi"],
       // scalars
       authContextClassReference: "urn:acr:high",
@@ -154,7 +155,8 @@ describe("joseToDomain — read parity with extractDomainClaims", () => {
     groups: ["g1"],
     permissions: ["read"],
     entitlements: ["e1"],
-    afr: ["knowledge"],
+    afc: ["knowledge", "possession"],
+    afr: "2fa",
     conforms_to: ["urn:lindorm:profile:fapi"],
     acr: "urn:acr:high",
     azp: "client-1",
@@ -227,6 +229,34 @@ describe("joseToDomain — read parity with extractDomainClaims", () => {
       tokenIntrospection: { active: true },
       acmeFlag: "x",
     });
+  });
+});
+
+describe("auth factor claims — `afr` is the RESOLVED single factor, `afc` the categories", () => {
+  const domain: Dict = {
+    authFactorReference: "phrh",
+    authFactorCategories: ["possession", "inherence"],
+  };
+
+  test("domain -> wire maps to the two distinct wire names", () => {
+    expect(domainToJose(domain)).toEqual({
+      afr: "phrh",
+      afc: ["possession", "inherence"],
+    });
+  });
+
+  test("domain -> wire -> domain round-trips both claims", () => {
+    expect(joseToDomain(domainToJose(domain)).claims).toEqual(domain);
+  });
+
+  test("`afr` is a scalar: an array value decodes to undefined", () => {
+    const { claims } = joseToDomain({ afr: ["2fa"] });
+    expect(claims.authFactorReference).toBeUndefined();
+  });
+
+  test('`afc` is a strict array: a scalar decodes to undefined (no "spaced" split)', () => {
+    const { claims } = joseToDomain({ afc: "knowledge possession" });
+    expect(claims.authFactorCategories).toBeUndefined();
   });
 });
 

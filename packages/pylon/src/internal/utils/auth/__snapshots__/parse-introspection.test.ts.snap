@@ -12,10 +12,11 @@ exports[`parseIntrospection > should map Lindorm extension fields 1`] = `
   "audience": [
     "https://api.example.com",
   ],
-  "authFactor": [
-    "pwd",
-    "otp",
+  "authFactorCategories": [
+    "knowledge",
+    "possession",
   ],
+  "authFactorReference": "2fa",
   "clientId": "client-ext",
   "entitlements": [
     "premium",

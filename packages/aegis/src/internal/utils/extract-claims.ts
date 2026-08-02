@@ -186,7 +186,8 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
   const authorizationDetails = consume(FIELD_KEYS.authorizationDetails);
 
   const authenticatorAssuranceLevel = consume(FIELD_KEYS.authenticatorAssuranceLevel);
-  const authFactor = consume(FIELD_KEYS.authFactor);
+  const authFactorCategories = consume(FIELD_KEYS.authFactorCategories);
+  const authFactorReference = consume(FIELD_KEYS.authFactorReference);
   const clientId = consume(FIELD_KEYS.clientId);
   const conformsTo = consume(FIELD_KEYS.conformsTo);
   const federationAssuranceLevel = consume(FIELD_KEYS.federationAssuranceLevel);
@@ -252,7 +253,10 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
     )
       ? authenticatorAssuranceLevel
       : undefined,
-    authFactor: isArray(authFactor) ? (authFactor as Array<string>) : undefined,
+    authFactorCategories: isArray(authFactorCategories)
+      ? (authFactorCategories as Array<string>)
+      : undefined,
+    authFactorReference: isString(authFactorReference) ? authFactorReference : undefined,
     clientId: isString(clientId) ? clientId : undefined,
     conformsTo: toStringArray(conformsTo),
     federationAssuranceLevel: isFinite<FederationAssuranceLevel>(federationAssuranceLevel)

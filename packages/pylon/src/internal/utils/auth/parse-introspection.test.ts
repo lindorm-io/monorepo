@@ -75,7 +75,8 @@ describe("parseIntrospection", () => {
       sessionHint: "browser",
       subjectHint: "identity",
       grantType: "authorization_code",
-      authFactor: ["pwd", "otp"],
+      authFactorReference: "2fa",
+      authFactorCategories: ["knowledge", "possession"],
       entitlements: ["premium"],
       groups: ["engineering", "leads"],
     } as IntrospectClaimsInput;

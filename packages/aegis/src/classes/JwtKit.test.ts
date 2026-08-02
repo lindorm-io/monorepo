@@ -247,7 +247,8 @@ describe("JwtKit", () => {
         audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
         authCode: "999a8b01e27c56aeb5b2f47c001ef8be7be39a375f8c5e929f82df1626de01d8",
         authContextClassReference: "test_auth_context_class",
-        authFactor: ["test_auth_factor"],
+        authFactorCategories: ["test_auth_factor_category"],
+        authFactorReference: "test_auth_factor",
         authMethods: ["test_auth_method"],
         authorizedParty: "6099162c-3853-5a28-ade1-7f354b68b54b",
         authState: "7409ac52a9615b8c9f9a",
@@ -278,7 +279,8 @@ describe("JwtKit", () => {
 
       const wirePayload = {
         acr: "test_auth_context_class",
-        afr: ["test_auth_factor"],
+        afc: ["test_auth_factor_category"],
+        afr: "test_auth_factor",
         amr: ["test_auth_method"],
         at_hash: "ehXwFopDjJcovgdtD6uhQhwII5E___tRO573XDWUJ5Q",
         aud: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],

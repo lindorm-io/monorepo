@@ -213,7 +213,7 @@ describe("CLAIM_REGISTRY", () => {
     expect(new Set(strict)).toEqual(
       new Set([
         "authMethods",
-        "authFactor",
+        "authFactorCategories",
         "entitlements",
         "groups",
         "preferredAccessibility",
@@ -376,7 +376,8 @@ describe("CLAIM_REGISTRY", () => {
       roles: ["roles"],
       authorizationDetails: ["authorizationDetails", "authorization_details"],
       authenticatorAssuranceLevel: ["authenticatorAssuranceLevel", "aal"],
-      authFactor: ["authFactor", "afr"],
+      authFactorCategories: ["authFactorCategories", "afc"],
+      authFactorReference: ["authFactorReference", "afr"],
       clientId: ["clientId", "client_id"],
       conformsTo: ["conformsTo", "conforms_to"],
       federationAssuranceLevel: ["federationAssuranceLevel", "fal"],

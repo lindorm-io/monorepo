@@ -6,7 +6,27 @@ import type {
   LevelOfAssurance,
 } from "./level-of-assurance.js";
 
-export type AuthFactor = "knowledge" | "possession" | "inherence" | (string & {});
+/**
+ * The RESOLVED (primary) authentication factor of the session — a SINGLE value,
+ * the strongest posture the authentication achieved:
+ *   - `"1fa"`   one factor only.
+ *   - `"2fa"`   two factors from distinct categories.
+ *   - `"phr"`   phishing-resistant (e.g. WebAuthn/FIDO2).
+ *   - `"phrh"`  phishing-resistant AND hardware-bound (a roaming authenticator).
+ * Open (`string & {}`) on purpose: aegis is a generic JWT library and must
+ * represent whatever arrived on the wire. The closed set is enforced downstream.
+ */
+export type AuthFactorReference = "1fa" | "2fa" | "phr" | "phrh" | (string & {});
+
+/**
+ * The authentication factor CATEGORIES the session exercised (PSD2 SCA axes) —
+ * an array, one entry per distinct category:
+ *   - `"knowledge"`   something the subject knows (password, PIN).
+ *   - `"possession"`  something the subject has (device, token, phone).
+ *   - `"inherence"`   something the subject is (biometrics).
+ * Open (`string & {}`) for the same reason as {@link AuthFactorReference}.
+ */
+export type AuthFactorCategory = "knowledge" | "possession" | "inherence" | (string & {});
 
 export type SessionHint =
   | "web"
@@ -21,11 +41,13 @@ export type SubjectHint = "user" | "client" | "service" | "device" | (string & {
 // Lindorm domain claims, domain form. This holds two distinct categories:
 //  - standards-based assurance axes (loa/aal/ial/fal — ISO 29115 / NIST 800-63)
 //    which have a standard meaning but no IANA-registered integer label, and
-//  - genuinely lindorm-proprietary hints (authFactor/sessionHint/subjectHint/
-//    tenantId) that are stripped from off-platform tokens.
+//  - genuinely lindorm-proprietary hints (authFactorReference/
+//    authFactorCategories/sessionHint/subjectHint/tenantId) that are stripped
+//    from off-platform tokens.
 export type LindormClaims = {
   authenticatorAssuranceLevel?: AuthenticatorAssuranceLevel;
-  authFactor?: Array<AuthFactor>;
+  authFactorCategories?: Array<AuthFactorCategory>;
+  authFactorReference?: AuthFactorReference;
   clientId?: string;
   // The profiles this token's posture clears (RS-facing signal): required on the
   // access token / introspection whenever non-empty. See `token-claims.md` §2/§3.

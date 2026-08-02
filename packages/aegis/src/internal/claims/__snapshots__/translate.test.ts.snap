@@ -12,9 +12,11 @@ exports[`domainToJose — content -> wire mapping > the full domain vocabulary m
     "iss": "https://delegator/",
     "sub": "actor",
   },
-  "afr": [
+  "afc": [
     "knowledge",
+    "possession",
   ],
+  "afr": "2fa",
   "amr": [
     "pwd",
     "otp",
