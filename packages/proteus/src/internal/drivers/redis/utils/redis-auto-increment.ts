@@ -29,6 +29,12 @@ export const applyRedisAutoIncrement = async (
 
     const key = buildIncrementKey(metadata, gen.key, namespace);
     const next = await client.incr(key);
-    row[gen.key] = next;
+
+    // Mint the value in the PK column's DECLARED type: a `bigint` column must get
+    // a JS bigint. Storing a plain number would mismatch reads (which hydrate to
+    // bigint) so `findOne({ id: 2n })` and every cross-table bigint FK would
+    // falsely miss.
+    const field = metadata.fields?.find((f) => f.key === gen.key);
+    row[gen.key] = field?.type === "bigint" ? BigInt(next) : next;
   }
 };

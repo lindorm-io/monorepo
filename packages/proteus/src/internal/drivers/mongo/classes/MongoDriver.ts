@@ -837,6 +837,11 @@ export class MongoDriver implements IProteusDriver {
     // directConnection required for single-node replica sets
     options.directConnection = true;
 
+    // BSON int64 must deserialise to a JS bigint, not a BSON Long: a `bigint`
+    // column (or bigint identity) is cloned through structuredClone on read,
+    // which flattens a Long into a plain object and loses the value.
+    options.useBigInt64 = true;
+
     const mongoClient = new MongoClient(url, options as any);
     await mongoClient.connect();
 

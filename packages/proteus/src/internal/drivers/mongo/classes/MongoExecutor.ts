@@ -741,7 +741,13 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         },
       );
 
-      const nextVal = (result as any)?.seq ?? 1;
+      const seq = (result as any)?.seq ?? 1;
+
+      // Mint the value in the column's DECLARED type: a `bigint` column must get
+      // a JS bigint. The sequence counter is a BSON int, so a bigint column
+      // would otherwise be minted as a number and mismatch reads (which hydrate
+      // to bigint), making `findOne({ id: 2n })` and bigint FK lookups miss.
+      const nextVal = field?.type === "bigint" ? BigInt(seq) : seq;
 
       if (isPk) {
         doc._id = nextVal;

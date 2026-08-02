@@ -1,3 +1,4 @@
+import { isBigInt, isNumber } from "@lindorm/is";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import { applyRedisAutoIncrement } from "./redis-auto-increment.js";
 import { describe, expect, test, vi, type Mock } from "vitest";
@@ -177,6 +178,39 @@ describe("applyRedisAutoIncrement", () => {
 
       expect(row).toMatchSnapshot();
       expect(client.incr).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("bigint primary key column", () => {
+    const withField = (type: string): EntityMetadata =>
+      ({
+        entity: { name: "BigEntity" },
+        target: TestEntity,
+        generated: [makeGenerated("increment", "id")],
+        fields: [{ key: "id", type }],
+      }) as unknown as EntityMetadata;
+
+    test("should mint a JS bigint when the generated column type is bigint", async () => {
+      const client = createMockRedisClient();
+      const first: Record<string, unknown> = {};
+      const second: Record<string, unknown> = {};
+
+      await applyRedisAutoIncrement(client as any, first, withField("bigint"), null);
+      await applyRedisAutoIncrement(client as any, second, withField("bigint"), null);
+
+      expect(first.id).toBe(1n);
+      expect(isBigInt(first.id)).toBe(true);
+      expect(second.id).toBe(2n);
+    });
+
+    test("should still mint a number for a non-bigint (integer) column", async () => {
+      const client = createMockRedisClient();
+      const row: Record<string, unknown> = {};
+
+      await applyRedisAutoIncrement(client as any, row, withField("integer"), null);
+
+      expect(row.id).toBe(1);
+      expect(isNumber(row.id)).toBe(true);
     });
   });
 
