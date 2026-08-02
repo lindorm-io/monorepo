@@ -42,10 +42,13 @@ const factory: TckDriverFactory = {
     uniqueEnforcement: true,
     referentialIntegrity: false,
     checkConstraints: false,
-    // Mongo stores bigint/decimal/binary as BSON Long/Decimal128/Binary, which
-    // do not round-trip to identical JS types through the shared deserialise.
-    richColumnTypes: false,
-    bigintIdentity: false,
+    bigintColumns: true,
+    decimalColumns: true,
+    // A BSON Binary survives the wire but not the read path: hydration clones
+    // the document with structuredClone, which flattens the Binary class into a
+    // plain object, and `deserialise` cannot make a Buffer of that.
+    binaryColumns: false,
+    bigintIdentity: true,
     // Mongo's driver rejects conflictOn by design (NotSupportedError).
     upsertConflictColumns: false,
     encryption: true,

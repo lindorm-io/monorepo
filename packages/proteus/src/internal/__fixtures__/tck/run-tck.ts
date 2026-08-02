@@ -173,8 +173,8 @@ const runTckForNaming = (
     );
   }
 
-  // BigInt auto-increment identity entities (mongo/redis cannot round-trip a
-  // bigint identity, so they never get the tables)
+  // BigInt auto-increment identity entities (only registered where the driver
+  // mints and round-trips a bigint identity)
   if (caps.bigintIdentity) {
     baseTargets.push(
       entities.TckBigIntPkParent,
@@ -245,11 +245,20 @@ const runTckForNaming = (
   maybeDescribe(caps.checkConstraints, "checkConstraints", () =>
     checkConstraintsSuite(getHandle, entities),
   );
-  maybeDescribe(caps.richColumnTypes, "typeCoercion", () =>
-    typeCoercionSuite(getHandle, entities),
+  // The suite gates each column type on its own flag; the wrapper only keeps
+  // the describe out of the report when a driver carries none of them.
+  maybeDescribe(
+    caps.bigintColumns || caps.decimalColumns || caps.binaryColumns,
+    "typeCoercion",
+    () => typeCoercionSuite(getHandle, entities, caps),
   );
-  maybeDescribe(caps.richColumnTypes, "typedJson", () =>
-    typedJsonSuite(getHandle, entities),
+  // Unchanged gating: @TypedJson carries nested bigint AND Buffer AND decimal
+  // in one sidecar, so it runs exactly where all three column types round-trip.
+  // A per-leg split of this suite is a separate change.
+  maybeDescribe(
+    caps.bigintColumns && caps.decimalColumns && caps.binaryColumns,
+    "typedJson",
+    () => typedJsonSuite(getHandle, entities),
   );
   maybeDescribe(caps.inheritance.singleTable, "inheritance:single-table", () =>
     inheritanceSingleTableSuite(getHandle, entities),

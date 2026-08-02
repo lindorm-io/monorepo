@@ -42,11 +42,15 @@ const factory: TckDriverFactory = {
     uniqueEnforcement: false,
     referentialIntegrity: false,
     checkConstraints: false,
-    // Redis round-trips bigint and decimal fine, but stores binary as a string,
-    // so it cannot satisfy the binary leg of the type-coercion suite. The whole
-    // suite is gated off (binary-only failure) rather than split.
-    richColumnTypes: false,
-    bigintIdentity: false,
+    bigintColumns: true,
+    // The number mode works, but deserializeHash reads every numeric column
+    // through parseFloat and never sees `field.mode`, so `{ mode: "string" }`
+    // loses precision.
+    decimalColumns: false,
+    // serializeHash stores a Buffer as its String() form, so the bytes are gone
+    // before the read path ever sees them.
+    binaryColumns: false,
+    bigintIdentity: true,
     // Redis's driver rejects conflictOn by design (NotSupportedError).
     upsertConflictColumns: false,
     encryption: true,

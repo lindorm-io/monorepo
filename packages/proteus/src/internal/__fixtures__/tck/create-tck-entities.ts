@@ -1179,6 +1179,12 @@ export const createTckEntities = (hookCallback: Mock) => {
   //   decimal {string} → exact, arbitrary-precision string
   //   binary           → Node Buffer (memory stores Uint8Array via structuredClone,
   //                      Postgres BYTEA returns Buffer; deserialise normalises both)
+  //
+  // Every column is @Nullable so each type can be exercised ALONE: the column
+  // types are independent capabilities (caps.bigintColumns / decimalColumns /
+  // binaryColumns), and a driver that loses one must not drag the others down
+  // with it — a row carrying a column the driver cannot read back throws on
+  // hydration, which would fail every leg instead of one.
 
   @Entity({ name: "TckTypeHolder" })
   class TckTypeHolder {
@@ -1195,19 +1201,23 @@ export const createTckEntities = (hookCallback: Mock) => {
     @UpdateDateField()
     updatedAt!: Date;
 
+    @Nullable()
     @Field("bigint")
-    bigValue!: bigint;
+    bigValue!: bigint | null;
 
+    @Nullable()
     @Precision(18, 4)
     @Field("decimal")
-    decimalValue!: number;
+    decimalValue!: number | null;
 
+    @Nullable()
     @Precision(38, 10)
     @Field("decimal", { mode: "string" })
-    decimalStringValue!: string;
+    decimalStringValue!: string | null;
 
+    @Nullable()
     @Field("binary")
-    binaryValue!: Buffer;
+    binaryValue!: Buffer | null;
   }
 
   // ─── Typed Array Round-Trip Entity ────────────────────────────────
@@ -1398,8 +1408,8 @@ export const createTckEntities = (hookCallback: Mock) => {
   // primary key — the driver mints the identity and it must come back as a JS
   // bigint everywhere (reads, writes, foreign keys). The child's owning-side FK
   // column is projected from the relation, so it inherits the parent's bigint
-  // width. Gated behind caps.bigintIdentity: mongo and redis cannot round-trip
-  // a bigint through the shared deserialise, so they never register these.
+  // width. Gated behind caps.bigintIdentity so a driver that cannot mint a
+  // bigint identity never registers these.
 
   @Entity({ name: "TckBigIntPkParent" })
   class TckBigIntPkParent {

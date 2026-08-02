@@ -33,18 +33,28 @@ export type TckCapabilities = {
   /** DB-level CHECK constraint enforcement via @Check() expressions */
   checkConstraints: boolean;
   /**
-   * Rich column types round-trip with identical JS types: bigint columns as
-   * JS bigint, decimal columns as precision-preserving string, binary columns
-   * as Node Buffer. Mongo (BSON Long/Decimal128/Binary) and Redis (binary
-   * stored as string) cannot satisfy all three through the shared deserialise.
+   * A `@Field("bigint")` column round-trips as a JS bigint holding the exact
+   * value, including magnitudes beyond Number.MAX_SAFE_INTEGER.
    */
-  richColumnTypes: boolean;
+  bigintColumns: boolean;
+  /**
+   * A `@Field("decimal")` column round-trips in BOTH modes: default mode as a
+   * JS number, `{ mode: "string" }` as an exact, precision-preserving string.
+   * A driver that reads every numeric column through parseFloat carries the
+   * number mode but loses the string mode, so it fails the pair.
+   */
+  decimalColumns: boolean;
+  /**
+   * A `@Field("binary")` column round-trips as a Node Buffer with byte
+   * equality.
+   */
+  binaryColumns: boolean;
   /**
    * A `@Field("bigint")` column can serve as a `@Generated("increment")`
    * primary key: the driver mints the identity itself, hands it back as a JS
    * bigint, and that bigint round-trips through reads, writes and foreign
-   * keys. Mongo and Redis cannot round-trip a bigint identity through the
-   * shared deserialise (see richColumnTypes above), so they cannot carry one.
+   * keys. A driver that mints a plain number, or that hands a bigint back as
+   * a string/Long, cannot carry one.
    */
   bigintIdentity: boolean;
   /**
