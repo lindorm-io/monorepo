@@ -2,6 +2,7 @@
 // https://www.rfc-editor.org/rfc/rfc8693
 // https://www.rfc-editor.org/rfc/rfc6749
 
+import type { TokenType } from "../enums/TokenType.js";
 import type { AuthorizationDetail } from "./authorization-detail.js";
 
 type LindormResponse = {
@@ -64,5 +65,5 @@ export type TokenResponse = LindormResponse & {
    * The type of the token issued as described in
    * Section 7.1. Value is case insensitive.
    */
-  tokenType?: "Bearer" | "DPoP" | (string & {});
+  tokenType?: TokenType;
 };

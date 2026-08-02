@@ -1,0 +1,43 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`tokenTypeSchema > should infer exactly the exported type 1`] = `
+[
+  "DPoP",
+  "DPoP",
+  "DPoP",
+]
+`;
+
+exports[`tokenTypeSchema > should reject a case variant of a listed value 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "Bearer",
+      "DPoP"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"Bearer\\"|\\"DPoP\\""
+  }
+]],
+  "success": false,
+}
+`;
+
+exports[`tokenTypeSchema > should reject an unlisted value 1`] = `
+{
+  "error": [ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "Bearer",
+      "DPoP"
+    ],
+    "path": [],
+    "message": "Invalid option: expected one of \\"Bearer\\"|\\"DPoP\\""
+  }
+]],
+  "success": false,
+}
+`;

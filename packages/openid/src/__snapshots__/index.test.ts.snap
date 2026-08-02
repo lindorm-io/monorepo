@@ -37,6 +37,7 @@ exports[`index > should export every runtime value 1`] = `
   "StandardScope",
   "SubjectType",
   "TokenEndpointAuthMethod",
+  "TokenType",
   "WELL_KNOWN_OAUTH_AUTHORIZATION_SERVER",
   "WELL_KNOWN_OAUTH_PROTECTED_RESOURCE",
   "WELL_KNOWN_OPENID_CONFIGURATION",

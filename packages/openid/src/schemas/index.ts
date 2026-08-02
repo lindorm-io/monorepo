@@ -1,3 +1,4 @@
+export * from "./token-type.js";
 export * from "./auth-method.js";
 export * from "./backchannel-token-delivery-mode.js";
 export * from "./claim-type.js";

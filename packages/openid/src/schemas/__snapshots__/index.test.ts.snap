@@ -17,5 +17,6 @@ exports[`schemas/index > should export every schema 1`] = `
   "standardScopeSchema",
   "subjectTypeSchema",
   "tokenEndpointAuthMethodSchema",
+  "tokenTypeSchema",
 ]
 `;

@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TokenType > should derive a closed type from the runtime values 1`] = `
+[
+  "Bearer",
+  "DPoP",
+  "mac",
+  "urn:acme:token-type:paseto",
+]
+`;
+
+exports[`TokenType > should match snapshot 1`] = `
+{
+  "Bearer": "Bearer",
+  "DPoP": "DPoP",
+}
+`;
