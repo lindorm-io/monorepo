@@ -24,22 +24,22 @@ import type { TokenEndpointAuthMethod } from "../enums/TokenEndpointAuthMethod.j
  */
 type LindormOpenIdConfiguration = {
   /**
-   * wire: `gdpr_right_to_erasure_endpoint` — LINDORM EXTENSION (registry E9),
-   * OPTIONAL. Subject-initiated GDPR erasure (Art. 17). Present only when GDPR
-   * DSR is enabled.
+   * wire: `gdpr_right_to_erasure_endpoint` — LINDORM EXTENSION, OPTIONAL. No
+   * RFC counterpart. Subject-initiated GDPR erasure (Art. 17). Present only
+   * when GDPR DSR is enabled.
    */
   gdprRightToErasureEndpoint?: string;
 
   /**
-   * wire: `gdpr_right_of_access_endpoint` — LINDORM EXTENSION (registry E9),
-   * OPTIONAL. Subject-initiated GDPR data disclosure / right of access
+   * wire: `gdpr_right_of_access_endpoint` — LINDORM EXTENSION, OPTIONAL. No
+   * RFC counterpart. Subject-initiated GDPR data disclosure / right of access
    * (Art. 15). Present only when GDPR DSR is enabled.
    */
   gdprRightOfAccessEndpoint?: string;
 
   /**
-   * wire: `gdpr_right_to_data_portability_endpoint` — LINDORM EXTENSION
-   * (registry E9), OPTIONAL. Subject-initiated GDPR data portability
+   * wire: `gdpr_right_to_data_portability_endpoint` — LINDORM EXTENSION,
+   * OPTIONAL. No RFC counterpart. Subject-initiated GDPR data portability
    * (Art. 20). Present only when GDPR DSR is enabled.
    */
   gdprRightToDataPortabilityEndpoint?: string;
@@ -149,8 +149,10 @@ type StandardOpenIdConfiguration = {
 
   /**
    * wire: `authorization_challenge_endpoint` — OPTIONAL
-   * (draft-ietf-oauth-first-party-apps). The browserless Authorization
-   * Challenge Endpoint for first-party native login.
+   * (draft-ietf-oauth-first-party-apps-03 §8). The browserless Authorization
+   * Challenge Endpoint for first-party native login. Standards-track but
+   * pre-RFC: a WG-adopted OAuth working group draft, not a Lindorm extension.
+   * Re-cite by RFC number once the draft advances.
    */
   authorizationChallengeEndpoint?: string;
 

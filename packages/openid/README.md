@@ -99,14 +99,14 @@ a mistyped member when a provider builds its own document. The name keeps its `O
 purpose: the well-known URI is literally `/.well-known/openid-configuration`, the bare noun
 `Configuration` collided with unrelated `config` identifiers at every use site, and the
 spec-derived alternatives (`ProviderMetadata`, `AuthorizationServerMetadata`) each name only half
-the job — this one type also serves `/.well-known/oauth-authorization-server`. Lindorm and vendor extension members
-(`rightToBeForgottenEndpoint`, `tokenExchangeEndpoint`, `mfaChallengeEndpoint`) are grouped
-separately from the standard set.
+the job — this one type also serves `/.well-known/oauth-authorization-server`. Lindorm extension members
+(`gdprRightToErasureEndpoint`, `gdprRightOfAccessEndpoint`, `gdprRightToDataPortabilityEndpoint`) are
+grouped separately from the standard set.
 
 ## Constants
 
 `WELL_KNOWN_OPENID_CONFIGURATION` · `WELL_KNOWN_OAUTH_AUTHORIZATION_SERVER` ·
-`WELL_KNOWN_OAUTH_PROTECTED_RESOURCE` · `WELL_KNOWN_JWKS` — paths relative to the issuer origin.
+`WELL_KNOWN_OAUTH_PROTECTED_RESOURCE` — paths relative to the issuer origin.
 Resolve with `new URL(path, issuer)` at the point of use; this package never fetches anything.
 
 ## Peer dependencies

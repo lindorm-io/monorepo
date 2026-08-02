@@ -27,7 +27,7 @@ export type IntrospectResponse = {
    * identifiers representing the intended audience for this
    * token, as defined in JWT [RFC7519].
    */
-  aud: Array<string>;
+  aud?: Array<string> | string;
 
   /**
    * OPTIONAL
@@ -58,7 +58,7 @@ export type IntrospectResponse = {
    * since January 1 1970 UTC, indicating when this token
    * will expire, as defined in JWT [RFC7519].
    */
-  exp: number;
+  exp?: number;
 
   /**
    * OPTIONAL
@@ -67,7 +67,7 @@ export type IntrospectResponse = {
    * since January 1 1970 UTC, indicating when this token
    * was originally issued, as defined in JWT [RFC7519].
    */
-  iat: number;
+  iat?: number;
 
   /**
    * OPTIONAL
@@ -92,7 +92,7 @@ export type IntrospectResponse = {
    * since January 1 1970 UTC, indicating when this token
    * is not to be used before, as defined in JWT [RFC7519].
    */
-  nbf: number;
+  nbf?: number;
 
   /**
    * OPTIONAL
