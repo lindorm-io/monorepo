@@ -48,8 +48,11 @@ export const StandardScope = {
  * Every scope value this vocabulary knows — the lindorm extensions plus the
  * RFC-standard set. Composed from the two above so no value is written twice.
  *
- * The type stays OPEN — RFC 6749 §3.3 lets any deployment define its own
- * scope values.
+ * The type is CLOSED — exactly these values. RFC 6749 §3.3 lets any deployment
+ * define its own scope values, but one that does widens in its OWN package
+ * (`Scope | "urn:acme:scope"`), or types the field `Array<string>` where the
+ * values are genuinely arbitrary — as `@lindorm/pylon` does for the scopes an
+ * external IdP put in its token response.
  */
 export const Scope = {
   ...LindormScope,
@@ -60,4 +63,4 @@ export type LindormScope = (typeof LindormScope)[keyof typeof LindormScope];
 
 export type StandardScope = (typeof StandardScope)[keyof typeof StandardScope];
 
-export type Scope = LindormScope | StandardScope | (string & {});
+export type Scope = LindormScope | StandardScope;

@@ -16,12 +16,15 @@ describe("GrantType", () => {
     expect(GrantType.Ciba).toBe("urn:openid:params:grant-type:ciba");
   });
 
-  test("should derive the type from the runtime values", () => {
+  test("should derive a closed type from the runtime values", () => {
     const fromEnum: GrantType = GrantType.AuthorizationCode;
     const fromLiteral: GrantType = "client_credentials";
-    // open union — RFC 6749 §8.3 allows extension grant types
-    const extension: GrantType = "urn:example:params:oauth:grant-type:custom";
+    // @ts-expect-error the type is CLOSED — an RFC 6749 §8.3 extension grant is not a GrantType
+    const rejected: GrantType = "urn:example:params:oauth:grant-type:custom";
+    // a deployment accepting an extension grant widens in ITS OWN package, never here
+    const widened: GrantType | "urn:example:params:oauth:grant-type:custom" =
+      "urn:example:params:oauth:grant-type:custom";
 
-    expect([fromEnum, fromLiteral, extension]).toMatchSnapshot();
+    expect([fromEnum, fromLiteral, rejected, widened]).toMatchSnapshot();
   });
 });

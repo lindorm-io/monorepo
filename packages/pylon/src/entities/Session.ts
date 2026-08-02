@@ -6,7 +6,6 @@ import {
   Nullable,
   PrimaryKeyField,
 } from "@lindorm/proteus";
-import type { Scope } from "@lindorm/openid";
 import type { IPylonSession } from "../interfaces/index.js";
 
 @Namespace("pylon")
@@ -33,7 +32,7 @@ export class Session implements IPylonSession {
   refreshToken?: string;
 
   @Field("array", { arrayType: "string" })
-  scope!: Array<Scope>;
+  scope!: Array<string>;
 
   @Field("string")
   subject!: string;

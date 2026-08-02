@@ -6,9 +6,10 @@
  * value and its type can never drift apart. Consumable at runtime (e.g. a
  * proteus `@Enum` column) as well as in type position.
  *
- * The type stays OPEN (`| (string & {})`) so a deployment can use custom AMRs
- * (e.g. vendor-specific factors) without losing autocomplete on the standard
- * set — RFC 8176 §1 explicitly anticipates values beyond the registry.
+ * The type is CLOSED — exactly the registry. RFC 8176 §1 anticipates values
+ * beyond it, but this package vouches only for the registered set: a
+ * deployment using a vendor-specific factor widens in its OWN package
+ * (`AuthMethod | "urn:acme:amr"`), so the hole is visible where it is taken.
  *
  * https://www.rfc-editor.org/rfc/rfc8176
  */
@@ -57,4 +58,4 @@ export const AuthMethod = {
   WindowsIntegrated: "wia",
 } as const;
 
-export type AuthMethod = (typeof AuthMethod)[keyof typeof AuthMethod] | (string & {});
+export type AuthMethod = (typeof AuthMethod)[keyof typeof AuthMethod];

@@ -1,9 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`TokenEndpointAuthMethod > should derive the type from the runtime values 1`] = `
+exports[`TokenEndpointAuthMethod > should derive a closed type from the runtime values 1`] = `
 [
   "private_key_jwt",
   "client_secret_basic",
+  "urn:example:auth-method",
   "urn:example:auth-method",
 ]
 `;

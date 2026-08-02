@@ -5,8 +5,10 @@
  * value and its type can never drift apart. Consumable at runtime (e.g. a
  * proteus `@Enum` column) as well as in type position.
  *
- * The type stays OPEN (`| (string & {})`) because RFC 6749 §8.3 explicitly
- * allows extension and vendor grant types.
+ * The type is CLOSED — exactly the grant types listed here. RFC 6749 §8.3
+ * allows extension and vendor grant types, but a deployment accepting one
+ * widens in its OWN package (`GrantType | "urn:acme:grant"`), so the hole is
+ * visible where it is taken.
  */
 export const GrantType = {
   /** wire: `authorization_code` — RFC 6749 §4.1 */
@@ -30,4 +32,4 @@ export const GrantType = {
   Ciba: "urn:openid:params:grant-type:ciba",
 } as const;
 
-export type GrantType = (typeof GrantType)[keyof typeof GrantType] | (string & {});
+export type GrantType = (typeof GrantType)[keyof typeof GrantType];

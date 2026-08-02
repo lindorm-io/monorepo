@@ -38,7 +38,13 @@ export type PylonAuthAuthorizeConfig = {
   prompt: PromptMode | null;
   resource: string | null;
   responseType: ResponseType;
-  scope: Array<Scope>;
+  /**
+   * The scopes pylon asks the external IdP for. RFC 6749 §3.3 lets every
+   * deployment define its own values (`read:users`, an API identifier, …), so
+   * the operator may configure anything — `@lindorm/openid`'s `Scope` is the
+   * autocomplete hint here, not the constraint.
+   */
+  scope: Array<Scope | (string & {})>;
 };
 
 export type PylonAuthResourceKey = "resource" | "audience";

@@ -13,11 +13,15 @@ describe("ResponseType", () => {
     expect(ResponseType.CodeIdTokenToken).toBe("code id_token token");
   });
 
-  test("should derive the type from the runtime values", () => {
+  test("should derive a closed type from the runtime values", () => {
     const fromEnum: ResponseType = ResponseType.Code;
     const fromLiteral: ResponseType = "id_token";
-    const extension: ResponseType = "urn:example:response-type";
+    // @ts-expect-error the type is CLOSED — an RFC 6749 §8.4 extension type is not a ResponseType
+    const rejected: ResponseType = "urn:example:response-type";
+    // a deployment accepting an extension type widens in ITS OWN package, never here
+    const widened: ResponseType | "urn:example:response-type" =
+      "urn:example:response-type";
 
-    expect([fromEnum, fromLiteral, extension]).toMatchSnapshot();
+    expect([fromEnum, fromLiteral, rejected, widened]).toMatchSnapshot();
   });
 });

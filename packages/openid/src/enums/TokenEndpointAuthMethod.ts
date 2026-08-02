@@ -4,8 +4,9 @@
  * OIDC Core §9 defines the first four; RFC 7591 §2 adds `none`; RFC 8705 §2
  * adds the mTLS methods.
  *
- * The type stays OPEN — the "OAuth Token Endpoint Authentication Methods"
- * IANA registry is extensible.
+ * The type is CLOSED — exactly the methods listed here. The "OAuth Token
+ * Endpoint Authentication Methods" IANA registry is extensible, but a
+ * deployment accepting an unlisted method widens in its OWN package.
  */
 export const TokenEndpointAuthMethod = {
   /** wire: `client_secret_basic` — OIDC Core §9; the spec DEFAULT when unspecified */
@@ -25,5 +26,4 @@ export const TokenEndpointAuthMethod = {
 } as const;
 
 export type TokenEndpointAuthMethod =
-  | (typeof TokenEndpointAuthMethod)[keyof typeof TokenEndpointAuthMethod]
-  | (string & {});
+  (typeof TokenEndpointAuthMethod)[keyof typeof TokenEndpointAuthMethod];

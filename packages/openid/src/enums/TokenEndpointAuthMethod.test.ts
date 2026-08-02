@@ -18,11 +18,15 @@ describe("TokenEndpointAuthMethod", () => {
     ]);
   });
 
-  test("should derive the type from the runtime values", () => {
+  test("should derive a closed type from the runtime values", () => {
     const fromEnum: TokenEndpointAuthMethod = TokenEndpointAuthMethod.PrivateKeyJwt;
     const fromLiteral: TokenEndpointAuthMethod = "client_secret_basic";
-    const extension: TokenEndpointAuthMethod = "urn:example:auth-method";
+    // @ts-expect-error the type is CLOSED — an unlisted registry entry is not a method
+    const rejected: TokenEndpointAuthMethod = "urn:example:auth-method";
+    // a deployment accepting an unlisted method widens in ITS OWN package, never here
+    const widened: TokenEndpointAuthMethod | "urn:example:auth-method" =
+      "urn:example:auth-method";
 
-    expect([fromEnum, fromLiteral, extension]).toMatchSnapshot();
+    expect([fromEnum, fromLiteral, rejected, widened]).toMatchSnapshot();
   });
 });

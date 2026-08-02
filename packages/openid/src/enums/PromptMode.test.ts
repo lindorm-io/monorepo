@@ -16,11 +16,14 @@ describe("PromptMode", () => {
     ]);
   });
 
-  test("should derive the type from the runtime values", () => {
+  test("should derive a closed type from the runtime values", () => {
     const fromEnum: PromptMode = PromptMode.SelectAccount;
     const fromLiteral: PromptMode = "none";
-    const extension: PromptMode = "urn:example:prompt";
+    // @ts-expect-error the type is CLOSED — an unregistered prompt value is not a PromptMode
+    const rejected: PromptMode = "urn:example:prompt";
+    // a deployment accepting an unregistered value widens in ITS OWN package, never here
+    const widened: PromptMode | "urn:example:prompt" = "urn:example:prompt";
 
-    expect([fromEnum, fromLiteral, extension]).toMatchSnapshot();
+    expect([fromEnum, fromLiteral, rejected, widened]).toMatchSnapshot();
   });
 });

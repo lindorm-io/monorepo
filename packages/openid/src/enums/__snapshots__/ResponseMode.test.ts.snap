@@ -1,9 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ResponseMode > should derive the type from the runtime values 1`] = `
+exports[`ResponseMode > should derive a closed type from the runtime values 1`] = `
 [
   "query",
   "form_post",
+  "web_message",
   "web_message",
 ]
 `;

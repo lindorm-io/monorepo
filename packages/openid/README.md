@@ -35,14 +35,22 @@ real world. Fixtures are not vocabulary.)_
   `@Enum` column cannot consume it. Every standard set here ships as a runtime object _and_ a type
   derived from it, so the two cannot drift.
 - **Dependency-light and browser-safe.** The only dependency is `@lindorm/types`, and it is imported
-  type-only — the built output has zero runtime imports, no Node builtins, no `Buffer`/`process`.
-  That is what lets `aegis`, `amphora`, `conduit`, `pylon` and tyr all depend on it without a cycle:
-  a client package would cycle with conduit, a vocabulary package cannot.
+  type-only — the built **main entry** has zero runtime imports, no Node builtins, no
+  `Buffer`/`process`. That is what lets `aegis`, `amphora`, `conduit`, `pylon` and tyr all depend on
+  it without a cycle: a client package would cycle with conduit, a vocabulary package cannot. The
+  zod validators are the one thing that needs a runtime import, and they live behind the
+  [`/schemas`](#schemas) subpath precisely so the main entry keeps that property.
 
 ## Install
 
 ```shell
 npm install @lindorm/openid
+```
+
+Add `zod` only if you import the [`/schemas`](#schemas) subpath:
+
+```shell
+npm install zod
 ```
 
 ## Naming
@@ -72,17 +80,61 @@ SubjectType.Pairwise; // "pairwise"
 const requested: GrantTypeValue = "urn:ietf:params:oauth:grant-type:token-exchange";
 ```
 
-`BackchannelTokenDeliveryMode` · `ClaimType` · `CodeChallengeMethod` · `DisplayMode` · `GrantType` ·
-`NamingSystem` · `PromptMode` · `ResponseMode` · `ResponseType` · `Scope` (`LindormScope` +
-`StandardScope`) · `SubjectType` · `TokenEndpointAuthMethod`
+`AuthMethod` · `BackchannelTokenDeliveryMode` · `ClaimType` · `CodeChallengeMethod` · `DisplayMode` ·
+`GrantType` · `NamingSystem` · `PromptMode` · `ResponseMode` · `ResponseType` · `Scope`
+(`LindormScope` + `StandardScope`) · `SubjectType` · `TokenEndpointAuthMethod`
 
-Sets the specs leave extensible (`GrantType`, `ResponseType`, `ResponseMode`, `PromptMode`, `Scope`,
-`TokenEndpointAuthMethod`) derive an **open** type that also accepts an unlisted string. Closed sets
-(`CodeChallengeMethod`, `DisplayMode`, `SubjectType`, `ClaimType`, `BackchannelTokenDeliveryMode`,
-`NamingSystem`) do not.
+**Every derived type is CLOSED** — exactly the values the set lists, nothing else. Several of these
+registries are extensible (RFC 6749 §8.3 grant types, §8.4 response types, §3.3 scopes, RFC 8176 §1
+AMRs, the IANA response-mode and token-endpoint-auth-method registries), but extensibility is not a
+reason to make the vocabulary accept any string: `| (string & {})` keeps autocomplete while quietly
+accepting everything, which is how an unvalidated third-party string ends up typed as ours.
+
+**The extender widens, not the vocabulary.** A package that genuinely handles a vendor value writes
+the union in its own code — `GrantType | "urn:acme:grant"` — so the hole is visible where it is
+taken. `@lindorm/pylon` does this both ways: `Auth0AuthorizeRequestQuery` adds Auth0's `audience`
+locally, and `IPylonSession.scope` is plain `Array<string>` because it holds whatever an external
+IdP granted, which is not this vocabulary at all.
 
 `CodeChallengeMethod` is this package's own and is deliberately separate from `@lindorm/pkce`'s
 method enum: this one is the OAuth wire vocabulary, that one is the PKCE implementation's.
+
+## Schemas
+
+Every vocabulary set also ships a zod validator, built from the same runtime object — so the
+validator, the runtime values and the type cannot drift. They live behind the
+**`@lindorm/openid/schemas`** subpath, not the main entry, because zod is a runtime import and the
+main entry has none (see [Why it exists](#why-it-exists)). Importing the subpath is what opts you
+into the zod peer dependency.
+
+```typescript
+import { promptModeSchema, scopeSchema } from "@lindorm/openid/schemas";
+
+promptModeSchema.parse("login"); // "login"
+promptModeSchema.parse("urn:example:prompt"); // throws ZodError — invalid_value
+
+const scopes = "openid profile".split(" ").map((s) => scopeSchema.parse(s));
+```
+
+`authMethodSchema` · `backchannelTokenDeliveryModeSchema` · `claimTypeSchema` ·
+`codeChallengeMethodSchema` · `displayModeSchema` · `grantTypeSchema` · `namingSystemSchema` ·
+`promptModeSchema` · `responseModeSchema` · `responseTypeSchema` · `scopeSchema`
+(`lindormScopeSchema` + `standardScopeSchema`) · `subjectTypeSchema` ·
+`tokenEndpointAuthMethodSchema`
+
+**Every schema is closed** — it rejects any value the set does not list, and there are no lenient
+variants. A deployment that accepts a vendor value (RFC 6749 §8.3 grant types, §8.4 response types,
+§3.3 scopes) validates it with its own union in its own package:
+
+```typescript
+import { grantTypeSchema } from "@lindorm/openid/schemas";
+import { z } from "zod";
+
+const acmeGrantTypeSchema = z.union([
+  grantTypeSchema,
+  z.literal("urn:acme:params:oauth:grant-type:magic"),
+]);
+```
 
 ## Types
 
@@ -133,4 +185,6 @@ Resolve with `new URL(path, issuer)` at the point of use; this package never fet
 
 ## Peer dependencies
 
-None.
+- `zod` — **optional**, and only needed for the [`@lindorm/openid/schemas`](#schemas) subpath. It is
+  a peer rather than a dependency because `z.infer` type identity breaks across duplicate installs.
+  The main entry never imports it.

@@ -4,7 +4,11 @@ import type { AuthMethod } from "@lindorm/openid";
 export type OidcClaims = {
   accessTokenHash?: string;
   authContextClassReference?: string;
-  authMethods?: Array<AuthMethod>;
+  // Whatever AMR values the issuer put in the token — aegis parses tokens it
+  // did not mint, and RFC 8176 §1 anticipates values beyond the registry. The
+  // openid `AuthMethod` set is CLOSED on purpose, so the extender widens here;
+  // the wire form (`amr?: Array<string>`) says the same thing.
+  authMethods?: Array<AuthMethod | (string & {})>;
   authorizedParty?: string;
   authTime?: Date;
   codeHash?: string;

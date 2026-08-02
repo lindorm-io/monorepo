@@ -31,11 +31,18 @@ export type LindormClaims = {
   // access token / introspection whenever non-empty. See `token-claims.md` §2/§3.
   conformsTo?: Array<string>;
   federationAssuranceLevel?: FederationAssuranceLevel;
-  grantType?: GrantType;
+  // RFC 6749 §8.3 allows extension and vendor grant types, and aegis parses
+  // tokens it did not mint. The openid `GrantType` set is CLOSED on purpose,
+  // so the extender widens here; the wire form (`gty?: string`) says the same.
+  grantType?: GrantType | (string & {});
   identityAssuranceLevel?: IdentityAssuranceLevel;
   levelOfAssurance?: LevelOfAssurance;
   permissions?: Array<string>;
-  scope?: Array<Scope>;
+  // RFC 6749 §3.3 lets every deployment define its own scope values, and aegis
+  // parses tokens it did not mint. The openid `Scope` set is CLOSED on purpose,
+  // so the extender widens here; the wire form (`scope?: Array<string> |
+  // string`) says the same.
+  scope?: Array<Scope | (string & {})>;
   sessionHint?: SessionHint;
   sessionId?: string;
   subjectHint?: SubjectHint;

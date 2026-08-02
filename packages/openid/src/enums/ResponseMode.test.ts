@@ -13,11 +13,14 @@ describe("ResponseMode", () => {
     expect(ResponseMode.Jwt).toBe("jwt");
   });
 
-  test("should derive the type from the runtime values", () => {
+  test("should derive a closed type from the runtime values", () => {
     const fromEnum: ResponseMode = ResponseMode.Query;
     const fromLiteral: ResponseMode = "form_post";
-    const extension: ResponseMode = "web_message";
+    // @ts-expect-error the type is CLOSED — an unlisted registry entry is not a ResponseMode
+    const rejected: ResponseMode = "web_message";
+    // a deployment accepting an unlisted mode widens in ITS OWN package, never here
+    const widened: ResponseMode | "web_message" = "web_message";
 
-    expect([fromEnum, fromLiteral, extension]).toMatchSnapshot();
+    expect([fromEnum, fromLiteral, rejected, widened]).toMatchSnapshot();
   });
 });

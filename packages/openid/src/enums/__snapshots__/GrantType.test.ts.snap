@@ -1,9 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`GrantType > should derive the type from the runtime values 1`] = `
+exports[`GrantType > should derive a closed type from the runtime values 1`] = `
 [
   "authorization_code",
   "client_credentials",
+  "urn:example:params:oauth:grant-type:custom",
   "urn:example:params:oauth:grant-type:custom",
 ]
 `;

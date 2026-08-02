@@ -2,8 +2,9 @@
  * OIDC Core §3.1.2.1 `prompt` values (consent | login | select_account | none)
  * + OIDC Initiating User Registration 1.0 (`create`).
  *
- * The type stays OPEN — `prompt` is a space-delimited list on the wire and
- * additional values may be registered.
+ * The type is CLOSED — exactly these five. `prompt` is a space-delimited list
+ * on the wire, so split it before typing each element; a deployment accepting
+ * an unregistered value widens in its OWN package.
  */
 export const PromptMode = {
   /** wire: `consent` — OIDC Core §3.1.2.1 */
@@ -18,4 +19,4 @@ export const PromptMode = {
   None: "none",
 } as const;
 
-export type PromptMode = (typeof PromptMode)[keyof typeof PromptMode] | (string & {});
+export type PromptMode = (typeof PromptMode)[keyof typeof PromptMode];

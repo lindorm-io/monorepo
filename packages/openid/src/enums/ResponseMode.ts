@@ -7,7 +7,9 @@
  * variants. JARM §4 defines the matching provider metadata — see
  * `OpenIdConfiguration`.
  *
- * The type stays OPEN — the response mode registry is extensible.
+ * The type is CLOSED — exactly the modes listed here. The IANA response mode
+ * registry is extensible, but a deployment accepting an unlisted mode widens
+ * in its OWN package.
  */
 export const ResponseMode = {
   /** wire: `form_post` — OAuth 2.0 Form Post Response Mode §2 */
@@ -26,6 +28,4 @@ export const ResponseMode = {
   Jwt: "jwt",
 } as const;
 
-export type ResponseMode =
-  | (typeof ResponseMode)[keyof typeof ResponseMode]
-  | (string & {});
+export type ResponseMode = (typeof ResponseMode)[keyof typeof ResponseMode];

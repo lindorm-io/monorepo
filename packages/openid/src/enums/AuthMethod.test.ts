@@ -46,12 +46,14 @@ describe("AuthMethod", () => {
     );
   });
 
-  test("should derive the type from the runtime values", () => {
+  test("should derive a closed type from the runtime values", () => {
     const fromEnum: AuthMethod = AuthMethod.Password;
     const fromLiteral: AuthMethod = "otp";
-    // open union — a deployment may use a vendor-specific factor
-    const vendor: AuthMethod = "vendor:face_liveness";
+    // @ts-expect-error the type is CLOSED — a vendor factor is not an AuthMethod
+    const rejected: AuthMethod = "vendor:face_liveness";
+    // a deployment using a vendor factor widens in ITS OWN package, never here
+    const widened: AuthMethod | "vendor:face_liveness" = "vendor:face_liveness";
 
-    expect([fromEnum, fromLiteral, vendor]).toMatchSnapshot();
+    expect([fromEnum, fromLiteral, rejected, widened]).toMatchSnapshot();
   });
 });

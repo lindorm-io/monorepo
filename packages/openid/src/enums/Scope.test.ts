@@ -31,12 +31,15 @@ describe("Scope", () => {
     expect(Object.values(LindormScope).filter((s) => standard.has(s))).toEqual([]);
   });
 
-  test("should derive the type from the runtime values", () => {
+  test("should derive a closed type from the runtime values", () => {
     const fromEnum: Scope = Scope.OpenId;
     const fromLindorm: LindormScope = LindormScope.WorkProfile;
     const fromStandard: StandardScope = "offline_access";
-    const extension: Scope = "urn:example:scope";
+    // @ts-expect-error the type is CLOSED — an RFC 6749 §3.3 deployment scope is not a Scope
+    const rejected: Scope = "urn:example:scope";
+    // a deployment defining its own scope widens in ITS OWN package, never here
+    const widened: Scope | "urn:example:scope" = "urn:example:scope";
 
-    expect([fromEnum, fromLindorm, fromStandard, extension]).toMatchSnapshot();
+    expect([fromEnum, fromLindorm, fromStandard, rejected, widened]).toMatchSnapshot();
   });
 });

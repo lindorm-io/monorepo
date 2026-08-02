@@ -1,9 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AuthMethod > should derive the type from the runtime values 1`] = `
+exports[`AuthMethod > should derive a closed type from the runtime values 1`] = `
 [
   "pwd",
   "otp",
+  "vendor:face_liveness",
   "vendor:face_liveness",
 ]
 `;

@@ -1,9 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ResponseType > should derive the type from the runtime values 1`] = `
+exports[`ResponseType > should derive a closed type from the runtime values 1`] = `
 [
   "code",
   "id_token",
+  "urn:example:response-type",
   "urn:example:response-type",
 ]
 `;

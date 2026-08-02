@@ -5,7 +5,9 @@
  * code token / code id_token token) + RFC 6749 §3.1.1 (code / token) +
  * OAuth 2.0 Multiple Response Type Encoding Practices §4 (`none`).
  *
- * The type stays OPEN — RFC 6749 §8.4 allows extension response types.
+ * The type is CLOSED — exactly the combinations listed here, in the spelling
+ * the specs use. RFC 6749 §8.4 allows extension response types, but a
+ * deployment accepting one widens in its OWN package.
  */
 export const ResponseType = {
   /** wire: `code` — RFC 6749 §4.1 authorization code flow */
@@ -26,6 +28,4 @@ export const ResponseType = {
   None: "none",
 } as const;
 
-export type ResponseType =
-  | (typeof ResponseType)[keyof typeof ResponseType]
-  | (string & {});
+export type ResponseType = (typeof ResponseType)[keyof typeof ResponseType];

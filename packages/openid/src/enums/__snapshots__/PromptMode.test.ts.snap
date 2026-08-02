@@ -1,9 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PromptMode > should derive the type from the runtime values 1`] = `
+exports[`PromptMode > should derive a closed type from the runtime values 1`] = `
 [
   "select_account",
   "none",
+  "urn:example:prompt",
   "urn:example:prompt",
 ]
 `;
