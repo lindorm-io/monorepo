@@ -9,6 +9,7 @@ import {
   Field,
   Generated,
   Inheritance,
+  Namespace,
   Nullable,
   PrimaryKeyField,
 } from "../../../decorators/index.js";
@@ -76,6 +77,26 @@ class FlushTruck extends FlushVehicle {
   payloadCapacity!: number | null;
 }
 
+// ─── Same NAME, two namespaces: two tables that must not share a prefix ─────
+
+@Namespace("billing")
+@Entity({ name: "FlushInvoice" })
+class FlushBillingInvoice {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  reference!: string;
+}
+
+@Namespace("legal")
+@Entity({ name: "FlushInvoice" })
+class FlushLegalInvoice {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  reference!: string;
+}
+
 const ENTITIES = [
   FlushUser,
   FlushOrder,
@@ -83,6 +104,8 @@ const ENTITIES = [
   FlushVehicle,
   FlushCar,
   FlushTruck,
+  FlushBillingInvoice,
+  FlushLegalInvoice,
 ];
 
 const createAdapter = (): ICacheAdapter => ({
@@ -199,6 +222,31 @@ describe("flushCache", () => {
 
       expect(adapter.delByPrefix).toHaveBeenCalledTimes(1);
       expect(adapter.delByPrefix).toHaveBeenCalledWith("tenant_a:cache:");
+    });
+  });
+
+  describe("entity namespace", () => {
+    test("should flush distinct prefixes for same-named entities in different namespaces", async () => {
+      source = await createSource({ adapter });
+
+      await source.flushCache([FlushBillingInvoice, FlushLegalInvoice]);
+
+      expect(adapter.delByPrefix).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(adapter.delByPrefix).mock.calls.flat().sort()).toEqual([
+        "cache:billing/FlushInvoice:",
+        "cache:legal/FlushInvoice:",
+      ]);
+    });
+
+    test("should keep the namespaced prefix under the source root so flush-all still matches", async () => {
+      source = await createSource({ adapter, namespace: "tenant_a" });
+
+      await source.flushCache(FlushBillingInvoice);
+
+      expect(adapter.delByPrefix).toHaveBeenCalledWith(
+        "tenant_a:cache:billing/FlushInvoice:",
+      );
+      expect(vi.mocked(adapter.delByPrefix).mock.calls[0][0]).toMatch(/^tenant_a:cache:/);
     });
   });
 

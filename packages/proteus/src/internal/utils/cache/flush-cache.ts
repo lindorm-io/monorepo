@@ -60,7 +60,15 @@ const resolvePrefixes = (
     }
 
     for (const participant of expandHierarchy(entity, resolveMetadata)) {
-      prefixes.add(buildCachePrefix(namespace, resolveMetadata(participant).entity.name));
+      const { entity: entityMeta } = resolveMetadata(participant);
+
+      prefixes.add(
+        buildCachePrefix({
+          sourceNamespace: namespace,
+          entityNamespace: entityMeta.namespace,
+          entityName: entityMeta.name,
+        }),
+      );
     }
   }
 

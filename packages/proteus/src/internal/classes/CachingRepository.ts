@@ -62,6 +62,7 @@ export class CachingRepository<
   private readonly adapter: ICacheAdapter;
   private readonly metadata: EntityMetadata;
   private readonly namespace: string | null;
+  private readonly entityNamespace: string | null;
   private readonly entityName: string;
   private readonly sourceTtlMs: number | undefined;
   private readonly logger: ILogger;
@@ -76,6 +77,10 @@ export class CachingRepository<
     this.adapter = options.adapter;
     this.metadata = options.metadata;
     this.namespace = options.namespace;
+    // The entity's own @Namespace overrides the source's for the table it maps to,
+    // so it must scope the cache too — two same-named entities in two namespaces
+    // are two tables (see buildCachePrefix).
+    this.entityNamespace = options.metadata.entity.namespace;
     this.entityName = options.metadata.entity.name;
     this.sourceTtlMs = options.sourceTtlMs;
     this.logger = options.logger.child([
@@ -607,7 +612,8 @@ export class CachingRepository<
     options: FindOptions<E> | undefined,
   ): string {
     return buildCacheKey({
-      namespace: this.namespace,
+      sourceNamespace: this.namespace,
+      entityNamespace: this.entityNamespace,
       entityName: this.entityName,
       operation,
       criteria,
@@ -626,7 +632,13 @@ export class CachingRepository<
    */
   private async invalidate(): Promise<void> {
     try {
-      await this.adapter.delByPrefix(buildCachePrefix(this.namespace, this.entityName));
+      await this.adapter.delByPrefix(
+        buildCachePrefix({
+          sourceNamespace: this.namespace,
+          entityNamespace: this.entityNamespace,
+          entityName: this.entityName,
+        }),
+      );
     } catch (err) {
       this.logger.warn("Cache invalidation failed", { error: err });
     }

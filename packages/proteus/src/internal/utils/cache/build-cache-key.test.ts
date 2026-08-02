@@ -1,9 +1,14 @@
-import { buildCacheKey, buildCachePrefix } from "./build-cache-key.js";
+import {
+  buildCacheKey,
+  buildCachePrefix,
+  buildCacheRootPrefix,
+} from "./build-cache-key.js";
 import { describe, expect, test } from "vitest";
 
 describe("buildCacheKey", () => {
   const base = {
-    namespace: "app",
+    sourceNamespace: "app",
+    entityNamespace: null,
     entityName: "User",
     operation: "find",
   };
@@ -74,7 +79,7 @@ describe("buildCacheKey", () => {
   });
 
   test("should produce a valid key when namespace is null", () => {
-    const key = buildCacheKey({ ...base, namespace: null });
+    const key = buildCacheKey({ ...base, sourceNamespace: null });
     expect(key).toMatchSnapshot();
   });
 
@@ -163,14 +168,122 @@ describe("buildCacheKey", () => {
     const b = buildCacheKey({ ...base, criteria: regexpB });
     expect(a).not.toBe(b);
   });
+
+  test("should produce a different key for an entity in its own namespace", () => {
+    const a = buildCacheKey({ ...base, entityNamespace: null });
+    const b = buildCacheKey({ ...base, entityNamespace: "billing" });
+    expect(a).not.toBe(b);
+    expect(b).toMatchSnapshot();
+  });
+
+  test("should produce different keys for the same entity name in two namespaces", () => {
+    const a = buildCacheKey({ ...base, entityNamespace: "billing" });
+    const b = buildCacheKey({ ...base, entityNamespace: "legal" });
+    expect(a).not.toBe(b);
+  });
+
+  test("should key an entity namespace equal to the source's as the same table", () => {
+    const a = buildCacheKey({ ...base, entityNamespace: null });
+    const b = buildCacheKey({ ...base, entityNamespace: "app" });
+    expect(a).toBe(b);
+  });
 });
 
 describe("buildCachePrefix", () => {
   test("should return correct prefix with namespace", () => {
-    expect(buildCachePrefix("app", "User")).toMatchSnapshot();
+    expect(
+      buildCachePrefix({
+        sourceNamespace: "app",
+        entityNamespace: null,
+        entityName: "User",
+      }),
+    ).toMatchSnapshot();
   });
 
   test("should return correct prefix with null namespace", () => {
-    expect(buildCachePrefix(null, "User")).toMatchSnapshot();
+    expect(
+      buildCachePrefix({
+        sourceNamespace: null,
+        entityNamespace: null,
+        entityName: "User",
+      }),
+    ).toMatchSnapshot();
+  });
+
+  test("should scope the entity namespace inside the source root", () => {
+    expect(
+      buildCachePrefix({
+        sourceNamespace: "app",
+        entityNamespace: "billing",
+        entityName: "Invoice",
+      }),
+    ).toMatchSnapshot();
+  });
+
+  test("should not put a namespaced entity under a same-named entity's prefix", () => {
+    const entity = buildCachePrefix({
+      sourceNamespace: "app",
+      entityNamespace: null,
+      entityName: "billing",
+    });
+    const namespaced = buildCachePrefix({
+      sourceNamespace: "app",
+      entityNamespace: "billing",
+      entityName: "Invoice",
+    });
+    expect(namespaced.startsWith(entity)).toBe(false);
+  });
+});
+
+// The invariant the whole cache rests on: `invalidate()` and `flushCache()` delete
+// by prefix, so a key that does not start with its own prefix — or with the source
+// root the flush-all uses — is a cache that can never be evicted.
+describe("key/prefix symmetry", () => {
+  const cases: Array<{ sourceNamespace: string | null; entityNamespace: string | null }> =
+    [
+      { sourceNamespace: null, entityNamespace: null },
+      { sourceNamespace: null, entityNamespace: "billing" },
+      { sourceNamespace: "app", entityNamespace: null },
+      { sourceNamespace: "app", entityNamespace: "billing" },
+      { sourceNamespace: "app", entityNamespace: "app" },
+    ];
+
+  for (const { sourceNamespace, entityNamespace } of cases) {
+    const label = `source=${sourceNamespace} entity=${entityNamespace}`;
+
+    test(`should start every key with the entity prefix (${label})`, () => {
+      const input = { sourceNamespace, entityNamespace, entityName: "Invoice" };
+      const prefix = buildCachePrefix(input);
+
+      for (const operation of ["find", "findOne", "count"]) {
+        const key = buildCacheKey({ ...input, operation, criteria: { id: "abc" } });
+        expect(key.startsWith(prefix)).toBe(true);
+      }
+    });
+
+    test(`should start every key with the source root prefix (${label})`, () => {
+      const key = buildCacheKey({
+        sourceNamespace,
+        entityNamespace,
+        entityName: "Invoice",
+        operation: "find",
+      });
+      expect(key.startsWith(buildCacheRootPrefix(sourceNamespace))).toBe(true);
+    });
+  }
+
+  test("should not match a sibling entity's prefix", () => {
+    const key = buildCacheKey({
+      sourceNamespace: "app",
+      entityNamespace: "billing",
+      entityName: "Invoice",
+      operation: "find",
+    });
+    const sibling = buildCachePrefix({
+      sourceNamespace: "app",
+      entityNamespace: "legal",
+      entityName: "Invoice",
+    });
+    expect(key.startsWith(sibling)).toBe(false);
   });
 });

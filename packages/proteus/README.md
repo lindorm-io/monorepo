@@ -2251,6 +2251,7 @@ await session.flushCache(User); // sessions share the source's adapter and names
 ```
 
 - **Inheritance is expanded.** Each subtype caches under its own entity name even when the subtypes share a table, so flushing any participant flushes the whole hierarchy (root and all children).
+- **`@Namespace` scopes the cache too.** An entity's own namespace is a different schema/database, so two same-named entities in two namespaces cache separately — flushing one leaves the other intact. Flushing everything still reaches both.
 - **An unregistered entity throws** `entity_not_registered` — a typo must not silently no-op.
 - **No cache adapter configured is a no-op** (logged at `verbose`), so the same code runs with and without caching.
 - **An adapter failure throws** `cache_flush_failed`. This is deliberately unlike the implicit post-write invalidation, which only logs a warning: an explicit flush is the caller asserting "make reads correct now", so a resolved promise must not hide a still-stale cache.

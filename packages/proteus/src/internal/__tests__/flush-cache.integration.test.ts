@@ -17,13 +17,17 @@ import {
   Entity,
   Field,
   Generated,
+  Namespace,
   PrimaryKeyField,
 } from "../../decorators/index.js";
 
 vi.setConfig({ testTimeout: 120_000 });
 
 const PG_CONNECTION = "postgres://root:example@localhost:5432/default";
-const namespace = `flush_cache_${randomBytes(6).toString("hex")}`;
+const suffix = randomBytes(6).toString("hex");
+const namespace = `flush_cache_${suffix}`;
+const billingNamespace = `flush_billing_${suffix}`;
+const legalNamespace = `flush_legal_${suffix}`;
 
 @Entity({ name: "FlushCacheProduct" })
 @Cache("5 Minutes")
@@ -32,6 +36,29 @@ class FlushCacheProduct {
 
   @Field("string")
   name!: string;
+}
+
+// The SAME entity name in two @Namespace schemas — two distinct tables whose
+// caches must stay apart.
+
+@Namespace(billingNamespace)
+@Entity({ name: "FlushCacheInvoice" })
+@Cache("5 Minutes")
+class FlushCacheBillingInvoice {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  reference!: string;
+}
+
+@Namespace(legalNamespace)
+@Entity({ name: "FlushCacheInvoice" })
+@Cache("5 Minutes")
+class FlushCacheLegalInvoice {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  reference!: string;
 }
 
 let client: Redis;
@@ -58,7 +85,7 @@ describe("flushCache integration", () => {
       url: PG_CONNECTION,
       namespace,
       synchronize: true,
-      entities: [FlushCacheProduct],
+      entities: [FlushCacheProduct, FlushCacheBillingInvoice, FlushCacheLegalInvoice],
       cache: { adapter: new RedisCacheAdapter({ client }), ttl: "5 Minutes" },
       logger: createMockLogger(),
     });
@@ -79,7 +106,9 @@ describe("flushCache integration", () => {
     const raw = new Client({ connectionString: PG_CONNECTION });
     await raw.connect();
     try {
-      await raw.query(`DROP SCHEMA IF EXISTS "${namespace}" CASCADE`);
+      for (const schema of [namespace, billingNamespace, legalNamespace]) {
+        await raw.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
+      }
     } finally {
       await raw.end();
     }
@@ -88,6 +117,8 @@ describe("flushCache integration", () => {
   beforeEach(async () => {
     await client.flushdb();
     await source.repository(FlushCacheProduct).clear();
+    await source.repository(FlushCacheBillingInvoice).clear();
+    await source.repository(FlushCacheLegalInvoice).clear();
   });
 
   test("a raw client() write leaves reads stale until flushCache evicts the entry", async () => {
@@ -168,5 +199,48 @@ describe("flushCache integration", () => {
     await source.flushCache();
 
     expect(await client.keys(`${namespace}:cache:*`)).toEqual([]);
+  });
+
+  describe("same entity name in two namespaces", () => {
+    test("caches separately instead of serving the other namespace's rows", async () => {
+      const billing = source.repository(FlushCacheBillingInvoice);
+      const legal = source.repository(FlushCacheLegalInvoice);
+      await billing.insert({ reference: "B-1" });
+      await legal.insert({ reference: "L-1" });
+
+      // Identical criteria, identical entity name — a shared key would hand the
+      // second read the first one's cached rows.
+      expect((await billing.find()).map((i) => i.reference)).toEqual(["B-1"]);
+      expect((await legal.find()).map((i) => i.reference)).toEqual(["L-1"]);
+      expect((await billing.find()).map((i) => i.reference)).toEqual(["B-1"]);
+    });
+
+    test("flushing one namespace leaves the other's cache intact", async () => {
+      const billing = source.repository(FlushCacheBillingInvoice);
+      const legal = source.repository(FlushCacheLegalInvoice);
+      await billing.insert({ reference: "B-2" });
+      await legal.insert({ reference: "L-2" });
+      await billing.find();
+      await legal.find();
+
+      await source.flushCache(FlushCacheBillingInvoice);
+
+      expect(await client.keys(`${namespace}:cache:${billingNamespace}/*`)).toEqual([]);
+      expect(
+        (await client.keys(`${namespace}:cache:${legalNamespace}/*`)).length,
+      ).toBeGreaterThan(0);
+    });
+
+    test("flushCache with no target still reaches namespaced entities", async () => {
+      const billing = source.repository(FlushCacheBillingInvoice);
+      await billing.insert({ reference: "B-3" });
+      await billing.find();
+
+      expect((await client.keys(`${namespace}:cache:*`)).length).toBeGreaterThan(0);
+
+      await source.flushCache();
+
+      expect(await client.keys(`${namespace}:cache:*`)).toEqual([]);
+    });
   });
 });

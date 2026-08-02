@@ -1358,4 +1358,61 @@ describe("CachingRepository", () => {
       expect(prefix).toBe("myapp:cache:TestEntity:");
     });
   });
+
+  describe("entity namespace in cache key", () => {
+    const namespacedMetadata = (namespace: string) =>
+      makeBaseMetadata({
+        entity: {
+          decorator: "Entity",
+          comment: null,
+          name: "TestEntity",
+          named: false,
+          namespace,
+        },
+      });
+
+    it("should scope the cache key by the entity's own namespace", async () => {
+      const { repo, inner, adapter } = createRepo({
+        namespace: "myapp",
+        metadata: namespacedMetadata("billing"),
+      });
+      inner.find.mockResolvedValue([]);
+
+      await repo.find({});
+
+      const key = (adapter.get as Mock).mock.calls[0][0] as string;
+      expect(key).toMatch(/^myapp:cache:billing\/TestEntity:find:/);
+    });
+
+    it("should not share a key with the same entity in another namespace", async () => {
+      const billing = createRepo({ metadata: namespacedMetadata("billing") });
+      const legal = createRepo({ metadata: namespacedMetadata("legal") });
+      billing.inner.find.mockResolvedValue([]);
+      legal.inner.find.mockResolvedValue([]);
+
+      await billing.repo.find({ id: "abc" } as never);
+      await legal.repo.find({ id: "abc" } as never);
+
+      expect((billing.adapter.get as Mock).mock.calls[0][0]).not.toBe(
+        (legal.adapter.get as Mock).mock.calls[0][0],
+      );
+    });
+
+    // A read key outside the prefix the write deletes = a cache that never evicts.
+    it("should invalidate the exact prefix its read keys live under", async () => {
+      const { repo, inner, adapter } = createRepo({
+        namespace: "myapp",
+        metadata: namespacedMetadata("billing"),
+      });
+      inner.find.mockResolvedValue([]);
+      (inner.save as Mock).mockResolvedValue(entityA);
+
+      await repo.find({});
+      await repo.save(entityA);
+
+      const key = (adapter.get as Mock).mock.calls[0][0] as string;
+      const prefix = (adapter.delByPrefix as Mock).mock.calls[0][0] as string;
+      expect(key.startsWith(prefix)).toBe(true);
+    });
+  });
 });
