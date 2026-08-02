@@ -7,6 +7,28 @@ spelled the same everywhere.
 It is **not** a client. There is no HTTP in this package, and there never will be — a conduit-based
 OIDC client is a separate, later package.
 
+## What may enter this package
+
+Two sources, and nothing else:
+
+1. **A standard** — a published RFC, an OpenID Connect specification, an IANA registry, or a
+   WG-adopted IETF draft. Cite it precisely (RFC number + section) at the member, and never invent a
+   citation. A draft is cited by its draft name and re-cited by RFC number once it advances.
+2. **A Lindorm extension** — fenced behind a `Lindorm*` name (`LindormAddress`, `LindormClaims`,
+   `LindormScope`, `LindormOpenIdConfiguration`, …) or, for a whole file, declared as such in its
+   header. These have no RFC counterpart and say so.
+
+**Vendor extensions do not belong here** — no Auth0, Okta, Keycloak, Google or other provider
+quirks, however common. They are the integration layer's business: `@lindorm/pylon` carries the
+Auth0 `audience`-for-`resource` swap as its own local type, precisely so this package stays clean.
+`configuration.test.ts` keeps a `@ts-expect-error` case asserting that Auth0's
+`mfa_challenge_endpoint` is rejected by `OpenIdConfiguration` — that is the rule as an executable
+test, not a comment.
+
+_(Auth0 discovery documents do appear as `__fixtures__` in aegis / amphora / conduit. That is
+correct: those are fixtures of a real provider's response, used to prove our parsers cope with the
+real world. Fixtures are not vocabulary.)_
+
 ## Why it exists
 
 - **Runtime values, not just types.** A type-only union carries nothing at runtime, so a proteus
