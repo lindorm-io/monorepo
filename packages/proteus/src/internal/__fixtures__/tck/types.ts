@@ -40,6 +40,14 @@ export type TckCapabilities = {
    */
   richColumnTypes: boolean;
   /**
+   * A `@Field("bigint")` column can serve as a `@Generated("increment")`
+   * primary key: the driver mints the identity itself, hands it back as a JS
+   * bigint, and that bigint round-trips through reads, writes and foreign
+   * keys. Mongo and Redis cannot round-trip a bigint identity through the
+   * shared deserialise (see richColumnTypes above), so they cannot carry one.
+   */
+  bigintIdentity: boolean;
+  /**
    * upsert() honours `conflictOn` to resolve conflicts on a non-PK unique
    * column. Mongo and Redis reject conflictOn by design (NotSupportedError).
    */

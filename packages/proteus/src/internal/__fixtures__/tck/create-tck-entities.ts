@@ -1393,6 +1393,88 @@ export const createTckEntities = (hookCallback: Mock) => {
     label!: string;
   }
 
+  // ─── BigInt Identity Entities ─────────────────────────────────────
+  // Real consumers give a table a `@Generated("increment") @Field("bigint")`
+  // primary key — the driver mints the identity and it must come back as a JS
+  // bigint everywhere (reads, writes, foreign keys). The child's owning-side FK
+  // column is projected from the relation, so it inherits the parent's bigint
+  // width. Gated behind caps.bigintIdentity: mongo and redis cannot round-trip
+  // a bigint through the shared deserialise, so they never register these.
+
+  @Entity({ name: "TckBigIntPkParent" })
+  class TckBigIntPkParent {
+    @PrimaryKey() @Generated("increment") @Field("bigint") id!: bigint;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @OneToMany(() => TckBigIntPkChild, "parent")
+    children!: Array<TckBigIntPkChild>;
+
+    @OneToMany(() => TckBigIntPkDeclaredChild, "parent")
+    declaredChildren!: Array<TckBigIntPkDeclaredChild>;
+  }
+
+  // AUTO-FK child: `parentId` carries NO @Field, so the FK column is projected
+  // entirely from the relation (its column type resolves from the referenced
+  // bigint PK). Mirrors the shape a consumer gets for free from @ManyToOne.
+  @Entity({ name: "TckBigIntPkChild" })
+  class TckBigIntPkChild {
+    @PrimaryKey() @Generated("increment") @Field("bigint") id!: bigint;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    label!: string;
+
+    @ManyToOne(() => TckBigIntPkParent, "children")
+    parent!: TckBigIntPkParent | null;
+
+    parentId!: bigint;
+  }
+
+  // DECLARED-FK child: the same relation, but the FK column is declared as a
+  // real `@Field("bigint")`. Paired with TckBigIntPkChild above so the suite can
+  // tell a bigint-FK failure apart from an untyped-projection failure.
+  @Entity({ name: "TckBigIntPkDeclaredChild" })
+  class TckBigIntPkDeclaredChild {
+    @PrimaryKey() @Generated("increment") @Field("bigint") id!: bigint;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    label!: string;
+
+    @ManyToOne(() => TckBigIntPkParent, "declaredChildren")
+    parent!: TckBigIntPkParent | null;
+
+    @Field("bigint")
+    parentId!: bigint;
+  }
+
   return {
     TckSimpleUser,
     TckSimplePost,
@@ -1449,5 +1531,8 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckPkString,
     TckPkIncrement,
     TckPkInteger,
+    TckBigIntPkParent,
+    TckBigIntPkChild,
+    TckBigIntPkDeclaredChild,
   };
 };

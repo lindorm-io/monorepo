@@ -46,6 +46,7 @@ const factory: TckDriverFactory = {
     // so it cannot satisfy the binary leg of the type-coercion suite. The whole
     // suite is gated off (binary-only failure) rather than split.
     richColumnTypes: false,
+    bigintIdentity: false,
     // Redis's driver rejects conflictOn by design (NotSupportedError).
     upsertConflictColumns: false,
     encryption: true,

@@ -45,6 +45,7 @@ const factory: TckDriverFactory = {
     // Mongo stores bigint/decimal/binary as BSON Long/Decimal128/Binary, which
     // do not round-trip to identical JS types through the shared deserialise.
     richColumnTypes: false,
+    bigintIdentity: false,
     // Mongo's driver rejects conflictOn by design (NotSupportedError).
     upsertConflictColumns: false,
     encryption: true,

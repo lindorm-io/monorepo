@@ -57,6 +57,7 @@ import { typeCoercionSuite } from "./type-coercion.tck.js";
 import { arrayTypeSuite } from "./array-type.tck.js";
 import { renamedColumnsSuite } from "./renamed-columns.tck.js";
 import { checkConstraintsSuite } from "./check-constraints.tck.js";
+import { bigintIdentitySuite } from "./bigint-identity.tck.js";
 
 const maybeDescribe = (flag: boolean, name: string, fn: () => void) => {
   if (flag) {
@@ -172,6 +173,16 @@ const runTckForNaming = (
     );
   }
 
+  // BigInt auto-increment identity entities (mongo/redis cannot round-trip a
+  // bigint identity, so they never get the tables)
+  if (caps.bigintIdentity) {
+    baseTargets.push(
+      entities.TckBigIntPkParent,
+      entities.TckBigIntPkChild,
+      entities.TckBigIntPkDeclaredChild,
+    );
+  }
+
   const allTargets = baseTargets;
 
   beforeAll(async () => {
@@ -227,6 +238,9 @@ const runTckForNaming = (
   );
   maybeDescribe(caps.referentialIntegrity, "referentialIntegrity", () =>
     foreignKeysSuite(getHandle, entities),
+  );
+  maybeDescribe(caps.bigintIdentity, "bigintIdentity", () =>
+    bigintIdentitySuite(getHandle, entities, caps),
   );
   maybeDescribe(caps.checkConstraints, "checkConstraints", () =>
     checkConstraintsSuite(getHandle, entities),

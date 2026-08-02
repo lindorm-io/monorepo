@@ -45,6 +45,7 @@ const factory: TckDriverFactory = {
     referentialIntegrity: true,
     checkConstraints: true,
     richColumnTypes: true,
+    bigintIdentity: true,
     upsertConflictColumns: true,
     encryption: true,
     inheritance: { singleTable: true, joined: true },
