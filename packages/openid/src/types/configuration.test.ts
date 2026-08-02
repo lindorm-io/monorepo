@@ -47,12 +47,37 @@ describe("OpenIdConfiguration", () => {
     expect([introspect, logout, revoke]).toBeDefined();
   });
 
-  test("should reject the deleted subject type values", () => {
+  /**
+   * The `*Supported` arrays are OPEN while the vocabulary they cite is CLOSED:
+   * this type also describes a THIRD PARTY's document, and a remote provider
+   * advertises whatever it implements. Auth0's real `scopes_supported` carries
+   * `name` / `picture` / `identities` — see `@lindorm/pylon`'s `__fixtures__`.
+   */
+  test("should accept the values a remote provider advertises", () => {
     const configuration: OpenIdConfiguration = {
       ...MINIMAL,
+      scopesSupported: ["openid", "profile", "name", "picture", "identities"],
+      subjectTypesSupported: ["public", "client", "identity"],
+      grantTypesSupported: ["authorization_code", "urn:acme:params:oauth:grant-type"],
+      idTokenSigningAlgValuesSupported: ["RS256", "Ed448"],
+    };
 
-      // @ts-expect-error OIDC Core §8 defines `pairwise` | `public`
-      subjectTypesSupported: ["client", "identity"],
+    expect(configuration).toMatchSnapshot();
+  });
+
+  test("should keep the vocabulary itself closed", () => {
+    // @ts-expect-error OIDC Core §8 defines `pairwise` | `public` — the ARRAY
+    // widens for a remote document, the vocabulary never does
+    const rejected: SubjectType = "identity";
+
+    expect(rejected).toBe("identity");
+  });
+
+  test("should keep the MEMBER names closed even though the values are open", () => {
+    const configuration: OpenIdConfiguration = {
+      ...MINIMAL,
+      // @ts-expect-error an unknown member is still a typo — only the `*Supported` VALUES widen
+      subjectTypeSupported: ["public"],
     };
 
     expect(configuration).toBeDefined();

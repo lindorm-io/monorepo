@@ -1,5 +1,37 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`OpenIdConfiguration > should accept the values a remote provider advertises 1`] = `
+{
+  "authorizationEndpoint": "https://test.lindorm.io/oauth/authorize",
+  "grantTypesSupported": [
+    "authorization_code",
+    "urn:acme:params:oauth:grant-type",
+  ],
+  "idTokenSigningAlgValuesSupported": [
+    "RS256",
+    "Ed448",
+  ],
+  "issuer": "https://test.lindorm.io",
+  "jwksUri": "https://test.lindorm.io/.well-known/jwks.json",
+  "responseTypesSupported": [
+    "code",
+  ],
+  "scopesSupported": [
+    "openid",
+    "profile",
+    "name",
+    "picture",
+    "identities",
+  ],
+  "subjectTypesSupported": [
+    "public",
+    "client",
+    "identity",
+  ],
+  "tokenEndpoint": "https://test.lindorm.io/oauth/token",
+}
+`;
+
 exports[`OpenIdConfiguration > should match snapshot for the spec-minimal document 1`] = `
 {
   "authorizationEndpoint": "https://test.lindorm.io/oauth/authorize",

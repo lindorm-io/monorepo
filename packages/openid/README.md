@@ -62,6 +62,17 @@ npm install zod
   (the extra `careOf`) with `StandardAddress`; `Claims` composes `NewLindormClaims` +
   `ExtendingLindormClaims` + `StandardClaims`; `Scope` composes `LindormScope` with `StandardScope`.
   If a name says `Lindorm`, no RFC defines it.
+- **A collision is the importer's problem, not the vocabulary's.** This package names things after the
+  wire, so `token_type` is `TokenType` — even though `@lindorm/aegis` also exports a `TokenType`,
+  meaning the token _kind_ (`access_token` / `refresh_token` / `id_token`). Same word, different
+  concept. Neither package distorts its own name to dodge the other; a file needing both aliases at
+  the import:
+
+  ```typescript
+  import { TokenType } from "@lindorm/openid";
+  import { TokenType as AegisTokenType } from "@lindorm/aegis";
+  ```
+
 - **Every field carries its wire name.** Types are camelCase; the doc-comment names the snake_case
   wire member, its requirement level, and the spec that defines it. Read the comment before trusting
   a field name.
@@ -80,9 +91,9 @@ SubjectType.Pairwise; // "pairwise"
 const requested: GrantTypeValue = "urn:ietf:params:oauth:grant-type:token-exchange";
 ```
 
-`AuthMethod` · `BackchannelTokenDeliveryMode` · `ClaimType` · `CodeChallengeMethod` · `DisplayMode` ·
-`GrantType` · `NamingSystem` · `PromptMode` · `ResponseMode` · `ResponseType` · `Scope`
-(`LindormScope` + `StandardScope`) · `SubjectType` · `TokenEndpointAuthMethod`
+`TokenType` · `AuthMethod` · `BackchannelTokenDeliveryMode` · `ClaimType` ·
+`CodeChallengeMethod` · `DisplayMode` · `GrantType` · `NamingSystem` · `PromptMode` · `ResponseMode` ·
+`ResponseType` · `Scope` (`LindormScope` + `StandardScope`) · `SubjectType` · `TokenEndpointAuthMethod`
 
 **Every derived type is CLOSED** — exactly the values the set lists, nothing else. Several of these
 registries are extensible (RFC 6749 §8.3 grant types, §8.4 response types, §3.3 scopes, RFC 8176 §1
@@ -95,6 +106,11 @@ the union in its own code — `GrantType | "urn:acme:grant"` — so the hole is 
 taken. `@lindorm/pylon` does this both ways: `Auth0AuthorizeRequestQuery` adds Auth0's `audience`
 locally, and `IPylonSession.scope` is plain `Array<string>` because it holds whatever an external
 IdP granted, which is not this vocabulary at all.
+
+The one widening this package does itself is
+[`OpenIdConfiguration`](#openidconfiguration)'s `*Supported` arrays — the type describes a _remote_
+provider's document as well as our own, so its reader is an extender by definition. The vocabulary
+sets it cites stay closed.
 
 `CodeChallengeMethod` is this package's own and is deliberately separate from `@lindorm/pkce`'s
 method enum: this one is the OAuth wire vocabulary, that one is the PKCE implementation's.
@@ -116,10 +132,10 @@ promptModeSchema.parse("urn:example:prompt"); // throws ZodError — invalid_val
 const scopes = "openid profile".split(" ").map((s) => scopeSchema.parse(s));
 ```
 
-`authMethodSchema` · `backchannelTokenDeliveryModeSchema` · `claimTypeSchema` ·
-`codeChallengeMethodSchema` · `displayModeSchema` · `grantTypeSchema` · `namingSystemSchema` ·
-`promptModeSchema` · `responseModeSchema` · `responseTypeSchema` · `scopeSchema`
-(`lindormScopeSchema` + `standardScopeSchema`) · `subjectTypeSchema` ·
+`tokenTypeSchema` · `authMethodSchema` · `backchannelTokenDeliveryModeSchema` ·
+`claimTypeSchema` · `codeChallengeMethodSchema` · `displayModeSchema` · `grantTypeSchema` ·
+`namingSystemSchema` · `promptModeSchema` · `responseModeSchema` · `responseTypeSchema` ·
+`scopeSchema` (`lindormScopeSchema` + `standardScopeSchema`) · `subjectTypeSchema` ·
 `tokenEndpointAuthMethodSchema`
 
 **Every schema is closed** — it rejects any value the set does not list, and there are no lenient
@@ -168,9 +184,25 @@ const configuration: OpenIdConfiguration = {
 };
 ```
 
-The shape is deliberately **closed** — no index signature. Excess-property checking is what catches
-a mistyped member when a provider builds its own document. The name keeps its `OpenId` prefix on
-purpose: the well-known URI is literally `/.well-known/openid-configuration`, the bare noun
+The `*Supported` array **values** are the one place this package widens (`Array<Scope | (string &
+{})>`), and it is the both-directions job that forces it: a remote provider advertises whatever _it_
+implements, so a reader must be able to hold a value we do not — Auth0's real `scopes_supported`
+carries `name`, `picture` and `identities`. The vocabulary sets stay closed; only the array element
+widens. Narrowing is the consumer's job at runtime, which is what the [`/schemas`](#schemas)
+validators are for: intersect what the remote advertises with what you implement.
+
+```typescript
+import { scopeSchema } from "@lindorm/openid/schemas";
+
+const usable = (configuration.scopesSupported ?? []).filter(
+  (s) => scopeSchema.safeParse(s).success,
+);
+```
+
+Apart from those values the shape is deliberately **closed** — no index signature, and an unknown
+member is still a typo. Excess-property checking is what catches a mistyped member when a provider
+builds its own document. The name keeps its `OpenId` prefix on purpose: the well-known URI is
+literally `/.well-known/openid-configuration`, the bare noun
 `Configuration` collided with unrelated `config` identifiers at every use site, and the
 spec-derived alternatives (`ProviderMetadata`, `AuthorizationServerMetadata`) each name only half
 the job — this one type also serves `/.well-known/oauth-authorization-server`. Lindorm extension members

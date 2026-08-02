@@ -51,6 +51,26 @@ type LindormOpenIdConfiguration = {
  * member carries its wire name, requirement level, and defining spec.
  */
 type StandardOpenIdConfiguration = {
+  /**
+   * WHY EVERY `*Supported` ARRAY IS OPEN (`| (string & {})`) WHILE THE
+   * VOCABULARY IT CITES IS CLOSED.
+   *
+   * This one type serves both directions: a provider serving its OWN metadata,
+   * and a relying party reading a THIRD PARTY's. A closed element type is right
+   * for the first and a lie for the second — a remote IdP advertises whatever
+   * it implements, and the reader must be able to hold a value we do not. (The
+   * `mac` token type, an unregistered `acme:` grant, an algorithm we never
+   * implemented: all legal for it to publish.)
+   *
+   * So the array widens and the vocabulary does not. `| (string & {})` keeps
+   * autocomplete on the serve side while a remote document parses. Narrowing is
+   * the consumer's job at RUNTIME — the `@lindorm/openid/schemas` validators
+   * exist for exactly that: intersect what the remote advertises with what you
+   * implement, then act on the result.
+   *
+   * The rest of the shape stays closed: an unknown MEMBER is still a typo.
+   */
+
   // ---------------------------------------------------------------- REQUIRED
 
   /**
@@ -83,19 +103,19 @@ type StandardOpenIdConfiguration = {
    * wire: `response_types_supported` — REQUIRED (OIDC Discovery §3,
    * RFC 8414 §2).
    */
-  responseTypesSupported: Array<ResponseType>;
+  responseTypesSupported: Array<ResponseType | (string & {})>;
 
   /**
    * wire: `subject_types_supported` — REQUIRED (OIDC Discovery §3). Values are
    * `pairwise` / `public` (OIDC Core §8).
    */
-  subjectTypesSupported: Array<SubjectType>;
+  subjectTypesSupported: Array<SubjectType | (string & {})>;
 
   /**
    * wire: `id_token_signing_alg_values_supported` — REQUIRED (OIDC Discovery
    * §3). MUST include `RS256`.
    */
-  idTokenSigningAlgValuesSupported: Array<JwksSigningAlgorithm>;
+  idTokenSigningAlgValuesSupported: Array<JwksSigningAlgorithm | (string & {})>;
 
   // ------------------------------------------------- RECOMMENDED ⇒ OPTIONAL
 
@@ -109,7 +129,7 @@ type StandardOpenIdConfiguration = {
    * wire: `scopes_supported` — RECOMMENDED (OIDC Discovery §3, RFC 8414 §2).
    * The provider MAY omit scopes it does not advertise publicly.
    */
-  scopesSupported?: Array<Scope>;
+  scopesSupported?: Array<Scope | (string & {})>;
 
   /**
    * wire: `claims_supported` — RECOMMENDED (OIDC Discovery §3). WIRE claim
@@ -163,16 +183,20 @@ type StandardOpenIdConfiguration = {
    * §3, RFC 8414 §2). When absent the spec default is
    * `["client_secret_basic"]`.
    */
-  tokenEndpointAuthMethodsSupported?: Array<TokenEndpointAuthMethod>;
+  tokenEndpointAuthMethodsSupported?: Array<TokenEndpointAuthMethod | (string & {})>;
 
   /** wire: `token_endpoint_auth_signing_alg_values_supported` — OPTIONAL (OIDC Discovery §3) */
-  tokenEndpointAuthSigningAlgValuesSupported?: Array<JwksSigningAlgorithm>;
+  tokenEndpointAuthSigningAlgValuesSupported?: Array<
+    JwksSigningAlgorithm | (string & {})
+  >;
 
   /** wire: `introspection_endpoint_auth_methods_supported` — OPTIONAL (RFC 8414 §2) */
-  introspectionEndpointAuthMethodsSupported?: Array<TokenEndpointAuthMethod>;
+  introspectionEndpointAuthMethodsSupported?: Array<
+    TokenEndpointAuthMethod | (string & {})
+  >;
 
   /** wire: `revocation_endpoint_auth_methods_supported` — OPTIONAL (RFC 8414 §2) */
-  revocationEndpointAuthMethodsSupported?: Array<TokenEndpointAuthMethod>;
+  revocationEndpointAuthMethodsSupported?: Array<TokenEndpointAuthMethod | (string & {})>;
 
   // ---------------------------------------------------------- CAPABILITY SETS
 
@@ -180,25 +204,25 @@ type StandardOpenIdConfiguration = {
   acrValuesSupported?: Array<string>;
 
   /** wire: `claim_types_supported` — OPTIONAL (OIDC Discovery §3); default `["normal"]` */
-  claimTypesSupported?: Array<ClaimType>;
+  claimTypesSupported?: Array<ClaimType | (string & {})>;
 
   /** wire: `code_challenge_methods_supported` — OPTIONAL (RFC 8414 §2, RFC 7636) */
-  codeChallengeMethodsSupported?: Array<CodeChallengeMethod>;
+  codeChallengeMethodsSupported?: Array<CodeChallengeMethod | (string & {})>;
 
   /** wire: `display_values_supported` — OPTIONAL (OIDC Discovery §3) */
-  displayValuesSupported?: Array<DisplayMode>;
+  displayValuesSupported?: Array<DisplayMode | (string & {})>;
 
   /**
    * wire: `grant_types_supported` — OPTIONAL (OIDC Discovery §3, RFC 8414 §2);
    * default `["authorization_code", "implicit"]`.
    */
-  grantTypesSupported?: Array<GrantType>;
+  grantTypesSupported?: Array<GrantType | (string & {})>;
 
   /**
    * wire: `response_modes_supported` — OPTIONAL (OIDC Discovery §3, RFC 8414
    * §2); default `["query", "fragment"]`.
    */
-  responseModesSupported?: Array<ResponseMode>;
+  responseModesSupported?: Array<ResponseMode | (string & {})>;
 
   /** wire: `ui_locales_supported` — OPTIONAL (OIDC Discovery §3) */
   uiLocalesSupported?: Array<string>;
@@ -206,30 +230,32 @@ type StandardOpenIdConfiguration = {
   // ------------------------------------------------------------ ID TOKEN / JWE
 
   /** wire: `id_token_encryption_alg_values_supported` — OPTIONAL (OIDC Discovery §3) */
-  idTokenEncryptionAlgValuesSupported?: Array<JwksEncryptionAlgorithm>;
+  idTokenEncryptionAlgValuesSupported?: Array<JwksEncryptionAlgorithm | (string & {})>;
 
   /** wire: `id_token_encryption_enc_values_supported` — OPTIONAL (OIDC Discovery §3) */
-  idTokenEncryptionEncValuesSupported?: Array<AesEncryption>;
+  idTokenEncryptionEncValuesSupported?: Array<AesEncryption | (string & {})>;
 
   /** wire: `userinfo_signing_alg_values_supported` — OPTIONAL (OIDC Discovery §3) */
-  userinfoSigningAlgValuesSupported?: Array<JwksSigningAlgorithm>;
+  userinfoSigningAlgValuesSupported?: Array<JwksSigningAlgorithm | (string & {})>;
 
   /** wire: `userinfo_encryption_alg_values_supported` — OPTIONAL (OIDC Discovery §3) */
-  userinfoEncryptionAlgValuesSupported?: Array<JwksEncryptionAlgorithm>;
+  userinfoEncryptionAlgValuesSupported?: Array<JwksEncryptionAlgorithm | (string & {})>;
 
   /** wire: `userinfo_encryption_enc_values_supported` — OPTIONAL (OIDC Discovery §3) */
-  userinfoEncryptionEncValuesSupported?: Array<AesEncryption>;
+  userinfoEncryptionEncValuesSupported?: Array<AesEncryption | (string & {})>;
 
   // -------------------------------------------------- REQUEST OBJECTS (RFC 9101)
 
   /** wire: `request_object_signing_alg_values_supported` — OPTIONAL (RFC 9101, OIDC Discovery §3) */
-  requestObjectSigningAlgValuesSupported?: Array<JwksSigningAlgorithm>;
+  requestObjectSigningAlgValuesSupported?: Array<JwksSigningAlgorithm | (string & {})>;
 
   /** wire: `request_object_encryption_alg_values_supported` — OPTIONAL (RFC 9101, OIDC Discovery §3) */
-  requestObjectEncryptionAlgValuesSupported?: Array<JwksEncryptionAlgorithm>;
+  requestObjectEncryptionAlgValuesSupported?: Array<
+    JwksEncryptionAlgorithm | (string & {})
+  >;
 
   /** wire: `request_object_encryption_enc_values_supported` — OPTIONAL (RFC 9101, OIDC Discovery §3) */
-  requestObjectEncryptionEncValuesSupported?: Array<AesEncryption>;
+  requestObjectEncryptionEncValuesSupported?: Array<AesEncryption | (string & {})>;
 
   /** wire: `request_parameter_supported` — OPTIONAL (OIDC Discovery §3); default `false` */
   requestParameterSupported?: boolean;
@@ -255,32 +281,40 @@ type StandardOpenIdConfiguration = {
    * wire: `authorization_signing_alg_values_supported` — OPTIONAL (JARM §4).
    * JWS `alg` values for signing authorization response JWTs.
    */
-  authorizationSigningAlgValuesSupported?: Array<JwksSigningAlgorithm>;
+  authorizationSigningAlgValuesSupported?: Array<JwksSigningAlgorithm | (string & {})>;
 
   /** wire: `authorization_encryption_alg_values_supported` — OPTIONAL (JARM §4) */
-  authorizationEncryptionAlgValuesSupported?: Array<JwksEncryptionAlgorithm>;
+  authorizationEncryptionAlgValuesSupported?: Array<
+    JwksEncryptionAlgorithm | (string & {})
+  >;
 
   /** wire: `authorization_encryption_enc_values_supported` — OPTIONAL (JARM §4) */
-  authorizationEncryptionEncValuesSupported?: Array<AesEncryption>;
+  authorizationEncryptionEncValuesSupported?: Array<AesEncryption | (string & {})>;
 
   // --------------------------------------------------- JWT INTROSPECTION (9701)
 
   /** wire: `introspection_signing_alg_values_supported` — OPTIONAL (RFC 9701 §7) */
-  introspectionSigningAlgValuesSupported?: Array<JwksSigningAlgorithm>;
+  introspectionSigningAlgValuesSupported?: Array<JwksSigningAlgorithm | (string & {})>;
 
   /** wire: `introspection_encryption_alg_values_supported` — OPTIONAL (RFC 9701 §7) */
-  introspectionEncryptionAlgValuesSupported?: Array<JwksEncryptionAlgorithm>;
+  introspectionEncryptionAlgValuesSupported?: Array<
+    JwksEncryptionAlgorithm | (string & {})
+  >;
 
   /** wire: `introspection_encryption_enc_values_supported` — OPTIONAL (RFC 9701 §7) */
-  introspectionEncryptionEncValuesSupported?: Array<AesEncryption>;
+  introspectionEncryptionEncValuesSupported?: Array<AesEncryption | (string & {})>;
 
   // ------------------------------------------------------------------- CIBA
 
   /** wire: `backchannel_token_delivery_modes_supported` — OPTIONAL (CIBA Core 1.0 §4) */
-  backchannelTokenDeliveryModesSupported?: Array<BackchannelTokenDeliveryMode>;
+  backchannelTokenDeliveryModesSupported?: Array<
+    BackchannelTokenDeliveryMode | (string & {})
+  >;
 
   /** wire: `backchannel_authentication_request_signing_alg_values_supported` — OPTIONAL (CIBA Core 1.0 §4) */
-  backchannelAuthenticationRequestSigningAlgValuesSupported?: Array<JwksSigningAlgorithm>;
+  backchannelAuthenticationRequestSigningAlgValuesSupported?: Array<
+    JwksSigningAlgorithm | (string & {})
+  >;
 
   /** wire: `backchannel_user_code_parameter_supported` — OPTIONAL (CIBA Core 1.0 §4); default `false` */
   backchannelUserCodeParameterSupported?: boolean;
@@ -302,7 +336,7 @@ type StandardOpenIdConfiguration = {
   authorizationResponseIssParameterSupported?: boolean;
 
   /** wire: `dpop_signing_alg_values_supported` — OPTIONAL (RFC 9449 §5.1) */
-  dpopSigningAlgValuesSupported?: Array<JwksSigningAlgorithm>;
+  dpopSigningAlgValuesSupported?: Array<JwksSigningAlgorithm | (string & {})>;
 
   /** wire: `op_policy_uri` — OPTIONAL (OIDC Discovery §3, RFC 8414 §2) */
   opPolicyUri?: string;
@@ -330,6 +364,10 @@ type StandardOpenIdConfiguration = {
  * (`introspectEndpoint`, `logoutEndpoint`, `revokeEndpoint`). Non-standard
  * members a remote provider emits still survive at runtime; reading one is a
  * deliberate, greppable cast rather than silently-typed `unknown` everywhere.
+ *
+ * The `*Supported` array VALUES are the one exception — they are open, because
+ * a remote provider advertises values we do not implement. See the note at the
+ * top of `StandardOpenIdConfiguration`.
  *
  * NAME — a DELIBERATE exception to this package's "the package is the
  * namespace" rule (which is why `OpenIdScope` is `Scope`, `OpenIdGrantType` is
