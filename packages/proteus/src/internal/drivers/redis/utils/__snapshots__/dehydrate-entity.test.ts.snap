@@ -71,3 +71,21 @@ exports[`dehydrateToRow > should skip virtual relationId properties 1`] = `
   "name": "Test",
 }
 `;
+
+exports[`dehydrateToRow typedJson > should carry null on both halves for a null typedJson value 1`] = `
+{
+  "__typemeta__:payload": null,
+  "payload": null,
+}
+`;
+
+exports[`dehydrateToRow typedJson > should split a typedJson value into data and sidecar meta 1`] = `
+{
+  "__typemeta__:payload": "{"when":"D","blob":"F","big":"I"}",
+  "payload": {
+    "big": "7",
+    "blob": "aGk",
+    "when": "2021-06-15T10:30:00.000Z",
+  },
+}
+`;

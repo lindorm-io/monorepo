@@ -1,0 +1,30 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`applySelect > should carry the typedJson sidecar along with its data key 1`] = `
+{
+  "__typemeta__:payload": "{"when":"date"}",
+  "id": "abc-123",
+  "payload": {
+    "when": "2021-06-15T10:30:00.000Z",
+  },
+}
+`;
+
+exports[`applySelect > should not invent a sidecar for a field that has none 1`] = `
+{
+  "name": "John",
+}
+`;
+
+exports[`applySelect > should project only the selected keys 1`] = `
+{
+  "id": "abc-123",
+  "name": "John",
+}
+`;
+
+exports[`applySelect > should skip a selected key that is absent from the row 1`] = `
+{
+  "id": "abc-123",
+}
+`;

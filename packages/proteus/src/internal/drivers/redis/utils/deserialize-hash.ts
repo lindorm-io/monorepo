@@ -4,6 +4,7 @@ import type {
   MetaFieldType,
   MetaRelation,
 } from "../../../entity/types/metadata.js";
+import { typedJsonMetaDictKey } from "../../../entity/utils/typed-json.js";
 import { RedisDriverError } from "../errors/RedisDriverError.js";
 
 /**
@@ -15,6 +16,8 @@ import { RedisDriverError } from "../errors/RedisDriverError.js";
  * - Type dispatch reverses the serialization from serializeHash
  * - Applies `field.transform.from()` if present
  * - FK columns from owning relations are deserialized alongside regular fields
+ * - A @TypedJson sidecar hash field is carried through raw for
+ *   `defaultHydrateEntity` to rejoin with the data half
  */
 export const deserializeHash = (
   hash: Record<string, string>,
@@ -53,6 +56,11 @@ export const deserializeHash = (
     }
 
     result[field.key] = value;
+
+    if (field.typedJson) {
+      const rawMeta = hash[typedJsonMetaDictKey(field.key)];
+      result[typedJsonMetaDictKey(field.key)] = rawMeta === undefined ? null : rawMeta;
+    }
   }
 
   for (const relation of relations) {

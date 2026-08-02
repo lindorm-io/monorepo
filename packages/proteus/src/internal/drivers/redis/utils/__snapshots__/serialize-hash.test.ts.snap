@@ -119,3 +119,25 @@ exports[`serializeHash > structured types > should serialize object value as JSO
   "meta": "{"foo":"bar"}",
 }
 `;
+
+exports[`typedJson sidecar > should emit the sidecar hash field verbatim, keyed by the meta dict key 1`] = `
+{
+  "__typemeta__:payload": "{"when":"D","blob":"F","big":"I"}",
+  "payload": "{"when":"2021-06-15T10:30:00.000Z","blob":"aGk","big":"7"}",
+}
+`;
+
+exports[`typedJson sidecar > should omit the sidecar when a scalar value produces no type metadata 1`] = `
+{
+  "payload": ""just-a-string"",
+}
+`;
+
+exports[`typedJson sidecar > should read the sidecar back as null when absent 1`] = `
+{
+  "__typemeta__:payload": null,
+  "payload": {
+    "a": 1,
+  },
+}
+`;

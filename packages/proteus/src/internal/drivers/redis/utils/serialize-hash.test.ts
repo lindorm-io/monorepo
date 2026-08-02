@@ -1,7 +1,14 @@
 import type { MetaField, MetaRelation } from "../../../entity/types/metadata.js";
+import {
+  joinTypedJson,
+  splitTypedJson,
+  typedJsonMetaDictKey,
+} from "../../../entity/utils/typed-json.js";
 import { serializeHash } from "./serialize-hash.js";
 import { deserializeHash } from "./deserialize-hash.js";
 import { describe, expect, test } from "vitest";
+
+const metaKey = typedJsonMetaDictKey("payload");
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -334,5 +341,66 @@ describe("serialize/deserialize round-trip", () => {
     expect(result!.tags).toEqual(["a", "b"]);
     expect(result!.createdAt).toBeInstanceOf(Date);
     expect((result!.createdAt as Date).toISOString()).toBe("2024-06-01T00:00:00.000Z");
+  });
+});
+
+// ─── TypedJson Sidecar ────────────────────────────────────────────────────────
+
+describe("typedJson sidecar", () => {
+  const field = makeField({
+    key: "payload",
+    type: "json",
+    typedJson: { name: null, column: "payload__typemeta" },
+  });
+
+  test("should emit the sidecar hash field verbatim, keyed by the meta dict key", () => {
+    const { data, meta } = splitTypedJson({
+      when: new Date("2021-06-15T10:30:00.000Z"),
+      blob: Buffer.from("hi"),
+      big: 7n,
+    });
+
+    expect(
+      serializeHash({ payload: data, [metaKey]: meta }, [field], []),
+    ).toMatchSnapshot();
+  });
+
+  test("should omit the sidecar when a scalar value produces no type metadata", () => {
+    // splitTypedJson bails on scalars, so there is no sidecar to write.
+    const { data, meta } = splitTypedJson("just-a-string");
+
+    const hash = serializeHash({ payload: data, [metaKey]: meta }, [field], []);
+    expect(metaKey in hash).toBe(false);
+    expect(hash).toMatchSnapshot();
+  });
+
+  test("should read the sidecar back as null when absent", () => {
+    const row = deserializeHash({ payload: '{"a":1}' }, [field], []);
+    expect(row).toMatchSnapshot();
+  });
+
+  test("should round-trip nested Date / Buffer / BigInt / undefined losslessly", () => {
+    const original = {
+      when: new Date("2021-06-15T10:30:00.000Z"),
+      blob: Buffer.from("hello world"),
+      big: 9007199254740993n,
+      maybe: undefined,
+      nested: { at: new Date("2000-01-01T00:00:00.000Z"), count: 3n },
+    };
+
+    const { data, meta } = splitTypedJson(original);
+    const hash = serializeHash({ payload: data, [metaKey]: meta }, [field], []);
+    const row = deserializeHash(hash, [field], []);
+    const joined = joinTypedJson(row!.payload, row![metaKey]) as any;
+
+    expect(joined.when).toBeInstanceOf(Date);
+    expect((joined.when as Date).toISOString()).toBe("2021-06-15T10:30:00.000Z");
+    expect(Buffer.isBuffer(joined.blob)).toBe(true);
+    expect((joined.blob as Buffer).toString()).toBe("hello world");
+    expect(joined.big).toBe(9007199254740993n);
+    expect("maybe" in joined).toBe(true);
+    expect(joined.maybe).toBeUndefined();
+    expect(joined.nested.at).toBeInstanceOf(Date);
+    expect(joined.nested.count).toBe(3n);
   });
 });

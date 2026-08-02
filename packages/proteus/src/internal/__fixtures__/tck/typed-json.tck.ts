@@ -2,7 +2,8 @@
 //
 // Verifies @TypedJson gives json/object/array fields lossless type fidelity:
 // nested Date / Buffer / BigInt / undefined survive a write + read round-trip,
-// survive an update, and that a missing sidecar degrades gracefully to plain data.
+// survive an update (entity diff AND criteria-based updateMany) and a `select`
+// projection, and that a missing sidecar degrades gracefully to plain data.
 
 import { beforeEach, describe, expect, test } from "vitest";
 import type { TckDriverHandle } from "./types.js";
@@ -118,6 +119,74 @@ export const typedJsonSuite = (
 
       // untouched field still intact
       expect((found.meta as any).since).toBeInstanceOf(Date);
+    });
+
+    test("updateMany replaces the sidecar, never joining fresh data to stale meta", async () => {
+      const repo = getHandle().repository(TckTypedJson);
+
+      const inserted = await repo.insert({
+        name: "bulk",
+        payload: makePayload(),
+        meta: { kind: "gamma", since: new Date("2012-02-02T00:00:00.000Z") },
+        optional: null,
+      });
+
+      // A payload with an entirely different type shape at every path: joining
+      // this against the inserted payload's sidecar would mistype every value.
+      await repo.updateMany({ name: "bulk" }, {
+        payload: {
+          when: "not-a-date",
+          blob: 5n,
+          big: new Date("2023-03-03T00:00:00.000Z"),
+          nested: { count: Buffer.from("nine") },
+          list: ["a", "b"],
+        },
+      } as any);
+
+      const found = await repo.findOneOrFail({ id: inserted.id });
+      const p = found.payload as any;
+
+      expect(p.when).toBe("not-a-date");
+      expect(typeof p.blob).toBe("bigint");
+      expect(p.blob).toBe(5n);
+      expect(p.big).toBeInstanceOf(Date);
+      expect((p.big as Date).getTime()).toBe(
+        new Date("2023-03-03T00:00:00.000Z").getTime(),
+      );
+      expect(Buffer.isBuffer(p.nested.count)).toBe(true);
+      expect((p.nested.count as Buffer).toString()).toBe("nine");
+      expect(p.list).toEqual(["a", "b"]);
+
+      // Paths that existed only in the previous payload must be gone entirely —
+      // a surviving sidecar would resurrect them as typed keys.
+      expect("maybe" in p).toBe(false);
+      expect("plain" in p).toBe(false);
+
+      // The untouched sibling field keeps its own sidecar.
+      expect((found.meta as any).since).toBeInstanceOf(Date);
+    });
+
+    test("select projection carries the sidecar, keeping types on a partial read", async () => {
+      const repo = getHandle().repository(TckTypedJson);
+
+      const inserted = await repo.insert({
+        name: "projected",
+        payload: makePayload(),
+        meta: { kind: "delta", since: new Date("2013-03-03T00:00:00.000Z") },
+        optional: null,
+      });
+
+      const [found] = await repo.find({ id: inserted.id }, { select: ["id", "payload"] });
+      const p = found.payload as any;
+
+      expect(found.id).toBe(inserted.id);
+      expect(p.when).toBeInstanceOf(Date);
+      expect(Buffer.isBuffer(p.blob)).toBe(true);
+      expect((p.blob as Buffer).toString()).toBe("hello world");
+      expect(typeof p.big).toBe("bigint");
+      expect(p.big).toBe(9007199254740993n);
+      expect(typeof p.nested.count).toBe("bigint");
+      expect(p.nested.at).toBeInstanceOf(Date);
     });
 
     test("plain JSON values round-trip unchanged (no special types)", async () => {

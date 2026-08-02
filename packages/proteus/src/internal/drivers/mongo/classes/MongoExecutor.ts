@@ -8,6 +8,7 @@ import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
 import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import { shouldAutoIncrement } from "../../../entity/utils/should-auto-increment.js";
+import { splitTypedJson } from "../../../entity/utils/typed-json.js";
 import { toAbortError } from "../../../utils/abort.js";
 import { dehydrateEntity } from "../utils/dehydrate.js";
 import { hydrateEntity, hydrateEntities } from "../utils/hydrate.js";
@@ -621,6 +622,17 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       const mongoField = field?.name ?? fieldKey;
       const transformed =
         value != null && field?.transform ? field.transform.to(value) : value;
+
+      // @TypedJson: $set both halves. Writing the data column alone would leave
+      // the previous sidecar in place, and fresh data joined against stale type
+      // metadata hydrates as silently mistyped values.
+      if (field?.typedJson) {
+        const { data, meta } = splitTypedJson(transformed);
+        setFields[mongoField] = data;
+        setFields[field.typedJson.column] = meta;
+        continue;
+      }
+
       setFields[mongoField] = transformed ?? null;
     }
 

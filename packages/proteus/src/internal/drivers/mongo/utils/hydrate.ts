@@ -5,6 +5,7 @@ import type { IEntity } from "../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
+import { typedJsonMetaDictKey } from "../../../entity/utils/typed-json.js";
 import { cloneDocument } from "./clone-with-getters.js";
 
 /**
@@ -21,6 +22,21 @@ const buildReverseFieldMap = (metadata: EntityMetadata): Map<string, string> => 
 };
 
 /**
+ * Build a mapping from @TypedJson sidecar doc key -> the Dict key
+ * `defaultHydrateEntity` reads the raw type metadata from. The sidecar is not a
+ * field of its own, so without this it would pass through under its raw name
+ * and the join would silently fall back to untyped data.
+ */
+const buildTypedJsonMetaMap = (metadata: EntityMetadata): Map<string, string> => {
+  const map = new Map<string, string>();
+  for (const field of metadata.fields) {
+    if (!field.typedJson) continue;
+    map.set(field.typedJson.column, typedJsonMetaDictKey(field.key));
+  }
+  return map;
+};
+
+/**
  * Convert a MongoDB document back into a flat Dict keyed by entity field keys.
  * This is the reverse of dehydrateEntity — it maps:
  * - _id -> PK field(s)
@@ -30,6 +46,7 @@ const documentToRow = (doc: Document, metadata: EntityMetadata): Dict => {
   const row: Dict = {};
   const cloned = cloneDocument(doc);
   const reverseMap = buildReverseFieldMap(metadata);
+  const typedJsonMetaMap = buildTypedJsonMetaMap(metadata);
   const pkSet = new Set(metadata.primaryKeys);
 
   // Extract PK values from _id
@@ -46,6 +63,12 @@ const documentToRow = (doc: Document, metadata: EntityMetadata): Dict => {
   // Map remaining fields from DB names to entity keys
   for (const [dbName, value] of Object.entries(cloned)) {
     if (dbName === "_id") continue;
+
+    const metaDictKey = typedJsonMetaMap.get(dbName);
+    if (metaDictKey) {
+      row[metaDictKey] = value;
+      continue;
+    }
 
     const entityKey = reverseMap.get(dbName);
     if (entityKey && !pkSet.has(entityKey)) {

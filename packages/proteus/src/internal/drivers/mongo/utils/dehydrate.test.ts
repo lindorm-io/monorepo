@@ -263,3 +263,43 @@ describe("dehydrateToRow", () => {
     expect(row).toMatchSnapshot();
   });
 });
+
+describe("typedJson", () => {
+  const typedField = makeField("payload", {
+    type: "json",
+    typedJson: { name: null, column: "payload__typemeta" },
+  } as Partial<MetaField>);
+
+  test("should split a typedJson field into data column and sidecar column", () => {
+    const metadata = makeMetadata([makeField("id"), typedField]);
+
+    const entity = {
+      id: "abc-123",
+      payload: {
+        when: new Date("2021-06-15T10:30:00.000Z"),
+        blob: Buffer.from("hi"),
+        big: 7n,
+      },
+    } as unknown as IEntity;
+
+    expect(dehydrateEntity(entity, metadata)).toMatchSnapshot();
+  });
+
+  test("should write null to both columns for a null typedJson value", () => {
+    const metadata = makeMetadata([makeField("id"), typedField]);
+
+    const entity = { id: "abc-123", payload: null } as unknown as IEntity;
+    expect(dehydrateEntity(entity, metadata)).toMatchSnapshot();
+  });
+
+  test("should key the sidecar by meta dict key in dehydrateToRow", () => {
+    const metadata = makeMetadata([makeField("id"), typedField]);
+
+    const entity = {
+      id: "abc-123",
+      payload: { at: new Date("2000-01-01T00:00:00.000Z") },
+    } as unknown as IEntity;
+
+    expect(dehydrateToRow(entity, metadata)).toMatchSnapshot();
+  });
+});

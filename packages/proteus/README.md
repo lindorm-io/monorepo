@@ -1051,6 +1051,26 @@ Applies a bidirectional transform. `to` runs during dehydration (entity → data
 tags!: string[];
 ```
 
+#### `@TypedJson`
+
+Gives a `json` / `object` / `array` field lossless type fidelity. Plain JSON storage flattens a nested `Date` to an ISO string, a `Buffer` to `{type,data}` and rejects a `BigInt` outright; `@TypedJson` writes JSON-safe data to the field's own column and the type metadata to a sidecar column, then recombines them on read.
+
+Supported on every driver — SQL drivers add a companion column, MongoDB a companion document key, Redis a companion hash field.
+
+```typescript
+@TypedJson()
+@Field("json")
+payload!: Record<string, unknown>;   // sidecar column: payload__typemeta
+
+@TypedJson({ name: "meta_types" })   // explicit sidecar column name
+@Field("object")
+meta!: Record<string, unknown>;
+```
+
+Without it, a `json` field holding a `Date`, `Buffer`, `BigInt`, `Map` or `Set` is rejected on write rather than silently corrupted. The data column stays the source of truth: a missing or stale sidecar degrades to plain parsed JSON, it never throws.
+
+**Options:** `{ name? }` — sidecar column name, default `<column>__typemeta`.
+
 #### `@Encrypted`
 
 Marks a field for application-level encryption at rest. Values are encrypted before writing and decrypted after reading. Requires an `IAmphora` key store configured on `ProteusSource`.

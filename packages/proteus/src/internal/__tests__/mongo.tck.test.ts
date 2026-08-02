@@ -48,6 +48,7 @@ const factory: TckDriverFactory = {
     // the document with structuredClone, which flattens the Binary class into a
     // plain object, and `deserialise` cannot make a Buffer of that.
     binaryColumns: false,
+    typedJson: true,
     bigintIdentity: true,
     // Mongo's driver rejects conflictOn by design (NotSupportedError).
     upsertConflictColumns: false,

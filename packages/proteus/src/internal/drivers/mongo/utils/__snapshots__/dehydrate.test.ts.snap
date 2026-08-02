@@ -112,3 +112,33 @@ exports[`dehydrateToRow > should produce a row dict keyed by entity field keys 1
   "name": "John",
 }
 `;
+
+exports[`typedJson > should key the sidecar by meta dict key in dehydrateToRow 1`] = `
+{
+  "__typemeta__:payload": "{"at":"D"}",
+  "id": "abc-123",
+  "payload": {
+    "at": "2000-01-01T00:00:00.000Z",
+  },
+}
+`;
+
+exports[`typedJson > should split a typedJson field into data column and sidecar column 1`] = `
+{
+  "_id": "abc-123",
+  "payload": {
+    "big": "7",
+    "blob": "aGk",
+    "when": "2021-06-15T10:30:00.000Z",
+  },
+  "payload__typemeta": "{"when":"D","blob":"F","big":"I"}",
+}
+`;
+
+exports[`typedJson > should write null to both columns for a null typedJson value 1`] = `
+{
+  "_id": "abc-123",
+  "payload": null,
+  "payload__typemeta": null,
+}
+`;

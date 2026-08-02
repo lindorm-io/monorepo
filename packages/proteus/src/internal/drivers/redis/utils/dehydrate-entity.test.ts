@@ -231,3 +231,32 @@ describe("dehydrateToRow", () => {
     expect(mockResolveJoinKeyValue).not.toHaveBeenCalled();
   });
 });
+
+describe("dehydrateToRow typedJson", () => {
+  const typedField = makeField({
+    key: "payload",
+    name: "payload",
+    type: "json",
+    typedJson: { name: null, column: "payload__typemeta" },
+  });
+
+  test("should split a typedJson value into data and sidecar meta", () => {
+    const metadata = makeMetadata([typedField]);
+
+    const entity = {
+      payload: {
+        when: new Date("2021-06-15T10:30:00.000Z"),
+        blob: Buffer.from("hi"),
+        big: 7n,
+      },
+    };
+
+    expect(dehydrateToRow(entity as any, metadata)).toMatchSnapshot();
+  });
+
+  test("should carry null on both halves for a null typedJson value", () => {
+    const metadata = makeMetadata([typedField]);
+
+    expect(dehydrateToRow({ payload: null } as any, metadata)).toMatchSnapshot();
+  });
+});

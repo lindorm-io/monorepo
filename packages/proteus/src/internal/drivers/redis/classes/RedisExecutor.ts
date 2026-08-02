@@ -42,6 +42,11 @@ import {
   GUARDED_HSET,
 } from "../utils/lua-scripts.js";
 import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import { stringifyForStorage } from "../../../entity/utils/stringify-for-storage.js";
+import {
+  splitTypedJson,
+  typedJsonMetaDictKey,
+} from "../../../entity/utils/typed-json.js";
 import { redactSensitive } from "../../../entity/utils/redact-sensitive.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
 import { resolveStorageMetadata } from "../../../entity/utils/resolve-storage-metadata.js";
@@ -707,8 +712,13 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       for (const [fieldKey, value] of Object.entries(update as Record<string, unknown>)) {
         const field = this.metadata.fields.find((f) => f.key === fieldKey);
         if (value == null) {
-          // Remove the field from the hash for null values
-          pipeline.hdel(key, fieldKey);
+          // Remove the field from the hash for null values — a @TypedJson field
+          // takes its sidecar with it, or the stale metadata outlives the data.
+          if (field?.typedJson) {
+            pipeline.hdel(key, fieldKey, typedJsonMetaDictKey(fieldKey));
+          } else {
+            pipeline.hdel(key, fieldKey);
+          }
           continue;
         }
         let transformed = field?.transform ? field.transform.to(value) : value;
@@ -721,6 +731,21 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
             this.metadata.entity.name,
           );
         }
+
+        // @TypedJson: write both halves. `String(value)` would flatten the whole
+        // payload to "[object Object]", and a data-only write would join fresh
+        // data against the previous sidecar.
+        if (field?.typedJson) {
+          const { data, meta } = splitTypedJson(transformed);
+          updateHash[fieldKey] = stringifyForStorage(data);
+          if (meta === null) {
+            pipeline.hdel(key, typedJsonMetaDictKey(fieldKey));
+          } else {
+            updateHash[typedJsonMetaDictKey(fieldKey)] = meta;
+          }
+          continue;
+        }
+
         updateHash[fieldKey] = String(transformed);
       }
       if (Object.keys(updateHash).length > 0) {
@@ -782,6 +807,14 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       if (pkSet.has(field.key)) continue;
       if (row[field.key] == null) {
         nullSet.add(field.key);
+      }
+
+      // A @TypedJson sidecar has its own null-ness: a value that carries no type
+      // metadata (a plain-JSON or scalar payload) leaves the data column set but
+      // must still clear the previous sidecar, or the stale metadata is joined
+      // onto the fresh data on read.
+      if (field.typedJson && row[typedJsonMetaDictKey(field.key)] == null) {
+        nullSet.add(typedJsonMetaDictKey(field.key));
       }
     }
 

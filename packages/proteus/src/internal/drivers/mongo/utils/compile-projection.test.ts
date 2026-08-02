@@ -54,4 +54,17 @@ describe("compileProjection", () => {
   test("should use metadata name for mapped fields", () => {
     expect(compileProjection(["email"], metadata)).toMatchSnapshot();
   });
+
+  test("should project the sidecar column of a selected typedJson field", () => {
+    const typedMetadata = makeMetadata([
+      makeField("id"),
+      {
+        ...makeField("payload"),
+        type: "json",
+        typedJson: { name: null, column: "payload__typemeta" },
+      } as unknown as MetaField,
+    ]);
+
+    expect(compileProjection(["id", "payload"], typedMetadata)).toMatchSnapshot();
+  });
 });

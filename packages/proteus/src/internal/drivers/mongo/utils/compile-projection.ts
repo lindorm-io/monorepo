@@ -5,6 +5,8 @@ import type { EntityMetadata } from "../../../entity/types/metadata.js";
  * Convert Proteus select fields into MongoDB projection.
  * Maps entity field keys to database field names.
  * PK fields are mapped to _id.
+ * A @TypedJson field also projects its sidecar column — without it the
+ * projected value hydrates as untyped JSON.
  * Returns undefined if no select is specified (return all fields).
  */
 export const compileProjection = (
@@ -20,6 +22,10 @@ export const compileProjection = (
     const field = metadata.fields.find((f) => f.key === fieldKey);
     const mongoField = pkSet.has(fieldKey) ? "_id" : (field?.name ?? fieldKey);
     projection[mongoField] = 1;
+
+    if (field?.typedJson) {
+      projection[field.typedJson.column] = 1;
+    }
   }
 
   // Always include _id unless explicitly excluded

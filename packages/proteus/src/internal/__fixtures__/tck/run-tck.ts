@@ -252,14 +252,10 @@ const runTckForNaming = (
     "typeCoercion",
     () => typeCoercionSuite(getHandle, entities, caps),
   );
-  // Unchanged gating: @TypedJson carries nested bigint AND Buffer AND decimal
-  // in one sidecar, so it runs exactly where all three column types round-trip.
-  // A per-leg split of this suite is a separate change.
-  maybeDescribe(
-    caps.bigintColumns && caps.decimalColumns && caps.binaryColumns,
-    "typedJson",
-    () => typedJsonSuite(getHandle, entities),
-  );
+  // @TypedJson has its own flag: the sidecar carries nested bigint / Buffer /
+  // Date through a JSON-safe data half, so it does not depend on the driver's
+  // native bigint / decimal / binary column support.
+  maybeDescribe(caps.typedJson, "typedJson", () => typedJsonSuite(getHandle, entities));
   maybeDescribe(caps.inheritance.singleTable, "inheritance:single-table", () =>
     inheritanceSingleTableSuite(getHandle, entities),
   );

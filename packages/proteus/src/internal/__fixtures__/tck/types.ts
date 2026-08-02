@@ -50,6 +50,13 @@ export type TckCapabilities = {
    */
   binaryColumns: boolean;
   /**
+   * A `@TypedJson()` json/object/array field round-trips losslessly: nested
+   * Date / Buffer / BigInt / `undefined` come back as the original types, an
+   * update replaces the sidecar rather than leaving stale type metadata, and a
+   * `select` projection carries the sidecar along with the data.
+   */
+  typedJson: boolean;
+  /**
    * A `@Field("bigint")` column can serve as a `@Generated("increment")`
    * primary key: the driver mints the identity itself, hands it back as a JS
    * bigint, and that bigint round-trips through reads, writes and foreign

@@ -22,6 +22,14 @@ exports[`compileProjection > should map PK field to _id 1`] = `
 }
 `;
 
+exports[`compileProjection > should project the sidecar column of a selected typedJson field 1`] = `
+{
+  "_id": 1,
+  "payload": 1,
+  "payload__typemeta": 1,
+}
+`;
+
 exports[`compileProjection > should use metadata name for mapped fields 1`] = `
 {
   "_id": 1,

@@ -1,6 +1,8 @@
+import { isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { MetaField, MetaRelation } from "../../../entity/types/metadata.js";
 import { stringifyForStorage } from "../../../entity/utils/stringify-for-storage.js";
+import { typedJsonMetaDictKey } from "../../../entity/utils/typed-json.js";
 
 /**
  * Serialize an entity row Dict into Redis HASH fields (Record<string, string>).
@@ -11,6 +13,8 @@ import { stringifyForStorage } from "../../../entity/utils/stringify-for-storage
  * - Embedded fields use `field.embedded.parentKey` prefix to read nested values
  * - FK columns from owning relations are serialized alongside regular fields
  * - All values are coerced to string representation
+ * - A @TypedJson field additionally emits its sidecar hash field, keyed by
+ *   `typedJsonMetaDictKey` so read-back needs no name mapping
  */
 export const serializeHash = (
   row: Dict,
@@ -36,6 +40,15 @@ export const serializeHash = (
     }
 
     result[field.key] = coerceToString(value, field.type);
+
+    // The sidecar is already a JSON string produced by splitTypedJson — write it
+    // verbatim, since coerceToString would stringify the string a second time.
+    if (field.typedJson) {
+      const meta = row[typedJsonMetaDictKey(field.key)];
+      if (isString(meta)) {
+        result[typedJsonMetaDictKey(field.key)] = meta;
+      }
+    }
   }
 
   for (const relation of relations) {

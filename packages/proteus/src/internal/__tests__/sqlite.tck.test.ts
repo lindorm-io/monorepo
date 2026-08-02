@@ -50,6 +50,7 @@ const factory: TckDriverFactory = {
     bigintColumns: true,
     decimalColumns: true,
     binaryColumns: true,
+    typedJson: true,
     bigintIdentity: true,
     upsertConflictColumns: true,
     encryption: true,

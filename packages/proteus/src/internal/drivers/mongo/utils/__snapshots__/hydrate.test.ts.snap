@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`hydrateEntity typedJson > should map the sidecar doc key onto the meta dict key 1`] = `
+{
+  "__typemeta__:payload": "{"when":"date"}",
+  "id": "abc-123",
+  "payload": {
+    "when": "2021-06-15T10:30:00.000Z",
+  },
+}
+`;

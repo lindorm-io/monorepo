@@ -1,6 +1,7 @@
 import type { Condition } from "@lindorm/match";
 import { Matcher } from "@lindorm/match";
 import type { Dict } from "@lindorm/types";
+import { typedJsonMetaDictKey } from "../../entity/utils/typed-json.js";
 import type { ResolvedFilter } from "./resolve-filters.js";
 
 /**
@@ -12,12 +13,19 @@ export const matchesRow = (row: Dict, criteria: Condition<any>): boolean =>
 /**
  * Project a row down to the selected field keys.
  * Returns the original row unchanged when selections is null or empty.
+ *
+ * A @TypedJson field carries its type metadata in a companion entry keyed by
+ * `typedJsonMetaDictKey`; that entry rides along with its data key, otherwise a
+ * projected typed-json field silently degrades to untyped JSON on hydration.
  */
 export const applySelect = (row: Dict, selections: Array<string> | null): Dict => {
   if (!selections || selections.length === 0) return row;
   const result: Dict = {};
   for (const key of selections) {
     if (key in row) result[key] = row[key];
+
+    const metaKey = typedJsonMetaDictKey(key);
+    if (metaKey in row) result[metaKey] = row[metaKey];
   }
   return result;
 };

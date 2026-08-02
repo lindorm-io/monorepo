@@ -154,3 +154,31 @@ describe("hydrateEntities", () => {
     expect(results).toEqual([]);
   });
 });
+
+describe("hydrateEntity typedJson", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("should map the sidecar doc key onto the meta dict key", () => {
+    const typedField = {
+      key: "payload",
+      name: "payload",
+      type: "json",
+      typedJson: { name: null, column: "payload__typemeta" },
+    } as unknown as MetaField;
+    const metadata = makeMetadata([makeField("id"), typedField]);
+
+    const doc = {
+      _id: "abc-123",
+      payload: { when: "2021-06-15T10:30:00.000Z" },
+      payload__typemeta: '{"when":"date"}',
+    };
+
+    hydrateEntity(doc, metadata);
+
+    const [row] = (defaultHydrateEntity as Mock).mock.calls[0];
+    expect(row).toMatchSnapshot();
+    expect("payload__typemeta" in row).toBe(false);
+  });
+});

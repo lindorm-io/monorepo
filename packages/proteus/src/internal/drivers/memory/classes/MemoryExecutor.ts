@@ -657,6 +657,16 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
               this.metadata.entity.name,
             );
           }
+          // @TypedJson: stage both halves. Overwriting the data half alone would
+          // leave the previous sidecar behind, and fresh data joined against
+          // stale type metadata hydrates as silently mistyped values.
+          if (field?.typedJson) {
+            const { data, meta } = splitTypedJson(transformed);
+            staged[key] = data;
+            staged[typedJsonMetaDictKey(key)] = meta;
+            continue;
+          }
+
           staged[key] = transformed;
         }
 

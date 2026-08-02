@@ -6,6 +6,10 @@ import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
 import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value.js";
 import { serialiseArray } from "../../../entity/utils/serialise.js";
+import {
+  splitTypedJson,
+  typedJsonMetaDictKey,
+} from "../../../entity/utils/typed-json.js";
 import { buildCompoundId } from "./build-compound-id.js";
 
 /**
@@ -16,6 +20,9 @@ import { buildCompoundId } from "./build-compound-id.js";
  * - Decimal fields: stored as string
  * - Date fields: native JS Date (BSON Date)
  * - JSON/array fields: native BSON passthrough
+ * - @TypedJson fields: JSON-safe data in the data column + stringified type
+ *   metadata in the sidecar column (BSON would otherwise flatten a nested
+ *   Buffer to Binary and drop `undefined` keys)
  * - Embedded entities: flatten to dot-notation (e.g. address.city)
  * - Nullable fields: explicit null, never undefined
  * - Computed fields: skipped
@@ -68,6 +75,10 @@ export const dehydrateEntity = <E extends IEntity>(
 
     if (pkSet.has(field.key)) {
       pkValues[field.key] = value;
+    } else if (field.typedJson) {
+      const { data, meta } = splitTypedJson(value);
+      doc[field.name] = data;
+      doc[field.typedJson.column] = meta;
     } else {
       // Use the metadata name (DB column name) for non-PK fields
       doc[field.name] = value;
@@ -148,7 +159,14 @@ export const dehydrateToRow = <E extends IEntity>(
       value = encryptFieldValue(value, field.encrypted, amphora);
     }
 
-    result[field.key] = value;
+    if (field.typedJson) {
+      const { data, meta } = splitTypedJson(value);
+      result[field.key] = data;
+      result[typedJsonMetaDictKey(field.key)] = meta;
+    } else {
+      result[field.key] = value;
+    }
+
     handledKeys.add(field.key);
   }
 

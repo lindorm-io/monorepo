@@ -50,6 +50,7 @@ const factory: TckDriverFactory = {
     // serializeHash stores a Buffer as its String() form, so the bytes are gone
     // before the read path ever sees them.
     binaryColumns: false,
+    typedJson: true,
     bigintIdentity: true,
     // Redis's driver rejects conflictOn by design (NotSupportedError).
     upsertConflictColumns: false,
