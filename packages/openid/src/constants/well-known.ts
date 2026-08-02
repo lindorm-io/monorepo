@@ -14,10 +14,3 @@ export const WELL_KNOWN_OAUTH_AUTHORIZATION_SERVER =
 /** RFC 9728 §3 — the OAuth 2.0 protected resource metadata document. */
 export const WELL_KNOWN_OAUTH_PROTECTED_RESOURCE =
   "/.well-known/oauth-protected-resource";
-
-/**
- * The conventional JWKS path. NOT specified — the authoritative location is
- * always the `jwks_uri` from the discovery document; this is only a fallback
- * for issuers that publish no discovery document.
- */
-export const WELL_KNOWN_JWKS = "/.well-known/jwks.json";

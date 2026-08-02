@@ -13,20 +13,6 @@ type ExtensionRequestQuery = {
   /**
    * OPTIONAL
    *
-   * Proprietary extension used by Auth0 (and historically by
-   * other vendors prior to RFC 8707) to indicate the target
-   * API / Resource Server for the issued access token. Values
-   * are opaque to the client and interpreted by the AS; Auth0
-   * typically expects the registered API Identifier (a URI by
-   * convention, but not strictly required).
-   *
-   * Prefer `resource` (RFC 8707) for standards-compliant OPs.
-   */
-  audience?: string;
-
-  /**
-   * OPTIONAL
-   *
    * RFC 8707 Resource Indicator. Indicates the target service
    * (resource server) where the client intends to use the
    * access token. The value MUST be an absolute URI as defined

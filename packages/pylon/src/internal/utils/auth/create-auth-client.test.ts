@@ -630,6 +630,58 @@ describe("createAuthClient", () => {
       );
     });
 
+    // `audience` is the proprietary Auth0 spelling of RFC 8707 `resource`. It
+    // is deliberately absent from `@lindorm/openid` (RFC-only), so the swap is
+    // typed locally here — assert the wire param actually changes name.
+    test("should send the resource as `resource` by default", async () => {
+      const ctx = createCtx();
+
+      const client = createAuthClient(
+        ctx as any,
+        createConfig({
+          router: {
+            pathPrefix: "/auth",
+            authorize: {
+              codeChallengeMethod: "S256",
+              resource: "https://api.example.com",
+              responseType: "code",
+              scope: ["openid"],
+            },
+          },
+        }),
+      );
+
+      const { redirect } = client.login();
+
+      expect(redirect.searchParams.get("resource")).toBe("https://api.example.com");
+      expect(redirect.searchParams.get("audience")).toBeNull();
+    });
+
+    test("should send the resource as `audience` when resourceKey is audience", async () => {
+      const ctx = createCtx();
+
+      const client = createAuthClient(
+        ctx as any,
+        createConfig({
+          router: {
+            pathPrefix: "/auth",
+            resourceKey: "audience",
+            authorize: {
+              codeChallengeMethod: "S256",
+              resource: "https://api.example.com",
+              responseType: "code",
+              scope: ["openid"],
+            },
+          },
+        }),
+      );
+
+      const { redirect } = client.login();
+
+      expect(redirect.searchParams.get("audience")).toBe("https://api.example.com");
+      expect(redirect.searchParams.get("resource")).toBeNull();
+    });
+
     test("should post the token request to the tokenEndpoint", async () => {
       const ctx = createCtx();
 

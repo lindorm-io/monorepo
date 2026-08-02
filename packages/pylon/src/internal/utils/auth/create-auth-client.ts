@@ -243,6 +243,13 @@ export const createClaimsClient = (
 
 // --- Full auth client (HTTP only — adds login/logout/token) ---
 
+/**
+ * Auth0 tenants without the RFC 8707 Resource Parameter Compatibility Profile
+ * require the proprietary `audience` parameter instead of `resource`. The
+ * vendor quirk lives here — `@lindorm/openid` stays RFC-only.
+ */
+type Auth0AuthorizeRequestQuery = AuthorizeRequestQuery & { audience?: string };
+
 export const createAuthClient = (
   ctx: PylonHttpContext,
   config: PylonAuthConfig,
@@ -317,7 +324,7 @@ export const createAuthClient = (
       ...(prompt && { prompt }),
     };
 
-    const merged = merge<AuthorizeRequestQuery>(authorize, input);
+    const merged = merge<Auth0AuthorizeRequestQuery>(authorize, input);
 
     // The config field is always named `resource`, but the wire param
     // is named per `resourceKey` — Auth0 tenants without the RFC 8707

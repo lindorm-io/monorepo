@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import {
-  WELL_KNOWN_JWKS,
   WELL_KNOWN_OAUTH_AUTHORIZATION_SERVER,
   WELL_KNOWN_OAUTH_PROTECTED_RESOURCE,
   WELL_KNOWN_OPENID_CONFIGURATION,
@@ -9,7 +8,6 @@ import {
 describe("well-known", () => {
   test("should match snapshot", () => {
     expect({
-      WELL_KNOWN_JWKS,
       WELL_KNOWN_OAUTH_AUTHORIZATION_SERVER,
       WELL_KNOWN_OAUTH_PROTECTED_RESOURCE,
       WELL_KNOWN_OPENID_CONFIGURATION,
