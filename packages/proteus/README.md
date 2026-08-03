@@ -162,11 +162,14 @@ wait is bounded by `syncLockTimeout` (default `10000` ms): the sync aborts with 
 naming the blocking session instead of hanging indefinitely. Set `0` to wait forever. Sync progress is
 logged at `verbose` and individual statements at `debug`, so a slow sync is distinguishable from a hang.
 
-Concurrent deploys against one database are safe. The sync lock is per-namespace, so services owning
-different schemas sync in parallel. Extensions (`pg_trgm`, `vector`) are the exception — they are
-database-scoped, so they are created first, in their own transaction, under a separate database-wide
-lock, and an extension a peer created in the meantime is accepted rather than failing the sync. Without
-that split a `CREATE EXTENSION` race would abort the losing deploy's whole plan.
+Concurrent deploys against one database are safe. Both the sync lock and the migration lock are
+per-namespace, so services owning different schemas proceed in parallel. Extensions (`pg_trgm`,
+`vector`) are the exception — they are database-scoped, so a per-namespace lock cannot serialize them.
+They are created first, in their own transaction, under a separate database-wide lock shared by sync
+and migrations alike, and an extension a peer created in the meantime is accepted rather than failing
+the deploy. Without that split a `CREATE EXTENSION` race would abort the losing deploy's whole plan —
+`CREATE EXTENSION IF NOT EXISTS` is not atomic, so the loser fails on `pg_extension_name_index` and
+takes every unrelated statement in its transaction down with it.
 
 ### MySQL
 
@@ -2487,6 +2490,29 @@ new ProteusSource({
   // ...
 });
 ```
+
+A generated migration puts its DDL in a single transaction, with two exceptions. Operations that
+cannot run transactionally (`ADD ENUM VALUE`, `CREATE INDEX CONCURRENTLY`) are emitted as bare
+`runner.query(...)` calls after it. Extensions are emitted before it, as `runner.extension("pg_trgm")`:
+
+```typescript
+export class AddSearch implements MigrationInterface {
+  public async up(runner: MigrationQueryRunner): Promise<void> {
+    // Create extension "pg_trgm"
+    await runner.extension("pg_trgm");
+
+    await runner.transaction(async (ctx) => {
+      await ctx.query(`CREATE TABLE ...`);
+    });
+  }
+}
+```
+
+`runner.extension()` is a first-class step rather than another `query` because an extension is
+database-scoped: it runs in its own transaction under the database-wide lock described under
+[PostgreSQL](#postgresql), so a concurrent deploy migrating another schema of the same database cannot
+lose the race and abort its whole migration. Only the Postgres driver implements it — MySQL and SQLite
+throw, since neither has extensions.
 
 ## CLI
 

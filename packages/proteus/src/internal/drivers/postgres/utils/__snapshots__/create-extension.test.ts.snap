@@ -1,0 +1,32 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createExtensionLocked — lock keys > should use a key1 outside the namespace lock space 1`] = `
+{
+  "key1": 1346848088,
+  "key2": 1398361667,
+}
+`;
+
+exports[`createExtensionLocked — success > should create the extension in its own transaction under the xact lock 1`] = `
+[
+  {
+    "params": undefined,
+    "sql": "BEGIN",
+  },
+  {
+    "params": [
+      1346848088,
+      1398361667,
+    ],
+    "sql": "SELECT pg_advisory_xact_lock($1, $2)",
+  },
+  {
+    "params": undefined,
+    "sql": "CREATE EXTENSION IF NOT EXISTS "pg_trgm";",
+  },
+  {
+    "params": undefined,
+    "sql": "COMMIT",
+  },
+]
+`;

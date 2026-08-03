@@ -43,6 +43,15 @@ const createRunner = (client: MysqlQueryClient): MigrationQueryRunner => ({
   query: async (sql, params): Promise<void> => {
     await client.query(sql, params);
   },
+  extension: async (name): Promise<void> => {
+    throw new MySqlMigrationError(`MySQL cannot create the extension "${name}"`, {
+      code: "migration_unsupported_operation",
+      title: "Migration Operation Not Supported",
+      details:
+        "`runner.extension()` installs a PostgreSQL database extension. MySQL has no equivalent concept, so a migration calling it cannot be applied on this driver — the migration was generated for postgres.",
+      data: { extension: name },
+    });
+  },
 });
 
 /**

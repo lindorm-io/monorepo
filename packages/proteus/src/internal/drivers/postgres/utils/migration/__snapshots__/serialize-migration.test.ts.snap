@@ -60,6 +60,83 @@ export class Generated20260220090000 implements MigrationInterface {
 "
 `;
 
+exports[`serializeMigration — extension operations > should checksum the extension SQL, not the emitted call 1`] = `"B3oyzBNu7MkFJWG0qPPVkoMW7Q5YJswij2LTGjKMrkY"`;
+
+exports[`serializeMigration — extension operations > should emit extensions before autocommit ops with no transaction block 1`] = `
+"import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
+
+export class Generated20260220090000 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+
+  public async up(runner: MigrationQueryRunner): Promise<void> {
+    // Create extension "pg_trgm"
+    await runner.extension("pg_trgm");
+
+    // Add value 'admin' to enum "app"."enum_role"
+    await runner.query(\`ALTER TYPE "app"."enum_role" ADD VALUE IF NOT EXISTS 'admin';\`);
+  }
+
+  public async down(runner: MigrationQueryRunner): Promise<void> {
+    // WARN: irreversible — Create extension "pg_trgm"
+
+    // WARN: irreversible — Add value 'admin' to enum "app"."enum_role"
+  }
+}
+"
+`;
+
+exports[`serializeMigration — extension operations > should emit extensions before the transaction block 1`] = `
+"import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
+
+export class Init implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+
+  public async up(runner: MigrationQueryRunner): Promise<void> {
+    // Create extension "pg_trgm"
+    await runner.extension("pg_trgm");
+
+    await runner.transaction(async (ctx) => {
+      // Create table "app"."users"
+      await ctx.query(\`CREATE TABLE "app"."users" ("id" UUID NOT NULL);\`);
+      // Create index "idx_users_name" on "app"."users"
+      await ctx.query(\`CREATE INDEX "idx_users_name" ON "app"."users" USING gin ("name" gin_trgm_ops);\`);
+    });
+  }
+
+  public async down(runner: MigrationQueryRunner): Promise<void> {
+    // WARN: irreversible — Create extension "pg_trgm"
+
+    // WARN: irreversible — Create table "app"."users"
+
+    await runner.transaction(async (ctx) => {
+      await ctx.query(\`DROP INDEX IF EXISTS "app"."idx_users_name";\`);
+    });
+  }
+}
+"
+`;
+
+exports[`serializeMigration — extension operations > should emit runner.extension outside any transaction 1`] = `
+"import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
+
+export class Generated20260220090000 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+
+  public async up(runner: MigrationQueryRunner): Promise<void> {
+    // Create extension "pg_trgm"
+    await runner.extension("pg_trgm");
+  }
+
+  public async down(runner: MigrationQueryRunner): Promise<void> {
+    // WARN: irreversible — Create extension "pg_trgm"
+  }
+}
+"
+`;
+
 exports[`serializeMigration — irreversible ops > should emit warning comments for irreversible down operations 1`] = `
 "import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
 

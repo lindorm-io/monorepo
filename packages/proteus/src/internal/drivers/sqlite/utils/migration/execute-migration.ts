@@ -50,6 +50,15 @@ const createRunner = (client: SqliteQueryClient): MigrationQueryRunner => ({
       client.exec(sql);
     }
   },
+  extension: async (name): Promise<void> => {
+    throw new SqliteMigrationError(`SQLite cannot create the extension "${name}"`, {
+      code: "migration_unsupported_operation",
+      title: "Migration Operation Not Supported",
+      details:
+        "`runner.extension()` installs a PostgreSQL database extension. SQLite has no equivalent concept, so a migration calling it cannot be applied on this driver — the migration was generated for postgres.",
+      data: { extension: name },
+    });
+  },
 });
 
 export const executeMigrationUp = async (

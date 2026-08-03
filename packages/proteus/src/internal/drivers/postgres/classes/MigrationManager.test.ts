@@ -345,6 +345,7 @@ describe("MigrationManager", () => {
         loaded[1].migration,
         { name: "20260221090000-second" },
         undefined,
+        mockLogger,
       );
       expect(result.applied).toHaveLength(1);
     });

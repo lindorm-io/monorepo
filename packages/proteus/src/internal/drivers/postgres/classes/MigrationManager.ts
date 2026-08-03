@@ -153,6 +153,7 @@ export class MigrationManager implements IMigrationManager {
             entry.migration,
             { name: entry.name, checksum },
             this.tableOptions,
+            this.logger,
           );
           results.push(r);
         }
@@ -257,6 +258,7 @@ export class MigrationManager implements IMigrationManager {
             entry.migration,
             { name: entry.name },
             this.tableOptions,
+            this.logger,
           );
           results.push(r);
         }

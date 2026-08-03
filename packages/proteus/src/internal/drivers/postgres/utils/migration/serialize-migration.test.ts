@@ -244,6 +244,135 @@ describe("serializeMigration — irreversible ops", () => {
   });
 });
 
+// --- Extension operations ---
+
+/**
+ * `CREATE EXTENSION IF NOT EXISTS` is not atomic and an extension is
+ * database-scoped, so it must not ride in the migration transaction: a
+ * concurrent deploy against another schema of the same database would abort the
+ * loser's transaction and take every unrelated statement with it. The generated
+ * file therefore calls `runner.extension()` before the transaction block.
+ */
+describe("serializeMigration — extension operations", () => {
+  const makeExtensionOp = (extension = "pg_trgm"): SyncOperation =>
+    makeOp({
+      type: "create_extension",
+      schema: null,
+      table: null,
+      description: `Create extension "${extension}"`,
+      sql: `CREATE EXTENSION IF NOT EXISTS "${extension}";`,
+      extension,
+    });
+
+  it("should emit runner.extension outside any transaction", () => {
+    const result = serializeMigration(makePlan([makeExtensionOp()]), emptySnapshot, {
+      timestamp: fixedDate,
+    });
+    expect(result.content).toContain('await runner.extension("pg_trgm");');
+    expect(result.content).not.toContain("CREATE EXTENSION");
+    expect(result.content).toMatchSnapshot();
+  });
+
+  it("should not claim all transactional operations are irreversible", () => {
+    // The extension is the ONLY op — there are no transactional ops to speak of
+    const result = serializeMigration(makePlan([makeExtensionOp()]), emptySnapshot, {
+      timestamp: fixedDate,
+    });
+    expect(result.content).not.toContain(
+      "all transactional operations in up() are irreversible",
+    );
+  });
+
+  it("should emit extensions before the transaction block", () => {
+    const plan = makePlan([
+      makeExtensionOp(),
+      makeOp({
+        type: "create_table",
+        description: 'Create table "app"."users"',
+        sql: 'CREATE TABLE "app"."users" ("id" UUID NOT NULL);',
+      }),
+      makeOp({
+        type: "create_index",
+        description: 'Create index "idx_users_name" on "app"."users"',
+        sql: 'CREATE INDEX "idx_users_name" ON "app"."users" USING gin ("name" gin_trgm_ops);',
+      }),
+    ]);
+    const result = serializeMigration(plan, emptySnapshot, {
+      timestamp: fixedDate,
+      name: "init",
+    });
+    expect(result.content.indexOf("runner.extension")).toBeLessThan(
+      result.content.indexOf("runner.transaction"),
+    );
+    expect(result.content).toMatchSnapshot();
+  });
+
+  it("should keep the irreversible note truthful when tx ops exist alongside", () => {
+    const plan = makePlan([
+      makeExtensionOp(),
+      makeOp({
+        type: "create_table",
+        description: 'Create table "app"."users"',
+        sql: 'CREATE TABLE "app"."users" ("id" UUID NOT NULL);',
+      }),
+    ]);
+    const result = serializeMigration(plan, emptySnapshot, { timestamp: fixedDate });
+    // create_table IS a transactional op and IS irreversible, so the note belongs
+    expect(result.content).toContain(
+      "all transactional operations in up() are irreversible",
+    );
+  });
+
+  it("should emit extensions before autocommit ops with no transaction block", () => {
+    const plan = makePlan([
+      makeExtensionOp(),
+      makeOp({
+        type: "add_enum_value",
+        table: null,
+        description: 'Add value \'admin\' to enum "app"."enum_role"',
+        sql: `ALTER TYPE "app"."enum_role" ADD VALUE IF NOT EXISTS 'admin';`,
+        autocommit: true,
+      }),
+    ]);
+    const result = serializeMigration(plan, emptySnapshot, { timestamp: fixedDate });
+    expect(result.content).not.toContain("runner.transaction");
+    expect(result.content).toMatchSnapshot();
+  });
+
+  it("should escape the extension name into a JS string literal", () => {
+    const result = serializeMigration(
+      makePlan([makeExtensionOp('weird"name')]),
+      emptySnapshot,
+      { timestamp: fixedDate },
+    );
+    expect(result.content).toContain('await runner.extension("weird\\"name");');
+  });
+
+  it("should throw when a create_extension op carries no extension name", () => {
+    const plan = makePlan([
+      makeOp({
+        type: "create_extension",
+        schema: null,
+        table: null,
+        description: "Create extension",
+        sql: "CREATE EXTENSION IF NOT EXISTS;",
+      }),
+    ]);
+    expect(() =>
+      serializeMigration(plan, emptySnapshot, { timestamp: fixedDate }),
+    ).toThrow("Cannot serialize a create_extension operation without an extension name");
+  });
+
+  it("should checksum the extension SQL, not the emitted call", () => {
+    // The checksum hashes `op.sql`, so moving the op out of the transaction
+    // block leaves already-generated checksums alone.
+    const result = serializeMigration(makePlan([makeExtensionOp()]), emptySnapshot, {
+      timestamp: fixedDate,
+    });
+    expect(result.checksum).toMatchSnapshot();
+  });
+});
+
 // --- warn_only filtering ---
 
 describe("serializeMigration — warn_only", () => {
