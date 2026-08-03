@@ -518,8 +518,12 @@ const compileJoinedUpdateManySubquery = <E extends IEntity>(
 };
 
 /**
- * Coerce a write value via the driver's coercion and apply field-level
+ * Apply `transform.to()`, the driver's write coercion, and field-level
  * encryption when configured.
+ *
+ * The transform runs FIRST, matching dehydrateEntity and compile-partial-update.
+ * updateMany used to skip it entirely, so a transformed column was written raw
+ * while every read still applied `transform.from()` — an asymmetric round-trip.
  */
 const coerceAndEncrypt = (
   value: unknown,
@@ -528,7 +532,10 @@ const coerceAndEncrypt = (
   deps: CompileUpdateDeps,
   amphora?: IAmphora,
 ): unknown => {
-  let coerced = deps.coerceWriteValue(value, field);
+  const transformed =
+    value != null && field.transform ? field.transform.to(value) : value;
+
+  let coerced = deps.coerceWriteValue(transformed, field);
   if (coerced != null && field.encrypted && amphora) {
     coerced = encryptFieldValue(
       coerced,

@@ -1039,7 +1039,9 @@ describe("CachingRepository", () => {
   // ─── Serialization ───────────────────────────────────────────────────────────
 
   describe("serialization", () => {
-    it("should NOT apply field.transform.to() when serializing — stores entity-side values directly", async () => {
+    // The replay path runs defaultHydrateEntity, which applies transform.from().
+    // Caching the entity-side value made a cache hit transform it a second time.
+    it("should apply field.transform.to() when serializing — the cache holds row-side values", async () => {
       const transformTo = vi.fn().mockReturnValue("transformed");
       const metadata = makeBaseMetadata({
         fields: [
@@ -1073,11 +1075,51 @@ describe("CachingRepository", () => {
 
       await repo.find({ name: "Entity A" });
 
-      expect(transformTo).not.toHaveBeenCalled();
-      // Verify the raw entity value is stored, not a transformed one
+      expect(transformTo).toHaveBeenCalledWith("Entity A");
+      // The cached value is row-side, so hydration's transform.from() lands back
+      // on the entity-side value instead of transforming it a second time.
       const setCall = (adapter.set as Mock).mock.calls[0];
       const serialized = JSON.parse(setCall[1]);
-      expect(serialized[0].name).toBe("Entity A");
+      expect(serialized[0].name).toBe("transformed");
+    });
+
+    it("should not call field.transform.to() for a null value when serializing", async () => {
+      const transformTo = vi.fn().mockReturnValue("transformed");
+      const metadata = makeBaseMetadata({
+        fields: [
+          {
+            key: "name",
+            decorator: "Field",
+            arrayType: null,
+            collation: null,
+            comment: null,
+            computed: null,
+            enum: null,
+            default: null,
+            hideOn: [],
+            max: null,
+            min: null,
+            name: "name",
+            nullable: true,
+
+            precision: null,
+            readonly: [],
+            scale: null,
+            schema: null,
+            transform: { to: transformTo, from: vi.fn() },
+            type: "string",
+          },
+        ] as any,
+      });
+      const { repo, inner, adapter } = createRepo({ metadata });
+      inner.find.mockResolvedValue([{ ...entityA, name: null } as any]);
+      adapter.get.mockResolvedValue(null);
+
+      await repo.find({ name: null } as any);
+
+      expect(transformTo).not.toHaveBeenCalled();
+      const setCall = (adapter.set as Mock).mock.calls[0];
+      expect(JSON.parse(setCall[1])[0].name).toBeNull();
     });
 
     it("should run AfterLoad hooks on deserialized entities from cache", async () => {

@@ -240,13 +240,13 @@ exports[`deserializeHash > structured types > should deserialize object from JSO
 }
 `;
 
-exports[`deserializeHash > transform > should apply transform.from() when value is non-null 1`] = `
+exports[`deserializeHash > transform > should NOT apply transform.from() — defaultHydrateEntity owns it 1`] = `
 {
-  "data": "transformed:raw",
+  "data": "raw",
 }
 `;
 
-exports[`deserializeHash > transform > should not apply transform when value is null (absent) 1`] = `
+exports[`deserializeHash > transform > should return null for an absent transformed field 1`] = `
 {
   "data": null,
 }

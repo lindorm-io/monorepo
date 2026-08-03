@@ -1660,6 +1660,52 @@ describe("RedisExecutor", () => {
 
       expect(updatePipeline.hdel).toHaveBeenCalledWith("entity:test_entity:1", "score");
     });
+
+    // A partial update must store a structured value the same way serializeHash
+    // does; the hand-rolled `String(value)` here flattened it to "[object Object]".
+    test("should store a plain json value as JSON, not [object Object]", async () => {
+      const jsonMetadata = {
+        ...baseMetadata,
+        fields: [...baseFields, makeField("payload", "json")],
+      } as unknown as EntityMetadata;
+      const jsonExecutor = new RedisExecutor<TestEntity>(
+        jsonMetadata,
+        redis.client,
+        null,
+      );
+
+      mockedScanEntityKeys.mockResolvedValueOnce(["entity:test_entity:1"]);
+      redis.mockPipeline._setExecResults([
+        [
+          null,
+          {
+            id: "1",
+            name: "match",
+            version: "1",
+            score: "10",
+            createdAt: "2025-01-01",
+            updatedAt: "2025-01-01",
+          },
+        ],
+      ]);
+
+      const updatePipeline = createMockPipeline();
+      updatePipeline._setExecResults([[null, 1]]);
+      redis.client.pipeline
+        .mockReturnValueOnce(redis.mockPipeline)
+        .mockReturnValueOnce(updatePipeline);
+
+      await jsonExecutor.executeUpdateMany(
+        { name: "match" } as any,
+        {
+          payload: { a: 1, nested: { b: 2 } },
+        } as any,
+      );
+
+      expect(updatePipeline.hset).toHaveBeenCalledWith("entity:test_entity:1", {
+        payload: '{"a":1,"nested":{"b":2}}',
+      });
+    });
   });
 
   // ─── Pipeline error handling ────────────────────────────────────────

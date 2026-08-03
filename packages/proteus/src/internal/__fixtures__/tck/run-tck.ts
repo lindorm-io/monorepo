@@ -52,6 +52,7 @@ import {
 } from "./inheritance.tck.js";
 import { complexPredicatesSuite } from "./complex-predicates.tck.js";
 import { typedJsonSuite } from "./typed-json.tck.js";
+import { transformSuite } from "./transform.tck.js";
 import { encryptionSuite } from "./encryption.tck.js";
 import { typeCoercionSuite } from "./type-coercion.tck.js";
 import { arrayTypeSuite } from "./array-type.tck.js";
@@ -139,6 +140,7 @@ const runTckForNaming = (
     entities.TckJsonHolder,
     entities.TckTypedJson,
     entities.TckWithAddress,
+    entities.TckTransformed,
     entities.TckTypeHolder,
     entities.TckArrayTypes,
     entities.TckRenamedColumns,
@@ -211,6 +213,7 @@ const runTckForNaming = (
   complexPredicatesSuite(getHandle, entities);
   arrayTypeSuite(getHandle, entities);
   renamedColumnsSuite(getHandle, entities);
+  transformSuite(getHandle, entities);
 
   // Capability-gated suites
   maybeDescribe(caps.softDelete, "softDelete", () =>

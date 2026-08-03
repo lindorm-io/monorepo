@@ -559,9 +559,15 @@ export class CachingRepository<
 
       const data: Record<string, unknown> = {};
       for (const field of effectiveMetadata.fields) {
-        // Store entity-side values directly — defaultHydrateEntity handles
-        // deserialise() + transform.from() on the replay path.
-        data[field.key] = (entity as any)[field.key];
+        // The replay path runs defaultHydrateEntity, which expects a ROW-side
+        // dict: it applies deserialise() and transform.from(). So a transformed
+        // field must be cached in its row-side form — caching the entity-side
+        // value (already through transform.from) made a cache hit apply the
+        // transform a second time. Encryption stays plaintext on purpose:
+        // deserializeEntities hydrates without an amphora, so nothing decrypts.
+        const value = (entity as any)[field.key];
+        data[field.key] =
+          value != null && field.transform ? field.transform.to(value) : value;
       }
       // Serialize FK join-key columns from owning relations
       for (const relation of effectiveMetadata.relations) {

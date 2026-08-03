@@ -8,7 +8,7 @@ import { getSnapshot } from "../../entity/utils/snapshot-store.js";
 
 export const queriesSuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
   describe("Queries", () => {
-    const { TckSimpleUser } = entities;
+    const { TckSimpleUser, TckJsonHolder } = entities;
 
     beforeEach(async () => {
       await getHandle().clear();
@@ -240,6 +240,33 @@ export const queriesSuite = (getHandle: () => TckDriverHandle, entities: TckEnti
       await expect(
         repo.updateMany({ name: "Nobody" }, { age: 99 }),
       ).resolves.not.toThrow();
+    });
+
+    // A partial update must store a structured value the same way a full write
+    // does. Redis hand-rolled `String(value)` here, which flattened json/object/
+    // array columns to "[object Object]" — silent data corruption on updateMany.
+    test("updateMany preserves plain json / object / array column values", async () => {
+      const repo = getHandle().repository(TckJsonHolder);
+
+      const inserted = await repo.insert({
+        metadata: { a: 1 },
+        settings: { theme: "dark", count: 1 },
+        payload: { items: ["one"], count: 1 },
+      });
+
+      await repo.updateMany(
+        { id: inserted.id },
+        {
+          metadata: { a: 2, nested: { deep: true } },
+          settings: { theme: "light", count: 7 },
+          payload: { items: ["two", "three"], count: 2 },
+        },
+      );
+
+      const found = await repo.findOneOrFail({ id: inserted.id });
+      expect(found.metadata).toEqual({ a: 2, nested: { deep: true } });
+      expect(found.settings).toEqual({ theme: "light", count: 7 });
+      expect(found.payload).toEqual({ items: ["two", "three"], count: 2 });
     });
 
     // ─── P1-F03: WHERE clause with null criteria value ──────────────────────────

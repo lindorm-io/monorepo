@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`coerceHashValue > should serialize a bigint array element without throwing 1`] = `"["1","2"]"`;

@@ -24,6 +24,7 @@ import { applyOrdering } from "../../../utils/query/apply-ordering.js";
 import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug.js";
 import { buildEntityKey, buildEntityKeyFromRow } from "../utils/build-entity-key.js";
 import { buildScanPattern } from "../utils/build-scan-pattern.js";
+import { coerceHashValue } from "../utils/coerce-hash-value.js";
 import { dehydrateToRow } from "../utils/dehydrate-entity.js";
 // deserializeHash parses array/json/object fields from JSON strings to native JS
 // types via JSON.parse (see coerceFromString). This happens BEFORE any criteria
@@ -746,7 +747,10 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
           continue;
         }
 
-        updateHash[fieldKey] = String(transformed);
+        // Same coercion the full-row write uses — `String(transformed)` flattened
+        // a plain json/object/array value to "[object Object]" and utf8-mangled a
+        // Buffer, so an updateMany corrupted what insert/update stored correctly.
+        updateHash[fieldKey] = coerceHashValue(transformed, field ?? null);
       }
       if (Object.keys(updateHash).length > 0) {
         pipeline.hset(key, updateHash);

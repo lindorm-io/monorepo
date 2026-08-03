@@ -24,6 +24,7 @@ import { resolveFilters } from "../../../utils/query/resolve-filters.js";
 import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides.js";
 import { buildEntityKey, buildEntityKeyFromRow } from "../utils/build-entity-key.js";
 import { buildScanPattern } from "../utils/build-scan-pattern.js";
+import { coerceHashValue } from "../utils/coerce-hash-value.js";
 // deserializeHash parses array/json/object fields from JSON strings to native JS
 // types via JSON.parse before criteria matching — complex predicates ($all, $has,
 // $overlap etc.) work correctly on deserialized values.
@@ -909,7 +910,10 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
             this.metadata.entity.name,
           );
         }
-        updateHash[fieldKey] = String(transformed);
+        // Same coercion the full-row write uses — `String(transformed)` flattened
+        // a plain json/object/array value to "[object Object]" and utf8-mangled a
+        // Buffer, so a builder update corrupted what insert/update stored correctly.
+        updateHash[fieldKey] = coerceHashValue(transformed, field ?? null);
       }
       if (Object.keys(updateHash).length > 0) {
         updatePipeline.hset(key, updateHash);

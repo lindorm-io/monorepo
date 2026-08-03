@@ -1002,6 +1002,45 @@ export const createTckEntities = (hookCallback: Mock) => {
     address!: TckAddress | null;
   }
 
+  // ─── Transform Round-Trip Entity ──────────────────────────────────
+  // Every transform here is NON-IDEMPOTENT on purpose: applying `to` or `from`
+  // twice lands on a DIFFERENT value. An idempotent pair (upper/lower, as used
+  // by TckEncrypted below) cannot detect a layer that applies the transform a
+  // second time — which is exactly how the redis read path applied it in both
+  // `deserializeHash` AND `defaultHydrateEntity` unnoticed.
+  @Entity({ name: "TckTransformed" })
+  class TckTransformed {
+    @PrimaryKeyField()
+    @Generated("uuid")
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    label!: string;
+
+    @Transform({
+      to: (value: unknown) => `${value as string}#`,
+      from: (raw: unknown) => (raw as string).slice(0, -1),
+    })
+    @Field("string")
+    suffixed!: string;
+
+    @Transform({
+      to: (value: unknown) => (value as number) * 2,
+      from: (raw: unknown) => (raw as number) / 2,
+    })
+    @Field("integer")
+    halved!: number;
+  }
+
   // ─── Encryption Test Entities ──────────────────────────────────────
   const toUpperCase = (value: unknown) => (value as string).toUpperCase();
   const toLowerCase = (raw: unknown) => (raw as string).toLowerCase();
@@ -1528,6 +1567,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckTypedJson,
     TckAddress,
     TckWithAddress,
+    TckTransformed,
     TckEncrypted,
     TckStagedEncrypted,
     TckElDefault,

@@ -171,33 +171,26 @@ describe("deserializeHash", () => {
   });
 
   describe("transform", () => {
-    test("should apply transform.from() when value is non-null", () => {
-      const fields = [
-        makeField({
-          key: "data",
-          type: "string",
-          transform: {
-            to: (v: unknown) => v,
-            from: (v: unknown) => `transformed:${v}`,
-          },
-        }),
-      ];
-      expect(deserializeHash({ data: "raw" }, fields, [])).toMatchSnapshot();
+    // defaultHydrateEntity owns transform.from() for EVERY driver. Applying it
+    // here too transformed a redis value twice — once in this deserialiser and
+    // once in the shared hydrator.
+    const transformed = () => [
+      makeField({
+        key: "data",
+        type: "string",
+        transform: {
+          to: (v: unknown) => v,
+          from: (v: unknown) => `transformed:${v}`,
+        },
+      }),
+    ];
+
+    test("should NOT apply transform.from() — defaultHydrateEntity owns it", () => {
+      expect(deserializeHash({ data: "raw" }, transformed(), [])).toMatchSnapshot();
     });
 
-    test("should not apply transform when value is null (absent)", () => {
-      const fields = [
-        makeField({
-          key: "data",
-          type: "string",
-          transform: {
-            to: (v: unknown) => v,
-            from: (v: unknown) => `transformed:${v}`,
-          },
-        }),
-      ];
-      // key absent → null, no transform
-      expect(deserializeHash({ other: "val" }, fields, [])).toMatchSnapshot();
+    test("should return null for an absent transformed field", () => {
+      expect(deserializeHash({ other: "val" }, transformed(), [])).toMatchSnapshot();
     });
   });
 

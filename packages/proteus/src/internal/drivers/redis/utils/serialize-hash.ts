@@ -1,8 +1,8 @@
-import { isBuffer, isString } from "@lindorm/is";
+import { isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { MetaField, MetaRelation } from "../../../entity/types/metadata.js";
-import { stringifyForStorage } from "../../../entity/utils/stringify-for-storage.js";
 import { typedJsonMetaDictKey } from "../../../entity/utils/typed-json.js";
+import { coerceHashValue } from "./coerce-hash-value.js";
 
 /**
  * Serialize an entity row Dict into Redis HASH fields (Record<string, string>).
@@ -12,7 +12,8 @@ import { typedJsonMetaDictKey } from "../../../entity/utils/typed-json.js";
  * - @Computed fields are skipped
  * - Embedded fields use `field.embedded.parentKey` prefix to read nested values
  * - FK columns from owning relations are serialized alongside regular fields
- * - All values are coerced to string representation
+ * - All values are coerced to string representation via `coerceHashValue`, the
+ *   same coercion the partial-update paths use
  * - A @TypedJson field additionally emits its sidecar hash field, keyed by
  *   `typedJsonMetaDictKey` so read-back needs no name mapping
  */
@@ -32,17 +33,10 @@ export const serializeHash = (
 
     if (value == null) continue;
 
-    // Encrypted fields are already string ciphertext after dehydrateToRow —
-    // skip coerceToString which would JSON.stringify string values for json/array/object types.
-    if (field.encrypted && typeof value === "string") {
-      result[field.key] = value;
-      continue;
-    }
-
-    result[field.key] = coerceToString(value, field.type);
+    result[field.key] = coerceHashValue(value, field);
 
     // The sidecar is already a JSON string produced by splitTypedJson — write it
-    // verbatim, since coerceToString would stringify the string a second time.
+    // verbatim, since coerceHashValue would stringify the string a second time.
     if (field.typedJson) {
       const meta = row[typedJsonMetaDictKey(field.key)];
       if (isString(meta)) {
@@ -68,30 +62,4 @@ export const serializeHash = (
   }
 
   return result;
-};
-
-const coerceToString = (value: unknown, type: string | null): string => {
-  // A Redis hash value is read back as a UTF-8 string, so raw bytes cannot be
-  // stored verbatim — they are base64-encoded. NOT the `{"type":"Buffer",
-  // "data":[…]}` shape a plain stringify emits: that string cannot be decoded
-  // back into the original bytes, so binary columns round-tripped to garbage.
-  if (type === "binary" && isBuffer(value)) return value.toString("base64");
-
-  if (typeof value === "boolean") return value ? "true" : "false";
-  if (value instanceof Date) return value.toISOString();
-  if (typeof value === "bigint") return String(value);
-  if (typeof value === "number") return String(value);
-
-  // Bigint-hardened stringify: a typed bigint array (@Field("array", { arrayType:
-  // "bigint" })) stores each element as a decimal string rather than throwing;
-  // deserialise restores the exact BigInt on read.
-  if (type === "array" || type === "json" || type === "object") {
-    return stringifyForStorage(value);
-  }
-
-  if (Array.isArray(value) || (typeof value === "object" && value !== null)) {
-    return stringifyForStorage(value);
-  }
-
-  return String(value);
 };

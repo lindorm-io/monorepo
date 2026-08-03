@@ -15,7 +15,8 @@ import { RedisDriverError } from "../errors/RedisDriverError.js";
  * - Empty hash `{}` returns null (key did not exist or was deleted)
  * - Absent key in hash maps to null in output
  * - Type dispatch reverses the serialization from serializeHash
- * - Applies `field.transform.from()` if present
+ * - `field.transform.from()` is NOT applied here — `defaultHydrateEntity` owns it
+ *   for every driver, so applying it here too transformed the value twice
  * - FK columns from owning relations are deserialized alongside regular fields
  * - A @TypedJson sidecar hash field is carried through raw for
  *   `defaultHydrateEntity` to rejoin with the data half
@@ -38,25 +39,14 @@ export const deserializeHash = (
     handledKeys.add(field.key);
 
     // Encrypted fields: pass ciphertext through as-is — defaultHydrateEntity
-    // handles decryption and transform.from() uniformly for all drivers.
+    // handles decryption uniformly for all drivers.
     if (field.encrypted) {
       result[field.key] = raw === undefined ? null : raw;
       continue;
     }
 
-    let value: unknown;
-
-    if (raw === undefined) {
-      value = null;
-    } else {
-      value = coerceFromString(raw, field.type, field.mode);
-    }
-
-    if (value != null && field.transform) {
-      value = field.transform.from(value);
-    }
-
-    result[field.key] = value;
+    result[field.key] =
+      raw === undefined ? null : coerceFromString(raw, field.type, field.mode);
 
     if (field.typedJson) {
       const rawMeta = hash[typedJsonMetaDictKey(field.key)];

@@ -80,6 +80,31 @@ const joinedChildMetadata = {
   primaryKeys: ["id"],
 } as unknown as EntityMetadata;
 
+// A non-idempotent transform on the column each updateMany test writes, so a
+// missing (or doubled) transform.to() is visible in the compiled params.
+const exclaim = {
+  to: (value: unknown) => `${value as string}!`,
+  from: (raw: unknown) => (raw as string).slice(0, -1),
+};
+
+const transformedMetadata = {
+  ...metadata,
+  fields: [
+    makeField("id", { type: "uuid" }),
+    makeField("name", { type: "string", transform: exclaim }),
+    makeField("version", { type: "integer", decorator: "Version" }),
+  ],
+} as unknown as EntityMetadata;
+
+const transformedJoinedChildMetadata = {
+  ...joinedChildMetadata,
+  fields: [
+    makeField("id", { type: "uuid" }),
+    makeField("name", { type: "string" }),
+    makeField("breed", { type: "string", transform: exclaim }),
+  ],
+} as unknown as EntityMetadata;
+
 const makeJoinedCtx = (dialect: SqlDialect): JoinedChildUpdateContext => ({
   joinConditions: [
     `${dialect.quoteIdentifier("t1")}.${dialect.quoteIdentifier("id")} = ${dialect.quoteIdentifier("t0")}.${dialect.quoteIdentifier("id")}`,
@@ -158,5 +183,30 @@ describe.each(dialects)("compileUpdateMany [%s]", (_name, dialect) => {
       "app",
     );
     expect(result).toMatchSnapshot();
+  });
+
+  // updateMany skipped transform.to() entirely, so a transformed column was
+  // written raw while every read still applied transform.from().
+  test("should apply transform.to on the bulk-update SET value", () => {
+    const result = compileUpdateMany(
+      { name: "Alice" } as any,
+      { name: "Bob" } as any,
+      transformedMetadata,
+      dialect,
+      makeDeps(dialect),
+    );
+    expect(result.params).toContain("Bob!");
+  });
+
+  test("should apply transform.to on a joined-inheritance SET value", () => {
+    const result = compileUpdateMany(
+      { name: "Rex" } as any,
+      { breed: "Beagle" } as any,
+      transformedJoinedChildMetadata,
+      dialect,
+      makeDeps(dialect, makeJoinedCtx(dialect)),
+      "app",
+    );
+    expect(result.params).toContain("Beagle!");
   });
 });
