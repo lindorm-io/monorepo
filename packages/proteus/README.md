@@ -2628,7 +2628,27 @@ import {
 } from "@lindorm/proteus/mocks/jest";
 ```
 
-Each factory resolves to a `Mocked<...>` (vitest) or `jest.Mocked<...>` (jest) implementation of the corresponding interface. Construction settings are `Partial<Pick<ProteusSourceSettingsBase, "entities" | "logger" | "namespace">>` — pass decorated entity classes (or glob directories) in `entities`; `driver` is fixed to `"memory"`.
+Each factory resolves to a `Mocked<...>` (vitest) or `jest.Mocked<...>` (jest) implementation of the corresponding interface. Construction settings are every real `ProteusSource` option except `driver` (fixed to `"memory"`) and `breaker` (the memory driver has no network I/O): `amphora`, `cache`, `encryption`, `entities`, `logger`, `meta`, `naming`, `namespace`.
+
+### Encrypted entities
+
+`@Encrypted` fields are sealed for real in the mocks — real key, real ciphertext in the store, decrypted again on read. Pass **no** `amphora` and the mock mints its own: a live `Amphora` holding a fresh AES KEK, plus the source-level `encryption` selector that names it. An encrypted entity therefore works untouched:
+
+```typescript
+const repo = await createMockRepository(Client);
+
+const client = await repo.insert({ secretEncrypted: "s3cr3t" });
+await repo.findOneOrFail({ id: client.id }); // → { secretEncrypted: "s3cr3t", ... }
+```
+
+Pass your own `amphora` and the key policy is yours verbatim — the minted default steps aside entirely, including its `encryption`, so a bare `@Encrypted()` field that names no key fails at source load exactly as in production:
+
+```typescript
+const repo = await createMockRepository(Client, {
+  amphora,
+  encryption: { condition: { purpose: "app:kek" } },
+});
+```
 
 ### Seeding rows
 

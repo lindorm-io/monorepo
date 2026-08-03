@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { MemoryCacheAdapter } from "../classes/MemoryCacheAdapter.js";
+import { BeforeInsert } from "../decorators/BeforeInsert.js";
 import { Entity } from "../decorators/Entity.js";
 import { Field } from "../decorators/Field.js";
 import { Generated } from "../decorators/Generated.js";
@@ -15,6 +17,14 @@ class Album {
   @PrimaryKeyField() @Generated("string") id!: string;
 
   @Field("string") artistId!: string;
+}
+
+const hookMeta = vi.fn();
+
+@Entity({ name: "SourceMockAudited" })
+@BeforeInsert(hookMeta)
+class Audited {
+  @PrimaryKeyField() @Generated("string") id!: string;
 }
 
 describe("createMockProteusSource", () => {
@@ -108,5 +118,52 @@ describe("createMockProteusSource", () => {
     // And through a session — the store flows down (shared driver store).
     const repo = source.session().repository(Album);
     expect(await repo.count({ artistId: "art_2" } as any)).toBe(1);
+  });
+
+  // The mock settings are the real source settings minus `driver` and `breaker`;
+  // anything short of that is a consumer whose app wiring cannot be reproduced
+  // in a test at all.
+  describe("settings pass-through", () => {
+    it("should apply the naming strategy to column names", async () => {
+      const source = await createMockProteusSource({
+        entities: [Album],
+        naming: "snake",
+      });
+
+      const [metadata] = source.getEntityMetadata();
+      const field = metadata.fields.find((f) => f.key === "artistId");
+
+      expect(field?.name).toBe("artist_id");
+    });
+
+    it("should route cached queries through the supplied cache adapter", async () => {
+      const adapter = new MemoryCacheAdapter();
+      const setSpy = vi.spyOn(adapter, "set");
+
+      const source = await createMockProteusSource({
+        entities: [Album],
+        cache: { adapter, ttl: "1 minute" },
+      });
+
+      await source.repository(Album).insert({ id: "alb_1", artistId: "art_1" } as any);
+      await source
+        .repository(Album)
+        .find({ artistId: "art_1" } as any, { cache: true } as any);
+
+      expect(setSpy).toHaveBeenCalled();
+    });
+
+    it("should thread the hook meta into entity hooks", async () => {
+      const meta = {
+        correlationId: "cor_1",
+        actor: "act_1",
+        timestamp: new Date("2026-08-03T00:00:00.000Z"),
+      };
+      const source = await createMockProteusSource({ entities: [Audited], meta });
+
+      await source.repository(Audited).insert({} as any);
+
+      expect(hookMeta).toHaveBeenCalledWith(expect.any(Object), meta);
+    });
   });
 });

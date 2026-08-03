@@ -9,6 +9,7 @@ import type {
   IProteusSource,
 } from "../interfaces/index.js";
 import type { CreateMockProteusSettings } from "./create-mock-proteus-settings.js";
+import { createMockProteusVault } from "./create-mock-proteus-vault.js";
 
 type MockFn = () => any;
 type AnyRepo = IProteusRepository<any>;
@@ -80,10 +81,22 @@ export const createMemoryBackend = async (
 ) => {
   const logger = settings?.logger ?? createLogger();
 
+  // Encryption is REAL here — an @Encrypted column is sealed in the store and
+  // opened again on read — so a vault is not optional. Minted only when the test
+  // brings no `amphora`; its `encryption` selector then fills in only when the
+  // test names no key of its own, so an injected `encryption: { kryptos }` still
+  // gets the amphora instance the source demands.
+  const vault = settings?.amphora ? null : createMockProteusVault(logger);
+
   const source = new ProteusSource({
     driver: "memory",
     logger,
+    amphora: settings?.amphora ?? vault?.amphora,
+    cache: settings?.cache,
+    encryption: settings?.encryption ?? vault?.encryption,
     entities: settings?.entities,
+    meta: settings?.meta,
+    naming: settings?.naming,
     namespace: settings?.namespace,
   });
 
