@@ -1,11 +1,15 @@
-import type { MetaField, MetaFieldType } from "../../entity/types/metadata.js";
+import type { MetaField, MetaFieldType } from "../types/metadata.js";
 
 /**
  * Synthetic `MetaField` for a primitive embedded-list element — the single
  * "value" column of a collection table. One canonical literal shared by all
- * SQL dialects (previously pasted into each driver's projection).
+ * SQL dialects (previously pasted into each driver's projection), and by the
+ * write path, so the element goes through the same dehydrate pipeline as any
+ * other column instead of being pushed at the driver verbatim.
  */
-export const buildPrimitiveElementField = (elementType: MetaFieldType): MetaField => ({
+export const buildPrimitiveElementField = (
+  elementType: MetaFieldType | null,
+): MetaField => ({
   key: "value",
   decorator: "Field",
   arrayType: null,

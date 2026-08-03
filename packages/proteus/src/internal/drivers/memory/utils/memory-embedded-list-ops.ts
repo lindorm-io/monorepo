@@ -1,7 +1,9 @@
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { MetaEmbeddedList } from "../../../entity/types/metadata.js";
 import type { MemoryCollectionTable, MemoryStore } from "../types/memory-store.js";
+import { dehydrateElementValue } from "../../../entity/utils/dehydrate-element-value.js";
 import { deserialise } from "../../../entity/utils/deserialise.js";
+import { buildPrimitiveElementField } from "../../../entity/utils/primitive-element-field.js";
 
 const getCollectionTable = (
   store: MemoryStore,
@@ -45,17 +47,22 @@ export const saveMemoryEmbeddedListRows = (
       };
       for (const field of embeddedList.elementFields) {
         const value = item != null ? item[field.key] : null;
-        row[field.key] =
-          value != null && field.transform ? field.transform.to(value) : value;
+        // No driver coercion: a memory row is structuredClone'd, so every JS
+        // value is stored natively (the same reason MemoryExecutor dehydrates
+        // entity columns with no `coerce`).
+        row[field.key] = dehydrateElementValue(value, field, embeddedList);
       }
       rows.push(row);
     }
   } else {
-    // Primitive elements
+    // Primitive elements. No MetaField of its own, so it borrows the synthetic
+    // one the DDL projected the "value" column from.
+    const elementField = buildPrimitiveElementField(embeddedList.elementType);
+
     for (const item of array) {
       rows.push({
         [embeddedList.parentFkColumn]: (entity as any)[embeddedList.parentPkColumn],
-        value: item,
+        value: dehydrateElementValue(item, elementField, embeddedList),
       });
     }
   }

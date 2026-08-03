@@ -2,7 +2,10 @@ import type { IEntity } from "../../../../../interfaces/index.js";
 import type { MetaEmbeddedList } from "../../../../entity/types/metadata.js";
 import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { dehydrateElementValue } from "../../../../entity/utils/dehydrate-element-value.js";
 import { deserialise } from "../../../../entity/utils/deserialise.js";
+import { buildPrimitiveElementField } from "../../../../entity/utils/primitive-element-field.js";
+import { coerceWriteValue } from "../query/coerce-value.js";
 
 /**
  * Insert collection table rows for an entity's @EmbeddedList fields.
@@ -43,10 +46,12 @@ export const insertEmbeddedListRows = async (
 
       for (const field of embeddedList.elementFields) {
         const value = item != null ? item[field.key] : null;
-        const transformed =
-          value != null && field.transform ? field.transform.to(value) : value;
         placeholders.push("?");
-        allParams.push(transformed ?? null);
+        allParams.push(
+          dehydrateElementValue(value, field, embeddedList, (v) =>
+            coerceWriteValue(v, field.type),
+          ),
+        );
       }
 
       valueClauses.push(`(${placeholders.join(", ")})`);
@@ -62,13 +67,24 @@ export const insertEmbeddedListRows = async (
       quoteIdentifier("value"),
     ];
 
+    // A primitive element has no MetaField of its own, so it borrows the
+    // synthetic one the DDL projected the "value" column from — that is what
+    // carries `elementType` into the coercion.
+    const elementField = buildPrimitiveElementField(embeddedList.elementType);
+
     const allParams: Array<unknown> = [];
     const valueClauses: Array<string> = [];
 
     for (let ordinal = 0; ordinal < array.length; ordinal++) {
       const item = array[ordinal];
       valueClauses.push("(?, ?, ?)");
-      allParams.push(parentPkValue, ordinal, item ?? null);
+      allParams.push(
+        parentPkValue,
+        ordinal,
+        dehydrateElementValue(item, elementField, embeddedList, (v) =>
+          coerceWriteValue(v, elementField.type),
+        ),
+      );
     }
 
     const sql = `INSERT INTO ${tableName} (${colNames.join(", ")}) VALUES ${valueClauses.join(", ")}`;

@@ -1126,6 +1126,8 @@ An encrypted column is projected as `text` on every driver, so the write pipelin
 
 Writing or reading an `@Encrypted` field without a vault **throws** `missing_amphora`. There is no plaintext fallback — silently downgrading a sealed column would put the secret in the clear, and handing a caller raw ciphertext under a field typed `number` corrupts it on the next save.
 
+An `@Embeddable` may carry `@Encrypted` fields when it is flattened by [`@Embedded`](#embedded) — they become entity columns like any other. As an [`@EmbeddedList`](#embeddedlist) **element** they cannot: those are a different table's columns, and neither the source-level `encryption` default nor `source.stageFieldDecorator` can address them, so the field would seal under a key nothing ever named. That combination is refused at metadata build with `unsupported_element_field_encryption`. Encrypt the whole collection as an `@Encrypted @Field("json")` column on the parent instead.
+
 #### `@Hide`
 
 Excludes a field from query results for a given scope. The field still exists in the database and entity; it is just excluded from SELECT projections.
@@ -1267,6 +1269,8 @@ tags!: string[];
 @EmbeddedList("string", { tableName: "user_tags" })   // custom table name
 tags!: string[];
 ```
+
+Element columns are written by the same rules as entity columns: `@Transform`'s `to()`, then the driver's write coercion — and read back as the exact inverse (`deserialise`, then `from()`). A primitive element has no field metadata of its own, so it borrows the element type. `@Encrypted` is refused on an element field; see [`@Encrypted`](#encrypted).
 
 ##### Loading: lazy by default on `find()`, eager by default on `findOne()`
 

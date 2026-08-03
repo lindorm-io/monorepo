@@ -10,7 +10,9 @@ import {
   buildDiscriminatorPredicateUnqualified,
   buildPrimaryKeyConditions,
 } from "./compile-helpers.js";
+import { coerceWriteValue } from "./coerce-value.js";
 import { dehydrateEntity } from "./dehydrate-entity.js";
+import { dehydrateFieldValue } from "../../../../entity/utils/dehydrate-field-value.js";
 import {
   partitionJoinedFields,
   type JoinedFieldPartition,
@@ -78,12 +80,22 @@ export const compileJoinedInsert = <E extends IEntity>(
   const childColumns: Array<{ column: string; value: unknown }> = [];
   const childPkParamIndices = new Map<string, number>();
 
-  // Add PK columns first (same values as root)
+  // Add PK columns first (same values as root). The child row carries the SAME
+  // value as the root's copy, so it must go through the SAME pipeline — a raw
+  // push sent a `bigint` PK to the driver as a BigInt on the child INSERT while
+  // the root got the decimal string `dehydrateEntity` produced: one value, two
+  // shapes, one statement.
   for (const pk of metadata.primaryKeys) {
     const field = metadata.fields.find((f) => f.key === pk);
     const colName = field?.name ?? pk;
     childPkParamIndices.set(pk, childColumns.length);
-    childColumns.push({ column: colName, value: (entity as any)[pk] });
+    childColumns.push({
+      column: colName,
+      value: dehydrateFieldValue((entity as any)[pk], field, metadata.entity.name, {
+        amphora,
+        coerce: (v) => coerceWriteValue(v, field?.type ?? null),
+      }),
+    });
   }
 
   // Add child-only fields via dehydration of the full entity, then filter

@@ -1346,6 +1346,66 @@ export const createTckEntities = (hookCallback: Mock) => {
     tags!: string[];
   }
 
+  // ─── Embedded-List Typed-Element Entity ───────────────────────────
+  // Every element column here needs the driver's WRITE coercion, which the
+  // collection-table insert used to skip entirely: it applied `transform.to`
+  // and pushed the result straight at the binder, while the read side ran the
+  // full `deserialise`. A `timestamp` element therefore reached better-sqlite3
+  // as a live Date (it refuses to bind one), a `boolean` element reached it as
+  // a JS boolean, and MySQL got an ISO-8601 string it rejects for DATETIME.
+  // The primitive list below is the same asymmetry with no @Embeddable in the
+  // way — that branch skipped even the transform.
+  //
+  // The transform is NON-IDEMPOTENT on purpose (see TckTransformed): an
+  // idempotent pair cannot detect a layer applying it a second time.
+
+  @Embeddable()
+  class TckElItem {
+    @Field("string")
+    label!: string;
+
+    @Transform({
+      to: (value: unknown) => `${value as string}#`,
+      from: (raw: unknown) => (raw as string).slice(0, -1),
+    })
+    @Field("string")
+    suffixed!: string;
+
+    @Field("integer")
+    quantity!: number;
+
+    @Field("boolean")
+    active!: boolean;
+
+    @Field("timestamp")
+    recordedAt!: Date;
+  }
+
+  @Entity({ name: "TckElTyped" })
+  class TckElTyped {
+    @PrimaryKeyField()
+    @Generated("uuid")
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @EmbeddedList(() => TckElItem)
+    items!: Array<TckElItem>;
+
+    @EmbeddedList("timestamp")
+    stamps!: Array<Date>;
+  }
+
   // ─── Divergent Column-Type Round-Trip Entity ──────────────────────
   // Exercises types that hydrate differently across drivers:
   //   bigint           → JS bigint (all drivers)
@@ -1712,6 +1772,8 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckElEagerMultiple,
     TckElLazySingle,
     TckElEager,
+    TckElItem,
+    TckElTyped,
     TckTypeHolder,
     TckArrayTypes,
     TckRenamedColumns,

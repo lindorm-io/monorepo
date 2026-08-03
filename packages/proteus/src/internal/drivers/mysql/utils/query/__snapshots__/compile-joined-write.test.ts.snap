@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileJoinedInsert > compiles a joined insert 1`] = `
+{
+  "childPkParamIndices": [
+    [
+      "id",
+      0,
+    ],
+  ],
+  "childSql": {
+    "params": [
+      "9007199254740993",
+      5,
+    ],
+    "text": "INSERT INTO \`app\`.\`cars\` (\`id\`, \`doors\`) VALUES (?, ?)",
+  },
+  "rootSql": {
+    "params": [
+      "9007199254740993",
+      "car",
+      "Volvo",
+    ],
+    "text": "INSERT INTO \`app\`.\`vehicles\` (\`id\`, \`kind\`, \`name\`) VALUES (?, ?, ?)",
+  },
+}
+`;

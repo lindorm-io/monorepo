@@ -1183,6 +1183,90 @@ describe("CachingRepository", () => {
       expect(JSON.parse(setCall[1])[0].name).toBeNull();
     });
 
+    // An @Embedded field's key is the DOTTED path ("address.city") while the
+    // hydrated entity holds a nested object — defaultHydrateEntity deletes the
+    // flat keys once it has rebuilt the instance. Reading the dotted key off the
+    // entity yielded `undefined` for EVERY embedded column, JSON.stringify
+    // dropped them, and the replay saw no key at all: a cache MISS returned the
+    // address, a cache HIT returned `address: null`.
+    const embeddedMetadata = () =>
+      makeBaseMetadata({
+        fields: [
+          {
+            key: "address.city",
+            decorator: "Field",
+            arrayType: null,
+            collation: null,
+            comment: null,
+            computed: null,
+            embedded: { parentKey: "address", constructor: () => TestEntity },
+            encrypted: null,
+            enum: null,
+            default: null,
+            hideOn: [],
+            max: null,
+            min: null,
+            name: "city",
+            nullable: false,
+            precision: null,
+            readonly: [],
+            scale: null,
+            schema: null,
+            transform: null,
+            typedJson: null,
+            type: "string",
+          },
+          {
+            key: "address.street",
+            decorator: "Field",
+            arrayType: null,
+            collation: null,
+            comment: null,
+            computed: null,
+            embedded: { parentKey: "address", constructor: () => TestEntity },
+            encrypted: null,
+            enum: null,
+            default: null,
+            hideOn: [],
+            max: null,
+            min: null,
+            name: "street",
+            nullable: false,
+            precision: null,
+            readonly: [],
+            scale: null,
+            schema: null,
+            transform: null,
+            typedJson: null,
+            type: "string",
+          },
+        ] as any,
+      });
+
+    it("should read @Embedded columns off the nested object when serializing", async () => {
+      const { repo, inner, adapter } = createRepo({ metadata: embeddedMetadata() });
+      inner.find.mockResolvedValue([
+        { id: "id-1", address: { city: "Oslo", street: "Karl Johans gate" } } as any,
+      ]);
+      adapter.get.mockResolvedValue(null);
+
+      await repo.find();
+
+      const setCall = (adapter.set as Mock).mock.calls[0];
+      expect(JSON.parse(setCall[1])).toMatchSnapshot();
+    });
+
+    it("should serialize a null @Embedded parent as null columns", async () => {
+      const { repo, inner, adapter } = createRepo({ metadata: embeddedMetadata() });
+      inner.find.mockResolvedValue([{ id: "id-1", address: null } as any]);
+      adapter.get.mockResolvedValue(null);
+
+      await repo.find();
+
+      const setCall = (adapter.set as Mock).mock.calls[0];
+      expect(JSON.parse(setCall[1])).toMatchSnapshot();
+    });
+
     it("should run AfterLoad hooks on deserialized entities from cache", async () => {
       const { repo, inner, adapter } = createRepo();
       const serialized = JSON.stringify([{ id: "id-1", name: "Entity A" }]);

@@ -9,7 +9,7 @@ import type {
 import type { SyncDialect } from "./sync-dialect.js";
 import { addNamedEnum } from "./add-named-enum.js";
 import { buildForeignKeyName, buildIndexName } from "../sql/constraint-names.js";
-import { buildPrimitiveElementField } from "./primitive-element-field.js";
+import { buildPrimitiveElementField } from "../../entity/utils/primitive-element-field.js";
 import { hasProjectedTable } from "./has-projected-table.js";
 import { resolveColumnNameSafe } from "../sql/resolve-column-name.js";
 

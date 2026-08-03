@@ -1,10 +1,23 @@
 import type { ClientSession, Db, Document } from "mongodb";
 import type { IEntity } from "../../../../interfaces/index.js";
-import type { MetaEmbeddedList } from "../../../entity/types/metadata.js";
+import type { MetaEmbeddedList, MetaField } from "../../../entity/types/metadata.js";
+import { dehydrateElementValue } from "../../../entity/utils/dehydrate-element-value.js";
 import { deserialise } from "../../../entity/utils/deserialise.js";
+import { buildPrimitiveElementField } from "../../../entity/utils/primitive-element-field.js";
+import { serialiseArray } from "../../../entity/utils/serialise.js";
 
 const sessionOpts = (session?: ClientSession): { session: ClientSession } | undefined =>
   session ? { session } : undefined;
+
+/**
+ * Mongo's write coercion, identical to the one `dehydrateEntity` applies to an
+ * entity column: serialise a typed array element-wise so BSON does not demote a
+ * bigint to a lossy Long. Everything else is stored natively.
+ */
+const coerceElement = (value: unknown, field: MetaField): unknown =>
+  value != null && field.type === "array" && field.arrayType
+    ? serialiseArray(value, field.arrayType, field.mode)
+    : value;
 
 /**
  * Save embedded list rows for a MongoDB collection (full replacement).
@@ -47,19 +60,26 @@ export const insertMongoEmbeddedListRows = async (
 
       for (const field of embeddedList.elementFields) {
         const value = item != null ? item[field.key] : null;
-        const transformed =
-          value != null && field.transform ? field.transform.to(value) : value;
-        doc[field.name] = transformed ?? null;
+        doc[field.name] = dehydrateElementValue(value, field, embeddedList, (v) =>
+          coerceElement(v, field),
+        );
       }
 
       docs.push(doc);
     }
   } else {
+    // A primitive element has no MetaField of its own, so it borrows the
+    // synthetic one the DDL projected the "value" column from — that is what
+    // carries `elementType` into the coercion.
+    const elementField = buildPrimitiveElementField(embeddedList.elementType);
+
     for (let ordinal = 0; ordinal < array.length; ordinal++) {
       docs.push({
         [embeddedList.parentFkColumn]: parentPkValue,
         __ordinal: ordinal,
-        value: array[ordinal] ?? null,
+        value: dehydrateElementValue(array[ordinal], elementField, embeddedList, (v) =>
+          coerceElement(v, elementField),
+        ),
       });
     }
   }
@@ -123,7 +143,7 @@ export const loadMongoEmbeddedListRows = async (
         if (raw === null || raw === undefined) {
           instance[field.key] = raw;
         } else {
-          let value = deserialise(raw, field.type, field.mode);
+          let value = deserialise(raw, field.type, field.mode, field.arrayType);
           if (field.transform) {
             value = field.transform.from(value);
           }
@@ -198,7 +218,7 @@ export const loadMongoEmbeddedListRowsBatch = async (
           if (raw === null || raw === undefined) {
             instance[field.key] = raw;
           } else {
-            let value = deserialise(raw, field.type, field.mode);
+            let value = deserialise(raw, field.type, field.mode, field.arrayType);
             if (field.transform) {
               value = field.transform.from(value);
             }

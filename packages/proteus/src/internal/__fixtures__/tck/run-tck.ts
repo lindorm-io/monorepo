@@ -40,7 +40,9 @@ import {
 import { queryBuilderSuite } from "./query-builder.tck.js";
 import { scopeSuite } from "./scope.tck.js";
 import { lazyLoadingSuite } from "./lazy-loading.tck.js";
+import { embeddedSuite } from "./embedded.tck.js";
 import { embeddedListLoadingSuite } from "./embedded-list-loading.tck.js";
+import { embeddedListTypesSuite } from "./embedded-list-types.tck.js";
 import { unversionedSuite } from "./unversioned.tck.js";
 import { streamSuite } from "./stream.tck.js";
 import { clearSuite } from "./clear.tck.js";
@@ -182,6 +184,7 @@ const runTckForNaming = (
       entities.TckElEagerMultiple,
       entities.TckElLazySingle,
       entities.TckElEager,
+      entities.TckElTyped,
     );
   }
 
@@ -224,6 +227,7 @@ const runTckForNaming = (
   arrayTypeSuite(getHandle, entities);
   renamedColumnsSuite(getHandle, entities);
   transformSuite(getHandle, entities, caps);
+  embeddedSuite(getHandle, entities);
 
   // Capability-gated suites
   maybeDescribe(caps.softDelete, "softDelete", () =>
@@ -245,6 +249,9 @@ const runTckForNaming = (
   );
   maybeDescribe(caps.embeddedLists, "embeddedListLoading", () =>
     embeddedListLoadingSuite(getHandle, entities),
+  );
+  maybeDescribe(caps.embeddedLists, "embeddedListTypes", () =>
+    embeddedListTypesSuite(getHandle, entities),
   );
   maybeDescribe(caps.uniqueEnforcement, "uniqueEnforcement", () =>
     uniqueConstraintsSuite(getHandle, entities),

@@ -580,7 +580,22 @@ export class CachingRepository<
         // transform a second time, and caching an @Encrypted field's plaintext
         // put the secret in the cache store in the clear. With a Redis adapter
         // that is the secret sitting in a second database, outside the vault.
-        const value = (entity as any)[field.key];
+        //
+        // An @Embedded field's key is the DOTTED path ("address.city") while the
+        // hydrated entity holds a nested object — defaultHydrateEntity deletes
+        // the flat keys once it has rebuilt the instance. Reading the dotted key
+        // off the entity therefore yielded `undefined` for EVERY embedded column,
+        // JSON.stringify dropped them, and the replay saw no key at all: a cache
+        // MISS returned the address, a cache HIT returned `address: null`.
+        let value: unknown;
+
+        if (field.embedded) {
+          const parentObj = (entity as any)[field.embedded.parentKey];
+          const nestedKey = field.key.split(".")[1];
+          value = parentObj != null ? parentObj[nestedKey] : null;
+        } else {
+          value = (entity as any)[field.key];
+        }
 
         if (field.typedJson) {
           const { data: half, meta } = dehydrateTypedJson(

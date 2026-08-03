@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CachingRepository > serialization > should read @Embedded columns off the nested object when serializing 1`] = `
+[
+  {
+    "address.city": "Oslo",
+    "address.street": "Karl Johans gate",
+  },
+]
+`;
+
+exports[`CachingRepository > serialization > should serialize a null @Embedded parent as null columns 1`] = `
+[
+  {
+    "address.city": null,
+    "address.street": null,
+  },
+]
+`;

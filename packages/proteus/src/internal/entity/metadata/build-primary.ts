@@ -28,6 +28,7 @@ import { generateAutoIndexes } from "./auto-indexes.js";
 import { collectAll, collectOwn, collectSingular } from "./collect.js";
 import { inferGeneratedTypes } from "./infer-generated-type.js";
 import { validateEmbeddedListInitializers } from "./validate-embedded-list-initializers.js";
+import { validateElementFields } from "./validate-element-fields.js";
 import { validateFields } from "./validate-fields.js";
 import { validateIndexes } from "./validate-indexes.js";
 import { validatePrimaryKeys, validateVersionKeys } from "./validate-primary-keys.js";
@@ -415,6 +416,12 @@ const resolveEmbeddedLists = (
       }
 
       validateFields(EmbeddableClass.name, embeddableFields);
+      validateElementFields(
+        targetName,
+        entry.key,
+        EmbeddableClass.name,
+        embeddableFields,
+      );
 
       result.push({
         key: entry.key,

@@ -2,6 +2,8 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { defaultCreateEntity } from "../internal/entity/utils/default-create-entity.js";
 import { defaultCloneEntity } from "../internal/entity/utils/default-clone-entity.js";
 import { Embeddable } from "./Embeddable.js";
+import { Embedded } from "./Embedded.js";
+import { Encrypted } from "./Encrypted.js";
 import { EmbeddedList } from "./EmbeddedList.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
@@ -302,5 +304,57 @@ describe("EmbeddedList — full metadata snapshot", () => {
   test("should match snapshot for multiple lists entity", () => {
     const metadata = getEntityMetadata(UserWithMultipleLists);
     expect(metadata).toMatchSnapshot();
+  });
+});
+
+// ─── @Encrypted element rejection ───────────────────────────────────────────
+//
+// The SAME @Embeddable is legal in both positions. Flattened by @Embedded its
+// fields land in `metadata.fields`, where the source-level `encryption` default,
+// `stageFieldDecorator` and `validateEncryptedFields` all reach them. As an
+// @EmbeddedList element they are a different table's columns and none of those
+// reach them — a bare @Encrypted() there would seal the value under a key
+// nothing ever named. So the collection-table position refuses it.
+
+@Embeddable()
+class SecretHolder {
+  @Field("string")
+  label!: string;
+
+  @Encrypted({ condition: { purpose: "test" } })
+  @Field("string")
+  token!: string;
+}
+
+@Entity({ name: "UserWithSecretList" })
+class UserWithSecretList {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @EmbeddedList(() => SecretHolder)
+  secrets!: Array<SecretHolder>;
+}
+
+@Entity({ name: "UserWithSecretEmbedded" })
+class UserWithSecretEmbedded {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Embedded(() => SecretHolder)
+  secret!: SecretHolder | null;
+}
+
+describe("EmbeddedList — @Encrypted elements", () => {
+  test("should reject an @Encrypted field on an embeddable element", () => {
+    expect(() => getEntityMetadata(UserWithSecretList)).toThrow(
+      /@Encrypted cannot be used on @EmbeddedList element field "token"/,
+    );
+  });
+
+  test("should still allow the same embeddable under @Embedded", () => {
+    const metadata = getEntityMetadata(UserWithSecretEmbedded);
+    const field = metadata.fields.find((f) => f.key === "secret.token");
+    expect(field?.encrypted).toEqual({
+      kryptos: null,
+      condition: { purpose: "test" },
+    });
   });
 });
