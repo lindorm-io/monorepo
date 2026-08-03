@@ -14,10 +14,23 @@ const sessionOpts = (session?: ClientSession): { session: ClientSession } | unde
  * entity column: serialise a typed array element-wise so BSON does not demote a
  * bigint to a lossy Long. Everything else is stored natively.
  */
-const coerceElement = (value: unknown, field: MetaField): unknown =>
-  value != null && field.type === "array" && field.arrayType
+const coerceElement = (value: unknown, field: MetaField | null): unknown =>
+  value != null && field?.type === "array" && field.arrayType
     ? serialiseArray(value, field.arrayType, field.mode)
     : value;
+
+/**
+ * The parent FK key holds the parent's PK value, so it writes through the parent
+ * PK's own pipeline — same transform, same driver coercion — instead of being
+ * pushed raw into the document.
+ */
+const dehydrateParentPk = (entity: IEntity, embeddedList: MetaEmbeddedList): unknown =>
+  dehydrateElementValue(
+    (entity as any)[embeddedList.parentPkColumn],
+    embeddedList.parentPkField,
+    embeddedList,
+    (v) => coerceElement(v, embeddedList.parentPkField),
+  );
 
 /**
  * Save embedded list rows for a MongoDB collection (full replacement).
@@ -47,7 +60,7 @@ export const insertMongoEmbeddedListRows = async (
   if (!array || !Array.isArray(array) || array.length === 0) return;
 
   const collection = db.collection(embeddedList.tableName);
-  const parentPkValue = (entity as any)[embeddedList.parentPkColumn];
+  const parentPkValue = dehydrateParentPk(entity, embeddedList);
   const docs: Array<Document> = [];
 
   if (embeddedList.elementFields) {
@@ -102,7 +115,7 @@ export const deleteMongoEmbeddedListRows = async (
   session?: ClientSession,
 ): Promise<void> => {
   const collection = db.collection(embeddedList.tableName);
-  const parentPkValue = (entity as any)[embeddedList.parentPkColumn];
+  const parentPkValue = dehydrateParentPk(entity, embeddedList);
 
   await collection.deleteMany(
     { [embeddedList.parentFkColumn]: parentPkValue },
@@ -120,7 +133,7 @@ export const loadMongoEmbeddedListRows = async (
   session?: ClientSession,
 ): Promise<void> => {
   const collection = db.collection(embeddedList.tableName);
-  const parentPkValue = (entity as any)[embeddedList.parentPkColumn];
+  const parentPkValue = dehydrateParentPk(entity, embeddedList);
 
   const docs = await collection
     .find({ [embeddedList.parentFkColumn]: parentPkValue }, sessionOpts(session))
@@ -177,7 +190,7 @@ export const loadMongoEmbeddedListRowsBatch = async (
   if (entities.length === 0) return;
 
   const collection = db.collection(embeddedList.tableName);
-  const pkValues = entities.map((e) => (e as any)[embeddedList.parentPkColumn]);
+  const pkValues = entities.map((e) => dehydrateParentPk(e, embeddedList));
 
   const docs = await collection
     .find({ [embeddedList.parentFkColumn]: { $in: pkValues } }, sessionOpts(session))

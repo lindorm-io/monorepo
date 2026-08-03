@@ -54,6 +54,20 @@ exports[`compileAggregate — aggregate type variations > should compile SUM wit
 }
 `;
 
+exports[`compileAggregate — auto-projected foreign key > should aggregate an auto-projected FK by its physical column name 1`] = `
+{
+  "params": [],
+  "text": "SELECT MAX("t0"."parent_id") AS "result" FROM "app"."children" AS "t0"",
+}
+`;
+
+exports[`compileAggregate — auto-projected foreign key > should aggregate an auto-projected FK by its property key 1`] = `
+{
+  "params": [],
+  "text": "SELECT MIN("t0"."parent_id") AS "result" FROM "app"."children" AS "t0"",
+}
+`;
+
 exports[`compileAggregate — combined soft-delete + version filtering > should AND both conditions on versioned + soft-deletable entity 1`] = `
 {
   "params": [],

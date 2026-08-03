@@ -1,7 +1,7 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
-import type { DehydrateMode } from "../../../../entity/utils/default-dehydrate-entity.js";
+import type { DehydrateMode } from "../../../../entity/types/dehydrate-mode.js";
 import { dehydrateFieldValue } from "../../../../entity/utils/dehydrate-field-value.js";
 import { resolveJoinKeyValue } from "../../../../entity/utils/resolve-join-key-value.js";
 import { dehydrateTypedJson } from "../../../../entity/utils/typed-json.js";

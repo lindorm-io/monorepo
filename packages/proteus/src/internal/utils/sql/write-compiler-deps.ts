@@ -1,7 +1,7 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
-import type { DehydrateMode } from "../../entity/utils/default-dehydrate-entity.js";
+import type { DehydrateMode } from "../../entity/types/dehydrate-mode.js";
 
 /**
  * Driver-injected dependencies shared by the write-path compilers

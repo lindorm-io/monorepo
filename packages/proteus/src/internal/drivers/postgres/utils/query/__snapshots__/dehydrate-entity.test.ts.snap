@@ -66,3 +66,29 @@ exports[`dehydrateEntity — embedded fields > should mix embedded and non-embed
   },
 ]
 `;
+
+exports[`dehydrateEntity — readonly fields > should exclude readonly fields in update mode 1`] = `
+[
+  {
+    "column": "name",
+    "value": "Alice",
+  },
+]
+`;
+
+exports[`dehydrateEntity — readonly fields > should include readonly fields in insert mode 1`] = `
+[
+  {
+    "column": "id",
+    "value": "abc",
+  },
+  {
+    "column": "slug",
+    "value": "alice-smith",
+  },
+  {
+    "column": "name",
+    "value": "Alice",
+  },
+]
+`;

@@ -1,8 +1,8 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { defaultCreateEntity } from "../internal/entity/utils/default-create-entity.js";
 import { defaultCloneEntity } from "../internal/entity/utils/default-clone-entity.js";
-import { defaultDehydrateEntity } from "../internal/entity/utils/default-dehydrate-entity.js";
 import { defaultHydrateEntity } from "../internal/entity/utils/default-hydrate-entity.js";
+import { dehydrateEntity } from "../internal/drivers/postgres/utils/query/dehydrate-entity.js";
 import { defaultValidateEntity } from "../internal/entity/utils/default-validate-entity.js";
 import { Embeddable } from "./Embeddable.js";
 import { Embedded } from "./Embedded.js";
@@ -12,6 +12,17 @@ import { Nullable } from "./Nullable.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { Generated } from "./Generated.js";
 import { describe, expect, test } from "vitest";
+
+// The flattening these tests assert is driver-independent, but it only exists
+// inside a driver's dehydrate — Postgres stands in for all of them. Its output
+// is column-ordered pairs; the assertions read better against a column dict.
+const dehydrateToColumns = (
+  entity: object,
+  metadata: Parameters<typeof dehydrateEntity>[1],
+): Record<string, unknown> =>
+  Object.fromEntries(
+    dehydrateEntity(entity as never, metadata, "insert").map((c) => [c.column, c.value]),
+  );
 
 @Embeddable()
 class Coord {
@@ -140,7 +151,7 @@ describe("Embedded — dehydration", () => {
     } as any);
 
     const metadata = getEntityMetadata(EmbeddedTestUser);
-    const row = defaultDehydrateEntity(entity, metadata, "insert");
+    const row = dehydrateToColumns(entity, metadata);
 
     expect(row).toMatchSnapshot();
     expect(row["homeAddress_street"]).toBe("123 Main St");
@@ -157,7 +168,7 @@ describe("Embedded — dehydration", () => {
     } as any);
 
     const metadata = getEntityMetadata(EmbeddedTestUser);
-    const row = defaultDehydrateEntity(entity, metadata, "insert");
+    const row = dehydrateToColumns(entity, metadata);
 
     expect(row["homeAddress_street"]).toBeNull();
     expect(row["homeAddress_city"]).toBeNull();
@@ -252,7 +263,7 @@ describe("Embedded — dehydration/hydration roundtrip", () => {
       workAddress: null,
     } as any);
 
-    const row = defaultDehydrateEntity(original, metadata, "insert");
+    const row = dehydrateToColumns(original, metadata);
 
     // Simulate what the driver does: map column names back to field keys
     const fieldKeyData: Record<string, unknown> = {};

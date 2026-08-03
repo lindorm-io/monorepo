@@ -20,6 +20,18 @@ const getCollectionTable = (
 };
 
 /**
+ * The parent FK column holds the parent's PK value, so it writes through the
+ * parent PK's own pipeline instead of being pushed raw into the row. Memory
+ * passes no driver coercion, exactly as it does for the element columns.
+ */
+const dehydrateParentPk = (entity: IEntity, embeddedList: MetaEmbeddedList): unknown =>
+  dehydrateElementValue(
+    (entity as any)[embeddedList.parentPkColumn],
+    embeddedList.parentPkField,
+    embeddedList,
+  );
+
+/**
  * Save embedded list rows for an entity (full replacement).
  */
 export const saveMemoryEmbeddedListRows = (
@@ -43,7 +55,7 @@ export const saveMemoryEmbeddedListRows = (
     // Embeddable elements
     for (const item of array) {
       const row: Record<string, unknown> = {
-        [embeddedList.parentFkColumn]: (entity as any)[embeddedList.parentPkColumn],
+        [embeddedList.parentFkColumn]: dehydrateParentPk(entity, embeddedList),
       };
       for (const field of embeddedList.elementFields) {
         const value = item != null ? item[field.key] : null;
@@ -61,7 +73,7 @@ export const saveMemoryEmbeddedListRows = (
 
     for (const item of array) {
       rows.push({
-        [embeddedList.parentFkColumn]: (entity as any)[embeddedList.parentPkColumn],
+        [embeddedList.parentFkColumn]: dehydrateParentPk(entity, embeddedList),
         value: dehydrateElementValue(item, elementField, embeddedList),
       });
     }

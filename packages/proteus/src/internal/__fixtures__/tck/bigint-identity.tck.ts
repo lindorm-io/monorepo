@@ -127,6 +127,24 @@ export const bigintIdentitySuite = (
         expect(ordered.map((c) => c.label)).toEqual(["theirs", "mine-1", "mine-2"]);
       });
 
+      // Aggregates resolve the field key through an engine of their own — the SQL
+      // compiler, mongo's $group stage, the in-memory reducer — so the auto-FK
+      // handling the clause above proves does NOT carry over for free.
+      test("aggregates resolve an auto-projected FK by its property key", async () => {
+        const parentRepo = getHandle().repository(TckBigIntPkParent);
+        const childRepo = getHandle().repository(TckBigIntPkChild);
+
+        const first = await parentRepo.insert({ name: "first" });
+        const second = await parentRepo.insert({ name: "second" });
+
+        await childRepo.insert({ label: "a", parentId: first.id });
+        await childRepo.insert({ label: "b", parentId: second.id });
+
+        expect(await childRepo.minimum("parentId")).toBe(Number(first.id));
+        expect(await childRepo.maximum("parentId")).toBe(Number(second.id));
+        expect(await childRepo.sum("parentId")).toBe(Number(first.id + second.id));
+      });
+
       test("select projects an auto-projected FK under its property key", async () => {
         const parentRepo = getHandle().repository(TckBigIntPkParent);
         const childRepo = getHandle().repository(TckBigIntPkChild);

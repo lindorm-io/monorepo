@@ -484,3 +484,58 @@ describe("compileAggregate — namespace/schema qualification", () => {
     expect(result.text).not.toContain('"reporting"."metrics"');
   });
 });
+
+describe("compileAggregate — auto-projected foreign key", () => {
+  // `parentId` carries no @Field — the FK column exists only as a relation
+  // joinKey, so it is reachable ONLY through metadata.relations. Under the snake
+  // strategy the column (`parent_id`) and the property key hydration hands back
+  // (`parentId`) diverge, and both have to resolve — exactly as they do for
+  // where/orderBy/groupBy.
+  const autoFkMetadata = {
+    entity: {
+      decorator: "Entity",
+      cache: null,
+      comment: null,
+      database: null,
+      name: "children",
+      namespace: "app",
+    },
+    fields: [makeField("id", { type: "uuid" }), makeField("label", { type: "string" })],
+    relations: [
+      {
+        key: "parent",
+        type: "ManyToOne",
+        joinKeys: { parent_id: "id" },
+      },
+    ],
+    primaryKeys: ["id"],
+  } as unknown as EntityMetadata;
+
+  test("should aggregate an auto-projected FK by its property key", () => {
+    const result = compileAggregate(
+      "MIN",
+      "parentId",
+      createEmptyState(),
+      autoFkMetadata,
+    );
+    expect(result).toMatchSnapshot();
+    expect(result.text).toContain('MIN("t0"."parent_id")');
+  });
+
+  test("should aggregate an auto-projected FK by its physical column name", () => {
+    const result = compileAggregate(
+      "MAX",
+      "parent_id",
+      createEmptyState(),
+      autoFkMetadata,
+    );
+    expect(result).toMatchSnapshot();
+    expect(result.text).toContain('MAX("t0"."parent_id")');
+  });
+
+  test("should still throw for a key that is neither a field nor a join key", () => {
+    expect(() =>
+      compileAggregate("SUM", "nope", createEmptyState(), autoFkMetadata),
+    ).toThrow(/not found in metadata/);
+  });
+});

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { MetaEmbeddedList } from "../../../entity/types/metadata.js";
 import type { MemoryStore } from "../types/memory-store.js";
+import { makeField } from "../../../__fixtures__/make-field.js";
 import {
   deleteMemoryEmbeddedListRows,
   loadMemoryEmbeddedListRows,
@@ -348,5 +349,26 @@ describe("deleteMemoryEmbeddedListRows", () => {
 
     const table = store.collectionTables.get("ns.entity_tags");
     expect(table?.get("entity-1")).toBeUndefined();
+  });
+});
+
+// ─── parent FK column dehydration ─────────────────────────────────────────────
+
+describe("memory embedded list — parent FK column dehydration", () => {
+  test("writes the parent FK through the parent PK's transform", () => {
+    const store = makeStore();
+    const embeddedList = makePrimitiveEmbeddedList({
+      parentPkField: makeField("id", {
+        type: "string",
+        transform: { to: (value) => `pk:${value}`, from: (raw) => raw },
+      }),
+    });
+
+    saveMemoryEmbeddedListRows(makeEntity() as any, embeddedList, store, null);
+
+    const rows = store.collectionTables.get("entity_tags")?.get("entity-1");
+    // The store key stays the raw PK — it is the index load/delete address by —
+    // while the FK column holds what the parent's own PK column holds.
+    expect(rows?.every((row) => row.entity_id === "pk:entity-1")).toBe(true);
   });
 });

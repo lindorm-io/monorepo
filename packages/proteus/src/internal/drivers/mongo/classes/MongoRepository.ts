@@ -59,6 +59,7 @@ import { compileFilterWithSystem } from "../utils/compile-filter.js";
 import { compileSort } from "../utils/compile-sort.js";
 import { compileProjection } from "../utils/compile-projection.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
+import { resolveColumnNameSafe } from "../../../utils/sql/resolve-column-name.js";
 
 export type MongoRepositorySettings<E extends IEntity> = {
   target: Constructor<E>;
@@ -786,8 +787,15 @@ export class MongoRepository<
     if (isPk) {
       mongoField = this.metadata.primaryKeys.length === 1 ? "_id" : `_id.${fieldKey}`;
     } else {
-      const fieldMeta = this.metadata.fields.find((f) => f.key === fieldKey);
-      mongoField = fieldMeta?.name ?? fieldKey;
+      // Relations are passed so an auto-projected FK resolves to the document key
+      // it was written under; a bare field lookup fell back to the property key,
+      // which under a renaming strategy addresses a key that does not exist and
+      // silently aggregates nothing.
+      mongoField = resolveColumnNameSafe(
+        this.metadata.fields,
+        fieldKey,
+        this.metadata.relations,
+      );
     }
 
     // Map AggregateFunction to MongoDB operator
@@ -816,7 +824,13 @@ export class MongoRepository<
     const docs = await collection.aggregate(pipeline, sessionOpts).toArray();
 
     if (docs.length === 0) return null;
-    return docs[0].result ?? null;
+
+    // The accumulator hands back whatever BSON type the column holds — a bigint
+    // column aggregates to a JS bigint, a decimal to a Decimal128 — but the
+    // aggregate contract is `number | null` on every driver, and the SQL ones
+    // already narrow the same way.
+    const raw = docs[0].result;
+    return raw != null ? Number(raw) : null;
   }
 
   // ─── Abstract: buildLazyLoader / isDuplicateKeyError ──────────────

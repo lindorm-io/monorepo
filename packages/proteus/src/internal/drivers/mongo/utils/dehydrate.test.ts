@@ -5,7 +5,7 @@ import type {
   MetaRelation,
 } from "../../../entity/types/metadata.js";
 import type { IEntity } from "../../../../interfaces/index.js";
-import { dehydrateEntity, dehydrateToRow } from "./dehydrate.js";
+import { dehydrateEntity } from "./dehydrate.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -222,48 +222,6 @@ describe("dehydrateEntity", () => {
   });
 });
 
-describe("dehydrateToRow", () => {
-  test("should produce a row dict keyed by entity field keys", () => {
-    const metadata = makeMetadata([
-      makeField("id"),
-      makeField("name"),
-      makeField("emailAddress", { name: "email_addr" }),
-    ]);
-
-    const entity = {
-      id: "abc",
-      name: "John",
-      emailAddress: "test@example.com",
-    } as unknown as IEntity;
-
-    const row = dehydrateToRow(entity, metadata);
-    // Row uses entity keys, not DB names
-    expect(row.emailAddress).toBe("test@example.com");
-    expect(row).toMatchSnapshot();
-  });
-
-  test("should include discriminator value", () => {
-    const metadata = makeMetadata(
-      [makeField("id"), makeField("type"), makeField("name")],
-      {
-        inheritance: {
-          strategy: "single-table",
-          discriminatorField: "type",
-          discriminatorValue: "child",
-          root: class {} as any,
-          parent: null,
-          children: new Map(),
-        },
-      },
-    );
-
-    const entity = { id: "abc", type: "child", name: "Test" } as unknown as IEntity;
-    const row = dehydrateToRow(entity, metadata);
-    expect(row.type).toBe("child");
-    expect(row).toMatchSnapshot();
-  });
-});
-
 describe("typedJson", () => {
   const typedField = makeField("payload", {
     type: "json",
@@ -290,16 +248,5 @@ describe("typedJson", () => {
 
     const entity = { id: "abc-123", payload: null } as unknown as IEntity;
     expect(dehydrateEntity(entity, metadata)).toMatchSnapshot();
-  });
-
-  test("should key the sidecar by meta dict key in dehydrateToRow", () => {
-    const metadata = makeMetadata([makeField("id"), typedField]);
-
-    const entity = {
-      id: "abc-123",
-      payload: { at: new Date("2000-01-01T00:00:00.000Z") },
-    } as unknown as IEntity;
-
-    expect(dehydrateToRow(entity, metadata)).toMatchSnapshot();
   });
 });

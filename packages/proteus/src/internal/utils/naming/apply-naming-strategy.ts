@@ -86,6 +86,11 @@ export const applyNamingStrategy = (
     embeddedLists: (metadata.embeddedLists ?? []).map((el) => ({
       ...el,
       parentFkColumn: transformName(el.parentFkColumn, strategy),
+      // The parent PK is one of `fields`; renamed here too so a collection write
+      // never dehydrates through a stale copy of it.
+      parentPkField: el.parentPkField
+        ? { ...el.parentPkField, name: resolveFieldName(el.parentPkField, strategy) }
+        : null,
       elementFields: el.elementFields
         ? el.elementFields.map((field) => {
             const name = resolveFieldName(field, strategy);

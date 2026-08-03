@@ -1100,6 +1100,10 @@ payload!: Record<string, unknown>;   // both `payload` and `payload__typemeta` a
 
 `transform.to` runs before the split, `transform.from` after the rejoin — on every driver and every write path (insert, entity-diff update, `updateMany`, query-builder writes).
 
+##### Not on an `@EmbeddedList` element
+
+An `@Embeddable` may carry `@TypedJson` fields when it is flattened by [`@Embedded`](#embedded) — the sidecar becomes an entity column like any other. As an [`@EmbeddedList`](#embeddedlist) **element** it cannot: a collection table projects one column per element field and has no sidecar, so the type metadata would be dropped and nested `Date` / `Buffer` / `BigInt` values would come back as plain JSON. That combination is refused at metadata build with `unsupported_element_field_typed_json`. Store the collection as a `@TypedJson @Field("json")` column on the parent instead.
+
 #### `@Encrypted`
 
 Marks a field for application-level encryption at rest. Values are encrypted before writing and decrypted after reading. Requires an `IAmphora` key store configured on `ProteusSource`.
@@ -1600,6 +1604,8 @@ const avg = await repo.average("score", { status: "active" });
 const min = await repo.minimum("age");
 const max = await repo.maximum("age");
 ```
+
+The field may be an auto-projected foreign key — the one a `@ManyToOne` creates without a `@Field` — addressed by the property key the entity hands back (`parentId`), exactly as in `find` / `order` / `groupBy`. Every driver narrows the result to a JS `number`, so a `bigint` column aggregates lossily beyond `Number.MAX_SAFE_INTEGER`.
 
 ### Pagination
 

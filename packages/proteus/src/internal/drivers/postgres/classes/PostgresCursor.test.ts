@@ -64,6 +64,7 @@ const embeddedListSpec: MetaEmbeddedList = {
   tableName: "item_tags",
   parentFkColumn: "item_entity_id",
   parentPkColumn: "id",
+  parentPkField: null,
   elementType: "string",
   elementFields: null,
   elementConstructor: null,

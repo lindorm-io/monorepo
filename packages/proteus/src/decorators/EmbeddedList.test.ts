@@ -4,6 +4,7 @@ import { defaultCloneEntity } from "../internal/entity/utils/default-clone-entit
 import { Embeddable } from "./Embeddable.js";
 import { Embedded } from "./Embedded.js";
 import { Encrypted } from "./Encrypted.js";
+import { TypedJson } from "./TypedJson.js";
 import { EmbeddedList } from "./EmbeddedList.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
@@ -356,5 +357,55 @@ describe("EmbeddedList — @Encrypted elements", () => {
       kryptos: null,
       condition: { purpose: "test" },
     });
+  });
+});
+
+// ─── @TypedJson element rejection ───────────────────────────────────────────
+//
+// @TypedJson is a TWO-column field: JSON-safe data in the declared column, the
+// JsonKit type metadata in a sidecar beside it. A collection table projects only
+// the element columns it can see, so the sidecar is never created and the
+// element read/write paths have no half to carry it — the type fidelity the
+// decorator exists for is silently lost. Wiring it up is a schema change, not a
+// missed branch, so the collection-table position refuses it.
+
+@Embeddable()
+class TypedPayloadHolder {
+  @Field("string")
+  label!: string;
+
+  @TypedJson()
+  @Field("json")
+  payload!: Record<string, unknown>;
+}
+
+@Entity({ name: "UserWithTypedPayloadList" })
+class UserWithTypedPayloadList {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @EmbeddedList(() => TypedPayloadHolder)
+  payloads!: Array<TypedPayloadHolder>;
+}
+
+@Entity({ name: "UserWithTypedPayloadEmbedded" })
+class UserWithTypedPayloadEmbedded {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Embedded(() => TypedPayloadHolder)
+  payload!: TypedPayloadHolder | null;
+}
+
+describe("EmbeddedList — @TypedJson elements", () => {
+  test("should reject a @TypedJson field on an embeddable element", () => {
+    expect(() => getEntityMetadata(UserWithTypedPayloadList)).toThrow(
+      /@TypedJson cannot be used on @EmbeddedList element field "payload"/,
+    );
+  });
+
+  test("should still allow the same embeddable under @Embedded", () => {
+    const metadata = getEntityMetadata(UserWithTypedPayloadEmbedded);
+    const field = metadata.fields.find((f) => f.key === "payload.payload");
+    expect(field?.name).toBe("payload_payload");
+    expect(field?.typedJson).not.toBeNull();
   });
 });

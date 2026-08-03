@@ -39,6 +39,7 @@ const primitiveEmbeddedList: MetaEmbeddedList = {
   tableName: "article_tags",
   parentFkColumn: "article_id",
   parentPkColumn: "id",
+  parentPkField: makeField("id", { type: "uuid" }),
   elementType: "string",
   elementFields: null,
   elementConstructor: null,
@@ -50,6 +51,7 @@ const embeddableEmbeddedList: MetaEmbeddedList = {
   tableName: "article_tag_objects",
   parentFkColumn: "article_id",
   parentPkColumn: "id",
+  parentPkField: makeField("id", { type: "uuid" }),
   elementType: null,
   elementFields: [
     makeField("label", { type: "string", name: "label" }),
@@ -881,5 +883,69 @@ describe("saveEmbeddedListRows", () => {
     await saveEmbeddedListRows(entity as any, primitiveEmbeddedList, client, null);
 
     expect(queries).toMatchSnapshot();
+  });
+});
+
+// ─── parent FK column dehydration ─────────────────────────────────────────────
+//
+// The parent FK column holds the parent's PK value, so it has to be written the
+// way that PK column itself is written — transform.to, then the driver's write
+// coercion. Pushed raw it diverges from the value it references, which a FK
+// constraint refuses. A `bigint` PK with a transform makes both halves visible:
+// 7n → transform.to → 70n → coerceWriteValue → "70".
+
+const transformedPkEmbeddedList: MetaEmbeddedList = {
+  key: "tags",
+  tableName: "ledger_tags",
+  parentFkColumn: "ledger_id",
+  parentPkColumn: "id",
+  parentPkField: makeField("id", {
+    type: "bigint",
+    transform: { to: (value) => (value as bigint) * 10n, from: (raw) => raw },
+  }),
+  elementType: "string",
+  elementFields: null,
+  elementConstructor: null,
+  loading: { single: "eager", multiple: "lazy" },
+};
+
+describe("embedded-list-ops — parent FK column dehydration", () => {
+  const parent = { id: 7n, tags: ["a", "b"] } as any;
+
+  test("insert binds the parent PK through transform and write coercion", async () => {
+    const { client, queries } = createMockClient();
+
+    await insertEmbeddedListRows(parent, transformedPkEmbeddedList, client, null);
+
+    expect(queries[0].params).toEqual(["70", 0, "a", "70", 1, "b"]);
+  });
+
+  test("delete binds the parent PK through transform and write coercion", async () => {
+    const { client, queries } = createMockClient();
+
+    await deleteEmbeddedListRows(parent, transformedPkEmbeddedList, client, null);
+
+    expect(queries[0].params).toEqual(["70"]);
+  });
+
+  test("load binds the parent PK through transform and write coercion", async () => {
+    const { client, queries } = createMockClient();
+
+    await loadEmbeddedListRows(parent, transformedPkEmbeddedList, client, null);
+
+    expect(queries[0].params).toEqual(["70"]);
+  });
+
+  test("loadBatch binds every parent PK through transform and write coercion", async () => {
+    const { client, queries } = createMockClient();
+
+    await loadEmbeddedListRowsBatch(
+      [parent, { id: 9n, tags: [] } as any],
+      transformedPkEmbeddedList,
+      client,
+      null,
+    );
+
+    expect(queries[0].params).toEqual([["70", "90"]]);
   });
 });

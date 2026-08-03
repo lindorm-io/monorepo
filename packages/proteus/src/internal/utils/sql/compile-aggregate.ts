@@ -73,7 +73,10 @@ export const compileAggregate = <E extends IEntity>(
 
   const params: Array<unknown> = [];
   const { aliasMap, inheritanceAliases } = deps.buildAliasMap(metadata, [], namespace);
-  const colName = resolveColumnName(metadata.fields, field as string);
+  // Relations are passed so an auto-projected FK — which has no MetaField —
+  // aggregates under both the property key and the physical column, the same
+  // pair every other clause (where / orderBy / groupBy) already accepts.
+  const colName = resolveColumnName(metadata.fields, field as string, metadata.relations);
   const qualifiedCol = `${dialect.quoteIdentifier("t0")}.${dialect.quoteIdentifier(colName)}`;
 
   const cteClause = deps.compileCtes(state.ctes, params);

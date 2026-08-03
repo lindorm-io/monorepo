@@ -345,6 +345,7 @@ export type MetaEmbeddedList = {
   tableName: string; // resolved table name
   parentFkColumn: string; // FK column pointing to parent PK
   parentPkColumn: string; // parent's PK property key (used for entity[parentPkColumn] lookups)
+  parentPkField: MetaField | null; // the PK's own field — the FK column writes through its pipeline
   elementType: MetaFieldType | null; // for primitives
   elementFields: Array<MetaField> | null; // for embeddables (flattened fields)
   elementConstructor: (() => Constructor) | null; // for embeddable instantiation

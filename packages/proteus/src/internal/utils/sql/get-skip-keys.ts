@@ -1,5 +1,5 @@
 import type { EntityMetadata } from "../../entity/types/metadata.js";
-import type { DehydrateMode } from "../../entity/utils/default-dehydrate-entity.js";
+import type { DehydrateMode } from "../../entity/types/dehydrate-mode.js";
 
 export const getSkipKeys = (
   metadata: EntityMetadata,

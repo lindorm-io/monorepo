@@ -401,3 +401,33 @@ describe("dehydrateEntity — FK resolved from relation object", () => {
     expect(result.find((c) => c.column === "authorId")?.value).toBe("author-1");
   });
 });
+
+describe("dehydrateEntity — readonly fields", () => {
+  // @ReadOnly() stages readonly: ["update", "upsert"] — an update must leave the
+  // column out entirely, an insert must still write it.
+  const readonlyMetadata = {
+    entity: { name: "users" },
+    fields: [
+      makeField("id", { type: "uuid" }),
+      makeField("slug", { type: "string", readonly: ["update", "upsert"] }),
+      makeField("name", { type: "string" }),
+    ],
+    relations: [],
+    primaryKeys: ["id"],
+    generated: [],
+    relationIds: [],
+    relationCounts: [],
+  } as unknown as EntityMetadata;
+
+  const readonlyEntity = { id: "abc", slug: "alice-smith", name: "Alice" };
+
+  test("should include readonly fields in insert mode", () => {
+    const result = dehydrateEntity(readonlyEntity as any, readonlyMetadata, "insert");
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should exclude readonly fields in update mode", () => {
+    const result = dehydrateEntity(readonlyEntity as any, readonlyMetadata, "update");
+    expect(result).toMatchSnapshot();
+  });
+});

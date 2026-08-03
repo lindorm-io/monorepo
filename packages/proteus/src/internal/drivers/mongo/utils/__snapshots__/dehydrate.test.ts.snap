@@ -97,32 +97,6 @@ exports[`dehydrateEntity > should use metadata name for field mapping 1`] = `
 }
 `;
 
-exports[`dehydrateToRow > should include discriminator value 1`] = `
-{
-  "id": "abc",
-  "name": "Test",
-  "type": "child",
-}
-`;
-
-exports[`dehydrateToRow > should produce a row dict keyed by entity field keys 1`] = `
-{
-  "emailAddress": "test@example.com",
-  "id": "abc",
-  "name": "John",
-}
-`;
-
-exports[`typedJson > should key the sidecar by meta dict key in dehydrateToRow 1`] = `
-{
-  "__typemeta__:payload": "{"at":"D"}",
-  "id": "abc-123",
-  "payload": {
-    "at": "2000-01-01T00:00:00.000Z",
-  },
-}
-`;
-
 exports[`typedJson > should split a typedJson field into data column and sidecar column 1`] = `
 {
   "_id": "abc-123",

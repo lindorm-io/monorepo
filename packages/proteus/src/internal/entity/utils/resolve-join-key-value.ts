@@ -11,7 +11,7 @@ import { resolvePropertyKey } from "./resolve-property-key.js";
  * 2. Check the raw column key as a property (covers callers that set it directly).
  * 3. Fall back to entity[relation.key][foreignKey] (e.g., entity.author.id)
  *
- * Used by defaultHydrateEntity, defaultDehydrateEntity, and diffColumns.
+ * Used by defaultHydrateEntity, every driver's dehydrateEntity, and diffColumns.
  */
 export const resolveJoinKeyValue = (
   entity: any,

@@ -8,6 +8,19 @@ import { buildPrimitiveElementField } from "../../../../entity/utils/primitive-e
 import { coerceWriteValue } from "../query/coerce-value.js";
 
 /**
+ * The parent FK column holds the parent's PK value, so it writes through the
+ * parent PK's own pipeline — same transform, same driver coercion — instead of
+ * being pushed raw into the binder.
+ */
+const dehydrateParentPk = (entity: IEntity, embeddedList: MetaEmbeddedList): unknown =>
+  dehydrateElementValue(
+    (entity as any)[embeddedList.parentPkColumn],
+    embeddedList.parentPkField,
+    embeddedList,
+    (v) => coerceWriteValue(v, embeddedList.parentPkField),
+  );
+
+/**
  * Insert collection table rows for an entity's @EmbeddedList fields.
  * Called after the parent entity is inserted/updated.
  */
@@ -21,7 +34,7 @@ export const insertEmbeddedListRows = async (
   if (!array || !Array.isArray(array) || array.length === 0) return;
 
   const qualifiedTable = quoteQualifiedName(namespace, embeddedList.tableName);
-  const parentPkValue = (entity as any)[embeddedList.parentPkColumn];
+  const parentPkValue = dehydrateParentPk(entity, embeddedList);
 
   if (embeddedList.elementFields) {
     // Embeddable element rows
@@ -103,7 +116,7 @@ export const deleteEmbeddedListRows = async (
   namespace: string | null,
 ): Promise<void> => {
   const qualifiedTable = quoteQualifiedName(namespace, embeddedList.tableName);
-  const parentPkValue = (entity as any)[embeddedList.parentPkColumn];
+  const parentPkValue = dehydrateParentPk(entity, embeddedList);
 
   const sql = `DELETE FROM ${qualifiedTable} WHERE ${quoteIdentifier(embeddedList.parentFkColumn)} = $1`;
   await client.query(sql, [parentPkValue]);
@@ -119,7 +132,7 @@ export const loadEmbeddedListRows = async (
   namespace: string | null,
 ): Promise<void> => {
   const qualifiedTable = quoteQualifiedName(namespace, embeddedList.tableName);
-  const parentPkValue = (entity as any)[embeddedList.parentPkColumn];
+  const parentPkValue = dehydrateParentPk(entity, embeddedList);
 
   const sql = `SELECT * FROM ${qualifiedTable} WHERE ${quoteIdentifier(embeddedList.parentFkColumn)} = $1 ORDER BY ${quoteIdentifier("__ordinal")}`;
   const result = await client.query(sql, [parentPkValue]);
@@ -177,7 +190,7 @@ export const loadEmbeddedListRowsBatch = async (
 
   const qualifiedTable = quoteQualifiedName(namespace, embeddedList.tableName);
   const fkCol = quoteIdentifier(embeddedList.parentFkColumn);
-  const pkValues = entities.map((e) => (e as any)[embeddedList.parentPkColumn]);
+  const pkValues = entities.map((e) => dehydrateParentPk(e, embeddedList));
 
   const sql = `SELECT * FROM ${qualifiedTable} WHERE ${fkCol} = ANY($1) ORDER BY ${quoteIdentifier("__ordinal")}`;
   const result = await client.query(sql, [pkValues]);
