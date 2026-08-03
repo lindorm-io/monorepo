@@ -83,6 +83,20 @@ describe("serializeHash", () => {
     });
   });
 
+  describe("binary", () => {
+    test("should serialize a Buffer as base64", () => {
+      const fields = [makeField({ key: "blob", type: "binary" })];
+      const row = { blob: Buffer.from([0xde, 0xad, 0xbe, 0xef]) };
+      expect(serializeHash(row, fields, [])).toMatchSnapshot();
+    });
+
+    test("should serialize an empty Buffer as an empty string", () => {
+      const fields = [makeField({ key: "blob", type: "binary" })];
+      const row = { blob: Buffer.alloc(0) };
+      expect(serializeHash(row, fields, [])).toMatchSnapshot();
+    });
+  });
+
   describe("structured types", () => {
     test("should serialize array value as JSON", () => {
       const fields = [makeField({ key: "tags", type: "array" })];
@@ -258,6 +272,36 @@ describe("serialize/deserialize round-trip", () => {
     expect(result).not.toBeNull();
     expect(result!.d).toBeInstanceOf(Date);
     expect((result!.d as Date).toISOString()).toBe("2024-01-01T00:00:00.000Z");
+  });
+
+  test("should round-trip binary (Buffer) with byte equality", () => {
+    const fields = [makeField({ key: "blob", type: "binary" })];
+    const bytes = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
+    const result = roundTrip({ blob: bytes }, fields);
+    expect(result).not.toBeNull();
+    expect(Buffer.isBuffer(result!.blob)).toBe(true);
+    expect((result!.blob as Buffer).equals(bytes)).toBe(true);
+  });
+
+  test("should round-trip binary containing every byte value", () => {
+    const fields = [makeField({ key: "blob", type: "binary" })];
+    // Covers the bytes a UTF-8 round-trip would mangle (0x00, 0x80-0xff).
+    const bytes = Buffer.from(Array.from({ length: 256 }, (_, i) => i));
+    const result = roundTrip({ blob: bytes }, fields);
+    expect((result!.blob as Buffer).equals(bytes)).toBe(true);
+  });
+
+  test("should round-trip decimal { mode: string } without losing precision", () => {
+    const fields = [makeField({ key: "amount", type: "decimal", mode: "string" })];
+    const result = roundTrip({ amount: "1234567890.1234567890" }, fields);
+    expect(result).not.toBeNull();
+    expect(result!.amount).toBe("1234567890.1234567890");
+  });
+
+  test("should round-trip decimal without a mode as a JS number", () => {
+    const fields = [makeField({ key: "amount", type: "decimal" })];
+    const result = roundTrip({ amount: 12345.6789 }, fields);
+    expect(result!.amount).toBe(12345.6789);
   });
 
   test("should round-trip json object", () => {

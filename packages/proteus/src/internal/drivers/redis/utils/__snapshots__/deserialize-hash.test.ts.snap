@@ -52,6 +52,12 @@ exports[`deserializeHash > basic types > should deserialize boolean true 1`] = `
 }
 `;
 
+exports[`deserializeHash > basic types > should deserialize decimal { mode: string } without losing precision 1`] = `
+{
+  "amount": "1234567890.1234567890",
+}
+`;
+
 exports[`deserializeHash > basic types > should deserialize decimal value 1`] = `
 {
   "amount": 99.99,
@@ -127,12 +133,6 @@ exports[`deserializeHash > error handling for invalid data > should match snapsh
 exports[`deserializeHash > error handling for invalid data > should match snapshot for integer invalid error message 1`] = `[RedisDriverError: Failed to deserialize integer from value: "abc"]`;
 
 exports[`deserializeHash > error handling for invalid data > should match snapshot for real invalid error message 1`] = `[RedisDriverError: Failed to deserialize real from value: "xyz"]`;
-
-exports[`deserializeHash > string-like types pass through > should pass through binary as string 1`] = `
-{
-  "val": "test-value",
-}
-`;
 
 exports[`deserializeHash > string-like types pass through > should pass through cidr as string 1`] = `
 {

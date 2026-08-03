@@ -842,6 +842,14 @@ export class MongoDriver implements IProteusDriver {
     // which flattens a Long into a plain object and loses the value.
     options.useBigInt64 = true;
 
+    // Same reason, for BSON binData: a `binary` column must deserialise to a
+    // Node Buffer, not a BSON Binary. structuredClone flattens the Binary class
+    // into a prototype-less `{ buffer, sub_type, position }` object, which
+    // `deserialise` cannot turn back into a Buffer (it throws). No proteus read
+    // path consumes a BSON Binary/UUID instance, so promoting at the driver
+    // fixes every one of them at once.
+    options.promoteBuffers = true;
+
     const mongoClient = new MongoClient(url, options as any);
     await mongoClient.connect();
 

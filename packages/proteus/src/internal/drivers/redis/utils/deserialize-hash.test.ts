@@ -74,6 +74,20 @@ describe("deserializeHash", () => {
       expect(deserializeHash({ amount: "99.99" }, fields, [])).toMatchSnapshot();
     });
 
+    test("should deserialize decimal { mode: string } without losing precision", () => {
+      const fields = [makeField({ key: "amount", type: "decimal", mode: "string" })];
+      expect(
+        deserializeHash({ amount: "1234567890.1234567890" }, fields, []),
+      ).toMatchSnapshot();
+    });
+
+    test("should deserialize binary value from base64", () => {
+      const fields = [makeField({ key: "blob", type: "binary" })];
+      const result = deserializeHash({ blob: "3q2+7w==" }, fields, []);
+      expect(Buffer.isBuffer(result!.blob)).toBe(true);
+      expect((result!.blob as Buffer).toString("hex")).toBe("deadbeef");
+    });
+
     test("should deserialize real value", () => {
       const fields = [makeField({ key: "weight", type: "real" })];
       expect(deserializeHash({ weight: "72.5" }, fields, [])).toMatchSnapshot();
@@ -322,7 +336,6 @@ describe("deserializeHash", () => {
       "cidr",
       "inet",
       "macaddr",
-      "binary",
       "time",
       "interval",
       "xml",

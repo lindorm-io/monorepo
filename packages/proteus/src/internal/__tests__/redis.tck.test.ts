@@ -43,13 +43,8 @@ const factory: TckDriverFactory = {
     referentialIntegrity: false,
     checkConstraints: false,
     bigintColumns: true,
-    // The number mode works, but deserializeHash reads every numeric column
-    // through parseFloat and never sees `field.mode`, so `{ mode: "string" }`
-    // loses precision.
-    decimalColumns: false,
-    // serializeHash stores a Buffer as its String() form, so the bytes are gone
-    // before the read path ever sees them.
-    binaryColumns: false,
+    decimalColumns: true,
+    binaryColumns: true,
     typedJson: true,
     bigintIdentity: true,
     // Redis's driver rejects conflictOn by design (NotSupportedError).

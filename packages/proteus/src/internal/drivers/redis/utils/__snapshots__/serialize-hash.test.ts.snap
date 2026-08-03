@@ -74,6 +74,18 @@ exports[`serializeHash > basic types > should serialize uuid value 1`] = `
 }
 `;
 
+exports[`serializeHash > binary > should serialize a Buffer as base64 1`] = `
+{
+  "blob": "3q2+7w==",
+}
+`;
+
+exports[`serializeHash > binary > should serialize an empty Buffer as an empty string 1`] = `
+{
+  "blob": "",
+}
+`;
+
 exports[`serializeHash > computed fields > should skip computed fields 1`] = `
 {
   "name": "test",

@@ -1,6 +1,7 @@
 import type { Dict } from "@lindorm/types";
 import type {
   MetaField,
+  MetaFieldMode,
   MetaFieldType,
   MetaRelation,
 } from "../../../entity/types/metadata.js";
@@ -48,7 +49,7 @@ export const deserializeHash = (
     if (raw === undefined) {
       value = null;
     } else {
-      value = coerceFromString(raw, field.type);
+      value = coerceFromString(raw, field.type, field.mode);
     }
 
     if (value != null && field.transform) {
@@ -80,7 +81,11 @@ export const deserializeHash = (
   return result;
 };
 
-const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
+const coerceFromString = (
+  raw: string,
+  type: MetaFieldType | null,
+  mode?: MetaFieldMode | null,
+): unknown => {
   switch (type) {
     case "boolean":
       return raw === "true";
@@ -119,6 +124,11 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
     case "decimal":
     case "float":
     case "real": {
+      // `@Field("decimal", { mode: "string" })` exists to carry digits a JS
+      // double cannot hold, so the stored string IS the value — parsing it
+      // would truncate exactly the precision the mode was chosen for.
+      if (type === "decimal" && mode === "string") return raw;
+
       const num = parseFloat(raw);
       if (Number.isNaN(num)) {
         throw new RedisDriverError(
@@ -151,6 +161,11 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
     case "object":
       return JSON.parse(raw);
 
+    // Bytes are stored base64-encoded by serializeHash, because a Redis hash
+    // value is read back as a UTF-8 string.
+    case "binary":
+      return Buffer.from(raw, "base64");
+
     // All string-like types pass through unchanged
     case "string":
     case "text":
@@ -163,7 +178,6 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
     case "cidr":
     case "inet":
     case "macaddr":
-    case "binary":
     case "time":
     case "interval":
     case "xml":

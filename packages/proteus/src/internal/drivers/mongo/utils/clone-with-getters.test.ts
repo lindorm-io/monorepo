@@ -1,3 +1,5 @@
+import { Binary } from "mongodb";
+import { deserialise } from "../../../entity/utils/deserialise.js";
 import { cloneDocument } from "./clone-with-getters.js";
 import { describe, expect, test } from "vitest";
 
@@ -46,5 +48,23 @@ describe("cloneDocument", () => {
 
   test("should handle empty object", () => {
     expect(cloneDocument({})).toMatchSnapshot();
+  });
+
+  // These two pin down WHY MongoDriver sets `promoteBuffers: true` on the
+  // client: structuredClone keeps a Buffer's bytes (as a Uint8Array, which
+  // `deserialise` restores) but flattens a BSON Binary into a plain object it
+  // cannot read. The fix has to happen at the driver, before cloning.
+  test("should preserve the bytes of a Buffer value", () => {
+    const bytes = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
+    const result = cloneDocument({ blob: bytes });
+
+    expect(deserialise(result.blob, "binary").equals(bytes)).toBe(true);
+  });
+
+  test("should flatten a BSON Binary beyond recovery", () => {
+    const result = cloneDocument({ blob: new Binary(Buffer.from([0xde, 0xad])) });
+
+    expect(result.blob).not.toBeInstanceOf(Binary);
+    expect(() => deserialise(result.blob, "binary")).toThrow();
   });
 });

@@ -1,4 +1,4 @@
-import { isString } from "@lindorm/is";
+import { isBuffer, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { MetaField, MetaRelation } from "../../../entity/types/metadata.js";
 import { stringifyForStorage } from "../../../entity/utils/stringify-for-storage.js";
@@ -71,6 +71,12 @@ export const serializeHash = (
 };
 
 const coerceToString = (value: unknown, type: string | null): string => {
+  // A Redis hash value is read back as a UTF-8 string, so raw bytes cannot be
+  // stored verbatim — they are base64-encoded. NOT the `{"type":"Buffer",
+  // "data":[…]}` shape a plain stringify emits: that string cannot be decoded
+  // back into the original bytes, so binary columns round-tripped to garbage.
+  if (type === "binary" && isBuffer(value)) return value.toString("base64");
+
   if (typeof value === "boolean") return value ? "true" : "false";
   if (value instanceof Date) return value.toISOString();
   if (typeof value === "bigint") return String(value);
