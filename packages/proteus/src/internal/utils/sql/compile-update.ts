@@ -190,8 +190,12 @@ export const compileUpdateMany = <E extends IEntity>(
     if (discriminatorColName && field.name === discriminatorColName) continue;
 
     if (field.typedJson) {
-      for (const pair of typedJsonChangedColumns(field, value, (d) =>
-        deps.coerceWriteValue(d, field),
+      for (const pair of typedJsonChangedColumns(
+        field,
+        value,
+        (d) => deps.coerceWriteValue(d, field),
+        amphora,
+        metadata.entity.name,
       )) {
         params.push(pair.value);
         setClauses.push(
@@ -360,8 +364,12 @@ const compileJoinedUpdateManyMultiTable = <E extends IEntity>(
     const alias = ctx.childFieldNames.has(field.name) ? "t1" : "t0";
 
     if (field.typedJson) {
-      for (const pair of typedJsonChangedColumns(field, value, (d) =>
-        deps.coerceWriteValue(d, field),
+      for (const pair of typedJsonChangedColumns(
+        field,
+        value,
+        (d) => deps.coerceWriteValue(d, field),
+        amphora,
+        metadata.entity.name,
       )) {
         params.push(pair.value);
         setClauses.push(
@@ -575,8 +583,12 @@ const partitionSetClauses = <E extends IEntity>(
     const target = ctx.childFieldNames.has(field.name) ? childSetClauses : rootSetClauses;
 
     if (field.typedJson) {
-      for (const pair of typedJsonChangedColumns(field, value, (d) =>
-        deps.coerceWriteValue(d, field),
+      for (const pair of typedJsonChangedColumns(
+        field,
+        value,
+        (d) => deps.coerceWriteValue(d, field),
+        amphora,
+        metadata.entity.name,
       )) {
         params.push(pair.value);
         target.push(

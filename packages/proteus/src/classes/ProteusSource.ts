@@ -271,6 +271,7 @@ export class ProteusSource implements IProteusSource {
       resolveMetadata: this.resolveMetadata,
       cacheAdapter: this.cacheAdapter,
       sourceTtlMs: this.sourceTtlMs,
+      amphora: this._amphora,
       parentEmitEntity: parentEmit,
       driver: clonedDriver!,
       signal: options?.signal,
@@ -624,6 +625,7 @@ export class ProteusSource implements IProteusSource {
       namespace: this._namespace,
       sourceTtlMs: this.sourceTtlMs,
       logger: this.logger,
+      amphora: this._amphora,
     });
   }
 

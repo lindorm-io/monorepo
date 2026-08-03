@@ -16,7 +16,7 @@ import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
 import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
 import {
-  splitTypedJson,
+  dehydrateTypedJson,
   typedJsonMetaDictKey,
 } from "../../../entity/utils/typed-json.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
@@ -78,21 +78,35 @@ const dehydrateToRow = (
       value = (entity as any)[field.key];
     }
 
-    value = value != null && field.transform ? field.transform.to(value) : value;
-    if (value != null && field.encrypted && amphora) {
-      value = encryptFieldValue(value, field.encrypted, amphora);
-    }
-
     // @TypedJson: store JSON-safe data + sidecar meta so structuredClone is lossless
     // (e.g. nested Buffer would otherwise downgrade to Uint8Array) and the shared
-    // hydrate path reconstructs the original types — mirrors the SQL sidecar.
+    // hydrate path reconstructs the original types — mirrors the SQL sidecar. It
+    // owns its own write order (transform, SPLIT, then seal EACH half), so it runs
+    // before the generic transform/encrypt below.
     if (field.typedJson) {
-      const { data, meta } = splitTypedJson(value);
+      const { data, meta } = dehydrateTypedJson(
+        field,
+        value,
+        amphora,
+        metadata.entity.name,
+      );
       row[field.key] = data;
       row[typedJsonMetaDictKey(field.key)] = meta;
-    } else {
-      row[field.key] = value;
+      continue;
     }
+
+    value = value != null && field.transform ? field.transform.to(value) : value;
+    if (value != null && field.encrypted && amphora) {
+      value = encryptFieldValue(
+        value,
+        field.encrypted,
+        amphora,
+        field.key,
+        metadata.entity.name,
+      );
+    }
+
+    row[field.key] = value;
   }
 
   // Extract FK columns from owning relations
@@ -646,6 +660,21 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
         const staged: Dict = {};
         for (const [key, value] of Object.entries(update as Record<string, unknown>)) {
           const field = this.metadata.fields.find((f) => f.key === key);
+          // @TypedJson: stage both halves. Overwriting the data half alone would
+          // leave the previous sidecar behind, and fresh data joined against
+          // stale type metadata hydrates as silently mistyped values.
+          if (field?.typedJson) {
+            const { data, meta } = dehydrateTypedJson(
+              field,
+              value,
+              this.amphora,
+              this.metadata.entity.name,
+            );
+            staged[key] = data;
+            staged[typedJsonMetaDictKey(key)] = meta;
+            continue;
+          }
+
           let transformed =
             value != null && field?.transform ? field.transform.to(value) : value;
           if (transformed != null && field?.encrypted && this.amphora) {
@@ -656,15 +685,6 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
               field.key,
               this.metadata.entity.name,
             );
-          }
-          // @TypedJson: stage both halves. Overwriting the data half alone would
-          // leave the previous sidecar behind, and fresh data joined against
-          // stale type metadata hydrates as silently mistyped values.
-          if (field?.typedJson) {
-            const { data, meta } = splitTypedJson(transformed);
-            staged[key] = data;
-            staged[typedJsonMetaDictKey(key)] = meta;
-            continue;
           }
 
           staged[key] = transformed;

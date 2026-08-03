@@ -43,9 +43,8 @@ import {
   GUARDED_HSET,
 } from "../utils/lua-scripts.js";
 import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
-import { stringifyForStorage } from "../../../entity/utils/stringify-for-storage.js";
 import {
-  splitTypedJson,
+  dehydrateTypedJson,
   typedJsonMetaDictKey,
 } from "../../../entity/utils/typed-json.js";
 import { redactSensitive } from "../../../entity/utils/redact-sensitive.js";
@@ -722,6 +721,26 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
           }
           continue;
         }
+        // @TypedJson: write both halves. `String(value)` would flatten the whole
+        // payload to "[object Object]", and a data-only write would join fresh
+        // data against the previous sidecar. It owns its own write order
+        // (transform, SPLIT, then seal EACH half), so it runs first.
+        if (field?.typedJson) {
+          const { data, meta } = dehydrateTypedJson(
+            field,
+            value,
+            this.amphora,
+            this.metadata.entity.name,
+          );
+          updateHash[fieldKey] = coerceHashValue(data, field);
+          if (meta === null) {
+            pipeline.hdel(key, typedJsonMetaDictKey(fieldKey));
+          } else {
+            updateHash[typedJsonMetaDictKey(fieldKey)] = meta;
+          }
+          continue;
+        }
+
         let transformed = field?.transform ? field.transform.to(value) : value;
         if (transformed != null && field?.encrypted && this.amphora) {
           transformed = encryptFieldValue(
@@ -731,20 +750,6 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
             field.key,
             this.metadata.entity.name,
           );
-        }
-
-        // @TypedJson: write both halves. `String(value)` would flatten the whole
-        // payload to "[object Object]", and a data-only write would join fresh
-        // data against the previous sidecar.
-        if (field?.typedJson) {
-          const { data, meta } = splitTypedJson(transformed);
-          updateHash[fieldKey] = stringifyForStorage(data);
-          if (meta === null) {
-            pipeline.hdel(key, typedJsonMetaDictKey(fieldKey));
-          } else {
-            updateHash[typedJsonMetaDictKey(fieldKey)] = meta;
-          }
-          continue;
         }
 
         // Same coercion the full-row write uses — `String(transformed)` flattened

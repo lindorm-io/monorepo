@@ -4,7 +4,7 @@ import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import type { DehydrateMode } from "../../../../entity/utils/default-dehydrate-entity.js";
 import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value.js";
 import { resolveJoinKeyValue } from "../../../../entity/utils/resolve-join-key-value.js";
-import { splitTypedJson } from "../../../../entity/utils/typed-json.js";
+import { dehydrateTypedJson } from "../../../../entity/utils/typed-json.js";
 import { coerceWriteValue } from "./coerce-value.js";
 
 export type DehydratedColumn = {
@@ -40,22 +40,36 @@ export const dehydrateEntity = <E extends IEntity>(
       value = (entity as any)[field.key];
     }
 
-    if (value != null && field.transform) {
-      value = field.transform.to(value);
-    }
-    if (value != null && field.encrypted && amphora) {
-      value = encryptFieldValue(value, field.encrypted, amphora);
-    }
+    // @TypedJson owns its own write order — transform, SPLIT, then seal EACH
+    // half — so it runs before the generic transform/encrypt below.
     if (field.typedJson) {
-      const { data, meta } = splitTypedJson(value);
+      const { data, meta } = dehydrateTypedJson(
+        field,
+        value,
+        amphora,
+        metadata.entity.name,
+      );
       columns.push({ column: field.name, value: coerceWriteValue(data, field.type) });
       columns.push({ column: field.typedJson.column, value: meta });
       handledKeys.add(field.name);
       handledKeys.add(field.typedJson.column);
-    } else {
-      columns.push({ column: field.name, value: coerceWriteValue(value, field.type) });
-      handledKeys.add(field.name);
+      continue;
     }
+
+    if (value != null && field.transform) {
+      value = field.transform.to(value);
+    }
+    if (value != null && field.encrypted && amphora) {
+      value = encryptFieldValue(
+        value,
+        field.encrypted,
+        amphora,
+        field.key,
+        metadata.entity.name,
+      );
+    }
+    columns.push({ column: field.name, value: coerceWriteValue(value, field.type) });
+    handledKeys.add(field.name);
   }
 
   for (const relation of metadata.relations) {

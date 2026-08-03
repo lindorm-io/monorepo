@@ -9,6 +9,7 @@ import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryErro
 import { ProteusError } from "../../../../errors/ProteusError.js";
 import type { MysqlQueryClient } from "../types/mysql-query-client.js";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
+import { dehydrateTypedJson } from "../../../entity/utils/typed-json.js";
 import { coerceWriteValue } from "../utils/query/coerce-value.js";
 import { resolveTableName } from "../utils/query/resolve-table-name.js";
 
@@ -111,10 +112,15 @@ export class MySqlInsertQueryBuilder<
       }
     }
 
-    const colNames = colKeys.map((key) => {
+    // A @TypedJson key contributes TWO columns: its data column and its sidecar.
+    // Emitting only the data column left the type metadata unwritten, so every
+    // nested Date/Buffer/BigInt came back as its JSON-safe stand-in.
+    const colNames: Array<string> = [];
+    for (const key of colKeys) {
       const field = this.metadata.fields.find((f) => f.key === key);
-      return field?.name ?? key;
-    });
+      colNames.push(field?.name ?? key);
+      if (field?.typedJson) colNames.push(field.typedJson.column);
+    }
 
     const resolved = resolveTableName(this.metadata, this.namespace);
     const tableName = quoteQualifiedName(resolved.schema, resolved.name);
@@ -123,13 +129,37 @@ export class MySqlInsertQueryBuilder<
     const rowPlaceholders: Array<string> = [];
 
     for (const row of this.data) {
-      const placeholders = colKeys.map((key) => {
+      // Column name → value for this row, so a @TypedJson key can split once
+      // and fill both of its columns.
+      const values = new Map<string, unknown>();
+
+      for (const key of colKeys) {
         const field = this.metadata.fields.find((f) => f.key === key);
+
+        if (field?.typedJson) {
+          // No amphora reaches a query builder, so an @Encrypted field is
+          // written in the clear here — the same gap the non-typedJson branch
+          // below already has. Use repository.insert() for encrypted entities.
+          const { data, meta } = dehydrateTypedJson(
+            field,
+            row[key],
+            undefined,
+            this.metadata.entity.name,
+          );
+          values.set(field.name, coerceWriteValue(data, field?.type ?? null));
+          values.set(field.typedJson.column, meta);
+          continue;
+        }
+
         let value = row[key];
         if (field?.transform) {
           value = field.transform.to(value);
         }
-        params.push(coerceWriteValue(value, field?.type ?? null));
+        values.set(field?.name ?? key, coerceWriteValue(value, field?.type ?? null));
+      }
+
+      const placeholders = colNames.map((name) => {
+        params.push(values.get(name));
         return "?";
       });
       rowPlaceholders.push(`(${placeholders.join(", ")})`);

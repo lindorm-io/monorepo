@@ -4,8 +4,9 @@
 // No external services required.
 
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import type { Constructor } from "@lindorm/types";
+import type { Constructor, Dict } from "@lindorm/types";
 import type { IEntity } from "../../interfaces/index.js";
+import type { MemoryStore } from "../drivers/memory/types/memory-store.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import {
@@ -13,6 +14,8 @@ import {
   TCK_ENCRYPTION,
 } from "../__fixtures__/tck/create-tck-amphora.js";
 import { stageTckEncryptions } from "../__fixtures__/tck/stage-tck-encryptions.js";
+import { resolveTableKey } from "../drivers/memory/utils/memory-referential-integrity.js";
+import { resolveTckMetadata } from "../__fixtures__/tck/resolve-tck-metadata.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
 
@@ -67,6 +70,16 @@ const factory: TckDriverFactory = {
 
       repository<E extends IEntity>(target: Constructor<E>) {
         return source.repository(target);
+      },
+
+      // The memory driver has no client to acquire, so the store is reached
+      // through the driver instance. Test-only reach-in: exposing the store on
+      // the public surface just to assert on it would be worse.
+      async readRawRows<E extends IEntity>(target: Constructor<E>) {
+        const metadata = resolveTckMetadata(source, target as Constructor<IEntity>);
+        const store = (source as any)._driver.store as MemoryStore;
+        const table = store.tables.get(resolveTableKey(metadata, source.namespace));
+        return [...(table?.values() ?? [])] as Array<Dict>;
       },
 
       async clear() {

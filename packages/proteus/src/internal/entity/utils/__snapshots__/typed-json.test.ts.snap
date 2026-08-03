@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`dehydrateTypedJson / hydrateTypedJson > splits an unencrypted value and rejoins it losslessly 1`] = `
+{
+  "big": "9007199254740993",
+  "blob": "aGVsbG8",
+  "maybe": 0,
+  "plain": "text",
+  "when": "2021-06-15T10:30:00.000Z",
+}
+`;
+
+exports[`dehydrateTypedJson / hydrateTypedJson > splits an unencrypted value and rejoins it losslessly 2`] = `"{"when":"D","blob":"F","big":"I","maybe":"U","plain":"S"}"`;
+
+exports[`typedJsonChangedColumns > expands to the data column and its sidecar, coercing only the data half 1`] = `
+[
+  {
+    "column": "payload",
+    "value": "{"when":"2021-06-15T10:30:00.000Z","blob":"aGVsbG8","big":"9007199254740993","maybe":0,"plain":"text"}",
+  },
+  {
+    "column": "payload__typemeta",
+    "value": "{"when":"D","blob":"F","big":"I","maybe":"U","plain":"S"}",
+  },
+]
+`;
+
+exports[`typedJsonMetaDictKey / joinTypedJson > the dict key is namespaced so it cannot collide with a field key 1`] = `"__typemeta__:payload"`;

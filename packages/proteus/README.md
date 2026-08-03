@@ -1077,6 +1077,26 @@ Without it, a `json` field holding a `Date`, `Buffer`, `BigInt`, `Map` or `Set` 
 
 **Options:** `{ name? }` — sidecar column name, default `<column>__typemeta`.
 
+##### With `@Encrypted`
+
+The two compose. The value is **split first, then both halves are sealed** — the data column and the sidecar each hold their own ciphertext:
+
+```typescript
+@Encrypted()
+@TypedJson()
+@Field("json")
+payload!: Record<string, unknown>;   // both `payload` and `payload__typemeta` are ciphertext
+```
+
+- **The split has to come first.** Encryption serialises its input as JSON, so sealing the joined value would throw on a nested `BigInt` and flatten a nested `Date` to a string — destroying exactly what `@TypedJson` preserves. Splitting first leaves a JSON-safe data half and a string sidecar, both of which encrypt cleanly.
+- **The sidecar is sealed too.** It is a map of every path's type; in the clear it would describe the shape of the value the data column hides.
+- **The sidecar column becomes `TEXT`.** Ciphertext is not JSON, so an encrypted field's companion column follows the data column to the driver's text type instead of `JSONB`/`JSON`.
+- **Neither half is queryable**, as with any `@Encrypted` field.
+
+##### With `@Transform`
+
+`transform.to` runs before the split, `transform.from` after the rejoin — on every driver and every write path (insert, entity-diff update, `updateMany`, query-builder writes).
+
 #### `@Encrypted`
 
 Marks a field for application-level encryption at rest. Values are encrypted before writing and decrypted after reading. Requires an `IAmphora` key store configured on `ProteusSource`.
@@ -2281,6 +2301,19 @@ await session.flushCache(User); // sessions share the source's adapter and names
 - **An unregistered entity throws** `entity_not_registered` — a typo must not silently no-op.
 - **No cache adapter configured is a no-op** (logged at `verbose`), so the same code runs with and without caching.
 - **An adapter failure throws** `cache_flush_failed`. This is deliberately unlike the implicit post-write invalidation, which only logs a warning: an explicit flush is the caller asserting "make reads correct now", so a resolved promise must not hide a still-stale cache.
+
+### Caching an `@Encrypted` entity
+
+An entity with `@Encrypted` fields is cacheable, and the cache entry holds **ciphertext**: the sealed form goes into the store and is opened again on the way out, so a hit returns the same plaintext a miss does. This matters because the cache is a second store — with `RedisCacheAdapter` it is a second database, outside the vault's reach.
+
+Two consequences worth knowing:
+
+- **A cache hit costs a decryption.** For a hot, heavily-encrypted entity that can outweigh the query it saves; measure before caching one.
+- **Encrypted columns are not queryable**, cached or not — the cache key is built from the criteria, not the row.
+
+An entity with `@Encrypted` fields and **no** `amphora` drops out of the cache entirely rather than caching plaintext. `ProteusSource.setup()` already refuses that combination, so this is a guard rather than a configuration you can reach.
+
+`@Field("binary")` entities are still skipped: a `Buffer` has no lossless JSON form.
 
 Adapter caveats:
 

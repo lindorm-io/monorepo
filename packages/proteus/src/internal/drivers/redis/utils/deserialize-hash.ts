@@ -40,14 +40,15 @@ export const deserializeHash = (
     handledKeys.add(field.key);
 
     // Encrypted fields: pass ciphertext through as-is — defaultHydrateEntity
-    // handles decryption uniformly for all drivers.
-    if (field.encrypted) {
-      result[field.key] = raw === undefined ? null : raw;
-      continue;
-    }
-
+    // handles decryption uniformly for all drivers. It must NOT short-circuit
+    // the sidecar below: an @Encrypted @TypedJson field seals both halves, and
+    // dropping the sidecar here left the read with untyped data.
     result[field.key] =
-      raw === undefined ? null : coerceFromString(raw, field.type, field.mode);
+      raw === undefined
+        ? null
+        : field.encrypted
+          ? raw
+          : coerceFromString(raw, field.type, field.mode);
 
     if (field.typedJson) {
       const rawMeta = hash[typedJsonMetaDictKey(field.key)];

@@ -4,7 +4,7 @@ import { describe, test, it, expect, beforeEach } from "vitest";
 // getMany, count, exists, withDeleted. Excludes advanced features (raw SQL,
 // GROUP BY, window functions, CTEs, subqueries, set operations).
 
-import type { TckDriverHandle } from "./types.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
 import type { ProteusSource } from "../../../classes/ProteusSource.js";
 import { NotSupportedError } from "../../../errors/index.js";
@@ -15,9 +15,17 @@ export const queryBuilderSuite = (
   getHandle: () => TckDriverHandle,
   entities: TckEntities,
   getSource: () => ProteusSource,
+  caps: TckCapabilities,
 ) => {
-  const { TckSimpleUser, TckSoftDeletable, TckScoped, TckCar, TckTruck, TckVehicle } =
-    entities;
+  const {
+    TckSimpleUser,
+    TckSoftDeletable,
+    TckScoped,
+    TckCar,
+    TckTruck,
+    TckTypedJson,
+    TckVehicle,
+  } = entities;
 
   void TckScoped; // referenced in filter tests via string-based approach
 
@@ -422,4 +430,75 @@ export const queryBuilderSuite = (
       expect(found).toBeInstanceOf(Car);
     });
   });
+
+  // A write builder bypasses the ORM lifecycle but NOT the storage contract: a
+  // @TypedJson field still owes its sidecar. The redis builder wrote the data
+  // column alone, so the type metadata was never stored (insert) or was left
+  // describing the previous value (update) — both hydrate as mistyped values.
+  if (caps.typedJson) {
+    describe("query builder writes the @TypedJson sidecar", () => {
+      test("insert() stores the sidecar so nested types survive the read", async () => {
+        const source = getSource();
+        const repo = getHandle().repository(TckTypedJson);
+
+        const now = new Date();
+        await source
+          .queryBuilder(TckTypedJson)
+          .insert()
+          .values([
+            {
+              id: "00000000-0000-0000-0000-0000000000a1",
+              version: 1,
+              name: "qb-typedjson-insert",
+              payload: { at: new Date("2019-09-09T09:09:09.000Z"), big: 11n },
+              meta: { ok: true },
+              optional: null,
+              transformed: null,
+              createdAt: now,
+              updatedAt: now,
+            } as any,
+          ])
+          .execute();
+
+        const found = await repo.findOneOrFail({ name: "qb-typedjson-insert" });
+        const p = found.payload as any;
+
+        expect(p.at).toBeInstanceOf(Date);
+        expect((p.at as Date).getTime()).toBe(
+          new Date("2019-09-09T09:09:09.000Z").getTime(),
+        );
+        expect(typeof p.big).toBe("bigint");
+        expect(p.big).toBe(11n);
+      });
+
+      test("update() replaces the sidecar rather than leaving the previous one", async () => {
+        const source = getSource();
+        const repo = getHandle().repository(TckTypedJson);
+
+        const inserted = await repo.insert({
+          name: "qb-typedjson-update",
+          payload: { at: new Date("2019-09-09T09:09:09.000Z"), big: 11n, gone: 1n },
+          meta: { ok: true },
+          optional: null,
+        });
+
+        await source
+          .queryBuilder(TckTypedJson)
+          .update()
+          .set({ payload: { at: 22n, big: new Date("2020-10-10T10:10:10.000Z") } } as any)
+          .where({ id: inserted.id })
+          .execute();
+
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        const p = found.payload as any;
+
+        // Every path's type is INVERTED versus the insert, so a surviving
+        // sidecar would mistype both — and resurrect the dropped key.
+        expect(typeof p.at).toBe("bigint");
+        expect(p.at).toBe(22n);
+        expect(p.big).toBeInstanceOf(Date);
+        expect("gone" in p).toBe(false);
+      });
+    });
+  }
 };

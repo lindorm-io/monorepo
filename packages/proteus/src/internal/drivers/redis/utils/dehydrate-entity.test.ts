@@ -51,6 +51,7 @@ const makeMetadata = (
   extra: Partial<EntityMetadata> = {},
 ): EntityMetadata =>
   ({
+    entity: { name: "TestEntity" },
     fields,
     relations,
     relationIds: [],

@@ -5,7 +5,7 @@ import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
 import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value.js";
 import {
-  splitTypedJson,
+  dehydrateTypedJson,
   typedJsonMetaDictKey,
 } from "../../../entity/utils/typed-json.js";
 
@@ -40,21 +40,36 @@ export const dehydrateToRow = <E extends IEntity>(
       value = (entity as any)[field.key];
     }
 
+    // @TypedJson owns its own write order — transform, SPLIT, then seal EACH
+    // half — so it runs before the generic transform/encrypt below.
+    if (field.typedJson) {
+      const { data, meta } = dehydrateTypedJson(
+        field,
+        value,
+        amphora,
+        metadata.entity.name,
+      );
+      result[field.key] = data;
+      result[typedJsonMetaDictKey(field.key)] = meta;
+      handledKeys.add(field.key);
+      continue;
+    }
+
     if (value != null && field.transform) {
       value = field.transform.to(value);
     }
 
     if (value != null && field.encrypted && amphora) {
-      value = encryptFieldValue(value, field.encrypted, amphora);
+      value = encryptFieldValue(
+        value,
+        field.encrypted,
+        amphora,
+        field.key,
+        metadata.entity.name,
+      );
     }
 
-    if (field.typedJson) {
-      const { data, meta } = splitTypedJson(value);
-      result[field.key] = data;
-      result[typedJsonMetaDictKey(field.key)] = meta;
-    } else {
-      result[field.key] = value;
-    }
+    result[field.key] = value;
 
     handledKeys.add(field.key);
   }

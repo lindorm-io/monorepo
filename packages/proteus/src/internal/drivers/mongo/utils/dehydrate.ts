@@ -7,7 +7,7 @@ import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js"
 import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value.js";
 import { serialiseArray } from "../../../entity/utils/serialise.js";
 import {
-  splitTypedJson,
+  dehydrateTypedJson,
   typedJsonMetaDictKey,
 } from "../../../entity/utils/typed-json.js";
 import { buildCompoundId } from "./build-compound-id.js";
@@ -52,6 +52,23 @@ export const dehydrateEntity = <E extends IEntity>(
       value = (entity as any)[field.key];
     }
 
+    // @TypedJson owns its own write order — transform, SPLIT, then seal EACH
+    // half — so it runs before the generic transform/encrypt below. A typed-json
+    // field is never a PK (an @Encrypted PK is rejected at load, and JsonKit
+    // splitting an id is meaningless), so it writes straight to the document.
+    if (field.typedJson) {
+      const { data, meta } = dehydrateTypedJson(
+        field,
+        value,
+        amphora,
+        metadata.entity.name,
+      );
+      doc[field.name] = data;
+      doc[field.typedJson.column] = meta;
+      handledKeys.add(field.key);
+      continue;
+    }
+
     // Apply transform.to() for custom transformations
     if (value != null && field.transform) {
       value = field.transform.to(value);
@@ -75,10 +92,6 @@ export const dehydrateEntity = <E extends IEntity>(
 
     if (pkSet.has(field.key)) {
       pkValues[field.key] = value;
-    } else if (field.typedJson) {
-      const { data, meta } = splitTypedJson(value);
-      doc[field.name] = data;
-      doc[field.typedJson.column] = meta;
     } else {
       // Use the metadata name (DB column name) for non-PK fields
       doc[field.name] = value;
@@ -151,21 +164,36 @@ export const dehydrateToRow = <E extends IEntity>(
       value = (entity as any)[field.key];
     }
 
+    // @TypedJson owns its own write order — transform, SPLIT, then seal EACH
+    // half — so it runs before the generic transform/encrypt below.
+    if (field.typedJson) {
+      const { data, meta } = dehydrateTypedJson(
+        field,
+        value,
+        amphora,
+        metadata.entity.name,
+      );
+      result[field.key] = data;
+      result[typedJsonMetaDictKey(field.key)] = meta;
+      handledKeys.add(field.key);
+      continue;
+    }
+
     if (value != null && field.transform) {
       value = field.transform.to(value);
     }
 
     if (value != null && field.encrypted && amphora) {
-      value = encryptFieldValue(value, field.encrypted, amphora);
+      value = encryptFieldValue(
+        value,
+        field.encrypted,
+        amphora,
+        field.key,
+        metadata.entity.name,
+      );
     }
 
-    if (field.typedJson) {
-      const { data, meta } = splitTypedJson(value);
-      result[field.key] = data;
-      result[typedJsonMetaDictKey(field.key)] = meta;
-    } else {
-      result[field.key] = value;
-    }
+    result[field.key] = value;
 
     handledKeys.add(field.key);
   }

@@ -11,6 +11,7 @@ import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryErro
 import { ProteusError } from "../../../../errors/ProteusError.js";
 import type { MysqlQueryClient } from "../types/mysql-query-client.js";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
+import { dehydrateTypedJson } from "../../../entity/utils/typed-json.js";
 import { coerceWriteValue } from "../utils/query/coerce-value.js";
 import { buildDiscriminatorPredicateUnqualified } from "../utils/query/compile-helpers.js";
 import { compileWhere } from "../utils/query/compile-where.js";
@@ -114,15 +115,37 @@ export class MySqlUpdateQueryBuilder<
     const params: Array<unknown> = [];
     const setClauses: Array<string> = [];
 
+    const pushSet = (column: string, value: unknown): void => {
+      params.push(value);
+      setClauses.push(`${quoteIdentifier(column)} = ?`);
+    };
+
     for (const [key, value] of Object.entries(this.data)) {
       const field = this.metadata.fields.find((f) => f.key === key);
-      const colName = field?.name ?? key;
+
+      // A @TypedJson field owns two columns. Setting the data column alone left
+      // the previous row's sidecar in place, so the fresh data was rejoined
+      // against stale type metadata and hydrated as mistyped values.
+      if (field?.typedJson) {
+        // No amphora reaches a query builder, so an @Encrypted field is written
+        // in the clear here — the same gap the branch below already has. Use
+        // repository.update() for encrypted entities.
+        const { data, meta } = dehydrateTypedJson(
+          field,
+          value,
+          undefined,
+          this.metadata.entity.name,
+        );
+        pushSet(field.name, coerceWriteValue(data, field?.type ?? null));
+        pushSet(field.typedJson.column, meta);
+        continue;
+      }
+
       let transformed = value;
       if (field?.transform) {
         transformed = field.transform.to(transformed);
       }
-      params.push(coerceWriteValue(transformed, field?.type ?? null));
-      setClauses.push(`${quoteIdentifier(colName)} = ?`);
+      pushSet(field?.name ?? key, coerceWriteValue(transformed, field?.type ?? null));
     }
 
     // MySQL supports UPDATE ... AS alias, but for QB updates we use unqualified

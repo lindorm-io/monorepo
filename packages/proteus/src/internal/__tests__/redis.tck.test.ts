@@ -7,7 +7,7 @@
 import { randomBytes } from "node:crypto";
 import type { Redis } from "ioredis";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import type { Constructor } from "@lindorm/types";
+import type { Constructor, Dict } from "@lindorm/types";
 import type { IEntity } from "../../interfaces/index.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";
@@ -19,6 +19,9 @@ import {
   TCK_ENCRYPTION,
 } from "../__fixtures__/tck/create-tck-amphora.js";
 import { stageTckEncryptions } from "../__fixtures__/tck/stage-tck-encryptions.js";
+import { getEntityName } from "../entity/utils/get-entity-name.js";
+import { resolveStorageMetadata } from "../entity/utils/resolve-storage-metadata.js";
+import { resolveTckMetadata } from "../__fixtures__/tck/resolve-tck-metadata.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
 
@@ -94,6 +97,32 @@ const factory: TckDriverFactory = {
 
       repository<E extends IEntity>(target: Constructor<E>) {
         return source.repository(target);
+      },
+
+      // One HGETALL per key under the entity's own prefix — the stored hash
+      // exactly as the driver wrote it, strings and all. The prefix comes from
+      // the same `getEntityName` parts the driver keys on, so it tracks the
+      // naming strategy and the `entity` type segment.
+      async readRawRows<E extends IEntity>(target: Constructor<E>) {
+        const metadata = resolveTckMetadata(source, target as Constructor<IEntity>);
+        const scoped = getEntityName(resolveStorageMetadata(metadata), { namespace });
+        const client = await source.client<Redis>();
+        const rows: Array<Dict> = [];
+        let cursor = "0";
+        do {
+          const [next, keys] = await client.scan(
+            cursor,
+            "MATCH",
+            `${scoped.parts.join(":")}:*`,
+            "COUNT",
+            1000,
+          );
+          cursor = next;
+          for (const key of keys) {
+            rows.push((await client.hgetall(key)) as Dict);
+          }
+        } while (cursor !== "0");
+        return rows;
       },
 
       async clear() {

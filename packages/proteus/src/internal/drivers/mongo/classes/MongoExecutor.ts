@@ -8,7 +8,8 @@ import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
 import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import { shouldAutoIncrement } from "../../../entity/utils/should-auto-increment.js";
-import { splitTypedJson } from "../../../entity/utils/typed-json.js";
+import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import { dehydrateTypedJson } from "../../../entity/utils/typed-json.js";
 import { toAbortError } from "../../../utils/abort.js";
 import { dehydrateEntity } from "../utils/dehydrate.js";
 import { hydrateEntity, hydrateEntities } from "../utils/hydrate.js";
@@ -620,17 +621,35 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       if (this.metadata.primaryKeys.includes(fieldKey)) continue; // Can't update PKs
 
       const mongoField = field?.name ?? fieldKey;
-      const transformed =
-        value != null && field?.transform ? field.transform.to(value) : value;
 
       // @TypedJson: $set both halves. Writing the data column alone would leave
       // the previous sidecar in place, and fresh data joined against stale type
       // metadata hydrates as silently mistyped values.
       if (field?.typedJson) {
-        const { data, meta } = splitTypedJson(transformed);
+        const { data, meta } = dehydrateTypedJson(
+          field,
+          value,
+          this.amphora,
+          this.metadata.entity.name,
+        );
         setFields[mongoField] = data;
         setFields[field.typedJson.column] = meta;
         continue;
+      }
+
+      let transformed =
+        value != null && field?.transform ? field.transform.to(value) : value;
+
+      // updateMany used to skip encryption entirely, writing an @Encrypted
+      // column in the clear while every read still tried to decrypt it.
+      if (transformed != null && field?.encrypted && this.amphora) {
+        transformed = encryptFieldValue(
+          transformed,
+          field.encrypted,
+          this.amphora,
+          field.key,
+          this.metadata.entity.name,
+        );
       }
 
       setFields[mongoField] = transformed ?? null;

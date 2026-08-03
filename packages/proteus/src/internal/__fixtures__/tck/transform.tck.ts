@@ -7,15 +7,16 @@
 // application is observable (redis applied `from` twice until this suite landed).
 
 import { beforeEach, describe, expect, test } from "vitest";
-import type { TckDriverHandle } from "./types.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
 
 export const transformSuite = (
   getHandle: () => TckDriverHandle,
   entities: TckEntities,
+  caps: TckCapabilities,
 ) => {
   describe("Transform", () => {
-    const { TckTransformed } = entities;
+    const { TckTransformed, TckTypedJson } = entities;
 
     beforeEach(async () => {
       await getHandle().clear();
@@ -109,5 +110,112 @@ export const transformSuite = (
       expect(bySuffixed[1].suffixed).toBe("two");
       expect(bySuffixed[1].halved).toBe(4);
     });
+
+    // A @TypedJson field is written through its own compiler branch, which used
+    // to skip transform.to() entirely — so the stored value never went through
+    // `to` while every read still applied `from`. `tick` is incremented by `to`
+    // and decremented by `from`, so a DROPPED `to` reads one too low and a
+    // DOUBLED one reads one too high; the payload also carries a Date and a
+    // BigInt so the split still has to be lossless around the transform.
+    if (caps.typedJson) {
+      describe("on a @TypedJson field", () => {
+        test("insert + find applies each direction exactly once", async () => {
+          const repo = getHandle().repository(TckTypedJson);
+
+          const inserted = await repo.insert({
+            name: "tj-transform-insert",
+            payload: { a: 1 },
+            meta: { b: 2 },
+            optional: null,
+            transformed: {
+              tick: 100,
+              stamp: new Date("2015-05-05T05:05:05.000Z"),
+              n: 3n,
+            },
+          });
+
+          const found = await repo.findOneOrFail({ id: inserted.id });
+          const t = found.transformed as any;
+
+          expect(t.tick).toBe(100);
+          expect(t.stamp).toBeInstanceOf(Date);
+          expect((t.stamp as Date).getTime()).toBe(
+            new Date("2015-05-05T05:05:05.000Z").getTime(),
+          );
+          expect(typeof t.n).toBe("bigint");
+          expect(t.n).toBe(3n);
+        });
+
+        test("update (partial diff) applies each direction exactly once", async () => {
+          const repo = getHandle().repository(TckTypedJson);
+
+          const inserted = await repo.insert({
+            name: "tj-transform-update",
+            payload: { a: 1 },
+            meta: { b: 2 },
+            optional: null,
+            transformed: {
+              tick: 100,
+              stamp: new Date("2015-05-05T05:05:05.000Z"),
+              n: 3n,
+            },
+          });
+
+          const entity = await repo.findOneOrFail({ id: inserted.id });
+          entity.transformed = {
+            tick: 200,
+            stamp: new Date("2016-06-06T06:06:06.000Z"),
+            n: 4n,
+          } as any;
+          await repo.update(entity);
+
+          const found = await repo.findOneOrFail({ id: inserted.id });
+          const t = found.transformed as any;
+
+          expect(t.tick).toBe(200);
+          expect(t.stamp).toBeInstanceOf(Date);
+          expect((t.stamp as Date).getTime()).toBe(
+            new Date("2016-06-06T06:06:06.000Z").getTime(),
+          );
+          expect(typeof t.n).toBe("bigint");
+          expect(t.n).toBe(4n);
+        });
+
+        test("updateMany applies each direction exactly once", async () => {
+          const repo = getHandle().repository(TckTypedJson);
+
+          const inserted = await repo.insert({
+            name: "tj-transform-many",
+            payload: { a: 1 },
+            meta: { b: 2 },
+            optional: null,
+            transformed: {
+              tick: 100,
+              stamp: new Date("2015-05-05T05:05:05.000Z"),
+              n: 3n,
+            },
+          });
+
+          await repo.updateMany({ name: "tj-transform-many" }, {
+            transformed: {
+              tick: 300,
+              stamp: new Date("2017-07-07T07:07:07.000Z"),
+              n: 5n,
+            },
+          } as any);
+
+          const found = await repo.findOneOrFail({ id: inserted.id });
+          const t = found.transformed as any;
+
+          expect(t.tick).toBe(300);
+          expect(t.stamp).toBeInstanceOf(Date);
+          expect((t.stamp as Date).getTime()).toBe(
+            new Date("2017-07-07T07:07:07.000Z").getTime(),
+          );
+          expect(typeof t.n).toBe("bigint");
+          expect(t.n).toBe(5n);
+        });
+      });
+    }
   });
 };

@@ -6,7 +6,7 @@
 import { randomBytes } from "node:crypto";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { Client } from "pg";
-import type { Constructor } from "@lindorm/types";
+import type { Constructor, Dict } from "@lindorm/types";
 import type { IEntity } from "../../interfaces/index.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import { PostgresDriver } from "../drivers/postgres/classes/PostgresDriver.js";
@@ -17,6 +17,7 @@ import {
   TCK_ENCRYPTION,
 } from "../__fixtures__/tck/create-tck-amphora.js";
 import { stageTckEncryptions } from "../__fixtures__/tck/stage-tck-encryptions.js";
+import { resolveTckStorageName } from "../__fixtures__/tck/resolve-tck-metadata.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
 
@@ -97,6 +98,15 @@ const factory: TckDriverFactory = {
 
       repository<E extends IEntity>(target: Constructor<E>) {
         return source.repository(target);
+      },
+
+      async readRawRows<E extends IEntity>(target: Constructor<E>) {
+        if (!clearClient) {
+          throw new Error("[TCK:PG] clearClient not initialized");
+        }
+        const table = resolveTckStorageName(source, target as Constructor<IEntity>);
+        const raw = await clearClient.query(`SELECT * FROM "${namespace}"."${table}"`);
+        return raw.rows as Array<Dict>;
       },
 
       async clear() {

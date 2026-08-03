@@ -222,6 +222,13 @@ class PgGoldKitchen {
   @Field("json")
   payload!: unknown;
 
+  // Sealed typed-json: BOTH the data column and the sidecar hold ciphertext, so
+  // BOTH must project to "text" — a JSONB sidecar would reject the ciphertext.
+  @Encrypted()
+  @TypedJson()
+  @Field("json")
+  sealedPayload!: unknown;
+
   @Deferrable({ initially: true })
   @Cascade({ onDestroy: "set_null", onUpdate: "cascade" })
   @ManyToOne(() => PgGoldOwner, "items")
@@ -378,6 +385,14 @@ describe("projectDesiredSchema (golden)", () => {
     const kitchen = schema.tables.find((t) => t.name === "PgGoldKitchen");
     expect(kitchen).toBeDefined();
     expect(kitchen!.columns.some((c) => c.name === "payload__typemeta")).toBe(true);
+
+    // A plain typed-json sidecar is JSONB; a SEALED one holds ciphertext, which
+    // is not JSON, so it follows its data column down to text.
+    const column = (name: string) => kitchen!.columns.find((c) => c.name === name);
+    expect(column("payload__typemeta")!.pgType).toBe("JSONB");
+    expect(column("sealedPayload")!.pgType).toBe("text");
+    expect(column("sealedPayload__typemeta")!.pgType).toBe("text");
+
     expect(schema).toMatchSnapshot();
   });
 

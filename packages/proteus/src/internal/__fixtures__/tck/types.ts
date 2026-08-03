@@ -1,5 +1,5 @@
 import type { IAmphora } from "@lindorm/amphora";
-import type { Constructor } from "@lindorm/types";
+import type { Constructor, Dict } from "@lindorm/types";
 import type { IEntity, IProteusRepository } from "../../../interfaces/index.js";
 import type { MetaDriver } from "../../entity/types/metadata.js";
 import type { NamingStrategy } from "../../../types/source-options.js";
@@ -103,6 +103,17 @@ export type TckDriverHandle = {
    */
   amphora: IAmphora;
   repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E>;
+  /**
+   * Every STORED row of one entity, read straight off the driver with no
+   * hydrate, decrypt or sidecar-join layer in between. Keys are storage-level
+   * names (SQL columns, Redis hash fields, Mongo document keys, memory row
+   * keys) and values are whatever the driver hands back.
+   *
+   * This is what lets a test prove a column really holds ciphertext. A
+   * round-trip assertion cannot: it passes just as well when nothing was
+   * encrypted at all.
+   */
+  readRawRows<E extends IEntity>(target: Constructor<E>): Promise<Array<Dict>>;
   clear(): Promise<void>;
   teardown(): Promise<void>;
 };

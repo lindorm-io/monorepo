@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type { ILogger } from "@lindorm/logger";
 import type { DeepPartial } from "@lindorm/types";
@@ -24,8 +25,10 @@ import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError.js";
 import { buildCacheKey, buildCachePrefix } from "../utils/cache/build-cache-key.js";
 import { resolveCacheTtl } from "../utils/cache/resolve-cache-ttl.js";
 import { defaultHydrateEntity } from "../entity/utils/default-hydrate-entity.js";
+import { encryptFieldValue } from "../entity/utils/encrypt-field-value.js";
 import { resolvePolymorphicMetadata } from "../entity/utils/resolve-polymorphic-metadata.js";
 import { runHooksAsync } from "../entity/utils/run-hooks-async.js";
+import { dehydrateTypedJson, typedJsonMetaDictKey } from "../entity/utils/typed-json.js";
 
 // ─── JSON replacer / reviver ─────────────────────────────────────────────
 
@@ -50,6 +53,7 @@ export type CachingRepositorySettings<E extends IEntity> = {
   namespace: string | null;
   sourceTtlMs: number | undefined;
   logger: ILogger;
+  amphora: IAmphora | undefined;
 };
 
 // ─── CachingRepository ──────────────────────────────────────────────────
@@ -66,6 +70,7 @@ export class CachingRepository<
   private readonly entityName: string;
   private readonly sourceTtlMs: number | undefined;
   private readonly logger: ILogger;
+  private readonly amphora: IAmphora | undefined;
   private readonly hasBinaryFields: boolean;
   private readonly hasEncryptedFields: boolean;
   private readonly hasEagerRelations: boolean;
@@ -83,6 +88,7 @@ export class CachingRepository<
     this.entityNamespace = options.metadata.entity.namespace;
     this.entityName = options.metadata.entity.name;
     this.sourceTtlMs = options.sourceTtlMs;
+    this.amphora = options.amphora;
     this.logger = options.logger.child([
       "CachingRepository",
       options.metadata.entity.name,
@@ -378,7 +384,12 @@ export class CachingRepository<
 
   private shouldSkipCache(options?: FindOptions<E>): boolean {
     if (this.hasBinaryFields) return true;
-    if (this.hasEncryptedFields) return true;
+    // @Encrypted entities ARE cacheable — serializeEntities seals every such
+    // field, so the cache store only ever holds ciphertext. Without a vault it
+    // could not seal them, and caching the plaintext instead is not an option;
+    // ProteusSource.setup() already refuses an @Encrypted entity with no
+    // amphora, so this is a belt-and-braces guard rather than a live path.
+    if (this.hasEncryptedFields && !this.amphora) return true;
     if (this.hasEagerRelations) return true;
     if (this.hasLazyRelations) return true;
     if (options?.relations?.length) {
@@ -560,14 +571,39 @@ export class CachingRepository<
       const data: Record<string, unknown> = {};
       for (const field of effectiveMetadata.fields) {
         // The replay path runs defaultHydrateEntity, which expects a ROW-side
-        // dict: it applies deserialise() and transform.from(). So a transformed
-        // field must be cached in its row-side form — caching the entity-side
+        // dict: it decrypts, then applies deserialise() and transform.from(). So
+        // every field is cached in its row-side form — caching the entity-side
         // value (already through transform.from) made a cache hit apply the
-        // transform a second time. Encryption stays plaintext on purpose:
-        // deserializeEntities hydrates without an amphora, so nothing decrypts.
+        // transform a second time, and caching an @Encrypted field's plaintext
+        // put the secret in the cache store in the clear. With a Redis adapter
+        // that is the secret sitting in a second database, outside the vault.
         const value = (entity as any)[field.key];
-        data[field.key] =
+
+        if (field.typedJson) {
+          const { data: half, meta } = dehydrateTypedJson(
+            field,
+            value,
+            this.amphora,
+            effectiveMetadata.entity.name,
+          );
+          data[field.key] = half;
+          data[typedJsonMetaDictKey(field.key)] = meta;
+          continue;
+        }
+
+        const transformed =
           value != null && field.transform ? field.transform.to(value) : value;
+
+        data[field.key] =
+          transformed != null && field.encrypted && this.amphora
+            ? encryptFieldValue(
+                transformed,
+                field.encrypted,
+                this.amphora,
+                field.key,
+                effectiveMetadata.entity.name,
+              )
+            : transformed;
       }
       // Serialize FK join-key columns from owning relations
       for (const relation of effectiveMetadata.relations) {
@@ -594,6 +630,7 @@ export class CachingRepository<
       const entity = defaultHydrateEntity<E>(data as any, effectiveMetadata, {
         snapshot: snapshot ?? true,
         hooks: true,
+        amphora: this.amphora,
       });
       await runHooksAsync("AfterLoad", effectiveMetadata.hooks, entity, undefined);
 

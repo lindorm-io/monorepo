@@ -14,7 +14,7 @@ import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { rm } from "node:fs/promises";
-import type { Constructor } from "@lindorm/types";
+import type { Constructor, Dict } from "@lindorm/types";
 import type { IEntity } from "../../interfaces/index.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import { MemoryCacheAdapter } from "../../classes/MemoryCacheAdapter.js";
@@ -25,6 +25,8 @@ import {
   TCK_ENCRYPTION,
 } from "../__fixtures__/tck/create-tck-amphora.js";
 import { stageTckEncryptions } from "../__fixtures__/tck/stage-tck-encryptions.js";
+import type { SqliteQueryClient } from "../drivers/sqlite/types/sqlite-query-client.js";
+import { resolveTckStorageName } from "../__fixtures__/tck/resolve-tck-metadata.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
 
@@ -95,6 +97,12 @@ const factory: TckDriverFactory = {
 
       repository<E extends IEntity>(target: Constructor<E>) {
         return source.repository(target);
+      },
+
+      async readRawRows<E extends IEntity>(target: Constructor<E>) {
+        const table = resolveTckStorageName(source, target as Constructor<IEntity>);
+        const client = await source.client<SqliteQueryClient>();
+        return client.all(`SELECT * FROM "${table}"`) as Array<Dict>;
       },
 
       async clear() {

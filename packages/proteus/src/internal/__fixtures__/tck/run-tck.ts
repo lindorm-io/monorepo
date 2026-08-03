@@ -155,6 +155,11 @@ const runTckForNaming = (
     baseTargets.push(entities.TckEncrypted, entities.TckStagedEncrypted);
   }
 
+  // @TypedJson + @Encrypted needs both capabilities.
+  if (caps.encryption && caps.typedJson) {
+    baseTargets.push(entities.TckTypedJsonEncrypted);
+  }
+
   // Single-table inheritance entities (all drivers)
   if (caps.inheritance.singleTable) {
     baseTargets.push(entities.TckVehicle, entities.TckCar, entities.TckTruck);
@@ -213,7 +218,7 @@ const runTckForNaming = (
   complexPredicatesSuite(getHandle, entities);
   arrayTypeSuite(getHandle, entities);
   renamedColumnsSuite(getHandle, entities);
-  transformSuite(getHandle, entities);
+  transformSuite(getHandle, entities, caps);
 
   // Capability-gated suites
   maybeDescribe(caps.softDelete, "softDelete", () =>
@@ -228,7 +233,7 @@ const runTckForNaming = (
   maybeDescribe(caps.cursor, "cursor", () => cursorSuite(getHandle, entities));
   maybeDescribe(caps.expiry, "expiry", () => expirySuite(getHandle, entities));
   maybeDescribe(caps.queryBuilder, "queryBuilder", () =>
-    queryBuilderSuite(getHandle, entities, getSource),
+    queryBuilderSuite(getHandle, entities, getSource, caps),
   );
   maybeDescribe(caps.lazyLoading, "lazyLoading", () =>
     lazyLoadingSuite(getHandle, entities),
@@ -258,7 +263,9 @@ const runTckForNaming = (
   // @TypedJson has its own flag: the sidecar carries nested bigint / Buffer /
   // Date through a JSON-safe data half, so it does not depend on the driver's
   // native bigint / decimal / binary column support.
-  maybeDescribe(caps.typedJson, "typedJson", () => typedJsonSuite(getHandle, entities));
+  maybeDescribe(caps.typedJson, "typedJson", () =>
+    typedJsonSuite(getHandle, entities, caps),
+  );
   maybeDescribe(caps.inheritance.singleTable, "inheritance:single-table", () =>
     inheritanceSingleTableSuite(getHandle, entities),
   );

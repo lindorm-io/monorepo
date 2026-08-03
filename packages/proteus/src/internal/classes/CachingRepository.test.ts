@@ -4,6 +4,7 @@
 // defaultHydrateEntity, runHooksAsync) are mocked so that every test is a pure
 // unit test. No DB or adapter I/O occurs.
 
+import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
 import type { ICacheAdapter } from "../../interfaces/CacheAdapter.js";
 import type { IProteusRepository } from "../../interfaces/index.js";
@@ -175,6 +176,7 @@ const createRepo = (
     metadata?: EntityMetadata;
     sourceTtlMs?: number;
     namespace?: string | null;
+    amphora?: IAmphora;
   } = {},
 ) => {
   const adapter = createMockAdapter();
@@ -189,6 +191,7 @@ const createRepo = (
     namespace: opts.namespace ?? null,
     sourceTtlMs: opts.sourceTtlMs,
     logger,
+    amphora: opts.amphora,
   });
 
   return { repo, adapter, inner, logger, metadata };
@@ -489,6 +492,64 @@ describe("CachingRepository", () => {
 
       expect(adapter.get).not.toHaveBeenCalled();
       expect(adapter.set).not.toHaveBeenCalled();
+    });
+
+    // An @Encrypted entity IS cacheable — the entry holds ciphertext (proved
+    // end-to-end in __tests__/caching-encryption.test.ts). Without a vault it
+    // cannot be sealed, and caching the plaintext instead is not an option, so
+    // the entity drops out of the cache entirely. ProteusSource.setup() already
+    // refuses this combination, so this covers the guard, not a live path.
+    const encryptedFieldMetadata = () =>
+      makeBaseMetadata({
+        fields: [
+          {
+            key: "secret",
+            decorator: "Field",
+            arrayType: null,
+            collation: null,
+            comment: null,
+            computed: null,
+            encrypted: { kryptos: null, condition: { purpose: "test" } },
+            enum: null,
+            default: null,
+            hideOn: [],
+            max: null,
+            min: null,
+            name: "secret",
+            nullable: false,
+
+            precision: null,
+            readonly: [],
+            scale: null,
+            schema: null,
+            transform: null,
+            typedJson: null,
+            type: "string",
+          },
+        ] as any,
+      });
+
+    it("should skip cache when entity has encrypted fields and no amphora", async () => {
+      const { repo, inner, adapter } = createRepo({ metadata: encryptedFieldMetadata() });
+      inner.find.mockResolvedValue([entityA]);
+
+      await repo.find({ name: "Entity A" });
+
+      expect(adapter.get).not.toHaveBeenCalled();
+      expect(adapter.set).not.toHaveBeenCalled();
+    });
+
+    it("should cache an entity with encrypted fields when an amphora is present", async () => {
+      const { repo, inner, adapter } = createRepo({
+        metadata: encryptedFieldMetadata(),
+        amphora: { findSync: vi.fn() } as unknown as IAmphora,
+      });
+      inner.find.mockResolvedValue([entityA]);
+
+      await repo.find({ name: "Entity A" });
+
+      expect(adapter.get).toHaveBeenCalled();
+      expect(adapter.set).toHaveBeenCalled();
     });
 
     it("should skip cache when entity has eager relations", async () => {

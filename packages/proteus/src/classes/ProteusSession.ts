@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor, Dict } from "@lindorm/types";
 import type {
@@ -34,6 +35,7 @@ export type ProteusSessionSettings = {
   resolveMetadata: MetadataResolver;
   cacheAdapter: ICacheAdapter | undefined;
   sourceTtlMs: number | undefined;
+  amphora: IAmphora | undefined;
   parentEmitEntity: EntityEmitFn;
   signal?: AbortSignal;
 };
@@ -57,6 +59,7 @@ export class ProteusSession implements IProteusSession {
   private readonly resolveMetadata: MetadataResolver;
   private readonly cacheAdapter: ICacheAdapter | undefined;
   private readonly sourceTtlMs: number | undefined;
+  private readonly amphora: IAmphora | undefined;
   private readonly parentEmitEntity: EntityEmitFn;
   private readonly _signal: AbortSignal | undefined;
 
@@ -69,6 +72,7 @@ export class ProteusSession implements IProteusSession {
     this.resolveMetadata = options.resolveMetadata;
     this.cacheAdapter = options.cacheAdapter;
     this.sourceTtlMs = options.sourceTtlMs;
+    this.amphora = options.amphora;
     this.parentEmitEntity = options.parentEmitEntity;
     this._signal = options.signal;
   }
@@ -113,6 +117,7 @@ export class ProteusSession implements IProteusSession {
       namespace: this.source.namespace,
       sourceTtlMs: this.sourceTtlMs,
       logger: this.logger,
+      amphora: this.amphora,
     });
   }
 

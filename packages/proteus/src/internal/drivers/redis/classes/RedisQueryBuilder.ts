@@ -25,6 +25,10 @@ import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-fi
 import { buildEntityKey, buildEntityKeyFromRow } from "../utils/build-entity-key.js";
 import { buildScanPattern } from "../utils/build-scan-pattern.js";
 import { coerceHashValue } from "../utils/coerce-hash-value.js";
+import {
+  dehydrateTypedJson,
+  typedJsonMetaDictKey,
+} from "../../../entity/utils/typed-json.js";
 // deserializeHash parses array/json/object fields from JSON strings to native JS
 // types via JSON.parse before criteria matching — complex predicates ($all, $has,
 // $overlap etc.) work correctly on deserialized values.
@@ -657,20 +661,36 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
     for (const item of this.data) {
       const row: Dict = {};
       for (const field of this.metadata.fields) {
-        if (field.key in (item as any)) {
-          let value = (item as any)[field.key];
-          if (value != null && field.transform) value = field.transform.to(value);
-          if (value != null && field.encrypted && this.amphora) {
-            value = encryptFieldValue(
-              value,
-              field.encrypted,
-              this.amphora,
-              field.key,
-              this.metadata.entity.name,
-            );
-          }
-          row[field.key] = value;
+        if (!(field.key in (item as any))) continue;
+
+        // @TypedJson: stage both halves so serializeHash writes the sidecar. A
+        // data-only row left the type metadata unwritten, and the read joined
+        // the fresh data against nothing — every nested Date/Buffer/BigInt came
+        // back as its JSON-safe stand-in.
+        if (field.typedJson) {
+          const { data, meta } = dehydrateTypedJson(
+            field,
+            (item as any)[field.key],
+            this.amphora,
+            this.metadata.entity.name,
+          );
+          row[field.key] = data;
+          row[typedJsonMetaDictKey(field.key)] = meta;
+          continue;
         }
+
+        let value = (item as any)[field.key];
+        if (value != null && field.transform) value = field.transform.to(value);
+        if (value != null && field.encrypted && this.amphora) {
+          value = encryptFieldValue(
+            value,
+            field.encrypted,
+            this.amphora,
+            field.key,
+            this.metadata.entity.name,
+          );
+        }
+        row[field.key] = value;
       }
 
       // For single-table children, inject the discriminator value so the row
@@ -894,12 +914,42 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
       for (const [fieldKey, value] of Object.entries(
         this.updateData as Record<string, unknown>,
       )) {
-        row[fieldKey] = value;
+        const field = this.metadata.fields.find((f) => f.key === fieldKey);
+
         if (value == null) {
-          updatePipeline.hdel(key, fieldKey);
+          row[fieldKey] = null;
+          // A @TypedJson field takes its sidecar with it, or the stale type
+          // metadata outlives the data it described.
+          if (field?.typedJson) {
+            updatePipeline.hdel(key, fieldKey, typedJsonMetaDictKey(fieldKey));
+            row[typedJsonMetaDictKey(fieldKey)] = null;
+          } else {
+            updatePipeline.hdel(key, fieldKey);
+          }
           continue;
         }
-        const field = this.metadata.fields.find((f) => f.key === fieldKey);
+
+        // @TypedJson: write both halves. A data-only write joined fresh data
+        // against the previous row's sidecar, hydrating silently mistyped values.
+        if (field?.typedJson) {
+          const { data, meta } = dehydrateTypedJson(
+            field,
+            value,
+            this.amphora,
+            this.metadata.entity.name,
+          );
+          updateHash[fieldKey] = coerceHashValue(data, field);
+          row[fieldKey] = data;
+          if (meta === null) {
+            updatePipeline.hdel(key, typedJsonMetaDictKey(fieldKey));
+            row[typedJsonMetaDictKey(fieldKey)] = null;
+          } else {
+            updateHash[typedJsonMetaDictKey(fieldKey)] = meta;
+            row[typedJsonMetaDictKey(fieldKey)] = meta;
+          }
+          continue;
+        }
+
         let transformed = field?.transform ? field.transform.to(value) : value;
         if (transformed != null && field?.encrypted && this.amphora) {
           transformed = encryptFieldValue(
@@ -914,6 +964,12 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
         // a plain json/object/array value to "[object Object]" and utf8-mangled a
         // Buffer, so a builder update corrupted what insert/update stored correctly.
         updateHash[fieldKey] = coerceHashValue(transformed, field ?? null);
+
+        // `row` is replayed through defaultHydrateEntity below, which is a
+        // ROW-side reader: it decrypts and applies transform.from(). Staging the
+        // authored value here made it apply `from` to a value that never went
+        // through `to`, and handed the decryptor plaintext.
+        row[fieldKey] = transformed;
       }
       if (Object.keys(updateHash).length > 0) {
         updatePipeline.hset(key, updateHash);

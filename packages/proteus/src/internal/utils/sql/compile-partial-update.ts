@@ -303,9 +303,12 @@ export const compileJoinedPartialUpdate = <E extends IEntity>(
 };
 
 /**
- * Append SET clauses for a changed-columns Dict: typedJson columns expand via
- * typedJsonChangedColumns; other columns get transform.to(), optional
- * encryption, and the driver's write coercion.
+ * Append SET clauses for a changed-columns Dict. Both branches apply the same
+ * three steps — transform.to(), optional encryption, the driver's write coercion
+ * — but a typedJson field runs them through typedJsonChangedColumns, which splits
+ * before it seals and expands into the data + sidecar pair. The typedJson branch
+ * used to skip transform.to() outright, so a transform on a typed-json field was
+ * silently dropped on every partial update while reads still applied `from`.
  */
 const pushChangedColumns = (
   changed: Dict,
@@ -323,8 +326,12 @@ const pushChangedColumns = (
 
     const field = metadata.fields.find((f) => f.name === colName);
     if (field?.typedJson) {
-      for (const pair of typedJsonChangedColumns(field, value, (d) =>
-        deps.coerceWriteValue(d, field),
+      for (const pair of typedJsonChangedColumns(
+        field,
+        value,
+        (d) => deps.coerceWriteValue(d, field),
+        amphora,
+        metadata.entity.name,
       )) {
         params.push(pair.value);
         setClauses.push(

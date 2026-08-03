@@ -7,7 +7,7 @@ import { decryptFieldValue } from "./decrypt-field-value.js";
 import { deserialise } from "./deserialise.js";
 import { deserialiseForeignKey } from "./deserialise-foreign-key.js";
 import { resolvePropertyKey } from "./resolve-property-key.js";
-import { joinTypedJson, typedJsonMetaDictKey } from "./typed-json.js";
+import { hydrateTypedJson, typedJsonMetaDictKey } from "./typed-json.js";
 import { runHooksSync } from "./run-hooks-sync.js";
 import { storeSnapshot } from "./snapshot-store.js";
 
@@ -46,10 +46,18 @@ export const defaultHydrateEntity = <E extends IEntity>(
 
     let raw = data[field.key];
 
-    // @TypedJson: reconstruct from data column + sidecar meta (lenient — never throws).
+    // @TypedJson: BOTH halves are sealed independently when the field is
+    // @Encrypted, so both are decrypted here before the join — the generic
+    // decryption below is unreachable for a typed-json field, and a plain
+    // `joinTypedJson` handed the consumer raw ciphertext.
     if (field.typedJson) {
-      const metaRaw = data[typedJsonMetaDictKey(field.key)];
-      const value = joinTypedJson(raw, metaRaw);
+      const value = hydrateTypedJson(
+        field,
+        raw,
+        data[typedJsonMetaDictKey(field.key)],
+        amphora,
+        metadata.entity.name,
+      );
       entity[field.key] = value;
       snapshotDict[field.key] = value;
       continue;

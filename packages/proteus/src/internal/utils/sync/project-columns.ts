@@ -60,7 +60,13 @@ export const projectColumns = (
     if (field.typedJson) {
       columns.push({
         name: field.typedJson.column,
-        columnType: dialect.typedJsonColumnType,
+        // An @Encrypted typed-json field seals its sidecar too, and ciphertext is
+        // not JSON — a JSONB/JSON companion column would reject it. Borrow the
+        // driver's own encrypted-column spelling rather than restating it, so the
+        // sidecar can never drift from the data column beside it.
+        columnType: field.encrypted
+          ? dialect.projectColumnType(field, options.tableName, options.namespace).type
+          : dialect.typedJsonColumnType,
         nullable: true,
         defaultExpr: null,
         identity: null,

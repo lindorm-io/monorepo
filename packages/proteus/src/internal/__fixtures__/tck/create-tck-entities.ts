@@ -2,6 +2,7 @@
 //
 // Each call produces fresh class declarations with fresh Symbol.metadata.
 
+import type { Dict } from "@lindorm/types";
 import type { Mock } from "vitest";
 import {
   AfterDestroy,
@@ -971,6 +972,62 @@ export const createTckEntities = (hookCallback: Mock) => {
     @TypedJson()
     @Field("json")
     optional!: Record<string, unknown> | null;
+
+    // @TypedJson + @Transform: the write path splits BEFORE it transforms
+    // nothing — it transforms, then splits — and the read path must apply
+    // `from` after the rejoin. The transform is non-idempotent so a dropped or
+    // doubled application is observable.
+    // NON-IDEMPOTENT on purpose: `to` increments the counter and `from`
+    // decrements it, so a DROPPED `to` reads one too low and a DOUBLED one
+    // reads one too high. A wrap/unwrap pair could not detect a dropped `to`
+    // at all — unwrapping a key that was never added is a silent no-op.
+    @Nullable()
+    @Transform({
+      to: (value: unknown) => ({
+        ...(value as Dict),
+        tick: ((value as Dict).tick as number) + 1,
+      }),
+      from: (raw: unknown) => ({
+        ...(raw as Dict),
+        tick: ((raw as Dict).tick as number) - 1,
+      }),
+    })
+    @TypedJson()
+    @Field("json")
+    transformed!: Record<string, unknown> | null;
+  }
+
+  // @TypedJson + @Encrypted: the two halves are split FIRST, then sealed
+  // independently. Sealing before the split would hand AesKit a live BigInt
+  // (throws) or a live Date (degrades to a string).
+  @Entity({ name: "TckTypedJsonEncrypted" })
+  class TckTypedJsonEncrypted {
+    @PrimaryKeyField()
+    @Generated("uuid")
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @Encrypted()
+    @TypedJson()
+    @Field("json")
+    payload!: Record<string, unknown>;
+
+    @Nullable()
+    @Encrypted()
+    @TypedJson()
+    @Field("json")
+    optional!: Record<string, unknown> | null;
   }
 
   @Embeddable()
@@ -1565,6 +1622,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckJsonbArray,
     TckJsonHolder,
     TckTypedJson,
+    TckTypedJsonEncrypted,
     TckAddress,
     TckWithAddress,
     TckTransformed,
