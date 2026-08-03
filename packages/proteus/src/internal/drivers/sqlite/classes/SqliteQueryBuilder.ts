@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
 import { QueryBuilder } from "../../../../classes/QueryBuilder.js";
 import { ProteusError, ProteusRepositoryError } from "../../../../errors/index.js";
@@ -37,17 +38,20 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly client: SqliteQueryClient;
   private readonly namespace: string | null;
   private readonly logger: ILogger | null;
+  private readonly amphora: IAmphora | undefined;
 
   constructor(
     metadata: EntityMetadata,
     client: SqliteQueryClient,
     namespace?: string | null,
     logger?: ILogger | null,
+    amphora?: IAmphora,
   ) {
     super(metadata);
     this.client = client;
     this.namespace = namespace ?? null;
     this.logger = logger ?? null;
+    this.amphora = amphora;
   }
 
   toSQL(): CompiledQuery {
@@ -200,6 +204,7 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.client,
       this.namespace,
       this.logger,
+      this.amphora,
     );
     cloned.state = this.cloneState();
     return cloned;
@@ -228,7 +233,9 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     const rows = this.client.all(query.text, query.params);
     if (rows.length === 0) return null;
 
-    const entities = hydrateRows<E>(rows, this.metadata, query.aliasMap, joinIncludes);
+    const entities = hydrateRows<E>(rows, this.metadata, query.aliasMap, joinIncludes, {
+      amphora: this.amphora,
+    });
     if (entities.length === 0) return null;
 
     if (queryIncludes.length > 0) {
@@ -238,6 +245,7 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         namespace: this.namespace,
         withDeleted: this.state.withDeleted,
         versionTimestamp: this.state.versionTimestamp,
+        amphora: this.amphora,
       });
     }
 
@@ -278,7 +286,9 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     };
     const query = compileQuery(joinState, this.metadata, this.namespace);
     const rows = this.client.all(query.text, query.params);
-    const entities = hydrateRows<E>(rows, this.metadata, query.aliasMap, joinIncludes);
+    const entities = hydrateRows<E>(rows, this.metadata, query.aliasMap, joinIncludes, {
+      amphora: this.amphora,
+    });
 
     if (queryIncludes.length > 0) {
       executeQueryIncludes(entities, queryIncludes, {
@@ -287,6 +297,7 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         namespace: this.namespace,
         withDeleted: this.state.withDeleted,
         versionTimestamp: this.state.versionTimestamp,
+        amphora: this.amphora,
       });
     }
 
@@ -338,12 +349,22 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   // --- Write builders ---
 
   insert(): IInsertQueryBuilder<E> {
-    return new SqliteInsertQueryBuilder<E>(this.metadata, this.client, this.namespace);
+    return new SqliteInsertQueryBuilder<E>(
+      this.metadata,
+      this.client,
+      this.namespace,
+      this.amphora,
+    );
   }
 
   update(): IUpdateQueryBuilder<E> {
     this.guardAppendOnlyWrite("update");
-    return new SqliteUpdateQueryBuilder<E>(this.metadata, this.client, this.namespace);
+    return new SqliteUpdateQueryBuilder<E>(
+      this.metadata,
+      this.client,
+      this.namespace,
+      this.amphora,
+    );
   }
 
   delete(): IDeleteQueryBuilder<E> {
@@ -353,6 +374,7 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.client,
       this.namespace,
       false,
+      this.amphora,
     );
   }
 
@@ -363,6 +385,7 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.client,
       this.namespace,
       true,
+      this.amphora,
     );
   }
 

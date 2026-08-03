@@ -1122,6 +1122,10 @@ token!: string;
 
 **Options:** `{ kryptos?, condition? }` — `condition` selects on `{ id, algorithm, curve, encryption, internal, issuer, ownerId, publish, purpose, type }`.
 
+An encrypted column is projected as `text` on every driver, so the write pipeline for an `@Encrypted` field is `transform.to()` → serialise → encrypt, and the driver's own write coercion is skipped. That makes every field type usable, including the ones the cipher cannot take verbatim: a `bigint` is sealed as its decimal string and a `date` / `timestamp` as its ISO-8601 string, and both are restored to the original JS type on read. Primary keys, computed fields and system-managed date/version fields cannot be `@Encrypted`.
+
+Writing or reading an `@Encrypted` field without a vault **throws** `missing_amphora`. There is no plaintext fallback — silently downgrading a sealed column would put the secret in the clear, and handing a caller raw ciphertext under a field typed `number` corrupts it on the next save.
+
 #### `@Hide`
 
 Excludes a field from query results for a given scope. The field still exists in the database and entity; it is just excluded from SELECT projections.
@@ -1736,6 +1740,8 @@ The `sql` tagged template produces parameterized queries — values are never in
 
 Query builder write operations bypass ORM lifecycle hooks (no `@BeforeInsert`, no cascade, no version check).
 
+They do **not** bypass the storage contract. A builder write applies the same column pipeline a repository write does — `@Transform`'s `to()`, then the `@TypedJson` split into data + sidecar, then `@Encrypted` sealing, then the driver's write coercion — and a builder read decrypts and rejoins the same way. Writing an `@Encrypted` entity through `.insert()` / `.update()` stores ciphertext, exactly as `repository.insert()` would.
+
 ```typescript
 const result = await qb
   .insert()
@@ -2311,7 +2317,7 @@ Two consequences worth knowing:
 - **A cache hit costs a decryption.** For a hot, heavily-encrypted entity that can outweigh the query it saves; measure before caching one.
 - **Encrypted columns are not queryable**, cached or not — the cache key is built from the criteria, not the row.
 
-An entity with `@Encrypted` fields and **no** `amphora` drops out of the cache entirely rather than caching plaintext. `ProteusSource.setup()` already refuses that combination, so this is a guard rather than a configuration you can reach.
+An entity with `@Encrypted` fields and **no** `amphora` drops out of the cache entirely rather than caching plaintext. `ProteusSource.setup()` refuses that combination — but `repository()` only requires `connect()`, so a source that never called `setup()` does reach it. There the read itself throws `missing_amphora`; skipping the cache just keeps the cache layer from being what throws.
 
 `@Field("binary")` entities are still skipped: a `Buffer` has no lossless JSON form.
 

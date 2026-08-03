@@ -25,7 +25,7 @@ import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError.js";
 import { buildCacheKey, buildCachePrefix } from "../utils/cache/build-cache-key.js";
 import { resolveCacheTtl } from "../utils/cache/resolve-cache-ttl.js";
 import { defaultHydrateEntity } from "../entity/utils/default-hydrate-entity.js";
-import { encryptFieldValue } from "../entity/utils/encrypt-field-value.js";
+import { dehydrateFieldValue } from "../entity/utils/dehydrate-field-value.js";
 import { resolvePolymorphicMetadata } from "../entity/utils/resolve-polymorphic-metadata.js";
 import { runHooksAsync } from "../entity/utils/run-hooks-async.js";
 import { dehydrateTypedJson, typedJsonMetaDictKey } from "../entity/utils/typed-json.js";
@@ -386,9 +386,12 @@ export class CachingRepository<
     if (this.hasBinaryFields) return true;
     // @Encrypted entities ARE cacheable — serializeEntities seals every such
     // field, so the cache store only ever holds ciphertext. Without a vault it
-    // could not seal them, and caching the plaintext instead is not an option;
-    // ProteusSource.setup() already refuses an @Encrypted entity with no
-    // amphora, so this is a belt-and-braces guard rather than a live path.
+    // could not seal them, and caching the plaintext instead is not an option.
+    // ProteusSource.setup() refuses an @Encrypted entity with no amphora, but
+    // repository() only goes through requireDriver() — i.e. connect() — so a
+    // source that never called setup() reaches here. The read then throws
+    // missing_amphora on its own; this only keeps the cache layer from being
+    // what throws.
     if (this.hasEncryptedFields && !this.amphora) return true;
     if (this.hasEagerRelations) return true;
     if (this.hasLazyRelations) return true;
@@ -591,19 +594,12 @@ export class CachingRepository<
           continue;
         }
 
-        const transformed =
-          value != null && field.transform ? field.transform.to(value) : value;
-
-        data[field.key] =
-          transformed != null && field.encrypted && this.amphora
-            ? encryptFieldValue(
-                transformed,
-                field.encrypted,
-                this.amphora,
-                field.key,
-                effectiveMetadata.entity.name,
-              )
-            : transformed;
+        data[field.key] = dehydrateFieldValue(
+          value,
+          field,
+          effectiveMetadata.entity.name,
+          { amphora: this.amphora },
+        );
       }
       // Serialize FK join-key columns from owning relations
       for (const relation of effectiveMetadata.relations) {

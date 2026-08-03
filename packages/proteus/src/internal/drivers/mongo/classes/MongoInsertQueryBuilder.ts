@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { ClientSession, Db, Document } from "mongodb";
 import type { DeepPartial } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces/index.js";
@@ -10,6 +11,13 @@ import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryErro
 import { MongoDuplicateKeyError } from "../errors/MongoDuplicateKeyError.js";
 import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
+import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
+import { serialiseArray } from "../../../entity/utils/serialise.js";
+import {
+  dehydrateTypedJson,
+  typedJsonMetaDictKey,
+} from "../../../entity/utils/typed-json.js";
+import { applyAutoIncrement } from "../utils/apply-auto-increment.js";
 import { resolveCollectionName } from "../utils/resolve-collection-name.js";
 
 const DUPLICATE_KEY_CODE = 11000;
@@ -27,12 +35,19 @@ export class MongoInsertQueryBuilder<
   private readonly db: Db;
   private readonly metadata: EntityMetadata;
   private readonly session: ClientSession | undefined;
+  private readonly amphora: IAmphora | undefined;
   private data: Array<DeepPartial<E>> = [];
 
-  constructor(db: Db, metadata: EntityMetadata, session?: ClientSession) {
+  constructor(
+    db: Db,
+    metadata: EntityMetadata,
+    session?: ClientSession,
+    amphora?: IAmphora,
+  ) {
     this.db = db;
     this.metadata = metadata;
     this.session = session;
+    this.amphora = amphora;
   }
 
   values(data: Array<DeepPartial<E>>): this {
@@ -77,13 +92,37 @@ export class MongoInsertQueryBuilder<
       const row: Record<string, unknown> = {};
 
       for (const field of this.metadata.fields) {
-        if (field.key in (item as any)) {
-          let value = (item as any)[field.key];
-          if (value != null && field.transform) {
-            value = field.transform.to(value);
-          }
-          row[field.key] = value;
+        if (!(field.key in (item as any))) continue;
+
+        // A builder write bypasses the ORM lifecycle but not the storage
+        // contract: dehydrateEntity splits @TypedJson into both columns,
+        // serialises a typed array so BSON does not demote bigint to a lossy
+        // Long, and seals @Encrypted. Writing the authored value instead left
+        // the sidecar unwritten and the ciphertext column in the clear.
+        if (field.typedJson) {
+          const { data, meta } = dehydrateTypedJson(
+            field,
+            (item as any)[field.key],
+            this.amphora,
+            this.metadata.entity.name,
+          );
+          row[field.key] = data;
+          row[typedJsonMetaDictKey(field.key)] = meta;
+          continue;
         }
+
+        row[field.key] = dehydrateFieldValue(
+          (item as any)[field.key],
+          field,
+          this.metadata.entity.name,
+          {
+            amphora: this.amphora,
+            coerce: (v) =>
+              v != null && field.type === "array" && field.arrayType
+                ? serialiseArray(v, field.arrayType, field.mode)
+                : v,
+          },
+        );
       }
 
       // Inject discriminator for single-table children
@@ -109,6 +148,13 @@ export class MongoInsertQueryBuilder<
         } else {
           doc[field.name] = row[field.key];
         }
+
+        // A @TypedJson key owns two document keys; emitting only the data one
+        // left the type metadata unwritten and every nested Date/Buffer/BigInt
+        // came back as its JSON-safe stand-in.
+        if (field.typedJson) {
+          doc[field.typedJson.column] = row[typedJsonMetaDictKey(field.key)];
+        }
       }
 
       // Build _id
@@ -121,6 +167,23 @@ export class MongoInsertQueryBuilder<
           compound[key] = pkValues[key];
         }
         doc._id = compound;
+      }
+
+      // A builder insert has no ORM lifecycle, but a @Generated("increment")
+      // PK is minted by the DRIVER, not the lifecycle. Skipping it sent `_id`
+      // to Mongo unset, Mongo minted an ObjectId in its place, and the read
+      // back blew up converting that object to the column's declared bigint.
+      await applyAutoIncrement(doc, this.metadata, this.db, this.session);
+
+      // Mirror the minted values back into the row the result is hydrated from,
+      // so the returned entity carries the id Mongo actually stored.
+      for (const gen of this.metadata.generated) {
+        if (!(gen.key in row)) {
+          const field = this.metadata.fields.find((f) => f.key === gen.key);
+          row[gen.key] = this.metadata.primaryKeys.includes(gen.key)
+            ? doc._id
+            : doc[field?.name ?? gen.key];
+        }
       }
 
       docs.push(doc);
@@ -153,6 +216,7 @@ export class MongoInsertQueryBuilder<
       return defaultHydrateEntity<E>(structuredClone(row), effectiveMetadata, {
         snapshot: false,
         hooks: false,
+        amphora: this.amphora,
       });
     });
 

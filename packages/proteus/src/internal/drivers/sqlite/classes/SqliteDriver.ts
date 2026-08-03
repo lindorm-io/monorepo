@@ -313,7 +313,13 @@ export class SqliteDriver implements IProteusDriver {
     this.checkSignal();
     const client = this.getClient();
     const metadata = this.resolveMetadata(target);
-    return new SqliteQueryBuilder<E>(metadata, client, this.namespace, this.logger);
+    return new SqliteQueryBuilder<E>(
+      metadata,
+      client,
+      this.namespace,
+      this.logger,
+      this.amphora,
+    );
   }
 
   createTransactionalQueryBuilder<E extends IEntity>(
@@ -328,6 +334,7 @@ export class SqliteDriver implements IProteusDriver {
       sqliteHandle.client,
       this.namespace,
       this.logger,
+      this.amphora,
     );
   }
 

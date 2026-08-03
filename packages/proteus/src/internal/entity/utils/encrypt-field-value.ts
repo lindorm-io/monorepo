@@ -7,10 +7,14 @@ import { resolveEncryptionKey } from "./resolve-encryption-key.js";
 export const encryptFieldValue = (
   value: unknown,
   encrypted: MetaEncrypted,
-  amphora: IAmphora,
+  amphora: IAmphora | undefined,
   fieldKey = "unknown",
   entityName = "unknown",
 ): string => {
+  // Reached whenever an @Encrypted field is written through a source that has no
+  // vault — `connect()` without `setup()`, or an omitted `amphora` option. The
+  // write sites used to guard on `&& amphora` and fall through to the plaintext,
+  // which silently downgraded a sealed column to cleartext.
   if (!amphora) {
     throw new ProteusError(
       "Encryption requires an amphora instance but none was provided",

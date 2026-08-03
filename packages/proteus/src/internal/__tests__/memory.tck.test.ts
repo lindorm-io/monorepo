@@ -35,6 +35,7 @@ const factory: TckDriverFactory = {
     embeddedLists: true,
     atomicIncrements: true,
     queryBuilder: true,
+    queryBuilderIncludes: false,
     uniqueEnforcement: true,
     referentialIntegrity: true,
     checkConstraints: false,

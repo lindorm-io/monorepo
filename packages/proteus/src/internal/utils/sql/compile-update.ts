@@ -4,7 +4,7 @@ import type { DeepPartial } from "@lindorm/types";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
-import { encryptFieldValue } from "../../entity/utils/encrypt-field-value.js";
+import { dehydrateFieldValue } from "../../entity/utils/dehydrate-field-value.js";
 import { typedJsonChangedColumns } from "../../entity/utils/typed-json.js";
 import type { PredicateEntry } from "../../types/query.js";
 import {
@@ -539,22 +539,11 @@ const coerceAndEncrypt = (
   metadata: EntityMetadata,
   deps: CompileUpdateDeps,
   amphora?: IAmphora,
-): unknown => {
-  const transformed =
-    value != null && field.transform ? field.transform.to(value) : value;
-
-  let coerced = deps.coerceWriteValue(transformed, field);
-  if (coerced != null && field.encrypted && amphora) {
-    coerced = encryptFieldValue(
-      coerced,
-      field.encrypted,
-      amphora,
-      field.key,
-      metadata.entity.name,
-    );
-  }
-  return coerced;
-};
+): unknown =>
+  dehydrateFieldValue(value, field, metadata.entity.name, {
+    amphora,
+    coerce: (v) => deps.coerceWriteValue(v, field),
+  });
 
 /**
  * Partition SET clauses of a joined inheritance update into root-table vs

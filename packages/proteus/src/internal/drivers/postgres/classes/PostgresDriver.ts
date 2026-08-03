@@ -400,7 +400,13 @@ export class PostgresDriver implements IProteusDriver {
     const client = this.signal
       ? this.createPgClientFromPoolWithSignal(pool, this.signal)
       : this.createPgClientFromPool(pool);
-    return new PostgresQueryBuilder<E>(metadata, client, this.namespace, this.logger);
+    return new PostgresQueryBuilder<E>(
+      metadata,
+      client,
+      this.namespace,
+      this.logger,
+      this.amphora,
+    );
   }
 
   createTransactionalQueryBuilder<E extends IEntity>(
@@ -414,6 +420,7 @@ export class PostgresDriver implements IProteusDriver {
       pgHandle.client,
       this.namespace,
       this.logger,
+      this.amphora,
     );
   }
 

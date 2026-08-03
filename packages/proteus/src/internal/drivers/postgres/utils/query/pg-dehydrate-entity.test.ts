@@ -12,6 +12,7 @@ const metadata = {
   primaryKeys: ["id"],
   generated: [],
   relations: [],
+  entity: { name: "TestEntity" },
 } as unknown as EntityMetadata;
 
 describe("pgDehydrateEntity", () => {
@@ -74,6 +75,7 @@ describe("pgDehydrateEntity — embedded fields", () => {
     primaryKeys: ["id"],
     generated: [],
     relations: [],
+    entity: { name: "TestEntity" },
   } as unknown as EntityMetadata;
 
   test("should read embedded fields from nested object in insert mode", () => {
@@ -110,6 +112,7 @@ describe("pgDehydrateEntity — readonly fields", () => {
     primaryKeys: ["id"],
     generated: [],
     relations: [],
+    entity: { name: "TestEntity" },
   } as unknown as EntityMetadata;
 
   test("should include readonly fields in insert mode", () => {
@@ -136,6 +139,7 @@ describe("pgDehydrateEntity — CreateDate fields", () => {
     primaryKeys: ["id"],
     generated: [],
     relations: [],
+    entity: { name: "TestEntity" },
   } as unknown as EntityMetadata;
 
   test("should include CreateDate fields in insert mode", () => {
@@ -182,6 +186,7 @@ describe("pgDehydrateEntity — transform functions", () => {
     primaryKeys: ["id"],
     generated: [],
     relations: [],
+    entity: { name: "TestEntity" },
   } as unknown as EntityMetadata;
 
   test("should apply transform.to before writing the value", () => {

@@ -382,6 +382,7 @@ export class PostgresRepository<
       releaseClient: release,
       batchSize: options?.batchSize ?? 100,
       namespace: this.namespace,
+      amphora: this.amphora,
     });
   }
 

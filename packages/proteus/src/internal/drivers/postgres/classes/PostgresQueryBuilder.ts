@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
 import { QueryBuilder } from "../../../../classes/QueryBuilder.js";
 import { ProteusError, ProteusRepositoryError } from "../../../../errors/index.js";
@@ -39,17 +40,20 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly client: PostgresQueryClient;
   private readonly namespace: string | null;
   private readonly logger: ILogger | null;
+  private readonly amphora: IAmphora | undefined;
 
   constructor(
     metadata: EntityMetadata,
     client: PostgresQueryClient,
     namespace?: string | null,
     logger?: ILogger | null,
+    amphora?: IAmphora,
   ) {
     super(metadata);
     this.client = client;
     this.namespace = namespace ?? null;
     this.logger = logger ?? null;
+    this.amphora = amphora;
   }
 
   // --- PG-specific methods ---
@@ -237,6 +241,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.client,
       this.namespace,
       this.logger,
+      this.amphora,
     );
     cloned.state = this.cloneState();
     return cloned;
@@ -272,6 +277,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.metadata,
       query.aliasMap,
       joinIncludes,
+      { amphora: this.amphora },
     );
     if (entities.length === 0) return null;
 
@@ -282,6 +288,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         namespace: this.namespace,
         withDeleted: this.state.withDeleted,
         versionTimestamp: this.state.versionTimestamp,
+        amphora: this.amphora,
       });
     }
 
@@ -327,6 +334,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.metadata,
       query.aliasMap,
       joinIncludes,
+      { amphora: this.amphora },
     );
 
     if (queryIncludes.length > 0) {
@@ -336,6 +344,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         namespace: this.namespace,
         withDeleted: this.state.withDeleted,
         versionTimestamp: this.state.versionTimestamp,
+        amphora: this.amphora,
       });
     }
 
@@ -505,12 +514,22 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   // --- Write builders ---
 
   insert(): IInsertQueryBuilder<E> {
-    return new PostgresInsertQueryBuilder<E>(this.metadata, this.client, this.namespace);
+    return new PostgresInsertQueryBuilder<E>(
+      this.metadata,
+      this.client,
+      this.namespace,
+      this.amphora,
+    );
   }
 
   update(): IUpdateQueryBuilder<E> {
     this.guardAppendOnlyWrite("update");
-    return new PostgresUpdateQueryBuilder<E>(this.metadata, this.client, this.namespace);
+    return new PostgresUpdateQueryBuilder<E>(
+      this.metadata,
+      this.client,
+      this.namespace,
+      this.amphora,
+    );
   }
 
   delete(): IDeleteQueryBuilder<E> {
@@ -520,6 +539,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.client,
       this.namespace,
       false,
+      this.amphora,
     );
   }
 
@@ -530,6 +550,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.client,
       this.namespace,
       true,
+      this.amphora,
     );
   }
 

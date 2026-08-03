@@ -7,10 +7,14 @@ import { resolveDecryptionKey } from "./resolve-decryption-key.js";
 export const decryptFieldValue = (
   cipher: string,
   encrypted: MetaEncrypted,
-  amphora: IAmphora,
+  amphora: IAmphora | undefined,
   fieldKey = "unknown",
   entityName = "unknown",
 ): unknown => {
+  // Symmetric with encryptFieldValue: a read with no vault cannot open the
+  // column, and handing the caller raw ciphertext under a field typed `number`
+  // (or re-saving it, which would seal the ciphertext a second time) is silent
+  // corruption. Fail loudly instead.
   if (!amphora) {
     throw new ProteusError(
       "Encryption requires an amphora instance but none was provided",

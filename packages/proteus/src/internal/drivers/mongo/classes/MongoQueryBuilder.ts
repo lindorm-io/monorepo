@@ -386,12 +386,22 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   // ─── Write builders ───────────────────────────────────────────────
 
   insert(): IInsertQueryBuilder<E> {
-    return new MongoInsertQueryBuilder<E>(this.db, this.metadata, this.session);
+    return new MongoInsertQueryBuilder<E>(
+      this.db,
+      this.metadata,
+      this.session,
+      this.amphora,
+    );
   }
 
   update(): IUpdateQueryBuilder<E> {
     this.guardAppendOnlyWrite("update");
-    return new MongoUpdateQueryBuilder<E>(this.db, this.metadata, this.session);
+    return new MongoUpdateQueryBuilder<E>(
+      this.db,
+      this.metadata,
+      this.session,
+      this.amphora,
+    );
   }
 
   delete(): IDeleteQueryBuilder<E> {

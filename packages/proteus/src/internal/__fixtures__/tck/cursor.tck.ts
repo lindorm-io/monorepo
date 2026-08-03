@@ -1,13 +1,17 @@
-import { test, expect, beforeEach } from "vitest";
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Cursor Suite
 // Tests cursor-based iteration.
 
-import type { TckDriverHandle } from "./types.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
 import { ProteusError } from "../../../errors/ProteusError.js";
 
-export const cursorSuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
-  const { TckSimpleUser } = entities;
+export const cursorSuite = (
+  getHandle: () => TckDriverHandle,
+  entities: TckEntities,
+  caps: TckCapabilities,
+) => {
+  const { TckEncrypted, TckSimpleUser } = entities;
 
   beforeEach(async () => {
     await getHandle().clear();
@@ -196,4 +200,55 @@ export const cursorSuite = (getHandle: () => TckDriverHandle, entities: TckEntit
 
     await cursor.close();
   });
+
+  // A cursor hydrates raw driver rows itself instead of going through find(),
+  // and the four row-reading cursors were built without an amphora — so every
+  // @Encrypted field came out of a cursor as its raw ciphertext. Memory and
+  // redis wrap an already-hydrated array, which is why only these four drifted.
+  if (caps.encryption) {
+    describe("cursor decrypts @Encrypted fields", () => {
+      test("next() and nextBatch() both return plaintext", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+
+        for (let i = 1; i <= 3; i++) {
+          await repo.insert({
+            secret: `cursor-secret-${i}`,
+            pin: i * 11,
+            verified: true,
+            metadata: { idx: i },
+            optionalSecret: null,
+            transformedSecret: "hello",
+          });
+        }
+
+        const single = await repo.cursor({});
+        const first = await single.next();
+        await single.close();
+
+        // `pin` is an @Encrypted integer: undecrypted it is a ciphertext string,
+        // and decrypted-but-undeserialised it is the string "11". Asserting the
+        // exact number pins BOTH halves — a type check alone passed on neither.
+        expect(first).not.toBeNull();
+        expect(first!.secret).toMatch(/^cursor-secret-([123])$/);
+        expect(first!.pin).toBe(Number(first!.secret.slice(-1)) * 11);
+        expect(first!.transformedSecret).toBe("hello");
+
+        const batched = await repo.cursor({});
+        const batch = await batched.nextBatch(3);
+        await batched.close();
+
+        expect(batch).toHaveLength(3);
+        const secrets = batch.map((e) => e.secret).sort();
+        expect(secrets).toEqual([
+          "cursor-secret-1",
+          "cursor-secret-2",
+          "cursor-secret-3",
+        ]);
+        for (const entity of batch) {
+          expect(entity.pin).toBe(Number(entity.secret.slice(-1)) * 11);
+          expect(entity.transformedSecret).toBe("hello");
+        }
+      });
+    });
+  }
 };

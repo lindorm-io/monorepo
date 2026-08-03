@@ -327,6 +327,7 @@ export class SqliteRepository<
       client: this.client,
       batchSize: options?.batchSize ?? 100,
       namespace: this.namespace,
+      amphora: this.amphora,
     });
   }
 
@@ -1093,7 +1094,10 @@ export class SqliteRepository<
           this.amphora,
         );
         const rows = this.client.all(text, params);
-        const hydrated = hydrateReturning<E>(rows[0], this.metadata, { hooks: false });
+        const hydrated = hydrateReturning<E>(rows[0], this.metadata, {
+          hooks: false,
+          amphora: this.amphora,
+        });
         await this.fireAfterHook("insert", hydrated);
         await this.fireSubscriber(
           "afterInsert",
@@ -1120,7 +1124,10 @@ export class SqliteRepository<
           this.amphora,
         );
         const rows = client.all(text, params);
-        const hydrated = hydrateReturning<E>(rows[0], this.metadata, { hooks: false });
+        const hydrated = hydrateReturning<E>(rows[0], this.metadata, {
+          hooks: false,
+          amphora: this.amphora,
+        });
 
         this.transferRelations(prepared, hydrated);
         this.transferEmbeddedLists(prepared, hydrated);

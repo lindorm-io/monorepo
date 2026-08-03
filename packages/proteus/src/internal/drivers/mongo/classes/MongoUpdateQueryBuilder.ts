@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type { ClientSession, Db, Document, Filter } from "mongodb";
 import type { DeepPartial } from "@lindorm/types";
@@ -9,6 +10,9 @@ import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryErro
 import { compilePredicatesToFilter } from "../utils/compile-aggregation-pipeline.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
 import { resolveCollectionName } from "../utils/resolve-collection-name.js";
+import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
+import { serialiseArray } from "../../../entity/utils/serialise.js";
+import { dehydrateTypedJson } from "../../../entity/utils/typed-json.js";
 
 /**
  * MongoDB UPDATE query builder.
@@ -23,13 +27,20 @@ export class MongoUpdateQueryBuilder<
   private readonly db: Db;
   private readonly metadata: EntityMetadata;
   private readonly session: ClientSession | undefined;
+  private readonly amphora: IAmphora | undefined;
   private updateData: DeepPartial<E> | null = null;
   private predicates: Array<{ predicate: Condition<E>; conjunction: "and" | "or" }> = [];
 
-  constructor(db: Db, metadata: EntityMetadata, session?: ClientSession) {
+  constructor(
+    db: Db,
+    metadata: EntityMetadata,
+    session?: ClientSession,
+    amphora?: IAmphora,
+  ) {
     this.db = db;
     this.metadata = metadata;
     this.session = session;
+    this.amphora = amphora;
   }
 
   set(data: DeepPartial<E>): this {
@@ -105,8 +116,34 @@ export class MongoUpdateQueryBuilder<
       if (this.metadata.primaryKeys.includes(fieldKey)) continue; // Can't update PKs
 
       const mongoField = field?.name ?? fieldKey;
-      const transformed =
-        value != null && field?.transform ? field.transform.to(value) : value;
+
+      // A @TypedJson key owns two document keys. Setting the data key alone left
+      // the previous document's sidecar in place, so the fresh data was rejoined
+      // against stale type metadata and hydrated as mistyped values.
+      if (field?.typedJson) {
+        const { data, meta } = dehydrateTypedJson(
+          field,
+          value,
+          this.amphora,
+          this.metadata.entity.name,
+        );
+        setFields[mongoField] = data ?? null;
+        setFields[field.typedJson.column] = meta;
+        continue;
+      }
+
+      // A builder write bypasses the ORM lifecycle but not the storage contract:
+      // an @Encrypted key holds ciphertext, so writing the plaintext here would
+      // leak it and make the read path fail to open it. The typed-array coercion
+      // is the one dehydrateEntity applies — BSON demotes a raw bigint array to a
+      // lossy Long, so a builder update corrupted what insert stored right.
+      const transformed = dehydrateFieldValue(value, field, this.metadata.entity.name, {
+        amphora: this.amphora,
+        coerce: (v) =>
+          v != null && field?.type === "array" && field.arrayType
+            ? serialiseArray(v, field.arrayType, field.mode)
+            : v,
+      });
       setFields[mongoField] = transformed ?? null;
     }
 

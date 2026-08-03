@@ -71,7 +71,7 @@ export const dehydrateTypedJson = (
   const { data, meta } = splitTypedJson(transformed);
 
   const encrypted = field.encrypted;
-  if (!encrypted || !amphora) return { data, meta };
+  if (!encrypted) return { data, meta };
 
   const seal = (half: unknown): string =>
     encryptFieldValue(half, encrypted, amphora, field.key, entityName);
@@ -96,7 +96,7 @@ export const hydrateTypedJson = (
   const encrypted = field.encrypted;
 
   const open = (half: unknown): unknown =>
-    encrypted && amphora && isString(half)
+    encrypted && isString(half)
       ? decryptFieldValue(half, encrypted, amphora, field.key, entityName)
       : half;
 

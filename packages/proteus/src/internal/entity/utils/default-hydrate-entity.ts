@@ -63,7 +63,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
       continue;
     }
 
-    if (raw != null && field.encrypted && amphora) {
+    if (raw != null && field.encrypted) {
       raw = decryptFieldValue(
         raw as string,
         field.encrypted,

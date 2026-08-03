@@ -20,6 +20,11 @@ import { guardMemoryLockMode } from "../utils/guard-memory-lock-mode.js";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
 import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
+import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
+import {
+  dehydrateTypedJson,
+  typedJsonMetaDictKey,
+} from "../../../entity/utils/typed-json.js";
 import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
 import { applyOrdering } from "../../../utils/query/apply-ordering.js";
@@ -32,6 +37,7 @@ import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-fi
 import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
 import { applyAutoIncrement } from "../utils/memory-auto-increment.js";
 import { checkUniqueConstraints } from "../utils/memory-unique-check.js";
+import { serializePk } from "../utils/serialize-pk.js";
 
 export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly getTable: () => MemoryTable;
@@ -283,12 +289,17 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   // ─── Write builders ───────────────────────────────────────────────
 
   insert(): IInsertQueryBuilder<E> {
-    return new MemoryInsertBuilder<E>(this.getTable, this.getStore, this.metadata);
+    return new MemoryInsertBuilder<E>(
+      this.getTable,
+      this.getStore,
+      this.metadata,
+      this.amphora,
+    );
   }
 
   update(): IUpdateQueryBuilder<E> {
     this.guardAppendOnlyWrite("update");
-    return new MemoryUpdateBuilder<E>(this.getTable, this.metadata);
+    return new MemoryUpdateBuilder<E>(this.getTable, this.metadata, this.amphora);
   }
 
   delete(): IDeleteQueryBuilder<E> {
@@ -299,6 +310,7 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.metadata,
       this.namespace,
       false,
+      this.amphora,
     );
   }
 
@@ -310,6 +322,7 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.metadata,
       this.namespace,
       true,
+      this.amphora,
     );
   }
 
@@ -468,16 +481,19 @@ class MemoryInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
   private readonly getTable: () => MemoryTable;
   private readonly getStore: () => MemoryStore;
   private readonly metadata: EntityMetadata;
+  private readonly amphora: IAmphora | undefined;
   private data: Array<DeepPartial<E>> = [];
 
   constructor(
     getTable: () => MemoryTable,
     getStore: () => MemoryStore,
     metadata: EntityMetadata,
+    amphora?: IAmphora,
   ) {
     this.getTable = getTable;
     this.getStore = getStore;
     this.metadata = metadata;
+    this.amphora = amphora;
   }
 
   values(data: Array<DeepPartial<E>>): this {
@@ -514,9 +530,31 @@ class MemoryInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
     for (const item of this.data) {
       const row: Dict = {};
       for (const field of this.metadata.fields) {
-        if (field.key in (item as any)) {
-          row[field.key] = (item as any)[field.key];
+        if (!(field.key in (item as any))) continue;
+
+        // A builder write bypasses the ORM lifecycle but not the storage
+        // contract. `row` is both what is stored AND what is replayed through
+        // defaultHydrateEntity below — a ROW-side reader — so it must hold what
+        // a repository write would have stored: transformed, split and sealed,
+        // never the authored value.
+        if (field.typedJson) {
+          const { data, meta } = dehydrateTypedJson(
+            field,
+            (item as any)[field.key],
+            this.amphora,
+            this.metadata.entity.name,
+          );
+          row[field.key] = data;
+          row[typedJsonMetaDictKey(field.key)] = meta;
+          continue;
         }
+
+        row[field.key] = dehydrateFieldValue(
+          (item as any)[field.key],
+          field,
+          this.metadata.entity.name,
+          { amphora: this.amphora },
+        );
       }
 
       // For single-table children, inject the discriminator value so the row
@@ -531,7 +569,7 @@ class MemoryInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
 
       applyAutoIncrement(row, this.metadata, this.getStore, true);
 
-      const pk = JSON.stringify(this.metadata.primaryKeys.map((k) => row[k]));
+      const pk = serializePk(row, this.metadata.primaryKeys);
 
       if (table.has(pk)) {
         throw new MemoryDuplicateKeyError(
@@ -552,7 +590,7 @@ class MemoryInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
       const entity = defaultHydrateEntity<E>(
         structuredClone(row),
         resolvePolymorphicMetadata(row, this.metadata),
-        { snapshot: false, hooks: false },
+        { snapshot: false, hooks: false, amphora: this.amphora },
       );
       results.push(entity);
     }
@@ -564,12 +602,14 @@ class MemoryInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
 class MemoryUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
   private readonly getTable: () => MemoryTable;
   private readonly metadata: EntityMetadata;
+  private readonly amphora: IAmphora | undefined;
   private updateData: DeepPartial<E> | null = null;
   private predicates: Array<{ predicate: Condition<E>; conjunction: "and" | "or" }> = [];
 
-  constructor(getTable: () => MemoryTable, metadata: EntityMetadata) {
+  constructor(getTable: () => MemoryTable, metadata: EntityMetadata, amphora?: IAmphora) {
     this.getTable = getTable;
     this.metadata = metadata;
+    this.amphora = amphora;
   }
 
   set(data: DeepPartial<E>): this {
@@ -641,12 +681,32 @@ class MemoryUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
       for (const [key, value] of Object.entries(
         this.updateData as Record<string, unknown>,
       )) {
-        row[key] = value;
+        const field = this.metadata.fields.find((f) => f.key === key);
+
+        // Same storage contract as the insert builder. Staging the authored
+        // value made the row-side reader below apply transform.from to
+        // something that never went through to, and handed the decryptor
+        // plaintext.
+        if (field?.typedJson) {
+          const { data, meta } = dehydrateTypedJson(
+            field,
+            value,
+            this.amphora,
+            this.metadata.entity.name,
+          );
+          row[key] = data;
+          row[typedJsonMetaDictKey(key)] = meta;
+          continue;
+        }
+
+        row[key] = dehydrateFieldValue(value, field, this.metadata.entity.name, {
+          amphora: this.amphora,
+        });
       }
       const entity = defaultHydrateEntity<E>(
         structuredClone(row),
         resolvePolymorphicMetadata(row, this.metadata),
-        { snapshot: false, hooks: false },
+        { snapshot: false, hooks: false, amphora: this.amphora },
       );
       results.push(entity);
     }
@@ -674,6 +734,7 @@ class MemoryDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
   private readonly metadata: EntityMetadata;
   private readonly namespace: string | null;
   private readonly soft: boolean;
+  private readonly amphora: IAmphora | undefined;
   private predicates: Array<{ predicate: Condition<E>; conjunction: "and" | "or" }> = [];
 
   constructor(
@@ -682,12 +743,14 @@ class MemoryDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
     metadata: EntityMetadata,
     namespace: string | null,
     soft: boolean,
+    amphora?: IAmphora,
   ) {
     this.getTable = getTable;
     this.getStore = getStore;
     this.metadata = metadata;
     this.namespace = namespace;
     this.soft = soft;
+    this.amphora = amphora;
   }
 
   where(criteria: Condition<E>): this {
@@ -760,7 +823,7 @@ class MemoryDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
       const entity = defaultHydrateEntity<E>(
         structuredClone(row),
         resolvePolymorphicMetadata(row, this.metadata),
-        { snapshot: false, hooks: false },
+        { snapshot: false, hooks: false, amphora: this.amphora },
       );
       results.push(entity);
 

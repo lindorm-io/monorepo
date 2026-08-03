@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type {
   IEntity,
@@ -24,6 +25,7 @@ export class PostgresDeleteQueryBuilder<
   private readonly client: PostgresQueryClient;
   private readonly namespace: string | null;
   private readonly isSoft: boolean;
+  private readonly amphora: IAmphora | undefined;
   private predicates: Array<PredicateEntry<E>> = [];
   private returningFields: Array<string> | "*" | null = null;
 
@@ -32,11 +34,13 @@ export class PostgresDeleteQueryBuilder<
     client: PostgresQueryClient,
     namespace?: string | null,
     soft?: boolean,
+    amphora?: IAmphora,
   ) {
     this.metadata = metadata;
     this.client = client;
     this.namespace = namespace ?? null;
     this.isSoft = soft ?? false;
+    this.amphora = amphora;
   }
 
   where(criteria: Condition<E>): this {
@@ -134,7 +138,10 @@ export class PostgresDeleteQueryBuilder<
 
     const rows = this.returningFields
       ? result.rows.map((row: any) =>
-          hydrateReturning<E>(row, this.metadata, { hooks: false }),
+          hydrateReturning<E>(row, this.metadata, {
+            hooks: false,
+            amphora: this.amphora,
+          }),
         )
       : [];
 

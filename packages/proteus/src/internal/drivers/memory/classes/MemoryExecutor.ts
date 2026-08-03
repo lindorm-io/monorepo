@@ -1,7 +1,6 @@
 import type { Condition } from "@lindorm/match";
 import { Matcher } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
-import { isBigInt } from "@lindorm/is";
 import type { DeepPartial, Dict } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
@@ -14,7 +13,7 @@ import type {
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
 import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
-import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
 import {
   dehydrateTypedJson,
   typedJsonMetaDictKey,
@@ -39,25 +38,11 @@ import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-c
 import { applyAutoIncrement } from "../utils/memory-auto-increment.js";
 import { checkUniqueConstraints } from "../utils/memory-unique-check.js";
 import { guardMemoryLockMode } from "../utils/guard-memory-lock-mode.js";
+import { serializePk } from "../utils/serialize-pk.js";
 import {
   applyDeleteReferentialActions,
   assertForeignKeysExist,
 } from "../utils/memory-referential-integrity.js";
-
-const serializePk = (
-  entity: Record<string, unknown>,
-  primaryKeys: Array<string>,
-): string =>
-  // `JSON.stringify` throws on a BigInt, so a bigint PK (or FK-backed lookup) must
-  // be tagged to a string first — otherwise every update/save/destroy on a
-  // bigint-PK entity crashes. The `n` tag keeps a bigint key distinct from the
-  // equivalent string/number, and non-bigint values serialize exactly as before.
-  JSON.stringify(
-    primaryKeys.map((k) => {
-      const value = entity[k];
-      return isBigInt(value) ? `${value}n` : value;
-    }),
-  );
 
 const dehydrateToRow = (
   entity: IEntity,
@@ -95,18 +80,9 @@ const dehydrateToRow = (
       continue;
     }
 
-    value = value != null && field.transform ? field.transform.to(value) : value;
-    if (value != null && field.encrypted && amphora) {
-      value = encryptFieldValue(
-        value,
-        field.encrypted,
-        amphora,
-        field.key,
-        metadata.entity.name,
-      );
-    }
-
-    row[field.key] = value;
+    row[field.key] = dehydrateFieldValue(value, field, metadata.entity.name, {
+      amphora,
+    });
   }
 
   // Extract FK columns from owning relations
@@ -675,19 +651,9 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
             continue;
           }
 
-          let transformed =
-            value != null && field?.transform ? field.transform.to(value) : value;
-          if (transformed != null && field?.encrypted && this.amphora) {
-            transformed = encryptFieldValue(
-              transformed,
-              field.encrypted,
-              this.amphora,
-              field.key,
-              this.metadata.entity.name,
-            );
-          }
-
-          staged[key] = transformed;
+          staged[key] = dehydrateFieldValue(value, field, this.metadata.entity.name, {
+            amphora: this.amphora,
+          });
         }
 
         // Validate FK columns on the prospective row before mutating in place.

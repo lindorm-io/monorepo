@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { FindCursor, Document } from "mongodb";
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { IProteusCursor } from "../../../../interfaces/ProteusCursor.js";
@@ -15,13 +16,19 @@ import { hydrateEntity } from "../utils/hydrate.js";
 export class MongoCursor<E extends IEntity> implements IProteusCursor<E> {
   private readonly cursor: FindCursor<Document>;
   private readonly metadata: EntityMetadata;
+  private readonly amphora: IAmphora | undefined;
   private closed: boolean;
   /** Serialization lock to prevent concurrent access to the underlying MongoDB cursor. */
   private pending: Promise<void>;
 
-  constructor(cursor: FindCursor<Document>, metadata: EntityMetadata) {
+  constructor(
+    cursor: FindCursor<Document>,
+    metadata: EntityMetadata,
+    amphora?: IAmphora,
+  ) {
     this.cursor = cursor;
     this.metadata = metadata;
+    this.amphora = amphora;
     this.closed = false;
     this.pending = Promise.resolve();
   }
@@ -39,7 +46,7 @@ export class MongoCursor<E extends IEntity> implements IProteusCursor<E> {
       const doc = await this.cursor.next();
       if (!doc) return null;
 
-      return hydrateEntity<E>(doc, this.metadata);
+      return hydrateEntity<E>(doc, this.metadata, this.amphora);
     });
   }
 
@@ -58,7 +65,7 @@ export class MongoCursor<E extends IEntity> implements IProteusCursor<E> {
       for (let i = 0; i < size; i++) {
         const doc = await this.cursor.next();
         if (!doc) break;
-        results.push(hydrateEntity<E>(doc, this.metadata));
+        results.push(hydrateEntity<E>(doc, this.metadata, this.amphora));
       }
 
       return results;

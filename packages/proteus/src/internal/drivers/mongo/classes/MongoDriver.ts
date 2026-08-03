@@ -377,6 +377,7 @@ export class MongoDriver implements IProteusDriver {
       repositoryFactory: factory,
       emitEntity: this.emitEntity,
       joinTableOps: createMongoJoinTableOps(db),
+      amphora: this.amphora,
     });
   }
 
@@ -417,6 +418,7 @@ export class MongoDriver implements IProteusDriver {
       emitEntity: this.emitEntity,
       joinTableOps: createMongoJoinTableOps(db, txHandle.session),
       session: txHandle.session,
+      amphora: this.amphora,
     });
   }
 

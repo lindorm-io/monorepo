@@ -7,8 +7,9 @@ import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor
 import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
 import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
-import { shouldAutoIncrement } from "../../../entity/utils/should-auto-increment.js";
-import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import { applyAutoIncrement } from "../utils/apply-auto-increment.js";
+import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
+import { serialiseArray } from "../../../entity/utils/serialise.js";
 import { dehydrateTypedJson } from "../../../entity/utils/typed-json.js";
 import { toAbortError } from "../../../utils/abort.js";
 import { dehydrateEntity } from "../utils/dehydrate.js";
@@ -107,7 +108,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     const doc = dehydrateEntity(entity, this.metadata, this.amphora);
 
     // Auto-increment handling
-    await this.applyAutoIncrement(doc);
+    await applyAutoIncrement(doc, this.metadata, this.db, this.session);
 
     try {
       await collection.insertOne(doc, sessionOpts(this.session));
@@ -544,7 +545,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
     for (const entity of entities) {
       const doc = dehydrateEntity(entity, this.metadata, this.amphora);
-      await this.applyAutoIncrement(doc);
+      await applyAutoIncrement(doc, this.metadata, this.db, this.session);
       docs.push(doc);
     }
 
@@ -637,20 +638,18 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         continue;
       }
 
-      let transformed =
-        value != null && field?.transform ? field.transform.to(value) : value;
-
       // updateMany used to skip encryption entirely, writing an @Encrypted
-      // column in the clear while every read still tried to decrypt it.
-      if (transformed != null && field?.encrypted && this.amphora) {
-        transformed = encryptFieldValue(
-          transformed,
-          field.encrypted,
-          this.amphora,
-          field.key,
-          this.metadata.entity.name,
-        );
-      }
+      // column in the clear while every read still tried to decrypt it. The
+      // typed-array coercion is the one dehydrateEntity applies — BSON demotes a
+      // raw bigint to a lossy Long, so updateMany corrupted what insert stored
+      // correctly on the very same column.
+      const transformed = dehydrateFieldValue(value, field, this.metadata.entity.name, {
+        amphora: this.amphora,
+        coerce: (v) =>
+          v != null && field?.type === "array" && field.arrayType
+            ? serialiseArray(v, field.arrayType, field.mode)
+            : v,
+      });
 
       setFields[mongoField] = transformed ?? null;
     }
@@ -745,46 +744,5 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     const existingConditions = Object.keys(filter).length > 0 ? [filter] : [];
     if (existingConditions.length === 0) return versionCondition;
     return { $and: [...existingConditions, versionCondition] };
-  }
-
-  /**
-   * Apply auto-increment values using the _proteus_sequences collection.
-   * Uses findOneAndUpdate with $inc for atomic counter increment.
-   */
-  private async applyAutoIncrement(doc: Document): Promise<void> {
-    for (const gen of this.metadata.generated) {
-      const field = this.metadata.fields.find((f) => f.key === gen.key);
-      const isPk = this.metadata.primaryKeys.includes(gen.key);
-      const currentValue = isPk ? doc._id : doc[field?.name ?? gen.key];
-
-      if (!shouldAutoIncrement(gen, currentValue)) continue;
-
-      const seqCollection = this.db.collection("_proteus_sequences");
-      const seqId = `${this.metadata.entity.name}.${gen.key}`;
-
-      const result = await seqCollection.findOneAndUpdate(
-        { _id: seqId as any },
-        { $inc: { seq: 1 } },
-        {
-          upsert: true,
-          returnDocument: "after",
-          ...sessionOpts(this.session),
-        },
-      );
-
-      const seq = (result as any)?.seq ?? 1;
-
-      // Mint the value in the column's DECLARED type: a `bigint` column must get
-      // a JS bigint. The sequence counter is a BSON int, so a bigint column
-      // would otherwise be minted as a number and mismatch reads (which hydrate
-      // to bigint), making `findOne({ id: 2n })` and bigint FK lookups miss.
-      const nextVal = field?.type === "bigint" ? BigInt(seq) : seq;
-
-      if (isPk) {
-        doc._id = nextVal;
-      } else {
-        doc[field?.name ?? gen.key] = nextVal;
-      }
-    }
   }
 }

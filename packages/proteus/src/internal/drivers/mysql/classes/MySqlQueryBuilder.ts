@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
 import { QueryBuilder } from "../../../../classes/QueryBuilder.js";
 import { ProteusError, ProteusRepositoryError } from "../../../../errors/index.js";
@@ -39,17 +40,20 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly client: MysqlQueryClient;
   private readonly namespace: string | null;
   private readonly logger: ILogger | null;
+  private readonly amphora: IAmphora | undefined;
 
   constructor(
     metadata: EntityMetadata,
     client: MysqlQueryClient,
     namespace?: string | null,
     logger?: ILogger | null,
+    amphora?: IAmphora,
   ) {
     super(metadata);
     this.client = client;
     this.namespace = namespace ?? null;
     this.logger = logger ?? null;
+    this.amphora = amphora;
   }
 
   // --- MySQL-specific methods ---
@@ -234,6 +238,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.client,
       this.namespace,
       this.logger,
+      this.amphora,
     );
     cloned.state = this.cloneState();
     return cloned;
@@ -267,6 +272,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.metadata,
       query.aliasMap,
       joinIncludes,
+      { amphora: this.amphora },
     );
     if (entities.length === 0) return null;
 
@@ -277,6 +283,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         namespace: this.namespace,
         withDeleted: this.state.withDeleted,
         versionTimestamp: this.state.versionTimestamp,
+        amphora: this.amphora,
       });
     }
 
@@ -322,6 +329,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       this.metadata,
       query.aliasMap,
       joinIncludes,
+      { amphora: this.amphora },
     );
 
     if (queryIncludes.length > 0) {
@@ -331,6 +339,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         namespace: this.namespace,
         withDeleted: this.state.withDeleted,
         versionTimestamp: this.state.versionTimestamp,
+        amphora: this.amphora,
       });
     }
 
@@ -385,12 +394,22 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   // --- Write builders ---
 
   insert(): IInsertQueryBuilder<E> {
-    return new MySqlInsertQueryBuilder<E>(this.metadata, this.client, this.namespace);
+    return new MySqlInsertQueryBuilder<E>(
+      this.metadata,
+      this.client,
+      this.namespace,
+      this.amphora,
+    );
   }
 
   update(): IUpdateQueryBuilder<E> {
     this.guardAppendOnlyWrite("update");
-    return new MySqlUpdateQueryBuilder<E>(this.metadata, this.client, this.namespace);
+    return new MySqlUpdateQueryBuilder<E>(
+      this.metadata,
+      this.client,
+      this.namespace,
+      this.amphora,
+    );
   }
 
   delete(): IDeleteQueryBuilder<E> {

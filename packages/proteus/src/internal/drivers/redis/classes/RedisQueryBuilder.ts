@@ -41,7 +41,7 @@ import { resolveStorageMetadata } from "../../../entity/utils/resolve-storage-me
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
 import { RedisDriverError } from "../errors/RedisDriverError.js";
 import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
-import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
 import { applyOrdering } from "../../../utils/query/apply-ordering.js";
 import {
@@ -679,18 +679,12 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
           continue;
         }
 
-        let value = (item as any)[field.key];
-        if (value != null && field.transform) value = field.transform.to(value);
-        if (value != null && field.encrypted && this.amphora) {
-          value = encryptFieldValue(
-            value,
-            field.encrypted,
-            this.amphora,
-            field.key,
-            this.metadata.entity.name,
-          );
-        }
-        row[field.key] = value;
+        row[field.key] = dehydrateFieldValue(
+          (item as any)[field.key],
+          field,
+          this.metadata.entity.name,
+          { amphora: this.amphora },
+        );
       }
 
       // For single-table children, inject the discriminator value so the row
@@ -950,16 +944,9 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
           continue;
         }
 
-        let transformed = field?.transform ? field.transform.to(value) : value;
-        if (transformed != null && field?.encrypted && this.amphora) {
-          transformed = encryptFieldValue(
-            transformed,
-            field.encrypted,
-            this.amphora,
-            field.key,
-            this.metadata.entity.name,
-          );
-        }
+        const transformed = dehydrateFieldValue(value, field, this.metadata.entity.name, {
+          amphora: this.amphora,
+        });
         // Same coercion the full-row write uses — `String(transformed)` flattened
         // a plain json/object/array value to "[object Object]" and utf8-mangled a
         // Buffer, so a builder update corrupted what insert/update stored correctly.

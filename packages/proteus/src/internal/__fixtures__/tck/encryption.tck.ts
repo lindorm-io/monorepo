@@ -1,18 +1,23 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
+import { isBigInt } from "@lindorm/is";
 // TCK: Encryption Suite
 // Tests field-level encryption via @Encrypted decorator across all drivers.
 
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
-import type { TckDriverHandle } from "./types.js";
+import type { ProteusSource } from "../../../classes/ProteusSource.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
 import { TCK_INTENDED_KEK, TCK_STAGED_KEK, TCK_TRAP_KEK } from "./create-tck-amphora.js";
 
 export const encryptionSuite = (
   getHandle: () => TckDriverHandle,
   entities: TckEntities,
+  getSource: () => ProteusSource,
+  caps: TckCapabilities,
 ) => {
   describe("Encryption", () => {
-    const { TckEncrypted, TckStagedEncrypted } = entities;
+    const { TckEncrypted, TckEncryptedItem, TckEncryptedOwner, TckStagedEncrypted } =
+      entities;
 
     beforeEach(async () => {
       await getHandle().clear();
@@ -327,6 +332,34 @@ export const encryptionSuite = (
         const found2 = await repo.findOneOrFail({ id: saved.id });
         expect(found2.secret).toBe("updated-via-save");
       });
+
+      // upsert() returns the row it just wrote, so it hydrates its own
+      // RETURNING/SELECT-back. On sqlite that hydrate ran without an amphora,
+      // so the caller received raw ciphertext from a call that had just
+      // encrypted correctly — a write/read asymmetry inside one method.
+      test("upsert returns the decrypted entity, not the stored ciphertext", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+
+        const upserted = await repo.upsert(
+          repo.create({
+            secret: "upsert-secret",
+            pin: 24,
+            verified: true,
+            metadata: { upserted: true },
+            optionalSecret: "opt-upsert",
+            transformedSecret: "world",
+          }),
+        );
+
+        expect(upserted.secret).toBe("upsert-secret");
+        expect(upserted.pin).toBe(24);
+        expect(upserted.verified).toBe(true);
+        expect(upserted.optionalSecret).toBe("opt-upsert");
+        expect(upserted.transformedSecret).toBe("world");
+
+        const found = await repo.findOneOrFail({ id: upserted.id });
+        expect(found.secret).toBe("upsert-secret");
+      });
     });
 
     // ─── Batch Operations ──────────────────────────────────────────────
@@ -440,6 +473,209 @@ export const encryptionSuite = (
 
         expect(mapped).toMatchSnapshot();
       });
+    });
+
+    // ─── Types AesKit Cannot Take Verbatim ─────────────────────────────
+    // `calculateContentType` accepts string/Buffer/array/boolean/number/object
+    // and THROWS on anything else, so a Date and a bigint have to be serialised
+    // before the cipher sees them. Every write path used to encrypt FIRST, which
+    // made @Encrypted unusable on `timestamp` and `bigint` on every driver.
+
+    describe("serialise-before-encrypt types", () => {
+      test("encrypted timestamp field round-trips as the same instant", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+        const secretAt = new Date("2021-03-04T05:06:07.008Z");
+
+        const inserted = await repo.insert({
+          secret: "s",
+          pin: 1,
+          verified: false,
+          metadata: {},
+          optionalSecret: null,
+          transformedSecret: "test",
+          secretAt,
+        });
+
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        expect(found.secretAt).toBeInstanceOf(Date);
+        // The exact instant, not merely a Date: MySQL's own write coercion spells
+        // a Date as local `YYYY-MM-DD HH:MM:SS.mmm`, which the only reader an
+        // encrypted column has (`deserialise`) would parse back in LOCAL time.
+        expect(found.secretAt!.toISOString()).toBe("2021-03-04T05:06:07.008Z");
+      });
+
+      test("encrypted bigint field round-trips beyond Number.MAX_SAFE_INTEGER", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+        // An @Encrypted column is projected as TEXT on every driver, so the
+        // driver's native bigint support is irrelevant here — the value is
+        // serialised to a decimal string and restored by `deserialise`.
+        const secretAmount = 9007199254740993n;
+
+        const inserted = await repo.insert({
+          secret: "s",
+          pin: 1,
+          verified: false,
+          metadata: {},
+          optionalSecret: null,
+          transformedSecret: "test",
+          secretAmount,
+        });
+
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        expect(found.secretAmount).toBe(9007199254740993n);
+      });
+
+      test("encrypted array field round-trips with element equality", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+
+        const inserted = await repo.insert({
+          secret: "s",
+          pin: 1,
+          verified: false,
+          metadata: {},
+          optionalSecret: null,
+          transformedSecret: "test",
+          secretTags: ["alpha", "beta", "gamma"],
+        });
+
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        expect(found.secretTags).toMatchSnapshot();
+      });
+
+      test("all three seal at rest — the raw row holds none of the plaintext", async () => {
+        const handle = getHandle();
+        const repo = handle.repository(TckEncrypted);
+
+        const inserted = await repo.insert({
+          secret: "s",
+          pin: 1,
+          verified: false,
+          metadata: {},
+          optionalSecret: null,
+          transformedSecret: "test",
+          secretAt: new Date("2021-03-04T05:06:07.008Z"),
+          secretAmount: 9007199254740993n,
+          secretTags: ["at-rest-canary"],
+        });
+
+        const rows = await handle.readRawRows(TckEncrypted);
+        const stored = JSON.stringify(rows, (_key, value) =>
+          isBigInt(value) ? String(value) : value,
+        );
+
+        expect(stored).not.toContain("2021-03-04");
+        expect(stored).not.toContain("9007199254740993");
+        expect(stored).not.toContain("at-rest-canary");
+        // The unencrypted PK proves the row really was read raw.
+        expect(stored).toContain(inserted.id);
+      });
+
+      test("updating the three types re-seals and round-trips", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+
+        const inserted = await repo.insert({
+          secret: "s",
+          pin: 1,
+          verified: false,
+          metadata: {},
+          optionalSecret: null,
+          transformedSecret: "test",
+          secretAt: new Date("2020-01-01T00:00:00.000Z"),
+          secretAmount: 1n,
+          secretTags: ["before"],
+        });
+
+        const entity = await repo.findOneOrFail({ id: inserted.id });
+        entity.secretAt = new Date("2022-11-12T13:14:15.016Z");
+        entity.secretAmount = -9007199254740993n;
+        entity.secretTags = ["after", "update"];
+        await repo.update(entity);
+
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        expect(found.secretAt!.toISOString()).toBe("2022-11-12T13:14:15.016Z");
+        expect(found.secretAmount).toBe(-9007199254740993n);
+        expect(found.secretTags).toMatchSnapshot();
+      });
+    });
+
+    // ─── Encrypted Relations ───────────────────────────────────────────
+    // A relation's entity is hydrated by a DIFFERENT code path than the root's,
+    // so the vault has to reach both. The repository include path always passed
+    // one; the query builder passed it to the JOINed hydrate but NOT to
+    // `executeQueryIncludes`, so a "query"-strategy include handed back the
+    // related entity's raw ciphertext from a call whose root decrypted fine.
+
+    describe("relations carry the vault into the related entity", () => {
+      const seed = async () => {
+        const handle = getHandle();
+        const owner = await handle.repository(TckEncryptedOwner).insert({
+          ownerSecret: "owner-plaintext",
+        });
+        await handle.repository(TckEncryptedItem).insert({
+          itemSecret: "item-plaintext",
+          ownerId: owner.id,
+        });
+        return owner;
+      };
+
+      test("repository include decrypts the related entity", async () => {
+        const owner = await seed();
+
+        const found = await getHandle()
+          .repository(TckEncryptedOwner)
+          .findOneOrFail({ id: owner.id }, { relations: ["items"] });
+
+        expect(found.ownerSecret).toBe("owner-plaintext");
+        expect(found.items).toHaveLength(1);
+        expect(found.items[0].itemSecret).toBe("item-plaintext");
+      });
+
+      if (caps.queryBuilderIncludes) {
+        test("query builder JOIN include decrypts the related entity", async () => {
+          const owner = await seed();
+
+          const found = await getSource()
+            .queryBuilder(TckEncryptedItem)
+            .include("owner", { strategy: "join" })
+            .where({ ownerId: owner.id })
+            .getOne();
+
+          expect(found).not.toBeNull();
+          expect(found!.itemSecret).toBe("item-plaintext");
+          expect(found!.owner).not.toBeNull();
+          expect(found!.owner!.ownerSecret).toBe("owner-plaintext");
+        });
+
+        test("query builder query-strategy include decrypts the related entity", async () => {
+          const owner = await seed();
+
+          const found = await getSource()
+            .queryBuilder(TckEncryptedOwner)
+            .include("items", { strategy: "query" })
+            .where({ id: owner.id })
+            .getOne();
+
+          expect(found).not.toBeNull();
+          expect(found!.ownerSecret).toBe("owner-plaintext");
+          expect(found!.items).toHaveLength(1);
+          expect(found!.items[0].itemSecret).toBe("item-plaintext");
+        });
+
+        test("getMany() query-strategy include decrypts every related entity", async () => {
+          const owner = await seed();
+
+          const found = await getSource()
+            .queryBuilder(TckEncryptedOwner)
+            .include("items", { strategy: "query" })
+            .where({ id: owner.id })
+            .getMany();
+
+          expect(found).toHaveLength(1);
+          expect(found[0].ownerSecret).toBe("owner-plaintext");
+          expect(found[0].items).toHaveLength(1);
+          expect(found[0].items[0].itemSecret).toBe("item-plaintext");
+        });
+      }
     });
 
     // ─── Increment / Decrement Rejection ───────────────────────────────

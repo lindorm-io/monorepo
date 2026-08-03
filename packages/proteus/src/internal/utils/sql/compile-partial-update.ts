@@ -2,7 +2,7 @@ import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
-import { encryptFieldValue } from "../../entity/utils/encrypt-field-value.js";
+import { dehydrateFieldValue } from "../../entity/utils/dehydrate-field-value.js";
 import { typedJsonChangedColumns } from "../../entity/utils/typed-json.js";
 import { partitionJoinedFields } from "../query/partition-joined-fields.js";
 import {
@@ -340,17 +340,12 @@ const pushChangedColumns = (
       }
       continue;
     }
-    let transformed = field?.transform ? field.transform.to(value) : value;
-    if (transformed != null && field?.encrypted && amphora) {
-      transformed = encryptFieldValue(
-        transformed,
-        field.encrypted,
+    params.push(
+      dehydrateFieldValue(value, field, metadata.entity.name, {
         amphora,
-        field.key,
-        metadata.entity.name,
-      );
-    }
-    params.push(deps.coerceWriteValue(transformed, field ?? null));
+        coerce: (v) => deps.coerceWriteValue(v, field ?? null),
+      }),
+    );
     setClauses.push(
       `${dialect.quoteIdentifier(colName)} = ${dialect.placeholder(params)}`,
     );

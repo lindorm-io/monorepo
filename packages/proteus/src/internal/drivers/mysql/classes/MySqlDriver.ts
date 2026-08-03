@@ -417,7 +417,13 @@ export class MySqlDriver implements IProteusDriver {
     const client = this.signal
       ? this.createMysqlClientFromPoolWithSignal(pool, this.signal)
       : this.createMysqlClientFromPool(pool);
-    return new MySqlQueryBuilder<E>(metadata, client, this.namespace, this.logger);
+    return new MySqlQueryBuilder<E>(
+      metadata,
+      client,
+      this.namespace,
+      this.logger,
+      this.amphora,
+    );
   }
 
   createTransactionalQueryBuilder<E extends IEntity>(
@@ -432,6 +438,7 @@ export class MySqlDriver implements IProteusDriver {
       mysqlHandle.client,
       this.namespace,
       this.logger,
+      this.amphora,
     );
   }
 

@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { DeepPartial, Dict } from "@lindorm/types";
 import type {
   IEntity,
@@ -9,6 +10,7 @@ import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryErro
 import { ProteusError } from "../../../../errors/ProteusError.js";
 import type { MysqlQueryClient } from "../types/mysql-query-client.js";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
+import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
 import { dehydrateTypedJson } from "../../../entity/utils/typed-json.js";
 import { coerceWriteValue } from "../utils/query/coerce-value.js";
 import { resolveTableName } from "../utils/query/resolve-table-name.js";
@@ -25,16 +27,19 @@ export class MySqlInsertQueryBuilder<
   private readonly metadata: EntityMetadata;
   private readonly client: MysqlQueryClient;
   private readonly namespace: string | null;
+  private readonly amphora: IAmphora | undefined;
   private data: Array<Dict> = [];
 
   constructor(
     metadata: EntityMetadata,
     client: MysqlQueryClient,
     namespace?: string | null,
+    amphora?: IAmphora,
   ) {
     this.metadata = metadata;
     this.client = client;
     this.namespace = namespace ?? null;
+    this.amphora = amphora;
   }
 
   values(data: Array<DeepPartial<E>>): this {
@@ -137,13 +142,10 @@ export class MySqlInsertQueryBuilder<
         const field = this.metadata.fields.find((f) => f.key === key);
 
         if (field?.typedJson) {
-          // No amphora reaches a query builder, so an @Encrypted field is
-          // written in the clear here — the same gap the non-typedJson branch
-          // below already has. Use repository.insert() for encrypted entities.
           const { data, meta } = dehydrateTypedJson(
             field,
             row[key],
-            undefined,
+            this.amphora,
             this.metadata.entity.name,
           );
           values.set(field.name, coerceWriteValue(data, field?.type ?? null));
@@ -151,11 +153,16 @@ export class MySqlInsertQueryBuilder<
           continue;
         }
 
-        let value = row[key];
-        if (field?.transform) {
-          value = field.transform.to(value);
-        }
-        values.set(field?.name ?? key, coerceWriteValue(value, field?.type ?? null));
+        // A builder write bypasses the ORM lifecycle but not the storage
+        // contract: an @Encrypted column holds ciphertext, so writing the
+        // plaintext here would leak it and make the read path fail to open it.
+        values.set(
+          field?.name ?? key,
+          dehydrateFieldValue(row[key], field, this.metadata.entity.name, {
+            amphora: this.amphora,
+            coerce: (v) => coerceWriteValue(v, field?.type ?? null),
+          }),
+        );
       }
 
       const placeholders = colNames.map((name) => {

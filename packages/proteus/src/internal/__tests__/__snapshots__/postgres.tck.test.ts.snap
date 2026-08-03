@@ -209,6 +209,21 @@ exports[`TCK: PostgreSQL > naming: snake > encryption > Encryption > findMany de
 ]
 `;
 
+exports[`TCK: PostgreSQL > naming: snake > encryption > Encryption > serialise-before-encrypt types > encrypted array field round-trips with element equality 1`] = `
+[
+  "alpha",
+  "beta",
+  "gamma",
+]
+`;
+
+exports[`TCK: PostgreSQL > naming: snake > encryption > Encryption > serialise-before-encrypt types > updating the three types re-seals and round-trips 1`] = `
+[
+  "after",
+  "update",
+]
+`;
+
 exports[`TCK: PostgreSQL > naming: snake > encryption > Encryption > update operations > save (insert-or-update) with encrypted fields round-trips correctly 1`] = `
 {
   "saved": true,

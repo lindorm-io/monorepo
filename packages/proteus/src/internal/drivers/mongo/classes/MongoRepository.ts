@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type { Db, ClientSession } from "mongodb";
 import type { ILogger } from "@lindorm/logger";
@@ -68,6 +69,7 @@ export type MongoRepositorySettings<E extends IEntity> = {
   emitEntity?: EntityEmitFn;
   joinTableOps: JoinTableOps;
   session?: ClientSession;
+  amphora?: IAmphora;
 };
 
 export class MongoRepository<
@@ -80,6 +82,7 @@ export class MongoRepository<
   private readonly hasReadonlyUpdateFields: boolean;
   private readonly joinTableOps: JoinTableOps;
   private readonly session: ClientSession | undefined;
+  private readonly amphora: IAmphora | undefined;
 
   constructor(options: MongoRepositorySettings<E>) {
     super({
@@ -99,6 +102,7 @@ export class MongoRepository<
     this.db = options.db;
     this.joinTableOps = options.joinTableOps;
     this.session = options.session;
+    this.amphora = options.amphora;
     this.hasEagerRelations = this.metadata.relations.some(
       (r) =>
         r.options.loading.single === "eager" || r.options.loading.multiple === "eager",
@@ -258,7 +262,7 @@ export class MongoRepository<
       if (projection) mongoCursor = mongoCursor.project(projection);
     }
 
-    return new MongoCursor<E>(mongoCursor, this.metadata);
+    return new MongoCursor<E>(mongoCursor, this.metadata, this.amphora);
   }
 
   async clear(_options?: ClearOptions): Promise<void> {

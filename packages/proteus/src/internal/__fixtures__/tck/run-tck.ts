@@ -152,7 +152,12 @@ const runTckForNaming = (
 
   // Encryption test entities
   if (caps.encryption) {
-    baseTargets.push(entities.TckEncrypted, entities.TckStagedEncrypted);
+    baseTargets.push(
+      entities.TckEncrypted,
+      entities.TckStagedEncrypted,
+      entities.TckEncryptedOwner,
+      entities.TckEncryptedItem,
+    );
   }
 
   // @TypedJson + @Encrypted needs both capabilities.
@@ -230,7 +235,7 @@ const runTckForNaming = (
   maybeDescribe(caps.atomicIncrements, "atomicIncrements", () =>
     incrementsSuite(getHandle, entities),
   );
-  maybeDescribe(caps.cursor, "cursor", () => cursorSuite(getHandle, entities));
+  maybeDescribe(caps.cursor, "cursor", () => cursorSuite(getHandle, entities, caps));
   maybeDescribe(caps.expiry, "expiry", () => expirySuite(getHandle, entities));
   maybeDescribe(caps.queryBuilder, "queryBuilder", () =>
     queryBuilderSuite(getHandle, entities, getSource, caps),
@@ -273,7 +278,7 @@ const runTckForNaming = (
     inheritanceJoinedSuite(getHandle, entities, getSource),
   );
   maybeDescribe(caps.encryption, "encryption", () =>
-    encryptionSuite(getHandle, entities),
+    encryptionSuite(getHandle, entities, getSource, caps),
   );
   maybeDescribe(caps.transactions.rollback, "transactions:rollback", () =>
     transactionsRollbackSuite(getHandle, entities, getSource),

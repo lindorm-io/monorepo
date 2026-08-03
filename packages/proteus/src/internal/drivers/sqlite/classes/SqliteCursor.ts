@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
 import type { IEntity, IProteusCursor } from "../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
@@ -19,6 +20,7 @@ export type SqliteCursorOptions = {
   client: SqliteQueryClient;
   batchSize: number;
   namespace: string | null;
+  amphora?: IAmphora;
 };
 
 export class SqliteCursor<E extends IEntity> implements IProteusCursor<E> {
@@ -27,6 +29,7 @@ export class SqliteCursor<E extends IEntity> implements IProteusCursor<E> {
   private readonly aliasMap: Array<AliasMap>;
   private readonly client: SqliteQueryClient;
   private readonly batchSize: number;
+  private readonly amphora: IAmphora | undefined;
   private closed = false;
   private reading = false;
 
@@ -36,6 +39,7 @@ export class SqliteCursor<E extends IEntity> implements IProteusCursor<E> {
     this.aliasMap = options.aliasMap;
     this.client = options.client;
     this.batchSize = options.batchSize;
+    this.amphora = options.amphora;
   }
 
   async next(): Promise<E | null> {
@@ -56,7 +60,7 @@ export class SqliteCursor<E extends IEntity> implements IProteusCursor<E> {
         this.metadata,
         this.aliasMap,
         [],
-        { snapshot: false },
+        { snapshot: false, amphora: this.amphora },
       );
       const entity = hydrated[0] ?? null;
       if (entity) {
@@ -93,6 +97,7 @@ export class SqliteCursor<E extends IEntity> implements IProteusCursor<E> {
 
       const entities = hydrateRows<E>(rows, this.metadata, this.aliasMap, [], {
         snapshot: false,
+        amphora: this.amphora,
       });
       this.loadEmbeddedLists(entities);
       return entities;

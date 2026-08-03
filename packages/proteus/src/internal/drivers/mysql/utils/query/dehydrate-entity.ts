@@ -2,7 +2,7 @@ import type { IAmphora } from "@lindorm/amphora";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import type { DehydrateMode } from "../../../../entity/utils/default-dehydrate-entity.js";
-import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value.js";
+import { dehydrateFieldValue } from "../../../../entity/utils/dehydrate-field-value.js";
 import { resolveJoinKeyValue } from "../../../../entity/utils/resolve-join-key-value.js";
 import { dehydrateTypedJson } from "../../../../entity/utils/typed-json.js";
 import { getSkipKeys } from "../../../../utils/sql/get-skip-keys.js";
@@ -57,19 +57,13 @@ export const dehydrateEntity = <E extends IEntity>(
       continue;
     }
 
-    if (value != null && field.transform) {
-      value = field.transform.to(value);
-    }
-    if (value != null && field.encrypted && amphora) {
-      value = encryptFieldValue(
-        value,
-        field.encrypted,
+    columns.push({
+      column: field.name,
+      value: dehydrateFieldValue(value, field, metadata.entity.name, {
         amphora,
-        field.key,
-        metadata.entity.name,
-      );
-    }
-    columns.push({ column: field.name, value: coerceWriteValue(value, field.type) });
+        coerce: (v) => coerceWriteValue(v, field.type),
+      }),
+    });
     handledKeys.add(field.name);
   }
 

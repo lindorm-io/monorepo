@@ -29,6 +29,7 @@ const metadata = {
   primaryKeys: ["id"],
   generated: [{ key: "seq", strategy: "increment" }],
   relations: [],
+  entity: { name: "TestEntity" },
 } as unknown as EntityMetadata;
 
 const entity = {
@@ -79,6 +80,7 @@ describe("defaultDehydrateEntity", () => {
           joinKeys: { authorId: "id" },
         },
       ],
+      entity: { name: "TestEntity" },
     } as unknown as EntityMetadata;
 
     const entityWithFK = { ...entity, authorId: "user-1" };
@@ -100,6 +102,7 @@ describe("defaultDehydrateEntity", () => {
           joinKeys: { authorId: "id" },
         },
       ],
+      entity: { name: "TestEntity" },
     } as unknown as EntityMetadata;
 
     const entityWithRelated = { ...entity, author: { id: "user-2" } };
@@ -124,6 +127,7 @@ describe("defaultDehydrateEntity", () => {
           },
         }),
       ],
+      entity: { name: "TestEntity" },
     } as unknown as EntityMetadata;
 
     const entityWithSlug = { ...entity, slug: "HELLO-WORLD" };
@@ -149,6 +153,7 @@ describe("defaultDehydrateEntity", () => {
           },
         }),
       ],
+      entity: { name: "TestEntity" },
     } as unknown as EntityMetadata;
 
     const entityWithNull = { ...entity, slug: null };
@@ -170,6 +175,7 @@ describe("defaultDehydrateEntity", () => {
           computed: "first_name || ' ' || last_name",
         }),
       ],
+      entity: { name: "TestEntity" },
     } as unknown as EntityMetadata;
 
     const entityWithComputed = { ...entity, fullName: "should be skipped" };
@@ -191,6 +197,7 @@ describe("defaultDehydrateEntity", () => {
           joinKeys: { tagId: "id" },
         },
       ],
+      entity: { name: "TestEntity" },
     } as unknown as EntityMetadata;
 
     const result = defaultDehydrateEntity(entity, metaWithM2M, "insert");
@@ -230,6 +237,7 @@ describe("defaultDehydrateEntity — embedded fields", () => {
     primaryKeys: ["id"],
     generated: [],
     relations: [],
+    entity: { name: "TestEntity" },
   } as unknown as EntityMetadata;
 
   test("should flatten embedded object into prefixed column names", () => {

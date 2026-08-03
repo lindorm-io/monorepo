@@ -2,7 +2,7 @@ import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../types/metadata.js";
-import { encryptFieldValue } from "./encrypt-field-value.js";
+import { dehydrateFieldValue } from "./dehydrate-field-value.js";
 import { resolveJoinKeyValue } from "./resolve-join-key-value.js";
 
 export type DehydrateMode = "insert" | "update";
@@ -38,19 +38,9 @@ export const defaultDehydrateEntity = <E extends IEntity>(
       value = (entity as any)[field.key];
     }
 
-    if (value != null && field.transform) {
-      value = field.transform.to(value);
-    }
-    if (value != null && field.encrypted && amphora) {
-      value = encryptFieldValue(
-        value,
-        field.encrypted,
-        amphora,
-        field.key,
-        metadata.entity.name,
-      );
-    }
-    result[field.name] = value;
+    result[field.name] = dehydrateFieldValue(value, field, metadata.entity.name, {
+      amphora,
+    });
     handledKeys.add(field.key);
   }
 

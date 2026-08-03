@@ -1142,6 +1142,84 @@ export const createTckEntities = (hookCallback: Mock) => {
     @Encrypted()
     @Field("string")
     transformedSecret!: string;
+
+    // The types AesKit cannot take verbatim. `calculateContentType` accepts
+    // string/Buffer/array/boolean/number/object and THROWS on everything else,
+    // so a Date and a bigint have to be serialised BEFORE the cipher sees them —
+    // and the driver's own write coercion cannot do it, because an encrypted
+    // column is projected as TEXT and only `deserialise` ever reads it back.
+    // Nullable so the suites that predate them keep inserting without a value.
+    @Nullable()
+    @Encrypted()
+    @Field("timestamp")
+    secretAt!: Date | null;
+
+    @Nullable()
+    @Encrypted()
+    @Field("bigint")
+    secretAmount!: bigint | null;
+
+    @Nullable()
+    @Encrypted()
+    @Field("array")
+    secretTags!: Array<string> | null;
+  }
+
+  // ─── Encrypted Relation Entities ───────────────────────────────────
+  // An @Encrypted field on BOTH sides of a relation, so a query-builder read
+  // that pulls the related entity has to carry the vault down into the JOINed
+  // (hydrateRows) AND the separately-queried (executeQueryIncludes) hydrate.
+  // The query-include path never received one: the root decrypted and the
+  // related entity came back holding raw ciphertext.
+
+  @Entity({ name: "TckEncryptedItem" })
+  class TckEncryptedItem {
+    @PrimaryKeyField()
+    @Generated("uuid")
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Encrypted()
+    @Field("string")
+    itemSecret!: string;
+
+    @ManyToOne(() => TckEncryptedOwner, "items")
+    owner!: TckEncryptedOwner | null;
+
+    @Nullable()
+    @Field("uuid")
+    ownerId!: string | null;
+  }
+
+  @Entity({ name: "TckEncryptedOwner" })
+  class TckEncryptedOwner {
+    @PrimaryKeyField()
+    @Generated("uuid")
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Encrypted()
+    @Field("string")
+    ownerSecret!: string;
+
+    @OneToMany(() => TckEncryptedItem, "owner")
+    items!: Array<TckEncryptedItem>;
   }
 
   // A dedicated entity for the per-source staged-selector suite. Both fields
@@ -1627,6 +1705,8 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckWithAddress,
     TckTransformed,
     TckEncrypted,
+    TckEncryptedItem,
+    TckEncryptedOwner,
     TckStagedEncrypted,
     TckElDefault,
     TckElEagerMultiple,

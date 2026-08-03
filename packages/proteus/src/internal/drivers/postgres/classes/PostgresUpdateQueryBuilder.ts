@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type { DeepPartial, Dict } from "@lindorm/types";
 import type {
@@ -11,6 +12,7 @@ import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryErro
 import { ProteusError } from "../../../../errors/ProteusError.js";
 import type { PostgresQueryClient } from "../types/postgres-query-client.js";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
+import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
 import { dehydrateTypedJson } from "../../../entity/utils/typed-json.js";
 import { coerceWriteValue } from "../utils/query/coerce-value.js";
 import { compileWhere } from "../utils/query/compile-where.js";
@@ -26,6 +28,7 @@ export class PostgresUpdateQueryBuilder<
   private readonly metadata: EntityMetadata;
   private readonly client: PostgresQueryClient;
   private readonly namespace: string | null;
+  private readonly amphora: IAmphora | undefined;
   private data: Dict | null = null;
   private predicates: Array<PredicateEntry<E>> = [];
   private returningFields: Array<string> | "*" | null = null;
@@ -34,10 +37,12 @@ export class PostgresUpdateQueryBuilder<
     metadata: EntityMetadata,
     client: PostgresQueryClient,
     namespace?: string | null,
+    amphora?: IAmphora,
   ) {
     this.metadata = metadata;
     this.client = client;
     this.namespace = namespace ?? null;
+    this.amphora = amphora;
   }
 
   set(data: DeepPartial<E>): this {
@@ -122,13 +127,10 @@ export class PostgresUpdateQueryBuilder<
       // the previous row's sidecar in place, so the fresh data was rejoined
       // against stale type metadata and hydrated as mistyped values.
       if (field?.typedJson) {
-        // No amphora reaches a query builder, so an @Encrypted field is written
-        // in the clear here — the same gap the branch below already has. Use
-        // repository.update() for encrypted entities.
         const { data, meta } = dehydrateTypedJson(
           field,
           value,
-          undefined,
+          this.amphora,
           this.metadata.entity.name,
         );
         pushSet(field.name, coerceWriteValue(data, field ?? null));
@@ -136,11 +138,16 @@ export class PostgresUpdateQueryBuilder<
         continue;
       }
 
-      let transformed = value;
-      if (field?.transform) {
-        transformed = field.transform.to(transformed);
-      }
-      pushSet(field?.name ?? key, coerceWriteValue(transformed, field ?? null));
+      // A builder write bypasses the ORM lifecycle but not the storage contract:
+      // an @Encrypted column holds ciphertext, so writing the plaintext here
+      // would leak it and make the read path fail to open it.
+      pushSet(
+        field?.name ?? key,
+        dehydrateFieldValue(value, field, this.metadata.entity.name, {
+          amphora: this.amphora,
+          coerce: (v) => coerceWriteValue(v, field ?? null),
+        }),
+      );
     }
 
     const whereClause = compileWhere(this.predicates, this.metadata, "t0", params);
@@ -161,7 +168,10 @@ export class PostgresUpdateQueryBuilder<
 
     const rows = this.returningFields
       ? result.rows.map((row: any) =>
-          hydrateReturning<E>(row, this.metadata, { hooks: false }),
+          hydrateReturning<E>(row, this.metadata, {
+            hooks: false,
+            amphora: this.amphora,
+          }),
         )
       : [];
 

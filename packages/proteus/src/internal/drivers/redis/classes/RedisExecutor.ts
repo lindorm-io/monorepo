@@ -42,7 +42,7 @@ import {
   GUARDED_HINCRBYFLOAT,
   GUARDED_HSET,
 } from "../utils/lua-scripts.js";
-import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
 import {
   dehydrateTypedJson,
   typedJsonMetaDictKey,
@@ -741,16 +741,9 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
           continue;
         }
 
-        let transformed = field?.transform ? field.transform.to(value) : value;
-        if (transformed != null && field?.encrypted && this.amphora) {
-          transformed = encryptFieldValue(
-            transformed,
-            field.encrypted,
-            this.amphora,
-            field.key,
-            this.metadata.entity.name,
-          );
-        }
+        const transformed = dehydrateFieldValue(value, field, this.metadata.entity.name, {
+          amphora: this.amphora,
+        });
 
         // Same coercion the full-row write uses — `String(transformed)` flattened
         // a plain json/object/array value to "[object Object]" and utf8-mangled a

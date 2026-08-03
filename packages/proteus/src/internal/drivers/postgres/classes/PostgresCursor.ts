@@ -1,4 +1,5 @@
 import Cursor from "pg-cursor";
+import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
 import type { PoolClient } from "pg";
 import type { IEntity, IProteusCursor } from "../../../../interfaces/index.js";
@@ -21,6 +22,7 @@ export type PostgresCursorOptions = {
   releaseClient: () => void;
   batchSize: number;
   namespace: string | null;
+  amphora?: IAmphora;
 };
 
 export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
@@ -31,6 +33,7 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
   private readonly batchSize: number;
   private readonly poolClient: PoolClient;
   private readonly namespace: string | null;
+  private readonly amphora: IAmphora | undefined;
   private closed = false;
   private reading = false;
 
@@ -42,6 +45,7 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
     this.batchSize = options.batchSize;
     this.poolClient = options.poolClient;
     this.namespace = options.namespace;
+    this.amphora = options.amphora;
   }
 
   async next(): Promise<E | null> {
@@ -63,7 +67,7 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
         this.metadata,
         this.aliasMap,
         [],
-        { snapshot: false },
+        { snapshot: false, amphora: this.amphora },
       );
       const entity = hydrated[0] ?? null;
       if (entity) {
@@ -98,7 +102,7 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
         this.metadata,
         this.aliasMap,
         [],
-        { snapshot: false },
+        { snapshot: false, amphora: this.amphora },
       );
       await this.loadEmbeddedLists(entities);
       return entities;

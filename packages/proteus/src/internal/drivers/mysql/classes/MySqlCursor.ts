@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
 import type { IEntity, IProteusCursor } from "../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
@@ -19,6 +20,7 @@ export type MySqlCursorOptions = {
   client: MysqlQueryClient;
   batchSize: number;
   namespace: string | null;
+  amphora?: IAmphora;
 };
 
 /**
@@ -37,6 +39,7 @@ export class MySqlCursor<E extends IEntity> implements IProteusCursor<E> {
   private readonly client: MysqlQueryClient;
   private readonly batchSize: number;
   private readonly namespace: string | null;
+  private readonly amphora: IAmphora | undefined;
   private buffer: Array<E> = [];
   private bufferIndex = 0;
   private offset = 0;
@@ -52,6 +55,7 @@ export class MySqlCursor<E extends IEntity> implements IProteusCursor<E> {
     this.client = options.client;
     this.batchSize = options.batchSize;
     this.namespace = options.namespace;
+    this.amphora = options.amphora;
   }
 
   async next(): Promise<E | null> {
@@ -152,7 +156,7 @@ export class MySqlCursor<E extends IEntity> implements IProteusCursor<E> {
       this.metadata,
       this.aliasMap,
       [],
-      { snapshot: false },
+      { snapshot: false, amphora: this.amphora },
     );
     await this.loadEmbeddedLists(entities);
     this.buffer = entities;

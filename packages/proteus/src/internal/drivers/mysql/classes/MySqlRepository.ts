@@ -339,6 +339,7 @@ export class MySqlRepository<
       client: this.client,
       batchSize: options?.batchSize ?? 100,
       namespace: this.namespace,
+      amphora: this.amphora,
     });
   }
 

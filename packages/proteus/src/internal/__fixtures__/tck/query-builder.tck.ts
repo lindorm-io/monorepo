@@ -1,4 +1,5 @@
 import { describe, test, it, expect, beforeEach } from "vitest";
+import { isBigInt } from "@lindorm/is";
 // TCK: QueryBuilder Suite
 // Tests basic QueryBuilder operations: where, orderBy, skip, take, getOne,
 // getMany, count, exists, withDeleted. Excludes advanced features (raw SQL,
@@ -18,6 +19,8 @@ export const queryBuilderSuite = (
   caps: TckCapabilities,
 ) => {
   const {
+    TckBigIntPkParent,
+    TckEncrypted,
     TckSimpleUser,
     TckSoftDeletable,
     TckScoped,
@@ -498,6 +501,156 @@ export const queryBuilderSuite = (
         expect(p.at).toBe(22n);
         expect(p.big).toBeInstanceOf(Date);
         expect("gone" in p).toBe(false);
+      });
+    });
+  }
+
+  // A write builder bypasses the ORM lifecycle but NOT the storage contract: an
+  // @Encrypted column holds ciphertext. The three SQL builders never received an
+  // amphora, so they wrote the plaintext straight into the column and the
+  // repository read path then tried to decrypt it.
+  if (caps.encryption) {
+    describe("query builder seals @Encrypted fields", () => {
+      const CANARY = "qb-encryption-canary-4f7a";
+
+      // Drivers hand back their own scalar types (sqlite a BigInt for a large
+      // integer, mongo a BSON Binary), so the whole raw row is stringified
+      // through String() rather than trusting JSON.stringify to know them. A
+      // round-trip assertion alone would pass even if nothing was encrypted.
+      const stringifyRows = (rows: Array<Record<string, unknown>>): string =>
+        JSON.stringify(rows, (_key, value) => (isBigInt(value) ? String(value) : value));
+
+      test("insert() writes ciphertext, and the repository reads the plaintext back", async () => {
+        const handle = getHandle();
+        const source = getSource();
+        const repo = handle.repository(TckEncrypted);
+
+        const id = "00000000-0000-0000-0000-0000000000e1";
+        const now = new Date();
+
+        await source
+          .queryBuilder(TckEncrypted)
+          .insert()
+          .values([
+            {
+              id,
+              version: 1,
+              secret: CANARY,
+              pin: 4242,
+              verified: true,
+              metadata: { canary: CANARY },
+              optionalSecret: null,
+              transformedSecret: "hello",
+              createdAt: now,
+              updatedAt: now,
+            } as any,
+          ])
+          .execute();
+
+        const rows = await handle.readRawRows(TckEncrypted);
+        const stored = stringifyRows(rows);
+
+        expect(stored).not.toContain(CANARY);
+        // The unencrypted primary key proves the row really was read raw, so the
+        // absence above is not just an empty result.
+        expect(stored).toContain(id);
+
+        const found = await repo.findOneOrFail({ id });
+        expect(found.secret).toBe(CANARY);
+        expect(found.pin).toBe(4242);
+        expect(found.verified).toBe(true);
+        expect(found.metadata).toEqual({ canary: CANARY });
+        expect(found.transformedSecret).toBe("hello");
+      });
+
+      test("update() writes ciphertext, and the repository reads the plaintext back", async () => {
+        const handle = getHandle();
+        const source = getSource();
+        const repo = handle.repository(TckEncrypted);
+
+        const inserted = await repo.insert({
+          secret: "sealed-by-repository",
+          pin: 1,
+          verified: false,
+          metadata: {},
+          optionalSecret: null,
+          transformedSecret: "test",
+        });
+
+        await source
+          .queryBuilder(TckEncrypted)
+          .update()
+          .set({ secret: CANARY, pin: 4242 } as any)
+          .where({ id: inserted.id })
+          .execute();
+
+        const rows = await handle.readRawRows(TckEncrypted);
+        const stored = stringifyRows(rows);
+
+        expect(stored).not.toContain(CANARY);
+        expect(stored).toContain(inserted.id);
+
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        expect(found.secret).toBe(CANARY);
+        expect(found.pin).toBe(4242);
+      });
+
+      test("getOne() decrypts, so the builder read is not the ciphertext", async () => {
+        const handle = getHandle();
+        const source = getSource();
+        const repo = handle.repository(TckEncrypted);
+
+        const inserted = await repo.insert({
+          secret: CANARY,
+          pin: 7,
+          verified: true,
+          metadata: { canary: CANARY },
+          optionalSecret: null,
+          transformedSecret: "hello",
+        });
+
+        const found = await source
+          .queryBuilder(TckEncrypted)
+          .where({ id: inserted.id })
+          .getOne();
+
+        expect(found).not.toBeNull();
+        expect(found!.secret).toBe(CANARY);
+        expect(found!.pin).toBe(7);
+        expect(found!.transformedSecret).toBe("hello");
+      });
+    });
+  }
+  // The memory builder hand-rolled `JSON.stringify(pks.map(...))` for its store
+  // key while the repository path used `serializePk`, which bigint-tags first —
+  // so a bigint identity threw "Do not know how to serialize a BigInt" through
+  // the builder and succeeded through the repository on the same entity.
+  if (caps.bigintIdentity) {
+    describe("query builder handles a bigint identity primary key", () => {
+      test("insert() mints a bigint PK the repository can read back", async () => {
+        const handle = getHandle();
+        const source = getSource();
+        const now = new Date();
+
+        await source
+          .queryBuilder(TckBigIntPkParent)
+          .insert()
+          .values([
+            {
+              name: "qb-bigint-pk",
+              version: 1,
+              createdAt: now,
+              updatedAt: now,
+            } as any,
+          ])
+          .execute();
+
+        const found = await handle
+          .repository(TckBigIntPkParent)
+          .findOneOrFail({ name: "qb-bigint-pk" });
+
+        expect(isBigInt(found.id)).toBe(true);
+        expect(found.id > 0n).toBe(true);
       });
     });
   }

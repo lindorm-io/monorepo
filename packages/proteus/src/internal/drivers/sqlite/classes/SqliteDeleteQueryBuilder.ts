@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type {
   IEntity,
@@ -21,6 +22,7 @@ export class SqliteDeleteQueryBuilder<
   private readonly metadata: EntityMetadata;
   private readonly client: SqliteQueryClient;
   private readonly isSoft: boolean;
+  private readonly amphora: IAmphora | undefined;
   private predicates: Array<PredicateEntry<E>> = [];
   private returningFields: Array<string> | "*" | null = null;
 
@@ -29,10 +31,12 @@ export class SqliteDeleteQueryBuilder<
     client: SqliteQueryClient,
     _namespace?: string | null,
     soft?: boolean,
+    amphora?: IAmphora,
   ) {
     this.metadata = metadata;
     this.client = client;
     this.isSoft = soft ?? false;
+    this.amphora = amphora;
   }
 
   where(criteria: Condition<E>): this {
@@ -131,7 +135,10 @@ export class SqliteDeleteQueryBuilder<
     if (this.returningFields) {
       const resultRows = this.client.all(text, params);
       const rows = resultRows.map((row: any) =>
-        hydrateReturning<E>(row, this.metadata, { hooks: false }),
+        hydrateReturning<E>(row, this.metadata, {
+          hooks: false,
+          amphora: this.amphora,
+        }),
       );
       return { rows, rowCount: resultRows.length };
     }
