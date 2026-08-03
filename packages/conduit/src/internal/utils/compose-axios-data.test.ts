@@ -80,19 +80,30 @@ describe("composeAxiosData", () => {
     });
   });
 
-  test("should return form data with content-type header", async () => {
+  test("should return a file-free form as urlencoded search params", async () => {
     const form = new FormData();
-    form.append("test", "value");
+    form.append("grant_type", "client_credentials");
+    form.append("resource", "https://identity.lindorm.io");
     ctx.req.form = form;
 
     const result = await composeAxiosData(ctx);
 
-    expect(result).toEqual({
-      data: form,
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+    expect(result.headers).toEqual({
+      "Content-Type": "application/x-www-form-urlencoded",
     });
+    expect(result.data).toBeInstanceOf(URLSearchParams);
+    expect((result.data as URLSearchParams).toString()).toMatchSnapshot();
+  });
+
+  test("should preserve repeated keys when serialising a form", async () => {
+    const form = new FormData();
+    form.append("resource", "https://one.lindorm.io");
+    form.append("resource", "https://two.lindorm.io");
+    ctx.req.form = form;
+
+    const result = await composeAxiosData(ctx);
+
+    expect((result.data as URLSearchParams).toString()).toMatchSnapshot();
   });
 
   test("should return form data with files and empty headers", async () => {

@@ -2,7 +2,7 @@ import { buildDpopProof } from "../internal/build-dpop-proof.js";
 import { BadGatewayError, InternalServerError } from "@lindorm/errors";
 import { isArray, isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
-import type { OpenIdConfiguration, TokenResponse } from "@lindorm/openid";
+import type { OpenIdConfiguration, TokenRequest, TokenResponse } from "@lindorm/openid";
 import type { Dict, DpopSigner } from "@lindorm/types";
 import { Conduit } from "../classes/index.js";
 import type { ConduitMiddleware, ConduitRequestOptions } from "../types/index.js";
@@ -32,14 +32,22 @@ export type ConduitClientCredentialsConfig = {
 };
 
 export type ConduitClientCredentialsOptions = {
-  audience?: string;
+  /**
+   * RFC 8707 resource indicator — the target service the issued access token
+   * should be audienced to. Sent verbatim as the `resource` token request
+   * parameter. Conduit speaks the RFC spelling only; an authorization server
+   * that wants the proprietary `audience` parameter instead must map it itself.
+   *
+   * https://www.rfc-editor.org/rfc/rfc8707
+   */
+  resource?: TokenRequest["resource"];
   scope?: Array<string>;
 };
 
 type CacheItem = {
   accessToken: string;
-  audience: string | null;
   issuer: string;
+  resource: string | null;
   scope: Array<string>;
   tokenType: string;
   tokenUri: string;
@@ -64,7 +72,7 @@ const replaceInCache = (cache: ConduitClientCredentialsCache, item: CacheItem): 
   for (let i = cache.length - 1; i >= 0; i--) {
     const entry = cache[i];
     if (
-      entry.audience === item.audience &&
+      entry.resource === item.resource &&
       entry.issuer === item.issuer &&
       entry.ttl <= now
     ) {
@@ -99,10 +107,10 @@ export const conduitClientCredentialsMiddlewareFactory = (
     options?: ConduitClientCredentialsOptions,
     logger?: ILogger,
   ): Promise<ConduitMiddleware> {
-    const { audience = DEFAULT, scope = [] } = options ?? {};
+    const { resource = DEFAULT, scope = [] } = options ?? {};
 
     const cachedToken = cache.filter(
-      (item) => item.audience === audience && item.issuer === issuer,
+      (item) => item.resource === resource && item.issuer === issuer,
     );
 
     const existing = cachedToken.find((item) =>
@@ -113,7 +121,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
       return bindAccessToken(existing.accessToken, existing.tokenType);
     }
 
-    const inFlightKey = `${audience}:${issuer}`;
+    const inFlightKey = `${resource}:${issuer}`;
     const inFlight = inFlightTokenRequests.get(inFlightKey);
 
     if (inFlight) {
@@ -159,9 +167,9 @@ export const conduitClientCredentialsMiddlewareFactory = (
       const requestOptions: ConduitRequestOptions = {};
 
       const requestContent: Dict<string> = {
-        ...(audience && audience !== DEFAULT ? { audience } : {}),
         ...(authLocation === "body" ? { clientId, clientSecret } : {}),
         grantType,
+        ...(resource && resource !== DEFAULT ? { resource } : {}),
         ...(scope.length > 0 ? { scope: scope.join(" ") } : {}),
       };
 
@@ -249,8 +257,8 @@ export const conduitClientCredentialsMiddlewareFactory = (
 
       replaceInCache(cache, {
         accessToken: data.accessToken,
-        audience,
         issuer,
+        resource,
         scope: receivedScope,
         tokenType: data.tokenType ?? "Bearer",
         tokenUri,

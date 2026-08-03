@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`composeAxiosData > should preserve repeated keys when serialising a form 1`] = `"resource=https%3A%2F%2Fone.lindorm.io&resource=https%3A%2F%2Ftwo.lindorm.io"`;
+
+exports[`composeAxiosData > should return a file-free form as urlencoded search params 1`] = `"grant_type=client_credentials&resource=https%3A%2F%2Fidentity.lindorm.io"`;

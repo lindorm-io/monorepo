@@ -1,0 +1,40 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`changeFormKeys > should convert every field name 1`] = `
+[
+  [
+    "grant_type",
+    "client_credentials",
+  ],
+  [
+    "client_id",
+    "client-id",
+  ],
+  [
+    "pascal_case",
+    "pascal",
+  ],
+]
+`;
+
+exports[`changeFormKeys > should leave field names untouched in none mode 1`] = `
+[
+  [
+    "grantType",
+    "client_credentials",
+  ],
+]
+`;
+
+exports[`changeFormKeys > should preserve repeated keys and entry order 1`] = `
+[
+  [
+    "resource_indicator",
+    "https://one.lindorm.io",
+  ],
+  [
+    "resource_indicator",
+    "https://two.lindorm.io",
+  ],
+]
+`;

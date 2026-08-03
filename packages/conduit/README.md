@@ -240,7 +240,9 @@ Supported algorithms: `ES256` / `ES384` / `ES512` (ECDSA P-256/384/521), `RS256`
 
 ### OAuth2 Client Credentials
 
-`conduitClientCredentialsMiddlewareFactory` returns an async factory that performs OIDC discovery (unless `tokenUri` is supplied), fetches and caches access tokens, deduplicates concurrent token requests for the same `(audience, issuer)`, and emits a per-request middleware that attaches the token via Bearer auth (or DPoP, when `dpopSigner` is supplied).
+`conduitClientCredentialsMiddlewareFactory` returns an async factory that performs OIDC discovery (unless `tokenUri` is supplied), fetches and caches access tokens, deduplicates concurrent token requests for the same `(resource, issuer)`, and emits a per-request middleware that attaches the token via Bearer auth (or DPoP, when `dpopSigner` is supplied).
+
+The token request is spec-shaped: snake_case parameters, and — with `contentType: "application/x-www-form-urlencoded"` — a real `application/x-www-form-urlencoded` body as RFC 6749 §4.4.2 requires. The target service is named with the RFC 8707 `resource` indicator; conduit does not speak the proprietary `audience` parameter.
 
 ```typescript
 import { conduitClientCredentialsMiddlewareFactory } from "@lindorm/conduit";
@@ -260,7 +262,7 @@ const client = new Conduit({
   baseURL: "https://api.example.com",
   middleware: [
     await getAuthMiddleware(
-      { audience: "https://api.example.com", scope: ["read", "write"] },
+      { resource: "https://api.example.com", scope: ["read", "write"] },
       logger,
     ),
   ],
@@ -284,7 +286,7 @@ Factory configuration:
 
 The factory takes an optional second argument `cache: Array<CacheItem>` — pass your own array to share a token cache between factories.
 
-The returned function signature is `(options?: { audience?: string; scope?: Array<string> }, logger?: ILogger) => Promise<ConduitMiddleware>`.
+The returned function signature is `(options?: { resource?: string; scope?: Array<string> }, logger?: ILogger) => Promise<ConduitMiddleware>` — `resource` is the RFC 8707 resource indicator.
 
 ### Case Conversion
 
@@ -308,6 +310,8 @@ const client = new Conduit({
 ```
 
 Modes are any `ChangeCase` value from `@lindorm/case`: `"camel" | "capital" | "constant" | "dot" | "header" | "kebab" | "lower" | "pascal" | "path" | "sentence" | "snake" | "none"`. Defaults: body → `snake`, query → `snake`, headers → `header`, response data → `camel`.
+
+`conduitChangeRequestBodyMiddleware` converts both `body` and `form` — a form-encoded request gets the same field-name conversion as a JSON one.
 
 ### Response Caching
 

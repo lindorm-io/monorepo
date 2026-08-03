@@ -1,5 +1,5 @@
 import { NotImplementedError } from "@lindorm/errors";
-import { isObject } from "@lindorm/is";
+import { isObject, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type ServerFormData from "form-data";
 import type { ConduitContext } from "../../types/index.js";
@@ -21,7 +21,7 @@ const newServerFormData = async (): Promise<ServerFormData> => {
 };
 
 type Result = {
-  data: ServerFormData | FormData | Dict<unknown> | undefined;
+  data: ServerFormData | FormData | URLSearchParams | Dict<unknown> | undefined;
   headers: Dict<string>;
 };
 
@@ -47,8 +47,22 @@ export const composeAxiosData = async (ctx: ConduitContext): Promise<Result> => 
       };
     }
 
+    // A file-free form is a urlencoded payload, not a multipart one. Axios
+    // ignores a Content-Type override on a `FormData` and serialises it as
+    // multipart regardless — hand it `URLSearchParams` so the request really
+    // goes out as `application/x-www-form-urlencoded` (RFC 6749 §4.4.2 requires
+    // exactly that for a token request).
+    const params = new URLSearchParams();
+
+    // The loop above returned for any File entry, so every value left is a string.
+    for (const [key, value] of ctx.req.form.entries()) {
+      if (isString(value)) {
+        params.append(key, value);
+      }
+    }
+
     return {
-      data: ctx.req.form,
+      data: params,
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },

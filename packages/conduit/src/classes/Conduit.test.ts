@@ -1,6 +1,5 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import nock from "nock";
-import { join } from "path";
 import {
   conduitBasicAuthMiddleware,
   conduitChangeRequestQueryMiddleware,
@@ -126,15 +125,35 @@ describe("Conduit", () => {
       );
     });
 
-    test("should resolve post with form data", async () => {
+    test("should resolve post with multipart form data when the form carries a file", async () => {
       scope = nock("http://test.lindorm.io")
         .post("/test/path", (body) => body.includes("Content-Disposition: form-data"))
+        .matchHeader("content-type", /^multipart\/form-data; boundary=/)
         .times(1)
         .reply(204);
 
       const form = new FormData();
 
-      form.append("file", join(__dirname, "..", "internal", "fixtures", "upload.txt"));
+      form.append("file", new File(["upload"], "upload.txt", { type: "text/plain" }));
+
+      await expect(conduit.post("/test/path", { form })).resolves.toEqual(
+        expect.objectContaining({ status: 204 }),
+      );
+    });
+
+    // A file-free form is a urlencoded payload, not a multipart one — axios would
+    // serialise a `FormData` as multipart no matter what Content-Type we declare.
+    test("should resolve post with urlencoded form data when the form carries no file", async () => {
+      scope = nock("http://test.lindorm.io")
+        .post("/test/path", "grant_type=client_credentials&scope=read+write")
+        .matchHeader("content-type", "application/x-www-form-urlencoded")
+        .times(1)
+        .reply(204);
+
+      const form = new FormData();
+
+      form.append("grant_type", "client_credentials");
+      form.append("scope", "read write");
 
       await expect(conduit.post("/test/path", { form })).resolves.toEqual(
         expect.objectContaining({ status: 204 }),

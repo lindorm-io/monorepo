@@ -151,6 +151,14 @@ describe("createConduitWebhookAuthMiddleware", () => {
       }),
       cache,
     );
+
+    // The subscription's audience is the RFC 8707 resource indicator on the wire.
+    expect(
+      vi.mocked(conduitClientCredentialsMiddlewareFactory).mock.results[0].value,
+    ).toHaveBeenCalledWith({
+      resource: "test-audience",
+      scope: ["read", "write"],
+    });
   });
 
   test("should throw InternalServerError for ClientCredentials with missing clientId", async () => {

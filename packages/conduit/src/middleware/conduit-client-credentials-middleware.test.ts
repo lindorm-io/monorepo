@@ -40,7 +40,7 @@ describe("conduit-client-credentials-middleware", () => {
     };
   });
 
-  describe("with audience", () => {
+  describe("with resource", () => {
     test("should return a middleware", async () => {
       const tokenScope = nock("https://lindorm.eu.auth0.com")
         .post("/oauth/token")
@@ -51,7 +51,7 @@ describe("conduit-client-credentials-middleware", () => {
           token_type: "Bearer",
         });
 
-      const middleware = await factory({ audience: "https://identity.lindorm-io" });
+      const middleware = await factory({ resource: "https://identity.lindorm-io" });
 
       expect(configScope.isDone()).toEqual(true);
       expect(tokenScope.isDone()).toEqual(true);
@@ -66,7 +66,7 @@ describe("conduit-client-credentials-middleware", () => {
     });
 
     test("should return middleware with cached data", async () => {
-      const middleware = await factory({ audience: "https://identity.lindorm-io" });
+      const middleware = await factory({ resource: "https://identity.lindorm-io" });
 
       await expect(middleware(ctx, vi.fn())).resolves.toBeUndefined();
 
@@ -89,7 +89,7 @@ describe("conduit-client-credentials-middleware", () => {
 
       MockDate.set("2024-01-01T00:00:30.000Z");
 
-      const middleware = await factory({ audience: "https://identity.lindorm-io" });
+      const middleware = await factory({ resource: "https://identity.lindorm-io" });
 
       expect(scope.isDone()).toEqual(true);
 
@@ -112,7 +112,7 @@ describe("conduit-client-credentials-middleware", () => {
           token_type: "Bearer",
         });
 
-      const middleware = await factory({ audience: "https://test.lindorm.io" });
+      const middleware = await factory({ resource: "https://test.lindorm.io" });
 
       expect(scope.isDone()).toEqual(true);
 
@@ -126,7 +126,7 @@ describe("conduit-client-credentials-middleware", () => {
     });
   });
 
-  describe("without audience", () => {
+  describe("without resource", () => {
     test("should return a middleware", async () => {
       const scope = nock("https://lindorm.eu.auth0.com")
         .post("/oauth/token")
@@ -282,13 +282,13 @@ describe("conduit-client-credentials-middleware", () => {
         cache,
       );
 
-      await factory({ audience: "https://test.audience" });
+      await factory({ resource: "https://test.resource" });
 
       expect(cache.length).toEqual(1);
 
       MockDate.set(new Date("2024-01-01T00:00:05.000Z"));
 
-      await factory({ audience: "https://test.audience" });
+      await factory({ resource: "https://test.resource" });
 
       expect(cache.length).toEqual(1);
     });
@@ -346,10 +346,10 @@ describe("conduit-client-credentials-middleware", () => {
         cache,
       );
 
-      // Call factory twice concurrently with same audience
+      // Call factory twice concurrently with same resource
       const [middleware1, middleware2] = await Promise.all([
-        factory({ audience: "https://shared.audience" }),
-        factory({ audience: "https://shared.audience" }),
+        factory({ resource: "https://shared.resource" }),
+        factory({ resource: "https://shared.resource" }),
       ]);
 
       const ctx1: any = { req: { headers: {} } };
@@ -401,7 +401,7 @@ describe("conduit-client-credentials-middleware", () => {
           };
         });
 
-      const middleware = await dpopFactory({ audience: "https://identity.lindorm-io" });
+      const middleware = await dpopFactory({ resource: "https://identity.lindorm-io" });
 
       expect(observedDpopHeader).toEqual(expect.stringMatching(/^.+\..+\..+$/));
 
@@ -425,6 +425,99 @@ describe("conduit-client-credentials-middleware", () => {
 
       expect(ctx.req.headers.Authorization).toEqual("DPoP bound_access_token");
       expect(ctx.req.headers.DPoP).toEqual(expect.stringMatching(/^.+\..+\..+$/));
+    });
+  });
+
+  describe("token request wire shape", () => {
+    test("should post snake_case JSON carrying the RFC 8707 resource indicator", async () => {
+      let observedBody: unknown;
+
+      nock("https://lindorm.is.auth0.com")
+        .post("/oauth/token", (body) => {
+          observedBody = body;
+          return true;
+        })
+        .times(1)
+        .reply(200, {
+          access_token: "access_token",
+          expires_in: 10,
+          token_type: "Bearer",
+        });
+
+      const factory = conduitClientCredentialsMiddlewareFactory({
+        clientId: "clientId",
+        clientSecret: "clientSecret",
+        clockTolerance: 0,
+        issuer: "https://lindorm.is.auth0.com/",
+        tokenUri: "https://lindorm.is.auth0.com/oauth/token",
+      });
+
+      await factory({
+        resource: "https://identity.lindorm.io",
+        scope: ["read", "write"],
+      });
+
+      expect(observedBody).toMatchSnapshot();
+    });
+
+    test("should post snake_case form fields carrying the RFC 8707 resource indicator", async () => {
+      let observedBody: unknown;
+
+      nock("https://lindorm.gl.auth0.com")
+        .post("/oauth/token", (body) => {
+          observedBody = body;
+          return true;
+        })
+        .times(1)
+        .reply(200, {
+          access_token: "access_token",
+          expires_in: 10,
+          token_type: "Bearer",
+        });
+
+      const factory = conduitClientCredentialsMiddlewareFactory({
+        clientId: "clientId",
+        clientSecret: "clientSecret",
+        clockTolerance: 0,
+        contentType: "application/x-www-form-urlencoded",
+        issuer: "https://lindorm.gl.auth0.com/",
+        tokenUri: "https://lindorm.gl.auth0.com/oauth/token",
+      });
+
+      await factory({
+        resource: "https://identity.lindorm.io",
+        scope: ["read", "write"],
+      });
+
+      expect(observedBody).toMatchSnapshot();
+    });
+
+    test("should omit the resource parameter when no resource is requested", async () => {
+      let observedBody: unknown;
+
+      nock("https://lindorm.fo.auth0.com")
+        .post("/oauth/token", (body) => {
+          observedBody = body;
+          return true;
+        })
+        .times(1)
+        .reply(200, {
+          access_token: "access_token",
+          expires_in: 10,
+          token_type: "Bearer",
+        });
+
+      const factory = conduitClientCredentialsMiddlewareFactory({
+        clientId: "clientId",
+        clientSecret: "clientSecret",
+        clockTolerance: 0,
+        issuer: "https://lindorm.fo.auth0.com/",
+        tokenUri: "https://lindorm.fo.auth0.com/oauth/token",
+      });
+
+      await factory();
+
+      expect(observedBody).toMatchSnapshot();
     });
   });
 });
