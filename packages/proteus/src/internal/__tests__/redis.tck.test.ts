@@ -14,6 +14,7 @@ import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";
 import { resolveInheritanceHierarchies } from "../entity/metadata/resolve-inheritance.js";
 import { isRedisCompatibleEntity } from "../drivers/redis/utils/validate-redis-entity.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import type { NamingStrategy } from "../../types/source-options.js";
 import {
   createTckAmphora,
   TCK_ENCRYPTION,
@@ -58,7 +59,10 @@ const factory: TckDriverFactory = {
     transactions: { rollback: false, savepoints: false },
     migrations: { lifecycle: false, generation: false },
   },
-  async setup(entities: Array<Constructor<IEntity>>): Promise<TckDriverHandle> {
+  async setup(
+    entities: Array<Constructor<IEntity>>,
+    naming: NamingStrategy = "none",
+  ): Promise<TckDriverHandle> {
     const logger = createMockLogger();
 
     // Resolve inheritance hierarchies BEFORE building entity metadata so the
@@ -81,6 +85,7 @@ const factory: TckDriverFactory = {
       driver: "redis",
       host: process.env.REDIS_HOST ?? "localhost",
       port: Number(process.env.REDIS_PORT ?? 6379),
+      naming,
       entities: compatible,
       logger,
       namespace,
@@ -169,6 +174,8 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: Redis", () => {
-  // One strategy per driver — redis proves `none` (default). See ../__fixtures__/tck/NAMING.md.
-  runTck(factory, () => source);
+  // `none` + `snake`: the redis driver keys its hash fields itself rather than
+  // through a shared compiler, so a renaming strategy has to be replayed here —
+  // proving it on a SQL driver does not cover it. See ../__fixtures__/tck/NAMING.md.
+  runTck(factory, () => source, ["none", "snake"]);
 });

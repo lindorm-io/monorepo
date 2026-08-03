@@ -1,5 +1,5 @@
 import { camelCase } from "@lindorm/case";
-import type { EntityMetadata } from "../types/metadata.js";
+import type { MetaField } from "../types/metadata.js";
 
 /**
  * Resolve the entity *property* key for a relation join column.
@@ -17,12 +17,15 @@ import type { EntityMetadata } from "../types/metadata.js";
  *
  * Under "none"/"camel" the column already equals the property key, so this is a
  * no-op (declared fields match by name; implicit keys are already camelCase).
+ *
+ * The inverse direction is `resolveColumnName` (internal/utils/sql) and takes
+ * the same `fields` argument, so the two read as a pair at a call site.
  */
 export const resolvePropertyKey = (
-  metadata: EntityMetadata,
+  fields: Array<MetaField>,
   columnKey: string,
 ): string => {
-  const field = metadata.fields.find((f) => f.name === columnKey);
+  const field = fields.find((f) => f.name === columnKey);
   if (field) return field.key;
   return camelCase(columnKey);
 };

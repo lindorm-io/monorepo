@@ -4,6 +4,14 @@ const entityRegistry = new Map<string, Function>();
 const targetToName = new Map<Function, string>();
 const metadataCache = new Map<Function, EntityMetadata>();
 
+// Every target ever decorated, name collisions included. `entityRegistry` keeps
+// only the newest class per name (lookup by name must resolve to one class), but
+// a same-named class registered later must not make the earlier one vanish: two
+// sources in one process can legitimately hold distinct classes under the same
+// entity name, and a consumer scanning the registry (memory referential
+// integrity) has to see both or it silently stops matching one source's rows.
+const allTargets = new Set<Function>();
+
 export const registerEntity = (name: string, target: Function): void => {
   const existing = entityRegistry.get(name);
   if (existing && existing !== target) {
@@ -13,12 +21,13 @@ export const registerEntity = (name: string, target: Function): void => {
   }
   entityRegistry.set(name, target);
   targetToName.set(target, name);
+  allTargets.add(target);
 };
 
 export const findEntityByName = (name: string): Function | undefined =>
   entityRegistry.get(name);
 
-export const getRegisteredTargets = (): Array<Function> => [...entityRegistry.values()];
+export const getRegisteredTargets = (): Array<Function> => [...allTargets];
 
 export const findEntityByTarget = (target: Function): string | undefined =>
   targetToName.get(target);

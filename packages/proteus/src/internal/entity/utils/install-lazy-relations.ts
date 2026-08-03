@@ -81,7 +81,7 @@ const isFkNull = (
   if (!relation.joinKeys) return false;
 
   for (const localKey of Object.keys(relation.joinKeys)) {
-    const propertyKey = resolvePropertyKey(metadata, localKey);
+    const propertyKey = resolvePropertyKey(metadata.fields, localKey);
     if ((entity as any)[propertyKey] != null) return false;
   }
 

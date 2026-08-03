@@ -4,31 +4,38 @@ The behavioural TCK (`run-tck.ts`) can replay the entire suite under one or more
 naming strategies (`none` / `snake` / `camel`) via `runTck(factory, getSource, namings)`.
 Each strategy runs in its own `describe` block with a fresh set of entity classes.
 
-## Why one strategy per driver
+## Why the document / key-value drivers replay a renaming strategy
 
-`applyNamingStrategy` is a **shared, driver-agnostic resolver**. It resolves
-entity / column / foreign-key names from metadata **before** any driver renders
-DDL or SQL — the same resolver output feeds every driver. Proving a strategy
-therefore only has to happen **once**: if `snake` resolves correctly, it resolves
-correctly for every driver, because the resolution step is identical across them.
+`applyNamingStrategy` is a shared resolver, so proving _it_ once is enough. What
+is NOT shared is what each driver then DOES with the resolved names:
 
-Replaying all three strategies on every driver was pure redundancy. Worse, on
-sqlite it was a resource problem: three strategy replays plus a cached replay meant
-**four full suite replays in a single worker**, which pushed the run into Node's
-heap ceiling and OOM'd. Redistributing to one strategy per driver drops sqlite to
-**two replays** (`none` + the cached `none` pass), well under the ceiling, while
-keeping full strategy coverage across the driver matrix.
+- **SQL drivers** compile every key through `resolveColumnName`, so a renamed
+  column is addressed correctly by construction.
+- **memory / redis** key their rows by entity PROPERTY key and hand criteria
+  straight to an in-memory matcher — no resolver at all.
+- **mongo** keys its documents by COLUMN name and resolves criteria itself.
+
+Those three each hand-roll the mapping, so a strategy proved on postgres proved
+nothing about them. Running them under `none` only ever compared a key to
+itself. When `snake` was first replayed on them (2026-08-03) it failed **79
+times** across FK writes, FK criteria, join tables, single-table inheritance
+collections and relation loading — every one a real defect. They now replay
+`none` + `snake`.
 
 ## Strategy → driver map
 
-| Strategy | Driver that proves it                   | Harness file (`__tests__/`)                                                          |
-| -------- | --------------------------------------- | ------------------------------------------------------------------------------------ |
-| `none`   | sqlite (+ cached), mongo, redis, memory | `sqlite.tck.test.ts`, `memory.tck.test.ts`, `mongo.tck.test.ts`, `redis.tck.test.ts` |
-| `snake`  | postgres                                | `postgres.tck.test.ts`                                                               |
-| `camel`  | mysql                                   | `mysql.tck.test.ts`                                                                  |
+| Strategy | Driver that proves it                  | Harness file (`__tests__/`)                                                            |
+| -------- | -------------------------------------- | -------------------------------------------------------------------------------------- |
+| `none`   | sqlite (+ cached), and all three below | `sqlite.tck.test.ts`                                                                   |
+| `snake`  | postgres, memory, mongo, redis         | `postgres.tck.test.ts`, `memory.tck.test.ts`, `mongo.tck.test.ts`, `redis.tck.test.ts` |
+| `camel`  | mysql                                  | `mysql.tck.test.ts`                                                                    |
 
-All three strategies are exercised against a **real** driver rendering **real**
-names — `none` on four drivers, `snake` on postgres, `camel` on mysql.
+sqlite stays single-strategy on purpose: it already carries a second full replay
+(the cached pass), and three replays in one worker pushed the run into Node's
+heap ceiling.
+
+⚠ A replay **doubles** a harness's case count — sanity-check the new total after
+adding one.
 
 ## Test taxonomy
 
@@ -42,9 +49,13 @@ a bare driver-name filter selects exactly that driver's harness(es): e.g.
 
 ## Residual risk
 
+The TCK entities all carry an explicit `@Entity({ name })`, which the strategy
+preserves verbatim — so the matrix exercises renamed COLUMNS, never renamed
+TABLE/collection names. Table-name resolution is covered by the per-driver DDL /
+naming cases instead.
+
 A driver-specific _rendering_ quirk under a strategy that driver is **not**
-assigned (e.g. how mysql quotes a `snake`-cased identifier) is **not** covered by
-this naming matrix. That surface is covered instead by each driver's own DDL /
-quoting / identifier cases (the `renamed-columns`, upsert-naming, and per-driver
-`quote-identifier` / `resolve-column-name` unit + integration tests). The naming
-matrix proves the shared _resolver_; the per-driver cases prove the _rendering_.
+assigned (e.g. how mysql quotes a `snake`-cased identifier) is likewise not
+covered here; that surface belongs to each driver's own DDL / quoting /
+identifier cases (`renamed-columns`, upsert-naming, per-driver
+`quote-identifier` / `resolve-column-name` unit + integration tests).

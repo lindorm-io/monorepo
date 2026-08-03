@@ -41,7 +41,10 @@ export const defaultDehydrateEntity = <E extends IEntity>(
     result[field.name] = dehydrateFieldValue(value, field, metadata.entity.name, {
       amphora,
     });
-    handledKeys.add(field.key);
+    // The Dict is keyed by COLUMN name, and so is `joinKeys` — tracking the
+    // property key here let the FK loop below overwrite a declared FK field
+    // under a renaming strategy.
+    handledKeys.add(field.name);
   }
 
   for (const relation of metadata.relations) {
@@ -51,8 +54,8 @@ export const defaultDehydrateEntity = <E extends IEntity>(
     for (const [localKey, foreignKey] of Object.entries(relation.joinKeys)) {
       if (handledKeys.has(localKey)) continue;
 
-      const value = resolveJoinKeyValue(entity, relation, localKey, foreignKey);
-      result[localKey] = value ?? null;
+      result[localKey] =
+        resolveJoinKeyValue(entity, relation, localKey, foreignKey, metadata) ?? null;
       handledKeys.add(localKey);
     }
   }

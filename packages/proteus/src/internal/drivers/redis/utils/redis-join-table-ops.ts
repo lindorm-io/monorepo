@@ -3,7 +3,7 @@ import type { IEntity } from "../../../../interfaces/index.js";
 import type { MetaRelation } from "../../../entity/types/metadata.js";
 import type { JoinTableOps } from "../../../types/join-table-ops.js";
 import { getJoinName } from "../../../entity/utils/get-join-name.js";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../entity/metadata/foreign-metadata.js";
 import { buildJoinSetKey, buildReverseJoinSetKey } from "./build-join-set-key.js";
 import { encodePkSegment } from "./encode-pk-segment.js";
 import { scanEntityKeys } from "./scan-entity-keys.js";
@@ -180,7 +180,7 @@ export const createRedisJoinTableOps = (
     if (targetMembers.length > 0) {
       // Resolve the mirror relation to determine the target join column name,
       // then build exact reverse keys instead of SCANning all reverse keys.
-      const foreignMeta = getEntityMetadata(relation.foreignConstructor());
+      const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
       const mirror = foreignMeta.relations.find((r) => r.key === relation.foreignKey);
       const targetFindKeys = Object.entries(mirror?.findKeys ?? {});
 

@@ -72,9 +72,9 @@ export class RelationPersister {
       // This mutates the entity BEFORE persist, so FK values are in the row
       if (relation.joinKeys) {
         for (const [fkCol, pkCol] of Object.entries(relation.joinKeys)) {
-          (entity as any)[resolvePropertyKey(this.metadata, fkCol)] = (saved as any)[
-            pkCol
-          ];
+          (entity as any)[resolvePropertyKey(this.metadata.fields, fkCol)] = (
+            saved as any
+          )[resolvePropertyKey(foreignMetadata.fields, pkCol)];
         }
       }
     }
@@ -155,9 +155,9 @@ export class RelationPersister {
               // Set FK on child pointing back to this entity
               if (mirror?.joinKeys) {
                 for (const [fkCol, pkCol] of Object.entries(mirror.joinKeys)) {
-                  (children[i] as any)[resolvePropertyKey(foreignMetadata, fkCol)] = (
-                    entity as any
-                  )[pkCol];
+                  (children[i] as any)[
+                    resolvePropertyKey(foreignMetadata.fields, fkCol)
+                  ] = (entity as any)[resolvePropertyKey(this.metadata.fields, pkCol)];
                 }
               }
               children[i] = await childRepo.save(children[i]);
@@ -165,7 +165,12 @@ export class RelationPersister {
           }
 
           if (shouldOrphan && mirror) {
-            const filter = buildRelationFilter(relation, entity);
+            const filter = buildRelationFilter(
+              relation,
+              entity,
+              this.metadata,
+              foreignMetadata,
+            );
             const existing = await childRepo.find(filter);
             const currentPks = new Set(
               children.map((c) => this.serializePk(c, foreignMetadata)),
@@ -174,7 +179,8 @@ export class RelationPersister {
               if (!currentPks.has(this.serializePk(orphan, foreignMetadata))) {
                 if (relation.options.onOrphan === "nullify" && mirror.joinKeys) {
                   for (const fkCol of Object.keys(mirror.joinKeys)) {
-                    (orphan as any)[resolvePropertyKey(foreignMetadata, fkCol)] = null;
+                    (orphan as any)[resolvePropertyKey(foreignMetadata.fields, fkCol)] =
+                      null;
                   }
                   await childRepo.save(orphan);
                 } else {
@@ -192,16 +198,21 @@ export class RelationPersister {
           if (shouldSave && related) {
             if (mirror?.joinKeys) {
               for (const [fkCol, pkCol] of Object.entries(mirror.joinKeys)) {
-                (related as any)[resolvePropertyKey(foreignMetadata, fkCol)] = (
+                (related as any)[resolvePropertyKey(foreignMetadata.fields, fkCol)] = (
                   entity as any
-                )[pkCol];
+                )[resolvePropertyKey(this.metadata.fields, pkCol)];
               }
             }
             related = await childRepo.save(related);
           }
 
           if (shouldOrphan && mirror) {
-            const filter = buildRelationFilter(relation, entity);
+            const filter = buildRelationFilter(
+              relation,
+              entity,
+              this.metadata,
+              foreignMetadata,
+            );
             const existing = await childRepo.findOne(filter);
             const shouldHandleOrphan =
               existing &&
@@ -212,7 +223,8 @@ export class RelationPersister {
             if (shouldHandleOrphan) {
               if (relation.options.onOrphan === "nullify" && mirror.joinKeys) {
                 for (const fkCol of Object.keys(mirror.joinKeys)) {
-                  (existing as any)[resolvePropertyKey(foreignMetadata, fkCol)] = null;
+                  (existing as any)[resolvePropertyKey(foreignMetadata.fields, fkCol)] =
+                    null;
                 }
                 await childRepo.save(existing);
               } else {
@@ -257,7 +269,12 @@ export class RelationPersister {
       // ─── OneToMany: find children and destroy each ─────────────────
       if (relation.type === "OneToMany") {
         const childRepo = this.repositoryFactory(foreignTarget, this.metadata.target);
-        const filter = buildRelationFilter(relation, entity);
+        const filter = buildRelationFilter(
+          relation,
+          entity,
+          this.metadata,
+          foreignMetadata,
+        );
         const children = await childRepo.find(filter);
         for (const child of children) {
           await childRepo.destroy(child);
@@ -270,8 +287,8 @@ export class RelationPersister {
         const childRepo = this.repositoryFactory(foreignTarget, this.metadata.target);
         const filter: Record<string, unknown> = {};
         for (const [localFkCol, foreignPkCol] of Object.entries(relation.joinKeys)) {
-          filter[foreignPkCol] =
-            (entity as any)[resolvePropertyKey(this.metadata, localFkCol)] ?? null;
+          filter[resolvePropertyKey(foreignMetadata.fields, foreignPkCol)] =
+            (entity as any)[resolvePropertyKey(this.metadata.fields, localFkCol)] ?? null;
         }
         const child = await childRepo.findOne(filter);
         if (child) {
@@ -283,7 +300,12 @@ export class RelationPersister {
       // ─── OneToOne (inverse side): find child and destroy ───────────
       if (relation.type === "OneToOne" && !relation.joinKeys) {
         const childRepo = this.repositoryFactory(foreignTarget, this.metadata.target);
-        const filter = buildRelationFilter(relation, entity);
+        const filter = buildRelationFilter(
+          relation,
+          entity,
+          this.metadata,
+          foreignMetadata,
+        );
         const child = await childRepo.findOne(filter);
         if (child) {
           await childRepo.destroy(child);

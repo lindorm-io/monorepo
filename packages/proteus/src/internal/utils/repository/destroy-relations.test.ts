@@ -372,7 +372,12 @@ describe("RelationPersister.destroy", () => {
       });
 
       expect(repositoryFactory).toHaveBeenCalledWith(ChildEntity, ParentEntity);
-      expect(mockBuildRelationFilter).toHaveBeenCalledWith(relation, entity);
+      expect(mockBuildRelationFilter).toHaveBeenCalledWith(
+        relation,
+        entity,
+        metadata,
+        expect.objectContaining({ target: expect.any(Function) }),
+      );
       expect(mockRepo.find).toHaveBeenCalledWith({ parentId: "e1" });
       expect(mockRepo.destroy).toHaveBeenCalledTimes(2);
       expect(mockRepo.destroy).toHaveBeenCalledWith(child1);
@@ -463,7 +468,12 @@ describe("RelationPersister.destroy", () => {
       });
 
       expect(repositoryFactory).toHaveBeenCalledWith(OtherEntity, ParentEntity);
-      expect(mockBuildRelationFilter).toHaveBeenCalledWith(relation, entity);
+      expect(mockBuildRelationFilter).toHaveBeenCalledWith(
+        relation,
+        entity,
+        metadata,
+        expect.objectContaining({ target: expect.any(Function) }),
+      );
       expect(mockRepo.findOne).toHaveBeenCalledWith({ parentId: "e1" });
       expect(mockRepo.destroy).toHaveBeenCalledWith(child);
     });

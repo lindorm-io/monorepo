@@ -161,12 +161,12 @@ export class RedisDriver implements IProteusDriver {
     meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
     this.checkSignal();
-    // NOTE (F-040): resolveMetadata applies naming strategy (DB column names).
-    // The executor receives this transformed metadata for HSET/HGETALL keys.
-    // DriverRepositoryBase separately calls getEntityMetadata (raw TS property names)
-    // for relation loading, hydration, and lifecycle hooks. This dual-resolution
-    // is intentional: base class works at the TS level (field.key), executor at
-    // the DB level (field.name). Both are consistent within their domain.
+    // The repository AND the executor both run on naming-resolved metadata, the
+    // way the SQL drivers wire it. `field.key` is identical either way, so the
+    // base class's TS-level work is unaffected — but its STORAGE-level work is
+    // not: it addresses join tables through `relation.joinKeys` / `findKeys`,
+    // which are physical column names. Raw metadata sent those to the wrong
+    // columns under a renaming strategy.
     const metadata = this.resolveMetadata(target);
     const client = this.requireClient();
 
@@ -177,6 +177,7 @@ export class RedisDriver implements IProteusDriver {
 
     return new RedisRepository<E>({
       target,
+      metadata,
       executor: this.wrapExecutor(
         new RedisExecutor<E>(
           metadata,

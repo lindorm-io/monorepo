@@ -4,6 +4,7 @@ import type { IEntity } from "../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
 import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value.js";
+import { resolvePropertyKey } from "../../../entity/utils/resolve-property-key.js";
 import {
   dehydrateTypedJson,
   typedJsonMetaDictKey,
@@ -74,12 +75,15 @@ export const dehydrateToRow = <E extends IEntity>(
     if (!relation.joinKeys) continue;
     if (relation.type === "ManyToMany") continue;
 
+    // The row Dict is keyed by property key throughout; `joinKeys` names
+    // physical columns, which diverge under a renaming strategy.
     for (const [localKey, foreignKey] of Object.entries(relation.joinKeys)) {
-      if (handledKeys.has(localKey)) continue;
+      const propertyKey = resolvePropertyKey(metadata.fields, localKey);
+      if (handledKeys.has(propertyKey)) continue;
 
-      const value = resolveJoinKeyValue(entity, relation, localKey, foreignKey);
-      result[localKey] = value ?? null;
-      handledKeys.add(localKey);
+      const value = resolveJoinKeyValue(entity, relation, localKey, foreignKey, metadata);
+      result[propertyKey] = value ?? null;
+      handledKeys.add(propertyKey);
     }
   }
 

@@ -3,11 +3,11 @@
 // Wires up all TCK suites with capability gating.
 // Each driver harness calls runTck() with its factory and ProteusSource accessor.
 //
-// Naming-strategy coverage is redistributed one-strategy-per-driver (none →
-// sqlite/mongo/redis/memory, snake → postgres, camel → mysql) because
-// applyNamingStrategy is a shared, driver-agnostic resolver — proving a strategy
-// once suffices. See ./NAMING.md for the full rationale, strategy→driver map, and
-// residual-risk note.
+// Naming-strategy coverage: the SQL drivers each prove ONE strategy (sqlite →
+// none, postgres → snake, mysql → camel), because they all compile keys through
+// the same shared resolver. The memory, mongo and redis drivers hand-roll their
+// key mapping instead, so they replay `none` + `snake`. See ./NAMING.md for the
+// full rationale, strategy→driver map, and residual-risk note.
 
 import { afterAll, beforeAll, describe, test, vi } from "vitest";
 import type { Constructor } from "@lindorm/types";
@@ -73,10 +73,10 @@ const maybeDescribe = (flag: boolean, name: string, fn: () => void) => {
  * resolution fuzzer. Each naming gets a fresh set of entity classes + hook spy
  * so the runs are fully isolated.
  *
- * Each driver is assigned a SINGLE strategy (the resolver is shared/driver-
- * agnostic, so proving a strategy once is enough — see ./NAMING.md). Passing
- * more than one is supported but should stay the exception (it multiplies replay
- * cost per worker).
+ * A driver that compiles every key through the shared resolver only needs a
+ * SINGLE strategy; one that hand-rolls its key mapping (memory / mongo / redis)
+ * needs a renaming replay of its own. Keep the list short either way — each
+ * entry is a full extra replay in the same worker (see ./NAMING.md).
  */
 export const runTck = (
   factory: TckDriverFactory,

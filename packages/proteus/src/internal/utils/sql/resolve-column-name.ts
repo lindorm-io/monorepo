@@ -68,7 +68,19 @@ export const resolveColumnName = (
 
 /**
  * Resolves a field key to its column name, falling back to the key itself.
- * Used by DDL generators where keys may already be column names.
+ * Used by DDL generators where keys may already be column names, and by the
+ * document/key-value drivers, which have no query planner to throw from.
+ *
+ * When `relations` is provided, an auto-projected FK is resolved too — it has no
+ * MetaField, so without this a criterion written against its property key
+ * (`parentId`) would address a document key that does not exist (`parent_id`)
+ * and silently match nothing.
  */
-export const resolveColumnNameSafe = (fields: Array<MetaField>, key: string): string =>
-  fields.find((f) => f.key === key)?.name ?? key;
+export const resolveColumnNameSafe = (
+  fields: Array<MetaField>,
+  key: string,
+  relations?: Array<MetaRelation>,
+): string =>
+  fields.find((f) => f.key === key)?.name ??
+  (relations ? findJoinKeyColumn(relations, key) : null) ??
+  key;

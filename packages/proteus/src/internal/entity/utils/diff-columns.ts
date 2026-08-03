@@ -66,7 +66,7 @@ export const diffColumns = <E extends IEntity>(
     for (const [localKey, foreignKey] of Object.entries(relation.joinKeys)) {
       if (excludeKeys.has(localKey)) continue;
 
-      const propertyKey = resolvePropertyKey(metadata, localKey);
+      const propertyKey = resolvePropertyKey(metadata.fields, localKey);
       const current = resolveJoinKeyValue(
         entity,
         relation,

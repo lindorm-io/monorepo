@@ -296,9 +296,11 @@ describe("RedisDriver", () => {
       const { driver } = createDriver();
       await driver.connect();
 
-      // Undecorated class has no metadata, so repository creation fails
+      // Undecorated class has no metadata, so repository creation fails — the
+      // EntityManager is what reports it now that the repository is handed the
+      // driver's already-resolved metadata instead of re-deriving its own.
       expect(() => driver.createRepository(class {} as any)).toThrow(
-        "Entity metadata not found",
+        "Failed to retrieve metadata for entity",
       );
     });
   });

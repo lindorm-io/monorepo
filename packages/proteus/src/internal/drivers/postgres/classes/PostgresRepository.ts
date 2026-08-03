@@ -1335,7 +1335,12 @@ export class PostgresRepository<
 
       const foreignTarget = relation.foreignConstructor();
       const repo = this.repositoryFactory(foreignTarget);
-      const filter = buildRelationFilter(relation, entity);
+      const filter = buildRelationFilter(
+        relation,
+        entity,
+        this.metadata,
+        getForeignMetadata(relation, foreignTarget),
+      );
       const isCol = relation.type === "OneToMany";
       const orderOpts = relation.orderBy ? { order: relation.orderBy } : undefined;
       return isCol ? repo.find(filter, orderOpts) : repo.findOne(filter);

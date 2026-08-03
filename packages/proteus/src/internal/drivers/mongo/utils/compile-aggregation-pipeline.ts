@@ -5,6 +5,7 @@ import type { OrderValue } from "../../../../types/find-options.js";
 import { NotSupportedError } from "../../../../errors/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../../types/query.js";
+import { resolveColumnNameSafe } from "../../../utils/sql/resolve-column-name.js";
 import { compileFilter } from "./compile-filter.js";
 import { compileSort } from "./compile-sort.js";
 
@@ -19,12 +20,12 @@ export type AggregateSelection = {
 
 /**
  * Resolve the MongoDB field name for a given entity field key.
- * PK fields map to _id, all others use the metadata name.
+ * PK fields map to _id, all others go through the shared key→column resolver
+ * (relation join keys included, so an auto-projected FK resolves too).
  */
 const resolveMongoFieldName = (fieldKey: string, metadata: EntityMetadata): string => {
   if (metadata.primaryKeys.includes(fieldKey)) return "_id";
-  const field = metadata.fields.find((f) => f.key === fieldKey);
-  return field?.name ?? fieldKey;
+  return resolveColumnNameSafe(metadata.fields, fieldKey, metadata.relations);
 };
 
 /**

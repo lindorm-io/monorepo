@@ -135,7 +135,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
     for (const [localKey, foreignPk] of Object.entries(relation.joinKeys)) {
       // joinKeys keys are column names; map back to the entity property key
       // (diverges from the column under the snake strategy).
-      const propertyKey = resolvePropertyKey(metadata, localKey);
+      const propertyKey = resolvePropertyKey(metadata.fields, localKey);
 
       // Skip if already handled in the field loop (user-declared FK field)
       if (propertyKey in snapshotDict) continue;
@@ -173,7 +173,8 @@ export const defaultHydrateEntity = <E extends IEntity>(
       // authored as either the physical column or the entity property key.
       const entry = entries.find(
         ([localKey]) =>
-          localKey === ri.column || resolvePropertyKey(metadata, localKey) === ri.column,
+          localKey === ri.column ||
+          resolvePropertyKey(metadata.fields, localKey) === ri.column,
       );
       entity[ri.key] =
         entity[ri.column] ??
@@ -182,7 +183,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
     } else if (entries.length === 1) {
       // Auto-detect single FK
       const [localKey, foreignPk] = entries[0];
-      const propertyKey = resolvePropertyKey(metadata, localKey);
+      const propertyKey = resolvePropertyKey(metadata.fields, localKey);
       entity[ri.key] =
         entity[propertyKey] ??
         deserialiseForeignKey(data[localKey], relation, foreignPk) ??

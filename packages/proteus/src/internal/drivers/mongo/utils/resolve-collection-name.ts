@@ -1,5 +1,5 @@
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../entity/metadata/foreign-metadata.js";
 
 /**
  * Resolve the MongoDB collection name for an entity.
@@ -16,7 +16,10 @@ export const resolveCollectionName = (metadata: EntityMetadata): string => {
     metadata.inheritance.strategy === "single-table" &&
     metadata.inheritance.discriminatorValue != null
   ) {
-    const rootMetadata = getEntityMetadata(metadata.inheritance.root);
+    // Resolve the root through the child's own resolver: raw metadata carries
+    // the un-renamed name, so under a renaming strategy the children addressed a
+    // different collection than the root wrote to.
+    const rootMetadata = getForeignMetadata(metadata, metadata.inheritance.root);
     return rootMetadata.entity.name;
   }
 

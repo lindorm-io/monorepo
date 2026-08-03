@@ -1,17 +1,18 @@
 import type { Sort, Document } from "mongodb";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { resolveColumnNameSafe } from "../../../utils/sql/resolve-column-name.js";
 
 /**
  * Resolve the MongoDB field name for a sort key.
- * Single PK maps to _id; composite PK maps to _id.fieldKey.
+ * Single PK maps to _id; composite PK maps to _id.fieldKey. Relation join keys
+ * are consulted so ordering by an auto-projected FK addresses the real key.
  */
 const resolveSortFieldName = (fieldKey: string, metadata: EntityMetadata): string => {
   const pkSet = new Set(metadata.primaryKeys);
   if (pkSet.has(fieldKey)) {
     return metadata.primaryKeys.length === 1 ? "_id" : `_id.${fieldKey}`;
   }
-  const field = metadata.fields.find((f) => f.key === fieldKey);
-  return field?.name ?? fieldKey;
+  return resolveColumnNameSafe(metadata.fields, fieldKey, metadata.relations);
 };
 
 /**

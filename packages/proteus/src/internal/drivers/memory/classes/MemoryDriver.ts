@@ -176,6 +176,7 @@ export class MemoryDriver implements IProteusDriver {
     meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
     this.checkSignal();
+    const metadata = this.resolveMetadata(target);
     const store = this.store;
     const namespace = this.namespace;
 
@@ -206,6 +207,7 @@ export class MemoryDriver implements IProteusDriver {
 
     return new MemoryRepository<E>({
       target,
+      metadata,
       executor: this.createExecutor(target),
       queryBuilderFactory: () => this.createQueryBuilder(target),
       store,
@@ -226,6 +228,7 @@ export class MemoryDriver implements IProteusDriver {
     meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
     this.checkSignal();
+    const metadata = this.resolveMetadata(target);
     const txHandle = handle as MemoryTransactionHandle;
     const namespace = this.namespace;
 
@@ -246,6 +249,7 @@ export class MemoryDriver implements IProteusDriver {
 
     return new MemoryRepository<E>({
       target,
+      metadata,
       executor: this.createExecutorForStore(target, txHandle.store),
       queryBuilderFactory: () => this.createTransactionalQueryBuilder(target, handle),
       store: txHandle.store,

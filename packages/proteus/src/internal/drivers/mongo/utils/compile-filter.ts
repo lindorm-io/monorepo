@@ -6,6 +6,7 @@ import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
 import { resolveFilters } from "../../../utils/query/resolve-filters.js";
 import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides.js";
+import { resolveColumnNameSafe } from "../../../utils/sql/resolve-column-name.js";
 
 /**
  * Resolve the MongoDB field name for a given entity field key.
@@ -13,7 +14,8 @@ import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-fi
  * - Single PK: maps to _id directly
  * - Composite PK: maps to _id.fieldKey (dot notation) so partial
  *   compound key lookups work correctly
- * - Non-PK fields: use the metadata name
+ * - Non-PK fields: the shared key→column resolver, relation join keys included
+ *   so a criterion on an auto-projected FK addresses the real document key
  */
 const resolveMongoFieldName = (fieldKey: string, metadata: EntityMetadata): string => {
   if (metadata.primaryKeys.includes(fieldKey)) {
@@ -21,8 +23,7 @@ const resolveMongoFieldName = (fieldKey: string, metadata: EntityMetadata): stri
     return `_id.${fieldKey}`;
   }
 
-  const field = metadata.fields.find((f) => f.key === fieldKey);
-  return field?.name ?? fieldKey;
+  return resolveColumnNameSafe(metadata.fields, fieldKey, metadata.relations);
 };
 
 const findField = (fieldKey: string, metadata: EntityMetadata): MetaField | undefined => {

@@ -5,6 +5,7 @@ import type { IEntity } from "../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
 import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value.js";
+import { resolvePropertyKey } from "../../../entity/utils/resolve-property-key.js";
 import { serialiseArray } from "../../../entity/utils/serialise.js";
 import {
   dehydrateTypedJson,
@@ -65,7 +66,8 @@ export const dehydrateEntity = <E extends IEntity>(
       );
       doc[field.name] = data;
       doc[field.typedJson.column] = meta;
-      handledKeys.add(field.key);
+      handledKeys.add(field.name);
+      handledKeys.add(field.typedJson.column);
       continue;
     }
 
@@ -92,15 +94,10 @@ export const dehydrateEntity = <E extends IEntity>(
       doc[field.name] = value;
     }
 
-    handledKeys.add(field.key);
-  }
-
-  // Skip virtual computed properties
-  for (const ri of metadata.relationIds ?? []) {
-    handledKeys.add(ri.key);
-  }
-  for (const rc of metadata.relationCounts ?? []) {
-    handledKeys.add(rc.key);
+    // A document is keyed by COLUMN name, and so is `joinKeys` — tracking the
+    // property key here made the FK loop below miss a declared FK field under a
+    // renaming strategy and overwrite the value it had just written with null.
+    handledKeys.add(field.name);
   }
 
   // Extract FK columns from owning relations
@@ -111,10 +108,8 @@ export const dehydrateEntity = <E extends IEntity>(
     for (const [localKey, foreignKey] of Object.entries(relation.joinKeys)) {
       if (handledKeys.has(localKey)) continue;
 
-      const value = resolveJoinKeyValue(entity, relation, localKey, foreignKey);
-      const field = metadata.fields.find((f) => f.key === localKey);
-      const mongoField = field?.name ?? localKey;
-      doc[mongoField] = value ?? null;
+      doc[localKey] =
+        resolveJoinKeyValue(entity, relation, localKey, foreignKey, metadata) ?? null;
       handledKeys.add(localKey);
     }
   }
@@ -193,12 +188,15 @@ export const dehydrateToRow = <E extends IEntity>(
     if (!relation.joinKeys) continue;
     if (relation.type === "ManyToMany") continue;
 
+    // This Dict is keyed by property key (not column), so the FK follows suit —
+    // `joinKeys` names physical columns, which diverge under a renaming strategy.
     for (const [localKey, foreignKey] of Object.entries(relation.joinKeys)) {
-      if (handledKeys.has(localKey)) continue;
+      const propertyKey = resolvePropertyKey(metadata.fields, localKey);
+      if (handledKeys.has(propertyKey)) continue;
 
-      const value = resolveJoinKeyValue(entity, relation, localKey, foreignKey);
-      result[localKey] = value ?? null;
-      handledKeys.add(localKey);
+      const value = resolveJoinKeyValue(entity, relation, localKey, foreignKey, metadata);
+      result[propertyKey] = value ?? null;
+      handledKeys.add(propertyKey);
     }
   }
 

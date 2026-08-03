@@ -51,6 +51,7 @@ import { redactSensitive } from "../../../entity/utils/redact-sensitive.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
 import { resolveStorageMetadata } from "../../../entity/utils/resolve-storage-metadata.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
+import { resolvePropertyKey } from "../../../entity/utils/resolve-property-key.js";
 import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
 import { RedisOptimisticLockError } from "../errors/RedisOptimisticLockError.js";
 import { RedisDriverError } from "../errors/RedisDriverError.js";
@@ -825,10 +826,12 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       if (!relation.joinKeys) continue;
       if (relation.type === "ManyToMany") continue;
 
+      // Hash fields are named by property key — see `serializeHash`.
       for (const localKey of Object.keys(relation.joinKeys)) {
-        if (pkSet.has(localKey)) continue;
-        if (row[localKey] == null) {
-          nullSet.add(localKey);
+        const propertyKey = resolvePropertyKey(this.metadata.fields, localKey);
+        if (pkSet.has(propertyKey)) continue;
+        if (row[propertyKey] == null) {
+          nullSet.add(propertyKey);
         }
       }
     }

@@ -2417,6 +2417,11 @@ new ProteusSource({
 
 Applies to column names, join keys, and find keys.
 
+What each driver physically renames differs. SQL columns and Mongo document keys follow the
+strategy; a Redis hash field and a memory row key are always the **property** key, so for those two
+the strategy only reaches the entity name and the join-table/FK columns. Nothing above the driver
+changes: the entity, its criteria and its results read identically either way.
+
 Queries are always written in **property keys**, never column names — including the FK column a
 `@ManyToOne` auto-generates without an explicit `@Field`. Under `naming: "snake"` a relation
 `author` yields the column `author_id`, and criteria, `order` and `select` all take `authorId`,

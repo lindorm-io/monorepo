@@ -18,7 +18,9 @@ import {
   dehydrateTypedJson,
   typedJsonMetaDictKey,
 } from "../../../entity/utils/typed-json.js";
+import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
+import { resolvePropertyKey } from "../../../entity/utils/resolve-property-key.js";
 import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
 import {
   matchesRow,
@@ -85,13 +87,18 @@ const dehydrateToRow = (
     });
   }
 
-  // Extract FK columns from owning relations
+  // Extract FK columns from owning relations. A memory row is keyed by PROPERTY
+  // key throughout, while `joinKeys` keys are physical columns — so both the
+  // already-handled check and the write have to go through the property key, or
+  // a renaming strategy parks the FK under a key nothing else ever reads.
   for (const relation of metadata.relations) {
     if (!relation.joinKeys || relation.type === "ManyToMany") continue;
 
-    for (const [localKey] of Object.entries(relation.joinKeys)) {
-      if (localKey in row) continue;
-      row[localKey] = (entity as any)[localKey] ?? null;
+    for (const [localKey, foreignKey] of Object.entries(relation.joinKeys)) {
+      const propertyKey = resolvePropertyKey(metadata.fields, localKey);
+      if (propertyKey in row) continue;
+      row[propertyKey] =
+        resolveJoinKeyValue(entity, relation, localKey, foreignKey, metadata) ?? null;
     }
   }
 
@@ -243,9 +250,10 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     // Also merge FK values from joinKeys
     for (const relation of this.metadata.relations) {
       if (!relation.joinKeys || relation.type === "ManyToMany") continue;
-      for (const [localKey] of Object.entries(relation.joinKeys)) {
-        if (localKey in row) {
-          merged[localKey] = row[localKey];
+      for (const localKey of Object.keys(relation.joinKeys)) {
+        const propertyKey = resolvePropertyKey(this.metadata.fields, localKey);
+        if (propertyKey in row) {
+          merged[propertyKey] = row[propertyKey];
         }
       }
     }

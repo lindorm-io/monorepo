@@ -9,6 +9,7 @@ import type { IEntity } from "../../interfaces/index.js";
 import type { MemoryStore } from "../drivers/memory/types/memory-store.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import type { NamingStrategy } from "../../types/source-options.js";
 import {
   createTckAmphora,
   TCK_ENCRYPTION,
@@ -50,11 +51,15 @@ const factory: TckDriverFactory = {
     transactions: { rollback: true, savepoints: true },
     migrations: { lifecycle: false, generation: false },
   },
-  async setup(entities: Array<Constructor<IEntity>>): Promise<TckDriverHandle> {
+  async setup(
+    entities: Array<Constructor<IEntity>>,
+    naming: NamingStrategy = "none",
+  ): Promise<TckDriverHandle> {
     const logger = createMockLogger();
 
     source = new ProteusSource({
       driver: "memory",
+      naming,
       entities,
       logger,
       amphora,
@@ -89,6 +94,7 @@ const factory: TckDriverFactory = {
         // Re-create source to get a fresh store
         source = new ProteusSource({
           driver: "memory",
+          naming,
           entities,
           logger,
           amphora,
@@ -107,6 +113,8 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: Memory", () => {
-  // One strategy per driver — memory proves `none` (default). See ../__fixtures__/tck/NAMING.md.
-  runTck(factory, () => source);
+  // `none` + `snake`: the memory driver keys its rows itself rather than through
+  // a shared compiler, so a renaming strategy has to be replayed here — proving
+  // it on a SQL driver does not cover it. See ../__fixtures__/tck/NAMING.md.
+  runTck(factory, () => source, ["none", "snake"]);
 });

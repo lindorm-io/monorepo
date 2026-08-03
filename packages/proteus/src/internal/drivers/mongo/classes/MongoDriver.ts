@@ -49,7 +49,7 @@ import { MongoRepository } from "./MongoRepository.js";
 import { MongoTransactionContext } from "./MongoTransactionContext.js";
 import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
 import { resolveCollectionName } from "../utils/resolve-collection-name.js";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../entity/metadata/foreign-metadata.js";
 import { diffIndexes } from "../utils/sync/diff-indexes.js";
 import { executeSync } from "../utils/sync/execute-sync.js";
 import { introspectIndexes } from "../utils/sync/introspect-indexes.js";
@@ -252,7 +252,7 @@ export class MongoDriver implements IProteusDriver {
 
           // Find mirror relation's join keys to include the other side
           const foreignTarget = relation.foreignConstructor();
-          const foreignMeta = getEntityMetadata(foreignTarget);
+          const foreignMeta = getForeignMetadata(relation, foreignTarget);
           const mirrorRelation = foreignMeta.relations.find(
             (r) =>
               r.type === "ManyToMany" &&
@@ -280,8 +280,9 @@ export class MongoDriver implements IProteusDriver {
           const fkKeys = Object.keys(relation.joinKeys);
           const indexSpec: IndexSpecification = {};
           for (const fk of fkKeys) {
-            const field = metadata.fields.find((f) => f.key === fk);
-            indexSpec[field?.name ?? fk] = 1;
+            // `joinKeys` keys are already physical column names — a lookup by
+            // property key resolved to the wrong name under a renaming strategy.
+            indexSpec[fk] = 1;
           }
           const indexName = `proteus_idx_${collectionName}_${fkKeys.join("_")}`;
           await collection.createIndex(indexSpec, { name: indexName }).catch((err) => {
@@ -357,6 +358,7 @@ export class MongoDriver implements IProteusDriver {
 
     return new MongoRepository<E>({
       target,
+      metadata,
       executor: this.wrapExecutor(
         new MongoExecutor<E>(
           metadata,
@@ -399,6 +401,7 @@ export class MongoDriver implements IProteusDriver {
 
     return new MongoRepository<E>({
       target,
+      metadata,
       executor: new MongoExecutor<E>(
         metadata,
         db,

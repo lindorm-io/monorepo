@@ -10,6 +10,7 @@ import type { Constructor, Dict } from "@lindorm/types";
 import type { IEntity } from "../../interfaces/index.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import type { NamingStrategy } from "../../types/source-options.js";
 import {
   createTckAmphora,
   TCK_ENCRYPTION,
@@ -56,7 +57,10 @@ const factory: TckDriverFactory = {
     transactions: { rollback: true, savepoints: false },
     migrations: { lifecycle: true, generation: true },
   },
-  async setup(entities: Array<Constructor<IEntity>>): Promise<TckDriverHandle> {
+  async setup(
+    entities: Array<Constructor<IEntity>>,
+    naming: NamingStrategy = "none",
+  ): Promise<TckDriverHandle> {
     const logger = createMockLogger();
 
     // Wait for MongoDB replica set to be ready (container may still be initializing)
@@ -79,6 +83,7 @@ const factory: TckDriverFactory = {
       driver: "mongo",
       url: MONGO_URL,
       synchronize: true,
+      naming,
       entities,
       logger,
       amphora,
@@ -127,6 +132,8 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: MongoDB", () => {
-  // One strategy per driver — mongo proves `none` (default). See ../__fixtures__/tck/NAMING.md.
-  runTck(factory, () => source);
+  // `none` + `snake`: the mongo driver keys its documents itself rather than
+  // through a shared compiler, so a renaming strategy has to be replayed here —
+  // proving it on a SQL driver does not cover it. See ../__fixtures__/tck/NAMING.md.
+  runTck(factory, () => source, ["none", "snake"]);
 });

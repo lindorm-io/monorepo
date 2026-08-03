@@ -7,6 +7,7 @@ import { getRegisteredTargets } from "../../../entity/metadata/registry.js";
 import { getEntityName } from "../../../entity/utils/get-entity-name.js";
 import { REDACTED, redactSensitive } from "../../../entity/utils/redact-sensitive.js";
 import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
+import { resolvePropertyKey } from "../../../entity/utils/resolve-property-key.js";
 import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
 
 /**
@@ -46,6 +47,14 @@ const tableContainsForeignValue = (
 };
 
 /**
+ * Memory rows are keyed by entity PROPERTY key, but `joinKeys` names physical
+ * columns — the two diverge under a renaming strategy. Every row lookup in this
+ * module therefore goes through the owning metadata's property key.
+ */
+const rowKey = (metadata: EntityMetadata, columnKey: string): string =>
+  resolvePropertyKey(metadata.fields, columnKey);
+
+/**
  * Validate that every non-null FK column on a row points to an existing parent
  * row. Called before insert/update writes. Mirrors Postgres SQLSTATE 23503.
  */
@@ -61,18 +70,20 @@ export const assertForeignKeysExist = (
     const parentTable = store.tables.get(tableKey);
 
     for (const [localCol, foreignPk] of Object.entries(relation.joinKeys!)) {
-      const value = row[localCol];
+      const localKey = rowKey(metadata, localCol);
+      const foreignKey = rowKey(foreignMeta, foreignPk);
+      const value = row[localKey];
       if (value == null) continue;
 
       const exists =
-        parentTable != null && tableContainsForeignValue(parentTable, foreignPk, value);
+        parentTable != null && tableContainsForeignValue(parentTable, foreignKey, value);
 
       if (!exists) {
         // The FK column holds the PARENT's PK value — redact when either the
         // child FK field or the referenced parent PK field is @Sensitive
         const sensitive =
-          metadata.fields.find((f) => f.key === localCol)?.sensitive != null ||
-          foreignMeta.fields.find((f) => f.key === foreignPk)?.sensitive != null;
+          metadata.fields.find((f) => f.key === localKey)?.sensitive != null ||
+          foreignMeta.fields.find((f) => f.key === foreignKey)?.sensitive != null;
         const safeValue = sensitive ? REDACTED : value;
         throw new ForeignKeyViolationError(
           `Foreign key violation: "${metadata.entity.name}.${localCol}" references a non-existent "${foreignMeta.entity.name}" row`,
@@ -122,13 +133,16 @@ export const applyDeleteReferentialActions = (
       if (!childTable) continue;
 
       for (const [localCol, foreignPk] of Object.entries(relation.joinKeys!)) {
+        const localKey = rowKey(childMetadata, localCol);
+        const foreignKey = rowKey(parentMetadata, foreignPk);
+
         for (const parentRow of deletedRows) {
-          const pkValue = parentRow[foreignPk];
+          const pkValue = parentRow[foreignKey];
           if (pkValue == null) continue;
 
           const matches: Array<[string, Dict]> = [];
           for (const [key, childRow] of childTable) {
-            if (childRow[localCol] === pkValue) {
+            if (childRow[localKey] === pkValue) {
               matches.push([key, childRow]);
             }
           }
@@ -146,7 +160,7 @@ export const applyDeleteReferentialActions = (
 
             case "set_null": {
               for (const [, childRow] of matches) {
-                childRow[localCol] = null;
+                childRow[localKey] = null;
               }
               break;
             }
@@ -174,7 +188,7 @@ export const applyDeleteReferentialActions = (
                   debug: {
                     // A @Sensitive parent PK column must not leak into error output
                     value: redactSensitive(
-                      parentMetadata.fields.find((f) => f.key === foreignPk),
+                      parentMetadata.fields.find((f) => f.key === foreignKey),
                       pkValue,
                     ),
                     childTable: childTableKey,

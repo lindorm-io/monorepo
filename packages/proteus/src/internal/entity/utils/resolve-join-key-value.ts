@@ -20,7 +20,7 @@ export const resolveJoinKeyValue = (
   foreignKey: string,
   metadata?: EntityMetadata,
 ): unknown => {
-  const propertyKey = metadata ? resolvePropertyKey(metadata, localKey) : localKey;
+  const propertyKey = metadata ? resolvePropertyKey(metadata.fields, localKey) : localKey;
 
   const bare = entity[propertyKey];
   if (bare !== undefined) return bare;

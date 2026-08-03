@@ -1,5 +1,6 @@
 import type { Document } from "mongodb";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { resolveColumnNameSafe } from "../../../utils/sql/resolve-column-name.js";
 
 /**
  * Convert Proteus select fields into MongoDB projection.
@@ -20,7 +21,9 @@ export const compileProjection = (
 
   for (const fieldKey of select) {
     const field = metadata.fields.find((f) => f.key === fieldKey);
-    const mongoField = pkSet.has(fieldKey) ? "_id" : (field?.name ?? fieldKey);
+    const mongoField = pkSet.has(fieldKey)
+      ? "_id"
+      : resolveColumnNameSafe(metadata.fields, fieldKey, metadata.relations);
     projection[mongoField] = 1;
 
     if (field?.typedJson) {

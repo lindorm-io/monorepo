@@ -15,7 +15,11 @@ import type {
   UpsertOptions,
 } from "../../../../types/index.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
-import type { MetaRelation, QueryScope } from "../../../entity/types/metadata.js";
+import type {
+  EntityMetadata,
+  MetaRelation,
+  QueryScope,
+} from "../../../entity/types/metadata.js";
 import type { RepositoryFactory } from "../../../types/repository-factory.js";
 import type { AggregateFunction } from "../../../types/aggregate.js";
 import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations.js";
@@ -24,7 +28,7 @@ import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
 import type { PaginateOptions } from "../../../../types/paginate-options.js";
 import type { KeysetOrderEntry } from "../../../utils/pagination/build-keyset-order.js";
 import type { JoinTableOps } from "../../../types/join-table-ops.js";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../entity/metadata/foreign-metadata.js";
 import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase.js";
 import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate.js";
 import {
@@ -58,6 +62,7 @@ import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-c
 
 export type MongoRepositorySettings<E extends IEntity> = {
   target: Constructor<E>;
+  metadata?: EntityMetadata;
   executor: IRepositoryExecutor<E>;
   queryBuilderFactory: () => IProteusQueryBuilder<E>;
   db: Db;
@@ -87,6 +92,7 @@ export class MongoRepository<
   constructor(options: MongoRepositorySettings<E>) {
     super({
       target: options.target,
+      metadata: options.metadata,
       executor: options.executor,
       queryBuilderFactory: options.queryBuilderFactory,
       namespace: options.namespace,
@@ -824,7 +830,12 @@ export class MongoRepository<
 
       const foreignTarget = relation.foreignConstructor();
       const repo = this.repositoryFactory(foreignTarget, target);
-      const filter = buildRelationFilter(relation, entity);
+      const filter = buildRelationFilter(
+        relation,
+        entity,
+        this.metadata,
+        getForeignMetadata(relation, foreignTarget),
+      );
       const isCol = relation.type === "OneToMany";
       const orderOpts = relation.orderBy ? { order: relation.orderBy } : undefined;
       return isCol ? repo.find(filter, orderOpts) : repo.findOne(filter);
@@ -864,7 +875,7 @@ export class MongoRepository<
     relation: MetaRelation,
   ): Promise<Array<IEntity>> {
     const foreignTarget = relation.foreignConstructor();
-    const foreignMeta = getEntityMetadata(foreignTarget);
+    const foreignMeta = getForeignMetadata(relation, foreignTarget);
 
     const inverseRelation = foreignMeta.relations.find(
       (r) =>
@@ -940,16 +951,21 @@ export class MongoRepository<
           if (relation.type === "ManyToMany") {
             const items = await this.loadManyToManyLazy(entity, relation);
             const foreignTarget = relation.foreignConstructor();
-            const foreignMeta = getEntityMetadata(foreignTarget);
+            const foreignMeta = getForeignMetadata(relation, foreignTarget);
             const pkKey = ri.column ?? foreignMeta.primaryKeys[0];
             (entity as any)[ri.key] = items.map((item) => (item as any)[pkKey]);
           } else {
             const foreignTarget = relation.foreignConstructor();
-            const filter = buildRelationFilter(relation, entity);
+            const filter = buildRelationFilter(
+              relation,
+              entity,
+              this.metadata,
+              getForeignMetadata(relation, foreignTarget),
+            );
             const repo = this.repositoryFactory(foreignTarget, this.metadata.target);
             const found = await repo.findOne(filter);
             if (found) {
-              const foreignMeta = getEntityMetadata(foreignTarget);
+              const foreignMeta = getForeignMetadata(relation, foreignTarget);
               const pkKey = ri.column ?? foreignMeta.primaryKeys[0];
               (entity as any)[ri.key] = (found as any)[pkKey];
             }
@@ -965,7 +981,12 @@ export class MongoRepository<
             (entity as any)[rc.key] = items.length;
           } else if (relation.type === "OneToMany") {
             const foreignTarget = relation.foreignConstructor();
-            const filter = buildRelationFilter(relation, entity);
+            const filter = buildRelationFilter(
+              relation,
+              entity,
+              this.metadata,
+              getForeignMetadata(relation, foreignTarget),
+            );
             const repo = this.repositoryFactory(foreignTarget, this.metadata.target);
             (entity as any)[rc.key] = await repo.count(filter);
           }

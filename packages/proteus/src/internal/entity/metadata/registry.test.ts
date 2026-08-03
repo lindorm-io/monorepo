@@ -3,6 +3,7 @@ import {
   findEntityByName,
   findEntityByTarget,
   getCachedMetadata,
+  getRegisteredTargets,
   registerEntity,
   setCachedMetadata,
 } from "./registry.js";
@@ -73,6 +74,18 @@ describe("registry", () => {
       expect(findEntityByName("DuplicateNameTest")).toBe(DuplicateNameClassB);
       expect(findEntityByTarget(DuplicateNameClassA)).toBeUndefined();
       expect(findEntityByTarget(DuplicateNameClassB)).toBe("DuplicateNameTest");
+    });
+
+    test("should keep both classes registered when a name is re-used", () => {
+      class ShadowedClassA {}
+      class ShadowedClassB {}
+      registerEntity("ShadowedNameTest", ShadowedClassA);
+      registerEntity("ShadowedNameTest", ShadowedClassB);
+
+      // Name lookup resolves to the newest class, but a registry SCAN must still
+      // see the shadowed one — two sources can hold same-named entity classes.
+      expect(getRegisteredTargets()).toContain(ShadowedClassA);
+      expect(getRegisteredTargets()).toContain(ShadowedClassB);
     });
 
     test("should allow re-registering same class with same name", () => {

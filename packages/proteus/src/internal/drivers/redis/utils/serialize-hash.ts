@@ -1,6 +1,7 @@
 import { isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { MetaField, MetaRelation } from "../../../entity/types/metadata.js";
+import { resolvePropertyKey } from "../../../entity/utils/resolve-property-key.js";
 import { typedJsonMetaDictKey } from "../../../entity/utils/typed-json.js";
 import { coerceHashValue } from "./coerce-hash-value.js";
 
@@ -49,15 +50,20 @@ export const serializeHash = (
     if (!relation.joinKeys) continue;
     if (relation.type === "ManyToMany") continue;
 
+    // A redis hash field is named by the entity PROPERTY key throughout (a
+    // renamed column is stored under its property key too), so a projected FK
+    // has to follow — `joinKeys` names physical columns, which diverge from the
+    // property key under a renaming strategy.
     for (const localKey of Object.keys(relation.joinKeys)) {
-      if (handledKeys.has(localKey)) continue;
+      const propertyKey = resolvePropertyKey(fields, localKey);
+      if (handledKeys.has(propertyKey)) continue;
 
-      const value = row[localKey];
-      handledKeys.add(localKey);
+      const value = row[propertyKey];
+      handledKeys.add(propertyKey);
 
       if (value == null) continue;
 
-      result[localKey] = String(value);
+      result[propertyKey] = String(value);
     }
   }
 
