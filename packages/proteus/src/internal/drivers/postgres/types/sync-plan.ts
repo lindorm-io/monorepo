@@ -32,6 +32,12 @@ export type SyncOperation = {
   sql: string;
   autocommit: boolean;
   constraintType?: "PRIMARY KEY" | "UNIQUE" | "FOREIGN KEY" | "CHECK";
+  /**
+   * Extension name for `create_extension` ops. Carried explicitly so the
+   * executor can confirm the extension exists after a duplicate-object race
+   * without parsing it back out of `sql`.
+   */
+  extension?: string;
 };
 
 export type SyncPlan = {

@@ -10,9 +10,26 @@ import type {
 } from "../../types/sync-plan.js";
 import { isPgLockTimeoutError } from "../abort.js";
 import { withAdvisoryLock } from "../advisory-lock.js";
+import { withAdvisoryXactLock } from "../advisory-xact-lock.js";
+import { isPgDuplicateObjectError } from "../duplicate-object.js";
 import { quoteQualifiedName } from "../quote-identifier.js";
 
 const SYNC_LOCK_KEY_1 = 0x50524f54; // "PROT"
+
+// Database-wide lock for `CREATE EXTENSION`. An extension is a DATABASE-scoped
+// object, so the per-namespace sync lock cannot serialize it: two deploys
+// against different schemas of the same database derive different lockKey2
+// values, both see "not exists", and both attempt the create — the loser fails
+// on `pg_extension_name_index`.
+//
+// Collision-free by construction: postgres keys an advisory lock on the (key1,
+// key2) PAIR, and every other proteus lock — sync here, migration in
+// MigrationManager — uses 0x50524f54 as key1. A different key1 therefore puts
+// the extension lock in a space no namespace can reach, which key2 alone could
+// never guarantee: `hashNamespaceToInt32` spans the whole int32 range, so some
+// namespace hashes onto any key2 we might pick.
+const EXTENSION_LOCK_KEY_1 = 0x50474558; // "PGEX"
+const EXTENSION_LOCK_KEY_2 = 0x53594e43; // "SYNC" — fixed: extensions are not namespaced
 
 type LockBlocker = {
   pid: number;
@@ -82,7 +99,10 @@ export class SyncPlanExecutor {
         const executedSql: Array<string> = [];
         const failedOperations: Array<{ operation: SyncOperation; error: Error }> = [];
 
-        const txOps = executableOps.filter((op) => !op.autocommit);
+        const extensionOps = executableOps.filter((op) => op.type === "create_extension");
+        const txOps = executableOps.filter(
+          (op) => !op.autocommit && op.type !== "create_extension",
+        );
         const autocommitOps = executableOps.filter((op) => op.autocommit);
 
         // Announce the run at verbose so a real sync is visibly making progress
@@ -94,6 +114,13 @@ export class SyncPlanExecutor {
             ` ${plan.summary.destructive} destructive)` +
             (lockTimeoutMs > 0 ? `, lock_timeout=${lockTimeoutMs}ms` : ""),
         );
+
+        // Phase 0: Extensions — database-scoped objects, so they run under a
+        // database-wide lock in their own transaction (see createExtension).
+        for (const op of extensionOps) {
+          const created = await this.createExtension(client, op, lockTimeoutMs);
+          if (created) executedSql.push(op.sql);
+        }
 
         // Phase 1: Transactional
         if (txOps.length > 0) {
@@ -193,6 +220,117 @@ export class SyncPlanExecutor {
     }
 
     return result;
+  };
+
+  /**
+   * Create one extension under the DATABASE-WIDE advisory lock, in a
+   * transaction of its own. Returns whether this session did the creating.
+   *
+   * Own transaction for two reasons. The lock is transaction-scoped, so COMMIT
+   * both releases it and ends the only window in which sync is serialized
+   * database-wide — the namespace-scoped plan that follows keeps its
+   * per-schema parallelism. And an extension failure can then only abort
+   * itself: inside the main transaction it would take every unrelated DDL
+   * statement down with it, which is exactly how the race lost an index while
+   * the extension it needed existed.
+   *
+   * Lock ordering is fixed — namespace lock (try, never waits) before this one
+   * — so the blocking wait here cannot close a cycle.
+   */
+  private createExtension = async (
+    client: PostgresQueryClient,
+    op: SyncOperation,
+    lockTimeoutMs: number,
+  ): Promise<boolean> => {
+    await client.query("BEGIN");
+
+    // Bounds the wait for the advisory lock AND for a peer's uncommitted
+    // pg_extension row. SET LOCAL resets on COMMIT/ROLLBACK.
+    if (lockTimeoutMs > 0) {
+      await client.query(`SET LOCAL lock_timeout = '${lockTimeoutMs}ms'`);
+    }
+
+    try {
+      await withAdvisoryXactLock(
+        client,
+        EXTENSION_LOCK_KEY_1,
+        EXTENSION_LOCK_KEY_2,
+        async () => {
+          this.logOperation(op.severity, op.description, op.sql);
+          await client.query(op.sql);
+        },
+      );
+
+      await client.query("COMMIT");
+
+      return true;
+    } catch (error) {
+      try {
+        await client.query("ROLLBACK");
+      } catch {
+        // ROLLBACK failure is secondary — preserve the original error
+      }
+
+      if (isPgLockTimeoutError(error)) {
+        throw new PostgresSyncError(
+          `Sync timed out creating extension "${op.extension ?? "?"}"`,
+          {
+            code: "sync_lock_timeout",
+            title: "Sync Lock Timeout",
+            details:
+              `Schema sync waited more than ${lockTimeoutMs}ms for the database-wide extension ` +
+              `lock, or for a concurrent session's extension transaction to finish. Retry, or ` +
+              `raise \`syncLockTimeout\` (0 waits indefinitely).`,
+            data: { extension: op.extension ?? null, lockTimeoutMs },
+            error: error as Error,
+          },
+        );
+      }
+
+      // Belt and braces: the lock only binds sessions that take it. A migration
+      // tool, a DBA or another app can create the extension between our check
+      // and our CREATE — and then the statement's goal is already met.
+      if (
+        isPgDuplicateObjectError(error) &&
+        op.extension &&
+        (await this.extensionExists(client, op.extension))
+      ) {
+        this.logger?.debug("Extension already created by a concurrent session", {
+          extension: op.extension,
+        });
+
+        return false;
+      }
+
+      throw new PostgresSyncError(`Failed to create extension "${op.extension ?? "?"}"`, {
+        code: "sync_failed",
+        title: "Sync Failed",
+        details:
+          "A schema sync could not create a required PostgreSQL extension; the extension transaction was rolled back and no other DDL ran.",
+        data: { extension: op.extension ?? null },
+        error: error as Error,
+      });
+    }
+  };
+
+  /**
+   * Whether the extension is installed in this database. Fails closed: a
+   * lookup that itself errors reports "not present", so the caller rethrows the
+   * original failure rather than swallowing it on a guess.
+   */
+  private extensionExists = async (
+    client: PostgresQueryClient,
+    extension: string,
+  ): Promise<boolean> => {
+    try {
+      const { rows } = await client.query(
+        `SELECT 1 FROM pg_extension WHERE extname = $1`,
+        [extension],
+      );
+      return rows.length > 0;
+    } catch {
+      return false;
+    }
   };
 
   /**

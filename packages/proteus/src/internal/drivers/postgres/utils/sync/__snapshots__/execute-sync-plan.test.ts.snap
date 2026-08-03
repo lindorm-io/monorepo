@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SyncPlanExecutor — extension operations > should create extensions in their own transaction under a db-wide xact lock 1`] = `
+[
+  "BEGIN",
+  "SELECT pg_advisory_xact_lock($1, $2)",
+  "CREATE EXTENSION IF NOT EXISTS "pg_trgm";",
+  "COMMIT",
+]
+`;

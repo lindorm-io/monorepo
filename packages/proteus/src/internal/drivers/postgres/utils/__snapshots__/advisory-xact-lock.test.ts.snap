@@ -1,0 +1,18 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`withAdvisoryXactLock > should acquire the lock before running the callback 1`] = `
+[
+  "SELECT pg_advisory_xact_lock($1, $2)",
+  "GUARDED_SQL;",
+]
+`;
+
+exports[`withAdvisoryXactLock > should acquire the transaction-scoped lock with the given keys 1`] = `
+{
+  "params": [
+    1346848088,
+    1398361667,
+  ],
+  "sql": "SELECT pg_advisory_xact_lock($1, $2)",
+}
+`;

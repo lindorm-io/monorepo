@@ -122,6 +122,7 @@ export const diffSchema = (snapshot: DbSnapshot, desired: DesiredSchema): SyncPl
       description: `Create extension ${quoteIdentifier(ext)}`,
       sql: `CREATE EXTENSION IF NOT EXISTS ${quoteIdentifier(ext)};`,
       autocommit: false,
+      extension: ext,
     });
   }
 

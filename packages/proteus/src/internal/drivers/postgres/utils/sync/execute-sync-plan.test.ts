@@ -69,6 +69,18 @@ const makeAutocommitOp = (overrides: Partial<SyncOperation> = {}): SyncOperation
   ...overrides,
 });
 
+const makeExtensionOp = (overrides: Partial<SyncOperation> = {}): SyncOperation => ({
+  type: "create_extension",
+  severity: "safe",
+  schema: null,
+  table: null,
+  description: 'Create extension "pg_trgm"',
+  sql: 'CREATE EXTENSION IF NOT EXISTS "pg_trgm";',
+  autocommit: false,
+  extension: "pg_trgm",
+  ...overrides,
+});
+
 const makeWarnOp = (overrides: Partial<SyncOperation> = {}): SyncOperation => ({
   type: "warn_only",
   severity: "warning",
@@ -299,6 +311,161 @@ describe("SyncPlanExecutor — mixed operations", () => {
     const autoOp = makeAutocommitOp({ sql: "AUTO_SQL;" });
     const result = await executeSyncPlan(client, makePlan([txOp, autoOp]));
     expect(result.statementsExecuted).toBe(2);
+  });
+});
+
+// --- extension operations ---
+
+/**
+ * Extensions are DATABASE-scoped, so they must not ride in the namespace-scoped
+ * plan transaction: a concurrent creator would abort it and take every
+ * unrelated DDL statement with it.
+ */
+describe("SyncPlanExecutor — extension operations", () => {
+  it("should create extensions in their own transaction under a db-wide xact lock", async () => {
+    const { client, queries } = makeClient();
+    await executeSyncPlan(client, makePlan([makeExtensionOp()]));
+    expect(queries).toMatchSnapshot();
+  });
+
+  it("should hold a lock key pair distinct from the namespace sync lock", async () => {
+    const queries: Array<{ sql: string; params?: Array<unknown> }> = [];
+    const client: PostgresQueryClient = {
+      query: vi.fn(async (sql: string, params?: Array<unknown>) => {
+        queries.push({ sql, params });
+        return { rows: [], rowCount: 0 };
+      }),
+    };
+    await executeSyncPlan(client, makePlan([makeExtensionOp()]));
+    const lock = queries.find((q) => q.sql.includes("pg_advisory_xact_lock"));
+    expect(lock!.params).toEqual([0x50474558, 0x53594e43]);
+    // key1 differs from the namespace lock's "PROT", so the pairs are disjoint
+    expect(lock!.params![0]).not.toBe(0x50524f54);
+  });
+
+  it("should apply lock_timeout inside the extension transaction", async () => {
+    const { client, queries } = makeClient();
+    await executeSyncPlan(client, makePlan([makeExtensionOp()]), { lockTimeout: 2500 });
+    expect(queries.filter((sql) => sql.includes("lock_timeout"))).toEqual([
+      "SET LOCAL lock_timeout = '2500ms'",
+    ]);
+  });
+
+  it("should not run extension SQL inside the plan transaction", async () => {
+    const { client, queries } = makeClient();
+    const extOp = makeExtensionOp();
+    const txOp = makeTxOp({ sql: "TX_SQL;" });
+    await executeSyncPlan(client, makePlan([extOp, txOp]));
+    // The plan transaction is the LAST BEGIN — the extension committed before it
+    const planBegin = queries.lastIndexOf("BEGIN");
+    expect(queries.indexOf(extOp.sql)).toBeLessThan(planBegin);
+    expect(queries.indexOf("TX_SQL;")).toBeGreaterThan(planBegin);
+  });
+
+  it("should count the extension statement as executed", async () => {
+    const { client } = makeClient();
+    const result = await executeSyncPlan(client, makePlan([makeExtensionOp()]));
+    expect(result.executedSql).toEqual(['CREATE EXTENSION IF NOT EXISTS "pg_trgm";']);
+    expect(result.statementsExecuted).toBe(1);
+  });
+
+  it("should throw a lock-timeout error when the extension lock times out", async () => {
+    const client: PostgresQueryClient = {
+      query: vi.fn(async (sql: string) => {
+        if (sql.includes("pg_advisory_xact_lock")) {
+          const error = new Error("canceling statement due to lock timeout");
+          (error as Error & { code: string }).code = "55P03";
+          throw error;
+        }
+        return { rows: [], rowCount: 0 };
+      }),
+    };
+    await expect(
+      executeSyncPlan(client, makePlan([makeExtensionOp()]), { lockTimeout: 500 }),
+    ).rejects.toThrow('Sync timed out creating extension "pg_trgm"');
+  });
+
+  it("should throw a sync error when the extension cannot be created", async () => {
+    const client: PostgresQueryClient = {
+      query: vi.fn(async (sql: string) => {
+        if (sql.startsWith("CREATE EXTENSION")) {
+          const error = new Error("permission denied to create extension");
+          (error as Error & { code: string }).code = "42501";
+          throw error;
+        }
+        return { rows: [], rowCount: 0 };
+      }),
+    };
+    await expect(executeSyncPlan(client, makePlan([makeExtensionOp()]))).rejects.toThrow(
+      'Failed to create extension "pg_trgm"',
+    );
+  });
+});
+
+// --- extension created by a concurrent peer ---
+
+describe("SyncPlanExecutor — extension duplicate race", () => {
+  const makeRacingClient = (
+    exists: boolean,
+  ): { client: PostgresQueryClient; queries: Array<string> } => {
+    const queries: Array<string> = [];
+    const client = {
+      query: vi.fn(async (sql: string) => {
+        queries.push(sql);
+        if (sql.startsWith("CREATE EXTENSION")) {
+          const error = new Error(
+            'duplicate key value violates unique constraint "pg_extension_name_index"',
+          );
+          (error as Error & { code: string }).code = "23505";
+          throw error;
+        }
+        if (sql.includes("pg_extension")) {
+          return exists
+            ? { rows: [{ "?column?": 1 }], rowCount: 1 }
+            : { rows: [], rowCount: 0 };
+        }
+        return { rows: [], rowCount: 0 };
+      }),
+    } as unknown as PostgresQueryClient;
+    return { client, queries };
+  };
+
+  it("should treat a duplicate as benign when the extension is present afterwards", async () => {
+    const { client } = makeRacingClient(true);
+    const result = await executeSyncPlan(client, makePlan([makeExtensionOp()]));
+    expect(result.executed).toBe(true);
+    // Not counted as executed — the peer created it, this session did not
+    expect(result.executedSql).toEqual([]);
+  });
+
+  it("should continue with the rest of the plan after a benign duplicate", async () => {
+    const { client, queries } = makeRacingClient(true);
+    const result = await executeSyncPlan(
+      client,
+      makePlan([makeExtensionOp(), makeTxOp({ sql: "TX_SQL;" })]),
+    );
+    expect(queries).toContain("TX_SQL;");
+    expect(result.executedSql).toEqual(["TX_SQL;"]);
+  });
+
+  it("should roll back the extension transaction before continuing", async () => {
+    const { client, queries } = makeRacingClient(true);
+    await executeSyncPlan(client, makePlan([makeExtensionOp()]));
+    expect(queries).toContain("ROLLBACK");
+  });
+
+  it("should rethrow the duplicate when the extension is absent afterwards", async () => {
+    const { client } = makeRacingClient(false);
+    await expect(executeSyncPlan(client, makePlan([makeExtensionOp()]))).rejects.toThrow(
+      'Failed to create extension "pg_trgm"',
+    );
+  });
+
+  it("should rethrow the duplicate when the op carries no extension name", async () => {
+    const { client } = makeRacingClient(true);
+    await expect(
+      executeSyncPlan(client, makePlan([makeExtensionOp({ extension: undefined })])),
+    ).rejects.toThrow("Failed to create extension");
   });
 });
 

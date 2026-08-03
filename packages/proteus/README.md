@@ -159,8 +159,14 @@ Full ACID transactions with savepoints. Connection pooling via `pg.Pool`. DDL sy
 `synchronize` runs its DDL in a transaction that takes an `ACCESS EXCLUSIVE` lock on each altered
 table. If another session holds a conflicting lock (commonly an idle-in-transaction connection), that
 wait is bounded by `syncLockTimeout` (default `10000` ms): the sync aborts with an actionable error
-naming the blocking session instead of hanging indefinitely. Set `0` to wait forever. Per-operation
-progress is logged at `info`, so a slow sync is distinguishable from a hang.
+naming the blocking session instead of hanging indefinitely. Set `0` to wait forever. Sync progress is
+logged at `verbose` and individual statements at `debug`, so a slow sync is distinguishable from a hang.
+
+Concurrent deploys against one database are safe. The sync lock is per-namespace, so services owning
+different schemas sync in parallel. Extensions (`pg_trgm`, `vector`) are the exception — they are
+database-scoped, so they are created first, in their own transaction, under a separate database-wide
+lock, and an extension a peer created in the meantime is accepted rather than failing the sync. Without
+that split a `CREATE EXTENSION` race would abort the losing deploy's whole plan.
 
 ### MySQL
 
