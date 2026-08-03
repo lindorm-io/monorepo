@@ -2378,6 +2378,15 @@ new ProteusSource({
 
 Applies to column names, join keys, and find keys.
 
+Queries are always written in **property keys**, never column names — including the FK column a
+`@ManyToOne` auto-generates without an explicit `@Field`. Under `naming: "snake"` a relation
+`author` yields the column `author_id`, and criteria, `order` and `select` all take `authorId`,
+the same key the hydrated entity carries. The physical column name is accepted as well.
+
+```typescript
+await repository.find({ authorId: author.id }, { order: { authorId: "DESC" } });
+```
+
 ## Per-Request Isolation
 
 `source.session()` creates a lightweight, request-scoped data-access handle that shares the parent's connection pool and entity metadata but carries its own logger, hook metadata, filter registry, and optional `AbortSignal`.

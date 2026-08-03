@@ -5,6 +5,7 @@ import type {
   MetaFieldType,
   MetaRelation,
 } from "../../../entity/types/metadata.js";
+import { deserialiseForeignKey } from "../../../entity/utils/deserialise-foreign-key.js";
 import { typedJsonMetaDictKey } from "../../../entity/utils/typed-json.js";
 import { RedisDriverError } from "../errors/RedisDriverError.js";
 
@@ -58,13 +59,19 @@ export const deserializeHash = (
     if (!relation.joinKeys) continue;
     if (relation.type === "ManyToMany") continue;
 
-    for (const localKey of Object.keys(relation.joinKeys)) {
+    for (const [localKey, foreignPk] of Object.entries(relation.joinKeys)) {
       if (handledKeys.has(localKey)) continue;
 
       const raw = hash[localKey];
       handledKeys.add(localKey);
 
-      result[localKey] = raw === undefined ? null : raw;
+      // A projected FK has no MetaField, so `coerceFromString` has no type to
+      // dispatch on — it borrows the referenced PK's type instead, exactly as the
+      // hydrate path does. Redis matches criteria in memory against this row, so
+      // handing back the raw hash string would leave a bigint/date FK criterion
+      // silently matching nothing (and ordering it lexicographically).
+      result[localKey] =
+        raw === undefined ? null : deserialiseForeignKey(raw, relation, foreignPk);
     }
   }
 

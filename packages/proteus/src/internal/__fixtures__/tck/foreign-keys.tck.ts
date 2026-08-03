@@ -105,6 +105,31 @@ export const foreignKeysSuite = (
       expect(reloaded?.parentId).toBe(parent.id);
     });
 
+    // The naming divergence that breaks an auto-projected FK criterion has nothing
+    // to do with the column's type — a uuid FK fails exactly like a bigint one. The
+    // criterion key must be the property key hydration hands back, not the physical
+    // column (`parent_id` under snake).
+    test("find and delete resolve an auto-projected uuid FK by its property key", async () => {
+      const parentRepo = getHandle().repository(TckFkParent);
+      const childRepo = getHandle().repository(TckFkCascadeChild);
+
+      const parent = await parentRepo.insert({ name: "CriterionParent" });
+      const other = await parentRepo.insert({ name: "OtherParent" });
+
+      await childRepo.insert({ value: "mine-1", parentId: parent.id });
+      await childRepo.insert({ value: "mine-2", parentId: parent.id });
+      await childRepo.insert({ value: "theirs", parentId: other.id });
+
+      const mine = await childRepo.find({ parentId: parent.id });
+      expect(mine.map((c) => c.value).sort()).toEqual(["mine-1", "mine-2"]);
+      expect(await childRepo.count({ parentId: parent.id })).toBe(2);
+
+      await childRepo.delete({ parentId: parent.id });
+
+      const remaining = await childRepo.find();
+      expect(remaining.map((c) => c.value)).toEqual(["theirs"]);
+    });
+
     test("delete(criteria) parent with ON DELETE CASCADE removes children", async () => {
       const parentRepo = getHandle().repository(TckFkParent);
       const childRepo = getHandle().repository(TckFkCascadeChild);

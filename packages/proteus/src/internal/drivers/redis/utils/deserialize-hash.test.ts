@@ -1,7 +1,14 @@
-import type { MetaField, MetaRelation } from "../../../entity/types/metadata.js";
+import { registerMetadataResolver } from "../../../entity/metadata/foreign-metadata.js";
+import type {
+  EntityMetadata,
+  MetaField,
+  MetaRelation,
+} from "../../../entity/types/metadata.js";
 import { RedisDriverError } from "../errors/RedisDriverError.js";
 import { deserializeHash } from "./deserialize-hash.js";
 import { describe, expect, test } from "vitest";
+
+class ForeignTarget {}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -217,6 +224,34 @@ describe("deserializeHash", () => {
       expect(
         deserializeHash({ name: "test", postId: "p1" }, fields, relations),
       ).toMatchSnapshot();
+    });
+
+    // A hash value is always a string, and a projected FK has no MetaField to
+    // dispatch coercion on. It must borrow the referenced PK's type, or the row
+    // the in-memory Matcher filters on holds "42" where the criterion holds 42n.
+    test("should coerce a projected FK to the referenced primary key's type", () => {
+      const relation = {
+        type: "ManyToOne",
+        key: "author",
+        foreignConstructor: () => ForeignTarget,
+        joinKeys: { authorId: "id" },
+      } as unknown as MetaRelation;
+
+      registerMetadataResolver(
+        { relations: [relation] } as unknown as EntityMetadata,
+        () =>
+          ({
+            fields: [makeField({ key: "id", type: "bigint" })],
+          }) as unknown as EntityMetadata,
+      );
+
+      const result = deserializeHash(
+        { name: "test", authorId: "42" },
+        [makeField({ key: "name", type: "string" })],
+        [relation],
+      );
+
+      expect(result!.authorId).toBe(BigInt(42));
     });
 
     test("should skip FK column already handled by fields", () => {

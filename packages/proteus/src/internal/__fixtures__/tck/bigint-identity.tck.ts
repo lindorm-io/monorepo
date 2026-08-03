@@ -96,6 +96,54 @@ export const bigintIdentitySuite = (
         expect(await repo.findOne({ id: ABSENT_ID })).toBeNull();
       });
 
+      // The FK column projected from the relation alone has no MetaField, so the
+      // query layer cannot resolve it the way it resolves a declared field. It
+      // must instead resolve it the way HYDRATION exposes it — under the camelCase
+      // property key — otherwise the criterion a consumer writes is not the key
+      // the entity they just read hands back. Under a renaming strategy
+      // (postgres: snake) the property key and the physical column diverge, which
+      // is where a column-name-only match breaks.
+      test("find, count and order resolve an auto-projected FK by its property key", async () => {
+        const parentRepo = getHandle().repository(TckBigIntPkParent);
+        const childRepo = getHandle().repository(TckBigIntPkChild);
+
+        const parent = await parentRepo.insert({ name: "parent" });
+        const other = await parentRepo.insert({ name: "other" });
+
+        await childRepo.insert({ label: "mine-1", parentId: parent.id });
+        await childRepo.insert({ label: "mine-2", parentId: parent.id });
+        await childRepo.insert({ label: "theirs", parentId: other.id });
+
+        const children = await childRepo.find({ parentId: parent.id });
+
+        expect(children.map((c) => c.label).sort()).toEqual(["mine-1", "mine-2"]);
+        expect(children.every((c) => c.parentId === parent.id)).toBe(true);
+        expect(await childRepo.count({ parentId: parent.id })).toBe(2);
+
+        // `other` was inserted second, so it holds the higher identity.
+        const ordered = await childRepo.find(undefined, {
+          order: { parentId: "DESC", label: "ASC" },
+        });
+        expect(ordered.map((c) => c.label)).toEqual(["theirs", "mine-1", "mine-2"]);
+      });
+
+      test("select projects an auto-projected FK under its property key", async () => {
+        const parentRepo = getHandle().repository(TckBigIntPkParent);
+        const childRepo = getHandle().repository(TckBigIntPkChild);
+
+        const parent = await parentRepo.insert({ name: "parent" });
+        await childRepo.insert({ label: "only", parentId: parent.id });
+
+        const [projected] = await childRepo.find(
+          { parentId: parent.id },
+          { select: ["label", "parentId"] },
+        );
+
+        expect(projected.label).toBe("only");
+        expect(isBigInt(projected.parentId)).toBe(true);
+        expect(projected.parentId).toBe(parent.id);
+      });
+
       test("find and count filter on a bigint identity criterion", async () => {
         const repo = getHandle().repository(TckBigIntPkParent);
 
