@@ -59,3 +59,22 @@ exports[`RedisQueryBuilder > toQuery / clone > toQuery returns state and driver 
   },
 }
 `;
+
+exports[`RedisQueryBuilder > unsupported methods > include() error names the drivers that do support it 1`] = `
+{
+  "code": "unsupported_operation",
+  "data": {
+    "operation": "include",
+    "relation": "anything",
+    "supportedDrivers": [
+      "postgres",
+      "mysql",
+      "sqlite",
+    ],
+  },
+  "details": "Query-builder relation loading is implemented by the postgres, mysql and sqlite drivers only — this is a driver gap, not a usage error. On the Redis driver, load relations through the repository instead: repository.find(criteria, { relations: [...] }).",
+  "message": "include is not supported by the Redis driver",
+  "title": "Unsupported Operation",
+  "type": "urn:lindorm:proteus:error:unsupported_operation",
+}
+`;

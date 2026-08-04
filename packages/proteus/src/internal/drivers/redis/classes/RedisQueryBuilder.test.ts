@@ -321,6 +321,31 @@ describe("RedisQueryBuilder", () => {
         expect(() => (qb as any)[method]()).toThrow(NotSupportedError);
       });
     }
+
+    // The builder never reads state.includes, so include() used to be a silent
+    // no-op that handed back unhydrated relations.
+    test("include() throws NotSupportedError at the call site", () => {
+      const qb = new RedisQueryBuilder(productMetadata, redis, null);
+      expect(() => qb.include("anything")).toThrow(NotSupportedError);
+    });
+
+    test("include() error names the drivers that do support it", () => {
+      const qb = new RedisQueryBuilder(productMetadata, redis, null);
+
+      try {
+        qb.include("anything");
+        throw new Error("include() did not throw");
+      } catch (error: any) {
+        expect({
+          message: error.message,
+          type: error.type,
+          code: error.code,
+          title: error.title,
+          details: error.details,
+          data: error.data,
+        }).toMatchSnapshot();
+      }
+    });
   });
 
   // ─── Lock mode ───────────────────────────────────────────────────

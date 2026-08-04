@@ -30,7 +30,8 @@ export type TckCapabilities = {
    * A query builder honours `.include(relation)`: the JOIN strategy hydrates the
    * related entity off the joined row, the "query" strategy loads it with a
    * second round-trip. Only the SQL builders implement it — the memory, mongo
-   * and redis builders ignore `state.includes` entirely.
+   * and redis builders reject `.include()` with a NotSupportedError at the call
+   * site (they never read `state.includes`).
    */
   queryBuilderIncludes: boolean;
   /** DB-level UNIQUE constraint enforcement via @Unique() */

@@ -1706,6 +1706,15 @@ qb.select("id", "name", "email").distinct().getMany();
 qb.include("posts", { required: true }).include("profile").getMany();
 ```
 
+**Driver support:** `include()` is implemented by **postgres, mysql and sqlite** only. The **memory,
+mongo and redis** builders throw `NotSupportedError` from `include()` itself — they cannot load
+relations through the query builder. Use the repository path there instead, which all six drivers
+support:
+
+```typescript
+await repository.find({ status: "active" }, { relations: ["posts", "profile"] });
+```
+
 ### Group By / Having
 
 ```typescript

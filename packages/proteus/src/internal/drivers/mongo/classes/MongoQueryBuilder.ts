@@ -172,6 +172,28 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
+  // ─── Relations ──────────────────────────────────────────────────────
+
+  /**
+   * Rejected outright: this builder never reads `state.includes`, so accepting
+   * the call would hand back unhydrated relations with no signal. Throwing at
+   * the call site puts the stack on the offending `.include()`, not on the
+   * terminal that would silently return incomplete entities.
+   */
+  override include(relation: string): this {
+    throw new NotSupportedError("include is not supported by the MongoDB driver", {
+      code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details:
+        "Query-builder relation loading is implemented by the postgres, mysql and sqlite drivers only — this is a driver gap, not a usage error. On the MongoDB driver, load relations through the repository instead: repository.find(criteria, { relations: [...] }).",
+      data: {
+        operation: "include",
+        relation,
+        supportedDrivers: ["postgres", "mysql", "sqlite"],
+      },
+    });
+  }
+
   // ─── Terminal methods ─────────────────────────────────────────────
 
   clone(): IProteusQueryBuilder<E> {

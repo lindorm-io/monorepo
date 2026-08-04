@@ -21,6 +21,7 @@ export const queryBuilderSuite = (
   const {
     TckBigIntPkParent,
     TckEncrypted,
+    TckSimplePost,
     TckSimpleUser,
     TckSoftDeletable,
     TckScoped,
@@ -338,6 +339,70 @@ export const queryBuilderSuite = (
       const counts = rows.map((r) => Number(r.n));
       expect(counts).toEqual([2, 1, 1]);
     });
+  });
+
+  // ─── include ───────────────────────────────────────────────────────
+
+  // Only the SQL builders read `state.includes`. The memory, mongo and redis
+  // builders drop it, so they reject `.include()` outright rather than hand
+  // back entities whose relations are silently missing.
+  describe("include", () => {
+    const seedAuthorWithPost = async () => {
+      const handle = getHandle();
+      const author = await handle
+        .repository(TckSimpleUser)
+        .insert({ name: "Eve", age: 50, email: "eve@test.com" });
+      await handle
+        .repository(TckSimplePost)
+        .insert({ title: "Included Post", body: null, authorId: author.id });
+      return author;
+    };
+
+    if (caps.queryBuilderIncludes) {
+      test("hydrates the related entities", async () => {
+        const author = await seedAuthorWithPost();
+
+        const found = await getSource()
+          .queryBuilder(TckSimpleUser)
+          .include("posts")
+          .where({ id: author.id })
+          .getOne();
+
+        expect(found).not.toBeNull();
+        expect(found!.posts).toHaveLength(1);
+        expect(found!.posts[0].title).toBe("Included Post");
+      });
+
+      test("rejects an undeclared relation name", async () => {
+        const qb = getSource().queryBuilder(TckSimpleUser);
+        expect(() => qb.include("not_a_relation")).toThrow(/Unknown relation/);
+      });
+    } else {
+      test("rejects a declared relation with NotSupportedError", async () => {
+        const qb = getSource().queryBuilder(TckSimpleUser);
+        expect(() => qb.include("posts")).toThrow(NotSupportedError);
+      });
+
+      // The driver gap outranks relation validation — the caller must be told
+      // the builder cannot do this at all, not that they misspelled a relation.
+      test("rejects an undeclared relation with NotSupportedError too", async () => {
+        const qb = getSource().queryBuilder(TckSimpleUser);
+        expect(() => qb.include("not_a_relation")).toThrow(NotSupportedError);
+      });
+
+      test("the error names the drivers that do support include", async () => {
+        const qb = getSource().queryBuilder(TckSimpleUser);
+
+        try {
+          qb.include("posts");
+          throw new Error("include() did not throw");
+        } catch (error: any) {
+          expect(error.code).toBe("unsupported_operation");
+          expect(error.details).toContain("postgres, mysql and sqlite");
+          expect(error.data.supportedDrivers).toEqual(["postgres", "mysql", "sqlite"]);
+        }
+      });
+    }
   });
 
   // ─── Inheritance: QB write operations ─────────────────────────────
