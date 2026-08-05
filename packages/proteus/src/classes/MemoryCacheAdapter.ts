@@ -1,3 +1,4 @@
+import { isExpired } from "@lindorm/date";
 import { ProteusError } from "../errors/ProteusError.js";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
 
@@ -34,7 +35,7 @@ export class MemoryCacheAdapter implements ICacheAdapter {
     const entry = this.map.get(key);
     if (!entry) return null;
 
-    if (Date.now() >= entry.expiresAt) {
+    if (isExpired(entry.expiresAt)) {
       this.map.delete(key);
       return null;
     }

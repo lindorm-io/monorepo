@@ -1,6 +1,7 @@
 import type { Condition } from "@lindorm/match";
 import { Matcher } from "@lindorm/match";
 import type { IAmphora } from "@lindorm/amphora";
+import { isExpired } from "@lindorm/date";
 import type { DeepPartial, Dict } from "@lindorm/types";
 import type { ILogger } from "@lindorm/logger";
 import type { Redis } from "ioredis";
@@ -335,7 +336,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       // Inclusive, matching the SQL `WHERE <expiry> <= NOW()` in
       // `compileDeleteExpired` — a row expiring exactly on `now` must not
       // survive here while the SQL drivers delete it.
-      if (expiryDate.getTime() <= now) {
+      if (isExpired(expiryDate, now)) {
         toDelete.push(keys[i]);
       }
     }

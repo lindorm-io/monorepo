@@ -1,5 +1,5 @@
 import { MemoryCacheAdapter } from "./MemoryCacheAdapter.js";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("MemoryCacheAdapter", () => {
   let adapter: MemoryCacheAdapter;
@@ -7,6 +7,10 @@ describe("MemoryCacheAdapter", () => {
   beforeEach(() => {
     adapter = new MemoryCacheAdapter({ maxEntries: 3 });
     vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe("get", () => {
@@ -21,16 +25,20 @@ describe("MemoryCacheAdapter", () => {
 
     test("should return null and evict entry after TTL expires", async () => {
       const now = 1000000;
-      vi.spyOn(Date, "now").mockReturnValue(now);
+      // Fake timers, not a `Date.now` spy: the adapter's expiry check reads the
+      // clock through `new Date()`, which a `vi.spyOn(Date, "now")` does not
+      // intercept.
+      vi.useFakeTimers();
+      vi.setSystemTime(now);
 
       await adapter.set("key1", "value1", 5000);
 
       // Still valid at now + 4999
-      vi.spyOn(Date, "now").mockReturnValue(now + 4999);
+      vi.setSystemTime(now + 4999);
       expect(await adapter.get("key1")).toBe("value1");
 
       // Expired at now + 5000
-      vi.spyOn(Date, "now").mockReturnValue(now + 5000);
+      vi.setSystemTime(now + 5000);
       expect(await adapter.get("key1")).toBeNull();
 
       // Confirm entry is gone (second get also returns null)

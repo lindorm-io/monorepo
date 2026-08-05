@@ -215,9 +215,12 @@ describe("caching integration", () => {
       // Populate cache
       await repo.find({ name: "ttl-test" });
 
-      // Advance Date.now past the 1 minute TTL
+      // Advance the clock past the 1 minute TTL. Fake timers rather than a
+      // `Date.now` spy: the adapter's expiry check reads `new Date()`, which a
+      // spy on `Date.now` does not intercept, so the entry would still look live.
       const realNow = Date.now();
-      const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(realNow + 61_000);
+      vi.useFakeTimers();
+      vi.setSystemTime(realNow + 61_000);
 
       const setSpy = vi.spyOn(adapter, "set");
 
@@ -228,7 +231,7 @@ describe("caching integration", () => {
       // set should have been called (cache was re-populated)
       expect(setSpy).toHaveBeenCalled();
 
-      dateNowSpy.mockRestore();
+      vi.useRealTimers();
     });
   });
 
