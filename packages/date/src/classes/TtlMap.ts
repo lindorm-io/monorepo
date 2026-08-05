@@ -1,5 +1,6 @@
 import type { Expiry, ReadableTime } from "../types/index.js";
 import { expiresAt } from "../utils/expires-at.js";
+import { isExpired } from "../utils/is-expired.js";
 
 type TtlEntry<V> = { value: V; expiresAt: number };
 
@@ -32,7 +33,7 @@ export class TtlMap<K, V> {
     const entry = this.store.get(key);
     if (!entry) return undefined;
 
-    if (Date.now() >= entry.expiresAt) {
+    if (isExpired(entry.expiresAt)) {
       this.store.delete(key);
       return undefined;
     }
@@ -44,7 +45,7 @@ export class TtlMap<K, V> {
     const entry = this.store.get(key);
     if (!entry) return false;
 
-    if (Date.now() >= entry.expiresAt) {
+    if (isExpired(entry.expiresAt)) {
       this.store.delete(key);
       return false;
     }
@@ -63,7 +64,7 @@ export class TtlMap<K, V> {
   cleanup = (): void => {
     const now = Date.now();
     for (const [key, entry] of this.store) {
-      if (now >= entry.expiresAt) {
+      if (isExpired(entry.expiresAt, now)) {
         this.store.delete(key);
       }
     }
@@ -75,7 +76,7 @@ export class TtlMap<K, V> {
   ): void => {
     const now = Date.now();
     for (const [key, entry] of this.store) {
-      if (now >= entry.expiresAt) {
+      if (isExpired(entry.expiresAt, now)) {
         this.store.delete(key);
         continue;
       }
@@ -86,7 +87,7 @@ export class TtlMap<K, V> {
   *keys(): IterableIterator<K> {
     const now = Date.now();
     for (const [key, entry] of this.store) {
-      if (now >= entry.expiresAt) {
+      if (isExpired(entry.expiresAt, now)) {
         this.store.delete(key);
         continue;
       }
@@ -97,7 +98,7 @@ export class TtlMap<K, V> {
   *values(): IterableIterator<V> {
     const now = Date.now();
     for (const [key, entry] of this.store) {
-      if (now >= entry.expiresAt) {
+      if (isExpired(entry.expiresAt, now)) {
         this.store.delete(key);
         continue;
       }
@@ -108,7 +109,7 @@ export class TtlMap<K, V> {
   *entries(): IterableIterator<[K, V]> {
     const now = Date.now();
     for (const [key, entry] of this.store) {
-      if (now >= entry.expiresAt) {
+      if (isExpired(entry.expiresAt, now)) {
         this.store.delete(key);
         continue;
       }

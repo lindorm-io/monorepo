@@ -1,5 +1,6 @@
 import type { Expiry, ReadableTime } from "../types/index.js";
 import { expiresAt } from "../utils/expires-at.js";
+import { isExpired } from "../utils/is-expired.js";
 
 export class TtlSet<T> {
   private readonly defaultTtl: ReadableTime;
@@ -27,7 +28,7 @@ export class TtlSet<T> {
     const exp = this.store.get(value);
     if (exp === undefined) return false;
 
-    if (Date.now() >= exp) {
+    if (isExpired(exp)) {
       this.store.delete(value);
       return false;
     }
@@ -46,7 +47,7 @@ export class TtlSet<T> {
   cleanup = (): void => {
     const now = Date.now();
     for (const [value, exp] of this.store) {
-      if (now >= exp) {
+      if (isExpired(exp, now)) {
         this.store.delete(value);
       }
     }
@@ -58,7 +59,7 @@ export class TtlSet<T> {
   ): void => {
     const now = Date.now();
     for (const [value, exp] of this.store) {
-      if (now >= exp) {
+      if (isExpired(exp, now)) {
         this.store.delete(value);
         continue;
       }
@@ -69,7 +70,7 @@ export class TtlSet<T> {
   *keys(): IterableIterator<T> {
     const now = Date.now();
     for (const [value, exp] of this.store) {
-      if (now >= exp) {
+      if (isExpired(exp, now)) {
         this.store.delete(value);
         continue;
       }
@@ -84,7 +85,7 @@ export class TtlSet<T> {
   *entries(): IterableIterator<[T, T]> {
     const now = Date.now();
     for (const [value, exp] of this.store) {
-      if (now >= exp) {
+      if (isExpired(exp, now)) {
         this.store.delete(value);
         continue;
       }
