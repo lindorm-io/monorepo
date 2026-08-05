@@ -33,7 +33,7 @@ class TypedJsonNullable {
   @Nullable()
   @TypedJson()
   @Field("array")
-  items!: unknown[] | null;
+  items!: Array<unknown> | null;
 }
 
 @Entity({ name: "TypedJsonNotDecorated" })

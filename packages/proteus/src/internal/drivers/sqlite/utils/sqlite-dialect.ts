@@ -1,4 +1,4 @@
-import { isObject } from "@lindorm/is";
+import { isArray, isObject, isObjectLike } from "@lindorm/is";
 import type { SqlDialect } from "../../../utils/sql/sql-dialect.js";
 import { NotSupportedError, ProteusError } from "../../../../errors/index.js";
 import type { LockMode } from "../../../../types/find-options.js";
@@ -60,7 +60,7 @@ export const sqliteDialect: SqlDialect = {
       const clauses: Array<string> = [];
       for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
         const escapedKey = k.replace(/"/g, '""');
-        if (typeof v === "object" && v !== null) {
+        if (isObjectLike(v) || isArray(v)) {
           params.push(JSON.stringify(v));
           clauses.push(`json_extract(${col}, '$."${escapedKey}"') = json(?)`);
         } else {

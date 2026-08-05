@@ -44,7 +44,7 @@ describe("createMemoryJoinTableOps", () => {
 
       await ops.sync(
         owner as any,
-        [related1, related2] as any[],
+        [related1, related2] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,
@@ -63,7 +63,7 @@ describe("createMemoryJoinTableOps", () => {
 
       await ops.sync(
         { id: "p1" } as any,
-        [{ id: "t1" }] as any[],
+        [{ id: "t1" }] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,
@@ -78,7 +78,7 @@ describe("createMemoryJoinTableOps", () => {
 
       await ops.sync(
         { id: "p1" } as any,
-        [{ id: "t1" }] as any[],
+        [{ id: "t1" }] as Array<any>,
         makeRelation(),
         makeMirror(),
         "myns",
@@ -100,7 +100,7 @@ describe("createMemoryJoinTableOps", () => {
       // Initial: two tags
       await ops.sync(
         owner as any,
-        [tag1, tag2] as any[],
+        [tag1, tag2] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,
@@ -109,7 +109,7 @@ describe("createMemoryJoinTableOps", () => {
       // Update: only tag1 and tag3
       await ops.sync(
         owner as any,
-        [tag1, tag3] as any[],
+        [tag1, tag3] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,
@@ -130,8 +130,20 @@ describe("createMemoryJoinTableOps", () => {
       const owner = { id: "post-1" };
       const tag1 = { id: "tag-1" };
 
-      await ops.sync(owner as any, [tag1] as any[], makeRelation(), makeMirror(), null);
-      await ops.sync(owner as any, [tag1] as any[], makeRelation(), makeMirror(), null);
+      await ops.sync(
+        owner as any,
+        [tag1] as Array<any>,
+        makeRelation(),
+        makeMirror(),
+        null,
+      );
+      await ops.sync(
+        owner as any,
+        [tag1] as Array<any>,
+        makeRelation(),
+        makeMirror(),
+        null,
+      );
 
       const table = store.joinTables.get("post_tag");
       expect(table?.size).toBe(1);
@@ -145,7 +157,7 @@ describe("createMemoryJoinTableOps", () => {
 
       await ops.sync(
         owner as any,
-        [{ id: "t1" }] as any[],
+        [{ id: "t1" }] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,
@@ -164,7 +176,13 @@ describe("createMemoryJoinTableOps", () => {
       const mirror = makeMirror();
 
       await expect(
-        ops.sync({ id: "p1" } as any, [{ id: "t1" }] as any[], relation, mirror, null),
+        ops.sync(
+          { id: "p1" } as any,
+          [{ id: "t1" }] as Array<any>,
+          relation,
+          mirror,
+          null,
+        ),
       ).resolves.toBeUndefined();
 
       // Table may have been created by resolveJoinTable, but no rows should be inserted
@@ -180,7 +198,13 @@ describe("createMemoryJoinTableOps", () => {
       const mirror = makeMirror({ findKeys: {} });
 
       await expect(
-        ops.sync({ id: "p1" } as any, [{ id: "t1" }] as any[], relation, mirror, null),
+        ops.sync(
+          { id: "p1" } as any,
+          [{ id: "t1" }] as Array<any>,
+          relation,
+          mirror,
+          null,
+        ),
       ).resolves.toBeUndefined();
 
       // Table may have been created by resolveJoinTable, but no rows should be inserted
@@ -196,8 +220,20 @@ describe("createMemoryJoinTableOps", () => {
       const ownerB = { id: "post-b" };
       const tag = { id: "tag-1" };
 
-      await ops.sync(ownerA as any, [tag] as any[], makeRelation(), makeMirror(), null);
-      await ops.sync(ownerB as any, [tag] as any[], makeRelation(), makeMirror(), null);
+      await ops.sync(
+        ownerA as any,
+        [tag] as Array<any>,
+        makeRelation(),
+        makeMirror(),
+        null,
+      );
+      await ops.sync(
+        ownerB as any,
+        [tag] as Array<any>,
+        makeRelation(),
+        makeMirror(),
+        null,
+      );
 
       // Clear ownerA's relationships
       await ops.sync(ownerA as any, [], makeRelation(), makeMirror(), null);
@@ -218,7 +254,7 @@ describe("createMemoryJoinTableOps", () => {
 
       await ops.sync(
         owner as any,
-        [{ id: "t1" }, { id: "t2" }] as any[],
+        [{ id: "t1" }, { id: "t2" }] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,
@@ -239,14 +275,14 @@ describe("createMemoryJoinTableOps", () => {
 
       await ops.sync(
         ownerA as any,
-        [{ id: "t1" }] as any[],
+        [{ id: "t1" }] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,
       );
       await ops.sync(
         ownerB as any,
-        [{ id: "t2" }] as any[],
+        [{ id: "t2" }] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,
@@ -279,7 +315,7 @@ describe("createMemoryJoinTableOps", () => {
       // Seed with a different owner
       await ops.sync(
         { id: "other" } as any,
-        [{ id: "t1" }] as any[],
+        [{ id: "t1" }] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,

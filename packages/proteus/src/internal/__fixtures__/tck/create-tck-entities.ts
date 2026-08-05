@@ -124,7 +124,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     @Eager()
     @Cascade({ onInsert: "cascade", onUpdate: "cascade" })
     @OneToMany(() => TckSimplePost, "author")
-    posts!: TckSimplePost[];
+    posts!: Array<TckSimplePost>;
   }
 
   @Entity({ name: "TckSoftDeletable" })
@@ -278,7 +278,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Eager()
     @ManyToMany(() => TckLeft, "rights")
-    lefts!: TckLeft[];
+    lefts!: Array<TckLeft>;
   }
 
   @Entity({ name: "TckLeft" })
@@ -303,7 +303,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     @Cascade({ onInsert: "cascade", onUpdate: "cascade" })
     @JoinTable()
     @ManyToMany(() => TckRight, "lefts")
-    rights!: TckRight[];
+    rights!: Array<TckRight>;
   }
 
   // ─── Lazy Loading Entities ──────────────────────────────────────────
@@ -356,7 +356,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     @Lazy()
     @Cascade({ onInsert: "cascade", onUpdate: "cascade" })
     @OneToMany(() => TckLazyPost, "author")
-    posts!: TckLazyPost[];
+    posts!: Array<TckLazyPost>;
   }
 
   @Entity({ name: "TckLazyDetail" })
@@ -431,7 +431,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Lazy()
     @ManyToMany(() => TckLazyLeft, "rights")
-    lefts!: TckLazyLeft[];
+    lefts!: Array<TckLazyLeft>;
   }
 
   @Entity({ name: "TckLazyLeft" })
@@ -456,7 +456,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     @Cascade({ onInsert: "cascade", onUpdate: "cascade" })
     @JoinTable()
     @ManyToMany(() => TckLazyRight, "lefts")
-    rights!: TckLazyRight[];
+    rights!: Array<TckLazyRight>;
   }
 
   @Entity({ name: "TckHooked" })
@@ -605,16 +605,16 @@ export const createTckEntities = (hookCallback: Mock) => {
     @Field("string") name!: string;
 
     @OneToMany(() => TckFkCascadeChild, "parent")
-    cascadeChildren!: TckFkCascadeChild[];
+    cascadeChildren!: Array<TckFkCascadeChild>;
 
     @OneToMany(() => TckFkRestrictChild, "parent")
-    restrictChildren!: TckFkRestrictChild[];
+    restrictChildren!: Array<TckFkRestrictChild>;
 
     @OneToMany(() => TckFkNullifyChild, "parent")
-    nullifyChildren!: TckFkNullifyChild[];
+    nullifyChildren!: Array<TckFkNullifyChild>;
 
     @OneToMany(() => TckFkAutoNullableChild, "parent")
-    autoNullableChildren!: TckFkAutoNullableChild[];
+    autoNullableChildren!: Array<TckFkAutoNullableChild>;
   }
 
   @Entity({ name: "TckFkCascadeChild" })
@@ -723,7 +723,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     @Cascade({ onInsert: "cascade", onUpdate: "cascade", onDestroy: "cascade" })
     @OnOrphan("delete")
     @OneToMany(() => TckCascadeChild, "parent")
-    children!: TckCascadeChild[];
+    children!: Array<TckCascadeChild>;
   }
 
   @Entity({ name: "TckCascadeChild" })
@@ -775,7 +775,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     @Lazy("multiple")
     @Cascade({ onInsert: "cascade", onUpdate: "cascade" })
     @OneToMany(() => TckScopedPost, "author")
-    posts!: TckScopedPost[];
+    posts!: Array<TckScopedPost>;
   }
 
   // ─── Single-Table Inheritance Entities ─────────────────────────────
@@ -878,18 +878,18 @@ export const createTckEntities = (hookCallback: Mock) => {
     updatedAt!: Date;
 
     @Field("array", { arrayType: "string" })
-    tags!: string[];
+    tags!: Array<string>;
 
     @Field("array", { arrayType: "integer" })
-    scores!: number[];
+    scores!: Array<number>;
 
     @Nullable()
     @Field("array", { arrayType: "string" })
-    extras!: string[] | null;
+    extras!: Array<string> | null;
 
     @Default(() => [])
     @Field("array", { arrayType: "string" })
-    labels!: string[];
+    labels!: Array<string>;
   }
 
   // JSONB-backed array (no arrayType) — stored as JSON, NOT a native PG array.
@@ -913,7 +913,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     name!: string;
 
     @Field("array")
-    tags!: string[];
+    tags!: Array<string>;
   }
 
   @Entity({ name: "TckJsonHolder" })
@@ -938,7 +938,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     settings!: { theme: string; count: number };
 
     @Field("json")
-    payload!: { items: string[]; count: number };
+    payload!: { items: Array<string>; count: number };
   }
 
   // @TypedJson — lossless type fidelity via a sidecar type-metadata column.
@@ -1274,7 +1274,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     name!: string;
 
     @EmbeddedList("string")
-    tags!: string[];
+    tags!: Array<string>;
   }
 
   @Entity({ name: "TckElEagerMultiple" })
@@ -1297,7 +1297,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Eager("multiple")
     @EmbeddedList("string")
-    tags!: string[];
+    tags!: Array<string>;
   }
 
   @Entity({ name: "TckElLazySingle" })
@@ -1320,7 +1320,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Lazy("single")
     @EmbeddedList("string")
-    tags!: string[];
+    tags!: Array<string>;
   }
 
   @Entity({ name: "TckElEager" })
@@ -1343,7 +1343,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Eager()
     @EmbeddedList("string")
-    tags!: string[];
+    tags!: Array<string>;
   }
 
   // ─── Embedded-List Typed-Element Entity ───────────────────────────

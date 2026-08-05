@@ -1,3 +1,4 @@
+import { isArray, isObjectLike } from "@lindorm/is";
 import type { Condition } from "@lindorm/match";
 
 /**
@@ -11,7 +12,7 @@ export const extractExactPk = (
   criteria: Condition<any>,
   primaryKeys: Array<string>,
 ): Array<unknown> | null => {
-  if (!criteria || typeof criteria !== "object") return null;
+  if (!isObjectLike(criteria)) return null;
 
   const values: Array<unknown> = [];
 
@@ -21,7 +22,7 @@ export const extractExactPk = (
     // Must be present and a scalar (not an operator object or array)
     if (value === undefined) return null;
     if (value === null) return null;
-    if (typeof value === "object") return null;
+    if (isObjectLike(value) || isArray(value)) return null;
 
     values.push(value);
   }

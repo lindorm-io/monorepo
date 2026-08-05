@@ -306,7 +306,7 @@ describe("MemoryDriver.createQueryBuilder", () => {
     await s.connect();
     await s.setup();
 
-    let qbResult: DriverTestUser[] = [];
+    let qbResult: Array<DriverTestUser> = [];
 
     await s.transaction(async (ctx) => {
       const txRepo = ctx.repository(DriverTestUser);

@@ -219,7 +219,7 @@ describe("loadRelationCounts — OneToMany", () => {
       [{ key: "commentCount", relationKey: "comments" }],
       [relation],
     );
-    const entities: any[] = [{ id: "a1" }, { id: "a1" }];
+    const entities: Array<any> = [{ id: "a1" }, { id: "a1" }];
 
     await loadRelationCounts(entities, { metadata, namespace: "public", client });
 
@@ -234,7 +234,7 @@ describe("loadRelationCounts — OneToMany", () => {
       [{ key: "commentCount", relationKey: "comments" }],
       [relation],
     );
-    const entities: any[] = [{ id: "a99" }];
+    const entities: Array<any> = [{ id: "a99" }];
 
     await loadRelationCounts(entities, { metadata, namespace: "public", client });
 
@@ -251,7 +251,7 @@ describe("loadRelationCounts — OneToMany", () => {
       [{ key: "commentCount", relationKey: "comments" }],
       [relation],
     );
-    const entities: any[] = [{ id: "a1" }, { id: "a2" }];
+    const entities: Array<any> = [{ id: "a1" }, { id: "a2" }];
 
     await loadRelationCounts(entities, { metadata, namespace: "public", client });
 
@@ -328,7 +328,7 @@ describe("loadRelationCounts — OneToMany", () => {
       { tenant_id: "t1", article_id: "a2", count: "5" },
     ]);
 
-    const entities: any[] = [
+    const entities: Array<any> = [
       { tenantId: "t1", id: "a1" },
       { tenantId: "t1", id: "a2" },
     ];
@@ -392,7 +392,7 @@ describe("loadRelationCounts — ManyToMany", () => {
       [{ key: "tagCount", relationKey: "comments" }],
       [relation],
     );
-    const entities: any[] = [{ id: "a1" }];
+    const entities: Array<any> = [{ id: "a1" }];
 
     await loadRelationCounts(entities, { metadata, namespace: "public", client });
 
@@ -455,7 +455,7 @@ describe("loadRelationCounts — ManyToMany", () => {
       [{ key: "tagCount", relationKey: "comments" }],
       [relation],
     );
-    const entities: any[] = [
+    const entities: Array<any> = [
       { tenantId: "t1", id: "a1" },
       { tenantId: "t1", id: "a2" },
     ];

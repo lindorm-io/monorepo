@@ -17,7 +17,7 @@ class RelationCountBlog {
   title!: string;
 
   @OneToMany(() => RelationCountComment, "blog")
-  comments!: RelationCountComment[];
+  comments!: Array<RelationCountComment>;
 
   @RelationCount<RelationCountBlog>("comments")
   @Field("integer")
@@ -42,7 +42,7 @@ class RelationCountDefaulted {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => RelationCountComment, "blog")
-  comments!: RelationCountComment[];
+  comments!: Array<RelationCountComment>;
 
   // Explicit default must be preserved (not overwritten with 0).
   @RelationCount<RelationCountDefaulted>("comments")

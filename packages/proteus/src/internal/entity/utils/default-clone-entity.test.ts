@@ -58,7 +58,7 @@ class CloneEntityParent {
   count!: number;
 
   @OneToMany(() => CloneEntityChild, "parent")
-  children!: CloneEntityChild[];
+  children!: Array<CloneEntityChild>;
 }
 
 // ManyToMany entities
@@ -70,7 +70,7 @@ class CloneEntityM2MTag {
   name!: string;
 
   @ManyToMany(() => CloneEntityM2MPost, "tags")
-  posts!: CloneEntityM2MPost[];
+  posts!: Array<CloneEntityM2MPost>;
 }
 
 @Entity({ name: "CloneEntityM2MPost" })
@@ -94,7 +94,7 @@ class CloneEntityM2MPost {
 
   @JoinTable()
   @ManyToMany(() => CloneEntityM2MTag, "posts")
-  tags!: CloneEntityM2MTag[];
+  tags!: Array<CloneEntityM2MTag>;
 }
 
 describe("defaultCloneEntity", () => {

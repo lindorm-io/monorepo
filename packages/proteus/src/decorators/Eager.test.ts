@@ -17,13 +17,13 @@ class EagerAuthor {
   name!: string;
 
   @OneToMany(() => EagerPost, "author")
-  posts!: EagerPost[];
+  posts!: Array<EagerPost>;
 
   @OneToMany(() => EagerSinglePost, "author")
-  singlePosts!: EagerSinglePost[];
+  singlePosts!: Array<EagerSinglePost>;
 
   @OneToMany(() => EagerMultiplePost, "author")
-  multiplePosts!: EagerMultiplePost[];
+  multiplePosts!: Array<EagerMultiplePost>;
 }
 
 @Entity({ name: "EagerPost" })

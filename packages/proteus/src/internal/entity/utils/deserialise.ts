@@ -1,4 +1,4 @@
-import { isBoolean, isNumber, isString } from "@lindorm/is";
+import { isBigInt, isBoolean, isNumber, isString } from "@lindorm/is";
 import { Primitive } from "@lindorm/json-kit";
 import { ProteusError } from "../../../errors/index.js";
 import type { MetaFieldMode, MetaFieldType } from "../types/metadata.js";
@@ -12,7 +12,7 @@ export const deserialise = (
 ): any => {
   switch (type) {
     case "bigint": {
-      if (typeof value === "bigint") return value;
+      if (isBigInt(value)) return value;
       if (value == null) return null;
       return BigInt(value);
     }

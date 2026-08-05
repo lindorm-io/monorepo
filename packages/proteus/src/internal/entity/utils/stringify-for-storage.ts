@@ -1,3 +1,4 @@
+import { isBigInt } from "@lindorm/is";
 /**
  * `JSON.stringify` for values headed into a JSON-string column (SQLite TEXT,
  * MySQL JSON, Redis HASH field), hardened against `bigint`.
@@ -12,4 +13,4 @@
  * via `deserialise(str, "timestamp"|"date")`, so it needs no special handling.
  */
 export const stringifyForStorage = (value: unknown): string =>
-  JSON.stringify(value, (_key, val) => (typeof val === "bigint" ? val.toString() : val));
+  JSON.stringify(value, (_key, val) => (isBigInt(val) ? val.toString() : val));

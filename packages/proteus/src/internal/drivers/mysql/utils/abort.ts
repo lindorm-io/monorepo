@@ -1,3 +1,4 @@
+import { isObjectLike } from "@lindorm/is";
 import type { AbortError } from "@lindorm/errors";
 import { toAbortError as toSharedAbortError } from "../../../utils/abort.js";
 
@@ -12,8 +13,7 @@ export const toAbortError = (reason: unknown, cause?: unknown): AbortError =>
   toSharedAbortError(reason, cause, "MySQL query cancelled");
 
 export const isMysqlQueryInterruptedError = (err: unknown): boolean =>
-  typeof err === "object" &&
-  err !== null &&
+  isObjectLike(err) &&
   (err as { errno?: unknown }).errno === MYSQL_QUERY_INTERRUPTED_ERRNO;
 
 /**

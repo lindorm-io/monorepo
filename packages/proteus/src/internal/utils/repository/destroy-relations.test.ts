@@ -76,8 +76,8 @@ const makeRelation = (overrides: Partial<MetaRelation> = {}): MetaRelation =>
 
 const makeMetadata = (
   target: any,
-  relations: MetaRelation[] = [],
-  primaryKeys: string[] = ["id"],
+  relations: Array<MetaRelation> = [],
+  primaryKeys: Array<string> = ["id"],
 ): EntityMetadata =>
   ({
     target,
@@ -411,8 +411,8 @@ describe("RelationPersister.destroy", () => {
     });
 
     test("destroys multiple children in iteration order", async () => {
-      const destroyOrder: string[] = [];
-      const children = [{ id: "a" }, { id: "b" }, { id: "c" }] as any[];
+      const destroyOrder: Array<string> = [];
+      const children = [{ id: "a" }, { id: "b" }, { id: "c" }] as Array<any>;
       mockRepo.find.mockResolvedValue(children);
       mockRepo.destroy.mockImplementation(async (c: any) => {
         destroyOrder.push(c.id);

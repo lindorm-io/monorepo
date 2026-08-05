@@ -1,3 +1,4 @@
+import { isBigInt, isObjectLike } from "@lindorm/is";
 import { createHash } from "node:crypto";
 
 export type BuildCachePrefixInput = {
@@ -18,7 +19,7 @@ export const sortDeep = (value: unknown): unknown => {
   if (value instanceof Set) return [...value].map(sortDeep);
   if (value instanceof RegExp) return value.toString();
   if (Array.isArray(value)) return value.map(sortDeep);
-  if (value !== null && typeof value === "object") {
+  if (isObjectLike(value)) {
     const sorted: Record<string, unknown> = {};
     for (const key of Object.keys(value as Record<string, unknown>).sort()) {
       sorted[key] = sortDeep((value as Record<string, unknown>)[key]);
@@ -30,7 +31,7 @@ export const sortDeep = (value: unknown): unknown => {
 
 export const replacer = (_key: string, value: unknown): unknown => {
   if (value instanceof Date) return value.toISOString();
-  if (typeof value === "bigint") return String(value);
+  if (isBigInt(value)) return String(value);
   return value;
 };
 

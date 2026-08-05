@@ -56,7 +56,7 @@ const aliasMap: Array<AliasMap> = [
 class ItemWithTagsEntity {
   id: string = "";
   name: string = "";
-  tags: string[] = [];
+  tags: Array<string> = [];
 }
 
 const embeddedListSpec: MetaEmbeddedList = {
@@ -362,7 +362,7 @@ describe("PostgresCursor", () => {
 
       const { cursor } = createCursor({ batchSize: 2 }, mockCursor);
 
-      const collected: any[] = [];
+      const collected: Array<any> = [];
       for await (const entity of cursor) {
         collected.push(entity);
       }
@@ -379,7 +379,7 @@ describe("PostgresCursor", () => {
 
       const { cursor, releaseClient } = createCursor({ batchSize: 5 }, mockCursor);
 
-      const collected: any[] = [];
+      const collected: Array<any> = [];
       for await (const entity of cursor) {
         collected.push(entity);
       }
@@ -414,7 +414,7 @@ describe("PostgresCursor", () => {
 
       const { cursor } = createCursor({ batchSize: 10 }, mockCursor);
 
-      const collected: any[] = [];
+      const collected: Array<any> = [];
       for await (const entity of cursor) {
         collected.push(entity);
       }

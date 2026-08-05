@@ -1,3 +1,4 @@
+import { isObjectLike } from "@lindorm/is";
 import { ProteusError } from "../../../errors/index.js";
 
 /**
@@ -10,7 +11,7 @@ import { ProteusError } from "../../../errors/index.js";
  * error. Throw a clear, actionable error instead.
  */
 export const guardFindSortKey = (options: unknown): void => {
-  if (options != null && typeof options === "object" && "orderBy" in options) {
+  if (isObjectLike(options) && "orderBy" in options) {
     throw new ProteusError(
       "Invalid option `orderBy` for an offset-based find — use `order`",
       {

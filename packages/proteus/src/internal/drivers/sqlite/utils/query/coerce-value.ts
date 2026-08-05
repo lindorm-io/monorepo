@@ -1,4 +1,11 @@
-import { isString } from "@lindorm/is";
+import {
+  isArray,
+  isBigInt,
+  isBoolean,
+  isNumber,
+  isObjectLike,
+  isString,
+} from "@lindorm/is";
 import type { MetaFieldType } from "../../../../entity/types/metadata.js";
 import { stringifyForStorage } from "../../../../entity/utils/stringify-for-storage.js";
 
@@ -36,27 +43,19 @@ export const coerceReadValue = (
 
     case "bigint":
       // With safeIntegers=true, comes back as BigInt already; handle number fallback
-      if (typeof value === "bigint") return value;
+      if (isBigInt(value)) return value;
       if (isString(value)) return BigInt(value);
-      if (typeof value === "number") return BigInt(value);
+      if (isNumber(value)) return BigInt(value);
       return value;
 
     case "decimal":
     case "float":
     case "real":
-      return typeof value === "bigint"
-        ? Number(value)
-        : isString(value)
-          ? Number(value)
-          : value;
+      return isBigInt(value) ? Number(value) : isString(value) ? Number(value) : value;
 
     case "integer":
     case "smallint":
-      return typeof value === "bigint"
-        ? Number(value)
-        : isString(value)
-          ? Number(value)
-          : value;
+      return isBigInt(value) ? Number(value) : isString(value) ? Number(value) : value;
 
     default:
       return value;
@@ -76,7 +75,7 @@ export const coerceWriteValue = (
   if (value === null || value === undefined) return value;
 
   // Boolean → INTEGER 0/1
-  if (typeof value === "boolean") return value ? 1 : 0;
+  if (isBoolean(value)) return value ? 1 : 0;
 
   // Date → ISO 8601 string
   if (value instanceof Date) return value.toISOString();
@@ -87,7 +86,7 @@ export const coerceWriteValue = (
   // Objects and arrays → JSON string. Use the bigint-hardened stringify so a
   // typed bigint array (@Field("array", { arrayType: "bigint" })) stores each
   // element as a decimal string instead of throwing; deserialise restores it.
-  if (typeof value === "object") return stringifyForStorage(value);
+  if (isObjectLike(value) || isArray(value)) return stringifyForStorage(value);
 
   // bigint stays as bigint — better-sqlite3 handles it natively
   return value;

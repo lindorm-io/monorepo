@@ -119,7 +119,7 @@ describe("executeQueryIncludes — early exit", () => {
   });
 
   test("does nothing when queryIncludes array is empty", async () => {
-    const entities = [{ id: "user-1" }] as any[];
+    const entities = [{ id: "user-1" }] as Array<any>;
     const opts = makeOpts();
     await executeQueryIncludes(entities, [], opts);
 
@@ -164,7 +164,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
       }),
     };
 
-    const entities: any[] = [{ id: "user-1" }];
+    const entities: Array<any> = [{ id: "user-1" }];
     await executeQueryIncludes(
       entities,
       [makeInclude("posts")],
@@ -197,7 +197,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
       query: vi.fn().mockResolvedValue({ rows: [] }),
     };
 
-    const entities: any[] = [{ id: "user-1" }];
+    const entities: Array<any> = [{ id: "user-1" }];
     await executeQueryIncludes(
       entities,
       [makeInclude("posts")],
@@ -234,7 +234,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
       }),
     };
 
-    const entities: any[] = [{ id: "user-1" }, { id: "user-2" }];
+    const entities: Array<any> = [{ id: "user-1" }, { id: "user-2" }];
     await executeQueryIncludes(
       entities,
       [makeInclude("posts")],
@@ -307,7 +307,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
       }),
     };
 
-    const entities: any[] = [{ id: "user-1" }];
+    const entities: Array<any> = [{ id: "user-1" }];
     await executeQueryIncludes(
       entities,
       [makeInclude("posts")],
@@ -348,7 +348,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
       }),
     };
 
-    const entities: any[] = [{ id: "user-1" }];
+    const entities: Array<any> = [{ id: "user-1" }];
     await executeQueryIncludes(entities, [include], makeOpts({ client: client as any }));
 
     // authorId should NOT be present because it's not in include.select
@@ -381,7 +381,7 @@ describe("executeQueryIncludes — owning relation (ManyToOne)", () => {
     const client = { query: vi.fn() };
 
     // Entity where authorId is null — FK is missing
-    const entities: any[] = [{ id: "post-1", authorId: null }];
+    const entities: Array<any> = [{ id: "post-1", authorId: null }];
     await executeQueryIncludes(
       entities,
       [makeInclude("author")],
@@ -416,7 +416,7 @@ describe("executeQueryIncludes — owning relation (ManyToOne)", () => {
       }),
     };
 
-    const entities: any[] = [{ id: "post-1", authorId: "author-1" }];
+    const entities: Array<any> = [{ id: "post-1", authorId: "author-1" }];
     await executeQueryIncludes(
       entities,
       [makeInclude("author")],
@@ -449,7 +449,7 @@ describe("executeQueryIncludes — owning relation (ManyToOne)", () => {
       query: vi.fn().mockResolvedValue({ rows: [] }),
     };
 
-    const entities: any[] = [{ id: "post-1", authorId: "author-missing" }];
+    const entities: Array<any> = [{ id: "post-1", authorId: "author-missing" }];
     await executeQueryIncludes(
       entities,
       [makeInclude("author")],
@@ -471,7 +471,7 @@ describe("executeQueryIncludes — owning relation (ManyToOne)", () => {
 
     const client = { query: vi.fn() };
 
-    const entities: any[] = [
+    const entities: Array<any> = [
       { id: "post-1", authorId: null },
       { id: "post-2", authorId: undefined },
     ];
@@ -530,7 +530,7 @@ describe("executeQueryIncludes — ManyToMany", () => {
       }),
     };
 
-    const entities: any[] = [{ id: "student-1" }, { id: "student-2" }];
+    const entities: Array<any> = [{ id: "student-1" }, { id: "student-2" }];
     await executeQueryIncludes(
       entities,
       [makeInclude("tags")],
@@ -568,7 +568,7 @@ describe("executeQueryIncludes — ManyToMany", () => {
       query: vi.fn().mockResolvedValue({ rows: [] }),
     };
 
-    const entities: any[] = [{ id: "student-1" }];
+    const entities: Array<any> = [{ id: "student-1" }];
     await executeQueryIncludes(
       entities,
       [makeInclude("tags")],
@@ -638,7 +638,7 @@ describe("executeQueryIncludes — multiple includes", () => {
     };
 
     // Entity has a valid profileId so the profile query is issued
-    const entities: any[] = [{ id: "user-1", profileId: "profile-1" }];
+    const entities: Array<any> = [{ id: "user-1", profileId: "profile-1" }];
     await executeQueryIncludes(
       entities,
       [makeInclude("posts"), makeInclude("profile")],
@@ -686,7 +686,7 @@ describe("executeQueryIncludes — multiple includes", () => {
     };
 
     // profileId is null — the owning-side branch should skip the query and assign null
-    const entities: any[] = [{ id: "user-1", profileId: null }];
+    const entities: Array<any> = [{ id: "user-1", profileId: null }];
     await executeQueryIncludes(
       entities,
       [makeInclude("posts"), makeInclude("profile")],

@@ -1,3 +1,4 @@
+import { isObjectLike, isString } from "@lindorm/is";
 import { EventEmitter } from "events";
 import type { IAmphora } from "@lindorm/amphora";
 import {
@@ -125,11 +126,10 @@ export class ProteusSource implements IProteusSource {
     // Pre-loaded classes go straight into _entities; string paths are deferred
     // to setup() since scanner.import() is async.
     this._entities = ((options.entities ?? []) as Array<unknown>).filter(
-      (a): a is Constructor<IEntity> =>
-        typeof a !== "string" && (a as any)?.prototype != null,
+      (a): a is Constructor<IEntity> => !isString(a) && (a as any)?.prototype != null,
     );
     this._pendingEntityPaths = ((options.entities ?? []) as Array<unknown>).filter(
-      (a): a is string => typeof a === "string",
+      (a): a is string => isString(a),
     );
 
     const namespace = options.namespace ?? null;
@@ -685,8 +685,9 @@ export class ProteusSource implements IProteusSource {
     // Explicitly disabled
     if (options.breaker === false) return null;
 
-    const userOpts: ProteusBreakerSettings =
-      typeof options.breaker === "object" ? options.breaker : {};
+    const userOpts: ProteusBreakerSettings = isObjectLike(options.breaker)
+      ? options.breaker
+      : {};
 
     const breakerOptions: CircuitBreakerSettings = {
       name: `proteus:${options.driver}`,

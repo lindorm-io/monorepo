@@ -6,7 +6,7 @@ import { describe, expect, test } from "vitest";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const makeMetadata = (fields: ReturnType<typeof makeField>[]): EntityMetadata =>
+const makeMetadata = (fields: Array<ReturnType<typeof makeField>>): EntityMetadata =>
   ({ fields }) as unknown as EntityMetadata;
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

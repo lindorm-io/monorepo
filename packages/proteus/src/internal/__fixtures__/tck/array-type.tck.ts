@@ -1,3 +1,4 @@
+import { isBigInt, isBoolean, isNumber, isString } from "@lindorm/is";
 import { beforeEach, describe, expect, test } from "vitest";
 // TCK: Typed Array Round-Trip Suite
 //
@@ -65,31 +66,31 @@ const assertRoundTrip = (found: any) => {
     "2024-07-01",
   ]);
 
-  expect(found.integers.every((n: unknown) => typeof n === "number")).toBe(true);
+  expect(found.integers.every((n: unknown) => isNumber(n))).toBe(true);
   expect(found.integers).toEqual(integers);
 
-  expect(found.smallints.every((n: unknown) => typeof n === "number")).toBe(true);
+  expect(found.smallints.every((n: unknown) => isNumber(n))).toBe(true);
   expect(found.smallints).toEqual(smallints);
 
-  expect(found.floats.every((n: unknown) => typeof n === "number")).toBe(true);
+  expect(found.floats.every((n: unknown) => isNumber(n))).toBe(true);
   expect(found.floats).toEqual(floats);
 
-  expect(found.reals.every((n: unknown) => typeof n === "number")).toBe(true);
+  expect(found.reals.every((n: unknown) => isNumber(n))).toBe(true);
   expect(found.reals).toEqual(reals);
 
-  expect(found.booleans.every((b: unknown) => typeof b === "boolean")).toBe(true);
+  expect(found.booleans.every((b: unknown) => isBoolean(b))).toBe(true);
   expect(found.booleans).toEqual(booleans);
 
-  expect(found.strings.every((s: unknown) => typeof s === "string")).toBe(true);
+  expect(found.strings.every((s: unknown) => isString(s))).toBe(true);
   expect(found.strings).toEqual(strings);
 
-  expect(found.uuids.every((s: unknown) => typeof s === "string")).toBe(true);
+  expect(found.uuids.every((s: unknown) => isString(s))).toBe(true);
   expect(found.uuids).toEqual(uuids);
 
-  expect(found.decimals.every((n: unknown) => typeof n === "number")).toBe(true);
+  expect(found.decimals.every((n: unknown) => isNumber(n))).toBe(true);
   expect(found.decimals).toEqual(decimals);
 
-  expect(found.bigints.every((b: unknown) => typeof b === "bigint")).toBe(true);
+  expect(found.bigints.every((b: unknown) => isBigInt(b))).toBe(true);
   expect(found.bigints).toEqual(bigints);
 };
 

@@ -33,7 +33,7 @@ class RcBlog {
   title!: string;
 
   @OneToMany(() => RcComment, "blog")
-  comments!: RcComment[];
+  comments!: Array<RcComment>;
 
   @RelationCount<RcBlog>("comments")
   @Field("integer")

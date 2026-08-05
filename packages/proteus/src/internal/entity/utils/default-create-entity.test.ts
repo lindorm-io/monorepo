@@ -67,7 +67,7 @@ class CreateEntityPost {
   views!: number;
 
   @OneToMany(() => CreateEntityComment, "post")
-  comments!: CreateEntityComment[];
+  comments!: Array<CreateEntityComment>;
 }
 
 @Entity({ name: "CreateEntityAddress" })
@@ -104,7 +104,7 @@ class CreateEntityM2MTag {
   name!: string;
 
   @ManyToMany(() => CreateEntityM2MArticle, "tags")
-  articles!: CreateEntityM2MArticle[];
+  articles!: Array<CreateEntityM2MArticle>;
 }
 
 @Entity({ name: "CreateEntityM2MArticle" })
@@ -116,7 +116,7 @@ class CreateEntityM2MArticle {
 
   @JoinTable()
   @ManyToMany(() => CreateEntityM2MTag, "articles")
-  tags!: CreateEntityM2MTag[];
+  tags!: Array<CreateEntityM2MTag>;
 }
 
 @Entity({ name: "CreateEntityArrays" })

@@ -39,7 +39,7 @@ class RepoTestCategory {
   name!: string;
 
   @OneToMany(() => RepoTestItem, "category")
-  items!: RepoTestItem[];
+  items!: Array<RepoTestItem>;
 }
 
 @Entity({ name: "RepoTestItem" })
@@ -687,7 +687,7 @@ describe("MemoryRepository.cursor", () => {
     await itemRepo.insert(itemRepo.create({ label: "C2" }));
 
     const cursor = await itemRepo.cursor();
-    const items: RepoTestItem[] = [];
+    const items: Array<RepoTestItem> = [];
 
     for await (const item of cursor) {
       items.push(item);
@@ -701,7 +701,7 @@ describe("MemoryRepository.cursor", () => {
     await itemRepo.insert(itemRepo.create({ label: "CursorB" }));
 
     const cursor = await itemRepo.cursor({ where: { label: "CursorA" } });
-    const items: RepoTestItem[] = [];
+    const items: Array<RepoTestItem> = [];
 
     for await (const item of cursor) {
       items.push(item);

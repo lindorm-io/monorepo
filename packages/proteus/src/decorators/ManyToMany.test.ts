@@ -18,7 +18,7 @@ class ManyToManyProduct {
 
   // Inverse side (no @JoinTable)
   @ManyToMany(() => ManyToManyCategory, "products")
-  categories!: ManyToManyCategory[];
+  categories!: Array<ManyToManyCategory>;
 }
 
 @Entity({ name: "ManyToManyCategory" })
@@ -31,7 +31,7 @@ class ManyToManyCategory {
   // Owning side (has @JoinTable)
   @JoinTable()
   @ManyToMany(() => ManyToManyProduct, "categories")
-  products!: ManyToManyProduct[];
+  products!: Array<ManyToManyProduct>;
 }
 
 // ManyToMany with custom joinTable name
@@ -43,7 +43,7 @@ class ManyToManyTagB {
   name!: string;
 
   @ManyToMany(() => ManyToManyArticleB, "tags")
-  articles!: ManyToManyArticleB[];
+  articles!: Array<ManyToManyArticleB>;
 }
 
 @Entity({ name: "ManyToManyArticleB" })
@@ -55,7 +55,7 @@ class ManyToManyArticleB {
 
   @JoinTable({ name: "article_to_tag" })
   @ManyToMany(() => ManyToManyTagB, "articles")
-  tags!: ManyToManyTagB[];
+  tags!: Array<ManyToManyTagB>;
 }
 
 describe("ManyToMany", () => {

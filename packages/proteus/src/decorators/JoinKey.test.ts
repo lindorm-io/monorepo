@@ -17,10 +17,10 @@ class JoinKeyDepartment {
   name!: string;
 
   @OneToMany(() => JoinKeyEmployee, "department")
-  employees!: JoinKeyEmployee[];
+  employees!: Array<JoinKeyEmployee>;
 
   @OneToMany(() => JoinKeyExplicitEmployee, "department")
-  explicitEmployees!: JoinKeyExplicitEmployee[];
+  explicitEmployees!: Array<JoinKeyExplicitEmployee>;
 }
 
 // Auto-calculated join key

@@ -75,7 +75,7 @@ export const streamSuite = (getHandle: () => TckDriverHandle, entities: TckEntit
         await repo.insert({ name: `StreamBreak${i}`, age: i });
       }
 
-      const seen: string[] = [];
+      const seen: Array<string> = [];
       for await (const entity of repo.stream()) {
         seen.push(entity.name);
         if (seen.length >= 2) break;

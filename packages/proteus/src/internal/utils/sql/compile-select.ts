@@ -1,4 +1,4 @@
-import { isNumber } from "@lindorm/is";
+import { isNumber, isString } from "@lindorm/is";
 import { ProteusError } from "../../../errors/index.js";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
@@ -83,7 +83,7 @@ export const buildAliasMap = (
     const foreignMeta = deps.getRelationMetadata(relation);
 
     // For M2M, the join table gets an alias too
-    if (relation.joinTable && typeof relation.joinTable === "string") {
+    if (relation.joinTable && isString(relation.joinTable)) {
       aliases.push({
         tableAlias: `t${counter}`,
         schema: resolveRelationSchema(rootMetadata),

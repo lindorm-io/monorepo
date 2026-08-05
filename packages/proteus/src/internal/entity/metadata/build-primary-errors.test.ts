@@ -127,10 +127,10 @@ describe("build-primary — duplicate @EmbeddedList table name guard (B11)", () 
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("string", { tableName: "shared_collection" })
-        tags!: string[];
+        tags!: Array<string>;
 
         @EmbeddedList("integer", { tableName: "shared_collection" })
-        scores!: number[];
+        scores!: Array<number>;
       }
 
       getEntityMetadata(B11DuplicateTableEntity);
@@ -145,10 +145,10 @@ describe("build-primary — duplicate @EmbeddedList table name guard (B11)", () 
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("string", { tableName: "dup_table" })
-        listA!: string[];
+        listA!: Array<string>;
 
         @EmbeddedList("string", { tableName: "dup_table" })
-        listB!: string[];
+        listB!: Array<string>;
       }
 
       getEntityMetadata(B11ErrorMessageEntity);
@@ -168,10 +168,10 @@ describe("build-primary — duplicate @EmbeddedList table name guard (B11)", () 
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("string", { tableName: "table_one" })
-        tags!: string[];
+        tags!: Array<string>;
 
         @EmbeddedList("integer", { tableName: "table_two" })
-        scores!: number[];
+        scores!: Array<number>;
       }
 
       getEntityMetadata(B11UniqueTableEntity);
@@ -189,7 +189,7 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("object" as any)
-        data!: object[];
+        data!: Array<object>;
       }
 
       getEntityMetadata(B13ObjectTypeEntity);
@@ -203,7 +203,7 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("json" as any)
-        payload!: object[];
+        payload!: Array<object>;
       }
 
       getEntityMetadata(B13JsonTypeEntity);
@@ -217,7 +217,7 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("array" as any)
-        nested!: any[][];
+        nested!: Array<Array<any>>;
       }
 
       getEntityMetadata(B13ArrayTypeEntity);
@@ -232,7 +232,7 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("json" as any)
-        configs!: object[];
+        configs!: Array<object>;
       }
 
       getEntityMetadata(B13ErrorMsgEntity);
@@ -253,13 +253,13 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("string")
-        tags!: string[];
+        tags!: Array<string>;
 
         @EmbeddedList("integer", { tableName: "b13_valid_scores" })
-        scores!: number[];
+        scores!: Array<number>;
 
         @EmbeddedList("uuid", { tableName: "b13_valid_ids" })
-        linkedIds!: string[];
+        linkedIds!: Array<string>;
       }
 
       getEntityMetadata(B13ValidScalarEntity);
@@ -280,7 +280,7 @@ describe("build-primary — parentFkColumn uses column name not property key (C7
       entityId!: string;
 
       @EmbeddedList("string", { tableName: "c7_tags" })
-      tags!: string[];
+      tags!: Array<string>;
     }
 
     const meta = getEntityMetadata(C7CustomPkEntity);
@@ -299,7 +299,7 @@ describe("build-primary — parentFkColumn uses column name not property key (C7
       @PrimaryKeyField() @Generated("uuid") id!: string;
 
       @EmbeddedList("string", { tableName: "c7_default_tags" })
-      tags!: string[];
+      tags!: Array<string>;
     }
 
     const meta = getEntityMetadata(C7DefaultNameEntity);
@@ -320,7 +320,7 @@ describe("build-primary — parentFkColumn uses column name not property key (C7
       pkProperty!: string;
 
       @EmbeddedList("string", { tableName: "c7_alpha_items" })
-      items!: string[];
+      items!: Array<string>;
     }
 
     const meta = getEntityMetadata(C7AlphaEntity);
@@ -341,7 +341,7 @@ describe("build-primary — parentFkColumn uses column name not property key (C7
       propKey!: string;
 
       @EmbeddedList("string", { tableName: "c7_parent_pk_items" })
-      items!: string[];
+      items!: Array<string>;
     }
 
     const meta = getEntityMetadata(C7ParentPkColumnEntity);
@@ -373,7 +373,7 @@ describe("build-primary — validateFields called on embeddable element fields (
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList(() => C8BadEmbeddable, { tableName: "c8_items" })
-        items!: C8BadEmbeddable[];
+        items!: Array<C8BadEmbeddable>;
       }
 
       getEntityMetadata(C8DuplicateEmbeddableColEntity);
@@ -396,7 +396,7 @@ describe("build-primary — validateFields called on embeddable element fields (
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList(() => C8GoodEmbeddable, { tableName: "c8_good_items" })
-        items!: C8GoodEmbeddable[];
+        items!: Array<C8GoodEmbeddable>;
       }
 
       getEntityMetadata(C8ValidEmbeddableEntity);
@@ -420,7 +420,7 @@ describe("build-primary — @EmbeddedList / @Field key collision guard (C9)", ()
         // TypeScript won't allow two declarations with the same name in one class body,
         // so we test via metadata manipulation — rename the EmbeddedList key to collide
         // with the @Field key after decoration.
-        extraTags!: string[];
+        extraTags!: Array<string>;
       }
 
       // Patch Symbol.metadata to simulate the collision
@@ -445,7 +445,7 @@ describe("build-primary — @EmbeddedList / @Field key collision guard (C9)", ()
         items!: string;
 
         @EmbeddedList("string", { tableName: "c9_error_items" })
-        extraItems!: string[];
+        extraItems!: Array<string>;
       }
 
       const meta = (C9ErrorMsgEntity as any)[Symbol.metadata];
@@ -473,7 +473,7 @@ describe("build-primary — @EmbeddedList / @Field key collision guard (C9)", ()
         label!: string;
 
         @EmbeddedList("string", { tableName: "c9_no_collision_items" })
-        items!: string[];
+        items!: Array<string>;
       }
 
       getEntityMetadata(C9NoCollisionEntity);
@@ -495,7 +495,7 @@ describe("build-primary — lazy @EmbeddedList field-initializer guard", () => {
 
         // Default scope: multiple=lazy — initializer below must be rejected.
         @EmbeddedList("string")
-        tags: string[] = [];
+        tags: Array<string> = [];
       }
 
       getEntityMetadata(LazyElInitDefault);
@@ -515,7 +515,7 @@ describe("build-primary — lazy @EmbeddedList field-initializer guard", () => {
 
         @Lazy()
         @EmbeddedList("string")
-        tags: string[] = [];
+        tags: Array<string> = [];
       }
 
       getEntityMetadata(LazyElInitExplicit);
@@ -533,7 +533,7 @@ describe("build-primary — lazy @EmbeddedList field-initializer guard", () => {
 
         @Lazy("single")
         @EmbeddedList("string")
-        tags: string[] = [];
+        tags: Array<string> = [];
       }
 
       getEntityMetadata(LazyElInitSingleScope);
@@ -552,7 +552,7 @@ describe("build-primary — lazy @EmbeddedList field-initializer guard", () => {
         // @Eager() on both scopes — no lazy loading, so initializer is fine.
         @Eager()
         @EmbeddedList("string")
-        tags: string[] = [];
+        tags: Array<string> = [];
       }
 
       getEntityMetadata(EagerElInitAllowed);
@@ -569,7 +569,7 @@ describe("build-primary — lazy @EmbeddedList field-initializer guard", () => {
         name!: string;
 
         @EmbeddedList("string")
-        tags!: string[];
+        tags!: Array<string>;
       }
 
       getEntityMetadata(LazyElDefiniteAssignment);

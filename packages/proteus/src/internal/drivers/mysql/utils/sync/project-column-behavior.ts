@@ -1,4 +1,4 @@
-import { isBoolean, isNumber, isString } from "@lindorm/is";
+import { isBigInt, isBoolean, isFunction, isNumber, isString } from "@lindorm/is";
 import type { MetaField, MetaGenerated } from "../../../../entity/types/metadata.js";
 import type { ProjectedColumnBehavior } from "../../../../utils/sync/sync-dialect.js";
 import { MySqlSyncError } from "../../errors/MySqlSyncError.js";
@@ -33,11 +33,11 @@ export const projectColumnBehavior = (
     );
   } else if (gen?.strategy === "uuid") {
     // UUID generated app-side; no default in MySQL
-  } else if (field.default !== null && typeof field.default !== "function") {
+  } else if (field.default !== null && !isFunction(field.default)) {
     const d = field.default;
     if (isString(d)) {
       defaultExpr = `'${d.replace(/'/g, "''")}'`;
-    } else if (isNumber(d) || typeof d === "bigint") {
+    } else if (isNumber(d) || isBigInt(d)) {
       defaultExpr = `${d}`;
     } else if (isBoolean(d)) {
       defaultExpr = `${d ? 1 : 0}`;

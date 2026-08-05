@@ -17,10 +17,10 @@ class DeferrableOwner {
   name!: string;
 
   @OneToMany(() => DeferrableImmediate, "owner")
-  immediateChildren!: DeferrableImmediate[];
+  immediateChildren!: Array<DeferrableImmediate>;
 
   @OneToMany(() => DeferrableDeferred, "owner")
-  deferredChildren!: DeferrableDeferred[];
+  deferredChildren!: Array<DeferrableDeferred>;
 }
 
 @Entity({ name: "DeferrableImmediate" })

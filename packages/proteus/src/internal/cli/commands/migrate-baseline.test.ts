@@ -165,7 +165,7 @@ describe("migrateBaseline", () => {
     await migrateBaseline({ name: "baseline", source: "/config.ts" });
 
     const infoCalls = (Logger.std.info as Mock).mock.calls.map(
-      (c: unknown[]) => c[0] as string,
+      (c: Array<unknown>) => c[0] as string,
     );
     expect(infoCalls.join("")).not.toContain("Baseline marked as applied");
   });

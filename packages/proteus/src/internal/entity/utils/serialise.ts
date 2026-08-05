@@ -1,3 +1,4 @@
+import { isBigInt } from "@lindorm/is";
 import type { MetaFieldMode, MetaFieldType } from "../types/metadata.js";
 
 /**
@@ -27,7 +28,7 @@ export const serialise = (
 
   switch (type) {
     case "bigint":
-      return typeof value === "bigint" ? value.toString() : String(value);
+      return isBigInt(value) ? value.toString() : String(value);
 
     case "date":
     case "timestamp":

@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import type { Condition } from "@lindorm/match";
 import type { Redis } from "ioredis";
 import type { ILogger } from "@lindorm/logger";
@@ -280,7 +281,7 @@ export class RedisRepository<
         });
       }
 
-      const keysToDelete: string[] = [];
+      const keysToDelete: Array<string> = [];
       for (let i = 0; i < fetchResults.length; i++) {
         const [err, hash] = fetchResults[i];
         if (err || !hash) continue;
@@ -319,8 +320,7 @@ export class RedisRepository<
     // Delete all M2M join SET keys (forward + reverse) for each M2M relation
     const joinKeys: Array<string> = [];
     for (const relation of this.metadata.relations) {
-      if (relation.type !== "ManyToMany" || typeof relation.joinTable !== "string")
-        continue;
+      if (relation.type !== "ManyToMany" || !isString(relation.joinTable)) continue;
 
       const forwardPattern = buildForwardJoinScanPattern(
         relation.joinTable,

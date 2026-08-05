@@ -16,7 +16,7 @@ class CascadeParent {
   name!: string;
 
   @OneToMany(() => CascadeChild, "parent")
-  children!: CascadeChild[];
+  children!: Array<CascadeChild>;
 }
 
 @Entity({ name: "CascadeChild" })
@@ -35,7 +35,7 @@ class CascadeSoftParent {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => CascadeSoftChild, "parent")
-  children!: CascadeSoftChild[];
+  children!: Array<CascadeSoftChild>;
 }
 
 @Entity({ name: "CascadeSoftChild" })

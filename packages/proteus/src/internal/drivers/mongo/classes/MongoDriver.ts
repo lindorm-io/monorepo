@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import {
   MongoClient,
   type Db,
@@ -238,7 +239,7 @@ export class MongoDriver implements IProteusDriver {
       for (const relation of metadata.relations) {
         if (!relation.joinKeys) continue;
 
-        if (relation.type === "ManyToMany" && typeof relation.joinTable === "string") {
+        if (relation.type === "ManyToMany" && isString(relation.joinTable)) {
           // Create join collection for M2M
           await this.createCollectionSafe(db, relation.joinTable);
 

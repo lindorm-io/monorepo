@@ -6,7 +6,7 @@ import type { EntityMetadata } from "../types/metadata.js";
 import { validateEncryptedFields } from "./validate-encrypted-fields.js";
 import { describe, expect, test } from "vitest";
 
-const createMetadata = (fields: ReturnType<typeof makeField>[]): EntityMetadata =>
+const createMetadata = (fields: Array<ReturnType<typeof makeField>>): EntityMetadata =>
   ({
     entity: { name: "TestEntity" },
     fields,

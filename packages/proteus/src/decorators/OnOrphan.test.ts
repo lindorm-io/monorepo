@@ -17,13 +17,13 @@ class OnOrphanParent {
   name!: string;
 
   @OneToMany(() => OnOrphanDeleteChild, "parent")
-  deleteChildren!: OnOrphanDeleteChild[];
+  deleteChildren!: Array<OnOrphanDeleteChild>;
 
   @OneToMany(() => OnOrphanNullifyChild, "parent")
-  nullifyChildren!: OnOrphanNullifyChild[];
+  nullifyChildren!: Array<OnOrphanNullifyChild>;
 
   @OneToMany(() => OnOrphanIgnoreChild, "parent")
-  ignoreChildren!: OnOrphanIgnoreChild[];
+  ignoreChildren!: Array<OnOrphanIgnoreChild>;
 }
 
 @Entity({ name: "OnOrphanDeleteChild" })

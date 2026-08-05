@@ -1,4 +1,4 @@
-import { isString } from "@lindorm/is";
+import { isBigInt, isString } from "@lindorm/is";
 import type { MetaField, MetaFieldType } from "../../../../entity/types/metadata.js";
 import { serialiseArray } from "../../../../entity/utils/serialise.js";
 
@@ -28,7 +28,7 @@ export const coerceReadValue = (
 
 export const coerceWriteValue = (value: unknown, field?: MetaField | null): unknown => {
   if (value === null || value === undefined) return value;
-  if (typeof value === "bigint") return value.toString();
+  if (isBigInt(value)) return value.toString();
   // JSONB-backed array fallback (@Field("array") with no arrayType → JSONB column).
   // node-postgres serializes a JS array as a Postgres array literal `{a,b}`, which is
   // invalid for jsonb; JSON-stringify so it round-trips as a JSON array `["a","b"]`.

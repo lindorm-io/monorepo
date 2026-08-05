@@ -1,3 +1,4 @@
+import { isObjectLike } from "@lindorm/is";
 import type { AbortError } from "@lindorm/errors";
 import { toAbortError as toSharedAbortError } from "../../../utils/abort.js";
 
@@ -19,9 +20,7 @@ export const PG_LOCK_TIMEOUT_SQLSTATE = "55P03";
  * Duck-type check for pg driver errors that indicate a `lock_timeout` abort.
  */
 export const isPgLockTimeoutError = (err: unknown): boolean =>
-  typeof err === "object" &&
-  err !== null &&
-  (err as { code?: unknown }).code === PG_LOCK_TIMEOUT_SQLSTATE;
+  isObjectLike(err) && (err as { code?: unknown }).code === PG_LOCK_TIMEOUT_SQLSTATE;
 
 /**
  * Build an AbortError carrying the signal's reason and (optionally) wrapping
@@ -35,6 +34,4 @@ export const toAbortError = (reason: unknown, cause?: unknown): AbortError =>
  * Duck-type check for pg driver errors that indicate a server-side cancel.
  */
 export const isPgQueryCancelledError = (err: unknown): boolean =>
-  typeof err === "object" &&
-  err !== null &&
-  (err as { code?: unknown }).code === PG_QUERY_CANCELLED_SQLSTATE;
+  isObjectLike(err) && (err as { code?: unknown }).code === PG_QUERY_CANCELLED_SQLSTATE;

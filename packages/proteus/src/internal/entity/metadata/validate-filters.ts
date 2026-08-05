@@ -1,3 +1,4 @@
+import { isArray, isObjectLike } from "@lindorm/is";
 import type { Condition } from "@lindorm/match";
 import type { Dict } from "@lindorm/types";
 import { EntityMetadataError } from "../errors/EntityMetadataError.js";
@@ -12,11 +13,11 @@ const extractFieldKeys = (predicate: Condition<Dict>): Set<string> => {
   const keys = new Set<string>();
 
   const walk = (obj: unknown): void => {
-    if (obj == null || typeof obj !== "object") return;
-    if (Array.isArray(obj)) {
+    if (isArray(obj)) {
       for (const item of obj) walk(item);
       return;
     }
+    if (!isObjectLike(obj)) return;
 
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       if (key === "$and" || key === "$or") {
@@ -34,7 +35,7 @@ const extractFieldKeys = (predicate: Condition<Dict>): Set<string> => {
         // This is a field key reference
         keys.add(key);
         // Value might be an operator object — walk it for nested predicates
-        if (value != null && typeof value === "object" && !Array.isArray(value)) {
+        if (isObjectLike(value)) {
           // Check if it's an operator object (all keys start with $)
           const entries = Object.entries(value as Record<string, unknown>);
           const isOperatorObj =

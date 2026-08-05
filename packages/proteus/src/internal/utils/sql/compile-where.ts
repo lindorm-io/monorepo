@@ -1,5 +1,5 @@
 import type { Condition, ConditionOperator } from "@lindorm/match";
-import { isObject } from "@lindorm/is";
+import { isObject, isObjectLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
@@ -37,7 +37,9 @@ const PREDICATE_OP_PREFIXES = [
 ] as const;
 
 const hasPredicateOperator = (obj: Record<string, unknown>): boolean =>
-  Object.keys(obj).some((k) => (PREDICATE_OP_PREFIXES as readonly string[]).includes(k));
+  Object.keys(obj).some((k) =>
+    (PREDICATE_OP_PREFIXES as ReadonlyArray<string>).includes(k),
+  );
 
 const guardArrayField = (
   operator: string,
@@ -168,9 +170,7 @@ export const compilePredicate = (
     const embeddedChildren = metadata.fields.filter((f) => f.embedded?.parentKey === key);
     if (
       embeddedChildren.length > 0 &&
-      value !== null &&
-      typeof value === "object" &&
-      !Array.isArray(value) &&
+      isObjectLike(value) &&
       !hasPredicateOperator(value as Record<string, unknown>)
     ) {
       for (const [childKey, childValue] of Object.entries(

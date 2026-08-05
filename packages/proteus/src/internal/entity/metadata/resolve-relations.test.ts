@@ -113,7 +113,7 @@ class RRPost {
   title!: string;
 
   @OneToMany(() => RRComment, "post")
-  comments!: RRComment[];
+  comments!: Array<RRComment>;
 }
 
 // ManyToMany
@@ -125,7 +125,7 @@ class RRStudent {
   name!: string;
 
   @ManyToMany(() => RRCourse, "students")
-  courses!: RRCourse[];
+  courses!: Array<RRCourse>;
 }
 
 @Entity({ name: "RRCourse" })
@@ -137,7 +137,7 @@ class RRCourse {
 
   @JoinTable()
   @ManyToMany(() => RRStudent, "courses")
-  students!: RRStudent[];
+  students!: Array<RRStudent>;
 }
 
 // ManyToMany with custom joinTable name
@@ -149,7 +149,7 @@ class RRCustomTableTag {
   name!: string;
 
   @ManyToMany(() => RRCustomTableArticle, "tags")
-  articles!: RRCustomTableArticle[];
+  articles!: Array<RRCustomTableArticle>;
 }
 
 @Entity({ name: "RRCustomTableArticle" })
@@ -161,7 +161,7 @@ class RRCustomTableArticle {
 
   @JoinTable({ name: "article_tag_join" })
   @ManyToMany(() => RRCustomTableTag, "articles")
-  tags!: RRCustomTableTag[];
+  tags!: Array<RRCustomTableTag>;
 }
 
 // Self-referential ManyToMany
@@ -174,10 +174,10 @@ class RRSelfRefNode {
 
   @JoinTable()
   @ManyToMany(() => RRSelfRefNode, "relatedTo")
-  relatedFrom!: RRSelfRefNode[];
+  relatedFrom!: Array<RRSelfRefNode>;
 
   @ManyToMany(() => RRSelfRefNode, "relatedFrom")
-  relatedTo!: RRSelfRefNode[];
+  relatedTo!: Array<RRSelfRefNode>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -194,7 +194,7 @@ class RRNullablePost {
   title!: string;
 
   @OneToMany(() => RRNullableComment, "post")
-  comments!: RRNullableComment[];
+  comments!: Array<RRNullableComment>;
 }
 
 @Entity({ name: "RRNullableComment" })
@@ -241,7 +241,7 @@ class RRNullableOtmParent {
 
   @Nullable()
   @OneToMany(() => RRNullableOtmChild, "parent")
-  children!: RRNullableOtmChild[];
+  children!: Array<RRNullableOtmChild>;
 }
 
 @Entity({ name: "RRNullableOtmChild" })
@@ -262,7 +262,7 @@ class RRNullableMtmA {
   @Nullable()
   @JoinTable()
   @ManyToMany(() => RRNullableMtmB, "as")
-  bs!: RRNullableMtmB[];
+  bs!: Array<RRNullableMtmB>;
 }
 
 @Entity({ name: "RRNullableMtmB" })
@@ -270,7 +270,7 @@ class RRNullableMtmB {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ManyToMany(() => RRNullableMtmA, "bs")
-  as!: RRNullableMtmA[];
+  as!: Array<RRNullableMtmA>;
 }
 
 // @Nullable on an inverse @OneToOne (no @JoinKey — FK lives on the other side) — must throw.
@@ -346,7 +346,7 @@ class RRNoJoinTableA {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ManyToMany(() => RRNoJoinTableB, "as")
-  bs!: RRNoJoinTableB[];
+  bs!: Array<RRNoJoinTableB>;
 }
 
 @Entity({ name: "RRNoJoinTableB" })
@@ -354,7 +354,7 @@ class RRNoJoinTableB {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ManyToMany(() => RRNoJoinTableA, "bs")
-  as!: RRNoJoinTableA[];
+  as!: Array<RRNoJoinTableA>;
 }
 
 // Join key field not found (local field doesn't exist)
@@ -363,7 +363,7 @@ class RRBadJoinKeyForeign {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => RRBadJoinKeyOwner, "foreign")
-  owners!: RRBadJoinKeyOwner[];
+  owners!: Array<RRBadJoinKeyOwner>;
 }
 
 @Entity({ name: "RRBadJoinKeyOwner" })
@@ -381,7 +381,7 @@ class RRBadForeignJoinForeign {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => RRBadForeignJoinOwner, "foreign")
-  owners!: RRBadForeignJoinOwner[];
+  owners!: Array<RRBadForeignJoinOwner>;
 }
 
 @Entity({ name: "RRBadForeignJoinOwner" })

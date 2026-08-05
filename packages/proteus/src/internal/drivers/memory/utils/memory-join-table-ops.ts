@@ -102,7 +102,7 @@ export const createMemoryJoinTableOps = (getStore: () => MemoryStore): JoinTable
     const ownerFindKeys = Object.entries(relation.findKeys ?? {});
     if (ownerFindKeys.length === 0) return;
 
-    const toDelete: string[] = [];
+    const toDelete: Array<string> = [];
     for (const [rowKey, row] of table) {
       const matches = ownerFindKeys.every(
         ([joinCol, entityKey]) => row[joinCol] === (entity as any)[entityKey],

@@ -1,3 +1,4 @@
+import { isObjectLike } from "@lindorm/is";
 import { ms } from "@lindorm/date";
 import type { MetaCache } from "../../entity/types/metadata.js";
 import type { FindCacheOption } from "../../../types/find-options.js";
@@ -17,7 +18,7 @@ export const resolveCacheTtl = (input: ResolveCacheTtlInput): CacheTtlResult => 
   if (findCacheOption === false) return { enabled: false };
 
   // Priority 1: explicit per-query TTL
-  if (typeof findCacheOption === "object" && findCacheOption.ttl != null) {
+  if (isObjectLike(findCacheOption) && findCacheOption.ttl != null) {
     return { enabled: true, ttlMs: ms(findCacheOption.ttl) };
   }
 

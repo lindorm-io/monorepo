@@ -8,7 +8,7 @@ interface Item {
   name: string;
 }
 
-const makeItems = (count: number): Item[] =>
+const makeItems = (count: number): Array<Item> =>
   Array.from({ length: count }, (_, i) => ({ id: i + 1, name: `item-${i + 1}` }));
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -120,7 +120,7 @@ describe("MemoryCursor", () => {
       const items = makeItems(4);
       const cursor = new MemoryCursor(items);
 
-      const results: Item[] = [];
+      const results: Array<Item> = [];
       for await (const item of cursor) {
         results.push(item);
       }
@@ -131,7 +131,7 @@ describe("MemoryCursor", () => {
     test("empty cursor produces no iterations", async () => {
       const cursor = new MemoryCursor<Item>([]);
 
-      const results: Item[] = [];
+      const results: Array<Item> = [];
       for await (const item of cursor) {
         results.push(item);
       }
@@ -143,7 +143,7 @@ describe("MemoryCursor", () => {
       const items = makeItems(5);
       const cursor = new MemoryCursor(items);
 
-      const results: Item[] = [];
+      const results: Array<Item> = [];
       for await (const item of cursor) {
         results.push(item);
         break;

@@ -1,4 +1,4 @@
-import { isFunction } from "@lindorm/is";
+import { isArray, isFunction, isObjectLike } from "@lindorm/is";
 import type { Constructor, Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { MetaFieldDecorator } from "../types/metadata.js";
@@ -63,7 +63,7 @@ export const defaultCloneEntity = <E extends IEntity>(
       const EmbeddableConstructor = firstField.embedded!.constructor();
       const instance = new EmbeddableConstructor();
       for (const [k, v] of Object.entries(source)) {
-        instance[k] = v != null && typeof v === "object" ? structuredClone(v) : v;
+        instance[k] = isObjectLike(v) || isArray(v) ? structuredClone(v) : v;
       }
       clone[parentKey] = instance;
     } else {

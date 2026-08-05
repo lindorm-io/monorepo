@@ -814,7 +814,7 @@ class MemoryDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
 
     const table = this.getTable();
     const results: Array<E> = [];
-    const toDelete: string[] = [];
+    const toDelete: Array<string> = [];
 
     // Apply system filters: default-on filters (includes __softDelete) + version
     const versionEndField = this.metadata.fields.find(

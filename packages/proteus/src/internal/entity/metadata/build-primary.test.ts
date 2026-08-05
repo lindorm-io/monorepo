@@ -345,7 +345,7 @@ describe("buildPrimaryMetadata — @EmbeddedList requires single PK", () => {
         @VersionKeyField() @Generated("uuid") versionId!: string;
 
         @EmbeddedList("string", { tableName: "bp_composite_tags" })
-        tags!: string[];
+        tags!: Array<string>;
       }
 
       buildPrimaryMetadata(BpCompositePkEmbeddedList);

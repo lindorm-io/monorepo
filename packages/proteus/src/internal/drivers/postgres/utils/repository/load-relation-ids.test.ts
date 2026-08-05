@@ -237,7 +237,7 @@ describe("loadRelationIds — OneToMany", () => {
       [{ key: "commentIds", relationKey: "comments", column: null }],
       [relation],
     );
-    const entities: any[] = [{ id: "a1" }];
+    const entities: Array<any> = [{ id: "a1" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 
@@ -272,7 +272,7 @@ describe("loadRelationIds — OneToMany", () => {
       [{ key: "commentIds", relationKey: "comments", column: null }],
       [relation],
     );
-    const entities: any[] = [{ id: "a99" }];
+    const entities: Array<any> = [{ id: "a99" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 
@@ -290,7 +290,7 @@ describe("loadRelationIds — OneToMany", () => {
       [{ key: "commentIds", relationKey: "comments", column: null }],
       [relation],
     );
-    const entities: any[] = [{ id: "a1" }, { id: "a2" }];
+    const entities: Array<any> = [{ id: "a1" }, { id: "a2" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 
@@ -311,7 +311,7 @@ describe("loadRelationIds — OneToMany", () => {
       [{ key: "commentSlugs", relationKey: "comments", column: "slug" }],
       [relation],
     );
-    const entities: any[] = [{ id: "a1" }];
+    const entities: Array<any> = [{ id: "a1" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 
@@ -339,7 +339,7 @@ describe("loadRelationIds — inverse OneToOne", () => {
       [{ key: "profileId", relationKey: "comments", column: null }],
       [relation],
     );
-    const entities: any[] = [{ id: "u1" }];
+    const entities: Array<any> = [{ id: "u1" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 
@@ -357,7 +357,7 @@ describe("loadRelationIds — inverse OneToOne", () => {
       [{ key: "profileId", relationKey: "comments", column: null }],
       [relation],
     );
-    const entities: any[] = [{ id: "u99" }];
+    const entities: Array<any> = [{ id: "u99" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 
@@ -420,7 +420,7 @@ describe("loadRelationIds — inverse OneToOne", () => {
       [{ key: "profileId", relationKey: "comments", column: null }],
       [relation],
     );
-    const entities: any[] = [{ tenantId: "t1", id: "u1" }];
+    const entities: Array<any> = [{ tenantId: "t1", id: "u1" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 
@@ -441,7 +441,7 @@ describe("loadRelationIds — inverse OneToOne", () => {
       [{ key: "profileId", relationKey: "comments", column: null }],
       [relation],
     );
-    const entities: any[] = [{ id: "u1" }, { id: "u2" }];
+    const entities: Array<any> = [{ id: "u1" }, { id: "u2" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 
@@ -487,7 +487,7 @@ describe("loadRelationIds — ManyToMany", () => {
       [{ key: "tagIds", relationKey: "comments", column: null }],
       [relation],
     );
-    const entities: any[] = [{ id: "a1" }];
+    const entities: Array<any> = [{ id: "a1" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 
@@ -523,7 +523,7 @@ describe("loadRelationIds — ManyToMany", () => {
       [{ key: "tagIds", relationKey: "comments", column: null }],
       [relation],
     );
-    const entities: any[] = [{ id: "a1" }];
+    const entities: Array<any> = [{ id: "a1" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 
@@ -587,7 +587,7 @@ describe("loadRelationIds — ManyToMany", () => {
       [{ key: "tagIds", relationKey: "comments", column: null }],
       [relation],
     );
-    const entities: any[] = [{ id: "a1" }, { id: "a2" }];
+    const entities: Array<any> = [{ id: "a1" }, { id: "a2" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 
@@ -663,7 +663,7 @@ describe("loadRelationIds — ManyToMany", () => {
       [{ key: "tagSlugs", relationKey: "comments", column: "slug" }],
       [relation],
     );
-    const entities: any[] = [{ id: "a1" }];
+    const entities: Array<any> = [{ id: "a1" }];
 
     await loadRelationIds(entities, { metadata, namespace: "public", client });
 

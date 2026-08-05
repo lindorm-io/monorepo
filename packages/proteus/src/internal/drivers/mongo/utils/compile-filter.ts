@@ -1,3 +1,4 @@
+import { isObjectLike } from "@lindorm/is";
 import type { Condition } from "@lindorm/match";
 import type { Filter, Document } from "mongodb";
 import type { Dict } from "@lindorm/types";
@@ -129,7 +130,7 @@ const compileOperator = (
     // Complex predicate operators
     case "$has": {
       // JSON containment — check if document field contains the given key/value pairs
-      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+      if (isObjectLike(value)) {
         const conditions: Array<Filter<Document>> = [];
         for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
           conditions.push({ [`${mongoField}.${k}`]: v });
@@ -181,12 +182,7 @@ const compileValue = (
     return { [mongoField]: null };
   }
 
-  if (
-    typeof value === "object" &&
-    !Array.isArray(value) &&
-    !(value instanceof Date) &&
-    !(value instanceof RegExp)
-  ) {
+  if (isObjectLike(value) && !(value instanceof Date) && !(value instanceof RegExp)) {
     const obj = value as Record<string, unknown>;
     const keys = Object.keys(obj);
 

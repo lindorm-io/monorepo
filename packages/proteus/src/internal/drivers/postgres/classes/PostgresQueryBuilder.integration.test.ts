@@ -127,7 +127,7 @@ const insertCourseStudent = async (courseId: string, studentId: string) => {
   );
 };
 
-const createQB = <E>(entity: new (...args: any[]) => E) => {
+const createQB = <E>(entity: new (...args: Array<any>) => E) => {
   const metadata = getEntityMetadata(entity as any);
   return new PostgresQueryBuilder<any>(metadata, client, schema);
 };

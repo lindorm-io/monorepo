@@ -1,4 +1,4 @@
-import { isObjectLike } from "@lindorm/is";
+import { isArray, isObjectLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaRelation, QueryScope } from "../types/metadata.js";
@@ -76,7 +76,7 @@ const storeSnapshotForRelated = (entity: object): void => {
       dict[key] = value;
     } else if (Buffer.isBuffer(value)) {
       dict[key] = value;
-    } else if (typeof value !== "object") {
+    } else if (!isObjectLike(value) && !isArray(value)) {
       // Primitives: string, number, boolean, bigint
       dict[key] = value;
     }

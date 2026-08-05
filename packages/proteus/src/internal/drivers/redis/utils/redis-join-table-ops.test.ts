@@ -87,18 +87,18 @@ const makeForeignMetadata = () => ({
 // ─── Mock Redis Client ──────────────────────────────────────────────────────
 
 const createMockRedis = () => {
-  const pipelineCommands: Array<{ cmd: string; args: any[] }> = [];
+  const pipelineCommands: Array<{ cmd: string; args: Array<any> }> = [];
 
   const pipelineObj: Record<string, Mock> = {
-    sadd: vi.fn((...args: any[]) => {
+    sadd: vi.fn((...args: Array<any>) => {
       pipelineCommands.push({ cmd: "sadd", args });
       return pipelineObj;
     }),
-    srem: vi.fn((...args: any[]) => {
+    srem: vi.fn((...args: Array<any>) => {
       pipelineCommands.push({ cmd: "srem", args });
       return pipelineObj;
     }),
-    del: vi.fn((...args: any[]) => {
+    del: vi.fn((...args: Array<any>) => {
       pipelineCommands.push({ cmd: "del", args });
       return pipelineObj;
     }),
@@ -132,7 +132,13 @@ describe("createRedisJoinTableOps", () => {
       const owner = { id: "post-1" };
       const related = [{ id: "tag-1" }, { id: "tag-2" }];
 
-      await ops.sync(owner as any, related as any[], makeRelation(), makeMirror(), null);
+      await ops.sync(
+        owner as any,
+        related as Array<any>,
+        makeRelation(),
+        makeMirror(),
+        null,
+      );
 
       // Pipeline should have been called
       expect(pipelineObj.sadd).toHaveBeenCalled();
@@ -149,7 +155,7 @@ describe("createRedisJoinTableOps", () => {
       // Sync with only tag-1 (tag-2 should be removed)
       await ops.sync(
         { id: "post-1" } as any,
-        [{ id: "tag-1" }] as any[],
+        [{ id: "tag-1" }] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,
@@ -167,7 +173,7 @@ describe("createRedisJoinTableOps", () => {
 
       await ops.sync(
         { id: "post-1" } as any,
-        [{ id: "tag-1" }] as any[],
+        [{ id: "tag-1" }] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,
@@ -185,7 +191,7 @@ describe("createRedisJoinTableOps", () => {
 
       await ops.sync(
         { id: "post-1" } as any,
-        [] as any[],
+        [] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,
@@ -203,7 +209,7 @@ describe("createRedisJoinTableOps", () => {
 
       await ops.sync(
         { id: "p1" } as any,
-        [{ id: "t1" }] as any[],
+        [{ id: "t1" }] as Array<any>,
         relation,
         makeMirror(),
         null,
@@ -221,7 +227,7 @@ describe("createRedisJoinTableOps", () => {
 
       await ops.sync(
         { id: "p1" } as any,
-        [{ id: "t1" }] as any[],
+        [{ id: "t1" }] as Array<any>,
         makeRelation(),
         mirror,
         null,
@@ -240,7 +246,7 @@ describe("createRedisJoinTableOps", () => {
       // tag-1 stays, tag-2 removed, tag-3 added
       await ops.sync(
         { id: "post-1" } as any,
-        [{ id: "tag-1" }, { id: "tag-3" }] as any[],
+        [{ id: "tag-1" }, { id: "tag-3" }] as Array<any>,
         makeRelation(),
         makeMirror(),
         null,

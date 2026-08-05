@@ -50,9 +50,9 @@ const mockInput = vi.fn();
 const mockConfirm = vi.fn();
 
 vi.mock("@inquirer/prompts", () => ({
-  checkbox: (...args: unknown[]) => mockCheckbox(...args),
-  input: (...args: unknown[]) => mockInput(...args),
-  confirm: (...args: unknown[]) => mockConfirm(...args),
+  checkbox: (...args: Array<unknown>) => mockCheckbox(...args),
+  input: (...args: Array<unknown>) => mockInput(...args),
+  confirm: (...args: Array<unknown>) => mockConfirm(...args),
 }));
 
 const mockProjectDesiredSchema = projectDesiredSchema as MockedFunction<

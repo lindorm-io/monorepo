@@ -97,7 +97,7 @@ describe("MemoryTransactionContext.repository", () => {
 
 describe("MemoryTransactionContext.queryBuilder", () => {
   test("returns a query builder scoped to the transaction store", async () => {
-    let qbResult: TxCtxUser[] = [];
+    let qbResult: Array<TxCtxUser> = [];
 
     await source.transaction(async (ctx) => {
       const txRepo = ctx.repository(TxCtxUser);

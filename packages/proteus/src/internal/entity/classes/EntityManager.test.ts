@@ -75,7 +75,7 @@ class EMOrder {
   name!: string;
 
   @OneToMany(() => EMOrderItem, "order")
-  items!: EMOrderItem[];
+  items!: Array<EMOrderItem>;
 }
 
 @Entity({ name: "EMNoDriver" })

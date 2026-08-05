@@ -168,7 +168,7 @@ class RIDuplicateChildB extends RIDuplicateRoot {}
 
 describe("resolveInheritanceHierarchies", () => {
   describe("single-table with two concrete subtypes", () => {
-    const entities = [RIVehicle, RICar, RITruck] as any[];
+    const entities = [RIVehicle, RICar, RITruck] as Array<any>;
     let result: ReturnType<typeof resolveInheritanceHierarchies>;
 
     beforeAll(() => {
@@ -257,7 +257,7 @@ describe("resolveInheritanceHierarchies", () => {
         RINumericRoot,
         RINumericTypeOne,
         RINumericTypeTwo,
-      ] as any[]);
+      ] as Array<any>);
 
       const rootMeta = result.get(RINumericRoot)!;
       expect(rootMeta.children.get(1)).toBe(RINumericTypeOne);
@@ -269,7 +269,11 @@ describe("resolveInheritanceHierarchies", () => {
     let result: ReturnType<typeof resolveInheritanceHierarchies>;
 
     beforeAll(() => {
-      result = resolveInheritanceHierarchies([RILevelA, RILevelB, RILevelC] as any[]);
+      result = resolveInheritanceHierarchies([
+        RILevelA,
+        RILevelB,
+        RILevelC,
+      ] as Array<any>);
     });
 
     test("should produce entries for A, B, and C", () => {
@@ -312,7 +316,7 @@ describe("resolveInheritanceHierarchies", () => {
         RIAbstractRoot,
         RIAbstractMiddle,
         RIConcreteLeaf,
-      ] as any[]);
+      ] as Array<any>);
 
       expect(result.has(RIAbstractRoot)).toBe(true);
       expect(result.has(RIConcreteLeaf)).toBe(true);
@@ -336,7 +340,7 @@ describe("resolveInheritanceHierarchies", () => {
         RIJoinedRoot,
         RIJoinedChildA,
         RIJoinedChildB,
-      ] as any[]);
+      ] as Array<any>);
     });
 
     test("should produce entries for root and both joined children", () => {
@@ -371,7 +375,7 @@ describe("resolveInheritanceHierarchies", () => {
           RIJoinedDepthRoot,
           RIJoinedDepthIntermediate,
           RIJoinedDepthLeaf,
-        ] as any[]),
+        ] as Array<any>),
       ).toThrow("does not support multi-level depth");
     });
   });
@@ -383,7 +387,7 @@ describe("resolveInheritanceHierarchies", () => {
           RIDuplicateRoot,
           RIDuplicateChildA,
           RIDuplicateChildB,
-        ] as any[]),
+        ] as Array<any>),
       ).toThrow('Discriminator value "duplicate" is already used by entity');
     });
   });
@@ -398,7 +402,7 @@ describe("resolveInheritanceHierarchies", () => {
       }
 
       expect(() =>
-        resolveInheritanceHierarchies([RIInvalidDiscriminator] as any[]),
+        resolveInheritanceHierarchies([RIInvalidDiscriminator] as Array<any>),
       ).toThrow("@Discriminator requires @Inheritance");
     });
   });
@@ -411,7 +415,7 @@ describe("resolveInheritanceHierarchies", () => {
         @PrimaryKeyField() @Generated("uuid") id!: string;
       }
 
-      expect(() => resolveInheritanceHierarchies([RIOrphanValue] as any[])).toThrow(
+      expect(() => resolveInheritanceHierarchies([RIOrphanValue] as Array<any>)).toThrow(
         "@DiscriminatorValue on",
       );
     });
@@ -424,7 +428,7 @@ describe("resolveInheritanceHierarchies", () => {
         @PrimaryKeyField() @Generated("uuid") id!: string;
       }
 
-      const result = resolveInheritanceHierarchies([RIPlain] as any[]);
+      const result = resolveInheritanceHierarchies([RIPlain] as Array<any>);
       expect(result.size).toBe(0);
     });
 

@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces/index.js";
@@ -46,7 +47,7 @@ export const executeQueryIncludes = async <E extends IEntity>(
     if (
       relation.type === "ManyToMany" &&
       relation.joinTable &&
-      typeof relation.joinTable === "string"
+      isString(relation.joinTable)
     ) {
       await executeManyToManyInclude(entities, include, relation, foreignMeta, ctx, opts);
     } else if (relation.joinKeys) {

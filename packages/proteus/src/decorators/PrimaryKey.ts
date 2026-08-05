@@ -10,7 +10,7 @@ export function PrimaryKey(): (
   target: undefined,
   context: ClassFieldDecoratorContext,
 ) => void;
-export function PrimaryKey<T extends abstract new (...args: any[]) => any>(
+export function PrimaryKey<T extends abstract new (...args: Array<any>) => any>(
   fields: Array<keyof InstanceType<T>>,
 ): (target: T, context: ClassDecoratorContext<T>) => void;
 export function PrimaryKey(fields?: any): any {

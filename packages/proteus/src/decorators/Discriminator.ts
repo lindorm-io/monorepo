@@ -11,7 +11,7 @@ import { stageDiscriminator } from "../internal/entity/metadata/stage-metadata.j
 export const Discriminator =
   <K extends string>(fieldName: K) =>
   <T extends Record<K, unknown>>(
-    _target: abstract new (...args: any[]) => T,
+    _target: abstract new (...args: Array<any>) => T,
     context: ClassDecoratorContext,
   ): void => {
     stageDiscriminator(context.metadata, fieldName);

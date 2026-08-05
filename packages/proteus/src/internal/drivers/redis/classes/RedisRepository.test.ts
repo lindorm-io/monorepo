@@ -217,7 +217,7 @@ class RepoParent {
   title!: string;
 
   @OneToMany(() => RepoChild, "parent")
-  children!: RepoChild[];
+  children!: Array<RepoChild>;
 }
 
 @Entity({ name: "repo_child" })
@@ -258,7 +258,7 @@ class RepoM2MOwner {
 
   @JoinTable()
   @ManyToMany(() => RepoM2MTarget, "owners")
-  targets!: RepoM2MTarget[];
+  targets!: Array<RepoM2MTarget>;
 }
 
 // Entity with manual (non-generated) PK — getSaveStrategy returns "unknown" when pk is set,
@@ -290,7 +290,7 @@ class RepoM2MTarget {
   label!: string;
 
   @ManyToMany(() => RepoM2MOwner, "targets")
-  owners!: RepoM2MOwner[];
+  owners!: Array<RepoM2MOwner>;
 }
 
 // ─── Mock Infrastructure Factories ────────────────────────────────────────────
@@ -571,7 +571,7 @@ describe("RedisRepository.upsertOne (lifecycle hooks)", () => {
     await repository.upsert(entity as any);
 
     const updateCalls = fireBeforeHookSpy.mock.calls.filter(
-      (c: any[]) => c[0] === "update",
+      (c: Array<any>) => c[0] === "update",
     );
     expect(updateCalls).toHaveLength(0);
   });
@@ -652,7 +652,7 @@ describe("RedisRepository.cursor", () => {
     executor.executeFind.mockResolvedValue([e1, e2]);
 
     const cursor = await repository.cursor();
-    const items: RepoItem[] = [];
+    const items: Array<RepoItem> = [];
 
     for await (const item of cursor) {
       items.push(item);

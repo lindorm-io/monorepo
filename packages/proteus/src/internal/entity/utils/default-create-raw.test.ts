@@ -18,7 +18,7 @@ class CreateRawOwner {
   name!: string;
 
   @OneToMany(() => CreateRawItem, "owner")
-  items!: CreateRawItem[];
+  items!: Array<CreateRawItem>;
 }
 
 @Entity({ name: "CreateRawItem" })

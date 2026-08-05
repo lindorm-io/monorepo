@@ -1,4 +1,4 @@
-import { isBigInt, isDate } from "@lindorm/is";
+import { isBigInt, isDate, isObjectLike } from "@lindorm/is";
 import { ProteusError } from "../../../errors/index.js";
 import type { EntityMetadata } from "../types/metadata.js";
 
@@ -31,7 +31,7 @@ const findUnserialisable = (value: unknown, path: string): Offence | null => {
     return null;
   }
 
-  if (typeof value === "object") {
+  if (isObjectLike(value)) {
     for (const [key, child] of Object.entries(value)) {
       const offence = findUnserialisable(child, path ? `${path}.${key}` : key);
       if (offence) return offence;

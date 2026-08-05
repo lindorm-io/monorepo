@@ -1,3 +1,4 @@
+import { isObjectLike, isString } from "@lindorm/is";
 import type { Condition } from "@lindorm/match";
 import type { Dict } from "@lindorm/types";
 import type { MetaFilter } from "../../entity/types/metadata.js";
@@ -19,7 +20,7 @@ export type ResolvedFilter = {
 const conditionRequiresParams = (cond: unknown): boolean => {
   if (cond === null || cond === undefined) return false;
 
-  if (typeof cond === "string" && cond.startsWith("$")) {
+  if (isString(cond) && cond.startsWith("$")) {
     return true;
   }
 
@@ -27,7 +28,7 @@ const conditionRequiresParams = (cond: unknown): boolean => {
     return cond.some((item) => conditionRequiresParams(item));
   }
 
-  if (typeof cond === "object") {
+  if (isObjectLike(cond)) {
     return Object.values(cond as Record<string, unknown>).some((v) =>
       conditionRequiresParams(v),
     );
@@ -51,7 +52,7 @@ const substituteParams = (
   const walk = (obj: unknown): unknown => {
     if (obj === null || obj === undefined) return obj;
 
-    if (typeof obj === "string" && obj.startsWith("$")) {
+    if (isString(obj) && obj.startsWith("$")) {
       const paramKey = obj.slice(1);
       // Only substitute if it looks like a param reference (not an operator)
       // Operators are at object keys, not values, so we only reach here for values.
@@ -74,7 +75,7 @@ const substituteParams = (
       return obj.map((item) => walk(item));
     }
 
-    if (typeof obj === "object") {
+    if (isObjectLike(obj)) {
       const result: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
         result[key] = walk(value);

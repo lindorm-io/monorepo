@@ -1,3 +1,4 @@
+import { isNumber } from "@lindorm/is";
 import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { SaveStrategy } from "../../types/types.js";
@@ -17,9 +18,7 @@ export const getSaveStrategy = <E extends IEntity>(
 
     if (
       versionValue != null &&
-      (typeof versionValue !== "number" ||
-        versionValue < 0 ||
-        !Number.isFinite(versionValue))
+      (!isNumber(versionValue) || versionValue < 0 || !Number.isFinite(versionValue))
     ) {
       throw new EntityManagerError("Corrupted version value", {
         code: "corrupted_version",

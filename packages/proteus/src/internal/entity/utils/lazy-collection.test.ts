@@ -6,7 +6,7 @@ describe("LazyCollection", () => {
 
   describe("then", () => {
     it("should load on first await and self-replace", async () => {
-      const items = [{ id: "a" }, { id: "b" }] as any[];
+      const items = [{ id: "a" }, { id: "b" }] as Array<any>;
       const loader = vi.fn().mockResolvedValue(items);
       const entity = createEntity();
 
@@ -22,7 +22,7 @@ describe("LazyCollection", () => {
     });
 
     it("should return cached value on second await", async () => {
-      const items = [{ id: "a" }] as any[];
+      const items = [{ id: "a" }] as Array<any>;
       const loader = vi.fn().mockResolvedValue(items);
       const entity = createEntity();
 
@@ -89,7 +89,7 @@ describe("LazyCollection", () => {
     });
 
     it("should return the array when resolved", async () => {
-      const items = [{ id: "a" }] as any[];
+      const items = [{ id: "a" }] as Array<any>;
       const entity = createEntity();
       const ref = new LazyCollection(
         entity,

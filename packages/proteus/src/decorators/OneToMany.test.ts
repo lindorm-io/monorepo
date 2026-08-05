@@ -31,7 +31,7 @@ class OneToManyPost {
 
   @Eager()
   @OneToMany(() => OneToManyComment, "post")
-  comments!: OneToManyComment[];
+  comments!: Array<OneToManyComment>;
 }
 
 describe("OneToMany", () => {

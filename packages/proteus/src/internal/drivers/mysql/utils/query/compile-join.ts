@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
 import type { IncludeSpec } from "../../../../types/query.js";
 import { ProteusError } from "../../../../../errors/ProteusError.js";
@@ -48,7 +49,7 @@ export const compileJoin = (
 
     const joinType = inc.required ? "INNER JOIN" : "LEFT JOIN";
 
-    if (relation.joinTable && typeof relation.joinTable === "string") {
+    if (relation.joinTable && isString(relation.joinTable)) {
       // ManyToMany: join through the join table
       clauses.push(
         ...compileManyToManyJoin(

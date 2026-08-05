@@ -68,7 +68,7 @@ export class TestUser {
   age!: number;
 
   @OneToMany(() => TestPost, "author")
-  posts!: TestPost[];
+  posts!: Array<TestPost>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -328,7 +328,7 @@ export class TestAuthor {
 
   @Eager()
   @OneToMany(() => TestArticle, "author")
-  articles!: TestArticle[];
+  articles!: Array<TestArticle>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -355,7 +355,7 @@ export class TestCourse {
 
   @JoinTable()
   @ManyToMany(() => TestStudent, "courses")
-  students!: TestStudent[];
+  students!: Array<TestStudent>;
 }
 
 @Entity({ name: "TestStudent" })
@@ -377,7 +377,7 @@ export class TestStudent {
   name!: string;
 
   @ManyToMany(() => TestCourse, "students")
-  courses!: TestCourse[];
+  courses!: Array<TestCourse>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

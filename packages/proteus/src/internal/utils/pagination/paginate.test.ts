@@ -102,7 +102,7 @@ beforeEach(async () => {
 // ─── Helpers ──────────────────────────────────────────────────────
 
 const seedItems = async (count: number, category = "general") => {
-  const items: PaginateItem[] = [];
+  const items: Array<PaginateItem> = [];
   for (let i = 0; i < count; i++) {
     const item = await repo.insert(
       repo.create({
@@ -499,7 +499,7 @@ describe("paginate()", () => {
       await seedItems(3);
 
       let cursor: string | undefined;
-      const allScores: number[] = [];
+      const allScores: Array<number> = [];
 
       for (let i = 0; i < 4; i++) {
         const result = await repo.paginate(undefined, {

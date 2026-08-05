@@ -25,9 +25,9 @@ export type MysqlSnapshotIndex = {
 
 export type MysqlSnapshotForeignKey = {
   constraintName: string;
-  columns: string[];
+  columns: Array<string>;
   referencedTable: string;
-  referencedColumns: string[];
+  referencedColumns: Array<string>;
   deleteRule: string;
   updateRule: string;
 };

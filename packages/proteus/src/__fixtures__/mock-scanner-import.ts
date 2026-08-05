@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import { vi } from "vitest";
 import { Scanner } from "@lindorm/scanner";
 
@@ -8,7 +9,7 @@ export const mockScannerImport = (): void => {
     this: Scanner,
     fileOrPath: any,
   ): Promise<T> {
-    const filePath = typeof fileOrPath === "string" ? fileOrPath : fileOrPath.fullPath;
+    const filePath = isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath;
     return require(filePath) as T;
   });
 };

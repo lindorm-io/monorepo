@@ -1,3 +1,4 @@
+import { isFunction, isObjectLike } from "@lindorm/is";
 import { existsSync } from "fs";
 import { isAbsolute, resolve } from "path";
 import { Scanner } from "@lindorm/scanner";
@@ -6,9 +7,8 @@ import { ProteusError } from "../../errors/ProteusError.js";
 import { PROTEUS_SOURCE_BRAND } from "../constants/brand.js";
 
 const isProteusSource = (val: unknown): val is ProteusSource =>
-  val != null &&
-  typeof val === "object" &&
-  typeof (val as any).constructor === "function" &&
+  isObjectLike(val) &&
+  isFunction((val as any).constructor) &&
   (val as any).constructor[PROTEUS_SOURCE_BRAND] === true;
 
 export const loadSource = async (

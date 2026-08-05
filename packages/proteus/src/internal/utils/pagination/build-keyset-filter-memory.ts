@@ -1,3 +1,4 @@
+import { isBoolean, isNumber, isString } from "@lindorm/is";
 import type { KeysetOrderEntry } from "./build-keyset-order.js";
 
 /**
@@ -103,9 +104,9 @@ const compareValues = (a: unknown, b: unknown): number => {
   if (a instanceof Date) return a.getTime() - new Date(b as string | number).getTime();
   if (b instanceof Date) return new Date(a as string | number).getTime() - b.getTime();
 
-  if (typeof a === "number" && typeof b === "number") return a - b;
-  if (typeof a === "string" && typeof b === "string") return a < b ? -1 : a > b ? 1 : 0;
-  if (typeof a === "boolean" && typeof b === "boolean") return a === b ? 0 : a ? 1 : -1;
+  if (isNumber(a) && isNumber(b)) return a - b;
+  if (isString(a) && isString(b)) return a < b ? -1 : a > b ? 1 : 0;
+  if (isBoolean(a) && isBoolean(b)) return a === b ? 0 : a ? 1 : -1;
 
   // Fallback: coerce to string
   const sa = String(a);

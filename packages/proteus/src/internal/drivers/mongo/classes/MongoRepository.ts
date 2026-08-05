@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type { Db, ClientSession } from "mongodb";
@@ -300,8 +301,7 @@ export class MongoRepository<
 
     // Clear join collections for M2M relations
     for (const relation of this.metadata.relations) {
-      if (relation.type !== "ManyToMany" || typeof relation.joinTable !== "string")
-        continue;
+      if (relation.type !== "ManyToMany" || !isString(relation.joinTable)) continue;
       const joinCollection = this.db.collection(relation.joinTable);
       await joinCollection.deleteMany(
         {},

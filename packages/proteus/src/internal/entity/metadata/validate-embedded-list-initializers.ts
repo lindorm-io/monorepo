@@ -7,7 +7,7 @@ import type { MetaEmbeddedList } from "../types/metadata.js";
  *
  * Why: `installLazyEmbeddedLists` only installs a `LazyCollection` thenable
  * when the property is `undefined` after hydrate. A field initializer like
- * `public tags: string[] = []` runs inside `new target()` before hydrate,
+ * `public tags: Array<string> = []` runs inside `new target()` before hydrate,
  * leaving `tags = []` — the install helper then skips the field and the
  * lazy loader is never attached. The user awaits the field and gets an
  * empty array forever, silently wrong.

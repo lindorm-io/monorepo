@@ -18,10 +18,10 @@ class RelationIdCompany {
   name!: string;
 
   @OneToMany(() => RelationIdEmployee, "company")
-  employees!: RelationIdEmployee[];
+  employees!: Array<RelationIdEmployee>;
 
   @OneToMany(() => RelationIdExplicitEmployee, "company")
-  explicitEmployees!: RelationIdExplicitEmployee[];
+  explicitEmployees!: Array<RelationIdExplicitEmployee>;
 }
 
 @Entity({ name: "RelationIdEmployee" })

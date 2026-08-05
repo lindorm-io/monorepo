@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type {
   EntityMetadata,
@@ -43,7 +44,7 @@ export const loadRelationCounts = async <E extends IEntity>(
       await loadOneToManyCount(entities, rc, relation, foreignMeta, schema, ctx);
     } else if (
       relation.type === "ManyToMany" &&
-      typeof relation.joinTable === "string" &&
+      isString(relation.joinTable) &&
       relation.joinKeys
     ) {
       await loadManyToManyCount(entities, rc, relation, ctx);

@@ -1,3 +1,4 @@
+import { isNumber, isString } from "@lindorm/is";
 import { ProteusError } from "../errors/ProteusError.js";
 import type { DiscriminatorValue as DiscriminatorValueType } from "../internal/entity/types/inheritance.js";
 import { stageDiscriminatorValue } from "../internal/entity/metadata/stage-metadata.js";
@@ -13,7 +14,7 @@ import { stageDiscriminatorValue } from "../internal/entity/metadata/stage-metad
 export const DiscriminatorValue =
   (value: DiscriminatorValueType) =>
   (_target: Function, context: ClassDecoratorContext): void => {
-    if (typeof value !== "string" && typeof value !== "number") {
+    if (!isString(value) && !isNumber(value)) {
       throw new ProteusError(
         `@DiscriminatorValue requires a string or number, received ${typeof value}`,
         {

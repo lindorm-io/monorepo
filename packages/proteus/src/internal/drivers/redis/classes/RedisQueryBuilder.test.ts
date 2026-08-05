@@ -1,3 +1,4 @@
+import { isArray, isObjectLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
 import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
@@ -83,7 +84,12 @@ vi.mock("../utils/is-pk-exact.js", () => ({
       const values: Array<unknown> = [];
       for (const pk of primaryKeys) {
         const value = criteria[pk];
-        if (value === undefined || value === null || typeof value === "object")
+        if (
+          value === undefined ||
+          value === null ||
+          isObjectLike(value) ||
+          isArray(value)
+        )
           return null;
         values.push(value);
       }

@@ -1,3 +1,4 @@
+import { isFunction, isObjectLike } from "@lindorm/is";
 import type { MongoError } from "mongodb";
 
 /**
@@ -8,7 +9,7 @@ import type { MongoError } from "mongodb";
  * primary step-down). These are safe to retry with a fresh transaction.
  */
 export const isRetryableMongoError = (error: unknown): boolean => {
-  if (error == null || typeof error !== "object") return false;
+  if (!isObjectLike(error)) return false;
 
   // MongoDB driver errors carry errorLabels array
   const mongoError = error as MongoError;
@@ -18,7 +19,7 @@ export const isRetryableMongoError = (error: unknown): boolean => {
   }
 
   // Fallback: check for hasErrorLabel method (MongoError interface)
-  if (typeof (mongoError as any).hasErrorLabel === "function") {
+  if (isFunction((mongoError as any).hasErrorLabel)) {
     return (mongoError as any).hasErrorLabel("TransientTransactionError");
   }
 

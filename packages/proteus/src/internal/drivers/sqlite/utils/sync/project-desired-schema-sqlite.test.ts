@@ -87,13 +87,13 @@ class GoldUser {
   displayName!: string;
 
   @EmbeddedList("string")
-  tags!: string[];
+  tags!: Array<string>;
 
   @EmbeddedList(() => GoldAddress)
-  addresses!: GoldAddress[];
+  addresses!: Array<GoldAddress>;
 
   @OneToMany(() => GoldPost, "author")
-  posts!: GoldPost[];
+  posts!: Array<GoldPost>;
 }
 
 @Entity({ name: "GoldPost" })
@@ -183,7 +183,7 @@ class GoldCourse {
 
   @JoinTable()
   @ManyToMany(() => GoldStudent, "courses")
-  students!: GoldStudent[];
+  students!: Array<GoldStudent>;
 }
 
 @Entity({ name: "GoldStudent" })
@@ -196,7 +196,7 @@ class GoldStudent {
   name!: string;
 
   @ManyToMany(() => GoldCourse, "students")
-  courses!: GoldCourse[];
+  courses!: Array<GoldCourse>;
 }
 
 @AppendOnly()
@@ -320,7 +320,7 @@ class GoldLindormClient {
   name!: string;
 
   @OneToMany(() => GoldLindormToken, "client")
-  tokens!: GoldLindormToken[];
+  tokens!: Array<GoldLindormToken>;
 }
 
 @Entity({ name: "GoldLindormToken" })

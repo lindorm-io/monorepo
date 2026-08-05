@@ -40,7 +40,7 @@ export const resetLazyEmbeddedListLoaderInvocations = (): void => {
  * it because the scope is lazy. Any defined value (empty array, populated
  * array, user write) is preserved as-is.
  *
- * Because a TS class field initializer (`public tags: string[] = []`) would
+ * Because a TS class field initializer (`public tags: Array<string> = []`) would
  * leave the property defined before hydrate and silently suppress the lazy
  * install, `buildPrimaryMetadata` rejects such initializers at build time via
  * `validateEmbeddedListInitializers`. Declare lazy `@EmbeddedList` fields with

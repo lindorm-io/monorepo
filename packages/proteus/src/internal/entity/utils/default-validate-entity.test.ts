@@ -192,10 +192,10 @@ class ValidateEntityWithPrimitiveLists {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @EmbeddedList("string")
-  tags!: string[];
+  tags!: Array<string>;
 
   @EmbeddedList("integer", { tableName: "validate_scores" })
-  scores!: number[];
+  scores!: Array<number>;
 }
 
 @Entity({ name: "ValidateEntityWithEmbeddableList" })
@@ -203,7 +203,7 @@ class ValidateEntityWithEmbeddableList {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @EmbeddedList(() => TagItem)
-  items!: TagItem[];
+  items!: Array<TagItem>;
 }
 
 describe("defaultValidateEntity — @EmbeddedList (B8)", () => {

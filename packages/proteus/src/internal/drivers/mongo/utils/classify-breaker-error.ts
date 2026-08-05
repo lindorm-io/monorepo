@@ -1,3 +1,4 @@
+import { isNumber, isString } from "@lindorm/is";
 import type { ErrorClassification } from "@lindorm/breaker";
 import { AbortError } from "@lindorm/errors";
 
@@ -41,12 +42,12 @@ export const classifyMongoError = (error: Error): ErrorClassification => {
   const code: number | string | undefined = (error as any).code;
   const systemCode: string | undefined = (error as any).code;
 
-  if (typeof code === "number") {
+  if (isNumber(code)) {
     if (TRANSIENT_MONGO_CODES.has(code)) return "transient";
     if (PERMANENT_MONGO_CODES.has(code)) return "permanent";
   }
 
-  if (typeof systemCode === "string" && TRANSIENT_SYSTEM_CODES.has(systemCode)) {
+  if (isString(systemCode) && TRANSIENT_SYSTEM_CODES.has(systemCode)) {
     return "transient";
   }
 

@@ -6,7 +6,7 @@ import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const makeUnique = (keys: string[]): EntityMetadata["uniques"][number] => ({
+const makeUnique = (keys: Array<string>): EntityMetadata["uniques"][number] => ({
   keys,
   name: null,
 });

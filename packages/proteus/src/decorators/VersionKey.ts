@@ -17,7 +17,7 @@ export function VersionKey(): (
   target: undefined,
   context: ClassFieldDecoratorContext,
 ) => void;
-export function VersionKey<T extends abstract new (...args: any[]) => any>(
+export function VersionKey<T extends abstract new (...args: Array<any>) => any>(
   fields: Array<keyof InstanceType<T>>,
 ): (target: T, context: ClassDecoratorContext<T>) => void;
 export function VersionKey(fields?: any): any {

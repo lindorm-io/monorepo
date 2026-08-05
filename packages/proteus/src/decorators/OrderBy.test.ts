@@ -17,10 +17,10 @@ class OrderByTeam {
 
   @OrderBy({ name: "ASC" })
   @OneToMany(() => OrderByPlayer, "team")
-  players!: OrderByPlayer[];
+  players!: Array<OrderByPlayer>;
 
   @OneToMany(() => OrderByCoach, "team")
-  coaches!: OrderByCoach[];
+  coaches!: Array<OrderByCoach>;
 }
 
 @Entity({ name: "OrderByPlayer" })

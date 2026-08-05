@@ -11,7 +11,7 @@ import { stageUnique } from "../internal/entity/metadata/stage-metadata.js";
 export function Unique(
   options?: UniqueDecoratorOptions,
 ): (target: undefined, context: ClassFieldDecoratorContext) => void;
-export function Unique<T extends abstract new (...args: any[]) => any>(
+export function Unique<T extends abstract new (...args: Array<any>) => any>(
   keys: Array<keyof InstanceType<T>>,
   options?: UniqueDecoratorOptions,
 ): (target: T, context: ClassDecoratorContext<T>) => void;

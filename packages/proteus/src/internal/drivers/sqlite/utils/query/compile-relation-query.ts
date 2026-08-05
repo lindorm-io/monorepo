@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
 import type { IncludeSpec } from "../../../../types/query.js";
 import { generateAutoFilters } from "../../../../entity/metadata/auto-filters.js";
@@ -37,7 +38,7 @@ export const compileRelationQuery = (
   if (
     relation.type === "ManyToMany" &&
     relation.joinTable &&
-    typeof relation.joinTable === "string"
+    isString(relation.joinTable)
   ) {
     return compileManyToManyQuery(
       include,

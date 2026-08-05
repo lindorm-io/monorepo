@@ -18,7 +18,7 @@ class ManyToOneTag {
   name!: string;
 
   @OneToMany(() => ManyToOneItem, "tag")
-  items!: ManyToOneItem[];
+  items!: Array<ManyToOneItem>;
 }
 
 @Entity({ name: "ManyToOneItem" })
@@ -46,7 +46,7 @@ class ManyToOneExplicitCategory {
   name!: string;
 
   @OneToMany(() => ManyToOneExplicitProduct, "category")
-  products!: ManyToOneExplicitProduct[];
+  products!: Array<ManyToOneExplicitProduct>;
 }
 
 @Entity({ name: "ManyToOneExplicitProduct" })

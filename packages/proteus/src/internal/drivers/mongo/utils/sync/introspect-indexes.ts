@@ -1,3 +1,4 @@
+import { isNumber } from "@lindorm/is";
 import type { Db } from "mongodb";
 import type { ExistingMongoIndex } from "./types.js";
 
@@ -40,8 +41,9 @@ export const introspectIndexes = async (
         keys: idx.key as Record<string, 1 | -1>,
         unique: idx.unique ?? false,
         sparse: idx.sparse ?? false,
-        expireAfterSeconds:
-          typeof idx.expireAfterSeconds === "number" ? idx.expireAfterSeconds : null,
+        expireAfterSeconds: isNumber(idx.expireAfterSeconds)
+          ? idx.expireAfterSeconds
+          : null,
       });
     }
   }

@@ -17,13 +17,13 @@ class LazyOrganization {
   name!: string;
 
   @OneToMany(() => LazyMember, "organization")
-  members!: LazyMember[];
+  members!: Array<LazyMember>;
 
   @OneToMany(() => LazySingleMember, "organization")
-  singleMembers!: LazySingleMember[];
+  singleMembers!: Array<LazySingleMember>;
 
   @OneToMany(() => LazyMultipleMember, "organization")
-  multipleMembers!: LazyMultipleMember[];
+  multipleMembers!: Array<LazyMultipleMember>;
 }
 
 @Entity({ name: "LazyMember" })

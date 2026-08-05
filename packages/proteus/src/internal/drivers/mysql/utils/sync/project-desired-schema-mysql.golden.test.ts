@@ -132,10 +132,10 @@ class MyGoldUser {
   name!: string;
 
   @EmbeddedList("string")
-  tags!: string[];
+  tags!: Array<string>;
 
   @EmbeddedList(() => MyGoldAddress)
-  addresses!: MyGoldAddress[];
+  addresses!: Array<MyGoldAddress>;
 }
 
 @AppendOnly()
@@ -220,7 +220,7 @@ class MyGoldLindormClient {
   name!: string;
 
   @OneToMany(() => MyGoldLindormToken, "client")
-  tokens!: MyGoldLindormToken[];
+  tokens!: Array<MyGoldLindormToken>;
 }
 
 @Entity({ name: "MyGoldLindormToken" })

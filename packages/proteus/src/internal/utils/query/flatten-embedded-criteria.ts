@@ -1,3 +1,4 @@
+import { isObjectLike } from "@lindorm/is";
 import type { Condition } from "@lindorm/match";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
@@ -34,9 +35,7 @@ export const flattenEmbeddedCriteria = <E extends IEntity>(
 
     if (
       embeddedChildren.length > 0 &&
-      value !== null &&
-      typeof value === "object" &&
-      !Array.isArray(value) &&
+      isObjectLike(value) &&
       !isPredicateOperator(value as Dict)
     ) {
       // Flatten: { address: { city: "London" } } -> { "address.city": "London" }

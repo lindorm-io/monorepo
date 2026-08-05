@@ -1,3 +1,4 @@
+import { isBigInt, isObjectLike } from "@lindorm/is";
 import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type { ILogger } from "@lindorm/logger";
@@ -33,12 +34,12 @@ import { dehydrateTypedJson, typedJsonMetaDictKey } from "../entity/utils/typed-
 // ─── JSON replacer / reviver ─────────────────────────────────────────────
 
 const jsonReplacer = (_key: string, value: unknown): unknown => {
-  if (typeof value === "bigint") return { __t: "bigint", v: String(value) };
+  if (isBigInt(value)) return { __t: "bigint", v: String(value) };
   return value;
 };
 
 const jsonReviver = (_key: string, value: unknown): unknown => {
-  if (value !== null && typeof value === "object" && (value as any).__t === "bigint") {
+  if (isObjectLike(value) && (value as any).__t === "bigint") {
     return BigInt((value as any).v);
   }
   return value;

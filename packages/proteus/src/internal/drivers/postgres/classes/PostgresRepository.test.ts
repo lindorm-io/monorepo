@@ -653,7 +653,7 @@ describe("PostgresRepository", () => {
 
     test("runs find and count in parallel", async () => {
       const { repo, executor } = createRepository();
-      const order: string[] = [];
+      const order: Array<string> = [];
 
       executor.executeFind.mockImplementation(async () => {
         order.push("find");
@@ -751,7 +751,7 @@ describe("PostgresRepository", () => {
       const { repo, executor, mockEM } = createRepository({
         metadata: mockMetadataWithRelations,
       });
-      const order: string[] = [];
+      const order: Array<string> = [];
 
       mockEM.insert.mockResolvedValue(entityA);
       mockSaveOwning.mockImplementation(async () => {
@@ -771,7 +771,7 @@ describe("PostgresRepository", () => {
       const { repo, executor, mockEM } = createRepository({
         metadata: mockMetadataWithRelations,
       });
-      const order: string[] = [];
+      const order: Array<string> = [];
 
       mockEM.insert.mockResolvedValue(entityA);
       executor.executeInsert.mockImplementation(async () => {

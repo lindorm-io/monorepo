@@ -102,7 +102,7 @@ export const hooksSuite = (
 
       // Hooks receive (entity, meta) — entity is at index 0
       const hasEntityArg = hookCallback.mock.calls.some(
-        (call: any[]) => call[0] && call[0].name === "HookArg",
+        (call: Array<any>) => call[0] && call[0].name === "HookArg",
       );
       expect(hasEntityArg).toBe(true);
     });

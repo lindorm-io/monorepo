@@ -1,3 +1,4 @@
+import { isArray, isBigInt, isBoolean, isObjectLike } from "@lindorm/is";
 import type { MetaFieldType } from "../../../../entity/types/metadata.js";
 import { stringifyForStorage } from "../../../../entity/utils/stringify-for-storage.js";
 
@@ -14,7 +15,7 @@ export const coerceWriteValue = (
   if (value === null || value === undefined) return value;
 
   // Boolean -> TINYINT(1) 0/1
-  if (typeof value === "boolean") return value ? 1 : 0;
+  if (isBoolean(value)) return value ? 1 : 0;
 
   // Date -> MySQL DATETIME(3) format: 'YYYY-MM-DD HH:MM:SS.mmm'
   // MySQL rejects ISO 8601 (with 'T' and 'Z'); must use space separator, no trailing 'Z'.
@@ -27,10 +28,10 @@ export const coerceWriteValue = (
   // Objects and arrays -> JSON string. Use the bigint-hardened stringify so a
   // typed bigint array (@Field("array", { arrayType: "bigint" })) stores each
   // element as a decimal string instead of throwing; deserialise restores it.
-  if (typeof value === "object") return stringifyForStorage(value);
+  if (isObjectLike(value) || isArray(value)) return stringifyForStorage(value);
 
   // bigint -> string (mysql2 handles bigint natively but string is safer)
-  if (typeof value === "bigint") return String(value);
+  if (isBigInt(value)) return String(value);
 
   return value;
 };

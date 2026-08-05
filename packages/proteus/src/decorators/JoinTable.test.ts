@@ -16,7 +16,7 @@ class JoinTableSkill {
 
   // Inverse side — no @JoinTable
   @ManyToMany(() => JoinTableDeveloper, "skills")
-  developers!: JoinTableDeveloper[];
+  developers!: Array<JoinTableDeveloper>;
 }
 
 @Entity({ name: "JoinTableDeveloper" })
@@ -29,7 +29,7 @@ class JoinTableDeveloper {
   // Owning side with default auto-generated table name
   @JoinTable()
   @ManyToMany(() => JoinTableSkill, "developers")
-  skills!: JoinTableSkill[];
+  skills!: Array<JoinTableSkill>;
 }
 
 @Entity({ name: "JoinTableTag" })
@@ -40,7 +40,7 @@ class JoinTableTag {
   label!: string;
 
   @ManyToMany(() => JoinTableArticle, "tags")
-  articles!: JoinTableArticle[];
+  articles!: Array<JoinTableArticle>;
 }
 
 @Entity({ name: "JoinTableArticle" })
@@ -53,7 +53,7 @@ class JoinTableArticle {
   // Owning side with explicit custom table name
   @JoinTable({ name: "article_tags" })
   @ManyToMany(() => JoinTableTag, "articles")
-  tags!: JoinTableTag[];
+  tags!: Array<JoinTableTag>;
 }
 
 describe("JoinTable", () => {

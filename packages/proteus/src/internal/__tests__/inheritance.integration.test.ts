@@ -149,7 +149,7 @@ beforeEach(async () => {
 
 // ─── Helper: inspect actual schema ───────────────────────────────────────────
 
-const getTableNames = async (): Promise<string[]> => {
+const getTableNames = async (): Promise<Array<string>> => {
   const result = await rawClient.query(
     `SELECT table_name FROM information_schema.tables
      WHERE table_schema = $1 AND table_type = 'BASE TABLE'
@@ -159,7 +159,7 @@ const getTableNames = async (): Promise<string[]> => {
   return result.rows.map((r: { table_name: string }) => r.table_name);
 };
 
-const getColumnNames = async (table: string): Promise<string[]> => {
+const getColumnNames = async (table: string): Promise<Array<string>> => {
   const result = await rawClient.query(
     `SELECT column_name FROM information_schema.columns
      WHERE table_schema = $1 AND table_name = $2

@@ -33,9 +33,9 @@ class RiParent {
   @UpdateDateField() updatedAt!: Date;
   @Field("string") name!: string;
 
-  @OneToMany(() => RiCascadeChild, "parent") cascadeChildren!: RiCascadeChild[];
-  @OneToMany(() => RiRestrictChild, "parent") restrictChildren!: RiRestrictChild[];
-  @OneToMany(() => RiNullifyChild, "parent") nullifyChildren!: RiNullifyChild[];
+  @OneToMany(() => RiCascadeChild, "parent") cascadeChildren!: Array<RiCascadeChild>;
+  @OneToMany(() => RiRestrictChild, "parent") restrictChildren!: Array<RiRestrictChild>;
+  @OneToMany(() => RiNullifyChild, "parent") nullifyChildren!: Array<RiNullifyChild>;
 }
 
 @Entity({ name: "RiCascadeChild" })
@@ -292,7 +292,7 @@ class RiSensitiveParent {
   @Sensitive() @PrimaryKeyField() @Generated("uuid") id!: string;
   @Field("string") name!: string;
 
-  @OneToMany(() => RiSensitiveChild, "parent") children!: RiSensitiveChild[];
+  @OneToMany(() => RiSensitiveChild, "parent") children!: Array<RiSensitiveChild>;
 }
 
 @Entity({ name: "RiSensitiveChild" })
@@ -314,7 +314,7 @@ class RiSensitivePkParent {
   @Sensitive() @PrimaryKeyField() @Generated("uuid") id!: string;
   @Field("string") name!: string;
 
-  @OneToMany(() => RiPlainFkChild, "parent") children!: RiPlainFkChild[];
+  @OneToMany(() => RiPlainFkChild, "parent") children!: Array<RiPlainFkChild>;
 }
 
 @Entity({ name: "RiPlainFkChild" })

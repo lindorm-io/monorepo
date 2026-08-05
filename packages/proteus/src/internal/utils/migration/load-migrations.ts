@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync } from "fs";
-import { isObjectLike } from "@lindorm/is";
+import { isFunction, isObjectLike, isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
 import { Scanner } from "@lindorm/scanner";
 import { ProteusError } from "../../../errors/index.js";
@@ -12,10 +12,10 @@ const scanner = new Scanner({
 
 const isMigrationInterface = (value: unknown): value is MigrationInterfaceShape =>
   isObjectLike(value) &&
-  typeof (value as MigrationInterfaceShape).id === "string" &&
-  typeof (value as MigrationInterfaceShape).ts === "string" &&
-  typeof (value as MigrationInterfaceShape).up === "function" &&
-  typeof (value as MigrationInterfaceShape).down === "function";
+  isString((value as MigrationInterfaceShape).id) &&
+  isString((value as MigrationInterfaceShape).ts) &&
+  isFunction((value as MigrationInterfaceShape).up) &&
+  isFunction((value as MigrationInterfaceShape).down);
 
 export const loadMigrations = async (
   directory: string,
@@ -55,14 +55,16 @@ export const loadMigrations = async (
       logger.warn("Failed to import migration file — skipping", { file: file.fullName });
       continue;
     }
-    if (!module || typeof module !== "object") continue;
+    if (!isObjectLike(module)) continue;
     const exports = Object.values(module);
     let found = false;
 
     for (const exported of exports) {
       // Migration classes need instantiation, plain objects can be used directly
-      if (typeof exported === "function" && exported.prototype) {
-        const instance = new (exported as new () => unknown)();
+      if (isFunction(exported) && exported.prototype) {
+        // isFunction narrows to a CALL signature; a migration class is a
+        // construct signature, so widen before casting.
+        const instance = new (exported as unknown as new () => unknown)();
         if (isMigrationInterface(instance)) {
           const existing = seenIds.get(instance.id);
           if (existing) {

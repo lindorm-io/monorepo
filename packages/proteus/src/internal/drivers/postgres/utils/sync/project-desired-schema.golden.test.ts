@@ -109,7 +109,7 @@ class PgGoldCourse {
 
   @JoinTable()
   @ManyToMany(() => PgGoldStudent, "courses")
-  students!: PgGoldStudent[];
+  students!: Array<PgGoldStudent>;
 }
 
 @Entity({ name: "PgGoldStudent" })
@@ -122,7 +122,7 @@ class PgGoldStudent {
   name!: string;
 
   @ManyToMany(() => PgGoldCourse, "students")
-  courses!: PgGoldCourse[];
+  courses!: Array<PgGoldCourse>;
 }
 
 @Embeddable()
@@ -149,10 +149,10 @@ class PgGoldUser {
   name!: string;
 
   @EmbeddedList("string")
-  tags!: string[];
+  tags!: Array<string>;
 
   @EmbeddedList(() => PgGoldAddress)
-  addresses!: PgGoldAddress[];
+  addresses!: Array<PgGoldAddress>;
 }
 
 @AppendOnly()
@@ -176,7 +176,7 @@ class PgGoldOwner {
   name!: string;
 
   @OneToMany(() => PgGoldKitchen, "owner")
-  items!: PgGoldKitchen[];
+  items!: Array<PgGoldKitchen>;
 }
 
 @Entity({ name: "PgGoldKitchen" })
@@ -256,7 +256,7 @@ class PgGoldLindormClient {
   name!: string;
 
   @OneToMany(() => PgGoldLindormToken, "client")
-  tokens!: PgGoldLindormToken[];
+  tokens!: Array<PgGoldLindormToken>;
 }
 
 @Entity({ name: "PgGoldLindormToken" })

@@ -1,3 +1,4 @@
+import { isFunction } from "@lindorm/is";
 import type { DeepPartial } from "@lindorm/types";
 import { EntityManagerError } from "../errors/EntityManagerError.js";
 import type { IEntity } from "../../../interfaces/index.js";
@@ -24,7 +25,7 @@ export const parseField = <E extends IEntity, O extends DeepPartial<E> = DeepPar
   if (value === null || value === undefined) {
     if (field.nullable) return value;
     if (field.default !== null) {
-      return typeof field.default === "function" ? field.default() : field.default;
+      return isFunction(field.default) ? field.default() : field.default;
     }
   }
   try {

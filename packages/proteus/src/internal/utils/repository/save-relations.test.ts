@@ -77,8 +77,8 @@ const makeRelation = (overrides: Partial<MetaRelation> = {}): MetaRelation =>
 
 const makeMetadata = (
   target: any,
-  relations: MetaRelation[] = [],
-  primaryKeys: string[] = ["id"],
+  relations: Array<MetaRelation> = [],
+  primaryKeys: Array<string> = ["id"],
 ): EntityMetadata =>
   ({
     target,

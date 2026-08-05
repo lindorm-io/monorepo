@@ -1,4 +1,4 @@
-import { isObjectLike } from "@lindorm/is";
+import { isBigInt, isObjectLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../types/metadata.js";
@@ -141,8 +141,8 @@ const valuesEqual = (a: unknown, b: unknown): boolean => {
   if (Buffer.isBuffer(a) || Buffer.isBuffer(b)) return false;
 
   // BigInt comparison
-  if (typeof a === "bigint" && typeof b === "bigint") return a === b;
-  if (typeof a === "bigint" || typeof b === "bigint") return false;
+  if (isBigInt(a) && isBigInt(b)) return a === b;
+  if (isBigInt(a) || isBigInt(b)) return false;
 
   // Array deep equality (order-sensitive)
   if (Array.isArray(a) && Array.isArray(b)) {

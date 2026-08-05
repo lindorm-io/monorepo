@@ -1,3 +1,4 @@
+import { isFunction } from "@lindorm/is";
 import type { LindormIdOptions } from "@lindorm/random";
 import { stageGenerated } from "../internal/entity/metadata/stage-metadata.js";
 import type { GeneratedDecoratorOptions } from "../internal/entity/types/decorators.js";
@@ -38,12 +39,12 @@ export function Generated(
   options: GeneratedDecoratorOptions & { namespace?: string } = {},
 ): GeneratedDecorator {
   return (_target: undefined, context: ClassFieldDecoratorContext): void => {
-    const isFunction = typeof strategyOrGenerator === "function";
+    const isGenerator = isFunction(strategyOrGenerator);
 
     stageGenerated(context.metadata, {
       key: String(context.name),
-      generator: isFunction ? strategyOrGenerator : null,
-      strategy: isFunction ? null : (strategyOrGenerator ?? "lindorm_id"),
+      generator: isGenerator ? strategyOrGenerator : null,
+      strategy: isGenerator ? null : (strategyOrGenerator ?? "lindorm_id"),
       length: options.length ?? null,
       max: options.max ?? null,
       min: options.min ?? null,

@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import type { DesiredMongoIndex } from "./types.js";
 import { hashIdentifier } from "../../../../utils/sql/hash-identifier.js";
@@ -187,7 +188,7 @@ export const projectDesiredIndexes = (
     // ManyToMany join collection indexes
     for (const relation of metadata.relations) {
       if (relation.type !== "ManyToMany") continue;
-      if (typeof relation.joinTable !== "string") continue;
+      if (!isString(relation.joinTable)) continue;
       if (!relation.joinKeys) continue;
 
       const joinCollName = relation.joinTable;

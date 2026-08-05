@@ -36,7 +36,7 @@ class UserWithTags {
   name!: string;
 
   @EmbeddedList("string")
-  tags!: string[];
+  tags!: Array<string>;
 }
 
 @Entity({ name: "UserWithAddresses" })
@@ -47,7 +47,7 @@ class UserWithAddresses {
   name!: string;
 
   @EmbeddedList(() => Address)
-  addresses!: Address[];
+  addresses!: Array<Address>;
 }
 
 @Entity({ name: "UserWithCustomTable" })
@@ -55,7 +55,7 @@ class UserWithCustomTable {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @EmbeddedList("string", { tableName: "custom_user_tags" })
-  tags!: string[];
+  tags!: Array<string>;
 }
 
 @Entity({ name: "UserWithMultipleLists" })
@@ -63,13 +63,13 @@ class UserWithMultipleLists {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @EmbeddedList("string")
-  tags!: string[];
+  tags!: Array<string>;
 
   @EmbeddedList("integer")
-  scores!: number[];
+  scores!: Array<number>;
 
   @EmbeddedList(() => Address)
-  addresses!: Address[];
+  addresses!: Array<Address>;
 }
 
 // ─── Metadata Staging ───────────────────────────────────────────────────────
@@ -180,7 +180,7 @@ describe("EmbeddedList — validation", () => {
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList(() => NotEmbeddable as any)
-        items!: any[];
+        items!: Array<any>;
       }
 
       getEntityMetadata(BadEmbeddedListEntity);

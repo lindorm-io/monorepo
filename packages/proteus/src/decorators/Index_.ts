@@ -22,11 +22,11 @@ export function Index(
 export function Index(
   options?: IndexDecoratorOptions,
 ): (target: undefined, context: ClassFieldDecoratorContext) => void;
-export function Index<T extends abstract new (...args: any[]) => any>(
+export function Index<T extends abstract new (...args: Array<any>) => any>(
   index: Array<keyof InstanceType<T>>,
   options?: Omit<IndexDecoratorOptions, "direction">,
 ): (target: T, context: ClassDecoratorContext<T>) => void;
-export function Index<T extends abstract new (...args: any[]) => any>(
+export function Index<T extends abstract new (...args: Array<any>) => any>(
   index: { [K in keyof InstanceType<T>]?: IndexDirection },
   options?: IndexDecoratorOptions,
 ): (target: T, context: ClassDecoratorContext<T>) => void;

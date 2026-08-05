@@ -28,7 +28,7 @@ const makeRelation = (overrides: Partial<MetaRelation>): MetaRelation => ({
   ...overrides,
 });
 
-const makeMetadata = (relations: MetaRelation[]): EntityMetadata =>
+const makeMetadata = (relations: Array<MetaRelation>): EntityMetadata =>
   ({ relations, fields: [] }) as unknown as EntityMetadata;
 
 const mockLoadRelation = () => vi.fn().mockResolvedValue(null);

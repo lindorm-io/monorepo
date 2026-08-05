@@ -102,7 +102,7 @@ class E2EPost {
   views!: number;
 
   @OneToMany(() => E2EComment, "post")
-  comments!: E2EComment[];
+  comments!: Array<E2EComment>;
 }
 
 describe("getEntityMetadata", () => {

@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import { makeField } from "../../../../__fixtures__/make-field.js";
 import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
 import { ProteusError } from "../../../../../errors/ProteusError.js";
@@ -231,7 +232,7 @@ const buildAliasMap = (includes: Array<{ relation: string }>): Array<AliasMap> =
     const rel = userMetadata.relations.find((r) => r.key === inc.relation);
     if (!rel) continue;
 
-    if (rel.joinTable && typeof rel.joinTable === "string") {
+    if (rel.joinTable && isString(rel.joinTable)) {
       aliases.push({
         tableAlias: `t${counter++}`,
         schema: "app",
@@ -573,7 +574,7 @@ describe("compileJoin", () => {
         const rel = versionedUserMetadata.relations.find((r) => r.key === inc.relation);
         if (!rel) continue;
 
-        if (rel.joinTable && typeof rel.joinTable === "string") {
+        if (rel.joinTable && isString(rel.joinTable)) {
           aliases.push({
             tableAlias: `t${counter++}`,
             schema: "app",

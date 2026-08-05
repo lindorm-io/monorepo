@@ -1,3 +1,4 @@
+import { isFunction } from "@lindorm/is";
 import type { Constructor } from "@lindorm/types";
 import type { MetaFieldType } from "../internal/entity/types/metadata.js";
 import { stageEmbeddedList } from "../internal/entity/metadata/stage-metadata.js";
@@ -16,22 +17,22 @@ export type EmbeddedListOptions = {
  * ```ts
  * // Embeddable array:
  * @EmbeddedList(() => Address)
- * addresses!: Address[];
+ * addresses!: Array<Address>;
  *
  * // Primitive array:
  * @EmbeddedList("string")
- * tags!: string[];
+ * tags!: Array<string>;
  *
  * // With custom table name:
  * @EmbeddedList("string", { tableName: "user_tags" })
- * tags!: string[];
+ * tags!: Array<string>;
  * ```
  */
 export const EmbeddedList =
   (typeOrFn: MetaFieldType | (() => Constructor), options?: EmbeddedListOptions) =>
   (_target: undefined, context: ClassFieldDecoratorContext): void => {
     const key = String(context.name);
-    const isConstructorFn = typeof typeOrFn === "function";
+    const isConstructorFn = isFunction(typeOrFn);
 
     stageEmbeddedList(context.metadata, {
       key,

@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import { uniq } from "@lindorm/utils";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type {
@@ -43,7 +44,7 @@ export const loadRelationIds = <E extends IEntity>(
       loadOneToManyIds(entities, ri, relation, foreignMeta, schema, ctx);
     } else if (
       relation.type === "ManyToMany" &&
-      typeof relation.joinTable === "string" &&
+      isString(relation.joinTable) &&
       relation.joinKeys
     ) {
       loadManyToManyIds(entities, ri, relation, foreignMeta, schema, ctx);

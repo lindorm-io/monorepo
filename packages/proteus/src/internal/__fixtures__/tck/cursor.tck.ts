@@ -25,7 +25,7 @@ export const cursorSuite = (
     const repo = getHandle().repository(TckSimpleUser);
     const cursor = await repo.cursor({ orderBy: { name: "ASC" } });
 
-    const results: string[] = [];
+    const results: Array<string> = [];
     let item = await cursor.next();
     while (item !== null) {
       results.push(item.name);
@@ -57,7 +57,7 @@ export const cursorSuite = (
     const repo = getHandle().repository(TckSimpleUser);
     const cursor = await repo.cursor({ orderBy: { name: "ASC" } });
 
-    const names: string[] = [];
+    const names: Array<string> = [];
     for await (const entity of cursor) {
       names.push(entity.name);
     }
@@ -72,7 +72,7 @@ export const cursorSuite = (
       orderBy: { name: "ASC" },
     });
 
-    const results: string[] = [];
+    const results: Array<string> = [];
     for await (const entity of cursor) {
       results.push(entity.name);
     }
