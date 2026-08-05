@@ -155,7 +155,7 @@ const createUrl: <P extends Dict<Param> = Dict<Param>, Q = Dict<Query>>(
 ) => URL;
 ```
 
-Builds a `URL`. If `pathOrUrl` is a `URL` instance or a string starting with `http`, it is used as the origin and existing search params are merged with `options.query`. Otherwise `pathOrUrl` is treated as a path and either `options.host` or `options.baseUrl` is required to resolve the origin; if neither is provided, throws `Invalid base [ ... ]`.
+Builds a `URL`. If `pathOrUrl` is a `URL` instance or a string starting with `http`, it is used as the origin and existing search params are merged with `options.query`. Otherwise `pathOrUrl` is treated as a path and either `options.host` or `options.baseURL` is required to resolve the origin; if neither is provided, throws `Invalid base [ ... ]`.
 
 ### `createBaseUrl({ base?, host?, port? })`
 
@@ -197,7 +197,7 @@ Returns `url` if it is already a `URL` instance, otherwise constructs a new `URL
 
 ```typescript
 type CreateUrlOptions<P = Dict<Param>, Q = Dict<Query>> = {
-  baseUrl?: string;
+  baseURL?: string;
   changeQueryCase?: ChangeCase;
   host?: string;
   params?: P;
