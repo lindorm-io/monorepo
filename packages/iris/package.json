@@ -59,6 +59,7 @@
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
     "@lindorm/aes": "^0.9.0",
+    "@lindorm/date": "^0.6.0",
     "@lindorm/errors": "^0.6.0",
     "@lindorm/is": "^0.3.0",
     "@lindorm/json-kit": "^0.8.0",

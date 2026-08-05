@@ -1,3 +1,5 @@
+import { isLive } from "@lindorm/date";
+
 export const wait = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -7,7 +9,7 @@ export const waitFor = async (
   pollMs: number = 50,
 ): Promise<void> => {
   const deadline = Date.now() + timeoutMs;
-  while (!(await predicate()) && Date.now() < deadline) {
+  while (!(await predicate()) && isLive(deadline)) {
     await new Promise((r) => setTimeout(r, pollMs));
   }
 

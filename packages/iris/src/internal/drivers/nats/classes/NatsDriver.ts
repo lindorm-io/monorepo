@@ -1,3 +1,4 @@
+import { isLive } from "@lindorm/date";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
@@ -278,7 +279,7 @@ export class NatsDriver extends ConnectionDriverBase {
   private async waitForStreamGone(streamName: string, timeoutMs: number): Promise<void> {
     if (!this.state.jsm) return;
     const deadline = Date.now() + timeoutMs;
-    while (Date.now() < deadline) {
+    while (isLive(deadline)) {
       try {
         await this.state.jsm.streams.info(streamName);
       } catch (err: any) {

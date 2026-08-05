@@ -1,4 +1,5 @@
 import { EventEmitter } from "node:events";
+import { isLive } from "@lindorm/date";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IIrisDriver } from "../../interfaces/IrisDriver.js";
@@ -97,7 +98,7 @@ export abstract class ConnectionDriverBase implements IIrisDriver {
     const pollInterval = 10;
     const deadline = Date.now() + timeoutMs;
 
-    while (this.getInFlightCount() > 0 && Date.now() < deadline) {
+    while (this.getInFlightCount() > 0 && isLive(deadline)) {
       await new Promise<void>((resolve) => {
         const t = setTimeout(resolve, pollInterval);
         t.unref();
