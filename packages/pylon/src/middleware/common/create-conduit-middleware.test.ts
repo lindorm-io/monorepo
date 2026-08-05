@@ -44,7 +44,7 @@ describe("createConduitMiddleware", () => {
     test("should create Conduit on ctx.conduits[alias]", async () => {
       const middleware = createConduitMiddleware({
         alias: "myService",
-        baseUrl: "https://api.test.lindorm.io",
+        baseURL: "https://api.test.lindorm.io",
       });
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
@@ -53,10 +53,26 @@ describe("createConduitMiddleware", () => {
       expect(ctx.conduits.myService).toBeDefined();
     });
 
+    test("should pass every caller setting through to Conduit", async () => {
+      const middleware = createConduitMiddleware({
+        alias: "myService",
+        baseURL: "https://api.test.lindorm.io",
+        timeout: 5000,
+      });
+
+      await middleware(ctx, next);
+
+      const settings = (Conduit as Mock).mock.calls[0][0];
+
+      expect(settings.alias).toBe("myService");
+      expect(settings.baseURL).toBe("https://api.test.lindorm.io");
+      expect(settings.timeout).toBe(5000);
+    });
+
     test("should include correlation middleware when correlationId exists", async () => {
       const middleware = createConduitMiddleware({
         alias: "myService",
-        baseUrl: "https://api.test.lindorm.io",
+        baseURL: "https://api.test.lindorm.io",
       });
 
       await middleware(ctx, next);
@@ -68,7 +84,7 @@ describe("createConduitMiddleware", () => {
     test("should include session middleware when sessionId exists", async () => {
       const middleware = createConduitMiddleware({
         alias: "myService",
-        baseUrl: "https://api.test.lindorm.io",
+        baseURL: "https://api.test.lindorm.io",
       });
 
       await middleware(ctx, next);
@@ -80,7 +96,7 @@ describe("createConduitMiddleware", () => {
     test("should always include changeResponseData middleware", async () => {
       const middleware = createConduitMiddleware({
         alias: "myService",
-        baseUrl: "https://api.test.lindorm.io",
+        baseURL: "https://api.test.lindorm.io",
       });
 
       await middleware(ctx, next);
@@ -92,7 +108,7 @@ describe("createConduitMiddleware", () => {
     test("should call next", async () => {
       const middleware = createConduitMiddleware({
         alias: "myService",
-        baseUrl: "https://api.test.lindorm.io",
+        baseURL: "https://api.test.lindorm.io",
       });
 
       await middleware(ctx, next);
@@ -119,7 +135,7 @@ describe("createConduitMiddleware", () => {
     test("should NOT include session middleware when sessionId is absent", async () => {
       const middleware = createConduitMiddleware({
         alias: "myService",
-        baseUrl: "https://api.test.lindorm.io",
+        baseURL: "https://api.test.lindorm.io",
       });
 
       await middleware(ctx, next);
@@ -142,8 +158,8 @@ describe("createConduitMiddleware", () => {
       };
 
       const middleware = createConduitMiddleware([
-        { alias: "serviceA", baseUrl: "https://a.test.lindorm.io" },
-        { alias: "serviceB", baseUrl: "https://b.test.lindorm.io" },
+        { alias: "serviceA", baseURL: "https://a.test.lindorm.io" },
+        { alias: "serviceB", baseURL: "https://b.test.lindorm.io" },
       ]);
 
       await middleware(ctx, next);
@@ -159,7 +175,7 @@ describe("createConduitMiddleware", () => {
       expect(() =>
         createConduitMiddleware({
           alias: "",
-          baseUrl: "https://api.test.lindorm.io",
+          baseURL: "https://api.test.lindorm.io",
         }),
       ).toThrow(ServerError);
     });

@@ -805,8 +805,8 @@ import { createConduitMiddleware } from "@lindorm/pylon";
 
 router.use(
   createConduitMiddleware([
-    { alias: "userService", baseUrl: "http://user-service:4000" },
-    { alias: "paymentService", baseUrl: "http://payment-service:4001" },
+    { alias: "userService", baseURL: "http://user-service:4000" },
+    { alias: "paymentService", baseURL: "http://payment-service:4001" },
   ]),
 );
 

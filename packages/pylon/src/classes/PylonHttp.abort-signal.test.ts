@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 describe("PylonHttp abort-signal integration", () => {
   let pylonHttp: PylonHttp;
   let server: http.Server;
-  let baseUrl: string;
+  let baseURL: string;
 
   const captured: {
     signal?: AbortSignal;
@@ -75,7 +75,7 @@ describe("PylonHttp abort-signal integration", () => {
     });
 
     const addr = server.address() as AddressInfo;
-    baseUrl = `http://127.0.0.1:${addr.port}`;
+    baseURL = `http://127.0.0.1:${addr.port}`;
   });
 
   afterAll(async () => {
@@ -87,7 +87,7 @@ describe("PylonHttp abort-signal integration", () => {
   test("aborts ctx.signal with client-disconnect reason when client disconnects", async () => {
     const controller = new AbortController();
 
-    const fetchPromise = fetch(`${baseUrl}/abort/slow`, {
+    const fetchPromise = fetch(`${baseURL}/abort/slow`, {
       signal: controller.signal,
     });
 
@@ -121,7 +121,7 @@ describe("PylonHttp abort-signal integration", () => {
   });
 
   test("does NOT abort a POST handler that awaits after the body (client stays connected)", async () => {
-    const response = await fetch(`${baseUrl}/abort/post-await`, {
+    const response = await fetch(`${baseURL}/abort/post-await`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ hello: "world" }),
