@@ -17,7 +17,6 @@ export const createWebhookSchema = z.object({
   username: z.string().nullable().optional(),
   password: z.string().nullable().optional(),
 
-  audience: z.string().nullable().optional(),
   authLocation: z.enum(["body", "header"]).nullable().optional(),
   clientId: z.string().nullable().optional(),
   clientSecret: z.string().nullable().optional(),
@@ -26,6 +25,7 @@ export const createWebhookSchema = z.object({
     .nullable()
     .optional(),
   issuer: z.string().nullable().optional(),
+  resource: z.string().nullable().optional(),
   scope: z.array(z.string()).optional(),
   tokenUri: z.string().url().nullable().optional(),
 });
