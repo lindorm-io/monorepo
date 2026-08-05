@@ -47,12 +47,12 @@ describe("createDispatchWebhook", () => {
     username: "username",
     password: "password",
 
-    audience: null,
     authLocation: null,
     clientId: null,
     clientSecret: null,
     contentType: null,
     issuer: null,
+    resource: null,
     scope: [],
     tokenUri: null,
 

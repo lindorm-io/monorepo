@@ -37,7 +37,6 @@ describe("createConduitWebhookAuthMiddleware", () => {
     version: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
-    audience: null,
     auth: WebhookAuth.None,
     authHeaders: {},
     authLocation: null,
@@ -50,6 +49,7 @@ describe("createConduitWebhookAuthMiddleware", () => {
     method: WebhookMethod.Post,
     ownerId: "owner-id",
     password: null,
+    resource: null,
     scope: [],
     tenantId: null,
     tokenUri: null,
@@ -137,7 +137,7 @@ describe("createConduitWebhookAuthMiddleware", () => {
       clientId: "client-id",
       clientSecret: "client-secret",
       issuer: "https://test.lindorm.io",
-      audience: "test-audience",
+      resource: "https://test.lindorm.io/api",
       scope: ["read", "write"],
     });
 
@@ -152,11 +152,12 @@ describe("createConduitWebhookAuthMiddleware", () => {
       cache,
     );
 
-    // The subscription's audience is the RFC 8707 resource indicator on the wire.
+    // The subscription's resource reaches the token request as the RFC 8707
+    // resource indicator.
     expect(
       vi.mocked(conduitClientCredentialsMiddlewareFactory).mock.results[0].value,
     ).toHaveBeenCalledWith({
-      resource: "test-audience",
+      resource: "https://test.lindorm.io/api",
       scope: ["read", "write"],
     });
   });

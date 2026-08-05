@@ -27,13 +27,12 @@ export interface IWebhookSubscription {
   password: string | null;
 
   // client credentials
-  /** Sent to the token endpoint as the RFC 8707 `resource` indicator. */
-  audience: string | null;
   authLocation: ClientCredentialsAuthLocation | null;
   clientId: string | null;
   clientSecret: string | null;
   contentType: ClientCredentialsContentType | null;
   issuer: string | null;
+  resource: string | null;
   scope: Array<string>;
   tokenUri: string | null;
 

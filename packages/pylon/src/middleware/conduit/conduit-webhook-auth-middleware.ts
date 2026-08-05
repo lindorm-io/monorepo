@@ -93,7 +93,7 @@ export const createConduitWebhookAuthMiddleware = async (
     );
 
     return await factory({
-      resource: subscription.audience ?? undefined,
+      resource: subscription.resource ?? undefined,
       scope: subscription.scope,
     });
   }

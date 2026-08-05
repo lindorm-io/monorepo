@@ -78,10 +78,6 @@ export class WebhookSubscription implements IWebhookSubscription {
 
   @Nullable()
   @Field("string")
-  audience!: string | null;
-
-  @Nullable()
-  @Field("string")
   authLocation!: ClientCredentialsAuthLocation | null;
 
   @Nullable()
@@ -105,6 +101,10 @@ export class WebhookSubscription implements IWebhookSubscription {
   @Nullable()
   @Field("string")
   issuer!: string | null;
+
+  @Nullable()
+  @Field("string")
+  resource!: string | null;
 
   @Default([])
   @Field("array", { arrayType: "string" })
