@@ -1,4 +1,5 @@
 import { randomBytes } from "crypto";
+import { isAfterOrEqual } from "@lindorm/date";
 import { KryptosError } from "../../../errors/index.js";
 import type {
   KryptosAlgorithm,
@@ -121,7 +122,7 @@ export const generateX509Certificate = (options: GenerateX509Options): Buffer =>
       },
     });
   }
-  if (options.notBefore.getTime() >= options.notAfter.getTime()) {
+  if (isAfterOrEqual(options.notBefore, options.notAfter)) {
     throw new KryptosError("notBefore must be strictly before notAfter", {
       code: "invalid_certificate_options",
       title: "Invalid Certificate Options",

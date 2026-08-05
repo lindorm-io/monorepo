@@ -10,6 +10,7 @@ import {
 } from "../../../__fixtures__/x509.js";
 import { KryptosKit } from "../../../classes/index.js";
 import type { IKryptos } from "../../../interfaces/index.js";
+import { parseX509Certificate } from "./parse-certificate.js";
 import { parseX509 } from "./parse-x509.js";
 import { verifyX509Chain } from "./verify-chain.js";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
@@ -71,6 +72,52 @@ describe("verifyX509Chain", () => {
     expect(() => verifyX509Chain(chain, TEST_X509_ROOT_PEM)).toThrow(
       /not marked as a CA/,
     );
+  });
+
+  // RFC 5280 §4.1.2.5: the validity period runs from notBefore THROUGH notAfter,
+  // INCLUSIVE. `isWithinValidity` therefore uses isAfterOrEqual/isBeforeOrEqual —
+  // an `isLive(notAfter, now)` would reject the final millisecond the RFC admits.
+  // Bounds are derived from the chain so the fixture's own window is the pin.
+  describe("RFC 5280 §4.1.2.5 validity window is inclusive at both ends", () => {
+    const chain = (): Array<Buffer> =>
+      parseX509([TEST_X509_LEAF_PEM, TEST_X509_INTERMEDIATE_PEM, TEST_X509_ROOT_PEM]);
+
+    const bounds = (): { start: Date; end: Date } => {
+      const parsed = chain().map((der) => parseX509Certificate(der));
+      return {
+        start: new Date(Math.max(...parsed.map((c) => c.notBefore.getTime()))),
+        end: new Date(Math.min(...parsed.map((c) => c.notAfter.getTime()))),
+      };
+    };
+
+    const at = (date: Date, assertion: (run: () => void) => void): void => {
+      MockDate.set(date.toISOString());
+      try {
+        assertion(() => verifyX509Chain(chain(), TEST_X509_ROOT_PEM));
+      } finally {
+        MockDate.set(new Date("2030-06-15T12:00:00.000Z").toISOString());
+      }
+    };
+
+    test("accepts at the exact notBefore instant", () => {
+      at(bounds().start, (run) => expect(run).not.toThrow());
+    });
+
+    test("rejects one millisecond before notBefore", () => {
+      at(new Date(bounds().start.getTime() - 1), (run) =>
+        expect(run).toThrow(/outside its validity window/),
+      );
+    });
+
+    test("accepts at the exact notAfter instant", () => {
+      at(bounds().end, (run) => expect(run).not.toThrow());
+    });
+
+    test("rejects one millisecond after notAfter", () => {
+      at(new Date(bounds().end.getTime() + 1), (run) =>
+        expect(run).toThrow(/outside its validity window/),
+      );
+    });
   });
 
   test("throws when the chain does not match any trust anchor", () => {

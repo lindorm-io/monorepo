@@ -1,3 +1,4 @@
+import { isAfter, isBefore } from "@lindorm/date";
 import type { Environment } from "@lindorm/types";
 import { KryptosError } from "../../errors/index.js";
 import type { IKryptos } from "../../interfaces/index.js";
@@ -202,8 +203,8 @@ const assertValidityWithinCa = (
   caLeaf: ParsedX509Certificate,
 ): void => {
   if (
-    subjectKryptos.notBefore.getTime() < caLeaf.notBefore.getTime() ||
-    subjectKryptos.expiresAt.getTime() > caLeaf.notAfter.getTime()
+    isBefore(subjectKryptos.notBefore, caLeaf.notBefore) ||
+    isAfter(subjectKryptos.expiresAt, caLeaf.notAfter)
   ) {
     throw new KryptosError(
       "ca-signed child validity window must fit within the CA's validity window",

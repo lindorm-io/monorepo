@@ -1,5 +1,12 @@
 import { B64 } from "@lindorm/b64";
-import { expiresAt, getUnixTime, isAfter, isBefore, isEqual } from "@lindorm/date";
+import {
+  expiresAt,
+  getUnixTime,
+  isAfter,
+  isAfterOrEqual,
+  isExpired as isDateExpired,
+  isLive,
+} from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
 import { lindormId } from "@lindorm/random";
 import { omitEmpty, omitUndefined } from "@lindorm/utils";
@@ -304,12 +311,16 @@ export class Kryptos implements IKryptos {
     return isAfter(this._notBefore, new Date());
   }
 
+  // One clock read for the whole window: `isPending` and `isExpired` each sample
+  // their own `new Date()`, so composing them would compare the two ends of the
+  // window against two different instants.
   get isActive(): boolean {
-    return !this.isPending && !this.isExpired;
+    const now = new Date();
+    return isAfterOrEqual(now, this._notBefore) && isLive(this._expiresAt, now);
   }
 
   get isExpired(): boolean {
-    return isEqual(this._expiresAt, new Date()) || isBefore(this._expiresAt, new Date());
+    return isDateExpired(this._expiresAt);
   }
 
   get modulus(): RsaModulus | null {

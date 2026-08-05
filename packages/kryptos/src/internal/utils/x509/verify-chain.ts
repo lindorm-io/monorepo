@@ -1,4 +1,5 @@
 import { createPublicKey, verify } from "crypto";
+import { isAfterOrEqual, isBeforeOrEqual } from "@lindorm/date";
 import { KryptosError } from "../../../errors/index.js";
 import type { ParsedX509Certificate } from "../../../types/index.js";
 import {
@@ -55,8 +56,11 @@ const describeCert = (cert: ParsedX509Certificate): string =>
     ? `CN=${cert.subject.commonName}`
     : cert.serialNumber.toString("hex");
 
+// RFC 5280 §4.1.2.5: the validity period runs from notBefore THROUGH notAfter,
+// INCLUSIVE — so both bounds are `*OrEqual`. `isLive(notAfter, now)` would be
+// wrong here: it excludes the exact notAfter instant the RFC includes.
 const isWithinValidity = (cert: ParsedX509Certificate, now: Date): boolean =>
-  now.getTime() >= cert.notBefore.getTime() && now.getTime() <= cert.notAfter.getTime();
+  isAfterOrEqual(now, cert.notBefore) && isBeforeOrEqual(now, cert.notAfter);
 
 const verifySignature = (child: ParsedX509Certificate, issuerSpki: Buffer): boolean => {
   if (!(child.signatureAlgorithm in SIG_ALG_HASH)) {
