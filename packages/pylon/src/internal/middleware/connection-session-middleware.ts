@@ -1,3 +1,4 @@
+import { isExpired } from "@lindorm/date";
 import { omitUndefined } from "@lindorm/utils";
 import type {
   PylonConnectionMiddleware,
@@ -81,7 +82,7 @@ export const createConnectionSessionMiddleware = <
     }
 
     const now = new Date();
-    if (session.expiresAt && session.expiresAt.getTime() <= now.getTime()) {
+    if (session.expiresAt && isExpired(session.expiresAt, now)) {
       return next();
     }
 

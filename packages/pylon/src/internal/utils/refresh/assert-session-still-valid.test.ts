@@ -37,4 +37,16 @@ describe("assertSessionStillValid", () => {
     };
     expect(() => assertSessionStillValid(session, now)).toThrow(ClientError);
   });
+
+  // Inclusive to the millisecond: a session whose expiry lands exactly on `now`
+  // is already gone, and one millisecond of headroom still refreshes.
+  test("throws when expiresAt lands exactly on now", () => {
+    const session = { ...baseSession, expiresAt: new Date(now) };
+    expect(() => assertSessionStillValid(session, now)).toThrow(ClientError);
+  });
+
+  test("does not throw one millisecond before expiry", () => {
+    const session = { ...baseSession, expiresAt: new Date(now.getTime() + 1) };
+    expect(() => assertSessionStillValid(session, now)).not.toThrow();
+  });
 });

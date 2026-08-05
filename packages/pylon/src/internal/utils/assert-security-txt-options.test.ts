@@ -1,7 +1,7 @@
 import { expiresAt } from "@lindorm/date";
 import { ServerError } from "@lindorm/errors";
 import { assertSecurityTxtOptions } from "./assert-security-txt-options.js";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 describe("assertSecurityTxtOptions", () => {
   const futureExpires = (): Date => {
@@ -77,6 +77,43 @@ describe("assertSecurityTxtOptions", () => {
           expires: past,
         }),
       ).toThrow(/past/);
+    });
+
+    // The bound is INCLUSIVE: the contract is "must be a future date", and `now`
+    // itself is not in the future. Freeze the clock so `expires` and the `now`
+    // the assertion samples are equal to the millisecond.
+    test("should throw when expires lands exactly on now", () => {
+      const frozen = new Date("2026-08-05T12:00:00.000Z");
+      vi.useFakeTimers();
+      vi.setSystemTime(frozen);
+
+      try {
+        expect(() =>
+          assertSecurityTxtOptions({
+            contact: "mailto:security@example.com",
+            expires: new Date(frozen),
+          }),
+        ).toThrow(ServerError);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    test("should not throw when expires is one millisecond after now", () => {
+      const frozen = new Date("2026-08-05T12:00:00.000Z");
+      vi.useFakeTimers();
+      vi.setSystemTime(frozen);
+
+      try {
+        expect(() =>
+          assertSecurityTxtOptions({
+            contact: "mailto:security@example.com",
+            expires: new Date(frozen.getTime() + 1),
+          }),
+        ).not.toThrow();
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     test("should throw when expires is more than 1 year in the future", () => {

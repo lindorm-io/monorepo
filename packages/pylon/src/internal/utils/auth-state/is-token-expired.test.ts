@@ -15,4 +15,14 @@ describe("isTokenExpired", () => {
   test("returns true when now is past exp", () => {
     expect(isTokenExpired(new Date("2026-04-11T11:59:59.000Z"), now)).toMatchSnapshot();
   });
+
+  // The boundary is inclusive to the millisecond: exp === now is EXPIRED, and a
+  // single millisecond of headroom is not.
+  test("returns false one millisecond before exp", () => {
+    expect(isTokenExpired(new Date(now.getTime() + 1), now)).toMatchSnapshot();
+  });
+
+  test("returns true one millisecond after exp", () => {
+    expect(isTokenExpired(new Date(now.getTime() - 1), now)).toMatchSnapshot();
+  });
 });

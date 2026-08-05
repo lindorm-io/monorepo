@@ -1,4 +1,4 @@
-import { type ReadableTime, ms } from "@lindorm/date";
+import { isLive, type ReadableTime, ms } from "@lindorm/date";
 import { ServerError } from "@lindorm/errors";
 import type { IProteusSource } from "@lindorm/proteus";
 import { ShaKit } from "@lindorm/sha";
@@ -217,7 +217,7 @@ export const useCache = (
       try {
         const entry = await repository.findOne({ id: key });
 
-        if (entry && (!entry.expiresAt || entry.expiresAt.getTime() > Date.now())) {
+        if (entry && (!entry.expiresAt || isLive(entry.expiresAt))) {
           const payload = entry.payload;
           const age = Math.max(0, Math.floor((Date.now() - payload.storedAt) / 1000));
 

@@ -1,5 +1,5 @@
 import type { IAmphora } from "@lindorm/amphora";
-import { add, duration, isAfter, ms, type ReadableTime, sub } from "@lindorm/date";
+import { add, duration, isLive, ms, type ReadableTime, sub } from "@lindorm/date";
 import {
   type IKryptos,
   type KryptosAuto,
@@ -97,7 +97,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
             k.algorithm === opts.algorithm &&
             k.purpose === opts.purpose &&
             (opts.curve == null || k.curve === opts.curve) &&
-            isAfter(k.expiresAt, notBefore),
+            isLive(k.expiresAt, notBefore),
         );
 
         // Only PUBLISHED keys get a CA-signed chain — a cert exists to let an RP

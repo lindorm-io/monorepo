@@ -1,3 +1,4 @@
+import { isExpired } from "@lindorm/date";
 import { ClientError } from "@lindorm/errors";
 import type { IPylonSession } from "../../../interfaces/index.js";
 
@@ -15,7 +16,7 @@ export function assertSessionStillValid(
     });
   }
 
-  if (session.expiresAt && session.expiresAt.getTime() <= now.getTime()) {
+  if (session.expiresAt && isExpired(session.expiresAt, now)) {
     throw new ClientError("Session expired", {
       code: "session_expired",
       title: "Session Expired",

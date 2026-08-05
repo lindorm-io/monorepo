@@ -3,6 +3,7 @@ import type {
   ConduitResponse,
   IConduitCacheDriver,
 } from "@lindorm/conduit";
+import { isExpired } from "@lindorm/date";
 import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -51,7 +52,10 @@ export const createFileCacheDriver = (dir: string): IConduitCacheDriver => {
 
       if (!captured) return null;
 
-      if (captured.expiresAt && Date.now() >= Date.parse(captured.expiresAt)) {
+      // The stored `expiresAt` is an ISO string; an unparseable one yields an
+      // Invalid Date, which `isExpired` reports as false — the same "serve it"
+      // outcome the `Date.parse` comparison gave.
+      if (captured.expiresAt && isExpired(captured.expiresAt)) {
         return null;
       }
 

@@ -1,5 +1,5 @@
 import type { IAmphora } from "@lindorm/amphora";
-import { add, duration, type ReadableTime } from "@lindorm/date";
+import { add, duration, isExpired, type ReadableTime } from "@lindorm/date";
 import { describeCertificate, type DescribedX509Certificate } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { type CreateLindormWorkerSettings, LindormWorker } from "@lindorm/worker";
@@ -25,9 +25,10 @@ const MS_PER_DAY = 86_400_000;
 
 const severityFor = (notAfter: Date, errorBy: Date, warnBy: Date): Severity => {
   // errorThreshold < warnThreshold, so errorBy < warnBy — check the tighter
-  // bound first. `notAfter <= errorBy` also covers an already-expired cert.
-  if (notAfter.getTime() <= errorBy.getTime()) return "error";
-  if (notAfter.getTime() <= warnBy.getTime()) return "warn";
+  // bound first. Read each as "would the cert be expired AT the threshold",
+  // which also covers an already-expired cert.
+  if (isExpired(notAfter, errorBy)) return "error";
+  if (isExpired(notAfter, warnBy)) return "warn";
   return "healthy";
 };
 

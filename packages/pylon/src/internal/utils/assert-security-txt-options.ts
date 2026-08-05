@@ -1,4 +1,4 @@
-import { expiresAt, type ReadableTime } from "@lindorm/date";
+import { expiresAt, isAfter, isExpired, type ReadableTime } from "@lindorm/date";
 import { ServerError } from "@lindorm/errors";
 import type { PylonSecurityTxt } from "../../types/index.js";
 
@@ -40,7 +40,9 @@ export const assertSecurityTxtOptions = (input: PylonSecurityTxt): void => {
 
   const now = new Date();
 
-  if (expires.getTime() < now.getTime()) {
+  // Inclusive: the contract below is "must be a future date", and `now` is not
+  // in the future — so an `expires` landing exactly on `now` is rejected too.
+  if (isExpired(expires, now)) {
     throw new ServerError("securityTxt.expires is in the past", {
       code: "expired_security_txt_expires",
       title: "Expired security.txt Expires",
@@ -50,7 +52,7 @@ export const assertSecurityTxtOptions = (input: PylonSecurityTxt): void => {
     });
   }
 
-  if (expires.getTime() > expiresAt(MAX_EXPIRES, now).getTime()) {
+  if (isAfter(expires, expiresAt(MAX_EXPIRES, now))) {
     throw new ServerError(
       `securityTxt.expires is more than ${MAX_EXPIRES} in the future`,
       {
