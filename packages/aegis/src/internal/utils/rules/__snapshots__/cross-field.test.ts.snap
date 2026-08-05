@@ -1,5 +1,23 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`crossField > equality boundaries > fails when expiresAt lands exactly on issuedAt 1`] = `
+[
+  {
+    "key": "expiresAt",
+    "message": "expiresAt (exp) must be after issuedAt (iat)",
+  },
+]
+`;
+
+exports[`crossField > equality boundaries > fails when notBefore is one millisecond after expiresAt 1`] = `
+[
+  {
+    "key": "notBefore",
+    "message": "notBefore (nbf) must be at or before expiresAt (exp)",
+  },
+]
+`;
+
 exports[`crossField > fails when expiresAt <= issuedAt 1`] = `
 [
   {
