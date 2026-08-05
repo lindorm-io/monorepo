@@ -16,6 +16,8 @@ This package is **ESM-only**. It cannot be `require()`'d from CommonJS.
 - Calendar-correct expiry helpers (`expiresAt`, `expiresIn`, `expires`) backed by date-fns `add()` — real calendar days for year and month units.
 - Estimation helpers (`ms`, `sec`, `duration`) that convert in either direction without a reference date, using a Gregorian-year average for year and month units.
 - `TtlMap<K, V>` and `TtlSet<T>` — lazy-expiring container types with per-entry TTL overrides.
+- `isExpired` / `isLive` — RFC 7519 aligned expiry predicates, each implemented as a positive comparison rather than a negation of the other.
+- `isAfterOrEqual` / `isBeforeOrEqual` — the `>=` / `<=` comparisons date-fns does not ship.
 - `isReadableTime` type guard.
 - `cronNext` / `isCron` — resolve the next fire time for a cron expression (timezone-aware, via [croner](https://github.com/hexagon/croner)), and guard a cron string.
 - Re-exports the entire `date-fns` API from the same module entry point.
@@ -149,6 +151,54 @@ const exp = expires("30 minutes");
 //   fromUnix: number,         // unix seconds of `from`
 // }
 ```
+
+#### `isExpired(date, now?)`
+
+Returns `true` when `date` is at or before `now` (default `new Date()`). The boundary is inclusive — the exact millisecond of expiry counts as expired, matching RFC 7519 §4.1.4, which requires the current time to be strictly before `exp`.
+
+```ts
+isExpired(new Date("2020-01-01")); // true
+```
+
+⚠ Both arguments take the date-fns `DateArg<Date>` type — a `Date`, a number of epoch **milliseconds**, or a date string. A JWT `exp` is a NumericDate in **seconds** (RFC 7519 §2), so `isExpired(payload.exp)` compiles but is wrong by a factor of 1000. Convert with date-fns `fromUnixTime` (re-exported from this package):
+
+```ts
+import { fromUnixTime, isExpired } from "@lindorm/date";
+
+isExpired(fromUnixTime(payload.exp)); // NumericDate is seconds
+```
+
+#### `isLive(date, now?)`
+
+Returns `true` when `date` is strictly after `now` (default `new Date()`) — the complement of `isExpired` for every valid date. Implemented as a positive comparison, so neither predicate is a negation of the other.
+
+```ts
+isLive(new Date("2099-01-01")); // true
+```
+
+⚠ Same `DateArg<Date>` seconds-vs-milliseconds trap as `isExpired` — a bare number is milliseconds, a JWT `exp` is seconds. Convert with `fromUnixTime(payload.exp)`.
+
+Both compare numeric time values, so an Invalid Date returns `false` from both.
+
+### Comparison
+
+date-fns ships `isAfter` (`>`), `isBefore` (`<`) and `isEqual` (`===`), but no inclusive pair. These two fill in the missing `>=` / `<=` so an inclusive comparison never has to be written as a negation. Argument names and types mirror date-fns, so they drop in beside `isAfter` / `isBefore`.
+
+#### `isAfterOrEqual(date, dateToCompare)`
+
+```ts
+isAfterOrEqual(new Date("2024-01-01"), new Date("2024-01-01")); // true
+isAfterOrEqual(new Date("2023-01-01"), new Date("2024-01-01")); // false
+```
+
+#### `isBeforeOrEqual(date, dateToCompare)`
+
+```ts
+isBeforeOrEqual(new Date("2024-01-01"), new Date("2024-01-01")); // true
+isBeforeOrEqual(new Date("2025-01-01"), new Date("2024-01-01")); // false
+```
+
+Both take `DateArg<Date>` and compare numeric time values, so an Invalid Date on either side returns `false`.
 
 ### Type guard
 
