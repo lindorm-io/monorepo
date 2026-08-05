@@ -103,6 +103,28 @@ describe("slidingWindowStrategy", () => {
     expect(updatedEntity.timestamps).toHaveLength(3);
   });
 
+  test("should exclude a timestamp landing exactly on the window start", async () => {
+    const now = new Date("2026-01-01T00:00:00.000Z");
+    const timestamps = [
+      new Date(now.getTime() - 60000), // exactly windowStart — excluded (strictly after)
+      new Date(now.getTime() - 59999), // one ms inside the window — kept
+    ];
+
+    mockFindOneOrSave.mockResolvedValue({
+      id: "test-key",
+      timestamps,
+      expiresAt: new Date(now.getTime() + 120000),
+    });
+
+    const result = await slidingWindowStrategy(repository, "test-key", 60000, 10);
+
+    // Only the 59999ms-old entry survives, + the new one = 2, remaining = 10 - 2 = 8
+    expect(result.remaining).toBe(8);
+
+    const updatedEntity = mockUpdate.mock.calls[0][0];
+    expect(updatedEntity.timestamps).toEqual([timestamps[1], now]);
+  });
+
   test("should return correct remaining count", async () => {
     const now = new Date("2026-01-01T00:00:00.000Z");
     const recentTimestamps = Array.from(

@@ -1,3 +1,4 @@
+import { isAfter } from "@lindorm/date";
 import type { IProteusRepository } from "@lindorm/proteus";
 import type { RateLimitSliding } from "../../../entities/RateLimitSliding.js";
 import type { RateLimitResult } from "./fixed-window-strategy.js";
@@ -17,9 +18,7 @@ export const slidingWindowStrategy = async (
     { id: key, timestamps: [], expiresAt },
   );
 
-  const validTimestamps = entity.timestamps.filter(
-    (t) => t.getTime() > windowStart.getTime(),
-  );
+  const validTimestamps = entity.timestamps.filter((t) => isAfter(t, windowStart));
 
   if (validTimestamps.length >= max) {
     entity.timestamps = validTimestamps;
