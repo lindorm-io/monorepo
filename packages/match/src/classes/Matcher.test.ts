@@ -770,4 +770,119 @@ describe("Matcher", () => {
       );
     });
   });
+
+  // joinedAt: John(1)=2020-01-01, Jane(2)=2019-01-01, Quintin(3)=2018-06-15,
+  // Alice(4)=2021-03-10. Comparing against 2020-01-01 puts John exactly ON the
+  // boundary, which is what separates $gt from $gte and $lt from $lte.
+  describe("date comparison operators", () => {
+    const PIVOT = new Date("2020-01-01");
+
+    test("$gt excludes the equal date", () => {
+      expect(Matcher.filter(TEST_PEOPLE, { joinedAt: { $gt: PIVOT } })).toEqual([
+        expect.objectContaining({ id: "4" }), // 2021-03-10 — strictly after
+      ]);
+    });
+
+    test("$gte includes the equal date", () => {
+      expect(Matcher.filter(TEST_PEOPLE, { joinedAt: { $gte: PIVOT } })).toEqual([
+        expect.objectContaining({ id: "1" }), // 2020-01-01 — equal
+        expect.objectContaining({ id: "4" }), // 2021-03-10 — strictly after
+      ]);
+    });
+
+    test("$lt excludes the equal date", () => {
+      expect(Matcher.filter(TEST_PEOPLE, { joinedAt: { $lt: PIVOT } })).toEqual([
+        expect.objectContaining({ id: "2" }), // 2019-01-01
+        expect.objectContaining({ id: "3" }), // 2018-06-15
+      ]);
+    });
+
+    test("$lte includes the equal date", () => {
+      expect(Matcher.filter(TEST_PEOPLE, { joinedAt: { $lte: PIVOT } })).toEqual([
+        expect.objectContaining({ id: "1" }), // 2020-01-01 — equal
+        expect.objectContaining({ id: "2" }), // 2019-01-01
+        expect.objectContaining({ id: "3" }), // 2018-06-15
+      ]);
+    });
+
+    // A distinct Date object with the same instant — equality is by time, not
+    // reference, on every one of the four operators.
+    describe("the boundary itself", () => {
+      const john = TEST_PEOPLE[0];
+      const same = new Date("2020-01-01");
+
+      test("$gt rejects it", () => {
+        expect(Matcher.match(john, { joinedAt: { $gt: same } })).toBe(false);
+      });
+
+      test("$gte accepts it", () => {
+        expect(Matcher.match(john, { joinedAt: { $gte: same } })).toBe(true);
+      });
+
+      test("$lt rejects it", () => {
+        expect(Matcher.match(john, { joinedAt: { $lt: same } })).toBe(false);
+      });
+
+      test("$lte accepts it", () => {
+        expect(Matcher.match(john, { joinedAt: { $lte: same } })).toBe(true);
+      });
+
+      // $between is inclusive at BOTH ends — the only two cases that can tell
+      // it apart from a strict range.
+      test("$between accepts it as the low bound", () => {
+        expect(
+          Matcher.match(john, { joinedAt: { $between: [same, new Date("2021-01-01")] } }),
+        ).toBe(true);
+      });
+
+      test("$between accepts it as the high bound", () => {
+        expect(
+          Matcher.match(john, { joinedAt: { $between: [new Date("2019-01-01"), same] } }),
+        ).toBe(true);
+      });
+    });
+
+    // The positive predicates ($gt fails on <=, $gte fails on <, …) only agree
+    // with the negated forms they replaced because `isDate` rejects a NaN time,
+    // so an Invalid Date never reaches a comparison — it falls through to the
+    // number branch, misses that too, and throws. Pin that, or a future move of
+    // the guard flips these from "throws" to "silently matches".
+    describe("Invalid Date never reaches a comparison", () => {
+      const invalid = new Date("not-a-date");
+      const broken = { ...TEST_PEOPLE[0], joinedAt: invalid };
+
+      test("Invalid Date value throws for $gt", () => {
+        expect(() => Matcher.match(broken, { joinedAt: { $gt: new Date() } })).toThrow(
+          /\$gt is not supported/,
+        );
+      });
+
+      test("Invalid Date value throws for $gte", () => {
+        expect(() => Matcher.match(broken, { joinedAt: { $gte: new Date() } })).toThrow(
+          /\$gte is not supported/,
+        );
+      });
+
+      test("Invalid Date value throws for $lt", () => {
+        expect(() => Matcher.match(broken, { joinedAt: { $lt: new Date() } })).toThrow(
+          /\$lt is not supported/,
+        );
+      });
+
+      test("Invalid Date value throws for $lte", () => {
+        expect(() => Matcher.match(broken, { joinedAt: { $lte: new Date() } })).toThrow(
+          /\$lte is not supported/,
+        );
+      });
+
+      test("Invalid Date operand throws too", () => {
+        expect(() =>
+          Matcher.match(TEST_PEOPLE[0], { joinedAt: { $gte: invalid } }),
+        ).toThrow(/\$gte is not supported/);
+        expect(() =>
+          Matcher.match(TEST_PEOPLE[0], { joinedAt: { $lte: invalid } }),
+        ).toThrow(/\$lte is not supported/);
+      });
+    });
+  });
 });

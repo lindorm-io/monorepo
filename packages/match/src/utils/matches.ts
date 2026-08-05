@@ -1,4 +1,4 @@
-import { isAfter, isBefore } from "@lindorm/date";
+import { isAfter, isAfterOrEqual, isBefore, isBeforeOrEqual } from "@lindorm/date";
 import {
   isArray,
   isBoolean,
@@ -103,7 +103,11 @@ const matchConditionOperator = <T>(value: T, operator: ConditionOperator<T>): bo
   if (!isUndefined(operator.$gt)) {
     matched = true;
     if (isDate(value) && isDate(operator.$gt)) {
-      if (!isAfter(value, operator.$gt)) return false;
+      // Fails on `<=`, so `>` is what passes. The positive form only agrees with
+      // a negated `isAfter` because the `isDate` guard above rejects an Invalid
+      // Date (`isNaN` time) — every date comparison here returns false for one.
+      // Move or loosen that guard and this silently flips.
+      if (isBeforeOrEqual(value, operator.$gt)) return false;
     } else if (isNumber(value) && isNumber(operator.$gt)) {
       if (value <= operator.$gt) return false;
     } else {
@@ -116,7 +120,9 @@ const matchConditionOperator = <T>(value: T, operator: ConditionOperator<T>): bo
   if (!isUndefined(operator.$gte)) {
     matched = true;
     if (isDate(value) && isDate(operator.$gte)) {
-      if (!(isAfter(value, operator.$gte) || isEqual(value, operator.$gte))) return false;
+      // Fails on strict `<`, so `>=` is what passes. Same Invalid Date caveat as
+      // `$gt` above — the `isDate` guard is load-bearing for this equivalence.
+      if (isBefore(value, operator.$gte)) return false;
     } else if (isNumber(value) && isNumber(operator.$gte)) {
       if (value < operator.$gte) return false;
     } else {
@@ -129,7 +135,8 @@ const matchConditionOperator = <T>(value: T, operator: ConditionOperator<T>): bo
   if (!isUndefined(operator.$lt)) {
     matched = true;
     if (isDate(value) && isDate(operator.$lt)) {
-      if (!isBefore(value, operator.$lt)) return false;
+      // Fails on `>=`, so `<` is what passes. Same Invalid Date caveat as `$gt`.
+      if (isAfterOrEqual(value, operator.$lt)) return false;
     } else if (isNumber(value) && isNumber(operator.$lt)) {
       if (value >= operator.$lt) return false;
     } else {
@@ -142,8 +149,9 @@ const matchConditionOperator = <T>(value: T, operator: ConditionOperator<T>): bo
   if (!isUndefined(operator.$lte)) {
     matched = true;
     if (isDate(value) && isDate(operator.$lte)) {
-      if (!(isBefore(value, operator.$lte) || isEqual(value, operator.$lte)))
-        return false;
+      // Fails on strict `>`, so `<=` is what passes. Same Invalid Date caveat as
+      // `$gt` above — the `isDate` guard is load-bearing for this equivalence.
+      if (isAfter(value, operator.$lte)) return false;
     } else if (isNumber(value) && isNumber(operator.$lte)) {
       if (value > operator.$lte) return false;
     } else {
@@ -157,10 +165,9 @@ const matchConditionOperator = <T>(value: T, operator: ConditionOperator<T>): bo
     matched = true;
     const [low, high] = operator.$between;
     if (isDate(value) && isDate(low) && isDate(high)) {
-      const inRange =
-        (isAfter(value, low) || isEqual(value, low)) &&
-        (isBefore(value, high) || isEqual(value, high));
-      if (!inRange) return false;
+      // Inclusive at both ends. Same Invalid Date caveat as `$gt` above — the
+      // `isDate` guard is load-bearing for this equivalence.
+      if (isBefore(value, low) || isAfter(value, high)) return false;
     } else if (isNumber(value) && isNumber(low) && isNumber(high)) {
       if (value < low || value > high) return false;
     } else {
