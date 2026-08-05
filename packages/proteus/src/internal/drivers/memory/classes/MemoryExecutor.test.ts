@@ -1,4 +1,13 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from "vitest";
 // Unit tests for MemoryExecutor — focused on null sort ordering (FIX-3)
 // and filter registry wiring.
 
@@ -7,6 +16,7 @@ import {
   CreateDateField,
   DeleteDateField,
   Entity,
+  ExpiryDateField,
   Field,
   Filter,
   Generated,
@@ -83,17 +93,38 @@ class ScopeFilterEntity {
   label!: string;
 }
 
+@Entity({ name: "ExpiryBoundaryEntity" })
+class ExpiryBoundaryEntity {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @VersionField()
+  version!: number;
+
+  @CreateDateField()
+  createdAt!: Date;
+
+  @UpdateDateField()
+  updatedAt!: Date;
+
+  @ExpiryDateField()
+  expiresAt!: Date | null;
+
+  @Field("string")
+  label!: string;
+}
+
 // ─── Setup ────────────────────────────────────────────────────────────────────
 
 let source: ProteusSource;
 let nullSortRepo: IProteusRepository<NullSortEntity>;
 let filteredRepo: IProteusRepository<FilteredEntity>;
 let scopeRepo: IProteusRepository<ScopeFilterEntity>;
+let expiryRepo: IProteusRepository<ExpiryBoundaryEntity>;
 
 beforeAll(async () => {
   source = new ProteusSource({
     driver: "memory",
-    entities: [NullSortEntity, FilteredEntity, ScopeFilterEntity],
+    entities: [NullSortEntity, FilteredEntity, ScopeFilterEntity, ExpiryBoundaryEntity],
     logger: createMockLogger(),
   });
   await source.connect();
@@ -102,6 +133,7 @@ beforeAll(async () => {
   nullSortRepo = source.repository(NullSortEntity);
   filteredRepo = source.repository(FilteredEntity);
   scopeRepo = source.repository(ScopeFilterEntity);
+  expiryRepo = source.repository(ExpiryBoundaryEntity);
 });
 
 afterAll(async () => {
@@ -112,6 +144,7 @@ beforeEach(async () => {
   await nullSortRepo.clear();
   await filteredRepo.clear();
   await scopeRepo.clear();
+  await expiryRepo.clear();
 });
 
 // ─── FIX-3: Null sort ordering ────────────────────────────────────────────────
@@ -132,7 +165,7 @@ describe("MemoryExecutor — null sort ordering (FIX-3)", () => {
 
       // Non-null values come first (ascending), then nulls at the end
       const scores = results.map((r) => r.score);
-      const nonNullScores = scores.filter((s) => s !== null) as number[];
+      const nonNullScores = scores.filter((s) => s !== null) as Array<number>;
       const nullScores = scores.filter((s) => s === null);
 
       expect(nonNullScores).toEqual([5, 10, 20]);
@@ -149,7 +182,7 @@ describe("MemoryExecutor — null sort ordering (FIX-3)", () => {
       const results = await nullSortRepo.find(undefined, { order: { score: "DESC" } });
 
       const scores = results.map((r) => r.score);
-      const nonNullScores = scores.filter((s) => s !== null) as number[];
+      const nonNullScores = scores.filter((s) => s !== null) as Array<number>;
       const nullScores = scores.filter((s) => s === null);
 
       expect(nonNullScores).toEqual([20, 10, 5]);
@@ -173,7 +206,7 @@ describe("MemoryExecutor — null sort ordering (FIX-3)", () => {
       const results = await qb.orderBy({ score: "ASC" }).getMany();
 
       const scores = results.map((r) => r.score);
-      const nonNullScores = scores.filter((s) => s !== null) as number[];
+      const nonNullScores = scores.filter((s) => s !== null) as Array<number>;
 
       expect(nonNullScores).toEqual([5, 10, 20]);
 
@@ -187,7 +220,7 @@ describe("MemoryExecutor — null sort ordering (FIX-3)", () => {
       const results = await qb.orderBy({ score: "DESC" }).getMany();
 
       const scores = results.map((r) => r.score);
-      const nonNullScores = scores.filter((s) => s !== null) as number[];
+      const nonNullScores = scores.filter((s) => s !== null) as Array<number>;
 
       expect(nonNullScores).toEqual([20, 10, 5]);
 
@@ -269,5 +302,61 @@ describe("MemoryExecutor — withoutScope", () => {
     // Again: with no scope params configured the filter is inactive anyway,
     // but withoutScope() must not break the query.
     expect(results).toHaveLength(3);
+  });
+});
+
+// ─── executeDeleteExpired — the equality boundary ─────────────────────────────
+
+describe("MemoryExecutor — executeDeleteExpired equality boundary", () => {
+  const FROZEN = new Date("2026-08-05T12:00:00.000Z");
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(FROZEN);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // `compileDeleteExpired` emits `WHERE <expiry> <= NOW()` and MongoExecutor
+  // filters `$lte: new Date()`, so the SQL and mongo drivers purge a row whose
+  // expiry lands exactly on `now`. Memory must agree to the millisecond or the
+  // same entity survives one driver and vanishes on another.
+  test("deletes a row whose expiry is exactly now", async () => {
+    await expiryRepo.insert(
+      expiryRepo.create({ label: "OnTheDot", expiresAt: new Date(FROZEN) }),
+    );
+
+    await expiryRepo.deleteExpired();
+
+    expect(await expiryRepo.find()).toHaveLength(0);
+  });
+
+  test("keeps a row expiring one millisecond after now", async () => {
+    await expiryRepo.insert(
+      expiryRepo.create({
+        label: "OneMsLeft",
+        expiresAt: new Date(FROZEN.getTime() + 1),
+      }),
+    );
+
+    await expiryRepo.deleteExpired();
+
+    const remaining = await expiryRepo.find();
+    expect(remaining.map((e) => e.label)).toEqual(["OneMsLeft"]);
+  });
+
+  test("deletes a row expiring one millisecond before now", async () => {
+    await expiryRepo.insert(
+      expiryRepo.create({
+        label: "OneMsPast",
+        expiresAt: new Date(FROZEN.getTime() - 1),
+      }),
+    );
+
+    await expiryRepo.deleteExpired();
+
+    expect(await expiryRepo.find()).toHaveLength(0);
   });
 });

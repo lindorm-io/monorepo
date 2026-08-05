@@ -1,3 +1,4 @@
+import { isArray, isObjectLike } from "@lindorm/is";
 import {
   beforeEach,
   describe,
@@ -94,7 +95,12 @@ vi.mock("../utils/is-pk-exact.js", () => ({
       const values: Array<unknown> = [];
       for (const pk of primaryKeys) {
         const value = criteria[pk];
-        if (value === undefined || value === null || typeof value === "object")
+        if (
+          value === undefined ||
+          value === null ||
+          isObjectLike(value) ||
+          isArray(value)
+        )
           return null;
         values.push(value);
       }
@@ -280,23 +286,23 @@ const createMockPipeline = () => {
     _setExecResults: (results: Array<[Error | null, any]>) => {
       execResults = results;
     },
-    del: vi.fn((...args: any[]) => {
+    del: vi.fn((...args: Array<any>) => {
       commands.push({ cmd: "del", args });
       return pipeline;
     }),
-    hset: vi.fn((...args: any[]) => {
+    hset: vi.fn((...args: Array<any>) => {
       commands.push({ cmd: "hset", args });
       return pipeline;
     }),
-    hdel: vi.fn((...args: any[]) => {
+    hdel: vi.fn((...args: Array<any>) => {
       commands.push({ cmd: "hdel", args });
       return pipeline;
     }),
-    hget: vi.fn((...args: any[]) => {
+    hget: vi.fn((...args: Array<any>) => {
       commands.push({ cmd: "hget", args });
       return pipeline;
     }),
-    hgetall: vi.fn((...args: any[]) => {
+    hgetall: vi.fn((...args: Array<any>) => {
       commands.push({ cmd: "hgetall", args });
       return pipeline;
     }),
@@ -688,7 +694,7 @@ describe("RedisExecutor", () => {
       );
       // The value should be a valid ISO timestamp
       const hsetCall = redis.mockPipeline.hset.mock.calls.find(
-        (c: any[]) => c[1] === "deletedAt",
+        (c: Array<any>) => c[1] === "deletedAt",
       );
       expect(hsetCall).toBeDefined();
       expect(() => new Date(hsetCall![2])).not.toThrow();
@@ -779,6 +785,46 @@ describe("RedisExecutor", () => {
 
       expect(delPipeline.del).toHaveBeenCalledWith("entity:test_entity:1");
       expect(delPipeline.del).not.toHaveBeenCalledWith("entity:test_entity:2");
+    });
+
+    // `compileDeleteExpired` emits `WHERE <expiry> <= NOW()` and MongoExecutor
+    // filters `$lte: new Date()`, so the SQL and mongo drivers purge a key whose
+    // expiry lands exactly on `now`. Redis must agree to the millisecond.
+    test("should delete a key whose expiry is exactly now, and keep one 1ms later", async () => {
+      const frozen = new Date("2026-08-05T12:00:00.000Z");
+      vi.useFakeTimers();
+      vi.setSystemTime(frozen);
+
+      try {
+        const expiryExecutor = new RedisExecutor<ExpiryEntity>(
+          expiryMetadata,
+          redis.client,
+          null,
+        );
+
+        mockedScanEntityKeys.mockResolvedValueOnce([
+          "entity:test_entity:1",
+          "entity:test_entity:2",
+        ]);
+
+        redis.mockPipeline._setExecResults([
+          [null, frozen.toISOString()],
+          [null, new Date(frozen.getTime() + 1).toISOString()],
+        ]);
+
+        const delPipeline = createMockPipeline();
+        delPipeline._setExecResults([[null, 1]]);
+        redis.client.pipeline
+          .mockReturnValueOnce(redis.mockPipeline)
+          .mockReturnValueOnce(delPipeline);
+
+        await expiryExecutor.executeDeleteExpired();
+
+        expect(delPipeline.del).toHaveBeenCalledWith("entity:test_entity:1");
+        expect(delPipeline.del).not.toHaveBeenCalledWith("entity:test_entity:2");
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     test("should be no-op when entity has no expiry field", async () => {

@@ -332,7 +332,10 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
       // F-026: Validate date before comparing
       const expiryDate = validateDate(raw as string, "executeDeleteExpired");
-      if (expiryDate.getTime() < now) {
+      // Inclusive, matching the SQL `WHERE <expiry> <= NOW()` in
+      // `compileDeleteExpired` — a row expiring exactly on `now` must not
+      // survive here while the SQL drivers delete it.
+      if (expiryDate.getTime() <= now) {
         toDelete.push(keys[i]);
       }
     }

@@ -272,13 +272,13 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const table = this.getTable();
-    const toDelete: string[] = [];
+    const toDelete: Array<string> = [];
     let count = 0;
 
     // Scope by discriminator for single-table inheritance child entities
     const discPks = this.getDiscriminatorFilteredPks(table);
 
-    const deletedRows: Dict[] = [];
+    const deletedRows: Array<Dict> = [];
     for (const [pk, row] of table) {
       if (discPks && !discPks.has(pk)) continue;
       if (matchesRow(row, flatCriteria)) {
@@ -364,7 +364,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
 
     const now = Date.now();
     const table = this.getTable();
-    const toDelete: string[] = [];
+    const toDelete: Array<string> = [];
 
     for (const [pk, row] of table) {
       const expiresAt = row[expiryField.key];
@@ -372,7 +372,10 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
 
       const expiryDate =
         expiresAt instanceof Date ? expiresAt : new Date(expiresAt as any);
-      if (expiryDate.getTime() < now) {
+      // Inclusive, matching the SQL `WHERE <expiry> <= NOW()` in
+      // `compileDeleteExpired` — a row expiring exactly on `now` must not
+      // survive here while the SQL drivers delete it.
+      if (expiryDate.getTime() <= now) {
         toDelete.push(pk);
       }
     }
