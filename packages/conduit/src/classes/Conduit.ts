@@ -34,7 +34,7 @@ import type {
 } from "../types/index.js";
 
 export class Conduit implements IConduit {
-  private readonly baseURL: URL | undefined;
+  private readonly baseUrl: URL | undefined;
   private readonly config: Partial<ConduitConfigContext>;
   private readonly context: ConduitAppContext;
   private readonly headers: Dict<string>;
@@ -44,7 +44,7 @@ export class Conduit implements IConduit {
   private readonly retryConfig: RetryConfig;
 
   constructor(options: ConduitSettings = {}) {
-    this.baseURL = options.baseURL ? getPlainUrl(options.baseURL) : undefined;
+    this.baseUrl = options.baseUrl ? getPlainUrl(options.baseUrl) : undefined;
 
     this.config = {
       adapter: options.adapter ?? "http",
@@ -58,7 +58,7 @@ export class Conduit implements IConduit {
 
     this.context = {
       alias: options.alias ?? null,
-      baseURL: this.baseURL?.toString() ?? null,
+      baseUrl: this.baseUrl?.toString() ?? null,
       environment: options.environment ?? null,
     };
 
@@ -289,7 +289,7 @@ export class Conduit implements IConduit {
       withCredentials,
     } = options;
 
-    const valid = getValidUrl(pathOrUrl, this.baseURL ?? REPLACE_URL);
+    const valid = getValidUrl(pathOrUrl, this.baseUrl ?? REPLACE_URL);
     const searchParams = extractSearchParams<RequestQuery>(valid);
     const url = getPlainUrl(valid).toString().replace(REPLACE_URL, "");
 
@@ -317,7 +317,7 @@ export class Conduit implements IConduit {
       onDownloadProgress,
       onRetry,
       onUploadProgress,
-      origin: getOrigin(url, this.baseURL),
+      origin: getOrigin(url, this.baseUrl),
       params: params as RequestParams,
       query: { ...searchParams, ...query },
       retryCallback,

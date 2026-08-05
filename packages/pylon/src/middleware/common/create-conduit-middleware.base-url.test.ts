@@ -38,7 +38,7 @@ describe("createConduitMiddleware - base url", () => {
 
     const middleware = createConduitMiddleware({
       alias: "myService",
-      baseURL: "https://api.test.lindorm.io",
+      baseUrl: "https://api.test.lindorm.io",
     });
 
     await middleware(ctx, next);
@@ -54,7 +54,7 @@ describe("createConduitMiddleware - base url", () => {
   test("should resolve request paths against the configured base url", async () => {
     const middleware = createConduitMiddleware({
       alias: "myService",
-      baseURL: "https://api.test.lindorm.io",
+      baseUrl: "https://api.test.lindorm.io",
     });
 
     await middleware(ctx, next);
@@ -73,8 +73,8 @@ describe("createConduitMiddleware - base url", () => {
 
   test("should resolve each alias against its own base url", async () => {
     const middleware = createConduitMiddleware([
-      { alias: "serviceA", baseURL: "https://a.test.lindorm.io" },
-      { alias: "serviceB", baseURL: "https://b.test.lindorm.io" },
+      { alias: "serviceA", baseUrl: "https://a.test.lindorm.io" },
+      { alias: "serviceB", baseUrl: "https://b.test.lindorm.io" },
     ]);
 
     await middleware(ctx, next);

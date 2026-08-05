@@ -9,7 +9,7 @@ describe("composeAxiosData", () => {
     ctx = {
       app: {
         alias: null,
-        baseURL: null,
+        baseUrl: null,
         environment: null,
       },
       req: {

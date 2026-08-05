@@ -17,7 +17,7 @@ describe("conduitRateLimitMiddleware", () => {
         url: "https://api.test/resource",
       },
       app: {
-        baseURL: null,
+        baseUrl: null,
       },
     };
 
@@ -82,12 +82,12 @@ describe("conduitRateLimitMiddleware", () => {
 
     const ctx1: any = {
       req: { url: "https://api1.test/resource" },
-      app: { baseURL: null },
+      app: { baseUrl: null },
     };
 
     const ctx2: any = {
       req: { url: "https://api2.test/resource" },
-      app: { baseURL: null },
+      app: { baseUrl: null },
     };
 
     // Each origin has its own bucket
@@ -110,12 +110,12 @@ describe("conduitRateLimitMiddleware", () => {
 
     const ctx1: any = {
       req: { url: "https://api1.test/resource" },
-      app: { baseURL: null },
+      app: { baseUrl: null },
     };
 
     const ctx2: any = {
       req: { url: "https://api2.test/resource" },
-      app: { baseURL: null },
+      app: { baseUrl: null },
     };
 
     // First request uses the global token

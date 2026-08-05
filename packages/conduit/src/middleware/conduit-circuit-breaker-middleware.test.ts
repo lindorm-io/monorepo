@@ -145,14 +145,14 @@ describe("conduitCircuitBreakerMiddleware", () => {
 
   test("handles relative URLs without crashing", async () => {
     ctx.req.url = "/api/test";
-    ctx.app = { baseURL: "https://api.test" };
+    ctx.app = { baseUrl: "https://api.test" };
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
     expect(next).toHaveBeenCalled();
   });
 
-  test("handles relative URLs without baseURL fallback", async () => {
+  test("handles relative URLs without baseUrl fallback", async () => {
     ctx.req.url = "/api/test";
     ctx.app = undefined;
 

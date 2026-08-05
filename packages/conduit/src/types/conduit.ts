@@ -35,7 +35,7 @@ export type ConduitSettings = {
    */
   adapter?: ConduitAdapter;
   alias?: string;
-  baseURL?: URL | string;
+  baseUrl?: URL | string;
   config?: ConduitAxiosOverrides;
   environment?: Environment;
   headers?: Dict;

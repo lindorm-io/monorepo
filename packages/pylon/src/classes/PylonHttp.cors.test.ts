@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 describe("PylonHttp CORS integration (F17)", () => {
   let server: http.Server;
-  let baseURL: string;
+  let baseUrl: string;
 
   beforeAll(async () => {
     const router = new PylonRouter();
@@ -40,7 +40,7 @@ describe("PylonHttp CORS integration (F17)", () => {
     server = http.createServer(pylonHttp.callback);
     await new Promise<void>((resolve) => server.listen(0, () => resolve()));
     const addr = server.address() as AddressInfo;
-    baseURL = `http://127.0.0.1:${addr.port}`;
+    baseUrl = `http://127.0.0.1:${addr.port}`;
   });
 
   afterAll(async () => {
@@ -52,7 +52,7 @@ describe("PylonHttp CORS integration (F17)", () => {
   // F17 symptom 1: the ACTUAL cross-origin response must carry ACAO, not just
   // the preflight — otherwise the browser discards every real response.
   test("an actual cross-origin GET carries Access-Control-Allow-Origin", async () => {
-    const res = await fetch(`${baseURL}/v1/genres?page_size=1`, {
+    const res = await fetch(`${baseUrl}/v1/genres?page_size=1`, {
       headers: { origin: "http://localhost:5173" },
     });
 
@@ -66,7 +66,7 @@ describe("PylonHttp CORS integration (F17)", () => {
   // "" for the missing request-headers header, which previously became [""] and
   // failed the allowlist.
   test("a valid preflight returns 204 with the negotiated CORS headers", async () => {
-    const res = await fetch(`${baseURL}/v1/genres`, {
+    const res = await fetch(`${baseUrl}/v1/genres`, {
       method: "OPTIONS",
       headers: {
         origin: "http://localhost:5173",
@@ -83,7 +83,7 @@ describe("PylonHttp CORS integration (F17)", () => {
   // A same-origin / non-browser request (no Origin header) must not be rejected
   // now that origin handling runs on every request.
   test("a request without an Origin header is not rejected", async () => {
-    const res = await fetch(`${baseURL}/v1/genres`);
+    const res = await fetch(`${baseUrl}/v1/genres`);
 
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({ ok: true });

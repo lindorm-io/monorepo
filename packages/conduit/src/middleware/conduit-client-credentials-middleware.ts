@@ -130,7 +130,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
 
     const tokenPromise = (async (): Promise<ConduitMiddleware> => {
       const client = new Conduit({
-        baseURL: issuer,
+        baseUrl: issuer,
         logger,
         middleware: [
           conduitChangeRequestBodyMiddleware("snake"),

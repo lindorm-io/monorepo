@@ -28,7 +28,7 @@ export const createConduitRateLimitMiddleware = (
 
     if (perOrigin) {
       try {
-        key = new URL(ctx.req.url, ctx.app?.baseURL ?? undefined).origin;
+        key = new URL(ctx.req.url, ctx.app?.baseUrl ?? undefined).origin;
       } catch {
         key = ctx.req.url;
       }

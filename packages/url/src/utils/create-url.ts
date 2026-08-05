@@ -16,14 +16,14 @@ export const createUrl = <P extends Dict<Param> = Dict<Param>, Q = Dict<Query>>(
     return addToUrl<P, Q>(new URL(pathOrUrl), options);
   }
 
-  const baseURL = options.host || options.baseURL;
+  const baseUrl = options.host || options.baseUrl;
 
-  if (!baseURL) {
-    throw new Error(`Invalid base [ ${baseURL} ]`);
+  if (!baseUrl) {
+    throw new Error(`Invalid base [ ${baseUrl} ]`);
   }
 
   const url = createBaseUrl({
-    base: options.baseURL,
+    base: options.baseUrl,
     host: options.host,
     port: options.port,
   });

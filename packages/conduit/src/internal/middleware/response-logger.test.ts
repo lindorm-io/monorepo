@@ -18,7 +18,7 @@ describe("responseLogger", () => {
     logger = createMockLogger();
 
     ctx = {
-      app: { alias: "test", baseURL: "https://api.test.lindorm.io", environment: "test" },
+      app: { alias: "test", baseUrl: "https://api.test.lindorm.io", environment: "test" },
       logger,
       req: {
         body: undefined,

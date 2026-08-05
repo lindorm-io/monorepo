@@ -6,7 +6,7 @@ import type { OnRetryCallback, RetryCallback } from "./retry.js";
 
 export type ConduitAppContext = {
   alias: string | null;
-  baseURL: string | null;
+  baseUrl: string | null;
   environment: Environment | null;
 };
 

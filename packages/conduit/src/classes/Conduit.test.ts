@@ -17,12 +17,12 @@ describe("Conduit", () => {
 
     test("should construct with base url as URL", () => {
       expect(
-        () => new Conduit({ baseURL: new URL("http://test.lindorm.io") }),
+        () => new Conduit({ baseUrl: new URL("http://test.lindorm.io") }),
       ).not.toThrow();
     });
 
     test("should construct with base url as string", () => {
-      expect(() => new Conduit({ baseURL: "http://test.lindorm.io" })).not.toThrow();
+      expect(() => new Conduit({ baseUrl: "http://test.lindorm.io" })).not.toThrow();
     });
 
     test("should construct with all options", () => {
@@ -30,7 +30,7 @@ describe("Conduit", () => {
         () =>
           new Conduit({
             alias: "alias",
-            baseURL: "http://test.lindorm.io",
+            baseUrl: "http://test.lindorm.io",
             headers: { "x-test-header": "test" },
             timeout: 5000,
             withCredentials: true,
@@ -46,7 +46,7 @@ describe("Conduit", () => {
 
     beforeEach(() => {
       conduit = new Conduit({
-        baseURL: "http://test.lindorm.io",
+        baseUrl: "http://test.lindorm.io",
         retryOptions: {
           maxAttempts: 3,
           strategy: "linear",
@@ -202,7 +202,7 @@ describe("Conduit", () => {
 
     beforeEach(() => {
       conduit = new Conduit({
-        baseURL: "http://test.lindorm.io",
+        baseUrl: "http://test.lindorm.io",
         retryOptions: {
           maxAttempts: 3,
           strategy: "linear",
@@ -246,7 +246,7 @@ describe("Conduit", () => {
       };
 
       conduit = new Conduit({
-        baseURL: "http://test.lindorm.io",
+        baseUrl: "http://test.lindorm.io",
         middleware: [mw],
         retryOptions: {
           maxAttempts: 3,
@@ -321,7 +321,7 @@ describe("Conduit", () => {
     let scope: nock.Scope;
 
     beforeEach(() => {
-      conduit = new Conduit({ baseURL: "http://test.lindorm.io" });
+      conduit = new Conduit({ baseUrl: "http://test.lindorm.io" });
     });
 
     afterEach(() => {

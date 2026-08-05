@@ -10,7 +10,7 @@ const main = async (): Promise<void> => {
 
   const conduit = new Conduit({
     alias: "Scryfall",
-    baseURL: "https://api.scryfall.com",
+    baseUrl: "https://api.scryfall.com",
     logger,
     middleware: [conduitChangeResponseDataMiddleware(ChangeCase.Camel)],
     timeout: 500,

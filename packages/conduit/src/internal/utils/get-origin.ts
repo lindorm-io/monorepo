@@ -1,6 +1,6 @@
-export const getOrigin = (url: string, baseURL?: URL): string => {
+export const getOrigin = (url: string, baseUrl?: URL): string => {
   try {
-    return new URL(url, baseURL).origin;
+    return new URL(url, baseUrl).origin;
   } catch {
     return url;
   }

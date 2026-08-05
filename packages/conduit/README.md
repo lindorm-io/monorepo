@@ -17,7 +17,7 @@ npm install @lindorm/conduit
 ```typescript
 import { Conduit } from "@lindorm/conduit";
 
-const client = new Conduit({ baseURL: "https://api.example.com" });
+const client = new Conduit({ baseUrl: "https://api.example.com" });
 
 const { data } = await client.get<Array<User>>("/users");
 
@@ -40,7 +40,7 @@ import { Conduit } from "@lindorm/conduit";
 const client = new Conduit({
   adapter: "http",
   alias: "MyAPI",
-  baseURL: "https://api.example.com",
+  baseUrl: "https://api.example.com",
   config: {},
   environment: "production",
   headers: { "X-Client": "v1" },
@@ -62,7 +62,7 @@ const client = new Conduit({
 | ----------------- | -------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `adapter`         | `"http" \| "fetch"`              | `"http"`        | Axios adapter. `"http"` uses Node `http`/`https`; `"fetch"` uses native fetch / undici.                                                                                                                                                                                                           |
 | `alias`           | `string`                         | `null`          | Human-readable name used in log entries.                                                                                                                                                                                                                                                          |
-| `baseURL`         | `URL \| string`                  | `undefined`     | Base URL prepended to every request path.                                                                                                                                                                                                                                                         |
+| `baseUrl`         | `URL \| string`                  | `undefined`     | Base URL prepended to every request path.                                                                                                                                                                                                                                                         |
 | `config`          | `RawAxiosRequestConfig` (subset) | `{}`            | Native Axios config pass-through (excluding fields Conduit owns: method, url, headers, etc).                                                                                                                                                                                                      |
 | `environment`     | `Environment`                    | `null`          | Sent as the `X-Environment` request header.                                                                                                                                                                                                                                                       |
 | `headers`         | `Dict<string>`                   | `{}`            | Default headers merged into every request.                                                                                                                                                                                                                                                        |
@@ -259,7 +259,7 @@ const getAuthMiddleware = conduitClientCredentialsMiddlewareFactory({
 });
 
 const client = new Conduit({
-  baseURL: "https://api.example.com",
+  baseUrl: "https://api.example.com",
   middleware: [
     await getAuthMiddleware(
       { resource: "https://api.example.com", scope: ["read", "write"] },
@@ -299,7 +299,7 @@ import {
 } from "@lindorm/conduit";
 
 const client = new Conduit({
-  baseURL: "https://api.example.com",
+  baseUrl: "https://api.example.com",
   middleware: [
     conduitChangeRequestBodyMiddleware("snake"),
     conduitChangeRequestQueryMiddleware("snake"),
@@ -341,7 +341,7 @@ Coalesces concurrent identical `GET` and `HEAD` requests into a single in-flight
 import { createConduitDeduplicationMiddleware } from "@lindorm/conduit";
 
 const client = new Conduit({
-  baseURL: "https://api.example.com",
+  baseUrl: "https://api.example.com",
   middleware: [createConduitDeduplicationMiddleware()],
 });
 
@@ -417,7 +417,7 @@ const userSchema = z.object({
 });
 
 const client = new Conduit({
-  baseURL: "https://api.example.com",
+  baseUrl: "https://api.example.com",
   middleware: [conduitSchemaMiddleware(userSchema)],
 });
 
@@ -459,7 +459,7 @@ By default Conduit retries up to 5 times with exponential backoff (250 ms base, 
 import { ClientError } from "@lindorm/errors";
 
 const client = new Conduit({
-  baseURL: "https://api.example.com",
+  baseUrl: "https://api.example.com",
   retryOptions: {
     maxAttempts: 3,
     strategy: "exponential",
@@ -675,7 +675,7 @@ import {
 
 const client = new Conduit({
   alias: "ExampleAPI",
-  baseURL: "https://api.example.com",
+  baseUrl: "https://api.example.com",
   headers: { "X-Client-Version": "1.0.0" },
   logger,
   middleware: [

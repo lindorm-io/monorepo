@@ -8,7 +8,7 @@ const main = async (): Promise<void> => {
   await EXAMPLE_PYLON.start();
 
   const conduit = new Conduit({
-    baseURL: "http://127.0.0.1:3000",
+    baseUrl: "http://127.0.0.1:3000",
     logger,
   });
 

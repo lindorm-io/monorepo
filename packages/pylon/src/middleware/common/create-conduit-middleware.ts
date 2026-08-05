@@ -10,9 +10,9 @@ import { ServerError } from "@lindorm/errors";
 import { isArray } from "@lindorm/is";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
-type Options = Omit<ConduitSettings, "alias" | "baseURL" | "logger"> & {
+type Options = Omit<ConduitSettings, "alias" | "baseUrl" | "logger"> & {
   alias: string;
-  baseURL: string;
+  baseUrl: string;
 };
 
 export const createConduitMiddleware = <C extends PylonContext = PylonContext>(
@@ -28,7 +28,7 @@ export const createConduitMiddleware = <C extends PylonContext = PylonContext>(
       type: "urn:lindorm:pylon:error:conduit_alias_required",
       title: "Conduit Alias Required",
       details: "Every conduit passed to createConduitMiddleware must define an alias",
-      // baseURL is upstream infrastructure; keep it server-side in debug only.
+      // baseUrl is upstream infrastructure; keep it server-side in debug only.
       debug: { options },
     });
   }

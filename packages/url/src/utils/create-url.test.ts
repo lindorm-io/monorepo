@@ -26,8 +26,8 @@ describe("createUrl", () => {
     ).toEqual("https://lindorm.io/path");
   });
 
-  test("should use baseURL", () => {
-    expect(createUrl("/path", { baseURL: "https://lindorm.io" }).toString()).toEqual(
+  test("should use baseUrl", () => {
+    expect(createUrl("/path", { baseUrl: "https://lindorm.io" }).toString()).toEqual(
       "https://lindorm.io/path",
     );
   });

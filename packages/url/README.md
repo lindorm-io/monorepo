@@ -119,7 +119,7 @@ getPlainUrl(new URL("https://test.lindorm.io:4000/path?a=1#frag")).toString();
 
 ### Coerce input into a URL
 
-`getValidUrl` accepts a `URL` instance or a string. With a relative string, pass `baseURL` as the second argument; without one, the input must already be absolute or it throws.
+`getValidUrl` accepts a `URL` instance or a string. With a relative string, pass `baseUrl` as the second argument; without one, the input must already be absolute or it throws.
 
 ```typescript
 import { getValidUrl } from "@lindorm/url";
@@ -155,7 +155,7 @@ const createUrl: <P extends Dict<Param> = Dict<Param>, Q = Dict<Query>>(
 ) => URL;
 ```
 
-Builds a `URL`. If `pathOrUrl` is a `URL` instance or a string starting with `http`, it is used as the origin and existing search params are merged with `options.query`. Otherwise `pathOrUrl` is treated as a path and either `options.host` or `options.baseURL` is required to resolve the origin; if neither is provided, throws `Invalid base [ ... ]`.
+Builds a `URL`. If `pathOrUrl` is a `URL` instance or a string starting with `http`, it is used as the origin and existing search params are merged with `options.query`. Otherwise `pathOrUrl` is treated as a path and either `options.host` or `options.baseUrl` is required to resolve the origin; if neither is provided, throws `Invalid base [ ... ]`.
 
 ### `createBaseUrl({ base?, host?, port? })`
 
@@ -185,10 +185,10 @@ const getPlainUrl: (url: URL | string) => URL;
 
 Returns a new `URL` containing only origin + pathname. Drops query and hash.
 
-### `getValidUrl(url, baseURL?)`
+### `getValidUrl(url, baseUrl?)`
 
 ```typescript
-const getValidUrl: (url: URL | string, baseURL?: URL | string) => URL;
+const getValidUrl: (url: URL | string, baseUrl?: URL | string) => URL;
 ```
 
 Returns `url` if it is already a `URL` instance, otherwise constructs a new `URL` from the string. Throws on invalid input.
@@ -197,7 +197,7 @@ Returns `url` if it is already a `URL` instance, otherwise constructs a new `URL
 
 ```typescript
 type CreateUrlOptions<P = Dict<Param>, Q = Dict<Query>> = {
-  baseURL?: string;
+  baseUrl?: string;
   changeQueryCase?: ChangeCase;
   host?: string;
   params?: P;

@@ -48,7 +48,7 @@ describe("composeAxiosConfig", () => {
     };
 
     ctx = {
-      app: { baseURL: undefined },
+      app: { baseUrl: undefined },
       req,
     };
   });
@@ -67,7 +67,7 @@ describe("composeAxiosConfig", () => {
   });
 
   test("should resolve with base url", async () => {
-    ctx.app.baseURL = "https://lindorm.io:5555";
+    ctx.app.baseUrl = "https://lindorm.io:5555";
     ctx.req.url = "/test/path/hello/:answer/:general";
 
     await expect(composeAxiosConfig(ctx)).resolves.toEqual({

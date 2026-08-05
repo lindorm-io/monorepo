@@ -6,7 +6,7 @@ exports[`requestLogger > should log a request without auth unchanged 1`] = `
   {
     "app": {
       "alias": "test",
-      "baseURL": "https://api.test.lindorm.io",
+      "baseUrl": "https://api.test.lindorm.io",
       "environment": "test",
     },
     "request": {
