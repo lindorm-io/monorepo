@@ -329,13 +329,28 @@ describe("AesKit", () => {
             aesKit = new AesKit({ kryptos, encryption });
           });
 
-          test("should encrypt and decrypt record mode with caller AAD", () => {
-            const encrypted = aesKit.encrypt("secret data", "record");
-            // For record mode, AAD is not embedded in the format.
-            // The caller is responsible for providing the same AAD at decrypt time.
-            // Since record mode has no format-derived AAD, we can pass one manually.
-            const decrypted = aesKit.decrypt(encrypted);
-            expect(decrypted).toEqual("secret data");
+          test("should bind the caller AAD to the record ciphertext", () => {
+            const encrypted = aesKit.encrypt("secret data", "record", { aad });
+
+            // The AAD is NOT stored with the record — that is what makes it a
+            // binding. Omitting it on decrypt must fail authentication.
+            expect(() => aesKit.decrypt(encrypted)).toThrow();
+
+            expect(aesKit.decrypt(encrypted, { aad })).toEqual("secret data");
+
+            expect(() =>
+              aesKit.decrypt(encrypted, { aad: Buffer.from("wrong") }),
+            ).toThrow();
+          });
+
+          test("should verify and assert record mode with the caller AAD", () => {
+            const encrypted = aesKit.encrypt("secret data", "record", { aad });
+
+            expect(aesKit.verify("secret data", encrypted)).toBe(false);
+            expect(aesKit.verify("secret data", encrypted, { aad })).toBe(true);
+
+            expect(() => aesKit.assert("secret data", encrypted)).toThrow();
+            expect(() => aesKit.assert("secret data", encrypted, { aad })).not.toThrow();
           });
         },
       );
@@ -368,7 +383,7 @@ describe("AesKit", () => {
       });
     });
 
-    describe("backward compatibility - record mode without AAD", () => {
+    describe("record mode - no AAD", () => {
       describe.each(["A128GCM", "A128CBC-HS256"] as const)(
         "encryption: %s",
         (encryption) => {

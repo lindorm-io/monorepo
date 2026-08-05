@@ -5,7 +5,9 @@ import type {
   AesContentDecryption,
   AesContentEncryption,
   AesContentOptions,
-  AesOperationOptions,
+  AesDecryptOptions,
+  AesEncryptOptions,
+  AesRecordEncryptOptions,
   IAesKit,
 } from "../interfaces/index.js";
 import type {
@@ -40,22 +42,22 @@ export class AesKit implements IAesKit {
     this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
   }
 
-  encrypt(data: AesContent, options?: AesOperationOptions): string;
-  encrypt(data: AesContent, mode: "cbor", options?: AesOperationOptions): string;
+  encrypt(data: AesContent, options?: AesEncryptOptions): string;
+  encrypt(data: AesContent, mode: "cbor", options?: AesEncryptOptions): string;
   encrypt(
     data: AesContent,
     mode: "record",
-    options?: AesOperationOptions,
+    options?: AesRecordEncryptOptions,
   ): AesEncryptionRecord;
   encrypt(
     data: AesContent,
     mode: "serialised",
-    options?: AesOperationOptions,
+    options?: AesEncryptOptions,
   ): SerialisedAesEncryption;
   encrypt(
     data: AesContent,
-    modeOrOptions?: AesEncryptionMode | AesOperationOptions,
-    _options?: AesOperationOptions,
+    modeOrOptions?: AesEncryptionMode | AesRecordEncryptOptions,
+    _options?: AesRecordEncryptOptions,
   ): string | AesEncryptionRecord | SerialisedAesEncryption {
     // The 2nd arg is EITHER the output mode (a string) OR the options object.
     // When it is omitted or an options object the mode defaults to "cbor".
@@ -73,8 +75,12 @@ export class AesKit implements IAesKit {
             kryptos: this.kryptos,
           });
 
+        // The only mode without a header, and therefore the only one that can
+        // bind a caller-supplied AAD. It is not stored on the record — the
+        // caller must pass the same AAD to `decrypt`.
         case "record":
           return encryptAes({
+            aad: options?.aad,
             apu: options?.apu,
             apv: options?.apv,
             data,
@@ -113,15 +119,15 @@ export class AesKit implements IAesKit {
 
   decrypt<T extends AesContent = string>(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
-    options?: AesOperationOptions,
+    options?: AesDecryptOptions,
   ): T {
     try {
       const parsed = parseAes(data);
 
-      // For string formats and serialised records, the AAD comes from the parsed header.
-      // For raw record mode, the caller may provide AAD via options.
-      // If the parsed data already has AAD (from format parsing), use it.
-      // If the caller provides AAD (raw record mode), use that instead.
+      // The cbor and serialised parsers always derive the AAD from the header,
+      // so `parsed.aad` is set for those. Record mode has no header: the AAD is
+      // whatever the caller bound at encrypt time and re-supplies here (either
+      // on the record itself or through the options).
       const aad = parsed.aad ?? options?.aad;
 
       return decryptAes<T>({
@@ -144,7 +150,7 @@ export class AesKit implements IAesKit {
   verify(
     input: AesContent,
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
-    options?: AesOperationOptions,
+    options?: AesDecryptOptions,
   ): boolean {
     try {
       return isEqual(input, this.decrypt(data, options));
@@ -156,7 +162,7 @@ export class AesKit implements IAesKit {
   assert(
     input: AesContent,
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
-    options?: AesOperationOptions,
+    options?: AesDecryptOptions,
   ): void {
     if (this.verify(input, data, options)) return;
     throw new AesError("Invalid AES cipher", {

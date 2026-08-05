@@ -90,19 +90,23 @@ aes.assert("wrong", cipher); // throws AesError("Invalid AES cipher")
 
 ### Additional Authenticated Data (AAD)
 
-The `cbor` and `serialised` formats automatically derive AAD from their header — metadata integrity is bound to the ciphertext for free. For `cbor` the header is the CBOR map's header-only fields (deterministically re-encoded on decrypt); for `serialised` it is the base64url-encoded header.
+The `cbor` and `serialised` formats derive their AAD from their own header — metadata integrity is bound to the ciphertext for free. They therefore accept **no** caller AAD, on either side. For `cbor` the header is the CBOR map's header-only fields (deterministically re-encoded on decrypt); for `serialised` it is the base64url-encoded header.
 
-For raw `record`-mode payloads with no header, you can supply AAD on decrypt through `options.aad`:
+`record` is the only format without a header, and so the only one that takes a caller-supplied AAD — on `encrypt`, and again on `decrypt`:
 
 ```ts
-const record = aes.encrypt("payload", "record");
 const aad = Buffer.from("request-id:abc-123");
 
-aes.decrypt({ ...record, aad }); // pass AAD through the record
-aes.decrypt(record, { aad }); // or via the options argument
+const record = aes.encrypt("payload", "record", { aad });
+
+aes.decrypt(record, { aad }); // "payload"
+aes.decrypt(record); // throws — the AAD is part of the authentication
+aes.decrypt({ ...record, aad }); // equivalent — AAD carried on the record
 ```
 
-To encrypt with caller-controlled AAD use the two-step `prepareEncryption()` flow described in the API reference.
+The AAD is **not** stored with the ciphertext. That is what makes it a binding: the caller must re-supply the same bytes, so a ciphertext cut from one context cannot be pasted into another. `verify` and `assert` take the same `{ aad }`.
+
+`prepareEncryption()` also accepts an `aad` on its `encrypt` closure, for JWE-style flows that build their own header.
 
 ## API reference
 
@@ -122,24 +126,26 @@ new AesKit({ kryptos, encryption });
 ### `aes.encrypt(data, mode?)`
 
 ```ts
-encrypt(data: AesContent, options?: AesOperationOptions): string; // "cbor"
-encrypt(data: AesContent, mode: "cbor", options?: AesOperationOptions): string;
-encrypt(data: AesContent, mode: "record", options?: AesOperationOptions): AesEncryptionRecord;
-encrypt(data: AesContent, mode: "serialised", options?: AesOperationOptions): SerialisedAesEncryption;
+encrypt(data: AesContent, options?: AesEncryptOptions): string; // "cbor"
+encrypt(data: AesContent, mode: "cbor", options?: AesEncryptOptions): string;
+encrypt(data: AesContent, mode: "record", options?: AesRecordEncryptOptions): AesEncryptionRecord;
+encrypt(data: AesContent, mode: "serialised", options?: AesEncryptOptions): SerialisedAesEncryption;
 ```
 
 Encrypts and returns one of three shapes. `mode` defaults to `"cbor"`; the 2nd argument may be the options object directly when relying on the default.
+
+Only the `record` overload accepts `aad` — the header-derived modes reject it at compile time.
 
 ### `aes.decrypt<T>(data, options?)`
 
 ```ts
 decrypt<T extends AesContent = string>(
   data: AesDecryptionRecord | SerialisedAesDecryption | string,
-  options?: AesOperationOptions,
+  options?: AesDecryptOptions,
 ): T;
 ```
 
-Auto-detects the input format. AAD is taken from the parsed input when present and otherwise from `options.aad`.
+Auto-detects the input format. AAD is taken from the parsed input when present (always the case for `cbor` and `serialised`) and otherwise from `options.aad`.
 
 ### `aes.verify(input, data, options?)`
 
@@ -147,7 +153,7 @@ Auto-detects the input format. AAD is taken from the parsed input when present a
 verify(
   input: AesContent,
   data: AesDecryptionRecord | SerialisedAesDecryption | string,
-  options?: AesOperationOptions,
+  options?: AesDecryptOptions,
 ): boolean;
 ```
 
@@ -159,7 +165,7 @@ Returns `true` if the decrypted payload deeply equals `input`, `false` otherwise
 assert(
   input: AesContent,
   data: AesDecryptionRecord | SerialisedAesDecryption | string,
-  options?: AesOperationOptions,
+  options?: AesDecryptOptions,
 ): void;
 ```
 
@@ -312,7 +318,19 @@ type AesKitSettings = {
   kryptos: IKryptos;
 };
 
-type AesOperationOptions = {
+// cbor / serialised / default encrypt
+type AesEncryptOptions = {
+  apu?: Buffer;
+  apv?: Buffer;
+};
+
+// record encrypt — the only mode that binds a caller AAD
+type AesRecordEncryptOptions = AesEncryptOptions & {
+  aad?: Buffer;
+};
+
+// decrypt / verify / assert
+type AesDecryptOptions = {
   aad?: Buffer;
 };
 ```

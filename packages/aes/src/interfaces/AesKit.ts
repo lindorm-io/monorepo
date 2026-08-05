@@ -8,13 +8,31 @@ import type {
 } from "../types/index.js";
 import type { PreparedEncryption } from "../internal/types/prepared-encryption.js";
 
-export type AesOperationOptions = {
-  aad?: Buffer;
+export type AesEncryptOptions = {
   // RFC 7518 §4.6 — ECDH-ES Concat-KDF OtherInfo (apu/apv). Only the ECDH-ES
   // key-agreement algorithms consume them; carried on the header so a recipient
   // re-derives the identical content encryption key.
   apu?: Buffer;
   apv?: Buffer;
+};
+
+/**
+ * The `record` format carries no header, so it is the only mode that accepts a
+ * caller-supplied AAD. The AAD is bound to the ciphertext but deliberately NOT
+ * stored with it — the caller re-supplies it on decrypt, which is what makes it
+ * a binding. The `cbor` and `serialised` formats derive their AAD from their own
+ * header (RFC 7516 §5.1 style) and therefore accept no caller AAD.
+ */
+export type AesRecordEncryptOptions = AesEncryptOptions & {
+  aad?: Buffer;
+};
+
+/**
+ * Decryption takes an AAD only. `apu`/`apv` are encrypt-time key-agreement
+ * inputs and always travel on the parsed input, never on the options.
+ */
+export type AesDecryptOptions = {
+  aad?: Buffer;
 };
 
 export type AesContentOptions = {
@@ -38,32 +56,32 @@ export type AesContentDecryption = {
 export interface IAesKit {
   kryptos: IKryptos;
 
-  encrypt(content: AesContent, options?: AesOperationOptions): string;
-  encrypt(content: AesContent, mode: "cbor", options?: AesOperationOptions): string;
+  encrypt(content: AesContent, options?: AesEncryptOptions): string;
+  encrypt(content: AesContent, mode: "cbor", options?: AesEncryptOptions): string;
   encrypt(
     content: AesContent,
     mode: "record",
-    options?: AesOperationOptions,
+    options?: AesRecordEncryptOptions,
   ): AesEncryptionRecord;
   encrypt(
     content: AesContent,
     mode: "serialised",
-    options?: AesOperationOptions,
+    options?: AesEncryptOptions,
   ): SerialisedAesEncryption;
 
   decrypt<T extends AesContent = string>(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
-    options?: AesOperationOptions,
+    options?: AesDecryptOptions,
   ): T;
   verify(
     input: AesContent,
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
-    options?: AesOperationOptions,
+    options?: AesDecryptOptions,
   ): boolean;
   assert(
     input: AesContent,
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
-    options?: AesOperationOptions,
+    options?: AesDecryptOptions,
   ): void;
 
   encryptContent(content: Buffer, options?: AesContentOptions): AesContentEncryption;
