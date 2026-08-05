@@ -1,4 +1,5 @@
 import { buildDpopProof } from "../internal/build-dpop-proof.js";
+import { isExpired, isLive } from "@lindorm/date";
 import { BadGatewayError, InternalServerError } from "@lindorm/errors";
 import { isArray, isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
@@ -74,7 +75,7 @@ const replaceInCache = (cache: ConduitClientCredentialsCache, item: CacheItem): 
     if (
       entry.resource === item.resource &&
       entry.issuer === item.issuer &&
-      entry.ttl <= now
+      isExpired(entry.ttl, now)
     ) {
       cache.splice(i, 1);
     }
@@ -117,7 +118,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
       scope.every((s) => item.scope.includes(s)),
     );
 
-    if (existing && existing.ttl > Date.now()) {
+    if (existing && isLive(existing.ttl)) {
       return bindAccessToken(existing.accessToken, existing.tokenType);
     }
 

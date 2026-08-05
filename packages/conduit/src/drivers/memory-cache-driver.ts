@@ -1,3 +1,4 @@
+import { isExpired } from "@lindorm/date";
 import { canonicalCacheKey } from "../internal/utils/canonical-cache-key.js";
 import type { IConduitCacheDriver } from "../interfaces/index.js";
 import type { ConduitResponse } from "../types/index.js";
@@ -21,7 +22,7 @@ export const createMemoryCacheDriver = (maxEntries = 1000): IConduitCacheDriver 
 
       if (!entry) return null;
 
-      if (entry.expiresAt !== null && Date.now() >= entry.expiresAt) {
+      if (entry.expiresAt !== null && isExpired(entry.expiresAt)) {
         store.delete(id);
         return null;
       }
