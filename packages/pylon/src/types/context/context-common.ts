@@ -11,6 +11,7 @@ import type { AuthorizationState } from "../http/authorization.js";
 import type { PylonAuthClaimsClient } from "../http/pylon-auth-client.js";
 import type { PylonClientContext } from "./pylon-client-context.js";
 import type { PylonIoContextHttp } from "./pylon-io-context.js";
+import type { PylonResolvedAccess } from "./pylon-resolved-access.js";
 import type { PylonSocketEmitter } from "../socket/pylon-socket-emitter.js";
 
 export type AppConfig = {
@@ -41,6 +42,14 @@ export type PylonHttpMetadata = PylonMetadata & {
 };
 
 export type PylonState = {
+  /**
+   * The resolved access credential, or `null` until `createAccessTokenMiddleware`
+   * has run. COEXISTS with `tokens`: `tokens` is the session's token set keyed by
+   * NAME (id, refresh, …), `access` is the single credential this request
+   * authenticated with — which on the introspected path has no `VerifiedToken` at
+   * all, so it could never live in `tokens`.
+   */
+  access: PylonResolvedAccess | null;
   actor: string;
   app: AppState;
   authorization: AuthorizationState;

@@ -38,6 +38,7 @@ describe("createSocketContextInitialisationMiddleware", () => {
     ).resolves.toBeUndefined();
 
     expect(ctx.state).toEqual({
+      access: null,
       actor: "unknown",
       app: {
         domain: "test.lindorm.io",

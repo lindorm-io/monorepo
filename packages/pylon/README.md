@@ -199,6 +199,7 @@ ctx.workerQueues?;  // populated by createWorkerQueueMiddleware
 ctx.queue(event, payload, priority?, optional?);  // enqueue a Job (when queue.enabled)
 ctx.webhook(event, data?, optional?);             // dispatch a webhook (when webhook.enabled)
 
+ctx.state.access;         // PylonResolvedAccess | null — the resolved credential
 ctx.state.app;            // { domain, environment, name, version }
 ctx.state.actor;          // resolved actor string
 ctx.state.authorization;  // { type: "basic" | "bearer" | "dpop" | "none", value }
@@ -620,7 +621,33 @@ const verifyApiKey = createTokenMiddleware({
 router.use(verifyApiKey("request.body.apiKey"));
 ```
 
-`createAccessTokenMiddleware` works on both HTTP and socket-event contexts: on HTTP it verifies the bearer / DPoP / session-derived access token; on socket events it consults the auth state established by `createHandshakeTokenMiddleware` instead of re-verifying every event.
+`createAccessTokenMiddleware` works on both HTTP and socket-event contexts: on HTTP it resolves the bearer / DPoP / session-derived access token; on socket events it consults the auth state established by `createHandshakeTokenMiddleware` instead of re-verifying every event.
+
+#### Resolved access — `ctx.state.access`
+
+On HTTP the middleware **sniffs the credential's wire format and routes** — it never tries a local verify and treats the failure as "must be opaque", because a tampered JWT has to fail rather than be handed to an authorization server that never issued it.
+
+| Credential                          | Route                                   | Result                                                           |
+| ----------------------------------- | --------------------------------------- | ---------------------------------------------------------------- |
+| JOSE / COSE (`Aegis.isJose/isCose`) | verified locally against your keys      | `ctx.state.access` **and** `ctx.state.tokens.accessToken`        |
+| anything else (opaque)              | `ctx.auth.introspect(token)` (RFC 7662) | `ctx.state.access` only — there is no `VerifiedToken` to publish |
+
+Both paths produce the same three-field shape, so every downstream gate reads one place:
+
+```typescript
+ctx.state.access; // PylonResolvedAccess | null
+// {
+//   provenance: "verified" | "introspected",  // signature checked here, vs the AS asserting it
+//   claims: DomainClaims,                     // domain-keyed camelCase on BOTH paths
+//   token: string,                            // the presented credential
+// }
+```
+
+`cnf` lives inside `claims.confirmation`, so it is not repeated on the outside; there is no `header` field (an opaque token has none, and a JWT's is derivable from `token`) and no `active` field (an inactive token throws `token_not_active` instead of resolving).
+
+A service that mints and verifies its own tokens needs **no `auth` configuration at all** — nothing on the JOSE/COSE path calls the IdP. Introspection is only reached by a genuinely opaque credential, and that needs `auth` configured.
+
+**DPoP (RFC 9449)** is checked from `(proof, claims.confirmation.thumbprint, token)`, so it runs identically on both paths — RFC 9449 §6.2 conveys `cnf.jkt` in the introspection response precisely so a resource server can validate the binding locally for an opaque token. A token carrying `cnf.jkt` is refused without a matching proof (`missing_dpop_proof`), and a token _without_ `cnf.jkt` presented under the `DPoP` scheme is refused as `token_not_dpop_bound`.
 
 ### Authorization
 
@@ -645,7 +672,9 @@ router.put(
 router.use(useValidation("accessToken", { issuer: "https://auth.example.com" }));
 ```
 
-`useRoles` and `usePermissions` accept a trailing `{ token: "<key>" }` to read from a non-default token (default: `accessToken`). `useAccess` reads claims from the OIDC introspection result when checking against `accessToken`, and from the parsed token payload otherwise.
+`useRoles` and `usePermissions` accept a trailing `{ token: "<key>" }` to read from a non-default token (default: `accessToken`). `useAccess` takes the same option.
+
+At the default key, `useAccess` and `usePermissions` read `ctx.state.access.claims` — the resolved credential, whatever established it — so they work unchanged on a locally verified token and on an introspected one. They throw `access_not_resolved` (401) when `createAccessTokenMiddleware` has not run ahead of them. Named keys (`{ token: "idToken" }`) address one entry of `ctx.state.tokens` instead, which is a different question and keeps reading the parsed token.
 
 ### Validation
 

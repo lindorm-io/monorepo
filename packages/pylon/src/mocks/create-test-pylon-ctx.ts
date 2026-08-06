@@ -68,6 +68,7 @@ export type CreateTestPylonCtxOptions = {
 };
 
 const defaultState = (): PylonState => ({
+  access: null,
   actor: "test-actor",
   app: {
     config: { audit: false, cache: false, rateLimit: false },

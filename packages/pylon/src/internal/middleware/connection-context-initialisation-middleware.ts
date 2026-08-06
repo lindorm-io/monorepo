@@ -20,6 +20,7 @@ export const createConnectionContextInitialisationMiddleware = (
     ctx.io.socket.data.client = client;
 
     ctx.state = {
+      access: null,
       actor: "unknown",
       app: ctx.io.socket.data.app,
       authorization: getSocketAuthorization(ctx.io.socket),

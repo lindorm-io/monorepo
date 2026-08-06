@@ -1,6 +1,7 @@
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { OPAQUE_TOKEN, joseShapedToken } from "../../__fixtures__/access/tokens.js";
 import { createAccessTokenMiddleware } from "./create-access-token-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
@@ -19,28 +20,98 @@ describe("createAccessTokenMiddleware", () => {
     beforeEach(() => {
       ctx = {
         aegis: createMockAegis(),
+        auth: { introspect: vi.fn() },
         logger: createMockLogger(),
         request: {},
         state: {
-          authorization: { type: "bearer", value: "jwt-token" },
+          access: null,
+          authorization: { type: "bearer", value: joseShapedToken() },
           session: null,
           tokens: {},
         },
       };
     });
 
-    test("verifies bearer header and stores on ctx.state.tokens.accessToken", async () => {
+    test("verifies a JOSE bearer token and resolves verified access", async () => {
       const middleware = createAccessTokenMiddleware(options);
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
       expect(ctx.aegis.verify).toHaveBeenCalledWith(
-        "jwt-token",
+        joseShapedToken(),
         { ...options },
-        { tokenType: "access_token", dpopProof: undefined },
+        // pylon owns the DPoP binding check now, so aegis is told to trust the
+        // bound thumbprint rather than demand a proof it was never handed.
+        { tokenType: "access_token", trustBoundThumbprint: true },
       );
+      expect(ctx.auth.introspect).not.toHaveBeenCalled();
       expect(ctx.state.tokens.accessToken).toMatchSnapshot();
+      expect(ctx.state.access).toMatchSnapshot();
       expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    test("introspects an OPAQUE bearer token and resolves introspected access", async () => {
+      ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
+      ctx.auth.introspect.mockResolvedValue({
+        active: true,
+        subject: "alice",
+        scope: ["openid"],
+        permissions: ["users:read"],
+      });
+
+      const middleware = createAccessTokenMiddleware(options);
+
+      await expect(middleware(ctx, next)).resolves.toBeUndefined();
+
+      expect(ctx.aegis.verify).not.toHaveBeenCalled();
+      expect(ctx.auth.introspect).toHaveBeenCalledWith(OPAQUE_TOKEN);
+      // No VerifiedToken exists on this path — never synthesise one.
+      expect(ctx.state.tokens.accessToken).toBeUndefined();
+      expect(ctx.state.access).toMatchSnapshot();
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    test("both provenances resolve the same claim shape", async () => {
+      const claims = { subject: "alice", scope: ["openid"], permissions: ["users:read"] };
+
+      (ctx.aegis.verify as Mock).mockResolvedValue({
+        claims,
+        format: "jwt",
+        header: {},
+        token: joseShapedToken(),
+      });
+      await createAccessTokenMiddleware(options)(ctx, next);
+      const verified = ctx.state.access;
+
+      ctx.state.access = null;
+      ctx.state.tokens = {};
+      ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
+      ctx.auth.introspect.mockResolvedValue({ active: true, ...claims });
+      await createAccessTokenMiddleware(options)(ctx, next);
+      const introspected = ctx.state.access;
+
+      expect(verified.provenance).toBe("verified");
+      expect(introspected.provenance).toBe("introspected");
+      expect(introspected.claims).toEqual(verified.claims);
+    });
+
+    test("throws 401 when introspection reports the token is not active", async () => {
+      ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
+      ctx.auth.introspect.mockResolvedValue({ active: false });
+
+      const middleware = createAccessTokenMiddleware(options);
+
+      await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
+
+      try {
+        await middleware(ctx, next);
+        expect.fail("Expected error to be thrown");
+      } catch (err: any) {
+        expect(err.status).toBe(401);
+        expect(err.code).toBe("token_not_active");
+      }
+      expect(ctx.state.access).toBeNull();
+      expect(next).not.toHaveBeenCalled();
     });
 
     test("falls back to session.accessToken when no header present", async () => {
@@ -64,6 +135,7 @@ describe("createAccessTokenMiddleware", () => {
 
       expect(ctx.aegis.verify).toHaveBeenCalledWith("session-jwt");
       expect(ctx.state.tokens.accessToken).toMatchSnapshot();
+      expect(ctx.state.access).toMatchSnapshot();
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -81,7 +153,7 @@ describe("createAccessTokenMiddleware", () => {
       await middleware(ctx, next);
 
       expect(ctx.aegis.verify).toHaveBeenCalledWith(
-        "jwt-token",
+        joseShapedToken(),
         { ...options },
         expect.objectContaining({ tokenType: "access_token" }),
       );
@@ -113,83 +185,19 @@ describe("createAccessTokenMiddleware", () => {
     });
   });
 
-  describe("DPoP (HTTP)", () => {
-    let ctx: any;
-
-    beforeEach(() => {
-      ctx = {
-        aegis: createMockAegis(),
-        logger: createMockLogger(),
-        method: "POST",
-        origin: "https://api.example.com",
-        path: "/orders",
-        request: {},
-        get: vi.fn((header: string) =>
-          header.toLowerCase() === "dpop" ? "proof-jwt" : undefined,
-        ),
-        state: {
-          authorization: { type: "dpop", value: "jwt-token" },
-          session: null,
-          tokens: {},
-        },
-      };
-
-      (ctx.aegis.verify as Mock).mockResolvedValue({
-        header: { tokenType: "access_token" },
-        format: "jwt",
-        claims: {
-          subject: "verified_subject",
-          confirmation: { thumbprint: "proof-thumbprint" },
-        },
-        dpop: {
-          thumbprint: "proof-thumbprint",
-          tokenId: "proof-jti",
-          httpMethod: "POST",
-          httpUri: "https://api.example.com/orders",
-          issuedAt: new Date("2024-01-01T08:00:00.000Z"),
-        },
-      });
-    });
-
-    test("passes DPoP header to aegis and stores verified token", async () => {
-      const middleware = createAccessTokenMiddleware(options);
-      await middleware(ctx, next);
-
-      expect(ctx.aegis.verify).toHaveBeenCalledWith(
-        "jwt-token",
-        { ...options },
-        { tokenType: "access_token", dpopProof: "proof-jwt" },
-      );
-      expect(ctx.state.tokens.accessToken).toMatchSnapshot();
-    });
-
-    test("throws 401 when DPoP header missing", async () => {
-      ctx.get.mockReturnValue(undefined);
-      const middleware = createAccessTokenMiddleware(options);
-      await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
-    });
-
-    test("throws 401 when proof htm does not match request method", async () => {
-      ctx.method = "GET";
-      const middleware = createAccessTokenMiddleware(options);
-      await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
-    });
-
-    test("throws 401 when proof htu does not match request URI", async () => {
-      ctx.path = "/other-path";
-      const middleware = createAccessTokenMiddleware(options);
-      await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
-    });
-  });
-
   describe("Socket event fast path", () => {
     const makeCtx = (authOverride: any = {}): any => {
-      const parsedBearer = { claims: { subject: "alice" }, format: "jwt", token: "x" };
+      const parsedBearer = {
+        claims: { subject: "alice" },
+        format: "jwt",
+        token: "socket-jwt",
+      };
       return {
         aegis: createMockAegis(),
+        auth: { introspect: vi.fn() },
         logger: createMockLogger(),
         event: "some:event",
-        state: { tokens: {} },
+        state: { access: null, tokens: {} },
         io: {
           socket: {
             data: {
@@ -219,6 +227,7 @@ describe("createAccessTokenMiddleware", () => {
       expect(ctx.io.socket.emit).not.toHaveBeenCalled();
       expect(ctx.aegis.verify).not.toHaveBeenCalled();
       expect(ctx.state.tokens.accessToken).toBe(ctx.io.socket.data.tokens.bearer);
+      expect(ctx.state.access).toMatchSnapshot();
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -262,10 +271,11 @@ describe("createAccessTokenMiddleware", () => {
     test("throws ServerError if run in the handshake phase", async () => {
       const ctx: any = {
         aegis: createMockAegis(),
+        auth: { introspect: vi.fn() },
         logger: createMockLogger(),
         handshakeId: "abc",
         io: { socket: { handshake: {}, data: {} } },
-        state: { tokens: {} },
+        state: { access: null, tokens: {} },
       };
       const middleware = createAccessTokenMiddleware(options);
       await expect(middleware(ctx, next)).rejects.toThrow(ServerError);
@@ -276,10 +286,12 @@ describe("createAccessTokenMiddleware", () => {
     test("throws 401 when verification fails", async () => {
       const ctx: any = {
         aegis: createMockAegis(),
+        auth: { introspect: vi.fn() },
         logger: createMockLogger(),
         request: {},
         state: {
-          authorization: { type: "bearer", value: "jwt-token" },
+          access: null,
+          authorization: { type: "bearer", value: joseShapedToken() },
           session: null,
           tokens: {},
         },
@@ -289,6 +301,7 @@ describe("createAccessTokenMiddleware", () => {
 
       const middleware = createAccessTokenMiddleware(options);
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
+      expect(ctx.state.access).toBeNull();
     });
   });
 });

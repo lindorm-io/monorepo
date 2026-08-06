@@ -1,39 +1,42 @@
 import { ClientError } from "@lindorm/errors";
+import { createUnconfiguredAuthClient } from "../../internal/utils/auth/create-unconfigured-auth-client.js";
+import type { PylonResolvedAccess } from "../../types/index.js";
 import { useAccess } from "./use-access.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("useAccess", () => {
   let ctx: any;
 
+  const access = (
+    provenance: PylonResolvedAccess["provenance"],
+    claims: Record<string, unknown> = {},
+  ): PylonResolvedAccess =>
+    ({
+      provenance,
+      token: "presented-token",
+      claims: {
+        roles: ["user"],
+        permissions: ["users:read"],
+        scope: ["openid"],
+        levelOfAssurance: 2,
+        ...claims,
+      },
+    }) as PylonResolvedAccess;
+
   beforeEach(() => {
     ctx = {
-      auth: {
-        introspect: vi.fn().mockResolvedValue({
-          active: true,
-          roles: ["user"],
-          permissions: ["users:read"],
-          scope: ["openid"],
-          levelOfAssurance: 2,
-        }),
-      },
+      // No `options.auth` configured: every ctx.auth method throws
+      // `auth_not_configured`. useAccess must never touch it.
+      auth: createUnconfiguredAuthClient(),
       state: {
-        tokens: {
-          accessToken: {
-            format: "jwt",
-            claims: {
-              roles: ["user"],
-              permissions: ["users:read"],
-              scope: ["openid"],
-              levelOfAssurance: 2,
-            },
-          },
-        },
+        access: access("verified"),
+        tokens: {},
       },
     };
   });
 
-  describe("with ctx.auth (introspection)", () => {
-    test("should call next when all checks pass", async () => {
+  describe("resolved access", () => {
+    test("should call next when all checks pass with NO auth configured", async () => {
       const next = vi.fn();
 
       await expect(
@@ -45,12 +48,30 @@ describe("useAccess", () => {
         })(ctx, next),
       ).resolves.toBeUndefined();
 
-      expect(ctx.auth.introspect).toHaveBeenCalledTimes(1);
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    test("should throw 401 when token is not active", async () => {
-      ctx.auth.introspect.mockResolvedValue({ active: false });
+    test("should never call ctx.auth.introspect", async () => {
+      ctx.auth.introspect = vi.fn();
+
+      await useAccess({ roles: ["user"] })(ctx, vi.fn());
+
+      expect(ctx.auth.introspect).not.toHaveBeenCalled();
+    });
+
+    test("should gate an introspected credential exactly as a verified one", async () => {
+      ctx.state.access = access("introspected");
+      const next = vi.fn();
+
+      await expect(
+        useAccess({ roles: ["user"], scope: ["openid"] })(ctx, next),
+      ).resolves.toBeUndefined();
+
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    test("should throw 401 when the access token middleware has not run", async () => {
+      ctx.state.access = null;
 
       await expect(useAccess({ roles: ["user"] })(ctx, vi.fn())).rejects.toThrow(
         ClientError,
@@ -60,7 +81,9 @@ describe("useAccess", () => {
         await useAccess({ roles: ["user"] })(ctx, vi.fn());
       } catch (err: any) {
         expect(err.status).toBe(401);
+        expect(err.code).toBe("access_not_resolved");
         expect(err.message).toMatchSnapshot();
+        expect(err.details).toMatchSnapshot();
       }
     });
 
@@ -119,13 +142,8 @@ describe("useAccess", () => {
       }
     });
 
-    test("should throw 403 when levelOfAssurance is undefined on introspection", async () => {
-      ctx.auth.introspect.mockResolvedValue({
-        active: true,
-        roles: ["user"],
-        permissions: ["users:read"],
-        scope: ["openid"],
-      });
+    test("should throw 403 when levelOfAssurance is absent on an introspected credential", async () => {
+      ctx.state.access = access("introspected", { levelOfAssurance: undefined });
 
       await expect(useAccess({ levelOfAssurance: 1 })(ctx, vi.fn())).rejects.toThrow(
         ClientError,
@@ -157,7 +175,7 @@ describe("useAccess", () => {
   });
 
   describe("custom token key", () => {
-    test("should use token payload directly even when ctx.auth exists", async () => {
+    beforeEach(() => {
       ctx.state.tokens.idToken = {
         format: "jwt",
         claims: {
@@ -167,7 +185,9 @@ describe("useAccess", () => {
           levelOfAssurance: 3,
         },
       };
+    });
 
+    test("should read the named token, not the resolved access", async () => {
       const next = vi.fn();
 
       await expect(
@@ -178,7 +198,17 @@ describe("useAccess", () => {
         })(ctx, next),
       ).resolves.toBeUndefined();
 
-      expect(ctx.auth.introspect).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    test("should read the named token even when no access is resolved", async () => {
+      ctx.state.access = null;
+      const next = vi.fn();
+
+      await expect(
+        useAccess({ roles: ["viewer"], token: "idToken" })(ctx, next),
+      ).resolves.toBeUndefined();
+
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -191,6 +221,7 @@ describe("useAccess", () => {
         await useAccess({ roles: ["user"], token: "customToken" })(ctx, vi.fn());
       } catch (err: any) {
         expect(err.status).toBe(401);
+        expect(err.code).toBe("token_not_found");
       }
     });
   });

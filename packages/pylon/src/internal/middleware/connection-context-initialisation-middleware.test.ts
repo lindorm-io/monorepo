@@ -38,6 +38,7 @@ describe("createConnectionContextInitialisationMiddleware", () => {
     ).resolves.toBeUndefined();
 
     expect(ctx.state).toEqual({
+      access: null,
       actor: "unknown",
       app: ctx.io.socket.data.app,
       authorization: { type: "none", value: null },

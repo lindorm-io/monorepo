@@ -14,20 +14,27 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
     let claims: Dict;
 
     if (tokenKey === "accessToken") {
-      const introspection = await ctx.auth.introspect();
+      // The RESOLVED access credential, whatever established it. Reading state
+      // here (rather than calling ctx.auth.introspect()) is what lets a service
+      // that verifies its own tokens locally use useAccess with no `auth`
+      // configured at all — the middleware already did the work.
+      const access = ctx.state.access;
 
-      if (!introspection.active) {
-        throw new ClientError("Access token is not active", {
+      if (!access) {
+        throw new ClientError("Access token middleware is required", {
           status: ClientError.Status.Unauthorized,
-          code: "token_not_active",
-          type: "urn:lindorm:pylon:error:token_not_active",
-          title: "Token Not Active",
-          details: "Token introspection returned active: false",
+          code: "access_not_resolved",
+          type: "urn:lindorm:pylon:error:access_not_resolved",
+          title: "Access Not Resolved",
+          details:
+            "useAccess reads ctx.state.access — install createAccessTokenMiddleware ahead of it, or point useAccess at a named token with the `token` option",
         });
       }
 
-      claims = introspection as Dict;
+      claims = access.claims as Dict;
     } else {
+      // A NAMED token is a different question — it addresses one entry of the
+      // session's token set, so it keeps reading `tokens`.
       const token = ctx.state.tokens[tokenKey];
 
       if (!token || token.format !== "jwt") {

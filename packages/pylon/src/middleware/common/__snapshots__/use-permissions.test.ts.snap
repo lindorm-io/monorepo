@@ -1,8 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`usePermissions > should throw ClientError 401 when token is missing 1`] = `"Token not found"`;
+exports[`usePermissions > should throw ClientError 401 when the access token middleware has not run 1`] = `"Access token middleware is required"`;
 
-exports[`usePermissions > should throw ClientError 401 when token is missing 2`] = `"Expected token [accessToken] on context"`;
+exports[`usePermissions > should throw ClientError 401 when the access token middleware has not run 2`] = `"usePermissions reads ctx.state.access — install createAccessTokenMiddleware ahead of it, or point usePermissions at a named token with the \`token\` option"`;
 
 exports[`usePermissions > should throw ClientError 403 when a permission is missing 1`] = `"Insufficient permissions"`;
 

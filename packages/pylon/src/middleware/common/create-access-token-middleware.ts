@@ -1,11 +1,11 @@
-import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
+import { Aegis, type DomainAssert, type VerifyOptions } from "@lindorm/aegis";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { DEFAULT_AUTH_WARNING_MS } from "../../internal/constants/auth.js";
 import { isInExpiryWarningWindow } from "../../internal/utils/auth-state/is-in-expiry-warning-window.js";
 import { isTokenExpired } from "../../internal/utils/auth-state/is-token-expired.js";
 import { markAuthExpiredEmitted } from "../../internal/utils/auth-state/mark-auth-expired-emitted.js";
 import { shouldEmitAuthExpired } from "../../internal/utils/auth-state/should-emit-auth-expired.js";
-import { assertDpopHttpRequestMatch } from "../../internal/utils/dpop/assert-dpop-http-request-match.js";
+import { assertDpopHttpBinding } from "../../internal/utils/dpop/assert-dpop-http-binding.js";
 import {
   isHttpContext,
   isSocketEventContext,
@@ -18,11 +18,27 @@ import type {
   PylonContext,
   PylonHttpContext,
   PylonMiddleware,
+  PylonResolvedAccess,
 } from "../../types/index.js";
 
 type Options = Omit<DomainAssert & VerifyOptions, "issuer"> & {
   issuer: string;
 };
+
+/**
+ * Is this credential one aegis can verify locally? SNIFFED from the wire format,
+ * never discovered by attempting a verify and treating the failure as "must be
+ * opaque" — a tampered JWT must FAIL, not fall through to introspection where an
+ * authorization server would be asked about a string it never issued.
+ *
+ * `Aegis.isJose` / `Aegis.isCose` are the same structural discriminators
+ * `aegis.verify` itself dispatches on (`internal/utils/verify-token.ts`), so this
+ * predicate is exactly congruent with "verify can select a kit for it": anything
+ * it accepts, verify will process; anything it rejects, verify would refuse with
+ * `unsupported_token_type`.
+ */
+const isLocallyVerifiable = (token: string): boolean =>
+  Aegis.isJose(token) || Aegis.isCose(token);
 
 const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> => {
   const source = resolveHttpTokenSource(ctx);
@@ -44,19 +60,54 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
       });
     }
 
-    const { assert, options: verifyOptions } = splitVerifyInput({
-      tokenType: "access_token",
-      ...options,
-      dpopProof,
-    } as DomainAssert & VerifyOptions);
+    if (isLocallyVerifiable(source.token)) {
+      // `trustBoundThumbprint` tells aegis the CALLER validates the DPoP binding
+      // — which pylon now does, uniformly, in `assertDpopHttpBinding` below.
+      // Without it aegis would reject every bound token for want of a proof it
+      // was not given, and handing it the proof as well would mean verifying the
+      // same proof twice on the verified path and once on the introspected one —
+      // two implementations of one check, free to drift.
+      const { assert, options: verifyOptions } = splitVerifyInput({
+        tokenType: "access_token",
+        ...options,
+        trustBoundThumbprint: true,
+      } as DomainAssert & VerifyOptions);
 
-    const verified = await ctx.aegis.verify(source.token, assert, verifyOptions);
+      const verified = await ctx.aegis.verify(source.token, assert, verifyOptions);
 
-    if (verified.dpop) {
-      assertDpopHttpRequestMatch(ctx, verified.dpop);
+      ctx.state.tokens.accessToken = verified;
+      ctx.state.access = {
+        provenance: "verified",
+        claims: verified.claims,
+        token: source.token,
+      };
+    } else {
+      // Opaque ⇒ the authorization server is the only authority on it (RFC 7662).
+      // ONE introspection call site, so swapping the resolver is a one-line change.
+      const introspection = await ctx.auth.introspect(source.token);
+
+      if (!introspection.active) {
+        throw new ClientError("Access token is not active", {
+          status: ClientError.Status.Unauthorized,
+          code: "token_not_active",
+          type: "urn:lindorm:pylon:error:token_not_active",
+          title: "Token Not Active",
+          details: "Token introspection returned active: false",
+        });
+      }
+
+      const { active: _active, ...claims } = introspection;
+
+      // `ctx.state.tokens.accessToken` is deliberately left UNSET here: there is
+      // no VerifiedToken, and synthesising one would erase the very provenance
+      // distinction `ctx.state.access` exists to preserve.
+      ctx.state.access = { provenance: "introspected", claims, token: source.token };
     }
 
-    ctx.state.tokens.accessToken = verified;
+    assertDpopHttpBinding(ctx, ctx.state.access, {
+      proof: dpopProof,
+      scheme: source.kind === "dpop",
+    });
     return;
   }
 
@@ -73,6 +124,14 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
       });
     }
     ctx.state.tokens.accessToken = parsed;
+    // A cookie-session credential is presented by the browser, not by a DPoP
+    // client — there is no proof to bind it to, so no binding check runs (the
+    // pre-existing behaviour: the session path never passed a proof to aegis).
+    ctx.state.access = {
+      provenance: "verified",
+      claims: parsed.claims,
+      token: source.session.accessToken,
+    };
     return;
   }
 
@@ -143,7 +202,15 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
           markAuthExpiredEmitted(auth, now);
         }
 
-        (ctx as any).state.tokens.accessToken = socket.data.tokens.bearer;
+        const bearer = socket.data.tokens.bearer;
+        (ctx as any).state.tokens.accessToken = bearer;
+        // Verified at handshake by createHandshakeTokenMiddleware; the fast path
+        // re-checks expiry, not the signature — provenance is still local.
+        (ctx as any).state.access = {
+          provenance: "verified",
+          claims: bearer.claims,
+          token: bearer.token,
+        } satisfies PylonResolvedAccess;
         timer.debug("Access token fast-path accepted", {
           expiresAt,
           strategy: auth.strategy,
@@ -162,11 +229,13 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
         });
       }
 
-      const verified = (ctx as any).state.tokens.accessToken;
-      ctx.logger.debug("Access token verification successful", {
-        subject: verified?.claims?.subject,
-        subjectHint: verified?.claims?.subjectHint,
-        tokenType: verified?.header?.tokenType,
+      // Read from `access`, not `tokens.accessToken` — the introspected path
+      // populates only the former.
+      const access = (ctx as any).state.access as PylonResolvedAccess | null;
+      ctx.logger.debug("Access token resolved", {
+        provenance: access?.provenance,
+        subject: access?.claims?.subject,
+        subjectHint: access?.claims?.subjectHint,
       });
     } catch (error: any) {
       timer.debug("Access token verification failed", error);

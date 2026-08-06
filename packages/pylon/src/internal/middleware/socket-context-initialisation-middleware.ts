@@ -33,6 +33,7 @@ export const createSocketContextInitialisationMiddleware = (
       buildClientContext(getHeader("user-agent") ?? null, getHeader);
 
     ctx.state = {
+      access: null,
       actor: "unknown",
       app: ctx.io.socket.data.app,
       authorization: getSocketAuthorization(ctx.io.socket),
