@@ -296,6 +296,39 @@ describe("OpenIdDriver", () => {
       ]);
     });
 
+    // RFC 8414 §2 — the introspection endpoint carries its own methods list, and
+    // a provider may advertise a different set there. Negotiating introspection
+    // from the token endpoint's list presents a method that endpoint never
+    // offered.
+    test("should negotiate introspection from the introspection endpoint's own methods", async () => {
+      openIdConfiguration.tokenEndpointAuthMethodsSupported = ["private_key_jwt"];
+      openIdConfiguration.introspectionEndpointAuthMethodsSupported = [
+        "client_secret_basic",
+      ];
+      captureIntrospection({ active: true });
+
+      await createDriver({
+        clientAssertion: { key: { kryptos: assertionKey } },
+      }).introspect(context, { token: "at" });
+
+      expect(observed.authorization).toEqual(expect.stringContaining("Basic "));
+      expect(fields().client_assertion_type).toBeUndefined();
+    });
+
+    // The documented fallback: no introspection-specific list means the endpoint
+    // authenticates like the token endpoint.
+    test("should fall back to the token endpoint's methods when none are published", async () => {
+      openIdConfiguration.tokenEndpointAuthMethodsSupported = ["private_key_jwt"];
+      openIdConfiguration.introspectionEndpointAuthMethodsSupported = undefined;
+      captureIntrospection({ active: true });
+
+      await createDriver({
+        clientAssertion: { key: { kryptos: assertionKey } },
+      }).introspect(context, { token: "at" });
+
+      expect(fields().client_assertion_type).toBe(ASSERTION_TYPE);
+    });
+
     // Gap 2 — a public client has no secret to present, whatever the provider
     // advertises.
     test("should authenticate a public client with client_id alone", async () => {

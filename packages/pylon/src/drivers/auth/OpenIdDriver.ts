@@ -58,7 +58,7 @@ export class OpenIdDriver extends PylonAuthDriverBase {
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       endpoints: await this.endpoints(context),
-      method: this.tokenEndpointAuthMethod(context),
+      method: this.introspectionEndpointAuthMethod(context),
       token: options.token,
       ...(isString(options.tokenTypeHint) && { tokenTypeHint: options.tokenTypeHint }),
     });
@@ -134,6 +134,31 @@ export class OpenIdDriver extends PylonAuthDriverBase {
       pinned: this.pinnedTokenEndpointAuthMethod,
       supported: getOpenIdConfiguration(context, { issuer: this.issuer })
         .tokenEndpointAuthMethodsSupported,
+    });
+  }
+
+  /**
+   * RFC 8414 §2 gives the introspection endpoint its own
+   * `introspection_endpoint_auth_methods_supported`, and a provider may advertise
+   * a different set there than at the token endpoint. Negotiating introspection
+   * from the token endpoint's list would present a method the provider never
+   * offered for that endpoint. A provider publishing no introspection-specific
+   * list authenticates it like the token endpoint, which is the documented
+   * fallback and what this resolves to.
+   */
+  protected introspectionEndpointAuthMethod(
+    context: PylonAuthDriverContext,
+  ): PylonClientAuthMethod {
+    const openid = getOpenIdConfiguration(context, { issuer: this.issuer });
+
+    return resolveTokenEndpointAuthMethod({
+      assertionKey: this.clientAssertionSettings.key,
+      clientSecret: this.clientSecret,
+      logger: context.logger,
+      pinned: this.pinnedTokenEndpointAuthMethod,
+      supported:
+        openid.introspectionEndpointAuthMethodsSupported ??
+        openid.tokenEndpointAuthMethodsSupported,
     });
   }
 }
