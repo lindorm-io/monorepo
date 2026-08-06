@@ -85,6 +85,7 @@ const { data, status, headers } = await client.get<ResponseType>("/path", {
   adapter: "fetch",
   body: { key: "value" },
   config: {},
+  contentType: "application/json",
   expectedResponse: "json",
   filename: "upload.zip",
   form: formData,
@@ -105,6 +106,8 @@ const { data, status, headers } = await client.get<ResponseType>("/path", {
 ```
 
 `expectedResponse` accepts `"arraybuffer" | "blob" | "document" | "formdata" | "json" | "stream" | "text"`.
+
+`contentType` accepts `"application/json"` (default) or `"application/x-www-form-urlencoded"`, and decides how `body` is serialised. It is read when the request is composed — after the whole middleware chain — so `conduitChangeRequestBodyMiddleware` still renames the keys of a form-encoded body, whatever order the middleware was registered in. Urlencoded is flat: a list of primitives becomes repeated parameters (RFC 8693 §2.1 multi-valued `audience`), anything else structured becomes one parameter holding its JSON (RFC 9396 §2 `authorization_details`), and `undefined`/`null` are dropped. `form` is the more specific option and wins outright — supply both and the `body` is not sent.
 
 The generic `request()` method takes a single combined options object:
 

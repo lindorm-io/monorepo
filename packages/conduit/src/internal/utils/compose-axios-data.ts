@@ -1,8 +1,11 @@
 import { NotImplementedError } from "@lindorm/errors";
-import { isObject, isString } from "@lindorm/is";
+import { isObject } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type ServerFormData from "form-data";
 import type { ConduitContext } from "../../types/index.js";
+import { composeUrlEncoded } from "./compose-url-encoded.js";
+
+const URL_ENCODED = "application/x-www-form-urlencoded" as const;
 
 const newServerFormData = async (): Promise<ServerFormData> => {
   if (typeof window !== "undefined") {
@@ -52,25 +55,31 @@ export const composeAxiosData = async (ctx: ConduitContext): Promise<Result> => 
     // multipart regardless — hand it `URLSearchParams` so the request really
     // goes out as `application/x-www-form-urlencoded` (RFC 6749 §4.4.2 requires
     // exactly that for a token request).
-    const params = new URLSearchParams();
-
+    //
     // The loop above returned for any File entry, so every value left is a string.
-    for (const [key, value] of ctx.req.form.entries()) {
-      if (isString(value)) {
-        params.append(key, value);
-      }
-    }
-
     return {
-      data: params,
+      data: composeUrlEncoded(ctx.req.form.entries()),
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": URL_ENCODED,
       },
     };
   }
 
   if (ctx.req.body !== undefined && ctx.req.body !== null) {
     if (isObject(ctx.req.body) && Object.keys(ctx.req.body).length) {
+      // Read here rather than in a middleware on purpose: compose runs after the
+      // whole middleware chain, so the encoding cannot depend on where a caller
+      // registered `conduitChangeRequestBodyMiddleware` — the body is already in
+      // its final shape by now.
+      if (ctx.req.contentType === URL_ENCODED) {
+        return {
+          data: composeUrlEncoded(Object.entries(ctx.req.body)),
+          headers: {
+            "Content-Type": URL_ENCODED,
+          },
+        };
+      }
+
       return {
         data: ctx.req.body,
         headers: {
@@ -80,9 +89,11 @@ export const composeAxiosData = async (ctx: ConduitContext): Promise<Result> => 
     }
 
     if (!isObject(ctx.req.body)) {
+      // An already-serialised body is passed through, but a declared
+      // contentType still has to reach the wire.
       return {
         data: ctx.req.body,
-        headers: {},
+        headers: ctx.req.contentType ? { "Content-Type": ctx.req.contentType } : {},
       };
     }
   }

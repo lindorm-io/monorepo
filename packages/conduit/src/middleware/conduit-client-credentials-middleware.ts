@@ -6,7 +6,11 @@ import type { ILogger } from "@lindorm/logger";
 import type { OpenIdConfiguration, TokenRequest, TokenResponse } from "@lindorm/openid";
 import type { Dict, DpopSigner } from "@lindorm/types";
 import { Conduit } from "../classes/index.js";
-import type { ConduitMiddleware, ConduitRequestOptions } from "../types/index.js";
+import type {
+  ConduitContentType,
+  ConduitMiddleware,
+  ConduitRequestOptions,
+} from "../types/index.js";
 import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware.js";
 import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware.js";
 import { conduitChangeRequestBodyMiddleware } from "./conduit-change-request-body-middleware.js";
@@ -15,9 +19,12 @@ import { createConduitDpopAuthMiddleware } from "./conduit-dpop-auth-middleware.
 
 export type ClientCredentialsAuthLocation = "body" | "header";
 
-export type ClientCredentialsContentType =
-  | "application/json"
-  | "application/x-www-form-urlencoded";
+/**
+ * The token request encodings this middleware supports — the same set conduit
+ * can serialise any request body into, named for the client-credentials
+ * surface that configures it (pylon persists it on a webhook subscription).
+ */
+export type ClientCredentialsContentType = ConduitContentType;
 
 export type ConduitClientCredentialsConfig = {
   authLocation?: ClientCredentialsAuthLocation;

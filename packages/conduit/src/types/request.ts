@@ -13,6 +13,11 @@ export type ConduitMethodOptions = {
   url?: URL | string;
 };
 
+/**
+ * The encodings conduit can serialise a request `body` into.
+ */
+export type ConduitContentType = "application/json" | "application/x-www-form-urlencoded";
+
 export type ConduitRequestOptions<
   ResponseData = any,
   RequestBody = Dict,
@@ -22,6 +27,15 @@ export type ConduitRequestOptions<
   adapter?: ConduitAdapter;
   body?: RequestBody;
   config?: ConduitAxiosOverrides;
+  /**
+   * How to serialise `body`. Defaults to `application/json`.
+   *
+   * Evaluated at compose time — AFTER every middleware has run — so a
+   * key-rewriting middleware such as `conduitChangeRequestBodyMiddleware`
+   * still applies to a form-encoded request. `form` takes precedence: when
+   * both are given the `body` is not sent.
+   */
+  contentType?: ConduitContentType;
   expectedResponse?: ExpectedResponse;
   filename?: string;
   form?: FormData;

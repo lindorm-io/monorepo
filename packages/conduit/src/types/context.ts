@@ -2,6 +2,7 @@ import type { RetryConfig } from "@lindorm/retry";
 import type { Dict, Environment } from "@lindorm/types";
 import type { Readable } from "stream";
 import type { ConduitConfigContext } from "./overrides.js";
+import type { ConduitContentType } from "./request.js";
 import type { OnRetryCallback, RetryCallback } from "./retry.js";
 
 export type ConduitAppContext = {
@@ -19,6 +20,7 @@ export type ConduitRequestMetadata = {
 export type ConduitRequestContext<Body = Dict, Params = Dict, Query = Dict> = {
   body: Body | undefined;
   config: ConduitConfigContext;
+  contentType: ConduitContentType | undefined;
   filename: string | undefined;
   form: FormData | undefined;
   headers: Dict<string>;

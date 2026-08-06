@@ -14,6 +14,7 @@ describe("composeAxiosConfig", () => {
         timeout: 250,
         withCredentials: true,
       },
+      contentType: undefined,
       filename: undefined,
       form: undefined,
       headers: { header: "header" },
