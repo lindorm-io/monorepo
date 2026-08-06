@@ -2,11 +2,12 @@ import type { IAmphora } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
 import type { OpenIdConfiguration } from "@lindorm/openid";
-import type { PylonAuthConfig } from "../../../types/index.js";
 
+// Structural, not `PylonAuthConfig`: the auth driver reads discovery with
+// nothing but the issuer in hand, and a `PylonAuthConfig` still satisfies it.
 export const getOpenIdConfiguration = (
   ctx: { amphora: IAmphora },
-  config: PylonAuthConfig,
+  config: { issuer: string },
 ): OpenIdConfiguration => {
   // The upstream IdP is the amphora `idp`; `config()` throws `idp_not_configured`
   // when none is set — trying to read a configuration that isn't there IS an error.

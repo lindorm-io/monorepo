@@ -1,0 +1,109 @@
+import { isString } from "@lindorm/is";
+import type { IPylonAuthDriver } from "../../interfaces/index.js";
+import {
+  fetchIntrospection,
+  fetchUserinfo,
+  openIdEndpoints,
+  resolveSubject,
+  resolveTokenEndpointAuthMethod,
+} from "../../internal/utils/auth/driver/index.js";
+import { getOpenIdConfiguration } from "../../internal/utils/auth/get-open-id-configuration.js";
+import type {
+  PylonAuthDriverContext,
+  PylonAuthEndpoints,
+  PylonAuthIntrospectOptions,
+  PylonAuthSubjectOptions,
+  PylonAuthUserinfoOptions,
+  PylonClientAuthMethod,
+  PylonIntrospection,
+  PylonOpenIdResourceDriverSettings,
+  PylonUserinfo,
+} from "../../types/index.js";
+
+/**
+ * The API-service driver: it validates tokens presented TO this service and
+ * never logs anyone in.
+ *
+ * ⚠ `authorize`, `exchange`, `refresh`, `clientCredentials` and `logout` are
+ * genuinely ABSENT — not stubs that throw. `driver.authorize === undefined` is
+ * what lets pylon refuse at boot to mount an auth router this driver cannot
+ * serve, instead of returning a 500 on the first user request. That is also why
+ * this does NOT extend {@link PylonAuthDriverBase}: inheriting the relying-party
+ * grants would put them back on the object.
+ *
+ * The shared work lives in the same helpers `OpenIdDriver` calls, so the two can
+ * never disagree about where the provider is or how to authenticate to it.
+ */
+export class OpenIdResourceDriver implements IPylonAuthDriver {
+  private readonly clientId: string;
+  private readonly clientSecret?: string;
+  private readonly issuer: string;
+  private readonly pinnedTokenEndpointAuthMethod: PylonOpenIdResourceDriverSettings["tokenEndpointAuthMethod"];
+
+  constructor(settings: PylonOpenIdResourceDriverSettings) {
+    this.clientId = settings.clientId;
+    this.clientSecret = settings.clientSecret;
+    this.issuer = settings.issuer;
+    this.pinnedTokenEndpointAuthMethod = settings.tokenEndpointAuthMethod;
+  }
+
+  async endpoints(context: PylonAuthDriverContext): Promise<PylonAuthEndpoints> {
+    return openIdEndpoints(context, this.issuer);
+  }
+
+  async introspect(
+    context: PylonAuthDriverContext,
+    options: PylonAuthIntrospectOptions,
+  ): Promise<PylonIntrospection> {
+    return fetchIntrospection(context, {
+      clientId: this.clientId,
+      clientSecret: this.clientSecret,
+      endpoints: await this.endpoints(context),
+      method: this.tokenEndpointAuthMethod(context),
+      token: options.token,
+      ...(isString(options.tokenTypeHint) && { tokenTypeHint: options.tokenTypeHint }),
+    });
+  }
+
+  async userinfo(
+    context: PylonAuthDriverContext,
+    options: PylonAuthUserinfoOptions,
+  ): Promise<PylonUserinfo> {
+    return fetchUserinfo(context, {
+      accessToken: options.accessToken,
+      endpoints: await this.endpoints(context),
+    });
+  }
+
+  async subject(
+    context: PylonAuthDriverContext,
+    options: PylonAuthSubjectOptions,
+  ): Promise<string | null> {
+    return resolveSubject(context, {
+      accessToken: options.accessToken,
+      endpoints: await this.endpoints(context),
+    });
+  }
+
+  /**
+   * ⚠ RFC 7662 §2.1 has the RESOURCE SERVER authenticate to the introspection
+   * endpoint, and its credentials may legitimately differ from a relying
+   * party's — which is exactly why this driver carries its own.
+   */
+  private tokenEndpointAuthMethod(
+    context: PylonAuthDriverContext,
+  ): PylonClientAuthMethod {
+    const openid = getOpenIdConfiguration(context, { issuer: this.issuer });
+
+    return resolveTokenEndpointAuthMethod({
+      clientSecret: this.clientSecret,
+      logger: context.logger,
+      pinned: this.pinnedTokenEndpointAuthMethod,
+      // RFC 8414 §2 gives the introspection endpoint its own methods list; a
+      // provider that publishes none authenticates it like the token endpoint.
+      supported:
+        openid.introspectionEndpointAuthMethodsSupported ??
+        openid.tokenEndpointAuthMethodsSupported,
+    });
+  }
+}

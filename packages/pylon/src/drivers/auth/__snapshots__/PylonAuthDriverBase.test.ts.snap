@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PylonAuthDriverBase > authorize > should snake_case every parameter name 1`] = `
+{
+  "client_id": "client-id",
+  "code_challenge": "code-challenge",
+  "code_challenge_method": "S256",
+  "nonce": "nonce-value",
+  "redirect_uri": "https://app.lindorm.io/auth/login/callback",
+  "response_type": "code",
+  "scope": "openid",
+  "state": "state-value",
+}
+`;

@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OpenIdResourceDriver > should resolve the same endpoints as the relying party driver 1`] = `
+{
+  "authorizationEndpoint": "https://auth.lindorm.io/authorize",
+  "endSessionEndpoint": null,
+  "introspectionEndpoint": "https://auth.lindorm.io/introspect",
+  "issuer": "https://auth.lindorm.io",
+  "jwksUri": "https://auth.lindorm.io/jwks",
+  "revocationEndpoint": null,
+  "tokenEndpoint": "https://auth.lindorm.io/token",
+  "userinfoEndpoint": "https://auth.lindorm.io/userinfo",
+}
+`;

@@ -1,3 +1,4 @@
+export * from "./PylonAuthDriver.js";
 export * from "./PylonCookies.js";
 export * from "./PylonFileUpload.js";
 export * from "./PylonSession.js";

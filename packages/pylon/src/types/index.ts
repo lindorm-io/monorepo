@@ -1,3 +1,4 @@
+export * from "./auth/index.js";
 export * from "./context/index.js";
 export * from "./http/index.js";
 export * from "./options/index.js";

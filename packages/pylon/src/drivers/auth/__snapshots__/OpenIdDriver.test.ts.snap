@@ -1,0 +1,60 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OpenIdDriver > endpoints > should project the discovery document 1`] = `
+{
+  "authorizationEndpoint": "https://auth.lindorm.io/authorize",
+  "endSessionEndpoint": "https://auth.lindorm.io/end-session",
+  "introspectionEndpoint": "https://auth.lindorm.io/introspect",
+  "issuer": "https://auth.lindorm.io",
+  "jwksUri": "https://auth.lindorm.io/jwks",
+  "revocationEndpoint": "https://auth.lindorm.io/revoke",
+  "tokenEndpoint": "https://auth.lindorm.io/token",
+  "userinfoEndpoint": "https://auth.lindorm.io/userinfo",
+}
+`;
+
+exports[`OpenIdDriver > endpoints > should report every absent optional endpoint as null 1`] = `
+{
+  "authorizationEndpoint": "https://auth.lindorm.io/authorize",
+  "endSessionEndpoint": null,
+  "introspectionEndpoint": null,
+  "issuer": "https://auth.lindorm.io",
+  "jwksUri": null,
+  "revocationEndpoint": null,
+  "tokenEndpoint": "https://auth.lindorm.io/token",
+  "userinfoEndpoint": null,
+}
+`;
+
+exports[`OpenIdDriver > introspect > should normalise an active introspection 1`] = `
+{
+  "active": true,
+  "clientId": "client-abc",
+  "expiresAt": 2023-11-14T23:13:20.000Z,
+  "scope": [
+    "openid",
+    "profile",
+  ],
+  "subject": "user-123",
+  "tokenType": "Bearer",
+  "username": "johndoe",
+}
+`;
+
+exports[`OpenIdDriver > logout > should redirect when the IdP publishes an end session endpoint 1`] = `
+{
+  "client_id": "client-id",
+  "post_logout_redirect_uri": "https://app.lindorm.io/auth/logout/callback",
+  "state": "state-value",
+}
+`;
+
+exports[`OpenIdDriver > userinfo > should normalise the userinfo response 1`] = `
+{
+  "email": "john@lindorm.io",
+  "emailVerified": true,
+  "familyName": "Doe",
+  "givenName": "John",
+  "subject": "user-123",
+}
+`;

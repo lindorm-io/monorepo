@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Auth0Driver > should keep the query sorted after the swap 1`] = `
+{
+  "audience": "https://api.lindorm.io",
+  "client_id": "client-id",
+  "code_challenge": "code-challenge",
+  "code_challenge_method": "S256",
+  "nonce": "nonce-value",
+  "redirect_uri": "https://app.lindorm.io/auth/login/callback",
+  "response_type": "code",
+  "scope": "openid profile",
+  "state": "state-value",
+}
+`;
