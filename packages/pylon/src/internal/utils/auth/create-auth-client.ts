@@ -425,8 +425,13 @@ export const createAuthClient = (
 
     const body = sortKeys(merge(tokenRequest, input));
 
+    // RFC 6749 §4.1.3 — the token endpoint takes
+    // `application/x-www-form-urlencoded`, never JSON. Auth0 tolerates JSON;
+    // Discord and others reject it outright. The body is still snake_cased by
+    // `conduitChangeRequestBodyMiddleware` — conduit encodes after middleware.
     const { data } = await conduit.post<TokenResponse>(openid.tokenEndpoint, {
       body,
+      contentType: "application/x-www-form-urlencoded",
       middleware,
     });
 
