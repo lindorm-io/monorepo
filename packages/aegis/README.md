@@ -317,7 +317,13 @@ Aegis.isCwe(token); // COSE_Encrypt0
 Aegis.toDomain(wire); // wire claim dict → { claims, custom } domain claims
 Aegis.toWire(claims); // domain claims → JOSE-keyed wire dict
 Aegis.assert(claims, matchers); // throws on mismatch
+
+Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew? });
 ```
+
+`verifyDpopProof` runs the RFC 9449 proof checks standalone — signature over the proof's embedded `jwk`, `typ: dpop+jwt`, the RFC 7638 thumbprint against the token's bound `cnf.jkt`, the §7 `ath` hash of the presented access token, and `iat` freshness (default skew 60s). It needs no key resolution because the proof carries its own key, and it returns the `ParsedDpopProof`.
+
+Reach for it when the access token is **not** locally verifiable: RFC 9449 §6.2 delivers `cnf.jkt` through the introspection response for an opaque token, and the resource server validates the binding itself. `htm` / `htu` are parsed but never compared — aegis does not see the HTTP request, so that comparison belongs to the consumer.
 
 `Aegis.header` and `Aegis.decode` are gone — read a verified token's `.header`, use the keyless instance `aegis.parse` for an unknown structured token (above), or a kit's keyless static `.decode` (e.g. `JwtKit.decode`) for a known format.
 

@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Aegis.verifyDpopProof > should parse a valid proof without any Aegis instance 1`] = `
+{
+  "accessTokenHash": "WXSA1LYsphIZPxnnP-TMOtF_C_nPwWp8v0tQZBMcSAU",
+  "httpMethod": "POST",
+  "httpUri": "https://api.example.com/resource",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "nonce": undefined,
+  "thumbprint": "LxMMTLzLftdEwQqk_iSStmYgEsJoz9_wwm3aogsV7MQ",
+  "tokenId": "proof-jti",
+}
+`;

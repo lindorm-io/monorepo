@@ -71,6 +71,7 @@ import { rawVerifyJwt } from "../internal/utils/raw-verify-jwt.js";
 import { resolveKey } from "../internal/utils/resolve-key.js";
 import { signToken } from "../internal/utils/sign-token.js";
 import { validate } from "../internal/utils/validate.js";
+import { verifyDpopProof } from "../internal/utils/verify-dpop-proof.js";
 import { verifyProfileToken } from "../internal/utils/verify-profile-token.js";
 import { verifyToken } from "../internal/utils/verify-token.js";
 import type {
@@ -95,6 +96,7 @@ import type {
   JweEncryptOptions,
   JwtClaimsWire,
   NarrowedToken,
+  ParsedDpopProof,
   ParsedToken,
   ProfileContent,
   ProfileMintOptions,
@@ -110,6 +112,7 @@ import type {
   VerifiedStructuredToken,
   VerifiedToken,
   VerifiedUnstructuredToken,
+  VerifyDpopProofOptions,
   VerifyOptions,
   VerifyStructuredTokenOptions,
   VerifyUnstructuredTokenOptions,
@@ -353,6 +356,32 @@ export class Aegis implements IAegis {
   // spelling out the three JOSE forms.
   static isJose(token: string): boolean {
     return Aegis.isJwe(token) || Aegis.isJws(token) || Aegis.isJwt(token);
+  }
+
+  /**
+   * Verify an RFC 9449 DPoP proof STANDALONE — signature over the embedded `jwk`,
+   * `typ: dpop+jwt`, the RFC 7638 thumbprint against the token's bound `cnf.jkt`,
+   * the `ath` hash of the presented access token (§7), and `iat` freshness. The
+   * same body `aegis.verify` runs for its `dpopProof` option, exposed as a static
+   * because it needs no key resolution: the proof carries its own key.
+   *
+   * A resource server needs this when the access token is NOT locally verifiable.
+   * RFC 9449 §6.2 conveys the binding via `cnf.jkt` in the introspection response
+   * and has the resource server "validate the access token binding itself
+   * locally", so the same proof check must run whether the thumbprint came from a
+   * verified JWT or from an introspection response.
+   *
+   * The request-context claims (`htm`/`htu`) are PARSED, never compared here —
+   * aegis does not see the HTTP request. That comparison is the consumer's
+   * (pylon does it in middleware).
+   */
+  static verifyDpopProof(options: VerifyDpopProofOptions): ParsedDpopProof {
+    return verifyDpopProof({
+      proof: options.proof,
+      accessToken: options.accessToken,
+      expectedThumbprint: options.expectedThumbprint,
+      dpopMaxSkew: options.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW,
+    });
   }
 
   static isCose(token: string): boolean {
