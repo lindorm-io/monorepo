@@ -1,4 +1,8 @@
-import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects.js";
+import {
+  TEST_ARRAY_WITH_OBJECTS,
+  TEST_DEEP_OBJECT,
+  TEST_OBJECT,
+} from "../../__fixtures__/objects.js";
 import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings.js";
 import { snakeArray, snakeCase, snakeKeys } from "./snake.js";
 import { describe, expect, test } from "vitest";
@@ -14,6 +18,10 @@ describe("snakeCase", () => {
 
   test("should convert array with objects", () => {
     expect(snakeKeys(TEST_ARRAY_WITH_OBJECTS)).toMatchSnapshot();
+  });
+
+  test("should convert object keys to a given depth", () => {
+    expect(snakeKeys(TEST_DEEP_OBJECT, { depth: 1 })).toMatchSnapshot();
   });
 
   test("should convert array with strings", () => {

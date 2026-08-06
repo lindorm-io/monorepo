@@ -12,3 +12,23 @@ export const TEST_OBJECT = {
 };
 
 export const TEST_ARRAY_WITH_OBJECTS = [TEST_OBJECT, TEST_OBJECT];
+
+/**
+ * RFC 9396 §2 — the fields inside an `authorization_details` entry are defined
+ * by the schema named in `type`, MAY legitimately be camelCase, and must not be
+ * case-converted. Shaped to exercise depth through an array.
+ */
+export const TEST_DEEP_OBJECT = {
+  grantType: "authorization_code",
+  authorizationDetails: [
+    {
+      type: "payment_initiation",
+      instructedAmount: { currencyCode: "EUR", amountValue: "123.50" },
+    },
+  ],
+};
+
+export const TEST_DEEP_ARRAY = [
+  { outerKey: { middleKey: { innerKey: true } } },
+  { outerKey: { middleKey: { innerKey: false } } },
+];

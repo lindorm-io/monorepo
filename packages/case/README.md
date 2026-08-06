@@ -13,7 +13,7 @@ This package is **ESM-only**. Import it with `import` syntax from a project that
 ## Features
 
 - Convert strings between 11 case conventions: camel, capital, constant, dot, header, kebab, lower, pascal, path, sentence, snake.
-- Convert the keys of an object (or an array of objects) recursively, preserving values.
+- Convert the keys of an object (or an array of objects) recursively, preserving values — with an optional `depth` limit.
 - Convert an array of strings element-by-element; non-string entries pass through untouched.
 - Generic `changeCase` and `changeKeys` dispatchers that pick a conversion at runtime via a string mode.
 
@@ -80,6 +80,41 @@ const rows = snakeKeys([{ firstName: "Alice" }, { firstName: "Bob" }]);
 // [{ first_name: "Alice" }, { first_name: "Bob" }]
 ```
 
+### Limit the depth
+
+By default the walk is unlimited. Pass `depth` to stop after a number of key levels — useful when a payload carries a field whose inner keys are defined by someone else's schema and must reach the wire verbatim (RFC 9396 `authorization_details`, for example).
+
+```typescript
+import { snakeKeys } from "@lindorm/case";
+
+const body = snakeKeys(
+  {
+    grantType: "authorization_code",
+    authorizationDetails: [
+      { type: "payment_initiation", instructedAmount: { currencyCode: "EUR" } },
+    ],
+  },
+  { depth: 1 },
+);
+// {
+//   grant_type: "authorization_code",
+//   authorization_details: [
+//     { type: "payment_initiation", instructedAmount: { currencyCode: "EUR" } },
+//   ],
+// }
+```
+
+Semantics:
+
+- Depth counts **object-key levels**. Level 1 is the input object's own keys.
+- **Arrays are transparent containers** — they have no keys of their own, so entering one does not consume a level. `snakeKeys([{ firstName: "Alice" }], { depth: 1 })` converts `firstName`.
+- Descending into an object **value** consumes a level.
+- A subtree beyond the depth is kept verbatim, by reference — it is neither converted nor cloned.
+- Omitting `depth` (or passing `Infinity`) means unlimited, which is the historical behaviour.
+- `depth` must be an integer `>= 1`; `0`, negatives and fractions throw. "Convert nothing" is spelled `changeKeys(input, "none")`.
+
+`changeKeys` takes the same options as a third argument: `changeKeys(input, "snake", { depth: 1 })`. With mode `"none"` the input is returned as-is and the options are not inspected.
+
 ### Convert an array of strings
 
 `xxxArray` transforms string entries; any non-string entry is appended to the result unchanged.
@@ -110,20 +145,20 @@ const obj = changeKeys({ "first-name": "Alice" }, mode); // { FirstName: "Alice"
 
 For each mode in `camel`, `capital`, `constant`, `dot`, `header`, `kebab`, `lower`, `pascal`, `path`, `sentence`, `snake`, the package exports three functions:
 
-| Function      | Signature                                 | Description                                                      |
-| ------------- | ----------------------------------------- | ---------------------------------------------------------------- |
-| `<mode>Case`  | `(input: string) => string`               | Convert a single string. Throws if `input` is not a string.      |
-| `<mode>Keys`  | `<T extends KeysInput>(input: T) => T`    | Recursively convert keys of an object or array of objects.       |
-| `<mode>Array` | `(input: Array<string>) => Array<string>` | Convert each string entry; non-string entries are kept in place. |
+| Function      | Signature                                                     | Description                                                      |
+| ------------- | ------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `<mode>Case`  | `(input: string) => string`                                   | Convert a single string. Throws if `input` is not a string.      |
+| `<mode>Keys`  | `<T extends KeysInput>(input: T, options?: KeysOptions) => T` | Recursively convert keys of an object or array of objects.       |
+| `<mode>Array` | `(input: Array<string>) => Array<string>`                     | Convert each string entry; non-string entries are kept in place. |
 
 So for example: `camelCase`, `camelKeys`, `camelArray`; `snakeCase`, `snakeKeys`, `snakeArray`; and so on for all 11 modes.
 
 ### Generic dispatchers
 
-| Function     | Signature                                                 | Description                                                                                                         |
-| ------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `changeCase` | `(input: string, mode?: ChangeCase) => string`            | Apply the named case to a string. Defaults to `"none"`. Throws on an unknown mode.                                  |
-| `changeKeys` | `<T extends KeysInput>(input: T, mode?: ChangeCase) => T` | Apply the named case to the keys of an object or array of objects. Defaults to `"none"`. Throws on an unknown mode. |
+| Function     | Signature                                                                        | Description                                                                                                         |
+| ------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `changeCase` | `(input: string, mode?: ChangeCase) => string`                                   | Apply the named case to a string. Defaults to `"none"`. Throws on an unknown mode.                                  |
+| `changeKeys` | `<T extends KeysInput>(input: T, mode?: ChangeCase, options?: KeysOptions) => T` | Apply the named case to the keys of an object or array of objects. Defaults to `"none"`. Throws on an unknown mode. |
 
 ### Types
 
@@ -132,11 +167,13 @@ So for example: `camelCase`, `camelKeys`, `camelArray`; `snakeCase`, `snakeKeys`
 | `ChangeCase`   | `"camel" \| "capital" \| "constant" \| "dot" \| "header" \| "kebab" \| "lower" \| "pascal" \| "path" \| "sentence" \| "snake" \| "none"` | Mode accepted by `changeCase` and `changeKeys`.       |
 | `CaseCallback` | `(input: string) => string`                                                                                                              | Signature shared by all per-mode `xxxCase` functions. |
 | `KeysInput`    | `Dict \| Array<Dict>` (where `Dict` is `Record<string, any>`)                                                                            | Input shape accepted by `xxxKeys` and `changeKeys`.   |
+| `KeysOptions`  | `{ depth?: number }`                                                                                                                     | Per-call options for `xxxKeys` and `changeKeys`.      |
 
 ## Error handling
 
 - `xxxCase(input)` throws if `input` is not a string (e.g. `null`, `undefined`, a number).
 - `xxxKeys(input)` and `changeKeys(input, mode)` throw if `input` is neither an object nor an array.
+- `xxxKeys(input, { depth })` and `changeKeys(input, mode, { depth })` throw `Error("Invalid depth [ ... ]")` if `depth` is not an integer `>= 1` (or `Infinity`).
 - `xxxArray(input)` throws if `input` is not an array. Non-string entries inside the array are passed through, not converted.
 - `changeCase` and `changeKeys` throw `Error("Invalid transform case [ ... ]")` if `mode` is not one of the supported values.
 

@@ -1,4 +1,4 @@
-import type { ChangeCase, KeysInput } from "../../types/index.js";
+import type { ChangeCase, KeysInput, KeysOptions } from "../../types/index.js";
 import {
   camelKeys,
   capitalKeys,
@@ -16,42 +16,44 @@ import {
 export const changeKeys = <T extends KeysInput = KeysInput>(
   input: T,
   mode: ChangeCase = "none",
+  options?: KeysOptions,
 ): T => {
   switch (mode) {
     case "camel":
-      return camelKeys(input);
+      return camelKeys(input, options);
 
     case "capital":
-      return capitalKeys(input);
+      return capitalKeys(input, options);
 
     case "constant":
-      return constantKeys(input);
+      return constantKeys(input, options);
 
     case "dot":
-      return dotKeys(input);
+      return dotKeys(input, options);
 
     case "header":
-      return headerKeys(input);
+      return headerKeys(input, options);
 
     case "kebab":
-      return kebabKeys(input);
+      return kebabKeys(input, options);
 
     case "lower":
-      return lowerKeys(input);
+      return lowerKeys(input, options);
 
     case "pascal":
-      return pascalKeys(input);
+      return pascalKeys(input, options);
 
     case "path":
-      return pathKeys(input);
+      return pathKeys(input, options);
 
     case "sentence":
-      return sentenceKeys(input);
+      return sentenceKeys(input, options);
 
     case "snake":
-      return snakeKeys(input);
+      return snakeKeys(input, options);
 
     case "none":
+      // Nothing is converted, so `options` (depth included) is never inspected.
       return input;
 
     default:

@@ -1,0 +1,73 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`changeKeys depth > should convert exactly 1 levels of a nested array 1`] = `
+[
+  {
+    "outer_key": {
+      "middleKey": {
+        "innerKey": true,
+      },
+    },
+  },
+  {
+    "outer_key": {
+      "middleKey": {
+        "innerKey": false,
+      },
+    },
+  },
+]
+`;
+
+exports[`changeKeys depth > should convert exactly 2 levels of a nested array 1`] = `
+[
+  {
+    "outer_key": {
+      "middle_key": {
+        "innerKey": true,
+      },
+    },
+  },
+  {
+    "outer_key": {
+      "middle_key": {
+        "innerKey": false,
+      },
+    },
+  },
+]
+`;
+
+exports[`changeKeys depth > should convert exactly 3 levels of a nested array 1`] = `
+[
+  {
+    "outer_key": {
+      "middle_key": {
+        "inner_key": true,
+      },
+    },
+  },
+  {
+    "outer_key": {
+      "middle_key": {
+        "inner_key": false,
+      },
+    },
+  },
+]
+`;
+
+exports[`changeKeys depth > should not mutate the input 1`] = `
+{
+  "authorizationDetails": [
+    {
+      "instructedAmount": {
+        "amountValue": "123.50",
+        "currencyCode": "EUR",
+      },
+      "type": "payment_initiation",
+    },
+  ],
+  "grantType": "authorization_code",
+}
+`;

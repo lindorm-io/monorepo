@@ -75,6 +75,21 @@ exports[`snakeCase > should convert object keys 1`] = `
 }
 `;
 
+exports[`snakeCase > should convert object keys to a given depth 1`] = `
+{
+  "authorization_details": [
+    {
+      "instructedAmount": {
+        "amountValue": "123.50",
+        "currencyCode": "EUR",
+      },
+      "type": "payment_initiation",
+    },
+  ],
+  "grant_type": "authorization_code",
+}
+`;
+
 exports[`snakeCase > should convert path/case 1`] = `"path_case"`;
 
 exports[`snakeCase > should convert snake_case 1`] = `"snake_case"`;
