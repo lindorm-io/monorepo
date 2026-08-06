@@ -164,6 +164,52 @@ describe("createAuthClient — token request encoding", () => {
     expect(scope.isDone()).toBe(true);
   });
 
+  /**
+   * RFC 9396 §2 — the fields inside an `authorization_details` entry are defined
+   * by the schema named in `type`, MAY legitimately be camelCase, and must be
+   * preserved verbatim on the wire. The body middleware used to snake_case the
+   * whole tree, rewriting a foreign schema on its way out; it is now pinned to
+   * the top level.
+   */
+  test("should send authorization_details entries verbatim while snake_casing the top level", async () => {
+    const scope = capture();
+
+    const client = createAuthClient(createCtx() as any, createConfig() as any);
+
+    await client.token({
+      grantType: "authorization_code",
+      code: "auth-code",
+      redirectUri: "https://app.lindorm.io/auth/login/callback",
+      authorizationDetails: [
+        {
+          type: "payment_initiation",
+          actions: ["initiate"],
+          instructedAmount: { currencyCode: "EUR", amountValue: "123.50" },
+          creditorAccount: { iban: "DE02100100109307118603" },
+        },
+      ],
+    } as any);
+
+    expect(observed.contentType).toBe("application/x-www-form-urlencoded");
+
+    const { authorization_details, ...rest } = fields();
+
+    expect(rest).toEqual({
+      grant_type: "authorization_code",
+      code: "auth-code",
+      redirect_uri: "https://app.lindorm.io/auth/login/callback",
+    });
+    expect(JSON.parse(authorization_details)).toEqual([
+      {
+        type: "payment_initiation",
+        actions: ["initiate"],
+        instructedAmount: { currencyCode: "EUR", amountValue: "123.50" },
+        creditorAccount: { iban: "DE02100100109307118603" },
+      },
+    ]);
+    expect(scope.isDone()).toBe(true);
+  });
+
   // OIDC Discovery §3 / RFC 8414 §2 — nothing advertised means the spec
   // default, `client_secret_basic`.
   test("should fall back to client_secret_basic when the IdP advertises nothing", async () => {

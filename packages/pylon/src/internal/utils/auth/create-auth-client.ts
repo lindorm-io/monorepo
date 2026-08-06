@@ -262,7 +262,12 @@ export const createAuthClient = (
     logger: ctx.logger,
     middleware: [
       conduitCorrelationMiddleware(ctx.state.metadata.correlationId),
-      conduitChangeRequestBodyMiddleware(),
+      // Depth 1 — top-level parameter names only. Every request this client
+      // sends is a flat parameter list (token exchange, introspection) except
+      // for RFC 9396 §2 `authorization_details`, whose entries carry fields
+      // defined by the schema named in `type`. Those MAY be camelCase by that
+      // schema and must reach the wire verbatim, so the walk stops above them.
+      conduitChangeRequestBodyMiddleware("snake", { depth: 1 }),
       conduitChangeRequestQueryMiddleware(),
       conduitChangeResponseDataMiddleware(),
     ],
