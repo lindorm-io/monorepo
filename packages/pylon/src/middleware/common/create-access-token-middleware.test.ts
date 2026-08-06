@@ -258,6 +258,23 @@ describe("createAccessTokenMiddleware", () => {
       expect(ctx.io.socket.emit).not.toHaveBeenCalled();
     });
 
+    // The fast path returns `expiresAt`/`strategy` to the dispatch site so the
+    // socket arm logs through the SAME timer the http arm uses. Assert the
+    // round-trip, or a wrong/dropped value would pass every other test here.
+    test("logs the accepted fast path with expiresAt and strategy", async () => {
+      const expiresAt = new Date("2099-01-01T00:00:00.000Z");
+      const ctx = makeCtx({ strategy: "dpop-bearer", getExpiresAt: () => expiresAt });
+      const middleware = createAccessTokenMiddleware(options);
+
+      await middleware(ctx, next);
+
+      const timer = (ctx.logger.timer as Mock).mock.results[0].value;
+      expect(timer.debug).toHaveBeenCalledWith("Access token fast-path accepted", {
+        expiresAt,
+        strategy: "dpop-bearer",
+      });
+    });
+
     test("throws Unauthorized when socket.data.pylon.auth is missing", async () => {
       const ctx = makeCtx();
       ctx.io.socket.data.pylon = {};

@@ -21,6 +21,8 @@ import type {
   PylonHttpContext,
   PylonMiddleware,
   PylonResolvedAccess,
+  PylonSocketAuthStrategy,
+  PylonSocketContext,
 } from "../../types/index.js";
 
 type Options = Omit<DomainAssert & VerifyOptions, "issuer"> & {
@@ -179,6 +181,65 @@ const runHttp = async (
   });
 };
 
+/**
+ * What the caller needs to log about an accepted fast path — returned rather
+ * than logged here so the socket arm shares the ONE timer the middleware
+ * started, exactly as the http arm does.
+ */
+type SocketFastPath = {
+  expiresAt: Date;
+  strategy: PylonSocketAuthStrategy;
+};
+
+const runSocket = (ctx: PylonSocketContext): SocketFastPath => {
+  const auth = ctx.io.socket.data?.pylon?.auth;
+
+  if (!auth) {
+    throw new ClientError("Invalid credentials", {
+      details:
+        "No handshake auth state — install createHandshakeTokenMiddleware in socket.connectionMiddleware",
+      status: ClientError.Status.Unauthorized,
+      code: "missing_handshake_auth_state",
+      type: "urn:lindorm:pylon:error:missing_handshake_auth_state",
+      title: "Missing Handshake Auth State",
+    });
+  }
+
+  const expiresAt = auth.getExpiresAt();
+  const now = new Date();
+
+  if (isTokenExpired(expiresAt, now)) {
+    throw new ClientError("Access token expired", {
+      status: ClientError.Status.Unauthorized,
+      code: "access_token_expired",
+      type: "urn:lindorm:pylon:error:access_token_expired",
+      title: "Access Token Expired",
+      data: { expiresAt: expiresAt.toISOString() },
+      debug: { strategy: auth.strategy },
+    });
+  }
+
+  if (
+    isInExpiryWarningWindow(expiresAt, now, DEFAULT_AUTH_WARNING_MS) &&
+    shouldEmitAuthExpired(auth, now)
+  ) {
+    ctx.io.socket.emit("$pylon/auth/expired", { expiresAt });
+    markAuthExpiredEmitted(auth, now);
+  }
+
+  const bearer = ctx.io.socket.data.tokens.bearer;
+  ctx.state.tokens.accessToken = bearer;
+  // Verified at handshake by createHandshakeTokenMiddleware; the fast path
+  // re-checks expiry, not the signature — provenance is still local.
+  ctx.state.access = {
+    provenance: "verified",
+    claims: bearer.claims,
+    token: bearer.token,
+  } satisfies PylonResolvedAccess;
+
+  return { expiresAt, strategy: auth.strategy };
+};
+
 export const createAccessTokenMiddleware = <C extends PylonContext = PylonContext>(
   options: Options,
 ): PylonMiddleware<C> => {
@@ -191,7 +252,7 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
     const timer = ctx.logger.timer();
 
     try {
-      if (isSocketHandshakeContext(ctx as any)) {
+      if (isSocketHandshakeContext(ctx)) {
         throw new ServerError(
           "createAccessTokenMiddleware cannot run in the handshake phase",
           {
@@ -204,58 +265,11 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
         );
       }
 
-      if (isSocketEventContext(ctx as any)) {
-        const socket = (ctx as any).io.socket;
-        const auth = socket.data?.pylon?.auth;
-
-        if (!auth) {
-          throw new ClientError("Invalid credentials", {
-            details:
-              "No handshake auth state — install createHandshakeTokenMiddleware in socket.connectionMiddleware",
-            status: ClientError.Status.Unauthorized,
-            code: "missing_handshake_auth_state",
-            type: "urn:lindorm:pylon:error:missing_handshake_auth_state",
-            title: "Missing Handshake Auth State",
-          });
-        }
-
-        const expiresAt = auth.getExpiresAt();
-        const now = new Date();
-
-        if (isTokenExpired(expiresAt, now)) {
-          throw new ClientError("Access token expired", {
-            status: ClientError.Status.Unauthorized,
-            code: "access_token_expired",
-            type: "urn:lindorm:pylon:error:access_token_expired",
-            title: "Access Token Expired",
-            data: { expiresAt: expiresAt.toISOString() },
-            debug: { strategy: auth.strategy },
-          });
-        }
-
-        if (
-          isInExpiryWarningWindow(expiresAt, now, DEFAULT_AUTH_WARNING_MS) &&
-          shouldEmitAuthExpired(auth, now)
-        ) {
-          socket.emit("$pylon/auth/expired", { expiresAt });
-          markAuthExpiredEmitted(auth, now);
-        }
-
-        const bearer = socket.data.tokens.bearer;
-        (ctx as any).state.tokens.accessToken = bearer;
-        // Verified at handshake by createHandshakeTokenMiddleware; the fast path
-        // re-checks expiry, not the signature — provenance is still local.
-        (ctx as any).state.access = {
-          provenance: "verified",
-          claims: bearer.claims,
-          token: bearer.token,
-        } satisfies PylonResolvedAccess;
-        timer.debug("Access token fast-path accepted", {
-          expiresAt,
-          strategy: auth.strategy,
-        });
-      } else if (isHttpContext(ctx as any)) {
-        await runHttp(ctx as unknown as PylonHttpContext, verifyInput, cache);
+      if (isSocketEventContext(ctx)) {
+        const { expiresAt, strategy } = runSocket(ctx);
+        timer.debug("Access token fast-path accepted", { expiresAt, strategy });
+      } else if (isHttpContext(ctx)) {
+        await runHttp(ctx, verifyInput, cache);
         timer.debug("Access token verified (http)");
       } else {
         throw new ClientError("Unsupported context for access token middleware", {
@@ -270,7 +284,7 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
 
       // Read from `access`, not `tokens.accessToken` — the introspected path
       // populates only the former.
-      const access = (ctx as any).state.access as PylonResolvedAccess | null;
+      const access = ctx.state.access;
       ctx.logger.debug("Access token resolved", {
         provenance: access?.provenance,
         subject: access?.claims?.subject,

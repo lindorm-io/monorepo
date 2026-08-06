@@ -136,9 +136,32 @@ describe("useAuditLog", () => {
         transport: "socket",
         statusCode: 200,
         sourceIp: "192.168.1.1",
+        sessionId: null,
         client: CLIENT_CONTEXT,
       }),
     );
+  });
+
+  // Neither http nor socket: the audit still WRITES, with placeholder values —
+  // it does not throw. Pinning that, because it is the arm no real transport
+  // reaches and so the one a refactor can quietly change.
+  test("should publish 'unknown' placeholders for a non-http, non-socket context", async () => {
+    (isHttpContext as unknown as Mock).mockReturnValue(false);
+    (isSocketContext as unknown as Mock).mockReturnValue(false);
+
+    await useAuditLog()(ctx, next);
+
+    expect(mockPublisher.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        endpoint: "unknown",
+        method: "unknown",
+        transport: "unknown",
+        statusCode: 0,
+        sourceIp: "unknown",
+        sessionId: null,
+      }),
+    );
+    expect(mockPublisher.publish).toHaveBeenCalledWith({ id: "msg-1" });
   });
 
   test("should use per-route sanitise over global", async () => {

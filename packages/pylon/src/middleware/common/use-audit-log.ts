@@ -16,6 +16,51 @@ type UseAuditLogOptions = {
   sanitise?: (body: unknown) => unknown;
 };
 
+/**
+ * The per-transport slice of an audit record. Only these VALUES differ between
+ * http and socket — the write that consumes them is identical — so this is a
+ * resolver, not a `runHttp`/`runSocket` split.
+ */
+type AuditTarget = {
+  endpoint: string;
+  method: string;
+  transport: string;
+  statusCode: number;
+  sourceIp: string;
+  sessionId: string | null;
+};
+
+const resolveTarget = (ctx: PylonContext): AuditTarget => {
+  if (isHttpContext(ctx)) {
+    return {
+      endpoint: ctx.request.path,
+      method: ctx.request.method,
+      transport: "http",
+      statusCode: ctx.status,
+      sourceIp: ctx.request.ip ?? "unknown",
+      sessionId: ctx.state.metadata?.sessionId ?? null,
+    };
+  }
+  if (isSocketContext(ctx)) {
+    return {
+      endpoint: ctx.event,
+      method: "event",
+      transport: "socket",
+      statusCode: 200,
+      sourceIp: ctx.io.socket.handshake?.address ?? "unknown",
+      sessionId: null,
+    };
+  }
+  return {
+    endpoint: "unknown",
+    method: "unknown",
+    transport: "unknown",
+    statusCode: 0,
+    sourceIp: "unknown",
+    sessionId: null,
+  };
+};
+
 export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware => {
   return async function useAuditLogMiddleware(ctx: PylonContext, next) {
     // Disabled by app config: silently pass through, never throw. The
@@ -53,33 +98,8 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
       const { RequestAudit } = await import("../../messages/RequestAudit.js");
       const publisher = bus.publisher(RequestAudit);
 
-      let endpoint: string;
-      let method: string;
-      let transport: string;
-      let statusCode: number;
-      let sourceIp: string;
-      let sessionId: string | null = null;
-
-      if (isHttpContext(ctx)) {
-        endpoint = ctx.request.path;
-        method = ctx.request.method;
-        transport = "http";
-        statusCode = ctx.status;
-        sourceIp = ctx.request.ip ?? "unknown";
-        sessionId = ctx.state.metadata?.sessionId ?? null;
-      } else if (isSocketContext(ctx)) {
-        endpoint = ctx.event;
-        method = "event";
-        transport = "socket";
-        statusCode = 200;
-        sourceIp = ctx.io.socket.handshake?.address ?? "unknown";
-      } else {
-        endpoint = "unknown";
-        method = "unknown";
-        transport = "unknown";
-        statusCode = 0;
-        sourceIp = "unknown";
-      }
+      const { endpoint, method, transport, statusCode, sourceIp, sessionId } =
+        resolveTarget(ctx);
 
       const message = publisher.create({
         requestId: ctx.state.metadata.id,
