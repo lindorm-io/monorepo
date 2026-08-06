@@ -9,6 +9,7 @@ import {
 } from "../../internal/utils/auth/driver/index.js";
 import { getOpenIdConfiguration } from "../../internal/utils/auth/get-open-id-configuration.js";
 import type {
+  PylonAuthDriverClientAssertionSettings,
   PylonAuthDriverContext,
   PylonAuthEndpoints,
   PylonAuthIntrospectOptions,
@@ -37,6 +38,7 @@ import type {
 export class OpenIdResourceDriver implements IPylonAuthDriver {
   readonly clientId: string;
 
+  private readonly clientAssertionSettings: PylonAuthDriverClientAssertionSettings;
   private readonly clientSecret?: string;
   private readonly issuer: string;
   private readonly pinnedTokenEndpointAuthMethod: PylonOpenIdResourceDriverSettings["tokenEndpointAuthMethod"];
@@ -46,6 +48,11 @@ export class OpenIdResourceDriver implements IPylonAuthDriver {
     this.clientSecret = settings.clientSecret;
     this.issuer = settings.issuer;
     this.pinnedTokenEndpointAuthMethod = settings.tokenEndpointAuthMethod;
+
+    this.clientAssertionSettings = {
+      expiry: settings.clientAssertion?.expiry ?? "1 minute",
+      key: settings.clientAssertion?.key ?? null,
+    };
   }
 
   async endpoints(context: PylonAuthDriverContext): Promise<PylonAuthEndpoints> {
@@ -57,6 +64,7 @@ export class OpenIdResourceDriver implements IPylonAuthDriver {
     options: PylonAuthIntrospectOptions,
   ): Promise<PylonIntrospection> {
     return fetchIntrospection(context, {
+      assertion: this.clientAssertionSettings,
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       endpoints: await this.endpoints(context),
@@ -97,6 +105,7 @@ export class OpenIdResourceDriver implements IPylonAuthDriver {
     const openid = getOpenIdConfiguration(context, { issuer: this.issuer });
 
     return resolveTokenEndpointAuthMethod({
+      assertionKey: this.clientAssertionSettings.key,
       clientSecret: this.clientSecret,
       logger: context.logger,
       pinned: this.pinnedTokenEndpointAuthMethod,

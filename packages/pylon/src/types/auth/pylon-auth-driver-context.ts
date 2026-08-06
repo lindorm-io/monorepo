@@ -1,3 +1,4 @@
+import type { IAegis } from "@lindorm/aegis";
 import type { IAmphora } from "@lindorm/amphora";
 import type { IConduit } from "@lindorm/conduit";
 import type { ILogger } from "@lindorm/logger";
@@ -16,6 +17,12 @@ import type { Environment } from "@lindorm/types";
  * A parameter is cheap to add later and impossible to remove without breaking
  * every driver already written, so this starts as small as it can be:
  *
+ * - `aegis` — signing and verification over the SAME keys `amphora` already
+ *   holds. It grants NO new authority: `new Aegis({ amphora, logger })` is a
+ *   wrapper over the vault that is on this context anyway, so a driver could
+ *   always reach crypto — aegis only makes it ergonomic. It is here because
+ *   RFC 7523 §2.2 client authentication (`client_secret_jwt` /
+ *   `private_key_jwt`) has to MINT a signed assertion per token request.
  * - `amphora` — the key vault and the registered upstream IdP, which is where a
  *   discovery-backed driver reads its provider metadata from.
  * - `conduit` — the outbound HTTP client, ALREADY correlation-tagged for this
@@ -25,6 +32,7 @@ import type { Environment } from "@lindorm/types";
  * - `environment` / `logger` — the ambient operational context.
  */
 export type PylonAuthDriverContext = {
+  readonly aegis: IAegis;
   readonly amphora: IAmphora;
   readonly conduit: IConduit;
   readonly environment: Environment;

@@ -54,6 +54,7 @@ export class OpenIdDriver extends PylonAuthDriverBase {
     options: PylonAuthIntrospectOptions,
   ): Promise<PylonIntrospection> {
     return fetchIntrospection(context, {
+      assertion: this.clientAssertionSettings,
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       endpoints: await this.endpoints(context),
@@ -127,6 +128,7 @@ export class OpenIdDriver extends PylonAuthDriverBase {
     context: PylonAuthDriverContext,
   ): PylonClientAuthMethod {
     return resolveTokenEndpointAuthMethod({
+      assertionKey: this.clientAssertionSettings.key,
       clientSecret: this.clientSecret,
       logger: context.logger,
       pinned: this.pinnedTokenEndpointAuthMethod,

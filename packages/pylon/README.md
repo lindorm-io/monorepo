@@ -973,7 +973,46 @@ class GitHubDriver extends PylonAuthDriverBase {
 }
 ```
 
-Drivers are not required to extend anything — `IPylonAuthDriver` is the contract. A driver never receives the request context, only a narrow read-only one (`amphora`, a correlation-tagged `conduit`, `environment`, `logger`), so it cannot touch a cookie or the session even deliberately.
+Drivers are not required to extend anything — `IPylonAuthDriver` is the contract. A driver never receives the request context, only a narrow read-only one (`aegis`, `amphora`, a correlation-tagged `conduit`, `environment`, `logger`), so it cannot touch a cookie or the session even deliberately. `aegis` grants no authority `amphora` did not already carry — it is a wrapper over the same vault — it is there so a driver can mint the signed client assertion below.
+
+### Client authentication
+
+The driver authenticates every token-endpoint and introspection request. Pylon composes five of the IANA-registered methods and picks one per request (RFC 6749 §2.3 allows at most one), negotiating from the provider's `token_endpoint_auth_methods_supported` unless `tokenEndpointAuthMethod` pins it.
+
+| Method                | What crosses the wire                          | Needs                   |
+| --------------------- | ---------------------------------------------- | ----------------------- |
+| `private_key_jwt`     | A JWT signed with the client's own private key | `clientAssertion.key`   |
+| `client_secret_jwt`   | A JWT MAC'd with the client secret             | `clientSecret` (≥ 16 B) |
+| `client_secret_basic` | The secret, in the `Authorization` header      | `clientSecret`          |
+| `client_secret_post`  | The secret, in the form body                   | `clientSecret`          |
+| `none`                | `client_id` alone (RFC 6749 §3.2.1)            | nothing                 |
+
+Negotiation walks that table top-down and takes the first method the provider advertises **and** the driver holds the credential for. The order is by what a compromise costs: asymmetric proof first (the provider stores only a public key, so breaching it yields nothing that can impersonate the client), then the MAC'd assertion (the secret itself never crosses the wire — only a short-lived, single-use `jti`-bearing JWT does), then the two that put the secret on the wire, header before body because the `Authorization` header is what log scrubbers already redact.
+
+**Capability comes from the driver, not from the provider.** A driver with no `clientAssertion.key` cannot compose `private_key_jwt` however loudly the provider advertises it, so negotiation skips the method rather than reaching for whatever key the deployment happens to sign with — and pinning it throws instead. A provider advertising only methods the driver cannot compose gets the spec default, plus a `warn`.
+
+The RFC 8705 mTLS methods (`tls_client_auth`, `self_signed_tls_client_auth`) are **not** built in: they prove a client certificate during the TLS handshake rather than by a signature, so they are settled on the HTTP agent. A driver that needs one attaches its own conduit middleware.
+
+```typescript
+new OpenIdDriver({
+  issuer: "https://auth.example.com",
+  clientId: "my-client-id",
+  clientAssertion: {
+    key: { condition: { purpose: "client_assertion" } }, // an amphora key…
+    // key: { kryptos },                                 // …or one supplied outright
+    expiry: "1 minute",
+  },
+});
+```
+
+| `clientAssertion` setting | Meaning                                                                                                                                                         |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `key`                     | The aegis signing-key selector `private_key_jwt` uses. Default `null` — the method is then not composable. Its public half must be registered with the provider |
+| `expiry`                  | The assertion's lifetime. Default `1 minute` — OIDC Core §9 has these tokens used once                                                                          |
+
+The assertion carries `iss` = `sub` = the client id, a fresh `jti`, `exp`, `iat`, and `aud` = the **token endpoint URL** — RFC 7523 §3 only asks for a value identifying the authorization server, but OIDC Core §9 narrows it to the token endpoint for both assertion methods, so that value satisfies both. A provider wanting its issuer identifier instead overrides `clientAssertionAudience` on `PylonAuthDriverBase`.
+
+⚠ `client_secret_jwt` MACs with the **UTF-8 octets of the client secret verbatim** (OIDC Core §9) — nothing is derived from it, because the provider reproduces the MAC from exactly those octets. A secret shorter than the MAC key size HS256 requires (16 bytes) is refused rather than stretched; that floor is OIDC Core §16.19's.
 
 ### Boot validation
 
@@ -1025,14 +1064,14 @@ There is **no** `ctx.auth.token(grant)`. A generic "call the token endpoint with
 
 The discovery-backed drivers read their endpoints off the upstream IdP's document, fetched by `amphora.idp`. Six fields are used, by their RFC wire names — only the first two are required by the specs, and a real IdP does omit the rest (Auth0 publishes no `introspection_endpoint`). ⚠ The document's own `issuer` wins over the configured one: a tenant-scoped provider templates it in the metadata it serves, and pylon verifies id_tokens against what the provider published.
 
-| Wire name                               | Spec level                                | Pylon behaviour when absent                                                                                 |
-| --------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `authorization_endpoint`                | REQUIRED (OIDC Discovery §3, RFC 8414 §2) | `openid_configuration_incomplete` — thrown when the document is adopted                                     |
-| `token_endpoint`                        | REQUIRED (OIDC Discovery §3, RFC 8414 §2) | `openid_configuration_incomplete` — thrown when the document is adopted                                     |
-| `userinfo_endpoint`                     | RECOMMENDED (OIDC Discovery §3)           | `idp_userinfo_endpoint_not_supported` — thrown by `ctx.auth.userinfo()` when it must call the IdP           |
-| `introspection_endpoint`                | OPTIONAL (RFC 8414 §2, RFC 7662)          | `idp_introspection_endpoint_not_supported` — thrown by `ctx.auth.introspect()` when it must call the IdP    |
-| `end_session_endpoint`                  | OPTIONAL (OIDC RP-Initiated Logout 1.0)   | `OpenIdDriver` logs out LOCALLY — the session is dropped and the browser goes straight to its destination   |
-| `token_endpoint_auth_methods_supported` | OPTIONAL (OIDC Discovery §3, RFC 8414 §2) | Falls back to the spec default `["client_secret_basic"]` — the token request uses HTTP basic auth, no throw |
+| Wire name                               | Spec level                                | Pylon behaviour when absent                                                                                                                                                           |
+| --------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `authorization_endpoint`                | REQUIRED (OIDC Discovery §3, RFC 8414 §2) | `openid_configuration_incomplete` — thrown when the document is adopted                                                                                                               |
+| `token_endpoint`                        | REQUIRED (OIDC Discovery §3, RFC 8414 §2) | `openid_configuration_incomplete` — thrown when the document is adopted                                                                                                               |
+| `userinfo_endpoint`                     | RECOMMENDED (OIDC Discovery §3)           | `idp_userinfo_endpoint_not_supported` — thrown by `ctx.auth.userinfo()` when it must call the IdP                                                                                     |
+| `introspection_endpoint`                | OPTIONAL (RFC 8414 §2, RFC 7662)          | `idp_introspection_endpoint_not_supported` — thrown by `ctx.auth.introspect()` when it must call the IdP                                                                              |
+| `end_session_endpoint`                  | OPTIONAL (OIDC RP-Initiated Logout 1.0)   | `OpenIdDriver` logs out LOCALLY — the session is dropped and the browser goes straight to its destination                                                                             |
+| `token_endpoint_auth_methods_supported` | OPTIONAL (OIDC Discovery §3, RFC 8414 §2) | Falls back to the spec default `client_secret_basic`, or to the strongest method the driver can compose when it holds no secret — see [Client authentication](#client-authentication) |
 
 The named errors are thrown at the point of use, so the local fast paths still work: `ctx.auth.userinfo()` and `ctx.auth.introspect()` only throw when they actually have to reach the IdP, and the login callback's best-effort subject lookup stays silent. An IdP that serves an endpoint without advertising it can have the field supplied through the `idp.openIdConfiguration` override on the Amphora, which is merged over the fetched document.
 

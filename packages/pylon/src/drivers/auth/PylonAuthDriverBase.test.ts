@@ -1,3 +1,7 @@
+import { Aegis, JwtKit } from "@lindorm/aegis";
+import { Amphora } from "@lindorm/amphora";
+import type { IKryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import axios from "axios";
 import nock from "nock";
@@ -79,9 +83,16 @@ describe("PylonAuthDriverBase", () => {
     observed = {};
     nock.cleanAll();
 
+    // A REAL aegis over a real (empty) vault: the assertion methods mint through
+    // it, and an injected key is the one thing that never touches the vault, so
+    // nothing needs to be registered for this to be honest.
+    const logger = createMockLogger();
+    const amphora = new Amphora({ logger });
+
     context = createAuthDriverContext({
-      amphora: {},
-      logger: createMockLogger(),
+      aegis: new Aegis({ amphora, logger }),
+      amphora,
+      logger,
       state: {
         app: { environment: "test" },
         metadata: { correlationId: "test-correlation" },
@@ -353,6 +364,258 @@ describe("PylonAuthDriverBase", () => {
           scope: null,
         }),
       ).rejects.toThrow(/Token endpoint auth method is not supported/);
+    });
+  });
+
+  /**
+   * RFC 7523 §2.2 / OIDC Core §9 — the two assertion methods. Both send
+   * `client_assertion_type=…:jwt-bearer` plus a signed `client_assertion`; they
+   * differ only in what signs it.
+   */
+  describe("assertion client authentication", () => {
+    // OIDC Core §16.19 — a client_secret used for symmetric signatures must
+    // carry at least the octets the MAC algorithm requires (16 for HS256).
+    const SECRET = "a-client-secret-of-at-least-16-bytes";
+    const ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    const TOKEN_ENDPOINT = "https://auth.lindorm.io/token";
+
+    let assertionKey: IKryptos;
+
+    /** The secret as OIDC Core §9 defines the MAC key: its UTF-8 octets, raw. */
+    const secretKey = (secret: string = SECRET): IKryptos =>
+      KryptosKit.from.utf({
+        id: "client-id",
+        algorithm: "HS256",
+        privateKey: secret,
+        type: "oct",
+        use: "sig",
+      });
+
+    const assertion = () => JwtKit.decode(fields().client_assertion);
+
+    const captureMany = (times: number): Array<string> => {
+      const bodies: Array<string> = [];
+
+      nock("https://auth.lindorm.io")
+        .post("/token")
+        .times(times)
+        .reply(200, function (_uri, requestBody) {
+          bodies.push(requestBody as string);
+          return { access_token: "at", token_type: "Bearer" };
+        });
+
+      return bodies;
+    };
+
+    beforeEach(() => {
+      assertionKey = KryptosKit.generate.sig.ec({ algorithm: "ES256" });
+    });
+
+    describe("client_secret_jwt", () => {
+      test("should send the assertion parameters instead of the secret", async () => {
+        const scope = capture();
+
+        await createDriver({
+          clientSecret: SECRET,
+          tokenEndpointAuthMethod: "client_secret_jwt",
+        }).refresh(context, { refreshToken: "rt", scope: null });
+
+        expect(scope.isDone()).toBe(true);
+        expect(observed.authorization).toBeUndefined();
+        expect(fields().client_secret).toBeUndefined();
+        expect(fields().client_assertion_type).toBe(ASSERTION_TYPE);
+        expect(fields().client_assertion).toEqual(expect.any(String));
+        // RFC 7521 §4.2 leaves `client_id` optional beside an assertion, but
+        // OIDC Core §9's own example sends it and providers key on it.
+        expect(fields().client_id).toBe("client-id");
+      });
+
+      // RFC 7523 §3 (1)(2)(3)(4)(7), narrowed by OIDC Core §9: iss == sub ==
+      // client_id, aud == the token endpoint, jti and exp both REQUIRED.
+      test("should carry the claims RFC 7523 §3 requires", async () => {
+        capture();
+
+        await createDriver({
+          clientSecret: SECRET,
+          tokenEndpointAuthMethod: "client_secret_jwt",
+        }).refresh(context, { refreshToken: "rt", scope: null });
+
+        const { header, payload } = assertion();
+
+        expect(payload.iss).toBe("client-id");
+        expect(payload.sub).toBe("client-id");
+        expect(payload.aud).toEqual([TOKEN_ENDPOINT]);
+        expect(payload.jti).toEqual(expect.any(String));
+        expect(payload.exp).toEqual(expect.any(Number));
+        expect(payload.iat).toEqual(expect.any(Number));
+        // The default lifetime — short, because OIDC Core §9 has the token used
+        // once.
+        expect(payload.exp! - payload.iat!).toBe(60);
+        // OIDC Core §9 — "an HMAC SHA algorithm, such as HMAC SHA-256".
+        expect(header.alg).toBe("HS256");
+      });
+
+      test("should honour a configured assertion expiry", async () => {
+        capture();
+
+        await createDriver({
+          clientAssertion: { expiry: "30 seconds" },
+          clientSecret: SECRET,
+          tokenEndpointAuthMethod: "client_secret_jwt",
+        }).refresh(context, { refreshToken: "rt", scope: null });
+
+        const { payload } = assertion();
+
+        expect(payload.exp! - payload.iat!).toBe(30);
+      });
+
+      // The MAC must be real: the provider reproduces it from the octets of the
+      // secret it already holds (OIDC Core §9), so the same octets must verify.
+      test("should produce an assertion that verifies against the secret", async () => {
+        capture();
+
+        await createDriver({
+          clientSecret: SECRET,
+          tokenEndpointAuthMethod: "client_secret_jwt",
+        }).refresh(context, { refreshToken: "rt", scope: null });
+
+        const verified = await context.aegis.jwt.verify(
+          fields().client_assertion,
+          undefined,
+          { key: { kryptos: secretKey() } },
+        );
+
+        expect(verified.payload.iss).toBe("client-id");
+        expect(verified.payload.sub).toBe("client-id");
+      });
+
+      test("should produce an assertion that does NOT verify against another secret", async () => {
+        capture();
+
+        await createDriver({
+          clientSecret: SECRET,
+          tokenEndpointAuthMethod: "client_secret_jwt",
+        }).refresh(context, { refreshToken: "rt", scope: null });
+
+        await expect(
+          context.aegis.jwt.verify(fields().client_assertion, undefined, {
+            key: { kryptos: secretKey("a-DIFFERENT-secret-of-16-plus-bytes") },
+          }),
+        ).rejects.toThrow();
+      });
+
+      // OIDC Core §16.19 / the HMAC key-size floor. A secret too short to be a
+      // MAC key is refused rather than stretched into one the provider could
+      // never reproduce.
+      test("should refuse a secret shorter than the MAC algorithm requires", async () => {
+        await expect(
+          createDriver({
+            clientSecret: "too-short",
+            tokenEndpointAuthMethod: "client_secret_jwt",
+          }).refresh(context, { refreshToken: "rt", scope: null }),
+        ).rejects.toThrow(/Invalid oct secret size/);
+      });
+    });
+
+    describe("private_key_jwt", () => {
+      test("should send the assertion parameters", async () => {
+        const scope = capture();
+
+        await createDriver({
+          clientAssertion: { key: { kryptos: assertionKey } },
+          tokenEndpointAuthMethod: "private_key_jwt",
+        }).refresh(context, { refreshToken: "rt", scope: null });
+
+        expect(scope.isDone()).toBe(true);
+        expect(observed.authorization).toBeUndefined();
+        expect(fields().client_secret).toBeUndefined();
+        expect(fields().client_assertion_type).toBe(ASSERTION_TYPE);
+        expect(fields().client_assertion).toEqual(expect.any(String));
+        expect(fields().client_id).toBe("client-id");
+      });
+
+      test("should carry the claims RFC 7523 §3 requires", async () => {
+        capture();
+
+        await createDriver({
+          clientAssertion: { key: { kryptos: assertionKey } },
+          tokenEndpointAuthMethod: "private_key_jwt",
+        }).refresh(context, { refreshToken: "rt", scope: null });
+
+        const { header, payload } = assertion();
+
+        expect(payload.iss).toBe("client-id");
+        expect(payload.sub).toBe("client-id");
+        expect(payload.aud).toEqual([TOKEN_ENDPOINT]);
+        expect(payload.jti).toEqual(expect.any(String));
+        expect(payload.exp! - payload.iat!).toBe(60);
+        // The algorithm comes from the key itself, never from a setting that
+        // could disagree with it.
+        expect(header.alg).toBe("ES256");
+        // OIDC Core §10.1 — the signing key MUST be findable from what the RP
+        // published, and `kid` is how the provider finds it.
+        expect(header.kid).toBe(assertionKey.id);
+      });
+
+      // The whole point of the method: the provider holds only the PUBLIC half,
+      // so the public half alone must be enough to verify.
+      test("should produce an assertion that verifies against the public key alone", async () => {
+        capture();
+
+        await createDriver({
+          clientAssertion: { key: { kryptos: assertionKey } },
+          tokenEndpointAuthMethod: "private_key_jwt",
+        }).refresh(context, { refreshToken: "rt", scope: null });
+
+        const publicKey = KryptosKit.from.jwk(assertionKey.toJWK("public"));
+
+        expect(publicKey.hasPrivateKey).toBe(false);
+
+        const verified = await context.aegis.jwt.verify(
+          fields().client_assertion,
+          undefined,
+          { key: { kryptos: publicKey } },
+        );
+
+        expect(verified.payload.iss).toBe("client-id");
+      });
+
+      // Pinning private_key_jwt on a driver that names no key is caught during
+      // negotiation, before anything is signed — the compose-layer guard behind
+      // it is exercised in `resolve-client-authentication.test.ts`.
+      test("should refuse to fall back to a secret when the key is missing", async () => {
+        await expect(
+          createDriver({
+            clientSecret: SECRET,
+            tokenEndpointAuthMethod: "private_key_jwt",
+          }).refresh(context, { refreshToken: "rt", scope: null }),
+        ).rejects.toThrow(/Token endpoint auth method is not supported/);
+      });
+    });
+
+    // OIDC Core §9 — "These tokens MUST only be used once". A repeated `jti` is
+    // a replay the provider is entitled to refuse, so it must be fresh per
+    // request rather than per driver.
+    test("should mint a fresh jti for every request", async () => {
+      const bodies = captureMany(2);
+
+      const driver = createDriver({
+        clientAssertion: { key: { kryptos: assertionKey } },
+        tokenEndpointAuthMethod: "private_key_jwt",
+      });
+
+      await driver.refresh(context, { refreshToken: "rt", scope: null });
+      await driver.refresh(context, { refreshToken: "rt", scope: null });
+
+      const ids = bodies.map(
+        (body) =>
+          JwtKit.decode(Object.fromEntries(new URLSearchParams(body)).client_assertion)
+            .payload.jti,
+      );
+
+      expect(ids).toHaveLength(2);
+      expect(ids[0]).toEqual(expect.any(String));
+      expect(ids[0]).not.toBe(ids[1]);
     });
   });
 

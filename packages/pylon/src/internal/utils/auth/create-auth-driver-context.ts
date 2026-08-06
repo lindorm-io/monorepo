@@ -20,6 +20,7 @@ import type { PylonAuthDriverContext, PylonContext } from "../../../types/index.
  * that knows its own payload can pin the depth — and that call is the driver's.
  */
 export const createAuthDriverContext = (ctx: PylonContext): PylonAuthDriverContext => ({
+  aegis: ctx.aegis,
   amphora: ctx.amphora,
   conduit: new Conduit({
     alias: "auth",

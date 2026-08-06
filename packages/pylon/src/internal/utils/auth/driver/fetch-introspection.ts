@@ -5,6 +5,7 @@ import type { IntrospectResponse } from "@lindorm/openid";
 import { sortKeys } from "@lindorm/utils";
 import { IntrospectionEndpointFailed } from "../../../../errors/IntrospectionEndpointFailed.js";
 import type {
+  PylonAuthDriverClientAssertionSettings,
   PylonAuthDriverContext,
   PylonAuthEndpoints,
   PylonClientAuthMethod,
@@ -14,6 +15,7 @@ import { parseIntrospection } from "../parse-introspection.js";
 import { resolveClientAuthentication } from "./resolve-client-authentication.js";
 
 export type FetchIntrospectionOptions = {
+  assertion: PylonAuthDriverClientAssertionSettings;
   clientId: string;
   clientSecret?: string;
   endpoints: PylonAuthEndpoints;
@@ -33,7 +35,8 @@ export const fetchIntrospection = async (
   context: PylonAuthDriverContext,
   options: FetchIntrospectionOptions,
 ): Promise<PylonIntrospection> => {
-  const { clientId, clientSecret, endpoints, method, token, tokenTypeHint } = options;
+  const { assertion, clientId, clientSecret, endpoints, method, token, tokenTypeHint } =
+    options;
 
   // `introspection_endpoint` is OPTIONAL (RFC 8414 §2) and real providers omit
   // it — Auth0 publishes none. Fail by name instead of posting to `undefined`.
@@ -49,7 +52,17 @@ export const fetchIntrospection = async (
     });
   }
 
-  const auth = resolveClientAuthentication({ clientId, clientSecret, method });
+  // ⚠ The assertion's `aud` is the TOKEN endpoint even here. RFC 7523 §3 wants a
+  // value identifying the AUTHORIZATION SERVER, not the endpoint being called,
+  // and OIDC Core §9 names the token endpoint URL as that value — so one
+  // audience across every endpoint is what the provider is told to expect.
+  const auth = await resolveClientAuthentication(context, {
+    assertion,
+    audience: endpoints.tokenEndpoint,
+    clientId,
+    clientSecret,
+    method,
+  });
 
   let data: IntrospectResponse;
 

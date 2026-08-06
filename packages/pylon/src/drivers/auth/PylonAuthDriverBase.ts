@@ -14,6 +14,7 @@ import type {
   PylonAuthAuthorizeOptions,
   PylonAuthClientCredentialsOptions,
   PylonAuthDriverAuthorizeSettings,
+  PylonAuthDriverClientAssertionSettings,
   PylonAuthDriverContext,
   PylonAuthDriverSettings,
   PylonAuthEndpoints,
@@ -39,6 +40,7 @@ export abstract class PylonAuthDriverBase implements IPylonAuthDriver {
   readonly pkce: PylonAuthDriverSettings["pkce"];
 
   protected readonly authorizeSettings: PylonAuthDriverAuthorizeSettings;
+  protected readonly clientAssertionSettings: PylonAuthDriverClientAssertionSettings;
   protected readonly clientSecret?: string;
   protected readonly pinnedTokenEndpointAuthMethod: PylonAuthDriverSettings["tokenEndpointAuthMethod"];
 
@@ -46,6 +48,13 @@ export abstract class PylonAuthDriverBase implements IPylonAuthDriver {
     this.clientId = settings.clientId;
     this.clientSecret = settings.clientSecret;
     this.pinnedTokenEndpointAuthMethod = settings.tokenEndpointAuthMethod;
+
+    this.clientAssertionSettings = {
+      // OIDC Core §9 has an assertion used ONCE; a minute is the interoperable
+      // ceiling providers assume and enough to absorb ordinary clock skew.
+      expiry: settings.clientAssertion?.expiry ?? "1 minute",
+      key: settings.clientAssertion?.key ?? null,
+    };
 
     // `undefined` means "not configured" and takes the default; `null` is the
     // operator saying this provider rejects PKCE. `??` cannot tell them apart.
@@ -159,10 +168,22 @@ export abstract class PylonAuthDriverBase implements IPylonAuthDriver {
     context: PylonAuthDriverContext,
   ): PylonClientAuthMethod {
     return resolveTokenEndpointAuthMethod({
+      assertionKey: this.clientAssertionSettings.key,
       clientSecret: this.clientSecret,
       logger: context.logger,
       pinned: this.pinnedTokenEndpointAuthMethod,
     });
+  }
+
+  /**
+   * The `aud` of an RFC 7523 §2.2 client assertion. OIDC Core §9 says it SHOULD
+   * be the token endpoint URL, which is what every provider following that
+   * document expects — but RFC 7523 §3 only requires "a value that identifies
+   * the authorization server", so a provider that wants its ISSUER identifier
+   * instead overrides this and changes nothing else.
+   */
+  protected clientAssertionAudience(endpoints: PylonAuthEndpoints): string {
+    return endpoints.tokenEndpoint;
   }
 
   /**
@@ -179,7 +200,9 @@ export abstract class PylonAuthDriverBase implements IPylonAuthDriver {
   ): Promise<PylonAuthTokenResult> {
     const endpoints = await this.endpoints(context);
 
-    const auth = resolveClientAuthentication({
+    const auth = await resolveClientAuthentication(context, {
+      assertion: this.clientAssertionSettings,
+      audience: this.clientAssertionAudience(endpoints),
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       method: this.tokenEndpointAuthMethod(context),

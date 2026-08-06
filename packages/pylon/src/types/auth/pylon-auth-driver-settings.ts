@@ -1,3 +1,4 @@
+import type { AegisSignKey } from "@lindorm/aegis";
 import type { ReadableTime } from "@lindorm/date";
 import type {
   CodeChallengeMethod,
@@ -8,12 +9,55 @@ import type {
 } from "@lindorm/openid";
 
 /**
- * The three client-authentication methods pylon composes itself. The IANA
- * registry is larger, but `client_secret_jwt` / `private_key_jwt` / the mTLS
- * methods need a signing key or a client certificate — a driver that wants one
- * of those attaches its own conduit middleware.
+ * The five client-authentication methods pylon composes itself.
+ *
+ * The IANA registry is larger, but the RFC 8705 mTLS methods
+ * (`tls_client_auth` / `self_signed_tls_client_auth`) prove possession of a
+ * CLIENT CERTIFICATE during the TLS handshake rather than by a signature, so
+ * they are settled on the HTTP agent and not in a request body — a conduit
+ * concern, not one this seam can compose. A driver that needs one attaches its
+ * own conduit middleware.
  */
-export type PylonClientAuthMethod = "client_secret_basic" | "client_secret_post" | "none";
+export type PylonClientAuthMethod =
+  | "client_secret_basic"
+  | "client_secret_jwt"
+  | "client_secret_post"
+  | "none"
+  | "private_key_jwt";
+
+/**
+ * The RFC 7523 §2.2 client assertion — the JWT the two assertion methods send
+ * as `client_assertion`.
+ *
+ * ⚠ Only `private_key_jwt` reads `key`. `client_secret_jwt` MACs the assertion
+ * with the client secret itself, and OIDC Core §9 pins how: "The HMAC is
+ * calculated using the octets of the UTF-8 representation of the client_secret
+ * as the shared key." Deriving anything from it — HKDF included — would produce
+ * a MAC the provider cannot reproduce, so that key is never configurable.
+ */
+export type PylonAuthDriverClientAssertionSettings = {
+  /**
+   * The assertion's lifetime. Short by design: OIDC Core §9 has these tokens
+   * used ONCE, and `exp` is the only bound RFC 7523 §3 makes mandatory. Long
+   * enough to absorb clock skew, short enough that a captured assertion is
+   * worthless. Default `1 minute`.
+   */
+  expiry: ReadableTime;
+
+  /**
+   * The key `private_key_jwt` signs with — the aegis selector, so it is either
+   * a key supplied outright (`{ kryptos }`) or one selected from the vault
+   * (`{ condition }`; `{}` takes the deployment's default signing key). Its
+   * PUBLIC half is what the client registered with the provider, so it must be
+   * reachable there — pylon's own `/.well-known/jwks.json` serves that purpose
+   * for a vault-resident key.
+   *
+   * `null` — the default — means the driver CANNOT compose `private_key_jwt`.
+   * Negotiation then skips the method entirely rather than reaching for
+   * whatever key the deployment happens to sign with, and pinning it throws.
+   */
+  key: AegisSignKey | null;
+};
 
 /**
  * The provider-side defaults for the authorization request. These are the
@@ -48,6 +92,9 @@ export type PylonAuthDriverSettings = {
 
   authorize?: Partial<PylonAuthDriverAuthorizeSettings>;
 
+  /** RFC 7523 §2.2 — how `client_secret_jwt` / `private_key_jwt` are minted. */
+  clientAssertion?: Partial<PylonAuthDriverClientAssertionSettings>;
+
   /**
    * The PKCE transformation pylon derives the challenge with. Defaults to
    * `S256`; `null` for a provider that rejects the parameters outright.
@@ -80,6 +127,12 @@ export type PylonOpenIdDriverSettings = PylonAuthDriverSettings & {
 export type PylonOpenIdResourceDriverSettings = {
   clientId: string;
   clientSecret?: string;
+  /**
+   * RFC 7523 §2.2 — a resource server authenticates to the introspection
+   * endpoint too, and RFC 8414 §2 gives that endpoint its own advertised
+   * methods, so it needs the same assertion knobs a relying party does.
+   */
+  clientAssertion?: Partial<PylonAuthDriverClientAssertionSettings>;
   issuer: string;
   tokenEndpointAuthMethod?: TokenEndpointAuthMethod;
 };

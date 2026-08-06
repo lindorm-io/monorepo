@@ -1,4 +1,8 @@
+import { Aegis, JwtKit } from "@lindorm/aegis";
+import { Amphora } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
+import type { IKryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { OpenIdConfiguration } from "@lindorm/openid";
 import axios from "axios";
@@ -24,17 +28,21 @@ describe("OpenIdDriver", () => {
     contentType?: string;
   };
 
-  const createContext = (): PylonAuthDriverContext =>
-    createAuthDriverContext({
+  const createContext = (): PylonAuthDriverContext => {
+    const logger = createMockLogger();
+
+    return createAuthDriverContext({
+      aegis: new Aegis({ amphora: new Amphora({ logger }), logger }),
       amphora: {
         idp: { config: () => ({ issuer: ISSUER, openIdConfiguration }) },
       },
-      logger: createMockLogger(),
+      logger,
       state: {
         app: { environment: "test" },
         metadata: { correlationId: "test-correlation" },
       },
     } as any);
+  };
 
   const createDriver = (settings: Partial<PylonOpenIdDriverSettings> = {}) =>
     new OpenIdDriver({
@@ -133,6 +141,16 @@ describe("OpenIdDriver", () => {
   });
 
   describe("client authentication", () => {
+    const ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    // OIDC Core §16.19 — long enough to be an HS256 MAC key.
+    const SECRET = "a-client-secret-of-at-least-16-bytes";
+
+    let assertionKey: IKryptos;
+
+    beforeEach(() => {
+      assertionKey = KryptosKit.generate.sig.ec({ algorithm: "ES256" });
+    });
+
     const captureToken = (): nock.Scope =>
       nock(ISSUER)
         .post("/token")
@@ -169,10 +187,34 @@ describe("OpenIdDriver", () => {
       expect(fields().client_secret).toBeUndefined();
     });
 
-    // The provider advertises only methods pylon cannot compose. Sending the
-    // spec default at least gives it credentials it may accept — but the
-    // mismatch is real, so it is logged rather than swallowed.
+    // The provider advertises only RFC 8705 mTLS, which proves a client
+    // certificate during the TLS handshake rather than by a signature — nothing
+    // this seam can compose. Sending the spec default at least gives the
+    // provider credentials it may accept, but the mismatch is real, so it is
+    // logged rather than swallowed.
     test("should warn and fall back when no advertised method can be composed", async () => {
+      openIdConfiguration.tokenEndpointAuthMethodsSupported = ["tls_client_auth"];
+      captureToken();
+
+      await createDriver().refresh(context, { refreshToken: "rt", scope: null });
+
+      expect(observed.authorization).toBe(
+        `Basic ${Buffer.from("client-id:client-secret").toString("base64")}`,
+      );
+      expect(context.logger.warn).toHaveBeenCalledWith(
+        "IdP advertises no client authentication method pylon can compose",
+        {
+          composable: ["client_secret_jwt", "client_secret_basic", "client_secret_post"],
+          fallback: "client_secret_basic",
+          supported: ["tls_client_auth"],
+        },
+      );
+    });
+
+    // The same fall-through for a method pylon CAN spell but this driver cannot
+    // compose: `private_key_jwt` needs a `clientAssertion.key`, and a driver
+    // that names none must not quietly sign with whatever the deployment uses.
+    test("should warn and fall back when private_key_jwt is advertised but no assertion key is configured", async () => {
       openIdConfiguration.tokenEndpointAuthMethodsSupported = ["private_key_jwt"];
       captureToken();
 
@@ -183,8 +225,75 @@ describe("OpenIdDriver", () => {
       );
       expect(context.logger.warn).toHaveBeenCalledWith(
         "IdP advertises no client authentication method pylon can compose",
-        { fallback: "client_secret_basic", supported: ["private_key_jwt"] },
+        {
+          composable: ["client_secret_jwt", "client_secret_basic", "client_secret_post"],
+          fallback: "client_secret_basic",
+          supported: ["private_key_jwt"],
+        },
       );
+    });
+
+    // Negotiation is by what a compromise costs: asymmetric proof outranks a
+    // shared secret, and a MAC'd assertion outranks putting the secret itself
+    // on the wire.
+    test("should negotiate private_key_jwt when the IdP advertises it and a key is configured", async () => {
+      openIdConfiguration.tokenEndpointAuthMethodsSupported = [
+        "client_secret_basic",
+        "client_secret_jwt",
+        "client_secret_post",
+        "private_key_jwt",
+      ];
+      captureToken();
+
+      await createDriver({
+        clientAssertion: { key: { kryptos: assertionKey } },
+      }).refresh(context, { refreshToken: "rt", scope: null });
+
+      expect(observed.authorization).toBeUndefined();
+      expect(fields().client_secret).toBeUndefined();
+      expect(fields().client_assertion_type).toBe(ASSERTION_TYPE);
+      expect(JwtKit.decode(fields().client_assertion).header.kid).toBe(assertionKey.id);
+    });
+
+    test("should negotiate client_secret_jwt over the plaintext-secret methods", async () => {
+      openIdConfiguration.tokenEndpointAuthMethodsSupported = [
+        "client_secret_basic",
+        "client_secret_jwt",
+        "client_secret_post",
+      ];
+      captureToken();
+
+      await createDriver({
+        clientAssertion: { key: { kryptos: assertionKey } },
+        clientSecret: SECRET,
+      }).refresh(context, { refreshToken: "rt", scope: null });
+
+      expect(observed.authorization).toBeUndefined();
+      expect(fields().client_secret).toBeUndefined();
+      expect(fields().client_assertion_type).toBe(ASSERTION_TYPE);
+      // OIDC Core §9 — the MAC key is the secret's UTF-8 octets, so the `kid`
+      // names the client rather than a key the provider could look up.
+      expect(JwtKit.decode(fields().client_assertion).header.alg).toBe("HS256");
+    });
+
+    // RFC 7662 §2.1 — the introspection request authenticates too, so it
+    // composes the same assertion the token endpoint does.
+    test("should authenticate introspection with an assertion", async () => {
+      openIdConfiguration.tokenEndpointAuthMethodsSupported = ["private_key_jwt"];
+      captureIntrospection({ active: true });
+
+      await createDriver({
+        clientAssertion: { key: { kryptos: assertionKey } },
+      }).introspect(context, { token: "at" });
+
+      expect(observed.authorization).toBeUndefined();
+      expect(fields().client_assertion_type).toBe(ASSERTION_TYPE);
+      // ⚠ `aud` is the TOKEN endpoint even here: RFC 7523 §3 wants a value
+      // identifying the authorization SERVER, and OIDC Core §9 names the token
+      // endpoint URL as that value.
+      expect(JwtKit.decode(fields().client_assertion).payload.aud).toEqual([
+        `${ISSUER}/token`,
+      ]);
     });
 
     // Gap 2 — a public client has no secret to present, whatever the provider
