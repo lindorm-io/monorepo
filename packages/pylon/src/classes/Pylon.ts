@@ -307,14 +307,17 @@ export class Pylon<
         const { WebhookSubscription } =
           await import("../entities/WebhookSubscription.js");
         proteusSource.addEntities([WebhookSubscription]);
-        // Stage the KEK onto the bare `@Encrypted()` marker before setup(), so
-        // proteus seals `clientSecret` at rest and opens it transparently on read.
-        await stageEncryptedField(
-          proteusSource,
-          WebhookSubscription,
-          "clientSecret",
-          this.options.webhook.encryption ?? DEFAULT_KEK,
-        );
+        // Stage the KEK onto the bare `@Encrypted()` markers before setup(), so
+        // proteus seals the stored delivery credentials at rest and opens them
+        // transparently on read. Both are live secrets under the same key.
+        for (const field of ["clientSecret", "password"]) {
+          await stageEncryptedField(
+            proteusSource,
+            WebhookSubscription,
+            field,
+            this.options.webhook.encryption ?? DEFAULT_KEK,
+          );
+        }
       }
 
       const irisSource = this.options.webhook.bus ?? this.options.bus;

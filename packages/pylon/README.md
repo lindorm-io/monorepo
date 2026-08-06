@@ -972,8 +972,9 @@ Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ct
 const app = new Pylon({
   webhook: {
     enabled: true,
-    // The at-rest KEK for a subscription's `clientSecret`. Default
-    // `{ condition: { purpose: "pylon:kek" } }` — override for a separate key.
+    // The at-rest KEK for a subscription's stored secrets (`clientSecret`,
+    // `password`). Default `{ condition: { purpose: "pylon:kek" } }` —
+    // override for a separate key.
     encryption: { condition: { purpose: "pylon:kek", publish: false } },
     maxErrors: 20,
   },
@@ -992,18 +993,20 @@ await ctx.webhook("user.created", { userId: "abc-123", email: "alice@example.com
 
 Each subscription tracks `errorCount`, `lastErrorAt`, and `suspendedAt`. After `maxErrors` consecutive failures (default 10) the subscription is auto-suspended and the request consumer skips it until `errorCount` and `suspendedAt` are cleared.
 
-### The stored `clientSecret`
+### The stored delivery secrets
 
-A subscription's `clientSecret` is encrypted **at rest** by Proteus: the `WebhookSubscription.clientSecret` column ships a bare `@Encrypted()` marker, and Pylon stages `webhook.encryption` (the KEK selector) onto it before the source sets up. A client **registers a plaintext secret** — Proteus seals it on write and decrypts it transparently on read.
+A subscription's **`clientSecret`** and its basic-auth **`password`** are encrypted **at rest** by Proteus: both columns ship a bare `@Encrypted()` marker, and Pylon stages `webhook.encryption` (the KEK selector) onto them before the source sets up. A client **registers plaintext credentials** — Proteus seals them on write and decrypts them transparently on read.
 
-**The secret never travels the bus.** The request consumer selects matched subscriptions and publishes one `WebhookDispatch` carrying the subscription **id** only; the dispatch consumer reloads the row DB-locally (Proteus decrypts there) and fans out — so the broker only ever holds the id, never the secret.
+`username` beside the password is **not** encrypted, and neither are `clientId`, `issuer` or `tokenUri`: at-rest encryption is reserved for reversible secrets, not for identifiers or delivery configuration.
 
-`webhook.encryption` is the same `{ kryptos?, condition? }` descriptor as the [`keys`](#keys) roles, read here as an **encrypt** (KEK) selector for the at-rest column:
+**The secrets never travel the bus.** The request consumer selects matched subscriptions and publishes one `WebhookDispatch` carrying the subscription **id** only; the dispatch consumer reloads the row DB-locally (Proteus decrypts there) and fans out — so the broker only ever holds the id, never a credential.
 
-- `condition` — which of the vault's keys seals the secret. Default `{ purpose: "pylon:kek" }` — the same bootstrap KEK that seals stored private keys (the webhook key does not rotate). Override it for a separate blast radius.
+`webhook.encryption` is the same `{ kryptos?, condition? }` descriptor as the [`keys`](#keys) roles, read here as an **encrypt** (KEK) selector for the at-rest columns:
+
+- `condition` — which of the vault's keys seals the secrets. Default `{ purpose: "pylon:kek" }` — the same bootstrap KEK that seals stored private keys (the webhook key does not rotate). Override it for a separate blast radius.
 - `kryptos` — a key supplied outright (e.g. an env-imported KEK).
 
-The floor is Proteus's (`use: "enc"`, private half), so the KEK can never be a signing key. Leaving the marker unresolvable (no `webhook.encryption` **and** no `pylon:kek` key in the vault) throws `unnamed_encryption_key` at setup — the column never silently stores plaintext.
+The floor is Proteus's (`use: "enc"`, private half), so the KEK can never be a signing key. Leaving the markers unresolvable (no `webhook.encryption` **and** no `pylon:kek` key in the vault) throws `unnamed_encryption_key` at setup — the columns never silently store plaintext.
 
 ## Workers
 

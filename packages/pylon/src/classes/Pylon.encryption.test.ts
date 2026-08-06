@@ -1,8 +1,8 @@
 // At-rest encryption wired end to end: pylon stages the KEK selector from its
-// settings onto the bare `@Encrypted()` markers on `Kryptos.privateKey` and
-// `WebhookSubscription.clientSecret` before the source sets up, against a REAL
-// sqlite database and a REAL Amphora. A mocked vault cannot prove which key
-// actually sealed the column, which is the whole point.
+// settings onto the bare `@Encrypted()` markers on `Kryptos.privateKey` and on
+// `WebhookSubscription.clientSecret` / `.password`, before the source sets up,
+// against a REAL sqlite database and a REAL Amphora. A mocked vault cannot
+// prove which key actually sealed the column, which is the whole point.
 
 import { parseAes } from "@lindorm/aes";
 import { Amphora, type IAmphora } from "@lindorm/amphora";
@@ -147,6 +147,26 @@ const insertSubscription = (source: ProteusSource) => {
   );
 };
 
+/** A basic-auth subscription: the username is an identifier and stays readable,
+ *  the password is a live delivery credential and must be sealed. */
+const insertBasicSubscription = (source: ProteusSource) => {
+  const repository = source.repository(WebhookSubscription);
+  return repository.insert(
+    repository.create({
+      id: "1c2f2f5a-9d43-5d0e-9a7d-2e2b0f4a7c31",
+      auth: WebhookAuth.Basic,
+      event: "order.created",
+      headers: {},
+      ownerId: "d5555606-ff30-5647-aa10-54be8d2a1086",
+      tenantId: null,
+      url: "http://test.webhook.com/endpoint",
+      authHeaders: {},
+      username: "webhook-user",
+      password: "plaintext-webhook-password",
+    }) as WebhookSubscription,
+  );
+};
+
 describe("Pylon at-rest encryption staging", () => {
   let amphora: IAmphora;
   let source: ProteusSource;
@@ -221,6 +241,44 @@ describe("Pylon at-rest encryption staging", () => {
         .repository(WebhookSubscription)
         .findOne({ id: created.id });
       expect(found?.clientSecret).toBe("plaintext-webhook-secret");
+    });
+
+    test("should round-trip a plaintext webhook basic password under the staged pylon:kek", async () => {
+      const created = await insertBasicSubscription(source);
+
+      const columns = await rawStringColumns(source, created.id);
+
+      expect(columns).not.toContain("plaintext-webhook-password");
+      expect(storedUnderKey(columns, kek.id)).toBe(true);
+
+      // Comes back decrypted on read — the basic-auth middleware does no crypto.
+      const found = await source
+        .repository(WebhookSubscription)
+        .findOne({ id: created.id });
+      expect(found?.password).toBe("plaintext-webhook-password");
+    });
+
+    // The username sits in the same credential block but is an IDENTIFIER, not a
+    // reversible secret — at-rest encryption is deliberately not applied to it.
+    test("should leave the basic username readable at rest", async () => {
+      const created = await insertBasicSubscription(source);
+
+      const columns = await rawStringColumns(source, created.id);
+
+      expect(columns).toContain("webhook-user");
+    });
+
+    // A null password must survive the encrypted column untouched — proteus has
+    // nothing to seal, and dispatch's "missing basic credentials" guard depends
+    // on reading back a real null rather than a ciphertext of nothing.
+    test("should store a null password as null on the encrypted column", async () => {
+      const created = await insertSubscription(source);
+
+      const found = await source
+        .repository(WebhookSubscription)
+        .findOne({ id: created.id });
+
+      expect(found?.password).toBeNull();
     });
 
     test("should keep the clientSecret off the bus — carried by id, decrypted at dispatch", async () => {

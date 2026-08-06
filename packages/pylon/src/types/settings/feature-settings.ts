@@ -27,10 +27,12 @@ export type PylonWebhookSettings = {
   db?: IProteusSource;
   bus?: IIrisSource;
   /**
-   * The at-rest KEK selector staged onto `WebhookSubscription.clientSecret`
-   * before the source sets up. Proteus encrypts the stored secret on write and
-   * decrypts it transparently on read — a subscription registers a PLAINTEXT
-   * secret and dispatch reads it back in the clear (no manual decrypt). Default
+   * The at-rest KEK selector staged onto `WebhookSubscription.clientSecret` and
+   * `WebhookSubscription.password` before the source sets up. Proteus encrypts
+   * the stored secrets on write and decrypts them transparently on read — a
+   * subscription registers PLAINTEXT credentials and dispatch reads them back in
+   * the clear (no manual decrypt). `username` is NOT encrypted: it is an
+   * identifier, not a secret. Default
    * `{ condition: { purpose: "pylon:kek" } }` — the same bootstrap KEK as kryptos;
    * override it (e.g. its own `purpose`) for a separate blast radius. Same
    * `{ kryptos?, condition? }` descriptor as every other key surface;

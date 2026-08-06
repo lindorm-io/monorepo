@@ -70,8 +70,15 @@ export class WebhookSubscription implements IWebhookSubscription {
   @Field("string")
   username!: string | null;
 
+  // Bare marker: self-documenting + fail-loud. Staged from the SAME setting as
+  // `clientSecret` below (`webhook.encryption`, default `pylon:kek`). A basic
+  // password is a live delivery credential — the same class of secret as the
+  // client secret — so it is sealed at rest by the same KEK. `username` beside
+  // it stays plaintext: it is an identifier, not a secret. Encrypted columns
+  // are text.
+  @Encrypted()
   @Nullable()
-  @Field("string")
+  @Field("text")
   password!: string | null;
 
   // client credentials
