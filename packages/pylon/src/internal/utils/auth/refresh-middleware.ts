@@ -51,22 +51,32 @@ export const createRefreshMiddleware = <C extends PylonHttpContext>(
       const autoRefresh = getAutoRefresh(ctx, config);
 
       if (now >= autoRefresh) {
-        try {
-          const data = await ctx.auth.token({
-            grantType: "refresh_token",
-            refreshToken: ctx.state.session.refreshToken,
-          });
+        if (ctx.state.session.refreshToken) {
+          try {
+            const data = await ctx.auth.token({
+              grantType: "refresh_token",
+              refreshToken: ctx.state.session.refreshToken,
+            });
 
-          ctx.state.session = await parseTokenData(ctx.aegis, data, {
-            defaultTokenExpiry: config.defaultTokenExpiry,
-            session: ctx.state.session,
-          });
+            ctx.state.session = await parseTokenData(ctx.aegis, data, {
+              defaultTokenExpiry: config.defaultTokenExpiry,
+              session: ctx.state.session,
+            });
 
-          await ctx.session.set(ctx.state.session);
-        } catch (error) {
-          ctx.logger.warn("Token refresh failed, clearing session", { error });
-          await ctx.session.del();
-          ctx.state.session = null;
+            await ctx.session.set(ctx.state.session);
+          } catch (error) {
+            ctx.logger.warn("Token refresh failed, clearing session", { error });
+            await ctx.session.del();
+            ctx.state.session = null;
+          }
+        } else {
+          // A session established without `offline_access` never receives a
+          // refresh token, so there is nothing to exchange. Skipping keeps it
+          // alive until its own expiry — attempting the grant would fail and
+          // the catch above would read that as a dead session and delete it.
+          ctx.logger.debug("Skipping token refresh, session has no refresh token", {
+            sessionId: ctx.state.session.id,
+          });
         }
       }
     }

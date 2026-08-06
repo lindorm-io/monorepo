@@ -32,6 +32,7 @@ describe("createRefreshMiddleware", async () => {
         token: vi.fn().mockResolvedValue({ data: true }),
       },
       logger: {
+        debug: vi.fn(),
         warn: vi.fn(),
       },
       session: {
@@ -63,7 +64,13 @@ describe("createRefreshMiddleware", async () => {
       createRefreshMiddleware(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
+    expect(ctx.auth.token).toHaveBeenCalledWith({
+      grantType: "refresh_token",
+      refreshToken: "refreshToken",
+    });
     expect(ctx.session.set).toHaveBeenCalled();
+    expect(ctx.session.del).not.toHaveBeenCalled();
+    expect(ctx.state.session).toBe("parsedTokenData");
   });
 
   test("should resolve half_life", async () => {
@@ -105,6 +112,36 @@ describe("createRefreshMiddleware", async () => {
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).not.toHaveBeenCalled();
+  });
+
+  test("should keep a session that has no refresh token", async () => {
+    // A session established without `offline_access` has no refresh token, and
+    // the IdP rejects a refresh_token grant that carries none.
+    ctx.auth.token.mockRejectedValue(new Error("invalid_request"));
+    delete ctx.state.session.refreshToken;
+
+    await expect(
+      createRefreshMiddleware(authConfig)(ctx, vi.fn()),
+    ).resolves.toBeUndefined();
+
+    expect(ctx.state.session).toEqual(
+      expect.objectContaining({ id: "a6d36ab7-ab36-52a8-b366-5f5f21f8280e" }),
+    );
+    expect(ctx.session.del).not.toHaveBeenCalled();
+    expect(ctx.auth.token).not.toHaveBeenCalled();
+    expect(ctx.session.set).not.toHaveBeenCalled();
+    expect(ctx.logger.debug).toHaveBeenCalled();
+  });
+
+  test("should clear the session when a refresh with a refresh token fails", async () => {
+    ctx.auth.token.mockRejectedValue(new Error("invalid_grant"));
+
+    await expect(
+      createRefreshMiddleware(authConfig)(ctx, vi.fn()),
+    ).resolves.toBeUndefined();
+
+    expect(ctx.session.del).toHaveBeenCalled();
+    expect(ctx.state.session).toBeNull();
   });
 
   test("should throw on missing session", async () => {

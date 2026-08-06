@@ -875,6 +875,8 @@ const app = new Pylon({
 | `max_age`    | Refresh after `refresh.maxAge` since `issuedAt`                     |
 | `none`       | Never auto-refresh                                                  |
 
+A session that holds no refresh token — one established without `offline_access` — is never refreshed under any mode. The middleware skips it and leaves it intact until its own expiry; it does not attempt the grant and does not clear the session.
+
 | Route                              | Description                                                            |
 | ---------------------------------- | ---------------------------------------------------------------------- |
 | `GET /:prefix/login`               | Start the authorize flow — sets the login cookie, redirects to the IdP |
