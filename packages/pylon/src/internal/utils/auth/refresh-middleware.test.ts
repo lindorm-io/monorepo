@@ -83,6 +83,24 @@ describe("createRefreshMiddleware", async () => {
     expect(ctx.session.set).toHaveBeenCalled();
   });
 
+  // Without an expiry there is no midpoint, so half_life must do nothing. It
+  // used to substitute issuedAt for the missing expiry, putting the midpoint in
+  // the past on every request — half_life silently behaving as force.
+  test("should NOT refresh on half_life when the session has no expiry", async () => {
+    authConfig.refresh.mode = "half_life";
+    ctx.state.session.expiresAt = null;
+
+    await expect(
+      createRefreshMiddleware(authConfig)(ctx, vi.fn()),
+    ).resolves.toBeUndefined();
+
+    expect(ctx.auth.token).not.toHaveBeenCalled();
+    expect(ctx.session.set).not.toHaveBeenCalled();
+    expect(ctx.state.session).toEqual(
+      expect.objectContaining({ id: "a6d36ab7-ab36-52a8-b366-5f5f21f8280e" }),
+    );
+  });
+
   test("should resolve max_age", async () => {
     authConfig.refresh.mode = "max_age";
 

@@ -875,6 +875,8 @@ const app = new Pylon({
 | `max_age`    | Refresh after `refresh.maxAge` since `issuedAt`                     |
 | `none`       | Never auto-refresh                                                  |
 
+`half_life` needs a known expiry to find a midpoint, so a session whose `expiresAt` is null is never refreshed under that mode — use `max_age` or `force` to refresh regardless of lifetime.
+
 A session that holds no refresh token — one established without `offline_access` — is never refreshed under any mode. The middleware skips it and leaves it intact until its own expiry; it does not attempt the grant and does not clear the session.
 
 | Route                              | Description                                                            |

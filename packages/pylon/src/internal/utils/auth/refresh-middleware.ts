@@ -1,5 +1,6 @@
 import { ms } from "@lindorm/date";
 import { ClientError, ServerError } from "@lindorm/errors";
+import { isDate } from "@lindorm/is";
 import type {
   PylonAuthConfig,
   PylonHttpContext,
@@ -13,9 +14,18 @@ const getAutoRefresh = (ctx: PylonHttpContext, config: PylonAuthConfig): number 
       return -1;
 
     case "half_life": {
-      const issuedAt = ctx.state.session!.issuedAt.getTime();
-      const expiresAt = ctx.state.session!.expiresAt?.getTime() ?? issuedAt;
-      return Math.floor((issuedAt + expiresAt) / 2);
+      const { expiresAt, issuedAt } = ctx.state.session!;
+
+      if (isDate(expiresAt)) {
+        return Math.floor((issuedAt.getTime() + expiresAt.getTime()) / 2);
+      }
+
+      // No expiry means no midpoint to have passed, so never refresh on this
+      // mode. Substituting `issuedAt` for the missing expiry — as this used to —
+      // makes the midpoint `issuedAt` itself, which is always in the past, so
+      // `half_life` silently became `force` and hit the token endpoint on every
+      // request. `force` already exists for callers who want that.
+      return Infinity;
     }
 
     case "max_age":
