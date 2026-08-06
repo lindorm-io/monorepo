@@ -8,7 +8,11 @@ import {
 } from "@lindorm/conduit";
 import { ServerError } from "@lindorm/errors";
 import { isArray } from "@lindorm/is";
-import type { PylonContext, PylonMiddleware } from "../../types/index.js";
+import type {
+  PylonContext,
+  PylonHttpMetadata,
+  PylonMiddleware,
+} from "../../types/index.js";
 
 type Options = Omit<ConduitSettings, "alias" | "baseUrl" | "logger"> & {
   alias: string;
@@ -41,7 +45,7 @@ export const createConduitMiddleware = <C extends PylonContext = PylonContext>(
         extra.push(conduitCorrelationMiddleware(ctx.state.metadata.correlationId));
       }
 
-      const metadata = ctx.state.metadata as Record<string, any>;
+      const metadata = ctx.state.metadata as PylonHttpMetadata;
       if (metadata.sessionId) {
         extra.push(conduitSessionMiddleware(metadata.sessionId));
       }

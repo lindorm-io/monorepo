@@ -145,9 +145,13 @@ type ConduitResponse<D> = {
 Every request automatically sets:
 
 - `Date` — current timestamp (`toUTCString`)
-- `X-Correlation-Id` — random UUID per request (override with `conduitCorrelationMiddleware`)
-- `X-Request-Id` — random UUID per request
+- `X-Correlation-Id` — generated per request (override with `conduitCorrelationMiddleware`)
+- `X-Request-Id` — generated per request
+- `X-Session-Id` — only when `ctx.req.metadata.sessionId` is set (see `conduitSessionMiddleware`)
 - `X-Environment` — only when `environment` is configured on the constructor
+
+These are derived from `ctx.req.metadata` **after** your middleware has run, so anything that
+writes metadata is forwarded on the wire without touching headers itself.
 
 ## Middleware
 
@@ -449,7 +453,7 @@ const correlation = conduitCorrelationMiddleware("correlation-id-123");
 const session = conduitSessionMiddleware("session-id-456");
 ```
 
-`conduitCorrelationMiddleware` overrides `ctx.req.metadata.correlationId` (which then becomes the `X-Correlation-Id` request header). `conduitSessionMiddleware` sets `ctx.req.metadata.sessionId`, which the request logger picks up.
+`conduitCorrelationMiddleware` overrides `ctx.req.metadata.correlationId` and `conduitSessionMiddleware` sets `ctx.req.metadata.sessionId`. Both reach the upstream service as `X-Correlation-Id` and `X-Session-Id`, and both appear in the request log. Register them only when you have an id to forward; a request without one keeps the correlation id generated at construction and sends no session header.
 
 ## Retry
 

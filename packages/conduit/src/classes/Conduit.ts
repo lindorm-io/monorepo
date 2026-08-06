@@ -343,9 +343,9 @@ export class Conduit implements IConduit {
       ConduitContext<ResponseData, RequestBody, RequestParams, RequestQuery>
     >(context, [
       ...(this.logger ? [responseLogger] : []),
-      defaultHeaders,
       ...this.middleware,
       ...middleware,
+      defaultHeaders,
       ...(this.logger ? [requestLogger] : []),
       axiosRequestHandler,
     ]);
