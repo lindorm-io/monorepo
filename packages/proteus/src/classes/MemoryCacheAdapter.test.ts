@@ -1,3 +1,4 @@
+import MockDate from "mockdate";
 import { MemoryCacheAdapter } from "./MemoryCacheAdapter.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -10,7 +11,7 @@ describe("MemoryCacheAdapter", () => {
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    MockDate.reset();
   });
 
   describe("get", () => {
@@ -28,17 +29,16 @@ describe("MemoryCacheAdapter", () => {
       // Fake timers, not a `Date.now` spy: the adapter's expiry check reads the
       // clock through `new Date()`, which a `vi.spyOn(Date, "now")` does not
       // intercept.
-      vi.useFakeTimers();
-      vi.setSystemTime(now);
+      MockDate.set(now);
 
       await adapter.set("key1", "value1", 5000);
 
       // Still valid at now + 4999
-      vi.setSystemTime(now + 4999);
+      MockDate.set(now + 4999);
       expect(await adapter.get("key1")).toBe("value1");
 
       // Expired at now + 5000
-      vi.setSystemTime(now + 5000);
+      MockDate.set(now + 5000);
       expect(await adapter.get("key1")).toBeNull();
 
       // Confirm entry is gone (second get also returns null)

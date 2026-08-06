@@ -1,3 +1,4 @@
+import MockDate from "mockdate";
 import {
   afterAll,
   afterEach,
@@ -215,12 +216,13 @@ describe("caching integration", () => {
       // Populate cache
       await repo.find({ name: "ttl-test" });
 
-      // Advance the clock past the 1 minute TTL. Fake timers rather than a
+      // Advance the clock past the 1 minute TTL. MockDate rather than a
       // `Date.now` spy: the adapter's expiry check reads `new Date()`, which a
-      // spy on `Date.now` does not intercept, so the entry would still look live.
+      // spy on `Date.now` does not intercept, so the entry would still look
+      // live. MockDate over fake timers because this test drives a real
+      // repository — faking setTimeout too would stall anything waiting on one.
       const realNow = Date.now();
-      vi.useFakeTimers();
-      vi.setSystemTime(realNow + 61_000);
+      MockDate.set(realNow + 61_000);
 
       const setSpy = vi.spyOn(adapter, "set");
 
@@ -231,7 +233,7 @@ describe("caching integration", () => {
       // set should have been called (cache was re-populated)
       expect(setSpy).toHaveBeenCalled();
 
-      vi.useRealTimers();
+      MockDate.reset();
     });
   });
 
