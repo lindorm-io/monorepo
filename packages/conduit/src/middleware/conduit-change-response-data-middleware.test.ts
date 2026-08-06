@@ -41,6 +41,28 @@ describe("conduitChangeResponseDataMiddleware", () => {
     });
   });
 
+  // The inbound mirror of the request-body case: RFC 9396 §2 type-specific
+  // fields on an incoming `authorization_details` must survive untouched.
+  test("should leave nested response data verbatim beyond the given depth", async () => {
+    ctx.res.data = {
+      access_token: "at",
+      authorization_details: [
+        { type: "payment_initiation", instructedAmount: { currencyCode: "EUR" } },
+      ],
+    };
+
+    await expect(
+      conduitChangeResponseDataMiddleware("camel", { depth: 1 })(ctx, vi.fn()),
+    ).resolves.toBeUndefined();
+
+    expect(ctx.res.data).toEqual({
+      accessToken: "at",
+      authorizationDetails: [
+        { type: "payment_initiation", instructedAmount: { currencyCode: "EUR" } },
+      ],
+    });
+  });
+
   test("should resolve with snake_case for response array", async () => {
     ctx.res.data = [ctx.res.data, ctx.res.data];
 

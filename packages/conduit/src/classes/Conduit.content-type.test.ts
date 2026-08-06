@@ -87,6 +87,43 @@ describe("Conduit — request content type on the wire", () => {
     expect(scope.isDone()).toBe(true);
   });
 
+  // RFC 9396 §2 — `authorization_details` travels as ONE urlencoded parameter
+  // carrying JSON, and the fields inside each entry are defined by the schema
+  // named in `type`. Snake-casing the whole body rewrites that foreign schema on
+  // the wire; a depth of 1 converts the parameter names only.
+  test("should keep authorization_details entries verbatim at depth 1", async () => {
+    const scope = capture();
+
+    const conduit = new Conduit({
+      baseUrl: "http://test.lindorm.io",
+      middleware: [conduitChangeRequestBodyMiddleware("snake", { depth: 1 })],
+    });
+
+    await conduit.post("/path", {
+      body: {
+        grantType: "authorization_code",
+        authorizationDetails: [
+          {
+            type: "payment_initiation",
+            instructedAmount: { currencyCode: "EUR", amountValue: "123.50" },
+          },
+        ],
+      },
+      contentType: "application/x-www-form-urlencoded",
+    });
+
+    const params = new URLSearchParams(observed.body as string);
+
+    expect(params.get("grant_type")).toBe("authorization_code");
+    expect(JSON.parse(params.get("authorization_details") as string)).toEqual([
+      {
+        type: "payment_initiation",
+        instructedAmount: { currencyCode: "EUR", amountValue: "123.50" },
+      },
+    ]);
+    expect(scope.isDone()).toBe(true);
+  });
+
   test("should repeat a list parameter rather than joining it", async () => {
     const scope = capture();
 

@@ -320,6 +320,14 @@ Modes are any `ChangeCase` value from `@lindorm/case`: `"camel" | "capital" | "c
 
 `conduitChangeRequestBodyMiddleware` converts both `body` and `form` — a form-encoded request gets the same field-name conversion as a JSON one.
 
+The body and response-data middleware also take the `KeysOptions` of `@lindorm/case` as a second argument, so a caller can bound how deep the conversion reaches:
+
+```typescript
+conduitChangeRequestBodyMiddleware("snake", { depth: 1 });
+```
+
+Depth counts object-key levels and treats arrays as transparent containers, so `{ depth: 1 }` renames the top-level parameters and leaves everything nested inside them verbatim. That is what an RFC 9396 §2 `authorization_details` payload needs: the fields inside each entry are defined by the schema named in `type` and must reach the wire unconverted. A `form` is flat and always converted in full.
+
 ### Response Caching
 
 In-memory cache for `GET` requests with `2xx` status. The cache key is method + URL + JSON-serialised query.
@@ -642,10 +650,10 @@ Registering a subclass never changes what a _bare_ status resolves to. `UserSusp
 
 - `conduitBasicAuthMiddleware(username, password)`
 - `conduitBearerAuthMiddleware(accessToken, tokenType?)`
-- `conduitChangeRequestBodyMiddleware(mode?)`
+- `conduitChangeRequestBodyMiddleware(mode?, options?)`
 - `conduitChangeRequestHeadersMiddleware(mode?)`
 - `conduitChangeRequestQueryMiddleware(mode?)`
-- `conduitChangeResponseDataMiddleware(mode?)`
+- `conduitChangeResponseDataMiddleware(mode?, options?)`
 - `conduitClientCredentialsMiddlewareFactory(config, cache?)`
 - `conduitCorrelationMiddleware(correlationId)`
 - `conduitHeaderMiddleware(name, value)`
