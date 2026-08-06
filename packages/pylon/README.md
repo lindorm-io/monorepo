@@ -114,7 +114,7 @@ await app.stop();
 Pylon distinguishes two storage roles, both `IProteusSource`:
 
 - **`db`** — the durable source (exposed per-request as `ctx.db`). Backs durable features (`audit`, `webhook`, `kryptos`), which may each override it with their own `db`.
-- **`kv`** — the ephemeral source (redis in production, a proteus memory-driver source in dev/test), exposed per-request as `ctx.kv`. Backs ephemeral features (`rateLimit`, `session`, `rooms`), which may each override it with their own `kv`.
+- **`kv`** — the ephemeral source (redis in production, a proteus memory-driver source in dev/test), exposed per-request as `ctx.kv`. Backs ephemeral features (`rateLimit`, `session`, `rooms`, `cache`, `introspection`), which may each override it with their own `kv`.
 
 | Method / property | Description                                                              |
 | ----------------- | ------------------------------------------------------------------------ |
@@ -646,6 +646,40 @@ ctx.state.access; // PylonResolvedAccess | null
 `cnf` lives inside `claims.confirmation`, so it is not repeated on the outside; there is no `header` field (an opaque token has none, and a JWT's is derivable from `token`) and no `active` field (an inactive token throws `token_not_active` instead of resolving).
 
 A service that mints and verifies its own tokens needs **no `auth` configuration at all** — nothing on the JOSE/COSE path calls the IdP. Introspection is only reached by a genuinely opaque credential, and that needs `auth` configured.
+
+#### Introspection cache
+
+An opaque credential costs one introspection call per request. The cache in front of `ctx.auth.introspect` is off unless a deployment asks for it:
+
+```typescript
+new Pylon({
+  kv: keyValueSource,
+  introspection: { enabled: true, ttl: "10 seconds" },
+});
+```
+
+| Setting      | Meaning                                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------- |
+| `enabled`    | Off when the block is absent. RFC 7662 §5 expects a deployment to be able to refuse caching |
+| `kv`         | Overrides the top-level `kv`. **No source ⇒ no cache** — introspection runs every request   |
+| `ttl`        | Deployment default. Built-in: `10 seconds`                                                  |
+| `encryption` | KEK selector for the stored claims. Default `{ condition: { purpose: "pylon:kek" } }`       |
+
+⚠ **The TTL is the revocation window.** RFC 7662 §5 warns that caching opens "a window during which a revoked token could be used at the protected resource", so it is measured in seconds — for `active: false` answers as much as for live ones. An entry is additionally bounded by the token's own `exp`, and caching to that `exp` is explicitly _not_ what this does: an opaque token that is never re-checked is a JWT without revocation.
+
+The TTL resolves in three tiers, and a single mount may only ever narrow:
+
+```typescript
+// Shorter window on a sensitive mount…
+router.use(createAccessTokenMiddleware({ issuer, cache: { ttl: "2 seconds" } }));
+
+// …or none at all: introspect on every request, whatever the deployment says.
+router.use(createAccessTokenMiddleware({ issuer, cache: false }));
+```
+
+The key is a digest of `(token, issuer, clientId)` — never the raw token, which would land readable in shared storage. The identity is part of it because RFC 7662 §2.2 lets the authorization server answer the same token differently per requesting client; keying on the token alone would let two services sharing a namespace read each other's answers. `ctx.auth.config` exposes that identity (`{ issuer, clientId }`, and never the client secret).
+
+Nothing is cached when introspection fails — a stale answer served over an unreachable authorization server is a revocation bypass — and a storage outage degrades to an uncached introspection rather than failing the request. The stored claims are encrypted at rest.
 
 **DPoP (RFC 9449)** is checked from `(proof, claims.confirmation.thumbprint, token)`, so it runs identically on both paths — RFC 9449 §6.2 conveys `cnf.jkt` in the introspection response precisely so a resource server can validate the binding locally for an opaque token. A token carrying `cnf.jkt` is refused without a matching proof (`missing_dpop_proof`), and a token _without_ `cnf.jkt` presented under the `DPoP` scheme is refused as `token_not_dpop_bound`.
 
@@ -1404,7 +1438,7 @@ The package re-exports three Proteus entities for the framework's built-in featu
 import { DataAuditLog, RequestAuditLog, WebhookSubscription } from "@lindorm/pylon";
 ```
 
-The remaining entities (`Session`, `Kryptos`, `Presence`, rate-limit entities) are wired into the configured Proteus source automatically when their feature is enabled — they are not part of the public import surface.
+The remaining entities (`Session`, `Kryptos`, `Presence`, `CachedResponse`, `CachedIntrospection`, rate-limit entities) are wired into the configured Proteus source automatically when their feature is enabled — they are not part of the public import surface.
 
 ## Command-line tools
 

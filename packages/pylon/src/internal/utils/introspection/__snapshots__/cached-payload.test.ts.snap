@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`cached introspection payload > should store the claims in wire form 1`] = `
+{
+  "active": true,
+  "claims": {
+    "client_id": "client-a",
+    "cnf": {
+      "jkt": "thumb",
+    },
+    "exp": 1786017600,
+    "iat": 1786014000,
+    "iss": "https://test.lindorm.io/",
+    "permissions": [
+      "users:read",
+    ],
+    "scope": [
+      "openid",
+      "profile",
+    ],
+    "sub": "alice",
+    "token_type": "Bearer",
+    "username": "alice@lindorm.io",
+  },
+}
+`;

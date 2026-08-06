@@ -34,6 +34,7 @@ import type {
   LogoutResult,
   PylonAuthClient,
   PylonAuthClaimsClient,
+  PylonAuthClientConfig,
   PylonAuthConfig,
   PylonContext,
   PylonHttpContext,
@@ -443,7 +444,14 @@ export const createAuthClient = (
     return data;
   };
 
-  return { ...claims, login, logout, token };
+  // The identity the IdP knows this pylon by — issuer + clientId only. The
+  // secret stays inside the closure, where the conduit middleware uses it.
+  const identity: PylonAuthClientConfig = {
+    issuer: config.issuer,
+    clientId: config.clientId,
+  };
+
+  return { ...claims, config: identity, login, logout, token };
 };
 
 // --- Socket claims client factory ---

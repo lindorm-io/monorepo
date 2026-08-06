@@ -1,6 +1,8 @@
 import { Aegis, type DomainAssert, type VerifyOptions } from "@lindorm/aegis";
+import type { ReadableTime } from "@lindorm/date";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { DEFAULT_AUTH_WARNING_MS } from "../../internal/constants/auth.js";
+import { introspectWithCache } from "../../internal/utils/introspection/introspect-with-cache.js";
 import { isInExpiryWarningWindow } from "../../internal/utils/auth-state/is-in-expiry-warning-window.js";
 import { isTokenExpired } from "../../internal/utils/auth-state/is-token-expired.js";
 import { markAuthExpiredEmitted } from "../../internal/utils/auth-state/mark-auth-expired-emitted.js";
@@ -23,6 +25,14 @@ import type {
 
 type Options = Omit<DomainAssert & VerifyOptions, "issuer"> & {
   issuer: string;
+  /**
+   * Per-mount control of the RFC 7662 introspection cache — tier ONE of the TTL
+   * resolution (`cache.ttl` ?? `settings.introspection.ttl` ?? ten seconds), and
+   * the sensitive-route carve-out: `cache: false` introspects on EVERY request
+   * for this mount even when the deployment enables caching. Only ever narrows;
+   * a mount cannot turn a cache on that the deployment did not configure.
+   */
+  cache?: false | { ttl?: ReadableTime };
 };
 
 /**
@@ -40,7 +50,13 @@ type Options = Omit<DomainAssert & VerifyOptions, "issuer"> & {
 const isLocallyVerifiable = (token: string): boolean =>
   Aegis.isJose(token) || Aegis.isCose(token);
 
-const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> => {
+type VerifyInput = Omit<Options, "cache">;
+
+const runHttp = async (
+  ctx: PylonHttpContext,
+  options: VerifyInput,
+  cache: Options["cache"],
+): Promise<void> => {
   const source = resolveHttpTokenSource(ctx);
 
   if (source.kind === "bearer" || source.kind === "dpop") {
@@ -83,8 +99,11 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
       };
     } else {
       // Opaque ⇒ the authorization server is the only authority on it (RFC 7662).
-      // ONE introspection call site, so swapping the resolver is a one-line change.
-      const introspection = await ctx.auth.introspect(source.token);
+      // ONE introspection call site, so swapping the resolver is a one-line
+      // change. The cache in front of it is short-lived by construction — the
+      // TTL is the revocation window (RFC 7662 §5) — and steps aside entirely
+      // when the deployment configured none.
+      const introspection = await introspectWithCache(ctx, source.token, cache);
 
       if (!introspection.active) {
         throw new ClientError("Access token is not active", {
@@ -147,8 +166,13 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
 
 export const createAccessTokenMiddleware = <C extends PylonContext = PylonContext>(
   options: Options,
-): PylonMiddleware<C> =>
-  async function accessTokenMiddleware(ctx, next): Promise<void> {
+): PylonMiddleware<C> => {
+  // `cache` is pylon's own knob and is split off HERE: `splitVerifyInput` routes
+  // every key it does not recognise as a verify option into the aegis `assert`
+  // bag, where an unknown key is rejected as a claim matcher.
+  const { cache, ...verifyInput } = options;
+
+  return async function accessTokenMiddleware(ctx, next): Promise<void> {
     const timer = ctx.logger.timer();
 
     try {
@@ -216,7 +240,7 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
           strategy: auth.strategy,
         });
       } else if (isHttpContext(ctx as any)) {
-        await runHttp(ctx as unknown as PylonHttpContext, options);
+        await runHttp(ctx as unknown as PylonHttpContext, verifyInput, cache);
         timer.debug("Access token verified (http)");
       } else {
         throw new ClientError("Unsupported context for access token middleware", {
@@ -256,3 +280,4 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
 
     await next();
   };
+};

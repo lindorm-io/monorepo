@@ -16,6 +16,10 @@ const notConfigured = (method: string): never => {
 };
 
 export const createUnconfiguredAuthClient = (): PylonAuthClient => ({
+  // `null`, not a throwing getter: reading a property must never explode (a
+  // debug log that spreads `ctx.auth` would), and `null` states the truth — there
+  // is no configured client identity. Every METHOD still throws.
+  config: null,
   introspect: () => notConfigured("introspect"),
   userinfo: () => notConfigured("userinfo"),
   login: () => notConfigured("login"),

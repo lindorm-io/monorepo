@@ -10,7 +10,13 @@ import type {
   PylonContext,
   PylonHttpContext,
 } from "../../types/index.js";
-import { AUDIT_SOURCE, CACHE_SOURCE, RATE_LIMIT_SOURCE } from "../constants/symbols.js";
+import {
+  AUDIT_SOURCE,
+  CACHE_SOURCE,
+  INTROSPECTION_SOURCE,
+  RATE_LIMIT_SOURCE,
+} from "../constants/symbols.js";
+import type { IntrospectionCacheConfig } from "../utils/introspection/introspect-with-cache.js";
 import {
   createAuthClient,
   createSocketClaimsClient,
@@ -42,6 +48,7 @@ type Options = {
   authConfig?: PylonAuthConfig;
   auditConfig?: AuditConfig;
   cacheKeyValue?: IProteusSource;
+  introspectionConfig?: IntrospectionCacheConfig;
   hermes?: IHermes;
   bus?: IIrisSource;
   kv?: IProteusSource;
@@ -111,6 +118,13 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
 
       if (options.cacheKeyValue) {
         (ctx as any)[CACHE_SOURCE] = options.cacheKeyValue;
+      }
+
+      // Attached ONLY when the introspection cache is enabled and has a source —
+      // its absence is what keeps caching off, so there is no second flag to
+      // disagree with (unlike the response cache, which a route may re-check).
+      if (options.introspectionConfig) {
+        (ctx as any)[INTROSPECTION_SOURCE] = options.introspectionConfig;
       }
 
       // Socket emitter (available whenever io is present)

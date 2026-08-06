@@ -1,3 +1,4 @@
+export * from "./CachedIntrospection.js";
 export * from "./CachedResponse.js";
 export * from "./ConduitCachedResponse.js";
 export * from "./DataAuditLog.js";

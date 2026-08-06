@@ -24,6 +24,7 @@ import {
   buildReadinessCallback,
 } from "../internal/utils/build-health-callbacks.js";
 import { createAuthRouter } from "../internal/utils/create-auth-router.js";
+import type { IntrospectionCacheConfig } from "../internal/utils/introspection/introspect-with-cache.js";
 import { createHealthRouter } from "../internal/utils/create-health-router.js";
 import { createWellKnownRouter } from "../internal/utils/create-well-known-router.js";
 import { normaliseRoutes } from "../internal/utils/normalise-routes.js";
@@ -128,6 +129,10 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         // cache.enabled). useCache reads ctx.state.app.config.cache to decide
         // whether to run, and throws only if enabled but no source is present.
         cacheKeyValue: this.options.cache?.kv ?? this.options.kv,
+        // The introspection cache is registered ONLY when enabled AND a source
+        // resolves: a deployment with no kv keeps introspecting every request,
+        // uncached and without error.
+        introspectionConfig: this.resolveIntrospectionConfig(),
         hermes: this.options.hermes,
         bus: this.options.bus,
         kv: this.options.kv,
@@ -206,6 +211,17 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
   private addRouter(path: string, router: PylonRouter<T>): void {
     this.logger.debug("Adding router", { path });
     this.router.use(path, router.routes(), router.allowedMethods());
+  }
+
+  private resolveIntrospectionConfig(): IntrospectionCacheConfig | undefined {
+    if (!this.options.introspection?.enabled) return undefined;
+
+    const kv = this.options.introspection.kv ?? this.options.kv;
+    if (!kv) return undefined;
+
+    // `ttl` is passed through UNRESOLVED — the three-tier fallback (per-mount,
+    // deployment, built-in) is decided in one expression at the call site.
+    return { kv, ttl: this.options.introspection.ttl };
   }
 
   private resolveHealthCallback(): PylonHttpCallback<T> | undefined {

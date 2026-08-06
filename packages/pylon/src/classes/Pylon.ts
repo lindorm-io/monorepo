@@ -336,6 +336,24 @@ export class Pylon<
       }
     }
 
+    if (this.options.introspection?.enabled) {
+      const source = this.options.introspection.kv ?? this.options.kv;
+      if (source) {
+        const { CachedIntrospection } =
+          await import("../entities/CachedIntrospection.js");
+        source.addEntities([CachedIntrospection]);
+        // Stage the KEK onto the bare `@Encrypted()` marker before setup(), so
+        // proteus seals the cached claim set at rest and opens it transparently
+        // on read. These are the claims of a live credential in shared storage.
+        await stageEncryptedField(
+          source,
+          CachedIntrospection,
+          "payload",
+          this.options.introspection.encryption ?? DEFAULT_KEK,
+        );
+      }
+    }
+
     if (this.options.rateLimit?.enabled) {
       const source = this.options.rateLimit.kv ?? this.options.kv;
       if (source) {

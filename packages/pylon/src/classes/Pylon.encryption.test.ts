@@ -19,6 +19,7 @@ import {
   WEBHOOK_REQUEST_QUEUE,
 } from "../internal/consumers/setup-webhook-request-consumer.js";
 import { createDispatchWebhook } from "../internal/utils/dispatch-webhook.js";
+import { CachedIntrospection } from "../entities/CachedIntrospection.js";
 import { Kryptos } from "../entities/Kryptos.js";
 import { WebhookSubscription } from "../entities/WebhookSubscription.js";
 import { WebhookAuth } from "../enums/index.js";
@@ -318,24 +319,89 @@ describe("Pylon at-rest encryption staging", () => {
     });
   });
 
-  test("should fail loud when a bare @Encrypted marker resolves to no key", async () => {
-    // No staging, no source-level default: the entity ships as a bare marker, so
-    // an unresolvable key must scream at setup rather than silently not encrypt.
-    amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
-    const bareSource = track(
-      new ProteusSource({
-        driver: "sqlite",
-        filename: ":memory:",
-        entities: [Kryptos] as never,
+  // The introspection cache stores the claim set of a LIVE credential in the
+  // ephemeral kv source, which is shared and frequently the least protected
+  // store in a deployment — so the row is sealed exactly like a private key.
+  describe("introspection cache", () => {
+    let kek: IKryptos;
+    let kv: ProteusSource;
+
+    beforeEach(async () => {
+      amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+      kek = kekKey();
+      amphora.add([kek]);
+
+      kv = createSource(amphora);
+      pylon = new Pylon({
         logger: createMockLogger(),
-        synchronize: true,
         amphora,
-      }),
-    );
+        domain: ISSUER,
+        environment: "test",
+        name: "@lindorm/pylon",
+        port: 55598,
+        version: "0.0.1",
+        kv: kv as any,
+        introspection: { enabled: true },
+      });
 
-    await bareSource.connect();
+      await pylon.setup();
+    });
 
-    await expect(bareSource.setup()).rejects.toThrow(ProteusError);
-    await expect(bareSource.setup()).rejects.toThrow(/names no encryption key/);
+    test("should seal the cached claims at rest under the staged pylon:kek", async () => {
+      const repository = kv.repository(CachedIntrospection);
+
+      const created = await repository.insert(
+        repository.create({
+          id: "digest-of-token",
+          expiresAt: new Date(Date.now() + 10_000),
+          payload: {
+            active: true,
+            claims: { sub: "alice", scope: ["openid"], exp: 1786017600 },
+          },
+        }) as CachedIntrospection,
+      );
+
+      const columns = await rawStringColumns(kv, created.id);
+
+      // The subject must not be legible in the raw row — reading through the
+      // repository proves nothing, it decrypts transparently.
+      expect(columns.join("|")).not.toContain("alice");
+      expect(storedUnderKey(columns, kek.id)).toBe(true);
+
+      const found = await repository.findOne({ id: created.id });
+      expect(found?.payload).toEqual({
+        active: true,
+        claims: { sub: "alice", scope: ["openid"], exp: 1786017600 },
+      });
+    });
   });
+
+  test.each([
+    ["Kryptos", Kryptos],
+    ["CachedIntrospection", CachedIntrospection],
+  ])(
+    "should fail loud when %s's bare @Encrypted marker resolves to no key",
+    async (_name, entity) => {
+      // No staging, no source-level default: the entity ships as a bare marker,
+      // so an unresolvable key must scream at setup rather than silently not
+      // encrypt. This is what makes dropping the staging call a BUILD failure
+      // instead of a silent plaintext write.
+      amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+      const bareSource = track(
+        new ProteusSource({
+          driver: "sqlite",
+          filename: ":memory:",
+          entities: [entity] as never,
+          logger: createMockLogger(),
+          synchronize: true,
+          amphora,
+        }),
+      );
+
+      await bareSource.connect();
+
+      await expect(bareSource.setup()).rejects.toThrow(ProteusError);
+      await expect(bareSource.setup()).rejects.toThrow(/names no encryption key/);
+    },
+  );
 });

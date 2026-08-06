@@ -47,6 +47,34 @@ export type PylonCacheSettings = {
   kv?: IProteusSource;
 };
 
+/**
+ * The RFC 7662 introspection cache — pylon as a RESOURCE SERVER, which is why it
+ * sits beside `cache`/`rateLimit` rather than under `auth` (pylon as a relying
+ * party). Absent means OFF: RFC 7662 §5 expects a deployment sensitive enough to
+ * refuse any caching to be able to say so, and saying nothing is saying no.
+ *
+ * ⚠ `ttl` IS the revocation window (RFC 7662 §5) and is measured in SECONDS, for
+ * `active: false` answers as much as for live ones. Default `10 seconds`; a
+ * single mount may shorten it, or opt out entirely, via
+ * `createAccessTokenMiddleware({ cache })`.
+ */
+export type PylonIntrospectionSettings = {
+  enabled: boolean;
+  kv?: IProteusSource;
+  ttl?: ReadableTime;
+  /**
+   * The at-rest KEK selector staged onto `CachedIntrospection.payload` before the
+   * source sets up. The cached answer is the claim set of a LIVE credential —
+   * subject, scope, delegation — sitting in shared storage, so proteus seals it
+   * on write and opens it transparently on read. Default
+   * `{ condition: { purpose: "pylon:kek" } }` — the same bootstrap KEK as kryptos
+   * and webhook; override it (e.g. its own `purpose`) for a separate blast
+   * radius. Same `{ kryptos?, condition? }` descriptor as every other key
+   * surface; `encryption` (the AEAD) is ignored on this path.
+   */
+  encryption?: PylonEncKey;
+};
+
 export type PylonRateLimitSettings = {
   enabled: boolean;
   kv?: IProteusSource;
