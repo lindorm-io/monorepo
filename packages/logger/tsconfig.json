@@ -1,7 +1,4 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*", "../../types/cjs-interop.d.ts"]
+  "include": ["src/**/*", "example/**/*", "../../types/cjs-interop.d.ts"]
 }
