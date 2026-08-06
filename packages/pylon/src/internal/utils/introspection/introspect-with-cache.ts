@@ -1,6 +1,10 @@
 import { isBefore, isLive, type ReadableTime, ms } from "@lindorm/date";
 import type { IProteusSource } from "@lindorm/proteus";
-import type { PylonHttpContext, PylonIntrospection } from "../../../types/index.js";
+import type {
+  PylonAuthClientConfig,
+  PylonHttpContext,
+  PylonIntrospection,
+} from "../../../types/index.js";
 import { DEFAULT_INTROSPECTION_CACHE_TTL } from "../../constants/introspection.js";
 import { INTROSPECTION_SOURCE } from "../../constants/symbols.js";
 import { buildIntrospectionCacheKey } from "./build-introspection-cache-key.js";
@@ -9,8 +13,8 @@ import { toCachedPayload } from "./to-cached-payload.js";
 
 /**
  * The deployment's introspection-cache wiring, attached to the context by the
- * dependencies middleware. Present ONLY when `introspection.enabled` is set and
- * a key-value source resolved — its absence is what turns the cache off.
+ * dependencies middleware. Present ONLY when `auth.cache.enabled` is set and a
+ * key-value source resolved — its absence is what turns the cache off.
  */
 export type IntrospectionCacheConfig = {
   kv: IProteusSource;
@@ -45,16 +49,23 @@ export const introspectWithCache = async (
     | undefined;
 
   // Off for this mount (the sensitive-route carve-out), or off for the
-  // deployment (no `introspection` block, or no key-value source to store in).
+  // deployment (no `auth.cache` block, or no key-value source to store in).
   if (cache === false || !config) return ctx.auth.introspect(token);
 
   // The response is a function of (token, authorization server, requesting
-  // client) — RFC 7662 §2.2. Without the latter two there is no key that is safe
-  // to share, so the cache steps aside rather than key on the token alone.
-  const identity = ctx.auth.config;
+  // client) — RFC 7662 §2.2. ⚠ Both come from the DRIVER, which is the party
+  // that authenticates to the introspection endpoint; RFC 7662 §2.1 has that be
+  // the resource server, whose credentials may legitimately differ from a
+  // relying party's. Without them there is no key that is safe to share, so the
+  // cache steps aside rather than key on the token alone.
+  let identity: PylonAuthClientConfig;
 
-  if (!identity) {
-    ctx.logger.debug("Introspection cache skipped: auth client exposes no identity");
+  try {
+    identity = await ctx.auth.config();
+  } catch (error: any) {
+    ctx.logger.debug("Introspection cache skipped: auth client exposes no identity", {
+      error,
+    });
     return ctx.auth.introspect(token);
   }
 

@@ -1,4 +1,5 @@
-import { ClientError } from "@lindorm/errors";
+import { ClientError, ServerError } from "@lindorm/errors";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createLoginCallbackHandler } from "./login-callback-handler.js";
 import { parseTokenData as _parseTokenData } from "./parse-token-data.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
@@ -10,10 +11,19 @@ const parseTokenData = _parseTokenData as Mock;
 describe("createLoginCallbackHandler", async () => {
   let authConfig: any;
   let ctx: any;
+  let exchange: Mock;
 
   beforeEach(() => {
+    exchange = vi.fn().mockResolvedValue({ data: true });
+
     authConfig = {
       defaultTokenExpiry: "1d",
+      driver: {
+        clientId: "client-id",
+        endpoints: vi.fn(),
+        exchange,
+        subject: vi.fn().mockResolvedValue(null),
+      },
       router: {
         cookies: {
           login: "login_cookie",
@@ -30,11 +40,11 @@ describe("createLoginCallbackHandler", async () => {
           claims: { nonce: "nonce" },
         }),
       },
-      auth: {
-        token: vi.fn().mockResolvedValue({ data: true }),
-      },
+      amphora: {},
+      logger: createMockLogger(),
       cookies: {
         get: vi.fn().mockResolvedValue({
+          callbackUri: "http://localhost/auth/login/callback",
           codeChallengeMethod: "codeChallengeMethod",
           codeVerifier: "codeVerifier",
           nonce: "nonce",
@@ -60,6 +70,8 @@ describe("createLoginCallbackHandler", async () => {
         del: vi.fn(),
       },
       state: {
+        app: { environment: "test" },
+        metadata: { correlationId: "test-correlation" },
         origin: "http://localhost",
       },
     };
@@ -78,7 +90,7 @@ describe("createLoginCallbackHandler", async () => {
       createLoginCallbackHandler(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.auth.token).toHaveBeenCalled();
+    expect(exchange).toHaveBeenCalled();
 
     expect(ctx.session.set).toHaveBeenCalledWith({
       accessToken: "accessToken",
@@ -91,6 +103,7 @@ describe("createLoginCallbackHandler", async () => {
 
   test("should resolve with token", async () => {
     ctx.cookies.get.mockResolvedValueOnce({
+      callbackUri: "http://localhost/auth/login/callback",
       codeChallengeMethod: "codeChallengeMethod",
       codeVerifier: "codeVerifier",
       nonce: "nonce",
@@ -113,6 +126,58 @@ describe("createLoginCallbackHandler", async () => {
     expect(ctx.redirect).toHaveBeenCalledWith("redirectUri");
   });
 
+  // ⚠ RFC 6749 §4.1.3 — the exchange's `redirect_uri` must be IDENTICAL to the
+  // one the authorization request carried. It is computed once, at login, and
+  // replayed from the cookie; rebuilding it here is a match nothing enforces.
+  test("should replay the callback uri from the cookie, not rebuild it", async () => {
+    ctx.cookies.get.mockResolvedValueOnce({
+      callbackUri: "https://app.lindorm.io/custom/prefix/login/callback",
+      codeChallengeMethod: "S256",
+      codeVerifier: "codeVerifier",
+      nonce: "nonce",
+      redirectUri: "redirectUri",
+      responseType: "code",
+      scope: "openid profile",
+      state: "state",
+    });
+
+    await createLoginCallbackHandler(authConfig)(ctx, vi.fn());
+
+    expect(exchange).toHaveBeenCalledWith(expect.any(Object), {
+      code: "code",
+      codeVerifier: "codeVerifier",
+      redirectUri: "https://app.lindorm.io/custom/prefix/login/callback",
+      scope: "openid profile",
+    });
+  });
+
+  test("should resolve the subject through the driver for an opaque token", async () => {
+    await createLoginCallbackHandler(authConfig)(ctx, vi.fn());
+
+    const [, , options] = parseTokenData.mock.calls[0];
+    await options.resolveSubject("opaque-access-token");
+
+    expect(authConfig.driver.subject).toHaveBeenCalledWith(expect.any(Object), {
+      accessToken: "opaque-access-token",
+    });
+  });
+
+  test("should pass no subject resolver when the driver cannot resolve one", async () => {
+    authConfig.driver.subject = undefined;
+
+    await createLoginCallbackHandler(authConfig)(ctx, vi.fn());
+
+    expect(parseTokenData.mock.calls[0][2].resolveSubject).toBeUndefined();
+  });
+
+  test("should throw when the driver cannot exchange the code", async () => {
+    authConfig.driver.exchange = undefined;
+
+    await expect(createLoginCallbackHandler(authConfig)(ctx, vi.fn())).rejects.toThrow(
+      ServerError,
+    );
+  });
+
   test("should resolve with nonce verification via aegis verify", async () => {
     await expect(
       createLoginCallbackHandler(authConfig)(ctx, vi.fn()),
@@ -131,6 +196,7 @@ describe("createLoginCallbackHandler", async () => {
 
   test("should throw on missing session", async () => {
     ctx.cookies.get.mockResolvedValueOnce({
+      callbackUri: "http://localhost/auth/login/callback",
       codeChallengeMethod: "codeChallengeMethod",
       codeVerifier: "codeVerifier",
       nonce: "nonce",
@@ -170,7 +236,7 @@ describe("createLoginCallbackHandler", async () => {
       expect(ctx.session.set).not.toHaveBeenCalled();
 
       // Token exchange should NOT happen
-      expect(ctx.auth.token).not.toHaveBeenCalled();
+      expect(exchange).not.toHaveBeenCalled();
     });
 
     test("should redirect to errorRedirect even without state or description", async () => {
@@ -218,6 +284,7 @@ describe("createLoginCallbackHandler", async () => {
     });
 
     ctx.cookies.get.mockResolvedValueOnce({
+      callbackUri: "http://localhost/auth/login/callback",
       codeChallengeMethod: "codeChallengeMethod",
       codeVerifier: "codeVerifier",
       nonce: "expected_nonce",

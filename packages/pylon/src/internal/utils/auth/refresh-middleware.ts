@@ -6,6 +6,7 @@ import type {
   PylonHttpContext,
   PylonHttpMiddleware,
 } from "../../../types/index.js";
+import { createAuthDriverContext } from "./create-auth-driver-context.js";
 import { parseTokenData } from "./parse-token-data.js";
 
 const getAutoRefresh = (ctx: PylonHttpContext, config: PylonAuthConfig): number => {
@@ -56,16 +57,20 @@ export const createRefreshMiddleware = <C extends PylonHttpContext>(
       });
     }
 
-    if (config.refresh.mode !== "none") {
+    // Capability wins over policy: a provider with no refresh grant (GitHub
+    // classic tokens never expire and cannot be refreshed) says so by omitting
+    // the method, and there is no second declaration free to disagree. The
+    // configured mode is reported as unhonourable ONCE, at boot.
+    if (config.driver.refresh && config.refresh.mode !== "none") {
       const now = Date.now();
       const autoRefresh = getAutoRefresh(ctx, config);
 
       if (now >= autoRefresh) {
         if (ctx.state.session.refreshToken) {
           try {
-            const data = await ctx.auth.token({
-              grantType: "refresh_token",
+            const data = await config.driver.refresh(createAuthDriverContext(ctx), {
               refreshToken: ctx.state.session.refreshToken,
+              scope: null,
             });
 
             ctx.state.session = await parseTokenData(ctx.aegis, data, {

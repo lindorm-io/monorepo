@@ -36,7 +36,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
 
   const makeCtx = (authorization: any, dpopHeader?: string): any => ({
     aegis,
-    auth: { introspect: vi.fn() },
+    auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
     logger: createMockLogger(),
     method: METHOD,
     origin: ORIGIN,

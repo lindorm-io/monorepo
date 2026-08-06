@@ -42,7 +42,7 @@ describe("createAccessTokenMiddleware — format sniff", () => {
     next = vi.fn();
     ctx = {
       aegis,
-      auth: { introspect: vi.fn() },
+      auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
       logger: createMockLogger(),
       request: {},
       state: {
@@ -120,5 +120,23 @@ describe("createAccessTokenMiddleware — format sniff", () => {
     expect(ctx.state.access.provenance).toBe("introspected");
 
     verify.mockRestore();
+  });
+
+  // A driver with no `introspect` is the NORMAL configuration for a service that
+  // mints and verifies its own JWTs. The credential is unresolvable here — say
+  // so, rather than reporting a verification that mysteriously failed.
+  test("an opaque credential is refused by name when the driver cannot introspect", async () => {
+    ctx.auth.capabilities = { introspect: false, userinfo: false };
+    ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
+
+    await expect(createAccessTokenMiddleware(options)(ctx, next)).rejects.toMatchObject({
+      code: "opaque_token_not_supported",
+      type: "urn:lindorm:pylon:error:opaque_token_not_supported",
+      status: 401,
+    });
+
+    expect(ctx.auth.introspect).not.toHaveBeenCalled();
+    expect(ctx.state.access).toBeNull();
+    expect(next).not.toHaveBeenCalled();
   });
 });

@@ -4,6 +4,7 @@ import { redactLoginCookie } from "./redact-login-cookie.js";
 
 describe("redactLoginCookie", () => {
   const cookie: PylonLoginCookie = {
+    callbackUri: "https://test.lindorm.io/auth/login/callback",
     codeChallengeMethod: "S256",
     codeVerifier: "pkce-code-verifier-secret",
     nonce: "nonce",

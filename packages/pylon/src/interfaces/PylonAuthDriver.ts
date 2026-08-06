@@ -27,16 +27,25 @@ import type {
  * silently never refreshing. Methods that throw `NOT_IMPLEMENTED` would defeat
  * this — every driver would then *have* every method.
  *
- * `endpoints` is the one exception and is REQUIRED. It is not a capability but
- * the provider's identity: pylon verifies id_tokens against the `issuer` and
- * `jwksUri` it returns, and there is no fallback for a driver that cannot say
- * who its provider is.
+ * `clientId` and `endpoints` are the two exceptions and are REQUIRED. Neither is
+ * a capability — together they are the IDENTITY of this relationship: pylon
+ * verifies id_tokens against the `issuer` and `jwksUri` `endpoints()` returns,
+ * and keys the introspection cache on `(issuer, clientId, token)` because RFC
+ * 7662 §2.2 lets the authorization server answer the same token differently per
+ * requesting client. There is no fallback for a driver that cannot say who its
+ * provider is or who it talks to that provider as.
  *
  * Drivers are not required to extend anything — this interface is the contract.
  * {@link PylonAuthDriverBase} is a convenience that implements the OAuth2
  * mechanics on top of `endpoints()`, nothing more.
  */
 export interface IPylonAuthDriver {
+  /**
+   * The client identifier this driver presents to the provider. ⚠ The client
+   * SECRET is deliberately not on the contract: it never leaves the driver.
+   */
+  readonly clientId: string;
+
   /**
    * The PKCE transformation pylon derives the challenge with (RFC 7636 §4.2),
    * or `null` for a provider that rejects the parameters. Absent ⇒ pylon's

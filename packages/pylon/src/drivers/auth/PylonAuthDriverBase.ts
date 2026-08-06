@@ -35,10 +35,10 @@ import type {
  * pylon's boot validation possible.
  */
 export abstract class PylonAuthDriverBase implements IPylonAuthDriver {
+  readonly clientId: string;
   readonly pkce: PylonAuthDriverSettings["pkce"];
 
   protected readonly authorizeSettings: PylonAuthDriverAuthorizeSettings;
-  protected readonly clientId: string;
   protected readonly clientSecret?: string;
   protected readonly pinnedTokenEndpointAuthMethod: PylonAuthDriverSettings["tokenEndpointAuthMethod"];
 

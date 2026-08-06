@@ -25,6 +25,7 @@ import {
   conduitSignedRequestMiddleware,
   createHttpSignedRequestMiddleware,
 } from "../middleware/index.js";
+import { OpenIdDriver } from "../drivers/auth/OpenIdDriver.js";
 import { Pylon } from "./Pylon.js";
 import { PylonRouter } from "./PylonRouter.js";
 
@@ -279,9 +280,11 @@ describe("Pylon", () => {
       logger,
 
       auth: {
-        clientId: "clientId",
-        clientSecret: "clientSecret",
-        issuer: "https://lindorm.eu.auth0.com/",
+        driver: new OpenIdDriver({
+          clientId: "clientId",
+          clientSecret: "clientSecret",
+          issuer: "https://lindorm.eu.auth0.com/",
+        }),
         router: {
           dynamicRedirectDomains: ["http://client.lindorm.io"],
         },

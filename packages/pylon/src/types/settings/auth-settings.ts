@@ -1,15 +1,20 @@
 import type { ReadableTime } from "@lindorm/date";
-import type {
-  CodeChallengeMethod,
-  PromptMode,
-  ResponseType,
-  Scope,
-} from "@lindorm/openid";
+import type { CodeChallengeMethod, ResponseType } from "@lindorm/openid";
+import type { IProteusSource } from "@lindorm/proteus";
 import type { DeepPartial } from "@lindorm/types";
+import type { IPylonAuthDriver } from "../../interfaces/PylonAuthDriver.js";
+import type { PylonEncKey } from "./keys.js";
 
 export type PylonLoginCookie = {
-  codeChallengeMethod: CodeChallengeMethod;
-  codeVerifier: string;
+  /**
+   * The callback URI handed to the driver's `authorize`, replayed VERBATIM to
+   * `exchange` — RFC 6749 §4.1.3 requires the two to match exactly, so it is
+   * computed once and carried here rather than rebuilt on the callback.
+   */
+  callbackUri: string;
+  /** `null` when the flow ran without PKCE (a driver that declared `pkce: null`). */
+  codeChallengeMethod: CodeChallengeMethod | null;
+  codeVerifier: string | null;
   nonce: string;
   redirectUri: string;
   responseType: ResponseType;
@@ -31,40 +36,17 @@ export type PylonAuthRefreshConfig = {
   mode: PylonRefreshMode;
 };
 
-export type PylonAuthAuthorizeConfig = {
-  acrValues: string | null;
-  codeChallengeMethod: CodeChallengeMethod;
-  maxAge: ReadableTime | null;
-  prompt: PromptMode | null;
-  resource: string | null;
-  responseType: ResponseType;
-  /**
-   * The scopes pylon asks the external IdP for. RFC 6749 §3.3 lets every
-   * deployment define its own values (`read:users`, an API identifier, …), so
-   * the operator may configure anything — `@lindorm/openid`'s `Scope` is the
-   * autocomplete hint here, not the constraint.
-   */
-  scope: Array<Scope | (string & {})>;
-};
-
-export type PylonAuthResourceKey = "resource" | "audience";
-
+/**
+ * Everything the auto-mounted auth routes need, and NOTHING about the provider —
+ * the authorization request's defaults (scope, response type, resource
+ * indicator, PKCE transformation) belong to the driver, which is what talks to
+ * the provider. A pure resource server omits `router` entirely.
+ */
 export type PylonAuthRouterConfig = {
   errorRedirect: string;
   pathPrefix: string;
 
-  authorize: PylonAuthAuthorizeConfig;
-
   dynamicRedirectDomains: Array<string>;
-
-  /**
-   * Wire-format name for the Resource Indicator on the authorize
-   * request. Defaults to `"resource"` (RFC 8707). Set to `"audience"`
-   * for Auth0 tenants without the Resource Parameter Compatibility
-   * Profile enabled, or any OP that only recognises the proprietary
-   * `audience` parameter.
-   */
-  resourceKey: PylonAuthResourceKey;
 
   cookies: {
     login: string;
@@ -77,20 +59,57 @@ export type PylonAuthRouterConfig = {
   };
 };
 
+/**
+ * The ONE home for driver-response caching. Today that is RFC 7662
+ * introspection; anything cached later shares this block rather than growing a
+ * second one beside it.
+ *
+ * Absent means OFF: RFC 7662 §5 expects a deployment sensitive enough to refuse
+ * any caching to be able to say so, and saying nothing is saying no.
+ *
+ * ⚠ `ttl` IS the revocation window (RFC 7662 §5) and is measured in SECONDS, for
+ * `active: false` answers as much as for live ones. Default `10 seconds`; a
+ * single mount may shorten it, or opt out entirely, via
+ * `createAccessTokenMiddleware({ cache })`.
+ *
+ * ⚠ `enabled` is CACHE policy, never a capability declaration. Whether this
+ * deployment introspects at all is `driver.introspect` — a driver without it
+ * simply leaves the cache dead, which pylon warns about once at boot.
+ */
+export type PylonAuthCacheSettings = {
+  enabled: boolean;
+  kv?: IProteusSource;
+  ttl?: ReadableTime;
+  /**
+   * The at-rest KEK selector staged onto `CachedIntrospection.payload` before the
+   * source sets up. The cached answer is the claim set of a LIVE credential —
+   * subject, scope, delegation — sitting in shared storage, so proteus seals it
+   * on write and opens it transparently on read. Default
+   * `{ condition: { purpose: "pylon:kek" } }` — the same bootstrap KEK as kryptos
+   * and webhook; override it (e.g. its own `purpose`) for a separate blast
+   * radius. Same `{ kryptos?, condition? }` descriptor as every other key
+   * surface; `encryption` (the AEAD) is ignored on this path.
+   */
+  encryption?: PylonEncKey;
+};
+
 export type PylonAuthConfig = {
-  clientId: string;
-  clientSecret: string;
-  issuer: string;
+  driver: IPylonAuthDriver;
   defaultTokenExpiry: ReadableTime;
   refresh: PylonAuthRefreshConfig;
   router: PylonAuthRouterConfig | null;
 };
 
+/**
+ * ⚠ `driver` is REQUIRED. Client credentials, the issuer and the authorization
+ * request's defaults are the PROVIDER's, so they live on the driver — pylon
+ * holds only the parts it owns itself: the routes, the cache, the refresh
+ * policy and the fallback token lifetime.
+ */
 export type PylonAuthSettings = {
-  clientId: string;
-  clientSecret: string;
-  issuer: string;
-  defaultTokenExpiry?: ReadableTime;
-  refresh?: Partial<PylonAuthRefreshConfig>;
+  driver: IPylonAuthDriver;
   router?: DeepPartial<PylonAuthRouterConfig>;
+  cache?: PylonAuthCacheSettings;
+  refresh?: Partial<PylonAuthRefreshConfig>;
+  defaultTokenExpiry?: ReadableTime;
 };

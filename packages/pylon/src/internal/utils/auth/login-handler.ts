@@ -30,6 +30,7 @@ export const createLoginHandler = (
     }
 
     const {
+      callbackUri,
       codeChallengeMethod,
       codeVerifier,
       nonce,
@@ -37,7 +38,7 @@ export const createLoginHandler = (
       responseType,
       scope,
       state,
-    } = ctx.auth.login({
+    } = await ctx.auth.login({
       acrValues: ctx.data.acrValues,
       display: ctx.data.display,
       idTokenHint: ctx.data.idTokenHint,
@@ -88,6 +89,7 @@ export const createLoginHandler = (
     }
 
     const cookie: PylonLoginCookie = {
+      callbackUri,
       codeChallengeMethod,
       codeVerifier,
       nonce,

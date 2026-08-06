@@ -214,14 +214,14 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
   }
 
   private resolveIntrospectionConfig(): IntrospectionCacheConfig | undefined {
-    if (!this.options.introspection?.enabled) return undefined;
+    if (!this.options.auth?.cache?.enabled) return undefined;
 
-    const kv = this.options.introspection.kv ?? this.options.kv;
+    const kv = this.options.auth.cache.kv ?? this.options.kv;
     if (!kv) return undefined;
 
     // `ttl` is passed through UNRESOLVED — the three-tier fallback (per-mount,
     // deployment, built-in) is decided in one expression at the call site.
-    return { kv, ttl: this.options.introspection.ttl };
+    return { kv, ttl: this.options.auth.cache.ttl };
   }
 
   private resolveHealthCallback(): PylonHttpCallback<T> | undefined {

@@ -22,6 +22,7 @@ import { calculateSubscriptions } from "../internal/utils/calculate-subscription
 import { calculateWorkers } from "../internal/utils/calculate-workers.js";
 import { scanWorkers } from "../internal/utils/scan-workers.js";
 import { stageEncryptedField } from "../internal/utils/stage-encrypted-field.js";
+import { validateAuthSettings } from "../internal/utils/auth/validate-auth-settings.js";
 import type { PylonEncKey } from "../types/index.js";
 import { PylonHttp } from "./PylonHttp.js";
 import { PylonIo } from "./PylonIo.js";
@@ -105,6 +106,12 @@ export class Pylon<
     if (this.isSetup) return;
 
     this.logger.verbose("Pylon setup");
+
+    // Before anything is loaded: a driver that cannot serve the features this
+    // deployment turned on must say so here, not on the first user request.
+    if (this.options.auth) {
+      validateAuthSettings(this.options.auth, this.logger);
+    }
 
     await this.loadSources();
 
@@ -336,8 +343,8 @@ export class Pylon<
       }
     }
 
-    if (this.options.introspection?.enabled) {
-      const source = this.options.introspection.kv ?? this.options.kv;
+    if (this.options.auth?.cache?.enabled) {
+      const source = this.options.auth.cache.kv ?? this.options.kv;
       if (source) {
         const { CachedIntrospection } =
           await import("../entities/CachedIntrospection.js");
@@ -349,7 +356,7 @@ export class Pylon<
           source,
           CachedIntrospection,
           "payload",
-          this.options.introspection.encryption ?? DEFAULT_KEK,
+          this.options.auth.cache.encryption ?? DEFAULT_KEK,
         );
       }
     }

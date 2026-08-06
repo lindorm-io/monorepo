@@ -3,6 +3,7 @@ import { isUrlLike } from "@lindorm/is";
 import { PylonRouter } from "../../classes/index.js";
 import type { PylonHttpContext, PylonHttpSettings } from "../../types/index.js";
 import { assertSecurityTxtOptions } from "./assert-security-txt-options.js";
+import { createAuthDriverContext } from "./auth/create-auth-driver-context.js";
 import { renderSecurityTxt } from "./render-security-txt.js";
 
 export const createWellKnownRouter = <C extends PylonHttpContext>(
@@ -41,12 +42,19 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
       });
     }
 
-    if (!isUrlLike(options.auth?.issuer)) {
+    // The authorization server is whoever the driver resolves — its own
+    // `endpoints().issuer`, never a statically configured one, so a provider
+    // that only knows its concrete issuer at runtime is advertised correctly.
+    const issuer = options.auth
+      ? (await options.auth.driver.endpoints(createAuthDriverContext(ctx))).issuer
+      : undefined;
+
+    if (!isUrlLike(issuer)) {
       throw new ClientError("Auth issuer is not configured", {
         code: "auth_issuer_not_configured",
         title: "Auth Issuer Not Configured",
         details:
-          "This server has no auth issuer configured for the protected resource metadata.",
+          "This server has no auth driver configured for the protected resource metadata, or its driver resolved no issuer.",
         type: "urn:lindorm:pylon:error:auth_issuer_not_configured",
         status: ClientError.Status.NotFound,
       });
@@ -57,7 +65,7 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
     // lists the issuers that can mint tokens for it. Wire names stay snake_case.
     ctx.body = {
       resource: options.domain,
-      authorization_servers: [options.auth.issuer],
+      authorization_servers: [issuer],
     };
     ctx.status = 200;
   });

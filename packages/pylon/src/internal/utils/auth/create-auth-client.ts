@@ -1,32 +1,10 @@
-import {
-  Conduit,
-  conduitBasicAuthMiddleware,
-  conduitBearerAuthMiddleware,
-  conduitChangeRequestBodyMiddleware,
-  conduitChangeRequestQueryMiddleware,
-  conduitChangeResponseDataMiddleware,
-  conduitCorrelationMiddleware,
-} from "@lindorm/conduit";
-import { sec } from "@lindorm/date";
-import type { IConduit } from "@lindorm/conduit";
 import { ServerError } from "@lindorm/errors";
-import { isArray, isNumberString, isString } from "@lindorm/is";
 import { PKCE } from "@lindorm/pkce";
-import type {
-  AuthorizeRequestQuery,
-  Claims,
-  IntrospectResponse,
-  LogoutRequest,
-  OpenIdConfiguration,
-  TokenEndpointAuthMethod,
-  TokenResponse,
-  TokenRequest as OpenIdTokenRequest,
-} from "@lindorm/openid";
-import { createUrl } from "@lindorm/url";
-import { merge, sortKeys } from "@lindorm/utils";
+import type { CodeChallengeMethod } from "@lindorm/openid";
 import { randomBytes } from "crypto";
 import { IntrospectionEndpointFailed } from "../../../errors/IntrospectionEndpointFailed.js";
 import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed.js";
+import type { IPylonAuthDriver } from "../../../interfaces/index.js";
 import type {
   AuthorizeQuery,
   AuthorizeResult,
@@ -36,39 +14,30 @@ import type {
   PylonAuthClaimsClient,
   PylonAuthClientConfig,
   PylonAuthConfig,
+  PylonAuthDriverContext,
   PylonContext,
   PylonHttpContext,
   PylonIntrospection,
   PylonIntrospectionActive,
   PylonUserinfo,
-  TokenRequest,
 } from "../../../types/index.js";
-import { getOpenIdConfiguration } from "./get-open-id-configuration.js";
-import { parseIntrospection } from "./parse-introspection.js";
+import { assertAuthorizeUrl } from "./assert-authorize-url.js";
+import { createAuthDriverContext } from "./create-auth-driver-context.js";
 import { parseUserinfo } from "./parse-userinfo.js";
-
-/**
- * OIDC Discovery §3 / RFC 8414 §2 — `token_endpoint_auth_methods_supported` is
- * OPTIONAL, and when it is omitted the spec default is `client_secret_basic`.
- */
-const DEFAULT_TOKEN_ENDPOINT_AUTH_METHODS: Array<TokenEndpointAuthMethod> = [
-  "client_secret_basic",
-];
 
 // --- Claims client (works on both HTTP and socket) ---
 
 type ClaimsClientOptions = {
   ctx: PylonContext;
-  config: PylonAuthConfig;
-  conduit: IConduit;
-  openid: OpenIdConfiguration;
+  driver: IPylonAuthDriver;
+  driverContext: PylonAuthDriverContext;
   resolveAccessToken: () => string | null;
 };
 
 export const createClaimsClient = (
   options: ClaimsClientOptions,
 ): PylonAuthClaimsClient => {
-  const { ctx, config, conduit, openid, resolveAccessToken } = options;
+  const { ctx, driver, driverContext, resolveAccessToken } = options;
 
   // Per-token caches: the empty string sentinel "" is the no-arg /
   // context-resolved-token entry. Explicit tokens are keyed by their value.
@@ -90,7 +59,7 @@ export const createClaimsClient = (
           return result;
         }
       } catch {
-        // Verification failed — fall through to endpoint with the explicit token.
+        // Verification failed — fall through to the driver with the explicit token.
       }
     } else {
       // Fast path: no-arg — use the parsed id_token from context if available.
@@ -113,41 +82,24 @@ export const createClaimsClient = (
       });
     }
 
-    // `userinfo_endpoint` is only RECOMMENDED (OIDC Discovery §3) — an OP that omits
-    // it cannot serve this call at all. Fail by name instead of requesting `undefined`.
-    if (!isString(openid.userinfoEndpoint)) {
-      throw new ServerError("IdP does not support the userinfo endpoint", {
-        code: "idp_userinfo_endpoint_not_supported",
-        title: "IdP Userinfo Endpoint Not Supported",
-        type: "urn:lindorm:pylon:error:idp_userinfo_endpoint_not_supported",
+    // The capability IS the method's presence. A driver for a provider with no
+    // profile endpoint (or one pylon was never meant to call) says so by
+    // omission, and the local fast paths above still work.
+    if (!driver.userinfo) {
+      throw new ServerError("Auth driver cannot fetch userinfo", {
+        code: "driver_cannot_userinfo",
+        title: "Auth Driver Cannot Fetch Userinfo",
+        type: "urn:lindorm:pylon:error:driver_cannot_userinfo",
         status: ServerError.Status.NotImplemented,
         details:
-          "The upstream IdP's discovery document publishes no `userinfo_endpoint` (RECOMMENDED, not REQUIRED, by OIDC Discovery §3), so userinfo cannot be fetched from the IdP. Supply the endpoint through the amphora `idp.openIdConfiguration` override if the IdP serves one without advertising it.",
-        data: { issuer: config.issuer },
+          "The configured auth driver implements no `userinfo` method, so the subject's profile cannot be fetched from the provider. Only the local id_token fast path is available in this deployment.",
       });
     }
 
-    try {
-      const { data } = await conduit.get<Claims>(openid.userinfoEndpoint, {
-        middleware: [conduitBearerAuthMiddleware(accessToken)],
-      });
+    const result = await driver.userinfo(driverContext, { accessToken });
 
-      const result = parseUserinfo(data);
-      userinfoCache.set(cacheKey, result);
-      return result;
-    } catch (error) {
-      throw new UserinfoEndpointFailed(
-        error instanceof Error ? error.message : "Userinfo endpoint request failed",
-        {
-          code: "userinfo_endpoint_failed",
-          title: "Userinfo Endpoint Failed",
-          details:
-            "The request to the IdP userinfo endpoint did not complete successfully; see the userinfoEndpoint in error data",
-          data: { userinfoEndpoint: openid.userinfoEndpoint },
-          debug: { error },
-        },
-      );
-    }
+    userinfoCache.set(cacheKey, result);
+    return result;
   };
 
   const introspect = async (token?: string): Promise<PylonIntrospection> => {
@@ -165,7 +117,7 @@ export const createClaimsClient = (
           return result;
         }
       } catch {
-        // Verification failed — fall through to endpoint with the explicit token.
+        // Verification failed — fall through to the driver with the explicit token.
       }
     } else {
       // Fast path: no-arg — use the parsed access token from context if available.
@@ -198,92 +150,71 @@ export const createClaimsClient = (
       );
     }
 
-    // `introspection_endpoint` is OPTIONAL (RFC 8414 §2) and real OPs omit it —
-    // Auth0 publishes none. Fail by name instead of posting to `undefined`.
-    if (!isString(openid.introspectionEndpoint)) {
-      throw new ServerError("IdP does not support the introspection endpoint", {
-        code: "idp_introspection_endpoint_not_supported",
-        title: "IdP Introspection Endpoint Not Supported",
-        type: "urn:lindorm:pylon:error:idp_introspection_endpoint_not_supported",
+    // The capability IS the method's presence. An API service that only ever
+    // sees locally verifiable JWTs configures a driver without `introspect`,
+    // and that is the NORMAL configuration — not a broken one.
+    if (!driver.introspect) {
+      throw new ServerError("Auth driver cannot introspect", {
+        code: "driver_cannot_introspect",
+        title: "Auth Driver Cannot Introspect",
+        type: "urn:lindorm:pylon:error:driver_cannot_introspect",
         status: ServerError.Status.NotImplemented,
         details:
-          "The upstream IdP's discovery document publishes no `introspection_endpoint` (OPTIONAL per RFC 8414), so the token cannot be introspected remotely. Use locally verifiable JWT access tokens, or supply the endpoint through the amphora `idp.openIdConfiguration` override.",
-        data: { issuer: config.issuer },
+          "The configured auth driver implements no `introspect` method (RFC 7662), so a token that cannot be verified locally cannot be resolved. Configure a driver that introspects, or accept only locally verifiable tokens.",
       });
     }
 
-    try {
-      const { data } = await conduit.post<IntrospectResponse>(
-        openid.introspectionEndpoint,
-        {
-          body: { token: accessToken },
-          middleware: [conduitBasicAuthMiddleware(config.clientId, config.clientSecret)],
-        },
-      );
+    const result = await driver.introspect(driverContext, { token: accessToken });
 
-      const result = parseIntrospection(data);
-      introspectCache.set(cacheKey, result);
-      return result;
-    } catch (error) {
-      throw new IntrospectionEndpointFailed(
-        error instanceof Error ? error.message : "Introspection endpoint request failed",
-        {
-          code: "introspect_endpoint_failed",
-          title: "Introspect Endpoint Failed",
-          details:
-            "The request to the IdP introspection endpoint did not complete successfully; see the introspectionEndpoint in error data",
-          data: { introspectionEndpoint: openid.introspectionEndpoint },
-          debug: { error },
-        },
-      );
-    }
+    introspectCache.set(cacheKey, result);
+    return result;
   };
 
-  return { introspect, userinfo };
+  return {
+    capabilities: {
+      introspect: Boolean(driver.introspect),
+      userinfo: Boolean(driver.userinfo),
+    },
+    introspect,
+    userinfo,
+  };
 };
 
-// --- Full auth client (HTTP only — adds login/logout/token) ---
+// --- Full auth client (HTTP only — adds login/logout) ---
 
 /**
- * Auth0 tenants without the RFC 8707 Resource Parameter Compatibility Profile
- * require the proprietary `audience` parameter instead of `resource`. The
- * vendor quirk lives here — `@lindorm/openid` stays RFC-only.
+ * Pylon's own PKCE default. `undefined` on the driver means "not configured";
+ * `null` is the operator saying the provider rejects the parameters, and `??`
+ * cannot tell the two apart.
  */
-type Auth0AuthorizeRequestQuery = AuthorizeRequestQuery & { audience?: string };
+const resolvePkce = (driver: IPylonAuthDriver): CodeChallengeMethod | null =>
+  driver.pkce === undefined ? "S256" : driver.pkce;
 
 export const createAuthClient = (
   ctx: PylonHttpContext,
   config: PylonAuthConfig,
 ): PylonAuthClient => {
-  const openid = getOpenIdConfiguration(ctx, config);
-
-  const conduit = new Conduit({
-    alias: "auth",
-    environment: ctx.state.app.environment,
-    logger: ctx.logger,
-    middleware: [
-      conduitCorrelationMiddleware(ctx.state.metadata.correlationId),
-      // Depth 1 — top-level parameter names only. Every request this client
-      // sends is a flat parameter list (token exchange, introspection) except
-      // for RFC 9396 §2 `authorization_details`, whose entries carry fields
-      // defined by the schema named in `type`. Those MAY be camelCase by that
-      // schema and must reach the wire verbatim, so the walk stops above them.
-      conduitChangeRequestBodyMiddleware("snake", { depth: 1 }),
-      conduitChangeRequestQueryMiddleware(),
-      conduitChangeResponseDataMiddleware(),
-    ],
-  });
+  const driverContext = createAuthDriverContext(ctx);
 
   const claims = createClaimsClient({
     ctx,
-    config,
-    conduit,
-    openid,
+    driver: config.driver,
+    driverContext,
     resolveAccessToken: () =>
       ctx.state.session?.accessToken ?? ctx.state.authorization?.value ?? null,
   });
 
-  const login = (input: AuthorizeQuery = {}): AuthorizeResult => {
+  // The identity the IdP knows this pylon by. ⚠ The issuer comes from
+  // `endpoints()`, not from settings: a tenant-scoped provider templates it in
+  // its metadata and the concrete value is only known at runtime. The secret
+  // never leaves the driver.
+  const identity = async (): Promise<PylonAuthClientConfig> => {
+    const endpoints = await config.driver.endpoints(driverContext);
+
+    return { issuer: endpoints.issuer, clientId: config.driver.clientId };
+  };
+
+  const login = async (input: AuthorizeQuery = {}): Promise<AuthorizeResult> => {
     if (!config.router) {
       throw new ServerError("Auth router is not configured", {
         code: "auth_router_not_configured",
@@ -294,72 +225,61 @@ export const createAuthClient = (
       });
     }
 
-    const {
-      method: codeChallengeMethod,
-      challenge: codeChallenge,
-      verifier: codeVerifier,
-    } = PKCE.create(config.router.authorize.codeChallengeMethod);
+    if (!config.driver.authorize) {
+      throw new ServerError("Auth driver cannot authorize", {
+        code: "driver_cannot_authorize",
+        title: "Auth Driver Cannot Authorize",
+        type: "urn:lindorm:pylon:error:driver_cannot_authorize",
+        details:
+          "The configured auth driver implements no `authorize` method, so no login can be started",
+      });
+    }
 
-    const { clientId } = config;
-    const { acrValues, prompt, resource, responseType, scope } = config.router.authorize;
-    const { resourceKey } = config.router;
-    const maxAge = isNumberString(input.maxAge)
-      ? input.maxAge.toString()
-      : config.router.authorize.maxAge
-        ? sec(config.router.authorize.maxAge).toString()
-        : undefined;
+    const pkce = resolvePkce(config.driver);
+    const created = pkce ? PKCE.create(pkce) : null;
 
-    const code = responseType.includes("code");
+    const codeChallenge = created?.challenge ?? null;
+    const codeChallengeMethod = created?.method ?? null;
+    const codeVerifier = created?.verifier ?? null;
+
     const nonce = randomBytes(16).toString("base64url");
     const state = randomBytes(16).toString("base64url");
 
-    const authorize: AuthorizeRequestQuery = {
-      clientId,
+    // ⚠ Computed ONCE and returned, so the login cookie can replay the SAME
+    // string to the code exchange. RFC 6749 §4.1.3 requires an exact match, and
+    // building it twice from the same inputs is a match nothing enforces.
+    const callbackUri = new URL(
+      `${config.router.pathPrefix}/login/callback`,
+      ctx.state.origin,
+    ).toString();
+
+    const redirect = await config.driver.authorize(driverContext, {
+      codeChallenge,
+      codeChallengeMethod,
       nonce,
-      redirectUri: new URL(
-        `${config.router.pathPrefix}/login/callback`,
-        ctx.state.origin,
-      ).toString(),
-      responseType,
-      scope: scope.join(" "),
+      redirectUri: callbackUri,
       state,
-      ...(acrValues && { acrValues }),
-      ...(resource && { resource }),
-      ...(code && { codeChallenge, codeChallengeMethod }),
-      ...(maxAge && { maxAge }),
-      ...(prompt && { prompt }),
-    };
+      query: input,
+    });
 
-    const merged = merge<Auth0AuthorizeRequestQuery>(authorize, input);
-
-    // The config field is always named `resource`, but the wire param
-    // is named per `resourceKey` — Auth0 tenants without the RFC 8707
-    // compatibility profile still require the proprietary `audience`
-    // parameter to issue a JWT access token.
-    if (resourceKey === "audience" && merged.resource) {
-      merged.audience = merged.resource;
-      delete merged.resource;
-    }
-
-    const query = sortKeys(merged);
-
-    const redirect = createUrl(openid.authorizationEndpoint, {
-      query,
-      changeQueryCase: "snake",
+    const { responseType, scope } = assertAuthorizeUrl(redirect, {
+      codeChallenge,
+      state,
     });
 
     return {
+      callbackUri,
       codeChallengeMethod,
       codeVerifier,
       nonce,
       redirect,
-      responseType: query.responseType,
-      scope: query.scope,
+      responseType,
+      scope,
       state,
     };
   };
 
-  const logout = (input: LogoutQuery = {}): LogoutResult => {
+  const logout = async (input: LogoutQuery = {}): Promise<LogoutResult> => {
     if (!config.router) {
       throw new ServerError("Auth router is not configured", {
         code: "auth_router_not_configured",
@@ -370,88 +290,35 @@ export const createAuthClient = (
       });
     }
 
-    // `end_session_endpoint` is OPTIONAL (OIDC RP-Initiated Logout 1.0 §2) — an OP
-    // that omits it has no RP-initiated logout to redirect to.
-    if (!isString(openid.endSessionEndpoint)) {
-      throw new ServerError("IdP does not support the end session endpoint", {
-        code: "idp_end_session_endpoint_not_supported",
-        title: "IdP End Session Endpoint Not Supported",
-        type: "urn:lindorm:pylon:error:idp_end_session_endpoint_not_supported",
-        status: ServerError.Status.NotImplemented,
+    if (!config.driver.logout) {
+      throw new ServerError("Auth driver cannot log out", {
+        code: "driver_cannot_logout",
+        title: "Auth Driver Cannot Log Out",
+        type: "urn:lindorm:pylon:error:driver_cannot_logout",
         details:
-          "The upstream IdP's discovery document publishes no `end_session_endpoint` (OPTIONAL per OIDC RP-Initiated Logout 1.0), so the user cannot be redirected to the IdP for logout. Clear the local session only, or supply the endpoint through the amphora `idp.openIdConfiguration` override.",
-        data: { issuer: config.issuer },
+          "The configured auth driver implements no `logout` method, so the session cannot be ended at the provider",
       });
     }
 
-    const { clientId } = config;
-
     const state = randomBytes(16).toString("base64url");
+    const { session } = ctx.state;
 
-    const logoutRequest: LogoutRequest = {
-      clientId,
+    const result = await config.driver.logout(driverContext, {
+      accessToken: session?.accessToken ?? null,
+      idTokenHint: input.idTokenHint ?? session?.idToken ?? null,
       postLogoutRedirectUri: new URL(
         `${config.router.pathPrefix}/logout/callback`,
         ctx.state.origin,
       ).toString(),
+      refreshToken: session?.refreshToken ?? null,
       state,
-    };
-
-    const redirect = createUrl(openid.endSessionEndpoint, {
-      query: sortKeys(merge(logoutRequest, input)),
-      changeQueryCase: "snake",
+      query: input,
     });
 
-    return { redirect, state };
+    return { ...result, state };
   };
 
-  const token = async (input: TokenRequest): Promise<TokenResponse> => {
-    const { clientId, clientSecret } = config;
-
-    // Absent ⇒ the spec default, so an OP that advertises nothing still gets the
-    // basic-auth credentials it is entitled to expect.
-    const authMethods = isArray(openid.tokenEndpointAuthMethodsSupported)
-      ? openid.tokenEndpointAuthMethodsSupported
-      : DEFAULT_TOKEN_ENDPOINT_AUTH_METHODS;
-
-    const clientPost = authMethods.includes("client_secret_post")
-      ? {
-          clientId,
-          clientSecret,
-        }
-      : null;
-
-    const middleware = authMethods.includes("client_secret_basic")
-      ? [conduitBasicAuthMiddleware(clientId, clientSecret)]
-      : [];
-
-    const tokenRequest: Omit<OpenIdTokenRequest, "grantType"> = {
-      ...(clientPost && clientPost),
-    };
-
-    const body = sortKeys(merge(tokenRequest, input));
-
-    // RFC 6749 §4.1.3 — the token endpoint takes
-    // `application/x-www-form-urlencoded`, never JSON. Auth0 tolerates JSON;
-    // Discord and others reject it outright. The body is still snake_cased by
-    // `conduitChangeRequestBodyMiddleware` — conduit encodes after middleware.
-    const { data } = await conduit.post<TokenResponse>(openid.tokenEndpoint, {
-      body,
-      contentType: "application/x-www-form-urlencoded",
-      middleware,
-    });
-
-    return data;
-  };
-
-  // The identity the IdP knows this pylon by — issuer + clientId only. The
-  // secret stays inside the closure, where the conduit middleware uses it.
-  const identity: PylonAuthClientConfig = {
-    issuer: config.issuer,
-    clientId: config.clientId,
-  };
-
-  return { ...claims, config: identity, login, logout, token };
+  return { ...claims, config: identity, login, logout };
 };
 
 // --- Socket claims client factory ---
@@ -459,26 +326,10 @@ export const createAuthClient = (
 export const createSocketClaimsClient = (
   ctx: PylonContext,
   config: PylonAuthConfig,
-): PylonAuthClaimsClient => {
-  const openid = getOpenIdConfiguration(ctx, config);
-
-  const conduit = new Conduit({
-    alias: "auth",
-    environment: ctx.state.app.environment,
-    logger: ctx.logger,
-    middleware: [
-      conduitCorrelationMiddleware(ctx.state.metadata.correlationId),
-      conduitChangeRequestBodyMiddleware(),
-      conduitChangeRequestQueryMiddleware(),
-      conduitChangeResponseDataMiddleware(),
-    ],
-  });
-
-  return createClaimsClient({
+): PylonAuthClaimsClient =>
+  createClaimsClient({
     ctx,
-    config,
-    conduit,
-    openid,
+    driver: config.driver,
+    driverContext: createAuthDriverContext(ctx),
     resolveAccessToken: () => ctx.state.authorization?.value ?? null,
   });
-};

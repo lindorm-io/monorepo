@@ -1,12 +1,5 @@
-import {
-  Conduit,
-  conduitBearerAuthMiddleware,
-  conduitChangeResponseDataMiddleware,
-  conduitCorrelationMiddleware,
-} from "@lindorm/conduit";
-import { ClientError } from "@lindorm/errors";
-import { isString } from "@lindorm/is";
-import type { AuthorizeResponseQuery, Claims } from "@lindorm/openid";
+import { ClientError, ServerError } from "@lindorm/errors";
+import type { AuthorizeResponseQuery } from "@lindorm/openid";
 import type {
   PylonAuthConfig,
   PylonHttpContext,
@@ -14,41 +7,8 @@ import type {
   PylonLoginCookie,
 } from "../../../types/index.js";
 import { redactLoginCookie } from "../redact/redact-login-cookie.js";
+import { createAuthDriverContext } from "./create-auth-driver-context.js";
 import { parseTokenData } from "./parse-token-data.js";
-
-const resolveSubjectViaUserinfo = (
-  ctx: PylonHttpContext,
-): ((accessToken: string) => Promise<string | null>) => {
-  return async (accessToken: string) => {
-    try {
-      // The upstream IdP is the amphora `idp`; `config()` throws when none is set,
-      // caught below (subject-via-userinfo is a best-effort fallback). Amphora types
-      // the discovery document loosely (it names only `issuer` / `jwksUri`), so the
-      // endpoint is narrowed here rather than asserted — wire: `userinfo_endpoint`.
-      const userinfoEndpoint =
-        ctx.amphora.idp.config().openIdConfiguration?.userinfoEndpoint;
-      if (!isString(userinfoEndpoint)) return null;
-
-      const conduit = new Conduit({
-        alias: "auth-userinfo",
-        environment: ctx.state.app.environment,
-        logger: ctx.logger,
-        middleware: [
-          conduitCorrelationMiddleware(ctx.state.metadata.correlationId),
-          conduitChangeResponseDataMiddleware(),
-        ],
-      });
-
-      const { data } = await conduit.get<Claims>(userinfoEndpoint, {
-        middleware: [conduitBearerAuthMiddleware(accessToken)],
-      });
-
-      return data.sub || null;
-    } catch {
-      return null;
-    }
-  };
-};
 
 export const createLoginCallbackHandler = (
   config: PylonAuthConfig,
@@ -116,7 +76,16 @@ export const createLoginCallbackHandler = (
       });
     }
 
-    const resolveSubject = resolveSubjectViaUserinfo(ctx);
+    const driverContext = createAuthDriverContext(ctx);
+
+    // An OPAQUE access token carries no subject pylon can read. The driver is the
+    // only party that knows how to ask its provider — a GitHub or Discord login
+    // completes on this alone, having no id_token at all. Best effort by
+    // contract: it returns `null` rather than throwing, and `parseTokenData`
+    // only fails once every provenance has come back empty.
+    const resolveSubject = config.driver.subject
+      ? (accessToken: string) => config.driver.subject!(driverContext, { accessToken })
+      : undefined;
 
     if (cookie.responseType.includes("token")) {
       ctx.state.session = await parseTokenData(ctx.aegis, ctx.data, {
@@ -126,15 +95,23 @@ export const createLoginCallbackHandler = (
     }
 
     if (cookie.responseType.includes("code") && ctx.data.code) {
-      const data = await ctx.auth.token({
+      if (!config.driver.exchange) {
+        throw new ServerError("Auth driver cannot exchange an authorization code", {
+          code: "driver_cannot_exchange",
+          title: "Auth Driver Cannot Exchange",
+          type: "urn:lindorm:pylon:error:driver_cannot_exchange",
+          details:
+            "The configured auth driver implements no `exchange` method, so the authorization code cannot be redeemed",
+        });
+      }
+
+      const data = await config.driver.exchange(driverContext, {
         code: ctx.data.code,
-        grantType: "authorization_code",
-        redirectUri: new URL(
-          `${routerConfig.pathPrefix}/login/callback`,
-          ctx.state.origin,
-        ).toString(),
         codeVerifier: cookie.codeVerifier,
-        scope: cookie.scope,
+        // ⚠ The SAME string the authorization request carried, replayed from the
+        // cookie rather than rebuilt — RFC 6749 §4.1.3 requires an exact match.
+        redirectUri: cookie.callbackUri,
+        scope: cookie.scope || null,
       });
 
       ctx.state.session = await parseTokenData(ctx.aegis, data, {

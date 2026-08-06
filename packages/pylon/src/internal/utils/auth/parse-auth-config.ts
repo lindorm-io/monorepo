@@ -18,19 +18,7 @@ const ROUTER_DEFAULTS: PylonAuthRouterConfig = {
   errorRedirect: "/error",
   pathPrefix: "/auth",
 
-  authorize: {
-    acrValues: null,
-    codeChallengeMethod: "S256",
-    maxAge: null,
-    prompt: null,
-    resource: null,
-    responseType: "code",
-    scope: ["openid", "offline_access", "email", "profile"],
-  },
-
   dynamicRedirectDomains: [],
-
-  resourceKey: "resource",
 
   cookies: {
     login: "pylon_login_session",
@@ -56,9 +44,7 @@ export const parseAuthConfig = (options: PylonAuthSettings): PylonAuthConfig => 
   const refresh = merge<PylonAuthRefreshConfig>(REFRESH_DEFAULTS, options.refresh ?? {});
 
   return {
-    clientId: options.clientId,
-    clientSecret: options.clientSecret,
-    issuer: options.issuer,
+    driver: options.driver,
     defaultTokenExpiry: options.defaultTokenExpiry ?? DEFAULT_TOKEN_EXPIRY,
     refresh,
     router,

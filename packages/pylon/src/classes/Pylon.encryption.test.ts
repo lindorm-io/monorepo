@@ -18,6 +18,7 @@ import {
   setupWebhookRequestConsumer,
   WEBHOOK_REQUEST_QUEUE,
 } from "../internal/consumers/setup-webhook-request-consumer.js";
+import { OpenIdDriver } from "../drivers/auth/OpenIdDriver.js";
 import { createDispatchWebhook } from "../internal/utils/dispatch-webhook.js";
 import { CachedIntrospection } from "../entities/CachedIntrospection.js";
 import { Kryptos } from "../entities/Kryptos.js";
@@ -341,7 +342,14 @@ describe("Pylon at-rest encryption staging", () => {
         port: 55598,
         version: "0.0.1",
         kv: kv as any,
-        introspection: { enabled: true },
+        auth: {
+          driver: new OpenIdDriver({
+            clientId: "client-id",
+            clientSecret: "client-secret",
+            issuer: ISSUER,
+          }),
+          cache: { enabled: true },
+        },
       });
 
       await pylon.setup();

@@ -107,6 +107,7 @@ export const _createTestPylonCtx = (
   };
 
   const auth: PylonAuthClaimsClient = {
+    capabilities: { introspect: true, userinfo: true },
     introspect: resolves({ active: false } as PylonIntrospection),
     userinfo: resolves({ subject: "test-actor" } as PylonUserinfo),
   };

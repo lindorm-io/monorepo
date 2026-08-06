@@ -18,7 +18,10 @@ type Options = {
  * KV namespace serve each other answers the AS deliberately made different —
  * leaking scopes one of them was never meant to see.
  *
- * ONE function, so the driver refactor changes only how the inputs are sourced.
+ * ⚠ Both come from the DRIVER — `endpoints().issuer` and the driver's own client
+ * id — not from a relying-party config. RFC 7662 §2.1 has the RESOURCE SERVER
+ * authenticate to the introspection endpoint, and those are the credentials the
+ * answer varies by.
  */
 export const buildIntrospectionCacheKey = ({
   token,

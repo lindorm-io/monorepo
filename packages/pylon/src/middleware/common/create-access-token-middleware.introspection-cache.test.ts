@@ -67,7 +67,13 @@ const createContext = (opts: ContextOptions): any => {
   const ctx: any = {
     aegis: createMockAegis(),
     auth: {
-      config: { issuer: opts.issuer ?? ISSUER, clientId: opts.clientId ?? "client-a" },
+      capabilities: { introspect: true, userinfo: true },
+      // Resolved from the DRIVER in production — `endpoints().issuer` and the
+      // driver's own client id — hence a method, not a static property.
+      config: async () => ({
+        issuer: opts.issuer ?? ISSUER,
+        clientId: opts.clientId ?? "client-a",
+      }),
       introspect: opts.introspect,
     },
     logger: createMockLogger(),
@@ -297,15 +303,18 @@ describe("createAccessTokenMiddleware introspection cache", () => {
 
   // No client identity ⇒ no key that is safe to share (RFC 7662 §2.2), so the
   // cache steps aside rather than key on the token alone.
-  test("should skip the cache when the auth client exposes no identity", async () => {
+  test("should skip the cache when the driver cannot resolve its identity", async () => {
     const middleware = createAccessTokenMiddleware(options);
+    const unresolvable = async () => {
+      throw new Error("idp not configured");
+    };
 
     const first = createContext({ kv, introspect });
-    first.auth.config = null;
+    first.auth.config = unresolvable;
     await middleware(first, next);
 
     const second = createContext({ kv, introspect });
-    second.auth.config = null;
+    second.auth.config = unresolvable;
     await middleware(second, next);
 
     expect(introspect).toHaveBeenCalledTimes(2);

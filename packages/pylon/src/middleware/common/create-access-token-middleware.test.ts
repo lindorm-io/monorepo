@@ -20,7 +20,7 @@ describe("createAccessTokenMiddleware", () => {
     beforeEach(() => {
       ctx = {
         aegis: createMockAegis(),
-        auth: { introspect: vi.fn() },
+        auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
         logger: createMockLogger(),
         request: {},
         state: {
@@ -194,7 +194,7 @@ describe("createAccessTokenMiddleware", () => {
       };
       return {
         aegis: createMockAegis(),
-        auth: { introspect: vi.fn() },
+        auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
         logger: createMockLogger(),
         event: "some:event",
         state: { access: null, tokens: {} },
@@ -271,7 +271,7 @@ describe("createAccessTokenMiddleware", () => {
     test("throws ServerError if run in the handshake phase", async () => {
       const ctx: any = {
         aegis: createMockAegis(),
-        auth: { introspect: vi.fn() },
+        auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
         logger: createMockLogger(),
         handshakeId: "abc",
         io: { socket: { handshake: {}, data: {} } },
@@ -286,7 +286,7 @@ describe("createAccessTokenMiddleware", () => {
     test("throws 401 when verification fails", async () => {
       const ctx: any = {
         aegis: createMockAegis(),
-        auth: { introspect: vi.fn() },
+        auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
         logger: createMockLogger(),
         request: {},
         state: {

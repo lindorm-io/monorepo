@@ -1,4 +1,5 @@
 import { ClientError } from "@lindorm/errors";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { parseTokenData as _parseTokenData } from "./parse-token-data.js";
 import { createRefreshMiddleware } from "./refresh-middleware.js";
@@ -14,9 +15,13 @@ const parseTokenData = _parseTokenData as Mock;
 describe("createRefreshMiddleware", async () => {
   let authConfig: any;
   let ctx: any;
+  let refresh: Mock;
 
   beforeEach(() => {
+    refresh = vi.fn().mockResolvedValue({ data: true });
+
     authConfig = {
+      driver: { clientId: "client-id", endpoints: vi.fn(), refresh },
       refresh: {
         maxAge: "12h",
         mode: "force",
@@ -28,19 +33,16 @@ describe("createRefreshMiddleware", async () => {
       aegis: {
         verify: vi.fn(),
       },
-      auth: {
-        token: vi.fn().mockResolvedValue({ data: true }),
-      },
-      logger: {
-        debug: vi.fn(),
-        warn: vi.fn(),
-      },
+      amphora: {},
+      logger: createMockLogger(),
       session: {
         get: vi.fn(),
         set: vi.fn(),
         del: vi.fn(),
       },
       state: {
+        app: { environment: "test" },
+        metadata: { correlationId: "test-correlation" },
         session: {
           id: "a6d36ab7-ab36-52a8-b366-5f5f21f8280e",
           accessToken: "accessToken",
@@ -64,9 +66,9 @@ describe("createRefreshMiddleware", async () => {
       createRefreshMiddleware(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.auth.token).toHaveBeenCalledWith({
-      grantType: "refresh_token",
+    expect(refresh).toHaveBeenCalledWith(expect.any(Object), {
       refreshToken: "refreshToken",
+      scope: null,
     });
     expect(ctx.session.set).toHaveBeenCalled();
     expect(ctx.session.del).not.toHaveBeenCalled();
@@ -94,7 +96,7 @@ describe("createRefreshMiddleware", async () => {
       createRefreshMiddleware(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.auth.token).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
     expect(ctx.session.set).not.toHaveBeenCalled();
     expect(ctx.state.session).toEqual(
       expect.objectContaining({ id: "a6d36ab7-ab36-52a8-b366-5f5f21f8280e" }),
@@ -135,7 +137,7 @@ describe("createRefreshMiddleware", async () => {
   test("should keep a session that has no refresh token", async () => {
     // A session established without `offline_access` has no refresh token, and
     // the IdP rejects a refresh_token grant that carries none.
-    ctx.auth.token.mockRejectedValue(new Error("invalid_request"));
+    refresh.mockRejectedValue(new Error("invalid_request"));
     delete ctx.state.session.refreshToken;
 
     await expect(
@@ -146,13 +148,13 @@ describe("createRefreshMiddleware", async () => {
       expect.objectContaining({ id: "a6d36ab7-ab36-52a8-b366-5f5f21f8280e" }),
     );
     expect(ctx.session.del).not.toHaveBeenCalled();
-    expect(ctx.auth.token).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
     expect(ctx.session.set).not.toHaveBeenCalled();
     expect(ctx.logger.debug).toHaveBeenCalled();
   });
 
   test("should clear the session when a refresh with a refresh token fails", async () => {
-    ctx.auth.token.mockRejectedValue(new Error("invalid_grant"));
+    refresh.mockRejectedValue(new Error("invalid_grant"));
 
     await expect(
       createRefreshMiddleware(authConfig)(ctx, vi.fn()),
@@ -160,6 +162,21 @@ describe("createRefreshMiddleware", async () => {
 
     expect(ctx.session.del).toHaveBeenCalled();
     expect(ctx.state.session).toBeNull();
+  });
+
+  // Capability wins over policy. A provider with no refresh grant (GitHub
+  // classic tokens never expire and cannot be refreshed) says so by omitting the
+  // method — there is no `mode: "none"` to also require, and therefore nothing
+  // that can disagree with it.
+  test("should not refresh when the driver implements no refresh method", async () => {
+    authConfig.driver.refresh = undefined;
+
+    await expect(
+      createRefreshMiddleware(authConfig)(ctx, vi.fn()),
+    ).resolves.toBeUndefined();
+
+    expect(ctx.session.set).not.toHaveBeenCalled();
+    expect(ctx.session.del).not.toHaveBeenCalled();
   });
 
   test("should throw on missing session", async () => {

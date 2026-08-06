@@ -3,8 +3,8 @@ import { ServerError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
 import type { OpenIdConfiguration } from "@lindorm/openid";
 
-// Structural, not `PylonAuthConfig`: the auth driver reads discovery with
-// nothing but the issuer in hand, and a `PylonAuthConfig` still satisfies it.
+// Structural, not a named settings type: the auth driver reads discovery with
+// nothing but the issuer in hand.
 export const getOpenIdConfiguration = (
   ctx: { amphora: IAmphora },
   config: { issuer: string },

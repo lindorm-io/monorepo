@@ -9,20 +9,20 @@ const notConfigured = (method: string): never => {
       title: "Auth Not Configured",
       type: "urn:lindorm:pylon:error:auth_not_configured",
       details:
-        "Add `auth: { issuer, clientId, clientSecret, ... }` to your Pylon options to use auth features.",
+        "Add `auth: { driver: new OpenIdDriver({ issuer, clientId, clientSecret }) }` to your Pylon options to use auth features.",
       data: { method },
     },
   );
 };
 
 export const createUnconfiguredAuthClient = (): PylonAuthClient => ({
-  // `null`, not a throwing getter: reading a property must never explode (a
-  // debug log that spreads `ctx.auth` would), and `null` states the truth — there
-  // is no configured client identity. Every METHOD still throws.
-  config: null,
+  // Reading a property must never explode (a debug log that spreads `ctx.auth`
+  // would), and `false` states the truth — an absent driver can do nothing.
+  // Every METHOD still throws.
+  capabilities: { introspect: false, userinfo: false },
+  config: () => notConfigured("config"),
   introspect: () => notConfigured("introspect"),
   userinfo: () => notConfigured("userinfo"),
   login: () => notConfigured("login"),
   logout: () => notConfigured("logout"),
-  token: () => notConfigured("token"),
 });

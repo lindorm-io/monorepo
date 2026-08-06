@@ -27,7 +27,6 @@ import type { PylonParseBodySettings } from "../http/parse-body.js";
 import type {
   PylonAuditSettings,
   PylonCacheSettings,
-  PylonIntrospectionSettings,
   PylonKryptosSettings,
   PylonQueueSettings,
   PylonRateLimitSettings,
@@ -55,7 +54,6 @@ type PylonCommonSettings = {
   environment?: Environment;
   hermes?: IHermes;
   bus?: IIrisSource;
-  introspection?: PylonIntrospectionSettings;
   /**
    * Ephemeral / in-memory storage source (redis in production, a proteus
    * memory-driver source in dev/test). Backs ephemeral features (rate limit,

@@ -79,7 +79,11 @@ const importStatement = (slot: SourceSlot): string => {
 };
 
 const buildImports = (answers: Answers, slots: Array<SourceSlot>): Array<string> => {
-  const lines: Array<string> = [`import { Pylon } from "@lindorm/pylon";`];
+  const lines: Array<string> = [
+    answers.features.auth
+      ? `import { OpenIdDriver, Pylon } from "@lindorm/pylon";`
+      : `import { Pylon } from "@lindorm/pylon";`,
+  ];
 
   if (answers.features.http || answers.features.socket || answers.workers.length > 0) {
     lines.push(`import { join } from "path";`);
@@ -220,16 +224,21 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
   }
 
   if (answers.features.auth) {
+    // The driver owns everything provider-specific — endpoints, the authorize
+    // query, token-request encoding and client authentication. Swap it for
+    // Auth0Driver, or your own subclass, without touching anything below.
     lines.push(`  auth: {`);
-    lines.push(`    clientId: config.auth.clientId,`);
-    lines.push(`    clientSecret: config.auth.clientSecret,`);
-    lines.push(`    issuer: config.auth.issuer,`);
-    lines.push(`    router: {`);
-    lines.push(`      pathPrefix: "/auth",`);
+    lines.push(`    driver: new OpenIdDriver({`);
+    lines.push(`      clientId: config.auth.clientId,`);
+    lines.push(`      clientSecret: config.auth.clientSecret,`);
+    lines.push(`      issuer: config.auth.issuer,`);
     lines.push(`      authorize: {`);
     lines.push(`        scope: ["openid", "profile", "email"],`);
     lines.push(`        responseType: "code",`);
     lines.push(`      },`);
+    lines.push(`    }),`);
+    lines.push(`    router: {`);
+    lines.push(`      pathPrefix: "/auth",`);
     lines.push(`    },`);
     lines.push(`  },`);
   }

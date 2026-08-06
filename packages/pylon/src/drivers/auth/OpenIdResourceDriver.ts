@@ -35,7 +35,8 @@ import type {
  * never disagree about where the provider is or how to authenticate to it.
  */
 export class OpenIdResourceDriver implements IPylonAuthDriver {
-  private readonly clientId: string;
+  readonly clientId: string;
+
   private readonly clientSecret?: string;
   private readonly issuer: string;
   private readonly pinnedTokenEndpointAuthMethod: PylonOpenIdResourceDriverSettings["tokenEndpointAuthMethod"];

@@ -924,7 +924,7 @@ export const config = configuration(
 `;
 
 exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit + sessions + auth + rateLimit + workers > pylon.ts 1`] = `
-"import { Pylon } from "@lindorm/pylon";
+"import { OpenIdDriver, Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
@@ -977,15 +977,17 @@ export const pylon = new Pylon({
     expiry: "7d",
   },
   auth: {
-    clientId: config.auth.clientId,
-    clientSecret: config.auth.clientSecret,
-    issuer: config.auth.issuer,
-    router: {
-      pathPrefix: "/auth",
+    driver: new OpenIdDriver({
+      clientId: config.auth.clientId,
+      clientSecret: config.auth.clientSecret,
+      issuer: config.auth.issuer,
       authorize: {
         scope: ["openid", "profile", "email"],
         responseType: "code",
       },
+    }),
+    router: {
+      pathPrefix: "/auth",
     },
   },
   rateLimit: {
@@ -1116,7 +1118,7 @@ export const config = configuration(
 `;
 
 exports[`scaffold > scaffold orchestration > auth-only combo (auto-forces session) > pylon.ts 1`] = `
-"import { Pylon } from "@lindorm/pylon";
+"import { OpenIdDriver, Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
@@ -1139,15 +1141,17 @@ export const pylon = new Pylon({
     expiry: "7d",
   },
   auth: {
-    clientId: config.auth.clientId,
-    clientSecret: config.auth.clientSecret,
-    issuer: config.auth.issuer,
-    router: {
-      pathPrefix: "/auth",
+    driver: new OpenIdDriver({
+      clientId: config.auth.clientId,
+      clientSecret: config.auth.clientSecret,
+      issuer: config.auth.issuer,
       authorize: {
         scope: ["openid", "profile", "email"],
         responseType: "code",
       },
+    }),
+    router: {
+      pathPrefix: "/auth",
     },
   },
   setup: async () => {},
@@ -2982,7 +2986,7 @@ export const pylon = new Pylon({
 `;
 
 exports[`scaffold > writePylonFile > snapshot: auth only (session auto-forced) 1`] = `
-"import { Pylon } from "@lindorm/pylon";
+"import { OpenIdDriver, Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
@@ -3005,15 +3009,17 @@ export const pylon = new Pylon({
     expiry: "7d",
   },
   auth: {
-    clientId: config.auth.clientId,
-    clientSecret: config.auth.clientSecret,
-    issuer: config.auth.issuer,
-    router: {
-      pathPrefix: "/auth",
+    driver: new OpenIdDriver({
+      clientId: config.auth.clientId,
+      clientSecret: config.auth.clientSecret,
+      issuer: config.auth.issuer,
       authorize: {
         scope: ["openid", "profile", "email"],
         responseType: "code",
       },
+    }),
+    router: {
+      pathPrefix: "/auth",
     },
   },
   setup: async () => {
@@ -3135,7 +3141,7 @@ export const pylon = new Pylon({
 `;
 
 exports[`scaffold > writePylonFile > snapshot: db=postgres + kv=redis + auth + rateLimit + all workers 1`] = `
-"import { Pylon } from "@lindorm/pylon";
+"import { OpenIdDriver, Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
@@ -3173,15 +3179,17 @@ export const pylon = new Pylon({
     expiry: "7d",
   },
   auth: {
-    clientId: config.auth.clientId,
-    clientSecret: config.auth.clientSecret,
-    issuer: config.auth.issuer,
-    router: {
-      pathPrefix: "/auth",
+    driver: new OpenIdDriver({
+      clientId: config.auth.clientId,
+      clientSecret: config.auth.clientSecret,
+      issuer: config.auth.issuer,
       authorize: {
         scope: ["openid", "profile", "email"],
         responseType: "code",
       },
+    }),
+    router: {
+      pathPrefix: "/auth",
     },
   },
   rateLimit: {
@@ -3606,7 +3614,7 @@ export const pylon = new Pylon({
 `;
 
 exports[`scaffold > writePylonFile > snapshot: session + auth + rate limit + postgres + redis 1`] = `
-"import { Pylon } from "@lindorm/pylon";
+"import { OpenIdDriver, Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
@@ -3644,15 +3652,17 @@ export const pylon = new Pylon({
     expiry: "7d",
   },
   auth: {
-    clientId: config.auth.clientId,
-    clientSecret: config.auth.clientSecret,
-    issuer: config.auth.issuer,
-    router: {
-      pathPrefix: "/auth",
+    driver: new OpenIdDriver({
+      clientId: config.auth.clientId,
+      clientSecret: config.auth.clientSecret,
+      issuer: config.auth.issuer,
       authorize: {
         scope: ["openid", "profile", "email"],
         responseType: "code",
       },
+    }),
+    router: {
+      pathPrefix: "/auth",
     },
   },
   rateLimit: {

@@ -1,46 +1,51 @@
-import { parseAuthConfig } from "./parse-auth-config.js";
 import { describe, expect, test } from "vitest";
+import type { IPylonAuthDriver } from "../../../interfaces/index.js";
+import type { PylonAuthEndpoints } from "../../../types/index.js";
+import { parseAuthConfig } from "./parse-auth-config.js";
+
+const ENDPOINTS: PylonAuthEndpoints = {
+  issuer: "https://issuer.com",
+  jwksUri: "https://issuer.com/jwks",
+  authorizationEndpoint: "https://issuer.com/authorize",
+  tokenEndpoint: "https://issuer.com/token",
+  userinfoEndpoint: null,
+  introspectionEndpoint: null,
+  revocationEndpoint: null,
+  endSessionEndpoint: null,
+};
+
+const driver: IPylonAuthDriver = {
+  clientId: "test-client-id",
+  endpoints: async () => ENDPOINTS,
+};
+
+// The driver is an OPAQUE instance to the config parser — snapshotting it would
+// assert its shape, not the parsing. Its identity is asserted on its own below.
+const parsed = (settings: Parameters<typeof parseAuthConfig>[0]) => {
+  const { driver: _driver, ...rest } = parseAuthConfig(settings);
+  return rest;
+};
 
 describe("parseAuthConfig", () => {
   test("should return config with null router when no router options", () => {
-    expect(
-      parseAuthConfig({
-        clientId: "test-client-id",
-        clientSecret: "test-client-secret",
-        issuer: "https://issuer.com",
-      }),
-    ).toMatchSnapshot();
+    expect(parsed({ driver })).toMatchSnapshot();
   });
 
   test("should merge defaults with router options", () => {
-    expect(
-      parseAuthConfig({
-        clientId: "test-client-id",
-        clientSecret: "test-client-secret",
-        issuer: "https://issuer.com",
-        router: {},
-      }),
-    ).toMatchSnapshot();
+    expect(parsed({ driver, router: {} })).toMatchSnapshot();
   });
 
   test("should merge defaults with custom router options", () => {
     expect(
-      parseAuthConfig({
-        clientId: "test-client-id",
-        clientSecret: "test-client-secret",
-        issuer: "https://issuer.com",
+      parsed({
+        driver,
         defaultTokenExpiry: "1d",
         refresh: {
           maxAge: "6m",
           mode: "none",
         },
         router: {
-          authorize: {
-            codeChallengeMethod: "plain",
-            resource: "https://api.example.com",
-          },
           dynamicRedirectDomains: ["https://client.com"],
-          resourceKey: "audience",
           staticRedirect: {
             login: "https://client.com/login/static",
           },
@@ -50,13 +55,10 @@ describe("parseAuthConfig", () => {
   });
 
   test("should merge refresh defaults when refresh is partially specified", () => {
-    expect(
-      parseAuthConfig({
-        clientId: "test-client-id",
-        clientSecret: "test-client-secret",
-        issuer: "https://issuer.com",
-        refresh: { mode: "max_age" },
-      }),
-    ).toMatchSnapshot();
+    expect(parsed({ driver, refresh: { mode: "max_age" } })).toMatchSnapshot();
+  });
+
+  test("should carry the driver through untouched", () => {
+    expect(parseAuthConfig({ driver }).driver).toBe(driver);
   });
 });

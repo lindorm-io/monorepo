@@ -27,7 +27,7 @@ type Options = Omit<DomainAssert & VerifyOptions, "issuer"> & {
   issuer: string;
   /**
    * Per-mount control of the RFC 7662 introspection cache — tier ONE of the TTL
-   * resolution (`cache.ttl` ?? `settings.introspection.ttl` ?? ten seconds), and
+   * resolution (`cache.ttl` ?? `settings.auth.cache.ttl` ?? ten seconds), and
    * the sensitive-route carve-out: `cache: false` introspects on EVERY request
    * for this mount even when the deployment enables caching. Only ever narrows;
    * a mount cannot turn a cache on that the deployment did not configure.
@@ -98,7 +98,22 @@ const runHttp = async (
         token: source.token,
       };
     } else {
-      // Opaque ⇒ the authorization server is the only authority on it (RFC 7662).
+      // Opaque ⇒ the authorization server is the only authority on it (RFC
+      // 7662), and a driver with no `introspect` cannot ask. That is the NORMAL
+      // configuration for a service that mints and verifies its own JWTs, so it
+      // is answered as what it is — this deployment does not accept opaque
+      // credentials — rather than as a verification that mysteriously failed.
+      if (!ctx.auth.capabilities.introspect) {
+        throw new ClientError("Opaque access tokens are not accepted", {
+          status: ClientError.Status.Unauthorized,
+          code: "opaque_token_not_supported",
+          type: "urn:lindorm:pylon:error:opaque_token_not_supported",
+          title: "Opaque Token Not Supported",
+          details:
+            "The presented credential is not a JOSE or COSE token this service can verify locally, and the configured auth driver implements no `introspect` method (RFC 7662) to resolve it with. Present a locally verifiable token.",
+        });
+      }
+
       // ONE introspection call site, so swapping the resolver is a one-line
       // change. The cache in front of it is short-lived by construction — the
       // TTL is the revocation window (RFC 7662 §5) — and steps aside entirely

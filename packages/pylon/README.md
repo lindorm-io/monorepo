@@ -645,7 +645,7 @@ ctx.state.access; // PylonResolvedAccess | null
 
 `cnf` lives inside `claims.confirmation`, so it is not repeated on the outside; there is no `header` field (an opaque token has none, and a JWT's is derivable from `token`) and no `active` field (an inactive token throws `token_not_active` instead of resolving).
 
-A service that mints and verifies its own tokens needs **no `auth` configuration at all** — nothing on the JOSE/COSE path calls the IdP. Introspection is only reached by a genuinely opaque credential, and that needs `auth` configured.
+A service that mints and verifies its own tokens needs **no `auth` configuration at all** — nothing on the JOSE/COSE path calls the IdP. Introspection is only reached by a genuinely opaque credential, and that needs an `auth` driver that implements `introspect`. Without one, an opaque credential is refused as `opaque_token_not_supported` (401) rather than as a verification that failed.
 
 #### Introspection cache
 
@@ -654,16 +654,19 @@ An opaque credential costs one introspection call per request. The cache in fron
 ```typescript
 new Pylon({
   kv: keyValueSource,
-  introspection: { enabled: true, ttl: "10 seconds" },
+  auth: {
+    driver: new OpenIdResourceDriver({ issuer, clientId, clientSecret }),
+    cache: { enabled: true, ttl: "10 seconds" },
+  },
 });
 ```
 
-| Setting      | Meaning                                                                                     |
-| ------------ | ------------------------------------------------------------------------------------------- |
-| `enabled`    | Off when the block is absent. RFC 7662 §5 expects a deployment to be able to refuse caching |
-| `kv`         | Overrides the top-level `kv`. **No source ⇒ no cache** — introspection runs every request   |
-| `ttl`        | Deployment default. Built-in: `10 seconds`                                                  |
-| `encryption` | KEK selector for the stored claims. Default `{ condition: { purpose: "pylon:kek" } }`       |
+| Setting      | Meaning                                                                                                                                                                                |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`    | Off when the block is absent. RFC 7662 §5 expects a deployment to be able to refuse caching. **Cache policy only** — whether this deployment introspects at all is `driver.introspect` |
+| `kv`         | Overrides the top-level `kv`. **No source ⇒ no cache** — introspection runs every request                                                                                              |
+| `ttl`        | Deployment default. Built-in: `10 seconds`                                                                                                                                             |
+| `encryption` | KEK selector for the stored claims. Default `{ condition: { purpose: "pylon:kek" } }`                                                                                                  |
 
 ⚠ **The TTL is the revocation window.** RFC 7662 §5 warns that caching opens "a window during which a revoked token could be used at the protected resource", so it is measured in seconds — for `active: false` answers as much as for live ones. An entry is additionally bounded by the token's own `exp`, and caching to that `exp` is explicitly _not_ what this does: an opaque token that is never re-checked is a JWT without revocation.
 
@@ -677,7 +680,7 @@ router.use(createAccessTokenMiddleware({ issuer, cache: { ttl: "2 seconds" } }))
 router.use(createAccessTokenMiddleware({ issuer, cache: false }));
 ```
 
-The key is a digest of `(token, issuer, clientId)` — never the raw token, which would land readable in shared storage. The identity is part of it because RFC 7662 §2.2 lets the authorization server answer the same token differently per requesting client; keying on the token alone would let two services sharing a namespace read each other's answers. `ctx.auth.config` exposes that identity (`{ issuer, clientId }`, and never the client secret).
+The key is a digest of `(token, issuer, clientId)` — never the raw token, which would land readable in shared storage. The identity is part of it because RFC 7662 §2.2 lets the authorization server answer the same token differently per requesting client; keying on the token alone would let two services sharing a namespace read each other's answers. Both inputs come from the **driver** — `endpoints().issuer` and its own client id — because RFC 7662 §2.1 has the resource server authenticate to the introspection endpoint, and those credentials may legitimately differ from a relying party's. `await ctx.auth.config()` exposes that identity (`{ issuer, clientId }`, and never the client secret).
 
 Nothing is cached when introspection fails — a stale answer served over an unreachable authorization server is a revocation bypass — and a storage outage degrades to an uncached introspection rather than failing the request. The stored claims are encrypted at rest.
 
@@ -907,29 +910,82 @@ router.use(
 
 ## OpenID Connect
 
-Pylon can act as an OpenID Connect Relying Party. Set `auth` to enable token verification and (unless `auth.router` is set to `null` via the partial) auto-mounted endpoints under `pathPrefix`.
+Pylon talks to an identity provider through an **auth driver**. The driver owns everything that varies by provider — where the endpoints are, how the authorization query is spelled, how the token request is encoded and authenticated, what userinfo and introspection look like, and whether logging out is a redirect, a revocation, or nothing at all. Pylon keeps everything a driver could weaken by omission: `state`, `nonce`, PKCE, cookie sealing, the `redirect_uri` allowlist, token verification, session assembly and the routes themselves.
 
 ```typescript
+import { OpenIdDriver } from "@lindorm/pylon";
+
 const app = new Pylon({
   auth: {
-    clientId: "my-client-id",
-    clientSecret: "my-client-secret",
-    issuer: "https://auth.example.com",
+    driver: new OpenIdDriver({
+      issuer: "https://auth.example.com",
+      clientId: "my-client-id",
+      clientSecret: "my-client-secret",
+      authorize: { scope: ["openid", "profile", "email"] },
+    }),
     refresh: { mode: "half_life" },
     router: {
       pathPrefix: "/auth",
       errorRedirect: "/error",
-      authorize: {
-        scope: ["openid", "profile", "email"],
-        responseType: "code",
-        codeChallengeMethod: "S256",
-      },
+      dynamicRedirectDomains: ["https://app.example.com"],
     },
   },
   session: { enabled: true },
   // …
 });
 ```
+
+| `auth` setting       | Meaning                                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| `driver`             | **Required.** How pylon talks to the provider — see the drivers below                                    |
+| `router`             | Mounts the login/logout routes under `pathPrefix`. Omit it entirely for a pure resource server           |
+| `cache`              | Driver-response caching (RFC 7662 introspection today) — see [Introspection cache](#introspection-cache) |
+| `refresh`            | When to auto-refresh a session's tokens                                                                  |
+| `defaultTokenExpiry` | Fallback session lifetime when the token response carries no expiry. Default `1d`                        |
+
+Client credentials, the issuer and the authorization request's defaults are the **provider's**, so they live on the driver, not on `auth`.
+
+### Drivers
+
+| Driver                 | Capabilities                                                   | Use for                                                                                               |
+| ---------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `OpenIdDriver`         | Everything, backed by `.well-known/openid-configuration`       | Any standard OP — tyr, Auth0, Google                                                                  |
+| `OpenIdResourceDriver` | `introspect` · `userinfo` · `subject` only                     | An API service that validates tokens and never logs anyone in                                         |
+| `Auth0Driver`          | `OpenIdDriver`, with the resource indicator sent as `audience` | Auth0 tenants without the RFC 8707 compatibility profile                                              |
+| `PylonAuthDriverBase`  | The OAuth2 mechanics, with `endpoints()` abstract              | A provider that publishes no discovery document (GitHub, Discord) — return the endpoints as a literal |
+
+**Every capability method is optional, and an omitted method IS the capability declaration.** There is no flag that can disagree with reality: a provider with no refresh grant simply has no `refresh`, and pylon reports the configured mode as unhonourable rather than silently never refreshing.
+
+```typescript
+class GitHubDriver extends PylonAuthDriverBase {
+  async endpoints() {
+    return {
+      issuer: "https://github.com",
+      jwksUri: null,
+      authorizationEndpoint: "https://github.com/login/oauth/authorize",
+      tokenEndpoint: "https://github.com/login/oauth/access_token",
+      userinfoEndpoint: "https://api.github.com/user",
+      introspectionEndpoint: null,
+      revocationEndpoint: null,
+      endSessionEndpoint: null,
+    };
+  }
+}
+```
+
+Drivers are not required to extend anything — `IPylonAuthDriver` is the contract. A driver never receives the request context, only a narrow read-only one (`amphora`, a correlation-tagged `conduit`, `environment`, `logger`), so it cannot touch a cookie or the session even deliberately.
+
+### Boot validation
+
+At `setup()` pylon holds the configuration against what the driver can serve. The test is whether there is a coherent thing to do without the capability:
+
+| Configuration                                      | Result                                                                             |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `router` set, driver has no `authorize`/`exchange` | **Throws** `auth_driver_cannot_serve_router` — `/login` is mounted and cannot work |
+| `refresh.mode !== "none"`, driver has no `refresh` | Warns once. Refresh is off                                                         |
+| `cache.enabled`, driver has no `introspect`        | Warns once. The cache is dead, not broken                                          |
+
+### Refresh
 
 | Refresh mode | Behaviour                                                           |
 | ------------ | ------------------------------------------------------------------- |
@@ -950,13 +1006,24 @@ A session that holds no refresh token — one established without `offline_acces
 | `GET /:prefix/logout/callback`     | Handle the IdP's post-logout redirect                                  |
 | `POST /:prefix/backchannel-logout` | Handle RP-initiated backchannel logout                                 |
 | `GET /:prefix/refresh`             | Force-refresh the session's tokens                                     |
-| `GET /:prefix/userinfo`            | Return `ctx.auth.userinfo()` (id-token fast path with IdP fallback)    |
+| `GET /:prefix/userinfo`            | Return `ctx.auth.userinfo()` (id-token fast path with driver fallback) |
 | `GET /:prefix/introspect`          | Return `ctx.auth.introspect()` (RFC 7662 metadata)                     |
 | `GET /:prefix/error`               | OIDC error landing page                                                |
 
 `ctx.auth.userinfo()` answers _who is this user?_ — it parses the id token locally when possible and falls back to the IdP's userinfo endpoint. `ctx.auth.introspect()` answers _is this token valid, what can it do, when does it expire?_.
 
-The relying party reads its endpoints off the upstream IdP's discovery document, fetched by `amphora.idp`. Six fields are used, by their RFC wire names — only the first two are required by the specs, and a real IdP does omit the rest (Auth0 publishes no `introspection_endpoint`):
+| `ctx.auth`             | Available on  | Notes                                                                                                  |
+| ---------------------- | ------------- | ------------------------------------------------------------------------------------------------------ |
+| `capabilities`         | HTTP + socket | `{ introspect, userinfo }`, derived from the driver — never configured                                 |
+| `introspect(token?)`   | HTTP + socket | Local fast path first, then `driver.introspect`                                                        |
+| `userinfo(token?)`     | HTTP + socket | Local fast path first, then `driver.userinfo`                                                          |
+| `await config()`       | HTTP          | `{ issuer, clientId }` resolved from the driver. A method, because the issuer comes from `endpoints()` |
+| `await login(query?)`  | HTTP          | Generates `state` / `nonce` / PKCE, then `driver.authorize`                                            |
+| `await logout(query?)` | HTTP          | `driver.logout` — returns `{ action: "redirect", url }` or `{ action: "local" }`                       |
+
+There is **no** `ctx.auth.token(grant)`. A generic "call the token endpoint with anything" makes the driver contract unenforceable, since a consumer could drive any grant straight past it; `conduitClientCredentialsMiddleware` covers raw client-credentials.
+
+The discovery-backed drivers read their endpoints off the upstream IdP's document, fetched by `amphora.idp`. Six fields are used, by their RFC wire names — only the first two are required by the specs, and a real IdP does omit the rest (Auth0 publishes no `introspection_endpoint`). ⚠ The document's own `issuer` wins over the configured one: a tenant-scoped provider templates it in the metadata it serves, and pylon verifies id_tokens against what the provider published.
 
 | Wire name                               | Spec level                                | Pylon behaviour when absent                                                                                 |
 | --------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -964,7 +1031,7 @@ The relying party reads its endpoints off the upstream IdP's discovery document,
 | `token_endpoint`                        | REQUIRED (OIDC Discovery §3, RFC 8414 §2) | `openid_configuration_incomplete` — thrown when the document is adopted                                     |
 | `userinfo_endpoint`                     | RECOMMENDED (OIDC Discovery §3)           | `idp_userinfo_endpoint_not_supported` — thrown by `ctx.auth.userinfo()` when it must call the IdP           |
 | `introspection_endpoint`                | OPTIONAL (RFC 8414 §2, RFC 7662)          | `idp_introspection_endpoint_not_supported` — thrown by `ctx.auth.introspect()` when it must call the IdP    |
-| `end_session_endpoint`                  | OPTIONAL (OIDC RP-Initiated Logout 1.0)   | `idp_end_session_endpoint_not_supported` — thrown by `ctx.auth.logout()`                                    |
+| `end_session_endpoint`                  | OPTIONAL (OIDC RP-Initiated Logout 1.0)   | `OpenIdDriver` logs out LOCALLY — the session is dropped and the browser goes straight to its destination   |
 | `token_endpoint_auth_methods_supported` | OPTIONAL (OIDC Discovery §3, RFC 8414 §2) | Falls back to the spec default `["client_secret_basic"]` — the token request uses HTTP basic auth, no throw |
 
 The named errors are thrown at the point of use, so the local fast paths still work: `ctx.auth.userinfo()` and `ctx.auth.introspect()` only throw when they actually have to reach the IdP, and the login callback's best-effort subject lookup stays silent. An IdP that serves an endpoint without advertising it can have the field supplied through the `idp.openIdConfiguration` override on the Amphora, which is merged over the fetched document.

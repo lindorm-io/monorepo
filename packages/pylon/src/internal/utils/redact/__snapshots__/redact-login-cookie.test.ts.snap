@@ -2,6 +2,7 @@
 
 exports[`redactLoginCookie > should filter the pkce code verifier and keep the rest 1`] = `
 {
+  "callbackUri": "https://test.lindorm.io/auth/login/callback",
   "codeChallengeMethod": "S256",
   "codeVerifier": "[Filtered]",
   "nonce": "nonce",

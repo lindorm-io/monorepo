@@ -1,4 +1,5 @@
 import { ClientError, ServerError } from "@lindorm/errors";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { PylonSecurityTxt } from "../../types/index.js";
 import { createWellKnownRouter } from "./create-well-known-router.js";
 import { describe, expect, test, vi } from "vitest";
@@ -12,7 +13,14 @@ describe("createWellKnownRouter", () => {
     maxRequestAge: 30000,
     name: "test-service",
     version: "1.0.0",
-    auth: { issuer: "https://auth.lindorm.io" },
+    // The authorization server comes from the DRIVER's resolved endpoints, so a
+    // provider whose concrete issuer is only known at runtime is advertised right.
+    auth: {
+      driver: {
+        clientId: "client-id",
+        endpoints: async () => ({ issuer: "https://auth.lindorm.io" }),
+      },
+    },
   };
 
   test("should create a router with expected routes", () => {
@@ -80,7 +88,16 @@ describe("createWellKnownRouter", () => {
       const router = createWellKnownRouter(options);
       const layer = router.stack.find((l) => l.path === "/oauth-protected-resource");
 
-      const ctx: any = { body: null, status: 0 };
+      const ctx: any = {
+        amphora: {},
+        body: null,
+        logger: createMockLogger(),
+        state: {
+          app: { environment: "test" },
+          metadata: { correlationId: "test-correlation" },
+        },
+        status: 0,
+      };
       const next = vi.fn();
 
       for (const mw of layer!.stack) {

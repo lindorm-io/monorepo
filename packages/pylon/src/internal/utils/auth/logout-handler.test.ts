@@ -22,8 +22,9 @@ describe("createLogoutHandler", () => {
 
     ctx = {
       auth: {
-        logout: vi.fn().mockReturnValue({
-          redirect: new URL("/auth/logout/callback", "https://example.com"),
+        logout: vi.fn().mockResolvedValue({
+          action: "redirect",
+          url: new URL("/auth/logout/callback", "https://example.com"),
           state: "state",
         }),
       },
@@ -91,6 +92,21 @@ describe("createLogoutHandler", () => {
       { signature: true, expiry: "15m" },
     );
     expect(ctx.redirect).toHaveBeenCalledWith("https://example.com/auth/logout/callback");
+  });
+
+  // A provider that revoked server-side (or has no RP-initiated logout) leaves
+  // nothing to come back to, so there is no state to carry in a cookie.
+  test("should drop the session and redirect locally when the driver says local", async () => {
+    ctx.auth.logout.mockResolvedValue({ action: "local", state: "state" });
+
+    await expect(
+      createLogoutHandler(routerConfig)(ctx, vi.fn()),
+    ).resolves.toBeUndefined();
+
+    expect(ctx.session.del).toHaveBeenCalled();
+    expect(ctx.state.session).toBeNull();
+    expect(ctx.cookies.set).not.toHaveBeenCalled();
+    expect(ctx.redirect).toHaveBeenCalledWith("https://client.com/redirect");
   });
 
   test("should throw on missing session", async () => {

@@ -58,7 +58,7 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
       });
     }
 
-    const { redirect, state } = ctx.auth.logout({
+    const result = await ctx.auth.logout({
       idTokenHint: ctx.data.idTokenHint ?? ctx.state.session.idToken,
       logoutHint: ctx.data.logoutHint,
       uiLocales: ctx.data.uiLocales,
@@ -81,9 +81,21 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
       });
     }
 
+    // The provider had nothing to redirect to — it revoked server-side, or has
+    // no RP-initiated logout at all. There is no callback coming, so the session
+    // is dropped here and the browser goes straight to its destination. Writing
+    // a logout cookie would leave a state value nothing will ever verify.
+    if (result.action === "local") {
+      await ctx.session.del();
+      ctx.state.session = null;
+
+      ctx.redirect(redirectUri);
+      return;
+    }
+
     const cookie: PylonLogoutCookie = {
       redirectUri,
-      state,
+      state: result.state,
     };
 
     // Signed for integrity: the logout cookie carries `redirectUri` (an
@@ -95,5 +107,5 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
       expiry: "15m",
     });
 
-    ctx.redirect(redirect.toString());
+    ctx.redirect(result.url.toString());
   };
