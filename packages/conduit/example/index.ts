@@ -1,10 +1,9 @@
-import { ChangeCase } from "@lindorm/case";
-import { Logger, LogLevel } from "@lindorm/logger";
+import { Logger } from "@lindorm/logger";
 import { Conduit, conduitChangeResponseDataMiddleware } from "../src/index.js";
 
 const main = async (): Promise<void> => {
   const logger = new Logger({
-    level: LogLevel.Debug,
+    level: "debug",
     readable: true,
   });
 
@@ -12,7 +11,7 @@ const main = async (): Promise<void> => {
     alias: "Scryfall",
     baseUrl: "https://api.scryfall.com",
     logger,
-    middleware: [conduitChangeResponseDataMiddleware(ChangeCase.Camel)],
+    middleware: [conduitChangeResponseDataMiddleware("camel")],
     timeout: 500,
   });
 
