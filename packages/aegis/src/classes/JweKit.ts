@@ -51,7 +51,10 @@ export class JweKit implements IJweKit {
   constructor(options: JweKitSettings) {
     this.logger = options.logger.child(["JweKit"]);
     this.kryptos = options.kryptos;
-    this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
+    // The KEY selects the cipher; `defaultEncryption` only fills in for a key
+    // that declares none.
+    this.encryption =
+      options.kryptos.encryption ?? options.defaultEncryption ?? "A256GCM";
     this.certBindingMode = options.certBindingMode ?? "strict";
     this.partyRecipient = options.partyRecipient;
   }
@@ -68,7 +71,10 @@ export class JweKit implements IJweKit {
    * else. The `objectId`/format sugar is DOMAIN enrichment built Aegis-side.
    */
   encrypt(data: TokenContent, options: JweEncryptOptions = {}): string {
-    const kit = new AesKit({ encryption: this.encryption, kryptos: this.kryptos });
+    const kit = new AesKit({
+      defaultEncryption: this.encryption,
+      kryptos: this.kryptos,
+    });
 
     this.logger.debug("Encrypting token", { options });
 
@@ -158,7 +164,9 @@ export class JweKit implements IJweKit {
   decrypt<T extends TokenContent = Buffer>(
     token: string,
   ): DecryptedEncryptedToken<T, string> {
-    const kit = new AesKit({ encryption: this.encryption, kryptos: this.kryptos });
+    // Decrypt is driven by the DECRYPTION RECORD assembled below — the wire's
+    // own `enc` — so the kit needs no encryption of its own.
+    const kit = new AesKit({ kryptos: this.kryptos });
 
     this.logger.debug("Decrypting token", { token: sanitiseToken(token) });
 

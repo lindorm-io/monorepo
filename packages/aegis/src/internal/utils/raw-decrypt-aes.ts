@@ -32,7 +32,9 @@ export const rawDecryptAes = async <T extends AesContent = string>({
     parsed.algorithm as KryptosEncAlgorithm | undefined,
     options?.key,
   );
-  const kit = new AesKit({ encryption: deps.encryption, kryptos });
+  // Decrypt reads the algorithm off the sealed record's own header, so the kit
+  // needs no encryption at all — naming one here could only ever be ignored.
+  const kit = new AesKit({ kryptos });
 
   return kit.decrypt<T>(data);
 };

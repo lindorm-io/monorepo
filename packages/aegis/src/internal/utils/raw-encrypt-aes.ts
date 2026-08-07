@@ -31,10 +31,7 @@ export const rawEncryptAes = async ({
   const options = isString(modeOrOptions) ? maybeOptions : modeOrOptions;
 
   const kryptos = await deps.resolveEncryptKey(options?.key);
-  const kit = new AesKit({
-    encryption: options?.key?.encryption ?? deps.encryption,
-    kryptos,
-  });
+  const kit = new AesKit({ defaultEncryption: deps.defaultEncryption, kryptos });
 
   return kit.encrypt(data, mode as "cbor", {
     apu: options?.apu,

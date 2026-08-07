@@ -33,11 +33,10 @@ export type CweKitSettings = {
   kryptos: IKryptos;
   logger: ILogger;
   /**
-   * The content-encryption algorithm. Defaults to the key's own `encryption`;
-   * supply it explicitly when the resolved key carries none (e.g. an Amphora
-   * key), exactly as JweKit takes its encryption from Aegis.
+   * The content-encryption AEAD for a key that DECLARES NONE — a fallback, not
+   * an override. The key's own `encryption` wins; see `AesKitSettings`.
    */
-  encryption?: KryptosEncryption;
+  defaultEncryption?: KryptosEncryption;
 };
 
 const unwrapEncrypt0 = (value: unknown): Array<unknown> => {
@@ -63,12 +62,15 @@ const unwrapEncrypt0 = (value: unknown): Array<unknown> => {
 export class CweKit implements ICweKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
-  private readonly encryption: KryptosEncryption | undefined;
+  private readonly encryption: KryptosEncryption;
 
   constructor(options: CweKitSettings) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CweKit"]);
-    this.encryption = options.encryption ?? options.kryptos.encryption ?? undefined;
+    // Same floor as JweKit and AesKit — all three wire kits resolve
+    // key-first, then the deployment fallback, then `A256GCM`.
+    this.encryption =
+      options.kryptos.encryption ?? options.defaultEncryption ?? "A256GCM";
   }
 
   /**
@@ -89,9 +91,8 @@ export class CweKit implements ICweKit {
 
     // Interop gate (D5): a non-proprietary encrypt refuses an encryption with no
     // OFFICIAL COSE-RFC registration (the AES-CBC-HMAC family) so the token stays
-    // interoperable. A missing encryption still falls through to encToCoseLabel's
-    // own throw below.
-    if (!options.proprietary && this.encryption && !isOfficialCoseEnc(this.encryption)) {
+    // interoperable.
+    if (!options.proprietary && !isOfficialCoseEnc(this.encryption)) {
       throw new CweError(
         `Encryption "${this.encryption}" has no official COSE registration`,
         {
@@ -131,7 +132,7 @@ export class CweKit implements ICweKit {
     const aad = buildEncStructure(protectedHeader);
     const { ciphertext, iv, tag } = new AesKit({
       kryptos: this.kryptos,
-      encryption: this.encryption,
+      defaultEncryption: this.encryption,
     }).encryptContent(bytes, { aad });
 
     const unprotected = new Map<number, unknown>();
@@ -186,7 +187,10 @@ export class CweKit implements ICweKit {
     const tag = ct.subarray(ct.length - tagBytes);
 
     const aad = buildEncStructure(Buffer.from(protectedHeader));
-    const plaintext = new AesKit({ kryptos: this.kryptos, encryption }).decryptContent({
+    // The label off the protected header is the authority here — it names what
+    // the sender used, which may not be what this key declares.
+    const plaintext = new AesKit({ kryptos: this.kryptos }).decryptContent({
+      encryption,
       aad,
       ciphertext,
       iv: Buffer.from(ivValue),

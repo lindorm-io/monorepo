@@ -5,8 +5,11 @@ import type { ParsedAesDecryptionRecord } from "../types/index.js";
 import { describe, expect, test } from "vitest";
 
 describe("parseAes (integration — strict return type)", () => {
-  const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
-  const kit = new AesKit({ kryptos, encryption: "A128GCM" });
+  const kryptos = KryptosKit.generate.auto({
+    algorithm: "A128KW",
+    encryption: "A128GCM",
+  });
+  const kit = new AesKit({ kryptos });
 
   test("cbor string input produces ParsedAesDecryptionRecord with populated keyId", () => {
     const cipher = kit.encrypt("payload", "cbor");

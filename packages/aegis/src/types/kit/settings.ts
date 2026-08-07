@@ -10,7 +10,11 @@ export type SignKitSettings = {
 };
 
 export type EncryptKitSettings = SignKitSettings & {
-  encryption?: KryptosEncryption;
+  /**
+   * The content-encryption AEAD for a key that DECLARES NONE — a fallback, not
+   * an override. The key's own `encryption` wins; see `AesKitSettings`.
+   */
+  defaultEncryption?: KryptosEncryption;
 };
 
 export type SignatureKitSettings = {

@@ -12,7 +12,7 @@ describe("cbor-aes", () => {
       algorithm: "dir",
       encryption: "A256GCM",
     });
-    const kit = new AesKit({ kryptos, encryption: "A256GCM" });
+    const kit = new AesKit({ kryptos });
 
     const cipher = kit.encrypt({ hello: "world" }, "cbor");
 
@@ -21,8 +21,11 @@ describe("cbor-aes", () => {
   });
 
   test("round-trips a key-wrap record (with wrapped CEK) through the cbor wire", () => {
-    const kryptos = KryptosKit.generate.enc.oct({ algorithm: "A256KW" });
-    const kit = new AesKit({ kryptos, encryption: "A256GCM" });
+    const kryptos = KryptosKit.generate.enc.oct({
+      algorithm: "A256KW",
+      encryption: "A256GCM",
+    });
+    const kit = new AesKit({ kryptos });
 
     const cipher = kit.encrypt("secret", "cbor");
     const parsed = parseCborAesString(cipher);
@@ -32,7 +35,10 @@ describe("cbor-aes", () => {
   });
 
   test("recomputes an AAD identical to the encrypt-time AAD (tamper-evident header)", () => {
-    const kryptos = KryptosKit.generate.enc.oct({ algorithm: "A256KW" });
+    const kryptos = KryptosKit.generate.enc.oct({
+      algorithm: "A256KW",
+      encryption: "A256GCM",
+    });
     const cipher = encryptCbor({
       data: "payload",
       encryption: "A256GCM",
@@ -50,9 +56,7 @@ describe("cbor-aes", () => {
     });
 
     expect(() =>
-      new AesKit({ kryptos, encryption: "A256GCM" }).decrypt(
-        `aes:${B64.encode(Buffer.from(tampered), "b64u")}`,
-      ),
+      new AesKit({ kryptos }).decrypt(`aes:${B64.encode(Buffer.from(tampered), "b64u")}`),
     ).toThrow();
     expect(parsed.aad).toBeInstanceOf(Buffer);
   });
@@ -66,11 +70,12 @@ describe("cbor-aes", () => {
   test("cbor wire decodes to the expected field set (dir vs key-wrap)", () => {
     const dirKit = new AesKit({
       kryptos: KryptosKit.generate.enc.oct({ algorithm: "dir", encryption: "A256GCM" }),
-      encryption: "A256GCM",
     });
     const kwKit = new AesKit({
-      kryptos: KryptosKit.generate.enc.oct({ algorithm: "A256KW" }),
-      encryption: "A256GCM",
+      kryptos: KryptosKit.generate.enc.oct({
+        algorithm: "A256KW",
+        encryption: "A256GCM",
+      }),
     });
 
     const decode = (cipher: string): Array<string> =>

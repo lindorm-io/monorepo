@@ -113,13 +113,19 @@ The AAD is **not** stored with the ciphertext. That is what makes it a binding: 
 ### `new AesKit(options)`
 
 ```ts
-new AesKit({ kryptos, encryption });
+new AesKit({ kryptos, defaultEncryption });
 ```
 
-| Option       | Type                 | Description                                                                       |
-| ------------ | -------------------- | --------------------------------------------------------------------------------- |
-| `kryptos`    | `IKryptos`           | Required. The `@lindorm/kryptos` key instance used for key derivation / wrapping. |
-| `encryption` | `KryptosEncryption?` | Optional. Falls back to `kryptos.encryption`, then to `"A256GCM"`.                |
+| Option              | Type                 | Description                                                                       |
+| ------------------- | -------------------- | --------------------------------------------------------------------------------- |
+| `kryptos`           | `IKryptos`           | Required. The `@lindorm/kryptos` key instance used for key derivation / wrapping. |
+| `defaultEncryption` | `KryptosEncryption?` | Optional. Used only when the key declares no `encryption`. Else `"A256GCM"`.      |
+
+**The key selects the cipher.** A `Kryptos` that declares an `encryption` states what it
+is, and `AesKit` honours it — `kryptos.encryption ?? defaultEncryption ?? "A256GCM"`.
+`defaultEncryption` is a fallback, never an override: it applies only when the key said
+nothing, so it can never disagree with one that did. A key imported from a peer's JWKS is
+the case it exists for — `enc` is not a JWK member, so such a key is silent.
 
 `aes.kryptos` is exposed as a public readonly property.
 
@@ -314,7 +320,7 @@ type AesContentType = "application/json" | "application/octet-stream" | "text/pl
 type AesEncryptionMode = "cbor" | "record" | "serialised";
 
 type AesKitSettings = {
-  encryption?: KryptosEncryption;
+  defaultEncryption?: KryptosEncryption;
   kryptos: IKryptos;
 };
 

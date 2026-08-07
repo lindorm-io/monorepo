@@ -3,8 +3,11 @@ import { AesKit } from "./AesKit.js";
 import { describe, expect, test } from "vitest";
 
 describe("AesKit (integration — compile-time options surface)", () => {
-  const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
-  const kit = new AesKit({ kryptos, encryption: "A128GCM" });
+  const kryptos = KryptosKit.generate.auto({
+    algorithm: "A128KW",
+    encryption: "A128GCM",
+  });
+  const kit = new AesKit({ kryptos });
 
   const aad = Buffer.from("caller-supplied-aad");
   const apu = Buffer.from("Alice");

@@ -39,7 +39,7 @@ const aegis = new Aegis({
   logger, // ILogger
   issuer: "https://example.com", // optional; falls back to amphora.internal?.issuer
   clockTolerance: 30, // optional, in seconds (default 0)
-  encryption: "A256GCM", // optional, default "A256GCM"
+  defaultEncryption: "A256GCM", // optional; only for keys that declare none
   certBindingMode: "strict", // optional, "strict" | "lax" (default "strict")
   dpopMaxSkew: 60, // optional, in seconds (default 60)
 
@@ -80,8 +80,8 @@ token gets minted.
 
 Every selector is amphora's `AmphoraKeySelector` — `{ kryptos?, condition? }`, the one
 key-selection vocabulary across the toolkit — narrowed to the attributes aegis permits.
-`sign`, `encrypt` and `decrypt` take the full selector; `AegisEncKey` adds `encryption`,
-which picks the cipher rather than the key. **`verify` deliberately carries no
+`sign`, `encrypt` and `decrypt` all take the full selector and nothing else — a selector
+names the KEY, and the key names its own cipher. **`verify` deliberately carries no
 `kryptos`**: a token names its verification key by `kid`, so there is no path that
 supplies one, and the field would be surface nothing honours.
 
@@ -242,9 +242,20 @@ const cookie = await aegis.aes.encrypt(session, {
 // The ciphertext names its own key, so the read side needs no selector — the
 // lookup is unfiltered and still finds an expired or unpublished key.
 const session = await aegis.aes.decrypt(cookie);
+```
 
-// `encryption` picks the CIPHER, never the key.
-await aegis.aes.encrypt(data, { key: { encryption: "A128CBC-HS256" } });
+#### The key picks the cipher
+
+A `Kryptos` that declares an `encryption` states what it is, and every aegis path — JWE,
+COSE and AES alike — seals with that algorithm. `AegisSettings.defaultEncryption` is the
+deployment fallback for a recipient key that declares none (an imported peer JWK carries
+no `enc`), so it can never disagree with a key that did. The resolution is
+`kryptos.encryption ?? defaultEncryption ?? "A256GCM"`.
+
+To seal under a different cipher, name a key that declares it:
+
+```typescript
+await aegis.aes.encrypt(data, { key: { condition: { purpose: "cookie" } } });
 ```
 
 A key supplied outright is the one case the vault cannot serve on the way back, so
@@ -381,7 +392,7 @@ import { JweKit } from "@lindorm/aegis";
 const kit = new JweKit({
   kryptos,
   logger,
-  encryption: "A256GCM", // optional; falls back to kryptos.encryption
+  defaultEncryption: "A256GCM", // optional; only when kryptos declares none
 });
 
 const token = kit.encrypt("secret data", { header: { oid: "msg-002" } });

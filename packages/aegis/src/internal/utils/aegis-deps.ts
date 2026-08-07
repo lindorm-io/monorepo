@@ -35,7 +35,8 @@ export type AegisDeps = {
   certificateThumbprintSha1: boolean;
   clockTolerance: number;
   dpopMaxSkew: number;
-  encryption: KryptosEncryption;
+  /** Deployment fallback for a key that declares no `encryption`. */
+  defaultEncryption: KryptosEncryption | undefined;
   /** This recipient's ECDH-ES identity (base64url `apv`) for read-side verification. */
   partyRecipient: string | undefined;
   logger: ILogger;

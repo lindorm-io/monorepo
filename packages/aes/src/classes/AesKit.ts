@@ -39,7 +39,11 @@ export class AesKit implements IAesKit {
 
   constructor(options: AesKitSettings) {
     this.kryptos = options.kryptos;
-    this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
+    // The KEY selects the cipher. `defaultEncryption` is the fallback for a key
+    // that declares none (an imported peer JWK), not an override of one that
+    // does — see `AesKitSettings`.
+    this.encryption =
+      options.kryptos.encryption ?? options.defaultEncryption ?? "A256GCM";
   }
 
   encrypt(data: AesContent, options?: AesEncryptOptions): string;
@@ -199,7 +203,9 @@ export class AesKit implements IAesKit {
       return decryptContentDirect({
         aad: input.aad,
         ciphertext: input.ciphertext,
-        encryption: this.encryption,
+        // From the WIRE, not from this kit — the sender's algorithm is the only
+        // one that can open this ciphertext.
+        encryption: input.encryption,
         initialisationVector: input.iv,
         kryptos: this.kryptos,
         tag: input.tag,

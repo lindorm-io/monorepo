@@ -218,16 +218,6 @@ describe("Aegis AES key selection", () => {
       expect(AesKit.parse(cbor).keyId).toBe(COOKIE_KEY.id);
     });
 
-    test("picks the CIPHER without touching the key", async () => {
-      const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
-        key: { encryption: "A128CBC-HS256" },
-      });
-
-      expect(AesKit.parse(encoded).encryption).toBe("A128CBC-HS256");
-      expect(AesKit.parse(encoded).keyId).toBe(TOKEN_KEY.id);
-      await expect(aegis.aes.decrypt(encoded)).resolves.toBe(PLAINTEXT);
-    });
-
     test("a selector that matches nothing throws, never falls back", async () => {
       const error = await aegis.aes
         .encrypt(PLAINTEXT, "cbor", { key: { condition: { purpose: "none" } } })

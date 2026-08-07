@@ -6,11 +6,10 @@ import { AesError } from "../errors/index.js";
 import { getAesDescriptor } from "../internal/utils/aes-descriptor.js";
 import { AesKit } from "./AesKit.js";
 
+// The `dir` key IS the algorithm — its secret is sized for it — so declaring
+// the encryption on the key is the only place it belongs.
 const dirKit = (encryption: AesCcmEncryption): AesKit =>
-  new AesKit({
-    encryption,
-    kryptos: KryptosKit.generate.enc.oct({ algorithm: "dir", encryption }),
-  });
+  new AesKit({ kryptos: KryptosKit.generate.enc.oct({ algorithm: "dir", encryption }) });
 
 describe("AesKit — AES-CCM", () => {
   describe.each(CCM_ENCRYPTION_ALGORITHMS)("%s", (encryption) => {
@@ -57,7 +56,13 @@ describe("AesKit — AES-CCM", () => {
       const plaintext = Buffer.from([0x01, 0x02, 0x03, 0x04]);
 
       const { ciphertext, iv, tag } = kit.encryptContent(plaintext, { aad });
-      const decrypted = kit.decryptContent({ aad, ciphertext, iv, tag });
+      const decrypted = kit.decryptContent({
+        aad,
+        ciphertext,
+        encryption: "AES-CCM-16-128-128",
+        iv,
+        tag,
+      });
 
       expect(decrypted).toEqual(plaintext);
     });
@@ -67,7 +72,7 @@ describe("AesKit — AES-CCM", () => {
         algorithm: "dir",
         encryption: "AES-CCM-16-128-256",
       });
-      const kit = new AesKit({ kryptos, encryption: "AES-CCM-16-128-256" });
+      const kit = new AesKit({ kryptos });
       const aad = Buffer.from("aad");
       const iv = Buffer.alloc(13, 7);
       const plaintext = Buffer.from("deterministic");
@@ -87,13 +92,22 @@ describe("AesKit — AES-CCM", () => {
       });
 
       expect(() =>
-        kit.decryptContent({ aad: Buffer.from("wrong"), ciphertext, iv, tag }),
+        kit.decryptContent({
+          aad: Buffer.from("wrong"),
+          ciphertext,
+          encryption: "AES-CCM-64-64-128",
+          iv,
+          tag,
+        }),
       ).toThrow(AesError);
     });
 
     test("rejects a non-direct (key-wrapping) kryptos", () => {
-      const kryptos = KryptosKit.generate.enc.oct({ algorithm: "A256KW" });
-      const kit = new AesKit({ kryptos, encryption: "A256GCM" });
+      const kryptos = KryptosKit.generate.enc.oct({
+        algorithm: "A256KW",
+        encryption: "A256GCM",
+      });
+      const kit = new AesKit({ kryptos });
 
       expect(() => kit.encryptContent(Buffer.from("x"))).toThrow(AesError);
     });

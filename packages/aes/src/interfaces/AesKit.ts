@@ -1,4 +1,4 @@
-import type { IKryptos } from "@lindorm/kryptos";
+import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type {
   AesContent,
   AesDecryptionRecord,
@@ -46,9 +46,18 @@ export type AesContentEncryption = {
   tag: Buffer;
 };
 
+/**
+ * The header-less ciphertext, described in full. `encryption` is REQUIRED and
+ * sits here rather than on the kit because the algorithm is part of the
+ * ciphertext's description, exactly like the IV and the tag — the caller reads
+ * it off the wire (a COSE protected header) and cannot decrypt without it. The
+ * kit's key-derived cipher never applies to a decrypt: it would ignore what the
+ * sender actually used.
+ */
 export type AesContentDecryption = {
   aad?: Buffer;
   ciphertext: Buffer;
+  encryption: KryptosEncryption;
   iv: Buffer;
   tag: Buffer;
 };

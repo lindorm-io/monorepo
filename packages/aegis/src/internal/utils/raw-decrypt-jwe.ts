@@ -31,7 +31,7 @@ export const rawDecryptJwe = async <T extends TokenContent = Buffer>({
 
   return new JweKit({
     certBindingMode: deps.certBindingMode,
-    encryption: deps.encryption,
+    defaultEncryption: deps.defaultEncryption,
     kryptos,
     logger: deps.logger,
     partyRecipient: deps.partyRecipient,

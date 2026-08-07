@@ -1,6 +1,5 @@
 import type { Condition } from "@lindorm/match";
 import type { AmphoraKeySelector, AmphoraQuery } from "@lindorm/amphora";
-import type { KryptosEncryption } from "@lindorm/kryptos";
 
 /**
  * The key attributes a caller may select on.
@@ -54,15 +53,15 @@ export type AegisSignKey = AmphoraKeySelector<AegisSignCondition>;
 /**
  * Selects the encryption (recipient) key. `kryptos` is a key supplied outright
  * — e.g. a client secret used as an `A128KW` wrap key.
+ *
+ * ⚠ It selects the KEY and nothing else — exactly like {@link AegisSignKey}. It
+ * used to carry an `encryption` beside the selector that named the content
+ * AEAD, which is gone: the resolved key's own declaration picks the cipher, so
+ * a member here could only ever have overridden the key or agreed with it.
+ * Encrypting to a peer under a different AEAD is a property of the key you
+ * name, not of the call.
  */
-export type AegisEncKey = AmphoraKeySelector<AegisEncCondition> & {
-  /**
-   * The JWE / COSE / AES content-encryption AEAD (`A256GCM`, …). This picks the
-   * CIPHER, never the key — it is not a selector, which is why it sits beside
-   * the shared selector rather than inside it.
-   */
-  encryption?: KryptosEncryption;
-};
+export type AegisEncKey = AmphoraKeySelector<AegisEncCondition>;
 
 /**
  * The read side, signatures. Selection is driven by the token's own `kid`, so a

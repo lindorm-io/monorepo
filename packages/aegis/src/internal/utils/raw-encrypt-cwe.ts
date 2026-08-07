@@ -35,7 +35,7 @@ export const rawEncryptCwe = async ({
   const token = new CweKit({
     kryptos,
     logger: deps.logger,
-    encryption: key?.encryption ?? deps.encryption,
+    defaultEncryption: deps.defaultEncryption,
   }).encrypt(data, rest);
 
   return { format: "cwe", token: token.toString("base64url") };

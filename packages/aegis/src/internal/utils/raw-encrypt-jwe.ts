@@ -35,7 +35,7 @@ export const rawEncryptJwe = async ({
     kryptos,
     data,
     options: rest,
-    encryption: key?.encryption ?? deps.encryption,
+    defaultEncryption: deps.defaultEncryption,
     certBindingMode: deps.certBindingMode,
     certificateThumbprintSha1: deps.certificateThumbprintSha1,
     logger: deps.logger,

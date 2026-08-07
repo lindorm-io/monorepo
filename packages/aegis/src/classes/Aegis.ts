@@ -134,7 +134,7 @@ export class Aegis implements IAegis {
   private readonly deps: AegisDeps;
   private readonly dpopMaxSkew: number | undefined;
   private readonly encryptKey: AegisEncKey;
-  private readonly encryption: KryptosEncryption;
+  private readonly defaultEncryption: KryptosEncryption | undefined;
   private readonly logger: ILogger;
   private readonly partyRecipient: string | undefined;
   private readonly signKey: AegisSignKey;
@@ -153,7 +153,9 @@ export class Aegis implements IAegis {
     this.certificateThumbprintSha1 = options.certificateThumbprintSha1 ?? true;
     this.clockTolerance = options.clockTolerance ?? 0;
     this.dpopMaxSkew = options.dpopMaxSkew;
-    this.encryption = options.encryption ?? "A256GCM";
+    // No floor here: the FLOOR lives in the wire kits, which apply it only
+    // after the resolved key has had its say.
+    this.defaultEncryption = options.defaultEncryption;
     this.partyRecipient = options.partyRecipient;
 
     // The DEPLOYMENT's key policy. Aegis ships no default selector of its own:
@@ -182,7 +184,7 @@ export class Aegis implements IAegis {
       certificateThumbprintSha1: this.certificateThumbprintSha1,
       clockTolerance: this.clockTolerance,
       dpopMaxSkew: this.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW,
-      encryption: this.encryption,
+      defaultEncryption: this.defaultEncryption,
       partyRecipient: this.partyRecipient,
       logger: this.logger,
       resolveSignKey: (options, profile) => this.resolveSignKey(options, profile),

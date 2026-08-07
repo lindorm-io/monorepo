@@ -29,7 +29,7 @@ export const encryptCose = ({
   inner,
   tokenType,
   cty,
-  encryption,
+  defaultEncryption,
   proprietary,
 }: {
   kryptos: IKryptos;
@@ -44,11 +44,12 @@ export const encryptCose = ({
    * to the inferred `application/octet-stream`.
    */
   cty?: string;
-  encryption?: KryptosEncryption;
+  /** Deployment fallback for a key that declares no `encryption`. */
+  defaultEncryption?: KryptosEncryption;
   proprietary?: boolean;
 }): Buffer => {
   // `CweKit.encrypt` returns the BARE encoded COSE_Encrypt0 bytes.
-  return new CweKit({ kryptos, logger, encryption }).encrypt(inner, {
+  return new CweKit({ kryptos, logger, defaultEncryption }).encrypt(inner, {
     tokenType,
     proprietary,
     ...(cty ? { header: { cty } } : {}),

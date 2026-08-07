@@ -1,5 +1,6 @@
 import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
+import { KryptosKit } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
@@ -138,19 +139,32 @@ describe("Aegis — domain encrypt / decrypt (§5e)", () => {
   });
 
   describe("proprietary threads to the CWE content encryption (D5)", () => {
+    // The AEAD comes from the KEY, so the private-use case is a key that
+    // DECLARES a private-use AEAD — selecting it is what puts AES-CBC-HMAC on
+    // the COSE wire. `key` names it; nothing overrides the declaration.
+    const CBC_KEY = { condition: { purpose: "cose-cbc", publish: true } };
+
+    beforeEach(() => {
+      amphora.add(
+        KryptosKit.generate.enc.oct({
+          algorithm: "dir",
+          encryption: "A128CBC-HS256",
+          purpose: "cose-cbc",
+          publish: true,
+        }),
+      );
+    });
+
     test("a non-COSE-RFC encryption is rejected unless proprietary is set", async () => {
       // AES-CBC-HMAC has no official COSE registration — the interop gate throws.
       await expect(
-        aegis.encrypt(claims, {
-          format: "cwe",
-          key: { encryption: "A128CBC-HS256" },
-        }),
+        aegis.encrypt(claims, { format: "cwe", key: CBC_KEY }),
       ).rejects.toMatchObject({ code: "cose_enc_not_registered" });
 
       // proprietary allows it, and it still round-trips.
       const encrypted = await aegis.encrypt(claims, {
         format: "cwe",
-        key: { encryption: "A128CBC-HS256" },
+        key: CBC_KEY,
         proprietary: true,
       });
       const decrypted = await aegis.decrypt(encrypted.token);
@@ -161,10 +175,7 @@ describe("Aegis — domain encrypt / decrypt (§5e)", () => {
 
     test("CweError is the concrete interop-gate error", async () => {
       await expect(
-        aegis.encrypt("opaque", {
-          format: "cwe",
-          key: { encryption: "A128CBC-HS256" },
-        }),
+        aegis.encrypt("opaque", { format: "cwe", key: CBC_KEY }),
       ).rejects.toThrow(CweError);
     });
   });

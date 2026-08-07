@@ -41,7 +41,7 @@ export const encryptToken = async ({
   deps: AegisDeps;
 }): Promise<EncryptedToken> => {
   const kryptos = await deps.resolveEncryptKey(options.key);
-  const encryption = options.key?.encryption ?? deps.encryption;
+  const defaultEncryption = deps.defaultEncryption;
   const format = options.format ?? "jwe";
   const opaque = isBuffer(data) || isString(data);
 
@@ -62,7 +62,7 @@ export const encryptToken = async ({
           partyRecipient: options.partyRecipient,
           tokenType: domainTokenTypePrefix(options.type),
         },
-        encryption,
+        defaultEncryption,
         certBindingMode: deps.certBindingMode,
         certificateThumbprintSha1: deps.certificateThumbprintSha1,
         logger: deps.logger,
@@ -92,7 +92,7 @@ export const encryptToken = async ({
         // `application/claims+cwe`) so decrypt can translate it back; opaque bytes
         // keep the caller's `type` (if any) and are returned verbatim.
         tokenType: opaque ? domainTokenTypePrefix(options.type) : COSE_CLAIMS_PREFIX,
-        encryption,
+        defaultEncryption,
         proprietary: options.proprietary,
       });
 

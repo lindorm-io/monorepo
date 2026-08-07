@@ -116,7 +116,7 @@ export const mintCoseToken = async ({
       inner: token,
       tokenType: typPrefix,
       cty: "application/cwt",
-      encryption: options.encrypt?.key?.encryption ?? deps.encryption,
+      defaultEncryption: deps.defaultEncryption,
       proprietary: options.proprietary,
     });
   }

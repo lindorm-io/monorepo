@@ -24,7 +24,14 @@ export type AegisSettings = {
   certificateThumbprintSha1?: boolean;
   clockTolerance?: number;
   dpopMaxSkew?: number;
-  encryption?: KryptosEncryption;
+  /**
+   * The deployment's content-encryption AEAD for a recipient key that DECLARES
+   * NONE — a fallback, not an override. A key that declares its own
+   * `encryption` wins on every path (JWE, COSE, AES): the declaration is what
+   * the key IS. An imported peer JWK carries no `enc`, which is the case this
+   * exists for. Omitted ⇒ `A256GCM`.
+   */
+  defaultEncryption?: KryptosEncryption;
   /**
    * This deployment's recipient identity (base64url `apv` — ECDH-ES Agreement
    * PartyVInfo). When set, decrypting/verifying an ECDH-ES JWE rejects a token

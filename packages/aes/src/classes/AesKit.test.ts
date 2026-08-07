@@ -37,17 +37,15 @@ describe("AesKit", () => {
   ];
 
   describe.each(algorithms)("algorithm: %s", (algorithm) => {
-    let kryptos: IKryptos;
-
-    beforeEach(async () => {
-      kryptos = KryptosKit.generate.auto({ algorithm });
-    });
-
+    // The KEY declares the content encryption, so the matrix varies it on the
+    // key rather than on the kit — the kit would not honour it there.
     describe.each(encryptions)("encryption: %s", (encryption) => {
+      let kryptos: IKryptos;
       let aesKit: IAesKit;
 
       beforeEach(async () => {
-        aesKit = new AesKit({ kryptos, encryption });
+        kryptos = KryptosKit.generate.auto({ algorithm, encryption });
+        aesKit = new AesKit({ kryptos });
       });
 
       describe.each(Object.entries(modes))("mode: %s", (mode, type) => {
@@ -87,8 +85,11 @@ describe("AesKit", () => {
     let aesKit: IAesKit;
 
     beforeEach(() => {
-      kryptos = KryptosKit.generate.enc.oct({ algorithm: "A128KW" });
-      aesKit = new AesKit({ kryptos, encryption: "A128GCM" });
+      kryptos = KryptosKit.generate.enc.oct({
+        algorithm: "A128KW",
+        encryption: "A128GCM",
+      });
+      aesKit = new AesKit({ kryptos });
     });
 
     test("should encrypt and decrypt objects", () => {
@@ -139,8 +140,11 @@ describe("AesKit", () => {
     let aesKit: IAesKit;
 
     beforeEach(() => {
-      kryptos = KryptosKit.generate.auto({ algorithm: "ECDH-ES" });
-      aesKit = new AesKit({ kryptos, encryption: "A256GCM" });
+      kryptos = KryptosKit.generate.auto({
+        algorithm: "ECDH-ES",
+        encryption: "A256GCM",
+      });
+      aesKit = new AesKit({ kryptos });
     });
 
     test.each<AesEncryptionMode>(["cbor", "record", "serialised"])(
@@ -216,8 +220,11 @@ describe("AesKit", () => {
 
     describe("isAesString", () => {
       test("should return true for valid aes: cbor string", () => {
-        const kryptos = KryptosKit.generate.enc.oct({ algorithm: "A128KW" });
-        const aesKit = new AesKit({ kryptos, encryption: "A128GCM" });
+        const kryptos = KryptosKit.generate.enc.oct({
+          algorithm: "A128KW",
+          encryption: "A128GCM",
+        });
+        const aesKit = new AesKit({ kryptos });
         const cipher = aesKit.encrypt("test", "cbor");
 
         expect(AesKit.isAesString(cipher)).toEqual(true);
@@ -278,8 +285,11 @@ describe("AesKit", () => {
     let aesKit: IAesKit;
 
     beforeEach(() => {
-      kryptos = KryptosKit.generate.enc.oct({ algorithm: "A128KW" });
-      aesKit = new AesKit({ kryptos, encryption: "A128GCM" });
+      kryptos = KryptosKit.generate.enc.oct({
+        algorithm: "A128KW",
+        encryption: "A128GCM",
+      });
+      aesKit = new AesKit({ kryptos });
     });
 
     test("should return false for wrong content", () => {
@@ -304,8 +314,11 @@ describe("AesKit", () => {
     let aesKit: IAesKit;
 
     beforeEach(() => {
-      kryptos = KryptosKit.generate.enc.oct({ algorithm: "A128KW" });
-      aesKit = new AesKit({ kryptos, encryption: "A128GCM" });
+      kryptos = KryptosKit.generate.enc.oct({
+        algorithm: "A128KW",
+        encryption: "A128GCM",
+      });
+      aesKit = new AesKit({ kryptos });
     });
 
     test("should throw AesError for invalid mode", () => {
@@ -325,8 +338,8 @@ describe("AesKit", () => {
           let aesKit: IAesKit;
 
           beforeEach(() => {
-            const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
-            aesKit = new AesKit({ kryptos, encryption });
+            const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW", encryption });
+            aesKit = new AesKit({ kryptos });
           });
 
           test("should bind the caller AAD to the record ciphertext", () => {
@@ -361,8 +374,11 @@ describe("AesKit", () => {
         let aesKit: IAesKit;
 
         beforeEach(() => {
-          const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
-          aesKit = new AesKit({ kryptos, encryption: "A128GCM" });
+          const kryptos = KryptosKit.generate.auto({
+            algorithm: "A128KW",
+            encryption: "A128GCM",
+          });
+          aesKit = new AesKit({ kryptos });
         });
 
         test("should encrypt and decrypt with auto-derived AAD", () => {
@@ -390,8 +406,8 @@ describe("AesKit", () => {
           let aesKit: IAesKit;
 
           beforeEach(() => {
-            const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
-            aesKit = new AesKit({ kryptos, encryption });
+            const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW", encryption });
+            aesKit = new AesKit({ kryptos });
           });
 
           test("should work without AAD in record mode", () => {
@@ -409,8 +425,11 @@ describe("AesKit", () => {
     let aesKit: IAesKit;
 
     beforeEach(() => {
-      kryptos = KryptosKit.generate.enc.oct({ algorithm: "A128KW" });
-      aesKit = new AesKit({ kryptos, encryption: "A128GCM" });
+      kryptos = KryptosKit.generate.enc.oct({
+        algorithm: "A128KW",
+        encryption: "A128GCM",
+      });
+      aesKit = new AesKit({ kryptos });
     });
 
     test("should return object with headerParams, publicEncryptionKey, and encrypt function", () => {
@@ -525,8 +544,8 @@ describe("AesKit", () => {
       ];
 
       algorithms.forEach((algorithm) => {
-        const k = KryptosKit.generate.auto({ algorithm });
-        const kit = new AesKit({ kryptos: k, encryption: "A256GCM" });
+        const k = KryptosKit.generate.auto({ algorithm, encryption: "A256GCM" });
+        const kit = new AesKit({ kryptos: k });
         const prepared = kit.prepareEncryption();
 
         const encryptResult = prepared.encrypt("test");

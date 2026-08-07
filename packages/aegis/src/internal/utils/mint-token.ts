@@ -161,7 +161,7 @@ export const mintToken = async ({
       partyProducer: options.encrypt?.partyProducer,
       partyRecipient: options.encrypt?.partyRecipient,
     },
-    encryption: options.encrypt?.key?.encryption ?? deps.encryption,
+    defaultEncryption: deps.defaultEncryption,
     certBindingMode: deps.certBindingMode,
     certificateThumbprintSha1:
       options.encrypt?.certificateThumbprintSha1 ?? deps.certificateThumbprintSha1,
