@@ -13,7 +13,7 @@ import { AmphoraIdp } from "../internal/classes/AmphoraIdp.js";
 import { AmphoraState } from "../internal/classes/AmphoraState.js";
 
 export class Amphora implements IAmphora {
-  readonly domain: string | null;
+  readonly issuer: string | null;
   readonly external: IAmphoraExternal;
   readonly idp: IAmphoraIdp;
 
@@ -21,44 +21,42 @@ export class Amphora implements IAmphora {
 
   constructor(options: AmphoraSettings) {
     this.state = new AmphoraState(options);
-    this.domain = this.state.domain;
+    this.issuer = this.state.issuer;
 
     this.external = new AmphoraExternal(this.state);
     this.idp = new AmphoraIdp(this.state);
 
-    if (this.domain && !isUrlLike(this.domain)) {
-      throw new AmphoraError("Domain must be a valid URL", {
-        code: "invalid_domain_url",
-        data: { domain: this.domain },
-        title: "Invalid Domain URL",
-        details: `The configured domain "${this.domain as string}" is not a valid URL. Provide a fully-qualified URL such as https://example.com.`,
+    if (this.issuer && !isUrlLike(this.issuer)) {
+      throw new AmphoraError("Issuer must be a valid URL", {
+        code: "invalid_issuer_url",
+        data: { issuer: this.issuer },
+        title: "Invalid Issuer URL",
+        details: `The configured issuer "${this.issuer as string}" is not a valid URL. Provide a fully-qualified URL such as https://example.com.`,
       });
     }
   }
 
   // public getters
 
-  // The service's OWN identity, derived from `domain` — minimal (it IS the issuer,
-  // it never discovers itself). External configs live on `external.issuers()` /
-  // `idp.config()`.
-  get config(): Array<AmphoraInternalConfig> {
-    if (!this.domain) return [];
+  // The service's OWN identity, derived from `issuer` — minimal (it IS the issuer,
+  // it never discovers itself), and SINGULAR: a service has one identity or none.
+  // The other two scopes live on `external.issuers()` / `idp.config()`.
+  get internal(): AmphoraInternalConfig | null {
+    if (!this.issuer) return null;
 
-    return [
-      {
-        issuer: this.domain,
-        jwksUri: new URL("/.well-known/jwks.json", this.domain).toString(),
-      },
-    ];
+    return {
+      issuer: this.issuer,
+      jwksUri: new URL("/.well-known/jwks.json", this.issuer).toString(),
+    };
   }
 
   get jwks(): AmphoraJwks {
-    if (!this.domain) {
-      throw new AmphoraError("Domain is required to get JWKS", {
-        code: "domain_required_for_jwks",
-        title: "Domain Required For JWKS",
+    if (!this.issuer) {
+      throw new AmphoraError("Issuer is required to get JWKS", {
+        code: "issuer_required_for_jwks",
+        title: "Issuer Required For JWKS",
         details:
-          "Domain is used to determine the signing issuer of the keys. If your server signs tokens, it must have a domain.",
+          "The amphora `issuer` is what the published keys are signed under. If your server signs tokens, it must declare one.",
       });
     }
 
@@ -102,12 +100,12 @@ export class Amphora implements IAmphora {
       const kryptos = KryptosKit.env.import(key);
 
       // Env-imported keys are our own (`internal: true`) and feed the JWKS when
-      // public + `publish: true` — an issuer that differs from this Amphora's
-      // domain would never be served, which is almost certainly a config error.
-      if (this.domain && kryptos.issuer && kryptos.issuer !== this.domain) {
-        this.state.logger.warn("Env-imported key issuer differs from amphora domain", {
-          domain: this.domain,
-          issuer: kryptos.issuer,
+      // public + `publish: true` — an issuer that differs from this Amphora's own
+      // issuer would never be served, which is almost certainly a config error.
+      if (this.issuer && kryptos.issuer && kryptos.issuer !== this.issuer) {
+        this.state.logger.warn("Env-imported key issuer differs from amphora issuer", {
+          expected: this.issuer,
+          actual: kryptos.issuer,
           kid: kryptos.id,
         });
       }

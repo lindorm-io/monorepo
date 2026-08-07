@@ -46,7 +46,7 @@ describe("resolveKey", () => {
 
   beforeEach(async () => {
     logger = createMockLogger();
-    amphora = new Amphora({ domain: ISSUER, logger });
+    amphora = new Amphora({ issuer: ISSUER, logger });
     await amphora.setup();
   });
 

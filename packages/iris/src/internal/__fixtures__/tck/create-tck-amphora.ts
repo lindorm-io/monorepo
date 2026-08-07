@@ -32,7 +32,7 @@ export const TCK_TRAP_KEK = TEST_KEY_ENC_AUDIT;
  */
 export const createTckAmphora = async (): Promise<IAmphora> => {
   const amphora = new Amphora({
-    domain: "https://test.lindorm.io/",
+    issuer: "https://test.lindorm.io/",
     logger: createMockLogger(),
   });
 

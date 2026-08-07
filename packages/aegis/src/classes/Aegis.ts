@@ -143,7 +143,7 @@ export class Aegis implements IAegis {
   constructor(options: AegisSettings) {
     this.logger = options.logger.child(["AegisKit"]);
     this.amphora = options.amphora;
-    this.issuer = options.issuer ?? this.amphora.domain;
+    this.issuer = options.issuer ?? this.amphora.issuer;
 
     this.certBindingMode = options.certBindingMode ?? "strict";
     // Default TRUE: a cert-bound token carries `x5t` for older clients unless the

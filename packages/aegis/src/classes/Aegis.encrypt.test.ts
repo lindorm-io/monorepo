@@ -22,7 +22,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
   beforeEach(async () => {
     logger = createMockLogger();
-    amphora = new Amphora({ domain: ISSUER, logger });
+    amphora = new Amphora({ issuer: ISSUER, logger });
     aegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_EC_KEY_SIG);

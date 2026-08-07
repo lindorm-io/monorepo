@@ -5,6 +5,7 @@ import type {
   AmphoraExternalSettings,
 } from "../../types/index.js";
 import { seedExternalConfig } from "../utils/seed-external-config.js";
+import { toExternalConfig } from "../utils/to-external-config.js";
 import type { AmphoraState } from "./AmphoraState.js";
 
 /**
@@ -20,20 +21,26 @@ export class AmphoraIdp implements IAmphoraIdp {
     // One issuer, one scope — the idp cannot also be an external provider.
     this.state.assertIssuerScopeFree(source.issuer, "idp");
 
-    const previous = this.state.idpConfig;
-    const config = seedExternalConfig(source);
-    this.state.idpConfig = config;
+    const previous = this.state.idpEntry;
+    const entry = seedExternalConfig(source);
+    this.state.idpEntry = entry;
 
     // Singleton — the previous idp's keys are evicted on swap.
     if (previous) {
       this.state.evictIssuer(previous.issuer ?? previous.input.issuer ?? null);
     }
 
-    if (config.load) await this.state.loadEntry(config);
+    if (entry.load) await this.state.loadEntry(entry);
   }
 
+  /**
+   * The upstream's resolved config. It throws twice, because the caller asked for
+   * ONE named provider and there is nothing sensible to hand back for either
+   * failure: no idp registered at all, or one registered whose issuer amphora has
+   * not settled. A `null` issuer here would be pinned as "verify against nothing".
+   */
   config(): AmphoraExternalConfig {
-    if (!this.state.idpConfig) {
+    if (!this.state.idpEntry) {
       throw new AmphoraError("No identity provider is configured", {
         code: "idp_not_configured",
         title: "IDP Not Configured",
@@ -42,17 +49,28 @@ export class AmphoraIdp implements IAmphoraIdp {
       });
     }
 
-    return { ...this.state.idpConfig };
+    const config = toExternalConfig(this.state.idpEntry);
+    if (config) return config;
+
+    throw new AmphoraError("Identity provider issuer is unresolved", {
+      code: "idp_issuer_unresolved",
+      data: {
+        openIdConfigurationUri: this.state.idpEntry.input.openIdConfigurationUri,
+      },
+      title: "IDP Issuer Unresolved",
+      details:
+        "The upstream identity provider was registered by `openIdConfigurationUri` alone, so its issuer comes from the discovery document — and that document has either not been fetched yet (registration is lazy by default; `amphora.setup()` fetches it) or could not be fetched. Declare `issuer` on the idp registration, or make sure setup() completed.",
+    });
   }
 
   refresh(): Promise<void> {
-    if (!this.state.idpConfig) return Promise.resolve();
-    return this.state.loadEntry(this.state.idpConfig);
+    if (!this.state.idpEntry) return Promise.resolve();
+    return this.state.loadEntry(this.state.idpEntry);
   }
 
   clear(): void {
-    const previous = this.state.idpConfig;
-    this.state.idpConfig = null;
+    const previous = this.state.idpEntry;
+    this.state.idpEntry = null;
     if (previous) {
       this.state.evictIssuer(previous.issuer ?? previous.input.issuer ?? null);
     }

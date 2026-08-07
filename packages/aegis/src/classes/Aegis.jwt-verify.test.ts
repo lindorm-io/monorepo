@@ -26,7 +26,7 @@ describe("Aegis verify — relocated domain policy", () => {
 
   beforeEach(async () => {
     logger = createMockLogger();
-    amphora = new Amphora({ domain: issuer, logger });
+    amphora = new Amphora({ issuer: issuer, logger });
     aegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_EC_KEY_SIG);

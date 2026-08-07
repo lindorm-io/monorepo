@@ -21,7 +21,7 @@ describe("Aegis — COSE namespaces", () => {
 
   beforeEach(async () => {
     const logger = createMockLogger();
-    amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+    amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
     aegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_EC_KEY_SIG); // ES512 signer
@@ -297,7 +297,7 @@ describe("Aegis — COSE namespaces", () => {
 
     beforeEach(async () => {
       const logger = createMockLogger();
-      macAmphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+      macAmphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
       macAegis = new Aegis({ amphora: macAmphora, logger });
       await macAmphora.setup();
       macAmphora.add(TEST_OCT_KEY_SIG); // HS* symmetric key → COSE_Mac0

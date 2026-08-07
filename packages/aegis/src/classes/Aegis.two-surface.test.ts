@@ -24,7 +24,7 @@ describe("Aegis — the two surfaces (Phase 19)", () => {
 
   beforeEach(async () => {
     logger = createMockLogger();
-    amphora = new Amphora({ domain: ISSUER, logger });
+    amphora = new Amphora({ issuer: ISSUER, logger });
     aegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_EC_KEY_SIG);
@@ -159,7 +159,7 @@ describe("Aegis — cwm explicit format (D6)", () => {
 
   beforeEach(async () => {
     logger = createMockLogger();
-    amphora = new Amphora({ domain: ISSUER, logger });
+    amphora = new Amphora({ issuer: ISSUER, logger });
     aegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_OCT_KEY_SIG); // HS256 → COSE_Mac0

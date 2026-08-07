@@ -25,7 +25,7 @@ describe("Aegis — COSE format guards", () => {
 
   beforeEach(async () => {
     const logger = createMockLogger();
-    amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+    amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
     aegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_EC_KEY_SIG); // ES512 signer

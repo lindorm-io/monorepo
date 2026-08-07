@@ -28,7 +28,7 @@ describe("encryptPayload / decryptPayload", () => {
 
   beforeEach(async () => {
     amphora = new Amphora({
-      domain: "https://test.lindorm.io/",
+      issuer: "https://test.lindorm.io/",
       logger: createMockLogger(),
     });
     await amphora.setup();

@@ -28,7 +28,7 @@ describe("Aegis profiles", () => {
 
   beforeEach(async () => {
     logger = createMockLogger();
-    amphora = new Amphora({ domain: ISSUER, logger });
+    amphora = new Amphora({ issuer: ISSUER, logger });
     aegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_EC_KEY_SIG);
@@ -96,7 +96,7 @@ describe("Aegis profiles", () => {
       // reporting a bare not-found.
       const { TEST_OCT_KEY_SIG } = await import("../__fixtures__/keys.js");
       const symLogger = createMockLogger();
-      const symAmphora = new Amphora({ domain: ISSUER, logger: symLogger });
+      const symAmphora = new Amphora({ issuer: ISSUER, logger: symLogger });
       await symAmphora.setup();
       symAmphora.add(TEST_OCT_KEY_SIG);
       const symAegis = new Aegis({ amphora: symAmphora, logger: symLogger });
@@ -146,7 +146,7 @@ describe("Aegis profiles", () => {
     });
 
     test("EdDSA id token produces a SHA-512 256-bit at_hash", async () => {
-      const okpAmphora = new Amphora({ domain: ISSUER, logger });
+      const okpAmphora = new Amphora({ issuer: ISSUER, logger });
       await okpAmphora.setup();
       okpAmphora.add(TEST_OKP_KEY_SIG);
       const okpAegis = new Aegis({ amphora: okpAmphora, logger });
@@ -163,7 +163,7 @@ describe("Aegis profiles", () => {
     });
 
     test("ML-DSA-65 id token produces a SHA-512 256-bit at_hash", async () => {
-      const akpAmphora = new Amphora({ domain: ISSUER, logger });
+      const akpAmphora = new Amphora({ issuer: ISSUER, logger });
       await akpAmphora.setup();
       akpAmphora.add(TEST_AKP_KEY_SIG);
       const akpAegis = new Aegis({ amphora: akpAmphora, logger });
@@ -184,7 +184,7 @@ describe("Aegis profiles", () => {
       // ⇒ 32 bytes above). No RS256 fixture exists, so ES256 stands in for the
       // *256 family.
       const es256Key = KryptosKit.generate.auto({ algorithm: "ES256", publish: true });
-      const es256Amphora = new Amphora({ domain: ISSUER, logger });
+      const es256Amphora = new Amphora({ issuer: ISSUER, logger });
       await es256Amphora.setup();
       es256Amphora.add(es256Key);
       const es256Aegis = new Aegis({ amphora: es256Amphora, logger });
@@ -383,7 +383,7 @@ describe("Aegis profiles", () => {
     let akpAegis: Aegis;
 
     beforeEach(async () => {
-      akpAmphora = new Amphora({ domain: ISSUER, logger });
+      akpAmphora = new Amphora({ issuer: ISSUER, logger });
       await akpAmphora.setup();
       akpAmphora.add(TEST_AKP_KEY_SIG);
       akpAegis = new Aegis({ amphora: akpAmphora, logger });

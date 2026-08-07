@@ -19,6 +19,13 @@ export interface IAmphoraExternal {
 
   addIssuer(source: AmphoraExternalSettings): Promise<void>;
   removeIssuer(issuer: string): void;
+  /**
+   * Every registered source whose issuer has SETTLED. A source registered by
+   * `openIdConfigurationUri` alone carries no issuer until that document is
+   * fetched (registration is lazy by default), so it is omitted until it resolves
+   * rather than listed with a `null` — and one unreachable peer never takes out
+   * the whole listing.
+   */
   issuers(): Array<AmphoraExternalConfig>;
   refresh(issuer: string): Promise<void>;
 }
@@ -27,18 +34,34 @@ export interface IAmphoraExternal {
  * The IDP scope — the ONE upstream identity provider, a distinguished singleton external
  * issuer. `set` registers or replaces it (swapping evicts the previous idp's keys); its
  * keys are external-provenance in the unified vault. A management + config view over the
- * same external fetch machinery. `config` throws when no idp is set.
+ * same external fetch machinery. `config` throws when no idp is set, and again when one
+ * is set but amphora has not settled its issuer.
  */
 export interface IAmphoraIdp {
   set(source: AmphoraExternalSettings): Promise<void>;
+  /**
+   * Throws `idp_not_configured` when no upstream is registered, and
+   * `idp_issuer_unresolved` when one is registered by `openIdConfigurationUri`
+   * alone and that document has not (or could not) be resolved. The caller named
+   * ONE provider, so there is nothing sensible to hand back for either.
+   */
   config(): AmphoraExternalConfig;
   refresh(): Promise<void>;
   clear(): void;
 }
 
+/**
+ * Three issuer scopes, named on the instance: `internal` (this service's OWN
+ * identity), `external` (foreign issuers it fetches from) and `idp` (the ONE
+ * upstream identity provider).
+ */
 export interface IAmphora {
-  config: Array<AmphoraInternalConfig>;
-  domain: string | null;
+  /**
+   * This service's own identity, `{ issuer, jwksUri }` derived from the `issuer`
+   * setting — SINGULAR, and `null` for a verify-only service that declared none.
+   */
+  internal: AmphoraInternalConfig | null;
+  issuer: string | null;
   jwks: AmphoraJwks;
   vault: Array<IKryptos>;
 

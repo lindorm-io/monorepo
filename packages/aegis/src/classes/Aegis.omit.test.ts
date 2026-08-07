@@ -22,7 +22,7 @@ describe("Aegis — omit (compact-by-default)", () => {
 
   beforeEach(async () => {
     const logger = createMockLogger();
-    const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+    const amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
     aegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_EC_KEY_SIG);

@@ -4,7 +4,7 @@ import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { JwksResponse } from "@lindorm/openid";
 import { AmphoraError } from "../../errors/index.js";
-import type { AmphoraExternalConfig } from "../../types/index.js";
+import type { ExternalEntry } from "../types/external-entry.js";
 
 type FetchExternalJwksOptions = {
   maxExternalKeys: number;
@@ -17,10 +17,14 @@ type FetchExternalJwksOptions = {
  * single unparseable key is isolated rather than taking out the issuer's whole
  * set; the key count is truncated to `maxExternalKeys`. Trust config is read from
  * the config's declared `input` (trustAnchors / trustMode).
+ *
+ * It takes the still-nullable internal {@link ExternalEntry}, not the public config:
+ * the fetch is the first caller that genuinely needs a `jwksUri`, so it is where a
+ * missing one is reported (`external_jwks_uri_missing`).
  */
 export const fetchExternalJwks = async (
   conduit: Conduit,
-  config: AmphoraExternalConfig,
+  config: ExternalEntry,
   options: FetchExternalJwksOptions,
 ): Promise<Array<IKryptos>> => {
   const { logger, maxExternalKeys } = options;

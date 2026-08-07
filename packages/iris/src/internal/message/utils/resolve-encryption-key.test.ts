@@ -32,7 +32,7 @@ describe("resolveEncryptionKey", () => {
 
   beforeEach(async () => {
     amphora = new Amphora({
-      domain: "https://test.lindorm.io/",
+      issuer: "https://test.lindorm.io/",
       logger: createMockLogger(),
     });
     await amphora.setup();
@@ -254,7 +254,7 @@ describe("resolveEncryptionKey", () => {
 
     const vault = (...keys: Array<IKryptos>): IAmphora => {
       const instance = new Amphora({
-        domain: "https://test.lindorm.io/",
+        issuer: "https://test.lindorm.io/",
         logger: createMockLogger(),
       });
       instance.add(keys);

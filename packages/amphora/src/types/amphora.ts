@@ -37,16 +37,30 @@ export type AmphoraExternalSettings = {
 };
 
 /**
- * A resolved + progressively-ENRICHED external issuer config — returned by
- * `external.issuers()` and `idp.config()`. `input` keeps the original declared options
- * verbatim (the source-of-truth for re-resolution); every other field is derived cache,
+ * A RESOLVED external issuer config — returned by `external.issuers()` and
+ * `idp.config()`. `input` keeps the original declared options verbatim (the
+ * source-of-truth for re-resolution); every other field is derived cache,
  * re-resolved from `input` on refresh. `issuer` / `jwksUri` fill in from `input` OR a
  * fetched discovery doc; `openIdConfiguration` is that fetched doc (NESTED, not flattened).
+ *
+ * ⚠ `issuer` is a `string`, not a nullable one: amphora scopes, verifies (`jwk.iss`)
+ * and evicts keys BY issuer, so a config without one is not a config. The nullable,
+ * still-resolving shape is amphora-internal and never reaches this type — a source
+ * that names no issuer is rejected at REGISTRATION, a discovery document that yields
+ * none throws at RESOLUTION, and a source registered by `openIdConfigurationUri` alone
+ * that has not resolved yet is simply not an issuer yet (`external.issuers()` lists it
+ * once it is; `idp.config()` throws `idp_issuer_unresolved` until then).
  */
 export type AmphoraExternalConfig = {
   input: AmphoraExternalSettings;
   load: boolean;
-  issuer: string | null;
+  issuer: string;
+  /**
+   * Nullable ON PURPOSE, unlike `issuer`: an issuer's keys can be handed to amphora
+   * outright via `external.add(kryptos)`, with no URI anywhere. The consumer that
+   * needs to FETCH is the one that should complain, and `fetchExternalJwks` does
+   * (`external_jwks_uri_missing`).
+   */
   jwksUri: string | null;
   /**
    * The fetched discovery document, merged with the declared override. PARTIAL:
@@ -71,7 +85,14 @@ export type AmphoraExternalConfig = {
 };
 
 export type AmphoraSettings = {
-  domain?: string;
+  /**
+   * The service's OWN issuer — the URL it mints tokens under. It stamps `issuer`
+   * and `jwksUri` on every key added via `add` / `env`, it is the filter deciding
+   * which keys `amphora.jwks` publishes, and it is what `amphora.internal` is
+   * derived from. Omit it for a service that only VERIFIES (it then has no
+   * identity of its own, and `amphora.jwks` throws).
+   */
+  issuer?: string;
   // When set, keys whose leaf certificate declares a DIFFERENT Environment OU are
   // rejected on add (cross-environment guard). Keys without a cert, or with a
   // non-Environment (foreign) OU, are unrestricted.

@@ -1,11 +1,9 @@
-import type {
-  AmphoraExternalConfig,
-  AmphoraExternalSettings,
-} from "../../types/index.js";
+import type { AmphoraExternalSettings } from "../../types/index.js";
+import type { ExternalEntry } from "../types/external-entry.js";
 import { validateExternalSource } from "./validate-external-source.js";
 
 /**
- * The initial, UNRESOLVED config for a registered issuer source — `input` verbatim
+ * The initial, UNRESOLVED entry for a registered issuer source — `input` verbatim
  * plus derived fields left empty. `resolveExternalConfig` fills `issuer` / `jwksUri`
  * / `openIdConfiguration`; `keyCount` / `lastRefresh` fill in when its keys land.
  * `lastAccess` stays `null` here (never-used) — `addExternalConfig` stamps it at
@@ -15,9 +13,7 @@ import { validateExternalSource } from "./validate-external-source.js";
  * so the SYNCHRONOUS item-1 validation runs at registration time — a non-URI issuer
  * (etc.) is rejected up front, NOT silently accepted on the lazy (`load: false`) path.
  */
-export const seedExternalConfig = (
-  input: AmphoraExternalSettings,
-): AmphoraExternalConfig => {
+export const seedExternalConfig = (input: AmphoraExternalSettings): ExternalEntry => {
   validateExternalSource(input);
 
   return {

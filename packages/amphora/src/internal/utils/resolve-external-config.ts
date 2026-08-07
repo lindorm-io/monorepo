@@ -11,10 +11,14 @@ import { seedExternalConfig } from "./seed-external-config.js";
 const OIDCONF = "/.well-known/openid-configuration" as const;
 
 /**
- * Resolve a declared issuer source into an enriched {@link AmphoraExternalConfig}:
+ * Resolve a declared issuer source into a settled {@link AmphoraExternalConfig}:
  * fetch/derive the discovery doc when one is needed, and settle `issuer` / `jwksUri`
  * / `openIdConfiguration`. `keyCount` and `lastRefresh` are left for the JWKS fetch
  * to fill — this only resolves config.
+ *
+ * Every branch either settles a `string` issuer or throws, which is what makes the
+ * PUBLIC `issuer: string` honest: resolution is the last moment an issuer can go
+ * missing, so it is where the question is answered.
  *
  * Item-1 validation (issuer must be a URI; a URN issuer requires an explicit jwksUri)
  * already ran at REGISTRATION via `seedExternalConfig` → `validateExternalSource`, so

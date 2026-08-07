@@ -17,7 +17,7 @@ const createEncKey = (purpose: string, publish = false): IKryptos =>
 const createAmphora = (...keys: Array<IKryptos>) => {
   const amphora = new Amphora({
     logger: createMockLogger(),
-    domain: "https://test.lindorm.io",
+    issuer: "https://test.lindorm.io",
   });
   for (const key of keys) amphora.add(key);
   return amphora;

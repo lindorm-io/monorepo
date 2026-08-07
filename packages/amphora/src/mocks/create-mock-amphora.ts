@@ -1,5 +1,10 @@
 import type { IAmphora } from "../interfaces/index.js";
-import type { AmphoraExternalConfig } from "../types/index.js";
+import type { AmphoraExternalConfig, AmphoraInternalConfig } from "../types/index.js";
+
+const MOCK_INTERNAL_CONFIG: AmphoraInternalConfig = {
+  issuer: "mock_issuer",
+  jwksUri: "mock_jwks_uri",
+};
 
 const MOCK_IDP_CONFIG: AmphoraExternalConfig = {
   input: {},
@@ -25,8 +30,8 @@ export const _createMockAmphora = (mockFn: () => any): IAmphora => {
   };
 
   return {
-    config: [],
-    domain: "mock_issuer",
+    internal: MOCK_INTERNAL_CONFIG,
+    issuer: "mock_issuer",
     jwks: { keys: [] },
     vault: [],
 

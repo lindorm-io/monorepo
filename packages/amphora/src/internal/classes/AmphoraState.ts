@@ -4,11 +4,8 @@ import { type IKryptos, KryptosKit, type LindormJwk } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Environment } from "@lindorm/types";
 import { AmphoraError } from "../../errors/index.js";
-import type {
-  AmphoraExternalConfig,
-  AmphoraCondition,
-  AmphoraSettings,
-} from "../../types/index.js";
+import type { AmphoraCondition, AmphoraSettings } from "../../types/index.js";
+import type { ExternalEntry } from "../types/external-entry.js";
 import { createExternalConduit } from "../utils/create-external-conduit.js";
 import { fetchExternalJwks } from "../utils/fetch-external-jwks.js";
 import { isEnvironment } from "../utils/is-environment.js";
@@ -25,15 +22,15 @@ import { seedExternalConfig } from "../utils/seed-external-config.js";
 export class AmphoraState {
   readonly conduit: Conduit;
   readonly logger: ILogger;
-  readonly domain: string | null;
+  readonly issuer: string | null;
   readonly environment: Environment | null;
   readonly maxExternalKeys: number;
   readonly maxIssuers: number;
   readonly refreshInterval: number;
 
   vault: Array<IKryptos> = [];
-  externalConfigs: Array<AmphoraExternalConfig> = [];
-  idpConfig: AmphoraExternalConfig | null = null;
+  externalEntries: Array<ExternalEntry> = [];
+  idpEntry: ExternalEntry | null = null;
 
   isSetup = false;
   setupPromise: Promise<void> | null = null;
@@ -46,14 +43,14 @@ export class AmphoraState {
     this.logger = options.logger.child(["Amphora"]);
     this.conduit = createExternalConduit(options, this.logger);
 
-    this.domain = options.domain ?? null;
+    this.issuer = options.issuer ?? null;
     this.environment = options.environment ?? null;
     this.maxExternalKeys = options.maxExternalKeys ?? 100;
     this.maxIssuers = options.maxIssuers ?? 1000;
     this.refreshInterval = options.refreshInterval ?? 300_000;
 
-    if (options.idp) this.idpConfig = seedExternalConfig(options.idp);
-    this.externalConfigs = (options.external ?? []).map(seedExternalConfig);
+    if (options.idp) this.idpEntry = seedExternalConfig(options.idp);
+    this.externalEntries = (options.external ?? []).map(seedExternalConfig);
   }
 
   // getters
@@ -63,13 +60,13 @@ export class AmphoraState {
   }
 
   get hasExternal(): boolean {
-    return this.externalConfigs.length > 0 || this.idpConfig !== null;
+    return this.externalEntries.length > 0 || this.idpEntry !== null;
   }
 
-  get allEntries(): Array<AmphoraExternalConfig> {
-    return this.idpConfig
-      ? [...this.externalConfigs, this.idpConfig]
-      : [...this.externalConfigs];
+  get allEntries(): Array<ExternalEntry> {
+    return this.idpEntry
+      ? [...this.externalEntries, this.idpEntry]
+      : [...this.externalEntries];
   }
 
   // vault selection
@@ -124,17 +121,17 @@ export class AmphoraState {
   // (`canSign` etc.) go straight to `filteredKeys` and never reach here, so a
   // probe does not count as use.
   markAccessed(keys: Array<IKryptos>): void {
-    if (keys.length === 0 || this.externalConfigs.length === 0) return;
+    if (keys.length === 0 || this.externalEntries.length === 0) return;
 
     const now = new Date();
 
     for (const key of keys) {
       if (key.internal || !key.issuer) continue;
 
-      const config = this.externalConfigs.find(
-        (entry) => entry.issuer === key.issuer || entry.input.issuer === key.issuer,
+      const entry = this.externalEntries.find(
+        (item) => item.issuer === key.issuer || item.input.issuer === key.issuer,
       );
-      if (config) config.lastAccess = now;
+      if (entry) entry.lastAccess = now;
     }
   }
 
@@ -151,12 +148,12 @@ export class AmphoraState {
     return this.allEntries.some((entry) => this.entryStale(entry));
   }
 
-  private entryStale(entry: AmphoraExternalConfig): boolean {
+  private entryStale(entry: ExternalEntry): boolean {
     if (!entry.lastRefresh) return true;
     return Date.now() - entry.lastRefresh.getTime() > this.refreshInterval;
   }
 
-  findEntry(issuer: string): AmphoraExternalConfig | undefined {
+  findEntry(issuer: string): ExternalEntry | undefined {
     return this.allEntries.find(
       (entry) => entry.issuer === issuer || entry.input.issuer === issuer,
     );
@@ -164,8 +161,8 @@ export class AmphoraState {
 
   // The idp's resolved (or declared) issuer, if an idp is set.
   get idpIssuer(): string | null {
-    if (!this.idpConfig) return null;
-    return this.idpConfig.issuer ?? this.idpConfig.input.issuer ?? null;
+    if (!this.idpEntry) return null;
+    return this.idpEntry.issuer ?? this.idpEntry.input.issuer ?? null;
   }
 
   // An issuer belongs to AT MOST one scope — it cannot be both the upstream `idp`
@@ -176,17 +173,17 @@ export class AmphoraState {
   assertIssuerScopeFree(
     issuer: string | null | undefined,
     scope: "external" | "idp",
-    self?: AmphoraExternalConfig,
+    self?: ExternalEntry,
   ): void {
     if (!issuer) return;
 
-    const holds = (entry: AmphoraExternalConfig): boolean =>
+    const holds = (entry: ExternalEntry): boolean =>
       entry !== self && (entry.issuer ?? entry.input.issuer) === issuer;
 
     const clash =
       scope === "idp"
-        ? this.externalConfigs.some(holds)
-        : this.idpConfig !== null && holds(this.idpConfig);
+        ? this.externalEntries.some(holds)
+        : this.idpEntry !== null && holds(this.idpEntry);
 
     if (clash) {
       throw new AmphoraError("Issuer is already registered in the other scope", {
@@ -220,8 +217,8 @@ export class AmphoraState {
     });
   }
 
-  // Add OUR OWN keys (from `add` / `env`): stamp issuer/jwksUri from domain,
-  // require issuer, reject expired, enforce the environment guard.
+  // Add OUR OWN keys (from `add` / `env`): stamp issuer/jwksUri from the amphora
+  // issuer, require issuer, reject expired, enforce the environment guard.
   addInternalKeys(array: Array<IKryptos>): void {
     for (const input of array) {
       if (!input.id) {
@@ -234,17 +231,17 @@ export class AmphoraState {
 
       const overwrite: Record<string, unknown> = {};
 
-      if (!input.issuer && this.domain) {
-        this.logger.silly("Setting issuer on Kryptos from domain", {
+      if (!input.issuer && this.issuer) {
+        this.logger.silly("Setting issuer on Kryptos from amphora issuer", {
           id: input.id,
-          issuer: this.domain,
+          issuer: this.issuer,
         });
-        overwrite.issuer = this.domain;
+        overwrite.issuer = this.issuer;
       }
 
-      if (!input.jwksUri && this.domain) {
-        const jwksUri = new URL("/.well-known/jwks.json", this.domain).toString();
-        this.logger.silly("Setting jwksUri on Kryptos from domain", {
+      if (!input.jwksUri && this.issuer) {
+        const jwksUri = new URL("/.well-known/jwks.json", this.issuer).toString();
+        this.logger.silly("Setting jwksUri on Kryptos from amphora issuer", {
           id: input.id,
           jwksUri,
         });
@@ -261,7 +258,7 @@ export class AmphoraState {
           data: { id: item.id },
           title: "Kryptos Issuer Required",
           details:
-            "A Kryptos must have an issuer, either set explicitly or derived from the Amphora domain.",
+            "A Kryptos must have an issuer, either set explicitly or derived from the Amphora issuer.",
         });
       }
 
@@ -282,7 +279,7 @@ export class AmphoraState {
     this.refreshJwks();
   }
 
-  // Add FOREIGN keys (via `external.add`): force `internal: false`, no domain
+  // Add FOREIGN keys (via `external.add`): force `internal: false`, no issuer
   // stamp — the provenance invariant for every key that enters an external scope.
   addExternalKeys(array: Array<IKryptos>): void {
     for (const input of array) {
@@ -311,10 +308,10 @@ export class AmphoraState {
   // Register a new EXTERNAL issuer source and enforce the cap. `lastAccess` is
   // stamped now — registration counts as use, so a just-registered issuer is
   // never the immediate eviction victim (only ever-idle peers are). The idp does
-  // NOT flow through here (it is a singleton on `idpConfig`, exempt from the cap).
-  addExternalConfig(config: AmphoraExternalConfig): void {
-    config.lastAccess = new Date();
-    this.externalConfigs.push(config);
+  // NOT flow through here (it is a singleton on `idpEntry`, exempt from the cap).
+  addExternalEntry(entry: ExternalEntry): void {
+    entry.lastAccess = new Date();
+    this.externalEntries.push(entry);
     this.enforceIssuerCap();
   }
 
@@ -322,13 +319,13 @@ export class AmphoraState {
   // least-recently-USED (smallest `lastAccess`; `null` = never used, sorts oldest)
   // until at or under `maxIssuers`. Inline on registration overflow, no background
   // sweeper. Correctness-safe: an evicted issuer re-registers + re-fetches on its
-  // next use. The idp is not in `externalConfigs`, so it is never a candidate.
+  // next use. The idp is not in `externalEntries`, so it is never a candidate.
   private enforceIssuerCap(): void {
-    while (this.externalConfigs.length > this.maxIssuers) {
+    while (this.externalEntries.length > this.maxIssuers) {
       let victimIndex = 0;
       let victimTime = Infinity;
 
-      this.externalConfigs.forEach((entry, index) => {
+      this.externalEntries.forEach((entry, index) => {
         const time = entry.lastAccess ? entry.lastAccess.getTime() : 0;
         if (time < victimTime) {
           victimTime = time;
@@ -336,7 +333,7 @@ export class AmphoraState {
         }
       });
 
-      const [victim] = this.externalConfigs.splice(victimIndex, 1);
+      const [victim] = this.externalEntries.splice(victimIndex, 1);
       const issuer = victim.issuer ?? victim.input.issuer ?? null;
 
       this.logger.warn(
@@ -356,17 +353,17 @@ export class AmphoraState {
     this.refreshJwks();
   }
 
-  private applyFetchedKeys(config: AmphoraExternalConfig, keys: Array<IKryptos>): void {
+  private applyFetchedKeys(entry: ExternalEntry, keys: Array<IKryptos>): void {
     this.vault = this.vault
-      .filter((i) => i.internal || i.issuer !== config.issuer)
+      .filter((i) => i.internal || i.issuer !== entry.issuer)
       .concat(keys);
-    config.keyCount = keys.length;
-    config.lastRefresh = new Date();
+    entry.keyCount = keys.length;
+    entry.lastRefresh = new Date();
     this.refreshJwks();
   }
 
   refreshJwks(): void {
-    if (this.domain === null) return;
+    if (this.issuer === null) return;
 
     this.logger.silly("Refreshing JWKS");
 
@@ -377,7 +374,7 @@ export class AmphoraState {
       // We publish OUR keys and only ours — republishing a key fetched from
       // someone else's JWKS would advertise their key material as our own.
       internal: true,
-      issuer: this.domain,
+      issuer: this.issuer,
     })
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .map((i) => i.toJWK("public"));
@@ -387,31 +384,31 @@ export class AmphoraState {
 
   // Re-resolve one entry's config from its verbatim `input`, then fetch + apply
   // its keys. Used by targeted refresh and eager load.
-  async loadEntry(config: AmphoraExternalConfig): Promise<void> {
-    await this.resolveEntry(config);
-    await this.fetchEntry(config);
+  async loadEntry(entry: ExternalEntry): Promise<void> {
+    await this.resolveEntry(entry);
+    await this.fetchEntry(entry);
   }
 
-  private async resolveEntry(config: AmphoraExternalConfig): Promise<void> {
-    const resolved = await resolveExternalConfig(this.conduit, config.input);
+  private async resolveEntry(entry: ExternalEntry): Promise<void> {
+    const resolved = await resolveExternalConfig(this.conduit, entry.input);
 
     // A discovery-derived issuer was unknown at registration; enforce scope
     // exclusivity now that it is settled (excluding this same entry).
-    const scope = config === this.idpConfig ? "idp" : "external";
-    this.assertIssuerScopeFree(resolved.issuer, scope, config);
+    const scope = entry === this.idpEntry ? "idp" : "external";
+    this.assertIssuerScopeFree(resolved.issuer, scope, entry);
 
-    config.issuer = resolved.issuer;
-    config.jwksUri = resolved.jwksUri;
-    config.openIdConfiguration = resolved.openIdConfiguration;
-    config.load = resolved.load;
+    entry.issuer = resolved.issuer;
+    entry.jwksUri = resolved.jwksUri;
+    entry.openIdConfiguration = resolved.openIdConfiguration;
+    entry.load = resolved.load;
   }
 
-  private async fetchEntry(config: AmphoraExternalConfig): Promise<void> {
-    const keys = await fetchExternalJwks(this.conduit, config, {
+  private async fetchEntry(entry: ExternalEntry): Promise<void> {
+    const keys = await fetchExternalJwks(this.conduit, entry, {
       maxExternalKeys: this.maxExternalKeys,
       logger: this.logger,
     });
-    this.applyFetchedKeys(config, keys);
+    this.applyFetchedKeys(entry, keys);
   }
 
   // Refetch EVERYTHING — idp + all external. Config resolution and key fetching
@@ -490,15 +487,15 @@ export class AmphoraState {
   // external entry owns the issuer — the granular find-miss path can pass a
   // local-only issuer, which simply has nothing to refetch.
   refreshIssuer(issuer: string): Promise<void> {
-    const config = this.findEntry(issuer);
-    if (!config) return Promise.resolve();
+    const entry = this.findEntry(issuer);
+    if (!entry) return Promise.resolve();
 
     const existing = this.issuerRefreshPromises.get(issuer);
     if (existing) return existing;
 
     const promise = (async (): Promise<void> => {
       try {
-        await this.loadEntry(config);
+        await this.loadEntry(entry);
       } finally {
         this.issuerRefreshPromises.delete(issuer);
       }

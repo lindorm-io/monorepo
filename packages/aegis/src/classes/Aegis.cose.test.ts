@@ -20,7 +20,7 @@ describe("Aegis — COSE", () => {
 
   beforeEach(async () => {
     const logger = createMockLogger();
-    const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+    const amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
     aegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_EC_KEY_SIG);
@@ -57,7 +57,7 @@ describe("Aegis — COSE", () => {
 
   test("mints and verifies a COSE id_token with an oct key (COSE_Mac0 CWT)", async () => {
     const logger = createMockLogger();
-    const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+    const amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
     const macAegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_OCT_KEY_SIG); // HS256, a confidential profile -> MAC path
@@ -85,7 +85,7 @@ describe("Aegis — COSE", () => {
     // QUERY, so it binds every encoder: COSE cannot MAC an access token with an
     // HS key any more than JOSE can sign one.
     const logger = createMockLogger();
-    const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+    const amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
     const macAegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_OCT_KEY_SIG);
@@ -106,7 +106,7 @@ describe("Aegis — COSE", () => {
     // HS* is still a first-class COSE signer — it is the access_token PROFILE
     // that forbids it, not the COSE encoder. id_token carries no algClass.
     const logger = createMockLogger();
-    const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+    const amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
     const macAegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_OCT_KEY_SIG);
@@ -127,7 +127,7 @@ describe("Aegis — COSE", () => {
 
   test("sign-then-encrypt: an id_token wrapped in COSE_Encrypt0 decrypts + verifies", async () => {
     const logger = createMockLogger();
-    const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+    const amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
     const encAegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_EC_KEY_SIG); // signs the inner CWT
@@ -161,7 +161,7 @@ describe("Aegis — COSE", () => {
   describe("sensitive claims (Phase 13 flat-wire correction, COSE)", () => {
     test("HONORS flat sensitive claims on an encrypted CWE round-trip", async () => {
       const logger = createMockLogger();
-      const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+      const amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
       const encAegis = new Aegis({ amphora, logger });
       await amphora.setup();
       amphora.add(TEST_EC_KEY_SIG); // signs the inner CWT

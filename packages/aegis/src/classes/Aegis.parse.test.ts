@@ -26,7 +26,7 @@ describe("Aegis — parse (keyless, unverified)", () => {
 
   beforeEach(async () => {
     const logger = createMockLogger();
-    amphora = new Amphora({ domain: ISSUER, logger });
+    amphora = new Amphora({ issuer: ISSUER, logger });
     aegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_EC_KEY_SIG); // ES512 signer (jwt/cwt/cws)
@@ -63,7 +63,7 @@ describe("Aegis — parse (keyless, unverified)", () => {
 
     test("cwm (COSE_Mac0)", async () => {
       const logger = createMockLogger();
-      const macAmphora = new Amphora({ domain: ISSUER, logger });
+      const macAmphora = new Amphora({ issuer: ISSUER, logger });
       const macAegis = new Aegis({ amphora: macAmphora, logger });
       await macAmphora.setup();
       macAmphora.add(TEST_OCT_KEY_SIG);

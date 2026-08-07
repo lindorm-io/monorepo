@@ -18,7 +18,7 @@ const KEK = KryptosKit.generate.enc.oct({
 const createAmphora = () => {
   const amphora = new Amphora({
     logger: createMockLogger(),
-    domain: "https://test.lindorm.io",
+    issuer: "https://test.lindorm.io",
   });
   amphora.add(KEK);
   return amphora;
