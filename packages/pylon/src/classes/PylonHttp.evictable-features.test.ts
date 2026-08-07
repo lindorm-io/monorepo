@@ -12,8 +12,8 @@
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
-import request from "supertest";
-import { beforeEach, describe, expect, test } from "vitest";
+import { createLoopbackRequest } from "../__fixtures__/loopback-request.js";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { CachedResponse } from "../entities/CachedResponse.js";
 import { RateLimitFixed } from "../entities/RateLimitFixed.js";
 import { useCache } from "../middleware/common/use-cache.js";
@@ -51,6 +51,14 @@ const createPylonHttp = async (
   return pylonHttp;
 };
 
+// ONE loopback-bound server for the file, dialled on the address it is bound to.
+// supertest otherwise binds the wildcard and dials 127.0.0.1, which lets a
+// foreign local listener answer instead — see __fixtures__/loopback-request.ts.
+const loopback = createLoopbackRequest();
+
+beforeAll(() => loopback.start());
+afterAll(() => loopback.stop());
+
 describe("PylonHttp response cache over ctx.cache", () => {
   let kv: Awaited<ReturnType<typeof createEvictableSource>>;
 
@@ -63,8 +71,14 @@ describe("PylonHttp response cache over ctx.cache", () => {
   test("should MISS then HIT when only a kv source is configured", async () => {
     const pylonHttp = await createPylonHttp({ kv, responseCache: { enabled: true } });
 
-    const first = await request(pylonHttp.callback).get("/v1/cached").expect(200);
-    const second = await request(pylonHttp.callback).get("/v1/cached").expect(200);
+    const first = await loopback
+      .request(pylonHttp.callback)
+      .get("/v1/cached")
+      .expect(200);
+    const second = await loopback
+      .request(pylonHttp.callback)
+      .get("/v1/cached")
+      .expect(200);
 
     expect(first.headers["x-pylon-cache"]).toBe("MISS");
     expect(second.headers["x-pylon-cache"]).toBe("HIT");
@@ -81,7 +95,7 @@ describe("PylonHttp response cache over ctx.cache", () => {
       responseCache: { enabled: true },
     });
 
-    await request(pylonHttp.callback).get("/v1/cached").expect(200);
+    await loopback.request(pylonHttp.callback).get("/v1/cached").expect(200);
 
     expect(await cache.repository(CachedResponse).find({})).toHaveLength(1);
     expect(await kv.repository(CachedResponse).find({})).toHaveLength(0);
@@ -93,7 +107,10 @@ describe("PylonHttp response cache over ctx.cache", () => {
   test("should pass through as DISABLED, not throw, when the feature is off", async () => {
     const pylonHttp = await createPylonHttp({ kv, responseCache: { enabled: false } });
 
-    const response = await request(pylonHttp.callback).get("/v1/cached").expect(200);
+    const response = await loopback
+      .request(pylonHttp.callback)
+      .get("/v1/cached")
+      .expect(200);
 
     expect(response.headers["x-pylon-cache"]).toBe("DISABLED");
     expect(await kv.repository(CachedResponse).find({})).toHaveLength(0);
@@ -103,7 +120,10 @@ describe("PylonHttp response cache over ctx.cache", () => {
   test("should fail the request when enabled with no evictable source", async () => {
     const pylonHttp = await createPylonHttp({ responseCache: { enabled: true } });
 
-    const response = await request(pylonHttp.callback).get("/v1/cached").expect(500);
+    const response = await loopback
+      .request(pylonHttp.callback)
+      .get("/v1/cached")
+      .expect(500);
 
     expect(response.body.error.code).toBe("cache_not_configured");
   });
@@ -118,8 +138,11 @@ describe("PylonHttp rate limit over ctx.cache", () => {
       rateLimit: { enabled: true, window: "1 minute", max: 1 },
     });
 
-    const first = await request(pylonHttp.callback).get("/v1/cached").expect(200);
-    await request(pylonHttp.callback).get("/v1/cached").expect(429);
+    const first = await loopback
+      .request(pylonHttp.callback)
+      .get("/v1/cached")
+      .expect(200);
+    await loopback.request(pylonHttp.callback).get("/v1/cached").expect(429);
 
     expect(first.headers["x-ratelimit-limit"]).toBe("1");
     expect(await kv.repository(RateLimitFixed).find({})).toHaveLength(1);
@@ -133,8 +156,8 @@ describe("PylonHttp rate limit over ctx.cache", () => {
       rateLimit: { enabled: false, window: "1 minute", max: 1 },
     });
 
-    await request(pylonHttp.callback).get("/v1/cached").expect(200);
-    await request(pylonHttp.callback).get("/v1/cached").expect(200);
+    await loopback.request(pylonHttp.callback).get("/v1/cached").expect(200);
+    await loopback.request(pylonHttp.callback).get("/v1/cached").expect(200);
 
     expect(await kv.repository(RateLimitFixed).find({})).toHaveLength(0);
   });

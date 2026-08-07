@@ -4,7 +4,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import { join } from "path";
 import { Socket as ClientSocket, io as ioClient } from "socket.io-client";
-import request from "supertest";
+import { createLoopbackRequest } from "../__fixtures__/loopback-request.js";
 import { Pylon } from "./Pylon.js";
 import {
   afterAll,
@@ -15,6 +15,14 @@ import {
   expect,
   test,
 } from "vitest";
+
+// ONE loopback-bound server for the file, dialled on the address it is bound to.
+// supertest otherwise binds the wildcard and dials 127.0.0.1, which lets a
+// foreign local listener answer instead — see __fixtures__/loopback-request.ts.
+const loopback = createLoopbackRequest();
+
+beforeAll(() => loopback.start());
+afterAll(() => loopback.stop());
 
 describe("PylonScanner", () => {
   let pylon: Pylon;
@@ -54,6 +62,13 @@ describe("PylonScanner", () => {
         listeners: join(__dirname, "..", "__fixtures__", "listeners"),
       },
       name: "@lindorm/pylon-scanner-test",
+      // ⚠ Bind the SAME address the socket clients below dial. Production binds
+      // the WILDCARD, which is right for a served container — but on macOS a
+      // wildcard bind does not conflict with a pre-existing 127.0.0.1-specific
+      // listener, so `port: 0` can be handed a port a foreign app already owns
+      // and longest-prefix routing then sends the client to THAT app. Naming the
+      // host makes such a port `EADDRINUSE` out of `pylon.start()` instead.
+      host: "127.0.0.1",
       port: 0,
       version: "0.0.1",
     });
@@ -70,8 +85,10 @@ describe("PylonScanner", () => {
     return addr.port;
   };
 
+  // `127.0.0.1`, matching the bind — not `localhost`, which resolves to both
+  // families and lets Happy Eyeballs decide which one answers.
   const connectClient = (): ClientSocket => {
-    return ioClient(`http://localhost:${getPort()}`, {
+    return ioClient(`http://127.0.0.1:${getPort()}`, {
       transports: ["websocket"],
       forceNew: true,
     });
@@ -83,10 +100,34 @@ describe("PylonScanner", () => {
       client.on("connect_error", reject);
     });
 
+  // ⚠ The property the whole file rests on. Against a WILDCARD bind a foreign
+  // 127.0.0.1 listener can own the port the kernel handed us and answer the
+  // clients below; binding the dialled address makes that `EADDRINUSE` instead.
+  test("should bind the host it was given, not the wildcard", () => {
+    expect((pylon as any).server.address().address).toBe("127.0.0.1");
+  });
+
+  // A bind failure reaches the caller of `start()`. Without this it arrives as
+  // an `error` event an `http.Server` has no handler for — an uncaught
+  // exception that kills the process while `start()` never settles.
+  test("should reject start() when the port is already taken", async () => {
+    const taken = new Pylon({
+      amphora,
+      logger,
+      environment: "test",
+      name: "@lindorm/pylon-scanner-test-conflict",
+      host: "127.0.0.1",
+      port: getPort(),
+      version: "0.0.1",
+    });
+
+    await expect(taken.start()).rejects.toMatchObject({ code: "EADDRINUSE" });
+  });
+
   // Route scanner conventions
 
   test("should handle PylonRouter instance export (escape hatch)", async () => {
-    const response = await request(pylon.callback).get("/custom").expect(200);
+    const response = await loopback.request(pylon.callback).get("/custom").expect(200);
 
     expect(response.body).toEqual(
       expect.objectContaining({
@@ -97,7 +138,7 @@ describe("PylonScanner", () => {
   });
 
   test("should handle index.ts file GET export", async () => {
-    const response = await request(pylon.callback).get("/v1/users").expect(200);
+    const response = await loopback.request(pylon.callback).get("/v1/users").expect(200);
 
     expect(response.body).toEqual(
       expect.objectContaining({
@@ -108,7 +149,8 @@ describe("PylonScanner", () => {
   });
 
   test("should handle index.ts file POST export with array middleware", async () => {
-    const response = await request(pylon.callback)
+    const response = await loopback
+      .request(pylon.callback)
       .post("/v1/users")
       .send({ name: "test" })
       .expect(201);
@@ -122,7 +164,10 @@ describe("PylonScanner", () => {
   });
 
   test("should handle dynamic [id] param GET", async () => {
-    const response = await request(pylon.callback).get("/v1/users/abc123").expect(200);
+    const response = await loopback
+      .request(pylon.callback)
+      .get("/v1/users/abc123")
+      .expect(200);
 
     expect(response.body).toEqual(
       expect.objectContaining({
@@ -134,7 +179,8 @@ describe("PylonScanner", () => {
   });
 
   test("should handle dynamic [id] param PUT", async () => {
-    const response = await request(pylon.callback)
+    const response = await loopback
+      .request(pylon.callback)
       .put("/v1/users/abc123")
       .send({ name: "updated" })
       .expect(200);
@@ -149,7 +195,10 @@ describe("PylonScanner", () => {
   });
 
   test("should handle dynamic [id] param DELETE", async () => {
-    const response = await request(pylon.callback).delete("/v1/users/abc123").expect(200);
+    const response = await loopback
+      .request(pylon.callback)
+      .delete("/v1/users/abc123")
+      .expect(200);
 
     expect(response.body).toEqual(
       expect.objectContaining({
@@ -161,7 +210,10 @@ describe("PylonScanner", () => {
   });
 
   test("should handle route group (no 'admin' in URL path)", async () => {
-    const response = await request(pylon.callback).get("/v1/dashboard").expect(200);
+    const response = await loopback
+      .request(pylon.callback)
+      .get("/v1/dashboard")
+      .expect(200);
 
     expect(response.body).toEqual(
       expect.objectContaining({
@@ -172,7 +224,10 @@ describe("PylonScanner", () => {
   });
 
   test("should handle catch-all [...path] route", async () => {
-    const response = await request(pylon.callback).get("/proxy/foo/bar/baz").expect(200);
+    const response = await loopback
+      .request(pylon.callback)
+      .get("/proxy/foo/bar/baz")
+      .expect(200);
 
     expect(response.body).toEqual(
       expect.objectContaining({
@@ -184,7 +239,7 @@ describe("PylonScanner", () => {
   });
 
   test("should handle optional catch-all [[...slug]] with trailing slash", async () => {
-    const response = await request(pylon.callback).get("/api/").expect(200);
+    const response = await loopback.request(pylon.callback).get("/api/").expect(200);
 
     expect(response.body).toEqual(
       expect.objectContaining({
@@ -195,7 +250,10 @@ describe("PylonScanner", () => {
   });
 
   test("should handle optional catch-all [[...slug]] with params", async () => {
-    const response = await request(pylon.callback).get("/api/one/two").expect(200);
+    const response = await loopback
+      .request(pylon.callback)
+      .get("/api/one/two")
+      .expect(200);
 
     expect(response.body).toEqual(
       expect.objectContaining({
@@ -209,19 +267,25 @@ describe("PylonScanner", () => {
   // Middleware inheritance
 
   test("should apply root middleware to scanned routes", async () => {
-    const response = await request(pylon.callback).get("/proxy/test-path").expect(200);
+    const response = await loopback
+      .request(pylon.callback)
+      .get("/proxy/test-path")
+      .expect(200);
 
     expect(response.body.middleware_chain).toEqual(["root"]);
   });
 
   test("should apply root + v1 middleware to nested routes", async () => {
-    const response = await request(pylon.callback).get("/v1/users").expect(200);
+    const response = await loopback.request(pylon.callback).get("/v1/users").expect(200);
 
     expect(response.body.middleware_chain).toEqual(["root", "v1"]);
   });
 
   test("should apply root + v1 + admin middleware through route groups", async () => {
-    const response = await request(pylon.callback).get("/v1/dashboard").expect(200);
+    const response = await loopback
+      .request(pylon.callback)
+      .get("/v1/dashboard")
+      .expect(200);
 
     expect(response.body.middleware_chain).toEqual(["root", "v1", "admin"]);
   });
@@ -229,13 +293,13 @@ describe("PylonScanner", () => {
   // Built-in routes take priority over scanned routes
 
   test("should prioritize built-in /health over scanned health route", async () => {
-    await request(pylon.callback).get("/health").expect(204);
+    await loopback.request(pylon.callback).get("/health").expect(204);
   });
 
   // 404 handling
 
   test("should return 404 for nonexistent routes", async () => {
-    await request(pylon.callback).get("/nonexistent").expect(404);
+    await loopback.request(pylon.callback).get("/nonexistent").expect(404);
   });
 
   // Socket listener tests

@@ -43,6 +43,7 @@ export class Pylon<
   S extends PylonSocketContext = PylonSocketContext,
 > {
   private readonly amphora: IAmphora;
+  private readonly host: string | undefined;
   private readonly http: PylonHttp<H>;
   private readonly io: PylonIo<S> | undefined;
   private readonly logger: ILogger;
@@ -99,6 +100,7 @@ export class Pylon<
       this.io = new PylonIo<S>(this.server, options, authConfig);
     }
 
+    this.host = options.host;
     this.port = options.port ?? 3000;
 
     this._setup = options.setup;
@@ -278,9 +280,21 @@ export class Pylon<
   // private
 
   private listen(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       this.server.on("request", this.http.callback);
-      this.server.listen(this.port, resolve);
+
+      // A bind failure — EADDRINUSE, EACCES on a privileged port — arrives as an
+      // `error` event, and an `http.Server` has no default handler for it, so
+      // without this the process dies on an uncaught exception while `start()`
+      // never settles. It belongs to the caller of `start()`.
+      this.server.once("error", reject);
+
+      // `host: undefined` is the WILDCARD, which is what a served container
+      // wants. `listen({ port, host })` takes it as such.
+      this.server.listen({ host: this.host, port: this.port }, () => {
+        this.server.off("error", reject);
+        resolve();
+      });
     });
   }
 

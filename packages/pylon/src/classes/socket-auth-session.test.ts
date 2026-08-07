@@ -5,7 +5,7 @@ import type { ILogger } from "@lindorm/logger";
 import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
 import { createCookieAuthStrategy, Zephyr } from "@lindorm/zephyr";
 import { join } from "path";
-import request from "supertest";
+import { createLoopbackRequest } from "../__fixtures__/loopback-request.js";
 import {
   SOCKET_AUTH_TEST_ISSUER,
   SOCKET_AUTH_TEST_KEY_ID,
@@ -82,6 +82,14 @@ const buildInMemoryProteus = async () => {
   return { source, store };
 };
 
+// ONE loopback-bound server for the file, dialled on the address it is bound to.
+// supertest otherwise binds the wildcard and dials 127.0.0.1, which lets a
+// foreign local listener answer instead — see __fixtures__/loopback-request.ts.
+const loopback = createLoopbackRequest();
+
+beforeAll(() => loopback.start());
+afterAll(() => loopback.stop());
+
 describe("socket auth (session / cookie) e2e", () => {
   let pylon: Pylon;
   let amphora: IAmphora;
@@ -136,6 +144,12 @@ describe("socket auth (session / cookie) e2e", () => {
         listeners: join(__dirname, "..", "__fixtures__", "socket-auth", "listeners"),
       },
       name: "@lindorm/pylon-socket-auth-session-test",
+      // Bind the SAME address the clients below dial. Production binds the
+      // WILDCARD, which a served container wants — but on macOS that does not
+      // conflict with a pre-existing 127.0.0.1-specific listener, so `port: 0`
+      // can be handed a port a foreign app already owns and the clients reach
+      // THAT app. Naming the host makes such a port `EADDRINUSE` at start.
+      host: "127.0.0.1",
       port: 0,
       version: "0.0.1",
     });
@@ -173,7 +187,8 @@ describe("socket auth (session / cookie) e2e", () => {
   };
 
   const login = async (subject = "alice", expiresIn = 3600): Promise<LoginResult> => {
-    const response = await request(pylon.callback)
+    const response = await loopback
+      .request(pylon.callback)
       .post("/login-session")
       .send({ subject, expiresIn })
       .expect(200);

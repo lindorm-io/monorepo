@@ -11,7 +11,7 @@ import {
 import { webcrypto } from "crypto";
 import { join } from "path";
 import type { Socket } from "socket.io-client";
-import request from "supertest";
+import { createLoopbackRequest } from "../__fixtures__/loopback-request.js";
 import { mintTestAccessToken } from "../__fixtures__/socket-auth/mint-test-access-token.js";
 import {
   SOCKET_AUTH_TEST_ISSUER,
@@ -145,6 +145,14 @@ const resolveLocalHandshakeHtu = (socket: Socket): string => {
 
 // ---------------------------------------------------------------------------
 
+// ONE loopback-bound server for the file, dialled on the address it is bound to.
+// supertest otherwise binds the wildcard and dials 127.0.0.1, which lets a
+// foreign local listener answer instead — see __fixtures__/loopback-request.ts.
+const loopback = createLoopbackRequest();
+
+beforeAll(() => loopback.start());
+afterAll(() => loopback.stop());
+
 describe("socket auth (dpop-bearer) e2e", () => {
   let pylon: Pylon;
   let amphora: IAmphora;
@@ -194,6 +202,12 @@ describe("socket auth (dpop-bearer) e2e", () => {
         connectionMiddleware: [useAccessToken()],
       },
       name: "@lindorm/pylon-socket-auth-dpop-test",
+      // Bind the SAME address the clients below dial. Production binds the
+      // WILDCARD, which a served container wants — but on macOS that does not
+      // conflict with a pre-existing 127.0.0.1-specific listener, so `port: 0`
+      // can be handed a port a foreign app already owns and the clients reach
+      // THAT app. Naming the host makes such a port `EADDRINUSE` at start.
+      host: "127.0.0.1",
       port: 0,
       version: "0.0.1",
     });
@@ -235,7 +249,8 @@ describe("socket auth (dpop-bearer) e2e", () => {
     subject: string,
     expiresIn = 3600,
   ): Promise<LoginResponse> => {
-    const response = await request(pylon.callback)
+    const response = await loopback
+      .request(pylon.callback)
       .post("/login")
       .send({ subject, expiresIn })
       .expect(200);
@@ -254,7 +269,8 @@ describe("socket auth (dpop-bearer) e2e", () => {
       htm: "POST",
       htu: loginUrl,
     });
-    const response = await request(pylon.callback)
+    const response = await loopback
+      .request(pylon.callback)
       .post("/login-dpop")
       .set("DPoP", proof)
       .send({ subject, expiresIn })
@@ -454,6 +470,12 @@ describe("socket auth (dpop-bearer) e2e", () => {
         connectionMiddleware: [useAccessToken({ dpop: "required" })],
       },
       name: "@lindorm/pylon-socket-auth-dpop-required-test",
+      // Bind the SAME address the clients below dial. Production binds the
+      // WILDCARD, which a served container wants — but on macOS that does not
+      // conflict with a pre-existing 127.0.0.1-specific listener, so `port: 0`
+      // can be handed a port a foreign app already owns and the clients reach
+      // THAT app. Naming the host makes such a port `EADDRINUSE` at start.
+      host: "127.0.0.1",
       port: 0,
       version: "0.0.1",
     });
@@ -463,7 +485,8 @@ describe("socket auth (dpop-bearer) e2e", () => {
       const strictAddr = (strictPylon as any).server.address();
       const strictUrl = `http://127.0.0.1:${strictAddr.port}`;
 
-      const response = await request(strictPylon.callback)
+      const response = await loopback
+        .request(strictPylon.callback)
         .post("/login")
         .send({ subject: "alice", expiresIn: 3600 })
         .expect(200);

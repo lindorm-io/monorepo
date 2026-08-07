@@ -112,6 +112,14 @@ await app.start();
 await app.stop();
 ```
 
+#### Bind address
+
+`port` defaults to `3000` and `host` to the **wildcard** — a served container has to accept traffic from outside its own namespace. Name a `host` to bind a single interface: `127.0.0.1` for a pylon reached only through a sidecar proxy on the same host, and for tests.
+
+`start()` **rejects** on a bind failure — `EADDRINUSE`, or `EACCES` on a privileged port — rather than letting it surface as an uncaught `error` event.
+
+⚠ On BSD and macOS a wildcard bind does **not** conflict with a pre-existing `127.0.0.1`-specific listener, so the kernel may hand out a port another process already owns, and longest-prefix routing then delivers `127.0.0.1` traffic to that process. Binding the address a client dials turns that into `EADDRINUSE` at boot instead of a request answered by somebody else.
+
 #### Source roles
 
 Pylon takes **four** sources, and where each built-in entity lives is fixed — there are no per-feature source overrides.
@@ -1122,12 +1130,14 @@ The assertion carries `iss` = `sub` = the client id, a fresh `jti`, `exp`, `iat`
 
 At `setup()` pylon holds the configuration against what the driver can serve. The test is whether there is a coherent thing to do without the capability:
 
-| Configuration                                        | Result                                                                             |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `router` set, driver has no `authorize`/`exchange`   | **Throws** `auth_driver_cannot_serve_router` — `/login` is mounted and cannot work |
-| `refresh.mode !== "none"`, driver has no `refresh`   | Warns once. Refresh is off                                                         |
-| `cache.introspection` on, driver has no `introspect` | Warns once. That half of the cache is dead, not broken                             |
-| `cache.userinfo` on, driver has no `userinfo`        | Warns once. That half of the cache is dead, not broken                             |
+| Configuration                                                     | Result                                                                             |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `router` set, driver has no `authorize`/`exchange`                | **Throws** `auth_driver_cannot_serve_router` — `/login` is mounted and cannot work |
+| `refresh.mode` **written** as non-`none`, driver has no `refresh` | Warns once. Refresh is off                                                         |
+| `cache.introspection` on, driver has no `introspect`              | Warns once. That half of the cache is dead, not broken                             |
+| `cache.userinfo` on, driver has no `userinfo`                     | Warns once. That half of the cache is dead, not broken                             |
+
+Every warning is about config the deployment **wrote**. A default pylon derived from the driver cannot contradict that driver, so it never warns.
 
 ### Refresh
 
@@ -1137,6 +1147,8 @@ At `setup()` pylon holds the configuration against what the driver can serve. Th
 | `half_life`  | Refresh once the request crosses the half-life of the current token |
 | `max_age`    | Refresh after `refresh.maxAge` since `issuedAt`                     |
 | `none`       | Never auto-refresh                                                  |
+
+**The default mode comes from the driver:** `half_life` when the driver implements `refresh`, `none` when it does not. A verify-only driver — `JwtDriver`, `OpenIdResourceDriver` — resolves to `none` with nothing written, so a resource server never has to restate what the missing method already says. Writing a mode overrides the derived default; writing one the driver cannot honour is what warns.
 
 `half_life` needs a known expiry to find a midpoint, so a session whose `expiresAt` is null is never refreshed under that mode — use `max_age` or `force` to refresh regardless of lifetime.
 

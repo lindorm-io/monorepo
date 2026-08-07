@@ -148,6 +148,18 @@ export type PylonSettings<
 > = PylonHttpSettings<C> & {
   socket?: PylonSocketSettings<S>;
   kryptos?: PylonKryptosSettings;
+  /**
+   * The interface to bind. Default is the WILDCARD — a container needs to accept
+   * traffic from outside its own namespace, so a server should.
+   *
+   * Name one to bind a single interface: `127.0.0.1` for a pylon reached only
+   * through a sidecar proxy on the same host, and for tests. ⚠ A wildcard bind
+   * does NOT conflict with a pre-existing `127.0.0.1`-specific listener on BSD
+   * and macOS, so the kernel can hand out a port another process already owns and
+   * longest-prefix routing then delivers `127.0.0.1` traffic to THAT process.
+   * Binding the address the client dials turns that into `EADDRINUSE` at boot.
+   */
+  host?: string;
   port?: number;
   setup?: PylonSetup;
   teardown?: PylonTeardown;

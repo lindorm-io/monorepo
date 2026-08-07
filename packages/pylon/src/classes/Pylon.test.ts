@@ -12,8 +12,17 @@ import MockDate from "mockdate";
 import nock from "nock";
 import os from "os";
 import { join } from "path";
-import request from "supertest";
-import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
+import { createLoopbackRequest } from "../__fixtures__/loopback-request.js";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from "vitest";
 
 axios.defaults.proxy = false;
 
@@ -31,6 +40,14 @@ import { PylonRouter } from "./PylonRouter.js";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
+
+// ONE loopback-bound server for the file, dialled on the address it is bound to.
+// supertest otherwise binds the wildcard and dials 127.0.0.1, which lets a
+// foreign local listener answer instead — see __fixtures__/loopback-request.ts.
+const loopback = createLoopbackRequest();
+
+beforeAll(() => loopback.start());
+afterAll(() => loopback.stop());
 
 describe("Pylon", () => {
   let files: Array<string>;
@@ -329,7 +346,8 @@ describe("Pylon", () => {
   });
 
   test("should return health check OK", async () => {
-    await request(pylon.callback)
+    await loopback
+      .request(pylon.callback)
       .get("/health")
       .set(
         "user-agent",
@@ -345,7 +363,10 @@ describe("Pylon", () => {
   });
 
   test("should return request info", async () => {
-    const response = await request(pylon.callback).get("/test/request").expect(200);
+    const response = await loopback
+      .request(pylon.callback)
+      .get("/test/request")
+      .expect(200);
 
     expect(response.body).toEqual({
       fresh: false,
@@ -363,7 +384,9 @@ describe("Pylon", () => {
       hostname: "127.0.0.1",
       href: expect.stringMatching(/http:\/\/127\.0\.0\.1:\d+\/test\/request/),
       idempotent: true,
-      ip: "::ffff:127.0.0.1",
+      // A real IPv4 socket, not the IPv4-mapped `::ffff:127.0.0.1` a dualstack
+      // wildcard bind reports — the test server binds 127.0.0.1 itself.
+      ip: "127.0.0.1",
       ips: [],
       method: "GET",
       origin: null,
@@ -389,7 +412,8 @@ describe("Pylon", () => {
   // keys are INTERNAL — they never leave the server and no RP has any business
   // seeing them. The set below is the INTENDED one: `publish: true` keys only.
   test("should return well-known jwks", async () => {
-    const response = await request(pylon.callback)
+    const response = await loopback
+      .request(pylon.callback)
       .get("/.well-known/jwks.json")
       .expect(200);
 
@@ -429,7 +453,8 @@ describe("Pylon", () => {
   });
 
   test("should NOT publish internal cookie or session keys in the jwks", async () => {
-    const response = await request(pylon.callback)
+    const response = await loopback
+      .request(pylon.callback)
       .get("/.well-known/jwks.json")
       .expect(200);
 
@@ -446,7 +471,8 @@ describe("Pylon", () => {
   });
 
   test("should return well-known oauth-protected-resource", async () => {
-    const response = await request(pylon.callback)
+    const response = await loopback
+      .request(pylon.callback)
       .get("/.well-known/oauth-protected-resource")
       .expect(200);
 
@@ -457,7 +483,8 @@ describe("Pylon", () => {
   });
 
   test("should return well-known right-to-be-forgotten", async () => {
-    await request(pylon.callback)
+    await loopback
+      .request(pylon.callback)
       .get("/.well-known/right-to-be-forgotten")
       .set("Authorization", "Bearer access_token")
       .expect(204);
@@ -466,7 +493,8 @@ describe("Pylon", () => {
   });
 
   test("should handle auth login redirect and callback", async () => {
-    const loginRes = await request(pylon.callback)
+    const loginRes = await loopback
+      .request(pylon.callback)
       .get("/auth/login")
       .query({ redirect_uri: "http://client.lindorm.io/login/callback" })
       .expect(302);
@@ -483,7 +511,8 @@ describe("Pylon", () => {
     const locationUrl = new URL(loginRes.headers["location"]);
     const state = locationUrl.searchParams.get("state")!;
 
-    const loginCallbackRes = await request(pylon.callback)
+    const loginCallbackRes = await loopback
+      .request(pylon.callback)
       .get("/auth/login/callback")
       .set("Cookie", loginRes.headers["set-cookie"])
       .query({ code: "code", state })
@@ -501,7 +530,8 @@ describe("Pylon", () => {
   });
 
   test("should parse params", async () => {
-    const response = await request(pylon.callback)
+    const response = await loopback
+      .request(pylon.callback)
       .post("/test/param/123456")
       .query({
         query_value: "test",
@@ -533,7 +563,8 @@ describe("Pylon", () => {
   });
 
   test("should parse body", async () => {
-    const response = await request(pylon.callback)
+    const response = await loopback
+      .request(pylon.callback)
       .post("/test/body")
       .send({
         TestString: "test",
@@ -561,7 +592,8 @@ describe("Pylon", () => {
 
     await conduitSignedRequestMiddleware({ kryptos })(mockContext, vi.fn());
 
-    await request(pylon.callback)
+    await loopback
+      .request(pylon.callback)
       .post("/test/signed")
       .set("date", mockContext.req.headers.date)
       .set("test", mockContext.req.headers.test)
@@ -576,7 +608,8 @@ describe("Pylon", () => {
   });
 
   test("should upload a file using formidable", async () => {
-    await request(pylon.callback)
+    await loopback
+      .request(pylon.callback)
       .post("/test/upload")
       .attach("upload.txt", join(__dirname, "..", "__fixtures__", "upload.txt"))
       .expect(204);
@@ -587,7 +620,10 @@ describe("Pylon", () => {
   });
 
   test("should handle error correctly", async () => {
-    const response = await request(pylon.callback).post("/test/error").expect(508);
+    const response = await loopback
+      .request(pylon.callback)
+      .post("/test/error")
+      .expect(508);
 
     expect(response.body).toEqual({
       __meta: {
@@ -610,7 +646,7 @@ describe("Pylon", () => {
   });
 
   test("should add amphora key globally", async () => {
-    await request(pylon.callback).post("/test/amphora").expect(204);
+    await loopback.request(pylon.callback).post("/test/amphora").expect(204);
 
     // The route mints an INTERNAL key (`publish: false`), so the query must say so
     // — `filteredKeys` defaults to `publish: true` and would not see it otherwise.

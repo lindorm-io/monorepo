@@ -3,10 +3,10 @@ import { createMockIrisSource } from "@lindorm/iris/mocks/vitest";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
 import { join } from "path";
-import request from "supertest";
+import { createLoopbackRequest } from "../__fixtures__/loopback-request.js";
 import { PylonHttp } from "./PylonHttp.js";
 import { PylonRouter } from "./PylonRouter.js";
-import { describe, expect, test, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
 const createPylonHttp = async (
   overrides: Record<string, unknown> = {},
@@ -23,11 +23,19 @@ const createPylonHttp = async (
   return pylonHttp;
 };
 
+// ONE loopback-bound server for the file, dialled on the address it is bound to.
+// supertest otherwise binds the wildcard and dials 127.0.0.1, which lets a
+// foreign local listener answer instead — see __fixtures__/loopback-request.ts.
+const loopback = createLoopbackRequest();
+
+beforeAll(() => loopback.start());
+afterAll(() => loopback.stop());
+
 describe("PylonHttp /health (liveness)", () => {
   test("responds 204 when no proteus, iris, or callback is configured", async () => {
     const pylonHttp = await createPylonHttp();
 
-    await request(pylonHttp.callback).get("/health").expect(204);
+    await loopback.request(pylonHttp.callback).get("/health").expect(204);
   });
 
   test("prefers a user-provided health callback over the auto-built one", async () => {
@@ -37,7 +45,7 @@ describe("PylonHttp /health (liveness)", () => {
 
     const pylonHttp = await createPylonHttp({ db: proteus, iris, callbacks: { health } });
 
-    await request(pylonHttp.callback).get("/health").expect(204);
+    await loopback.request(pylonHttp.callback).get("/health").expect(204);
 
     expect(health).toHaveBeenCalledTimes(1);
     expect(proteus.ping).not.toHaveBeenCalled();
@@ -49,7 +57,7 @@ describe("PylonHttp /health (liveness)", () => {
 
     const pylonHttp = await createPylonHttp({ db: proteus, callbacks: { health: null } });
 
-    await request(pylonHttp.callback).get("/health").expect(204);
+    await loopback.request(pylonHttp.callback).get("/health").expect(204);
 
     expect(proteus.ping).not.toHaveBeenCalled();
   });
@@ -60,9 +68,9 @@ describe("PylonHttp /health (liveness)", () => {
 
     const pylonHttp = await createPylonHttp({ db: proteus, bus: iris });
 
-    await request(pylonHttp.callback).get("/health").expect(204);
-    await request(pylonHttp.callback).get("/health").expect(204);
-    await request(pylonHttp.callback).get("/health").expect(204);
+    await loopback.request(pylonHttp.callback).get("/health").expect(204);
+    await loopback.request(pylonHttp.callback).get("/health").expect(204);
+    await loopback.request(pylonHttp.callback).get("/health").expect(204);
 
     expect(proteus.ping).toHaveBeenCalledTimes(1);
     expect(iris.ping).toHaveBeenCalledTimes(1);
@@ -77,7 +85,7 @@ describe("PylonHttp /health (liveness)", () => {
 
     const pylonHttp = await createPylonHttp({ cache, db, kv });
 
-    await request(pylonHttp.callback).get("/health").expect(204);
+    await loopback.request(pylonHttp.callback).get("/health").expect(204);
 
     expect(db.ping).toHaveBeenCalledTimes(1);
     expect(kv.ping).not.toHaveBeenCalled();
@@ -91,15 +99,15 @@ describe("PylonHttp /health (liveness)", () => {
     const pylonHttp = await createPylonHttp({ db: proteus });
 
     // Not latched yet: the failing check surfaces as 503.
-    const failed = await request(pylonHttp.callback).get("/health").expect(503);
+    const failed = await loopback.request(pylonHttp.callback).get("/health").expect(503);
     expect(failed.body.error).toMatchObject({
       code: "health_check_failed",
       data: { failures: ["db"] },
     });
 
     // Recovers → latches healthy → never pings again.
-    await request(pylonHttp.callback).get("/health").expect(204);
-    await request(pylonHttp.callback).get("/health").expect(204);
+    await loopback.request(pylonHttp.callback).get("/health").expect(204);
+    await loopback.request(pylonHttp.callback).get("/health").expect(204);
 
     expect(proteus.ping).toHaveBeenCalledTimes(2);
   });
@@ -109,7 +117,7 @@ describe("PylonHttp /ready (readiness)", () => {
   test("responds 204 when no proteus or iris is configured", async () => {
     const pylonHttp = await createPylonHttp();
 
-    await request(pylonHttp.callback).get("/ready").expect(204);
+    await loopback.request(pylonHttp.callback).get("/ready").expect(204);
   });
 
   test("pings proteus + iris on every call (reflects live state)", async () => {
@@ -118,8 +126,8 @@ describe("PylonHttp /ready (readiness)", () => {
 
     const pylonHttp = await createPylonHttp({ db: proteus, bus: iris });
 
-    await request(pylonHttp.callback).get("/ready").expect(204);
-    await request(pylonHttp.callback).get("/ready").expect(204);
+    await loopback.request(pylonHttp.callback).get("/ready").expect(204);
+    await loopback.request(pylonHttp.callback).get("/ready").expect(204);
 
     expect(proteus.ping).toHaveBeenCalledTimes(2);
     expect(iris.ping).toHaveBeenCalledTimes(2);
@@ -131,7 +139,7 @@ describe("PylonHttp /ready (readiness)", () => {
 
     const pylonHttp = await createPylonHttp({ db: proteus });
 
-    const response = await request(pylonHttp.callback).get("/ready").expect(503);
+    const response = await loopback.request(pylonHttp.callback).get("/ready").expect(503);
 
     expect(response.body.error).toMatchObject({
       code: "health_check_failed",
@@ -145,7 +153,7 @@ describe("PylonHttp /ready (readiness)", () => {
 
     const pylonHttp = await createPylonHttp({ bus: iris });
 
-    const response = await request(pylonHttp.callback).get("/ready").expect(503);
+    const response = await loopback.request(pylonHttp.callback).get("/ready").expect(503);
 
     expect(response.body.error).toMatchObject({
       code: "health_check_failed",
@@ -163,7 +171,7 @@ describe("PylonHttp /ready (readiness)", () => {
 
     const pylonHttp = await createPylonHttp({ db, kv });
 
-    const response = await request(pylonHttp.callback).get("/ready").expect(503);
+    const response = await loopback.request(pylonHttp.callback).get("/ready").expect(503);
 
     expect(response.body.error).toMatchObject({
       code: "health_check_failed",
@@ -179,7 +187,7 @@ describe("PylonHttp /ready (readiness)", () => {
 
     const pylonHttp = await createPylonHttp({ kv, cache });
 
-    const response = await request(pylonHttp.callback).get("/ready").expect(503);
+    const response = await loopback.request(pylonHttp.callback).get("/ready").expect(503);
 
     expect(response.body.error).toMatchObject({
       code: "health_check_failed",
@@ -196,7 +204,7 @@ describe("PylonHttp /ready (readiness)", () => {
 
     const pylonHttp = await createPylonHttp({ bus, cache, db, kv });
 
-    await request(pylonHttp.callback).get("/ready").expect(204);
+    await loopback.request(pylonHttp.callback).get("/ready").expect(204);
 
     for (const source of [bus, cache, db, kv]) {
       expect(source.ping).toHaveBeenCalledTimes(1);
@@ -208,7 +216,7 @@ describe("PylonHttp /ready (readiness)", () => {
 
     const pylonHttp = await createPylonHttp({ kv });
 
-    await request(pylonHttp.callback).get("/ready").expect(204);
+    await loopback.request(pylonHttp.callback).get("/ready").expect(204);
 
     expect(kv.ping).toHaveBeenCalledTimes(1);
   });
@@ -218,7 +226,7 @@ describe("PylonHttp /ready (readiness)", () => {
 
     const pylonHttp = await createPylonHttp({ kv });
 
-    await request(pylonHttp.callback).get("/ready").expect(204);
+    await loopback.request(pylonHttp.callback).get("/ready").expect(204);
   });
 
   test("prefers a user-provided ready callback", async () => {
@@ -227,7 +235,7 @@ describe("PylonHttp /ready (readiness)", () => {
 
     const pylonHttp = await createPylonHttp({ db: proteus, callbacks: { ready } });
 
-    await request(pylonHttp.callback).get("/ready").expect(204);
+    await loopback.request(pylonHttp.callback).get("/ready").expect(204);
 
     expect(ready).toHaveBeenCalledTimes(1);
     expect(proteus.ping).not.toHaveBeenCalled();
@@ -238,7 +246,7 @@ describe("PylonHttp /ready (readiness)", () => {
 
     const pylonHttp = await createPylonHttp({ db: proteus, callbacks: { ready: null } });
 
-    await request(pylonHttp.callback).get("/ready").expect(204);
+    await loopback.request(pylonHttp.callback).get("/ready").expect(204);
 
     expect(proteus.ping).not.toHaveBeenCalled();
   });
@@ -259,7 +267,10 @@ describe("PylonHttp routes option", () => {
   test("should accept a bare directory path string and scan it", async () => {
     const pylonHttp = await createPylonHttp({ routes: routesDir });
 
-    const response = await request(pylonHttp.callback).get("/custom").expect(200);
+    const response = await loopback
+      .request(pylonHttp.callback)
+      .get("/custom")
+      .expect(200);
     expect(response.body.route).toBe("custom");
   });
 
@@ -268,7 +279,10 @@ describe("PylonHttp routes option", () => {
       routes: { path: "/solo", router: buildRouter("solo") },
     });
 
-    const response = await request(pylonHttp.callback).get("/solo/probe").expect(200);
+    const response = await loopback
+      .request(pylonHttp.callback)
+      .get("/solo/probe")
+      .expect(200);
     expect(response.body).toEqual({ marker: "solo" });
   });
 
@@ -280,8 +294,14 @@ describe("PylonHttp routes option", () => {
       ],
     });
 
-    const alpha = await request(pylonHttp.callback).get("/alpha/probe").expect(200);
-    const beta = await request(pylonHttp.callback).get("/beta/probe").expect(200);
+    const alpha = await loopback
+      .request(pylonHttp.callback)
+      .get("/alpha/probe")
+      .expect(200);
+    const beta = await loopback
+      .request(pylonHttp.callback)
+      .get("/beta/probe")
+      .expect(200);
 
     expect(alpha.body).toEqual({ marker: "alpha" });
     expect(beta.body).toEqual({ marker: "beta" });
@@ -290,7 +310,10 @@ describe("PylonHttp routes option", () => {
   test("should accept an array of directory path strings and scan each", async () => {
     const pylonHttp = await createPylonHttp({ routes: [routesDir] });
 
-    const response = await request(pylonHttp.callback).get("/custom").expect(200);
+    const response = await loopback
+      .request(pylonHttp.callback)
+      .get("/custom")
+      .expect(200);
     expect(response.body.route).toBe("custom");
   });
 
@@ -299,8 +322,11 @@ describe("PylonHttp routes option", () => {
       routes: [routesDir, { path: "/mixed", router: buildRouter("mixed") }],
     });
 
-    const scanned = await request(pylonHttp.callback).get("/custom").expect(200);
-    const direct = await request(pylonHttp.callback).get("/mixed/probe").expect(200);
+    const scanned = await loopback.request(pylonHttp.callback).get("/custom").expect(200);
+    const direct = await loopback
+      .request(pylonHttp.callback)
+      .get("/mixed/probe")
+      .expect(200);
 
     expect(scanned.body.route).toBe("custom");
     expect(direct.body).toEqual({ marker: "mixed" });
