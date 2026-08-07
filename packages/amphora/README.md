@@ -40,11 +40,13 @@ const amphora = new Amphora({
   logger: createLogger(),
 });
 
-const key = KryptosKit.generate.sig.ec({ algorithm: "ES512" });
+const key = KryptosKit.generate.sig.ec({ algorithm: "ES512", publish: true });
 amphora.add(key);
 
 const found = await amphora.find({ use: "sig" });
 ```
+
+`publish` is opt-in — kryptos defaults it to `false`, and amphora does not hand back one of our own unpublished keys unless a query asks for one. A token key needs `publish: true`; an operational key like a KEK takes the default. See [our own unpublished keys are excluded by default](#our-own-unpublished-keys-are-excluded-by-default).
 
 ## Constructor
 
@@ -60,26 +62,32 @@ new Amphora({
 });
 ```
 
-| Option            | Type                             | Default     | Description                                                                                                                                                                                                                                                                                                                                  |
-| ----------------- | -------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `logger`          | `ILogger`                        | required    | Logger instance from `@lindorm/logger`.                                                                                                                                                                                                                                                                                                      |
-| `internal`        | `AmphoraInternalSettings`        | `undefined` | This service's OWN issuer scope — `{ issuer }`, the URL it mints tokens under. Used as the default `issuer` and `jwksUri` for added keys, as the filter for which keys appear in `amphora.jwks`, and as the source of `amphora.internal`. Validated as a URL at construction time. Omit the whole block for a service that only verifies.    |
-| `environment`     | `Environment`                    | `null`      | Cross-environment guard. When set, a key whose leaf certificate declares a different `Environment` OU is rejected on `add`. See [Environment enforcement](#environment-enforcement).                                                                                                                                                         |
-| `idp`             | `AmphoraExternalSettings`        | `undefined` | The single UPSTREAM identity provider — a distinguished singleton external issuer. Managed through [`amphora.idp`](#external-providers).                                                                                                                                                                                                     |
-| `external`        | `Array<AmphoraExternalSettings>` | `[]`        | Foreign OIDC issuers to discover keys from. Managed through [`amphora.external`](#external-providers).                                                                                                                                                                                                                                       |
-| `lookup`          | `ConduitLookup`                  | `undefined` | DNS resolver hook for external discovery/JWKS fetches (SSRF IP-pinning). Supply a resolver that validates each resolved address against an egress policy and returns the vetted IP, so the fetch connects to exactly that address. Omit for ordinary DNS.                                                                                    |
-| `maxExternalKeys` | `number`                         | `100`       | Maximum number of keys accepted per external provider; excess keys are truncated.                                                                                                                                                                                                                                                            |
-| `maxIssuers`      | `number`                         | `1000`      | Hard cap on the number of external issuers held at once (the `idp` is exempt). Registering past the cap via `external.addIssuer` evicts the least-recently-used external issuer inline; eviction is correctness-safe (it re-fetches on next use). Bounds the vault against client-driven growth (e.g. one issuer per DCR `jwks_uri` client). |
-| `maxRedirects`    | `number`                         | `0`         | Max HTTP redirects followed on external fetches. Defaults to `0` — a discovery/JWKS endpoint has no reason to redirect, and following one can defeat a caller's egress guard. Raise only for a provider trusted to redirect.                                                                                                                 |
-| `refreshInterval` | `number`                         | `300_000`   | Milliseconds before externally-fetched keys are considered stale.                                                                                                                                                                                                                                                                            |
+The three issuer scopes are named the same way in the settings as on the instance — `internal`, `idp`, `external` — so what you set is what you read back.
+
+| Option            | Type                             | Default     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------- | -------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `logger`          | `ILogger`                        | required    | Logger instance from `@lindorm/logger`.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `internal`        | `AmphoraInternalSettings`        | `undefined` | This service's OWN issuer scope — `{ issuer }`, the URL it mints tokens under. Used as the default `issuer` and `jwksUri` for added keys, as the filter for which keys appear in `amphora.jwks`, and as the source of `amphora.internal`. Validated as a URL at construction time (`invalid_issuer_url`). The BLOCK is optional — omit it for a service that only verifies — but `issuer` inside it is required: a block that declares nothing is not a thing anyone means. |
+| `environment`     | `Environment`                    | `null`      | Cross-environment guard. When set, a key whose leaf certificate declares a different `Environment` OU is rejected on `add`. See [Environment enforcement](#environment-enforcement).                                                                                                                                                                                                                                                                                        |
+| `idp`             | `AmphoraExternalSettings`        | `undefined` | The single UPSTREAM identity provider — a distinguished singleton external issuer. Managed through [`amphora.idp`](#external-providers).                                                                                                                                                                                                                                                                                                                                    |
+| `external`        | `Array<AmphoraExternalSettings>` | `[]`        | Foreign OIDC issuers to discover keys from. Managed through [`amphora.external`](#external-providers).                                                                                                                                                                                                                                                                                                                                                                      |
+| `lookup`          | `ConduitLookup`                  | `undefined` | DNS resolver hook for external discovery/JWKS fetches (SSRF IP-pinning). Supply a resolver that validates each resolved address against an egress policy and returns the vetted IP, so the fetch connects to exactly that address. Omit for ordinary DNS.                                                                                                                                                                                                                   |
+| `maxExternalKeys` | `number`                         | `100`       | Maximum number of keys accepted per external provider; excess keys are truncated.                                                                                                                                                                                                                                                                                                                                                                                           |
+| `maxIssuers`      | `number`                         | `1000`      | Hard cap on the number of external issuers held at once (the `idp` is exempt). Registering past the cap via `external.addIssuer` evicts the least-recently-used external issuer inline; eviction is correctness-safe (it re-fetches on next use). Bounds the vault against client-driven growth (e.g. one issuer per DCR `jwks_uri` client).                                                                                                                                |
+| `maxRedirects`    | `number`                         | `0`         | Max HTTP redirects followed on external fetches. Defaults to `0` — a discovery/JWKS endpoint has no reason to redirect, and following one can defeat a caller's egress guard. Raise only for a provider trusted to redirect.                                                                                                                                                                                                                                                |
+| `refreshInterval` | `number`                         | `300_000`   | Milliseconds before externally-fetched keys are considered stale.                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ## Adding Keys
 
 ### From `IKryptos` instances
 
 ```typescript
-const sigKey = KryptosKit.generate.sig.ec({ algorithm: "ES512" });
-const encKey = KryptosKit.generate.enc.okp({ algorithm: "ECDH-ES", curve: "X25519" });
+const sigKey = KryptosKit.generate.sig.ec({ algorithm: "ES512", publish: true });
+const encKey = KryptosKit.generate.enc.okp({
+  algorithm: "ECDH-ES",
+  curve: "X25519",
+  publish: true,
+});
 
 amphora.add(sigKey);
 amphora.add([sigKey, encKey]);
@@ -149,16 +157,18 @@ await amphora.filter({ algorithm: { $in: ["ES256", "ES384", "ES512"] } });
 await amphora.filter({ use: "enc", hasPrivateKey: true });
 ```
 
-### Internal keys are excluded by default
+### Our own unpublished keys are excluded by default
 
-Every query — `find`, `findSync`, `filter`, `filterSync`, and the [capability checks](#capability-checks) — defaults to `{ publish: true }`. A key generated with `publish: false` (a KEK, a CA, a cookie or session key) is hidden from **selection**, not merely from publication: it is never handed to a caller who did not ask for one, so a service cannot accidentally sign a token with a key that is absent from its JWKS and therefore unverifiable.
+Every query — `find`, `findSync`, `filter`, `filterSync`, and the [capability checks](#capability-checks) — drops keys that are both ours (`internal: true`) and unpublished (`publish: false`): a KEK, a CA, a cookie or session key. Such a key is hidden from **selection**, not merely from publication — it is never handed to a caller who did not ask for one, so a service cannot accidentally sign a token with a key that is absent from its JWKS and therefore unverifiable.
 
-The caller's key wins, so an internal key is an explicit opt-in:
+The gate reads `publish` only for our own keys, because that is all `publish` means — "belongs in OUR published JWKS". A foreign key never does, so external keys pass the gate whatever their own flag says.
+
+**Naming `publish` in the query turns the gate off** and leaves the value as an ordinary match, so reaching an unpublished key is an explicit opt-in:
 
 ```typescript
-await amphora.filter({ use: "sig" }); // published keys only — the default
-await amphora.filter({ use: "sig", publish: false }); // internal keys only
-await amphora.filter({ use: "sig", publish: { $exists: true } }); // both
+await amphora.filter({ use: "sig" }); // gated: our published keys, plus every external key
+await amphora.filter({ use: "sig", publish: false }); // ungated: unpublished keys only
+await amphora.filter({ use: "sig", publish: { $exists: true } }); // ungated: everything (publish is always set)
 ```
 
 `findById()` / `findByIdSync()` are **not** filtered: an explicit id is explicit intent, and a token signed by an internal (or since-expired) key must still be verifiable. Key ids are unique **per issuer**, so an id can collide across issuers — `findById` then returns the **most recent** (by `createdAt`) and logs a `warn`, never throwing or picking arbitrarily. Resolve a `kid` off a token with `find({ id, issuer })` to name the issuer and avoid the ambiguity.
@@ -178,15 +188,18 @@ Available query fields (from `AmphoraQuery`):
 | `hasPrivateKey`         | `boolean`                         | Whether the key contains private material.                                                                                                                                     |
 | `hasPublicKey`          | `boolean`                         | Whether the key contains public material.                                                                                                                                      |
 | `internal`              | `boolean`                         | Whether the key is our own. `false` means it was imported from an external provider (a remote JWKS).                                                                           |
+| `isActive`              | `boolean`                         | Lifetime state — usable now (neither pending nor expired).                                                                                                                     |
+| `isExpired`             | `boolean`                         | Lifetime state — past `expiresAt`.                                                                                                                                             |
+| `isPending`             | `boolean`                         | Lifetime state — `notBefore` has not passed, so the key cannot yet have produced anything.                                                                                     |
 | `issuer`                | `string`                          | Issuing authority URL.                                                                                                                                                         |
 | `operations`            | `Array<KeyOperation>`             | Derived capability of the key material (`sign`, `verify`, `encrypt`, `decrypt`, `deriveKey`, `deriveBits`, `wrapKey`, `unwrapKey`) — advisory; prefer `use` + `hasPrivateKey`. |
 | `ownerId`               | `string`                          | Tenant/owner identifier.                                                                                                                                                       |
-| `publish`               | `boolean`                         | Whether the key belongs in the published JWKS. **Defaults to `true` in every query** — pass it explicitly to reach internal keys.                                              |
+| `publish`               | `boolean`                         | Whether the key belongs in the published JWKS. **Gated by default for our own keys** — name it in the query to turn the gate off.                                              |
 | `purpose`               | `string`                          | Caller-defined key purpose.                                                                                                                                                    |
 | `type`                  | `"EC" \| "RSA" \| "oct" \| "OKP"` | Key type.                                                                                                                                                                      |
 | `use`                   | `"sig" \| "enc"`                  | Signature or encryption.                                                                                                                                                       |
 
-All query results are filtered to active keys only (excludes expired and not-yet-valid keys), default to published keys only, and are sorted newest-first by creation date.
+All query results are filtered to active keys only (excludes expired and not-yet-valid keys), pass the default publish gate, and are sorted newest-first by creation date.
 
 ## JWKS Endpoint
 
@@ -234,6 +247,8 @@ An issuer source takes one of three forms (also acceptable in the `external` / `
 // 3. Explicit OpenID configuration URI
 { openIdConfigurationUri: "https://login.microsoftonline.com/v2.0/.well-known/openid-configuration" }
 ```
+
+When a fetched discovery document publishes an `issuer` that differs from the declared one, **the published value wins**, and amphora files that issuer's keys under it. Microsoft needs this — it templates `{tenantid}` in the metadata it serves per tenant. So read the settled issuer off `external.issuers()` / `idp.config()` rather than re-deriving it from what you declared; a separately-derived issuer can name a provider whose keys are filed elsewhere.
 
 Each source also accepts:
 
@@ -325,7 +340,7 @@ amphora.canVerify();
 
 `hasPrivateKey` is what excludes remotely-fetched keys: a JWKS only ever yields public halves, so a vault holding nothing but external sig keys can verify but not sign.
 
-Like every other query, the capability checks run against the **published** set — a vault holding nothing but internal (`publish: false`) keys reports no capabilities, because those keys are not candidates for selection.
+Like every other query, the capability checks run through the default publish gate — a vault holding nothing but our own unpublished (`publish: false`) keys reports no capabilities, because those keys are not candidates for selection.
 
 ## Properties
 
@@ -365,7 +380,7 @@ Common scenarios that throw:
 - `findSync()` / `filterSync()` / `findByIdSync()` invoked before `setup()` when external providers are configured.
 - Reading `amphora.jwks` when no `issuer` is configured (`issuer_required_for_jwks`).
 - `find()` / `findById()` not finding a match after a refresh.
-- An external issuer that is not a URI (`external_issuer_not_uri`), or a URN issuer with no `jwksUri` (`urn_issuer_requires_jwks_uri`) — validated at registration, so a lazy source is rejected up front.
+- An external issuer that is not a URI (`external_issuer_not_uri`), a URN issuer with no `jwksUri` (`urn_issuer_requires_jwks_uri`), or a source naming nothing amphora can discover or fetch from (`invalid_issuer_options`) — all validated at registration, so a lazy source is rejected up front.
 - A discovery document that provides no `issuer` with none configured (`external_issuer_unresolved`) — a resolved external issuer must be a URI.
 - Registering an issuer that already belongs to the other scope (`issuer_scope_conflict`) — an issuer is the idp **or** an external provider, never both — or `removeIssuer()` called with the idp's issuer (`remove_issuer_is_idp`; use `idp.clear()`).
 - `idp.config()` called before an idp is set (`idp_not_configured`), or with one registered by `openIdConfigurationUri` alone whose issuer amphora has not settled (`idp_issuer_unresolved`).
@@ -465,6 +480,7 @@ import type {
   AmphoraInternalConfig,
   AmphoraInternalSettings,
   AmphoraJwks,
+  AmphoraKeySelector,
   AmphoraSettings,
   AmphoraCondition,
   AmphoraQuery,

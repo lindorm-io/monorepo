@@ -12,15 +12,16 @@ npm install @lindorm/pylon
 
 ### Peer dependencies
 
-`@lindorm/amphora` and `@lindorm/logger` are required — both are constructor arguments to `Pylon`. The remaining peers are optional and only needed when their feature is used:
+`@lindorm/amphora` and `@lindorm/logger` are required — both are constructor arguments to `Pylon`. `zod` is required too, since `useSchema` takes a Zod schema. The remaining peers are optional and only needed when their feature is used:
 
-| Peer dependency    | Required for                                                         |
-| ------------------ | -------------------------------------------------------------------- |
-| `@lindorm/amphora` | required — passed as `amphora`                                       |
-| `@lindorm/logger`  | required — passed as `logger`                                        |
-| `@lindorm/proteus` | sessions, rate limiting, presence, audit, webhooks, kryptos rotation |
-| `@lindorm/iris`    | queue, audit publishing, webhook dispatch                            |
-| `@lindorm/hermes`  | exposing a hermes session on `ctx.hermes`                            |
+| Peer dependency    | Required for                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `@lindorm/amphora` | required — passed as `amphora`                                                        |
+| `@lindorm/logger`  | required — passed as `logger`                                                         |
+| `zod`              | required — `useSchema`                                                                |
+| `@lindorm/proteus` | sessions, rate limiting, presence, response cache, auth caches, audit, webhooks, keys |
+| `@lindorm/iris`    | queue, audit publishing, webhook dispatch                                             |
+| `@lindorm/hermes`  | exposing a hermes session on `ctx.hermes`                                             |
 
 ## Quick start
 
@@ -58,7 +59,7 @@ For scaffolding a new project, see `@lindorm/create-pylon` (`npm create @lindorm
 - WebSocket gateway built on Socket.IO with file-based and programmatic listeners
 - Unified per-request context shared across HTTP and socket transports (logger, aegis, amphora, conduits, sessions)
 - OpenID Connect Relying Party with auto-mounted login/logout/refresh/userinfo/introspect routes
-- Cookie session store (encrypted by default) backed by a `Session` Proteus entity
+- Cookie session store backed by a `Session` Proteus entity — signed and sealed when a cookie key is named
 - Bearer / DPoP / session token verification, plus role / permission / scope / claim matchers
 - Rate limiting with fixed-window, sliding-window, and token-bucket strategies
 - Multi-tenancy hooks (`useTenant`, `useScope`) that drive Proteus filter params
@@ -80,7 +81,7 @@ const app = new Pylon({
   name: "my-service",
   version: "1.2.3",
   environment: "production",
-  domain: "api.example.com",
+  domain: "https://api.example.com",
   port: 3000,
   proxy: true,
 
@@ -111,6 +112,12 @@ await app.start();
 // later…
 await app.stop();
 ```
+
+#### Identity
+
+`name`, `version`, `environment` and `domain` are ambient identity — not policy: they tag every log line and reach a handler as `ctx.state.app`, beside (not inside) `config`. The first three also fill the error envelope's `__meta`.
+
+`domain` is **not** a bind address; it is this service's own identifier, defaulting to `amphora.issuer` and then to `"unknown"`. It is the `WWW-Authenticate` realm and the RFC 9728 `resource` value, so give it the **absolute URL** the service is reached at — `/.well-known/oauth-protected-resource` refuses a bare hostname.
 
 #### Bind address
 
@@ -239,6 +246,7 @@ ctx.state.app;            // { config, domain, environment, name, version }
 ctx.state.app.config;     // the deployment's resolved policy — see below
 ctx.state.actor;          // resolved actor string
 ctx.state.authorization;  // { type: "basic" | "bearer" | "dpop" | "none", value }
+ctx.state.client;         // parsed user agent and declared client context
 ctx.state.metadata;       // { id, correlationId, date, environment, ... }
 ctx.state.tenant?;        // tenant id when useTenant() ran
 ctx.state.tokens;         // map of parsed tokens (accessToken, idToken, ...)
@@ -247,10 +255,11 @@ ctx.state.tokens;         // map of parsed tokens (accessToken, idToken, ...)
 HTTP-only additions:
 
 ```typescript
-ctx.auth;       // full PylonAuthClient (login / logout / token in addition to claims)
+ctx.auth;       // full PylonAuthClient — login / logout on top of the claims verbs
 ctx.challenge(scheme, params?);  // append a WWW-Authenticate challenge
 ctx.cookies;    // IPylonCookies
 ctx.data;       // parsed request body (camelCased)
+ctx.files;      // Array<IPylonFileUpload> — populated by useUpload
 ctx.params;     // path parameters
 ctx.request;    // Koa request augmented with body / files
 ctx.session;    // { set, get, del, logout }
@@ -592,7 +601,7 @@ When `useAccessToken` in `connectionMiddleware` (or the auto-wired session conne
 | `$pylon/auth/refresh` | client → server | Replace bearer / re-read session and refresh expiry              |
 | `$pylon/auth/expired` | server → client | Advisory event emitted once inside the pre-expiry warning window |
 
-After the handshake, `useAccessToken` does not re-verify the token on every event. It checks the expiry on the stored auth state — accepted silently if well before expiry, accepted with one `$pylon/auth/expired` emission inside the warning window, and rejected (with the socket disconnected for session strategy) once expired.
+After the handshake, `useAccessToken` does not re-verify the token on every event. It checks the expiry on the stored auth state — accepted silently if well before expiry, accepted with one `$pylon/auth/expired` emission inside the warning window (60 seconds), and rejected as `access_token_expired` (401) once expired. The socket stays open: only a **failed** `$pylon/auth/refresh` disconnects it, and only under the session strategy, where the session it was reading is gone.
 
 ### Rooms
 
@@ -690,11 +699,15 @@ router.use(verifyApiKey("request.body.apiKey"));
 | Socket handshake | verifies the credential once and registers the auth state (strategy, expiry, refresh) for the socket |
 | Socket event     | fast path over that state — re-checks EXPIRY, not the signature                                      |
 
-⚠ **It takes no `issuer`.** The issuer is `ctx.state.app.config.auth.issuer`, settled once at boot by amphora for the scope `auth.driver` named — so an `auth` block is required to mount it. A service that mints the tokens it verifies configures `new JwtDriver({ issuer: "self" })`; a resource server pinning an upstream with no discovery document uses `"idp"`. Verifying with no issuer matcher is not a weaker check but NO check, so a deployment that resolved none is refused by name (`access_issuer_unresolved`) on the paths that verify locally. The opaque path is unaffected — RFC 7662 makes the authorization server the authority there.
+One mount, because a deployment that had to mount a request/event middleware and a handshake middleware separately had to keep their two issuers agreeing — and mounting the http one in a handshake was refused, which is how the split announced itself. Its return type is an intersection, not a union, so the same value sits in a middleware array and a connection-middleware array without a cast.
+
+⚠ **It takes no `issuer`.** The issuer is `ctx.state.app.config.auth.issuer`, settled once at boot by amphora for the scope `auth.driver` named — a per-mount issuer would restate a deployment constant, free to disagree with the keys verification actually runs against. A service that mints the tokens it verifies configures `new JwtDriver({ issuer: "self" })`; a resource server pinning an upstream with no discovery document uses `"idp"`.
+
+Verifying with no issuer matcher is not a weaker check but NO check, so the LOCAL paths refuse by name (`access_issuer_unresolved`, 500) when no `auth` block resolved one. The opaque path never asks — RFC 7662 makes the authorization server the authority there — so a deployment that only accepts opaque tokens mounts this legitimately with no issuer resolved.
 
 `{ dpop: "required" | "optional" | "disabled" }` sets how strictly the HANDSHAKE treats DPoP (default `"optional"`). It is handshake-only: on HTTP the scheme states the intent per request.
 
-`createTokenMiddleware({ issuer })` is the DIFFERENT case and keeps its per-mount issuer — it accepts tokens signed by issuers that are not ours, of which amphora carries an array.
+`createTokenMiddleware({ issuer })` is the DIFFERENT job and keeps its per-mount issuer: it accepts tokens from issuers that are **not** ours — `amphora.external`, of which a service may hold several — while `useAccessToken` pins the one issuer this deployment is a party to.
 
 #### Resolved access — `ctx.state.access`
 
@@ -759,7 +772,7 @@ router.use(useAccessToken({ cache: { ttl: "2 seconds" } }));
 router.use(useAccessToken({ cache: false }));
 ```
 
-Both keys are a digest of `(kind, token, issuer, clientId)` — never the raw token, which would land readable in shared storage. **The token, never the subject**: two tokens for one subject can carry different scopes, and both answers vary by granted scope (RFC 7662 §2.2 lets the authorization server "limit which scopes from a given token are returned for each protected resource"; OIDC Core §5.3 returns exactly the profile claims the token's scopes authorise). The identity is part of it for the same reason — keying on the token alone would let two services sharing a namespace read each other's answers. Both inputs come from the **driver** — `endpoints().issuer` and its own client id — because RFC 7662 §2.1 has the resource server authenticate to the introspection endpoint, and those credentials may legitimately differ from a relying party's. `ctx.state.app.config.auth` exposes that identity (`{ issuer, clientId }`, and never the client secret); either one `null` means there is no key safe to share, so the cache steps aside and calls the driver.
+Both keys are a digest of `(kind, token, issuer, clientId)` — never the raw token, which would land readable in shared storage. **The token, never the subject**: two tokens for one subject can carry different scopes, and both answers vary by granted scope (RFC 7662 §2.2 lets the authorization server "limit which scopes from a given token are returned for each protected resource"; OIDC Core §5.3 returns exactly the profile claims the token's scopes authorise). The identity is part of it for the same reason — keying on the token alone would let two services sharing a namespace read each other's answers. Both are read off `ctx.state.app.config.auth` — the one place that identity lives, resolved from the **driver** (`endpoints().issuer` and its own client id) once at boot, never the client secret. It is the driver's because RFC 7662 §2.1 has the resource server authenticate to the introspection endpoint, and those credentials may legitimately differ from a relying party's. Either one `null` means there is no key safe to share, so the cache steps aside and calls the driver.
 
 The caching is **inside** `ctx.auth.introspect` / `ctx.auth.userinfo` rather than in front of them, so there is no uncached path a caller can pick by mistake. A sensitive route opts out per call with `ctx.auth.introspect(token, { cache: false })` — which `useAccessToken({ cache })` forwards for the mount.
 
@@ -922,8 +935,9 @@ collide with a CDN/proxy's own `X-Cache` in the response chain):
 
 - `X-Pylon-Cache` (always) — `HIT` (served from cache, incl. a coalesced single-flight
   replay), `MISS` (computed fresh and stored), `DYNAMIC` (computed but not eligible to store —
-  `3xx`/stream/`>=400`/over the size cap/`private` with no actor), or `BYPASS` (caching
-  skipped by request `no-store` or `skip()`).
+  `3xx`/stream/`>=400`/over the size cap/`private` with no actor), `BYPASS` (caching
+  skipped by request `no-store` or `skip()`), or `DISABLED` (the deployment left
+  `responseCache` off — the mount passes through, it does not throw).
 - `ETag` (strong, on cacheable responses), `Cache-Control: <public|private>, max-age=<seconds>`,
   `Age` (seconds since the stored representation was captured), `Vary` (when configured).
 - `X-Pylon-Cache-Source: <driverType>` — outside `production` only (so the backend isn't
@@ -1021,7 +1035,6 @@ const app = new Pylon({
       clientSecret: "my-client-secret",
       authorize: { scope: ["openid", "profile", "email"] },
     }),
-    refresh: { mode: "half_life" },
     router: {
       pathPrefix: "/auth",
       errorRedirect: "/error",
@@ -1040,7 +1053,7 @@ const app = new Pylon({
 | `session`            | The session cookie and its `Session` store — see [Sessions](#sessions)                                                            |
 | `encryption`         | KEK selector for the cached payloads. Default `{ condition: { purpose: "pylon:kek" } }`                                           |
 | `cache`              | Driver-response caching — RFC 7662 introspection and OIDC Core §5.3 userinfo; see [Driver-response cache](#driver-response-cache) |
-| `refresh`            | When to auto-refresh a session's tokens                                                                                           |
+| `refresh`            | When to auto-refresh a session's tokens. Default derived from the driver — see [Refresh](#refresh)                                |
 | `defaultTokenExpiry` | Fallback session lifetime when the token response carries no expiry. Default `1d`                                                 |
 
 Client credentials and the authorization request's defaults are the **provider's**, so they live on the driver, not on `auth`. The **issuer** lives on neither — it is amphora's.
@@ -1177,9 +1190,9 @@ A session that holds no refresh token — one established without `offline_acces
 
 ⚠ **`ctx.auth` is VERBS ONLY.** Everything a handler could want to _know_ about auth — the issuer, the client id, what the driver can serve, what is cached — is a noun, and nouns live on [`ctx.state.app.config.auth`](#app-config).
 
-There is **no** `ctx.auth.token(grant)`. A generic "call the token endpoint with anything" makes the driver contract unenforceable, since a consumer could drive any grant straight past it; `conduitClientCredentialsMiddleware` covers raw client-credentials.
+There is **no** `ctx.auth.token(grant)`. A generic "call the token endpoint with anything" makes the driver contract unenforceable, since a consumer could drive any grant straight past it; `@lindorm/conduit`'s `conduitClientCredentialsMiddlewareFactory` covers raw client-credentials on the outbound side.
 
-The discovery-backed drivers read their endpoints off the upstream IdP's document, fetched by `amphora.idp`. Six fields are used, by their RFC wire names — only the first two are required by the specs, and a real IdP does omit the rest (Auth0 publishes no `introspection_endpoint`). ⚠ The **issuer** is not one of them: it is whatever amphora resolved for the idp, which already prefers the document's own `issuer` over the declared one (a tenant-scoped provider templates it in the metadata it serves). Amphora files the fetched keys under that same string, so re-deriving it in the driver could only disagree with where the keys live. There is likewise no `jwks_uri` on the driver surface — amphora fetches and caches the keys, and a member pylon reads nowhere would only look like it configured verification.
+The discovery-backed drivers read their endpoints off the upstream IdP's document, fetched by `amphora.idp`. These fields are read, by their RFC wire names — only the first two are required by the specs, and a real IdP does omit the rest (Auth0 publishes no `introspection_endpoint`). ⚠ The **issuer** is not one of them: it is whatever amphora resolved for the idp, which already prefers the document's own `issuer` over the declared one (a tenant-scoped provider templates it in the metadata it serves). Amphora files the fetched keys under that same string, so re-deriving it in the driver could only disagree with where the keys live. There is likewise no `jwks_uri` on the driver surface — amphora fetches and caches the keys, and a member pylon reads nowhere would only look like it configured verification.
 
 | Wire name                               | Spec level                                | Pylon behaviour when absent                                                                                                                                                           |
 | --------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1187,6 +1200,7 @@ The discovery-backed drivers read their endpoints off the upstream IdP's documen
 | `token_endpoint`                        | REQUIRED (OIDC Discovery §3, RFC 8414 §2) | `openid_configuration_incomplete` — thrown when the document is adopted                                                                                                               |
 | `userinfo_endpoint`                     | RECOMMENDED (OIDC Discovery §3)           | `idp_userinfo_endpoint_not_supported` — thrown by `ctx.auth.userinfo()` when it must call the IdP                                                                                     |
 | `introspection_endpoint`                | OPTIONAL (RFC 8414 §2, RFC 7662)          | `idp_introspection_endpoint_not_supported` — thrown by `ctx.auth.introspect()` when it must call the IdP                                                                              |
+| `revocation_endpoint`                   | OPTIONAL (RFC 7009 §2)                    | Projected onto `endpoints().revocationEndpoint` for a driver's own use — pylon itself calls nothing with it                                                                           |
 | `end_session_endpoint`                  | OPTIONAL (OIDC RP-Initiated Logout 1.0)   | `OpenIdDriver` logs out LOCALLY — the session is dropped and the browser goes straight to its destination                                                                             |
 | `token_endpoint_auth_methods_supported` | OPTIONAL (OIDC Discovery §3, RFC 8414 §2) | Falls back to the spec default `client_secret_basic`, or to the strongest method the driver can compose when it holds no secret — see [Client authentication](#client-authentication) |
 
@@ -1238,7 +1252,7 @@ The session cookie is **signed / sealed when a key is configured** for it — `a
 
 ## Webhooks
 
-Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ctx.webhook(event, data)` helper. Enable with `webhook: { enabled: true }` and provide either inline `db` / `bus` or rely on the top-level integrations.
+Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ctx.webhook(event, data)` helper. Enable with `webhook: { enabled: true }`. It reads the top-level `db` (subscriptions) and `bus` (dispatch) — there is no per-feature source to name, and with neither configured the feature registers nothing (see [Source roles](#source-roles)).
 
 ```typescript
 const app = new Pylon({
@@ -1482,13 +1496,13 @@ const app2 = new Pylon({
 
 Mounted under `/.well-known`:
 
-| Route                           | Description                                                                                                                                                              |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GET /jwks.json`                | The published JWKS, served straight from the Amphora                                                                                                                     |
-| `GET /oauth-protected-resource` | RFC 9728 protected resource metadata: `{ resource: <domain>, authorization_servers: [<driver issuer>] }`. Requires `domain` and an `auth` driver that resolves an issuer |
-| `GET /right-to-be-forgotten`    | Bearer-authorized erasure hook — invokes `callbacks.rightToBeForgotten`, returns `204`                                                                                   |
-| `GET /change-password`          | Redirects to `changePasswordUri`                                                                                                                                         |
-| `GET /security.txt`             | Opt-in — rendered from `securityTxt`                                                                                                                                     |
+| Route                           | Description                                                                                                                                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /jwks.json`                | The published JWKS, served straight from the Amphora                                                                                                                                        |
+| `GET /oauth-protected-resource` | RFC 9728 protected resource metadata: `{ resource: <domain>, authorization_servers: [<driver issuer>] }`. `404`s unless `domain` is an absolute URL and an `auth` driver resolves an issuer |
+| `GET /right-to-be-forgotten`    | Bearer-authorized erasure hook — invokes `callbacks.rightToBeForgotten`, returns `204`                                                                                                      |
+| `GET /change-password`          | Redirects to `changePasswordUri`                                                                                                                                                            |
+| `GET /security.txt`             | Opt-in — rendered from `securityTxt`                                                                                                                                                        |
 
 Pylon does **not** serve a discovery document. A discovery document is derived from what a service actually implements — its policy registry, its served keys, its implemented grants — so an authorization server owns and mounts its own `/.well-known` router:
 
@@ -1559,11 +1573,12 @@ Pylon catches the throw in the built-in `httpErrorHandlerMiddleware`, derives th
     "version": "1.2.3"
   },
   "error": {
-    "id": "<uuid>",
+    "id": "err_<random>",
     "name": "ClientError",
     "title": "Error",
     "message": "User not found",
     "code": "unknown_error",
+    "type": "urn:lindorm:error:unknown_error",
     "support": "<random>",
     "data": {}
   }
@@ -1667,7 +1682,7 @@ The map types only outgoing emissions; incoming listener payloads are typed by t
 
 ## Entities
 
-The package re-exports three Proteus entities for the framework's built-in features:
+The framework's Proteus entities ship on the `@lindorm/pylon/entities` subpath — kept off the package root so importing the server never pulls Proteus into scope. The three worth querying directly:
 
 | Entity                | Purpose                                           |
 | --------------------- | ------------------------------------------------- |
@@ -1676,10 +1691,14 @@ The package re-exports three Proteus entities for the framework's built-in featu
 | `WebhookSubscription` | Webhook targets and their authentication settings |
 
 ```typescript
-import { DataAuditLog, RequestAuditLog, WebhookSubscription } from "@lindorm/pylon";
+import {
+  DataAuditLog,
+  RequestAuditLog,
+  WebhookSubscription,
+} from "@lindorm/pylon/entities";
 ```
 
-The remaining entities (`Session`, `Kryptos`, `Presence`, `CachedResponse`, `CachedIntrospection`, `CachedUserinfo`, rate-limit entities) are wired into the source their role dictates automatically when their feature is enabled — see [Source roles](#source-roles) — and are not part of the public import surface. `ConduitCachedResponse` is the exception: it is **consumer-placed**, registered on whichever source you hand `createProteusCacheDriver`, never by Pylon.
+The rest (`Session`, `Kryptos`, `Presence`, `CachedResponse`, `CachedIntrospection`, `CachedUserinfo`, the rate-limit entities) are exported too, but Pylon wires each into the source its role dictates when the feature is enabled — see [Source roles](#source-roles) — so a deployment does not register them itself. `ConduitCachedResponse` is the exception: it is **consumer-placed**, registered on whichever source you hand `createProteusCacheDriver`, never by Pylon. Messages sit on `@lindorm/pylon/messages` on the same terms.
 
 ## Command-line tools
 

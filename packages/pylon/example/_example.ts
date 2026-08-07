@@ -42,16 +42,19 @@ amphora.add([
   }),
 ]);
 
-// Handshake auth runs on every namespace connection and rejects anonymous
-// sockets, so scope it to the `/authorized` namespace — the default and
-// `/other` namespaces stay open. It populates `socket.data.tokens.bearer`,
-// which the `/authorized` listener reads. No issuer: it verifies against
-// `auth.driver`'s, which is this service's own (see `auth` below).
-const handshakeToken = useAccessToken();
+// ONE middleware for every transport. Mounted as connection middleware it runs
+// the handshake, rejecting anonymous sockets — so scope it to the `/authorized`
+// namespace, leaving the default and `/other` namespaces open. It populates
+// `socket.data.tokens.bearer`, which the `/authorized` listener reads.
+//
+// It takes no issuer. The driver below names a SCOPE, amphora settles the issuer
+// for that scope while fetching its keys, and pylon records the answer on
+// `ctx.state.app.config.auth` at boot — so no mount restates it.
+const accessToken = useAccessToken();
 
 const authorizedNamespaceOnly: PylonConnectionMiddleware = async (ctx, next) => {
   if (ctx.io.socket.nsp.name === "/authorized") {
-    await handshakeToken(ctx, next);
+    await accessToken(ctx, next);
     return;
   }
   await next();
