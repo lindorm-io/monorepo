@@ -1,5 +1,9 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`resolveDefaultTopic > should fall back to the message name for a dynamic @Topic 1`] = `"pylon.RequestAudit"`;
+
+exports[`resolveDefaultTopic > should prefer a static @Topic over the message name 1`] = `"pylon.audit.request"`;
+
 exports[`resolveDefaultTopic > should prefix the message name with namespace when set 1`] = `"orders.OrderCreated"`;
 
 exports[`resolveDefaultTopic > should return the message name when namespace is null 1`] = `"OrderCreated"`;

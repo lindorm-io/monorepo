@@ -222,7 +222,7 @@ describe("publishRabbitMessages", () => {
   it("should sanitize routing key for topic with special chars", async () => {
     const state = createState();
     const metadata = createMetadata({
-      topic: { callback: () => "orders/created@v2" },
+      topic: { type: "dynamic", callback: () => "orders/created@v2" },
     } as Partial<MessageMetadata>);
     const driver = createDriver(metadata);
     const logger = createMockLogger();

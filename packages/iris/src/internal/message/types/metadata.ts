@@ -63,9 +63,18 @@ export type MetaGenerated = {
   strategy: MetaGeneratedStrategy | null;
 };
 
-export type MetaTopic = {
-  callback: (message: any) => string;
-};
+/**
+ * A `@Topic` is either a CONSTANT the topic can be resolved from without a
+ * message in hand, or a callback that derives it per instance. The distinction
+ * is load-bearing: only a static topic lets `consume()` / a stream pipeline /
+ * the Kafka topic bootstrap resolve the SAME topic a publish resolves. A
+ * dynamic callback returning a constant looks identical at the call site but
+ * cannot be resolved statically, so it forces the queue-string fallback — which
+ * is why the constant form has to be expressible as a constant.
+ */
+export type MetaTopic =
+  | { type: "static"; topic: string }
+  | { type: "dynamic"; callback: (message: any) => string };
 
 export type MetaHeader = {
   key: string;

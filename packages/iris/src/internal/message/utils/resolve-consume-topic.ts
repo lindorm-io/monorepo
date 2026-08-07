@@ -7,12 +7,14 @@ export const resolveConsumeTopic = (
   logger?: ILogger,
   queue?: string,
 ): string => {
-  if (metadata.topic?.callback) {
+  if (metadata.topic?.type === "dynamic") {
     // A dynamic @Topic callback resolves the publish topic from each message
     // instance, so consume() cannot derive it statically. The caller-supplied
     // queue is the only reliable source for the topic to listen on -- publishers
     // and consumers agree on this exact string by convention -- so honor it.
     // Only fall back to the namespaced message name when no queue was provided.
+    // A STATIC @Topic never reaches here: it resolves to the same topic the
+    // publish side resolves, and the queue stays the consumer-group identity.
     if (queue) {
       return queue;
     }

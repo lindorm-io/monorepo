@@ -285,6 +285,16 @@ export const createTckMessages = (hookLog: Array<string>) => {
     @Field("string") body!: string;
   }
 
+  // A CONSTANT topic under a namespace: resolves to `ns.static.topic` on both
+  // the publish and the consume side. The namespace is prefixed exactly once,
+  // and the topic string deliberately does NOT re-spell it.
+  @Namespace("ns")
+  @Topic("static.topic")
+  @Message({ name: "TckStaticTopicMessage" })
+  class TckStaticTopicMessage implements IMessage {
+    @Field("string") body!: string;
+  }
+
   return {
     TckBasicMessage,
     TckTopicMessage,
@@ -312,5 +322,6 @@ export const createTckMessages = (hookLog: Array<string>) => {
     TckMandatoryPersistentMessage,
     TckCorrelationMessage,
     TckNamespacedMessage,
+    TckStaticTopicMessage,
   };
 };

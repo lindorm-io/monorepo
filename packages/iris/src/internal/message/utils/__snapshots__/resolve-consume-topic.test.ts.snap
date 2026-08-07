@@ -2,10 +2,14 @@
 
 exports[`resolveConsumeTopic > should honor the explicit queue for a dynamic @Topic callback without warning 1`] = `"queue.aggregate.ns.order.create"`;
 
-exports[`resolveConsumeTopic > should ignore an explicit queue for a static topic and use the namespaced name 1`] = `"ns.OrderCreated"`;
+exports[`resolveConsumeTopic > should ignore an explicit queue for an undecorated message and use the namespaced name 1`] = `"ns.OrderCreated"`;
+
+exports[`resolveConsumeTopic > should ignore the queue for a static @Topic and resolve the namespaced topic 1`] = `"pylon.audit.request"`;
+
+exports[`resolveConsumeTopic > should resolve a static @Topic without a queue and without warning 1`] = `"audit.request"`;
 
 exports[`resolveConsumeTopic > should return the bare message name when namespace is null 1`] = `"OrderCreated"`;
 
 exports[`resolveConsumeTopic > should return the namespaced message name when namespace is set 1`] = `"ns.OrderCreated"`;
 
-exports[`resolveConsumeTopic > should warn and fall back to the static topic for a dynamic @Topic callback 1`] = `"ns.OrderCreated"`;
+exports[`resolveConsumeTopic > should warn and fall back to the message name for a dynamic @Topic callback 1`] = `"ns.OrderCreated"`;

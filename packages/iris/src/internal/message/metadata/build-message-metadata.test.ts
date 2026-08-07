@@ -30,7 +30,10 @@ const stabilize = (metadata: any) => ({
     ...h,
     callback: "[function]",
   })),
-  topic: metadata.topic != null ? { callback: "[function]" } : null,
+  topic:
+    metadata.topic?.type === "dynamic"
+      ? { type: "dynamic", callback: "[function]" }
+      : (metadata.topic ?? null),
   encrypted:
     metadata.encrypted != null ? { condition: metadata.encrypted.condition } : null,
 });

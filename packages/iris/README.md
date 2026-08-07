@@ -162,6 +162,8 @@ await queue.unconsume("process-orders");
 await queue.unconsumeAll();
 ```
 
+The first argument is the **queue** — the consumer-group identity, not the topic. The topic comes from the message: its class name, or its [`@Topic`](#topic). The one exception is a message with a **dynamic** `@Topic` callback, which cannot be resolved without an instance; there the queue string is used as the topic too, and publisher and consumer must agree on it by convention. Give such a message a constant `@Topic` instead and the queue is free to name a role.
+
 ### RPC
 
 Request/response over the broker.
@@ -347,9 +349,16 @@ class OrderPlaced {
 
 #### `@Topic`
 
-Provides a callback that resolves the routing topic dynamically from the message instance instead of using the class name.
+Sets the routing topic instead of using the class name. Takes either a constant string or a callback that resolves the topic from each message instance. A `@Namespace` is prefixed onto the result — once — so the topic string must not repeat it.
 
 ```typescript
+@Namespace("billing")
+@Topic("invoice.issued") // → publishes and consumes on `billing.invoice.issued`
+@Message()
+class InvoiceIssued {
+  @Field("string") invoiceId!: string;
+}
+
 @Topic((msg: RegionalEvent) => `events.${msg.region}.${msg.type}`)
 @Message()
 class RegionalEvent {
@@ -358,7 +367,9 @@ class RegionalEvent {
 }
 ```
 
-**Argument:** `(message: any) => string`.
+**Argument:** `string | ((message: any) => string)`.
+
+**Prefer the constant form whenever the topic never varies.** Only a constant topic can be resolved without a message in hand, and `consume()`, stream pipelines and the Kafka topic bootstrap all need exactly that. A callback that happens to return a constant is still classified as dynamic: `consume()` then falls back to the **queue string** as the topic, so a consumer whose queue names a role (`invoice.issued.persist`) silently binds a topic nobody publishes to and receives nothing. With a constant `@Topic`, the queue goes back to being only the consumer-group identity and both sides resolve the same topic.
 
 #### `@Broadcast`
 

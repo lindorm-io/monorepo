@@ -160,8 +160,15 @@ describe("stage-metadata", () => {
       expect(metadata.message).toMatchSnapshot();
     });
 
-    it("should set topic", () => {
-      const topic = { callback: (msg: any) => "user-events" };
+    it("should set a dynamic topic", () => {
+      const topic = { type: "dynamic", callback: (msg: any) => "user-events" } as const;
+      stageTopic(metadata, topic);
+
+      expect(metadata.topic).toBe(topic);
+    });
+
+    it("should set a static topic", () => {
+      const topic = { type: "static", topic: "user-events" } as const;
       stageTopic(metadata, topic);
 
       expect(metadata.topic).toBe(topic);

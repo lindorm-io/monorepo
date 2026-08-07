@@ -94,6 +94,7 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
     messages.TckMandatoryPersistentMessage,
     messages.TckCorrelationMessage,
     messages.TckNamespacedMessage,
+    messages.TckStaticTopicMessage,
   );
 
   beforeAll(async () => {
@@ -108,7 +109,8 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
   if (shouldRun("publish-subscribe"))
     publishSubscribeSuite(getHandle, messages, timeoutMs, caps);
   if (shouldRun("fan-out")) fanOutSuite(getHandle, messages, timeoutMs, caps);
-  if (shouldRun("topic-resolution")) topicResolutionSuite(getHandle, messages, timeoutMs);
+  if (shouldRun("topic-resolution"))
+    topicResolutionSuite(getHandle, messages, timeoutMs, caps);
   if (shouldRun("hooks")) hooksSuite(getHandle, messages, hookLog, timeoutMs);
 
   // Capability-gated suites
