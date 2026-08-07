@@ -1,4 +1,4 @@
-import { camelCase, snakeCase, snakeKeys } from "@lindorm/case";
+import { camelCase, camelKeys, snakeCase, snakeKeys } from "@lindorm/case";
 import { getUnixTime } from "@lindorm/date";
 import { isArray, isFinite, isObject, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
@@ -277,8 +277,16 @@ const decodeBespoke = (spec: ClaimSpec, value: unknown): unknown => {
     case "authDetails":
       return isArray(value) ? value : undefined;
     case "events":
+      // A SET events map is keyed by event-type URIs (RFC 8417 §2.2). Those are
+      // identifiers, not field names — case-converting them would rewrite the
+      // URI. Carried verbatim, and it must NOT join the `address` arm below.
+      return value;
     case "address":
-      return value; // SET events map / address object carried verbatim
+      // The mirror of the encode side's `snakeKeys`. OIDC Core §5.1 defines the
+      // wire address with snake keys (`street_address`, `postal_code`); the
+      // domain form is camel like every other claim. Without this the round trip
+      // is asymmetric and hands snake keys back into a camel-typed shape.
+      return isObject(value) ? camelKeys(value) : value;
     default: {
       const exhaustive: undefined = spec.bespoke;
       throw new AegisDomainError("Unhandled bespoke claim sub-kind", {

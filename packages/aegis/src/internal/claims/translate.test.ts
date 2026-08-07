@@ -135,6 +135,28 @@ describe("domainToJose — content -> wire mapping", () => {
       address: { street_address: "1 Byron Way", postal_code: "0001" },
     });
   });
+
+  // The write side snakes the address per OIDC Core §5.1, so the read side has
+  // to camel it back or the round trip is asymmetric — handing snake keys into a
+  // camelCase-typed shape. It used to share the `events` arm and pass through.
+  test("should camel the address back on the way in", () => {
+    const address = { streetAddress: "1 Byron Way", postalCode: "0001" };
+
+    expect(joseToDomain(domainToJose({ address })).claims.address).toEqual(address);
+  });
+
+  // ⚠ The reason `events` cannot share the address arm: a SET events map is
+  // keyed by event-type URIs (RFC 8417 §2.2). Those are identifiers, and
+  // case-converting one rewrites the URI.
+  test("should NOT case-convert the keys of a SET events map", () => {
+    const events = {
+      "https://schemas.openid.net/secevent/risc/event-type/account-disabled": {
+        reason: "hijacking",
+      },
+    };
+
+    expect(joseToDomain(domainToJose({ events })).claims.events).toEqual(events);
+  });
 });
 
 describe("joseToDomain — read parity with extractDomainClaims", () => {
