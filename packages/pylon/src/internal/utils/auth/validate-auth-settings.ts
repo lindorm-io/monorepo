@@ -49,12 +49,24 @@ export const validateAuthSettings = (
     );
   }
 
-  // ⚠ `cache.enabled` is CACHE policy — ttl, kv, encryption are all cache
-  // concerns. It never declared that this deployment introspects; that is
-  // `driver.introspect`. Without it the cache is dead, not broken.
-  if (settings.cache?.enabled && !driver.introspect) {
-    logger.warn(
-      "Auth response caching is enabled but the driver implements no introspect method; nothing will be cached",
-    );
+  // ⚠ `cache.enabled` is CACHE policy — the ttls, `auth.kv` and
+  // `auth.encryption` are all cache concerns. It never declared that this
+  // deployment introspects or reads userinfo; those are `driver.introspect` and
+  // `driver.userinfo`. Without one, that half of the cache is dead, not broken —
+  // so each concern warns for itself, and only when it is actually switched on.
+  if (settings.cache?.enabled && settings.cache.introspection !== false) {
+    if (!driver.introspect) {
+      logger.warn(
+        "Auth introspection caching is enabled but the driver implements no introspect method; nothing will be cached",
+      );
+    }
+  }
+
+  if (settings.cache?.enabled && settings.cache.userinfo !== false) {
+    if (!driver.userinfo) {
+      logger.warn(
+        "Auth userinfo caching is enabled but the driver implements no userinfo method; nothing will be cached",
+      );
+    }
   }
 };

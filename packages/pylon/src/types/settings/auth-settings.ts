@@ -60,37 +60,42 @@ export type PylonAuthRouterConfig = {
 };
 
 /**
- * The ONE home for driver-response caching. Today that is RFC 7662
- * introspection; anything cached later shares this block rather than growing a
- * second one beside it.
+ * The ONE home for driver-response caching: RFC 7662 introspection and OIDC
+ * Core §5.3 userinfo, each with its OWN ttl.
  *
  * Absent means OFF: RFC 7662 §5 expects a deployment sensitive enough to refuse
  * any caching to be able to say so, and saying nothing is saying no.
  *
- * ⚠ `ttl` IS the revocation window (RFC 7662 §5) and is measured in SECONDS, for
- * `active: false` answers as much as for live ones. Default `10 seconds`; a
- * single mount may shorten it, or opt out entirely, via
- * `createAccessTokenMiddleware({ cache })`.
+ * ⚠ There is deliberately NO shared `ttl`. The two lifetimes answer different
+ * questions — introspection's IS the revocation window and is measured in
+ * seconds, userinfo's is a staleness tolerance on profile claims and is measured
+ * in minutes — and one knob feeding both could only be read as "does it override
+ * or seed the specific one?", an ambiguity with no good answer.
  *
  * ⚠ `enabled` is CACHE policy, never a capability declaration. Whether this
- * deployment introspects at all is `driver.introspect` — a driver without it
- * simply leaves the cache dead, which pylon warns about once at boot.
+ * deployment introspects or reads userinfo at all is `driver.introspect` /
+ * `driver.userinfo` — a driver without one simply leaves that half of the cache
+ * dead, which pylon warns about once at boot.
+ *
+ * Storage lives one level up, on `auth.kv` / `auth.encryption`, like every other
+ * feature block.
  */
 export type PylonAuthCacheSettings = {
   enabled: boolean;
-  kv?: IProteusSource;
-  ttl?: ReadableTime;
   /**
-   * The at-rest KEK selector staged onto `CachedIntrospection.payload` before the
-   * source sets up. The cached answer is the claim set of a LIVE credential —
-   * subject, scope, delegation — sitting in shared storage, so proteus seals it
-   * on write and opens it transparently on read. Default
-   * `{ condition: { purpose: "pylon:kek" } }` — the same bootstrap KEK as kryptos
-   * and webhook; override it (e.g. its own `purpose`) for a separate blast
-   * radius. Same `{ kryptos?, condition? }` descriptor as every other key
-   * surface; `encryption` (the AEAD) is ignored on this path.
+   * The revocation window — SECONDS, RFC 7662 §5, for `active: false` answers as
+   * much as for live ones. Default `10 seconds`; a single mount may shorten it,
+   * or opt out entirely, via `createAccessTokenMiddleware({ cache })`. `false`
+   * turns introspection caching off for the deployment while userinfo caching
+   * stays on.
    */
-  encryption?: PylonEncKey;
+  introspection?: false | { ttl?: ReadableTime };
+  /**
+   * Staleness tolerance for profile claims. Default `5 minutes` — there is no
+   * revocation window to respect here, since a profile is not an authorization
+   * decision. `false` turns userinfo caching off while introspection stays on.
+   */
+  userinfo?: false | { ttl?: ReadableTime };
 };
 
 export type PylonAuthConfig = {
@@ -109,6 +114,24 @@ export type PylonAuthConfig = {
 export type PylonAuthSettings = {
   driver: IPylonAuthDriver;
   router?: DeepPartial<PylonAuthRouterConfig>;
+  /**
+   * The ephemeral source the cache entities live in, overriding the top-level
+   * `kv` — exactly as `session.kv`, `rateLimit.kv` and `cache.kv` do. **No source
+   * ⇒ no cache**: the driver is called on every request, without error.
+   */
+  kv?: IProteusSource;
+  /**
+   * The at-rest KEK selector staged onto `CachedIntrospection.payload` and
+   * `CachedUserinfo.payload` before the source sets up. Both hold data about a
+   * LIVE credential — a claim set with subject, scope and delegation; a profile
+   * with name, email and picture — sitting in shared storage, so proteus seals
+   * them on write and opens them transparently on read. Default
+   * `{ condition: { purpose: "pylon:kek" } }` — the same bootstrap KEK as kryptos
+   * and webhook; override it (e.g. its own `purpose`) for a separate blast
+   * radius. Same `{ kryptos?, condition? }` descriptor as every other key
+   * surface; `encryption` (the AEAD) is ignored on this path.
+   */
+  encryption?: PylonEncKey;
   cache?: PylonAuthCacheSettings;
   refresh?: Partial<PylonAuthRefreshConfig>;
   defaultTokenExpiry?: ReadableTime;

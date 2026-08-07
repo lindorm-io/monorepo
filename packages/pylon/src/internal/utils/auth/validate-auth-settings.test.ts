@@ -24,6 +24,7 @@ const createDriver = (overrides: Partial<IPylonAuthDriver> = {}): IPylonAuthDriv
   exchange: vi.fn(),
   refresh: vi.fn(),
   introspect: vi.fn(),
+  userinfo: vi.fn(),
   ...overrides,
 });
 
@@ -173,6 +174,66 @@ describe("validateAuthSettings", () => {
       );
 
       expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    test("should warn once when caching is enabled but the driver cannot fetch userinfo", () => {
+      validateAuthSettings(
+        { driver: createDriver({ userinfo: undefined }), cache: { enabled: true } },
+        logger,
+      );
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("userinfo"));
+    });
+
+    test("should never throw for a dead userinfo cache", () => {
+      expect(() =>
+        validateAuthSettings(
+          { driver: createDriver({ userinfo: undefined }), cache: { enabled: true } },
+          logger,
+        ),
+      ).not.toThrow();
+    });
+
+    // Each concern warns for ITSELF: a driver missing both capabilities has two
+    // dead halves, and one warning would hide the other.
+    test("should warn for each dead concern separately", () => {
+      validateAuthSettings(
+        {
+          driver: createDriver({ introspect: undefined, userinfo: undefined }),
+          cache: { enabled: true },
+        },
+        logger,
+      );
+
+      expect(logger.warn).toHaveBeenCalledTimes(2);
+    });
+
+    // A concern the deployment switched off is not dead config — it is the
+    // deployment saying it does not want that cache.
+    test("should stay silent for a concern the deployment switched off", () => {
+      validateAuthSettings(
+        {
+          driver: createDriver({ introspect: undefined, userinfo: undefined }),
+          cache: { enabled: true, introspection: false, userinfo: false },
+        },
+        logger,
+      );
+
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    test("should warn only for the concern still switched on", () => {
+      validateAuthSettings(
+        {
+          driver: createDriver({ introspect: undefined, userinfo: undefined }),
+          cache: { enabled: true, introspection: false },
+        },
+        logger,
+      );
+
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("userinfo"));
     });
   });
 

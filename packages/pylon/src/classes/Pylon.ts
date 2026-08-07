@@ -344,20 +344,29 @@ export class Pylon<
     }
 
     if (this.options.auth?.cache?.enabled) {
-      const source = this.options.auth.cache.kv ?? this.options.kv;
+      // Storage sits on the FEATURE, like session/rateLimit/cache — not on the
+      // cache sub-block, which holds policy alone.
+      const source = this.options.auth.kv ?? this.options.kv;
       if (source) {
-        const { CachedIntrospection } =
-          await import("../entities/CachedIntrospection.js");
-        source.addEntities([CachedIntrospection]);
-        // Stage the KEK onto the bare `@Encrypted()` marker before setup(), so
-        // proteus seals the cached claim set at rest and opens it transparently
-        // on read. These are the claims of a live credential in shared storage.
-        await stageEncryptedField(
-          source,
-          CachedIntrospection,
-          "payload",
-          this.options.auth.cache.encryption ?? DEFAULT_KEK,
-        );
+        const encryption = this.options.auth.encryption ?? DEFAULT_KEK;
+
+        // Stage the KEK onto each bare `@Encrypted()` marker before setup(), so
+        // proteus seals the cached answer at rest and opens it transparently on
+        // read. Both describe a live credential sitting in shared storage.
+        // Registered per CONCERN: a deployment that turned one off gets no table
+        // for it.
+        if (this.options.auth.cache.introspection !== false) {
+          const { CachedIntrospection } =
+            await import("../entities/CachedIntrospection.js");
+          source.addEntities([CachedIntrospection]);
+          await stageEncryptedField(source, CachedIntrospection, "payload", encryption);
+        }
+
+        if (this.options.auth.cache.userinfo !== false) {
+          const { CachedUserinfo } = await import("../entities/CachedUserinfo.js");
+          source.addEntities([CachedUserinfo]);
+          await stageEncryptedField(source, CachedUserinfo, "payload", encryption);
+        }
       }
     }
 

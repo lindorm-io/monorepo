@@ -24,7 +24,7 @@ import {
   buildReadinessCallback,
 } from "../internal/utils/build-health-callbacks.js";
 import { createAuthRouter } from "../internal/utils/create-auth-router.js";
-import type { IntrospectionCacheConfig } from "../internal/utils/introspection/introspect-with-cache.js";
+import type { AuthCacheConfig } from "../internal/utils/auth-cache/auth-cache-config.js";
 import { createHealthRouter } from "../internal/utils/create-health-router.js";
 import { createWellKnownRouter } from "../internal/utils/create-well-known-router.js";
 import { normaliseRoutes } from "../internal/utils/normalise-routes.js";
@@ -129,10 +129,10 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         // cache.enabled). useCache reads ctx.state.app.config.cache to decide
         // whether to run, and throws only if enabled but no source is present.
         cacheKeyValue: this.options.cache?.kv ?? this.options.kv,
-        // The introspection cache is registered ONLY when enabled AND a source
-        // resolves: a deployment with no kv keeps introspecting every request,
-        // uncached and without error.
-        introspectionConfig: this.resolveIntrospectionConfig(),
+        // The driver-response cache is registered ONLY when enabled AND a source
+        // resolves: a deployment with no kv keeps calling the driver on every
+        // request, uncached and without error.
+        authCacheConfig: this.resolveAuthCacheConfig(),
         hermes: this.options.hermes,
         bus: this.options.bus,
         kv: this.options.kv,
@@ -213,15 +213,18 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     this.router.use(path, router.routes(), router.allowedMethods());
   }
 
-  private resolveIntrospectionConfig(): IntrospectionCacheConfig | undefined {
-    if (!this.options.auth?.cache?.enabled) return undefined;
+  private resolveAuthCacheConfig(): AuthCacheConfig | undefined {
+    const { auth } = this.options;
 
-    const kv = this.options.auth.cache.kv ?? this.options.kv;
+    if (!auth?.cache?.enabled) return undefined;
+
+    // Storage sits on the FEATURE, like `session.kv` / `rateLimit.kv` / `cache.kv`.
+    const kv = auth.kv ?? this.options.kv;
     if (!kv) return undefined;
 
-    // `ttl` is passed through UNRESOLVED — the three-tier fallback (per-mount,
-    // deployment, built-in) is decided in one expression at the call site.
-    return { kv, ttl: this.options.auth.cache.ttl };
+    // Each concern's policy is passed through UNRESOLVED — the TTL fallback is
+    // decided in one expression at its own call site.
+    return { kv, introspection: auth.cache.introspection, userinfo: auth.cache.userinfo };
   }
 
   private resolveHealthCallback(): PylonHttpCallback<T> | undefined {

@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildAuthCacheKey > should derive a stable digest for userinfo 1`] = `"-57HYFqgnvSbMBsClNUluUNK6Si-oddgnbdpdp4P5dM"`;
+
+exports[`buildAuthCacheKey > should derive a stable digest from the four inputs 1`] = `"0YGMmqfgczHUzPcrbWht_I8raZ_BmDI3iW9-uZadR-o"`;

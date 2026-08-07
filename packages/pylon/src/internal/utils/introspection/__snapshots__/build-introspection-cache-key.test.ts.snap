@@ -1,3 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`buildIntrospectionCacheKey > should derive a stable digest from the three inputs 1`] = `"9ODFgn5aCpNiKQlXWw7Zyxk907Wl-EUPE4jtHpYYgVg"`;

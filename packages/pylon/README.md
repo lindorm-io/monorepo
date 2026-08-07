@@ -114,7 +114,7 @@ await app.stop();
 Pylon distinguishes two storage roles, both `IProteusSource`:
 
 - **`db`** — the durable source (exposed per-request as `ctx.db`). Backs durable features (`audit`, `webhook`, `kryptos`), which may each override it with their own `db`.
-- **`kv`** — the ephemeral source (redis in production, a proteus memory-driver source in dev/test), exposed per-request as `ctx.kv`. Backs ephemeral features (`rateLimit`, `session`, `rooms`, `cache`, `introspection`), which may each override it with their own `kv`.
+- **`kv`** — the ephemeral source (redis in production, a proteus memory-driver source in dev/test), exposed per-request as `ctx.kv`. Backs ephemeral features (`rateLimit`, `session`, `rooms`, `cache`, `auth`), which may each override it with their own `kv`.
 
 | Method / property | Description                                                              |
 | ----------------- | ------------------------------------------------------------------------ |
@@ -647,30 +647,36 @@ ctx.state.access; // PylonResolvedAccess | null
 
 A service that mints and verifies its own tokens needs **no `auth` configuration at all** — nothing on the JOSE/COSE path calls the IdP. Introspection is only reached by a genuinely opaque credential, and that needs an `auth` driver that implements `introspect`. Without one, an opaque credential is refused as `opaque_token_not_supported` (401) rather than as a verification that failed.
 
-#### Introspection cache
+#### Driver-response cache
 
-An opaque credential costs one introspection call per request. The cache in front of `ctx.auth.introspect` is off unless a deployment asks for it:
+An opaque credential costs one introspection call per request, and every profile read costs a userinfo call. The cache in front of them is off unless a deployment asks for it:
 
 ```typescript
 new Pylon({
   kv: keyValueSource,
   auth: {
     driver: new OpenIdResourceDriver({ issuer, clientId, clientSecret }),
-    cache: { enabled: true, ttl: "10 seconds" },
+    kv: authKeyValueSource, // optional — falls back to the top-level kv
+    cache: {
+      enabled: true,
+      introspection: { ttl: "10 seconds" }, // or `false` to switch this half off
+      userinfo: { ttl: "5 minutes" }, //        …independently of the other
+    },
   },
 });
 ```
 
-| Setting      | Meaning                                                                                                                                                                                |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`    | Off when the block is absent. RFC 7662 §5 expects a deployment to be able to refuse caching. **Cache policy only** — whether this deployment introspects at all is `driver.introspect` |
-| `kv`         | Overrides the top-level `kv`. **No source ⇒ no cache** — introspection runs every request                                                                                              |
-| `ttl`        | Deployment default. Built-in: `10 seconds`                                                                                                                                             |
-| `encryption` | KEK selector for the stored claims. Default `{ condition: { purpose: "pylon:kek" } }`                                                                                                  |
+| Setting               | Meaning                                                                                                                                                                           |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cache.enabled`       | Off when the block is absent. RFC 7662 §5 expects a deployment to be able to refuse caching. **Cache policy only** — the capabilities are `driver.introspect` / `driver.userinfo` |
+| `cache.introspection` | `false` switches introspection caching off. `ttl` is the deployment default; built-in `10 seconds`                                                                                |
+| `cache.userinfo`      | `false` switches userinfo caching off. `ttl` is the deployment default; built-in `5 minutes`                                                                                      |
+| `kv`                  | Overrides the top-level `kv` for both. **No source ⇒ no cache** — the driver is called every request                                                                              |
+| `encryption`          | KEK selector for both stored payloads. Default `{ condition: { purpose: "pylon:kek" } }`                                                                                          |
 
-⚠ **The TTL is the revocation window.** RFC 7662 §5 warns that caching opens "a window during which a revoked token could be used at the protected resource", so it is measured in seconds — for `active: false` answers as much as for live ones. An entry is additionally bounded by the token's own `exp`, and caching to that `exp` is explicitly _not_ what this does: an opaque token that is never re-checked is a JWT without revocation.
+⚠ **The two TTLs are not the same kind of number, which is why there is no shared one.** Introspection's IS the revocation window: RFC 7662 §5 warns that caching opens "a window during which a revoked token could be used at the protected resource", so it is measured in seconds — for `active: false` answers as much as for live ones. An entry is additionally bounded by the token's own `exp`, and caching to that `exp` is explicitly _not_ what this does: an opaque token that is never re-checked is a JWT without revocation. Userinfo's is a staleness tolerance on profile claims — no authorization decision rides on it — so it is measured in minutes.
 
-The TTL resolves in three tiers, and a single mount may only ever narrow:
+The introspection TTL resolves in three tiers, and a single mount may only ever narrow:
 
 ```typescript
 // Shorter window on a sensitive mount…
@@ -680,9 +686,11 @@ router.use(createAccessTokenMiddleware({ issuer, cache: { ttl: "2 seconds" } }))
 router.use(createAccessTokenMiddleware({ issuer, cache: false }));
 ```
 
-The key is a digest of `(token, issuer, clientId)` — never the raw token, which would land readable in shared storage. The identity is part of it because RFC 7662 §2.2 lets the authorization server answer the same token differently per requesting client; keying on the token alone would let two services sharing a namespace read each other's answers. Both inputs come from the **driver** — `endpoints().issuer` and its own client id — because RFC 7662 §2.1 has the resource server authenticate to the introspection endpoint, and those credentials may legitimately differ from a relying party's. `await ctx.auth.config()` exposes that identity (`{ issuer, clientId }`, and never the client secret).
+Both keys are a digest of `(kind, token, issuer, clientId)` — never the raw token, which would land readable in shared storage. **The token, never the subject**: two tokens for one subject can carry different scopes, and both answers vary by granted scope (RFC 7662 §2.2 lets the authorization server "limit which scopes from a given token are returned for each protected resource"; OIDC Core §5.3 returns exactly the profile claims the token's scopes authorise). The identity is part of it for the same reason — keying on the token alone would let two services sharing a namespace read each other's answers. Both inputs come from the **driver** — `endpoints().issuer` and its own client id — because RFC 7662 §2.1 has the resource server authenticate to the introspection endpoint, and those credentials may legitimately differ from a relying party's. `await ctx.auth.config()` exposes that identity (`{ issuer, clientId }`, and never the client secret).
 
-Nothing is cached when introspection fails — a stale answer served over an unreachable authorization server is a revocation bypass — and a storage outage degrades to an uncached introspection rather than failing the request. The stored claims are encrypted at rest.
+Nothing is cached when either call fails — a stale answer served over an unreachable authorization server is a revocation bypass, and a cached userinfo failure would outlive its own cause — and a storage outage degrades to an uncached call rather than failing the request. **There is no negative userinfo entry at all**: userinfo returns a profile or it errors, and "is this token still good?" is introspection's question, under introspection's far shorter window.
+
+Both payloads are encrypted at rest. The cached profile is stored as the domain object under `@TypedJson`, not in claim wire form: the wire translation snake-keys the nested OIDC Core §5.1 `address` on the way out and returns it verbatim on the way in, so a wire-form payload would answer a cache hit differently from a miss.
 
 **DPoP (RFC 9449)** is checked from `(proof, claims.confirmation.thumbprint, token)`, so it runs identically on both paths — RFC 9449 §6.2 conveys `cnf.jkt` in the introspection response precisely so a resource server can validate the binding locally for an opaque token. A token carrying `cnf.jkt` is refused without a matching proof (`missing_dpop_proof`), and a token _without_ `cnf.jkt` presented under the `DPoP` scheme is refused as `token_not_dpop_bound`.
 
@@ -935,13 +943,15 @@ const app = new Pylon({
 });
 ```
 
-| `auth` setting       | Meaning                                                                                                  |
-| -------------------- | -------------------------------------------------------------------------------------------------------- |
-| `driver`             | **Required.** How pylon talks to the provider — see the drivers below                                    |
-| `router`             | Mounts the login/logout routes under `pathPrefix`. Omit it entirely for a pure resource server           |
-| `cache`              | Driver-response caching (RFC 7662 introspection today) — see [Introspection cache](#introspection-cache) |
-| `refresh`            | When to auto-refresh a session's tokens                                                                  |
-| `defaultTokenExpiry` | Fallback session lifetime when the token response carries no expiry. Default `1d`                        |
+| `auth` setting       | Meaning                                                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `driver`             | **Required.** How pylon talks to the provider — see the drivers below                                                             |
+| `router`             | Mounts the login/logout routes under `pathPrefix`. Omit it entirely for a pure resource server                                    |
+| `kv`                 | Source for the driver-response caches. Overrides the top-level `kv`                                                               |
+| `encryption`         | KEK selector for the cached payloads. Default `{ condition: { purpose: "pylon:kek" } }`                                           |
+| `cache`              | Driver-response caching — RFC 7662 introspection and OIDC Core §5.3 userinfo; see [Driver-response cache](#driver-response-cache) |
+| `refresh`            | When to auto-refresh a session's tokens                                                                                           |
+| `defaultTokenExpiry` | Fallback session lifetime when the token response carries no expiry. Default `1d`                                                 |
 
 Client credentials, the issuer and the authorization request's defaults are the **provider's**, so they live on the driver, not on `auth`.
 
@@ -1018,11 +1028,12 @@ The assertion carries `iss` = `sub` = the client id, a fresh `jti`, `exp`, `iat`
 
 At `setup()` pylon holds the configuration against what the driver can serve. The test is whether there is a coherent thing to do without the capability:
 
-| Configuration                                      | Result                                                                             |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `router` set, driver has no `authorize`/`exchange` | **Throws** `auth_driver_cannot_serve_router` — `/login` is mounted and cannot work |
-| `refresh.mode !== "none"`, driver has no `refresh` | Warns once. Refresh is off                                                         |
-| `cache.enabled`, driver has no `introspect`        | Warns once. The cache is dead, not broken                                          |
+| Configuration                                        | Result                                                                             |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `router` set, driver has no `authorize`/`exchange`   | **Throws** `auth_driver_cannot_serve_router` — `/login` is mounted and cannot work |
+| `refresh.mode !== "none"`, driver has no `refresh`   | Warns once. Refresh is off                                                         |
+| `cache.introspection` on, driver has no `introspect` | Warns once. That half of the cache is dead, not broken                             |
+| `cache.userinfo` on, driver has no `userinfo`        | Warns once. That half of the cache is dead, not broken                             |
 
 ### Refresh
 
@@ -1544,7 +1555,7 @@ The package re-exports three Proteus entities for the framework's built-in featu
 import { DataAuditLog, RequestAuditLog, WebhookSubscription } from "@lindorm/pylon";
 ```
 
-The remaining entities (`Session`, `Kryptos`, `Presence`, `CachedResponse`, `CachedIntrospection`, rate-limit entities) are wired into the configured Proteus source automatically when their feature is enabled — they are not part of the public import surface.
+The remaining entities (`Session`, `Kryptos`, `Presence`, `CachedResponse`, `CachedIntrospection`, `CachedUserinfo`, rate-limit entities) are wired into the configured Proteus source automatically when their feature is enabled — they are not part of the public import surface.
 
 ## Command-line tools
 

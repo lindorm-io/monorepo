@@ -21,6 +21,7 @@ import {
 import { OpenIdDriver } from "../drivers/auth/OpenIdDriver.js";
 import { createDispatchWebhook } from "../internal/utils/dispatch-webhook.js";
 import { CachedIntrospection } from "../entities/CachedIntrospection.js";
+import { CachedUserinfo } from "../entities/CachedUserinfo.js";
 import { Kryptos } from "../entities/Kryptos.js";
 import { WebhookSubscription } from "../entities/WebhookSubscription.js";
 import { WebhookAuth } from "../enums/index.js";
@@ -387,6 +388,7 @@ describe("Pylon at-rest encryption staging", () => {
   test.each([
     ["Kryptos", Kryptos],
     ["CachedIntrospection", CachedIntrospection],
+    ["CachedUserinfo", CachedUserinfo],
   ])(
     "should fail loud when %s's bare @Encrypted marker resolves to no key",
     async (_name, entity) => {

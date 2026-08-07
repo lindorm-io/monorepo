@@ -1,28 +1,18 @@
-import { isBefore, isLive, type ReadableTime, ms } from "@lindorm/date";
-import type { IProteusSource } from "@lindorm/proteus";
+import { isBefore, isLive, ms } from "@lindorm/date";
 import type {
   PylonAuthClientConfig,
   PylonHttpContext,
   PylonIntrospection,
 } from "../../../types/index.js";
-import { DEFAULT_INTROSPECTION_CACHE_TTL } from "../../constants/introspection.js";
-import { INTROSPECTION_SOURCE } from "../../constants/symbols.js";
-import { buildIntrospectionCacheKey } from "./build-introspection-cache-key.js";
-import { fromCachedPayload } from "./from-cached-payload.js";
-import { toCachedPayload } from "./to-cached-payload.js";
-
-/**
- * The deployment's introspection-cache wiring, attached to the context by the
- * dependencies middleware. Present ONLY when `auth.cache.enabled` is set and a
- * key-value source resolved — its absence is what turns the cache off.
- */
-export type IntrospectionCacheConfig = {
-  kv: IProteusSource;
-  ttl?: ReadableTime;
-};
+import { DEFAULT_INTROSPECTION_CACHE_TTL } from "../../constants/auth-cache.js";
+import { AUTH_CACHE_SOURCE } from "../../constants/symbols.js";
+import type { AuthCacheConfig, AuthCacheEntryOptions } from "./auth-cache-config.js";
+import { buildAuthCacheKey } from "./build-auth-cache-key.js";
+import { fromCachedIntrospection } from "./from-cached-introspection.js";
+import { toCachedIntrospection } from "./to-cached-introspection.js";
 
 /** Per-mount override. `false` turns the cache off for this mount alone. */
-export type IntrospectionCacheOptions = false | { ttl?: ReadableTime };
+export type IntrospectionCacheOptions = AuthCacheEntryOptions;
 
 /**
  * `ctx.auth.introspect` with a short-lived shared cache in front of it.
@@ -33,8 +23,8 @@ export type IntrospectionCacheOptions = false | { ttl?: ReadableTime };
  * Caching to the token's own `exp` would make the window the entire token
  * lifetime, i.e. an opaque token behaving like an unrevocable JWT.
  *
- * Three-tier TTL: per-mount `cache.ttl`, else the deployment default, else ten
- * seconds. Everything else fails OPEN to an uncached introspection — no source,
+ * Three-tier TTL: per-mount `cache.ttl`, else `auth.cache.introspection.ttl`,
+ * else ten seconds. Everything else fails OPEN to an uncached introspection — no source,
  * no client identity to key on, or a storage outage must never fail a request.
  * Only the introspection call itself propagates its error: serving a stale
  * answer over an unreachable authorization server is a revocation bypass.
@@ -44,13 +34,14 @@ export const introspectWithCache = async (
   token: string,
   cache: IntrospectionCacheOptions | undefined,
 ): Promise<PylonIntrospection> => {
-  const config = (ctx as any)[INTROSPECTION_SOURCE] as
-    | IntrospectionCacheConfig
-    | undefined;
+  const config = (ctx as any)[AUTH_CACHE_SOURCE] as AuthCacheConfig | undefined;
 
-  // Off for this mount (the sensitive-route carve-out), or off for the
-  // deployment (no `auth.cache` block, or no key-value source to store in).
-  if (cache === false || !config) return ctx.auth.introspect(token);
+  // Off for this mount (the sensitive-route carve-out), off for introspection
+  // specifically (`cache.introspection: false`, userinfo unaffected), or off for
+  // the deployment (no `auth.cache` block, or no key-value source to store in).
+  if (cache === false || !config || config.introspection === false) {
+    return ctx.auth.introspect(token);
+  }
 
   // The response is a function of (token, authorization server, requesting
   // client) — RFC 7662 §2.2. ⚠ Both come from the DRIVER, which is the party
@@ -69,8 +60,11 @@ export const introspectWithCache = async (
     return ctx.auth.introspect(token);
   }
 
-  const ttlMs = ms(cache?.ttl ?? config.ttl ?? DEFAULT_INTROSPECTION_CACHE_TTL);
-  const key = buildIntrospectionCacheKey({
+  const ttlMs = ms(
+    cache?.ttl ?? config.introspection?.ttl ?? DEFAULT_INTROSPECTION_CACHE_TTL,
+  );
+  const key = buildAuthCacheKey({
+    kind: "introspection",
     token,
     issuer: identity.issuer,
     clientId: identity.clientId,
@@ -97,7 +91,7 @@ export const introspectWithCache = async (
 
       if (live && withinTtl) {
         ctx.logger.debug("Introspection cache hit", { active: entry.payload.active });
-        return fromCachedPayload(entry.payload);
+        return fromCachedIntrospection(entry.payload);
       }
     }
   } catch (error: any) {
@@ -121,7 +115,7 @@ export const introspectWithCache = async (
     try {
       await repository.upsert({
         id: key,
-        payload: toCachedPayload(introspection),
+        payload: toCachedIntrospection(introspection),
         expiresAt: bounded,
       } as any);
     } catch (error: any) {

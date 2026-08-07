@@ -12,7 +12,7 @@ import MockDate from "mockdate";
 import { afterEach, beforeEach, describe, expect, type Mock, test, vi } from "vitest";
 import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
 import { CachedIntrospection } from "../../entities/CachedIntrospection.js";
-import { INTROSPECTION_SOURCE } from "../../internal/constants/symbols.js";
+import { AUTH_CACHE_SOURCE } from "../../internal/constants/symbols.js";
 import { stageEncryptedField } from "../../internal/utils/stage-encrypted-field.js";
 import { createAccessTokenMiddleware } from "./create-access-token-middleware.js";
 
@@ -58,6 +58,8 @@ const createKv = async (amphora: IAmphora): Promise<ProteusSource> => {
 type ContextOptions = {
   kv?: ProteusSource;
   ttl?: string;
+  /** `false` = the deployment turned introspection caching off on its own. */
+  introspection?: false;
   clientId?: string;
   issuer?: string;
   introspect: Mock;
@@ -87,7 +89,10 @@ const createContext = (opts: ContextOptions): any => {
   };
 
   if (opts.kv) {
-    ctx[INTROSPECTION_SOURCE] = { kv: opts.kv, ttl: opts.ttl };
+    ctx[AUTH_CACHE_SOURCE] = {
+      kv: opts.kv,
+      introspection: opts.introspection === false ? false : { ttl: opts.ttl },
+    };
   }
 
   return ctx;

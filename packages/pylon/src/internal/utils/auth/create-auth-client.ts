@@ -21,9 +21,11 @@ import type {
   PylonIntrospectionActive,
   PylonUserinfo,
 } from "../../../types/index.js";
+import { userinfoWithCache } from "../auth-cache/userinfo-with-cache.js";
 import { assertAuthorizeUrl } from "./assert-authorize-url.js";
 import { createAuthDriverContext } from "./create-auth-driver-context.js";
 import { parseUserinfo } from "./parse-userinfo.js";
+import { resolveAuthIdentity } from "./resolve-auth-identity.js";
 
 // --- Claims client (works on both HTTP and socket) ---
 
@@ -96,7 +98,14 @@ export const createClaimsClient = (
       });
     }
 
-    const result = await driver.userinfo(driverContext, { accessToken });
+    // ONE userinfo call site, so the shared cache in front of it wraps every
+    // consumer of `ctx.auth.userinfo` at once. It steps aside entirely when the
+    // deployment configured none — the per-request map above is unrelated and
+    // always applies.
+    const result = await userinfoWithCache(ctx, accessToken, {
+      identity: () => resolveAuthIdentity(driver, driverContext),
+      fetch: () => driver.userinfo!(driverContext, { accessToken }),
+    });
 
     userinfoCache.set(cacheKey, result);
     return result;
@@ -204,15 +213,10 @@ export const createAuthClient = (
       ctx.state.session?.accessToken ?? ctx.state.authorization?.value ?? null,
   });
 
-  // The identity the IdP knows this pylon by. ⚠ The issuer comes from
-  // `endpoints()`, not from settings: a tenant-scoped provider templates it in
-  // its metadata and the concrete value is only known at runtime. The secret
-  // never leaves the driver.
-  const identity = async (): Promise<PylonAuthClientConfig> => {
-    const endpoints = await config.driver.endpoints(driverContext);
-
-    return { issuer: endpoints.issuer, clientId: config.driver.clientId };
-  };
+  // The identity the IdP knows this pylon by — the SAME resolver the cache keys
+  // on, so `ctx.auth.config()` and a cache key can never disagree.
+  const identity = (): Promise<PylonAuthClientConfig> =>
+    resolveAuthIdentity(config.driver, driverContext);
 
   const login = async (input: AuthorizeQuery = {}): Promise<AuthorizeResult> => {
     if (!config.router) {

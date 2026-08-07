@@ -2,7 +2,7 @@ import { Aegis, type DomainAssert, type VerifyOptions } from "@lindorm/aegis";
 import type { ReadableTime } from "@lindorm/date";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { DEFAULT_AUTH_WARNING_MS } from "../../internal/constants/auth.js";
-import { introspectWithCache } from "../../internal/utils/introspection/introspect-with-cache.js";
+import { introspectWithCache } from "../../internal/utils/auth-cache/introspect-with-cache.js";
 import { isInExpiryWarningWindow } from "../../internal/utils/auth-state/is-in-expiry-warning-window.js";
 import { isTokenExpired } from "../../internal/utils/auth-state/is-token-expired.js";
 import { markAuthExpiredEmitted } from "../../internal/utils/auth-state/mark-auth-expired-emitted.js";
@@ -29,8 +29,8 @@ type Options = Omit<DomainAssert & VerifyOptions, "issuer"> & {
   issuer: string;
   /**
    * Per-mount control of the RFC 7662 introspection cache — tier ONE of the TTL
-   * resolution (`cache.ttl` ?? `settings.auth.cache.ttl` ?? ten seconds), and
-   * the sensitive-route carve-out: `cache: false` introspects on EVERY request
+   * resolution (`cache.ttl` ?? `settings.auth.cache.introspection.ttl` ?? ten
+   * seconds), and the sensitive-route carve-out: `cache: false` introspects on EVERY request
    * for this mount even when the deployment enables caching. Only ever narrows;
    * a mount cannot turn a cache on that the deployment did not configure.
    */

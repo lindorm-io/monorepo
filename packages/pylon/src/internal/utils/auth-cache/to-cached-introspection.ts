@@ -15,7 +15,7 @@ import type { PylonIntrospection } from "../../../types/index.js";
  * An inactive answer stores `claims: null` — RFC 7662 §2.2 permits nothing but
  * `active: false`, and the negative is still a real entry.
  */
-export const toCachedPayload = (
+export const toCachedIntrospection = (
   introspection: PylonIntrospection,
 ): CachedIntrospectionPayload => {
   if (!introspection.active) return { active: false, claims: null };
