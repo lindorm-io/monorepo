@@ -20,6 +20,7 @@ import {
   writeEnvFile,
   writeIrisSamples,
   writeLindormConfigFile,
+  writeMiddlewareFiles,
   writePackageJson,
   writePylonFile,
   writeTestCtxFile,
@@ -126,12 +127,85 @@ describe("scaffold", () => {
       expect(dumpTree(projectDir)).toMatchSnapshot();
     });
 
-    test("renames _gitignore to .gitignore but leaves _middleware.ts alone", () => {
+    test("renames _gitignore to .gitignore", () => {
       const answers = baseAnswers({ projectDir });
       copyTemplates(answers);
       expect(existsSync(join(projectDir, ".gitignore"))).toBe(true);
       expect(existsSync(join(projectDir, "_gitignore"))).toBe(false);
-      expect(existsSync(join(projectDir, "src/routes/_middleware.ts"))).toBe(true);
+    });
+
+    // ⚠ The root `_middleware.ts` is GENERATED, not overlaid: its content depends
+    // on whether rate limiting was chosen, because pylon installs no limiter of
+    // its own and the mount has to be in the file. A static template could only
+    // ever ship one of the two variants.
+    test("does not overlay a root _middleware.ts from the templates", () => {
+      const answers = baseAnswers({ projectDir });
+      copyTemplates(answers);
+      expect(existsSync(join(projectDir, "src/routes/_middleware.ts"))).toBe(false);
+    });
+  });
+
+  // ⭐ Pylon mounts nothing on a deployment's behalf, so a scaffold that asked
+  // for rate limiting must SHOW the mount — a `rateLimit` policy alone limits
+  // nothing.
+  describe("writeMiddlewareFiles", () => {
+    test("mounts useRateLimit first when rate limiting is chosen", () => {
+      const answers = baseAnswers({
+        projectDir,
+        kv: "redis",
+        features: baseFeatures({ socket: true, rateLimit: true }),
+      });
+      mkdirSync(projectDir, { recursive: true });
+      writeMiddlewareFiles(answers);
+
+      const http = readFileSync(join(projectDir, "src/routes/_middleware.ts"), "utf-8");
+      const socket = readFileSync(
+        join(projectDir, "src/listeners/_middleware.ts"),
+        "utf-8",
+      );
+
+      for (const file of [http, socket]) {
+        expect(file).toContain(`import { useRateLimit } from "@lindorm/pylon";`);
+        // No arguments: the limits live on the `rateLimit` block, and a closure
+        // copy here would be free to disagree with it.
+        expect(file).toContain("useRateLimit()");
+        expect(file).not.toContain("useRateLimit({");
+      }
+
+      expect(http).toMatchSnapshot("routes/_middleware.ts");
+      expect(socket).toMatchSnapshot("listeners/_middleware.ts");
+    });
+
+    test("mounts nothing extra when rate limiting is not chosen", () => {
+      const answers = baseAnswers({
+        projectDir,
+        features: baseFeatures({ socket: true }),
+      });
+      mkdirSync(projectDir, { recursive: true });
+      writeMiddlewareFiles(answers);
+
+      const http = readFileSync(join(projectDir, "src/routes/_middleware.ts"), "utf-8");
+      const socket = readFileSync(
+        join(projectDir, "src/listeners/_middleware.ts"),
+        "utf-8",
+      );
+
+      expect(http).not.toContain("useRateLimit");
+      expect(socket).not.toContain("useRateLimit");
+      expect(http).toMatchSnapshot("routes/_middleware.ts");
+      expect(socket).toMatchSnapshot("listeners/_middleware.ts");
+    });
+
+    test("writes only the transports the scaffold has", () => {
+      const answers = baseAnswers({
+        projectDir,
+        features: baseFeatures({ http: false, socket: true, rateLimit: true }),
+      });
+      mkdirSync(projectDir, { recursive: true });
+      writeMiddlewareFiles(answers);
+
+      expect(existsSync(join(projectDir, "src/routes/_middleware.ts"))).toBe(false);
+      expect(existsSync(join(projectDir, "src/listeners/_middleware.ts"))).toBe(true);
     });
   });
 
@@ -832,9 +906,17 @@ describe("scaffold", () => {
         features: baseFeatures({ rateLimit: true }),
       });
       await scaffold(answers, FIXED_KEK);
+
+      const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+      // The block is POLICY and carries no `enabled`; the MOUNT is what turns it
+      // into a limiter, and it has to be in the scaffold for that to be true.
+      expect(pylon).toContain("rateLimit: {");
+      expect(pylon).not.toContain("enabled: true,\n    strategy");
       expect(
-        readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8"),
-      ).toMatchSnapshot("pylon.ts");
+        readFileSync(join(projectDir, "src/routes/_middleware.ts"), "utf-8"),
+      ).toContain("useRateLimit()");
+
+      expect(pylon).toMatchSnapshot("pylon.ts");
     });
 
     test("all-on: postgres + redis + rabbit + sessions + auth + rateLimit + workers", async () => {

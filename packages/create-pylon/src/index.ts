@@ -13,10 +13,12 @@ export {
   writeEnvExampleFile,
   writeEnvFile,
   writeIrisSamples,
+  writeMiddlewareFiles,
   writePackageJson,
   writePylonFile,
   writeWorkerFiles,
 } from "./scaffold.js";
+export { buildMiddlewareFile } from "./build-middleware-file.js";
 export { buildConfigDevelopmentYaml, buildConfigYaml } from "./build-config-yaml.js";
 export { installDependencies, installDevDependencies } from "./install.js";
 export { initGit } from "./git.js";

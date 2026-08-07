@@ -195,8 +195,9 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
   }
 
   if (answers.features.audit) {
+    // The block's PRESENCE is the switch — there is no `enabled` beside the
+    // policy to disagree with it. Drop the block to turn auditing off.
     lines.push(`  audit: {`);
-    lines.push(`    enabled: true,`);
     lines.push(`    // sanitise: (body) => body,`);
     lines.push(`    // skip: (ctx) => false,`);
     lines.push(`    // entities: [],`);
@@ -263,8 +264,12 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
 
   if (answers.features.rateLimit) {
     // Counters land on the evictable `cache` source, which falls back to `kv`.
+    //
+    // ⚠ This block is POLICY, not a mount. Pylon installs no limiter of its own
+    // — the generated `src/routes/_middleware.ts` mounts `useRateLimit()`, which
+    // is what applies this policy to every route. The block's presence is the
+    // deployment-wide switch: drop it and every mount passes through.
     lines.push(`  rateLimit: {`);
-    lines.push(`    enabled: true,`);
     lines.push(`    strategy: "fixed",`);
     lines.push(`    window: "1m",`);
     lines.push(`    max: 60,`);

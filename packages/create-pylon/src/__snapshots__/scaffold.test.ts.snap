@@ -449,10 +449,6 @@ pylon.start().catch((error) => {
   process.exit(1);
 });
 ",
-  "src/listeners/_middleware.ts": "import { socketExampleMiddleware } from "../middleware/socket-example.js";
-
-export const MIDDLEWARE = [socketExampleMiddleware];
-",
   "src/listeners/ping.ts": "import { useSchema } from "@lindorm/pylon";
 import type { ServerSocketMiddleware } from "../types/context.js";
 import { pingHandler, pingSchema } from "../features/ping/ping-handler.js";
@@ -489,10 +485,6 @@ export const socketExampleMiddleware: ServerSocketMiddleware = async (ctx, next)
 
   await next();
 };
-",
-  "src/routes/_middleware.ts": "import { httpExampleMiddleware } from "../middleware/http-example.js";
-
-export const MIDDLEWARE = [httpExampleMiddleware];
 ",
   "src/routes/v1/example.ts": "import { useHandler, useSchema } from "@lindorm/pylon";
 import type { ServerHttpMiddleware } from "../../types/context.js";
@@ -698,10 +690,6 @@ export const httpExampleMiddleware: ServerHttpMiddleware = async (ctx, next) => 
 
   await next();
 };
-",
-  "src/routes/_middleware.ts": "import { httpExampleMiddleware } from "../middleware/http-example.js";
-
-export const MIDDLEWARE = [httpExampleMiddleware];
 ",
   "src/routes/v1/example.ts": "import { useHandler, useSchema } from "@lindorm/pylon";
 import type { ServerHttpMiddleware } from "../../types/context.js";
@@ -942,7 +930,6 @@ export const pylon = new Pylon({
   queue: { enabled: true },
   webhook: { enabled: true },
   audit: {
-    enabled: true,
     // sanitise: (body) => body,
     // skip: (ctx) => false,
     // entities: [],
@@ -969,7 +956,6 @@ export const pylon = new Pylon({
     },
   },
   rateLimit: {
-    enabled: true,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -1163,7 +1149,6 @@ export const pylon = new Pylon({
   kv: redis,
   // cache: evictableSource, // allkeys-lru; defaults to kv
   rateLimit: {
-    enabled: true,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -2905,6 +2890,40 @@ export default defineConfig({
 "
 `;
 
+exports[`scaffold > writeMiddlewareFiles > mounts nothing extra when rate limiting is not chosen > listeners/_middleware.ts 1`] = `
+"import { socketExampleMiddleware } from "../middleware/socket-example.js";
+
+export const MIDDLEWARE = [socketExampleMiddleware];
+"
+`;
+
+exports[`scaffold > writeMiddlewareFiles > mounts nothing extra when rate limiting is not chosen > routes/_middleware.ts 1`] = `
+"import { httpExampleMiddleware } from "../middleware/http-example.js";
+
+export const MIDDLEWARE = [httpExampleMiddleware];
+"
+`;
+
+exports[`scaffold > writeMiddlewareFiles > mounts useRateLimit first when rate limiting is chosen > listeners/_middleware.ts 1`] = `
+"import { useRateLimit } from "@lindorm/pylon";
+import { socketExampleMiddleware } from "../middleware/socket-example.js";
+
+// Mounting IS the switch: pylon never injects a limiter of its own, so this
+// file is what applies the deployment's rateLimit policy to every event.
+export const MIDDLEWARE = [useRateLimit(), socketExampleMiddleware];
+"
+`;
+
+exports[`scaffold > writeMiddlewareFiles > mounts useRateLimit first when rate limiting is chosen > routes/_middleware.ts 1`] = `
+"import { useRateLimit } from "@lindorm/pylon";
+import { httpExampleMiddleware } from "../middleware/http-example.js";
+
+// Mounting IS the switch: pylon never injects a limiter of its own, so this
+// file is what applies the deployment's rateLimit policy to every route.
+export const MIDDLEWARE = [useRateLimit(), httpExampleMiddleware];
+"
+`;
+
 exports[`scaffold > writePackageJson > default answers produce minimal package.json 1`] = `
 "{
   "name": "test-app",
@@ -2986,7 +3005,6 @@ export const pylon = new Pylon({
   queue: { enabled: true },
   webhook: { enabled: true },
   audit: {
-    enabled: true,
     // sanitise: (body) => body,
     // skip: (ctx) => false,
     // entities: [],
@@ -3209,7 +3227,6 @@ export const pylon = new Pylon({
     },
   },
   rateLimit: {
-    enabled: true,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -3342,7 +3359,6 @@ export const pylon = new Pylon({
   queue: { enabled: true },
   webhook: { enabled: true },
   audit: {
-    enabled: true,
     // sanitise: (body) => body,
     // skip: (ctx) => false,
     // entities: [],
@@ -3579,7 +3595,6 @@ export const pylon = new Pylon({
   kv: redis,
   // cache: evictableSource, // allkeys-lru; defaults to kv
   rateLimit: {
-    enabled: true,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -3623,7 +3638,6 @@ export const pylon = new Pylon({
   kv: redis,
   // cache: evictableSource, // allkeys-lru; defaults to kv
   rateLimit: {
-    enabled: true,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -3688,7 +3702,6 @@ export const pylon = new Pylon({
     },
   },
   rateLimit: {
-    enabled: true,
     strategy: "fixed",
     window: "1m",
     max: 60,

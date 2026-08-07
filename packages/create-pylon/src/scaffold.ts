@@ -16,6 +16,7 @@ import { buildConfigDevelopmentYaml, buildConfigYaml } from "./build-config-yaml
 import { buildContextFile } from "./build-context-file.js";
 import { buildDockerCompose } from "./build-docker-compose.js";
 import { buildIrisSamples } from "./build-iris-samples.js";
+import { buildMiddlewareFile } from "./build-middleware-file.js";
 import { buildPylonFile } from "./build-pylon-file.js";
 import { buildTestCtxFile } from "./build-test-ctx-file.js";
 import { buildVitestConfig } from "./build-vitest-config.js";
@@ -400,6 +401,26 @@ export const writePylonFile = (answers: Answers): void => {
   writeFileSync(target, buildPylonFile(answers), "utf-8");
 };
 
+/**
+ * The root `_middleware.ts` of each scanned directory. ⚠ Generated, not part of
+ * the `templates/` overlay: pylon installs no middleware on the strength of a
+ * setting, so a rate-limited scaffold has to MOUNT `useRateLimit()` here, and a
+ * static file could only ever show one of the two variants.
+ */
+export const writeMiddlewareFiles = (answers: Answers): void => {
+  if (answers.features.http) {
+    const target = join(answers.projectDir, "src/routes/_middleware.ts");
+    ensureDir(target);
+    writeFileSync(target, buildMiddlewareFile(answers, "http"), "utf-8");
+  }
+
+  if (answers.features.socket) {
+    const target = join(answers.projectDir, "src/listeners/_middleware.ts");
+    ensureDir(target);
+    writeFileSync(target, buildMiddlewareFile(answers, "socket"), "utf-8");
+  }
+};
+
 export const writeTestCtxFile = (answers: Answers): void => {
   if (answers.db === "none" && answers.kv === "none") return;
 
@@ -468,6 +489,7 @@ export const scaffold = async (
   writeContextFile(answers);
   writeAmphoraFile(answers);
   writePylonFile(answers);
+  writeMiddlewareFiles(answers);
   writeTestCtxFile(answers);
   writeLindormConfigFile(answers);
   writeDockerCompose(answers);
