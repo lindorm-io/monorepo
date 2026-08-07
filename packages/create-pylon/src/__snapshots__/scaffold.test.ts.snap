@@ -437,9 +437,17 @@ export const updateWebhookHandler: ServerHandler<typeof updateWebhookSchema> = a
   return { body: updated };
 };
 ",
-  "src/index.ts": "import { pylon } from "./pylon/pylon.js";
+  "src/index.ts": "import { logger } from "./logger/index.js";
+import { pylon } from "./pylon/pylon.js";
 
-void pylon.start();
+// \`start()\` rejects when the bind fails — EADDRINUSE, or EACCES on a privileged
+// port. Handle it: a floated promise turns a named startup failure into an
+// unhandled rejection with no log line, and the exit code stops meaning anything
+// to whatever supervises the process.
+pylon.start().catch((error) => {
+  logger.error("Pylon failed to start", error);
+  process.exit(1);
+});
 ",
   "src/listeners/_middleware.ts": "import { socketExampleMiddleware } from "../middleware/socket-example.js";
 
@@ -495,7 +503,10 @@ export const GET: Array<ServerHttpMiddleware> = [
   useHandler(exampleHandler),
 ];
 ",
-  "src/routes/webhooks/[id].ts": "// TODO: add auth middleware — these routes expose webhook subscription management.
+  "src/routes/webhooks/[id].ts": "// TODO: guard these routes — they expose webhook subscription management.
+// \`useAccessToken()\` from @lindorm/pylon resolves the presented credential on
+// every transport; it reads the issuer from the \`auth\` block, so scaffold with
+// OIDC authentication (or add one) before mounting it.
 import { useHandler, useSchema } from "@lindorm/pylon";
 import type { ServerHttpMiddleware } from "../../types/context.js";
 import {
@@ -526,7 +537,10 @@ export const DELETE: Array<ServerHttpMiddleware> = [
   useHandler(deleteWebhookHandler),
 ];
 ",
-  "src/routes/webhooks/index.ts": "// TODO: add auth middleware — these routes expose webhook subscription management.
+  "src/routes/webhooks/index.ts": "// TODO: guard these routes — they expose webhook subscription management.
+// \`useAccessToken()\` from @lindorm/pylon resolves the presented credential on
+// every transport; it reads the issuer from the \`auth\` block, so scaffold with
+// OIDC authentication (or add one) before mounting it.
 import { useHandler, useSchema } from "@lindorm/pylon";
 import type { ServerHttpMiddleware } from "../../types/context.js";
 import {
@@ -657,9 +671,17 @@ export const exampleHandler: ServerHandler<typeof exampleSchema> = async (ctx) =
   return { body: { message } };
 };
 ",
-  "src/index.ts": "import { pylon } from "./pylon/pylon.js";
+  "src/index.ts": "import { logger } from "./logger/index.js";
+import { pylon } from "./pylon/pylon.js";
 
-void pylon.start();
+// \`start()\` rejects when the bind fails — EADDRINUSE, or EACCES on a privileged
+// port. Handle it: a floated promise turns a named startup failure into an
+// unhandled rejection with no log line, and the exit code stops meaning anything
+// to whatever supervises the process.
+pylon.start().catch((error) => {
+  logger.error("Pylon failed to start", error);
+  process.exit(1);
+});
 ",
   "src/logger/index.ts": "import { Logger } from "@lindorm/logger";
 import { config } from "../pylon/config.js";
@@ -760,9 +782,17 @@ logger:
 logger:
   level: error
 ",
-  "src/index.ts": "import { pylon } from "./pylon/pylon.js";
+  "src/index.ts": "import { logger } from "./logger/index.js";
+import { pylon } from "./pylon/pylon.js";
 
-void pylon.start();
+// \`start()\` rejects when the bind fails — EADDRINUSE, or EACCES on a privileged
+// port. Handle it: a floated promise turns a named startup failure into an
+// unhandled rejection with no log line, and the exit code stops meaning anything
+// to whatever supervises the process.
+pylon.start().catch((error) => {
+  logger.error("Pylon failed to start", error);
+  process.exit(1);
+});
 ",
   "src/logger/index.ts": "import { Logger } from "@lindorm/logger";
 import { config } from "../pylon/config.js";

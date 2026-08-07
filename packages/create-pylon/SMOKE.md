@@ -1,6 +1,6 @@
 # Smoke test
 
-The `@lindorm/create-pylon` unit test suite covers every scaffold write path and CLI orchestration step — 201 tests, 121 snapshots — but it doesn't verify that the generated project actually compiles against the real `@lindorm/*` packages. This is the canonical manual check before a release.
+The `@lindorm/create-pylon` unit test suite covers every scaffold write path and CLI orchestration step, but it doesn't verify that the generated project actually compiles against the real `@lindorm/*` packages. This is the canonical manual check before a release.
 
 ## Recipe
 
@@ -21,11 +21,15 @@ cd /Users/jonn/Projects/lindorm/lindorm-monorepo/packages
 node ./create-pylon/dist/cli.js pylon-smoke
 
 # → answer prompts. A typical "flex everything" combo:
+#   issuer:       http://localhost:3000
 #   features:     HTTP routes ✓ Socket.IO listeners ✓
-#   proteus:      postgres
-#   iris:         redis
+#   db:           postgres
+#   kv:           redis
+#   bus:          redis
 #   webhooks:     yes
 #   audit:        yes
+#   auth:         yes          (also turns on auth.session)
+#   rate limit:   yes          (only offered when a kv store is picked)
 #   workers:      all four
 
 # 3. Verify the generated project compiles
@@ -41,21 +45,21 @@ npm install   # restores root node_modules after the scratch scaffold
 
 ## Non-interactive variant
 
-For scripted smoke tests (CI, batch runs across combos), bypass the prompts by calling `scaffold(answers)` directly:
+For scripted smoke tests (CI, batch runs across combos), bypass the prompts by calling `scaffold(answers)` directly.
+
+Derive the dependency lists from the exported constants rather than hand-listing them — the CLI resolves them exactly this way, so the recipe cannot drift from what a real scaffold installs. `scaffold()` already runs `proteus init` / `iris init` and their sample generators, so do not call them again.
 
 ```js
 // .scratch/smoke.mjs
-import { scaffold } from "/Users/jonn/Projects/lindorm/lindorm-monorepo/packages/create-pylon/dist/index.js";
 import {
+  BASE_DEV_DEPENDENCIES,
+  BASE_RUNTIME_DEPENDENCIES,
+  buildDependencyList,
+  buildDevDependencyList,
   installDependencies,
   installDevDependencies,
-} from "/Users/jonn/Projects/lindorm/lindorm-monorepo/packages/create-pylon/dist/install.js";
-import {
-  runIrisGenerateSampleMessage,
-  runIrisInit,
-  runProteusGenerateSampleEntity,
-  runProteusInit,
-} from "/Users/jonn/Projects/lindorm/lindorm-monorepo/packages/create-pylon/dist/drivers.js";
+  scaffold,
+} from "/Users/jonn/Projects/lindorm/lindorm-monorepo/packages/create-pylon/dist/index.js";
 import { resolve } from "path";
 import { existsSync, rmSync } from "fs";
 
@@ -73,13 +77,15 @@ const answers = {
     socket: true,
     webhooks: true,
     audit: true,
-    session: false,
-    auth: false,
-    rateLimit: false,
+    // `session` follows `auth` in the prompt flow; the session block is emitted
+    // under `auth`, so it is meaningless without it.
+    session: true,
+    auth: true,
+    rateLimit: true,
   },
   // Driver picks are role-based: `db` (DbDriver), `kv` (KvDriver), `bus` (IrisDriver).
   db: "postgres",
-  kv: "none",
+  kv: "redis",
   bus: "redis",
   workers: [
     "amphora-entity-sync",
@@ -90,40 +96,20 @@ const answers = {
 };
 
 await scaffold(answers);
+
 await installDependencies(projectDir, [
-  "@lindorm/pylon",
-  "@lindorm/amphora",
-  "@lindorm/logger",
-  "@lindorm/types",
-  "@lindorm/config",
-  "zod",
-  "@lindorm/proteus",
-  "pg",
-  "@lindorm/iris",
-  "ioredis",
+  ...BASE_RUNTIME_DEPENDENCIES,
+  ...buildDependencyList(answers),
 ]);
-// The repo is on vitest — no jest / ts-jest. These mirror BASE_DEV_DEPENDENCIES.
 await installDevDependencies(projectDir, [
-  "@lindorm/scaffold",
-  "@lindorm/worker",
-  "@types/node",
-  "@types/pg",
-  "@types/supertest",
-  "globals",
-  "mockdate",
-  "nock",
-  "supertest",
-  "tsx",
-  "typescript",
-  "vitest",
+  ...BASE_DEV_DEPENDENCIES,
+  ...buildDevDependencyList(answers),
 ]);
-await runProteusInit(projectDir, { db: "postgres", kv: "none" });
-await runProteusGenerateSampleEntity(projectDir);
-await runIrisInit(projectDir, "redis");
-await runIrisGenerateSampleMessage(projectDir);
 ```
 
 Run via `node .scratch/smoke.mjs`, then `cd packages/pylon-smoke && npx tsc --noEmit`.
+
+An auth-selected scaffold reads `AUTH__ISSUER` at boot but never at compile time, so `tsc --noEmit` passes without a reachable provider. Verifying that amphora actually discovers the upstream is a runtime concern — see "What this does NOT verify".
 
 ## Why inside the workspace
 
@@ -133,14 +119,15 @@ If you scaffold to `/tmp` or anywhere outside `packages/`, npm will pull `@lindo
 
 No single scaffold exercises every branch. Rotate these over releases:
 
-| Combo                                                    | Why                                                                          |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| HTTP only, no drivers, no workers                        | Minimal — catches regressions in the base template                           |
-| Socket only, no proteus, no iris                         | Socket-only service with just `/health` exposed                              |
-| HTTP + postgres + redis + webhooks + audit + all workers | Everything on — maximum branch coverage                                      |
-| HTTP + mongo + kafka                                     | Rotates the docker-compose assembly for non-postgres/non-redis               |
-| HTTP + sqlite + nats                                     | Exercises sqlite (no container) + nats (container)                           |
-| Any combo with proteus=memory                            | Proteus `memory` driver has no connection URL — catches config assembly bugs |
+| Combo                                                    | Why                                                                           |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| HTTP only, no drivers, no workers                        | Minimal — catches regressions in the base template                            |
+| Socket only, no proteus, no iris                         | Socket-only service with just `/health` exposed                               |
+| HTTP + postgres + redis + webhooks + audit + all workers | Everything on — maximum branch coverage                                       |
+| Any combo with auth + a kv store                         | Emits `auth.session`, the `idp` amphora registration and the rate-limit block |
+| HTTP + mongo + kafka                                     | Rotates the docker-compose assembly for non-postgres/non-redis                |
+| HTTP + sqlite + nats                                     | Exercises sqlite (no container) + nats (container)                            |
+| Any combo with proteus=memory                            | Proteus `memory` driver has no connection URL — catches config assembly bugs  |
 
 ## What "pass" means
 

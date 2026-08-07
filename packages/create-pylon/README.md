@@ -25,7 +25,7 @@ The scaffolder asks for features and drivers, copies templates into the target d
 - Generates `@lindorm/proteus` sources and a sample entity when one or more persistence drivers are selected
 - Generates an `@lindorm/iris` source, sample message, sample publisher, and sample subscriber when a message bus driver is selected
 - Generates a `docker-compose.yml` containing only the services required by the selected drivers
-- Generates a per-driver `.env` with reasonable local defaults plus a freshly generated `PYLON_KEK` key encryption key
+- Generates a `.env` holding only the genuine per-developer secrets, including a freshly generated `PYLON__KEK` key encryption key; driver URLs live in the committed `config/*.yml` so a teammate can clone and run
 - Detects collisions with non-empty target directories and prompts before removing them
 - Skips `git init` when the target directory is already inside a git working tree
 - Programmatic API exposing each scaffold step so the same building blocks can be driven from another tool
@@ -36,7 +36,7 @@ The scaffolder asks for features and drivers, copies templates into the target d
 ? Project name: my-app
 ? Issuer URL:                     (this service's identity — becomes the Amphora issuer for JWKS; default http://localhost:3000)
 ? Select features:                (HTTP routes / Socket.IO listeners)
-? Persistence store (Proteus DB): (postgres / mysql / mongo / sqlite / memory / none)
+? Persistence store (Proteus DB): (postgres / mysql / mongo / sqlite / none)
 ? Key-value store (Proteus KV):   (redis / memory / none — rate-limit / session / cache)
 ? Message bus driver (Iris):      (none / kafka / nats / rabbit / redis)
 ? Webhooks?                       (only when both a Proteus store and an Iris driver are selected)
@@ -64,22 +64,22 @@ splitting the stores later needs no code change.
 
 Generated layout (some files only appear depending on the answers):
 
-- `src/index.ts` — entry file with a `Symbol.metadata` polyfill that calls `pylon.start()`
+- `src/index.ts` — entry file; calls `pylon.start()` and logs + exits non-zero if it rejects (a bind failure is `EADDRINUSE`, not a floated promise)
 - `src/logger/index.ts` — shared `Logger` instance from `@lindorm/logger`
-- `src/pylon/amphora.ts` — `Amphora` instance from `@lindorm/amphora`, and the only place an issuer is declared: this service's own (`issuer`) and, with auth selected, the upstream provider (`idp`). The pylon auth driver declares neither — it reads whichever scope it pins off this instance
+- `src/pylon/amphora.ts` — `Amphora` instance from `@lindorm/amphora`, and the only place an issuer is declared: this service's own (`internal: { issuer }`) and, with auth selected, the upstream provider (`idp`). The pylon auth driver declares neither — it reads whichever scope it pins off this instance
 - `src/pylon/config.ts` — typed config loaded with `@lindorm/config`, validated with a `zod` schema generated from the selected drivers
 - `src/pylon/pylon.ts` — the `Pylon` instance, wired with the selected features, sources, and workers
 - `src/types/context.ts` — typed `ServerHttpContext`, `ServerSocketContext`, `ServerHttpMiddleware`, `ServerSocketMiddleware`, `ServerHandler`, and `ServerSocketHandler` aliases
 - `src/routes/v1/example.ts` + `src/features/example/example-handler.ts` — example HTTP route (only when HTTP is selected)
 - `src/listeners/ping.ts` + `src/features/ping/ping-handler.ts` — example Socket.IO listener (only when Socket.IO is selected)
 - `src/routes/webhooks/` + `src/features/webhooks/` — CRUD routes and handlers for `WebhookSubscription` (only when webhooks are selected)
-- `src/workers/<worker>.ts` — one file per selected worker (`amphora-entity-sync`, `expiry-cleanup`, `kryptos-rotation`) plus an `alive.ts` example
+- `src/workers/<worker>.ts` — one file per selected worker (`amphora-entity-sync`, `certificate-expiry`, `expiry-cleanup`, `kryptos-rotation`) plus an `alive.ts` example
 - `src/proteus/db/source.ts` (the primary db/kv store, with `entities/` + `migrations/`) — plus `src/proteus/kv/source.ts` when both a db and a kv store are picked — and a sample `SampleEntity`, written by `@lindorm/proteus/scaffold`'s code generator
 - `src/__fixtures__/test-ctx.ts` — a project-bound `createTestCtx` helper (only when a db or kv store is picked) wrapping `@lindorm/pylon/mocks/vitest`'s `createTestPylonCtx`; `ctx.db`/`ctx.kv`/`ctx.cache` are stateful in-memory Proteus mocks (writes persist, reads reflect them) so repository round-trips work in tests
 - `src/iris/source.ts`, a sample `SampleMessage`, plus a sample publisher and subscriber — written by `@lindorm/iris`'s code generator
 - `docker-compose.yml` — only emitted when a selected driver is `postgres`, `mysql`, `mongo`, `redis`, `kafka`, `nats`, or `rabbit`
 - `config/{default,development,test,production}.yml` — base config files
-- `.env` — environment variables seeded with driver defaults and a freshly generated `PYLON_KEK`
+- `.env` (gitignored) — `NODE_ENV`, a freshly generated `PYLON__KEK`, and `AUTH__CLIENT_SECRET` when auth is selected — and `.env.example`, a committed reference for every env var the schema responds to
 - `lindorm.config.ts` — CLI/scaffold-only config (via `@lindorm/scaffold`'s `defineConfig`) that drives the
   `proteus` / `iris` / `pylon generate` commands' target directories; never imported by the runtime
 - `package.json`, `tsconfig.json`, `tsconfig.build.json`, `vitest.config.mjs`, `.gitignore`
@@ -117,21 +117,25 @@ await initGit(answers.projectDir);
 
 ### Scaffold
 
-| Export                   | Signature                                           | Description                                                                                                                                                        |
-| ------------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `scaffold`               | `(answers: Answers, kek?: string) => Promise<void>` | Runs the full file-emit pipeline: templates, package.json, env, config, pylon, test-ctx fixture, docker-compose, iris, workers, plus `runProteusInit`.             |
-| `copyTemplates`          | `(answers: Answers) => void`                        | Copies the `base`, `http`, `socket`, `webhooks`, and `workers` template overlays based on `answers`.                                                               |
-| `writePackageJson`       | `(answers: Answers) => void`                        | Writes `package.json` with the project name and scripts; when the stack needs docker-compose services, `dev` runs through `composed` (up/down around `tsx watch`). |
-| `writeEnvFile`           | `(answers: Answers, kek?: string) => void`          | Writes `.env` with `NODE_ENV`, `PYLON_KEK`, and per-driver entries.                                                                                                |
-| `buildEnvLines`          | `(answers: Answers, kek?: string) => Array<string>` | Same content as `writeEnvFile` but returned as an array of lines.                                                                                                  |
-| `writeConfigFile`        | `(answers: Answers) => void`                        | Writes `src/pylon/config.ts`.                                                                                                                                      |
-| `writePylonFile`         | `(answers: Answers) => void`                        | Writes `src/pylon/pylon.ts`.                                                                                                                                       |
-| `writeTestCtxFile`       | `(answers: Answers) => void`                        | Writes `src/__fixtures__/test-ctx.ts` (a project-bound `createTestCtx`) when a db or kv store is selected.                                                         |
-| `writeDockerCompose`     | `(answers: Answers) => void`                        | Writes `docker-compose.yml` when a selected driver requires container infrastructure.                                                                              |
-| `writeWorkerFiles`       | `(answers: Answers) => void`                        | Writes one `src/workers/<key>.ts` per selected worker.                                                                                                             |
-| `writeIrisSamples`       | `(answers: Answers) => void`                        | Writes a sample publisher and subscriber under `src/iris/`.                                                                                                        |
-| `buildDependencyList`    | `(answers: Answers) => Array<string>`               | Returns the runtime npm packages required by the selected drivers, on top of `BASE_RUNTIME_DEPENDENCIES`.                                                          |
-| `buildDevDependencyList` | `(answers: Answers) => Array<string>`               | Returns the additional dev dependencies required by the selected drivers.                                                                                          |
+| Export                       | Signature                                           | Description                                                                                                                                                                                                                                          |
+| ---------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scaffold`                   | `(answers: Answers, kek?: string) => Promise<void>` | Runs the full file-emit pipeline: templates, package.json, vitest config, env, config, context, amphora, pylon, test-ctx fixture, `lindorm.config.ts`, docker-compose, workers, iris samples — then the proteus/iris code generators, then prettier. |
+| `copyTemplates`              | `(answers: Answers) => void`                        | Copies the `base`, `http`, `socket`, `webhooks`, and `workers` template overlays based on `answers`.                                                                                                                                                 |
+| `writePackageJson`           | `(answers: Answers) => void`                        | Writes `package.json` with the project name and scripts; when the stack needs docker-compose services, `dev` runs through `composed` (up/down around `tsx watch`).                                                                                   |
+| `writeEnvFile`               | `(answers: Answers, kek?: string) => void`          | Writes `.env` with `NODE_ENV`, `PYLON__KEK`, and `AUTH__CLIENT_SECRET` when auth is selected.                                                                                                                                                        |
+| `buildEnvLines`              | `(answers: Answers, kek?: string) => Array<string>` | Same content as `writeEnvFile` but returned as an array of lines.                                                                                                                                                                                    |
+| `writeEnvExampleFile`        | `(answers: Answers) => void`                        | Writes the committed `.env.example` reference.                                                                                                                                                                                                       |
+| `writeConfigFile`            | `(answers: Answers) => void`                        | Writes `src/pylon/config.ts`.                                                                                                                                                                                                                        |
+| `writeConfigYaml`            | `(answers: Answers) => void`                        | Writes `config/default.yml`.                                                                                                                                                                                                                         |
+| `writeConfigDevelopmentYaml` | `(answers: Answers) => void`                        | Writes `config/development.yml` with dev URLs matching `docker-compose.yml`.                                                                                                                                                                         |
+| `writePylonFile`             | `(answers: Answers) => void`                        | Writes `src/pylon/pylon.ts`.                                                                                                                                                                                                                         |
+| `writeDockerCompose`         | `(answers: Answers) => void`                        | Writes `docker-compose.yml` when a selected driver requires container infrastructure.                                                                                                                                                                |
+| `writeWorkerFiles`           | `(answers: Answers) => void`                        | Writes one `src/workers/<key>.ts` per selected worker.                                                                                                                                                                                               |
+| `writeIrisSamples`           | `(answers: Answers) => void`                        | Writes a sample publisher and subscriber under `src/iris/`.                                                                                                                                                                                          |
+| `buildDependencyList`        | `(answers: Answers) => Array<string>`               | Returns the runtime npm packages required by the selected drivers, on top of `BASE_RUNTIME_DEPENDENCIES`.                                                                                                                                            |
+| `buildDevDependencyList`     | `(answers: Answers) => Array<string>`               | Returns the additional dev dependencies required by the selected drivers.                                                                                                                                                                            |
+
+`scaffold()` also emits `src/pylon/amphora.ts` (the sole issuer declaration — `internal`, plus `idp` when auth is selected), `src/types/context.ts`, `src/__fixtures__/test-ctx.ts`, `vitest.config.mjs` and `lindorm.config.ts`. Those writers are not exported individually; drive them through `scaffold()`.
 
 ### Install / Git
 
