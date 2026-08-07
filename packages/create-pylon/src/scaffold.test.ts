@@ -198,6 +198,34 @@ describe("scaffold", () => {
       expect(socket).toMatchSnapshot("listeners/_middleware.ts");
     });
 
+    test("mounts useAuditLog on both transports when audit is chosen", () => {
+      const answers = baseAnswers({
+        projectDir,
+        db: "postgres",
+        bus: "rabbit",
+        features: baseFeatures({ socket: true, audit: true }),
+      });
+      mkdirSync(projectDir, { recursive: true });
+      writeMiddlewareFiles(answers);
+
+      const http = readFileSync(join(projectDir, "src/routes/_middleware.ts"), "utf-8");
+      const socket = readFileSync(
+        join(projectDir, "src/listeners/_middleware.ts"),
+        "utf-8",
+      );
+
+      for (const file of [http, socket]) {
+        expect(file).toContain(`import { useAuditLog } from "@lindorm/pylon";`);
+        // No arguments: `sanitise` and `skip` live on the `audit` block, and the
+        // block's presence is the switch.
+        expect(file).toContain("useAuditLog()");
+        expect(file).not.toContain("useAuditLog({");
+      }
+
+      expect(http).toMatchSnapshot("routes/_middleware.ts");
+      expect(socket).toMatchSnapshot("listeners/_middleware.ts");
+    });
+
     test("writes only the transports the scaffold has", () => {
       const answers = baseAnswers({
         projectDir,
@@ -931,6 +959,78 @@ describe("scaffold", () => {
       expect(middleware).not.toContain("useRateLimit({");
 
       expect(pylon).toMatchSnapshot("pylon.ts");
+    });
+
+    // ⭐ The same coupling, for audit — and it was the half that was missing:
+    // the scaffold emitted the `audit` block (which creates the table and starts
+    // the consumer) and mounted `useAuditLog` NOWHERE, so a project answering
+    // "yes" to audit logging audited nothing at all. Asserted off ONE scaffold so
+    // neither half can be emitted alone.
+    test("emits the audit block and the mount together", async () => {
+      const answers = baseAnswers({
+        projectDir,
+        db: "postgres",
+        bus: "rabbit",
+        features: baseFeatures({ audit: true }),
+      });
+      await scaffold(answers, FIXED_KEK);
+
+      const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+      const middleware = readFileSync(
+        join(projectDir, "src/routes/_middleware.ts"),
+        "utf-8",
+      );
+
+      // The block's PRESENCE is the switch — no `enabled` beside the policy.
+      expect(pylon).toContain("audit: {");
+      expect(middleware).toContain("useAuditLog()");
+      expect(middleware).toContain(`from "@lindorm/pylon"`);
+    });
+
+    test("emits neither the audit block nor the mount when audit is off", async () => {
+      const answers = baseAnswers({ projectDir, db: "postgres", bus: "rabbit" });
+      await scaffold(answers, FIXED_KEK);
+
+      expect(readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8")).not.toContain(
+        "audit: {",
+      );
+      expect(
+        readFileSync(join(projectDir, "src/routes/_middleware.ts"), "utf-8"),
+      ).not.toContain("useAuditLog");
+    });
+
+    // ⚠ Order is load-bearing, not cosmetic. A middleware records only what it
+    // wraps, and the limiter rejects by THROWING — so audit mounted below it
+    // would never see a 429, which is exactly the request an auditor wants.
+    test("mounts useAuditLog ahead of useRateLimit when both are chosen", async () => {
+      const answers = baseAnswers({
+        projectDir,
+        db: "postgres",
+        kv: "redis",
+        bus: "rabbit",
+        features: baseFeatures({ audit: true, rateLimit: true }),
+      });
+      await scaffold(answers, FIXED_KEK);
+
+      const middleware = readFileSync(
+        join(projectDir, "src/routes/_middleware.ts"),
+        "utf-8",
+      );
+
+      // Prettier may wrap the array, so assert the ORDER rather than one line.
+      const audit = middleware.indexOf("useAuditLog()");
+      const limit = middleware.indexOf("useRateLimit()");
+      // The MOUNT, not the import of the same name that precedes it.
+      const example = middleware.lastIndexOf("httpExampleMiddleware");
+
+      expect(audit).toBeGreaterThan(-1);
+      expect(limit).toBeGreaterThan(audit);
+      expect(example).toBeGreaterThan(limit);
+
+      // Both come off the toolkit, so they share ONE import.
+      expect(middleware).toContain(
+        `import { useAuditLog, useRateLimit } from "@lindorm/pylon";`,
+      );
     });
 
     test("emits neither the block nor the mount when rate limiting is off", async () => {

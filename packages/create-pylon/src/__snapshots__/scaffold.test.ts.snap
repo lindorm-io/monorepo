@@ -2904,6 +2904,30 @@ export const MIDDLEWARE = [httpExampleMiddleware];
 "
 `;
 
+exports[`scaffold > writeMiddlewareFiles > mounts useAuditLog on both transports when audit is chosen > listeners/_middleware.ts 1`] = `
+"import { useAuditLog } from "@lindorm/pylon";
+import { socketExampleMiddleware } from "../middleware/socket-example.js";
+
+// Mounting IS the switch here too, and this one is mounted FIRST so it
+// wraps everything below it — a request denied by the limiter or by an
+// auth check is still recorded, with the status the client received. The
+// \`audit\` block in \`src/pylon/pylon.ts\` is the policy it reads.
+export const MIDDLEWARE = [useAuditLog(), socketExampleMiddleware];
+"
+`;
+
+exports[`scaffold > writeMiddlewareFiles > mounts useAuditLog on both transports when audit is chosen > routes/_middleware.ts 1`] = `
+"import { useAuditLog } from "@lindorm/pylon";
+import { httpExampleMiddleware } from "../middleware/http-example.js";
+
+// Mounting IS the switch here too, and this one is mounted FIRST so it
+// wraps everything below it — a request denied by the limiter or by an
+// auth check is still recorded, with the status the client received. The
+// \`audit\` block in \`src/pylon/pylon.ts\` is the policy it reads.
+export const MIDDLEWARE = [useAuditLog(), httpExampleMiddleware];
+"
+`;
+
 exports[`scaffold > writeMiddlewareFiles > mounts useRateLimit first when rate limiting is chosen > listeners/_middleware.ts 1`] = `
 "import { useRateLimit } from "@lindorm/pylon";
 import { socketExampleMiddleware } from "../middleware/socket-example.js";
