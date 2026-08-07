@@ -20,6 +20,10 @@ import type {
  * arguments IS the deployment's limit, which is how a deployment mounts one
  * global limiter (routes' root `_middleware.ts`, or `socket.middleware`) without
  * a closure copy of the numbers free to disagree with the policy.
+ *
+ * ⚠ Equally, a mount stating its own `window` and `max` needs NO deployment
+ * block at all. The block is policy, never a switch: mounting is what turns rate
+ * limiting on, so there is nothing for an absent block to turn off.
  */
 type RateLimitOptions = {
   window?: ReadableTime | number;
@@ -78,14 +82,13 @@ export const useRateLimit = (options: RateLimitOptions = {}): PylonMiddleware =>
         : ms(options.window);
 
   return async function useRateLimitMiddleware(ctx: PylonContext, next) {
-    // No `rateLimit` block on the deployment: silently pass through, never
-    // throw. The throws below only fire when there IS a policy to apply.
+    // The deployment's policy, stated once for every mount that carries no
+    // limits of its own. ⚠ It is NOT a switch, and it is never absent: a
+    // deployment with no `rateLimit` block resolves to a policy imposing no
+    // window and no ceiling. Mounting IS the switch, so there is no short-circuit
+    // here — a limiter that was mounted and then quietly neutralised by a missing
+    // settings block is the one outcome a rate limiter must never have.
     const config = ctx.state.app.config.rateLimit;
-
-    if (config === false) {
-      await next();
-      return;
-    }
 
     // A mount states its own skip or inherits the deployment's — the same
     // narrowing every other member gets, so "never rate-limit health checks"
@@ -113,19 +116,20 @@ export const useRateLimit = (options: RateLimitOptions = {}): PylonMiddleware =>
     }
 
     // The evictable per-request session, installed whenever a `cache` (or the
-    // `kv` fallback) source is configured — INDEPENDENT of the `rateLimit`
-    // policy block, which is the `ctx.state.app.config.rateLimit` check above.
-    // Read after the off/skip guards so a skipped request never opens a session.
+    // `kv` fallback) source is configured — the ONE thing this middleware asks
+    // of the deployment, exactly as `useCache` does, because a `rateLimit` block
+    // is optional policy and a mount may state every limit itself. Read after the
+    // skip and bounds guards so a skipped request never opens a session.
     if (!ctx.cache) {
-      throw new ServerError("Rate limiting is not configured", {
+      throw new ServerError("Rate limiting has no store for its counters", {
         code: "rate_limit_not_configured",
         type: "urn:lindorm:pylon:error:rate_limit_not_configured",
         title: "Rate Limit Not Configured",
-        // ⚠ The deployment already HAS a `rateLimit` block here — the config
-        // guard above returned otherwise — so naming that block would send the
-        // operator to set something already set. What is missing is the STORE.
+        // ⚠ Names the missing STORE, never the `rateLimit` block: the mount is
+        // bounded by the time this runs, so the operator has already stated the
+        // limits. What is missing is somewhere to keep the counters.
         details:
-          "Rate limiting is configured but no evictable source is attached, so there is nowhere to keep the counters. Give PylonSettings a `cache` source (or a `kv` source, which `cache` falls back to) before using useRateLimit",
+          "This route mounts useRateLimit but no evictable source is attached, so there is nowhere to keep the counters. Give PylonSettings a `cache` source (or a `kv` source, which `cache` falls back to) before using useRateLimit",
         debug: { strategy },
       });
     }

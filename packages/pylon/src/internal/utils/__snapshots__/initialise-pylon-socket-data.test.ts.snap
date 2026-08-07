@@ -6,7 +6,11 @@ exports[`initialisePylonSocketData > should initialize with all options provided
     "config": {
       "audit": false,
       "auth": null,
-      "rateLimit": false,
+      "rateLimit": {
+        "max": null,
+        "strategy": "fixed",
+        "window": null,
+      },
     },
     "domain": "test.lindorm.io",
     "environment": "development",
@@ -24,7 +28,11 @@ exports[`initialisePylonSocketData > should use defaults for missing options 1`]
     "config": {
       "audit": false,
       "auth": null,
-      "rateLimit": false,
+      "rateLimit": {
+        "max": null,
+        "strategy": "fixed",
+        "window": null,
+      },
     },
     "domain": "unknown",
     "environment": "unknown",
@@ -42,7 +50,11 @@ exports[`initialisePylonSocketData > should use defaults for undefined values 1`
     "config": {
       "audit": false,
       "auth": null,
-      "rateLimit": false,
+      "rateLimit": {
+        "max": null,
+        "strategy": "fixed",
+        "window": null,
+      },
     },
     "domain": "unknown",
     "environment": "unknown",

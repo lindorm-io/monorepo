@@ -29,7 +29,10 @@ export const buildMiddlewareFile = (
     // ⚠ Mounted FIRST: a rejected request must not run the rest of the chain.
     // And with NO arguments — the window, ceiling, strategy, key and skip all
     // live on the `rateLimit` block in `src/pylon/pylon.ts`, so this mount holds
-    // no second copy of the numbers free to disagree with it.
+    // no second copy of the numbers free to disagree with it. That makes the two
+    // inseparable: a bare mount with no block inherits no bounds and throws
+    // `rate_limit_not_bounded` on every request, so `buildPylonFile` must emit
+    // the block whenever this emits the mount.
     mounts.push(`useRateLimit()`);
   }
 
@@ -41,9 +44,9 @@ export const buildMiddlewareFile = (
   if (answers.features.rateLimit) {
     lines.push(
       `// Mounting IS the switch: pylon never injects a limiter of its own, so this`,
-      `// file is what applies the deployment's rateLimit policy to every ${
-        isSocket ? "event" : "route"
-      }.`,
+      `// file is what rate-limits every ${isSocket ? "event" : "route"}. The mount takes no arguments —`,
+      `// its window and ceiling come from the \`rateLimit\` block in`,
+      `// \`src/pylon/pylon.ts\`, and without that block it throws on every request.`,
     );
   }
 

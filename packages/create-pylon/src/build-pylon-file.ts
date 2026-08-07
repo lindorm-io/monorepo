@@ -265,10 +265,11 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
   if (answers.features.rateLimit) {
     // Counters land on the evictable `cache` source, which falls back to `kv`.
     //
-    // ⚠ This block is POLICY, not a mount. Pylon installs no limiter of its own
-    // — the generated `src/routes/_middleware.ts` mounts `useRateLimit()`, which
-    // is what applies this policy to every route. The block's presence is the
-    // deployment-wide switch: drop it and every mount passes through.
+    // ⚠ This block is POLICY, never a switch — MOUNTING is the switch, and the
+    // generated `src/routes/_middleware.ts` mounts a bare `useRateLimit()`.
+    // These are therefore the only numbers that mount has: drop the block and it
+    // is bounded by nothing, which throws `rate_limit_not_bounded` on every
+    // request. Block and mount ship together or not at all.
     lines.push(`  rateLimit: {`);
     lines.push(`    strategy: "fixed",`);
     lines.push(`    window: "1m",`);

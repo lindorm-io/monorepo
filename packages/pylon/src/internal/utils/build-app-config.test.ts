@@ -46,11 +46,14 @@ describe("buildAppConfig", () => {
     buildAppConfig({ amphora, logger, environment: "test", ...options });
 
   // ⚠ Nothing configured is not an error and not a missing member: every entry
-  // is present and OFF, so a middleware reads one property and decides.
-  test("should resolve everything off for a bare deployment", () => {
+  // is present, so a middleware reads one property and decides. `rateLimit` is
+  // the one that never resolves to an off state — the block is policy and
+  // mounting `useRateLimit` is the switch, so an absent block resolves to a
+  // policy imposing nothing rather than to `false`.
+  test("should resolve a bare deployment to off, except the rate-limit policy", () => {
     expect(build()).toEqual({
       audit: false,
-      rateLimit: false,
+      rateLimit: { strategy: "fixed", window: null, max: null },
       auth: null,
     });
   });
@@ -97,8 +100,21 @@ describe("buildAppConfig", () => {
   });
 
   describe("rateLimit", () => {
-    test("should resolve false when the block is absent", () => {
-      expect(build().rateLimit).toBe(false);
+    // ⭐ Never `false`. `useRateLimit` is turned on by being MOUNTED, so an
+    // absent block cannot mean off — it means the deployment imposes no limits
+    // of its own, and every mount states its own or throws.
+    test("should resolve a policy imposing nothing when the block is absent", () => {
+      expect(build().rateLimit).toEqual({
+        strategy: "fixed",
+        window: null,
+        max: null,
+      });
+    });
+
+    // Stating nothing and stating a bare block are the same deployment: there is
+    // no second representation of "no limits" for a mount to read differently.
+    test("should resolve an absent block and a bare block identically", () => {
+      expect(build().rateLimit).toEqual(build({ rateLimit: {} }).rateLimit);
     });
 
     // ⚠ MILLISECONDS. `useRateLimit` compares a mount's window against this one,
@@ -119,8 +135,8 @@ describe("buildAppConfig", () => {
       });
     });
 
-    // A bare block without limits is a legitimate deployment: it switches rate
-    // limiting on for mounts that state their own.
+    // A bare block without limits is a legitimate deployment: it imposes nothing
+    // on mounts that state their own.
     test("should resolve null limits for a bare block", () => {
       expect(build({ rateLimit: {} }).rateLimit).toEqual({
         strategy: "fixed",

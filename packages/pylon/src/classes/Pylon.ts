@@ -386,17 +386,32 @@ export class Pylon<
       }
     }
 
-    // ⚠ Unconditional, unlike every other block here: the response cache has no
-    // settings block to gate on, because whether a route caches is decided by
-    // mounting `useCache` and Pylon cannot see a route's middleware chain. So the
-    // table follows the SOURCE — an evictable store gets a `CachedResponse`, the
-    // same way it gets a `ctx.cache` session. The alternative is a mounted
-    // `useCache` failing on an unregistered entity at the first request.
+    // ⚠ Unconditional, unlike every other block here: whether a route caches or
+    // rate-limits is decided by MOUNTING `useCache` / `useRateLimit`, and Pylon
+    // cannot know what a middleware chain's opaque closures are. So these tables
+    // follow the SOURCE — an evictable store gets them the same way it gets a
+    // `ctx.cache` session — rather than a settings block that a mount is free to
+    // disagree with. The alternative is a mount failing on an unregistered entity
+    // at its first request, which is a deployment learning its own configuration
+    // through a 500.
+    //
+    // A lost counter costs at most one extra allowed request, and a lost cache
+    // entry one extra round trip, so both belong on the evictable half — the
+    // rate-limit buckets in particular are exactly the churn that must not be
+    // able to push a `Session` out of `kv`.
     {
       const source = this.cache;
       if (source) {
         const { CachedResponse } = await import("../entities/CachedResponse.js");
-        source.addEntities([CachedResponse]);
+        const { RateLimitFixed } = await import("../entities/RateLimitFixed.js");
+        const { RateLimitSliding } = await import("../entities/RateLimitSliding.js");
+        const { RateLimitBucket } = await import("../entities/RateLimitBucket.js");
+        source.addEntities([
+          CachedResponse,
+          RateLimitFixed,
+          RateLimitSliding,
+          RateLimitBucket,
+        ]);
       }
     }
 
@@ -424,19 +439,6 @@ export class Pylon<
           source.addEntities([CachedUserinfo]);
           await stageEncryptedField(source, CachedUserinfo, "payload", encryption);
         }
-      }
-    }
-
-    if (this.options.rateLimit) {
-      // A lost counter costs at most one extra allowed request, so the buckets
-      // are evictable — and they are exactly the churn that must not be able to
-      // push a `Session` out of `kv`.
-      const source = this.cache;
-      if (source) {
-        const { RateLimitFixed } = await import("../entities/RateLimitFixed.js");
-        const { RateLimitSliding } = await import("../entities/RateLimitSliding.js");
-        const { RateLimitBucket } = await import("../entities/RateLimitBucket.js");
-        source.addEntities([RateLimitFixed, RateLimitSliding, RateLimitBucket]);
       }
     }
 

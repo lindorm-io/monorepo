@@ -4,7 +4,7 @@ import { initialisePylonSocketData } from "./initialise-pylon-socket-data.js";
 
 const CONFIG: AppConfig = Object.freeze({
   audit: false,
-  rateLimit: false,
+  rateLimit: Object.freeze({ strategy: "fixed", window: null, max: null }),
   auth: null,
 });
 

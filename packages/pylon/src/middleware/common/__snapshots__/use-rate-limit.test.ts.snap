@@ -1,3 +1,3 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`useRateLimit > should name the missing evictable source, not the policy block 1`] = `"Rate limiting is configured but no evictable source is attached, so there is nowhere to keep the counters. Give PylonSettings a \`cache\` source (or a \`kv\` source, which \`cache\` falls back to) before using useRateLimit"`;
+exports[`useRateLimit > should name the missing evictable source, not the policy block 1`] = `"This route mounts useRateLimit but no evictable source is attached, so there is nowhere to keep the counters. Give PylonSettings a \`cache\` source (or a \`kv\` source, which \`cache\` falls back to) before using useRateLimit"`;

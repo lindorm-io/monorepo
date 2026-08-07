@@ -242,14 +242,16 @@ describe("Pylon source placement", () => {
     });
   });
 
-  // ⚠ `CachedResponse` is the one entity with no settings block behind it, and
-  // that is deliberate: whether a route caches is decided by mounting `useCache`,
-  // which Pylon cannot see. So the table follows the SOURCE — an evictable store
-  // always gets one — while every other evictable entity still follows its policy
-  // block. Registering it lazily is not an option: the first request through a
-  // mounted `useCache` would hit an unregistered entity.
+  // ⚠ The MOUNT-driven entities are the ones with no settings block behind them,
+  // and that is deliberate: whether a route caches or rate-limits is decided by
+  // mounting `useCache` / `useRateLimit`, which Pylon cannot see. So their tables
+  // follow the SOURCE — an evictable store always gets all four — while every
+  // other evictable entity still follows its policy block. Registering them
+  // lazily is not an option: the first request through a mount would hit an
+  // unregistered entity, and for the limiter that means a security control
+  // failing on the traffic it was put there to survive.
   describe("no feature blocks", () => {
-    test("should register CachedResponse on the evictable source and nothing else", async () => {
+    test("should register the mount-driven entities on the evictable source and nothing else", async () => {
       const amphora = createAmphora();
       const kv = createSource(amphora);
 
@@ -268,13 +270,19 @@ describe("Pylon source placement", () => {
 
       const kvTables = await tableNames(kv);
 
+      // ⭐ No `rateLimit` block anywhere in these settings, and all three
+      // strategies still get their table: a mount states its own limits and must
+      // find somewhere to keep the counters.
       expect(kvTables).toContain("CachedResponse");
+      expect(kvTables).toContain("RateLimitFixed");
+      expect(kvTables).toContain("RateLimitSliding");
+      expect(kvTables).toContain("RateLimitBucket");
 
-      // Rate limiting keeps its block, so its counters stay behind it.
-      expect(kvTables).not.toContain("RateLimitFixed");
-      expect(kvTables).not.toContain("RateLimitSliding");
-      expect(kvTables).not.toContain("RateLimitBucket");
+      // The blocked features still stay behind their blocks.
       expect(kvTables).not.toContain("Session");
+      expect(kvTables).not.toContain("Presence");
+      expect(kvTables).not.toContain("CachedIntrospection");
+      expect(kvTables).not.toContain("CachedUserinfo");
     });
   });
 

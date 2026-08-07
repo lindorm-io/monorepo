@@ -25,9 +25,11 @@ describe("useRateLimit", () => {
   const allowedResult = { allowed: true, remaining: 9, resetAt };
   const deniedResult = { allowed: false, remaining: 0, resetAt };
 
-  /** Rate limiting on for the deployment, with no window or ceiling of its own —
-   *  every mount below states its own, exactly as a route-level mount does. */
-  const RATE_LIMIT_ON = { strategy: "fixed", window: null, max: null } as const;
+  /** A deployment with NO `rateLimit` block — the policy that imposes nothing,
+   *  which is what an absent block resolves to. Every mount below states its own
+   *  window and ceiling, exactly as a route-level mount does, and that alone is
+   *  enough: the block is policy, never a switch. */
+  const NO_DEPLOYMENT_LIMITS = { strategy: "fixed", window: null, max: null } as const;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -44,7 +46,9 @@ describe("useRateLimit", () => {
 
     ctx = {
       logger: createMockLogger(),
-      state: { app: { config: createTestAppConfig({ rateLimit: RATE_LIMIT_ON }) } },
+      state: {
+        app: { config: createTestAppConfig({ rateLimit: NO_DEPLOYMENT_LIMITS }) },
+      },
       request: { ip: "192.168.1.1" },
       set: vi.fn(),
       cache: mockSession,
@@ -104,7 +108,9 @@ describe("useRateLimit", () => {
 
     ctx = {
       logger: createMockLogger(),
-      state: { app: { config: createTestAppConfig({ rateLimit: RATE_LIMIT_ON }) } },
+      state: {
+        app: { config: createTestAppConfig({ rateLimit: NO_DEPLOYMENT_LIMITS }) },
+      },
       event: "test:event",
       io: { socket: { id: "socket-123" } },
       set: vi.fn(),
@@ -182,9 +188,9 @@ describe("useRateLimit", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  // ⚠ Same shape as useCache's: this throw sits BELOW the `rateLimit` config
-  // guard, so the deployment already HAS a `rateLimit` block when it fires. What
-  // is missing is the evictable source, and that is what the operator is told.
+  // ⚠ Same shape as useCache's: this throw sits BELOW the bounds guard, so the
+  // mount is already bounded when it fires — the operator has stated the limits.
+  // What is missing is the evictable source, and that is what they are told.
   test("should name the missing evictable source, not the policy block", async () => {
     delete ctx.cache;
 
@@ -200,16 +206,84 @@ describe("useRateLimit", () => {
     }
   });
 
-  test("should pass through silently (no throw) when rate limiting is disabled by config", async () => {
-    ctx.state.app.config = createTestAppConfig({ rateLimit: false });
-    delete ctx.cache; // disabled AND no session — must not throw
+  // ⭐ A deployment with NO `rateLimit` block. Mounting IS the switch, so there
+  // is nothing an absent block can turn off — the mount either limits on the
+  // numbers it states, or says it has none. What it must never do is sit in the
+  // chain allowing everything, which is what a settings-block short-circuit made
+  // it do.
+  describe("no deployment block", () => {
+    beforeEach(() => {
+      // The literal resolution of an absent `rateLimit` block: no window, no
+      // ceiling, nothing to inherit.
+      ctx.state.app.config = createTestAppConfig({ rateLimit: NO_DEPLOYMENT_LIMITS });
+    });
 
-    await expect(
-      useRateLimit({ window: "1m", max: 10 })(ctx, next),
-    ).resolves.not.toThrow();
+    test("should limit on the mount's own window and ceiling", async () => {
+      await useRateLimit({ window: "1m", max: 10 })(ctx, next);
 
-    expect(next).toHaveBeenCalledTimes(1);
-    expect(fixedWindowStrategy).not.toHaveBeenCalled();
+      expect(fixedWindowStrategy).toHaveBeenCalledWith(
+        mockRepository,
+        "192.168.1.1",
+        60_000,
+        10,
+      );
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    test("should deny over the mount's own ceiling", async () => {
+      (fixedWindowStrategy as Mock).mockResolvedValue(deniedResult);
+
+      await expect(
+        useRateLimit({ window: "1m", max: 10 })(ctx, next),
+      ).rejects.toMatchObject({ code: "rate_limit_exceeded" });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    // The failure this whole shape exists to prevent: a mounted limiter bounded
+    // by nothing used to pass every request through in silence.
+    test("should throw rate_limit_not_bounded rather than pass traffic through", async () => {
+      await expect(useRateLimit()(ctx, next)).rejects.toMatchObject({
+        code: "rate_limit_not_bounded",
+      });
+      expect(next).not.toHaveBeenCalled();
+      expect(fixedWindowStrategy).not.toHaveBeenCalled();
+    });
+
+    // Half-bounded is unbounded: a window with no ceiling limits nothing.
+    test("should throw rate_limit_not_bounded when only the window is stated", async () => {
+      await expect(useRateLimit({ window: "1m" })(ctx, next)).rejects.toMatchObject({
+        code: "rate_limit_not_bounded",
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    test("should throw rate_limit_not_bounded when only the ceiling is stated", async () => {
+      await expect(useRateLimit({ max: 10 })(ctx, next)).rejects.toMatchObject({
+        code: "rate_limit_not_bounded",
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    // The bounds guard sits ABOVE the store guard, so an unbounded mount is told
+    // what it is actually missing rather than being sent to configure a source.
+    test("should report the missing bounds before the missing store", async () => {
+      delete ctx.cache;
+
+      await expect(useRateLimit()(ctx, next)).rejects.toMatchObject({
+        code: "rate_limit_not_bounded",
+      });
+    });
+
+    // A mount's own `skip` still wins over everything, including the throw: a
+    // request that is never rate-limited needs no bounds.
+    test("should skip before it can be unbounded", async () => {
+      const skip = vi.fn().mockReturnValue(true);
+
+      await useRateLimit({ skip })(ctx, next);
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(fixedWindowStrategy).not.toHaveBeenCalled();
+    });
   });
 
   test("should default key to request.ip for HTTP", async () => {
@@ -231,7 +305,9 @@ describe("useRateLimit", () => {
 
     ctx = {
       logger: createMockLogger(),
-      state: { app: { config: createTestAppConfig({ rateLimit: RATE_LIMIT_ON }) } },
+      state: {
+        app: { config: createTestAppConfig({ rateLimit: NO_DEPLOYMENT_LIMITS }) },
+      },
       event: "test:event",
       io: { socket: { id: "sock-abc" } },
       set: vi.fn(),
@@ -268,7 +344,9 @@ describe("useRateLimit", () => {
 
     ctx = {
       logger: createMockLogger(),
-      state: { app: { config: createTestAppConfig({ rateLimit: RATE_LIMIT_ON }) } },
+      state: {
+        app: { config: createTestAppConfig({ rateLimit: NO_DEPLOYMENT_LIMITS }) },
+      },
       event: "test:event",
       io: { socket: { id: "socket-123" } },
       set: vi.fn(),
@@ -367,10 +445,13 @@ describe("useRateLimit", () => {
       );
     });
 
-    // Enabled with no limits anywhere is not a silent no-op: the deployment
-    // asked for rate limiting and never said how much.
-    test("should throw when neither the mount nor the deployment bounds it", async () => {
-      ctx.state.app.config = createTestAppConfig({ rateLimit: RATE_LIMIT_ON });
+    // A deployment stating a bare `rateLimit: {}` is indistinguishable from
+    // stating no block: both impose nothing, and a mount that adds nothing of
+    // its own is unbounded either way.
+    test("should throw when a bare block leaves the mount unbounded", async () => {
+      ctx.state.app.config = createTestAppConfig({
+        rateLimit: { strategy: "fixed", window: null, max: null },
+      });
 
       await expect(useRateLimit()(ctx, next)).rejects.toMatchObject({
         code: "rate_limit_not_bounded",
@@ -378,16 +459,32 @@ describe("useRateLimit", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    test("should still run when only the mount bounds it", async () => {
-      ctx.state.app.config = createTestAppConfig({ rateLimit: RATE_LIMIT_ON });
+    // A deployment window with no ceiling is still unbounded — the two are only
+    // a limit together, whichever side states them.
+    test("should throw when the deployment states a window but no ceiling", async () => {
+      ctx.state.app.config = createTestAppConfig({
+        rateLimit: { strategy: "fixed", window: 30_000, max: null },
+      });
 
-      await expect(useRateLimit({ window: "1m", max: 4 })(ctx, next)).resolves.toBe(
-        undefined,
-      );
+      await expect(useRateLimit()(ctx, next)).rejects.toMatchObject({
+        code: "rate_limit_not_bounded",
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    // The two halves may come from different sides: the deployment's window, the
+    // mount's ceiling.
+    test("should combine a deployment window with a mount ceiling", async () => {
+      ctx.state.app.config = createTestAppConfig({
+        rateLimit: { strategy: "fixed", window: 30_000, max: null },
+      });
+
+      await useRateLimit({ max: 4 })(ctx, next);
+
       expect(fixedWindowStrategy).toHaveBeenCalledWith(
         mockRepository,
         "192.168.1.1",
-        60_000,
+        30_000,
         4,
       );
     });

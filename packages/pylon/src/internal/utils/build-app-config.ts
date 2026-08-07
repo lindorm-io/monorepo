@@ -34,12 +34,13 @@ const buildAudit = (settings: PylonAuditSettings | undefined): AppAuditConfig | 
   });
 };
 
-const buildRateLimit = (
-  settings: PylonRateLimitSettings | undefined,
-): AppRateLimitConfig | false => {
-  if (!settings) return false;
-
-  return Object.freeze({
+// ⚠ Never `false`, unlike audit: the block is POLICY and mounting `useRateLimit`
+// is the switch. An absent block therefore resolves to a policy that imposes
+// nothing rather than an off state — a mount stating its own window and ceiling
+// is complete without a block, and one stating neither throws by name instead of
+// inheriting a silent pass-through.
+const buildRateLimit = (settings: PylonRateLimitSettings = {}): AppRateLimitConfig =>
+  Object.freeze({
     strategy: settings.strategy ?? "fixed",
     // Resolved to milliseconds HERE so `useRateLimit` never has to decide
     // whether a mount's window and the deployment's are the same spelling of
@@ -53,7 +54,6 @@ const buildRateLimit = (
     ...(settings.key && { key: settings.key }),
     ...(settings.skip && { skip: settings.skip }),
   });
-};
 
 const buildAuth = (
   settings: PylonAuthSettings,

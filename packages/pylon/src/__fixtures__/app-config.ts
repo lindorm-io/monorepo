@@ -1,13 +1,17 @@
 import type { AppAuthConfig, AppConfig } from "../types/index.js";
 
 /**
- * A deployment policy with every feature OFF and no auth block — the shape a
- * bare pylon serves. Tests widen exactly the entry they are about, so a test
- * that never mentions rate limiting cannot accidentally depend on it.
+ * The shape a bare pylon serves: audit off, no auth block, and a rate-limit
+ * policy that imposes nothing. Tests widen exactly the entry they are about, so
+ * a test that never mentions rate limiting cannot accidentally depend on it.
+ *
+ * ⚠ `rateLimit` has no off state to default to — the block is policy, not a
+ * switch, so "no `rateLimit` configured" IS a resolved policy with no window and
+ * no ceiling. A mount inheriting this one must state its own limits or throw.
  */
 export const createTestAppConfig = (overrides: Partial<AppConfig> = {}): AppConfig => ({
   audit: false,
-  rateLimit: false,
+  rateLimit: { strategy: "fixed", window: null, max: null },
   auth: null,
   ...overrides,
 });

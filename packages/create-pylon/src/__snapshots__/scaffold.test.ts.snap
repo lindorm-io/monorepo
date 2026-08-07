@@ -1121,7 +1121,7 @@ export const pylon = new Pylon({
 "
 `;
 
-exports[`scaffold > scaffold orchestration > rateLimit-only combo (with postgres + redis) > pylon.ts 1`] = `
+exports[`scaffold > scaffold orchestration > emits the rateLimit block and the bare mount together > pylon.ts 1`] = `
 "import { Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";
@@ -2909,7 +2909,9 @@ exports[`scaffold > writeMiddlewareFiles > mounts useRateLimit first when rate l
 import { socketExampleMiddleware } from "../middleware/socket-example.js";
 
 // Mounting IS the switch: pylon never injects a limiter of its own, so this
-// file is what applies the deployment's rateLimit policy to every event.
+// file is what rate-limits every event. The mount takes no arguments —
+// its window and ceiling come from the \`rateLimit\` block in
+// \`src/pylon/pylon.ts\`, and without that block it throws on every request.
 export const MIDDLEWARE = [useRateLimit(), socketExampleMiddleware];
 "
 `;
@@ -2919,7 +2921,9 @@ exports[`scaffold > writeMiddlewareFiles > mounts useRateLimit first when rate l
 import { httpExampleMiddleware } from "../middleware/http-example.js";
 
 // Mounting IS the switch: pylon never injects a limiter of its own, so this
-// file is what applies the deployment's rateLimit policy to every route.
+// file is what rate-limits every route. The mount takes no arguments —
+// its window and ceiling come from the \`rateLimit\` block in
+// \`src/pylon/pylon.ts\`, and without that block it throws on every request.
 export const MIDDLEWARE = [useRateLimit(), httpExampleMiddleware];
 "
 `;

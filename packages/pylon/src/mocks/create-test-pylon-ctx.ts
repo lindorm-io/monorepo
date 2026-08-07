@@ -79,11 +79,15 @@ const defaultState = (): PylonState => ({
   actor: "test-actor",
   app: {
     // Features OFF, auth ON: a consumer test wants `ctx.auth.introspect` to
-    // answer without also opting into audit writes or rate-limit storage. The
-    // identity is what a driver-response cache would key on.
+    // answer without also opting into audit writes or deployment-wide limits.
+    // The identity is what a driver-response cache would key on.
+    //
+    // ⚠ `rateLimit` has no off state: the block is policy and mounting
+    // `useRateLimit` is the switch, so this is the resolution of an absent block
+    // — imposing nothing, which a mount must bound itself against.
     config: {
       audit: false,
-      rateLimit: false,
+      rateLimit: { strategy: "fixed", window: null, max: null },
       auth: {
         issuer: "http://localhost:3000",
         clientId: "test-client",

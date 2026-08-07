@@ -158,16 +158,35 @@ describe("PylonIo rate limit", () => {
     expect(await kv.repository(RateLimitFixed).find({})).toHaveLength(1);
   });
 
-  // The mount is inert without a policy, exactly as on the http transport.
-  test("should pass through a mounted limiter when the deployment has no rateLimit block", async () => {
+  // ⭐ A mount that states its own limits needs NO `rateLimit` block, exactly as
+  // on the http transport: the block is policy, and mounting is the switch.
+  test("should limit a self-bounded mount when the deployment has no rateLimit block", async () => {
+    const { client, kv } = await createHarness({
+      middleware: [useRateLimit({ window: "1 minute", max: 1 })],
+    });
+
+    expect(await ack(client, { text: "one" })).toMatchObject({
+      ok: true,
+      data: { text: "one" },
+    });
+
+    const rejection = firstError(client);
+    client.emit("echo", { text: "two" });
+
+    expect(await rejection).toMatchObject({ code: "rate_limit_exceeded" });
+    expect(await kv.repository(RateLimitFixed).find({})).toHaveLength(1);
+  });
+
+  // ⭐ …and a mount bounded by nothing rejects the event rather than acking it.
+  // A limiter in an event chain that quietly allows everything is the outcome
+  // this shape exists to make impossible.
+  test("should reject events on a bare mount when no rateLimit block bounds it", async () => {
     const { client, kv } = await createHarness({ middleware: [useRateLimit()] });
 
-    await ack(client, { text: "one" });
+    const rejection = firstError(client);
+    client.emit("echo", { text: "one" });
 
-    expect(await ack(client, { text: "two" })).toMatchObject({
-      ok: true,
-      data: { text: "two" },
-    });
+    expect(await rejection).toMatchObject({ code: "rate_limit_not_bounded" });
     expect(await kv.repository(RateLimitFixed).find({})).toHaveLength(0);
   });
 });

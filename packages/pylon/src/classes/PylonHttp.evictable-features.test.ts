@@ -2,13 +2,15 @@
 // evictable session — so what they can do is decided by ONE thing: whether an
 // evictable source (`cache`, or the `kv` fallback) was configured.
 //
-// ⚠ MOUNTING is the declaration that a feature is on. There is no `responseCache`
-// settings block at all — every knob `useCache` reads is stated per mount — and
-// pylon never injects a `useRateLimit()` of its own into a deployment's chain: a
-// global limiter is an explicit mount in the routes' root `_middleware.ts`. The
-// `rateLimit` block is POLICY (window, ceiling, strategy, key, skip) that a mount
-// inherits, and its presence is the deployment-wide switch. Asserted end to end
-// through a real PylonHttp with a real router.
+// ⚠ MOUNTING is the declaration that a feature is on, for BOTH of them. There is
+// no `responseCache` settings block at all — every knob `useCache` reads is
+// stated per mount — and pylon never injects a `useRateLimit()` of its own into a
+// deployment's chain: a global limiter is an explicit mount in the routes' root
+// `_middleware.ts`. The `rateLimit` block is POLICY (window, ceiling, strategy,
+// key, skip) that a mount inherits, and NOT a switch: a mount stating its own
+// limits works with no block at all, and one stating none throws rather than
+// standing in the chain allowing everything. Asserted end to end through a real
+// PylonHttp with a real router.
 
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
@@ -41,10 +43,22 @@ const createRouter = (): PylonRouter => {
     ctx.body = { ok: true };
   });
 
+  // A bare mount: every limit is inherited from the deployment, so this route is
+  // bounded only when a `rateLimit` block bounds it.
   router.get("/limited", useRateLimit(), async (ctx) => {
     ctx.status = 200;
     ctx.body = { ok: true };
   });
+
+  // A mount that states BOTH its limits and so needs nothing from the deployment.
+  router.get(
+    "/self-limited",
+    useRateLimit({ window: "1 minute", max: 1 }),
+    async (ctx) => {
+      ctx.status = 200;
+      ctx.body = { ok: true };
+    },
+  );
 
   return router;
 };
@@ -158,15 +172,53 @@ describe("PylonHttp rate limit over ctx.cache", () => {
     expect(await kv.repository(RateLimitFixed).find({})).toHaveLength(1);
   });
 
-  test("should pass through silently when the deployment has no rateLimit block", async () => {
+  // ⭐ NOTHING is configured for rate limiting — no `rateLimit` block at all —
+  // and the mount still limits, on the numbers it states itself. The deployment
+  // owes a limiter exactly what it owes the response cache: an evictable source.
+  test("should limit a self-bounded mount with no rateLimit block at all", async () => {
     const kv = await createEvictableSource();
 
     const pylonHttp = await createPylonHttp({ kv });
 
-    await loopback.request(pylonHttp.callback).get("/v1/limited").expect(200);
-    await loopback.request(pylonHttp.callback).get("/v1/limited").expect(200);
+    const first = await loopback
+      .request(pylonHttp.callback)
+      .get("/v1/self-limited")
+      .expect(200);
+    await loopback.request(pylonHttp.callback).get("/v1/self-limited").expect(429);
 
+    expect(first.headers["x-ratelimit-limit"]).toBe("1");
+    expect(await kv.repository(RateLimitFixed).find({})).toHaveLength(1);
+  });
+
+  // ⭐ The regression this file now holds: a mounted limiter bounded by NOTHING
+  // used to pass every request through in silence, because the middleware
+  // short-circuited on the missing block before it could reach the bounds check.
+  // A rate limiter that is not limiting must say so.
+  test("should fail a bare mount when no rateLimit block bounds it", async () => {
+    const kv = await createEvictableSource();
+
+    const pylonHttp = await createPylonHttp({ kv });
+
+    const response = await loopback
+      .request(pylonHttp.callback)
+      .get("/v1/limited")
+      .expect(500);
+
+    expect(response.body.error.code).toBe("rate_limit_not_bounded");
     expect(await kv.repository(RateLimitFixed).find({})).toHaveLength(0);
+  });
+
+  // Mounted, bounded, and nowhere to keep the counters — the limiter's half of
+  // `cache_not_configured`, and the only thing it asks of the deployment.
+  test("should fail a bounded mount with no evictable source", async () => {
+    const pylonHttp = await createPylonHttp({});
+
+    const response = await loopback
+      .request(pylonHttp.callback)
+      .get("/v1/self-limited")
+      .expect(500);
+
+    expect(response.body.error.code).toBe("rate_limit_not_configured");
   });
 
   // ⭐ The rule this file exists to hold: a policy block is NOT a mount. Pylon

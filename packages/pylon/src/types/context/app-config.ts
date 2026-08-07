@@ -20,9 +20,12 @@ export type AppAuditConfig = {
  * `useRateLimit` compares it against a mount's own window, and two spellings of
  * a duration cannot be compared.
  *
- * `window` / `max` are nullable because a bare `rateLimit: {}` is a legitimate
- * deployment: it turns the feature on for mounts that state their own limits
- * without imposing a global one.
+ * ⚠ NEVER `false`, unlike {@link AppAuditConfig}: the `rateLimit` block is
+ * policy, not a switch. Mounting `useRateLimit` is what turns limiting on, so a
+ * deployment that states no block resolves to a policy imposing nothing —
+ * `window` and `max` `null` — and a mount stating both is complete on its own. A
+ * mount bounded by neither throws `rate_limit_not_bounded`; there is no state in
+ * which a mounted limiter silently allows every request.
  */
 export type AppRateLimitConfig = {
   readonly strategy: PylonRateLimitStrategy;
@@ -87,20 +90,23 @@ export type AppAuthConfig = {
  * chain, and a `readonly` the compiler cannot see through (a cast, a plain
  * `any` ctx in a test) is not a guarantee.
  *
- * ⚠ `false` / `null` is OFF for every entry, and an object is ON. There is no
- * second `enabled` flag inside a policy free to disagree with the presence of
- * the policy itself.
+ * ⚠ Where an entry CAN be `false` / `null` that is OFF, and an object is ON —
+ * there is no second `enabled` flag inside a policy free to disagree with the
+ * presence of the policy itself.
  *
- * ⚠ There is NO `responseCache` entry, and its absence is the design rather
- * than an omission: every knob `useCache` reads — ttl, scope, vary, skip, actor
- * — is stated per MOUNT, so a deployment entry could only ever have been a
- * second switch beside the mount, free to disagree with it. Mounting `useCache`
- * IS the declaration that a route caches; the only thing it still needs from
- * the deployment is an evictable source, and it names that one by name.
+ * ⚠ The mount-driven features are the ones with no off state to read here.
+ * There is NO `responseCache` entry at all, and `rateLimit` is never `false`:
+ * for both, MOUNTING the middleware is the declaration that the feature is on,
+ * so a deployment entry could only ever have been a second switch beside the
+ * mount, free to disagree with it. `useCache` reads every knob it needs off its
+ * own mount; `useRateLimit` reads limits a mount may leave to the deployment,
+ * which is why `rateLimit` survives as policy — but a policy that imposes
+ * nothing, not an off switch. All either asks of the deployment is an evictable
+ * source, and both name that one by name.
  */
 export type AppConfig = {
   readonly audit: AppAuditConfig | false;
-  readonly rateLimit: AppRateLimitConfig | false;
+  readonly rateLimit: AppRateLimitConfig;
   /** `null` is "this deployment configured no `auth` block". */
   readonly auth: AppAuthConfig | null;
 };

@@ -40,10 +40,14 @@ export type PylonWebhookSettings = {
 export type PylonRateLimitStrategy = "fixed" | "sliding" | "token-bucket";
 
 /**
- * The deployment's rate-limit policy. ⚠ Its PRESENCE is the switch — there is no
- * `enabled` beside it, because a flag next to a populated policy either restates
- * what the policy already says or contradicts it. Omit the block to leave rate
- * limiting off; every `useRateLimit` mount then passes through.
+ * The deployment's rate-limit policy — the limits every mount that states none
+ * of its own inherits, written once.
+ *
+ * ⚠ It is NOT a switch. MOUNTING `useRateLimit` is what turns rate limiting on,
+ * so omitting this block does not turn a mount off: a mount stating its own
+ * `window` and `max` limits exactly as it says, and one stating neither throws
+ * `rate_limit_not_bounded`. A limiter in a chain always limits or says why it
+ * cannot.
  *
  * Pylon mounts nothing on its own: a global limiter is an explicit
  * `useRateLimit()` in the routes' root `_middleware.ts` (or `socket.middleware`
@@ -52,9 +56,9 @@ export type PylonRateLimitStrategy = "fixed" | "sliding" | "token-bucket";
 export type PylonRateLimitSettings = {
   strategy?: PylonRateLimitStrategy;
   /**
-   * The deployment-wide window and ceiling. Both are optional together: a bare
-   * `rateLimit: {}` turns the feature on for mounts that state their own limits
-   * without imposing a global one.
+   * The deployment-wide window and ceiling, imposed on every mount that states
+   * none. Both are optional together: a bare `rateLimit: {}` imposes nothing and
+   * is indistinguishable from omitting the block.
    */
   window?: ReadableTime | number;
   max?: number;
@@ -63,9 +67,11 @@ export type PylonRateLimitSettings = {
 };
 
 /**
- * The deployment's audit policy. ⚠ Its PRESENCE is the switch, on the same terms
- * as {@link PylonRateLimitSettings} — omit the block to leave auditing off, and
- * every `useAuditLog` mount passes through.
+ * The deployment's audit policy. ⚠ Unlike {@link PylonRateLimitSettings}, its
+ * PRESENCE is the switch — omit the block to leave auditing off, and every
+ * `useAuditLog` mount passes through. The block is wiring as well as policy: it
+ * is what subscribes the consumer that writes a published record to
+ * `RequestAuditLog`, so a mount without it would publish into a bus nobody reads.
  */
 export type PylonAuditSettings = {
   sanitise?: (body: unknown) => unknown;

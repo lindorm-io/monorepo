@@ -147,7 +147,7 @@ describe("scaffold", () => {
 
   // ⭐ Pylon mounts nothing on a deployment's behalf, so a scaffold that asked
   // for rate limiting must SHOW the mount — a `rateLimit` policy alone limits
-  // nothing.
+  // nothing, and mounting is the only switch there is.
   describe("writeMiddlewareFiles", () => {
     test("mounts useRateLimit first when rate limiting is chosen", () => {
       const answers = baseAnswers({
@@ -167,7 +167,9 @@ describe("scaffold", () => {
       for (const file of [http, socket]) {
         expect(file).toContain(`import { useRateLimit } from "@lindorm/pylon";`);
         // No arguments: the limits live on the `rateLimit` block, and a closure
-        // copy here would be free to disagree with it.
+        // copy here would be free to disagree with it. Which is why the block is
+        // not optional for this mount — see "emits the rateLimit block and the
+        // bare mount together" below.
         expect(file).toContain("useRateLimit()");
         expect(file).not.toContain("useRateLimit({");
       }
@@ -898,7 +900,12 @@ describe("scaffold", () => {
       expect(readFileSync(join(projectDir, ".env"), "utf-8")).toMatchSnapshot(".env");
     });
 
-    test("rateLimit-only combo (with postgres + redis)", async () => {
+    // ⭐ The block and the mount are ONE decision, not two. The mount is bare,
+    // so the block is the only place its window and ceiling can come from: a
+    // scaffold with the mount and no block throws `rate_limit_not_bounded` on
+    // every request, and a block with no mount limits nothing. Asserted off ONE
+    // scaffold so neither half can be emitted alone.
+    test("emits the rateLimit block and the bare mount together", async () => {
       const answers = baseAnswers({
         projectDir,
         db: "postgres",
@@ -908,15 +915,34 @@ describe("scaffold", () => {
       await scaffold(answers, FIXED_KEK);
 
       const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-      // The block is POLICY and carries no `enabled`; the MOUNT is what turns it
-      // into a limiter, and it has to be in the scaffold for that to be true.
+      const middleware = readFileSync(
+        join(projectDir, "src/routes/_middleware.ts"),
+        "utf-8",
+      );
+
+      // The block is POLICY and carries no `enabled` — mounting is the switch.
       expect(pylon).toContain("rateLimit: {");
       expect(pylon).not.toContain("enabled: true,\n    strategy");
-      expect(
-        readFileSync(join(projectDir, "src/routes/_middleware.ts"), "utf-8"),
-      ).toContain("useRateLimit()");
+      // ...and it states BOTH bounds, because the mount states neither.
+      expect(pylon).toMatch(/^ {4}window: "1m",$/m);
+      expect(pylon).toMatch(/^ {4}max: 60,$/m);
+
+      expect(middleware).toContain("useRateLimit()");
+      expect(middleware).not.toContain("useRateLimit({");
 
       expect(pylon).toMatchSnapshot("pylon.ts");
+    });
+
+    test("emits neither the block nor the mount when rate limiting is off", async () => {
+      const answers = baseAnswers({ projectDir, db: "postgres", kv: "redis" });
+      await scaffold(answers, FIXED_KEK);
+
+      expect(readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8")).not.toContain(
+        "rateLimit",
+      );
+      expect(
+        readFileSync(join(projectDir, "src/routes/_middleware.ts"), "utf-8"),
+      ).not.toContain("useRateLimit");
     });
 
     test("all-on: postgres + redis + rabbit + sessions + auth + rateLimit + workers", async () => {

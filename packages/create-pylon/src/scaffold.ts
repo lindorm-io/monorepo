@@ -406,6 +406,10 @@ export const writePylonFile = (answers: Answers): void => {
  * the `templates/` overlay: pylon installs no middleware on the strength of a
  * setting, so a rate-limited scaffold has to MOUNT `useRateLimit()` here, and a
  * static file could only ever show one of the two variants.
+ *
+ * ⚠ The mount is bare, so its bounds are the `rateLimit` block `writePylonFile`
+ * emits — a mount without that block throws `rate_limit_not_bounded` on every
+ * request. Both hang off `features.rateLimit`; they must stay that way.
  */
 export const writeMiddlewareFiles = (answers: Answers): void => {
   if (answers.features.http) {

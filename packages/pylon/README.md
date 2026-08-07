@@ -135,7 +135,7 @@ Pylon takes **four** sources, and where each built-in entity lives is fixed — 
 | ------- | ---------------- | ----------- | -------------------------------------------------------------------- |
 | `db`    | `IProteusSource` | `ctx.db`    | `kryptos`, `webhook`, `audit` — durable and relational               |
 | `kv`    | `IProteusSource` | `ctx.kv`    | `session`, `rooms` presence — authoritative, **must not be evicted** |
-| `cache` | `IProteusSource` | `ctx.cache` | `useCache`, `rateLimit`, the auth caches — **evictable**             |
+| `cache` | `IProteusSource` | `ctx.cache` | `useCache`, `useRateLimit`, the auth caches — **evictable**          |
 | `bus`   | `IIrisSource`    | `ctx.bus`   | `queue`, `webhook` dispatch, `audit` publication                     |
 
 **`cache` defaults to `kv` when unset**, so a single-instance deployment configures one ephemeral store and nothing changes for it — `ctx.cache` still works, it just points at the same instance as `ctx.kv`.
@@ -293,13 +293,15 @@ ctx.socket?;    // emit() and broadcast() — Pylon envelope emitter
 
 ```typescript
 ctx.state.app.config.audit; // AppAuditConfig | false — { sanitise?, skip? }
-ctx.state.app.config.rateLimit; // AppRateLimitConfig | false — { strategy, window, max, key?, skip? }
+ctx.state.app.config.rateLimit; // AppRateLimitConfig — { strategy, window, max, key?, skip? }
 ctx.state.app.config.auth; // AppAuthConfig | null
 ```
 
-`false` / `null` is OFF for every entry and an object is ON. The **presence of the settings block is the switch** — there is no `enabled` flag beside a policy free to disagree with it, so `audit: {}` and `rateLimit: {}` turn their features on and omitting the block leaves them off. `window` is resolved to **milliseconds**, because `useRateLimit` compares a mount's window against it.
+Where an entry **can** be `false` / `null` that is OFF and an object is ON. There is no `enabled` flag beside a policy free to disagree with it, so `audit: {}` turns auditing on and omitting the block leaves it off.
 
-There is deliberately **no `responseCache` entry**: every knob `useCache` reads — ttl, scope, vary, skip, actor — is stated per mount, so a deployment entry could only ever have been a second switch beside the mount. Mounting `useCache` is the whole declaration; the only thing it still needs from the deployment is an evictable source.
+The **mount-driven** features are the ones with no off state to read here. There is deliberately **no `responseCache` entry**, and **`rateLimit` is never `false`**: for both, mounting the middleware is the declaration that the feature is on, so a deployment entry could only ever have been a second switch beside the mount. `useCache` reads every knob it needs off its own mount, which is why it has no entry at all. `useRateLimit` reads limits a mount may leave to the deployment, which is why `rateLimit` survives — but as **policy that may impose nothing**, not an off switch: omitting the block resolves to `{ strategy: "fixed", window: null, max: null }`, and a mount then states its own limits or throws `rate_limit_not_bounded`. `window` is resolved to **milliseconds**, because `useRateLimit` compares a mount's window against it.
+
+All either feature asks of the deployment is an **evictable source**, and both name that one by name.
 
 `auth` is `null` when no `auth` block is configured, and **reading it never throws** — it is eager state on every request of every pylon, including the ones with no auth at all.
 
@@ -869,7 +871,7 @@ The resolved credential wins over introspection because it IS the credential thi
 import { useRateLimit } from "@lindorm/pylon";
 
 router.use(useRateLimit()); // the deployment's own window, ceiling and strategy
-router.use(useRateLimit({ window: "1m", max: 60 })); // fixed (default)
+router.use(useRateLimit({ window: "1m", max: 60 })); // fixed (default) — needs no settings block
 router.use(useRateLimit({ window: "1m", max: 60, strategy: "sliding" }));
 router.use(useRateLimit({ window: "1m", max: 60, strategy: "token-bucket" }));
 
@@ -883,9 +885,13 @@ router.use(
 );
 ```
 
-`useRateLimit` requires a `rateLimit` block on the constructor (which also wires the entities into the evictable source, `cache ?? kv`). The block's **presence** is the switch — `rateLimit: {}` is on, omitting it is off — and a mount passes through silently when it is off. HTTP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `X-RateLimit-Strategy`; rejected requests also include `Retry-After`.
+**The mount is the switch, and the `rateLimit` setting is only policy.** A mount stating both its own `window` and `max` needs no settings block at all; the block exists to state the numbers **once** for the mounts that carry none. The one thing `useRateLimit` asks of the constructor is an **evictable source** (`cache`, or the `kv` fallback) to keep counters in, and the `RateLimitFixed` / `RateLimitSliding` / `RateLimitBucket` entities are wired into that source whenever one is configured — the same terms as the response cache. Mounting without one throws `rate_limit_not_configured`.
 
-**Every option is optional and only ever NARROWS the deployment's own**, which lives on `ctx.state.app.config.rateLimit` — so "never rate-limit health checks" is stated once, as `rateLimit.skip`, and holds for a mount that says nothing about it. A mount that states neither its own limits nor inherits any throws `rate_limit_not_bounded` rather than silently doing nothing.
+HTTP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `X-RateLimit-Strategy`; rejected requests also include `Retry-After`.
+
+**Every option is optional and only ever NARROWS the deployment's own**, which lives on `ctx.state.app.config.rateLimit` — so "never rate-limit health checks" is stated once, as `rateLimit.skip`, and holds for a mount that says nothing about it. The two halves may come from different sides: a deployment `window` with a per-mount `max` bounds the mount just as well.
+
+⚠ **A mount bounded by neither itself nor the deployment throws `rate_limit_not_bounded` on every request** — it does not pass traffic through. A limiter that is mounted and limiting nothing is the one outcome a rate limiter must never have, so it fails loudly instead. In practice: a bare `useRateLimit()` requires a `rateLimit` block naming both `window` and `max`, and the two go together.
 
 **Pylon mounts nothing on your behalf.** A global limiter is an explicit mount, because a configured policy is not a request for one and Pylon has no place in your middleware order:
 
@@ -896,7 +902,7 @@ import { useRateLimit } from "@lindorm/pylon";
 export const MIDDLEWARE = [useRateLimit()];
 ```
 
-No arguments: the window, ceiling, strategy, key and skip all live on `ctx.state.app.config.rateLimit`, so the mount carries no second copy of the numbers. On the socket transport, mount it as `socket: { middleware: [useRateLimit()] }` or in the listeners' root `_middleware.ts`.
+No arguments: the window, ceiling, strategy, key and skip all live on `ctx.state.app.config.rateLimit`, so the mount carries no second copy of the numbers — which means this form **needs** a `rateLimit` block naming `window` and `max`, or every request through it raises `rate_limit_not_bounded`. State the limits on the mount instead when the deployment has no policy to share. On the socket transport, mount it as `socket: { middleware: [useRateLimit()] }` or in the listeners' root `_middleware.ts`.
 
 ### Response cache
 
@@ -1722,7 +1728,7 @@ import {
 } from "@lindorm/pylon/entities";
 ```
 
-The rest (`Session`, `Kryptos`, `Presence`, `CachedResponse`, `CachedIntrospection`, `CachedUserinfo`, the rate-limit entities) are exported too, but Pylon wires each into the source its role dictates when the feature is configured — see [Source roles](#source-roles) — so a deployment does not register them itself. `CachedResponse` is the one that follows the SOURCE rather than a settings block: whether a route caches is decided by mounting `useCache`, which Pylon cannot see, so an evictable source always gets one. `ConduitCachedResponse` is the exception: it is **consumer-placed**, registered on whichever source you hand `createProteusCacheDriver`, never by Pylon. Messages sit on `@lindorm/pylon/messages` on the same terms.
+The rest (`Session`, `Kryptos`, `Presence`, `CachedResponse`, `CachedIntrospection`, `CachedUserinfo`, the rate-limit entities) are exported too, but Pylon wires each into the source its role dictates when the feature is configured — see [Source roles](#source-roles) — so a deployment does not register them itself. `CachedResponse` and the three rate-limit entities follow the SOURCE rather than a settings block: whether a route caches or rate-limits is decided by mounting `useCache` / `useRateLimit`, which Pylon cannot see, so an **evictable source always gets all four** — the alternative is a mount failing on an unregistered entity at its first request. Schema-managed drivers create the tables on the next synchronise. `ConduitCachedResponse` is the exception: it is **consumer-placed**, registered on whichever source you hand `createProteusCacheDriver`, never by Pylon. Messages sit on `@lindorm/pylon/messages` on the same terms.
 
 ## Command-line tools
 
