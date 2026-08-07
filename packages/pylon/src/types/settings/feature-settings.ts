@@ -1,7 +1,7 @@
 import type { ReadableTime } from "@lindorm/date";
 import type { IEntity } from "@lindorm/proteus";
 import type { Constructor } from "@lindorm/types";
-import type { PylonEncKey } from "./keys.js";
+import type { PylonColumnEncKey } from "./keys.js";
 
 export type PylonKryptosSettings = {
   enabled: boolean;
@@ -9,10 +9,11 @@ export type PylonKryptosSettings = {
    * The at-rest KEK selector staged onto `Kryptos.privateKey` before the source
    * sets up. Proteus encrypts the stored private key on write and decrypts it
    * transparently on read. Default `{ condition: { purpose: "pylon:kek" } }` —
-   * the bootstrap key-encryption-key. Same `{ kryptos?, condition? }` descriptor
-   * as every other key surface; `encryption` (the AEAD) is ignored on this path.
+   * the bootstrap key-encryption-key. The `{ kryptos?, condition? }` descriptor
+   * and nothing more: proteus owns the cipher on this path, so there is no AEAD
+   * to name (see {@link PylonColumnEncKey}).
    */
-  encryption?: PylonEncKey;
+  encryption?: PylonColumnEncKey;
 };
 
 export type PylonQueueSettings = {
@@ -29,11 +30,12 @@ export type PylonWebhookSettings = {
    * the clear (no manual decrypt). `username` is NOT encrypted: it is an
    * identifier, not a secret. Default
    * `{ condition: { purpose: "pylon:kek" } }` — the same bootstrap KEK as kryptos;
-   * override it (e.g. its own `purpose`) for a separate blast radius. Same
-   * `{ kryptos?, condition? }` descriptor as every other key surface;
-   * `encryption` (the AEAD) is ignored on this path.
+   * override it (e.g. its own `purpose`) for a separate blast radius. The
+   * `{ kryptos?, condition? }` descriptor and nothing more: proteus owns the
+   * cipher on this path, so there is no AEAD to name (see
+   * {@link PylonColumnEncKey}).
    */
-  encryption?: PylonEncKey;
+  encryption?: PylonColumnEncKey;
   maxErrors?: number;
 };
 

@@ -4,7 +4,7 @@ import type { Dict } from "@lindorm/types";
 import { safelyParse, sanitiseToken } from "@lindorm/utils";
 import type {
   PylonCommonContext,
-  PylonEncKey,
+  PylonCookieEncKey,
   PylonGetCookieOptions,
   PylonSignKey,
 } from "../../../types/index.js";
@@ -29,7 +29,7 @@ export type CreateGetCookieOptions = {
    */
   signature?: PylonSignKey;
   /** The ORDINARY-cookie encryption selector — a configured key turns decrypt ON by default. */
-  encryption?: PylonEncKey;
+  encryption?: PylonCookieEncKey;
 };
 
 export type GetCookie = <T = any>(

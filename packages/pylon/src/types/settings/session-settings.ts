@@ -1,5 +1,5 @@
 import type { PylonCookieAttributes } from "./cookie-settings.js";
-import type { PylonEncKey, PylonSignKey } from "./keys.js";
+import type { PylonCookieEncKey, PylonSignKey } from "./keys.js";
 
 /**
  * Session SETTINGS — the `new Pylon({ auth: { session } })` declaration. A pylon
@@ -44,6 +44,6 @@ export type PylonSessionSettings = Pick<
   "domain" | "path" | "priority" | "sameSite" | "secure"
 > & {
   enabled: true;
-  encryption?: PylonEncKey;
+  encryption?: PylonCookieEncKey;
   signature?: PylonSignKey;
 };

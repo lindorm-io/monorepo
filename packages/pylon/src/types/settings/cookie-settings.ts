@@ -1,5 +1,5 @@
 import type { Expiry } from "@lindorm/date";
-import type { PylonEncKey, PylonSignKey } from "./keys.js";
+import type { PylonCookieEncKey, PylonSignKey } from "./keys.js";
 
 export type CookieEncoding = "base64" | "base64url" | "hex";
 export type CookiePriority = "low" | "medium" | "high";
@@ -48,6 +48,6 @@ export type PylonCookieSettings = Pick<
   PylonCookieAttributes,
   "chunked" | "chunkSize" | "domain" | "encoding" | "httpOnly" | "sameSite" | "secure"
 > & {
-  encryption?: PylonEncKey;
+  encryption?: PylonCookieEncKey;
   signature?: PylonSignKey;
 };

@@ -1,4 +1,8 @@
-import type { PylonEncKey, PylonSignKey, PylonVerifyKey } from "../../../types/index.js";
+import type {
+  PylonCookieEncKey,
+  PylonSignKey,
+  PylonVerifyKey,
+} from "../../../types/index.js";
 
 /**
  * The FLAT key selectors as DECLARED on a cookie/session Settings — the shape
@@ -7,7 +11,7 @@ import type { PylonEncKey, PylonSignKey, PylonVerifyKey } from "../../../types/i
  */
 export type PylonKeySelectors = {
   signature?: PylonSignKey;
-  encryption?: PylonEncKey;
+  encryption?: PylonCookieEncKey;
 };
 
 /**
@@ -18,5 +22,5 @@ export type PylonKeySelectors = {
 export type PylonResolvedKeys = {
   signature?: PylonSignKey;
   verification?: PylonVerifyKey;
-  encryption?: PylonEncKey;
+  encryption?: PylonCookieEncKey;
 };

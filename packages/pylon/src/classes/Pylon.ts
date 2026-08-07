@@ -25,7 +25,7 @@ import { scanWorkers } from "../internal/utils/scan-workers.js";
 import { stageEncryptedField } from "../internal/utils/stage-encrypted-field.js";
 import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config.js";
 import { validateAuthSettings } from "../internal/utils/auth/validate-auth-settings.js";
-import type { PylonEncKey } from "../types/index.js";
+import type { PylonColumnEncKey } from "../types/index.js";
 import { PylonHttp } from "./PylonHttp.js";
 import { PylonIo } from "./PylonIo.js";
 
@@ -34,7 +34,7 @@ import { PylonIo } from "./PylonIo.js";
 // private keys and webhook client secrets alike (the webhook key does not
 // rotate, so it needs no separate purpose). A deployment can still override
 // `kryptos.encryption` / `webhook.encryption` for blast-radius separation.
-const DEFAULT_KEK: PylonEncKey = { condition: { purpose: "pylon:kek" } };
+const DEFAULT_KEK: PylonColumnEncKey = { condition: { purpose: "pylon:kek" } };
 
 export class Pylon<
   E extends PylonEventMap = PylonEventMap,

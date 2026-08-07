@@ -1,13 +1,20 @@
 import type { IProteusSource, ProteusEncryptionKey } from "@lindorm/proteus";
-import type { PylonEncKey } from "../../types/index.js";
+import type { PylonColumnEncKey } from "../../types/index.js";
 
 /**
- * A `PylonEncKey` as a proteus at-rest key selector. Both are the shared
- * `{ kryptos?, condition? }` descriptor, so the mapping is a pass-through; the
- * AEAD `encryption` is meaningless on the `@Encrypted` KEK path (proteus owns
- * the cipher there) and is dropped.
+ * A `PylonColumnEncKey` as a proteus at-rest key selector — a TOTAL mapping:
+ * both are the `{ kryptos?, condition? }` descriptor and both members reach
+ * proteus, so nothing this path is handed can be silently dropped. (The AEAD
+ * that used to be dropped here now lives on `PylonCookieEncKey` alone, where it
+ * is honoured.)
+ *
+ * The cast is the ONE remaining difference and is narrow: the two condition
+ * types are near-identical Picks of `AmphoraQuery`, differing only in that
+ * pylon's admits `algClass` while proteus's admits the key's `encryption`
+ * attribute. It stays a cast rather than a converted shape because the overlap
+ * is what any real KEK selector uses.
  */
-const toProteusEncryptionKey = (key: PylonEncKey): ProteusEncryptionKey => ({
+const toProteusEncryptionKey = (key: PylonColumnEncKey): ProteusEncryptionKey => ({
   kryptos: key.kryptos,
   condition: key.condition as ProteusEncryptionKey["condition"],
 });
@@ -27,7 +34,7 @@ export const stageEncryptedField = async (
   source: IProteusSource,
   entity: Function,
   field: string,
-  key: PylonEncKey,
+  key: PylonColumnEncKey,
 ): Promise<void> => {
   const { Encrypted } = await import("@lindorm/proteus");
   source.stageFieldDecorator(entity, field, Encrypted, toProteusEncryptionKey(key));

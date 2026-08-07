@@ -1,5 +1,9 @@
 import type { PylonCookieAttributes } from "../settings/cookie-settings.js";
-import type { PylonEncKey, PylonSignKey, PylonVerifyKey } from "../settings/keys.js";
+import type {
+  PylonCookieEncKey,
+  PylonSignKey,
+  PylonVerifyKey,
+} from "../settings/keys.js";
 
 /**
  * The RUNTIME toggle for one `ctx.cookies.set`. Each field is `boolean |
@@ -15,14 +19,14 @@ import type { PylonEncKey, PylonSignKey, PylonVerifyKey } from "../settings/keys
  */
 export type PylonSetCookieOptions = PylonCookieAttributes & {
   /** Encrypts THIS cookie's value. `true` ⇒ `cookies.encryption`; a selector ⇒ that key; `false` ⇒ off. */
-  encryption?: boolean | PylonEncKey;
+  encryption?: boolean | PylonCookieEncKey;
   /** Signs THIS cookie. `true` ⇒ `cookies.signature`; a selector ⇒ that key; `false` ⇒ off. */
   signature?: boolean | PylonSignKey;
 };
 
 export type PylonGetCookieOptions = Pick<PylonCookieAttributes, "encoding"> & {
   /** `true` ⇒ decrypt (the ciphertext names its own key); `false` ⇒ off; absent ⇒ on iff `cookies.encryption` is named. */
-  encrypted?: boolean | PylonEncKey;
+  encrypted?: boolean | PylonCookieEncKey;
   /**
    * Whether — and against which key — THIS cookie's signature is verified,
    * checked on the key its `.kid` names before the signature is trusted.

@@ -60,12 +60,31 @@ export type PylonVerifyKey = {
 /**
  * Selects the key that ENCRYPTS a cookie value or a stored session's tokens.
  * Handed to `aegis.aes.encrypt`, which owns the encryption floor (`use: "enc"`).
+ *
+ * ⚠ Named for its PATH, and one of a pair with {@link PylonColumnEncKey}: pylon
+ * runs two encryption paths that take the same `{ kryptos?, condition? }`
+ * selector but do NOT take the same extras, and a single shared type meant three
+ * of five settings accepted an `encryption` AEAD that was silently discarded.
+ * The type now states which path it belongs to, so nothing has to be remembered.
  */
-export type PylonEncKey = AmphoraKeySelector<PylonKeyCondition> & {
+export type PylonCookieEncKey = AmphoraKeySelector<PylonKeyCondition> & {
   /**
    * The AES content-encryption AEAD (`A256GCM`, …). This picks the CIPHER, never
    * the key — it is not a selector, which is why it sits beside the shared
-   * selector rather than inside it.
+   * selector rather than inside it. Omitted ⇒ aegis's deployment-wide
+   * `encryption` (itself defaulting to `A256GCM`).
    */
   encryption?: KryptosEncryption;
 };
+
+/**
+ * Selects the KEK that proteus seals an `@Encrypted()` column with — the stored
+ * private key, the webhook delivery credentials, the cached auth payloads.
+ *
+ * ⚠ It carries NO AEAD, unlike {@link PylonCookieEncKey}: proteus owns the
+ * cipher on the KEK path (it derives the content encryption from the resolved
+ * key), so pylon has nothing to pick. Selecting the key is the whole surface,
+ * which is what makes the staging mapping total — every member of this type
+ * reaches proteus.
+ */
+export type PylonColumnEncKey = AmphoraKeySelector<PylonKeyCondition>;

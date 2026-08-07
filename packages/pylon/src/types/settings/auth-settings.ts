@@ -2,7 +2,7 @@ import type { ReadableTime } from "@lindorm/date";
 import type { CodeChallengeMethod, ResponseType } from "@lindorm/openid";
 import type { DeepPartial } from "@lindorm/types";
 import type { IPylonAuthDriver } from "../../interfaces/PylonAuthDriver.js";
-import type { PylonEncKey } from "./keys.js";
+import type { PylonColumnEncKey } from "./keys.js";
 import type { PylonSessionSettings } from "./session-settings.js";
 
 export type PylonLoginCookie = {
@@ -154,10 +154,11 @@ export type PylonAuthSettings = {
    * them on write and opens them transparently on read. Default
    * `{ condition: { purpose: "pylon:kek" } }` — the same bootstrap KEK as kryptos
    * and webhook; override it (e.g. its own `purpose`) for a separate blast
-   * radius. Same `{ kryptos?, condition? }` descriptor as every other key
-   * surface; `encryption` (the AEAD) is ignored on this path.
+   * radius. The `{ kryptos?, condition? }` descriptor and nothing more: proteus
+   * owns the cipher on this path, so there is no AEAD to name (see
+   * {@link PylonColumnEncKey}).
    */
-  encryption?: PylonEncKey;
+  encryption?: PylonColumnEncKey;
   cache?: PylonAuthCacheSettings;
   refresh?: Partial<PylonAuthRefreshConfig>;
   defaultTokenExpiry?: ReadableTime;

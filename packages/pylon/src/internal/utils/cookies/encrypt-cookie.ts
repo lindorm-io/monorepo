@@ -1,11 +1,11 @@
 import type { AesContent } from "@lindorm/aes";
-import type { PylonCommonContext, PylonEncKey } from "../../../types/index.js";
+import type { PylonCommonContext, PylonCookieEncKey } from "../../../types/index.js";
 import { resolveCookieEncryptionKey } from "../keys/resolve-cookie-encryption-key.js";
 
 export const encryptCookie = async (
   ctx: Pick<PylonCommonContext, "aegis" | "amphora">,
   value: AesContent,
-  key: PylonEncKey | undefined,
+  key: PylonCookieEncKey | undefined,
 ): Promise<string> => {
   // A cookie is an INTERNAL, self-opened artifact — the deployment names WHICH
   // key seals it (`cookies.encryption`, or `auth.session.encryption` for the

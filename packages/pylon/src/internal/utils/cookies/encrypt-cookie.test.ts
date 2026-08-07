@@ -4,7 +4,7 @@ import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test } from "vitest";
-import type { PylonEncKey } from "../../../types/index.js";
+import type { PylonCookieEncKey } from "../../../types/index.js";
 import { encryptCookie } from "./encrypt-cookie.js";
 
 const ISSUER = "http://test.lindorm.io";
@@ -39,7 +39,7 @@ describe("encryptCookie", () => {
     ctx = { aegis: new Aegis({ amphora, logger }), amphora };
   });
 
-  const key: PylonEncKey = {
+  const key: PylonCookieEncKey = {
     condition: { purpose: "cookie", publish: false },
   };
 

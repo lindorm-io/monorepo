@@ -2,7 +2,7 @@ import { Matcher } from "@lindorm/match";
 import { applyKeyFloor, ENVELOPE_FLOOR, type IAmphora } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
-import type { PylonEncKey } from "../../../types/index.js";
+import type { PylonCookieEncKey } from "../../../types/index.js";
 
 /**
  * Resolve the key that seals a cookie (or the session it stands for), keeping the
@@ -26,7 +26,7 @@ import type { PylonEncKey } from "../../../types/index.js";
  */
 export const resolveCookieEncryptionKey = async (
   amphora: IAmphora,
-  key: PylonEncKey | undefined,
+  key: PylonCookieEncKey | undefined,
 ): Promise<IKryptos> => {
   if (!key?.kryptos && !key?.condition) {
     throw new ServerError("Cookie encryption key is not configured", {
