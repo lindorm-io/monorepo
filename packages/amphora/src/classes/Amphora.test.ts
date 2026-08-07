@@ -847,7 +847,6 @@ describe("Amphora", () => {
       const instance = new Amphora({ logger: createMockLogger() });
 
       expect(instance.internal).toBeNull();
-      expect(instance.issuer).toBeNull();
     });
 
     test("should throw on jwks when no internal block is configured", () => {

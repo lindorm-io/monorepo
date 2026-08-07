@@ -117,7 +117,7 @@ await app.stop();
 
 `name`, `version`, `environment` and `domain` are ambient identity — not policy: they tag every log line and reach a handler as `ctx.state.app`, beside (not inside) `config`. The first three also fill the error envelope's `__meta`.
 
-`domain` is **not** a bind address; it is this service's own identifier, defaulting to `amphora.issuer` and then to `"unknown"`. It is the `WWW-Authenticate` realm and the RFC 9728 `resource` value, so give it the **absolute URL** the service is reached at — `/.well-known/oauth-protected-resource` refuses a bare hostname.
+`domain` is **not** a bind address; it is this service's own identifier, defaulting to `amphora.internal?.issuer` (the issuer this service mints under) and then to `"unknown"`. It is the `WWW-Authenticate` realm and the RFC 9728 `resource` value, so give it the **absolute URL** the service is reached at — `/.well-known/oauth-protected-resource` refuses a bare hostname.
 
 #### Bind address
 
@@ -839,7 +839,8 @@ Recognised paths: `"data"` (default), `"body"`, `"headers"`, `"params"`, `"query
 ```typescript
 import { useScope, useTenant } from "@lindorm/pylon";
 
-// Resolve tenant from access-token introspection (default)
+// Resolve tenant from the access credential the request carried (default)
+router.use(useAccessToken());
 router.use(useTenant());
 
 // Or read from any object-path
@@ -850,6 +851,16 @@ router.use(useScope({ params: (ctx) => ({ tenantId: ctx.state.tenant }) }));
 ```
 
 `useTenant` defaults to `required: true`, sets `ctx.state.tenant`, and (when a tenant is found and a Proteus session exists) installs a `__scope` filter param.
+
+It reads the tenant from the first of three sources, in this order:
+
+| Source                             | When                                             |
+| ---------------------------------- | ------------------------------------------------ |
+| the object-path you named          | a `path` argument was given                      |
+| `ctx.state.access.claims.tenantId` | `useAccessToken` resolved a credential           |
+| `ctx.auth.introspect()`            | nothing resolved one — no `useAccessToken` mount |
+
+The resolved credential wins over introspection because it IS the credential this request carried — populated identically on the locally-verified and the introspected path — so re-introspecting would cost a round trip per request to re-answer a settled question, from a second source free to disagree. A resolved credential carrying no tenant therefore **fails** rather than falling through to introspection.
 
 ### Rate limiting
 

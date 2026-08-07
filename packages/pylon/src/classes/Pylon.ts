@@ -20,7 +20,6 @@ import { setupDataAuditListeners } from "../internal/listeners/setup-data-audit-
 import { setupWebhookDispatchConsumer } from "../internal/consumers/setup-webhook-dispatch-consumer.js";
 import { setupWebhookRequestConsumer } from "../internal/consumers/setup-webhook-request-consumer.js";
 import { buildAppConfig } from "../internal/utils/build-app-config.js";
-import { calculateSubscriptions } from "../internal/utils/calculate-subscriptions.js";
 import { scanWorkers } from "../internal/utils/scan-workers.js";
 import { stageEncryptedField } from "../internal/utils/stage-encrypted-field.js";
 import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config.js";
@@ -65,10 +64,9 @@ export class Pylon<
 
     options.environment = options.environment ?? "development";
     options.version = options.version ?? "0.0.0";
-    options.domain = options.domain ?? options.amphora.issuer ?? "unknown";
-
-    options.subscriptions = options.subscriptions ?? [];
-    options.subscriptions.push(...calculateSubscriptions());
+    // This service's own identifier defaults to the issuer it mints under —
+    // amphora's `internal` scope, absent on a verify-only deployment.
+    options.domain = options.domain ?? options.amphora.internal?.issuer ?? "unknown";
 
     // Normalised HERE and not left to `scanWorkers`: that function's own
     // normalisation drops a single worker that is not `instanceof LindormWorker`

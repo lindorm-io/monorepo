@@ -61,7 +61,6 @@ export interface IAmphora {
    * setting — SINGULAR, and `null` for a verify-only service that declared none.
    */
   internal: AmphoraInternalConfig | null;
-  issuer: string | null;
   jwks: AmphoraJwks;
   vault: Array<IKryptos>;
 

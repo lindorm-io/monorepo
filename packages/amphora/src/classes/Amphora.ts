@@ -13,7 +13,6 @@ import { AmphoraIdp } from "../internal/classes/AmphoraIdp.js";
 import { AmphoraState } from "../internal/classes/AmphoraState.js";
 
 export class Amphora implements IAmphora {
-  readonly issuer: string | null;
   readonly external: IAmphoraExternal;
   readonly idp: IAmphoraIdp;
 
@@ -21,37 +20,39 @@ export class Amphora implements IAmphora {
 
   constructor(options: AmphoraSettings) {
     this.state = new AmphoraState(options);
-    this.issuer = this.state.issuer;
 
     this.external = new AmphoraExternal(this.state);
     this.idp = new AmphoraIdp(this.state);
 
-    if (this.issuer && !isUrlLike(this.issuer)) {
+    if (this.state.issuer && !isUrlLike(this.state.issuer)) {
       throw new AmphoraError("Issuer must be a valid URL", {
         code: "invalid_issuer_url",
-        data: { issuer: this.issuer },
+        data: { issuer: this.state.issuer },
         title: "Invalid Issuer URL",
-        details: `The configured issuer "${this.issuer as string}" is not a valid URL. Provide a fully-qualified URL such as https://example.com.`,
+        details: `The configured issuer "${this.state.issuer as string}" is not a valid URL. Provide a fully-qualified URL such as https://example.com.`,
       });
     }
   }
 
   // public getters
 
-  // The service's OWN identity, derived from `issuer` — minimal (it IS the issuer,
-  // it never discovers itself), and SINGULAR: a service has one identity or none.
-  // The other two scopes live on `external.issuers()` / `idp.config()`.
+  // The service's OWN identity, derived from the `internal.issuer` setting —
+  // minimal (it IS the issuer, it never discovers itself), and SINGULAR: a
+  // service has one identity or none. This is the ONE reader of that setting;
+  // the issuer is deliberately not also exposed bare, because `internal` is what
+  // names the scope it belongs to. The other two scopes live on
+  // `external.issuers()` / `idp.config()`.
   get internal(): AmphoraInternalConfig | null {
-    if (!this.issuer) return null;
+    if (!this.state.issuer) return null;
 
     return {
-      issuer: this.issuer,
-      jwksUri: new URL("/.well-known/jwks.json", this.issuer).toString(),
+      issuer: this.state.issuer,
+      jwksUri: new URL("/.well-known/jwks.json", this.state.issuer).toString(),
     };
   }
 
   get jwks(): AmphoraJwks {
-    if (!this.issuer) {
+    if (!this.state.issuer) {
       throw new AmphoraError("Issuer is required to get JWKS", {
         code: "issuer_required_for_jwks",
         title: "Issuer Required For JWKS",
@@ -102,9 +103,9 @@ export class Amphora implements IAmphora {
       // Env-imported keys are our own (`internal: true`) and feed the JWKS when
       // public + `publish: true` — an issuer that differs from this Amphora's own
       // issuer would never be served, which is almost certainly a config error.
-      if (this.issuer && kryptos.issuer && kryptos.issuer !== this.issuer) {
+      if (this.state.issuer && kryptos.issuer && kryptos.issuer !== this.state.issuer) {
         this.state.logger.warn("Env-imported key issuer differs from amphora issuer", {
-          expected: this.issuer,
+          expected: this.state.issuer,
           actual: kryptos.issuer,
           kid: kryptos.id,
         });

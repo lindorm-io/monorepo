@@ -37,7 +37,7 @@ import { Aegis } from "@lindorm/aegis";
 const aegis = new Aegis({
   amphora, // IAmphora — key store
   logger, // ILogger
-  issuer: "https://example.com", // optional; falls back to amphora.issuer
+  issuer: "https://example.com", // optional; falls back to amphora.internal?.issuer
   clockTolerance: 30, // optional, in seconds (default 0)
   encryption: "A256GCM", // optional, default "A256GCM"
   certBindingMode: "strict", // optional, "strict" | "lax" (default "strict")

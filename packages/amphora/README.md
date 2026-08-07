@@ -345,7 +345,6 @@ Like every other query, the capability checks run through the default publish ga
 ## Properties
 
 ```typescript
-amphora.issuer; // string | null — this service's OWN issuer, as configured
 amphora.vault; // Array<IKryptos>
 amphora.internal; // AmphoraInternalConfig | null — the service's OWN identity, derived from `internal.issuer`
 amphora.jwks; // AmphoraJwks — throws AmphoraError when no issuer is configured
@@ -355,7 +354,7 @@ amphora.idp; // IAmphoraIdp — the upstream identity provider
 
 Amphora names **three** issuer scopes, and each has its own accessor: `internal` (this service), `external` (foreign peers), `idp` (the one upstream).
 
-`internal` is the service's own identity — `{ issuer, jwksUri }` derived from the `internal` setting, and `null` for a verify-only service that declares none. It is SINGULAR: a service has one identity or none. `vault`, `internal`, `external.issuers()`, and `jwks.keys` getters return copies, so mutating the returned values does not affect internal state.
+`internal` is the service's own identity — `{ issuer, jwksUri }` derived from the `internal` setting, and `null` for a verify-only service that declares none. It is SINGULAR: a service has one identity or none, and it is the ONE reader of that setting: `amphora.internal?.issuer`, never a bare `amphora.issuer` that names no scope. `vault`, `internal`, `external.issuers()`, and `jwks.keys` getters return copies, so mutating the returned values does not affect internal state.
 
 ## Errors
 

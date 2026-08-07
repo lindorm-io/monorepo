@@ -31,7 +31,6 @@ export const _createMockAmphora = (mockFn: () => any): IAmphora => {
 
   return {
     internal: MOCK_INTERNAL_CONFIG,
-    issuer: "mock_issuer",
     jwks: { keys: [] },
     vault: [],
 

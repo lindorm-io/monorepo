@@ -26,6 +26,25 @@ describe("Aegis", () => {
     amphora.add(TEST_OKP_KEY_ENC);
   });
 
+  // The issuer aegis STAMPS is the service's own — amphora's `internal` scope,
+  // which is the one reader of that setting. A verify-only deployment declares
+  // none, and stamps none.
+  describe("issuer", () => {
+    test("should default to the amphora internal issuer", () => {
+      expect(new Aegis({ amphora, logger }).issuer).toBe("https://test.lindorm.io/");
+    });
+
+    test("should prefer an explicitly configured issuer", () => {
+      expect(
+        new Aegis({ amphora, logger, issuer: "https://other.lindorm.io/" }).issuer,
+      ).toBe("https://other.lindorm.io/");
+    });
+
+    test("should be null when the amphora declares no internal issuer", () => {
+      expect(new Aegis({ amphora: new Amphora({ logger }), logger }).issuer).toBeNull();
+    });
+  });
+
   test("should sign and verify jwe", async () => {
     const res = await aegis.jwe.encrypt("data", {
       header: { oid: "33100373-9769-4389-94dd-1b1d738f0fc4" },

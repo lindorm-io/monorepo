@@ -143,7 +143,9 @@ export class Aegis implements IAegis {
   constructor(options: AegisSettings) {
     this.logger = options.logger.child(["AegisKit"]);
     this.amphora = options.amphora;
-    this.issuer = options.issuer ?? this.amphora.issuer;
+    // The service's OWN issuer — amphora's `internal` scope, which is `null` for
+    // a verify-only deployment that declares none.
+    this.issuer = options.issuer ?? this.amphora.internal?.issuer ?? null;
 
     this.certBindingMode = options.certBindingMode ?? "strict";
     // Default TRUE: a cert-bound token carries `x5t` for older clients unless the
