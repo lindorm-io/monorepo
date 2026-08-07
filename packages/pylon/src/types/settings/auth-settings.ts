@@ -103,25 +103,25 @@ export type PylonAuthCacheSettings = {
  * `createAccessTokenMiddleware({ cache: false })` already uses per mount, so
  * "off" has ONE idiom rather than two.
  */
-export type PylonAuthCacheEntry = false | { ttl?: ReadableTime };
+export type PylonAuthCacheEntry = false | { readonly ttl?: ReadableTime };
 
 /**
  * The resolved driver-response cache policy. It holds NO storage handle: the
- * entries live in `ctx.cache` like every other evictable row. `null` is the
- * whole off switch — `parseAuthConfig` produces it whenever the deployment did
- * not enable `auth.cache`, so there is no second flag free to disagree.
+ * entries live in `ctx.cache` like every other evictable row. Its home is
+ * `ctx.state.app.config.auth.cache`, where `false` is the whole off switch —
+ * `buildAppConfig` produces it whenever the deployment did not enable
+ * `auth.cache`, so there is no second flag free to disagree.
  *
  * ⚠ The per-concern TTLs are carried UNRESOLVED. Introspection resolves over
  * three tiers (per-mount, deployment, built-in) and userinfo over two, each in
  * one expression at its own call site.
  */
 export type PylonAuthCacheConfig = {
-  introspection?: PylonAuthCacheEntry;
-  userinfo?: PylonAuthCacheEntry;
+  readonly introspection?: PylonAuthCacheEntry;
+  readonly userinfo?: PylonAuthCacheEntry;
 };
 
 export type PylonAuthConfig = {
-  cache: PylonAuthCacheConfig | null;
   driver: IPylonAuthDriver;
   defaultTokenExpiry: ReadableTime;
   refresh: PylonAuthRefreshConfig;

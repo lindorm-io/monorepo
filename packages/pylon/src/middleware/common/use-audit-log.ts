@@ -1,15 +1,7 @@
 import { ServerError } from "@lindorm/errors";
-import type { IIrisSource } from "@lindorm/iris";
-import { AUDIT_SOURCE } from "../../internal/constants/symbols.js";
 import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.js";
 import { resolveActor } from "../../internal/utils/resolve-actor.js";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
-
-type AuditConfig = {
-  bus: IIrisSource;
-  sanitise?: (body: unknown) => unknown;
-  skip?: (ctx: any) => boolean;
-};
 
 type UseAuditLogOptions = {
   skip?: (ctx: PylonContext) => boolean;
@@ -63,24 +55,34 @@ const resolveTarget = (ctx: PylonContext): AuditTarget => {
 
 export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware => {
   return async function useAuditLogMiddleware(ctx: PylonContext, next) {
-    // Disabled by app config: silently pass through, never throw. The
-    // source-missing throw below only fires when audit IS enabled.
-    if (ctx.state.app.config.audit === false) {
+    // ⚠ ONE switch. `config.audit` is the whole of it — the policy and the
+    // on/off used to be separate channels that could disagree, so an enabled
+    // deployment with no policy threw and a disabled one with a policy silently
+    // skipped. Off means pass through, never throw.
+    const config = ctx.state.app.config.audit;
+
+    if (config === false) {
       await next();
       return;
-    }
-
-    const config = (ctx as any)[AUDIT_SOURCE] as AuditConfig | undefined;
-    if (!config) {
-      throw new ServerError(
-        "Audit logging is not configured. Enable it in PylonSettings with audit: { enabled: true } and provide a top-level actor resolver.",
-      );
     }
 
     const skipFn = options.skip ?? config.skip;
     if (skipFn?.(ctx)) {
       await next();
       return;
+    }
+
+    // The only throw left, and it is the genuine one: audit is ON and there is
+    // nowhere to publish the record. Read AFTER the switches, like every other
+    // feature, so a skipped request never opens a session it has no use for.
+    if (!ctx.bus) {
+      throw new ServerError("Audit logging has no message bus to publish to", {
+        code: "audit_bus_not_configured",
+        type: "urn:lindorm:pylon:error:audit_bus_not_configured",
+        title: "Audit Bus Not Configured",
+        details:
+          "Audit logging is enabled in PylonSettings but no `bus` source is configured, so the audit record cannot be published. Configure `bus`, or turn audit off.",
+      });
     }
 
     const start = Date.now();
@@ -94,9 +96,8 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
       const body = ctx.data ? (sanitise ? sanitise(ctx.data) : ctx.data) : null;
 
       const actor = resolveActor(ctx);
-      const bus = config.bus.session({ logger: ctx.logger });
       const { RequestAudit } = await import("../../messages/RequestAudit.js");
-      const publisher = bus.publisher(RequestAudit);
+      const publisher = ctx.bus.publisher(RequestAudit);
 
       const { endpoint, method, transport, statusCode, sourceIp, sessionId } =
         resolveTarget(ctx);

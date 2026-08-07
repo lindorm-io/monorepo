@@ -9,6 +9,14 @@ import {
 import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
 import { createAccessTokenMiddleware } from "./create-access-token-middleware.js";
 import { beforeAll, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../__fixtures__/app-config.js";
+
+/** Auth configured with a driver that CAN introspect — the ordinary resource
+ *  server, so the opaque arm is reachable. */
+const APP_CONFIG = createTestAppConfig({ auth: createTestAuthConfig() });
 
 /**
  * The format sniff, proved against a REAL Aegis and a REAL signature. The point
@@ -42,11 +50,12 @@ describe("createAccessTokenMiddleware — format sniff", () => {
     next = vi.fn();
     ctx = {
       aegis,
-      auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
+      auth: { introspect: vi.fn() },
       logger: createMockLogger(),
       request: {},
       state: {
         access: null,
+        app: { config: APP_CONFIG },
         authorization: { type: "bearer", value: token },
         session: null,
         tokens: {},
@@ -116,7 +125,9 @@ describe("createAccessTokenMiddleware — format sniff", () => {
     ).resolves.toBeUndefined();
 
     expect(verify).not.toHaveBeenCalled();
-    expect(ctx.auth.introspect).toHaveBeenCalledWith(OPAQUE_TOKEN);
+    expect(ctx.auth.introspect).toHaveBeenCalledWith(OPAQUE_TOKEN, {
+      cache: undefined,
+    });
     expect(ctx.state.access.provenance).toBe("introspected");
 
     verify.mockRestore();
@@ -126,7 +137,13 @@ describe("createAccessTokenMiddleware — format sniff", () => {
   // mints and verifies its own JWTs. The credential is unresolvable here — say
   // so, rather than reporting a verification that mysteriously failed.
   test("an opaque credential is refused by name when the driver cannot introspect", async () => {
-    ctx.auth.capabilities = { introspect: false, userinfo: false };
+    // The capability is DERIVED from the driver and lives in state, so a
+    // deployment whose driver cannot introspect says so here.
+    ctx.state.app.config = createTestAppConfig({
+      auth: createTestAuthConfig({
+        capabilities: { introspect: false, userinfo: false },
+      }),
+    });
     ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
 
     await expect(createAccessTokenMiddleware(options)(ctx, next)).rejects.toMatchObject({

@@ -19,6 +19,7 @@ import { setupDataAuditConsumer } from "../internal/consumers/setup-data-audit-c
 import { setupDataAuditListeners } from "../internal/listeners/setup-data-audit-listeners.js";
 import { setupWebhookDispatchConsumer } from "../internal/consumers/setup-webhook-dispatch-consumer.js";
 import { setupWebhookRequestConsumer } from "../internal/consumers/setup-webhook-request-consumer.js";
+import { buildAppConfig } from "../internal/utils/build-app-config.js";
 import { calculateSubscriptions } from "../internal/utils/calculate-subscriptions.js";
 import { calculateWorkers } from "../internal/utils/calculate-workers.js";
 import { scanWorkers } from "../internal/utils/scan-workers.js";
@@ -118,11 +119,16 @@ export class Pylon<
 
     await this.amphora.setup();
 
-    this.http.loadMiddleware();
+    // ⚠ Built HERE and nowhere else: after amphora has fetched, so the auth
+    // driver's issuer is a memory read, and before either transport loads, so
+    // both serve the SAME frozen object. Nothing in it varies per request.
+    const appConfig = buildAppConfig(this.options);
+
+    this.http.loadMiddleware(appConfig);
     await this.http.loadRouters();
 
     if (this.io) {
-      await this.io.load();
+      await this.io.load(appConfig);
       this.http.server.use(httpSocketIoMiddleware(this.io.server));
     }
 

@@ -1,8 +1,6 @@
 import { Aegis, type DomainAssert, type VerifyOptions } from "@lindorm/aegis";
-import type { ReadableTime } from "@lindorm/date";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { DEFAULT_AUTH_WARNING_MS } from "../../internal/constants/auth.js";
-import { introspectWithCache } from "../../internal/utils/auth-cache/introspect-with-cache.js";
 import { isInExpiryWarningWindow } from "../../internal/utils/auth-state/is-in-expiry-warning-window.js";
 import { isTokenExpired } from "../../internal/utils/auth-state/is-token-expired.js";
 import { markAuthExpiredEmitted } from "../../internal/utils/auth-state/mark-auth-expired-emitted.js";
@@ -17,6 +15,7 @@ import { extractTokenFromSession } from "../../internal/utils/tokens/extract-tok
 import { resolveHttpTokenSource } from "../../internal/utils/tokens/resolve-http-token-source.js";
 import { splitVerifyInput } from "../../internal/utils/tokens/split-verify-input.js";
 import type {
+  PylonAuthCacheEntry,
   PylonContext,
   PylonHttpContext,
   PylonMiddleware,
@@ -33,8 +32,10 @@ type Options = Omit<DomainAssert & VerifyOptions, "issuer"> & {
    * seconds), and the sensitive-route carve-out: `cache: false` introspects on EVERY request
    * for this mount even when the deployment enables caching. Only ever narrows;
    * a mount cannot turn a cache on that the deployment did not configure.
+   *
+   * Handed straight to `ctx.auth.introspect`, which is where the cache lives.
    */
-  cache?: false | { ttl?: ReadableTime };
+  cache?: PylonAuthCacheEntry;
 };
 
 /**
@@ -105,7 +106,7 @@ const runHttp = async (
       // configuration for a service that mints and verifies its own JWTs, so it
       // is answered as what it is — this deployment does not accept opaque
       // credentials — rather than as a verification that mysteriously failed.
-      if (!ctx.auth.capabilities.introspect) {
+      if (!ctx.state.app.config.auth?.capabilities.introspect) {
         throw new ClientError("Opaque access tokens are not accepted", {
           status: ClientError.Status.Unauthorized,
           code: "opaque_token_not_supported",
@@ -116,11 +117,11 @@ const runHttp = async (
         });
       }
 
-      // ONE introspection call site, so swapping the resolver is a one-line
-      // change. The cache in front of it is short-lived by construction — the
-      // TTL is the revocation window (RFC 7662 §5) — and steps aside entirely
-      // when the deployment configured none.
-      const introspection = await introspectWithCache(ctx, source.token, cache);
+      // ONE introspection call site. The cache is INSIDE `ctx.auth.introspect`
+      // — short-lived by construction, the TTL being the revocation window (RFC
+      // 7662 §5) — so this mount states only its own carve-out and never picks
+      // between a cached resolver and an uncached one.
+      const introspection = await ctx.auth.introspect(source.token, { cache });
 
       if (!introspection.active) {
         throw new ClientError("Access token is not active", {

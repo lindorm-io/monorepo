@@ -4,6 +4,14 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { OPAQUE_TOKEN, joseShapedToken } from "../../__fixtures__/access/tokens.js";
 import { createAccessTokenMiddleware } from "./create-access-token-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../__fixtures__/app-config.js";
+
+/** Auth configured with a driver that CAN introspect — the ordinary resource
+ *  server, so the opaque arm is reachable. */
+const APP_CONFIG = createTestAppConfig({ auth: createTestAuthConfig() });
 
 describe("createAccessTokenMiddleware", () => {
   let next: Mock;
@@ -20,11 +28,12 @@ describe("createAccessTokenMiddleware", () => {
     beforeEach(() => {
       ctx = {
         aegis: createMockAegis(),
-        auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
+        auth: { introspect: vi.fn() },
         logger: createMockLogger(),
         request: {},
         state: {
           access: null,
+          app: { config: APP_CONFIG },
           authorization: { type: "bearer", value: joseShapedToken() },
           session: null,
           tokens: {},
@@ -64,7 +73,9 @@ describe("createAccessTokenMiddleware", () => {
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
       expect(ctx.aegis.verify).not.toHaveBeenCalled();
-      expect(ctx.auth.introspect).toHaveBeenCalledWith(OPAQUE_TOKEN);
+      expect(ctx.auth.introspect).toHaveBeenCalledWith(OPAQUE_TOKEN, {
+        cache: undefined,
+      });
       // No VerifiedToken exists on this path — never synthesise one.
       expect(ctx.state.tokens.accessToken).toBeUndefined();
       expect(ctx.state.access).toMatchSnapshot();
@@ -194,10 +205,10 @@ describe("createAccessTokenMiddleware", () => {
       };
       return {
         aegis: createMockAegis(),
-        auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
+        auth: { introspect: vi.fn() },
         logger: createMockLogger(),
         event: "some:event",
-        state: { access: null, tokens: {} },
+        state: { access: null, app: { config: APP_CONFIG }, tokens: {} },
         io: {
           socket: {
             data: {
@@ -288,11 +299,11 @@ describe("createAccessTokenMiddleware", () => {
     test("throws ServerError if run in the handshake phase", async () => {
       const ctx: any = {
         aegis: createMockAegis(),
-        auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
+        auth: { introspect: vi.fn() },
         logger: createMockLogger(),
         handshakeId: "abc",
         io: { socket: { handshake: {}, data: {} } },
-        state: { access: null, tokens: {} },
+        state: { access: null, app: { config: APP_CONFIG }, tokens: {} },
       };
       const middleware = createAccessTokenMiddleware(options);
       await expect(middleware(ctx, next)).rejects.toThrow(ServerError);
@@ -303,11 +314,12 @@ describe("createAccessTokenMiddleware", () => {
     test("throws 401 when verification fails", async () => {
       const ctx: any = {
         aegis: createMockAegis(),
-        auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
+        auth: { introspect: vi.fn() },
         logger: createMockLogger(),
         request: {},
         state: {
           access: null,
+          app: { config: APP_CONFIG },
           authorization: { type: "bearer", value: joseShapedToken() },
           session: null,
           tokens: {},

@@ -2,12 +2,16 @@ import type { Environment } from "@lindorm/types";
 import type { AppConfig, PylonSocketData } from "../../types/index.js";
 
 type Options = {
-  audit?: { enabled: boolean };
+  /**
+   * The deployment's resolved policy, built ONCE by `buildAppConfig` after
+   * `amphora.setup()` and shared with the http transport. It is stamped onto
+   * every socket's `data.app`, so it must be the same reference rather than a
+   * per-connection rebuild of the same inputs.
+   */
+  config: AppConfig;
   domain?: string;
   environment?: Environment;
   name?: string;
-  rateLimit?: { enabled: boolean };
-  responseCache?: { enabled: boolean };
   version?: string;
 };
 
@@ -19,14 +23,8 @@ export const initialisePylonSocketData = <D extends PylonSocketData>(
   const name = options.name ?? "unknown";
   const version = options.version ?? "0.0.0";
 
-  const config: AppConfig = {
-    audit: options.audit?.enabled ?? false,
-    cache: options.responseCache?.enabled ?? false,
-    rateLimit: options.rateLimit?.enabled ?? false,
-  };
-
   const data: PylonSocketData = {
-    app: { config, domain, environment, name, version },
+    app: { config: options.config, domain, environment, name, version },
     tokens: {},
     pylon: {},
   };

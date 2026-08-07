@@ -10,7 +10,6 @@ import type {
   PylonContext,
   PylonHttpContext,
 } from "../../types/index.js";
-import { AUDIT_SOURCE, AUTH_CACHE_POLICY } from "../constants/symbols.js";
 import {
   createAuthClient,
   createSocketClaimsClient,
@@ -31,26 +30,23 @@ import {
 } from "../utils/create-socket-emitter.js";
 import { resolveActor, type ActorResolver } from "../utils/resolve-actor.js";
 
-type AuditConfig = {
-  bus: IIrisSource;
-  sanitise?: (body: unknown) => unknown;
-  skip?: (ctx: any) => boolean;
-};
-
 /**
  * Sources come in under their ROLE — `db` / `kv` / `cache` / `bus` — and each
  * one becomes a per-request `ctx.*` session. There is no second, per-feature
  * channel: a feature that needs storage picks the role whose eviction policy it
  * can live with (`ctx.cache` for a rate-limit bucket or a cached response,
- * `ctx.kv` for a session or a presence record) and reads it off the context.
+ * `ctx.kv` for a session or a presence record, `ctx.bus` for an audit record)
+ * and reads it off the context.
  *
- * The remaining fields are POLICY, not storage — the wiring a feature cannot
- * derive from the context on its own.
+ * ⚠ There is no POLICY channel here either. Everything a feature needs to know
+ * about how this deployment is configured is on `ctx.state.app.config`, built
+ * once at setup and served to both transports — so nothing is stashed on the
+ * context under a symbol, and no middleware needs a cast to read it. What is
+ * left are the INSTANCES a request cannot construct for itself.
  */
 type Options = {
   actor?: ActorResolver;
   authConfig?: PylonAuthConfig;
-  auditConfig?: AuditConfig;
   hermes?: IHermes;
   bus?: IIrisSource;
   cache?: IProteusSource;
@@ -115,18 +111,6 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         }
       } else {
         lazyFactory(ctx, "auth", () => createUnconfiguredAuthClient());
-      }
-
-      if (options.auditConfig) {
-        (ctx as any)[AUDIT_SOURCE] = options.auditConfig;
-      }
-
-      // The driver-response cache POLICY — the entries themselves live in
-      // `ctx.cache`. Present ONLY when the deployment configured `auth.cache`,
-      // and `parseAuthConfig` is the one place that decides so: its absence is
-      // what keeps caching off, with no second flag free to disagree.
-      if (options.authConfig?.cache) {
-        (ctx as any)[AUTH_CACHE_POLICY] = options.authConfig.cache;
       }
 
       // Socket emitter (available whenever io is present)

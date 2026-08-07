@@ -5,8 +5,9 @@ exports[`initialisePylonSocketData > should initialize with all options provided
   "app": {
     "config": {
       "audit": false,
-      "cache": false,
+      "auth": null,
       "rateLimit": false,
+      "responseCache": false,
     },
     "domain": "test.lindorm.io",
     "environment": "development",
@@ -23,8 +24,9 @@ exports[`initialisePylonSocketData > should use defaults for missing options 1`]
   "app": {
     "config": {
       "audit": false,
-      "cache": false,
+      "auth": null,
       "rateLimit": false,
+      "responseCache": false,
     },
     "domain": "unknown",
     "environment": "unknown",
@@ -41,8 +43,9 @@ exports[`initialisePylonSocketData > should use defaults for undefined values 1`
   "app": {
     "config": {
       "audit": false,
-      "cache": false,
+      "auth": null,
       "rateLimit": false,
+      "responseCache": false,
     },
     "domain": "unknown",
     "environment": "unknown",

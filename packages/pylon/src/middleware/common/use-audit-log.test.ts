@@ -1,6 +1,6 @@
 import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { AUDIT_SOURCE } from "../../internal/constants/symbols.js";
+import { createTestAppConfig } from "../../__fixtures__/app-config.js";
 import { useAuditLog } from "./use-audit-log.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
@@ -27,8 +27,12 @@ describe("useAuditLog", () => {
   let ctx: any;
   let next: Mock;
   let mockPublisher: any;
-  let mockIris: any;
   let auditConfig: any;
+
+  /** Rebuild ctx.state.app.config.audit from the mutable `auditConfig` bag. */
+  const applyAuditConfig = (): void => {
+    ctx.state.app.config = createTestAppConfig({ audit: { ...auditConfig } });
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -38,20 +42,15 @@ describe("useAuditLog", () => {
       publish: vi.fn().mockResolvedValue(undefined),
     };
 
-    mockIris = {
-      session: vi.fn().mockReturnValue({
-        publisher: vi.fn().mockReturnValue(mockPublisher),
-      }),
-    };
-
-    auditConfig = {
-      bus: mockIris,
-    };
+    auditConfig = {};
 
     (isHttpContext as unknown as Mock).mockReturnValue(true);
     (isSocketContext as unknown as Mock).mockReturnValue(false);
 
     ctx = {
+      // The request-scoped iris SESSION, exactly what the dependencies
+      // middleware installs — audit no longer carries a source of its own.
+      bus: { publisher: vi.fn().mockReturnValue(mockPublisher) },
       logger: createMockLogger(),
       data: { foo: "bar" },
       request: { path: "/api/users", method: "POST", ip: "10.0.0.1" },
@@ -61,7 +60,7 @@ describe("useAuditLog", () => {
         actor: "user-123",
         app: {
           name: "test-app",
-          config: { audit: true, cache: false, rateLimit: false },
+          config: createTestAppConfig({ audit: {} }),
         },
         authorization: { type: "none", value: null },
         client: CLIENT_CONTEXT,
@@ -72,7 +71,6 @@ describe("useAuditLog", () => {
         },
         tokens: {},
       },
-      [AUDIT_SOURCE]: auditConfig,
     };
 
     next = vi.fn().mockResolvedValue(undefined);
@@ -169,6 +167,7 @@ describe("useAuditLog", () => {
     const routeSanitise = vi.fn().mockReturnValue({ route_redacted: true });
 
     auditConfig.sanitise = globalSanitise;
+    applyAuditConfig();
 
     await useAuditLog({ sanitise: routeSanitise })(ctx, next);
 
@@ -184,6 +183,7 @@ describe("useAuditLog", () => {
   test("should use global sanitise when no per-route sanitise", async () => {
     const globalSanitise = vi.fn().mockReturnValue({ global_redacted: true });
     auditConfig.sanitise = globalSanitise;
+    applyAuditConfig();
 
     await useAuditLog()(ctx, next);
 
@@ -207,6 +207,7 @@ describe("useAuditLog", () => {
 
   test("should use global skip from config when no per-route skip", async () => {
     auditConfig.skip = vi.fn().mockReturnValue(true);
+    applyAuditConfig();
 
     await useAuditLog()(ctx, next);
 
@@ -223,21 +224,34 @@ describe("useAuditLog", () => {
     expect(next).toHaveBeenCalledTimes(1);
   });
 
-  test("should throw ServerError when audit not configured", async () => {
-    delete ctx[AUDIT_SOURCE];
+  // ⚠ The ONE remaining throw, and it is the genuine one: audit is on and there
+  // is nowhere to publish the record.
+  test("should throw ServerError when audit is on with no bus", async () => {
+    delete ctx.bus;
 
     await expect(useAuditLog()(ctx, next)).rejects.toThrow(ServerError);
     expect(next).not.toHaveBeenCalled();
   });
 
+  // ⚠ `config.audit` is the WHOLE switch. Off means pass through even with no
+  // bus at all — the two channels that could disagree are gone.
   test("should pass through silently (no throw) when audit is disabled by config", async () => {
-    ctx.state.app.config.audit = false;
-    delete ctx[AUDIT_SOURCE]; // disabled AND no source — must not throw
+    ctx.state.app.config = createTestAppConfig({ audit: false });
+    delete ctx.bus; // disabled AND no bus — must not throw
 
     await expect(useAuditLog()(ctx, next)).resolves.not.toThrow();
 
     expect(next).toHaveBeenCalledTimes(1);
     expect(mockPublisher.create).not.toHaveBeenCalled();
+  });
+
+  // The record inherits this request's actor and correlation id, because the
+  // publisher comes from the request-scoped session rather than a bare one
+  // opened off a stashed source.
+  test("should publish through the request-scoped bus session", async () => {
+    await useAuditLog()(ctx, next);
+
+    expect(ctx.bus.publisher).toHaveBeenCalledTimes(1);
   });
 
   test("should call next even when audit creation fails", async () => {

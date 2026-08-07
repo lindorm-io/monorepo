@@ -10,6 +10,14 @@ import {
 import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
 import { createAccessTokenMiddleware } from "./create-access-token-middleware.js";
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../__fixtures__/app-config.js";
+
+/** Auth configured with a driver that CAN introspect — the ordinary resource
+ *  server, so the opaque arm is reachable. */
+const APP_CONFIG = createTestAppConfig({ auth: createTestAuthConfig() });
 
 const METHOD = "POST";
 const ORIGIN = "https://api.example.com";
@@ -36,7 +44,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
 
   const makeCtx = (authorization: any, dpopHeader?: string): any => ({
     aegis,
-    auth: { capabilities: { introspect: true, userinfo: true }, introspect: vi.fn() },
+    auth: { introspect: vi.fn() },
     logger: createMockLogger(),
     method: METHOD,
     origin: ORIGIN,
@@ -45,7 +53,13 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
     get: vi.fn((header: string) =>
       header.toLowerCase() === "dpop" ? dpopHeader : undefined,
     ),
-    state: { access: null, authorization, session: null, tokens: {} },
+    state: {
+      access: null,
+      app: { config: APP_CONFIG },
+      authorization,
+      session: null,
+      tokens: {},
+    },
   });
 
   beforeAll(async () => {

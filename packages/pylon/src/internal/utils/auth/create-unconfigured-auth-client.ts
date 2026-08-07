@@ -15,12 +15,13 @@ const notConfigured = (method: string): never => {
   );
 };
 
+/**
+ * ⚠ Every member THROWS, and that is now the whole of it: `ctx.auth` is verbs
+ * only, so there is no property here a debug log could explode on. What a
+ * handler needs to KNOW — that no auth is configured — is
+ * `ctx.state.app.config.auth === null`, which is a plain read.
+ */
 export const createUnconfiguredAuthClient = (): PylonAuthClient => ({
-  // Reading a property must never explode (a debug log that spreads `ctx.auth`
-  // would), and `false` states the truth — an absent driver can do nothing.
-  // Every METHOD still throws.
-  capabilities: { introspect: false, userinfo: false },
-  config: () => notConfigured("config"),
   introspect: () => notConfigured("introspect"),
   userinfo: () => notConfigured("userinfo"),
   login: () => notConfigured("login"),

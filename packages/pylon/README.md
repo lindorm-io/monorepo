@@ -227,7 +227,8 @@ ctx.queue(event, payload, priority?, optional?);  // enqueue a Job (when queue.e
 ctx.webhook(event, data?, optional?);             // dispatch a webhook (when webhook.enabled)
 
 ctx.state.access;         // PylonResolvedAccess | null — the resolved credential
-ctx.state.app;            // { domain, environment, name, version }
+ctx.state.app;            // { config, domain, environment, name, version }
+ctx.state.app.config;     // the deployment's resolved policy — see below
 ctx.state.actor;          // resolved actor string
 ctx.state.authorization;  // { type: "basic" | "bearer" | "dpop" | "none", value }
 ctx.state.metadata;       // { id, correlationId, date, environment, ... }
@@ -268,6 +269,32 @@ ctx.params;     // params extracted from parameterised event names
 ctx.rooms?;     // join(), leave(), members(), presence()
 ctx.socket?;    // emit() and broadcast() — Pylon envelope emitter
 ```
+
+### App config
+
+`ctx.state.app.config` is the ONE home for the deployment's resolved configuration and policy. It is built **once**, after `amphora.setup()`, and every request of **both transports** is handed the same deeply frozen object — nothing in it varies per request, and a handler cannot flip a policy for everything downstream of it.
+
+```typescript
+ctx.state.app.config.audit; // AppAuditConfig | false — { sanitise?, skip? }
+ctx.state.app.config.responseCache; // AppResponseCacheConfig | false
+ctx.state.app.config.rateLimit; // AppRateLimitConfig | false — { strategy, window, max, key?, skip? }
+ctx.state.app.config.auth; // AppAuthConfig | null
+```
+
+`false` / `null` is OFF for every entry and an object is ON — there is no second `enabled` flag inside a policy free to disagree with the presence of the policy itself. `window` is resolved to **milliseconds**, because `useRateLimit` compares a mount's window against it. `responseCache` is an empty object today: every knob `useCache` reads is stated per mount, and the deployment only says whether the feature is on at all.
+
+`auth` is `null` when no `auth` block is configured, and **reading it never throws** — it is eager state on every request of every pylon, including the ones with no auth at all.
+
+```typescript
+ctx.state.app.config.auth?.issuer; // string | null — from driver.endpoints()
+ctx.state.app.config.auth?.clientId; // string | null — null for a verify-only driver
+ctx.state.app.config.auth?.capabilities; // { introspect, userinfo } — derived from the driver
+ctx.state.app.config.auth?.cache; // PylonAuthCacheConfig | false
+```
+
+`issuer` is `null` only when the driver's pinned scope resolves to nothing (no idp on amphora, or one whose issuer amphora never settled) — pylon warns once at setup, and the request paths that genuinely need an issuer still raise the driver's own named error. `clientId` is `null` for a verify-only driver, which is nobody's OAuth client. Either one missing means the driver-response cache has no key it is safe to share, so it steps aside and calls the driver.
+
+`app`'s other members — `domain`, `environment`, `name`, `version` — are ambient identity, not policy, which is why they sit beside `config` rather than inside it.
 
 ## HTTP routing
 
@@ -713,7 +740,9 @@ router.use(createAccessTokenMiddleware({ issuer, cache: { ttl: "2 seconds" } }))
 router.use(createAccessTokenMiddleware({ issuer, cache: false }));
 ```
 
-Both keys are a digest of `(kind, token, issuer, clientId)` — never the raw token, which would land readable in shared storage. **The token, never the subject**: two tokens for one subject can carry different scopes, and both answers vary by granted scope (RFC 7662 §2.2 lets the authorization server "limit which scopes from a given token are returned for each protected resource"; OIDC Core §5.3 returns exactly the profile claims the token's scopes authorise). The identity is part of it for the same reason — keying on the token alone would let two services sharing a namespace read each other's answers. Both inputs come from the **driver** — `endpoints().issuer` and its own client id — because RFC 7662 §2.1 has the resource server authenticate to the introspection endpoint, and those credentials may legitimately differ from a relying party's. `await ctx.auth.config()` exposes that identity (`{ issuer, clientId }`, and never the client secret).
+Both keys are a digest of `(kind, token, issuer, clientId)` — never the raw token, which would land readable in shared storage. **The token, never the subject**: two tokens for one subject can carry different scopes, and both answers vary by granted scope (RFC 7662 §2.2 lets the authorization server "limit which scopes from a given token are returned for each protected resource"; OIDC Core §5.3 returns exactly the profile claims the token's scopes authorise). The identity is part of it for the same reason — keying on the token alone would let two services sharing a namespace read each other's answers. Both inputs come from the **driver** — `endpoints().issuer` and its own client id — because RFC 7662 §2.1 has the resource server authenticate to the introspection endpoint, and those credentials may legitimately differ from a relying party's. `ctx.state.app.config.auth` exposes that identity (`{ issuer, clientId }`, and never the client secret); either one `null` means there is no key safe to share, so the cache steps aside and calls the driver.
+
+The caching is **inside** `ctx.auth.introspect` / `ctx.auth.userinfo` rather than in front of them, so there is no uncached path a caller can pick by mistake. A sensitive route opts out per call with `ctx.auth.introspect(token, { cache: false })` — which `createAccessTokenMiddleware({ cache })` forwards for the mount.
 
 Nothing is cached when either call fails — a stale answer served over an unreachable authorization server is a revocation bypass, and a cached userinfo failure would outlive its own cause — and a storage outage degrades to an uncached call rather than failing the request. **There is no negative userinfo entry at all**: userinfo returns a profile or it errors, and "is this token still good?" is introspection's question, under introspection's far shorter window.
 
@@ -795,6 +824,7 @@ router.use(useScope({ params: (ctx) => ({ tenantId: ctx.state.tenant }) }));
 ```typescript
 import { useRateLimit } from "@lindorm/pylon";
 
+router.use(useRateLimit()); // the deployment's own window, ceiling and strategy
 router.use(useRateLimit({ window: "1m", max: 60 })); // fixed (default)
 router.use(useRateLimit({ window: "1m", max: 60, strategy: "sliding" }));
 router.use(useRateLimit({ window: "1m", max: 60, strategy: "token-bucket" }));
@@ -811,7 +841,9 @@ router.use(
 
 `useRateLimit` requires `rateLimit: { enabled: true }` on the constructor (which also wires the entities into the evictable source, `cache ?? kv`). HTTP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `X-RateLimit-Strategy`; rejected requests also include `Retry-After`.
 
-When `rateLimit.window` and `rateLimit.max` are set on the constructor, Pylon installs a global rate-limit middleware automatically.
+**Every option is optional and only ever NARROWS the deployment's own**, which lives on `ctx.state.app.config.rateLimit` — so "never rate-limit health checks" is stated once, as `rateLimit.skip`, and holds for a mount that says nothing about it. A mount that states neither its own limits nor inherits any throws `rate_limit_not_bounded` rather than silently doing nothing.
+
+When `rateLimit.window` and `rateLimit.max` are set on the constructor, Pylon installs a global `useRateLimit()` automatically — with no arguments, so there is no closure copy of the limits free to disagree with the one every route-level mount reads.
 
 ### Response cache
 
@@ -898,7 +930,7 @@ router.use(
 );
 ```
 
-`useAuditLog` requires `audit: { enabled: true }` on the constructor and a `bus` source. Each request publishes a `RequestAudit` message containing the endpoint, method, transport, status, duration, source IP, session id, user agent, request id, correlation id, actor, and the (optionally sanitised) body. Set `audit.entities` to a list of entity classes for entity-level change tracking — Pylon installs Proteus listeners on those entities and persists field-level diffs into `DataAuditLog`.
+`useAuditLog` requires `audit: { enabled: true }` on the constructor and a `bus` source. `audit.enabled` is the **whole** switch: off means the middleware passes through silently, whatever else is or is not configured, and on with no `bus` throws `audit_bus_not_configured`. The record is published through `ctx.bus` — the request-scoped session, so it carries this request's actor and correlation id. `sanitise` and `skip` are stated per deployment (`audit.sanitise` / `audit.skip`) or per mount, and the mount wins. Each request publishes a `RequestAudit` message containing the endpoint, method, transport, status, duration, source IP, session id, user agent, request id, correlation id, actor, and the (optionally sanitised) body. Set `audit.entities` to a list of entity classes for entity-level change tracking — Pylon installs Proteus listeners on those entities and persists field-level diffs into `DataAuditLog`.
 
 ### Conduits (HTTP clients)
 
@@ -1113,14 +1145,14 @@ A session that holds no refresh token — one established without `offline_acces
 
 `ctx.auth.userinfo()` answers _who is this user?_ — it parses the id token locally when possible and falls back to the IdP's userinfo endpoint. `ctx.auth.introspect()` answers _is this token valid, what can it do, when does it expire?_.
 
-| `ctx.auth`             | Available on  | Notes                                                                                                                                                                  |
-| ---------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `capabilities`         | HTTP + socket | `{ introspect, userinfo }`, derived from the driver — never configured                                                                                                 |
-| `introspect(token?)`   | HTTP + socket | Local fast path first, then `driver.introspect`                                                                                                                        |
-| `userinfo(token?)`     | HTTP + socket | Local fast path first, then `driver.userinfo`                                                                                                                          |
-| `await config()`       | HTTP          | `{ issuer, clientId }` resolved from the driver. A method, because the issuer comes from `endpoints()`. Rejects for a verify-only driver, which declares no `clientId` |
-| `await login(query?)`  | HTTP          | Generates `state` / `nonce` / PKCE, then `driver.authorize`                                                                                                            |
-| `await logout(query?)` | HTTP          | `driver.logout` — returns `{ action: "redirect", url }` or `{ action: "local" }`                                                                                       |
+| `ctx.auth`                     | Available on  | Notes                                                                                                                            |
+| ------------------------------ | ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `introspect(token?, options?)` | HTTP + socket | Local fast path first, then `driver.introspect` — with the RFC 7662 §5 cache built in. `options.cache: false` opts this call out |
+| `userinfo(token?)`             | HTTP + socket | Local fast path first, then `driver.userinfo` — with the OIDC Core §5.3 cache built in                                           |
+| `await login(query?)`          | HTTP          | Generates `state` / `nonce` / PKCE, then `driver.authorize`                                                                      |
+| `await logout(query?)`         | HTTP          | `driver.logout` — returns `{ action: "redirect", url }` or `{ action: "local" }`                                                 |
+
+⚠ **`ctx.auth` is VERBS ONLY.** Everything a handler could want to _know_ about auth — the issuer, the client id, what the driver can serve, what is cached — is a noun, and nouns live on [`ctx.state.app.config.auth`](#app-config).
 
 There is **no** `ctx.auth.token(grant)`. A generic "call the token endpoint with anything" makes the driver contract unenforceable, since a consumer could drive any grant straight past it; `conduitClientCredentialsMiddleware` covers raw client-credentials.
 

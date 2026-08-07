@@ -16,6 +16,8 @@ import { socketLoggerMiddleware } from "../internal/middleware/socket-logger-mid
 import { composePylonHandshakeContext } from "../internal/utils/handshake/compose-pylon-handshake-context.js";
 import { registerAuthRefreshListener } from "../internal/utils/refresh/register-auth-refresh-listener.js";
 import { initialisePylonSocketData } from "../internal/utils/initialise-pylon-socket-data.js";
+import { buildAppConfig } from "../internal/utils/build-app-config.js";
+import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config.js";
 import { composePylonSocketContextBase } from "../internal/utils/compose-pylon-socket-context.js";
 import { createBuiltInRoomListeners } from "../internal/utils/create-built-in-room-listeners.js";
 import { loadPylonListeners } from "../internal/utils/load-pylon-listener.js";
@@ -29,12 +31,14 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import type { Server } from "http";
 import { Server as SocketIoServer } from "socket.io";
 import type {
+  AppConfig,
   IoServer,
   IoSocket,
   PylonConnectionMiddleware,
   PylonSettings,
   PylonSocket,
   PylonSocketContext,
+  PylonSocketData,
   PylonSocketMiddleware,
 } from "../types/index.js";
 import { PylonListener } from "./PylonListener.js";
@@ -60,13 +64,10 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     this.middleware = [
       createDependenciesMiddleware({
         actor: options.actor,
-        auditConfig: options.bus
-          ? {
-              bus: options.bus,
-              sanitise: options.audit?.sanitise,
-              skip: options.audit?.skip,
-            }
-          : undefined,
+        // The socket transport resolves claims too — the handshake authenticates
+        // a credential and `ctx.auth.introspect()` answers for it — so it gets
+        // the same parsed auth config the http transport does.
+        authConfig: options.auth ? parseAuthConfig(options.auth) : undefined,
         hermes: options.hermes,
         bus: options.bus,
         cache,
@@ -77,16 +78,10 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       }),
       createQueueMiddleware(options.queue),
       createWebhookMiddleware(options.webhook),
+      // No arguments: the deployment's rate-limit policy is on
+      // `ctx.state.app.config.rateLimit`, which reaches this transport too.
       ...(options.rateLimit?.enabled && options.rateLimit.window && options.rateLimit.max
-        ? [
-            useRateLimit({
-              window: options.rateLimit.window,
-              max: options.rateLimit.max,
-              strategy: options.rateLimit.strategy,
-              key: options.rateLimit.key,
-              skip: options.rateLimit.skip,
-            }),
-          ]
+        ? [useRateLimit()]
         : []),
       ...(socket.middleware ?? []),
     ];
@@ -107,13 +102,40 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     this.addMiddleware(middleware);
   }
 
-  async load(): Promise<void> {
+  /**
+   * ⚠ `appConfig` is handed in by `Pylon`, which builds it ONCE after
+   * `amphora.setup()` and gives the SAME frozen object to both transports. It
+   * falls back to building its own only for a `PylonIo` driven standalone.
+   */
+  async load(appConfig?: AppConfig): Promise<void> {
     if (this._loaded) return this._loaded;
+    if (appConfig) this.appConfig = appConfig;
     this._loaded = this.loadOnce();
     return this._loaded;
   }
 
   private _loaded: Promise<void> | null = null;
+  private appConfig: AppConfig | null = null;
+
+  /** Built at most once per process, never per connection. */
+  private get resolvedAppConfig(): AppConfig {
+    return (this.appConfig ??= buildAppConfig(this.options));
+  }
+
+  /**
+   * The socket's ambient identity plus the deployment's policy. ⚠ `config` is
+   * the SAME frozen object on every connection — only the surrounding data
+   * (tokens, session, the pylon namespace) is per-socket.
+   */
+  private buildSocketData(): PylonSocketData {
+    return initialisePylonSocketData({
+      config: this.resolvedAppConfig,
+      domain: this.options.domain,
+      environment: this.options.environment,
+      name: this.options.name,
+      version: this.options.version,
+    });
+  }
 
   private async loadOnce(): Promise<void> {
     this.logger.verbose("Loading listeners");
@@ -262,7 +284,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
   ): Promise<void> {
     socket.data = {
       ...socket.data,
-      ...initialisePylonSocketData(this.options),
+      ...this.buildSocketData(),
     };
 
     const ctx = composePylonHandshakeContext(this.server, socket as PylonSocket);
@@ -279,7 +301,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     if (!socket.data?.app) {
       socket.data = {
         ...socket.data,
-        ...initialisePylonSocketData(this.options),
+        ...this.buildSocketData(),
       };
     }
 

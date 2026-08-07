@@ -5,6 +5,7 @@
 
 import { Aegis } from "@lindorm/aegis";
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
+import type { ReadableTime } from "@lindorm/date";
 import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { isBigInt } from "@lindorm/is";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
@@ -14,7 +15,10 @@ import { afterEach, beforeEach, describe, expect, type Mock, test, vi } from "vi
 import { CachedUserinfo } from "../../../entities/CachedUserinfo.js";
 import type { IPylonAuthDriver } from "../../../interfaces/index.js";
 import type { PylonAuthConfig, PylonUserinfo } from "../../../types/index.js";
-import { AUTH_CACHE_POLICY } from "../../constants/symbols.js";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../../__fixtures__/app-config.js";
 import { stageEncryptedField } from "../../utils/stage-encrypted-field.js";
 import { createAuthClient } from "./create-auth-client.js";
 
@@ -81,9 +85,11 @@ const createDriver = (userinfo: Mock, clientId = "client-a"): IPylonAuthDriver =
 
 type ContextOptions = {
   kv?: ProteusSource;
-  ttl?: string;
+  ttl?: ReadableTime;
   /** `false` = the deployment turned userinfo caching off on its own. */
   userinfo?: false;
+  /** `null` = a VERIFY-ONLY driver, which is nobody's OAuth client. */
+  clientId?: string | null;
   amphora: IAmphora;
 };
 
@@ -99,7 +105,20 @@ const createContext = (opts: ContextOptions): any => {
     logger: createMockLogger(),
     request: {},
     state: {
-      app: { environment: "test" },
+      app: {
+        // Exactly what `buildAppConfig` resolves: the driver's identity and
+        // capabilities, plus the deployment's per-concern cache policy.
+        config: createTestAppConfig({
+          auth: createTestAuthConfig({
+            clientId: opts.clientId === undefined ? "client-a" : opts.clientId,
+            issuer: ISSUER,
+            cache: opts.kv
+              ? { userinfo: opts.userinfo === false ? false : { ttl: opts.ttl } }
+              : false,
+          }),
+        }),
+        environment: "test",
+      },
       authorization: { type: "bearer", value: TOKEN },
       metadata: { correlationId: "corr-1" },
       origin: "https://api.lindorm.io",
@@ -108,20 +127,15 @@ const createContext = (opts: ContextOptions): any => {
     },
   };
 
-  // Exactly what the dependencies middleware installs: the evictable SESSION as
-  // the storage, and the parsed `PylonAuthConfig.cache` as the policy.
+  // The evictable SESSION, exactly what the dependencies middleware installs.
   if (opts.kv) {
     ctx.cache = opts.kv.session({ logger: ctx.logger });
-    ctx[AUTH_CACHE_POLICY] = {
-      userinfo: opts.userinfo === false ? false : { ttl: opts.ttl },
-    };
   }
 
   return ctx;
 };
 
 const createConfig = (driver: IPylonAuthDriver): PylonAuthConfig => ({
-  cache: null,
   driver,
   defaultTokenExpiry: "1d",
   refresh: { maxAge: "1h", mode: "half_life" },
@@ -364,17 +378,12 @@ describe("createAuthClient userinfo cache", () => {
   });
 
   // No client identity ⇒ no key that is safe to share, so the cache steps aside
-  // rather than key on the token alone.
-  test("should skip the cache when the driver cannot resolve its identity", async () => {
-    const unresolvable = (): never => {
-      throw new Error("idp not configured");
-    };
-
+  // rather than key on the token alone. A VERIFY-ONLY driver is nobody's OAuth
+  // client, which `buildAppConfig` resolves to a null client id.
+  test("should skip the cache when the deployment resolved no client id", async () => {
     for (let i = 0; i < 2; i++) {
-      const ctx = createContext({ kv, amphora });
-      const driver = createDriver(userinfo);
-      (driver as any).endpoints = unresolvable;
-      await createAuthClient(ctx, createConfig(driver)).userinfo(TOKEN);
+      const ctx = createContext({ kv, amphora, clientId: null });
+      await createAuthClient(ctx, createConfig(createDriver(userinfo))).userinfo(TOKEN);
     }
 
     expect(userinfo).toHaveBeenCalledTimes(2);

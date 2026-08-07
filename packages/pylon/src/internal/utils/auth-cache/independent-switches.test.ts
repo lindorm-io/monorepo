@@ -15,7 +15,10 @@ import { CachedUserinfo } from "../../../entities/CachedUserinfo.js";
 import type { IPylonAuthDriver } from "../../../interfaces/index.js";
 import type { PylonAuthCacheConfig, PylonAuthConfig } from "../../../types/index.js";
 import { createAccessTokenMiddleware } from "../../../middleware/common/create-access-token-middleware.js";
-import { AUTH_CACHE_POLICY } from "../../constants/symbols.js";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../../__fixtures__/app-config.js";
 import { createAuthClient } from "../auth/create-auth-client.js";
 import { stageEncryptedField } from "../stage-encrypted-field.js";
 
@@ -60,7 +63,7 @@ const createKv = async (amphora: IAmphora): Promise<ProteusSource> => {
   return source;
 };
 
-const createDriver = (userinfo: Mock): IPylonAuthDriver =>
+const createDriver = (introspect: Mock, userinfo: Mock): IPylonAuthDriver =>
   ({
     clientId: "client-a",
     endpoints: () => ({
@@ -72,11 +75,11 @@ const createDriver = (userinfo: Mock): IPylonAuthDriver =>
       revocationEndpoint: null,
       endSessionEndpoint: null,
     }),
+    introspect,
     userinfo,
   }) as unknown as IPylonAuthDriver;
 
 const createConfig = (driver: IPylonAuthDriver): PylonAuthConfig => ({
-  cache: null,
   driver,
   defaultTokenExpiry: "1d",
   refresh: { maxAge: "1h", mode: "half_life" },
@@ -87,6 +90,7 @@ const createContext = (
   cache: PylonAuthCacheConfig,
   kv: ProteusSource,
   introspect: Mock,
+  userinfo: Mock,
   amphora: IAmphora,
 ): any => {
   const aegis = createMockAegis();
@@ -95,16 +99,18 @@ const createContext = (
   const ctx: any = {
     aegis,
     amphora,
-    auth: {
-      capabilities: { introspect: true, userinfo: true },
-      config: async () => ({ issuer: ISSUER, clientId: "client-a" }),
-      introspect,
-    },
     logger: createMockLogger(),
     request: {},
     state: {
       access: null,
-      app: { environment: "test" },
+      app: {
+        // Exactly what `buildAppConfig` resolves: the driver's identity and
+        // capabilities, plus the deployment's per-concern cache policy.
+        config: createTestAppConfig({
+          auth: createTestAuthConfig({ clientId: "client-a", issuer: ISSUER, cache }),
+        }),
+        environment: "test",
+      },
       authorization: { type: "bearer", value: TOKEN },
       metadata: { correlationId: "corr-1" },
       origin: "https://api.lindorm.io",
@@ -113,10 +119,12 @@ const createContext = (
     },
   };
 
-  // Exactly what the dependencies middleware installs: the evictable SESSION as
-  // the storage, and the parsed `PylonAuthConfig.cache` as the policy.
+  // The evictable SESSION, exactly what the dependencies middleware installs.
   ctx.cache = kv.session({ logger: ctx.logger });
-  ctx[AUTH_CACHE_POLICY] = cache;
+
+  // ONE real client for both concerns, over ONE driver — the point of the file
+  // is that the two switches are independent inside it.
+  ctx.auth = createAuthClient(ctx, createConfig(createDriver(introspect, userinfo)));
 
   return ctx;
 };
@@ -156,10 +164,10 @@ describe("auth cache independent switches", () => {
 
   /** One request: resolve the opaque access token, then read the profile. */
   const request = async (cache: PylonAuthCacheConfig): Promise<void> => {
-    const ctx = createContext(cache, kv, introspect, amphora);
+    const ctx = createContext(cache, kv, introspect, userinfo, amphora);
 
     await createAccessTokenMiddleware({ issuer: ISSUER } as any)(ctx, next);
-    await createAuthClient(ctx, createConfig(createDriver(userinfo))).userinfo(TOKEN);
+    await ctx.auth.userinfo(TOKEN);
   };
 
   test("should cache userinfo and not introspection", async () => {

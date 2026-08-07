@@ -1,5 +1,6 @@
 import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { createTestAppConfig } from "../../__fixtures__/app-config.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { useCache } from "./use-cache.js";
 
@@ -69,7 +70,9 @@ const createCtx = (config: CtxConfig = {}): any => {
       actor: config.actor ?? "unknown",
       app: {
         environment: config.environment ?? "test",
-        config: { audit: false, cache: config.cacheEnabled ?? true, rateLimit: false },
+        config: createTestAppConfig({
+          responseCache: (config.cacheEnabled ?? true) ? {} : false,
+        }),
       },
     },
     get: (name: string) => headers[name.toLowerCase()],

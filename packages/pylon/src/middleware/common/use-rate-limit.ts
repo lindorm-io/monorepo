@@ -1,19 +1,28 @@
 import { type ReadableTime, ms } from "@lindorm/date";
 import { ClientError, ServerError } from "@lindorm/errors";
+import { isNumber } from "@lindorm/is";
 import type { IProteusSession } from "@lindorm/proteus";
 import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.js";
 import { fixedWindowStrategy } from "../../internal/utils/rate-limit/fixed-window-strategy.js";
 import type { RateLimitResult } from "../../internal/utils/rate-limit/fixed-window-strategy.js";
 import { slidingWindowStrategy } from "../../internal/utils/rate-limit/sliding-window-strategy.js";
 import { tokenBucketStrategy } from "../../internal/utils/rate-limit/token-bucket-strategy.js";
-import type { PylonContext, PylonMiddleware } from "../../types/index.js";
+import type {
+  PylonContext,
+  PylonMiddleware,
+  PylonRateLimitStrategy,
+} from "../../types/index.js";
 
-type RateLimitStrategy = "fixed" | "sliding" | "token-bucket";
-
+/**
+ * A mount's OWN limits, each narrowing the deployment policy on
+ * `ctx.state.app.config.rateLimit`. Every member is optional because the
+ * deployment already stated all five — `useRateLimit()` with no arguments IS the
+ * deployment's limit, which is how the globally mounted one is installed.
+ */
 type RateLimitOptions = {
-  window: ReadableTime | number;
-  max: number;
-  strategy?: RateLimitStrategy;
+  window?: ReadableTime | number;
+  max?: number;
+  strategy?: PylonRateLimitStrategy;
   key?: (ctx: PylonContext) => string;
   skip?: (ctx: PylonContext) => boolean;
 };
@@ -30,7 +39,7 @@ const resolveKey = (ctx: PylonContext): string => {
 
 const executeStrategy = async (
   session: IProteusSession,
-  strategy: RateLimitStrategy,
+  strategy: PylonRateLimitStrategy,
   key: string,
   windowMs: number,
   max: number,
@@ -56,22 +65,49 @@ const executeStrategy = async (
   }
 };
 
-export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
-  const strategy: RateLimitStrategy = options.strategy ?? "fixed";
-  const windowMs =
-    typeof options.window === "number" ? options.window : ms(options.window);
+export const useRateLimit = (options: RateLimitOptions = {}): PylonMiddleware => {
+  // Resolved once: a mount's window is a fixed duration, whatever spelling it
+  // arrived in, and the deployment's is already milliseconds.
+  const mountWindowMs =
+    options.window === undefined
+      ? null
+      : isNumber(options.window)
+        ? options.window
+        : ms(options.window);
 
   return async function useRateLimitMiddleware(ctx: PylonContext, next) {
-    // Disabled by app config: silently pass through, never throw. The
-    // source-missing throw below only fires when rate limiting IS enabled.
-    if (ctx.state.app.config.rateLimit === false) {
+    // Disabled by app config: silently pass through, never throw. The throws
+    // below only fire when rate limiting IS enabled.
+    const config = ctx.state.app.config.rateLimit;
+
+    if (config === false) {
       await next();
       return;
     }
 
-    if (options.skip?.(ctx)) {
+    // A mount states its own skip or inherits the deployment's — the same
+    // narrowing every other member gets, so "never rate-limit health checks"
+    // is stated once.
+    const skip = options.skip ?? config.skip;
+
+    if (skip?.(ctx)) {
       await next();
       return;
+    }
+
+    const strategy = options.strategy ?? config.strategy;
+    const windowMs = mountWindowMs ?? config.window;
+    const max = options.max ?? config.max;
+
+    if (windowMs === null || max === null) {
+      throw new ServerError("Rate limiting has no window or ceiling to apply", {
+        code: "rate_limit_not_bounded",
+        type: "urn:lindorm:pylon:error:rate_limit_not_bounded",
+        title: "Rate Limit Not Bounded",
+        details:
+          "Rate limiting is enabled but neither this mount nor PylonSettings names both a `window` and a `max`. State them on the mount, or set rateLimit.window and rateLimit.max for the deployment.",
+        debug: { max, strategy, windowMs },
+      });
     }
 
     // The evictable per-request session, installed whenever a `cache` (or the
@@ -89,11 +125,11 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
       });
     }
 
-    const key = options.key?.(ctx) ?? resolveKey(ctx);
-    const result = await executeStrategy(ctx.cache, strategy, key, windowMs, options.max);
+    const key = (options.key ?? config.key)?.(ctx) ?? resolveKey(ctx);
+    const result = await executeStrategy(ctx.cache, strategy, key, windowMs, max);
 
     if (isHttpContext(ctx)) {
-      ctx.set("X-RateLimit-Limit", String(options.max));
+      ctx.set("X-RateLimit-Limit", String(max));
       ctx.set("X-RateLimit-Remaining", String(result.remaining));
       ctx.set("X-RateLimit-Reset", String(Math.ceil(result.resetAt.getTime() / 1000)));
       ctx.set("X-RateLimit-Strategy", strategy);
@@ -112,7 +148,7 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
         title: "Rate Limit Exceeded",
         details: `Too many requests; retry after ${Math.ceil((result.resetAt.getTime() - Date.now()) / 1000)} seconds`,
         data: {
-          limit: options.max,
+          limit: max,
           remaining: result.remaining,
           resetAt: result.resetAt.toISOString(),
           retryAfter: Math.ceil((result.resetAt.getTime() - Date.now()) / 1000),

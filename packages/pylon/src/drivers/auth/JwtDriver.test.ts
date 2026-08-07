@@ -48,7 +48,7 @@ describe("JwtDriver", () => {
   /**
    * The absence IS the capability declaration. Pylon reads exactly this at boot
    * to refuse to mount an auth router this driver cannot serve, and
-   * `resolveAuthIdentity` reads the missing `clientId` the same way.
+   * `buildAppConfig` reads the missing `clientId` the same way.
    */
   describe("declared capabilities", () => {
     let contract: IPylonAuthDriver;

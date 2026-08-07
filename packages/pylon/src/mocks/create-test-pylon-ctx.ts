@@ -78,7 +78,20 @@ const defaultState = (): PylonState => ({
   access: null,
   actor: "test-actor",
   app: {
-    config: { audit: false, cache: false, rateLimit: false },
+    // Features OFF, auth ON: a consumer test wants `ctx.auth.introspect` to
+    // answer without also opting into audit writes or rate-limit storage. The
+    // identity is what a driver-response cache would key on.
+    config: {
+      audit: false,
+      responseCache: false,
+      rateLimit: false,
+      auth: {
+        issuer: "http://localhost:3000",
+        clientId: "test-client",
+        capabilities: { introspect: true, userinfo: true },
+        cache: false,
+      },
+    },
     domain: "http://localhost:3000",
     environment: "test",
     name: "test",
@@ -114,7 +127,6 @@ export const _createTestPylonCtx = (
   };
 
   const auth: PylonAuthClaimsClient = {
-    capabilities: { introspect: true, userinfo: true },
     introspect: resolves({ active: false } as PylonIntrospection),
     userinfo: resolves({ subject: "test-actor" } as PylonUserinfo),
   };

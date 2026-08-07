@@ -1,7 +1,6 @@
 import type { ReadableTime } from "@lindorm/date";
 import { merge } from "@lindorm/utils";
 import type {
-  PylonAuthCacheConfig,
   PylonAuthConfig,
   PylonAuthSettings,
   PylonAuthRefreshConfig,
@@ -44,15 +43,7 @@ export const parseAuthConfig = (options: PylonAuthSettings): PylonAuthConfig => 
 
   const refresh = merge<PylonAuthRefreshConfig>(REFRESH_DEFAULTS, options.refresh ?? {});
 
-  // The ONE place the driver-response cache is switched on. `enabled: false` and
-  // an absent block collapse to the same `null`, which is the only off switch
-  // the two cache utilities ever consult.
-  const cache: PylonAuthCacheConfig | null = options.cache?.enabled
-    ? { introspection: options.cache.introspection, userinfo: options.cache.userinfo }
-    : null;
-
   return {
-    cache,
     driver: options.driver,
     defaultTokenExpiry: options.defaultTokenExpiry ?? DEFAULT_TOKEN_EXPIRY,
     refresh,

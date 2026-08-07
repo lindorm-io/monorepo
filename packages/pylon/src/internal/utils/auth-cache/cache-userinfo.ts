@@ -1,26 +1,17 @@
 import { isLive, ms } from "@lindorm/date";
-import type {
-  PylonAuthCacheConfig,
-  PylonAuthClientConfig,
-  PylonContext,
-  PylonUserinfo,
-} from "../../../types/index.js";
+import type { PylonContext, PylonUserinfo } from "../../../types/index.js";
 import { DEFAULT_USERINFO_CACHE_TTL } from "../../constants/auth-cache.js";
-import { AUTH_CACHE_POLICY } from "../../constants/symbols.js";
 import { buildAuthCacheKey } from "./build-auth-cache-key.js";
 
 type Options = {
-  /** The `(issuer, clientId)` the provider knows this pylon by — resolved from
-   *  the DRIVER, because that is the party the answer varies by. Synchronous:
-   *  the driver's endpoints are, and a driver with no client id THROWS here
-   *  rather than answering. */
-  identity: () => PylonAuthClientConfig;
-  /** The uncached call, invoked on a miss and on every degraded path. */
+  /** The uncached driver call, invoked on a miss and on every degraded path. */
   fetch: () => Promise<PylonUserinfo>;
 };
 
 /**
- * The driver's userinfo call with a shared cache in front of it (OIDC Core §5.3).
+ * The shared cache built INTO `ctx.auth.userinfo` (OIDC Core §5.3). Not a
+ * wrapper a caller may choose: there is one userinfo, and this is the part of it
+ * that remembers.
  *
  * ⚠ Unlike introspection, the TTL here is a STALENESS TOLERANCE, not a
  * revocation window — a profile is not an authorization decision, and by the
@@ -35,16 +26,18 @@ type Options = {
  * Everything else fails OPEN to an uncached fetch — no source, no client
  * identity to key on, or a storage outage must never fail a request.
  */
-export const userinfoWithCache = async (
+export const cacheUserinfo = async (
   ctx: PylonContext,
   token: string,
   options: Options,
 ): Promise<PylonUserinfo> => {
-  const config = (ctx as any)[AUTH_CACHE_POLICY] as PylonAuthCacheConfig | undefined;
+  const { auth } = ctx.state.app.config;
 
   // Off for userinfo specifically (`cache.userinfo: false`, introspection
-  // unaffected), or off for the deployment (no `auth.cache` block).
-  if (!config || config.userinfo === false) return options.fetch();
+  // unaffected), or off for the deployment (no `auth.cache` block, or no `auth`
+  // block at all).
+  if (!auth || auth.cache === false) return options.fetch();
+  if (auth.cache.userinfo === false) return options.fetch();
 
   // No evictable source in this deployment: keep fetching, uncached and without
   // error. Read AFTER the switches so an off deployment never opens a session it
@@ -54,24 +47,18 @@ export const userinfoWithCache = async (
   // The response is a function of (token, provider, requesting client). Without
   // the last two there is no key that is safe to share, so the cache steps aside
   // rather than key on the token alone.
-  let identity: PylonAuthClientConfig;
+  const { clientId, issuer } = auth;
 
-  try {
-    identity = options.identity();
-  } catch (error: any) {
-    ctx.logger.debug("Userinfo cache skipped: auth driver exposes no identity", {
-      error,
+  if (!issuer || !clientId) {
+    ctx.logger.debug("Userinfo cache skipped: auth exposes no identity", {
+      clientId,
+      issuer,
     });
     return options.fetch();
   }
 
-  const ttlMs = ms(config.userinfo?.ttl ?? DEFAULT_USERINFO_CACHE_TTL);
-  const key = buildAuthCacheKey({
-    kind: "userinfo",
-    token,
-    issuer: identity.issuer,
-    clientId: identity.clientId,
-  });
+  const ttlMs = ms(auth.cache.userinfo?.ttl ?? DEFAULT_USERINFO_CACHE_TTL);
+  const key = buildAuthCacheKey({ kind: "userinfo", token, issuer, clientId });
 
   // Dynamically import the entity so the static module graph from index.js stays
   // free of @lindorm/proteus (iris/proteus optionality).

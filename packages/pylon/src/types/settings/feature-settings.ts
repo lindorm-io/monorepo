@@ -41,9 +41,16 @@ export type PylonResponseCacheSettings = {
   enabled: boolean;
 };
 
+export type PylonRateLimitStrategy = "fixed" | "sliding" | "token-bucket";
+
 export type PylonRateLimitSettings = {
   enabled: boolean;
-  strategy?: "fixed" | "sliding" | "token-bucket";
+  strategy?: PylonRateLimitStrategy;
+  /**
+   * The deployment-wide window and ceiling. Both are optional together: a
+   * deployment may enable rate limiting for mounts that state their own limits
+   * without imposing a global one, in which case no global mount is installed.
+   */
   window?: ReadableTime | number;
   max?: number;
   key?: (ctx: any) => string;

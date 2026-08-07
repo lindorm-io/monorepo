@@ -75,7 +75,6 @@ describe("auth flow", () => {
   });
 
   const createConfig = (driver: IPylonAuthDriver): PylonAuthConfig => ({
-    cache: null,
     driver,
     defaultTokenExpiry: "1d",
     refresh: { maxAge: "1h", mode: "half_life" },

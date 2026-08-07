@@ -19,6 +19,7 @@ import { httpResponseTimeMiddleware } from "../internal/middleware/http-response
 import { createHttpSessionMiddleware } from "../internal/middleware/http-session-middleware.js";
 import { createHttpStateMiddleware } from "../internal/middleware/http-state-middleware.js";
 import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config.js";
+import { buildAppConfig } from "../internal/utils/build-app-config.js";
 import {
   buildLivenessCallback,
   buildReadinessCallback,
@@ -33,6 +34,7 @@ import type { IProteusSource } from "@lindorm/proteus";
 import Koa from "koa";
 import { useRateLimit } from "../middleware/common/use-rate-limit.js";
 import type {
+  AppConfig,
   HttpCallback,
   PylonAuthConfig,
   PylonHttpCallback,
@@ -77,7 +79,13 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     this.addMiddleware(middleware);
   }
 
-  loadMiddleware(): void {
+  /**
+   * ⚠ `appConfig` is handed in by `Pylon`, which builds it ONCE after
+   * `amphora.setup()` and gives the SAME frozen object to both transports. It
+   * falls back to building its own only for a `PylonHttp` driven standalone,
+   * where there is no second transport to agree with.
+   */
+  loadMiddleware(appConfig?: AppConfig): void {
     this.logger.debug("Loading middleware");
 
     this.server.use(createHttpCorsMiddleware(this.options.cors, this.logger));
@@ -89,11 +97,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpResponseLoggerMiddleware,
       httpErrorHandlerMiddleware,
       createHttpStateMiddleware({
-        config: {
-          audit: this.options.audit?.enabled ?? false,
-          cache: this.options.responseCache?.enabled ?? false,
-          rateLimit: this.options.rateLimit?.enabled ?? false,
-        },
+        config: appConfig ?? buildAppConfig(this.options),
         environment: this.options.environment,
         name: this.options.name,
         version: this.options.version,
@@ -123,13 +127,6 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       createDependenciesMiddleware({
         actor: this.options.actor,
         authConfig: this.authConfig,
-        auditConfig: this.options.bus
-          ? {
-              bus: this.options.bus,
-              sanitise: this.options.audit?.sanitise,
-              skip: this.options.audit?.skip,
-            }
-          : undefined,
         hermes: this.options.hermes,
         bus: this.options.bus,
         // `ctx.cache` is installed whenever an evictable source is provided,
@@ -142,18 +139,14 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       }),
       createQueueMiddleware(this.options.queue),
       createWebhookMiddleware(this.options.webhook),
+      // No arguments: the deployment's window, ceiling, strategy, key and skip
+      // are all on `ctx.state.app.config.rateLimit`, so restating them in a
+      // closure here would be a second copy free to disagree with the one every
+      // route-level mount reads.
       ...(this.options.rateLimit?.enabled &&
       this.options.rateLimit.window &&
       this.options.rateLimit.max
-        ? [
-            useRateLimit({
-              window: this.options.rateLimit.window,
-              max: this.options.rateLimit.max,
-              strategy: this.options.rateLimit.strategy,
-              key: this.options.rateLimit.key,
-              skip: this.options.rateLimit.skip,
-            }),
-          ]
+        ? [useRateLimit()]
         : []),
     ]);
 

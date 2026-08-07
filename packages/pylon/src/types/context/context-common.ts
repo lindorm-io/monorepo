@@ -13,15 +13,15 @@ import type { PylonClientContext } from "./pylon-client-context.js";
 import type { PylonIoContextHttp } from "./pylon-io-context.js";
 import type { PylonResolvedAccess } from "./pylon-resolved-access.js";
 import type { PylonSocketEmitter } from "../socket/pylon-socket-emitter.js";
-
-export type AppConfig = {
-  audit: boolean;
-  cache: boolean;
-  rateLimit: boolean;
-};
+import type { AppConfig } from "./app-config.js";
 
 export type AppState = {
-  config: AppConfig;
+  /**
+   * The deployment's resolved configuration and policy — the same deeply frozen
+   * object on every request of both transports. The other members are ambient
+   * IDENTITY, which is why they sit beside it rather than inside it.
+   */
+  readonly config: AppConfig;
   domain: string;
   environment: Environment;
   name: string;

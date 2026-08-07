@@ -1,13 +1,14 @@
-// The driver-response cache has exactly ONE switch: `PylonAuthConfig.cache`.
-// `parseAuthConfig` is the only thing that sets it, the dependencies middleware
-// is the only thing that carries it, and its ABSENCE is what keeps caching off —
-// there is no second flag anywhere that could disagree. Storage is `ctx.cache`,
-// the ordinary evictable session, so a deployment with no ephemeral source keeps
-// calling the driver uncached and WITHOUT error.
+// The driver-response cache has exactly ONE switch:
+// `ctx.state.app.config.auth.cache`. `buildAppConfig` is the only thing that
+// sets it, and its ABSENCE is what keeps caching off — there is no second flag
+// anywhere that could disagree. Storage is `ctx.cache`, the ordinary evictable
+// session, so a deployment with no ephemeral source keeps calling the driver
+// uncached and WITHOUT error.
 //
-// Driven end to end through the real `parseAuthConfig` + real dependencies
-// middleware + real auth client against a REAL sqlite source and Amphora — the
-// payloads are `@Encrypted`, so mocks would prove nothing about what round-trips.
+// Driven end to end from the SETTINGS through the real `buildAppConfig` + real
+// dependencies middleware + real auth client against a REAL sqlite source and
+// Amphora — the payloads are `@Encrypted`, so mocks would prove nothing about
+// what round-trips.
 
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { Amphora, type IAmphora } from "@lindorm/amphora";
@@ -22,6 +23,7 @@ import { createAccessTokenMiddleware } from "../../../middleware/common/create-a
 import type { PylonAuthSettings } from "../../../types/index.js";
 import { createDependenciesMiddleware } from "../../middleware/common-dependencies-middleware.js";
 import { parseAuthConfig } from "../auth/parse-auth-config.js";
+import { buildAppConfig } from "../build-app-config.js";
 import { stageEncryptedField } from "../stage-encrypted-field.js";
 
 const ISSUER = "https://test.lindorm.io/";
@@ -106,7 +108,7 @@ describe("auth cache capability", () => {
     vi.clearAllMocks();
   });
 
-  const createCtx = (): any => {
+  const createCtx = (auth: PylonAuthSettings): any => {
     const aegis = createMockAegis();
     // Opaque credential: nothing to verify locally, so the middleware must go to
     // the authorization server (RFC 7662).
@@ -122,7 +124,9 @@ describe("auth cache capability", () => {
         actor: "unknown",
         app: {
           environment: "test",
-          config: { audit: false, cache: false, rateLimit: false },
+          // The REAL resolver, from the REAL settings — the switch under test is
+          // what `buildAppConfig` makes of `auth.cache`.
+          config: buildAppConfig({ amphora, auth, logger: createMockLogger() }),
         },
         authorization: { type: "bearer", value: TOKEN },
         metadata: { correlationId: "corr-1", date: new Date() },
@@ -134,14 +138,15 @@ describe("auth cache capability", () => {
   };
 
   /**
-   * ONE request, wired exactly as `PylonHttp` wires it: settings → parsed auth
-   * config → dependencies middleware → access-token middleware → `ctx.auth`.
+   * ONE request, wired exactly as `PylonHttp` wires it: settings → app config +
+   * parsed auth config → dependencies middleware → access-token middleware →
+   * `ctx.auth`.
    */
   const request = async (
     auth: PylonAuthSettings,
     source: ProteusSource | null,
   ): Promise<void> => {
-    const ctx = createCtx();
+    const ctx = createCtx(auth);
 
     await createDependenciesMiddleware({
       authConfig: parseAuthConfig(auth),

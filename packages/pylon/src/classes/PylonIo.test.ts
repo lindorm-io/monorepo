@@ -10,6 +10,7 @@ import { join } from "path";
 import { PylonListenerScanner } from "../internal/classes/PylonListenerScanner.js";
 import { PylonError } from "../errors/PylonError.js";
 import { PylonListener } from "./PylonListener.js";
+import { JwtDriver } from "../drivers/auth/JwtDriver.js";
 import { PylonIo } from "./PylonIo.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
@@ -40,7 +41,12 @@ describe("PylonIo (handshake chain)", () => {
       logger: createMockLogger(),
       environment: "test",
       cors: overrides.cors,
-      auth: overrides.session ? { session: overrides.session } : undefined,
+      // ⚠ `driver` is REQUIRED on PylonAuthSettings — a session block without one
+      // is not a configuration pylon accepts. `JwtDriver` is the minimal honest
+      // driver: it pins an issuer and makes no network calls.
+      auth: overrides.session
+        ? { driver: new JwtDriver({ issuer: "self" }), session: overrides.session }
+        : undefined,
       db: overrides.db,
       kv: overrides.kv,
       socket: {

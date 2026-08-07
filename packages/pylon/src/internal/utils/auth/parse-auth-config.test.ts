@@ -60,35 +60,4 @@ describe("parseAuthConfig", () => {
   test("should carry the driver through untouched", () => {
     expect(parseAuthConfig({ driver }).driver).toBe(driver);
   });
-
-  // `auth.cache` is the ONE driver-response-cache switch. An absent block and an
-  // explicit `enabled: false` collapse to the SAME `null`, so there is never a
-  // second flag the two cache utilities could disagree with.
-  describe("cache", () => {
-    test("should parse no policy when the block is absent", () => {
-      expect(parseAuthConfig({ driver }).cache).toBeNull();
-    });
-
-    test("should parse no policy when the block is disabled, TTLs and all", () => {
-      expect(
-        parseAuthConfig({
-          driver,
-          cache: { enabled: false, introspection: { ttl: "30 seconds" } },
-        }).cache,
-      ).toBeNull();
-    });
-
-    test("should carry each concern through UNRESOLVED when enabled", () => {
-      expect(
-        parseAuthConfig({
-          driver,
-          cache: { enabled: true, introspection: { ttl: "2 seconds" }, userinfo: false },
-        }).cache,
-      ).toEqual({ introspection: { ttl: "2 seconds" }, userinfo: false });
-    });
-
-    test("should leave both concerns absent when enabled bare", () => {
-      expect(parseAuthConfig({ driver, cache: { enabled: true } }).cache).toEqual({});
-    });
-  });
 });

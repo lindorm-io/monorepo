@@ -1,22 +1,26 @@
 import { isBefore, isLive, ms } from "@lindorm/date";
 import type {
-  PylonAuthCacheConfig,
   PylonAuthCacheEntry,
-  PylonAuthClientConfig,
-  PylonHttpContext,
+  PylonContext,
   PylonIntrospection,
 } from "../../../types/index.js";
 import { DEFAULT_INTROSPECTION_CACHE_TTL } from "../../constants/auth-cache.js";
-import { AUTH_CACHE_POLICY } from "../../constants/symbols.js";
 import { buildAuthCacheKey } from "./build-auth-cache-key.js";
 import { fromCachedIntrospection } from "./from-cached-introspection.js";
 import { toCachedIntrospection } from "./to-cached-introspection.js";
 
-/** Per-mount override. `false` turns the cache off for this mount alone. */
-export type IntrospectionCacheOptions = PylonAuthCacheEntry;
+type Options = {
+  /** The per-call carve-out. `false` introspects for this call whatever the
+   *  deployment configured; `{ ttl }` shortens the window. */
+  cache: PylonAuthCacheEntry | undefined;
+  /** The uncached driver call, invoked on a miss and on every degraded path. */
+  fetch: () => Promise<PylonIntrospection>;
+};
 
 /**
- * `ctx.auth.introspect` with a short-lived shared cache in front of it.
+ * The short-lived shared cache built INTO `ctx.auth.introspect`. Not a wrapper a
+ * caller may choose: there is one introspect, and this is the part of it that
+ * remembers.
  *
  * ⚠ The TTL IS the revocation window. RFC 7662 §5 warns that caching opens "a
  * window during which a revoked token could be used at the protected resource",
@@ -24,30 +28,32 @@ export type IntrospectionCacheOptions = PylonAuthCacheEntry;
  * Caching to the token's own `exp` would make the window the entire token
  * lifetime, i.e. an opaque token behaving like an unrevocable JWT.
  *
- * Three-tier TTL: per-mount `cache.ttl`, else `auth.cache.introspection.ttl`,
- * else ten seconds. Everything else fails OPEN to an uncached introspection — no source,
- * no client identity to key on, or a storage outage must never fail a request.
- * Only the introspection call itself propagates its error: serving a stale
- * answer over an unreachable authorization server is a revocation bypass.
+ * Three-tier TTL: per-call `cache.ttl`, else `auth.cache.introspection.ttl`,
+ * else ten seconds. Everything else fails OPEN to an uncached introspection — no
+ * source, no client identity to key on, or a storage outage must never fail a
+ * request. Only the introspection call itself propagates its error: serving a
+ * stale answer over an unreachable authorization server is a revocation bypass.
  */
-export const introspectWithCache = async (
-  ctx: PylonHttpContext,
+export const cacheIntrospection = async (
+  ctx: PylonContext,
   token: string,
-  cache: IntrospectionCacheOptions | undefined,
+  options: Options,
 ): Promise<PylonIntrospection> => {
-  const config = (ctx as any)[AUTH_CACHE_POLICY] as PylonAuthCacheConfig | undefined;
+  const { auth } = ctx.state.app.config;
 
-  // Off for this mount (the sensitive-route carve-out), off for introspection
+  // Off for this call (the sensitive-route carve-out), off for introspection
   // specifically (`cache.introspection: false`, userinfo unaffected), or off for
-  // the deployment (no `auth.cache` block).
-  if (cache === false || !config || config.introspection === false) {
-    return ctx.auth.introspect(token);
+  // the deployment (no `auth.cache` block, or no `auth` block at all).
+  if (options.cache === false || !auth || auth.cache === false) {
+    return options.fetch();
   }
+
+  if (auth.cache.introspection === false) return options.fetch();
 
   // No evictable source in this deployment: keep introspecting, uncached and
   // without error. Read AFTER the switches so an off deployment never opens a
   // session it has no use for.
-  if (!ctx.cache) return ctx.auth.introspect(token);
+  if (!ctx.cache) return options.fetch();
 
   // The response is a function of (token, authorization server, requesting
   // client) — RFC 7662 §2.2. ⚠ Both come from the DRIVER, which is the party
@@ -55,26 +61,22 @@ export const introspectWithCache = async (
   // the resource server, whose credentials may legitimately differ from a
   // relying party's. Without them there is no key that is safe to share, so the
   // cache steps aside rather than key on the token alone.
-  let identity: PylonAuthClientConfig;
+  const { clientId, issuer } = auth;
 
-  try {
-    identity = await ctx.auth.config();
-  } catch (error: any) {
-    ctx.logger.debug("Introspection cache skipped: auth client exposes no identity", {
-      error,
+  if (!issuer || !clientId) {
+    ctx.logger.debug("Introspection cache skipped: auth exposes no identity", {
+      clientId,
+      issuer,
     });
-    return ctx.auth.introspect(token);
+    return options.fetch();
   }
 
   const ttlMs = ms(
-    cache?.ttl ?? config.introspection?.ttl ?? DEFAULT_INTROSPECTION_CACHE_TTL,
+    options.cache?.ttl ??
+      auth.cache.introspection?.ttl ??
+      DEFAULT_INTROSPECTION_CACHE_TTL,
   );
-  const key = buildAuthCacheKey({
-    kind: "introspection",
-    token,
-    issuer: identity.issuer,
-    clientId: identity.clientId,
-  });
+  const key = buildAuthCacheKey({ kind: "introspection", token, issuer, clientId });
 
   // Dynamically import the entity so the static module graph from index.js stays
   // free of @lindorm/proteus (iris/proteus optionality).
@@ -86,10 +88,10 @@ export const introspectWithCache = async (
     const entry = await repository.findOne({ id: key });
 
     if (entry) {
-      // BOTH bounds must hold: the entry's own expiry, AND this mount's TTL
-      // measured from when the entry was written. Mounts share one key, so a
+      // BOTH bounds must hold: the entry's own expiry, AND this call's TTL
+      // measured from when the entry was written. Callers share one key, so a
       // two-second carve-out would otherwise be served a sixty-second entry
-      // written by a lenient mount — a revocation window it never agreed to.
+      // written by a lenient one — a revocation window it never agreed to.
       const live = !entry.expiresAt || isLive(entry.expiresAt);
       const withinTtl = isLive(new Date(entry.updatedAt.getTime() + ttlMs));
 
@@ -104,7 +106,7 @@ export const introspectWithCache = async (
 
   // A failure here propagates untouched — nothing is written, and no earlier
   // answer is served in its place.
-  const introspection = await ctx.auth.introspect(token);
+  const introspection = await options.fetch();
 
   const expiresAt = new Date(Date.now() + ttlMs);
   // An entry must never outlive the credential it describes.

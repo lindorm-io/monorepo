@@ -123,7 +123,7 @@ export const useCache = (
 
     // Disabled by app config (e.g. off outside production): silently pass through,
     // never throw. The source-missing throw below only fires when cache IS enabled.
-    if (ctx.state.app.config.cache === false) {
+    if (ctx.state.app.config.responseCache === false) {
       ctx.set("X-Pylon-Cache", "DISABLED");
       await next();
       return;
@@ -137,9 +137,9 @@ export const useCache = (
 
     // The evictable per-request session, installed whenever a `cache` (or the
     // `kv` fallback) source is configured — INDEPENDENT of
-    // `responseCache.enabled`, which is the `ctx.state.app.config.cache` check
-    // above. Read after the disabled/skip guards so a request that never caches
-    // never opens a session against the evictable store.
+    // `responseCache.enabled`, which is the `ctx.state.app.config.responseCache`
+    // check above. Read after the disabled/skip guards so a request that never
+    // caches never opens a session against the evictable store.
     if (!ctx.cache) {
       throw new ServerError("Response cache is not configured", {
         code: "cache_not_configured",

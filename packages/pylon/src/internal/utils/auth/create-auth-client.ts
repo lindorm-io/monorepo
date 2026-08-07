@@ -12,20 +12,20 @@ import type {
   LogoutResult,
   PylonAuthClient,
   PylonAuthClaimsClient,
-  PylonAuthClientConfig,
   PylonAuthConfig,
   PylonAuthDriverContext,
   PylonContext,
   PylonHttpContext,
+  PylonIntrospectOptions,
   PylonIntrospection,
   PylonIntrospectionActive,
   PylonUserinfo,
 } from "../../../types/index.js";
-import { userinfoWithCache } from "../auth-cache/userinfo-with-cache.js";
+import { cacheIntrospection } from "../auth-cache/cache-introspection.js";
+import { cacheUserinfo } from "../auth-cache/cache-userinfo.js";
 import { assertAuthorizeUrl } from "./assert-authorize-url.js";
 import { createAuthDriverContext } from "./create-auth-driver-context.js";
 import { parseUserinfo } from "./parse-userinfo.js";
-import { resolveAuthIdentity } from "./resolve-auth-identity.js";
 
 // --- Claims client (works on both HTTP and socket) ---
 
@@ -98,12 +98,12 @@ export const createClaimsClient = (
       });
     }
 
-    // ONE userinfo call site, so the shared cache in front of it wraps every
-    // consumer of `ctx.auth.userinfo` at once. It steps aside entirely when the
-    // deployment configured none — the per-request map above is unrelated and
+    // ONE userinfo call site, and the shared cache is INSIDE it rather than in
+    // front of it — so every consumer of `ctx.auth.userinfo` is cached alike and
+    // there is no uncached path to pick by mistake. It steps aside entirely when
+    // the deployment configured none; the per-request map above is unrelated and
     // always applies.
-    const result = await userinfoWithCache(ctx, accessToken, {
-      identity: () => resolveAuthIdentity(driver, driverContext),
+    const result = await cacheUserinfo(ctx, accessToken, {
       fetch: () => driver.userinfo!(driverContext, { accessToken }),
     });
 
@@ -111,7 +111,10 @@ export const createClaimsClient = (
     return result;
   };
 
-  const introspect = async (token?: string): Promise<PylonIntrospection> => {
+  const introspect = async (
+    token?: string,
+    introspectOptions: PylonIntrospectOptions = {},
+  ): Promise<PylonIntrospection> => {
     const cacheKey = token ?? "";
     const cached = introspectCache.get(cacheKey);
     if (cached) return cached;
@@ -173,20 +176,19 @@ export const createClaimsClient = (
       });
     }
 
-    const result = await driver.introspect(driverContext, { token: accessToken });
+    // ONE introspection call site, with the RFC 7662 §5 revocation window built
+    // in. Short-lived by construction, and it steps aside entirely when the
+    // deployment configured no cache — or when this call opted out.
+    const result = await cacheIntrospection(ctx, accessToken, {
+      cache: introspectOptions.cache,
+      fetch: () => driver.introspect!(driverContext, { token: accessToken }),
+    });
 
     introspectCache.set(cacheKey, result);
     return result;
   };
 
-  return {
-    capabilities: {
-      introspect: Boolean(driver.introspect),
-      userinfo: Boolean(driver.userinfo),
-    },
-    introspect,
-    userinfo,
-  };
+  return { introspect, userinfo };
 };
 
 // --- Full auth client (HTTP only — adds login/logout) ---
@@ -212,16 +214,6 @@ export const createAuthClient = (
     resolveAccessToken: () =>
       ctx.state.session?.accessToken ?? ctx.state.authorization?.value ?? null,
   });
-
-  // The identity the IdP knows this pylon by — the SAME resolver the cache keys
-  // on, so `ctx.auth.config()` and a cache key can never disagree.
-  //
-  // ⚠ `async` over a synchronous resolver on purpose: `ctx.auth.config()` is a
-  // handler-facing promise-returning method, and a verify-only driver makes the
-  // resolver THROW rather than answer. Wrapping it turns that into a rejection,
-  // which is what every caller already handles.
-  const identity = async (): Promise<PylonAuthClientConfig> =>
-    resolveAuthIdentity(config.driver, driverContext);
 
   const login = async (input: AuthorizeQuery = {}): Promise<AuthorizeResult> => {
     if (!config.router) {
@@ -327,7 +319,7 @@ export const createAuthClient = (
     return { ...result, state };
   };
 
-  return { ...claims, config: identity, login, logout };
+  return { ...claims, login, logout };
 };
 
 // --- Socket claims client factory ---

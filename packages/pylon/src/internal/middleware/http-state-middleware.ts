@@ -5,7 +5,12 @@ import { buildClientContext } from "../utils/build-client-context.js";
 import { getAuthorization } from "../utils/get-authorization.js";
 
 type Options = {
-  config?: Partial<AppConfig>;
+  /**
+   * The deployment's resolved policy, built ONCE by `buildAppConfig` after
+   * `amphora.setup()`. Handed in rather than derived here: it is the same object
+   * the socket transport serves, and deriving it twice is how the two drift.
+   */
+  config: AppConfig;
   environment?: Environment;
   name?: string;
   domain?: string;
@@ -17,12 +22,7 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
   const environment = options.environment || "unknown";
   const name = options.name ?? "unknown";
   const version = options.version ?? "0.0.0";
-
-  const config: AppConfig = {
-    audit: options.config?.audit ?? false,
-    cache: options.config?.cache ?? false,
-    rateLimit: options.config?.rateLimit ?? false,
-  };
+  const config = options.config;
 
   return async function httpStateMiddleware(ctx, next) {
     try {

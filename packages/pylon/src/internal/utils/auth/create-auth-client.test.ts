@@ -2,6 +2,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { IntrospectionEndpointFailed } from "../../../errors/IntrospectionEndpointFailed.js";
 import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed.js";
+import { createTestAppConfig } from "../../../__fixtures__/app-config.js";
 import type { IPylonAuthDriver } from "../../../interfaces/index.js";
 import type {
   PylonAuthConfig,
@@ -66,7 +67,6 @@ const createDriver = (overrides: Partial<IPylonAuthDriver> = {}): IPylonAuthDriv
 });
 
 const createConfig = (driver: IPylonAuthDriver, router = false): PylonAuthConfig => ({
-  cache: null,
   driver,
   defaultTokenExpiry: "1d",
   refresh: { maxAge: "1h", mode: "half_life" },
@@ -79,7 +79,7 @@ const createCtx = (overrides: any = {}) => {
     amphora: { idp: { config: () => ({ issuer: ISSUER }) } },
     logger: createMockLogger(),
     state: {
-      app: { environment: "test" },
+      app: { config: createTestAppConfig(), environment: "test" },
       metadata: { correlationId: "test-corr" },
       origin: "https://app.lindorm.io",
       tokens: {},
@@ -99,51 +99,17 @@ describe("createAuthClient", () => {
     driver = createDriver();
   });
 
-  describe("capabilities", () => {
-    test("should derive them from the driver rather than from settings", () => {
-      const client = createAuthClient(
-        createCtx() as any,
-        createConfig(createDriver({ introspect: undefined, userinfo: undefined })),
-      );
+  // ⚠ VERBS ONLY. `capabilities` and the client identity are NOUNS and moved to
+  // `ctx.state.app.config.auth` — pinned here so a member cannot creep back on.
+  test("should expose nothing but the four verbs", () => {
+    const client = createAuthClient(createCtx() as any, createConfig(driver));
 
-      expect(client.capabilities).toEqual({ introspect: false, userinfo: false });
-    });
-
-    test("should report both when the driver implements both", () => {
-      const client = createAuthClient(createCtx() as any, createConfig(driver));
-
-      expect(client.capabilities).toEqual({ introspect: true, userinfo: true });
-    });
-  });
-
-  // The introspection cache keys on (token, issuer, clientId) — RFC 7662 §2.2
-  // lets the authorization server answer per requesting client. Both inputs come
-  // from the DRIVER, which is the party that authenticates to the endpoint.
-  describe("config", () => {
-    test("should source the issuer from the driver's endpoints", async () => {
-      const client = createAuthClient(createCtx() as any, createConfig(driver));
-
-      await expect(client.config()).resolves.toEqual({
-        issuer: ISSUER,
-        clientId: "client-id",
-      });
-    });
-
-    test("should prefer the driver's runtime issuer over any static value", async () => {
-      const tenant = createDriver({
-        clientId: "resource-server",
-        endpoints: vi
-          .fn()
-          .mockReturnValue({ ...ENDPOINTS, issuer: "https://tenant.lindorm.io" }),
-      });
-
-      const client = createAuthClient(createCtx() as any, createConfig(tenant));
-
-      await expect(client.config()).resolves.toEqual({
-        issuer: "https://tenant.lindorm.io",
-        clientId: "resource-server",
-      });
-    });
+    expect(Object.keys(client).sort()).toEqual([
+      "introspect",
+      "login",
+      "logout",
+      "userinfo",
+    ]);
   });
 
   describe("introspect", () => {
