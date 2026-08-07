@@ -26,7 +26,6 @@ import { composeMiddleware } from "@lindorm/middleware";
 import { isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
 import { uniq } from "@lindorm/utils";
-import { useRateLimit } from "../middleware/common/use-rate-limit.js";
 import { createAdapter } from "@socket.io/redis-adapter";
 import type { Server } from "http";
 import { Server as SocketIoServer } from "socket.io";
@@ -92,11 +91,9 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       }),
       createQueueMiddleware(options.queue),
       createWebhookMiddleware(options.webhook),
-      // No arguments: the deployment's rate-limit policy is on
-      // `ctx.state.app.config.rateLimit`, which reaches this transport too.
-      ...(options.rateLimit?.enabled && options.rateLimit.window && options.rateLimit.max
-        ? [useRateLimit()]
-        : []),
+      // ⚠ No global `useRateLimit()` is injected here. A deployment that wants
+      // every event limited mounts it itself — `socket.middleware:
+      // [useRateLimit()]`, or the listeners' root `_middleware.ts`.
       ...(socket.middleware ?? []),
     ];
     this.options = options;

@@ -386,7 +386,13 @@ export class Pylon<
       }
     }
 
-    if (this.options.responseCache?.enabled) {
+    // ⚠ Unconditional, unlike every other block here: the response cache has no
+    // settings block to gate on, because whether a route caches is decided by
+    // mounting `useCache` and Pylon cannot see a route's middleware chain. So the
+    // table follows the SOURCE — an evictable store gets a `CachedResponse`, the
+    // same way it gets a `ctx.cache` session. The alternative is a mounted
+    // `useCache` failing on an unregistered entity at the first request.
+    {
       const source = this.cache;
       if (source) {
         const { CachedResponse } = await import("../entities/CachedResponse.js");
@@ -421,7 +427,7 @@ export class Pylon<
       }
     }
 
-    if (this.options.rateLimit?.enabled) {
+    if (this.options.rateLimit) {
       // A lost counter costs at most one extra allowed request, so the buckets
       // are evictable — and they are exactly the churn that must not be able to
       // push a `Session` out of `kv`.
@@ -444,7 +450,7 @@ export class Pylon<
       }
     }
 
-    if (this.options.audit?.enabled) {
+    if (this.options.audit) {
       const proteusSource = this.options.db;
       if (proteusSource) {
         const { RequestAuditLog } = await import("../entities/RequestAuditLog.js");
@@ -470,7 +476,7 @@ export class Pylon<
   }
 
   private async subscribe(): Promise<void> {
-    if (this.options.audit?.enabled) {
+    if (this.options.audit) {
       const { bus, db } = this.options;
 
       if (bus && db) {

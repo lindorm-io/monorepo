@@ -183,9 +183,9 @@ describe("useRateLimit", () => {
   });
 
   // ⚠ Same shape as useCache's: this throw sits BELOW the `rateLimit` config
-  // guard, so rate limiting is already enabled when it fires. What is missing is
-  // the evictable source, and that is what the operator must be told.
-  test("should name the missing evictable source, not the feature switch", async () => {
+  // guard, so the deployment already HAS a `rateLimit` block when it fires. What
+  // is missing is the evictable source, and that is what the operator is told.
+  test("should name the missing evictable source, not the policy block", async () => {
     delete ctx.cache;
 
     try {
@@ -195,7 +195,7 @@ describe("useRateLimit", () => {
       expect(err.code).toBe("rate_limit_not_configured");
       expect(err.details).toContain("cache");
       expect(err.details).toContain("kv");
-      expect(err.details).not.toContain("rateLimit: { enabled: true }");
+      expect(err.details).not.toContain("enabled");
       expect(err.details).toMatchSnapshot();
     }
   });

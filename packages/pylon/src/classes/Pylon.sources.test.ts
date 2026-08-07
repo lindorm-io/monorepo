@@ -103,7 +103,7 @@ const createPylon = (
     cache: sourcesInUse.cache as any,
     bus,
 
-    audit: { enabled: true, entities: [WebhookSubscription] },
+    audit: { entities: [WebhookSubscription] },
     auth: {
       driver: new OpenIdResourceDriver({
         clientId: "client-id",
@@ -114,8 +114,7 @@ const createPylon = (
     },
     kryptos: { enabled: true },
     queue: { enabled: true },
-    rateLimit: { enabled: true, window: "1 minute", max: 10 },
-    responseCache: { enabled: true },
+    rateLimit: { window: "1 minute", max: 10 },
     rooms: { presence: true },
     webhook: { enabled: true },
   });
@@ -243,6 +242,42 @@ describe("Pylon source placement", () => {
     });
   });
 
+  // ⚠ `CachedResponse` is the one entity with no settings block behind it, and
+  // that is deliberate: whether a route caches is decided by mounting `useCache`,
+  // which Pylon cannot see. So the table follows the SOURCE — an evictable store
+  // always gets one — while every other evictable entity still follows its policy
+  // block. Registering it lazily is not an option: the first request through a
+  // mounted `useCache` would hit an unregistered entity.
+  describe("no feature blocks", () => {
+    test("should register CachedResponse on the evictable source and nothing else", async () => {
+      const amphora = createAmphora();
+      const kv = createSource(amphora);
+
+      pylon = new Pylon({
+        logger: createMockLogger(),
+        amphora,
+        domain: ISSUER,
+        environment: "test",
+        name: "@lindorm/pylon",
+        port: 55599,
+        version: "0.0.1",
+        kv: kv as any,
+      });
+
+      await pylon.setup();
+
+      const kvTables = await tableNames(kv);
+
+      expect(kvTables).toContain("CachedResponse");
+
+      // Rate limiting keeps its block, so its counters stay behind it.
+      expect(kvTables).not.toContain("RateLimitFixed");
+      expect(kvTables).not.toContain("RateLimitSliding");
+      expect(kvTables).not.toContain("RateLimitBucket");
+      expect(kvTables).not.toContain("Session");
+    });
+  });
+
   // No ephemeral source at all: every ephemeral feature simply registers
   // nothing, and setup still succeeds.
   describe("no ephemeral source", () => {
@@ -269,8 +304,7 @@ describe("Pylon source placement", () => {
           session: { enabled: true },
         },
         kryptos: { enabled: true },
-        rateLimit: { enabled: true, window: "1 minute", max: 10 },
-        responseCache: { enabled: true },
+        rateLimit: { window: "1 minute", max: 10 },
         rooms: { presence: true },
       });
 

@@ -37,19 +37,24 @@ export type PylonWebhookSettings = {
   maxErrors?: number;
 };
 
-export type PylonResponseCacheSettings = {
-  enabled: boolean;
-};
-
 export type PylonRateLimitStrategy = "fixed" | "sliding" | "token-bucket";
 
+/**
+ * The deployment's rate-limit policy. ⚠ Its PRESENCE is the switch — there is no
+ * `enabled` beside it, because a flag next to a populated policy either restates
+ * what the policy already says or contradicts it. Omit the block to leave rate
+ * limiting off; every `useRateLimit` mount then passes through.
+ *
+ * Pylon mounts nothing on its own: a global limiter is an explicit
+ * `useRateLimit()` in the routes' root `_middleware.ts` (or `socket.middleware`
+ * / the listeners' root `_middleware.ts`).
+ */
 export type PylonRateLimitSettings = {
-  enabled: boolean;
   strategy?: PylonRateLimitStrategy;
   /**
-   * The deployment-wide window and ceiling. Both are optional together: a
-   * deployment may enable rate limiting for mounts that state their own limits
-   * without imposing a global one, in which case no global mount is installed.
+   * The deployment-wide window and ceiling. Both are optional together: a bare
+   * `rateLimit: {}` turns the feature on for mounts that state their own limits
+   * without imposing a global one.
    */
   window?: ReadableTime | number;
   max?: number;
@@ -57,8 +62,12 @@ export type PylonRateLimitSettings = {
   skip?: (ctx: any) => boolean;
 };
 
+/**
+ * The deployment's audit policy. ⚠ Its PRESENCE is the switch, on the same terms
+ * as {@link PylonRateLimitSettings} — omit the block to leave auditing off, and
+ * every `useAuditLog` mount passes through.
+ */
 export type PylonAuditSettings = {
-  enabled: boolean;
   sanitise?: (body: unknown) => unknown;
   skip?: (ctx: any) => boolean;
   entities?: Array<Constructor<IEntity>>;

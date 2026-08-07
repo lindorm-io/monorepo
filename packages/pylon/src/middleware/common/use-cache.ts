@@ -121,14 +121,6 @@ export const useCache = (
       return;
     }
 
-    // Disabled by app config (e.g. off outside production): silently pass through,
-    // never throw. The source-missing throw below only fires when cache IS enabled.
-    if (ctx.state.app.config.responseCache === false) {
-      ctx.set("X-Pylon-Cache", "DISABLED");
-      await next();
-      return;
-    }
-
     if (options.skip?.(ctx)) {
       ctx.set("X-Pylon-Cache", "BYPASS");
       await next();
@@ -136,20 +128,19 @@ export const useCache = (
     }
 
     // The evictable per-request session, installed whenever a `cache` (or the
-    // `kv` fallback) source is configured — INDEPENDENT of
-    // `responseCache.enabled`, which is the `ctx.state.app.config.responseCache`
-    // check above. Read after the disabled/skip guards so a request that never
-    // caches never opens a session against the evictable store.
+    // `kv` fallback) source is configured. ⚠ This is the ONLY thing the response
+    // cache asks of the deployment: there is no `responseCache` policy block and
+    // no feature switch, because mounting `useCache` IS the declaration that this
+    // route caches — a settings flag beside it could only ever disagree with the
+    // mount. Read after the skip guard so a skipped request never opens a session
+    // against the evictable store.
     if (!ctx.cache) {
       throw new ServerError("Response cache is not configured", {
         code: "cache_not_configured",
         type: "urn:lindorm:pylon:error:cache_not_configured",
         title: "Response Cache Not Configured",
-        // ⚠ `responseCache` is already enabled here — the config guard above
-        // returned otherwise — so naming that switch would send the operator to
-        // set something already set. What is missing is the STORE.
         details:
-          "The response cache is enabled but no evictable source is attached, so there is nowhere to store an entry. Give PylonSettings a `cache` source (or a `kv` source, which `cache` falls back to) before using useCache",
+          "This route mounts useCache but no evictable source is attached, so there is nowhere to store an entry. Give PylonSettings a `cache` source (or a `kv` source, which `cache` falls back to) before using useCache",
       });
     }
 

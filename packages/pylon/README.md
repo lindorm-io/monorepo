@@ -135,7 +135,7 @@ Pylon takes **four** sources, and where each built-in entity lives is fixed — 
 | ------- | ---------------- | ----------- | -------------------------------------------------------------------- |
 | `db`    | `IProteusSource` | `ctx.db`    | `kryptos`, `webhook`, `audit` — durable and relational               |
 | `kv`    | `IProteusSource` | `ctx.kv`    | `session`, `rooms` presence — authoritative, **must not be evicted** |
-| `cache` | `IProteusSource` | `ctx.cache` | `responseCache`, `rateLimit`, the auth caches — **evictable**        |
+| `cache` | `IProteusSource` | `ctx.cache` | `useCache`, `rateLimit`, the auth caches — **evictable**             |
 | `bus`   | `IIrisSource`    | `ctx.bus`   | `queue`, `webhook` dispatch, `audit` publication                     |
 
 **`cache` defaults to `kv` when unset**, so a single-instance deployment configures one ephemeral store and nothing changes for it — `ctx.cache` still works, it just points at the same instance as `ctx.kv`.
@@ -293,12 +293,13 @@ ctx.socket?;    // emit() and broadcast() — Pylon envelope emitter
 
 ```typescript
 ctx.state.app.config.audit; // AppAuditConfig | false — { sanitise?, skip? }
-ctx.state.app.config.responseCache; // AppResponseCacheConfig | false
 ctx.state.app.config.rateLimit; // AppRateLimitConfig | false — { strategy, window, max, key?, skip? }
 ctx.state.app.config.auth; // AppAuthConfig | null
 ```
 
-`false` / `null` is OFF for every entry and an object is ON — there is no second `enabled` flag inside a policy free to disagree with the presence of the policy itself. `window` is resolved to **milliseconds**, because `useRateLimit` compares a mount's window against it. `responseCache` is an empty object today: every knob `useCache` reads is stated per mount, and the deployment only says whether the feature is on at all.
+`false` / `null` is OFF for every entry and an object is ON. The **presence of the settings block is the switch** — there is no `enabled` flag beside a policy free to disagree with it, so `audit: {}` and `rateLimit: {}` turn their features on and omitting the block leaves them off. `window` is resolved to **milliseconds**, because `useRateLimit` compares a mount's window against it.
+
+There is deliberately **no `responseCache` entry**: every knob `useCache` reads — ttl, scope, vary, skip, actor — is stated per mount, so a deployment entry could only ever have been a second switch beside the mount. Mounting `useCache` is the whole declaration; the only thing it still needs from the deployment is an evictable source.
 
 `auth` is `null` when no `auth` block is configured, and **reading it never throws** — it is eager state on every request of every pylon, including the ones with no auth at all.
 
@@ -882,11 +883,20 @@ router.use(
 );
 ```
 
-`useRateLimit` requires `rateLimit: { enabled: true }` on the constructor (which also wires the entities into the evictable source, `cache ?? kv`). HTTP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `X-RateLimit-Strategy`; rejected requests also include `Retry-After`.
+`useRateLimit` requires a `rateLimit` block on the constructor (which also wires the entities into the evictable source, `cache ?? kv`). The block's **presence** is the switch — `rateLimit: {}` is on, omitting it is off — and a mount passes through silently when it is off. HTTP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `X-RateLimit-Strategy`; rejected requests also include `Retry-After`.
 
 **Every option is optional and only ever NARROWS the deployment's own**, which lives on `ctx.state.app.config.rateLimit` — so "never rate-limit health checks" is stated once, as `rateLimit.skip`, and holds for a mount that says nothing about it. A mount that states neither its own limits nor inherits any throws `rate_limit_not_bounded` rather than silently doing nothing.
 
-When `rateLimit.window` and `rateLimit.max` are set on the constructor, Pylon installs a global `useRateLimit()` automatically — with no arguments, so there is no closure copy of the limits free to disagree with the one every route-level mount reads.
+**Pylon mounts nothing on your behalf.** A global limiter is an explicit mount, because a configured policy is not a request for one and Pylon has no place in your middleware order:
+
+```typescript
+// routes/_middleware.ts — every scanned route inherits it.
+import { useRateLimit } from "@lindorm/pylon";
+
+export const MIDDLEWARE = [useRateLimit()];
+```
+
+No arguments: the window, ceiling, strategy, key and skip all live on `ctx.state.app.config.rateLimit`, so the mount carries no second copy of the numbers. On the socket transport, mount it as `socket: { middleware: [useRateLimit()] }` or in the listeners' root `_middleware.ts`.
 
 ### Response cache
 
@@ -920,9 +930,12 @@ router.get(
 ```
 
 `useCache(ttl, scope, options?)` slots after `useSchema` (it folds `ctx.data` into the
-key) and before `useHandler`. It requires `responseCache: { enabled: true }` on the
-constructor, which wires the `CachedResponse` entity into the evictable source
-(`cache ?? kv`).
+key) and before `useHandler`. **The mount is the whole declaration** — there is no
+`responseCache` setting and no `ctx.state.app.config` entry, because every knob it reads
+is stated per mount and a deployment-wide switch could only ever disagree with the mount.
+The one thing it needs from the constructor is an **evictable source** (`cache`, or the
+`kv` fallback); the `CachedResponse` entity is wired into that source whenever one is
+configured. Mounting it without one throws `cache_not_configured`.
 
 - `ttl` accepts a `ReadableTime` (e.g. `"60s"`) or a number of milliseconds.
 - `scope`:
@@ -947,9 +960,8 @@ collide with a CDN/proxy's own `X-Cache` in the response chain):
 
 - `X-Pylon-Cache` (always) — `HIT` (served from cache, incl. a coalesced single-flight
   replay), `MISS` (computed fresh and stored), `DYNAMIC` (computed but not eligible to store —
-  `3xx`/stream/`>=400`/over the size cap/`private` with no actor), `BYPASS` (caching
-  skipped by request `no-store` or `skip()`), or `DISABLED` (the deployment left
-  `responseCache` off — the mount passes through, it does not throw).
+  `3xx`/stream/`>=400`/over the size cap/`private` with no actor), or `BYPASS` (caching
+  skipped by request `no-store` or `skip()`).
 - `ETag` (strong, on cacheable responses), `Cache-Control: <public|private>, max-age=<seconds>`,
   `Age` (seconds since the stored representation was captured), `Vary` (when configured).
 - `X-Pylon-Cache-Source: <driverType>` — outside `production` only (so the backend isn't
@@ -975,7 +987,7 @@ router.use(
 );
 ```
 
-`useAuditLog` requires `audit: { enabled: true }` on the constructor and a `bus` source. `audit.enabled` is the **whole** switch: off means the middleware passes through silently, whatever else is or is not configured, and on with no `bus` throws `audit_bus_not_configured`. The record is published through `ctx.bus` — the request-scoped session, so it carries this request's actor and correlation id. `sanitise` and `skip` are stated per deployment (`audit.sanitise` / `audit.skip`) or per mount, and the mount wins. Each request publishes a `RequestAudit` message containing the endpoint, method, transport, status, duration, source IP, session id, user agent, request id, correlation id, actor, and the (optionally sanitised) body. Set `audit.entities` to a list of entity classes for entity-level change tracking — Pylon installs Proteus listeners on those entities and persists field-level diffs into `DataAuditLog`.
+`useAuditLog` requires an `audit` block on the constructor and a `bus` source. The block's **presence** is the whole switch: omit it and the middleware passes through silently, whatever else is or is not configured; supply it with no `bus` and it throws `audit_bus_not_configured`. The record is published through `ctx.bus` — the request-scoped session, so it carries this request's actor and correlation id. `sanitise` and `skip` are stated per deployment (`audit.sanitise` / `audit.skip`) or per mount, and the mount wins. Each request publishes a `RequestAudit` message containing the endpoint, method, transport, status, duration, source IP, session id, user agent, request id, correlation id, actor, and the (optionally sanitised) body. Set `audit.entities` to a list of entity classes for entity-level change tracking — Pylon installs Proteus listeners on those entities and persists field-level diffs into `DataAuditLog`.
 
 ### Conduits (HTTP clients)
 
@@ -1710,7 +1722,7 @@ import {
 } from "@lindorm/pylon/entities";
 ```
 
-The rest (`Session`, `Kryptos`, `Presence`, `CachedResponse`, `CachedIntrospection`, `CachedUserinfo`, the rate-limit entities) are exported too, but Pylon wires each into the source its role dictates when the feature is enabled — see [Source roles](#source-roles) — so a deployment does not register them itself. `ConduitCachedResponse` is the exception: it is **consumer-placed**, registered on whichever source you hand `createProteusCacheDriver`, never by Pylon. Messages sit on `@lindorm/pylon/messages` on the same terms.
+The rest (`Session`, `Kryptos`, `Presence`, `CachedResponse`, `CachedIntrospection`, `CachedUserinfo`, the rate-limit entities) are exported too, but Pylon wires each into the source its role dictates when the feature is configured — see [Source roles](#source-roles) — so a deployment does not register them itself. `CachedResponse` is the one that follows the SOURCE rather than a settings block: whether a route caches is decided by mounting `useCache`, which Pylon cannot see, so an evictable source always gets one. `ConduitCachedResponse` is the exception: it is **consumer-placed**, registered on whichever source you hand `createProteusCacheDriver`, never by Pylon. Messages sit on `@lindorm/pylon/messages` on the same terms.
 
 ## Command-line tools
 

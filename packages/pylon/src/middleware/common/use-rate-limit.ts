@@ -16,8 +16,10 @@ import type {
 /**
  * A mount's OWN limits, each narrowing the deployment policy on
  * `ctx.state.app.config.rateLimit`. Every member is optional because the
- * deployment already stated all five — `useRateLimit()` with no arguments IS the
- * deployment's limit, which is how the globally mounted one is installed.
+ * deployment may already have stated all five — `useRateLimit()` with no
+ * arguments IS the deployment's limit, which is how a deployment mounts one
+ * global limiter (routes' root `_middleware.ts`, or `socket.middleware`) without
+ * a closure copy of the numbers free to disagree with the policy.
  */
 type RateLimitOptions = {
   window?: ReadableTime | number;
@@ -76,8 +78,8 @@ export const useRateLimit = (options: RateLimitOptions = {}): PylonMiddleware =>
         : ms(options.window);
 
   return async function useRateLimitMiddleware(ctx: PylonContext, next) {
-    // Disabled by app config: silently pass through, never throw. The throws
-    // below only fire when rate limiting IS enabled.
+    // No `rateLimit` block on the deployment: silently pass through, never
+    // throw. The throws below only fire when there IS a policy to apply.
     const config = ctx.state.app.config.rateLimit;
 
     if (config === false) {
@@ -105,25 +107,25 @@ export const useRateLimit = (options: RateLimitOptions = {}): PylonMiddleware =>
         type: "urn:lindorm:pylon:error:rate_limit_not_bounded",
         title: "Rate Limit Not Bounded",
         details:
-          "Rate limiting is enabled but neither this mount nor PylonSettings names both a `window` and a `max`. State them on the mount, or set rateLimit.window and rateLimit.max for the deployment.",
+          "Neither this mount nor PylonSettings names both a `window` and a `max`. State them on the mount, or set rateLimit.window and rateLimit.max for the deployment.",
         debug: { max, strategy, windowMs },
       });
     }
 
     // The evictable per-request session, installed whenever a `cache` (or the
-    // `kv` fallback) source is configured — INDEPENDENT of `rateLimit.enabled`,
-    // which is the `ctx.state.app.config.rateLimit` check above. Read after the
-    // disabled/skip guards so a skipped request never opens a session.
+    // `kv` fallback) source is configured — INDEPENDENT of the `rateLimit`
+    // policy block, which is the `ctx.state.app.config.rateLimit` check above.
+    // Read after the off/skip guards so a skipped request never opens a session.
     if (!ctx.cache) {
       throw new ServerError("Rate limiting is not configured", {
         code: "rate_limit_not_configured",
         type: "urn:lindorm:pylon:error:rate_limit_not_configured",
         title: "Rate Limit Not Configured",
-        // ⚠ `rateLimit` is already enabled here — the config guard above
-        // returned otherwise — so naming that switch would send the operator to
-        // set something already set. What is missing is the STORE.
+        // ⚠ The deployment already HAS a `rateLimit` block here — the config
+        // guard above returned otherwise — so naming that block would send the
+        // operator to set something already set. What is missing is the STORE.
         details:
-          "Rate limiting is enabled but no evictable source is attached, so there is nowhere to keep the counters. Give PylonSettings a `cache` source (or a `kv` source, which `cache` falls back to) before using useRateLimit",
+          "Rate limiting is configured but no evictable source is attached, so there is nowhere to keep the counters. Give PylonSettings a `cache` source (or a `kv` source, which `cache` falls back to) before using useRateLimit",
         debug: { strategy },
       });
     }

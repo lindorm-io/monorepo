@@ -83,7 +83,6 @@ const defaultState = (): PylonState => ({
     // identity is what a driver-response cache would key on.
     config: {
       audit: false,
-      responseCache: false,
       rateLimit: false,
       auth: {
         issuer: "http://localhost:3000",

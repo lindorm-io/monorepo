@@ -58,7 +58,7 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
     // ⚠ ONE switch. `config.audit` is the whole of it — the policy and the
     // on/off used to be separate channels that could disagree, so an enabled
     // deployment with no policy threw and a disabled one with a policy silently
-    // skipped. Off means pass through, never throw.
+    // skipped. No `audit` block means pass through, never throw.
     const config = ctx.state.app.config.audit;
 
     if (config === false) {
@@ -81,7 +81,7 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
         type: "urn:lindorm:pylon:error:audit_bus_not_configured",
         title: "Audit Bus Not Configured",
         details:
-          "Audit logging is enabled in PylonSettings but no `bus` source is configured, so the audit record cannot be published. Configure `bus`, or turn audit off.",
+          "PylonSettings carries an `audit` block but no `bus` source, so the audit record cannot be published. Configure `bus`, or drop the `audit` block.",
       });
     }
 

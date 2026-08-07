@@ -16,25 +16,13 @@ export type AppAuditConfig = {
 };
 
 /**
- * The response cache's deployment policy.
- *
- * ⚠ It is EMPTY, and that is the honest answer rather than an oversight: every
- * knob `useCache` reads — ttl, scope, vary, skip, actor — is stated per MOUNT,
- * because two routes cache for wildly different reasons. The deployment only
- * says whether the feature is on at all, which is `false` versus this object.
- * It exists as an object so the four entries of {@link AppConfig} read the same
- * way, and so the first deployment-wide knob lands without moving the switch.
- */
-export type AppResponseCacheConfig = Record<string, never>;
-
-/**
  * The deployment's rate-limit policy, resolved. `window` is MILLISECONDS —
  * `useRateLimit` compares it against a mount's own window, and two spellings of
  * a duration cannot be compared.
  *
- * `window` / `max` are nullable because `rateLimit: { enabled: true }` with
- * neither is a legitimate deployment: it turns the feature on for mounts that
- * state their own limits without imposing a global one.
+ * `window` / `max` are nullable because a bare `rateLimit: {}` is a legitimate
+ * deployment: it turns the feature on for mounts that state their own limits
+ * without imposing a global one.
  */
 export type AppRateLimitConfig = {
   readonly strategy: PylonRateLimitStrategy;
@@ -102,14 +90,16 @@ export type AppAuthConfig = {
  * ⚠ `false` / `null` is OFF for every entry, and an object is ON. There is no
  * second `enabled` flag inside a policy free to disagree with the presence of
  * the policy itself.
+ *
+ * ⚠ There is NO `responseCache` entry, and its absence is the design rather
+ * than an omission: every knob `useCache` reads — ttl, scope, vary, skip, actor
+ * — is stated per MOUNT, so a deployment entry could only ever have been a
+ * second switch beside the mount, free to disagree with it. Mounting `useCache`
+ * IS the declaration that a route caches; the only thing it still needs from
+ * the deployment is an evictable source, and it names that one by name.
  */
 export type AppConfig = {
   readonly audit: AppAuditConfig | false;
-  /**
-   * The RESPONSE cache — named for what it caches, because `auth.cache` is a
-   * different cache with a different lifetime and different storage rules.
-   */
-  readonly responseCache: AppResponseCacheConfig | false;
   readonly rateLimit: AppRateLimitConfig | false;
   /** `null` is "this deployment configured no `auth` block". */
   readonly auth: AppAuthConfig | null;

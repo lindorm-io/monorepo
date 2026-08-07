@@ -56,7 +56,6 @@ type CtxConfig = {
   access?: PylonResolvedAccess | null;
   tokens?: Record<string, VerifiedToken>;
   environment?: string;
-  cacheEnabled?: boolean;
 };
 
 const createCtx = (config: CtxConfig = {}): any => {
@@ -81,9 +80,10 @@ const createCtx = (config: CtxConfig = {}): any => {
       tokens: config.tokens ?? {},
       app: {
         environment: config.environment ?? "test",
-        config: createTestAppConfig({
-          responseCache: (config.cacheEnabled ?? true) ? {} : false,
-        }),
+        // ⚠ Every feature OFF. `useCache` reads NOTHING from the deployment
+        // policy — mounting it is the whole declaration — so a bare config is
+        // what a caching route runs against.
+        config: createTestAppConfig(),
       },
     },
     get: (name: string) => headers[name.toLowerCase()],
@@ -129,22 +129,40 @@ describe("useCache", () => {
     expect(fake.store.size).toBe(1);
   });
 
-  test("should pass through with DISABLED and never throw when cache is disabled by config", async () => {
+  // ⚠ The mount is the whole switch. There is no deployment block to turn the
+  // response cache off behind a route's back, so a mounted `useCache` CACHES
+  // against a bare `AppConfig` — and `DISABLED`, the state that only a second
+  // switch could produce, can no longer be emitted by anything.
+  test("should cache against a deployment policy that configures nothing", async () => {
     const mw = useCache("60s", "public");
-    // Disabled AND no source configured — must NOT throw, just pass through.
-    const ctx = createCtx({ cacheEnabled: false });
-    const handler = handlerFor(ctx, 200, { hello: "world" });
+    const ctx = createCtx({ session: fake.session });
 
-    await expect(mw(ctx, handler)).resolves.not.toThrow();
+    await mw(ctx, handlerFor(ctx, 200, { hello: "world" }));
 
-    expect(ctx.responseHeaders["X-Pylon-Cache"]).toBe("DISABLED");
-    expect(handler).toHaveBeenCalledTimes(1);
-    expect(fake.repository.upsert).not.toHaveBeenCalled();
+    expect(ctx.responseHeaders["X-Pylon-Cache"]).toBe("MISS");
+    expect(fake.repository.upsert).toHaveBeenCalledTimes(1);
   });
 
-  test("should throw when cache is enabled by config but no source is configured", async () => {
+  test("should never emit a DISABLED cache state", async () => {
     const mw = useCache("60s", "public");
-    const ctx = createCtx({ cacheEnabled: true }); // no source
+
+    const miss = createCtx({ session: fake.session });
+    await mw(miss, handlerFor(miss, 200, { hello: "world" }));
+
+    const hit = createCtx({ session: fake.session });
+    await mw(hit, vi.fn());
+
+    const bypass = createCtx({ session: fake.session, headers: { pragma: "no-cache" } });
+    await mw(bypass, handlerFor(bypass, 200, { hello: "world" }));
+
+    for (const ctx of [miss, hit, bypass]) {
+      expect(ctx.responseHeaders["X-Pylon-Cache"]).not.toBe("DISABLED");
+    }
+  });
+
+  test("should throw when no evictable source is configured", async () => {
+    const mw = useCache("60s", "public");
+    const ctx = createCtx(); // no source
 
     await expect(mw(ctx, handlerFor(ctx, 200, {}))).rejects.toThrow(
       /cache is not configured/i,
@@ -546,11 +564,9 @@ describe("useCache", () => {
     expect(handler).not.toHaveBeenCalled();
   });
 
-  // ⚠ This throw is reached ONLY when `responseCache` is already enabled (the
-  // config guard returned above it), so the operator must be pointed at the
-  // missing SOURCE. Naming the feature switch here told them to set something
-  // that is, by construction, already set.
-  test("should name the missing evictable source, not the feature switch", async () => {
+  // ⚠ The missing SOURCE is the only thing left to name: there is no feature
+  // switch, so the error cannot send an operator off to set one.
+  test("should name the missing evictable source, and no feature switch", async () => {
     const mw = useCache("60s", "public");
     const ctx = createCtx({ session: undefined });
 
@@ -561,9 +577,8 @@ describe("useCache", () => {
       expect(err.code).toBe("cache_not_configured");
       expect(err.details).toContain("cache");
       expect(err.details).toContain("kv");
-      // The setting it used to name does not exist: `cache` is an
-      // `IProteusSource`, and the feature switch is spelled `responseCache`.
-      expect(err.details).not.toContain("cache: { enabled: true }");
+      expect(err.details).not.toContain("responseCache");
+      expect(err.details).not.toContain("enabled");
       expect(err.details).toMatchSnapshot();
     }
   });

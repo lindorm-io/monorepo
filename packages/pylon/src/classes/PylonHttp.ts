@@ -32,7 +32,6 @@ import { isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
 import Koa from "koa";
-import { useRateLimit } from "../middleware/common/use-rate-limit.js";
 import type {
   AppConfig,
   HttpCallback,
@@ -138,24 +137,20 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         hermes: this.options.hermes,
         bus: this.options.bus,
         // `ctx.cache` is installed whenever an evictable source is provided,
-        // INDEPENDENT of responseCache.enabled / rateLimit.enabled — useCache
-        // and useRateLimit read ctx.state.app.config to decide whether to run,
-        // and throw only if enabled with no session to store in.
+        // INDEPENDENT of any feature block — `useCache` needs nothing else from
+        // the deployment, and `useRateLimit` reads its policy off
+        // `ctx.state.app.config`. Both throw only when they run with no session
+        // to store in.
         cache: this.cache,
         kv: this.options.kv,
         db: this.options.db,
       }),
       createQueueMiddleware(this.options.queue),
       createWebhookMiddleware(this.options.webhook),
-      // No arguments: the deployment's window, ceiling, strategy, key and skip
-      // are all on `ctx.state.app.config.rateLimit`, so restating them in a
-      // closure here would be a second copy free to disagree with the one every
-      // route-level mount reads.
-      ...(this.options.rateLimit?.enabled &&
-      this.options.rateLimit.window &&
-      this.options.rateLimit.max
-        ? [useRateLimit()]
-        : []),
+      // ⚠ No global `useRateLimit()` is injected here. Pylon never puts
+      // middleware into a deployment's chain because a setting was truthy —
+      // mounting IS the declaration. A deployment that wants every route limited
+      // mounts `useRateLimit()` itself in the routes' root `_middleware.ts`.
     ]);
 
     this.logger.debug("Middleware loaded");

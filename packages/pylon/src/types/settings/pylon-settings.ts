@@ -29,7 +29,6 @@ import type {
   PylonKryptosSettings,
   PylonQueueSettings,
   PylonRateLimitSettings,
-  PylonResponseCacheSettings,
   PylonRoomsSettings,
   PylonWebhookSettings,
 } from "./feature-settings.js";
@@ -94,7 +93,6 @@ type PylonCommonSettings = {
   name?: string;
   queue?: PylonQueueSettings;
   rateLimit?: PylonRateLimitSettings;
-  responseCache?: PylonResponseCacheSettings;
   rooms?: PylonRoomsSettings;
   version?: string;
   webhook?: PylonWebhookSettings;

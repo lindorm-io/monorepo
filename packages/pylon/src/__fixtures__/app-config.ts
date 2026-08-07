@@ -7,7 +7,6 @@ import type { AppAuthConfig, AppConfig } from "../types/index.js";
  */
 export const createTestAppConfig = (overrides: Partial<AppConfig> = {}): AppConfig => ({
   audit: false,
-  responseCache: false,
   rateLimit: false,
   auth: null,
   ...overrides,

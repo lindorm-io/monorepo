@@ -50,72 +50,79 @@ describe("buildAppConfig", () => {
   test("should resolve everything off for a bare deployment", () => {
     expect(build()).toEqual({
       audit: false,
-      responseCache: false,
       rateLimit: false,
       auth: null,
     });
   });
 
-  describe("audit", () => {
-    test("should resolve false when disabled, sanitise and skip and all", () => {
-      const audit = { enabled: false, sanitise: vi.fn(), skip: vi.fn() };
+  // ⚠ There is no `responseCache` entry to resolve. Its every knob is stated per
+  // `useCache` mount, so a deployment entry could only have been a second switch
+  // beside the mount — the mount is the whole declaration.
+  test("should carry no responseCache entry at all", () => {
+    expect(build()).not.toHaveProperty("responseCache");
+    expect(build({ responseCache: { enabled: true } })).not.toHaveProperty(
+      "responseCache",
+    );
+  });
 
-      expect(build({ audit }).audit).toBe(false);
+  describe("audit", () => {
+    test("should resolve false when the block is absent", () => {
+      expect(build().audit).toBe(false);
+    });
+
+    // ⚠ The BLOCK is the switch. A bare `{}` is a deployment saying "audit, with
+    // nothing to narrow" — there is no `enabled` beside the policy to disagree
+    // with it.
+    test("should resolve an empty policy for a bare block", () => {
+      expect(build({ audit: {} }).audit).toEqual({});
     });
 
     // ⚠ The policy carries NO source. Audit publishes through `ctx.bus`, the
     // request-scoped session every other feature reads its storage from.
-    test("should carry only the policy when enabled", () => {
+    test("should carry only the policy", () => {
       const sanitise = vi.fn();
       const skip = vi.fn();
 
-      expect(build({ audit: { enabled: true, sanitise, skip } }).audit).toEqual({
+      expect(build({ audit: { sanitise, skip } }).audit).toEqual({
         sanitise,
         skip,
       });
     });
 
-    test("should resolve an empty policy when enabled bare", () => {
-      expect(build({ audit: { enabled: true } }).audit).toEqual({});
-    });
-  });
-
-  describe("responseCache", () => {
-    test("should resolve false when absent or disabled", () => {
-      expect(build().responseCache).toBe(false);
-      expect(build({ responseCache: { enabled: false } }).responseCache).toBe(false);
-    });
-
-    test("should resolve a policy object when enabled", () => {
-      expect(build({ responseCache: { enabled: true } }).responseCache).toEqual({});
+    // `entities` drives Pylon's proteus listeners, not per-request behaviour, so
+    // it never reaches the request context.
+    test("should leave entities out of the resolved policy", () => {
+      expect(build({ audit: { entities: [class Thing {}] } }).audit).toEqual({});
     });
   });
 
   describe("rateLimit", () => {
-    test("should resolve false when absent or disabled", () => {
+    test("should resolve false when the block is absent", () => {
       expect(build().rateLimit).toBe(false);
-      expect(
-        build({ rateLimit: { enabled: false, window: "1m", max: 10 } }).rateLimit,
-      ).toBe(false);
     });
 
     // ⚠ MILLISECONDS. `useRateLimit` compares a mount's window against this one,
     // and two spellings of a duration cannot be compared.
     test("should resolve the window to milliseconds", () => {
-      expect(
-        build({ rateLimit: { enabled: true, window: "1m", max: 10 } }).rateLimit,
-      ).toEqual({ strategy: "fixed", window: 60_000, max: 10 });
+      expect(build({ rateLimit: { window: "1m", max: 10 } }).rateLimit).toEqual({
+        strategy: "fixed",
+        window: 60_000,
+        max: 10,
+      });
     });
 
     test("should pass a numeric window through unchanged", () => {
-      expect(
-        build({ rateLimit: { enabled: true, window: 5_000, max: 3 } }).rateLimit,
-      ).toEqual({ strategy: "fixed", window: 5_000, max: 3 });
+      expect(build({ rateLimit: { window: 5_000, max: 3 } }).rateLimit).toEqual({
+        strategy: "fixed",
+        window: 5_000,
+        max: 3,
+      });
     });
 
-    // Enabled without limits is a legitimate deployment: mounts state their own.
-    test("should resolve null limits when enabled bare", () => {
-      expect(build({ rateLimit: { enabled: true } }).rateLimit).toEqual({
+    // A bare block without limits is a legitimate deployment: it switches rate
+    // limiting on for mounts that state their own.
+    test("should resolve null limits for a bare block", () => {
+      expect(build({ rateLimit: {} }).rateLimit).toEqual({
         strategy: "fixed",
         window: null,
         max: null,
@@ -129,7 +136,6 @@ describe("buildAppConfig", () => {
       expect(
         build({
           rateLimit: {
-            enabled: true,
             strategy: "sliding",
             window: "1m",
             max: 1,
@@ -265,9 +271,8 @@ describe("buildAppConfig", () => {
         amphora,
         logger,
         environment: "test",
-        audit: { enabled: true, skip: vi.fn() },
-        responseCache: { enabled: true },
-        rateLimit: { enabled: true, window: "1m", max: 10 },
+        audit: { skip: vi.fn() },
+        rateLimit: { window: "1m", max: 10 },
         auth: { driver: createDriver(), cache: { enabled: true } },
       });
 

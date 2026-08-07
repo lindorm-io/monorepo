@@ -8,11 +8,9 @@ import type {
   AppAuthConfig,
   AppConfig,
   AppRateLimitConfig,
-  AppResponseCacheConfig,
   PylonAuditSettings,
   PylonAuthSettings,
   PylonRateLimitSettings,
-  PylonResponseCacheSettings,
 } from "../../types/index.js";
 import { createSetupDriverContext } from "./auth/create-setup-driver-context.js";
 
@@ -23,11 +21,12 @@ type Options = {
   environment?: Environment;
   logger: ILogger;
   rateLimit?: PylonRateLimitSettings;
-  responseCache?: PylonResponseCacheSettings;
 };
 
+// ⚠ The BLOCK is the switch. An absent block is off; any block — even a bare
+// `{}` — is on. There is no `enabled` to disagree with the policy beside it.
 const buildAudit = (settings: PylonAuditSettings | undefined): AppAuditConfig | false => {
-  if (!settings?.enabled) return false;
+  if (!settings) return false;
 
   return Object.freeze({
     ...(settings.sanitise && { sanitise: settings.sanitise }),
@@ -35,14 +34,10 @@ const buildAudit = (settings: PylonAuditSettings | undefined): AppAuditConfig | 
   });
 };
 
-const buildResponseCache = (
-  settings: PylonResponseCacheSettings | undefined,
-): AppResponseCacheConfig | false => (settings?.enabled ? Object.freeze({}) : false);
-
 const buildRateLimit = (
   settings: PylonRateLimitSettings | undefined,
 ): AppRateLimitConfig | false => {
-  if (!settings?.enabled) return false;
+  if (!settings) return false;
 
   return Object.freeze({
     strategy: settings.strategy ?? "fixed",
@@ -132,7 +127,6 @@ const buildAuth = (
 export const buildAppConfig = (options: Options): AppConfig =>
   Object.freeze({
     audit: buildAudit(options.audit),
-    responseCache: buildResponseCache(options.responseCache),
     rateLimit: buildRateLimit(options.rateLimit),
     auth: options.auth ? buildAuth(options.auth, options) : null,
   });
