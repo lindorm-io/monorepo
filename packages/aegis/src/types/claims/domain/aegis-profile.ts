@@ -59,7 +59,10 @@ export type AegisProfile = {
   nickname?: string | null;
   preferredUsername?: string | null;
   profile?: string | null;
-  updatedAt?: number;
+  // OIDC Core §5.1 `updated_at` is a NumericDate. Like every other date-valued
+  // claim the DOMAIN form is a `Date` and the WIRE form carries the unix
+  // seconds — that split is what the domain/wire type pair exists for.
+  updatedAt?: Date;
   website?: string | null;
   zoneinfo?: string | null;
 

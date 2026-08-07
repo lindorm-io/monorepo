@@ -170,6 +170,28 @@ describe("Aegis verify — relocated domain policy", () => {
         someCustomThing: 42,
       });
     });
+
+    // `updated_at` is an OIDC Core §5.1 NumericDate. Like every other date-valued
+    // claim its DOMAIN form is a `Date` and its WIRE form is unix seconds — the
+    // registry marks it `value: "date"`, and a domain `number` encodes to
+    // `undefined`, dropping the claim from the token without an error.
+    test("profile updatedAt round-trips as a Date over a unix-seconds wire claim", async () => {
+      const updatedAt = new Date("2023-11-14T22:13:20.000Z");
+
+      const { token } = await mint({
+        ...baseContent,
+        tokenType: "id_token",
+        profile: { updatedAt },
+      });
+
+      // Wire form: an integer count of seconds, never an ISO string or a Date —
+      // that is what a relying party parses.
+      const { payload } = JwtKit.decode(token);
+      expect(payload.updated_at).toBe(1700000000);
+
+      const parsed = await aegis.verify(token, undefined, { typPresence: "optional" });
+      expect(parsed.profile).toEqual({ updatedAt });
+    });
   });
 
   describe("actor verification", () => {

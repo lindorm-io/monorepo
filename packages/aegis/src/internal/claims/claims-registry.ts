@@ -609,8 +609,10 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
   //     Personalization / contact-card fields. `category: "profile"` so read-side
   //     bucketing (a later phase) can collect them into `VerifiedToken.profile`.
   //     `value` is DERIVED from the AegisProfile field type (string→text,
-  //     boolean→bool, number-NumericDate→date, string[]→array, nested object→
-  //     bespoke). Long JOSE names ⇒ private-use labels (append-only after P(19));
+  //     boolean→bool, Date→date, Array<string>→array, nested object→bespoke).
+  //     A NumericDate claim is a `Date` in the domain layer — never a raw number
+  //     of seconds, which the `"date"` encoder drops.
+  //     Long JOSE names ⇒ private-use labels (append-only after P(19));
   //     the 4-char `name` stays string-keyed (cose:null) per the byte-rule. No
   //     code reads the category yet — pure metadata this phase. NOTE: the OIDC
   //     `profile` URL claim registers under domain/jose "profile"; that is the
@@ -694,7 +696,8 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
   },
   // OIDC `profile` URL claim — the CLAIM named "profile" (distinct from the bucket).
   { domain: "profile", jose: "profile", cose: P(34), value: "text", category: "profile" },
-  // `updatedAt` is a NumericDate (number seconds) ⇒ "date", per the derive-from-type rule.
+  // `updatedAt` is an OIDC Core §5.1 NumericDate: domain `Date` <-> wire unix
+  // seconds ⇒ "date", per the derive-from-type rule.
   {
     domain: "updatedAt",
     jose: "updated_at",
