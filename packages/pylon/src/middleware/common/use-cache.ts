@@ -17,9 +17,9 @@ type CacheOptions = {
   vary?: Array<string>;
   skip?: (ctx: PylonContext) => boolean;
   // Per-route override for the identity folded into a `private` key. Defaults to
-  // pylon's `resolveActor` (access-token sub → id-token sub → basic-auth user).
-  // Called directly (not memoised) so a route may key on a different identity
-  // (e.g. tenant) than the request-wide actor.
+  // pylon's `resolveActor` (resolved-access subject → access-token subject →
+  // id-token subject → basic-auth username). Called directly (not memoised) so a
+  // route may key on a different identity (e.g. tenant) than the request-wide actor.
   actor?: (ctx: PylonContext) => string;
 };
 
@@ -145,8 +145,11 @@ export const useCache = (
         code: "cache_not_configured",
         type: "urn:lindorm:pylon:error:cache_not_configured",
         title: "Response Cache Not Configured",
+        // ⚠ `responseCache` is already enabled here — the config guard above
+        // returned otherwise — so naming that switch would send the operator to
+        // set something already set. What is missing is the STORE.
         details:
-          "Enable the response cache in PylonSettings with cache: { enabled: true } before using useCache",
+          "The response cache is enabled but no evictable source is attached, so there is nowhere to store an entry. Give PylonSettings a `cache` source (or a `kv` source, which `cache` falls back to) before using useCache",
       });
     }
 

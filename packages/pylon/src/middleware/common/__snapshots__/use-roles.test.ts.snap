@@ -1,8 +1,12 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`useRoles > should throw ClientError 401 when token is missing 1`] = `"Token not found"`;
+exports[`useRoles > should throw ClientError 401 when a named token is missing 1`] = `"Token not found"`;
 
-exports[`useRoles > should throw ClientError 401 when token is missing 2`] = `"Expected token [accessToken] on context"`;
+exports[`useRoles > should throw ClientError 401 when a named token is missing 2`] = `"Expected token [idToken] on context"`;
+
+exports[`useRoles > should throw ClientError 401 when the access token middleware has not run 1`] = `"Access token middleware is required"`;
+
+exports[`useRoles > should throw ClientError 401 when the access token middleware has not run 2`] = `"useRoles reads ctx.state.access — install useAccessToken ahead of it, or point useRoles at a named token with the \`token\` option"`;
 
 exports[`useRoles > should throw ClientError 403 when no role matches 1`] = `"Insufficient roles"`;
 

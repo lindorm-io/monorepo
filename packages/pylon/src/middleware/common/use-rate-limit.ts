@@ -119,8 +119,11 @@ export const useRateLimit = (options: RateLimitOptions = {}): PylonMiddleware =>
         code: "rate_limit_not_configured",
         type: "urn:lindorm:pylon:error:rate_limit_not_configured",
         title: "Rate Limit Not Configured",
+        // ⚠ `rateLimit` is already enabled here — the config guard above
+        // returned otherwise — so naming that switch would send the operator to
+        // set something already set. What is missing is the STORE.
         details:
-          "Enable rate limiting in PylonSettings with rateLimit: { enabled: true } before using useRateLimit",
+          "Rate limiting is enabled but no evictable source is attached, so there is nowhere to keep the counters. Give PylonSettings a `cache` source (or a `kv` source, which `cache` falls back to) before using useRateLimit",
         debug: { strategy },
       });
     }

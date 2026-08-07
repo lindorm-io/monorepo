@@ -182,6 +182,24 @@ describe("useRateLimit", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  // ⚠ Same shape as useCache's: this throw sits BELOW the `rateLimit` config
+  // guard, so rate limiting is already enabled when it fires. What is missing is
+  // the evictable source, and that is what the operator must be told.
+  test("should name the missing evictable source, not the feature switch", async () => {
+    delete ctx.cache;
+
+    try {
+      await useRateLimit({ window: "1m", max: 10 })(ctx, next);
+      expect.unreachable("useRateLimit should have thrown");
+    } catch (err: any) {
+      expect(err.code).toBe("rate_limit_not_configured");
+      expect(err.details).toContain("cache");
+      expect(err.details).toContain("kv");
+      expect(err.details).not.toContain("rateLimit: { enabled: true }");
+      expect(err.details).toMatchSnapshot();
+    }
+  });
+
   test("should pass through silently (no throw) when rate limiting is disabled by config", async () => {
     ctx.state.app.config = createTestAppConfig({ rateLimit: false });
     delete ctx.cache; // disabled AND no session — must not throw

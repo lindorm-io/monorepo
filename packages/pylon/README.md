@@ -244,7 +244,7 @@ ctx.webhook(event, data?, optional?);             // dispatch a webhook (when we
 ctx.state.access;         // PylonResolvedAccess | null — the resolved credential
 ctx.state.app;            // { config, domain, environment, name, version }
 ctx.state.app.config;     // the deployment's resolved policy — see below
-ctx.state.actor;          // resolved actor string
+ctx.state.actor;          // resolved actor string ("unknown" until resolved)
 ctx.state.authorization;  // { type: "basic" | "bearer" | "dpop" | "none", value }
 ctx.state.client;         // parsed user agent and declared client context
 ctx.state.metadata;       // { id, correlationId, date, environment, ... }
@@ -805,9 +805,9 @@ router.put(
 router.use(useValidation("accessToken", { issuer: "https://auth.example.com" }));
 ```
 
-`useRoles` and `usePermissions` accept a trailing `{ token: "<key>" }` to read from a non-default token (default: `accessToken`). `useAccess` takes the same option.
+`useAccess`, `usePermissions` and `useRoles` accept a trailing `{ token: "<key>" }` to read from a non-default token (default: `accessToken`).
 
-At the default key, `useAccess` and `usePermissions` read `ctx.state.access.claims` — the resolved credential, whatever established it — so they work unchanged on a locally verified token and on an introspected one. They throw `access_not_resolved` (401) when `useAccessToken` has not run ahead of them. Named keys (`{ token: "idToken" }`) address one entry of `ctx.state.tokens` instead, which is a different question and keeps reading the parsed token.
+At the default key, all three read `ctx.state.access.claims` — the resolved credential, whatever established it — so they work unchanged on a locally verified token and on an introspected one. They throw `access_not_resolved` (401) when `useAccessToken` has not run ahead of them. Named keys (`{ token: "idToken" }`) address one entry of `ctx.state.tokens` instead, which is a different question and keeps reading the parsed token.
 
 ### Validation
 
@@ -917,8 +917,9 @@ constructor, which wires the `CachedResponse` entity into the evictable source
 - `scope`:
   - `"public"` — one shared entry per request shape; the actor is ignored.
   - `"private"` — the resolved actor is folded into the key, so each actor gets its own
-    entry. The actor defaults to pylon's `resolveActor` (access-token sub → id-token sub →
-    basic-auth user) and can be overridden per route with `options.actor`. A private request
+    entry. The actor defaults to pylon's `resolveActor` (`ctx.state.access` subject →
+    access-token subject → id-token subject → basic-auth username) and can be overridden per
+    route with `options.actor`. A private request
     with no resolvable actor is **never cached** (it would leak under a global key) — it is
     served straight from the handler and logs a warning so the misconfiguration is visible.
 - The cache key is a SHA-256 of the method, path, the key-sorted `ctx.data`, the actor

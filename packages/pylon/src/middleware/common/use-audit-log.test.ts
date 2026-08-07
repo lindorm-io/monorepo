@@ -1,5 +1,6 @@
 import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { ACCESS_TEST_ISSUER, createTestAegis } from "../../__fixtures__/access/aegis.js";
 import { createTestAppConfig } from "../../__fixtures__/app-config.js";
 import { useAuditLog } from "./use-audit-log.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
@@ -57,6 +58,7 @@ describe("useAuditLog", () => {
       status: 201,
       get: vi.fn().mockReturnValue("Mozilla/5.0"),
       state: {
+        access: null,
         actor: "user-123",
         app: {
           name: "test-app",
@@ -289,15 +291,50 @@ describe("useAuditLog", () => {
     );
   });
 
-  test("should resolve actor from accessToken when ctx.state.actor is 'unknown'", async () => {
+  // ⚠ A REAL minted-and-verified token, not a `{ claims: { … } }` literal: the
+  // audit record's `actor` is only worth anything if it survives aegis's
+  // wire→domain claim translation, and a literal cannot prove that.
+  test("should resolve actor from a real verified access token when ctx.state.actor is 'unknown'", async () => {
+    const aegis = createTestAegis(createMockLogger());
+    const { token } = await aegis.mint("default", {
+      audience: [ACCESS_TEST_ISSUER],
+      expires: "1 hour",
+      subject: "bob",
+      tokenType: "access_token",
+    });
+    const verified = await aegis.verify(
+      token,
+      { issuer: ACCESS_TEST_ISSUER },
+      { tokenType: "access_token" },
+    );
+
     ctx.state.actor = "unknown";
-    ctx.state.tokens = { accessToken: { claims: { sub: "bob" } } };
+    ctx.state.tokens = { accessToken: verified };
     ctx.state.authorization = { type: "none", value: null };
 
     await useAuditLog()(ctx, next);
 
     expect(mockPublisher.create).toHaveBeenCalledWith(
       expect.objectContaining({ actor: "bob" }),
+    );
+  });
+
+  // An introspected credential never lands in `ctx.state.tokens`, so this is the
+  // request that used to be audited as "unknown" despite being authenticated.
+  test("should resolve actor from an introspected credential on ctx.state.access", async () => {
+    ctx.state.actor = "unknown";
+    ctx.state.access = {
+      provenance: "introspected",
+      token: "opaque-token",
+      claims: { subject: "carol" },
+    };
+    ctx.state.tokens = {};
+    ctx.state.authorization = { type: "none", value: null };
+
+    await useAuditLog()(ctx, next);
+
+    expect(mockPublisher.create).toHaveBeenCalledWith(
+      expect.objectContaining({ actor: "carol" }),
     );
   });
 

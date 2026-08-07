@@ -21,7 +21,6 @@ import { setupWebhookDispatchConsumer } from "../internal/consumers/setup-webhoo
 import { setupWebhookRequestConsumer } from "../internal/consumers/setup-webhook-request-consumer.js";
 import { buildAppConfig } from "../internal/utils/build-app-config.js";
 import { calculateSubscriptions } from "../internal/utils/calculate-subscriptions.js";
-import { calculateWorkers } from "../internal/utils/calculate-workers.js";
 import { scanWorkers } from "../internal/utils/scan-workers.js";
 import { stageEncryptedField } from "../internal/utils/stage-encrypted-field.js";
 import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config.js";
@@ -71,9 +70,12 @@ export class Pylon<
     options.subscriptions = options.subscriptions ?? [];
     options.subscriptions.push(...calculateSubscriptions());
 
+    // Normalised HERE and not left to `scanWorkers`: that function's own
+    // normalisation drops a single worker that is not `instanceof LindormWorker`
+    // (a duplicate install, a foreign-built worker), and wrapping it in an array
+    // first is what keeps it. The built-in AmphoraWorker is `scanWorkers`'s job.
     const workers = options.workers;
     options.workers = Array.isArray(workers) ? workers : workers ? [workers] : [];
-    options.workers.push(...calculateWorkers());
 
     this.options = options;
 

@@ -1,28 +1,63 @@
-import type { PylonCommonContext } from "../../types/index.js";
+import type { VerifiedToken } from "@lindorm/aegis";
+import { isString } from "@lindorm/is";
+import type {
+  AuthorizationState,
+  PylonCommonContext,
+  PylonState,
+} from "../../types/index.js";
 
 export type ActorResolver = (ctx: PylonCommonContext) => string;
 
-const defaultActorResolver: ActorResolver = (ctx) => {
-  const tokens = ctx.state?.tokens as any;
+const nonEmptyString = (value: unknown): string | undefined =>
+  isString(value) && value.length > 0 ? value : undefined;
 
-  const accessSub = tokens?.accessToken?.claims?.sub;
-  if (typeof accessSub === "string" && accessSub.length > 0) return accessSub;
+/**
+ * ⚠ The subject claim is `subject`, NOT `sub`. Aegis returns DOMAIN-keyed claims
+ * (`StdClaims`), so neither a `VerifiedToken` nor a `PylonResolvedAccess` ever
+ * carries `.sub` — reading it resolved every authenticated request to "unknown"
+ * with nothing to show for it. The typed context is what keeps that honest here:
+ * the old `as any` on `ctx.state.tokens` is gone precisely so the next claim
+ * rename fails the build instead of failing silently.
+ */
+const tokenSubject = (token: VerifiedToken | undefined): string | undefined =>
+  nonEmptyString(token?.claims?.subject);
 
-  const idSub = tokens?.idToken?.claims?.sub;
-  if (typeof idSub === "string" && idSub.length > 0) return idSub;
+const basicUsername = (
+  authorization: AuthorizationState | undefined,
+): string | undefined => {
+  if (authorization?.type !== "basic") return undefined;
 
-  const authorization = ctx.state?.authorization;
-  if (authorization?.type === "basic" && typeof authorization.value === "string") {
-    try {
-      const decoded = Buffer.from(authorization.value, "base64").toString("utf-8");
-      const [username] = decoded.split(":");
-      if (username && username.length > 0) return username;
-    } catch {
-      /* ignore malformed basic auth */
-    }
+  try {
+    const [username] = Buffer.from(authorization.value, "base64")
+      .toString("utf-8")
+      .split(":");
+
+    return nonEmptyString(username);
+  } catch {
+    // Malformed credentials name no actor — and are not this function's error
+    // to raise; the authenticating middleware already rejected or allowed them.
+    return undefined;
   }
+};
 
-  return "unknown";
+const defaultActorResolver: ActorResolver = (ctx) => {
+  const state = ctx.state as PylonState | undefined;
+
+  return (
+    // The RESOLVED access credential FIRST. It is the one shape both credential
+    // paths produce, and the introspected path deliberately leaves
+    // `tokens.accessToken` unset (there is no VerifiedToken to put there), so
+    // without this an introspection-authenticated request has no resolvable
+    // actor at all: it audits as "unknown" and can never key a `private`
+    // response-cache entry.
+    nonEmptyString(state?.access?.claims?.subject) ??
+    // `createTokenMiddleware` populates `tokens` without touching `access`, so
+    // the session's token set stays a fallback rather than being subsumed.
+    tokenSubject(state?.tokens?.accessToken) ??
+    tokenSubject(state?.tokens?.idToken) ??
+    basicUsername(state?.authorization) ??
+    "unknown"
+  );
 };
 
 /**
@@ -36,7 +71,7 @@ export const resolveActor = (
   ctx: PylonCommonContext,
   configured?: ActorResolver,
 ): string => {
-  const state = ctx.state as PylonCommonContext["state"] | undefined;
+  const state = ctx.state as PylonState | undefined;
   if (state?.actor && state.actor !== "unknown") return state.actor;
 
   const resolver = configured ?? defaultActorResolver;

@@ -1,7 +1,10 @@
+import type { IAegis, VerifiedToken } from "@lindorm/aegis";
 import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { ACCESS_TEST_ISSUER, createTestAegis } from "../../__fixtures__/access/aegis.js";
 import { createTestAppConfig } from "../../__fixtures__/app-config.js";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import type { PylonResolvedAccess } from "../../types/index.js";
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { useCache } from "./use-cache.js";
 
 const delay = (timeout: number): Promise<void> =>
@@ -50,6 +53,8 @@ type CtxConfig = {
   data?: any;
   headers?: Record<string, string>;
   actor?: string;
+  access?: PylonResolvedAccess | null;
+  tokens?: Record<string, VerifiedToken>;
   environment?: string;
   cacheEnabled?: boolean;
 };
@@ -67,7 +72,13 @@ const createCtx = (config: CtxConfig = {}): any => {
     request: {},
     logger: createMockLogger(),
     state: {
+      // "unknown" is the state-init value, i.e. NOT YET RESOLVED — so a ctx
+      // that names no actor exercises the default resolver over `access` /
+      // `tokens`, which is the path a real authenticated request takes.
       actor: config.actor ?? "unknown",
+      access: config.access ?? null,
+      authorization: { type: "none", value: null },
+      tokens: config.tokens ?? {},
       app: {
         environment: config.environment ?? "test",
         config: createTestAppConfig({
@@ -262,6 +273,110 @@ describe("useCache", () => {
     expect(fake.repository.upsert).not.toHaveBeenCalled();
   });
 
+  // ⚠ Every test above hands `createCtx` a ready-made `actor`, which memoises
+  // and short-circuits `resolveActor`. These four run the DEFAULT resolver over a
+  // real credential — the only shape a real request has, and the one that used
+  // to resolve to "unknown" and refuse to cache anything token-authenticated.
+  describe("private scope over a real credential", () => {
+    let aegis: IAegis;
+    let alice: VerifiedToken;
+    let bob: VerifiedToken;
+
+    const introspected = (subject: string): PylonResolvedAccess =>
+      ({
+        provenance: "introspected",
+        token: "opaque-token",
+        claims: { subject },
+      }) as PylonResolvedAccess;
+
+    beforeAll(async () => {
+      aegis = createTestAegis(createMockLogger());
+
+      const mint = async (subject: string): Promise<VerifiedToken> => {
+        const { token } = await aegis.mint("default", {
+          audience: [ACCESS_TEST_ISSUER],
+          expires: "1 hour",
+          subject,
+          tokenType: "access_token",
+        });
+
+        return aegis.verify(
+          token,
+          { issuer: ACCESS_TEST_ISSUER },
+          { tokenType: "access_token" },
+        );
+      };
+
+      alice = await mint("alice");
+      bob = await mint("bob");
+    });
+
+    test("should cache a private response keyed on a verified access token's subject", async () => {
+      const mw = useCache("60s", "private");
+
+      const first = createCtx({ session: fake.session, tokens: { accessToken: alice } });
+      await mw(first, handlerFor(first, 200, { secret: "alice" }));
+
+      expect(first.responseHeaders["X-Pylon-Cache"]).toBe("MISS");
+      expect(fake.store.size).toBe(1);
+
+      const second = createCtx({ session: fake.session, tokens: { accessToken: alice } });
+      const handler = vi.fn();
+      await mw(second, handler);
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(second.responseHeaders["X-Pylon-Cache"]).toBe("HIT");
+      expect(second.body).toEqual({ secret: "alice" });
+    });
+
+    test("should keep two token subjects on separate entries", async () => {
+      const mw = useCache("60s", "private");
+
+      const a = createCtx({ session: fake.session, tokens: { accessToken: alice } });
+      await mw(a, handlerFor(a, 200, { secret: "alice" }));
+
+      const b = createCtx({ session: fake.session, tokens: { accessToken: bob } });
+      const handler = handlerFor(b, 200, { secret: "bob" });
+      await mw(b, handler);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(b.responseHeaders["X-Pylon-Cache"]).toBe("MISS");
+      expect(b.body).toEqual({ secret: "bob" });
+      expect(fake.store.size).toBe(2);
+    });
+
+    // The introspected path never populates `tokens.accessToken`, so this is the
+    // arm a `tokens`-only resolver leaves permanently uncacheable.
+    test("should cache a private response keyed on an introspected credential's subject", async () => {
+      const mw = useCache("60s", "private");
+
+      const first = createCtx({ session: fake.session, access: introspected("carol") });
+      await mw(first, handlerFor(first, 200, { secret: "carol" }));
+
+      expect(first.responseHeaders["X-Pylon-Cache"]).toBe("MISS");
+
+      const second = createCtx({ session: fake.session, access: introspected("carol") });
+      const handler = vi.fn();
+      await mw(second, handler);
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(second.responseHeaders["X-Pylon-Cache"]).toBe("HIT");
+      expect(second.body).toEqual({ secret: "carol" });
+    });
+
+    test("should still refuse to cache when the request carries no credential", async () => {
+      const mw = useCache("60s", "private");
+      const ctx = createCtx({ session: fake.session });
+      const handler = handlerFor(ctx, 200, { hello: "world" });
+
+      await mw(ctx, handler);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(ctx.responseHeaders["X-Pylon-Cache"]).toBe("DYNAMIC");
+      expect(fake.repository.upsert).not.toHaveBeenCalled();
+    });
+  });
+
   test("should share a public entry across actors", async () => {
     const mw = useCache("60s", "public");
 
@@ -429,6 +544,28 @@ describe("useCache", () => {
 
     await expect(mw(ctx, handler)).rejects.toThrow(ServerError);
     expect(handler).not.toHaveBeenCalled();
+  });
+
+  // ⚠ This throw is reached ONLY when `responseCache` is already enabled (the
+  // config guard returned above it), so the operator must be pointed at the
+  // missing SOURCE. Naming the feature switch here told them to set something
+  // that is, by construction, already set.
+  test("should name the missing evictable source, not the feature switch", async () => {
+    const mw = useCache("60s", "public");
+    const ctx = createCtx({ session: undefined });
+
+    try {
+      await mw(ctx, vi.fn());
+      expect.unreachable("useCache should have thrown");
+    } catch (err: any) {
+      expect(err.code).toBe("cache_not_configured");
+      expect(err.details).toContain("cache");
+      expect(err.details).toContain("kv");
+      // The setting it used to name does not exist: `cache` is an
+      // `IProteusSource`, and the feature switch is spelled `responseCache`.
+      expect(err.details).not.toContain("cache: { enabled: true }");
+      expect(err.details).toMatchSnapshot();
+    }
   });
 
   test("should coalesce two concurrent misses into a single handler invocation", async () => {
