@@ -1,4 +1,5 @@
 import { ServerError } from "@lindorm/errors";
+import { isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
 import type { PylonAuthSettings } from "../../../types/index.js";
 
@@ -11,10 +12,14 @@ import type { PylonAuthSettings } from "../../../types/index.js";
  *
  * - A mounted `/login` that cannot authorize has no answer at all — nothing
  *   degrades, so it THROWS.
- * - Refresh with no `refresh` method is simply off, and the cache with no
- *   `introspect` is simply dead. Both are workable deployments, so they WARN —
+ * - A cache with no `introspect` is simply dead, and a refresh mode the driver
+ *   cannot honour is simply off. Both are workable deployments, so they WARN —
  *   once, because config that states an intent pylon silently discards is the
  *   shape of the bugs this repo keeps finding.
+ *
+ * ⚠ Every warning here is about config the DEPLOYMENT WROTE. A default pylon
+ * derived itself can never contradict the driver it was derived from, so it
+ * never warns — a warning that fires on correct config is worse than none.
  */
 export const validateAuthSettings = (
   settings: PylonAuthSettings,
@@ -40,12 +45,18 @@ export const validateAuthSettings = (
     }
   }
 
-  // ⚠ The ABSENT METHOD is the declaration, so there is no `mode: "none"` to
-  // require alongside it — two statements of one fact are free to drift.
-  if (!driver.refresh && (settings.refresh?.mode ?? "half_life") !== "none") {
+  // ⚠ Only a mode the DEPLOYMENT WROTE can be a misconfiguration. The absent
+  // method is the declaration, and `parseAuthConfig` already reads the default
+  // off it, so an unwritten mode agrees with the driver by construction — warning
+  // on it would fire on correct config and teach people to ignore warnings.
+  if (
+    !driver.refresh &&
+    isString(settings.refresh?.mode) &&
+    settings.refresh.mode !== "none"
+  ) {
     logger.warn(
       "Auth refresh is configured but the driver implements no refresh method; refresh is off",
-      { mode: settings.refresh?.mode ?? "half_life" },
+      { mode: settings.refresh.mode },
     );
   }
 

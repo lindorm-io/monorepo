@@ -30,7 +30,7 @@ exports[`parseAuthConfig > should merge defaults with router options 1`] = `
   "defaultTokenExpiry": "1d",
   "refresh": {
     "maxAge": "1h",
-    "mode": "half_life",
+    "mode": "none",
   },
   "router": {
     "cookies": {
@@ -64,7 +64,7 @@ exports[`parseAuthConfig > should return config with null router when no router 
   "defaultTokenExpiry": "1d",
   "refresh": {
     "maxAge": "1h",
-    "mode": "half_life",
+    "mode": "none",
   },
   "router": null,
 }

@@ -59,7 +59,9 @@ describe("Pylon auth config", () => {
 
     expect((http as any).authConfig).toMatchObject({
       defaultTokenExpiry: "1d",
-      refresh: { maxAge: "1h", mode: "half_life" },
+      // `none`, with nothing written: `JwtDriver` implements no `refresh`, and
+      // the driver is where the refresh default comes from.
+      refresh: { maxAge: "1h", mode: "none" },
       router: null,
     });
   });

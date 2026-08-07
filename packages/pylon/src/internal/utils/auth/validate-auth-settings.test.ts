@@ -78,7 +78,8 @@ describe("validateAuthSettings", () => {
     });
 
     // A pure resource server omits the router, and a driver with neither
-    // relying-party method is exactly the right configuration for it.
+    // relying-party method is exactly the right configuration for it. It writes
+    // NO refresh policy either — the driver already said it cannot refresh.
     test("should accept a resource-server driver when no router is configured", () => {
       expect(() =>
         validateAuthSettings(
@@ -88,7 +89,6 @@ describe("validateAuthSettings", () => {
               exchange: undefined,
               refresh: undefined,
             }),
-            refresh: { mode: "none" },
           },
           logger,
         ),
@@ -98,8 +98,9 @@ describe("validateAuthSettings", () => {
     });
   });
 
-  // Refresh is simply OFF — the absent method IS the declaration, so requiring a
-  // `mode: "none"` alongside it would be two statements of one fact.
+  // Refresh is simply OFF — the absent method IS the declaration, and
+  // `parseAuthConfig` reads the default straight off it. Only a mode the
+  // deployment WROTE can contradict the driver, so only that warns.
   describe("refresh", () => {
     test("should warn once when a mode is configured the driver cannot honour", () => {
       validateAuthSettings(
@@ -113,18 +114,36 @@ describe("validateAuthSettings", () => {
       });
     });
 
-    test("should warn on the default mode, which is not none", () => {
+    // ⚠ The whole point: correct config must be silent. A verify-only driver is
+    // a normal deployment, and it should not have to write `mode: "none"` to
+    // restate what the missing method already says.
+    test("should stay silent on the default mode for a driver that cannot refresh", () => {
       validateAuthSettings({ driver: createDriver({ refresh: undefined }) }, logger);
 
-      expect(logger.warn).toHaveBeenCalledTimes(1);
-      expect(logger.warn).toHaveBeenCalledWith(expect.any(String), {
-        mode: "half_life",
-      });
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    test("should stay silent when the deployment named a maxAge but no mode", () => {
+      validateAuthSettings(
+        { driver: createDriver({ refresh: undefined }), refresh: { maxAge: "30m" } },
+        logger,
+      );
+
+      expect(logger.warn).not.toHaveBeenCalled();
     });
 
     test("should stay silent when the deployment already asked for none", () => {
       validateAuthSettings(
         { driver: createDriver({ refresh: undefined }), refresh: { mode: "none" } },
+        logger,
+      );
+
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    test("should stay silent when the driver can refresh", () => {
+      validateAuthSettings(
+        { driver: createDriver(), refresh: { mode: "force" } },
         logger,
       );
 
