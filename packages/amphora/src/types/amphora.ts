@@ -16,6 +16,21 @@ export type AmphoraInternalConfig = {
   jwksUri: string;
 };
 
+/**
+ * The service's OWN issuer scope. The BLOCK is optional — omit it for a service
+ * that only VERIFIES (it then has no identity of its own, and `amphora.jwks`
+ * throws) — but an issuer is what the block IS, so within it, it is required.
+ */
+export type AmphoraInternalSettings = {
+  /**
+   * The service's OWN issuer — the URL it mints tokens under. It stamps `issuer`
+   * and `jwksUri` on every key added via `add` / `env`, it is the filter deciding
+   * which keys `amphora.jwks` publishes, and it is what `amphora.internal` is
+   * derived from.
+   */
+  issuer: string;
+};
+
 export type AmphoraExternalSettings = {
   issuer?: string;
   jwksUri?: string;
@@ -85,14 +100,6 @@ export type AmphoraExternalConfig = {
 };
 
 export type AmphoraSettings = {
-  /**
-   * The service's OWN issuer — the URL it mints tokens under. It stamps `issuer`
-   * and `jwksUri` on every key added via `add` / `env`, it is the filter deciding
-   * which keys `amphora.jwks` publishes, and it is what `amphora.internal` is
-   * derived from. Omit it for a service that only VERIFIES (it then has no
-   * identity of its own, and `amphora.jwks` throws).
-   */
-  issuer?: string;
   // When set, keys whose leaf certificate declares a DIFFERENT Environment OU are
   // rejected on add (cross-environment guard). Keys without a cert, or with a
   // non-Environment (foreign) OU, are unrestricted.
@@ -100,6 +107,8 @@ export type AmphoraSettings = {
   external?: Array<AmphoraExternalSettings>;
   /** The single UPSTREAM identity provider — a distinguished singleton external issuer. */
   idp?: AmphoraExternalSettings;
+  /** The service's OWN issuer scope. See {@link AmphoraInternalSettings}. */
+  internal?: AmphoraInternalSettings;
   logger: ILogger;
   /**
    * DNS resolver hook for external discovery/JWKS fetches — forwarded to the

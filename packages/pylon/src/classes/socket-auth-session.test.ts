@@ -92,7 +92,7 @@ describe("socket auth (session / cookie) e2e", () => {
     logger = createMockLogger();
 
     amphora = new Amphora({
-      issuer: SOCKET_AUTH_TEST_ISSUER,
+      internal: { issuer: SOCKET_AUTH_TEST_ISSUER },
       logger,
     });
 
@@ -389,7 +389,7 @@ describe("PylonIo constructor enforces CORS safety net when session is enabled",
   beforeAll(() => {
     logger = createMockLogger();
     amphora = new Amphora({
-      issuer: SOCKET_AUTH_TEST_ISSUER,
+      internal: { issuer: SOCKET_AUTH_TEST_ISSUER },
       logger,
     });
     amphora.add(

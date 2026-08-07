@@ -36,7 +36,7 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createLogger } from "@lindorm/logger";
 
 const amphora = new Amphora({
-  issuer: "https://auth.example.com",
+  internal: { issuer: "https://auth.example.com" },
   logger: createLogger(),
 });
 
@@ -50,7 +50,7 @@ const found = await amphora.find({ use: "sig" });
 
 ```typescript
 new Amphora({
-  issuer: "https://auth.example.com",
+  internal: { issuer: "https://auth.example.com" },
   logger,
   idp: { issuer: "https://accounts.google.com" },
   external: [{ issuer: "https://partner.example.com/" }],
@@ -63,7 +63,7 @@ new Amphora({
 | Option            | Type                             | Default     | Description                                                                                                                                                                                                                                                                                                                                  |
 | ----------------- | -------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `logger`          | `ILogger`                        | required    | Logger instance from `@lindorm/logger`.                                                                                                                                                                                                                                                                                                      |
-| `issuer`          | `string`                         | `null`      | This service's OWN issuer — the URL it mints tokens under. Used as the default `issuer` and `jwksUri` for added keys, as the filter for which keys appear in `amphora.jwks`, and as the source of `amphora.internal`. Validated as a URL at construction time.                                                                               |
+| `internal`        | `AmphoraInternalSettings`        | `undefined` | This service's OWN issuer scope — `{ issuer }`, the URL it mints tokens under. Used as the default `issuer` and `jwksUri` for added keys, as the filter for which keys appear in `amphora.jwks`, and as the source of `amphora.internal`. Validated as a URL at construction time. Omit the whole block for a service that only verifies.    |
 | `environment`     | `Environment`                    | `null`      | Cross-environment guard. When set, a key whose leaf certificate declares a different `Environment` OU is rejected on `add`. See [Environment enforcement](#environment-enforcement).                                                                                                                                                         |
 | `idp`             | `AmphoraExternalSettings`        | `undefined` | The single UPSTREAM identity provider — a distinguished singleton external issuer. Managed through [`amphora.idp`](#external-providers).                                                                                                                                                                                                     |
 | `external`        | `Array<AmphoraExternalSettings>` | `[]`        | Foreign OIDC issuers to discover keys from. Managed through [`amphora.external`](#external-providers).                                                                                                                                                                                                                                       |
@@ -85,7 +85,7 @@ amphora.add(sigKey);
 amphora.add([sigKey, encKey]);
 ```
 
-When `issuer` is set, Amphora auto-assigns `issuer` and `jwksUri` to added keys that don't already have them. Keys are deduplicated by `id` — adding a key with the same id replaces the previous one. Keys without an `id`, without an `issuer` (when the Amphora declares none), or that are already expired are rejected with `AmphoraError`.
+When `internal.issuer` is set, Amphora auto-assigns `issuer` and `jwksUri` to added keys that don't already have them. Keys are deduplicated by `id` — adding a key with the same id replaces the previous one. Keys without an `id`, without an `issuer` (when the Amphora declares none), or that are already expired are rejected with `AmphoraError`.
 
 ### From environment-encoded strings
 
@@ -102,7 +102,7 @@ When Amphora is constructed with an `environment`, `add` (and therefore `env`) r
 
 ```typescript
 const amphora = new Amphora({
-  issuer: "https://auth.example.com",
+  internal: { issuer: "https://auth.example.com" },
   environment: "production",
   logger,
 });
@@ -190,7 +190,7 @@ All query results are filtered to active keys only (excludes expired and not-yet
 
 ## JWKS Endpoint
 
-When `issuer` is set, `amphora.jwks` returns the public JWKS for keys that match it. External keys, `publish: false` keys, expired keys, and keys without public material are excluded. Accessing `jwks` without a configured `issuer` throws `AmphoraError`.
+When `internal.issuer` is set, `amphora.jwks` returns the public JWKS for keys that match it. External keys, `publish: false` keys, expired keys, and keys without public material are excluded. Accessing `jwks` without a configured `issuer` throws `AmphoraError`.
 
 ```typescript
 app.get("/.well-known/jwks.json", (req, res) => {
@@ -290,7 +290,7 @@ Setting `trustAnchors` on an external provider entry pins the CAs that must sign
 
 ```typescript
 new Amphora({
-  issuer: "https://auth.example.com",
+  internal: { issuer: "https://auth.example.com" },
   logger,
   external: [
     {
@@ -332,7 +332,7 @@ Like every other query, the capability checks run against the **published** set 
 ```typescript
 amphora.issuer; // string | null — this service's OWN issuer, as configured
 amphora.vault; // Array<IKryptos>
-amphora.internal; // AmphoraInternalConfig | null — the service's OWN identity, derived from `issuer`
+amphora.internal; // AmphoraInternalConfig | null — the service's OWN identity, derived from `internal.issuer`
 amphora.jwks; // AmphoraJwks — throws AmphoraError when no issuer is configured
 amphora.external; // IAmphoraExternal — foreign issuers
 amphora.idp; // IAmphoraIdp — the upstream identity provider
@@ -340,7 +340,7 @@ amphora.idp; // IAmphoraIdp — the upstream identity provider
 
 Amphora names **three** issuer scopes, and each has its own accessor: `internal` (this service), `external` (foreign peers), `idp` (the one upstream).
 
-`internal` is the service's own identity — `{ issuer, jwksUri }` derived from `issuer`, and `null` for a verify-only service that declares none. It is SINGULAR: a service has one identity or none. `vault`, `internal`, `external.issuers()`, and `jwks.keys` getters return copies, so mutating the returned values does not affect internal state.
+`internal` is the service's own identity — `{ issuer, jwksUri }` derived from the `internal` setting, and `null` for a verify-only service that declares none. It is SINGULAR: a service has one identity or none. `vault`, `internal`, `external.issuers()`, and `jwks.keys` getters return copies, so mutating the returned values does not affect internal state.
 
 ## Errors
 
@@ -360,7 +360,7 @@ try {
 
 Common scenarios that throw:
 
-- Constructing with an `issuer` that is not a valid URL (`invalid_issuer_url`).
+- Constructing with an `internal.issuer` that is not a valid URL (`invalid_issuer_url`).
 - `add()` called with a key missing `id`, missing `issuer` (when the Amphora declares none), or already expired.
 - `findSync()` / `filterSync()` / `findByIdSync()` invoked before `setup()` when external providers are configured.
 - Reading `amphora.jwks` when no `issuer` is configured (`issuer_required_for_jwks`).
@@ -463,6 +463,7 @@ import type {
   AmphoraExternalConfig,
   AmphoraExternalSettings,
   AmphoraInternalConfig,
+  AmphoraInternalSettings,
   AmphoraJwks,
   AmphoraSettings,
   AmphoraCondition,

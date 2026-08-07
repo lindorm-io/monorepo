@@ -17,7 +17,7 @@ const createKek = () =>
 const createAmphora = (...keys: Array<ReturnType<typeof createKek>>) => {
   const amphora = new Amphora({
     logger: createMockLogger(),
-    issuer: "https://test.lindorm.io",
+    internal: { issuer: "https://test.lindorm.io" },
   });
   for (const key of keys) amphora.add(key);
   return amphora;

@@ -184,7 +184,7 @@ describe("Pylon at-rest encryption staging", () => {
     let kek: IKryptos;
 
     beforeEach(async () => {
-      amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+      amphora = new Amphora({ internal: { issuer: ISSUER }, logger: createMockLogger() });
       kek = kekKey();
       amphora.add([kek]);
 
@@ -326,7 +326,7 @@ describe("Pylon at-rest encryption staging", () => {
     let kv: ProteusSource;
 
     beforeEach(async () => {
-      amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+      amphora = new Amphora({ internal: { issuer: ISSUER }, logger: createMockLogger() });
       kek = kekKey();
       amphora.add([kek]);
 
@@ -392,7 +392,7 @@ describe("Pylon at-rest encryption staging", () => {
       // so an unresolvable key must scream at setup rather than silently not
       // encrypt. This is what makes dropping the staging call a BUILD failure
       // instead of a silent plaintext write.
-      amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+      amphora = new Amphora({ internal: { issuer: ISSUER }, logger: createMockLogger() });
       const bareSource = track(
         new ProteusSource({
           driver: "sqlite",

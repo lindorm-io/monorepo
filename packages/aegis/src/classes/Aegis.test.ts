@@ -17,7 +17,7 @@ describe("Aegis", () => {
 
   beforeEach(async () => {
     logger = createMockLogger();
-    amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
+    amphora = new Amphora({ internal: { issuer: "https://test.lindorm.io/" }, logger });
     aegis = new Aegis({ amphora, logger });
 
     await amphora.setup();

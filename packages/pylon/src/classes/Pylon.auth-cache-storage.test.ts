@@ -128,7 +128,10 @@ describe("Pylon auth cache storage", () => {
   });
 
   test("should register both cache entities on kv when no cache source is set", async () => {
-    const amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+    const amphora = new Amphora({
+      internal: { issuer: ISSUER },
+      logger: createMockLogger(),
+    });
     amphora.add([createKek("pylon:kek")]);
 
     const kv = createSource(amphora);
@@ -144,7 +147,10 @@ describe("Pylon auth cache storage", () => {
 
   // `cache ?? kv` — the evictable source WINS when a deployment splits the two.
   test("should register both cache entities on cache, not kv, when the two are split", async () => {
-    const amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+    const amphora = new Amphora({
+      internal: { issuer: ISSUER },
+      logger: createMockLogger(),
+    });
     amphora.add([createKek("pylon:kek")]);
 
     const kv = createSource(amphora);
@@ -171,7 +177,10 @@ describe("Pylon auth cache storage", () => {
   // No ephemeral source at all ⇒ no cache, and setup must still succeed: a
   // deployment without one keeps calling the driver, uncached and without error.
   test("should set up without any ephemeral source", async () => {
-    const amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+    const amphora = new Amphora({
+      internal: { issuer: ISSUER },
+      logger: createMockLogger(),
+    });
     amphora.add([createKek("pylon:kek")]);
 
     pylon = createPylon(amphora, { driver: driver(), cache: { enabled: true } });
@@ -182,7 +191,10 @@ describe("Pylon auth cache storage", () => {
   // A separate blast radius for the cached credentials: `auth.encryption` names
   // its own KEK, and the default `pylon:kek` must NOT be the one that sealed it.
   test("should seal both payloads under auth.encryption", async () => {
-    const amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+    const amphora = new Amphora({
+      internal: { issuer: ISSUER },
+      logger: createMockLogger(),
+    });
     const bootstrap = createKek("pylon:kek");
     const authKek = createKek("pylon:auth-cache");
     amphora.add([bootstrap, authKek]);
@@ -225,7 +237,10 @@ describe("Pylon auth cache storage", () => {
 
   // A concern switched off gets no table at all — dead schema is still schema.
   test("should register only the concern that is switched on", async () => {
-    const amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+    const amphora = new Amphora({
+      internal: { issuer: ISSUER },
+      logger: createMockLogger(),
+    });
     amphora.add([createKek("pylon:kek")]);
 
     const kv = createSource(amphora);

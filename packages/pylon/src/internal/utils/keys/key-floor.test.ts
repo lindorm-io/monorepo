@@ -37,7 +37,7 @@ describe("the cookie time floor", () => {
 
   const vault = (...keys: Array<IKryptos>): IAmphora => {
     const amphora = new Amphora({
-      issuer: "http://test.lindorm.io",
+      internal: { issuer: "http://test.lindorm.io" },
       logger: createMockLogger(),
     });
     amphora.add(keys);

@@ -71,7 +71,7 @@ describe("auth cache capability", () => {
   let driver: IPylonAuthDriver;
 
   beforeEach(async () => {
-    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ internal: { issuer: ISSUER }, logger: createMockLogger() });
     amphora.add([
       KryptosKit.generate.enc.oct({
         algorithm: "A128KW",

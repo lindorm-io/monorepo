@@ -126,7 +126,7 @@ const createMemoryOptions = (
 /** A real vault: key selection is not something a mock can get wrong. */
 const createTestAmphora = async (): Promise<IAmphora> => {
   const amphora = new Amphora({
-    issuer: "https://test.lindorm.io/",
+    internal: { issuer: "https://test.lindorm.io/" },
     logger: createMockLogger() as any,
   });
   await amphora.setup();

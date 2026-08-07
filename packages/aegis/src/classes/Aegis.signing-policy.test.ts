@@ -43,7 +43,7 @@ describe("Aegis signing policy", () => {
 
   beforeEach(async () => {
     logger = createMockLogger();
-    amphora = new Amphora({ issuer: ISSUER, logger });
+    amphora = new Amphora({ internal: { issuer: ISSUER }, logger });
     await amphora.setup();
   });
 

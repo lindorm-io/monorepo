@@ -8,7 +8,7 @@ import { Pylon } from "../src/index.js";
 const logger = new Logger({ level: "silly", readable: true });
 
 const amphora = new Amphora({
-  issuer: "http://test.lindorm.io",
+  internal: { issuer: "http://test.lindorm.io" },
   logger,
   external: [
     {
@@ -39,7 +39,7 @@ const pylon = new Pylon({
 // creating what's needed for the pretend external server
 
 const externalAmphora = new Amphora({
-  issuer: "http://external.lindorm.io",
+  internal: { issuer: "http://external.lindorm.io" },
   logger,
 });
 

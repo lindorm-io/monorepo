@@ -22,7 +22,7 @@ export const resolveSelfIssuer = (context: { amphora: IAmphora }): string => {
     title: "Self Issuer Not Configured",
     type: "urn:lindorm:pylon:error:self_issuer_not_configured",
     details:
-      "The driver pins this service's OWN issuer, which amphora derives from its `issuer` setting, but none is configured. Set `new Amphora({ issuer })` to the URL this service issues tokens under, or pin the upstream instead.",
+      "The driver pins this service's OWN issuer, which amphora derives from its `internal` setting, but none is configured. Set `new Amphora({ internal: { issuer } })` to the URL this service issues tokens under, or pin the upstream instead.",
   });
 };
 

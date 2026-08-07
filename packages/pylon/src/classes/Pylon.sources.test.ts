@@ -53,7 +53,10 @@ const createSource = (amphora: IAmphora): ProteusSource => {
 };
 
 const createAmphora = (): IAmphora => {
-  const amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+  const amphora = new Amphora({
+    internal: { issuer: ISSUER },
+    logger: createMockLogger(),
+  });
   const kek: IKryptos = KryptosKit.generate.enc.oct({
     algorithm: "A128KW",
     publish: false,

@@ -31,7 +31,7 @@ describe("Amphora", () => {
   let amphora: Amphora;
 
   beforeEach(() => {
-    amphora = new Amphora({ issuer, logger: createMockLogger() });
+    amphora = new Amphora({ internal: { issuer }, logger: createMockLogger() });
   });
 
   describe("add", () => {
@@ -105,7 +105,7 @@ describe("Amphora", () => {
       const logger = createMockLogger();
       const child = createMockLogger();
       vi.mocked(logger.child).mockReturnValue(child);
-      const scoped = new Amphora({ issuer, logger });
+      const scoped = new Amphora({ internal: { issuer }, logger });
 
       const foreign = KryptosKit.from.jwk(
         { ...TEST_EC_KEY_SIG.toJWK("private"), iss: "https://other.lindorm.io/" },
@@ -311,7 +311,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -345,7 +345,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -373,7 +373,7 @@ describe("Amphora", () => {
       });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         lookup,
         external: [
@@ -403,7 +403,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         maxRedirects: 1,
         external: [
@@ -422,7 +422,7 @@ describe("Amphora", () => {
 
     test("should throw from findByIdSync when setup not called with external providers", () => {
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -685,7 +685,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [ecJwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -779,7 +779,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -800,7 +800,7 @@ describe("Amphora", () => {
       expect(
         () =>
           new Amphora({
-            issuer: "not-a-url",
+            internal: { issuer: "not-a-url" },
             logger: createMockLogger(),
           }),
       ).toThrow(AmphoraError);
@@ -810,7 +810,7 @@ describe("Amphora", () => {
       expect(
         () =>
           new Amphora({
-            issuer: "not-a-url",
+            internal: { issuer: "not-a-url" },
             logger: createMockLogger(),
           }),
       ).toThrow(expect.objectContaining({ code: "invalid_issuer_url" }));
@@ -830,13 +830,32 @@ describe("Amphora", () => {
       });
     });
 
+    // The same setting is the filter deciding what the service PUBLISHES, so the
+    // block reaching the vault is observable on the wire — not only on the
+    // derived accessor.
+    test("should publish keys stamped with the internal issuer", () => {
+      const instance = new Amphora({ internal: { issuer }, logger: createMockLogger() });
+      instance.add(TEST_EC_KEY_SIG);
+
+      expect(instance.jwks.keys.map((key) => key.kid)).toEqual([TEST_EC_KEY_SIG.id]);
+    });
+
     // A verify-only deployment declares no issuer of its own — it mints nothing,
-    // so it HAS no identity. That is a fact, not a missing config.
-    test("should be null when no issuer is configured", () => {
+    // so it HAS no identity. That is a fact, not a missing config. The BLOCK is
+    // what is omitted; there is no issuer-less `internal` to express.
+    test("should be null when no internal block is configured", () => {
       const instance = new Amphora({ logger: createMockLogger() });
 
       expect(instance.internal).toBeNull();
       expect(instance.issuer).toBeNull();
+    });
+
+    test("should throw on jwks when no internal block is configured", () => {
+      const instance = new Amphora({ logger: createMockLogger() });
+
+      expect(() => instance.jwks).toThrow(
+        expect.objectContaining({ code: "issuer_required_for_jwks" }),
+      );
     });
   });
 
@@ -897,7 +916,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -932,7 +951,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -967,7 +986,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -993,7 +1012,7 @@ describe("Amphora", () => {
 
     test("should throw from filterSync when setup not called with external providers", () => {
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1011,7 +1030,7 @@ describe("Amphora", () => {
 
     test("should throw from findSync when setup not called with external providers", () => {
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1047,7 +1066,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1073,7 +1092,7 @@ describe("Amphora", () => {
         .reply(500, { error: "Internal Server Error" });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1105,7 +1124,7 @@ describe("Amphora", () => {
         .reply(500, { error: "Internal Server Error" });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1147,7 +1166,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwkWithWrongIssuer] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1187,7 +1206,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk1, jwk2, jwk3, jwk4, jwk5] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         maxExternalKeys: 2,
         external: [
@@ -1221,7 +1240,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [externalJwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1265,7 +1284,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [externalJwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [{ issuer, jwksUri: "https://test.lindorm.io/.well-known/jwks.json" }],
       });
@@ -1315,7 +1334,7 @@ describe("Amphora", () => {
 
     const createScoped = (logger: ReturnType<typeof createMockLogger>) =>
       new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger,
         external: [{ issuer: externalIssuer, jwksUri: externalJwksUri }],
       });
@@ -1503,7 +1522,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1578,7 +1597,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         refreshInterval: 100,
         external: [
@@ -1616,7 +1635,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         refreshInterval: 300_000,
         external: [
@@ -1652,7 +1671,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         refreshInterval: 100,
         external: [
@@ -1711,7 +1730,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1742,7 +1761,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1773,7 +1792,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1807,7 +1826,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1836,7 +1855,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1878,7 +1897,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [looseJwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1943,7 +1962,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -1974,7 +1993,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -2006,7 +2025,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -2041,7 +2060,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -2086,7 +2105,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [strictJwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           {
@@ -2270,7 +2289,7 @@ describe("Amphora", () => {
     });
 
     test("default cap is 1000 — the 1001st external issuer evicts one (lazy)", async () => {
-      const instance = new Amphora({ issuer, logger: createMockLogger() });
+      const instance = new Amphora({ internal: { issuer }, logger: createMockLogger() });
 
       for (let i = 0; i < 1001; i++) {
         await instance.external.addIssuer({
@@ -2290,7 +2309,7 @@ describe("Amphora", () => {
 
     test("evicts the least-recently-USED external issuer on addIssuer overflow", async () => {
       const instance = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         maxIssuers: 2,
       });
@@ -2341,7 +2360,7 @@ describe("Amphora", () => {
 
     test("the idp is exempt from the cap", async () => {
       const instance = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         maxIssuers: 1,
       });
@@ -2370,7 +2389,7 @@ describe("Amphora", () => {
 
     test("a never-used constructor external issuer is evicted before a freshly-registered one", async () => {
       const instance = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         maxIssuers: 1,
         external: [
@@ -2396,7 +2415,7 @@ describe("Amphora", () => {
     });
 
     test("find bumps the external issuer's lastAccess", async () => {
-      const instance = new Amphora({ issuer, logger: createMockLogger() });
+      const instance = new Amphora({ internal: { issuer }, logger: createMockLogger() });
 
       persistJwks("a");
 
@@ -2686,7 +2705,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [b] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         external: [
           { issuer: issuerA, jwksUri: jwksA },
@@ -2733,7 +2752,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [b] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger,
         external: [
           { issuer: issuerA, jwksUri: "https://iss-a.lindorm.io/.well-known/jwks.json" },
@@ -2877,7 +2896,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [publicJwk()] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         idp: { issuer: idpIssuer, jwksUri: idpJwksUri },
       });
@@ -2906,7 +2925,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [extJwk] });
 
       amphora = new Amphora({
-        issuer: issuer,
+        internal: { issuer },
         logger: createMockLogger(),
         idp: { issuer: idpIssuer, jwksUri: idpJwksUri },
         external: [
@@ -2940,7 +2959,7 @@ describe("Amphora environment enforcement", () => {
 
   test("rejects a key whose certificate environment differs", () => {
     const amphora = new Amphora({
-      issuer: issuer,
+      internal: { issuer },
       environment: "development",
       logger: createMockLogger(),
     });
@@ -2960,7 +2979,7 @@ describe("Amphora environment enforcement", () => {
 
   test("accepts a key whose certificate environment matches", () => {
     const amphora = new Amphora({
-      issuer: issuer,
+      internal: { issuer },
       environment: "development",
       logger: createMockLogger(),
     });
@@ -2971,7 +2990,7 @@ describe("Amphora environment enforcement", () => {
 
   test("accepts a key without a certificate (e.g. an oct KEK)", () => {
     const amphora = new Amphora({
-      issuer: issuer,
+      internal: { issuer },
       environment: "development",
       logger: createMockLogger(),
     });
@@ -2983,7 +3002,7 @@ describe("Amphora environment enforcement", () => {
 
   test("accepts a key whose certificate OU is a foreign (non-environment) value", () => {
     const amphora = new Amphora({
-      issuer: issuer,
+      internal: { issuer },
       environment: "development",
       logger: createMockLogger(),
     });
@@ -3002,7 +3021,7 @@ describe("Amphora environment enforcement", () => {
   });
 
   test("an amphora without an environment ignores certificate environments", () => {
-    const amphora = new Amphora({ issuer, logger: createMockLogger() });
+    const amphora = new Amphora({ internal: { issuer }, logger: createMockLogger() });
 
     expect(() => amphora.add(keyForEnvironment("production"))).not.toThrow();
     expect(amphora.vault).toHaveLength(1);

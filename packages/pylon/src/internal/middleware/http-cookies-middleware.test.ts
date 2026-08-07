@@ -384,7 +384,10 @@ describe("httpCookiesMiddleware", async () => {
   // enough that its ciphertext exceeds the chunk threshold.
   test("should AES-tokenise first, then chunk, with byte-exact round-trip", async () => {
     const logger = createMockLogger();
-    const amphora = new Amphora({ issuer: "http://test.lindorm.io", logger });
+    const amphora = new Amphora({
+      internal: { issuer: "http://test.lindorm.io" },
+      logger,
+    });
     const cookieKey = KryptosKit.generate.auto({
       algorithm: "dir",
       issuer: "http://test.lindorm.io",

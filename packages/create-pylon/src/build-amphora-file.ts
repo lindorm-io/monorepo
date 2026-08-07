@@ -4,7 +4,7 @@ import type { Answers } from "./types.js";
  * `src/pylon/amphora.ts` — the key vault, and the ONLY place an issuer is
  * declared.
  *
- * Amphora owns all three issuer scopes: `issuer` is this service's own
+ * Amphora owns all three issuer scopes: `internal` is this service's own
  * (`amphora.internal`), `idp` is the single upstream, and `external` is any
  * foreign peer. Pylon's auth driver declares none of them — it reads whichever
  * scope it pins off this instance, so which upstream the service talks to is
@@ -16,7 +16,7 @@ export const buildAmphoraFile = (answers: Answers): string => {
     `import { logger } from "../logger/index.js";`,
     `import { config } from "./config.js";`,
     ``,
-    `// \`issuer\` is this service's own identity: every key added to the vault (the`,
+    `// \`internal.issuer\` is this service's own identity: every key added to the vault (the`,
     `// KEK below, plus rotated Kryptos keys) derives its issuer + jwks_uri from it,`,
     `// and it's what /.well-known/jwks.json publishes under. \`environment\` rejects`,
     `// any key whose certificate was minted for a different deployment environment.`,
@@ -36,7 +36,7 @@ export const buildAmphoraFile = (answers: Answers): string => {
   lines.push(
     `export const amphora = new Amphora({`,
     `  logger,`,
-    `  issuer: config.issuer,`,
+    `  internal: { issuer: config.issuer },`,
     `  environment: config.nodeEnv,`,
   );
 

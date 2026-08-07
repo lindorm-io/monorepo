@@ -39,7 +39,7 @@ describe("buildAppConfig", () => {
 
   beforeEach(() => {
     logger = createMockLogger();
-    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ internal: { issuer: ISSUER }, logger: createMockLogger() });
   });
 
   const build = (options: any = {}) =>

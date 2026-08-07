@@ -153,7 +153,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   beforeEach(async () => {
     MockDate.set(NOW.toISOString());
 
-    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ internal: { issuer: ISSUER }, logger: createMockLogger() });
     amphora.add([
       KryptosKit.generate.enc.oct({
         algorithm: "A128KW",

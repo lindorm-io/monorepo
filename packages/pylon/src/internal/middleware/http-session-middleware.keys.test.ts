@@ -136,7 +136,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ internal: { issuer: ISSUER }, logger: createMockLogger() });
 
     cookieSigKey = KryptosKit.generate.auto({
       algorithm: "HS256",

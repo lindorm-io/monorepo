@@ -43,7 +43,7 @@ export class AmphoraState {
     this.logger = options.logger.child(["Amphora"]);
     this.conduit = createExternalConduit(options, this.logger);
 
-    this.issuer = options.issuer ?? null;
+    this.issuer = options.internal?.issuer ?? null;
     this.environment = options.environment ?? null;
     this.maxExternalKeys = options.maxExternalKeys ?? 100;
     this.maxIssuers = options.maxIssuers ?? 1000;

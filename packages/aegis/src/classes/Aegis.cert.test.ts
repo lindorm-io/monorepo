@@ -96,7 +96,7 @@ describe("Aegis cert binding", () => {
   describe("with cert-bound kryptos", () => {
     beforeEach(async () => {
       logger = createMockLogger();
-      amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
+      amphora = new Amphora({ internal: { issuer: "https://test.lindorm.io/" }, logger });
       aegis = new Aegis({ amphora, logger });
 
       await amphora.setup();
@@ -179,7 +179,7 @@ describe("Aegis cert binding", () => {
     test("deployment-level certificateThumbprintSha1: false suppresses x5t by default", async () => {
       const localLogger = createMockLogger();
       const localAmphora = new Amphora({
-        issuer: "https://test.lindorm.io/",
+        internal: { issuer: "https://test.lindorm.io/" },
         logger: localLogger,
       });
       const localAegis = new Aegis({
@@ -325,7 +325,7 @@ describe("Aegis cert binding", () => {
   describe("with chain-less kryptos", () => {
     beforeEach(async () => {
       logger = createMockLogger();
-      amphora = new Amphora({ issuer: "https://test.lindorm.io/", logger });
+      amphora = new Amphora({ internal: { issuer: "https://test.lindorm.io/" }, logger });
       aegis = new Aegis({ amphora, logger });
 
       await amphora.setup();
@@ -425,7 +425,7 @@ describe("Aegis cert binding", () => {
     }> => {
       const localLogger = createMockLogger();
       const localAmphora = new Amphora({
-        issuer: "https://test.lindorm.io/",
+        internal: { issuer: "https://test.lindorm.io/" },
         logger: localLogger,
       });
       const localAegis = new Aegis({
@@ -472,7 +472,7 @@ describe("Aegis cert binding", () => {
         warnSpy.push({ message: msg, meta });
       });
       const localAmphora = new Amphora({
-        issuer: "https://test.lindorm.io/",
+        internal: { issuer: "https://test.lindorm.io/" },
         logger: localLogger,
       });
       const localAegis = new Aegis({

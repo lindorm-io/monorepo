@@ -119,7 +119,7 @@ describe("createSessionStore", () => {
     beforeEach(() => {
       const logger = createMockLogger();
 
-      amphora = new Amphora({ issuer: ISSUER, logger });
+      amphora = new Amphora({ internal: { issuer: ISSUER }, logger });
 
       sessionKey = KryptosKit.generate.auto({
         algorithm: "ECDH-ES",

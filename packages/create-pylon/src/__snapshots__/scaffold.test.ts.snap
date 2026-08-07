@@ -1266,7 +1266,7 @@ exports[`scaffold > writeAmphoraFile > snapshot: auth 1`] = `
 import { logger } from "../logger/index.js";
 import { config } from "./config.js";
 
-// \`issuer\` is this service's own identity: every key added to the vault (the
+// \`internal.issuer\` is this service's own identity: every key added to the vault (the
 // KEK below, plus rotated Kryptos keys) derives its issuer + jwks_uri from it,
 // and it's what /.well-known/jwks.json publishes under. \`environment\` rejects
 // any key whose certificate was minted for a different deployment environment.
@@ -1278,7 +1278,7 @@ import { config } from "./config.js";
 // \`amphora.setup()\`, so the document is resolved before the first request.
 export const amphora = new Amphora({
   logger,
-  issuer: config.issuer,
+  internal: { issuer: config.issuer },
   environment: config.nodeEnv,
   idp: { issuer: config.auth.issuer },
 });
@@ -1292,13 +1292,13 @@ exports[`scaffold > writeAmphoraFile > snapshot: no auth 1`] = `
 import { logger } from "../logger/index.js";
 import { config } from "./config.js";
 
-// \`issuer\` is this service's own identity: every key added to the vault (the
+// \`internal.issuer\` is this service's own identity: every key added to the vault (the
 // KEK below, plus rotated Kryptos keys) derives its issuer + jwks_uri from it,
 // and it's what /.well-known/jwks.json publishes under. \`environment\` rejects
 // any key whose certificate was minted for a different deployment environment.
 export const amphora = new Amphora({
   logger,
-  issuer: config.issuer,
+  internal: { issuer: config.issuer },
   environment: config.nodeEnv,
 });
 

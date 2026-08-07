@@ -22,7 +22,7 @@ describe("Pylon source lifecycle", () => {
 
     pylon = new Pylon({
       logger,
-      amphora: new Amphora({ issuer: "http://test.lindorm.io", logger }),
+      amphora: new Amphora({ internal: { issuer: "http://test.lindorm.io" }, logger }),
       domain: "http://test.lindorm.io",
       environment: "test",
       name: "@lindorm/pylon",

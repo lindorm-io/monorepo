@@ -30,7 +30,7 @@ import { Logger } from "@lindorm/logger";
 import { Pylon, PylonRouter, useHandler } from "@lindorm/pylon";
 
 const logger = new Logger({ readable: true });
-const amphora = new Amphora({ issuer: "https://api.example.com", logger });
+const amphora = new Amphora({ internal: { issuer: "https://api.example.com" }, logger });
 
 const router = new PylonRouter();
 
@@ -990,7 +990,7 @@ import { OpenIdDriver } from "@lindorm/pylon";
 // discovery document and the provider's keys.
 const amphora = new Amphora({
   logger,
-  issuer: "https://api.example.com",
+  internal: { issuer: "https://api.example.com" },
   idp: { issuer: "https://auth.example.com" },
 });
 

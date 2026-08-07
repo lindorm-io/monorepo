@@ -1,4 +1,4 @@
-import { Amphora } from "@lindorm/amphora";
+import { Amphora, type AmphoraSettings } from "@lindorm/amphora";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test } from "vitest";
 import type { IPylonAuthDriver } from "../../interfaces/index.js";
@@ -14,10 +14,9 @@ describe("JwtDriver", () => {
    * ⚠ A REAL `Amphora`, not a mock. The whole driver is a read of amphora's two
    * own-side issuer scopes, so a hand-written stub would only assert the stub.
    */
-  const createContext = (settings: {
-    issuer?: string;
-    idp?: { issuer?: string; jwksUri?: string };
-  }): PylonAuthDriverContext => {
+  const createContext = (
+    settings: Omit<AmphoraSettings, "logger">,
+  ): PylonAuthDriverContext => {
     const logger = createMockLogger();
 
     return createAuthDriverContext({
@@ -91,14 +90,14 @@ describe("JwtDriver", () => {
 
   describe("endpoints", () => {
     test("should pin this service's own issuer", () => {
-      const context = createContext({ issuer: SELF });
+      const context = createContext({ internal: { issuer: SELF } });
 
       expect(new JwtDriver({ issuer: "self" }).endpoints(context)).toMatchSnapshot();
     });
 
     test("should pin the upstream idp's issuer", () => {
       const context = createContext({
-        issuer: SELF,
+        internal: { issuer: SELF },
         idp: { issuer: IDP, jwksUri: `${IDP}.well-known/jwks.json` },
       });
 
@@ -109,7 +108,7 @@ describe("JwtDriver", () => {
     // why the setting has no default.
     test("should pin each scope independently on a service that holds both", () => {
       const context = createContext({
-        issuer: SELF,
+        internal: { issuer: SELF },
         idp: { issuer: IDP, jwksUri: `${IDP}.well-known/jwks.json` },
       });
 
@@ -119,7 +118,7 @@ describe("JwtDriver", () => {
 
     // The sync signature IS the amphora boundary — see `IPylonAuthDriver`.
     test("should resolve endpoints without awaiting anything", () => {
-      const context = createContext({ issuer: SELF });
+      const context = createContext({ internal: { issuer: SELF } });
 
       const endpoints = new JwtDriver({ issuer: "self" }).endpoints(context);
 
@@ -143,7 +142,7 @@ describe("JwtDriver", () => {
 
     // Amphora's own error, and it says exactly the right thing.
     test("should throw for `idp` when no upstream is registered", () => {
-      const context = createContext({ issuer: SELF });
+      const context = createContext({ internal: { issuer: SELF } });
 
       expect(() => new JwtDriver({ issuer: "idp" }).endpoints(context)).toThrow(
         expect.objectContaining({ code: "idp_not_configured" }),
@@ -160,10 +159,10 @@ describe("JwtDriver", () => {
      */
     test("should throw for `idp` when amphora resolved no issuer for it", () => {
       const context = createContext({
-        issuer: SELF,
+        internal: { issuer: SELF },
         idp: {
           openIdConfigurationUri: `${IDP}.well-known/openid-configuration`,
-        } as any,
+        },
       });
 
       expect(() => new JwtDriver({ issuer: "idp" }).endpoints(context)).toThrow(

@@ -76,7 +76,7 @@ describe("prepareOutbound", () => {
     vi.clearAllMocks();
 
     const amphora = new Amphora({
-      issuer: "https://test.lindorm.io/",
+      internal: { issuer: "https://test.lindorm.io/" },
       logger: createMockLogger(),
     });
     await amphora.setup();

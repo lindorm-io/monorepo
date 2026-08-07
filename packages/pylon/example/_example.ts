@@ -11,7 +11,7 @@ const logger = new Logger({
 });
 
 const amphora = new Amphora({
-  issuer: "http://test.lindorm.io",
+  internal: { issuer: "http://test.lindorm.io" },
   logger,
 });
 
