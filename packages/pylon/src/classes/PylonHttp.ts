@@ -55,10 +55,18 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
   readonly server: Koa;
 
-  constructor(options: PylonHttpSettings<T>) {
+  /**
+   * ⚠ `authConfig` is handed in by `Pylon`, which parses it ONCE and gives the
+   * SAME object to both transports — a pylon serving http and sockets has one
+   * auth configuration, not two equal-but-distinct ones. It falls back to
+   * parsing its own only for a `PylonHttp` driven standalone, where there is no
+   * second transport to agree with.
+   */
+  constructor(options: PylonHttpSettings<T>, authConfig?: PylonAuthConfig) {
     this.logger = options.logger.child(["PylonHttp"]);
 
-    this.authConfig = options.auth ? parseAuthConfig(options.auth) : undefined;
+    this.authConfig =
+      authConfig ?? (options.auth ? parseAuthConfig(options.auth) : undefined);
     this.middleware = [];
     this.options = options;
     this.router = new PylonRouter<T>();

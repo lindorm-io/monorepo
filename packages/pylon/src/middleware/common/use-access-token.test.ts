@@ -2,7 +2,7 @@ import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { OPAQUE_TOKEN, joseShapedToken } from "../../__fixtures__/access/tokens.js";
-import { createAccessTokenMiddleware } from "./create-access-token-middleware.js";
+import { useAccessToken } from "./use-access-token.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import {
   createTestAppConfig,
@@ -13,10 +13,11 @@ import {
  *  server, so the opaque arm is reachable. */
 const APP_CONFIG = createTestAppConfig({ auth: createTestAuthConfig() });
 
-describe("createAccessTokenMiddleware", () => {
-  let next: Mock;
+/** The issuer `useAccessToken` reads off the policy above. No mount states it. */
+const ISSUER = "https://test.lindorm.io/";
 
-  const options: any = { issuer: "https://test.lindorm.io/" };
+describe("useAccessToken", () => {
+  let next: Mock;
 
   beforeEach(() => {
     next = vi.fn();
@@ -42,13 +43,13 @@ describe("createAccessTokenMiddleware", () => {
     });
 
     test("verifies a JOSE bearer token and resolves verified access", async () => {
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
       expect(ctx.aegis.verify).toHaveBeenCalledWith(
         joseShapedToken(),
-        { ...options },
+        { issuer: ISSUER },
         // pylon owns the DPoP binding check now, so aegis is told to trust the
         // bound thumbprint rather than demand a proof it was never handed.
         { tokenType: "access_token", trustBoundThumbprint: true },
@@ -68,7 +69,7 @@ describe("createAccessTokenMiddleware", () => {
         permissions: ["users:read"],
       });
 
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
@@ -91,14 +92,14 @@ describe("createAccessTokenMiddleware", () => {
         header: {},
         token: joseShapedToken(),
       });
-      await createAccessTokenMiddleware(options)(ctx, next);
+      await useAccessToken()(ctx, next);
       const verified = ctx.state.access;
 
       ctx.state.access = null;
       ctx.state.tokens = {};
       ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
       ctx.auth.introspect.mockResolvedValue({ active: true, ...claims });
-      await createAccessTokenMiddleware(options)(ctx, next);
+      await useAccessToken()(ctx, next);
       const introspected = ctx.state.access;
 
       expect(verified.provenance).toBe("verified");
@@ -110,7 +111,7 @@ describe("createAccessTokenMiddleware", () => {
       ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
       ctx.auth.introspect.mockResolvedValue({ active: false });
 
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
 
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
 
@@ -141,7 +142,7 @@ describe("createAccessTokenMiddleware", () => {
         token: "session-jwt",
       });
 
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
       await middleware(ctx, next);
 
       expect(ctx.aegis.verify).toHaveBeenCalledWith("session-jwt");
@@ -160,12 +161,12 @@ describe("createAccessTokenMiddleware", () => {
         subject: "alice",
       };
 
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
       await middleware(ctx, next);
 
       expect(ctx.aegis.verify).toHaveBeenCalledWith(
         joseShapedToken(),
-        { ...options },
+        { issuer: ISSUER },
         expect.objectContaining({ tokenType: "access_token" }),
       );
     });
@@ -173,7 +174,7 @@ describe("createAccessTokenMiddleware", () => {
     test("throws Unauthorized when neither header nor session present", async () => {
       ctx.state.authorization = { type: "none", value: null };
 
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
     });
 
@@ -191,7 +192,7 @@ describe("createAccessTokenMiddleware", () => {
         await vi.importActual<typeof import("@lindorm/aegis")>("@lindorm/aegis");
       (ctx.aegis.verify as Mock).mockRejectedValue(new AegisError("bad token"));
 
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
     });
   });
@@ -231,7 +232,7 @@ describe("createAccessTokenMiddleware", () => {
 
     test("accepts silently when well before expiry warning window", async () => {
       const ctx = makeCtx();
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
 
       await middleware(ctx, next);
 
@@ -245,7 +246,7 @@ describe("createAccessTokenMiddleware", () => {
     test("emits $pylon/auth/expired exactly once inside the warning window", async () => {
       const soon = new Date(Date.now() + 30_000);
       const ctx = makeCtx({ getExpiresAt: () => soon });
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
 
       await middleware(ctx, next);
 
@@ -263,7 +264,7 @@ describe("createAccessTokenMiddleware", () => {
     test("throws hard when now >= expiresAt", async () => {
       const past = new Date(Date.now() - 1_000);
       const ctx = makeCtx({ getExpiresAt: () => past });
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
 
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
       expect(ctx.io.socket.emit).not.toHaveBeenCalled();
@@ -275,7 +276,7 @@ describe("createAccessTokenMiddleware", () => {
     test("logs the accepted fast path with expiresAt and strategy", async () => {
       const expiresAt = new Date("2099-01-01T00:00:00.000Z");
       const ctx = makeCtx({ strategy: "dpop-bearer", getExpiresAt: () => expiresAt });
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
 
       await middleware(ctx, next);
 
@@ -290,23 +291,99 @@ describe("createAccessTokenMiddleware", () => {
       const ctx = makeCtx();
       ctx.io.socket.data.pylon = {};
 
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
     });
   });
 
-  describe("handshake context guard", () => {
-    test("throws ServerError if run in the handshake phase", async () => {
+  // The handshake phase used to be REFUSED here (`createAccessTokenMiddleware`
+  // threw `access_token_middleware_in_handshake` and pointed at a second
+  // factory). One mount now serves it — the exhaustive handshake coverage lives
+  // in use-access-token.handshake.test.ts; this pins the DISPATCH.
+  describe("handshake context", () => {
+    test("runs the handshake arm instead of refusing it", async () => {
       const ctx: any = {
         aegis: createMockAegis(),
         auth: { introspect: vi.fn() },
         logger: createMockLogger(),
         handshakeId: "abc",
-        io: { socket: { handshake: {}, data: {} } },
+        io: {
+          socket: {
+            handshake: { auth: { bearer: "jwt-token" }, headers: {} },
+            data: { tokens: {}, pylon: {} },
+          },
+        },
         state: { access: null, app: { config: APP_CONFIG }, tokens: {} },
       };
-      const middleware = createAccessTokenMiddleware(options);
-      await expect(middleware(ctx, next)).rejects.toThrow(ServerError);
+      (ctx.aegis.verify as Mock).mockResolvedValue({
+        claims: { subject: "alice", expiresAt: new Date("2099-01-01T00:00:00.000Z") },
+        header: { tokenType: "access_token" },
+        token: "jwt-token",
+      });
+
+      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+
+      expect(ctx.aegis.verify).toHaveBeenCalledWith(
+        "jwt-token",
+        { issuer: ISSUER },
+        { tokenType: "access_token", dpopProof: undefined },
+      );
+      expect(ctx.io.socket.data.pylon.auth.strategy).toBe("bearer");
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // No mount states an issuer, so a deployment that resolved none has nothing to
+  // verify against. Refuse by name rather than verify with no `issuer` matcher —
+  // that is not a weaker check, it is NO check.
+  describe("unresolved issuer", () => {
+    const makeCtx = (auth: any): any => ({
+      aegis: createMockAegis(),
+      auth: { introspect: vi.fn() },
+      logger: createMockLogger(),
+      request: {},
+      state: {
+        access: null,
+        app: { config: createTestAppConfig({ auth }) },
+        authorization: { type: "bearer", value: joseShapedToken() },
+        session: null,
+        tokens: {},
+      },
+    });
+
+    test("throws ServerError when the deployment configured no auth block", async () => {
+      const ctx = makeCtx(null);
+
+      await expect(useAccessToken()(ctx, next)).rejects.toMatchObject({
+        code: "access_issuer_unresolved",
+        type: "urn:lindorm:pylon:error:access_issuer_unresolved",
+        data: { auth: "unconfigured" },
+      });
+      expect(ctx.aegis.verify).not.toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    test("throws ServerError when the driver could not settle an issuer", async () => {
+      const ctx = makeCtx(createTestAuthConfig({ issuer: null }));
+
+      await expect(useAccessToken()(ctx, next)).rejects.toThrow(ServerError);
+      await expect(useAccessToken()(ctx, next)).rejects.toMatchObject({
+        data: { auth: "unresolved" },
+      });
+      expect(ctx.aegis.verify).not.toHaveBeenCalled();
+    });
+
+    // The OPAQUE arm never verifies locally, so it must not demand an issuer:
+    // RFC 7662 makes the authorization server the authority on that credential.
+    test("still introspects an opaque token with no issuer resolved", async () => {
+      const ctx = makeCtx(createTestAuthConfig({ issuer: null }));
+      ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
+      ctx.auth.introspect.mockResolvedValue({ active: true, subject: "alice" });
+
+      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+
+      expect(ctx.state.access.provenance).toBe("introspected");
+      expect(next).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -328,7 +405,7 @@ describe("createAccessTokenMiddleware", () => {
 
       (ctx.aegis.verify as Mock).mockRejectedValue(new Error("invalid signature"));
 
-      const middleware = createAccessTokenMiddleware(options);
+      const middleware = useAccessToken();
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
       expect(ctx.state.access).toBeNull();
     });

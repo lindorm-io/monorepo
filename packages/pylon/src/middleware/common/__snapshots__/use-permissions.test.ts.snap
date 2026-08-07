@@ -2,7 +2,7 @@
 
 exports[`usePermissions > should throw ClientError 401 when the access token middleware has not run 1`] = `"Access token middleware is required"`;
 
-exports[`usePermissions > should throw ClientError 401 when the access token middleware has not run 2`] = `"usePermissions reads ctx.state.access — install createAccessTokenMiddleware ahead of it, or point usePermissions at a named token with the \`token\` option"`;
+exports[`usePermissions > should throw ClientError 401 when the access token middleware has not run 2`] = `"usePermissions reads ctx.state.access — install useAccessToken ahead of it, or point usePermissions at a named token with the \`token\` option"`;
 
 exports[`usePermissions > should throw ClientError 403 when a permission is missing 1`] = `"Insufficient permissions"`;
 

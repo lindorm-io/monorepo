@@ -1,3 +1,4 @@
+export * from "./handshake-dpop-mode.js";
 export * from "./io.js";
 export * from "./pylon-event-map.js";
 export * from "./pylon-socket-emitter.js";

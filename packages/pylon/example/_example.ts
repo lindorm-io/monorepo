@@ -2,7 +2,7 @@ import { Amphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
 import { Logger } from "@lindorm/logger";
 import { join } from "path";
-import { Pylon, createHandshakeTokenMiddleware } from "../src/index.js";
+import { JwtDriver, Pylon, useAccessToken } from "../src/index.js";
 import type { PylonConnectionMiddleware } from "../src/index.js";
 
 const logger = new Logger({
@@ -45,10 +45,9 @@ amphora.add([
 // Handshake auth runs on every namespace connection and rejects anonymous
 // sockets, so scope it to the `/authorized` namespace — the default and
 // `/other` namespaces stay open. It populates `socket.data.tokens.bearer`,
-// which the `/authorized` listener reads.
-const handshakeToken = createHandshakeTokenMiddleware({
-  issuer: "http://test.lindorm.io",
-});
+// which the `/authorized` listener reads. No issuer: it verifies against
+// `auth.driver`'s, which is this service's own (see `auth` below).
+const handshakeToken = useAccessToken();
 
 const authorizedNamespaceOnly: PylonConnectionMiddleware = async (ctx, next) => {
   if (ctx.io.socket.nsp.name === "/authorized") {
@@ -61,6 +60,14 @@ const authorizedNamespaceOnly: PylonConnectionMiddleware = async (ctx, next) => 
 export const EXAMPLE_PYLON = new Pylon({
   amphora,
   logger,
+
+  // This service mints the tokens it verifies, so its issuer is amphora's own
+  // and there is no upstream to authorize against — which is exactly what
+  // `JwtDriver({ issuer: "self" })` says. `useAccessToken` reads the issuer
+  // from here, once, rather than from each mount.
+  auth: {
+    driver: new JwtDriver({ issuer: "self" }),
+  },
 
   environment: "test",
 

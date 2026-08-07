@@ -33,6 +33,7 @@ import { Server as SocketIoServer } from "socket.io";
 import type {
   AppConfig,
   IoServer,
+  PylonAuthConfig,
   IoSocket,
   PylonConnectionMiddleware,
   PylonSettings,
@@ -44,13 +45,23 @@ import type {
 import { PylonListener } from "./PylonListener.js";
 
 export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
+  private readonly authConfig: PylonAuthConfig | undefined;
   private readonly logger: ILogger;
   private readonly options: PylonSettings<any, any, T>;
   private readonly middleware: Array<PylonSocketMiddleware<T>>;
 
   readonly server: IoServer;
 
-  constructor(http: Server, options: PylonSettings<any, any, T>) {
+  /**
+   * ⚠ `authConfig` is handed in by `Pylon`, which parses it ONCE and gives the
+   * SAME object to both transports. It falls back to parsing its own only for a
+   * `PylonIo` driven standalone.
+   */
+  constructor(
+    http: Server,
+    options: PylonSettings<any, any, T>,
+    authConfig?: PylonAuthConfig,
+  ) {
     assertSessionCookieSafeForSockets(options);
     assertSameSiteForSockets(options.auth?.session);
 
@@ -61,13 +72,16 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     // The evictable source — `cache`, or `kv` when the deployment runs one store.
     const cache = options.cache ?? options.kv;
 
+    this.authConfig =
+      authConfig ?? (options.auth ? parseAuthConfig(options.auth) : undefined);
+
     this.middleware = [
       createDependenciesMiddleware({
         actor: options.actor,
         // The socket transport resolves claims too — the handshake authenticates
         // a credential and `ctx.auth.introspect()` answers for it — so it gets
         // the same parsed auth config the http transport does.
-        authConfig: options.auth ? parseAuthConfig(options.auth) : undefined,
+        authConfig: this.authConfig,
         hermes: options.hermes,
         bus: options.bus,
         cache,

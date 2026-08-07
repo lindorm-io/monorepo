@@ -24,6 +24,7 @@ import { calculateSubscriptions } from "../internal/utils/calculate-subscription
 import { calculateWorkers } from "../internal/utils/calculate-workers.js";
 import { scanWorkers } from "../internal/utils/scan-workers.js";
 import { stageEncryptedField } from "../internal/utils/stage-encrypted-field.js";
+import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config.js";
 import { validateAuthSettings } from "../internal/utils/auth/validate-auth-settings.js";
 import type { PylonEncKey } from "../types/index.js";
 import { PylonHttp } from "./PylonHttp.js";
@@ -85,10 +86,17 @@ export class Pylon<
     this.amphora = options.amphora;
 
     this.server = createServer();
-    this.http = new PylonHttp<H>(options as any);
+
+    // ⚠ Parsed HERE and nowhere else, for the same reason `buildAppConfig` is:
+    // both transports read the driver, the refresh policy and the router prefix,
+    // and two equal-but-distinct copies of one configuration is one edit away
+    // from disagreeing.
+    const authConfig = options.auth ? parseAuthConfig(options.auth) : undefined;
+
+    this.http = new PylonHttp<H>(options as any, authConfig);
 
     if (options.socket?.enabled) {
-      this.io = new PylonIo<S>(this.server, options);
+      this.io = new PylonIo<S>(this.server, options, authConfig);
     }
 
     this.port = options.port ?? 3000;

@@ -1,16 +1,25 @@
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { createHandshakeTokenMiddleware } from "./create-handshake-token-middleware.js";
+import { useAccessToken } from "./use-access-token.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../__fixtures__/app-config.js";
 
-const options: any = { issuer: "https://test.lindorm.io/" };
+const APP_CONFIG = createTestAppConfig({ auth: createTestAuthConfig() });
+
+/** The issuer `useAccessToken` reads off the policy above. No mount states it. */
+const ISSUER = "https://test.lindorm.io/";
 
 const makeCtx = (overrides: any = {}): any => {
   const aegis = createMockAegis();
   return {
     aegis,
     logger: createMockLogger(),
+    handshakeId: "hsk-1",
+    state: { access: null, app: { config: APP_CONFIG }, tokens: {} },
     io: {
       socket: {
         handshake: {
@@ -48,7 +57,7 @@ const makeDpopVerifyResult = (overrides: any = {}) => ({
   ...overrides.top,
 });
 
-describe("createHandshakeTokenMiddleware", () => {
+describe("useAccessToken — socket handshake", () => {
   let next: Mock;
 
   beforeEach(() => {
@@ -67,12 +76,12 @@ describe("createHandshakeTokenMiddleware", () => {
         token: "jwt-token",
       });
 
-      const mw = createHandshakeTokenMiddleware(options);
+      const mw = useAccessToken();
       await mw(ctx, next);
 
       expect(ctx.aegis.verify).toHaveBeenCalledWith(
         "jwt-token",
-        { ...options },
+        { issuer: ISSUER },
         { tokenType: "access_token", dpopProof: undefined },
       );
       expect(ctx.io.socket.data.tokens.bearer).toMatchSnapshot();
@@ -82,13 +91,34 @@ describe("createHandshakeTokenMiddleware", () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    test("throws when bearer verification fails", async () => {
+    // The handshake shares the middleware's error contract now: a raw failure
+    // out of aegis is an unauthenticated CLIENT, not a 500. It used to escape
+    // the old handshake factory unwrapped, so socket.io saw a bare `Error` with
+    // no status and the connection error handler logged it as a server fault.
+    test("wraps a raw verification failure as an unauthorized client error", async () => {
       const ctx = makeCtx();
       ctx.io.socket.handshake.auth.bearer = "bad-jwt";
       (ctx.aegis.verify as Mock).mockRejectedValue(new Error("bad signature"));
 
-      const mw = createHandshakeTokenMiddleware(options);
-      await expect(mw(ctx, next)).rejects.toThrow();
+      const mw = useAccessToken();
+      await expect(mw(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        code: "access_token_verification_failed",
+        type: "urn:lindorm:pylon:error:access_token_verification_failed",
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    // …and a named ClientError from the DPoP checks passes through UNCHANGED —
+    // wrapping every failure into one code would erase the reason.
+    test("passes a named client error through unwrapped", async () => {
+      const ctx = makeCtx();
+      ctx.io.socket.handshake.auth.bearer = "jwt-token";
+
+      const mw = useAccessToken({ dpop: "required" });
+      await expect(mw(ctx, next)).rejects.toMatchObject({
+        code: "handshake_dpop_proof_required",
+      });
     });
 
     test("bearer refresh handler swaps token and clears authExpiredEmittedAt", async () => {
@@ -105,7 +135,7 @@ describe("createHandshakeTokenMiddleware", () => {
           token: "jwt-token",
         });
 
-        const mw = createHandshakeTokenMiddleware(options);
+        const mw = useAccessToken();
         await mw(ctx, next);
 
         (ctx.aegis.verify as Mock).mockResolvedValueOnce({
@@ -144,7 +174,7 @@ describe("createHandshakeTokenMiddleware", () => {
         token: "jwt-token",
       });
 
-      const mw = createHandshakeTokenMiddleware(options);
+      const mw = useAccessToken();
       await mw(ctx, next);
 
       (ctx.aegis.verify as Mock).mockResolvedValueOnce({
@@ -177,7 +207,7 @@ describe("createHandshakeTokenMiddleware", () => {
         token: "session-jwt",
       });
 
-      const mw = createHandshakeTokenMiddleware(options);
+      const mw = useAccessToken();
       await mw(ctx, next);
 
       expect(ctx.io.socket.data.pylon.auth.strategy).toBe("session");
@@ -198,7 +228,7 @@ describe("createHandshakeTokenMiddleware", () => {
         data: { session, pylon: { auth: preAuth } },
       });
 
-      const mw = createHandshakeTokenMiddleware(options);
+      const mw = useAccessToken();
       await mw(ctx, next);
 
       expect(ctx.io.socket.data.pylon.auth).toBe(preAuth);
@@ -213,7 +243,7 @@ describe("createHandshakeTokenMiddleware", () => {
         token: "session-jwt",
       });
 
-      const mw = createHandshakeTokenMiddleware(options);
+      const mw = useAccessToken();
       await mw(ctx, next);
 
       ctx.io.socket.data.pylon.auth.authExpiredEmittedAt = new Date();
@@ -237,7 +267,7 @@ describe("createHandshakeTokenMiddleware", () => {
         token: "session-jwt",
       });
 
-      const mw = createHandshakeTokenMiddleware(options);
+      const mw = useAccessToken();
       await mw(ctx, next);
 
       await expect(ctx.io.socket.data.pylon.auth.refresh({})).rejects.toThrow(
@@ -260,7 +290,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
 
-        const mw = createHandshakeTokenMiddleware({ ...options, dpop: "required" });
+        const mw = useAccessToken({ dpop: "required" });
         await expect(mw(ctx, next)).rejects.toThrow(ClientError);
         expect(ctx.aegis.verify).not.toHaveBeenCalled();
       });
@@ -279,7 +309,7 @@ describe("createHandshakeTokenMiddleware", () => {
           },
         });
 
-        const mw = createHandshakeTokenMiddleware({ ...options, dpop: "required" });
+        const mw = useAccessToken({ dpop: "required" });
         await expect(mw(ctx, next)).rejects.toThrow(ClientError);
       });
 
@@ -290,12 +320,12 @@ describe("createHandshakeTokenMiddleware", () => {
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
         (ctx.aegis.verify as Mock).mockResolvedValue(makeDpopVerifyResult());
 
-        const mw = createHandshakeTokenMiddleware({ ...options, dpop: "required" });
+        const mw = useAccessToken({ dpop: "required" });
         await mw(ctx, next);
 
         expect(ctx.aegis.verify).toHaveBeenCalledWith(
           "jwt-token",
-          { ...options },
+          { issuer: ISSUER },
           { tokenType: "access_token", dpopProof: "proof-jwt" },
         );
         expect(ctx.io.socket.data.pylon.auth.strategy).toBe("dpop-bearer");
@@ -313,7 +343,7 @@ describe("createHandshakeTokenMiddleware", () => {
           token: "jwt-token",
         });
 
-        const mw = createHandshakeTokenMiddleware(options);
+        const mw = useAccessToken();
         await mw(ctx, next);
 
         expect(ctx.io.socket.data.pylon.auth.strategy).toBe("bearer");
@@ -326,7 +356,7 @@ describe("createHandshakeTokenMiddleware", () => {
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
         (ctx.aegis.verify as Mock).mockResolvedValue(makeDpopVerifyResult());
 
-        const mw = createHandshakeTokenMiddleware(options);
+        const mw = useAccessToken();
         await mw(ctx, next);
 
         expect(ctx.io.socket.data.pylon.auth.strategy).toBe("dpop-bearer");
@@ -346,7 +376,7 @@ describe("createHandshakeTokenMiddleware", () => {
           token: "jwt-token",
         });
 
-        const mw = createHandshakeTokenMiddleware(options);
+        const mw = useAccessToken();
         await expect(mw(ctx, next)).rejects.toThrow(ClientError);
       });
 
@@ -364,7 +394,7 @@ describe("createHandshakeTokenMiddleware", () => {
           }),
         );
 
-        const mw = createHandshakeTokenMiddleware(options);
+        const mw = useAccessToken();
         await expect(mw(ctx, next)).rejects.toThrow(ClientError);
       });
     });
@@ -384,7 +414,7 @@ describe("createHandshakeTokenMiddleware", () => {
           token: "jwt-token",
         });
 
-        const mw = createHandshakeTokenMiddleware({ ...options, dpop: "disabled" });
+        const mw = useAccessToken({ dpop: "disabled" });
         await mw(ctx, next);
 
         expect(ctx.io.socket.data.pylon.auth.strategy).toBe("bearer");
@@ -398,7 +428,7 @@ describe("createHandshakeTokenMiddleware", () => {
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
         (ctx.aegis.verify as Mock).mockResolvedValueOnce(makeDpopVerifyResult());
 
-        const mw = createHandshakeTokenMiddleware(options);
+        const mw = useAccessToken();
         await mw(ctx, next);
       };
 
@@ -469,7 +499,7 @@ describe("createHandshakeTokenMiddleware", () => {
   describe("no credentials", () => {
     test("throws Unauthorized when neither header nor session present", async () => {
       const ctx = makeCtx();
-      const mw = createHandshakeTokenMiddleware(options);
+      const mw = useAccessToken();
 
       await expect(mw(ctx, next)).rejects.toThrow(ClientError);
       expect(next).not.toHaveBeenCalled();

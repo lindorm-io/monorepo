@@ -85,7 +85,7 @@ export type PylonAuthCacheSettings = {
   /**
    * The revocation window — SECONDS, RFC 7662 §5, for `active: false` answers as
    * much as for live ones. Default `10 seconds`; a single mount may shorten it,
-   * or opt out entirely, via `createAccessTokenMiddleware({ cache })`. `false`
+   * or opt out entirely, via `useAccessToken({ cache })`. `false`
    * turns introspection caching off for the deployment while userinfo caching
    * stays on.
    */
@@ -100,7 +100,7 @@ export type PylonAuthCacheSettings = {
 
 /**
  * One cached concern's policy. `false` is OFF — the same spelling
- * `createAccessTokenMiddleware({ cache: false })` already uses per mount, so
+ * `useAccessToken({ cache: false })` already uses per mount, so
  * "off" has ONE idiom rather than two.
  */
 export type PylonAuthCacheEntry = false | { readonly ttl?: ReadableTime };

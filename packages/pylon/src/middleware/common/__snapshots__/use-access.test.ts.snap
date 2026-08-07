@@ -4,7 +4,7 @@ exports[`useAccess > resolved access > should collect all violations into a sing
 
 exports[`useAccess > resolved access > should throw 401 when the access token middleware has not run 1`] = `"Access token middleware is required"`;
 
-exports[`useAccess > resolved access > should throw 401 when the access token middleware has not run 2`] = `"useAccess reads ctx.state.access — install createAccessTokenMiddleware ahead of it, or point useAccess at a named token with the \`token\` option"`;
+exports[`useAccess > resolved access > should throw 401 when the access token middleware has not run 2`] = `"useAccess reads ctx.state.access — install useAccessToken ahead of it, or point useAccess at a named token with the \`token\` option"`;
 
 exports[`useAccess > resolved access > should throw 403 when levelOfAssurance is absent on an introspected credential 1`] = `"levelOfAssurance (got: undefined)"`;
 

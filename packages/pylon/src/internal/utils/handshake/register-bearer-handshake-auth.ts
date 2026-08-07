@@ -3,9 +3,11 @@ import { ClientError } from "@lindorm/errors";
 import { assertDpopHandshakeMatch } from "../dpop/assert-dpop-handshake-match.js";
 import { createBearerRefreshHandler } from "../refresh/create-bearer-refresh-handler.js";
 import { splitVerifyInput } from "../tokens/split-verify-input.js";
-import type { PylonSocket, PylonSocketAuth } from "../../../types/index.js";
-
-export type HandshakeDpopMode = "required" | "optional" | "disabled";
+import type {
+  HandshakeDpopMode,
+  PylonSocket,
+  PylonSocketAuth,
+} from "../../../types/index.js";
 
 type RegisterBearerHandshakeAuthOptions = {
   aegis: IAegis;

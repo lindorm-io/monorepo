@@ -43,7 +43,7 @@ export type PylonHttpMetadata = PylonMetadata & {
 
 export type PylonState = {
   /**
-   * The resolved access credential, or `null` until `createAccessTokenMiddleware`
+   * The resolved access credential, or `null` until `useAccessToken`
    * has run. COEXISTS with `tokens`: `tokens` is the session's token set keyed by
    * NAME (id, refresh, …), `access` is the single credential this request
    * authenticated with — which on the introspected path has no `VerifiedToken` at

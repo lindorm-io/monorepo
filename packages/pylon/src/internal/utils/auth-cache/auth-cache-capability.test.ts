@@ -19,7 +19,7 @@ import { afterEach, beforeEach, describe, expect, type Mock, test, vi } from "vi
 import { CachedIntrospection } from "../../../entities/CachedIntrospection.js";
 import { CachedUserinfo } from "../../../entities/CachedUserinfo.js";
 import type { IPylonAuthDriver } from "../../../interfaces/index.js";
-import { createAccessTokenMiddleware } from "../../../middleware/common/create-access-token-middleware.js";
+import { useAccessToken } from "../../../middleware/common/use-access-token.js";
 import type { PylonAuthSettings } from "../../../types/index.js";
 import { createDependenciesMiddleware } from "../../middleware/common-dependencies-middleware.js";
 import { parseAuthConfig } from "../auth/parse-auth-config.js";
@@ -153,7 +153,7 @@ describe("auth cache capability", () => {
       cache: (source ?? undefined) as any,
     })(ctx, vi.fn());
 
-    await createAccessTokenMiddleware({ issuer: ISSUER } as any)(ctx, vi.fn());
+    await useAccessToken()(ctx, vi.fn());
     await ctx.auth.userinfo(TOKEN);
   };
 

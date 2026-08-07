@@ -559,30 +559,32 @@ export const ONCE = [validate, handle];
 `socket.middleware` runs once per event; `socket.connectionMiddleware` runs once during the Socket.IO handshake before any events are accepted. Use `connectionMiddleware` for authentication and any setup that should fail the handshake outright on error.
 
 ```typescript
-import { Pylon, createHandshakeTokenMiddleware } from "@lindorm/pylon";
+import { Pylon, useAccessToken } from "@lindorm/pylon";
 
 const app = new Pylon({
   socket: {
     enabled: true,
     listeners: "./src/listeners",
-    connectionMiddleware: [
-      createHandshakeTokenMiddleware({ issuer: "https://auth.example.com" }),
-    ],
+    connectionMiddleware: [useAccessToken()],
   },
   // …
 });
 ```
 
+`useAccessToken` is the SAME mount used on an http router and on a socket
+listener — it dispatches on the context it is handed, and takes no issuer (see
+[Authentication](#authentication)).
+
 ### Auth refresh protocol
 
-When `createHandshakeTokenMiddleware` (or the auto-wired session connection middleware) populates auth state at handshake time, Pylon registers a refresh listener for the reserved events:
+When `useAccessToken` in `connectionMiddleware` (or the auto-wired session connection middleware) populates auth state at handshake time, Pylon registers a refresh listener for the reserved events:
 
 | Event                 | Direction       | Purpose                                                          |
 | --------------------- | --------------- | ---------------------------------------------------------------- |
 | `$pylon/auth/refresh` | client → server | Replace bearer / re-read session and refresh expiry              |
 | `$pylon/auth/expired` | server → client | Advisory event emitted once inside the pre-expiry warning window |
 
-After the handshake, `createAccessTokenMiddleware` does not re-verify the token on every event. It checks the expiry on the stored auth state — accepted silently if well before expiry, accepted with one `$pylon/auth/expired` emission inside the warning window, and rejected (with the socket disconnected for session strategy) once expired.
+After the handshake, `useAccessToken` does not re-verify the token on every event. It checks the expiry on the stored auth state — accepted silently if well before expiry, accepted with one `$pylon/auth/expired` emission inside the warning window, and rejected (with the socket disconnected for session strategy) once expired.
 
 ### Rooms
 
@@ -649,16 +651,13 @@ All middleware below is exported from the package root.
 
 ```typescript
 import {
-  createAccessTokenMiddleware,
   createBasicAuthMiddleware,
-  createHandshakeTokenMiddleware,
   createTokenMiddleware,
+  useAccessToken,
 } from "@lindorm/pylon";
 
-const accessAuth = createAccessTokenMiddleware({
-  issuer: "https://auth.example.com",
-  audience: "my-api",
-});
+// No issuer: it verifies against `auth.driver`'s, resolved once at boot.
+const accessAuth = useAccessToken({ audience: "my-api" });
 
 const basicAuth = createBasicAuthMiddleware([{ username: "admin", password: "secret" }]);
 
@@ -675,7 +674,19 @@ const verifyApiKey = createTokenMiddleware({
 router.use(verifyApiKey("request.body.apiKey"));
 ```
 
-`createAccessTokenMiddleware` works on both HTTP and socket-event contexts: on HTTP it resolves the bearer / DPoP / session-derived access token; on socket events it consults the auth state established by `createHandshakeTokenMiddleware` instead of re-verifying every event.
+`useAccessToken` is ONE mount for all three surfaces — an http router, `socket.connectionMiddleware`, and a socket listener — dispatching on the context it is handed:
+
+| Surface          | What it does                                                                                         |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| HTTP request     | resolves the bearer / DPoP / session-derived access token onto `ctx.state.access`                    |
+| Socket handshake | verifies the credential once and registers the auth state (strategy, expiry, refresh) for the socket |
+| Socket event     | fast path over that state — re-checks EXPIRY, not the signature                                      |
+
+⚠ **It takes no `issuer`.** The issuer is `ctx.state.app.config.auth.issuer`, settled once at boot by amphora for the scope `auth.driver` named — so an `auth` block is required to mount it. A service that mints the tokens it verifies configures `new JwtDriver({ issuer: "self" })`; a resource server pinning an upstream with no discovery document uses `"idp"`. Verifying with no issuer matcher is not a weaker check but NO check, so a deployment that resolved none is refused by name (`access_issuer_unresolved`) on the paths that verify locally. The opaque path is unaffected — RFC 7662 makes the authorization server the authority there.
+
+`{ dpop: "required" | "optional" | "disabled" }` sets how strictly the HANDSHAKE treats DPoP (default `"optional"`). It is handshake-only: on HTTP the scheme states the intent per request.
+
+`createTokenMiddleware({ issuer })` is the DIFFERENT case and keeps its per-mount issuer — it accepts tokens signed by issuers that are not ours, of which amphora carries an array.
 
 #### Resolved access — `ctx.state.access`
 
@@ -734,15 +745,15 @@ The introspection TTL resolves in three tiers, and a single mount may only ever 
 
 ```typescript
 // Shorter window on a sensitive mount…
-router.use(createAccessTokenMiddleware({ issuer, cache: { ttl: "2 seconds" } }));
+router.use(useAccessToken({ cache: { ttl: "2 seconds" } }));
 
 // …or none at all: introspect on every request, whatever the deployment says.
-router.use(createAccessTokenMiddleware({ issuer, cache: false }));
+router.use(useAccessToken({ cache: false }));
 ```
 
 Both keys are a digest of `(kind, token, issuer, clientId)` — never the raw token, which would land readable in shared storage. **The token, never the subject**: two tokens for one subject can carry different scopes, and both answers vary by granted scope (RFC 7662 §2.2 lets the authorization server "limit which scopes from a given token are returned for each protected resource"; OIDC Core §5.3 returns exactly the profile claims the token's scopes authorise). The identity is part of it for the same reason — keying on the token alone would let two services sharing a namespace read each other's answers. Both inputs come from the **driver** — `endpoints().issuer` and its own client id — because RFC 7662 §2.1 has the resource server authenticate to the introspection endpoint, and those credentials may legitimately differ from a relying party's. `ctx.state.app.config.auth` exposes that identity (`{ issuer, clientId }`, and never the client secret); either one `null` means there is no key safe to share, so the cache steps aside and calls the driver.
 
-The caching is **inside** `ctx.auth.introspect` / `ctx.auth.userinfo` rather than in front of them, so there is no uncached path a caller can pick by mistake. A sensitive route opts out per call with `ctx.auth.introspect(token, { cache: false })` — which `createAccessTokenMiddleware({ cache })` forwards for the mount.
+The caching is **inside** `ctx.auth.introspect` / `ctx.auth.userinfo` rather than in front of them, so there is no uncached path a caller can pick by mistake. A sensitive route opts out per call with `ctx.auth.introspect(token, { cache: false })` — which `useAccessToken({ cache })` forwards for the mount.
 
 Nothing is cached when either call fails — a stale answer served over an unreachable authorization server is a revocation bypass, and a cached userinfo failure would outlive its own cause — and a storage outage degrades to an uncached call rather than failing the request. **There is no negative userinfo entry at all**: userinfo returns a profile or it errors, and "is this token still good?" is introspection's question, under introspection's far shorter window.
 
@@ -775,7 +786,7 @@ router.use(useValidation("accessToken", { issuer: "https://auth.example.com" }))
 
 `useRoles` and `usePermissions` accept a trailing `{ token: "<key>" }` to read from a non-default token (default: `accessToken`). `useAccess` takes the same option.
 
-At the default key, `useAccess` and `usePermissions` read `ctx.state.access.claims` — the resolved credential, whatever established it — so they work unchanged on a locally verified token and on an introspected one. They throw `access_not_resolved` (401) when `createAccessTokenMiddleware` has not run ahead of them. Named keys (`{ token: "idToken" }`) address one entry of `ctx.state.tokens` instead, which is a different question and keeps reading the parsed token.
+At the default key, `useAccess` and `usePermissions` read `ctx.state.access.claims` — the resolved credential, whatever established it — so they work unchanged on a locally verified token and on an introspected one. They throw `access_not_resolved` (401) when `useAccessToken` has not run ahead of them. Named keys (`{ token: "idToken" }`) address one entry of `ctx.state.tokens` instead, which is a different question and keeps reading the parsed token.
 
 ### Validation
 

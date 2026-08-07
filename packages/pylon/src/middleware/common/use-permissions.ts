@@ -31,7 +31,7 @@ export const usePermissions = (...args: Array<string | TokenOption>): PylonMiddl
           type: "urn:lindorm:pylon:error:access_not_resolved",
           title: "Access Not Resolved",
           details:
-            "usePermissions reads ctx.state.access — install createAccessTokenMiddleware ahead of it, or point usePermissions at a named token with the `token` option",
+            "usePermissions reads ctx.state.access — install useAccessToken ahead of it, or point usePermissions at a named token with the `token` option",
         });
       }
 

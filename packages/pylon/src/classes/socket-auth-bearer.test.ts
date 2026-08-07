@@ -9,7 +9,8 @@ import {
   SOCKET_AUTH_TEST_ISSUER,
   SOCKET_AUTH_TEST_KEY_ID,
 } from "../__fixtures__/socket-auth/shared.js";
-import { createHandshakeTokenMiddleware } from "../middleware/common/create-handshake-token-middleware.js";
+import { JwtDriver } from "../drivers/auth/JwtDriver.js";
+import { useAccessToken } from "../middleware/common/use-access-token.js";
 import { Pylon } from "./Pylon.js";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
@@ -17,7 +18,7 @@ import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 // reconciling fake timers with socket.io's internal timers:
 //   - $pylon/auth/expired emission inside expiry warning window
 //   - autoRefreshOnExpiry round trip via Zephyr
-//   - hard-expiry rejection from createAccessTokenMiddleware (token past exp)
+//   - hard-expiry rejection from useAccessToken (token past exp)
 //   - throttle behaviour for repeated $pylon/auth/expired emissions
 //   These scenarios were intentionally split out so the bearer happy-path
 //   tests below stay deterministic and free of fake-timer plumbing.
@@ -54,14 +55,15 @@ describe("socket auth (bearer) e2e", () => {
     pylon = new Pylon({
       amphora,
       logger,
+      // `useAccessToken` verifies against `auth.driver`'s issuer. This service
+      // mints the tokens it verifies, so that is amphora's own.
+      auth: { driver: new JwtDriver({ issuer: "self" }) },
       environment: "test",
       routes: join(__dirname, "..", "__fixtures__", "socket-auth", "routes"),
       socket: {
         enabled: true,
         listeners: join(__dirname, "..", "__fixtures__", "socket-auth", "listeners"),
-        connectionMiddleware: [
-          createHandshakeTokenMiddleware({ issuer: SOCKET_AUTH_TEST_ISSUER }),
-        ],
+        connectionMiddleware: [useAccessToken()],
       },
       name: "@lindorm/pylon-socket-auth-bearer-test",
       port: 0,

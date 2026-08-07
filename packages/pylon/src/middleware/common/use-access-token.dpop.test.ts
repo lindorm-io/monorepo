@@ -8,7 +8,7 @@ import {
   type DpopTestClient,
 } from "../../__fixtures__/access/dpop.js";
 import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
-import { createAccessTokenMiddleware } from "./create-access-token-middleware.js";
+import { useAccessToken } from "./use-access-token.js";
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   createTestAppConfig,
@@ -17,7 +17,9 @@ import {
 
 /** Auth configured with a driver that CAN introspect — the ordinary resource
  *  server, so the opaque arm is reachable. */
-const APP_CONFIG = createTestAppConfig({ auth: createTestAuthConfig() });
+const APP_CONFIG = createTestAppConfig({
+  auth: createTestAuthConfig({ issuer: ACCESS_TEST_ISSUER }),
+});
 
 const METHOD = "POST";
 const ORIGIN = "https://api.example.com";
@@ -32,9 +34,7 @@ const HTU = `${ORIGIN}${PATH}`;
  * credential paths — these tests prove it does, and that it can FAIL on the
  * introspected one rather than being silently skipped.
  */
-describe("createAccessTokenMiddleware — DPoP binding", () => {
-  const options: any = { issuer: ACCESS_TEST_ISSUER };
-
+describe("useAccessToken — DPoP binding", () => {
   let aegis: IAegis;
   let client: DpopTestClient;
   let boundToken: string;
@@ -101,9 +101,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
       });
       ctx = makeCtx({ type: "dpop", value: boundToken }, proof);
 
-      await expect(
-        createAccessTokenMiddleware(options)(ctx, next),
-      ).resolves.toBeUndefined();
+      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
 
       expect(ctx.state.access.provenance).toBe("verified");
       expect(next).toHaveBeenCalledTimes(1);
@@ -117,9 +115,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
       });
       ctx = makeCtx({ type: "dpop", value: boundToken }, proof);
 
-      await expect(createAccessTokenMiddleware(options)(ctx, next)).rejects.toThrow(
-        ClientError,
-      );
+      await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -127,7 +123,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
       ctx = makeCtx({ type: "bearer", value: boundToken });
 
       try {
-        await createAccessTokenMiddleware(options)(ctx, next);
+        await useAccessToken()(ctx, next);
         expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err.status).toBe(401);
@@ -145,7 +141,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
       ctx = makeCtx({ type: "dpop", value: unboundToken }, proof);
 
       try {
-        await createAccessTokenMiddleware(options)(ctx, next);
+        await useAccessToken()(ctx, next);
         expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err.status).toBe(401);
@@ -156,9 +152,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
     test("accepts an unbound token presented as bearer", async () => {
       ctx = makeCtx({ type: "bearer", value: unboundToken });
 
-      await expect(
-        createAccessTokenMiddleware(options)(ctx, next),
-      ).resolves.toBeUndefined();
+      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
       expect(next).toHaveBeenCalledTimes(1);
     });
   });
@@ -179,9 +173,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
       ctx = makeCtx({ type: "dpop", value: OPAQUE_TOKEN }, proof);
       ctx.auth.introspect.mockResolvedValue(active(client.jkt));
 
-      await expect(
-        createAccessTokenMiddleware(options)(ctx, next),
-      ).resolves.toBeUndefined();
+      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
 
       expect(ctx.state.access.provenance).toBe("introspected");
       expect(next).toHaveBeenCalledTimes(1);
@@ -197,7 +189,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
       ctx.auth.introspect.mockResolvedValue(active(client.jkt));
 
       try {
-        await createAccessTokenMiddleware(options)(ctx, next);
+        await useAccessToken()(ctx, next);
         expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err.status).toBe(401);
@@ -215,9 +207,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
       ctx = makeCtx({ type: "dpop", value: OPAQUE_TOKEN }, proof);
       ctx.auth.introspect.mockResolvedValue(active(client.jkt));
 
-      await expect(createAccessTokenMiddleware(options)(ctx, next)).rejects.toThrow(
-        ClientError,
-      );
+      await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -230,9 +220,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
       ctx = makeCtx({ type: "dpop", value: OPAQUE_TOKEN }, proof);
       ctx.auth.introspect.mockResolvedValue(active(client.jkt));
 
-      await expect(createAccessTokenMiddleware(options)(ctx, next)).rejects.toThrow(
-        ClientError,
-      );
+      await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -247,9 +235,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
 
       MockDate.set(new Date(Date.now() + 10 * 60 * 1000));
 
-      await expect(createAccessTokenMiddleware(options)(ctx, next)).rejects.toThrow(
-        ClientError,
-      );
+      await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -258,7 +244,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
       ctx.auth.introspect.mockResolvedValue(active(client.jkt));
 
       try {
-        await createAccessTokenMiddleware(options)(ctx, next);
+        await useAccessToken()(ctx, next);
         expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err.status).toBe(401);
@@ -270,9 +256,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
       ctx = makeCtx({ type: "bearer", value: OPAQUE_TOKEN });
       ctx.auth.introspect.mockResolvedValue(active());
 
-      await expect(
-        createAccessTokenMiddleware(options)(ctx, next),
-      ).resolves.toBeUndefined();
+      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -280,7 +264,7 @@ describe("createAccessTokenMiddleware — DPoP binding", () => {
       ctx = makeCtx({ type: "dpop", value: OPAQUE_TOKEN });
 
       try {
-        await createAccessTokenMiddleware(options)(ctx, next);
+        await useAccessToken()(ctx, next);
         expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err.status).toBe(401);

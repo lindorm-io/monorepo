@@ -14,7 +14,7 @@ import { CachedIntrospection } from "../../../entities/CachedIntrospection.js";
 import { CachedUserinfo } from "../../../entities/CachedUserinfo.js";
 import type { IPylonAuthDriver } from "../../../interfaces/index.js";
 import type { PylonAuthCacheConfig, PylonAuthConfig } from "../../../types/index.js";
-import { createAccessTokenMiddleware } from "../../../middleware/common/create-access-token-middleware.js";
+import { useAccessToken } from "../../../middleware/common/use-access-token.js";
 import {
   createTestAppConfig,
   createTestAuthConfig,
@@ -166,7 +166,7 @@ describe("auth cache independent switches", () => {
   const request = async (cache: PylonAuthCacheConfig): Promise<void> => {
     const ctx = createContext(cache, kv, introspect, userinfo, amphora);
 
-    await createAccessTokenMiddleware({ issuer: ISSUER } as any)(ctx, next);
+    await useAccessToken()(ctx, next);
     await ctx.auth.userinfo(TOKEN);
   };
 

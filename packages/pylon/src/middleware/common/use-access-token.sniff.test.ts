@@ -7,7 +7,7 @@ import {
   tamperPayload,
 } from "../../__fixtures__/access/aegis.js";
 import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
-import { createAccessTokenMiddleware } from "./create-access-token-middleware.js";
+import { useAccessToken } from "./use-access-token.js";
 import { beforeAll, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import {
   createTestAppConfig,
@@ -16,7 +16,9 @@ import {
 
 /** Auth configured with a driver that CAN introspect — the ordinary resource
  *  server, so the opaque arm is reachable. */
-const APP_CONFIG = createTestAppConfig({ auth: createTestAuthConfig() });
+const APP_CONFIG = createTestAppConfig({
+  auth: createTestAuthConfig({ issuer: ACCESS_TEST_ISSUER }),
+});
 
 /**
  * The format sniff, proved against a REAL Aegis and a REAL signature. The point
@@ -24,9 +26,7 @@ const APP_CONFIG = createTestAppConfig({ auth: createTestAuthConfig() });
  * and MUST NOT be able to reach introspection by failing, because the
  * authorization server has no opinion on a token it never issued.
  */
-describe("createAccessTokenMiddleware — format sniff", () => {
-  const options: any = { issuer: ACCESS_TEST_ISSUER };
-
+describe("useAccessToken — format sniff", () => {
   let aegis: IAegis;
   let ctx: any;
   let next: Mock;
@@ -64,9 +64,7 @@ describe("createAccessTokenMiddleware — format sniff", () => {
   });
 
   test("verifies a genuine JWT locally and never introspects it", async () => {
-    await expect(
-      createAccessTokenMiddleware(options)(ctx, next),
-    ).resolves.toBeUndefined();
+    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.auth.introspect).not.toHaveBeenCalled();
     expect(ctx.state.access.provenance).toBe("verified");
@@ -88,9 +86,7 @@ describe("createAccessTokenMiddleware — format sniff", () => {
       }),
     };
 
-    await expect(createAccessTokenMiddleware(options)(ctx, next)).rejects.toThrow(
-      ClientError,
-    );
+    await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
 
     // The security-critical assertion: no fall-through to the authorization
     // server, so a forged token can never be laundered into an active answer.
@@ -107,9 +103,7 @@ describe("createAccessTokenMiddleware — format sniff", () => {
       value: [header, payload, "AAAA"].join("."),
     };
 
-    await expect(createAccessTokenMiddleware(options)(ctx, next)).rejects.toThrow(
-      ClientError,
-    );
+    await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
 
     expect(ctx.auth.introspect).not.toHaveBeenCalled();
     expect(ctx.state.access).toBeNull();
@@ -120,9 +114,7 @@ describe("createAccessTokenMiddleware — format sniff", () => {
     ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
     ctx.auth.introspect.mockResolvedValue({ active: true, subject: "alice" });
 
-    await expect(
-      createAccessTokenMiddleware(options)(ctx, next),
-    ).resolves.toBeUndefined();
+    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
 
     expect(verify).not.toHaveBeenCalled();
     expect(ctx.auth.introspect).toHaveBeenCalledWith(OPAQUE_TOKEN, {
@@ -141,12 +133,13 @@ describe("createAccessTokenMiddleware — format sniff", () => {
     // deployment whose driver cannot introspect says so here.
     ctx.state.app.config = createTestAppConfig({
       auth: createTestAuthConfig({
+        issuer: ACCESS_TEST_ISSUER,
         capabilities: { introspect: false, userinfo: false },
       }),
     });
     ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
 
-    await expect(createAccessTokenMiddleware(options)(ctx, next)).rejects.toMatchObject({
+    await expect(useAccessToken()(ctx, next)).rejects.toMatchObject({
       code: "opaque_token_not_supported",
       type: "urn:lindorm:pylon:error:opaque_token_not_supported",
       status: 401,

@@ -12,7 +12,7 @@ export type PylonAccessProvenance = "verified" | "introspected";
 /**
  * The resolved access credential — the ONE shape both credential paths produce,
  * so every downstream gate reads the same fields regardless of how the token was
- * established. Populated by `createAccessTokenMiddleware`; `null` until it runs.
+ * established. Populated by `useAccessToken`; `null` until it runs.
  *
  * Deliberately three fields:
  * - `confirmation`/`cnf` is NOT here — it is already inside `claims`

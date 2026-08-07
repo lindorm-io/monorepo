@@ -18,7 +18,8 @@ import {
   SOCKET_AUTH_TEST_KEY_ID,
 } from "../__fixtures__/socket-auth/shared.js";
 import { reconstructHandshakeHtu } from "../internal/utils/handshake/reconstruct-handshake-htu.js";
-import { createHandshakeTokenMiddleware } from "../middleware/common/create-handshake-token-middleware.js";
+import { JwtDriver } from "../drivers/auth/JwtDriver.js";
+import { useAccessToken } from "../middleware/common/use-access-token.js";
 import { Pylon } from "./Pylon.js";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
@@ -182,14 +183,15 @@ describe("socket auth (dpop-bearer) e2e", () => {
     pylon = new Pylon({
       amphora,
       logger,
+      // `useAccessToken` verifies against `auth.driver`'s issuer. This service
+      // mints the tokens it verifies, so that is amphora's own.
+      auth: { driver: new JwtDriver({ issuer: "self" }) },
       environment: "test",
       routes: join(__dirname, "..", "__fixtures__", "socket-auth", "routes"),
       socket: {
         enabled: true,
         listeners: join(__dirname, "..", "__fixtures__", "socket-auth", "listeners"),
-        connectionMiddleware: [
-          createHandshakeTokenMiddleware({ issuer: SOCKET_AUTH_TEST_ISSUER }),
-        ],
+        connectionMiddleware: [useAccessToken()],
       },
       name: "@lindorm/pylon-socket-auth-dpop-test",
       port: 0,
@@ -443,17 +445,13 @@ describe("socket auth (dpop-bearer) e2e", () => {
     const strictPylon = new Pylon({
       amphora,
       logger,
+      auth: { driver: new JwtDriver({ issuer: "self" }) },
       environment: "test",
       routes: join(__dirname, "..", "__fixtures__", "socket-auth", "routes"),
       socket: {
         enabled: true,
         listeners: join(__dirname, "..", "__fixtures__", "socket-auth", "listeners"),
-        connectionMiddleware: [
-          createHandshakeTokenMiddleware({
-            issuer: SOCKET_AUTH_TEST_ISSUER,
-            dpop: "required",
-          }),
-        ],
+        connectionMiddleware: [useAccessToken({ dpop: "required" })],
       },
       name: "@lindorm/pylon-socket-auth-dpop-required-test",
       port: 0,

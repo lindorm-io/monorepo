@@ -20,12 +20,10 @@ import { CachedIntrospection } from "../../entities/CachedIntrospection.js";
 import type { IPylonAuthDriver } from "../../interfaces/index.js";
 import { createAuthClient } from "../../internal/utils/auth/create-auth-client.js";
 import { stageEncryptedField } from "../../internal/utils/stage-encrypted-field.js";
-import { createAccessTokenMiddleware } from "./create-access-token-middleware.js";
+import { useAccessToken } from "./use-access-token.js";
 
 const ISSUER = "https://test.lindorm.io/";
 const NOW = new Date("2026-08-06T10:00:00.000Z");
-
-const options: any = { issuer: ISSUER };
 
 const ACTIVE_INTROSPECTION = {
   active: true,
@@ -144,7 +142,7 @@ const createContext = (opts: ContextOptions): any => {
   return ctx;
 };
 
-describe("createAccessTokenMiddleware introspection cache", () => {
+describe("useAccessToken introspection cache", () => {
   let amphora: IAmphora;
   let kv: ProteusSource;
   let introspect: Mock;
@@ -176,7 +174,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   });
 
   test("should introspect once across two requests for the same token", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
 
     const first = createContext({ kv, introspect });
     await middleware(first, next);
@@ -193,7 +191,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   // RFC 7662 §2.2 — the AS may answer the same token differently per client, so
   // one pylon must never be served another's answer out of a shared namespace.
   test("should not share an entry across clientIds", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
 
     await middleware(createContext({ kv, introspect }), next);
     await middleware(createContext({ kv, introspect, clientId: "client-b" }), next);
@@ -202,7 +200,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   });
 
   test("should not share an entry across issuers", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
 
     await middleware(createContext({ kv, introspect }), next);
     await middleware(
@@ -215,7 +213,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
 
   // The TTL IS the revocation window (RFC 7662 §5) — it must actually elapse.
   test("should introspect again once the entry has expired", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
 
     await middleware(createContext({ kv, introspect }), next);
 
@@ -229,10 +227,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   });
 
   test("should honour a per-mount ttl over the deployment default", async () => {
-    const middleware = createAccessTokenMiddleware({
-      ...options,
-      cache: { ttl: "2 seconds" },
-    });
+    const middleware = useAccessToken({ cache: { ttl: "2 seconds" } });
 
     await middleware(createContext({ kv, introspect, ttl: "60 seconds" }), next);
 
@@ -243,7 +238,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   });
 
   test("should honour the deployment ttl over the built-in default", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
 
     await middleware(createContext({ kv, introspect, ttl: "60 seconds" }), next);
 
@@ -257,11 +252,8 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   // Mounts share one key, so a strict mount must re-check the AGE of whatever a
   // lenient mount left behind — otherwise its carve-out is decorative.
   test("should not serve a strict mount an entry a lenient mount wrote", async () => {
-    const lenient = createAccessTokenMiddleware(options);
-    const strict = createAccessTokenMiddleware({
-      ...options,
-      cache: { ttl: "2 seconds" },
-    });
+    const lenient = useAccessToken();
+    const strict = useAccessToken({ cache: { ttl: "2 seconds" } });
 
     await lenient(createContext({ kv, introspect, ttl: "60 seconds" }), next);
 
@@ -276,7 +268,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
 
   // The sensitive-route carve-out: tier one may only ever NARROW.
   test("should introspect every request when the mount opts out", async () => {
-    const middleware = createAccessTokenMiddleware({ ...options, cache: false });
+    const middleware = useAccessToken({ cache: false });
 
     await middleware(createContext({ kv, introspect }), next);
     await middleware(createContext({ kv, introspect }), next);
@@ -285,7 +277,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   });
 
   test("should never let an entry outlive the token's own expiry", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
 
     introspect.mockResolvedValue({
       ...ACTIVE_INTROSPECTION,
@@ -303,7 +295,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   // A negative is a real entry — it saves the AS the same load, under the same
   // short window — and it still rejects the request.
   test("should cache an inactive answer and still reject", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
     introspect.mockResolvedValue({ active: false });
 
     const first = createContext({ kv, introspect });
@@ -323,7 +315,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   // `kv` is optional on PylonSettings — a service without one must keep working
   // exactly as it did before the cache existed.
   test("should work uncached when no source is configured", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
 
     const first = createContext({ introspect });
     await middleware(first, next);
@@ -336,7 +328,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   // Serving an earlier answer while the AS is unreachable is a revocation
   // bypass with extra steps.
   test("should cache nothing and propagate when introspection fails", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
     introspect.mockRejectedValue(new Error("authorization server is down"));
 
     await expect(middleware(createContext({ kv, introspect }), next)).rejects.toThrow(
@@ -355,7 +347,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   // No client identity ⇒ no key that is safe to share (RFC 7662 §2.2), so the
   // cache steps aside rather than key on the token alone.
   test("should skip the cache when the deployment resolved no issuer", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
 
     await middleware(createContext({ kv, introspect, issuer: null }), next);
     await middleware(createContext({ kv, introspect, issuer: null }), next);
@@ -366,7 +358,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   // A VERIFY-ONLY driver is nobody's OAuth client, and an empty client id would
   // key every such pylon's entries together.
   test("should skip the cache when the driver exposes no client id", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
 
     await middleware(createContext({ kv, introspect, clientId: null }), next);
     await middleware(createContext({ kv, introspect, clientId: null }), next);
@@ -376,7 +368,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
 
   // A storage outage must degrade to an introspection, never fail the request.
   test("should serve the request when the cache backend fails", async () => {
-    const middleware = createAccessTokenMiddleware(options);
+    const middleware = useAccessToken();
     const broken = {
       session: () => ({
         repository: () => ({

@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createAccessTokenMiddleware > HTTP context > falls back to session.accessToken when no header present 1`] = `
+exports[`useAccessToken > HTTP context > falls back to session.accessToken when no header present 1`] = `
 {
   "claims": {
     "subject": "alice",
@@ -10,7 +10,7 @@ exports[`createAccessTokenMiddleware > HTTP context > falls back to session.acce
 }
 `;
 
-exports[`createAccessTokenMiddleware > HTTP context > falls back to session.accessToken when no header present 2`] = `
+exports[`useAccessToken > HTTP context > falls back to session.accessToken when no header present 2`] = `
 {
   "claims": {
     "subject": "alice",
@@ -20,7 +20,7 @@ exports[`createAccessTokenMiddleware > HTTP context > falls back to session.acce
 }
 `;
 
-exports[`createAccessTokenMiddleware > HTTP context > introspects an OPAQUE bearer token and resolves introspected access 1`] = `
+exports[`useAccessToken > HTTP context > introspects an OPAQUE bearer token and resolves introspected access 1`] = `
 {
   "claims": {
     "permissions": [
@@ -36,7 +36,7 @@ exports[`createAccessTokenMiddleware > HTTP context > introspects an OPAQUE bear
 }
 `;
 
-exports[`createAccessTokenMiddleware > HTTP context > verifies a JOSE bearer token and resolves verified access 1`] = `
+exports[`useAccessToken > HTTP context > verifies a JOSE bearer token and resolves verified access 1`] = `
 {
   "claims": {
     "subject": "verified_subject",
@@ -48,7 +48,7 @@ exports[`createAccessTokenMiddleware > HTTP context > verifies a JOSE bearer tok
 }
 `;
 
-exports[`createAccessTokenMiddleware > HTTP context > verifies a JOSE bearer token and resolves verified access 2`] = `
+exports[`useAccessToken > HTTP context > verifies a JOSE bearer token and resolves verified access 2`] = `
 {
   "claims": {
     "subject": "verified_subject",
@@ -58,7 +58,7 @@ exports[`createAccessTokenMiddleware > HTTP context > verifies a JOSE bearer tok
 }
 `;
 
-exports[`createAccessTokenMiddleware > Socket event fast path > accepts silently when well before expiry warning window 1`] = `
+exports[`useAccessToken > Socket event fast path > accepts silently when well before expiry warning window 1`] = `
 {
   "claims": {
     "subject": "alice",
