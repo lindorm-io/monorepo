@@ -68,28 +68,41 @@ describe("useStatic — content-type and cache headers", () => {
   });
 
   describe("cache-control matrix", () => {
+    // Assert the status first: a missing Cache-Control on its own reads as a
+    // bare `undefined`, which says nothing about whether the miss was a 404, a
+    // 500, or a response that never came from this server at all.
     test("default → public, max-age=0", async () => {
       const res = await rawRequest(defaultPort, "/assets/sample.txt");
+
+      expect(res.status).toBe(200);
       expect(res.headers["cache-control"]).toBe("public, max-age=0");
     });
 
     test("ReadableTime maxAge → seconds", async () => {
       const res = await rawRequest(sevenDayPort, "/assets/sample.txt");
+
+      expect(res.status).toBe(200);
       expect(res.headers["cache-control"]).toBe("public, max-age=604800");
     });
 
     test("numeric millisecond maxAge → floored to seconds", async () => {
       const res = await rawRequest(msPort, "/assets/sample.txt");
+
+      expect(res.status).toBe(200);
       expect(res.headers["cache-control"]).toBe("public, max-age=1");
     });
 
     test("immutable is appended", async () => {
       const res = await rawRequest(immutablePort, "/assets/sample.txt");
+
+      expect(res.status).toBe(200);
       expect(res.headers["cache-control"]).toBe("public, max-age=3600, immutable");
     });
 
     test("private visibility", async () => {
       const res = await rawRequest(privatePort, "/assets/sample.txt");
+
+      expect(res.status).toBe(200);
       expect(res.headers["cache-control"]).toBe("private, max-age=0");
     });
   });

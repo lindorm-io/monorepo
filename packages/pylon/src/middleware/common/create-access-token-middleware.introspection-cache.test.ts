@@ -12,7 +12,7 @@ import MockDate from "mockdate";
 import { afterEach, beforeEach, describe, expect, type Mock, test, vi } from "vitest";
 import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
 import { CachedIntrospection } from "../../entities/CachedIntrospection.js";
-import { AUTH_CACHE_SOURCE } from "../../internal/constants/symbols.js";
+import { AUTH_CACHE_POLICY } from "../../internal/constants/symbols.js";
 import { stageEncryptedField } from "../../internal/utils/stage-encrypted-field.js";
 import { createAccessTokenMiddleware } from "./create-access-token-middleware.js";
 
@@ -88,9 +88,11 @@ const createContext = (opts: ContextOptions): any => {
     },
   };
 
+  // Exactly what the dependencies middleware installs: the evictable SESSION as
+  // the storage, and the parsed `PylonAuthConfig.cache` as the policy.
   if (opts.kv) {
-    ctx[AUTH_CACHE_SOURCE] = {
-      kv: opts.kv,
+    ctx.cache = opts.kv.session({ logger: ctx.logger });
+    ctx[AUTH_CACHE_POLICY] = {
       introspection: opts.introspection === false ? false : { ttl: opts.ttl },
     };
   }
@@ -107,7 +109,7 @@ describe("createAccessTokenMiddleware introspection cache", () => {
   beforeEach(async () => {
     MockDate.set(NOW.toISOString());
 
-    amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
     amphora.add([
       KryptosKit.generate.enc.oct({
         algorithm: "A128KW",

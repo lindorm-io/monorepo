@@ -14,7 +14,7 @@ import { verifyCookie } from "../cookies/verify-cookie.js";
  * Amphora already drops inactive keys from a QUERY, so the clock only bites
  * where the vault does not — and both of those places are here:
  *
- *   1. an INJECTED `kryptos` (`keys.cookie.signature: { kryptos }`), which never
+ *   1. an INJECTED `kryptos` (`cookies.signature: { kryptos }`), which never
  *      touches the vault at all; and
  *   2. `findByIdSync` on the read side, which is unfiltered BY DESIGN because the
  *      cookie's `.kid` — the CLIENT's claim — chooses which key answers for it.
@@ -37,7 +37,7 @@ describe("the cookie time floor", () => {
 
   const vault = (...keys: Array<IKryptos>): IAmphora => {
     const amphora = new Amphora({
-      domain: "http://test.lindorm.io",
+      issuer: "http://test.lindorm.io",
       logger: createMockLogger(),
     });
     amphora.add(keys);

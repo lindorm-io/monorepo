@@ -12,23 +12,31 @@ import {
 import type { IPylonSession } from "../../interfaces/index.js";
 import type { PylonCookieSettings } from "../../types/index.js";
 import { createSessionStore } from "./create-session-store.js";
-import { beforeEach, describe, expect, test, type Mock } from "vitest";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createSessionStore", () => {
   let ctx: any;
+  let kv: Awaited<ReturnType<typeof createMockProteusSource>>;
   let session: IPylonSession;
   let mockRepo: Awaited<ReturnType<typeof createMockRepository>>;
 
   beforeEach(async () => {
     mockRepo = await createMockRepository();
 
-    const mockProteus = await createMockProteusSource();
-    mockProteus.repository.mockReturnValue(mockRepo);
+    // The store opens its OWN request-scoped session off the source — `ctx.kv`
+    // does not exist yet on the paths that read the session (the session
+    // middleware runs before the dependencies middleware; the socket handshake
+    // chain never runs it at all).
+    kv = await createMockProteusSource();
+    kv.session.mockReturnValue({
+      repository: vi.fn().mockReturnValue(mockRepo),
+    } as any);
 
     ctx = {
       aegis: createMockAegis(),
       amphora: createMockAmphora(),
-      kv: mockProteus,
+      logger: createMockLogger(),
+      state: { metadata: { correlationId: "test-correlation-id" } },
     };
 
     session = {
@@ -47,16 +55,12 @@ describe("createSessionStore", () => {
     (mockRepo.delete as Mock).mockResolvedValue(undefined);
   });
 
-  test("should resolve undefined when not enabled", () => {
-    expect(createSessionStore({ enabled: false })).toBeUndefined();
-  });
-
   test("should resolve undefined when no options", () => {
-    expect(createSessionStore()).toBeUndefined();
+    expect(createSessionStore(kv)).toBeUndefined();
   });
 
-  test("should resolve store when enabled with keyValue on context", async () => {
-    const store = createSessionStore({ enabled: true });
+  test("should resolve store when enabled with a kv source", async () => {
+    const store = createSessionStore(kv, { enabled: true });
 
     expect(store).toBeDefined();
 
@@ -75,22 +79,16 @@ describe("createSessionStore", () => {
     await expect(store!.logout(ctx, session.subject)).resolves.toBeUndefined();
   });
 
-  test("should fall back to cookie when no keyValue available", async () => {
-    ctx.kv = undefined;
-
-    const store = createSessionStore({ enabled: true });
-
-    expect(store).toBeDefined();
-
-    // set returns the session id (no repo to insert into)
-    await expect(store!.set(ctx, session)).resolves.toEqual(session.id);
-
-    // get returns null (no repo to query)
-    await expect(store!.get(ctx, session.id)).resolves.toBeNull();
-
-    // del and logout are no-ops
-    await expect(store!.del(ctx, session.id)).resolves.toBeUndefined();
-    await expect(store!.logout(ctx, session.subject)).resolves.toBeUndefined();
+  /**
+   * NO store when there is no `kv` source — that is what makes the session
+   * cookie-only. A store that exists with nowhere to write would be write-only:
+   * `set` hands back an id nothing holds and `get` answers null for it, so the
+   * caller would put a pointer in the cookie and never read a session back.
+   * `undefined` is what tells the session middleware to put the whole session
+   * object in the cookie instead.
+   */
+  test("should resolve undefined when no kv source is configured", () => {
+    expect(createSessionStore(undefined, { enabled: true })).toBeUndefined();
   });
 
   /**
@@ -121,7 +119,7 @@ describe("createSessionStore", () => {
     beforeEach(() => {
       const logger = createMockLogger();
 
-      amphora = new Amphora({ domain: ISSUER, logger });
+      amphora = new Amphora({ issuer: ISSUER, logger });
 
       sessionKey = KryptosKit.generate.auto({
         algorithm: "ECDH-ES",
@@ -143,11 +141,16 @@ describe("createSessionStore", () => {
 
       amphora.add([sessionKey, tokenKey]);
 
-      realCtx = { aegis: new Aegis({ amphora, logger }), amphora, kv: ctx.kv };
+      realCtx = {
+        aegis: new Aegis({ amphora, logger }),
+        amphora,
+        logger,
+        state: { metadata: { correlationId: "test-correlation-id" } },
+      };
     });
 
     test("seals the session's tokens with the INTERNAL session key, not the newer PUBLISHED token key", async () => {
-      const store = createSessionStore({ enabled: true, ...sessionKeys });
+      const store = createSessionStore(kv, { enabled: true, ...sessionKeys });
 
       await store!.set(realCtx, session);
 
@@ -164,7 +167,7 @@ describe("createSessionStore", () => {
     // is what the old `|| canEncrypt()` fallback did. Asserted so the fix cannot
     // silently revert.
     test("without a configured key the tokens are stored unencrypted, never sealed with the token key", async () => {
-      const store = createSessionStore({ enabled: true });
+      const store = createSessionStore(kv, { enabled: true });
 
       await store!.set(realCtx, session);
 
@@ -188,7 +191,7 @@ describe("createSessionStore", () => {
 
       (mockRepo.findOne as Mock).mockResolvedValue({ ...session, accessToken: stale });
 
-      const store = createSessionStore({ enabled: true, ...sessionKeys });
+      const store = createSessionStore(kv, { enabled: true, ...sessionKeys });
       const read = await store!.get(realCtx, session.id);
 
       expect(read!.accessToken).toBe("access-token");
@@ -197,7 +200,7 @@ describe("createSessionStore", () => {
     // Fail LOUDLY, not silently — a named key the vault does not hold must never
     // degrade into persisting a bearer token in the clear.
     test("throws when the named session enc key is not in the vault", async () => {
-      const store = createSessionStore({
+      const store = createSessionStore(kv, {
         enabled: true,
         encryption: { condition: { purpose: "no-such-purpose" } },
       });

@@ -1,12 +1,10 @@
 import type { ReadableTime } from "@lindorm/date";
-import type { IIrisSource } from "@lindorm/iris";
-import type { IEntity, IProteusSource } from "@lindorm/proteus";
+import type { IEntity } from "@lindorm/proteus";
 import type { Constructor } from "@lindorm/types";
 import type { PylonEncKey } from "./keys.js";
 
 export type PylonKryptosSettings = {
   enabled: boolean;
-  db?: IProteusSource;
   /**
    * The at-rest KEK selector staged onto `Kryptos.privateKey` before the source
    * sets up. Proteus encrypts the stored private key on write and decrypts it
@@ -19,13 +17,10 @@ export type PylonKryptosSettings = {
 
 export type PylonQueueSettings = {
   enabled: boolean;
-  bus?: IIrisSource;
 };
 
 export type PylonWebhookSettings = {
   enabled: boolean;
-  db?: IProteusSource;
-  bus?: IIrisSource;
   /**
    * The at-rest KEK selector staged onto `WebhookSubscription.clientSecret` and
    * `WebhookSubscription.password` before the source sets up. Proteus encrypts
@@ -42,14 +37,12 @@ export type PylonWebhookSettings = {
   maxErrors?: number;
 };
 
-export type PylonCacheSettings = {
+export type PylonResponseCacheSettings = {
   enabled: boolean;
-  kv?: IProteusSource;
 };
 
 export type PylonRateLimitSettings = {
   enabled: boolean;
-  kv?: IProteusSource;
   strategy?: "fixed" | "sliding" | "token-bucket";
   window?: ReadableTime | number;
   max?: number;
@@ -59,8 +52,6 @@ export type PylonRateLimitSettings = {
 
 export type PylonAuditSettings = {
   enabled: boolean;
-  db?: IProteusSource;
-  bus?: IIrisSource;
   sanitise?: (body: unknown) => unknown;
   skip?: (ctx: any) => boolean;
   entities?: Array<Constructor<IEntity>>;
@@ -68,5 +59,4 @@ export type PylonAuditSettings = {
 
 export type PylonRoomsSettings = {
   presence?: boolean;
-  kv?: IProteusSource;
 };

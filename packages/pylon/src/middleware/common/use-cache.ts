@@ -1,10 +1,8 @@
 import { isLive, type ReadableTime, ms } from "@lindorm/date";
 import { ServerError } from "@lindorm/errors";
-import type { IProteusSource } from "@lindorm/proteus";
 import { ShaKit } from "@lindorm/sha";
 import { sortKeys } from "@lindorm/utils";
 import type { CachedResponsePayload } from "../../entities/CachedResponse.js";
-import { CACHE_SOURCE } from "../../internal/constants/symbols.js";
 import { isHttpContext } from "../../internal/utils/is-context.js";
 import { resolveActor } from "../../internal/utils/resolve-actor.js";
 import type {
@@ -137,8 +135,12 @@ export const useCache = (
       return;
     }
 
-    const rawSource = (ctx as any)[CACHE_SOURCE] as IProteusSource | undefined;
-    if (!rawSource) {
+    // The evictable per-request session, installed whenever a `cache` (or the
+    // `kv` fallback) source is configured — INDEPENDENT of
+    // `responseCache.enabled`, which is the `ctx.state.app.config.cache` check
+    // above. Read after the disabled/skip guards so a request that never caches
+    // never opens a session against the evictable store.
+    if (!ctx.cache) {
       throw new ServerError("Response cache is not configured", {
         code: "cache_not_configured",
         type: "urn:lindorm:pylon:error:cache_not_configured",
@@ -147,6 +149,11 @@ export const useCache = (
           "Enable the response cache in PylonSettings with cache: { enabled: true } before using useCache",
       });
     }
+
+    // Read out here rather than inside the closure below: TypeScript drops the
+    // `ctx.cache` narrowing inside a function expression, and a plain string is
+    // not a capability being aliased.
+    const driverType = ctx.cache.driverType;
 
     // Namespaced diagnostic headers (X-Pylon-Cache*) so they don't collide with
     // CDN/proxy `X-Cache` in the response chain. Standard cache headers
@@ -161,7 +168,7 @@ export const useCache = (
       ctx.set("Cache-Control", cacheControl);
       ctx.set("Age", String(age));
       if (ctx.state?.app?.environment !== "production") {
-        ctx.set("X-Pylon-Cache-Source", rawSource.driverType);
+        ctx.set("X-Pylon-Cache-Source", driverType);
       }
     };
 
@@ -208,9 +215,7 @@ export const useCache = (
     // Dynamically import the entity so the static module graph from index.js
     // stays free of @lindorm/proteus (iris/proteus optionality).
     const { CachedResponse } = await import("../../entities/CachedResponse.js");
-    const repository = rawSource
-      .session({ logger: ctx.logger })
-      .repository(CachedResponse);
+    const repository = ctx.cache.repository(CachedResponse);
 
     // READ (skipped on a no-cache request, which forces a refresh).
     if (!noCache) {

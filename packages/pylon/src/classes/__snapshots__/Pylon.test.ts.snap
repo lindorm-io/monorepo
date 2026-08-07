@@ -1,12 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Pylon > should setup correctly 1`] = `
-[
-  {
-    "issuer": "http://test.lindorm.io",
-    "jwksUri": "http://test.lindorm.io/.well-known/jwks.json",
-  },
-]
+{
+  "issuer": "http://test.lindorm.io",
+  "jwksUri": "http://test.lindorm.io/.well-known/jwks.json",
+}
 `;
 
 exports[`Pylon > should setup correctly 2`] = `

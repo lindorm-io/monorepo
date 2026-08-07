@@ -5,7 +5,7 @@ exports[`assertSessionCookieSafeForSockets > should throw with actionable error 
   "code": "wildcard_cors_allowlist_for_session",
   "data": {},
   "debug": {},
-  "details": "options.cors.allowOrigins cannot be '*' when options.session is set. Cookie-mode socket auth is Cross-Site WebSocket Hijacking (CSWSH) vulnerable without an explicit origin allowlist.",
+  "details": "options.cors.allowOrigins cannot be '*' when options.auth.session is set. Cookie-mode socket auth is Cross-Site WebSocket Hijacking (CSWSH) vulnerable without an explicit origin allowlist.",
   "errors": [],
   "id": Any<String>,
   "lineage": [

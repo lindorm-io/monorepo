@@ -66,16 +66,18 @@ describe("createConnectionSessionMiddleware", () => {
   beforeEach(async () => {
     mockRepo = await createMockRepository();
     mockProteus = await createMockProteusSource();
-    mockProteus.repository.mockReturnValue(mockRepo);
+    // The store opens its own request-scoped session off the SOURCE — the
+    // handshake chain never runs the dependencies middleware, so there is no
+    // `ctx.kv` to read.
+    mockProteus.session.mockReturnValue({
+      repository: vi.fn().mockReturnValue(mockRepo),
+    } as any);
 
     (mockRepo.findOne as Mock).mockResolvedValue(buildSession());
 
     options = {
       enabled: true,
-      expiry: "90 minutes",
-      httpOnly: true,
       sameSite: "lax",
-      name: "test_pylon_session",
     };
 
     next = vi.fn().mockResolvedValue(undefined);
@@ -84,7 +86,7 @@ describe("createConnectionSessionMiddleware", () => {
   test("should proceed without session when cookie header is missing", async () => {
     const ctx = buildCtx(undefined, mockProteus);
 
-    await createConnectionSessionMiddleware(options)(ctx, next);
+    await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
     expect(ctx.io.socket.data.session).toBeUndefined();
     expect(ctx.io.socket.data.pylon.auth).toBeUndefined();
@@ -94,16 +96,16 @@ describe("createConnectionSessionMiddleware", () => {
   test("should proceed without session when cookie header lacks session cookie", async () => {
     const ctx = buildCtx("other=1; another=2", mockProteus);
 
-    await createConnectionSessionMiddleware(options)(ctx, next);
+    await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
     expect(ctx.io.socket.data.session).toBeUndefined();
     expect(ctx.io.socket.data.pylon.auth).toBeUndefined();
   });
 
   test("should load session, register auth, and parse bearer when cookie valid", async () => {
-    const ctx = buildCtx(`test_pylon_session=${SESSION_ID}`, mockProteus);
+    const ctx = buildCtx(`pylon_session=${SESSION_ID}`, mockProteus);
 
-    await createConnectionSessionMiddleware(options)(ctx, next);
+    await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
     expect(ctx.io.socket.data.session).toMatchSnapshot({
       expiresAt: expect.any(Date),
@@ -118,9 +120,9 @@ describe("createConnectionSessionMiddleware", () => {
   test("should proceed without session when store returns null", async () => {
     (mockRepo.findOne as Mock).mockResolvedValue(null);
 
-    const ctx = buildCtx(`test_pylon_session=${SESSION_ID}`, mockProteus);
+    const ctx = buildCtx(`pylon_session=${SESSION_ID}`, mockProteus);
 
-    await createConnectionSessionMiddleware(options)(ctx, next);
+    await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
     expect(ctx.io.socket.data.session).toBeUndefined();
     expect(ctx.io.socket.data.pylon.auth).toBeUndefined();
@@ -132,9 +134,9 @@ describe("createConnectionSessionMiddleware", () => {
       buildSession({ expiresAt: new Date("2000-01-01T00:00:00.000Z") }),
     );
 
-    const ctx = buildCtx(`test_pylon_session=${SESSION_ID}`, mockProteus);
+    const ctx = buildCtx(`pylon_session=${SESSION_ID}`, mockProteus);
 
-    await createConnectionSessionMiddleware(options)(ctx, next);
+    await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
     expect(ctx.io.socket.data.session).toBeUndefined();
     expect(ctx.io.socket.data.pylon.auth).toBeUndefined();
@@ -142,7 +144,7 @@ describe("createConnectionSessionMiddleware", () => {
   });
 
   test("should not overwrite existing socket.data.pylon.auth", async () => {
-    const ctx = buildCtx(`test_pylon_session=${SESSION_ID}`, mockProteus);
+    const ctx = buildCtx(`pylon_session=${SESSION_ID}`, mockProteus);
     const existing = {
       strategy: "bearer" as const,
       getExpiresAt: () => new Date("2099-01-01T00:00:00.000Z"),
@@ -151,7 +153,7 @@ describe("createConnectionSessionMiddleware", () => {
     };
     ctx.io.socket.data.pylon.auth = existing;
 
-    await createConnectionSessionMiddleware(options)(ctx, next);
+    await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
     // Session is still loaded (informational), but auth is preserved.
     expect(ctx.io.socket.data.session).toBeDefined();
@@ -159,20 +161,21 @@ describe("createConnectionSessionMiddleware", () => {
     expect(next).toHaveBeenCalled();
   });
 
-  test("should proceed without session when store is disabled", async () => {
-    options.enabled = false;
-    const ctx = buildCtx(`test_pylon_session=${SESSION_ID}`, mockProteus);
+  // No `kv` source ⇒ no store, so the handshake has nowhere to resolve the id
+  // the cookie carries. It proceeds unauthenticated rather than guessing.
+  test("should proceed without session when no kv source is configured", async () => {
+    const ctx = buildCtx(`pylon_session=${SESSION_ID}`, mockProteus);
 
-    await createConnectionSessionMiddleware(options)(ctx, next);
+    await createConnectionSessionMiddleware(undefined, options)(ctx, next);
 
     expect(ctx.io.socket.data.session).toBeUndefined();
     expect(next).toHaveBeenCalled();
   });
 
   test("should use store-backed refresh closure that re-reads store", async () => {
-    const ctx = buildCtx(`test_pylon_session=${SESSION_ID}`, mockProteus);
+    const ctx = buildCtx(`pylon_session=${SESSION_ID}`, mockProteus);
 
-    await createConnectionSessionMiddleware(options)(ctx, next);
+    await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
     // Now flip the mock to return a new session with a later expiry.
     (mockRepo.findOne as Mock).mockResolvedValue(
@@ -189,9 +192,9 @@ describe("createConnectionSessionMiddleware", () => {
   });
 
   test("should reject refresh when store returns null", async () => {
-    const ctx = buildCtx(`test_pylon_session=${SESSION_ID}`, mockProteus);
+    const ctx = buildCtx(`pylon_session=${SESSION_ID}`, mockProteus);
 
-    await createConnectionSessionMiddleware(options)(ctx, next);
+    await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
     (mockRepo.findOne as Mock).mockResolvedValue(null);
 
@@ -199,9 +202,9 @@ describe("createConnectionSessionMiddleware", () => {
   });
 
   test("should reject refresh when reloaded session is past expiry", async () => {
-    const ctx = buildCtx(`test_pylon_session=${SESSION_ID}`, mockProteus);
+    const ctx = buildCtx(`pylon_session=${SESSION_ID}`, mockProteus);
 
-    await createConnectionSessionMiddleware(options)(ctx, next);
+    await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
     (mockRepo.findOne as Mock).mockResolvedValue(
       buildSession({ expiresAt: new Date("2000-01-01T00:00:00.000Z") }),

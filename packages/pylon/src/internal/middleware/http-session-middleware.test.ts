@@ -14,13 +14,18 @@ MockDate.set(MockedDate);
 
 describe("httpSessionMiddleware", () => {
   let ctx: any;
+  let mockProteus: Awaited<ReturnType<typeof createMockProteusSource>>;
   let next: Next;
   let options: PylonSessionSettings;
 
   beforeEach(async () => {
     const mockRepo = await createMockRepository();
-    const mockProteus = await createMockProteusSource();
-    mockProteus.repository.mockReturnValue(mockRepo);
+    mockProteus = await createMockProteusSource();
+    // The store opens its own request-scoped session off the SOURCE: this
+    // middleware runs BEFORE the dependencies middleware that installs `ctx.kv`.
+    mockProteus.session.mockReturnValue({
+      repository: vi.fn().mockReturnValue(mockRepo),
+    } as any);
 
     (mockRepo.insert as Mock).mockImplementation((s: any) => Promise.resolve(s));
     (mockRepo.findOne as Mock).mockResolvedValue({
@@ -33,7 +38,6 @@ describe("httpSessionMiddleware", () => {
 
     ctx = {
       logger: createMockLogger(),
-      kv: mockProteus,
       cookies: {
         set: vi.fn(),
         get: vi.fn().mockReturnValue("cad4002a-bd04-52f1-9733-58866f421686"),
@@ -56,17 +60,14 @@ describe("httpSessionMiddleware", () => {
 
     options = {
       enabled: true,
-      expiry: "90 minutes",
-      httpOnly: true,
       sameSite: "strict",
-      name: "test_pylon_session",
     };
 
     next = () => Promise.resolve();
   });
 
   test("should set session with keyValue store", async () => {
-    await createHttpSessionMiddleware(options)(ctx, next);
+    await createHttpSessionMiddleware(mockProteus, options)(ctx, next);
 
     await ctx.session.set({
       id: "cad4002a-bd04-52f1-9733-58866f421686",
@@ -79,7 +80,7 @@ describe("httpSessionMiddleware", () => {
   });
 
   test("should get session from keyValue store", async () => {
-    await createHttpSessionMiddleware(options)(ctx, next);
+    await createHttpSessionMiddleware(mockProteus, options)(ctx, next);
 
     expect(ctx.state.session).toEqual({
       id: "cad4002a-bd04-52f1-9733-58866f421686",
@@ -89,19 +90,38 @@ describe("httpSessionMiddleware", () => {
     });
   });
 
-  test("should return null session when no keyValue source", async () => {
-    ctx.kv = undefined;
+  // No kv source ⇒ no store ⇒ cookie-only: the whole session object is the
+  // cookie's value, written and read straight through.
+  test("should read the session out of the cookie when no kv source is configured", async () => {
+    const cookieOnly = {
+      id: "cad4002a-bd04-52f1-9733-58866f421686",
+      accessToken: "access_token",
+      expiresAt: null,
+      issuedAt: MockedDate,
+      scope: [],
+      subject: "sub-1",
+    };
 
-    await createHttpSessionMiddleware(options)(ctx, next);
+    ctx.cookies.get.mockResolvedValue(cookieOnly);
 
-    expect(ctx.state.session).toBeNull();
+    await createHttpSessionMiddleware(undefined, options)(ctx, next);
+
+    expect(ctx.state.session).toEqual(cookieOnly);
+
+    await ctx.session.set(cookieOnly);
+
+    expect(ctx.cookies.set).toHaveBeenCalledWith(
+      "pylon_session",
+      cookieOnly,
+      expect.anything(),
+    );
   });
 
   test("should delete session", async () => {
-    await createHttpSessionMiddleware(options)(ctx, next);
+    await createHttpSessionMiddleware(mockProteus, options)(ctx, next);
 
     await expect(ctx.session.del()).resolves.toBeUndefined();
 
-    expect(ctx.cookies.del).toHaveBeenCalledWith("test_pylon_session");
+    expect(ctx.cookies.del).toHaveBeenCalledWith("pylon_session");
   });
 });

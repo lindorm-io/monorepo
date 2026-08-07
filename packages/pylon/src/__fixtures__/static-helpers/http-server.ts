@@ -11,6 +11,20 @@ export type StaticTestServer = {
   close: () => Promise<void>;
 };
 
+// Bind the SAME address `rawRequest` dials (127.0.0.1) — never the wildcard.
+// `listen(0)` binds `::`, and the kernel's ephemeral allocator does not treat a
+// pre-existing 127.0.0.1-specific listener as a conflict, so it will happily
+// hand out a port some other local app (Steam, VS Code, ...) is already
+// listening on. The bind then succeeds, but a client dialling 127.0.0.1 is
+// delivered to the more specific listener and never reaches koa — the test sees
+// that foreign app's response. Binding 127.0.0.1 makes such a port EADDRINUSE,
+// so the allocator skips it and the collision cannot happen.
+const listenOnLoopback = (server: http.Server): Promise<void> =>
+  new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => resolve());
+  });
+
 // Build a real HTTP server whose only route is a static mount at `mountPath`.
 // The error-handler + response-body middleware are included so misses surface
 // the pylon error body shape and directory listings get snake-cased — exactly
@@ -28,7 +42,7 @@ export const createStaticServer = async (
   app.use(router.routes() as any).use(router.allowedMethods() as any);
 
   const server = http.createServer(app.callback());
-  await new Promise<void>((resolve) => server.listen(0, () => resolve()));
+  await listenOnLoopback(server);
   const port = (server.address() as AddressInfo).port;
 
   return {
@@ -50,7 +64,7 @@ export const createServerFromRouter = async (
   app.use(router.routes() as any).use(router.allowedMethods() as any);
 
   const server = http.createServer(app.callback());
-  await new Promise<void>((resolve) => server.listen(0, () => resolve()));
+  await listenOnLoopback(server);
   const port = (server.address() as AddressInfo).port;
 
   return {

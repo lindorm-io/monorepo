@@ -17,7 +17,7 @@ import type { PylonSignKey } from "../../../types/index.js";
  * not, and a miss is a throw.
  *
  * The selector is REQUIRED, and it is per-cookie: the caller hands over the key
- * the cookie itself names, or the deployment's `keys.cookie.signature`. Falling
+ * the cookie itself names, or the deployment's `cookies.signature`. Falling
  * back to the floor alone would query the vault's default set — the PUBLISHED
  * keys — and return whichever is newest: in a pylon that is the JWKS token key,
  * because token keys rotate twice as often as cookie keys. That is not a
@@ -34,7 +34,7 @@ export const resolveCookieSigningKey = async (
       title: "Cookie Signing Key Not Configured",
       type: "urn:lindorm:pylon:error:cookie_signing_key_not_configured",
       details:
-        'A cookie was set with `signed: true`, but no cookie signing key is configured; name the key that signs cookies in the pylon options (`keys.cookie.signature`, e.g. `{ condition: { purpose: "cookie", publish: false } }`). A session cookie chains to it — `keys.session.signature ?? keys.cookie.signature` — so naming the cookie key is what makes any cookie signable. Pylon will not guess one: the vault\'s default set is the published keys, so a guess would sign cookies with the JWKS token key.',
+        'A cookie was set with `signed: true`, but no cookie signing key is configured; name the key that signs cookies in the pylon options (`cookies.signature`, e.g. `{ condition: { purpose: "cookie", publish: false } }`). A session cookie chains to it — `auth.session.signature ?? cookies.signature` — so naming the cookie key is what makes any cookie signable. Pylon will not guess one: the vault\'s default set is the published keys, so a guess would sign cookies with the JWKS token key.',
       data: { floor: SIGN_FLOOR },
     });
   }
@@ -58,7 +58,7 @@ export const resolveCookieSigningKey = async (
         title: "Cookie Signing Key Not Found",
         type: "urn:lindorm:pylon:error:cookie_signing_key_not_found",
         details:
-          "The amphora holds no usable key matching the configured cookie signing key (`keys.cookie.signature`, or `keys.session.signature` for the session cookie); add the key to the vault (the kryptos rotation worker mints the keys it is given) or correct the condition. Note that amphora queries the PUBLISHED set by default — an internal cookie key needs `publish: false`.",
+          "The amphora holds no usable key matching the configured cookie signing key (`cookies.signature`, or `auth.session.signature` for the session cookie); add the key to the vault (the kryptos rotation worker mints the keys it is given) or correct the condition. Note that amphora queries the PUBLISHED set by default — an internal cookie key needs `publish: false`.",
         data: { query },
         debug: { error: (error as Error).message },
       });
@@ -71,7 +71,7 @@ export const resolveCookieSigningKey = async (
       title: "Cookie Signing Key Policy Violation",
       type: "urn:lindorm:pylon:error:cookie_signing_key_policy_violation",
       details:
-        'The key named as the cookie signing key (`keys.cookie.signature`, or `keys.session.signature` for the session cookie) cannot sign: a signing key must have use "sig" and a private half, and it must be active — a key that has expired, or whose notBefore has not yet passed, cannot sign a new cookie.',
+        'The key named as the cookie signing key (`cookies.signature`, or `auth.session.signature` for the session cookie) cannot sign: a signing key must have use "sig" and a private half, and it must be active — a key that has expired, or whose notBefore has not yet passed, cannot sign a new cookie.',
       data: {
         kid: kryptos.id,
         use: kryptos.use,

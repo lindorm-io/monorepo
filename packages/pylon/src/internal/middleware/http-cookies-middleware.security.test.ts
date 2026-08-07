@@ -66,7 +66,7 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
   let config: PylonCookieSettings;
 
   beforeEach(() => {
-    amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
     amphora.add([cookieSignKey(), cookieEncKey()]);
     // Both cookie keys are configured, so — under configured-key-⇒-default-on —
     // an unqualified write signs AND seals, and an unqualified read verifies AND

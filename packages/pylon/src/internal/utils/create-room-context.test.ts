@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
+import { createMockProteusSession } from "@lindorm/proteus/mocks/vitest";
 import { createHttpRoomContext, createRoomContext } from "./create-room-context.js";
 import { describe, expect, test, vi, type Mock } from "vitest";
 
@@ -77,53 +77,37 @@ describe("createRoomContext", () => {
     expect(result).toEqual(["socket-a", "socket-b"]);
   });
 
-  test("should include presence function when proteusSource and presence are provided", async () => {
-    const proteusSource = await createMockProteusSource();
+  test("should include presence function when a session is provided", async () => {
+    const session = await createMockProteusSession();
 
     const ctx = createRoomContext({
       socket: createMockSocket() as any,
       io: createMockIo() as any,
       logger: createMockLogger(),
-      proteusSource: proteusSource as any,
-      presence: true,
+      session: session as any,
     });
 
     expect(typeof ctx.presence).toBe("function");
   });
 
-  test("should not include presence when presence is false", async () => {
-    const proteusSource = await createMockProteusSource();
-
+  // The session IS the presence switch — the caller passes it only when
+  // presence is enabled AND a `kv` source resolved, so there is no second flag.
+  test("should not include presence when no session is provided", () => {
     const ctx = createRoomContext({
       socket: createMockSocket() as any,
       io: createMockIo() as any,
       logger: createMockLogger(),
-      proteusSource: proteusSource as any,
-      presence: false,
-    });
-
-    expect(ctx.presence).toBeUndefined();
-  });
-
-  test("should not include presence when proteusSource is not provided", () => {
-    const ctx = createRoomContext({
-      socket: createMockSocket() as any,
-      io: createMockIo() as any,
-      logger: createMockLogger(),
-      presence: true,
     });
 
     expect(ctx.presence).toBeUndefined();
   });
 
   test("should use socket.data.tokens.accessToken.claims.subject as userId", async () => {
-    const proteusSource = await createMockProteusSource();
+    const session = await createMockProteusSession();
     const mockRepo = {
       findOneOrSave: vi.fn().mockResolvedValue(undefined),
     };
-    (proteusSource.session as Mock).mockReturnValue({
-      repository: vi.fn().mockReturnValue(mockRepo),
-    });
+    (session.repository as Mock).mockReturnValue(mockRepo);
 
     const socket = createMockSocket({
       data: {
@@ -137,8 +121,7 @@ describe("createRoomContext", () => {
       socket: socket as any,
       io: createMockIo() as any,
       logger: createMockLogger(),
-      proteusSource: proteusSource as any,
-      presence: true,
+      session: session as any,
     });
 
     await ctx.join("room-1");
@@ -150,13 +133,11 @@ describe("createRoomContext", () => {
   });
 
   test("should fall back to socket.id when no accessToken subject", async () => {
-    const proteusSource = await createMockProteusSource();
+    const session = await createMockProteusSession();
     const mockRepo = {
       findOneOrSave: vi.fn().mockResolvedValue(undefined),
     };
-    (proteusSource.session as Mock).mockReturnValue({
-      repository: vi.fn().mockReturnValue(mockRepo),
-    });
+    (session.repository as Mock).mockReturnValue(mockRepo);
 
     const socket = createMockSocket();
 
@@ -164,8 +145,7 @@ describe("createRoomContext", () => {
       socket: socket as any,
       io: createMockIo() as any,
       logger: createMockLogger(),
-      proteusSource: proteusSource as any,
-      presence: true,
+      session: session as any,
     });
 
     await ctx.join("room-1");
@@ -210,27 +190,22 @@ describe("createHttpRoomContext", () => {
     expect(result).toEqual(["socket-a", "socket-b"]);
   });
 
-  test("should include presence when proteusSource and presence are provided", async () => {
-    const proteusSource = await createMockProteusSource();
+  test("should include presence when a session is provided", async () => {
+    const session = await createMockProteusSession();
 
     const ctx = createHttpRoomContext({
       io: createMockIo() as any,
       logger: createMockLogger(),
-      proteusSource: proteusSource as any,
-      presence: true,
+      session: session as any,
     });
 
     expect(typeof ctx.presence).toBe("function");
   });
 
-  test("should not include presence when presence is false", async () => {
-    const proteusSource = await createMockProteusSource();
-
+  test("should not include presence when no session is provided", () => {
     const ctx = createHttpRoomContext({
       io: createMockIo() as any,
       logger: createMockLogger(),
-      proteusSource: proteusSource as any,
-      presence: false,
     });
 
     expect(ctx.presence).toBeUndefined();

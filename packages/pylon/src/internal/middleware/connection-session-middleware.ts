@@ -1,14 +1,15 @@
 import { isExpired } from "@lindorm/date";
+import type { IProteusSource } from "@lindorm/proteus";
 import { omitUndefined } from "@lindorm/utils";
 import type {
   PylonConnectionMiddleware,
   PylonCookieSettings,
   PylonGetCookieOptions,
   PylonSessionSettings,
-  PylonSetCookieOptions,
   PylonSocketAuth,
   PylonSocketHandshakeContext,
 } from "../../types/index.js";
+import { SESSION_COOKIE_NAME } from "../constants/session.js";
 import { createGetCookie } from "../utils/cookies/create-get-cookie.js";
 import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
 import { createSessionStore } from "../utils/create-session-store.js";
@@ -19,34 +20,28 @@ import { extractTokenFromSession } from "../utils/tokens/extract-token-from-sess
 export const createConnectionSessionMiddleware = <
   C extends PylonSocketHandshakeContext = PylonSocketHandshakeContext,
 >(
+  kv: IProteusSource | undefined,
   options: PylonSessionSettings,
   cookies?: PylonCookieSettings,
 ): PylonConnectionMiddleware<C> => {
-  const name = options.name ?? "pylon_session";
-
   // The session cookie's keys travel in the config — the handshake reads the
   // cookie through this config, not a per-call options object. A CONFIGURED key
   // turns its role on the same way the HTTP session middleware does
-  // (`session.<role> ?? cookies.<role>`), preserving the fail-closed contract
-  // for a NAMED-but-unresolvable key.
+  // (`auth.session.<role> ?? cookies.<role>`), preserving the fail-closed
+  // contract for a NAMED-but-unresolvable key.
   const sk = resolveSessionKeys(options, cookies);
 
-  const config: PylonSetCookieOptions & PylonGetCookieOptions = omitUndefined({
-    domain: options.domain,
-    encoding: options.encoding ?? "base64url",
-    expiry: options.expiry,
-    httpOnly: options.httpOnly,
-    path: options.path,
-    priority: options.priority,
-    sameSite: options.sameSite,
-    secure: options.secure,
-    encryption: sk.encryption,
-    signature: sk.signature,
+  // READ-only: the handshake never writes a cookie, so this carries the read
+  // policy alone. `base64url` is the same codec the http cookies middleware
+  // defaults to — the session cookie's value is pylon's own opaque handle, so
+  // both ends agree on it by construction rather than by configuration.
+  const config: PylonGetCookieOptions = omitUndefined({
+    encoding: "base64url",
     encrypted: sk.encryption ? true : undefined,
     signed: sk.verification,
   });
 
-  const store = createSessionStore(options, cookies);
+  const store = createSessionStore(kv, options, cookies);
 
   return async function connectionSessionMiddleware(ctx, next): Promise<void> {
     const socket = ctx.io.socket;
@@ -65,7 +60,7 @@ export const createConnectionSessionMiddleware = <
       encryption: cookies?.encryption,
     });
 
-    const sessionId = await getCookie<string>(name);
+    const sessionId = await getCookie<string>(SESSION_COOKIE_NAME);
 
     if (!sessionId || typeof sessionId !== "string") {
       return next();

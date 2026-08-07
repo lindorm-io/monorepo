@@ -11,7 +11,7 @@ const logger = new Logger({
 });
 
 const amphora = new Amphora({
-  domain: "http://test.lindorm.io",
+  issuer: "http://test.lindorm.io",
   logger,
 });
 
@@ -69,8 +69,8 @@ export const EXAMPLE_PYLON = new Pylon({
   // key is otherwise unreachable and the JWKS token key would win. A configured
   // key turns that role on by default (a plain `set` signs and seals).
   //
-  // No `session` keys: a session IS a cookie, and every session role chains to
-  // its `cookies` counterpart — so this vault's two cookie keys do everything.
+  // No `auth.session` keys: a session IS a cookie, and every session role chains
+  // to its `cookies` counterpart — so this vault's two cookie keys do everything.
   // No `verification` either: it derives from the signing condition.
   cookies: {
     signature: { condition: { purpose: "cookie", publish: false } },

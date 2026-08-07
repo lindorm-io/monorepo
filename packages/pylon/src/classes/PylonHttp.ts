@@ -24,12 +24,12 @@ import {
   buildReadinessCallback,
 } from "../internal/utils/build-health-callbacks.js";
 import { createAuthRouter } from "../internal/utils/create-auth-router.js";
-import type { AuthCacheConfig } from "../internal/utils/auth-cache/auth-cache-config.js";
 import { createHealthRouter } from "../internal/utils/create-health-router.js";
 import { createWellKnownRouter } from "../internal/utils/create-well-known-router.js";
 import { normaliseRoutes } from "../internal/utils/normalise-routes.js";
 import { isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
+import type { IProteusSource } from "@lindorm/proteus";
 import Koa from "koa";
 import { useRateLimit } from "../middleware/common/use-rate-limit.js";
 import type {
@@ -91,7 +91,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       createHttpStateMiddleware({
         config: {
           audit: this.options.audit?.enabled ?? false,
-          cache: this.options.cache?.enabled ?? false,
+          cache: this.options.responseCache?.enabled ?? false,
           rateLimit: this.options.rateLimit?.enabled ?? false,
         },
         environment: this.options.environment,
@@ -107,8 +107,14 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         maxRequestAge: this.options.maxRequestAge,
       }),
       createHttpCookiesMiddleware(this.options.cookies),
-      ...(this.options.session
-        ? [createHttpSessionMiddleware(this.options.session, this.options.cookies)]
+      ...(this.options.auth?.session
+        ? [
+            createHttpSessionMiddleware(
+              this.options.kv,
+              this.options.auth.session,
+              this.options.cookies,
+            ),
+          ]
         : []),
       createHttpBodyParserMiddleware(this.options.parseBody),
       httpQueryParserMiddleware,
@@ -117,27 +123,22 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       createDependenciesMiddleware({
         actor: this.options.actor,
         authConfig: this.authConfig,
-        auditConfig:
-          (this.options.audit?.bus ?? this.options.bus)
-            ? {
-                bus: this.options.audit?.bus ?? this.options.bus!,
-                sanitise: this.options.audit?.sanitise,
-                skip: this.options.audit?.skip,
-              }
-            : undefined,
-        // Always register the cache source when one is provided (independent of
-        // cache.enabled). useCache reads ctx.state.app.config.cache to decide
-        // whether to run, and throws only if enabled but no source is present.
-        cacheKeyValue: this.options.cache?.kv ?? this.options.kv,
-        // The driver-response cache is registered ONLY when enabled AND a source
-        // resolves: a deployment with no kv keeps calling the driver on every
-        // request, uncached and without error.
-        authCacheConfig: this.resolveAuthCacheConfig(),
+        auditConfig: this.options.bus
+          ? {
+              bus: this.options.bus,
+              sanitise: this.options.audit?.sanitise,
+              skip: this.options.audit?.skip,
+            }
+          : undefined,
         hermes: this.options.hermes,
         bus: this.options.bus,
+        // `ctx.cache` is installed whenever an evictable source is provided,
+        // INDEPENDENT of responseCache.enabled / rateLimit.enabled — useCache
+        // and useRateLimit read ctx.state.app.config to decide whether to run,
+        // and throw only if enabled with no session to store in.
+        cache: this.cache,
         kv: this.options.kv,
         db: this.options.db,
-        rateLimitKeyValue: this.options.rateLimit?.kv ?? this.options.kv,
       }),
       createQueueMiddleware(this.options.queue),
       createWebhookMiddleware(this.options.webhook),
@@ -198,6 +199,11 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
   // private
 
+  /** The evictable source — `cache`, or `kv` when the deployment runs one store. */
+  private get cache(): IProteusSource | undefined {
+    return this.options.cache ?? this.options.kv;
+  }
+
   private addMiddleware(middleware: Array<PylonHttpMiddleware<T>>): void {
     for (const mw of middleware) {
       if (!mw) continue;
@@ -211,20 +217,6 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
   private addRouter(path: string, router: PylonRouter<T>): void {
     this.logger.debug("Adding router", { path });
     this.router.use(path, router.routes(), router.allowedMethods());
-  }
-
-  private resolveAuthCacheConfig(): AuthCacheConfig | undefined {
-    const { auth } = this.options;
-
-    if (!auth?.cache?.enabled) return undefined;
-
-    // Storage sits on the FEATURE, like `session.kv` / `rateLimit.kv` / `cache.kv`.
-    const kv = auth.kv ?? this.options.kv;
-    if (!kv) return undefined;
-
-    // Each concern's policy is passed through UNRESOLVED — the TTL fallback is
-    // decided in one expression at its own call site.
-    return { kv, introspection: auth.cache.introspection, userinfo: auth.cache.userinfo };
   }
 
   private resolveHealthCallback(): PylonHttpCallback<T> | undefined {
@@ -246,10 +238,16 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     if (configured === null) return undefined;
     if (configured) return configured;
 
-    // `/ready` is readiness: check live I/O on every call.
+    // `/ready` is readiness: check live I/O on every call, across EVERY
+    // configured role. `kv` and `cache` can be separately deployed instances, so
+    // leaving them out lets a pod whose session store is unreachable report
+    // green while every login on it fails. `this.cache` resolves the fallback,
+    // and the probe pings a doubly-named instance once.
     return buildReadinessCallback<T>({
       bus: this.options.bus,
+      cache: this.cache,
       db: this.options.db,
+      kv: this.options.kv,
     });
   }
 }

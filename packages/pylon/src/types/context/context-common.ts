@@ -78,6 +78,21 @@ export type PylonCommonContext = {
 
   hermes?: IHermesSession;
   bus?: IIrisSession;
+  /**
+   * The EVICTABLE ephemeral session (`allkeys-lru`) — throwaway data whose loss
+   * costs at most a recomputation. It exists so a consumer needing a scratch
+   * cache does not reach for `ctx.kv` and put evictable churn in the
+   * `noeviction` instance, which is the exact failure the source split prevents:
+   * a rate-limit bucket must never be able to push a `Session` out.
+   *
+   * Falls back to the `kv` source when the deployment configured no `cache`, so
+   * a single-store deployment still gets a working `ctx.cache`. Even then it is
+   * its OWN session, never `ctx.kv` itself — session identity stays the same
+   * whether or not the stores are split, so splitting them later changes no
+   * consumer code. Writes are visible across both: a session is a lightweight
+   * handle over the source's shared pool, not an isolated transaction.
+   */
+  cache?: IProteusSession;
   kv?: IProteusSession;
   db?: IProteusSession;
 

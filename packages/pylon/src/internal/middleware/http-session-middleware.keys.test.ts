@@ -3,6 +3,7 @@ import { AesKit } from "@lindorm/aes";
 import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import type { IProteusSource } from "@lindorm/proteus";
 import {
   createMockProteusSource,
   createMockRepository,
@@ -14,7 +15,7 @@ import { createHttpCookiesMiddleware } from "./http-cookies-middleware.js";
 import { createHttpSessionMiddleware } from "./http-session-middleware.js";
 
 /**
- * A deployment's two flat key scopes: `cookies` and `session`. Under the
+ * A deployment's two flat key scopes: `cookies` and `auth.session`. Under the
  * settings-declare-keys / configured-key-⇒-default-on model, naming a role's key
  * is what turns it on — there are no `encrypted`/`signed` session booleans, and
  * verification is DERIVED from the signature condition.
@@ -22,7 +23,7 @@ import { createHttpSessionMiddleware } from "./http-session-middleware.js";
 type Keys = { cookie?: PylonCookieSettings; session?: PylonCookieSettings };
 
 /**
- * The session key CHAIN — `session.<role> ?? cookie.<role>` — end to end, through
+ * The session key CHAIN — `auth.session.<role> ?? cookies.<role>` — end to end, through
  * the real cookie middleware, a real aegis and a real vault.
  *
  * A pylon session IS a cookie: with a kv store the cookie carries the id and the
@@ -67,7 +68,6 @@ type Ctx = {
   set: Mock;
   logger: ReturnType<typeof createMockLogger>;
   state: any;
-  kv?: any;
   cookies?: any;
   session?: any;
 };
@@ -119,9 +119,11 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     keys: Keys,
     options: PylonSessionSettings,
     handler: () => Promise<void>,
+    kv?: IProteusSource,
   ): Promise<void> => {
     const cookies = createHttpCookiesMiddleware(keys.cookie);
     const middleware = createHttpSessionMiddleware(
+      kv,
       { ...options, ...keys.session },
       keys.cookie,
     );
@@ -134,7 +136,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
 
     cookieSigKey = KryptosKit.generate.auto({
       algorithm: "HS256",
@@ -213,7 +215,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     test("a session with NO session keys signs and seals with the COOKIE keys", async () => {
       const ctx = buildCtx();
 
-      await run(ctx, { cookie: COOKIE_KEYS }, { enabled: false }, async () => {
+      await run(ctx, { cookie: COOKIE_KEYS }, { enabled: true }, async () => {
         await ctx.session.set(session());
       });
 
@@ -235,7 +237,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       await run(
         ctx,
         { cookie: COOKIE_KEYS, session: SESSION_KEYS },
-        { enabled: false },
+        { enabled: true },
         async () => {
           await ctx.session.set(session());
           await ctx.cookies.set(
@@ -266,7 +268,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       await run(
         ctx,
         { cookie: COOKIE_KEYS, session: { encryption: SESSION_KEYS!.encryption } },
-        { enabled: false },
+        { enabled: true },
         async () => {
           await ctx.session.set(session());
         },
@@ -289,7 +291,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     test("rotating the signing key does not invalidate live cookies", async () => {
       const before = buildCtx();
 
-      await run(before, { cookie: COOKIE_KEYS }, { enabled: false }, async () => {
+      await run(before, { cookie: COOKIE_KEYS }, { enabled: true }, async () => {
         await before.session.set(session());
       });
 
@@ -309,7 +311,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const after = buildCtx(cookieHeader(before));
 
-      await run(after, { cookie: COOKIE_KEYS }, { enabled: false }, async () => {
+      await run(after, { cookie: COOKIE_KEYS }, { enabled: true }, async () => {
         // A fresh write picks the rotated key…
         await after.session.set(session());
       });
@@ -333,7 +335,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const write = buildCtx();
 
-      await run(write, keys, { enabled: false }, async () => {
+      await run(write, keys, { enabled: true }, async () => {
         await write.session.set(session());
       });
 
@@ -341,7 +343,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const read = buildCtx(cookieHeader(write));
 
-      await run(read, keys, { enabled: false }, async () => {});
+      await run(read, keys, { enabled: true }, async () => {});
 
       expect(read.state.session).toEqual(
         expect.objectContaining({ id: session().id, subject: session().subject }),
@@ -370,7 +372,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const write = buildCtx();
 
-      await run(write, keys, { enabled: false }, async () => {
+      await run(write, keys, { enabled: true }, async () => {
         await write.session.set(session());
       });
 
@@ -378,7 +380,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const read = buildCtx(cookieHeader(write));
 
-      await run(read, keys, { enabled: false }, async () => {});
+      await run(read, keys, { enabled: true }, async () => {});
 
       expect(read.state.session).toEqual(expect.objectContaining({ id: session().id }));
     });
@@ -393,7 +395,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       await run(
         ctx,
         { cookie: COOKIE_KEYS, session: SESSION_KEYS },
-        { enabled: false },
+        { enabled: true },
         async () => {
           await ctx.session.set(session());
         },
@@ -423,8 +425,9 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     test("kv session — the cookie carries the (sealed) id, the record's tokens are sealed with the resolved session enc key", async () => {
       const ctx = buildCtx();
       const kv = await createMockProteusSource();
-      kv.repository.mockReturnValue(repository);
-      ctx.kv = kv;
+      kv.session.mockReturnValue({
+        repository: vi.fn().mockReturnValue(repository),
+      } as any);
 
       await run(
         ctx,
@@ -433,6 +436,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
         async () => {
           await ctx.session.set(session());
         },
+        kv,
       );
 
       const value = setCookies(ctx)["pylon_session"];
@@ -467,7 +471,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       run(
         ctx,
         { cookie: { signature: { condition: { purpose: "no-such-purpose" } } } },
-        { enabled: false },
+        { enabled: true },
         async () => {
           await ctx.session.set(session());
         },
@@ -487,7 +491,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       run(
         ctx,
         { cookie: { encryption: { condition: { purpose: "no-such-purpose" } } } },
-        { enabled: false },
+        { enabled: true },
         async () => {
           await ctx.session.set(session());
         },

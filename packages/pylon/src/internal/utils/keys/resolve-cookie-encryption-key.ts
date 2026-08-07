@@ -17,8 +17,8 @@ import type { PylonEncKey } from "../../../types/index.js";
  * recipient key we could never decrypt with.
  *
  * The selector is REQUIRED, and it is per-cookie: the caller hands over the key
- * the cookie itself names, or the deployment's `keys.cookie.encryption` (the
- * session cookie chains `keys.session.encryption ?? keys.cookie.encryption`).
+ * the cookie itself names, or the deployment's `cookies.encryption` (the
+ * session cookie chains `auth.session.encryption ?? cookies.encryption`).
  * Falling back to the floor alone would query the vault's default set — the
  * PUBLISHED keys — and seal cookies with the JWKS token key. This mirrors
  * proteus's `unnamed_encryption_key`: "which key encrypts this" must not have an
@@ -34,7 +34,7 @@ export const resolveCookieEncryptionKey = async (
       title: "Cookie Encryption Key Not Configured",
       type: "urn:lindorm:pylon:error:cookie_encryption_key_not_configured",
       details:
-        'A cookie was set with `encrypted: true`, but no cookie encryption key is configured; name the key that seals cookies in the pylon options (`keys.cookie.encryption`, e.g. `{ condition: { purpose: "cookie", publish: false } }`). A session cookie chains to it — `keys.session.encryption ?? keys.cookie.encryption` — so naming the cookie key is what makes any cookie encryptable. Pylon will not guess one: the vault\'s default set is the published keys, so a guess would seal cookies with the JWKS token key.',
+        'A cookie was set with `encrypted: true`, but no cookie encryption key is configured; name the key that seals cookies in the pylon options (`cookies.encryption`, e.g. `{ condition: { purpose: "cookie", publish: false } }`). A session cookie chains to it — `auth.session.encryption ?? cookies.encryption` — so naming the cookie key is what makes any cookie encryptable. Pylon will not guess one: the vault\'s default set is the published keys, so a guess would seal cookies with the JWKS token key.',
       data: { floor: ENVELOPE_FLOOR },
     });
   }
@@ -58,7 +58,7 @@ export const resolveCookieEncryptionKey = async (
         title: "Cookie Encryption Key Not Found",
         type: "urn:lindorm:pylon:error:cookie_encryption_key_not_found",
         details:
-          "The amphora holds no usable key matching the configured cookie encryption key (`keys.cookie.encryption`, or `keys.session.encryption` for the session cookie); add the key to the vault (the kryptos rotation worker mints the keys it is given) or correct the condition. Note that amphora queries the PUBLISHED set by default — an internal cookie key needs `publish: false`.",
+          "The amphora holds no usable key matching the configured cookie encryption key (`cookies.encryption`, or `auth.session.encryption` for the session cookie); add the key to the vault (the kryptos rotation worker mints the keys it is given) or correct the condition. Note that amphora queries the PUBLISHED set by default — an internal cookie key needs `publish: false`.",
         data: { query },
         debug: { error: (error as Error).message },
       });
@@ -71,7 +71,7 @@ export const resolveCookieEncryptionKey = async (
       title: "Cookie Encryption Key Policy Violation",
       type: "urn:lindorm:pylon:error:cookie_encryption_key_policy_violation",
       details:
-        'The key named as the cookie encryption key (`keys.cookie.encryption`, or `keys.session.encryption` for the session cookie) cannot seal a cookie: an encryption key must have use "enc" and a private/secret half — a cookie is reopened by this same server — and it must be active, so a key that has expired, or whose notBefore has not yet passed, cannot seal a new cookie.',
+        'The key named as the cookie encryption key (`cookies.encryption`, or `auth.session.encryption` for the session cookie) cannot seal a cookie: an encryption key must have use "enc" and a private/secret half — a cookie is reopened by this same server — and it must be active, so a key that has expired, or whose notBefore has not yet passed, cannot seal a new cookie.',
       data: {
         kid: kryptos.id,
         use: kryptos.use,

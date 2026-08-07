@@ -30,7 +30,7 @@ import { Logger } from "@lindorm/logger";
 import { Pylon, PylonRouter, useHandler } from "@lindorm/pylon";
 
 const logger = new Logger({ readable: true });
-const amphora = new Amphora({ domain: "https://api.example.com", logger });
+const amphora = new Amphora({ issuer: "https://api.example.com", logger });
 
 const router = new PylonRouter();
 
@@ -94,6 +94,7 @@ const app = new Pylon({
 
   db: proteusSource,
   kv: keyValueSource,
+  cache: cacheSource, // optional — defaults to kv
   bus: irisSource,
 
   setup: async () => {
@@ -111,10 +112,35 @@ await app.start();
 await app.stop();
 ```
 
-Pylon distinguishes two storage roles, both `IProteusSource`:
+#### Source roles
 
-- **`db`** — the durable source (exposed per-request as `ctx.db`). Backs durable features (`audit`, `webhook`, `kryptos`), which may each override it with their own `db`.
-- **`kv`** — the ephemeral source (redis in production, a proteus memory-driver source in dev/test), exposed per-request as `ctx.kv`. Backs ephemeral features (`rateLimit`, `session`, `rooms`, `cache`, `auth`), which may each override it with their own `kv`.
+Pylon takes **four** sources, and where each built-in entity lives is fixed — there are no per-feature source overrides.
+
+| Role    | Type             | Per-request | Backs                                                                |
+| ------- | ---------------- | ----------- | -------------------------------------------------------------------- |
+| `db`    | `IProteusSource` | `ctx.db`    | `kryptos`, `webhook`, `audit` — durable and relational               |
+| `kv`    | `IProteusSource` | `ctx.kv`    | `session`, `rooms` presence — authoritative, **must not be evicted** |
+| `cache` | `IProteusSource` | `ctx.cache` | `responseCache`, `rateLimit`, the auth caches — **evictable**        |
+| `bus`   | `IIrisSource`    | `ctx.bus`   | `queue`, `webhook` dispatch, `audit` publication                     |
+
+**`cache` defaults to `kv` when unset**, so a single-instance deployment configures one ephemeral store and nothing changes for it — `ctx.cache` still works, it just points at the same instance as `ctx.kv`.
+
+Reach for `ctx.cache` for anything throwaway. Writing evictable churn through `ctx.kv` puts it in the `noeviction` instance, which is the exact failure this split exists to prevent.
+
+The split criterion is one question — **is eviction under memory pressure acceptable for this data?** — which is exactly what a Redis `maxmemory-policy` answers. Two populations with opposite needs used to share one instance: evict a `Session` to make room for a rate-limit bucket and a traffic spike logs users out.
+
+- **`kv` → `noeviction`.** Losing a `Session` or a `Presence` record loses state a user can see.
+- **`cache` → `allkeys-lru`.** Losing a cached response, a cached introspection answer or a rate-limit counter costs work, never state.
+
+⚠ **Use `allkeys-lru` for `cache`, not `allkeys-random`.** Random eviction is as likely to drop the counter of an _actively attacking_ client as an idle one, which weakens the rate limit precisely when it matters; LRU keeps hot buckets — the ones under attack — resident.
+
+| Entity                                                                                                             | Source                                                                                                               |
+| ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `Kryptos`, `WebhookSubscription`, `RequestAuditLog`, `DataAuditLog`                                                | `db`                                                                                                                 |
+| `Session`, `Presence`                                                                                              | `kv`                                                                                                                 |
+| `CachedResponse`, `CachedIntrospection`, `CachedUserinfo`, `RateLimitFixed`, `RateLimitSliding`, `RateLimitBucket` | `cache`                                                                                                              |
+| `Job`, `WebhookRequest`, `WebhookDispatch`, `RequestAudit`, `DataAuditChange`                                      | `bus`                                                                                                                |
+| `ConduitCachedResponse`                                                                                            | consumer-placed — `createProteusCacheDriver(source)` takes the source you hand it; Pylon never registers this entity |
 
 | Method / property | Description                                                              |
 | ----------------- | ------------------------------------------------------------------------ |
@@ -189,7 +215,8 @@ ctx.entities;    // entity registry
 ctx.logger;      // per-request scoped ILogger
 
 ctx.db?;         // IProteusSession — durable source, when configured
-ctx.kv?;         // IProteusSession — ephemeral source, when configured
+ctx.kv?;         // IProteusSession — authoritative ephemeral source, when configured
+ctx.cache?;      // IProteusSession — evictable ephemeral source (falls back to kv)
 ctx.bus?;        // IIrisSession when configured
 ctx.hermes?;     // IHermesSession when configured
 
@@ -571,7 +598,7 @@ router.post(
 | `emit(target, event, data?)`      | yes  | yes    | Emit a Pylon envelope to the target                            |
 | `broadcast(target, event, data?)` | —    | yes    | Like `emit` but excludes the calling socket                    |
 
-`presence` requires `rooms.presence: true` and an ephemeral source (`rooms.kv ?? kv`) — Pylon registers a `Presence` entity at startup and writes a record on each `join`.
+`presence` requires `rooms.presence: true` and a `kv` source — Pylon registers a `Presence` entity at startup and writes a record on each `join`. It lives in `kv`, not `cache`: an evicted presence record silently drops a member from a live room.
 
 ### Redis adapter
 
@@ -653,10 +680,9 @@ An opaque credential costs one introspection call per request, and every profile
 
 ```typescript
 new Pylon({
-  kv: keyValueSource,
+  cache: cacheSource, // or just `kv` — `cache` falls back to it
   auth: {
-    driver: new OpenIdResourceDriver({ issuer, clientId, clientSecret }),
-    kv: authKeyValueSource, // optional — falls back to the top-level kv
+    driver: new OpenIdResourceDriver({ clientId, clientSecret }),
     cache: {
       enabled: true,
       introspection: { ttl: "10 seconds" }, // or `false` to switch this half off
@@ -671,8 +697,9 @@ new Pylon({
 | `cache.enabled`       | Off when the block is absent. RFC 7662 §5 expects a deployment to be able to refuse caching. **Cache policy only** — the capabilities are `driver.introspect` / `driver.userinfo` |
 | `cache.introspection` | `false` switches introspection caching off. `ttl` is the deployment default; built-in `10 seconds`                                                                                |
 | `cache.userinfo`      | `false` switches userinfo caching off. `ttl` is the deployment default; built-in `5 minutes`                                                                                      |
-| `kv`                  | Overrides the top-level `kv` for both. **No source ⇒ no cache** — the driver is called every request                                                                              |
 | `encryption`          | KEK selector for both stored payloads. Default `{ condition: { purpose: "pylon:kek" } }`                                                                                          |
+
+Both entities live in the top-level `cache` source (falling back to `kv`) — a cached answer is disposable by construction. **No ephemeral source ⇒ no cache**: the driver is called every request, without error.
 
 ⚠ **The two TTLs are not the same kind of number, which is why there is no shared one.** Introspection's IS the revocation window: RFC 7662 §5 warns that caching opens "a window during which a revoked token could be used at the protected resource", so it is measured in seconds — for `active: false` answers as much as for live ones. An entry is additionally bounded by the token's own `exp`, and caching to that `exp` is explicitly _not_ what this does: an opaque token that is never re-checked is a JWT without revocation. Userinfo's is a staleness tolerance on profile claims — no authorization decision rides on it — so it is measured in minutes.
 
@@ -782,7 +809,7 @@ router.use(
 );
 ```
 
-`useRateLimit` requires `rateLimit: { enabled: true }` on the constructor (which also wires the entities into the ephemeral source, `rateLimit.kv ?? kv`). HTTP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `X-RateLimit-Strategy`; rejected requests also include `Retry-After`.
+`useRateLimit` requires `rateLimit: { enabled: true }` on the constructor (which also wires the entities into the evictable source, `cache ?? kv`). HTTP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `X-RateLimit-Strategy`; rejected requests also include `Retry-After`.
 
 When `rateLimit.window` and `rateLimit.max` are set on the constructor, Pylon installs a global rate-limit middleware automatically.
 
@@ -818,8 +845,9 @@ router.get(
 ```
 
 `useCache(ttl, scope, options?)` slots after `useSchema` (it folds `ctx.data` into the
-key) and before `useHandler`. It requires `cache: { enabled: true }` on the constructor,
-which wires the `CachedResponse` entity into the ephemeral source (`cache.kv ?? kv`).
+key) and before `useHandler`. It requires `responseCache: { enabled: true }` on the
+constructor, which wires the `CachedResponse` entity into the evictable source
+(`cache ?? kv`).
 
 - `ttl` accepts a `ReadableTime` (e.g. `"60s"`) or a number of milliseconds.
 - `scope`:
@@ -853,7 +881,7 @@ collide with a CDN/proxy's own `X-Cache` in the response chain):
 Concurrent misses for the same key are coalesced in-process via single-flight: only one
 handler runs and its result is replayed to the waiters. This is per-Pylon-process and **not**
 distributed — across multiple containers each process may run the handler once, which is
-acceptable by design (the shared `kv` source still de-duplicates the stored entry). A
+acceptable by design (the shared `cache` source still de-duplicates the stored entry). A
 cache backend outage degrades gracefully: read/write failures are logged and the handler is
 served, never failing the request.
 
@@ -870,7 +898,7 @@ router.use(
 );
 ```
 
-`useAuditLog` requires `audit: { enabled: true }` on the constructor and an Iris source (either `audit.bus` or `bus`). Each request publishes a `RequestAudit` message containing the endpoint, method, transport, status, duration, source IP, session id, user agent, request id, correlation id, actor, and the (optionally sanitised) body. Set `audit.entities` to a list of entity classes for entity-level change tracking — Pylon installs Proteus listeners on those entities and persists field-level diffs into `DataAuditLog`.
+`useAuditLog` requires `audit: { enabled: true }` on the constructor and a `bus` source. Each request publishes a `RequestAudit` message containing the endpoint, method, transport, status, duration, source IP, session id, user agent, request id, correlation id, actor, and the (optionally sanitised) body. Set `audit.entities` to a list of entity classes for entity-level change tracking — Pylon installs Proteus listeners on those entities and persists field-level diffs into `DataAuditLog`.
 
 ### Conduits (HTTP clients)
 
@@ -920,13 +948,24 @@ router.use(
 
 Pylon talks to an identity provider through an **auth driver**. The driver owns everything that varies by provider — where the endpoints are, how the authorization query is spelled, how the token request is encoded and authenticated, what userinfo and introspection look like, and whether logging out is a redirect, a revocation, or nothing at all. Pylon keeps everything a driver could weaken by omission: `state`, `nonce`, PKCE, cookie sealing, the `redirect_uri` allowlist, token verification, session assembly and the routes themselves.
 
+**⭐ Amphora fetches, the driver shapes.** Amphora owns every issuer and every key, and does all of its fetching at ITS setup: `amphora.internal` is this service's own identity, `amphora.idp` the single upstream, `amphora.external` any foreign ones. A driver declares no issuer of its own — **which scope a deployment uses is stated by WHICH DRIVER it picks**, and `endpoints()` is synchronous so a driver that tried to fetch would not compile.
+
 ```typescript
+import { Amphora } from "@lindorm/amphora";
 import { OpenIdDriver } from "@lindorm/pylon";
 
+// The issuer is declared HERE, once. This registration is what fetches the
+// discovery document and the provider's keys.
+const amphora = new Amphora({
+  logger,
+  issuer: "https://api.example.com",
+  idp: { issuer: "https://auth.example.com" },
+});
+
 const app = new Pylon({
+  amphora,
   auth: {
     driver: new OpenIdDriver({
-      issuer: "https://auth.example.com",
       clientId: "my-client-id",
       clientSecret: "my-client-secret",
       authorize: { scope: ["openid", "profile", "email"] },
@@ -937,8 +976,8 @@ const app = new Pylon({
       errorRedirect: "/error",
       dynamicRedirectDomains: ["https://app.example.com"],
     },
+    session: { enabled: true },
   },
-  session: { enabled: true },
   // …
 });
 ```
@@ -947,31 +986,42 @@ const app = new Pylon({
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `driver`             | **Required.** How pylon talks to the provider — see the drivers below                                                             |
 | `router`             | Mounts the login/logout routes under `pathPrefix`. Omit it entirely for a pure resource server                                    |
-| `kv`                 | Source for the driver-response caches. Overrides the top-level `kv`                                                               |
+| `session`            | The session cookie and its `Session` store — see [Sessions](#sessions)                                                            |
 | `encryption`         | KEK selector for the cached payloads. Default `{ condition: { purpose: "pylon:kek" } }`                                           |
 | `cache`              | Driver-response caching — RFC 7662 introspection and OIDC Core §5.3 userinfo; see [Driver-response cache](#driver-response-cache) |
 | `refresh`            | When to auto-refresh a session's tokens                                                                                           |
 | `defaultTokenExpiry` | Fallback session lifetime when the token response carries no expiry. Default `1d`                                                 |
 
-Client credentials, the issuer and the authorization request's defaults are the **provider's**, so they live on the driver, not on `auth`.
+Client credentials and the authorization request's defaults are the **provider's**, so they live on the driver, not on `auth`. The **issuer** lives on neither — it is amphora's.
 
 ### Drivers
 
-| Driver                 | Capabilities                                                   | Use for                                                                                               |
-| ---------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `OpenIdDriver`         | Everything, backed by `.well-known/openid-configuration`       | Any standard OP — tyr, Auth0, Google                                                                  |
-| `OpenIdResourceDriver` | `introspect` · `userinfo` · `subject` only                     | An API service that validates tokens and never logs anyone in                                         |
-| `Auth0Driver`          | `OpenIdDriver`, with the resource indicator sent as `audience` | Auth0 tenants without the RFC 8707 compatibility profile                                              |
-| `PylonAuthDriverBase`  | The OAuth2 mechanics, with `endpoints()` abstract              | A provider that publishes no discovery document (GitHub, Discord) — return the endpoints as a literal |
+| Driver                 | Reads                        | Capabilities                                                   | Use for                                                                                               |
+| ---------------------- | ---------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `OpenIdDriver`         | `amphora.idp`                | Everything, backed by `.well-known/openid-configuration`       | Any standard OP — tyr, Auth0, Google                                                                  |
+| `OpenIdResourceDriver` | `amphora.idp`                | `introspect` · `userinfo` · `subject` only                     | An API service that validates tokens and never logs anyone in                                         |
+| `Auth0Driver`          | `amphora.idp`                | `OpenIdDriver`, with the resource indicator sent as `audience` | Auth0 tenants without the RFC 8707 compatibility profile                                              |
+| `JwtDriver`            | `amphora.internal` OR `.idp` | `endpoints()` only — verify-only, no network, no client id     | A service that mints its own tokens, or an upstream that publishes no discovery document              |
+| `PylonAuthDriverBase`  | whatever the subclass reads  | The OAuth2 mechanics, with `endpoints()` abstract              | A provider that publishes no discovery document (GitHub, Discord) — return the endpoints as a literal |
+
+`JwtDriver` is the smallest possible driver: it pins one of amphora's two own-side issuer scopes and returns `null` for every endpoint.
+
+```typescript
+new JwtDriver({ issuer: "self" }); // this service IS the issuer → amphora.internal
+new JwtDriver({ issuer: "idp" }); //  the registered upstream    → amphora.idp
+```
+
+The scope is **required and has no default**: a service can federate, holding its own issuer _and_ an upstream, so which one its tokens come from is not derivable. An unconfigured scope throws by name — pylon's `self_issuer_not_configured`, or amphora's own `idp_not_configured` / `idp_issuer_unresolved` (registered, but with no issuer settled yet).
+
+Use it when `OpenIdResourceDriver` cannot serve the upstream: an amphora `idp` may be registered by an issuer + `jwksUri` pair with no `.well-known/openid-configuration` behind it, and the resource driver needs that document.
 
 **Every capability method is optional, and an omitted method IS the capability declaration.** There is no flag that can disagree with reality: a provider with no refresh grant simply has no `refresh`, and pylon reports the configured mode as unhonourable rather than silently never refreshing.
 
 ```typescript
 class GitHubDriver extends PylonAuthDriverBase {
-  async endpoints() {
+  endpoints() {
     return {
       issuer: "https://github.com",
-      jwksUri: null,
       authorizationEndpoint: "https://github.com/login/oauth/authorize",
       tokenEndpoint: "https://github.com/login/oauth/access_token",
       userinfoEndpoint: "https://api.github.com/user",
@@ -983,7 +1033,9 @@ class GitHubDriver extends PylonAuthDriverBase {
 }
 ```
 
-Drivers are not required to extend anything — `IPylonAuthDriver` is the contract. A driver never receives the request context, only a narrow read-only one (`aegis`, `amphora`, a correlation-tagged `conduit`, `environment`, `logger`), so it cannot touch a cookie or the session even deliberately. `aegis` grants no authority `amphora` did not already carry — it is a wrapper over the same vault — it is there so a driver can mint the signed client assertion below.
+Drivers are not required to extend anything — `IPylonAuthDriver` is the contract. A driver never receives the request context, only a narrow read-only one (`aegis`, `amphora`, a correlation-tagged `conduit`, `environment`, `kv`, `logger`), so it cannot touch a cookie or the session even deliberately. `aegis` grants no authority `amphora` did not already carry — it is a wrapper over the same vault — it is there so a driver can mint the signed client assertion below.
+
+`kv` is pylon's **authoritative** ephemeral source as a request-scoped `IProteusSession` (this request's logger and hook meta already attached), `undefined` when the deployment configured none. It is there for a driver that resolves an opaque token against its own store rather than an HTTP introspection endpoint — an authoritative lookup, which is why it is `kv` and never the evictable `cache`. It is the only storage on this seam: still no cookies, no session writes, no `ctx.state`.
 
 ### Client authentication
 
@@ -1005,7 +1057,6 @@ The RFC 8705 mTLS methods (`tls_client_auth`, `self_signed_tls_client_auth`) are
 
 ```typescript
 new OpenIdDriver({
-  issuer: "https://auth.example.com",
   clientId: "my-client-id",
   clientAssertion: {
     key: { condition: { purpose: "client_assertion" } }, // an amphora key…
@@ -1062,18 +1113,18 @@ A session that holds no refresh token — one established without `offline_acces
 
 `ctx.auth.userinfo()` answers _who is this user?_ — it parses the id token locally when possible and falls back to the IdP's userinfo endpoint. `ctx.auth.introspect()` answers _is this token valid, what can it do, when does it expire?_.
 
-| `ctx.auth`             | Available on  | Notes                                                                                                  |
-| ---------------------- | ------------- | ------------------------------------------------------------------------------------------------------ |
-| `capabilities`         | HTTP + socket | `{ introspect, userinfo }`, derived from the driver — never configured                                 |
-| `introspect(token?)`   | HTTP + socket | Local fast path first, then `driver.introspect`                                                        |
-| `userinfo(token?)`     | HTTP + socket | Local fast path first, then `driver.userinfo`                                                          |
-| `await config()`       | HTTP          | `{ issuer, clientId }` resolved from the driver. A method, because the issuer comes from `endpoints()` |
-| `await login(query?)`  | HTTP          | Generates `state` / `nonce` / PKCE, then `driver.authorize`                                            |
-| `await logout(query?)` | HTTP          | `driver.logout` — returns `{ action: "redirect", url }` or `{ action: "local" }`                       |
+| `ctx.auth`             | Available on  | Notes                                                                                                                                                                  |
+| ---------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `capabilities`         | HTTP + socket | `{ introspect, userinfo }`, derived from the driver — never configured                                                                                                 |
+| `introspect(token?)`   | HTTP + socket | Local fast path first, then `driver.introspect`                                                                                                                        |
+| `userinfo(token?)`     | HTTP + socket | Local fast path first, then `driver.userinfo`                                                                                                                          |
+| `await config()`       | HTTP          | `{ issuer, clientId }` resolved from the driver. A method, because the issuer comes from `endpoints()`. Rejects for a verify-only driver, which declares no `clientId` |
+| `await login(query?)`  | HTTP          | Generates `state` / `nonce` / PKCE, then `driver.authorize`                                                                                                            |
+| `await logout(query?)` | HTTP          | `driver.logout` — returns `{ action: "redirect", url }` or `{ action: "local" }`                                                                                       |
 
 There is **no** `ctx.auth.token(grant)`. A generic "call the token endpoint with anything" makes the driver contract unenforceable, since a consumer could drive any grant straight past it; `conduitClientCredentialsMiddleware` covers raw client-credentials.
 
-The discovery-backed drivers read their endpoints off the upstream IdP's document, fetched by `amphora.idp`. Six fields are used, by their RFC wire names — only the first two are required by the specs, and a real IdP does omit the rest (Auth0 publishes no `introspection_endpoint`). ⚠ The document's own `issuer` wins over the configured one: a tenant-scoped provider templates it in the metadata it serves, and pylon verifies id_tokens against what the provider published.
+The discovery-backed drivers read their endpoints off the upstream IdP's document, fetched by `amphora.idp`. Six fields are used, by their RFC wire names — only the first two are required by the specs, and a real IdP does omit the rest (Auth0 publishes no `introspection_endpoint`). ⚠ The **issuer** is not one of them: it is whatever amphora resolved for the idp, which already prefers the document's own `issuer` over the declared one (a tenant-scoped provider templates it in the metadata it serves). Amphora files the fetched keys under that same string, so re-deriving it in the driver could only disagree with where the keys live. There is likewise no `jwks_uri` on the driver surface — amphora fetches and caches the keys, and a member pylon reads nowhere would only look like it configured verification.
 
 | Wire name                               | Spec level                                | Pylon behaviour when absent                                                                                                                                                           |
 | --------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1090,19 +1141,23 @@ The named errors are thrown at the point of use, so the local fast paths still w
 
 `ctx.session` is an auth-focused store keyed by `id`, `accessToken`, `idToken?`, `refreshToken?`, `subject`, and `scope`. It is populated by Pylon's OIDC flow but the same shape works for any OAuth2 provider. It is **not** a general-purpose state bag — for anonymous data, use `ctx.cookies` directly or model the data as a domain entity.
 
+The session lives under `auth`, next to the flow that fills it — `Session` is eight fields (`id`, `accessToken`, `expiresAt`, `idToken?`, `issuedAt`, `refreshToken?`, `scope`, `subject`) and carries no consumer payload, so it is an OAuth artifact store and the cookie is only how it is addressed.
+
 ```typescript
 const app = new Pylon({
-  session: {
-    enabled: true,
-    name: "sid",
-    domain: ".example.com",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: true,
-    expiry: "7d",
-    priority: "high",
-    // Optional flat key selectors — each role falls back to its `cookies` counterpart.
-    encryption: { condition: { purpose: "session", publish: false } },
+  auth: {
+    driver: new OpenIdDriver({
+      /* … */
+    }),
+    session: {
+      enabled: true,
+      domain: ".example.com",
+      sameSite: "lax",
+      secure: true,
+      priority: "high",
+      // Optional flat key selectors — each role falls back to its `cookies` counterpart.
+      encryption: { condition: { purpose: "session", publish: false } },
+    },
   },
   // …
 });
@@ -1113,7 +1168,18 @@ await ctx.session.del();
 await ctx.session.logout(subject);
 ```
 
-The session cookie is **signed / sealed when a key is configured** for it — `session.<role> ?? cookies.<role>` (see [Keys](#keys)). There is no separate `signed` / `encrypted` toggle: naming the key turns the role on. When `session.enabled` is true, Pylon registers the `Session` entity on the configured ephemeral source (`session.kv ?? kv`).
+`enabled` is the literal `true`, not a boolean: presence IS the intent, so omit the block to turn sessions off rather than declaring one that does nothing.
+
+Four cookie attributes are deliberately not settings, because none of them is the deployment's to choose:
+
+| Attribute  | Fixed to                  | Why                                                                                                                                                               |
+| ---------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`     | `pylon_session`           | `pylon_login_session` / `pylon_logout_session` never were configurable either, and one settable name of three does not solve a two-pylons-on-one-domain collision |
+| `httpOnly` | `true`                    | The cookie addresses an access token, an id token and a refresh token — `httpOnly: false` hands all three to any XSS                                              |
+| `encoding` | `base64url`               | The value is a store id or a sealed blob, both pylon's own opaque handle                                                                                          |
+| `expiry`   | the session's `expiresAt` | A separate max-age can only disagree with the record it addresses. `expiresAt: null` ⇒ no expiry attribute ⇒ a browser-session cookie                             |
+
+The session cookie is **signed / sealed when a key is configured** for it — `auth.session.<role> ?? cookies.<role>` (see [Keys](#keys)). There is no separate `signed` / `encrypted` toggle: naming the key turns the role on. When `auth.session.enabled` is true, Pylon registers the `Session` entity on the `kv` source — never on `cache`, since evicting a session logs the user out. With no `kv` configured the session is cookie-only: the whole session object travels in the cookie.
 
 ## Webhooks
 
@@ -1269,10 +1335,13 @@ const app = new Pylon({
     encryption: { condition: { purpose: "cookie", publish: false } },
   },
   // Optional — every role falls back to its `cookies` counterpart.
-  session: {
-    enabled: true,
-    signature: { condition: { purpose: "session", publish: false } },
-    encryption: { condition: { purpose: "session", publish: false } },
+  auth: {
+    driver,
+    session: {
+      enabled: true,
+      signature: { condition: { purpose: "session", publish: false } },
+      encryption: { condition: { purpose: "session", publish: false } },
+    },
   },
   // …
 });
@@ -1294,30 +1363,30 @@ Verification has **no selector**: it is derived from the resolved `signature`'s 
 There is no separate session key taxonomy, because there is no separate artifact. With a session store the cookie carries the session id and the tokens are sealed **at rest**; without one the **whole session object — tokens and all — travels in the cookie**. Either way it is a cookie, so each `session` selector is a per-role override of its `cookies` counterpart:
 
 ```
-session.<role> ?? cookies.<role>
+auth.session.<role> ?? cookies.<role>
 ```
 
-Name only `cookies` and one key set does everything. Name `session` too and the session cookie is signed / sealed with its **own** key — a smaller blast radius, or an asymmetric signature for session cookies specifically — while every ordinary cookie keeps using the `cookies` keys. Any cookie can do the same, per call — `signature` and `encryption` each take `true` (the deployment cookie key) or a selector (its own key): `ctx.cookies.set(name, value, { signature, encryption: true })`.
+Name only `cookies` and one key set does everything. Name `auth.session` too and the session cookie is signed / sealed with its **own** key — a smaller blast radius, or an asymmetric signature for session cookies specifically — while every ordinary cookie keeps using the `cookies` keys. Any cookie can do the same, per call — `signature` and `encryption` each take `true` (the deployment cookie key) or a selector (its own key): `ctx.cookies.set(name, value, { signature, encryption: true })`.
 
 ### Verification is derived from `signature`
 
 Verification asks: _is the key that signed this cookie one of the keys I would have signed it with?_ That **is** the signing policy — so the verification condition is the resolved `signature`'s condition:
 
 ```
-{ condition: (session.signature ?? cookies.signature).condition }
+{ condition: (auth.session.signature ?? cookies.signature).condition }
 ```
 
-Naming `session.signature` is therefore **enough**; there is no separate verification field to declare or forget, and no way to configure a session cookie that signs but cannot be read. When a `signature` is an injected `kryptos` there is no condition to inherit and the floor (`use: "sig"`) applies alone: the cookie's `.kid` already names the key. For a genuinely broader read policy on one read, pass a `PylonVerifyKey` to the per-call `ctx.cookies.get(name, { signed })`.
+Naming `auth.session.signature` is therefore **enough**; there is no separate verification field to declare or forget, and no way to configure a session cookie that signs but cannot be read. When a `signature` is an injected `kryptos` there is no condition to inherit and the floor (`use: "sig"`) applies alone: the cookie's `.kid` already names the key. For a genuinely broader read policy on one read, pass a `PylonVerifyKey` to the per-call `ctx.cookies.get(name, { signed })`.
 
 ### Rollover
 
 - **Key rotation never invalidates a live cookie.** A signature is verified against the key the cookie's own `.kid` names, and the condition matches a key _class_, not a kid — so when the rotation worker mints next year's cookie key, cookies signed by the previous one keep verifying. That is why the verification floor is `isPending: false` and **not** `isActive`: an **expired** key must keep verifying, or a rotation would log out every live session. A key whose `notBefore` has not passed cannot have signed anything, so it is refused — the `.kid` is the client's claim, and it does not get to name a key that has never been usable. Ciphertext likewise names its own key, so it keeps decrypting.
-- **Changing the signing _policy_ is different.** Introducing `session.signature: { purpose: "session" }` narrows the derived read policy to session keys, which excludes the cookie key your live session cookies were signed with — those cookies stop verifying on the next read. Plan the cutover as a rotation: keep signing with the cookie key until live sessions have expired, then introduce the session signing key.
+- **Changing the signing _policy_ is different.** Introducing `auth.session.signature: { purpose: "session" }` narrows the derived read policy to session keys, which excludes the cookie key your live session cookies were signed with — those cookies stop verifying on the next read. Plan the cutover as a rotation: keep signing with the cookie key until live sessions have expired, then introduce the session signing key.
 
 ### The rest
 
 - ⚠ **`publish: false` is load-bearing.** Amphora's default query is the **published** set, so an internal cookie/session key is unreachable without it. Omit it and you select the JWKS token key.
-- **A cookie is signed only when a signing key is named.** There is no fallback to the floor alone — it would resolve to whichever published key is newest, in practice the token key (token keys rotate twice as often as cookie keys). So no `cookies.signature` ⇒ unsigned cookies; a per-call `{ signature: true }` with none configured throws rather than guessing. Since `session` chains to `cookies`, a session cookie is signable iff a cookie signing key is named.
+- **A cookie is signed only when a signing key is named.** There is no fallback to the floor alone — it would resolve to whichever published key is newest, in practice the token key (token keys rotate twice as often as cookie keys). So no `cookies.signature` ⇒ unsigned cookies; a per-call `{ signature: true }` with none configured throws rather than guessing. Since `auth.session` chains to `cookies`, a session cookie is signable iff a cookie signing key is named.
 - **The floor is Pylon's, the selector is yours.** `use`, `hasPrivateKey` and the key's lifetime state are the minimum that makes an operation possible; they are absent from the condition type by construction, so you cannot widen them. `purpose`, `publish` and `internal` are your policy.
 - **Signing demands an active key.** `isActive: true` is on the signing floor, so an expired or not-yet-valid key never signs a cookie — including one handed to `cookies.signature` as an injected `kryptos`, which never touches the vault and is therefore time-checked by nothing else.
 - **The read side of encryption takes no selector.** Ciphertext names its own key, so `aes.decrypt` resolves it by kid.
@@ -1327,8 +1396,8 @@ Naming `session.signature` is therefore **enough**; there is no separate verific
 
 Two probes are always auto-mounted:
 
-- **`GET /health` — liveness.** Verifies I/O (`db`/`bus`) **once**, then latches success and returns `204` on every later call **without re-pinging**. The process proves it came up (I/O reachable once), but a later DB/broker blip never flips liveness — restarting the container can't fix the DB, it only thrashes. Until the first successful check it returns `503`.
-- **`GET /ready` — readiness.** Pings live I/O on **every** call, reflecting current state — for load-balancer / readiness probes. Returns `204` when healthy (or when there's no I/O to check) and `503 Service Unavailable` with `code: "health_check_failed"` + `data.failures` when a source is down.
+- **`GET /health` — liveness.** Verifies the durable I/O (`db`/`bus`) **once**, then latches success and returns `204` on every later call **without re-pinging**. The process proves it came up (I/O reachable once), but a later DB/broker blip never flips liveness — restarting the container can't fix the DB, it only thrashes. Until the first successful check it returns `503`. It deliberately does **not** cover `kv`/`cache`: readiness already drains a pod whose ephemeral store is unreachable, and restarting cannot fix that either.
+- **`GET /ready` — readiness.** Pings **every configured source** — `db`, `kv`, `cache`, `bus` — on **every** call, reflecting current state, for load-balancer / readiness probes. Roles the deployment did not configure are simply absent, not a failure. Returns `204` when healthy (or when there's no I/O to check) and `503 Service Unavailable` with `code: "health_check_failed"` + `data.failures` (the role names) when a source is down. `kv` and `cache` are in there because they can be separately deployed instances: without them a pod whose session store is unreachable reports green and every login on it fails. When `cache` falls back to `kv` the shared instance is pinged **once**, reported under `kv`.
 
 Override or disable either via `callbacks` (`null` = a pure `204` probe, no check):
 
@@ -1358,13 +1427,13 @@ const app2 = new Pylon({
 
 Mounted under `/.well-known`:
 
-| Route                           | Description                                                                                                                                 |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /jwks.json`                | The published JWKS, served straight from the Amphora                                                                                        |
-| `GET /oauth-protected-resource` | RFC 9728 protected resource metadata: `{ resource: <domain>, authorization_servers: [<auth.issuer>] }`. Requires `domain` and `auth.issuer` |
-| `GET /right-to-be-forgotten`    | Bearer-authorized erasure hook — invokes `callbacks.rightToBeForgotten`, returns `204`                                                      |
-| `GET /change-password`          | Redirects to `changePasswordUri`                                                                                                            |
-| `GET /security.txt`             | Opt-in — rendered from `securityTxt`                                                                                                        |
+| Route                           | Description                                                                                                                                                              |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /jwks.json`                | The published JWKS, served straight from the Amphora                                                                                                                     |
+| `GET /oauth-protected-resource` | RFC 9728 protected resource metadata: `{ resource: <domain>, authorization_servers: [<driver issuer>] }`. Requires `domain` and an `auth` driver that resolves an issuer |
+| `GET /right-to-be-forgotten`    | Bearer-authorized erasure hook — invokes `callbacks.rightToBeForgotten`, returns `204`                                                                                   |
+| `GET /change-password`          | Redirects to `changePasswordUri`                                                                                                                                         |
+| `GET /security.txt`             | Opt-in — rendered from `securityTxt`                                                                                                                                     |
 
 Pylon does **not** serve a discovery document. A discovery document is derived from what a service actually implements — its policy registry, its served keys, its implemented grants — so an authorization server owns and mounts its own `/.well-known` router:
 
@@ -1555,7 +1624,7 @@ The package re-exports three Proteus entities for the framework's built-in featu
 import { DataAuditLog, RequestAuditLog, WebhookSubscription } from "@lindorm/pylon";
 ```
 
-The remaining entities (`Session`, `Kryptos`, `Presence`, `CachedResponse`, `CachedIntrospection`, `CachedUserinfo`, rate-limit entities) are wired into the configured Proteus source automatically when their feature is enabled — they are not part of the public import surface.
+The remaining entities (`Session`, `Kryptos`, `Presence`, `CachedResponse`, `CachedIntrospection`, `CachedUserinfo`, rate-limit entities) are wired into the source their role dictates automatically when their feature is enabled — see [Source roles](#source-roles) — and are not part of the public import surface. `ConduitCachedResponse` is the exception: it is **consumer-placed**, registered on whichever source you hand `createProteusCacheDriver`, never by Pylon.
 
 ## Command-line tools
 

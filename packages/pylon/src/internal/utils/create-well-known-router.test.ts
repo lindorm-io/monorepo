@@ -18,7 +18,7 @@ describe("createWellKnownRouter", () => {
     auth: {
       driver: {
         clientId: "client-id",
-        endpoints: async () => ({ issuer: "https://auth.lindorm.io" }),
+        endpoints: () => ({ issuer: "https://auth.lindorm.io" }),
       },
     },
   };

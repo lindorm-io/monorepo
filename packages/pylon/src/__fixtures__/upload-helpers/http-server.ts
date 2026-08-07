@@ -51,7 +51,11 @@ export const createUploadServer = async (
   app.use(router.routes() as any).use(router.allowedMethods() as any);
 
   const server = http.createServer(app.callback());
-  await new Promise<void>((resolve) => server.listen(0, () => resolve()));
+  // Bind the SAME address the tests dial (127.0.0.1), never the wildcard —
+  // `listen(0)` binds `::`, and the ephemeral allocator does not treat a
+  // 127.0.0.1-specific listener as a conflict, so it can hand out a port a
+  // foreign local app already owns and the tests read that app's responses.
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", () => resolve()));
   const port = (server.address() as AddressInfo).port;
 
   return {

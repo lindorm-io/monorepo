@@ -2,9 +2,9 @@ import { PylonError } from "../../../errors/PylonError.js";
 import type { PylonSettings } from "../../../types/index.js";
 
 export const assertSessionCookieSafeForSockets = (
-  options: Pick<PylonSettings, "session" | "cors">,
+  options: Pick<PylonSettings, "auth" | "cors">,
 ): void => {
-  if (!options.session) return;
+  if (!options.auth?.session) return;
 
   const allowOrigins = options.cors?.allowOrigins;
 
@@ -27,7 +27,7 @@ export const assertSessionCookieSafeForSockets = (
       "Session middleware requires a non-wildcard CORS allowlist for socket transport",
       {
         details:
-          "options.cors.allowOrigins cannot be '*' when options.session is set. " +
+          "options.cors.allowOrigins cannot be '*' when options.auth.session is set. " +
           "Cookie-mode socket auth is Cross-Site WebSocket Hijacking (CSWSH) " +
           "vulnerable without an explicit origin allowlist.",
         code: "wildcard_cors_allowlist_for_session",

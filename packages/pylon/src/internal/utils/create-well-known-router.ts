@@ -46,7 +46,7 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
     // `endpoints().issuer`, never a statically configured one, so a provider
     // that only knows its concrete issuer at runtime is advertised correctly.
     const issuer = options.auth
-      ? (await options.auth.driver.endpoints(createAuthDriverContext(ctx))).issuer
+      ? options.auth.driver.endpoints(createAuthDriverContext(ctx)).issuer
       : undefined;
 
     if (!isUrlLike(issuer)) {

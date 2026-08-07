@@ -19,7 +19,7 @@ vi.mock("@lindorm/aegis", async () => ({
 }));
 
 // The deployment's selector. Pylon holds no opinion about which key signs a
-// cookie — this is what an app's `keys.cookie.signature` says.
+// cookie — this is what an app's `cookies.signature` says.
 const COOKIE_KEY: PylonSignKey = {
   condition: { purpose: "cookie", publish: false },
 };
@@ -103,7 +103,7 @@ describe("signCookie", () => {
 
     beforeEach(() => {
       amphora = new Amphora({
-        domain: "http://test.lindorm.io",
+        issuer: "http://test.lindorm.io",
         logger: createMockLogger(),
       });
     });

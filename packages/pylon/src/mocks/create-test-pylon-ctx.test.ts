@@ -26,19 +26,41 @@ describe("createTestPylonCtx", () => {
     expect(found?.value).toBe("hello");
   });
 
-  test("should back db and kv with distinct stateful sessions", async () => {
+  // Three DISTINCT stores, so a test can prove which one a consumer wrote to —
+  // the whole point of splitting the evictable `cache` off the authoritative
+  // `kv` is lost if a test cannot tell them apart.
+  test("should back db, kv and cache with distinct stateful sessions", async () => {
     const ctx = await createTestPylonCtx();
 
     expect(ctx.db).not.toBe(ctx.kv);
+    expect(ctx.cache).not.toBe(ctx.kv);
+    expect(ctx.cache).not.toBe(ctx.db);
 
     const inserted = await ctx.db!.repository(TestEntity).insert({ value: "in-db" });
 
-    // The kv session is a separate store — it does not see the db write.
+    // Neither ephemeral session sees the db write.
     expect(await ctx.kv!.repository(TestEntity).findOne({ id: inserted.id })).toBeNull();
+    expect(
+      await ctx.cache!.repository(TestEntity).findOne({ id: inserted.id }),
+    ).toBeNull();
     // The db session persists across repository() calls.
     expect(
       await ctx.db!.repository(TestEntity).findOne({ id: inserted.id }),
     ).not.toBeNull();
+  });
+
+  test("should omit ctx.cache when cache is null", async () => {
+    const ctx = await createTestPylonCtx({ cache: null });
+
+    expect(ctx.cache).toBeUndefined();
+    expect(ctx.kv).toBeDefined();
+  });
+
+  test("should use a provided cache session override", async () => {
+    const cache = (await createTestPylonCtx()).cache!;
+    const ctx = await createTestPylonCtx({ cache });
+
+    expect(ctx.cache).toBe(cache);
   });
 
   test("should expose the ecosystem mocks", async () => {

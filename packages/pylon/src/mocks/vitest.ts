@@ -21,6 +21,7 @@ export const createTestPylonCtx = async (options?: CreateTestPylonCtxOptions) =>
       conduit: createMockConduit(),
       db: await createMockProteusSession(),
       kv: await createMockProteusSession(),
+      cache: await createMockProteusSession(),
     },
     options,
   );

@@ -70,7 +70,7 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
   let tokenKey: IKryptos;
 
   beforeEach(() => {
-    amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
 
     cookieKey = cookieEncKey();
     tokenKey = publishedTokenEncKey();

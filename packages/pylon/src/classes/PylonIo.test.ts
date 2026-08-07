@@ -31,6 +31,7 @@ describe("PylonIo (handshake chain)", () => {
       cors?: any;
       session?: any;
       db?: any;
+      kv?: any;
       connectionMiddleware?: Array<any>;
     } = {},
   ): PylonIo => {
@@ -39,8 +40,9 @@ describe("PylonIo (handshake chain)", () => {
       logger: createMockLogger(),
       environment: "test",
       cors: overrides.cors,
-      session: overrides.session,
+      auth: overrides.session ? { session: overrides.session } : undefined,
       db: overrides.db,
+      kv: overrides.kv,
       socket: {
         enabled: true,
         listeners: [],
@@ -188,8 +190,6 @@ describe("PylonIo (handshake chain)", () => {
     const validSession = {
       enabled: true,
       sameSite: "lax" as const,
-      name: "pylon_session",
-      signed: false,
     };
     const validCors = { allowOrigins: ["https://app.example.com"] };
 
@@ -219,7 +219,7 @@ describe("PylonIo (handshake chain)", () => {
             amphora,
             logger: createMockLogger(),
             environment: "test",
-            session: validSession,
+            auth: { session: validSession },
             socket: { enabled: true, listeners: [] },
           } as any),
       ).toThrow(PylonError);
@@ -233,7 +233,7 @@ describe("PylonIo (handshake chain)", () => {
             logger: createMockLogger(),
             environment: "test",
             cors: { allowOrigins: "*" },
-            session: validSession,
+            auth: { session: validSession },
             socket: { enabled: true, listeners: [] },
           } as any),
       ).toThrow(PylonError);
@@ -247,7 +247,7 @@ describe("PylonIo (handshake chain)", () => {
             logger: createMockLogger(),
             environment: "test",
             cors: validCors,
-            session: { ...validSession, sameSite: "none" },
+            auth: { session: { ...validSession, sameSite: "none" } },
             socket: { enabled: true, listeners: [] },
           } as any),
       ).toThrow(PylonError);
@@ -261,7 +261,7 @@ describe("PylonIo (handshake chain)", () => {
             logger: createMockLogger(),
             environment: "test",
             cors: validCors,
-            session: { enabled: true, name: "pylon_session" },
+            auth: { session: { enabled: true } },
             socket: { enabled: true, listeners: [] },
           } as any),
       ).toThrow(PylonError);
@@ -281,7 +281,8 @@ describe("PylonIo (handshake chain)", () => {
 
       const io = createPylonIo({
         cors: validCors,
-        session: { ...validSession, kv: mockProteus },
+        kv: mockProteus,
+        session: { ...validSession },
       });
 
       await io.load();
@@ -421,5 +422,71 @@ describe("PylonIo socket.listeners option", () => {
 
     scanSpy.mockRestore();
     ofSpy.mockRestore();
+  });
+});
+
+// The socket event chain gets the same four source roles as the http one. The
+// dependencies middleware is the first entry PylonIo builds, so running it
+// against a socket-shaped ctx proves the wiring end to end rather than through
+// a spy on the constructor arguments.
+describe("PylonIo source roles", () => {
+  let http: HttpServer;
+
+  beforeEach(() => {
+    http = new HttpServer();
+  });
+
+  afterEach(() => {
+    http.close();
+  });
+
+  const dependenciesMiddleware = (overrides: Record<string, unknown>): any => {
+    const io = new PylonIo(http, {
+      amphora: new Amphora({ logger: createMockLogger() }),
+      logger: createMockLogger(),
+      environment: "test",
+      socket: { enabled: true, listeners: [] },
+      ...overrides,
+    } as any);
+
+    return (io as any).middleware[0];
+  };
+
+  const socketCtx = () => ({ logger: createMockLogger(), event: "test:event" }) as any;
+
+  const taggedSource = async (tag: string) => {
+    const source: any = await createMockProteusSource();
+    source.session = vi.fn().mockReturnValue({ tag });
+    return source;
+  };
+
+  test("should install ctx.cache from the cache source", async () => {
+    const cache = await taggedSource("cache");
+    const kv = await taggedSource("kv");
+
+    const ctx = socketCtx();
+
+    await dependenciesMiddleware({ cache, kv })(ctx, vi.fn());
+
+    expect(ctx.cache).toEqual({ tag: "cache" });
+    expect(ctx.kv).toEqual({ tag: "kv" });
+  });
+
+  test("should fall back to the kv source when no cache is configured", async () => {
+    const kv = await taggedSource("kv");
+
+    const ctx = socketCtx();
+
+    await dependenciesMiddleware({ kv })(ctx, vi.fn());
+
+    expect(ctx.cache).toEqual({ tag: "kv" });
+  });
+
+  test("should leave ctx.cache undefined when no ephemeral source is configured", async () => {
+    const ctx = socketCtx();
+
+    await dependenciesMiddleware({ db: await taggedSource("db") })(ctx, vi.fn());
+
+    expect(ctx.cache).toBeUndefined();
   });
 });

@@ -3,11 +3,11 @@ import type { AppConfig, PylonSocketData } from "../../types/index.js";
 
 type Options = {
   audit?: { enabled: boolean };
-  cache?: { enabled: boolean };
   domain?: string;
   environment?: Environment;
   name?: string;
   rateLimit?: { enabled: boolean };
+  responseCache?: { enabled: boolean };
   version?: string;
 };
 
@@ -21,7 +21,7 @@ export const initialisePylonSocketData = <D extends PylonSocketData>(
 
   const config: AppConfig = {
     audit: options.audit?.enabled ?? false,
-    cache: options.cache?.enabled ?? false,
+    cache: options.responseCache?.enabled ?? false,
     rateLimit: options.rateLimit?.enabled ?? false,
   };
 

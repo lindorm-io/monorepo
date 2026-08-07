@@ -38,7 +38,7 @@ describe("resolveCookieEncryptionKey", () => {
   let amphora: IAmphora;
 
   beforeEach(() => {
-    amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
   });
 
   // The magic is GONE, not moved: with no selector there is nothing to select

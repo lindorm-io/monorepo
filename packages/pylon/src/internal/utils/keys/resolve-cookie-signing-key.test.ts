@@ -27,7 +27,7 @@ describe("resolveCookieSigningKey", () => {
   let amphora: IAmphora;
 
   beforeEach(async () => {
-    amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
     await amphora.setup();
   });
 

@@ -1,5 +1,6 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
+import type { IProteusSource } from "@lindorm/proteus";
 import type { ILindormWorker } from "@lindorm/worker";
 import type { Server as HttpServer } from "http";
 import { createServer } from "http";
@@ -62,7 +63,7 @@ export class Pylon<
 
     options.environment = options.environment ?? "development";
     options.version = options.version ?? "0.0.0";
-    options.domain = options.domain ?? options.amphora.domain ?? "unknown";
+    options.domain = options.domain ?? options.amphora.issuer ?? "unknown";
 
     options.subscriptions = options.subscriptions ?? [];
     options.subscriptions.push(...calculateSubscriptions());
@@ -139,6 +140,10 @@ export class Pylon<
       await this.options.kv.connect();
     }
 
+    if (this.options.cache) {
+      await this.options.cache.connect();
+    }
+
     if (this.options.bus) {
       await this.options.bus.connect();
     }
@@ -159,6 +164,10 @@ export class Pylon<
 
     if (this.options.kv) {
       await this.options.kv.setup();
+    }
+
+    if (this.options.cache) {
+      await this.options.cache.setup();
     }
 
     if (this.options.bus) {
@@ -232,6 +241,10 @@ export class Pylon<
       await this.options.kv.disconnect();
     }
 
+    if (this.options.cache) {
+      await this.options.cache.disconnect();
+    }
+
     this.isSetup = false;
     this.isTeardown = true;
   }
@@ -276,9 +289,19 @@ export class Pylon<
     }, 10000).unref();
   }
 
+  /**
+   * The evictable source. Unset `cache` means the deployment runs ONE ephemeral
+   * store, so everything evictable shares `kv` — exactly the behaviour before
+   * the role existed.
+   */
+  private get cache(): IProteusSource | undefined {
+    return this.options.cache ?? this.options.kv;
+  }
+
   private async loadSources(): Promise<void> {
-    if (this.options.session?.enabled) {
-      const source = this.options.session.kv ?? this.options.kv;
+    if (this.options.auth?.session?.enabled) {
+      // Authoritative: evicting a session logs the user out.
+      const source = this.options.kv;
       if (source) {
         const { Session } = await import("../entities/Session.js");
         source.addEntities([Session]);
@@ -286,7 +309,7 @@ export class Pylon<
     }
 
     if (this.options.kryptos?.enabled) {
-      const source = this.options.kryptos.db ?? this.options.db;
+      const source = this.options.db;
       if (source) {
         const { Kryptos } = await import("../entities/Kryptos.js");
         source.addEntities([Kryptos]);
@@ -301,7 +324,7 @@ export class Pylon<
     }
 
     if (this.options.queue?.enabled) {
-      const source = this.options.queue.bus ?? this.options.bus;
+      const source = this.options.bus;
       if (source) {
         const { Job } = await import("../messages/Job.js");
         source.addMessages([Job]);
@@ -309,7 +332,7 @@ export class Pylon<
     }
 
     if (this.options.webhook?.enabled) {
-      const proteusSource = this.options.webhook.db ?? this.options.db;
+      const proteusSource = this.options.db;
       if (proteusSource) {
         const { WebhookSubscription } =
           await import("../entities/WebhookSubscription.js");
@@ -327,7 +350,7 @@ export class Pylon<
         }
       }
 
-      const irisSource = this.options.webhook.bus ?? this.options.bus;
+      const irisSource = this.options.bus;
       if (irisSource) {
         const { WebhookRequest } = await import("../messages/WebhookRequest.js");
         const { WebhookDispatch } = await import("../messages/WebhookDispatch.js");
@@ -335,8 +358,8 @@ export class Pylon<
       }
     }
 
-    if (this.options.cache?.enabled) {
-      const source = this.options.cache.kv ?? this.options.kv;
+    if (this.options.responseCache?.enabled) {
+      const source = this.cache;
       if (source) {
         const { CachedResponse } = await import("../entities/CachedResponse.js");
         source.addEntities([CachedResponse]);
@@ -344,9 +367,9 @@ export class Pylon<
     }
 
     if (this.options.auth?.cache?.enabled) {
-      // Storage sits on the FEATURE, like session/rateLimit/cache — not on the
-      // cache sub-block, which holds policy alone.
-      const source = this.options.auth.kv ?? this.options.kv;
+      // A cached introspection or userinfo answer is disposable by construction
+      // — losing one costs a round trip, nothing more — so it lives in `cache`.
+      const source = this.cache;
       if (source) {
         const encryption = this.options.auth.encryption ?? DEFAULT_KEK;
 
@@ -371,7 +394,10 @@ export class Pylon<
     }
 
     if (this.options.rateLimit?.enabled) {
-      const source = this.options.rateLimit.kv ?? this.options.kv;
+      // A lost counter costs at most one extra allowed request, so the buckets
+      // are evictable — and they are exactly the churn that must not be able to
+      // push a `Session` out of `kv`.
+      const source = this.cache;
       if (source) {
         const { RateLimitFixed } = await import("../entities/RateLimitFixed.js");
         const { RateLimitSliding } = await import("../entities/RateLimitSliding.js");
@@ -381,7 +407,9 @@ export class Pylon<
     }
 
     if (this.options.rooms?.presence) {
-      const source = this.options.rooms.kv ?? this.options.kv;
+      // Authoritative: an evicted presence record silently drops a member from
+      // a live room.
+      const source = this.options.kv;
       if (source) {
         const { Presence } = await import("../entities/Presence.js");
         source.addEntities([Presence]);
@@ -389,7 +417,7 @@ export class Pylon<
     }
 
     if (this.options.audit?.enabled) {
-      const proteusSource = this.options.audit.db ?? this.options.db;
+      const proteusSource = this.options.db;
       if (proteusSource) {
         const { RequestAuditLog } = await import("../entities/RequestAuditLog.js");
         proteusSource.addEntities([RequestAuditLog]);
@@ -400,7 +428,7 @@ export class Pylon<
         }
       }
 
-      const irisSource = this.options.audit.bus ?? this.options.bus;
+      const irisSource = this.options.bus;
       if (irisSource) {
         const { RequestAudit } = await import("../messages/RequestAudit.js");
         irisSource.addMessages([RequestAudit]);
@@ -415,8 +443,7 @@ export class Pylon<
 
   private async subscribe(): Promise<void> {
     if (this.options.audit?.enabled) {
-      const bus = this.options.audit.bus ?? this.options.bus;
-      const db = this.options.audit.db ?? this.options.db;
+      const { bus, db } = this.options;
 
       if (bus && db) {
         await setupAuditConsumer(bus, db, this.logger);
@@ -434,8 +461,7 @@ export class Pylon<
     }
 
     if (this.options.webhook?.enabled) {
-      const bus = this.options.webhook.bus ?? this.options.bus;
-      const db = this.options.webhook.db ?? this.options.db;
+      const { bus, db } = this.options;
 
       if (bus && db) {
         await setupWebhookRequestConsumer(bus, db, this.logger);

@@ -68,6 +68,22 @@ describe("PylonHttp /health (liveness)", () => {
     expect(iris.ping).toHaveBeenCalledTimes(1);
   });
 
+  // Liveness stays on the DURABLE I/O only — readiness already drains a pod
+  // whose ephemeral store is unreachable, and a restart cannot fix either one.
+  test("does not ping the ephemeral sources", async () => {
+    const cache = await createMockProteusSource();
+    const db = await createMockProteusSource();
+    const kv = await createMockProteusSource();
+
+    const pylonHttp = await createPylonHttp({ cache, db, kv });
+
+    await request(pylonHttp.callback).get("/health").expect(204);
+
+    expect(db.ping).toHaveBeenCalledTimes(1);
+    expect(kv.ping).not.toHaveBeenCalled();
+    expect(cache.ping).not.toHaveBeenCalled();
+  });
+
   test("stays 503 until the first successful check, then latches healthy", async () => {
     const proteus = await createMockProteusSource();
     proteus.ping.mockResolvedValueOnce(false);
@@ -135,6 +151,74 @@ describe("PylonHttp /ready (readiness)", () => {
       code: "health_check_failed",
       data: { failures: ["bus"] },
     });
+  });
+
+  // `kv` and `cache` can be separately deployed instances. Without them in the
+  // probe, a pod whose session store is unreachable reports ready and every
+  // login on it fails.
+  test("returns 503 when the kv source is down", async () => {
+    const db = await createMockProteusSource();
+    const kv = await createMockProteusSource();
+    kv.ping.mockResolvedValue(false);
+
+    const pylonHttp = await createPylonHttp({ db, kv });
+
+    const response = await request(pylonHttp.callback).get("/ready").expect(503);
+
+    expect(response.body.error).toMatchObject({
+      code: "health_check_failed",
+      data: { failures: ["kv"] },
+    });
+    expect(db.ping).toHaveBeenCalledTimes(1);
+  });
+
+  test("returns 503 when a separately configured cache source is down", async () => {
+    const kv = await createMockProteusSource();
+    const cache = await createMockProteusSource();
+    cache.ping.mockRejectedValue(new Error("cache down"));
+
+    const pylonHttp = await createPylonHttp({ kv, cache });
+
+    const response = await request(pylonHttp.callback).get("/ready").expect(503);
+
+    expect(response.body.error).toMatchObject({
+      code: "health_check_failed",
+      data: { failures: ["cache"] },
+    });
+    expect(kv.ping).toHaveBeenCalledTimes(1);
+  });
+
+  test("pings every configured role", async () => {
+    const bus = await createMockIrisSource();
+    const cache = await createMockProteusSource();
+    const db = await createMockProteusSource();
+    const kv = await createMockProteusSource();
+
+    const pylonHttp = await createPylonHttp({ bus, cache, db, kv });
+
+    await request(pylonHttp.callback).get("/ready").expect(204);
+
+    for (const source of [bus, cache, db, kv]) {
+      expect(source.ping).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  test("does not double-ping when cache is unset and falls back to kv", async () => {
+    const kv = await createMockProteusSource();
+
+    const pylonHttp = await createPylonHttp({ kv });
+
+    await request(pylonHttp.callback).get("/ready").expect(204);
+
+    expect(kv.ping).toHaveBeenCalledTimes(1);
+  });
+
+  test("responds 204 when only some roles are configured", async () => {
+    const kv = await createMockProteusSource();
+
+    const pylonHttp = await createPylonHttp({ kv });
+
+    await request(pylonHttp.callback).get("/ready").expect(204);
   });
 
   test("prefers a user-provided ready callback", async () => {

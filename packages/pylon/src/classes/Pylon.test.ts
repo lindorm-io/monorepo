@@ -66,7 +66,7 @@ describe("Pylon", () => {
     logger = createMockLogger();
 
     amphora = new Amphora({
-      domain: "http://test.lindorm.io",
+      issuer: "http://test.lindorm.io",
       logger,
       idp: {
         openIdConfiguration: {
@@ -283,10 +283,15 @@ describe("Pylon", () => {
         driver: new OpenIdDriver({
           clientId: "clientId",
           clientSecret: "clientSecret",
-          issuer: "https://lindorm.eu.auth0.com/",
         }),
         router: {
           dynamicRedirectDomains: ["http://client.lindorm.io"],
+        },
+        // The session cookie SEALS with its own key. Signature is unnamed, so it
+        // CHAINS to the cookie signature below (and verification derives from it).
+        session: {
+          enabled: true,
+          encryption: { condition: { purpose: "session", publish: false } },
         },
       },
 
@@ -310,12 +315,6 @@ describe("Pylon", () => {
       name: "@lindorm/pylon",
       parseBody: { formidable: true },
       port: 55555,
-      // The session cookie SEALS with its own key. Signature is unnamed, so it
-      // CHAINS to the cookie signature above (and verification derives from it).
-      session: {
-        enabled: true,
-        encryption: { condition: { purpose: "session", publish: false } },
-      },
       version: "0.0.1",
     });
 
@@ -325,7 +324,7 @@ describe("Pylon", () => {
   afterEach(vi.clearAllMocks);
 
   test("should setup correctly", async () => {
-    expect(amphora.config).toMatchSnapshot();
+    expect(amphora.internal).toMatchSnapshot();
     expect(amphora.vault).toMatchSnapshot();
   });
 

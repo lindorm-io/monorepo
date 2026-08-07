@@ -1,7 +1,6 @@
 import { type ReadableTime, ms } from "@lindorm/date";
 import { ClientError, ServerError } from "@lindorm/errors";
-import type { IProteusSession, IProteusSource } from "@lindorm/proteus";
-import { RATE_LIMIT_SOURCE } from "../../internal/constants/symbols.js";
+import type { IProteusSession } from "@lindorm/proteus";
 import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.js";
 import { fixedWindowStrategy } from "../../internal/utils/rate-limit/fixed-window-strategy.js";
 import type { RateLimitResult } from "../../internal/utils/rate-limit/fixed-window-strategy.js";
@@ -30,7 +29,7 @@ const resolveKey = (ctx: PylonContext): string => {
 };
 
 const executeStrategy = async (
-  source: IProteusSession,
+  session: IProteusSession,
   strategy: RateLimitStrategy,
   key: string,
   windowMs: number,
@@ -39,12 +38,12 @@ const executeStrategy = async (
   switch (strategy) {
     case "fixed": {
       const { RateLimitFixed } = await import("../../entities/RateLimitFixed.js");
-      return fixedWindowStrategy(source.repository(RateLimitFixed), key, windowMs, max);
+      return fixedWindowStrategy(session.repository(RateLimitFixed), key, windowMs, max);
     }
     case "sliding": {
       const { RateLimitSliding } = await import("../../entities/RateLimitSliding.js");
       return slidingWindowStrategy(
-        source.repository(RateLimitSliding),
+        session.repository(RateLimitSliding),
         key,
         windowMs,
         max,
@@ -52,7 +51,7 @@ const executeStrategy = async (
     }
     case "token-bucket": {
       const { RateLimitBucket } = await import("../../entities/RateLimitBucket.js");
-      return tokenBucketStrategy(source.repository(RateLimitBucket), key, windowMs, max);
+      return tokenBucketStrategy(session.repository(RateLimitBucket), key, windowMs, max);
     }
   }
 };
@@ -75,8 +74,11 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
       return;
     }
 
-    const rawSource = (ctx as any)[RATE_LIMIT_SOURCE] as IProteusSource | undefined;
-    if (!rawSource) {
+    // The evictable per-request session, installed whenever a `cache` (or the
+    // `kv` fallback) source is configured — INDEPENDENT of `rateLimit.enabled`,
+    // which is the `ctx.state.app.config.rateLimit` check above. Read after the
+    // disabled/skip guards so a skipped request never opens a session.
+    if (!ctx.cache) {
       throw new ServerError("Rate limiting is not configured", {
         code: "rate_limit_not_configured",
         type: "urn:lindorm:pylon:error:rate_limit_not_configured",
@@ -87,9 +89,8 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
       });
     }
 
-    const source = rawSource.session({ logger: ctx.logger });
     const key = options.key?.(ctx) ?? resolveKey(ctx);
-    const result = await executeStrategy(source, strategy, key, windowMs, options.max);
+    const result = await executeStrategy(ctx.cache, strategy, key, windowMs, options.max);
 
     if (isHttpContext(ctx)) {
       ctx.set("X-RateLimit-Limit", String(options.max));

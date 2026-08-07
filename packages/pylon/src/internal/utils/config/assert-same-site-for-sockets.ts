@@ -15,9 +15,9 @@ export const assertSameSiteForSockets = (
       "Session cookie SameSite must be 'lax' or 'strict' when auto-wired for sockets",
       {
         details:
-          "options.session.sameSite is unset. Cross-Site WebSocket Hijacking " +
+          "options.auth.session.sameSite is unset. Cross-Site WebSocket Hijacking " +
           "(CSWSH) defense-in-depth requires SameSite=Lax or SameSite=Strict on " +
-          "the session cookie. Set options.session.sameSite explicitly.",
+          "the session cookie. Set options.auth.session.sameSite explicitly.",
         code: "missing_same_site_for_session",
         title: "Missing SameSite for Session",
       },
@@ -31,7 +31,7 @@ export const assertSameSiteForSockets = (
       "Session cookie SameSite must be 'lax' or 'strict' when auto-wired for sockets",
       {
         details:
-          `options.session.sameSite is '${sameSite}'. Cross-Site WebSocket ` +
+          `options.auth.session.sameSite is '${sameSite}'. Cross-Site WebSocket ` +
           "Hijacking (CSWSH) defense-in-depth requires SameSite=Lax or " +
           "SameSite=Strict on the session cookie.",
         code: "invalid_same_site_for_session",

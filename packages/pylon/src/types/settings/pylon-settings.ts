@@ -26,15 +26,14 @@ import type { PylonCorsSettings } from "./cors.js";
 import type { PylonParseBodySettings } from "../http/parse-body.js";
 import type {
   PylonAuditSettings,
-  PylonCacheSettings,
   PylonKryptosSettings,
   PylonQueueSettings,
   PylonRateLimitSettings,
+  PylonResponseCacheSettings,
   PylonRoomsSettings,
   PylonWebhookSettings,
 } from "./feature-settings.js";
 import type { PylonHttpCallback } from "../http/callbacks.js";
-import type { PylonSessionSettings } from "./session-settings.js";
 
 import type { PylonSecurityTxt } from "./security-txt.js";
 import type { PylonSetup, PylonTeardown } from "./setup.js";
@@ -45,26 +44,57 @@ export type PylonHttpRouters<C extends PylonHttpContext> = {
   router: PylonRouter<C>;
 };
 
+/**
+ * Pylon takes FOUR sources and no per-feature overrides. Which one a feature
+ * lands in is fixed, and the split criterion is a single question: **is eviction
+ * under memory pressure acceptable for this data?** — the same question a redis
+ * `maxmemory-policy` answers.
+ *
+ * - **`db`** — durable, relational. Backs `kryptos`, `webhook`, `audit`.
+ *   Per-request as `ctx.db`.
+ * - **`kv`** — authoritative ephemeral storage that must NOT be evicted
+ *   (`noeviction`). Backs `session` and `rooms` presence, and is what an auth
+ *   driver is handed as `ctx.kv`. Per-request as `ctx.kv`.
+ * - **`cache`** — evictable ephemeral storage (`allkeys-lru`). Backs the response
+ *   cache, the driver-response caches and the rate-limit counters. **Defaults to
+ *   `kv` when unset**, so a single-instance deployment configures one source and
+ *   nothing changes for it.
+ * - **`bus`** — messaging. Backs `queue`, `webhook` dispatch and `audit`
+ *   publication. Per-request as `ctx.bus`.
+ *
+ * Splitting `cache` off `kv` exists because two populations with opposite needs
+ * were sharing one instance: evicting a `Session` to make room for a rate-limit
+ * bucket logs a user out on a traffic spike.
+ *
+ * ⚠ `auth` (and the `auth.session` inside it) is COMMON, not http. Both are read
+ * by the SOCKET path as much as the http one: the handshake token middleware has
+ * a `source.kind === "session"` branch that reads the session and installs the
+ * refresh handler, and handshake token verification needs the driver's
+ * `endpoints().issuer`. Declaring them under the http-flavoured type would tell
+ * the next reader they are http-only, which is false. `auth.router` — the
+ * login / callback / logout routes — genuinely IS http-only, but it stays inside
+ * the `auth` block: routes that never mount without http are ordinary inert
+ * config, and splitting `auth` across two homes costs more than it explains.
+ */
 type PylonCommonSettings = {
   actor?: (ctx: PylonCommonContext) => string;
   amphora: IAmphora;
   audit?: PylonAuditSettings;
-  cache?: PylonCacheSettings;
+  auth?: PylonAuthSettings;
+  bus?: IIrisSource;
+  /** Evictable ephemeral source (`allkeys-lru`). Defaults to `kv` when unset. */
+  cache?: IProteusSource;
+  db?: IProteusSource;
   domain?: string;
   environment?: Environment;
   hermes?: IHermes;
-  bus?: IIrisSource;
-  /**
-   * Ephemeral / in-memory storage source (redis in production, a proteus
-   * memory-driver source in dev/test). Backs ephemeral features (rate limit,
-   * session, rooms) and is exposed per-request as `ctx.kv`.
-   */
+  /** Authoritative ephemeral source (`noeviction`) — never evict what lives here. */
   kv?: IProteusSource;
   logger: ILogger;
   name?: string;
-  db?: IProteusSource;
   queue?: PylonQueueSettings;
   rateLimit?: PylonRateLimitSettings;
+  responseCache?: PylonResponseCacheSettings;
   rooms?: PylonRoomsSettings;
   version?: string;
   webhook?: PylonWebhookSettings;
@@ -86,7 +116,6 @@ export type PylonHttpCallbacksSettings<C extends PylonHttpContext = PylonHttpCon
 
 export type PylonHttpSettings<C extends PylonHttpContext = PylonHttpContext> =
   PylonCommonSettings & {
-    auth?: PylonAuthSettings;
     callbacks?: PylonHttpCallbacksSettings<C>;
     changePasswordUri?: string;
     cookies?: PylonCookieSettings;
@@ -98,7 +127,6 @@ export type PylonHttpSettings<C extends PylonHttpContext = PylonHttpContext> =
     parseBody?: PylonParseBodySettings;
     proxy?: boolean;
     securityTxt?: PylonSecurityTxt;
-    session?: PylonSessionSettings;
   };
 
 export type PylonSocketSettings<

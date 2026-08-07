@@ -219,7 +219,7 @@ describe("httpCookiesMiddleware round-trip", () => {
   // A mocked encrypt/decrypt could never prove the chunk boundaries are byte-safe.
   test("encrypted + over threshold round-trips with byte-exact tokenised payload", async () => {
     const logger = createMockLogger();
-    const amphora = new Amphora({ domain: "http://test.lindorm.io", logger });
+    const amphora = new Amphora({ issuer: "http://test.lindorm.io", logger });
     const cookieKey = KryptosKit.generate.auto({
       algorithm: "dir",
       issuer: "http://test.lindorm.io",

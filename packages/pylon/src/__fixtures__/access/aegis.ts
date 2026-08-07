@@ -11,7 +11,7 @@ export const ACCESS_TEST_ISSUER = "http://access.test.lindorm.io";
  * would answer whatever the test told it to.
  */
 export const createTestAegis = (logger: ILogger): IAegis => {
-  const amphora = new Amphora({ domain: ACCESS_TEST_ISSUER, logger });
+  const amphora = new Amphora({ issuer: ACCESS_TEST_ISSUER, logger });
 
   amphora.add(
     KryptosKit.generate.sig.ec({

@@ -38,7 +38,6 @@ const ISSUER = "http://test.lindorm.io";
 const kekKey = (): IKryptos =>
   KryptosKit.generate.enc.oct({
     algorithm: "A128KW",
-    issuer: ISSUER,
     publish: false,
     purpose: "pylon:kek",
   });
@@ -145,7 +144,6 @@ const insertSubscription = (source: ProteusSource) => {
       authHeaders: {},
       clientId: "client-id",
       clientSecret: "plaintext-webhook-secret",
-      issuer: ISSUER,
     }) as WebhookSubscription,
   );
 };
@@ -186,7 +184,7 @@ describe("Pylon at-rest encryption staging", () => {
     let kek: IKryptos;
 
     beforeEach(async () => {
-      amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+      amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
       kek = kekKey();
       amphora.add([kek]);
 
@@ -211,7 +209,6 @@ describe("Pylon at-rest encryption staging", () => {
           privateKey: "super-secret-private-key",
           publicKey: "public-key",
           certificateChain: [],
-          issuer: ISSUER,
           jwksUri: null,
           internal: true,
           ownerId: null,
@@ -329,7 +326,7 @@ describe("Pylon at-rest encryption staging", () => {
     let kv: ProteusSource;
 
     beforeEach(async () => {
-      amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+      amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
       kek = kekKey();
       amphora.add([kek]);
 
@@ -347,7 +344,6 @@ describe("Pylon at-rest encryption staging", () => {
           driver: new OpenIdDriver({
             clientId: "client-id",
             clientSecret: "client-secret",
-            issuer: ISSUER,
           }),
           cache: { enabled: true },
         },
@@ -396,7 +392,7 @@ describe("Pylon at-rest encryption staging", () => {
       // so an unresolvable key must scream at setup rather than silently not
       // encrypt. This is what makes dropping the staging call a BUILD failure
       // instead of a silent plaintext write.
-      amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+      amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
       const bareSource = track(
         new ProteusSource({
           driver: "sqlite",

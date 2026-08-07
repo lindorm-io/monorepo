@@ -1,6 +1,5 @@
 import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { RATE_LIMIT_SOURCE } from "../../internal/constants/symbols.js";
 import { useRateLimit } from "./use-rate-limit.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
@@ -17,7 +16,7 @@ import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.
 describe("useRateLimit", () => {
   let ctx: any;
   let next: Mock;
-  let mockSource: any;
+  let mockSession: any;
   let mockRepository: any;
 
   const resetAt = new Date("2026-01-01T00:01:00.000Z");
@@ -29,8 +28,7 @@ describe("useRateLimit", () => {
     vi.clearAllMocks();
 
     mockRepository = {};
-    const sessionSource = { repository: vi.fn().mockReturnValue(mockRepository) };
-    mockSource = { session: vi.fn().mockReturnValue(sessionSource) };
+    mockSession = { repository: vi.fn().mockReturnValue(mockRepository) };
 
     (fixedWindowStrategy as Mock).mockResolvedValue(allowedResult);
     (slidingWindowStrategy as Mock).mockResolvedValue(allowedResult);
@@ -44,7 +42,7 @@ describe("useRateLimit", () => {
       state: { app: { config: { audit: false, cache: false, rateLimit: true } } },
       request: { ip: "192.168.1.1" },
       set: vi.fn(),
-      [RATE_LIMIT_SOURCE]: mockSource,
+      cache: mockSession,
     };
     next = vi.fn();
   });
@@ -105,7 +103,7 @@ describe("useRateLimit", () => {
       event: "test:event",
       io: { socket: { id: "socket-123" } },
       set: vi.fn(),
-      [RATE_LIMIT_SOURCE]: mockSource,
+      cache: mockSession,
     };
 
     await useRateLimit({ window: "1m", max: 10 })(ctx, next);
@@ -170,8 +168,8 @@ describe("useRateLimit", () => {
     expect(fixedWindowStrategy).not.toHaveBeenCalled();
   });
 
-  test("should throw ServerError when rate limit source is not configured", async () => {
-    delete ctx[RATE_LIMIT_SOURCE];
+  test("should throw ServerError when no evictable session is on the context", async () => {
+    delete ctx.cache;
 
     await expect(useRateLimit({ window: "1m", max: 10 })(ctx, next)).rejects.toThrow(
       ServerError,
@@ -181,7 +179,7 @@ describe("useRateLimit", () => {
 
   test("should pass through silently (no throw) when rate limiting is disabled by config", async () => {
     ctx.state.app.config.rateLimit = false;
-    delete ctx[RATE_LIMIT_SOURCE]; // disabled AND no source — must not throw
+    delete ctx.cache; // disabled AND no session — must not throw
 
     await expect(
       useRateLimit({ window: "1m", max: 10 })(ctx, next),
@@ -214,7 +212,7 @@ describe("useRateLimit", () => {
       event: "test:event",
       io: { socket: { id: "sock-abc" } },
       set: vi.fn(),
-      [RATE_LIMIT_SOURCE]: mockSource,
+      cache: mockSession,
     };
 
     await useRateLimit({ window: "1m", max: 10 })(ctx, next);
@@ -251,7 +249,7 @@ describe("useRateLimit", () => {
       event: "test:event",
       io: { socket: { id: "socket-123" } },
       set: vi.fn(),
-      [RATE_LIMIT_SOURCE]: mockSource,
+      cache: mockSession,
     };
 
     try {

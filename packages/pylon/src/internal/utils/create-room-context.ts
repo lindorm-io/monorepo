@@ -1,34 +1,37 @@
 import { expiresAt } from "@lindorm/date";
 import type { ILogger } from "@lindorm/logger";
-import type { IProteusRepository, IProteusSource } from "@lindorm/proteus";
+import type { IProteusRepository, IProteusSession } from "@lindorm/proteus";
 import type { PylonRoomContextHttp, PylonRoomContextSocket } from "../../types/index.js";
 import type { PylonSocket } from "../../types/socket/pylon-socket.js";
 import type { IoServer } from "../../types/socket/io.js";
 
+/**
+ * ⚠ `session` is the AUTHORITATIVE `kv` session, never `cache` — an evicted
+ * `Presence` row drops a live member from a room. It is also the ONLY presence
+ * switch: the caller passes it when presence is enabled and a `kv` source
+ * resolved, so there is no second `presence` flag free to disagree with it.
+ */
 type CreateRoomContextOptions = {
   socket: PylonSocket;
   io: IoServer;
   logger: ILogger;
-  proteusSource?: IProteusSource;
-  presence?: boolean;
+  session?: IProteusSession;
 };
 
 type CreateHttpRoomContextOptions = {
   io: IoServer;
   logger: ILogger;
-  proteusSource?: IProteusSource;
-  presence?: boolean;
+  session?: IProteusSession;
 };
 
 const createPresenceRepoFactory = (
-  proteusSource: IProteusSource,
-  logger: ILogger,
+  session: IProteusSession,
 ): (() => Promise<IProteusRepository<any>>) => {
   let cached: IProteusRepository<any> | undefined;
   return async () => {
     if (!cached) {
       const { Presence } = await import("../../entities/Presence.js");
-      cached = proteusSource.session({ logger }).repository(Presence);
+      cached = session.repository(Presence);
     }
     return cached;
   };
@@ -37,10 +40,9 @@ const createPresenceRepoFactory = (
 export const createHttpRoomContext = (
   options: CreateHttpRoomContextOptions,
 ): PylonRoomContextHttp => {
-  const { io, logger, proteusSource, presence } = options;
+  const { io, session } = options;
 
-  const getPresenceRepo =
-    presence && proteusSource ? createPresenceRepoFactory(proteusSource, logger) : null;
+  const getPresenceRepo = session ? createPresenceRepoFactory(session) : null;
 
   return {
     members: async (room: string): Promise<Array<string>> => {
@@ -69,10 +71,9 @@ export const createHttpRoomContext = (
 export const createRoomContext = (
   options: CreateRoomContextOptions,
 ): PylonRoomContextSocket => {
-  const { socket, io, logger, proteusSource, presence } = options;
+  const { socket, io, logger, session } = options;
 
-  const getPresenceRepo =
-    presence && proteusSource ? createPresenceRepoFactory(proteusSource, logger) : null;
+  const getPresenceRepo = session ? createPresenceRepoFactory(session) : null;
 
   const userId = (socket.data as any)?.tokens?.accessToken?.claims?.subject ?? socket.id;
 

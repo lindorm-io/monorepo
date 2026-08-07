@@ -7,10 +7,21 @@ describe("assertSessionCookieSafeForSockets", () => {
     expect(() => assertSessionCookieSafeForSockets({} as any)).not.toThrow();
   });
 
+  // `auth` without a `session` block mounts no session cookie, so the CSWSH
+  // guard has nothing to protect — a pure resource server may keep a wildcard.
+  test("should pass when auth is configured without a session", () => {
+    expect(() =>
+      assertSessionCookieSafeForSockets({
+        auth: { driver: {} } as any,
+        cors: { allowOrigins: "*" },
+      }),
+    ).not.toThrow();
+  });
+
   test("should pass when session is set and cors allowlist is explicit", () => {
     expect(() =>
       assertSessionCookieSafeForSockets({
-        session: { enabled: true } as any,
+        auth: { session: { enabled: true } } as any,
         cors: { allowOrigins: ["https://app.example.com"] },
       }),
     ).not.toThrow();
@@ -19,7 +30,7 @@ describe("assertSessionCookieSafeForSockets", () => {
   test("should throw when session is set and cors is missing", () => {
     expect(() =>
       assertSessionCookieSafeForSockets({
-        session: { enabled: true } as any,
+        auth: { session: { enabled: true } } as any,
       }),
     ).toThrow(PylonError);
   });
@@ -27,7 +38,7 @@ describe("assertSessionCookieSafeForSockets", () => {
   test("should throw when session is set and cors.allowOrigins is missing", () => {
     expect(() =>
       assertSessionCookieSafeForSockets({
-        session: { enabled: true } as any,
+        auth: { session: { enabled: true } } as any,
         cors: {},
       }),
     ).toThrow(PylonError);
@@ -36,7 +47,7 @@ describe("assertSessionCookieSafeForSockets", () => {
   test("should throw when session is set and cors.allowOrigins is '*'", () => {
     expect(() =>
       assertSessionCookieSafeForSockets({
-        session: { enabled: true } as any,
+        auth: { session: { enabled: true } } as any,
         cors: { allowOrigins: "*" },
       }),
     ).toThrow(PylonError);
@@ -45,7 +56,7 @@ describe("assertSessionCookieSafeForSockets", () => {
   test("should throw with actionable error message", () => {
     try {
       assertSessionCookieSafeForSockets({
-        session: { enabled: true } as any,
+        auth: { session: { enabled: true } } as any,
         cors: { allowOrigins: "*" },
       });
       expect.fail("expected to throw");

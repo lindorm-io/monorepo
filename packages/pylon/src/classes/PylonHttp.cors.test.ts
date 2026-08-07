@@ -38,7 +38,11 @@ describe("PylonHttp CORS integration (F17)", () => {
     await pylonHttp.loadRouters();
 
     server = http.createServer(pylonHttp.callback);
-    await new Promise<void>((resolve) => server.listen(0, () => resolve()));
+    // Bind the SAME address the tests dial (127.0.0.1), never the wildcard —
+    // `listen(0)` binds `::`, and the ephemeral allocator does not treat a
+    // 127.0.0.1-specific listener as a conflict, so it can hand out a port a
+    // foreign local app already owns and the tests read that app's responses.
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", () => resolve()));
     const addr = server.address() as AddressInfo;
     baseUrl = `http://127.0.0.1:${addr.port}`;
   });

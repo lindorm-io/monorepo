@@ -12,18 +12,17 @@ import { encryptCookie } from "./cookies/encrypt-cookie.js";
 import { resolveSessionKeys } from "./keys/resolve-session-keys.js";
 import { resolveActor } from "./resolve-actor.js";
 
-const getSource = (
-  ctx: PylonCommonContext,
-  override?: IProteusSource,
-): IProteusSession | null => {
-  if (override) {
-    return override.session({
-      logger: ctx.logger,
-      meta: buildHookMeta(ctx, resolveActor(ctx)),
-    });
-  }
-  return ctx.kv ?? null;
-};
+/**
+ * The store takes the `kv` SOURCE, not `ctx.kv`.
+ *
+ * ⚠ It has to. The session middleware runs BEFORE the dependencies middleware
+ * that installs `ctx.kv` — and the socket handshake chain never runs that
+ * middleware at all — so `ctx.kv` is undefined on exactly the paths that read
+ * the session. The store therefore opens its own request-scoped session,
+ * carrying this request's logger and hook meta.
+ */
+const openSession = (ctx: PylonCommonContext, kv: IProteusSource): IProteusSession =>
+  kv.session({ logger: ctx.logger, meta: buildHookMeta(ctx, resolveActor(ctx)) });
 
 let cachedSession: typeof import("../../entities/Session.js").Session | undefined;
 const getSessionEntity = async (): Promise<
@@ -36,21 +35,32 @@ const getSessionEntity = async (): Promise<
 };
 
 export const createSessionStore = (
+  kv: IProteusSource | undefined,
   options?: PylonSessionSettings,
   cookies?: PylonCookieSettings,
 ): IPylonSessionStore | undefined => {
-  if (!options?.enabled) return;
+  // No `kv` configured ⇒ NO store, and the session is cookie-only: the caller
+  // puts the whole session object in the cookie and reads it back out. A store
+  // that exists but has nowhere to write is worse than none — `set` would return
+  // an id nothing holds and `get` would answer null for it, so the session would
+  // be write-only.
+  if (!options?.enabled || !kv) return;
+
+  // Captured as a `const` so the closures below see the narrowed source rather
+  // than the optional parameter.
+  const source = kv;
 
   // Same key that seals the session COOKIE:
-  // `session.encryption ?? cookies.encryption`. A stored session and a
+  // `auth.session.encryption ?? cookies.encryption`. A stored session and a
   // cookie-only session are the same secret in two places — the store just holds
   // it at rest instead of on the wire.
   const { encryption: encryptionKey } = resolveSessionKeys(options, cookies);
 
+  // The `Session` entity lives in the AUTHORITATIVE `kv` source and nowhere
+  // else — evicting a session logs the user out.
   return {
     set: async (ctx, session): Promise<string> => {
-      const source = getSource(ctx, options.kv);
-      if (!source) return session.id;
+      const proteus = openSession(ctx, source);
 
       // Encryption at rest follows the same rule as proteus `@Encrypted`: naming
       // a session enc key (`session.encryption ?? cookies.encryption`) is what
@@ -77,16 +87,15 @@ export const createSessionStore = (
       }
 
       const Session = await getSessionEntity();
-      const result = await source.repository(Session).upsert(session);
+      const result = await proteus.repository(Session).upsert(session);
       return result.id;
     },
 
     get: async (ctx, id): Promise<IPylonSession | null> => {
-      const source = getSource(ctx, options.kv);
-      if (!source) return null;
+      const proteus = openSession(ctx, source);
 
       const Session = await getSessionEntity();
-      const session = await source.repository(Session).findOne({ id });
+      const session = await proteus.repository(Session).findOne({ id });
 
       if (!session) return null;
 
@@ -109,19 +118,17 @@ export const createSessionStore = (
     },
 
     del: async (ctx, id): Promise<void> => {
-      const source = getSource(ctx, options.kv);
-      if (!source) return;
+      const proteus = openSession(ctx, source);
 
       const Session = await getSessionEntity();
-      await source.repository(Session).delete({ id });
+      await proteus.repository(Session).delete({ id });
     },
 
     logout: async (ctx, subject): Promise<void> => {
-      const source = getSource(ctx, options.kv);
-      if (!source) return;
+      const proteus = openSession(ctx, source);
 
       const Session = await getSessionEntity();
-      await source.repository(Session).delete({ subject });
+      await proteus.repository(Session).delete({ subject });
     },
   };
 };

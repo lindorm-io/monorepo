@@ -25,7 +25,7 @@ describe("PylonScanner", () => {
     logger = createMockLogger();
 
     amphora = new Amphora({
-      domain: "http://test.lindorm.io",
+      issuer: "http://test.lindorm.io",
       logger,
     });
 

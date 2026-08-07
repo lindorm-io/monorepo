@@ -48,33 +48,32 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
 
   constructor(http: Server, options: PylonSettings<any, any, T>) {
     assertSessionCookieSafeForSockets(options);
-    assertSameSiteForSockets(options.session);
+    assertSameSiteForSockets(options.auth?.session);
 
     this.logger = options.logger.child(["PylonSocket"]);
 
     const socket = options.socket!;
 
+    // The evictable source — `cache`, or `kv` when the deployment runs one store.
+    const cache = options.cache ?? options.kv;
+
     this.middleware = [
       createDependenciesMiddleware({
         actor: options.actor,
-        auditConfig:
-          (options.audit?.bus ?? options.bus)
-            ? {
-                bus: options.audit?.bus ?? options.bus!,
-                sanitise: options.audit?.sanitise,
-                skip: options.audit?.skip,
-              }
-            : undefined,
+        auditConfig: options.bus
+          ? {
+              bus: options.bus,
+              sanitise: options.audit?.sanitise,
+              skip: options.audit?.skip,
+            }
+          : undefined,
         hermes: options.hermes,
         bus: options.bus,
+        cache,
         kv: options.kv,
         db: options.db,
-        rateLimitKeyValue: options.rateLimit?.kv ?? options.kv,
         roomsEnabled: !!options.rooms,
         roomsPresence: options.rooms?.presence,
-        roomsKeyValue: options.rooms?.presence
-          ? (options.rooms.kv ?? options.kv)
-          : undefined,
       }),
       createQueueMiddleware(options.queue),
       createWebhookMiddleware(options.webhook),
@@ -196,8 +195,14 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       createConnectionContextInitialisationMiddleware(this.logger),
       createCommonContextInitialisationMiddleware(this.options.amphora),
       ...(this.options.cors ? [createConnectionCorsMiddleware(this.options.cors)] : []),
-      ...(this.options.session
-        ? [createConnectionSessionMiddleware(this.options.session, this.options.cookies)]
+      ...(this.options.auth?.session
+        ? [
+            createConnectionSessionMiddleware(
+              this.options.kv,
+              this.options.auth.session,
+              this.options.cookies,
+            ),
+          ]
         : []),
       connectionLoggerMiddleware,
       ...((this.options.socket?.connectionMiddleware ??

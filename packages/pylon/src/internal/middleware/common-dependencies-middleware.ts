@@ -10,13 +10,7 @@ import type {
   PylonContext,
   PylonHttpContext,
 } from "../../types/index.js";
-import {
-  AUDIT_SOURCE,
-  AUTH_CACHE_SOURCE,
-  CACHE_SOURCE,
-  RATE_LIMIT_SOURCE,
-} from "../constants/symbols.js";
-import type { AuthCacheConfig } from "../utils/auth-cache/auth-cache-config.js";
+import { AUDIT_SOURCE, AUTH_CACHE_POLICY } from "../constants/symbols.js";
 import {
   createAuthClient,
   createSocketClaimsClient,
@@ -43,20 +37,27 @@ type AuditConfig = {
   skip?: (ctx: any) => boolean;
 };
 
+/**
+ * Sources come in under their ROLE — `db` / `kv` / `cache` / `bus` — and each
+ * one becomes a per-request `ctx.*` session. There is no second, per-feature
+ * channel: a feature that needs storage picks the role whose eviction policy it
+ * can live with (`ctx.cache` for a rate-limit bucket or a cached response,
+ * `ctx.kv` for a session or a presence record) and reads it off the context.
+ *
+ * The remaining fields are POLICY, not storage — the wiring a feature cannot
+ * derive from the context on its own.
+ */
 type Options = {
   actor?: ActorResolver;
   authConfig?: PylonAuthConfig;
   auditConfig?: AuditConfig;
-  cacheKeyValue?: IProteusSource;
-  authCacheConfig?: AuthCacheConfig;
   hermes?: IHermes;
   bus?: IIrisSource;
+  cache?: IProteusSource;
   kv?: IProteusSource;
   db?: IProteusSource;
-  rateLimitKeyValue?: IProteusSource;
   roomsEnabled?: boolean;
   roomsPresence?: boolean;
-  roomsKeyValue?: IProteusSource;
 };
 
 export const createDependenciesMiddleware = <C extends PylonCommonContext>(
@@ -88,6 +89,14 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         );
       }
 
+      // Installed the same way as `kv` — a lazyFactory GETTER, so a request that
+      // never caches anything never opens a session against the evictable store.
+      if (options.cache) {
+        lazyFactory(ctx, "cache", () =>
+          options.cache!.session(buildProteusSessionOptions(ctx, actor)),
+        );
+      }
+
       if (options.bus) {
         lazyFactory(ctx, "bus", () =>
           options.bus!.session(buildIrisSessionOptions(ctx, actor)),
@@ -112,19 +121,12 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         (ctx as any)[AUDIT_SOURCE] = options.auditConfig;
       }
 
-      if (options.rateLimitKeyValue) {
-        (ctx as any)[RATE_LIMIT_SOURCE] = options.rateLimitKeyValue;
-      }
-
-      if (options.cacheKeyValue) {
-        (ctx as any)[CACHE_SOURCE] = options.cacheKeyValue;
-      }
-
-      // Attached ONLY when the driver-response cache is enabled and has a source
-      // — its absence is what keeps caching off, so there is no second flag to
-      // disagree with (unlike the response cache, which a route may re-check).
-      if (options.authCacheConfig) {
-        (ctx as any)[AUTH_CACHE_SOURCE] = options.authCacheConfig;
+      // The driver-response cache POLICY — the entries themselves live in
+      // `ctx.cache`. Present ONLY when the deployment configured `auth.cache`,
+      // and `parseAuthConfig` is the one place that decides so: its absence is
+      // what keeps caching off, with no second flag free to disagree.
+      if (options.authConfig?.cache) {
+        (ctx as any)[AUTH_CACHE_POLICY] = options.authConfig.cache;
       }
 
       // Socket emitter (available whenever io is present)
@@ -147,15 +149,17 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         );
       }
 
-      // Rooms (only when rooms enabled)
+      // Rooms (only when rooms enabled). `ctx.kv` is read INSIDE the lazy
+      // factory, so a request that never touches `ctx.rooms` never opens a kv
+      // session — and presence lands in the authoritative store, never in
+      // `cache`, because an evicted record drops a live member.
       if (options.roomsEnabled && "io" in ctx && "event" in ctx) {
         lazyFactory(ctx, "rooms", () =>
           createRoomContext({
             socket: (ctx as any).io.socket,
             io: (ctx as any).io.app,
             logger: ctx.logger,
-            proteusSource: options.roomsKeyValue,
-            presence: options.roomsPresence,
+            session: options.roomsPresence ? ctx.kv : undefined,
           }),
         );
       } else if (options.roomsEnabled && "io" in ctx && "request" in ctx) {
@@ -163,8 +167,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
           createHttpRoomContext({
             io: (ctx as any).io.app,
             logger: ctx.logger,
-            proteusSource: options.roomsKeyValue,
-            presence: options.roomsPresence,
+            session: options.roomsPresence ? ctx.kv : undefined,
           }),
         );
       }
@@ -178,7 +181,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         title: "Dependency Resolution Failed",
         type: "urn:lindorm:pylon:error:dependency_resolution_failed",
         details:
-          "One of the per-request dependencies (actor, hermes, db, kv, bus, auth, socket, or rooms) could not be resolved",
+          "One of the per-request dependencies (actor, hermes, db, kv, cache, bus, auth, socket, or rooms) could not be resolved",
         debug: { error },
       });
     }

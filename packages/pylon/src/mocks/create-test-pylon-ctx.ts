@@ -39,6 +39,7 @@ export type TestPylonCtxDeps = {
   conduit: IConduit;
   db: IProteusSession;
   kv: IProteusSession;
+  cache: IProteusSession;
 };
 
 export type CreateTestPylonCtxOptions = {
@@ -61,6 +62,12 @@ export type CreateTestPylonCtxOptions = {
   db?: IProteusSession | null;
   /** Override ctx.kv: pass a session, or `null` to omit the mock session. */
   kv?: IProteusSession | null;
+  /**
+   * Override ctx.cache: pass a session, or `null` to omit the mock session. A
+   * DISTINCT session from `kv` by default, so a test can prove which store a
+   * consumer wrote to.
+   */
+  cache?: IProteusSession | null;
   /** ctx.bus — omitted unless provided. */
   bus?: IIrisSession | null;
   /** ctx.hermes — omitted unless provided. */
@@ -150,6 +157,9 @@ export const _createTestPylonCtx = (
 
   const kv = options.kv === undefined ? deps.kv : options.kv;
   if (kv != null) ctx.kv = kv;
+
+  const cache = options.cache === undefined ? deps.cache : options.cache;
+  if (cache != null) ctx.cache = cache;
 
   if (options.bus) ctx.bus = options.bus;
   if (options.hermes) ctx.hermes = options.hermes;

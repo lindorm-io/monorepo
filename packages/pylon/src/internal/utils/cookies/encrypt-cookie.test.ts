@@ -35,7 +35,7 @@ describe("encryptCookie", () => {
 
   beforeEach(() => {
     const logger = createMockLogger();
-    amphora = new Amphora({ domain: ISSUER, logger });
+    amphora = new Amphora({ issuer: ISSUER, logger });
     ctx = { aegis: new Aegis({ amphora, logger }), amphora };
   });
 

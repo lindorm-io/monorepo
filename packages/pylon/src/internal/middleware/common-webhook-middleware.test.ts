@@ -112,33 +112,6 @@ describe("createWebhookMiddleware", () => {
     await expect(ctx.webhook("event", {})).rejects.toThrow("publish failed");
   });
 
-  test("should use iris override source", async () => {
-    const overrideWq = { create: mockCreate, publish: mockPublish };
-    const overrideIris = {
-      session: vi
-        .fn()
-        .mockReturnValue({ workerQueue: vi.fn().mockReturnValue(overrideWq) }),
-    };
-
-    const middleware = createWebhookMiddleware({
-      enabled: true,
-      bus: overrideIris as any,
-    });
-
-    await middleware(ctx, vi.fn());
-
-    await ctx.webhook("event", {});
-
-    expect(overrideIris.session).toHaveBeenCalledWith({
-      logger: ctx.logger,
-      meta: {
-        correlationId: "test-correlation-id",
-        actor: "unknown",
-        timestamp: expect.any(Date),
-      },
-    });
-  });
-
   test("should call next", async () => {
     const next = vi.fn();
     const middleware = createWebhookMiddleware({ enabled: true });

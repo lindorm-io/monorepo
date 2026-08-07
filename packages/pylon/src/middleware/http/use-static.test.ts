@@ -36,7 +36,9 @@ describe("useStatic", () => {
     app.use(router.routes() as any).use(router.allowedMethods() as any);
 
     server = http.createServer(app.callback());
-    await new Promise<void>((resolve) => server.listen(0, () => resolve()));
+    // Bind the SAME address the tests dial (127.0.0.1), never the wildcard —
+    // see the note in __fixtures__/static-helpers/http-server.ts.
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", () => resolve()));
     port = (server.address() as AddressInfo).port;
   });
 

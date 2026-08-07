@@ -2,7 +2,6 @@ import { createMockHermes } from "@lindorm/hermes/mocks/vitest";
 import { createMockIrisSource } from "@lindorm/iris/mocks/vitest";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
-import { RATE_LIMIT_SOURCE } from "../constants/symbols.js";
 import { createDependenciesMiddleware } from "./common-dependencies-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -91,6 +90,120 @@ describe("createDependenciesMiddleware", () => {
       },
       signal: undefined,
     });
+  });
+
+  test("should lazily create the evictable cache session on first access", async () => {
+    const cache = await createMockProteusSource();
+
+    const middleware = createDependenciesMiddleware({ cache: cache as any });
+
+    await middleware(ctx, vi.fn());
+
+    expect(cache.session).not.toHaveBeenCalled();
+
+    const session = ctx.cache;
+
+    expect(session).toBeDefined();
+    expect(cache.session).toHaveBeenCalledTimes(1);
+    expect(cache.session).toHaveBeenCalledWith({
+      logger: ctx.logger,
+      meta: {
+        correlationId: "unknown",
+        actor: "unknown",
+        timestamp: expect.any(Date),
+      },
+      signal: undefined,
+    });
+  });
+
+  test("should keep ctx.cache and ctx.kv on their own sources", async () => {
+    const cache = await createMockProteusSource();
+    const kv = await createMockProteusSource();
+
+    cache.session.mockReturnValue({ tag: "cache" } as any);
+    kv.session.mockReturnValue({ tag: "kv" } as any);
+
+    const middleware = createDependenciesMiddleware({
+      cache: cache as any,
+      kv: kv as any,
+    });
+
+    await middleware(ctx, vi.fn());
+
+    expect(ctx.cache).toEqual({ tag: "cache" });
+    expect(ctx.kv).toEqual({ tag: "kv" });
+  });
+
+  // On the fallback the caller hands the SAME source under both roles. Each role
+  // still gets its own session, so session identity does not change the day the
+  // stores are actually split — no consumer code moves.
+  test("should give cache its own session even when it falls back to the kv source", async () => {
+    const source = await createMockProteusSource();
+
+    const middleware = createDependenciesMiddleware({
+      cache: source as any,
+      kv: source as any,
+    });
+
+    await middleware(ctx, vi.fn());
+
+    expect(ctx.cache).toBeDefined();
+    expect(ctx.kv).toBeDefined();
+    expect(ctx.cache).not.toBe(ctx.kv);
+    expect(source.session).toHaveBeenCalledTimes(2);
+  });
+
+  // ⚠ `cache` is installed as a lazyFactory GETTER, exactly like `kv`. Building
+  // the context must not open a session, and a helper that COPIES the context
+  // must forward through a getter rather than spread — a spread evaluates every
+  // getter on the object, which would open a session against the evictable store
+  // on every request, including the ones that never cache.
+  test("should not open a cache session when the context is merely built", async () => {
+    const cache = await createMockProteusSource();
+
+    const middleware = createDependenciesMiddleware({ cache: cache as any });
+
+    await middleware(ctx, vi.fn());
+
+    expect(cache.session).not.toHaveBeenCalled();
+
+    // A copy that FORWARDS — the createAuthDriverContext pattern. Still nothing
+    // opened, right up until something reads it.
+    const forwarded = {
+      get cache() {
+        return ctx.cache;
+      },
+    };
+
+    expect(cache.session).not.toHaveBeenCalled();
+    expect(forwarded.cache).toBeDefined();
+    expect(cache.session).toHaveBeenCalledTimes(1);
+  });
+
+  // The other half of the same fact, pinned so nobody "simplifies"
+  // createAuthDriverContext's getters into a spread: a spread DOES materialise.
+  test("should prove a spread of the context evaluates the cache getter", async () => {
+    const cache = await createMockProteusSource();
+
+    const middleware = createDependenciesMiddleware({ cache: cache as any });
+
+    await middleware(ctx, vi.fn());
+
+    expect(cache.session).not.toHaveBeenCalled();
+
+    void { ...ctx };
+
+    expect(cache.session).toHaveBeenCalledTimes(1);
+  });
+
+  test("should not install ctx.cache when no cache source is configured", async () => {
+    const kv = await createMockProteusSource();
+
+    const middleware = createDependenciesMiddleware({ kv: kv as any });
+
+    await middleware(ctx, vi.fn());
+
+    expect(ctx.cache).toBeUndefined();
   });
 
   test("should lazily create iris session on first access", async () => {
@@ -217,27 +330,6 @@ describe("createDependenciesMiddleware", () => {
     expect(ctx.hermes).toBeUndefined();
   });
 
-  test("should store raw rateLimitKeyValue on context via symbol (lazy session)", async () => {
-    const rateLimitKeyValue = await createMockProteusSource();
-
-    const middleware = createDependenciesMiddleware({
-      rateLimitKeyValue: rateLimitKeyValue as any,
-    });
-
-    await middleware(ctx, vi.fn());
-
-    expect(rateLimitKeyValue.session).not.toHaveBeenCalled();
-    expect(ctx[RATE_LIMIT_SOURCE]).toBe(rateLimitKeyValue);
-  });
-
-  test("should not set rate limit symbol when rateLimitKeyValue not provided", async () => {
-    const middleware = createDependenciesMiddleware({});
-
-    await middleware(ctx, vi.fn());
-
-    expect(ctx[RATE_LIMIT_SOURCE]).toBeUndefined();
-  });
-
   describe("rooms", () => {
     test("should lazily create rooms via lazyFactory when roomsEnabled and socket context", async () => {
       const socketCtx: any = {
@@ -312,8 +404,11 @@ describe("createDependenciesMiddleware", () => {
       expect(socketCtx.rooms).toBeUndefined();
     });
 
-    test("should pass roomsKeyValue and roomsPresence to room context factory", async () => {
-      const roomsKeyValue = await createMockProteusSource();
+    // Presence is AUTHORITATIVE — an evicted record drops a live member — so it
+    // reads `ctx.kv`, never `ctx.cache`. And `ctx.kv` is read INSIDE the rooms
+    // lazyFactory, so a request that touches neither opens neither.
+    test("should build presence on the kv session, opened only when rooms is touched", async () => {
+      const kv = await createMockProteusSource();
 
       const socketCtx: any = {
         logger: createMockLogger(),
@@ -334,9 +429,48 @@ describe("createDependenciesMiddleware", () => {
       };
 
       const middleware = createDependenciesMiddleware({
+        kv: kv as any,
         roomsEnabled: true,
         roomsPresence: true,
-        roomsKeyValue: roomsKeyValue as any,
+      });
+
+      await middleware(socketCtx, vi.fn());
+
+      // Neither `ctx.kv` nor `ctx.rooms` has been read yet.
+      expect(kv.session).not.toHaveBeenCalled();
+
+      const rooms = socketCtx.rooms;
+
+      expect(rooms).toBeDefined();
+      expect(typeof rooms.presence).toBe("function");
+      expect(kv.session).toHaveBeenCalledTimes(1);
+    });
+
+    test("should omit presence and leave kv unopened when roomsPresence is off", async () => {
+      const kv = await createMockProteusSource();
+
+      const socketCtx: any = {
+        logger: createMockLogger(),
+        event: "test:event",
+        io: {
+          app: {
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
+            in: vi.fn().mockReturnValue({ fetchSockets: vi.fn() }),
+          },
+          socket: {
+            id: "s1",
+            data: {},
+            join: vi.fn(),
+            leave: vi.fn(),
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
+          },
+        },
+      };
+
+      const middleware = createDependenciesMiddleware({
+        kv: kv as any,
+        roomsEnabled: true,
+        roomsPresence: false,
       });
 
       await middleware(socketCtx, vi.fn());
@@ -344,7 +478,8 @@ describe("createDependenciesMiddleware", () => {
       const rooms = socketCtx.rooms;
 
       expect(rooms).toBeDefined();
-      expect(typeof rooms.presence).toBe("function");
+      expect(rooms.presence).toBeUndefined();
+      expect(kv.session).not.toHaveBeenCalled();
     });
   });
 });

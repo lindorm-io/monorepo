@@ -8,7 +8,7 @@ export const encryptCookie = async (
   key: PylonEncKey | undefined,
 ): Promise<string> => {
   // A cookie is an INTERNAL, self-opened artifact — the deployment names WHICH
-  // key seals it (`keys.cookie.encryption`, or `keys.session.encryption` for the
+  // key seals it (`cookies.encryption`, or `auth.session.encryption` for the
   // session cookie), and pylon holds only the ENVELOPE floor. Resolving to a
   // CONCRETE key first is what closes the hole: aegis is handed that exact
   // kryptos, so it never reaches its deployment-wide enc policy — which queries
