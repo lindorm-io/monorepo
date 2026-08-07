@@ -58,13 +58,12 @@ describe("getInitialisationVector", () => {
   test("should include encryption in error data", () => {
     const unsupported = "INVALID_ALG" as KryptosEncryption;
 
-    try {
-      getInitialisationVector(unsupported);
-      fail("Expected AesError to be thrown");
-    } catch (error) {
-      expect(error).toBeInstanceOf(AesError);
-      expect((error as AesError).message).toBe("Unsupported encryption algorithm");
-      expect((error as AesError).data).toEqual({ encryption: unsupported });
-    }
+    expect(() => getInitialisationVector(unsupported)).toThrow(AesError);
+    expect(() => getInitialisationVector(unsupported)).toThrow(
+      expect.objectContaining({
+        message: "Unsupported encryption algorithm",
+        data: { encryption: unsupported },
+      }),
+    );
   });
 });

@@ -85,16 +85,13 @@ describe("withRetry", () => {
 
     const fn = vi.fn().mockRejectedValue(original);
 
-    try {
-      await withRetry(fn, isRetryable, {
+    await expect(
+      withRetry(fn, isRetryable, {
         maxRetries: 1,
         initialDelayMs: 1,
         jitter: false,
-      });
-      fail("should have thrown");
-    } catch (error) {
-      expect(error).toBe(original);
-    }
+      }),
+    ).rejects.toBe(original);
   });
 
   it("should call onRetry callback on each retry", async () => {

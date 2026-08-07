@@ -78,11 +78,13 @@ describe("publishToExchange", () => {
         Buffer.from("test"),
         {},
       );
-      fail("should have thrown");
     } catch (err: any) {
       expect(err).toBeInstanceOf(IrisPublishError);
       expect(err.debug).toMatchSnapshot();
+      return;
     }
+
+    expect.fail("should have thrown");
   });
 
   it("should reject when channel write buffer is full", async () => {
@@ -110,9 +112,11 @@ describe("publishToExchange", () => {
         Buffer.from("test"),
         {},
       );
-      fail("should have thrown");
     } catch (err: any) {
       expect(err.message).toMatchSnapshot();
+      return;
     }
+
+    expect.fail("should have thrown");
   });
 });

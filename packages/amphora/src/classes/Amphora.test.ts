@@ -863,23 +863,20 @@ describe("Amphora", () => {
     test("should include debug context in error when key not found", async () => {
       amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
 
-      try {
-        await amphora.find({ issuer, id: "non-existent-id" });
-        fail("Expected find() to throw");
-      } catch (error) {
-        expect(error).toBeInstanceOf(AmphoraError);
-        expect((error as AmphoraError).message).toBe(
-          "Kryptos not found using query after refresh",
-        );
-        expect((error as AmphoraError).code).toBe(
-          "kryptos_not_found_by_query_after_refresh",
-        );
-        expect((error as AmphoraError).data).toEqual({
-          queryKeys: ["issuer", "id"],
-          totalKeys: 2,
-          activeKeys: 2,
-        });
-      }
+      const promise = amphora.find({ issuer, id: "non-existent-id" });
+
+      await expect(promise).rejects.toThrow(AmphoraError);
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({
+          message: "Kryptos not found using query after refresh",
+          code: "kryptos_not_found_by_query_after_refresh",
+          data: {
+            queryKeys: ["issuer", "id"],
+            totalKeys: 2,
+            activeKeys: 2,
+          },
+        }),
+      );
     });
   });
 
@@ -887,21 +884,20 @@ describe("Amphora", () => {
     test("should include debug context in error when key not found", () => {
       amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
 
-      try {
-        amphora.findSync({ issuer, id: "non-existent-id" });
-        fail("Expected findSync() to throw");
-      } catch (error) {
-        expect(error).toBeInstanceOf(AmphoraError);
-        expect((error as AmphoraError).message).toBe(
-          "Kryptos not found using query (sync, no refresh)",
-        );
-        expect((error as AmphoraError).code).toBe("kryptos_not_found_by_query_sync");
-        expect((error as AmphoraError).data).toEqual({
-          queryKeys: ["issuer", "id"],
-          totalKeys: 2,
-          activeKeys: 2,
-        });
-      }
+      expect(() => amphora.findSync({ issuer, id: "non-existent-id" })).toThrow(
+        AmphoraError,
+      );
+      expect(() => amphora.findSync({ issuer, id: "non-existent-id" })).toThrow(
+        expect.objectContaining({
+          message: "Kryptos not found using query (sync, no refresh)",
+          code: "kryptos_not_found_by_query_sync",
+          data: {
+            queryKeys: ["issuer", "id"],
+            totalKeys: 2,
+            activeKeys: 2,
+          },
+        }),
+      );
     });
   });
 
@@ -1866,15 +1862,14 @@ describe("Amphora", () => {
         ],
       });
 
-      try {
-        await amphora.setup();
-        fail("Expected setup() to throw");
-      } catch (error) {
-        expect(error).toBeInstanceOf(AmphoraError);
-        expect((error as AmphoraError).message).toBe(
-          "All external JWKS providers failed during refresh",
-        );
-      }
+      const promise = amphora.setup();
+
+      await expect(promise).rejects.toThrow(AmphoraError);
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({
+          message: "All external JWKS providers failed during refresh",
+        }),
+      );
     });
 
     test("should evaluate mixed trusted and untrusted issuers independently", async () => {
@@ -2436,30 +2431,28 @@ describe("Amphora", () => {
 
   describe("external issuer validation (item 1)", () => {
     test("rejects a non-URI issuer with external_issuer_not_uri", async () => {
-      try {
-        await amphora.external.addIssuer({
-          issuer: "not-a-uri",
-          jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
-          load: true,
-        });
-        fail("Expected addIssuer to throw");
-      } catch (error) {
-        expect(error).toBeInstanceOf(AmphoraError);
-        expect((error as AmphoraError).code).toBe("external_issuer_not_uri");
-      }
+      const promise = amphora.external.addIssuer({
+        issuer: "not-a-uri",
+        jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
+        load: true,
+      });
+
+      await expect(promise).rejects.toThrow(AmphoraError);
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({ code: "external_issuer_not_uri" }),
+      );
     });
 
     test("rejects a URN issuer without a jwksUri (cannot discover a URN)", async () => {
-      try {
-        await amphora.external.addIssuer({
-          issuer: "urn:lindorm:tyr:client:abc",
-          load: true,
-        });
-        fail("Expected addIssuer to throw");
-      } catch (error) {
-        expect(error).toBeInstanceOf(AmphoraError);
-        expect((error as AmphoraError).code).toBe("urn_issuer_requires_jwks_uri");
-      }
+      const promise = amphora.external.addIssuer({
+        issuer: "urn:lindorm:tyr:client:abc",
+        load: true,
+      });
+
+      await expect(promise).rejects.toThrow(AmphoraError);
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({ code: "urn_issuer_requires_jwks_uri" }),
+      );
     });
 
     test("accepts a URN issuer WITH a jwksUri (the tyr client-cache shape)", async () => {
@@ -2485,31 +2478,30 @@ describe("Amphora", () => {
     test("rejects a non-URI issuer on the LAZY path (no load) at registration", async () => {
       // The default lazy path must validate at addIssuer time, NOT silently accept
       // and only warn on a later refresh.
-      try {
-        await amphora.external.addIssuer({
-          issuer: "not-a-uri",
-          jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
-        });
-        fail("Expected addIssuer to throw");
-      } catch (error) {
-        expect(error).toBeInstanceOf(AmphoraError);
-        expect((error as AmphoraError).code).toBe("external_issuer_not_uri");
-      }
+      const promise = amphora.external.addIssuer({
+        issuer: "not-a-uri",
+        jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
+      });
+
+      await expect(promise).rejects.toThrow(AmphoraError);
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({ code: "external_issuer_not_uri" }),
+      );
+
       // The bad source was never registered.
       expect(amphora.external.issuers()).toHaveLength(0);
     });
 
     test("idp.set rejects a non-URI issuer even when lazy", async () => {
-      try {
-        await amphora.idp.set({
-          issuer: "not-a-uri",
-          jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
-        });
-        fail("Expected idp.set to throw");
-      } catch (error) {
-        expect(error).toBeInstanceOf(AmphoraError);
-        expect((error as AmphoraError).code).toBe("external_issuer_not_uri");
-      }
+      const promise = amphora.idp.set({
+        issuer: "not-a-uri",
+        jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
+      });
+
+      await expect(promise).rejects.toThrow(AmphoraError);
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({ code: "external_issuer_not_uri" }),
+      );
     });
 
     test("construction rejects a non-URI external issuer up front", () => {
@@ -2529,17 +2521,16 @@ describe("Amphora", () => {
         .get("/.well-known/openid-configuration")
         .reply(200, { jwksUri: "https://noissuer.lindorm.io/.well-known/jwks.json" });
 
-      try {
-        await amphora.external.addIssuer({
-          openIdConfigurationUri:
-            "https://noissuer.lindorm.io/.well-known/openid-configuration",
-          load: true,
-        });
-        fail("Expected addIssuer to throw");
-      } catch (error) {
-        expect(error).toBeInstanceOf(AmphoraError);
-        expect((error as AmphoraError).code).toBe("external_issuer_unresolved");
-      }
+      const promise = amphora.external.addIssuer({
+        openIdConfigurationUri:
+          "https://noissuer.lindorm.io/.well-known/openid-configuration",
+        load: true,
+      });
+
+      await expect(promise).rejects.toThrow(AmphoraError);
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({ code: "external_issuer_unresolved" }),
+      );
     });
 
     test("addIssuer rejects an issuer already claimed by the idp", async () => {
@@ -2548,15 +2539,12 @@ describe("Amphora", () => {
         jwksUri: "https://up.lindorm.io/.well-known/jwks.json",
       });
 
-      try {
-        await amphora.external.addIssuer({
+      await expect(
+        amphora.external.addIssuer({
           issuer: "https://up.lindorm.io/",
           jwksUri: "https://up.lindorm.io/.well-known/jwks.json",
-        });
-        fail("Expected addIssuer to throw");
-      } catch (error) {
-        expect((error as AmphoraError).code).toBe("issuer_scope_conflict");
-      }
+        }),
+      ).rejects.toThrow(expect.objectContaining({ code: "issuer_scope_conflict" }));
     });
 
     test("idp.set rejects an issuer already claimed by an external provider", async () => {
@@ -2565,15 +2553,12 @@ describe("Amphora", () => {
         jwksUri: "https://ext.lindorm.io/.well-known/jwks.json",
       });
 
-      try {
-        await amphora.idp.set({
+      await expect(
+        amphora.idp.set({
           issuer: "https://ext.lindorm.io/",
           jwksUri: "https://ext.lindorm.io/.well-known/jwks.json",
-        });
-        fail("Expected idp.set to throw");
-      } catch (error) {
-        expect((error as AmphoraError).code).toBe("issuer_scope_conflict");
-      }
+        }),
+      ).rejects.toThrow(expect.objectContaining({ code: "issuer_scope_conflict" }));
     });
 
     test("removeIssuer refuses the idp's issuer (use idp.clear)", async () => {
@@ -2582,12 +2567,9 @@ describe("Amphora", () => {
         jwksUri: "https://up.lindorm.io/.well-known/jwks.json",
       });
 
-      try {
-        amphora.external.removeIssuer("https://up.lindorm.io/");
-        fail("Expected removeIssuer to throw");
-      } catch (error) {
-        expect((error as AmphoraError).code).toBe("remove_issuer_is_idp");
-      }
+      expect(() => amphora.external.removeIssuer("https://up.lindorm.io/")).toThrow(
+        expect.objectContaining({ code: "remove_issuer_is_idp" }),
+      );
     });
   });
 
@@ -2803,13 +2785,10 @@ describe("Amphora", () => {
     };
 
     test("idp.config() throws idp_not_configured when unset", () => {
-      try {
-        amphora.idp.config();
-        fail("Expected idp.config() to throw");
-      } catch (error) {
-        expect(error).toBeInstanceOf(AmphoraError);
-        expect((error as AmphoraError).code).toBe("idp_not_configured");
-      }
+      expect(() => amphora.idp.config()).toThrow(AmphoraError);
+      expect(() => amphora.idp.config()).toThrow(
+        expect.objectContaining({ code: "idp_not_configured" }),
+      );
     });
 
     test("idp.set registers the upstream and loads its keys", async () => {
