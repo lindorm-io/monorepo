@@ -110,19 +110,19 @@ export type PylonAuthDriverSettings = {
   tokenEndpointAuthMethod?: TokenEndpointAuthMethod;
 };
 
-export type PylonOpenIdDriverSettings = PylonAuthDriverSettings & {
-  /**
-   * The issuer this driver reads discovery for. It must match the issuer
-   * registered on `amphora.idp` — that registration is what fetched the
-   * document and its keys.
-   */
-  issuer: string;
-};
+/**
+ * ⚠ There is no `issuer` here. The upstream is whatever is registered on
+ * `amphora.idp`, and that registration is what fetched the discovery document
+ * and the keys this driver's tokens are verified against. A second issuer
+ * string on pylon's side could only ever disagree with it.
+ */
+export type PylonOpenIdDriverSettings = PylonAuthDriverSettings;
 
 /**
  * A pure resource server never logs anyone in, so it carries no authorization
  * defaults and no PKCE. It authenticates to the introspection endpoint (RFC
- * 7662 §2.1) and reads userinfo, nothing more.
+ * 7662 §2.1) and reads userinfo, nothing more. Its provider is `amphora.idp`,
+ * the same as every other discovery-backed driver's.
  */
 export type PylonOpenIdResourceDriverSettings = {
   clientId: string;
@@ -133,6 +133,27 @@ export type PylonOpenIdResourceDriverSettings = {
    * methods, so it needs the same assertion knobs a relying party does.
    */
   clientAssertion?: Partial<PylonAuthDriverClientAssertionSettings>;
-  issuer: string;
   tokenEndpointAuthMethod?: TokenEndpointAuthMethod;
+};
+
+/**
+ * Which of amphora's issuer scopes {@link JwtDriver} pins.
+ *
+ * ⚠ REQUIRED, with no default. A service can legitimately hold BOTH — an OIDC
+ * provider that mints its own tokens AND federates to an upstream — so which
+ * one a deployment verifies against is a fact only the deployment knows. A
+ * default here would silently pick one of two live issuers.
+ */
+export type PylonJwtDriverIssuer = "self" | "idp";
+
+/**
+ * A verify-only driver's whole configuration: which issuer, and nothing else.
+ * No client id, no secret, no endpoints — it never talks to anyone.
+ */
+export type PylonJwtDriverSettings = {
+  /**
+   * `"self"` — this service IS the issuer (`amphora.internal`). `"idp"` — the
+   * single upstream registered on `amphora.idp`.
+   */
+  issuer: PylonJwtDriverIssuer;
 };

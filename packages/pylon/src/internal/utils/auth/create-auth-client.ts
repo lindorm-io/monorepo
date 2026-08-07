@@ -215,7 +215,12 @@ export const createAuthClient = (
 
   // The identity the IdP knows this pylon by — the SAME resolver the cache keys
   // on, so `ctx.auth.config()` and a cache key can never disagree.
-  const identity = (): Promise<PylonAuthClientConfig> =>
+  //
+  // ⚠ `async` over a synchronous resolver on purpose: `ctx.auth.config()` is a
+  // handler-facing promise-returning method, and a verify-only driver makes the
+  // resolver THROW rather than answer. Wrapping it turns that into a rejection,
+  // which is what every caller already handles.
+  const identity = async (): Promise<PylonAuthClientConfig> =>
     resolveAuthIdentity(config.driver, driverContext);
 
   const login = async (input: AuthorizeQuery = {}): Promise<AuthorizeResult> => {

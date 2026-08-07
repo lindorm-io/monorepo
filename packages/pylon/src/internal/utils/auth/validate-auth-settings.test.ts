@@ -8,7 +8,6 @@ import { validateAuthSettings } from "./validate-auth-settings.js";
 
 const ENDPOINTS: PylonAuthEndpoints = {
   issuer: "https://auth.lindorm.io",
-  jwksUri: null,
   authorizationEndpoint: "https://auth.lindorm.io/authorize",
   tokenEndpoint: "https://auth.lindorm.io/token",
   userinfoEndpoint: null,
@@ -19,7 +18,7 @@ const ENDPOINTS: PylonAuthEndpoints = {
 
 const createDriver = (overrides: Partial<IPylonAuthDriver> = {}): IPylonAuthDriver => ({
   clientId: "client-id",
-  endpoints: async () => ENDPOINTS,
+  endpoints: () => ENDPOINTS,
   authorize: vi.fn(),
   exchange: vi.fn(),
   refresh: vi.fn(),

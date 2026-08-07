@@ -75,6 +75,7 @@ describe("auth flow", () => {
   });
 
   const createConfig = (driver: IPylonAuthDriver): PylonAuthConfig => ({
+    cache: null,
     driver,
     defaultTokenExpiry: "1d",
     refresh: { maxAge: "1h", mode: "half_life" },
@@ -125,7 +126,6 @@ describe("auth flow", () => {
     nock.cleanAll();
 
     openIdConfiguration = {
-      issuer: ISSUER,
       authorizationEndpoint: `${ISSUER}/authorize`,
       tokenEndpoint: `${ISSUER}/token`,
       jwksUri: `${ISSUER}/jwks`,
@@ -141,7 +141,6 @@ describe("auth flow", () => {
     const driver = new OpenIdDriver({
       clientId: "client-id",
       clientSecret: "client-secret",
-      issuer: ISSUER,
       authorize: { scope: ["openid", "profile"] },
     });
 
@@ -275,7 +274,6 @@ describe("auth flow", () => {
     const driver = new Auth0Driver({
       clientId: "client-id",
       clientSecret: "client-secret",
-      issuer: ISSUER,
       authorize: {
         resource: "https://api.lindorm.io",
         scope: ["openid", "profile"],

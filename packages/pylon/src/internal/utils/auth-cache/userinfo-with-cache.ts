@@ -1,18 +1,20 @@
 import { isLive, ms } from "@lindorm/date";
 import type {
+  PylonAuthCacheConfig,
   PylonAuthClientConfig,
   PylonContext,
   PylonUserinfo,
 } from "../../../types/index.js";
 import { DEFAULT_USERINFO_CACHE_TTL } from "../../constants/auth-cache.js";
-import { AUTH_CACHE_SOURCE } from "../../constants/symbols.js";
-import type { AuthCacheConfig } from "./auth-cache-config.js";
+import { AUTH_CACHE_POLICY } from "../../constants/symbols.js";
 import { buildAuthCacheKey } from "./build-auth-cache-key.js";
 
 type Options = {
   /** The `(issuer, clientId)` the provider knows this pylon by — resolved from
-   *  the DRIVER, because that is the party the answer varies by. */
-  identity: () => Promise<PylonAuthClientConfig>;
+   *  the DRIVER, because that is the party the answer varies by. Synchronous:
+   *  the driver's endpoints are, and a driver with no client id THROWS here
+   *  rather than answering. */
+  identity: () => PylonAuthClientConfig;
   /** The uncached call, invoked on a miss and on every degraded path. */
   fetch: () => Promise<PylonUserinfo>;
 };
@@ -38,12 +40,16 @@ export const userinfoWithCache = async (
   token: string,
   options: Options,
 ): Promise<PylonUserinfo> => {
-  const config = (ctx as any)[AUTH_CACHE_SOURCE] as AuthCacheConfig | undefined;
+  const config = (ctx as any)[AUTH_CACHE_POLICY] as PylonAuthCacheConfig | undefined;
 
   // Off for userinfo specifically (`cache.userinfo: false`, introspection
-  // unaffected), or off for the deployment (no `auth.cache` block, or no
-  // key-value source to store in).
+  // unaffected), or off for the deployment (no `auth.cache` block).
   if (!config || config.userinfo === false) return options.fetch();
+
+  // No evictable source in this deployment: keep fetching, uncached and without
+  // error. Read AFTER the switches so an off deployment never opens a session it
+  // has no use for.
+  if (!ctx.cache) return options.fetch();
 
   // The response is a function of (token, provider, requesting client). Without
   // the last two there is no key that is safe to share, so the cache steps aside
@@ -51,7 +57,7 @@ export const userinfoWithCache = async (
   let identity: PylonAuthClientConfig;
 
   try {
-    identity = await options.identity();
+    identity = options.identity();
   } catch (error: any) {
     ctx.logger.debug("Userinfo cache skipped: auth driver exposes no identity", {
       error,
@@ -70,7 +76,7 @@ export const userinfoWithCache = async (
   // Dynamically import the entity so the static module graph from index.js stays
   // free of @lindorm/proteus (iris/proteus optionality).
   const { CachedUserinfo } = await import("../../../entities/CachedUserinfo.js");
-  const repository = config.kv.session({ logger: ctx.logger }).repository(CachedUserinfo);
+  const repository = ctx.cache.repository(CachedUserinfo);
 
   try {
     const entry = await repository.findOne({ id: key });

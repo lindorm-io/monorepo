@@ -33,20 +33,24 @@ import type {
  * grants would put them back on the object.
  *
  * The shared work lives in the same helpers `OpenIdDriver` calls, so the two can
- * never disagree about where the provider is or how to authenticate to it.
+ * never disagree about where the provider is or how to authenticate to it — its
+ * provider is `amphora.idp`, and it declares no issuer of its own.
+ *
+ * ⚠ It needs a DISCOVERY DOCUMENT: it reads the introspection and userinfo
+ * endpoints off one, and RFC 8414 §2's advertised auth methods to authenticate
+ * with. An upstream registered on amphora by `jwksUri` alone publishes none, so
+ * this driver cannot serve it — that is what `JwtDriver` is for.
  */
 export class OpenIdResourceDriver implements IPylonAuthDriver {
   readonly clientId: string;
 
   private readonly clientAssertionSettings: PylonAuthDriverClientAssertionSettings;
   private readonly clientSecret?: string;
-  private readonly issuer: string;
   private readonly pinnedTokenEndpointAuthMethod: PylonOpenIdResourceDriverSettings["tokenEndpointAuthMethod"];
 
   constructor(settings: PylonOpenIdResourceDriverSettings) {
     this.clientId = settings.clientId;
     this.clientSecret = settings.clientSecret;
-    this.issuer = settings.issuer;
     this.pinnedTokenEndpointAuthMethod = settings.tokenEndpointAuthMethod;
 
     this.clientAssertionSettings = {
@@ -55,8 +59,8 @@ export class OpenIdResourceDriver implements IPylonAuthDriver {
     };
   }
 
-  async endpoints(context: PylonAuthDriverContext): Promise<PylonAuthEndpoints> {
-    return openIdEndpoints(context, this.issuer);
+  endpoints(context: PylonAuthDriverContext): PylonAuthEndpoints {
+    return openIdEndpoints(context);
   }
 
   async introspect(
@@ -67,7 +71,7 @@ export class OpenIdResourceDriver implements IPylonAuthDriver {
       assertion: this.clientAssertionSettings,
       clientId: this.clientId,
       clientSecret: this.clientSecret,
-      endpoints: await this.endpoints(context),
+      endpoints: this.endpoints(context),
       method: this.tokenEndpointAuthMethod(context),
       token: options.token,
       ...(isString(options.tokenTypeHint) && { tokenTypeHint: options.tokenTypeHint }),
@@ -80,7 +84,7 @@ export class OpenIdResourceDriver implements IPylonAuthDriver {
   ): Promise<PylonUserinfo> {
     return fetchUserinfo(context, {
       accessToken: options.accessToken,
-      endpoints: await this.endpoints(context),
+      endpoints: this.endpoints(context),
     });
   }
 
@@ -90,7 +94,7 @@ export class OpenIdResourceDriver implements IPylonAuthDriver {
   ): Promise<string | null> {
     return resolveSubject(context, {
       accessToken: options.accessToken,
-      endpoints: await this.endpoints(context),
+      endpoints: this.endpoints(context),
     });
   }
 
@@ -102,7 +106,7 @@ export class OpenIdResourceDriver implements IPylonAuthDriver {
   private tokenEndpointAuthMethod(
     context: PylonAuthDriverContext,
   ): PylonClientAuthMethod {
-    const openid = getOpenIdConfiguration(context, { issuer: this.issuer });
+    const openid = getOpenIdConfiguration(context);
 
     return resolveTokenEndpointAuthMethod({
       assertionKey: this.clientAssertionSettings.key,

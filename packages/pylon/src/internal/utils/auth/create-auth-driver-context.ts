@@ -33,5 +33,13 @@ export const createAuthDriverContext = (ctx: PylonContext): PylonAuthDriverConte
     ],
   }),
   environment: ctx.state.app.environment,
+  // The request-scoped session, not the source: a driver writing through it
+  // inherits this request's actor and correlation id on every proteus hook.
+  // `undefined` when no `kv` source is configured. Read through a getter so the
+  // session is still only materialised on first use — `ctx.kv` is itself lazy,
+  // and a driver context is built on paths (`/.well-known`) that never touch it.
+  get kv() {
+    return ctx.kv;
+  },
   logger: ctx.logger,
 });

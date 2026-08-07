@@ -31,7 +31,7 @@ describe("socket auth (bearer) e2e", () => {
     logger = createMockLogger();
 
     amphora = new Amphora({
-      domain: SOCKET_AUTH_TEST_ISSUER,
+      issuer: SOCKET_AUTH_TEST_ISSUER,
       logger,
     });
 

@@ -27,13 +27,30 @@ import type {
  * silently never refreshing. Methods that throw `NOT_IMPLEMENTED` would defeat
  * this — every driver would then *have* every method.
  *
- * `clientId` and `endpoints` are the two exceptions and are REQUIRED. Neither is
- * a capability — together they are the IDENTITY of this relationship: pylon
- * verifies id_tokens against the `issuer` and `jwksUri` `endpoints()` returns,
- * and keys the introspection cache on `(issuer, clientId, token)` because RFC
- * 7662 §2.2 lets the authorization server answer the same token differently per
- * requesting client. There is no fallback for a driver that cannot say who its
- * provider is or who it talks to that provider as.
+ * `endpoints` is the one exception and is REQUIRED. It is not a capability — it
+ * is the IDENTITY of this relationship: pylon verifies tokens as having been
+ * issued by the `issuer` it returns.
+ *
+ * ## ⭐ The boundary: amphora FETCHES, the driver SHAPES
+ *
+ * **Amphora owns every issuer and every key, and does all of its fetching at
+ * ITS setup.** A driver never fetches a discovery document, never fetches a
+ * JWKS, and never declares an issuer of its own — it projects what amphora
+ * already holds onto {@link PylonAuthEndpoints}.
+ *
+ * **Which issuer scope a deployment uses is declared by WHICH DRIVER it picks**,
+ * never by a duplicate issuer string in pylon config. Amphora has three scopes:
+ * `amphora.internal` (this service's OWN issuer), `amphora.idp` (the single
+ * upstream), and `amphora.external` (foreign issuers). `OpenIdDriver` /
+ * `OpenIdResourceDriver` read the idp; `JwtDriver` pins whichever of the first
+ * two the deployment names.
+ *
+ * ⚠ **`endpoints()` is SYNCHRONOUS, and that signature is the enforcement.** A
+ * driver that cannot resolve its endpoints without awaiting something is a
+ * driver doing amphora's fetching, and it will not compile. A driver that needs
+ * keys from a foreign issuer registers that issuer with `amphora.external` —
+ * amphora then fetches and caches it, and the driver reads it synchronously
+ * like everything else.
  *
  * Drivers are not required to extend anything — this interface is the contract.
  * {@link PylonAuthDriverBase} is a convenience that implements the OAuth2
@@ -43,8 +60,20 @@ export interface IPylonAuthDriver {
   /**
    * The client identifier this driver presents to the provider. ⚠ The client
    * SECRET is deliberately not on the contract: it never leaves the driver.
+   *
+   * OPTIONAL, because a VERIFY-ONLY driver has no OAuth client: it never
+   * authenticates to a token or introspection endpoint, so there is nothing to
+   * be a client OF. Absent is the honest statement; an empty string would be a
+   * client id that is simply wrong.
+   *
+   * Its only readers are the driver-response caches, which key on
+   * `(issuer, clientId, token)` because RFC 7662 §2.2 lets the authorization
+   * server answer the same token differently per requesting client. Those paths
+   * are reached only through `introspect` / `userinfo` — methods a verify-only
+   * driver does not have — so an absent `clientId` is unreachable there rather
+   * than defaulted.
    */
-  readonly clientId: string;
+  readonly clientId?: string;
 
   /**
    * The PKCE transformation pylon derives the challenge with (RFC 7636 §4.2),
@@ -58,14 +87,24 @@ export interface IPylonAuthDriver {
 
   /**
    * The provider's endpoint surface. Called per request; a discovery-backed
-   * driver reads the cached document, a hardcoded one returns a literal.
+   * driver projects the document amphora already fetched, a hardcoded one
+   * returns a literal.
+   *
+   * ⚠ SYNCHRONOUS on purpose — see the boundary note on this interface. Every
+   * fetch happened at `amphora.setup()`; there is nothing left here to await.
    */
-  endpoints(context: PylonAuthDriverContext): Promise<PylonAuthEndpoints>;
+  endpoints(context: PylonAuthDriverContext): PylonAuthEndpoints;
 
   /**
    * Build the authorization request URL. A `URL` rather than a query dict so a
    * provider needing path or fragment control is not stuck; pylon post-asserts
    * that `state` and the code challenge survived onto it.
+   *
+   * ⚠ Async even though pylon's own drivers only construct a URL: a custom
+   * driver may need to persist per-flow state (its own PKCE record, a pushed
+   * authorization request per RFC 9126) before it can name the URL. That is
+   * capability the contract keeps — unlike `endpoints()`, where the async-ness
+   * would only ever be amphora's work done in the wrong place.
    */
   authorize?(
     context: PylonAuthDriverContext,
@@ -118,6 +157,10 @@ export interface IPylonAuthDriver {
    * browser to, or `local` when the provider has nothing to redirect to and the
    * session should simply be dropped (having been revoked server-side or not at
    * all).
+   *
+   * ⚠ Async for the same reason `authorize` is: pylon's own drivers only build
+   * a URL, but a driver whose provider ends sessions over a back channel (a
+   * revocation call, an RFC 7009 request) has real I/O to do here.
    */
   logout?(
     context: PylonAuthDriverContext,

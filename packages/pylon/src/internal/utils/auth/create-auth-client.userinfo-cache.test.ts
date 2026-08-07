@@ -14,7 +14,7 @@ import { afterEach, beforeEach, describe, expect, type Mock, test, vi } from "vi
 import { CachedUserinfo } from "../../../entities/CachedUserinfo.js";
 import type { IPylonAuthDriver } from "../../../interfaces/index.js";
 import type { PylonAuthConfig, PylonUserinfo } from "../../../types/index.js";
-import { AUTH_CACHE_SOURCE } from "../../constants/symbols.js";
+import { AUTH_CACHE_POLICY } from "../../constants/symbols.js";
 import { stageEncryptedField } from "../../utils/stage-encrypted-field.js";
 import { createAuthClient } from "./create-auth-client.js";
 
@@ -67,9 +67,8 @@ const createKv = async (amphora: IAmphora): Promise<ProteusSource> => {
 const createDriver = (userinfo: Mock, clientId = "client-a"): IPylonAuthDriver =>
   ({
     clientId,
-    endpoints: async () => ({
+    endpoints: () => ({
       issuer: ISSUER,
-      jwksUri: null,
       authorizationEndpoint: `${ISSUER}authorize`,
       tokenEndpoint: `${ISSUER}token`,
       userinfoEndpoint: `${ISSUER}userinfo`,
@@ -109,9 +108,11 @@ const createContext = (opts: ContextOptions): any => {
     },
   };
 
+  // Exactly what the dependencies middleware installs: the evictable SESSION as
+  // the storage, and the parsed `PylonAuthConfig.cache` as the policy.
   if (opts.kv) {
-    ctx[AUTH_CACHE_SOURCE] = {
-      kv: opts.kv,
+    ctx.cache = opts.kv.session({ logger: ctx.logger });
+    ctx[AUTH_CACHE_POLICY] = {
       userinfo: opts.userinfo === false ? false : { ttl: opts.ttl },
     };
   }
@@ -120,6 +121,7 @@ const createContext = (opts: ContextOptions): any => {
 };
 
 const createConfig = (driver: IPylonAuthDriver): PylonAuthConfig => ({
+  cache: null,
   driver,
   defaultTokenExpiry: "1d",
   refresh: { maxAge: "1h", mode: "half_life" },
@@ -164,7 +166,7 @@ describe("createAuthClient userinfo cache", () => {
     MockDate.set(NOW.toISOString());
 
     const { KryptosKit } = await import("@lindorm/kryptos");
-    amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
     amphora.add([
       KryptosKit.generate.enc.oct({
         algorithm: "A128KW",
@@ -286,12 +288,11 @@ describe("createAuthClient userinfo cache", () => {
     expect(hit.address).toEqual(miss.address);
   });
 
-  // The paired proof: the wire translation is NOT symmetric over `address` —
-  // `Aegis.toWire` snake-keys it, `Aegis.toDomain` hands it back verbatim. A
-  // wire-form payload would therefore return `{ streetAddress }` on a MISS and
-  // `{ street_address }` on a HIT. If this ever starts failing, aegis has been
-  // made symmetric and the choice may be revisited — but not before.
-  test("wire form would rewrite that same claim — why the payload is domain form", () => {
+  // Aegis is now symmetric over `address` — `toWire` snake-keys it and
+  // `toDomain` camels it back — so the asymmetry that once forced domain form is
+  // retired. The choice STANDS, on `updatedAt` alone: a wire-form payload
+  // flattens it to unix seconds and the `Date` never comes back (pinned above).
+  test("the address claim round-trips symmetrically now — that reason is retired", () => {
     const wire = Aegis.toWire({
       subject: "alice",
       address: { streetAddress: "1 Storgatan" },
@@ -299,7 +300,7 @@ describe("createAuthClient userinfo cache", () => {
 
     expect(wire.address).toEqual({ street_address: "1 Storgatan" });
     expect(Aegis.toDomain(wire).claims.address).toEqual({
-      street_address: "1 Storgatan",
+      streetAddress: "1 Storgatan",
     });
   });
 
@@ -365,7 +366,7 @@ describe("createAuthClient userinfo cache", () => {
   // No client identity ⇒ no key that is safe to share, so the cache steps aside
   // rather than key on the token alone.
   test("should skip the cache when the driver cannot resolve its identity", async () => {
-    const unresolvable = async () => {
+    const unresolvable = (): never => {
       throw new Error("idp not configured");
     };
 

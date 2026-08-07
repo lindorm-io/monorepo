@@ -46,7 +46,6 @@ describe("OpenIdResourceDriver", () => {
     driver = new OpenIdResourceDriver({
       clientId: "resource-server",
       clientSecret: "resource-secret",
-      issuer: ISSUER,
     });
   });
 
@@ -97,8 +96,8 @@ describe("OpenIdResourceDriver", () => {
     });
   });
 
-  test("should resolve the same endpoints as the relying party driver", async () => {
-    await expect(driver.endpoints(context)).resolves.toMatchSnapshot();
+  test("should resolve the same endpoints as the relying party driver", () => {
+    expect(driver.endpoints(context)).toMatchSnapshot();
   });
 
   test("should introspect with its OWN credentials", async () => {

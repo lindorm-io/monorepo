@@ -11,6 +11,7 @@ import {
   SOCKET_AUTH_TEST_KEY_ID,
 } from "../__fixtures__/socket-auth/shared.js";
 import type { IPylonSession } from "../interfaces/index.js";
+import { OpenIdResourceDriver } from "../drivers/auth/OpenIdResourceDriver.js";
 import { Pylon } from "./Pylon.js";
 import { afterAll, beforeAll, describe, expect, test, vi, type Mock } from "vitest";
 
@@ -91,7 +92,7 @@ describe("socket auth (session / cookie) e2e", () => {
     logger = createMockLogger();
 
     amphora = new Amphora({
-      domain: SOCKET_AUTH_TEST_ISSUER,
+      issuer: SOCKET_AUTH_TEST_ISSUER,
       logger,
     });
 
@@ -119,12 +120,15 @@ describe("socket auth (session / cookie) e2e", () => {
       logger,
       environment: "test",
       cors: { allowOrigins: [ALLOWED_ORIGIN] },
-      session: {
-        enabled: true,
-        expiry: "90 minutes",
-        httpOnly: true,
-        sameSite: "lax",
-        kv: inMemory.source as any,
+      kv: inMemory.source as any,
+      auth: {
+        driver: new OpenIdResourceDriver({
+          clientId: "client-id",
+        }),
+        session: {
+          enabled: true,
+          sameSite: "lax",
+        },
       },
       routes: join(__dirname, "..", "__fixtures__", "socket-auth", "routes"),
       socket: {
@@ -385,7 +389,7 @@ describe("PylonIo constructor enforces CORS safety net when session is enabled",
   beforeAll(() => {
     logger = createMockLogger();
     amphora = new Amphora({
-      domain: SOCKET_AUTH_TEST_ISSUER,
+      issuer: SOCKET_AUTH_TEST_ISSUER,
       logger,
     });
     amphora.add(
@@ -409,12 +413,14 @@ describe("PylonIo constructor enforces CORS safety net when session is enabled",
     amphora,
     logger,
     environment: "test" as const,
-    session: {
-      enabled: true,
-      expiry: "90 minutes" as const,
-      httpOnly: true,
-      sameSite: "lax" as const,
-      signed: false,
+    auth: {
+      driver: new OpenIdResourceDriver({
+        clientId: "client-id",
+      }),
+      session: {
+        enabled: true as const,
+        sameSite: "lax" as const,
+      },
     },
     routes: join(__dirname, "..", "__fixtures__", "socket-auth", "routes"),
     socket: {

@@ -1,9 +1,9 @@
 import type { ReadableTime } from "@lindorm/date";
 import type { CodeChallengeMethod, ResponseType } from "@lindorm/openid";
-import type { IProteusSource } from "@lindorm/proteus";
 import type { DeepPartial } from "@lindorm/types";
 import type { IPylonAuthDriver } from "../../interfaces/PylonAuthDriver.js";
 import type { PylonEncKey } from "./keys.js";
+import type { PylonSessionSettings } from "./session-settings.js";
 
 export type PylonLoginCookie = {
   /**
@@ -77,8 +77,8 @@ export type PylonAuthRouterConfig = {
  * `driver.userinfo` — a driver without one simply leaves that half of the cache
  * dead, which pylon warns about once at boot.
  *
- * Storage lives one level up, on `auth.kv` / `auth.encryption`, like every other
- * feature block.
+ * Storage is pylon's `cache` source (falling back to `kv`) — these entries are
+ * evictable by construction. The KEK sealing them is `auth.encryption`.
  */
 export type PylonAuthCacheSettings = {
   enabled: boolean;
@@ -89,16 +89,39 @@ export type PylonAuthCacheSettings = {
    * turns introspection caching off for the deployment while userinfo caching
    * stays on.
    */
-  introspection?: false | { ttl?: ReadableTime };
+  introspection?: PylonAuthCacheEntry;
   /**
    * Staleness tolerance for profile claims. Default `5 minutes` — there is no
    * revocation window to respect here, since a profile is not an authorization
    * decision. `false` turns userinfo caching off while introspection stays on.
    */
-  userinfo?: false | { ttl?: ReadableTime };
+  userinfo?: PylonAuthCacheEntry;
+};
+
+/**
+ * One cached concern's policy. `false` is OFF — the same spelling
+ * `createAccessTokenMiddleware({ cache: false })` already uses per mount, so
+ * "off" has ONE idiom rather than two.
+ */
+export type PylonAuthCacheEntry = false | { ttl?: ReadableTime };
+
+/**
+ * The resolved driver-response cache policy. It holds NO storage handle: the
+ * entries live in `ctx.cache` like every other evictable row. `null` is the
+ * whole off switch — `parseAuthConfig` produces it whenever the deployment did
+ * not enable `auth.cache`, so there is no second flag free to disagree.
+ *
+ * ⚠ The per-concern TTLs are carried UNRESOLVED. Introspection resolves over
+ * three tiers (per-mount, deployment, built-in) and userinfo over two, each in
+ * one expression at its own call site.
+ */
+export type PylonAuthCacheConfig = {
+  introspection?: PylonAuthCacheEntry;
+  userinfo?: PylonAuthCacheEntry;
 };
 
 export type PylonAuthConfig = {
+  cache: PylonAuthCacheConfig | null;
   driver: IPylonAuthDriver;
   defaultTokenExpiry: ReadableTime;
   refresh: PylonAuthRefreshConfig;
@@ -115,11 +138,14 @@ export type PylonAuthSettings = {
   driver: IPylonAuthDriver;
   router?: DeepPartial<PylonAuthRouterConfig>;
   /**
-   * The ephemeral source the cache entities live in, overriding the top-level
-   * `kv` — exactly as `session.kv`, `rateLimit.kv` and `cache.kv` do. **No source
-   * ⇒ no cache**: the driver is called on every request, without error.
+   * The session cookie. It lives HERE, not at the top level, because a pylon
+   * session is not a state bag — `Session` is eight fields (id, accessToken,
+   * expiresAt, idToken, issuedAt, refreshToken, scope, subject) with no `data`
+   * and no consumer payload. A pylon session IS an OAuth artifact store; the
+   * cookie is only how it is addressed. Nesting it under `auth` puts the store
+   * next to the flow that fills it.
    */
-  kv?: IProteusSource;
+  session?: PylonSessionSettings;
   /**
    * The at-rest KEK selector staged onto `CachedIntrospection.payload` and
    * `CachedUserinfo.payload` before the source sets up. Both hold data about a

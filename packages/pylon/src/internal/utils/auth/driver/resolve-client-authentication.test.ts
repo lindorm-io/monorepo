@@ -34,8 +34,49 @@ describe("resolveClientAuthentication", () => {
       amphora,
       conduit: {} as never,
       environment: "test",
+      kv: undefined,
       logger,
     };
+  });
+
+  /**
+   * `PylonAuthEndpoints.tokenEndpoint` is `string | null`, so the assertion
+   * `aud` can be absent. RFC 7523 §3 makes `aud` mandatory on the assertion and
+   * OIDC Core §9 names the token endpoint URL as that value — there is nothing
+   * to address the assertion to, and only the two ASSERTION methods care.
+   */
+  describe("assertion audience", () => {
+    const key = { kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES256" }) };
+
+    test("should refuse private_key_jwt with no audience", async () => {
+      await expect(
+        resolve("private_key_jwt", {
+          assertion: { expiry: "1 minute", key },
+          audience: null,
+        }),
+      ).rejects.toMatchObject({
+        code: "client_assertion_audience_missing",
+        type: "urn:lindorm:pylon:error:client_assertion_audience_missing",
+      });
+    });
+
+    test("should refuse client_secret_jwt with no audience", async () => {
+      await expect(
+        resolve("client_secret_jwt", { audience: null }),
+      ).rejects.toMatchObject({
+        code: "client_assertion_audience_missing",
+      });
+    });
+
+    // The other three never mint an assertion, so a missing audience is none of
+    // their business — refusing them would break a provider that publishes an
+    // introspection endpoint but no token endpoint.
+    test.each(["client_secret_basic", "client_secret_post", "none"] as const)(
+      "should not care about the audience for %s",
+      async (method) => {
+        await expect(resolve(method, { audience: null })).resolves.toBeDefined();
+      },
+    );
   });
 
   // The three methods that predate the assertion pair must be untouched by it.

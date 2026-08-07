@@ -12,10 +12,11 @@ import { createAuthClient } from "./create-auth-client.js";
 
 const ISSUER = "https://auth.lindorm.io";
 
+const AUTHORIZATION_ENDPOINT = `${ISSUER}/authorize`;
+
 const ENDPOINTS: PylonAuthEndpoints = {
   issuer: ISSUER,
-  jwksUri: `${ISSUER}/jwks`,
-  authorizationEndpoint: `${ISSUER}/authorize`,
+  authorizationEndpoint: AUTHORIZATION_ENDPOINT,
   tokenEndpoint: `${ISSUER}/token`,
   userinfoEndpoint: `${ISSUER}/userinfo`,
   introspectionEndpoint: `${ISSUER}/introspect`,
@@ -38,9 +39,9 @@ const ROUTER: PylonAuthRouterConfig = {
  */
 const createDriver = (overrides: Partial<IPylonAuthDriver> = {}): IPylonAuthDriver => ({
   clientId: "client-id",
-  endpoints: vi.fn().mockResolvedValue(ENDPOINTS),
+  endpoints: vi.fn().mockReturnValue(ENDPOINTS),
   authorize: vi.fn(async (_context, options) => {
-    const url = new URL(ENDPOINTS.authorizationEndpoint);
+    const url = new URL(AUTHORIZATION_ENDPOINT);
     url.searchParams.set("state", options.state);
     url.searchParams.set("scope", "openid profile");
     url.searchParams.set("response_type", "code");
@@ -65,6 +66,7 @@ const createDriver = (overrides: Partial<IPylonAuthDriver> = {}): IPylonAuthDriv
 });
 
 const createConfig = (driver: IPylonAuthDriver, router = false): PylonAuthConfig => ({
+  cache: null,
   driver,
   defaultTokenExpiry: "1d",
   refresh: { maxAge: "1h", mode: "half_life" },
@@ -132,7 +134,7 @@ describe("createAuthClient", () => {
         clientId: "resource-server",
         endpoints: vi
           .fn()
-          .mockResolvedValue({ ...ENDPOINTS, issuer: "https://tenant.lindorm.io" }),
+          .mockReturnValue({ ...ENDPOINTS, issuer: "https://tenant.lindorm.io" }),
       });
 
       const client = createAuthClient(createCtx() as any, createConfig(tenant));
@@ -413,7 +415,7 @@ describe("createAuthClient", () => {
 
     test("should refuse a url the driver stripped the state from", async () => {
       const stripped = createDriver({
-        authorize: vi.fn(async () => new URL(ENDPOINTS.authorizationEndpoint)),
+        authorize: vi.fn(async () => new URL(AUTHORIZATION_ENDPOINT)),
       });
       const client = createAuthClient(createCtx() as any, createConfig(stripped, true));
 
@@ -425,7 +427,7 @@ describe("createAuthClient", () => {
     test("should refuse a url the driver stripped the code challenge from", async () => {
       const stripped = createDriver({
         authorize: vi.fn(async (_context, options) => {
-          const url = new URL(ENDPOINTS.authorizationEndpoint);
+          const url = new URL(AUTHORIZATION_ENDPOINT);
           url.searchParams.set("state", options.state);
           return url;
         }),

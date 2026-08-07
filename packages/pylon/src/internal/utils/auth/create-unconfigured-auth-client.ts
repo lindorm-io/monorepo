@@ -9,7 +9,7 @@ const notConfigured = (method: string): never => {
       title: "Auth Not Configured",
       type: "urn:lindorm:pylon:error:auth_not_configured",
       details:
-        "Add `auth: { driver: new OpenIdDriver({ issuer, clientId, clientSecret }) }` to your Pylon options to use auth features.",
+        "Add `auth: { driver: new OpenIdDriver({ clientId, clientSecret }) }` to your Pylon options to use auth features, and register the upstream on the amphora (`idp`) — the driver reads its issuer from there.",
       data: { method },
     },
   );

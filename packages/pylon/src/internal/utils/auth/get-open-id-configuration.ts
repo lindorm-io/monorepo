@@ -3,24 +3,29 @@ import { ServerError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
 import type { OpenIdConfiguration } from "@lindorm/openid";
 
-// Structural, not a named settings type: the auth driver reads discovery with
-// nothing but the issuer in hand.
-export const getOpenIdConfiguration = (
-  ctx: { amphora: IAmphora },
-  config: { issuer: string },
-): OpenIdConfiguration => {
+/**
+ * The upstream IdP's discovery document, validated once at pylon's boundary.
+ *
+ * ⚠ It takes NO issuer. Which issuer this is, is `amphora.idp` — the driver has
+ * no issuer of its own to check the document against, and the check that used
+ * to live here (`idp.issuer !== config.issuer`) could only ever compare amphora
+ * to a copy of amphora.
+ */
+export const getOpenIdConfiguration = (ctx: {
+  amphora: IAmphora;
+}): OpenIdConfiguration => {
   // The upstream IdP is the amphora `idp`; `config()` throws `idp_not_configured`
   // when none is set — trying to read a configuration that isn't there IS an error.
   const idp = ctx.amphora.idp.config();
 
-  if (idp.issuer !== config.issuer || !idp.openIdConfiguration) {
+  if (!idp.openIdConfiguration) {
     throw new ServerError("OpenID configuration not found", {
       code: "openid_configuration_not_found",
       title: "OpenID Configuration Not Found",
       type: "urn:lindorm:pylon:error:openid_configuration_not_found",
       details:
-        "The amphora idp is not configured for this issuer, or its discovery document has not been fetched. Register the upstream via amphora.idp.set / the `idp` setting.",
-      data: { issuer: config.issuer, idpIssuer: idp.issuer },
+        "The amphora idp has no discovery document. Either it was registered without one (an issuer + jwksUri pair discovers nothing), or amphora has not resolved it yet — a lazily registered idp resolves on `amphora.setup()`.",
+      data: { issuer: idp.issuer },
     });
   }
 
@@ -42,7 +47,7 @@ export const getOpenIdConfiguration = (
       type: "urn:lindorm:pylon:error:openid_configuration_incomplete",
       details:
         "The upstream IdP's discovery document omits metadata the specs mark REQUIRED (OIDC Discovery §3 / RFC 8414 §2); see the missing wire names in error data. The document cannot be used as an OpenID Provider configuration.",
-      data: { issuer: config.issuer, missing },
+      data: { issuer: idp.issuer, missing },
     });
   }
 

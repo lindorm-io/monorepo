@@ -21,7 +21,6 @@ import type {
   PylonAuthUserinfoOptions,
   PylonClientAuthMethod,
   PylonIntrospection,
-  PylonOpenIdDriverSettings,
   PylonUserinfo,
 } from "../../types/index.js";
 import { PylonAuthDriverBase } from "./PylonAuthDriverBase.js";
@@ -33,20 +32,14 @@ import { PylonAuthDriverBase } from "./PylonAuthDriverBase.js";
  * It implements EVERY method on the contract, so pylon's boot validation passes
  * whatever the deployment configures.
  *
- * The discovery document comes from `amphora.idp`, which fetched and caches it
- * alongside the provider's keys — this driver never fetches it itself.
+ * ⚠ It declares NO issuer. Its provider is whatever is registered on
+ * `amphora.idp` — the registration that fetched the discovery document and the
+ * provider's keys. Picking this driver IS the declaration that the upstream idp
+ * is the party this deployment talks to.
  */
 export class OpenIdDriver extends PylonAuthDriverBase {
-  protected readonly issuer: string;
-
-  constructor(settings: PylonOpenIdDriverSettings) {
-    super(settings);
-
-    this.issuer = settings.issuer;
-  }
-
-  async endpoints(context: PylonAuthDriverContext): Promise<PylonAuthEndpoints> {
-    return openIdEndpoints(context, this.issuer);
+  endpoints(context: PylonAuthDriverContext): PylonAuthEndpoints {
+    return openIdEndpoints(context);
   }
 
   async introspect(
@@ -57,7 +50,7 @@ export class OpenIdDriver extends PylonAuthDriverBase {
       assertion: this.clientAssertionSettings,
       clientId: this.clientId,
       clientSecret: this.clientSecret,
-      endpoints: await this.endpoints(context),
+      endpoints: this.endpoints(context),
       method: this.introspectionEndpointAuthMethod(context),
       token: options.token,
       ...(isString(options.tokenTypeHint) && { tokenTypeHint: options.tokenTypeHint }),
@@ -70,7 +63,7 @@ export class OpenIdDriver extends PylonAuthDriverBase {
   ): Promise<PylonUserinfo> {
     return fetchUserinfo(context, {
       accessToken: options.accessToken,
-      endpoints: await this.endpoints(context),
+      endpoints: this.endpoints(context),
     });
   }
 
@@ -80,7 +73,7 @@ export class OpenIdDriver extends PylonAuthDriverBase {
   ): Promise<string | null> {
     return resolveSubject(context, {
       accessToken: options.accessToken,
-      endpoints: await this.endpoints(context),
+      endpoints: this.endpoints(context),
     });
   }
 
@@ -88,7 +81,7 @@ export class OpenIdDriver extends PylonAuthDriverBase {
     context: PylonAuthDriverContext,
     options: PylonAuthLogoutOptions,
   ): Promise<PylonAuthLogoutResult> {
-    const endpoints = await this.endpoints(context);
+    const endpoints = this.endpoints(context);
 
     // `end_session_endpoint` is OPTIONAL (OIDC RP-Initiated Logout 1.0 §2). A
     // provider that omits it has no RP-initiated logout to redirect to — which
@@ -132,8 +125,7 @@ export class OpenIdDriver extends PylonAuthDriverBase {
       clientSecret: this.clientSecret,
       logger: context.logger,
       pinned: this.pinnedTokenEndpointAuthMethod,
-      supported: getOpenIdConfiguration(context, { issuer: this.issuer })
-        .tokenEndpointAuthMethodsSupported,
+      supported: getOpenIdConfiguration(context).tokenEndpointAuthMethodsSupported,
     });
   }
 
@@ -149,7 +141,7 @@ export class OpenIdDriver extends PylonAuthDriverBase {
   protected introspectionEndpointAuthMethod(
     context: PylonAuthDriverContext,
   ): PylonClientAuthMethod {
-    const openid = getOpenIdConfiguration(context, { issuer: this.issuer });
+    const openid = getOpenIdConfiguration(context);
 
     return resolveTokenEndpointAuthMethod({
       assertionKey: this.clientAssertionSettings.key,

@@ -1,18 +1,19 @@
 import { isBefore, isLive, ms } from "@lindorm/date";
 import type {
+  PylonAuthCacheConfig,
+  PylonAuthCacheEntry,
   PylonAuthClientConfig,
   PylonHttpContext,
   PylonIntrospection,
 } from "../../../types/index.js";
 import { DEFAULT_INTROSPECTION_CACHE_TTL } from "../../constants/auth-cache.js";
-import { AUTH_CACHE_SOURCE } from "../../constants/symbols.js";
-import type { AuthCacheConfig, AuthCacheEntryOptions } from "./auth-cache-config.js";
+import { AUTH_CACHE_POLICY } from "../../constants/symbols.js";
 import { buildAuthCacheKey } from "./build-auth-cache-key.js";
 import { fromCachedIntrospection } from "./from-cached-introspection.js";
 import { toCachedIntrospection } from "./to-cached-introspection.js";
 
 /** Per-mount override. `false` turns the cache off for this mount alone. */
-export type IntrospectionCacheOptions = AuthCacheEntryOptions;
+export type IntrospectionCacheOptions = PylonAuthCacheEntry;
 
 /**
  * `ctx.auth.introspect` with a short-lived shared cache in front of it.
@@ -34,14 +35,19 @@ export const introspectWithCache = async (
   token: string,
   cache: IntrospectionCacheOptions | undefined,
 ): Promise<PylonIntrospection> => {
-  const config = (ctx as any)[AUTH_CACHE_SOURCE] as AuthCacheConfig | undefined;
+  const config = (ctx as any)[AUTH_CACHE_POLICY] as PylonAuthCacheConfig | undefined;
 
   // Off for this mount (the sensitive-route carve-out), off for introspection
   // specifically (`cache.introspection: false`, userinfo unaffected), or off for
-  // the deployment (no `auth.cache` block, or no key-value source to store in).
+  // the deployment (no `auth.cache` block).
   if (cache === false || !config || config.introspection === false) {
     return ctx.auth.introspect(token);
   }
+
+  // No evictable source in this deployment: keep introspecting, uncached and
+  // without error. Read AFTER the switches so an off deployment never opens a
+  // session it has no use for.
+  if (!ctx.cache) return ctx.auth.introspect(token);
 
   // The response is a function of (token, authorization server, requesting
   // client) — RFC 7662 §2.2. ⚠ Both come from the DRIVER, which is the party
@@ -74,9 +80,7 @@ export const introspectWithCache = async (
   // free of @lindorm/proteus (iris/proteus optionality).
   const { CachedIntrospection } =
     await import("../../../entities/CachedIntrospection.js");
-  const repository = config.kv
-    .session({ logger: ctx.logger })
-    .repository(CachedIntrospection);
+  const repository = ctx.cache.repository(CachedIntrospection);
 
   try {
     const entry = await repository.findOne({ id: key });

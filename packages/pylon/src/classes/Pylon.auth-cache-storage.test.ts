@@ -1,8 +1,9 @@
-// Storage for the driver-response caches sits on the FEATURE — `auth.kv` and
-// `auth.encryption` — exactly like `session.kv` / `webhook.encryption`, and
-// resolves as `auth.kv ?? kv`. Driven against REAL sqlite sources and a REAL
-// Amphora: which source a table landed in, and which key sealed it, cannot be
-// asserted against a mock.
+// A cached introspection or userinfo answer is DISPOSABLE — losing one costs a
+// round trip — so both entities land in the evictable `cache` source, which
+// falls back to `kv` when a deployment runs one ephemeral store. The KEK sealing
+// them is still named per feature (`auth.encryption`). Driven against REAL
+// sqlite sources and a REAL Amphora: which source a table landed in, and which
+// key sealed it, cannot be asserted against a mock.
 
 import { parseAes } from "@lindorm/aes";
 import { Amphora, type IAmphora } from "@lindorm/amphora";
@@ -36,7 +37,6 @@ const createSource = (amphora: IAmphora): ProteusSource => {
 const createKek = (purpose: string): IKryptos =>
   KryptosKit.generate.enc.oct({
     algorithm: "A128KW",
-    issuer: ISSUER,
     publish: false,
     purpose,
   });
@@ -45,13 +45,13 @@ const driver = (): PylonAuthSettings["driver"] =>
   new OpenIdResourceDriver({
     clientId: "client-id",
     clientSecret: "client-secret",
-    issuer: ISSUER,
   });
 
 const createPylon = (
   amphora: IAmphora,
   auth: PylonAuthSettings,
   kv?: ProteusSource,
+  cache?: ProteusSource,
 ): Pylon =>
   new Pylon({
     logger: createMockLogger(),
@@ -62,6 +62,7 @@ const createPylon = (
     port: 55597,
     version: "0.0.1",
     kv: kv as any,
+    cache: cache as any,
     auth,
   });
 
@@ -69,10 +70,9 @@ const createPylon = (
  * The tables proteus synchronised onto this source — the only honest answer to
  * "did the entity land here?".
  *
- * ⚠ Pylon connects the TOP-LEVEL `db`/`kv`/`bus` only; a feature-level source is
- * the consumer's to connect (pre-existing and uniform across `session.kv`,
- * `cache.kv`, `rateLimit.kv`), so the test connects it here — after `setup()`,
- * which is where the entity registration and KEK staging happened.
+ * `connect()` / `setup()` are idempotent, so calling them here after the pylon
+ * has already run its own is safe — and it is what makes the assertion read the
+ * schema as it stands once registration and KEK staging have happened.
  */
 const tableNames = async (source: ProteusSource): Promise<string> => {
   await source.connect();
@@ -127,8 +127,8 @@ describe("Pylon auth cache storage", () => {
     vi.clearAllMocks();
   });
 
-  test("should register both cache entities on the top-level kv when auth names none", async () => {
-    const amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+  test("should register both cache entities on kv when no cache source is set", async () => {
+    const amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
     amphora.add([createKek("pylon:kek")]);
 
     const kv = createSource(amphora);
@@ -142,35 +142,36 @@ describe("Pylon auth cache storage", () => {
     expect(tables).toContain("CachedUserinfo");
   });
 
-  // `auth.kv ?? kv`, in that order — the feature-level source WINS.
-  test("should honour auth.kv over the top-level kv", async () => {
-    const amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+  // `cache ?? kv` — the evictable source WINS when a deployment splits the two.
+  test("should register both cache entities on cache, not kv, when the two are split", async () => {
+    const amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
     amphora.add([createKek("pylon:kek")]);
 
-    const authKv = createSource(amphora);
-    const fallbackKv = createSource(amphora);
+    const kv = createSource(amphora);
+    const cache = createSource(amphora);
 
     pylon = createPylon(
       amphora,
-      { driver: driver(), kv: authKv as any, cache: { enabled: true } },
-      fallbackKv,
+      { driver: driver(), cache: { enabled: true } },
+      kv,
+      cache,
     );
 
     await pylon.setup();
 
-    const auth = await tableNames(authKv);
-    const fallback = await tableNames(fallbackKv);
+    const cacheTables = await tableNames(cache);
+    const kvTables = await tableNames(kv);
 
-    expect(auth).toContain("CachedIntrospection");
-    expect(auth).toContain("CachedUserinfo");
-    expect(fallback).not.toContain("CachedIntrospection");
-    expect(fallback).not.toContain("CachedUserinfo");
+    expect(cacheTables).toContain("CachedIntrospection");
+    expect(cacheTables).toContain("CachedUserinfo");
+    expect(kvTables).not.toContain("CachedIntrospection");
+    expect(kvTables).not.toContain("CachedUserinfo");
   });
 
-  // No source at either level ⇒ no cache, and setup must still succeed: a
-  // deployment without a kv keeps calling the driver, uncached and without error.
-  test("should set up without a source at either level", async () => {
-    const amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+  // No ephemeral source at all ⇒ no cache, and setup must still succeed: a
+  // deployment without one keeps calling the driver, uncached and without error.
+  test("should set up without any ephemeral source", async () => {
+    const amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
     amphora.add([createKek("pylon:kek")]);
 
     pylon = createPylon(amphora, { driver: driver(), cache: { enabled: true } });
@@ -181,7 +182,7 @@ describe("Pylon auth cache storage", () => {
   // A separate blast radius for the cached credentials: `auth.encryption` names
   // its own KEK, and the default `pylon:kek` must NOT be the one that sealed it.
   test("should seal both payloads under auth.encryption", async () => {
-    const amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+    const amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
     const bootstrap = createKek("pylon:kek");
     const authKek = createKek("pylon:auth-cache");
     amphora.add([bootstrap, authKek]);
@@ -224,7 +225,7 @@ describe("Pylon auth cache storage", () => {
 
   // A concern switched off gets no table at all — dead schema is still schema.
   test("should register only the concern that is switched on", async () => {
-    const amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+    const amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
     amphora.add([createKek("pylon:kek")]);
 
     const kv = createSource(amphora);

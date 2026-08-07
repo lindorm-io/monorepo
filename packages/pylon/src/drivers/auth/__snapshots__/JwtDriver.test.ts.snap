@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`JwtDriver > endpoints > should pin the upstream idp's issuer 1`] = `
+{
+  "authorizationEndpoint": null,
+  "endSessionEndpoint": null,
+  "introspectionEndpoint": null,
+  "issuer": "https://auth.lindorm.io/",
+  "revocationEndpoint": null,
+  "tokenEndpoint": null,
+  "userinfoEndpoint": null,
+}
+`;
+
+exports[`JwtDriver > endpoints > should pin this service's own issuer 1`] = `
+{
+  "authorizationEndpoint": null,
+  "endSessionEndpoint": null,
+  "introspectionEndpoint": null,
+  "issuer": "https://tyr.lindorm.io/",
+  "revocationEndpoint": null,
+  "tokenEndpoint": null,
+  "userinfoEndpoint": null,
+}
+`;

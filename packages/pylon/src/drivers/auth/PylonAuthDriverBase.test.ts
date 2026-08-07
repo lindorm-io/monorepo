@@ -23,12 +23,31 @@ axios.defaults.proxy = false;
  * OAuth2 mechanic below comes from the base.
  */
 class TestDriver extends PylonAuthDriverBase {
-  public async endpoints(): Promise<PylonAuthEndpoints> {
+  public endpoints(): PylonAuthEndpoints {
     return {
       issuer: "https://auth.lindorm.io",
-      jwksUri: "https://auth.lindorm.io/jwks",
       authorizationEndpoint: "https://auth.lindorm.io/authorize",
       tokenEndpoint: "https://auth.lindorm.io/token",
+      userinfoEndpoint: null,
+      introspectionEndpoint: null,
+      revocationEndpoint: null,
+      endSessionEndpoint: null,
+    };
+  }
+}
+
+/**
+ * `authorizationEndpoint` and `tokenEndpoint` are `string | null` on the surface
+ * so a VERIFY-ONLY driver can state that its provider has neither. This base IS
+ * the relying party, so reaching it with either missing is a misconfiguration
+ * that must fail by name rather than request `null`.
+ */
+class EndpointlessDriver extends PylonAuthDriverBase {
+  public endpoints(): PylonAuthEndpoints {
+    return {
+      issuer: "https://auth.lindorm.io",
+      authorizationEndpoint: null,
+      tokenEndpoint: null,
       userinfoEndpoint: null,
       introspectionEndpoint: null,
       revocationEndpoint: null,
@@ -115,6 +134,47 @@ describe("PylonAuthDriverBase", () => {
 
     test("should keep an explicit plain", () => {
       expect(createDriver({ pkce: "plain" }).pkce).toBe("plain");
+    });
+  });
+
+  describe("missing endpoints", () => {
+    const endpointless = (): EndpointlessDriver =>
+      new EndpointlessDriver({ clientId: "client-id", clientSecret: "client-secret" });
+
+    test("should refuse to authorize against a provider with no authorization endpoint", async () => {
+      await expect(
+        endpointless().authorize(context, authorizeOptions()),
+      ).rejects.toMatchObject({
+        code: "idp_authorization_endpoint_not_supported",
+        type: "urn:lindorm:pylon:error:idp_authorization_endpoint_not_supported",
+      });
+    });
+
+    // Every grant this base runs POSTs to the token endpoint, so a provider
+    // without one supports none of them.
+    test("should refuse to run a grant against a provider with no token endpoint", async () => {
+      await expect(
+        endpointless().refresh(context, { refreshToken: "rt", scope: null }),
+      ).rejects.toMatchObject({
+        code: "idp_token_endpoint_not_supported",
+        type: "urn:lindorm:pylon:error:idp_token_endpoint_not_supported",
+      });
+    });
+
+    // It fails BEFORE composing credentials — nothing reaches the wire.
+    test("should send nothing when it has no token endpoint", async () => {
+      const scope = nock("https://auth.lindorm.io").post("/token").reply(200, {});
+
+      await expect(
+        endpointless().exchange(context, {
+          code: "code",
+          codeVerifier: null,
+          redirectUri: "https://app.lindorm.io/auth/login/callback",
+          scope: null,
+        }),
+      ).rejects.toMatchObject({ code: "idp_token_endpoint_not_supported" });
+
+      expect(scope.isDone()).toBe(false);
     });
   });
 

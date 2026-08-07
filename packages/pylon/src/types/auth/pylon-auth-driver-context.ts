@@ -2,6 +2,7 @@ import type { IAegis } from "@lindorm/aegis";
 import type { IAmphora } from "@lindorm/amphora";
 import type { IConduit } from "@lindorm/conduit";
 import type { ILogger } from "@lindorm/logger";
+import type { IProteusSession } from "@lindorm/proteus";
 import type { Environment } from "@lindorm/types";
 
 /**
@@ -29,6 +30,13 @@ import type { Environment } from "@lindorm/types";
  *   request and already case-converting outbound bodies and queries. A driver
  *   adds per-call middleware (client authentication, bearer tokens) and pins the
  *   inbound case depth it needs; it never constructs its own client.
+ * - `kv` — pylon's AUTHORITATIVE ephemeral source, request-scoped (the same
+ *   session `ctx.kv` hands a route, with this request's logger and hook meta
+ *   already attached). It is `kv` and never `cache`: a driver that resolves an
+ *   opaque token against its own store is doing an authoritative lookup, and a
+ *   token record is not disposable. `undefined` when the deployment configured
+ *   no `kv`. It stays the ONLY storage on this seam — no cookies, no session
+ *   writes, no `ctx.state`.
  * - `environment` / `logger` — the ambient operational context.
  */
 export type PylonAuthDriverContext = {
@@ -36,5 +44,6 @@ export type PylonAuthDriverContext = {
   readonly amphora: IAmphora;
   readonly conduit: IConduit;
   readonly environment: Environment;
+  readonly kv: IProteusSession | undefined;
   readonly logger: ILogger;
 };

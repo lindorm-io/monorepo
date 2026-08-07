@@ -13,12 +13,11 @@ import { afterEach, beforeEach, describe, expect, type Mock, test, vi } from "vi
 import { CachedIntrospection } from "../../../entities/CachedIntrospection.js";
 import { CachedUserinfo } from "../../../entities/CachedUserinfo.js";
 import type { IPylonAuthDriver } from "../../../interfaces/index.js";
-import type { PylonAuthConfig } from "../../../types/index.js";
+import type { PylonAuthCacheConfig, PylonAuthConfig } from "../../../types/index.js";
 import { createAccessTokenMiddleware } from "../../../middleware/common/create-access-token-middleware.js";
-import { AUTH_CACHE_SOURCE } from "../../constants/symbols.js";
+import { AUTH_CACHE_POLICY } from "../../constants/symbols.js";
 import { createAuthClient } from "../auth/create-auth-client.js";
 import { stageEncryptedField } from "../stage-encrypted-field.js";
-import type { AuthCacheConfig } from "./auth-cache-config.js";
 
 const ISSUER = "https://test.lindorm.io/";
 const NOW = new Date("2026-08-06T10:00:00.000Z");
@@ -64,9 +63,8 @@ const createKv = async (amphora: IAmphora): Promise<ProteusSource> => {
 const createDriver = (userinfo: Mock): IPylonAuthDriver =>
   ({
     clientId: "client-a",
-    endpoints: async () => ({
+    endpoints: () => ({
       issuer: ISSUER,
-      jwksUri: null,
       authorizationEndpoint: `${ISSUER}authorize`,
       tokenEndpoint: `${ISSUER}token`,
       userinfoEndpoint: `${ISSUER}userinfo`,
@@ -78,6 +76,7 @@ const createDriver = (userinfo: Mock): IPylonAuthDriver =>
   }) as unknown as IPylonAuthDriver;
 
 const createConfig = (driver: IPylonAuthDriver): PylonAuthConfig => ({
+  cache: null,
   driver,
   defaultTokenExpiry: "1d",
   refresh: { maxAge: "1h", mode: "half_life" },
@@ -85,7 +84,7 @@ const createConfig = (driver: IPylonAuthDriver): PylonAuthConfig => ({
 });
 
 const createContext = (
-  cache: Omit<AuthCacheConfig, "kv">,
+  cache: PylonAuthCacheConfig,
   kv: ProteusSource,
   introspect: Mock,
   amphora: IAmphora,
@@ -114,7 +113,10 @@ const createContext = (
     },
   };
 
-  ctx[AUTH_CACHE_SOURCE] = { kv, ...cache };
+  // Exactly what the dependencies middleware installs: the evictable SESSION as
+  // the storage, and the parsed `PylonAuthConfig.cache` as the policy.
+  ctx.cache = kv.session({ logger: ctx.logger });
+  ctx[AUTH_CACHE_POLICY] = cache;
 
   return ctx;
 };
@@ -129,7 +131,7 @@ describe("auth cache independent switches", () => {
   beforeEach(async () => {
     MockDate.set(NOW.toISOString());
 
-    amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
+    amphora = new Amphora({ issuer: ISSUER, logger: createMockLogger() });
     amphora.add([
       KryptosKit.generate.enc.oct({
         algorithm: "A128KW",
@@ -153,7 +155,7 @@ describe("auth cache independent switches", () => {
   });
 
   /** One request: resolve the opaque access token, then read the profile. */
-  const request = async (cache: Omit<AuthCacheConfig, "kv">): Promise<void> => {
+  const request = async (cache: PylonAuthCacheConfig): Promise<void> => {
     const ctx = createContext(cache, kv, introspect, amphora);
 
     await createAccessTokenMiddleware({ issuer: ISSUER } as any)(ctx, next);
@@ -161,7 +163,7 @@ describe("auth cache independent switches", () => {
   };
 
   test("should cache userinfo and not introspection", async () => {
-    const cache: Omit<AuthCacheConfig, "kv"> = {
+    const cache: PylonAuthCacheConfig = {
       introspection: false,
       userinfo: { ttl: "5 minutes" },
     };
@@ -177,7 +179,7 @@ describe("auth cache independent switches", () => {
   });
 
   test("should cache introspection and not userinfo", async () => {
-    const cache: Omit<AuthCacheConfig, "kv"> = {
+    const cache: PylonAuthCacheConfig = {
       introspection: { ttl: "10 seconds" },
       userinfo: false,
     };

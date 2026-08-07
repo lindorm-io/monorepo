@@ -49,8 +49,8 @@ export const validateAuthSettings = (
     );
   }
 
-  // ⚠ `cache.enabled` is CACHE policy — the ttls, `auth.kv` and
-  // `auth.encryption` are all cache concerns. It never declared that this
+  // ⚠ `cache.enabled` is CACHE policy — the ttls and `auth.encryption` are all
+  // cache concerns. It never declared that this
   // deployment introspects or reads userinfo; those are `driver.introspect` and
   // `driver.userinfo`. Without one, that half of the cache is dead, not broken —
   // so each concern warns for itself, and only when it is actually switched on.

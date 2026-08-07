@@ -29,7 +29,6 @@ describe("Auth0Driver", () => {
   ): PylonOpenIdDriverSettings => ({
     clientId: "client-id",
     clientSecret: "client-secret",
-    issuer: ISSUER,
     authorize: { resource: "https://api.lindorm.io", scope: ["openid", "profile"] },
     ...overrides,
   });
@@ -116,7 +115,7 @@ describe("Auth0Driver", () => {
   test("should inherit every other capability from OpenIdDriver", async () => {
     const driver = new Auth0Driver(settings());
 
-    await expect(driver.endpoints(context)).resolves.toMatchObject({ issuer: ISSUER });
+    expect(driver.endpoints(context)).toMatchObject({ issuer: ISSUER });
     await expect(
       driver.logout(context, {
         accessToken: null,

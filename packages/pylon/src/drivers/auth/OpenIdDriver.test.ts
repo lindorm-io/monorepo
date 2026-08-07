@@ -21,6 +21,7 @@ const ISSUER = "https://auth.lindorm.io";
 
 describe("OpenIdDriver", () => {
   let context: PylonAuthDriverContext;
+  let idpIssuer: string;
   let openIdConfiguration: Partial<OpenIdConfiguration>;
   let observed: {
     authorization?: string;
@@ -28,13 +29,19 @@ describe("OpenIdDriver", () => {
     contentType?: string;
   };
 
+  /**
+   * The amphora `idp` stands in for a REGISTERED and RESOLVED upstream: both
+   * the issuer amphora settled on and the document it fetched. Those are two
+   * separate fields on `AmphoraExternalConfig`, and the driver reads the
+   * issuer from the first — never re-deriving it from the second.
+   */
   const createContext = (): PylonAuthDriverContext => {
     const logger = createMockLogger();
 
     return createAuthDriverContext({
       aegis: new Aegis({ amphora: new Amphora({ logger }), logger }),
       amphora: {
-        idp: { config: () => ({ issuer: ISSUER, openIdConfiguration }) },
+        idp: { config: () => ({ issuer: idpIssuer, openIdConfiguration }) },
       },
       logger,
       state: {
@@ -48,7 +55,6 @@ describe("OpenIdDriver", () => {
     new OpenIdDriver({
       clientId: "client-id",
       clientSecret: "client-secret",
-      issuer: ISSUER,
       ...settings,
     });
 
@@ -72,6 +78,8 @@ describe("OpenIdDriver", () => {
     observed = {};
     nock.cleanAll();
 
+    idpIssuer = ISSUER;
+
     openIdConfiguration = {
       issuer: ISSUER,
       authorizationEndpoint: `${ISSUER}/authorize`,
@@ -91,52 +99,60 @@ describe("OpenIdDriver", () => {
   });
 
   describe("endpoints", () => {
-    test("should project the discovery document", async () => {
-      await expect(createDriver().endpoints(context)).resolves.toMatchSnapshot();
+    test("should project the discovery document", () => {
+      expect(createDriver().endpoints(context)).toMatchSnapshot();
     });
 
-    test("should carry issuer and jwksUri", async () => {
-      const endpoints = await createDriver().endpoints(context);
+    // The sync signature IS the boundary: every fetch happened at
+    // `amphora.setup()`, so there is nothing left here to await. Asserted on
+    // the value, not on a resolved promise — a driver that went async would
+    // hand back a `Promise` and fail this outright.
+    test("should resolve endpoints without awaiting anything", () => {
+      const endpoints = createDriver().endpoints(context);
 
+      expect(endpoints).not.toBeInstanceOf(Promise);
       expect(endpoints.issuer).toBe(ISSUER);
-      expect(endpoints.jwksUri).toBe(`${ISSUER}/jwks`);
     });
 
     /**
      * Gap 1 — Microsoft's discovery document is served per tenant and the real
      * issuer is tenant-specific, so what the PROVIDER published wins over what
-     * the operator configured. Pylon verifies id_tokens against this.
+     * the operator configured. That preference is AMPHORA's
+     * (`resolveExternalConfig` takes `openIdConfiguration.issuer ?? input.issuer`),
+     * and the driver carries the value amphora settled on. Pylon verifies
+     * id_tokens against this, and amphora filed the fetched keys under the same
+     * string — re-deriving it here could disagree with where the keys live.
      */
-    test("should prefer the discovery issuer over the configured one", async () => {
-      openIdConfiguration.issuer = "https://login.example.com/tenant-abc/v2.0";
+    test("should carry the issuer amphora resolved, not the document's", () => {
+      idpIssuer = "https://login.example.com/tenant-abc/v2.0";
+      openIdConfiguration.issuer = "https://login.example.com/{tenantid}/v2.0";
 
-      const endpoints = await createDriver().endpoints(context);
+      const endpoints = createDriver().endpoints(context);
 
       expect(endpoints.issuer).toBe("https://login.example.com/tenant-abc/v2.0");
     });
 
-    test("should fall back to the configured issuer when the document omits it", async () => {
-      delete openIdConfiguration.issuer;
-
-      const endpoints = await createDriver().endpoints(context);
-
-      expect(endpoints.issuer).toBe(ISSUER);
-    });
-
-    test("should report every absent optional endpoint as null", async () => {
+    test("should report every absent optional endpoint as null", () => {
       openIdConfiguration = {
         issuer: ISSUER,
         authorizationEndpoint: `${ISSUER}/authorize`,
         tokenEndpoint: `${ISSUER}/token`,
       };
 
-      await expect(createDriver().endpoints(context)).resolves.toMatchSnapshot();
+      expect(createDriver().endpoints(context)).toMatchSnapshot();
     });
 
-    test("should throw when the document omits required metadata", async () => {
+    // `jwks_uri` is amphora's business — it fetches and caches the keys — so it
+    // is not on the driver surface at all. A member nothing reads is worse than
+    // no member: it reads as configuring verification while doing nothing.
+    test("should publish no jwksUri", () => {
+      expect(createDriver().endpoints(context)).not.toHaveProperty("jwksUri");
+    });
+
+    test("should throw when the document omits required metadata", () => {
       delete openIdConfiguration.tokenEndpoint;
 
-      await expect(createDriver().endpoints(context)).rejects.toThrow(ServerError);
+      expect(() => createDriver().endpoints(context)).toThrow(ServerError);
     });
   });
 

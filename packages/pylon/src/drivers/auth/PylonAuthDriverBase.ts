@@ -1,5 +1,6 @@
 import { conduitChangeResponseDataMiddleware } from "@lindorm/conduit";
 import { sec } from "@lindorm/date";
+import { ServerError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
 import type { AuthorizeRequestQuery } from "@lindorm/openid";
 import type { Dict } from "@lindorm/types";
@@ -29,6 +30,13 @@ import type {
  * The OAuth2 mechanics every provider shares, with `endpoints()` as its ONE
  * abstract member. Extend it for a provider that publishes no discovery
  * document — return the endpoints as a literal and everything else works.
+ *
+ * ⚠ `endpoints()` is SYNCHRONOUS (see {@link IPylonAuthDriver}): amphora does
+ * every fetch at its own setup, so a subclass needing foreign keys registers
+ * that issuer with `amphora.external` rather than fetching here. It is also
+ * where a subclass says its provider has NO authorization or token endpoint —
+ * `null` for either, and the relying-party methods below fail by name instead
+ * of requesting nothing.
  *
  * It deliberately implements only the RELYING PARTY grants. `introspect`,
  * `userinfo`, `subject` and `logout` are left off: a subclass that can serve
@@ -70,7 +78,7 @@ export abstract class PylonAuthDriverBase implements IPylonAuthDriver {
     };
   }
 
-  abstract endpoints(context: PylonAuthDriverContext): Promise<PylonAuthEndpoints>;
+  abstract endpoints(context: PylonAuthDriverContext): PylonAuthEndpoints;
 
   // --- IPylonAuthDriver ---
 
@@ -78,7 +86,23 @@ export abstract class PylonAuthDriverBase implements IPylonAuthDriver {
     context: PylonAuthDriverContext,
     options: PylonAuthAuthorizeOptions,
   ): Promise<URL> {
-    const endpoints = await this.endpoints(context);
+    const endpoints = this.endpoints(context);
+
+    // `authorization_endpoint` is `string | null` on the surface because a
+    // VERIFY-ONLY driver has none. This base is the relying party, so reaching
+    // here without one means the deployment mounted a login against a provider
+    // that cannot serve it — fail by name rather than redirecting to `null`.
+    if (!isString(endpoints.authorizationEndpoint)) {
+      throw new ServerError("IdP does not publish an authorization endpoint", {
+        code: "idp_authorization_endpoint_not_supported",
+        title: "IdP Authorization Endpoint Not Supported",
+        type: "urn:lindorm:pylon:error:idp_authorization_endpoint_not_supported",
+        status: ServerError.Status.NotImplemented,
+        details:
+          "The driver resolved no `authorization_endpoint` (RFC 6749 §3.1), so no login can be started against this provider. Configure a provider that publishes one, or drop `auth.router` for a service that only validates tokens.",
+        data: { issuer: endpoints.issuer },
+      });
+    }
 
     // Sorted AFTER the subclass hook so a renamed parameter still lands in
     // order — the Auth0 `resource` ⇒ `audience` swap is exactly that.
@@ -181,8 +205,14 @@ export abstract class PylonAuthDriverBase implements IPylonAuthDriver {
    * document expects — but RFC 7523 §3 only requires "a value that identifies
    * the authorization server", so a provider that wants its ISSUER identifier
    * instead overrides this and changes nothing else.
+   *
+   * ⚠ The parameter narrows `tokenEndpoint` to a non-null `string`: the only
+   * caller has already asserted it, and a driver that reached a token request
+   * without one failed earlier by name.
    */
-  protected clientAssertionAudience(endpoints: PylonAuthEndpoints): string {
+  protected clientAssertionAudience(
+    endpoints: PylonAuthEndpoints & { tokenEndpoint: string },
+  ): string {
     return endpoints.tokenEndpoint;
   }
 
@@ -198,11 +228,30 @@ export abstract class PylonAuthDriverBase implements IPylonAuthDriver {
     context: PylonAuthDriverContext,
     request: PylonAuthTokenRequest,
   ): Promise<PylonAuthTokenResult> {
-    const endpoints = await this.endpoints(context);
+    const endpoints = this.endpoints(context);
+
+    // Every grant this base runs POSTs to the token endpoint, so a provider
+    // without one supports none of them. RFC 6749 §3.2 makes it REQUIRED for
+    // any grant; `null` here is a VERIFY-ONLY surface reaching relying-party
+    // code, which is a configuration error and not a request to retry.
+    if (!isString(endpoints.tokenEndpoint)) {
+      throw new ServerError("IdP does not publish a token endpoint", {
+        code: "idp_token_endpoint_not_supported",
+        title: "IdP Token Endpoint Not Supported",
+        type: "urn:lindorm:pylon:error:idp_token_endpoint_not_supported",
+        status: ServerError.Status.NotImplemented,
+        details:
+          "The driver resolved no `token_endpoint` (RFC 6749 §3.2), so no OAuth2 grant can be run against this provider. A driver that only verifies tokens has no token endpoint by design and must not be configured as a relying party.",
+        data: { issuer: endpoints.issuer },
+      });
+    }
 
     const auth = await resolveClientAuthentication(context, {
       assertion: this.clientAssertionSettings,
-      audience: this.clientAssertionAudience(endpoints),
+      audience: this.clientAssertionAudience({
+        ...endpoints,
+        tokenEndpoint: endpoints.tokenEndpoint,
+      }),
       clientId: this.clientId,
       clientSecret: this.clientSecret,
       method: this.tokenEndpointAuthMethod(context),

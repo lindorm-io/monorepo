@@ -14,8 +14,13 @@ import { mintClientAssertion } from "./mint-client-assertion.js";
 
 export type ResolveClientAuthenticationOptions = {
   assertion: PylonAuthDriverClientAssertionSettings;
-  /** The `aud` of an assertion — the provider's token endpoint. */
-  audience: string;
+  /**
+   * The `aud` of an assertion — the provider's token endpoint. `null` when the
+   * provider publishes none, which only the two ASSERTION methods care about:
+   * RFC 7523 §3 makes `aud` mandatory on the assertion, and the other three
+   * methods never mint one.
+   */
+  audience: string | null;
   clientId: string;
   clientSecret?: string;
   method: PylonClientAuthMethod;
@@ -100,6 +105,17 @@ export const resolveClientAuthentication = async (
         });
       }
 
+      if (!isString(audience)) {
+        throw new ServerError("Assertion audience is required for client_secret_jwt", {
+          code: "client_assertion_audience_missing",
+          title: "Client Assertion Audience Missing",
+          type: "urn:lindorm:pylon:error:client_assertion_audience_missing",
+          details:
+            "The driver resolved client_secret_jwt but published no token endpoint to use as the assertion `aud`. RFC 7523 §3 makes `aud` mandatory, and OIDC Core §9 names the token endpoint URL as that value, so there is nothing to address the assertion to.",
+          data: { clientId, method },
+        });
+      }
+
       const clientAssertion = await mintClientAssertion(context, {
         audience,
         clientId,
@@ -145,6 +161,17 @@ export const resolveClientAuthentication = async (
           type: "urn:lindorm:pylon:error:client_assertion_key_missing",
           details:
             "The driver resolved private_key_jwt but names no clientAssertion.key. Configure the signing key whose public half the client registered with the provider; pylon will not silently reach for the deployment's default signing key.",
+          data: { clientId, method },
+        });
+      }
+
+      if (!isString(audience)) {
+        throw new ServerError("Assertion audience is required for private_key_jwt", {
+          code: "client_assertion_audience_missing",
+          title: "Client Assertion Audience Missing",
+          type: "urn:lindorm:pylon:error:client_assertion_audience_missing",
+          details:
+            "The driver resolved private_key_jwt but published no token endpoint to use as the assertion `aud`. RFC 7523 §3 makes `aud` mandatory, and OIDC Core §9 names the token endpoint URL as that value, so there is nothing to address the assertion to.",
           data: { clientId, method },
         });
       }
