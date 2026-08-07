@@ -155,8 +155,14 @@ export class Aegis implements IAegis {
     this.partyRecipient = options.partyRecipient;
 
     // The DEPLOYMENT's key policy. Aegis ships no default selector of its own:
-    // it does not know a deployment's `purpose` taxonomy, and amphora already
-    // filters `publish: true` by default, so there is nothing to duplicate.
+    // it does not know a deployment's `purpose` taxonomy, and an EMPTY condition
+    // is already the safe one. Amphora's default gate is `!internal || publish`
+    // — it hides an INTERNAL unpublished key (the KEK / CA / cookie hazard) and
+    // leaves every external key selectable, because `publish` means "belongs in
+    // OUR JWKS" and an external key never does. Naming `publish` here would be
+    // worse than redundant: a condition that mentions it opts OUT of that gate
+    // entirely, so `publish: true` would exclude the external keys verification
+    // depends on.
     this.signKey = options.sign ?? {};
     this.encryptKey = options.encrypt ?? {};
     this.verifyKey = options.verify ?? {};
