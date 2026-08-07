@@ -1495,7 +1495,8 @@ Naming `auth.session.signature` is therefore **enough**; there is no separate ve
 - **A cookie is signed only when a signing key is named.** There is no fallback to the floor alone — it would resolve to whichever published key is newest, in practice the token key (token keys rotate twice as often as cookie keys). So no `cookies.signature` ⇒ unsigned cookies; a per-call `{ signature: true }` with none configured throws rather than guessing. Since `auth.session` chains to `cookies`, a session cookie is signable iff a cookie signing key is named.
 - **The floor is Pylon's, the selector is yours.** `use`, `hasPrivateKey` and the key's lifetime state are the minimum that makes an operation possible; they are absent from the condition type by construction, so you cannot widen them. `purpose`, `publish` and `internal` are your policy.
 - **Signing demands an active key.** `isActive: true` is on the signing floor, so an expired or not-yet-valid key never signs a cookie — including one handed to `cookies.signature` as an injected `kryptos`, which never touches the vault and is therefore time-checked by nothing else.
-- **The read side of encryption takes no selector.** Ciphertext names its own key, so `aes.decrypt` resolves it by kid.
+- **The read side of encryption takes no selector.** Ciphertext names its own key, so `aes.decrypt` resolves it by kid — which is why `ctx.cookies.get(name, { encrypted })` takes a plain `boolean`, unlike `signed`.
+- **The KEY picks the cipher, not the selector.** Every encryption role — cookies, sessions and the `@Encrypted()` column KEKs — is a pure key selector. The AES algorithm a value is sealed with is the one the resolved key declares (`aegis` and `proteus` both read it off the key), so to seal cookies with `A192CBC-HS384` you mint the cookie key declaring it. Nothing in the pylon options names an algorithm.
 - A role naming a key the vault does not hold **fails loudly**, never silently.
 
 ## Health & readiness

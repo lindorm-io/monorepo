@@ -1,11 +1,11 @@
 import type { AesContent } from "@lindorm/aes";
-import type { PylonCommonContext, PylonCookieEncKey } from "../../../types/index.js";
+import type { PylonCommonContext, PylonEncKey } from "../../../types/index.js";
 import { resolveCookieEncryptionKey } from "../keys/resolve-cookie-encryption-key.js";
 
 export const encryptCookie = async (
   ctx: Pick<PylonCommonContext, "aegis" | "amphora">,
   value: AesContent,
-  key: PylonCookieEncKey | undefined,
+  key: PylonEncKey | undefined,
 ): Promise<string> => {
   // A cookie is an INTERNAL, self-opened artifact — the deployment names WHICH
   // key seals it (`cookies.encryption`, or `auth.session.encryption` for the
@@ -15,7 +15,7 @@ export const encryptCookie = async (
   // the PUBLISHED set and would seal the cookie with the JWKS token key.
   const kryptos = await resolveCookieEncryptionKey(ctx.amphora, key);
 
-  return ctx.aegis.aes.encrypt(value, {
-    key: { kryptos, encryption: key?.encryption },
-  });
+  // The resolved key is the whole instruction: aegis seals with the algorithm
+  // that key declares, so there is nothing else to hand it.
+  return ctx.aegis.aes.encrypt(value, { key: { kryptos } });
 };

@@ -4,7 +4,7 @@ import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test } from "vitest";
-import type { PylonCookieEncKey } from "../../../types/index.js";
+import type { PylonEncKey } from "../../../types/index.js";
 import { encryptCookie } from "./encrypt-cookie.js";
 
 const ISSUER = "http://test.lindorm.io";
@@ -39,7 +39,7 @@ describe("encryptCookie", () => {
     ctx = { aegis: new Aegis({ amphora, logger }), amphora };
   });
 
-  const key: PylonCookieEncKey = {
+  const key: PylonEncKey = {
     condition: { purpose: "cookie", publish: false },
   };
 
@@ -61,6 +61,28 @@ describe("encryptCookie", () => {
 
     const sealed = await encryptCookie(ctx, "secret_value", key);
 
+    await expect(ctx.aegis.aes.decrypt(sealed)).resolves.toBe("secret_value");
+  });
+
+  // The PROOF that the selector needs no AEAD member: a cookie key whose
+  // declared algorithm differs from every default seals under ITS algorithm
+  // with nothing named on the selector. Nothing pylon could put there would
+  // change the outcome, so there is nothing to put there.
+  test("seals under the cookie key's own declared algorithm, unprompted", async () => {
+    const cookieKey = KryptosKit.generate.auto({
+      algorithm: "dir",
+      encryption: "A192CBC-HS384",
+      issuer: ISSUER,
+      publish: false,
+      purpose: "cookie",
+    });
+
+    amphora.add([cookieKey, publishedTokenEncKey()]);
+
+    const sealed = await encryptCookie(ctx, "secret_value", key);
+
+    expect(AesKit.parse(sealed).encryption).toBe("A192CBC-HS384");
+    expect(AesKit.parse(sealed).keyId).toBe(cookieKey.id);
     await expect(ctx.aegis.aes.decrypt(sealed)).resolves.toBe("secret_value");
   });
 

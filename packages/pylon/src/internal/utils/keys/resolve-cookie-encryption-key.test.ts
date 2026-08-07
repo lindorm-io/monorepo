@@ -2,7 +2,7 @@ import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test } from "vitest";
-import type { PylonCookieEncKey } from "../../../types/index.js";
+import type { PylonEncKey } from "../../../types/index.js";
 import { resolveCookieEncryptionKey } from "./resolve-cookie-encryption-key.js";
 
 const ISSUER = "http://test.lindorm.io";
@@ -52,7 +52,7 @@ describe("resolveCookieEncryptionKey", () => {
 
   test("throws when the selector carries neither kryptos nor condition", async () => {
     await expect(
-      resolveCookieEncryptionKey(amphora, {} as PylonCookieEncKey),
+      resolveCookieEncryptionKey(amphora, {} as PylonEncKey),
     ).rejects.toMatchObject({ code: "cookie_encryption_key_not_configured" });
   });
 
