@@ -34,23 +34,31 @@ The scaffolder asks for features and drivers, copies templates into the target d
 
 ```
 ? Project name: my-app
-? Issuer URL:                     (this service's identity — becomes the Amphora domain for JWKS; default http://localhost:3000)
+? Issuer URL:                     (this service's identity — becomes the Amphora issuer for JWKS; default http://localhost:3000)
 ? Select features:                (HTTP routes / Socket.IO listeners)
 ? Persistence store (Proteus DB): (postgres / mysql / mongo / sqlite / memory / none)
 ? Key-value store (Proteus KV):   (redis / memory / none — rate-limit / session / cache)
 ? Message bus driver (Iris):      (none / kafka / nats / rabbit / redis)
 ? Webhooks?                       (only when both a Proteus store and an Iris driver are selected)
 ? Audit logging?                  (only when both a Proteus store and an Iris driver are selected)
-? OIDC authentication?            (selecting "yes" also enables session)
+? OIDC authentication?            (selecting "yes" also enables `auth.session`)
 ? Rate limiting?                  (only when a key-value store is selected)
 ? Workers:                        (only when a Proteus store is selected)
 ```
 
 You pick at most one **db** store and one **kv** store. The db store is the primary Proteus source
 (`src/proteus/db/source.ts`) — schema-managed, holds your entities, and backs the kryptos/worker layer. The kv
-store (`src/proteus/kv/source.ts` when a db is also picked, otherwise the primary) backs rate limiting,
-sessions, and the db query cache. When only one store is picked it is the primary at `src/proteus/db/source.ts`;
+store (`src/proteus/kv/source.ts` when a db is also picked, otherwise the primary) is wired to Pylon's
+top-level `kv` option and backs sessions, room presence, rate limiting and the response cache. When only one
+store is picked it is the primary at `src/proteus/db/source.ts` and is wired as **both** `db` and `kv`;
 `none` is valid for either.
+
+Pylon also takes a fourth source, `cache` — the evictable half of `kv` (rate-limit counters, cached responses,
+cached driver answers). The scaffold leaves it unset, so it falls back to `kv` and one store does everything.
+The generated `pylon.ts` carries a commented line showing where to point a second store once the two
+populations need different Redis `maxmemory-policy` settings (`noeviction` for `kv`, `allkeys-lru` for
+`cache`). Handlers reach it as `ctx.cache` either way — use that, not `ctx.kv`, for anything throwaway, so
+splitting the stores later needs no code change.
 
 ## What gets scaffolded
 
@@ -58,7 +66,7 @@ Generated layout (some files only appear depending on the answers):
 
 - `src/index.ts` — entry file with a `Symbol.metadata` polyfill that calls `pylon.start()`
 - `src/logger/index.ts` — shared `Logger` instance from `@lindorm/logger`
-- `src/pylon/amphora.ts` — `Amphora` instance from `@lindorm/amphora`
+- `src/pylon/amphora.ts` — `Amphora` instance from `@lindorm/amphora`, and the only place an issuer is declared: this service's own (`issuer`) and, with auth selected, the upstream provider (`idp`). The pylon auth driver declares neither — it reads whichever scope it pins off this instance
 - `src/pylon/config.ts` — typed config loaded with `@lindorm/config`, validated with a `zod` schema generated from the selected drivers
 - `src/pylon/pylon.ts` — the `Pylon` instance, wired with the selected features, sources, and workers
 - `src/types/context.ts` — typed `ServerHttpContext`, `ServerSocketContext`, `ServerHttpMiddleware`, `ServerSocketMiddleware`, `ServerHandler`, and `ServerSocketHandler` aliases
@@ -67,7 +75,7 @@ Generated layout (some files only appear depending on the answers):
 - `src/routes/webhooks/` + `src/features/webhooks/` — CRUD routes and handlers for `WebhookSubscription` (only when webhooks are selected)
 - `src/workers/<worker>.ts` — one file per selected worker (`amphora-entity-sync`, `expiry-cleanup`, `kryptos-rotation`) plus an `alive.ts` example
 - `src/proteus/db/source.ts` (the primary db/kv store, with `entities/` + `migrations/`) — plus `src/proteus/kv/source.ts` when both a db and a kv store are picked — and a sample `SampleEntity`, written by `@lindorm/proteus/scaffold`'s code generator
-- `src/__fixtures__/test-ctx.ts` — a project-bound `createTestCtx` helper (only when a db or kv store is picked) wrapping `@lindorm/pylon/mocks/vitest`'s `createTestPylonCtx`; `ctx.db`/`ctx.kv` are stateful in-memory Proteus mocks (writes persist, reads reflect them) so repository round-trips work in tests
+- `src/__fixtures__/test-ctx.ts` — a project-bound `createTestCtx` helper (only when a db or kv store is picked) wrapping `@lindorm/pylon/mocks/vitest`'s `createTestPylonCtx`; `ctx.db`/`ctx.kv`/`ctx.cache` are stateful in-memory Proteus mocks (writes persist, reads reflect them) so repository round-trips work in tests
 - `src/iris/source.ts`, a sample `SampleMessage`, plus a sample publisher and subscriber — written by `@lindorm/iris`'s code generator
 - `docker-compose.yml` — only emitted when a selected driver is `postgres`, `mysql`, `mongo`, `redis`, `kafka`, `nats`, or `rabbit`
 - `config/{default,development,test,production}.yml` — base config files

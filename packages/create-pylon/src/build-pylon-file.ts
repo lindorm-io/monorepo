@@ -125,14 +125,14 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
   const primaryExists = answers.db !== "none" || answers.kv !== "none";
   const kvIsSecondary = answers.db !== "none" && answers.kv !== "none";
 
-  // When a kv store is picked, the kv source is either the distinct secondary
-  // (kvSlot) or, when kv is the sole primary, the db-role primary (dbSlot).
+  // Pylon takes FOUR sources — `db` / `kv` / `cache` / `bus` — and no
+  // per-feature overrides: where each built-in entity lives is fixed. `kv` is
+  // the AUTHORITATIVE ephemeral store (sessions, presence) and `cache` the
+  // EVICTABLE one (rate limits, response cache, auth caches), defaulting to
+  // `kv` when unset. A scaffold picks at most one ephemeral store, so `kv` is
+  // either the distinct secondary or the sole primary, and `cache` is left
+  // unset — the generated comment says how to split it later.
   const kvRef = kvIsSecondary ? kvSlot!.binding : (dbSlot?.binding ?? null);
-
-  // session falls back to the db primary as its keyValue store when no kv
-  // store was picked (preserves old behaviour).
-  const sessionRef =
-    answers.kv !== "none" ? kvRef : answers.db !== "none" ? dbSlot!.binding : null;
 
   if (answers.features.http) {
     lines.push(`  routes: join(import.meta.dirname, "..", "routes"),`);
@@ -173,8 +173,16 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
     lines.push(`  },`);
   }
 
-  if (kvIsSecondary) {
-    lines.push(`  kv: ${kvSlot!.binding},`);
+  if (kvRef) {
+    // Sessions and room presence live here and must NOT be evicted — run this
+    // store with `maxmemory-policy noeviction`.
+    lines.push(`  kv: ${kvRef},`);
+    // Rate-limit counters, cached responses and cached driver answers are
+    // disposable. Point `cache` at a SECOND store run with `allkeys-lru` to
+    // keep their churn from evicting a session; unset, they share `kv`.
+    // ⚠ `allkeys-lru`, not `allkeys-random`: random eviction drops the counter
+    // of an actively attacking client as readily as an idle one.
+    lines.push(`  // cache: evictableSource, // allkeys-lru; defaults to kv`);
   }
 
   if (answers.bus !== "none") {
@@ -195,43 +203,18 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
     lines.push(`  },`);
   }
 
-  if (answers.features.session) {
-    lines.push(`  session: {`);
-    lines.push(`    enabled: true,`);
-    if (sessionRef) {
-      lines.push(`    kv: ${sessionRef},`);
-    }
-    lines.push(`    name: "sid",`);
-    // The session cookie signs + seals with its OWN keys — a separate blast
-    // radius from ordinary cookies. Only nameable when a primary source exists
-    // to mint and hold them (the kryptos-rotation worker); without one the
-    // session cookie falls back to unsigned. `session.<role> ?? cookies.<role>`
-    // means dropping these two lines chains the session onto the cookie keys.
-    if (primaryExists) {
-      lines.push(`    // Session's own keys — separate blast radius from other cookies.`);
-      lines.push(
-        `    signature: { condition: { purpose: "pylon:session", publish: false } },`,
-      );
-      lines.push(
-        `    encryption: { condition: { purpose: "pylon:session", publish: false } },`,
-      );
-    }
-    lines.push(`    httpOnly: true,`);
-    lines.push(`    sameSite: "lax",`);
-    lines.push(`    secure: false, // TODO: flip to true in production (behind HTTPS)`);
-    lines.push(`    expiry: "7d",`);
-    lines.push(`  },`);
-  }
-
   if (answers.features.auth) {
-    // The driver owns everything provider-specific — endpoints, the authorize
-    // query, token-request encoding and client authentication. Swap it for
+    // The driver owns everything provider-specific — the authorize query,
+    // token-request encoding and client authentication. Swap it for
     // Auth0Driver, or your own subclass, without touching anything below.
+    //
+    // ⚠ It declares NO issuer. The upstream is registered once on the amphora
+    // (`idp`), which is what fetched the discovery document and the provider's
+    // keys; a second issuer string here could only ever disagree with it.
     lines.push(`  auth: {`);
     lines.push(`    driver: new OpenIdDriver({`);
     lines.push(`      clientId: config.auth.clientId,`);
     lines.push(`      clientSecret: config.auth.clientSecret,`);
-    lines.push(`      issuer: config.auth.issuer,`);
     lines.push(`      authorize: {`);
     lines.push(`        scope: ["openid", "profile", "email"],`);
     lines.push(`        responseType: "code",`);
@@ -240,13 +223,48 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
     lines.push(`    router: {`);
     lines.push(`      pathPrefix: "/auth",`);
     lines.push(`    },`);
+
+    if (answers.features.session) {
+      // The session lives under `auth` because it IS the OAuth artifact store —
+      // the flow above fills it. The `Session` entity lands on the top-level
+      // `kv` source; there is no per-feature source to name here.
+      //
+      // `name`, `httpOnly`, `encoding` and `expiry` are not settings: the name is
+      // fixed, httpOnly is forced on, the value is pylon's own opaque handle, and
+      // the cookie's expiry IS the session's `expiresAt`.
+      lines.push(`    session: {`);
+      lines.push(`      enabled: true,`);
+      // The session cookie signs + seals with its OWN keys — a separate blast
+      // radius from ordinary cookies. Only nameable when a primary source exists
+      // to mint and hold them (the kryptos-rotation worker); without one the
+      // session cookie falls back to unsigned. `auth.session.<role> ??
+      // cookies.<role>` means dropping these two lines chains the session onto
+      // the cookie keys.
+      if (primaryExists) {
+        lines.push(
+          `      // Session's own keys — separate blast radius from other cookies.`,
+        );
+        lines.push(
+          `      signature: { condition: { purpose: "pylon:session", publish: false } },`,
+        );
+        lines.push(
+          `      encryption: { condition: { purpose: "pylon:session", publish: false } },`,
+        );
+      }
+      lines.push(`      sameSite: "lax",`);
+      lines.push(
+        `      secure: false, // TODO: flip to true in production (behind HTTPS)`,
+      );
+      lines.push(`    },`);
+    }
+
     lines.push(`  },`);
   }
 
   if (answers.features.rateLimit) {
+    // Counters land on the evictable `cache` source, which falls back to `kv`.
     lines.push(`  rateLimit: {`);
     lines.push(`    enabled: true,`);
-    lines.push(`    kv: ${kvRef},`);
     lines.push(`    strategy: "fixed",`);
     lines.push(`    window: "1m",`);
     lines.push(`    max: 60,`);

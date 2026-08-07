@@ -10,6 +10,7 @@ import {
   writeFileSync,
 } from "fs";
 import { dirname, join, resolve } from "path";
+import { buildAmphoraFile } from "./build-amphora-file.js";
 import { buildConfigFile } from "./build-config-file.js";
 import { buildConfigDevelopmentYaml, buildConfigYaml } from "./build-config-yaml.js";
 import { buildContextFile } from "./build-context-file.js";
@@ -387,6 +388,12 @@ export const writeContextFile = (answers: Answers): void => {
   writeFileSync(target, buildContextFile(answers), "utf-8");
 };
 
+export const writeAmphoraFile = (answers: Answers): void => {
+  const target = join(answers.projectDir, "src/pylon/amphora.ts");
+  ensureDir(target);
+  writeFileSync(target, buildAmphoraFile(answers), "utf-8");
+};
+
 export const writePylonFile = (answers: Answers): void => {
   const target = join(answers.projectDir, "src/pylon/pylon.ts");
   ensureDir(target);
@@ -459,6 +466,7 @@ export const scaffold = async (
   writeConfigYaml(answers);
   writeConfigDevelopmentYaml(answers);
   writeContextFile(answers);
+  writeAmphoraFile(answers);
   writePylonFile(answers);
   writeTestCtxFile(answers);
   writeLindormConfigFile(answers);

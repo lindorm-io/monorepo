@@ -81,7 +81,7 @@ export const buildConfigFile = (answers: Answers): string => {
     `  nodeEnv: z`,
     `    .enum(["production", "staging", "development", "test", "unknown"])`,
     `    .default("development"),`,
-    `  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which`,
+    `  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which`,
     `  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env`,
     `  // (ISSUER) — never ship localhost to production.`,
     `  issuer: z.string(),`,

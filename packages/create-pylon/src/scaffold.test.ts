@@ -10,6 +10,7 @@ import {
   buildEnvLines,
   copyTemplates,
   scaffold,
+  writeAmphoraFile,
   writeVitestConfig,
   writeConfigDevelopmentYaml,
   writeConfigFile,
@@ -343,6 +344,44 @@ describe("scaffold", () => {
       writeVitestConfig(baseAnswers({ projectDir, db: "postgres" }));
       const content = readFileSync(join(projectDir, "vitest.config.mjs"), "utf-8");
       expect(content).toContain("unplugin-swc");
+    });
+  });
+
+  /**
+   * The amphora is the ONLY place an issuer is declared — this service's own
+   * (`domain`) and the upstream (`idp`). Pylon's auth driver declares neither
+   * and reads whichever scope it pins off this instance, so a scaffold with
+   * auth that never registered the idp would fail on the first request.
+   */
+  describe("writeAmphoraFile", () => {
+    test.each<[string, Partial<Answers>]>([
+      ["no auth", {}],
+      ["auth", { features: baseFeatures({ auth: true }) }],
+    ])("snapshot: %s", (_name, overrides) => {
+      mkdirSync(projectDir, { recursive: true });
+      writeAmphoraFile(baseAnswers({ projectDir, ...overrides }));
+      expect(
+        readFileSync(join(projectDir, "src/pylon/amphora.ts"), "utf-8"),
+      ).toMatchSnapshot();
+    });
+
+    test("registers the upstream idp when auth is enabled", () => {
+      mkdirSync(projectDir, { recursive: true });
+      writeAmphoraFile(
+        baseAnswers({ projectDir, features: baseFeatures({ auth: true }) }),
+      );
+      const content = readFileSync(join(projectDir, "src/pylon/amphora.ts"), "utf-8");
+
+      expect(content).toContain("idp: { issuer: config.auth.issuer }");
+    });
+
+    test("registers no idp without auth — there is no upstream to declare", () => {
+      mkdirSync(projectDir, { recursive: true });
+      writeAmphoraFile(baseAnswers({ projectDir }));
+      const content = readFileSync(join(projectDir, "src/pylon/amphora.ts"), "utf-8");
+
+      expect(content).not.toContain("idp:");
+      expect(content).toContain("issuer: config.issuer");
     });
   });
 
@@ -885,7 +924,9 @@ describe("scaffold", () => {
         expect(pylon).not.toContain(`../proteus/kv/source.js`);
       });
 
-      test("session binds to the kv secondary when both db and kv are selected", async () => {
+      // Sessions live on the top-level `kv` source — there is no per-feature
+      // override to name, so the binding is what the scaffold must get right.
+      test("kv binds to the kv secondary when both db and kv are selected", async () => {
         const answers = baseAnswers({
           projectDir,
           db: "postgres",
@@ -895,7 +936,8 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toMatch(/session: \{[^}]*kv: redis/);
+        expect(pylon).toMatch(/^ {2}kv: redis,$/m);
+        expect(pylon).not.toMatch(/session: \{[^}]*kv:/);
       });
 
       test("wires the kv secondary as the top-level kv option", async () => {
@@ -912,7 +954,9 @@ describe("scaffold", () => {
         expect(pylon).toMatch(/^ {2}kv: redis,$/m);
       });
 
-      test("session falls back to the db primary when only db is selected", async () => {
+      // Only one store picked ⇒ `db` and `kv` are the SAME source. Emitting
+      // both is what keeps the Session entity registered at all.
+      test("kv falls back to the db primary when only db is selected", async () => {
         const answers = baseAnswers({
           projectDir,
           db: "postgres",
@@ -921,11 +965,12 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toMatch(/session: \{[^}]*kv: postgres/);
+        expect(pylon).toMatch(/^ {2}db: postgres,$/m);
+        expect(pylon).toMatch(/^ {2}kv: postgres,$/m);
         expect(pylon).not.toContain(`../proteus/kv/source.js`);
       });
 
-      test("session binds to the db-role primary when only kv is selected", async () => {
+      test("kv binds to the db-role primary when only kv is selected", async () => {
         const answers = baseAnswers({
           projectDir,
           kv: "redis",
@@ -934,7 +979,8 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toMatch(/session: \{[^}]*kv: redis/);
+        expect(pylon).toMatch(/^ {2}db: redis,$/m);
+        expect(pylon).toMatch(/^ {2}kv: redis,$/m);
         expect(pylon).not.toContain(`../proteus/kv/source.js`);
       });
     });

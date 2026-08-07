@@ -38,8 +38,8 @@ const certificateExpiry = (): string =>
 
 // Pylon has NO default key set — it does not know your `purpose` taxonomy and
 // will not invent one. So the keys are scaffolded here, explicitly, as source you
-// can read and edit. The pylon `cookies` / `session` key selectors name the same
-// `pylon:*` purposes, so every role resolves the key it is meant to use.
+// can read and edit. The pylon `cookies` / `auth.session` key selectors name the
+// same `pylon:*` purposes, so every role resolves the key it is meant to use.
 const kryptosRotation = (dbDriver: string): string =>
   [
     `import { createKryptosRotationWorker } from "@lindorm/pylon";`,
@@ -58,7 +58,7 @@ const kryptosRotation = (dbDriver: string): string =>
     `// parties re-fetch the JWKS anyway.`,
     `//`,
     `// The \`pylon:cookie\` / \`pylon:session\` purposes below are the ones`,
-    `// \`src/pylon/pylon.ts\` selects on (its flat \`cookies\` / \`session\` key`,
+    `// \`src/pylon/pylon.ts\` selects on (its flat \`cookies\` / \`auth.session\` key`,
     `// selectors); \`pylon:token\` feeds the published JWKS. Rename one here and`,
     `// you must rename it there too.`,
     ``,

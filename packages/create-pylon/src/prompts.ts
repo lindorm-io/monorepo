@@ -37,7 +37,7 @@ const promptProjectName = async (initial?: string): Promise<string> => {
 const promptIssuer = async (): Promise<string> =>
   input({
     message:
-      "Issuer URL (this service's identity — becomes the Amphora domain for JWKS):",
+      "Issuer URL (this service's identity — becomes the Amphora issuer for JWKS):",
     default: "http://localhost:3000",
     validate: (value) =>
       /^https?:\/\/.+/.test(value.trim())

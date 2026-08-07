@@ -482,22 +482,6 @@ export const socketExampleMiddleware: ServerSocketMiddleware = async (ctx, next)
   await next();
 };
 ",
-  "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
-import { logger } from "../logger/index.js";
-import { config } from "./config.js";
-
-// \`domain\` is this service's issuer: every key added to the vault (the KEK
-// below, plus rotated Kryptos keys) derives its issuer + jwks_uri from it, and
-// it's what /.well-known/jwks.json publishes under. \`environment\` rejects any
-// key whose certificate was minted for a different deployment environment.
-export const amphora = new Amphora({
-  logger,
-  domain: config.issuer,
-  environment: config.nodeEnv,
-});
-
-amphora.env(config.pylon.kek);
-",
   "src/routes/_middleware.ts": "import { httpExampleMiddleware } from "../middleware/http-example.js";
 
 export const MIDDLEWARE = [httpExampleMiddleware];
@@ -693,22 +677,6 @@ export const httpExampleMiddleware: ServerHttpMiddleware = async (ctx, next) => 
   await next();
 };
 ",
-  "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
-import { logger } from "../logger/index.js";
-import { config } from "./config.js";
-
-// \`domain\` is this service's issuer: every key added to the vault (the KEK
-// below, plus rotated Kryptos keys) derives its issuer + jwks_uri from it, and
-// it's what /.well-known/jwks.json publishes under. \`environment\` rejects any
-// key whose certificate was minted for a different deployment environment.
-export const amphora = new Amphora({
-  logger,
-  domain: config.issuer,
-  environment: config.nodeEnv,
-});
-
-amphora.env(config.pylon.kek);
-",
   "src/routes/_middleware.ts": "import { httpExampleMiddleware } from "../middleware/http-example.js";
 
 export const MIDDLEWARE = [httpExampleMiddleware];
@@ -804,22 +772,6 @@ export const logger = new Logger({
   readable: config.logger.readable,
 });
 ",
-  "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
-import { logger } from "../logger/index.js";
-import { config } from "./config.js";
-
-// \`domain\` is this service's issuer: every key added to the vault (the KEK
-// below, plus rotated Kryptos keys) derives its issuer + jwks_uri from it, and
-// it's what /.well-known/jwks.json publishes under. \`environment\` rejects any
-// key whose certificate was minted for a different deployment environment.
-export const amphora = new Amphora({
-  logger,
-  domain: config.issuer,
-  environment: config.nodeEnv,
-});
-
-amphora.env(config.pylon.kek);
-",
   "tsconfig.build.json": "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -887,7 +839,7 @@ export const config = configuration(
     nodeEnv: z
       .enum(["production", "staging", "development", "test", "unknown"])
       .default("development"),
-    // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+    // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
     // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
     // (ISSUER) — never ship localhost to production.
     issuer: z.string(),
@@ -955,6 +907,7 @@ export const pylon = new Pylon({
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: rabbit,
   queue: { enabled: true },
   webhook: { enabled: true },
@@ -964,23 +917,10 @@ export const pylon = new Pylon({
     // skip: (ctx) => false,
     // entities: [],
   },
-  session: {
-    enabled: true,
-    kv: redis,
-    name: "sid",
-    // Session's own keys — separate blast radius from other cookies.
-    signature: { condition: { purpose: "pylon:session", publish: false } },
-    encryption: { condition: { purpose: "pylon:session", publish: false } },
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false, // TODO: flip to true in production (behind HTTPS)
-    expiry: "7d",
-  },
   auth: {
     driver: new OpenIdDriver({
       clientId: config.auth.clientId,
       clientSecret: config.auth.clientSecret,
-      issuer: config.auth.issuer,
       authorize: {
         scope: ["openid", "profile", "email"],
         responseType: "code",
@@ -989,10 +929,17 @@ export const pylon = new Pylon({
     router: {
       pathPrefix: "/auth",
     },
+    session: {
+      enabled: true,
+      // Session's own keys — separate blast radius from other cookies.
+      signature: { condition: { purpose: "pylon:session", publish: false } },
+      encryption: { condition: { purpose: "pylon:session", publish: false } },
+      sameSite: "lax",
+      secure: false, // TODO: flip to true in production (behind HTTPS)
+    },
   },
   rateLimit: {
     enabled: true,
-    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -1092,7 +1039,7 @@ export const config = configuration(
     nodeEnv: z
       .enum(["production", "staging", "development", "test", "unknown"])
       .default("development"),
-    // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+    // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
     // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
     // (ISSUER) — never ship localhost to production.
     issuer: z.string(),
@@ -1132,19 +1079,10 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  session: {
-    enabled: true,
-    name: "sid",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false, // TODO: flip to true in production (behind HTTPS)
-    expiry: "7d",
-  },
   auth: {
     driver: new OpenIdDriver({
       clientId: config.auth.clientId,
       clientSecret: config.auth.clientSecret,
-      issuer: config.auth.issuer,
       authorize: {
         scope: ["openid", "profile", "email"],
         responseType: "code",
@@ -1152,6 +1090,11 @@ export const pylon = new Pylon({
     }),
     router: {
       pathPrefix: "/auth",
+    },
+    session: {
+      enabled: true,
+      sameSite: "lax",
+      secure: false, // TODO: flip to true in production (behind HTTPS)
     },
   },
   setup: async () => {},
@@ -1188,9 +1131,9 @@ export const pylon = new Pylon({
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   rateLimit: {
     enabled: true,
-    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -1315,6 +1258,51 @@ export type ServerHandler<
 
 export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
   PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
+"
+`;
+
+exports[`scaffold > writeAmphoraFile > snapshot: auth 1`] = `
+"import { Amphora } from "@lindorm/amphora";
+import { logger } from "../logger/index.js";
+import { config } from "./config.js";
+
+// \`issuer\` is this service's own identity: every key added to the vault (the
+// KEK below, plus rotated Kryptos keys) derives its issuer + jwks_uri from it,
+// and it's what /.well-known/jwks.json publishes under. \`environment\` rejects
+// any key whose certificate was minted for a different deployment environment.
+//
+// \`idp\` is the UPSTREAM identity provider — registered here and nowhere else.
+// Amphora discovers \`{issuer}/.well-known/openid-configuration\` and fetches the
+// provider's keys from it; \`OpenIdDriver\` then reads that document rather than
+// fetching anything itself. Registration is lazy, and \`pylon.setup()\` awaits
+// \`amphora.setup()\`, so the document is resolved before the first request.
+export const amphora = new Amphora({
+  logger,
+  issuer: config.issuer,
+  environment: config.nodeEnv,
+  idp: { issuer: config.auth.issuer },
+});
+
+amphora.env(config.pylon.kek);
+"
+`;
+
+exports[`scaffold > writeAmphoraFile > snapshot: no auth 1`] = `
+"import { Amphora } from "@lindorm/amphora";
+import { logger } from "../logger/index.js";
+import { config } from "./config.js";
+
+// \`issuer\` is this service's own identity: every key added to the vault (the
+// KEK below, plus rotated Kryptos keys) derives its issuer + jwks_uri from it,
+// and it's what /.well-known/jwks.json publishes under. \`environment\` rejects
+// any key whose certificate was minted for a different deployment environment.
+export const amphora = new Amphora({
+  logger,
+  issuer: config.issuer,
+  environment: config.nodeEnv,
+});
+
+amphora.env(config.pylon.kek);
 "
 `;
 
@@ -1480,7 +1468,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1521,7 +1509,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1560,7 +1548,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1596,7 +1584,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1640,7 +1628,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1679,7 +1667,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1715,7 +1703,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1761,7 +1749,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1805,7 +1793,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1849,7 +1837,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1890,7 +1878,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1929,7 +1917,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -1968,7 +1956,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -2007,7 +1995,7 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
-  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // This service's own issuer URL. Becomes the Amphora \`issuer\`, from which
   // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
   // (ISSUER) — never ship localhost to production.
   issuer: z.string(),
@@ -2054,7 +2042,7 @@ exports[`scaffold > writeConfigYaml > snapshot: nats only 1`] = `
 #   logger.readable  LOGGER__READABLE
 #   nats.servers     NATS__SERVERS
 
-# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# This service's own issuer URL (Amphora issuer → key issuer + jwks_uri).
 # Override per-environment via ISSUER; never ship localhost to production.
 issuer: http://localhost:3000
 
@@ -2090,7 +2078,7 @@ exports[`scaffold > writeConfigYaml > snapshot: no drivers 1`] = `
 #   logger.level     LOGGER__LEVEL
 #   logger.readable  LOGGER__READABLE
 
-# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# This service's own issuer URL (Amphora issuer → key issuer + jwks_uri).
 # Override per-environment via ISSUER; never ship localhost to production.
 issuer: http://localhost:3000
 
@@ -2132,7 +2120,7 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + auth 1`] = `
 #   auth.clientSecret     AUTH__CLIENT_SECRET
 #   auth.issuer           AUTH__ISSUER
 
-# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# This service's own issuer URL (Amphora issuer → key issuer + jwks_uri).
 # Override per-environment via ISSUER; never ship localhost to production.
 issuer: http://localhost:3000
 
@@ -2176,7 +2164,7 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + kafka 1`] = `
 #   postgres.migrations   POSTGRES__MIGRATIONS
 #   kafka.brokers         KAFKA__BROKERS
 
-# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# This service's own issuer URL (Amphora issuer → key issuer + jwks_uri).
 # Override per-environment via ISSUER; never ship localhost to production.
 issuer: http://localhost:3000
 
@@ -2220,7 +2208,7 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + redis 1`] = `
 #   postgres.migrations   POSTGRES__MIGRATIONS
 #   redis.url             REDIS__URL
 
-# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# This service's own issuer URL (Amphora issuer → key issuer + jwks_uri).
 # Override per-environment via ISSUER; never ship localhost to production.
 issuer: http://localhost:3000
 
@@ -2263,7 +2251,7 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres only 1`] = `
 #   postgres.synchronize  POSTGRES__SYNCHRONIZE
 #   postgres.migrations   POSTGRES__MIGRATIONS
 
-# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# This service's own issuer URL (Amphora issuer → key issuer + jwks_uri).
 # Override per-environment via ISSUER; never ship localhost to production.
 issuer: http://localhost:3000
 
@@ -2304,7 +2292,7 @@ exports[`scaffold > writeConfigYaml > snapshot: redis kv + redis iris (deduped) 
 #   logger.readable  LOGGER__READABLE
 #   redis.url        REDIS__URL
 
-# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# This service's own issuer URL (Amphora issuer → key issuer + jwks_uri).
 # Override per-environment via ISSUER; never ship localhost to production.
 issuer: http://localhost:3000
 
@@ -2343,7 +2331,7 @@ exports[`scaffold > writeConfigYaml > snapshot: sqlite only 1`] = `
 #   sqlite.synchronize  SQLITE__SYNCHRONIZE
 #   sqlite.migrations   SQLITE__MIGRATIONS
 
-# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# This service's own issuer URL (Amphora issuer → key issuer + jwks_uri).
 # Override per-environment via ISSUER; never ship localhost to production.
 issuer: http://localhost:3000
 
@@ -2963,6 +2951,7 @@ export const pylon = new Pylon({
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: kafka,
   queue: { enabled: true },
   webhook: { enabled: true },
@@ -3000,19 +2989,10 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  session: {
-    enabled: true,
-    name: "sid",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false, // TODO: flip to true in production (behind HTTPS)
-    expiry: "7d",
-  },
   auth: {
     driver: new OpenIdDriver({
       clientId: config.auth.clientId,
       clientSecret: config.auth.clientSecret,
-      issuer: config.auth.issuer,
       authorize: {
         scope: ["openid", "profile", "email"],
         responseType: "code",
@@ -3020,6 +3000,11 @@ export const pylon = new Pylon({
     }),
     router: {
       pathPrefix: "/auth",
+    },
+    session: {
+      enabled: true,
+      sameSite: "lax",
+      secure: false, // TODO: flip to true in production (behind HTTPS)
     },
   },
   setup: async () => {
@@ -3057,6 +3042,7 @@ export const pylon = new Pylon({
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: memoryKv,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   setup: async () => {
     await memoryDb.connect();
     await memoryKv.connect();
@@ -3093,6 +3079,8 @@ export const pylon = new Pylon({
     signature: { condition: { purpose: "pylon:cookie", publish: false } },
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
+  kv: redisDb,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: redisBus,
   queue: { enabled: true },
   setup: async () => {
@@ -3130,6 +3118,8 @@ export const pylon = new Pylon({
     signature: { condition: { purpose: "pylon:cookie", publish: false } },
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
+  kv: redis,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   setup: async () => {
     await redis.connect();
   },
@@ -3166,23 +3156,11 @@ export const pylon = new Pylon({
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
-  session: {
-    enabled: true,
-    kv: redis,
-    name: "sid",
-    // Session's own keys — separate blast radius from other cookies.
-    signature: { condition: { purpose: "pylon:session", publish: false } },
-    encryption: { condition: { purpose: "pylon:session", publish: false } },
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false, // TODO: flip to true in production (behind HTTPS)
-    expiry: "7d",
-  },
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   auth: {
     driver: new OpenIdDriver({
       clientId: config.auth.clientId,
       clientSecret: config.auth.clientSecret,
-      issuer: config.auth.issuer,
       authorize: {
         scope: ["openid", "profile", "email"],
         responseType: "code",
@@ -3191,10 +3169,17 @@ export const pylon = new Pylon({
     router: {
       pathPrefix: "/auth",
     },
+    session: {
+      enabled: true,
+      // Session's own keys — separate blast radius from other cookies.
+      signature: { condition: { purpose: "pylon:session", publish: false } },
+      encryption: { condition: { purpose: "pylon:session", publish: false } },
+      sameSite: "lax",
+      secure: false, // TODO: flip to true in production (behind HTTPS)
+    },
   },
   rateLimit: {
     enabled: true,
-    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -3239,6 +3224,7 @@ export const pylon = new Pylon({
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: rabbit,
   queue: { enabled: true },
   setup: async () => {
@@ -3280,6 +3266,7 @@ export const pylon = new Pylon({
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redisKv,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: redisBus,
   queue: { enabled: true },
   setup: async () => {
@@ -3319,6 +3306,8 @@ export const pylon = new Pylon({
     signature: { condition: { purpose: "pylon:cookie", publish: false } },
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
+  kv: postgres,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: rabbit,
   queue: { enabled: true },
   webhook: { enabled: true },
@@ -3364,6 +3353,8 @@ export const pylon = new Pylon({
     signature: { condition: { purpose: "pylon:cookie", publish: false } },
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
+  kv: postgres,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: rabbit,
   queue: { enabled: true },
   setup: async () => {
@@ -3401,6 +3392,8 @@ export const pylon = new Pylon({
     signature: { condition: { purpose: "pylon:cookie", publish: false } },
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
+  kv: postgres,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   setup: async () => {
     await postgres.connect();
   },
@@ -3463,6 +3456,8 @@ export const pylon = new Pylon({
     signature: { condition: { purpose: "pylon:cookie", publish: false } },
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
+  kv: redis,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   setup: async () => {
     await redis.connect();
   },
@@ -3552,9 +3547,9 @@ export const pylon = new Pylon({
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   rateLimit: {
     enabled: true,
-    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -3595,9 +3590,10 @@ export const pylon = new Pylon({
     signature: { condition: { purpose: "pylon:cookie", publish: false } },
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
+  kv: redis,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   rateLimit: {
     enabled: true,
-    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -3639,23 +3635,11 @@ export const pylon = new Pylon({
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
   kv: redis,
-  session: {
-    enabled: true,
-    kv: redis,
-    name: "sid",
-    // Session's own keys — separate blast radius from other cookies.
-    signature: { condition: { purpose: "pylon:session", publish: false } },
-    encryption: { condition: { purpose: "pylon:session", publish: false } },
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false, // TODO: flip to true in production (behind HTTPS)
-    expiry: "7d",
-  },
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   auth: {
     driver: new OpenIdDriver({
       clientId: config.auth.clientId,
       clientSecret: config.auth.clientSecret,
-      issuer: config.auth.issuer,
       authorize: {
         scope: ["openid", "profile", "email"],
         responseType: "code",
@@ -3664,10 +3648,17 @@ export const pylon = new Pylon({
     router: {
       pathPrefix: "/auth",
     },
+    session: {
+      enabled: true,
+      // Session's own keys — separate blast radius from other cookies.
+      signature: { condition: { purpose: "pylon:session", publish: false } },
+      encryption: { condition: { purpose: "pylon:session", publish: false } },
+      sameSite: "lax",
+      secure: false, // TODO: flip to true in production (behind HTTPS)
+    },
   },
   rateLimit: {
     enabled: true,
-    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -3699,14 +3690,6 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  session: {
-    enabled: true,
-    name: "sid",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false, // TODO: flip to true in production (behind HTTPS)
-    expiry: "7d",
-  },
   setup: async () => {
   },
   teardown: async () => {
@@ -3740,18 +3723,8 @@ export const pylon = new Pylon({
     signature: { condition: { purpose: "pylon:cookie", publish: false } },
     encryption: { condition: { purpose: "pylon:cookie", publish: false } },
   },
-  session: {
-    enabled: true,
-    kv: postgres,
-    name: "sid",
-    // Session's own keys — separate blast radius from other cookies.
-    signature: { condition: { purpose: "pylon:session", publish: false } },
-    encryption: { condition: { purpose: "pylon:session", publish: false } },
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false, // TODO: flip to true in production (behind HTTPS)
-    expiry: "7d",
-  },
+  kv: postgres,
+  // cache: evictableSource, // allkeys-lru; defaults to kv
   setup: async () => {
     await postgres.connect();
   },
@@ -3798,8 +3771,9 @@ exports[`scaffold > writeTestCtxFile > snapshot: db + kv 1`] = `
 import type { ServerHttpContext } from "../types/context.js";
 
 // A ready-made ServerHttpContext for tests: infrastructure is mocked, and
-// ctx.db / ctx.kv are stateful in-memory Proteus mocks (writes persist, reads
-// reflect them) — seed or override per call via the options.
+// ctx.db / ctx.kv / ctx.cache are stateful in-memory Proteus mocks (writes
+// persist, reads reflect them) — seed or override per call via the options.
+// The three are DISTINCT mocks, so a test can prove which store was written.
 export const createTestCtx = (options?: CreateTestPylonCtxOptions): ServerHttpContext =>
   createTestPylonCtx(options) as ServerHttpContext;
 "
@@ -3813,8 +3787,9 @@ exports[`scaffold > writeTestCtxFile > snapshot: db only 1`] = `
 import type { ServerHttpContext } from "../types/context.js";
 
 // A ready-made ServerHttpContext for tests: infrastructure is mocked, and
-// ctx.db / ctx.kv are stateful in-memory Proteus mocks (writes persist, reads
-// reflect them) — seed or override per call via the options.
+// ctx.db / ctx.kv / ctx.cache are stateful in-memory Proteus mocks (writes
+// persist, reads reflect them) — seed or override per call via the options.
+// The three are DISTINCT mocks, so a test can prove which store was written.
 export const createTestCtx = (options?: CreateTestPylonCtxOptions): ServerHttpContext =>
   createTestPylonCtx(options) as ServerHttpContext;
 "
@@ -3828,8 +3803,9 @@ exports[`scaffold > writeTestCtxFile > snapshot: kv only 1`] = `
 import type { ServerHttpContext } from "../types/context.js";
 
 // A ready-made ServerHttpContext for tests: infrastructure is mocked, and
-// ctx.db / ctx.kv are stateful in-memory Proteus mocks (writes persist, reads
-// reflect them) — seed or override per call via the options.
+// ctx.db / ctx.kv / ctx.cache are stateful in-memory Proteus mocks (writes
+// persist, reads reflect them) — seed or override per call via the options.
+// The three are DISTINCT mocks, so a test can prove which store was written.
 export const createTestCtx = (options?: CreateTestPylonCtxOptions): ServerHttpContext =>
   createTestPylonCtx(options) as ServerHttpContext;
 "
@@ -3843,8 +3819,9 @@ exports[`scaffold > writeTestCtxFile > snapshot: memory db 1`] = `
 import type { ServerHttpContext } from "../types/context.js";
 
 // A ready-made ServerHttpContext for tests: infrastructure is mocked, and
-// ctx.db / ctx.kv are stateful in-memory Proteus mocks (writes persist, reads
-// reflect them) — seed or override per call via the options.
+// ctx.db / ctx.kv / ctx.cache are stateful in-memory Proteus mocks (writes
+// persist, reads reflect them) — seed or override per call via the options.
+// The three are DISTINCT mocks, so a test can prove which store was written.
 export const createTestCtx = (options?: CreateTestPylonCtxOptions): ServerHttpContext =>
   createTestPylonCtx(options) as ServerHttpContext;
 "
@@ -3896,7 +3873,7 @@ import { postgres } from "../proteus/db/source.js";
 // parties re-fetch the JWKS anyway.
 //
 // The \`pylon:cookie\` / \`pylon:session\` purposes below are the ones
-// \`src/pylon/pylon.ts\` selects on (its flat \`cookies\` / \`session\` key
+// \`src/pylon/pylon.ts\` selects on (its flat \`cookies\` / \`auth.session\` key
 // selectors); \`pylon:token\` feeds the published JWKS. Rename one here and
 // you must rename it there too.
 
@@ -3990,7 +3967,7 @@ import { postgres } from "../proteus/db/source.js";
 // parties re-fetch the JWKS anyway.
 //
 // The \`pylon:cookie\` / \`pylon:session\` purposes below are the ones
-// \`src/pylon/pylon.ts\` selects on (its flat \`cookies\` / \`session\` key
+// \`src/pylon/pylon.ts\` selects on (its flat \`cookies\` / \`auth.session\` key
 // selectors); \`pylon:token\` feeds the published JWKS. Rename one here and
 // you must rename it there too.
 

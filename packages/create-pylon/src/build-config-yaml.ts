@@ -129,7 +129,7 @@ export const buildConfigYaml = (answers: Answers): string => {
     `# Env-var override reference for this service:`,
     ...unique.map((h) => `#   ${h.path.padEnd(widest)}  ${h.envVar}`),
     ``,
-    `# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).`,
+    `# This service's own issuer URL (Amphora issuer → key issuer + jwks_uri).`,
     `# Override per-environment via ISSUER; never ship localhost to production.`,
     `issuer: ${answers.issuer}`,
     ``,
