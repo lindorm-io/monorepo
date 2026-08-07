@@ -1,13 +1,12 @@
-import { ServerError } from "@lindorm/errors";
 import type { PylonSocketMiddleware } from "../../types/index.js";
+import { resolveErrorStatus } from "../utils/resolve-error-status.js";
 
 export const socketErrorHandlerMiddleware: PylonSocketMiddleware = async (ctx, next) => {
   try {
     await next();
   } catch (err: any) {
     try {
-      const status =
-        err.status ?? err.statusCode ?? ServerError.Status.InternalServerError;
+      const status = resolveErrorStatus(err);
 
       if (status >= 500) {
         ctx.logger.error("Server error", err);

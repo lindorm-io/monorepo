@@ -56,7 +56,18 @@ const createFakeBus = () => {
       handlers.set(name, cb);
     },
   };
-  return { published, handlers, workerQueue: () => queue } as any;
+  return {
+    published,
+    handlers,
+    workerQueue: () => queue,
+    // Enough of `IIrisSource` for `Pylon.setup()` to drive it: webhooks are a
+    // producer on `bus` feeding a consumer that writes to `db`, and enabling
+    // them without both is a boot failure.
+    addMessages: () => undefined,
+    connect: async () => undefined,
+    setup: async () => undefined,
+    disconnect: async () => undefined,
+  } as any;
 };
 
 let sources: Array<ProteusSource> = [];
@@ -88,6 +99,7 @@ const createPylon = (amphora: IAmphora, db: ProteusSource): Pylon =>
     port: 55598,
     version: "0.0.1",
     db: db as any,
+    bus: createFakeBus(),
     kryptos: { enabled: true },
     webhook: { enabled: true },
   });

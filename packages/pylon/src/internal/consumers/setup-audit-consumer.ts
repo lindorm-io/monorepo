@@ -30,6 +30,8 @@ export const setupAuditConsumer = async (
       requestBody: message.requestBody,
       sessionId: message.sessionId,
       client: message.client,
+      errorCode: message.errorCode,
+      errorType: message.errorType,
     });
 
     logger.debug("Audit log persisted", { requestId: message.requestId });

@@ -2,6 +2,7 @@ import {
   CorrelationField,
   DeadLetter,
   Field,
+  Generated,
   IdentifierField,
   Message,
   Namespace,
@@ -18,7 +19,12 @@ import type { PylonClientContext } from "../types/index.js";
 @Retry({ maxRetries: 5, strategy: "exponential", delay: 1000 })
 @DeadLetter()
 export class RequestAudit {
+  // ⚠ `@IdentifierField` stages a non-nullable, non-optional string and
+  // generates NOTHING, so without this every publish failed validation — and
+  // the middleware's `.catch(log)` swallowed it, which is why an audit block
+  // could look wired up while never emitting a single record.
   @IdentifierField()
+  @Generated("lindorm_id", { namespace: "aud" })
   readonly id!: string;
 
   @CorrelationField()
@@ -65,4 +71,17 @@ export class RequestAudit {
   @Nullable()
   @Field("object")
   readonly client!: PylonClientContext | null;
+
+  /**
+   * Set only when the request threw. The error's identifying `code` and `type`
+   * — never its message or stack, which are interpolated at the throw site and
+   * can carry request values the `sanitise` hook never sees.
+   */
+  @Nullable()
+  @Field("string")
+  readonly errorCode!: string | null;
+
+  @Nullable()
+  @Field("string")
+  readonly errorType!: string | null;
 }

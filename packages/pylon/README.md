@@ -993,7 +993,14 @@ router.use(
 );
 ```
 
-`useAuditLog` requires an `audit` block on the constructor and a `bus` source. The block's **presence** is the whole switch: omit it and the middleware passes through silently, whatever else is or is not configured; supply it with no `bus` and it throws `audit_bus_not_configured`. The record is published through `ctx.bus` — the request-scoped session, so it carries this request's actor and correlation id. `sanitise` and `skip` are stated per deployment (`audit.sanitise` / `audit.skip`) or per mount, and the mount wins. Each request publishes a `RequestAudit` message containing the endpoint, method, transport, status, duration, source IP, session id, user agent, request id, correlation id, actor, and the (optionally sanitised) body. Set `audit.entities` to a list of entity classes for entity-level change tracking — Pylon installs Proteus listeners on those entities and persists field-level diffs into `DataAuditLog`.
+`useAuditLog` requires an `audit` block on the constructor plus **both** a `bus` and a `db` source. The block's **presence** is the whole switch: omit it and the middleware passes through silently, whatever else is or is not configured. Supply it with a source missing and the pylon refuses to boot — `audit_bus_not_configured` with nowhere to publish, `audit_db_not_configured` with nowhere to persist. Both are boot failures because both are configuration facts, and a half-wired pipeline publishes records that nothing consumes while the deployment reads as audited. The record is published through `ctx.bus` — the request-scoped session, so it carries this request's actor and correlation id. `sanitise` and `skip` are stated per deployment (`audit.sanitise` / `audit.skip`) or per mount, and the mount wins. Each request publishes a `RequestAudit` message containing the endpoint, method, transport, status, duration, source IP, session id, user agent, request id, correlation id, actor, and the (optionally sanitised) body. Set `audit.entities` to a list of entity classes for entity-level change tracking — Pylon installs Proteus listeners on those entities and persists field-level diffs into `DataAuditLog`.
+
+**A request that fails is audited too.** The record is written whether or not the chain throws, and the original error propagates unchanged — a 401, 403, 429 or 500 is the request an auditor most wants, and a log that silently drops every denial is worse than none because it still looks complete. Two consequences worth knowing:
+
+- `statusCode` on a failed record is the status the **client received**, resolved from the error itself. It cannot be read off `ctx.status`: Pylon's error handler is mounted above every route middleware, so it maps the error to a status only after `useAuditLog`'s frame has unwound. A `RedirectError` is recorded as the `302` it actually produces, not as a 500.
+- `errorCode` and `errorType` carry the error's identity — never its message or stack, which are interpolated at the throw site and can hold request values `sanitise` never sees. Both are `null` on a request that succeeded.
+
+**Mount it outermost.** A middleware records only what it wraps, so `useAuditLog()` mounted below `useRateLimit()` never sees a 429 — the limiter rejects by throwing, and the throw never reaches a frame that was never entered.
 
 ### Conduits (HTTP clients)
 
@@ -1282,7 +1289,7 @@ The session cookie is **signed / sealed when a key is configured** for it — `a
 
 ## Webhooks
 
-Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ctx.webhook(event, data)` helper. Enable with `webhook: { enabled: true }`. It reads the top-level `db` (subscriptions) and `bus` (dispatch) — there is no per-feature source to name, and with neither configured the feature registers nothing (see [Source roles](#source-roles)).
+Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ctx.webhook(event, data)` helper. Enable with `webhook: { enabled: true }`. It reads the top-level `db` (subscriptions) and `bus` (dispatch) — there is no per-feature source to name (see [Source roles](#source-roles)). **Both are required**: enabling webhooks without one is a boot failure, `webhook_bus_not_configured` or `webhook_db_not_configured`. Booting a producer whose consumer could not be wired would mean `ctx.webhook()` publishing into a queue nobody reads, for subscriptions in a table that was never created.
 
 ```typescript
 const app = new Pylon({

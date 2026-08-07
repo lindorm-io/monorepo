@@ -65,4 +65,17 @@ export class RequestAuditLog {
   @Nullable()
   @Field("json")
   client!: PylonClientContext | null;
+
+  /**
+   * Set only when the request threw. Indexed because "every denial with this
+   * code" is the query an audit of a failed request is actually for.
+   */
+  @Index()
+  @Nullable()
+  @Field("string")
+  errorCode!: string | null;
+
+  @Nullable()
+  @Field("string")
+  errorType!: string | null;
 }

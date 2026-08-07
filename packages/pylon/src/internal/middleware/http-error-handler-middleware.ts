@@ -4,14 +4,19 @@ import { lindormId } from "@lindorm/random";
 import { RedirectError } from "../../errors/index.js";
 import type { PylonHttpMiddleware } from "../../types/index.js";
 import { deriveChallenge } from "../utils/challenge/derive-challenge.js";
+import { resolveErrorStatus } from "../utils/resolve-error-status.js";
+
+// `resolveErrorStatus` answers a plain `number` — an arbitrary error's `status`
+// is not a member of either enum — so the 401 it is compared against is widened
+// to match rather than compared enum-to-number.
+const UNAUTHORIZED: number = ClientError.Status.Unauthorized;
 
 export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next) => {
   try {
     await next();
   } catch (err: any) {
     try {
-      const status =
-        err.status ?? err.statusCode ?? ServerError.Status.InternalServerError;
+      const status = resolveErrorStatus(err);
 
       if (err instanceof RedirectError) {
         const url = new URL(err.redirect);
@@ -42,10 +47,7 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
         // RFC 9110 §11.6.1 — a 401 must advertise how to authenticate. Only 401: a 403
         // insufficient_scope challenge is a deliberate ctx.challenge() call, never derived.
         // An explicit challenge already on the response always wins.
-        if (
-          status === ClientError.Status.Unauthorized &&
-          !ctx.response?.get("WWW-Authenticate")
-        ) {
+        if (status === UNAUTHORIZED && !ctx.response?.get("WWW-Authenticate")) {
           deriveChallenge(ctx);
         }
 

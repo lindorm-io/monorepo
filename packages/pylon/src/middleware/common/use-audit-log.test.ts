@@ -1,4 +1,4 @@
-import { ServerError } from "@lindorm/errors";
+import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ACCESS_TEST_ISSUER, createTestAegis } from "../../__fixtures__/access/aegis.js";
 import { createTestAppConfig } from "../../__fixtures__/app-config.js";
@@ -335,6 +335,140 @@ describe("useAuditLog", () => {
 
     expect(mockPublisher.create).toHaveBeenCalledWith(
       expect.objectContaining({ actor: "carol" }),
+    );
+  });
+
+  // ⭐ The record is written whether or not the chain throws. Everything below
+  // used to produce NOTHING: the publish sat after a bare `await next()`, so a
+  // 401 / 403 / 429 / 500 left no trace at all. The end-to-end proof — that the
+  // status recorded is the one the client saw, through the error handler pylon
+  // mounts above the route — is in `PylonHttp.audit.test.ts`.
+  describe("a request that throws downstream", () => {
+    test("should still publish an audit record", async () => {
+      next.mockRejectedValue(new Error("downstream exploded"));
+
+      await expect(useAuditLog()(ctx, next)).rejects.toThrow("downstream exploded");
+
+      expect(mockPublisher.publish).toHaveBeenCalledTimes(1);
+    });
+
+    test("should rethrow the ORIGINAL error, unchanged", async () => {
+      const original = new ClientError("Forbidden", {
+        status: ClientError.Status.Forbidden,
+        code: "insufficient_scope",
+      });
+      next.mockRejectedValue(original);
+
+      await expect(useAuditLog()(ctx, next)).rejects.toBe(original);
+    });
+
+    // ⚠ A `finally` that throws REPLACES the in-flight exception. If recording
+    // the audit could throw, the request would surface an audit-log failure
+    // instead of what it actually failed with.
+    test("should surface the original error even when the record cannot be built", async () => {
+      const original = new Error("downstream exploded");
+      next.mockRejectedValue(original);
+      mockPublisher.create.mockImplementation(() => {
+        throw new Error("create failed");
+      });
+
+      await expect(useAuditLog()(ctx, next)).rejects.toBe(original);
+      expect(ctx.logger.error).toHaveBeenCalledWith(
+        "Failed to create audit log",
+        expect.any(Error),
+      );
+    });
+
+    test("should record the status the error resolves to, not ctx.status", async () => {
+      // What koa still has on the context when this frame unwinds — the error
+      // handler sits ABOVE and has not run yet.
+      ctx.status = 404;
+      next.mockRejectedValue(
+        new ClientError("Forbidden", {
+          status: ClientError.Status.Forbidden,
+          code: "insufficient_scope",
+          type: "urn:lindorm:pylon:error:insufficient_scope",
+        }),
+      );
+
+      await expect(useAuditLog()(ctx, next)).rejects.toThrow();
+
+      expect(mockPublisher.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 403,
+          errorCode: "insufficient_scope",
+          errorType: "urn:lindorm:pylon:error:insufficient_scope",
+        }),
+      );
+    });
+
+    test("should record 500 and the fallback identifiers for a bare Error", async () => {
+      next.mockRejectedValue(new Error("kaboom"));
+
+      await expect(useAuditLog()(ctx, next)).rejects.toThrow();
+
+      expect(mockPublisher.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 500,
+          errorCode: "unknown_error",
+          errorType: "urn:lindorm:error:unknown_error",
+        }),
+      );
+    });
+
+    // A socket event has no status of its own, so a COMPLETED one records 200 —
+    // but a failed one must not be recorded as having succeeded.
+    test("should record the error status on a socket event, not 200", async () => {
+      (isHttpContext as unknown as Mock).mockReturnValue(false);
+      (isSocketContext as unknown as Mock).mockReturnValue(true);
+
+      ctx = {
+        ...ctx,
+        event: "chat:message",
+        io: { socket: { handshake: { address: "192.168.1.1" } } },
+      };
+      next.mockRejectedValue(
+        new ClientError("Nope", { status: ClientError.Status.Unauthorized }),
+      );
+
+      await expect(useAuditLog()(ctx, next)).rejects.toThrow();
+
+      expect(mockPublisher.create).toHaveBeenCalledWith(
+        expect.objectContaining({ transport: "socket", statusCode: 401 }),
+      );
+    });
+
+    // The error's identity, never its prose. A message is interpolated at the
+    // throw site and can carry request values `sanitise` never sees.
+    test("should never put the error message or stack on the record", async () => {
+      next.mockRejectedValue(new Error("user@example.com is not permitted"));
+
+      await expect(useAuditLog()(ctx, next)).rejects.toThrow();
+
+      const [record] = mockPublisher.create.mock.calls[0];
+      expect(JSON.stringify(record)).not.toContain("user@example.com");
+      expect(record).not.toHaveProperty("errorMessage");
+      expect(record).not.toHaveProperty("errorStack");
+    });
+
+    // A skipped request is skipped whether it throws or not — the switch runs
+    // before `next()` and owes the same answer on both paths.
+    test("should not publish for a skipped request that throws", async () => {
+      next.mockRejectedValue(new Error("downstream exploded"));
+
+      await expect(useAuditLog({ skip: () => true })(ctx, next)).rejects.toThrow(
+        "downstream exploded",
+      );
+
+      expect(mockPublisher.create).not.toHaveBeenCalled();
+    });
+  });
+
+  test("should record errorCode and errorType as null for a request that did not throw", async () => {
+    await useAuditLog()(ctx, next);
+
+    expect(mockPublisher.create).toHaveBeenCalledWith(
+      expect.objectContaining({ errorCode: null, errorType: null }),
     );
   });
 

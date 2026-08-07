@@ -2,6 +2,7 @@ import {
   CorrelationField,
   DeadLetter,
   Field,
+  Generated,
   IdentifierField,
   Message,
   Namespace,
@@ -17,7 +18,11 @@ import {
 @Retry({ maxRetries: 5, strategy: "exponential", delay: 1000 })
 @DeadLetter()
 export class DataAuditChange {
+  // ⚠ See `RequestAudit.id` — `@IdentifierField` generates nothing on its own,
+  // so an unset `id` failed validation on every publish and the listener's
+  // `.catch(log)` swallowed it.
   @IdentifierField()
+  @Generated("lindorm_id", { namespace: "aud" })
   readonly id!: string;
 
   @CorrelationField()

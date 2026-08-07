@@ -1,4 +1,5 @@
 import type { IAmphora } from "@lindorm/amphora";
+import { ServerError } from "@lindorm/errors";
 import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
 import type { ILindormWorker } from "@lindorm/worker";
@@ -477,34 +478,79 @@ export class Pylon<
     }
   }
 
+  /**
+   * ⚠ A missing source is a THROW here, not a skipped consumer.
+   *
+   * Both blocks are a producer on `bus` feeding a consumer that writes to `db`,
+   * and this is the one place the whole pipe is visible. The old `if (bus && db)`
+   * silently dropped the consumer half, which is the worst of both worlds: the
+   * producer still runs — `useAuditLog` guards only on `ctx.bus`, `ctx.webhook()`
+   * only on the iris session — so every record is published into a queue nobody
+   * consumes and a table that was never created. A deployment reads that as
+   * "audited" right up until someone asks for the records.
+   *
+   * At BOOT rather than per request, because the mismatch is a configuration
+   * fact, known before the first request and unchanged by any of them.
+   */
   private async subscribe(): Promise<void> {
     if (this.options.audit) {
       const { bus, db } = this.options;
 
-      if (bus && db) {
-        await setupAuditConsumer(bus, db, this.logger);
+      if (!bus) {
+        throw new ServerError("Audit logging has no message bus to publish to", {
+          code: "audit_bus_not_configured",
+          type: "urn:lindorm:pylon:error:audit_bus_not_configured",
+          title: "Audit Bus Not Configured",
+          details:
+            "PylonSettings carries an `audit` block but no `bus` source, so audit records cannot be published. Configure `bus`, or drop the `audit` block.",
+        });
+      }
 
-        if (this.options.audit.entities?.length) {
-          await setupDataAuditListeners(
-            db,
-            bus,
-            this.options.audit.entities,
-            this.logger,
-          );
-          await setupDataAuditConsumer(bus, db, this.logger);
-        }
+      if (!db) {
+        throw new ServerError("Audit logging has no database to persist to", {
+          code: "audit_db_not_configured",
+          type: "urn:lindorm:pylon:error:audit_db_not_configured",
+          title: "Audit Db Not Configured",
+          details:
+            "PylonSettings carries an `audit` block but no `db` source, so no audit table is created and no consumer persists the published records. Configure `db`, or drop the `audit` block.",
+        });
+      }
+
+      await setupAuditConsumer(bus, db, this.logger);
+
+      if (this.options.audit.entities?.length) {
+        await setupDataAuditListeners(db, bus, this.options.audit.entities, this.logger);
+        await setupDataAuditConsumer(bus, db, this.logger);
       }
     }
 
     if (this.options.webhook?.enabled) {
       const { bus, db } = this.options;
 
-      if (bus && db) {
-        await setupWebhookRequestConsumer(bus, db, this.logger);
-        await setupWebhookDispatchConsumer(bus, db, this.logger, {
-          maxErrors: this.options.webhook.maxErrors,
+      if (!bus) {
+        throw new ServerError("Webhooks have no message bus to dispatch through", {
+          code: "webhook_bus_not_configured",
+          type: "urn:lindorm:pylon:error:webhook_bus_not_configured",
+          title: "Webhook Bus Not Configured",
+          details:
+            "PylonSettings enables `webhook` but carries no `bus` source, so `ctx.webhook()` has nowhere to publish. Configure `bus`, or disable `webhook`.",
         });
       }
+
+      if (!db) {
+        throw new ServerError("Webhooks have no database to read subscriptions from", {
+          code: "webhook_db_not_configured",
+          type: "urn:lindorm:pylon:error:webhook_db_not_configured",
+          title: "Webhook Db Not Configured",
+          details:
+            "PylonSettings enables `webhook` but carries no `db` source, so no subscription table is created and no consumer dispatches the published requests. Configure `db`, or disable `webhook`.",
+        });
+      }
+
+      await setupWebhookRequestConsumer(bus, db, this.logger);
+      await setupWebhookDispatchConsumer(bus, db, this.logger, {
+        maxErrors: this.options.webhook.maxErrors,
+      });
     }
   }
 }
