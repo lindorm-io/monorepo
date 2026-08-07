@@ -3,7 +3,7 @@ import type { Dict } from "@lindorm/types";
 
 @Namespace("pylon")
 @Message()
-@Topic(() => "pylon.queue.job")
+@Topic("queue.job")
 export class Job {
   @CorrelationField()
   readonly correlationId!: string;

@@ -75,15 +75,12 @@ const createPylonHttp = async (bus: any): Promise<PylonHttp> => {
 };
 
 /**
- * ⚠ The topic `RequestAudit` is actually PUBLISHED to, which is neither what the
- * `@Topic` callback spells nor what `setupAuditConsumer` listens on:
- * `resolveTopic` prefixes the `@Namespace("pylon")` onto a callback that already
- * begins `pylon.`, so `pylon.audit.request` goes out as `pylon.pylon.audit.request`.
- *
- * This file subscribes on the REAL topic so it tests the middleware and nothing
- * else. The consumer-side mismatch is pinned separately, at the bottom.
+ * The topic `RequestAudit` resolves to: `@Namespace("pylon")` prefixed onto the
+ * static `@Topic("audit.request")`, applied exactly once. `setupAuditConsumer`
+ * derives this same string — it passes only a QUEUE, and a static `@Topic` is
+ * resolvable without a message instance, so the consumer never has to guess.
  */
-const PUBLISHED_TOPIC = "pylon.pylon.audit.request";
+const PUBLISHED_TOPIC = "pylon.audit.request";
 
 const loopback = createLoopbackRequest();
 
@@ -204,21 +201,15 @@ describe("PylonHttp audit log over a real error-handled chain", () => {
     });
   });
 
-  // ⛔ NOT a property worth having — a PIN on a defect this fix could not carry.
-  //
-  // `resolveTopic` prefixes `@Namespace("pylon")` onto a `@Topic` callback that
-  // already begins `pylon.`, so records go out on `pylon.pylon.audit.request`.
-  // `setupAuditConsumer` meanwhile consumes on queue `pylon.audit.request.persist`
-  // — and iris's `resolveConsumeTopic` uses the QUEUE STRING as the topic when a
-  // message has a dynamic `@Topic` callback. The two never meet, so nothing has
-  // ever reached `RequestAuditLog`. All four pylon consumers are shaped this way.
-  //
-  // Left unfixed on purpose: the repair changes broker-visible topic and queue
-  // names (or iris's `@Topic`), which is a design call, not a bug fix. WHEN it is
-  // made this test fails — deliberately, so the pairing gets re-derived rather
-  // than this stale expectation being carried forward.
-  test("PINS the publish/consume topic mismatch that keeps records out of the db", async () => {
-    const consumed: Array<unknown> = [];
+  // ⭐ THE regression guard. For as long as `RequestAudit` carried a `@Topic`
+  // CALLBACK, publish and consume resolved different strings and no record ever
+  // reached a consumer: the callback's result got the `pylon.` namespace
+  // prefixed onto a value that already spelled it (`pylon.pylon.audit.request`),
+  // while `resolveConsumeTopic` classified any callback as dynamic and listened
+  // on the QUEUE string instead. A static `@Topic` collapses both sides onto one
+  // resolvable string, so the queue goes back to being just the consumer group.
+  test("delivers the published record to a consumer bound only by queue name", async () => {
+    const consumed: Array<any> = [];
 
     await bus
       .workerQueue(RequestAudit)
@@ -227,9 +218,13 @@ describe("PylonHttp audit log over a real error-handled chain", () => {
     await loopback.request(pylonHttp.callback).get("/v1/ok").expect(200);
     await awaitRecords(1);
 
-    // Published — and received by nothing on the consumer's topic.
+    for (let i = 0; i < 100 && consumed.length < 1; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
     expect(records).toHaveLength(1);
-    expect(consumed).toHaveLength(0);
+    expect(consumed).toHaveLength(1);
+    expect(consumed[0]).toMatchObject({ endpoint: "/v1/ok", statusCode: 200 });
   });
 
   // The record carries the error's identity, never its stack or message — a

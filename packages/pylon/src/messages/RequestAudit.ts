@@ -15,7 +15,7 @@ import type { PylonClientContext } from "../types/index.js";
 
 @Namespace("pylon")
 @Message()
-@Topic(() => "pylon.audit.request")
+@Topic("audit.request")
 @Retry({ maxRetries: 5, strategy: "exponential", delay: 1000 })
 @DeadLetter()
 export class RequestAudit {

@@ -14,7 +14,7 @@ import {
 
 @Namespace("pylon")
 @Message()
-@Topic(() => "pylon.audit.data")
+@Topic("audit.data")
 @Retry({ maxRetries: 5, strategy: "exponential", delay: 1000 })
 @DeadLetter()
 export class DataAuditChange {
