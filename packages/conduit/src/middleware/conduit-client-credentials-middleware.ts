@@ -141,7 +141,13 @@ export const conduitClientCredentialsMiddlewareFactory = (
         baseUrl: issuer,
         logger,
         middleware: [
-          conduitChangeRequestBodyMiddleware("snake"),
+          // Depth 1: every parameter a token request carries is a flat scalar,
+          // so nothing legitimate needs converting below the top level — while
+          // an RFC 9396 §4 `authorization_details` entry carries fields defined
+          // by the schema named in its `type`, which must reach the wire
+          // verbatim. Bounding it here is what keeps that true no matter what
+          // the request grows.
+          conduitChangeRequestBodyMiddleware("snake", { depth: 1 }),
           conduitChangeResponseDataMiddleware("camel"),
         ],
       });

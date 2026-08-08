@@ -251,6 +251,8 @@ Supported algorithms: `ES256` / `ES384` / `ES512` (ECDSA P-256/384/521), `RS256`
 
 The token request is spec-shaped: snake_case parameters, and — with `contentType: "application/x-www-form-urlencoded"` — a real `application/x-www-form-urlencoded` body as RFC 6749 §4.4.2 requires. The target service is named with the RFC 8707 `resource` indicator; conduit does not speak the proprietary `audience` parameter.
 
+The snake-casing is bounded to `{ depth: 1 }`: every token request parameter is a flat scalar, so nothing legitimate needs converting below the top level — while an RFC 9396 §4 `authorization_details` entry carries fields defined by the schema named in its `type`, which must reach the wire verbatim.
+
 ```typescript
 import { conduitClientCredentialsMiddlewareFactory } from "@lindorm/conduit";
 
