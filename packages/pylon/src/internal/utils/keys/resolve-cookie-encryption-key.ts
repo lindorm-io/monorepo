@@ -1,5 +1,10 @@
 import { Matcher } from "@lindorm/match";
-import { applyKeyFloor, ENVELOPE_FLOOR, type IAmphora } from "@lindorm/amphora";
+import {
+  applyKeyFloor,
+  ENVELOPE_DEFAULT,
+  ENVELOPE_FLOOR,
+  type IAmphora,
+} from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { PylonEncKey } from "../../../types/index.js";
@@ -16,13 +21,22 @@ import type { PylonEncKey } from "../../../types/index.js";
  * private/secret half — never the looser SEAL floor that would admit a public
  * recipient key we could never decrypt with.
  *
- * The selector is REQUIRED, and it is per-cookie: the caller hands over the key
- * the cookie itself names, or the deployment's `cookies.encryption` (the
- * session cookie chains `auth.session.encryption ?? cookies.encryption`).
- * Falling back to the floor alone would query the vault's default set — the
- * PUBLISHED keys — and seal cookies with the JWKS token key. This mirrors
- * proteus's `unnamed_encryption_key`: "which key encrypts this" must not have an
- * implicit answer, so a bare cookie is a loud failure, not a silent guess.
+ * `ENVELOPE_DEFAULT` (`publish: false`) sits under the caller's condition as a
+ * DEFAULT, so that condition still wins over it. A cookie key is by definition
+ * unpublished — it never leaves this server and never belongs in a JWKS — and
+ * amphora's own gate hides exactly that key from a query naming no `publish`.
+ * Without the default layer a selector had to spell `publish: false` itself to
+ * reach its own cookie key, which is a workaround, not a policy.
+ *
+ * The selector is still REQUIRED, and it is still per-cookie: the caller hands
+ * over the key the cookie itself names, or the deployment's `cookies.encryption`
+ * (the session cookie chains `auth.session.encryption ?? cookies.encryption`).
+ * The default narrows the guess; it does not supply one. Falling back to floor
+ * plus default would seal a cookie with whichever internal enc key is newest —
+ * the session key, a column KEK — collapsing the blast radius the separate
+ * roles exist to keep apart. This mirrors proteus's `unnamed_encryption_key`:
+ * "which key encrypts this" must not have an implicit answer, so a bare cookie
+ * is a loud failure, not a silent guess.
  */
 export const resolveCookieEncryptionKey = async (
   amphora: IAmphora,
@@ -34,16 +48,17 @@ export const resolveCookieEncryptionKey = async (
       title: "Cookie Encryption Key Not Configured",
       type: "urn:lindorm:pylon:error:cookie_encryption_key_not_configured",
       details:
-        'A cookie was set with `encrypted: true`, but no cookie encryption key is configured; name the key that seals cookies in the pylon options (`cookies.encryption`, e.g. `{ condition: { purpose: "cookie", publish: false } }`). A session cookie chains to it — `auth.session.encryption ?? cookies.encryption` — so naming the cookie key is what makes any cookie encryptable. Pylon will not guess one: the vault\'s default set is the published keys, so a guess would seal cookies with the JWKS token key.',
+        'A cookie was set with `encrypted: true`, but no cookie encryption key is configured; name the key that seals cookies in the pylon options (`cookies.encryption`, e.g. `{ condition: { purpose: "cookie" } }`). A session cookie chains to it — `auth.session.encryption ?? cookies.encryption` — so naming the cookie key is what makes any cookie encryptable. Pylon will not guess one: a guess would seal cookies with whichever internal encryption key is newest — the session key, a KEK — collapsing the blast radius the separate roles exist to keep apart.',
       data: { floor: ENVELOPE_FLOOR },
     });
   }
 
   // The floor is applied LAST so it always wins the merge: `key.condition` is
   // duck-typed and could carry a floor key (e.g. `use`), which must never
-  // override the policy. Per-layer `undefined` stripping keeps a
-  // `{ x: undefined }` condition from becoming match-all.
-  const query = applyKeyFloor(ENVELOPE_FLOOR, key.condition);
+  // override the policy. `ENVELOPE_DEFAULT` (`publish: false`) is only a
+  // default, so the caller's condition still wins over it; per-layer `undefined`
+  // stripping keeps a `{ x: undefined }` condition from erasing that default.
+  const query = applyKeyFloor(ENVELOPE_FLOOR, ENVELOPE_DEFAULT, key.condition);
 
   let kryptos: IKryptos;
 
@@ -58,7 +73,7 @@ export const resolveCookieEncryptionKey = async (
         title: "Cookie Encryption Key Not Found",
         type: "urn:lindorm:pylon:error:cookie_encryption_key_not_found",
         details:
-          "The amphora holds no usable key matching the configured cookie encryption key (`cookies.encryption`, or `auth.session.encryption` for the session cookie); add the key to the vault (the kryptos rotation worker mints the keys it is given) or correct the condition. Note that amphora queries the PUBLISHED set by default — an internal cookie key needs `publish: false`.",
+          "The amphora holds no usable key matching the configured cookie encryption key (`cookies.encryption`, or `auth.session.encryption` for the session cookie); add the key to the vault (the kryptos rotation worker mints the keys it is given) or correct the condition. The query defaults to `publish: false` — a cookie key is unpublished by definition — so a deployment that deliberately seals cookies with a published key must say `publish: true`.",
         data: { query },
         debug: { error: (error as Error).message },
       });

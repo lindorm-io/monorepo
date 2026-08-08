@@ -85,6 +85,50 @@ describe("resolveCookieEncryptionKey", () => {
       expect(resolved.publish).toBe(false);
     });
 
+    // A cookie key is unpublished by definition, so a selector that names no
+    // `publish` means `publish: false` — otherwise amphora's gate hides the very
+    // key the condition describes and the deployment has to spell the default
+    // out by hand. The NEWER published cookie key is the control: `find` returns
+    // the newest match, so it is what an ungated query would hand back.
+    test("resolves an internal unpublished key for a condition that names no publish", async () => {
+      const internal = cookieEncKey();
+      const published = KryptosKit.generate.auto({
+        algorithm: "dir",
+        createdAt: NEWER,
+        issuer: ISSUER,
+        publish: true,
+        purpose: "cookie",
+      });
+
+      amphora.add([internal, published]);
+
+      const resolved = await resolveCookieEncryptionKey(amphora, {
+        condition: { purpose: "cookie" },
+      });
+
+      expect(resolved.id).toBe(internal.id);
+      expect(resolved.publish).toBe(false);
+    });
+
+    // The default is a default: it loses to the caller, unlike the floor.
+    test("a condition stating publish: true overrides the default", async () => {
+      const published = KryptosKit.generate.auto({
+        algorithm: "dir",
+        createdAt: OLDER,
+        issuer: ISSUER,
+        publish: true,
+        purpose: "cookie",
+      });
+
+      amphora.add([cookieEncKey(), published]);
+
+      const resolved = await resolveCookieEncryptionKey(amphora, {
+        condition: { purpose: "cookie", publish: true },
+      });
+
+      expect(resolved.id).toBe(published.id);
+    });
+
     // An injected key skips the vault entirely.
     test("honours an injected kryptos without touching the vault", async () => {
       const injected = cookieEncKey();

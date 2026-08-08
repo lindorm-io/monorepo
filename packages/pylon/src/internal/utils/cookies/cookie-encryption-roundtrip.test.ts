@@ -62,6 +62,58 @@ describe("cookie encryption round-trip", () => {
     },
   );
 
+  // THE DEFAULT, end to end. A vault holding NOTHING but the internal
+  // unpublished cookie key — which is what a real deployment's cookie key is —
+  // and a selector that names only the purpose. Amphora's publish gate hides
+  // exactly this key from a query naming no `publish`, so without the envelope
+  // default the seal cannot resolve a key at all.
+  test("seals and reopens with an internal unpublished key the selector never mentions", async () => {
+    const cookieKey = KryptosKit.generate.auto({
+      algorithm: "dir",
+      encryption: "A256GCM",
+      issuer: ISSUER,
+      publish: false,
+      purpose: "cookie",
+    });
+
+    amphora.add(cookieKey);
+
+    const sealed = await encryptCookie(ctx, "secret_value", {
+      condition: { purpose: "cookie" },
+    });
+
+    expect(AesKit.parse(sealed).keyId).toBe(cookieKey.id);
+
+    const getCookie = createGetCookie({
+      ctx,
+      config,
+      parsed: [{ name: "session", signature: null, kid: null, value: sealed }],
+    });
+
+    await expect(getCookie("session", { encrypted: true })).resolves.toBe("secret_value");
+  });
+
+  // The default yields: a deployment that deliberately seals with a published
+  // key says so, and gets it — `publish` stays consumer policy.
+  test("a selector stating publish: true still reaches a published key", async () => {
+    const published = KryptosKit.generate.auto({
+      algorithm: "dir",
+      encryption: "A256GCM",
+      issuer: ISSUER,
+      publish: true,
+      purpose: "cookie",
+    });
+
+    amphora.add(published);
+
+    const sealed = await encryptCookie(ctx, "secret_value", {
+      condition: { purpose: "cookie", publish: true },
+    });
+
+    expect(AesKit.parse(sealed).keyId).toBe(published.id);
+    await expect(ctx.aegis.aes.decrypt(sealed)).resolves.toBe("secret_value");
+  });
+
   // A key-WRAPPING cookie key: the content-encryption key is generated per
   // message, so a wrong AEAD would seal happily and only the wire shows it.
   test("a wrapping cookie key's declaration reaches the wire too", async () => {
