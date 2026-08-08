@@ -453,7 +453,10 @@ export class CachingRepository<
     });
 
     this.inflight.set(key, promise);
-    void promise.finally(() => this.inflight.delete(key));
+    // `.finally()` returns a NEW promise that rejects with the same reason.
+    // The caller only ever handles `promise` itself, so without this catch a
+    // failing fetch surfaces as an unhandled rejection alongside the real one.
+    void promise.finally(() => this.inflight.delete(key)).catch(() => undefined);
 
     return promise;
   }
@@ -514,7 +517,10 @@ export class CachingRepository<
     });
 
     this.inflight.set(key, promise);
-    void promise.finally(() => this.inflight.delete(key));
+    // `.finally()` returns a NEW promise that rejects with the same reason.
+    // The caller only ever handles `promise` itself, so without this catch a
+    // failing fetch surfaces as an unhandled rejection alongside the real one.
+    void promise.finally(() => this.inflight.delete(key)).catch(() => undefined);
 
     return promise;
   }
@@ -560,7 +566,10 @@ export class CachingRepository<
     });
 
     this.inflight.set(key, promise);
-    void promise.finally(() => this.inflight.delete(key));
+    // `.finally()` returns a NEW promise that rejects with the same reason.
+    // The caller only ever handles `promise` itself, so without this catch a
+    // failing fetch surfaces as an unhandled rejection alongside the real one.
+    void promise.finally(() => this.inflight.delete(key)).catch(() => undefined);
 
     return promise;
   }

@@ -1602,4 +1602,46 @@ describe("CachingRepository", () => {
       expect(key.startsWith(prefix)).toBe(true);
     });
   });
+
+  // The in-flight map de-duplicates concurrent identical reads and clears the
+  // entry with `.finally()`. `.finally()` returns a NEW promise that rejects
+  // with the same reason, and only the ORIGINAL is ever handed to a caller — so
+  // an un-caught derivative turns every failed cached read into an unhandled
+  // rejection on top of the real error.
+  describe("a failing cached read", () => {
+    it("rejects once, without a second unhandled rejection from the in-flight cleanup", async () => {
+      const unhandled: Array<unknown> = [];
+      const onUnhandled = (reason: unknown): void => {
+        unhandled.push(reason);
+      };
+      process.on("unhandledRejection", onUnhandled);
+
+      try {
+        const { repo, inner } = createRepo();
+        const failure = new Error("inner find exploded");
+        (inner.find as Mock).mockRejectedValue(failure);
+
+        await expect(repo.find({ id: "id-1" } as never)).rejects.toThrow(failure);
+
+        // Two full macrotask turns: an unhandled rejection is reported after the
+        // microtask queue drains, so a same-tick assertion would pass either way.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(unhandled).toEqual([]);
+      } finally {
+        process.off("unhandledRejection", onUnhandled);
+      }
+    });
+
+    it("still clears the in-flight entry, so an identical read re-fetches", async () => {
+      const { repo, inner } = createRepo();
+      (inner.find as Mock).mockRejectedValue(new Error("inner find exploded"));
+
+      await expect(repo.find({ id: "id-1" } as never)).rejects.toThrow();
+      await expect(repo.find({ id: "id-1" } as never)).rejects.toThrow();
+
+      expect(inner.find).toHaveBeenCalledTimes(2);
+    });
+  });
 });
