@@ -56,6 +56,7 @@ export const runHttpAccessToken = async (
       ctx.state.access = {
         provenance: "verified",
         claims: verified.claims,
+        custom: verified.custom,
         token: source.token,
       };
     } else {
@@ -93,12 +94,17 @@ export const runHttpAccessToken = async (
         });
       }
 
-      const { active: _active, ...claims } = introspection;
+      const { active: _active, custom, ...claims } = introspection;
 
       // `ctx.state.tokens.accessToken` is deliberately left UNSET here: there is
       // no VerifiedToken, and synthesising one would erase the very provenance
       // distinction `ctx.state.access` exists to preserve.
-      ctx.state.access = { provenance: "introspected", claims, token: source.token };
+      ctx.state.access = {
+        provenance: "introspected",
+        claims,
+        custom,
+        token: source.token,
+      };
     }
 
     assertDpopHttpBinding(ctx, ctx.state.access, {
@@ -127,6 +133,7 @@ export const runHttpAccessToken = async (
     ctx.state.access = {
       provenance: "verified",
       claims: parsed.claims,
+      custom: parsed.custom,
       token: source.session.accessToken,
     };
     return;

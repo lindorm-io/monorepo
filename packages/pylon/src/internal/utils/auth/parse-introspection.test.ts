@@ -232,6 +232,80 @@ describe("parseIntrospection", () => {
     expect(result.notBefore!.getTime()).toBe(1699999000 * 1000);
   });
 
+  // RFC 7662 §2.2 lets the server return members the registry has never heard
+  // of. They are the deployment's own extension claims, so they are kept —
+  // bucketed, not flattened, so a consumer can tell them from a registered claim.
+  describe("custom claims", () => {
+    test("should bucket the unregistered members under custom", () => {
+      const result = parseActive({
+        active: true,
+        sub: "user-custom",
+        tenant_tier: "gold",
+        feature_flags: ["beta-search"],
+      });
+
+      expect(result.custom).toEqual({
+        tenantTier: "gold",
+        featureFlags: ["beta-search"],
+      });
+      expect(result.subject).toBe("user-custom");
+    });
+
+    // ALWAYS an object — a sometimes-absent field invites `null` reaches at
+    // every read site.
+    test("should be an empty object when the response carries none", () => {
+      const result = parseActive({ active: true, sub: "user-plain" });
+
+      expect(result.custom).toEqual({});
+    });
+
+    // `active`/`token_type`/`username` describe the ANSWER (RFC 7662 §2.2), not
+    // the token, and no claim registry entry exists for any of them — so the
+    // translator hands all three back as "unregistered". They have their own
+    // places on this shape and must not be repeated as extension claims.
+    test("should keep the RFC 7662 response members out of the bucket", () => {
+      const result = parseActive({
+        active: true,
+        sub: "user-members",
+        token_type: "bearer",
+        username: "johndoe",
+      });
+
+      expect(result.custom).toEqual({});
+      expect(result.tokenType).toBe("bearer");
+      expect(result.username).toBe("johndoe");
+    });
+
+    // `custom` is RESERVED at the top level, so a server that returns a member
+    // of that name is not ambiguous and not lost — it is unregistered like every
+    // other extension claim, so it lands INSIDE the bucket.
+    test("should nest a member literally named custom inside the bucket", () => {
+      const result = parseActive({
+        active: true,
+        sub: "user-collision",
+        custom: { nested: "value" },
+      });
+
+      expect(result.custom).toEqual({ custom: { nested: "value" } });
+    });
+
+    // The profile carve-out is unchanged: an introspection answer is not a
+    // userinfo response, and dropping a volunteered name/email must not be
+    // routed around by the new bucket.
+    test("should still drop the profile claims rather than bucket them", () => {
+      const result = parseActive({
+        active: true,
+        sub: "user-profile",
+        email: "user@lindorm.io",
+        given_name: "Jane",
+      });
+
+      expect(result).not.toHaveProperty("email");
+      expect(result).not.toHaveProperty("givenName");
+      expect(result.custom).toEqual({});
+    });
+  });
+
   test("should wrap single audience string in array", () => {
     const data = {
       active: true,

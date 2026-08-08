@@ -28,6 +28,7 @@ exports[`OpenIdDriver > introspect > should normalise an active introspection 1`
 {
   "active": true,
   "clientId": "client-abc",
+  "custom": {},
   "expiresAt": 2023-11-14T23:13:20.000Z,
   "scope": [
     "openid",

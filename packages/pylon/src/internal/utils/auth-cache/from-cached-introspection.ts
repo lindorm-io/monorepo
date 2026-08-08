@@ -9,16 +9,26 @@ import type {
  * The stored payload back as an introspection answer — the read twin of
  * `toCachedIntrospection`. `Aegis.toDomain` is the registry-driven inverse of
  * `Aegis.toWire`: it rebuilds the `Date` claims from their unix seconds and
- * camelCases everything it does not recognise into `custom` (`token_type` ->
- * `tokenType`, `username`), which is why the two buckets are merged back into
- * one flat claim set — a cache HIT must be indistinguishable from a MISS.
+ * camelCases everything it does not recognise into a bucket (`token_type` ->
+ * `tokenType`, `username`). Those two are RFC 7662 §2.2 RESPONSE members rather
+ * than claims, so they are merged back onto the flat answer — a cache HIT must
+ * be indistinguishable from a MISS.
+ *
+ * The EXTENSION claims never went through that translation — `toCachedIntrospection`
+ * stored them beside the wire claims precisely so their keys survive — so they
+ * are restored verbatim.
  */
 export const fromCachedIntrospection = (
   payload: CachedIntrospectionPayload,
 ): PylonIntrospection => {
   if (!payload.active) return { active: false };
 
-  const { claims, custom } = Aegis.toDomain(payload.claims ?? {});
+  const { claims, custom: responseMembers } = Aegis.toDomain(payload.claims ?? {});
 
-  return { ...custom, ...claims, active: true } as PylonIntrospectionActive;
+  return {
+    ...responseMembers,
+    ...claims,
+    active: true,
+    custom: payload.custom ?? {},
+  } as PylonIntrospectionActive;
 };

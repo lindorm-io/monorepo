@@ -7,6 +7,15 @@ router.get(
   useHandler(async (ctx) => {
     // `ctx.state.access` is the resolved credential — populated whether the
     // token was verified locally or introspected, so a handler reads one place.
-    return { body: { subject: ctx.state.access?.claims.subject ?? null } };
+    // `custom` carries the claims the registry does not know, on both paths, and
+    // is always an object. It is a plain Dict — a deployment casts to its own.
+    const custom = (ctx.state.access?.custom ?? {}) as { tenantTier?: string };
+
+    return {
+      body: {
+        subject: ctx.state.access?.claims.subject ?? null,
+        tenantTier: custom.tenantTier ?? null,
+      },
+    };
   }),
 );

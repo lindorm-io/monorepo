@@ -242,6 +242,7 @@ ctx.queue(event, payload, priority?, optional?);  // enqueue a Job (when queue.e
 ctx.webhook(event, data?, optional?);             // dispatch a webhook (when webhook.enabled)
 
 ctx.state.access;         // PylonResolvedAccess | null — the resolved credential
+ctx.state.access?.custom; // the credential's unregistered claims (Dict, `{}` when none)
 ctx.state.app;            // { config, domain, environment, name, version }
 ctx.state.app.config;     // the deployment's resolved policy — see below
 ctx.state.actor;          // resolved actor string ("unknown" until resolved)
@@ -721,16 +722,25 @@ On HTTP the middleware **sniffs the credential's wire format and routes** — it
 | JOSE / COSE (`Aegis.isJose/isCose`) | verified locally against your keys      | `ctx.state.access` **and** `ctx.state.tokens.accessToken`        |
 | anything else (opaque)              | `ctx.auth.introspect(token)` (RFC 7662) | `ctx.state.access` only — there is no `VerifiedToken` to publish |
 
-Both paths produce the same three-field shape, so every downstream gate reads one place:
+Both paths produce the same four-field shape, so every downstream gate reads one place:
 
 ```typescript
 ctx.state.access; // PylonResolvedAccess | null
 // {
 //   provenance: "verified" | "introspected",  // signature checked here, vs the AS asserting it
 //   claims: DomainClaims,                     // domain-keyed camelCase on BOTH paths
+//   custom: Dict,                             // the unregistered claims — `{}` when there are none
 //   token: string,                            // the presented credential
 // }
 ```
+
+`custom` holds the claims the aegis registry does not know — your own extension claims. It is populated on both paths (from the verified token's own bucket, and from the members RFC 7662 §2.2 lets an authorization server add to an introspection response) and is ALWAYS an object, so a read never has to test for it. It is untyped on purpose — a deployment knows its own claims and casts:
+
+```typescript
+const { tenantTier } = ctx.state.access!.custom as { tenantTier?: string };
+```
+
+The RFC 7662 response members that describe the ANSWER rather than the token — `active`, `token_type`, `username` — are kept out of the bucket. And `custom` is reserved at the top level of an introspection answer: a server returning a member literally named `custom` gets it back at `access.custom.custom`, not shadowing the bucket.
 
 `cnf` lives inside `claims.confirmation`, so it is not repeated on the outside; there is no `header` field (an opaque token has none, and a JWT's is derivable from `token`) and no `active` field (an inactive token throws `token_not_active` instead of resolving).
 

@@ -11,6 +11,7 @@ describe("usePermissions", () => {
     ({
       provenance,
       token: "presented-token",
+      custom: {},
       claims: {
         permissions: ["users:read", "users:write"],
         roles: [],

@@ -27,6 +27,7 @@ const NOW = new Date("2026-08-06T10:00:00.000Z");
 
 const ACTIVE_INTROSPECTION = {
   active: true,
+  custom: {},
   subject: "alice",
   scope: ["openid"],
   permissions: ["users:read"],
@@ -186,6 +187,31 @@ describe("useAccessToken introspection cache", () => {
     expect(second.state.access.provenance).toBe("introspected");
     // A HIT is indistinguishable from a MISS — Dates included.
     expect(second.state.access.claims).toEqual(first.state.access.claims);
+  });
+
+  // The extension claims go through the SAME encrypted json column, and the wire
+  // translation that column stores in would re-key them — so a HIT must hand the
+  // bucket back exactly as the MISS produced it, key for key.
+  test("should round-trip the custom claims through the stored entry", async () => {
+    const middleware = useAccessToken();
+
+    introspect.mockResolvedValue({
+      ...ACTIVE_INTROSPECTION,
+      custom: { tenantTier: "gold", "urn:lindorm:claim:v2": { nested: ["a"] } },
+    });
+
+    const first = createContext({ kv, introspect });
+    await middleware(first, next);
+
+    const second = createContext({ kv, introspect });
+    await middleware(second, next);
+
+    expect(introspect).toHaveBeenCalledTimes(1);
+    expect(second.state.access.custom).toEqual({
+      tenantTier: "gold",
+      "urn:lindorm:claim:v2": { nested: ["a"] },
+    });
+    expect(second.state.access.custom).toEqual(first.state.access.custom);
   });
 
   // RFC 7662 §2.2 — the AS may answer the same token differently per client, so

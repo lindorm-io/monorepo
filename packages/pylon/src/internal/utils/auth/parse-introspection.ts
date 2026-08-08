@@ -25,6 +25,29 @@ const omitProfileClaims = (claims: Dict): Dict => {
   return result;
 };
 
+// RFC 7662 §2.2 response members that describe the ANSWER, not the token: they
+// have no registry entry, so the translator sweeps them into the custom bucket
+// alongside the real extension claims. They already have their own places on
+// `PylonIntrospectionActive`, so the bucket must not repeat them. (`token_type`
+// arrives here as `tokenType` — the translator camelCases every unregistered
+// key before this runs.)
+const RESPONSE_MEMBER_KEYS: ReadonlySet<string> = new Set([
+  "active",
+  "tokenType",
+  "username",
+]);
+
+// The extension claims, kept whole. `custom` itself is NOT special-cased: a
+// server that returns a member named `custom` gets it at `custom.custom`, which
+// is exactly where an unregistered key belongs.
+const pickCustomClaims = (custom: Dict): Dict => {
+  const result: Dict = {};
+  for (const key of Object.keys(custom)) {
+    if (!RESPONSE_MEMBER_KEYS.has(key)) result[key] = custom[key];
+  }
+  return result;
+};
+
 export const parseIntrospection = (data: IntrospectClaimsInput): PylonIntrospection => {
   if (!isBoolean(data.active)) {
     throw new IntrospectionEndpointFailed("Missing active claim", {
@@ -39,11 +62,12 @@ export const parseIntrospection = (data: IntrospectClaimsInput): PylonIntrospect
     return { active: false };
   }
 
-  const { claims } = Aegis.toDomain(data);
+  const { claims, custom } = Aegis.toDomain(data);
 
   return omitUndefined({
     ...omitProfileClaims(claims),
     active: true as const,
+    custom: pickCustomClaims(custom),
     tokenType: isString(data.tokenType)
       ? data.tokenType
       : isString((data as Dict).token_type)

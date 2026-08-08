@@ -124,7 +124,11 @@ export const createClaimsClient = (
       try {
         const verified = await ctx.aegis.verify(token);
         if (verified.format === "jwt") {
-          const result: PylonIntrospectionActive = { ...verified.claims, active: true };
+          const result: PylonIntrospectionActive = {
+            ...verified.claims,
+            active: true,
+            custom: verified.custom,
+          };
           introspectCache.set(cacheKey, result);
           return result;
         }
@@ -136,12 +140,15 @@ export const createClaimsClient = (
       const accessTokenParsed = ctx.state.tokens?.accessToken;
       if (accessTokenParsed && accessTokenParsed.format === "jwt") {
         // The domain `claims` bucket holds only the registered claims — the
-        // custom-claim and profile buckets are kept separate on VerifiedToken,
-        // so introspection sees neither. `confirmation` IS a registered claim
-        // (PopClaims) and passes through.
+        // custom-claim and profile buckets are kept separate on VerifiedToken.
+        // The introspection shape keeps that same split, so `custom` carries
+        // over as the bucket it already is; the PROFILE still does not, because
+        // an introspection answer is not a profile (RFC 7662 vs OIDC §5.3).
+        // `confirmation` IS a registered claim (PopClaims) and passes through.
         const result: PylonIntrospectionActive = {
           ...accessTokenParsed.claims,
           active: true,
+          custom: accessTokenParsed.custom,
         };
         introspectCache.set(cacheKey, result);
         return result;

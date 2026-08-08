@@ -64,6 +64,7 @@ describe("useAccessToken", () => {
       ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
       ctx.auth.introspect.mockResolvedValue({
         active: true,
+        custom: {},
         subject: "alice",
         scope: ["openid"],
         permissions: ["users:read"],
@@ -88,6 +89,7 @@ describe("useAccessToken", () => {
 
       (ctx.aegis.verify as Mock).mockResolvedValue({
         claims,
+        custom: {},
         format: "jwt",
         header: {},
         token: joseShapedToken(),
@@ -98,7 +100,7 @@ describe("useAccessToken", () => {
       ctx.state.access = null;
       ctx.state.tokens = {};
       ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
-      ctx.auth.introspect.mockResolvedValue({ active: true, ...claims });
+      ctx.auth.introspect.mockResolvedValue({ active: true, custom: {}, ...claims });
       await useAccessToken()(ctx, next);
       const introspected = ctx.state.access;
 
@@ -138,6 +140,7 @@ describe("useAccessToken", () => {
       };
       (ctx.aegis.verify as Mock).mockResolvedValue({
         claims: { subject: "alice" },
+        custom: {},
         format: "jwt",
         token: "session-jwt",
       });
@@ -201,6 +204,7 @@ describe("useAccessToken", () => {
     const makeCtx = (authOverride: any = {}): any => {
       const parsedBearer = {
         claims: { subject: "alice" },
+        custom: {},
         format: "jwt",
         token: "socket-jwt",
       };
@@ -317,6 +321,7 @@ describe("useAccessToken", () => {
       };
       (ctx.aegis.verify as Mock).mockResolvedValue({
         claims: { subject: "alice", expiresAt: new Date("2099-01-01T00:00:00.000Z") },
+        custom: {},
         header: { tokenType: "access_token" },
         token: "jwt-token",
       });
@@ -378,7 +383,11 @@ describe("useAccessToken", () => {
     test("still introspects an opaque token with no issuer resolved", async () => {
       const ctx = makeCtx(createTestAuthConfig({ issuer: null }));
       ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
-      ctx.auth.introspect.mockResolvedValue({ active: true, subject: "alice" });
+      ctx.auth.introspect.mockResolvedValue({
+        active: true,
+        custom: {},
+        subject: "alice",
+      });
 
       await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
 

@@ -64,6 +64,7 @@ export const runSocketAccessToken = (ctx: PylonSocketContext): SocketFastPath =>
   ctx.state.access = {
     provenance: "verified",
     claims: bearer.claims,
+    custom: bearer.custom,
     token: bearer.token,
   } satisfies PylonResolvedAccess;
 

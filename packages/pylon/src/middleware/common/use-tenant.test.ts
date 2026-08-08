@@ -29,6 +29,7 @@ describe("useTenant", () => {
     beforeEach(() => {
       ctx.state.access = {
         provenance: "verified",
+        custom: {},
         claims: { tenantId: "tenant-resolved" },
         token: "access.token.value",
       };
@@ -44,6 +45,7 @@ describe("useTenant", () => {
     test("should read an introspected credential without introspecting again", async () => {
       ctx.state.access = {
         provenance: "introspected",
+        custom: {},
         claims: { tenantId: "tenant-resolved" },
         token: "opaque-token",
       };
@@ -69,6 +71,7 @@ describe("useTenant", () => {
     test("should throw 403 without introspecting when the credential carries no tenant", async () => {
       ctx.state.access = {
         provenance: "verified",
+        custom: {},
         claims: {},
         token: "access.token.value",
       };
@@ -90,6 +93,7 @@ describe("useTenant", () => {
     test("should allow a missing tenant when required is false", async () => {
       ctx.state.access = {
         provenance: "verified",
+        custom: {},
         claims: {},
         token: "access.token.value",
       };
@@ -168,6 +172,7 @@ describe("useTenant", () => {
     test("should win over the resolved access credential", async () => {
       ctx.state.access = {
         provenance: "verified",
+        custom: {},
         claims: { tenantId: "tenant-resolved" },
         token: "access.token.value",
       };

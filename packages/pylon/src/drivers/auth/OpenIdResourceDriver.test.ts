@@ -119,7 +119,7 @@ describe("OpenIdResourceDriver", () => {
       `Basic ${Buffer.from("resource-server:resource-secret").toString("base64")}`,
     );
     expect(fields()).toEqual({ token: "access-token" });
-    expect(result).toEqual({ active: true, subject: "user-123" });
+    expect(result).toEqual({ active: true, custom: {}, subject: "user-123" });
     expect(scope.isDone()).toBe(true);
   });
 

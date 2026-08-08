@@ -12,15 +12,19 @@ import type { PylonIntrospection } from "../../../types/index.js";
  * — it does not silently degrade to an ISO string. The wire form is dates-as-
  * unix-seconds, which is exactly what `Aegis.toDomain` reads back.
  *
+ * The custom bucket is stored as it stands, OUTSIDE the wire claims: the wire
+ * translation snake_cases every key it does not recognise, and an extension
+ * claim's key belongs to whoever defined it — it must come back unchanged.
+ *
  * An inactive answer stores `claims: null` — RFC 7662 §2.2 permits nothing but
  * `active: false`, and the negative is still a real entry.
  */
 export const toCachedIntrospection = (
   introspection: PylonIntrospection,
 ): CachedIntrospectionPayload => {
-  if (!introspection.active) return { active: false, claims: null };
+  if (!introspection.active) return { active: false, claims: null, custom: null };
 
-  const { active: _active, ...claims } = introspection;
+  const { active: _active, custom, ...claims } = introspection;
 
-  return { active: true, claims: Aegis.toWire(claims) };
+  return { active: true, claims: Aegis.toWire(claims), custom };
 };

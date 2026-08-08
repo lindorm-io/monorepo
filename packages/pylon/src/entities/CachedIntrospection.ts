@@ -16,13 +16,21 @@ import {
  * at rest and a `Date` would come back as a string the claim translator cannot
  * read. `Aegis.toDomain` rebuilds the domain claims on the way out.
  *
+ * `custom` is the unregistered-claim bucket, stored BESIDE the wire claims
+ * rather than flattened into them. The wire translation renames what it does not
+ * recognise (camel on read, snake on write), and an extension claim is someone
+ * else's key — a cache round trip must hand it back byte-identical, not
+ * re-cased.
+ *
  * `claims` is `null` for an inactive token, and only for an inactive token: RFC
  * 7662 §2.2 says the server SHOULD NOT include anything but `active: false`, and
  * a negative IS a real cache entry — it must be storable, not merely absent.
+ * `custom` is `null` there for the same reason.
  */
 export type CachedIntrospectionPayload = {
   active: boolean;
   claims: Record<string, unknown> | null;
+  custom: Record<string, unknown> | null;
 };
 
 @Namespace("pylon")

@@ -22,5 +22,6 @@ exports[`cached introspection payload > should store the claims in wire form 1`]
     "token_type": "Bearer",
     "username": "alice@lindorm.io",
   },
+  "custom": {},
 }
 `;

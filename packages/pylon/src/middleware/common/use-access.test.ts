@@ -14,6 +14,7 @@ describe("useAccess", () => {
     ({
       provenance,
       token: "presented-token",
+      custom: {},
       claims: {
         roles: ["user"],
         permissions: ["users:read"],

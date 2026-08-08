@@ -5,6 +5,7 @@ exports[`useAccessToken > HTTP context > falls back to session.accessToken when 
   "claims": {
     "subject": "alice",
   },
+  "custom": {},
   "format": "jwt",
   "token": "session-jwt",
 }
@@ -15,6 +16,7 @@ exports[`useAccessToken > HTTP context > falls back to session.accessToken when 
   "claims": {
     "subject": "alice",
   },
+  "custom": {},
   "provenance": "verified",
   "token": "session-jwt",
 }
@@ -31,6 +33,7 @@ exports[`useAccessToken > HTTP context > introspects an OPAQUE bearer token and 
     ],
     "subject": "alice",
   },
+  "custom": {},
   "provenance": "introspected",
   "token": "opaque-access-token",
 }
@@ -53,6 +56,7 @@ exports[`useAccessToken > HTTP context > verifies a JOSE bearer token and resolv
   "claims": {
     "subject": "verified_subject",
   },
+  "custom": {},
   "provenance": "verified",
   "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSJ9.signature",
 }
@@ -63,6 +67,7 @@ exports[`useAccessToken > Socket event fast path > accepts silently when well be
   "claims": {
     "subject": "alice",
   },
+  "custom": {},
   "provenance": "verified",
   "token": "socket-jwt",
 }

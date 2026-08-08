@@ -18,6 +18,7 @@ exports[`parseIntrospection > should map Lindorm extension fields 1`] = `
   ],
   "authFactorReference": "2fa",
   "clientId": "client-ext",
+  "custom": {},
   "entitlements": [
     "premium",
   ],
@@ -61,6 +62,7 @@ exports[`parseIntrospection > should map full RFC 7662 response to PylonIntrospe
     "https://other.example.com",
   ],
   "clientId": "client-abc",
+  "custom": {},
   "expiresAt": 2023-11-14T23:13:20.000Z,
   "issuedAt": 2023-11-14T22:13:20.000Z,
   "issuer": "https://auth.example.com",
