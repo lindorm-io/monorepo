@@ -35,9 +35,9 @@ export type UpdateEvent<E = any> = EntityEventBase<E> & {
    * `undefined` when the entity was never hydrated (constructed via `create()`),
    * because no prior state exists.
    *
-   * ⚠ @Embedded parents are the exception: the snapshot holds the same
-   * embeddable instance the entity does, so an in-place mutation of a nested
-   * value is not recoverable here.
+   * Nested values are reported at their prior state too, @Embedded parents
+   * included — an in-place mutation of `entity.address.street` does not reach
+   * back into what is reported here.
    */
   oldEntity: E | undefined;
 };

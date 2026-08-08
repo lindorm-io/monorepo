@@ -1571,6 +1571,41 @@ await repo.increment({ id: user.id }, "loginCount", 1);
 await repo.decrement({ id: user.id }, "credits", 5);
 ```
 
+#### Change detection
+
+`update()` writes only the columns that differ from the state the entity was
+loaded in, and skips the round-trip entirely when nothing differs. Mutating a
+value **in place** counts as a change — a nested `@Embedded` field, a key inside
+a json payload, an element pushed onto an array, a `Date` moved with
+`setFullYear`:
+
+```typescript
+const user = await repo.findOne({ id });
+
+user.address.street = "Storgata 2"; // in place — detected
+user.settings.theme = "dark"; // in place — detected
+user.tags.push("beta"); // in place — detected
+
+await repo.update(user);
+```
+
+Two things are outside it. An entity built with `create()` was never loaded, so
+there is nothing to compare against and every column is written. And
+[`@EmbeddedList`](#embeddedlist) fields live in their own collection table and
+are saved by full replacement — changing one alone does not bump the parent's
+`@VersionField` or `@UpdateDateField`; touch a tracked field on the parent if you
+need the parent row to move.
+
+Detecting an in-place change requires a copy of each mutable value at read time,
+so a read of rows carrying large json payloads costs proportionally more than the
+row itself. Pass `{ snapshot: false }` on a read that will never be written back —
+change detection is then off for those entities, and `update()` writes every
+column:
+
+```typescript
+const rows = await repo.find({ status: "active" }, { snapshot: false });
+```
+
 ### Delete
 
 ```typescript

@@ -18,6 +18,7 @@ import type { ProteusSource } from "../../../classes/ProteusSource.js";
 import type { NamingStrategy } from "../../../types/source-options.js";
 import { createTckEntities } from "./create-tck-entities.js";
 
+import { changeDetectionSuite } from "./change-detection.tck.js";
 import { crudSuite } from "./crud.tck.js";
 import { generatedKeysSuite } from "./generated-keys.tck.js";
 import { queriesSuite } from "./queries.tck.js";
@@ -228,6 +229,7 @@ const runTckForNaming = (
   renamedColumnsSuite(getHandle, entities);
   transformSuite(getHandle, entities, caps);
   embeddedSuite(getHandle, entities);
+  changeDetectionSuite(getHandle, entities, getSource, caps);
 
   // Capability-gated suites
   maybeDescribe(caps.softDelete, "softDelete", () =>

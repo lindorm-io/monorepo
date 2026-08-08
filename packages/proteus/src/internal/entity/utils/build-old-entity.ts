@@ -22,11 +22,10 @@ import {
  * - A column the snapshot never carried (partial projection) keeps the
  *   entity's current value rather than being clobbered with `undefined`.
  *
- * ⚠ @Embedded parents are the one place this cannot be faithful: the snapshot
- * stores the SAME embeddable instance the entity holds (see
- * `defaultHydrateEntity`), so an in-place mutation of `entity.address.street`
- * has already overwritten the snapshot's copy of it. The prior nested value is
- * not recoverable — for the same reason `diffColumns` cannot see the change.
+ * Nested values ARE faithful, including an @Embedded parent's: hydration
+ * detaches every mutable snapshot value from the entity (`copySnapshotValue`),
+ * so an in-place mutation of `entity.address.street` no longer overwrites the
+ * prior value on its way past.
  */
 export const buildOldEntity = <E extends IEntity>(
   entity: E,

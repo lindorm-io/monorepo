@@ -2,6 +2,7 @@ import { isArray, isObjectLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaRelation, QueryScope } from "../types/metadata.js";
+import { copySnapshotValue } from "./copy-snapshot-value.js";
 import { getSnapshot, storeSnapshot } from "./snapshot-store.js";
 
 /**
@@ -65,7 +66,10 @@ const storeSnapshotForRelated = (entity: object): void => {
   // metadata-driven snapshot — don't overwrite it with a heuristic one
   if (getSnapshot(entity)) return;
 
-  // Fallback for manually-provided relation data: build snapshot from enumerable properties
+  // Fallback for manually-provided relation data: build snapshot from enumerable
+  // properties. A Date and a Buffer are mutable, so they are DETACHED from the
+  // entity — a snapshot sharing the entity's own object records the mutation it
+  // exists to detect, and the change is then never written.
   const dict: Dict = {};
   for (const [key, value] of Object.entries(entity)) {
     if (value === null) {
@@ -73,9 +77,9 @@ const storeSnapshotForRelated = (entity: object): void => {
     } else if (value === undefined) {
       // skip
     } else if (value instanceof Date) {
-      dict[key] = value;
+      dict[key] = copySnapshotValue(value);
     } else if (Buffer.isBuffer(value)) {
-      dict[key] = value;
+      dict[key] = copySnapshotValue(value);
     } else if (!isObjectLike(value) && !isArray(value)) {
       // Primitives: string, number, boolean, bigint
       dict[key] = value;

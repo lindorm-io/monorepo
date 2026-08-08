@@ -3,6 +3,7 @@ import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { ProteusHookMeta } from "../../../types/proteus-hook-meta.js";
 import type { EntityMetadata } from "../types/metadata.js";
+import { copySnapshotValue } from "./copy-snapshot-value.js";
 import { decryptFieldValue } from "./decrypt-field-value.js";
 import { deserialise } from "./deserialise.js";
 import { deserialiseForeignKey } from "./deserialise-foreign-key.js";
@@ -30,6 +31,10 @@ export type HydrateOptions = {
  *   deserialiseForeignKey (they carry the referenced PK's type, not their own).
  * - Snapshot is stored by default (opt out with { snapshot: false }).
  * - OnHydrate hooks fire by default (opt out with { hooks: false }).
+ *
+ * Every snapshot value goes through `copySnapshotValue`. Storing the entity's
+ * own object by reference made the snapshot mutable through the entity, so an
+ * in-place change was invisible to `diffColumns` and silently never written.
  */
 export const defaultHydrateEntity = <E extends IEntity>(
   data: Dict,
@@ -59,7 +64,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
         metadata.entity.name,
       );
       entity[field.key] = value;
-      snapshotDict[field.key] = value;
+      snapshotDict[field.key] = copySnapshotValue(value);
       continue;
     }
 
@@ -83,7 +88,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
       entity[field.key] = value;
     }
 
-    snapshotDict[field.key] = entity[field.key];
+    snapshotDict[field.key] = copySnapshotValue(entity[field.key]);
   }
 
   // Reconstruct embedded objects from flattened dotted-key fields
@@ -125,7 +130,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
     for (const f of groupFields) {
       delete snapshotDict[f.key];
     }
-    snapshotDict[parentKey] = entity[parentKey];
+    snapshotDict[parentKey] = copySnapshotValue(entity[parentKey]);
   }
 
   // Extract FK columns from owning relations
@@ -144,14 +149,14 @@ export const defaultHydrateEntity = <E extends IEntity>(
       // referenced PK's type — the same type the DDL gave the column.
       if (localKey in data) {
         entity[propertyKey] = deserialiseForeignKey(data[localKey], relation, foreignPk);
-        snapshotDict[propertyKey] = entity[propertyKey];
+        snapshotDict[propertyKey] = copySnapshotValue(entity[propertyKey]);
       } else if (propertyKey in data) {
         entity[propertyKey] = deserialiseForeignKey(
           data[propertyKey],
           relation,
           foreignPk,
         );
-        snapshotDict[propertyKey] = entity[propertyKey];
+        snapshotDict[propertyKey] = copySnapshotValue(entity[propertyKey]);
       }
     }
   }

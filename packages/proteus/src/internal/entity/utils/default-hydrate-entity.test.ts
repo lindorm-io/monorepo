@@ -403,6 +403,53 @@ describe("defaultHydrateEntity", () => {
     expect(snap!["address.zip"]).toBeUndefined();
   });
 
+  test("should detach every mutable snapshot value from the entity", () => {
+    const metaWithEmbedded = {
+      target: EmbeddedPersonEntity,
+      fields: [
+        makeField("id", { type: "uuid" }),
+        makeField("tags", { type: "array", arrayType: "string" }),
+        makeField("meta", { type: "json" }),
+        makeField("seenAt", { type: "timestamp", name: "seen_at" }),
+        makeField("address.zip", {
+          type: "string",
+          name: "address_zip",
+          embedded: { parentKey: "address", constructor: () => EmbeddedCity },
+        }),
+      ],
+      relations: [],
+      primaryKeys: ["id"],
+      hooks: [],
+    } as unknown as EntityMetadata;
+
+    const entity = defaultHydrateEntity(
+      {
+        id: "abc",
+        tags: ["a"],
+        meta: { nested: { tier: "old" } },
+        seenAt: "2020-01-01T00:00:00.000Z",
+        "address.zip": "62704",
+      },
+      metaWithEmbedded,
+    ) as any;
+
+    // The whole defect: a snapshot sharing the entity's objects records every
+    // in-place mutation it exists to detect, so `diffColumns` compares the
+    // object with itself and the update writes nothing.
+    entity.tags.push("b");
+    entity.meta.nested.tier = "new";
+    entity.seenAt.setUTCFullYear(2031);
+    entity.address.zip = "99999";
+
+    const snap = getSnapshot(entity)!;
+
+    expect(snap.tags).toEqual(["a"]);
+    expect(snap.meta).toEqual({ nested: { tier: "old" } });
+    expect((snap.seenAt as Date).toISOString()).toBe("2020-01-01T00:00:00.000Z");
+    expect((snap.address as EmbeddedCity).zip).toBe("62704");
+    expect(snap.address).toBeInstanceOf(EmbeddedCity);
+  });
+
   test("should handle mix of null and non-null embedded fields (partial null = reconstructed object)", () => {
     const metaWithEmbedded = {
       target: EmbeddedPersonEntity,
