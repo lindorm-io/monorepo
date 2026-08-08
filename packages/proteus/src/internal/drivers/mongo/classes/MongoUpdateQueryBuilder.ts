@@ -13,6 +13,7 @@ import { resolveCollectionName } from "../utils/resolve-collection-name.js";
 import { dehydrateFieldValue } from "../../../entity/utils/dehydrate-field-value.js";
 import { serialiseArray } from "../../../entity/utils/serialise.js";
 import { dehydrateTypedJson } from "../../../entity/utils/typed-json.js";
+import { guardEncryptedCriteria } from "../../../utils/repository/repository-guards.js";
 
 /**
  * MongoDB UPDATE query builder.
@@ -49,16 +50,22 @@ export class MongoUpdateQueryBuilder<
   }
 
   where(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "where");
+
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
   andWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "andWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
   orWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "orWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }

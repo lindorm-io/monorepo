@@ -46,6 +46,7 @@ import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-pre
 import {
   guardAppendOnly,
   guardDeleteDateField,
+  guardEncryptedCriteria,
   guardVersionFields,
   validateRelationNames,
 } from "../../../utils/repository/repository-guards.js";
@@ -152,6 +153,7 @@ export class PostgresRepository<
     options?: FindOptions<E>,
     scope: QueryScope = "multiple",
   ): Promise<Array<E>> {
+    guardEncryptedCriteria(this.metadata, criteria, "find");
     if (options?.relations) {
       validateRelationNames(this.metadata, options.relations as Array<string>);
     }
@@ -207,6 +209,7 @@ export class PostgresRepository<
 
   async versions(criteria: Condition<E>, options?: FindOptions<E>): Promise<Array<E>> {
     guardVersionFields(this.metadata, "versions");
+    guardEncryptedCriteria(this.metadata, criteria, "versions");
 
     const entities = await this.executor.executeFind(
       criteria,
@@ -255,6 +258,8 @@ export class PostgresRepository<
   // ─── Override: PG error wrapping ──────────────────────────────────
 
   override async delete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
+    guardEncryptedCriteria(this.metadata, criteria, "delete");
+
     try {
       if (options?.limit) {
         await this.executor.executeDelete(criteria, options);
@@ -277,6 +282,9 @@ export class PostgresRepository<
     criteria: Condition<E>,
     update: DeepPartial<E>,
   ): Promise<void> {
+    // CRITERIA only — the `update` payload re-encrypts on the way in.
+    guardEncryptedCriteria(this.metadata, criteria, "updateMany");
+
     if (this.entityManager.updateStrategy === "version") {
       throw new ProteusRepositoryError(
         `updateMany is not supported for versioned entity "${this.metadata.entity.name}". Use update() for individual version updates.`,
@@ -310,6 +318,7 @@ export class PostgresRepository<
     _options?: DeleteOptions,
   ): Promise<void> {
     guardDeleteDateField(this.metadata, "softDelete");
+    guardEncryptedCriteria(this.metadata, criteria, "softDelete");
 
     try {
       await this.executor.executeSoftDelete(criteria);
@@ -330,6 +339,7 @@ export class PostgresRepository<
     _options?: DeleteOptions,
   ): Promise<void> {
     guardDeleteDateField(this.metadata, "restore");
+    guardEncryptedCriteria(this.metadata, criteria, "restore");
 
     try {
       await this.executor.executeRestore(criteria);
@@ -359,6 +369,8 @@ export class PostgresRepository<
         },
       );
     }
+
+    guardEncryptedCriteria(this.metadata, options?.where, "cursor");
 
     const hiddenSelect = filterHiddenSelections(
       this.metadata,

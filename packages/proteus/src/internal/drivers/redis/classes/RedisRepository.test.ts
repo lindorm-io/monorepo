@@ -44,6 +44,7 @@ vi.mock("../../../utils/repository/build-pk-predicate.js", () => ({
 
 vi.mock("../../../utils/repository/repository-guards.js", () => ({
   guardAppendOnly: vi.fn(),
+  guardEncryptedCriteria: vi.fn(),
   validateRelationNames: vi.fn(),
   guardDeleteDateField: vi.fn(),
   guardExpiryDateField: vi.fn(),

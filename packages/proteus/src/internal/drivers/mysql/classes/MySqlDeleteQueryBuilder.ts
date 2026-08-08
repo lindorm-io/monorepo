@@ -13,6 +13,7 @@ import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.j
 import { buildDiscriminatorPredicateUnqualified } from "../utils/query/compile-helpers.js";
 import { compileWhere } from "../utils/query/compile-where.js";
 import { resolveTableName } from "../utils/query/resolve-table-name.js";
+import { guardEncryptedCriteria } from "../../../utils/repository/repository-guards.js";
 
 /**
  * MySQL DELETE query builder.
@@ -44,16 +45,22 @@ export class MySqlDeleteQueryBuilder<
   }
 
   where(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "where");
+
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
   andWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "andWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
   orWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "orWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }

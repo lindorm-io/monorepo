@@ -38,6 +38,7 @@ import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
 import { applyAutoIncrement } from "../utils/memory-auto-increment.js";
 import { checkUniqueConstraints } from "../utils/memory-unique-check.js";
 import { serializePk } from "../utils/serialize-pk.js";
+import { guardEncryptedCriteria } from "../../../utils/repository/repository-guards.js";
 
 export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly getTable: () => MemoryTable;
@@ -640,16 +641,22 @@ class MemoryUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
   }
 
   where(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "where");
+
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
   andWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "andWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
   orWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "orWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
@@ -776,16 +783,22 @@ class MemoryDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
   }
 
   where(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "where");
+
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
   andWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "andWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
   orWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "orWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }

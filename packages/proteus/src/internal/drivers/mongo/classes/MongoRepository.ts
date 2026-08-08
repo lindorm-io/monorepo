@@ -34,6 +34,7 @@ import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase.js";
 import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate.js";
 import {
   guardAppendOnly,
+  guardEncryptedCriteria,
   guardVersionFields,
   validateRelationNames,
 } from "../../../utils/repository/repository-guards.js";
@@ -132,6 +133,7 @@ export class MongoRepository<
     options?: FindOptions<E>,
     scope: QueryScope = "multiple",
   ): Promise<Array<E>> {
+    guardEncryptedCriteria(this.metadata, criteria, "find");
     guardFindSortKey(options);
 
     if (options?.relations) {
@@ -179,6 +181,7 @@ export class MongoRepository<
    */
   async versions(criteria: Condition<E>, options?: FindOptions<E>): Promise<Array<E>> {
     guardVersionFields(this.metadata, "versions");
+    guardEncryptedCriteria(this.metadata, criteria, "versions");
 
     const entities = await this.executor.executeFind(criteria, {
       ...options,
@@ -236,6 +239,7 @@ export class MongoRepository<
   // ─── Abstract: cursor / clear ─────────────────────────────────────
 
   async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
+    guardEncryptedCriteria(this.metadata, options?.where, "cursor");
     const hiddenSelect = filterHiddenSelections(
       this.metadata,
       ["multiple"],

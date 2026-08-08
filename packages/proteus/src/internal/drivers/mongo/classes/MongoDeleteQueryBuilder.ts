@@ -9,6 +9,7 @@ import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryErro
 import { compilePredicatesToFilter } from "../utils/compile-aggregation-pipeline.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
 import { resolveCollectionName } from "../utils/resolve-collection-name.js";
+import { guardEncryptedCriteria } from "../../../utils/repository/repository-guards.js";
 
 /**
  * MongoDB DELETE / soft-DELETE query builder.
@@ -36,16 +37,22 @@ export class MongoDeleteQueryBuilder<
   }
 
   where(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "where");
+
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
   andWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "andWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
   orWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "orWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }

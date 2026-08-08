@@ -49,6 +49,7 @@ import {
   extractNumericValues,
 } from "../../../utils/query/compute-in-memory-aggregate.js";
 import { scanAllRows as scanAllRowsShared } from "../utils/scan-all-rows.js";
+import { guardEncryptedCriteria } from "../../../utils/repository/repository-guards.js";
 
 // ─── Lock mode guard ──────────────────────────────────────────────────────────
 
@@ -830,16 +831,22 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
   }
 
   where(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "where");
+
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
   andWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "andWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
   orWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "orWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
@@ -1041,16 +1048,22 @@ class RedisDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
   }
 
   where(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "where");
+
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
   andWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "andWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
   orWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "orWhere");
+
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }

@@ -1,9 +1,13 @@
 import { describe, expect, test } from "vitest";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
+import { matches } from "@lindorm/match";
 import {
+  CRITERIA_LOGICAL_OPERATORS,
   guardAppendOnly,
   guardDeleteDateField,
+  guardEncryptedCriteria,
+  guardEncryptedField,
   guardExpiryDateField,
   guardVersionFields,
   guardUpsertBlocked,
@@ -202,5 +206,193 @@ describe("validateRelationNames", () => {
     expect(() => validateRelationNames(metadata, ["foo"])).toThrow(
       'Unknown relation "foo" on "TestEntity". Available: [tags, author]',
     );
+  });
+});
+
+describe("guardEncryptedField", () => {
+  const metadata = makeMetadata({
+    fields: [
+      { key: "pin", encrypted: { condition: null, kryptos: null } },
+      { key: "count", encrypted: null },
+    ] as any,
+  });
+
+  test("does not throw for an unencrypted field", () => {
+    expect(() => guardEncryptedField(metadata, "count", "increment")).not.toThrow();
+  });
+
+  test("does not throw for an unknown field", () => {
+    expect(() => guardEncryptedField(metadata, "nope", "increment")).not.toThrow();
+  });
+
+  test("throws ProteusRepositoryError for an encrypted field", () => {
+    expect(() => guardEncryptedField(metadata, "pin", "increment")).toThrow(
+      ProteusRepositoryError,
+    );
+  });
+
+  test("names the method that was refused", () => {
+    expect(() => guardEncryptedField(metadata, "pin", "sum")).toThrow(
+      'Cannot sum encrypted field "pin" on entity "TestEntity"',
+    );
+  });
+});
+
+describe("guardEncryptedCriteria", () => {
+  const metadata = makeMetadata({
+    fields: [
+      { key: "id", encrypted: null, embedded: null },
+      { key: "name", encrypted: null, embedded: null },
+      { key: "sealed", encrypted: { condition: null, kryptos: null }, embedded: null },
+      {
+        key: "address.city",
+        encrypted: { condition: null, kryptos: null },
+        embedded: { parentKey: "address", constructor: () => class {} },
+      },
+      {
+        key: "address.zip",
+        encrypted: null,
+        embedded: { parentKey: "address", constructor: () => class {} },
+      },
+    ] as any,
+  });
+
+  const expectRefused = (criteria: unknown) =>
+    expect(() => guardEncryptedCriteria(metadata, criteria, "find")).toThrow(
+      ProteusRepositoryError,
+    );
+
+  const expectAllowed = (criteria: unknown) =>
+    expect(() => guardEncryptedCriteria(metadata, criteria, "find")).not.toThrow();
+
+  describe("flat criteria", () => {
+    test("refuses an encrypted field", () => {
+      expectRefused({ sealed: "alice" });
+    });
+
+    test("refuses an encrypted field carrying a field-level operator", () => {
+      expectRefused({ sealed: { $like: "ali%" } });
+    });
+
+    test("allows unencrypted fields", () => {
+      expectAllowed({ id: "1", name: { $like: "a%" } });
+    });
+
+    test("allows an unknown key — resolving criteria keys is not this guard's job", () => {
+      expectAllowed({ nope: 1 });
+    });
+
+    test("allows a key that only exists on Object.prototype", () => {
+      // Regression: an `in`-based operator lookup answers true for
+      // "constructor"/"toString", which would send a real field key down the
+      // logical-operator branch instead of resolving it against the metadata.
+      expectAllowed({ toString: "x", constructor: "y" });
+    });
+
+    test("allows no criteria at all", () => {
+      expectAllowed(undefined);
+      expectAllowed(null);
+      expectAllowed({});
+    });
+  });
+
+  describe("logical nesting", () => {
+    test("refuses inside $and", () => {
+      expectRefused({ $and: [{ sealed: "alice" }] });
+    });
+
+    test("refuses inside $or", () => {
+      expectRefused({ $or: [{ name: "a" }, { sealed: "alice" }] });
+    });
+
+    test("refuses inside $not", () => {
+      expectRefused({ $not: { sealed: "alice" } });
+    });
+
+    test("refuses at arbitrary depth", () => {
+      expectRefused({
+        $and: [{ name: "a" }, { $or: [{ id: "1" }, { $not: { sealed: "alice" } }] }],
+      });
+    });
+
+    test("refuses when $and is handed a single condition rather than an array", () => {
+      expectRefused({ $and: { sealed: "alice" } });
+    });
+
+    test("refuses when $not is handed an array rather than a single condition", () => {
+      expectRefused({ $not: [{ sealed: "alice" }] });
+    });
+
+    test("allows logical nesting over unencrypted fields only", () => {
+      expectAllowed({
+        $and: [{ name: "a" }, { $or: [{ id: "1" }, { $not: { name: "b" } }] }],
+      });
+    });
+
+    test("does not descend into a field-level operator's values", () => {
+      // `sealed` here is a VALUE, not a criteria key — the walk must not treat
+      // an $in element as a nested condition.
+      expectAllowed({ name: { $in: ["sealed", "address.city"] } });
+    });
+  });
+
+  describe("@Embedded parents", () => {
+    test("refuses the nested shape when the child is encrypted", () => {
+      expectRefused({ address: { city: "London" } });
+    });
+
+    test("refuses the dotted shape when the child is encrypted", () => {
+      expectRefused({ "address.city": "London" });
+    });
+
+    test("allows the nested shape when only unencrypted children are named", () => {
+      expectAllowed({ address: { zip: "N1" } });
+    });
+
+    test("refuses an encrypted child nested under a logical operator", () => {
+      expectRefused({ $or: [{ address: { city: "London" } }] });
+    });
+  });
+
+  test("the error names the digest-column way out", () => {
+    expect(() =>
+      guardEncryptedCriteria(metadata, { sealed: "alice" }, "findOne"),
+    ).toThrow('Cannot filter on encrypted field "sealed" on entity "TestEntity"');
+
+    try {
+      guardEncryptedCriteria(metadata, { sealed: "alice" }, "findOne");
+      throw new Error("expected guardEncryptedCriteria to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProteusRepositoryError);
+      expect((error as ProteusRepositoryError).details).toMatchSnapshot();
+    }
+  });
+});
+
+describe("criteria logical operators are pinned to @lindorm/match", () => {
+  // The COMPILE-TIME half of the pin lives in repository-guards.ts: the
+  // operator map is typed `Record<LogicalOperator, true>`, where
+  // `LogicalOperator` is extracted from `Condition`'s own `$`-prefixed keys.
+  // A fourth logical operator added to @lindorm/match therefore fails proteus'
+  // BUILD as a missing property — that, not this test, is what catches drift.
+  //
+  // This test is the BEHAVIOURAL half: it proves every name the walk descends
+  // through is one `matches()` really evaluates as a logical operator over the
+  // whole object, rather than as a field key.
+  test("every operator the walk descends through is logical in matches()", () => {
+    expect(CRITERIA_LOGICAL_OPERATORS).toMatchSnapshot();
+
+    // Were any of these read as a FIELD key, `object[key]` would be undefined
+    // and every one of these would be false.
+    expect(matches({ a: 1 }, { $and: [{ a: 1 }] } as any)).toBe(true);
+    expect(matches({ a: 1 }, { $or: [{ a: 2 }, { a: 1 }] } as any)).toBe(true);
+    expect(matches({ a: 1 }, { $not: { a: 2 } } as any)).toBe(true);
+  });
+
+  test("a non-logical $ key is a field-level operator, not a criteria key", () => {
+    // `$like` sits INSIDE a field's value; as a criteria key it names nothing.
+    // This is why the walk skips unrecognised `$` keys instead of resolving
+    // them against the metadata.
+    expect(matches({ a: "abc" }, { a: { $like: "ab%" } } as any)).toBe(true);
   });
 });

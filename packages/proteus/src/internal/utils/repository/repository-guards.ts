@@ -1,3 +1,6 @@
+import { isArray, isObject } from "@lindorm/is";
+import type { Condition } from "@lindorm/match";
+import type { Dict } from "@lindorm/types";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
 
@@ -113,10 +116,115 @@ export const guardEncryptedField = (
       {
         code: "unsupported_operation",
         title: "Unsupported Operation",
-        details: `The encrypted field "${property}" is stored as ciphertext and cannot be ${method}ed in place; read, mutate, and write the value back instead.`,
+        details: `The field "${property}" is stored as ciphertext, so ${method}() has no value of the declared type to work with. Read the entities, compute over the decrypted values in application code, and write any result back.`,
         debug: { entityName: metadata.entity.name, property, method },
       },
     );
+  }
+};
+
+/**
+ * The logical operators that appear as criteria KEYS. Everything else
+ * `$`-prefixed is a FIELD-level operator and only ever shows up inside a
+ * field's value (`{ name: { $like: "x" } }`), never as a criteria key.
+ *
+ * `Condition<T>` spells its logical operators as its only `$`-prefixed keys —
+ * the rest of the shape is mapped from `T` — so extracting them from the type
+ * pins this list to `@lindorm/match`. The `Record` makes it exact in BOTH
+ * directions: a fourth operator added there fails this compile as a missing
+ * property, a stale one as an excess property.
+ */
+type LogicalOperator = Extract<keyof Condition<{ _: never }>, `$${string}`>;
+
+const LOGICAL_OPERATOR_MAP: Record<LogicalOperator, true> = {
+  $and: true,
+  $or: true,
+  $not: true,
+};
+
+export const CRITERIA_LOGICAL_OPERATORS = Object.keys(
+  LOGICAL_OPERATOR_MAP,
+) as Array<LogicalOperator>;
+
+const isLogicalOperator = (key: string): boolean =>
+  (CRITERIA_LOGICAL_OPERATORS as Array<string>).includes(key);
+
+/**
+ * A value is an operator object — `{ $gt: 5 }` — rather than a nested predicate
+ * once it carries any non-logical `$` key. Mirrors `flattenEmbeddedCriteria`,
+ * which decides the same way whether to flatten an @Embedded parent.
+ */
+const isFieldOperatorObject = (value: Dict): boolean =>
+  Object.keys(value).some((key) => key.startsWith("$") && !isLogicalOperator(key));
+
+const guardEncryptedKey = (
+  metadata: EntityMetadata,
+  key: string,
+  method: string,
+): void => {
+  const field = metadata.fields.find((f) => f.key === key);
+  if (!field?.encrypted) return;
+
+  throw new ProteusRepositoryError(
+    `Cannot filter on encrypted field "${key}" on entity "${metadata.entity.name}"`,
+    {
+      code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details:
+        `The field "${key}" is sealed with a random initialisation vector, so the same plaintext ` +
+        `encrypts to different ciphertext on every write — no value ${method}() could send would ` +
+        `ever match the stored column, and a scheme that made it match would leak equality across ` +
+        `rows. To filter on a sealed value, store a deterministic derivative beside it — a digest ` +
+        `column written on save — and put the criteria on that column instead.`,
+      debug: { entityName: metadata.entity.name, property: key, method },
+    },
+  );
+};
+
+/**
+ * Reject criteria that filter on an `@Encrypted` column, at every depth.
+ *
+ * Without this the query is not merely unsupported, it is silently wrong: the
+ * column holds ciphertext, the criteria carries plaintext, and the driver
+ * returns zero rows — indistinguishable from a correct empty answer.
+ */
+export const guardEncryptedCriteria = (
+  metadata: EntityMetadata,
+  criteria: unknown,
+  method: string,
+): void => {
+  if (!isObject(criteria)) return;
+
+  for (const [key, value] of Object.entries(criteria)) {
+    if (isLogicalOperator(key)) {
+      // `$and`/`$or` carry an array of conditions and `$not` a single one.
+      // Accept either shape from either operator, so a caller writing
+      // `$not: [...]` is still walked rather than waved through.
+      for (const condition of isArray(value) ? value : [value]) {
+        guardEncryptedCriteria(metadata, condition, method);
+      }
+      continue;
+    }
+
+    // A `$`-prefixed key that is not logical is a field-level operator and
+    // never names a column.
+    if (key.startsWith("$")) continue;
+
+    // `{ address: { city: "x" } }` — an @Embedded parent is flattened to its
+    // dotted child keys before any driver sees it, so resolve it the same way
+    // or an @Encrypted child slips through under an unencrypted parent key.
+    if (isObject(value) && !isFieldOperatorObject(value)) {
+      const children = metadata.fields.filter((f) => f.embedded?.parentKey === key);
+
+      if (children.length > 0) {
+        for (const childKey of Object.keys(value)) {
+          guardEncryptedKey(metadata, `${key}.${childKey}`, method);
+        }
+        continue;
+      }
+    }
+
+    guardEncryptedKey(metadata, key, method);
   }
 };
 

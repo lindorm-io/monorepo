@@ -38,6 +38,7 @@ import { buildPrimaryKeyPredicate } from "../utils/repository/build-pk-predicate
 import {
   guardAppendOnly,
   guardDeleteDateField,
+  guardEncryptedCriteria,
   guardEncryptedField,
   guardExpiryDateField,
   guardUpsertBlocked,
@@ -201,10 +202,14 @@ export abstract class DriverRepositoryBase<
   // ─── Queries ──────────────────────────────────────────────────────
 
   async count(criteria?: Condition<E>, options?: FindOptions<E>): Promise<number> {
+    guardEncryptedCriteria(this.metadata, criteria, "count");
+
     return this.executor.executeCount(criteria ?? ({} as Condition<E>), options ?? {});
   }
 
   async exists(criteria: Condition<E>, options?: FindOptions<E>): Promise<boolean> {
+    guardEncryptedCriteria(this.metadata, criteria, "exists");
+
     if (options && Object.keys(options).length > 0) {
       return (await this.executor.executeCount(criteria, options)) > 0;
     }
@@ -550,6 +555,7 @@ export abstract class DriverRepositoryBase<
     value: number,
   ): Promise<void> {
     guardAppendOnly(this.metadata, "increment");
+    guardEncryptedCriteria(this.metadata, criteria, "increment");
     guardEncryptedField(this.metadata, property as string, "increment");
     await this.executor.executeIncrement(criteria, property, value);
   }
@@ -560,6 +566,7 @@ export abstract class DriverRepositoryBase<
     value: number,
   ): Promise<void> {
     guardAppendOnly(this.metadata, "decrement");
+    guardEncryptedCriteria(this.metadata, criteria, "decrement");
     guardEncryptedField(this.metadata, property as string, "decrement");
     await this.executor.executeDecrement(criteria, property, value);
   }
@@ -568,12 +575,16 @@ export abstract class DriverRepositoryBase<
 
   async delete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "delete");
+    guardEncryptedCriteria(this.metadata, criteria, "delete");
 
     await this.executor.executeDelete(criteria, options);
   }
 
   async updateMany(criteria: Condition<E>, update: DeepPartial<E>): Promise<void> {
     guardAppendOnly(this.metadata, "updateMany");
+    // CRITERIA only — the `update` payload re-encrypts on the way in, so
+    // writing a sealed field is fine; matching on one is not.
+    guardEncryptedCriteria(this.metadata, criteria, "updateMany");
 
     if (this.entityManager.updateStrategy === "version") {
       throw new ProteusRepositoryError(
@@ -619,6 +630,7 @@ export abstract class DriverRepositoryBase<
   async softDelete(criteria: Condition<E>, _options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "softDelete");
     guardDeleteDateField(this.metadata, "softDelete");
+    guardEncryptedCriteria(this.metadata, criteria, "softDelete");
     await this.executor.executeSoftDelete(criteria);
   }
 
@@ -632,6 +644,7 @@ export abstract class DriverRepositoryBase<
   async restore(criteria: Condition<E>, _options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "restore");
     guardDeleteDateField(this.metadata, "restore");
+    guardEncryptedCriteria(this.metadata, criteria, "restore");
     await this.executor.executeRestore(criteria);
   }
 
@@ -639,6 +652,7 @@ export abstract class DriverRepositoryBase<
 
   async ttl(criteria: Condition<E>, _options?: FindOptions<E>): Promise<number> {
     guardExpiryDateField(this.metadata, "ttl");
+    guardEncryptedCriteria(this.metadata, criteria, "ttl");
 
     const seconds = await this.executor.executeTtl(criteria);
 
@@ -686,19 +700,36 @@ export abstract class DriverRepositoryBase<
   // ─── Aggregates ───────────────────────────────────────────────────
 
   async sum(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
-    return this.executeAggregate("sum", field, criteria);
+    return this.aggregate("sum", "sum", field, criteria);
   }
 
   async average(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
-    return this.executeAggregate("avg", field, criteria);
+    return this.aggregate("avg", "average", field, criteria);
   }
 
   async minimum(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
-    return this.executeAggregate("min", field, criteria);
+    return this.aggregate("min", "minimum", field, criteria);
   }
 
   async maximum(field: keyof E, criteria?: Condition<E>): Promise<number | null> {
-    return this.executeAggregate("max", field, criteria);
+    return this.aggregate("max", "maximum", field, criteria);
+  }
+
+  /**
+   * Both guards apply to an aggregate: the FIELD holds ciphertext, so summing
+   * or ordering it is meaningless, and the CRITERIA cannot name a sealed column
+   * any more than a find can.
+   */
+  private async aggregate(
+    type: AggregateFunction,
+    method: string,
+    field: keyof E,
+    criteria?: Condition<E>,
+  ): Promise<number | null> {
+    guardEncryptedField(this.metadata, field as string, method);
+    guardEncryptedCriteria(this.metadata, criteria, method);
+
+    return this.executeAggregate(type, field, criteria);
   }
 
   // ─── Stream ───────────────────────────────────────────────────────

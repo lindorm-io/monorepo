@@ -723,5 +723,119 @@ export const encryptionSuite = (
         expect(found.pin).toBe(1000);
       });
     });
+
+    // ─── Criteria Rejection ────────────────────────────────────────────
+    // An @Encrypted column is sealed under a RANDOM initialisation vector, so
+    // the same plaintext seals to different bytes on every write and no value a
+    // caller could send would ever match. Left unguarded the query does not
+    // fail — it returns zero rows, indistinguishable from a correct empty
+    // answer. Every driver must refuse it instead, symmetrically.
+
+    describe("filtering on an encrypted field is rejected", () => {
+      const seed = async () => {
+        const repo = getHandle().repository(TckEncrypted);
+        return repo.insert({
+          secret: "criteria-canary",
+          pin: 7,
+          verified: true,
+          metadata: {},
+          optionalSecret: null,
+          transformedSecret: "test",
+        });
+      };
+
+      test("the row is there — it is the filter that cannot reach it", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+        const inserted = await seed();
+
+        // Present, and its plaintext round-trips.
+        const all = await repo.find({});
+        expect(all).toHaveLength(1);
+        expect(all[0].secret).toBe("criteria-canary");
+
+        // An unencrypted column still reaches it.
+        await expect(repo.find({ id: inserted.id })).resolves.toHaveLength(1);
+
+        // The encrypted one throws rather than quietly matching nothing.
+        await expect(repo.find({ secret: "criteria-canary" })).rejects.toThrow(
+          ProteusRepositoryError,
+        );
+        await expect(repo.findOne({ secret: "criteria-canary" })).rejects.toThrow(
+          /Cannot filter on encrypted field "secret"/,
+        );
+        await expect(repo.count({ secret: "criteria-canary" })).rejects.toThrow(
+          /Cannot filter on encrypted field "secret"/,
+        );
+      });
+
+      test("rejects an encrypted field nested under a logical operator", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+        await seed();
+
+        await expect(
+          repo.find({ $and: [{ secret: "criteria-canary" }] }),
+        ).rejects.toThrow(/Cannot filter on encrypted field "secret"/);
+        await expect(repo.find({ $not: { secret: "criteria-canary" } })).rejects.toThrow(
+          /Cannot filter on encrypted field "secret"/,
+        );
+        await expect(repo.find({ $or: [{ pin: 7 }, { id: "nope" }] })).rejects.toThrow(
+          /Cannot filter on encrypted field "pin"/,
+        );
+      });
+
+      test("rejects the criteria of a bulk write but not its payload", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+        const inserted = await seed();
+
+        await expect(
+          repo.updateMany({ secret: "criteria-canary" }, { pin: 8 }),
+        ).rejects.toThrow(/Cannot filter on encrypted field "secret"/);
+        await expect(repo.delete({ secret: "criteria-canary" })).rejects.toThrow(
+          /Cannot filter on encrypted field "secret"/,
+        );
+
+        // Writing an encrypted field is fine — it re-seals on the way in.
+        await repo.updateMany({ id: inserted.id }, { secret: "rotated" });
+
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        expect(found.secret).toBe("rotated");
+      });
+
+      test("aggregating an encrypted field is rejected — it would add up ciphertext", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+        await seed();
+
+        await expect(repo.sum("pin")).rejects.toThrow(/Cannot sum encrypted field "pin"/);
+        await expect(repo.average("pin")).rejects.toThrow(
+          /Cannot average encrypted field "pin"/,
+        );
+        await expect(repo.minimum("pin")).rejects.toThrow(
+          /Cannot minimum encrypted field "pin"/,
+        );
+        await expect(repo.maximum("pin")).rejects.toThrow(
+          /Cannot maximum encrypted field "pin"/,
+        );
+      });
+
+      test("criteria over unencrypted columns are untouched", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+        const inserted = await seed();
+
+        // A real uuid that matches nothing — the PK column is `uuid` on the SQL
+        // drivers, so a non-uuid placeholder is a cast error, not a miss.
+        const absentId = "00000000-0000-4000-8000-000000000000";
+
+        await expect(repo.count({ id: inserted.id })).resolves.toBe(1);
+        await expect(repo.exists({ $and: [{ id: inserted.id }] })).resolves.toBe(true);
+        await expect(
+          repo.find({ $or: [{ id: inserted.id }, { id: absentId }] }),
+        ).resolves.toHaveLength(1);
+        // A top-level `$not` is deliberately absent here: the Mongo filter
+        // compiler emits it verbatim, which the server rejects ("unknown top
+        // level operator: $not"). That is a pre-existing compiler gap, not
+        // something this suite is about — the REJECTION cases above still cover
+        // `$not`, because the guard fires before any compilation.
+      });
+    });
   });
 };

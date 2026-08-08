@@ -16,6 +16,7 @@ import type {
   WindowSpec,
 } from "../internal/types/query.js";
 import { resolveIncludeStrategy } from "../internal/utils/query/resolve-include-strategy.js";
+import { guardEncryptedCriteria } from "../internal/utils/repository/repository-guards.js";
 
 /**
  * Abstract base class for fluent query builders.
@@ -40,6 +41,8 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
    * Use `.andWhere()` or `.orWhere()` to append additional conditions.
    */
   where(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "where");
+
     this.state.predicates = [{ predicate: criteria, conjunction: "and" }];
     this.state.subqueryPredicates = [];
     this.state.rawWhere = [];
@@ -47,11 +50,15 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
   }
 
   andWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "andWhere");
+
     this.state.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
   orWhere(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "orWhere");
+
     this.state.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
@@ -171,16 +178,22 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
   }
 
   having(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "having");
+
     this.state.having = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
   andHaving(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "andHaving");
+
     this.state.having.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
   orHaving(criteria: Condition<E>): this {
+    guardEncryptedCriteria(this.metadata, criteria, "orHaving");
+
     this.state.having.push({ predicate: criteria, conjunction: "or" });
     return this;
   }

@@ -32,6 +32,7 @@ import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase.js";
 import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate.js";
 import {
   guardAppendOnly,
+  guardEncryptedCriteria,
   validateRelationNames,
 } from "../../../utils/repository/repository-guards.js";
 import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
@@ -120,6 +121,7 @@ export class RedisRepository<
     options?: FindOptions<E>,
     scope: QueryScope = "multiple",
   ): Promise<Array<E>> {
+    guardEncryptedCriteria(this.metadata, criteria, "find");
     guardFindSortKey(options);
 
     if (options?.relations) {
@@ -214,6 +216,7 @@ export class RedisRepository<
    * Use find() for full lifecycle processing.
    */
   async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
+    guardEncryptedCriteria(this.metadata, options?.where, "cursor");
     const hiddenSelect = filterHiddenSelections(
       this.metadata,
       ["multiple"],

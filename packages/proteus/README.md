@@ -1094,7 +1094,7 @@ payload!: Record<string, unknown>;   // both `payload` and `payload__typemeta` a
 - **The split has to come first.** Encryption serialises its input as JSON, so sealing the joined value would throw on a nested `BigInt` and flatten a nested `Date` to a string — destroying exactly what `@TypedJson` preserves. Splitting first leaves a JSON-safe data half and a string sidecar, both of which encrypt cleanly.
 - **The sidecar is sealed too.** It is a map of every path's type; in the clear it would describe the shape of the value the data column hides.
 - **The sidecar column becomes `TEXT`.** Ciphertext is not JSON, so an encrypted field's companion column follows the data column to the driver's text type instead of `JSONB`/`JSON`.
-- **Neither half is queryable**, as with any `@Encrypted` field.
+- **Neither half is queryable**, as with any `@Encrypted` field — criteria naming one are [refused](#an-encrypted-column-cannot-be-queried).
 
 ##### With `@Transform`
 
@@ -1132,6 +1132,39 @@ token!: string;
 An encrypted column is projected as `text` on every driver, so the write pipeline for an `@Encrypted` field is `transform.to()` → serialise → encrypt, and the driver's own write coercion is skipped. That makes every field type usable, including the ones the cipher cannot take verbatim: a `bigint` is sealed as its decimal string and a `date` / `timestamp` as its ISO-8601 string, and both are restored to the original JS type on read. Primary keys, computed fields and system-managed date/version fields cannot be `@Encrypted`.
 
 Writing or reading an `@Encrypted` field without a vault **throws** `missing_amphora`. There is no plaintext fallback — silently downgrading a sealed column would put the secret in the clear, and handing a caller raw ciphertext under a field typed `number` corrupts it on the next save.
+
+##### An `@Encrypted` column cannot be queried
+
+Every value is sealed under a **random initialisation vector**, so the same plaintext encrypts to different bytes on every write. No criteria value could ever match the stored column — including one you encrypt yourself first — and any scheme that made it match would leak equality across rows, which is most of what sealing the column was for.
+
+Proteus therefore **refuses** the query rather than returning an empty result, which is indistinguishable from a correct empty answer:
+
+```typescript
+await repo.findOne({ ssn: "123-45-6789" });
+// throws unsupported_operation:
+//   Cannot filter on encrypted field "ssn" on entity "Person"
+```
+
+The refusal covers every criteria-taking entry point — `find` / `findOne` / `findOneOrFail` / `findOneOrSave` / `findAndCount` / `findPaginated` / `paginate` / `count` / `exists` / `delete` / `updateMany` / `softDelete` / `restore` / `ttl` / `increment` / `decrement` / `versions` / `sum` / `average` / `minimum` / `maximum` / `cursor` / `stream`, and the query builder's `where` / `andWhere` / `orWhere` / `having` / `andHaving` / `orHaving` including its raw `update()` / `delete()` / `softDelete()` builders — at any depth of `$and` / `$or` / `$not`, and through an `@Embedded` parent (`{ address: { city } }` as well as `{ "address.city": … }`).
+
+Two things are **not** refused:
+
+- **Writing** an encrypted field, including in an `updateMany` payload — it re-seals on the way in. Only the _criteria_ is refused.
+- **Aggregating** over an unencrypted column while an encrypted one exists on the entity. `sum` / `average` / `minimum` / `maximum` refuse only when the aggregated **field itself** is encrypted — adding up ciphertext yields a meaningless number rather than an error.
+
+**To filter on a sealed value, store a deterministic derivative beside it** — a digest column written on save — and query that instead:
+
+```typescript
+@Encrypted()
+@Field("string")
+ssn!: string;
+
+@Sensitive({ digest: "sha256" })
+@Field("string")
+ssnDigest!: string; // queried instead of `ssn`
+```
+
+Proteus does no hashing — compute the digest in application code (`@lindorm/sha`) and write it alongside the sealed value. [`@Sensitive`](#sensitive) only redacts the column from proteus' own error output and validates that what you stored looks like the declared digest. The trade is explicit: the digest column _does_ reveal which rows share a value, which is exactly what a random IV hides — so add it only where equality lookup is worth that.
 
 An `@Embeddable` may carry `@Encrypted` fields when it is flattened by [`@Embedded`](#embedded) — they become entity columns like any other. As an [`@EmbeddedList`](#embeddedlist) **element** they cannot: those are a different table's columns, and neither the source-level `encryption` default nor `source.stageFieldDecorator` can address them, so the field would seal under a key nothing ever named. That combination is refused at metadata build with `unsupported_element_field_encryption`. Encrypt the whole collection as an `@Encrypted @Field("json")` column on the parent instead.
 
@@ -2373,7 +2406,7 @@ An entity with `@Encrypted` fields is cacheable, and the cache entry holds **cip
 Two consequences worth knowing:
 
 - **A cache hit costs a decryption.** For a hot, heavily-encrypted entity that can outweigh the query it saves; measure before caching one.
-- **Encrypted columns are not queryable**, cached or not — the cache key is built from the criteria, not the row.
+- **Encrypted columns are not queryable**, cached or not — criteria naming one are [refused outright](#an-encrypted-column-cannot-be-queried), so no cache entry is ever built for such a query.
 
 An entity with `@Encrypted` fields and **no** `amphora` drops out of the cache entirely rather than caching plaintext. `ProteusSource.setup()` refuses that combination — but `repository()` only requires `connect()`, so a source that never called `setup()` does reach it. There the read itself throws `missing_amphora`; skipping the cache just keeps the cache layer from being what throws.
 
@@ -2415,6 +2448,8 @@ new ProteusSource({
 ```
 
 A decorator that names its own key overrides the source default. A field that names **neither** throws when the source loads — there is no unscoped fallback, because an unscoped lookup means "any internal encryption key, newest first", and a vault typically holds more than one (a KEK **and** a rotated cookie key). Which key encrypts your database must not have an implicit answer.
+
+An `@Encrypted` column is **not queryable** — the random IV means no criteria value can match it, and proteus refuses such criteria rather than returning zero rows. See [An `@Encrypted` column cannot be queried](#an-encrypted-column-cannot-be-queried).
 
 ### Naming the key
 
