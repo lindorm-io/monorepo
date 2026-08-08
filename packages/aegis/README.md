@@ -570,6 +570,12 @@ identity field of the subject's profile, and the profile bucket is deliberately 
 out of introspection answers and authorization decisions. A token may carry both; each
 round-trips independently.
 
+The split reaches the profile content types. `AccessTokenContent` picks `username`, so
+`aegis.mint("access_token", { …, username })` is typed — introspection describes an
+access token, so a token may assert about itself what an introspection answer may
+report about it. `IdTokenContent` does not pick it; an id token carries
+`preferredUsername` through its `profile` container instead.
+
 ### Rich Authorization Requests (RFC 9396)
 
 `authorizationDetails` carries the RFC 9396 `authorization_details` claim. The

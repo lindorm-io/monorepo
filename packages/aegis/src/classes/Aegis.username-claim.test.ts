@@ -3,16 +3,23 @@
 // It is deliberately NOT the OIDC Core §5.1 `preferred_username` profile claim —
 // the two are separate registry entries and neither shadows the other.
 //
-// The `default` profile is the policy-free tier, so it is what these mint through:
-// the conformance profiles (`access_token`, `id_token`) curate their content picks
-// from the RFCs they implement, and RFC 9068 / OIDC Core do not define `username`.
+// A registered claim must be mintable through a real profile, not only through the
+// policy-free `default` tier — otherwise it can arrive only by introspection, which is
+// the one-path asymmetry registering it removed. `AccessTokenContent` therefore picks
+// it: RFC 7662 introspects an ACCESS token, so the claim an introspection answer may
+// report about one is a claim that token may assert about itself.
+//
+// `IdTokenContent` deliberately does NOT pick it. OIDC Core §5.1 gives id tokens
+// `preferred_username`, which is already registered and already reachable there
+// through the `profile` container. The two stay distinct.
 
 import { Amphora, type IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, expectTypeOf, test } from "vitest";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
+import type { AccessTokenContent, IdTokenContent } from "../types/index.js";
 import { Aegis } from "./Aegis.js";
 import { JwtKit } from "./JwtKit.js";
 
@@ -92,6 +99,73 @@ describe("Aegis username claim", () => {
       expect(verified.profile?.preferredUsername).toBe("Alice");
       expect(verified.claims).not.toHaveProperty("preferredUsername");
       expect(verified.custom).toEqual({});
+    });
+  });
+
+  // The access token is the artifact RFC 7662 introspects, so it is the profile that
+  // must be able to assert the claim itself. Minting it here — not only through
+  // `default` — is what keeps the payload and introspection provenances symmetric.
+  describe("access_token profile", () => {
+    // A `Pick` is the compiler's record of what a token may usefully assert, so the
+    // split is asserted at the type level too: an inline `mint` literal would
+    // otherwise fall through to the profile-UNAWARE overload
+    // (`mint(string & {}, SignContent)`) and type-check for the wrong reason,
+    // silently dropping every access_token-specific rule for that call.
+    test("should admit username on AccessTokenContent but not on IdTokenContent", () => {
+      expectTypeOf<AccessTokenContent>().toHaveProperty("username");
+      expectTypeOf<IdTokenContent>().not.toHaveProperty("username");
+    });
+
+    test("should carry username on a minted access token and back to the domain", async () => {
+      const { token } = await aegis.mint("access_token", {
+        subject: "user-1",
+        audience: [RESOURCE],
+        clientId: "client-1",
+        username: "alice@lindorm.io",
+      });
+
+      const { payload } = JwtKit.decode(token);
+      expect(payload.username).toBe("alice@lindorm.io");
+      // Never silently rewritten into the OIDC profile claim.
+      expect(payload).not.toHaveProperty("preferred_username");
+
+      const verified = await aegis.verify(token, { audience: RESOURCE });
+
+      expect(verified.claims.username).toBe("alice@lindorm.io");
+      expect(verified.custom).not.toHaveProperty("username");
+      expect(verified.profile ?? {}).not.toHaveProperty("preferredUsername");
+    });
+
+    test("should leave username absent when the access token carries none", async () => {
+      const { token } = await aegis.mint("access_token", {
+        subject: "user-1",
+        audience: [RESOURCE],
+        clientId: "client-1",
+      });
+
+      const verified = await aegis.verify(token, { audience: RESOURCE });
+
+      expect(verified.claims).not.toHaveProperty("username");
+      expect(verified.custom).not.toHaveProperty("username");
+    });
+
+    test("should round-trip username through the COSE wire on the access_token profile", async () => {
+      const { token } = await aegis.mint(
+        "access_token",
+        {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: "client-1",
+          username: "alice@lindorm.io",
+        },
+        { format: "cwt" },
+      );
+
+      const verified = await aegis.verify(token, { audience: RESOURCE });
+
+      expect(verified.format).toBe("cwt");
+      expect(verified.claims.username).toBe("alice@lindorm.io");
+      expect(verified.custom).not.toHaveProperty("username");
     });
   });
 

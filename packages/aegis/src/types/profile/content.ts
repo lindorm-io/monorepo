@@ -53,6 +53,14 @@ export type AccessTokenContent = Required<
       | "vectorOfTrust"
       | "vectorTrustMark"
       | "conformsTo"
+      // RFC 7662 §2.2. Introspection describes an ACCESS token, so a username an
+      // introspection answer may report about one is a claim that token may assert
+      // about itself — minting it must not be reachable only through the
+      // policy-free `default` profile, or it could arrive by introspection alone.
+      // NOT `preferredUsername`: that is the OIDC Core §5.1 PROFILE field, which
+      // reaches an id token through `IdTokenContent`'s `profile` container and is
+      // deliberately absent here.
+      | "username"
     >
   >;
 
