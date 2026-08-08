@@ -320,9 +320,9 @@ describe("Pylon", () => {
       environment: "test",
 
       // The deployment SAYS which key does what, per feature. Pylon guesses none
-      // of it — and `publish: false` is load-bearing in every condition: amphora's
-      // default query is the PUBLISHED set, so an internal key is otherwise
-      // unreachable. A configured key ⇒ that role is on by default.
+      // of it. `publish: false` is stated rather than left to the cookie
+      // selectors' default, so this fixture keeps asserting the same key even if
+      // that default moves. A configured key ⇒ that role is on by default.
       cookies: {
         signature: { condition: { purpose: "cookie", publish: false } },
         encryption: { condition: { purpose: "cookie", publish: false } },

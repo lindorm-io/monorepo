@@ -7,9 +7,13 @@ import { resolveCookieSigningKey } from "./resolve-cookie-signing-key.js";
 
 const ISSUER = "http://test.lindorm.io";
 
+const OLDER = new Date("2024-01-01T00:00:00.000Z");
+const NEWER = new Date("2024-06-01T00:00:00.000Z");
+
 const sigKey = (): IKryptos =>
   KryptosKit.generate.sig.oct({
     algorithm: "HS256",
+    createdAt: OLDER,
     issuer: ISSUER,
     purpose: "cookie",
     publish: false,
@@ -40,6 +44,51 @@ describe("resolveCookieSigningKey", () => {
     });
 
     expect(resolved.id).toBe(sig.id);
+  });
+
+  // A cookie signature is verified by this deployment alone, so a selector that
+  // names no `publish` means `publish: false` — otherwise amphora's gate hides
+  // the very key the condition describes and the deployment has to spell the
+  // default out by hand. The NEWER published cookie key is the control: `find`
+  // returns the newest match, so it is what an ungated query would hand back.
+  test("resolves an internal unpublished key for a condition that names no publish", async () => {
+    const internal = sigKey();
+    const published = KryptosKit.generate.sig.oct({
+      algorithm: "HS256",
+      createdAt: NEWER,
+      issuer: ISSUER,
+      publish: true,
+      purpose: "cookie",
+    });
+
+    amphora.add([internal, published]);
+
+    const resolved = await resolveCookieSigningKey(amphora, {
+      condition: { purpose: "cookie" },
+    });
+
+    expect(resolved.id).toBe(internal.id);
+    expect(resolved.publish).toBe(false);
+  });
+
+  // The default is a default: it loses to the caller, unlike the floor. A
+  // deployment that deliberately signs cookies with a published key still can.
+  test("a condition stating publish: true overrides the default", async () => {
+    const published = KryptosKit.generate.sig.oct({
+      algorithm: "HS256",
+      createdAt: OLDER,
+      issuer: ISSUER,
+      publish: true,
+      purpose: "cookie",
+    });
+
+    amphora.add([sigKey(), published]);
+
+    const resolved = await resolveCookieSigningKey(amphora, {
+      condition: { purpose: "cookie", publish: true },
+    });
+
+    expect(resolved.id).toBe(published.id);
   });
 
   // #8: `key.condition` is duck-typed, so a config/JSON one can carry a floor

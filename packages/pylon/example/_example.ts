@@ -74,10 +74,12 @@ export const EXAMPLE_PYLON = new Pylon({
 
   environment: "test",
 
-  // Which vault key does what — declared per feature. `publish: false` is
-  // load-bearing: amphora's default query is the PUBLISHED set, so an internal
-  // key is otherwise unreachable and the JWKS token key would win. A configured
-  // key turns that role on by default (a plain `set` signs and seals).
+  // Which vault key does what — declared per feature. `publish: false` is the
+  // DEFAULT for both cookie roles (a cookie key seals what only this server
+  // reopens and signs what only this server verifies), so stating it changes
+  // nothing; it is written out because overriding it is then an edit rather
+  // than an addition. A configured key turns that role on by default (a plain
+  // `set` signs and seals).
   //
   // No `auth.session` keys: a session IS a cookie, and every session role chains
   // to its `cookies` counterpart — so this vault's two cookie keys do everything.

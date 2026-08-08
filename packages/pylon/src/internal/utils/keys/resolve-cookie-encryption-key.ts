@@ -1,8 +1,8 @@
 import { Matcher } from "@lindorm/match";
 import {
   applyKeyFloor,
-  ENVELOPE_DEFAULT,
   ENVELOPE_FLOOR,
+  UNPUBLISHED_DEFAULT,
   type IAmphora,
 } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
@@ -21,7 +21,7 @@ import type { PylonEncKey } from "../../../types/index.js";
  * private/secret half — never the looser SEAL floor that would admit a public
  * recipient key we could never decrypt with.
  *
- * `ENVELOPE_DEFAULT` (`publish: false`) sits under the caller's condition as a
+ * `UNPUBLISHED_DEFAULT` (`publish: false`) sits under the caller's condition as a
  * DEFAULT, so that condition still wins over it. A cookie key is by definition
  * unpublished — it never leaves this server and never belongs in a JWKS — and
  * amphora's own gate hides exactly that key from a query naming no `publish`.
@@ -55,10 +55,10 @@ export const resolveCookieEncryptionKey = async (
 
   // The floor is applied LAST so it always wins the merge: `key.condition` is
   // duck-typed and could carry a floor key (e.g. `use`), which must never
-  // override the policy. `ENVELOPE_DEFAULT` (`publish: false`) is only a
+  // override the policy. `UNPUBLISHED_DEFAULT` (`publish: false`) is only a
   // default, so the caller's condition still wins over it; per-layer `undefined`
   // stripping keeps a `{ x: undefined }` condition from erasing that default.
-  const query = applyKeyFloor(ENVELOPE_FLOOR, ENVELOPE_DEFAULT, key.condition);
+  const query = applyKeyFloor(ENVELOPE_FLOOR, UNPUBLISHED_DEFAULT, key.condition);
 
   let kryptos: IKryptos;
 

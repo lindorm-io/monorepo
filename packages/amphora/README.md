@@ -173,16 +173,26 @@ await amphora.filter({ use: "sig", publish: false }); // ungated: unpublished ke
 await amphora.filter({ use: "sig", publish: { $exists: true } }); // ungated: everything (publish is always set)
 ```
 
-**Envelope encryption opts out once, centrally.** Sealing a value the same deployment must reopen — a proteus `@Encrypted` column, an iris message, a pylon cookie or session — is by definition done with a key that never belongs in a JWKS, so a selector for one that names no `publish` means `publish: false`. That is the exported `ENVELOPE_DEFAULT`, applied as the layer under the caller's own condition:
+**An operation nobody else reads opts out once, centrally.** When the artifact never leaves this deployment — a proteus `@Encrypted` column, an iris message, a pylon cookie value or cookie signature — the key that made it is ours in the strict sense: it never belongs in a JWKS, because no relying party will ever check it. A selector for such a key that names no `publish` means `publish: false`. That is the exported `UNPUBLISHED_DEFAULT`, applied as the layer under the caller's own condition:
 
 ```typescript
-import { applyKeyFloor, ENVELOPE_DEFAULT, ENVELOPE_FLOOR } from "@lindorm/amphora";
+import {
+  applyKeyFloor,
+  ENVELOPE_FLOOR,
+  SIGN_FLOOR,
+  UNPUBLISHED_DEFAULT,
+} from "@lindorm/amphora";
 
-applyKeyFloor(ENVELOPE_FLOOR, ENVELOPE_DEFAULT, { purpose: "cookie" });
+applyKeyFloor(ENVELOPE_FLOOR, UNPUBLISHED_DEFAULT, { purpose: "cookie" });
 // → { purpose: "cookie", publish: false, use: "enc", hasPrivateKey: true, isActive: true }
+
+applyKeyFloor(SIGN_FLOOR, UNPUBLISHED_DEFAULT, { purpose: "cookie" });
+// → { purpose: "cookie", publish: false, use: "sig", hasPrivateKey: true, isActive: true }
 ```
 
-A **floor** (`SIGN_FLOOR`, `VERIFY_FLOOR`, `SEAL_FLOOR`, `ENVELOPE_FLOOR`, `DECRYPT_FLOOR`) is spread **last** and can never be overridden — it is the minimum that makes the operation possible. A **default** is spread among the caller layers, so the caller wins: state `publish: true` and you seal with a published key. Without the default layer, every consumer had to spell `publish: false` in its own config to reach its own key, and forgetting it silently selected the JWKS token key instead.
+A **floor** (`SIGN_FLOOR`, `VERIFY_FLOOR`, `SEAL_FLOOR`, `ENVELOPE_FLOOR`, `DECRYPT_FLOOR`) is spread **last** and can never be overridden — it is the minimum that makes the operation possible. A **default** is spread among the caller layers, so the caller wins: state `publish: true` and you get a published key. Without the default layer, every consumer had to spell `publish: false` in its own config to reach its own key, and forgetting it silently selected the JWKS token key instead.
+
+⚠ **The default is about `publish`, not about safety — it does not belong everywhere.** A **token** signature exists to be verified against our JWKS, so its key must be published: `@lindorm/aegis` applies the floor and the deployment's own selector and deliberately no default. Nor does it belong on a **check**: where a key is resolved by `kid` through the unfiltered `findById` there is no gate to reach past, and a `publish` layer stops being "where to look" and becomes an assertion that the key is unpublished (pylon's cookie verification is that shape, and gets no default). Sharing `SIGN_FLOOR` with an operation says nothing about sharing this default with it.
 
 `findById()` / `findByIdSync()` are **not** filtered: an explicit id is explicit intent, and a token signed by an internal (or since-expired) key must still be verifiable. Key ids are unique **per issuer**, so an id can collide across issuers — `findById` then returns the **most recent** (by `createdAt`) and logs a `warn`, never throwing or picking arbitrarily. Resolve a `kid` off a token with `find({ id, issuer })` to name the issuer and avoid the ambiguity.
 

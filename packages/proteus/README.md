@@ -2446,7 +2446,7 @@ Whatever names the key, proteus enforces the minimum that makes at-rest encrypti
 | `hasPrivateKey: true` | **Floor**   | At-rest encryption runs in both directions. A public-only key encrypts and can never decrypt again. |
 | `publish: false`      | **Default** | A KEK never leaves the service — but `publish` is your policy, so your condition wins.              |
 
-The `publish` row is a **default**, not a floor: amphora's `ENVELOPE_DEFAULT`, shared by every consumer that seals a value it must reopen itself. It sits under your condition, so `{ purpose: "kek" }` reaches an unpublished KEK without saying `publish: false`, and `{ publish: true }` overrides it.
+The `publish` row is a **default**, not a floor: amphora's `UNPUBLISHED_DEFAULT`, shared by every consumer whose artifact this deployment is the only one to read back. It sits under your condition, so `{ purpose: "kek" }` reaches an unpublished KEK without saying `publish: false`, and `{ publish: true }` overrides it.
 
 A key that violates the floor — including one passed as `kryptos` — throws.
 

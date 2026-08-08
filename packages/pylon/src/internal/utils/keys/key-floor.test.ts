@@ -117,19 +117,18 @@ describe("the cookie time floor", () => {
       ).resolves.toBeUndefined();
     });
 
-    // THE PUBLISH QUESTION, settled on the real path. Encryption's read side
-    // needed a fix because its WRITE side could not reach an internal
-    // unpublished key without being told to; signing's read side is a different
-    // shape entirely. `findByIdSync` is unfiltered, and the verification floor
-    // is a Matcher CHECK — it constrains only what it names — so a condition
-    // that says nothing about `publish` says nothing about it here either. A
-    // cookie signed by an internal unpublished key therefore verifies, and the
-    // signing pair has no round-trip hole to close.
-    test("VERIFIES a cookie signed by an internal unpublished key, against a condition naming no publish", async () => {
+    // THE PUBLISH QUESTION, settled on the real path, in BOTH directions and
+    // with the deployment stating nothing but what the key is FOR. The write
+    // side reaches its own unpublished key because the query defaults to
+    // `publish: false`; the read side accepts it because `findByIdSync` is
+    // unfiltered and the verification floor is a Matcher CHECK that constrains
+    // only what it names. A cookie key is the deployment's own either way.
+    test("SIGNS and VERIFIES with an internal unpublished key, against a condition naming no publish", async () => {
       const key = cookieKey();
       const amphora = vault(key);
+      const named: PylonSignKey = { condition: { purpose: "cookie" } };
 
-      const { signature, kid } = await signCookie({ amphora }, "value", COOKIE_KEY);
+      const { signature, kid } = await signCookie({ amphora }, "value", named);
 
       expect(key.publish).toBe(false);
       expect(kid).toBe(key.id);
@@ -139,19 +138,6 @@ describe("the cookie time floor", () => {
           condition: { purpose: "cookie" },
         }),
       ).resolves.toBeUndefined();
-    });
-
-    // The write side is where `publish` still bites, and it bites LOUDLY at the
-    // moment the cookie is set — the vault query runs through amphora's gate, so
-    // a signing selector naming no `publish` cannot see its own key. Nothing is
-    // signed with the wrong key and nothing silently fails to verify later;
-    // encryption's default is not needed here to prevent a broken round trip.
-    test("refuses to SIGN with an internal unpublished key the selector does not ask for", async () => {
-      const amphora = vault(cookieKey());
-
-      await expect(
-        signCookie({ amphora }, "value", { condition: { purpose: "cookie" } }),
-      ).rejects.toMatchObject({ code: "cookie_signing_key_not_found" });
     });
 
     // The other direction: a key whose `notBefore` has not passed cannot have

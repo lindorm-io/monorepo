@@ -235,9 +235,9 @@ describe("createSessionStore", () => {
     let stored: Record<string, IPylonSession>;
 
     // Verbatim the scaffold `create-pylon` writes and the shape the README
-    // documents. The WRITE side is a SELECTION, so it names `publish: false` to
-    // reach past amphora's default gate — the read side names nothing, because
-    // the ciphertext names its own key.
+    // documents. The WRITE side is a SELECTION; `publish: false` is now its
+    // default, and stating it keeps this fixture pinned to the same key
+    // regardless. The read side names nothing — the ciphertext names its key.
     const kekSettings = {
       enabled: true as const,
       encryption: { condition: { purpose: "pylon:kek", publish: false } },

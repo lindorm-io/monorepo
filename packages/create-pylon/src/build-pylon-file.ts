@@ -158,9 +158,11 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
     // opinion on your `purpose` taxonomy — these selectors SELECT the purposes
     // the kryptos-rotation worker MINTS, so the two must stay in lockstep.
     //
-    // ⚠ `publish: false` is load-bearing: amphora's default query is the
-    // PUBLISHED set, so an internal cookie key is unreachable without it and
-    // the JWKS token key would be selected instead.
+    // `publish: false` is the DEFAULT for both roles — a cookie key seals what
+    // only this server reopens and signs what only this server verifies — so
+    // stating it changes nothing. It is written out because a scaffold should
+    // show the shape a deployment reasons about, and because overriding it
+    // (`publish: true`) is then an edit rather than an addition.
     lines.push(`  cookies: {`);
     lines.push(`    // Signed + sealed with the internal cookie key; verification is`);
     lines.push(`    // derived from the signature condition (code, not config).`);

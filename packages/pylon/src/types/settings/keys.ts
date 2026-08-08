@@ -35,9 +35,10 @@ export type PylonKeyCondition = Condition<PylonKeyAttributes>;
  * `kryptos` is a key supplied outright — e.g. an env-imported cookie secret that
  * never reaches the vault. It skips the vault query, never the floor.
  *
- * `condition` is which of the vault's keys. ⚠ Amphora's default query is the
- * PUBLISHED set, so an internal cookie key needs `publish: false` to be
- * reachable at all.
+ * `condition` is which of the vault's keys, and it defaults to `publish: false`
+ * (amphora's `UNPUBLISHED_DEFAULT`): a cookie signature is verified by this
+ * deployment and no one else, so its key is unpublished by definition and
+ * `{ purpose: "cookie" }` reaches it. State `publish: true` to override.
  */
 export type PylonSignKey = AmphoraKeySelector<PylonKeyCondition>;
 
@@ -50,7 +51,10 @@ export type PylonSignKey = AmphoraKeySelector<PylonKeyCondition>;
  *
  * ⚠ DELIBERATELY NOT an `AmphoraKeySelector` — it carries no `kryptos` because
  * the cookie names the one key that can check it. Same shape, same reason, as
- * aegis's `AegisVerifyKey`.
+ * aegis's `AegisVerifyKey`. It also takes NO `publish` default, unlike
+ * {@link PylonSignKey}: a default reaches past a query gate, and there is no
+ * query here — it would only assert that the key the cookie names is
+ * unpublished, which is not this deployment's stated policy.
  */
 export type PylonVerifyKey = {
   condition?: PylonKeyCondition;

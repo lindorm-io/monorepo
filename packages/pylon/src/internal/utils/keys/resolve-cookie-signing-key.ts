@@ -1,5 +1,10 @@
 import { Matcher } from "@lindorm/match";
-import { applyKeyFloor, SIGN_FLOOR, type IAmphora } from "@lindorm/amphora";
+import {
+  applyKeyFloor,
+  SIGN_FLOOR,
+  UNPUBLISHED_DEFAULT,
+  type IAmphora,
+} from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { PylonSignKey } from "../../../types/index.js";
@@ -16,13 +21,24 @@ import type { PylonSignKey } from "../../../types/index.js";
  * the signer. There is no fallback: a key either satisfies the policy or it does
  * not, and a miss is a throw.
  *
- * The selector is REQUIRED, and it is per-cookie: the caller hands over the key
- * the cookie itself names, or the deployment's `cookies.signature`. Falling
- * back to the floor alone would query the vault's default set — the PUBLISHED
- * keys — and return whichever is newest: in a pylon that is the JWKS token key,
- * because token keys rotate twice as often as cookie keys. That is not a
- * hypothetical; it is the bug this option exists to remove, and a purposeless
- * fallback is worse than a loud failure.
+ * `UNPUBLISHED_DEFAULT` (`publish: false`) sits under the caller's condition as a
+ * DEFAULT, so that condition still wins over it. A cookie signature is verified
+ * by this deployment and nobody else — no relying party ever sees it — so the key
+ * that makes it is ours in the same strict sense a cookie's sealing key is, and
+ * amphora's gate hides exactly that key from a query naming no `publish`.
+ *
+ * ⚠ This is NOT a statement about signing in general, only about signing a
+ * cookie. A TOKEN signature must use a published key or no relying party can
+ * verify it, and aegis's `resolveSignKey` therefore applies no default —
+ * `SIGN_FLOOR` being shared between them settles nothing either way. This
+ * resolver has exactly one caller, `signCookie`.
+ *
+ * The selector is still REQUIRED, and it is per-cookie: the caller hands over the
+ * key the cookie itself names, or the deployment's `cookies.signature`. The
+ * default narrows the guess; it does not supply one. Falling back to floor plus
+ * default would sign with whichever internal sig key is newest — the session key,
+ * some other role's — collapsing the blast radius the separate roles exist to
+ * keep apart, and a purposeless fallback is worse than a loud failure.
  */
 export const resolveCookieSigningKey = async (
   amphora: IAmphora,
@@ -34,16 +50,17 @@ export const resolveCookieSigningKey = async (
       title: "Cookie Signing Key Not Configured",
       type: "urn:lindorm:pylon:error:cookie_signing_key_not_configured",
       details:
-        'A cookie was set with `signed: true`, but no cookie signing key is configured; name the key that signs cookies in the pylon options (`cookies.signature`, e.g. `{ condition: { purpose: "cookie", publish: false } }`). A session cookie chains to it — `auth.session.signature ?? cookies.signature` — so naming the cookie key is what makes any cookie signable. Pylon will not guess one: the vault\'s default set is the published keys, so a guess would sign cookies with the JWKS token key.',
+        'A cookie was set with `signed: true`, but no cookie signing key is configured; name the key that signs cookies in the pylon options (`cookies.signature`, e.g. `{ condition: { purpose: "cookie" } }`). A session cookie chains to it — `auth.session.signature ?? cookies.signature` — so naming the cookie key is what makes any cookie signable. Pylon will not guess one: a guess would sign cookies with whichever internal signing key is newest — the session key, some other role\'s — collapsing the blast radius the separate roles exist to keep apart.',
       data: { floor: SIGN_FLOOR },
     });
   }
 
   // The floor is applied LAST so it always wins the merge: `key.condition` is
   // duck-typed and could carry a floor key (e.g. `use`), which must never
-  // override the policy. Per-layer `undefined` stripping keeps a
-  // `{ x: undefined }` condition from becoming match-all.
-  const query = applyKeyFloor(SIGN_FLOOR, key.condition);
+  // override the policy. `UNPUBLISHED_DEFAULT` (`publish: false`) is only a
+  // default, so the caller's condition still wins over it; per-layer `undefined`
+  // stripping keeps a `{ x: undefined }` condition from erasing that default.
+  const query = applyKeyFloor(SIGN_FLOOR, UNPUBLISHED_DEFAULT, key.condition);
 
   let kryptos: IKryptos;
 
@@ -58,7 +75,7 @@ export const resolveCookieSigningKey = async (
         title: "Cookie Signing Key Not Found",
         type: "urn:lindorm:pylon:error:cookie_signing_key_not_found",
         details:
-          "The amphora holds no usable key matching the configured cookie signing key (`cookies.signature`, or `auth.session.signature` for the session cookie); add the key to the vault (the kryptos rotation worker mints the keys it is given) or correct the condition. Note that amphora queries the PUBLISHED set by default — an internal cookie key needs `publish: false`.",
+          "The amphora holds no usable key matching the configured cookie signing key (`cookies.signature`, or `auth.session.signature` for the session cookie); add the key to the vault (the kryptos rotation worker mints the keys it is given) or correct the condition. The query defaults to `publish: false` — a cookie signature is verified by this deployment alone, so its key is unpublished by definition — and a deployment that deliberately signs cookies with a published key must say `publish: true`.",
         data: { query },
         debug: { error: (error as Error).message },
       });

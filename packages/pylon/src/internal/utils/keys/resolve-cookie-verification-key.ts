@@ -20,6 +20,16 @@ import type { PylonVerifyKey } from "../../../types/index.js";
  * `notBefore` has not passed, and which therefore cannot have signed anything, is
  * refused.
  *
+ * ⚠ NO `UNPUBLISHED_DEFAULT` here, unlike the sign and seal resolvers. Theirs is
+ * a vault QUERY, where the default reaches past amphora's publish gate to their
+ * own key; this is a CHECK on a key `findByIdSync` already returned, and that
+ * call is unfiltered — there is no gate, so a `publish` layer would stop meaning
+ * "where to look" and start asserting that the key is unpublished. That is a
+ * policy the deployment did not state, and it would break the round trip it is
+ * supposed to protect: a `signature` given as an injected `kryptos` has no
+ * condition to inherit, so the check would be floor plus default alone and would
+ * refuse a published key pylon had just signed with.
+ *
  * Every failure is the client's: it presented the `.kid`. The caller wraps a
  * throw as an invalid cookie signature.
  */
