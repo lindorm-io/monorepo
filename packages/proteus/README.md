@@ -682,7 +682,9 @@ Marks an entity as append-only. Insert and read operations are allowed; update, 
 
 Cannot be combined with `@DeleteDateField` or `@ExpiryDateField` — an append-only row is neither soft-deleted nor expired, so metadata build rejects either pairing.
 
-For SQL drivers (PostgreSQL, MySQL, SQLite), `setup()` generates `BEFORE UPDATE` / `BEFORE DELETE` triggers that enforce immutability at the database level. PostgreSQL additionally generates a `BEFORE TRUNCATE` trigger. These are a second line, not the first: trigger DDL is best-effort, and a schema managed by migrations may never have carried it.
+For SQL drivers (PostgreSQL, MySQL, SQLite), `setup()` generates `BEFORE UPDATE` / `BEFORE DELETE` triggers that enforce immutability at the database level. PostgreSQL additionally generates a `BEFORE TRUNCATE` trigger.
+
+The repository guard covers every write that goes through proteus, so the triggers cover the writes that do not — raw SQL, another service, a migration. **`setup()` fails if the trigger DDL fails**, with a `SyncError` (`append_only_trigger_failed`) naming the table, the driver and the underlying error. A process that finished `setup()` has the triggers; there is no path where it starts believing a table is immutable while nothing enforces it. Grant the connecting role trigger-creation rights, or manage the schema by migrations that carry the same triggers.
 
 #### `@Filter`
 
@@ -1320,6 +1322,8 @@ Element columns are written by the same rules as entity columns: `@Transform`'s 
 
 - `repo.findOne(...)` returns plain arrays for every embedded list field.
 - `repo.find(...)` returns a `LazyCollection<T>` thenable on each embedded list field. `await row.tags` resolves to the actual array and replaces the property by identity, so subsequent reads are plain arrays.
+
+An eager load fetches every parent's collection rows in one query and correlates them back by primary key. The correlation is on the PK's decimal string, so a numeric PK works on every driver regardless of whether the driver hands the foreign key back as a number, a string or a bigint.
 
 Override per scope when the default does not fit:
 

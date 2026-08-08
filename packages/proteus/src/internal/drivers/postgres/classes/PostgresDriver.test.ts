@@ -155,6 +155,7 @@ import { withRetry } from "../utils/transaction/with-retry.js";
 import { TransactionContext } from "./TransactionContext.js";
 import { PostgresDriverError } from "../errors/PostgresDriverError.js";
 import { PostgresMigrationError } from "../errors/PostgresMigrationError.js";
+import { PostgresSyncError } from "../errors/PostgresSyncError.js";
 import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan.js";
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { Constructor } from "@lindorm/types";
@@ -795,6 +796,90 @@ describe("PostgresDriver", () => {
       await driver.setup([]);
 
       expect(migrationManagerMod.MigrationManager).toHaveBeenCalled();
+    });
+  });
+
+  // ─── Append-only triggers ─────────────────────────────────────────────
+  //
+  // The repository guard refuses an update/delete that goes THROUGH proteus.
+  // These triggers exist for the writes that do not — raw SQL, another
+  // service, a migration. A failure used to be logged at `warn` and setup
+  // reported success, so a deployment believed a table was immutable while
+  // nothing enforced it. Setup must fail instead, naming the table.
+
+  describe("append-only triggers", () => {
+    const appendOnlyMetadata = {
+      entity: { name: "Ledger", namespace: null },
+      fields: [makeField("id")],
+      primaryKeys: ["id"],
+      relations: [],
+      generated: [],
+      appendOnly: true,
+    } as unknown as EntityMetadata;
+
+    const makeAppendOnlyDriver = (): PostgresDriver => {
+      const { driver, resolveMetadata } = makeDriver({ synchronize: true });
+      resolveMetadata.mockReturnValue(appendOnlyMetadata);
+      (driver as any).pool = getMockPool();
+      return driver;
+    };
+
+    /** Reject only the trigger DDL, so the rest of sync runs normally. */
+    const failTriggerDdl = (): void => {
+      getMockClient().query.mockImplementation(async (sql: string) => {
+        if (sql.includes("TRIGGER")) {
+          throw new Error("permission denied for schema public");
+        }
+        return { rows: [], rowCount: 0 };
+      });
+    };
+
+    test("applies the trigger DDL after a successful sync", async () => {
+      const driver = makeAppendOnlyDriver();
+
+      await driver.setup([TestEntity]);
+
+      const statements = getMockClient()
+        .query.mock.calls.map((call: Array<unknown>) => String(call[0]))
+        .filter((sql: string) => sql.includes("CREATE TRIGGER"));
+
+      expect(statements).toHaveLength(3);
+    });
+
+    test("setup rejects, naming the table, when the trigger DDL fails", async () => {
+      const driver = makeAppendOnlyDriver();
+      failTriggerDdl();
+
+      await expect(driver.setup([TestEntity])).rejects.toThrow(PostgresSyncError);
+      await expect(driver.setup([TestEntity])).rejects.toThrow(/Ledger/);
+    });
+
+    test("the rejection carries the table, the driver and the underlying failure", async () => {
+      const driver = makeAppendOnlyDriver();
+      failTriggerDdl();
+
+      const error = (await driver
+        .setup([TestEntity])
+        .catch((e: unknown) => e)) as PostgresSyncError;
+
+      expect(error.code).toBe("append_only_trigger_failed");
+      expect(error.data).toEqual({ table: `"Ledger"`, driver: "postgres" });
+      expect(error.details).toContain("permission denied for schema public");
+    });
+
+    test("a non-append-only entity does not fail setup when the drop DDL fails", async () => {
+      const { driver, resolveMetadata } = makeDriver({ synchronize: true });
+      resolveMetadata.mockReturnValue({
+        ...appendOnlyMetadata,
+        appendOnly: false,
+      } as unknown as EntityMetadata);
+      (driver as any).pool = getMockPool();
+      failTriggerDdl();
+
+      // Dropping a leftover trigger is best-effort on purpose — the table may
+      // not exist yet on a first sync, and a trigger that survives only makes
+      // the table stricter than asked, never looser.
+      await expect(driver.setup([TestEntity])).resolves.toBeUndefined();
     });
   });
 });

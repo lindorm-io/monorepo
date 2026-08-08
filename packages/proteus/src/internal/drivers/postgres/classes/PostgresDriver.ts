@@ -26,6 +26,7 @@ import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
 import { isPgQueryCancelledError, toAbortError } from "../utils/abort.js";
 import { PostgresDriverError } from "../errors/PostgresDriverError.js";
 import { PostgresMigrationError } from "../errors/PostgresMigrationError.js";
+import { PostgresSyncError } from "../errors/PostgresSyncError.js";
 import type { PostgresQueryClient } from "../types/postgres-query-client.js";
 import type { PostgresTransactionHandle } from "../types/postgres-transaction-handle.js";
 import { diffSchema } from "../utils/sync/diff-schema.js";
@@ -840,10 +841,21 @@ export class PostgresDriver implements IProteusDriver {
             table: qualifiedTable,
           });
         } catch (error) {
-          this.logger.warn("Failed to apply append-only triggers", {
-            table: qualifiedTable,
-            error: error instanceof Error ? error.message : String(error),
-          });
+          // The repository guard already refuses an update/delete that goes
+          // through proteus. These triggers exist for the writes that do NOT —
+          // raw SQL, another service, a migration. Continuing past a failure
+          // would hand back a table the deployment believes is immutable and
+          // is not, so setup fails instead.
+          throw new PostgresSyncError(
+            `Failed to apply append-only triggers to ${qualifiedTable}`,
+            {
+              code: "append_only_trigger_failed",
+              title: "Append-Only Trigger Failed",
+              details: `The @AppendOnly triggers for table ${qualifiedTable} could not be applied on the postgres driver, so writes that bypass the repository would not be rejected. Setup is aborted rather than leaving the table mutable. Underlying failure: ${error instanceof Error ? error.message : String(error)}`,
+              data: { table: qualifiedTable, driver: "postgres" },
+              error: error instanceof Error ? error : undefined,
+            },
+          );
         }
       } else {
         // Drop any existing append-only triggers in case @AppendOnly was removed

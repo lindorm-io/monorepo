@@ -20,6 +20,7 @@ import type {
 import { toAbortError } from "../../../utils/abort.js";
 import { SqliteDriverError } from "../errors/SqliteDriverError.js";
 import { SqliteMigrationError } from "../errors/SqliteMigrationError.js";
+import { SqliteSyncError } from "../errors/SqliteSyncError.js";
 import type { SqliteQueryClient } from "../types/sqlite-query-client.js";
 import type { SqliteTransactionHandle } from "../types/sqlite-transaction-handle.js";
 import { diffSchema } from "../utils/sync/diff-schema.js";
@@ -563,10 +564,21 @@ export class SqliteDriver implements IProteusDriver {
             table: quotedTable,
           });
         } catch (error) {
-          this.logger.warn("Failed to apply append-only triggers", {
-            table: quotedTable,
-            error: error instanceof Error ? error.message : String(error),
-          });
+          // The repository guard already refuses an update/delete that goes
+          // through proteus. These triggers exist for the writes that do NOT —
+          // raw SQL, another service, a migration. Continuing past a failure
+          // would hand back a table the deployment believes is immutable and
+          // is not, so setup fails instead.
+          throw new SqliteSyncError(
+            `Failed to apply append-only triggers to ${quotedTable}`,
+            {
+              code: "append_only_trigger_failed",
+              title: "Append-Only Trigger Failed",
+              details: `The @AppendOnly triggers for table ${quotedTable} could not be applied on the sqlite driver, so writes that bypass the repository would not be rejected. Setup is aborted rather than leaving the table mutable. Underlying failure: ${error instanceof Error ? error.message : String(error)}`,
+              data: { table: quotedTable, driver: "sqlite" },
+              error: error instanceof Error ? error : undefined,
+            },
+          );
         }
       } else {
         // Drop any existing append-only triggers in case @AppendOnly was removed

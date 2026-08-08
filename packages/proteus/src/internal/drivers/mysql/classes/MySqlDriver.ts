@@ -26,6 +26,7 @@ import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
 import type { IProteusRepository } from "../../../../interfaces/ProteusRepository.js";
 import { MySqlDriverError } from "../errors/MySqlDriverError.js";
 import { MySqlMigrationError } from "../errors/MySqlMigrationError.js";
+import { MySqlSyncError } from "../errors/MySqlSyncError.js";
 import type { MysqlQueryClient } from "../types/mysql-query-client.js";
 import type { MysqlTransactionHandle } from "../types/mysql-transaction-handle.js";
 import { beginTransaction } from "../utils/transaction/begin-transaction.js";
@@ -926,10 +927,21 @@ export class MySqlDriver implements IProteusDriver {
             table: quotedTable,
           });
         } catch (error) {
-          this.logger.warn("Failed to apply append-only triggers", {
-            table: quotedTable,
-            error: error instanceof Error ? error.message : String(error),
-          });
+          // The repository guard already refuses an update/delete that goes
+          // through proteus. These triggers exist for the writes that do NOT —
+          // raw SQL, another service, a migration. Continuing past a failure
+          // would hand back a table the deployment believes is immutable and
+          // is not, so setup fails instead.
+          throw new MySqlSyncError(
+            `Failed to apply append-only triggers to ${quotedTable}`,
+            {
+              code: "append_only_trigger_failed",
+              title: "Append-Only Trigger Failed",
+              details: `The @AppendOnly triggers for table ${quotedTable} could not be applied on the mysql driver, so writes that bypass the repository would not be rejected. Setup is aborted rather than leaving the table mutable. Underlying failure: ${error instanceof Error ? error.message : String(error)}`,
+              data: { table: quotedTable, driver: "mysql" },
+              error: error instanceof Error ? error : undefined,
+            },
+          );
         }
       } else {
         // Drop any existing append-only triggers in case @AppendOnly was removed
