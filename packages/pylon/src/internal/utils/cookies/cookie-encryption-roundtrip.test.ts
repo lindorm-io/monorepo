@@ -84,9 +84,9 @@ describe("cookie encryption round-trip", () => {
   // The two halves of the surface, asserted at COMPILE time. Neither side has
   // anything to say about the cipher, so neither side accepts anything.
   test("neither side accepts what it cannot use", () => {
-    // @ts-expect-error the write-side selector names the KEY, never the AEAD
     const writeKey: PylonEncKey = {
       condition: { purpose: "cookie" },
+      // @ts-expect-error the write-side selector names the KEY, never the AEAD
       encryption: "A256GCM",
     };
     // @ts-expect-error the read side takes no selector — the ciphertext names its own key
