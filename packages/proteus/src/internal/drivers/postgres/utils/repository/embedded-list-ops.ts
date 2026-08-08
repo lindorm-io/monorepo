@@ -195,10 +195,19 @@ export const loadEmbeddedListRowsBatch = async (
   const sql = `SELECT * FROM ${qualifiedTable} WHERE ${fkCol} = ANY($1) ORDER BY ${quoteIdentifier("__ordinal")}`;
   const result = await client.query(sql, [pkValues]);
 
-  // Group rows by FK value
-  const grouped = new Map<unknown, Array<Record<string, unknown>>>();
+  // Group rows by FK value.
+  //
+  // The FK arrives RAW from the driver while the parent's PK is already
+  // hydrated, and the two are not the same JS type: pg hands an int8 back as
+  // a string, against a hydrated `bigint` PK. `Map` compares keys with
+  // SameValueZero, so `"1"` and `1n` are two different keys and every parent
+  // silently received an empty list. Correlate on the decimal string both
+  // sides agree on — same as the memory and mongo drivers. This is the local
+  // Map key only: the column type, the stored value and the query parameters
+  // are untouched.
+  const grouped = new Map<string, Array<Record<string, unknown>>>();
   for (const row of result.rows) {
-    const fkValue = row[embeddedList.parentFkColumn];
+    const fkValue = String(row[embeddedList.parentFkColumn]);
     let group = grouped.get(fkValue);
     if (!group) {
       group = [];
@@ -209,7 +218,7 @@ export const loadEmbeddedListRowsBatch = async (
 
   // Distribute results to entities
   for (const entity of entities) {
-    const pkValue = (entity as any)[embeddedList.parentPkColumn];
+    const pkValue = String((entity as any)[embeddedList.parentPkColumn]);
     const rows = grouped.get(pkValue);
 
     if (!rows || rows.length === 0) {

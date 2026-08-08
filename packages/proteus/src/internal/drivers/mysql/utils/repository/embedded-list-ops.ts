@@ -192,10 +192,20 @@ export const loadEmbeddedListRowsBatch = async (
   const sql = `SELECT * FROM ${tableName} WHERE ${fkCol} IN (${placeholders}) ORDER BY ${quoteIdentifier("__ordinal")}`;
   const { rows } = await client.query(sql, pkValues);
 
-  // Group rows by FK value
-  const grouped = new Map<unknown, Array<Record<string, unknown>>>();
+  // Group rows by FK value.
+  //
+  // The FK arrives RAW from the driver while the parent's PK is already
+  // hydrated, and the two are not the same JS type: mysql2 runs with
+  // `bigNumberStrings: false`, so a BIGINT inside the safe range comes back as
+  // a number, against a hydrated `bigint` PK. `Map` compares keys with
+  // SameValueZero, so `1` and `1n` are two different keys and every parent
+  // silently received an empty list. Correlate on the decimal string both
+  // sides agree on — same as the memory and mongo drivers. This is the local
+  // Map key only: the column type, the stored value and the query parameters
+  // are untouched.
+  const grouped = new Map<string, Array<Record<string, unknown>>>();
   for (const row of rows) {
-    const fkValue = (row as any)[embeddedList.parentFkColumn];
+    const fkValue = String((row as any)[embeddedList.parentFkColumn]);
     let group = grouped.get(fkValue);
     if (!group) {
       group = [];
@@ -206,7 +216,7 @@ export const loadEmbeddedListRowsBatch = async (
 
   // Distribute results to entities
   for (const entity of entities) {
-    const pkValue = (entity as any)[embeddedList.parentPkColumn];
+    const pkValue = String((entity as any)[embeddedList.parentPkColumn]);
     const entityRows = grouped.get(pkValue);
 
     if (!entityRows || entityRows.length === 0) {

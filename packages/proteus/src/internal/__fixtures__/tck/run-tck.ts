@@ -188,7 +188,14 @@ const runTckForNaming = (
       entities.TckElLazySingle,
       entities.TckElEager,
       entities.TckElTyped,
+      entities.TckElIntegerPk,
     );
+  }
+
+  // Embedded list on a bigint identity — needs BOTH capabilities, so it only
+  // registers where the driver carries collection tables AND mints a bigint PK.
+  if (caps.embeddedLists && caps.bigintIdentity) {
+    baseTargets.push(entities.TckElBigIntPk);
   }
 
   // BigInt auto-increment identity entities (only registered where the driver
@@ -253,7 +260,7 @@ const runTckForNaming = (
     lazyLoadingSuite(getHandle, entities),
   );
   maybeDescribe(caps.embeddedLists, "embeddedListLoading", () =>
-    embeddedListLoadingSuite(getHandle, entities),
+    embeddedListLoadingSuite(getHandle, entities, caps),
   );
   maybeDescribe(caps.embeddedLists, "embeddedListTypes", () =>
     embeddedListTypesSuite(getHandle, entities),

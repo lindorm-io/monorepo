@@ -1436,6 +1436,65 @@ export const createTckEntities = (hookCallback: Mock) => {
     stamps!: Array<Date>;
   }
 
+  // ─── Embedded-List Numeric-PK Entities ────────────────────────────
+  // The batch eager loader fetches every parent's collection rows in ONE query
+  // and then correlates them back by primary key. The FK it reads off the row
+  // is RAW from the driver while the parent's PK is already hydrated, and the
+  // two are not the same JS type on any SQL driver: pg returns an int8 as a
+  // string, mysql2 returns a BIGINT in the safe range as a number, and
+  // better-sqlite3 (safeIntegers) returns EVERY integer as a bigint. A `Map`
+  // keyed on one and read with the other never hits, so every parent silently
+  // received an empty list.
+  //
+  // Every other embedded-list entity above has a uuid PK, where raw and
+  // hydrated are the same string — which is exactly why this was invisible.
+  // Both loading modes are declared so the assertion can distinguish the batch
+  // loader (@Eager("multiple") on find) from the per-entity one.
+
+  @Entity({ name: "TckElBigIntPk" })
+  class TckElBigIntPk {
+    @PrimaryKey() @Generated("increment") @Field("bigint") id!: bigint;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @Eager("multiple")
+    @EmbeddedList("string")
+    tags!: Array<string>;
+  }
+
+  @Entity({ name: "TckElIntegerPk" })
+  class TckElIntegerPk {
+    @PrimaryKeyField("integer")
+    @Generated("increment")
+    id!: number;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @Eager("multiple")
+    @EmbeddedList("string")
+    tags!: Array<string>;
+  }
+
   // ─── Divergent Column-Type Round-Trip Entity ──────────────────────
   // Exercises types that hydrate differently across drivers:
   //   bigint           → JS bigint (all drivers)
@@ -1805,6 +1864,8 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckElEager,
     TckElItem,
     TckElTyped,
+    TckElBigIntPk,
+    TckElIntegerPk,
     TckTypeHolder,
     TckArrayTypes,
     TckRenamedColumns,

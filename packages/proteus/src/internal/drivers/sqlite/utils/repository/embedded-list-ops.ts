@@ -188,10 +188,20 @@ export const loadEmbeddedListRowsBatch = (
   const sql = `SELECT * FROM ${tableName} WHERE ${fkCol} IN (${placeholders}) ORDER BY ${quoteIdentifier("__ordinal")}`;
   const rows = client.all(sql, pkValues);
 
-  // Group rows by FK value
-  const grouped = new Map<unknown, Array<Record<string, unknown>>>();
+  // Group rows by FK value.
+  //
+  // The FK arrives RAW from the driver while the parent's PK is already
+  // hydrated, and the two are not the same JS type: better-sqlite3 runs in
+  // safeIntegers mode, so EVERY integer column comes back as a bigint, while
+  // an `integer` PK hydrates to a number. `Map` compares keys with
+  // SameValueZero, so `1n` and `1` are two different keys and every parent
+  // silently received an empty list. Correlate on the decimal string both
+  // sides agree on — same as the memory and mongo drivers. This is the local
+  // Map key only: the column type, the stored value and the query parameters
+  // are untouched.
+  const grouped = new Map<string, Array<Record<string, unknown>>>();
   for (const row of rows) {
-    const fkValue = row[embeddedList.parentFkColumn];
+    const fkValue = String(row[embeddedList.parentFkColumn]);
     let group = grouped.get(fkValue);
     if (!group) {
       group = [];
@@ -202,7 +212,7 @@ export const loadEmbeddedListRowsBatch = (
 
   // Distribute results to entities
   for (const entity of entities) {
-    const pkValue = (entity as any)[embeddedList.parentPkColumn];
+    const pkValue = String((entity as any)[embeddedList.parentPkColumn]);
     const entityRows = grouped.get(pkValue);
 
     if (!entityRows || entityRows.length === 0) {

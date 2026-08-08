@@ -6,7 +6,7 @@ import { test, it, expect, beforeEach } from "vitest";
 //   - @Eager() / @Eager("multiple") forces load on list queries
 //   - @Lazy("single") forces a thenable on findOne
 
-import type { TckDriverHandle } from "./types.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
 import { isLazyCollection } from "../../entity/utils/lazy-collection.js";
 import {
@@ -17,8 +17,16 @@ import {
 export const embeddedListLoadingSuite = (
   getHandle: () => TckDriverHandle,
   entities: TckEntities,
+  caps: TckCapabilities,
 ) => {
-  const { TckElDefault, TckElEagerMultiple, TckElLazySingle, TckElEager } = entities;
+  const {
+    TckElDefault,
+    TckElEagerMultiple,
+    TckElLazySingle,
+    TckElEager,
+    TckElBigIntPk,
+    TckElIntegerPk,
+  } = entities;
 
   beforeEach(async () => {
     await getHandle().clear();
@@ -209,4 +217,65 @@ export const embeddedListLoadingSuite = (
     expect([...tags].sort()).toEqual(["one", "three", "two"]);
     expect(getLazyEmbeddedListLoaderInvocations()).toBe(1);
   });
+
+  // ─── E10/E11: Numeric PK — batch correlation lands rows on the RIGHT parent ──
+  //
+  // Every entity above has a uuid PK, where the FK the driver hands back and
+  // the hydrated PK are the same string. A NUMERIC PK is where they diverge:
+  // pg returns an int8 as a string, mysql2 returns a safe-range BIGINT as a
+  // number, and better-sqlite3 (safeIntegers) returns every integer as a
+  // bigint. The batch loader correlates rows to parents through a Map, and a
+  // Map keyed on one JS type and read with another never hits — so each
+  // parent silently got an empty list.
+  //
+  // Asserting "the lists are non-empty" would NOT catch a mis-correlation, so
+  // each parent is given a distinct tag set and must receive exactly its own.
+
+  test("integer PK: batch eager load gives each parent its own rows", async () => {
+    const repo = getHandle().repository(TckElIntegerPk);
+
+    const alpha = await repo.insert({ name: "alpha", tags: ["a1", "a2"] });
+    const beta = await repo.insert({ name: "beta", tags: ["b1"] });
+    const gamma = await repo.insert({ name: "gamma", tags: ["g1", "g2", "g3"] });
+
+    expect(new Set([alpha.id, beta.id, gamma.id]).size).toBe(3);
+
+    // find() + @Eager("multiple") is the BATCH path: one collection query for
+    // all three parents, then correlate the rows back by primary key.
+    const rows = await repo.find();
+    expect(rows).toHaveLength(3);
+
+    const byName = new Map(rows.map((r) => [r.name, r]));
+    expect([...byName.get("alpha")!.tags].sort()).toEqual(["a1", "a2"]);
+    expect([...byName.get("beta")!.tags].sort()).toEqual(["b1"]);
+    expect([...byName.get("gamma")!.tags].sort()).toEqual(["g1", "g2", "g3"]);
+
+    // findOne is eager on the single scope, which routes through the same
+    // correlation with a one-entity batch.
+    const one = await repo.findOne({ id: beta.id });
+    expect([...one!.tags].sort()).toEqual(["b1"]);
+  });
+
+  if (caps.bigintIdentity) {
+    test("bigint PK: batch eager load gives each parent its own rows", async () => {
+      const repo = getHandle().repository(TckElBigIntPk);
+
+      const alpha = await repo.insert({ name: "alpha", tags: ["a1", "a2"] });
+      const beta = await repo.insert({ name: "beta", tags: ["b1"] });
+      const gamma = await repo.insert({ name: "gamma", tags: ["g1", "g2", "g3"] });
+
+      expect(new Set([alpha.id, beta.id, gamma.id]).size).toBe(3);
+
+      const rows = await repo.find();
+      expect(rows).toHaveLength(3);
+
+      const byName = new Map(rows.map((r) => [r.name, r]));
+      expect([...byName.get("alpha")!.tags].sort()).toEqual(["a1", "a2"]);
+      expect([...byName.get("beta")!.tags].sort()).toEqual(["b1"]);
+      expect([...byName.get("gamma")!.tags].sort()).toEqual(["g1", "g2", "g3"]);
+
+      const one = await repo.findOne({ id: beta.id });
+      expect([...one!.tags].sort()).toEqual(["b1"]);
+    });
+  }
 };
