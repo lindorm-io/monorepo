@@ -16,8 +16,14 @@
 //       suppressing them otherwise (OIDC Core §13.3)
 //   - dynamic fields (geo location) — use fresh endpoints
 //   - redundancies with OIDC Core claims (language vs locale, timeZone
-//     vs zoneinfo, username vs preferred_username, gravatarUri/avatarUri
-//     vs picture)
+//     vs zoneinfo, gravatarUri/avatarUri vs picture)
+//
+// ⚠ `username` is NOT the redundancy it looks like. RFC 7662 §2.2 `username` is
+// a claim ABOUT a token (a registered `OAuthClaims` member, category "claims");
+// OIDC Core §5.1 `preferred_username` is an identity field of the PROFILE. Both
+// are registered, both round-trip, and neither shadows the other — the split
+// matters because the profile bucket is dropped from an introspection answer and
+// kept off the resolved access credential, while `username` is not.
 //
 // Aegis top-level claims (sub, permissions, roles, etc.) are NOT part of
 // AegisProfile — they have first-class fields on SignJwtContent /

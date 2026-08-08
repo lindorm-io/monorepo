@@ -798,6 +798,22 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
     value: "text",
     category: "profile",
   },
+
+  // --- RFC 7662 §2.2 `username`. A CLAIM about the token (category "claims",
+  //     extracted like any other), NOT an OIDC §5.1 profile field — it is
+  //     distinct from `preferred_username` above and neither shadows the other.
+  //     Appended here rather than beside the other OAuth claims because the
+  //     private-use labels are APPEND-ONLY: renumbering P(7)… to keep the
+  //     declaration order pretty would silently reinterpret every CWT already
+  //     issued. Long JOSE name (8 chars) ⇒ private-use label.
+  {
+    domain: "username",
+    jose: "username",
+    cose: P(50),
+    value: "text",
+    category: "claims",
+    subset: "core",
+  },
 ];
 
 const byDomain = new Map<string, ClaimSpec>(

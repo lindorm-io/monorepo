@@ -274,6 +274,26 @@ describe("CLAIM_REGISTRY", () => {
     }
   });
 
+  test("username and preferredUsername are separate entries in separate categories", () => {
+    // RFC 7662 §2.2 `username` is a claim ABOUT the token; OIDC Core §5.1
+    // `preferred_username` is a PROFILE field. Same-looking names, different
+    // specs, different read-side buckets — collapsing one into the other is the
+    // failure this pins.
+    const username = claimByDomain("username");
+    const preferred = claimByDomain("preferredUsername");
+
+    expect(username?.jose).toBe("username");
+    expect(username?.category).toBe("claims");
+    expect(username?.subset).toBe("core");
+
+    expect(preferred?.jose).toBe("preferred_username");
+    expect(preferred?.category).toBe("profile");
+    expect(preferred?.subset).toBeUndefined();
+
+    expect(claimByJose("username")?.domain).toBe("username");
+    expect(claimByJose("preferred_username")?.domain).toBe("preferredUsername");
+  });
+
   test("lookups resolve by domain and jose", () => {
     expect(claimByDomain("issuer")?.jose).toBe("iss");
     expect(claimByJose("iss")?.domain).toBe("issuer");
@@ -374,6 +394,7 @@ describe("CLAIM_REGISTRY", () => {
       entitlements: ["entitlements"],
       groups: ["groups"],
       roles: ["roles"],
+      username: ["username"],
       authorizationDetails: ["authorizationDetails", "authorization_details"],
       authenticatorAssuranceLevel: ["authenticatorAssuranceLevel", "aal"],
       authFactorCategories: ["authFactorCategories", "afc"],

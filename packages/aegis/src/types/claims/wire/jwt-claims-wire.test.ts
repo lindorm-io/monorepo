@@ -53,6 +53,8 @@ const JWT_CLAIMS_WIRE_KINDS = {
   entitlements: "array",
   groups: "array",
   roles: "array",
+  // RFC 7662 token introspection
+  username: "text",
   // RFC 9396 rich authorization requests
   authorization_details: "bespoke",
   // RFC 8417 / RFC 9493 security event token

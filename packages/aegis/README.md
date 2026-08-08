@@ -532,6 +532,7 @@ const { payload } = await aegis.cwe.decrypt(cwe.token); // Buffer
   roles?: Array<string>;
   groups?: Array<string>;
   entitlements?: Array<string>;
+  username?: string;            // RFC 7662 §2.2 — NOT preferred_username, see below
   authorizationDetails?: Array<AuthorizationDetail>; // RFC 9396 (RAR) — see below
   clientId?: string;
   grantType?: string;
@@ -551,6 +552,23 @@ const { payload } = await aegis.cwe.decrypt(cwe.token); // Buffer
   // …plus the rest of the StdClaims / OidcClaims / DelegationClaims surface
 }
 ```
+
+### `username` is not `preferred_username`
+
+Two similar-looking names, two different specs, two separate registry entries — and
+they never shadow each other:
+
+| Claim                | Spec           | Domain name         | Bucket                     |
+| -------------------- | -------------- | ------------------- | -------------------------- |
+| `username`           | RFC 7662 §2.2  | `username`          | `claims` (`OAuthClaims`)   |
+| `preferred_username` | OIDC Core §5.1 | `preferredUsername` | `profile` (`AegisProfile`) |
+
+`username` is a claim **about the token** — if an authorization server can report one
+in an introspection answer, a token can carry one — so it travels with the
+authorization claims and is read back on both provenances. `preferredUsername` is an
+identity field of the subject's profile, and the profile bucket is deliberately kept
+out of introspection answers and authorization decisions. A token may carry both; each
+round-trips independently.
 
 ### Rich Authorization Requests (RFC 9396)
 

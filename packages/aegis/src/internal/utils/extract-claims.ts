@@ -182,6 +182,7 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
   const entitlements = consume(FIELD_KEYS.entitlements);
   const groups = consume(FIELD_KEYS.groups);
   const roles = consume(FIELD_KEYS.roles);
+  const username = consume(FIELD_KEYS.username);
 
   const authorizationDetails = consume(FIELD_KEYS.authorizationDetails);
 
@@ -241,6 +242,7 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
     entitlements: isArray(entitlements) ? (entitlements as Array<string>) : undefined,
     groups: isArray(groups) ? (groups as Array<string>) : undefined,
     roles: toStringArray(roles),
+    username: isString(username) ? username : undefined,
 
     // RarClaims — carried verbatim, no key translation (RFC 9396)
     authorizationDetails: isArray(authorizationDetails)
