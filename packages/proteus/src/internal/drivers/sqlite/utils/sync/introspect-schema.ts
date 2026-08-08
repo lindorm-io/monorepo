@@ -18,9 +18,12 @@ export const introspectSchema = (
 ): SqliteDbSnapshot => {
   const tables = new Map<string, ReturnType<typeof introspectTable>>();
 
-  // List all user tables from sqlite_master
+  // List all user tables from sqlite_master. The `_` is escaped: unescaped it is
+  // LIKE's single-character wildcard, so the filter would also hide every user
+  // table named `sqlite` plus one more character (`SqliteLedger`, …) — LIKE is
+  // case-insensitive for ASCII — and those tables would introspect as absent.
   const masterRows = client.all(
-    `SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name`,
+    `SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite\\_%' ESCAPE '\\' ORDER BY name`,
   );
 
   const managedSet = managedTableNames ? new Set(managedTableNames) : null;
@@ -37,9 +40,11 @@ export const introspectSchema = (
     // Introspect indexes separately
     table.indexes = introspectIndexes(client, tableName);
 
-    // Introspect proteus-managed triggers
+    // Introspect proteus-managed triggers. The `_` is escaped for the same reason
+    // as above — unescaped it would also match a user trigger named `proteusXyz`
+    // and hand it to the diff as proteus-managed (i.e. droppable).
     const triggerRows = client.all(
-      `SELECT name FROM sqlite_master WHERE type = 'trigger' AND tbl_name = ? AND name LIKE 'proteus_%' ORDER BY name`,
+      `SELECT name FROM sqlite_master WHERE type = 'trigger' AND tbl_name = ? AND name LIKE 'proteus\\_%' ESCAPE '\\' ORDER BY name`,
       [tableName],
     );
     table.triggers = triggerRows.map((row) => ({ name: row.name as string }));
