@@ -1,4 +1,5 @@
 import { AesKit } from "@lindorm/aes";
+import { ServerError } from "@lindorm/errors";
 import type { IProteusSession, IProteusSource } from "@lindorm/proteus";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type { IPylonSessionStore } from "../../interfaces/PylonSessionStore.js";
@@ -23,6 +24,47 @@ import { resolveActor } from "./resolve-actor.js";
  */
 const openSession = (ctx: PylonCommonContext, kv: IProteusSource): IProteusSession =>
   kv.session({ logger: ctx.logger, meta: buildHookMeta(ctx, resolveActor(ctx)) });
+
+/**
+ * Decrypt one stored session token.
+ *
+ * There is deliberately NO capability pre-check in front of this. `get` used to
+ * gate the whole decrypt block on `amphora.canDecrypt()`, which asked a question
+ * the decrypt never asks — and answered it wrongly: it ran amphora's default
+ * publish gate, so an INTERNAL unpublished KEK (`purpose: "pylon:kek"`,
+ * `publish: false` — the shape the docs and the scaffold configure) made it
+ * answer `false`, the block was skipped, and `get` handed the CIPHERTEXT back as
+ * the session's access token. It reached the IdP as a bearer token.
+ *
+ * So a key this deployment no longer holds is a THROW. Returning the ciphertext
+ * untouched is the worst available outcome — it is a bearer token that is not
+ * one, and every consumer downstream treats it as valid until a remote endpoint
+ * rejects it with no explanation.
+ */
+const decryptSessionToken = async (
+  ctx: PylonCommonContext,
+  value: string,
+  field: string,
+  id: string,
+): Promise<string> => {
+  try {
+    // No selector: the ciphertext names its own key, so aegis resolves it by
+    // kid. Sessions written before this deployment changed which key it
+    // encrypts with still decrypt.
+    return await ctx.aegis.aes.decrypt(value);
+  } catch (error: any) {
+    const { keyId } = AesKit.parse(value);
+
+    throw new ServerError("Stored session is sealed with an unavailable key", {
+      code: "session_decryption_failed",
+      type: "urn:lindorm:pylon:error:session_decryption_failed",
+      title: "Stored Session Is Sealed With An Unavailable Key",
+      details: `The stored session's ${field} is sealed with key "${keyId}", which this deployment cannot resolve. Session encryption at rest is readable only with the key the ciphertext names — restore that key to the vault, or evict the session. The ciphertext is never handed back as a token.`,
+      data: { id, field, kid: keyId },
+      error,
+    });
+  }
+};
 
 let cachedSession: typeof import("../../entities/Session.js").Session | undefined;
 const getSessionEntity = async (): Promise<
@@ -64,10 +106,13 @@ export const createSessionStore = (
 
       // Encryption at rest follows the same rule as proteus `@Encrypted`: naming
       // a session enc key (`session.encryption ?? cookies.encryption`) is what
-      // turns it on, and a NAMED key that cannot be resolved throws
-      // rather than persisting a bearer token in the clear. There is deliberately
-      // no `canEncrypt()` fallback — it would query the PUBLISHED set and seal the
-      // session with the JWKS token key. Unnamed ⇒ stored as-is, never guessed.
+      // turns it on, and a NAMED key that cannot be resolved throws rather than
+      // persisting a bearer token in the clear. There is deliberately no
+      // capability fallback for an UNNAMED key — falling back to "encrypt with
+      // whatever the vault offers" resolves through aegis's deployment-wide enc
+      // policy and seals the session with the JWKS token key. Unnamed ⇒ stored
+      // as-is, never guessed. (The READ side needs no such decision: the
+      // ciphertext names its own key — see `decryptSessionToken`.)
       if (encryptionKey) {
         session.accessToken = await encryptCookie(
           ctx,
@@ -99,19 +144,26 @@ export const createSessionStore = (
 
       if (!session) return null;
 
-      // No selector on the read side: the ciphertext names its own key, so aegis
-      // resolves it by kid. Sessions written before this deployment changed
-      // which key it encrypts with still decrypt.
-      if (ctx.amphora.canDecrypt()) {
-        if (AesKit.isAesString(session.accessToken)) {
-          session.accessToken = await ctx.aegis.aes.decrypt(session.accessToken);
-        }
-        if (AesKit.isAesString(session.idToken)) {
-          session.idToken = await ctx.aegis.aes.decrypt(session.idToken);
-        }
-        if (AesKit.isAesString(session.refreshToken)) {
-          session.refreshToken = await ctx.aegis.aes.decrypt(session.refreshToken);
-        }
+      // A sealed value is decrypted because it IS sealed — the shape of the
+      // stored value is the whole trigger, and it names the key that reads it.
+      if (AesKit.isAesString(session.accessToken)) {
+        session.accessToken = await decryptSessionToken(
+          ctx,
+          session.accessToken,
+          "accessToken",
+          id,
+        );
+      }
+      if (AesKit.isAesString(session.idToken)) {
+        session.idToken = await decryptSessionToken(ctx, session.idToken, "idToken", id);
+      }
+      if (AesKit.isAesString(session.refreshToken)) {
+        session.refreshToken = await decryptSessionToken(
+          ctx,
+          session.refreshToken,
+          "refreshToken",
+          id,
+        );
       }
 
       return session;

@@ -209,4 +209,142 @@ describe("createSessionStore", () => {
       expect(mockRepo.upsert).not.toHaveBeenCalled();
     });
   });
+
+  /**
+   * ⚠ The whole round trip, on the vault shape a real deployment runs: the ONLY
+   * enc key is an INTERNAL, UNPUBLISHED KEK (`purpose: "pylon:kek"`,
+   * `publish: false`) — what pylon's own docs and `create-pylon`'s scaffold
+   * configure, and what a kv-backed encrypted session is.
+   *
+   * `get` used to gate the decrypt on `amphora.canDecrypt()`, which runs
+   * amphora's default publish gate and therefore could not see that KEK. The
+   * gate answered false, decryption was skipped, and the store handed the
+   * CIPHERTEXT back as `accessToken` — a bearer token that is not one. It went
+   * on to `/introspect`, `/userinfo` and the refresh grant as the user's token.
+   *
+   * The at-rest assertion is not decoration: without it this suite would pass
+   * just as happily if encryption had silently stopped happening, which is the
+   * other way to make plaintext come back out.
+   */
+  describe("encrypted round trip through an internal unpublished KEK", () => {
+    const ISSUER = "http://kek.test.lindorm.io";
+
+    let amphora: IAmphora;
+    let kek: IKryptos;
+    let realCtx: any;
+    let stored: Record<string, IPylonSession>;
+
+    // Verbatim the scaffold `create-pylon` writes and the shape the README
+    // documents. The WRITE side is a SELECTION, so it names `publish: false` to
+    // reach past amphora's default gate — the read side names nothing, because
+    // the ciphertext names its own key.
+    const kekSettings = {
+      enabled: true as const,
+      encryption: { condition: { purpose: "pylon:kek", publish: false } },
+    };
+
+    beforeEach(() => {
+      const logger = createMockLogger();
+
+      amphora = new Amphora({ internal: { issuer: ISSUER }, logger });
+
+      kek = KryptosKit.generate.enc.oct({
+        algorithm: "A256GCMKW",
+        publish: false,
+        purpose: "pylon:kek",
+      });
+
+      amphora.add(kek);
+
+      realCtx = {
+        aegis: new Aegis({ amphora, logger }),
+        amphora,
+        logger,
+        state: { metadata: { correlationId: "test-correlation-id" } },
+      };
+
+      // The repository now actually STORES, so `get` reads back what `set`
+      // wrote instead of a fixture. Cloned on both sides: the store mutates the
+      // session object in place, so a shared reference would let the read's
+      // decryption rewrite "the row" and hide a skipped decrypt.
+      stored = {};
+
+      (mockRepo.upsert as Mock).mockImplementation(async (entity: IPylonSession) => {
+        stored[entity.id] = structuredClone(entity);
+        return entity;
+      });
+
+      (mockRepo.findOne as Mock).mockImplementation(async ({ id }: { id: string }) =>
+        stored[id] ? structuredClone(stored[id]) : null,
+      );
+    });
+
+    test("the KEK is exactly the key the default selection gate hides", () => {
+      expect(kek.internal).toBe(true);
+      expect(kek.publish).toBe(false);
+      expect(kek.hasPrivateKey).toBe(true);
+
+      // Unreachable by a vacuous query — which is correct, and is why the read
+      // side must not ask the vault a question at all.
+      expect(amphora.filterSync({ use: "enc" })).toEqual([]);
+    });
+
+    test("writes ciphertext at rest and reads the ORIGINAL tokens back", async () => {
+      const store = createSessionStore(kv, kekSettings);
+
+      await store!.set(realCtx, { ...session });
+
+      // AT REST: every token is sealed, and sealed with the KEK.
+      const row = stored[session.id];
+
+      for (const field of ["accessToken", "idToken", "refreshToken"] as const) {
+        expect(AesKit.isAesString(row[field])).toBe(true);
+        expect(AesKit.parse(row[field]!).keyId).toBe(kek.id);
+      }
+
+      expect(row.accessToken).not.toBe("access-token");
+
+      // READ BACK: the plaintext the caller handed in, not the ciphertext.
+      const read = await store!.get(realCtx, session.id);
+
+      expect(read!.accessToken).toBe("access-token");
+      expect(read!.idToken).toBe("id-token");
+      expect(read!.refreshToken).toBe("refresh-token");
+    });
+
+    /**
+     * A session sealed with a key this deployment no longer holds. Aegis cannot
+     * resolve the kid, and the answer is a THROW — never the ciphertext.
+     * Returning it is precisely the bug this suite exists for: the caller gets
+     * a value shaped like a token, and nothing downstream can tell.
+     */
+    test("throws, naming the key, when the sealing key is gone from the vault", async () => {
+      const store = createSessionStore(kv, kekSettings);
+
+      await store!.set(realCtx, { ...session });
+
+      const logger = createMockLogger();
+      const emptied = new Amphora({ internal: { issuer: ISSUER }, logger });
+
+      emptied.add(
+        KryptosKit.generate.enc.oct({
+          algorithm: "A256GCMKW",
+          publish: false,
+          purpose: "pylon:kek",
+        }),
+      );
+
+      const staleCtx = {
+        ...realCtx,
+        aegis: new Aegis({ amphora: emptied, logger }),
+        amphora: emptied,
+      };
+
+      await expect(store!.get(staleCtx, session.id)).rejects.toMatchObject({
+        code: "session_decryption_failed",
+        type: "urn:lindorm:pylon:error:session_decryption_failed",
+        data: { id: session.id, field: "accessToken", kid: kek.id },
+      });
+    });
+  });
 });

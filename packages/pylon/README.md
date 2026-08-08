@@ -1524,6 +1524,8 @@ auth.session.<role> ?? cookies.<role>
 
 ⚠ **`encryption` is mandatory for a cookie-only session.** With no `kv` source the cookie carries the access, id and refresh token themselves, base64url **encoded** rather than encrypted, and re-sends them on every request — so a resolvable `auth.session.encryption ?? cookies.encryption` is a boot requirement, `session_encryption_not_configured`. With a `kv` source the cookie carries only an opaque id and the tokens sit behind the store's own access boundary: a missing key warns once at boot and the deployment runs. The fallback counts either way — one key on `cookies` satisfies both.
 
+**Writing names a key; reading names nothing.** The selector is a vault query, so it must reach past amphora's publish gate to a KEK that is by definition unpublished — `{ condition: { purpose: "pylon:kek", publish: false } }`. The read side asks the vault nothing at all: the stored ciphertext carries its own `kid`, which is what lets a session written before a key rotation still open. A stored token whose key this deployment no longer holds is a **throw** (`session_decryption_failed`, naming the `kid`) — restore the key or evict the session. Ciphertext is never handed back as a token.
+
 Name only `cookies` and one key set does everything. Name `auth.session` too and the session cookie is signed / sealed with its **own** key — a smaller blast radius, or an asymmetric signature for session cookies specifically — while every ordinary cookie keeps using the `cookies` keys. Any cookie can do the same, per call — `signature` and `encryption` each take `true` (the deployment cookie key) or a selector (its own key): `ctx.cookies.set(name, value, { signature, encryption: true })`.
 
 ### Verification is derived from `signature`

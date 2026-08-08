@@ -143,7 +143,17 @@ describe("refresh outcome headers", () => {
       purpose: "token",
     });
 
-    amphora.add([sig]);
+    // The session store's KEK — INTERNAL and UNPUBLISHED, as a KEK always is.
+    // The suite runs with session encryption ON because that is the recommended
+    // production shape, and because a middleware chain that reads the stored
+    // tokens back is the only thing that proves they come back as tokens.
+    const kek: IKryptos = KryptosKit.generate.enc.oct({
+      algorithm: "A256GCMKW",
+      publish: false,
+      purpose: "pylon:kek",
+    });
+
+    amphora.add([sig, kek]);
 
     kv = new ProteusSource({
       driver: "sqlite",
@@ -169,13 +179,10 @@ describe("refresh outcome headers", () => {
         // opportunistically under it, which is the case the headers exist for.
         refresh: { mode: "force" },
         router: { pathPrefix: "/auth" },
-        // ⚠ No session `encryption` here, deliberately: `/introspect` and
-        // `/userinfo` must read the stored tokens back, and an encrypted store
-        // currently hands back ciphertext — `createSessionStore`'s read path is
-        // gated on `amphora.canDecrypt()`, which applies amphora's DEFAULT key
-        // gate and so cannot see an internal unpublished KEK, the very key the
-        // write path encrypted with.
-        session: { enabled: true },
+        session: {
+          enabled: true,
+          encryption: { condition: { purpose: "pylon:kek", publish: false } },
+        },
       },
       routes: [{ path: "/test", router: createSeedRouter() }],
     });
