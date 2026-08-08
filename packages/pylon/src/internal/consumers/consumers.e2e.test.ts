@@ -168,6 +168,13 @@ describe("pylon consumers end to end", () => {
 
       expect(row).toMatchObject({ entityId: created.id, action: "update" });
 
+      // The point of the record: the field the caller actually changed, with
+      // the value it held BEFORE the write. `updatedAt`/`version` move on every
+      // update, so a diff holding only those is the shape of a broken audit.
+      expect(row.changes).toMatchObject({
+        event: { from: "order.created", to: "order.shipped" },
+      });
+
       // The diff itself carries `Date` values (`updatedAt` moves on every
       // versioned write). A plain json column rejects those outright, which is
       // why `changes` is `@TypedJson` — this asserts the Date survived the
