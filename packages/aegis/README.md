@@ -426,6 +426,21 @@ const formatted = kit.format(signature); // string
 
 `aegis.mint(profile, content)` and `aegis.verify(profile, token, assert?, options)` apply a named token profile (`access_token`, `id_token`, `delegation`, …) on top of the standard JOSE operations. The floor's `audience` / `issuer` live in the profile `options` (the fourth argument); extra claim matchers go in the optional `assert` (third).
 
+**Typed content.** `mint` resolves the content type from the profile NAME, so a built-in profile is held to its own content type (`AccessTokenContent`, `IdTokenContent`, …) at every call site — inline literal included, no annotation or type argument needed. A claim the profile does not carry is a compile error against that type:
+
+```ts
+await aegis.mint("access_token", {
+  subject: "user-1",
+  audience: [resource],
+  clientId: "client-1",
+  federationAssuranceLevel: 1,
+  // ^ Object literal may only specify known properties, and
+  //   'federationAssuranceLevel' does not exist in type 'AccessTokenContent'.
+});
+```
+
+A name that is not a built-in — a profile registered at runtime with `registerProfile` — falls back to the open `SignContent` vocabulary, so custom profiles keep working unconstrained.
+
 **`typ` presence.** Each profile declares a `typ` policy: `required` (the header must carry exactly the profile's typ) or `none` (no typ mandated). Mint always stamps the profile's typ value — presence only governs verify.
 
 **Required claims on verify.** Profiled verify enforces the profile's `required` claims (the same domain-keyed names enforced at mint) — a token missing one is rejected with `jwt_required_claims_missing`. Missing means absent, `null`, or an empty string.

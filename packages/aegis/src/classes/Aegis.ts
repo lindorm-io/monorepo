@@ -98,7 +98,7 @@ import type {
   NarrowedToken,
   ParsedDpopProof,
   ParsedToken,
-  ProfileContent,
+  ProfileContentFor,
   ProfileMintOptions,
   ProfileVerifyOptions,
   RawSignInput,
@@ -285,14 +285,9 @@ export class Aegis implements IAegis {
     return parseToken<C>(token);
   }
 
-  mint<P extends keyof ProfileContent>(
+  mint<P extends string>(
     profile: P,
-    content: ProfileContent[P],
-    options?: ProfileMintOptions,
-  ): Promise<SignedToken>;
-  mint(
-    profile: string & {},
-    content: SignContent,
+    content: ProfileContentFor<P>,
     options?: ProfileMintOptions,
   ): Promise<SignedToken>;
   mint(

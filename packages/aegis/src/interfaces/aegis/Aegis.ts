@@ -30,11 +30,10 @@ import type {
   JwtClaimsWire,
   NarrowedToken,
   ParsedToken,
-  ProfileContent,
+  ProfileContentFor,
   ProfileMintOptions,
   ProfileVerifyOptions,
   RawSignInput,
-  SignContent,
   SignedToken,
   SignStructuredTokenOptions,
   SignUnstructuredTokenOptions,
@@ -198,14 +197,15 @@ export interface IAegis {
    */
   parse<C extends Dict = Dict>(token: string): ParsedToken<C>;
 
-  mint<P extends keyof ProfileContent>(
+  /**
+   * ONE signature, not a typed/loose overload pair: {@link ProfileContentFor}
+   * resolves the content type from the profile NAME, so a built-in name is held
+   * to its own `Pick` and only a genuinely custom name gets the open
+   * `SignContent`. See the type's comment for the fall-through this closes.
+   */
+  mint<P extends string>(
     profile: P,
-    content: ProfileContent[P],
-    options?: ProfileMintOptions,
-  ): Promise<SignedToken>;
-  mint(
-    profile: string & {},
-    content: SignContent,
+    content: ProfileContentFor<P>,
     options?: ProfileMintOptions,
   ): Promise<SignedToken>;
 

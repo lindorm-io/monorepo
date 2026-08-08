@@ -134,3 +134,22 @@ export type ProfileContent = {
   userinfo: UserinfoContent;
   jarm: JarmContent;
 };
+
+/**
+ * Resolves a profile NAME to the content type `mint` accepts for it: a built-in
+ * name gets its own `Pick`, any other name gets the open {@link SignContent}
+ * escape hatch for a runtime-registered profile.
+ *
+ * This is ONE signature on purpose. The pair it replaced — a typed overload over
+ * `keyof ProfileContent` plus a loose one over `string & {}` — leaked, because
+ * `string & {}` accepts a BUILT-IN name as readily as a custom one: an inline
+ * literal carrying a claim the profile does not `Pick` failed the typed overload,
+ * fell through to the loose one, and compiled as `SignContent`, which admits
+ * nearly the whole vocabulary. Resolving the content type from the name inside a
+ * single signature removes the fall-through rather than ordering around it, and
+ * the compiler reports the real problem — the offending key against
+ * `AccessTokenContent` — instead of a two-overload mismatch.
+ */
+export type ProfileContentFor<P extends string> = P extends keyof ProfileContent
+  ? ProfileContent[P]
+  : SignContent;

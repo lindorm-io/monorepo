@@ -7,7 +7,7 @@ import MockDate from "mockdate";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG, TEST_RSA_KEY_SIG } from "../__fixtures__/keys.js";
 import { createJoseSignature } from "../internal/utils/jose-signature.js";
-import type { SignContent } from "../types/index.js";
+import type { DefaultContent } from "../types/index.js";
 import { Aegis } from "./Aegis.js";
 import { JwtKit } from "./JwtKit.js";
 
@@ -32,9 +32,9 @@ describe("Aegis verify — relocated domain policy", () => {
     amphora.add(TEST_EC_KEY_SIG);
   });
 
-  const mint = (content: SignContent) => aegis.mint("default", content);
+  const mint = (content: DefaultContent) => aegis.mint("default", content);
 
-  const baseContent: SignContent = {
+  const baseContent: DefaultContent = {
     expires: "1h",
     subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
     tokenType: "test_token",
@@ -50,7 +50,7 @@ describe("Aegis verify — relocated domain policy", () => {
     });
 
     test("resolves a full set of custom matchers (hashes, vot, authTime)", async () => {
-      const content: SignContent = {
+      const content: DefaultContent = {
         ...baseContent,
         accessToken:
           "12ceb9251ddf52399fe62f122a45844865a83dcb52585fea90ae3448e0244ab0037950882d705675a4fe248e1c8d9f5c",

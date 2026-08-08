@@ -70,7 +70,7 @@ describe("Aegis — COSE", () => {
 
     const { token } = await macAegis.mint(
       "id_token",
-      { subject: "user-1", audience: ["client-1"], clientId: "client-1" },
+      { subject: "user-1", audience: ["client-1"] },
       { format: "cwm" }, // D6: a symmetric key MACs via the explicit cwm format
     );
 
@@ -150,7 +150,7 @@ describe("Aegis — COSE", () => {
 
     const { token } = await encAegis.mint(
       "id_token",
-      { subject: "user-1", audience: ["client-1"], clientId: "client-1" },
+      { subject: "user-1", audience: ["client-1"] },
       { format: "cwt", encrypt: {} },
     );
 
@@ -190,7 +190,6 @@ describe("Aegis — COSE", () => {
         {
           subject: "user-1",
           audience: ["client-1"],
-          clientId: "client-1",
           sensitive: {
             nationalIdentityNumber: "ABC-123",
             nationalIdentityNumberVerified: true,
