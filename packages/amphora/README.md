@@ -159,9 +159,11 @@ await amphora.filter({ use: "enc", hasPrivateKey: true });
 
 ### Our own unpublished keys are excluded by default
 
-Every query — `find`, `findSync`, `filter`, `filterSync`, and the [capability checks](#capability-checks) — drops keys that are both ours (`internal: true`) and unpublished (`publish: false`): a KEK, a CA, a cookie or session key. Such a key is hidden from **selection**, not merely from publication — it is never handed to a caller who did not ask for one, so a service cannot accidentally sign a token with a key that is absent from its JWKS and therefore unverifiable.
+Every query — `find`, `findSync`, `filter`, `filterSync` — drops keys that are both ours (`internal: true`) and unpublished (`publish: false`): a KEK, a CA, a cookie or session key. Such a key is hidden from **selection**, not merely from publication — it is never handed to a caller who did not ask for one, so a service cannot accidentally sign a token with a key that is absent from its JWKS and therefore unverifiable.
 
 The gate reads `publish` only for our own keys, because that is all `publish` means — "belongs in OUR published JWKS". A foreign key never does, so external keys pass the gate whatever their own flag says.
+
+The gate is on **selection**, so `findById()` / `findByIdSync()` and the [capability checks](#capability-checks) are outside it: an explicit id is explicit intent, and a capability is not a pick.
 
 **Naming `publish` in the query turns the gate off** and leaves the value as an ordinary match, so reaching an unpublished key is an explicit opt-in:
 
@@ -199,7 +201,7 @@ Available query fields (from `AmphoraQuery`):
 | `type`                  | `"EC" \| "RSA" \| "oct" \| "OKP"` | Key type.                                                                                                                                                                      |
 | `use`                   | `"sig" \| "enc"`                  | Signature or encryption.                                                                                                                                                       |
 
-All query results are filtered to active keys only (excludes expired and not-yet-valid keys), pass the default publish gate, and are sorted newest-first by creation date.
+All query results are filtered to active keys only (excludes expired and not-yet-valid keys), pass the default publish gate, and are sorted newest-first by creation date. The [capability checks](#capability-checks) apply the active filter but not the publish gate.
 
 ## JWKS Endpoint
 
@@ -331,16 +333,16 @@ amphora.canSign();
 amphora.canVerify();
 ```
 
-| Method         | Returns true when the vault contains an active, published key matching… |
-| -------------- | ----------------------------------------------------------------------- |
-| `canEncrypt()` | `{ use: "enc" }` — a public half or an oct secret.                      |
-| `canDecrypt()` | `{ use: "enc", hasPrivateKey: true }`                                   |
-| `canSign()`    | `{ use: "sig", hasPrivateKey: true }`                                   |
-| `canVerify()`  | `{ use: "sig" }`                                                        |
+| Method         | Returns true when the vault contains an active key matching… |
+| -------------- | ------------------------------------------------------------ |
+| `canEncrypt()` | `{ use: "enc" }` — a public half or an oct secret.           |
+| `canDecrypt()` | `{ use: "enc", hasPrivateKey: true }`                        |
+| `canSign()`    | `{ use: "sig", hasPrivateKey: true }`                        |
+| `canVerify()`  | `{ use: "sig" }`                                             |
 
 `hasPrivateKey` is what excludes remotely-fetched keys: a JWKS only ever yields public halves, so a vault holding nothing but external sig keys can verify but not sign.
 
-Like every other query, the capability checks run through the default publish gate — a vault holding nothing but our own unpublished (`publish: false`) keys reports no capabilities, because those keys are not candidates for selection.
+⚠ **The capability checks do NOT run through the publish gate.** They are not selections: `publish` says what belongs in our published JWKS, never what we are able to do, so a vault holding nothing but internal unpublished keys — a KEK, a CA, a cookie or session key — reports the capabilities those keys have. `find` / `filter` still hide them, and that is unchanged: a capability answers "can we do this at all", a query answers "which key do we hand out". Do not read `canDecrypt()` as "a vacuous `find({ use: "enc" })` will succeed" — it never meant that.
 
 ## Properties
 

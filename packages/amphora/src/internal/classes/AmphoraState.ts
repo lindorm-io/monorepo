@@ -71,19 +71,31 @@ export class AmphoraState {
 
   // vault selection
 
-  // `publish` gates SELECTION, but it means "belongs in OUR published JWKS" — and
-  // an EXTERNAL key (`internal: false`) never does. So the default gate hides only
-  // INTERNAL unpublished keys — the KEK / CA / cookie / session hazard. A caller
-  // that NAMES `publish` opts out of the default gate entirely.
-  filteredKeys(condition: AmphoraCondition): Array<IKryptos> {
+  // Every ACTIVE key matching the condition, newest first, with NO publish gate.
+  // This is the raw answer to "does the vault HOLD such a key?", which is a
+  // different question from "which key do we hand out?" — `publish` describes
+  // what belongs in our JWKS, not what we are able to do. Capability probes
+  // (`canSign` / `canDecrypt` / …) ask the former, so they read from here;
+  // `findByIdMostRecent` is unfiltered for the same reason.
+  matchedKeys(condition: AmphoraCondition): Array<IKryptos> {
     const active = this.vault.filter((i) => i.isActive);
 
-    const matched = Matcher.filter<IKryptos>(active, condition);
+    return Matcher.filter<IKryptos>(active, condition).sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+  }
 
-    const gated =
-      "publish" in condition ? matched : matched.filter((i) => !i.internal || i.publish);
+  // SELECTION — `matchedKeys` plus the publish gate. `publish` gates selection,
+  // but it means "belongs in OUR published JWKS" — and an EXTERNAL key
+  // (`internal: false`) never does. So the default gate hides only INTERNAL
+  // unpublished keys — the KEK / CA / cookie / session hazard. A caller that
+  // NAMES `publish` opts out of the default gate entirely.
+  filteredKeys(condition: AmphoraCondition): Array<IKryptos> {
+    const matched = this.matchedKeys(condition);
 
-    return gated.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return "publish" in condition
+      ? matched
+      : matched.filter((i) => !i.internal || i.publish);
   }
 
   // Unified, UNFILTERED lookup by id across the whole vault. kid uniqueness is
@@ -118,7 +130,7 @@ export class AmphoraState {
   // key was just RETURNED to a caller (find / filter hit). This is the signal
   // `maxIssuers` eviction ranks by. The idp is deliberately not tracked: it is
   // exempt from the cap, so its recency never matters. Capability PROBES
-  // (`canSign` etc.) go straight to `filteredKeys` and never reach here, so a
+  // (`canSign` etc.) go straight to `matchedKeys` and never reach here, so a
   // probe does not count as use.
   markAccessed(keys: Array<IKryptos>): void {
     if (keys.length === 0 || this.externalEntries.length === 0) return;

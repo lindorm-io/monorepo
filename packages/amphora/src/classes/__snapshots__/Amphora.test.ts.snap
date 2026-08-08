@@ -68,6 +68,42 @@ exports[`Amphora > add > should update jwks when adding key 1`] = `
 }
 `;
 
+exports[`Amphora > can > internal unpublished keys are a capability, not a selection > should report enc capabilities for an internal oct dir key 1`] = `
+{
+  "canDecrypt": true,
+  "canEncrypt": true,
+  "canSign": false,
+  "canVerify": false,
+}
+`;
+
+exports[`Amphora > can > internal unpublished keys are a capability, not a selection > should report enc capabilities when the ONLY enc key is internal and unpublished 1`] = `
+{
+  "canDecrypt": true,
+  "canEncrypt": true,
+  "canSign": false,
+  "canVerify": false,
+}
+`;
+
+exports[`Amphora > can > internal unpublished keys are a capability, not a selection > should report sig capabilities when the ONLY sig key is internal and unpublished 1`] = `
+{
+  "canDecrypt": false,
+  "canEncrypt": false,
+  "canSign": true,
+  "canVerify": true,
+}
+`;
+
+exports[`Amphora > can > internal unpublished keys are a capability, not a selection > should still respect activity and key halves for internal keys 1`] = `
+{
+  "canDecrypt": false,
+  "canEncrypt": false,
+  "canSign": false,
+  "canVerify": false,
+}
+`;
+
 exports[`Amphora > can > should encrypt AND decrypt with an oct dir key, which has no public half 1`] = `
 {
   "canDecrypt": true,

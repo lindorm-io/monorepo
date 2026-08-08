@@ -235,21 +235,29 @@ export class Amphora implements IAmphora {
   // demanding `hasPublicKey` would exclude every dir / A*KW / PBES2 key.
   // `hasPrivateKey` on the decrypt side is what excludes remotely-fetched keys —
   // a JWKS only ever yields public halves.
+  //
+  // ⚠ All four read `matchedKeys`, NOT `filteredKeys`. A capability is not a
+  // SELECTION: the publish gate exists to stop an outbound pick landing on an
+  // internal unpublished key, and publishing describes what belongs in our JWKS,
+  // never what we are able to do. Through `filteredKeys` a deployment whose only
+  // enc key was an internal unpublished KEK answered `canDecrypt() === false`
+  // while decrypting with that key perfectly well — a probe that contradicts the
+  // operation it describes.
 
   canEncrypt(): boolean {
-    return this.state.filteredKeys({ use: "enc" }).length > 0;
+    return this.state.matchedKeys({ use: "enc" }).length > 0;
   }
 
   canDecrypt(): boolean {
-    return this.state.filteredKeys({ use: "enc", hasPrivateKey: true }).length > 0;
+    return this.state.matchedKeys({ use: "enc", hasPrivateKey: true }).length > 0;
   }
 
   canSign(): boolean {
-    return this.state.filteredKeys({ use: "sig", hasPrivateKey: true }).length > 0;
+    return this.state.matchedKeys({ use: "sig", hasPrivateKey: true }).length > 0;
   }
 
   canVerify(): boolean {
-    return this.state.filteredKeys({ use: "sig" }).length > 0;
+    return this.state.matchedKeys({ use: "sig" }).length > 0;
   }
 
   // private methods

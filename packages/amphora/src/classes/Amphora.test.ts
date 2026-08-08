@@ -539,11 +539,19 @@ describe("Amphora", () => {
       expect(amphora.findByIdSync(internalSig.id)).toEqual(internalSig);
     });
 
-    test("should report no signing capability for a vault holding only internal keys", () => {
+    // The publish gate governs SELECTION only. A capability answers "does the
+    // vault hold a key that can do this?", and an internal unpublished key
+    // signs and verifies perfectly well — it is merely never handed out by a
+    // vacuous query. Reporting `false` here made the probe contradict the
+    // operation it describes: pylon skipped decrypting an encrypted session on
+    // exactly this vault shape and served the ciphertext as a bearer token.
+    test("should still report signing capability for a vault holding only internal keys", () => {
       amphora.add(internalSig);
 
-      expect(amphora.canSign()).toBe(false);
-      expect(amphora.canVerify()).toBe(false);
+      expect(amphora.filterSync({ use: "sig" })).toEqual([]);
+
+      expect(amphora.canSign()).toBe(true);
+      expect(amphora.canVerify()).toBe(true);
     });
 
     test("should exclude internal keys from the jwks", () => {
@@ -644,6 +652,77 @@ describe("Amphora", () => {
       );
 
       expect(capabilities()).toMatchSnapshot();
+    });
+
+    /**
+     * ⚠ The regression that produced this suite. A capability is NOT a
+     * selection: it asks whether the vault holds a key that can do the work.
+     * `publish` says what belongs in our published JWKS — nothing about what we
+     * are able to do — so an INTERNAL, UNPUBLISHED key (a KEK, a CA, a cookie or
+     * session key: the whole point of `publish: false`) must answer `true` on
+     * every one of the four.
+     *
+     * Through the selection filter it answered `false`, and pylon's session
+     * store — gated on `canDecrypt()` and configured with exactly this shape
+     * (`{ purpose: "pylon:kek", publish: false }`) — skipped decryption and
+     * handed the stored CIPHERTEXT back as the session's access token.
+     */
+    describe("internal unpublished keys are a capability, not a selection", () => {
+      const internal = (key: IKryptos) =>
+        KryptosKit.clone(key, { publish: false, purpose: "pylon:kek" });
+
+      test("should report enc capabilities when the ONLY enc key is internal and unpublished", () => {
+        const kek = internal(TEST_EC_KEY_ENC);
+
+        amphora.add(kek);
+
+        expect(kek.internal).toBe(true);
+        expect(kek.publish).toBe(false);
+        expect(kek.hasPrivateKey).toBe(true);
+
+        // Selection still hides it — that gate is unchanged and deliberate.
+        expect(amphora.filterSync({ use: "enc" })).toEqual([]);
+
+        expect(amphora.canEncrypt()).toBe(true);
+        expect(amphora.canDecrypt()).toBe(true);
+        expect(capabilities()).toMatchSnapshot();
+      });
+
+      test("should report sig capabilities when the ONLY sig key is internal and unpublished", () => {
+        const kek = internal(TEST_RSA_KEY_SIG);
+
+        amphora.add(kek);
+
+        expect(amphora.filterSync({ use: "sig" })).toEqual([]);
+
+        expect(amphora.canSign()).toBe(true);
+        expect(amphora.canVerify()).toBe(true);
+        expect(capabilities()).toMatchSnapshot();
+      });
+
+      // An oct KEK is the shape a deployment reaches for first — no public half
+      // at all, so it can never be published and is always internal.
+      test("should report enc capabilities for an internal oct dir key", () => {
+        amphora.add(internal(TEST_OCT_KEY_ENC));
+
+        expect(amphora.canEncrypt()).toBe(true);
+        expect(amphora.canDecrypt()).toBe(true);
+        expect(capabilities()).toMatchSnapshot();
+      });
+
+      // The gate is dropped, not inverted: an inactive key is still no
+      // capability, and a public-only half still cannot do the private-half work.
+      test("should still respect activity and key halves for internal keys", () => {
+        amphora.add(
+          KryptosKit.clone(TEST_EC_KEY_ENC, {
+            publish: false,
+            purpose: "pylon:kek",
+            notBefore: new Date("2099-01-01T00:00:00.000Z"),
+          }),
+        );
+
+        expect(capabilities()).toMatchSnapshot();
+      });
     });
   });
 
