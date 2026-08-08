@@ -43,6 +43,7 @@ describe("createRefreshMiddleware", async () => {
       state: {
         app: { environment: "test" },
         metadata: { correlationId: "test-correlation" },
+        sessionRefreshed: false,
         session: {
           id: "a6d36ab7-ab36-52a8-b366-5f5f21f8280e",
           accessToken: "accessToken",
@@ -73,6 +74,56 @@ describe("createRefreshMiddleware", async () => {
     expect(ctx.session.set).toHaveBeenCalled();
     expect(ctx.session.del).not.toHaveBeenCalled();
     expect(ctx.state.session).toBe("parsedTokenData");
+    expect(ctx.state.sessionRefreshed).toBe(true);
+  });
+
+  // The middleware records WHAT IT DID, never why it ran. `/refresh` synthesises
+  // `mode: "force"`, but `force` is also a legitimate configured mode on
+  // `/introspect` and `/userinfo` — so an opportunistic refresh is
+  // indistinguishable here, and records the same fact because it IS the same
+  // fact. The route that cares is what reports it.
+  describe("outcome recorded on state", () => {
+    test("should record an opportunistic half_life refresh the same way", async () => {
+      authConfig.refresh.mode = "half_life";
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.state.sessionRefreshed).toBe(true);
+    });
+
+    test("should stay false when the mode says not yet", async () => {
+      authConfig.refresh.maxAge = "43201s";
+      authConfig.refresh.mode = "max_age";
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.state.sessionRefreshed).toBe(false);
+    });
+
+    test("should stay false when the driver implements no refresh method", async () => {
+      authConfig.driver.refresh = undefined;
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.state.sessionRefreshed).toBe(false);
+    });
+
+    test("should stay false when the session holds no refresh token", async () => {
+      delete ctx.state.session.refreshToken;
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.state.sessionRefreshed).toBe(false);
+    });
+
+    test("should stay false when the grant fails and the session is cleared", async () => {
+      refresh.mockRejectedValue(new Error("invalid_grant"));
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.state.sessionRefreshed).toBe(false);
+      expect(ctx.state.session).toBeNull();
+    });
   });
 
   test("should resolve half_life", async () => {

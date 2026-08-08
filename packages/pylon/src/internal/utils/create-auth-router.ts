@@ -8,9 +8,9 @@ import { createLoginCallbackHandler } from "./auth/login-callback-handler.js";
 import { createLoginHandler, loginSchema } from "./auth/login-handler.js";
 import { createLogoutCallbackHandler } from "./auth/logout-callback-handler.js";
 import { createLogoutHandler, logoutSchema } from "./auth/logout-handler.js";
+import { createRefreshHandler } from "./auth/refresh-handler.js";
 import { createRefreshMiddleware } from "./auth/refresh-middleware.js";
 import { createUserinfoHandler } from "./auth/userinfo-handler.js";
-import { noopHandler } from "./noop-handler.js";
 import { useSchema } from "../../middleware/index.js";
 
 export const createAuthRouter = <C extends PylonHttpContext>(
@@ -38,7 +38,11 @@ export const createAuthRouter = <C extends PylonHttpContext>(
 
   router.get("/logout/callback", createLogoutCallbackHandler(routerConfig));
 
-  router.get("/refresh", forceRefresh, noopHandler);
+  // POST, not GET: the exchange mints new tokens and rewrites the stored
+  // session, which is not a safe method (RFC 9110 §9.2.1) — and `@lindorm/zephyr`'s
+  // `createCookieAuthStrategy` already POSTs to whatever refresh URL it is given,
+  // so a GET-only route was one a pylon's own socket client could not call.
+  router.post("/refresh", forceRefresh, createRefreshHandler());
 
   router.get("/userinfo", refreshMiddleware, createUserinfoHandler());
 

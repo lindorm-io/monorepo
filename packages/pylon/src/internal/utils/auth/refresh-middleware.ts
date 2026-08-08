@@ -79,6 +79,13 @@ export const createRefreshMiddleware = <C extends PylonHttpContext>(
             });
 
             await ctx.session.set(ctx.state.session);
+
+            // Recorded HERE and only here — one exchange with the token
+            // endpoint, one `true`. The middleware states what it did and stops;
+            // reporting it is `/refresh`'s job, and an opportunistic refresh on
+            // `/introspect` or `/userinfo` records the same fact because it IS
+            // the same fact.
+            ctx.state.sessionRefreshed = true;
           } catch (error) {
             ctx.logger.warn("Token refresh failed, clearing session", { error });
             await ctx.session.del();

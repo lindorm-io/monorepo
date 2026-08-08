@@ -49,6 +49,7 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
         },
         origin: ctx.request.origin || `${ctx.protocol}://${ctx.host}`,
         session: null,
+        sessionRefreshed: false,
         tokens: {},
       };
 
