@@ -31,11 +31,13 @@ const omitProfileClaims = (claims: Dict): Dict => {
 // `PylonIntrospectionActive`, so the bucket must not repeat them. (`token_type`
 // arrives here as `tokenType` — the translator camelCases every unregistered
 // key before this runs.)
-const RESPONSE_MEMBER_KEYS: ReadonlySet<string> = new Set([
-  "active",
-  "tokenType",
-  "username",
-]);
+//
+// ⚠ `username` is NOT one of them. It is a claim ABOUT the token — an
+// authorization server that can report one means a token can carry one — so it
+// is a REGISTERED aegis claim and the translator resolves it into `claims` on
+// its own. Filtering it here would strip it from the introspected path only,
+// re-opening the very verified-vs-introspected divergence this parser closes.
+const RESPONSE_MEMBER_KEYS: ReadonlySet<string> = new Set(["active", "tokenType"]);
 
 // The extension claims, kept whole. `custom` itself is NOT special-cased: a
 // server that returns a member named `custom` gets it at `custom.custom`, which
@@ -73,6 +75,5 @@ export const parseIntrospection = (data: IntrospectClaimsInput): PylonIntrospect
       : isString((data as Dict).token_type)
         ? ((data as Dict).token_type as string)
         : undefined,
-    username: isString(data.username) ? data.username : undefined,
   }) as PylonIntrospectionActive;
 };

@@ -14,6 +14,9 @@ router.get(
     return {
       body: {
         subject: ctx.state.access?.claims.subject ?? null,
+        // RFC 7662 §2.2 `username` is a registered claim, so it reads out of
+        // `claims` on both paths — not out of `custom`, and not from a profile.
+        username: ctx.state.access?.claims.username ?? null,
         tenantTier: custom.tenantTier ?? null,
       },
     };

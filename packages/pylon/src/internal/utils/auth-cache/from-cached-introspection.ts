@@ -10,9 +10,10 @@ import type {
  * `toCachedIntrospection`. `Aegis.toDomain` is the registry-driven inverse of
  * `Aegis.toWire`: it rebuilds the `Date` claims from their unix seconds and
  * camelCases everything it does not recognise into a bucket (`token_type` ->
- * `tokenType`, `username`). Those two are RFC 7662 §2.2 RESPONSE members rather
- * than claims, so they are merged back onto the flat answer — a cache HIT must
- * be indistinguishable from a MISS.
+ * `tokenType`). That is an RFC 7662 §2.2 RESPONSE member rather than a claim, so
+ * it is merged back onto the flat answer — a cache HIT must be indistinguishable
+ * from a MISS. (`username` needs no such handling: it is a REGISTERED claim, so
+ * it comes back in `claims` like `sub` does.)
  *
  * The EXTENSION claims never went through that translation — `toCachedIntrospection`
  * stored them beside the wire claims precisely so their keys survive — so they

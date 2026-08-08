@@ -1,7 +1,13 @@
-// Custom (unregistered) claims must reach `ctx.state.access.custom` on BOTH
-// provenances — driven end to end, because that divergence is exactly what a
-// mock echoing a mock hides: a REAL minted-and-verified token for `verified`,
-// and a REAL introspection response through the auth client for `introspected`.
+// What lands in which bucket of `ctx.state.access` must agree on BOTH provenances
+// — driven end to end, because that divergence is exactly what a mock echoing a
+// mock hides: a REAL minted-and-verified token for `verified`, and a REAL
+// introspection response through the auth client for `introspected`.
+//
+// Two buckets and one exclusion:
+//   - `custom`  the unregistered claims, `{}` when there are none;
+//   - `claims`  the registered ones, INCLUDING RFC 7662 §2.2 `username`;
+//   - neither   the RFC 7662 response members that describe the ANSWER rather
+//               than the token (`active`, `token_type`).
 
 import type { IAegis } from "@lindorm/aegis";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
@@ -75,12 +81,14 @@ describe("useAccessToken — custom claims", () => {
 
   const createVerifiedContext = async (
     claims?: Record<string, unknown>,
+    content?: Record<string, unknown>,
   ): Promise<any> => {
     const signed = await aegis.mint("default", {
       audience: [ACCESS_TEST_ISSUER],
       expires: "1 hour",
       subject: "alice",
       tokenType: "access_token",
+      ...content,
       ...(claims ? { claims } : {}),
     });
 
@@ -169,16 +177,16 @@ describe("useAccessToken — custom claims", () => {
       expect(ctx.state.access.custom).not.toBeUndefined();
     });
 
-    // `active`/`token_type`/`username` are RFC 7662 §2.2 members describing the
-    // ANSWER, and the claim registry knows none of them — so the translator
-    // sweeps all three into its bucket and they would ride out as "custom
-    // claims" of the token unless they are taken back out.
+    // `active`/`token_type` are RFC 7662 §2.2 members describing the ANSWER, and
+    // the claim registry knows neither — so the translator sweeps both into its
+    // bucket and they would ride out as "custom claims" of the token unless they
+    // are taken back out. (`username` IS a registered claim and is asserted
+    // separately below.)
     test("should keep the RFC 7662 response members out of the bucket", async () => {
       const ctx = createIntrospectedContext({
         active: true,
         sub: "alice",
         token_type: "Bearer",
-        username: "alice@lindorm.io",
       });
 
       await useAccessToken()(ctx, next);
@@ -199,6 +207,109 @@ describe("useAccessToken — custom claims", () => {
       await useAccessToken()(ctx, next);
 
       expect(ctx.state.access.custom).toEqual({ custom: "a-literal-value" });
+    });
+  });
+
+  // RFC 7662 §2.2 `username` is a REGISTERED aegis claim, so it belongs in
+  // `claims` — never in `custom`, and never filtered out as a response member.
+  describe("username", () => {
+    test("should reach claims.username from a verified token", async () => {
+      const ctx = await createVerifiedContext(undefined, {
+        username: "alice@lindorm.io",
+      });
+
+      await useAccessToken()(ctx, next);
+
+      expect(ctx.state.access.provenance).toBe("verified");
+      expect(ctx.state.access.claims.username).toBe("alice@lindorm.io");
+      expect(ctx.state.access.custom).toEqual({});
+    });
+
+    test("should reach claims.username from an introspection response", async () => {
+      const ctx = createIntrospectedContext({
+        active: true,
+        sub: "alice",
+        username: "alice@lindorm.io",
+      });
+
+      await useAccessToken()(ctx, next);
+
+      expect(ctx.state.access.provenance).toBe("introspected");
+      expect(ctx.state.access.claims.username).toBe("alice@lindorm.io");
+      expect(ctx.state.access.custom).toEqual({});
+    });
+
+    test("should surface the SAME username on both provenances", async () => {
+      const verified = await createVerifiedContext(undefined, {
+        username: "alice@lindorm.io",
+      });
+      await useAccessToken()(verified, next);
+
+      const introspected = createIntrospectedContext({
+        active: true,
+        sub: "alice",
+        username: "alice@lindorm.io",
+      });
+      await useAccessToken()(introspected, next);
+
+      expect(introspected.state.access.claims.username).toBe(
+        verified.state.access.claims.username,
+      );
+    });
+
+    test("should yield no username when neither credential carries one", async () => {
+      const verified = await createVerifiedContext();
+      await useAccessToken()(verified, next);
+
+      const introspected = createIntrospectedContext({ active: true, sub: "alice" });
+      await useAccessToken()(introspected, next);
+
+      expect(verified.state.access.claims).not.toHaveProperty("username");
+      expect(introspected.state.access.claims).not.toHaveProperty("username");
+      expect(verified.state.access.custom).not.toHaveProperty("username");
+      expect(introspected.state.access.custom).not.toHaveProperty("username");
+    });
+
+    // The naming trap. `preferred_username` is a PROFILE claim, and the profile
+    // is deliberately absent from an authorization decision — so it reaches
+    // NEITHER bucket, while `username` reaches `claims`.
+    test("should not confuse username with preferred_username", async () => {
+      const ctx = createIntrospectedContext({
+        active: true,
+        sub: "alice",
+        username: "alice@lindorm.io",
+        preferred_username: "Alice",
+      });
+
+      await useAccessToken()(ctx, next);
+
+      expect(ctx.state.access.claims.username).toBe("alice@lindorm.io");
+      expect(ctx.state.access.claims).not.toHaveProperty("preferredUsername");
+      expect(ctx.state.access.custom).toEqual({});
+    });
+  });
+
+  // `active` and `tokenType` are facts about the ANSWER, not the token. `active`
+  // would be permanently `true` here (the middleware refuses an inactive token),
+  // and neither is an aegis claim — so the resolved credential carries neither,
+  // in either bucket, on either provenance.
+  describe("RFC 7662 response members", () => {
+    test("should keep active and tokenType off the resolved credential", async () => {
+      const ctx = createIntrospectedContext({
+        active: true,
+        sub: "alice",
+        token_type: "Bearer",
+      });
+
+      await useAccessToken()(ctx, next);
+
+      expect(ctx.state.access.claims).not.toHaveProperty("active");
+      expect(ctx.state.access.claims).not.toHaveProperty("tokenType");
+      expect(ctx.state.access.claims).not.toHaveProperty("token_type");
+      expect(ctx.state.access.custom).not.toHaveProperty("active");
+      expect(ctx.state.access.custom).not.toHaveProperty("tokenType");
+      expect(ctx.state.access).not.toHaveProperty("active");
+      expect(ctx.state.access).not.toHaveProperty("tokenType");
     });
   });
 

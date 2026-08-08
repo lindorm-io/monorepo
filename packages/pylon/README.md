@@ -740,9 +740,11 @@ ctx.state.access; // PylonResolvedAccess | null
 const { tenantTier } = ctx.state.access!.custom as { tenantTier?: string };
 ```
 
-The RFC 7662 response members that describe the ANSWER rather than the token — `active`, `token_type`, `username` — are kept out of the bucket. And `custom` is reserved at the top level of an introspection answer: a server returning a member literally named `custom` gets it back at `access.custom.custom`, not shadowing the bucket.
+The RFC 7662 response members that describe the ANSWER rather than the token — `active` and `token_type` — are kept out of the bucket, and off the resolved credential entirely. RFC 7662 `username` is the opposite case: an authorization server that can report one means a token can carry one, so it is a registered aegis claim and arrives at `access.claims.username` on **both** paths. (It is not OIDC's `preferred_username`, which is a profile field — see below.) And `custom` is reserved at the top level of an introspection answer: a server returning a member literally named `custom` gets it back at `access.custom.custom`, not shadowing the bucket.
 
 `cnf` lives inside `claims.confirmation`, so it is not repeated on the outside; there is no `header` field (an opaque token has none, and a JWT's is derivable from `token`) and no `active` field (an inactive token throws `token_not_active` instead of resolving).
+
+There is also no `profile` and no `sensitive`, deliberately. The resolved credential answers one question — may this request do this — and a name, an email, a picture or a national identity number bear on none of it. Identity is read where identity is wanted (`ctx.auth.userinfo()`, `ctx.state.tokens.idToken`); the introspection parser drops the profile claims outright, so an authorization server cannot volunteer personal data into an authorization decision.
 
 A service that mints and verifies its own tokens needs **no `auth` configuration at all** — nothing on the JOSE/COSE path calls the IdP. Introspection is only reached by a genuinely opaque credential, and that needs an `auth` driver that implements `introspect`. Without one, an opaque credential is refused as `opaque_token_not_supported` (401) rather than as a verification that failed.
 

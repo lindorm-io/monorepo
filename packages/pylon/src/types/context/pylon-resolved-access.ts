@@ -28,7 +28,20 @@ export type PylonAccessProvenance = "verified" | "introspected";
  * - `dpop` is NOT here — a parsed proof is a per-request artifact of the DPoP
  *   binding check, not resolved credential data.
  * - `active` is NOT here — it is a rejection signal the middleware consumes; an
- *   inactive token never produces a resolved access at all.
+ *   inactive token never produces a resolved access at all, so the field would be
+ *   permanently `true` or never reached.
+ * - `tokenType` is NOT here — an RFC 7662 §2.2 fact about the introspection
+ *   ANSWER, with no counterpart on the verified path. (RFC 7662 §2.2 `username`
+ *   is the opposite case and IS here, inside `claims`: it is a claim about the
+ *   token, registered in aegis, and produced by both paths.)
+ * - `profile` and `sensitive` are NOT here, and that is deliberate rather than an
+ *   oversight. This shape answers ONE question — may this request do this — and a
+ *   name, an email, a picture or a national identity number bear on none of it.
+ *   Identity is the id token's and userinfo's job (`ctx.auth.userinfo`,
+ *   `ctx.state.tokens.idToken`), read where identity is actually wanted. Keeping
+ *   them out is also what stops an authorization server volunteering personal
+ *   data into an authorization decision: the introspection parser drops the
+ *   profile claims outright, so there is no bucket for them to arrive in.
  */
 export type PylonResolvedAccess = {
   provenance: PylonAccessProvenance;

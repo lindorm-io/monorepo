@@ -38,8 +38,12 @@ export type PylonIntrospectionActive = StdClaims &
     active: true;
     /** Always an object — `{}` when the token carried no unregistered claims. */
     custom: Dict;
+    /**
+     * RFC 7662 §2.2 `token_type`. Declared here rather than drawn from the aegis
+     * claim types because it describes the ANSWER, not the token — unlike
+     * `username`, which IS a registered claim and arrives via `OAuthClaims`.
+     */
     tokenType?: string;
-    username?: string;
   };
 
 // When the token is inactive, the response is just { active: false }.

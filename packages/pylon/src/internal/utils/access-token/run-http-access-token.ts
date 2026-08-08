@@ -94,7 +94,13 @@ export const runHttpAccessToken = async (
         });
       }
 
-      const { active: _active, custom, ...claims } = introspection;
+      // `active` and `tokenType` are RFC 7662 §2.2 facts about the ANSWER, not
+      // claims of the token, so neither reaches the resolved credential: `active`
+      // is a rejection signal already consumed above (it would be permanently
+      // `true` here), and `tokenType` has no counterpart on the verified path —
+      // leaving it in would put a field in `claims` that only ever appears on one
+      // provenance and that `DomainClaims` does not declare.
+      const { active: _active, custom, tokenType: _tokenType, ...claims } = introspection;
 
       // `ctx.state.tokens.accessToken` is deliberately left UNSET here: there is
       // no VerifiedToken, and synthesising one would erase the very provenance
