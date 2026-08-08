@@ -309,7 +309,12 @@ describe("Pylon source placement", () => {
             clientId: "client-id",
             clientSecret: "client-secret",
           }),
-          session: { enabled: true },
+          // No `kv` here, so the session is cookie-only and the cookie carries
+          // the tokens themselves — an encryption key is mandatory, not advised.
+          session: {
+            enabled: true,
+            encryption: { condition: { purpose: "pylon:kek", publish: false } },
+          },
         },
         kryptos: { enabled: true },
         rateLimit: { window: "1 minute", max: 10 },

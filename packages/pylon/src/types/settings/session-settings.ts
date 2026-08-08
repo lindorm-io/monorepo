@@ -22,6 +22,16 @@ import type { PylonEncKey, PylonSignKey } from "./keys.js";
  * middleware is simply never mounted. Presence IS the intent — omit the block to
  * turn sessions off.
  *
+ * ⚠ `encryption` — resolved as `auth.session.encryption ?? cookies.encryption` —
+ * is REQUIRED for a COOKIE-ONLY session and merely recommended for a `kv`-backed
+ * one, and the difference is what the cookie holds. With a `kv` source the cookie
+ * carries an opaque store id and the tokens sit at rest behind that store's
+ * access boundary; with none, the WHOLE session object — access token, id token,
+ * refresh token — is what goes into the cookie, base64url ENCODED rather than
+ * encrypted, and is re-sent on every request. So a cookie-only session with no
+ * key resolvable is a boot failure (`session_encryption_not_configured`), and a
+ * kv-backed one warns once and runs. See `validateSessionEncryption`.
+ *
  * ⚠ Four cookie attributes are DELIBERATELY absent, because none of them is the
  * deployment's to choose:
  *

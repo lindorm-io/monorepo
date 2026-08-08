@@ -21,6 +21,10 @@ import type { PylonKeySelectors, PylonResolvedKeys } from "./types.js";
  * through `resolveVerificationKey` from the SAME resolved signature — so naming
  * `session.signature` alone is sufficient and cannot leave the session cookie
  * unreadable.
+ *
+ * An `encryption` that resolves to NOTHING through this chain is what
+ * `validateSessionEncryption` reports at boot — fatally for a cookie-only
+ * session, whose cookie IS the token set.
  */
 export const resolveSessionKeys = (
   session?: PylonKeySelectors,

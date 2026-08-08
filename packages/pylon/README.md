@@ -1195,6 +1195,8 @@ At `setup()` pylon holds the configuration against what the driver can serve. Th
 | Configuration                                                     | Result                                                                             |
 | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `router` set, driver has no `authorize`/`exchange`                | **Throws** `auth_driver_cannot_serve_router` — `/login` is mounted and cannot work |
+| `session` on, **no `kv`**, no encryption key resolvable           | **Throws** `session_encryption_not_configured` — the cookie IS the token set       |
+| `session` on, `kv` configured, no encryption key resolvable       | Warns once. Tokens are stored in the clear                                         |
 | `refresh.mode` **written** as non-`none`, driver has no `refresh` | Warns once. Refresh is off                                                         |
 | `cache.introspection` on, driver has no `introspect`              | Warns once. That half of the cache is dead, not broken                             |
 | `cache.userinfo` on, driver has no `userinfo`                     | Warns once. That half of the cache is dead, not broken                             |
@@ -1216,6 +1218,23 @@ Every warning is about config the deployment **wrote**. A default pylon derived 
 
 A session that holds no refresh token — one established without `offline_access` — is never refreshed under any mode. The middleware skips it and leaves it intact until its own expiry; it does not attempt the grant and does not clear the session.
 
+### The refresh route
+
+`POST /:prefix/refresh` reports what happened, because the reason to call it is to decide **when to call again, and when to re-authenticate**:
+
+```json
+{ "refreshed": true, "expires_at": "2026-08-08T13:00:00.000Z" }
+{ "refreshed": false, "expires_at": "2026-08-08T11:20:00.000Z" }
+```
+
+`expires_at` is the answer either way — the **new** lifetime on a refresh, the **original** one on a skip. It is returned on success too: otherwise the client has to infer the new lifetime from configuration it may not hold.
+
+A refresh whose grant **fails** deletes the session, so the route answers `401 refresh_session_required` — the same error it gives when no session was presented at all. It cannot answer `200 { "refreshed": false, "expires_at": null }`, because a live session with no deadline reports exactly that, and a caller choosing between "call again later" and "re-authenticate" cannot be handed one body for both.
+
+The outcome is recorded by the **middleware** on `ctx.state.sessionRefreshed` and reported by the **route**. The middleware never learns why it ran — `/refresh` synthesises `mode: "force"`, but `force` is also a legitimate configured mode on `/introspect` and `/userinfo` — so an opportunistic refresh on any mounted route records the same fact, and a handler of your own can read it.
+
+⚠ **`POST`, not `GET`.** The exchange mints new tokens and rewrites the stored session, which is not a safe method (RFC 9110 §9.2.1); `@lindorm/zephyr`'s `createCookieAuthStrategy` already POSTs to whatever refresh URL it is given.
+
 | Route                              | Description                                                            |
 | ---------------------------------- | ---------------------------------------------------------------------- |
 | `GET /:prefix/login`               | Start the authorize flow — sets the login cookie, redirects to the IdP |
@@ -1223,7 +1242,7 @@ A session that holds no refresh token — one established without `offline_acces
 | `GET /:prefix/logout`              | Start RP-initiated logout                                              |
 | `GET /:prefix/logout/callback`     | Handle the IdP's post-logout redirect                                  |
 | `POST /:prefix/backchannel-logout` | Handle RP-initiated backchannel logout                                 |
-| `GET /:prefix/refresh`             | Force-refresh the session's tokens                                     |
+| `POST /:prefix/refresh`            | Force-refresh the session's tokens — see [below](#the-refresh-route)   |
 | `GET /:prefix/userinfo`            | Return `ctx.auth.userinfo()` (id-token fast path with driver fallback) |
 | `GET /:prefix/introspect`          | Return `ctx.auth.introspect()` (RFC 7662 metadata)                     |
 | `GET /:prefix/error`               | OIDC error landing page                                                |
@@ -1297,7 +1316,7 @@ Four cookie attributes are deliberately not settings, because none of them is th
 | `encoding` | `base64url`               | The value is a store id or a sealed blob, both pylon's own opaque handle                                                                                          |
 | `expiry`   | the session's `expiresAt` | A separate max-age can only disagree with the record it addresses. `expiresAt: null` ⇒ no expiry attribute ⇒ a browser-session cookie                             |
 
-The session cookie is **signed / sealed when a key is configured** for it — `auth.session.<role> ?? cookies.<role>` (see [Keys](#keys)). There is no separate `signed` / `encrypted` toggle: naming the key turns the role on. When `auth.session.enabled` is true, Pylon registers the `Session` entity on the `kv` source — never on `cache`, since evicting a session logs the user out. With no `kv` configured the session is cookie-only: the whole session object travels in the cookie.
+The session cookie is **signed / sealed when a key is configured** for it — `auth.session.<role> ?? cookies.<role>` (see [Keys](#keys)). There is no separate `signed` / `encrypted` toggle: naming the key turns the role on. When `auth.session.enabled` is true, Pylon registers the `Session` entity on the `kv` source — never on `cache`, since evicting a session logs the user out. With no `kv` configured the session is cookie-only: the whole session object travels in the cookie — which is why an encryption key is a **boot requirement** in that case and a boot **warning** when a `kv` source is configured.
 
 ## Webhooks
 
@@ -1483,6 +1502,8 @@ There is no separate session key taxonomy, because there is no separate artifact
 ```
 auth.session.<role> ?? cookies.<role>
 ```
+
+⚠ **`encryption` is mandatory for a cookie-only session.** With no `kv` source the cookie carries the access, id and refresh token themselves, base64url **encoded** rather than encrypted, and re-sends them on every request — so a resolvable `auth.session.encryption ?? cookies.encryption` is a boot requirement, `session_encryption_not_configured`. With a `kv` source the cookie carries only an opaque id and the tokens sit behind the store's own access boundary: a missing key warns once at boot and the deployment runs. The fallback counts either way — one key on `cookies` satisfies both.
 
 Name only `cookies` and one key set does everything. Name `auth.session` too and the session cookie is signed / sealed with its **own** key — a smaller blast radius, or an asymmetric signature for session cookies specifically — while every ordinary cookie keeps using the `cookies` keys. Any cookie can do the same, per call — `signature` and `encryption` each take `true` (the deployment cookie key) or a selector (its own key): `ctx.cookies.set(name, value, { signature, encryption: true })`.
 

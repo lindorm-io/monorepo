@@ -21,6 +21,7 @@ import { setupDataAuditListeners } from "../internal/listeners/setup-data-audit-
 import { setupWebhookDispatchConsumer } from "../internal/consumers/setup-webhook-dispatch-consumer.js";
 import { setupWebhookRequestConsumer } from "../internal/consumers/setup-webhook-request-consumer.js";
 import { buildAppConfig } from "../internal/utils/build-app-config.js";
+import { validateSessionEncryption } from "../internal/utils/config/validate-session-encryption.js";
 import { scanWorkers } from "../internal/utils/scan-workers.js";
 import { stageEncryptedField } from "../internal/utils/stage-encrypted-field.js";
 import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config.js";
@@ -125,6 +126,11 @@ export class Pylon<
     if (this.options.auth) {
       validateAuthSettings(this.options.auth, this.logger);
     }
+
+    // Whether the session's tokens are sealed, and how badly it matters. Not part
+    // of `validateAuthSettings`: that one is handed the auth block alone, and the
+    // answer here needs the `cookies` fallback key and the `kv` source too.
+    validateSessionEncryption(this.options, this.logger);
 
     await this.loadSources();
 
