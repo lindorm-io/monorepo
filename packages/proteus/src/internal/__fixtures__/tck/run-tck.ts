@@ -28,6 +28,7 @@ import { relationsOneToOneSuite } from "./relations-one-to-one.tck.js";
 import { relationsOneToManySuite } from "./relations-one-to-many.tck.js";
 import { relationsManyToManySuite } from "./relations-many-to-many.tck.js";
 import { aggregatesSuite } from "./aggregates.tck.js";
+import { appendOnlySuite } from "./append-only.tck.js";
 import { incrementsSuite } from "./increments.tck.js";
 import { upsertSuite } from "./upsert.tck.js";
 import { cursorSuite } from "./cursor.tck.js";
@@ -128,6 +129,7 @@ const runTckForNaming = (
     entities.TckHooked,
     entities.TckScoped,
     entities.TckUnversioned,
+    entities.TckAppendOnly,
     entities.TckUniqueConstrained,
     entities.TckUniqueComposite,
     entities.TckReadonlyScoped,
@@ -217,6 +219,7 @@ const runTckForNaming = (
   hooksSuite(getHandle, entities, hookCallback);
   edgeCasesSuite(getHandle, entities);
   unversionedSuite(getHandle, entities);
+  appendOnlySuite(getHandle, entities);
   clearSuite(getHandle, entities);
   scopeSuite(getHandle, entities);
   streamSuite(getHandle, entities);

@@ -678,9 +678,11 @@ Marks an entity as append-only. Insert and read operations are allowed; update, 
 
 **Allowed:** `insert`, `clone`, `find*`, `count`, `exists`, `aggregate`, `cursor`, `paginate`.
 
-**Blocked:** `update`, `destroy`, `softDestroy`, `updateMany`, `softDelete`, `delete`, `upsert`, `clear`, `restore`.
+**Blocked:** `update`, `destroy`, `softDestroy`, `updateMany`, `softDelete`, `delete`, `upsert`, `clear`, `restore`. Each throws a `ProteusRepositoryError` with code `append_only_violation`, on every driver, before any statement reaches the store.
 
-For SQL drivers (PostgreSQL, MySQL, SQLite), `setup()` generates `BEFORE UPDATE` / `BEFORE DELETE` triggers that enforce immutability at the database level. PostgreSQL additionally generates a `BEFORE TRUNCATE` trigger.
+Cannot be combined with `@DeleteDateField` or `@ExpiryDateField` — an append-only row is neither soft-deleted nor expired, so metadata build rejects either pairing.
+
+For SQL drivers (PostgreSQL, MySQL, SQLite), `setup()` generates `BEFORE UPDATE` / `BEFORE DELETE` triggers that enforce immutability at the database level. PostgreSQL additionally generates a `BEFORE TRUNCATE` trigger. These are a second line, not the first: trigger DDL is best-effort, and a schema managed by migrations may never have carried it.
 
 #### `@Filter`
 

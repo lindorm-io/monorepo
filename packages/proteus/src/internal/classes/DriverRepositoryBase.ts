@@ -577,7 +577,7 @@ export abstract class DriverRepositoryBase<
     guardAppendOnly(this.metadata, "delete");
     guardEncryptedCriteria(this.metadata, criteria, "delete");
 
-    await this.executor.executeDelete(criteria, options);
+    await this.performDelete(criteria, options);
   }
 
   async updateMany(criteria: Condition<E>, update: DeepPartial<E>): Promise<void> {
@@ -599,7 +599,8 @@ export abstract class DriverRepositoryBase<
     }
 
     this.entityManager.verifyReadonly(update);
-    await this.executor.executeUpdateMany(criteria, update);
+
+    await this.performUpdateMany(criteria, update);
   }
 
   // ─── Soft Deletes ─────────────────────────────────────────────────
@@ -631,7 +632,8 @@ export abstract class DriverRepositoryBase<
     guardAppendOnly(this.metadata, "softDelete");
     guardDeleteDateField(this.metadata, "softDelete");
     guardEncryptedCriteria(this.metadata, criteria, "softDelete");
-    await this.executor.executeSoftDelete(criteria);
+
+    await this.performSoftDelete(criteria);
   }
 
   /**
@@ -645,6 +647,41 @@ export abstract class DriverRepositoryBase<
     guardAppendOnly(this.metadata, "restore");
     guardDeleteDateField(this.metadata, "restore");
     guardEncryptedCriteria(this.metadata, criteria, "restore");
+
+    await this.performRestore(criteria);
+  }
+
+  // ─── Protected: Criteria write hooks ──────────────────────────────
+  //
+  // The four criteria-based writes above are the only guarded PUBLIC methods a
+  // driver ever needed to reshape, and reshaping them meant restating every
+  // guard by hand — a list kept in sync across thirteen classes by memory. It
+  // was not kept in sync: three SQL drivers dropped `guardAppendOnly`, so an
+  // @AppendOnly entity could be bulk-deleted and bulk-updated on exactly those.
+  //
+  // So the public method above owns the guards and a driver overrides the hook
+  // below, which only executes. A driver cannot drop a guard it does not
+  // mention, and a guard added above reaches every driver the moment it lands.
+
+  protected async performDelete(
+    criteria: Condition<E>,
+    options?: DeleteOptions,
+  ): Promise<void> {
+    await this.executor.executeDelete(criteria, options);
+  }
+
+  protected async performUpdateMany(
+    criteria: Condition<E>,
+    update: DeepPartial<E>,
+  ): Promise<void> {
+    await this.executor.executeUpdateMany(criteria, update);
+  }
+
+  protected async performSoftDelete(criteria: Condition<E>): Promise<void> {
+    await this.executor.executeSoftDelete(criteria);
+  }
+
+  protected async performRestore(criteria: Condition<E>): Promise<void> {
     await this.executor.executeRestore(criteria);
   }
 

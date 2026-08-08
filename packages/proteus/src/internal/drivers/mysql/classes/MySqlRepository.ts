@@ -44,7 +44,6 @@ import { hydrateReturning } from "../utils/query/hydrate-returning.js";
 import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate.js";
 import {
   guardAppendOnly,
-  guardDeleteDateField,
   guardEncryptedCriteria,
   guardVersionFields,
   validateRelationNames,
@@ -230,11 +229,15 @@ export class MySqlRepository<
     return entities;
   }
 
-  // ─── Override: MySQL error wrapping ──────────────────────────────
+  // ─── Criteria write hooks: MySQL error wrapping ──────────────────
+  //
+  // Execution only. The guards live on the public methods in
+  // DriverRepositoryBase, so they apply here without being restated.
 
-  override async delete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
-    guardEncryptedCriteria(this.metadata, criteria, "delete");
-
+  protected override async performDelete(
+    criteria: Condition<E>,
+    options?: DeleteOptions,
+  ): Promise<void> {
     try {
       if (options?.limit) {
         await this.executor.executeDelete(criteria, options);
@@ -253,28 +256,10 @@ export class MySqlRepository<
     }
   }
 
-  override async updateMany(
+  protected override async performUpdateMany(
     criteria: Condition<E>,
     update: DeepPartial<E>,
   ): Promise<void> {
-    // CRITERIA only — the `update` payload re-encrypts on the way in.
-    guardEncryptedCriteria(this.metadata, criteria, "updateMany");
-
-    if (this.entityManager.updateStrategy === "version") {
-      throw new ProteusRepositoryError(
-        `updateMany is not supported for versioned entity "${this.metadata.entity.name}". Use update() for individual version updates.`,
-        {
-          code: "unsupported_operation",
-          title: "Unsupported Operation",
-          details:
-            "updateMany is not supported for versioned entities; use update() for individual version updates.",
-          data: { entity: this.metadata.entity.name, operation: "updateMany" },
-        },
-      );
-    }
-
-    this.entityManager.verifyReadonly(update);
-
     try {
       await this.executor.executeUpdateMany(criteria, update);
     } catch (error) {
@@ -287,13 +272,7 @@ export class MySqlRepository<
     }
   }
 
-  override async softDelete(
-    criteria: Condition<E>,
-    _options?: DeleteOptions,
-  ): Promise<void> {
-    guardDeleteDateField(this.metadata, "softDelete");
-    guardEncryptedCriteria(this.metadata, criteria, "softDelete");
-
+  protected override async performSoftDelete(criteria: Condition<E>): Promise<void> {
     try {
       await this.executor.executeSoftDelete(criteria);
     } catch (error) {
@@ -306,13 +285,7 @@ export class MySqlRepository<
     }
   }
 
-  override async restore(
-    criteria: Condition<E>,
-    _options?: DeleteOptions,
-  ): Promise<void> {
-    guardDeleteDateField(this.metadata, "restore");
-    guardEncryptedCriteria(this.metadata, criteria, "restore");
-
+  protected override async performRestore(criteria: Condition<E>): Promise<void> {
     try {
       await this.executor.executeRestore(criteria);
     } catch (error) {

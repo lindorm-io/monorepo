@@ -10,6 +10,7 @@ import {
   AfterLoad,
   AfterSave,
   AfterUpdate,
+  AppendOnly,
   BeforeDestroy,
   BeforeInsert,
   BeforeSave,
@@ -531,6 +532,35 @@ export const createTckEntities = (hookCallback: Mock) => {
     @Default(0)
     @Field("integer")
     score!: number;
+  }
+
+  /**
+   * Append-only: every criteria-based write must refuse it, on every driver.
+   *
+   * No @DeleteDateField — metadata build rejects that pairing outright, since
+   * an append-only entity cannot be soft-deleted.
+   *
+   * Nothing is ever inserted into it. The SQL drivers put BEFORE UPDATE/DELETE
+   * triggers on an append-only table, and a populated table would let the
+   * DATABASE do the refusing — hiding whether the repository guard ran at all.
+   * Empty, only the guard can refuse. (It also keeps the MySQL harness's
+   * `DELETE FROM every table` clear from tripping its own trigger.)
+   */
+  @AppendOnly()
+  @Entity({ name: "TckAppendOnly" })
+  class TckAppendOnly {
+    @PrimaryKeyField()
+    @Generated("uuid")
+    id!: string;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
   }
 
   @Entity({ name: "TckUniqueConstrained" })
@@ -1740,6 +1770,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckHooked,
     TckScoped,
     TckUnversioned,
+    TckAppendOnly,
     TckUniqueConstrained,
     TckUniqueComposite,
     TckReadonlyScoped,
