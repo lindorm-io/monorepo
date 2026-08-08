@@ -17,44 +17,29 @@ describe("createRefreshHandler", () => {
     };
   });
 
-  test("should report a refresh with the new expiry", async () => {
+  // What happened is on the headers the MIDDLEWARE set, on every mount that runs
+  // it. A body here could only be read on this one route.
+  test("should answer 204 with no body when a refresh happened", async () => {
     ctx.state.sessionRefreshed = true;
 
     await createRefreshHandler()(ctx, async () => undefined);
 
-    expect(ctx.status).toBe(200);
-    expect(ctx.body).toEqual({
-      refreshed: true,
-      expiresAt: new Date("2024-01-01T20:00:00.000Z"),
-    });
+    expect(ctx.status).toBe(204);
+    expect(ctx.body).toBeUndefined();
   });
 
   // A skipped refresh is not a failure: the session is alive and the expiry it
-  // went in with still stands. Saying so is the whole point of the route.
-  test("should report a skip with the original expiry", async () => {
+  // went in with still stands. The headers say both.
+  test("should answer 204 with no body when the refresh was skipped", async () => {
     await createRefreshHandler()(ctx, async () => undefined);
 
-    expect(ctx.status).toBe(200);
-    expect(ctx.body).toEqual({
-      refreshed: false,
-      expiresAt: new Date("2024-01-01T20:00:00.000Z"),
-    });
+    expect(ctx.status).toBe(204);
+    expect(ctx.body).toBeUndefined();
   });
 
-  // A session with no deadline of its own. `expiresAt: null` has to mean THIS
-  // and only this, which is why a destroyed session cannot also report it.
-  test("should report a null expiry for a session with no deadline", async () => {
-    ctx.state.session.expiresAt = null;
-
-    await createRefreshHandler()(ctx, async () => undefined);
-
-    expect(ctx.body).toEqual({ refreshed: false, expiresAt: null });
-  });
-
-  // The middleware deletes the session when the grant fails. `200 { refreshed:
-  // false, expiresAt: null }` would be indistinguishable from the test above,
-  // and a caller choosing between "call again later" and "re-authenticate"
-  // cannot be handed one body for both.
+  // The one thing no header can say: there is no session left. The middleware
+  // destroys it when the grant fails on THIS route, and `204` would report
+  // success for a request that logged the user out.
   test("should answer 401 when the middleware destroyed the session", async () => {
     ctx.state.session = null;
 

@@ -3,6 +3,7 @@ import { isArray, isBoolean, isFinite, isString } from "@lindorm/is";
 import type { HttpMethod } from "@lindorm/types";
 import { CorsError } from "../../errors/index.js";
 import type { PylonCorsSettings, PylonHttpContext } from "../../types/index.js";
+import { PYLON_EXPOSED_HEADERS } from "../constants/headers.js";
 
 export const handleAccessControlOrigin = (
   ctx: PylonHttpContext,
@@ -136,13 +137,24 @@ export const handleAccessControlExposeHeaders = (
   ctx: PylonHttpContext,
   options: PylonCorsSettings,
 ): void => {
-  if (!options.exposeHeaders) return;
-
   const config = isArray(options.exposeHeaders) ? options.exposeHeaders : [];
 
-  if (config.length) {
-    return ctx.set("access-control-expose-headers", config.join(","));
-  }
+  // Pylon's own `x-pylon-*` headers are ADDED to whatever the deployment
+  // configured, never instead of it. A browser cannot read a custom response
+  // header that is not named here, and a browser is the primary consumer of a
+  // cookie session — so a header pylon emits FOR the client was invisible to
+  // that client unless the deployment happened to list it, which is a thing no
+  // deployment can be expected to know. `X-Pylon-Cache` had been unreadable
+  // cross-origin since it shipped for exactly that reason.
+  //
+  // Both lists are lowercase, so a deployment that already named one of ours
+  // does not get it twice.
+  const exposed = [
+    ...PYLON_EXPOSED_HEADERS,
+    ...config.filter((header) => !PYLON_EXPOSED_HEADERS.includes(header)),
+  ];
+
+  ctx.set("access-control-expose-headers", exposed.join(","));
 };
 
 export const handleAccessControlMaxAge = (

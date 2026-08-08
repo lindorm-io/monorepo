@@ -68,7 +68,9 @@ describe("httpCorsMiddleware", () => {
     expect(ctx.set).toHaveBeenCalledWith("access-control-allow-credentials", "true");
     expect(ctx.set).toHaveBeenCalledWith(
       "access-control-expose-headers",
-      "exposed-header-1,exposed-header-2",
+      // Pylon's own headers first, the deployment's added to them — a browser
+      // cannot read a custom response header that is not named here.
+      "x-pylon-cache,x-pylon-cache-source,x-pylon-session-refreshed,x-pylon-session-expires-at,exposed-header-1,exposed-header-2",
     );
     expect(ctx.set).not.toHaveBeenCalledWith(
       "access-control-allow-methods",
@@ -109,7 +111,9 @@ describe("httpCorsMiddleware", () => {
     );
     expect(ctx.set).toHaveBeenCalledWith(
       "access-control-expose-headers",
-      "exposed-header-1,exposed-header-2",
+      // Pylon's own headers first, the deployment's added to them — a browser
+      // cannot read a custom response header that is not named here.
+      "x-pylon-cache,x-pylon-cache-source,x-pylon-session-refreshed,x-pylon-session-expires-at,exposed-header-1,exposed-header-2",
     );
     expect(ctx.set).toHaveBeenCalledWith("cross-origin-embedder-policy", "require-corp");
     expect(ctx.set).toHaveBeenCalledWith("cross-origin-opener-policy", "same-origin");

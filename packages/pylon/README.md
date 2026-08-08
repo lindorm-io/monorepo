@@ -985,6 +985,9 @@ collide with a CDN/proxy's own `X-Cache` in the response chain):
 - `X-Pylon-Cache-Source: <driverType>` — outside `production` only (so the backend isn't
   advertised publicly).
 
+Pylon's `X-Pylon-*` headers are in `Access-Control-Expose-Headers` by default, so a browser can
+read them cross-origin — see [CORS](#cors).
+
 Concurrent misses for the same key are coalesced in-process via single-flight: only one
 handler runs and its result is replayed to the waiters. This is per-Pylon-process and **not**
 distributed — across multiple containers each process may run the handler once, which is
@@ -1218,34 +1221,50 @@ Every warning is about config the deployment **wrote**. A default pylon derived 
 
 A session that holds no refresh token — one established without `offline_access` — is never refreshed under any mode. The middleware skips it and leaves it intact until its own expiry; it does not attempt the grant and does not clear the session.
 
-### The refresh route
+**A grant that fails does not mean the same thing on every route.** A spent refresh token and an IdP that was unreachable for two seconds are indistinguishable from the middleware, so which reading is safe is decided by the **mount**:
 
-`POST /:prefix/refresh` reports what happened, because the reason to call it is to decide **when to call again, and when to re-authenticate**:
+| Mount                                      | A failed grant                                                             |
+| ------------------------------------------ | -------------------------------------------------------------------------- |
+| `POST /:prefix/refresh`                    | Deletes the session. The caller asked for a working one and cannot have it |
+| `/:prefix/introspect`, `/:prefix/userinfo` | Keeps the session, logs a warning. It expires on its own terms             |
 
-```json
-{ "refreshed": true, "expires_at": "2026-08-08T13:00:00.000Z" }
-{ "refreshed": false, "expires_at": "2026-08-08T11:20:00.000Z" }
+The opportunistic mounts do **not** log the user out over a transient fault at the IdP — they were asked for something else, and a blip is not an answer to that question.
+
+### The refresh outcome
+
+The refresh middleware runs on `/refresh`, `/introspect`, `/userinfo` and any mount you add, so the outcome is produced on all of them. It is reported on **response headers**, which is the only place every one of those routes has free — the others already answer with their own payload:
+
+```
+X-Pylon-Session-Refreshed: true
+X-Pylon-Session-Expires-At: 2026-08-08T13:00:00.000Z
 ```
 
-`expires_at` is the answer either way — the **new** lifetime on a refresh, the **original** one on a skip. It is returned on success too: otherwise the client has to infer the new lifetime from configuration it may not hold.
+- `X-Pylon-Session-Refreshed` is set **whenever the middleware ran**, so its absence means "no refresh middleware on this route" rather than "not refreshed".
+- `X-Pylon-Session-Expires-At` is the **new** lifetime on a refresh and the **original** one on a skip — the answer to _when do I call again_ either way. It is **omitted** when there is no deadline to state: a session whose `expiresAt` is null, or one this request destroyed. ISO 8601 has no spelling for "none", and inventing one would be a second thing for every client to parse.
 
-A refresh whose grant **fails** deletes the session, so the route answers `401 refresh_session_required` — the same error it gives when no session was presented at all. It cannot answer `200 { "refreshed": false, "expires_at": null }`, because a live session with no deadline reports exactly that, and a caller choosing between "call again later" and "re-authenticate" cannot be handed one body for both.
+Both are in `Access-Control-Expose-Headers` by default, so a browser can read them — see [CORS](#cors).
 
-The outcome is recorded by the **middleware** on `ctx.state.sessionRefreshed` and reported by the **route**. The middleware never learns why it ran — `/refresh` synthesises `mode: "force"`, but `force` is also a legitimate configured mode on `/introspect` and `/userinfo` — so an opportunistic refresh on any mounted route records the same fact, and a handler of your own can read it.
+The outcome is also on `ctx.state.sessionRefreshed` for a handler of your own. The middleware never learns why it ran — `/refresh` synthesises `mode: "force"`, but `force` is also a legitimate configured mode on `/introspect` and `/userinfo` — so an opportunistic refresh on any mounted route records the same fact, because it is the same fact.
+
+### The refresh route
+
+`POST /:prefix/refresh` answers **`204` with no body**. What happened is on the headers above.
+
+It answers `401 refresh_session_required` when the grant failed — the same error it gives when no session was presented at all. That is the one thing no header can say: after this request there is no session either way, and `204` would report success for a request that logged the user out.
 
 ⚠ **`POST`, not `GET`.** The exchange mints new tokens and rewrites the stored session, which is not a safe method (RFC 9110 §9.2.1); `@lindorm/zephyr`'s `createCookieAuthStrategy` already POSTs to whatever refresh URL it is given.
 
-| Route                              | Description                                                            |
-| ---------------------------------- | ---------------------------------------------------------------------- |
-| `GET /:prefix/login`               | Start the authorize flow — sets the login cookie, redirects to the IdP |
-| `GET /:prefix/login/callback`      | Handle the authorize callback, exchange the code, set the session      |
-| `GET /:prefix/logout`              | Start RP-initiated logout                                              |
-| `GET /:prefix/logout/callback`     | Handle the IdP's post-logout redirect                                  |
-| `POST /:prefix/backchannel-logout` | Handle RP-initiated backchannel logout                                 |
-| `POST /:prefix/refresh`            | Force-refresh the session's tokens — see [below](#the-refresh-route)   |
-| `GET /:prefix/userinfo`            | Return `ctx.auth.userinfo()` (id-token fast path with driver fallback) |
-| `GET /:prefix/introspect`          | Return `ctx.auth.introspect()` (RFC 7662 metadata)                     |
-| `GET /:prefix/error`               | OIDC error landing page                                                |
+| Route                              | Description                                                                 |
+| ---------------------------------- | --------------------------------------------------------------------------- |
+| `GET /:prefix/login`               | Start the authorize flow — sets the login cookie, redirects to the IdP      |
+| `GET /:prefix/login/callback`      | Handle the authorize callback, exchange the code, set the session           |
+| `GET /:prefix/logout`              | Start RP-initiated logout                                                   |
+| `GET /:prefix/logout/callback`     | Handle the IdP's post-logout redirect                                       |
+| `POST /:prefix/backchannel-logout` | Handle RP-initiated backchannel logout                                      |
+| `POST /:prefix/refresh`            | Force-refresh the session's tokens — `204`, see [above](#the-refresh-route) |
+| `GET /:prefix/userinfo`            | Return `ctx.auth.userinfo()` (id-token fast path with driver fallback)      |
+| `GET /:prefix/introspect`          | Return `ctx.auth.introspect()` (RFC 7662 metadata)                          |
+| `GET /:prefix/error`               | OIDC error landing page                                                     |
 
 `ctx.auth.userinfo()` answers _who is this user?_ — it parses the id token locally when possible and falls back to the IdP's userinfo endpoint. `ctx.auth.introspect()` answers _is this token valid, what can it do, when does it expire?_.
 
@@ -1707,6 +1726,8 @@ const app = new Pylon({
 ```
 
 Use `"*"` for `allowOrigins`, `allowMethods`, or `allowHeaders` to allow everything. When socket and session are both enabled, Pylon refuses to start unless `cors.allowOrigins` is an explicit array (the wildcard would expose the session to Cross-Site WebSocket Hijacking).
+
+`exposeHeaders` is **added to** Pylon's own headers, never instead of them. A browser cannot read a custom response header that is not in `Access-Control-Expose-Headers`, so `X-Pylon-Cache`, `X-Pylon-Cache-Source`, `X-Pylon-Session-Refreshed` and `X-Pylon-Session-Expires-At` are always exposed — a header Pylon emits for the client should not depend on the deployment having thought to list it.
 
 ## Body parsing
 

@@ -1,12 +1,17 @@
-// `POST /:prefix/refresh` through the REAL auth router — real refresh
-// middleware, real driver, real session store, real cookie.
+// The refresh OUTCOME through the REAL auth router — real refresh middleware,
+// real driver, real session store, real cookie.
 //
 // The route used to answer 204 with an empty body whether the session was
 // refreshed or skipped entirely, so a caller could not tell "you have a fresh
 // lifetime" from "nothing happened, the old expiry stands" — which is the one
-// question the endpoint exists to answer. Only an end-to-end run proves the
-// reporting, because what is being asserted is the seam: the MIDDLEWARE records
-// what it did on `ctx.state`, the ROUTE reads it back.
+// question it exists to answer. It then answered with a body, which was worse
+// in a different way: the same middleware runs on `/introspect` and
+// `/userinfo`, so the fact is produced on every one of those routes, and a body
+// field could only ever be read on one of them.
+//
+// It is reported on RESPONSE HEADERS, which is what this suite proves — not by
+// asserting the claim on `/refresh` and taking the others on trust, but by
+// running all three.
 
 import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
@@ -17,15 +22,11 @@ import { randomUUID } from "crypto";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { createLoopbackRequest } from "../__fixtures__/loopback-request.js";
 import type { IPylonAuthDriver } from "../interfaces/index.js";
-import type { PylonAuthTokenResult, PylonEncKey } from "../types/index.js";
+import type { PylonAuthTokenResult } from "../types/index.js";
 import { Pylon } from "./Pylon.js";
 import { PylonRouter } from "./PylonRouter.js";
 
 const ISSUER = "http://auth-refresh.test.lindorm.io";
-
-const SESSION_KEY: PylonEncKey = {
-  condition: { purpose: "pylon:kek", publish: false },
-};
 
 /** The lifetime the seeded session starts with. */
 const SEEDED_EXPIRES_IN = 3600;
@@ -84,24 +85,35 @@ const createSeedRouter = (): PylonRouter<any> => {
   const router = new PylonRouter<any>();
 
   router.post("/seed", async (ctx) => {
-    const signed = await ctx.aegis.mint("default", {
+    const access = await ctx.aegis.mint("default", {
       audience: [ISSUER],
       expires: `${SEEDED_EXPIRES_IN} seconds`,
       subject: "alice",
       tokenType: "access_token",
     });
 
+    // An id token as well, so `/userinfo`'s local fast path can answer without
+    // a driver `userinfo` method — this suite is about the middleware in front
+    // of the handlers, not the handlers.
+    const id = await ctx.aegis.mint("default", {
+      audience: ["client-id"],
+      expires: `${SEEDED_EXPIRES_IN} seconds`,
+      subject: "alice",
+      tokenType: "id_token",
+    });
+
     await ctx.session.set({
       id: randomUUID(),
-      accessToken: signed.token,
-      expiresAt: signed.expiresAt,
+      accessToken: access.token,
+      expiresAt: access.expiresAt,
+      idToken: id.token,
       issuedAt: new Date(),
       scope: [],
       subject: "alice",
       ...(ctx.data?.withRefreshToken === false ? {} : { refreshToken: "refresh-token" }),
     });
 
-    ctx.body = { expiresAt: signed.expiresAt };
+    ctx.body = { expiresAt: access.expiresAt };
     ctx.status = 200;
   });
 
@@ -113,7 +125,7 @@ const loopback = createLoopbackRequest();
 beforeAll(() => loopback.start());
 afterAll(() => loopback.stop());
 
-describe("POST /auth/refresh", () => {
+describe("refresh outcome headers", () => {
   let pylon: Pylon;
   let logger: ILogger;
   let amphora: IAmphora;
@@ -124,11 +136,6 @@ describe("POST /auth/refresh", () => {
 
     amphora = new Amphora({ internal: { issuer: ISSUER }, logger });
 
-    const kek: IKryptos = KryptosKit.generate.enc.oct({
-      algorithm: "A128KW",
-      publish: false,
-      purpose: "pylon:kek",
-    });
     const sig: IKryptos = KryptosKit.generate.sig.ec({
       algorithm: "ES256",
       curve: "P-256",
@@ -136,7 +143,7 @@ describe("POST /auth/refresh", () => {
       purpose: "token",
     });
 
-    amphora.add([kek, sig]);
+    amphora.add([sig]);
 
     kv = new ProteusSource({
       driver: "sqlite",
@@ -158,8 +165,17 @@ describe("POST /auth/refresh", () => {
       kv: kv as any,
       auth: {
         driver: createDriver(),
+        // `force` on every mount: `/introspect` and `/userinfo` refresh
+        // opportunistically under it, which is the case the headers exist for.
+        refresh: { mode: "force" },
         router: { pathPrefix: "/auth" },
-        session: { enabled: true, encryption: SESSION_KEY },
+        // ⚠ No session `encryption` here, deliberately: `/introspect` and
+        // `/userinfo` must read the stored tokens back, and an encrypted store
+        // currently hands back ciphertext — `createSessionStore`'s read path is
+        // gated on `amphora.canDecrypt()`, which applies amphora's DEFAULT key
+        // gate and so cannot see an internal unpublished KEK, the very key the
+        // write path encrypted with.
+        session: { enabled: true },
       },
       routes: [{ path: "/test", router: createSeedRouter() }],
     });
@@ -191,41 +207,78 @@ describe("POST /auth/refresh", () => {
     return { cookie: pair, expiresAt: response.body.expires_at };
   };
 
-  test("should report refreshed: true and the NEW expiry", async () => {
+  const assertRefreshed = (expiresAt: string | undefined, was: string): void => {
+    // The new lifetime, not the configured one the caller may not hold — and
+    // demonstrably not the one the session went in with.
+    expect(expiresAt).toBeDefined();
+    expect(expiresAt).not.toBe(was);
+
+    const seconds = (new Date(expiresAt!).getTime() - Date.now()) / 1000;
+
+    expect(seconds).toBeGreaterThan(SEEDED_EXPIRES_IN);
+    expect(seconds).toBeLessThanOrEqual(REFRESHED_EXPIRES_IN);
+  };
+
+  test("should answer 204 with no body on the refresh route", async () => {
     const seeded = await seed(true);
 
     const response = await loopback
       .request(pylon.callback)
       .post("/auth/refresh")
       .set("cookie", seeded.cookie)
+      .expect(204);
+
+    expect(response.text).toBe("");
+    expect(response.get("x-pylon-session-refreshed")).toBe("true");
+
+    assertRefreshed(response.get("x-pylon-session-expires-at"), seeded.expiresAt);
+  });
+
+  // The claim is that the outcome is readable wherever the middleware ran. Run
+  // it on the two routes it rides along on, rather than asserting it once and
+  // trusting the wiring.
+  test("should report an opportunistic refresh on /introspect", async () => {
+    const seeded = await seed(true);
+
+    const response = await loopback
+      .request(pylon.callback)
+      .get("/auth/introspect")
+      .set("cookie", seeded.cookie)
       .expect(200);
 
-    expect(response.body.refreshed).toBe(true);
+    expect(response.get("x-pylon-session-refreshed")).toBe("true");
 
-    // The new lifetime, not the configured one the caller may not hold — and
-    // demonstrably not the one it went in with.
-    expect(response.body.expires_at).not.toBe(seeded.expiresAt);
+    assertRefreshed(response.get("x-pylon-session-expires-at"), seeded.expiresAt);
+  });
 
-    const seconds = (new Date(response.body.expires_at).getTime() - Date.now()) / 1000;
+  test("should report an opportunistic refresh on /userinfo", async () => {
+    const seeded = await seed(true);
 
-    expect(seconds).toBeGreaterThan(SEEDED_EXPIRES_IN);
-    expect(seconds).toBeLessThanOrEqual(REFRESHED_EXPIRES_IN);
+    const response = await loopback
+      .request(pylon.callback)
+      .get("/auth/userinfo")
+      .set("cookie", seeded.cookie)
+      .expect(200);
+
+    expect(response.get("x-pylon-session-refreshed")).toBe("true");
+
+    assertRefreshed(response.get("x-pylon-session-expires-at"), seeded.expiresAt);
   });
 
   // A session established without `offline_access` holds no refresh token, so
   // there is nothing to exchange. The middleware SKIPS it and leaves it intact —
   // the caller must learn that the old expiry still stands.
-  test("should report refreshed: false and the ORIGINAL expiry when there is no refresh token", async () => {
+  test("should report false and the ORIGINAL expiry when there is no refresh token", async () => {
     const seeded = await seed(false);
 
     const response = await loopback
       .request(pylon.callback)
       .post("/auth/refresh")
       .set("cookie", seeded.cookie)
-      .expect(200);
+      .expect(204);
 
-    expect(response.body.refreshed).toBe(false);
-    expect(response.body.expires_at).toBe(seeded.expiresAt);
+    expect(response.get("x-pylon-session-refreshed")).toBe("false");
+    expect(response.get("x-pylon-session-expires-at")).toBe(seeded.expiresAt);
   });
 
   test("should answer 401 when no session is presented", async () => {
@@ -235,5 +288,10 @@ describe("POST /auth/refresh", () => {
       .expect(401);
 
     expect(response.body.error.code).toBe("refresh_session_required");
+
+    // The middleware threw before it could do anything, so there is no outcome
+    // to report — and a header that is set unconditionally when it RAN is what
+    // makes that absence readable.
+    expect(response.get("x-pylon-session-refreshed")).toBeUndefined();
   });
 });

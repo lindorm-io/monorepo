@@ -6,6 +6,10 @@ import type {
   PylonHttpContext,
   PylonHttpMiddleware,
 } from "../../../types/index.js";
+import {
+  PYLON_SESSION_EXPIRES_AT_HEADER,
+  PYLON_SESSION_REFRESHED_HEADER,
+} from "../../constants/headers.js";
 import { createAuthDriverContext } from "./create-auth-driver-context.js";
 import { parseTokenData } from "./parse-token-data.js";
 
@@ -43,8 +47,34 @@ const getAutoRefresh = (ctx: PylonHttpContext, config: PylonAuthConfig): number 
   }
 };
 
+export type RefreshMiddlewareConfig = {
+  /**
+   * What a grant that FAILED means for the session.
+   *
+   * A failed exchange is ambiguous on its own: the refresh token may genuinely
+   * be spent or revoked, or the IdP may simply have been unreachable for the
+   * two seconds this request took. The middleware cannot tell those apart —
+   * only the MOUNT can say which reading is the safe one, so the mount declares
+   * it and the middleware still never learns why it ran.
+   *
+   * - `true` — the caller asked for a working session and cannot be given one,
+   *   so the dead reading is the honest one. `POST /:prefix/refresh`.
+   * - `false` (default) — the refresh was opportunistic, riding along a request
+   *   that asked for something else. The session is left to expire on its own
+   *   terms and the failure is logged; a transient network fault on a read must
+   *   not log the user out.
+   *
+   * Defaulted to `false` deliberately. Deleting a session is destructive and
+   * unrecoverable, so it is opt-in: forgetting the flag costs a session that
+   * outlives its usefulness until its own expiry, while the opposite default
+   * would cost users their session on any blip at the IdP.
+   */
+  deleteSessionOnFailedGrant?: boolean;
+};
+
 export const createRefreshMiddleware = <C extends PylonHttpContext>(
   config: PylonAuthConfig,
+  { deleteSessionOnFailedGrant = false }: RefreshMiddlewareConfig = {},
 ): PylonHttpMiddleware<C> =>
   async function refreshMiddleware(ctx, next) {
     if (!ctx.state.session) {
@@ -81,26 +111,53 @@ export const createRefreshMiddleware = <C extends PylonHttpContext>(
             await ctx.session.set(ctx.state.session);
 
             // Recorded HERE and only here — one exchange with the token
-            // endpoint, one `true`. The middleware states what it did and stops;
-            // reporting it is `/refresh`'s job, and an opportunistic refresh on
-            // `/introspect` or `/userinfo` records the same fact because it IS
-            // the same fact.
+            // endpoint, one `true`. An opportunistic refresh on `/introspect` or
+            // `/userinfo` records the same fact because it IS the same fact.
             ctx.state.sessionRefreshed = true;
           } catch (error) {
-            ctx.logger.warn("Token refresh failed, clearing session", { error });
-            await ctx.session.del();
-            ctx.state.session = null;
+            if (deleteSessionOnFailedGrant) {
+              ctx.logger.warn("Token refresh failed, deleting session", { error });
+              await ctx.session.del();
+              ctx.state.session = null;
+            } else {
+              ctx.logger.warn(
+                "Token refresh failed, keeping session until its own expiry",
+                { error },
+              );
+            }
           }
         } else {
           // A session established without `offline_access` never receives a
           // refresh token, so there is nothing to exchange. Skipping keeps it
-          // alive until its own expiry — attempting the grant would fail and
-          // the catch above would read that as a dead session and delete it.
+          // alive until its own expiry — attempting the grant would fail, and
+          // on a mount that reads a failure as a dead session that would delete
+          // a session which was never renewable in the first place.
           ctx.logger.debug("Skipping token refresh, session has no refresh token", {
             sessionId: ctx.state.session.id,
           });
         }
       }
+    }
+
+    // The outcome is reported as RESPONSE HEADERS, not as a body field. This
+    // middleware runs on `/refresh`, `/introspect`, `/userinfo` and any mount a
+    // deployment adds, so the fact is produced on every one of them — but only
+    // `/refresh` has a body free to carry it; the others already answer with
+    // their own payload. A header reports it uniformly wherever the middleware
+    // ran, which is what makes an opportunistic refresh observable at all.
+    //
+    // `Refreshed` is set unconditionally, so its ABSENCE means "no refresh
+    // middleware on this route" rather than "not refreshed" — one reading, not
+    // two. `Expires-At` is omitted when there is no deadline to state: a session
+    // whose `expiresAt` is null, or one this request destroyed. The header's
+    // value space is ISO 8601 and has no spelling for "none"; inventing one
+    // (`null`, empty) would be a second thing for every client to parse, while
+    // the pair already says it — `Refreshed` present means the middleware ran,
+    // `Expires-At` absent means this session carries no deadline.
+    ctx.set(PYLON_SESSION_REFRESHED_HEADER, ctx.state.sessionRefreshed.toString());
+
+    if (isDate(ctx.state.session?.expiresAt)) {
+      ctx.set(PYLON_SESSION_EXPIRES_AT_HEADER, ctx.state.session.expiresAt.toISOString());
     }
 
     await next();

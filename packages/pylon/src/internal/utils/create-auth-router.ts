@@ -19,16 +19,22 @@ export const createAuthRouter = <C extends PylonHttpContext>(
   const router = new PylonRouter<C>();
   const routerConfig = config.router!;
 
-  const refreshMiddleware = createRefreshMiddleware(config);
-  const forceRefresh = createRefreshMiddleware(
+  // Two mounts, two readings of a failed grant — declared HERE, where the
+  // difference is known, so the middleware still never has to ask why it ran. A
+  // refresh riding along a read must not log the user out over a blip at the
+  // IdP; `/refresh` was asked for a working session and cannot supply one, so
+  // for it the dead reading is the honest one.
+  const opportunisticRefresh = createRefreshMiddleware(config);
+  const explicitRefresh = createRefreshMiddleware(
     merge(config, { refresh: { mode: "force" } }),
+    { deleteSessionOnFailedGrant: true },
   );
 
   router.post("/backchannel-logout", backchannelLogoutHandler);
 
   router.get("/error", errorHandler);
 
-  router.get("/introspect", refreshMiddleware, createIntrospectHandler());
+  router.get("/introspect", opportunisticRefresh, createIntrospectHandler());
 
   router.get("/login", useSchema(loginSchema), createLoginHandler(routerConfig));
 
@@ -42,9 +48,9 @@ export const createAuthRouter = <C extends PylonHttpContext>(
   // session, which is not a safe method (RFC 9110 §9.2.1) — and `@lindorm/zephyr`'s
   // `createCookieAuthStrategy` already POSTs to whatever refresh URL it is given,
   // so a GET-only route was one a pylon's own socket client could not call.
-  router.post("/refresh", forceRefresh, createRefreshHandler());
+  router.post("/refresh", explicitRefresh, createRefreshHandler());
 
-  router.get("/userinfo", refreshMiddleware, createUserinfoHandler());
+  router.get("/userinfo", opportunisticRefresh, createUserinfoHandler());
 
   return router;
 };

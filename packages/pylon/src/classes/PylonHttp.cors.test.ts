@@ -29,6 +29,7 @@ describe("PylonHttp CORS integration (F17)", () => {
         allowOrigins: "*",
         allowMethods: ["GET", "POST"],
         allowHeaders: ["content-type"],
+        exposeHeaders: ["x-request-id"],
         maxAge: "1h",
       },
       routes: { path: "/v1", router },
@@ -82,6 +83,33 @@ describe("PylonHttp CORS integration (F17)", () => {
     expect(res.headers.get("access-control-allow-origin")).toBe("*");
     expect(res.headers.get("access-control-allow-methods")).toBe("GET");
     expect(res.headers.get("access-control-allow-headers")).toBe("content-type");
+  });
+
+  // Pylon emits `X-Pylon-Session-Refreshed` / `X-Pylon-Cache` for the CLIENT's
+  // benefit, and a browser cannot read a custom response header that is not in
+  // Access-Control-Expose-Headers. Left to the deployment's `exposeHeaders`,
+  // they were readable only where someone had thought to list them — so pylon
+  // names its own, added to what the deployment configured.
+  test("an actual cross-origin response exposes pylon's headers alongside the deployment's", async () => {
+    const res = await fetch(`${baseUrl}/v1/genres`, {
+      headers: { origin: "http://localhost:5173" },
+    });
+
+    const exposed = (res.headers.get("access-control-expose-headers") ?? "")
+      .split(",")
+      .map((header) => header.trim());
+
+    expect(exposed).toEqual(
+      expect.arrayContaining([
+        "x-pylon-session-refreshed",
+        "x-pylon-session-expires-at",
+        "x-pylon-cache",
+        "x-pylon-cache-source",
+      ]),
+    );
+
+    // Alongside, not instead of.
+    expect(exposed).toContain("x-request-id");
   });
 
   // A same-origin / non-browser request (no Origin header) must not be rejected

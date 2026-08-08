@@ -3,6 +3,10 @@ import { ServerError } from "@lindorm/errors";
 import { ShaKit } from "@lindorm/sha";
 import { sortKeys } from "@lindorm/utils";
 import type { CachedResponsePayload } from "../../entities/CachedResponse.js";
+import {
+  PYLON_CACHE_HEADER,
+  PYLON_CACHE_SOURCE_HEADER,
+} from "../../internal/constants/headers.js";
 import { isHttpContext } from "../../internal/utils/is-context.js";
 import { resolveActor } from "../../internal/utils/resolve-actor.js";
 import type {
@@ -122,7 +126,7 @@ export const useCache = (
     }
 
     if (options.skip?.(ctx)) {
-      ctx.set("X-Pylon-Cache", "BYPASS");
+      ctx.set(PYLON_CACHE_HEADER, "BYPASS");
       await next();
       return;
     }
@@ -157,12 +161,12 @@ export const useCache = (
       etag: string | undefined,
       age: number,
     ) => {
-      ctx.set("X-Pylon-Cache", state);
+      ctx.set(PYLON_CACHE_HEADER, state);
       if (etag) ctx.set("ETag", etag);
       ctx.set("Cache-Control", cacheControl);
       ctx.set("Age", String(age));
       if (ctx.state?.app?.environment !== "production") {
-        ctx.set("X-Pylon-Cache-Source", driverType);
+        ctx.set(PYLON_CACHE_SOURCE_HEADER, driverType);
       }
     };
 
@@ -180,7 +184,7 @@ export const useCache = (
 
     // no-store: bypass entirely, no read, no write.
     if (noStore) {
-      ctx.set("X-Pylon-Cache", "BYPASS");
+      ctx.set(PYLON_CACHE_HEADER, "BYPASS");
       await next();
       return;
     }
@@ -199,7 +203,7 @@ export const useCache = (
           "Response cache: `private` scope with no resolvable actor; skipping cache",
           { method: ctx.method, path: ctx.path },
         );
-        ctx.set("X-Pylon-Cache", "DYNAMIC");
+        ctx.set(PYLON_CACHE_HEADER, "DYNAMIC");
         await next();
         return;
       }
@@ -255,7 +259,7 @@ export const useCache = (
 
       // Non-cacheable (or the originator threw): run independently; nothing stored.
       await next();
-      ctx.set("X-Pylon-Cache", "DYNAMIC");
+      ctx.set(PYLON_CACHE_HEADER, "DYNAMIC");
       return;
     }
 
@@ -274,7 +278,7 @@ export const useCache = (
 
     if (!result.cacheable) {
       // Computed but not eligible to store (3xx / stream / >=400 / oversize).
-      ctx.set("X-Pylon-Cache", "DYNAMIC");
+      ctx.set(PYLON_CACHE_HEADER, "DYNAMIC");
       return;
     }
 

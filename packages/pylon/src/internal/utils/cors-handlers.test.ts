@@ -212,28 +212,48 @@ describe("handleAccessControlMethods", () => {
   });
 });
 
+// A browser cannot read a custom response header that is not named here, so a
+// header pylon emits FOR the client is invisible to that client unless pylon
+// names it itself. Nothing a deployment configures can be the reason its own
+// framework's headers are readable.
 describe("handleAccessControlExposeHeaders", () => {
-  test("should not set header when exposeHeaders is not set", () => {
+  const PYLON_HEADERS =
+    "x-pylon-cache,x-pylon-cache-source,x-pylon-session-refreshed,x-pylon-session-expires-at";
+
+  test("should expose pylon's own headers when exposeHeaders is not set", () => {
     const ctx = createCtx();
     handleAccessControlExposeHeaders(ctx, {});
-    expect(ctx.set).not.toHaveBeenCalled();
+    expect(ctx.set).toHaveBeenCalledWith("access-control-expose-headers", PYLON_HEADERS);
   });
 
-  test("should set expose headers", () => {
+  test("should ADD the deployment's headers to pylon's, not replace them", () => {
     const ctx = createCtx();
     handleAccessControlExposeHeaders(ctx, {
       exposeHeaders: ["x-request-id", "x-correlation-id"],
     });
     expect(ctx.set).toHaveBeenCalledWith(
       "access-control-expose-headers",
-      "x-request-id,x-correlation-id",
+      `${PYLON_HEADERS},x-request-id,x-correlation-id`,
     );
   });
 
-  test("should not set header when exposeHeaders is empty array", () => {
+  test("should expose pylon's own headers when exposeHeaders is an empty array", () => {
     const ctx = createCtx();
     handleAccessControlExposeHeaders(ctx, { exposeHeaders: [] });
-    expect(ctx.set).not.toHaveBeenCalled();
+    expect(ctx.set).toHaveBeenCalledWith("access-control-expose-headers", PYLON_HEADERS);
+  });
+
+  // Both lists are lowercase, so a deployment that already named one of ours
+  // does not get it twice.
+  test("should not repeat a header the deployment already named", () => {
+    const ctx = createCtx();
+    handleAccessControlExposeHeaders(ctx, {
+      exposeHeaders: ["x-pylon-cache", "x-request-id"],
+    });
+    expect(ctx.set).toHaveBeenCalledWith(
+      "access-control-expose-headers",
+      `${PYLON_HEADERS},x-request-id`,
+    );
   });
 });
 

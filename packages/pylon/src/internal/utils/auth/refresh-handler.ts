@@ -2,27 +2,22 @@ import { ClientError } from "@lindorm/errors";
 import type { PylonHttpContext, PylonHttpMiddleware } from "../../../types/index.js";
 
 /**
- * Reports what the refresh middleware in front of it DID.
+ * `POST /:prefix/refresh` answers `204` with no body.
  *
- * The route used to answer `204` with an empty body whether the session was
- * refreshed or skipped entirely, which made the endpoint unusable for the one
- * question it exists to answer: when do I call again, and when do I have to send
- * the user back to the IdP? `expiresAt` is that answer, and it is worth returning
- * on success too — otherwise a client has to infer the new lifetime from
- * configuration it does not hold.
+ * What happened is reported by the refresh MIDDLEWARE, on
+ * `X-Pylon-Session-Refreshed` and `X-Pylon-Session-Expires-At`. It has to be:
+ * the same middleware runs on `/introspect`, `/userinfo` and any mount a
+ * deployment adds, and those routes have no body to spare — they answer with
+ * their own payload. A body field would have made the outcome readable on
+ * exactly one of the routes that produce it.
  *
- * Three outcomes, three distinct answers:
- *
- * - refreshed ⇒ `200 { refreshed: true, expiresAt }` — the NEW expiry.
- * - skipped ⇒ `200 { refreshed: false, expiresAt }` — the ORIGINAL expiry still
- *   stands. A session without a refresh token (no `offline_access`) is the
- *   common case; it is alive, just not renewable.
- * - the grant FAILED ⇒ the middleware deleted the session, so `401`. It cannot
- *   be `200 { refreshed: false, expiresAt: null }`: a live session with no
- *   deadline reports exactly that, and a caller that must choose between calling
- *   again and re-authenticating cannot be handed one body for both. The same
- *   `refresh_session_required` the middleware throws when there was no session to
- *   begin with — after this request there is none either way.
+ * So this handler exists for ONE thing the headers cannot say: whether there is
+ * still a session at all. A grant that fails on this route destroys it (the
+ * caller asked for a working session and cannot be given one), and answering
+ * `204` for that would report success for a request that left the user logged
+ * out. It answers the same `refresh_session_required` the middleware throws when
+ * no session was presented to begin with — after this request there is none
+ * either way.
  */
 export const createRefreshHandler = <
   C extends PylonHttpContext,
@@ -38,9 +33,5 @@ export const createRefreshHandler = <
       });
     }
 
-    ctx.body = {
-      refreshed: ctx.state.sessionRefreshed,
-      expiresAt: ctx.state.session.expiresAt,
-    };
-    ctx.status = 200;
+    ctx.status = 204;
   };

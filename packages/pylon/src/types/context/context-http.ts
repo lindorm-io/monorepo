@@ -41,11 +41,15 @@ export type PylonHttpState = PylonState & {
    * synthesises `mode: "force"`, but `force` is also a legitimate configured mode
    * on `/introspect` and `/userinfo`, so the mode cannot tell an explicit refresh
    * from an opportunistic one — and does not have to. Every mount records
-   * alike, and the route that cares reports it.
+   * alike, and every mount reports it on `X-Pylon-Session-Refreshed`.
    *
    * `false` covers every non-refresh outcome: the mode said not yet, the driver
-   * has no refresh grant, the session held no refresh token, or the grant failed
-   * (in which case `session` is `null` — the session is gone, not stale).
+   * has no refresh grant, the session held no refresh token, or the grant
+   * failed. A failed grant leaves `session` `null` only on the mount that reads
+   * a failure as a dead session — `POST /:prefix/refresh`, which was asked for a
+   * working session. An opportunistic refresh on `/introspect` or `/userinfo`
+   * leaves the session in place to expire on its own terms, so `session` is
+   * still the one the request came in with.
    */
   sessionRefreshed: boolean;
 };

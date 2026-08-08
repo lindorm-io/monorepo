@@ -35,6 +35,7 @@ describe("createRefreshMiddleware", async () => {
       },
       amphora: {},
       logger: createMockLogger(),
+      set: vi.fn(),
       session: {
         get: vi.fn(),
         set: vi.fn(),
@@ -116,13 +117,98 @@ describe("createRefreshMiddleware", async () => {
       expect(ctx.state.sessionRefreshed).toBe(false);
     });
 
-    test("should stay false when the grant fails and the session is cleared", async () => {
+    test("should stay false when the grant fails and the session is deleted", async () => {
+      refresh.mockRejectedValue(new Error("invalid_grant"));
+
+      await createRefreshMiddleware(authConfig, { deleteSessionOnFailedGrant: true })(
+        ctx,
+        vi.fn(),
+      );
+
+      expect(ctx.state.sessionRefreshed).toBe(false);
+      expect(ctx.state.session).toBeNull();
+    });
+
+    test("should stay false when the grant fails and the session is kept", async () => {
       refresh.mockRejectedValue(new Error("invalid_grant"));
 
       await createRefreshMiddleware(authConfig)(ctx, vi.fn());
 
       expect(ctx.state.sessionRefreshed).toBe(false);
-      expect(ctx.state.session).toBeNull();
+      expect(ctx.state.session).not.toBeNull();
+    });
+  });
+
+  // Reported on HEADERS, because this middleware runs on `/refresh`,
+  // `/introspect`, `/userinfo` and any mount a deployment adds — and only
+  // `/refresh` has a body free to carry it.
+  describe("outcome reported on response headers", () => {
+    test("should report a refresh and the NEW expiry", async () => {
+      const expiresAt = new Date("2024-01-02T08:00:00.000Z");
+      parseTokenData.mockResolvedValue({ ...ctx.state.session, expiresAt });
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.set).toHaveBeenCalledWith("X-Pylon-Session-Refreshed", "true");
+      expect(ctx.set).toHaveBeenCalledWith(
+        "X-Pylon-Session-Expires-At",
+        "2024-01-02T08:00:00.000Z",
+      );
+    });
+
+    test("should report a skip and the ORIGINAL expiry", async () => {
+      const { expiresAt } = ctx.state.session;
+      delete ctx.state.session.refreshToken;
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.set).toHaveBeenCalledWith("X-Pylon-Session-Refreshed", "false");
+      expect(ctx.set).toHaveBeenCalledWith(
+        "X-Pylon-Session-Expires-At",
+        expiresAt.toISOString(),
+      );
+    });
+
+    // `false` is still reported: the header is present whenever the middleware
+    // ran, so a client reads its ABSENCE as "no refresh middleware here" rather
+    // than having to guess between that and "not refreshed".
+    test("should report false when the mode says never", async () => {
+      authConfig.refresh.mode = "none";
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.set).toHaveBeenCalledWith("X-Pylon-Session-Refreshed", "false");
+    });
+
+    // ISO 8601 has no spelling for "no deadline", and inventing one would be a
+    // second thing for every client to parse. The pair says it instead:
+    // `Refreshed` present, `Expires-At` absent.
+    test("should omit the expiry header for a session with no deadline", async () => {
+      authConfig.refresh.mode = "none";
+      ctx.state.session.expiresAt = null;
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.set).toHaveBeenCalledWith("X-Pylon-Session-Refreshed", "false");
+      expect(ctx.set).not.toHaveBeenCalledWith(
+        "X-Pylon-Session-Expires-At",
+        expect.anything(),
+      );
+    });
+
+    test("should omit the expiry header when the failed grant destroyed the session", async () => {
+      refresh.mockRejectedValue(new Error("invalid_grant"));
+
+      await createRefreshMiddleware(authConfig, { deleteSessionOnFailedGrant: true })(
+        ctx,
+        vi.fn(),
+      );
+
+      expect(ctx.set).toHaveBeenCalledWith("X-Pylon-Session-Refreshed", "false");
+      expect(ctx.set).not.toHaveBeenCalledWith(
+        "X-Pylon-Session-Expires-At",
+        expect.anything(),
+      );
     });
   });
 
@@ -204,15 +290,43 @@ describe("createRefreshMiddleware", async () => {
     expect(ctx.logger.debug).toHaveBeenCalled();
   });
 
-  test("should clear the session when a refresh with a refresh token fails", async () => {
-    refresh.mockRejectedValue(new Error("invalid_grant"));
+  // A failed exchange is ambiguous — a spent refresh token and an IdP that was
+  // unreachable for two seconds look identical from here. The MOUNT declares
+  // which reading is the safe one; the middleware still never learns why it ran.
+  describe("a grant that fails", () => {
+    beforeEach(() => {
+      refresh.mockRejectedValue(new Error("invalid_grant"));
+    });
 
-    await expect(
-      createRefreshMiddleware(authConfig)(ctx, vi.fn()),
-    ).resolves.toBeUndefined();
+    test("should delete the session when the mount asked for that", async () => {
+      await expect(
+        createRefreshMiddleware(authConfig, { deleteSessionOnFailedGrant: true })(
+          ctx,
+          vi.fn(),
+        ),
+      ).resolves.toBeUndefined();
 
-    expect(ctx.session.del).toHaveBeenCalled();
-    expect(ctx.state.session).toBeNull();
+      expect(ctx.session.del).toHaveBeenCalled();
+      expect(ctx.state.session).toBeNull();
+      expect(ctx.logger.warn).toHaveBeenCalled();
+    });
+
+    // The default. Deleting is destructive and unrecoverable, so it is opt-in:
+    // an opportunistic refresh behind `/introspect` or `/userinfo` must not log
+    // the user out over a transient failure at the IdP.
+    test("should keep the session by default, unchanged", async () => {
+      const before = ctx.state.session;
+
+      await expect(
+        createRefreshMiddleware(authConfig)(ctx, vi.fn()),
+      ).resolves.toBeUndefined();
+
+      expect(ctx.session.del).not.toHaveBeenCalled();
+      expect(ctx.session.set).not.toHaveBeenCalled();
+      expect(ctx.state.session).toBe(before);
+      expect(ctx.state.session.expiresAt).toEqual(before.expiresAt);
+      expect(ctx.logger.warn).toHaveBeenCalled();
+    });
   });
 
   // Capability wins over policy. A provider with no refresh grant (GitHub
