@@ -1,0 +1,20 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildOldEntity > should overlay the snapshot's prior values onto the entity 1`] = `
+Thing {
+  "age": 30,
+  "id": "1",
+  "name": "original",
+  "version": 1,
+}
+`;
+
+exports[`buildOldEntity — embedded fields > should read the prior nested values from under the parent key 1`] = `
+Place {
+  "address": Address {
+    "city": "Springfield",
+    "street": "Old St",
+  },
+  "id": "1",
+}
+`;

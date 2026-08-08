@@ -60,6 +60,7 @@ import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.j
 import { resolveTableName } from "../utils/query/resolve-table-name.js";
 import { DuplicateKeyError } from "../../../errors/DuplicateKeyError.js";
 import { PostgresCursor } from "./PostgresCursor.js";
+import { buildOldEntity } from "../../../entity/utils/build-old-entity.js";
 import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store.js";
 import { diffColumns } from "../../../entity/utils/diff-columns.js";
 import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
@@ -619,7 +620,7 @@ export class PostgresRepository<
       // Snapshot must be retrieved from the ORIGINAL entity BEFORE copy
       const snapshot = getSnapshot(entity);
       // Capture old entity for subscriber events (shallow copy so subscribers can diff)
-      const oldEntity = snapshot ? { ...entity } : undefined;
+      const oldEntity = buildOldEntity(entity, this.metadata, snapshot);
 
       // Early exit: if snapshot exists, diff BEFORE copy/bump.
       // This avoids bumping version/timestamps when nothing changed.
@@ -892,7 +893,7 @@ export class PostgresRepository<
       if (changed === null) {
         // No column changes but entity has relations or embedded lists — process updates only.
         // No version bump: the main entity row is untouched.
-        const oldEntity = { ...entity };
+        const oldEntity = buildOldEntity(entity, this.metadata, snapshot);
         return await this.withImplicitTransaction(
           async ({ client, repositoryFactory }) => {
             const txRelPersister = this.buildRelationPersister(client, repositoryFactory);
@@ -973,7 +974,7 @@ export class PostgresRepository<
           await txRelPersister.saveOwning(newVersion, "update");
 
           // Intent-based hooks: developer called update() or save(), so fire those hooks
-          const oldEntity = { ...entity };
+          const oldEntity = buildOldEntity(entity, this.metadata, snapshot);
           await this.fireBeforeHook(hookKind, newVersion);
           await this.fireSubscriber("beforeUpdate", {
             ...this.buildSubscriberEvent(newVersion, client),

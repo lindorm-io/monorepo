@@ -3,7 +3,11 @@ import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../types/metadata.js";
 import { resolveJoinKeyValue } from "./resolve-join-key-value.js";
-import { resolvePropertyKey } from "./resolve-property-key.js";
+import {
+  resolveSnapshotValue,
+  snapshotLocatorForField,
+  snapshotLocatorForJoinKey,
+} from "./snapshot-locator.js";
 
 /**
  * Compare current entity field values against a snapshot and return only
@@ -36,22 +40,21 @@ export const diffColumns = <E extends IEntity>(
     if (excludeKeys.has(field.key)) continue;
 
     let current: unknown;
-    let previous: unknown;
 
     if (field.embedded) {
       // Embedded fields use dotted keys (e.g., "address.street") but after
-      // hydration the entity has nested objects: entity.address.street
-      // and the snapshot stores snapshot["address"] = { street: ... }.
+      // hydration the entity has nested objects: entity.address.street.
       // Normalize undefined → null so SQL params never receive undefined.
       const parentObj = (entity as any)[field.embedded.parentKey];
-      const nestedKey = field.key.split(".")[1];
-      current = parentObj != null ? parentObj[nestedKey] : null;
-      const prevParent = snapshot[field.embedded.parentKey];
-      previous = prevParent != null ? prevParent[nestedKey] : null;
+      current = parentObj != null ? parentObj[field.key.split(".")[1]] : null;
     } else {
       current = (entity as any)[field.key];
-      previous = snapshot[field.key];
     }
+
+    const { value: previous } = resolveSnapshotValue(
+      snapshot,
+      snapshotLocatorForField(field),
+    );
 
     if (!valuesEqual(current, previous)) {
       changed[field.name] = current;
@@ -66,7 +69,6 @@ export const diffColumns = <E extends IEntity>(
     for (const [localKey, foreignKey] of Object.entries(relation.joinKeys)) {
       if (excludeKeys.has(localKey)) continue;
 
-      const propertyKey = resolvePropertyKey(metadata.fields, localKey);
       const current = resolveJoinKeyValue(
         entity,
         relation,
@@ -74,7 +76,10 @@ export const diffColumns = <E extends IEntity>(
         foreignKey,
         metadata,
       );
-      const previous = snapshot[propertyKey] ?? snapshot[localKey];
+      const { value: previous } = resolveSnapshotValue(
+        snapshot,
+        snapshotLocatorForJoinKey(metadata.fields, localKey),
+      );
 
       if (!valuesEqual(current, previous)) {
         changed[localKey] = current;

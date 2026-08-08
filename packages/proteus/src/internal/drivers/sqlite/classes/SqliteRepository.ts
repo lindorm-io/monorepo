@@ -59,6 +59,7 @@ import { quoteIdentifier } from "../utils/quote-identifier.js";
 import { getJoinName } from "../../../entity/utils/get-join-name.js";
 import { DuplicateKeyError } from "../../../errors/DuplicateKeyError.js";
 import { SqliteCursor } from "./SqliteCursor.js";
+import { buildOldEntity } from "../../../entity/utils/build-old-entity.js";
 import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store.js";
 import { diffColumns } from "../../../entity/utils/diff-columns.js";
 import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
@@ -549,7 +550,7 @@ export class SqliteRepository<
   ): Promise<E> {
     try {
       const snapshot = getSnapshot(entity);
-      const oldEntity = snapshot ? { ...entity } : undefined;
+      const oldEntity = buildOldEntity(entity, this.metadata, snapshot);
 
       let changed: Dict | null = null;
 
@@ -796,7 +797,7 @@ export class SqliteRepository<
       }
 
       if (changed === null) {
-        const oldEntity = { ...entity };
+        const oldEntity = buildOldEntity(entity, this.metadata, snapshot);
         return await this.withImplicitTransaction(
           async ({ client, repositoryFactory }) => {
             const txRelPersister = this.buildRelationPersister(client, repositoryFactory);
@@ -873,7 +874,7 @@ export class SqliteRepository<
           const txRelPersister = this.buildRelationPersister(client, repositoryFactory);
           await txRelPersister.saveOwning(newVersion, "update");
 
-          const oldEntity = { ...entity };
+          const oldEntity = buildOldEntity(entity, this.metadata, snapshot);
           await this.fireBeforeHook(hookKind, newVersion);
           await this.fireSubscriber("beforeUpdate", {
             ...this.buildSubscriberEvent(newVersion, client),

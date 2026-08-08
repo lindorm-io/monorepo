@@ -24,10 +24,21 @@ export type InsertEvent<E = any> = EntityEventBase<E>;
 
 /**
  * Dispatched before and after an update operation.
- * Includes a snapshot of the entity before the update was applied.
+ * Includes the entity as it was when it was last loaded.
  */
 export type UpdateEvent<E = any> = EntityEventBase<E> & {
-  /** Snapshot of the entity before the update. May be undefined if no snapshot was available. */
+  /**
+   * The entity as it was when last hydrated, rebuilt from that snapshot — NOT
+   * the caller's argument, which the caller already mutated. Always a fresh
+   * copy, so mutating it cannot corrupt the entity being saved.
+   *
+   * `undefined` when the entity was never hydrated (constructed via `create()`),
+   * because no prior state exists.
+   *
+   * ⚠ @Embedded parents are the exception: the snapshot holds the same
+   * embeddable instance the entity does, so an in-place mutation of a nested
+   * value is not recoverable here.
+   */
   oldEntity: E | undefined;
 };
 

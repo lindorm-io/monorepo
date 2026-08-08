@@ -2102,7 +2102,8 @@ source.on("entity:after-insert", async (event) => {
 
 source.on("entity:after-update", async (event) => {
   await auditLog.write("update", event.entity, event.metadata, event.meta);
-  // event.oldEntity contains the snapshot before the update (when available)
+  // event.oldEntity holds the entity as it was when last loaded — diff it
+  // against event.entity to see what actually changed
 });
 
 source.on("connection:state", ({ state }) => {
@@ -2114,21 +2115,21 @@ source.on("breaker:state", (event) => {
 });
 ```
 
-| Event                        | Payload                                       |
-| ---------------------------- | --------------------------------------------- |
-| `connection:state`           | `{ state: "connected" \| "disconnected" }`    |
-| `breaker:state`              | `StateChangeEvent`                            |
-| `entity:before-insert`       | `InsertEvent`                                 |
-| `entity:after-insert`        | `InsertEvent`                                 |
-| `entity:before-update`       | `UpdateEvent` (includes `oldEntity` snapshot) |
-| `entity:after-update`        | `UpdateEvent`                                 |
-| `entity:before-destroy`      | `DestroyEvent`                                |
-| `entity:after-destroy`       | `DestroyEvent`                                |
-| `entity:before-soft-destroy` | `SoftDestroyEvent`                            |
-| `entity:after-soft-destroy`  | `SoftDestroyEvent`                            |
-| `entity:before-restore`      | `RestoreEvent`                                |
-| `entity:after-restore`       | `RestoreEvent`                                |
-| `entity:after-load`          | `LoadEvent`                                   |
+| Event                        | Payload                                    |
+| ---------------------------- | ------------------------------------------ |
+| `connection:state`           | `{ state: "connected" \| "disconnected" }` |
+| `breaker:state`              | `StateChangeEvent`                         |
+| `entity:before-insert`       | `InsertEvent`                              |
+| `entity:after-insert`        | `InsertEvent`                              |
+| `entity:before-update`       | `UpdateEvent` (includes `oldEntity`)       |
+| `entity:after-update`        | `UpdateEvent` (includes `oldEntity`)       |
+| `entity:before-destroy`      | `DestroyEvent`                             |
+| `entity:after-destroy`       | `DestroyEvent`                             |
+| `entity:before-soft-destroy` | `SoftDestroyEvent`                         |
+| `entity:after-soft-destroy`  | `SoftDestroyEvent`                         |
+| `entity:before-restore`      | `RestoreEvent`                             |
+| `entity:after-restore`       | `RestoreEvent`                             |
+| `entity:after-load`          | `LoadEvent`                                |
 
 All entity event payloads share the same base shape:
 

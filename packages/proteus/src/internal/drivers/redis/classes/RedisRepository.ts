@@ -43,6 +43,7 @@ import {
   extractNumericValues,
 } from "../../../utils/query/compute-in-memory-aggregate.js";
 import { executePaginateFindInMemory } from "../../../utils/pagination/execute-paginate-find-in-memory.js";
+import { buildOldEntity } from "../../../entity/utils/build-old-entity.js";
 import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store.js";
 import { diffColumns } from "../../../entity/utils/diff-columns.js";
 import { retainReadonlyFields } from "../../../entity/utils/retain-readonly-fields.js";
@@ -471,7 +472,7 @@ export class RedisRepository<
     const prepared = this.entityManager.update(entity);
     this.entityManager.validate(prepared);
     await this.retainReadonlyOnUpdate(prepared);
-    const oldEntity = snapshot ? entity : undefined;
+    const oldEntity = buildOldEntity(entity, this.metadata, snapshot);
     const updateEvent = { ...this.buildSubscriberEvent(prepared), oldEntity };
 
     if (!this.hasRelations) {
@@ -557,7 +558,7 @@ export class RedisRepository<
     const relPersister = this.buildRelationPersister();
     await relPersister.saveOwning(newVersion, "update");
 
-    const oldEntity = entity;
+    const oldEntity = buildOldEntity(entity, this.metadata, snapshot);
     await this.fireBeforeHook(hookKind, newVersion);
     await this.fireSubscriber("beforeUpdate", {
       ...this.buildSubscriberEvent(newVersion),
