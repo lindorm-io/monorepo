@@ -236,11 +236,17 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
       lines.push(`    session: {`);
       lines.push(`      enabled: true,`);
       // The session cookie signs + seals with its OWN keys — a separate blast
-      // radius from ordinary cookies. Only nameable when a primary source exists
-      // to mint and hold them (the kryptos-rotation worker); without one the
-      // session cookie falls back to unsigned. `auth.session.<role> ??
-      // cookies.<role>` means dropping these two lines chains the session onto
-      // the cookie keys.
+      // radius from ordinary cookies. Rotated keys are only nameable when a
+      // primary source exists to mint and hold them (the kryptos-rotation
+      // worker). `auth.session.<role> ?? cookies.<role>` means dropping these
+      // lines chains the session onto the cookie keys.
+      //
+      // ⚠ An encryption key is NOT optional without a primary source, because
+      // no primary source means no `kv`, and a session with no store puts the
+      // WHOLE session — access, id and refresh token — in the cookie itself.
+      // Pylon refuses to boot such a deployment unsealed. The env-imported
+      // bootstrap KEK is the one key a sourceless scaffold holds, so the session
+      // seals with that until there is a rotation worker to mint its own.
       if (primaryExists) {
         lines.push(
           `      // Session's own keys — separate blast radius from other cookies.`,
@@ -250,6 +256,16 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
         );
         lines.push(
           `      encryption: { condition: { purpose: "pylon:session", publish: false } },`,
+        );
+      } else {
+        lines.push(
+          `      // No store, so the cookie carries the tokens themselves — sealing is`,
+        );
+        lines.push(
+          `      // mandatory. The bootstrap KEK until a source can hold a rotated key.`,
+        );
+        lines.push(
+          `      encryption: { condition: { purpose: "pylon:kek", publish: false } },`,
         );
       }
       lines.push(`      sameSite: "lax",`);

@@ -1191,6 +1191,23 @@ describe("scaffold", () => {
         expect(pylon).toMatch(/^ {2}kv: redis,$/m);
         expect(pylon).not.toContain(`../proteus/kv/source.js`);
       });
+
+      // No source at all ⇒ no `kv` ⇒ the session cookie carries the tokens
+      // themselves, and pylon refuses to boot such a deployment unsealed. The
+      // env-imported bootstrap KEK is the only key this scaffold holds.
+      test("seals the session with the bootstrap KEK when no source is selected", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          features: baseFeatures({ session: true, auth: true }),
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+        expect(pylon).not.toMatch(/^ {2}kv: /m);
+        expect(pylon).toContain(
+          `encryption: { condition: { purpose: "pylon:kek", publish: false } },`,
+        );
+      });
     });
   });
 });

@@ -1109,6 +1109,9 @@ export const pylon = new Pylon({
     },
     session: {
       enabled: true,
+      // No store, so the cookie carries the tokens themselves — sealing is
+      // mandatory. The bootstrap KEK until a source can hold a rotated key.
+      encryption: { condition: { purpose: "pylon:kek", publish: false } },
       sameSite: "lax",
       secure: false, // TODO: flip to true in production (behind HTTPS)
     },
@@ -3079,6 +3082,9 @@ export const pylon = new Pylon({
     },
     session: {
       enabled: true,
+      // No store, so the cookie carries the tokens themselves — sealing is
+      // mandatory. The bootstrap KEK until a source can hold a rotated key.
+      encryption: { condition: { purpose: "pylon:kek", publish: false } },
       sameSite: "lax",
       secure: false, // TODO: flip to true in production (behind HTTPS)
     },
