@@ -4,6 +4,7 @@ import type {
   SqliteSnapshotForeignKey,
   SqliteSnapshotTable,
 } from "../../types/db-snapshot.js";
+import { pragmaInt } from "./pragma-int.js";
 
 /**
  * Introspects a single SQLite table using PRAGMA queries.
@@ -27,17 +28,17 @@ export const introspectTable = (
 
   const columns: Array<SqliteSnapshotColumn> = [];
   for (const row of columnRows) {
-    const hidden = row.hidden as number;
+    const hidden = pragmaInt(row.hidden, "hidden");
     if (hidden === 1) continue; // internal/hidden column, never proteus-managed
 
     const isGenerated = hidden === 2 || hidden === 3;
     columns.push({
-      cid: row.cid as number,
+      cid: pragmaInt(row.cid, "cid"),
       name: row.name as string,
       type: row.type as string,
-      notNull: (row.notnull as number) === 1,
+      notNull: pragmaInt(row.notnull, "notnull") === 1,
       defaultValue: row.dflt_value as string | null,
-      pk: row.pk as number,
+      pk: pragmaInt(row.pk, "pk"),
       generatedExpr: isGenerated
         ? parseGeneratedExpression(tableSql, row.name as string)
         : null,
@@ -55,7 +56,7 @@ export const introspectTable = (
   // deferrability from the DDL — `foreign_key_list` does not report it.
   const fromColumnsById = new Map<number, Array<string>>();
   for (const row of fkRows) {
-    const id = row.id as number;
+    const id = pragmaInt(row.id, "id");
     if (!fromColumnsById.has(id)) fromColumnsById.set(id, []);
     fromColumnsById.get(id)!.push(row.from as string);
   }
@@ -72,10 +73,10 @@ export const introspectTable = (
   }
 
   const foreignKeys: Array<SqliteSnapshotForeignKey> = fkRows.map((row) => {
-    const clause = deferrableById.get(row.id as number) ?? EMPTY_DEFERRABLE;
+    const clause = deferrableById.get(pragmaInt(row.id, "id")) ?? EMPTY_DEFERRABLE;
     return {
-      id: row.id as number,
-      seq: row.seq as number,
+      id: pragmaInt(row.id, "id"),
+      seq: pragmaInt(row.seq, "seq"),
       table: row.table as string,
       from: row.from as string,
       to: row.to as string,

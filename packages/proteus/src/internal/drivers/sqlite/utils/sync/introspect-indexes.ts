@@ -3,6 +3,7 @@ import type {
   SqliteSnapshotIndex,
   SqliteSnapshotIndexColumn,
 } from "../../types/db-snapshot.js";
+import { pragmaInt } from "./pragma-int.js";
 
 /**
  * Introspects all indexes for a given table using PRAGMA queries.
@@ -25,9 +26,9 @@ export const introspectIndexes = (
 
   for (const row of indexListRows) {
     const indexName = row.name as string;
-    const unique = (row.unique as number) === 1;
+    const unique = pragmaInt(row.unique, "unique") === 1;
     const origin = row.origin as string; // "c" = CREATE INDEX, "u" = UNIQUE constraint, "pk" = PK
-    const partial = (row.partial as number) === 1;
+    const partial = pragmaInt(row.partial, "partial") === 1;
 
     // Skip PK indexes — they are implicit
     if (origin === "pk") continue;
@@ -36,8 +37,8 @@ export const introspectIndexes = (
     const colRows = client.all(`PRAGMA index_info("${indexName.replace(/"/g, '""')}")`);
 
     const columns: Array<SqliteSnapshotIndexColumn> = colRows.map((colRow) => ({
-      seqno: colRow.seqno as number,
-      cid: colRow.cid as number,
+      seqno: pragmaInt(colRow.seqno, "seqno"),
+      cid: pragmaInt(colRow.cid, "cid"),
       name: colRow.name as string,
     }));
 

@@ -12,6 +12,12 @@ import { SyncPlanExecutor } from "./execute-sync-plan.js";
  * and a genuine change to either must be detected. Runs entirely in-memory via
  * better-sqlite3 (no docker) so `PRAGMA table_xinfo` / `sqlite_master` parsing
  * is exercised against a real engine.
+ *
+ * ⚠ `defaultSafeIntegers(true)` is NOT optional here — `SqliteDriver.connect`
+ * sets it on every real connection, and it applies to PRAGMA results too, so
+ * every introspected integer (`notnull`, `pk`, `hidden`, `seq`, `seqno`,
+ * `unique`, `partial`) arrives as a BigInt. A fixture without it introspects a
+ * shape no deployment ever sees.
  */
 
 const wrap = (db: Database.Database): SqliteQueryClient => ({
@@ -156,6 +162,7 @@ describe("sqlite sync round-trip (computed + deferrable)", () => {
 
   beforeEach(() => {
     db = new Database(":memory:");
+    db.defaultSafeIntegers(true);
     client = wrap(db);
   });
 

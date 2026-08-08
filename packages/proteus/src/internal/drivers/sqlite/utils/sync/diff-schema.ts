@@ -210,12 +210,9 @@ const canUseAddColumn = (
   }
 
   // Check unique constraint changes
-  const existingUniqueStr = normalizeUniqueConstraints(existingTable);
-  const desiredUniqueStr = desiredTable.uniqueConstraints
-    .map((u) => `${u.name}:${u.columns.join(",")}`)
-    .sort()
-    .join("|");
-  if (existingUniqueStr !== desiredUniqueStr) {
+  if (
+    normalizeUniqueConstraints(existingTable) !== desiredUniquesSignature(desiredTable)
+  ) {
     return { safe: false, newColumns: [] };
   }
 
@@ -281,21 +278,35 @@ const normalizeFks = (table: SqliteSnapshotTable): string => {
 /**
  * Normalizes unique constraints from an existing table snapshot for comparison.
  * Unique constraints in SQLite appear as indexes with origin "u".
+ *
+ * ⚠ Compared by COLUMN LIST ONLY — deliberately, not as a shortcut. SQLite does
+ * not persist a UNIQUE constraint's name: `CONSTRAINT "uq_x" UNIQUE ("slug")`
+ * becomes an auto-index called `sqlite_autoindex_<table>_<n>` whose
+ * `sqlite_master.sql` is NULL. Including the name would compare a proteus-minted
+ * label against a sqlite-minted one — never equal, so every sync would plan a
+ * full rebuild that reproduced the same table. `normalizeFks` already drops FK
+ * names for exactly this reason (sqlite's FKs are inline and unnamed); the
+ * column list is the whole of the constraint's identity here.
  */
-const normalizeUniqueConstraints = (table: SqliteSnapshotTable): string => {
-  const uniqueIndexes = table.indexes.filter((idx) => idx.origin === "u");
-  const strs: Array<string> = [];
+const normalizeUniqueConstraints = (table: SqliteSnapshotTable): string =>
+  table.indexes
+    .filter((idx) => idx.origin === "u")
+    .map((idx) =>
+      idx.columns
+        .slice()
+        .sort((a, b) => a.seqno - b.seqno)
+        .map((c) => c.name)
+        .join(","),
+    )
+    .sort()
+    .join("|");
 
-  for (const idx of uniqueIndexes) {
-    const cols = idx.columns
-      .sort((a, b) => a.seqno - b.seqno)
-      .map((c) => c.name)
-      .join(",");
-    strs.push(`${idx.name}:${cols}`);
-  }
-
-  return strs.sort().join("|");
-};
+/** The desired-side counterpart of `normalizeUniqueConstraints` — same shape. */
+const desiredUniquesSignature = (table: SqliteDesiredTable): string =>
+  table.uniqueConstraints
+    .map((u) => u.columns.join(","))
+    .sort()
+    .join("|");
 
 /**
  * Compares a `SqliteDesiredSchema` against a `SqliteDbSnapshot` and produces a
@@ -489,12 +500,8 @@ const hasTableDifferences = (
   if (normalizeFks(existing) !== desiredFksSignature(desired)) return true;
 
   // Unique constraint changes
-  const existingUniqueStr = normalizeUniqueConstraints(existing);
-  const desiredUniqueStr = desired.uniqueConstraints
-    .map((u) => `${u.name}:${u.columns.join(",")}`)
-    .sort()
-    .join("|");
-  if (existingUniqueStr !== desiredUniqueStr) return true;
+  if (normalizeUniqueConstraints(existing) !== desiredUniquesSignature(desired))
+    return true;
 
   return false;
 };
