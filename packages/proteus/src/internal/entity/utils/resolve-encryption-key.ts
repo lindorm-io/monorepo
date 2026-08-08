@@ -1,8 +1,12 @@
 import { Matcher } from "@lindorm/match";
-import { applyKeyFloor, ENVELOPE_FLOOR, type IAmphora } from "@lindorm/amphora";
+import {
+  applyKeyFloor,
+  ENVELOPE_DEFAULT,
+  ENVELOPE_FLOOR,
+  type IAmphora,
+} from "@lindorm/amphora";
 import type { IKryptos } from "@lindorm/kryptos";
 import { ProteusError } from "../../../errors/index.js";
-import { ENCRYPTION_DEFAULT } from "../../constants/key-floor.js";
 import type { MetaEncrypted } from "../types/metadata.js";
 
 /**
@@ -25,10 +29,10 @@ export const resolveEncryptionKey = (
 ): IKryptos => {
   // The floor is applied LAST so it always wins the merge: the condition is
   // duck-typed and could carry a floor key (e.g. `use`), which must never
-  // override the policy. `ENCRYPTION_DEFAULT` (`publish: false`) is only a
+  // override the policy. `ENVELOPE_DEFAULT` (`publish: false`) is only a
   // default, so the caller's condition still wins over it; per-layer `undefined`
   // stripping keeps a `{ x: undefined }` condition from erasing that default.
-  const query = applyKeyFloor(ENVELOPE_FLOOR, ENCRYPTION_DEFAULT, encrypted.condition);
+  const query = applyKeyFloor(ENVELOPE_FLOOR, ENVELOPE_DEFAULT, encrypted.condition);
 
   let kryptos: IKryptos;
 
