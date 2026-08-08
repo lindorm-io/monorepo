@@ -173,6 +173,17 @@ await amphora.filter({ use: "sig", publish: false }); // ungated: unpublished ke
 await amphora.filter({ use: "sig", publish: { $exists: true } }); // ungated: everything (publish is always set)
 ```
 
+**Envelope encryption opts out once, centrally.** Sealing a value the same deployment must reopen — a proteus `@Encrypted` column, an iris message, a pylon cookie or session — is by definition done with a key that never belongs in a JWKS, so a selector for one that names no `publish` means `publish: false`. That is the exported `ENVELOPE_DEFAULT`, applied as the layer under the caller's own condition:
+
+```typescript
+import { applyKeyFloor, ENVELOPE_DEFAULT, ENVELOPE_FLOOR } from "@lindorm/amphora";
+
+applyKeyFloor(ENVELOPE_FLOOR, ENVELOPE_DEFAULT, { purpose: "cookie" });
+// → { purpose: "cookie", publish: false, use: "enc", hasPrivateKey: true, isActive: true }
+```
+
+A **floor** (`SIGN_FLOOR`, `VERIFY_FLOOR`, `SEAL_FLOOR`, `ENVELOPE_FLOOR`, `DECRYPT_FLOOR`) is spread **last** and can never be overridden — it is the minimum that makes the operation possible. A **default** is spread among the caller layers, so the caller wins: state `publish: true` and you seal with a published key. Without the default layer, every consumer had to spell `publish: false` in its own config to reach its own key, and forgetting it silently selected the JWKS token key instead.
+
 `findById()` / `findByIdSync()` are **not** filtered: an explicit id is explicit intent, and a token signed by an internal (or since-expired) key must still be verifiable. Key ids are unique **per issuer**, so an id can collide across issuers — `findById` then returns the **most recent** (by `createdAt`) and logs a `warn`, never throwing or picking arbitrarily. Resolve a `kid` off a token with `find({ id, issuer })` to name the issuer and avoid the ambiguity.
 
 > ⚠ **`find({ id })` is NOT `findById(id)`.** They read as interchangeable and are not. `find()` goes through the filter, so `find({ id })` will **not** return an internal (`publish: false`) or inactive key — you get a not-found error for a key that is plainly sitting in the vault. `findById()` bypasses the filter entirely. **Resolving a key from a `kid` you read off a token? Use `findById()`.**
