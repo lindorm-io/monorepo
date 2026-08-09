@@ -75,7 +75,12 @@ export class Amphora implements IAmphora {
     if (this.state.setupPromise) return this.state.setupPromise;
 
     this.state.setupPromise = (async (): Promise<void> => {
-      await this.refresh();
+      // The STRICT invocation of the one sweep: every registered issuer is
+      // fetched here, and a `required` one that fails takes the boot down with
+      // it. A service that cannot resolve a required upstream cannot verify a
+      // token from it, so it must not come up pretending otherwise. Every later
+      // sweep runs the same code leniently — see `AmphoraState.refreshAll`.
+      await this.state.refreshAll(true);
       this.state.isSetup = true;
     })();
 
@@ -167,8 +172,9 @@ export class Amphora implements IAmphora {
       return existing;
     }
 
-    // No issuer to target — fall back to refreshing EVERYTHING fetched. This is
-    // the expensive path, reinforcing "resolve a kid via find({ id, issuer })".
+    // No issuer to target — a bare kid does not say which issuer owns it — so
+    // fall back to refreshing EVERY registered issuer. This is the expensive
+    // path, reinforcing "resolve a kid via find({ id, issuer })".
     if (this.state.hasExternal) {
       await this.refresh();
 

@@ -55,7 +55,7 @@ new Amphora({
   internal: { issuer: "https://auth.example.com" },
   logger,
   idp: { issuer: "https://accounts.google.com" },
-  external: [{ issuer: "https://partner.example.com/" }],
+  external: [{ issuer: "https://partner.example.com/", required: true }],
   maxExternalKeys: 100,
   maxIssuers: 1000,
   refreshInterval: 300_000,
@@ -69,8 +69,8 @@ The three issuer scopes are named the same way in the settings as on the instanc
 | `logger`          | `ILogger`                        | required    | Logger instance from `@lindorm/logger`.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `internal`        | `AmphoraInternalSettings`        | `undefined` | This service's OWN issuer scope — `{ issuer }`, the URL it mints tokens under. Used as the default `issuer` and `jwksUri` for added keys, as the filter for which keys appear in `amphora.jwks`, and as the source of `amphora.internal`. Validated as a URL at construction time (`invalid_issuer_url`). The BLOCK is optional — omit it for a service that only verifies — but `issuer` inside it is required: a block that declares nothing is not a thing anyone means. |
 | `environment`     | `Environment`                    | `null`      | Cross-environment guard. When set, a key whose leaf certificate declares a different `Environment` OU is rejected on `add`. See [Environment enforcement](#environment-enforcement).                                                                                                                                                                                                                                                                                        |
-| `idp`             | `AmphoraExternalSettings`        | `undefined` | The single UPSTREAM identity provider — a distinguished singleton external issuer. Managed through [`amphora.idp`](#external-providers).                                                                                                                                                                                                                                                                                                                                    |
-| `external`        | `Array<AmphoraExternalSettings>` | `[]`        | Foreign OIDC issuers to discover keys from. Managed through [`amphora.external`](#external-providers).                                                                                                                                                                                                                                                                                                                                                                      |
+| `idp`             | `AmphoraIdpSettings`             | `undefined` | The single UPSTREAM identity provider — a distinguished singleton external issuer. ALWAYS REQUIRED: `setup()` fetches it and THROWS when it cannot be resolved. `AmphoraIdpSettings` is `AmphoraExternalSettings` without `required` — there is no deployment in which a missing upstream is survivable, so there is nothing to declare. Managed through [`amphora.idp`](#external-providers).                                                                              |
+| `external`        | `Array<AmphoraExternalSettings>` | `[]`        | Foreign OIDC issuers to discover keys from. All of them are fetched at `setup()`; set `required: true` on the ones whose failure should stop the boot. Managed through [`amphora.external`](#external-providers).                                                                                                                                                                                                                                                           |
 | `lookup`          | `ConduitLookup`                  | `undefined` | DNS resolver hook for external discovery/JWKS fetches (SSRF IP-pinning). Supply a resolver that validates each resolved address against an egress policy and returns the vetted IP, so the fetch connects to exactly that address. Omit for ordinary DNS.                                                                                                                                                                                                                   |
 | `maxExternalKeys` | `number`                         | `100`       | Maximum number of keys accepted per external provider; excess keys are truncated.                                                                                                                                                                                                                                                                                                                                                                                           |
 | `maxIssuers`      | `number`                         | `1000`      | Hard cap on the number of external issuers held at once (the `idp` is exempt). Registering past the cap via `external.addIssuer` evicts the least-recently-used external issuer inline; eviction is correctness-safe (it re-fetches on next use). Bounds the vault against client-driven growth (e.g. one issuer per DCR `jwks_uri` client).                                                                                                                                |
@@ -275,18 +275,18 @@ When a fetched discovery document publishes an `issuer` that differs from the de
 
 Each source also accepts:
 
-| Field                 | Type                           | Description                                                                                                                                   |
-| --------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `load`                | `boolean`                      | Eager-fetch this issuer's keys on `addIssuer` / `idp.set` (default `false` — lazy; fetched on the next refresh or a find-miss on its issuer). |
-| `openIdConfiguration` | `Partial<OpenIdConfiguration>` | Override or supplement values from the discovery document.                                                                                    |
-| `trustAnchors`        | `string \| Array<string>`      | PEM-encoded CA certificate(s) used to validate the certificate chains attached to fetched JWKs. See [Trust Anchors](#trust-anchors).          |
-| `trustMode`           | `"strict" \| "lax"`            | How to handle fetched keys without a certificate chain when `trustAnchors` is set. Default `"strict"`.                                        |
+| Field                 | Type                           | Description                                                                                                                                                                                                                                                                                                                                  |
+| --------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `required`            | `boolean`                      | Whether a failed fetch is FATAL — not WHEN the fetch happens (every source is fetched at `setup()`, always). `true` — `setup()` throws when this issuer cannot be resolved or its keys cannot be fetched. `false` (default) — the failure is a `warn`, setup completes, and the periodic refresh retries it. Refresh is tolerant either way. |
+| `openIdConfiguration` | `Partial<OpenIdConfiguration>` | Override or supplement values from the discovery document.                                                                                                                                                                                                                                                                                   |
+| `trustAnchors`        | `string \| Array<string>`      | PEM-encoded CA certificate(s) used to validate the certificate chains attached to fetched JWKs. See [Trust Anchors](#trust-anchors).                                                                                                                                                                                                         |
+| `trustMode`           | `"strict" \| "lax"`            | How to handle fetched keys without a certificate chain when `trustAnchors` is set. Default `"strict"`.                                                                                                                                                                                                                                       |
 
 **An external issuer must be a URI** — a URL with an authority (`https://…`) or a URN (`urn:…`). A bare identifier throws `external_issuer_not_uri`; a URN has no authority to discover from, so a URN issuer with no explicit `jwksUri` throws `urn_issuer_requires_jwks_uri`.
 
-`external.issuers()` returns the resolved config per issuer: `input` (the declared options, verbatim), the settled `issuer` / `jwksUri`, the nested `openIdConfiguration` discovery doc, plus `keyCount`, `lastRefresh` (last fetch), and `lastAccess` (last find/filter hit — the LRU signal for `maxIssuers` eviction; `null` until first use).
+`external.issuers()` returns the resolved config per issuer: `input` (the declared options, verbatim), the resolved `required`, the settled `issuer` / `jwksUri`, the nested `openIdConfiguration` discovery doc, plus `keyCount`, `lastRefresh` (last SUCCESSFUL fetch — `null` while every attempt so far has failed), and `lastAccess` (last find/filter hit — the LRU signal for `maxIssuers` eviction; `null` until first use).
 
-`AmphoraExternalConfig.issuer` is a `string`, never `null` — amphora scopes, verifies (`jwk.iss`) and evicts keys BY issuer, so a config without one is not a config. A source registered by `openIdConfigurationUri` alone carries no issuer until that document is fetched, and registration is lazy by default, so it is simply **omitted** from `issuers()` until it resolves rather than listed with a `null`. It stays registered and appears the moment it resolves; one unreachable peer never takes out the whole listing. `jwksUri` DOES stay `string | null` — an issuer's keys can be handed over directly with `external.add(kryptos)`, so the fetch is what complains (`external_jwks_uri_missing`), not the listing.
+`AmphoraExternalConfig.issuer` is a `string`, never `null` — amphora scopes, verifies (`jwk.iss`) and evicts keys BY issuer, so a config without one is not a config. A source registered by `openIdConfigurationUri` alone carries no issuer until that document is fetched — before `setup()`, or after it when a non-`required` fetch failed — so it is simply **omitted** from `issuers()` until it resolves rather than listed with a `null`. It stays registered and appears the moment it resolves; one unreachable peer never takes out the whole listing. `jwksUri` DOES stay `string | null` — an issuer's keys can be handed over directly with `external.add(kryptos)`, so the fetch is what complains (`external_jwks_uri_missing`), not the listing.
 
 The discovery document is typed `Partial<OpenIdConfiguration>` — `OpenIdConfiguration` from [`@lindorm/openid`](../openid), the one provider-metadata shape the whole toolkit shares, as a partial because amphora neither validates the fetched document nor reads more than `issuer` / `jwksUri`. Every field the provider sends is preserved verbatim for downstream consumers (a relying party reads its endpoints off `idp.config().openIdConfiguration`); a consumer that needs a complete document validates it at its own boundary.
 
@@ -297,22 +297,24 @@ The idp is a singleton external issuer with a management + config view over the 
 ```typescript
 await amphora.idp.set({ issuer: "https://accounts.google.com" }); // register or REPLACE (a swap evicts the old idp's keys)
 amphora.idp.config(); // AmphoraExternalConfig — throws `idp_not_configured` when unset,
-// and `idp_issuer_unresolved` when registered by `openIdConfigurationUri` alone and not yet resolved
+// and `idp_issuer_unresolved` when declared by `openIdConfigurationUri` alone and setup() has not run yet
 await amphora.idp.refresh();
 amphora.idp.clear();
 ```
 
 An issuer belongs to exactly **one** scope — the idp or `external`, never both. Registering the same issuer in both throws `issuer_scope_conflict`.
 
+**The idp is always required, so it is strict at boot.** `AmphoraIdpSettings` has no `required` flag — a relying party cannot verify a single token from an upstream it could not resolve, so the answer is never `false`. `idp.set()` awaits the discovery / JWKS fetch and throws when it fails, and `amphora.setup()` does the same for an idp declared in the constructor. **A service will not boot until its IdP serves discovery** — deploy ordering follows from that.
+
 ### Refresh behaviour
 
-- `setup()` is lazy — the first `find()` or `filter()` call triggers it automatically when external / idp sources are configured. `findSync()` / `filterSync()` / `findByIdSync()` throw if invoked beforehand.
+- `setup()` is deferred — the first `find()` or `filter()` call triggers it automatically when external / idp sources are configured. `findSync()` / `filterSync()` / `findByIdSync()` throw if invoked beforehand. It fetches EVERY registered issuer in one parallel sweep, and throws when a `required` one (or the idp) fails.
 - Concurrent calls to `setup()` or `refresh()` are deduplicated; only one network round-trip is in flight at a time.
-- Refresh is per-issuer. `amphora.refresh()` refetches the idp AND all external issuers; `amphora.external.refresh(issuer)` and `amphora.idp.refresh()` target one. A find-miss on `find({ id, issuer })` refetches that one issuer; a `findById(id)` miss (no issuer) refetches everything.
+- Refresh is per-issuer. `amphora.refresh()` refetches the idp and every external issuer; `amphora.external.refresh(issuer)` and `amphora.idp.refresh()` target one. A find-miss on `find({ id, issuer })` refetches that one issuer; a `findById(id)` miss carries no issuer to target with, so it refetches everything.
 - After setup, async lookups re-fetch when the queried issuer's cache is older than `refreshInterval`. If the local vault already satisfies the query and the cache is fresh, no network call is made.
-- Partial failures are tolerated: if some issuers fail but at least one succeeds, the vault is updated with what's available. If every configured issuer fails, refresh throws `AmphoraError`.
+- **Strict at boot, lenient afterwards.** The sweep itself always tolerates partial failure — a failing issuer is warned and the others still land. Only the verdict at the end of the SETUP sweep is strict: a `required` issuer that failed throws its own error, so the process dies on the real cause. Every periodic refresh after that throws nothing; the previously fetched config and keys keep serving and the refresh interval is the retry backoff.
 - Fetched keys whose `iss` claim does not match the configured `issuer` are rejected to prevent issuer spoofing.
-- Rejection is per key, never per issuer: a JWK that cannot be parsed (e.g. one without an `alg`, which `@lindorm/kryptos` requires) is logged with its `kid` and skipped — the issuer's remaining keys still load. Only when _no_ key survives does the refresh throw.
+- Rejection is per key, never per issuer: a JWK that cannot be parsed (e.g. one without an `alg`, which `@lindorm/kryptos` requires) is logged with its `kid` and skipped — the issuer's remaining keys still load. Only when _no_ key survives does the fetch itself fail for that issuer.
 
 ```typescript
 await amphora.setup();
@@ -402,7 +404,7 @@ Common scenarios that throw:
 - `findSync()` / `filterSync()` / `findByIdSync()` invoked before `setup()` when external providers are configured.
 - Reading `amphora.jwks` when no `issuer` is configured (`issuer_required_for_jwks`).
 - `find()` / `findById()` not finding a match after a refresh.
-- An external issuer that is not a URI (`external_issuer_not_uri`), a URN issuer with no `jwksUri` (`urn_issuer_requires_jwks_uri`), or a source naming nothing amphora can discover or fetch from (`invalid_issuer_options`) — all validated at registration, so a lazy source is rejected up front.
+- An external issuer that is not a URI (`external_issuer_not_uri`), a URN issuer with no `jwksUri` (`urn_issuer_requires_jwks_uri`), or a source naming nothing amphora can discover or fetch from (`invalid_issuer_options`) — all validated synchronously at registration, before any network call.
 - A discovery document that provides no `issuer` with none configured (`external_issuer_unresolved`) — a resolved external issuer must be a URI.
 - Registering an issuer that already belongs to the other scope (`issuer_scope_conflict`) — an issuer is the idp **or** an external provider, never both — or `removeIssuer()` called with the idp's issuer (`remove_issuer_is_idp`; use `idp.clear()`).
 - `idp.config()` called before an idp is set (`idp_not_configured`), or with one registered by `openIdConfigurationUri` alone whose issuer amphora has not settled (`idp_issuer_unresolved`).
@@ -437,22 +439,22 @@ The returned object implements `IAmphora`, including the `external` and `idp` fa
 
 **Methods**
 
-| Signature                                                   | Description                                                                         |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `add(kryptos: IKryptos \| Array<IKryptos>): void`           | Add one or more keys to the vault.                                                  |
-| `env(keys: string \| Array<string>): void`                  | Decode `kryptos:` strings and add them.                                             |
-| `setup(): Promise<void>`                                    | Resolve external configuration and load external JWKS. Idempotent and deduplicated. |
-| `refresh(): Promise<void>`                                  | Re-fetch external configuration and JWKS. Deduplicated.                             |
-| `find(query: AmphoraCondition): Promise<IKryptos>`          | First match, refreshing external keys when needed. Throws if not found.             |
-| `findSync(query: AmphoraCondition): IKryptos`               | First match against the local vault. Throws if not found.                           |
-| `findById(id: string): Promise<IKryptos>`                   | Lookup by id, refreshing if external providers are configured.                      |
-| `findByIdSync(id: string): IKryptos`                        | Lookup by id against the local vault only.                                          |
-| `filter(query: AmphoraCondition): Promise<Array<IKryptos>>` | All matches, refreshing when needed.                                                |
-| `filterSync(query: AmphoraCondition): Array<IKryptos>`      | All matches against the local vault.                                                |
-| `canEncrypt(): boolean`                                     | Has any active key suitable for encryption.                                         |
-| `canDecrypt(): boolean`                                     | Has any active key suitable for decryption.                                         |
-| `canSign(): boolean`                                        | Has any active key suitable for signing.                                            |
-| `canVerify(): boolean`                                      | Has any active key suitable for verification.                                       |
+| Signature                                                   | Description                                                                                                                 |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `add(kryptos: IKryptos \| Array<IKryptos>): void`           | Add one or more keys to the vault.                                                                                          |
+| `env(keys: string \| Array<string>): void`                  | Decode `kryptos:` strings and add them.                                                                                     |
+| `setup(): Promise<void>`                                    | Resolve external configuration and load external JWKS. Throws when the idp cannot be resolved. Idempotent and deduplicated. |
+| `refresh(): Promise<void>`                                  | Re-fetch external configuration and JWKS. Deduplicated.                                                                     |
+| `find(query: AmphoraCondition): Promise<IKryptos>`          | First match, refreshing external keys when needed. Throws if not found.                                                     |
+| `findSync(query: AmphoraCondition): IKryptos`               | First match against the local vault. Throws if not found.                                                                   |
+| `findById(id: string): Promise<IKryptos>`                   | Lookup by id, refreshing if external providers are configured.                                                              |
+| `findByIdSync(id: string): IKryptos`                        | Lookup by id against the local vault only.                                                                                  |
+| `filter(query: AmphoraCondition): Promise<Array<IKryptos>>` | All matches, refreshing when needed.                                                                                        |
+| `filterSync(query: AmphoraCondition): Array<IKryptos>`      | All matches against the local vault.                                                                                        |
+| `canEncrypt(): boolean`                                     | Has any active key suitable for encryption.                                                                                 |
+| `canDecrypt(): boolean`                                     | Has any active key suitable for decryption.                                                                                 |
+| `canSign(): boolean`                                        | Has any active key suitable for signing.                                                                                    |
+| `canVerify(): boolean`                                      | Has any active key suitable for verification.                                                                               |
 
 **Getters**
 
@@ -467,23 +469,23 @@ The returned object implements `IAmphora`, including the `external` and `idp` fa
 
 ### `interface IAmphoraExternal` (`amphora.external`)
 
-| Signature                                                   | Description                                           |
-| ----------------------------------------------------------- | ----------------------------------------------------- |
-| `add(kryptos: IKryptos \| Array<IKryptos>): void`           | Insert one or more foreign keys (⇒ `internal:false`). |
-| `remove(id: string): void`                                  | Drop a key by id.                                     |
-| `addIssuer(source: AmphoraExternalSettings): Promise<void>` | Register an issuer source (eager when `load`).        |
-| `removeIssuer(issuer: string): void`                        | Drop the source and evict its keys.                   |
-| `issuers(): Array<AmphoraExternalConfig>`                   | Every source whose issuer has settled.                |
-| `refresh(issuer: string): Promise<void>`                    | Refetch one issuer.                                   |
+| Signature                                                   | Description                                                                |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `add(kryptos: IKryptos \| Array<IKryptos>): void`           | Insert one or more foreign keys (⇒ `internal:false`).                      |
+| `remove(id: string): void`                                  | Drop a key by id.                                                          |
+| `addIssuer(source: AmphoraExternalSettings): Promise<void>` | Register an issuer source and fetch its keys; throws when the fetch fails. |
+| `removeIssuer(issuer: string): void`                        | Drop the source and evict its keys.                                        |
+| `issuers(): Array<AmphoraExternalConfig>`                   | Every source whose issuer has settled.                                     |
+| `refresh(issuer: string): Promise<void>`                    | Refetch one issuer.                                                        |
 
 ### `interface IAmphoraIdp` (`amphora.idp`)
 
-| Signature                                             | Description                                                                                            |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `set(source: AmphoraExternalSettings): Promise<void>` | Register or REPLACE the upstream (a swap evicts old keys).                                             |
-| `config(): AmphoraExternalConfig`                     | The resolved config — throws `idp_not_configured` when unset, `idp_issuer_unresolved` when unresolved. |
-| `refresh(): Promise<void>`                            | Refetch the upstream.                                                                                  |
-| `clear(): void`                                       | Unset the idp and evict its keys.                                                                      |
+| Signature                                        | Description                                                                                            |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `set(source: AmphoraIdpSettings): Promise<void>` | Register or REPLACE the upstream (a swap evicts old keys). Awaits the fetch — throws when it fails.    |
+| `config(): AmphoraExternalConfig`                | The resolved config — throws `idp_not_configured` when unset, `idp_issuer_unresolved` when unresolved. |
+| `refresh(): Promise<void>`                       | Refetch the upstream.                                                                                  |
+| `clear(): void`                                  | Unset the idp and evict its keys.                                                                      |
 
 ### `class AmphoraError extends LindormError`
 
@@ -499,6 +501,7 @@ Public interface implemented by `Amphora` and the mock factories.
 import type {
   AmphoraExternalConfig,
   AmphoraExternalSettings,
+  AmphoraIdpSettings,
   AmphoraInternalConfig,
   AmphoraInternalSettings,
   AmphoraJwks,

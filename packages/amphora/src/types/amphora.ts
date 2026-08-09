@@ -42,14 +42,35 @@ export type AmphoraExternalSettings = {
   openIdConfiguration?: Partial<OpenIdConfiguration>;
   openIdConfigurationUri?: string;
   /**
-   * Eager-fetch this issuer's keys on `addIssuer` / `idp.set` (await the fetch), vs
-   * lazy (registered now, fetched on the next refresh or the first `find`-miss).
-   * Default `false` (lazy) — the per-issuer miss-refresh makes first use cheap.
+   * Whether a failed fetch is FATAL. It does not say WHEN the fetch happens —
+   * every registered issuer is fetched at `setup()`, always.
+   *
+   * - `true` — `setup()` THROWS when this issuer cannot be resolved or its keys
+   *   cannot be fetched. Boot fails on the real cause rather than deferring an
+   *   unusable provider to a user's first request.
+   * - `false` (default) — a failure at `setup()` is logged as a `warn` and setup
+   *   completes; the ordinary periodic refresh retries it, and the refresh
+   *   interval is the retry backoff.
+   *
+   * Either way REFRESH is tolerant: an issuer that resolved at boot and later
+   * fails a refresh keeps its working config and keys, and never takes a healthy
+   * running process down.
    */
-  load?: boolean;
+  required?: boolean;
   trustAnchors?: string | Array<string>;
   trustMode?: "strict" | "lax";
 };
+
+/**
+ * The UPSTREAM identity provider's source — an external issuer source MINUS
+ * `required`, because the idp is ALWAYS required.
+ *
+ * A relying party cannot verify a single token from its own upstream without
+ * that provider's discovery document, so there is no deployment in which a
+ * missing idp is survivable. Making it a flag would only offer a way to declare
+ * something untrue.
+ */
+export type AmphoraIdpSettings = Omit<AmphoraExternalSettings, "required">;
 
 /**
  * A RESOLVED external issuer config — returned by `external.issuers()` and
@@ -68,7 +89,11 @@ export type AmphoraExternalSettings = {
  */
 export type AmphoraExternalConfig = {
   input: AmphoraExternalSettings;
-  load: boolean;
+  /**
+   * Whether a failed fetch is fatal at `setup()` — `input.required ?? false` for
+   * an external issuer, and always `true` for the idp.
+   */
+  required: boolean;
   issuer: string;
   /**
    * Nullable ON PURPOSE, unlike `issuer`: an issuer's keys can be handed to amphora
@@ -91,6 +116,7 @@ export type AmphoraExternalConfig = {
    */
   openIdConfiguration: Partial<OpenIdConfiguration> | null;
   keyCount: number;
+  /** Last SUCCESSFUL fetch. `null` until this issuer's keys have landed once. */
   lastRefresh: Date | null;
   // Last time a key from this issuer was RETURNED by a find/filter — the LRU
   // signal for `maxIssuers` eviction. `null` until first use: a never-used
@@ -105,8 +131,11 @@ export type AmphoraSettings = {
   // non-Environment (foreign) OU, are unrestricted.
   environment?: Environment;
   external?: Array<AmphoraExternalSettings>;
-  /** The single UPSTREAM identity provider — a distinguished singleton external issuer. */
-  idp?: AmphoraExternalSettings;
+  /**
+   * The single UPSTREAM identity provider — a distinguished singleton external
+   * issuer, always `required`. `setup()` throws when it cannot be resolved.
+   */
+  idp?: AmphoraIdpSettings;
   /** The service's OWN issuer scope. See {@link AmphoraInternalSettings}. */
   internal?: AmphoraInternalSettings;
   logger: ILogger;

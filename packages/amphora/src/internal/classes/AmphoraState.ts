@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import { Matcher } from "@lindorm/match";
 import type { Conduit } from "@lindorm/conduit";
 import { type IKryptos, KryptosKit, type LindormJwk } from "@lindorm/kryptos";
@@ -11,6 +12,7 @@ import { fetchExternalJwks } from "../utils/fetch-external-jwks.js";
 import { isEnvironment } from "../utils/is-environment.js";
 import { resolveExternalConfig } from "../utils/resolve-external-config.js";
 import { seedExternalConfig } from "../utils/seed-external-config.js";
+import { seedIdpConfig } from "../utils/seed-idp-config.js";
 
 /**
  * The ONE shared internal state behind an Amphora — a single Conduit, a single
@@ -49,7 +51,7 @@ export class AmphoraState {
     this.maxIssuers = options.maxIssuers ?? 1000;
     this.refreshInterval = options.refreshInterval ?? 300_000;
 
-    if (options.idp) this.idpEntry = seedExternalConfig(options.idp);
+    if (options.idp) this.idpEntry = seedIdpConfig(options.idp);
     this.externalEntries = (options.external ?? []).map(seedExternalConfig);
   }
 
@@ -151,7 +153,7 @@ export class AmphoraState {
   isStaleFor(condition: AmphoraCondition): boolean {
     const issuer = condition.issuer;
 
-    if (typeof issuer === "string") {
+    if (isString(issuer)) {
       const entry = this.findEntry(issuer);
       if (!entry) return false;
       return this.entryStale(entry);
@@ -395,7 +397,7 @@ export class AmphoraState {
   // external fetch orchestration
 
   // Re-resolve one entry's config from its verbatim `input`, then fetch + apply
-  // its keys. Used by targeted refresh and eager load.
+  // its keys. Used by targeted refresh and by the registration verbs.
   async loadEntry(entry: ExternalEntry): Promise<void> {
     await this.resolveEntry(entry);
     await this.fetchEntry(entry);
@@ -412,7 +414,10 @@ export class AmphoraState {
     entry.issuer = resolved.issuer;
     entry.jwksUri = resolved.jwksUri;
     entry.openIdConfiguration = resolved.openIdConfiguration;
-    entry.load = resolved.load;
+    // `required` is deliberately NOT re-derived here. Resolution re-seeds from
+    // `input`, and the idp's strictness is not declared in its input (its type
+    // has no `required`) — copying it back would silently demote the idp to
+    // optional. It is written once, at seed, and never again.
   }
 
   private async fetchEntry(entry: ExternalEntry): Promise<void> {
@@ -423,22 +428,39 @@ export class AmphoraState {
     this.applyFetchedKeys(entry, keys);
   }
 
-  // Refetch EVERYTHING — idp + all external. Config resolution and key fetching
-  // are each tolerant of partial failure; only a total wipe-out throws.
-  async refreshAll(): Promise<void> {
+  // Refetch EVERY registered issuer — the idp and all external. Both phases are
+  // `Promise.allSettled`, so one unreachable provider never denies the others,
+  // and the whole sweep costs ONE round-trip of wall clock rather than N.
+  //
+  // `strict` is the ONLY difference between the SETUP sweep and the periodic
+  // one, expressed as a parameter rather than a second code path that could
+  // drift. The asymmetry is deliberate and each half has its own reason:
+  //
+  // - STRICT at boot (`setup()`): a service whose `required` upstream cannot be
+  //   resolved cannot do its job — it could not verify a single token from that
+  //   issuer — so it must not come up pretending otherwise. It throws the real
+  //   cause.
+  // - LENIENT afterwards (every periodic refresh): the process is already
+  //   serving, on keys that resolved. A transient blip at the provider must not
+  //   kill it. Failures are warned and the refresh interval is the retry backoff.
+  //
+  // Per-entry `required` REPLACES the old "every provider failed" throw: two
+  // throw conditions for one situation is what this collapses.
+  async refreshAll(strict = false): Promise<void> {
     this.logger.silly("Refreshing vault");
 
     const entries = this.allEntries;
     if (entries.length === 0) return;
 
+    const failures = new Map<ExternalEntry, unknown>();
+
     const resolveResults = await Promise.allSettled(
       entries.map((entry) => this.resolveEntry(entry)),
     );
 
-    let resolveFailures = 0;
     resolveResults.forEach((result, index) => {
       if (result.status === "rejected") {
-        resolveFailures++;
+        failures.set(entries[index], result.reason);
         this.logger.warn("Failed to load external config", {
           error: result.reason,
           issuer: entries[index].input.issuer,
@@ -446,38 +468,40 @@ export class AmphoraState {
       }
     });
 
-    if (resolveFailures === entries.length) {
-      throw new AmphoraError("All external config providers failed during refresh", {
-        code: "external_config_providers_failed",
-        data: { failed: resolveFailures, total: entries.length },
-        title: "External Config Providers Failed",
-        details: `All ${entries.length} external configuration provider(s) failed to load during refresh. Check provider availability and the openIdConfigurationUri/jwksUri endpoints.`,
-      });
-    }
-
-    const resolved = entries.filter(
-      (_, index) => resolveResults[index].status === "fulfilled",
-    );
+    const resolved = entries.filter((entry) => !failures.has(entry));
 
     const fetchResults = await Promise.allSettled(
       resolved.map((entry) => this.fetchEntry(entry)),
     );
 
-    let fetchFailures = 0;
-    for (const result of fetchResults) {
+    fetchResults.forEach((result, index) => {
       if (result.status === "rejected") {
-        fetchFailures++;
-        this.logger.warn("Failed to refresh external JWKS", { error: result.reason });
+        failures.set(resolved[index], result.reason);
+        this.logger.warn("Failed to refresh external JWKS", {
+          error: result.reason,
+          issuer: resolved[index].issuer,
+        });
       }
-    }
+    });
 
-    if (resolved.length > 0 && fetchFailures === resolved.length) {
-      throw new AmphoraError("All external JWKS providers failed during refresh", {
-        code: "external_jwks_providers_failed",
-        data: { failed: fetchFailures, total: resolved.length },
-        title: "External JWKS Providers Failed",
-        details: `All ${resolved.length} external JWKS provider(s) failed to return usable keys during refresh. Check provider availability and the JWKS endpoints.`,
+    if (!strict) return;
+
+    for (const entry of entries) {
+      if (entry.required !== true || !failures.has(entry)) continue;
+
+      // The `warn` above already carries the cause; this states the reason the
+      // process is about to die, which the cause alone does not say. The cause
+      // itself is what gets thrown — a wrapper would bury the one thing an
+      // operator needs (a 503, a bad JWKS, an unreachable host) one level down.
+      this.logger.error("Required issuer could not be loaded", {
+        issuer:
+          entry.issuer ??
+          entry.input.issuer ??
+          entry.input.openIdConfigurationUri ??
+          null,
       });
+
+      throw failures.get(entry);
     }
   }
 
@@ -519,6 +543,6 @@ export class AmphoraState {
 
   refreshFor(condition: AmphoraCondition): Promise<void> {
     const issuer = condition.issuer;
-    return typeof issuer === "string" ? this.refreshIssuer(issuer) : this.refresh();
+    return isString(issuer) ? this.refreshIssuer(issuer) : this.refresh();
   }
 }

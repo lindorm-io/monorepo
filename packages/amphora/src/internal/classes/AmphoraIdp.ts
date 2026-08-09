@@ -1,10 +1,7 @@
 import { AmphoraError } from "../../errors/index.js";
 import type { IAmphoraIdp } from "../../interfaces/index.js";
-import type {
-  AmphoraExternalConfig,
-  AmphoraExternalSettings,
-} from "../../types/index.js";
-import { seedExternalConfig } from "../utils/seed-external-config.js";
+import type { AmphoraExternalConfig, AmphoraIdpSettings } from "../../types/index.js";
+import { seedIdpConfig } from "../utils/seed-idp-config.js";
 import { toExternalConfig } from "../utils/to-external-config.js";
 import type { AmphoraState } from "./AmphoraState.js";
 
@@ -17,12 +14,19 @@ import type { AmphoraState } from "./AmphoraState.js";
 export class AmphoraIdp implements IAmphoraIdp {
   constructor(private readonly state: AmphoraState) {}
 
-  async set(source: AmphoraExternalSettings): Promise<void> {
+  /**
+   * Register or REPLACE the upstream. It awaits the discovery / JWKS fetch and
+   * THROWS when that fails — the same strictness `setup()` applies to a
+   * construction-declared idp, reached through the same load. A caller pointing
+   * the service at an upstream it cannot reach has misconfigured it, and hearing
+   * so here beats a 500 later.
+   */
+  async set(source: AmphoraIdpSettings): Promise<void> {
     // One issuer, one scope — the idp cannot also be an external provider.
     this.state.assertIssuerScopeFree(source.issuer, "idp");
 
     const previous = this.state.idpEntry;
-    const entry = seedExternalConfig(source);
+    const entry = seedIdpConfig(source);
     this.state.idpEntry = entry;
 
     // Singleton — the previous idp's keys are evicted on swap.
@@ -30,7 +34,7 @@ export class AmphoraIdp implements IAmphoraIdp {
       this.state.evictIssuer(previous.issuer ?? previous.input.issuer ?? null);
     }
 
-    if (entry.load) await this.state.loadEntry(entry);
+    await this.state.loadEntry(entry);
   }
 
   /**
@@ -59,7 +63,7 @@ export class AmphoraIdp implements IAmphoraIdp {
       },
       title: "IDP Issuer Unresolved",
       details:
-        "The upstream identity provider was registered by `openIdConfigurationUri` alone, so its issuer comes from the discovery document — and that document has either not been fetched yet (registration is lazy by default; `amphora.setup()` fetches it) or could not be fetched. Declare `issuer` on the idp registration, or make sure setup() completed.",
+        "The upstream identity provider was registered by `openIdConfigurationUri` alone, so its issuer comes from the discovery document — and that document has not been fetched. An idp declared in the constructor is fetched by `amphora.setup()`, which throws if it cannot, so this means setup() has not run yet. Await setup() before reading config(), or declare `issuer` on the registration.",
     });
   }
 

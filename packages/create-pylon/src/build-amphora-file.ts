@@ -28,8 +28,9 @@ export const buildAmphoraFile = (answers: Answers): string => {
       `// \`idp\` is the UPSTREAM identity provider — registered here and nowhere else.`,
       `// Amphora discovers \`{issuer}/.well-known/openid-configuration\` and fetches the`,
       `// provider's keys from it; \`OpenIdDriver\` then reads that document rather than`,
-      `// fetching anything itself. Registration is lazy, and \`pylon.setup()\` awaits`,
-      `// \`amphora.setup()\`, so the document is resolved before the first request.`,
+      `// fetching anything itself. The idp is always REQUIRED: \`pylon.setup()\` awaits`,
+      `// \`amphora.setup()\`, which fetches the document and THROWS when it cannot — so`,
+      `// this service will not boot until its identity provider serves discovery.`,
     );
   }
 

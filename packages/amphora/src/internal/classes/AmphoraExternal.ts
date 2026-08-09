@@ -27,6 +27,15 @@ export class AmphoraExternal implements IAmphoraExternal {
     this.state.removeKey(id);
   }
 
+  /**
+   * Register an issuer source and fetch its keys. There is no deferred
+   * registration: a source amphora holds is a source amphora has fetched.
+   *
+   * A failure THROWS, whatever `required` says — `required` decides whether one
+   * bad entry in the SETUP sweep is fatal to the boot, and there is no sweep
+   * here. This is a single imperative call, so it reports its own failure to its
+   * own caller rather than leaving a registered issuer with no keys behind it.
+   */
   async addIssuer(source: AmphoraExternalSettings): Promise<void> {
     // One issuer, one scope — an external issuer cannot also be the idp.
     this.state.assertIssuerScopeFree(source.issuer, "external");
@@ -37,9 +46,7 @@ export class AmphoraExternal implements IAmphoraExternal {
     // overflow). Registration stamps `lastAccess`, so this new issuer is safe.
     this.state.addExternalEntry(entry);
 
-    // `load` eager-fetches now; lazy issuers wait for the next refresh or a
-    // find-miss on their issuer.
-    if (entry.load) await this.state.loadEntry(entry);
+    await this.state.loadEntry(entry);
   }
 
   removeIssuer(issuer: string): void {
@@ -67,11 +74,12 @@ export class AmphoraExternal implements IAmphoraExternal {
    * as a copy.
    *
    * A source registered by `openIdConfigurationUri` alone names no issuer until
-   * that document is fetched, and registration is lazy by default, so it is simply
-   * not an issuer yet and is omitted rather than listed with a `null`. It stays
-   * registered and appears here the moment it resolves. Omitting beats throwing:
-   * one unreachable peer must not take out the whole listing, which is the same
-   * partial-failure tolerance `refreshAll` is built on.
+   * that document is fetched, so a constructor-declared one is not an issuer yet
+   * before `setup()` — nor after it, if the fetch failed and the source was not
+   * `required`. It is omitted rather than listed with a `null`, and appears here
+   * the moment it resolves. Omitting beats throwing: one unreachable peer must
+   * not take out the whole listing, which is the same partial-failure tolerance
+   * `refreshAll` is built on.
    */
   issuers(): Array<AmphoraExternalConfig> {
     const result: Array<AmphoraExternalConfig> = [];

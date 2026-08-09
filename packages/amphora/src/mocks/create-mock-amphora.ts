@@ -8,7 +8,8 @@ const MOCK_INTERNAL_CONFIG: AmphoraInternalConfig = {
 
 const MOCK_IDP_CONFIG: AmphoraExternalConfig = {
   input: {},
-  load: false,
+  // The idp is always required.
+  required: true,
   issuer: "mock_issuer",
   jwksUri: "mock_jwks_uri",
   openIdConfiguration: null,

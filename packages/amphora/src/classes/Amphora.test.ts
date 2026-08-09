@@ -1158,28 +1158,6 @@ describe("Amphora", () => {
 
       expect(amphora.external.issuers().length).toBe(1);
     });
-
-    test("should throw when all providers fail", async () => {
-      nock("https://external.lindorm.io")
-        .get("/.well-known/openid-configuration")
-        .times(1)
-        .reply(500, { error: "Internal Server Error" });
-
-      amphora = new Amphora({
-        internal: { issuer },
-        logger: createMockLogger(),
-        external: [
-          {
-            issuer: "https://external.lindorm.io/",
-          },
-        ],
-      });
-
-      await expect(amphora.setup()).rejects.toThrow(AmphoraError);
-      await expect(amphora.setup()).rejects.toThrow(
-        "All external config providers failed during refresh",
-      );
-    });
   });
 
   describe("external JWKS resilience", () => {
@@ -1230,6 +1208,9 @@ describe("Amphora", () => {
       expect(badProviderKeys).toHaveLength(0);
     });
 
+    // Declared `required` so the rejection surfaces at setup instead of a warn —
+    // the assertion is about WHICH keys the fetch refuses, and the flag is only
+    // how that verdict is made visible.
     test("should reject keys with mismatched issuer", async () => {
       const jwkWithWrongIssuer = TEST_EC_KEY_SIG.toJWK("private");
       jwkWithWrongIssuer.iss = "https://attacker.com/";
@@ -1244,15 +1225,18 @@ describe("Amphora", () => {
         logger: createMockLogger(),
         external: [
           {
+            required: true,
             issuer: "https://external.lindorm.io/",
             jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
           },
         ],
       });
 
-      await expect(amphora.setup()).rejects.toThrow(AmphoraError);
-      await expect(amphora.setup()).rejects.toThrow(
-        "All external JWKS providers failed during refresh",
+      const promise = amphora.setup();
+
+      await expect(promise).rejects.toThrow(AmphoraError);
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({ code: "external_jwks_issuer_mismatch" }),
       );
 
       const externalKeys = amphora.vault.filter(
@@ -1360,7 +1344,12 @@ describe("Amphora", () => {
       amphora = new Amphora({
         internal: { issuer },
         logger: createMockLogger(),
-        external: [{ issuer, jwksUri: "https://test.lindorm.io/.well-known/jwks.json" }],
+        external: [
+          {
+            issuer,
+            jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+          },
+        ],
       });
 
       await amphora.setup();
@@ -1396,21 +1385,14 @@ describe("Amphora", () => {
       return jwk;
     };
 
-    // Captures the AmphoraError thrown per-issuer inside getExternalJwks, which
-    // refreshExternalKeys swallows into a warn before throwing its own error.
-    const providerError = (child: ReturnType<typeof createMockLogger>): AmphoraError => {
-      const call = vi
-        .mocked(child.warn)
-        .mock.calls.find(([message]) => message === "Failed to refresh external JWKS");
-
-      return (call?.[1] as { error: AmphoraError }).error;
-    };
-
+    // `required` so a fetch that rejects every key surfaces AT setup rather than
+    // as a warn — these cases are about the per-issuer verdict, and the flag is
+    // only what makes it visible to the caller.
     const createScoped = (logger: ReturnType<typeof createMockLogger>) =>
       new Amphora({
         internal: { issuer },
         logger,
-        external: [{ issuer: externalIssuer, jwksUri: externalJwksUri }],
+        external: [{ required: true, issuer: externalIssuer, jwksUri: externalJwksUri }],
       });
 
     test("should skip the unparseable key and still load the issuer's other keys", async () => {
@@ -1467,28 +1449,24 @@ describe("Amphora", () => {
           keys: [unparseableJwk("key-no-alg-1"), unparseableJwk("key-no-alg-2")],
         });
 
-      const logger = createMockLogger();
-      const child = createMockLogger();
-      vi.mocked(logger.child).mockReturnValue(child);
+      amphora = createScoped(createMockLogger());
 
-      amphora = createScoped(logger);
+      const promise = amphora.setup();
 
-      await expect(amphora.setup()).rejects.toThrow(
-        "All external JWKS providers failed during refresh",
+      await expect(promise).rejects.toThrow(AmphoraError);
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({
+          code: "external_jwks_all_unusable",
+          data: {
+            issuer: externalIssuer,
+            total: 2,
+            rejected: 0,
+            expired: 0,
+            rejectedByTrust: 0,
+            unusable: 2,
+          },
+        }),
       );
-
-      const error = providerError(child);
-
-      expect(error).toBeInstanceOf(AmphoraError);
-      expect(error.code).toBe("external_jwks_all_unusable");
-      expect(error.data).toEqual({
-        issuer: externalIssuer,
-        total: 2,
-        rejected: 0,
-        expired: 0,
-        rejectedByTrust: 0,
-        unusable: 2,
-      });
     });
 
     test("should throw when the only keys are unparseable and expired, never return an empty set", async () => {
@@ -1499,27 +1477,24 @@ describe("Amphora", () => {
         .times(1)
         .reply(200, { keys: [unparseableJwk("key-no-alg"), expired] });
 
-      const logger = createMockLogger();
-      const child = createMockLogger();
-      vi.mocked(logger.child).mockReturnValue(child);
+      amphora = createScoped(createMockLogger());
 
-      amphora = createScoped(logger);
+      const promise = amphora.setup();
 
-      await expect(amphora.setup()).rejects.toThrow(
-        "All external JWKS providers failed during refresh",
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({
+          code: "external_jwks_no_valid_keys",
+          data: {
+            issuer: externalIssuer,
+            total: 2,
+            rejected: 0,
+            expired: 1,
+            rejectedByTrust: 0,
+            unusable: 1,
+          },
+        }),
       );
 
-      const error = providerError(child);
-
-      expect(error.code).toBe("external_jwks_no_valid_keys");
-      expect(error.data).toEqual({
-        issuer: externalIssuer,
-        total: 2,
-        rejected: 0,
-        expired: 1,
-        rejectedByTrust: 0,
-        unusable: 1,
-      });
       expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
     });
 
@@ -1531,27 +1506,21 @@ describe("Amphora", () => {
         .times(1)
         .reply(200, { keys: [unparseableJwk("key-no-alg"), mismatched] });
 
-      const logger = createMockLogger();
-      const child = createMockLogger();
-      vi.mocked(logger.child).mockReturnValue(child);
-
-      amphora = createScoped(logger);
+      amphora = createScoped(createMockLogger());
 
       await expect(amphora.setup()).rejects.toThrow(
-        "All external JWKS providers failed during refresh",
+        expect.objectContaining({
+          code: "external_jwks_no_valid_keys",
+          data: {
+            issuer: externalIssuer,
+            total: 2,
+            rejected: 1,
+            expired: 0,
+            rejectedByTrust: 0,
+            unusable: 1,
+          },
+        }),
       );
-
-      const error = providerError(child);
-
-      expect(error.code).toBe("external_jwks_no_valid_keys");
-      expect(error.data).toEqual({
-        issuer: externalIssuer,
-        total: 2,
-        rejected: 1,
-        expired: 0,
-        rejectedByTrust: 0,
-        unusable: 1,
-      });
     });
 
     test("should load a fully valid JWKS unaffected", async () => {
@@ -1870,6 +1839,7 @@ describe("Amphora", () => {
         logger: createMockLogger(),
         external: [
           {
+            required: true,
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
             trustAnchors: trustedCa.certificateChain[0],
@@ -1878,7 +1848,7 @@ describe("Amphora", () => {
       });
 
       await expect(amphora.setup()).rejects.toThrow(
-        "All external JWKS providers failed during refresh",
+        expect.objectContaining({ code: "external_jwks_all_rejected_by_trust" }),
       );
 
       expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
@@ -1904,6 +1874,7 @@ describe("Amphora", () => {
         logger: createMockLogger(),
         external: [
           {
+            required: true,
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
             trustAnchors: ca.certificateChain[0],
@@ -1916,7 +1887,7 @@ describe("Amphora", () => {
       expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
     });
 
-    test("should include rejectedByTrust in debug when all keys fail trust validation", async () => {
+    test("should include rejectedByTrust in the error data when all keys fail trust validation", async () => {
       const trustedCa = generateCa();
       const untrustedCa = generateCa();
       const child = generateChild(untrustedCa);
@@ -1933,6 +1904,7 @@ describe("Amphora", () => {
         logger: createMockLogger(),
         external: [
           {
+            required: true,
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
             trustAnchors: trustedCa.certificateChain[0],
@@ -1945,7 +1917,8 @@ describe("Amphora", () => {
       await expect(promise).rejects.toThrow(AmphoraError);
       await expect(promise).rejects.toThrow(
         expect.objectContaining({
-          message: "All external JWKS providers failed during refresh",
+          code: "external_jwks_all_rejected_by_trust",
+          data: expect.objectContaining({ rejectedByTrust: 1, total: 1 }),
         }),
       );
     });
@@ -2102,6 +2075,7 @@ describe("Amphora", () => {
         logger: createMockLogger(),
         external: [
           {
+            required: true,
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
             trustAnchors: trustedCa.certificateChain[0],
@@ -2111,7 +2085,7 @@ describe("Amphora", () => {
       });
 
       await expect(amphora.setup()).rejects.toThrow(
-        "All external JWKS providers failed during refresh",
+        expect.objectContaining({ code: "external_jwks_all_rejected_by_trust" }),
       );
 
       expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
@@ -2137,6 +2111,7 @@ describe("Amphora", () => {
         logger: createMockLogger(),
         external: [
           {
+            required: true,
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
             trustAnchors: ca.certificateChain[0],
@@ -2251,8 +2226,8 @@ describe("Amphora", () => {
   });
 
   describe("external facet — issuer sources", () => {
-    const jwksUri = "https://lazy.lindorm.io/.well-known/jwks.json";
-    const externalIssuer = "https://lazy.lindorm.io/";
+    const jwksUri = "https://peer.lindorm.io/.well-known/jwks.json";
+    const externalIssuer = "https://peer.lindorm.io/";
 
     const publicJwk = () => {
       const jwk = TEST_EC_KEY_SIG.toJWK("public");
@@ -2260,46 +2235,45 @@ describe("Amphora", () => {
       return jwk;
     };
 
-    test("addIssuer registers lazily; refresh(issuer) loads it", async () => {
-      nock("https://lazy.lindorm.io")
+    test("addIssuer fetches the source's keys before it resolves", async () => {
+      nock("https://peer.lindorm.io")
         .get("/.well-known/jwks.json")
         .times(1)
         .reply(200, { keys: [publicJwk()] });
 
       await amphora.external.addIssuer({ issuer: externalIssuer, jwksUri });
 
-      // Registered, not yet fetched.
-      expect(amphora.external.issuers()).toHaveLength(1);
-      expect(amphora.external.issuers()[0]!.lastRefresh).toBeNull();
-      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
-
-      await amphora.external.refresh(externalIssuer);
-
       expect(nock.isDone()).toBe(true);
-      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(1);
+      expect(amphora.external.issuers()).toHaveLength(1);
       expect(amphora.external.issuers()[0]!.lastRefresh).toBeInstanceOf(Date);
       expect(amphora.external.issuers()[0]!.keyCount).toBe(1);
+      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(1);
     });
 
-    test("addIssuer with load:true eager-fetches immediately", async () => {
-      nock("https://lazy.lindorm.io")
+    // `required` decides whether one bad entry in the SETUP sweep is fatal to
+    // the boot. There is no sweep here — a single imperative call reports its own
+    // failure to its own caller, so it throws whatever `required` says.
+    test("addIssuer throws when the fetch fails, default (non-required) source", async () => {
+      nock("https://peer.lindorm.io")
         .get("/.well-known/jwks.json")
         .times(1)
-        .reply(200, { keys: [publicJwk()] });
+        .reply(503, { error: "Service Unavailable" });
 
-      await amphora.external.addIssuer({ issuer: externalIssuer, jwksUri, load: true });
+      await expect(
+        amphora.external.addIssuer({ issuer: externalIssuer, jwksUri }),
+      ).rejects.toThrow();
 
       expect(nock.isDone()).toBe(true);
-      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(1);
+      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
     });
 
     test("removeIssuer drops the source and evicts its keys", async () => {
-      nock("https://lazy.lindorm.io")
+      nock("https://peer.lindorm.io")
         .get("/.well-known/jwks.json")
         .times(1)
         .reply(200, { keys: [publicJwk()] });
 
-      await amphora.external.addIssuer({ issuer: externalIssuer, jwksUri, load: true });
+      await amphora.external.addIssuer({ issuer: externalIssuer, jwksUri });
       expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(1);
 
       amphora.external.removeIssuer(externalIssuer);
@@ -2331,7 +2305,6 @@ describe("Amphora", () => {
 
       await amphora.external.addIssuer({
         issuer: "https://enrich.lindorm.io/",
-        load: true,
       });
 
       const [config] = amphora.external.issuers();
@@ -2350,18 +2323,22 @@ describe("Amphora", () => {
       return jwk;
     };
 
-    const persistJwks = (host: string) =>
-      nock(`https://${host}.lindorm.io`)
+    // Registration FETCHES, so every issuer this suite registers must be
+    // answerable — one host pattern serving the same key everywhere. The cap is
+    // what is under test here, never the fetch.
+    beforeEach(() => {
+      nock(/lindorm\.io/)
         .persist()
         .get("/.well-known/jwks.json")
         .reply(200, { keys: [publicJwk()] });
+    });
 
     afterEach(() => {
       nock.cleanAll();
       MockDate.set(MockedDate);
     });
 
-    test("default cap is 1000 — the 1001st external issuer evicts one (lazy)", async () => {
+    test("default cap is 1000 — the 1001st external issuer evicts one", async () => {
       const instance = new Amphora({ internal: { issuer }, logger: createMockLogger() });
 
       for (let i = 0; i < 1001; i++) {
@@ -2387,22 +2364,16 @@ describe("Amphora", () => {
         maxIssuers: 2,
       });
 
-      persistJwks("a");
-      persistJwks("b");
-      persistJwks("c");
-
       MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
       await instance.external.addIssuer({
         issuer: "https://a.lindorm.io/",
         jwksUri: "https://a.lindorm.io/.well-known/jwks.json",
-        load: true,
       });
 
       MockDate.set(new Date("2024-01-01T08:00:01.000Z"));
       await instance.external.addIssuer({
         issuer: "https://b.lindorm.io/",
         jwksUri: "https://b.lindorm.io/.well-known/jwks.json",
-        load: true,
       });
 
       // Use A — B is now the least-recently-used external issuer.
@@ -2415,7 +2386,6 @@ describe("Amphora", () => {
       await instance.external.addIssuer({
         issuer: "https://c.lindorm.io/",
         jwksUri: "https://c.lindorm.io/.well-known/jwks.json",
-        load: true,
       });
 
       const issuers = instance.external.issuers().map((c) => c.issuer);
@@ -2473,7 +2443,8 @@ describe("Amphora", () => {
         ],
       });
 
-      // Constructor-seeded issuer starts never-used.
+      // A constructor-seeded issuer starts never-used — `setup()` has not run,
+      // so nothing has fetched or touched it.
       expect(instance.external.issuers()[0]!.lastAccess).toBeNull();
 
       await instance.external.addIssuer({
@@ -2490,12 +2461,9 @@ describe("Amphora", () => {
     test("find bumps the external issuer's lastAccess", async () => {
       const instance = new Amphora({ internal: { issuer }, logger: createMockLogger() });
 
-      persistJwks("a");
-
       await instance.external.addIssuer({
         issuer: "https://a.lindorm.io/",
         jwksUri: "https://a.lindorm.io/.well-known/jwks.json",
-        load: true,
       });
 
       MockDate.set(new Date("2024-01-01T09:00:00.000Z"));
@@ -2508,23 +2476,28 @@ describe("Amphora", () => {
   });
 
   describe("external issuer validation (item 1)", () => {
+    // Validation is SYNCHRONOUS, at registration, before any network call — so
+    // an invalid source is rejected outright rather than surfacing as a fetch
+    // failure. The unconsumed jwksUri interceptor-less host proves nothing was
+    // fetched: a request would have failed the nock guard instead.
     test("rejects a non-URI issuer with external_issuer_not_uri", async () => {
       const promise = amphora.external.addIssuer({
         issuer: "not-a-uri",
         jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
-        load: true,
       });
 
       await expect(promise).rejects.toThrow(AmphoraError);
       await expect(promise).rejects.toThrow(
         expect.objectContaining({ code: "external_issuer_not_uri" }),
       );
+
+      // The bad source was never registered.
+      expect(amphora.external.issuers()).toHaveLength(0);
     });
 
     test("rejects a URN issuer without a jwksUri (cannot discover a URN)", async () => {
       const promise = amphora.external.addIssuer({
         issuer: "urn:lindorm:tyr:client:abc",
-        load: true,
       });
 
       await expect(promise).rejects.toThrow(AmphoraError);
@@ -2545,7 +2518,6 @@ describe("Amphora", () => {
       await amphora.external.addIssuer({
         issuer: "urn:lindorm:tyr:client:abc",
         jwksUri: "https://urn-keys.lindorm.io/.well-known/jwks.json",
-        load: true,
       });
 
       expect(
@@ -2553,24 +2525,7 @@ describe("Amphora", () => {
       ).toHaveLength(1);
     });
 
-    test("rejects a non-URI issuer on the LAZY path (no load) at registration", async () => {
-      // The default lazy path must validate at addIssuer time, NOT silently accept
-      // and only warn on a later refresh.
-      const promise = amphora.external.addIssuer({
-        issuer: "not-a-uri",
-        jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
-      });
-
-      await expect(promise).rejects.toThrow(AmphoraError);
-      await expect(promise).rejects.toThrow(
-        expect.objectContaining({ code: "external_issuer_not_uri" }),
-      );
-
-      // The bad source was never registered.
-      expect(amphora.external.issuers()).toHaveLength(0);
-    });
-
-    test("idp.set rejects a non-URI issuer even when lazy", async () => {
+    test("idp.set rejects a non-URI issuer", async () => {
       const promise = amphora.idp.set({
         issuer: "not-a-uri",
         jwksUri: "https://x.lindorm.io/.well-known/jwks.json",
@@ -2602,7 +2557,6 @@ describe("Amphora", () => {
       const promise = amphora.external.addIssuer({
         openIdConfigurationUri:
           "https://noissuer.lindorm.io/.well-known/openid-configuration",
-        load: true,
       });
 
       await expect(promise).rejects.toThrow(AmphoraError);
@@ -2612,6 +2566,11 @@ describe("Amphora", () => {
     });
 
     test("addIssuer rejects an issuer already claimed by the idp", async () => {
+      nock("https://up.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, OPEN_ID_JWKS_RESPONSE);
+
       await amphora.idp.set({
         issuer: "https://up.lindorm.io/",
         jwksUri: "https://up.lindorm.io/.well-known/jwks.json",
@@ -2626,6 +2585,11 @@ describe("Amphora", () => {
     });
 
     test("idp.set rejects an issuer already claimed by an external provider", async () => {
+      nock("https://ext.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, OPEN_ID_JWKS_RESPONSE);
+
       await amphora.external.addIssuer({
         issuer: "https://ext.lindorm.io/",
         jwksUri: "https://ext.lindorm.io/.well-known/jwks.json",
@@ -2640,6 +2604,11 @@ describe("Amphora", () => {
     });
 
     test("removeIssuer refuses the idp's issuer (use idp.clear)", async () => {
+      nock("https://up.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, OPEN_ID_JWKS_RESPONSE);
+
       await amphora.idp.set({
         issuer: "https://up.lindorm.io/",
         jwksUri: "https://up.lindorm.io/.well-known/jwks.json",
@@ -2654,19 +2623,24 @@ describe("Amphora", () => {
   /**
    * `AmphoraExternalConfig.issuer` is a `string`, so the nullable, still-resolving
    * shape must not escape. A source registered by `openIdConfigurationUri` alone
-   * carries no issuer until that document is fetched — and `load` defaults to
-   * lazy, so that window is ordinary. Each facet answers it differently because
-   * the questions differ: `idp.config()` named ONE provider, `issuers()` asked
-   * what amphora holds.
+   * carries no issuer until that document is fetched — a window that now opens
+   * only for a CONSTRUCTOR-declared source: before `setup()`, or after it when a
+   * non-`required` fetch failed. Each facet answers it differently because the
+   * questions differ: `idp.config()` named ONE provider, `issuers()` asked what
+   * amphora holds.
    */
   describe("unresolved issuer at the public boundary", () => {
     const discoveryUri = "https://pending.lindorm.io/.well-known/openid-configuration";
 
-    test("idp.config() throws when the idp has no resolved issuer", async () => {
-      await amphora.idp.set({ openIdConfigurationUri: discoveryUri });
+    test("idp.config() throws before setup() when the idp declares only a discovery uri", () => {
+      const instance = new Amphora({
+        internal: { issuer },
+        logger: createMockLogger(),
+        idp: { openIdConfigurationUri: discoveryUri },
+      });
 
-      expect(() => amphora.idp.config()).toThrow(AmphoraError);
-      expect(() => amphora.idp.config()).toThrow(
+      expect(() => instance.idp.config()).toThrow(AmphoraError);
+      expect(() => instance.idp.config()).toThrow(
         expect.objectContaining({
           code: "idp_issuer_unresolved",
           data: { openIdConfigurationUri: discoveryUri },
@@ -2692,23 +2666,66 @@ describe("Amphora", () => {
         .times(1)
         .reply(200, { keys: [jwk] });
 
-      await amphora.idp.set({ openIdConfigurationUri: discoveryUri, load: true });
+      await amphora.idp.set({ openIdConfigurationUri: discoveryUri });
 
       expect(amphora.idp.config().issuer).toBe("https://pending.lindorm.io/");
     });
 
-    // One pending (or unreachable) peer must not take out the listing of every
-    // other issuer — the same partial-failure tolerance `refreshAll` is built on.
-    test("external.issuers() omits an unresolved source and keeps the rest", async () => {
-      await amphora.external.addIssuer({ openIdConfigurationUri: discoveryUri });
-      await amphora.external.addIssuer({
-        issuer: "https://settled.lindorm.io/",
-        jwksUri: "https://settled.lindorm.io/.well-known/jwks.json",
+    // One pending peer must not take out the listing of every other issuer —
+    // the same partial-failure tolerance `refreshAll` is built on.
+    test("external.issuers() omits a not-yet-resolved source and keeps the rest", () => {
+      const instance = new Amphora({
+        internal: { issuer },
+        logger: createMockLogger(),
+        external: [
+          { openIdConfigurationUri: discoveryUri },
+          {
+            issuer: "https://settled.lindorm.io/",
+            jwksUri: "https://settled.lindorm.io/.well-known/jwks.json",
+          },
+        ],
       });
 
-      expect(amphora.external.issuers().map((c) => c.issuer)).toEqual([
+      expect(instance.external.issuers().map((c) => c.issuer)).toEqual([
         "https://settled.lindorm.io/",
       ]);
+    });
+
+    // Same shape AFTER setup: the discovery fetch failed and the source was not
+    // `required`, so setup completed and the source is still issuer-less. The
+    // healthy peer beside it is what proves the listing survived, not the sweep.
+    test("external.issuers() still omits a source whose non-required setup fetch failed", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("public");
+      delete jwk.iss;
+
+      nock("https://pending.lindorm.io")
+        .get("/.well-known/openid-configuration")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+
+      nock("https://settled.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      const instance = new Amphora({
+        internal: { issuer },
+        logger: createMockLogger(),
+        external: [
+          { openIdConfigurationUri: discoveryUri },
+          {
+            issuer: "https://settled.lindorm.io/",
+            jwksUri: "https://settled.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await expect(instance.setup()).resolves.toBeUndefined();
+
+      expect(instance.external.issuers().map((c) => c.issuer)).toEqual([
+        "https://settled.lindorm.io/",
+      ]);
+      expect(nock.isDone()).toBe(true);
     });
 
     test("external.issuers() lists the source once its issuer resolves", async () => {
@@ -2731,7 +2748,6 @@ describe("Amphora", () => {
 
       await amphora.external.addIssuer({
         openIdConfigurationUri: discoveryUri,
-        load: true,
       });
 
       expect(amphora.external.issuers().map((c) => c.issuer)).toEqual([
@@ -2815,8 +2831,14 @@ describe("Amphora", () => {
         internal: { issuer },
         logger,
         external: [
-          { issuer: issuerA, jwksUri: "https://iss-a.lindorm.io/.well-known/jwks.json" },
-          { issuer: issuerB, jwksUri: "https://iss-b.lindorm.io/.well-known/jwks.json" },
+          {
+            issuer: issuerA,
+            jwksUri: "https://iss-a.lindorm.io/.well-known/jwks.json",
+          },
+          {
+            issuer: issuerB,
+            jwksUri: "https://iss-b.lindorm.io/.well-known/jwks.json",
+          },
         ],
       });
 
@@ -2875,7 +2897,7 @@ describe("Amphora", () => {
         .times(1)
         .reply(200, { keys: [publicJwk()] });
 
-      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri, load: true });
+      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri });
 
       expect(amphora.idp.config().issuer).toBe(idpIssuer);
       expect(amphora.idp.config().keyCount).toBe(1);
@@ -2891,7 +2913,6 @@ describe("Amphora", () => {
       await amphora.idp.set({
         issuer: "https://idp-a.lindorm.io/",
         jwksUri: "https://idp-a.lindorm.io/.well-known/jwks.json",
-        load: true,
       });
       expect(
         amphora.vault.filter((k) => k.issuer === "https://idp-a.lindorm.io/"),
@@ -2907,7 +2928,6 @@ describe("Amphora", () => {
       await amphora.idp.set({
         issuer: "https://idp-b.lindorm.io/",
         jwksUri: "https://idp-b.lindorm.io/.well-known/jwks.json",
-        load: true,
       });
 
       expect(amphora.idp.config().issuer).toBe("https://idp-b.lindorm.io/");
@@ -2925,7 +2945,7 @@ describe("Amphora", () => {
         .times(1)
         .reply(200, { keys: [publicJwk()] });
 
-      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri, load: true });
+      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri });
 
       amphora.idp.clear();
 
@@ -2939,7 +2959,7 @@ describe("Amphora", () => {
         .times(2)
         .reply(200, { keys: [publicJwk()] });
 
-      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri, load: true });
+      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri });
       await amphora.idp.refresh();
 
       expect(nock.isDone()).toBe(true);
@@ -3001,6 +3021,219 @@ describe("Amphora", () => {
       expect(
         amphora.vault.filter((k) => k.issuer === "https://ext.lindorm.io/"),
       ).toHaveLength(1);
+    });
+  });
+
+  /**
+   * `required` is the whole of the strictness story: it does not say WHEN an
+   * issuer is fetched — every registered issuer is fetched at `setup()` — only
+   * whether a failure there is fatal.
+   *
+   * The asymmetry between boot and steady state is deliberate. STRICT at
+   * `setup()`: a service whose required upstream cannot be resolved cannot
+   * verify a single token from it, so it must not come up pretending otherwise.
+   * LENIENT at every periodic refresh afterwards: the process is already
+   * serving on keys that resolved, and a transient blip at the provider must not
+   * kill it — the refresh interval is the retry backoff.
+   */
+  describe("required at setup, lenient at refresh", () => {
+    const idpIssuer = "https://idp.lindorm.io/";
+    const idpJwksUri = "https://idp.lindorm.io/.well-known/jwks.json";
+    const peerIssuer = "https://peer.lindorm.io/";
+    const peerJwksUri = "https://peer.lindorm.io/.well-known/jwks.json";
+    const healthyIssuer = "https://healthy.lindorm.io/";
+    const healthyJwksUri = "https://healthy.lindorm.io/.well-known/jwks.json";
+
+    const publicJwk = (key = TEST_EC_KEY_SIG) => {
+      const jwk = key.toJWK("public");
+      delete jwk.iss;
+      return jwk;
+    };
+
+    const healthy = () =>
+      nock("https://healthy.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk(TEST_OKP_KEY_SIG)] });
+
+    // Several cases deliberately leave a failing interceptor unconsumed; a leaked
+    // one would answer a later test's request (or, once spent, let it reach the
+    // real network).
+    afterEach(() => {
+      nock.cleanAll();
+    });
+
+    // A HEALTHY peer stands beside the broken one on purpose. Without it the
+    // test would also pass under the "every provider failed" throw this
+    // replaced, so it would not be testing `required` at all.
+    test("setup() throws when a REQUIRED external fails, with a healthy peer alongside", async () => {
+      healthy();
+
+      nock("https://peer.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+
+      amphora = new Amphora({
+        internal: { issuer },
+        logger: createMockLogger(),
+        external: [
+          { issuer: healthyIssuer, jwksUri: healthyJwksUri },
+          { required: true, issuer: peerIssuer, jwksUri: peerJwksUri },
+        ],
+      });
+
+      await expect(amphora.setup()).rejects.toThrow();
+
+      // The sweep itself stayed tolerant — only the verdict at its end is strict.
+      expect(amphora.vault.filter((k) => k.issuer === healthyIssuer)).toHaveLength(1);
+      expect(amphora.vault.filter((k) => k.issuer === peerIssuer)).toHaveLength(0);
+      expect(nock.isDone()).toBe(true);
+    });
+
+    // ALONE, with nothing healthy to hide behind: the default is not required,
+    // so the failure is a warn and boot proceeds.
+    test("setup() completes when the ONLY external fails and is not required", async () => {
+      const logger = createMockLogger();
+      const child = createMockLogger();
+      vi.mocked(logger.child).mockReturnValue(child);
+
+      nock("https://peer.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+
+      amphora = new Amphora({
+        internal: { issuer },
+        logger,
+        external: [{ issuer: peerIssuer, jwksUri: peerJwksUri }],
+      });
+
+      await expect(amphora.setup()).resolves.toBeUndefined();
+
+      expect(child.warn).toHaveBeenCalledWith(
+        "Failed to refresh external JWKS",
+        expect.objectContaining({ issuer: peerIssuer }),
+      );
+      expect(amphora.external.issuers()[0]!.lastRefresh).toBeNull();
+      expect(amphora.vault.filter((k) => k.issuer === peerIssuer)).toHaveLength(0);
+      expect(nock.isDone()).toBe(true);
+    });
+
+    // The idp takes no `required` flag because it is always required — same
+    // verdict, reached without anything to declare.
+    test("setup() throws when the IDP fails, with a healthy external alongside", async () => {
+      healthy();
+
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+
+      amphora = new Amphora({
+        internal: { issuer },
+        logger: createMockLogger(),
+        idp: { issuer: idpIssuer, jwksUri: idpJwksUri },
+        external: [{ issuer: healthyIssuer, jwksUri: healthyJwksUri }],
+      });
+
+      await expect(amphora.setup()).rejects.toThrow();
+
+      expect(amphora.vault.filter((k) => k.issuer === healthyIssuer)).toHaveLength(1);
+      expect(amphora.vault.filter((k) => k.issuer === idpIssuer)).toHaveLength(0);
+      expect(nock.isDone()).toBe(true);
+    });
+
+    // `set` is the runtime twin of the boot path and must not be laxer: both
+    // reach the upstream through the same load, and both throw when it fails.
+    test("idp.set() throws when the upstream cannot be loaded", async () => {
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+
+      await expect(
+        amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri }),
+      ).rejects.toThrow();
+
+      expect(nock.isDone()).toBe(true);
+    });
+
+    // Both a required external AND the idp resolve at boot, then both fail the
+    // NEXT sweep. Neither throws — this is the half of the rule that keeps a
+    // serving process alive through a provider blip.
+    test("a required external and the idp both survive a later refresh failure", async () => {
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+      nock("https://peer.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk(TEST_OKP_KEY_SIG)] });
+
+      amphora = new Amphora({
+        internal: { issuer },
+        logger: createMockLogger(),
+        idp: { issuer: idpIssuer, jwksUri: idpJwksUri },
+        external: [{ required: true, issuer: peerIssuer, jwksUri: peerJwksUri }],
+      });
+
+      await amphora.setup();
+
+      // Both upstreams go down AFTER a successful boot.
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+      nock("https://peer.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+
+      await expect(amphora.refresh()).resolves.toBeUndefined();
+
+      // The previously fetched configs and keys are still serving.
+      expect(amphora.idp.config().issuer).toBe(idpIssuer);
+      expect(amphora.vault.filter((k) => k.issuer === idpIssuer)).toHaveLength(1);
+      expect(amphora.vault.filter((k) => k.issuer === peerIssuer)).toHaveLength(1);
+      expect(nock.isDone()).toBe(true);
+    });
+
+    // A bare `kid` does not say which issuer owns it, so nothing in the lookup
+    // can name the source the key lives on. That is precisely the narrowing this
+    // shape removes: an external nobody had ever asked about BY NAME used to be
+    // unreachable this way, and the lookup answered "no such key" while amphora
+    // held the registration all along.
+    test("findById resolves a bare kid from an external nobody named", async () => {
+      nock("https://peer.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [] });
+
+      amphora = new Amphora({
+        internal: { issuer },
+        logger: createMockLogger(),
+        external: [{ issuer: peerIssuer, jwksUri: peerJwksUri }],
+      });
+
+      await amphora.setup();
+
+      expect(amphora.vault.filter((k) => k.issuer === peerIssuer)).toHaveLength(0);
+
+      // The peer rotates a key in AFTER boot. Nothing below names its issuer.
+      const rotated = { ...publicJwk(), kid: "rotated-kid" };
+
+      nock("https://peer.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [rotated] });
+
+      const found = await amphora.findById("rotated-kid");
+
+      expect(found.id).toBe("rotated-kid");
+      expect(found.issuer).toBe(peerIssuer);
+      expect(nock.isDone()).toBe(true);
     });
   });
 });
