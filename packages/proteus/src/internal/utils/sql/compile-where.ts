@@ -157,9 +157,16 @@ export const compilePredicate = (
       dialect,
       fieldAliasOverrides,
     );
-    if (sub) {
-      parts.push(`NOT (${sub})`);
-    }
+    // The criteria language is the JS matcher's, so `$not` means the matcher's
+    // TWO-valued negation: `!matches(row, sub)`. SQL's `NOT (…)` is three-valued
+    // — for a NULL column `NOT (col = 'x')` is UNKNOWN, which drops the row,
+    // while the matcher keeps it (`undefined !== 'x'`). `IS NOT TRUE` collapses
+    // false and unknown into true, which is exactly the matcher's semantic.
+    //
+    // An empty sub-predicate compiles to NO clause, i.e. "matches every row"
+    // (`$not: {}`, `$not: { col: { $nin: [] } }`), so its negation matches none.
+    // Emitting nothing would instead drop the `$not` and match everything.
+    parts.push(sub ? `(${sub}) IS NOT TRUE` : "FALSE");
   }
 
   for (const [key, value] of Object.entries(predicate)) {

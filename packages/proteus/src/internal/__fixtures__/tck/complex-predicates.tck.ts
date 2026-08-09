@@ -280,10 +280,18 @@ export const complexPredicatesSuite = (
 
     // ─── Criteria-level $not on TckJsonbArray ──────────────────────────
     // `$not` as a criteria KEY negates a whole sub-predicate. It is a distinct
-    // operator from the field-level `{ field: { $not: … } }` form: SQL drivers
-    // compile it to `NOT (…)`, the in-memory drivers evaluate `!matches(…)`, and
-    // MongoDB — which has no top-level `$not` — needs `$nor`. Every row below has
-    // a non-null `name`, so no driver's NULL-vs-missing handling is in play.
+    // operator from the field-level `{ field: { $not: … } }` form.
+    //
+    // The criteria language is `@lindorm/match`'s, so `$not` means the matcher's
+    // TWO-valued negation — `!matches(row, sub)` — on EVERY driver. The in-memory
+    // drivers are the matcher; MongoDB (which has no top-level `$not`) uses `$nor`,
+    // which includes a null-or-missing field; the SQL drivers must emit
+    // `(…) IS NOT TRUE` rather than `NOT (…)`, because SQL's three-valued `NOT`
+    // turns a NULL column's comparison into UNKNOWN and silently drops the row.
+    //
+    // `label` is nullable and two rows hold NULL, so a driver that borrows SQL's
+    // three-valued negation fails the `label` cases. The `name` cases are over a
+    // NOT NULL column and must be unaffected by that distinction.
 
     describe("Criteria-level $not", () => {
       const { TckJsonbArray } = entities;
@@ -291,10 +299,10 @@ export const complexPredicatesSuite = (
       beforeEach(async () => {
         await getHandle().clear();
         const repo = getHandle().repository(TckJsonbArray);
-        await repo.insert({ name: "ab", tags: ["a", "b"] });
-        await repo.insert({ name: "abc", tags: ["a", "b", "c"] });
-        await repo.insert({ name: "cd", tags: ["c", "d"] });
-        await repo.insert({ name: "xy", tags: ["x", "y", "z"] });
+        await repo.insert({ name: "ab", label: "keep", tags: ["a", "b"] });
+        await repo.insert({ name: "abc", label: "drop", tags: ["a", "b", "c"] });
+        await repo.insert({ name: "cd", label: null, tags: ["c", "d"] });
+        await repo.insert({ name: "xy", label: null, tags: ["x", "y", "z"] });
       });
 
       test("negates a single-field sub-predicate", async () => {
@@ -338,6 +346,86 @@ export const complexPredicatesSuite = (
           order: { name: "ASC" },
         });
         expect(results.map((r) => r.name)).toEqual(["ab", "abc", "cd", "xy"]);
+      });
+
+      // ── NULL rows: the matcher keeps them, SQL's `NOT (…)` would drop them ──
+
+      test("keeps rows whose negated column is NULL", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ $not: { label: "drop" } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "cd", "xy"]);
+      });
+
+      test("keeps NULL rows when negating a field operator", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { $not: { label: { $in: ["drop", "keep"] } } } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["cd", "xy"]);
+      });
+
+      test("keeps NULL rows when negating a nested $or", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { $not: { $or: [{ label: "drop" }, { name: "ab" }] } } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["cd", "xy"]);
+      });
+
+      test("keeps NULL rows for a $not nested inside $and", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          {
+            $and: [{ tags: { $length: 2 } }, { $not: { label: "drop" } }],
+          } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["ab", "cd"]);
+      });
+
+      test("keeps NULL rows for a $not nested inside $or", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          {
+            $or: [{ name: "abc" }, { $not: { label: "keep" } }],
+          } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["abc", "cd", "xy"]);
+      });
+
+      test("an explicit NULL sub-predicate still negates to the non-NULL rows", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ $not: { label: null } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "abc"]);
+      });
+
+      // ── Empty sub-predicate ──
+      // An empty sub-predicate matches EVERY row, so its negation matches none.
+      // The SQL drivers compile a sub-predicate to a clause string, and an empty
+      // one yields no clause at all — which without an explicit constant would
+      // drop the `$not` and return everything, the exact inverse.
+
+      test("an empty $not matches nothing", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ $not: {} } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results).toEqual([]);
+      });
+
+      test("a $not over a no-op sub-clause matches nothing", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ $not: { name: { $nin: [] } } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results).toEqual([]);
       });
     });
 

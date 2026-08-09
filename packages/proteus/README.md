@@ -2021,11 +2021,22 @@ All `where` and `criteria` parameters accept a `Predicate<E>` — a type-safe qu
 { $not: { $or: [{ role: "admin" }, { role: "moderator" }] } }
 ```
 
-As a criteria KEY, `$not` negates the whole sub-predicate on every driver — SQL
-compiles it to `NOT (…)`, the in-memory drivers evaluate `!matches(…)`, and
-MongoDB (which has no top-level `$not`) compiles it to `$nor`. That is a
-different operator from the field-level `{ field: { $not: … } }` form, which
-negates one column's condition.
+As a criteria KEY, `$not` negates the whole sub-predicate. That is a different
+operator from the field-level `{ field: { $not: … } }` form, which negates one
+column's condition.
+
+**`$not` is two-valued on every driver.** The criteria language is a JavaScript
+object condition, so negation means what it means in JavaScript — `!matches(row,
+sub)` — and a NULL column is simply "not equal". `{ $not: { label: "x" } }`
+therefore returns rows where `label` is NULL, on all six drivers. The in-memory
+drivers evaluate the matcher directly, MongoDB uses `$nor` (which includes a
+null-or-missing field), and the SQL drivers compile to `(…) IS NOT TRUE` rather
+than `NOT (…)` — SQL's three-valued `NOT` would turn a NULL comparison into
+UNKNOWN and silently drop the row, making one literal condition mean different
+things per driver.
+
+An empty sub-predicate matches every row, so negating it matches none:
+`{ $not: {} }` returns nothing.
 
 ## Relations
 

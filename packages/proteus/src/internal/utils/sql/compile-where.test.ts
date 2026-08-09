@@ -303,6 +303,72 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
     expect(params).toEqual(["Alice"]);
   });
 
+  // `$not` follows the JS matcher's TWO-valued negation (`!matches(row, sub)`),
+  // not SQL's three-valued `NOT (…)`: for a NULL column `NOT (col = 'x')` is
+  // UNKNOWN and drops the row, while the matcher keeps it. `IS NOT TRUE`
+  // collapses false and unknown into true, which is the matcher's semantic.
+  test("should negate with IS NOT TRUE so NULL columns survive", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { $not: { name: "Alice" } }, conjunction: "and" },
+    ];
+    const result = compileWhere(entries, metadata, "t0", [], dialect);
+    expect(result).toContain("IS NOT TRUE");
+    expect(result).not.toContain("NOT (");
+  });
+
+  test("should compile a nested $not inside $and", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      {
+        predicate: { $and: [{ age: { $gte: 18 } }, { $not: { name: "Alice" } }] },
+        conjunction: "and",
+      },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual([18, "Alice"]);
+  });
+
+  test("should compile a nested $not inside $or", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      {
+        predicate: { $or: [{ age: { $gte: 18 } }, { $not: { name: "Alice" } }] },
+        conjunction: "and",
+      },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual([18, "Alice"]);
+  });
+
+  // An empty sub-predicate compiles to NO clause, which means "matches every
+  // row" — so its negation matches none. Without an explicit constant the
+  // `$not` would vanish entirely and match everything, the exact inverse.
+  test("should compile an empty $not to FALSE", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { $not: {} }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual([]);
+  });
+
+  // `$nin: []` is a no-op clause ("not in nothing" is always true), so negating
+  // it must also match nothing.
+  test("should compile a $not over a no-op sub-clause to FALSE", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { $not: { name: { $nin: [] } } }, conjunction: "and" },
+    ];
+    const result = compileWhere(entries, metadata, "t0", [], dialect);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("compilePredicate returns an empty string for an empty predicate", () => {
+    expect(compilePredicate({}, metadata, "t0", [], dialect)).toBe("");
+  });
+
   test("should compile complex nested predicates", () => {
     const entries: Array<PredicateEntry<any>> = [
       {

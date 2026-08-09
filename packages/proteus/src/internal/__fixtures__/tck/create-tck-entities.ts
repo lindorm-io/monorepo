@@ -954,6 +954,14 @@ export const createTckEntities = (hookCallback: Mock) => {
     @Field("string")
     name!: string;
 
+    // Nullable on purpose: criteria-level `$not` must follow the JS matcher's
+    // two-valued negation, so a NULL row has to survive `$not: { label: … }`.
+    // Every `$not` case over `name` alone would pass under SQL's three-valued
+    // `NOT (…)` too, and prove nothing.
+    @Nullable()
+    @Field("string")
+    label!: string | null;
+
     @Field("array")
     tags!: Array<string>;
   }
