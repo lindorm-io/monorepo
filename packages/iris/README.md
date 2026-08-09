@@ -1189,6 +1189,8 @@ const queue = source.workerQueue(OrderPlaced);
 const rpc = source.rpcClient(GetPrice, PriceResponse);
 ```
 
+`addMessages` is the exception to the inert lifecycle: it really registers. The mock re-opens its backing source around the call and sets it up again, so a consumer that registers messages during its own boot (Pylon does) gets them — existing subscriptions, consumers and in-flight messages survive untouched.
+
 Assert delivery by subscribing and publishing for real — memory delivery is awaited inline, so it is complete synchronously after `publish`:
 
 ```typescript

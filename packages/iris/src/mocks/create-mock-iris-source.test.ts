@@ -10,6 +10,11 @@ class MockSourceMessage implements IMessage {
   @Field("string") body!: string;
 }
 
+@Message({ name: "MockLateMessage" })
+class MockLateMessage implements IMessage {
+  @Field("string") body!: string;
+}
+
 describe("createMockIrisSource", () => {
   it("should create a memory-backed source with default capabilities", async () => {
     const source = await createMockIrisSource();
@@ -78,5 +83,46 @@ describe("createMockIrisSource", () => {
     const source = await createMockIrisSource();
 
     await expect(source.ping()).resolves.toBe(true);
+  });
+
+  // The facade's backing source is already set up so tests can publish without a
+  // lifecycle, while its own `setup` is inert — so a consumer registering
+  // messages during its own boot (Pylon does, for queue / webhook / audit /
+  // subscriptions) must not meet the real source's post-setup guard.
+  describe("addMessages", () => {
+    it("should register a message added after the facade was built", async () => {
+      const source = await createMockIrisSource({ messages: [MockSourceMessage] });
+
+      await source.addMessages([MockLateMessage]);
+
+      expect(source.hasMessage(MockLateMessage)).toBe(true);
+    });
+
+    it("should deliver the added message, keeping existing subscriptions live", async () => {
+      const source = await createMockIrisSource({ messages: [MockSourceMessage] });
+      const early: Array<string> = [];
+      const late: Array<string> = [];
+
+      await source.messageBus(MockSourceMessage).subscribe({
+        topic: "MockSourceMessage",
+        callback: async (message) => void early.push(message.body),
+      });
+
+      await source.addMessages([MockLateMessage]);
+
+      await source.messageBus(MockLateMessage).subscribe({
+        topic: "MockLateMessage",
+        callback: async (message) => void late.push(message.body),
+      });
+
+      const earlyBus = source.messageBus(MockSourceMessage);
+      await earlyBus.publish(earlyBus.create({ body: "survivor" }));
+
+      const lateBus = source.messageBus(MockLateMessage);
+      await lateBus.publish(lateBus.create({ body: "newcomer" }));
+
+      expect(early).toEqual(["survivor"]);
+      expect(late).toEqual(["newcomer"]);
+    });
   });
 });

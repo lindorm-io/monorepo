@@ -157,7 +157,27 @@ export const createMemoryIrisBackend = async (
       messages: source.messages,
       capabilities,
 
-      addMessages: spyImpl((input: any) => source.addMessages(input)),
+      // The backing source is deliberately ALREADY set up — that is what makes
+      // the facade usable without a lifecycle — while the facade's own `setup`
+      // is inert. So a consumer that registers messages during its own boot
+      // (Pylon does, for its queue / webhook / audit / subscription messages)
+      // would hit the real source's post-setup guard on a source that, as far
+      // as it can tell, has not been set up, and the whole registration would be
+      // refused for the run. Re-open the source around the call and set it up
+      // again: the memory driver's `setup` is a no-op, so subscriptions,
+      // consumers, timers and in-flight state survive untouched — the second
+      // pass only re-validates `@Encrypted` messages, which is exactly the check
+      // the newly added ones still owe.
+      addMessages: spyImpl(async (input: any) => {
+        const reopened = source as unknown as { isSetUp: boolean };
+        reopened.isSetUp = false;
+        try {
+          await source.addMessages(input);
+          await source.setup();
+        } finally {
+          reopened.isSetUp = true;
+        }
+      }),
       addSubscriber: spyImpl((subscriber: any) => source.addSubscriber(subscriber)),
       removeSubscriber: spyImpl((subscriber: any) => source.removeSubscriber(subscriber)),
       session: spyImpl((options?: any) => wrapSession(source.session(options))),
