@@ -113,11 +113,20 @@ const compileOperator = (
       return value ? { [mongoField]: { $eq: null } } : { [mongoField]: { $ne: null } };
 
     case "$not": {
-      const compiled = compileValue(mongoField, value, field);
-      if ("$expr" in compiled) {
-        return { $nor: [compiled] };
+      // An inner condition that constrains nothing matches every document, so
+      // its negation matches none — the rule the SQL compilers apply to an empty
+      // `$not`. MongoDB rejects one outright ("$not argument must be a non-empty
+      // object"), so the constant is required here, not merely tidier.
+      if (isObjectLike(value) && Object.keys(value as Dict).length === 0) {
+        return { $expr: false };
       }
-      return { [mongoField]: { $not: compiled[mongoField] } };
+      // `$nor` over the compiled inner negates EVERY shape. MongoDB's
+      // field-level `$not` takes only a document or a regex, so a compiled plain
+      // equality, a Date, or an `$and`/`$expr` fan-out (decimal `$between`,
+      // `$has`, `$contained`) cannot pass through it. `$nor` also keeps
+      // documents whose field is null or missing, which is the two-valued
+      // negation the criteria language means.
+      return { $nor: [compileValue(mongoField, value, field)] };
     }
 
     case "$regex": {
@@ -254,9 +263,11 @@ export const compileFilter = <E extends Dict = Dict>(
     const field = findField(key, metadata);
     const compiled = compileValue(mongoField, value, field);
 
-    // Merge compiled conditions
+    // Merge compiled conditions. `$nor` joins the operator-keyed list: a
+    // field-level `$not` compiles to one, and two of them in the same criteria
+    // object would otherwise overwrite each other on the single `$nor` key.
     for (const [ck, cv] of Object.entries(compiled)) {
-      if (ck === "$and" || ck === "$or" || ck === "$expr") {
+      if (ck === "$and" || ck === "$or" || ck === "$nor" || ck === "$expr") {
         andConditions.push({ [ck]: cv });
       } else {
         filter[ck] = cv;

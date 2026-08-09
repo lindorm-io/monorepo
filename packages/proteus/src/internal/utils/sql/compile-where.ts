@@ -404,5 +404,26 @@ const compileOperator = (
     clauses.push(`(${qualifiedCol} % ${divisorPlaceholder}) = ${remainderPlaceholder}`);
   }
 
+  // A FIELD-level `$not` negates ONE column's condition — a different operator
+  // from the criteria-level `$not` handled in `compilePredicate`. It carries the
+  // same TWO-valued meaning, because the criteria language is the JS matcher's:
+  // `!matchConditionOperator(value, inner)`. So the negation must be
+  // `(…) IS NOT TRUE`, not SQL's three-valued `NOT (…)` — for a NULL column
+  // `NOT (col = 'x')` is UNKNOWN and drops the row, while the matcher keeps it.
+  //
+  // An inner object every operator of which compiles to NO clause matches every
+  // row (`$not: {}`, `$not: { $nin: [] }`), so its negation matches none;
+  // emitting nothing would instead drop the `$not` and match everything.
+  //
+  // A non-object `$not` value is outside the declared type but the matcher
+  // accepts it as `value !== inner`, so read it as a negated equality.
+  if (ops.$not) {
+    const inner = isObject(ops.$not)
+      ? (ops.$not as ConditionOperator<unknown>)
+      : ({ $eq: ops.$not } as ConditionOperator<unknown>);
+    const sub = compileOperator(qualifiedCol, inner, params, field, fieldKey, dialect);
+    clauses.push(sub.length > 0 ? `(${sub.join(" AND ")}) IS NOT TRUE` : "FALSE");
+  }
+
   return clauses;
 };

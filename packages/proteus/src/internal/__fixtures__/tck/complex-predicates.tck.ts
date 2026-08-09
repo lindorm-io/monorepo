@@ -429,6 +429,154 @@ export const complexPredicatesSuite = (
       });
     });
 
+    // ─── Field-level $not on TckJsonbArray ─────────────────────────────
+    // `{ field: { $not: … } }` negates ONE column's condition — a distinct
+    // operator from the criteria-level `$not` above, and the one the SQL
+    // compilers had no branch for at all: the clause vanished and the query
+    // returned EVERY row, silently over-matching a filter written to exclude.
+    //
+    // Its meaning is the matcher's too — `!matchConditionOperator(value, inner)`
+    // — so it is likewise two-valued: a NULL column is simply "not equal", and
+    // negating an operator over it keeps the row. Every expectation below was
+    // taken from running `@lindorm/match` over these same four rows, not from
+    // what any driver happened to return.
+
+    describe("Field-level $not", () => {
+      const { TckJsonbArray } = entities;
+
+      beforeEach(async () => {
+        await getHandle().clear();
+        const repo = getHandle().repository(TckJsonbArray);
+        await repo.insert({ name: "ab", label: "keep", tags: ["a", "b"] });
+        await repo.insert({ name: "abc", label: "drop", tags: ["a", "b", "c"] });
+        await repo.insert({ name: "cd", label: null, tags: ["c", "d"] });
+        await repo.insert({ name: "xy", label: null, tags: ["x", "y", "z"] });
+      });
+
+      test("negates an operator on a NOT NULL column", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ name: { $not: { $eq: "ab" } } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["abc", "cd", "xy"]);
+      });
+
+      test("keeps rows whose negated column is NULL", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $not: { $eq: "drop" } } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "cd", "xy"]);
+      });
+
+      test("keeps NULL rows when negating $in", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { label: { $not: { $in: ["drop", "keep"] } } } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["cd", "xy"]);
+      });
+
+      test("negating $eq: null returns the non-NULL rows", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $not: { $eq: null } } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "abc"]);
+      });
+
+      // Outside the declared type, but the matcher reads a non-object `$not` as
+      // `value !== inner`, so every driver must too rather than drop the clause.
+      test("negates a bare value", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $not: "drop" } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "cd", "xy"]);
+      });
+
+      test("intersects two field-level negations in one criteria object", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          {
+            label: { $not: { $eq: "keep" } },
+            tags: { $not: { $length: 3 } },
+          } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["cd"]);
+      });
+
+      test("negates an array operator", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ tags: { $not: { $all: ["a"] } } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["cd", "xy"]);
+      });
+
+      test("negates $length", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ tags: { $not: { $length: 2 } } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["abc", "xy"]);
+      });
+
+      test("composes with a criteria-level $and", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          {
+            $and: [{ tags: { $length: 2 } }, { label: { $not: { $eq: "keep" } } }],
+          } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["cd"]);
+      });
+
+      test("composes with a criteria-level $or", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          {
+            $or: [{ name: "abc" }, { label: { $not: { $eq: "keep" } } }],
+          } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["abc", "cd", "xy"]);
+      });
+
+      // A criteria-level `$not` wrapping a field-level one — the two negations
+      // must cancel, including on the NULL rows.
+      test("cancels against an enclosing criteria-level $not", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { $not: { label: { $not: { $eq: "drop" } } } } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["abc"]);
+      });
+
+      // Same rule as the criteria-level form: an inner condition that constrains
+      // nothing matches every row, so its negation matches none.
+
+      test("an empty field-level $not matches nothing", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $not: {} } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results).toEqual([]);
+      });
+
+      test("a field-level $not over a no-op sub-clause matches nothing", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $not: { $nin: [] } } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results).toEqual([]);
+      });
+    });
+
     // ─── JSON containment ($has) on TckJsonHolder ──────────────────────
 
     describe("JSON containment ($has)", () => {

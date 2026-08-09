@@ -378,6 +378,34 @@ exports[`compileFilter > logical operators > should compile a criteria-level $no
 }
 `;
 
+exports[`compileFilter > logical operators > should compile a field-level $not over a bare value 1`] = `
+{
+  "$nor": [
+    {
+      "name": "foo",
+    },
+  ],
+}
+`;
+
+exports[`compileFilter > logical operators > should compile a field-level $not to $nor 1`] = `
+{
+  "$nor": [
+    {
+      "name": {
+        "$eq": "foo",
+      },
+    },
+  ],
+}
+`;
+
+exports[`compileFilter > logical operators > should compile an empty field-level $not to a match-nothing constant 1`] = `
+{
+  "$expr": false,
+}
+`;
+
 exports[`compileFilter > logical operators > should compile nested $and and $or 1`] = `
 {
   "$and": [
@@ -400,13 +428,28 @@ exports[`compileFilter > logical operators > should compile nested $and and $or 
 }
 `;
 
-exports[`compileFilter > logical operators > should keep a field-level $not as a field-level $not 1`] = `
+exports[`compileFilter > logical operators > should keep two field-level $not clauses apart 1`] = `
 {
-  "name": {
-    "$not": {
-      "$eq": "foo",
+  "$and": [
+    {
+      "$nor": [
+        {
+          "name": {
+            "$eq": "foo",
+          },
+        },
+      ],
     },
-  },
+    {
+      "$nor": [
+        {
+          "age": {
+            "$gte": 18,
+          },
+        },
+      ],
+    },
+  ],
 }
 `;
 

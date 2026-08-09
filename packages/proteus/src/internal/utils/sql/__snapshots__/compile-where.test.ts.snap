@@ -42,11 +42,29 @@ exports[`compileWhere [mysql] > should compile OR conjunction between two predic
 
 exports[`compileWhere [mysql] > should compile a $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 
+exports[`compileWhere [mysql] > should compile a field-level $not over $eq: null to IS NOT NULL 1`] = `"WHERE (\`t0\`.\`name\` IS NULL) IS NOT TRUE"`;
+
+exports[`compileWhere [mysql] > should compile a field-level $not over $in 1`] = `"WHERE (\`t0\`.\`name\` IN (?, ?)) IS NOT TRUE"`;
+
+exports[`compileWhere [mysql] > should compile a field-level $not over a bare value 1`] = `"WHERE (\`t0\`.\`name\` = ?) IS NOT TRUE"`;
+
+exports[`compileWhere [mysql] > should compile a field-level $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
+
+exports[`compileWhere [mysql] > should compile a field-level $not over an array operator 1`] = `"WHERE (JSON_CONTAINS(\`t0\`.\`tags\`, ?)) IS NOT TRUE"`;
+
+exports[`compileWhere [mysql] > should compile a field-level $not over an operator object 1`] = `"WHERE (\`t0\`.\`name\` = ?) IS NOT TRUE"`;
+
+exports[`compileWhere [mysql] > should compile a field-level $not over several operators as one negation 1`] = `"WHERE (\`t0\`.\`age\` > ? AND \`t0\`.\`age\` <= ?) IS NOT TRUE"`;
+
 exports[`compileWhere [mysql] > should compile a nested $not inside $and 1`] = `"WHERE (\`t0\`.\`age\` >= ? AND (\`t0\`.\`name\` = ?) IS NOT TRUE)"`;
 
 exports[`compileWhere [mysql] > should compile a nested $not inside $or 1`] = `"WHERE (\`t0\`.\`age\` >= ? OR (\`t0\`.\`name\` = ?) IS NOT TRUE)"`;
 
+exports[`compileWhere [mysql] > should compile a nested field-level $not as a double negation 1`] = `"WHERE ((\`t0\`.\`name\` = ?) IS NOT TRUE) IS NOT TRUE"`;
+
 exports[`compileWhere [mysql] > should compile an empty $not to FALSE 1`] = `"WHERE FALSE"`;
+
+exports[`compileWhere [mysql] > should compile an empty field-level $not to FALSE 1`] = `"WHERE FALSE"`;
 
 exports[`compileWhere [mysql] > should compile comparison operators ($gt, $lte) 1`] = `"WHERE (\`t0\`.\`age\` > ? AND \`t0\`.\`age\` <= ?)"`;
 
@@ -108,11 +126,29 @@ exports[`compileWhere [postgres] > should compile OR conjunction between two pre
 
 exports[`compileWhere [postgres] > should compile a $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 
+exports[`compileWhere [postgres] > should compile a field-level $not over $eq: null to IS NOT NULL 1`] = `"WHERE ("t0"."name" IS NULL) IS NOT TRUE"`;
+
+exports[`compileWhere [postgres] > should compile a field-level $not over $in 1`] = `"WHERE ("t0"."name" IN ($1, $2)) IS NOT TRUE"`;
+
+exports[`compileWhere [postgres] > should compile a field-level $not over a bare value 1`] = `"WHERE ("t0"."name" = $1) IS NOT TRUE"`;
+
+exports[`compileWhere [postgres] > should compile a field-level $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
+
+exports[`compileWhere [postgres] > should compile a field-level $not over an array operator 1`] = `"WHERE ("t0"."tags" @> $1::jsonb) IS NOT TRUE"`;
+
+exports[`compileWhere [postgres] > should compile a field-level $not over an operator object 1`] = `"WHERE ("t0"."name" = $1) IS NOT TRUE"`;
+
+exports[`compileWhere [postgres] > should compile a field-level $not over several operators as one negation 1`] = `"WHERE ("t0"."age" > $1 AND "t0"."age" <= $2) IS NOT TRUE"`;
+
 exports[`compileWhere [postgres] > should compile a nested $not inside $and 1`] = `"WHERE ("t0"."age" >= $1 AND ("t0"."name" = $2) IS NOT TRUE)"`;
 
 exports[`compileWhere [postgres] > should compile a nested $not inside $or 1`] = `"WHERE ("t0"."age" >= $1 OR ("t0"."name" = $2) IS NOT TRUE)"`;
 
+exports[`compileWhere [postgres] > should compile a nested field-level $not as a double negation 1`] = `"WHERE (("t0"."name" = $1) IS NOT TRUE) IS NOT TRUE"`;
+
 exports[`compileWhere [postgres] > should compile an empty $not to FALSE 1`] = `"WHERE FALSE"`;
+
+exports[`compileWhere [postgres] > should compile an empty field-level $not to FALSE 1`] = `"WHERE FALSE"`;
 
 exports[`compileWhere [postgres] > should compile comparison operators ($gt, $lte) 1`] = `"WHERE ("t0"."age" > $1 AND "t0"."age" <= $2)"`;
 
@@ -174,11 +210,29 @@ exports[`compileWhere [sqlite] > should compile OR conjunction between two predi
 
 exports[`compileWhere [sqlite] > should compile a $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 
+exports[`compileWhere [sqlite] > should compile a field-level $not over $eq: null to IS NOT NULL 1`] = `"WHERE ("t0"."name" IS NULL) IS NOT TRUE"`;
+
+exports[`compileWhere [sqlite] > should compile a field-level $not over $in 1`] = `"WHERE ("t0"."name" IN (?, ?)) IS NOT TRUE"`;
+
+exports[`compileWhere [sqlite] > should compile a field-level $not over a bare value 1`] = `"WHERE ("t0"."name" = ?) IS NOT TRUE"`;
+
+exports[`compileWhere [sqlite] > should compile a field-level $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
+
+exports[`compileWhere [sqlite] > should compile a field-level $not over an array operator 1`] = `"WHERE (EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value = ?)) IS NOT TRUE"`;
+
+exports[`compileWhere [sqlite] > should compile a field-level $not over an operator object 1`] = `"WHERE ("t0"."name" = ?) IS NOT TRUE"`;
+
+exports[`compileWhere [sqlite] > should compile a field-level $not over several operators as one negation 1`] = `"WHERE ("t0"."age" > ? AND "t0"."age" <= ?) IS NOT TRUE"`;
+
 exports[`compileWhere [sqlite] > should compile a nested $not inside $and 1`] = `"WHERE ("t0"."age" >= ? AND ("t0"."name" = ?) IS NOT TRUE)"`;
 
 exports[`compileWhere [sqlite] > should compile a nested $not inside $or 1`] = `"WHERE ("t0"."age" >= ? OR ("t0"."name" = ?) IS NOT TRUE)"`;
 
+exports[`compileWhere [sqlite] > should compile a nested field-level $not as a double negation 1`] = `"WHERE (("t0"."name" = ?) IS NOT TRUE) IS NOT TRUE"`;
+
 exports[`compileWhere [sqlite] > should compile an empty $not to FALSE 1`] = `"WHERE FALSE"`;
+
+exports[`compileWhere [sqlite] > should compile an empty field-level $not to FALSE 1`] = `"WHERE FALSE"`;
 
 exports[`compileWhere [sqlite] > should compile comparison operators ($gt, $lte) 1`] = `"WHERE ("t0"."age" > ? AND "t0"."age" <= ?)"`;
 

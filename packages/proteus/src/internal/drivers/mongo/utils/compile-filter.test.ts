@@ -242,11 +242,39 @@ describe("compileFilter", () => {
       ).toMatchSnapshot();
     });
 
-    // The FIELD-level `{ field: { $not: … } }` form is a different operator and
-    // keeps compiling to Mongo's field-level $not.
-    test("should keep a field-level $not as a field-level $not", () => {
+    // The FIELD-level `{ field: { $not: … } }` form is a different operator. It
+    // negates through $nor as well: Mongo's own field-level $not takes only a
+    // document or a regex, so a compiled plain equality or $and/$expr fan-out
+    // cannot pass through it, and $nor negates every shape alike.
+    test("should compile a field-level $not to $nor", () => {
       expect(
         compileFilter({ name: { $not: { $eq: "foo" } } } as any, defaultMetadata),
+      ).toMatchSnapshot();
+    });
+
+    test("should compile a field-level $not over a bare value", () => {
+      expect(
+        compileFilter({ name: { $not: "foo" } } as any, defaultMetadata),
+      ).toMatchSnapshot();
+    });
+
+    // An inner condition that constrains nothing matches every document, so its
+    // negation matches none. Mongo rejects an empty `$not` outright, so this
+    // needs a constant rather than a negated clause.
+    test("should compile an empty field-level $not to a match-nothing constant", () => {
+      expect(
+        compileFilter({ name: { $not: {} } } as any, defaultMetadata),
+      ).toMatchSnapshot();
+    });
+
+    // One `$nor` key cannot carry two independent negations — they must fan out
+    // into `$and` instead of overwriting each other.
+    test("should keep two field-level $not clauses apart", () => {
+      expect(
+        compileFilter(
+          { name: { $not: { $eq: "foo" } }, age: { $not: { $gte: 18 } } } as any,
+          defaultMetadata,
+        ),
       ).toMatchSnapshot();
     });
   });

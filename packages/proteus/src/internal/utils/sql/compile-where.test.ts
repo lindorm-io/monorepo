@@ -369,6 +369,123 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
     expect(compilePredicate({}, metadata, "t0", [], dialect)).toBe("");
   });
 
+  // ── Field-level `$not` ──
+  // `{ field: { $not: … } }` negates ONE column's condition and is a different
+  // operator from the criteria-level `$not` above. It carries the same
+  // two-valued meaning, so it also compiles to `(…) IS NOT TRUE` — emitting
+  // nothing at all would drop the predicate and return every row.
+
+  test("should compile a field-level $not over an operator object", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: { $eq: "Alice" } } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice"]);
+  });
+
+  test("should negate a field-level $not with IS NOT TRUE, not NOT (…)", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: { $eq: "Alice" } } }, conjunction: "and" },
+    ];
+    const result = compileWhere(entries, metadata, "t0", [], dialect);
+    expect(result).toContain("IS NOT TRUE");
+    expect(result).not.toContain("NOT (");
+  });
+
+  test("should compile a field-level $not over $in", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: { $in: ["Alice", "Bob"] } } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice", "Bob"]);
+  });
+
+  // The matcher ANDs every operator present in one operator object, so negating
+  // it negates the conjunction — one `IS NOT TRUE` over both clauses.
+  test("should compile a field-level $not over several operators as one negation", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { age: { $not: { $gt: 18, $lte: 65 } } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual([18, 65]);
+  });
+
+  test("should compile a field-level $not over $eq: null to IS NOT NULL", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: { $eq: null } } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual([]);
+  });
+
+  // Outside the declared type, but the matcher reads a non-object `$not` as
+  // `value !== inner`, so compile it as a negated equality rather than dropping.
+  test("should compile a field-level $not over a bare value", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: "Alice" } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice"]);
+  });
+
+  test("should compile a nested field-level $not as a double negation", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: { $not: { $eq: "Alice" } } } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice"]);
+  });
+
+  test("should compile an empty field-level $not to FALSE", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: {} } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual([]);
+  });
+
+  test("should compile a field-level $not over a no-op sub-clause to FALSE", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: { $nin: [] } } }, conjunction: "and" },
+    ];
+    const result = compileWhere(entries, metadata, "t0", [], dialect);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should compile a field-level $not over an array operator", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { tags: { $not: { $all: ["a"] } } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toMatchSnapshot();
+    expect(params.length).toBeGreaterThan(0);
+  });
+
+  // The array-typed guard must still fire from inside a negation.
+  test("should reject an array operator on a non-array column inside $not", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: { $all: ["a"] } } }, conjunction: "and" },
+    ];
+    expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+      /requires an array-typed column/,
+    );
+  });
+
   test("should compile complex nested predicates", () => {
     const entries: Array<PredicateEntry<any>> = [
       {

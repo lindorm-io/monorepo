@@ -1419,8 +1419,12 @@ denormalized, load-maintained column.
 A `@RelationCount` is selectable on the repository, and the projection decides whether it loads, on
 the same terms as a `@RelationId`: each count costs a batched `COUNT(*)` per read on a SQL driver and
 a count per entity on a document driver, so one nobody named is not paid for. With no `select` every
-count loads. A builder, a cursor and a stream refuse it — they return the stored column, and that
-column is the one nothing maintains.
+count loads.
+
+The repository is the ONLY surface that fills it. A builder, a cursor and a stream issue no count
+query, so they refuse the key in a projection and leave the property absent on an unprojected read
+too — the backing column is never read onto an entity by anything, since its stored value is
+whatever the DDL defaulted to. The same holds for a per-relation `select` on an `include()`.
 
 ### Relation Modifiers
 
@@ -1629,16 +1633,20 @@ coming back as a silently missing column. A relation is never selectable — loa
 
 **A projection accepts exactly what that surface returns**, so the two surfaces differ:
 
-| Surface                                           | Selectable keys                                                         |
-| ------------------------------------------------- | ----------------------------------------------------------------------- |
-| `find` / `findOne` / `versions`                   | fields · auto-projected foreign keys · `@RelationId` · `@RelationCount` |
-| `QueryBuilder.select()` · `cursor()` · `stream()` | fields · auto-projected foreign keys                                    |
+| Surface                                           | Selectable keys                                                          |
+| ------------------------------------------------- | ------------------------------------------------------------------------ |
+| `find` / `findOne` / `versions`                   | columns · auto-projected foreign keys · `@RelationId` · `@RelationCount` |
+| `QueryBuilder.select()` · `cursor()` · `stream()` | columns · auto-projected foreign keys                                    |
+| `include(rel, { select })`                        | the foreign entity's columns                                             |
 
 A query returns the row and nothing else. A `@RelationId` and a `@RelationCount` are loaded after the
 rows, with a query each, and only a root read through the repository issues that load — so naming one
 on a builder, a cursor or a stream throws and says which decorator it is. An owning `*ToOne` relation
 id is the exception that proves the rule: it IS the foreign key the query projects anyway, so it is
 selectable everywhere.
+
+"Columns" is the declared fields MINUS a `@RelationCount`'s backing field: it is a column that
+nothing maintains, so it is not one of them anywhere.
 
 ### Update
 
@@ -1868,10 +1876,11 @@ qb.include("posts", { select: ["title"] }).getMany();
 // posts: [ Post { title: "…" } ] — no id, no authorId
 ```
 
-A per-relation `select` is validated against the FOREIGN entity's fields, so a typo throws instead
-of quietly dropping out of the projection. It narrows COLUMNS only: a relation of the included
-entity is not selectable there (include it from the root instead), and neither is that entity's own
-`@RelationId` — no driver loads one for an included relation.
+A per-relation `select` is validated against the FOREIGN entity's stored columns, so a typo throws
+instead of quietly dropping out of the projection. It narrows COLUMNS only: a relation of the
+included entity is not selectable there (include it from the root instead), and neither is that
+entity's own `@RelationId` or `@RelationCount` — no driver loads either for an included relation, so
+a count would come back as the stored column nothing maintains.
 
 **Driver support:** all six drivers implement `include()`, and the conformance suite asserts the
 behaviour above on every one of them. The repository path loads the same relations without a
@@ -2019,24 +2028,28 @@ All `where` and `criteria` parameters accept a `Predicate<E>` — a type-safe qu
 { $or: [{ role: "admin" }, { role: "moderator" }] }
 { $not: { status: "banned" } }
 { $not: { $or: [{ role: "admin" }, { role: "moderator" }] } }
+{ status: { $not: { $eq: "banned" } } }
 ```
 
-As a criteria KEY, `$not` negates the whole sub-predicate. That is a different
-operator from the field-level `{ field: { $not: … } }` form, which negates one
-column's condition.
+`$not` is two operators. As a criteria KEY it negates a whole sub-predicate; as
+a FIELD's operator — `{ field: { $not: … } }` — it negates that one column's
+condition, and every operator inside the inner object has to hold for the
+negation to bite (`{ age: { $not: { $gt: 18, $lte: 65 } } }` excludes only the
+18–65 band).
 
-**`$not` is two-valued on every driver.** The criteria language is a JavaScript
+**Both are two-valued on every driver.** The criteria language is a JavaScript
 object condition, so negation means what it means in JavaScript — `!matches(row,
-sub)` — and a NULL column is simply "not equal". `{ $not: { label: "x" } }`
-therefore returns rows where `label` is NULL, on all six drivers. The in-memory
-drivers evaluate the matcher directly, MongoDB uses `$nor` (which includes a
-null-or-missing field), and the SQL drivers compile to `(…) IS NOT TRUE` rather
-than `NOT (…)` — SQL's three-valued `NOT` would turn a NULL comparison into
-UNKNOWN and silently drop the row, making one literal condition mean different
-things per driver.
+sub)` — and a NULL column is simply "not equal". `{ $not: { label: "x" } }` and
+`{ label: { $not: { $eq: "x" } } }` both return rows where `label` is NULL, on
+all six drivers. The in-memory drivers evaluate the matcher directly, MongoDB
+negates through `$nor` (which includes a null-or-missing field), and the SQL
+drivers compile to `(…) IS NOT TRUE` rather than `NOT (…)` — SQL's three-valued
+`NOT` would turn a NULL comparison into UNKNOWN and silently drop the row,
+making one literal condition mean different things per driver.
 
-An empty sub-predicate matches every row, so negating it matches none:
-`{ $not: {} }` returns nothing.
+An inner condition that constrains nothing matches every row, so negating it
+matches none: `{ $not: {} }`, `{ label: { $not: {} } }` and
+`{ label: { $not: { $nin: [] } } }` all return nothing.
 
 ## Relations
 
