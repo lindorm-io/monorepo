@@ -1,3 +1,4 @@
+import type { ILogger } from "@lindorm/logger";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import type { NamespaceOptions } from "../../../../types/types.js";
 import type { DbSnapshot } from "../../types/db-snapshot.js";
@@ -7,6 +8,7 @@ import type {
   SerializeMigrationOptions,
 } from "./serialize-migration.js";
 import type { MigrationTableSettings } from "../../types/migration.js";
+import { PostgresMigrationError } from "../../errors/PostgresMigrationError.js";
 import { computeHash } from "../../../../utils/migration/compute-hash.js";
 import { loadMigrations } from "./load-migrations.js";
 import { introspectSchema } from "../sync/introspect-schema.js";
@@ -25,7 +27,11 @@ export type GenerateBaselineMigrationOptions = {
   directory: string;
   timestamp?: Date;
   tableOptions?: MigrationTableSettings;
-  logger?: import("@lindorm/logger").ILogger;
+  // Required: the written baseline is read back through `loadMigrations` so the
+  // recorded checksum is the one `apply()` / `status()` recompute. An optional
+  // logger made that read skippable, and the skip path recorded a checksum
+  // derived from the SQL instead — a value no reader can ever reproduce.
+  logger: ILogger;
 };
 
 export type GenerateBaselineMigrationResult = {
@@ -82,15 +88,28 @@ export const generateBaselineMigration = async (
   let markedAsApplied = false;
 
   if (livePending.length === 0) {
-    // Load the written file back and compute checksum from the actual module
-    // to ensure it matches what apply-time will compute via computeHash
-    const loaded = options.logger
-      ? await loadMigrations(options.directory, options.logger)
-      : [];
+    // Load the written file back and compute the checksum from the actual module,
+    // because that is what apply() and status() compute via computeHash. Any other
+    // value — including the SQL-derived `migration.checksum` — records a baseline
+    // that can only ever report checksum_mismatch, so refuse rather than mark it
+    // applied: the file is on disk and nothing has been recorded yet.
+    const loaded = await loadMigrations(options.directory, options.logger);
     const baselineEntry = loaded.find((l) => l.migration.id === migration.id);
-    const checksum = baselineEntry
-      ? computeHash(baselineEntry.migration)
-      : migration.checksum;
+
+    if (!baselineEntry) {
+      throw new PostgresMigrationError(
+        "Baseline migration could not be read back after writing",
+        {
+          code: "migration_baseline_unreadable",
+          title: "Migration Baseline Unreadable",
+          details:
+            "The generated baseline migration was written to disk but could not be loaded back, so its checksum cannot be computed the way apply() and status() will. The baseline has NOT been marked as applied — check the migrations directory for import errors and re-run.",
+          data: { filepath, migrationId: migration.id },
+        },
+      );
+    }
+
+    const checksum = computeHash(baselineEntry.migration);
 
     await ensureMigrationTable(client, options.tableOptions);
 

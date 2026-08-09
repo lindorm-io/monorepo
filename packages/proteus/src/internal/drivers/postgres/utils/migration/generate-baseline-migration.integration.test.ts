@@ -13,7 +13,13 @@ import { introspectSchema } from "../sync/introspect-schema.js";
 import { projectDesiredSchema } from "../sync/project-desired-schema.js";
 import { getAllMigrationRecords } from "./migration-table.js";
 import { generateBaselineMigration } from "./generate-baseline-migration.js";
+import { loadMigrations } from "./load-migrations.js";
+import { resolvePending } from "./resolve-pending.js";
+import { computeHash } from "../../../../utils/migration/compute-hash.js";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+
+const logger = createMockLogger();
 
 let client: PostgresQueryClient;
 let raw: Client;
@@ -43,6 +49,7 @@ describe("generate-baseline-migration (integration)", () => {
 
       const result = await generateBaselineMigration(client, [metadata], nsOptions, {
         directory: dir,
+        logger,
       });
 
       expect(result.operationCount).toBeGreaterThan(0);
@@ -74,6 +81,7 @@ describe("generate-baseline-migration (integration)", () => {
       // Generate baseline — should detect match and mark as applied
       const result = await generateBaselineMigration(client, [metadata], nsOptions, {
         directory: dir,
+        logger,
         tableOptions: { schema },
       });
 
@@ -86,6 +94,16 @@ describe("generate-baseline-migration (integration)", () => {
       expect(records[0].name).toMatch(/^\d{14}-baseline$/);
       expect(records[0].finishedAt).toBeInstanceOf(Date);
       expect(records[0].rolledBackAt).toBeNull();
+
+      // …and the recorded checksum is the one the READERS compute. apply() and
+      // status() both hash the loaded module through computeHash, so a baseline
+      // written with any other value can only ever report checksum_mismatch.
+      const loaded = await loadMigrations(dir, logger);
+      const { resolved } = resolvePending(loaded, records, computeHash);
+
+      expect(resolved).toHaveLength(1);
+      expect(resolved[0].status).toBe("applied");
+      expect(records[0].checksum).toBe(computeHash(loaded[0].migration));
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -100,6 +118,7 @@ describe("generate-baseline-migration (integration)", () => {
 
       const result = await generateBaselineMigration(client, [metadata], nsOptions, {
         directory: dir,
+        logger,
         name: "initial-schema",
       });
 

@@ -388,13 +388,28 @@ export class SqliteMigrationManager implements IMigrationManager {
     let markedAsApplied = false;
 
     if (liveDiff.operations.length === 0) {
-      // Load the written file back and compute checksum from the actual module
-      // to ensure it matches what apply-time will compute via computeHash
+      // Load the written file back and compute the checksum from the actual module,
+      // because that is what apply() and status() compute via computeHash. Any other
+      // value — including the SQL-derived `migration.checksum` — records a baseline
+      // that can only ever report checksum_mismatch, so refuse rather than mark it
+      // applied: the file is on disk and nothing has been recorded yet.
       const loaded = await loadMigrations(this.directory, this.logger);
       const baselineEntry = loaded.find((l) => l.migration.id === migration.id);
-      const checksum = baselineEntry
-        ? computeHash(baselineEntry.migration)
-        : migration.checksum;
+
+      if (!baselineEntry) {
+        throw new SqliteMigrationError(
+          "Baseline migration could not be read back after writing",
+          {
+            code: "migration_baseline_unreadable",
+            title: "Migration Baseline Unreadable",
+            details:
+              "The generated baseline migration was written to disk but could not be loaded back, so its checksum cannot be computed the way apply() and status() will. The baseline has NOT been marked as applied — check the migrations directory for import errors and re-run.",
+            data: { filepath, migrationId: migration.id },
+          },
+        );
+      }
+
+      const checksum = computeHash(baselineEntry.migration);
 
       await ensureMigrationTable(this.client, this.tableOptions);
 

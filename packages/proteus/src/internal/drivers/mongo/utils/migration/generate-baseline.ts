@@ -5,6 +5,7 @@ import type { GenerateBaselineResult } from "../../../../interfaces/MigrationMan
 import { computeHash } from "../../../../utils/migration/compute-hash.js";
 import { loadMigrations } from "../../../../utils/migration/load-migrations.js";
 import { writeMigrationFile } from "../../../../utils/migration/write-migration-file.js";
+import { MongoMigrationError } from "../../errors/MongoMigrationError.js";
 import { diffIndexes } from "../sync/diff-indexes.js";
 import { introspectIndexes } from "../sync/introspect-indexes.js";
 import { projectDesiredIndexes } from "../sync/project-desired-indexes.js";
@@ -20,7 +21,11 @@ export type GenerateMongoBaselineOptions = {
   directory: string;
   timestamp?: Date;
   tableName?: string;
-  logger?: ILogger;
+  // Required: the written baseline is read back through `loadMigrations` so the
+  // recorded checksum is the one `apply()` / `status()` recompute. An optional
+  // logger made that read skippable, and the skip path recorded a checksum
+  // derived from the serialized plan instead — a value no reader can reproduce.
+  logger: ILogger;
 };
 
 export const generateMongoBaseline = async (
@@ -73,14 +78,28 @@ export const generateMongoBaseline = async (
   let markedAsApplied = false;
 
   if (liveOps === 0) {
-    // Load the written file back and compute checksum from the actual module
-    const loaded = options.logger
-      ? await loadMigrations(options.directory, options.logger)
-      : [];
+    // Load the written file back and compute the checksum from the actual module,
+    // because that is what apply() and status() compute via computeHash. Any other
+    // value records a baseline that can only ever report checksum_mismatch, so
+    // refuse rather than mark it applied: the file is on disk and nothing has been
+    // recorded yet.
+    const loaded = await loadMigrations(options.directory, options.logger);
     const baselineEntry = loaded.find((l) => l.migration.id === migration.id);
-    const checksum = baselineEntry
-      ? computeHash(baselineEntry.migration)
-      : migration.checksum;
+
+    if (!baselineEntry) {
+      throw new MongoMigrationError(
+        "Baseline migration could not be read back after writing",
+        {
+          code: "migration_baseline_unreadable",
+          title: "Migration Baseline Unreadable",
+          details:
+            "The generated baseline migration was written to disk but could not be loaded back, so its checksum cannot be computed the way apply() and status() will. The baseline has NOT been marked as applied — check the migrations directory for import errors and re-run.",
+          data: { filepath, migrationId: migration.id },
+        },
+      );
+    }
+
+    const checksum = computeHash(baselineEntry.migration);
 
     await ensureMigrationCollection(db, options.tableName);
 

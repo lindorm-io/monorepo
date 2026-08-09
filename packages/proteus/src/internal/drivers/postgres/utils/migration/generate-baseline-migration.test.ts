@@ -36,6 +36,10 @@ vi.mock("./write-migration-file.js", () => ({
   writeMigrationFile: vi.fn(),
 }));
 
+vi.mock("./load-migrations.js", () => ({
+  loadMigrations: vi.fn(),
+}));
+
 vi.mock("./migration-table.js", () => ({
   ensureMigrationTable: vi.fn(),
   insertMigrationRecord: vi.fn(),
@@ -52,18 +56,22 @@ import { projectDesiredSchema } from "../sync/project-desired-schema.js";
 import { diffSchema } from "../sync/diff-schema.js";
 import { serializeMigration } from "./serialize-migration.js";
 import { writeMigrationFile } from "./write-migration-file.js";
+import { loadMigrations } from "./load-migrations.js";
 import {
   ensureMigrationTable,
   insertMigrationRecord,
   markMigrationFinished,
 } from "./migration-table.js";
+import { computeHash } from "../../../../utils/migration/compute-hash.js";
 import { generateBaselineMigration } from "./generate-baseline-migration.js";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 
 const mockIntrospect = introspectSchema as MockedFunction<typeof introspectSchema>;
 const mockProject = projectDesiredSchema as MockedFunction<typeof projectDesiredSchema>;
 const mockDiff = diffSchema as MockedFunction<typeof diffSchema>;
 const mockSerialize = serializeMigration as MockedFunction<typeof serializeMigration>;
 const mockWrite = writeMigrationFile as MockedFunction<typeof writeMigrationFile>;
+const mockLoad = loadMigrations as MockedFunction<typeof loadMigrations>;
 const mockEnsureTable = ensureMigrationTable as MockedFunction<
   typeof ensureMigrationTable
 >;
@@ -128,6 +136,20 @@ const mockClient: PostgresQueryClient = {
   query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
 };
 
+const logger = createMockLogger();
+
+// The module `loadMigrations` reads back off disk. Its up/down SOURCE is what
+// computeHash digests — which is the checksum apply() and status() recompute.
+const loadedBaseline = {
+  migration: {
+    id: fixedMigration.id,
+    ts: fixedMigration.ts,
+    up: async () => {},
+    down: async () => {},
+  },
+  name: "20260220090000-baseline",
+};
+
 const fixedTimestamp = new Date("2026-02-20T09:00:00.000Z");
 
 beforeEach(() => {
@@ -137,6 +159,7 @@ beforeEach(() => {
   mockIntrospect.mockResolvedValue(emptySnapshot);
   mockSerialize.mockReturnValue(fixedMigration);
   mockWrite.mockResolvedValue("/tmp/migrations/20260220090000-baseline.ts");
+  mockLoad.mockResolvedValue([loadedBaseline]);
   mockEnsureTable.mockResolvedValue(undefined);
   mockInsert.mockResolvedValue(undefined);
   mockMarkFinished.mockResolvedValue(undefined);
@@ -151,6 +174,7 @@ describe("generateBaselineMigration — orchestration", () => {
 
     await generateBaselineMigration(mockClient, metaList, nsOpts, {
       directory: "/tmp/migrations",
+      logger,
       timestamp: fixedTimestamp,
     });
 
@@ -168,6 +192,7 @@ describe("generateBaselineMigration — orchestration", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
         timestamp: fixedTimestamp,
       },
     );
@@ -187,6 +212,7 @@ describe("generateBaselineMigration — orchestration", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
         timestamp: fixedTimestamp,
       },
     );
@@ -205,6 +231,7 @@ describe("generateBaselineMigration — orchestration", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
         name: "initial-schema",
         timestamp: fixedTimestamp,
       },
@@ -224,6 +251,7 @@ describe("generateBaselineMigration — orchestration", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
         timestamp: fixedTimestamp,
       },
     );
@@ -245,6 +273,7 @@ describe("generateBaselineMigration — orchestration", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
       },
     );
 
@@ -264,6 +293,7 @@ describe("generateBaselineMigration — result shape", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
         timestamp: fixedTimestamp,
       },
     );
@@ -280,6 +310,7 @@ describe("generateBaselineMigration — result shape", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
       },
     );
 
@@ -307,6 +338,7 @@ describe("generateBaselineMigration — result shape", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
       },
     );
 
@@ -322,6 +354,7 @@ describe("generateBaselineMigration — result shape", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
       },
     );
 
@@ -346,6 +379,7 @@ describe("generateBaselineMigration — markedAsApplied", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
         timestamp: fixedTimestamp,
       },
     );
@@ -372,6 +406,7 @@ describe("generateBaselineMigration — markedAsApplied", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
       },
     );
 
@@ -394,6 +429,7 @@ describe("generateBaselineMigration — markedAsApplied", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
         tableOptions,
         timestamp: fixedTimestamp,
       },
@@ -419,6 +455,7 @@ describe("generateBaselineMigration — markedAsApplied", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
         timestamp: fixedTimestamp,
       },
     );
@@ -428,10 +465,37 @@ describe("generateBaselineMigration — markedAsApplied", () => {
       expect.objectContaining({
         id: fixedMigration.id,
         name: "20260220090000-baseline", // .ts extension stripped
-        checksum: fixedMigration.checksum,
+        // The checksum is hashed off the LOADED module, which is what apply()
+        // and status() recompute — never the SQL-derived serializer checksum.
+        checksum: computeHash(loadedBaseline.migration),
       }),
       undefined,
     );
+  });
+
+  it("should refuse to mark a baseline applied when the written file cannot be read back", async () => {
+    mockDiff
+      .mockReturnValueOnce(makePlan([makeTxOp()]))
+      .mockReturnValueOnce(makePlan([]));
+    mockLoad.mockResolvedValue([]);
+
+    await expect(
+      generateBaselineMigration(
+        mockClient,
+        [],
+        { namespace: "app" },
+        {
+          directory: "/tmp/migrations",
+          logger,
+          timestamp: fixedTimestamp,
+        },
+      ),
+    ).rejects.toThrow(/could not be read back after writing/);
+
+    // Nothing recorded — a baseline whose checksum no reader can reproduce is
+    // worse than no baseline at all.
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockMarkFinished).not.toHaveBeenCalled();
   });
 });
 
@@ -459,6 +523,7 @@ describe("generateBaselineMigration — warn_only in live diff", () => {
       { namespace: "app" },
       {
         directory: "/tmp/migrations",
+        logger,
       },
     );
 
@@ -480,6 +545,7 @@ describe("generateBaselineMigration — error propagation", () => {
         { namespace: "app" },
         {
           directory: "/tmp/migrations",
+          logger,
           timestamp: fixedTimestamp,
         },
       ),
@@ -498,6 +564,7 @@ describe("generateBaselineMigration — error propagation", () => {
         { namespace: "app" },
         {
           directory: "/tmp/migrations",
+          logger,
           timestamp: fixedTimestamp,
         },
       ),
@@ -516,6 +583,7 @@ describe("generateBaselineMigration — error propagation", () => {
         { namespace: "app" },
         {
           directory: "/tmp/migrations",
+          logger,
           timestamp: fixedTimestamp,
         },
       ),
