@@ -99,6 +99,12 @@ const buildImports = (answers: Answers, slots: Array<SourceSlot>): Array<string>
     lines.push(importStatement(slot));
   }
 
+  if (answers.bus !== "none") {
+    lines.push(
+      `import { sampleSubscription } from "../iris/subscribers/sample-subscriber.js";`,
+    );
+  }
+
   return lines;
 };
 
@@ -190,6 +196,12 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
   if (answers.bus !== "none") {
     lines.push(`  bus: ${busSlot!.binding},`);
     lines.push(`  queue: { enabled: true },`);
+    // Declared subscriptions are bound at boot, alongside pylon's own audit and
+    // webhook consumers, and their message classes are registered on `bus`
+    // before it sets up. Declaring one is what makes it run — a subscriber
+    // wired in a helper somewhere has to be remembered and called, and one that
+    // is not is silence with no error.
+    lines.push(`  subscriptions: [sampleSubscription],`);
   }
 
   if (answers.features.webhooks) {

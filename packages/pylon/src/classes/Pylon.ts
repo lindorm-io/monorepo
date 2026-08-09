@@ -493,18 +493,41 @@ export class Pylon<
         }
       }
     }
+
+    // A declared subscription names the class its payload is read with, and iris
+    // resolves a message's schema from the SOURCE's registry — so the class has
+    // to be on the bus before `setup()` bootstraps topics, exactly like the
+    // messages Pylon's own features add above. Registering it here rather than
+    // asking the deployment to repeat it in `new IrisSource({ messages })` keeps
+    // one declaration; `addMessages` de-duplicates, so a deployment that does
+    // list it loses nothing.
+    if (this.options.subscriptions?.length) {
+      const source = this.options.bus;
+      if (source) {
+        source.addMessages(this.options.subscriptions.map(({ message }) => message));
+      }
+    }
   }
 
   /**
+   * Every consumer this deployment's configuration implies — Pylon's own audit
+   * and webhook pipes, and the `subscriptions` the deployment declared.
+   *
    * ⚠ A missing source is a THROW here, not a skipped consumer.
    *
-   * Both blocks are a producer on `bus` feeding a consumer that writes to `db`,
-   * and this is the one place the whole pipe is visible. The old `if (bus && db)`
-   * silently dropped the consumer half, which is the worst of both worlds: the
-   * producer still runs — `useAuditLog` guards only on `ctx.bus`, `ctx.webhook()`
-   * only on the iris session — so every record is published into a queue nobody
-   * consumes and a table that was never created. A deployment reads that as
-   * "audited" right up until someone asks for the records.
+   * The audit and webhook blocks are a producer on `bus` feeding a consumer that
+   * writes to `db`, and this is the one place the whole pipe is visible. The old
+   * `if (bus && db)` silently dropped the consumer half, which is the worst of
+   * both worlds: the producer still runs — `useAuditLog` guards only on
+   * `ctx.bus`, `ctx.webhook()` only on the iris session — so every record is
+   * published into a queue nobody consumes and a table that was never created. A
+   * deployment reads that as "audited" right up until someone asks for the
+   * records.
+   *
+   * `subscriptions` is the same fault one step further along: the option was
+   * declared and read by nothing at all, so a deployment naming a topic and a
+   * callback got silence and no error. Its consumer half needs only `bus`, so
+   * that is the only source it can be missing.
    *
    * At BOOT rather than per request, because the mismatch is a configuration
    * fact, known before the first request and unchanged by any of them.
@@ -568,6 +591,29 @@ export class Pylon<
       await setupWebhookDispatchConsumer(bus, db, this.logger, {
         maxErrors: this.options.webhook.maxErrors,
       });
+    }
+
+    if (this.options.subscriptions?.length) {
+      const { bus } = this.options;
+
+      if (!bus) {
+        throw new ServerError("Bus subscriptions have no message bus to bind to", {
+          code: "subscriptions_bus_not_configured",
+          type: "urn:lindorm:pylon:error:subscriptions_bus_not_configured",
+          title: "Subscriptions Bus Not Configured",
+          details:
+            "PylonSettings declares `subscriptions` but no `bus` source, so no topic can be bound and no declared callback would ever run. Configure `bus`, or drop the `subscriptions`.",
+        });
+      }
+
+      for (const { message, ...subscribe } of this.options.subscriptions) {
+        await bus.messageBus(message).subscribe(subscribe);
+
+        this.logger.verbose("Bus subscription registered", {
+          topic: subscribe.topic,
+          queue: subscribe.queue,
+        });
+      }
     }
   }
 }

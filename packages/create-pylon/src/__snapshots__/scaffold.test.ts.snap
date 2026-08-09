@@ -902,6 +902,7 @@ import { config } from "./config.js";
 import { postgres } from "../proteus/db/source.js";
 import { redis } from "../proteus/kv/source.js";
 import { rabbit } from "../iris/source.js";
+import { sampleSubscription } from "../iris/subscribers/sample-subscriber.js";
 
 export const pylon = new Pylon({
   logger,
@@ -928,6 +929,7 @@ export const pylon = new Pylon({
   // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: rabbit,
   queue: { enabled: true },
+  subscriptions: [sampleSubscription],
   webhook: { enabled: true },
   audit: {
     // sanitise: (body) => body,
@@ -2737,23 +2739,22 @@ export const publishSample = async (
 `;
 
 exports[`scaffold > writeIrisSamples > snapshot: kafka publisher + subscriber > subscriber 1`] = `
-"import { logger } from "../../logger/index.js";
-import { kafka } from "../source.js";
+"import type { PylonSubscribeSettings } from "@lindorm/pylon";
+import { logger } from "../../logger/index.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const bus = kafka.messageBus(SampleMessage);
-
-export const subscribeSample = async (): Promise<void> => {
-  await bus.subscribe({
-    topic: "SampleMessage",
-    queue: "sample-queue",
-    callback: async (msg, envelope) => {
-      logger.info("Received sample message", {
-        topic: envelope.topic,
-        correlationId: envelope.correlationId,
-      });
-    },
-  });
+export const sampleSubscription: PylonSubscribeSettings<SampleMessage> = {
+  message: SampleMessage,
+  // Bound verbatim — match what the publisher resolves (a static \`@Topic\`,
+  // else the class name). Drop \`queue\` to broadcast to every instance.
+  topic: "SampleMessage",
+  queue: "sample-queue",
+  callback: async (msg, envelope) => {
+    logger.debug("Received sample message", {
+      topic: envelope.topic,
+      correlationId: envelope.correlationId,
+    });
+  },
 };
 "
 `;
@@ -2773,23 +2774,22 @@ export const publishSample = async (
 `;
 
 exports[`scaffold > writeIrisSamples > snapshot: nats publisher + subscriber > subscriber 1`] = `
-"import { logger } from "../../logger/index.js";
-import { nats } from "../source.js";
+"import type { PylonSubscribeSettings } from "@lindorm/pylon";
+import { logger } from "../../logger/index.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const bus = nats.messageBus(SampleMessage);
-
-export const subscribeSample = async (): Promise<void> => {
-  await bus.subscribe({
-    topic: "SampleMessage",
-    queue: "sample-queue",
-    callback: async (msg, envelope) => {
-      logger.info("Received sample message", {
-        topic: envelope.topic,
-        correlationId: envelope.correlationId,
-      });
-    },
-  });
+export const sampleSubscription: PylonSubscribeSettings<SampleMessage> = {
+  message: SampleMessage,
+  // Bound verbatim — match what the publisher resolves (a static \`@Topic\`,
+  // else the class name). Drop \`queue\` to broadcast to every instance.
+  topic: "SampleMessage",
+  queue: "sample-queue",
+  callback: async (msg, envelope) => {
+    logger.debug("Received sample message", {
+      topic: envelope.topic,
+      correlationId: envelope.correlationId,
+    });
+  },
 };
 "
 `;
@@ -2809,23 +2809,22 @@ export const publishSample = async (
 `;
 
 exports[`scaffold > writeIrisSamples > snapshot: rabbit publisher + subscriber > subscriber 1`] = `
-"import { logger } from "../../logger/index.js";
-import { rabbit } from "../source.js";
+"import type { PylonSubscribeSettings } from "@lindorm/pylon";
+import { logger } from "../../logger/index.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const bus = rabbit.messageBus(SampleMessage);
-
-export const subscribeSample = async (): Promise<void> => {
-  await bus.subscribe({
-    topic: "SampleMessage",
-    queue: "sample-queue",
-    callback: async (msg, envelope) => {
-      logger.info("Received sample message", {
-        topic: envelope.topic,
-        correlationId: envelope.correlationId,
-      });
-    },
-  });
+export const sampleSubscription: PylonSubscribeSettings<SampleMessage> = {
+  message: SampleMessage,
+  // Bound verbatim — match what the publisher resolves (a static \`@Topic\`,
+  // else the class name). Drop \`queue\` to broadcast to every instance.
+  topic: "SampleMessage",
+  queue: "sample-queue",
+  callback: async (msg, envelope) => {
+    logger.debug("Received sample message", {
+      topic: envelope.topic,
+      correlationId: envelope.correlationId,
+    });
+  },
 };
 "
 `;
@@ -2845,23 +2844,22 @@ export const publishSample = async (
 `;
 
 exports[`scaffold > writeIrisSamples > snapshot: redis publisher + subscriber > subscriber 1`] = `
-"import { logger } from "../../logger/index.js";
-import { redis } from "../source.js";
+"import type { PylonSubscribeSettings } from "@lindorm/pylon";
+import { logger } from "../../logger/index.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const bus = redis.messageBus(SampleMessage);
-
-export const subscribeSample = async (): Promise<void> => {
-  await bus.subscribe({
-    topic: "SampleMessage",
-    queue: "sample-queue",
-    callback: async (msg, envelope) => {
-      logger.info("Received sample message", {
-        topic: envelope.topic,
-        correlationId: envelope.correlationId,
-      });
-    },
-  });
+export const sampleSubscription: PylonSubscribeSettings<SampleMessage> = {
+  message: SampleMessage,
+  // Bound verbatim — match what the publisher resolves (a static \`@Topic\`,
+  // else the class name). Drop \`queue\` to broadcast to every instance.
+  topic: "SampleMessage",
+  queue: "sample-queue",
+  callback: async (msg, envelope) => {
+    logger.debug("Received sample message", {
+      topic: envelope.topic,
+      correlationId: envelope.correlationId,
+    });
+  },
 };
 "
 `;
@@ -3008,6 +3006,7 @@ import { config } from "./config.js";
 import { postgres } from "../proteus/db/source.js";
 import { redis } from "../proteus/kv/source.js";
 import { kafka } from "../iris/source.js";
+import { sampleSubscription } from "../iris/subscribers/sample-subscriber.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3034,6 +3033,7 @@ export const pylon = new Pylon({
   // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: kafka,
   queue: { enabled: true },
+  subscriptions: [sampleSubscription],
   webhook: { enabled: true },
   audit: {
     // sanitise: (body) => body,
@@ -3144,6 +3144,7 @@ import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { redis as redisDb } from "../proteus/db/source.js";
 import { redis as redisBus } from "../iris/source.js";
+import { sampleSubscription } from "../iris/subscribers/sample-subscriber.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3165,6 +3166,7 @@ export const pylon = new Pylon({
   // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: redisBus,
   queue: { enabled: true },
+  subscriptions: [sampleSubscription],
   setup: async () => {
     await redisDb.connect();
     await redisBus.connect();
@@ -3287,6 +3289,7 @@ import { config } from "./config.js";
 import { postgres } from "../proteus/db/source.js";
 import { redis } from "../proteus/kv/source.js";
 import { rabbit } from "../iris/source.js";
+import { sampleSubscription } from "../iris/subscribers/sample-subscriber.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3308,6 +3311,7 @@ export const pylon = new Pylon({
   // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: rabbit,
   queue: { enabled: true },
+  subscriptions: [sampleSubscription],
   setup: async () => {
     await postgres.connect();
     await redis.connect();
@@ -3329,6 +3333,7 @@ import { config } from "./config.js";
 import { postgres } from "../proteus/db/source.js";
 import { redis as redisKv } from "../proteus/kv/source.js";
 import { redis as redisBus } from "../iris/source.js";
+import { sampleSubscription } from "../iris/subscribers/sample-subscriber.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3350,6 +3355,7 @@ export const pylon = new Pylon({
   // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: redisBus,
   queue: { enabled: true },
+  subscriptions: [sampleSubscription],
   setup: async () => {
     await postgres.connect();
     await redisKv.connect();
@@ -3370,6 +3376,7 @@ import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { postgres } from "../proteus/db/source.js";
 import { rabbit } from "../iris/source.js";
+import { sampleSubscription } from "../iris/subscribers/sample-subscriber.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3391,6 +3398,7 @@ export const pylon = new Pylon({
   // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: rabbit,
   queue: { enabled: true },
+  subscriptions: [sampleSubscription],
   webhook: { enabled: true },
   audit: {
     // sanitise: (body) => body,
@@ -3416,6 +3424,7 @@ import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { postgres } from "../proteus/db/source.js";
 import { rabbit } from "../iris/source.js";
+import { sampleSubscription } from "../iris/subscribers/sample-subscriber.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3437,6 +3446,7 @@ export const pylon = new Pylon({
   // cache: evictableSource, // allkeys-lru; defaults to kv
   bus: rabbit,
   queue: { enabled: true },
+  subscriptions: [sampleSubscription],
   setup: async () => {
     await postgres.connect();
     await rabbit.connect();
@@ -3491,6 +3501,7 @@ import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { rabbit } from "../iris/source.js";
+import { sampleSubscription } from "../iris/subscribers/sample-subscriber.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3502,6 +3513,7 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   bus: rabbit,
   queue: { enabled: true },
+  subscriptions: [sampleSubscription],
   setup: async () => {
     await rabbit.connect();
   },

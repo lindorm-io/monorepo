@@ -65,6 +65,7 @@ For scaffolding a new project, see `@lindorm/create-pylon` (`npm create @lindorm
 - Multi-tenancy hooks (`useTenant`, `useScope`) that drive Proteus filter params
 - Audit logging — request-level via Iris, optional entity-change tracking via Proteus listeners
 - Webhook subscriptions with `none` / `auth_headers` / `basic` / `client_credentials` auth and automatic suspension on repeated failures
+- Declared Iris bus subscriptions bound at boot, alongside the built-in audit and webhook consumers
 - Built-in workers for Kryptos key rotation, Amphora key sync, and expiry cleanup, plus a `pylon` CLI to generate routes, listeners, middleware, handlers, and workers
 - Auto-mounted endpoints for `/health` (liveness), `/ready` (readiness), `/.well-known/jwks.json`, `/.well-known/oauth-protected-resource`, `/.well-known/right-to-be-forgotten`, `/.well-known/change-password`, and (opt-in) `/.well-known/security.txt`
 
@@ -1046,6 +1047,34 @@ The middleware forwards the current correlation id and session id (when present)
 ### Iris helpers
 
 `createPublisherMiddleware([Message])` exposes lazy publishers under `ctx.publishers.<camelCasedMessageName>`. `createWorkerQueueMiddleware([Message])` does the same on `ctx.workerQueues`. Both accept an optional second argument to override the global Iris source.
+
+### Bus subscriptions
+
+`subscriptions` binds the deployment's own consumers on `bus` at boot, alongside Pylon's audit and webhook consumers. Each entry is Iris's `SubscribeOptions` plus the `@Message` class its payload is read with.
+
+```typescript
+const app = new Pylon({
+  amphora,
+  logger,
+  bus: irisSource,
+
+  subscriptions: [
+    {
+      message: OrderPlaced,
+      topic: "OrderPlaced",
+      queue: "fulfilment", // omit for broadcast — every instance receives every message
+      callback: async (message, envelope) => {
+        await fulfil(message.orderId);
+      },
+    },
+  ],
+});
+```
+
+- `message` is required and has no default. A topic names where to listen, never how to read what arrives — Iris deserialises and validates against the class.
+- Pylon registers that class on `bus` before the source sets up, so it does not have to be repeated in `new IrisSource({ messages })`. Listing it in both is harmless (registration de-duplicates).
+- **`bus` is required**: declaring a subscription without one is a boot failure, `subscriptions_bus_not_configured`. A subscriber that cannot be bound is silence, and a deployment reads silence as "no traffic".
+- `topic` is bound verbatim. Match it to what the publisher resolves — a static `@Topic` (prefixed by `@Namespace`), else the class name.
 
 ### Attaching extra Proteus / Iris sources
 

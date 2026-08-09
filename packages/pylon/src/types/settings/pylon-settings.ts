@@ -161,6 +161,22 @@ export type PylonSettings<
   port?: number;
   setup?: PylonSetup;
   teardown?: PylonTeardown;
-  subscriptions?: Array<PylonSubscribeSettings>;
+  /**
+   * Bus subscriptions bound at boot, alongside Pylon's own audit and webhook
+   * consumers. Each names the `@Message` class it reads with, and Pylon registers
+   * that class on `bus` before the source sets up.
+   *
+   * Requires `bus`. Declaring a subscription without one is a boot failure
+   * (`subscriptions_bus_not_configured`), for the same reason the audit and
+   * webhook blocks are: a subscriber that cannot be bound is silence, and a
+   * deployment reads silence as "no traffic".
+   *
+   * ⚠ `<any>` rather than the default `<IMessage>`: `IMessage` is an EMPTY
+   * interface, so under `strictFunctionTypes` a callback typed to the
+   * deployment's own message class fails the contravariance check against it and
+   * every declaration would need a cast. The element type stays exact wherever
+   * its own `M` is named.
+   */
+  subscriptions?: Array<PylonSubscribeSettings<any>>;
   workers?: string | ILindormWorker | Array<ILindormWorker | string>;
 };
