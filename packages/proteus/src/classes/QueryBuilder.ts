@@ -19,6 +19,7 @@ import { getForeignMetadata } from "../internal/entity/metadata/foreign-metadata
 import { resolveIncludeStrategy } from "../internal/utils/query/resolve-include-strategy.js";
 import { withRelationKeys } from "../internal/utils/query/with-relation-keys.js";
 import {
+  columnKeys,
   guardEncryptedCriteria,
   querySelectableKeys,
   validateSelectionKeys,
@@ -130,14 +131,14 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
 
     // A per-relation `select` is resolved against the FOREIGN entity, so it is
     // validated there too — an unknown key matched no field of the included
-    // entity and dropped out of the projection without a word.
+    // entity and dropped out of the projection without a word. It may name the
+    // foreign entity's stored columns and nothing else: a relation projection
+    // returns the row it selected, and no driver loads a relation's own relation
+    // values afterwards. `columnKeys` is that set — `fields` would still carry a
+    // @RelationCount's backing column, which nothing maintains.
     if (options?.select) {
       const foreignMetadata = getForeignMetadata(meta, meta.foreignConstructor());
-      validateSelectionKeys(
-        foreignMetadata,
-        options.select,
-        foreignMetadata.fields.map((f) => f.key),
-      );
+      validateSelectionKeys(foreignMetadata, options.select, columnKeys(foreignMetadata));
     }
 
     const required = options?.required ?? false;

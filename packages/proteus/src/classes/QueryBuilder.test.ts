@@ -10,6 +10,7 @@ import { JoinKey } from "../decorators/JoinKey.js";
 import { ManyToOne } from "../decorators/ManyToOne.js";
 import { OneToMany } from "../decorators/OneToMany.js";
 import { PrimaryKeyField } from "../decorators/PrimaryKeyField.js";
+import { RelationCount } from "../decorators/RelationCount.js";
 import { QueryBuilder } from "./QueryBuilder.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -37,6 +38,14 @@ class QbPost {
 
   @OneToMany(() => QbComment, "post")
   comments!: Array<QbComment>;
+
+  // A @RelationCount's backing column exists but is never maintained — no write
+  // sets it and only a root repository read recomputes it. A relation
+  // projection returns the row it selected and issues no count query, so this
+  // key must be refused there.
+  @RelationCount<QbPost>("comments")
+  @Field("integer")
+  commentCount!: number;
 }
 
 // Concrete test implementation
@@ -304,6 +313,15 @@ describe("QueryBuilder", () => {
       expect(() => qb.include("posts", { select: ["comments"] })).toThrow(ProteusError);
       expect(() => qb.include("posts", { select: ["comments"] })).toThrow(
         /Relation "comments" cannot be selected on "QbPost"/,
+      );
+    });
+
+    test("should throw on a @RelationCount of the foreign entity in the relation select", () => {
+      expect(() => qb.include("posts", { select: ["commentCount"] })).toThrow(
+        ProteusError,
+      );
+      expect(() => qb.include("posts", { select: ["commentCount"] })).toThrow(
+        /@RelationCount "commentCount" cannot be selected on "QbPost" here/,
       );
     });
 

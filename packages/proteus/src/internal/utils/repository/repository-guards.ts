@@ -240,7 +240,7 @@ export const guardEncryptedCriteria = (
  * otherwise a surface that returns stored columns alone would accept the count
  * and hand back whatever the column was defaulted to.
  */
-const columnKeys = (metadata: EntityMetadata): Array<string> => {
+export const columnKeys = (metadata: EntityMetadata): Array<string> => {
   const counts = new Set((metadata.relationCounts ?? []).map((rc) => rc.key));
   return metadata.fields.filter((f) => !counts.has(f.key)).map((f) => f.key);
 };
@@ -257,11 +257,11 @@ const columnKeys = (metadata: EntityMetadata): Array<string> => {
  * kinds and every `@RelationCount` are loaded AFTER the rows, by the repository,
  * and no query issues that load.
  *
- * A per-relation `select` passes `fields` alone instead: it narrows the columns
- * projected off a joined or separately-queried relation, and that projection
- * carries neither a foreign key (they are stripped again as implicit) nor a
- * relationId (no driver loads a relation's own), so naming either there would
- * resolve to nothing.
+ * A per-relation `select` passes `columnKeys` alone instead: it narrows the
+ * columns projected off a joined or separately-queried relation, and that
+ * projection carries neither a foreign key (they are stripped again as
+ * implicit) nor a relationId (no driver loads a relation's own), so naming
+ * either there would resolve to nothing.
  */
 export const querySelectableKeys = (metadata: EntityMetadata): Array<string> =>
   uniq([...columnKeys(metadata), ...projectedForeignKeys(metadata)]);
