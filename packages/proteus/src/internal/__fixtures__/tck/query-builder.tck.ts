@@ -343,9 +343,12 @@ export const queryBuilderSuite = (
 
   // ─── include ───────────────────────────────────────────────────────
 
-  // Only the SQL builders read `state.includes`. The memory, mongo and redis
-  // builders drop it, so they reject `.include()` outright rather than hand
-  // back entities whose relations are silently missing.
+  // `strategy` names a ROUND-TRIP SHAPE, not a SQL construct: "join" asks for
+  // the fewest trips to the store, "query" for more but smaller ones. Every
+  // driver that supports `.include()` implements both as best it can and
+  // nothing throws — so both must land on the same entities. The mongo and
+  // redis builders still drop `state.includes` entirely, so they reject
+  // `.include()` outright rather than hand back silently missing relations.
   describe("include", () => {
     const seedAuthorWithPost = async () => {
       const handle = getHandle();
@@ -356,6 +359,15 @@ export const queryBuilderSuite = (
         .repository(TckSimplePost)
         .insert({ title: "Included Post", body: null, authorId: author.id });
       return author;
+    };
+
+    /** An author with no posts at all, alongside one that has a post. */
+    const seedAuthorWithoutPosts = async () => {
+      const author = await seedAuthorWithPost();
+      const lonely = await getHandle()
+        .repository(TckSimpleUser)
+        .insert({ name: "Lonely", age: 51, email: "lonely@test.com" });
+      return { author, lonely };
     };
 
     if (caps.queryBuilderIncludes) {
@@ -376,6 +388,193 @@ export const queryBuilderSuite = (
       test("rejects an undeclared relation name", async () => {
         const qb = getSource().queryBuilder(TckSimpleUser);
         expect(() => qb.include("not_a_relation")).toThrow(/Unknown relation/);
+      });
+
+      // A dotted path is not a relation key, so it fails the same validation an
+      // outright typo does. Relation loading is ONE level deep — pinned here so
+      // nesting cannot be assumed to work on any driver.
+      test("rejects a nested relation path", async () => {
+        const qb = getSource().queryBuilder(TckSimpleUser);
+        expect(() => qb.include("posts.author")).toThrow(/Unknown relation/);
+      });
+
+      test("required excludes a root with no matching relation", async () => {
+        const { author } = await seedAuthorWithoutPosts();
+
+        const found = await getSource()
+          .queryBuilder(TckSimpleUser)
+          .include("posts", { required: true })
+          .getMany();
+
+        expect(found.map((u) => u.id)).toEqual([author.id]);
+      });
+
+      test("required is honoured by count and exists too", async () => {
+        await seedAuthorWithoutPosts();
+
+        const count = await getSource()
+          .queryBuilder(TckSimpleUser)
+          .include("posts", { required: true })
+          .count();
+
+        expect(count).toBe(1);
+      });
+
+      test("an unmatched to-many relation is an empty array", async () => {
+        const { lonely } = await seedAuthorWithoutPosts();
+
+        const found = await getSource()
+          .queryBuilder(TckSimpleUser)
+          .include("posts")
+          .where({ id: lonely.id })
+          .getOne();
+
+        expect(found).not.toBeNull();
+        expect(found!.posts).toEqual([]);
+      });
+
+      test("an unmatched to-one relation is null", async () => {
+        const orphan = await getHandle()
+          .repository(TckSimplePost)
+          .insert({ title: "Orphan", body: null, authorId: null });
+
+        const found = await getSource()
+          .queryBuilder(TckSimplePost)
+          .include("author")
+          .where({ id: orphan.id })
+          .getOne();
+
+        expect(found).not.toBeNull();
+        expect(found!.author).toBeNull();
+      });
+
+      // A relation whose own `where` matches nothing is indistinguishable from
+      // a relation with no rows at all — the root survives, the relation is
+      // empty. The filter belongs to the relation, never to the root.
+      test("a relation filtered to nothing keeps the root with an empty relation", async () => {
+        const author = await seedAuthorWithPost();
+
+        const found = await getSource()
+          .queryBuilder(TckSimpleUser)
+          .include("posts", { where: { title: "no such title" } })
+          .where({ id: author.id })
+          .getOne();
+
+        expect(found).not.toBeNull();
+        expect(found!.posts).toEqual([]);
+      });
+
+      test("a required relation filtered to nothing excludes the root", async () => {
+        await seedAuthorWithPost();
+
+        const found = await getSource()
+          .queryBuilder(TckSimpleUser)
+          .include("posts", { required: true, where: { title: "no such title" } })
+          .getMany();
+
+        expect(found).toEqual([]);
+      });
+
+      test("a relation where filters the relation, not the root", async () => {
+        const author = await seedAuthorWithPost();
+        await getHandle()
+          .repository(TckSimplePost)
+          .insert({ title: "Other Post", body: null, authorId: author.id });
+
+        const found = await getSource()
+          .queryBuilder(TckSimpleUser)
+          .include("posts", { where: { title: "Other Post" } })
+          .where({ id: author.id })
+          .getOne();
+
+        expect(found).not.toBeNull();
+        expect(found!.posts.map((p) => p.title)).toEqual(["Other Post"]);
+      });
+
+      // The named columns AND the keys the store needs to stitch the relation
+      // back together: the foreign PK, plus the FK for an inverse relation.
+      // Naming fewer than that is NOT pinned — see the note in the README.
+      test("select limits the columns on the related entity", async () => {
+        const author = await seedAuthorWithPost();
+
+        const found = await getSource()
+          .queryBuilder(TckSimpleUser)
+          .include("posts", { select: ["id", "title", "authorId"] })
+          .where({ id: author.id })
+          .getOne();
+
+        expect(found!.posts).toHaveLength(1);
+        expect(found!.posts[0].title).toBe("Included Post");
+        expect(found!.posts[0].id).toBeDefined();
+        expect(found!.posts[0].body).toBeUndefined();
+        expect(found!.posts[0].createdAt).toBeUndefined();
+      });
+
+      test("select limits the columns on a to-one relation", async () => {
+        const author = await seedAuthorWithPost();
+
+        const found = await getSource()
+          .queryBuilder(TckSimplePost)
+          .include("author", { select: ["id", "name"] })
+          .where({ authorId: author.id })
+          .getOne();
+
+        expect(found!.author).not.toBeNull();
+        expect(found!.author!.name).toBe("Eve");
+        expect(found!.author!.email).toBeUndefined();
+        expect(found!.author!.age).toBeUndefined();
+      });
+
+      // The two strategies trade round trips for round-trip size; they never
+      // trade correctness. Whatever a driver does internally, the caller gets
+      // the same entities either way.
+      test("both strategies produce identical results", async () => {
+        const { author, lonely } = await seedAuthorWithoutPosts();
+
+        const read = async (strategy: "join" | "query") =>
+          getSource()
+            .queryBuilder(TckSimpleUser)
+            .include("posts", { strategy })
+            .orderBy({ name: "ASC" })
+            .getMany();
+
+        const joined = await read("join");
+        const queried = await read("query");
+
+        const shape = (users: Array<any>) =>
+          users.map((u) => ({
+            id: u.id,
+            posts: u.posts.map((p: any) => p.title).sort(),
+          }));
+
+        expect(shape(joined)).toEqual(shape(queried));
+        expect(shape(joined).find((u) => u.id === author.id)!.posts).toEqual([
+          "Included Post",
+        ]);
+        expect(shape(joined).find((u) => u.id === lonely.id)!.posts).toEqual([]);
+      });
+
+      test("both strategies produce identical results for a to-one relation", async () => {
+        await seedAuthorWithPost();
+        await getHandle()
+          .repository(TckSimplePost)
+          .insert({ title: "Orphan", body: null, authorId: null });
+
+        const read = async (strategy: "join" | "query") =>
+          getSource()
+            .queryBuilder(TckSimplePost)
+            .include("author", { strategy })
+            .orderBy({ title: "ASC" })
+            .getMany();
+
+        const shape = (posts: Array<any>) =>
+          posts.map((p) => ({ title: p.title, author: p.author?.name ?? null }));
+
+        expect(shape(await read("join"))).toEqual(shape(await read("query")));
+        expect(shape(await read("join"))).toEqual([
+          { title: "Included Post", author: "Eve" },
+          { title: "Orphan", author: null },
+        ]);
       });
     } else {
       test("rejects a declared relation with NotSupportedError", async () => {
@@ -398,8 +597,13 @@ export const queryBuilderSuite = (
           throw new Error("include() did not throw");
         } catch (error: any) {
           expect(error.code).toBe("unsupported_operation");
-          expect(error.details).toContain("postgres, mysql and sqlite");
-          expect(error.data.supportedDrivers).toEqual(["postgres", "mysql", "sqlite"]);
+          expect(error.details).toContain("postgres, mysql, sqlite and memory");
+          expect(error.data.supportedDrivers).toEqual([
+            "postgres",
+            "mysql",
+            "sqlite",
+            "memory",
+          ]);
         }
       });
     }

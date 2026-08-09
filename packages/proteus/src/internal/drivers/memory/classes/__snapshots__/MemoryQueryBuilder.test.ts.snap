@@ -1,21 +1,16 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MemoryQueryBuilder — unsupported methods > include() error names the drivers that do support it 1`] = `
+exports[`MemoryQueryBuilder — unsupported methods > include() rejects a relation the entity does not declare 1`] = `
 {
-  "code": "unsupported_operation",
+  "code": "unknown_relation",
   "data": {
-    "operation": "include",
+    "entityName": "QbTestProduct",
     "relation": "anything",
-    "supportedDrivers": [
-      "postgres",
-      "mysql",
-      "sqlite",
-    ],
   },
-  "details": "Query-builder relation loading is implemented by the postgres, mysql and sqlite drivers only — this is a driver gap, not a usage error. On the memory driver, load relations through the repository instead: repository.find(criteria, { relations: [...] }).",
-  "message": "include is not supported by the memory driver",
-  "title": "Unsupported Operation",
-  "type": "urn:lindorm:proteus:error:unsupported_operation",
+  "details": "The requested relation is not declared on this entity.",
+  "message": "Unknown relation "anything" on entity "QbTestProduct". Valid relations: (none)",
+  "title": "Unknown Relation",
+  "type": "urn:lindorm:proteus:error:unknown_relation",
 }
 `;
 

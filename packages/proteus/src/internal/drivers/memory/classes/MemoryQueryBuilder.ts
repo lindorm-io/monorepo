@@ -35,10 +35,20 @@ import {
 import { resolveFilters } from "../../../utils/query/resolve-filters.js";
 import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides.js";
 import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
+import { attachMemoryIncludes } from "../utils/attach-memory-includes.js";
+import {
+  resolveMemoryIncludes,
+  type MemoryIncludeMatch,
+} from "../utils/resolve-memory-includes.js";
 import { applyAutoIncrement } from "../utils/memory-auto-increment.js";
 import { checkUniqueConstraints } from "../utils/memory-unique-check.js";
 import { serializePk } from "../utils/serialize-pk.js";
 import { guardEncryptedCriteria } from "../../../utils/repository/repository-guards.js";
+
+type MemoryQueryResult = {
+  rows: Array<Dict>;
+  includes: Array<MemoryIncludeMatch>;
+};
 
 export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly getTable: () => MemoryTable;
@@ -190,28 +200,6 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  // ─── Relations ──────────────────────────────────────────────────────
-
-  /**
-   * Rejected outright: this builder never reads `state.includes`, so accepting
-   * the call would hand back unhydrated relations with no signal. Throwing at
-   * the call site puts the stack on the offending `.include()`, not on the
-   * terminal that would silently return incomplete entities.
-   */
-  override include(relation: string): this {
-    throw new NotSupportedError("include is not supported by the memory driver", {
-      code: "unsupported_operation",
-      title: "Unsupported Operation",
-      details:
-        "Query-builder relation loading is implemented by the postgres, mysql and sqlite drivers only — this is a driver gap, not a usage error. On the memory driver, load relations through the repository instead: repository.find(criteria, { relations: [...] }).",
-      data: {
-        operation: "include",
-        relation,
-        supportedDrivers: ["postgres", "mysql", "sqlite"],
-      },
-    });
-  }
-
   // ─── Terminal methods ─────────────────────────────────────────────
 
   clone(): IProteusQueryBuilder<E> {
@@ -232,9 +220,9 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   async getOne(): Promise<E | null> {
-    const rows = await this.resolveRows();
+    const { rows, includes } = await this.resolveResult();
     if (rows.length === 0) return null;
-    return this.hydrateRow(rows[0]);
+    return this.hydrateRow(rows[0], includes);
   }
 
   async getOneOrFail(): Promise<E> {
@@ -254,12 +242,14 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   async getMany(): Promise<Array<E>> {
-    const rows = await this.resolveRows();
-    return rows.map((row) => this.hydrateRow(row));
+    const { rows, includes } = await this.resolveResult();
+    return rows.map((row) => this.hydrateRow(row, includes));
   }
 
   async getManyAndCount(): Promise<[Array<E>, number]> {
-    const allRows = await this.resolveRows(/* skipPagination */ true);
+    const { rows: allRows, includes } = await this.resolveResult(
+      /* skipPagination */ true,
+    );
     const totalCount = allRows.length;
 
     let paginatedRows = allRows;
@@ -270,7 +260,7 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       paginatedRows = paginatedRows.slice(0, this.state.take);
     }
 
-    const entities = paginatedRows.map((row) => this.hydrateRow(row));
+    const entities = paginatedRows.map((row) => this.hydrateRow(row, includes));
     return [entities, totalCount];
   }
 
@@ -352,6 +342,11 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   // ─── Private ──────────────────────────────────────────────────────
 
   private async resolveRows(skipPagination?: boolean): Promise<Array<Dict>> {
+    const { rows } = await this.resolveResult(skipPagination);
+    return rows;
+  }
+
+  private async resolveResult(skipPagination?: boolean): Promise<MemoryQueryResult> {
     const table = this.getTable();
     let rows = [...table.values()];
 
@@ -442,6 +437,24 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       });
     }
 
+    // Includes are resolved BEFORE ordering and pagination so that `required`
+    // can drop unmatched roots first — a root excluded by a required relation
+    // must not consume a slot in take/skip, and must not be counted by
+    // count()/exists() either, which is what the SQL drivers' INNER JOIN does.
+    const includes = resolveMemoryIncludes(rows, this.state.includes, {
+      rootMetadata: this.metadata,
+      store: this.getStore(),
+      namespace: this.namespace,
+      withDeleted: this.state.withDeleted,
+      versionTimestamp: this.state.versionTimestamp,
+    });
+    const required = includes.filter((match) => match.include.required);
+    if (required.length > 0) {
+      rows = rows.filter((row) =>
+        required.every((match) => (match.rows.get(row) ?? []).length > 0),
+      );
+    }
+
     // Ordering: explicit .orderBy() > @DefaultOrder > none
     const effectiveOrderBy = this.state.orderBy ?? this.metadata.defaultOrder;
     if (effectiveOrderBy) {
@@ -461,7 +474,9 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       }
     }
 
-    // Select projection
+    // Select projection. Relations were matched against the UNPROJECTED rows,
+    // so the projected copy inherits their matches by identity — projecting a
+    // join key away narrows the returned columns, never the relation.
     if (this.state.selections && this.state.selections.length > 0) {
       const keys = this.state.selections as Array<string>;
       rows = rows.map((r) => {
@@ -469,20 +484,24 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         for (const k of keys) {
           if (k in r) projected[k] = r[k];
         }
+        for (const match of includes) {
+          match.rows.set(projected, match.rows.get(r) ?? []);
+        }
         return projected;
       });
     }
 
-    return rows;
+    return { rows, includes };
   }
 
-  private hydrateRow(row: Dict): E {
+  private hydrateRow(row: Dict, includes: Array<MemoryIncludeMatch>): E {
     const effectiveMetadata = resolvePolymorphicMetadata(row, this.metadata);
-    return defaultHydrateEntity<E>(structuredClone(row), effectiveMetadata, {
+    const entity = defaultHydrateEntity<E>(structuredClone(row), effectiveMetadata, {
       snapshot: true,
       hooks: true,
       amphora: this.amphora,
     });
+    return attachMemoryIncludes(entity, row, includes, this.amphora);
   }
 
   private async computeAggregate(

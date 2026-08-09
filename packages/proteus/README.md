@@ -1780,14 +1780,40 @@ qb.select("id", "name", "email").distinct().getMany();
 qb.include("posts", { required: true }).include("profile").getMany();
 ```
 
-**Driver support:** `include()` is implemented by **postgres, mysql and sqlite** only. The **memory,
-mongo and redis** builders throw `NotSupportedError` from `include()` itself — they cannot load
+Relation loading is **one level deep** — a dotted path (`"posts.author"`) is not a relation key and
+is rejected like any other unknown relation.
+
+| Option     | Meaning                                                                                         |
+| ---------- | ----------------------------------------------------------------------------------------------- |
+| `required` | `true` drops a root with no matching relation. Default `false` keeps it with an empty relation. |
+| `strategy` | Round-trip shape — see below. Defaults to `join` for to-one, `query` for to-many.               |
+| `select`   | Restricts the related entity to the named columns.                                              |
+| `where`    | Filters the relation. Combined with `required` it also decides whether the root survives.       |
+
+An unmatched relation is always an **empty relation, never an absent property**: `[]` for
+`OneToMany` / `ManyToMany`, `null` for `ManyToOne` / `OneToOne`. A relation that a `where` filtered
+down to nothing lands in exactly the same place as a relation with no rows at all.
+
+**`strategy` names a round-trip shape, not a SQL construct.** `"join"` asks for the fewest trips to
+the store, preferably one; `"query"` asks for more trips, each smaller and faster. Both must return
+the same entities — the choice is a performance trade, never a semantic one. The memory driver makes
+no round trips at all (the store is the same heap), so it implements one path and ignores the option.
+
+**Driver support:** `include()` is implemented by **postgres, mysql, sqlite and memory**. The
+**mongo and redis** builders throw `NotSupportedError` from `include()` itself — they cannot load
 relations through the query builder. Use the repository path there instead, which all six drivers
 support:
 
 ```typescript
 await repository.find({ status: "active" }, { relations: ["posts", "profile"] });
 ```
+
+> ⚠ **`select` and the store's own keys.** On the SQL drivers, per-relation `select` emits exactly
+> the named columns — including for the keys the driver needs to stitch the relation back to its
+> root. Name too few and the relation comes back **empty** rather than partially populated: the
+> foreign primary key is required by both strategies, and `strategy: "query"` on an inverse relation
+> additionally needs the foreign key pointing back at the root. Name those keys explicitly. The
+> memory driver matches relations before projecting, so it is not sensitive to this.
 
 ### Group By / Having
 

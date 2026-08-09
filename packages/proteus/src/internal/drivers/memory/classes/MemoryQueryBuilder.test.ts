@@ -116,14 +116,9 @@ describe("MemoryQueryBuilder — unsupported methods", () => {
     });
   }
 
-  // The builder never reads state.includes, so include() used to be a silent
-  // no-op that handed back unhydrated relations.
-  test("include() throws NotSupportedError at the call site", () => {
-    const qb = source.queryBuilder(QbTestProduct);
-    expect(() => qb.include("anything")).toThrow(NotSupportedError);
-  });
-
-  test("include() error names the drivers that do support it", () => {
+  // include() is supported; an entity with no relations rejects it as a bad
+  // relation name, not as a driver gap.
+  test("include() rejects a relation the entity does not declare", () => {
     const qb = source.queryBuilder(QbTestProduct);
 
     try {
