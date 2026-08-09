@@ -144,38 +144,48 @@ const renderIndexDDL = (table: SqliteDesiredTable): Array<string> => {
 };
 
 /**
- * Determines if adding columns to an existing table is safe via ALTER TABLE ADD COLUMN.
+ * Answers two separate questions about an existing table, because the ADD COLUMN
+ * route needs both and they are not the same question:
  *
- * Safe when: only new columns are being added (no removals, no type changes, no constraint
- * changes), and all new columns are either nullable or have a default value.
+ * - `expressibleAsAddColumn` — can this change be reached by ALTER TABLE ADD COLUMN
+ *   alone? True when the only difference is added columns (no removals, no type /
+ *   nullability / default / generated-expression changes, no PK, FK or unique
+ *   constraint changes) and every added column is non-generated and either nullable
+ *   or defaulted. An UNCHANGED table answers `true` — there is simply nothing to add.
+ * - `newColumns` — the columns to add. Empty when there is no work to do.
+ *
+ * A single flag cannot carry both: collapsing them yields a value that reads as
+ * "safe" but means "safe AND there is work", so its negation reads as "unsafe" while
+ * also covering "nothing to do". `newColumns` already answers the second question,
+ * so the second flag would be redundant state.
  */
 const canUseAddColumn = (
   existingTable: SqliteSnapshotTable,
   desiredTable: SqliteDesiredTable,
-): { safe: boolean; newColumns: Array<SqliteDesiredColumn> } => {
+): { expressibleAsAddColumn: boolean; newColumns: Array<SqliteDesiredColumn> } => {
   const existingColNames = new Set(existingTable.columns.map((c) => c.name));
   const desiredColNames = new Set(desiredTable.columns.map((c) => c.name));
 
   // Any removed columns? Not safe for ADD COLUMN
   for (const name of existingColNames) {
     if (!desiredColNames.has(name)) {
-      return { safe: false, newColumns: [] };
+      return { expressibleAsAddColumn: false, newColumns: [] };
     }
   }
 
   // Any existing columns changed? Check type, nullability, default
   for (const existingCol of existingTable.columns) {
     const desiredCol = desiredTable.columns.find((c) => c.name === existingCol.name);
-    if (!desiredCol) return { safe: false, newColumns: [] };
+    if (!desiredCol) return { expressibleAsAddColumn: false, newColumns: [] };
 
     // Type change
     if (normalizeType(existingCol.type) !== normalizeType(desiredCol.sqliteType)) {
-      return { safe: false, newColumns: [] };
+      return { expressibleAsAddColumn: false, newColumns: [] };
     }
 
     // Nullability change
     if (existingCol.notNull !== !desiredCol.nullable) {
-      return { safe: false, newColumns: [] };
+      return { expressibleAsAddColumn: false, newColumns: [] };
     }
 
     // Default value change (compare normalized)
@@ -183,7 +193,7 @@ const canUseAddColumn = (
       normalizeDefault(existingCol.defaultValue) !==
       normalizeDefault(desiredCol.defaultExpr)
     ) {
-      return { safe: false, newColumns: [] };
+      return { expressibleAsAddColumn: false, newColumns: [] };
     }
 
     // Generated-expression change (computed ↔ plain, or expression edited)
@@ -191,7 +201,7 @@ const canUseAddColumn = (
       normalizeGenerated(existingCol.generatedExpr) !==
       normalizeGenerated(desiredCol.computed)
     ) {
-      return { safe: false, newColumns: [] };
+      return { expressibleAsAddColumn: false, newColumns: [] };
     }
   }
 
@@ -201,19 +211,19 @@ const canUseAddColumn = (
     .sort((a, b) => a.pk - b.pk)
     .map((c) => c.name);
   if (existingPks.join(",") !== desiredTable.primaryKeys.join(",")) {
-    return { safe: false, newColumns: [] };
+    return { expressibleAsAddColumn: false, newColumns: [] };
   }
 
   // Check FK changes — compare normalized FK lists (incl. deferrability)
   if (normalizeFks(existingTable) !== desiredFksSignature(desiredTable)) {
-    return { safe: false, newColumns: [] };
+    return { expressibleAsAddColumn: false, newColumns: [] };
   }
 
   // Check unique constraint changes
   if (
     normalizeUniqueConstraints(existingTable) !== desiredUniquesSignature(desiredTable)
   ) {
-    return { safe: false, newColumns: [] };
+    return { expressibleAsAddColumn: false, newColumns: [] };
   }
 
   // New columns
@@ -221,14 +231,14 @@ const canUseAddColumn = (
 
   for (const col of newColumns) {
     // sqlite forbids ALTER TABLE ADD COLUMN of a STORED generated column — must rebuild.
-    if (col.computed) return { safe: false, newColumns: [] };
+    if (col.computed) return { expressibleAsAddColumn: false, newColumns: [] };
     // Non-generated new columns must be nullable or carry a default.
     if (!col.nullable && col.defaultExpr === null) {
-      return { safe: false, newColumns: [] };
+      return { expressibleAsAddColumn: false, newColumns: [] };
     }
   }
 
-  return { safe: newColumns.length > 0, newColumns };
+  return { expressibleAsAddColumn: true, newColumns };
 };
 
 const normalizeType = (type: string): string => type.toUpperCase().trim();
@@ -353,8 +363,8 @@ export const diffSchema = (
     // Existing table — check if we can use simple ADD COLUMN
     const addColumnCheck = canUseAddColumn(existingTable, desiredTable);
 
-    if (addColumnCheck.safe && addColumnCheck.newColumns.length > 0) {
-      // Safe to add columns via ALTER TABLE
+    if (addColumnCheck.expressibleAsAddColumn && addColumnCheck.newColumns.length > 0) {
+      // Reachable by ALTER TABLE ADD COLUMN, and there is something to add
       for (const col of addColumnCheck.newColumns) {
         let def = `${quoteIdentifier(col.name)} ${col.sqliteType}`;
         if (col.defaultExpr) def += ` DEFAULT ${col.defaultExpr}`;
@@ -367,8 +377,10 @@ export const diffSchema = (
           ddl: `ALTER TABLE ${quoteIdentifier(desiredTable.name)} ADD COLUMN ${def};`,
         });
       }
-    } else if (!addColumnCheck.safe) {
-      // Need recreate-table if there are actual differences
+    } else {
+      // Everything else: not expressible as ADD COLUMN, or expressible with nothing
+      // to add (an unchanged table). `hasTableDifferences` is the gate either way —
+      // it returns false for the unchanged table, so no operation is planned.
       const hasDifferences = hasTableDifferences(existingTable, desiredTable);
 
       if (hasDifferences) {
@@ -571,8 +583,10 @@ const hasIndexDefinitionChanged = (
   // Column count
   if (existing.columns.length !== desired.columns.length) return true;
 
-  // Column names in order
+  // Column names in order. ⚠ `.slice()` first — `existing` belongs to the caller's
+  // snapshot, and a diff must not reorder the thing it is reading.
   const existingCols = existing.columns
+    .slice()
     .sort((a, b) => a.seqno - b.seqno)
     .map((c) => c.name);
   const desiredCols = desired.columns.map((c) => c.name);
