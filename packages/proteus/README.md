@@ -1373,9 +1373,16 @@ authorId!: string;
 
 @RelationId("author", { column: "author_id" })
 authorId!: string;
+
+@RelationId("posts")                           // a to-many carries every id
+postIds!: Array<string>;
 ```
 
 For `*ToOne` owning relations, the FK column is auto-detected. For composite FK or `*ToMany`, specify the `column` option. Multiple `@RelationId` decorators may target the same relation for composite keys.
+
+The value follows the relation's cardinality, identically on all six drivers: a `OneToMany` and a
+`ManyToMany` carry EVERY related id as an array — `[]` when there are none — while an owning `*ToOne`
+and an inverse `OneToOne` carry the one id, or `null`.
 
 A `@RelationId` is selectable on the repository by its own property name, as in
 `select: ["id", "authorId"]`, and the projection decides whether it loads at all. Named it loads,

@@ -42,6 +42,7 @@ import { RelationPersister } from "../../../utils/repository/RelationPersister.j
 import { createMemoryJoinTableOps } from "../utils/memory-join-table-ops.js";
 import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations.js";
 import { buildRelationFilter } from "../../../utils/repository/build-relation-filter.js";
+import { loadEntityRelationIds } from "../../../utils/repository/load-entity-relation-ids.js";
 import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
 import { MemoryCursor } from "./MemoryCursor.js";
 import { buildOldEntity } from "../../../entity/utils/build-old-entity.js";
@@ -942,37 +943,12 @@ export class MemoryRepository<
     relationCounts: Array<MetaRelationCount>,
   ): Promise<void> {
     for (const entity of entities) {
-      // Load RelationIds for async relations (M2M, inverse *ToOne)
-      for (const ri of relationIds) {
-        const relation = this.metadata.relations.find((r) => r.key === ri.relationKey);
-        if (!relation) continue;
-
-        // Sync ones are already hydrated by defaultHydrateEntity
-        if (relation.joinKeys && relation.type !== "ManyToMany") continue;
-
-        if (relation.type === "ManyToMany") {
-          const items = await this.loadManyToManyLazy(entity, relation);
-          const foreignTarget = relation.foreignConstructor();
-          const foreignMeta = getForeignMetadata(relation, foreignTarget);
-          const pkKey = ri.column ?? foreignMeta.primaryKeys[0];
-          (entity as any)[ri.key] = items.map((item) => (item as any)[pkKey]);
-        } else {
-          const foreignTarget = relation.foreignConstructor();
-          const filter = buildRelationFilter(
-            relation,
-            entity,
-            this.metadata,
-            getForeignMetadata(relation, foreignTarget),
-          );
-          const repo = this.repositoryFactory(foreignTarget, this.metadata.target);
-          const found = await repo.findOne(filter);
-          if (found) {
-            const foreignMeta = getForeignMetadata(relation, foreignTarget);
-            const pkKey = ri.column ?? foreignMeta.primaryKeys[0];
-            (entity as any)[ri.key] = (found as any)[pkKey];
-          }
-        }
-      }
+      // Load RelationIds for async relations (*ToMany, inverse *ToOne)
+      await loadEntityRelationIds(entity, relationIds, {
+        metadata: this.metadata,
+        repositoryFactory: this.repositoryFactory,
+        loadManyToMany: (target, relation) => this.loadManyToManyLazy(target, relation),
+      });
 
       // Load RelationCounts
       for (const rc of relationCounts) {

@@ -144,6 +144,10 @@ export const queriesSuite = (getHandle: () => TckDriverHandle, entities: TckEnti
       expect(projected).toHaveLength(1);
       expect(projected[0].id).toBe(child.id);
       expect(projected[0].parentId).toEqual(full.parentId);
+
+      // An owning *ToOne points at one parent, so its id is that one value —
+      // never a list.
+      expect(Array.isArray(projected[0].parentId)).toBe(false);
     });
 
     // A @RelationCount is populated by the repository, so the repository is
@@ -197,6 +201,61 @@ export const queriesSuite = (getHandle: () => TckDriverHandle, entities: TckEnti
 
       expect(full.autoNullableChildCount).toBe(1);
       expect(full.autoNullableChildIds).toBeDefined();
+    });
+
+    // A @RelationId takes the shape of the relation's cardinality, and a
+    // OneToMany has many children — so it carries EVERY child's id. Asserting
+    // only that the property is there passed on the drivers that read the
+    // relation with findOne and handed back a single child's id as a bare
+    // string, losing the rest without a word.
+    test("find loads every child's id into a OneToMany @RelationId", async () => {
+      const parentRepo = getHandle().repository(TckFkParent);
+      const childRepo = getHandle().repository(TckFkAutoNullableChild);
+
+      const parent = await parentRepo.insert({ name: "AllChildRelationIds" });
+      const first = await childRepo.insert({ value: "one", parent });
+      const second = await childRepo.insert({ value: "two", parent });
+      const third = await childRepo.insert({ value: "three", parent });
+
+      const [full] = await parentRepo.find({ id: parent.id });
+
+      expect(Array.isArray(full.autoNullableChildIds)).toBe(true);
+      expect(full.autoNullableChildIds).toHaveLength(3);
+      expect([...full.autoNullableChildIds].sort()).toEqual(
+        [first.id, second.id, third.id].sort(),
+      );
+    });
+
+    // The same shape holds with nothing to put in it: a childless parent gets
+    // the empty list, not null and not a missing property.
+    test("find gives a childless OneToMany @RelationId an empty array", async () => {
+      const parentRepo = getHandle().repository(TckFkParent);
+
+      const parent = await parentRepo.insert({ name: "NoChildRelationIds" });
+
+      const [full] = await parentRepo.find({ id: parent.id });
+
+      expect(full.autoNullableChildIds).toEqual([]);
+    });
+
+    // Projected or not, the value is the same value.
+    test("find loads every child's id into a projected OneToMany @RelationId", async () => {
+      const parentRepo = getHandle().repository(TckFkParent);
+      const childRepo = getHandle().repository(TckFkAutoNullableChild);
+
+      const parent = await parentRepo.insert({ name: "ProjectedChildRelationIds" });
+      const first = await childRepo.insert({ value: "one", parent });
+      const second = await childRepo.insert({ value: "two", parent });
+
+      const [projected] = await parentRepo.find(
+        { id: parent.id },
+        { select: ["id", "autoNullableChildIds"] },
+      );
+
+      expect(projected.autoNullableChildIds).toHaveLength(2);
+      expect([...projected.autoNullableChildIds].sort()).toEqual(
+        [first.id, second.id].sort(),
+      );
     });
 
     test("find returns empty array when no matches", async () => {
