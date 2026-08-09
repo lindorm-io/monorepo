@@ -11,7 +11,9 @@ import {
   guardExpiryDateField,
   guardVersionFields,
   guardUpsertBlocked,
+  selectableKeys,
   validateRelationNames,
+  validateSelectionKeys,
 } from "./repository-guards.js";
 
 const makeMetadata = (overrides: Partial<EntityMetadata> = {}): EntityMetadata =>
@@ -206,6 +208,79 @@ describe("validateRelationNames", () => {
     expect(() => validateRelationNames(metadata, ["foo"])).toThrow(
       'Unknown relation "foo" on "TestEntity". Available: [tags, author]',
     );
+  });
+});
+
+describe("selectableKeys", () => {
+  test("returns the declared fields", () => {
+    const metadata = makeMetadata({
+      fields: [{ key: "id" }, { key: "name" }] as any,
+    });
+    expect(selectableKeys(metadata)).toEqual(["id", "name"]);
+  });
+
+  test("adds @RelationId properties that have no field of their own", () => {
+    const metadata = makeMetadata({
+      fields: [{ key: "id" }] as any,
+      relationIds: [{ key: "authorId", relationKey: "author", column: null }],
+    });
+    expect(selectableKeys(metadata)).toEqual(["id", "authorId"]);
+  });
+
+  test("lists a @RelationId that is also a declared field only once", () => {
+    const metadata = makeMetadata({
+      fields: [{ key: "id" }, { key: "authorId" }] as any,
+      relationIds: [{ key: "authorId", relationKey: "author", column: null }],
+    });
+    expect(selectableKeys(metadata)).toEqual(["id", "authorId"]);
+  });
+});
+
+describe("validateSelectionKeys", () => {
+  const metadata = makeMetadata({
+    fields: [{ key: "id" }, { key: "title" }] as any,
+    relationIds: [{ key: "authorId", relationKey: "author", column: null }],
+    relations: [{ key: "author" }, { key: "comments" }] as any,
+  });
+
+  test("does not throw for keys in the selectable set", () => {
+    expect(() =>
+      validateSelectionKeys(metadata, ["id", "authorId"], selectableKeys(metadata)),
+    ).not.toThrow();
+  });
+
+  test("does not throw for an empty key list", () => {
+    expect(() =>
+      validateSelectionKeys(metadata, [], selectableKeys(metadata)),
+    ).not.toThrow();
+  });
+
+  test("throws ProteusRepositoryError for an unknown key", () => {
+    expect(() =>
+      validateSelectionKeys(metadata, ["titel"], selectableKeys(metadata)),
+    ).toThrow(ProteusRepositoryError);
+  });
+
+  test("includes the unknown key and the selectable set in the message", () => {
+    expect(() =>
+      validateSelectionKeys(metadata, ["titel"], selectableKeys(metadata)),
+    ).toThrow('Unknown field "titel" on "TestEntity". Available: [id, title, authorId]');
+  });
+
+  test("throws a distinct error when the key names a relation", () => {
+    expect(() =>
+      validateSelectionKeys(metadata, ["comments"], selectableKeys(metadata)),
+    ).toThrow('Relation "comments" cannot be selected on "TestEntity"');
+  });
+
+  test("rejects a @RelationId when the caller passes fields alone as selectable", () => {
+    expect(() =>
+      validateSelectionKeys(
+        metadata,
+        ["authorId"],
+        metadata.fields.map((f) => f.key),
+      ),
+    ).toThrow('Unknown field "authorId" on "TestEntity". Available: [id, title]');
   });
 });
 

@@ -14,6 +14,8 @@ import { buildSimpleIn } from "./build-simple-in.js";
 
 export type LoadRelationIdsContext = {
   metadata: EntityMetadata;
+  /** The relationIds the projection asked for — see `projectedRelationIds`. */
+  relationIds: Array<MetaRelationId>;
   namespace: string | null;
   client: PostgresQueryClient;
 };
@@ -28,9 +30,9 @@ export const loadRelationIds = async <E extends IEntity>(
   entities: Array<E>,
   ctx: LoadRelationIdsContext,
 ): Promise<void> => {
-  if (entities.length === 0 || ctx.metadata.relationIds.length === 0) return;
+  if (entities.length === 0 || ctx.relationIds.length === 0) return;
 
-  for (const ri of ctx.metadata.relationIds) {
+  for (const ri of ctx.relationIds) {
     const relation = ctx.metadata.relations.find((r) => r.key === ri.relationKey);
     if (!relation) continue;
 

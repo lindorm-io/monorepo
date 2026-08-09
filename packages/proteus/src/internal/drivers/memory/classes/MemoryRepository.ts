@@ -17,6 +17,7 @@ import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor
 import type {
   EntityMetadata,
   MetaRelation,
+  MetaRelationId,
   QueryScope,
 } from "../../../entity/types/metadata.js";
 import type { RepositoryFactory } from "../../../types/repository-factory.js";
@@ -29,8 +30,11 @@ import {
   guardAppendOnly,
   guardEncryptedCriteria,
   guardVersionFields,
+  selectableKeys,
   validateRelationNames,
+  validateSelectionKeys,
 } from "../../../utils/repository/repository-guards.js";
+import { projectedRelationIds } from "../../../utils/repository/projected-relation-ids.js";
 import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
 import { createMemoryJoinTableOps } from "../utils/memory-join-table-ops.js";
 import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations.js";
@@ -133,11 +137,13 @@ export class MemoryRepository<
       validateRelationNames(this.metadata, options.relations as Array<string>);
     }
 
-    const hiddenSelect = filterHiddenSelections(
-      this.metadata,
-      [scope],
-      (options?.select as Array<string>) ?? null,
-    );
+    const select = (options?.select as Array<string>) ?? null;
+
+    if (select) {
+      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+    }
+
+    const hiddenSelect = filterHiddenSelections(this.metadata, [scope], select);
     const effectiveOptions = hiddenSelect
       ? { ...options, select: hiddenSelect as Array<keyof E> }
       : options;
@@ -148,7 +154,10 @@ export class MemoryRepository<
     );
 
     if (this.hasAsyncRelationIds || this.hasRelationCounts) {
-      await this.loadRelationIdsAndCounts(entities);
+      await this.loadRelationIdsAndCounts(
+        entities,
+        projectedRelationIds(this.metadata, select),
+      );
     }
 
     if (this.hasEmbeddedLists) {
@@ -171,6 +180,12 @@ export class MemoryRepository<
     guardVersionFields(this.metadata, "versions");
     guardEncryptedCriteria(this.metadata, criteria, "versions");
 
+    const select = (options?.select as Array<string>) ?? null;
+
+    if (select) {
+      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+    }
+
     const entities = await this.executor.executeFind(criteria, {
       ...options,
       withDeleted: true,
@@ -178,7 +193,10 @@ export class MemoryRepository<
     } as FindOptions<E>);
 
     if (this.hasAsyncRelationIds || this.hasRelationCounts) {
-      await this.loadRelationIdsAndCounts(entities);
+      await this.loadRelationIdsAndCounts(
+        entities,
+        projectedRelationIds(this.metadata, select),
+      );
     }
 
     if (this.hasEmbeddedLists) {
@@ -902,10 +920,13 @@ export class MemoryRepository<
     return entities;
   }
 
-  private async loadRelationIdsAndCounts(entities: Array<E>): Promise<void> {
+  private async loadRelationIdsAndCounts(
+    entities: Array<E>,
+    relationIds: Array<MetaRelationId>,
+  ): Promise<void> {
     for (const entity of entities) {
       // Load RelationIds for async relations (M2M, inverse *ToOne)
-      for (const ri of this.metadata.relationIds ?? []) {
+      for (const ri of relationIds) {
         const relation = this.metadata.relations.find((r) => r.key === ri.relationKey);
         if (!relation) continue;
 

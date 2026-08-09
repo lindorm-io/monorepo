@@ -42,7 +42,7 @@ const discriminatorKeys = (metadata: EntityMetadata): Array<string> =>
  * side, non-ManyToMany). They are not `fields`, so restricting the metadata does
  * not hold them back — they have to be cleared explicitly.
  */
-const projectedForeignKeys = (metadata: EntityMetadata): Array<string> =>
+export const projectedForeignKeys = (metadata: EntityMetadata): Array<string> =>
   metadata.relations
     .filter((relation) => relation.joinKeys && relation.type !== "ManyToMany")
     .flatMap((relation) =>

@@ -18,6 +18,7 @@ import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor
 import type {
   EntityMetadata,
   MetaRelation,
+  MetaRelationId,
   QueryScope,
 } from "../../../entity/types/metadata.js";
 import type { RepositoryFactory } from "../../../types/repository-factory.js";
@@ -33,8 +34,11 @@ import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-pre
 import {
   guardAppendOnly,
   guardEncryptedCriteria,
+  selectableKeys,
   validateRelationNames,
+  validateSelectionKeys,
 } from "../../../utils/repository/repository-guards.js";
+import { projectedRelationIds } from "../../../utils/repository/projected-relation-ids.js";
 import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
 import { buildRelationFilter } from "../../../utils/repository/build-relation-filter.js";
 import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
@@ -128,11 +132,13 @@ export class RedisRepository<
       validateRelationNames(this.metadata, options.relations as Array<string>);
     }
 
-    const hiddenSelect = filterHiddenSelections(
-      this.metadata,
-      [scope],
-      (options?.select as Array<string>) ?? null,
-    );
+    const select = (options?.select as Array<string>) ?? null;
+
+    if (select) {
+      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+    }
+
+    const hiddenSelect = filterHiddenSelections(this.metadata, [scope], select);
     const effectiveOptions = hiddenSelect
       ? { ...options, select: hiddenSelect as Array<keyof E> }
       : options;
@@ -143,7 +149,10 @@ export class RedisRepository<
     );
 
     if (this.hasAsyncRelationIds || this.hasRelationCounts) {
-      await this.loadRelationIdsAndCounts(entities);
+      await this.loadRelationIdsAndCounts(
+        entities,
+        projectedRelationIds(this.metadata, select),
+      );
     }
 
     for (const entity of entities) {
@@ -946,11 +955,14 @@ export class RedisRepository<
     return entities;
   }
 
-  private async loadRelationIdsAndCounts(entities: Array<E>): Promise<void> {
+  private async loadRelationIdsAndCounts(
+    entities: Array<E>,
+    relationIds: Array<MetaRelationId>,
+  ): Promise<void> {
     await Promise.all(
       entities.map(async (entity) => {
         // Load RelationIds for async relations (M2M, inverse *ToOne)
-        for (const ri of this.metadata.relationIds ?? []) {
+        for (const ri of relationIds) {
           const relation = this.metadata.relations.find((r) => r.key === ri.relationKey);
           if (!relation) continue;
 

@@ -1,8 +1,10 @@
 import { isArray, isObject } from "@lindorm/is";
 import type { Condition } from "@lindorm/match";
 import type { Dict } from "@lindorm/types";
+import { uniq } from "@lindorm/utils";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { projectedForeignKeys } from "../query/include-projection.js";
 
 export const guardDeleteDateField = (metadata: EntityMetadata, method: string): void => {
   const field = metadata.fields.find((f) => f.decorator === "DeleteDate");
@@ -225,6 +227,70 @@ export const guardEncryptedCriteria = (
     }
 
     guardEncryptedKey(metadata, key, method);
+  }
+};
+
+/**
+ * The keys a ROOT projection may name: everything the root query populates.
+ *
+ * Beyond the declared columns that is two things without a `MetaField` of their
+ * own — an owning relation's auto-projected foreign key, which hydration
+ * assigns unasked, and a `@RelationId`, which the repository loads and which
+ * honours the projection. Both come back when named, so both are selectable.
+ *
+ * A per-relation `select` passes `fields` alone instead: it narrows the columns
+ * projected off a joined or separately-queried relation, and that projection
+ * carries neither a foreign key (they are stripped again as implicit) nor a
+ * relationId (no driver loads a relation's own), so naming either there would
+ * resolve to nothing.
+ */
+export const selectableKeys = (metadata: EntityMetadata): Array<string> =>
+  uniq([
+    ...metadata.fields.map((field) => field.key),
+    ...projectedForeignKeys(metadata),
+    ...(metadata.relationIds ?? []).map((relationId) => relationId.key),
+  ]);
+
+/**
+ * Reject a projection key that names nothing.
+ *
+ * An unknown key matched no field, narrowed nothing and vanished — the caller
+ * got an entity missing the column they asked for, with no error, on every
+ * driver. `selectable` is the set the surface can actually populate, so what
+ * this accepts is exactly what comes back.
+ */
+export const validateSelectionKeys = (
+  metadata: EntityMetadata,
+  keys: Array<string>,
+  selectable: Array<string>,
+): void => {
+  const relations = new Set(metadata.relations.map((relation) => relation.key));
+  const valid = new Set(selectable);
+
+  for (const key of keys) {
+    if (valid.has(key)) continue;
+
+    if (relations.has(key)) {
+      throw new ProteusRepositoryError(
+        `Relation "${key}" cannot be selected on "${metadata.entity.name}"`,
+        {
+          code: "relation_not_selectable",
+          title: "Relation Not Selectable",
+          details: `"${key}" is a relation, not a column — load it with include("${key}") or the \`relations\` option, and use that relation's own select to narrow it.`,
+          debug: { entityName: metadata.entity.name, key },
+        },
+      );
+    }
+
+    throw new ProteusRepositoryError(
+      `Unknown field "${key}" on "${metadata.entity.name}". Available: [${selectable.join(", ")}]`,
+      {
+        code: "unknown_field",
+        title: "Unknown Field",
+        details: "The selected key is not declared on this entity.",
+        debug: { entityName: metadata.entity.name, key },
+      },
+    );
   }
 };
 

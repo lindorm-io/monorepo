@@ -15,9 +15,14 @@ import type {
   SqlFragment,
   WindowSpec,
 } from "../internal/types/query.js";
+import { getForeignMetadata } from "../internal/entity/metadata/foreign-metadata.js";
 import { resolveIncludeStrategy } from "../internal/utils/query/resolve-include-strategy.js";
 import { withRelationKeys } from "../internal/utils/query/with-relation-keys.js";
-import { guardEncryptedCriteria } from "../internal/utils/repository/repository-guards.js";
+import {
+  guardEncryptedCriteria,
+  selectableKeys,
+  validateSelectionKeys,
+} from "../internal/utils/repository/repository-guards.js";
 
 /**
  * Abstract base class for fluent query builders.
@@ -94,8 +99,10 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
   // --- Relations ---
 
   include(relation: string, options?: IncludeOptions): this {
-    const valid = this.metadata.relations.map((r) => r.key);
-    if (!valid.includes(relation)) {
+    const meta = this.metadata.relations.find((r) => r.key === relation);
+
+    if (!meta) {
+      const valid = this.metadata.relations.map((r) => r.key);
       throw new ProteusError(
         `Unknown relation "${relation}" on entity "${this.metadata.entity.name}". Valid relations: ${valid.join(", ") || "(none)"}`,
         {
@@ -118,6 +125,18 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
             "This relation has already been added to the query; include it only once.",
           data: { entityName: this.metadata.entity.name, relation },
         },
+      );
+    }
+
+    // A per-relation `select` is resolved against the FOREIGN entity, so it is
+    // validated there too — an unknown key matched no field of the included
+    // entity and dropped out of the projection without a word.
+    if (options?.select) {
+      const foreignMetadata = getForeignMetadata(meta, meta.foreignConstructor());
+      validateSelectionKeys(
+        foreignMetadata,
+        options.select,
+        foreignMetadata.fields.map((f) => f.key),
       );
     }
 
@@ -147,20 +166,11 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
   // --- Projection ---
 
   select(...fields: Array<keyof E>): this {
-    const validKeys = this.metadata.fields.map((f) => f.key);
-    for (const field of fields) {
-      if (!validKeys.includes(field as string)) {
-        throw new ProteusError(
-          `Unknown field "${String(field)}" on entity "${this.metadata.entity.name}". Valid fields: ${validKeys.join(", ")}`,
-          {
-            code: "unknown_field",
-            title: "Unknown Field",
-            details: "The selected field is not declared on this entity.",
-            data: { entityName: this.metadata.entity.name, field: String(field) },
-          },
-        );
-      }
-    }
+    validateSelectionKeys(
+      this.metadata,
+      fields.map((field) => String(field)),
+      selectableKeys(this.metadata),
+    );
 
     this.state.selections = withRelationKeys(fields, this.state.includes, this.metadata);
     return this;

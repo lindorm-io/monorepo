@@ -147,7 +147,12 @@ describe("loadRelationIds — early exit", () => {
       [{ key: "commentIds", relationKey: "comments", column: null }],
       [makeRelation()],
     );
-    await loadRelationIds([], { metadata, namespace: "public", client });
+    await loadRelationIds([], {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
     expect(client.query).not.toHaveBeenCalled();
   });
 
@@ -156,6 +161,7 @@ describe("loadRelationIds — early exit", () => {
     const metadata = makeOwnerMetadata([], []);
     await loadRelationIds([{ id: "a1" }] as any, {
       metadata,
+      relationIds: metadata.relationIds,
       namespace: "public",
       client,
     });
@@ -170,6 +176,7 @@ describe("loadRelationIds — early exit", () => {
     );
     await loadRelationIds([{ id: "a1" }] as any, {
       metadata,
+      relationIds: metadata.relationIds,
       namespace: "public",
       client,
     });
@@ -190,6 +197,7 @@ describe("loadRelationIds — early exit", () => {
     );
     await loadRelationIds([{ id: "a1" }] as any, {
       metadata,
+      relationIds: metadata.relationIds,
       namespace: "public",
       client,
     });
@@ -209,6 +217,7 @@ describe("loadRelationIds — early exit", () => {
     );
     await loadRelationIds([{ id: "a1" }] as any, {
       metadata,
+      relationIds: metadata.relationIds,
       namespace: "public",
       client,
     });
@@ -239,7 +248,12 @@ describe("loadRelationIds — OneToMany", () => {
     );
     const entities: Array<any> = [{ id: "a1" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].commentIds).toEqual(["c1", "c2"]);
   });
@@ -254,6 +268,7 @@ describe("loadRelationIds — OneToMany", () => {
 
     await loadRelationIds([{ id: "a1" }] as any, {
       metadata,
+      relationIds: metadata.relationIds,
       namespace: "public",
       client,
     });
@@ -274,7 +289,12 @@ describe("loadRelationIds — OneToMany", () => {
     );
     const entities: Array<any> = [{ id: "a99" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].commentIds).toEqual([]);
   });
@@ -292,7 +312,12 @@ describe("loadRelationIds — OneToMany", () => {
     );
     const entities: Array<any> = [{ id: "a1" }, { id: "a2" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].commentIds).toEqual(["c1"]);
     expect(entities[1].commentIds).toEqual(["c2", "c3"]);
@@ -313,7 +338,12 @@ describe("loadRelationIds — OneToMany", () => {
     );
     const entities: Array<any> = [{ id: "a1" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].commentSlugs).toEqual(["my-comment"]);
   });
@@ -341,7 +371,12 @@ describe("loadRelationIds — inverse OneToOne", () => {
     );
     const entities: Array<any> = [{ id: "u1" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].profileId).toBe("p1");
   });
@@ -359,7 +394,12 @@ describe("loadRelationIds — inverse OneToOne", () => {
     );
     const entities: Array<any> = [{ id: "u99" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].profileId).toBeNull();
   });
@@ -378,6 +418,7 @@ describe("loadRelationIds — inverse OneToOne", () => {
 
     await loadRelationIds([{ id: "u1" }] as any, {
       metadata,
+      relationIds: metadata.relationIds,
       namespace: "public",
       client,
     });
@@ -422,7 +463,12 @@ describe("loadRelationIds — inverse OneToOne", () => {
     );
     const entities: Array<any> = [{ tenantId: "t1", id: "u1" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].profileId).toBe("p1");
   });
@@ -443,7 +489,12 @@ describe("loadRelationIds — inverse OneToOne", () => {
     );
     const entities: Array<any> = [{ id: "u1" }, { id: "u2" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].profileId).toBe("p1");
     expect(entities[1].profileId).toBe("p2");
@@ -489,7 +540,12 @@ describe("loadRelationIds — ManyToMany", () => {
     );
     const entities: Array<any> = [{ id: "a1" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].tagIds).toEqual(["t1", "t2"]);
   });
@@ -525,7 +581,12 @@ describe("loadRelationIds — ManyToMany", () => {
     );
     const entities: Array<any> = [{ id: "a1" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].tagIds).toEqual([]);
   });
@@ -550,6 +611,7 @@ describe("loadRelationIds — ManyToMany", () => {
 
     await loadRelationIds([{ id: "a1" }] as any, {
       metadata,
+      relationIds: metadata.relationIds,
       namespace: "public",
       client,
     });
@@ -589,7 +651,12 @@ describe("loadRelationIds — ManyToMany", () => {
     );
     const entities: Array<any> = [{ id: "a1" }, { id: "a2" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     // No query should be issued — inverse side has no joinKeys
     expect(client.query).not.toHaveBeenCalled();
@@ -615,6 +682,7 @@ describe("loadRelationIds — ManyToMany", () => {
 
     await loadRelationIds([{ id: "a1" }] as any, {
       metadata,
+      relationIds: metadata.relationIds,
       namespace: "public",
       client,
     });
@@ -665,7 +733,12 @@ describe("loadRelationIds — ManyToMany", () => {
     );
     const entities: Array<any> = [{ id: "a1" }];
 
-    await loadRelationIds(entities, { metadata, namespace: "public", client });
+    await loadRelationIds(entities, {
+      metadata,
+      relationIds: metadata.relationIds,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].tagSlugs).toEqual(["alpha", "beta"]);
   });

@@ -1377,6 +1377,12 @@ authorId!: string;
 
 For `*ToOne` owning relations, the FK column is auto-detected. For composite FK or `*ToMany`, specify the `column` option. Multiple `@RelationId` decorators may target the same relation for composite keys.
 
+A `@RelationId` is selectable by its own property name — `select: ["id", "authorId"]` — and the
+projection decides whether it loads at all. Named it loads, omitted it is skipped, and skipping is
+the point: an owning `*ToOne` rides along on a foreign key that was fetched anyway, but a
+`OneToMany`, a `ManyToMany` and an inverse `OneToOne` each cost their own query. With no `select`
+every relation id loads, as before.
+
 #### `@RelationCount`
 
 Populates a field with the count of a related collection, loaded via a batched `COUNT(*) ... GROUP BY` query.
@@ -1391,6 +1397,10 @@ commentCount!: number;
 ```
 
 The field must also have `@Field("integer")`.
+
+Both decorators name a relation by key, and a name that matches no relation on the entity fails when
+the metadata is built — a misspelled relation used to resolve to nothing and be skipped without a
+word on every driver.
 
 The count is computed per read — the backing column is never maintained in the database — so it
 cannot be used in `WHERE` or `ORDER BY`. Count-sorted lists need a raw aggregate query or a
@@ -1596,6 +1606,11 @@ const user = await repo.findOneOrSave(
   { name: "Alice", email: "alice@example.com" },
 );
 ```
+
+**`select` keys are validated.** A key that names nothing throws rather than narrowing nothing and
+coming back as a silently missing column. Selectable keys are the entity's fields, its owning
+relations' auto-projected foreign keys, and its `@RelationId` properties. A relation is not one of
+them — load it with `relations` / `include()`, which says so in the error.
 
 ### Update
 
@@ -1824,6 +1839,11 @@ key you DO name is yours to keep: `select: ["id", "title"]` returns both.
 qb.include("posts", { select: ["title"] }).getMany();
 // posts: [ Post { title: "…" } ] — no id, no authorId
 ```
+
+A per-relation `select` is validated against the FOREIGN entity's fields, so a typo throws instead
+of quietly dropping out of the projection. It narrows COLUMNS only: a relation of the included
+entity is not selectable there (include it from the root instead), and neither is that entity's own
+`@RelationId` — no driver loads one for an included relation.
 
 **Driver support:** all six drivers implement `include()`, and the conformance suite asserts the
 behaviour above on every one of them. The repository path loads the same relations without a

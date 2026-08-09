@@ -398,6 +398,30 @@ export const queryBuilderSuite = (
       expect(() => qb.include("posts.author")).toThrow(/Unknown relation/);
     });
 
+    // The relation NAME was validated; the per-relation `select` was stored
+    // verbatim, so a key that matched no field of the FOREIGN entity narrowed
+    // nothing and dropped out of the projection on every driver.
+    test("rejects an undeclared key in a relation select", async () => {
+      const qb = getSource().queryBuilder(TckSimpleUser);
+      expect(() => qb.include("posts", { select: ["titel"] })).toThrow(
+        /Unknown field "titel"/,
+      );
+    });
+
+    test("rejects a relation of the foreign entity in a relation select", () => {
+      const qb = getSource().queryBuilder(TckSimpleUser);
+      expect(() => qb.include("posts", { select: ["author"] })).toThrow(
+        /Relation "author" cannot be selected/,
+      );
+    });
+
+    test("rejects a relation named in the root select", () => {
+      const qb = getSource().queryBuilder(TckSimpleUser);
+      expect(() => qb.select("posts" as never)).toThrow(
+        /Relation "posts" cannot be selected/,
+      );
+    });
+
     test("required excludes a root with no matching relation", async () => {
       const { author } = await seedAuthorWithoutPosts();
 

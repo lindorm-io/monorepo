@@ -8,7 +8,8 @@ import { getSnapshot } from "../../entity/utils/snapshot-store.js";
 
 export const queriesSuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
   describe("Queries", () => {
-    const { TckSimpleUser, TckJsonHolder } = entities;
+    const { TckSimpleUser, TckJsonHolder, TckFkParent, TckFkAutoNullableChild } =
+      entities;
 
     beforeEach(async () => {
       await getHandle().clear();
@@ -101,6 +102,48 @@ export const queriesSuite = (getHandle: () => TckDriverHandle, entities: TckEnti
       expect(results).toHaveLength(1);
       expect(results[0].id).toBeDefined();
       expect(results[0].name).toBe("Alice");
+    });
+
+    // A projection key that means nothing used to be accepted and dropped: it
+    // matched no field, narrowed nothing, and came back as a silently missing
+    // column on every driver.
+    test("find rejects a select key that is not declared", async () => {
+      const repo = getHandle().repository(TckSimpleUser);
+
+      await expect(repo.find(undefined, { select: ["naem" as "name"] })).rejects.toThrow(
+        /Unknown field "naem"/,
+      );
+    });
+
+    test("find rejects a relation named in select", async () => {
+      const repo = getHandle().repository(TckSimpleUser);
+
+      await expect(repo.find(undefined, { select: ["posts"] })).rejects.toThrow(
+        /Relation "posts" cannot be selected/,
+      );
+    });
+
+    // `parentId` is a @RelationId with no @Field of its own. Naming it must be
+    // accepted and must not change its value — asserted against the unprojected
+    // read rather than against the parent's id, because what a driver stores for
+    // an auto-FK written through a relation OBJECT is its own business (the ones
+    // without referential integrity leave it null).
+    test("find accepts a @RelationId property in select", async () => {
+      const parentRepo = getHandle().repository(TckFkParent);
+      const childRepo = getHandle().repository(TckFkAutoNullableChild);
+
+      const parent = await parentRepo.insert({ name: "SelectableRelationId" });
+      const child = await childRepo.insert({ value: "with-parent", parent });
+
+      const [full] = await childRepo.find({ id: child.id });
+      const projected = await childRepo.find(
+        { id: child.id },
+        { select: ["id", "parentId"] },
+      );
+
+      expect(projected).toHaveLength(1);
+      expect(projected[0].id).toBe(child.id);
+      expect(projected[0].parentId).toEqual(full.parentId);
     });
 
     test("find returns empty array when no matches", async () => {

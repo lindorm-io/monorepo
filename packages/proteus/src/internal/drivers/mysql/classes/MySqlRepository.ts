@@ -46,8 +46,11 @@ import {
   guardAppendOnly,
   guardEncryptedCriteria,
   guardVersionFields,
+  selectableKeys,
   validateRelationNames,
+  validateSelectionKeys,
 } from "../../../utils/repository/repository-guards.js";
+import { projectedRelationIds } from "../../../utils/repository/projected-relation-ids.js";
 import { wrapMysqlError } from "../utils/repository/wrap-mysql-error.js";
 import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
 import { createMysqlJoinTableOps } from "../utils/repository/mysql-join-table-ops.js";
@@ -148,11 +151,13 @@ export class MySqlRepository<
       validateRelationNames(this.metadata, options.relations as Array<string>);
     }
 
-    const hiddenSelect = filterHiddenSelections(
-      this.metadata,
-      [scope],
-      (options?.select as Array<string>) ?? null,
-    );
+    const select = (options?.select as Array<string>) ?? null;
+
+    if (select) {
+      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+    }
+
+    const hiddenSelect = filterHiddenSelections(this.metadata, [scope], select);
     const effectiveOptions = hiddenSelect
       ? { ...options, select: hiddenSelect as Array<keyof E> }
       : options;
@@ -166,6 +171,7 @@ export class MySqlRepository<
     if (this.hasAsyncRelationIds || this.hasRelationCounts) {
       const loadCtx = {
         metadata: this.metadata,
+        relationIds: projectedRelationIds(this.metadata, select),
         namespace: this.namespace,
         client: this.client,
       };
@@ -193,6 +199,12 @@ export class MySqlRepository<
     guardVersionFields(this.metadata, "versions");
     guardEncryptedCriteria(this.metadata, criteria, "versions");
 
+    const select = (options?.select as Array<string>) ?? null;
+
+    if (select) {
+      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+    }
+
     const entities = await this.executor.executeFind(
       criteria,
       {
@@ -206,6 +218,7 @@ export class MySqlRepository<
     if (this.hasAsyncRelationIds || this.hasRelationCounts) {
       const loadCtx = {
         metadata: this.metadata,
+        relationIds: projectedRelationIds(this.metadata, select),
         namespace: this.namespace,
         client: this.client,
       };

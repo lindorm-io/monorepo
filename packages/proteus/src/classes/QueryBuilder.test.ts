@@ -3,8 +3,41 @@ import type { IEntity } from "../interfaces/index.js";
 import type { EntityMetadata } from "../internal/entity/types/metadata.js";
 import type { QueryState } from "../internal/types/query.js";
 import { makeField } from "../internal/__fixtures__/make-field.js";
+import { Entity } from "../decorators/Entity.js";
+import { Field } from "../decorators/Field.js";
+import { Generated } from "../decorators/Generated.js";
+import { JoinKey } from "../decorators/JoinKey.js";
+import { ManyToOne } from "../decorators/ManyToOne.js";
+import { OneToMany } from "../decorators/OneToMany.js";
+import { PrimaryKeyField } from "../decorators/PrimaryKeyField.js";
 import { QueryBuilder } from "./QueryBuilder.js";
 import { beforeEach, describe, expect, test } from "vitest";
+
+// The `posts` relation resolves through this pair: a per-relation `select` is
+// validated against the FOREIGN entity's real metadata, so the relation cannot
+// point at an anonymous class.
+@Entity({ name: "QbComment" })
+class QbComment {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string") body!: string;
+
+  @JoinKey()
+  @ManyToOne(() => QbPost, "comments")
+  post!: QbPost;
+}
+
+@Entity({ name: "QbPost" })
+class QbPost {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string") title!: string;
+
+  @Field("string") status!: string;
+
+  @OneToMany(() => QbComment, "post")
+  comments!: Array<QbComment>;
+}
 
 // Concrete test implementation
 class TestQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
@@ -98,10 +131,12 @@ const makeMetadata = (overrides: Partial<EntityMetadata> = {}): EntityMetadata =
     hooks: [],
     indexes: [],
     primaryKeys: ["id"],
+    relationIds: [{ key: "latestPostId", relationKey: "posts", column: null }],
+    relationCounts: [],
     relations: [
       {
         key: "posts",
-        foreignConstructor: () => class {} as any,
+        foreignConstructor: () => QbPost as any,
         foreignKey: "authorId",
         findKeys: { authorId: "id" },
         joinKeys: null,
@@ -227,6 +262,30 @@ describe("QueryBuilder", () => {
       expect(() => qb.include("posts")).toThrow(ProteusError);
       expect(() => qb.include("posts")).toThrow(/already included/);
     });
+
+    test("should accept a select naming fields of the foreign entity", () => {
+      qb.include("posts", { select: ["id", "title", "status"] });
+      expect(qb.getState().includes[0].select).toEqual(["id", "title", "status"]);
+    });
+
+    test("should throw on an unknown key in the relation select", () => {
+      expect(() => qb.include("posts", { select: ["titel"] })).toThrow(ProteusError);
+      expect(() => qb.include("posts", { select: ["titel"] })).toThrow(
+        /Unknown field "titel" on "QbPost"/,
+      );
+    });
+
+    test("should throw on a relation of the foreign entity in the relation select", () => {
+      expect(() => qb.include("posts", { select: ["comments"] })).toThrow(ProteusError);
+      expect(() => qb.include("posts", { select: ["comments"] })).toThrow(
+        /Relation "comments" cannot be selected on "QbPost"/,
+      );
+    });
+
+    test("should not record the include when its select is rejected", () => {
+      expect(() => qb.include("posts", { select: ["titel"] })).toThrow(ProteusError);
+      expect(qb.getState().includes).toEqual([]);
+    });
   });
 
   describe("select", () => {
@@ -240,6 +299,18 @@ describe("QueryBuilder", () => {
       expect(() => qb.select("nonexistent" as any)).toThrow(
         /Unknown field "nonexistent"/,
       );
+    });
+
+    test("should throw on a relation", () => {
+      expect(() => qb.select("posts" as any)).toThrow(ProteusError);
+      expect(() => qb.select("posts" as any)).toThrow(
+        /Relation "posts" cannot be selected on "TestEntity"/,
+      );
+    });
+
+    test("should accept a @RelationId property", () => {
+      qb.select("id" as any, "latestPostId" as any);
+      expect(qb.getState().selections).toEqual(["id", "latestPostId"]);
     });
   });
 
