@@ -260,11 +260,11 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       code: "unsupported_operation",
       title: "Unsupported Operation",
       details:
-        "Query-builder relation loading is implemented by the postgres, mysql, sqlite and memory drivers only — this is a driver gap, not a usage error. On the Redis driver, load relations through the repository instead: repository.find(criteria, { relations: [...] }).",
+        "Query-builder relation loading is implemented by the postgres, mysql, sqlite, memory and mongo drivers only — this is a driver gap, not a usage error. On the Redis driver, load relations through the repository instead: repository.find(criteria, { relations: [...] }).",
       data: {
         operation: "include",
         relation,
-        supportedDrivers: ["postgres", "mysql", "sqlite", "memory"],
+        supportedDrivers: ["postgres", "mysql", "sqlite", "memory", "mongo"],
       },
     });
   }

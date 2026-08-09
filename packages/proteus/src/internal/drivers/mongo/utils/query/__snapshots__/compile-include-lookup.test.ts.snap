@@ -1,0 +1,160 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileIncludeLookup > an owning relation matches the root's foreign key against the foreign id 1`] = `
+[
+  {
+    "$lookup": {
+      "as": "__rel_author",
+      "from": "User",
+      "let": {
+        "rel0": "$author_id",
+      },
+      "pipeline": [
+        {
+          "$match": {
+            "$expr": {
+              "$and": [
+                {
+                  "$eq": [
+                    "$_id",
+                    "$$rel0",
+                  ],
+                },
+                {
+                  "$ne": [
+                    "$$rel0",
+                    null,
+                  ],
+                },
+                {
+                  "$ne": [
+                    "$_id",
+                    null,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ],
+    },
+  },
+]
+`;
+
+exports[`compileIncludeLookup > many-to-many > hops through the join collection in a single lookup 1`] = `
+[
+  {
+    "$lookup": {
+      "as": "__rel_rights",
+      "from": "left_x_right",
+      "let": {
+        "root0": "$_id",
+      },
+      "pipeline": [
+        {
+          "$match": {
+            "$expr": {
+              "$and": [
+                {
+                  "$eq": [
+                    "$left_id",
+                    "$$root0",
+                  ],
+                },
+                {
+                  "$ne": [
+                    "$$root0",
+                    null,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+        {
+          "$lookup": {
+            "as": "__link",
+            "from": "Right",
+            "let": {
+              "link0": "$right_id",
+            },
+            "pipeline": [
+              {
+                "$match": {
+                  "$expr": {
+                    "$and": [
+                      {
+                        "$eq": [
+                          "$_id",
+                          "$$link0",
+                        ],
+                      },
+                      {
+                        "$ne": [
+                          "$$link0",
+                          null,
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+        {
+          "$unwind": "$__link",
+        },
+        {
+          "$replaceRoot": {
+            "newRoot": "$__link",
+          },
+        },
+      ],
+    },
+  },
+]
+`;
+
+exports[`compileIncludeLookup > matches the foreign column against the root id, both sides null-guarded 1`] = `
+[
+  {
+    "$lookup": {
+      "as": "__rel_posts",
+      "from": "Post",
+      "let": {
+        "rel0": "$_id",
+      },
+      "pipeline": [
+        {
+          "$match": {
+            "$expr": {
+              "$and": [
+                {
+                  "$eq": [
+                    "$author_id",
+                    "$$rel0",
+                  ],
+                },
+                {
+                  "$ne": [
+                    "$$rel0",
+                    null,
+                  ],
+                },
+                {
+                  "$ne": [
+                    "$author_id",
+                    null,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ],
+    },
+  },
+]
+`;

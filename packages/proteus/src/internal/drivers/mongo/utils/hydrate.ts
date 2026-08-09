@@ -42,7 +42,7 @@ const buildTypedJsonMetaMap = (metadata: EntityMetadata): Map<string, string> =>
  * - _id -> PK field(s)
  * - DB column names -> entity property keys
  */
-const documentToRow = (doc: Document, metadata: EntityMetadata): Dict => {
+export const documentToRow = (doc: Document, metadata: EntityMetadata): Dict => {
   const row: Dict = {};
   const cloned = cloneDocument(doc);
   const reverseMap = buildReverseFieldMap(metadata);

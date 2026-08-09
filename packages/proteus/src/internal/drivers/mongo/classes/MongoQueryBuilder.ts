@@ -19,30 +19,26 @@ import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
 import { resolveFilters } from "../../../utils/query/resolve-filters.js";
 import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
+import { partitionIncludes } from "../../../utils/query/partition-includes.js";
 import { compileFilter } from "../utils/compile-filter.js";
 import { compileSort } from "../utils/compile-sort.js";
 import { compileProjection } from "../utils/compile-projection.js";
 import { hydrateEntity, hydrateEntities } from "../utils/hydrate.js";
+import { resolveMongoFieldName } from "../utils/resolve-mongo-field-name.js";
 import {
   compileAggregationPipeline,
   compilePredicatesToFilter,
 } from "../utils/compile-aggregation-pipeline.js";
+import {
+  attachLookupIncludes,
+  stripLookupAliases,
+} from "../utils/query/attach-lookup-includes.js";
+import { compileIncludePipeline } from "../utils/query/compile-include-pipeline.js";
+import { executeMongoQueryIncludes } from "../utils/query/execute-query-includes.js";
 import { MongoInsertQueryBuilder } from "./MongoInsertQueryBuilder.js";
 import { MongoUpdateQueryBuilder } from "./MongoUpdateQueryBuilder.js";
 import { MongoDeleteQueryBuilder } from "./MongoDeleteQueryBuilder.js";
 import { resolveCollectionName as resolveBaseCollectionName } from "../utils/resolve-collection-name.js";
-
-/**
- * Resolve the MongoDB field name for a given entity field key.
- * Single PK maps to _id; composite PK maps to _id.fieldKey.
- */
-const resolveMongoFieldName = (fieldKey: string, metadata: EntityMetadata): string => {
-  if (metadata.primaryKeys.includes(fieldKey)) {
-    return metadata.primaryKeys.length === 1 ? "_id" : `_id.${fieldKey}`;
-  }
-  const field = metadata.fields.find((f) => f.key === fieldKey);
-  return field?.name ?? fieldKey;
-};
 
 /**
  * MongoDB QueryBuilder implementation.
@@ -172,28 +168,6 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  // ─── Relations ──────────────────────────────────────────────────────
-
-  /**
-   * Rejected outright: this builder never reads `state.includes`, so accepting
-   * the call would hand back unhydrated relations with no signal. Throwing at
-   * the call site puts the stack on the offending `.include()`, not on the
-   * terminal that would silently return incomplete entities.
-   */
-  override include(relation: string): this {
-    throw new NotSupportedError("include is not supported by the MongoDB driver", {
-      code: "unsupported_operation",
-      title: "Unsupported Operation",
-      details:
-        "Query-builder relation loading is implemented by the postgres, mysql, sqlite and memory drivers only — this is a driver gap, not a usage error. On the MongoDB driver, load relations through the repository instead: repository.find(criteria, { relations: [...] }).",
-      data: {
-        operation: "include",
-        relation,
-        supportedDrivers: ["postgres", "mysql", "sqlite", "memory"],
-      },
-    });
-  }
-
   // ─── Terminal methods ─────────────────────────────────────────────
 
   clone(): IProteusQueryBuilder<E> {
@@ -221,6 +195,18 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       };
     }
 
+    if (this.hasIncludes()) {
+      const { queryIncludes } = partitionIncludes(this.state.includes);
+
+      return {
+        driver: "mongo",
+        type: "aggregate",
+        collection: this.resolveCollectionName(),
+        pipeline: this.buildIncludePipeline(),
+        relationQueries: queryIncludes.map((include) => include.relation),
+      };
+    }
+
     const filter = this.buildFilter();
     const sort = this.buildSort();
     const projection = this.buildProjection();
@@ -240,6 +226,11 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   async getOne(): Promise<E | null> {
     if (this.isAggregationQuery()) {
       const results = await this.executeAggregation();
+      return results.length > 0 ? results[0] : null;
+    }
+
+    if (this.hasIncludes()) {
+      const results = await this.executeWithIncludes(1);
       return results.length > 0 ? results[0] : null;
     }
 
@@ -281,6 +272,10 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       return this.executeAggregation();
     }
 
+    if (this.hasIncludes()) {
+      return this.executeWithIncludes(this.state.take);
+    }
+
     const collection = this.db.collection(this.resolveCollectionName());
     const filter = this.buildFilter();
     const sort = this.buildSort();
@@ -310,6 +305,10 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       const results = await this.executeAggregation();
       const totalCount = await this.countAggregation();
       return [results, totalCount];
+    }
+
+    if (this.hasIncludes()) {
+      return [await this.executeWithIncludes(this.state.take), await this.count()];
     }
 
     const collection = this.db.collection(this.resolveCollectionName());
@@ -344,12 +343,20 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       return this.countAggregation();
     }
 
+    if (this.hasRequiredIncludes()) {
+      return this.countThroughIncludes();
+    }
+
     const collection = this.db.collection(this.resolveCollectionName());
     const filter = this.buildFilter();
     return collection.countDocuments(filter, this.sessionOpts());
   }
 
   async exists(): Promise<boolean> {
+    if (this.hasRequiredIncludes()) {
+      return (await this.countThroughIncludes(1)) > 0;
+    }
+
     const collection = this.db.collection(this.resolveCollectionName());
     const filter = this.buildFilter();
     const count = await collection.countDocuments(filter, {
@@ -451,6 +458,110 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       (this.state.groupBy != null && this.state.groupBy.length > 0) ||
       this.aggregateSelections.length > 0
     );
+  }
+
+  // ─── Relations ────────────────────────────────────────────────────
+
+  private hasIncludes(): boolean {
+    return this.state.includes.length > 0;
+  }
+
+  /** Only a required relation can decide whether a root exists at all. */
+  private hasRequiredIncludes(): boolean {
+    return this.state.includes.some((include) => include.required);
+  }
+
+  /**
+   * The `$lookup` pipeline the JOIN strategy reads through — the whole result in
+   * one round trip.
+   */
+  private buildIncludePipeline(take?: number | null, minimal = false): Array<Document> {
+    const { joinIncludes } = partitionIncludes(this.state.includes);
+
+    return compileIncludePipeline({
+      filter: this.buildFilter(),
+      includes: joinIncludes,
+      rootMetadata: this.metadata,
+      withDeleted: this.state.withDeleted,
+      versionTimestamp: this.state.versionTimestamp,
+      sort: this.buildSort(),
+      skip: this.state.skip,
+      take: take ?? null,
+      projection: this.buildProjection(),
+      minimal,
+    });
+  }
+
+  /**
+   * Read roots and their relations.
+   *
+   * The two strategies split the work rather than the result: join relations
+   * ride along with the roots in one aggregation, query relations are fetched
+   * afterwards one query each. A query that asks for both makes exactly the trips
+   * each relation asked for.
+   */
+  private async executeWithIncludes(take: number | null): Promise<Array<E>> {
+    const { joinIncludes, queryIncludes } = partitionIncludes(this.state.includes);
+    const collection = this.db.collection(this.resolveCollectionName());
+    const sessionOpts = this.sessionOpts();
+
+    const docs =
+      joinIncludes.length > 0
+        ? await collection
+            .aggregate(this.buildIncludePipeline(take), sessionOpts)
+            .toArray()
+        : await collection
+            .find(this.buildFilter(), {
+              projection: this.buildProjection(),
+              sort: this.buildSort(),
+              ...(this.state.skip != null && this.state.skip > 0
+                ? { skip: this.state.skip }
+                : {}),
+              ...(take != null ? { limit: take } : {}),
+              ...sessionOpts,
+            })
+            .toArray();
+
+    const entities = docs.map((doc, index) =>
+      attachLookupIncludes(
+        hydrateEntity<E>(
+          stripLookupAliases(doc, joinIncludes),
+          this.metadata,
+          this.amphora,
+        ),
+        docs[index],
+        joinIncludes,
+        this.metadata,
+        this.amphora,
+      ),
+    );
+
+    await executeMongoQueryIncludes(entities, queryIncludes, {
+      rootMetadata: this.metadata,
+      db: this.db,
+      withDeleted: this.state.withDeleted,
+      versionTimestamp: this.state.versionTimestamp,
+      session: this.session,
+      amphora: this.amphora,
+    });
+
+    return this.state.distinct ? this.deduplicateEntities(entities) : entities;
+  }
+
+  /**
+   * Count roots through the relation pipeline, so a required relation governs
+   * counting and existence the way an inner join does. Only the required
+   * relations are materialised, and only far enough to know they matched.
+   */
+  private async countThroughIncludes(limit?: number): Promise<number> {
+    const collection = this.db.collection(this.resolveCollectionName());
+    const pipeline = this.buildIncludePipeline(null, true);
+
+    if (limit != null) pipeline.push({ $limit: limit });
+    pipeline.push({ $count: "total" });
+
+    const docs = await collection.aggregate(pipeline, this.sessionOpts()).toArray();
+    return docs.length > 0 ? docs[0].total : 0;
   }
 
   /**

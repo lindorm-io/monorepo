@@ -1798,6 +1798,8 @@ down to nothing lands in exactly the same place as a relation with no rows at al
 the store, preferably one; `"query"` asks for more trips, each smaller and faster. Both must return
 the same entities — the choice is a performance trade, never a semantic one. The memory driver makes
 no round trips at all (the store is the same heap), so it implements one path and ignores the option.
+On mongo the two are genuinely different: `"join"` is one aggregation with a `$lookup` per relation,
+`"query"` reads the roots and then queries each relation separately.
 
 **`select` narrows the related entity and decides nothing else.** The keys a store needs to match a
 relation up with its root — a foreign primary key, the foreign key pointing back at the root, a
@@ -1811,10 +1813,9 @@ qb.include("posts", { select: ["title"] }).getMany();
 // posts: [ Post { title: "…" } ] — no id, no authorId
 ```
 
-**Driver support:** `include()` is implemented by **postgres, mysql, sqlite and memory**. The
-**mongo and redis** builders throw `NotSupportedError` from `include()` itself — they cannot load
-relations through the query builder. Use the repository path there instead, which all six drivers
-support:
+**Driver support:** `include()` is implemented by **postgres, mysql, sqlite, memory and mongo**. The
+**redis** builder throws `NotSupportedError` from `include()` itself — it cannot load relations
+through the query builder. Use the repository path there instead, which all six drivers support:
 
 ```typescript
 await repository.find({ status: "active" }, { relations: ["posts", "profile"] });

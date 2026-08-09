@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileRelationFilter > soft delete > excludes soft-deleted foreign rows 1`] = `
+{
+  "deleted_at": null,
+}
+`;

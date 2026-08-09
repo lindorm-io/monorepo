@@ -348,9 +348,9 @@ export const queryBuilderSuite = (
   // `strategy` names a ROUND-TRIP SHAPE, not a SQL construct: "join" asks for
   // the fewest trips to the store, "query" for more but smaller ones. Every
   // driver that supports `.include()` implements both as best it can and
-  // nothing throws — so both must land on the same entities. The mongo and
-  // redis builders still drop `state.includes` entirely, so they reject
-  // `.include()` outright rather than hand back silently missing relations.
+  // nothing throws — so both must land on the same entities. The redis builder
+  // still drops `state.includes` entirely, so it rejects `.include()` outright
+  // rather than hand back silently missing relations.
   describe("include", () => {
     const seedAuthorWithPost = async () => {
       const handle = getHandle();
@@ -671,12 +671,13 @@ export const queryBuilderSuite = (
           throw new Error("include() did not throw");
         } catch (error: any) {
           expect(error.code).toBe("unsupported_operation");
-          expect(error.details).toContain("postgres, mysql, sqlite and memory");
+          expect(error.details).toContain("postgres, mysql, sqlite, memory and mongo");
           expect(error.data.supportedDrivers).toEqual([
             "postgres",
             "mysql",
             "sqlite",
             "memory",
+            "mongo",
           ]);
         }
       });
