@@ -258,8 +258,8 @@ export class AmphoraState {
         overwrite.issuer = this.issuer;
       }
 
-      // A URN issuer derives no jwksUri — the key simply carries none, exactly
-      // as it would under an amphora with no issuer at all.
+      // An issuer that is not an http(s) URL derives no jwksUri — the key simply
+      // carries none, exactly as it would under an amphora with no issuer at all.
       const jwksUri = this.issuer ? deriveInternalJwksUri(this.issuer) : null;
 
       if (!input.jwksUri && jwksUri) {

@@ -975,6 +975,35 @@ describe("Amphora", () => {
       expect(urn.vault[0]!.jwksUri).toBeNull();
     });
 
+    // A URN is not the only issuer with nowhere to publish. `ftp://example.com`
+    // is a URI with an authority, so a path resolves against it happily — into
+    // `ftp://example.com/.well-known/jwks.json`, an address no client can fetch.
+    // A location is derivable only from an http(s) URL, so this issuer lands in
+    // exactly the URN's position: legal, and publishing nothing.
+    test.each(["ftp://example.com", "ws://example.com"])(
+      "should derive no jwksUri from a non-http URI issuer: %s",
+      (issuer) => {
+        const instance = new Amphora({
+          internal: { issuer },
+          logger: createMockLogger(),
+        });
+
+        expect(instance.internal).toEqual({ issuer, jwksUri: null });
+      },
+    );
+
+    test("should stamp a non-http URI issuer on added keys without a jwksUri", () => {
+      const instance = new Amphora({
+        internal: { issuer: "ftp://example.com" },
+        logger: createMockLogger(),
+      });
+
+      instance.add(KryptosKit.generate.sig.ec({ algorithm: "ES256", publish: true }));
+
+      expect(instance.vault[0]!.issuer).toBe("ftp://example.com");
+      expect(instance.vault[0]!.jwksUri).toBeNull();
+    });
+
     // The scope this whole rule exists to protect: a URI issuer keeps a `kid`
     // lookup narrowed to the keys it actually owns.
     test("should scope a key lookup to the internal issuer", async () => {
@@ -2509,7 +2538,11 @@ describe("Amphora", () => {
           .issuers()
           .some((c) => c.issuer === "https://issuer-0.lindorm.io/"),
       ).toBe(false);
-    });
+      // 1001 sequential registrations, each a nock-served fetch: ~4.8s of work
+      // against vitest's 5s default, so it timed out whenever another suite file
+      // ran beside it. The cost is inherent to proving the DEFAULT cap, so the
+      // budget is what was wrong.
+    }, 20000);
 
     test("evicts the least-recently-USED external issuer on addIssuer overflow", async () => {
       const instance = new Amphora({
@@ -2656,7 +2689,68 @@ describe("Amphora", () => {
 
       await expect(promise).rejects.toThrow(AmphoraError);
       await expect(promise).rejects.toThrow(
-        expect.objectContaining({ code: "urn_issuer_requires_jwks_uri" }),
+        expect.objectContaining({ code: "non_http_issuer_requires_jwks_uri" }),
+      );
+    });
+
+    // Not a URN, and it has an authority — so a URN-shaped rule accepted it and
+    // discovery derived `ftp://example.com/.well-known/openid-configuration`.
+    // Deriving a location needs a scheme amphora can request over.
+    test("rejects a non-http URI issuer without a jwksUri", async () => {
+      const promise = amphora.external.addIssuer({ issuer: "ftp://example.com" });
+
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({ code: "non_http_issuer_requires_jwks_uri" }),
+      );
+
+      expect(amphora.external.issuers()).toHaveLength(0);
+    });
+
+    test("accepts a non-http URI issuer WITH a jwksUri — an identity, not an address", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("public");
+      delete jwk.iss;
+
+      nock("https://ftp-keys.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      await amphora.external.addIssuer({
+        issuer: "ftp://example.com",
+        jwksUri: "https://ftp-keys.lindorm.io/.well-known/jwks.json",
+      });
+
+      expect(amphora.vault.filter((k) => k.issuer === "ftp://example.com")).toHaveLength(
+        1,
+      );
+    });
+
+    // The discovery uri is the first thing validated and it used to return
+    // early, so junk here skipped every other check and surfaced as a failed
+    // request — or, worse, was silently ignored once a valid issuer + jwksUri
+    // sat beside it.
+    test("rejects a non-http openIdConfigurationUri instead of skipping validation", async () => {
+      const promise = amphora.external.addIssuer({
+        openIdConfigurationUri: "foo:bar",
+      });
+
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({
+          code: "external_openid_configuration_uri_not_http_url",
+        }),
+      );
+
+      expect(amphora.external.issuers()).toHaveLength(0);
+    });
+
+    test("rejects a non-http jwksUri", async () => {
+      const promise = amphora.external.addIssuer({
+        issuer: "https://x.lindorm.io/",
+        jwksUri: "foo:bar",
+      });
+
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({ code: "external_jwks_uri_not_http_url" }),
       );
     });
 

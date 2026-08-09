@@ -137,7 +137,40 @@ describe("resolveExternalConfig", () => {
       await expect(
         resolveExternalConfig(conduit, { issuer: "urn:lindorm:test" }),
       ).rejects.toThrow(
-        expect.objectContaining({ code: "urn_issuer_requires_jwks_uri" }),
+        expect.objectContaining({ code: "non_http_issuer_requires_jwks_uri" }),
+      );
+    });
+
+    // A URI, not a URN, with an authority — so the URN-shaped rule let it
+    // through and discovery derived `ftp://example.com/.well-known/...`, a legal
+    // URL no client can fetch. Same position as the URN, same refusal.
+    test("should reject a non-http uri issuer with no jwksUri", async () => {
+      await expect(
+        resolveExternalConfig(conduit, { issuer: "ftp://example.com" }),
+      ).rejects.toThrow(
+        expect.objectContaining({ code: "non_http_issuer_requires_jwks_uri" }),
+      );
+    });
+
+    // The discovery uri is FETCHED, so it is held to the same rule. No nock
+    // interceptor is registered: had this been accepted, the request itself
+    // would have failed instead — which is the fetch-time failure registration
+    // exists to pre-empt.
+    test("should reject a non-http discovery uri", async () => {
+      await expect(
+        resolveExternalConfig(conduit, { openIdConfigurationUri: "foo:bar" }),
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: "external_openid_configuration_uri_not_http_url",
+        }),
+      );
+    });
+
+    test("should reject a non-http jwksUri", async () => {
+      await expect(
+        resolveExternalConfig(conduit, { issuer: `${AUTH0}/`, jwksUri: "foo:bar" }),
+      ).rejects.toThrow(
+        expect.objectContaining({ code: "external_jwks_uri_not_http_url" }),
       );
     });
 

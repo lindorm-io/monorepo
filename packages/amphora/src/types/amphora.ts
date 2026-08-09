@@ -14,9 +14,9 @@ import type { Environment } from "@lindorm/types";
 export type AmphoraInternalConfig = {
   issuer: string;
   /**
-   * `{issuer}/.well-known/jwks.json` — `null` when the issuer is a URN, which
-   * names the service without saying where to reach it, so there is nothing to
-   * derive.
+   * `{issuer}/.well-known/jwks.json` — `null` unless the issuer is an http(s)
+   * URL. A URN names the service without saying where to reach it, and any other
+   * scheme names somewhere nothing can fetch from, so there is nothing to derive.
    */
   jwksUri: string | null;
 };
@@ -37,7 +37,8 @@ export type AmphoraInternalSettings = {
    * (`https://…`) or a URN (`urn:…`), never a bare or opaque identifier
    * (`internal_issuer_not_uri`). Key resolution scopes by issuer only when the
    * issuer is a URI, so anything looser would quietly cost this service scoping
-   * for its own tokens. A URN issuer derives no `jwksUri`.
+   * for its own tokens. Only an http(s) URL issuer derives a `jwksUri` — a URN
+   * (or any other scheme) names no location to publish keys at.
    */
   issuer: string;
 };

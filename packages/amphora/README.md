@@ -91,9 +91,27 @@ are unique per issuer, so an issuer that cannot be matched cannot scope. A servi
 whose own issuer was opaque used to boot fine and quietly resolve its own tokens'
 keys across every registered issuer at once; it now fails to construct instead.
 
-A URN issuer has no authority to reach, so nothing derives a JWKS location from it:
-`amphora.internal.jwksUri` is `null` and keys added under it carry no `jwksUri`. An
-external URN issuer must be given one explicitly (`urn_issuer_requires_jwks_uri`).
+### An address is an http(s) URL
+
+Being a legal issuer and being somewhere amphora can fetch from are two different
+things, so they are two different rules. **Anything amphora derives a location from
+or requests over the wire must be an `http:` / `https:` URL with a host** — the
+issuer it discovers from, `jwksUri`, and `openIdConfigurationUri`. A URN has no
+authority to resolve a path against, and any other scheme with one (`ftp://…`)
+resolves into a syntactically valid address nothing can fetch; deriving that is
+worse than deriving nothing.
+
+So an issuer that is not an http(s) URL derives no JWKS location:
+`amphora.internal.jwksUri` is `null` and keys added under it carry no `jwksUri`. On
+the external side it must be handed one explicitly, or registration throws
+`non_http_issuer_requires_jwks_uri`. Such an issuer is still perfectly valid as an
+IDENTITY — `{ issuer: "urn:example:auth", jwksUri: "https://…" }` names a key set
+and says where to get it, which is the shape a private-use issuer uses.
+
+A declared `jwksUri` or `openIdConfigurationUri` that is not an http(s) URL is
+refused at registration (`external_jwks_uri_not_http_url`,
+`external_openid_configuration_uri_not_http_url`) rather than carried as far as the
+request, or quietly ignored.
 
 ## Adding Keys
 
@@ -308,7 +326,7 @@ Each source also accepts:
 | `trustAnchors`        | `string \| Array<string>`      | PEM-encoded CA certificate(s) used to validate the certificate chains attached to fetched JWKs. See [Trust Anchors](#trust-anchors).                                                                                                                                                                                                         |
 | `trustMode`           | `"strict" \| "lax"`            | How to handle fetched keys without a certificate chain when `trustAnchors` is set. Default `"strict"`.                                                                                                                                                                                                                                       |
 
-**An external issuer must be a URI** — a URL with an authority (`https://…`) or a URN (`urn:…`), the same rule the internal issuer answers to (see [an issuer is a URI, inside and out](#an-issuer-is-a-uri-inside-and-out)). A bare or opaque identifier throws `external_issuer_not_uri`; a URN has no authority to discover from, so a URN issuer with no explicit `jwksUri` throws `urn_issuer_requires_jwks_uri`.
+**An external issuer must be a URI** — a URL with an authority (`https://…`) or a URN (`urn:…`), the same rule the internal issuer answers to (see [an issuer is a URI, inside and out](#an-issuer-is-a-uri-inside-and-out)). A bare or opaque identifier throws `external_issuer_not_uri`. **`jwksUri` and `openIdConfigurationUri` must be `http(s)` URLs** — amphora fetches them (see [an address is an http(s) URL](#an-address-is-an-https-url)) — and an issuer that is not itself an http(s) URL names no location to discover from, so it requires an explicit `jwksUri` (`non_http_issuer_requires_jwks_uri`).
 
 `external.issuers()` returns the resolved config per issuer: `input` (the declared options, verbatim), the resolved `required`, the settled `issuer` / `jwksUri`, the nested `openIdConfiguration` discovery doc, plus `keyCount`, `lastRefresh` (last SUCCESSFUL fetch — `null` while every attempt so far has failed), and `lastAccess` (last find/filter hit — the LRU signal for `maxIssuers` eviction; `null` until first use).
 
@@ -405,7 +423,7 @@ amphora.canVerify();
 ```typescript
 amphora.vault; // Array<IKryptos>
 amphora.internal; // AmphoraInternalConfig | null — the service's OWN identity, derived from `internal.issuer`
-// → { issuer, jwksUri } — `jwksUri` is null when the issuer is a URN
+// → { issuer, jwksUri } — `jwksUri` is null unless the issuer is an http(s) URL
 amphora.jwks; // AmphoraJwks — throws AmphoraError when no issuer is configured
 amphora.external; // IAmphoraExternal — foreign issuers
 amphora.idp; // IAmphoraIdp — the upstream identity provider
@@ -438,7 +456,7 @@ Common scenarios that throw:
 - `findSync()` / `filterSync()` / `findByIdSync()` invoked before `setup()` when external providers are configured.
 - Reading `amphora.jwks` when no `issuer` is configured (`issuer_required_for_jwks`).
 - `find()` / `findById()` not finding a match after a refresh.
-- An external issuer that is not a URI (`external_issuer_not_uri`), a URN issuer with no `jwksUri` (`urn_issuer_requires_jwks_uri`), or a source naming nothing amphora can discover or fetch from (`invalid_issuer_options`) — all validated synchronously at registration, before any network call.
+- An external issuer that is not a URI (`external_issuer_not_uri`), a `jwksUri` or `openIdConfigurationUri` that is not an http(s) URL (`external_jwks_uri_not_http_url`, `external_openid_configuration_uri_not_http_url`), an issuer that is not an http(s) URL with no `jwksUri` to discover from (`non_http_issuer_requires_jwks_uri`), or a source naming nothing amphora can discover or fetch from (`invalid_issuer_options`) — all validated synchronously at registration, before any network call.
 - A discovery document that provides no `issuer` with none configured (`external_issuer_unresolved`) — a resolved external issuer must be a URI.
 - Registering an issuer that already belongs to the other scope (`issuer_scope_conflict`) — an issuer is the idp **or** an external provider, never both — or `removeIssuer()` called with the idp's issuer (`remove_issuer_is_idp`; use `idp.clear()`).
 - `idp.config()` called before an idp is set (`idp_not_configured`), or with one registered by `openIdConfigurationUri` alone whose issuer amphora has not settled (`idp_issuer_unresolved`).
