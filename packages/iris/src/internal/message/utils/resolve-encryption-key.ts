@@ -2,13 +2,13 @@ import {
   applyKeyFloor,
   DECRYPT_FLOOR,
   ENVELOPE_FLOOR,
+  UNPUBLISHED_DEFAULT,
   type IAmphora,
 } from "@lindorm/amphora";
 import type { IKryptos } from "@lindorm/kryptos";
 import { Matcher } from "@lindorm/match";
 import { IrisEncryptionError } from "../../../errors/IrisEncryptionError.js";
 import type { IrisEncryptionKey } from "../../../types/encryption.js";
-import { ENCRYPTION_DEFAULT } from "../../constants/key-floor.js";
 import { hasEncryptionKey } from "./has-encryption-key.js";
 
 export type ResolveEncryptionKeyOptions = {
@@ -63,10 +63,12 @@ export const resolveEncryptionKey = async (
   // The selector applies to the vault query alone. An injected key and a key
   // named by an encrypted payload both come from outside it. The floor is
   // applied LAST so it always wins the merge: `key.condition` is duck-typed and
-  // could carry a floor key, which must never override the policy. Per-layer
-  // `undefined` stripping keeps a `{ x: undefined }` condition from erasing the
-  // `ENCRYPTION_DEFAULT` (`publish: false`).
-  const query = applyKeyFloor(ENVELOPE_FLOOR, ENCRYPTION_DEFAULT, key.condition);
+  // could carry a floor key, which must never override the policy.
+  // `UNPUBLISHED_DEFAULT` (`publish: false`) is only a default — a message KEK
+  // never leaves the service, but `publish` is consumer policy, so the caller's
+  // condition still wins over it; per-layer `undefined` stripping keeps a
+  // `{ x: undefined }` condition from erasing that default.
+  const query = applyKeyFloor(ENVELOPE_FLOOR, UNPUBLISHED_DEFAULT, key.condition);
 
   const kryptos = id
     ? // An injected key is typically an env KEK that was never added to the
