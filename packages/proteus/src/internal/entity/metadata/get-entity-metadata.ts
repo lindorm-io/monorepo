@@ -4,6 +4,7 @@ import type { EntityMetadata, MetaFieldDecorator } from "../types/metadata.js";
 import { type BuildPrimaryOptions, buildPrimaryMetadata } from "./build-primary.js";
 import { getCachedMetadata, setCachedMetadata } from "./registry.js";
 import { resolveRelations } from "./resolve-relations.js";
+import { validateRelationReferences } from "./validate-relation-references.js";
 
 export const getEntityMetadata = <
   TExtra extends Dict = Dict,
@@ -21,6 +22,9 @@ export const getEntityMetadata = <
 
   const primaryMeta = buildPrimaryMetadata<TExtra, TDecorator>(target, options);
   const relations = resolveRelations(target, primaryMeta);
+
+  validateRelationReferences(primaryMeta, relations);
+
   const final: EntityMetadata<TExtra, TDecorator> = { ...primaryMeta, relations };
 
   setCachedMetadata(target, final);
