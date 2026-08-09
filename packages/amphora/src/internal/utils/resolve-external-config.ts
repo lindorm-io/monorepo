@@ -6,30 +6,38 @@ import type {
   AmphoraExternalConfig,
   AmphoraExternalSettings,
 } from "../../types/index.js";
-import { seedExternalConfig } from "./seed-external-config.js";
+import { validateExternalSource } from "./validate-external-source.js";
 
 const OIDCONF = "/.well-known/openid-configuration" as const;
 
 /**
- * Resolve a declared issuer source into a settled {@link AmphoraExternalConfig}:
- * fetch/derive the discovery doc when one is needed, and settle `issuer` / `jwksUri`
- * / `openIdConfiguration`. `keyCount` and `lastRefresh` are left for the JWKS fetch
- * to fill — this only resolves config.
+ * Resolve a declared issuer source: fetch/derive the discovery doc when one is
+ * needed, and settle `issuer` / `jwksUri` / `openIdConfiguration`. Those three ARE
+ * the return — resolution settles nothing else, so it offers nothing else.
+ *
+ * The narrow return is load-bearing, not tidiness. Resolution re-derives from
+ * `input` alone, and `input` does not say which scope a source was registered in
+ * (nothing in it does) nor whether the idp is required (`AmphoraIdpSettings` has no
+ * `required` to declare). A wider return would therefore carry `scope:
+ * "external"` and `required: false` — both WRONG for the idp — plus a zeroed
+ * `keyCount` / `lastRefresh` / `lastAccess` that would clobber a live entry's
+ * bookkeeping on every refresh. Returning only what is genuinely resolved means
+ * those values cannot be spread, read or widened into existence.
  *
  * Every branch either settles a `string` issuer or throws, which is what makes the
  * PUBLIC `issuer: string` honest: resolution is the last moment an issuer can go
  * missing, so it is where the question is answered.
  *
- * Item-1 validation (issuer must be a URI; a URN issuer requires an explicit jwksUri)
- * already ran at REGISTRATION via `seedExternalConfig` → `validateExternalSource`, so
- * the input here is a resolvable source. Discovery from a URL issuer is gated on
- * `isUrlLike(issuer) && !isUrn(issuer)`.
+ * Item-1 validation (issuer must be a URI; a URN issuer requires an explicit
+ * jwksUri) already ran at REGISTRATION, so the input here is a resolvable source;
+ * asserting it again is cheap and keeps the branches below free of the question.
+ * Discovery from a URL issuer is gated on `isUrlLike(issuer) && !isUrn(issuer)`.
  */
 export const resolveExternalConfig = async (
   conduit: Conduit,
   input: AmphoraExternalSettings,
-): Promise<AmphoraExternalConfig> => {
-  const base = seedExternalConfig(input);
+): Promise<Pick<AmphoraExternalConfig, "issuer" | "jwksUri" | "openIdConfiguration">> => {
+  validateExternalSource(input);
 
   // 1. An explicit discovery URI — fetch it, derive issuer + jwksUri from the doc.
   if (isUrlLike(input.openIdConfigurationUri)) {
@@ -60,7 +68,6 @@ export const resolveExternalConfig = async (
     }
 
     return {
-      ...base,
       issuer,
       jwksUri: openIdConfiguration.jwksUri ?? input.jwksUri ?? null,
       openIdConfiguration,
@@ -72,7 +79,6 @@ export const resolveExternalConfig = async (
   //    URN reaches here only WITH a jwksUri.
   if (isUri(input.issuer) && isUrlLike(input.jwksUri)) {
     return {
-      ...base,
       issuer: input.issuer,
       jwksUri: input.jwksUri,
       openIdConfiguration: input.openIdConfiguration ?? null,
@@ -93,7 +99,6 @@ export const resolveExternalConfig = async (
     };
 
     return {
-      ...base,
       issuer: openIdConfiguration.issuer ?? input.issuer,
       jwksUri: openIdConfiguration.jwksUri ?? input.jwksUri ?? null,
       openIdConfiguration,

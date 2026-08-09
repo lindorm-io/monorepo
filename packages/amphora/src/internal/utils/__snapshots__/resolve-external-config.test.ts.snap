@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`resolveExternalConfig > returns only what it resolves > should settle a direct issuer + jwksUri without carrying seeded fields 1`] = `
+{
+  "issuer": "urn:lindorm:test",
+  "jwksUri": "https://lindorm.eu.auth0.com/.well-known/jwks.json",
+  "openIdConfiguration": null,
+}
+`;

@@ -432,14 +432,15 @@ export class AmphoraState {
     // exclusivity now that it is settled (excluding this same entry).
     this.assertIssuerScopeFree(resolved.issuer, entry.scope, entry);
 
+    // The three fields resolution settles — which is everything it returns.
+    // `required` and `scope` are not among them BY CONSTRUCTION: resolution
+    // re-derives from `input`, which declares neither for the idp (its settings
+    // type has no `required`, and nothing in an input says which scope it was
+    // registered in), so a resolved value for either could only be wrong. Both
+    // are written once, at seed, and never again.
     entry.issuer = resolved.issuer;
     entry.jwksUri = resolved.jwksUri;
     entry.openIdConfiguration = resolved.openIdConfiguration;
-    // `required` and `scope` are deliberately NOT re-derived here. Resolution
-    // re-seeds from `input`, which declares neither for the idp (its settings
-    // type has no `required`, and nothing in an input says which scope it was
-    // registered in) — copying them back would silently demote the idp to an
-    // optional external. Both are written once, at seed, and never again.
   }
 
   private fetchKeys(entry: ExternalEntry): Promise<Array<IKryptos>> {

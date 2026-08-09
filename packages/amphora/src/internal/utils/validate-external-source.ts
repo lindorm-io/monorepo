@@ -8,7 +8,9 @@ import type { AmphoraExternalSettings } from "../../types/index.js";
  * so an invalid source is rejected up front, independent of `load` (a lazy source
  * would otherwise only surface its error on a later refresh, as a `warn`). It mirrors
  * the resolvable/unresolvable branches of `resolveExternalConfig` WITHOUT fetching:
- * returns for a valid source, throws for an invalid one.
+ * returns for a valid source, throws for an invalid one. `resolveExternalConfig`
+ * asserts it again as its precondition — registration is what makes that redundant,
+ * not the resolver.
  *
  * - an explicit `openIdConfigurationUri` is sufficient on its own;
  * - a present issuer must be a URI (URL-with-authority OR URN) — never a bare id
