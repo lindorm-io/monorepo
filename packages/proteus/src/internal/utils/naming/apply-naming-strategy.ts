@@ -1,11 +1,8 @@
 import { camelCase, snakeCase } from "@lindorm/case";
 import type { Dict } from "@lindorm/types";
-import type {
-  EntityMetadata,
-  MetaField,
-  MetaTypedJson,
-} from "../../entity/types/metadata.js";
+import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
 import type { NamingStrategy } from "../../../types/source-options.js";
+import { resolveTypedJsonColumn } from "../../entity/utils/typed-json.js";
 
 const transformName = (name: string, strategy: NamingStrategy): string => {
   switch (strategy) {
@@ -27,17 +24,6 @@ const resolveFieldName = (field: MetaField, strategy: NamingStrategy): string =>
   // composite, not the key, so it follows the strategy (`home_address_street`).
   if (field.embedded) return transformName(field.name, strategy);
   return transformName(field.key, strategy);
-};
-
-// Resolve the sidecar column for a @TypedJson field after the data column is resolved.
-// An explicit @TypedJson({ name }) is preserved verbatim; otherwise default to
-// `<resolvedDataColumn>__typemeta`.
-const resolveTypedJson = (
-  typedJson: MetaTypedJson | null,
-  resolvedDataColumn: string,
-): MetaTypedJson | null => {
-  if (!typedJson) return null;
-  return { ...typedJson, column: typedJson.name ?? `${resolvedDataColumn}__typemeta` };
 };
 
 const resolveJoinKeys = (
@@ -76,7 +62,7 @@ export const applyNamingStrategy = (
     },
     fields: metadata.fields.map((field) => {
       const name = resolveFieldName(field, strategy);
-      return { ...field, name, typedJson: resolveTypedJson(field.typedJson, name) };
+      return { ...field, name, typedJson: resolveTypedJsonColumn(field.typedJson, name) };
     }),
     relations: metadata.relations.map((relation) => ({
       ...relation,
@@ -94,7 +80,11 @@ export const applyNamingStrategy = (
       elementFields: el.elementFields
         ? el.elementFields.map((field) => {
             const name = resolveFieldName(field, strategy);
-            return { ...field, name, typedJson: resolveTypedJson(field.typedJson, name) };
+            return {
+              ...field,
+              name,
+              typedJson: resolveTypedJsonColumn(field.typedJson, name),
+            };
           })
         : null,
     })),

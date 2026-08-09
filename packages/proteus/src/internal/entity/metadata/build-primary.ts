@@ -35,6 +35,7 @@ import { validatePrimaryKeys, validateVersionKeys } from "./validate-primary-key
 import { validateReadonlyOperations } from "./validate-readonly.js";
 import { validateFilters } from "./validate-filters.js";
 import { validateUniques } from "./validate-uniques.js";
+import { resolveTypedJsonColumn } from "../utils/typed-json.js";
 
 const primaryCache = new Map<Function, Omit<EntityMetadata, "relations">>();
 
@@ -133,8 +134,7 @@ const mergeFieldModifiers = <TDecorator extends MetaFieldDecorator>(
         condition: modifier.encrypted.condition,
       };
     if (modifier.typedJson != null) {
-      const name = modifier.typedJson.name;
-      field.typedJson = { name, column: name ?? `${field.name}__typemeta` };
+      field.typedJson = resolveTypedJsonColumn(modifier.typedJson, field.name);
     }
     if (modifier.hideOn != null) {
       // Hide is additive — merge arrays
@@ -155,7 +155,9 @@ const mergeFieldModifiers = <TDecorator extends MetaFieldDecorator>(
  * 3. Collect fields from the embeddable class's Symbol.metadata
  * 4. Also collect field modifiers from the embeddable and merge them
  * 5. Create new MetaField entries with dotted keys and prefixed column names
- * 6. Validate no duplicate column names after flattening
+ *
+ * Column collisions produced by flattening are caught by `validateFields`, which
+ * runs later over the final field list.
  */
 const flattenEmbeddedFields = <TDecorator extends MetaFieldDecorator>(
   targetName: string,
@@ -214,43 +216,26 @@ const flattenEmbeddedFields = <TDecorator extends MetaFieldDecorator>(
     // object is null, child validation is skipped entirely. When the embedded object
     // IS present, child fields enforce their original constraints.
     for (const ef of embeddableFields) {
+      // The flattened column name is a composite (prefix + child name). The
+      // child's own `named` flag is preserved: an explicitly-named child column
+      // stays verbatim, a default child is left for the naming strategy to
+      // transform the composite (it cannot re-derive from the dotted key).
+      const name = `${embedded.prefix}${ef.name}`;
+
       fields.push({
         ...ef,
         key: `${embedded.key}.${ef.key}`,
-        // The flattened column name is a composite (prefix + child name). The
-        // child's own `named` flag is preserved: an explicitly-named child column
-        // stays verbatim, a default child is left for the naming strategy to
-        // transform the composite (it cannot re-derive from the dotted key).
-        name: `${embedded.prefix}${ef.name}`,
+        name,
+        // The @TypedJson sidecar defaults off the DATA column, so it has to
+        // follow the prefix too — otherwise two @Embedded declarations of one
+        // @Embeddable get distinct data columns but the same sidecar.
+        typedJson: resolveTypedJsonColumn(ef.typedJson, name),
         embedded: {
           parentKey: embedded.key,
           constructor: embedded.embeddableConstructor,
         },
       } as MetaField<TDecorator>);
     }
-  }
-
-  // Validate no duplicate column names after flattening
-  const seen = new Map<string, string>();
-  for (const field of fields) {
-    const existing = seen.get(field.name);
-    if (existing) {
-      throw new EntityMetadataError(
-        `Duplicate column name "${field.name}" — field "${field.key}" collides with "${existing}"`,
-        {
-          code: "duplicate_column",
-          title: "Duplicate Column",
-          details: `After flattening @Embedded fields, "${field.key}" and "${existing}" on "${targetName}" both map to column "${field.name}" — adjust the @Embedded prefix or field column names to keep them distinct.`,
-          debug: {
-            target: targetName,
-            field1: existing,
-            field2: field.key,
-            column: field.name,
-          },
-        },
-      );
-    }
-    seen.set(field.name, field.key);
   }
 };
 

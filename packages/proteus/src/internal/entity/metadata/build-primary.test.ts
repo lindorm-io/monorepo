@@ -38,6 +38,7 @@ import { Nullable } from "../../../decorators/Nullable.js";
 import { PrimaryKey } from "../../../decorators/PrimaryKey.js";
 import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { TypedJson } from "../../../decorators/TypedJson.js";
 import { VersionKeyField } from "../../../decorators/VersionKeyField.js";
 import { EntityMetadataError } from "../errors/EntityMetadataError.js";
 import { describe, expect, test } from "vitest";
@@ -645,5 +646,118 @@ describe("buildPrimaryMetadata — non-nullable array default", () => {
     // json is deliberately NOT a container zero-value type — non-nullable and
     // no @Default, yet the staging loop leaves its default null.
     expect(field.default).toBeNull();
+  });
+});
+
+// ─── flattenEmbeddedFields: @TypedJson sidecar follows the @Embedded prefix ────
+
+describe("buildPrimaryMetadata — @TypedJson sidecar under @Embedded", () => {
+  test("two @Embedded declarations of one @Embeddable get distinct, prefixed sidecar columns", () => {
+    @Embeddable()
+    class BpTypedJsonEmbeddable {
+      @TypedJson()
+      @Field("json")
+      payload!: Record<string, unknown>;
+    }
+
+    @Entity({ name: "BpTwoTypedJsonEmbeds" })
+    class BpTwoTypedJsonEmbeds {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @Embedded(() => BpTypedJsonEmbeddable)
+      request!: BpTypedJsonEmbeddable | null;
+
+      @Embedded(() => BpTypedJsonEmbeddable)
+      response!: BpTypedJsonEmbeddable | null;
+    }
+
+    const built = buildPrimaryMetadata(BpTwoTypedJsonEmbeds);
+
+    const request = built.fields.find((f) => f.key === "request.payload")!;
+    const response = built.fields.find((f) => f.key === "response.payload")!;
+
+    // The data columns are prefixed — the sidecars must follow, or both
+    // @Embedded declarations write their type metadata to `payload__typemeta`.
+    expect(request.name).toBe("request_payload");
+    expect(request.typedJson).toEqual({
+      name: null,
+      column: "request_payload__typemeta",
+    });
+
+    expect(response.name).toBe("response_payload");
+    expect(response.typedJson).toEqual({
+      name: null,
+      column: "response_payload__typemeta",
+    });
+  });
+
+  test("a bare @TypedJson field keeps its own column as the sidecar stem", () => {
+    @Entity({ name: "BpBareTypedJson" })
+    class BpBareTypedJson {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @TypedJson()
+      @Field("json")
+      payload!: Record<string, unknown>;
+
+      @TypedJson({ name: "meta_types" })
+      @Field("json", { name: "body" })
+      other!: Record<string, unknown>;
+    }
+
+    const built = buildPrimaryMetadata(BpBareTypedJson);
+
+    expect(built.fields.find((f) => f.key === "payload")!.typedJson).toEqual({
+      name: null,
+      column: "payload__typemeta",
+    });
+    expect(built.fields.find((f) => f.key === "other")!.typedJson).toEqual({
+      name: "meta_types",
+      column: "meta_types",
+    });
+  });
+
+  test("throws when two @Embedded declarations share an explicitly named sidecar", () => {
+    @Embeddable()
+    class BpNamedSidecarEmbeddable {
+      @TypedJson({ name: "payload_types" })
+      @Field("json")
+      payload!: Record<string, unknown>;
+    }
+
+    // An explicit @TypedJson({ name }) is verbatim by design, so the prefix
+    // cannot separate the two sidecars — the collision must be refused.
+    expect(() => {
+      @Entity({ name: "BpNamedSidecarCollision" })
+      class BpNamedSidecarCollision {
+        @PrimaryKeyField() @Generated("uuid") id!: string;
+
+        @Embedded(() => BpNamedSidecarEmbeddable)
+        request!: BpNamedSidecarEmbeddable | null;
+
+        @Embedded(() => BpNamedSidecarEmbeddable)
+        response!: BpNamedSidecarEmbeddable | null;
+      }
+
+      buildPrimaryMetadata(BpNamedSidecarCollision);
+    }).toThrow(/Duplicate column name "payload_types"/);
+  });
+
+  test("throws when a @TypedJson sidecar collides with a declared column", () => {
+    expect(() => {
+      @Entity({ name: "BpSidecarShadowsColumn" })
+      class BpSidecarShadowsColumn {
+        @PrimaryKeyField() @Generated("uuid") id!: string;
+
+        @TypedJson()
+        @Field("json")
+        payload!: Record<string, unknown>;
+
+        @Field("string", { name: "payload__typemeta" })
+        shadow!: string;
+      }
+
+      buildPrimaryMetadata(BpSidecarShadowsColumn);
+    }).toThrow(/Duplicate column name "payload__typemeta"/);
   });
 });

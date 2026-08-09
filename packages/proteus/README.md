@@ -1106,7 +1106,7 @@ payload!: Record<string, unknown>;   // both `payload` and `payload__typemeta` a
 
 ##### Not on an `@EmbeddedList` element
 
-An `@Embeddable` may carry `@TypedJson` fields when it is flattened by [`@Embedded`](#embedded) — the sidecar becomes an entity column like any other. As an [`@EmbeddedList`](#embeddedlist) **element** it cannot: a collection table projects one column per element field and has no sidecar, so the type metadata would be dropped and nested `Date` / `Buffer` / `BigInt` values would come back as plain JSON. That combination is refused at metadata build with `unsupported_element_field_typed_json`. Store the collection as a `@TypedJson @Field("json")` column on the parent instead.
+An `@Embeddable` may carry `@TypedJson` fields when it is flattened by [`@Embedded`](#embedded) — the sidecar becomes an entity column like any other, and it follows the `@Embedded` prefix its data column gets (`@Embedded(() => Payload) request` → `request_payload` plus `request_payload__typemeta`), so the same `@Embeddable` can be embedded twice. An **explicit** `@TypedJson({ name })` is verbatim by design and therefore is NOT prefixed — embedding such an `@Embeddable` twice is refused at metadata build with `duplicate_column`. As an [`@EmbeddedList`](#embeddedlist) **element** it cannot: a collection table projects one column per element field and has no sidecar, so the type metadata would be dropped and nested `Date` / `Buffer` / `BigInt` values would come back as plain JSON. That combination is refused at metadata build with `unsupported_element_field_typed_json`. Store the collection as a `@TypedJson @Field("json")` column on the parent instead.
 
 #### `@Encrypted`
 
@@ -1926,7 +1926,14 @@ All `where` and `criteria` parameters accept a `Predicate<E>` — a type-safe qu
 { $and: [{ age: { $gte: 18 } }, { status: "active" }] }
 { $or: [{ role: "admin" }, { role: "moderator" }] }
 { $not: { status: "banned" } }
+{ $not: { $or: [{ role: "admin" }, { role: "moderator" }] } }
 ```
+
+As a criteria KEY, `$not` negates the whole sub-predicate on every driver — SQL
+compiles it to `NOT (…)`, the in-memory drivers evaluate `!matches(…)`, and
+MongoDB (which has no top-level `$not`) compiles it to `$nor`. That is a
+different operator from the field-level `{ field: { $not: … } }` form, which
+negates one column's condition.
 
 ## Relations
 

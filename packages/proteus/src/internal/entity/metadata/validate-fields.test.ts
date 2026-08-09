@@ -25,7 +25,7 @@ describe("validateFields", () => {
         makeField("userId", { name: "user_id" }),
         makeField("userIdentifier", { name: "user_id" }),
       ]),
-    ).toThrow("Duplicate field column name");
+    ).toThrow(/Duplicate column name "user_id"/);
   });
 
   test("should throw on duplicate CreateDate field", () => {

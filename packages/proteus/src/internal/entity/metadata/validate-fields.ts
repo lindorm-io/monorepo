@@ -104,8 +104,31 @@ const validateModifierFieldTypes = (targetName: string, field: MetaField): void 
 
 export const validateFields = (targetName: string, fields: Array<MetaField>): void => {
   const seenKeys = new Set<string>();
-  const seenNames = new Set<string>();
   const seenDecorators = new Set<MetaFieldDecorator>();
+
+  // Every physical column an entity writes is claimed here — the data columns AND
+  // the @TypedJson sidecars, which are columns too. This is the ONLY duplicate-column
+  // check: it runs after @Embedded flattening and after single-table subtype merging,
+  // so it sees the final column set whatever produced it.
+  const seenNames = new Map<string, string>();
+
+  const claimColumn = (column: string, owner: string): void => {
+    const existing = seenNames.get(column);
+
+    if (existing) {
+      throw new EntityMetadataError(
+        `Duplicate column name "${column}" — "${owner}" collides with "${existing}"`,
+        {
+          code: "duplicate_column",
+          title: "Duplicate Column",
+          details: `"${owner}" and "${existing}" on "${targetName}" both resolve to column "${column}" — give each a distinct name. @Embedded flattening prefixes the data column, but an explicit @Field({ name }) or @TypedJson({ name }) is kept verbatim and so is shared by every @Embedded declaration of that @Embeddable.`,
+          debug: { target: targetName, column, field1: existing, field2: owner },
+        },
+      );
+    }
+
+    seenNames.set(column, owner);
+  };
 
   for (const field of fields) {
     if (seenKeys.has(field.key)) {
@@ -118,15 +141,11 @@ export const validateFields = (targetName: string, fields: Array<MetaField>): vo
     }
     seenKeys.add(field.key);
 
-    if (seenNames.has(field.name)) {
-      throw new EntityMetadataError("Duplicate field column name", {
-        code: "duplicate_column",
-        title: "Duplicate Column",
-        details: `Two fields on "${targetName}" map to the same column "${field.name}" (latest is "${field.key}") — give each field a distinct column name.`,
-        debug: { target: targetName, field: field.key, name: field.name },
-      });
+    claimColumn(field.name, field.key);
+
+    if (field.typedJson) {
+      claimColumn(field.typedJson.column, `${field.key} (@TypedJson sidecar)`);
     }
-    seenNames.add(field.name);
 
     const decorator = field.decorator;
 

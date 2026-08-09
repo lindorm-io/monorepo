@@ -1,7 +1,7 @@
 import type { IAmphora } from "@lindorm/amphora";
 import { isArray, isObjectLike, isString } from "@lindorm/is";
 import { JsonKit } from "@lindorm/json-kit";
-import type { MetaField } from "../types/metadata.js";
+import type { MetaField, MetaTypedJson } from "../types/metadata.js";
 import { decryptFieldValue } from "./decrypt-field-value.js";
 import { encryptFieldValue } from "./encrypt-field-value.js";
 
@@ -13,6 +13,26 @@ import { encryptFieldValue } from "./encrypt-field-value.js";
  * two are recombined losslessly (Date/Buffer/BigInt/undefined). The data column
  * is always the source of truth — reconstruction never throws.
  */
+
+/**
+ * Derive the sidecar column for a @TypedJson field from its DATA column.
+ *
+ * The sidecar's default name is a function of the data column, so it has to be
+ * re-derived every time that column is (re)resolved — when the modifier is
+ * merged, when `@Embedded` prefixes the flattened column, and when the naming
+ * strategy transforms it. Deriving it in one place is what keeps a prefixed
+ * data column from carrying an unprefixed sidecar, which is how two `@Embedded`
+ * declarations of one `@Embeddable` came to share a sidecar column.
+ *
+ * An explicit `@TypedJson({ name })` is preserved verbatim at every step.
+ */
+export const resolveTypedJsonColumn = (
+  typedJson: { name: string | null } | null,
+  dataColumn: string,
+): MetaTypedJson | null =>
+  typedJson
+    ? { name: typedJson.name, column: typedJson.name ?? `${dataColumn}__typemeta` }
+    : null;
 
 /** Dict key under which the raw sidecar value is carried into defaultHydrateEntity. */
 export const typedJsonMetaDictKey = (fieldKey: string): string =>

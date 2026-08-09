@@ -377,7 +377,7 @@ describe("build-primary — validateFields called on embeddable element fields (
       }
 
       getEntityMetadata(C8DuplicateEmbeddableColEntity);
-    }).toThrow(/Duplicate field column name/);
+    }).toThrow(/Duplicate column name "shared_col"/);
   });
 
   test("does not throw when embeddable element fields are valid", () => {
