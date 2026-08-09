@@ -477,12 +477,26 @@ describe("Matcher", () => {
       ).toEqual([expect.objectContaining({ id: "1" })]);
     });
 
-    test("should throw if $between is used on unsupported types", () => {
+    // Range operators order `number | Date | bigint | string`. Strings use plain
+    // JS ordering — the language does not reproduce a database collation.
+    test("should range over strings with $between", () => {
+      expect(
+        Matcher.filter(TEST_PEOPLE, {
+          name: { $between: ["A", "K"] },
+        }),
+      ).toEqual([
+        expect.objectContaining({ id: "1" }), // John Doe
+        expect.objectContaining({ id: "2" }), // Jane Black
+        expect.objectContaining({ id: "4" }), // Alice Fisher
+      ]);
+    });
+
+    test("should throw if $between is used on an unorderable type", () => {
       expect(() =>
         Matcher.filter(TEST_PEOPLE, {
-          name: { $between: ["A", "Z"] } as any,
+          friends: { $between: [1, 2] } as any,
         }),
-      ).toThrow();
+      ).toThrow(/\$between is not supported/);
     });
 
     test("should exclude with $not containing matching $and", () => {
@@ -552,9 +566,18 @@ describe("Matcher", () => {
       ).toEqual([]);
     });
 
-    // Test for invalid types in comparison
+    // A string field orders against a string operand …
+    test("should compare strings with $gt", () => {
+      expect(Matcher.filter(TEST_PEOPLE, { name: { $gt: "K" } })).toEqual([
+        expect.objectContaining({ id: "3" }), // Quintin Smith
+      ]);
+    });
+
+    // … but the two sides must be the same KIND. Mixing them is unorderable.
     test("should throw when comparing incompatible types", () => {
-      expect(() => Matcher.filter(TEST_PEOPLE, { name: { $gt: "30" } })).toThrow();
+      expect(() => Matcher.filter(TEST_PEOPLE, { name: { $gt: 30 as any } })).toThrow(
+        /\$gt is not supported/,
+      );
     });
 
     // Test for null values
@@ -644,14 +667,15 @@ describe("Matcher", () => {
       ).toEqual([expect.objectContaining({ id: "4" })]);
     });
 
-    // Test empty $and operator
-    test("should handle empty $and operator", () => {
-      expect(Matcher.filter(TEST_PEOPLE, { $and: [] })).toEqual(TEST_PEOPLE); // Empty $and should match everything
+    // An empty logical array is an ERROR, not an identity element. The vacuous
+    // algebra means the OPPOSITE thing depending on which operator you used,
+    // while "no constraint" already has one unambiguous spelling: omit the key.
+    test("should throw on an empty $and operator", () => {
+      expect(() => Matcher.filter(TEST_PEOPLE, { $and: [] })).toThrow(/\$and/);
     });
 
-    // Test empty $or operator
-    test("should handle empty $or operator", () => {
-      expect(Matcher.filter(TEST_PEOPLE, { $or: [] })).toEqual([]); // Empty $or should match nothing
+    test("should throw on an empty $or operator", () => {
+      expect(() => Matcher.filter(TEST_PEOPLE, { $or: [] })).toThrow(/\$or/);
     });
 
     // Test empty $not operator

@@ -100,6 +100,11 @@ export const createTemporalMatchers = ({
 
   for (const spec of TEMPORAL_SPECS) {
     if (skipByClaim[spec.jose as keyof AegisClaimsWire]) continue;
+    // `$or: [{ $exists: false }, bound]` is how the condition language spells
+    // OPTIONAL, and that is what this needs: a claim is range-checked only when
+    // it is present. A plain bound would REQUIRE it — a null or absent value
+    // with a comparison operator does not match — so `nbf`/`auth_time`, which
+    // most tokens omit, would start failing verification.
     predicate[spec.jose as keyof AegisClaimsWire] = {
       $or: [{ $exists: false }, temporalBound(spec.temporal, clockTolerance, now)],
     };
@@ -107,16 +112,13 @@ export const createTemporalMatchers = ({
 
   // maxTokenAge (RFC-style): the token's `iat` must be within `maxTokenAge`
   // seconds of now. `iat` is a "past" claim (already upper-bounded above); this
-  // adds the lower bound AND requires presence — a value operator with multiple
-  // conditions must be an `$and` (a bare multi-key operator object matches only
-  // its FIRST key), so both bounds and presence are enforced together.
+  // adds the lower bound AND requires presence — every operator in one object
+  // must hold, so the three sit side by side as a conjunction.
   if (maxTokenAge !== undefined) {
     predicate.iat = {
-      $and: [
-        { $exists: true },
-        { $lte: addSeconds(now, clockTolerance) },
-        { $gte: subSeconds(now, maxTokenAge + clockTolerance) },
-      ],
+      $exists: true,
+      $lte: addSeconds(now, clockTolerance),
+      $gte: subSeconds(now, maxTokenAge + clockTolerance),
     };
   }
 

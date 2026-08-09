@@ -1,5 +1,18 @@
 import type { DeepPartial, Dict } from "@lindorm/types";
 
+/**
+ * The value types the range operators can order: `number | Date | bigint |
+ * string`. Strings order by PLAIN JS comparison — the language does not attempt
+ * to reproduce a database's collation, so a mixed-case or non-ASCII string range
+ * is a DOCUMENTED cross-driver divergence, the same class as `$regex`.
+ *
+ * Intersecting it with the field type is what makes the restriction visible at
+ * compile time: a `boolean`, a `Buffer` or a plain object is assignable to
+ * neither side, so `{ published: { $gt: true } }` no longer waits until runtime
+ * to fail. A `null` operand fails here too — `$gte: null` is not orderable.
+ */
+type Comparable = number | bigint | string | Date;
+
 export type ConditionOperator<T> = {
   // existence
   $exists?: boolean;
@@ -7,11 +20,11 @@ export type ConditionOperator<T> = {
   $neq?: T | null;
 
   // comparisons
-  $gt?: T;
-  $gte?: T;
-  $lt?: T;
-  $lte?: T;
-  $between?: [T, T];
+  $gt?: T & Comparable;
+  $gte?: T & Comparable;
+  $lt?: T & Comparable;
+  $lte?: T & Comparable;
+  $between?: [T & Comparable, T & Comparable];
 
   // fuzzy finding
   $like?: T;
@@ -44,7 +57,14 @@ export type ConditionOperator<T> = {
   $length?: number;
 
   // json/object containment
-  $has?: DeepPartial<T>;
+  //
+  // Plain JSON containment, the same thing every dialect's `compileHas` emits —
+  // no nested operators. Against an ARRAY the operand may be a single ELEMENT
+  // (`{ tags: { $has: "a" } }`) as well as a list of them, which is why the
+  // element type is unwrapped and offered alongside the whole shape.
+  $has?: [NonNullable<T>] extends [Array<infer U>]
+    ? DeepPartial<T> | DeepPartial<U>
+    : DeepPartial<T>;
 
   // numbers
   $mod?: [number, number]; // value % [0] === [1]

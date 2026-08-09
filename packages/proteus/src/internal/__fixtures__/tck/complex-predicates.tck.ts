@@ -486,15 +486,12 @@ export const complexPredicatesSuite = (
         expect(results.map((r) => r.name)).toEqual(["ab", "abc"]);
       });
 
-      // Outside the declared type, but the matcher reads a non-object `$not` as
-      // `value !== inner`, so every driver must too rather than drop the clause.
-      test("negates a bare value", async () => {
-        const repo = getHandle().repository(TckJsonbArray);
-        const results = await repo.find({ label: { $not: "drop" } } as any, {
-          order: { name: "ASC" },
-        });
-        expect(results.map((r) => r.name)).toEqual(["ab", "cd", "xy"]);
-      });
+      // A NON-OBJECT `$not` payload is no longer part of the language. It was
+      // never declared in the type, and the matcher read it as
+      // `value !== inner` — a REFERENCE comparison, so a Date, Buffer or array
+      // payload was always "not equal" and the criterion constrained nothing.
+      // `{ label: { $not: "drop" } }` is now a malformed condition; write
+      // `{ label: { $not: { $eq: "drop" } } }`.
 
       test("intersects two field-level negations in one criteria object", async () => {
         const repo = getHandle().repository(TckJsonbArray);
@@ -557,16 +554,10 @@ export const complexPredicatesSuite = (
         expect(results.map((r) => r.name)).toEqual(["abc"]);
       });
 
-      // Same rule as the criteria-level form: an inner condition that constrains
-      // nothing matches every row, so its negation matches none.
-
-      test("an empty field-level $not matches nothing", async () => {
-        const repo = getHandle().repository(TckJsonbArray);
-        const results = await repo.find({ label: { $not: {} } } as any, {
-          order: { name: "ASC" },
-        });
-        expect(results).toEqual([]);
-      });
+      // `{ label: { $not: {} } }` is no longer part of the language either. A
+      // criteria-level `{}` legitimately means "no constraints", but a NAMED
+      // field's empty bag constrains nothing while claiming to constrain
+      // something — so it is malformed rather than a negated tautology.
 
       test("a field-level $not over a no-op sub-clause matches nothing", async () => {
         const repo = getHandle().repository(TckJsonbArray);
