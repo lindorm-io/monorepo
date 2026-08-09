@@ -11,6 +11,7 @@ export * from "./is-equal.js";
 export * from "./is-error.js";
 export * from "./is-finite.js";
 export * from "./is-function.js";
+export * from "./is-http-url.js";
 export * from "./is-jwe.js";
 export * from "./is-jws.js";
 export * from "./is-jwt.js";

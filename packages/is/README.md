@@ -87,10 +87,13 @@ Every helper is exported individually from `@lindorm/is`. Helpers whose return t
 
 ### URLs
 
-| Helper      | Signature                                            | Notes                                                                                          |
-| ----------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `isUrl`     | `(input: any) => input is URL`                       | True only for `URL` instances.                                                                 |
-| `isUrlLike` | `(input: any, base?: any) => input is URL \| string` | True for `URL` instances or any value that successfully parses through `new URL(input, base)`. |
+| Helper      | Signature                                            | Notes                                                                                                                                                               |
+| ----------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isUrl`     | `(input: any) => input is URL`                       | True only for `URL` instances.                                                                                                                                      |
+| `isUrlLike` | `(input: any, base?: any) => input is URL \| string` | True for `URL` instances or any value that successfully parses through `new URL(input, base)`. Deliberately loose — `new URL` accepts any `scheme:value`.           |
+| `isUri`     | `(input?: any) => input is string`                   | A string usable as an IDENTIFIER: a URL with an authority (`https://…`) or a URN (`urn:…`). Rejects `foo:bar`, which parses but carries no authority.               |
+| `isUrn`     | `(input?: any) => input is string`                   | RFC 8141 `urn:<NID>:<NSS>`; the scheme and NID are case-insensitive.                                                                                                |
+| `isHttpUrl` | `(input?: any) => input is string`                   | A string a LOCATION can be derived from or fetched: `http:` or `https:` with a host. Rejects a URN and any other scheme (`ftp://example.com`), and `URL` instances. |
 
 ### JOSE tokens
 
