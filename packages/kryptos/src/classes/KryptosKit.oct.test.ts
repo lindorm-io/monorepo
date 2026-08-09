@@ -1,3 +1,4 @@
+import { B64 } from "@lindorm/b64";
 import MockDate from "mockdate";
 import {
   TEST_OCT_KEY_B64,
@@ -195,6 +196,36 @@ describe("KryptosKit (oct)", () => {
         type: "oct",
         use: "enc",
       });
+    });
+
+    // `dir` derives the oct key SIZE from the content encryption, so the
+    // documented `encryption` default has to be resolved BEFORE key generation,
+    // not only when the Kryptos is assembled.
+    test("enc defaults encryption to A256GCM when omitted", () => {
+      const kryptos = KryptosKit.generate.enc.oct({
+        algorithm: "dir",
+      });
+
+      expect(kryptos.encryption).toBe("A256GCM");
+      expect(kryptos.export("b64")).toEqual({
+        id: expect.stringMatching(/^key_[A-Za-z0-9]{16}$/),
+        algorithm: "dir",
+        encryption: "A256GCM",
+        privateKey: expect.any(String),
+        publicKey: "",
+        type: "oct",
+        use: "enc",
+      });
+      expect(B64.toBuffer(kryptos.export("b64").privateKey!, "b64u")).toHaveLength(32);
+    });
+
+    test("enc defaults encryption to A256GCM when omitted (async)", async () => {
+      const kryptos = await KryptosKit.generateAsync.enc.oct({
+        algorithm: "dir",
+      });
+
+      expect(kryptos.encryption).toBe("A256GCM");
+      expect(B64.toBuffer(kryptos.export("b64").privateKey!, "b64u")).toHaveLength(32);
     });
 
     test("sig", () => {

@@ -1,0 +1,47 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`resolveGenerate > should default an explicit nullish content encryption 1`] = `
+{
+  "algorithm": "A256KW",
+  "encryption": "A256GCM",
+  "type": "oct",
+  "use": "enc",
+}
+`;
+
+exports[`resolveGenerate > should default the content encryption for enc keys 1`] = `
+{
+  "algorithm": "dir",
+  "encryption": "A256GCM",
+  "type": "oct",
+  "use": "enc",
+}
+`;
+
+exports[`resolveGenerate > should keep an explicit content encryption 1`] = `
+{
+  "algorithm": "dir",
+  "encryption": "A128CBC-HS256",
+  "type": "oct",
+  "use": "enc",
+}
+`;
+
+exports[`resolveGenerate > should not carry a content encryption onto a sig key 1`] = `
+{
+  "algorithm": "ES256",
+  "curve": "P-256",
+  "encryption": null,
+  "type": "EC",
+  "use": "sig",
+}
+`;
+
+exports[`resolveGenerate > should null the content encryption for sig keys 1`] = `
+{
+  "algorithm": "HS512",
+  "encryption": null,
+  "type": "oct",
+  "use": "sig",
+}
+`;

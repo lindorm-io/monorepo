@@ -45,6 +45,7 @@ import { decodeCborEnv } from "../internal/utils/cbor/decode-cbor-env.js";
 import { fromOptions } from "../internal/utils/from-options.js";
 import { isB64, isDer, isJwk, isPem } from "../internal/utils/is.js";
 import { isKryptos } from "../internal/utils/is-kryptos.js";
+import { resolveGenerate } from "../internal/utils/resolve-generate.js";
 import { stampCertificate } from "../internal/utils/stamp-certificate.js";
 import { Kryptos } from "./Kryptos.js";
 
@@ -373,12 +374,10 @@ export class KryptosKit {
   }
 
   private static generateAuto(options: KryptosAuto): IKryptos {
-    const generate: KryptosGenerate = {
+    return KryptosKit.generateKryptos({
       ...autoGenerateConfig(options.algorithm),
       ...options,
-    };
-
-    return KryptosKit.finalizeGenerate(generate, generateKey(generate));
+    });
   }
 
   private static generateAkpSig(options: KryptosGenerateAkpSig): IKryptos {
@@ -463,7 +462,9 @@ export class KryptosKit {
   }
 
   private static generateKryptos(generate: KryptosGenerate): IKryptos {
-    return KryptosKit.finalizeGenerate(generate, generateKey(generate));
+    const resolved = resolveGenerate(generate);
+
+    return KryptosKit.finalizeGenerate(resolved, generateKey(resolved));
   }
 
   private static finalizeGenerate(
@@ -487,13 +488,13 @@ export class KryptosKit {
     const childExpiresAt =
       generate.expiresAt ?? caWindow?.expiresAt ?? expiresAt("25 years", notBefore);
 
-    const encryption = generate.use === "enc" ? (generate.encryption ?? "A256GCM") : null;
-
+    // `encryption` is already resolved by resolveGenerate — every caller passes
+    // a resolved `generate`, because key generation itself needs the value.
     const base = {
       ...generate,
       notBefore,
       expiresAt: childExpiresAt,
-      encryption,
+      encryption: generate.encryption ?? null,
       ...key,
     };
 
@@ -570,12 +571,10 @@ export class KryptosKit {
   }
 
   private static async generateAutoAsync(options: KryptosAuto): Promise<IKryptos> {
-    const generate: KryptosGenerate = {
+    return KryptosKit.generateKryptosAsync({
       ...autoGenerateConfig(options.algorithm),
       ...options,
-    };
-
-    return KryptosKit.finalizeGenerate(generate, await generateKeyAsync(generate));
+    });
   }
 
   private static async generateAkpSigAsync(
@@ -635,6 +634,8 @@ export class KryptosKit {
   private static async generateKryptosAsync(
     generate: KryptosGenerate,
   ): Promise<IKryptos> {
-    return KryptosKit.finalizeGenerate(generate, await generateKeyAsync(generate));
+    const resolved = resolveGenerate(generate);
+
+    return KryptosKit.finalizeGenerate(resolved, await generateKeyAsync(resolved));
   }
 }
