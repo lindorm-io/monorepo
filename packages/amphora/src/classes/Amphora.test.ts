@@ -874,6 +874,16 @@ describe("Amphora", () => {
     });
   });
 
+  /**
+   * ONE issuer rule across all three scopes: a URI, meaning a URL with an
+   * authority or a URN. The internal issuer used to be checked with `isUrlLike`
+   * while the external one demanded a URI — and `isUrlLike` accepts any
+   * `scheme:opaque`, so `foo:bar` passed. That was not merely inconsistent: key
+   * resolution scopes a `kid` lookup by issuer ONLY when the issuer is a URI, so
+   * an opaque internal issuer booted happily and silently resolved this
+   * service's OWN tokens unscoped — the degradation the scoping fix exists to
+   * prevent, reachable purely through config.
+   */
   describe("issuer validation", () => {
     test("should throw AmphoraError when the issuer is not a valid URL", () => {
       expect(
@@ -892,7 +902,96 @@ describe("Amphora", () => {
             internal: { issuer: "not-a-url" },
             logger: createMockLogger(),
           }),
-      ).toThrow(expect.objectContaining({ code: "invalid_issuer_url" }));
+      ).toThrow(expect.objectContaining({ code: "internal_issuer_not_uri" }));
+    });
+
+    // THE hole this rule closes. `new URL("foo:bar")` parses — scheme `foo:`,
+    // opaque path `bar`, empty host — so the old URL-like check waved it through.
+    test("should reject an opaque scheme:value issuer that carries no authority", () => {
+      expect(
+        () =>
+          new Amphora({
+            internal: { issuer: "foo:bar" },
+            logger: createMockLogger(),
+          }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "internal_issuer_not_uri",
+          data: { issuer: "foo:bar" },
+        }),
+      );
+    });
+
+    test("should name both acceptable shapes in the error, not just a URL", () => {
+      try {
+        new Amphora({ internal: { issuer: "foo:bar" }, logger: createMockLogger() });
+        throw new Error("should have thrown");
+      } catch (error: any) {
+        expect(error.title).toBe("Internal Issuer Not URI");
+        expect(error.details).toContain("https://");
+        expect(error.details).toContain("urn:");
+      }
+    });
+
+    // A URN is a URI, so it is a legal issuer on BOTH sides — the case the old
+    // "provide a fully-qualified URL" message actively argued against. Guard it:
+    // anyone tempted to "fix" this validator back toward URLs breaks it here.
+    test("should accept a URN issuer", () => {
+      expect(
+        () =>
+          new Amphora({
+            internal: { issuer: "urn:lindorm:test" },
+            logger: createMockLogger(),
+          }),
+      ).not.toThrow();
+    });
+
+    test("should reject a malformed URN with no namespace-specific string", () => {
+      expect(
+        () => new Amphora({ internal: { issuer: "urn:x" }, logger: createMockLogger() }),
+      ).toThrow(expect.objectContaining({ code: "internal_issuer_not_uri" }));
+    });
+
+    // A URN names the service without saying where to reach it, so nothing
+    // derives a JWKS location from it — `null`, not a guess and not a throw.
+    test("should derive no jwksUri from a URN issuer", () => {
+      const urn = new Amphora({
+        internal: { issuer: "urn:lindorm:test" },
+        logger: createMockLogger(),
+      });
+
+      expect(urn.internal).toEqual({ issuer: "urn:lindorm:test", jwksUri: null });
+    });
+
+    test("should stamp a URN issuer on added keys without a jwksUri", () => {
+      const urn = new Amphora({
+        internal: { issuer: "urn:lindorm:test" },
+        logger: createMockLogger(),
+      });
+
+      urn.add(KryptosKit.generate.sig.ec({ algorithm: "ES256", publish: true }));
+
+      expect(urn.vault[0]!.issuer).toBe("urn:lindorm:test");
+      expect(urn.vault[0]!.jwksUri).toBeNull();
+    });
+
+    // The scope this whole rule exists to protect: a URI issuer keeps a `kid`
+    // lookup narrowed to the keys it actually owns.
+    test("should scope a key lookup to the internal issuer", async () => {
+      const scoped = new Amphora({
+        internal: { issuer: "urn:lindorm:test" },
+        logger: createMockLogger(),
+      });
+      const key = KryptosKit.generate.sig.ec({ algorithm: "ES256", publish: true });
+
+      scoped.add(key);
+
+      await expect(scoped.findById(key.id, "urn:lindorm:test")).resolves.toEqual(
+        expect.objectContaining({ id: key.id, issuer: "urn:lindorm:test" }),
+      );
+      await expect(scoped.findById(key.id, "urn:lindorm:other")).rejects.toThrow(
+        expect.objectContaining({ code: "kryptos_not_found_by_id" }),
+      );
     });
   });
 

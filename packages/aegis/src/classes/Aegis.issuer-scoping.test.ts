@@ -185,6 +185,54 @@ describe("Aegis issuer-scoped key resolution", () => {
     );
   });
 
+  /**
+   * ⭐ OUR OWN tokens are scoped too, and that is why amphora refuses an internal
+   * issuer that is not a URI. The scope is applied only to a URI `iss`, so a
+   * service whose own issuer was opaque (`foo:bar` — URL-like, no authority)
+   * would fall out of scoping entirely for the tokens it mints itself, with
+   * nothing to warn anyone. Amphora now rejects such an issuer at construction,
+   * which makes this path the only reachable one.
+   *
+   * Both halves are asserted: our own token verifies under our own scope, and
+   * our own kid is NOT reachable from a peer's scope — so the internal issuer is
+   * a real boundary and not a label.
+   */
+  test("scopes a SELF-issued token to this service's own issuer", async () => {
+    const keySelf = KryptosKit.generate.sig.ec({
+      algorithm: "ES256",
+      id: "self-kid",
+      issuer: SELF,
+      publish: true,
+    });
+
+    amphora.add(keySelf);
+
+    // Minted by this service under its own issuer, and signed by the vault's own
+    // key — the selector picks it because it holds the only private sig half.
+    const { token } = await aegis.jwt.sign({
+      iss: SELF,
+      sub: "user-1",
+      aud: [AUDIENCE],
+      iat: 1704096000,
+      exp: 1704096120,
+      jti: "token-1",
+    });
+
+    await expect(aegis.jwt.verify(token)).resolves.toMatchObject({
+      payload: { iss: SELF, sub: "user-1" },
+    });
+
+    // The same key, the same kid, a peer's `iss` — the scope must not find it.
+    const forged = await craft(keySelf, ISSUER_A);
+
+    await expect(aegis.jwt.verify(forged)).rejects.toThrow(
+      expect.objectContaining({
+        code: "verify_key_not_found",
+        data: expect.objectContaining({ kid: "self-kid", issuer: ISSUER_A }),
+      }),
+    );
+  });
+
   // A token with no `iss` has nothing to scope by, so it resolves unscoped — and
   // that is exactly when the vault's own ambiguity has to surface as an error
   // rather than a guess.

@@ -1,4 +1,4 @@
-import { isArray, isUrlLike } from "@lindorm/is";
+import { isArray, isUri } from "@lindorm/is";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { AmphoraError } from "../errors/index.js";
 import type { IAmphora, IAmphoraExternal, IAmphoraIdp } from "../interfaces/index.js";
@@ -11,6 +11,7 @@ import type {
 import { AmphoraExternal } from "../internal/classes/AmphoraExternal.js";
 import { AmphoraIdp } from "../internal/classes/AmphoraIdp.js";
 import { AmphoraState } from "../internal/classes/AmphoraState.js";
+import { deriveInternalJwksUri } from "../internal/utils/derive-internal-jwks-uri.js";
 
 export class Amphora implements IAmphora {
   readonly external: IAmphoraExternal;
@@ -24,14 +25,20 @@ export class Amphora implements IAmphora {
     this.external = new AmphoraExternal(this.state);
     this.idp = new AmphoraIdp(this.state);
 
-    if (this.state.issuer && !isUrlLike(this.state.issuer)) {
-      throw new AmphoraError("Issuer must be a valid URL", {
-        code: "invalid_issuer_url",
-        data: { issuer: this.state.issuer },
-        title: "Invalid Issuer URL",
-        details: `The configured issuer "${this.state.issuer as string}" is not a valid URL. Provide a fully-qualified URL such as https://example.com.`,
-      });
-    }
+    // The SAME rule as the external side (`external_issuer_not_uri`): an issuer
+    // is a URI or it is not an issuer. `isUrlLike` was too loose here — `new URL`
+    // accepts any `scheme:opaque`, so `foo:bar` passed while carrying no
+    // authority. That mattered beyond tidiness: key resolution scopes by issuer
+    // ONLY when the issuer is a URI, so a service whose own issuer was URL-like
+    // but not a URI kept booting and silently lost scoping for its own tokens.
+    if (this.state.issuer === null || isUri(this.state.issuer)) return;
+
+    throw new AmphoraError("Internal issuer must be a URI", {
+      code: "internal_issuer_not_uri",
+      data: { issuer: this.state.issuer },
+      title: "Internal Issuer Not URI",
+      details: `The internal issuer "${this.state.issuer as string}" is not a URI. An issuer must be a URL with an authority (https://…) or a URN (urn:…).`,
+    });
   }
 
   // public getters
@@ -47,7 +54,7 @@ export class Amphora implements IAmphora {
 
     return {
       issuer: this.state.issuer,
-      jwksUri: new URL("/.well-known/jwks.json", this.state.issuer).toString(),
+      jwksUri: deriveInternalJwksUri(this.state.issuer),
     };
   }
 

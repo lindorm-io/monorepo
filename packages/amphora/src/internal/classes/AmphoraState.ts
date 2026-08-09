@@ -8,6 +8,7 @@ import { AmphoraError } from "../../errors/index.js";
 import type { AmphoraCondition, AmphoraSettings } from "../../types/index.js";
 import type { ExternalEntry } from "../types/external-entry.js";
 import { createExternalConduit } from "../utils/create-external-conduit.js";
+import { deriveInternalJwksUri } from "../utils/derive-internal-jwks-uri.js";
 import { fetchExternalJwks } from "../utils/fetch-external-jwks.js";
 import { isEnvironment } from "../utils/is-environment.js";
 import { resolveExternalConfig } from "../utils/resolve-external-config.js";
@@ -257,8 +258,11 @@ export class AmphoraState {
         overwrite.issuer = this.issuer;
       }
 
-      if (!input.jwksUri && this.issuer) {
-        const jwksUri = new URL("/.well-known/jwks.json", this.issuer).toString();
+      // A URN issuer derives no jwksUri — the key simply carries none, exactly
+      // as it would under an amphora with no issuer at all.
+      const jwksUri = this.issuer ? deriveInternalJwksUri(this.issuer) : null;
+
+      if (!input.jwksUri && jwksUri) {
         this.logger.silly("Setting jwksUri on Kryptos from amphora issuer", {
           id: input.id,
           jwksUri,

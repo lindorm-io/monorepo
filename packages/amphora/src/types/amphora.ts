@@ -13,7 +13,12 @@ import type { Environment } from "@lindorm/types";
 /** The service's OWN identity — minimal (it IS the issuer; it never discovers itself). */
 export type AmphoraInternalConfig = {
   issuer: string;
-  jwksUri: string;
+  /**
+   * `{issuer}/.well-known/jwks.json` — `null` when the issuer is a URN, which
+   * names the service without saying where to reach it, so there is nothing to
+   * derive.
+   */
+  jwksUri: string | null;
 };
 
 /**
@@ -23,10 +28,16 @@ export type AmphoraInternalConfig = {
  */
 export type AmphoraInternalSettings = {
   /**
-   * The service's OWN issuer — the URL it mints tokens under. It stamps `issuer`
+   * The service's OWN issuer — the URI it mints tokens under. It stamps `issuer`
    * and `jwksUri` on every key added via `add` / `env`, it is the filter deciding
    * which keys `amphora.jwks` publishes, and it is what `amphora.internal` is
    * derived from.
+   *
+   * A URI on the same terms as an external issuer: a URL with an authority
+   * (`https://…`) or a URN (`urn:…`), never a bare or opaque identifier
+   * (`internal_issuer_not_uri`). Key resolution scopes by issuer only when the
+   * issuer is a URI, so anything looser would quietly cost this service scoping
+   * for its own tokens. A URN issuer derives no `jwksUri`.
    */
   issuer: string;
 };

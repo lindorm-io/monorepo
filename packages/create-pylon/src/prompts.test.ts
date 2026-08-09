@@ -212,6 +212,53 @@ describe("runPrompts", () => {
     expect(answers.features.rateLimit).toBe(false);
   });
 
+  /**
+   * The scaffolded amphora is constructed with this value, and amphora refuses an
+   * issuer that is not a URI — so a value this prompt accepts but amphora rejects
+   * is a scaffold that cannot boot. Reached through the mocked prompt's captured
+   * `validate`, which is the only way it runs under test.
+   */
+  describe("issuer validation", () => {
+    const issuerValidate = async (): Promise<(value: string) => true | string> => {
+      queueSequence(mockedCheckbox, [["http"]]);
+      queueSequence(mockedSelect, ["none", "none", "none"]);
+      queueSequence(mockedConfirm, [false]);
+
+      await runPrompts({ positionalName: "issuer-app", cwd: sandboxDir });
+
+      const call = mockedInput.mock.calls.find(([options]) =>
+        String(options.message).startsWith("Issuer URL"),
+      );
+
+      return call![0].validate;
+    };
+
+    test("accepts a fully-qualified http(s) URL", async () => {
+      const validate = await issuerValidate();
+
+      expect(validate("http://localhost:3000")).toBe(true);
+      expect(validate("https://auth.example.com")).toBe(true);
+    });
+
+    // `/^https?:\/\/.+/` alone matched this — the scheme is right but there is no
+    // authority, so `new URL(...).host` is empty and amphora would refuse it.
+    test("rejects an http URL carrying no authority", async () => {
+      const validate = await issuerValidate();
+
+      expect(validate("http://#fragment")).toEqual(expect.any(String));
+      expect(validate("http://?query")).toEqual(expect.any(String));
+    });
+
+    // Amphora would take a URN, but the generated pylon publishes its own JWKS
+    // under the issuer and a URN gives it nowhere to publish from.
+    test("rejects a bare identifier and a URN", async () => {
+      const validate = await issuerValidate();
+
+      expect(validate("my-service")).toEqual(expect.any(String));
+      expect(validate("urn:example:auth")).toEqual(expect.any(String));
+    });
+  });
+
   test("cancels when user declines to remove existing directory", async () => {
     const existing = join(sandboxDir, "existing-app");
     mkdirSync(existing);

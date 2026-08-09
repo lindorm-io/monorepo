@@ -67,8 +67,8 @@ export type ResolveKeyOptions = {
    *
    * ⚠ A scope is used ONLY when it is a URI (a URL with an authority, or a URN).
    * That is not a heuristic — it is amphora's own invariant: an internal issuer
-   * is URL-validated at construction (`invalid_issuer_url`) and an external one
-   * must be a URI (`external_issuer_not_uri`), so NO vault key can ever carry a
+   * must be a URI at construction (`internal_issuer_not_uri`) and an external
+   * one likewise (`external_issuer_not_uri`), so NO vault key can ever carry a
    * bare identifier as its issuer. A non-URI `iss` names a PARTY, not a
    * key-registration scope — an RFC 7523 client assertion's `iss` is the
    * `client_id`, and the `delegation` profile declares `issuer: "per-token"` for

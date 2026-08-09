@@ -46,6 +46,7 @@
     "@inquirer/prompts": "^8.3.0",
     "@lindorm/case": "^0.3.0",
     "@lindorm/iris": "^0.7.0",
+    "@lindorm/is": "^0.3.0",
     "@lindorm/kryptos": "^0.11.0",
     "@lindorm/logger": "^0.7.0",
     "@lindorm/proteus": "^0.12.0",
