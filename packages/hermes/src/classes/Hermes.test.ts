@@ -1079,6 +1079,36 @@ describe("Hermes", () => {
   // -- C3: Hermes.setup() partial failure scenarios --
 
   describe("setup partial failure", () => {
+    // Registering entities is asynchronous — the input accepts paths, so it
+    // scans and imports. While the interface declared it `void` this rejection
+    // was floated: it went straight past the try/catch below, so a refused
+    // registration left the status stuck on "initialising" while setup()
+    // resolved as if the boot had succeeded.
+    it("should reset to 'created' status when proteus.addEntities() rejects", async () => {
+      const proteus = createTestProteusSource();
+      const iris = createTestIrisSource();
+      await proteus.connect();
+      await iris.connect();
+
+      vi.spyOn(proteus, "addEntities").mockRejectedValue(
+        new Error("entity registration refused"),
+      );
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await expect(hermes.setup()).rejects.toThrow("entity registration refused");
+      expect(hermes.status).toBe("created");
+
+      (proteus.addEntities as Mock).mockRestore();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
     it("should reset to 'created' status when proteus.setup() throws", async () => {
       const proteus = createTestProteusSource();
       const iris = createTestIrisSource();

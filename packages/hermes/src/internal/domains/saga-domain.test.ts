@@ -118,7 +118,7 @@ describe("SagaDomain", () => {
     ]);
     registry = new HermesRegistry(scanned);
 
-    proteus.addEntities([
+    await proteus.addEntities([
       EventRecord,
       SagaRecord,
       CausationRecord,

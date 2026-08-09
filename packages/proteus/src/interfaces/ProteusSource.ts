@@ -37,7 +37,7 @@ export interface IProteusSource extends IProteusRepositoryProvider {
   disconnect(): Promise<void>;
   setup(): Promise<void>;
 
-  addEntities(entities: EntityScannerInput): void;
+  addEntities(entities: EntityScannerInput): Promise<void>;
   getEntityMetadata(): Array<EntityMetadata>;
 
   stageDecorator(Entity: Function, Decorator: DecoratorFactory, opts?: unknown): void;

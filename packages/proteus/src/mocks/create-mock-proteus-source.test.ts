@@ -120,6 +120,32 @@ describe("createMockProteusSource", () => {
     expect(await repo.count({ artistId: "art_2" } as any)).toBe(1);
   });
 
+  // The facade's backing source is already set up so tests can seed without a
+  // lifecycle, while its own `setup` is inert — so a consumer registering
+  // entities during its own boot (Pylon does, unconditionally) must not meet the
+  // real source's post-setup guard.
+  describe("addEntities", () => {
+    it("should register an entity added after the facade was built", async () => {
+      const source = await createMockProteusSource({ entities: [TestEntity] });
+
+      await source.addEntities([Album]);
+
+      expect(source.hasEntity(Album)).toBe(true);
+    });
+
+    it("should create the table for the added entity, keeping existing rows", async () => {
+      const source = await createMockProteusSource({ entities: [TestEntity] });
+      await source.repository(TestEntity).insert({ id: "ent_1" } as any);
+
+      await source.addEntities([Album]);
+
+      await source.repository(Album).insert({ id: "alb_9", artistId: "art_9" } as any);
+
+      expect(await source.repository(Album).count({} as any)).toBe(1);
+      expect(await source.repository(TestEntity).count({} as any)).toBe(1);
+    });
+  });
+
   // The mock settings are the real source settings minus `driver` and `breaker`;
   // anything short of that is a consumer whose app wiring cannot be reproduced
   // in a test at all.

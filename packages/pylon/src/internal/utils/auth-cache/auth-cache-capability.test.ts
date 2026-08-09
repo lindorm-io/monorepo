@@ -50,7 +50,7 @@ const createCacheSource = async (amphora: IAmphora): Promise<ProteusSource> => {
   });
   sources.push(source);
 
-  source.addEntities([CachedIntrospection, CachedUserinfo]);
+  await source.addEntities([CachedIntrospection, CachedUserinfo]);
   for (const entity of [CachedIntrospection, CachedUserinfo]) {
     await stageEncryptedField(source, entity, "payload", {
       condition: { purpose: "pylon:kek" },

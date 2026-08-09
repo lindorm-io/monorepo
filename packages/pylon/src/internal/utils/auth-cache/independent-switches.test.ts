@@ -50,7 +50,7 @@ const createKv = async (amphora: IAmphora): Promise<ProteusSource> => {
 
   // Both concerns registered, exactly as Pylon.loadSources does when neither is
   // switched off — the SWITCH under test is the runtime policy, not the schema.
-  source.addEntities([CachedIntrospection, CachedUserinfo]);
+  await source.addEntities([CachedIntrospection, CachedUserinfo]);
   for (const entity of [CachedIntrospection, CachedUserinfo]) {
     await stageEncryptedField(source, entity, "payload", {
       condition: { purpose: "pylon:kek" },

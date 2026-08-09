@@ -117,7 +117,7 @@ describe("ViewDomain", () => {
     ]);
     registry = new HermesRegistry(scanned);
 
-    proteus.addEntities([
+    await proteus.addEntities([
       EventRecord,
       SagaRecord,
       CausationRecord,
@@ -725,7 +725,7 @@ describe("ViewDomain", () => {
 
   it("should resolve view from viewSources when driverType matches", async () => {
     const secondSource = createTestProteusSource();
-    secondSource.addEntities([TestViewEntity]);
+    await secondSource.addEntities([TestViewEntity]);
     await secondSource.connect();
     await secondSource.setup();
 
@@ -1063,7 +1063,7 @@ describe("ViewDomain", () => {
 
   it("should save view and causation transactionally in cross-source view source", async () => {
     const secondSource = createTestProteusSource();
-    secondSource.addEntities([TestViewEntity, CausationRecord]);
+    await secondSource.addEntities([TestViewEntity, CausationRecord]);
     await secondSource.connect();
     await secondSource.setup();
 
@@ -1135,7 +1135,7 @@ describe("ViewDomain", () => {
 
   it("should roll back both view and causation when cross-source transaction fails", async () => {
     const secondSource = createTestProteusSource();
-    secondSource.addEntities([TestViewEntity, CausationRecord]);
+    await secondSource.addEntities([TestViewEntity, CausationRecord]);
     await secondSource.connect();
     await secondSource.setup();
 
@@ -1206,7 +1206,7 @@ describe("ViewDomain", () => {
 
   it("should check causation in view source for cross-source dedup", async () => {
     const secondSource = createTestProteusSource();
-    secondSource.addEntities([TestViewEntity, CausationRecord]);
+    await secondSource.addEntities([TestViewEntity, CausationRecord]);
     await secondSource.connect();
     await secondSource.setup();
 

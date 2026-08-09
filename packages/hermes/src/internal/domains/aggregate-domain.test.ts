@@ -121,7 +121,7 @@ describe("AggregateDomain", () => {
     ]);
     registry = new HermesRegistry(scanned);
 
-    proteus.addEntities([
+    await proteus.addEntities([
       EventRecord,
       SagaRecord,
       CausationRecord,
@@ -1140,7 +1140,7 @@ describe("AggregateDomain", () => {
 
   it("should route the DEK to a distinct encryptionSource, keeping ciphertext separate", async () => {
     const encryptionSource = createTestProteusSource();
-    encryptionSource.addEntities([EncryptionRecord]);
+    await encryptionSource.addEntities([EncryptionRecord]);
     await encryptionSource.connect();
     await encryptionSource.setup();
 

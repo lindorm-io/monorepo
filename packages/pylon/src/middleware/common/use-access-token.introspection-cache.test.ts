@@ -49,7 +49,7 @@ const createKv = async (amphora: IAmphora): Promise<ProteusSource> => {
 
   // Exactly what Pylon.loadSources does: register, then stage the KEK onto the
   // bare `@Encrypted()` marker BEFORE setup resolves the entity.
-  source.addEntities([CachedIntrospection]);
+  await source.addEntities([CachedIntrospection]);
   await stageEncryptedField(source, CachedIntrospection, "payload", {
     condition: { purpose: "pylon:kek" },
   });

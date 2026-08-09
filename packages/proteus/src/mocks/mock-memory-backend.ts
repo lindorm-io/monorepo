@@ -185,7 +185,26 @@ export const createMemoryBackend = async (
       ping: spyImpl(() => source.ping()),
       flushCache: spyImpl((target?: any) => source.flushCache(target)),
 
-      addEntities: spyImpl((entities: any) => source.addEntities(entities)),
+      // The backing source is deliberately ALREADY set up — that is what makes
+      // the facade usable without a lifecycle — while the facade's own `setup`
+      // is inert. So a consumer that registers entities during its own boot
+      // (Pylon does, unconditionally) would hit the real source's post-setup
+      // guard on a source that, as far as it can tell, has not been set up. Its
+      // registration would then be refused for the whole run, and while
+      // `addEntities` was declared to return `void` that refusal was a floated
+      // rejection nobody saw. Re-open the source around the call and set it up
+      // again: the memory driver's `setup` only fills in tables it does not
+      // already have, so the store and its rows survive.
+      addEntities: spyImpl(async (entities: any) => {
+        const reopened = source as unknown as { isSetUp: boolean };
+        reopened.isSetUp = false;
+        try {
+          await source.addEntities(entities);
+          await source.setup();
+        } finally {
+          reopened.isSetUp = true;
+        }
+      }),
       stageDecorator: spyImpl((Entity: any, Decorator: any, opts?: any) =>
         source.stageDecorator(Entity, Decorator, opts),
       ),

@@ -155,7 +155,7 @@ export class Hermes implements IHermes {
 
       this.registry.validate(this.logger);
 
-      this.registerEntities();
+      await this.registerEntities();
       await this.registerIrisMessages();
 
       await this.setupSources();
@@ -733,15 +733,20 @@ export class Hermes implements IHermes {
 
   // -- Setup helpers --
 
-  private registerEntities(): void {
+  private async registerEntities(): Promise<void> {
     this.logger.debug("Registering internal entities with proteus");
 
-    this.proteus.addEntities([EventRecord, SagaRecord, CausationRecord, ChecksumRecord]);
+    await this.proteus.addEntities([
+      EventRecord,
+      SagaRecord,
+      CausationRecord,
+      ChecksumRecord,
+    ]);
 
     // The per-aggregate DEK (EncryptionRecord) lives on its own source when
     // `encryptionSource` is configured; by default it is `proteus`, so this
     // registers it exactly once on the main source (never double-registered).
-    this.encryptionSource.addEntities([EncryptionRecord]);
+    await this.encryptionSource.addEntities([EncryptionRecord]);
 
     const viewSourcesWithCausation = new Set<IProteusSource>();
 
@@ -754,11 +759,11 @@ export class Hermes implements IHermes {
         source: view.driverType ?? "default",
       });
 
-      source.addEntities([view.entity]);
+      await source.addEntities([view.entity]);
 
       if (source !== this.proteus && !viewSourcesWithCausation.has(source)) {
         viewSourcesWithCausation.add(source);
-        source.addEntities([CausationRecord]);
+        await source.addEntities([CausationRecord]);
 
         this.logger.debug("Registering CausationRecord on view source", {
           driverType: view.driverType,

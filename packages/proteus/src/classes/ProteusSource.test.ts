@@ -6,6 +6,8 @@ import { Field } from "../decorators/Field.js";
 import { Generated } from "../decorators/Generated.js";
 import { PrimaryKeyField } from "../decorators/PrimaryKeyField.js";
 import { Filter } from "../decorators/Filter.js";
+import { ProteusError } from "../errors/index.js";
+import type { IProteusSource } from "../interfaces/index.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "SessionTestEntity" })
@@ -58,6 +60,64 @@ describe("ProteusSource", () => {
         logger: createMockLogger(),
       });
       expect(source.hasEntity(SessionTestEntity)).toBe(false);
+    });
+  });
+
+  describe("addEntities after setup guard", () => {
+    // Typed as the INTERFACE, not the class. `EntityScannerInput` accepts PATHS
+    // as well as classes, and resolving a path means filesystem traversal plus a
+    // dynamic `import()` — so the implementation is inherently async, and the
+    // interface is what has to declare it awaitable. While it declared `void`
+    // this helper did not compile, and every caller floated the promise, turning
+    // the post-setup guard below from a catchable boot failure into an unhandled
+    // rejection that escaped the caller's try/catch.
+    const addThroughInterface = (source: IProteusSource): Promise<void> =>
+      source.addEntities([UnregisteredEntity]);
+
+    test("should reject catchably for a caller holding the source as IProteusSource", async () => {
+      const source: IProteusSource = createSource();
+      await source.connect();
+      await source.setup();
+
+      let caught: unknown;
+      try {
+        await addThroughInterface(source);
+      } catch (error) {
+        caught = error;
+      }
+
+      expect(caught).toBeInstanceOf(ProteusError);
+      expect((caught as ProteusError).message).toBe(
+        "Cannot add entities after setup() has been called. Create a new ProteusSource instance instead.",
+      );
+      expect((caught as ProteusError).code).toBe("entities_added_after_setup");
+
+      await source.disconnect();
+    });
+
+    test("should register the entity before the awaited interface call resolves", async () => {
+      const source: IProteusSource = new ProteusSource({
+        driver: "memory",
+        entities: [],
+        logger: createMockLogger(),
+      });
+
+      await addThroughInterface(source);
+
+      expect(source.hasEntity(UnregisteredEntity)).toBe(true);
+      expect(source.getEntityMetadata()).toHaveLength(1);
+    });
+
+    test("should throw ProteusError when adding entities after setup", async () => {
+      const source = createSource();
+      await source.connect();
+      await source.setup();
+
+      await expect(source.addEntities([UnregisteredEntity])).rejects.toThrow(
+        ProteusError,
+      );
+
+      await source.disconnect();
     });
   });
 

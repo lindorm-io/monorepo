@@ -350,7 +350,7 @@ export class Pylon<
       const source = this.options.kv;
       if (source) {
         const { Session } = await import("../entities/Session.js");
-        source.addEntities([Session]);
+        await source.addEntities([Session]);
       }
     }
 
@@ -358,7 +358,7 @@ export class Pylon<
       const source = this.options.db;
       if (source) {
         const { Kryptos } = await import("../entities/Kryptos.js");
-        source.addEntities([Kryptos]);
+        await source.addEntities([Kryptos]);
         // Stage the KEK onto the bare `@Encrypted()` marker before setup().
         await stageEncryptedField(
           source,
@@ -382,7 +382,7 @@ export class Pylon<
       if (proteusSource) {
         const { WebhookSubscription } =
           await import("../entities/WebhookSubscription.js");
-        proteusSource.addEntities([WebhookSubscription]);
+        await proteusSource.addEntities([WebhookSubscription]);
         // Stage the KEK onto the bare `@Encrypted()` markers before setup(), so
         // proteus seals the stored delivery credentials at rest and opens them
         // transparently on read. Both are live secrets under the same key.
@@ -424,7 +424,7 @@ export class Pylon<
         const { RateLimitFixed } = await import("../entities/RateLimitFixed.js");
         const { RateLimitSliding } = await import("../entities/RateLimitSliding.js");
         const { RateLimitBucket } = await import("../entities/RateLimitBucket.js");
-        source.addEntities([
+        await source.addEntities([
           CachedResponse,
           RateLimitFixed,
           RateLimitSliding,
@@ -448,13 +448,13 @@ export class Pylon<
         if (this.options.auth.cache.introspection !== false) {
           const { CachedIntrospection } =
             await import("../entities/CachedIntrospection.js");
-          source.addEntities([CachedIntrospection]);
+          await source.addEntities([CachedIntrospection]);
           await stageEncryptedField(source, CachedIntrospection, "payload", encryption);
         }
 
         if (this.options.auth.cache.userinfo !== false) {
           const { CachedUserinfo } = await import("../entities/CachedUserinfo.js");
-          source.addEntities([CachedUserinfo]);
+          await source.addEntities([CachedUserinfo]);
           await stageEncryptedField(source, CachedUserinfo, "payload", encryption);
         }
       }
@@ -466,7 +466,7 @@ export class Pylon<
       const source = this.options.kv;
       if (source) {
         const { Presence } = await import("../entities/Presence.js");
-        source.addEntities([Presence]);
+        await source.addEntities([Presence]);
       }
     }
 
@@ -474,11 +474,11 @@ export class Pylon<
       const proteusSource = this.options.db;
       if (proteusSource) {
         const { RequestAuditLog } = await import("../entities/RequestAuditLog.js");
-        proteusSource.addEntities([RequestAuditLog]);
+        await proteusSource.addEntities([RequestAuditLog]);
 
         if (this.options.audit.entities?.length) {
           const { DataAuditLog } = await import("../entities/DataAuditLog.js");
-          proteusSource.addEntities([DataAuditLog]);
+          await proteusSource.addEntities([DataAuditLog]);
         }
       }
 

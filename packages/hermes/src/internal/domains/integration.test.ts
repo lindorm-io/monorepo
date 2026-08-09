@@ -146,7 +146,7 @@ describe("Full Pipeline Integration", () => {
     const scanned = await HermesScanner.scan(ALL_MODULES);
     registry = new HermesRegistry(scanned);
 
-    proteus.addEntities([
+    await proteus.addEntities([
       EventRecord,
       SagaRecord,
       CausationRecord,
