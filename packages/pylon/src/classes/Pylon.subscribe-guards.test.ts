@@ -53,7 +53,7 @@ const createAmphora = (): IAmphora => {
 /** A bus that swallows the consumer wiring — the guard runs before any of it. */
 const createFakeBus = () =>
   ({
-    addMessages: () => undefined,
+    addMessages: async () => undefined,
     connect: async () => undefined,
     setup: async () => undefined,
     disconnect: async () => undefined,

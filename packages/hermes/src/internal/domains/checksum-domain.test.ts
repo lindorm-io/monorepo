@@ -114,7 +114,7 @@ describe("ChecksumDomain", () => {
       TestViewEntity,
     ]);
 
-    iris.addMessages([
+    await iris.addMessages([
       HermesCommandMessage,
       HermesEventMessage,
       HermesErrorMessage,

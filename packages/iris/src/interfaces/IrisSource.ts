@@ -23,7 +23,7 @@ export interface IIrisSource extends IIrisMessagingProvider {
    */
   readonly capabilities: IrisCapabilities;
 
-  addMessages(input: MessageScannerInput): void;
+  addMessages(input: MessageScannerInput): Promise<void>;
   addSubscriber(subscriber: IMessageSubscriber): void;
   removeSubscriber(subscriber: IMessageSubscriber): void;
   session(options?: SessionOptions): IIrisSession;

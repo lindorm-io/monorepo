@@ -70,7 +70,9 @@ const createAmphora = (): IAmphora => {
 const createFakeBus = () => {
   const messages: Array<string> = [];
   return {
-    addMessages: (list: Array<any>) => messages.push(...list.map((m) => m.name)),
+    addMessages: async (list: Array<any>) => {
+      messages.push(...list.map((m) => m.name));
+    },
     connect: async () => undefined,
     setup: async () => undefined,
     disconnect: async () => undefined,

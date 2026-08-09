@@ -156,7 +156,7 @@ export class Hermes implements IHermes {
       this.registry.validate(this.logger);
 
       this.registerEntities();
-      this.registerIrisMessages();
+      await this.registerIrisMessages();
 
       await this.setupSources();
       await this.setupIris();
@@ -767,10 +767,10 @@ export class Hermes implements IHermes {
     }
   }
 
-  private registerIrisMessages(): void {
+  private async registerIrisMessages(): Promise<void> {
     this.logger.debug("Registering Iris messages");
 
-    this.iris.addMessages([
+    await this.iris.addMessages([
       HermesCommandMessage,
       HermesErrorMessage,
       HermesEventMessage,

@@ -373,7 +373,7 @@ export class Pylon<
       const source = this.options.bus;
       if (source) {
         const { Job } = await import("../messages/Job.js");
-        source.addMessages([Job]);
+        await source.addMessages([Job]);
       }
     }
 
@@ -400,7 +400,7 @@ export class Pylon<
       if (irisSource) {
         const { WebhookRequest } = await import("../messages/WebhookRequest.js");
         const { WebhookDispatch } = await import("../messages/WebhookDispatch.js");
-        irisSource.addMessages([WebhookRequest, WebhookDispatch]);
+        await irisSource.addMessages([WebhookRequest, WebhookDispatch]);
       }
     }
 
@@ -485,11 +485,11 @@ export class Pylon<
       const irisSource = this.options.bus;
       if (irisSource) {
         const { RequestAudit } = await import("../messages/RequestAudit.js");
-        irisSource.addMessages([RequestAudit]);
+        await irisSource.addMessages([RequestAudit]);
 
         if (this.options.audit.entities?.length) {
           const { DataAuditChange } = await import("../messages/DataAuditChange.js");
-          irisSource.addMessages([DataAuditChange]);
+          await irisSource.addMessages([DataAuditChange]);
         }
       }
     }
@@ -504,7 +504,9 @@ export class Pylon<
     if (this.options.subscriptions?.length) {
       const source = this.options.bus;
       if (source) {
-        source.addMessages(this.options.subscriptions.map(({ message }) => message));
+        await source.addMessages(
+          this.options.subscriptions.map(({ message }) => message),
+        );
       }
     }
   }

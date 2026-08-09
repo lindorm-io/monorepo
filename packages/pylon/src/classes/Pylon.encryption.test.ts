@@ -63,7 +63,7 @@ const createFakeBus = () => {
     // Enough of `IIrisSource` for `Pylon.setup()` to drive it: webhooks are a
     // producer on `bus` feeding a consumer that writes to `db`, and enabling
     // them without both is a boot failure.
-    addMessages: () => undefined,
+    addMessages: async () => undefined,
     connect: async () => undefined,
     setup: async () => undefined,
     disconnect: async () => undefined,

@@ -8,7 +8,7 @@ import { IdentifierField } from "../decorators/IdentifierField.js";
 import { Message } from "../decorators/Message.js";
 import { IrisNotSupportedError } from "../errors/IrisNotSupportedError.js";
 import { IrisSourceError } from "../errors/IrisSourceError.js";
-import type { IMessageSubscriber } from "../interfaces/index.js";
+import type { IIrisSource, IMessageSubscriber } from "../interfaces/index.js";
 import type { IIrisDriver } from "../interfaces/IrisDriver.js";
 import { driverCapabilities } from "../internal/drivers/driver-capabilities.js";
 import type { IrisSourceSettings, IrisSourceSettingsBase } from "../types/index.js";
@@ -1059,6 +1059,47 @@ describe("IrisSource", () => {
   });
 
   describe("addMessages after setup guard", () => {
+    // Typed as the INTERFACE, not the class. `MessageScannerInput` accepts PATHS
+    // as well as classes, and resolving a path means filesystem traversal plus a
+    // dynamic `import()` — so the implementation is inherently async, and the
+    // interface is what has to declare it awaitable. While it declared `void`
+    // this helper did not compile, and every caller floated the promise, turning
+    // the post-setup guard below from a catchable boot failure into an unhandled
+    // rejection that escaped the caller's try/catch.
+    const addThroughInterface = (source: IIrisSource): Promise<void> =>
+      source.addMessages([AnotherTestMessage]);
+
+    it("should reject catchably for a caller holding the source as IIrisSource", async () => {
+      const source: IIrisSource = new IrisSource(
+        createMemoryOptions({ messages: [SourceTestMessage] }),
+      );
+      await source.connect();
+      await source.setup();
+
+      let caught: unknown;
+      try {
+        await addThroughInterface(source);
+      } catch (error) {
+        caught = error;
+      }
+
+      expect(caught).toBeInstanceOf(IrisSourceError);
+      expect((caught as IrisSourceError).message).toBe(
+        "Cannot add messages after setup() has been called",
+      );
+
+      await source.disconnect();
+    });
+
+    it("should register the message before the awaited interface call resolves", async () => {
+      const source: IIrisSource = new IrisSource(createMemoryOptions());
+
+      await addThroughInterface(source);
+
+      expect(source.hasMessage(AnotherTestMessage)).toBe(true);
+      expect(source.messages).toHaveLength(1);
+    });
+
     it("should throw IrisSourceError when adding messages after setup", async () => {
       const source = new IrisSource(
         createMemoryOptions({ messages: [SourceTestMessage] }),

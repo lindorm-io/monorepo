@@ -155,7 +155,7 @@ describe("Full Pipeline Integration", () => {
       TestViewEntity,
     ]);
 
-    iris.addMessages([
+    await iris.addMessages([
       HermesCommandMessage,
       HermesEventMessage,
       HermesErrorMessage,
