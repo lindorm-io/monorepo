@@ -7,6 +7,7 @@ import type { IncludeSpec } from "../../../../types/query.js";
 import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity.js";
 import { resolvePolymorphicMetadata } from "../../../../entity/utils/resolve-polymorphic-metadata.js";
+import { resolvePropertyKey } from "../../../../entity/utils/resolve-property-key.js";
 import { resolveColumnNameSafe } from "../resolve-column-name.js";
 import {
   compileRelationQuery,
@@ -85,7 +86,14 @@ const executeOwningInclude = async <E extends IEntity>(
 ): Promise<void> => {
   // joinKeys: { localFKField: foreignPKField }
   // Extract the FK values from root entities to query the foreign table
-  const localFkKeys = Object.keys(relation.joinKeys!);
+  // `joinKeys` names PHYSICAL columns, but the values are read off a HYDRATED
+  // entity, which is keyed by PROPERTY. The two diverge under a renaming
+  // strategy (`author_id` / `authorId`) — reading the column name there yields
+  // `undefined` for every root, which this function then reports as "no FK", so
+  // the relation came back empty without a query ever being issued.
+  const localFkKeys = Object.keys(relation.joinKeys!).map((column) =>
+    resolvePropertyKey(opts.rootMetadata.fields, column),
+  );
   const foreignPkKeys = Object.values(relation.joinKeys!);
 
   const fkValues: Array<Array<unknown>> = [];
@@ -153,7 +161,9 @@ const executeInverseInclude = async <E extends IEntity>(
   opts: ExecuteQueryIncludesOptions,
 ): Promise<void> => {
   // findKeys: { foreignFKField: localPKField }
-  const localPkKeys = Object.values(relation.findKeys!);
+  const localPkKeys = Object.values(relation.findKeys!).map((column) =>
+    resolvePropertyKey(opts.rootMetadata.fields, column),
+  );
   const foreignFkKeys = Object.keys(relation.findKeys!);
 
   const pkValues: Array<Array<unknown>> = [];
@@ -208,7 +218,9 @@ const executeManyToManyInclude = async <E extends IEntity>(
 ): Promise<void> => {
   // joinKeys: { joinTableCol: rootPKField }
   const joinKeys = relation.joinKeys!;
-  const localPkKeys = Object.values(joinKeys);
+  const localPkKeys = Object.values(joinKeys).map((column) =>
+    resolvePropertyKey(opts.rootMetadata.fields, column),
+  );
   const joinTableCols = Object.keys(joinKeys);
 
   const pkValues: Array<Array<unknown>> = [];
