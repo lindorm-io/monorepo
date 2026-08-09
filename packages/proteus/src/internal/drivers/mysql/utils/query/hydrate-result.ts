@@ -5,6 +5,13 @@ import type { IncludeSpec } from "../../../../types/query.js";
 import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity.js";
 import type { HydrateOptions } from "../../../../entity/utils/default-hydrate-entity.js";
 import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
+import type { IncludeProjection } from "../../../../utils/query/include-projection.js";
+import {
+  clearImplicitKeys,
+  includeProjection,
+  joinStitchKeys,
+  restrictToProjection,
+} from "../../../../utils/query/include-projection.js";
 import type { AliasMap } from "./compile-select.js";
 import { extractFieldDictFromAliased } from "./extract-field-dict.js";
 import { getRelationMetadata } from "./get-relation-metadata.js";
@@ -13,6 +20,7 @@ type IncludeInfo = {
   inc: IncludeSpec;
   relation: EntityMetadata["relations"][number];
   foreignMeta: EntityMetadata;
+  projection: IncludeProjection | null;
   targetAlias: AliasMap;
 };
 
@@ -66,7 +74,8 @@ export const hydrateRows = <E extends IEntity>(
     const foreignMeta = getRelationMetadata(relation);
     const targetAlias = aliasMap.find((a) => a.relationKey === inc.relation);
     if (!targetAlias) continue;
-    includeInfos.push({ inc, relation, foreignMeta, targetAlias });
+    const projection = includeProjection(inc, relation, foreignMeta, joinStitchKeys);
+    includeInfos.push({ inc, relation, foreignMeta, projection, targetAlias });
   }
 
   // With includes, group rows by root entity PK and aggregate included relations
@@ -92,7 +101,7 @@ export const hydrateRows = <E extends IEntity>(
     const entry = entityMap.get(pkValue)!;
 
     // Hydrate each included relation
-    for (const { inc, foreignMeta, targetAlias } of includeInfos) {
+    for (const { inc, foreignMeta, projection, targetAlias } of includeInfos) {
       const foreignPks = foreignMeta.primaryKeys;
       const hasData = foreignPks.some((pk) => {
         const alias = `${targetAlias.tableAlias}_${pk}`;
@@ -107,17 +116,9 @@ export const hydrateRows = <E extends IEntity>(
         targetAlias.tableAlias,
       );
 
-      const foreignFields = inc.select
-        ? effectiveForeignMeta.fields.filter(
-            (f) =>
-              inc.select!.includes(f.key) ||
-              effectiveForeignMeta.primaryKeys.includes(f.key),
-          )
-        : effectiveForeignMeta.fields;
-
-      const restrictedMeta = inc.select
-        ? { ...effectiveForeignMeta, fields: foreignFields }
-        : effectiveForeignMeta;
+      // The projection carries the stitching keys the compiler emitted; they are
+      // cleared off the entity again once the relation is assembled.
+      const restrictedMeta = restrictToProjection(effectiveForeignMeta, projection);
 
       const dict = extractFieldDictFromAliased(
         row,
@@ -152,14 +153,17 @@ export const hydrateRows = <E extends IEntity>(
 
   // Assemble final results
   return Array.from(entityMap.values()).map(({ root, relations }) => {
-    for (const { inc, relation } of includeInfos) {
+    for (const { inc, relation, projection } of includeInfos) {
       const isCollection =
         relation.type === "OneToMany" || relation.type === "ManyToMany";
       let items = relations.get(inc.relation) ?? [];
 
+      // @OrderBy is applied before the implicit keys go, since it may name one.
       if (isCollection && relation.orderBy && items.length > 1) {
         items = sortByOrderBy(items, relation.orderBy);
       }
+
+      for (const item of items) clearImplicitKeys(item, projection);
 
       (root as any)[inc.relation] = isCollection ? items : (items[0] ?? null);
     }

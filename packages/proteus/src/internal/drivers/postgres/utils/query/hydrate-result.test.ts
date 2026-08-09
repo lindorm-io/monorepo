@@ -392,21 +392,22 @@ describe("hydrateRows — with includes", () => {
   });
 
   // -------------------------------------------------------------------------
-  // T01-5: inc.select partial field restriction — PKs always included
+  // inc.select narrows the entity; the primary key it matches rows by is read
+  // off the row and cleared again, so naming too few columns cannot empty a
+  // relation that matched.
   // -------------------------------------------------------------------------
 
-  test("inc.select restriction: only selected fields and PKs appear on the related entity", () => {
+  test("inc.select restriction: the related entity carries the named columns alone", () => {
     mockGetRelationMetadata.mockReturnValue(postMeta);
 
     const rows = [
       {
         t0_id: "author-1",
         t0_name: "Alice",
-        // With inc.select: ["title"], the query would only project t1_id and t1_title.
-        // hydrate-result filters fields itself: PKs always kept per F05 fix.
+        // The compiler projects t1_id alongside t1_title even though only
+        // "title" was named — the PK is how this row is matched and deduped.
         t1_id: "post-1",
         t1_title: "Hello",
-        t1_authorId: null, // absent from projection but present in row for completeness
       },
     ];
 
@@ -420,15 +421,60 @@ describe("hydrateRows — with includes", () => {
     ]);
     const post = (result[0] as any).posts[0];
 
-    // PK "id" must always be included (F05)
-    expect(post.id).toBe("post-1");
-    // Selected field present
+    // The relation matched on the PK…
+    expect((result[0] as any).posts).toHaveLength(1);
     expect(post.title).toBe("Hello");
-    // Non-selected, non-PK field: not populated from row data (retains class initializer default null)
-    // defaultHydrateEntity skips fields not in restrictedMeta.fields — class initializer sets null
+    // …and the PK is gone again, because the caller did not ask for it.
+    expect(post.id).toBeUndefined();
+    // Never populated from the row: not in the projection at all.
     expect(post.authorId).toBeNull();
 
     expect(result[0]).toMatchSnapshot();
+  });
+
+  test("inc.select restriction: a primary key the caller named survives", () => {
+    mockGetRelationMetadata.mockReturnValue(postMeta);
+
+    const rows = [
+      { t0_id: "author-1", t0_name: "Alice", t1_id: "post-1", t1_title: "Hello" },
+    ];
+
+    const selectInclude: IncludeSpec = {
+      ...o2mInclude,
+      select: ["id", "title"],
+    };
+
+    const result = hydrateRows(rows, authorMetaWithPosts, authorAliasMap, [
+      selectInclude,
+    ]);
+    const post = (result[0] as any).posts[0];
+
+    expect(post.id).toBe("post-1");
+    expect(post.title).toBe("Hello");
+  });
+
+  // @OrderBy reads the hydrated entity, so its column is projected too — and
+  // sorted on before it is cleared. Rows arrive in the wrong order on purpose.
+  test("inc.select restriction: @OrderBy still sorts by a column it did not name", () => {
+    mockGetRelationMetadata.mockReturnValue(postMeta);
+
+    const rows = [
+      { t0_id: "author-1", t0_name: "Alice", t1_id: "post-2", t1_title: "Zulu" },
+      { t0_id: "author-1", t0_name: "Alice", t1_id: "post-1", t1_title: "Alpha" },
+    ];
+
+    const orderedInclude: IncludeSpec = { ...o2mInclude, select: ["id"] };
+    const orderedRelation: MetaRelation = { ...o2mRelation, orderBy: { title: "ASC" } };
+    const orderedMeta = {
+      ...authorMetaWithPosts,
+      relations: [orderedRelation],
+    } as unknown as EntityMetadata;
+
+    const result = hydrateRows(rows, orderedMeta, authorAliasMap, [orderedInclude]);
+    const posts = (result[0] as any).posts;
+
+    expect(posts.map((p: any) => p.id)).toEqual(["post-1", "post-2"]);
+    expect(posts.map((p: any) => p.title)).toEqual([undefined, undefined]);
   });
 });
 

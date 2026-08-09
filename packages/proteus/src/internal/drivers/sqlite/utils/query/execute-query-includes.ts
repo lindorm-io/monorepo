@@ -8,6 +8,13 @@ import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
 import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity.js";
 import { resolvePolymorphicMetadata } from "../../../../entity/utils/resolve-polymorphic-metadata.js";
 import { resolvePropertyKey } from "../../../../entity/utils/resolve-property-key.js";
+import type { IncludeProjection } from "../../../../utils/query/include-projection.js";
+import {
+  clearImplicitKeys,
+  includeProjection,
+  queryStitchKeys,
+  restrictToProjection,
+} from "../../../../utils/query/include-projection.js";
 import { resolveColumnNameSafe } from "../resolve-column-name.js";
 import {
   compileRelationQuery,
@@ -89,6 +96,8 @@ const executeOwningInclude = <E extends IEntity>(
   // strategy (`author_id` / `authorId`) — reading the column name there yields
   // `undefined` for every root, which this function then reports as "no FK", so
   // the relation came back empty without a query ever being issued.
+  const projection = includeProjection(include, relation, foreignMeta, queryStitchKeys);
+
   const localFkKeys = Object.keys(relation.joinKeys!).map((column) =>
     resolvePropertyKey(opts.rootMetadata.fields, column),
   );
@@ -138,7 +147,7 @@ const executeOwningInclude = <E extends IEntity>(
   for (const [fkKey, ownerEntities] of fkToEntities) {
     const rows = foreignRows.get(fkKey) ?? [];
     const hydrated = rows.map((row) =>
-      hydrateRow(row, foreignMeta, include, opts.amphora),
+      hydrateRow(row, foreignMeta, projection, opts.amphora),
     );
 
     for (const entity of ownerEntities) {
@@ -156,6 +165,8 @@ const executeInverseInclude = <E extends IEntity>(
   ctx: RelationQueryContext,
   opts: ExecuteQueryIncludesOptions,
 ): void => {
+  const projection = includeProjection(include, relation, foreignMeta, queryStitchKeys);
+
   const localPkKeys = Object.values(relation.findKeys!).map((column) =>
     resolvePropertyKey(opts.rootMetadata.fields, column),
   );
@@ -192,7 +203,7 @@ const executeInverseInclude = <E extends IEntity>(
   for (const [pkKey, ownerEntities] of pkToEntities) {
     const rows = grouped.get(pkKey) ?? [];
     const hydrated = rows.map((row) =>
-      hydrateRow(row, foreignMeta, include, opts.amphora),
+      hydrateRow(row, foreignMeta, projection, opts.amphora),
     );
 
     for (const entity of ownerEntities) {
@@ -209,6 +220,8 @@ const executeManyToManyInclude = <E extends IEntity>(
   ctx: RelationQueryContext,
   opts: ExecuteQueryIncludesOptions,
 ): void => {
+  const projection = includeProjection(include, relation, foreignMeta, queryStitchKeys);
+
   const joinKeys = relation.joinKeys!;
   const localPkKeys = Object.values(joinKeys).map((column) =>
     resolvePropertyKey(opts.rootMetadata.fields, column),
@@ -243,7 +256,7 @@ const executeManyToManyInclude = <E extends IEntity>(
   for (const [pkKey, ownerEntities] of pkToEntities) {
     const rows = grouped.get(pkKey) ?? [];
     const hydrated = rows.map((row) =>
-      hydrateRow(row, foreignMeta, include, opts.amphora),
+      hydrateRow(row, foreignMeta, projection, opts.amphora),
     );
 
     for (const entity of ownerEntities) {
@@ -258,22 +271,25 @@ const executeManyToManyInclude = <E extends IEntity>(
 const hydrateRow = (
   row: Dict,
   metadata: EntityMetadata,
-  include: IncludeSpec,
+  projection: IncludeProjection | null,
   amphora?: IAmphora,
 ): Dict => {
   const dict = extractFieldDictFromReturning(row, metadata);
   const effectiveMeta = resolvePolymorphicMetadata(dict, metadata);
 
-  const restrictedMeta = include.select
-    ? {
-        ...effectiveMeta,
-        fields: effectiveMeta.fields.filter((f) => include.select!.includes(f.key)),
-      }
-    : effectiveMeta;
+  const entity = defaultHydrateEntity(
+    dict,
+    restrictToProjection(effectiveMeta, projection),
+    {
+      snapshot: false,
+      hooks: false,
+      amphora,
+    },
+  );
 
-  return defaultHydrateEntity(dict, restrictedMeta, {
-    snapshot: false,
-    hooks: false,
-    amphora,
-  });
+  // The keys that matched this row back to its root are the driver’s own; the
+  // caller gets the columns it named and nothing else.
+  clearImplicitKeys(entity, projection);
+
+  return entity;
 };

@@ -4,6 +4,11 @@ import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
 import { typedJsonMetaAlias } from "../../entity/utils/typed-json.js";
 import type { IncludeSpec, RawSelectEntry, WindowSpec } from "../../types/query.js";
+import {
+  includeProjection,
+  joinStitchKeys,
+  restrictToProjection,
+} from "../query/include-projection.js";
 import { resolveColumnName } from "./resolve-column-name.js";
 import type { SqlDialect } from "./sql-dialect.js";
 import type { AliasMap, BuiltAliasResult, InheritanceAliasMap } from "./types.js";
@@ -197,9 +202,11 @@ export const compileSelect = <E extends IEntity>(
     const targetAlias = aliasMap.find((a) => a.relationKey === inc.relation);
     if (!targetAlias) continue;
 
-    const relFields = inc.select
-      ? foreignMeta.fields.filter((f) => inc.select!.includes(f.key))
-      : foreignMeta.fields;
+    // A per-relation `select` narrows the entity, never the join: the keys the
+    // hydrator matches and dedupes rows by are projected regardless of what was
+    // named, and cleared off the entity again afterwards.
+    const projection = includeProjection(inc, relation, foreignMeta, joinStitchKeys);
+    const relFields = restrictToProjection(foreignMeta, projection).fields;
 
     for (const field of relFields) {
       const col = dialect.quoteIdentifier(field.name);

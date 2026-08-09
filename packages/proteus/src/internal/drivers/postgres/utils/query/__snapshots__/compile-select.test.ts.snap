@@ -149,6 +149,9 @@ exports[`buildAliasMap > should create root alias for entity with no includes 1`
           "typedJson": null,
         },
       ],
+      "primaryKeys": [
+        "id",
+      ],
       "relations": [],
     },
     "relationKey": null,
@@ -307,6 +310,9 @@ exports[`buildAliasMap — ManyToMany includes > should produce 3 alias entries 
           "type": "string",
           "typedJson": null,
         },
+      ],
+      "primaryKeys": [
+        "id",
       ],
       "relations": [
         {
@@ -477,6 +483,9 @@ exports[`buildAliasMap — ManyToMany includes > should produce 3 alias entries 
           "type": "string",
           "typedJson": null,
         },
+      ],
+      "primaryKeys": [
+        "id",
       ],
       "relations": [
         {

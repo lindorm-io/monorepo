@@ -1799,6 +1799,18 @@ the store, preferably one; `"query"` asks for more trips, each smaller and faste
 the same entities — the choice is a performance trade, never a semantic one. The memory driver makes
 no round trips at all (the store is the same heap), so it implements one path and ignores the option.
 
+**`select` narrows the related entity and decides nothing else.** The keys a store needs to match a
+relation up with its root — a foreign primary key, the foreign key pointing back at the root, a
+join-table column — are the driver's own business: it reads them whether or not they were named,
+and clears the unasked-for ones off the entity again. So naming one column gets you one column, on
+every driver and under either strategy; it can never turn a matched relation into an empty one. A
+key you DO name is yours to keep: `select: ["id", "title"]` returns both.
+
+```typescript
+qb.include("posts", { select: ["title"] }).getMany();
+// posts: [ Post { title: "…" } ] — no id, no authorId
+```
+
 **Driver support:** `include()` is implemented by **postgres, mysql, sqlite and memory**. The
 **mongo and redis** builders throw `NotSupportedError` from `include()` itself — they cannot load
 relations through the query builder. Use the repository path there instead, which all six drivers
@@ -1807,13 +1819,6 @@ support:
 ```typescript
 await repository.find({ status: "active" }, { relations: ["posts", "profile"] });
 ```
-
-> ⚠ **`select` and the store's own keys.** On the SQL drivers, per-relation `select` emits exactly
-> the named columns — including for the keys the driver needs to stitch the relation back to its
-> root. Name too few and the relation comes back **empty** rather than partially populated: the
-> foreign primary key is required by both strategies, and `strategy: "query"` on an inverse relation
-> additionally needs the foreign key pointing back at the root. Name those keys explicitly. The
-> memory driver matches relations before projecting, so it is not sensitive to this.
 
 ### Group By / Having
 

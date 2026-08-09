@@ -154,14 +154,13 @@ AuthorEntity {
 }
 `;
 
-exports[`hydrateRows — with includes > inc.select restriction: only selected fields and PKs appear on the related entity 1`] = `
+exports[`hydrateRows — with includes > inc.select restriction: the related entity carries the named columns alone 1`] = `
 AuthorEntity {
   "id": "author-1",
   "name": "Alice",
   "posts": [
     PostEntity {
       "authorId": null,
-      "id": "post-1",
       "title": "Hello",
     },
   ],

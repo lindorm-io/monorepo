@@ -21,6 +21,8 @@ export const queryBuilderSuite = (
   const {
     TckBigIntPkParent,
     TckEncrypted,
+    TckLeft,
+    TckRight,
     TckSimplePost,
     TckSimpleUser,
     TckSoftDeletable,
@@ -491,39 +493,111 @@ export const queryBuilderSuite = (
         expect(found!.posts.map((p) => p.title)).toEqual(["Other Post"]);
       });
 
-      // The named columns AND the keys the store needs to stitch the relation
-      // back together: the foreign PK, plus the FK for an inverse relation.
-      // Naming fewer than that is NOT pinned — see the note in the README.
-      test("select limits the columns on the related entity", async () => {
-        const author = await seedAuthorWithPost();
+      // `select` names the columns the caller wants on the related entity, and
+      // decides NOTHING else. The keys a store needs to match a relation up —
+      // a foreign primary key, the foreign key pointing back at the root, a
+      // join-table column — are the driver's own business: it reads them
+      // whether or not they were named, and clears the unasked-for ones off
+      // again before handing the entity back. So naming too few columns
+      // narrows the entity; it can never turn a matched relation into an empty
+      // one, which is indistinguishable from no match at all.
+      for (const strategy of ["join", "query"] as const) {
+        test(`select narrows a to-many relation and nothing else (${strategy})`, async () => {
+          const author = await seedAuthorWithPost();
 
-        const found = await getSource()
-          .queryBuilder(TckSimpleUser)
-          .include("posts", { select: ["id", "title", "authorId"] })
-          .where({ id: author.id })
-          .getOne();
+          const found = await getSource()
+            .queryBuilder(TckSimpleUser)
+            .include("posts", { strategy, select: ["title"] })
+            .where({ id: author.id })
+            .getOne();
 
-        expect(found!.posts).toHaveLength(1);
-        expect(found!.posts[0].title).toBe("Included Post");
-        expect(found!.posts[0].id).toBeDefined();
-        expect(found!.posts[0].body).toBeUndefined();
-        expect(found!.posts[0].createdAt).toBeUndefined();
-      });
+          expect(found!.posts).toHaveLength(1);
+          expect(found!.posts[0].title).toBe("Included Post");
+          expect(found!.posts[0].id).toBeUndefined();
+          expect(found!.posts[0].authorId).toBeUndefined();
+          expect(found!.posts[0].body).toBeUndefined();
+          expect(found!.posts[0].createdAt).toBeUndefined();
+        });
 
-      test("select limits the columns on a to-one relation", async () => {
-        const author = await seedAuthorWithPost();
+        // Only the keys added on the caller's behalf are cleared: one the
+        // caller named survives, even though the driver needed it anyway.
+        test(`select keeps a stitching key the caller asked for (${strategy})`, async () => {
+          const author = await seedAuthorWithPost();
 
-        const found = await getSource()
-          .queryBuilder(TckSimplePost)
-          .include("author", { select: ["id", "name"] })
-          .where({ authorId: author.id })
-          .getOne();
+          const found = await getSource()
+            .queryBuilder(TckSimpleUser)
+            .include("posts", { strategy, select: ["id", "title"] })
+            .where({ id: author.id })
+            .getOne();
 
-        expect(found!.author).not.toBeNull();
-        expect(found!.author!.name).toBe("Eve");
-        expect(found!.author!.email).toBeUndefined();
-        expect(found!.author!.age).toBeUndefined();
-      });
+          expect(found!.posts).toHaveLength(1);
+          expect(found!.posts[0].id).toEqual(expect.any(String));
+          expect(found!.posts[0].title).toBe("Included Post");
+          expect(found!.posts[0].authorId).toBeUndefined();
+          expect(found!.posts[0].body).toBeUndefined();
+          expect(found!.posts[0].createdAt).toBeUndefined();
+        });
+
+        test(`select narrows a to-one relation and nothing else (${strategy})`, async () => {
+          const author = await seedAuthorWithPost();
+
+          const found = await getSource()
+            .queryBuilder(TckSimplePost)
+            .include("author", { strategy, select: ["name"] })
+            .where({ authorId: author.id })
+            .getOne();
+
+          expect(found!.author).not.toBeNull();
+          expect(found!.author!.name).toBe("Eve");
+          expect(found!.author!.id).toBeUndefined();
+          expect(found!.author!.email).toBeUndefined();
+          expect(found!.author!.age).toBeUndefined();
+        });
+
+        test(`select narrows a many-to-many relation and nothing else (${strategy})`, async () => {
+          const right = await getHandle().repository(TckRight).insert({ label: "R1" });
+          const left = await getHandle()
+            .repository(TckLeft)
+            .save({ label: "L1", rights: [right] });
+
+          const found = await getSource()
+            .queryBuilder(TckLeft)
+            .include("rights", { strategy, select: ["label"] })
+            .where({ id: left.id })
+            .getOne();
+
+          expect(found!.rights).toHaveLength(1);
+          expect(found!.rights[0].label).toBe("R1");
+          expect(found!.rights[0].id).toBeUndefined();
+          expect(found!.rights[0].createdAt).toBeUndefined();
+        });
+      }
+
+      // The same rule on the root side: a join fans a root row out across its
+      // relations and hydration folds them back up by the root primary key, so
+      // the key is read whether or not the root `select` named it. Withholding
+      // it grouped every root under one empty key — two authors came back as
+      // one, carrying both their post lists.
+      test.each(["join", "query"] as const)(
+        "a root select that omits the primary key still returns one entity per root (%s)",
+        async (strategy) => {
+          const { author, lonely } = await seedAuthorWithoutPosts();
+
+          const found = await getSource()
+            .queryBuilder(TckSimpleUser)
+            .select("name")
+            .include("posts", { strategy })
+            .where({ id: { $in: [author.id, lonely.id] } })
+            .orderBy({ name: "ASC" })
+            .getMany();
+
+          expect(found.map((u) => u.name)).toEqual(["Eve", "Lonely"]);
+          expect(found[0].posts.map((p) => p.title)).toEqual(["Included Post"]);
+          expect(found[1].posts).toEqual([]);
+          // What an unselected ROOT column reads as is deliberately not pinned
+          // here: memory leaves it absent, the SQL drivers null it.
+        },
+      );
 
       // The two strategies trade round trips for round-trip size; they never
       // trade correctness. Whatever a driver does internally, the caller gets

@@ -689,7 +689,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > applies select filter wh
     "orderBy": null,
     "type": "OneToMany",
   },
-  "text": "SELECT "id", "title" FROM "app"."Post" WHERE "author_id" IN ($1)",
+  "text": "SELECT "id", "title", "author_id" FROM "app"."Post" WHERE "author_id" IN ($1)",
 }
 `;
 

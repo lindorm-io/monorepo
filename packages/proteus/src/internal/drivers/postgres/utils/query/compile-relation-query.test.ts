@@ -187,11 +187,27 @@ describe("compileRelationQuery — inverse (OneToMany)", () => {
     const include = makeInclude({ select: ["id", "title"] });
     const result = compileRelationQuery(include, [["uuid-1"]], makeCtx());
 
-    // The SELECT clause contains only the selected fields
+    // The selected fields, plus the foreign key the rows are grouped back to
+    // their roots by — reading that off a row it was never asked to select is
+    // what made the relation come back empty.
     expect(result.text).toContain('"id"');
     expect(result.text).toContain('"title"');
-    // author_id will still appear in the WHERE clause as the FK condition
+    expect(result.text).toContain('SELECT "id", "title", "author_id"');
     expect(result).toMatchSnapshot();
+  });
+
+  test("emits the grouping foreign key when include.select omits it", () => {
+    const relation = makeRelation({ findKeys: { authorId: "id" } });
+    const foreignMeta = makeForeignMeta();
+
+    mockFindRelationByKey.mockReturnValue(relation);
+    mockGetRelationMetadata.mockReturnValue(foreignMeta);
+
+    const include = makeInclude({ select: ["title"] });
+    const result = compileRelationQuery(include, [["uuid-1"]], makeCtx());
+
+    expect(result.text).toContain('SELECT "title", "author_id"');
+    expect(result.text).not.toContain('"id",');
   });
 
   test("includes withDeleted filter when withDeleted is true", () => {

@@ -41,6 +41,7 @@ const metadata = {
     makeField("age", { type: "integer" }),
     makeField("department", { type: "string", name: "dept_code" }),
   ],
+  primaryKeys: ["id"],
   relations: [],
 } as unknown as EntityMetadata;
 
@@ -519,6 +520,7 @@ describe("compileSelect — non-empty includes", () => {
       makeField("label", { type: "string" }),
       makeField("active", { type: "boolean" }),
     ],
+    primaryKeys: ["id"],
     relations: [],
   } as unknown as EntityMetadata;
 
@@ -584,6 +586,31 @@ describe("compileSelect — non-empty includes", () => {
     expect(result).toMatchSnapshot();
   });
 
+  // The hydrator matches and dedupes joined rows by the foreign primary key, so
+  // the compiler projects it whether or not the caller named it. Leaving it out
+  // made the relation come back empty instead of narrow.
+  test("should emit the foreign primary key even when include.select omits it", () => {
+    mockFindRelationByKey.mockReturnValue(m2oRelation);
+    mockGetRelationMetadata.mockReturnValue(tagMeta);
+
+    const includes: Array<IncludeSpec> = [
+      {
+        relation: "tags",
+        required: false,
+        strategy: "join",
+        select: ["label"],
+        where: null,
+      },
+    ];
+
+    const { aliasMap } = buildAliasMap(rootWithRelation, includes);
+    const result = compileSelect(rootWithRelation, aliasMap, null, includes, false);
+
+    expect(result).toContain('"t1"."id" AS "t1_id"');
+    expect(result).toContain('"t1"."label" AS "t1_label"');
+    expect(result).not.toContain('"t1"."active"');
+  });
+
   test("should emit columns from multiple included relations with distinct alias prefixes", () => {
     // Second relation — profile
     const profileMeta = {
@@ -596,6 +623,7 @@ describe("compileSelect — non-empty includes", () => {
         namespace: "app",
       },
       fields: [makeField("id", { type: "uuid" }), makeField("bio", { type: "string" })],
+      primaryKeys: ["id"],
       relations: [],
     } as unknown as EntityMetadata;
 

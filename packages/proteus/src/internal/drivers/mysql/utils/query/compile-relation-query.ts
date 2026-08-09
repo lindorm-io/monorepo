@@ -3,6 +3,12 @@ import type { EntityMetadata, MetaRelation } from "../../../../entity/types/meta
 import type { IncludeSpec } from "../../../../types/query.js";
 import { generateAutoFilters } from "../../../../entity/metadata/auto-filters.js";
 import { mergeSystemFilterOverrides } from "../../../../utils/query/merge-system-filter-overrides.js";
+import type { IncludeProjection } from "../../../../utils/query/include-projection.js";
+import {
+  includeProjection,
+  queryStitchKeys,
+  restrictToProjection,
+} from "../../../../utils/query/include-projection.js";
 import { resolveFilters } from "../../../../utils/query/resolve-filters.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 import { resolveColumnNameSafe } from "../resolve-column-name.js";
@@ -85,7 +91,8 @@ const compileOwningQuery = (
   params: Array<unknown>,
 ): CompiledRelationQuery => {
   const tableName = quoteQualifiedName(schema, foreignMeta.entity.name);
-  const columns = buildSelectColumns(foreignMeta, include);
+  const projection = includeProjection(include, relation, foreignMeta, queryStitchKeys);
+  const columns = buildSelectColumns(foreignMeta, projection);
 
   const foreignPkKeys = Object.values(relation.joinKeys!);
 
@@ -109,7 +116,8 @@ const compileInverseQuery = (
   params: Array<unknown>,
 ): CompiledRelationQuery => {
   const tableName = quoteQualifiedName(schema, foreignMeta.entity.name);
-  const columns = buildSelectColumns(foreignMeta, include);
+  const projection = includeProjection(include, relation, foreignMeta, queryStitchKeys);
+  const columns = buildSelectColumns(foreignMeta, projection);
 
   const foreignFkKeys = Object.keys(relation.findKeys!);
 
@@ -140,7 +148,8 @@ const compileManyToManyQuery = (
 ): CompiledRelationQuery => {
   const foreignTable = quoteQualifiedName(schema, foreignMeta.entity.name);
   const joinTableName = quoteQualifiedName(schema, relation.joinTable as string);
-  const columns = buildSelectColumns(foreignMeta, include, "f");
+  const projection = includeProjection(include, relation, foreignMeta, queryStitchKeys);
+  const columns = buildSelectColumns(foreignMeta, projection, "f");
 
   const joinKeys = relation.joinKeys!;
 
@@ -201,12 +210,10 @@ const buildRelationOrderBy = (
 
 const buildSelectColumns = (
   metadata: EntityMetadata,
-  include: IncludeSpec,
+  projection: IncludeProjection | null,
   tableAlias?: string,
 ): string => {
-  const fields = include.select
-    ? metadata.fields.filter((f) => include.select!.includes(f.key))
-    : metadata.fields;
+  const fields = restrictToProjection(metadata, projection).fields;
 
   const prefix = tableAlias ? `${quoteIdentifier(tableAlias)}.` : "";
 

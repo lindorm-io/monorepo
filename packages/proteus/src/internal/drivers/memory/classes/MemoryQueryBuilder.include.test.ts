@@ -306,6 +306,21 @@ describe("MemoryQueryBuilder.include — select", () => {
     expect(book.version).toBeUndefined();
   });
 
+  // Hydration attaches an owning foreign key of its own accord, whether or not
+  // the column was named. A caller that named its columns did not ask for it.
+  test("clears a foreign key the caller did not name", async () => {
+    const found = await source
+      .queryBuilder(IncAuthor)
+      .include("books", { select: ["id", "title"] })
+      .where({ id: written.id })
+      .getOne();
+
+    const book = found!.books.find((b) => b.title === "Tagged")!;
+    expect(book.id).toBeDefined();
+    expect(book.title).toBe("Tagged");
+    expect(book.authorId).toBeUndefined();
+  });
+
   test("a projected-away join key narrows the columns, not the relation", async () => {
     const found = await source
       .queryBuilder(IncAuthor)
