@@ -89,8 +89,23 @@ export interface IAmphora {
   filter(query: AmphoraCondition): Promise<Array<IKryptos>>;
   filterSync(query: AmphoraCondition): Array<IKryptos>;
   find(query: AmphoraCondition): Promise<IKryptos>;
-  findById(id: string): Promise<IKryptos>;
-  findByIdSync(id: string): IKryptos;
+  /**
+   * UNFILTERED lookup by key id — no `isActive` filter, no publish gate, because
+   * an artifact naming a `kid` must still resolve to a key that has since
+   * expired or was never published (the caller's floor owns the time policy).
+   *
+   * Key ids are unique PER ISSUER. Pass `issuer` whenever it is known — from the
+   * artifact's own `iss`, or the issuer the verifier expects — and the lookup is
+   * NARROWED to that issuer's keys. It never widens and never falls back: a
+   * scoped miss throws rather than retrying unscoped, because a fallback would
+   * mean an id the claimed issuer does not hold gets answered by some other
+   * issuer's key.
+   *
+   * Called with no issuer, an id that matches keys from MORE THAN ONE issuer
+   * throws `kryptos_ambiguous_id` — there is nothing to choose with.
+   */
+  findById(id: string, issuer?: string): Promise<IKryptos>;
+  findByIdSync(id: string, issuer?: string): IKryptos;
   findSync(query: AmphoraCondition): IKryptos;
   refresh(): Promise<void>;
   setup(): Promise<void>;

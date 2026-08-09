@@ -165,20 +165,25 @@ export class Amphora implements IAmphora {
     });
   }
 
-  async findById(id: string): Promise<IKryptos> {
-    const existing = this.state.findByIdMostRecent(id);
+  // The optional `issuer` NARROWS the lookup and never widens it: a key answers
+  // only when it belongs to the named issuer. There is NO fallback — a scoped
+  // miss is a miss, never a retry unscoped. Falling back would be strictly worse
+  // than not scoping at all: an attacker would no longer need an id COLLISION,
+  // only an id the claimed issuer does not hold.
+  async findById(id: string, issuer?: string): Promise<IKryptos> {
+    const existing = this.state.findByIdExact(id, issuer);
     if (existing) {
       this.state.markAccessed([existing]);
       return existing;
     }
 
-    // No issuer to target — a bare kid does not say which issuer owns it — so
-    // fall back to refreshing EVERY registered issuer. This is the expensive
-    // path, reinforcing "resolve a kid via find({ id, issuer })".
+    // A known issuer targets the refetch at that ONE source (a no-op when no
+    // registered entry owns it). Only a bare kid — which does not say which
+    // issuer owns it — falls back to refreshing EVERY registered issuer.
     if (this.state.hasExternal) {
-      await this.refresh();
+      await this.state.refreshFor({ issuer });
 
-      const refreshed = this.state.findByIdMostRecent(id);
+      const refreshed = this.state.findByIdExact(id, issuer);
       if (refreshed) {
         this.state.markAccessed([refreshed]);
         return refreshed;
@@ -187,16 +192,18 @@ export class Amphora implements IAmphora {
 
     throw new AmphoraError("Kryptos not found by id", {
       code: "kryptos_not_found_by_id",
-      data: { id, totalKeys: this.state.vault.length },
+      data: { id, issuer: issuer ?? null, totalKeys: this.state.vault.length },
       title: "Kryptos Not Found By ID",
-      details: `No Kryptos with id "${id}" exists in the vault, even after refreshing external providers. Confirm the id is correct and the key is available.`,
+      details: issuer
+        ? `No Kryptos with id "${id}" exists in the vault under issuer "${issuer}", even after refreshing that issuer. The lookup is scoped to the issuer on purpose and never falls back to an unscoped search; confirm the id is correct and that the key is registered under this issuer.`
+        : `No Kryptos with id "${id}" exists in the vault, even after refreshing external providers. Confirm the id is correct and the key is available.`,
     });
   }
 
-  findByIdSync(id: string): IKryptos {
+  findByIdSync(id: string, issuer?: string): IKryptos {
     this.assertSetupForSync();
 
-    const existing = this.state.findByIdMostRecent(id);
+    const existing = this.state.findByIdExact(id, issuer);
     if (existing) {
       this.state.markAccessed([existing]);
       return existing;
@@ -204,9 +211,11 @@ export class Amphora implements IAmphora {
 
     throw new AmphoraError("Kryptos not found by id", {
       code: "kryptos_not_found_by_id_sync",
-      data: { id, totalKeys: this.state.vault.length },
+      data: { id, issuer: issuer ?? null, totalKeys: this.state.vault.length },
       title: "Kryptos Not Found By ID (Sync)",
-      details: `No Kryptos with id "${id}" exists in the vault. Synchronous lookup does not refresh external providers, so the key must already be loaded.`,
+      details: issuer
+        ? `No Kryptos with id "${id}" exists in the vault under issuer "${issuer}". Synchronous lookup does not refresh external providers, so the key must already be loaded — and the issuer scope never falls back to an unscoped search.`
+        : `No Kryptos with id "${id}" exists in the vault. Synchronous lookup does not refresh external providers, so the key must already be loaded.`,
     });
   }
 

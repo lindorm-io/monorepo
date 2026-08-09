@@ -78,7 +78,7 @@ export class AmphoraState {
   // different question from "which key do we hand out?" — `publish` describes
   // what belongs in our JWKS, not what we are able to do. Capability probes
   // (`canSign` / `canDecrypt` / …) ask the former, so they read from here;
-  // `findByIdMostRecent` is unfiltered for the same reason.
+  // `findByIdExact` is unfiltered for the same reason.
   matchedKeys(condition: AmphoraCondition): Array<IKryptos> {
     const active = this.vault.filter((i) => i.isActive);
 
@@ -100,32 +100,36 @@ export class AmphoraState {
       : matched.filter((i) => !i.internal || i.publish);
   }
 
-  // Unified, UNFILTERED lookup by id across the whole vault. kid uniqueness is
-  // per-issuer, so an id can collide across issuers — return the most recent
-  // (createdAt desc; Kryptos has no updatedAt) and warn, never throw or pick
-  // arbitrarily.
-  findByIdMostRecent(id: string): IKryptos | undefined {
-    const matches = this.vault.filter((i) => i.id === id);
+  // Unified, UNFILTERED lookup by id across the whole vault — EXACT MATCH, and
+  // scoped to one issuer when the caller knows it.
+  //
+  // ⚠ Deliberately NOT routed through `matchedKeys`/`filteredKeys`: those apply
+  // the `isActive` filter and the publish gate, and `findById` exists precisely
+  // to bypass both — a token signed by a since-expired key must still verify
+  // (the clock is enforced by the caller's floor, e.g. `VERIFY_FLOOR`'s
+  // `isPending: false`, not by selection).
+  //
+  // kid uniqueness is PER ISSUER, so an id can collide across issuers. An
+  // UNSCOPED lookup that hits a collision THROWS: it has nothing to decide with,
+  // and picking the "most recent" let a registered issuer choose the tiebreak —
+  // `createdAt` comes off the fetched JWK's own `iat`, so a peer could publish a
+  // colliding kid with a large `iat` and have its key answer for someone else's.
+  findByIdExact(id: string, issuer?: string): IKryptos | undefined {
+    const matches = this.vault.filter(
+      (i) => i.id === id && (issuer === undefined || i.issuer === issuer),
+    );
 
     if (matches.length === 0) return undefined;
     if (matches.length === 1) return matches[0];
 
-    const sorted = [...matches].sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    );
-    const selected = sorted[0];
+    const issuers = matches.map((m) => m.issuer);
 
-    this.logger.warn(
-      "Ambiguous findById: multiple keys share this id across issuers; returning most recent",
-      {
-        id,
-        count: matches.length,
-        issuers: matches.map((m) => m.issuer),
-        selected: { issuer: selected.issuer, createdAt: selected.createdAt },
-      },
-    );
-
-    return selected;
+    throw new AmphoraError("Ambiguous Kryptos id", {
+      code: "kryptos_ambiguous_id",
+      data: { id, issuer: issuer ?? null, count: matches.length, issuers },
+      title: "Ambiguous Kryptos ID",
+      details: `The id "${id}" matches ${matches.length} keys (issuers: ${issuers.join(", ")}). Key ids are unique per issuer, so a bare id cannot identify one of them — name the issuer the key belongs to.`,
+    });
   }
 
   // LRU bookkeeping — bump the last-ACCESS time of every EXTERNAL issuer whose

@@ -2865,7 +2865,9 @@ describe("Amphora", () => {
     const issuerA = "https://iss-a.lindorm.io/";
     const issuerB = "https://iss-b.lindorm.io/";
 
-    const seedCollision = async (logger = createMockLogger()) => {
+    const seedCollision = async () => {
+      const logger = createMockLogger();
+
       // Two issuers serve the SAME kid — kid uniqueness is PER ISSUER, so both
       // survive in the unified vault (eviction is by issuer, not by id).
       const a = { ...TEST_EC_KEY_SIG.toJWK("public"), kid: "shared-kid" };
@@ -2900,32 +2902,113 @@ describe("Amphora", () => {
       await amphora.setup();
     };
 
-    // OKP fixture is newer than the EC fixture (iat), so the iss-b key is the
-    // most-recent of the collision.
-    test("findById returns the most recent and warns, never throws or picks arbitrarily", async () => {
-      const logger = createMockLogger();
-      const child = createMockLogger();
-      vi.mocked(logger.child).mockReturnValue(child);
+    test("unscoped findById THROWS on a collision, naming the colliding issuers", async () => {
+      await seedCollision();
 
-      await seedCollision(logger);
-
-      const found = await amphora.findById("shared-kid");
-      expect(found.issuer).toBe(issuerB);
-
-      expect(child.warn).toHaveBeenCalledWith(
-        "Ambiguous findById: multiple keys share this id across issuers; returning most recent",
+      await expect(amphora.findById("shared-kid")).rejects.toThrow(AmphoraError);
+      await expect(amphora.findById("shared-kid")).rejects.toThrow(
         expect.objectContaining({
-          id: "shared-kid",
-          count: 2,
-          issuers: expect.arrayContaining([issuerA, issuerB]),
+          code: "kryptos_ambiguous_id",
+          data: expect.objectContaining({
+            id: "shared-kid",
+            issuer: null,
+            count: 2,
+            issuers: expect.arrayContaining([issuerA, issuerB]),
+          }),
         }),
       );
     });
 
-    test("findByIdSync applies the same most-recent rule", async () => {
+    test("unscoped findByIdSync throws the same ambiguity", async () => {
       await seedCollision();
 
-      expect(amphora.findByIdSync("shared-kid").issuer).toBe(issuerB);
+      expect(() => amphora.findByIdSync("shared-kid")).toThrow(
+        expect.objectContaining({ code: "kryptos_ambiguous_id" }),
+      );
+    });
+
+    // The whole point: naming the issuer resolves the collision to exactly the
+    // key that issuer published — never the peer's colliding one.
+    test("a scoped findById resolves the collision to the named issuer's key", async () => {
+      await seedCollision();
+
+      const a = await amphora.findById("shared-kid", issuerA);
+      const b = await amphora.findById("shared-kid", issuerB);
+
+      expect(a.issuer).toBe(issuerA);
+      expect(a.type).toBe("EC");
+      expect(b.issuer).toBe(issuerB);
+      expect(b.type).toBe("OKP");
+    });
+
+    test("a scoped findByIdSync resolves the collision to the named issuer's key", async () => {
+      await seedCollision();
+
+      expect(amphora.findByIdSync("shared-kid", issuerA).type).toBe("EC");
+      expect(amphora.findByIdSync("shared-kid", issuerB).type).toBe("OKP");
+    });
+
+    // NO FALLBACK. An issuer that does not hold the id must fail, never retry
+    // unscoped — a fallback would let a kid the claimed issuer lacks be answered
+    // by whichever other issuer happens to hold one.
+    test("a scoped miss does NOT fall back to an unscoped search", async () => {
+      await seedCollision();
+
+      const unknownIssuer = "https://iss-c.lindorm.io/";
+
+      expect(() => amphora.findByIdSync("shared-kid", unknownIssuer)).toThrow(
+        expect.objectContaining({
+          code: "kryptos_not_found_by_id_sync",
+          data: expect.objectContaining({ id: "shared-kid", issuer: unknownIssuer }),
+        }),
+      );
+
+      await expect(amphora.findById("shared-kid", unknownIssuer)).rejects.toThrow(
+        expect.objectContaining({
+          code: "kryptos_not_found_by_id",
+          data: expect.objectContaining({ id: "shared-kid", issuer: unknownIssuer }),
+        }),
+      );
+    });
+
+    // A scoped miss refetches THAT issuer alone. Both mocks below are `times(1)`
+    // and already consumed by setup, so a refresh-all would 404 on the peer —
+    // only the named issuer is allowed a second fetch.
+    test("a scoped miss refetches only the named issuer", async () => {
+      await seedCollision();
+
+      const rotated = { ...TEST_RSA_KEY_SIG.toJWK("public"), kid: "rotated-kid" };
+      delete rotated.iss;
+
+      nock("https://iss-a.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [rotated] });
+
+      const found = await amphora.findById("rotated-kid", issuerA);
+
+      expect(found.id).toBe("rotated-kid");
+      expect(found.issuer).toBe(issuerA);
+      expect(nock.isDone()).toBe(true);
+    });
+
+    // The reason findById is unfiltered, restated against the scoped path: a
+    // token signed by a since-expired key must still resolve. Time is the
+    // caller's floor to enforce, not selection's.
+    test("a scoped lookup still returns an EXPIRED key", async () => {
+      const expiring = KryptosKit.clone(TEST_EC_KEY_SIG, {
+        issuer,
+        expiresAt: new Date("2024-01-01T09:00:00.000Z"),
+      });
+      amphora.add(expiring);
+
+      MockDate.set(new Date("2024-01-01T10:00:00.000Z"));
+
+      expect(expiring.isExpired).toBe(true);
+      expect(amphora.findByIdSync(expiring.id, issuer)).toEqual(expiring);
+      await expect(amphora.findById(expiring.id, issuer)).resolves.toEqual(expiring);
+
+      MockDate.set(MockedDate);
     });
   });
 

@@ -131,9 +131,12 @@ const key = await amphora.find({ id: "some-uuid" });
 const keys = await amphora.filter({ use: "sig", type: "EC" });
 
 const byId = await amphora.findById("some-uuid");
+
+// A kid is unique only per issuer — name the issuer whenever you know it.
+const scoped = await amphora.findById("some-uuid", "https://partner.example.com/");
 ```
 
-`find()` and `findById()` throw `AmphoraError` when no match is found.
+`find()` and `findById()` throw `AmphoraError` when no match is found. A scoped `findById` refreshes **only** the named issuer; an unscoped one has nothing to target and refreshes every registered issuer.
 
 ### Sync — local vault only
 
@@ -142,6 +145,7 @@ The sync methods never make network calls. If external providers are configured,
 ```typescript
 const key = amphora.findSync({ id: "some-uuid" });
 const byId = amphora.findByIdSync("some-uuid");
+const scoped = amphora.findByIdSync("some-uuid", "https://partner.example.com/");
 const keys = amphora.filterSync({ use: "enc" });
 ```
 
@@ -194,7 +198,11 @@ A **floor** (`SIGN_FLOOR`, `VERIFY_FLOOR`, `SEAL_FLOOR`, `ENVELOPE_FLOOR`, `DECR
 
 ⚠ **The default is about `publish`, not about safety — it does not belong everywhere.** A **token** signature exists to be verified against our JWKS, so its key must be published: `@lindorm/aegis` applies the floor and the deployment's own selector and deliberately no default. Nor does it belong on a **check**: where a key is resolved by `kid` through the unfiltered `findById` there is no gate to reach past, and a `publish` layer stops being "where to look" and becomes an assertion that the key is unpublished (pylon's cookie verification is that shape, and gets no default). Sharing `SIGN_FLOOR` with an operation says nothing about sharing this default with it.
 
-`findById()` / `findByIdSync()` are **not** filtered: an explicit id is explicit intent, and a token signed by an internal (or since-expired) key must still be verifiable. Key ids are unique **per issuer**, so an id can collide across issuers — `findById` then returns the **most recent** (by `createdAt`) and logs a `warn`, never throwing or picking arbitrarily. Resolve a `kid` off a token with `find({ id, issuer })` to name the issuer and avoid the ambiguity.
+`findById()` / `findByIdSync()` are **not** filtered: an explicit id is explicit intent, and a token signed by an internal (or since-expired) key must still be verifiable.
+
+Key ids are unique **per issuer**, so pass the issuer as the second argument whenever you know it — `findById(kid, issuer)`. It **narrows** the lookup to that issuer's keys and there is **no fallback**: an id the named issuer does not hold throws, it never retries unscoped. Falling back would be strictly worse than not scoping at all, since an attacker would then need no id collision — only a `kid` the issuer it claims to be does not hold. A scoped miss also refetches that **one** issuer rather than every registered one.
+
+Called with no issuer, an id that matches keys from **more than one** issuer throws `kryptos_ambiguous_id`, naming them. There is nothing to choose with: `createdAt` comes off the fetched JWK's own `iat`, so a "most recent wins" rule let a registered peer pick its own tiebreak and answer for someone else's `kid`.
 
 > ⚠ **`find({ id })` is NOT `findById(id)`.** They read as interchangeable and are not. `find()` goes through the filter, so `find({ id })` will **not** return an internal (`publish: false`) or inactive key — you get a not-found error for a key that is plainly sitting in the vault. `findById()` bypasses the filter entirely. **Resolving a key from a `kid` you read off a token? Use `findById()`.**
 
