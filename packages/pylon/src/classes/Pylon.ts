@@ -35,6 +35,17 @@ import { PylonIo } from "./PylonIo.js";
 // private keys and webhook client secrets alike (the webhook key does not
 // rotate, so it needs no separate purpose). A deployment can still override
 // `kryptos.encryption` / `webhook.encryption` for blast-radius separation.
+//
+// ⚠ It states no `publish: false`, and must not start to. A KEK is unpublished
+// — but saying so HERE would be a second copy of a policy amphora already owns.
+// This selector is only ever STAGED onto an `@Encrypted` column, so the one
+// resolver it reaches is proteus's `resolveEncryptionKey`, which lays amphora's
+// `UNPUBLISHED_DEFAULT` under the caller's condition before it queries the
+// vault; `{ purpose: "pylon:kek" }` therefore reaches the internal key on its
+// own. Pylon's own cookie/session resolvers lay down the same default, so there
+// is no second effective query to reconcile. Spelling `publish: false` per
+// consumer was the workaround that shared default replaced, and two statements
+// of one policy is one edit away from disagreeing.
 const DEFAULT_KEK: PylonEncKey = { condition: { purpose: "pylon:kek" } };
 
 export class Pylon<
