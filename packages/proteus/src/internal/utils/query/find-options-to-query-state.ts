@@ -8,6 +8,7 @@ import { guardFindSortKey } from "./guard-find-sort-key.js";
 import { mergeSystemFilterOverrides } from "./merge-system-filter-overrides.js";
 import { resolveFilters } from "./resolve-filters.js";
 import { resolveIncludeStrategy } from "./resolve-include-strategy.js";
+import { withRelationKeys } from "./with-relation-keys.js";
 
 export const findOptionsToQueryState = <E extends IEntity>(
   criteria: Condition<E>,
@@ -73,7 +74,9 @@ export const findOptionsToQueryState = <E extends IEntity>(
     skip,
     take,
     includes,
-    selections: (options.select as Array<keyof E>) ?? null,
+    selections: metadata
+      ? withRelationKeys((options.select as Array<keyof E>) ?? null, includes, metadata)
+      : ((options.select as Array<keyof E>) ?? null),
     withDeleted: options.withDeleted ?? false,
     distinct: options.distinct ?? false,
     lock: options.lock ?? null,

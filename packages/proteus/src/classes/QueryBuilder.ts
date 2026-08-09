@@ -16,6 +16,7 @@ import type {
   WindowSpec,
 } from "../internal/types/query.js";
 import { resolveIncludeStrategy } from "../internal/utils/query/resolve-include-strategy.js";
+import { withRelationKeys } from "../internal/utils/query/with-relation-keys.js";
 import { guardEncryptedCriteria } from "../internal/utils/repository/repository-guards.js";
 
 /**
@@ -131,6 +132,15 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
       select: options?.select ?? null,
       where: options?.where ?? null,
     });
+
+    // A narrowed root projection has to carry the key its relations are matched
+    // by, whichever order `select` and `include` were called in.
+    this.state.selections = withRelationKeys(
+      this.state.selections,
+      this.state.includes,
+      this.metadata,
+    );
+
     return this;
   }
 
@@ -152,7 +162,7 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
       }
     }
 
-    this.state.selections = fields;
+    this.state.selections = withRelationKeys(fields, this.state.includes, this.metadata);
     return this;
   }
 
