@@ -16,12 +16,7 @@ import {
   VERIFY_FLOOR,
 } from "@lindorm/amphora";
 import { isString } from "@lindorm/is";
-import type {
-  IKryptos,
-  KryptosEncAlgorithm,
-  KryptosEncryption,
-  KryptosSigAlgorithm,
-} from "@lindorm/kryptos";
+import type { IKryptos, KryptosEncAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
 import type {
@@ -46,7 +41,7 @@ import {
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import type { OmitMode } from "../internal/utils/apply-omit.js";
 import { registerProfile as registerProfileFn } from "../internal/profiles/registry.js";
-import type { AegisDeps } from "../internal/utils/aegis-deps.js";
+import type { AegisDeps, ResolveVerifyKeyOptions } from "../internal/utils/aegis-deps.js";
 import { decryptToken } from "../internal/utils/decrypt-token.js";
 import { encryptToken } from "../internal/utils/encrypt-token.js";
 import { createJwtValidate } from "../internal/utils/jwt-validate.js";
@@ -147,6 +142,22 @@ export class Aegis implements IAegis {
     // a verify-only deployment that declares none.
     this.issuer = options.issuer ?? this.amphora.internal?.issuer ?? null;
 
+    // The two issuer strings are configured SEPARATELY, and since read-side key
+    // selection is scoped by issuer they now have to agree exactly. Amphora
+    // stamps every key we add with ITS issuer; a token we mint carries THIS one.
+    // A difference that used to be invisible — a trailing slash, a hostname
+    // variant — becomes a hard verify failure on our own tokens, and the error
+    // it produces ("no such key under that issuer") does not point at the cause.
+    // So say it once, loudly, at construction.
+    const amphoraIssuer = this.amphora.internal?.issuer;
+
+    if (options.issuer && amphoraIssuer && options.issuer !== amphoraIssuer) {
+      this.logger.warn(
+        "Aegis issuer differs from the amphora issuer; verification of self-issued tokens will fail",
+        { aegis: options.issuer, amphora: amphoraIssuer },
+      );
+    }
+
     this.certBindingMode = options.certBindingMode ?? "strict";
     // Default TRUE: a cert-bound token carries `x5t` for older clients unless the
     // deployment (or a per-call option) opts out. Write-side emission gate only.
@@ -188,8 +199,7 @@ export class Aegis implements IAegis {
       partyRecipient: this.partyRecipient,
       logger: this.logger,
       resolveSignKey: (options, profile) => this.resolveSignKey(options, profile),
-      resolveVerifyKey: (id, algorithm, verify) =>
-        this.resolveVerifyKey(id, algorithm, verify),
+      resolveVerifyKey: (options) => this.resolveVerifyKey(options),
       resolveEncryptKey: (encrypt) => this.resolveEncryptKey(encrypt),
       resolveDecryptKey: (id, algorithm, decrypt) =>
         this.resolveDecryptKey(id, algorithm, decrypt),
@@ -649,17 +659,22 @@ export class Aegis implements IAegis {
   // not steer key selection by its own `alg` (RFC 8725 §3.1). The `selector`
   // below is dead for resolution; it stays only to record the `alg` the token
   // declared.
-  private resolveVerifyKey(
-    id: string | undefined,
-    algorithm: KryptosSigAlgorithm | undefined,
-    verify?: AegisVerifyKey,
-  ): Promise<IKryptos> {
+  private resolveVerifyKey(options: ResolveVerifyKeyOptions): Promise<IKryptos> {
     return resolveKey({
-      id,
+      id: options.id,
+      // A `kid` is unique only PER ISSUER, so a bare kid lets ANY registered
+      // issuer's key answer for a token claiming to come from another. Narrowing
+      // to the issuer the token names (or the one the verifier expects) is what
+      // stops a peer's colliding kid from verifying a forged `iss`.
+      issuer: options.issuer,
       amphora: this.amphora,
-      floor: applyKeyFloor(VERIFY_FLOOR, this.verifyKey.condition, verify?.condition),
-      selector: { algorithm },
-      kryptos: verify?.kryptos ?? this.verifyKey.kryptos,
+      floor: applyKeyFloor(
+        VERIFY_FLOOR,
+        this.verifyKey.condition,
+        options.verify?.condition,
+      ),
+      selector: { algorithm: options.algorithm },
+      kryptos: options.verify?.kryptos ?? this.verifyKey.kryptos,
       logger: this.logger,
       operation: "verify",
     });

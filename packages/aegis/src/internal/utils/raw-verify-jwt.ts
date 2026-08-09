@@ -1,4 +1,5 @@
 import type { Condition } from "@lindorm/match";
+import { isString } from "@lindorm/is";
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { JwtKit } from "../../classes/JwtKit.js";
@@ -37,11 +38,16 @@ export const rawVerifyJwt = async <C extends Dict = Dict>({
 
   const decode = JwtKit.decode(jwt);
 
-  const kryptos = await deps.resolveVerifyKey(
-    decode.header.kid,
-    decode.header.alg as KryptosSigAlgorithm,
-    key,
-  );
+  // Scoped by the token's own UNVERIFIED `iss` — the raw namespace has no
+  // verifier-declared issuer to prefer (that is the profiled surface). A kid is
+  // unique only per issuer, so without this any registered issuer's colliding
+  // key could answer for a forged `iss`. Narrowing only, no fallback.
+  const kryptos = await deps.resolveVerifyKey({
+    id: decode.header.kid,
+    algorithm: decode.header.alg as KryptosSigAlgorithm,
+    issuer: isString(decode.payload.iss) ? decode.payload.iss : undefined,
+    verify: key,
+  });
 
   return new JwtKit({
     certBindingMode: deps.certBindingMode,

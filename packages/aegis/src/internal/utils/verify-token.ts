@@ -37,6 +37,7 @@ export const verifyToken = async <C extends Dict = Dict>({
   options,
   deps,
   encrypted = false,
+  issuer,
 }: {
   token: string;
   assert?: DomainAssert;
@@ -45,12 +46,19 @@ export const verifyToken = async <C extends Dict = Dict>({
   // True once an encrypting outer (jwe/cwe) has been peeled: the inner token was
   // delivered encrypted, so sensitive claims (OIDC Core §13.3) may surface.
   encrypted?: boolean;
+  // The issuer the VERIFIER expects, when it declared one (profiled verify).
+  // Threaded to every claims-bearing branch to SCOPE its key lookup; it survives
+  // the JWE/CWE peel, so the signed inner token is scoped too.
+  issuer?: string;
 }): Promise<VerifiedToken<C>> => {
   if (JwtKit.isJwt(token)) {
-    return verifyJwtToken<C>({ token, assert, options, deps, encrypted });
+    return verifyJwtToken<C>({ token, assert, options, deps, encrypted, issuer });
   }
 
   if (JweKit.isJwe(token)) {
+    // The JWE outer resolves its recipient key UNSCOPED — the claims are behind
+    // that key, so no `iss` is readable yet. The signed inner token below IS
+    // scoped. See the unscoped-paths note in `resolve-key.ts`.
     const decrypt = await rawDecryptJwe<TokenContent>({ jwe: token, deps });
 
     // verify = authenticity: the decrypted inner must be a SIGNED token, which is
@@ -76,6 +84,7 @@ export const verifyToken = async <C extends Dict = Dict>({
       options,
       deps,
       encrypted: true,
+      issuer,
     });
     // The OUTER wire is a JWE; the domain claims come from the verified signed
     // inner token, whose format is recorded under `inner`.
@@ -132,6 +141,7 @@ export const verifyToken = async <C extends Dict = Dict>({
         verifyIssuedAt: options?.verifyIssuedAt,
         verifyAuthTime: options?.verifyAuthTime,
         deps,
+        issuer,
       });
       if (options || assert) {
         validateCwtClaims(

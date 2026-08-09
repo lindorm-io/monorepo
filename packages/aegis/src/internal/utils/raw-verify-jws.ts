@@ -23,11 +23,14 @@ export const rawVerifyJws = async <T extends TokenContent = Buffer>({
 }): Promise<VerifiedUnstructuredToken<T, string>> => {
   const decode = JwsKit.decode(jws);
 
-  const kryptos = await deps.resolveVerifyKey(
-    decode.header.kid,
-    decode.header.alg as KryptosSigAlgorithm,
-    options.key,
-  );
+  // UNSCOPED by construction: a JWS is opaque — its payload is arbitrary bytes
+  // with no claims layer, so there is no `iss` to narrow the kid lookup by. Not
+  // an oversight; see the unscoped-paths note in `resolve-key.ts`.
+  const kryptos = await deps.resolveVerifyKey({
+    id: decode.header.kid,
+    algorithm: decode.header.alg as KryptosSigAlgorithm,
+    verify: options.key,
+  });
 
   return new JwsKit({
     certBindingMode: deps.certBindingMode,

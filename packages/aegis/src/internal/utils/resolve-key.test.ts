@@ -219,6 +219,131 @@ describe("resolveKey", () => {
     });
   });
 
+  // The SCOPE is the third job a condition-shaped input does — and the only one
+  // that is vetted before use, because only a URI can be a vault key's issuer.
+  describe("the issuer scope", () => {
+    test("a matching URI issuer resolves the key", async () => {
+      amphora.add(TEST_OCT_KEY_SIG);
+
+      const kryptos = await resolveKey({
+        amphora,
+        floor: VERIFY_FLOOR,
+        id: TEST_OCT_KEY_SIG.id,
+        issuer: ISSUER,
+        logger,
+        operation: "verify",
+      });
+
+      expect(kryptos.id).toBe(TEST_OCT_KEY_SIG.id);
+    });
+
+    test("a non-matching URI issuer is a MISS, never an unscoped retry", async () => {
+      amphora.add(TEST_OCT_KEY_SIG);
+
+      const error = await resolveKey({
+        amphora,
+        floor: VERIFY_FLOOR,
+        id: TEST_OCT_KEY_SIG.id,
+        issuer: "https://someone-else.lindorm.io/",
+        logger,
+        operation: "verify",
+      }).catch((err: Error) => err);
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("verify_key_not_found");
+      expect((error as AegisError).data).toMatchObject({
+        issuer: "https://someone-else.lindorm.io/",
+      });
+    });
+
+    // A bare identifier is a PARTY name, not a key-registration scope — amphora
+    // files keys only under URIs, so scoping by one would empty the candidate
+    // set rather than narrow it. RFC 7523 client assertions and the `delegation`
+    // profile both carry an `iss` of exactly this shape.
+    test("a NON-URI issuer is not a scope at all and is dropped", async () => {
+      amphora.add(TEST_OCT_KEY_SIG);
+
+      const kryptos = await resolveKey({
+        amphora,
+        floor: VERIFY_FLOOR,
+        id: TEST_OCT_KEY_SIG.id,
+        issuer: "client-1",
+        logger,
+        operation: "verify",
+      });
+
+      expect(kryptos.id).toBe(TEST_OCT_KEY_SIG.id);
+    });
+
+    test("a URN issuer IS a URI, so it scopes", async () => {
+      const urn = "urn:lindorm:test:client";
+      amphora.add(KryptosKit.clone(TEST_OCT_KEY_SIG, { issuer: urn }));
+
+      await expect(
+        resolveKey({
+          amphora,
+          floor: VERIFY_FLOOR,
+          id: TEST_OCT_KEY_SIG.id,
+          issuer: urn,
+          logger,
+          operation: "verify",
+        }),
+      ).resolves.toMatchObject({ id: TEST_OCT_KEY_SIG.id });
+
+      const error = await resolveKey({
+        amphora,
+        floor: VERIFY_FLOOR,
+        id: TEST_OCT_KEY_SIG.id,
+        issuer: "urn:lindorm:test:other",
+        logger,
+        operation: "verify",
+      }).catch((err: Error) => err);
+
+      expect((error as AegisError).code).toBe("verify_key_not_found");
+    });
+
+    // The scope narrows WHICH key an id may name. It does not reintroduce the
+    // time filter `findById` exists to bypass.
+    test("a scoped lookup still returns an EXPIRED key", async () => {
+      const expiring = KryptosKit.clone(TEST_OCT_KEY_SIG, {
+        expiresAt: new Date("2024-01-01T09:00:00.000Z"),
+      });
+      amphora.add(expiring);
+
+      MockDate.set(new Date("2024-01-01T10:00:00.000Z"));
+
+      expect(expiring.isExpired).toBe(true);
+
+      await expect(
+        resolveKey({
+          amphora,
+          floor: VERIFY_FLOOR,
+          id: expiring.id,
+          issuer: ISSUER,
+          logger,
+          operation: "verify",
+        }),
+      ).resolves.toMatchObject({ id: expiring.id });
+
+      MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
+    });
+
+    // An injected key never came from the vault, so no vault-shaped scope can
+    // apply to it — the same reason the SELECTOR does not.
+    test("an injected key is unaffected by the scope", async () => {
+      const kryptos = await resolveKey({
+        amphora,
+        floor: VERIFY_FLOOR,
+        kryptos: CLIENT_SECRET,
+        issuer: "https://nobody.lindorm.io/",
+        logger,
+        operation: "verify",
+      });
+
+      expect(kryptos).toBe(CLIENT_SECRET);
+    });
+  });
+
   // Read selection is kid-driven; nothing searches. A kid-less artifact would
   // otherwise fall through to `find(query)`, whose read-side selector is the
   // token's OWN declared `alg` — an undocumented fallback the design forbids

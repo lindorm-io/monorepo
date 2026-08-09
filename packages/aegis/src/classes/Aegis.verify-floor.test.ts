@@ -84,7 +84,14 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     ).rejects.toThrow(AegisDomainError);
   });
 
-  test("rejects a wrong issuer", async () => {
+  // A pinned issuer now bites EARLIER than the floor: it scopes the key lookup,
+  // so a token whose `kid` is not registered under the pinned issuer is refused
+  // before its signature is ever checked. Same verdict, sharper reason — and it
+  // is the whole point of the scope (a colliding kid from another registered
+  // issuer never reaches the signature). The floor's `jwt_issuer_mismatch` still
+  // owns the case where the key IS under the pinned issuer but the `iss` claim
+  // disagrees — covered by the per-token-issuer tests below.
+  test("rejects a wrong issuer, at key resolution", async () => {
     const { token } = await mintAccessToken();
 
     await expect(
@@ -92,7 +99,36 @@ describe("Aegis profiled verify floor (§4.4)", () => {
         audience: RESOURCE,
         issuer: "https://not-the-issuer/",
       }),
-    ).rejects.toThrow(AegisDomainError);
+    ).rejects.toThrow(
+      expect.objectContaining({
+        code: "verify_key_not_found",
+        data: expect.objectContaining({ issuer: "https://not-the-issuer/" }),
+      }),
+    );
+  });
+
+  // The floor's issuer check is NOT dead: when the key IS registered under the
+  // pinned issuer, resolution succeeds and the claim comparison is what rejects.
+  test("rejects a token whose iss claim disagrees with a resolvable pinned issuer", async () => {
+    const token = craftToken(
+      { ...wireHeader, typ: "application/at+jwt" },
+      {
+        iss: "https://someone-else.lindorm.io/",
+        sub: "user-1",
+        aud: [RESOURCE],
+        iat: 1704096000,
+        exp: 1704096120,
+        jti: "token-1",
+        client_id: "client-1",
+      },
+    );
+
+    await expect(
+      aegis.verify("access_token", token, undefined, {
+        audience: RESOURCE,
+        issuer: ISSUER,
+      }),
+    ).rejects.toThrow(expect.objectContaining({ code: "jwt_issuer_mismatch" }));
   });
 
   test("rejects a typ mismatch (id_token verified as access_token)", async () => {

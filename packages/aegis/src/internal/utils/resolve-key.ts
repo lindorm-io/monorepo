@@ -1,5 +1,6 @@
 import { Matcher } from "@lindorm/match";
 import { applyKeyFloor, type AmphoraCondition, type IAmphora } from "@lindorm/amphora";
+import { isUri } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { AegisKeyError } from "../../errors/index.js";
@@ -39,13 +40,50 @@ export type ResolveKeyOptions = {
    * A token's `kid`. Resolved with `findById`, which is deliberately UNFILTERED:
    * a token signed by a since-expired key must still verify. (An expired key
    * must never SIGN, which is why the sign side pins via the selector instead —
-   * that path runs through the active-only filter.)
+   * that path runs through the active-only filter.) The {@link issuer} scope
+   * below narrows WHICH key that id may name; it does not reintroduce a time or
+   * publish filter, so the expired-key rationale is untouched.
    *
    * An injected `kryptos` takes the vault out of the picture — but it does NOT
    * override an `id`: on the read side the artifact names the one key that can
    * read it, so a supplied key that names another is a caller error (below).
    */
   id?: string;
+
+  /**
+   * SCOPE. The issuer the {@link id} belongs to — a `kid` is unique only PER
+   * ISSUER, so without one an id from any registered issuer can answer.
+   *
+   * It NARROWS, never widens: it restricts the candidate set to that issuer's
+   * keys and there is NO fallback — an id the named issuer does not hold is a
+   * miss, never a retry unscoped. That is why the value may come from the
+   * artifact's own UNVERIFIED `iss`: set restriction can only produce a miss,
+   * never a key the unscoped lookup would not also have considered. It relaxes
+   * no floor; the floor is checked on whatever key comes back, exactly as before.
+   *
+   * ⚠ Falling back would be strictly WORSE than not scoping at all: an attacker
+   * would no longer need an id COLLISION, only a `kid` the issuer it claims to
+   * be does not hold.
+   *
+   * ⚠ A scope is used ONLY when it is a URI (a URL with an authority, or a URN).
+   * That is not a heuristic — it is amphora's own invariant: an internal issuer
+   * is URL-validated at construction (`invalid_issuer_url`) and an external one
+   * must be a URI (`external_issuer_not_uri`), so NO vault key can ever carry a
+   * bare identifier as its issuer. A non-URI `iss` names a PARTY, not a
+   * key-registration scope — an RFC 7523 client assertion's `iss` is the
+   * `client_id`, and the `delegation` profile declares `issuer: "per-token"` for
+   * exactly that reason. Scoping by one would not narrow the candidate set, it
+   * would empty it: every such verify would fail, with no attacker denied
+   * anything (a forgery has to name a REGISTERED issuer to be believed, and
+   * those are URIs). A consumer whose client keys ARE vault residents files them
+   * under a URI issuer (a URN is enough) and gets scoping; one that does not
+   * supplies the key outright via the per-call `key.kryptos`, which bypasses the
+   * vault and this scope entirely.
+   *
+   * Meaningless for a vault QUERY (`find`) — the write side selects by policy,
+   * not by an artifact's claim — so it is applied to the `id` lookup alone.
+   */
+  issuer?: string;
 
   /** The profile in play, named in the error when the policy cannot be satisfied. */
   profile?: string;
@@ -57,13 +95,37 @@ export type ResolveKeyOptions = {
  *
  *   FLOOR    — policy. Checked on the key, whatever its provenance.
  *   SELECTOR — a vault query. Checked on nothing; it only ever selects.
+ *   SCOPE    — the issuer an `id` belongs to. Narrows the id lookup, nothing else.
  *
  * There is NO preference, NO ranking and NO fallback: a key either satisfies
  * the policy or it does not, and a miss is a throw. Falling back to a key the
- * policy forbids is how an unverifiable token gets minted.
+ * policy forbids is how an unverifiable token gets minted — and falling back
+ * from a scoped id lookup to an unscoped one is how an issuer answers for a
+ * `kid` it does not hold.
+ *
+ * --- Why FOUR read paths resolve their key UNSCOPED (they are not oversights) ---
+ *
+ * An issuer scope has to come from somewhere, and these four artifacts have no
+ * claims to read it off — by construction, not by omission:
+ *
+ *   - JWS  and its COSE twin CWS  — OPAQUE. The payload is arbitrary bytes with
+ *     no claims layer at all; there is no `iss` in an unstructured artifact.
+ *   - JWE  and its COSE twin CWE  — ENCRYPTED. The claims sit behind the very
+ *     key this call is resolving, so nothing readable exists before it succeeds.
+ *     A JWE/CWE that wraps a SIGNED inner token is covered where it counts: the
+ *     inner JWT/CWT re-verifies through the scoped path.
+ *
+ * The claims-bearing artifacts — JWT and its COSE twins CWT/CWM — all carry a
+ * cleartext, pre-verification `iss`, and all of them scope.
  */
 export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> => {
   const { amphora, floor, id, logger, operation, profile, selector } = options;
+
+  // The ONE place a scope is vetted, so no call site has to remember: only a URI
+  // can be a vault key's issuer (see `ResolveKeyOptions.issuer`), so a bare
+  // identifier is a party name, not a scope, and is dropped rather than turned
+  // into a guaranteed miss.
+  const issuer = isUri(options.issuer) ? options.issuer : undefined;
 
   const copy = describeKeyOperation(operation);
 
@@ -123,10 +185,10 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
   const kryptos =
     options.kryptos ??
     (id
-      ? await amphora.findById(id).catch((error: Error) => {
+      ? await amphora.findById(id, issuer).catch((error: Error) => {
           throw new AegisKeyError(copy.notFound.message, {
             code: `${operation}_key_not_found`,
-            data: { kid: id, profile },
+            data: { kid: id, issuer, profile },
             debug: { error: error.message },
             title: copy.notFound.title,
             details: copy.notFound.details,

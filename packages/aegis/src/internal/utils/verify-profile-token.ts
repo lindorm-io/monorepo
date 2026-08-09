@@ -40,6 +40,16 @@ export const verifyProfileToken = async ({
 
   const profile = resolveProfile(name);
 
+  // Computed HERE, above the verify call, because it is needed twice and the
+  // earlier use is the load-bearing one: it SCOPES the key lookup to the issuer
+  // this verifier will accept, so a colliding `kid` from another registered
+  // issuer never gets to produce a valid signature. The floor's `iss` check
+  // below is the second use — it compares the claim, which only means anything
+  // once the right key checked the signature.
+  const expectedIssuer =
+    options.issuer ??
+    (profile.issuer === "platform" ? (deps.issuer ?? undefined) : undefined);
+
   // The typ is enforced by enforceVerifyFloor against profile.typ, so we do NOT
   // also pass tokenType to the standard verify (which would compute its own typ
   // expectation and could disagree). `audience`/`issuer` are consumed by the
@@ -57,17 +67,20 @@ export const verifyProfileToken = async ({
   // client assertion reaches the floor (which owns the profile's typ presence
   // policy). Direct jwt.verify callers keep the strict default.
   const verified = JweKit.isJwe(token)
-    ? await verifyToken({ token, assert, options: { ...rest, expPresence }, deps })
+    ? await verifyToken({
+        token,
+        assert,
+        options: { ...rest, expPresence },
+        deps,
+        issuer: expectedIssuer,
+      })
     : await verifyJwtToken({
         token,
         assert,
         options: { ...rest, typPresence: "optional", expPresence },
         deps,
+        issuer: expectedIssuer,
       });
-
-  const expectedIssuer =
-    options.issuer ??
-    (profile.issuer === "platform" ? (deps.issuer ?? undefined) : undefined);
 
   // DOMAIN-keyed floor payload from the RAW wire claims (`verified.wire.payload`),
   // not `verified.claims`: extractDomainClaims reports true wire presence and

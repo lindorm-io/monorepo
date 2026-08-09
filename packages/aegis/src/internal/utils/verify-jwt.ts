@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
@@ -33,6 +34,7 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   options = {},
   deps,
   encrypted = false,
+  issuer,
 }: {
   token: string;
   assert?: DomainAssert;
@@ -41,14 +43,25 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   // Whether the JWT was the inner token of an ENCRYPTED outer (jwe). Drives the
   // read-side sensitive-claim gate (OIDC Core §13.3).
   encrypted?: boolean;
+  // The issuer the VERIFIER expects, when it declared one (profiled verify).
+  // Takes precedence over the token's own `iss` for scoping the key lookup — a
+  // verifier that has already decided which issuer it will accept must not have
+  // that decision re-opened by the artifact.
+  issuer?: string;
 }): Promise<VerifiedToken<C>> => {
   const decode = JwtKit.decode(token);
 
-  const kryptos = await deps.resolveVerifyKey(
-    decode.header.kid,
-    decode.header.alg as KryptosSigAlgorithm,
-    options.key,
-  );
+  // Verifier-declared issuer wins; else the token's own UNVERIFIED `iss`; else
+  // unscoped. The unverified value is safe here because the scope only ever
+  // NARROWS the candidate keys — a lie produces a miss, never a wider search
+  // (`ResolveKeyOptions.issuer`). The `iss` claim itself is still checked, and
+  // only ever after the signature.
+  const kryptos = await deps.resolveVerifyKey({
+    id: decode.header.kid,
+    algorithm: decode.header.alg as KryptosSigAlgorithm,
+    issuer: issuer ?? (isString(decode.payload.iss) ? decode.payload.iss : undefined),
+    verify: options.key,
+  });
 
   const kit = new JwtKit({
     certBindingMode: deps.certBindingMode,

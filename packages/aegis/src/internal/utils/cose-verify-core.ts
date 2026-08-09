@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import {
   decodeEncryptedCoseKid,
   decryptCose,
@@ -22,6 +23,7 @@ export const coseVerifyCore = async ({
   verifyIssuedAt,
   verifyAuthTime,
   deps,
+  issuer,
 }: {
   input: Buffer;
   /** Override "now" for the in-kit temporal range check (R10). Per-call only. */
@@ -37,6 +39,11 @@ export const coseVerifyCore = async ({
   /** Range-check `auth_time` (default true). */
   verifyAuthTime?: boolean;
   deps: AegisDeps;
+  /**
+   * The issuer the VERIFIER expects, when it declared one (profiled verify).
+   * Takes precedence over the CWT's own `iss` when scoping the key lookup.
+   */
+  issuer?: string;
 }) => {
   let bytes = input;
 
@@ -46,6 +53,10 @@ export const coseVerifyCore = async ({
   const encrypted = isEncryptedCose(bytes);
 
   if (encrypted) {
+    // The CWE (COSE_Encrypt0) outer resolves UNSCOPED — its claims sit behind
+    // the very key being resolved, exactly as for the outer JWE. The signed
+    // inner CWT/CWM below IS scoped. See the unscoped-paths note in
+    // `resolve-key.ts`.
     const encKryptos = await deps.resolveDecryptKey(
       decodeEncryptedCoseKid(bytes),
       undefined,
@@ -54,7 +65,15 @@ export const coseVerifyCore = async ({
   }
 
   const decoded = decodeCwt(bytes);
-  const kryptos = await deps.resolveVerifyKey(decoded.kid, undefined);
+
+  // Verifier-declared issuer wins; else the CWT's own UNVERIFIED `iss` (a
+  // COSE_Sign1/Mac0 payload is cleartext CBOR); else unscoped. Narrowing only —
+  // the same contract the JOSE paths use.
+  const kryptos = await deps.resolveVerifyKey({
+    id: decoded.kid,
+    algorithm: undefined,
+    issuer: issuer ?? (isString(decoded.payload?.iss) ? decoded.payload.iss : undefined),
+  });
   const { claims, wire, typ } = verifyCose({
     kryptos,
     logger: deps.logger,

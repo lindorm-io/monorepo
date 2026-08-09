@@ -1,4 +1,5 @@
 import type { Condition } from "@lindorm/match";
+import { isNumber, isObject, isString } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
@@ -57,6 +58,28 @@ export type CwtDecoded = {
   kid: string | undefined;
   algorithm: string | undefined;
   typ: string | undefined;
+  /**
+   * ⚠ UNVERIFIED cleartext WIRE claims — the COSE-name-keyed dict, exactly what
+   * `decodeCwtWire`/`verifyCwt` produce, decoded with the same codec.
+   *
+   * A CWT is a COSE_Sign1 and a CWM a COSE_Mac0, so the payload is cleartext
+   * CBOR (a signature/MAC authenticates, it does not conceal) — the COSE twin of
+   * a JWS/JWT payload being cleartext base64url. That is why the JOSE seam can
+   * read `JwtKit.decode(token).payload` before it holds a key, and why this can
+   * too. The CWE (COSE_Encrypt0) twin of a JWE has no such payload and is
+   * decoded elsewhere (`decodeEncryptedCoseKid`), which is the right shape.
+   *
+   * ⚠⚠ NOTHING has authenticated these claims. They are safe for NARROWING a key
+   * lookup — restricting the candidate set can only ever produce a miss — and
+   * for nothing else. Never treat a value read here as an assertion; the
+   * authenticated claims are the verify result's.
+   *
+   * `undefined` when there are no claims to read: a DETACHED (nil) payload,
+   * which is legal COSE, or a payload that is not a CBOR claims map at all —
+   * this same decode serves the OPAQUE CWS path, whose payload is arbitrary
+   * bytes.
+   */
+  payload: CwtClaimsWire | undefined;
 };
 
 // A CWT may be the bare COSE object or wrapped in the CWT tag (61). Strip it.
@@ -282,8 +305,36 @@ export const decodeCwtWire = <C extends Dict = Dict>(
 };
 
 /**
- * Decode a CWT WITHOUT verifying — exposes the kid/alg/typ from the headers so
- * the caller can resolve the verification key before checking the signature.
+ * Best-effort decode of the CWT payload byte string into the WIRE claim dict,
+ * for the pre-verification {@link CwtDecoded}. It NEVER throws — every caller of
+ * `decodeCwt` is resolving a key, not reading claims, and two legitimate inputs
+ * carry no claims at all: a DETACHED (nil) payload, which is legal COSE, and an
+ * OPAQUE CWS payload, which is arbitrary bytes rather than a CBOR claims map. So
+ * a payload this cannot read is reported as "no claims", not as a malformed
+ * token — the structural verdict belongs to `verifyCwt`/`decodeCwtWire`, which
+ * decode the payload in their own right.
+ */
+const decodeUnverifiedClaims = (
+  payloadBstr: Uint8Array | null | undefined,
+): CwtClaimsWire | undefined => {
+  if (payloadBstr == null) return undefined;
+
+  try {
+    const decoded = decodeCbor<unknown>(Buffer.from(payloadBstr), { preferMap: false });
+
+    if (!(decoded instanceof Map) && !isObject(decoded)) return undefined;
+
+    return decodeCwtClaims(decoded) as CwtClaimsWire;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Decode a CWT WITHOUT verifying — the pre-verification twin of the JOSE
+ * `JwtKit.decode`, exposing what a caller needs before it holds a key: the
+ * kid/alg/typ off the COSE headers, and the cleartext WIRE claims (`payload`).
+ * Both are UNVERIFIED; see {@link CwtDecoded}.
  */
 export const decodeCwt = (token: Buffer): CwtDecoded => {
   const cose = unwrapCwt(decodeCbor(token));
@@ -297,7 +348,11 @@ export const decodeCwt = (token: Buffer): CwtDecoded => {
     });
   }
 
-  const [protectedBstr, unprotected] = contents as [Uint8Array, Map<number, unknown>];
+  const [protectedBstr, unprotected, payloadBstr] = contents as [
+    Uint8Array,
+    Map<number, unknown>,
+    Uint8Array | null | undefined,
+  ];
   const protectedHeader = decodeProtectedHeader(protectedBstr);
 
   const kidValue = unprotected.get(coseByJose("kid"));
@@ -308,7 +363,8 @@ export const decodeCwt = (token: Buffer): CwtDecoded => {
     cose,
     kid:
       kidValue instanceof Uint8Array ? Buffer.from(kidValue).toString("utf8") : undefined,
-    algorithm: typeof algLabel === "number" ? coseLabelToAlg(algLabel) : undefined,
-    typ: typeof typ === "string" ? typ : undefined,
+    algorithm: isNumber(algLabel) ? coseLabelToAlg(algLabel) : undefined,
+    typ: isString(typ) ? typ : undefined,
+    payload: decodeUnverifiedClaims(payloadBstr),
   };
 };

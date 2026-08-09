@@ -1,4 +1,5 @@
 import type { Condition } from "@lindorm/match";
+import { isString } from "@lindorm/is";
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { CwmKit } from "../../classes/CwmKit.js";
@@ -39,11 +40,14 @@ export const rawVerifyCwm = async <C extends Dict = Dict>({
   const bytes = Buffer.from(token, "base64url");
   const decoded = decodeCwt(bytes);
 
-  const kryptos = await deps.resolveVerifyKey(
-    decoded.kid,
-    decoded.algorithm as KryptosSigAlgorithm,
-    key,
-  );
+  // Scoped by the token's own UNVERIFIED `iss`, as in `rawVerifyCwt` — a
+  // COSE_Mac0 payload is cleartext CBOR too. Narrowing only, no fallback.
+  const kryptos = await deps.resolveVerifyKey({
+    id: decoded.kid,
+    algorithm: decoded.algorithm as KryptosSigAlgorithm,
+    issuer: isString(decoded.payload?.iss) ? decoded.payload.iss : undefined,
+    verify: key,
+  });
 
   return new CwmKit({
     kryptos,

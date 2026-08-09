@@ -59,6 +59,7 @@ Key selection is one mechanism — a **condition** — doing two strictly separa
 - **Selector** — a vault query. "Which of _my_ keys." The deployment default merged
   with the per-call condition (shallow; the caller's key wins). It is meaningless for
   a key that never came from the vault, so it is **not** applied to a supplied key.
+- **Scope** — the issuer a `kid` belongs to. Read-side only; see below.
 
 The four floors are deliberately asymmetric:
 
@@ -77,6 +78,45 @@ operations for both halves and can never tell them apart.
 There is **no ranking and no fallback**. A key satisfies the policy or it does not,
 and a miss throws — falling back to a key the policy forbids is how an unverifiable
 token gets minted.
+
+#### Verification keys are scoped to an issuer
+
+A `kid` is unique only **per issuer**, so resolving one across the whole vault lets any
+registered issuer's key answer for a token claiming to come from another. Every read
+path that has an issuer to work with therefore **narrows** the lookup to it:
+
+| source, in order of precedence | where it comes from                                                                               |
+| ------------------------------ | ------------------------------------------------------------------------------------------------- |
+| the verifier's expected issuer | `options.issuer` on a profiled verify, else the deployment issuer for a `platform`-issuer profile |
+| the artifact's own `iss`       | read off the unverified decode (JWT, CWT, CWM)                                                    |
+| _nothing_ — unscoped           | the artifact carries no `iss`                                                                     |
+
+The scope only ever **narrows**: it restricts which vault keys may answer, relaxes no
+floor, and applies no time or publish filter — a token signed by a since-expired key
+still verifies. That is what makes it safe to take from an unverified `iss`: a lie can
+only produce a miss. And there is **no fallback** — a `kid` the named issuer does not
+hold is a hard failure, never an unscoped retry. Falling back would be worse than not
+scoping at all, since an attacker would then need no id collision.
+
+A scope is used only when it is a **URI** (a URL with an authority, or a URN), because
+that is the only thing amphora files keys under. A bare identifier names a party, not a
+key-registration scope — an RFC 7523 client assertion's `iss` is the `client_id`, and
+the `delegation` profile declares `issuer: "per-token"` for exactly that reason — so
+scoping by one would not narrow the candidate set, it would empty it. Register client
+keys under a URI issuer (a URN is enough) to get scoping, or supply the key outright
+via the per-call `key.kryptos`, which bypasses the vault entirely.
+
+**Four read paths stay unscoped, by construction.** A **JWS** and its COSE twin **CWS**
+are opaque — arbitrary payload bytes, no claims layer, no `iss` to read. A **JWE** and
+its COSE twin **CWE** are encrypted — the claims sit behind the very key being resolved.
+A JWE/CWE wrapping a signed inner token is still covered: the inner JWT/CWT re-verifies
+through the scoped path.
+
+⚠ The `issuer` on `AegisSettings` and amphora's `internal.issuer` must now agree
+**exactly** — a trailing-slash or hostname difference that used to be invisible becomes
+a failure to resolve your own signing key. Aegis logs a `warn` at construction when the
+two are both set and differ. Declaring the issuer on amphora alone (aegis inherits it)
+removes the possibility.
 
 Every selector is amphora's `AmphoraKeySelector` — `{ kryptos?, condition? }`, the one
 key-selection vocabulary across the toolkit — narrowed to the attributes aegis permits.
@@ -709,6 +749,7 @@ import {
 ## Security notes
 
 - Signature/decryption keys are always sourced from the supplied `IAmphora`. The `jku`, `jwk`, `x5u`, `x5c`, `x5t`, and `x5t#S256` JOSE header parameters are never trusted as key sources during verification — only `kid` is used as a lookup key into Amphora. The COSE verify path is the same: the signing/encryption key is resolved only by the COSE `kid` (unprotected header, label 4), never from anything embedded in the token.
+- A `kid` lookup is scoped to the issuer the verifier expects, or the one the artifact claims — see [Verification keys are scoped to an issuer](#verification-keys-are-scoped-to-an-issuer). Without it, a registered peer publishing a colliding `kid` could sign a token claiming another issuer's `iss` and have it verify.
 - JWE payload compression (`zip` header) is rejected outright.
 - Critical header parameters are enforced per RFC 7515 §4.1.11; unknown `crit` entries cause verification to fail.
 - DPoP-bound tokens (`cnf.jkt`) require either a matching DPoP proof or `trustBoundThumbprint: true` on verify.

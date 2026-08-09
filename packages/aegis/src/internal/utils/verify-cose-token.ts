@@ -25,6 +25,15 @@ export const verifyCoseToken = async ({
   deps: AegisDeps;
 }): Promise<VerifiedToken> => {
   const profile = resolveProfile(name);
+
+  // Computed BEFORE the verify, exactly as on the JOSE side: its first job is to
+  // SCOPE the key lookup to the issuer this verifier accepts, so a colliding
+  // `kid` from another registered issuer never produces a valid signature. The
+  // floor's `iss` comparison below is the second job.
+  const expectedIssuer =
+    options.issuer ??
+    (profile.issuer === "platform" ? (deps.issuer ?? undefined) : undefined);
+
   const { claims, wire, decoded, typ, encrypted } = await coseVerifyCore({
     input: Buffer.from(token, "base64url"),
     currentDate: options.currentDate,
@@ -34,11 +43,8 @@ export const verifyCoseToken = async ({
     verifyIssuedAt: options.verifyIssuedAt,
     verifyAuthTime: options.verifyAuthTime,
     deps,
+    issuer: expectedIssuer,
   });
-
-  const expectedIssuer =
-    options.issuer ??
-    (profile.issuer === "platform" ? (deps.issuer ?? undefined) : undefined);
 
   enforceVerifyFloor({
     audience: options.audience,

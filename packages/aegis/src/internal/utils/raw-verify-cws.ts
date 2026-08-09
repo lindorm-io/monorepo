@@ -29,11 +29,15 @@ export const rawVerifyCws = async <T extends TokenContent = Buffer>({
   const bytes = Buffer.from(token, "base64url");
   const decoded = decodeCwt(bytes);
 
-  const kryptos = await deps.resolveVerifyKey(
-    decoded.kid,
-    decoded.algorithm as KryptosSigAlgorithm,
-    options.key,
-  );
+  // UNSCOPED by construction — the COSE twin of the JWS case: a CWS is opaque,
+  // its payload arbitrary bytes with no claims layer, so there is no `iss` to
+  // narrow by. (`decoded.payload` is `undefined` here for exactly that reason.)
+  // Not an oversight; see the unscoped-paths note in `resolve-key.ts`.
+  const kryptos = await deps.resolveVerifyKey({
+    id: decoded.kid,
+    algorithm: decoded.algorithm as KryptosSigAlgorithm,
+    verify: options.key,
+  });
 
   return new CwsKit({ kryptos, logger: deps.logger }).verify<T>(bytes);
 };
