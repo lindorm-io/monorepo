@@ -153,4 +153,29 @@ describe("SqliteRepository @RelationId projection", () => {
       source.repository(RiProjAuthor).find(undefined, { select: ["posts"] }),
     ).rejects.toThrow('Relation "posts" cannot be selected on "RiProjAuthor"');
   });
+
+  // A cursor projection never passed through find(), so it named whatever it
+  // liked and got back an entity quietly missing the column.
+  test("cursor rejects an unknown select key", async () => {
+    await expect(
+      source.repository(RiProjAuthor).cursor({ select: ["naem" as "name"] }),
+    ).rejects.toThrow('Unknown field "naem" on "RiProjAuthor"');
+  });
+
+  test("cursor rejects a relation named in select", async () => {
+    await expect(
+      source.repository(RiProjAuthor).cursor({ select: ["posts"] }),
+    ).rejects.toThrow('Relation "posts" cannot be selected on "RiProjAuthor"');
+  });
+
+  test("cursor accepts a select of declared keys", async () => {
+    const cursor = await source
+      .repository(RiProjAuthor)
+      .cursor({ select: ["id", "name"] });
+
+    const author = await cursor.next();
+    await cursor.close();
+
+    expect(author?.name).toBe("Alice");
+  });
 });

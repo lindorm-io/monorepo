@@ -1610,7 +1610,9 @@ const user = await repo.findOneOrSave(
 **`select` keys are validated.** A key that names nothing throws rather than narrowing nothing and
 coming back as a silently missing column. Selectable keys are the entity's fields, its owning
 relations' auto-projected foreign keys, and its `@RelationId` properties. A relation is not one of
-them — load it with `relations` / `include()`, which says so in the error.
+them — load it with `relations` / `include()`, which says so in the error. The same keys govern
+every projection: `find` / `findOne` / `versions`, `cursor()` and `stream()`, and the query
+builder's own `select()`.
 
 ### Update
 

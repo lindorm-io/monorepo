@@ -55,6 +55,8 @@ vi.mock("../../../utils/repository/repository-guards.js", () => ({
   guardVersionFields: vi.fn(),
   guardUpsertBlocked: vi.fn(),
   validateRelationNames: vi.fn(),
+  selectableKeys: vi.fn(() => []),
+  validateSelectionKeys: vi.fn(),
 }));
 
 vi.mock("../utils/repository/wrap-pg-error.js", () => ({

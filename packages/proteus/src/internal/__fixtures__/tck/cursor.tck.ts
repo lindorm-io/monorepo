@@ -81,6 +81,53 @@ export const cursorSuite = (
     expect(results[0]).toBe("User03");
   });
 
+  // A cursor projection goes straight into the query state without passing
+  // through find(), so the keys it may name were never checked: an unknown one
+  // narrowed nothing and streamed back an entity quietly missing the column
+  // that was asked for. It names the same keys find() does.
+  test("cursor rejects a select key that is not declared", async () => {
+    const repo = getHandle().repository(TckSimpleUser);
+
+    await expect(repo.cursor({ select: ["naem" as "name"] })).rejects.toThrow(
+      /Unknown field "naem"/,
+    );
+  });
+
+  test("cursor rejects a relation named in select", async () => {
+    const repo = getHandle().repository(TckSimpleUser);
+
+    await expect(repo.cursor({ select: ["posts"] })).rejects.toThrow(
+      /Relation "posts" cannot be selected/,
+    );
+  });
+
+  // stream() opens the cursor lazily, so the rejection has to survive to the
+  // first pull rather than being swallowed by the deferred call.
+  test("stream rejects a select key that is not declared", async () => {
+    const repo = getHandle().repository(TckSimpleUser);
+
+    const iterate = async (): Promise<void> => {
+      for await (const _entity of repo.stream({ select: ["naem" as "name"] })) {
+        break;
+      }
+    };
+
+    await expect(iterate()).rejects.toThrow(/Unknown field "naem"/);
+  });
+
+  test("cursor accepts a select of declared keys", async () => {
+    const repo = getHandle().repository(TckSimpleUser);
+    const cursor = await repo.cursor({
+      select: ["id", "name"],
+      orderBy: { name: "ASC" },
+    });
+
+    const first = await cursor.next();
+    await cursor.close();
+
+    expect(first?.name).toBe("User01");
+  });
+
   test("cursor on empty set returns null immediately", async () => {
     await getHandle().clear();
     const repo = getHandle().repository(TckSimpleUser);

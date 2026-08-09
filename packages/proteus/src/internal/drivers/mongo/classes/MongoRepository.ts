@@ -258,11 +258,14 @@ export class MongoRepository<
 
   async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
     guardEncryptedCriteria(this.metadata, options?.where, "cursor");
-    const hiddenSelect = filterHiddenSelections(
-      this.metadata,
-      ["multiple"],
-      (options?.select as Array<string>) ?? null,
-    );
+
+    const select = (options?.select as Array<string>) ?? null;
+
+    if (select) {
+      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+    }
+
+    const hiddenSelect = filterHiddenSelections(this.metadata, ["multiple"], select);
     const effectiveOptions = hiddenSelect
       ? { ...options, select: hiddenSelect as Array<keyof E> }
       : options;
@@ -287,9 +290,9 @@ export class MongoRepository<
     }
 
     // Apply projection
-    const select = effectiveOptions?.select as Array<string> | undefined;
-    if (select && select.length > 0) {
-      const projection = compileProjection(select, this.metadata);
+    const effectiveSelect = effectiveOptions?.select as Array<string> | undefined;
+    if (effectiveSelect && effectiveSelect.length > 0) {
+      const projection = compileProjection(effectiveSelect, this.metadata);
       if (projection) mongoCursor = mongoCursor.project(projection);
     }
 

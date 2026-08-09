@@ -49,6 +49,8 @@ vi.mock("../../../utils/repository/repository-guards.js", () => ({
   guardDeleteDateField: vi.fn(),
   guardExpiryDateField: vi.fn(),
   guardUpsertBlocked: vi.fn(),
+  selectableKeys: vi.fn(() => []),
+  validateSelectionKeys: vi.fn(),
 }));
 
 vi.mock("../../../utils/repository/RelationPersister.js", () => ({

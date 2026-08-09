@@ -305,11 +305,14 @@ export class SqliteRepository<
 
   async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
     guardEncryptedCriteria(this.metadata, options?.where, "cursor");
-    const hiddenSelect = filterHiddenSelections(
-      this.metadata,
-      ["multiple"],
-      (options?.select as Array<string>) ?? null,
-    );
+
+    const select = (options?.select as Array<string>) ?? null;
+
+    if (select) {
+      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+    }
+
+    const hiddenSelect = filterHiddenSelections(this.metadata, ["multiple"], select);
     const effectiveOptions = hiddenSelect
       ? { ...options, select: hiddenSelect as Array<keyof E> }
       : options;
