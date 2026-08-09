@@ -13,6 +13,7 @@ import type {
   PylonAuthDriverContext,
   PylonAuthEndpoints,
   PylonAuthIntrospectOptions,
+  PylonAuthIssuerScope,
   PylonAuthSubjectOptions,
   PylonAuthUserinfoOptions,
   PylonClientAuthMethod,
@@ -43,6 +44,13 @@ import type {
  */
 export class OpenIdResourceDriver implements IPylonAuthDriver {
   readonly clientId: string;
+
+  /**
+   * Its provider is `amphora.idp`, same as every other discovery-backed driver
+   * — so a deployment that registered no upstream is one this driver cannot
+   * serve a single request for, and pylon says so at boot.
+   */
+  readonly issuerScope: PylonAuthIssuerScope = "idp";
 
   private readonly clientAssertionSettings: PylonAuthDriverClientAssertionSettings;
   private readonly clientSecret?: string;

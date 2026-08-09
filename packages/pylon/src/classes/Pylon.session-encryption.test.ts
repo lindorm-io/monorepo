@@ -14,6 +14,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import { ProteusSource } from "@lindorm/proteus";
 import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
+import { IDP_SETTINGS, nockIdp } from "../__fixtures__/idp.js";
 import { createLoopbackRequest } from "../__fixtures__/loopback-request.js";
 import { OpenIdResourceDriver } from "../drivers/auth/OpenIdResourceDriver.js";
 import { PylonError } from "../errors/PylonError.js";
@@ -27,6 +28,10 @@ const SESSION_KEY: PylonEncKey = {
 };
 
 const WARNING = "auth.session.encryption";
+
+// `OpenIdResourceDriver` pins `amphora.idp`, so these deployments need a real
+// upstream registered — a pylon that boots without one does not exist.
+nockIdp();
 
 const loopback = createLoopbackRequest();
 
@@ -48,7 +53,11 @@ afterEach(async () => {
 });
 
 const createAmphora = (logger: ILogger): IAmphora => {
-  const amphora = new Amphora({ internal: { issuer: ISSUER }, logger });
+  const amphora = new Amphora({
+    internal: { issuer: ISSUER },
+    idp: IDP_SETTINGS,
+    logger,
+  });
   const kek: IKryptos = KryptosKit.generate.enc.oct({
     algorithm: "A128KW",
     publish: false,

@@ -15,11 +15,13 @@ const ENDPOINTS: PylonAuthEndpoints = {
 
 const driver: IPylonAuthDriver = {
   clientId: "test-client-id",
+  issuerScope: "none",
   endpoints: () => ENDPOINTS,
 };
 
 const refreshingDriver: IPylonAuthDriver = {
   clientId: "test-client-id",
+  issuerScope: "none",
   endpoints: () => ENDPOINTS,
   refresh: async () => {
     throw new Error("not called");

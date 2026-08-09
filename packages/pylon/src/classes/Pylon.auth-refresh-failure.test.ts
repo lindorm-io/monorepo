@@ -36,6 +36,7 @@ const SEEDED_EXPIRES_IN = 3600;
  */
 const createDriver = (): IPylonAuthDriver => ({
   clientId: "client-id",
+  issuerScope: "none",
 
   endpoints: () => ({
     issuer: ISSUER,

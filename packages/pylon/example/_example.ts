@@ -68,6 +68,10 @@ export const EXAMPLE_PYLON = new Pylon({
   // and there is no upstream to authorize against — which is exactly what
   // `JwtDriver({ issuer: "self" })` says. `useAccessToken` reads the issuer
   // from here, once, rather than from each mount.
+  //
+  // The pairing is enforced: pylon holds the pinned scope against amphora after
+  // `amphora.setup()`, so dropping `internal` above without changing the driver
+  // fails `setup()` instead of every request that reaches the issuer.
   auth: {
     driver: new JwtDriver({ issuer: "self" }),
   },

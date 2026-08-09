@@ -40,7 +40,13 @@ import type {
  * these tokens come from" is not derivable — it is always stated.
  */
 export class JwtDriver implements IPylonAuthDriver {
-  private readonly scope: PylonJwtDriverIssuer;
+  /**
+   * The pinned scope, on the CONTRACT rather than held privately: pylon holds
+   * the deployment against it at boot, straight after `amphora.setup()`, so
+   * `new JwtDriver({ issuer: "idp" })` against an amphora with no upstream
+   * fails the process instead of every request that reaches the issuer.
+   */
+  readonly issuerScope: PylonJwtDriverIssuer;
 
   constructor(settings: PylonJwtDriverSettings) {
     // The scope routinely arrives from a config file or an env var, where the
@@ -58,7 +64,7 @@ export class JwtDriver implements IPylonAuthDriver {
       });
     }
 
-    this.scope = settings.issuer;
+    this.issuerScope = settings.issuer;
   }
 
   /**
@@ -84,7 +90,7 @@ export class JwtDriver implements IPylonAuthDriver {
   }
 
   private issuer(context: PylonAuthDriverContext): string {
-    switch (this.scope) {
+    switch (this.issuerScope) {
       case "self":
         return resolveSelfIssuer(context);
 

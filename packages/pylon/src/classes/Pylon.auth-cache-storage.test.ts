@@ -13,11 +13,15 @@ import { ProteusSource } from "@lindorm/proteus";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { CachedIntrospection } from "../entities/CachedIntrospection.js";
 import { CachedUserinfo } from "../entities/CachedUserinfo.js";
+import { IDP_SETTINGS, nockIdp } from "../__fixtures__/idp.js";
 import { OpenIdResourceDriver } from "../drivers/auth/OpenIdResourceDriver.js";
 import type { PylonAuthSettings } from "../types/index.js";
 import { Pylon } from "./Pylon.js";
 
 const ISSUER = "http://test.lindorm.io";
+
+// `OpenIdResourceDriver` pins `amphora.idp` — registered here so these pylons boot.
+nockIdp();
 
 let sources: Array<ProteusSource> = [];
 
@@ -130,6 +134,7 @@ describe("Pylon auth cache storage", () => {
   test("should register both cache entities on kv when no cache source is set", async () => {
     const amphora = new Amphora({
       internal: { issuer: ISSUER },
+      idp: IDP_SETTINGS,
       logger: createMockLogger(),
     });
     amphora.add([createKek("pylon:kek")]);
@@ -149,6 +154,7 @@ describe("Pylon auth cache storage", () => {
   test("should register both cache entities on cache, not kv, when the two are split", async () => {
     const amphora = new Amphora({
       internal: { issuer: ISSUER },
+      idp: IDP_SETTINGS,
       logger: createMockLogger(),
     });
     amphora.add([createKek("pylon:kek")]);
@@ -179,6 +185,7 @@ describe("Pylon auth cache storage", () => {
   test("should set up without any ephemeral source", async () => {
     const amphora = new Amphora({
       internal: { issuer: ISSUER },
+      idp: IDP_SETTINGS,
       logger: createMockLogger(),
     });
     amphora.add([createKek("pylon:kek")]);
@@ -193,6 +200,7 @@ describe("Pylon auth cache storage", () => {
   test("should seal both payloads under auth.encryption", async () => {
     const amphora = new Amphora({
       internal: { issuer: ISSUER },
+      idp: IDP_SETTINGS,
       logger: createMockLogger(),
     });
     const bootstrap = createKek("pylon:kek");
@@ -239,6 +247,7 @@ describe("Pylon auth cache storage", () => {
   test("should register only the concern that is switched on", async () => {
     const amphora = new Amphora({
       internal: { issuer: ISSUER },
+      idp: IDP_SETTINGS,
       logger: createMockLogger(),
     });
     amphora.add([createKek("pylon:kek")]);

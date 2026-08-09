@@ -11,9 +11,13 @@ import {
   SOCKET_AUTH_TEST_KEY_ID,
 } from "../__fixtures__/socket-auth/shared.js";
 import type { IPylonSession } from "../interfaces/index.js";
+import { IDP_SETTINGS, nockIdp } from "../__fixtures__/idp.js";
 import { OpenIdResourceDriver } from "../drivers/auth/OpenIdResourceDriver.js";
 import { Pylon } from "./Pylon.js";
 import { afterAll, beforeAll, describe, expect, test, vi, type Mock } from "vitest";
+
+// `OpenIdResourceDriver` pins `amphora.idp` — registered here so these pylons boot.
+nockIdp();
 
 /**
  * Cookie-jar strategy: faithful use of `createCookieAuthStrategy` with manual
@@ -101,6 +105,7 @@ describe("socket auth (session / cookie) e2e", () => {
 
     amphora = new Amphora({
       internal: { issuer: SOCKET_AUTH_TEST_ISSUER },
+      idp: IDP_SETTINGS,
       logger,
     });
 
@@ -405,6 +410,7 @@ describe("PylonIo constructor enforces CORS safety net when session is enabled",
     logger = createMockLogger();
     amphora = new Amphora({
       internal: { issuer: SOCKET_AUTH_TEST_ISSUER },
+      idp: IDP_SETTINGS,
       logger,
     });
     amphora.add(

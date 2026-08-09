@@ -20,6 +20,7 @@ import type {
   PylonAuthDriverSettings,
   PylonAuthEndpoints,
   PylonAuthExchangeOptions,
+  PylonAuthIssuerScope,
   PylonAuthRefreshOptions,
   PylonAuthTokenRequest,
   PylonAuthTokenResult,
@@ -46,6 +47,14 @@ import type {
 export abstract class PylonAuthDriverBase implements IPylonAuthDriver {
   readonly clientId: string;
   readonly pkce: PylonAuthDriverSettings["pkce"];
+
+  /**
+   * `"none"` — a subclass returning its endpoints as a LITERAL resolves its own
+   * issuer and pins neither of amphora's own-side scopes. That is the shape this
+   * base exists for, so it is the default; a subclass reading `amphora.idp` or
+   * `amphora.internal` overrides it and gets the boot check that goes with it.
+   */
+  readonly issuerScope: PylonAuthIssuerScope = "none";
 
   protected readonly authorizeSettings: PylonAuthDriverAuthorizeSettings;
   protected readonly clientAssertionSettings: PylonAuthDriverClientAssertionSettings;

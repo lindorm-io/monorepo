@@ -25,6 +25,7 @@ import { validateSessionEncryption } from "../internal/utils/config/validate-ses
 import { scanWorkers } from "../internal/utils/scan-workers.js";
 import { stageEncryptedField } from "../internal/utils/stage-encrypted-field.js";
 import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config.js";
+import { validateAuthIssuer } from "../internal/utils/auth/validate-auth-issuer.js";
 import { validateAuthSettings } from "../internal/utils/auth/validate-auth-settings.js";
 import type { PylonEncKey } from "../types/index.js";
 import { PylonHttp } from "./PylonHttp.js";
@@ -146,6 +147,16 @@ export class Pylon<
     await this.loadSources();
 
     await this.amphora.setup();
+
+    // Amphora has now fetched every issuer it was given, and thrown for a
+    // required one it could not resolve — so the scope the driver pinned is
+    // either held or missing for good, and this is the first point the answer is
+    // final. Deliberately NOT part of `validateAuthSettings` above: that one
+    // runs before anything is loaded, which is right for its router/capability
+    // checks and would see an empty amphora here.
+    if (this.options.auth) {
+      validateAuthIssuer(this.options.auth, this.amphora);
+    }
 
     // ⚠ Built HERE and nowhere else: after amphora has fetched, so the auth
     // driver's issuer is a memory read, and before either transport loads, so

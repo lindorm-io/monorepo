@@ -42,6 +42,7 @@ const REFRESHED_EXPIRES_IN = 7200;
  */
 const createDriver = (): IPylonAuthDriver => ({
   clientId: "client-id",
+  issuerScope: "none",
 
   endpoints: () => ({
     issuer: ISSUER,

@@ -1101,7 +1101,10 @@ import { Amphora } from "@lindorm/amphora";
 import { OpenIdDriver } from "@lindorm/pylon";
 
 // The issuer is declared HERE, once. This registration is what fetches the
-// discovery document and the provider's keys.
+// discovery document and the provider's keys — and it GATES BOOT: `pylon.setup()`
+// awaits `amphora.setup()`, which throws when the upstream cannot be resolved,
+// and then holds the scope the driver pinned against what amphora ended up with.
+// A service pinning an idp it never registered does not start.
 const amphora = new Amphora({
   logger,
   internal: { issuer: "https://api.example.com" },
@@ -1156,7 +1159,9 @@ new JwtDriver({ issuer: "self" }); // this service IS the issuer → amphora.int
 new JwtDriver({ issuer: "idp" }); //  the registered upstream    → amphora.idp
 ```
 
-The scope is **required and has no default**: a service can federate, holding its own issuer _and_ an upstream, so which one its tokens come from is not derivable. An unconfigured scope throws by name — pylon's `self_issuer_not_configured`, or amphora's own `idp_not_configured` / `idp_issuer_unresolved` (registered, but with no issuer settled yet).
+The scope is **required and has no default**: a service can federate, holding its own issuer _and_ an upstream, so which one its tokens come from is not derivable.
+
+**A pinned scope amphora does not hold fails `setup()`** — pylon's `self_issuer_not_configured`, or amphora's own `idp_not_configured` / `idp_issuer_unresolved`. The check runs straight after `amphora.setup()`, which is where every issuer is fetched, so the answer is final: a pinned issuer that resolves to nothing would verify every token against nothing, and that is a deployment that must not come up.
 
 Use it when `OpenIdResourceDriver` cannot serve the upstream: an amphora `idp` may be registered by an issuer + `jwksUri` pair with no `.well-known/openid-configuration` behind it, and the resource driver needs that document.
 
@@ -1177,6 +1182,10 @@ class GitHubDriver extends PylonAuthDriverBase {
   }
 }
 ```
+
+**Every driver states which amphora issuer scope it pins — `readonly issuerScope: "self" | "idp" | "none"` — and pylon holds the deployment against it at boot.** `GitHubDriver` above pins neither: it resolves its own issuer, which is `"none"` — a positive statement, not an absence. That is why the member is required rather than optional: if omitting it meant "pins nothing", a driver that does pin a scope and forgets to say so would silently lose its boot check, which is the failure this seam exists to remove. `PylonAuthDriverBase` supplies `"none"`, so a subclass returning literal endpoints writes nothing; only an implementer of `IPylonAuthDriver` directly has to state it.
+
+`OpenIdDriver`, `OpenIdResourceDriver` and `Auth0Driver` all declare `"idp"` — they read the upstream for their issuer, their endpoints _and_ the auth methods they negotiate — so a deployment that registered no upstream fails `setup()` instead of 500ing every request that reaches the provider.
 
 Drivers are not required to extend anything — `IPylonAuthDriver` is the contract. A driver never receives the request context, only a narrow read-only one (`aegis`, `amphora`, a correlation-tagged `conduit`, `environment`, `kv`, `logger`), so it cannot touch a cookie or the session even deliberately. `aegis` grants no authority `amphora` did not already carry — it is a wrapper over the same vault — it is there so a driver can mint the signed client assertion below.
 
@@ -1232,8 +1241,11 @@ At `setup()` pylon holds the configuration against what the driver can serve. Th
 | `refresh.mode` **written** as non-`none`, driver has no `refresh` | Warns once. Refresh is off                                                         |
 | `cache.introspection` on, driver has no `introspect`              | Warns once. That half of the cache is dead, not broken                             |
 | `cache.userinfo` on, driver has no `userinfo`                     | Warns once. That half of the cache is dead, not broken                             |
+| Driver pins `issuerScope`, amphora holds no such scope            | **Throws** `self_issuer_not_configured` / `idp_not_configured` — see below         |
 
 Every warning is about config the deployment **wrote**. A default pylon derived from the driver cannot contradict that driver, so it never warns.
+
+The last row runs at a different moment. Everything above it is answered before anything is loaded, which is right for a question about the driver's own methods; the pinned issuer scope is held **after `amphora.setup()`**, because that is where every issuer is fetched and a required one that fails already threw. Only then is "amphora does not hold this scope" a final answer rather than a premature one. A driver declaring `issuerScope: "none"` resolves its own issuer and is not held against anything.
 
 ### Refresh
 

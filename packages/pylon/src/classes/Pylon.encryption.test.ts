@@ -18,6 +18,7 @@ import {
   setupWebhookRequestConsumer,
   WEBHOOK_REQUEST_QUEUE,
 } from "../internal/consumers/setup-webhook-request-consumer.js";
+import { IDP_SETTINGS, nockIdp } from "../__fixtures__/idp.js";
 import { OpenIdDriver } from "../drivers/auth/OpenIdDriver.js";
 import { createDispatchWebhook } from "../internal/utils/dispatch-webhook.js";
 import { CachedIntrospection } from "../entities/CachedIntrospection.js";
@@ -32,6 +33,9 @@ import { Pylon } from "./Pylon.js";
 vi.mock("../internal/utils/dispatch-webhook.js");
 
 const ISSUER = "http://test.lindorm.io";
+
+// The introspection-cache pylon below runs `OpenIdDriver`, which pins `amphora.idp`.
+nockIdp();
 
 /** The bootstrap key-encryption-key — pylon's default `pylon:kek` selector,
  *  shared by stored private keys and webhook client secrets alike. */
@@ -338,7 +342,11 @@ describe("Pylon at-rest encryption staging", () => {
     let kv: ProteusSource;
 
     beforeEach(async () => {
-      amphora = new Amphora({ internal: { issuer: ISSUER }, logger: createMockLogger() });
+      amphora = new Amphora({
+        internal: { issuer: ISSUER },
+        idp: IDP_SETTINGS,
+        logger: createMockLogger(),
+      });
       kek = kekKey();
       amphora.add([kek]);
 

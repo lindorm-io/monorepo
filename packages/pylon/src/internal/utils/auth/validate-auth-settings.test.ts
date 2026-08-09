@@ -18,6 +18,7 @@ const ENDPOINTS: PylonAuthEndpoints = {
 
 const createDriver = (overrides: Partial<IPylonAuthDriver> = {}): IPylonAuthDriver => ({
   clientId: "client-id",
+  issuerScope: "none",
   endpoints: () => ENDPOINTS,
   authorize: vi.fn(),
   exchange: vi.fn(),

@@ -15,11 +15,15 @@ import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusSource } from "@lindorm/proteus";
 import { afterEach, describe, expect, test } from "vitest";
+import { IDP_SETTINGS, nockIdp } from "../__fixtures__/idp.js";
 import { OpenIdResourceDriver } from "../drivers/auth/OpenIdResourceDriver.js";
 import { WebhookSubscription } from "../entities/WebhookSubscription.js";
 import { Pylon } from "./Pylon.js";
 
 const ISSUER = "http://test.lindorm.io";
+
+// `OpenIdResourceDriver` pins `amphora.idp` — registered here so these pylons boot.
+nockIdp();
 
 /** Everything that must survive eviction. */
 const AUTHORITATIVE = ["Session", "Presence"];
@@ -55,6 +59,7 @@ const createSource = (amphora: IAmphora): ProteusSource => {
 const createAmphora = (): IAmphora => {
   const amphora = new Amphora({
     internal: { issuer: ISSUER },
+    idp: IDP_SETTINGS,
     logger: createMockLogger(),
   });
   const kek: IKryptos = KryptosKit.generate.enc.oct({

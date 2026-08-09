@@ -40,6 +40,7 @@ const ROUTER: PylonAuthRouterConfig = {
  */
 const createDriver = (overrides: Partial<IPylonAuthDriver> = {}): IPylonAuthDriver => ({
   clientId: "client-id",
+  issuerScope: "none",
   endpoints: vi.fn().mockReturnValue(ENDPOINTS),
   authorize: vi.fn(async (_context, options) => {
     const url = new URL(AUTHORIZATION_ENDPOINT);

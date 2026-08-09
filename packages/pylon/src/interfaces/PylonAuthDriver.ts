@@ -6,6 +6,7 @@ import type {
   PylonAuthEndpoints,
   PylonAuthExchangeOptions,
   PylonAuthIntrospectOptions,
+  PylonAuthIssuerScope,
   PylonAuthLogoutOptions,
   PylonAuthLogoutResult,
   PylonAuthRefreshOptions,
@@ -84,6 +85,30 @@ export interface IPylonAuthDriver {
    * transformation its provider understands.
    */
   readonly pkce?: CodeChallengeMethod | null;
+
+  /**
+   * Which of amphora's own-side issuer scopes this driver PINS — `"self"` for
+   * `amphora.internal`, `"idp"` for the registered upstream, `"none"` for a
+   * driver that resolves its issuer from itself.
+   *
+   * Read ONCE at boot, immediately after `amphora.setup()`: a driver naming a
+   * scope amphora does not hold can verify nothing at all, so pylon refuses to
+   * start rather than letting the first user request discover it as a 500.
+   *
+   * ⚠ REQUIRED, and `"none"` is why. Pinning is not universal — a driver
+   * returning a LITERAL issuer (one it was constructed with, a foreign issuer
+   * registered on `amphora.external`) pins neither scope — but letting that be
+   * expressed by OMISSION would mean a driver that does pin one and forgets to
+   * say so silently gets no boot check at all. Stating `"none"` costs one line
+   * and makes that impossible. {@link PylonAuthDriverBase} supplies it, so only
+   * an implementer of this interface directly has to write it.
+   *
+   * ⚠ It is a SCOPE NAME, not an issuer. The issuer is `endpoints().issuer`,
+   * which is what resolves this scope to a URL — and the resolution pylon must
+   * never do here, since which endpoints a driver needs is the driver's
+   * knowledge.
+   */
+  readonly issuerScope: PylonAuthIssuerScope;
 
   /**
    * The provider's endpoint surface. Called per request; a discovery-backed

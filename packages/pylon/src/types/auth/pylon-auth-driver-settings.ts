@@ -137,14 +137,30 @@ export type PylonOpenIdResourceDriverSettings = {
 };
 
 /**
- * Which of amphora's issuer scopes {@link JwtDriver} pins.
+ * Which of amphora's own-side issuer scopes a driver pins — the REQUIRED
+ * `issuerScope` declaration on `IPylonAuthDriver`.
+ *
+ * ⚠ `"none"` is a POSITIVE STATEMENT, not an absence: this driver resolves its
+ * issuer from itself (a literal it was constructed with, a foreign issuer
+ * registered on `amphora.external`) and pins neither own-side scope, so pylon
+ * has nothing to hold it against at boot. It is spelled out because an OMITTED
+ * declaration and "pins nothing" would otherwise be the same value — and a
+ * driver that does pin a scope but forgets to say so would silently lose its
+ * boot check, which is the failure mode this whole seam exists to remove.
+ */
+export type PylonAuthIssuerScope = "self" | "idp" | "none";
+
+/**
+ * The scopes {@link JwtDriver} can be configured with. `"none"` is not one of
+ * them: a driver whose whole job is to pin an issuer, pinning nothing, would
+ * verify every token against nothing.
  *
  * ⚠ REQUIRED, with no default. A service can legitimately hold BOTH — an OIDC
- * provider that mints its own tokens AND federates to an upstream — so which
- * one a deployment verifies against is a fact only the deployment knows. A
- * default here would silently pick one of two live issuers.
+ * provider that mints its own tokens AND federates to an upstream — so which one
+ * a deployment verifies against is a fact only the deployment knows. A default
+ * here would silently pick one of two live issuers.
  */
-export type PylonJwtDriverIssuer = "self" | "idp";
+export type PylonJwtDriverIssuer = Exclude<PylonAuthIssuerScope, "none">;
 
 /**
  * A verify-only driver's whole configuration: which issuer, and nothing else.

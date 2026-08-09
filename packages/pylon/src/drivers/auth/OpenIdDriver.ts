@@ -15,6 +15,7 @@ import type {
   PylonAuthDriverContext,
   PylonAuthEndpoints,
   PylonAuthIntrospectOptions,
+  PylonAuthIssuerScope,
   PylonAuthLogoutOptions,
   PylonAuthLogoutResult,
   PylonAuthSubjectOptions,
@@ -38,6 +39,15 @@ import { PylonAuthDriverBase } from "./PylonAuthDriverBase.js";
  * is the party this deployment talks to.
  */
 export class OpenIdDriver extends PylonAuthDriverBase {
+  /**
+   * Picking this driver IS the declaration that the upstream is the party this
+   * deployment talks to — stated here so pylon refuses to boot when no upstream
+   * is registered, rather than 500ing every request that reaches the provider.
+   * It is not only `endpoints()` that reads the idp: the negotiated auth methods
+   * come off the same discovery document.
+   */
+  override readonly issuerScope: PylonAuthIssuerScope = "idp";
+
   endpoints(context: PylonAuthDriverContext): PylonAuthEndpoints {
     return openIdEndpoints(context);
   }
