@@ -10,6 +10,21 @@ import type { ExternalEntry } from "../types/external-entry.js";
  * genuinely differ: `idp.config()` was asked for one specific provider and throws,
  * while `external.issuers()` lists what amphora holds and simply omits it — a
  * single unreachable peer must not take out the whole listing.
+ *
+ * The copy names every field rather than spreading the entry: {@link ExternalEntry}
+ * carries bookkeeping the public config does not (`scope`), and a spread would ship
+ * each such field to consumers untyped and unnoticed.
  */
 export const toExternalConfig = (entry: ExternalEntry): AmphoraExternalConfig | null =>
-  entry.issuer === null ? null : { ...entry, issuer: entry.issuer };
+  entry.issuer === null
+    ? null
+    : {
+        input: entry.input,
+        required: entry.required,
+        issuer: entry.issuer,
+        jwksUri: entry.jwksUri,
+        openIdConfiguration: entry.openIdConfiguration,
+        keyCount: entry.keyCount,
+        lastRefresh: entry.lastRefresh,
+        lastAccess: entry.lastAccess,
+      };

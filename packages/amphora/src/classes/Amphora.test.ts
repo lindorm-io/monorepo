@@ -2267,6 +2267,61 @@ describe("Amphora", () => {
       expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
     });
 
+    // Registration is the point of no return, so it comes AFTER the fetch. A
+    // source amphora could not fetch is not a source amphora holds — leaving a
+    // keyless entry registered would advertise an issuer it cannot verify.
+    test("a failed addIssuer registers no source", async () => {
+      nock("https://peer.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+
+      await expect(
+        amphora.external.addIssuer({ issuer: externalIssuer, jwksUri }),
+      ).rejects.toThrow();
+
+      expect(amphora.external.issuers()).toHaveLength(0);
+      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
+      expect(nock.isDone()).toBe(true);
+    });
+
+    // Registering spends the `maxIssuers` cap, and spending it evicts a peer.
+    // A source that never loaded must not buy that eviction.
+    test("a failed addIssuer does not evict a healthy peer under the maxIssuers cap", async () => {
+      const instance = new Amphora({
+        internal: { issuer },
+        logger: createMockLogger(),
+        maxIssuers: 1,
+      });
+
+      nock("https://healthy.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      await instance.external.addIssuer({
+        issuer: "https://healthy.lindorm.io/",
+        jwksUri: "https://healthy.lindorm.io/.well-known/jwks.json",
+      });
+
+      nock("https://peer.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+
+      await expect(
+        instance.external.addIssuer({ issuer: externalIssuer, jwksUri }),
+      ).rejects.toThrow();
+
+      expect(instance.external.issuers().map((c) => c.issuer)).toEqual([
+        "https://healthy.lindorm.io/",
+      ]);
+      expect(
+        instance.vault.filter((k) => k.issuer === "https://healthy.lindorm.io/"),
+      ).toHaveLength(1);
+      expect(nock.isDone()).toBe(true);
+    });
+
     test("removeIssuer drops the source and evicts its keys", async () => {
       nock("https://peer.lindorm.io")
         .get("/.well-known/jwks.json")
@@ -2937,6 +2992,117 @@ describe("Amphora", () => {
       expect(
         amphora.vault.filter((k) => k.issuer === "https://idp-b.lindorm.io/"),
       ).toHaveLength(1);
+    });
+
+    // A swap trades a working upstream for a new one, and the trade is
+    // all-or-nothing: the new source is resolved and fetched into an entry the
+    // vault is not serving from, so a failure throws with the previous idp
+    // exactly as it was rather than leaving the service with neither.
+    test("a failed set leaves the previous idp serving — same config, same keys", async () => {
+      nock("https://idp-a.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      await amphora.idp.set({
+        issuer: "https://idp-a.lindorm.io/",
+        jwksUri: "https://idp-a.lindorm.io/.well-known/jwks.json",
+      });
+
+      const before = amphora.idp.config();
+
+      nock("https://idp-b.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+
+      await expect(
+        amphora.idp.set({
+          issuer: "https://idp-b.lindorm.io/",
+          jwksUri: "https://idp-b.lindorm.io/.well-known/jwks.json",
+        }),
+      ).rejects.toThrow();
+
+      expect(amphora.idp.config()).toEqual(before);
+      expect(
+        amphora.vault.filter((k) => k.issuer === "https://idp-a.lindorm.io/"),
+      ).toHaveLength(1);
+      expect(
+        amphora.vault.filter((k) => k.issuer === "https://idp-b.lindorm.io/"),
+      ).toHaveLength(0);
+      expect(nock.isDone()).toBe(true);
+    });
+
+    test("a failed set with no previous idp leaves no half-installed entry", async () => {
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+
+      await expect(
+        amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri }),
+      ).rejects.toThrow();
+
+      expect(() => amphora.idp.config()).toThrow(
+        expect.objectContaining({ code: "idp_not_configured" }),
+      );
+      expect(amphora.vault.filter((k) => k.issuer === idpIssuer)).toHaveLength(0);
+      expect(nock.isDone()).toBe(true);
+    });
+
+    // Replacing an idp with the SAME issuer is the case where eviction and
+    // installation collide: eviction is BY issuer, so it has to happen before
+    // the fetched keys land — applying first and evicting after would drop the
+    // very keys just installed.
+    test("re-setting the SAME issuer installs the freshly fetched keys", async () => {
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri });
+      expect(amphora.vault.filter((k) => k.issuer === idpIssuer)).toHaveLength(1);
+
+      // The upstream rotates: same issuer, a different key.
+      const rotated = TEST_OKP_KEY_SIG.toJWK("public");
+      delete rotated.iss;
+
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [rotated] });
+
+      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri });
+
+      const keys = amphora.vault.filter((k) => k.issuer === idpIssuer);
+      expect(keys).toHaveLength(1);
+      expect(keys[0]!.id).toBe(rotated.kid);
+      expect(amphora.idp.config().keyCount).toBe(1);
+      expect(nock.isDone()).toBe(true);
+    });
+
+    test("a failed set of the SAME issuer keeps the serving keys", async () => {
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      await amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri });
+
+      const before = amphora.idp.config();
+
+      nock("https://idp.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(503, { error: "Service Unavailable" });
+
+      await expect(
+        amphora.idp.set({ issuer: idpIssuer, jwksUri: idpJwksUri }),
+      ).rejects.toThrow();
+
+      expect(amphora.idp.config()).toEqual(before);
+      expect(amphora.vault.filter((k) => k.issuer === idpIssuer)).toHaveLength(1);
+      expect(nock.isDone()).toBe(true);
     });
 
     test("idp.clear evicts the idp keys and unsets config", async () => {

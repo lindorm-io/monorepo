@@ -35,6 +35,10 @@ export class AmphoraExternal implements IAmphoraExternal {
    * bad entry in the SETUP sweep is fatal to the boot, and there is no sweep
    * here. This is a single imperative call, so it reports its own failure to its
    * own caller rather than leaving a registered issuer with no keys behind it.
+   *
+   * Registration therefore comes AFTER the fetch, not before: registering spends
+   * the `maxIssuers` cap and that spend evicts a peer, so a source that never
+   * loaded must not buy a working peer's eviction.
    */
   async addIssuer(source: AmphoraExternalSettings): Promise<void> {
     // One issuer, one scope — an external issuer cannot also be the idp.
@@ -42,11 +46,16 @@ export class AmphoraExternal implements IAmphoraExternal {
 
     const entry = seedExternalConfig(source);
 
+    // Resolve + fetch into a staged entry — nothing amphora holds is touched
+    // until this returns.
+    const keys = await this.state.prepareEntry(entry);
+
     // Register + enforce the `maxIssuers` cap (evicts the LRU external issuer on
     // overflow). Registration stamps `lastAccess`, so this new issuer is safe.
+    // Eviction runs inside it, hence BEFORE the keys land: an overflow victim
+    // sharing this issuer would otherwise take the new keys with it.
     this.state.addExternalEntry(entry);
-
-    await this.state.loadEntry(entry);
+    this.state.applyFetchedKeys(entry, keys);
   }
 
   removeIssuer(issuer: string): void {

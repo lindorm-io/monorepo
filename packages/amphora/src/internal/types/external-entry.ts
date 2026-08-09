@@ -13,4 +13,12 @@ import type { AmphoraExternalConfig } from "../../types/index.js";
  */
 export type ExternalEntry = Omit<AmphoraExternalConfig, "issuer"> & {
   issuer: string | null;
+  /**
+   * Which issuer scope this entry belongs to. Written once at SEED and never
+   * derived: a registration resolves and fetches into a STAGED entry before it
+   * replaces the serving one, so "is this the idp?" cannot be answered by
+   * identity against `state.idpEntry` — the staged entry is not installed yet,
+   * and the entry it is about to replace still is.
+   */
+  scope: "external" | "idp";
 };

@@ -367,7 +367,15 @@ export class AmphoraState {
     this.refreshJwks();
   }
 
-  private applyFetchedKeys(entry: ExternalEntry, keys: Array<IKryptos>): void {
+  // INSTALL one entry's fetched keys — the second half of every load, and the
+  // only step that makes a registration visible in the vault. Public because a
+  // SWAP (`idp.set` / `external.addIssuer`) stages the fetch first and calls
+  // this once the keys are in hand.
+  //
+  // ⚠ It replaces this issuer's foreign keys, so an issuer-scoped eviction that
+  // belongs to the same swap MUST run BEFORE it — evicting afterwards would drop
+  // the keys just installed when the new source names the same issuer.
+  applyFetchedKeys(entry: ExternalEntry, keys: Array<IKryptos>): void {
     this.vault = this.vault
       .filter((i) => i.internal || i.issuer !== entry.issuer)
       .concat(keys);
@@ -397,10 +405,24 @@ export class AmphoraState {
   // external fetch orchestration
 
   // Re-resolve one entry's config from its verbatim `input`, then fetch + apply
-  // its keys. Used by targeted refresh and by the registration verbs.
+  // its keys. The REFRESH path: the entry is already installed, so resolving in
+  // place and applying straight away is the whole operation.
   async loadEntry(entry: ExternalEntry): Promise<void> {
+    this.applyFetchedKeys(entry, await this.prepareEntry(entry));
+  }
+
+  // Resolve + fetch WITHOUT touching the vault — everything a load does that can
+  // fail, and nothing it does that a caller would have to undo. The entry itself
+  // is enriched (issuer / jwksUri / discovery doc), which is safe precisely
+  // because a REGISTRATION passes an entry nothing is serving from yet: the
+  // caller installs it, with its keys, only once this resolves.
+  //
+  // This is what makes a swap all-or-nothing. Registration used to mutate the
+  // shared state first and load after, so a failure left the service with
+  // neither the source it replaced nor a working new one.
+  async prepareEntry(entry: ExternalEntry): Promise<Array<IKryptos>> {
     await this.resolveEntry(entry);
-    await this.fetchEntry(entry);
+    return this.fetchKeys(entry);
   }
 
   private async resolveEntry(entry: ExternalEntry): Promise<void> {
@@ -408,24 +430,27 @@ export class AmphoraState {
 
     // A discovery-derived issuer was unknown at registration; enforce scope
     // exclusivity now that it is settled (excluding this same entry).
-    const scope = entry === this.idpEntry ? "idp" : "external";
-    this.assertIssuerScopeFree(resolved.issuer, scope, entry);
+    this.assertIssuerScopeFree(resolved.issuer, entry.scope, entry);
 
     entry.issuer = resolved.issuer;
     entry.jwksUri = resolved.jwksUri;
     entry.openIdConfiguration = resolved.openIdConfiguration;
-    // `required` is deliberately NOT re-derived here. Resolution re-seeds from
-    // `input`, and the idp's strictness is not declared in its input (its type
-    // has no `required`) — copying it back would silently demote the idp to
-    // optional. It is written once, at seed, and never again.
+    // `required` and `scope` are deliberately NOT re-derived here. Resolution
+    // re-seeds from `input`, which declares neither for the idp (its settings
+    // type has no `required`, and nothing in an input says which scope it was
+    // registered in) — copying them back would silently demote the idp to an
+    // optional external. Both are written once, at seed, and never again.
   }
 
-  private async fetchEntry(entry: ExternalEntry): Promise<void> {
-    const keys = await fetchExternalJwks(this.conduit, entry, {
+  private fetchKeys(entry: ExternalEntry): Promise<Array<IKryptos>> {
+    return fetchExternalJwks(this.conduit, entry, {
       maxExternalKeys: this.maxExternalKeys,
       logger: this.logger,
     });
-    this.applyFetchedKeys(entry, keys);
+  }
+
+  private async fetchEntry(entry: ExternalEntry): Promise<void> {
+    this.applyFetchedKeys(entry, await this.fetchKeys(entry));
   }
 
   // Refetch EVERY registered issuer — the idp and all external. Both phases are

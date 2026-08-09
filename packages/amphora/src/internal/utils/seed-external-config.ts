@@ -19,6 +19,7 @@ export const seedExternalConfig = (input: AmphoraExternalSettings): ExternalEntr
 
   return {
     input,
+    scope: "external",
     required: input.required ?? false,
     issuer: input.issuer ?? null,
     jwksUri: input.jwksUri ?? null,

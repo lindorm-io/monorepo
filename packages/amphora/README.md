@@ -295,7 +295,7 @@ The discovery document is typed `Partial<OpenIdConfiguration>` — `OpenIdConfig
 The idp is a singleton external issuer with a management + config view over the same fetch machinery:
 
 ```typescript
-await amphora.idp.set({ issuer: "https://accounts.google.com" }); // register or REPLACE (a swap evicts the old idp's keys)
+await amphora.idp.set({ issuer: "https://accounts.google.com" }); // register or REPLACE (a successful swap evicts the old idp's keys)
 amphora.idp.config(); // AmphoraExternalConfig — throws `idp_not_configured` when unset,
 // and `idp_issuer_unresolved` when declared by `openIdConfigurationUri` alone and setup() has not run yet
 await amphora.idp.refresh();
@@ -305,6 +305,13 @@ amphora.idp.clear();
 An issuer belongs to exactly **one** scope — the idp or `external`, never both. Registering the same issuer in both throws `issuer_scope_conflict`.
 
 **The idp is always required, so it is strict at boot.** `AmphoraIdpSettings` has no `required` flag — a relying party cannot verify a single token from an upstream it could not resolve, so the answer is never `false`. `idp.set()` awaits the discovery / JWKS fetch and throws when it fails, and `amphora.setup()` does the same for an idp declared in the constructor. **A service will not boot until its IdP serves discovery** — deploy ordering follows from that.
+
+**Registration is all-or-nothing.** `idp.set()` and `external.addIssuer()` resolve and fetch the new source BEFORE they touch anything amphora is serving from, so a failure changes nothing:
+
+- A failed `idp.set()` leaves the previous idp exactly as it was — same config, same keys, still serving. You never trade a working upstream for one you could not reach. Re-setting the SAME issuer is safe: the keys are only swapped once the new set is in hand.
+- A failed `addIssuer()` registers no source, and does not spend the `maxIssuers` cap — so it never evicts a healthy peer on behalf of one that did not load.
+
+Retry the call; nothing needs unwinding first.
 
 ### Refresh behaviour
 
@@ -469,23 +476,23 @@ The returned object implements `IAmphora`, including the `external` and `idp` fa
 
 ### `interface IAmphoraExternal` (`amphora.external`)
 
-| Signature                                                   | Description                                                                |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `add(kryptos: IKryptos \| Array<IKryptos>): void`           | Insert one or more foreign keys (⇒ `internal:false`).                      |
-| `remove(id: string): void`                                  | Drop a key by id.                                                          |
-| `addIssuer(source: AmphoraExternalSettings): Promise<void>` | Register an issuer source and fetch its keys; throws when the fetch fails. |
-| `removeIssuer(issuer: string): void`                        | Drop the source and evict its keys.                                        |
-| `issuers(): Array<AmphoraExternalConfig>`                   | Every source whose issuer has settled.                                     |
-| `refresh(issuer: string): Promise<void>`                    | Refetch one issuer.                                                        |
+| Signature                                                   | Description                                                                                     |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `add(kryptos: IKryptos \| Array<IKryptos>): void`           | Insert one or more foreign keys (⇒ `internal:false`).                                           |
+| `remove(id: string): void`                                  | Drop a key by id.                                                                               |
+| `addIssuer(source: AmphoraExternalSettings): Promise<void>` | Register an issuer source and fetch its keys; throws when the fetch fails, registering nothing. |
+| `removeIssuer(issuer: string): void`                        | Drop the source and evict its keys.                                                             |
+| `issuers(): Array<AmphoraExternalConfig>`                   | Every source whose issuer has settled.                                                          |
+| `refresh(issuer: string): Promise<void>`                    | Refetch one issuer.                                                                             |
 
 ### `interface IAmphoraIdp` (`amphora.idp`)
 
-| Signature                                        | Description                                                                                            |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `set(source: AmphoraIdpSettings): Promise<void>` | Register or REPLACE the upstream (a swap evicts old keys). Awaits the fetch — throws when it fails.    |
-| `config(): AmphoraExternalConfig`                | The resolved config — throws `idp_not_configured` when unset, `idp_issuer_unresolved` when unresolved. |
-| `refresh(): Promise<void>`                       | Refetch the upstream.                                                                                  |
-| `clear(): void`                                  | Unset the idp and evict its keys.                                                                      |
+| Signature                                        | Description                                                                                                                                                           |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `set(source: AmphoraIdpSettings): Promise<void>` | Register or REPLACE the upstream, all-or-nothing. Awaits the fetch — throws when it fails, leaving the previous idp untouched; a successful swap evicts the old keys. |
+| `config(): AmphoraExternalConfig`                | The resolved config — throws `idp_not_configured` when unset, `idp_issuer_unresolved` when unresolved.                                                                |
+| `refresh(): Promise<void>`                       | Refetch the upstream.                                                                                                                                                 |
+| `clear(): void`                                  | Unset the idp and evict its keys.                                                                                                                                     |
 
 ### `class AmphoraError extends LindormError`
 

@@ -20,7 +20,9 @@ export interface IAmphoraExternal {
 
   /**
    * Register an issuer source and fetch its keys — it awaits the fetch and
-   * throws when it fails. There is no deferred registration.
+   * throws when it fails. There is no deferred registration, and no partial
+   * one: the fetch happens first, so a failure registers nothing and never
+   * spends the `maxIssuers` cap on a source that did not load.
    */
   addIssuer(source: AmphoraExternalSettings): Promise<void>;
   removeIssuer(issuer: string): void;
@@ -46,6 +48,12 @@ export interface IAmphoraExternal {
  * `amphora.setup()` throws when a construction-declared idp cannot be resolved.
  */
 export interface IAmphoraIdp {
+  /**
+   * Register or REPLACE the upstream, ALL-OR-NOTHING: the new source is resolved
+   * and fetched before anything is swapped, so a failure throws with the
+   * previous idp untouched — same config, same keys, still serving. A successful
+   * swap evicts the previous idp's keys.
+   */
   set(source: AmphoraIdpSettings): Promise<void>;
   /**
    * Throws `idp_not_configured` when no upstream is registered, and
