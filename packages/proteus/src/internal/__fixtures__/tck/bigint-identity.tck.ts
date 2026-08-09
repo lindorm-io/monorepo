@@ -220,41 +220,65 @@ export const bigintIdentitySuite = (
       });
     });
 
+    // What a driver STORES for a bigint FK, and hands back for it, is not an
+    // enforcement question — every driver that carries a bigint identity owes
+    // the same answer, so these run unconditionally.
+    describe("foreign-key storage", () => {
+      test("a declared bigint FK column round-trips as a bigint", async () => {
+        const parentRepo = getHandle().repository(TckBigIntPkParent);
+        const childRepo = getHandle().repository(TckBigIntPkDeclaredChild);
+
+        const parent = await parentRepo.insert({ name: "parent" });
+        const child = await childRepo.insert({ label: "child", parentId: parent.id });
+
+        expect(isBigInt(child.parentId)).toBe(true);
+        expect(child.parentId).toBe(parent.id);
+
+        const found = await childRepo.findOne({ id: child.id });
+        expect(isBigInt(found!.parentId)).toBe(true);
+        expect(found!.parentId).toBe(parent.id);
+      });
+
+      test("children are found by the parent's bigint identity as a declared FK criterion", async () => {
+        const parentRepo = getHandle().repository(TckBigIntPkParent);
+        const childRepo = getHandle().repository(TckBigIntPkDeclaredChild);
+
+        const parent = await parentRepo.insert({ name: "parent" });
+        const other = await parentRepo.insert({ name: "other" });
+
+        await childRepo.insert({ label: "mine-1", parentId: parent.id });
+        await childRepo.insert({ label: "mine-2", parentId: parent.id });
+        await childRepo.insert({ label: "theirs", parentId: other.id });
+
+        const children = await childRepo.find({ parentId: parent.id });
+
+        expect(children.map((c) => c.label).sort()).toEqual(["mine-1", "mine-2"]);
+        expect(await childRepo.count({ parentId: parent.id })).toBe(2);
+      });
+
+      // The FK column projected from the relation alone (no @Field) must carry
+      // the SAME bigint the declared column does — the DDL gives it the
+      // referenced PK's bigint width, so the read path must hand it back at
+      // that width too, not as whatever the driver's wire format happens to be.
+      test("an auto-projected bigint FK column round-trips as a bigint", async () => {
+        const parentRepo = getHandle().repository(TckBigIntPkParent);
+        const childRepo = getHandle().repository(TckBigIntPkChild);
+
+        const parent = await parentRepo.insert({ name: "parent" });
+        const child = await childRepo.insert({ label: "child", parentId: parent.id });
+
+        expect(isBigInt(child.parentId)).toBe(true);
+        expect(child.parentId).toBe(parent.id);
+
+        const found = await childRepo.findOne({ id: child.id });
+        expect(isBigInt(found!.parentId)).toBe(true);
+        expect(found!.parentId).toBe(parent.id);
+      });
+    });
+
     // FK enforcement only means something where the driver actually enforces it.
     if (caps.referentialIntegrity) {
       describe("foreign-key integrity", () => {
-        test("a declared bigint FK column round-trips as a bigint", async () => {
-          const parentRepo = getHandle().repository(TckBigIntPkParent);
-          const childRepo = getHandle().repository(TckBigIntPkDeclaredChild);
-
-          const parent = await parentRepo.insert({ name: "parent" });
-          const child = await childRepo.insert({ label: "child", parentId: parent.id });
-
-          expect(isBigInt(child.parentId)).toBe(true);
-          expect(child.parentId).toBe(parent.id);
-
-          const found = await childRepo.findOne({ id: child.id });
-          expect(isBigInt(found!.parentId)).toBe(true);
-          expect(found!.parentId).toBe(parent.id);
-        });
-
-        test("children are found by the parent's bigint identity as a declared FK criterion", async () => {
-          const parentRepo = getHandle().repository(TckBigIntPkParent);
-          const childRepo = getHandle().repository(TckBigIntPkDeclaredChild);
-
-          const parent = await parentRepo.insert({ name: "parent" });
-          const other = await parentRepo.insert({ name: "other" });
-
-          await childRepo.insert({ label: "mine-1", parentId: parent.id });
-          await childRepo.insert({ label: "mine-2", parentId: parent.id });
-          await childRepo.insert({ label: "theirs", parentId: other.id });
-
-          const children = await childRepo.find({ parentId: parent.id });
-
-          expect(children.map((c) => c.label).sort()).toEqual(["mine-1", "mine-2"]);
-          expect(await childRepo.count({ parentId: parent.id })).toBe(2);
-        });
-
         test("a child pointing at a non-existent bigint identity is rejected", async () => {
           const parentRepo = getHandle().repository(TckBigIntPkParent);
           const childRepo = getHandle().repository(TckBigIntPkDeclaredChild);
@@ -264,25 +288,6 @@ export const bigintIdentitySuite = (
           await expect(
             childRepo.insert({ label: "orphan", parentId: ABSENT_ID }),
           ).rejects.toThrow(ProteusRepositoryError);
-        });
-
-        // The FK column projected from the relation alone (no @Field) must carry
-        // the SAME bigint the declared column does — the DDL gives it the
-        // referenced PK's bigint width, so the read path must hand it back at
-        // that width too, not as whatever the driver's wire format happens to be.
-        test("an auto-projected bigint FK column round-trips as a bigint", async () => {
-          const parentRepo = getHandle().repository(TckBigIntPkParent);
-          const childRepo = getHandle().repository(TckBigIntPkChild);
-
-          const parent = await parentRepo.insert({ name: "parent" });
-          const child = await childRepo.insert({ label: "child", parentId: parent.id });
-
-          expect(isBigInt(child.parentId)).toBe(true);
-          expect(child.parentId).toBe(parent.id);
-
-          const found = await childRepo.findOne({ id: child.id });
-          expect(isBigInt(found!.parentId)).toBe(true);
-          expect(found!.parentId).toBe(parent.id);
         });
 
         test("a child on an auto-projected bigint FK pointing at nothing is rejected", async () => {

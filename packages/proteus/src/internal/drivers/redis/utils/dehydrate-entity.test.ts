@@ -216,6 +216,24 @@ describe("dehydrateToRow", () => {
     expect(mockResolveJoinKeyValue).not.toHaveBeenCalled();
   });
 
+  // An auto-FK has no @Field, so its @RelationId carries the very property key
+  // the FK column is stored under. Treating the relationId as "handled" dropped
+  // the FK from the row entirely — a child written through the relation object
+  // stored null and lost its parent.
+  test("should write the FK of an auto-FK relation whose @RelationId shares its key", () => {
+    const fields = [makeField({ key: "value", name: "value", type: "string" })];
+    const relations = [makeRelation({ key: "parent", joinKeys: { parentId: "id" } })];
+    const metadata = makeMetadata(fields, relations, {
+      relationIds: [{ key: "parentId", relationKey: "parent", column: null }],
+    } as any);
+
+    mockResolveJoinKeyValue.mockReturnValue("parent-1");
+
+    const entity = { value: "Test", parent: { id: "parent-1" } };
+
+    expect(dehydrateToRow(entity as any, metadata)).toMatchSnapshot();
+  });
+
   test("should skip FK column already handled by fields", () => {
     const fields = [
       makeField({ key: "name", type: "string" }),

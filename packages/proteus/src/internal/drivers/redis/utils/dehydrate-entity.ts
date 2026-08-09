@@ -13,7 +13,8 @@ import {
 /**
  * Convert an entity instance into a flat Dict keyed by field key for Redis persistence.
  *
- * - Skips @Computed fields and virtual computed properties (relationIds, relationCounts)
+ * - Skips @Computed fields, and never writes a virtual @RelationId / @RelationCount
+ *   property (neither declares a field, so neither is read in the first place)
  * - Handles @Embedded fields by reading from nested objects
  * - Applies transform.to() when present
  * - Splits @TypedJson fields into JSON-safe data + a sidecar type-metadata entry
@@ -63,14 +64,12 @@ export const dehydrateToRow = <E extends IEntity>(
     handledKeys.add(field.key);
   }
 
-  // Skip virtual computed properties
-  for (const ri of metadata.relationIds ?? []) {
-    handledKeys.add(ri.key);
-  }
-  for (const rc of metadata.relationCounts ?? []) {
-    handledKeys.add(rc.key);
-  }
-
+  // A @RelationId / @RelationCount is virtual and never written, but it needs no
+  // marking here: neither has a field of its own, and only the field loop above
+  // reads a property into the row. Marking them handled instead SUPPRESSED the FK
+  // below, because an auto-FK's relationId carries the very property key the FK
+  // column is stored under — so a child written through the relation OBJECT
+  // stored a null FK and lost its parent.
   for (const relation of metadata.relations) {
     if (!relation.joinKeys) continue;
     if (relation.type === "ManyToMany") continue;

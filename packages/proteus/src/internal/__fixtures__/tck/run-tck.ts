@@ -50,6 +50,7 @@ import { streamSuite } from "./stream.tck.js";
 import { clearSuite } from "./clear.tck.js";
 import { uniqueConstraintsSuite } from "./unique-constraints.tck.js";
 import { foreignKeysSuite } from "./foreign-keys.tck.js";
+import { foreignKeyStorageSuite } from "./foreign-key-storage.tck.js";
 import {
   inheritanceSingleTableSuite,
   inheritanceJoinedSuite,
@@ -240,6 +241,7 @@ const runTckForNaming = (
   transformSuite(getHandle, entities, caps);
   embeddedSuite(getHandle, entities);
   changeDetectionSuite(getHandle, entities, getSource, caps);
+  foreignKeyStorageSuite(getHandle, entities);
 
   // Capability-gated suites
   maybeDescribe(caps.softDelete, "softDelete", () =>

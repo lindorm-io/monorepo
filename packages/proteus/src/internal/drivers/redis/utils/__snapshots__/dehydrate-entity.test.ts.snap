@@ -72,6 +72,13 @@ exports[`dehydrateToRow > should skip virtual relationId properties 1`] = `
 }
 `;
 
+exports[`dehydrateToRow > should write the FK of an auto-FK relation whose @RelationId shares its key 1`] = `
+{
+  "parentId": "parent-1",
+  "value": "Test",
+}
+`;
+
 exports[`dehydrateToRow typedJson > should carry null on both halves for a null typedJson value 1`] = `
 {
   "__typemeta__:payload": null,
