@@ -1,5 +1,5 @@
 import { checkbox, confirm, input, select } from "@inquirer/prompts";
-import { isUri } from "@lindorm/is";
+import { isHttpUrl } from "@lindorm/is";
 import { existsSync, readdirSync, rmSync } from "fs";
 import { resolve } from "path";
 import { isValidProjectName, parseProjectName } from "./project-name.js";
@@ -35,18 +35,19 @@ const promptProjectName = async (initial?: string): Promise<string> => {
   });
 };
 
-// Amphora rejects an issuer that is not a URI, so the scaffold must not emit one:
-// `/^https?:\/\/.+/` alone let `http://#x` through, which has no authority. The
-// scaffold additionally holds the issuer to http(s) — amphora would take a URN,
-// but the generated pylon serves its own JWKS at `{issuer}/.well-known/jwks.json`,
-// and a URN has nowhere to serve it from.
+// The generated pylon serves its own JWKS at `{issuer}/.well-known/jwks.json`, so
+// the issuer has to be something a location can be DERIVED from. Amphora would
+// take a URN as an identity, but it derives no jwksUri from one — the scaffold
+// would publish nothing. That is exactly what `isHttpUrl` asks, so ask it rather
+// than re-deriving the rule here: a hand-rolled `/^https?:\/\/.+/` let
+// `http://#x` through, which carries no authority.
 const promptIssuer = async (): Promise<string> =>
   input({
     message:
       "Issuer URL (this service's identity — becomes the Amphora issuer for JWKS):",
     default: "http://localhost:3000",
     validate: (value) =>
-      /^https?:\/\//.test(value.trim()) && isUri(value.trim())
+      isHttpUrl(value.trim())
         ? true
         : "Enter a fully-qualified URL with a host, e.g. https://auth.example.com",
   });

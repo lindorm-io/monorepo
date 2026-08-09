@@ -241,7 +241,7 @@ describe("runPrompts", () => {
     });
 
     // `/^https?:\/\/.+/` alone matched this — the scheme is right but there is no
-    // authority, so `new URL(...).host` is empty and amphora would refuse it.
+    // authority, so `new URL(...)` refuses it and amphora would too.
     test("rejects an http URL carrying no authority", async () => {
       const validate = await issuerValidate();
 
@@ -256,6 +256,15 @@ describe("runPrompts", () => {
 
       expect(validate("my-service")).toEqual(expect.any(String));
       expect(validate("urn:example:auth")).toEqual(expect.any(String));
+    });
+
+    // Same reason as the URN, different shape: amphora accepts it as an identity
+    // but derives no jwksUri from it, so the scaffold would publish nothing.
+    test("rejects a non-http URI", async () => {
+      const validate = await issuerValidate();
+
+      expect(validate("ftp://example.com")).toEqual(expect.any(String));
+      expect(validate("ws://example.com")).toEqual(expect.any(String));
     });
   });
 
