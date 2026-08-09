@@ -490,6 +490,54 @@ describe("defaultHydrateEntity", () => {
     expect(entity.address.zip).toBeNull();
   });
 
+  // A @RelationCount is declared with a backing @Field, but nothing maintains
+  // that column: every write and every diff drops the key, so what is stored is
+  // whatever the DDL defaulted to. Reading it would hand a surface that issues
+  // no count query a plausible-looking number. The repository assigns the real
+  // value after hydration.
+  describe("@RelationCount backing column", () => {
+    const countMetadata = {
+      ...metadata,
+      fields: [...metadata.fields, makeField("postCount", { type: "integer" })],
+      relationCounts: [{ key: "postCount", relationKey: "posts" }],
+    } as unknown as EntityMetadata;
+
+    test("should not read the stored column onto the entity", () => {
+      const entity = defaultHydrateEntity(
+        { id: "abc", name: "Alice", postCount: 0 },
+        countMetadata,
+        { snapshot: false, hooks: false },
+      ) as any;
+
+      expect(entity.name).toBe("Alice");
+      expect(entity.postCount).toBeUndefined();
+    });
+
+    // The write path excludes the key unconditionally, so leaving it out of the
+    // snapshot cannot turn into a write — and keeping it would make the value
+    // the repository assigns afterwards look like an in-place edit.
+    test("should not record the stored column in the snapshot", () => {
+      const entity = defaultHydrateEntity(
+        { id: "abc", name: "Alice", postCount: 7 },
+        countMetadata,
+        { hooks: false },
+      ) as any;
+
+      expect(getSnapshot(entity)).not.toHaveProperty("postCount");
+    });
+
+    test("should still read every other column", () => {
+      const entity = defaultHydrateEntity(
+        { id: "abc", name: "Alice", age: 30, postCount: 3 },
+        countMetadata,
+        { snapshot: false, hooks: false },
+      ) as any;
+
+      expect(entity.id).toBe("abc");
+      expect(entity.age).toBe(30);
+    });
+  });
+
   test("should skip ManyToMany relations in FK extraction", () => {
     const metaWithM2M = {
       ...metadata,

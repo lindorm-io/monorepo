@@ -46,8 +46,22 @@ export const defaultHydrateEntity = <E extends IEntity>(
   const entity = new metadata.target() as any;
   const snapshotDict: Dict = {};
 
+  // A @RelationCount is declared with a backing @Field, so it looks like a
+  // column here — but nothing ever maintains it: `getSkipKeys` drops it from
+  // every write and `diffColumns` from every update, so the stored value is
+  // whatever the DDL defaulted to and means nothing. The only true value comes
+  // from the repository's count query, which assigns it after hydration.
+  // Reading the column would hand a builder read — which issues no count query —
+  // a plausible-looking zero, and `select()` already refuses the key for exactly
+  // that reason. Skipped for the snapshot too: the write path excludes the key
+  // unconditionally, so its absence there can never turn into a write.
+  const relationCountKeys = new Set(
+    (metadata.relationCounts ?? []).map((relationCount) => relationCount.key),
+  );
+
   for (const field of metadata.fields) {
     if (!(field.key in data)) continue;
+    if (relationCountKeys.has(field.key)) continue;
 
     let raw = data[field.key];
 

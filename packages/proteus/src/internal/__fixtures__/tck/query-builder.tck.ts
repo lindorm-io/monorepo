@@ -21,6 +21,7 @@ export const queryBuilderSuite = (
   const {
     TckBigIntPkParent,
     TckEncrypted,
+    TckFkAutoNullableChild,
     TckFkParent,
     TckLeft,
     TckRight,
@@ -437,6 +438,37 @@ export const queryBuilderSuite = (
       expect(() => qb.select("autoNullableChildIds")).toThrow(
         /@RelationId "autoNullableChildIds" cannot be selected/,
       );
+    });
+
+    // Refusing the key in `select()` and then handing it back unasked would be
+    // the same lie by another route. A @RelationCount's backing column is never
+    // written, so an unprojected builder read leaves the property absent — the
+    // repository, which runs the count query, is the only surface that fills it.
+    test("leaves a @RelationCount absent on an unprojected read", async () => {
+      const repo = getHandle().repository(TckFkParent);
+      const parent = await repo.insert({ name: "counted" });
+      await getHandle()
+        .repository(TckFkAutoNullableChild)
+        .insert({ value: "one", parent });
+
+      const [viaRepository] = await repo.find({ id: parent.id });
+      expect(viaRepository.autoNullableChildCount).toBe(1);
+
+      const viaBuilder = await getSource()
+        .queryBuilder(TckFkParent)
+        .where({ id: parent.id })
+        .getMany();
+
+      expect(viaBuilder).toHaveLength(1);
+      expect(viaBuilder[0].name).toBe("counted");
+      expect(viaBuilder[0].autoNullableChildCount).toBeUndefined();
+
+      const one = await getSource()
+        .queryBuilder(TckFkParent)
+        .where({ id: parent.id })
+        .getOne();
+
+      expect(one?.autoNullableChildCount).toBeUndefined();
     });
 
     test("required excludes a root with no matching relation", async () => {

@@ -132,9 +132,11 @@ describe("SqliteRepository @RelationCount projection", () => {
 
     expect(countQueries).toEqual([]);
     expect(author.name).toBe("Alice");
-    // A backing column left out of the projection hydrates as null; a property
-    // with no column of its own is simply absent. Neither is the count.
-    expect(author.postCount).toBeNull();
+    // Both are simply absent. The backing column used to arrive as null here;
+    // hydration no longer reads a relation count's column at all, whatever the
+    // projection said, because nothing maintains it. Only the count query fills
+    // the property, and this projection asked for no count.
+    expect(author.postCount).toBeUndefined();
     expect(author.barePostCount).toBeUndefined();
   });
 
