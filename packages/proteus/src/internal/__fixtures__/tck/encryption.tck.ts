@@ -630,52 +630,50 @@ export const encryptionSuite = (
         expect(found.items[0].itemSecret).toBe("item-plaintext");
       });
 
-      if (caps.queryBuilderIncludes) {
-        test("query builder JOIN include decrypts the related entity", async () => {
-          const owner = await seed();
+      test("query builder JOIN include decrypts the related entity", async () => {
+        const owner = await seed();
 
-          const found = await getSource()
-            .queryBuilder(TckEncryptedItem)
-            .include("owner", { strategy: "join" })
-            .where({ ownerId: owner.id })
-            .getOne();
+        const found = await getSource()
+          .queryBuilder(TckEncryptedItem)
+          .include("owner", { strategy: "join" })
+          .where({ ownerId: owner.id })
+          .getOne();
 
-          expect(found).not.toBeNull();
-          expect(found!.itemSecret).toBe("item-plaintext");
-          expect(found!.owner).not.toBeNull();
-          expect(found!.owner!.ownerSecret).toBe("owner-plaintext");
-        });
+        expect(found).not.toBeNull();
+        expect(found!.itemSecret).toBe("item-plaintext");
+        expect(found!.owner).not.toBeNull();
+        expect(found!.owner!.ownerSecret).toBe("owner-plaintext");
+      });
 
-        test("query builder query-strategy include decrypts the related entity", async () => {
-          const owner = await seed();
+      test("query builder query-strategy include decrypts the related entity", async () => {
+        const owner = await seed();
 
-          const found = await getSource()
-            .queryBuilder(TckEncryptedOwner)
-            .include("items", { strategy: "query" })
-            .where({ id: owner.id })
-            .getOne();
+        const found = await getSource()
+          .queryBuilder(TckEncryptedOwner)
+          .include("items", { strategy: "query" })
+          .where({ id: owner.id })
+          .getOne();
 
-          expect(found).not.toBeNull();
-          expect(found!.ownerSecret).toBe("owner-plaintext");
-          expect(found!.items).toHaveLength(1);
-          expect(found!.items[0].itemSecret).toBe("item-plaintext");
-        });
+        expect(found).not.toBeNull();
+        expect(found!.ownerSecret).toBe("owner-plaintext");
+        expect(found!.items).toHaveLength(1);
+        expect(found!.items[0].itemSecret).toBe("item-plaintext");
+      });
 
-        test("getMany() query-strategy include decrypts every related entity", async () => {
-          const owner = await seed();
+      test("getMany() query-strategy include decrypts every related entity", async () => {
+        const owner = await seed();
 
-          const found = await getSource()
-            .queryBuilder(TckEncryptedOwner)
-            .include("items", { strategy: "query" })
-            .where({ id: owner.id })
-            .getMany();
+        const found = await getSource()
+          .queryBuilder(TckEncryptedOwner)
+          .include("items", { strategy: "query" })
+          .where({ id: owner.id })
+          .getMany();
 
-          expect(found).toHaveLength(1);
-          expect(found[0].ownerSecret).toBe("owner-plaintext");
-          expect(found[0].items).toHaveLength(1);
-          expect(found[0].items[0].itemSecret).toBe("item-plaintext");
-        });
-      }
+        expect(found).toHaveLength(1);
+        expect(found[0].ownerSecret).toBe("owner-plaintext");
+        expect(found[0].items).toHaveLength(1);
+        expect(found[0].items[0].itemSecret).toBe("item-plaintext");
+      });
     });
 
     // ─── Increment / Decrement Rejection ───────────────────────────────

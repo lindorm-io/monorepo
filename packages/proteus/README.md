@@ -1796,10 +1796,22 @@ down to nothing lands in exactly the same place as a relation with no rows at al
 
 **`strategy` names a round-trip shape, not a SQL construct.** `"join"` asks for the fewest trips to
 the store, preferably one; `"query"` asks for more trips, each smaller and faster. Both must return
-the same entities — the choice is a performance trade, never a semantic one. The memory driver makes
-no round trips at all (the store is the same heap), so it implements one path and ignores the option.
-On mongo the two are genuinely different: `"join"` is one aggregation with a `$lookup` per relation,
-`"query"` reads the roots and then queries each relation separately.
+the same entities — the choice is a performance trade, never a semantic one. What each driver makes
+of it:
+
+| Driver                    | `"join"`                                      | `"query"`                                |
+| ------------------------- | --------------------------------------------- | ---------------------------------------- |
+| postgres · mysql · sqlite | one statement with a `JOIN` per relation      | roots first, then one query per relation |
+| mongo                     | one aggregation with a `$lookup` per relation | roots first, then one query per relation |
+| redis                     | the relation reads batched into one pipeline  | the same reads, one command at a time    |
+| memory                    | no round trips at all — the option is ignored | same                                     |
+
+Redis cannot reach one round trip: the roots have to be read before their related keys are known.
+Under `"join"` every relation's first hop shares ONE pipeline and every second hop shares a second,
+so a query costs 1 trip — 2 once a many-to-many is included, since the join SETs have to be read
+before the targets they name. A relation whose foreign key sits in an ordinary hash field has no
+index pointing at it and costs a `SCAN` of the foreign keyspace on top, whichever strategy is
+chosen; an owning to-one and a many-to-many both address their rows by key and never scan.
 
 **`select` narrows the related entity and decides nothing else.** The keys a store needs to match a
 relation up with its root — a foreign primary key, the foreign key pointing back at the root, a
@@ -1813,9 +1825,9 @@ qb.include("posts", { select: ["title"] }).getMany();
 // posts: [ Post { title: "…" } ] — no id, no authorId
 ```
 
-**Driver support:** `include()` is implemented by **postgres, mysql, sqlite, memory and mongo**. The
-**redis** builder throws `NotSupportedError` from `include()` itself — it cannot load relations
-through the query builder. Use the repository path there instead, which all six drivers support:
+**Driver support:** all six drivers implement `include()`, and the conformance suite asserts the
+behaviour above on every one of them. The repository path loads the same relations without a
+builder:
 
 ```typescript
 await repository.find({ status: "active" }, { relations: ["posts", "profile"] });

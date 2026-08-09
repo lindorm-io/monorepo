@@ -50,6 +50,27 @@ import {
 } from "../../../utils/query/compute-in-memory-aggregate.js";
 import { scanAllRows as scanAllRowsShared } from "../utils/scan-all-rows.js";
 import { guardEncryptedCriteria } from "../../../utils/repository/repository-guards.js";
+import {
+  attachRowIncludes,
+  type RowIncludeMatch,
+} from "../../../utils/query/attach-row-includes.js";
+import { resolveRedisIncludes } from "../utils/query/resolve-redis-includes.js";
+
+type RedisQueryResult = {
+  rows: Array<Dict>;
+  includes: Array<RowIncludeMatch>;
+};
+
+type RedisResolveOptions = {
+  /** Skip skip/take so a caller can count before pagination. */
+  skipPagination?: boolean;
+  /**
+   * Load only the relations that can change which roots survive. A count, an
+   * existence check and an aggregate are all decided by `required` alone, so
+   * fetching an optional relation for them is round trips spent on nothing.
+   */
+  requiredIncludesOnly?: boolean;
+};
 
 // ─── Lock mode guard ──────────────────────────────────────────────────────────
 
@@ -247,28 +268,6 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  // ─── Relations ──────────────────────────────────────────────────────
-
-  /**
-   * Rejected outright: this builder never reads `state.includes`, so accepting
-   * the call would hand back unhydrated relations with no signal. Throwing at
-   * the call site puts the stack on the offending `.include()`, not on the
-   * terminal that would silently return incomplete entities.
-   */
-  override include(relation: string): this {
-    throw new NotSupportedError("include is not supported by the Redis driver", {
-      code: "unsupported_operation",
-      title: "Unsupported Operation",
-      details:
-        "Query-builder relation loading is implemented by the postgres, mysql, sqlite, memory and mongo drivers only — this is a driver gap, not a usage error. On the Redis driver, load relations through the repository instead: repository.find(criteria, { relations: [...] }).",
-      data: {
-        operation: "include",
-        relation,
-        supportedDrivers: ["postgres", "mysql", "sqlite", "memory", "mongo"],
-      },
-    });
-  }
-
   // ─── Terminal methods ─────────────────────────────────────────────
 
   clone(): IProteusQueryBuilder<E> {
@@ -289,9 +288,9 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   async getOne(): Promise<E | null> {
-    const rows = await this.resolveRows();
+    const { rows, includes } = await this.resolveResult();
     if (rows.length === 0) return null;
-    return this.hydrateRow(rows[0]);
+    return this.hydrateRow(rows[0], includes);
   }
 
   async getOneOrFail(): Promise<E> {
@@ -312,12 +311,14 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   async getMany(): Promise<Array<E>> {
-    const rows = await this.resolveRows();
-    return rows.map((row) => this.hydrateRow(row));
+    const { rows, includes } = await this.resolveResult();
+    return rows.map((row) => this.hydrateRow(row, includes));
   }
 
   async getManyAndCount(): Promise<[Array<E>, number]> {
-    const allRows = await this.resolveRows(/* forCount */ true);
+    const { rows: allRows, includes } = await this.resolveResult({
+      skipPagination: true,
+    });
     const totalCount = allRows.length;
 
     let paginatedRows = allRows;
@@ -328,7 +329,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       paginatedRows = paginatedRows.slice(0, this.state.take);
     }
 
-    const entities = paginatedRows.map((row) => this.hydrateRow(row));
+    const entities = paginatedRows.map((row) => this.hydrateRow(row, includes));
     return [entities, totalCount];
   }
 
@@ -440,10 +441,26 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   /**
    * Resolve filtered, ordered rows from Redis.
+   *
+   * Only the REQUIRED relations are loaded here, because that is all a count,
+   * an existence check or an aggregate can be changed by — an optional relation
+   * costs round trips and moves neither answer.
+   *
    * @param forCount - When true, skips pagination (skip/take) so the caller
-   *   can get the total count before pagination is applied (used by getManyAndCount/count).
+   *   can get the total count before pagination is applied (used by count).
    */
   private async resolveRows(forCount?: boolean): Promise<Array<Dict>> {
+    const { rows } = await this.resolveResult({
+      skipPagination: forCount,
+      requiredIncludesOnly: true,
+    });
+    return rows;
+  }
+
+  /**
+   * Resolve filtered, ordered rows along with the relations they matched.
+   */
+  private async resolveResult(options?: RedisResolveOptions): Promise<RedisQueryResult> {
     let rows: Array<Dict>;
 
     // PK-exact optimization: if the first predicate is a simple PK equality,
@@ -560,6 +577,28 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       });
     }
 
+    // Includes are resolved BEFORE ordering and pagination so that `required`
+    // can drop unmatched roots first — a root excluded by a required relation
+    // must not consume a slot in take/skip, and must not be counted by
+    // count()/exists() either, which is what an INNER JOIN does.
+    const specs = options?.requiredIncludesOnly
+      ? this.state.includes.filter((include) => include.required)
+      : this.state.includes;
+    const includes = await resolveRedisIncludes(rows, specs, {
+      rootMetadata: this.metadata,
+      client: this.client,
+      namespace: this.namespace,
+      withDeleted: this.state.withDeleted,
+      versionTimestamp: this.state.versionTimestamp,
+      logger: this.logger,
+    });
+    const required = includes.filter((match) => match.include.required);
+    if (required.length > 0) {
+      rows = rows.filter((row) =>
+        required.every((match) => (match.rows.get(row) ?? []).length > 0),
+      );
+    }
+
     // Ordering: explicit .orderBy() > @DefaultOrder > none
     const effectiveOrderBy = this.state.orderBy ?? this.metadata.defaultOrder;
     if (effectiveOrderBy) {
@@ -570,7 +609,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     }
 
     // Pagination
-    if (!forCount) {
+    if (!options?.skipPagination) {
       if (this.state.skip != null && this.state.skip > 0) {
         rows = rows.slice(this.state.skip);
       }
@@ -579,7 +618,9 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       }
     }
 
-    // Select projection
+    // Select projection. Relations were matched against the UNPROJECTED rows,
+    // so the projected copy inherits their matches by identity — projecting a
+    // join key away narrows the returned columns, never the relation.
     if (this.state.selections && this.state.selections.length > 0) {
       const keys = this.state.selections as Array<string>;
       rows = rows.map((r) => {
@@ -587,11 +628,14 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         for (const k of keys) {
           if (k in r) projected[k] = r[k];
         }
+        for (const match of includes) {
+          match.rows.set(projected, match.rows.get(r) ?? []);
+        }
         return projected;
       });
     }
 
-    return rows;
+    return { rows, includes };
   }
 
   private async scanAllRows(): Promise<Array<Dict>> {
@@ -605,13 +649,14 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     );
   }
 
-  private hydrateRow(row: Dict): E {
+  private hydrateRow(row: Dict, includes: Array<RowIncludeMatch>): E {
     const effectiveMetadata = resolvePolymorphicMetadata(row, this.metadata);
-    return defaultHydrateEntity<E>(structuredClone(row), effectiveMetadata, {
+    const entity = defaultHydrateEntity<E>(structuredClone(row), effectiveMetadata, {
       snapshot: true,
       hooks: true,
       amphora: this.amphora,
     });
+    return attachRowIncludes(entity, row, includes, this.amphora);
   }
 
   private async computeAggregate(

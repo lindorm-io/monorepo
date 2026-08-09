@@ -26,14 +26,6 @@ export type TckCapabilities = {
   atomicIncrements: boolean;
   /** source.queryBuilder() — where, orderBy, skip, take, select, aggregates, clone */
   queryBuilder: boolean;
-  /**
-   * A query builder honours `.include(relation)`: the JOIN strategy hydrates the
-   * related entity off the joined row, the "query" strategy loads it with a
-   * second round-trip. Only the SQL builders implement it — the memory, mongo
-   * and redis builders reject `.include()` with a NotSupportedError at the call
-   * site (they never read `state.includes`).
-   */
-  queryBuilderIncludes: boolean;
   /** DB-level UNIQUE constraint enforcement via @Unique() */
   uniqueEnforcement: boolean;
   /** DB-level FK constraint enforcement: ON DELETE CASCADE / RESTRICT / SET NULL */

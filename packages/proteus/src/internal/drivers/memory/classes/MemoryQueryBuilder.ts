@@ -35,11 +35,11 @@ import {
 import { resolveFilters } from "../../../utils/query/resolve-filters.js";
 import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides.js";
 import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
-import { attachMemoryIncludes } from "../utils/attach-memory-includes.js";
 import {
-  resolveMemoryIncludes,
-  type MemoryIncludeMatch,
-} from "../utils/resolve-memory-includes.js";
+  attachRowIncludes,
+  type RowIncludeMatch,
+} from "../../../utils/query/attach-row-includes.js";
+import { resolveMemoryIncludes } from "../utils/resolve-memory-includes.js";
 import { applyAutoIncrement } from "../utils/memory-auto-increment.js";
 import { checkUniqueConstraints } from "../utils/memory-unique-check.js";
 import { serializePk } from "../utils/serialize-pk.js";
@@ -47,7 +47,7 @@ import { guardEncryptedCriteria } from "../../../utils/repository/repository-gua
 
 type MemoryQueryResult = {
   rows: Array<Dict>;
-  includes: Array<MemoryIncludeMatch>;
+  includes: Array<RowIncludeMatch>;
 };
 
 export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
@@ -494,14 +494,14 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return { rows, includes };
   }
 
-  private hydrateRow(row: Dict, includes: Array<MemoryIncludeMatch>): E {
+  private hydrateRow(row: Dict, includes: Array<RowIncludeMatch>): E {
     const effectiveMetadata = resolvePolymorphicMetadata(row, this.metadata);
     const entity = defaultHydrateEntity<E>(structuredClone(row), effectiveMetadata, {
       snapshot: true,
       hooks: true,
       amphora: this.amphora,
     });
-    return attachMemoryIncludes(entity, row, includes, this.amphora);
+    return attachRowIncludes(entity, row, includes, this.amphora);
   }
 
   private async computeAggregate(

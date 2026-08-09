@@ -1,0 +1,45 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`planRedisInclude (naming: none) > a many-to-many reads both join SETs per root and addresses members by key 1`] = `
+{
+  "link": {
+    "foreignKey": "id",
+    "joinColumn": "planLeftId",
+    "joinTable": "plan_left_x_plan_right",
+    "localKey": "id",
+  },
+  "memberKey": "ns:entity:plan_right:r9",
+  "sets": [
+    [
+      "ns:join:plan_left_x_plan_right:planLeftId:l1",
+      "ns:join:plan_left_x_plan_right:rev:planLeftId:l1",
+    ],
+    [
+      "ns:join:plan_left_x_plan_right:planLeftId:l2",
+      "ns:join:plan_left_x_plan_right:rev:planLeftId:l2",
+    ],
+  ],
+}
+`;
+
+exports[`planRedisInclude (naming: snake) > a many-to-many reads both join SETs per root and addresses members by key 1`] = `
+{
+  "link": {
+    "foreignKey": "id",
+    "joinColumn": "plan_left_id",
+    "joinTable": "plan_left_x_plan_right",
+    "localKey": "id",
+  },
+  "memberKey": "ns:entity:plan_right:r9",
+  "sets": [
+    [
+      "ns:join:plan_left_x_plan_right:plan_left_id:l1",
+      "ns:join:plan_left_x_plan_right:rev:plan_left_id:l1",
+    ],
+    [
+      "ns:join:plan_left_x_plan_right:plan_left_id:l2",
+      "ns:join:plan_left_x_plan_right:rev:plan_left_id:l2",
+    ],
+  ],
+}
+`;
