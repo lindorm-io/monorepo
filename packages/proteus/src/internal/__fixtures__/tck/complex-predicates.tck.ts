@@ -278,6 +278,69 @@ export const complexPredicatesSuite = (
       });
     });
 
+    // ─── Criteria-level $not on TckJsonbArray ──────────────────────────
+    // `$not` as a criteria KEY negates a whole sub-predicate. It is a distinct
+    // operator from the field-level `{ field: { $not: … } }` form: SQL drivers
+    // compile it to `NOT (…)`, the in-memory drivers evaluate `!matches(…)`, and
+    // MongoDB — which has no top-level `$not` — needs `$nor`. Every row below has
+    // a non-null `name`, so no driver's NULL-vs-missing handling is in play.
+
+    describe("Criteria-level $not", () => {
+      const { TckJsonbArray } = entities;
+
+      beforeEach(async () => {
+        await getHandle().clear();
+        const repo = getHandle().repository(TckJsonbArray);
+        await repo.insert({ name: "ab", tags: ["a", "b"] });
+        await repo.insert({ name: "abc", tags: ["a", "b", "c"] });
+        await repo.insert({ name: "cd", tags: ["c", "d"] });
+        await repo.insert({ name: "xy", tags: ["x", "y", "z"] });
+      });
+
+      test("negates a single-field sub-predicate", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ $not: { name: "cd" } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "abc", "xy"]);
+      });
+
+      test("negates a nested $or", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { $not: { $or: [{ name: "ab" }, { name: "cd" }] } } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["abc", "xy"]);
+      });
+
+      test("negates a field operator", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { $not: { name: { $in: ["ab", "xy"] } } } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["abc", "cd"]);
+      });
+
+      test("intersects with a sibling field criterion", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { tags: { $length: 2 }, $not: { name: "cd" } } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["ab"]);
+      });
+
+      test("negating a predicate nothing matches returns every row", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ $not: { name: "nope" } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "abc", "cd", "xy"]);
+      });
+    });
+
     // ─── JSON containment ($has) on TckJsonHolder ──────────────────────
 
     describe("JSON containment ($has)", () => {

@@ -239,6 +239,17 @@ export const compileFilter = <E extends Dict = Dict>(
       continue;
     }
 
+    // A CRITERIA-level `$not` negates a whole sub-predicate — the same thing the
+    // SQL drivers compile to `NOT (…)` and the in-memory drivers evaluate as
+    // `!matches(…)`. MongoDB has no top-level `$not` (the server rejects it with
+    // "unknown top level operator"); `$nor` over a single expression is the
+    // documented way to negate one. The FIELD-level `{ field: { $not: … } }` form
+    // is a different operator and stays in `compileOperator`.
+    if (key === "$not") {
+      andConditions.push({ $nor: [compileFilter(value as Condition<E>, metadata)] });
+      continue;
+    }
+
     const mongoField = resolveMongoFieldName(key, metadata);
     const field = findField(key, metadata);
     const compiled = compileValue(mongoField, value, field);

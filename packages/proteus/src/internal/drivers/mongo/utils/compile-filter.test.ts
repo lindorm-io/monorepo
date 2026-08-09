@@ -214,6 +214,41 @@ describe("compileFilter", () => {
         ),
       ).toMatchSnapshot();
     });
+
+    // MongoDB has no top-level $not — the server rejects it with "unknown top
+    // level operator: $not". A criteria-level $not compiles to $nor over the
+    // negated sub-predicate.
+    test("should compile a criteria-level $not to $nor", () => {
+      expect(compileFilter({ $not: { name: "foo" } } as any, defaultMetadata)).toEqual({
+        $nor: [{ name: "foo" }],
+      });
+    });
+
+    test("should compile a criteria-level $not over a nested $or", () => {
+      expect(
+        compileFilter(
+          { $not: { $or: [{ name: "foo" }, { name: "bar" }] } } as any,
+          defaultMetadata,
+        ),
+      ).toMatchSnapshot();
+    });
+
+    test("should compile a criteria-level $not alongside a sibling field", () => {
+      expect(
+        compileFilter(
+          { age: { $gte: 18 }, $not: { name: "foo" } } as any,
+          defaultMetadata,
+        ),
+      ).toMatchSnapshot();
+    });
+
+    // The FIELD-level `{ field: { $not: … } }` form is a different operator and
+    // keeps compiling to Mongo's field-level $not.
+    test("should keep a field-level $not as a field-level $not", () => {
+      expect(
+        compileFilter({ name: { $not: { $eq: "foo" } } } as any, defaultMetadata),
+      ).toMatchSnapshot();
+    });
   });
 
   describe("complex predicates", () => {
