@@ -296,7 +296,15 @@ export const introspectSchema = async (
     table.checkConstraints.push(chk);
   }
 
-  // Batch-query triggers (only proteus-managed triggers)
+  // Batch-query triggers (only proteus-managed triggers). The `_` is escaped:
+  // unescaped it is LIKE's single-character wildcard, so the filter would also
+  // claim a user trigger named `proteusXyz` as proteus-managed — and
+  // proteus-managed is exactly what `diffSchema` drops. `!` is the escape
+  // character rather than a backslash because MySQL processes backslashes inside
+  // the string literal too, so a backslash pattern is read twice and its correct
+  // spelling depends on `sql_mode`: under `NO_BACKSLASH_ESCAPES` both `'…\_%'`
+  // and `'…\\_%'` fail outright with "Incorrect arguments to ESCAPE". `!` has one
+  // meaning in one layer and behaves identically under every sql_mode.
   const { rows: triggerRows } = await client.query<{
     TRIGGER_NAME: string;
     EVENT_OBJECT_TABLE: string;
@@ -304,7 +312,7 @@ export const introspectSchema = async (
     `SELECT TRIGGER_NAME, EVENT_OBJECT_TABLE
      FROM information_schema.TRIGGERS
      WHERE TRIGGER_SCHEMA = DATABASE() AND EVENT_OBJECT_TABLE IN (?)
-       AND TRIGGER_NAME LIKE 'proteus_%'
+       AND TRIGGER_NAME LIKE 'proteus!_%' ESCAPE '!'
      ORDER BY EVENT_OBJECT_TABLE, TRIGGER_NAME`,
     [relevantTableNames],
   );

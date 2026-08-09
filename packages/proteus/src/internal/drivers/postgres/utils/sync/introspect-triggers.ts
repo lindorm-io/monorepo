@@ -10,6 +10,14 @@ export type TriggerRow = {
  * Introspects user-defined triggers on the managed tables. Only returns triggers
  * whose names start with the proteus prefix ("proteus_") so we never conflict
  * with user-created triggers outside of proteus management.
+ *
+ * The `_` is escaped: unescaped it is LIKE's single-character wildcard, so the
+ * filter would also claim a user trigger named `proteusXyz` as proteus-managed —
+ * and proteus-managed is exactly what `diffSchema` drops. The template literal
+ * needs `\\` to emit the one backslash PostgreSQL sees; a single `\` would be
+ * consumed by JS and silently leave the pattern unescaped. Backslash is a plain
+ * character inside a string literal while `standard_conforming_strings` is on,
+ * which it is by default.
  */
 export const introspectTriggers = async (
   client: PostgresQueryClient,
@@ -30,7 +38,7 @@ export const introspectTriggers = async (
     WHERE n.nspname = ANY($1)
       AND c.relname = ANY($2)
       AND NOT t.tgisinternal
-      AND t.tgname LIKE 'proteus_%'
+      AND t.tgname LIKE 'proteus\\_%' ESCAPE '\\'
     ORDER BY n.nspname, c.relname, t.tgname
     `,
     [schemas, tables],
