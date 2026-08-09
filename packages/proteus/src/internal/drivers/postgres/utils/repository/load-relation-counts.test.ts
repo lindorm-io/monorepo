@@ -149,7 +149,12 @@ describe("loadRelationCounts — early exit", () => {
       [{ key: "commentCount", relationKey: "comments" }],
       [makeRelation()],
     );
-    await loadRelationCounts([], { metadata, namespace: "public", client });
+    await loadRelationCounts([], {
+      metadata,
+      relationCounts: metadata.relationCounts,
+      namespace: "public",
+      client,
+    });
     expect(client.query).not.toHaveBeenCalled();
   });
 
@@ -158,6 +163,25 @@ describe("loadRelationCounts — early exit", () => {
     const metadata = makeOwnerMetadata([], []);
     await loadRelationCounts([{ id: "a1" }] as any, {
       metadata,
+      relationCounts: metadata.relationCounts,
+      namespace: "public",
+      client,
+    });
+    expect(client.query).not.toHaveBeenCalled();
+  });
+
+  // The projection decides which counts load, so the context carries the ones
+  // it named — not every count the entity declares. A count costs a COUNT(*)
+  // query of its own, which is the whole reason not to run it unasked.
+  it("should query for the counts the context names, not the ones metadata declares", async () => {
+    const client = makeClient();
+    const metadata = makeOwnerMetadata(
+      [{ key: "commentCount", relationKey: "comments" }],
+      [makeRelation()],
+    );
+    await loadRelationCounts([{ id: "a1" }] as any, {
+      metadata,
+      relationCounts: [],
       namespace: "public",
       client,
     });
@@ -172,6 +196,7 @@ describe("loadRelationCounts — early exit", () => {
     );
     await loadRelationCounts([{ id: "a1" }] as any, {
       metadata,
+      relationCounts: metadata.relationCounts,
       namespace: "public",
       client,
     });
@@ -200,6 +225,7 @@ describe("loadRelationCounts — OneToMany", () => {
 
     await loadRelationCounts([{ id: "a1" }] as any, {
       metadata,
+      relationCounts: metadata.relationCounts,
       namespace: "public",
       client,
     });
@@ -221,7 +247,12 @@ describe("loadRelationCounts — OneToMany", () => {
     );
     const entities: Array<any> = [{ id: "a1" }, { id: "a1" }];
 
-    await loadRelationCounts(entities, { metadata, namespace: "public", client });
+    await loadRelationCounts(entities, {
+      metadata,
+      relationCounts: metadata.relationCounts,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].commentCount).toBe(5);
     expect(entities[1].commentCount).toBe(5);
@@ -236,7 +267,12 @@ describe("loadRelationCounts — OneToMany", () => {
     );
     const entities: Array<any> = [{ id: "a99" }];
 
-    await loadRelationCounts(entities, { metadata, namespace: "public", client });
+    await loadRelationCounts(entities, {
+      metadata,
+      relationCounts: metadata.relationCounts,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].commentCount).toBe(0);
   });
@@ -253,7 +289,12 @@ describe("loadRelationCounts — OneToMany", () => {
     );
     const entities: Array<any> = [{ id: "a1" }, { id: "a2" }];
 
-    await loadRelationCounts(entities, { metadata, namespace: "public", client });
+    await loadRelationCounts(entities, {
+      metadata,
+      relationCounts: metadata.relationCounts,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].commentCount).toBe(2);
     expect(entities[1].commentCount).toBe(7);
@@ -274,6 +315,7 @@ describe("loadRelationCounts — OneToMany", () => {
 
     await loadRelationCounts([{ id: "a1" }] as any, {
       metadata,
+      relationCounts: metadata.relationCounts,
       namespace: "public",
       client,
     });
@@ -297,6 +339,7 @@ describe("loadRelationCounts — OneToMany", () => {
 
     await loadRelationCounts([{ id: "a1" }] as any, {
       metadata,
+      relationCounts: metadata.relationCounts,
       namespace: "ctx_ns",
       client,
     });
@@ -335,6 +378,7 @@ describe("loadRelationCounts — OneToMany", () => {
 
     await loadRelationCounts(entities, {
       metadata: compositeMetadata,
+      relationCounts: compositeMetadata.relationCounts,
       namespace: "public",
       client,
     });
@@ -370,6 +414,7 @@ describe("loadRelationCounts — ManyToMany", () => {
 
     await loadRelationCounts([{ id: "a1" }] as any, {
       metadata,
+      relationCounts: metadata.relationCounts,
       namespace: "public",
       client,
     });
@@ -394,7 +439,12 @@ describe("loadRelationCounts — ManyToMany", () => {
     );
     const entities: Array<any> = [{ id: "a1" }];
 
-    await loadRelationCounts(entities, { metadata, namespace: "public", client });
+    await loadRelationCounts(entities, {
+      metadata,
+      relationCounts: metadata.relationCounts,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].tagCount).toBe(8);
   });
@@ -413,6 +463,7 @@ describe("loadRelationCounts — ManyToMany", () => {
 
     await loadRelationCounts([{ id: "a1" }] as any, {
       metadata,
+      relationCounts: metadata.relationCounts,
       namespace: "public",
       client,
     });
@@ -434,6 +485,7 @@ describe("loadRelationCounts — ManyToMany", () => {
 
     await loadRelationCounts([{ id: "a1" }] as any, {
       metadata,
+      relationCounts: metadata.relationCounts,
       namespace: "public",
       client,
     });
@@ -460,7 +512,12 @@ describe("loadRelationCounts — ManyToMany", () => {
       { tenantId: "t1", id: "a2" },
     ];
 
-    await loadRelationCounts(entities, { metadata, namespace: "public", client });
+    await loadRelationCounts(entities, {
+      metadata,
+      relationCounts: metadata.relationCounts,
+      namespace: "public",
+      client,
+    });
 
     expect(entities[0].tagCount).toBe(6);
     expect(entities[1].tagCount).toBe(9);
@@ -489,6 +546,7 @@ describe("loadRelationCounts — relation type skipping", () => {
 
     await loadRelationCounts([{ id: "a1" }] as any, {
       metadata,
+      relationCounts: metadata.relationCounts,
       namespace: "public",
       client,
     });
@@ -506,6 +564,7 @@ describe("loadRelationCounts — relation type skipping", () => {
 
     await loadRelationCounts([{ id: "a1" }] as any, {
       metadata,
+      relationCounts: metadata.relationCounts,
       namespace: "public",
       client,
     });

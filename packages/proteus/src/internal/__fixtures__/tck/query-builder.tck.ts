@@ -21,6 +21,7 @@ export const queryBuilderSuite = (
   const {
     TckBigIntPkParent,
     TckEncrypted,
+    TckFkParent,
     TckLeft,
     TckRight,
     TckSimplePost,
@@ -419,6 +420,22 @@ export const queryBuilderSuite = (
       const qb = getSource().queryBuilder(TckSimpleUser);
       expect(() => qb.select("posts" as never)).toThrow(
         /Relation "posts" cannot be selected/,
+      );
+    });
+
+    // The builder's own projection names what the compiled query returns. A
+    // relation id and a relation count are not in the row on any driver.
+    test("rejects a @RelationCount in the root select", () => {
+      const qb = getSource().queryBuilder(TckFkParent);
+      expect(() => qb.select("autoNullableChildCount")).toThrow(
+        /@RelationCount "autoNullableChildCount" cannot be selected/,
+      );
+    });
+
+    test("rejects a @RelationId in the root select", () => {
+      const qb = getSource().queryBuilder(TckFkParent);
+      expect(() => qb.select("autoNullableChildIds")).toThrow(
+        /@RelationId "autoNullableChildIds" cannot be selected/,
       );
     });
 

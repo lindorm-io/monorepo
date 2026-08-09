@@ -20,7 +20,7 @@ import { resolveIncludeStrategy } from "../internal/utils/query/resolve-include-
 import { withRelationKeys } from "../internal/utils/query/with-relation-keys.js";
 import {
   guardEncryptedCriteria,
-  selectableKeys,
+  querySelectableKeys,
   validateSelectionKeys,
 } from "../internal/utils/repository/repository-guards.js";
 
@@ -169,7 +169,7 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     validateSelectionKeys(
       this.metadata,
       fields.map((field) => String(field)),
-      selectableKeys(this.metadata),
+      querySelectableKeys(this.metadata),
     );
 
     this.state.selections = withRelationKeys(fields, this.state.includes, this.metadata);

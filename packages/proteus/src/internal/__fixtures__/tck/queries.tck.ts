@@ -146,6 +146,59 @@ export const queriesSuite = (getHandle: () => TckDriverHandle, entities: TckEnti
       expect(projected[0].parentId).toEqual(full.parentId);
     });
 
+    // A @RelationCount is populated by the repository, so the repository is
+    // where it may be named. It used to be neither: an unprojected find filled
+    // it while a projection that named it was refused as an unknown field.
+    test("find accepts a @RelationCount property in select", async () => {
+      const parentRepo = getHandle().repository(TckFkParent);
+      const childRepo = getHandle().repository(TckFkAutoNullableChild);
+
+      const parent = await parentRepo.insert({ name: "SelectableRelationCount" });
+      await childRepo.insert({ value: "one", parent });
+      await childRepo.insert({ value: "two", parent });
+
+      const projected = await parentRepo.find(
+        { id: parent.id },
+        { select: ["id", "autoNullableChildCount"] },
+      );
+
+      expect(projected).toHaveLength(1);
+      expect(projected[0].autoNullableChildCount).toBe(2);
+    });
+
+    // Every relation count costs a query of its own, so an unnamed one is a
+    // round trip for a value nobody asked for — the same bargain a relation id
+    // strikes. A count left out comes back as null where a backing column was
+    // simply not selected, and absent where the property has no column at all.
+    test("find skips the @RelationCount and @RelationId a projection omits", async () => {
+      const parentRepo = getHandle().repository(TckFkParent);
+      const childRepo = getHandle().repository(TckFkAutoNullableChild);
+
+      const parent = await parentRepo.insert({ name: "SkippedRelationValues" });
+      await childRepo.insert({ value: "one", parent });
+
+      const [projected] = await parentRepo.find(
+        { id: parent.id },
+        { select: ["id", "name"] },
+      );
+
+      expect([null, undefined]).toContain(projected.autoNullableChildCount);
+      expect(projected.autoNullableChildIds).toBeUndefined();
+    });
+
+    test("find still populates both when there is no projection", async () => {
+      const parentRepo = getHandle().repository(TckFkParent);
+      const childRepo = getHandle().repository(TckFkAutoNullableChild);
+
+      const parent = await parentRepo.insert({ name: "UnprojectedRelationValues" });
+      await childRepo.insert({ value: "one", parent });
+
+      const [full] = await parentRepo.find({ id: parent.id });
+
+      expect(full.autoNullableChildCount).toBe(1);
+      expect(full.autoNullableChildIds).toBeDefined();
+    });
+
     test("find returns empty array when no matches", async () => {
       const repo = getHandle().repository(TckSimpleUser);
       const results = await repo.find({ name: "NonExistent" });

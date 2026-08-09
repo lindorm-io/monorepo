@@ -231,12 +231,31 @@ export const guardEncryptedCriteria = (
 };
 
 /**
- * The keys a ROOT projection may name: everything the root query populates.
+ * The declared columns a row really carries a value for.
  *
- * Beyond the declared columns that is two things without a `MetaField` of their
- * own — an owning relation's auto-projected foreign key, which hydration
- * assigns unasked, and a `@RelationId`, which the repository loads and which
- * honours the projection. Both come back when named, so both are selectable.
+ * A `@RelationCount` is written as a property WITH a backing `@Field`, and that
+ * column is never maintained: every write skips it and every repository read
+ * recomputes the value. So the column is in `fields` while its content is a
+ * lie, and the two sets below have to start from the columns without it —
+ * otherwise a surface that returns stored columns alone would accept the count
+ * and hand back whatever the column was defaulted to.
+ */
+const columnKeys = (metadata: EntityMetadata): Array<string> => {
+  const counts = new Set((metadata.relationCounts ?? []).map((rc) => rc.key));
+  return metadata.fields.filter((f) => !counts.has(f.key)).map((f) => f.key);
+};
+
+/**
+ * The keys a COMPILED QUERY projection may name — `QueryBuilder.select()`,
+ * `cursor()` and the `stream()` that delegates to it.
+ *
+ * A query returns the row and nothing else: the declared columns, plus an
+ * owning relation's auto-projected foreign key, which hydration assigns unasked
+ * and which no `MetaField` of its own accounts for. An owning `*ToOne`
+ * `@RelationId` is that foreign key, so it is named here too — the value
+ * genuinely comes back. Nothing else virtual does: the remaining `@RelationId`
+ * kinds and every `@RelationCount` are loaded AFTER the rows, by the repository,
+ * and no query issues that load.
  *
  * A per-relation `select` passes `fields` alone instead: it narrows the columns
  * projected off a joined or separately-queried relation, and that projection
@@ -244,12 +263,54 @@ export const guardEncryptedCriteria = (
  * relationId (no driver loads a relation's own), so naming either there would
  * resolve to nothing.
  */
-export const selectableKeys = (metadata: EntityMetadata): Array<string> =>
+export const querySelectableKeys = (metadata: EntityMetadata): Array<string> =>
+  uniq([...columnKeys(metadata), ...projectedForeignKeys(metadata)]);
+
+/**
+ * The keys a REPOSITORY projection may name — `find`, `findOne`, `versions`,
+ * and everything funnelling through them.
+ *
+ * Everything a query returns, plus the two virtual kinds the repository loads
+ * once the rows are in hand and which honour the projection: `@RelationId` and
+ * `@RelationCount`. Derived from the query set rather than listed again, so the
+ * two can never drift into disagreeing about a column.
+ */
+export const repositorySelectableKeys = (metadata: EntityMetadata): Array<string> =>
   uniq([
-    ...metadata.fields.map((field) => field.key),
-    ...projectedForeignKeys(metadata),
+    ...querySelectableKeys(metadata),
     ...(metadata.relationIds ?? []).map((relationId) => relationId.key),
+    ...(metadata.relationCounts ?? []).map((relationCount) => relationCount.key),
   ]);
+
+const RELATION_VALUE_DETAILS = {
+  "@RelationId":
+    "An owning *ToOne relation id rides along on a foreign key the query already " +
+    "projects; every other kind costs a query of its own, and only a root read " +
+    "through the repository — find(), findOne(), versions() — issues it.",
+  "@RelationCount":
+    "A relation count is recomputed on every repository read and its backing column " +
+    "is never maintained, so a projection that returns stored columns would hand " +
+    "back a value that means nothing. Only a root read through the repository — " +
+    "find(), findOne(), versions() — computes it.",
+} as const;
+
+/**
+ * The virtual kind a key names, if any — a `@RelationId` or a `@RelationCount`.
+ *
+ * Both are populated after the rows are read rather than projected with them, so
+ * a surface that cannot populate one owes the caller that reason instead of
+ * reporting an unknown field.
+ */
+const relationValueDecorator = (
+  metadata: EntityMetadata,
+  key: string,
+): keyof typeof RELATION_VALUE_DETAILS | null => {
+  if ((metadata.relationIds ?? []).some((ri) => ri.key === key)) return "@RelationId";
+  if ((metadata.relationCounts ?? []).some((rc) => rc.key === key)) {
+    return "@RelationCount";
+  }
+  return null;
+};
 
 /**
  * Reject a projection key that names nothing.
@@ -269,6 +330,20 @@ export const validateSelectionKeys = (
 
   for (const key of keys) {
     if (valid.has(key)) continue;
+
+    const decorator = relationValueDecorator(metadata, key);
+
+    if (decorator) {
+      throw new ProteusRepositoryError(
+        `${decorator} "${key}" cannot be selected on "${metadata.entity.name}" here`,
+        {
+          code: "relation_value_not_selectable",
+          title: "Relation Value Not Selectable",
+          details: RELATION_VALUE_DETAILS[decorator],
+          debug: { entityName: metadata.entity.name, key, decorator },
+        },
+      );
+    }
 
     if (relations.has(key)) {
       throw new ProteusRepositoryError(

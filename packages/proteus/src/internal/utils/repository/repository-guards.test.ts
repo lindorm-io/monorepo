@@ -11,7 +11,8 @@ import {
   guardExpiryDateField,
   guardVersionFields,
   guardUpsertBlocked,
-  selectableKeys,
+  querySelectableKeys,
+  repositorySelectableKeys,
   validateRelationNames,
   validateSelectionKeys,
 } from "./repository-guards.js";
@@ -211,66 +212,182 @@ describe("validateRelationNames", () => {
   });
 });
 
-describe("selectableKeys", () => {
+/**
+ * The owning `*ToOne` shape: a foreign key hydration projects unasked, exposed
+ * as a `@RelationId` with no `@Field` of its own.
+ */
+const owningRelation = { key: "author", type: "ManyToOne", joinKeys: { authorId: "id" } };
+
+describe("querySelectableKeys", () => {
   test("returns the declared fields", () => {
     const metadata = makeMetadata({
       fields: [{ key: "id" }, { key: "name" }] as any,
     });
-    expect(selectableKeys(metadata)).toEqual(["id", "name"]);
+    expect(querySelectableKeys(metadata)).toEqual(["id", "name"]);
   });
 
+  test("adds an owning relation's auto-projected foreign key", () => {
+    const metadata = makeMetadata({
+      fields: [{ key: "id" }] as any,
+      relations: [owningRelation] as any,
+      relationIds: [{ key: "authorId", relationKey: "author", column: null }],
+    });
+    expect(querySelectableKeys(metadata)).toEqual(["id", "authorId"]);
+  });
+
+  test("omits a @RelationId no column carries", () => {
+    const metadata = makeMetadata({
+      fields: [{ key: "id" }] as any,
+      relations: [{ key: "posts", type: "OneToMany", joinKeys: null }] as any,
+      relationIds: [{ key: "postIds", relationKey: "posts", column: null }],
+    });
+    expect(querySelectableKeys(metadata)).toEqual(["id"]);
+  });
+
+  // A @RelationCount is written WITH a backing @Field, so it is in `fields` —
+  // but nothing maintains that column, and a query returns the stored value.
+  test("omits a @RelationCount even though it has a backing field", () => {
+    const metadata = makeMetadata({
+      fields: [{ key: "id" }, { key: "postCount" }] as any,
+      relationCounts: [{ key: "postCount", relationKey: "posts" }],
+    });
+    expect(querySelectableKeys(metadata)).toEqual(["id"]);
+  });
+});
+
+describe("repositorySelectableKeys", () => {
   test("adds @RelationId properties that have no field of their own", () => {
     const metadata = makeMetadata({
       fields: [{ key: "id" }] as any,
-      relationIds: [{ key: "authorId", relationKey: "author", column: null }],
+      relationIds: [{ key: "postIds", relationKey: "posts", column: null }],
     });
-    expect(selectableKeys(metadata)).toEqual(["id", "authorId"]);
+    expect(repositorySelectableKeys(metadata)).toEqual(["id", "postIds"]);
+  });
+
+  test("adds @RelationCount properties, backing field or not", () => {
+    const metadata = makeMetadata({
+      fields: [{ key: "id" }, { key: "postCount" }] as any,
+      relationCounts: [
+        { key: "postCount", relationKey: "posts" },
+        { key: "tagCount", relationKey: "tags" },
+      ],
+    });
+    expect(repositorySelectableKeys(metadata)).toEqual(["id", "postCount", "tagCount"]);
   });
 
   test("lists a @RelationId that is also a declared field only once", () => {
     const metadata = makeMetadata({
       fields: [{ key: "id" }, { key: "authorId" }] as any,
+      relations: [owningRelation] as any,
       relationIds: [{ key: "authorId", relationKey: "author", column: null }],
     });
-    expect(selectableKeys(metadata)).toEqual(["id", "authorId"]);
+    expect(repositorySelectableKeys(metadata)).toEqual(["id", "authorId"]);
+  });
+
+  test("is the query set plus the values the repository loads after the rows", () => {
+    const metadata = makeMetadata({
+      fields: [{ key: "id" }, { key: "postCount" }] as any,
+      relations: [owningRelation] as any,
+      relationIds: [
+        { key: "authorId", relationKey: "author", column: null },
+        { key: "postIds", relationKey: "posts", column: null },
+      ],
+      relationCounts: [{ key: "postCount", relationKey: "posts" }],
+    });
+    expect(repositorySelectableKeys(metadata)).toEqual([
+      ...querySelectableKeys(metadata),
+      "postIds",
+      "postCount",
+    ]);
   });
 });
 
 describe("validateSelectionKeys", () => {
   const metadata = makeMetadata({
-    fields: [{ key: "id" }, { key: "title" }] as any,
-    relationIds: [{ key: "authorId", relationKey: "author", column: null }],
-    relations: [{ key: "author" }, { key: "comments" }] as any,
+    fields: [{ key: "id" }, { key: "title" }, { key: "commentCount" }] as any,
+    relationIds: [
+      { key: "authorId", relationKey: "author", column: null },
+      { key: "commentIds", relationKey: "comments", column: null },
+    ],
+    relationCounts: [{ key: "commentCount", relationKey: "comments" }],
+    relations: [owningRelation, { key: "comments" }] as any,
   });
 
   test("does not throw for keys in the selectable set", () => {
     expect(() =>
-      validateSelectionKeys(metadata, ["id", "authorId"], selectableKeys(metadata)),
+      validateSelectionKeys(
+        metadata,
+        ["id", "authorId"],
+        repositorySelectableKeys(metadata),
+      ),
     ).not.toThrow();
   });
 
   test("does not throw for an empty key list", () => {
     expect(() =>
-      validateSelectionKeys(metadata, [], selectableKeys(metadata)),
+      validateSelectionKeys(metadata, [], repositorySelectableKeys(metadata)),
     ).not.toThrow();
   });
 
   test("throws ProteusRepositoryError for an unknown key", () => {
     expect(() =>
-      validateSelectionKeys(metadata, ["titel"], selectableKeys(metadata)),
+      validateSelectionKeys(metadata, ["titel"], repositorySelectableKeys(metadata)),
     ).toThrow(ProteusRepositoryError);
   });
 
   test("includes the unknown key and the selectable set in the message", () => {
     expect(() =>
-      validateSelectionKeys(metadata, ["titel"], selectableKeys(metadata)),
-    ).toThrow('Unknown field "titel" on "TestEntity". Available: [id, title, authorId]');
+      validateSelectionKeys(metadata, ["titel"], repositorySelectableKeys(metadata)),
+    ).toThrow(
+      'Unknown field "titel" on "TestEntity". Available: [id, title, authorId, commentIds, commentCount]',
+    );
   });
 
   test("throws a distinct error when the key names a relation", () => {
     expect(() =>
-      validateSelectionKeys(metadata, ["comments"], selectableKeys(metadata)),
+      validateSelectionKeys(metadata, ["comments"], repositorySelectableKeys(metadata)),
     ).toThrow('Relation "comments" cannot be selected on "TestEntity"');
+  });
+
+  test("accepts a @RelationId and a @RelationCount on the repository surface", () => {
+    expect(() =>
+      validateSelectionKeys(
+        metadata,
+        ["commentIds", "commentCount"],
+        repositorySelectableKeys(metadata),
+      ),
+    ).not.toThrow();
+  });
+
+  test("names the decorator when a @RelationId is not selectable on the surface", () => {
+    expect(() =>
+      validateSelectionKeys(metadata, ["commentIds"], querySelectableKeys(metadata)),
+    ).toThrow('@RelationId "commentIds" cannot be selected on "TestEntity" here');
+  });
+
+  test("names the decorator when a @RelationCount is not selectable on the surface", () => {
+    expect(() =>
+      validateSelectionKeys(metadata, ["commentCount"], querySelectableKeys(metadata)),
+    ).toThrow('@RelationCount "commentCount" cannot be selected on "TestEntity" here');
+  });
+
+  test("explains why rather than reporting an unknown field", () => {
+    try {
+      validateSelectionKeys(metadata, ["commentCount"], querySelectableKeys(metadata));
+      throw new Error("expected validateSelectionKeys to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProteusRepositoryError);
+      expect((error as ProteusRepositoryError).code).toBe(
+        "relation_value_not_selectable",
+      );
+      expect((error as ProteusRepositoryError).details).toMatchSnapshot();
+    }
+  });
+
+  test("still accepts an owning *ToOne relation id, which the row carries", () => {
+    expect(() =>
+      validateSelectionKeys(metadata, ["authorId"], querySelectableKeys(metadata)),
+    ).not.toThrow();
   });
 
   test("rejects a @RelationId when the caller passes fields alone as selectable", () => {
@@ -280,7 +397,7 @@ describe("validateSelectionKeys", () => {
         ["authorId"],
         metadata.fields.map((f) => f.key),
       ),
-    ).toThrow('Unknown field "authorId" on "TestEntity". Available: [id, title]');
+    ).toThrow('@RelationId "authorId" cannot be selected on "TestEntity" here');
   });
 });
 

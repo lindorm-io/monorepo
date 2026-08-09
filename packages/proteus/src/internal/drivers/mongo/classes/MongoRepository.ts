@@ -19,6 +19,7 @@ import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor
 import type {
   EntityMetadata,
   MetaRelation,
+  MetaRelationCount,
   MetaRelationId,
   QueryScope,
 } from "../../../entity/types/metadata.js";
@@ -37,11 +38,13 @@ import {
   guardAppendOnly,
   guardEncryptedCriteria,
   guardVersionFields,
-  selectableKeys,
+  querySelectableKeys,
+  repositorySelectableKeys,
   validateRelationNames,
   validateSelectionKeys,
 } from "../../../utils/repository/repository-guards.js";
 import { projectedRelationIds } from "../../../utils/repository/projected-relation-ids.js";
+import { projectedRelationCounts } from "../../../utils/repository/projected-relation-counts.js";
 import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
 import { buildRelationFilter } from "../../../utils/repository/build-relation-filter.js";
 import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
@@ -147,7 +150,11 @@ export class MongoRepository<
     const select = (options?.select as Array<string>) ?? null;
 
     if (select) {
-      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+      validateSelectionKeys(
+        this.metadata,
+        select,
+        repositorySelectableKeys(this.metadata),
+      );
     }
 
     const hiddenSelect = filterHiddenSelections(this.metadata, [scope], select);
@@ -164,6 +171,7 @@ export class MongoRepository<
       await this.loadRelationIdsAndCounts(
         entities,
         projectedRelationIds(this.metadata, select),
+        projectedRelationCounts(this.metadata, select),
       );
     }
 
@@ -195,7 +203,11 @@ export class MongoRepository<
     const select = (options?.select as Array<string>) ?? null;
 
     if (select) {
-      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+      validateSelectionKeys(
+        this.metadata,
+        select,
+        repositorySelectableKeys(this.metadata),
+      );
     }
 
     const entities = await this.executor.executeFind(criteria, {
@@ -208,6 +220,7 @@ export class MongoRepository<
       await this.loadRelationIdsAndCounts(
         entities,
         projectedRelationIds(this.metadata, select),
+        projectedRelationCounts(this.metadata, select),
       );
     }
 
@@ -262,7 +275,7 @@ export class MongoRepository<
     const select = (options?.select as Array<string>) ?? null;
 
     if (select) {
-      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+      validateSelectionKeys(this.metadata, select, querySelectableKeys(this.metadata));
     }
 
     const hiddenSelect = filterHiddenSelections(this.metadata, ["multiple"], select);
@@ -982,6 +995,7 @@ export class MongoRepository<
   private async loadRelationIdsAndCounts(
     entities: Array<E>,
     relationIds: Array<MetaRelationId>,
+    relationCounts: Array<MetaRelationCount>,
   ): Promise<void> {
     await Promise.all(
       entities.map(async (entity) => {
@@ -1015,7 +1029,7 @@ export class MongoRepository<
           }
         }
 
-        for (const rc of this.metadata.relationCounts ?? []) {
+        for (const rc of relationCounts) {
           const relation = this.metadata.relations.find((r) => r.key === rc.relationKey);
           if (!relation) continue;
 

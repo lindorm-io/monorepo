@@ -1377,11 +1377,14 @@ authorId!: string;
 
 For `*ToOne` owning relations, the FK column is auto-detected. For composite FK or `*ToMany`, specify the `column` option. Multiple `@RelationId` decorators may target the same relation for composite keys.
 
-A `@RelationId` is selectable by its own property name — `select: ["id", "authorId"]` — and the
-projection decides whether it loads at all. Named it loads, omitted it is skipped, and skipping is
-the point: an owning `*ToOne` rides along on a foreign key that was fetched anyway, but a
-`OneToMany`, a `ManyToMany` and an inverse `OneToOne` each cost their own query. With no `select`
-every relation id loads, as before.
+A `@RelationId` is selectable on the repository by its own property name, as in
+`select: ["id", "authorId"]`, and the projection decides whether it loads at all. Named it loads,
+omitted it is skipped, and skipping is the point: an owning `*ToOne` rides along on a foreign key
+that was fetched anyway, but a `OneToMany`, a `ManyToMany` and an inverse `OneToOne` each cost their
+own query. With no `select` every relation id loads.
+
+A builder, a cursor and a stream issue no such query, so they refuse the kinds that need one; the
+owning `*ToOne` id is selectable there too, because it is the projected foreign key.
 
 #### `@RelationCount`
 
@@ -1405,6 +1408,12 @@ word on every driver.
 The count is computed per read — the backing column is never maintained in the database — so it
 cannot be used in `WHERE` or `ORDER BY`. Count-sorted lists need a raw aggregate query or a
 denormalized, load-maintained column.
+
+A `@RelationCount` is selectable on the repository, and the projection decides whether it loads, on
+the same terms as a `@RelationId`: each count costs a batched `COUNT(*)` per read on a SQL driver and
+a count per entity on a document driver, so one nobody named is not paid for. With no `select` every
+count loads. A builder, a cursor and a stream refuse it — they return the stored column, and that
+column is the one nothing maintains.
 
 ### Relation Modifiers
 
@@ -1608,11 +1617,21 @@ const user = await repo.findOneOrSave(
 ```
 
 **`select` keys are validated.** A key that names nothing throws rather than narrowing nothing and
-coming back as a silently missing column. Selectable keys are the entity's fields, its owning
-relations' auto-projected foreign keys, and its `@RelationId` properties. A relation is not one of
-them — load it with `relations` / `include()`, which says so in the error. The same keys govern
-every projection: `find` / `findOne` / `versions`, `cursor()` and `stream()`, and the query
-builder's own `select()`.
+coming back as a silently missing column. A relation is never selectable — load it with `relations` /
+`include()`, which says so in the error.
+
+**A projection accepts exactly what that surface returns**, so the two surfaces differ:
+
+| Surface                                           | Selectable keys                                                         |
+| ------------------------------------------------- | ----------------------------------------------------------------------- |
+| `find` / `findOne` / `versions`                   | fields · auto-projected foreign keys · `@RelationId` · `@RelationCount` |
+| `QueryBuilder.select()` · `cursor()` · `stream()` | fields · auto-projected foreign keys                                    |
+
+A query returns the row and nothing else. A `@RelationId` and a `@RelationCount` are loaded after the
+rows, with a query each, and only a root read through the repository issues that load — so naming one
+on a builder, a cursor or a stream throws and says which decorator it is. An owning `*ToOne` relation
+id is the exception that proves the rule: it IS the foreign key the query projects anyway, so it is
+selectable everywhere.
 
 ### Update
 

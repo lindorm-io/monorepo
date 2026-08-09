@@ -11,7 +11,7 @@ export const cursorSuite = (
   entities: TckEntities,
   caps: TckCapabilities,
 ) => {
-  const { TckEncrypted, TckSimpleUser } = entities;
+  const { TckEncrypted, TckFkParent, TckSimpleUser } = entities;
 
   beforeEach(async () => {
     await getHandle().clear();
@@ -113,6 +113,42 @@ export const cursorSuite = (
     };
 
     await expect(iterate()).rejects.toThrow(/Unknown field "naem"/);
+  });
+
+  // A cursor compiles a query and streams the rows it returns. A relation id
+  // and a relation count are loaded after the rows, by the repository, so this
+  // surface refuses them with that reason rather than accepting a key it can
+  // never fill — or, for a count, filling it from a column nothing maintains.
+  test("cursor rejects a @RelationCount named in select", async () => {
+    const repo = getHandle().repository(TckFkParent);
+
+    await expect(
+      repo.cursor({ select: ["id", "autoNullableChildCount"] }),
+    ).rejects.toThrow(/@RelationCount "autoNullableChildCount" cannot be selected/);
+  });
+
+  test("cursor rejects a @RelationId named in select", async () => {
+    const repo = getHandle().repository(TckFkParent);
+
+    await expect(repo.cursor({ select: ["id", "autoNullableChildIds"] })).rejects.toThrow(
+      /@RelationId "autoNullableChildIds" cannot be selected/,
+    );
+  });
+
+  test("stream rejects a @RelationCount at the first pull", async () => {
+    const repo = getHandle().repository(TckFkParent);
+
+    const iterate = async (): Promise<void> => {
+      for await (const _entity of repo.stream({
+        select: ["id", "autoNullableChildCount"],
+      })) {
+        break;
+      }
+    };
+
+    await expect(iterate()).rejects.toThrow(
+      /@RelationCount "autoNullableChildCount" cannot be selected/,
+    );
   });
 
   test("cursor accepts a select of declared keys", async () => {

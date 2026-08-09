@@ -11,3 +11,5 @@ exports[`criteria logical operators are pinned to @lindorm/match > every operato
 exports[`guardAppendOnly > error message matches snapshot 1`] = `[ProteusRepositoryError: Cannot delete an append-only entity "TestEntity"]`;
 
 exports[`guardEncryptedCriteria > the error names the digest-column way out 1`] = `"The field "sealed" is sealed with a random initialisation vector, so the same plaintext encrypts to different ciphertext on every write — no value findOne() could send would ever match the stored column, and a scheme that made it match would leak equality across rows. To filter on a sealed value, store a deterministic derivative beside it — a digest column written on save — and put the criteria on that column instead."`;
+
+exports[`validateSelectionKeys > explains why rather than reporting an unknown field 1`] = `"A relation count is recomputed on every repository read and its backing column is never maintained, so a projection that returns stored columns would hand back a value that means nothing. Only a root read through the repository — find(), findOne(), versions() — computes it."`;

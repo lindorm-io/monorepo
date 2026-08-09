@@ -48,6 +48,7 @@ import {
   PrimaryKey,
   PrimaryKeyField,
   ReadOnly,
+  RelationCount,
   RelationId,
   ScopeField,
   Transform,
@@ -645,6 +646,17 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @OneToMany(() => TckFkAutoNullableChild, "parent")
     autoNullableChildren!: Array<TckFkAutoNullableChild>;
+
+    // The two virtual kinds a projection may name on the REPOSITORY surface and
+    // nowhere else: both are loaded after the rows, each with a query of its
+    // own. The count carries the backing @Field the decorator documents; the
+    // relation id has no column at all.
+    @RelationCount<TckFkParent>("autoNullableChildren")
+    @Field("integer")
+    autoNullableChildCount!: number;
+
+    @RelationId<TckFkParent>("autoNullableChildren")
+    autoNullableChildIds!: Array<string>;
   }
 
   @Entity({ name: "TckFkCascadeChild" })

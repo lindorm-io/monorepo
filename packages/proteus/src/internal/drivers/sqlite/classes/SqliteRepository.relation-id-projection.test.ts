@@ -168,6 +168,21 @@ describe("SqliteRepository @RelationId projection", () => {
     ).rejects.toThrow('Relation "posts" cannot be selected on "RiProjAuthor"');
   });
 
+  // A cursor compiles a query and streams the rows back. The relation id a
+  // repository loads with a second query is not among them, so naming it is
+  // refused with the reason instead of accepted and left unfilled.
+  test("cursor rejects a @RelationId no column carries", async () => {
+    await expect(
+      source.repository(RiProjAuthor).cursor({ select: ["id", "postIds"] }),
+    ).rejects.toThrow('@RelationId "postIds" cannot be selected on "RiProjAuthor"');
+  });
+
+  test("the query builder rejects a @RelationId no column carries", () => {
+    expect(() => source.queryBuilder(RiProjAuthor).select("postIds")).toThrow(
+      '@RelationId "postIds" cannot be selected on "RiProjAuthor" here',
+    );
+  });
+
   test("cursor accepts a select of declared keys", async () => {
     const cursor = await source
       .repository(RiProjAuthor)

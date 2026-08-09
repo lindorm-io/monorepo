@@ -126,13 +126,18 @@ const makeMetadata = (overrides: Partial<EntityMetadata> = {}): EntityMetadata =
       makeField("name", { type: "string" }),
       makeField("email", { type: "string", nullable: true }),
       makeField("age", { type: "integer" }),
+      makeField("postCount", { type: "integer" }),
+      makeField("authorId", { type: "uuid", nullable: true }),
     ],
     generated: [],
     hooks: [],
     indexes: [],
     primaryKeys: ["id"],
-    relationIds: [{ key: "latestPostId", relationKey: "posts", column: null }],
-    relationCounts: [],
+    relationIds: [
+      { key: "latestPostId", relationKey: "posts", column: null },
+      { key: "authorId", relationKey: "author", column: null },
+    ],
+    relationCounts: [{ key: "postCount", relationKey: "posts" }],
     relations: [
       {
         key: "posts",
@@ -153,6 +158,26 @@ const makeMetadata = (overrides: Partial<EntityMetadata> = {}): EntityMetadata =
           strategy: null,
         },
         type: "OneToMany",
+      },
+      {
+        key: "author",
+        foreignConstructor: () => QbPost as any,
+        foreignKey: "posts",
+        findKeys: null,
+        joinKeys: { authorId: "id" },
+        joinTable: null,
+        options: {
+          deferrable: false,
+          initiallyDeferred: false,
+          loading: { single: "lazy", multiple: "lazy" },
+          nullable: true,
+          onDestroy: "cascade",
+          onInsert: "cascade",
+          onOrphan: "ignore",
+          onUpdate: "cascade",
+          strategy: null,
+        },
+        type: "ManyToOne",
       },
     ],
     schemas: [],
@@ -308,9 +333,29 @@ describe("QueryBuilder", () => {
       );
     });
 
-    test("should accept a @RelationId property", () => {
-      qb.select("id" as any, "latestPostId" as any);
-      expect(qb.getState().selections).toEqual(["id", "latestPostId"]);
+    // A builder compiles a query and returns the row. The relation ids and
+    // relation counts a repository loads afterwards are not in that row, so
+    // naming one here is refused with the reason rather than accepted and left
+    // unfilled — or, for a count, filled from a column nothing maintains.
+    test("should throw on a @RelationId the row does not carry", () => {
+      expect(() => qb.select("latestPostId" as any)).toThrow(ProteusError);
+      expect(() => qb.select("latestPostId" as any)).toThrow(
+        /@RelationId "latestPostId" cannot be selected on "TestEntity" here/,
+      );
+    });
+
+    test("should throw on a @RelationCount, backing field or not", () => {
+      expect(() => qb.select("postCount" as any)).toThrow(ProteusError);
+      expect(() => qb.select("postCount" as any)).toThrow(
+        /@RelationCount "postCount" cannot be selected on "TestEntity" here/,
+      );
+    });
+
+    // An owning *ToOne relation id IS the foreign key the query projects
+    // whether or not it was asked for, so the value genuinely comes back.
+    test("should accept an owning *ToOne @RelationId", () => {
+      qb.select("id" as any, "authorId" as any);
+      expect(qb.getState().selections).toEqual(["id", "authorId"]);
     });
   });
 

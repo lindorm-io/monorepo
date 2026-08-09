@@ -18,6 +18,7 @@ import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor
 import type {
   EntityMetadata,
   MetaRelation,
+  MetaRelationCount,
   MetaRelationId,
   QueryScope,
 } from "../../../entity/types/metadata.js";
@@ -34,11 +35,13 @@ import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-pre
 import {
   guardAppendOnly,
   guardEncryptedCriteria,
-  selectableKeys,
+  querySelectableKeys,
+  repositorySelectableKeys,
   validateRelationNames,
   validateSelectionKeys,
 } from "../../../utils/repository/repository-guards.js";
 import { projectedRelationIds } from "../../../utils/repository/projected-relation-ids.js";
+import { projectedRelationCounts } from "../../../utils/repository/projected-relation-counts.js";
 import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
 import { buildRelationFilter } from "../../../utils/repository/build-relation-filter.js";
 import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
@@ -135,7 +138,11 @@ export class RedisRepository<
     const select = (options?.select as Array<string>) ?? null;
 
     if (select) {
-      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+      validateSelectionKeys(
+        this.metadata,
+        select,
+        repositorySelectableKeys(this.metadata),
+      );
     }
 
     const hiddenSelect = filterHiddenSelections(this.metadata, [scope], select);
@@ -152,6 +159,7 @@ export class RedisRepository<
       await this.loadRelationIdsAndCounts(
         entities,
         projectedRelationIds(this.metadata, select),
+        projectedRelationCounts(this.metadata, select),
       );
     }
 
@@ -230,7 +238,7 @@ export class RedisRepository<
     const select = (options?.select as Array<string>) ?? null;
 
     if (select) {
-      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+      validateSelectionKeys(this.metadata, select, querySelectableKeys(this.metadata));
     }
 
     const hiddenSelect = filterHiddenSelections(this.metadata, ["multiple"], select);
@@ -961,6 +969,7 @@ export class RedisRepository<
   private async loadRelationIdsAndCounts(
     entities: Array<E>,
     relationIds: Array<MetaRelationId>,
+    relationCounts: Array<MetaRelationCount>,
   ): Promise<void> {
     await Promise.all(
       entities.map(async (entity) => {
@@ -997,7 +1006,7 @@ export class RedisRepository<
         }
 
         // Load RelationCounts
-        for (const rc of this.metadata.relationCounts ?? []) {
+        for (const rc of relationCounts) {
           const relation = this.metadata.relations.find((r) => r.key === rc.relationKey);
           if (!relation) continue;
 

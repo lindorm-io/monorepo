@@ -55,7 +55,8 @@ vi.mock("../../../utils/repository/repository-guards.js", () => ({
   guardVersionFields: vi.fn(),
   guardUpsertBlocked: vi.fn(),
   validateRelationNames: vi.fn(),
-  selectableKeys: vi.fn(() => []),
+  querySelectableKeys: vi.fn(() => []),
+  repositorySelectableKeys: vi.fn(() => []),
   validateSelectionKeys: vi.fn(),
 }));
 

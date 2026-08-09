@@ -46,11 +46,13 @@ import {
   guardAppendOnly,
   guardEncryptedCriteria,
   guardVersionFields,
-  selectableKeys,
+  querySelectableKeys,
+  repositorySelectableKeys,
   validateRelationNames,
   validateSelectionKeys,
 } from "../../../utils/repository/repository-guards.js";
 import { projectedRelationIds } from "../../../utils/repository/projected-relation-ids.js";
+import { projectedRelationCounts } from "../../../utils/repository/projected-relation-counts.js";
 import { wrapMysqlError } from "../utils/repository/wrap-mysql-error.js";
 import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
 import { createMysqlJoinTableOps } from "../utils/repository/mysql-join-table-ops.js";
@@ -154,7 +156,11 @@ export class MySqlRepository<
     const select = (options?.select as Array<string>) ?? null;
 
     if (select) {
-      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+      validateSelectionKeys(
+        this.metadata,
+        select,
+        repositorySelectableKeys(this.metadata),
+      );
     }
 
     const hiddenSelect = filterHiddenSelections(this.metadata, [scope], select);
@@ -172,6 +178,7 @@ export class MySqlRepository<
       const loadCtx = {
         metadata: this.metadata,
         relationIds: projectedRelationIds(this.metadata, select),
+        relationCounts: projectedRelationCounts(this.metadata, select),
         namespace: this.namespace,
         client: this.client,
       };
@@ -202,7 +209,11 @@ export class MySqlRepository<
     const select = (options?.select as Array<string>) ?? null;
 
     if (select) {
-      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+      validateSelectionKeys(
+        this.metadata,
+        select,
+        repositorySelectableKeys(this.metadata),
+      );
     }
 
     const entities = await this.executor.executeFind(
@@ -219,6 +230,7 @@ export class MySqlRepository<
       const loadCtx = {
         metadata: this.metadata,
         relationIds: projectedRelationIds(this.metadata, select),
+        relationCounts: projectedRelationCounts(this.metadata, select),
         namespace: this.namespace,
         client: this.client,
       };
@@ -321,7 +333,7 @@ export class MySqlRepository<
     const select = (options?.select as Array<string>) ?? null;
 
     if (select) {
-      validateSelectionKeys(this.metadata, select, selectableKeys(this.metadata));
+      validateSelectionKeys(this.metadata, select, querySelectableKeys(this.metadata));
     }
 
     const hiddenSelect = filterHiddenSelections(this.metadata, ["multiple"], select);

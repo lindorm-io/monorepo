@@ -13,6 +13,8 @@ import { buildSimpleIn } from "./build-simple-in.js";
 
 export type LoadRelationCountsContext = {
   metadata: EntityMetadata;
+  /** The relationCounts the projection asked for — see `projectedRelationCounts`. */
+  relationCounts: Array<MetaRelationCount>;
   namespace: string | null;
   client: MysqlQueryClient;
 };
@@ -30,9 +32,9 @@ export const loadRelationCounts = async <E extends IEntity>(
   entities: Array<E>,
   ctx: LoadRelationCountsContext,
 ): Promise<void> => {
-  if (entities.length === 0 || ctx.metadata.relationCounts.length === 0) return;
+  if (entities.length === 0 || ctx.relationCounts.length === 0) return;
 
-  for (const rc of ctx.metadata.relationCounts) {
+  for (const rc of ctx.relationCounts) {
     const relation = ctx.metadata.relations.find((r) => r.key === rc.relationKey);
     if (!relation) continue;
 
