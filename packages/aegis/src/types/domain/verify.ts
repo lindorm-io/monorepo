@@ -33,6 +33,14 @@ export type VerifyActorOptions = {
 export type VerifyOptions = {
   actor?: VerifyActorOptions;
   /**
+   * Widen the temporal range checks by this many seconds in BOTH directions, to
+   * absorb clock skew between the issuer and this verifier: a `"past"` claim
+   * (`iat`/`nbf`/`auth_time`) may sit this far in the future, a `"future"` claim
+   * (`exp`) this far in the past. Overrides the deployment-wide
+   * `AegisSettings.clockTolerance` (default `0`) for this call only.
+   */
+  clockTolerance?: number;
+  /**
    * Override "now" for the temporal range checks (R10). When set, `exp`/`nbf`/
    * `iat` are validated against this instant instead of the real wall-clock — a
    * token expired relative to a PAST `currentDate` still verifies. Threaded to the

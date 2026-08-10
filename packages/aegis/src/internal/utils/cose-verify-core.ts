@@ -16,6 +16,7 @@ import type { AegisDeps } from "./aegis-deps.js";
  */
 export const coseVerifyCore = async ({
   input,
+  clockTolerance,
   currentDate,
   maxTokenAge,
   verifyExpiration,
@@ -26,6 +27,8 @@ export const coseVerifyCore = async ({
   issuer,
 }: {
   input: Buffer;
+  /** Widen the temporal range checks by this many seconds. Overrides the deployment default. */
+  clockTolerance?: number;
   /** Override "now" for the in-kit temporal range check (R10). Per-call only. */
   currentDate?: Date;
   /** Reject a token whose `iat` is older than this many seconds (R10). Per-call only. */
@@ -78,7 +81,7 @@ export const coseVerifyCore = async ({
     kryptos,
     logger: deps.logger,
     token: bytes,
-    clockTolerance: deps.clockTolerance,
+    clockTolerance: clockTolerance ?? deps.clockTolerance,
     currentDate,
     maxTokenAge,
     verifyExpiration,

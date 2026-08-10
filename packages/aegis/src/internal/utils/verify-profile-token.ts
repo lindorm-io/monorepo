@@ -50,12 +50,14 @@ export const verifyProfileToken = async ({
     options.issuer ??
     (profile.issuer === "platform" ? (deps.issuer ?? undefined) : undefined);
 
-  // The typ is enforced by enforceVerifyFloor against profile.typ, so we do NOT
-  // also pass tokenType to the standard verify (which would compute its own typ
-  // expectation and could disagree). `audience`/`issuer` are consumed by the
-  // floor below; `rest` is the pure verify-knob set (the claim matchers are the
-  // separate `assert` argument).
-  const { audience: _audience, issuer: _issuer, clockTolerance: _ct, ...rest } = options;
+  // `audience`/`issuer` are consumed by the floor below; `rest` is the pure
+  // verify-knob set (the claim matchers are the separate `assert` argument) and
+  // carries `clockTolerance` through with the rest of the temporal family. A
+  // profile's own typ is enforced by enforceVerifyFloor against `profile.typ`;
+  // a caller that ALSO asserts `tokenType` is asserting it deliberately and
+  // gets both checks — agreeing ones both pass, a disagreeing one is a matcher
+  // the caller asked for and that is false.
+  const { audience: _audience, issuer: _issuer, ...rest } = options;
 
   // A `lifetime: null` profile (RFC 8417 / SSF `security_event`, introspection,
   // userinfo) mints tokens with NO exp, so its verify must tolerate an absent exp

@@ -36,6 +36,7 @@ export const verifyCoseToken = async ({
 
   const { claims, wire, decoded, typ, encrypted } = await coseVerifyCore({
     input: Buffer.from(token, "base64url"),
+    clockTolerance: options.clockTolerance,
     currentDate: options.currentDate,
     maxTokenAge: options.maxTokenAge,
     verifyExpiration: options.verifyExpiration,

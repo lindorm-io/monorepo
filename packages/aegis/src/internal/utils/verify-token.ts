@@ -161,6 +161,7 @@ export const verifyToken = async <C extends Dict = Dict>({
         encrypted: coseEncrypted,
       } = await coseVerifyCore({
         input: bytes,
+        clockTolerance: options?.clockTolerance,
         currentDate: options?.currentDate,
         maxTokenAge: options?.maxTokenAge,
         verifyExpiration: options?.verifyExpiration,

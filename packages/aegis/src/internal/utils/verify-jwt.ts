@@ -73,6 +73,7 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   // The kit asserts the header typ from a bare PREFIX it re-wraps; derive that
   // prefix from the domain `tokenType`.
   kit.verify<C>(token, undefined, {
+    clockTolerance: options.clockTolerance,
     currentDate: options.currentDate,
     maxTokenAge: options.maxTokenAge,
     verifyExpiration: options.verifyExpiration,

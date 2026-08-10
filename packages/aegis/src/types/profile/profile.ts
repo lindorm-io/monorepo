@@ -177,7 +177,9 @@ export type ProfileMintOptions = {
 export type ProfileVerifyOptions = VerifyOptions & {
   audience: string;
   issuer?: string;
-  clockTolerance?: number;
+  // No `clockTolerance` — it is a standard verify knob and is declared ONCE, on
+  // {@link VerifyOptions}. Re-declaring it here is what let the profiled path
+  // destructure it away as a profile-only field and drop it.
   // No `format` — unlike mint, verify is NOT told the wire encoding. It detects
   // COSE vs JOSE from the token itself (`Aegis.isCose`), so a caller never has to
   // know, or match, a token's format to verify it.
