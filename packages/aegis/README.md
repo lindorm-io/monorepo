@@ -354,9 +354,9 @@ parsed.header.keyId;
 These do not need a key or amphora.
 
 ```typescript
-Aegis.isJwt(token);
-Aegis.isJws(token);
-Aegis.isJwe(token);
+Aegis.isJwt(token); // a JWS whose payload is a claims set (RFC 7519 §3)
+Aegis.isJws(token); // JWS compact serialization — TRUE for a JWT too
+Aegis.isJwe(token); // JWE compact serialization
 Aegis.isJose(token); // any JOSE token (JWT, JWS, or JWE)
 
 Aegis.isCose(token); // any COSE token — the other wire family
@@ -371,6 +371,8 @@ Aegis.assert(claims, matchers); // throws on mismatch
 
 Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew? });
 ```
+
+The JOSE guards decide on the **wire grammar** — segment count plus the header parameters the RFCs make REQUIRED (`alg`; `enc` for a JWE) — and on aegis's algorithm allowlist. `typ` is a hint, never the discriminant: RFC 7515 §4.1.9 and RFC 7519 §5.1 both make it optional, so a typ-less id_token, an RFC 9068 `at+jwt`, and an RFC 9449 `dpop+jwt` all read as a JWT. What separates a JWT from an opaque JWS is the payload being a JSON claims object — a signed handle stays a `jws`, including one that DECLARES `typ: JWT` over a non-claims payload. Because every JWT is a JWS (RFC 7519 §3), `isJws` is TRUE for a claims token as well; ask `isJwt` first when you need the narrow answer.
 
 ⚠ These are **wire-family** guards — they say which kit `verify` would select, not whether the token carries claims. A `jws` / `cws` passes `isJose` / `isCose` and verifies to an EMPTY claims set. To route a credential between local verification and introspection, use [`isClaimsBearingToken`](#isclaimsbearingtoken--verify-locally-or-introspect).
 

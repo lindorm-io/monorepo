@@ -1,10 +1,15 @@
 import { JwtKit } from "../classes/JwtKit.js";
 
 /**
- * True when `token` is a well-formed JWT string (three dot-separated segments,
- * an `alg` header, and a `JWT` / `<type>+jwt` media type). The free-function,
- * string-shape twin of `Aegis.isJwt` — pylon and other consumers discriminate a
- * JWT from a JWS by this token-shape check, which needs no `Aegis` instance and no
- * verify result. Never throws.
+ * True when `token` is a JWT: a JWS whose payload is a JSON claims set (RFC 7519
+ * §3), signed with an algorithm on aegis's allowlist. The `typ` header is a hint
+ * and never the discriminant — §5.1 makes it optional, so a typ-less id_token
+ * qualifies, as do RFC 9068 `at+jwt`, RFC 9449 `dpop+jwt` and RFC 8417
+ * `secevent+jwt`.
+ *
+ * FALSE for a signed OPAQUE payload — with or without a `typ`, and including one
+ * that DECLARES a claims type over a non-claims payload. The free-function twin
+ * of `Aegis.isJwt`, needing no `Aegis` instance and no verify result. Never
+ * throws.
  */
 export const isJwtToken = (token: string): boolean => JwtKit.isJwt(token);

@@ -1,5 +1,6 @@
 import { AesKit } from "@lindorm/aes";
 import { B64 } from "@lindorm/b64";
+import { isJwe as isJweFormat } from "@lindorm/is";
 import {
   ECDH_ES_ALGORITHMS,
   type IKryptos,
@@ -13,6 +14,7 @@ import type { IJweKit } from "../interfaces/index.js";
 import { B64U } from "../internal/constants/format.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
+import { isSupportedJoseAlgorithm } from "../internal/utils/is-supported-jose-algorithm.js";
 import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { parseTokenHeader } from "../internal/utils/token-header.js";
@@ -334,18 +336,15 @@ export class JweKit implements IJweKit {
 
   // public static
 
+  /**
+   * Is this the JWE Compact Serialization (RFC 7516 §7.1), encrypted with an
+   * algorithm on the allowlist? Five segments and the two REQUIRED header
+   * parameters, `alg` (§4.1.1) and `enc` (§4.1.2) — never a `typ`, which RFC
+   * 7516 does not require at all, so an externally issued encrypted token
+   * carries none and used to be rejected as an unrecognised wire.
+   */
   static isJwe(jwe: string): boolean {
-    if (typeof jwe !== "string") return false;
-    const parts = jwe.split(".");
-    if (parts.length !== 5) return false;
-    try {
-      const header = decodeJoseHeader(parts[0]);
-      if (typeof header.alg !== "string") return false;
-      const typ = header.typ;
-      return typ === "JWE" || (typeof typ === "string" && typ.endsWith("+jwe"));
-    } catch {
-      return false;
-    }
+    return isJweFormat(jwe) && isSupportedJoseAlgorithm(jwe);
   }
 
   /**

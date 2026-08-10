@@ -1,5 +1,6 @@
 import type { Condition } from "@lindorm/match";
 import { B64 } from "@lindorm/b64";
+import { isJwt as isJwtFormat } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
@@ -9,6 +10,7 @@ import type { IJwtKit } from "../interfaces/index.js";
 import { B64U } from "../internal/constants/format.js";
 import { applyOmit } from "../internal/utils/apply-omit.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
+import { isSupportedJoseAlgorithm } from "../internal/utils/is-supported-jose-algorithm.js";
 import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
 import {
   createJoseSignature,
@@ -273,18 +275,20 @@ export class JwtKit implements IJwtKit {
 
   // public static
 
+  /**
+   * Is this a JWT aegis can process — a JWS whose payload is a claims set (RFC
+   * 7519 §3), signed with an algorithm on the allowlist?
+   *
+   * The `typ` header decides nothing. RFC 7519 §5.1 makes it OPTIONAL and an
+   * id_token carries none, while RFC 9068 (`at+jwt`), RFC 9449 (`dpop+jwt`) and
+   * RFC 8417 (`secevent+jwt`) each stamp their own — so a fixed spelling
+   * recognises only what aegis itself minted and rejects every externally issued
+   * token. What decides it is the payload being a JSON claims object, which is
+   * also what keeps a signed OPAQUE handle out: it stays a JWS, and a token
+   * DECLARING a claims typ over a non-claims payload is not believed.
+   */
   static isJwt(jwt: string): boolean {
-    if (typeof jwt !== "string") return false;
-    const parts = jwt.split(".");
-    if (parts.length !== 3) return false;
-    try {
-      const header = decodeJoseHeader(parts[0]);
-      if (typeof header.alg !== "string") return false;
-      const typ = header.typ;
-      return typ === "JWT" || (typeof typ === "string" && typ.endsWith("+jwt"));
-    } catch {
-      return false;
-    }
+    return isJwtFormat(jwt) && isSupportedJoseAlgorithm(jwt);
   }
 
   /**

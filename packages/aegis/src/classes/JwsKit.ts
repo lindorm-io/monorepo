@@ -1,4 +1,5 @@
 import { B64 } from "@lindorm/b64";
+import { isJws as isJwsFormat } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { sanitiseToken } from "@lindorm/utils";
@@ -7,6 +8,7 @@ import type { IJwsKit } from "../interfaces/index.js";
 import { B64U } from "../internal/constants/format.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
+import { isSupportedJoseAlgorithm } from "../internal/utils/is-supported-jose-algorithm.js";
 import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
 import {
   createJoseSignature,
@@ -175,22 +177,20 @@ export class JwsKit implements IJwsKit {
 
   // public static
 
+  /**
+   * Is this the JWS Compact Serialization (RFC 7515 §7.1), signed with an
+   * algorithm on the allowlist? Three segments and a REQUIRED `alg` — never a
+   * `typ`, which §4.1.9 makes OPTIONAL and which an external issuer usually
+   * omits, so routing on the `JWS`/`JOSE`/`+jws` spellings recognised only what
+   * aegis itself minted.
+   *
+   * Deliberately a SUPERSET of {@link JwtKit.isJwt}: RFC 7519 §3 makes every JWT
+   * a JWS. The dispatchers ask the narrow question first, so a claims token
+   * still reaches the JWT branch and only what is left over — the genuinely
+   * opaque signed payloads — arrives here.
+   */
   static isJws(jws: string): boolean {
-    if (typeof jws !== "string") return false;
-    const parts = jws.split(".");
-    if (parts.length !== 3) return false;
-    try {
-      const header = decodeJoseHeader(parts[0]);
-      if (typeof header.alg !== "string") return false;
-      const typ = header.typ;
-      return (
-        typ === "JWS" ||
-        typ === "JOSE" ||
-        (typeof typ === "string" && typ.endsWith("+jws"))
-      );
-    } catch {
-      return false;
-    }
+    return isJwsFormat(jws) && isSupportedJoseAlgorithm(jws);
   }
 
   static decode<T extends TokenContent = string>(
