@@ -4,6 +4,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   ACCESS_TEST_ISSUER,
   createTestAegis,
+  mintOpaqueCws,
   tamperPayload,
 } from "../../__fixtures__/access/aegis.js";
 import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
@@ -148,5 +149,147 @@ describe("useAccessToken — format sniff", () => {
     expect(ctx.auth.introspect).not.toHaveBeenCalled();
     expect(ctx.state.access).toBeNull();
     expect(next).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The sniff decides VERIFY-LOCALLY vs INTROSPECT, and the only property that can
+ * decide it is whether the credential has a CLAIMS LAYER aegis can establish —
+ * not which wire family it belongs to. A signed-but-opaque token (a JWS, or its
+ * COSE twin a CWS) is a HANDLE: aegis can check its signature and still learn
+ * nothing about it, so the authorization server remains the only authority
+ * (RFC 7662). Routing one to local verify would accept it with empty claims —
+ * no expiry, no revocation, no record lookup.
+ */
+describe("useAccessToken — claims-bearing sniff", () => {
+  let aegis: IAegis;
+  let ctx: any;
+  let next: Mock;
+  let jwt: string;
+  let cwt: string;
+  let jwe: string;
+  let cws: string;
+  let jws: string;
+
+  beforeAll(async () => {
+    aegis = createTestAegis(createMockLogger());
+
+    const content = {
+      audience: [ACCESS_TEST_ISSUER],
+      expires: "1 hour" as const,
+      permissions: ["users:read"],
+      subject: "alice",
+      tokenType: "access_token" as const,
+    };
+
+    jwt = (await aegis.mint("default", content)).token;
+    cwt = (await aegis.mint("default", content, { format: "cwt" })).token;
+
+    // Sign-then-encrypt: the outer JWE declares `cty: JWT` (RFC 7519 §5.2), so
+    // its plaintext IS a claims-bearing token — verify decrypts and re-verifies
+    // the inner JWT, which is the whole point of the format.
+    jwe = (await aegis.jwe.encrypt(jwt, { header: { cty: "JWT" } })).token;
+
+    // The two opaque handles: same signature guarantee, no claims layer.
+    cws = await mintOpaqueCws(aegis);
+    jws = (await aegis.jws.sign(Buffer.from("opaque-handle"))).token;
+  });
+
+  beforeEach(() => {
+    next = vi.fn();
+    ctx = {
+      aegis,
+      auth: { introspect: vi.fn() },
+      logger: createMockLogger(),
+      request: {},
+      state: {
+        access: null,
+        app: { config: APP_CONFIG },
+        authorization: null,
+        session: null,
+        tokens: {},
+      },
+    };
+  });
+
+  const present = (token: string): void => {
+    ctx.state.authorization = { type: "bearer", value: token };
+  };
+
+  test("an opaque COSE handle (CWS) is introspected, never verified locally", async () => {
+    const verify = vi.spyOn(aegis, "verify");
+    present(cws);
+    ctx.auth.introspect.mockResolvedValue({ active: true, subject: "alice" });
+
+    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+
+    expect(verify).not.toHaveBeenCalled();
+    expect(ctx.auth.introspect).toHaveBeenCalledWith(cws, { cache: undefined });
+    expect(ctx.state.access.provenance).toBe("introspected");
+    expect(ctx.state.access.claims.subject).toBe("alice");
+
+    verify.mockRestore();
+  });
+
+  test("an opaque JOSE handle (JWS) is introspected, never verified locally", async () => {
+    const verify = vi.spyOn(aegis, "verify");
+    present(jws);
+    ctx.auth.introspect.mockResolvedValue({ active: true, subject: "alice" });
+
+    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+
+    expect(verify).not.toHaveBeenCalled();
+    expect(ctx.auth.introspect).toHaveBeenCalledWith(jws, { cache: undefined });
+    expect(ctx.state.access.provenance).toBe("introspected");
+
+    verify.mockRestore();
+  });
+
+  test("an opaque handle is refused, not verified, when the driver cannot introspect", async () => {
+    ctx.state.app.config = createTestAppConfig({
+      auth: createTestAuthConfig({
+        issuer: ACCESS_TEST_ISSUER,
+        capabilities: { introspect: false, userinfo: false },
+      }),
+    });
+    present(cws);
+
+    await expect(useAccessToken()(ctx, next)).rejects.toMatchObject({
+      code: "opaque_token_not_supported",
+      status: 401,
+    });
+
+    expect(ctx.state.access).toBeNull();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test("a JWT verifies locally and is never introspected", async () => {
+    present(jwt);
+
+    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+
+    expect(ctx.auth.introspect).not.toHaveBeenCalled();
+    expect(ctx.state.access.provenance).toBe("verified");
+    expect(ctx.state.access.claims.subject).toBe("alice");
+  });
+
+  test("a CWT verifies locally and is never introspected", async () => {
+    present(cwt);
+
+    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+
+    expect(ctx.auth.introspect).not.toHaveBeenCalled();
+    expect(ctx.state.access.provenance).toBe("verified");
+    expect(ctx.state.access.claims.subject).toBe("alice");
+  });
+
+  test("a sign-then-encrypt JWE verifies locally and is never introspected", async () => {
+    present(jwe);
+
+    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+
+    expect(ctx.auth.introspect).not.toHaveBeenCalled();
+    expect(ctx.state.access.provenance).toBe("verified");
+    expect(ctx.state.access.claims.subject).toBe("alice");
   });
 });

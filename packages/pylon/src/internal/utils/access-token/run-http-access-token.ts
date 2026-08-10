@@ -1,9 +1,12 @@
-import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
+import {
+  isClaimsBearingToken,
+  type DomainAssert,
+  type VerifyOptions,
+} from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import type { PylonAuthCacheEntry, PylonHttpContext } from "../../../types/index.js";
 import { assertDpopHttpBinding } from "../dpop/assert-dpop-http-binding.js";
 import { extractTokenFromSession } from "../tokens/extract-token-from-session.js";
-import { isLocallyVerifiable } from "../tokens/is-locally-verifiable.js";
 import { resolveHttpTokenSource } from "../tokens/resolve-http-token-source.js";
 import { splitVerifyInput } from "../tokens/split-verify-input.js";
 import { resolveAccessIssuer } from "./resolve-access-issuer.js";
@@ -36,7 +39,19 @@ export const runHttpAccessToken = async (
       });
     }
 
-    if (isLocallyVerifiable(source.token)) {
+    // The routing question is whether aegis can establish this credential's
+    // CLAIMS locally — not which wire family it belongs to. A signed but OPAQUE
+    // token (a JWS, or its COSE twin a CWS) is an authorization server's handle:
+    // aegis can check its signature and still learn nothing, so verifying it
+    // here would resolve an access state with EMPTY claims — no expiry, no
+    // revocation, no grant — while never asking the only party that knows.
+    // Aegis owns the claims-bearing taxonomy (it is the same split its `parse`
+    // draws), so the predicate is its, not a second copy here.
+    //
+    // SNIFFED from the wire, never inferred from a failed verify: falling
+    // through on failure would hand a tampered JWT to introspection, asking an
+    // authorization server about a string it never issued.
+    if (isClaimsBearingToken(source.token)) {
       // `trustBoundThumbprint` tells aegis the CALLER validates the DPoP binding
       // — which pylon now does, uniformly, in `assertDpopHttpBinding` below.
       // Without it aegis would reject every bound token for want of a proof it
@@ -72,7 +87,7 @@ export const runHttpAccessToken = async (
           type: "urn:lindorm:pylon:error:opaque_token_not_supported",
           title: "Opaque Token Not Supported",
           details:
-            "The presented credential is not a JOSE or COSE token this service can verify locally, and the configured auth driver implements no `introspect` method (RFC 7662) to resolve it with. Present a locally verifiable token.",
+            "The presented credential carries no claims layer this service can verify locally — it is an opaque handle, or a signed blob (JWS/CWS) with no claims — and the configured auth driver implements no `introspect` method (RFC 7662) to resolve it with. Present a claims-bearing token (JWT, CWT, or a sign-then-encrypt JWE/CWE wrapping one).",
         });
       }
 

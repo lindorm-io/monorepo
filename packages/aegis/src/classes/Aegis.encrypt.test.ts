@@ -82,6 +82,36 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       expect(header.typ).toBe("JWT");
     });
 
+    // A cty naming a nested claims token is a DECLARATION about the plaintext,
+    // and a caller routing on it (verify locally vs introspect) is trusting it.
+    // The COSE half already refuses the same lie structurally; these two pin the
+    // JOSE twin, and the honest opaque nesting that must keep working.
+    test("refuses a JWE whose cty declares a JWT but whose plaintext is an opaque JWS", async () => {
+      amphora.add(TEST_EC_KEY_ENC);
+
+      const jws = (await aegis.jws.sign(Buffer.from("opaque-handle"))).token;
+      const { token } = await aegis.jwe.encrypt(jws, { header: { cty: "JWT" } });
+
+      await expect(aegis.verify(token)).rejects.toMatchObject({
+        code: "verify_inner_type_mismatch",
+      });
+    });
+
+    test("still delivers an HONESTLY declared opaque inner (cty text/plain) as inner jws", async () => {
+      amphora.add(TEST_EC_KEY_ENC);
+
+      const jws = (await aegis.jws.sign(Buffer.from("opaque-handle"))).token;
+      const { token } = await aegis.jwe.encrypt(jws, {
+        header: { cty: "text/plain" },
+      });
+
+      const verified = await aegis.verify(token);
+
+      expect(verified.format).toBe("jwe");
+      expect(verified.inner).toBe("jws");
+      expect(verified.claims).toEqual({});
+    });
+
     test("does not encrypt an encryptable profile when no encrypt option is given", async () => {
       amphora.add(TEST_EC_KEY_ENC);
 

@@ -716,12 +716,14 @@ Verifying with no issuer matcher is not a weaker check but NO check, so the LOCA
 
 #### Resolved access — `ctx.state.access`
 
-On HTTP the middleware **sniffs the credential's wire format and routes** — it never tries a local verify and treats the failure as "must be opaque", because a tampered JWT has to fail rather than be handed to an authorization server that never issued it.
+On HTTP the middleware **sniffs the credential and routes** — it never tries a local verify and treats the failure as "must be opaque", because a tampered JWT has to fail rather than be handed to an authorization server that never issued it.
 
-| Credential                          | Route                                   | Result                                                           |
-| ----------------------------------- | --------------------------------------- | ---------------------------------------------------------------- |
-| JOSE / COSE (`Aegis.isJose/isCose`) | verified locally against your keys      | `ctx.state.access` **and** `ctx.state.tokens.accessToken`        |
-| anything else (opaque)              | `ctx.auth.introspect(token)` (RFC 7662) | `ctx.state.access` only — there is no `VerifiedToken` to publish |
+The sniff asks whether aegis can establish the credential's **claims** locally (`isClaimsBearingToken`), not which wire family it belongs to. A signed but opaque token is still opaque: an authorization server's handle is routinely a JWS — or its COSE twin a CWS — and aegis will check its signature and learn nothing, so only the issuer can say whether it is live.
+
+| Credential                                        | Route                                   | Result                                                           |
+| ------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------- |
+| JWT / CWT / CWM, or a sign-then-encrypt JWE / CWE | verified locally against your keys      | `ctx.state.access` **and** `ctx.state.tokens.accessToken`        |
+| opaque — a handle, or a signed JWS / CWS          | `ctx.auth.introspect(token)` (RFC 7662) | `ctx.state.access` only — there is no `VerifiedToken` to publish |
 
 Both paths produce the same four-field shape, so every downstream gate reads one place:
 
@@ -747,7 +749,7 @@ The RFC 7662 response members that describe the ANSWER rather than the token —
 
 There is also no `profile` and no `sensitive`, deliberately. The resolved credential answers one question — may this request do this — and a name, an email, a picture or a national identity number bear on none of it. Identity is read where identity is wanted (`ctx.auth.userinfo()`, `ctx.state.tokens.idToken`); the introspection parser drops the profile claims outright, so an authorization server cannot volunteer personal data into an authorization decision.
 
-A service that mints and verifies its own tokens needs **no `auth` configuration at all** — nothing on the JOSE/COSE path calls the IdP. Introspection is only reached by a genuinely opaque credential, and that needs an `auth` driver that implements `introspect`. Without one, an opaque credential is refused as `opaque_token_not_supported` (401) rather than as a verification that failed.
+A service that mints and verifies its own tokens needs **no `auth` configuration at all** — nothing on the local-verify path calls the IdP. Introspection is only reached by a credential with no claims layer, and that needs an `auth` driver that implements `introspect`. Without one, such a credential is refused as `opaque_token_not_supported` (401) rather than as a verification that failed.
 
 #### Driver-response cache
 

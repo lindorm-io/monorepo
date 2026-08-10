@@ -16,6 +16,7 @@ import { isCws as isCwsBytes } from "../cose/is-cose-format.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { buildCoseVerifiedToken, coseDomainHeader } from "./build-cose-verified-token.js";
 import { coseVerifyCore } from "./cose-verify-core.js";
+import { isClaimsContentType } from "./is-claims-content-type.js";
 import { joseDomainHeader } from "./jose-domain-header.js";
 import { rawDecryptJwe } from "./raw-decrypt-jwe.js";
 import { rawVerifyCws } from "./raw-verify-cws.js";
@@ -28,7 +29,8 @@ import { verifyJwtToken } from "./verify-jwt.js";
  * `VerifiedToken`): auto-detect the format and verify. A JWT/CWT/CWM resolves the
  * full domain `claims`/`custom` buckets; a JWS/CWS delivers its opaque `raw`
  * payload beside an empty domain; a JWE/CWE is decrypted and its SIGNED inner
- * re-verified (an unsigned inner ⇒ `verify_requires_signature`), the OUTER
+ * re-verified (an unsigned inner ⇒ `verify_requires_signature`; a plaintext that
+ * contradicts a claims-token `cty` ⇒ `verify_inner_type_mismatch`), the OUTER
  * `format` (`jwe`/`cwe`) reported with the inner format under `inner`.
  */
 export const verifyToken = async <C extends Dict = Dict>({
@@ -74,6 +76,31 @@ export const verifyToken = async <C extends Dict = Dict>({
           title: "Verify Requires Signature",
           details:
             "aegis.verify requires sender authentication: a JWE must decrypt to a signed token (JWT or JWS). This JWE's plaintext is not a signed token — read confidential, unsigned encrypted claims with aegis.decrypt instead.",
+        },
+      );
+    }
+
+    // A cty is a DECLARATION about the plaintext, and one that names a nested
+    // CLAIMS token (`JWT` / `…+jwt`, RFC 7519 §5.2) must be TRUE: a wrapper that
+    // says "claims inside" and delivers an opaque JWS would verify to an EMPTY
+    // domain, which a caller routing on the declaration reads as an
+    // authenticated credential with nothing in it. The COSE half already refuses
+    // the same lie structurally (`cwt_invalid_typ` — a CWE's plaintext is decoded
+    // as a CWT), so this is the JOSE twin of a check that already exists.
+    //
+    // A JWE genuinely wrapping an opaque JWS is unaffected: it declares
+    // `text/plain` (the only cty that reconstructs an opaque compact token), not
+    // a claims media type, and still resolves to `{ format: "jwe", inner: "jws" }`.
+    if (isClaimsContentType(decrypt.header.cty) && !JwtKit.isJwt(decrypt.payload)) {
+      throw new AegisDomainError(
+        "Encrypted token does not contain the declared claims token",
+        {
+          code: "verify_inner_type_mismatch",
+          data: { cty: decrypt.header.cty },
+          debug: { token: sanitiseToken(token) },
+          title: "Verify Inner Type Mismatch",
+          details:
+            "The JWE declares a nested claims token in its cty (RFC 7519 §5.2) but its plaintext is not a JWT. A token whose envelope misdescribes its content cannot be trusted to carry the claims it advertises.",
         },
       );
     }

@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import { coseByJose } from "../header/header-registry.js";
 import { Tag, decodeCbor } from "./cbor.js";
 import { COSE_TAG, decodeProtectedHeader } from "./structures.js";
@@ -35,18 +36,31 @@ const structureTag = (bytes: Buffer): Tag["tag"] | undefined => {
   }
 };
 
-// The COSE `typ` media type (protected header label 16, RFC 9596), or `undefined`.
-const coseTyp = (bytes: Buffer): string | undefined => {
+// A string-valued COSE PROTECTED header parameter, read by its JOSE name, or
+// `undefined`. Keyless and never throws — the protected header is cleartext CBOR
+// on every COSE structure, encrypted ones included.
+const coseProtected = (bytes: Buffer, jose: string): string | undefined => {
   try {
     const contents = innerCose(decodeCbor(bytes))?.contents;
     const protectedBstr = Array.isArray(contents) ? contents[0] : undefined;
     if (!(protectedBstr instanceof Uint8Array)) return undefined;
-    const typ = decodeProtectedHeader(protectedBstr).get(coseByJose("typ"));
-    return typeof typ === "string" ? typ : undefined;
+    const value = decodeProtectedHeader(protectedBstr).get(coseByJose(jose));
+    return isString(value) ? value : undefined;
   } catch {
     return undefined;
   }
 };
+
+// The COSE `typ` media type (protected header label 16, RFC 9596), or `undefined`.
+const coseTyp = (bytes: Buffer): string | undefined => coseProtected(bytes, "typ");
+
+/**
+ * The COSE `cty` (protected header label 3) — the DECLARED content type of the
+ * structure's payload. On a CWE (COSE_Encrypt0) that is the declaration of what
+ * the CIPHERTEXT holds, readable without the decryption key because the protected
+ * header is cleartext and AAD-covered. `undefined` when absent or not a string.
+ */
+export const coseCty = (bytes: Buffer): string | undefined => coseProtected(bytes, "cty");
 
 const SIGNED_STRUCTURE = (bytes: Buffer): boolean => {
   const tag = structureTag(bytes);
@@ -54,7 +68,7 @@ const SIGNED_STRUCTURE = (bytes: Buffer): boolean => {
 };
 
 const hasSuffix = (typ: string | undefined, media: string, suffix: string): boolean =>
-  typ === media || (typeof typ === "string" && typ.endsWith(suffix));
+  typ === media || (isString(typ) && typ.endsWith(suffix));
 
 /**
  * A claims-bearing CWT signed with COSE_Sign1 (D6). `cwt` and `cwm` are disjoint

@@ -311,7 +311,7 @@ const plain = await aegis.aes.decrypt(encoded, { key: { kryptos: detached } });
 
 ### Universal verification
 
-`aegis.verify(token, assert?, options?)` auto-detects the format — JWT, JWS, JWE, or any COSE token (base64url CBOR, no JOSE dot structure) — and returns the unified domain `VerifiedToken`. A JWE / CWE is decrypted first, then its inner MUST be a signed token (an unsigned encrypted claims set throws `verify_requires_signature` — read those with `aegis.decrypt`). The result is therefore **always** signature-verified.
+`aegis.verify(token, assert?, options?)` auto-detects the format — JWT, JWS, JWE, or any COSE token (base64url CBOR, no JOSE dot structure) — and returns the unified domain `VerifiedToken`. A JWE / CWE is decrypted first, then its inner MUST be a signed token (an unsigned encrypted claims set throws `verify_requires_signature` — read those with `aegis.decrypt`), and a wrapper whose `cty` declares a nested claims token MUST actually hold one (`verify_inner_type_mismatch`; the COSE half refuses the same lie as `cwt_invalid_typ`). The result is therefore **always** signature-verified.
 
 ```typescript
 const result = await aegis.verify(anyToken, {
@@ -371,6 +371,8 @@ Aegis.assert(claims, matchers); // throws on mismatch
 
 Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew? });
 ```
+
+⚠ These are **wire-family** guards — they say which kit `verify` would select, not whether the token carries claims. A `jws` / `cws` passes `isJose` / `isCose` and verifies to an EMPTY claims set. To route a credential between local verification and introspection, use [`isClaimsBearingToken`](#isclaimsbearingtoken--verify-locally-or-introspect).
 
 `verifyDpopProof` runs the RFC 9449 proof checks standalone — signature over the proof's embedded `jwk`, `typ: dpop+jwt`, the RFC 7638 thumbprint against the token's bound `cnf.jkt`, the §7 `ath` hash of the presented access token, and `iat` freshness (default skew 60s). It needs no key resolution because the proof carries its own key, and it returns the `ParsedDpopProof`.
 
@@ -725,6 +727,32 @@ if (isJwtToken(token)) {
   /* a well-formed JWT string */
 }
 ```
+
+### `isClaimsBearingToken` — verify locally, or introspect?
+
+`isClaimsBearingToken(token)` answers the question a resource server actually has before it decides whether to verify a credential itself or introspect it (RFC 7662): **can aegis establish this token's claims locally?** Keyless, never throws.
+
+```typescript
+import { isClaimsBearingToken } from "@lindorm/aegis";
+
+if (isClaimsBearingToken(token)) {
+  const verified = await aegis.verify(token, assert, options);
+} else {
+  const introspection = await introspect(token); // RFC 7662
+}
+```
+
+| Format                             | Claims-bearing | Why                                             |
+| ---------------------------------- | -------------- | ----------------------------------------------- |
+| `jwt` / `cwt` / `cwm`              | yes            | the claims layer is on the wire                 |
+| `jwe` / `cwe` with a claims `cty`  | yes            | declares a nested JWT/CWT — `verify` peels it   |
+| `jws` / `cws`                      | **no**         | a signature over an OPAQUE payload — no claims  |
+| `jwe` / `cwe` with any other `cty` | **no**         | `verify` refuses a plaintext that is not signed |
+| anything else                      | **no**         | not a token                                     |
+
+⚠ **Do not use a wire-family check (`Aegis.isJose` / `Aegis.isCose`) for this decision.** They answer "can `verify` select a kit", which is a different question: `verify` dispatches a `jws`/`cws` perfectly happily and hands back its `raw` payload beside an **empty** `claims`. That is the right answer for `aegis.jws.verify` and a dangerous one for an authorization decision — an authorization server's opaque handle is routinely a signed token, and treating it as verified accepts it with no expiry, no revocation and no grant, while never asking the issuer that holds all three.
+
+The encrypted rule reads the **declared** `cty` off the cleartext protected header — `JWT` / `application/jwt` / `…+jwt` (RFC 7519 §5.2) and `application/cwt` / `…+cwt` / `…+cwm` (RFC 8392), the same declarations `mint(profile, content, { encrypt })` stamps. That matches what `verify` accepts: a JWE/CWE whose plaintext is not a signed token is refused with `verify_requires_signature`, and one that declares a claims token but delivers something else with `verify_inner_type_mismatch` — so a token this predicate admits is one `verify` resolves to real claims or rejects outright, never one it resolves to an empty claims set.
 
 ## Errors
 

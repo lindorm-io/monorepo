@@ -11,8 +11,15 @@ export const joseShapedToken = (payload: object = { sub: "alice" }): string =>
   [segment({ alg: "RS256", typ: "JWT" }), segment(payload), "signature"].join(".");
 
 /**
- * An OPAQUE access token — not dot-delimited and not base64url CBOR, so neither
- * `Aegis.isJose` nor `Aegis.isCose` accepts it and `aegis.verify` would refuse it
- * with `unsupported_token_type`. The middleware must introspect it instead.
+ * An OPAQUE access token in its simplest form: a bare handle that is not a token
+ * wire at all, so `aegis.verify` would refuse it with `unsupported_token_type`.
+ * The middleware must introspect it instead.
+ *
+ * ⚠ Opaqueness is a property of the CLAIMS LAYER, not of the wire shape — an
+ * authorization server's handle is routinely a SIGNED token (a JWS, or its COSE
+ * twin a CWS) whose payload is the handle itself. Such a credential is dotted or
+ * base64url CBOR and verifies its own signature, and is still opaque. Use
+ * `mintOpaqueCws` (`__fixtures__/access/aegis.ts`) for that case; this constant
+ * only covers the trivial one.
  */
 export const OPAQUE_TOKEN = "opaque-access-token";

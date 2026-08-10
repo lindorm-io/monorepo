@@ -31,7 +31,8 @@ type ReconstructStrategy =
  * (e.g. `text/plain; charset=utf-8` → `text/plain`) and lower-case, so an external
  * JOSE/COSE producer's parameterised cty still reconstructs faithfully.
  */
-const bareMediaType = (cty: string): string => cty.split(";")[0].trim().toLowerCase();
+export const bareMediaType = (cty: string): string =>
+  cty.split(";")[0].trim().toLowerCase();
 
 /**
  * A NESTED JOSE token (RFC 7519 §5.2) — `application/jwt`, the `JWT` short form,

@@ -28,7 +28,7 @@ const TOKEN = "opaque-access-token";
 
 /**
  * ⚠ Two claims here exist to prove the payload is stored in DOMAIN form:
- * `updatedAt` is a real `Date` (which a PLAIN `@Field("json")` would reject
+ * `updatedAt` is a real `Date` (which a PLAIN `@Field("object")` would reject
  * outright), and `address` is the one NESTED profile claim (OIDC Core §5.1),
  * whose keys the wire translation would rewrite. See the two pins below.
  */
