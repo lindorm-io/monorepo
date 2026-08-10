@@ -81,9 +81,19 @@ export class AmphoraIdp implements IAmphoraIdp {
     });
   }
 
+  /**
+   * Refetch the upstream's keys, on the same terms an external issuer's refresh
+   * gets: a failure stamps the backoff and is logged before it is rethrown. The
+   * idp is a DECLARED entry, so its FIRST failure is the `warn` that says an
+   * operator's dependency went down, and the repeats drop to `debug`.
+   *
+   * It takes the ENTRY rather than the issuer, so an idp registered by
+   * `openIdConfigurationUri` alone — which has no settled issuer to look up
+   * by — is refreshed (and resolved) here like any other.
+   */
   refresh(): Promise<void> {
     if (!this.state.idpEntry) return Promise.resolve();
-    return this.state.loadEntry(this.state.idpEntry);
+    return this.state.refreshEntry(this.state.idpEntry);
   }
 
   clear(): void {

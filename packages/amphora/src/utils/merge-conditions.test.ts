@@ -37,6 +37,19 @@ describe("mergeConditions", () => {
   test("returns an empty object for no layers", () => {
     expect(mergeConditions()).toEqual({});
   });
+
+  // The strip is a TOP-LEVEL property filter, and must stay one. A recursive
+  // strip walks into an operator's operand, and a `RegExp` — which has no own
+  // enumerable properties — comes back out as `{}`, so `{ $regex: /^cookie/ }`
+  // silently became `{ $regex: {} }` in the path that decides which key answers
+  // a security question.
+  test("leaves an operator operand untouched, RegExp included", () => {
+    const regex = /^cookie/;
+    const merged = mergeConditions({ purpose: { $regex: regex } });
+
+    expect(merged.purpose).toEqual({ $regex: regex });
+    expect((merged.purpose as { $regex: RegExp }).$regex).toBeInstanceOf(RegExp);
+  });
 });
 
 describe("applyKeyFloor", () => {

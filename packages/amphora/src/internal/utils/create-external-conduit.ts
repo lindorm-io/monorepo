@@ -9,6 +9,10 @@ import type { AmphoraSettings } from "../../types/index.js";
  * passed a caller's egress guard 302 to an internal host AFTER the check. The
  * optional `lookup` pins the fetch to a validated IP (closes the connect-time
  * re-resolve / DNS-rebinding gap `maxRedirects: 0` does not).
+ *
+ * `timeout` × `maxAttempts` is the worst-case wall clock of ONE load, and that
+ * load runs inline on a request path whenever an issuer is registered through
+ * `external.addIssuer`. An amphora used that way lowers `timeout` to bound it.
  */
 export const createExternalConduit = (
   settings: AmphoraSettings,
@@ -21,5 +25,5 @@ export const createExternalConduit = (
     logger,
     middleware: [conduitChangeResponseDataMiddleware()],
     retryOptions: { maxAttempts: 3 },
-    timeout: 10000,
+    timeout: settings.timeout ?? 10000,
   });

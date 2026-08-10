@@ -12,9 +12,13 @@ import { seedExternalConfig } from "./seed-external-config.js";
  * Stamping both rather than special-casing the idp downstream is what keeps "is a
  * failure here fatal?" and "which scope is this?" ONE question each with ONE
  * answer, asked identically of every entry.
+ *
+ * The idp is `declared` HOWEVER it arrived — including through `idp.set()` at
+ * runtime. It is a singleton the operator points the service at, not one of a
+ * client-sized population, so the scheduled sweep is exactly where it belongs.
  */
 export const seedIdpConfig = (input: AmphoraIdpSettings): ExternalEntry => ({
-  ...seedExternalConfig(input),
+  ...seedExternalConfig(input, "declared"),
   scope: "idp",
   required: true,
 });

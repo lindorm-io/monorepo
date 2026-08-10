@@ -55,18 +55,33 @@ export type AmphoraExternalSettings = {
   openIdConfigurationUri?: string;
   /**
    * Whether a failed fetch is FATAL. It does not say WHEN the fetch happens —
-   * every registered issuer is fetched at `setup()`, always.
+   * every DECLARED issuer is fetched at `setup()`, always.
    *
    * - `true` — `setup()` THROWS when this issuer cannot be resolved or its keys
    *   cannot be fetched. Boot fails on the real cause rather than deferring an
    *   unusable provider to a user's first request.
-   * - `false` (default) — a failure at `setup()` is logged as a `warn` and setup
-   *   completes; the ordinary periodic refresh retries it, and the refresh
-   *   interval is the retry backoff.
+   * - `false` (default) — the first failure is logged as a `warn`, setup
+   *   completes, and the issuer is retried on the schedule below.
+   *
+   * ⚠ RETRY IS EXPLICIT, not a property of the refresh interval. A failed load
+   * stamps the issuer with a retry time of now + `refreshInterval`, and no
+   * SPECULATIVE refetch happens before it. Saying "the refresh interval is the
+   * backoff" was false while an issuer that had NEVER succeeded counted as
+   * permanently stale: it had no last-refresh instant for an interval to be
+   * measured from, so every unscoped lookup re-attempted it immediately, without
+   * bound and with no clock movement.
+   *
+   * A MISS is never gated by that stamp — a provider that was failing and has
+   * since rotated a key is fetched on the spot, not after the backoff.
    *
    * Either way REFRESH is tolerant: an issuer that resolved at boot and later
    * fails a refresh keeps its working config and keys, and never takes a healthy
    * running process down.
+   *
+   * `required` is meaningful only for a DECLARED source (the constructor
+   * `external` array), because only those are in the `setup()` sweep. An issuer
+   * registered through `external.addIssuer` reports its own failure by throwing
+   * from that call.
    */
   required?: boolean;
   trustAnchors?: string | Array<string>;
@@ -165,13 +180,20 @@ export type AmphoraSettings = {
    * Hard cap on the number of EXTERNAL issuers held at once — the idp is EXEMPT
    * (it is a distinguished singleton). Registering past the cap via
    * `external.addIssuer` evicts the least-recently-USED external issuer inline
-   * (LRU by the last find/filter hit; a never-used issuer goes first). Eviction
-   * is correctness-safe — an evicted issuer re-registers and re-fetches on its
-   * next use. This bounds the vault against CLIENT-driven growth (e.g. one issuer
-   * per DCR `jwks_uri` client), which is the memory-exhaustion vector the cap
-   * closes; the trigger is `addIssuer` overflow, so operator-declared `external`
-   * from construction is never trimmed until dynamic registration begins.
+   * (LRU by the last find/filter hit; a never-used issuer goes first). This
+   * bounds the vault against CLIENT-driven growth (e.g. one issuer per DCR
+   * `jwks_uri` client), which is the memory-exhaustion vector the cap closes;
+   * the trigger is `addIssuer` overflow, so operator-declared `external` from
+   * construction is never trimmed until dynamic registration begins.
    * Defaults to 1000.
+   *
+   * ⚠ EVICTION DOES NOT SELF-HEAL. An evicted issuer is gone: amphora holds no
+   * source for it, so a later lookup for its keys fails and nothing refetches
+   * it — a targeted refresh finds no entry and no-ops. Re-registering is the
+   * CONSUMER's job, and the consumers that rely on the cap already do it
+   * naturally: call `external.addIssuer` before the lookup that needs the
+   * issuer, which is what a per-request registration flow does on every request
+   * anyway.
    */
   maxIssuers?: number;
   /**
@@ -184,6 +206,22 @@ export type AmphoraSettings = {
    */
   maxRedirects?: number;
   refreshInterval?: number;
+  /**
+   * Per-fetch HTTP timeout, in milliseconds, for external discovery / JWKS
+   * fetches — forwarded to the internal Conduit. Defaults to `10000`.
+   *
+   * It bounds ONE attempt, and the Conduit retries up to three times, so the
+   * worst case of a single load is roughly three times this plus backoff. That
+   * matters because a load is not only a background sweep: `external.addIssuer`
+   * resolves and fetches INLINE, so on a service that registers issuers per
+   * request this value sits directly in a request's wall clock. Lower it there.
+   *
+   * Instance-level rather than per-source, like {@link ConduitLookup} and
+   * `maxRedirects`: one Conduit serves every source, and two sources on one
+   * amphora needing different timeouts are better served by two amphoras — which
+   * is also how the boot-sweep and per-request roles are actually deployed.
+   */
+  timeout?: number;
 };
 
 export type AmphoraCondition = Condition<AmphoraQuery>;

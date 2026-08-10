@@ -563,6 +563,104 @@ describe("Amphora", () => {
       expect(amphora.jwks.keys.some((k) => k.kid === internalEc.id)).toBe(false);
       expect(amphora.jwks.keys.some((k) => k.kid === TEST_OKP_KEY_SIG.id)).toBe(true);
     });
+
+    // `undefined` ≡ ABSENT, everywhere: a condition value of `undefined` means
+    // "not specified". A consumer writing `filter({ publish: cfg.publish })`
+    // against an unset config field is therefore asking nothing about
+    // `publish`, and must get the DEFAULT gate — not an opt-out of it.
+    //
+    // The gate used to read key PRESENCE (`"publish" in condition`), which is
+    // true for a key present with the value `undefined`. So such a caller
+    // skipped the gate while the matcher, treating the same value as "no
+    // constraint", constrained nothing either — and every internal unpublished
+    // key (the KEK, the CA, the cookie key) was handed back to a caller who
+    // asked for published ones. `find` takes `[0]` of a newest-first sort, so
+    // the caller silently received whichever internal key was newest.
+    describe("undefined is not an opt-out of the publish gate", () => {
+      test("should apply the default gate when publish is undefined", async () => {
+        amphora.add([internalSig, TEST_OKP_KEY_SIG]);
+
+        await expect(amphora.filter({ use: "sig", publish: undefined })).resolves.toEqual(
+          [TEST_OKP_KEY_SIG],
+        );
+        expect(amphora.filterSync({ use: "sig", publish: undefined })).toEqual([
+          TEST_OKP_KEY_SIG,
+        ]);
+        await expect(amphora.find({ use: "sig", publish: undefined })).resolves.toEqual(
+          TEST_OKP_KEY_SIG,
+        );
+        expect(amphora.findSync({ use: "sig", publish: undefined })).toEqual(
+          TEST_OKP_KEY_SIG,
+        );
+      });
+
+      test("should throw rather than hand back an internal key when publish is undefined", async () => {
+        amphora.add(internalSig);
+
+        await expect(amphora.filter({ use: "sig", publish: undefined })).resolves.toEqual(
+          [],
+        );
+        expect(amphora.filterSync({ use: "sig", publish: undefined })).toEqual([]);
+        await expect(amphora.find({ use: "sig", publish: undefined })).rejects.toThrow(
+          AmphoraError,
+        );
+        expect(() => amphora.findSync({ use: "sig", publish: undefined })).toThrow(
+          AmphoraError,
+        );
+      });
+
+      test("should keep an explicit publish value meaning exactly what it meant", async () => {
+        amphora.add([internalSig, TEST_OKP_KEY_SIG]);
+
+        await expect(amphora.filter({ use: "sig", publish: false })).resolves.toEqual([
+          internalSig,
+        ]);
+        expect(amphora.filterSync({ use: "sig", publish: false })).toEqual([internalSig]);
+        await expect(amphora.find({ use: "sig", publish: false })).resolves.toEqual(
+          internalSig,
+        );
+        expect(amphora.findSync({ use: "sig", publish: false })).toEqual(internalSig);
+
+        await expect(amphora.filter({ use: "sig", publish: true })).resolves.toEqual([
+          TEST_OKP_KEY_SIG,
+        ]);
+        expect(amphora.filterSync({ use: "sig", publish: true })).toEqual([
+          TEST_OKP_KEY_SIG,
+        ]);
+        await expect(amphora.find({ use: "sig", publish: true })).resolves.toEqual(
+          TEST_OKP_KEY_SIG,
+        );
+        expect(amphora.findSync({ use: "sig", publish: true })).toEqual(TEST_OKP_KEY_SIG);
+      });
+
+      // The general case the boundary normalisation closes, not merely the
+      // `publish` instance: an undefined value NEVER widens a lookup, whichever
+      // field carries it. A condition with one is exactly the condition without
+      // it — same matches, same gate.
+      test("should treat an undefined value on any field as absent", async () => {
+        amphora.add([internalSig, TEST_OKP_KEY_SIG]);
+
+        await expect(amphora.filter({ use: "sig", purpose: undefined })).resolves.toEqual(
+          [TEST_OKP_KEY_SIG],
+        );
+        expect(amphora.filterSync({ use: "sig", purpose: undefined })).toEqual([
+          TEST_OKP_KEY_SIG,
+        ]);
+        await expect(
+          amphora.filter({ use: "sig", issuer: undefined, purpose: undefined }),
+        ).resolves.toEqual([TEST_OKP_KEY_SIG]);
+      });
+
+      // A condition that is ENTIRELY undefined values is the empty condition,
+      // so it must behave as `filter({})` does — gated, not wide open.
+      test("should apply the default gate to a condition of only undefined values", async () => {
+        amphora.add([internalSig, TEST_OKP_KEY_SIG]);
+
+        await expect(
+          amphora.filter({ publish: undefined, purpose: undefined }),
+        ).resolves.toEqual(await amphora.filter({}));
+      });
+    });
   });
 
   describe("can", () => {
@@ -1081,6 +1179,26 @@ describe("Amphora", () => {
             totalKeys: 2,
             activeKeys: 2,
           },
+        }),
+      );
+    });
+
+    // The diagnostics report the EFFECTIVE query — the one that was actually
+    // run. An unspecified field never constrained anything, so naming it here
+    // would send an operator hunting for a criterion that was never applied.
+    test("should not name an unspecified field among the query keys", async () => {
+      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
+
+      const promise = amphora.find({
+        issuer,
+        id: "non-existent-id",
+        publish: undefined,
+        purpose: undefined,
+      });
+
+      await expect(promise).rejects.toThrow(
+        expect.objectContaining({
+          data: expect.objectContaining({ queryKeys: ["issuer", "id"] }),
         }),
       );
     });
@@ -1871,6 +1989,232 @@ describe("Amphora", () => {
     });
   });
 
+  // A stale refetch is an OPTIMISATION, so its failure must not deny a caller we
+  // can already answer — while a MISS refetch is the only thing that can produce
+  // an answer at all, so its failure must keep propagating its real cause. Both
+  // directions are pinned here: a test for the first alone would let the guard be
+  // "simplified" into swallowing miss failures too, which turns a 503 into a
+  // generic not-found and hides the outage.
+  describe("stale refresh failure vs miss failure", () => {
+    const staleIssuer = "https://stale.lindorm.io/";
+    const staleJwksUri = "https://stale.lindorm.io/.well-known/jwks.json";
+
+    const publicJwk = () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("public");
+      delete jwk.iss;
+      return jwk;
+    };
+
+    // The endpoint answers once (setup), then is down for good. `times` is not
+    // usable for the down half: the conduit retries a 5xx, so one logical load
+    // consumes several interceptors.
+    const downAfterOneGoodFetch = () => {
+      nock("https://stale.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [publicJwk()] });
+
+      nock("https://stale.lindorm.io")
+        .persist()
+        .get("/.well-known/jwks.json")
+        .reply(503, { error: "Service Unavailable" });
+    };
+
+    const staleAmphora = (logger = createMockLogger()) =>
+      new Amphora({
+        internal: { issuer },
+        logger,
+        refreshInterval: 100,
+        external: [{ issuer: staleIssuer, jwksUri: staleJwksUri }],
+      });
+
+    afterEach(() => {
+      nock.cleanAll();
+      MockDate.set(MockedDate);
+    });
+
+    test("filter serves the cached keys when only the STALE refetch failed", async () => {
+      downAfterOneGoodFetch();
+
+      amphora = staleAmphora();
+      await amphora.setup();
+
+      MockDate.set(new Date("2024-01-01T08:00:00.200Z"));
+
+      const result = await amphora.filter({ issuer: staleIssuer });
+
+      expect(result).toEqual([
+        expect.objectContaining({ id: TEST_EC_KEY_SIG.id, issuer: staleIssuer }),
+      ]);
+    });
+
+    test("find serves the cached key when only the STALE refetch failed", async () => {
+      downAfterOneGoodFetch();
+
+      amphora = staleAmphora();
+      await amphora.setup();
+
+      MockDate.set(new Date("2024-01-01T08:00:00.200Z"));
+
+      const result = await amphora.find({ issuer: staleIssuer, use: "sig" });
+
+      expect(result.id).toBe(TEST_EC_KEY_SIG.id);
+    });
+
+    test("a swallowed stale refetch is logged at debug, not warn or error", async () => {
+      downAfterOneGoodFetch();
+
+      const logger = createMockLogger();
+      const child = createMockLogger();
+      vi.mocked(logger.child).mockReturnValue(child);
+
+      amphora = staleAmphora(logger);
+      await amphora.setup();
+
+      vi.mocked(child.debug).mockClear();
+      MockDate.set(new Date("2024-01-01T08:00:00.200Z"));
+
+      await amphora.filter({ issuer: staleIssuer });
+
+      expect(child.debug).toHaveBeenCalledWith(
+        "Stale refresh failed; serving cached keys",
+        expect.objectContaining({ issuer: staleIssuer }),
+      );
+    });
+
+    // Serving from cache IS use. Without this the one lookup per backoff window
+    // that takes the swallow path leaves the entry looking idle, so an issuer in
+    // active use becomes the eviction victim while its endpoint is down — and
+    // eviction is final.
+    test("serving from cache on a swallowed refetch still counts as an access", async () => {
+      nock(/lindorm\.io/)
+        .persist()
+        .get("/.well-known/jwks.json")
+        .reply(200, { keys: [publicJwk()] });
+
+      const instance = new Amphora({
+        internal: { issuer },
+        logger: createMockLogger(),
+        maxIssuers: 2,
+        refreshInterval: 100,
+      });
+
+      MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
+      await instance.external.addIssuer({ issuer: staleIssuer, jwksUri: staleJwksUri });
+
+      MockDate.set(new Date("2024-01-01T08:00:01.000Z"));
+      await instance.external.addIssuer({
+        issuer: "https://idle.lindorm.io/",
+        jwksUri: "https://idle.lindorm.io/.well-known/jwks.json",
+      });
+
+      // The stale issuer's endpoint goes down, then it is USED — the refetch is
+      // swallowed and the cached key is served.
+      nock.cleanAll();
+      nock("https://stale.lindorm.io")
+        .persist()
+        .get("/.well-known/jwks.json")
+        .reply(503, { error: "Service Unavailable" });
+      nock("https://new.lindorm.io")
+        .persist()
+        .get("/.well-known/jwks.json")
+        .reply(200, { keys: [publicJwk()] });
+
+      MockDate.set(new Date("2024-01-01T08:00:02.000Z"));
+      await instance.filter({ issuer: staleIssuer });
+
+      MockDate.set(new Date("2024-01-01T08:00:03.000Z"));
+      await instance.external.addIssuer({
+        issuer: "https://new.lindorm.io/",
+        jwksUri: "https://new.lindorm.io/.well-known/jwks.json",
+      });
+
+      const issuers = instance.external.issuers().map((c) => c.issuer);
+
+      expect(issuers).toContain(staleIssuer);
+      expect(issuers).not.toContain("https://idle.lindorm.io/");
+    });
+
+    test("filter propagates the real cause when the MISS refetch failed", async () => {
+      nock("https://stale.lindorm.io")
+        .persist()
+        .get("/.well-known/jwks.json")
+        .reply(503, { error: "Service Unavailable" });
+
+      amphora = staleAmphora();
+      await amphora.setup();
+
+      expect(amphora.vault.filter((k) => k.issuer === staleIssuer)).toHaveLength(0);
+
+      const error = await amphora
+        .filter({ issuer: staleIssuer, use: "sig" })
+        .then(() => null)
+        .catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(Error);
+      expect(error).not.toBeInstanceOf(AmphoraError);
+      expect(error).toEqual(expect.objectContaining({ status: 503 }));
+    });
+
+    // `find` delegates to `filter`, so the miss refetch throws before `find`
+    // reaches its own not-found. That ordering is the point: a 503 must not be
+    // reported as "no key matched".
+    test("find propagates the real cause rather than its not-found on a failed MISS refetch", async () => {
+      nock("https://stale.lindorm.io")
+        .persist()
+        .get("/.well-known/jwks.json")
+        .reply(503, { error: "Service Unavailable" });
+
+      amphora = staleAmphora();
+      await amphora.setup();
+
+      const error = await amphora
+        .find({ issuer: staleIssuer, use: "sig" })
+        .then(() => null)
+        .catch((e: unknown) => e);
+
+      expect(error).toEqual(expect.objectContaining({ status: 503 }));
+      expect(error).not.toEqual(
+        expect.objectContaining({ code: "kryptos_not_found_by_query_after_refresh" }),
+      );
+    });
+
+    // `findById` has no cached answer to fall back on by construction — the id
+    // was not in the vault — so R7 does not reach it and its real cause stands.
+    test("findById propagates the real cause on a failed refetch", async () => {
+      nock("https://stale.lindorm.io")
+        .persist()
+        .get("/.well-known/jwks.json")
+        .reply(503, { error: "Service Unavailable" });
+
+      amphora = staleAmphora();
+      await amphora.setup();
+
+      const error = await amphora
+        .findById("no-such-kid", staleIssuer)
+        .then(() => null)
+        .catch((e: unknown) => e);
+
+      expect(error).toEqual(expect.objectContaining({ status: 503 }));
+      expect(error).not.toBeInstanceOf(AmphoraError);
+    });
+
+    // The sync readers never refresh, so there is nothing to swallow: a stale
+    // cached key is served exactly as before.
+    test("filterSync is untouched by the swallow and still serves stale keys", async () => {
+      downAfterOneGoodFetch();
+
+      amphora = staleAmphora();
+      await amphora.setup();
+
+      MockDate.set(new Date("2024-01-01T08:00:00.200Z"));
+
+      expect(amphora.filterSync({ issuer: staleIssuer })).toEqual([
+        expect.objectContaining({ id: TEST_EC_KEY_SIG.id }),
+      ]);
+    });
+  });
+
   describe("external trust anchors", () => {
     const externalIssuer = "https://external.lindorm.io/";
     const externalJwksUri = "https://external.lindorm.io/.well-known/jwks.json";
@@ -2340,7 +2684,9 @@ describe("Amphora", () => {
       expect(amphora.jwks.keys.some((k) => k.kid === a.id)).toBe(false);
     });
 
-    test("external.remove drops a key by id", () => {
+    // Updated for the required `issuer`: a kid is unique only PER ISSUER, so
+    // naming one is the only way to say WHICH key is meant.
+    test("external.remove drops a key by id under its issuer", () => {
       const key = KryptosKit.generate.sig.ec({
         algorithm: "ES256",
         issuer: "https://foreign.lindorm.io/",
@@ -2348,8 +2694,309 @@ describe("Amphora", () => {
       amphora.external.add(key);
       expect(amphora.vault.find((k) => k.id === key.id)).toBeDefined();
 
-      amphora.external.remove(key.id);
+      amphora.external.remove(key.id, "https://foreign.lindorm.io/");
       expect(amphora.vault.find((k) => k.id === key.id)).toBeUndefined();
+    });
+
+    // A FOREIGN key carries its own identity or it has none we may invent. There
+    // is no fallback issuer to stamp — using ours would claim someone else's key
+    // as our own — so an issuer-less foreign key is rejected outright, mirroring
+    // the guard the internal side already has.
+    test("external.add rejects a foreign key that carries no issuer", () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("public");
+      delete jwk.iss;
+
+      const issuerless = KryptosKit.from.jwk(jwk);
+      expect(issuerless.issuer).toBeNull();
+
+      expect(() => amphora.external.add(issuerless)).toThrow(
+        expect.objectContaining({
+          code: "kryptos_issuer_required",
+          data: expect.objectContaining({ id: issuerless.id }),
+        }),
+      );
+      expect(amphora.vault).toHaveLength(0);
+    });
+  });
+
+  // A key id is unique PER ISSUER — the same invariant `findByIdExact` throws
+  // `kryptos_ambiguous_id` on. Dedupe has to agree: keyed on the bare id, adding
+  // OUR key under a kid two peers also use DELETED both peers' keys.
+  describe("vault dedupe is scoped to (id, issuer)", () => {
+    const issuerA = "https://iss-a.lindorm.io/";
+    const issuerB = "https://iss-b.lindorm.io/";
+
+    const foreign = (source: IKryptos, id: string, keyIssuer: string): IKryptos =>
+      KryptosKit.clone(source, { id, issuer: keyIssuer, internal: false });
+
+    test("adding OUR key with a colliding kid leaves both peers' keys intact", () => {
+      amphora.external.add([
+        foreign(TEST_EC_KEY_SIG, "kid-1", issuerA),
+        foreign(TEST_OKP_KEY_SIG, "kid-1", issuerB),
+      ]);
+
+      amphora.add(KryptosKit.clone(TEST_RSA_KEY_SIG, { id: "kid-1", issuer }));
+
+      expect(amphora.vault).toHaveLength(3);
+      expect(amphora.findByIdSync("kid-1", issuerA).type).toBe("EC");
+      expect(amphora.findByIdSync("kid-1", issuerB).type).toBe("OKP");
+      expect(amphora.findByIdSync("kid-1", issuer).type).toBe("RSA");
+    });
+
+    test("two foreign issuers sharing a kid coexist through external.add", () => {
+      amphora.external.add(foreign(TEST_EC_KEY_SIG, "kid-1", issuerA));
+      amphora.external.add(foreign(TEST_OKP_KEY_SIG, "kid-1", issuerB));
+
+      expect(amphora.vault).toHaveLength(2);
+      expect(amphora.findByIdSync("kid-1", issuerA).type).toBe("EC");
+      expect(amphora.findByIdSync("kid-1", issuerB).type).toBe("OKP");
+    });
+
+    // The other half: scoping the dedupe must not stop a genuine ROTATION from
+    // replacing the key it rotates.
+    test("add replaces a key with the same id under the SAME issuer", () => {
+      amphora.add(KryptosKit.clone(TEST_EC_KEY_SIG, { id: "kid-1", issuer }));
+      amphora.add(KryptosKit.clone(TEST_OKP_KEY_SIG, { id: "kid-1", issuer }));
+
+      expect(amphora.vault).toHaveLength(1);
+      expect(amphora.findByIdSync("kid-1", issuer).type).toBe("OKP");
+    });
+
+    test("external.add replaces a key with the same id under the SAME issuer", () => {
+      amphora.external.add(foreign(TEST_EC_KEY_SIG, "kid-1", issuerA));
+      amphora.external.add(foreign(TEST_OKP_KEY_SIG, "kid-1", issuerA));
+
+      expect(amphora.vault).toHaveLength(1);
+      expect(amphora.findByIdSync("kid-1", issuerA).type).toBe("OKP");
+    });
+  });
+
+  // Removal answers to the SAME per-issuer uniqueness the add side does. Keyed
+  // on the bare id it dropped the kid from EVERY issuer at once — the mirror of
+  // the dedupe bug above, and the exact ambiguity `findByIdExact` refuses to
+  // guess at (`kryptos_ambiguous_id`). Naming the issuer is the caller's answer.
+  describe("external.remove is scoped to (id, issuer)", () => {
+    const issuerA = "https://iss-a.lindorm.io/";
+    const issuerB = "https://iss-b.lindorm.io/";
+
+    const foreign = (source: IKryptos, id: string, keyIssuer: string): IKryptos =>
+      KryptosKit.clone(source, { id, issuer: keyIssuer, internal: false });
+
+    // ⚠ The fixture keys expire 2024-06-01 in REAL time, so every test here
+    // needs the frozen clock a preceding block may have moved.
+    beforeEach(() => {
+      MockDate.set(MockedDate);
+    });
+
+    afterEach(() => {
+      MockDate.set(MockedDate);
+    });
+
+    test("removes only the named issuer's key when two peers share a kid", () => {
+      amphora.external.add([
+        foreign(TEST_EC_KEY_SIG, "kid-1", issuerA),
+        foreign(TEST_OKP_KEY_SIG, "kid-1", issuerB),
+      ]);
+
+      amphora.external.remove("kid-1", issuerA);
+
+      expect(amphora.vault).toHaveLength(1);
+      expect(amphora.findByIdSync("kid-1", issuerB).type).toBe("OKP");
+      expect(amphora.vault.find((k) => k.issuer === issuerA)).toBeUndefined();
+    });
+
+    test("removing a kid under an issuer that does not hold it is a no-op", () => {
+      amphora.external.add([
+        foreign(TEST_EC_KEY_SIG, "kid-1", issuerA),
+        foreign(TEST_OKP_KEY_SIG, "kid-2", issuerB),
+      ]);
+
+      const before = amphora.vault;
+
+      amphora.external.remove("kid-1", issuerB);
+
+      expect(amphora.vault).toEqual(before);
+      expect(amphora.findByIdSync("kid-1", issuerA).type).toBe("EC");
+      expect(amphora.findByIdSync("kid-2", issuerB).type).toBe("OKP");
+    });
+
+    // A foreign key is never IN our jwks, so the refresh has to be observed
+    // through what a recompute would change: an internal published key that has
+    // since expired stays in the cached listing until something recomputes it.
+    test("refreshes the jwks after removing", () => {
+      amphora.add(TEST_EC_KEY_SIG);
+      amphora.external.add(foreign(TEST_OKP_KEY_SIG, "kid-1", issuerA));
+
+      expect(amphora.jwks.keys).toHaveLength(1);
+
+      // Past the fixture's `expiresAt` — the cached listing is now stale.
+      MockDate.set(new Date("2024-07-01T08:00:00.000Z"));
+      expect(amphora.jwks.keys).toHaveLength(1);
+
+      amphora.external.remove("kid-1", issuerA);
+
+      expect(amphora.jwks.keys).toHaveLength(0);
+    });
+  });
+
+  // ONE provenance rule, both ID-SCOPED writers, both directions: a vault write
+  // must not cross provenance. The vault partitions by `internal`, and a slot is
+  // `(id, issuer)` — so one of OUR keys and a foreign key can never share one.
+  //
+  // ⚠ The rule keys on `internal`, NEVER on the issuer. A foreign key may
+  // legitimately carry OUR issuer (the last two tests here), so "the issuer is
+  // ours" says nothing about whose key it is; only the flag does.
+  //
+  // The crossing case THROWS. Skipping would make a failed removal
+  // indistinguishable from a successful one, and letting the two coexist is
+  // worse: they would share the one `(id, issuer)` slot both writers treat as
+  // unique, so `findByIdExact` would see two matches and throw
+  // `kryptos_ambiguous_id` at LOOKUP time — punishing a read that did nothing
+  // wrong.
+  describe("vault writes cannot cross provenance", () => {
+    const foreignIssuer = "https://foreign.lindorm.io/";
+
+    // The env string from the `env` block above — an EC key whose kid is below,
+    // carrying no issuer, so `env` files it under OURS as `internal: true`.
+    const envKey =
+      "kryptos:eyJlbmMiOiJBMTkyR0NNIiwiaWF0IjoxNzQ0NzA0MjYzLCJrZXlfb3BzIjpbImRlcml2ZUtleSJdLCJuYmYiOjE3NDQ3MDQyNjMsInB1cnBvc2UiOiJ0ZXN0IiwidWF0IjoxNzQ0NzA0MjYzLCJjcnYiOiJQLTM4NCIsIngiOiJGMTgyVlNMMURyRll5b19feVJ3eXlvS3JtT08wVEU0MktxT0pOQk1CNlgxSlFYbGV1MTVqYVpsN3dHdG5XcmxUIiwieSI6IlM3bElSZG45dlh5QnF4S0FSUTZzampLcXlCekt1T3VJM1BYcExlUEZ3bmpXNDduWEVVN2hDMzNydmF5ZzVZbVkiLCJkIjoiVzlRNmZMc2J2NkN0dk1zWUUyOTJha2VqeUlZeHFUY1BGSTQzUE9Fd1dpeVRrMFhhelk4NEREQnpHZlNVNEhmOCIsImtpZCI6IjE2NmM2YWI2LWRmOWYtNGZkYS1hYWI4LTkyMTM5ZWY2NDc5MiIsImFsZyI6IkVDREgtRVMrQTE5MktXIiwidXNlIjoiZW5jIiwia3R5IjoiRUMifQ";
+    const envKeyId = "166c6ab6-df9f-4fda-aab8-92139ef64792";
+
+    const ours = (source: IKryptos, id: string, keyIssuer: string): IKryptos =>
+      KryptosKit.clone(source, { id, issuer: keyIssuer, internal: true });
+
+    const foreign = (source: IKryptos, id: string, keyIssuer: string): IKryptos =>
+      KryptosKit.clone(source, { id, issuer: keyIssuer, internal: false });
+
+    // ⚠ The fixture keys expire 2024-06-01 in REAL time, so every test here
+    // needs the frozen clock a preceding block may have moved.
+    beforeEach(() => {
+      MockDate.set(MockedDate);
+    });
+
+    afterEach(() => {
+      MockDate.set(MockedDate);
+    });
+
+    test("external.remove refuses to delete one of OUR keys, which survives", () => {
+      amphora.add(ours(TEST_EC_KEY_SIG, "kid-1", issuer));
+
+      expect(() => amphora.external.remove("kid-1", issuer)).toThrow(
+        expect.objectContaining({
+          code: "kryptos_provenance_conflict",
+          data: expect.objectContaining({
+            id: "kid-1",
+            issuer,
+            held: "internal",
+            attempted: "external",
+          }),
+        }),
+      );
+
+      expect(amphora.vault).toHaveLength(1);
+      expect(amphora.findByIdSync("kid-1", issuer).internal).toBe(true);
+    });
+
+    test("external.add refuses to replace one of OUR keys, which survives unmodified", () => {
+      amphora.add(ours(TEST_EC_KEY_SIG, "kid-1", issuer));
+
+      expect(() =>
+        amphora.external.add(foreign(TEST_OKP_KEY_SIG, "kid-1", issuer)),
+      ).toThrow(
+        expect.objectContaining({
+          code: "kryptos_provenance_conflict",
+          data: expect.objectContaining({ held: "internal", attempted: "external" }),
+        }),
+      );
+
+      expect(amphora.vault).toHaveLength(1);
+
+      const held = amphora.findByIdSync("kid-1", issuer);
+      expect(held.internal).toBe(true);
+      expect(held.type).toBe("EC");
+    });
+
+    test("add refuses to replace a FOREIGN key, which survives unmodified", () => {
+      amphora.external.add(foreign(TEST_OKP_KEY_SIG, "kid-1", issuer));
+
+      expect(() => amphora.add(ours(TEST_EC_KEY_SIG, "kid-1", issuer))).toThrow(
+        expect.objectContaining({
+          code: "kryptos_provenance_conflict",
+          data: expect.objectContaining({ held: "external", attempted: "internal" }),
+        }),
+      );
+
+      expect(amphora.vault).toHaveLength(1);
+
+      const held = amphora.findByIdSync("kid-1", issuer);
+      expect(held.internal).toBe(false);
+      expect(held.type).toBe("OKP");
+    });
+
+    test("env refuses to replace a FOREIGN key holding the imported key's slot", () => {
+      amphora.external.add(foreign(TEST_OKP_KEY_SIG, envKeyId, issuer));
+
+      expect(() => amphora.env(envKey)).toThrow(
+        expect.objectContaining({
+          code: "kryptos_provenance_conflict",
+          data: expect.objectContaining({
+            id: envKeyId,
+            issuer,
+            held: "external",
+            attempted: "internal",
+          }),
+        }),
+      );
+
+      expect(amphora.vault).toHaveLength(1);
+      expect(amphora.findByIdSync(envKeyId, issuer).internal).toBe(false);
+    });
+
+    // The other half of the rule — it must not touch a SAME-provenance write,
+    // which is an ordinary rotation in both directions.
+    test("add replaces one of OUR keys under the same slot", () => {
+      amphora.add(ours(TEST_EC_KEY_SIG, "kid-1", issuer));
+      amphora.add(ours(TEST_OKP_KEY_SIG, "kid-1", issuer));
+
+      expect(amphora.vault).toHaveLength(1);
+
+      const held = amphora.findByIdSync("kid-1", issuer);
+      expect(held.internal).toBe(true);
+      expect(held.type).toBe("OKP");
+    });
+
+    test("external.add replaces a FOREIGN key under the same slot", () => {
+      amphora.external.add(foreign(TEST_EC_KEY_SIG, "kid-1", foreignIssuer));
+      amphora.external.add(foreign(TEST_OKP_KEY_SIG, "kid-1", foreignIssuer));
+
+      expect(amphora.vault).toHaveLength(1);
+
+      const held = amphora.findByIdSync("kid-1", foreignIssuer);
+      expect(held.internal).toBe(false);
+      expect(held.type).toBe("OKP");
+    });
+
+    // ⚠ THE test that stops the rule being "simplified" into an issuer
+    // comparison. A foreign key may carry OUR issuer — `external.add` accepts
+    // one and must — and a different id is a different slot, so nothing crosses.
+    test("external.add accepts a foreign key under OUR issuer at a different id", () => {
+      amphora.add(ours(TEST_EC_KEY_SIG, "kid-1", issuer));
+
+      amphora.external.add(foreign(TEST_OKP_KEY_SIG, "kid-2", issuer));
+
+      expect(amphora.vault).toHaveLength(2);
+      expect(amphora.findByIdSync("kid-1", issuer).internal).toBe(true);
+      expect(amphora.findByIdSync("kid-2", issuer).internal).toBe(false);
+    });
+
+    test("external.remove drops a foreign key that carries OUR issuer", () => {
+      amphora.add(ours(TEST_EC_KEY_SIG, "kid-1", issuer));
+      amphora.external.add(foreign(TEST_OKP_KEY_SIG, "kid-2", issuer));
+
+      amphora.external.remove("kid-2", issuer);
+
+      expect(amphora.vault).toHaveLength(1);
+      expect(amphora.findByIdSync("kid-1", issuer).internal).toBe(true);
     });
   });
 

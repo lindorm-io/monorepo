@@ -12,8 +12,11 @@ import type { ExternalEntry } from "../types/external-entry.js";
  * single unreachable peer must not take out the whole listing.
  *
  * The copy names every field rather than spreading the entry: {@link ExternalEntry}
- * carries bookkeeping the public config does not (`scope`), and a spread would ship
- * each such field to consumers untyped and unnoticed.
+ * carries bookkeeping the public config does not (`scope`, `origin`, `failureCount`,
+ * `retryAfter`), and a spread would ship each such field to consumers untyped and
+ * unnoticed. The retry pair is held back deliberately — `external.issuers()`
+ * describes what amphora HOLDS, not how it is retrying; the failure state is
+ * carried by the logs instead.
  */
 export const toExternalConfig = (entry: ExternalEntry): AmphoraExternalConfig | null =>
   entry.issuer === null

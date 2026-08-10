@@ -1,4 +1,4 @@
-import { isArray, isUri } from "@lindorm/is";
+import { isArray, isString, isUri } from "@lindorm/is";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { AmphoraError } from "../errors/index.js";
 import type { IAmphora, IAmphoraExternal, IAmphoraIdp } from "../interfaces/index.js";
@@ -12,6 +12,7 @@ import { AmphoraExternal } from "../internal/classes/AmphoraExternal.js";
 import { AmphoraIdp } from "../internal/classes/AmphoraIdp.js";
 import { AmphoraState } from "../internal/classes/AmphoraState.js";
 import { deriveInternalJwksUri } from "../internal/utils/derive-internal-jwks-uri.js";
+import { omitUnspecified } from "../internal/utils/omit-unspecified.js";
 
 export class Amphora implements IAmphora {
   readonly external: IAmphoraExternal;
@@ -129,7 +130,26 @@ export class Amphora implements IAmphora {
     this.add(result);
   }
 
-  async filter(condition: AmphoraCondition): Promise<Array<IKryptos>> {
+  // ⚠ Every condition entering amphora is NORMALISED here first — this method
+  // and the three below it are the whole public surface a condition arrives
+  // through, so the four `omitUnspecified` calls are the class's boundary.
+  //
+  // `undefined` ≡ absent: it is what the matcher means by an `undefined`
+  // condition value, and stripping such a key makes "present" and "specified"
+  // one question everywhere downstream — for the publish gate, and for the
+  // not-found diagnostics, which report the query that was actually run. The
+  // hazard is not hypothetical: a consumer writing
+  // `filter({ publish: cfg.publish })` against an unset config field asked
+  // nothing about `publish`, yet key PRESENCE read it as naming one, so the
+  // default gate was skipped and every internal unpublished key — the KEK, the
+  // CA, the cookie key — answered a request for published ones.
+  //
+  // `find` normalises before delegating here rather than leaning on this call,
+  // so its own diagnostics see the same condition the lookup did; a second
+  // strip is idempotent.
+  async filter(input: AmphoraCondition): Promise<Array<IKryptos>> {
+    const condition = omitUnspecified(input);
+
     if (!this.state.isSetup && this.state.hasExternal) {
       await this.setup();
     }
@@ -141,22 +161,62 @@ export class Amphora implements IAmphora {
       return filtered;
     }
 
-    if (this.state.hasExternal) await this.state.refreshFor(condition);
+    // ONE refetch, reached from two different situations, and a failure means
+    // something different in each.
+    //
+    // A MISS (`filtered.length === 0`) has no answer to fall back on — the
+    // refetch is the only thing that can produce one — so its failure keeps
+    // propagating the real cause. Reporting a 503 as "no key matched" would name
+    // the wrong problem and hide the outage.
+    //
+    // STALENESS is an OPTIMISATION: we already hold matching keys and only their
+    // age sent us to the network. They still verify; they are merely old. Denying
+    // the caller on OUR network problem costs one failed authentication per
+    // `refreshInterval` for the length of an upstream's outage — and since the
+    // demand path is the only refresh a registered issuer gets, that is the
+    // routine case, not the rare one.
+    //
+    // ⚠ The cost, stated: a key WITHDRAWN while the endpoint is down keeps
+    // verifying until it recovers. Accepted — failing closed here protected
+    // nothing. It denied the LEGITIMATE client whose keys are fine, and did
+    // nothing to an attacker, who is not hitting a stale entry to begin with.
+    if (this.state.hasExternal) {
+      try {
+        await this.state.refreshFor(condition);
+      } catch (error) {
+        if (filtered.length === 0) throw error;
+
+        this.state.logger.debug("Stale refresh failed; serving cached keys", {
+          error,
+          issuer: isString(condition.issuer) ? condition.issuer : null,
+        });
+
+        // Serving from cache IS use. Skipping this leaves an issuer in active
+        // use looking idle for as long as its endpoint is down, which makes it
+        // the `maxIssuers` eviction victim — and eviction is final.
+        this.state.markAccessed(filtered);
+        return filtered;
+      }
+    }
 
     const refreshed = this.state.filteredKeys(condition);
     this.state.markAccessed(refreshed);
     return refreshed;
   }
 
-  filterSync(condition: AmphoraCondition): Array<IKryptos> {
+  filterSync(input: AmphoraCondition): Array<IKryptos> {
     this.assertSetupForSync();
+
+    const condition = omitUnspecified(input);
 
     const filtered = this.state.filteredKeys(condition);
     this.state.markAccessed(filtered);
     return filtered;
   }
 
-  async find(condition: AmphoraCondition): Promise<IKryptos> {
+  async find(input: AmphoraCondition): Promise<IKryptos> {
+    const condition = omitUnspecified(input);
+
     const [key] = await this.filter(condition);
     if (key) return key;
 
@@ -226,8 +286,10 @@ export class Amphora implements IAmphora {
     });
   }
 
-  findSync(condition: AmphoraCondition): IKryptos {
+  findSync(input: AmphoraCondition): IKryptos {
     this.assertSetupForSync();
+
+    const condition = omitUnspecified(input);
 
     const [key] = this.state.filteredKeys(condition);
     if (key) {

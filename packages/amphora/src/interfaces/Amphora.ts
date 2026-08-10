@@ -13,10 +13,39 @@ import type {
  * `add`/`remove` manage foreign KEYS (⇒ `internal: false`); the `Issuer` verbs manage
  * the issuer SOURCES (fetch config + per-issuer refresh). Keys land in the ONE vault and
  * are found via the unified top-level `find`.
+ *
+ * That "foreign keys only" is ENFORCED, not merely documented: both key verbs throw
+ * `kryptos_provenance_conflict` rather than replace or delete a key of OURS
+ * (`internal: true`). The rule is symmetric — `amphora.add()` / `amphora.env()` throw the
+ * same way over a FOREIGN key. It keys on `internal`, never on the issuer: a foreign key
+ * may legitimately carry our own issuer, and `add` accepts one.
  */
 export interface IAmphoraExternal {
+  /**
+   * File FOREIGN keys (⇒ `internal: false`, each carrying its own issuer — nothing
+   * of ours is stamped on them). A key replaces the one already held at the same
+   * `(id, issuer)`, so long as that one is foreign too; over a key of OURS it
+   * throws `kryptos_provenance_conflict` and leaves it untouched.
+   */
   add(kryptos: Array<IKryptos> | IKryptos): void;
-  remove(id: string): void;
+  /**
+   * Drop ONE key — the `id`, under the `issuer` that holds it.
+   *
+   * FOREIGN keys only: naming a key of OURS throws `kryptos_provenance_conflict`
+   * and removes nothing. Silently skipping it would make a failed removal
+   * indistinguishable from a successful one.
+   *
+   * `issuer` is REQUIRED because a key id is unique only PER ISSUER: two peers
+   * can publish the same `kid`, so a bare id names a key of each and removing by
+   * it would take both. That is the same collision `findById` refuses to guess
+   * at (`kryptos_ambiguous_id`) and that `add` scopes its replacement by. Naming
+   * the issuer removes the question rather than answering it with a rule — and
+   * every foreign key carries an issuer (`add` rejects one that does not), so a
+   * caller always has one to name.
+   *
+   * Removing an id the named issuer does not hold is a no-op.
+   */
+  remove(id: string, issuer: string): void;
 
   /**
    * Register an issuer source and fetch its keys — it awaits the fetch and
@@ -84,6 +113,13 @@ export interface IAmphora {
   external: IAmphoraExternal;
   idp: IAmphoraIdp;
 
+  /**
+   * File this service's OWN keys — issuer and jwksUri stamped from the `issuer`
+   * setting when the key carries none. A key replaces the one already held at the
+   * same `(id, issuer)`; over a FOREIGN key it throws
+   * `kryptos_provenance_conflict` and leaves it untouched, the mirror of the
+   * guard `external.add` / `external.remove` answer to.
+   */
   add(kryptos: Array<IKryptos> | IKryptos): void;
   env(keys: Array<string> | string): void;
   filter(query: AmphoraCondition): Promise<Array<IKryptos>>;
