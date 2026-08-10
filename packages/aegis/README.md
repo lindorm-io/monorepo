@@ -75,6 +75,11 @@ one would break `dir` / `A*KW` encryption outright. `hasPrivateKey` on the decry
 floor is what separates the two encryption directions — `ECDH-ES` reports the same
 operations for both halves and can never tell them apart.
 
+A profile's `algClass` is on the `sign` floor alone because the read side selects by
+the token's `kid` rather than by a query — there is no question to constrain. It is
+still enforced on verify, as a check in the [profiled verify floor](#token-profiles)
+against the algorithm the signature was verified under.
+
 There is **no ranking and no fallback**. A key satisfies the policy or it does not,
 and a miss throws — falling back to a key the policy forbids is how an unverifiable
 token gets minted.
@@ -521,9 +526,15 @@ await aegis.mint("access_token", {
 
 A name that is not a built-in — a profile registered at runtime with `registerProfile` — falls back to the open `SignContent` vocabulary, so custom profiles keep working unconstrained.
 
+**Direction (`use`).** A profile declares which side it is used on — `"mint"`, `"verify"`, or `"both"` — ONCE, on the profile itself rather than a marker per policy field. `forbidden`, `algClass`, `rules` and `validate` then apply on whichever side the profile is used, the same mint/verify symmetry the verification floor already keeps for `required`.
+
+`use` is optional when you write a profile and resolves to `"both"`, so every built-in and every `registerProfile` call behaves exactly as before; only a deliberate narrowing changes anything. `mint` refuses a `"verify"` profile with `jwt_profile_not_mintable`, profiled `verify` refuses a `"mint"` one with `jwt_profile_not_verifiable` — and the narrowing is enforced by the compiler too: a verify-only name resolves to `never` as `mint`'s content type, so the call site does not typecheck either.
+
 **`typ` presence.** Each profile declares a `typ` policy: `required` (the header must carry exactly the profile's typ) or `none` (no typ mandated). Mint always stamps the profile's typ value — presence only governs verify.
 
 **Required and forbidden claims on verify.** Profiled verify enforces the profile's `required` claims (the same domain-keyed names enforced at mint) — a token missing one is rejected with `jwt_required_claims_missing`. It enforces `forbidden` the same way: a token CARRYING one is rejected with `jwt_forbidden_claims_present`. Present/missing means absent, `null`, or an empty string. A mint-time policy alone buys nothing for a profile that verifies tokens minted elsewhere.
+
+**`algClass` on verify.** A profile's `algClass` is enforced on BOTH sides for the same reason. At mint it constrains key SELECTION (an asymmetric-only profile never picks an `oct` key); at verify it is checked against the algorithm the signature was verified under, and a mismatch is rejected with `jwt_algorithm_not_permitted` before any claim is looked at. `access_token`, `external_access_token` and `delegation` declare `asymmetric` because a shared MAC secret both verifies AND forges — a statement about reading someone else's token, so the verify half is the half that matters. That algorithm is not a header parameter taken on trust: every verify path refuses a header `alg` differing from the resolved key's own before it accepts the signature. A profile declaring no `algClass` is unconstrained, which is why `security_event` (RFC 8417 / SSF, whose own example header is `alg: HS256`) still verifies an HS-signed token.
 
 ### `external_access_token` — third-party access tokens
 
@@ -544,7 +555,7 @@ Everything else is unchanged: `iss` / `sub` / `aud` / `iat` / `jti` / `exp` are 
 
 ⚠ A `typ` the WIRE layer refuses never reaches the profile: `JwtKit.verify` rejects a present `typ` that is neither `JWT` nor `<type>+jwt` (`jwt_invalid_typ`), so an issuer stamping something else — Keycloak's `typ: Bearer` — is refused before any profile floor runs.
 
-The profile is verify-shaped: `autoInject` is empty, so `mint("external_access_token", …)` fails on the `iss` / `iat` / `jti` it will not generate.
+The profile declares `use: "verify"`, so `mint("external_access_token", …)` is refused outright — at the call site, where the content type resolves to `never`, and at runtime with `jwt_profile_not_mintable`. `autoInject` stays empty because nothing here is ours to generate; it was never the guard, since a caller hand-supplying `iss` / `iat` / `jti` still got a degraded access token signed by our own vault.
 
 ## COSE / CWT
 

@@ -121,10 +121,16 @@ export type JarmContent = Required<Pick<SignContent, "audience">> &
 /**
  * Maps each built-in profile name to its input content type. Used by the
  * typed `mint` overload so the compiler enforces required/forbidden claims.
+ *
+ * A VERIFY-ONLY profile (`use: "verify"`) maps to `never`: there is no content
+ * it accepts, because there is no token of that kind we are entitled to issue.
+ * That is the type-level half of the runtime refusal — the compiler kills the
+ * call site, and `jwt_profile_not_mintable` covers a caller who casts past it.
  */
 export type ProfileContent = {
   default: DefaultContent;
   access_token: AccessTokenContent;
+  external_access_token: never;
   id_token: IdTokenContent;
   logout_token: LogoutTokenContent;
   erasure_token: ErasureTokenContent;
@@ -149,6 +155,10 @@ export type ProfileContent = {
  * single signature removes the fall-through rather than ordering around it, and
  * the compiler reports the real problem — the offending key against
  * `AccessTokenContent` — instead of a two-overload mismatch.
+ *
+ * A verify-only name resolves to `never` through the SAME lookup, which is why
+ * the fall-through must stay closed: reintroduce the loose overload and
+ * `mint("external_access_token", …)` compiles again as `SignContent`.
  */
 export type ProfileContentFor<P extends string> = P extends keyof ProfileContent
   ? ProfileContent[P]

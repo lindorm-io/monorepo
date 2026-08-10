@@ -65,15 +65,37 @@ export type TokenProfileTyp =
   | { presence: "required"; value: string };
 
 /**
+ * The DIRECTION a profile is used in — declared ONCE, on the profile, rather
+ * than per policy field. `forbidden`, `algClass`, `rules` and `validate` all
+ * apply on whichever side the profile is used; a marker on each of them would
+ * be four things to keep in agreement, and the question they would answer is
+ * the same question every time.
+ *
+ * - `"both"` (the default) — mint and verify, the mint/verify symmetry the
+ *   verification floor already documents for `required`.
+ * - `"verify"` — the profile exists to check ANOTHER issuer's token
+ *   (`external_access_token`). `mint` refuses it, and the compiler refuses it
+ *   too: {@link import("./content.js").ProfileContentFor} resolves such a name
+ *   to `never`, so the call site does not survive a typecheck either.
+ * - `"mint"` — the profile only ever emits; profiled `verify` refuses it.
+ */
+export type TokenProfileUse = "mint" | "verify" | "both";
+
+/**
  * Runtime descriptor that enforces a profile's policy. Types erase and are
  * bypassable, so each profile is also a runtime descriptor applied by
  * `buildProfileClaims` (presence/forbid/atLeastOneOf/requiredWhen) and
  * `validateProfileClaims` (structural RFC + crypto rules).
+ *
+ * This is the RESOLVED descriptor — what `resolveProfile` returns and what
+ * every consumer reads. Authoring is {@link TokenProfileInput}, whose optional
+ * fields `defineProfile` resolves; no consumer re-derives a default.
  */
 export type TokenProfile<
   R extends ReadonlyArray<ProfileClaimName> = ReadonlyArray<ProfileClaimName>,
 > = {
   name: string;
+  use: TokenProfileUse;
   typ: TokenProfileTyp;
   required: R;
   forbidden: ReadonlyArray<ProfileClaimName>;
@@ -92,13 +114,18 @@ export type TokenProfile<
   lifetime?: Expiry | null;
   encryptable: boolean;
   /**
-   * The artifact's own opinion on the class of key that may sign it. Part of
-   * the signing FLOOR, so it CONSTRAINS the key query rather than merely
-   * auditing its answer — and it is enforced on an injected key too.
+   * The artifact's own opinion on the class of key that may sign it. Enforced
+   * on BOTH sides, because it is a claim about what a valid signature PROVES.
    *
-   * In practice only `"asymmetric"` (access_token, delegation). Absent means no
-   * constraint: with `alg: none` not being a Kryptos algorithm, "asymmetric or
-   * HS*" is the whole algorithm space.
+   * At MINT it is part of the signing FLOOR, so it CONSTRAINS the key query
+   * rather than merely auditing its answer — and it is enforced on an injected
+   * key too. At VERIFY there is no query to constrain (the key is named by the
+   * token's `kid`), so `enforceVerifyFloor` checks it against the algorithm the
+   * signature was verified under and raises `jwt_algorithm_not_permitted`.
+   *
+   * In practice only `"asymmetric"` (access_token, external_access_token,
+   * delegation). Absent means no constraint: with `alg: none` not being a
+   * Kryptos algorithm, "asymmetric or HS*" is the whole algorithm space.
    */
   algClass?: KryptosAlgClass;
   /**
@@ -118,6 +145,19 @@ export type TokenProfile<
    * `validateProfileClaims`.
    */
   validate: (claims: Dict, ctx: SignContext) => Array<InvalidEntry>;
+};
+
+/**
+ * The AUTHORING shape — what `defineProfile` and `registerProfile` take. The
+ * only difference from {@link TokenProfile} is that `use` may be omitted;
+ * `defineProfile` resolves it to `"both"`, which is why omitting it changes
+ * nothing for the eleven built-ins or for any consumer's custom profile. Only a
+ * DELIBERATE narrowing has an effect.
+ */
+export type TokenProfileInput<
+  R extends ReadonlyArray<ProfileClaimName> = ReadonlyArray<ProfileClaimName>,
+> = Omit<TokenProfile<R>, "use"> & {
+  use?: TokenProfileUse;
 };
 
 export type ProfileMintOptions = {

@@ -11,6 +11,10 @@ const ISSUER = "https://test.lindorm.io/";
 const RESOURCE = "https://rs.lindorm.io/";
 
 const base = {
+  // The algorithm the signature was verified UNDER (see VerifyFloorInput) — an
+  // asymmetric one, so the algClass floor is satisfied unless a case says
+  // otherwise.
+  algorithm: "ES512",
   audience: RESOURCE,
   decodedTyp: "application/at+jwt",
   expectedIssuer: ISSUER,
@@ -74,6 +78,7 @@ describe("enforceVerifyFloor", () => {
   test("does NOT require exp when the profile lifetime is null (SET)", () => {
     expect(() =>
       enforceVerifyFloor({
+        algorithm: "ES512",
         audience: RESOURCE,
         decodedTyp: "application/secevent+jwt",
         expectedIssuer: ISSUER,
@@ -121,6 +126,7 @@ describe("enforceVerifyFloor", () => {
     };
 
     const noneBase = {
+      algorithm: "ES512",
       audience: RESOURCE,
       expectedIssuer: undefined,
       profile: defaultProfile,
@@ -202,6 +208,7 @@ describe("enforceVerifyFloor", () => {
     test("passes a compliant delegation (jti present, iat absent and not required)", () => {
       expect(() =>
         enforceVerifyFloor({
+          algorithm: "ES512",
           audience: RESOURCE,
           decodedTyp: "application/delegation+jwt",
           expectedIssuer: "client-1",
@@ -214,6 +221,7 @@ describe("enforceVerifyFloor", () => {
     test("rejects a delegation without jti", () => {
       expect(() =>
         enforceVerifyFloor({
+          algorithm: "ES512",
           audience: RESOURCE,
           decodedTyp: "application/delegation+jwt",
           expectedIssuer: "client-1",
@@ -250,6 +258,7 @@ describe("enforceVerifyFloor", () => {
     test("lists ALL forbidden claims present", () => {
       expect(() =>
         enforceVerifyFloor({
+          algorithm: "ES512",
           audience: RESOURCE,
           decodedTyp: undefined,
           expectedIssuer: ISSUER,
@@ -288,6 +297,7 @@ describe("enforceVerifyFloor", () => {
     test("passes a profile whose forbidden list is empty", () => {
       expect(() =>
         enforceVerifyFloor({
+          algorithm: "ES512",
           audience: RESOURCE,
           decodedTyp: "application/delegation+jwt",
           expectedIssuer: "client-1",
@@ -295,6 +305,72 @@ describe("enforceVerifyFloor", () => {
           payload: { ...delegationPayload, nonce: "n-0S6" },
         }),
       ).not.toThrow();
+    });
+  });
+
+  // `algClass` is the third mint/verify mirror in this floor. Mint makes it part
+  // of the key SELECTION, which defends nobody reading a token minted elsewhere
+  // — and "elsewhere" is the whole reason `external_access_token` exists.
+  describe("algClass", () => {
+    test("rejects a symmetric algorithm for an asymmetric-only profile", () => {
+      expect(() =>
+        enforceVerifyFloor({ ...base, algorithm: "HS256", payload: validPayload }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "jwt_algorithm_not_permitted",
+          data: expect.objectContaining({ algorithm: "HS256" }),
+        }),
+      );
+    });
+
+    test("rejects alg none for an asymmetric-only profile", () => {
+      expect(() =>
+        enforceVerifyFloor({ ...base, algorithm: "none", payload: validPayload }),
+      ).toThrow(expect.objectContaining({ code: "jwt_algorithm_not_permitted" }));
+    });
+
+    test("rejects an absent algorithm for an asymmetric-only profile", () => {
+      expect(() =>
+        enforceVerifyFloor({ ...base, algorithm: undefined, payload: validPayload }),
+      ).toThrow(expect.objectContaining({ code: "jwt_algorithm_not_permitted" }));
+    });
+
+    test("passes an asymmetric algorithm for an asymmetric-only profile", () => {
+      expect(() =>
+        enforceVerifyFloor({ ...base, algorithm: "RS256", payload: validPayload }),
+      ).not.toThrow();
+    });
+
+    // It rejects the CLASS the profile named, never algorithms in general: a
+    // profile that declares none is unconstrained (RFC 8417 / SSF permits HS*).
+    test("ignores the algorithm entirely for a profile with no algClass", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          algorithm: "HS256",
+          audience: RESOURCE,
+          decodedTyp: undefined,
+          expectedIssuer: undefined,
+          profile: defaultProfile,
+          payload: {
+            issuer: ISSUER,
+            audience: [RESOURCE],
+            subject: "user-1",
+            expiresAt: new Date(1704099600 * 1000),
+          },
+        }),
+      ).not.toThrow();
+    });
+
+    // It runs BEFORE the claim assertions: a token whose signing class the
+    // profile refuses is not a token of that kind, whatever its claims say.
+    test("reports the algorithm before a claim failure", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...base,
+          algorithm: "HS256",
+          payload: { ...validPayload, tokenId: undefined },
+        }),
+      ).toThrow(expect.objectContaining({ code: "jwt_algorithm_not_permitted" }));
     });
   });
 });

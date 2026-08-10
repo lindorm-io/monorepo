@@ -25,6 +25,7 @@ export type BuildProfileContext = {
 // of the result is the pure content -> wire map this builder then injects onto.
 const RAW_PROFILE: TokenProfile = {
   name: "raw",
+  use: "both",
   typ: { presence: "none" },
   required: [],
   forbidden: [],

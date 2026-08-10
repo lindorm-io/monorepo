@@ -2,8 +2,21 @@ import { isArray } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
 import type { TokenProfile } from "../../types/index.js";
+import { algPermitted } from "./rules/alg-permitted.js";
 
 export type VerifyFloorInput = {
+  /**
+   * The algorithm the signature was ACTUALLY verified under — NOT a header
+   * parameter read on trust. Every claims-bearing verify path refuses a header
+   * `alg` that differs from the resolved key's own algorithm, and does so
+   * before it accepts the signature: `JwtKit.verify` (`jwt_algorithm_mismatch`),
+   * `JwsKit.verify` (`jws_algorithm_mismatch`) and the COSE `verifyCwt`
+   * (`cwt_algorithm_mismatch` / `cwm_algorithm_mismatch`). So by the time the
+   * floor runs, this value and `kryptos.algorithm` are the same string, and an
+   * attacker cannot move it by editing the header — a lie there costs the
+   * signature.
+   */
+  algorithm: string | undefined;
   audience: string;
   decodedTyp: string | undefined;
   /**
@@ -41,6 +54,9 @@ const typMismatch = (
  * The §4.4 verification floor for profiled verify, enforced UNCONDITIONALLY
  * on top of the standard signature/alg/exp/nbf checks JwtKit already runs:
  *
+ *   - `algClass` — the algorithm the signature was verified under is of the
+ *     class the profile permits (the verify half of the constraint mint applies
+ *     when it SELECTS a signing key),
  *   - `typ` per the profile's presence policy: `required` demands an exact
  *     match, `none` runs no check (unless the COSE path overrides),
  *   - `iss` exact-match against the expected issuer,
@@ -55,7 +71,33 @@ const typMismatch = (
  * standard verify; this floor only adds the presence + identity assertions.
  */
 export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
-  const { audience, decodedTyp, expectedIssuer, payload, profile } = input;
+  const { algorithm, audience, decodedTyp, expectedIssuer, payload, profile } = input;
+
+  // FIRST, because it decides whether the signature proves anything at all —
+  // reporting a claim mismatch on a token whose signing class the profile
+  // rejects would name the lesser problem.
+  //
+  // `algClass` is the mirror of what mint does when it makes the class part of
+  // the SIGNING floor, and the mint half alone buys nothing: `access_token`,
+  // `external_access_token` and `delegation` declare `asymmetric` because a
+  // shared MAC secret both verifies AND forges, which is a statement about
+  // reading SOMEONE ELSE's token. A profile declaring no class is unconstrained
+  // — `alg: none` is not a Kryptos algorithm, so "asymmetric or HS*" is the
+  // whole space — and RFC 8417 / SSF (`security_event`) genuinely permits HS*.
+  if (profile.algClass) {
+    const invalid = algPermitted(algorithm, profile.algClass);
+
+    if (invalid.length > 0) {
+      throw new AegisDomainError("Invalid token", {
+        code: "jwt_algorithm_not_permitted",
+        data: { algorithm, invalid },
+        debug: { algClass: profile.algClass, invalid, profile: profile.name },
+        title: "JWT Algorithm Not Permitted",
+        details:
+          "The token was verified under an algorithm whose class the profile does not permit, so its signature cannot prove what the profile requires of it.",
+      });
+    }
+  }
 
   switch (profile.typ.presence) {
     case "none":

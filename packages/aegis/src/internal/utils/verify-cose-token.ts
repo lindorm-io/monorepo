@@ -1,3 +1,4 @@
+import { AegisDomainError } from "../../errors/index.js";
 import type { ProfileVerifyOptions, VerifiedToken } from "../../types/index.js";
 import { coseTyp } from "../cose/cose-typ.js";
 import { resolveProfile } from "../profiles/registry.js";
@@ -26,6 +27,19 @@ export const verifyCoseToken = async ({
 }): Promise<VerifiedToken> => {
   const profile = resolveProfile(name);
 
+  // A mint-only profile cannot verify on this wire either — `verifyProfileToken`
+  // dispatches here BEFORE it resolves the profile, so the COSE reader owns the
+  // same refusal rather than inheriting it.
+  if (profile.use === "mint") {
+    throw new AegisDomainError("Profile cannot be verified", {
+      code: "jwt_profile_not_verifiable",
+      data: { profile: profile.name, use: profile.use },
+      title: "JWT Profile Not Verifiable",
+      details:
+        "This token profile declares itself mint-only, so it carries no verification policy and cannot be used to verify a token. Use the profile that owns the artifact you are reading.",
+    });
+  }
+
   // Computed BEFORE the verify, exactly as on the JOSE side: its first job is to
   // SCOPE the key lookup to the issuer this verifier accepts, so a colliding
   // `kid` from another registered issuer never produces a valid signature. The
@@ -48,6 +62,10 @@ export const verifyCoseToken = async ({
   });
 
   enforceVerifyFloor({
+    // The protected-header alg, which `verifyCwt` has already refused to accept
+    // unless it equals the resolved key's algorithm (`cwt_algorithm_mismatch` /
+    // `cwm_algorithm_mismatch`) — the COSE twin of the JOSE cross-check.
+    algorithm: decoded.algorithm,
     audience: options.audience,
     decodedTyp: typ,
     expectedTyp: coseTyp(profile.typ),

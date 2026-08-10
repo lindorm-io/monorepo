@@ -48,6 +48,21 @@ export const mintToken = async ({
 
   const profile = resolveProfile(name);
 
+  // A profile declares the DIRECTION it is used in. A verify-only one exists to
+  // check ANOTHER issuer's token, so minting it would emit that artifact under
+  // OUR signature — a degraded token of a kind we are not entitled to issue.
+  // `ProfileContentFor` resolves such a name to `never`, so a typechecked caller
+  // never reaches this; the throw covers the untyped and cast-past-it ones.
+  if (profile.use === "verify") {
+    throw new AegisDomainError("Profile cannot be minted", {
+      code: "jwt_profile_not_mintable",
+      data: { profile: profile.name, use: profile.use },
+      title: "JWT Profile Not Mintable",
+      details:
+        "This token profile declares itself verify-only: it exists to verify a token issued elsewhere, so it cannot be used to mint one. Use the profile that owns the artifact you are issuing.",
+    });
+  }
+
   // T5 — `options.encrypt` is only meaningful for encryptable profiles.
   // Passing it for a non-encryptable profile (access_token / SET / logout /
   // erasure / DPoP) is a caller error, not a silent no-op.

@@ -18,6 +18,7 @@ const ALGORITHM = "ES512" as const;
 // content -> wire map (pinned by the snapshot below).
 const permissiveProfile: TokenProfile = {
   name: "parity",
+  use: "both",
   typ: { presence: "none" },
   required: [],
   forbidden: [],

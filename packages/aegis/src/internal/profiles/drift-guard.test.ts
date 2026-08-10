@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import type { ProfileContentFor } from "../../types/index.js";
 import { resolveProfile } from "./registry.js";
 
 /**
@@ -54,3 +55,51 @@ describe("autoInject is domain-named (no wire-name leak)", () => {
     });
   }
 });
+
+/**
+ * The DIRECTION every built-in declares. `"both"` is the behaviour-preserving
+ * answer and the default, so this table is really a list of the ONE profile
+ * deliberately narrowed — `external_access_token`, which exists to verify a
+ * token another authorization server issued.
+ *
+ * Everything else is genuinely two-sided: an `introspection` (RFC 9701 §5) or
+ * `userinfo` (OIDC Core §5.3.2) response is a signed JWT the RECIPIENT
+ * validates, a `jarm` response is validated by the client, a `logout_token` by
+ * the RP (Back-Channel Logout §2.6), a `security_event` by the SSF receiver.
+ * Narrowing any of them would break a consumer silently, so none is narrowed on
+ * a guess.
+ */
+const PROFILE_USE: Record<string, "mint" | "verify" | "both"> = {
+  access_token: "both",
+  default: "both",
+  delegation: "both",
+  erasure_token: "both",
+  external_access_token: "verify",
+  id_token: "both",
+  introspection: "both",
+  jarm: "both",
+  logout_token: "both",
+  security_event: "both",
+  userinfo: "both",
+};
+
+describe("profile use direction", () => {
+  for (const [name, use] of Object.entries(PROFILE_USE)) {
+    test(`${name}: declares use "${use}"`, () => {
+      expect(resolveProfile(name).use).toBe(use);
+    });
+  }
+});
+
+/**
+ * The TYPE-level half must agree with the runtime one: a verify-only profile's
+ * mint content resolves to `never`, so the call site fails to compile as well
+ * as to run. A `both` profile keeps its own content type.
+ */
+type Assert<T extends true> = T;
+type _VerifyOnlyMintsNothing = Assert<
+  [ProfileContentFor<"external_access_token">] extends [never] ? true : false
+>;
+type _BothStillMints = Assert<
+  [ProfileContentFor<"access_token">] extends [never] ? false : true
+>;

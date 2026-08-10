@@ -1,4 +1,5 @@
 import { JweKit } from "../../classes/JweKit.js";
+import { AegisDomainError } from "../../errors/index.js";
 import type {
   ProfileVerifyOptions,
   VerifiedToken,
@@ -39,6 +40,19 @@ export const verifyProfileToken = async ({
   }
 
   const profile = resolveProfile(name);
+
+  // The mirror of the mint refusal: a profile that declares itself mint-only
+  // makes no statement about a token arriving from outside, so verifying
+  // against it would report a floor it was never written to be a floor for.
+  if (profile.use === "mint") {
+    throw new AegisDomainError("Profile cannot be verified", {
+      code: "jwt_profile_not_verifiable",
+      data: { profile: profile.name, use: profile.use },
+      title: "JWT Profile Not Verifiable",
+      details:
+        "This token profile declares itself mint-only, so it carries no verification policy and cannot be used to verify a token. Use the profile that owns the artifact you are reading.",
+    });
+  }
 
   // Computed HERE, above the verify call, because it is needed twice and the
   // earlier use is the load-bearing one: it SCOPES the key lookup to the issuer
@@ -93,6 +107,11 @@ export const verifyProfileToken = async ({
   );
 
   enforceVerifyFloor({
+    // The header alg AFTER a successful verify, which the kit has already
+    // refused to accept unless it equals the resolved key's own algorithm
+    // (`jwt_algorithm_mismatch` / `jws_algorithm_mismatch`) — so this is the
+    // algorithm the signature was checked under, not a claim taken on trust.
+    algorithm: verified.header.algorithm,
     audience: options.audience,
     decodedTyp: verified.header.headerType,
     expectedIssuer,

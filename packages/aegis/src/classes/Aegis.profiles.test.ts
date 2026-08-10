@@ -432,4 +432,103 @@ describe("Aegis profiles", () => {
       expect(payload.sub).toBe("customer-sub");
     });
   });
+
+  /**
+   * A profile declares the DIRECTION it is used in, once, rather than a marker
+   * per policy field. `"both"` is the default and the behaviour every existing
+   * profile keeps; only a deliberate narrowing changes anything.
+   */
+  describe("profile use direction", () => {
+    const mintOnlyContent = {
+      subject: "user-1",
+      audience: [RESOURCE],
+      expires: "1h" as const,
+    };
+
+    beforeEach(() => {
+      aegis.registerProfile({
+        name: "mint_only_test_profile",
+        use: "mint",
+        typ: { presence: "none" },
+        required: ["subject", "audience", "expiresAt"],
+        forbidden: [],
+        requiredWhen: [],
+        atLeastOneOf: [],
+        autoInject: ["issuedAt", "tokenId", "issuer"],
+        issuer: "platform",
+        lifetime: "1h",
+        encryptable: false,
+        validate: () => [],
+      });
+    });
+
+    test("a mint-only profile mints", async () => {
+      await expect(
+        aegis.mint("mint_only_test_profile", mintOnlyContent),
+      ).resolves.toMatchObject({ format: "jwt" });
+    });
+
+    test("a mint-only profile is refused by profiled verify", async () => {
+      const { token } = await aegis.mint("mint_only_test_profile", mintOnlyContent);
+
+      await expect(
+        aegis.verify("mint_only_test_profile", token, undefined, {
+          audience: RESOURCE,
+        }),
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: "jwt_profile_not_verifiable",
+          data: { profile: "mint_only_test_profile", use: "mint" },
+        }),
+      );
+    });
+
+    test("a mint-only profile is refused by profiled COSE verify too", async () => {
+      const { token } = await aegis.mint("mint_only_test_profile", mintOnlyContent, {
+        format: "cwt",
+      });
+
+      await expect(
+        aegis.verify("mint_only_test_profile", token, undefined, {
+          audience: RESOURCE,
+        }),
+      ).rejects.toThrow(expect.objectContaining({ code: "jwt_profile_not_verifiable" }));
+    });
+
+    // The default is what keeps every other profile — built-in and
+    // consumer-registered — exactly as it was, in BOTH directions.
+    test("a both profile is unaffected in both directions", async () => {
+      const { token } = await aegis.mint("access_token", {
+        subject: "user-1",
+        audience: [RESOURCE],
+        clientId: "client-1",
+      });
+
+      await expect(
+        aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
+      ).resolves.toMatchObject({ claims: { subject: "user-1" } });
+    });
+
+    test("a profile registered without a use defaults to both", async () => {
+      aegis.registerProfile({
+        name: "unmarked_test_profile",
+        typ: { presence: "none" },
+        required: ["subject", "audience", "expiresAt"],
+        forbidden: [],
+        requiredWhen: [],
+        atLeastOneOf: [],
+        autoInject: ["issuedAt", "tokenId", "issuer"],
+        issuer: "platform",
+        lifetime: "1h",
+        encryptable: false,
+        validate: () => [],
+      });
+
+      const { token } = await aegis.mint("unmarked_test_profile", mintOnlyContent);
+
+      await expect(
+        aegis.verify("unmarked_test_profile", token, undefined, { audience: RESOURCE }),
+      ).resolves.toMatchObject({ claims: { subject: "user-1" } });
+    });
+  });
 });

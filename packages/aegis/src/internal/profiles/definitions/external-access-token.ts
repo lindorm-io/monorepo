@@ -44,12 +44,16 @@ import { ISSUER_IS_URI } from "./rule-predicates.js";
  * which issuer it accepts through `ProfileVerifyOptions.issuer`; that value also
  * scopes the key lookup.
  *
- * `autoInject: []` — nothing here is ours to generate. This profile exists to
- * VERIFY; the empty list means an accidental `mint` fails loudly on the missing
- * `iss`/`iat`/`jti` rather than quietly emitting a degraded access token.
+ * `use: "verify"` — the profile exists to check a token we did not issue, so
+ * `mint` refuses it outright and the compiler refuses the call site with it
+ * (`ProfileContentFor` resolves the name to `never`). `autoInject: []` remains
+ * the honest statement that nothing here is ours to generate; it was never a
+ * guard, because a caller who hand-supplied `iss`/`iat`/`jti` still got a
+ * degraded access token signed by our own vault.
  */
 export const externalAccessTokenProfile = defineProfile({
   name: "external_access_token",
+  use: "verify",
   typ: { presence: "none" },
   required: ["issuer", "expiresAt", "audience", "subject", "issuedAt", "tokenId"],
   forbidden: [

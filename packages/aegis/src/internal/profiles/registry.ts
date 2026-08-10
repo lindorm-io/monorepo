@@ -1,5 +1,6 @@
-import type { TokenProfile } from "../../types/index.js";
+import type { TokenProfile, TokenProfileInput } from "../../types/index.js";
 import { AegisDomainError } from "../../errors/index.js";
+import { defineProfile } from "./define-profile.js";
 import { accessTokenProfile } from "./definitions/access-token.js";
 import { defaultProfile } from "./definitions/default.js";
 import { delegationProfile } from "./definitions/delegation.js";
@@ -19,8 +20,13 @@ import { userinfoProfile } from "./definitions/userinfo.js";
  */
 const registry = new Map<string, TokenProfile>();
 
-export const registerProfile = (profile: TokenProfile): void => {
-  registry.set(profile.name, profile);
+/**
+ * Registers a profile under its own name. The descriptor goes through
+ * `defineProfile` so a runtime-registered profile is resolved exactly as a
+ * built-in is — `resolveProfile` never hands a consumer an unresolved `use`.
+ */
+export const registerProfile = (profile: TokenProfileInput): void => {
+  registry.set(profile.name, defineProfile(profile));
 };
 
 export const resolveProfile = (name: string): TokenProfile => {

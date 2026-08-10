@@ -259,29 +259,44 @@ describe("Aegis — the external_access_token profile", () => {
     });
 
     /**
-     * ⚠ `TokenProfile` has no verify-only marker, so this profile is MINTABLE
-     * like any other. `autoInject: []` is a mitigation, not a guard: a caller
-     * must hand-supply every envelope claim the profile requires, so an
-     * ACCIDENTAL mint fails loudly rather than emitting a degraded access token
-     * from our own vault. A caller who supplies them all still gets a token.
+     * The profile declares `use: "verify"`, so mint refuses it OUTRIGHT — a
+     * profile that exists to check a third party's token has no business
+     * emitting one under our own signature.
+     *
+     * `autoInject: []` used to be the only thing standing in the way, and it was
+     * a mitigation rather than a guard: it made the ACCIDENTAL mint fail on the
+     * `iss`/`iat`/`jti` it would not generate, while a caller who hand-supplied
+     * all three still got a degraded access token. This supplies all three on
+     * purpose, so the refusal cannot be the envelope's doing.
      */
-    test("should fail an accidental mint on the claims it will not generate", async () => {
+    // `iat`/`jti` are envelope OPTIONS, not content — supplied here so the mint
+    // is complete and the refusal cannot be mistaken for the old envelope
+    // failure.
+    const mintContent = { issuer: "https://other-idp.lindorm.io/", subject: SUBJECT, audience: [RESOURCE] }; // prettier-ignore
+    const mintOptions = { sign: { issuedAt: new Date(), tokenId: "token-1" } };
+
+    test("should refuse to mint — the profile is verify-only", async () => {
       await expect(
-        aegis.mint("external_access_token", {
-          subject: SUBJECT,
-          audience: [RESOURCE],
-        }),
+        // @ts-expect-error a verify-only profile takes no mint content
+        // (`ProfileContentFor` resolves it to `never`) — the compiler kills the
+        // call site as well as the runtime.
+        aegis.mint("external_access_token", mintContent, mintOptions),
       ).rejects.toThrow(
         expect.objectContaining({
-          data: expect.objectContaining({
-            invalid: expect.arrayContaining([
-              expect.objectContaining({ key: "issuer" }),
-              expect.objectContaining({ key: "issuedAt" }),
-              expect.objectContaining({ key: "tokenId" }),
-            ]),
-          }),
+          code: "jwt_profile_not_mintable",
+          data: { profile: "external_access_token", use: "verify" },
         }),
       );
+    });
+
+    test("should refuse to mint it as a CWT too", async () => {
+      await expect(
+        // @ts-expect-error a verify-only profile takes no mint content
+        aegis.mint("external_access_token", mintContent, {
+          ...mintOptions,
+          format: "cwt",
+        }),
+      ).rejects.toThrow(expect.objectContaining({ code: "jwt_profile_not_mintable" }));
     });
 
     // `issuer: "per-token"` — the deployment's own issuer is never assumed for a

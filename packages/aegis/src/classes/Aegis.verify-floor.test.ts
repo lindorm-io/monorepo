@@ -3,8 +3,9 @@ import { B64 } from "@lindorm/b64";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
+import { importJWK, SignJWT } from "jose";
 import MockDate from "mockdate";
-import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
+import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../__fixtures__/keys.js";
 import { AegisDomainError } from "../errors/index.js";
 import { B64U } from "../internal/constants/format.js";
 import { createJoseSignature } from "../internal/utils/jose-signature.js";
@@ -386,6 +387,128 @@ describe("Aegis profiled verify floor (§4.4)", () => {
           issuer: "client-1",
         }),
       ).rejects.toThrow(expect.objectContaining({ code: "jwt_required_claims_missing" }));
+    });
+  });
+
+  /**
+   * `algClass` is a claim about what a valid signature PROVES, so it has to bite
+   * where someone else's token is checked — `access_token` declares
+   * `asymmetric` precisely because a shared MAC secret lets every holder FORGE a
+   * token, and a mint-only constraint defends nobody against that.
+   *
+   * Every token here is signed with `jose` and an HS256 key the vault also
+   * holds. It cannot be built with `aegis.mint`: the same `algClass` is part of
+   * the SIGNING floor, so mint never selects a symmetric key for these profiles
+   * — a mint-built fixture could not reach the hole this covers.
+   */
+  describe("algClass floor on verify", () => {
+    const hsHeader = {
+      alg: "HS256" as const,
+      kid: TEST_OCT_KEY_SIG.id,
+    };
+
+    const signHs256 = async (claims: Dict, typ?: string): Promise<string> => {
+      const key = await importJWK(
+        TEST_OCT_KEY_SIG.export("jwk") as Record<string, unknown>,
+        "HS256",
+      );
+
+      return new SignJWT(claims)
+        .setProtectedHeader({ ...hsHeader, ...(typ ? { typ } : {}) })
+        .sign(key);
+    };
+
+    beforeEach(() => {
+      amphora.add(TEST_OCT_KEY_SIG);
+    });
+
+    test("rejects an HS-signed access token — a shared secret cannot prove who issued it", async () => {
+      const token = await signHs256(
+        {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          iat: 1704096000,
+          exp: 1704096120,
+          jti: "forged-1",
+          client_id: "client-1",
+        },
+        "application/at+jwt",
+      );
+
+      await expect(
+        aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: "jwt_algorithm_not_permitted",
+          data: expect.objectContaining({ algorithm: "HS256" }),
+        }),
+      );
+    });
+
+    test("rejects an HS-signed external access token", async () => {
+      const token = await signHs256({
+        iss: ISSUER,
+        sub: "user-1",
+        aud: [RESOURCE],
+        iat: 1704096000,
+        exp: 1704096120,
+        jti: "forged-2",
+      });
+
+      await expect(
+        aegis.verify("external_access_token", token, undefined, {
+          audience: RESOURCE,
+          issuer: ISSUER,
+        }),
+      ).rejects.toThrow(expect.objectContaining({ code: "jwt_algorithm_not_permitted" }));
+    });
+
+    test("rejects an HS-signed delegation token", async () => {
+      const token = await signHs256(
+        { ...perTokenPayload, aud: [ISSUER] },
+        "application/delegation+jwt",
+      );
+
+      await expect(
+        aegis.verify("delegation", token, undefined, {
+          audience: ISSUER,
+          issuer: "client-1",
+        }),
+      ).rejects.toThrow(expect.objectContaining({ code: "jwt_algorithm_not_permitted" }));
+    });
+
+    // The rule is the profile's, not a blanket ban: a profile that declares no
+    // algClass still accepts an HS-signed token. `security_event` is the RFC
+    // 8417 / SSF case whose own example header is `{"alg":"HS256"}`.
+    test("accepts an HS-signed token for a profile that declares no algClass", async () => {
+      const token = await signHs256(
+        {
+          iss: ISSUER,
+          aud: ["https://receiver"],
+          iat: 1704096000,
+          jti: "set-1",
+          sub_id: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+          events: { "urn:lindorm:event:test": {} },
+        },
+        "application/secevent+jwt",
+      );
+
+      await expect(
+        aegis.verify("security_event", token, undefined, {
+          audience: "https://receiver",
+        }),
+      ).resolves.toMatchObject({ claims: { issuer: ISSUER } });
+    });
+
+    // The asymmetric round trip is untouched — the floor rejects the CLASS, not
+    // every token that reaches it.
+    test("still accepts the asymmetric access token it always did", async () => {
+      const { token } = await mintAccessToken();
+
+      await expect(
+        aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
+      ).resolves.toMatchObject({ claims: { subject: "user-1" } });
     });
   });
 });

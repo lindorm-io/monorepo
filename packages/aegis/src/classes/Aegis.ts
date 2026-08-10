@@ -105,6 +105,7 @@ import type {
   SignUnstructuredTokenOptions,
   TokenContent,
   TokenProfile,
+  TokenProfileInput,
   VerifiedStructuredToken,
   VerifiedToken,
   VerifiedUnstructuredToken,
@@ -265,7 +266,7 @@ export class Aegis implements IAegis {
     };
   }
 
-  registerProfile(profile: TokenProfile): void {
+  registerProfile(profile: TokenProfileInput): void {
     registerProfileFn(profile);
   }
 

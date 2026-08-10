@@ -33,6 +33,19 @@ export const mintCoseToken = async ({
 }): Promise<SignedToken> => {
   const profile = resolveProfile(name);
 
+  // A verify-only profile cannot be minted on this wire either — `mintToken`
+  // dispatches here BEFORE it resolves the profile, so the COSE encoder owns
+  // the same refusal rather than inheriting it.
+  if (profile.use === "verify") {
+    throw new AegisDomainError("Profile cannot be minted", {
+      code: "jwt_profile_not_mintable",
+      data: { profile: profile.name, use: profile.use },
+      title: "JWT Profile Not Mintable",
+      details:
+        "This token profile declares itself verify-only: it exists to verify a token issued elsewhere, so it cannot be used to mint one. Use the profile that owns the artifact you are issuing.",
+    });
+  }
+
   // Encryption is only meaningful for encryptable profiles; an encrypt option
   // on a non-encryptable profile is a caller error, not a silent no-op.
   if (options.encrypt !== undefined && !profile.encryptable) {

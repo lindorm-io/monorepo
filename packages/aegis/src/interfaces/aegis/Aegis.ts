@@ -37,7 +37,7 @@ import type {
   SignStructuredTokenOptions,
   SignUnstructuredTokenOptions,
   TokenContent,
-  TokenProfile,
+  TokenProfileInput,
   VerifiedStructuredToken,
   VerifiedToken,
   VerifiedUnstructuredToken,
@@ -177,7 +177,7 @@ export interface IAegis {
   jws: IAegisJws;
   jwt: IAegisJwt;
 
-  registerProfile(profile: TokenProfile): void;
+  registerProfile(profile: TokenProfileInput): void;
 
   sign(input: RawSignInput): Promise<SignedToken>;
 
