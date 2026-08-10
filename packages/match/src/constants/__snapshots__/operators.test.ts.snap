@@ -1,0 +1,34 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`operators > should declare the condition operator vocabulary 1`] = `
+[
+  "$exists",
+  "$eq",
+  "$neq",
+  "$gt",
+  "$gte",
+  "$lt",
+  "$lte",
+  "$between",
+  "$like",
+  "$ilike",
+  "$regex",
+  "$similar",
+  "$in",
+  "$nin",
+  "$all",
+  "$overlap",
+  "$contained",
+  "$length",
+  "$has",
+  "$mod",
+]
+`;
+
+exports[`operators > should declare the logical operator vocabulary 1`] = `
+[
+  "$and",
+  "$or",
+  "$not",
+]
+`;

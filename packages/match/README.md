@@ -125,6 +125,24 @@ Matcher.remove(users, { name: { $regex: /^L/ } });
 The `Condition<T>`, `ConditionOperator<T>`, and `RootCondition<T>` types are exported for explicit
 typing.
 
+### The operator vocabulary
+
+`ConditionOperatorKey` and `LogicalOperatorKey` are exported as const objects, with the type of the
+same name, plus the guards `isConditionOperatorKey` and `isLogicalOperatorKey`.
+
+```ts
+import { ConditionOperatorKey, isConditionOperatorKey } from "@lindorm/match";
+
+Object.values(ConditionOperatorKey); // ["$exists", "$eq", …]
+isConditionOperatorKey("$ne"); // false
+```
+
+Conditions are written with the literal (`{ age: { $gte: 18 } }`), not with named access — the
+artifact exists so that every implementation of the language derives its operator set from ONE
+place, and so that each operator's contract is stated next to the key. `@lindorm/proteus` compiles
+an exhaustive `switch` over it, which makes a missing branch a build failure rather than a clause
+that silently matches every row.
+
 ## License
 
 AGPL-3.0-or-later

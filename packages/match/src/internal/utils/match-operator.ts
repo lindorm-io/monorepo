@@ -9,7 +9,7 @@ import {
   isRegExp,
   isString,
 } from "@lindorm/is";
-import type { ConditionOperatorKey } from "../constants/operators.js";
+import type { ConditionOperatorKey } from "../../constants/operators.js";
 import { compareValues } from "./compare-values.js";
 import { isAbsent } from "./is-absent.js";
 import { jsonContains } from "./json-contains.js";

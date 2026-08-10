@@ -1,6 +1,6 @@
 import { isArray, isEqual, isObject, isUndefined } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
-import { isConditionOperatorKey } from "../constants/operators.js";
+import { isConditionOperatorKey } from "../../constants/operators.js";
 import { matchOperator } from "./match-operator.js";
 
 /**
