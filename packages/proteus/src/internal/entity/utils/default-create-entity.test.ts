@@ -361,4 +361,17 @@ describe("defaultCreateEntity", () => {
 
     expect(comment.postId).toBeNull();
   });
+
+  test("should still derive the FK when an undefined FK is passed alongside the relation", () => {
+    // `undefined` is ABSENT — it is not an explicit FK, so it must not beat the
+    // relation object. A key-presence test would take the explicit branch and
+    // null the FK, silently detaching the relation the caller just passed.
+    const comment = defaultCreateEntity(CreateEntityComment, {
+      body: "Nice",
+      post: { id: "post-42" } as any,
+      postId: undefined,
+    });
+
+    expect(comment.postId).toBe("post-42");
+  });
 });

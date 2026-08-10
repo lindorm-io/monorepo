@@ -1,4 +1,4 @@
-import { isFunction, isObject, isObjectLike } from "@lindorm/is";
+import { isFunction, isObject, isObjectLike, isUndefined } from "@lindorm/is";
 import type { Constructor, DeepPartial, Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
@@ -99,7 +99,11 @@ export const createEntity = <
             // relation object when one is set — the relation object is the
             // authoritative handle, and create() must not leave the FK null
             // when the caller passed the related entity.
-            if (fkKey in (options as Dict)) {
+            //
+            // `undefined` is ABSENT, so it is not an explicit FK — a
+            // key-presence test here would null the FK of a relation the
+            // caller had just passed.
+            if (!isUndefined(options[fkKey])) {
               entity[fkKey] = options[fkKey] ?? null;
             } else if (hasRelObj && relObj[foreignKey] != null) {
               entity[fkKey] = relObj[foreignKey];

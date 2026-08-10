@@ -135,6 +135,8 @@ export class ProteusSource implements IProteusSource {
     const namespace = options.namespace ?? null;
     this._namespace = namespace;
     this._driverType = options.driver;
+    // NOT a "was this specified?" test — `migrationsTable` is declared on the
+    // SQL settings variants only, so the `in` narrows the settings union.
     this._migrationsTable =
       "migrationsTable" in options ? options.migrationsTable : undefined;
     this._registryRef = { current: createFilterRegistry() };

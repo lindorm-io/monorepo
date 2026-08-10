@@ -56,7 +56,14 @@ const substituteParams = (
       const paramKey = obj.slice(1);
       // Only substitute if it looks like a param reference (not an operator)
       // Operators are at object keys, not values, so we only reach here for values.
-      if (!(paramKey in params)) {
+      //
+      // `undefined` is ABSENT, not a value — a key-presence test would let it
+      // through, substitute `undefined`, and the condition language would then
+      // ignore the criterion entirely. A `{ tenantId: "$tenantId" }` filter
+      // would evaporate into `{}`, and for a read that legitimately means "all
+      // rows", so nothing downstream catches it. An explicit `null` IS a value
+      // and stays substitutable.
+      if (params[paramKey] === undefined) {
         throw new ProteusError(
           `Filter "${filterName}" requires parameter "${paramKey}" but it was not provided`,
           {

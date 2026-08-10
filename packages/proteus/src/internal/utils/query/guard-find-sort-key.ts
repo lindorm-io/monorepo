@@ -1,4 +1,5 @@
-import { isObjectLike } from "@lindorm/is";
+import { isObjectLike, isUndefined } from "@lindorm/is";
+import type { Dict } from "@lindorm/types";
 import { ProteusError } from "../../../errors/index.js";
 
 /**
@@ -9,9 +10,12 @@ import { ProteusError } from "../../../errors/index.js";
  * look interchangeable, and passing `orderBy` to an offset read used to be a
  * silent no-op — the sort was dropped and an unsorted result came back with no
  * error. Throw a clear, actionable error instead.
+ *
+ * An `orderBy` of `undefined` is ABSENT — nothing was specified, so there is
+ * no footgun to guard against and a spread options object must not throw.
  */
 export const guardFindSortKey = (options: unknown): void => {
-  if (isObjectLike(options) && "orderBy" in options) {
+  if (isObjectLike(options) && !isUndefined((options as Dict).orderBy)) {
     throw new ProteusError(
       "Invalid option `orderBy` for an offset-based find — use `order`",
       {

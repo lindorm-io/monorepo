@@ -119,6 +119,36 @@ describe("resolveFilters", () => {
       );
     });
 
+    test("should throw when a required param is supplied as undefined", () => {
+      // `undefined` is ABSENT, not a value. A key-presence test would let the
+      // param through, substitute `undefined`, and the matcher would then
+      // ignore the criterion — a `tenantId` filter would evaporate and the
+      // query would return every tenant's rows.
+      const registry: FilterRegistry = new Map([
+        ["tenant", { enabled: true, params: { tenantId: undefined } }],
+      ]);
+      expect(() => resolveFilters([tenantFilter], registry, undefined)).toThrow(
+        'Filter "tenant" requires parameter "tenantId"',
+      );
+    });
+
+    test("should throw when a per-request override supplies the param as undefined", () => {
+      expect(() =>
+        resolveFilters([tenantFilter], new Map(), {
+          tenant: { tenantId: undefined },
+        }),
+      ).toThrow('Filter "tenant" requires parameter "tenantId"');
+    });
+
+    test("should substitute an explicit null param", () => {
+      // `null` is an explicit value and stays substitutable — only `undefined`
+      // means "not specified".
+      const result = resolveFilters([tenantFilter], new Map(), {
+        tenant: { tenantId: null },
+      });
+      expect(result[0].predicate).toEqual({ tenantId: null });
+    });
+
     test("should not substitute non-param values (no $ prefix)", () => {
       const filter: MetaFilter = {
         name: "literal",
