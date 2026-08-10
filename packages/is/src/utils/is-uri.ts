@@ -1,3 +1,4 @@
+import { isUrlSafeString } from "../internal/is-url-safe-string.js";
 import { isString } from "./is-string.js";
 import { isUrn } from "./is-urn.js";
 
@@ -11,6 +12,7 @@ import { isUrn } from "./is-urn.js";
 // URN, which has no authority.
 export const isUri = (input?: any): input is string => {
   if (!isString(input)) return false;
+  if (!isUrlSafeString(input)) return false;
   if (isUrn(input)) return true;
 
   try {

@@ -1,3 +1,4 @@
+import { isUrlSafeString } from "../internal/is-url-safe-string.js";
 import { isString } from "./is-string.js";
 
 // A URL a LOCATION can be derived from, or fetched: `http:` or `https:`, with a
@@ -16,6 +17,7 @@ import { isString } from "./is-string.js";
 // (`http://` and `http://:8080` both throw).
 export const isHttpUrl = (input?: any): input is string => {
   if (!isString(input)) return false;
+  if (!isUrlSafeString(input)) return false;
 
   try {
     const { protocol } = new URL(input);
