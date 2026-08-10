@@ -5,7 +5,14 @@ import {
   isConditionOperatorKey,
   isLogicalOperatorKey,
 } from "@lindorm/match";
-import { isArray, isObject, isObjectLike, isRegExp } from "@lindorm/is";
+import {
+  isArray,
+  isNull,
+  isObject,
+  isObjectLike,
+  isRegExp,
+  isUndefined,
+} from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
@@ -14,7 +21,6 @@ import { NotSupportedError, ProteusError } from "../../../errors/index.js";
 import type { CompiledCondition } from "./compiled-condition.js";
 import {
   ALWAYS_FALSE,
-  ALWAYS_TRUE,
   compiledClause,
   conjoin,
   disjoin,
@@ -97,6 +103,67 @@ const malformedPayload = (
       data: { operator, field: fieldKey, expected },
     },
   );
+};
+
+/**
+ * "Null, or not supplied at all" — the OPERAND side of the null rule.
+ *
+ * The two sides are different concerns and must not be merged. A null ROW VALUE
+ * simply does not match a comparison, which is what SQL already does by dropping
+ * the row. A null OPERAND is not orderable: `$gte: null` asks for "greater than
+ * or equal to nothing", so it is a malformed payload rather than a query.
+ *
+ * `undefined` is refused alongside it. The condition language reads `undefined`
+ * as "not specified" and strips it, but that strip is only safe together with
+ * the named-field empty-bag throw — until both land, refusing is the direction
+ * that cannot turn a mistyped criterion into an unrestricted one.
+ */
+const isAbsent = (operand: unknown): boolean => isNull(operand) || isUndefined(operand);
+
+const requireOrderable = (operator: string, fieldKey: string, operand: unknown): void => {
+  if (!isAbsent(operand)) return;
+  malformedPayload(operator, fieldKey, "an orderable operand");
+};
+
+/**
+ * The membership test `$in` performs and `$nin` NEGATES — one compilation, so
+ * the two can never disagree.
+ *
+ * A null MEMBER is a value like any other in the condition language, but `col IN
+ * (NULL)` is UNKNOWN for every row: it matched nothing under `$in` and, once
+ * `$nin` became a two-valued negation, would have matched EVERYTHING under
+ * `$nin`. Nulls are therefore lifted out into an explicit `IS NULL` alternative.
+ */
+const compileMembership = (
+  qualifiedCol: string,
+  operand: Array<unknown>,
+  params: Array<unknown>,
+  dialect: SqlDialect,
+): CompiledCondition => {
+  // `$in: []` can never hold. It is well-formed and useful — "match nothing" —
+  // so it is a state of its own rather than a clause that happens to say FALSE.
+  // Negated, it gives `$nin: []` the always-true it needs: an empty exclusion
+  // list excludes nothing, which is NOT the same as "nothing to emit", and
+  // conflating the two turned `deleteMany({ tag: { $nin: [] } })` into
+  // `DELETE FROM t`.
+  if (operand.length === 0) return ALWAYS_FALSE;
+
+  const values = operand.filter((value) => !isNull(value));
+  const alternatives: Array<CompiledCondition> = [];
+
+  if (values.length > 0) {
+    const placeholders = values.map((value) => {
+      params.push(value);
+      return dialect.placeholder(params);
+    });
+    alternatives.push(compiledClause(`${qualifiedCol} IN (${placeholders.join(", ")})`));
+  }
+
+  if (values.length !== operand.length) {
+    alternatives.push(compiledClause(`${qualifiedCol} IS NULL`));
+  }
+
+  return disjoin(alternatives);
 };
 
 /**
@@ -376,28 +443,44 @@ const compileOperatorKey = (
       if (operand === null || operand === undefined) {
         return compiledClause(`${qualifiedCol} IS NOT NULL`);
       }
+      // NOT `<>`. SQL's inequality is three-valued: against a NULL column it is
+      // UNKNOWN and the row is DROPPED, while the condition language is
+      // two-valued and KEEPS it — a row whose column is null is not equal to the
+      // operand, so negating that equality keeps it. `$neq` is therefore the
+      // negation of `$eq`, compiled once and negated, rather than a second
+      // comparison that happens to disagree on NULL.
       params.push(operand);
-      return compiledClause(`${qualifiedCol} <> ${dialect.placeholder(params)}`);
+      return negate(compiledClause(`${qualifiedCol} = ${dialect.placeholder(params)}`));
     }
 
     case ConditionOperatorKey.Gt:
+      requireOrderable(key, fieldKey, operand);
       params.push(operand);
       return compiledClause(`${qualifiedCol} > ${dialect.placeholder(params)}`);
 
     case ConditionOperatorKey.Gte:
+      requireOrderable(key, fieldKey, operand);
       params.push(operand);
       return compiledClause(`${qualifiedCol} >= ${dialect.placeholder(params)}`);
 
     case ConditionOperatorKey.Lt:
+      requireOrderable(key, fieldKey, operand);
       params.push(operand);
       return compiledClause(`${qualifiedCol} < ${dialect.placeholder(params)}`);
 
     case ConditionOperatorKey.Lte:
+      requireOrderable(key, fieldKey, operand);
       params.push(operand);
       return compiledClause(`${qualifiedCol} <= ${dialect.placeholder(params)}`);
 
     case ConditionOperatorKey.Between: {
+      if (isAbsent(operand)) {
+        return malformedPayload(key, fieldKey, "two orderable bounds");
+      }
       const [low, high] = operand as [unknown, unknown];
+      if (isAbsent(low) || isAbsent(high)) {
+        return malformedPayload(key, fieldKey, "two orderable bounds");
+      }
       params.push(low);
       const lowPlaceholder = dialect.placeholder(params);
       params.push(high);
@@ -407,33 +490,18 @@ const compileOperatorKey = (
       );
     }
 
-    case ConditionOperatorKey.In: {
-      const array = operand as Array<unknown>;
-      // `$in: []` can never hold. It is well-formed and useful — "match nothing"
-      // — so it is a state of its own rather than a clause that happens to say
-      // FALSE.
-      if (array.length === 0) return ALWAYS_FALSE;
+    case ConditionOperatorKey.In:
+      return compileMembership(qualifiedCol, operand as Array<unknown>, params, dialect);
 
-      const placeholders = array.map((value) => {
-        params.push(value);
-        return dialect.placeholder(params);
-      });
-      return compiledClause(`${qualifiedCol} IN (${placeholders.join(", ")})`);
-    }
-
-    case ConditionOperatorKey.Nin: {
-      const array = operand as Array<unknown>;
-      // `$nin: []` excludes nothing, so EVERY row satisfies it. That is not the
-      // same as "nothing to emit", and conflating the two turned
-      // `deleteMany({ tag: { $nin: [] } })` into `DELETE FROM t`.
-      if (array.length === 0) return ALWAYS_TRUE;
-
-      const placeholders = array.map((value) => {
-        params.push(value);
-        return dialect.placeholder(params);
-      });
-      return compiledClause(`${qualifiedCol} NOT IN (${placeholders.join(", ")})`);
-    }
+    // NOT `NOT IN`. Like `<>`, it is three-valued and drops the rows the
+    // condition language keeps: a row whose column is null is not one of the
+    // listed values. Negating the SAME membership test `$in` compiles is what
+    // makes the pair agree by construction — and it carries the empty-list
+    // states across for free, since the negation of always-false is always-true.
+    case ConditionOperatorKey.Nin:
+      return negate(
+        compileMembership(qualifiedCol, operand as Array<unknown>, params, dialect),
+      );
 
     case ConditionOperatorKey.Like:
       params.push(operand);
@@ -498,7 +566,13 @@ const compileOperatorKey = (
       return compiledClause(dialect.compileHas(qualifiedCol, params, operand));
 
     case ConditionOperatorKey.Mod: {
+      if (isAbsent(operand)) {
+        return malformedPayload(key, fieldKey, "a divisor and a remainder");
+      }
       const [divisor, remainder] = operand as [number, number];
+      if (isAbsent(divisor) || isAbsent(remainder)) {
+        return malformedPayload(key, fieldKey, "a divisor and a remainder");
+      }
       params.push(divisor);
       const divisorPlaceholder = dialect.placeholder(params);
       params.push(remainder);

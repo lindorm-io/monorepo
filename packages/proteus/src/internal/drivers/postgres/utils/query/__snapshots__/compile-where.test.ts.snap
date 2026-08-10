@@ -2,7 +2,7 @@
 
 exports[`compileWhere > $nin: [] is a no-op (never filters anything) > empty $nin combined with another operator does not add extra clause 1`] = `"WHERE "t0"."age" >= $1"`;
 
-exports[`compileWhere > $nin: [] is a no-op (never filters anything) > non-empty $nin still produces NOT IN clause 1`] = `"WHERE "t0"."name" NOT IN ($1, $2)"`;
+exports[`compileWhere > $nin: [] is a no-op (never filters anything) > non-empty $nin still produces an exclusion clause 1`] = `"WHERE ("t0"."name" IN ($1, $2)) IS NOT TRUE"`;
 
 exports[`compileWhere > $regex flags handling > case-insensitive regex (i flag) uses ~* operator 1`] = `"WHERE "t0"."name" ~* $1"`;
 
@@ -48,7 +48,7 @@ exports[`compileWhere > should compile $mod 1`] = `"WHERE ("t0"."age" % $1) = $2
 
 exports[`compileWhere > should compile $neq: null to IS NOT NULL 1`] = `"WHERE "t0"."name" IS NOT NULL"`;
 
-exports[`compileWhere > should compile $nin 1`] = `"WHERE "t0"."name" NOT IN ($1)"`;
+exports[`compileWhere > should compile $nin 1`] = `"WHERE ("t0"."name" IN ($1)) IS NOT TRUE"`;
 
 exports[`compileWhere > should compile $not at root level 1`] = `"WHERE ("t0"."name" = $1) IS NOT TRUE"`;
 

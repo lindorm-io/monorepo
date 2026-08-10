@@ -2043,8 +2043,8 @@ operators does not take over the object:
 
 Presence decides that an operator applies; a payload of the wrong shape raises
 rather than being coerced or dropped. `$not` needs an object, `$regex` needs a
-`RegExp`, `$and` / `$or` need a non-empty array, and an unrecognised
-`$`-prefixed key raises too.
+`RegExp`, `$and` / `$or` need a non-empty array, a comparison operator needs an
+orderable operand, and an unrecognised `$`-prefixed key raises too.
 
 | written                                   |                                              |
 | ----------------------------------------- | -------------------------------------------- |
@@ -2053,6 +2053,7 @@ rather than being coerced or dropped. `$not` needs an object, `$regex` needs a
 | `{ name: { $regex: "^Ali" } }`            | ✗ raises — the language declares a `RegExp`  |
 | `{ name: { $regex: /^Ali/ } }`            | ✓                                            |
 | `{ age: { $or: [] } }`                    | ✗ raises — omit the key to constrain nothing |
+| `{ age: { $gte: null } }`                 | ✗ raises — null is not orderable             |
 
 This matters beyond tidiness: a payload the compiler could not read used to
 compile to no clause at all, so `delete({ published: { $not: false } })` — which
@@ -2067,19 +2068,73 @@ condition, and every operator inside the inner object has to hold for the
 negation to bite (`{ age: { $not: { $gt: 18, $lte: 65 } } }` excludes only the
 18–65 band).
 
-**Both are two-valued on every driver.** The criteria language is a JavaScript
-object condition, so negation means what it means in JavaScript — `!matches(row,
-sub)` — and a NULL column is simply "not equal". `{ $not: { label: "x" } }` and
-`{ label: { $not: { $eq: "x" } } }` both return rows where `label` is NULL, on
-all six drivers. The in-memory drivers evaluate the matcher directly, MongoDB
-negates through `$nor` (which includes a null-or-missing field), and the SQL
-drivers compile to `(…) IS NOT TRUE` rather than `NOT (…)` — SQL's three-valued
-`NOT` would turn a NULL comparison into UNKNOWN and silently drop the row,
-making one literal condition mean different things per driver.
+Both are two-valued on every driver — see below.
 
 An inner condition that constrains nothing matches every row, so negating it
 matches none: `{ $not: {} }` and `{ label: { $not: { $nin: [] } } }` both return
 nothing.
+
+### Negation is two-valued on every driver
+
+The criteria language is a JavaScript object condition, so negation means what it
+means in JavaScript — a NULL column is simply "not equal", and negating that
+keeps the row. This covers `$not` in both its forms **and the negating operators
+`$neq` and `$nin`**:
+
+```typescript
+// `label` is nullable. All four return the rows where label IS NULL.
+{
+  $not: {
+    label: "x";
+  }
+}
+{
+  label: {
+    $not: {
+      $eq: "x";
+    }
+  }
+}
+{
+  label: {
+    $neq: "x";
+  }
+}
+{
+  label: {
+    $nin: ["x"];
+  }
+}
+```
+
+The in-memory drivers evaluate the matcher directly, MongoDB negates through
+`$nor` and `$ne` / `$nin` (all of which keep a null-or-missing field), and the
+SQL drivers compile to `(…) IS NOT TRUE` rather than `NOT (…)`, `<>` or
+`NOT IN` — SQL's three-valued forms turn a NULL comparison into UNKNOWN and
+silently drop the row, which would make one literal condition mean different
+things per driver.
+
+### Nulls
+
+`null` is a value, and the language respects it. It is **not** interchangeable
+with `undefined`, which means "not specified".
+
+| written                           |                                                   |
+| --------------------------------- | ------------------------------------------------- |
+| `{ label: { $eq: null } }`        | the rows whose `label` is null                    |
+| `{ label: { $neq: null } }`       | the rows whose `label` is not null                |
+| `{ label: { $in: [null, "x"] } }` | null is a member like any other — null rows match |
+| `{ label: { $nin: [null] } }`     | excludes the null rows                            |
+| `{ label: { $gte: "x" } }`        | a null row does not match — no error              |
+| `{ label: { $gte: null } }`       | ✗ raises — null is not orderable                  |
+
+The two sides are different concerns. A null on the **value** side is a row that
+does not satisfy a comparison, which is what every database already does. A null
+on the **operand** side of `$gt` / `$gte` / `$lt` / `$lte` / `$between` / `$mod`
+is a malformed payload — "greater than or equal to nothing" is not a question —
+and raises like any other bad payload. It used to bind as a parameter, and
+`label >= NULL` is UNKNOWN for every row, so a condition that is an error
+returned an empty result set instead.
 
 ### Empty operands
 

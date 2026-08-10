@@ -403,8 +403,10 @@ describe("compileWhere", () => {
       expect(params).toEqual(["pre"]);
     });
 
-    test("non-empty $nin still produces NOT IN clause", () => {
-      // Regression guard: empty check must not suppress non-empty arrays
+    test("non-empty $nin still produces an exclusion clause", () => {
+      // Regression guard: empty check must not suppress non-empty arrays.
+      // The clause is a negated membership test rather than `NOT IN`, which is
+      // three-valued and would drop the rows whose column is NULL.
       const entries: Array<PredicateEntry<any>> = [
         { predicate: { name: { $nin: ["Alice", "Bob"] } }, conjunction: "and" },
       ];
@@ -412,7 +414,7 @@ describe("compileWhere", () => {
       const result = compileWhere(entries, metadata, "t0", params);
       expect(result).toMatchSnapshot();
       expect(params).toEqual(["Alice", "Bob"]);
-      expect(result).toContain("NOT IN");
+      expect(result).toContain("IS NOT TRUE");
     });
   });
 

@@ -74,6 +74,74 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
     expect(params).toEqual([]);
   });
 
+  // `<>` and `NOT IN` are THREE-valued: against a NULL column they evaluate to
+  // UNKNOWN and the row is dropped, while the condition language is two-valued
+  // and KEEPS it — a row whose column is null is not equal to "drop", so
+  // negating that equality keeps it. Verified on postgres 17.10, mysql 9.7.1 and
+  // sqlite 3.53.0: `label <> 'drop'` and `label NOT IN ('drop')` each returned
+  // one row of four where the matcher returns three.
+  test("should compile $neq to a two-valued negation, not to <>", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $neq: "Alice" } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toContain("IS NOT TRUE");
+    expect(result).not.toContain("<>");
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice"]);
+  });
+
+  test("should compile $nin to a two-valued negation, not to NOT IN", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $nin: ["Alice", "Bob"] } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toContain("IS NOT TRUE");
+    expect(result).not.toContain("NOT IN");
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice", "Bob"]);
+  });
+
+  // A null INSIDE the list is the same three-valued trap one level down: `col IN
+  // (NULL)` is UNKNOWN for every row, so `$in` matched nothing and `$nin`
+  // matched nothing either. The language reads a null member as a value —
+  // `{ label: { $in: [null] } }` selects the NULL rows.
+  test("should compile a null member of $in to an IS NULL alternative", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $in: ["Alice", null] } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toContain("IS NULL");
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice"]);
+  });
+
+  test("should compile a $in of only null to IS NULL", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $in: [null] } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toContain("IS NULL");
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual([]);
+  });
+
+  test("should negate the same membership test for a $nin holding null", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $nin: ["Alice", null] } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result).toContain("IS NULL");
+    expect(result).toContain("IS NOT TRUE");
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice"]);
+  });
+
   test("should compile comparison operators ($gt, $lte)", () => {
     const entries: Array<PredicateEntry<any>> = [
       { predicate: { age: { $gt: 18, $lte: 65 } }, conjunction: "and" },
@@ -604,6 +672,75 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
       expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
         /requires an array-typed column.*"score".*type "float"/,
       );
+    });
+  });
+
+  // null on the VALUE side and null on the OPERAND side are different concerns.
+  // A row whose column is null simply does not match a comparison — SQL already
+  // drops it and that stays. A null OPERAND is not orderable, so it is a
+  // malformed payload: `$gte: null` asks for "greater than or equal to nothing".
+  // It used to bind as a parameter, and `col >= NULL` is UNKNOWN for every row —
+  // so a condition that is an error returned an empty result set instead.
+  //
+  // `undefined` is refused the same way here. The language reads it as "not
+  // specified" and strips it, but the strip only becomes safe together with the
+  // named-field empty-bag throw — until both land, refusing is the direction
+  // that cannot open a hole.
+  describe("null operand to a comparison operator", () => {
+    test.each([
+      ["$gt", { age: { $gt: null } }],
+      ["$gte", { age: { $gte: null } }],
+      ["$lt", { age: { $lt: null } }],
+      ["$lte", { age: { $lte: null } }],
+      ["$gt undefined", { age: { $gt: undefined } }],
+      ["$lte undefined", { age: { $lte: undefined } }],
+    ])(
+      "should refuse %s rather than bind an unorderable operand",
+      (_label, predicate) => {
+        const entries: Array<PredicateEntry<any>> = [{ predicate, conjunction: "and" }];
+        expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+          /requires an orderable operand/,
+        );
+      },
+    );
+
+    test.each([
+      ["a null payload", { age: { $between: null } }],
+      ["an undefined payload", { age: { $between: undefined } }],
+      ["a null lower bound", { age: { $between: [null, 65] } }],
+      ["a null upper bound", { age: { $between: [18, null] } }],
+      ["an undefined bound", { age: { $between: [18, undefined] } }],
+    ])("should refuse a $between with %s", (_label, predicate) => {
+      const entries: Array<PredicateEntry<any>> = [{ predicate, conjunction: "and" }];
+      expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+        /requires two orderable bounds/,
+      );
+    });
+
+    test.each([
+      ["a null payload", { age: { $mod: null } }],
+      ["an undefined payload", { age: { $mod: undefined } }],
+      ["a null divisor", { age: { $mod: [null, 0] } }],
+      ["a null remainder", { age: { $mod: [3, null] } }],
+    ])("should refuse a $mod with %s", (_label, predicate) => {
+      const entries: Array<PredicateEntry<any>> = [{ predicate, conjunction: "and" }];
+      expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+        /requires a divisor and a remainder/,
+      );
+    });
+
+    // The VALUE side is untouched: a null operand to `$eq` / `$neq` is a real
+    // question about a real value, and both already answer it correctly.
+    test("should still compile $eq: null and $neq: null as null comparisons", () => {
+      const params: Array<unknown> = [];
+      const entries: Array<PredicateEntry<any>> = [
+        { predicate: { name: { $eq: null } }, conjunction: "and" },
+        { predicate: { email: { $neq: null } }, conjunction: "and" },
+      ];
+      const result = compileWhere(entries, metadata, "t0", params, dialect);
+      expect(result).toContain("IS NULL");
+      expect(result).toContain("IS NOT NULL");
+      expect(params).toEqual([]);
     });
   });
 

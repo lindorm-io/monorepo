@@ -430,6 +430,200 @@ export const complexPredicatesSuite = (
       });
     });
 
+    // ─── $neq / $nin over a NULLABLE column ────────────────────────────
+    // SQL's `<>` and `NOT IN` are THREE-valued: against a NULL column they
+    // evaluate to UNKNOWN and the row is DROPPED. The condition language is
+    // two-valued — a row whose column is null is not equal to "drop", so
+    // negating that equality KEEPS it — and the driver is meant to be an
+    // implementation detail. Verified at HEAD on postgres 17.10, mysql 9.7.1 and
+    // sqlite 3.53.0: `label <> 'drop'` returned one row of four where the
+    // matcher returns three.
+    //
+    // `label` is nullable and two rows hold NULL, which is what makes these
+    // cases able to fail at all — every `$neq` case over a NOT NULL column
+    // passes under either reading and proves nothing.
+    //
+    // Every expectation comes from running `Matcher.filter` from `@lindorm/match`
+    // over these exact four rows.
+
+    describe("$neq / $nin over a nullable column", () => {
+      const { TckJsonbArray } = entities;
+
+      beforeEach(async () => {
+        await getHandle().clear();
+        const repo = getHandle().repository(TckJsonbArray);
+        await repo.insert({ name: "ab", label: "keep", tags: ["a", "b"] });
+        await repo.insert({ name: "abc", label: "drop", tags: ["a", "b", "c"] });
+        await repo.insert({ name: "cd", label: null, tags: ["c", "d"] });
+        await repo.insert({ name: "xy", label: null, tags: ["x", "y", "z"] });
+      });
+
+      test("$neq keeps the rows whose column is NULL", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $neq: "drop" } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "cd", "xy"]);
+      });
+
+      test("$nin keeps the rows whose column is NULL", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $nin: ["drop"] } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "cd", "xy"]);
+      });
+
+      test("$nin over several values keeps the NULL rows", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $nin: ["drop", "keep"] } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["cd", "xy"]);
+      });
+
+      // `$eq: null` and `$neq: null` ask about the null VALUE and are a separate
+      // question — both already agreed with the matcher and must keep doing so.
+      test("$neq: null still returns only the non-NULL rows", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $neq: null } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "abc"]);
+      });
+
+      test("$eq: null still returns only the NULL rows", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $eq: null } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["cd", "xy"]);
+      });
+
+      test("$neq over a NOT NULL column is unchanged", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ name: { $neq: "ab" } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["abc", "cd", "xy"]);
+      });
+
+      test("$nin over a NOT NULL column is unchanged", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ name: { $nin: ["ab", "abc"] } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["cd", "xy"]);
+      });
+
+      test("$neq intersects with a sibling criterion", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { label: { $neq: "drop" }, tags: { $length: 2 } } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["ab", "cd"]);
+      });
+
+      test("$nin and $neq in one operator bag are conjoined", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { label: { $nin: ["drop"], $neq: "keep" } } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["cd", "xy"]);
+      });
+
+      test("$nin composes inside a criteria-level $or", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { $or: [{ name: "abc" }, { label: { $nin: ["keep"] } }] } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["abc", "cd", "xy"]);
+      });
+
+      test("$neq composes inside a criteria-level $and", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { $and: [{ label: { $neq: "drop" } }, { tags: { $length: 2 } }] } as any,
+          { order: { name: "ASC" } },
+        );
+        expect(results.map((r) => r.name)).toEqual(["ab", "cd"]);
+      });
+
+      // Negating a two-valued `$neq` must give back exactly its complement,
+      // NULL rows included — a three-valued `$neq` loses them from both sides.
+      test("a criteria-level $not over $neq returns the complement", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ $not: { label: { $neq: "drop" } } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["abc"]);
+      });
+
+      test("a field-level $not over $neq returns the complement", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $not: { $neq: "drop" } } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["abc"]);
+      });
+
+      // A null MEMBER of the list is a value like any other: `$in: [null]`
+      // selects the NULL rows and `$nin: [null]` excludes them. `col IN (NULL)`
+      // is UNKNOWN for every row, so both used to return nothing at all.
+      test("$in holding null selects the NULL rows", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $in: [null] } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["cd", "xy"]);
+      });
+
+      test("$in holding null alongside a value takes the union", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $in: ["drop", null] } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["abc", "cd", "xy"]);
+      });
+
+      test("$nin holding null excludes the NULL rows", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $nin: [null] } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "abc"]);
+      });
+
+      test("$nin holding null alongside a value excludes both", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $nin: ["drop", null] } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab"]);
+      });
+
+      // The three-state compiled result, unchanged: an empty exclusion list
+      // excludes nothing and an empty inclusion list can never hold.
+      test("an empty $nin still excludes nothing", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $nin: [] } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "abc", "cd", "xy"]);
+      });
+
+      test("an empty $in still matches nothing", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $in: [] } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results).toEqual([]);
+      });
+    });
+
     // ─── Field-level $not on TckJsonbArray ─────────────────────────────
     // `{ field: { $not: … } }` negates ONE column's condition — a distinct
     // operator from the criteria-level `$not` above, and the one the SQL
@@ -1040,9 +1234,35 @@ export const complexPredicatesSuite = (
           ["a string $regex", { label: { $regex: "keep" } }],
           ["an empty $or", { label: { $or: [] } }],
           ["an empty $and", { label: { $and: [] } }],
+          // A null OPERAND to a comparison operator. The row-value side is a
+          // different concern and stays: a row whose column is null simply does
+          // not match, which is what every driver already does. But `$gte: null`
+          // asks for "greater than or equal to nothing" — it is not orderable,
+          // so it is a malformed payload, exactly as a non-object `$not` is. It
+          // used to bind as a parameter, and `label >= NULL` is UNKNOWN for
+          // every row, so a condition that is an error returned an empty result
+          // set instead.
+          ["a null $gt operand", { label: { $gt: null } }],
+          ["a null $gte operand", { label: { $gte: null } }],
+          ["a null $lt operand", { label: { $lt: null } }],
+          ["a null $lte operand", { label: { $lte: null } }],
+          ["a null $between payload", { label: { $between: null } }],
+          ["a null $between bound", { label: { $between: [null, "z"] } }],
+          ["a null $mod payload", { version: { $mod: null } }],
+          ["a null $mod divisor", { version: { $mod: [null, 0] } }],
         ])("refuses %s", async (_label, criteria) => {
           const repo = getHandle().repository(TckJsonbArray);
           await expect((repo.find as any)(criteria)).rejects.toThrow();
+        });
+
+        // The row-value side, which does NOT throw: two rows hold NULL and a
+        // comparison simply does not match them.
+        test("a comparison over a nullable column filters the NULL rows out", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+          const results = await repo.find({ label: { $gte: "drop" } } as any, {
+            order: { name: "ASC" },
+          });
+          expect(results.map((r) => r.name)).toEqual(["ab", "abc"]);
         });
 
         // The wipe this phase exists for. `{ label: { $not: false } }` has ONE
