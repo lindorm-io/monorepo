@@ -3,6 +3,7 @@ import type { Dict } from "@lindorm/types";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type { AppState } from "../context/context-common.js";
 import type { PylonClientContext } from "../context/pylon-client-context.js";
+import type { PylonResolvedAccess } from "../context/pylon-resolved-access.js";
 import type { IoSocket } from "./io.js";
 
 export type PylonListenerMethod =
@@ -23,6 +24,14 @@ export type PylonSocketAuth = {
 };
 
 export type PylonSocketPylonNamespace = {
+  /**
+   * The credential the handshake resolved, republished on every event by the
+   * fast path. It sits BESIDE `tokens.bearer` rather than being derived from it
+   * because an OPAQUE credential produces no `VerifiedToken` at all — reading
+   * the access state off `tokens.bearer` is exactly what made an opaque token
+   * unable to authenticate over a socket.
+   */
+  access?: PylonResolvedAccess;
   auth?: PylonSocketAuth;
 };
 

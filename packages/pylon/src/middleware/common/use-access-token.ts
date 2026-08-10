@@ -1,5 +1,5 @@
 import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
-import { ClientError, ServerError } from "@lindorm/errors";
+import { ClientError } from "@lindorm/errors";
 import { logResolvedAccess } from "../../internal/utils/access-token/log-resolved-access.js";
 import { runHandshakeAccessToken } from "../../internal/utils/access-token/run-handshake-access-token.js";
 import { runHttpAccessToken } from "../../internal/utils/access-token/run-http-access-token.js";
@@ -9,6 +9,7 @@ import {
   isSocketEventContext,
   isSocketHandshakeContext,
 } from "../../internal/utils/is-context.js";
+import { splitVerifyInput } from "../../internal/utils/tokens/split-verify-input.js";
 import type {
   HandshakeDpopMode,
   PylonAnyContext,
@@ -25,8 +26,9 @@ export type UseAccessTokenOptions = Omit<DomainAssert & VerifyOptions, "issuer">
    * ever narrows; a mount cannot turn a cache on that the deployment did not
    * configure.
    *
-   * Handed straight to `ctx.auth.introspect`, which is where the cache lives, so
-   * it applies to the HTTP arm — the only one that introspects.
+   * Handed straight to `ctx.auth.introspect`, which is where the cache lives —
+   * so it applies wherever an opaque credential is resolved, which is now the
+   * socket handshake as well as HTTP.
    */
   cache?: PylonAuthCacheEntry;
   /**
@@ -47,13 +49,17 @@ export type UseAccessTokenOptions = Omit<DomainAssert & VerifyOptions, "issuer">
  * Resolve the access credential this deployment is a party to, on whichever
  * transport the request arrived by. ONE mount serves all three:
  *
- * - **HTTP** — bearer / DPoP / cookie-session, verified locally when the wire
- *   format is JOSE or COSE and introspected (RFC 7662) when it is opaque.
- * - **Socket handshake** — verifies the credential once and registers the auth
+ * - **HTTP** — bearer / DPoP / cookie-session.
+ * - **Socket handshake** — resolves the credential once and registers the auth
  *   state (strategy, expiry, refresh) the connection then runs on.
- * - **Socket event** — the fast path over that state: it re-checks EXPIRY, not
- *   the signature, and emits `$pylon/auth/expired` once inside the warning
- *   window.
+ * - **Socket event** — the fast path over that state: it republishes the
+ *   resolved access and re-checks EXPIRY, not the signature, and emits
+ *   `$pylon/auth/expired` once inside the warning window.
+ *
+ * Both credential-bearing transports run the SAME two-arm resolver — verified
+ * locally when the wire format carries a claims layer, introspected (RFC 7662)
+ * when it does not — and then the SAME claim assert over the result, so a
+ * matcher stated on this mount applies whichever arm resolved the credential.
  *
  * ⚠ It takes NO issuer. The issuer is `ctx.state.app.config.auth.issuer`,
  * settled once at boot by amphora for the scope the auth driver named. A
@@ -73,6 +79,14 @@ export const useAccessToken = (
   const { cache, dpop, ...verifyInput } = options;
   const dpopMode: HandshakeDpopMode = dpop ?? "optional";
 
+  // Split ONCE, at mount time. The two halves then travel apart all the way
+  // down: the KNOBS are per-arm (aegis owns a structured token's temporal range
+  // check; the introspected arm owns its own), while the MATCHERS are shared and
+  // run once over whichever claims came back.
+  const { assert: matchers, options: verifyOptions } = splitVerifyInput(
+    verifyInput as DomainAssert & VerifyOptions,
+  );
+
   return async function useAccessTokenMiddleware(
     ctx: PylonAnyContext,
     next,
@@ -81,7 +95,7 @@ export const useAccessToken = (
 
     try {
       if (isSocketHandshakeContext(ctx)) {
-        await runHandshakeAccessToken(ctx, { dpopMode, verifyInput });
+        await runHandshakeAccessToken(ctx, { cache, dpopMode, matchers, verifyOptions });
         timer.debug("Access token verified (handshake)", {
           strategy: ctx.io.socket.data.pylon.auth?.strategy,
         });
@@ -90,7 +104,7 @@ export const useAccessToken = (
         timer.debug("Access token fast-path accepted", { expiresAt, strategy });
         logResolvedAccess(ctx);
       } else if (isHttpContext(ctx)) {
-        await runHttpAccessToken(ctx, { cache, verifyInput });
+        await runHttpAccessToken(ctx, { cache, matchers, verifyOptions });
         timer.debug("Access token verified (http)");
         logResolvedAccess(ctx);
       } else {
@@ -104,20 +118,24 @@ export const useAccessToken = (
         });
       }
     } catch (error: any) {
-      timer.debug("Access token verification failed", error);
+      timer.debug("Access token resolution failed", error);
 
-      if (error instanceof ClientError || error instanceof ServerError) {
-        throw error;
-      }
-
-      throw new ClientError("Access token verification failed", {
-        error,
-        status: ClientError.Status.Unauthorized,
-        code: "access_token_verification_failed",
-        type: "urn:lindorm:pylon:error:access_token_verification_failed",
-        title: "Access Token Verification Failed",
-        details: error.message,
-      });
+      // ⚠ THIS CATCH CONVERTS NOTHING — it logs and rethrows.
+      //
+      // It used to rethrow `ClientError`/`ServerError` and turn EVERYTHING else
+      // into a 401, which laundered every error type nobody had thought of into
+      // "your credential is bad": a `ProteusError` out of a redis-backed
+      // `introspect` extends `LindormError` directly, so a dead cache reported
+      // itself to the caller as an authentication failure — on the hot path for
+      // every opaque token, with the 500 the operator needed erased.
+      //
+      // The conversion moved to the two places a VERDICT is actually reached —
+      // `verifyAccessToken` and the proof check inside `assertDpopBinding` —
+      // where the scope is a single call over caller-presented bytes rather than
+      // a class list that goes stale. Everything that reaches here already
+      // carries the status it earned, so a failure nobody anticipated surfaces
+      // as itself instead of as a 401.
+      throw error;
     }
 
     await next();

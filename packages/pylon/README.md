@@ -701,8 +701,12 @@ router.use(verifyApiKey("request.body.apiKey"));
 | Surface          | What it does                                                                                         |
 | ---------------- | ---------------------------------------------------------------------------------------------------- |
 | HTTP request     | resolves the bearer / DPoP / session-derived access token onto `ctx.state.access`                    |
-| Socket handshake | verifies the credential once and registers the auth state (strategy, expiry, refresh) for the socket |
-| Socket event     | fast path over that state — re-checks EXPIRY, not the signature                                      |
+| Socket handshake | resolves the credential once and registers the auth state (strategy, expiry, refresh) for the socket |
+| Socket event     | fast path over that state — republishes the resolved access and re-checks EXPIRY, not the signature  |
+
+Both credential-bearing surfaces run the **same** resolution and the **same** claim
+assert, so an opaque credential authenticates over a websocket exactly as it does
+over HTTP, and a matcher stated on the mount applies whichever route resolved it.
 
 One mount, because a deployment that had to mount a request/event middleware and a handshake middleware separately had to keep their two issuers agreeing — and mounting the http one in a handshake was refused, which is how the split announced itself. Its return type is an intersection, not a union, so the same value sits in a middleware array and a connection-middleware array without a cast.
 
@@ -712,11 +716,15 @@ Verifying with no issuer matcher is not a weaker check but NO check, so the LOCA
 
 `{ dpop: "required" | "optional" | "disabled" }` sets how strictly the HANDSHAKE treats DPoP (default `"optional"`). It is handshake-only: on HTTP the scheme states the intent per request.
 
+`{ cache }` narrows the RFC 7662 introspection cache for this mount, and applies wherever an opaque credential is resolved — the socket handshake as well as HTTP.
+
+Every other option is an aegis **claim matcher** (`audience`, `scope`, `roles`, …) or an aegis **verify knob** (`maxTokenAge`, `currentDate`, …). The knobs go to the local verify; the matchers are asserted once, afterwards, over the resolved claims — see below.
+
 `createTokenMiddleware({ issuer })` is the DIFFERENT job and keeps its per-mount issuer: it accepts tokens from issuers that are **not** ours — `amphora.external`, of which a service may hold several — while `useAccessToken` pins the one issuer this deployment is a party to.
 
 #### Resolved access — `ctx.state.access`
 
-On HTTP the middleware **sniffs the credential and routes** — it never tries a local verify and treats the failure as "must be opaque", because a tampered JWT has to fail rather than be handed to an authorization server that never issued it.
+The middleware **sniffs the credential and routes** — it never tries a local verify and treats the failure as "must be opaque", because a tampered JWT has to fail rather than be handed to an authorization server that never issued it.
 
 The sniff asks whether aegis can establish the credential's **claims** locally (`isClaimsBearingToken`), not which wire family it belongs to. A signed but opaque token is still opaque: an authorization server's handle is routinely a JWS — or its COSE twin a CWS — and aegis will check its signature and learn nothing, so only the issuer can say whether it is live.
 
@@ -747,7 +755,25 @@ The RFC 7662 response members that describe the ANSWER rather than the token —
 
 `cnf` lives inside `claims.confirmation`, so it is not repeated on the outside; there is no `header` field (an opaque token has none, and a JWT's is derivable from `token`) and no `active` field (an inactive token throws `token_not_active` instead of resolving).
 
-There is also no `profile` and no `sensitive`, deliberately. The resolved credential answers one question — may this request do this — and a name, an email, a picture or a national identity number bear on none of it. Identity is read where identity is wanted (`ctx.auth.userinfo()`, `ctx.state.tokens.idToken`); the introspection parser drops the profile claims outright, so an authorization server cannot volunteer personal data into an authorization decision.
+##### Claim matchers apply to BOTH routes
+
+A matcher stated on the mount is asserted **after** resolution, over `access.claims`:
+
+```typescript
+router.use(
+  useAccessToken({ audience: "https://api.example.com", scope: "orders:write" }),
+);
+```
+
+A credential failing it is refused with `access_token_claims_invalid` (401), carrying the failing claim KEYS in `data.invalid` and their values in `debug` only. `audience` is contains-self (RFC 9068 §4): `aud` is an array on the wire, and a token good at this audience carries it among them.
+
+⚠ This is one pass over one claim set precisely because applying it inside the local verify made it a **silent no-op for an opaque credential** — a JWT audienced elsewhere was refused while the opaque handle for the same wrong audience was served. Since the token format is the client's choice, such a gate covered whichever clients happened to pick JWT.
+
+The `issuer` matcher is pylon's own and is not yours to state: it is `$exists: false` OR equals the deployment's issuer. A structured token always carries `iss` (aegis refuses one without), so that is a hard check there; RFC 7662 makes `iss` optional in an introspection response, and the issuer is already established by which endpoint was called.
+
+Temporal claims are **not** in that shared pass. A structured token's `exp`/`nbf`/`iat` are range-checked inside `aegis.verify` with its clock tolerance; an introspection answer gets its own check — `active` is primary, and an answer reporting `active: true` beside an `exp` already gone is refused as `token_not_active`. A single shared `exp > now` would have rejected tokens the local verify accepts inside its tolerance window.
+
+There is also no `profile` and no `sensitive`, deliberately. The resolved credential answers one question — may this request do this — and a name, an email, a picture or a national identity number bear on none of it. Identity is read where identity is wanted (`ctx.auth.userinfo()`, `ctx.state.tokens.idToken`); the introspection parser drops the profile claims **and** the sensitive-identity claims (`nationalIdentityNumber`, `socialSecurityNumber`, …) outright, so an authorization server cannot volunteer personal data into an authorization decision. That matches the local-verify path, which surfaces sensitive claims only on an encrypted token (OIDC Core §13.3) and never into `claims`.
 
 A service that mints and verifies its own tokens needs **no `auth` configuration at all** — nothing on the local-verify path calls the IdP. Introspection is only reached by a credential with no claims layer, and that needs an `auth` driver that implements `introspect`. Without one, such a credential is refused as `opaque_token_not_supported` (401) rather than as a verification that failed.
 
@@ -798,7 +824,9 @@ Nothing is cached when either call fails — a stale answer served over an unrea
 
 Both payloads are encrypted at rest. The cached profile is stored as the domain object under `@TypedJson`, not in claim wire form: the wire translation snake-keys the nested OIDC Core §5.1 `address` on the way out and returns it verbatim on the way in, so a wire-form payload would answer a cache hit differently from a miss.
 
-**DPoP (RFC 9449)** is checked from `(proof, claims.confirmation.thumbprint, token)`, so it runs identically on both paths — RFC 9449 §6.2 conveys `cnf.jkt` in the introspection response precisely so a resource server can validate the binding locally for an opaque token. A token carrying `cnf.jkt` is refused without a matching proof (`missing_dpop_proof`), and a token _without_ `cnf.jkt` presented under the `DPoP` scheme is refused as `token_not_dpop_bound`.
+**DPoP (RFC 9449)** is checked from `(proof, claims.confirmation.thumbprint, token)`, so it runs identically on both credential routes AND on both transports — RFC 9449 §6.2 conveys `cnf.jkt` in the introspection response precisely so a resource server can validate the binding locally for an opaque token. A token carrying `cnf.jkt` is refused without a matching proof (`missing_dpop_proof`), a token _without_ `cnf.jkt` presented under the `DPoP` scheme is refused as `token_not_dpop_bound`, and a proof that fails its own verification is `invalid_dpop_proof`. Only `htm`/`htu` are transport-specific: HTTP reads them off the request, a handshake reconstructs them from the upgrade (`GET`, the socket.io path).
+
+**Errors are not laundered.** The middleware converts a failure into a 401 only where a verdict on the presented credential is actually reached — the local verify and the DPoP proof check. Anything else propagates as itself, so a driver's storage or transport failure inside `ctx.auth.introspect` surfaces as the 500 it is instead of telling the caller its token was bad.
 
 ### Authorization
 

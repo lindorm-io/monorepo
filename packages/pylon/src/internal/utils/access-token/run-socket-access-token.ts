@@ -56,17 +56,30 @@ export const runSocketAccessToken = (ctx: PylonSocketContext): SocketFastPath =>
     markAuthExpiredEmitted(auth, now);
   }
 
+  const access = ctx.io.socket.data.pylon.access;
+
+  if (!access) {
+    throw new ClientError("Invalid credentials", {
+      details:
+        "Handshake auth state carries no resolved access credential — install useAccessToken in socket.connectionMiddleware",
+      status: ClientError.Status.Unauthorized,
+      code: "missing_handshake_access",
+      type: "urn:lindorm:pylon:error:missing_handshake_access",
+      title: "Missing Handshake Access",
+      debug: { strategy: auth.strategy },
+    });
+  }
+
   const bearer = ctx.io.socket.data.tokens.bearer;
-  ctx.state.tokens.accessToken = bearer;
-  // Verified at handshake by the same middleware mounted in
+  // `undefined` for an OPAQUE credential — there is no VerifiedToken behind an
+  // introspection answer, which is why the fast path republishes the RESOLVED
+  // access rather than rebuilding it from the parsed token.
+  if (bearer) ctx.state.tokens.accessToken = bearer;
+  // Established at handshake by the same middleware mounted in
   // `socket.connectionMiddleware`; the fast path re-checks expiry, not the
-  // signature — provenance is still local.
-  ctx.state.access = {
-    provenance: "verified",
-    claims: bearer.claims,
-    custom: bearer.custom,
-    token: bearer.token,
-  } satisfies PylonResolvedAccess;
+  // signature — and it carries that handshake's provenance forward rather than
+  // asserting one of its own.
+  ctx.state.access = access satisfies PylonResolvedAccess;
 
   return { expiresAt, strategy: auth.strategy };
 };

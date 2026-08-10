@@ -44,7 +44,9 @@ describe("createBearerRefreshHandler", () => {
       aegis,
       socket,
       subject: "alice",
-      verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
+      issuer: "https://test.lindorm.io/",
+      matchers: {},
+      verifyOptions: {},
     });
 
     await handler({ bearer: "new-jwt", expiresIn: 3600 });
@@ -65,7 +67,9 @@ describe("createBearerRefreshHandler", () => {
       aegis,
       socket,
       subject: "alice",
-      verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
+      issuer: "https://test.lindorm.io/",
+      matchers: {},
+      verifyOptions: {},
     });
 
     await handler({ bearer: "new-jwt", expiresIn: 300 });
@@ -84,7 +88,9 @@ describe("createBearerRefreshHandler", () => {
       aegis,
       socket,
       subject: "alice",
-      verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
+      issuer: "https://test.lindorm.io/",
+      matchers: {},
+      verifyOptions: {},
     });
 
     await expect(handler({ bearer: "new-jwt", expiresIn: 3600 })).rejects.toThrow(
@@ -109,7 +115,9 @@ describe("createBearerRefreshHandler", () => {
         capturedJkt: "jkt-abc",
         socket,
         subject: "alice",
-        verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
+        issuer: "https://test.lindorm.io/",
+        matchers: {},
+        verifyOptions: {},
       });
 
       await expect(
@@ -134,7 +142,9 @@ describe("createBearerRefreshHandler", () => {
         capturedJkt: "jkt-abc",
         socket,
         subject: "alice",
-        verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
+        issuer: "https://test.lindorm.io/",
+        matchers: {},
+        verifyOptions: {},
       });
 
       await expect(handler({ bearer: "new-jwt", expiresIn: 3600 })).rejects.toThrow(
@@ -154,7 +164,9 @@ describe("createBearerRefreshHandler", () => {
         capturedJkt: "jkt-abc",
         socket,
         subject: "alice",
-        verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
+        issuer: "https://test.lindorm.io/",
+        matchers: {},
+        verifyOptions: {},
       });
 
       await expect(handler({ bearer: "new-jwt", expiresIn: 3600 })).rejects.toThrow(
@@ -168,7 +180,9 @@ describe("createBearerRefreshHandler", () => {
       aegis,
       socket,
       subject: "alice",
-      verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
+      issuer: "https://test.lindorm.io/",
+      matchers: {},
+      verifyOptions: {},
     });
 
     await expect(handler({})).rejects.toThrow(ClientError);

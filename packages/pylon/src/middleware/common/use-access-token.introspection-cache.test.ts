@@ -5,7 +5,7 @@
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import type { ReadableTime } from "@lindorm/date";
 import { Amphora, type IAmphora } from "@lindorm/amphora";
-import { ClientError } from "@lindorm/errors";
+import { ClientError, LindormError } from "@lindorm/errors";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusSource } from "@lindorm/proteus";
@@ -305,17 +305,83 @@ describe("useAccessToken introspection cache", () => {
   test("should never let an entry outlive the token's own expiry", async () => {
     const middleware = useAccessToken();
 
-    introspect.mockResolvedValue({
+    introspect.mockResolvedValueOnce({
       ...ACTIVE_INTROSPECTION,
       expiresAt: new Date(NOW.getTime() + 3_000),
     });
 
     await middleware(createContext({ kv, introspect, ttl: "60 seconds" }), next);
 
+    // Four seconds on, the cached entry is gone even though the sixty-second
+    // TTL has barely started — so the SECOND request reaches the authorization
+    // server, which answers about a token that is now live again.
     MockDate.set(new Date(NOW.getTime() + 4_000).toISOString());
+    introspect.mockResolvedValueOnce({
+      ...ACTIVE_INTROSPECTION,
+      expiresAt: new Date(NOW.getTime() + 60_000),
+    });
     await middleware(createContext({ kv, introspect, ttl: "60 seconds" }), next);
 
     expect(introspect).toHaveBeenCalledTimes(2);
+  });
+
+  /**
+   * `active` is the authorization server's primary answer and is honoured first,
+   * but it cannot catch the server contradicting ITSELF: an answer that reports
+   * `active: true` beside an `exp` already in the past is not a live token, and
+   * serving it would extend every such grant indefinitely.
+   *
+   * ⚠ No clock tolerance here, deliberately. An introspection answer is fetched
+   * live from the authority rather than carried across a clock boundary — the
+   * tolerance that a structured token's `exp` gets inside `aegis.verify` has
+   * nothing to apply to.
+   */
+  test("should reject an active answer whose own exp has already passed", async () => {
+    const middleware = useAccessToken();
+
+    introspect.mockResolvedValue({
+      ...ACTIVE_INTROSPECTION,
+      expiresAt: new Date(NOW.getTime() - 1_000),
+    });
+
+    const ctx = createContext({ kv, introspect });
+
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      status: 401,
+      code: "token_not_active",
+    });
+    expect(ctx.state.access).toBeNull();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test("should reject an active answer whose nbf has not yet been reached", async () => {
+    const middleware = useAccessToken();
+
+    introspect.mockResolvedValue({
+      ...ACTIVE_INTROSPECTION,
+      notBefore: new Date(NOW.getTime() + 60_000),
+    });
+
+    const ctx = createContext({ kv, introspect });
+
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      status: 401,
+      code: "token_not_active",
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  // Neither claim is required by RFC 7662 §2.2 — every member is a MAY — so an
+  // answer carrying no temporal claims at all must still be accepted.
+  test("should accept an active answer that carries no temporal claims", async () => {
+    const middleware = useAccessToken();
+
+    introspect.mockResolvedValue({ ...ACTIVE_INTROSPECTION });
+
+    const ctx = createContext({ kv, introspect });
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined();
+    expect(ctx.state.access.provenance).toBe("introspected");
   });
 
   // A negative is a real entry — it saves the AS the same load, under the same
@@ -351,23 +417,62 @@ describe("useAccessToken introspection cache", () => {
     expect(first.state.access.provenance).toBe("introspected");
   });
 
-  // Serving an earlier answer while the AS is unreachable is a revocation
-  // bypass with extra steps.
+  /**
+   * Serving an earlier answer while the AS is unreachable is a revocation bypass
+   * with extra steps — so nothing is cached and the failure propagates.
+   *
+   * ⚠ PROPAGATES AS ITSELF. It used to be converted into a 401
+   * `access_token_verification_failed`, because the middleware wrapped every
+   * error it did not recognise. A driver whose store or transport failed
+   * therefore told the caller its credential was bad and hid the 500 from the
+   * operator — on the hot path for every opaque token.
+   */
   test("should cache nothing and propagate when introspection fails", async () => {
     const middleware = useAccessToken();
     introspect.mockRejectedValue(new Error("authorization server is down"));
 
     await expect(middleware(createContext({ kv, introspect }), next)).rejects.toThrow(
-      ClientError,
+      "authorization server is down",
     );
 
     const rows = await kv.repository(CachedIntrospection).find({});
     expect(rows).toHaveLength(0);
 
     await expect(middleware(createContext({ kv, introspect }), next)).rejects.toThrow(
-      ClientError,
+      "authorization server is down",
     );
     expect(introspect).toHaveBeenCalledTimes(2);
+  });
+
+  /**
+   * The FILED bug, in the shape it was reported: the introspection driver's own
+   * storage failed, and the caller was told its access token was invalid.
+   *
+   * `ProteusError` extends `LindormError` DIRECTLY — it is neither a
+   * `ClientError` nor a `ServerError` — which is exactly why the old
+   * "rethrow those two, wrap everything else" catch laundered it into a 401.
+   */
+  test("should propagate a driver storage failure instead of reporting a bad credential", async () => {
+    const middleware = useAccessToken();
+
+    // The shape of a `ProteusError`: a LindormError that is neither of the two
+    // the old catch recognised. Constructed here rather than imported so the
+    // test states the PROPERTY that matters rather than depending on proteus.
+    class StorageError extends LindormError {
+      static readonly namespace = "proteus";
+    }
+    introspect.mockRejectedValue(
+      new StorageError("Connection refused", { code: "connection_refused" }),
+    );
+
+    const ctx = createContext({ kv, introspect });
+
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      code: "connection_refused",
+    });
+    await expect(middleware(ctx, next)).rejects.not.toBeInstanceOf(ClientError);
+    expect(ctx.state.access).toBeNull();
+    expect(next).not.toHaveBeenCalled();
   });
 
   // No client identity ⇒ no key that is safe to share (RFC 7662 §2.2), so the

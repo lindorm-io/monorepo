@@ -44,8 +44,9 @@ amphora.add([
 
 // ONE middleware for every transport. Mounted as connection middleware it runs
 // the handshake, rejecting anonymous sockets — so scope it to the `/authorized`
-// namespace, leaving the default and `/other` namespaces open. It populates
-// `socket.data.tokens.bearer`, which the `/authorized` listener reads.
+// namespace, leaving the default and `/other` namespaces open. It records what
+// the connection authenticated as on `socket.data.pylon.access`, which the
+// `/authorized` listener reads back off `ctx.state.access`.
 //
 // It takes no issuer. The driver below names a SCOPE, amphora settles the issuer
 // for that scope while fetching its keys, and pylon records the answer on

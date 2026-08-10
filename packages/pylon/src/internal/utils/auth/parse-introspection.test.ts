@@ -304,6 +304,49 @@ describe("parseIntrospection", () => {
       expect(result).not.toHaveProperty("givenName");
       expect(result.custom).toEqual({});
     });
+
+    /**
+     * The SENSITIVE carve-out, the profile carve-out's twin. Aegis partitions
+     * the `category: "sensitive"` claims into their own bucket and surfaces them
+     * only on an encrypted token (OIDC Core §13.3) — so a locally verified token
+     * NEVER resolves a national identity number into `claims`, and until now an
+     * introspection answer did.
+     *
+     * That was both a divergence between the two provenances and a leak of a
+     * kind `PylonResolvedAccess` exists to prevent: it answers ONE question —
+     * may this request do this — and a national identity number bears on none
+     * of it. `DomainClaims` does not declare these fields at all, so letting
+     * them through also made the type a lie.
+     */
+    test("should drop the sensitive identity claims rather than bucket them", () => {
+      const result = parseActive({
+        active: true,
+        sub: "user-sensitive",
+        national_identity_number: "01019012345",
+        national_identity_number_verified: true,
+        social_security_number: "078-05-1120",
+        social_security_number_verified: false,
+      });
+
+      expect(result).not.toHaveProperty("nationalIdentityNumber");
+      expect(result).not.toHaveProperty("nationalIdentityNumberVerified");
+      expect(result).not.toHaveProperty("socialSecurityNumber");
+      expect(result).not.toHaveProperty("socialSecurityNumberVerified");
+      expect(result.custom).toEqual({});
+      expect(JSON.stringify(result)).not.toContain("01019012345");
+    });
+
+    test("should drop them in their camelCase form too", () => {
+      const result = parseActive({
+        active: true,
+        sub: "user-sensitive-camel",
+        nationalIdentityNumber: "01019012345",
+        scope: "openid",
+      });
+
+      expect(result).not.toHaveProperty("nationalIdentityNumber");
+      expect(result.scope).toEqual(["openid"]);
+    });
   });
 
   test("should wrap single audience string in array", () => {

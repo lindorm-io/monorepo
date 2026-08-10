@@ -1,19 +1,17 @@
-import {
-  isClaimsBearingToken,
-  type DomainAssert,
-  type VerifyOptions,
-} from "@lindorm/aegis";
+import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import type { PylonAuthCacheEntry, PylonHttpContext } from "../../../types/index.js";
-import { assertDpopHttpBinding } from "../dpop/assert-dpop-http-binding.js";
+import { assertDpopBinding } from "../dpop/assert-dpop-binding.js";
 import { extractTokenFromSession } from "../tokens/extract-token-from-session.js";
 import { resolveHttpTokenSource } from "../tokens/resolve-http-token-source.js";
-import { splitVerifyInput } from "../tokens/split-verify-input.js";
-import { resolveAccessIssuer } from "./resolve-access-issuer.js";
+import { sessionResolvedAccess } from "../tokens/session-resolved-access.js";
+import { assertResolvedAccess } from "./assert-resolved-access.js";
+import { resolveAccess } from "./resolve-access.js";
 
 type Options = {
   cache: PylonAuthCacheEntry | undefined;
-  verifyInput: Omit<DomainAssert & VerifyOptions, "issuer">;
+  matchers: DomainAssert;
+  verifyOptions: VerifyOptions;
 };
 
 export const runHttpAccessToken = async (
@@ -39,96 +37,22 @@ export const runHttpAccessToken = async (
       });
     }
 
-    // The routing question is whether aegis can establish this credential's
-    // CLAIMS locally — not which wire family it belongs to. A signed but OPAQUE
-    // token (a JWS, or its COSE twin a CWS) is an authorization server's handle:
-    // aegis can check its signature and still learn nothing, so verifying it
-    // here would resolve an access state with EMPTY claims — no expiry, no
-    // revocation, no grant — while never asking the only party that knows.
-    // Aegis owns the claims-bearing taxonomy (it is the same split its `parse`
-    // draws), so the predicate is its, not a second copy here.
-    //
-    // SNIFFED from the wire, never inferred from a failed verify: falling
-    // through on failure would hand a tampered JWT to introspection, asking an
-    // authorization server about a string it never issued.
-    if (isClaimsBearingToken(source.token)) {
-      // `trustBoundThumbprint` tells aegis the CALLER validates the DPoP binding
-      // — which pylon now does, uniformly, in `assertDpopHttpBinding` below.
-      // Without it aegis would reject every bound token for want of a proof it
-      // was not given, and handing it the proof as well would mean verifying the
-      // same proof twice on the verified path and once on the introspected one —
-      // two implementations of one check, free to drift.
-      const { assert, options: verifyOptions } = splitVerifyInput({
-        tokenType: "access_token",
-        issuer: resolveAccessIssuer(ctx),
-        ...options.verifyInput,
-        trustBoundThumbprint: true,
-      } as DomainAssert & VerifyOptions);
+    const { access, issuer, verified } = await resolveAccess(ctx, source.token, {
+      cache: options.cache,
+      verifyOptions: options.verifyOptions,
+    });
 
-      const verified = await ctx.aegis.verify(source.token, assert, verifyOptions);
+    assertResolvedAccess(access, { issuer, matchers: options.matchers });
 
-      ctx.state.tokens.accessToken = verified;
-      ctx.state.access = {
-        provenance: "verified",
-        claims: verified.claims,
-        custom: verified.custom,
-        token: source.token,
-      };
-    } else {
-      // Opaque ⇒ the authorization server is the only authority on it (RFC
-      // 7662), and a driver with no `introspect` cannot ask. That is the NORMAL
-      // configuration for a service that mints and verifies its own JWTs, so it
-      // is answered as what it is — this deployment does not accept opaque
-      // credentials — rather than as a verification that mysteriously failed.
-      if (!ctx.state.app.config.auth?.capabilities.introspect) {
-        throw new ClientError("Opaque access tokens are not accepted", {
-          status: ClientError.Status.Unauthorized,
-          code: "opaque_token_not_supported",
-          type: "urn:lindorm:pylon:error:opaque_token_not_supported",
-          title: "Opaque Token Not Supported",
-          details:
-            "The presented credential carries no claims layer this service can verify locally — it is an opaque handle, or a signed blob (JWS/CWS) with no claims — and the configured auth driver implements no `introspect` method (RFC 7662) to resolve it with. Present a claims-bearing token (JWT, CWT, or a sign-then-encrypt JWE/CWE wrapping one).",
-        });
-      }
+    // `ctx.state.tokens.accessToken` is left UNSET on the introspected arm:
+    // there is no VerifiedToken, and synthesising one would erase the very
+    // provenance distinction `ctx.state.access` exists to preserve.
+    if (verified) ctx.state.tokens.accessToken = verified;
+    ctx.state.access = access;
 
-      // ONE introspection call site. The cache is INSIDE `ctx.auth.introspect`
-      // — short-lived by construction, the TTL being the revocation window (RFC
-      // 7662 §5) — so this mount states only its own carve-out and never picks
-      // between a cached resolver and an uncached one.
-      const introspection = await ctx.auth.introspect(source.token, {
-        cache: options.cache,
-      });
-
-      if (!introspection.active) {
-        throw new ClientError("Access token is not active", {
-          status: ClientError.Status.Unauthorized,
-          code: "token_not_active",
-          type: "urn:lindorm:pylon:error:token_not_active",
-          title: "Token Not Active",
-          details: "Token introspection returned active: false",
-        });
-      }
-
-      // `active` and `tokenType` are RFC 7662 §2.2 facts about the ANSWER, not
-      // claims of the token, so neither reaches the resolved credential: `active`
-      // is a rejection signal already consumed above (it would be permanently
-      // `true` here), and `tokenType` has no counterpart on the verified path —
-      // leaving it in would put a field in `claims` that only ever appears on one
-      // provenance and that `DomainClaims` does not declare.
-      const { active: _active, custom, tokenType: _tokenType, ...claims } = introspection;
-
-      // `ctx.state.tokens.accessToken` is deliberately left UNSET here: there is
-      // no VerifiedToken, and synthesising one would erase the very provenance
-      // distinction `ctx.state.access` exists to preserve.
-      ctx.state.access = {
-        provenance: "introspected",
-        claims,
-        custom,
-        token: source.token,
-      };
-    }
-
-    assertDpopHttpBinding(ctx, ctx.state.access, {
+    assertDpopBinding(access, {
+      htm: ctx.method,
+      htu: { origin: ctx.origin, path: ctx.path },
       proof: dpopProof,
       scheme: source.kind === "dpop",
     });
@@ -147,16 +71,18 @@ export const runHttpAccessToken = async (
         debug: { sessionId: source.session.id },
       });
     }
+
     ctx.state.tokens.accessToken = parsed;
     // A cookie-session credential is presented by the browser, not by a DPoP
     // client — there is no proof to bind it to, so no binding check runs (the
     // pre-existing behaviour: the session path never passed a proof to aegis).
-    ctx.state.access = {
-      provenance: "verified",
-      claims: parsed.claims,
-      custom: parsed.custom,
-      token: source.session.accessToken,
-    };
+    //
+    // ⚠ It does not run the shared assert either, and that is a KNOWN gap rather
+    // than a decision: `extractTokenFromSession` verifies with no issuer matcher
+    // and no mount matchers at all, so making it answer to them is a change of
+    // its own (a deployment that settled no issuer but serves cookie sessions
+    // would start failing here). It is left exactly as it was.
+    ctx.state.access = sessionResolvedAccess(source.session.accessToken, parsed);
     return;
   }
 

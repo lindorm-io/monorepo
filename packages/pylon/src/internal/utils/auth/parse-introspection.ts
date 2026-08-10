@@ -8,6 +8,7 @@ import type {
   PylonIntrospectionActive,
 } from "../../../types/index.js";
 import { PROFILE_CLAIM_KEYS } from "./profile-claim-keys.js";
+import { SENSITIVE_CLAIM_KEYS } from "./sensitive-claim-keys.js";
 
 // Permissive structural input — a consumer's `IntrospectResponse` or a plain
 // JSON body from the introspection endpoint passes through without a cast.
@@ -15,12 +16,18 @@ export type IntrospectClaimsInput = Dict & {
   active?: unknown;
 };
 
-// Drop the AegisProfile-category claims the translator surfaced — an
-// introspection response is not a profile (RFC 7662 vs OIDC §5.3).
-const omitProfileClaims = (claims: Dict): Dict => {
+// Drop the IDENTITY claims the translator surfaced: the AegisProfile category
+// (an introspection response is not a profile — RFC 7662 vs OIDC §5.3) and the
+// AegisSensitive category (which `DomainClaims` does not declare, and which the
+// locally-verified path suppresses on an unencrypted token per OIDC Core §13.3).
+// Both are identity, and `ctx.state.access.claims` answers an authorization
+// question; keeping either would make the introspected arm resolve a wider claim
+// set than the verified one.
+const omitIdentityClaims = (claims: Dict): Dict => {
   const result: Dict = {};
   for (const key of Object.keys(claims)) {
-    if (!PROFILE_CLAIM_KEYS.has(key)) result[key] = claims[key];
+    if (PROFILE_CLAIM_KEYS.has(key) || SENSITIVE_CLAIM_KEYS.has(key)) continue;
+    result[key] = claims[key];
   }
   return result;
 };
@@ -67,7 +74,7 @@ export const parseIntrospection = (data: IntrospectClaimsInput): PylonIntrospect
   const { claims, custom } = Aegis.toDomain(data);
 
   return omitUndefined({
-    ...omitProfileClaims(claims),
+    ...omitIdentityClaims(claims),
     active: true as const,
     custom: pickCustomClaims(custom),
     tokenType: isString(data.tokenType)

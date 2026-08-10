@@ -2,6 +2,7 @@ import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import type {
   HandshakeDpopMode,
+  PylonAuthCacheEntry,
   PylonSocketAuth,
   PylonSocketHandshakeContext,
 } from "../../../types/index.js";
@@ -9,11 +10,13 @@ import { registerBearerHandshakeAuth } from "../handshake/register-bearer-handsh
 import { createSessionRefreshHandler } from "../refresh/create-session-refresh-handler.js";
 import { extractTokenFromSession } from "../tokens/extract-token-from-session.js";
 import { resolveHandshakeTokenSource } from "../tokens/resolve-handshake-token-source.js";
-import { resolveAccessIssuer } from "./resolve-access-issuer.js";
+import { sessionResolvedAccess } from "../tokens/session-resolved-access.js";
 
 type Options = {
+  cache: PylonAuthCacheEntry | undefined;
   dpopMode: HandshakeDpopMode;
-  verifyInput: Omit<DomainAssert & VerifyOptions, "issuer">;
+  matchers: DomainAssert;
+  verifyOptions: VerifyOptions;
 };
 
 export const runHandshakeAccessToken = async (
@@ -24,16 +27,13 @@ export const runHandshakeAccessToken = async (
   const source = resolveHandshakeTokenSource(socket);
 
   if (source.kind === "bearer" || source.kind === "dpop") {
-    await registerBearerHandshakeAuth({
-      aegis: ctx.aegis,
+    await registerBearerHandshakeAuth(ctx, {
+      cache: options.cache,
       dpopMode: options.dpopMode,
       dpopProof: source.kind === "dpop" ? source.dpopProof : undefined,
-      socket,
+      matchers: options.matchers,
       token: source.token,
-      verifyOptions: {
-        issuer: resolveAccessIssuer(ctx),
-        ...options.verifyInput,
-      } as DomainAssert & VerifyOptions,
+      verifyOptions: options.verifyOptions,
     });
     return;
   }
@@ -45,7 +45,13 @@ export const runHandshakeAccessToken = async (
     if (socket.data.pylon.auth) return;
 
     const parsed = await extractTokenFromSession(ctx.aegis, source.session);
-    if (parsed) socket.data.tokens.bearer = parsed;
+    if (parsed) {
+      socket.data.tokens.bearer = parsed;
+      socket.data.pylon.access = sessionResolvedAccess(
+        source.session.accessToken,
+        parsed,
+      );
+    }
 
     const auth: PylonSocketAuth = {
       strategy: "session",

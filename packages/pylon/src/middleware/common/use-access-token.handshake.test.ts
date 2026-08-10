@@ -1,8 +1,13 @@
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import {
+  createDpopTestClient,
+  type DpopTestClient,
+} from "../../__fixtures__/access/dpop.js";
+import { OPAQUE_TOKEN, joseShapedToken } from "../../__fixtures__/access/tokens.js";
 import { useAccessToken } from "./use-access-token.js";
-import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import {
   createTestAppConfig,
   createTestAuthConfig,
@@ -10,13 +15,23 @@ import {
 
 const APP_CONFIG = createTestAppConfig({ auth: createTestAuthConfig() });
 
-/** The issuer `useAccessToken` reads off the policy above. No mount states it. */
-const ISSUER = "https://test.lindorm.io/";
+/**
+ * ⚠ A JOSE-SHAPED token, not the bare string `"jwt-token"` this suite used to
+ * present. The handshake arm now runs the same claims-bearing SNIFF as HTTP, and
+ * a bare handle is routed to introspection — which is what these tests are NOT
+ * about. The old fixture only ever reached `aegis.verify` because the handshake
+ * arm called it unconditionally.
+ */
+const TOKEN = joseShapedToken();
+
+/** The verify KNOBS every structured handshake resolve passes now. */
+const VERIFY_OPTIONS = { tokenType: "access_token", trustBoundThumbprint: true };
 
 const makeCtx = (overrides: any = {}): any => {
   const aegis = createMockAegis();
   return {
     aegis,
+    auth: { introspect: vi.fn() },
     logger: createMockLogger(),
     handshakeId: "hsk-1",
     state: { access: null, app: { config: APP_CONFIG }, tokens: {} },
@@ -40,23 +55,6 @@ const makeCtx = (overrides: any = {}): any => {
   };
 };
 
-const makeDpopVerifyResult = (overrides: any = {}) => ({
-  claims: {
-    subject: "alice",
-    expiresAt: new Date("2026-04-11T12:05:00.000Z"),
-    confirmation: { thumbprint: "jkt-abc" },
-    ...overrides.claims,
-  },
-  header: { tokenType: "access_token" },
-  token: "jwt-token",
-  dpop: {
-    httpMethod: "GET",
-    httpUri: "https://api.example.com/socket.io/",
-    ...overrides.dpop,
-  },
-  ...overrides.top,
-});
-
 describe("useAccessToken — socket handshake", () => {
   let next: Mock;
 
@@ -67,23 +65,19 @@ describe("useAccessToken — socket handshake", () => {
   describe("bearer path", () => {
     test("verifies bearer and registers bearer strategy auth", async () => {
       const ctx = makeCtx();
-      ctx.io.socket.handshake.auth.bearer = "jwt-token";
+      ctx.io.socket.handshake.auth.bearer = TOKEN;
 
       const exp = new Date("2026-04-11T12:05:00.000Z");
       (ctx.aegis.verify as Mock).mockResolvedValue({
         claims: { subject: "alice", expiresAt: exp },
         header: { tokenType: "access_token" },
-        token: "jwt-token",
+        token: TOKEN,
       });
 
       const mw = useAccessToken();
       await mw(ctx, next);
 
-      expect(ctx.aegis.verify).toHaveBeenCalledWith(
-        "jwt-token",
-        { issuer: ISSUER },
-        { tokenType: "access_token", dpopProof: undefined },
-      );
+      expect(ctx.aegis.verify).toHaveBeenCalledWith(TOKEN, undefined, VERIFY_OPTIONS);
       expect(ctx.io.socket.data.tokens.bearer).toMatchSnapshot();
       expect(ctx.io.socket.data.pylon.auth.strategy).toBe("bearer");
       expect(ctx.io.socket.data.pylon.auth.getExpiresAt()).toEqual(exp);
@@ -97,7 +91,7 @@ describe("useAccessToken — socket handshake", () => {
     // no status and the connection error handler logged it as a server fault.
     test("wraps a raw verification failure as an unauthorized client error", async () => {
       const ctx = makeCtx();
-      ctx.io.socket.handshake.auth.bearer = "bad-jwt";
+      ctx.io.socket.handshake.auth.bearer = TOKEN;
       (ctx.aegis.verify as Mock).mockRejectedValue(new Error("bad signature"));
 
       const mw = useAccessToken();
@@ -113,7 +107,7 @@ describe("useAccessToken — socket handshake", () => {
     // wrapping every failure into one code would erase the reason.
     test("passes a named client error through unwrapped", async () => {
       const ctx = makeCtx();
-      ctx.io.socket.handshake.auth.bearer = "jwt-token";
+      ctx.io.socket.handshake.auth.bearer = TOKEN;
 
       const mw = useAccessToken({ dpop: "required" });
       await expect(mw(ctx, next)).rejects.toMatchObject({
@@ -126,13 +120,13 @@ describe("useAccessToken — socket handshake", () => {
 
       try {
         const ctx = makeCtx();
-        ctx.io.socket.handshake.auth.bearer = "jwt-token";
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
 
         const initExp = new Date("2026-04-11T12:05:00.000Z");
         (ctx.aegis.verify as Mock).mockResolvedValueOnce({
           claims: { subject: "alice", expiresAt: initExp },
           header: {},
-          token: "jwt-token",
+          token: TOKEN,
         });
 
         const mw = useAccessToken();
@@ -166,12 +160,12 @@ describe("useAccessToken — socket handshake", () => {
 
     test("bearer refresh handler throws on subject mismatch", async () => {
       const ctx = makeCtx();
-      ctx.io.socket.handshake.auth.bearer = "jwt-token";
+      ctx.io.socket.handshake.auth.bearer = TOKEN;
 
       (ctx.aegis.verify as Mock).mockResolvedValueOnce({
         claims: { subject: "alice", expiresAt: new Date() },
         header: {},
-        token: "jwt-token",
+        token: TOKEN,
       });
 
       const mw = useAccessToken();
@@ -276,58 +270,82 @@ describe("useAccessToken — socket handshake", () => {
     });
   });
 
+  /**
+   * ⚠ REAL proofs, signed by a real client key. Pylon now runs the RFC 9449 §7.1
+   * proof check ITSELF (`Aegis.verifyDpopProof`, a static — the mocked instance
+   * cannot stand in for it) against the RECONSTRUCTED handshake `htu`, instead of
+   * handing the proof to `aegis.verify` and comparing what came back. That is the
+   * same check the HTTP arm runs, which is what extends proof-of-possession to a
+   * DPoP-bound OPAQUE credential over a socket.
+   */
   describe("DPoP path", () => {
-    // `aegis.parse` is now an INSTANCE method (was the static `Aegis.parse`), so
-    // the preflight jkt is stubbed on the ctx's own mock aegis.
-    const mockPreflightJkt = (ctx: any, jkt = "jkt-abc") => {
-      (ctx.aegis.parse as Mock).mockReturnValue({
-        claims: { confirmation: { thumbprint: jkt } },
-      });
-    };
+    const HANDSHAKE_HTU = "https://api.example.com/socket.io/";
+
+    let client: DpopTestClient;
+
+    beforeAll(async () => {
+      client = await createDpopTestClient();
+    });
+
+    const boundVerifyResult = (overrides: any = {}) => ({
+      claims: {
+        subject: "alice",
+        expiresAt: new Date("2099-04-11T12:05:00.000Z"),
+        confirmation: { thumbprint: client.jkt },
+        ...overrides.claims,
+      },
+      custom: {},
+      header: { tokenType: "access_token" },
+      token: TOKEN,
+    });
+
+    const unboundVerifyResult = () => ({
+      claims: { subject: "alice", expiresAt: new Date("2099-04-11T12:05:00.000Z") },
+      custom: {},
+      header: {},
+      token: TOKEN,
+    });
+
+    const proofFor = (uri = HANDSHAKE_HTU, accessToken = TOKEN) =>
+      client.sign({ method: "GET", uri, accessToken });
 
     describe('dpop: "required"', () => {
       test("rejects when DPoP header is missing", async () => {
         const ctx = makeCtx();
-        ctx.io.socket.handshake.auth.bearer = "jwt-token";
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
 
         const mw = useAccessToken({ dpop: "required" });
-        await expect(mw(ctx, next)).rejects.toThrow(ClientError);
+        await expect(mw(ctx, next)).rejects.toMatchObject({
+          code: "handshake_dpop_proof_required",
+        });
         expect(ctx.aegis.verify).not.toHaveBeenCalled();
       });
 
       test("rejects when bearer-only token (no cnf.jkt) is presented", async () => {
         const ctx = makeCtx();
-        ctx.io.socket.handshake.auth.bearer = "jwt-token";
-        ctx.io.socket.handshake.headers.dpop = "proof-jwt";
-        (ctx.aegis.verify as Mock).mockResolvedValue({
-          claims: { subject: "alice", expiresAt: new Date() },
-          header: {},
-          token: "jwt-token",
-          dpop: {
-            httpMethod: "GET",
-            httpUri: "https://api.example.com/socket.io/",
-          },
-        });
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
+        ctx.io.socket.handshake.headers.dpop = await proofFor();
+        (ctx.aegis.verify as Mock).mockResolvedValue(unboundVerifyResult());
 
         const mw = useAccessToken({ dpop: "required" });
-        await expect(mw(ctx, next)).rejects.toThrow(ClientError);
+        await expect(mw(ctx, next)).rejects.toMatchObject({
+          code: "handshake_dpop_binding_missing",
+        });
       });
 
       test("accepts jkt-bound token + valid proof, strategy = dpop-bearer", async () => {
         const ctx = makeCtx();
-        mockPreflightJkt(ctx);
-        ctx.io.socket.handshake.auth.bearer = "jwt-token";
-        ctx.io.socket.handshake.headers.dpop = "proof-jwt";
-        (ctx.aegis.verify as Mock).mockResolvedValue(makeDpopVerifyResult());
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
+        ctx.io.socket.handshake.headers.dpop = await proofFor();
+        (ctx.aegis.verify as Mock).mockResolvedValue(boundVerifyResult());
 
         const mw = useAccessToken({ dpop: "required" });
         await mw(ctx, next);
 
-        expect(ctx.aegis.verify).toHaveBeenCalledWith(
-          "jwt-token",
-          { issuer: ISSUER },
-          { tokenType: "access_token", dpopProof: "proof-jwt" },
-        );
+        // ⚠ The proof is NOT handed to aegis any more. Pylon runs the binding
+        // check itself — the same `assertDpopBinding` the HTTP arm uses — so the
+        // proof is verified in ONE place for both provenances.
+        expect(ctx.aegis.verify).toHaveBeenCalledWith(TOKEN, undefined, VERIFY_OPTIONS);
         expect(ctx.io.socket.data.pylon.auth.strategy).toBe("dpop-bearer");
         expect(next).toHaveBeenCalledTimes(1);
       });
@@ -336,12 +354,8 @@ describe("useAccessToken — socket handshake", () => {
     describe('dpop: "optional" (default)', () => {
       test("accepts bearer-only token, strategy = bearer", async () => {
         const ctx = makeCtx();
-        ctx.io.socket.handshake.auth.bearer = "jwt-token";
-        (ctx.aegis.verify as Mock).mockResolvedValue({
-          claims: { subject: "alice", expiresAt: new Date() },
-          header: {},
-          token: "jwt-token",
-        });
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
+        (ctx.aegis.verify as Mock).mockResolvedValue(unboundVerifyResult());
 
         const mw = useAccessToken();
         await mw(ctx, next);
@@ -351,10 +365,9 @@ describe("useAccessToken — socket handshake", () => {
 
       test("accepts jkt-bound token + valid proof, strategy = dpop-bearer", async () => {
         const ctx = makeCtx();
-        mockPreflightJkt(ctx);
-        ctx.io.socket.handshake.auth.bearer = "jwt-token";
-        ctx.io.socket.handshake.headers.dpop = "proof-jwt";
-        (ctx.aegis.verify as Mock).mockResolvedValue(makeDpopVerifyResult());
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
+        ctx.io.socket.handshake.headers.dpop = await proofFor();
+        (ctx.aegis.verify as Mock).mockResolvedValue(boundVerifyResult());
 
         const mw = useAccessToken();
         await mw(ctx, next);
@@ -364,55 +377,70 @@ describe("useAccessToken — socket handshake", () => {
 
       test("rejects jkt-bound token without proof (strict per token)", async () => {
         const ctx = makeCtx();
-        mockPreflightJkt(ctx);
-        ctx.io.socket.handshake.auth.bearer = "jwt-token";
-        (ctx.aegis.verify as Mock).mockResolvedValue({
-          claims: {
-            subject: "alice",
-            expiresAt: new Date(),
-            confirmation: { thumbprint: "jkt-abc" },
-          },
-          header: {},
-          token: "jwt-token",
-        });
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
+        (ctx.aegis.verify as Mock).mockResolvedValue(boundVerifyResult());
 
         const mw = useAccessToken();
-        await expect(mw(ctx, next)).rejects.toThrow(ClientError);
+        await expect(mw(ctx, next)).rejects.toMatchObject({
+          code: "missing_dpop_proof",
+        });
       });
 
       test("rejects invalid DPoP proof (htu mismatch)", async () => {
         const ctx = makeCtx();
-        mockPreflightJkt(ctx);
-        ctx.io.socket.handshake.auth.bearer = "jwt-token";
-        ctx.io.socket.handshake.headers.dpop = "proof-jwt";
-        (ctx.aegis.verify as Mock).mockResolvedValue(
-          makeDpopVerifyResult({
-            dpop: {
-              httpMethod: "GET",
-              httpUri: "https://evil.example.com/socket.io/",
-            },
-          }),
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
+        ctx.io.socket.handshake.headers.dpop = await proofFor(
+          "https://evil.example.com/socket.io/",
         );
+        (ctx.aegis.verify as Mock).mockResolvedValue(boundVerifyResult());
 
         const mw = useAccessToken();
-        await expect(mw(ctx, next)).rejects.toThrow(ClientError);
+        await expect(mw(ctx, next)).rejects.toMatchObject({
+          code: "dpop_htu_mismatch",
+        });
+      });
+
+      // The §7 `ath` binds the proof to the token it was presented with, so a
+      // proof lifted from another exchange cannot be replayed against this one.
+      test("rejects a proof signed over a different access token", async () => {
+        const ctx = makeCtx();
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
+        ctx.io.socket.handshake.headers.dpop = await proofFor(
+          HANDSHAKE_HTU,
+          joseShapedToken({ sub: "mallory" }),
+        );
+        (ctx.aegis.verify as Mock).mockResolvedValue(boundVerifyResult());
+
+        const mw = useAccessToken();
+        await expect(mw(ctx, next)).rejects.toMatchObject({
+          code: "invalid_dpop_proof",
+        });
+      });
+
+      // The proof's own key must be the one the token is bound to.
+      test("rejects a proof from a key the token is not bound to", async () => {
+        const other = await createDpopTestClient();
+        const ctx = makeCtx();
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
+        ctx.io.socket.handshake.headers.dpop = await other.sign({
+          method: "GET",
+          uri: HANDSHAKE_HTU,
+          accessToken: TOKEN,
+        });
+        (ctx.aegis.verify as Mock).mockResolvedValue(boundVerifyResult());
+
+        const mw = useAccessToken();
+        await expect(mw(ctx, next)).rejects.toMatchObject({
+          code: "invalid_dpop_proof",
+        });
       });
     });
 
     describe('dpop: "disabled"', () => {
       test("accepts jkt-bound token without proof as plain bearer", async () => {
         const ctx = makeCtx();
-        mockPreflightJkt(ctx);
-        ctx.io.socket.handshake.auth.bearer = "jwt-token";
-        (ctx.aegis.verify as Mock).mockResolvedValue({
-          claims: {
-            subject: "alice",
-            expiresAt: new Date(),
-            confirmation: { thumbprint: "jkt-abc" },
-          },
-          header: {},
-          token: "jwt-token",
-        });
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
+        (ctx.aegis.verify as Mock).mockResolvedValue(boundVerifyResult());
 
         const mw = useAccessToken({ dpop: "disabled" });
         await mw(ctx, next);
@@ -423,10 +451,9 @@ describe("useAccessToken — socket handshake", () => {
 
     describe("refresh handler with captured jkt", () => {
       const installDpopHandshake = async (ctx: any) => {
-        mockPreflightJkt(ctx);
-        ctx.io.socket.handshake.auth.bearer = "jwt-token";
-        ctx.io.socket.handshake.headers.dpop = "proof-jwt";
-        (ctx.aegis.verify as Mock).mockResolvedValueOnce(makeDpopVerifyResult());
+        ctx.io.socket.handshake.auth.bearer = TOKEN;
+        ctx.io.socket.handshake.headers.dpop = await proofFor();
+        (ctx.aegis.verify as Mock).mockResolvedValueOnce(boundVerifyResult());
 
         const mw = useAccessToken();
         await mw(ctx, next);
@@ -439,9 +466,10 @@ describe("useAccessToken — socket handshake", () => {
         (ctx.aegis.verify as Mock).mockResolvedValueOnce({
           claims: {
             subject: "alice",
-            expiresAt: new Date("2026-04-11T13:00:00.000Z"),
-            confirmation: { thumbprint: "jkt-abc" },
+            expiresAt: new Date("2099-04-11T13:00:00.000Z"),
+            confirmation: { thumbprint: client.jkt },
           },
+          custom: {},
           header: {},
           token: "new-jwt",
         });
@@ -464,6 +492,7 @@ describe("useAccessToken — socket handshake", () => {
             expiresAt: new Date(),
             confirmation: { thumbprint: "jkt-xyz" },
           },
+          custom: {},
           header: {},
           token: "new-jwt",
         });
@@ -482,6 +511,7 @@ describe("useAccessToken — socket handshake", () => {
 
         (ctx.aegis.verify as Mock).mockResolvedValueOnce({
           claims: { subject: "alice", expiresAt: new Date() },
+          custom: {},
           header: {},
           token: "new-jwt",
         });

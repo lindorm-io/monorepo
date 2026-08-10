@@ -1,6 +1,7 @@
 import { AegisError, type IAegis } from "@lindorm/aegis";
 import type { IPylonSession } from "../../../interfaces/index.js";
 import type { PylonSocket } from "../../../types/index.js";
+import { sessionResolvedAccess } from "../tokens/session-resolved-access.js";
 import { assertSessionStillValid } from "./assert-session-still-valid.js";
 
 export type SessionLookup = (sessionId: string) => Promise<IPylonSession | null>;
@@ -30,6 +31,9 @@ export const createSessionRefreshHandler = ({
       const verified = await aegis.verify(session.accessToken);
       if (verified.format === "jwt") {
         socket.data.tokens.bearer = verified;
+        // Republished alongside the parsed token, or the socket fast path would
+        // keep serving the claims of the token this refresh replaced.
+        socket.data.pylon.access = sessionResolvedAccess(session.accessToken, verified);
 
         const auth = socket.data.pylon.auth;
         if (auth) {

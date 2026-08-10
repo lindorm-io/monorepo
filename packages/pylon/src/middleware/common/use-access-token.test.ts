@@ -13,9 +13,6 @@ import {
  *  server, so the opaque arm is reachable. */
 const APP_CONFIG = createTestAppConfig({ auth: createTestAuthConfig() });
 
-/** The issuer `useAccessToken` reads off the policy above. No mount states it. */
-const ISSUER = "https://test.lindorm.io/";
-
 describe("useAccessToken", () => {
   let next: Mock;
 
@@ -47,9 +44,13 @@ describe("useAccessToken", () => {
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
+      // ⚠ `assert` is `undefined`. The claim matchers — including the ISSUER —
+      // are no longer handed to verify: they run once, afterwards, over the
+      // resolved claims of whichever arm produced them, which is what makes a
+      // mount's matchers apply to an opaque credential too.
       expect(ctx.aegis.verify).toHaveBeenCalledWith(
         joseShapedToken(),
-        { issuer: ISSUER },
+        undefined,
         // pylon owns the DPoP binding check now, so aegis is told to trust the
         // bound thumbprint rather than demand a proof it was never handed.
         { tokenType: "access_token", trustBoundThumbprint: true },
@@ -169,7 +170,7 @@ describe("useAccessToken", () => {
 
       expect(ctx.aegis.verify).toHaveBeenCalledWith(
         joseShapedToken(),
-        { issuer: ISSUER },
+        undefined,
         expect.objectContaining({ tokenType: "access_token" }),
       );
     });
@@ -208,6 +209,15 @@ describe("useAccessToken", () => {
         format: "jwt",
         token: "socket-jwt",
       };
+      // What the handshake arm leaves behind. The fast path republishes THIS
+      // rather than rebuilding an access shape from the parsed token, because an
+      // opaque credential produces no parsed token at all.
+      const handshakeAccess = {
+        provenance: "verified" as const,
+        claims: parsedBearer.claims,
+        custom: parsedBearer.custom,
+        token: parsedBearer.token,
+      };
       return {
         aegis: createMockAegis(),
         auth: { introspect: vi.fn() },
@@ -219,6 +229,7 @@ describe("useAccessToken", () => {
             data: {
               tokens: { bearer: parsedBearer },
               pylon: {
+                access: handshakeAccess,
                 auth: {
                   strategy: "bearer",
                   getExpiresAt: () => new Date("2099-01-01T00:00:00.000Z"),
@@ -313,7 +324,7 @@ describe("useAccessToken", () => {
         handshakeId: "abc",
         io: {
           socket: {
-            handshake: { auth: { bearer: "jwt-token" }, headers: {} },
+            handshake: { auth: { bearer: joseShapedToken() }, headers: {} },
             data: { tokens: {}, pylon: {} },
           },
         },
@@ -323,16 +334,15 @@ describe("useAccessToken", () => {
         claims: { subject: "alice", expiresAt: new Date("2099-01-01T00:00:00.000Z") },
         custom: {},
         header: { tokenType: "access_token" },
-        token: "jwt-token",
+        token: joseShapedToken(),
       });
 
       await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
 
-      expect(ctx.aegis.verify).toHaveBeenCalledWith(
-        "jwt-token",
-        { issuer: ISSUER },
-        { tokenType: "access_token", dpopProof: undefined },
-      );
+      expect(ctx.aegis.verify).toHaveBeenCalledWith(joseShapedToken(), undefined, {
+        tokenType: "access_token",
+        trustBoundThumbprint: true,
+      });
       expect(ctx.io.socket.data.pylon.auth.strategy).toBe("bearer");
       expect(next).toHaveBeenCalledTimes(1);
     });
@@ -415,7 +425,10 @@ describe("useAccessToken", () => {
       (ctx.aegis.verify as Mock).mockRejectedValue(new Error("invalid signature"));
 
       const middleware = useAccessToken();
-      await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
+      await expect(middleware(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        code: "access_token_verification_failed",
+      });
       expect(ctx.state.access).toBeNull();
     });
   });

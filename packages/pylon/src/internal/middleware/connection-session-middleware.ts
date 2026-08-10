@@ -16,6 +16,7 @@ import { createSessionStore } from "../utils/create-session-store.js";
 import { resolveSessionKeys } from "../utils/keys/resolve-session-keys.js";
 import { createSessionRefreshHandler } from "../utils/refresh/create-session-refresh-handler.js";
 import { extractTokenFromSession } from "../utils/tokens/extract-token-from-session.js";
+import { sessionResolvedAccess } from "../utils/tokens/session-resolved-access.js";
 
 export const createConnectionSessionMiddleware = <
   C extends PylonSocketHandshakeContext = PylonSocketHandshakeContext,
@@ -91,6 +92,7 @@ export const createConnectionSessionMiddleware = <
     const parsedToken = await extractTokenFromSession(ctx.aegis, session);
     if (parsedToken) {
       socket.data.tokens.bearer = parsedToken;
+      socket.data.pylon.access = sessionResolvedAccess(session.accessToken, parsedToken);
     }
 
     const initialExpiresAt: Date =

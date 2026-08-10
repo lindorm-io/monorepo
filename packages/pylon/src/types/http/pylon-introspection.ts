@@ -1,12 +1,4 @@
-import type {
-  DelegationClaims,
-  LindormClaims,
-  OAuthClaims,
-  OidcClaims,
-  PopClaims,
-  RarClaims,
-  StdClaims,
-} from "@lindorm/aegis";
+import type { DomainClaims } from "@lindorm/aegis";
 import type { Dict } from "@lindorm/types";
 
 // OAuth 2.0 token introspection (RFC 7662) response as resolved by
@@ -28,23 +20,17 @@ import type { Dict } from "@lindorm/types";
 // the translator routes it into the bucket like every other unregistered key
 // and it surfaces at `introspection.custom.custom`. Reading `.custom` always
 // yields the bucket, never a raw claim value.
-export type PylonIntrospectionActive = StdClaims &
-  OidcClaims &
-  PopClaims &
-  DelegationClaims &
-  OAuthClaims &
-  RarClaims &
-  LindormClaims & {
-    active: true;
-    /** Always an object — `{}` when the token carried no unregistered claims. */
-    custom: Dict;
-    /**
-     * RFC 7662 §2.2 `token_type`. Declared here rather than drawn from the aegis
-     * claim types because it describes the ANSWER, not the token — unlike
-     * `username`, which IS a registered claim and arrives via `OAuthClaims`.
-     */
-    tokenType?: string;
-  };
+export type PylonIntrospectionActive = DomainClaims & {
+  active: true;
+  /** Always an object — `{}` when the token carried no unregistered claims. */
+  custom: Dict;
+  /**
+   * RFC 7662 §2.2 `token_type`. Declared here rather than drawn from the aegis
+   * claim types because it describes the ANSWER, not the token — unlike
+   * `username`, which IS a registered claim and arrives inside `DomainClaims`.
+   */
+  tokenType?: string;
+};
 
 // When the token is inactive, the response is just { active: false }.
 // RFC 7662 §2.2: the server SHOULD NOT include additional information.

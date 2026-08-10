@@ -1,31 +1,59 @@
-import type { DomainAssert, IAegis, VerifyOptions } from "@lindorm/aegis";
+import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { assertDpopHandshakeMatch } from "../dpop/assert-dpop-handshake-match.js";
+import { isString } from "@lindorm/is";
+import { assertResolvedAccess } from "../access-token/assert-resolved-access.js";
+import { resolveAccess } from "../access-token/resolve-access.js";
+import { assertDpopBinding } from "../dpop/assert-dpop-binding.js";
 import { createBearerRefreshHandler } from "../refresh/create-bearer-refresh-handler.js";
-import { splitVerifyInput } from "../tokens/split-verify-input.js";
+import { reconstructHandshakeHtu } from "./reconstruct-handshake-htu.js";
 import type {
   HandshakeDpopMode,
-  PylonSocket,
+  PylonAuthCacheEntry,
   PylonSocketAuth,
+  PylonSocketHandshakeContext,
 } from "../../../types/index.js";
 
 type RegisterBearerHandshakeAuthOptions = {
-  aegis: IAegis;
+  cache: PylonAuthCacheEntry | undefined;
   dpopMode: HandshakeDpopMode;
   dpopProof: string | undefined;
-  socket: PylonSocket;
+  matchers: DomainAssert;
   token: string;
-  verifyOptions: DomainAssert & VerifyOptions;
+  verifyOptions: VerifyOptions;
 };
 
-export const registerBearerHandshakeAuth = async ({
-  aegis,
-  dpopMode,
-  dpopProof,
-  socket,
-  token,
-  verifyOptions,
-}: RegisterBearerHandshakeAuthOptions): Promise<void> => {
+/**
+ * Resolve a handshake credential through the SAME `resolveAccess` the HTTP arm
+ * runs, then register the auth state the connection lives on.
+ *
+ * Two things follow from sharing the resolver, and both are new here: an OPAQUE
+ * credential now authenticates over a handshake (this path used to call
+ * `aegis.parse` unconditionally, which throws `parse_requires_claims` on a
+ * signed handle and `unsupported_token_type` on a bare one — so an opaque token
+ * could not connect at all), and the mount's claim matchers apply to whichever
+ * arm resolved it.
+ *
+ * The DPoP proof is pylon's to check, not aegis's: `resolveAccess` passes
+ * `trustBoundThumbprint`, and `assertDpopBinding` runs the RFC 9449 §7.1 check
+ * against the RECONSTRUCTED handshake `htu` — the same function HTTP uses, which
+ * is what extends proof-of-possession to a DPoP-bound OPAQUE token here.
+ */
+export const registerBearerHandshakeAuth = async (
+  ctx: PylonSocketHandshakeContext,
+  {
+    cache,
+    dpopMode,
+    dpopProof,
+    matchers,
+    token,
+    verifyOptions,
+  }: RegisterBearerHandshakeAuthOptions,
+): Promise<void> => {
+  const socket = ctx.io.socket;
+
+  // Refused BEFORE the credential is resolved: "required" is a statement about
+  // the request, and a request with no proof cannot satisfy it however good the
+  // token turns out to be.
   if (dpopMode === "required" && !dpopProof) {
     throw new ClientError("Missing DPoP proof", {
       code: "handshake_dpop_proof_required",
@@ -36,29 +64,17 @@ export const registerBearerHandshakeAuth = async ({
     });
   }
 
-  // Preflight parse the token so we can tell whether it carries a cnf.jkt
-  // binding BEFORE handing it to aegis.verify. aegis.verify refuses to
-  // process a bound token without a proof (and vice versa), so we only pass
-  // `dpopProof` to the full verify when the token is actually DPoP-bound.
-  // In "optional" mode a bearer-only token may still arrive alongside a
-  // DPoP header (the client signed preemptively) — we accept the token as
-  // a plain bearer and ignore the proof.
-  const preflight = aegis.parse(token);
-  const preflightJkt = preflight.claims.confirmation?.thumbprint;
-
-  const passDpopProof = preflightJkt && dpopMode !== "disabled" ? dpopProof : undefined;
-
-  const { assert, options } = splitVerifyInput({
-    tokenType: "access_token",
-    ...verifyOptions,
-    dpopProof: passDpopProof,
+  const { access, issuer, verified } = await resolveAccess(ctx, token, {
+    cache,
+    verifyOptions,
   });
 
-  const verified = await aegis.verify(token, assert, options);
+  assertResolvedAccess(access, { issuer, matchers });
 
-  const confirmedJkt = verified.claims.confirmation?.thumbprint;
+  const thumbprint = access.claims.confirmation?.thumbprint;
+  const bound = isString(thumbprint) && thumbprint.length > 0;
 
-  if (dpopMode === "required" && !confirmedJkt) {
+  if (dpopMode === "required" && !bound) {
     throw new ClientError("Missing DPoP binding", {
       code: "handshake_dpop_binding_missing",
       title: "Handshake DPoP Binding Missing",
@@ -68,47 +84,52 @@ export const registerBearerHandshakeAuth = async ({
     });
   }
 
-  let capturedJkt: string | undefined;
-  let dpopValidated = false;
+  // "disabled" accepts a bound token as a plain bearer, so there is no binding
+  // to check. In the other two modes the binding check is the SAME one HTTP
+  // runs: it no-ops for an unbound token (a preemptively signed proof beside a
+  // bearer-only token is simply ignored) and is strict for a bound one.
+  if (dpopMode !== "disabled" && bound) {
+    const htu = reconstructHandshakeHtu(socket.handshake);
 
-  if (dpopMode !== "disabled" && confirmedJkt) {
-    if (!dpopProof) {
-      throw new ClientError("Missing DPoP proof", {
-        code: "handshake_dpop_proof_missing_for_bound_token",
-        title: "Handshake DPoP Proof Missing For Bound Token",
-        type: "urn:lindorm:pylon:error:handshake_dpop_proof_missing_for_bound_token",
-        details: "Access token is DPoP-bound but handshake did not present a DPoP header",
-        status: ClientError.Status.Unauthorized,
-      });
-    }
-    if (!verified.dpop) {
+    if (!htu) {
       throw new ClientError("Invalid DPoP proof", {
-        code: "handshake_dpop_proof_unverified",
-        title: "Handshake DPoP Proof Unverified",
-        type: "urn:lindorm:pylon:error:handshake_dpop_proof_unverified",
-        details: "DPoP proof could not be verified",
+        code: "dpop_handshake_htu_unresolvable",
+        title: "DPoP Handshake HTU Unresolvable",
+        type: "urn:lindorm:pylon:error:dpop_handshake_htu_unresolvable",
+        details: "Unable to reconstruct handshake htu — missing host header",
         status: ClientError.Status.Unauthorized,
       });
     }
-    assertDpopHandshakeMatch(socket.handshake, verified.dpop);
-    capturedJkt = confirmedJkt;
-    dpopValidated = true;
+
+    // A socket handshake is an HTTP GET upgrade request, so `htm` is fixed; and
+    // there is no authorization SCHEME to read on it, so the mount's `dpop` mode
+    // carries the "a bound token is asserted" intent instead.
+    assertDpopBinding(access, { htm: "GET", htu, proof: dpopProof, scheme: false });
   }
 
-  socket.data.tokens.bearer = verified;
+  const dpopValidated = dpopMode !== "disabled" && bound;
+
+  // ⚠ `tokens.bearer` is left UNSET for an OPAQUE credential — there is no
+  // VerifiedToken behind an introspection answer, and synthesising one would
+  // erase the provenance distinction. The connection's own record of what it
+  // authenticated as is `pylon.access`, which BOTH arms produce.
+  if (verified) socket.data.tokens.bearer = verified;
+  socket.data.pylon.access = access;
 
   const auth: PylonSocketAuth = {
     strategy: dpopValidated ? "dpop-bearer" : "bearer",
-    getExpiresAt: () => verified.claims.expiresAt ?? new Date(0),
+    getExpiresAt: () => access.claims.expiresAt ?? new Date(0),
     refresh: async () => {},
     authExpiredEmittedAt: null,
   };
   auth.refresh = createBearerRefreshHandler({
-    aegis,
-    capturedJkt,
+    aegis: ctx.aegis,
+    capturedJkt: dpopValidated ? thumbprint : undefined,
+    issuer,
+    matchers,
     socket,
-    subject: verified.claims.subject,
-    verifyOptions: { tokenType: "access_token", ...verifyOptions },
+    subject: access.claims.subject,
+    verifyOptions,
   });
   socket.data.pylon.auth = auth;
 };

@@ -20,7 +20,7 @@ exports[`useAccessToken — socket handshake > bearer path > verifies bearer and
   "header": {
     "tokenType": "access_token",
   },
-  "token": "jwt-token",
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSJ9.signature",
 }
 `;
 
