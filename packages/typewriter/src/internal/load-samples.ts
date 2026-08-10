@@ -10,9 +10,10 @@ type Options = {
   samples?: Array<string>;
 };
 
+// `require` survives under vitest, which shims it, but the package is ESM-only —
+// so the built bin threw `require is not defined` on every JSON sample it read.
 const loadJsonSample = (file: string): string =>
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  JSON.stringify(require(file));
+  JSON.stringify(JSON.parse(readFileSync(file, "utf-8")));
 
 const loadYamlSample = (file: string): string =>
   JSON.stringify(load(readFileSync(file, "utf-8")));
