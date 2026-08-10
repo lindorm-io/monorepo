@@ -1,7 +1,15 @@
+import { Amphora } from "@lindorm/amphora";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { Dict } from "@lindorm/types";
+import MockDate from "mockdate";
+import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
 import type { ValidateJwtOptions } from "../types/index.js";
 import { Aegis } from "./Aegis.js";
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
+
+// The signing fixture has a fixed validity window — the round-trip block below
+// mints and verifies, so the clock must sit inside it.
+MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
 // The array-valued claims the registry knows AND the domain matcher surface
 // names. A SCALAR matcher against one of them means "the claim must CONTAIN this
@@ -172,6 +180,92 @@ describe("Aegis.assert / Aegis.matches", () => {
         }
         expect(Aegis.matches(dict, matcher)).toBe(!threw);
       }
+    });
+  });
+
+  // The round trip nobody exercised: mint hashes a RAW source into a domain
+  // claim, and assert must hash the same raw source into the same claim name.
+  // The assert half used to key the predicate by the option name
+  // (`accessToken`), which is neither the domain claim nor the wire one, so this
+  // could never match a token aegis had just minted.
+  describe("mint → assert round trip", () => {
+    const issuer = "https://test.lindorm.io/";
+
+    const sources = {
+      accessToken: "12ceb9251ddf52399fe62f122a45844865a83dcb52585fea90ae3448e024",
+      authCode: "999a8b01e27c56aeb5b2f47c001ef8be7be39a375f8c5e929f82df1626de01d8",
+      authState: "7409ac52a9615b8c9f9a",
+    };
+
+    let aegis: Aegis;
+
+    beforeEach(async () => {
+      const logger = createMockLogger();
+      const amphora = new Amphora({ internal: { issuer }, logger });
+
+      aegis = new Aegis({ amphora, logger });
+
+      await amphora.setup();
+
+      amphora.add(TEST_EC_KEY_SIG);
+    });
+
+    const mintVerified = async () => {
+      const { token } = await aegis.mint("default", {
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+        ...sources,
+      });
+
+      return aegis.verify(token);
+    };
+
+    test.each(["accessToken", "authCode", "authState"] as const)(
+      "should assert a minted token with the raw %s",
+      async (key) => {
+        const verified = await mintVerified();
+
+        expect(() =>
+          Aegis.assert(verified.claims as Dict, {
+            algorithm: verified.header.algorithm,
+            [key]: sources[key],
+          }),
+        ).not.toThrow();
+
+        expect(
+          Aegis.matches(verified.claims as Dict, {
+            algorithm: verified.header.algorithm,
+            [key]: "a-different-source-value",
+          }),
+        ).toBe(false);
+      },
+    );
+
+    test("should assert all three raw sources at once", async () => {
+      const verified = await mintVerified();
+
+      expect(
+        Aegis.matches(verified.claims as Dict, {
+          algorithm: verified.header.algorithm,
+          ...sources,
+        }),
+      ).toBe(true);
+    });
+
+    // Mint accepts a PRE-COMPUTED hash as an option; assert matches it as an
+    // ordinary equality claim, needing no algorithm.
+    test("should assert a minted token with the pre-computed hash", async () => {
+      const verified = await mintVerified();
+
+      expect(
+        Aegis.matches(
+          verified.claims as Dict,
+          {
+            accessTokenHash: (verified.claims as Dict).accessTokenHash,
+          } as unknown as ValidateJwtOptions,
+        ),
+      ).toBe(true);
     });
   });
 });

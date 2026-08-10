@@ -1,3 +1,5 @@
+import { createHash } from "./create-hash.js";
+import { HASH_MATCHERS } from "./hash-matchers.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { createJwtValidate } from "./jwt-validate.js";
 import { claimByDomain } from "../claims/claims-registry.js";
@@ -61,21 +63,66 @@ describe("createJwtValidate", () => {
   });
 
   describe("hash-derive inputs", () => {
-    test("should hash the assert-only derive inputs before the lift", () => {
-      expect(
-        createJwtValidate({
-          algorithm: "ES256",
-          accessToken: "the-access-token",
-          authCode: "the-auth-code",
-          authState: "the-auth-state",
-        }),
-      ).toMatchSnapshot();
+    // The raw source value is hashed into the DOMAIN claim mint wrote it to —
+    // not into the option key, and not into the wire name (which is the verify
+    // half's vocabulary, because that half matches a wire payload).
+    test("should key the hash by the domain claim, not the option key", () => {
+      const predicate = createJwtValidate({
+        algorithm: "ES256",
+        accessToken: "the-access-token",
+        authCode: "the-auth-code",
+        authState: "the-auth-state",
+      });
+
+      expect(Object.keys(predicate)).toEqual([
+        "accessTokenHash",
+        "codeHash",
+        "stateHash",
+      ]);
+      expect(predicate).toMatchSnapshot();
+    });
+
+    test("should hash each source with the token algorithm", () => {
+      expect(createJwtValidate({ algorithm: "ES256", accessToken: "raw" })).toEqual({
+        accessTokenHash: { $eq: createHash("ES256", "raw") },
+      });
+      expect(createJwtValidate({ algorithm: "RS512", accessToken: "raw" })).toEqual({
+        accessTokenHash: { $eq: createHash("RS512", "raw") },
+      });
+    });
+
+    // A caller holding the hash already matches it as an ordinary equality
+    // claim through the normal path — no `algorithm` needed.
+    test("should accept a pre-computed hash as a plain equality matcher", () => {
+      expect(createJwtValidate({ accessTokenHash: "precomputed" } as never)).toEqual({
+        accessTokenHash: { $eq: "precomputed" },
+      });
+      expect(createJwtValidate({ codeHash: "precomputed" } as never)).toEqual({
+        codeHash: { $eq: "precomputed" },
+      });
+      expect(createJwtValidate({ stateHash: "precomputed" } as never)).toEqual({
+        stateHash: { $eq: "precomputed" },
+      });
     });
 
     test("should not emit a predicate key for the algorithm knob", () => {
       expect(createJwtValidate({ algorithm: "ES256", subject: "s" })).toEqual({
         subject: { $eq: "s" },
       });
+    });
+  });
+
+  describe("boolean and Date matchers", () => {
+    test("should build $eq for a boolean claim", () => {
+      expect(createJwtValidate({ emailVerified: true } as never)).toEqual({
+        emailVerified: { $eq: true },
+      });
+    });
+
+    test("should build $eq for a Date claim", () => {
+      const authTime = new Date("2024-01-01T08:00:00.000Z");
+
+      expect(createJwtValidate({ authTime })).toEqual({ authTime: { $eq: authTime } });
     });
   });
 
@@ -123,5 +170,35 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
 
   test("should build the assert predicate", () => {
     expect(createJwtValidate(matchers as never)).toMatchSnapshot();
+  });
+
+  // The hash-derive inputs are the one place the two halves legitimately write
+  // different KEYS from the same table — the wire name on the verify side, the
+  // domain name on the assert side — but the hashed VALUE must be identical.
+  describe("hash-derive inputs", () => {
+    const sources = {
+      accessToken: "the-access-token",
+      authCode: "the-auth-code",
+      authState: "the-auth-state",
+    };
+
+    test("should map every option key to a registry domain claim", () => {
+      for (const [key, domain] of Object.entries(HASH_MATCHERS)) {
+        expect(claimByDomain(domain), `${key} → ${domain}`).toBeDefined();
+      }
+    });
+
+    test("should hash to the same value under each half's own claim name", () => {
+      const assertPredicate = createJwtValidate({ algorithm: "ES256", ...sources });
+      const verifyPredicate = createIdentityMatchers("ES256", sources);
+
+      for (const [key, domain] of Object.entries(HASH_MATCHERS)) {
+        const jose = claimByDomain(domain)?.jose as keyof typeof verifyPredicate;
+        const hashed = { $eq: createHash("ES256", sources[key as keyof typeof sources]) };
+
+        expect(assertPredicate[domain]).toEqual(hashed);
+        expect(verifyPredicate[jose]).toEqual(hashed);
+      }
+    });
   });
 });

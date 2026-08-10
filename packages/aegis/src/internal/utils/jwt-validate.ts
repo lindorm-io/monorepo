@@ -4,19 +4,23 @@ import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
 import type { ValidateJwtOptions } from "../../types/index.js";
 import { claimByDomain } from "../claims/claims-registry.js";
-import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
+import { createHash } from "./create-hash.js";
+import { HASH_MATCHERS } from "./hash-matchers.js";
 import { liftClaimMatcher } from "./lift-claim-matcher.js";
 
 /**
  * Assert matcher builder — the flat-dict twin of `createIdentityMatchers`. It
- * keys the predicate by the caller's OWN key (the claims it matches are domain
- * -keyed), where the verify half re-keys to the wire name; the per-claim VALUE
- * lift is shared, so the registry stays the only thing that knows which claims
- * are array-valued.
+ * keys the predicate by the DOMAIN claim name (the claims it matches are the
+ * ones a caller already holds), where the verify half re-keys to the wire name
+ * because it matches a wire payload. Same mechanism, different vocabulary; the
+ * per-claim VALUE lift is shared, so the registry stays the only thing that
+ * knows which claims are array-valued.
  *
- * The hash-derive inputs (`accessToken`/`authCode`/`authState` → `at_hash`/
- * `c_hash`/`s_hash`) are assert-only and resolve BEFORE the lift: they name a
- * SOURCE value that is hashed with `algorithm`, not a claim value to match.
+ * The hash-derive inputs resolve BEFORE the lift: they name a raw SOURCE value
+ * (`accessToken`/`authCode`/`authState`) that is hashed with `algorithm` into
+ * the claim mint wrote it to (`accessTokenHash`/`codeHash`/`stateHash`). A
+ * caller holding the hash already can match it directly under that domain name —
+ * it is an ordinary equality claim and needs no `algorithm`.
  */
 export const createJwtValidate = (validate: ValidateJwtOptions): Condition<Dict> => {
   const algorithm = validate.algorithm;
@@ -25,16 +29,10 @@ export const createJwtValidate = (validate: ValidateJwtOptions): Condition<Dict>
   for (const [key, value] of Object.entries(validate)) {
     if (key === "algorithm") continue;
 
-    if (key === "accessToken" && algorithm && isString(value)) {
-      predicate[key] = { $eq: createAccessTokenHash(algorithm, value) };
-      continue;
-    }
-    if (key === "authCode" && algorithm && isString(value)) {
-      predicate[key] = { $eq: createCodeHash(algorithm, value) };
-      continue;
-    }
-    if (key === "authState" && algorithm && isString(value)) {
-      predicate[key] = { $eq: createStateHash(algorithm, value) };
+    const hashDomain = HASH_MATCHERS[key];
+
+    if (hashDomain && algorithm && isString(value)) {
+      predicate[hashDomain] = { $eq: createHash(algorithm, value) };
       continue;
     }
 

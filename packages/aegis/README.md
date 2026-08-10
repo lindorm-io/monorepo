@@ -388,6 +388,16 @@ Aegis.matches({ scope: ["openid", "profile"] }, { scope: "openid" }); // true
 Aegis.matches({ scope: ["openid"] }, { scope: ["openid", "profile"] }); // false — an array requires ALL
 ```
 
+Both also take the three hash-derive inputs, exactly as `mint` and `verify` do: you supply the RAW value and aegis hashes it with the token's `algorithm` into the claim `mint` wrote — `accessToken` → `accessTokenHash`, `authCode` → `codeHash`, `authState` → `stateHash`. A hash you already hold is an ordinary equality claim under that same name and needs no `algorithm`.
+
+```typescript
+Aegis.assert(verified.claims, {
+  algorithm: verified.header.algorithm,
+  accessToken: presentedAccessToken, // hashed, then compared to accessTokenHash
+});
+Aegis.matches(verified.claims, { accessTokenHash: knownHash }); // plain equality
+```
+
 `verifyDpopProof` runs the RFC 9449 proof checks standalone — signature over the proof's embedded `jwk`, `typ: dpop+jwt`, the RFC 7638 thumbprint against the token's bound `cnf.jkt`, the §7 `ath` hash of the presented access token, and `iat` freshness (default skew 60s). It needs no key resolution because the proof carries its own key, and it returns the `ParsedDpopProof`.
 
 Reach for it when the access token is **not** locally verifiable: RFC 9449 §6.2 delivers `cnf.jkt` through the introspection response for an opaque token, and the resource server validates the binding itself. `htm` / `htu` are parsed but never compared — aegis does not see the HTTP request, so that comparison belongs to the consumer.

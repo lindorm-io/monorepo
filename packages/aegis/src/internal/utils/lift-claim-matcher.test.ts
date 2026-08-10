@@ -35,9 +35,24 @@ describe("liftClaimMatcher", () => {
     expect(liftClaimMatcher(claimByDomain("levelOfAssurance"), 3)).toEqual({ $eq: 3 });
   });
 
+  test("should build $eq for a boolean claim", () => {
+    expect(liftClaimMatcher(claimByDomain("emailVerified"), true)).toEqual({ $eq: true });
+    expect(liftClaimMatcher(claimByDomain("emailVerified"), false)).toEqual({
+      $eq: false,
+    });
+  });
+
+  // A Date is a temporal claim VALUE, never an operator bag — `isObject`
+  // excludes it by prototype, so it must have its own branch.
+  test("should build $eq for a Date claim", () => {
+    const date = new Date("2024-01-01T08:00:00.000Z");
+
+    expect(liftClaimMatcher(claimByDomain("authTime"), date)).toEqual({ $eq: date });
+  });
+
   test("should return undefined for an unsupported value shape", () => {
     expect(liftClaimMatcher(claimByDomain("subject"), null)).toBeUndefined();
     expect(liftClaimMatcher(claimByDomain("subject"), undefined)).toBeUndefined();
-    expect(liftClaimMatcher(claimByDomain("emailVerified"), true)).toBeUndefined();
+    expect(liftClaimMatcher(claimByDomain("authTime"), new Date("nope"))).toBeUndefined();
   });
 });

@@ -6,21 +6,8 @@ import { AegisDomainError } from "../../errors/index.js";
 import type { AegisClaimsWire } from "../../types/index.js";
 import { claimByDomain } from "../claims/claims-registry.js";
 import { createHash } from "./create-hash.js";
+import { HASH_MATCHERS } from "./hash-matchers.js";
 import { liftClaimMatcher } from "./lift-claim-matcher.js";
-
-/**
- * The hash-DERIVE matchers — the ONLY matchers the registry can't resolve by a
- * name lookup. Each names a SOURCE value (the access token / code / state) that
- * is HASHED into its wire claim, so the option key ("accessToken") deliberately
- * differs from the registry domain ("accessTokenHash") and the value is computed,
- * not name-mapped. Every OTHER matcher key is a plain domain name the registry
- * owns, resolved via `specByDomain(key).jose`.
- */
-const HASH_MATCHERS: Readonly<Record<string, { jose: keyof AegisClaimsWire }>> = {
-  accessToken: { jose: "at_hash" },
-  authCode: { jose: "c_hash" },
-  authState: { jose: "s_hash" },
-};
 
 /**
  * Identity matcher builder (the AEGIS half). Builds the wire-keyed named-claim
@@ -48,9 +35,11 @@ export const createIdentityMatchers = (
     // sole exception (they compute a hash, not a name lookup). An unmapped key
     // has no claim to build a predicate for and throws (the exhaustive-mapping
     // throwing default the `mapVerify` switch used to provide).
-    const hash = HASH_MATCHERS[key];
+    const hashDomain = HASH_MATCHERS[key];
     const spec = claimByDomain(key);
-    const mapped = hash?.jose ?? (spec?.jose as keyof AegisClaimsWire | undefined);
+    const mapped = (hashDomain ? claimByDomain(hashDomain)?.jose : spec?.jose) as
+      | keyof AegisClaimsWire
+      | undefined;
 
     if (mapped === undefined) {
       throw new AegisDomainError(`Unsupported key: ${key} for JWT verification`, {
@@ -62,7 +51,7 @@ export const createIdentityMatchers = (
       });
     }
 
-    if (hash && isString(value)) {
+    if (hashDomain && isString(value)) {
       predicate[mapped] = { $eq: createHash(algorithm, value) };
       continue;
     }

@@ -1,5 +1,5 @@
 import type { ConditionOperator } from "@lindorm/match";
-import { isArray, isNumber, isObject, isString } from "@lindorm/is";
+import { isArray, isBoolean, isDate, isNumber, isObject, isString } from "@lindorm/is";
 import type { ClaimSpec } from "../claims/claims-registry.js";
 
 /**
@@ -29,12 +29,18 @@ export const liftClaimMatcher = (
   if (isObject(value)) return value as ConditionOperator<any>;
 
   // The array lift is string-only on purpose: a registry `value: "array"` claim
-  // is an array of STRINGS, so a numeric matcher for one is malformed input and
-  // keeps its literal-equality reading rather than being silently lifted.
+  // is an array of STRINGS, so a non-string matcher for one is malformed input
+  // and keeps its literal-equality reading rather than being silently lifted.
   if (isString(value)) {
     return spec?.value === "array" ? { $all: [value] } : { $eq: value };
   }
-  if (isNumber(value)) return { $eq: value };
+
+  // The remaining scalar claim kinds are plain equality. A `bool` claim
+  // (`emailVerified`) and a `date` claim (`authTime`) both reach here because
+  // the type offers a literal value for every field — and a Date arrives as a
+  // VALUE rather than an operator bag because `isObject` excludes it by
+  // prototype. Deep equality compares Dates by instant, so `$eq` is right.
+  if (isNumber(value) || isBoolean(value) || isDate(value)) return { $eq: value };
 
   return undefined;
 };

@@ -102,15 +102,15 @@ exports[`createJwtValidate / createIdentityMatchers parity > should build the ve
 }
 `;
 
-exports[`createJwtValidate > hash-derive inputs > should hash the assert-only derive inputs before the lift 1`] = `
+exports[`createJwtValidate > hash-derive inputs > should key the hash by the domain claim, not the option key 1`] = `
 {
-  "accessToken": {
+  "accessTokenHash": {
     "$eq": "uby9Z8Gb_H_x4fPjwNzguw",
   },
-  "authCode": {
+  "codeHash": {
     "$eq": "TT-mXNvl57l-BcINg6sBWQ",
   },
-  "authState": {
+  "stateHash": {
     "$eq": "sRiXnuhZcAIVMpbUvyTPtw",
   },
 }
