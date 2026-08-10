@@ -30,11 +30,12 @@ const ISSUER = "https://test.lindorm.io/";
 const NOW = new Date("2026-08-06T10:00:00.000Z");
 
 /**
- * ⚠ `tokenType`, `issuer` and `audience` are not decoration. The introspected arm
- * now asserts that the answer declared a `token_type` at all (RFC 7662 §2.2), and
- * the shared assert pins `iss` with a hard `$eq` and applies the mount's
- * `audience` — so an answer missing any of the three is refused before the cache
- * behaviour under test here can be observed.
+ * ⚠ `issuer` and `audience` are not decoration. The shared assert bounds `iss`
+ * against the deployment's own (absent passes, contradicting does not) and
+ * applies the mount's `audience` unconditionally — so an answer naming the wrong
+ * issuer, or none of the mount's audience, is refused before the cache behaviour
+ * under test here can be observed. `tokenType` is stated to match the bearer
+ * presentation these contexts use; an absent one would pass too.
  */
 const ACTIVE_INTROSPECTION = {
   active: true,
@@ -245,10 +246,10 @@ describe("useAccessToken introspection cache", () => {
 
     await middleware(createContext({ kv, introspect }), next);
 
-    // The second pylon pins a different issuer, and the shared assert compares
-    // the answer's `iss` against it with a hard `$eq` — so its authorization
-    // server has to name itself, or the request is refused before the cache
-    // keying under test here can be observed.
+    // The second pylon pins a different issuer, and the shared assert refuses an
+    // answer that names a CONTRADICTING one — so this answer has to name the
+    // second pylon's issuer, or the request is refused before the cache keying
+    // under test here can be observed.
     introspect.mockResolvedValue({ ...ACTIVE_INTROSPECTION, issuer: other });
     await middleware(createContext({ kv, introspect, issuer: other }), next);
 

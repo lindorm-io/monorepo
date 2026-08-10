@@ -22,27 +22,36 @@ export type AssertResolvedAccessOptions = {
  * confused deputy: the JWT for the wrong audience was refused while the opaque
  * handle for the same wrong audience was served.
  *
- * ⚠ `issuer` is an EXACT match, on both arms. It used to be the optional-bound
- * idiom (`$or: [{ $exists: false }, { $eq }]`) because RFC 7662 makes `iss`
- * OPTIONAL in an introspection response — but the structured arm's profile floor
- * rejects a mismatched `iss` unconditionally, so tolerating an absent one here
- * made the opaque arm the laxer of two arms serving the same mount. An
- * authorization server that will not name itself is one this deployment cannot
- * pin, and pinning is the whole point.
+ * ⚠ `issuer` is the OPTIONAL-BOUND idiom — an ABSENT `iss` passes, a
+ * CONTRADICTING one does not. RFC 7662 §2.2 makes `iss` a MAY in an
+ * introspection response, and pylon has already pinned provenance without it:
+ * the issuer is resolved BEFORE both arms, and the introspection call goes to
+ * THAT issuer's endpoint, so WHICH authority answered is the pin. The `iss`
+ * member is corroboration on top of a pin that already holds — a missing one
+ * costs nothing, while one naming somebody else is a real conflict and is still
+ * refused. Do NOT re-tighten this to `$eq`: the only answers it would newly
+ * reject are the spec-conformant ones.
+ *
+ * ⚠ The bound is shared by both arms but only ever RELAXES the introspected one.
+ * On the structured arm `iss` is mandatory twice over, before this pass runs:
+ * the `access_token` profile lists `issuer` in `required`, and
+ * `enforceVerifyFloor` exact-matches it against the issuer `verifyAccessToken`
+ * hands in — the same issuer that SCOPES the key lookup, so a foreign token
+ * cannot even reach a valid signature.
  *
  * ⚠ `tokenType` is NOT in this pass, and cannot be stated on the mount. The
  * structured arm asserts the JOSE `typ` through the `access_token` profile floor
- * (`application/at+jwt`, RFC 9068 §2.2); the introspected arm asserts that its
- * answer declared one at all (`assertIntrospectionLive`). RFC 7662's
- * `token_type` and aegis's are homonyms, not the same field, so there is no
- * single value both arms could be matched against.
+ * (`application/at+jwt`, RFC 9068 §2.2); the introspected arm compares RFC
+ * 7662's `token_type` against the scheme the request presented
+ * (`assertIntrospectionScheme`). The two are homonyms, not the same field, so
+ * there is no single value both arms could be matched against.
  */
 export const assertResolvedAccess = (
   access: PylonResolvedAccess,
   options: AssertResolvedAccessOptions,
 ): void => {
   const predicate: DomainAssert = {
-    issuer: { $eq: options.issuer },
+    issuer: { $or: [{ $exists: false }, { $eq: options.issuer }] },
     ...options.matchers,
   };
 

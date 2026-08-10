@@ -161,9 +161,9 @@ describe("useAccessToken — DPoP binding", () => {
   describe("introspected provenance", () => {
     /**
      * The answer restates `issuer` because this deployment pins the real-Aegis
-     * one, and it carries `tokenType` because RFC 7662 §2.2's `token_type` is now
-     * asserted PRESENT — a bare `{ active: true }` is refused before any binding
-     * check is reached.
+     * one. Its `tokenType` is the fixture default `Bearer` — which these
+     * DPoP-presented flows are served with on purpose: the `token_type` bound is
+     * one-directional, see the note at the end of this block.
      */
     const active = (thumbprint?: string): PylonIntrospectionActive =>
       introspectionAnswer({
@@ -262,6 +262,67 @@ describe("useAccessToken — DPoP binding", () => {
     test("accepts an unbound opaque token presented as bearer", async () => {
       ctx = makeCtx({ type: "bearer", value: OPAQUE_TOKEN });
       ctx.auth.introspect.mockResolvedValue(active());
+
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    /**
+     * ⚠ THE ONE HOLE `cnf.jkt` CANNOT COVER. RFC 9449 §6.2 has the binding
+     * travel in the introspection response — so when the answer OMITS `cnf.jkt`
+     * there is nothing for `assertDpopBinding` to compare and it correctly
+     * no-ops. An authorization server that names `token_type: DPoP` while
+     * omitting the confirmation is therefore saying "this credential is bound"
+     * about a credential pylon would otherwise spend as a plain bearer token,
+     * with no proof presented and none demanded. RFC 7662's `token_type` is the
+     * only place that contradiction is visible on this arm.
+     */
+    test("rejects a DPoP-typed answer for a credential presented as bearer", async () => {
+      ctx = makeCtx({ type: "bearer", value: OPAQUE_TOKEN });
+      ctx.auth.introspect.mockResolvedValue({ ...active(), tokenType: "DPoP" });
+
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        code: "introspection_token_type_mismatch",
+      });
+      expect(ctx.state.access).toBeNull();
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    test("accepts a DPoP-typed answer for a credential presented under DPoP", async () => {
+      const proof = await client.sign({
+        method: METHOD,
+        uri: HTU,
+        accessToken: OPAQUE_TOKEN,
+      });
+      ctx = makeCtx({ type: "dpop", value: OPAQUE_TOKEN }, proof);
+      ctx.auth.introspect.mockResolvedValue({
+        ...active(client.jkt),
+        tokenType: "DPoP",
+      });
+
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
+      expect(ctx.state.access.provenance).toBe("introspected");
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    // ⚠ ONE DIRECTION ONLY. The six flows above present under DPoP against an
+    // answer that says `Bearer`, and every one of them is served — the request
+    // is holding itself to the STRICTER standard, and the binding is enforced
+    // from `cnf.jkt` and the proof either way. A symmetric equality here would
+    // refuse every authorization server that answers `Bearer` for its bound
+    // tokens, which is the same class of bug as refusing an absent member.
+    test("accepts a Bearer-typed answer for a bound credential presented under DPoP", async () => {
+      const proof = await client.sign({
+        method: METHOD,
+        uri: HTU,
+        accessToken: OPAQUE_TOKEN,
+      });
+      ctx = makeCtx({ type: "dpop", value: OPAQUE_TOKEN }, proof);
+      ctx.auth.introspect.mockResolvedValue({
+        ...active(client.jkt),
+        tokenType: "Bearer",
+      });
 
       await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
       expect(next).toHaveBeenCalledTimes(1);

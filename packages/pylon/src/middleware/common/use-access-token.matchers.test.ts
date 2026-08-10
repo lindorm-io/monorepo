@@ -214,13 +214,17 @@ describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
   });
 
   /**
-   * ⚠ The issuer is a HARD `$eq` on BOTH arms now. It used to be the
-   * optional-bound idiom (`$or: [{ $exists: false }, { $eq }]`) on the grounds
-   * that RFC 7662 §2.2 makes every response member a MAY — but the structured
-   * arm's profile floor rejects a mismatched `iss` unconditionally, so tolerating
-   * an absent one made the opaque arm the laxer of two arms serving one mount.
-   * An authorization server that will not name itself is one this deployment
-   * cannot pin, and pinning is the whole point.
+   * ⚠ The issuer is the OPTIONAL-BOUND idiom on both arms
+   * (`$or: [{ $exists: false }, { $eq }]`): an ABSENT `iss` passes, a
+   * CONTRADICTING one does not. RFC 7662 §2.2 makes it a MAY, and the credential
+   * is already pinned without it — pylon called a SPECIFIC issuer's introspection
+   * endpoint, resolved before both arms, so WHICH authority answered is the pin
+   * and the claim is corroboration on top of it.
+   *
+   * The bound only ever relaxes the INTROSPECTED arm. A structured credential
+   * answers to `iss` twice over before the matchers run: the deployment's issuer
+   * scopes the key lookup, and the `access_token` profile floor exact-matches the
+   * claim and lists `issuer` in its required set.
    */
   describe("issuer", () => {
     test("VERIFIED: a token from another issuer is refused inside verify", async () => {
@@ -241,20 +245,19 @@ describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    // ⚠ EXPECTATION FLIPPED. This used to accept an answer with no `iss`. The
-    // predicate is a hard `$eq` now, so an answer that declines to name an issuer
-    // is refused — see the note above.
-    test("INTROSPECTED: an answer with no iss is refused", async () => {
+    // ⚠ EXPECTATION FLIPPED BACK. A hard `$eq` refused this, which is a
+    // spec-conformant answer (RFC 7662 §2.2 makes `iss` a MAY) and cost nothing
+    // to refuse — see the note above.
+    test("INTROSPECTED: an answer with no iss is served", async () => {
       const ctx = makeCtx(OPAQUE_TOKEN);
       const { issuer: _none, ...noIssuer } = introspectionAnswer({ audience: [SELF] });
       ctx.auth.introspect.mockResolvedValue(noIssuer);
 
-      await expect(useAccessToken({ audience: SELF })(ctx, next)).rejects.toMatchObject({
-        status: 401,
-        code: "access_token_claims_invalid",
-        data: { invalid: ["issuer"], provenance: "introspected" },
-      });
-      expect(next).not.toHaveBeenCalled();
+      await expect(
+        useAccessToken({ audience: SELF })(ctx, next),
+      ).resolves.toBeUndefined();
+      expect(ctx.state.access.provenance).toBe("introspected");
+      expect(next).toHaveBeenCalledTimes(1);
     });
 
     // …and an answer that states a DIFFERENT issuer is refused the same way.

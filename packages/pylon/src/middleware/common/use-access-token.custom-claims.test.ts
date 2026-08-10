@@ -104,10 +104,11 @@ describe("useAccessToken — custom claims", () => {
   // --- introspected: a real RFC 7662 response through the real auth client ---
 
   /**
-   * The wire members every answer must carry now: `token_type` is asserted
-   * PRESENT (RFC 7662 §2.2), and the shared assert pins `iss` with a hard `$eq`
-   * and applies the mount's `audience` — so a body stating none of them is
-   * refused before the claim BUCKETS under test here can be inspected.
+   * The wire members every answer here carries. `iss` and `token_type` are both
+   * optional bounds — an absent one passes — but a body that states the WRONG
+   * issuer, or the DPoP scheme against this bearer-presented credential, is
+   * refused before the claim BUCKETS under test here can be inspected. The
+   * mount's `audience` applies unconditionally.
    */
   const activeBody = (extra: Record<string, unknown>): Record<string, unknown> => ({
     active: true,

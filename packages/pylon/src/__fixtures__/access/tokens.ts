@@ -41,9 +41,10 @@ export const verifiedAccess = (
 });
 
 /**
- * An RFC 7662 answer that clears the floor. `tokenType` is present because the
- * introspected arm now requires the authority to state it — a bare
- * `{ active: true }` is refused.
+ * An RFC 7662 answer that clears the floor. `tokenType` is `Bearer` because the
+ * suites that use it present their credential as a bearer token — an ABSENT one
+ * is equally conformant (RFC 7662 §2.2 makes it a MAY) and is accepted, so state
+ * it explicitly where a test is about the `token_type` bound itself.
  */
 export const introspectionAnswer = (
   overrides: Partial<PylonIntrospectionActive> = {},

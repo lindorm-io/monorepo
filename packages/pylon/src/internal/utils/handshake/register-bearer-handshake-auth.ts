@@ -59,6 +59,16 @@ export const registerBearerHandshakeAuth = async (
   const { access, issuer, verified } = await resolveAccess(ctx, token, {
     audience: matchers.audience,
     cache,
+    // ⚠ `undefined`, and stated rather than defaulted. A socket handshake has no
+    // `Authorization` header and therefore no RFC 6749 §7.1 scheme to present:
+    // the credential arrives in the socket.io `auth.bearer` payload whatever it
+    // is bound to. That is the SAME gap `assertDpopBinding` is already handed as
+    // `scheme: false` below, and it must not be papered over by inventing a
+    // scheme from the presence of a DPoP proof — under `dpop: "disabled"` a bound
+    // token is deliberately accepted with no proof at all, so a derived "bearer"
+    // would refuse the `DPoP` answer that mode exists to allow. The mount's
+    // `dpop` mode carries the binding intent on this transport instead.
+    scheme: undefined,
   });
 
   assertResolvedAccess(access, { issuer, matchers });

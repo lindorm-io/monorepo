@@ -48,9 +48,9 @@ describe("useAccessToken", () => {
 
     test("verifies a JOSE bearer token and resolves verified access", async () => {
       // ⚠ The mock's DEFAULT answer (`{ subject: "verified_subject" }`, no issuer,
-      // no audience) no longer clears the shared assert — the issuer predicate is
-      // a hard `$eq` and the mount's audience applies on both arms — so a
-      // structured answer has to state the claim floor it is supposed to clear.
+      // no audience) no longer clears the shared assert — the mount's audience
+      // applies on both arms — so a structured answer has to state the claim floor
+      // it is supposed to clear.
       (ctx.aegis.verify as Mock).mockResolvedValue(verifiedAccess());
 
       const middleware = useAccessToken(ACCESS_MOUNT);
@@ -128,20 +128,44 @@ describe("useAccessToken", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    // RFC 7662 §2.2 `token_type` is now asserted PRESENT on the introspected arm:
-    // the structured arm can never produce a credential whose type went unstated
-    // (the profile floor matches the JOSE `typ`), so an answer of bare
-    // `{ active: true }` must not be the one shape that slips past.
-    test("throws 401 when an active answer declares no token_type", async () => {
+    // RFC 7662 §2.2 makes `token_type` a MAY, so a bare answer is conformant and
+    // is served. What is asserted is the OPTIONAL BOUND — see the two tests
+    // below, and `assertIntrospectionScheme`.
+    test("serves an active answer that declares no token_type", async () => {
       ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
       ctx.auth.introspect.mockResolvedValue({
         ...introspectionAnswer(),
         tokenType: undefined,
       });
 
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
+      expect(ctx.state.access.provenance).toBe("introspected");
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    // RFC 7235 §2.1 makes the scheme case-insensitive, and authorization servers
+    // spell it every way there is.
+    test.each(["bearer", "Bearer", "BEARER"])(
+      "serves an answer of %j for a Bearer-presented credential",
+      async (tokenType) => {
+        ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
+        ctx.auth.introspect.mockResolvedValue(introspectionAnswer({ tokenType }));
+
+        await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
+        expect(ctx.state.access.provenance).toBe("introspected");
+      },
+    );
+
+    // The binding bypass. An answer naming the DPoP scheme but carrying no
+    // `cnf.jkt` leaves the binding check nothing to compare, so a bound
+    // credential would be spent as a plain bearer token with no proof at all.
+    test("throws 401 when the answer's token_type contradicts the scheme", async () => {
+      ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
+      ctx.auth.introspect.mockResolvedValue(introspectionAnswer({ tokenType: "DPoP" }));
+
       await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toMatchObject({
         status: 401,
-        code: "introspection_token_type_missing",
+        code: "introspection_token_type_mismatch",
       });
       expect(ctx.state.access).toBeNull();
       expect(next).not.toHaveBeenCalled();

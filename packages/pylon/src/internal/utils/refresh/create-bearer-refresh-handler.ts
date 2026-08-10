@@ -78,6 +78,13 @@ export const createBearerRefreshHandler = ({
     const { access, verified } = await resolveAccess(ctx, token, {
       audience: matchers.audience,
       cache,
+      // ⚠ `undefined`, for the same reason the handshake states it: a refresh is
+      // a socket EVENT carrying `{ bearer, expiresIn }` — there is no
+      // `Authorization` header on it and never was one on the handshake it
+      // continues, so there is no RFC 6749 §7.1 scheme for an introspection
+      // answer's `token_type` to contradict. The binding is carried forward by
+      // `assertJktUnchanged` below, which is this transport's equivalent.
+      scheme: undefined,
     });
 
     assertResolvedAccess(access, { issuer, matchers });

@@ -34,8 +34,8 @@ const LIVE_EXPIRY = new Date("2099-01-01T00:00:00.000Z");
 /**
  * An RFC 7662 answer that clears the floor for THIS suite. It restates `issuer`
  * because the deployment here pins the real-Aegis issuer, not the one
- * `accessClaims` defaults to — and the issuer predicate is a hard `$eq` on both
- * arms now, so an answer that names the wrong one (or none) is refused.
+ * `accessClaims` defaults to — and an answer naming a CONTRADICTING issuer is
+ * refused on both arms. (Naming NONE would pass: the bound tolerates absence.)
  */
 const answer = (
   overrides: Partial<PylonIntrospectionActive> = {},
@@ -141,18 +141,32 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  // ⚠ NEW REFUSAL. RFC 7662 §2.2 `token_type` is asserted PRESENT: the structured
-  // arm can never produce a credential whose type went unstated, so an answer of
-  // bare `{ active: true, … }` must not be the one shape that slips past.
-  test("refuses an active handle whose answer declares no token_type", async () => {
+  // RFC 7662 §2.2 makes `token_type` a MAY, so a bare answer is conformant.
+  test("serves an active handle whose answer declares no token_type", async () => {
     const ctx = makeCtx(OPAQUE_TOKEN);
     ctx.auth.introspect.mockResolvedValue({ ...answer(), tokenType: undefined });
 
-    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toMatchObject({
-      status: 401,
-      code: "introspection_token_type_missing",
-    });
-    expect(next).not.toHaveBeenCalled();
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
+    expect(ctx.io.socket.data.pylon.access.provenance).toBe("introspected");
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  // ⚠ A HANDSHAKE PRESENTS NO SCHEME, and this is the observable consequence.
+  // socket.io carries the credential in the `auth.bearer` payload — there is no
+  // `Authorization` header and so no RFC 6749 §7.1 scheme for the answer's
+  // `token_type` to contradict. HTTP refuses this exact answer
+  // (`introspection_token_type_mismatch`); the handshake cannot, because it has
+  // nothing to compare. Deriving a scheme from the DPoP proof header instead
+  // would refuse the `DPoP` answer that `dpop: "disabled"` exists to accept, so
+  // the gap is stated rather than papered over — the mount's `dpop` mode carries
+  // the binding intent on this transport.
+  test("serves any stated token_type — a handshake has no scheme to contradict", async () => {
+    const ctx = makeCtx(OPAQUE_TOKEN);
+    ctx.auth.introspect.mockResolvedValue(answer({ tokenType: "DPoP" }));
+
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
+    expect(ctx.io.socket.data.pylon.access.provenance).toBe("introspected");
+    expect(next).toHaveBeenCalledTimes(1);
   });
 
   test("refuses an opaque handle when the driver cannot introspect", async () => {

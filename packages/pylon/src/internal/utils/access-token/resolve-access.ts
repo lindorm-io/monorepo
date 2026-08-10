@@ -6,6 +6,10 @@ import type {
   PylonResolvedAccess,
 } from "../../../types/index.js";
 import { assertIntrospectionLive } from "./assert-introspection-live.js";
+import {
+  assertIntrospectionScheme,
+  type PresentedScheme,
+} from "./assert-introspection-scheme.js";
 import { resolveAccessIssuer } from "./resolve-access-issuer.js";
 import { verifyAccessToken } from "./verify-access-token.js";
 
@@ -18,6 +22,17 @@ export type ResolveAccessOptions = {
    */
   audience: string;
   cache: PylonAuthCacheEntry | undefined;
+  /**
+   * The RFC 6749 §7.1 scheme the credential was PRESENTED under, or `undefined`
+   * on a transport that carries no authorization scheme at all. Required — not
+   * optional — so every caller has to state which of the two it is rather than
+   * omitting it by accident.
+   *
+   * Only the introspected arm reads it: it is the value RFC 7662's `token_type`
+   * is compared against (`assertIntrospectionScheme`). The structured arm has no
+   * use for it — a bound token's scheme is settled by `cnf.jkt` and the proof.
+   */
+  scheme: PresentedScheme | undefined;
 };
 
 export type ResolvedAccess = {
@@ -126,6 +141,8 @@ export const resolveAccess = async (
     });
   }
 
+  assertIntrospectionScheme(introspection, options.scheme);
+
   assertIntrospectionLive(introspection);
 
   // `active` and `tokenType` are RFC 7662 §2.2 facts about the ANSWER, not
@@ -134,7 +151,7 @@ export const resolveAccess = async (
   // here), and `tokenType` — RFC 6749 §7.1's presentation scheme, a homonym of
   // the JOSE `typ` the structured arm asserts — has no counterpart in
   // `DomainClaims`. Both are asserted BEFORE the strip — `active` just above,
-  // `tokenType` in `assertIntrospectionLive` — so dropping them loses no check.
+  // `tokenType` in `assertIntrospectionScheme` — so dropping them loses no check.
   const { active: _active, custom, tokenType: _tokenType, ...claims } = introspection;
 
   return {

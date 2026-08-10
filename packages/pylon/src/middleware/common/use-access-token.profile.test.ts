@@ -113,6 +113,13 @@ describe("useAccessToken — what a credential must be", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
+    // ⚠ THE RELAXATION MUST NOT REACH THIS ARM. The shared claim assert now
+    // tolerates an ABSENT `iss` (RFC 7662 §2.2 makes it a MAY on the OTHER arm),
+    // and a structured credential answers to `iss` regardless — twice over,
+    // before that pass runs: the deployment's issuer SCOPES the verification key
+    // lookup, and the `access_token` profile floor exact-matches the claim and
+    // lists `issuer` in its required set. A token from an issuer this deployment
+    // did not pin never reaches a valid signature, let alone the matchers.
     test("an access token from another issuer is refused", async () => {
       ctx.state.app.config = createTestAppConfig({
         auth: createTestAuthConfig({ issuer: "https://elsewhere.example.com" }),
@@ -121,9 +128,11 @@ describe("useAccessToken — what a credential must be", () => {
 
       await expect(useAccessToken(MOUNT)(ctx, next)).rejects.toMatchObject({
         status: 401,
+        code: "access_token_verification_failed",
       });
 
       expect(ctx.state.access).toBeNull();
+      expect(next).not.toHaveBeenCalled();
     });
 
     // The COSE wire reaches the same profiled verify, and pylon hands it no
@@ -160,22 +169,21 @@ describe("useAccessToken — what a credential must be", () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    // RFC 7662 §2.2 makes `iss` OPTIONAL, and tolerating its absence made the
-    // opaque arm the laxer of two arms serving one mount: the structured arm
-    // rejects a foreign issuer unconditionally. An authorization server that will
-    // not name itself is one this deployment cannot pin.
-    test("an answer that names no issuer is refused", async () => {
+    // RFC 7662 §2.2 makes `iss` a MAY, so an answer that omits it is conformant
+    // and is served. It costs nothing: pylon called a SPECIFIC issuer's
+    // introspection endpoint — resolved before both arms — so which authority
+    // answered is what pins the credential. The claim is corroboration on a pin
+    // that already holds.
+    test("an answer that names no issuer is served", async () => {
       const answer = introspectionAnswer({ audience: [ACCESS_TEST_AUDIENCE] });
       delete answer.issuer;
       ctx.auth.introspect.mockResolvedValue(answer);
 
-      await expect(useAccessToken(MOUNT)(ctx, next)).rejects.toMatchObject({
-        status: 401,
-        code: "access_token_claims_invalid",
-      });
+      await expect(useAccessToken(MOUNT)(ctx, next)).resolves.toBeUndefined();
 
-      expect(ctx.state.access).toBeNull();
-      expect(next).not.toHaveBeenCalled();
+      expect(ctx.state.access.provenance).toBe("introspected");
+      expect(ctx.state.access.claims.issuer).toBeUndefined();
+      expect(next).toHaveBeenCalledTimes(1);
     });
 
     test("an answer naming a foreign issuer is refused", async () => {
@@ -192,10 +200,11 @@ describe("useAccessToken — what a credential must be", () => {
       });
     });
 
-    // The structured arm can never produce a credential whose type went
-    // unstated — the profile floor matches the `typ` header. A bare
-    // `{ active: true }` must not be the one shape that slips past.
-    test("an answer that states no token type is refused", async () => {
+    // RFC 7662 §2.2 makes `token_type` a MAY too, and it is RFC 6749 §7.1's
+    // PRESENTATION SCHEME rather than the JOSE `typ` the profile floor matches —
+    // a homonym, so there was never an `at+jwt`-shaped value for it to be
+    // compared against. A bare answer is conformant and is served.
+    test("an answer that states no token type is served", async () => {
       const answer = introspectionAnswer({
         issuer: ACCESS_TEST_ISSUER,
         audience: [ACCESS_TEST_AUDIENCE],
@@ -203,13 +212,50 @@ describe("useAccessToken — what a credential must be", () => {
       delete answer.tokenType;
       ctx.auth.introspect.mockResolvedValue(answer);
 
+      await expect(useAccessToken(MOUNT)(ctx, next)).resolves.toBeUndefined();
+
+      expect(ctx.state.access.provenance).toBe("introspected");
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    // What `token_type` IS compared against: the scheme the request presented.
+    // An answer of `DPoP` for a credential presented as `Bearer` is a
+    // proof-of-possession bypass — the answer carries no `cnf.jkt`, so the
+    // binding check has nothing to compare and the bound credential would be
+    // spent as a plain bearer token.
+    test("an answer naming a scheme the request did not use is refused", async () => {
+      ctx.auth.introspect.mockResolvedValue(
+        introspectionAnswer({
+          issuer: ACCESS_TEST_ISSUER,
+          audience: [ACCESS_TEST_AUDIENCE],
+          tokenType: "DPoP",
+        }),
+      );
+
       await expect(useAccessToken(MOUNT)(ctx, next)).rejects.toMatchObject({
         status: 401,
-        code: "introspection_token_type_missing",
+        code: "introspection_token_type_mismatch",
       });
 
       expect(ctx.state.access).toBeNull();
+      expect(next).not.toHaveBeenCalled();
     });
+
+    test.each(["bearer", "Bearer", "BEARER"])(
+      "an answer of %j matches a Bearer-presented credential",
+      async (tokenType) => {
+        ctx.auth.introspect.mockResolvedValue(
+          introspectionAnswer({
+            issuer: ACCESS_TEST_ISSUER,
+            audience: [ACCESS_TEST_AUDIENCE],
+            tokenType,
+          }),
+        );
+
+        await expect(useAccessToken(MOUNT)(ctx, next)).resolves.toBeUndefined();
+        expect(ctx.state.access.provenance).toBe("introspected");
+      },
+    );
 
     test("an answer for another audience is refused", async () => {
       ctx.auth.introspect.mockResolvedValue(

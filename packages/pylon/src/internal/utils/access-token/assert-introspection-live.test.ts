@@ -6,10 +6,12 @@ import { assertIntrospectionLive } from "./assert-introspection-live.js";
 const NOW = new Date("2026-08-10T12:00:00.000Z");
 
 /**
- * The checks the INTROSPECTED arm owns: an authorization server that
+ * The TEMPORAL check the INTROSPECTED arm owns: an authorization server that
  * contradicts ITSELF — `active: true` beside an `exp` already gone, an `nbf`
- * not yet reached, an `iat` in the future — or one that declines to say what
- * kind of credential it answered about at all.
+ * not yet reached, an `iat` in the future.
+ *
+ * The answer's `token_type` is asserted elsewhere (`assertIntrospectionScheme`)
+ * — it is a scheme comparison, not a temporal one.
  *
  * ⚠ The clock is pinned with MockDate rather than passed in. The `now` argument
  * is GONE: the window is `Aegis.matches`'s default one, the same builder
@@ -99,34 +101,14 @@ describe("assertIntrospectionLive", () => {
     }
   });
 
-  // The structured arm can never produce a credential whose type went unstated
-  // — the profile floor matches the JOSE `typ`. A bare `{ active: true }` is
-  // the one shape that could slip past on this arm, so it is refused by name.
-  describe("token type", () => {
-    test("refuses an answer that states no token type", () => {
-      expect(() =>
-        assertIntrospectionLive(introspectionAnswer({ tokenType: undefined })),
-      ).toThrow(
-        expect.objectContaining({
-          code: "introspection_token_type_missing",
-          status: 401,
-        }),
-      );
-    });
-
-    test("refuses an empty token type", () => {
-      expect(() =>
-        assertIntrospectionLive(introspectionAnswer({ tokenType: "" })),
-      ).toThrow(expect.objectContaining({ code: "introspection_token_type_missing" }));
-    });
-
-    // PRESENCE, not equality: RFC 7662 §2.2's `token_type` is RFC 6749 §7.1's
-    // presentation scheme, so `DPoP` is as valid an answer as `Bearer` and the
-    // mount has no value to compare it against.
-    test("accepts any stated token type", () => {
-      expect(() =>
-        assertIntrospectionLive(introspectionAnswer({ tokenType: "DPoP" })),
-      ).not.toThrow();
-    });
+  // Liveness says nothing about the presentation scheme — a bare
+  // `{ active: true }` answer clears this check whatever it states.
+  test("ignores the answer's token type", () => {
+    expect(() =>
+      assertIntrospectionLive(introspectionAnswer({ tokenType: undefined })),
+    ).not.toThrow();
+    expect(() =>
+      assertIntrospectionLive(introspectionAnswer({ tokenType: "DPoP" })),
+    ).not.toThrow();
   });
 });

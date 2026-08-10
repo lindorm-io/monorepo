@@ -19,7 +19,7 @@ const access = (
 const MATCHERS: AccessTokenMatchers = { audience: ACCESS_TEST_AUDIENCE };
 
 describe("assertResolvedAccess", () => {
-  describe("issuer — the hard match", () => {
+  describe("issuer — the optional bound", () => {
     test("accepts a matching issuer", () => {
       expect(() =>
         assertResolvedAccess(access("verified", accessClaims()), {
@@ -38,20 +38,29 @@ describe("assertResolvedAccess", () => {
       ).toThrow(expect.objectContaining({ code: "access_token_claims_invalid" }));
     });
 
-    // ⚠ EXPECTATION FLIPPED. An absent `iss` used to pass: the predicate was the
-    // optional-bound idiom (`$or: [{ $exists: false }, { $eq }]`) because RFC
-    // 7662 §2.2 makes `iss` a MAY. It is now a hard `{ $eq: issuer }`, and the
-    // reason is the asymmetry it created — the structured arm's profile floor
-    // rejects a mismatched `iss` unconditionally, so tolerating an ABSENT one
-    // here made the opaque arm the laxer of two arms serving the same mount. An
-    // authorization server that will not name itself cannot be pinned.
-    test("refuses an ABSENT issuer", () => {
+    // ⚠ EXPECTATION FLIPPED BACK. RFC 7662 §2.2 makes `iss` a MAY, and the
+    // credential's provenance is already pinned by WHICH issuer's introspection
+    // endpoint answered — resolved before both arms. The claim is corroboration
+    // on a pin that holds without it, so an absent one costs nothing.
+    test("accepts an ABSENT issuer", () => {
       expect(() =>
         assertResolvedAccess(
           access("introspected", {
             audience: [ACCESS_TEST_AUDIENCE],
             subject: "alice",
           }),
+          { issuer: ACCESS_TEST_APP_ISSUER, matchers: MATCHERS },
+        ),
+      ).not.toThrow();
+    });
+
+    // The bound tolerates only SILENCE. Any stated issuer is compared, whichever
+    // arm resolved the credential — a verified token has no laxer reading of it
+    // than an introspected one.
+    test("refuses a different issuer on the introspected arm too", () => {
+      expect(() =>
+        assertResolvedAccess(
+          access("introspected", accessClaims({ issuer: "https://elsewhere.test" })),
           { issuer: ACCESS_TEST_APP_ISSUER, matchers: MATCHERS },
         ),
       ).toThrow(

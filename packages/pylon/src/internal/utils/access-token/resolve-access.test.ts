@@ -18,8 +18,16 @@ import { resolveAccess } from "./resolve-access.js";
 
 const TOKEN = joseShapedToken();
 
-/** The one thing a caller states; the issuer is the deployment's, not the mount's. */
-const OPTIONS = { audience: ACCESS_TEST_AUDIENCE, cache: undefined };
+/**
+ * What a caller states; the issuer is the deployment's, not the mount's.
+ * `scheme` is the RFC 6749 §7.1 scheme the credential was presented under —
+ * HTTP's, here, since that is the transport that has one.
+ */
+const OPTIONS = {
+  audience: ACCESS_TEST_AUDIENCE,
+  cache: undefined,
+  scheme: "bearer" as const,
+};
 
 /**
  * The two arms, in ONE place — which is the whole point of the file. Everything
@@ -119,10 +127,7 @@ describe("resolveAccess", () => {
     test("passes the mount's cache carve-out through", async () => {
       ctx.auth.introspect.mockResolvedValue(introspectionAnswer());
 
-      await resolveAccess(ctx, OPAQUE_TOKEN, {
-        audience: ACCESS_TEST_AUDIENCE,
-        cache: false,
-      });
+      await resolveAccess(ctx, OPAQUE_TOKEN, { ...OPTIONS, cache: false });
 
       expect(ctx.auth.introspect).toHaveBeenCalledWith(OPAQUE_TOKEN, { cache: false });
     });
@@ -135,20 +140,40 @@ describe("resolveAccess", () => {
       );
     });
 
-    // An active answer that names no `token_type` (RFC 7662 §2.2) is refused at
-    // the arm that produced it — the structured arm can never produce a
-    // credential whose type went unstated.
-    test("refuses an active answer that states no token type", async () => {
+    // ⚠ EXPECTATION FLIPPED. An answer with no `token_type` used to be refused
+    // by name. RFC 7662 §2.2 makes it a MAY, so a bare answer is conformant —
+    // and there was never an `at+jwt`-shaped value to compare it against
+    // anyway, `token_type` being RFC 6749 §7.1's presentation scheme.
+    test("accepts an active answer that states no token type", async () => {
       ctx.auth.introspect.mockResolvedValue(
         introspectionAnswer({ tokenType: undefined }),
       );
 
+      await expect(resolveAccess(ctx, OPAQUE_TOKEN, OPTIONS)).resolves.toMatchObject({
+        access: { provenance: "introspected" },
+      });
+    });
+
+    // What the answer IS compared against: the scheme the request presented.
+    test("refuses an answer whose token type contradicts the presented scheme", async () => {
+      ctx.auth.introspect.mockResolvedValue(introspectionAnswer({ tokenType: "DPoP" }));
+
       await expect(resolveAccess(ctx, OPAQUE_TOKEN, OPTIONS)).rejects.toThrow(
         expect.objectContaining({
-          code: "introspection_token_type_missing",
+          code: "introspection_token_type_mismatch",
           status: 401,
         }),
       );
+    });
+
+    // A transport with no `Authorization` header presents no scheme, so there is
+    // nothing for the answer to contradict and any stated type is accepted.
+    test("accepts any stated token type when no scheme was presented", async () => {
+      ctx.auth.introspect.mockResolvedValue(introspectionAnswer({ tokenType: "DPoP" }));
+
+      await expect(
+        resolveAccess(ctx, OPAQUE_TOKEN, { ...OPTIONS, scheme: undefined }),
+      ).resolves.toMatchObject({ access: { provenance: "introspected" } });
     });
 
     test("refuses by name when the driver cannot introspect", async () => {
