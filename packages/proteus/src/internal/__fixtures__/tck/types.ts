@@ -88,6 +88,26 @@ export type TckCapabilities = {
    * exclude can match every document.
    */
   fieldConditions: boolean;
+  /**
+   * The STRUCTURED operators — the ones over a column holding a document or a
+   * list — mean what the condition language says, including over a NULL column:
+   *
+   * - `$length` counts array ELEMENTS, string CHARACTERS or object KEYS,
+   *   dispatched from the declared column type, and refuses a column that has
+   *   no length;
+   * - `$all` / `$overlap` / `$contained` require an array VALUE, so a NULL
+   *   column never satisfies them — not even the degenerate empty-list forms;
+   * - `$in` / `$nin` against an array column are OVERLAP and its negation, not
+   *   a scalar comparison against the whole array;
+   * - `$has` accepts a single ELEMENT against an array column, and carries
+   *   PLAIN containment — an operator nested inside it is a literal JSON key.
+   *
+   * ⚠ This is an OPEN BUG on the drivers that carry `false`, not a design
+   * choice. Mongo's filter compiler predates all of it: `$all: []` matches no
+   * document where the language matches every array, and it reads a bare array
+   * as an exact match rather than containment.
+   */
+  structuredOperators: boolean;
   /** Table inheritance strategies */
   inheritance: {
     /** Single-table inheritance: all subtypes share one table with discriminator column */

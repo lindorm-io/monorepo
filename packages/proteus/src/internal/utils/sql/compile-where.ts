@@ -8,6 +8,7 @@ import {
 import {
   isArray,
   isNull,
+  isNumber,
   isObject,
   isObjectLike,
   isRegExp,
@@ -27,6 +28,7 @@ import {
   negate,
   renderCondition,
 } from "./compiled-condition.js";
+import { resolveLengthMeasure } from "./length-measure.js";
 import { resolveColumnName } from "./resolve-column-name.js";
 import type { SqlDialect } from "./sql-dialect.js";
 
@@ -41,20 +43,44 @@ const hasPredicateOperator = (obj: Record<string, unknown>): boolean =>
   );
 
 const guardArrayField = (
-  operator: string,
+  subject: string,
   field: MetaField | null,
   fieldKey: string,
 ): void => {
   if (!field) return; // join key columns — skip guard (no field metadata available)
   if (field.type === "array") return;
   throw new ProteusError(
-    `Operator "${operator}" requires an array-typed column, but field "${fieldKey}" has type "${field.type}"`,
+    `${subject} requires an array-typed column, but field "${fieldKey}" has type "${field.type}"`,
     {
       code: "invalid_operator_type",
       title: "Invalid Operator Type",
       details:
-        "This operator requires an array-typed column; the target field has a different type.",
-      data: { operator, field: fieldKey, fieldType: field.type },
+        "This condition requires an array-typed column; the target field has a different type.",
+      data: { subject, field: fieldKey, fieldType: field.type },
+    },
+  );
+};
+
+/**
+ * `$has` is JSON containment, so the column has to hold JSON — an `array` whose
+ * ELEMENTS can contain the operand, or an `object` whose KEYS can. Every other
+ * type has no containment to test.
+ *
+ * The condition language reduces `$has` on a scalar column to a plain equality,
+ * which is `$eq` spelled a second way. Refusing it instead keeps one spelling
+ * per meaning and matches how `$all` / `$overlap` / `$contained` already treat a
+ * column they cannot apply to.
+ */
+const guardStructuredField = (field: MetaField | null, fieldKey: string): void => {
+  if (field?.type === "array" || field?.type === "object") return;
+  throw new ProteusError(
+    `Operator "$has" requires a structured column, but field "${fieldKey}" has type "${field?.type ?? "unknown"}"`,
+    {
+      code: "invalid_operator_type",
+      title: "Invalid Operator Type",
+      details:
+        "$has tests JSON containment and needs a column declared as an object or an array. Use $eq to compare a scalar column.",
+      data: { operator: "$has", field: fieldKey, fieldType: field?.type ?? null },
     },
   );
 };
@@ -136,10 +162,18 @@ const requireOrderable = (operator: string, fieldKey: string, operand: unknown):
  */
 const compileMembership = (
   qualifiedCol: string,
-  operand: Array<unknown>,
+  operator: string,
+  rawOperand: unknown,
   params: Array<unknown>,
+  field: MetaField | null,
+  fieldKey: string,
   dialect: SqlDialect,
 ): CompiledCondition => {
+  if (!isArray<unknown>(rawOperand)) {
+    return malformedPayload(operator, fieldKey, "an array");
+  }
+  const operand = rawOperand;
+
   // `$in: []` can never hold. It is well-formed and useful — "match nothing" —
   // so it is a state of its own rather than a clause that happens to say FALSE.
   // Negated, it gives `$nin: []` the always-true it needs: an empty exclusion
@@ -147,6 +181,15 @@ const compileMembership = (
   // conflating the two turned `deleteMany({ tag: { $nin: [] } })` into
   // `DELETE FROM t`.
   if (operand.length === 0) return ALWAYS_FALSE;
+
+  // An ARRAY column holds a LIST, and membership between a list and a list is
+  // OVERLAP — `{ tags: { $in: ["a", "b"] } }` asks for rows whose tags include
+  // "a" or "b", which is what the condition language answers. A scalar `IN` was
+  // asking whether the whole array equals one of the listed values: a hard error
+  // on postgres and a silent empty result on mysql and sqlite.
+  if (field?.type === "array") {
+    return compiledClause(dialect.compileOverlap(qualifiedCol, params, operand, field));
+  }
 
   const values = operand.filter((value) => !isNull(value));
   const alternatives: Array<CompiledCondition> = [];
@@ -356,6 +399,20 @@ const compileFieldCondition = (
     return [compiledClause(`${qualifiedCol} IS NULL`)];
   }
 
+  // A bare ARRAY means CONTAINMENT, not equality: `{ tags: ["a"] }` matches a
+  // row whose tags contain "a". Equality stays available and explicit as
+  // `{ tags: { $eq: ["a"] } }`.
+  //
+  // The array and the object form are ONE rule — a bare composite value means
+  // "contained in", never "equal to"; an array contains its elements as an
+  // object contains its keys — so both compile to what `$has` compiles to.
+  // Bound as a plain `=` parameter this was a hard error on postgres and sqlite
+  // and a silent non-match on mysql.
+  if (isArray<unknown>(value)) {
+    guardArrayField("A bare array condition", field, fieldKey);
+    return [compiledClause(dialect.compileHas(qualifiedCol, params, value, field))];
+  }
+
   // `isObject` is decided by PROTOTYPE, so a Date, a Buffer and a RegExp are
   // values here rather than operator bags.
   if (isObject(value)) {
@@ -413,7 +470,9 @@ const compileOperator = (
 
     guardObjectField(field, fieldKey);
     compiled.push(
-      compiledClause(dialect.compileHas(qualifiedCol, params, collectNestedKeys(ops))),
+      compiledClause(
+        dialect.compileHas(qualifiedCol, params, collectNestedKeys(ops), field),
+      ),
     );
     nestedEmitted = true;
   }
@@ -491,7 +550,15 @@ const compileOperatorKey = (
     }
 
     case ConditionOperatorKey.In:
-      return compileMembership(qualifiedCol, operand as Array<unknown>, params, dialect);
+      return compileMembership(
+        qualifiedCol,
+        key,
+        operand,
+        params,
+        field,
+        fieldKey,
+        dialect,
+      );
 
     // NOT `NOT IN`. Like `<>`, it is three-valued and drops the rows the
     // condition language keeps: a row whose column is null is not one of the
@@ -500,7 +567,7 @@ const compileOperatorKey = (
     // states across for free, since the negation of always-false is always-true.
     case ConditionOperatorKey.Nin:
       return negate(
-        compileMembership(qualifiedCol, operand as Array<unknown>, params, dialect),
+        compileMembership(qualifiedCol, key, operand, params, field, fieldKey, dialect),
       );
 
     case ConditionOperatorKey.Like:
@@ -542,28 +609,43 @@ const compileOperatorKey = (
       );
 
     case ConditionOperatorKey.All:
-      guardArrayField(key, field, fieldKey);
+      guardArrayField(`Operator "${key}"`, field, fieldKey);
       return compiledClause(
         dialect.compileAll(qualifiedCol, params, operand as Array<unknown>, field),
       );
 
     case ConditionOperatorKey.Overlap:
-      guardArrayField(key, field, fieldKey);
+      guardArrayField(`Operator "${key}"`, field, fieldKey);
       return compiledClause(
         dialect.compileOverlap(qualifiedCol, params, operand as Array<unknown>, field),
       );
 
     case ConditionOperatorKey.Contained:
-      guardArrayField(key, field, fieldKey);
+      guardArrayField(`Operator "${key}"`, field, fieldKey);
       return compiledClause(
         dialect.compileContained(qualifiedCol, params, operand as Array<unknown>, field),
       );
 
-    case ConditionOperatorKey.Length:
-      return compiledClause(dialect.compileLength(qualifiedCol, params, operand, field));
+    // Three measures, one operator, dispatched from the DECLARED column type —
+    // never from the stored value. A column that has no length refuses the
+    // condition here rather than reaching a dialect that would error, count the
+    // wrong thing, or silently return nothing.
+    case ConditionOperatorKey.Length: {
+      if (!isNumber(operand)) return malformedPayload(key, fieldKey, "a number");
+      return compiledClause(
+        dialect.compileLength(
+          qualifiedCol,
+          params,
+          operand,
+          resolveLengthMeasure(field, fieldKey),
+          field,
+        ),
+      );
+    }
 
     case ConditionOperatorKey.Has:
-      return compiledClause(dialect.compileHas(qualifiedCol, params, operand));
+      guardStructuredField(field, fieldKey);
+      return compiledClause(dialect.compileHas(qualifiedCol, params, operand, field));
 
     case ConditionOperatorKey.Mod: {
       if (isAbsent(operand)) {

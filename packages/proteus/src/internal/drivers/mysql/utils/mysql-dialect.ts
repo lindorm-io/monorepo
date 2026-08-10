@@ -58,14 +58,21 @@ export const mysqlDialect: SqlDialect = {
     );
   },
 
+  // `JSON_CONTAINS` is already the containment the condition language means, for
+  // an array column and an object one alike, and it already accepts a scalar
+  // candidate against an array target.
   compileHas: (col, params, value) => {
     params.push(JSON.stringify(value));
     return `JSON_CONTAINS(${col}, CAST(? AS JSON))`;
   },
 
   compileAll: (col, params, arr) => {
+    // Every element of an empty list is trivially present — but only in a row
+    // that HAS a list. `1=1` said "every row", which handed back the rows whose
+    // column is NULL: postgres excludes them (`NULL @> '[]'` is NULL) and so
+    // does the condition language, whose `$all` requires an array value.
     if (arr.length === 0) {
-      return "1=1";
+      return `${col} IS NOT NULL`;
     }
     params.push(JSON.stringify(arr));
     return `JSON_CONTAINS(${col}, ?)`;
@@ -80,16 +87,26 @@ export const mysqlDialect: SqlDialect = {
   },
 
   compileContained: (col, params, arr) => {
+    // Contained by the empty set means the row's own list is empty — an EMPTY
+    // array, not a missing one. `IS NULL OR` let the NULL rows through, where
+    // postgres (`NULL <@ '[]'` is NULL) and the condition language both exclude
+    // them.
     if (arr.length === 0) {
-      return `(${col} IS NULL OR JSON_LENGTH(${col}) = 0)`;
+      return `(${col} IS NOT NULL AND JSON_LENGTH(${col}) = 0)`;
     }
     params.push(JSON.stringify(arr));
     return `JSON_CONTAINS(?, ${col})`;
   },
 
-  compileLength: (col, params, value, _field) => {
+  // `JSON_LENGTH` counts array elements AND object keys, so mysql's long-standing
+  // object-key behaviour was right — it was simply never decided, it was what
+  // measuring every column as JSON happened to do. It still cannot measure a
+  // character column: `JSON_LENGTH('abcd')` is "Invalid JSON text".
+  compileLength: (col, params, value, measure) => {
+    const lengthExpr =
+      measure === "string" ? `CHAR_LENGTH(${col})` : `JSON_LENGTH(${col})`;
     params.push(value);
-    return `(${col} IS NOT NULL AND COALESCE(JSON_LENGTH(${col}), 0) = ?)`;
+    return `(${col} IS NOT NULL AND COALESCE(${lengthExpr}, 0) = ?)`;
   },
 
   joinedDeleteSyntax: "multi-table",

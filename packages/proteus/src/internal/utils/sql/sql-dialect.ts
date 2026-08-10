@@ -1,5 +1,6 @@
 import type { LockMode } from "../../../types/find-options.js";
 import type { MetaField } from "../../entity/types/metadata.js";
+import type { LengthMeasure } from "./length-measure.js";
 
 export type SqlDialect = {
   // Quoting
@@ -25,7 +26,16 @@ export type SqlDialect = {
   compileIlike: (col: string, params: Array<unknown>, value: unknown) => string;
   compileRegex: (col: string, params: Array<unknown>, regex: RegExp) => string | null;
   compileSimilar: (col: string, params: Array<unknown>, value: unknown) => string;
-  compileHas: (col: string, params: Array<unknown>, value: unknown) => string;
+  // JSON containment. The declared column type decides which containment is
+  // meant: on an ARRAY column the operand is matched against the ELEMENTS, on an
+  // OBJECT column against the KEYS. The two are different questions and a
+  // dialect that cannot tell them apart answers the wrong one.
+  compileHas: (
+    col: string,
+    params: Array<unknown>,
+    value: unknown,
+    field: MetaField | null,
+  ) => string;
   compileAll: (
     col: string,
     params: Array<unknown>,
@@ -44,10 +54,16 @@ export type SqlDialect = {
     arr: Array<unknown>,
     field: MetaField | null,
   ) => string;
+  // `$length` measures one of three things, and WHICH one is resolved from the
+  // declared column type before a dialect is reached — so a dialect renders the
+  // measure it is handed and never inspects the stored value. `field` is still
+  // passed because postgres needs `arrayType` to choose between a native array
+  // and a JSONB one.
   compileLength: (
     col: string,
     params: Array<unknown>,
     value: unknown,
+    measure: LengthMeasure,
     field: MetaField | null,
   ) => string;
 

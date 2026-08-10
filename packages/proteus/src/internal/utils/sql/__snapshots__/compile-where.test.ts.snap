@@ -1,5 +1,75 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`compileWhere [mysql] > $has containment > should accept a LIST of elements against an array column 1`] = `"JSON_CONTAINS(\`t0\`.\`tags\`, CAST(? AS JSON))"`;
+
+exports[`compileWhere [mysql] > $has containment > should accept a LIST of elements against an array column 2`] = `
+[
+  "["a","b"]",
+]
+`;
+
+exports[`compileWhere [mysql] > $has containment > should accept a SCALAR against a jsonb-backed array column 1`] = `"JSON_CONTAINS(\`t0\`.\`tags\`, CAST(? AS JSON))"`;
+
+exports[`compileWhere [mysql] > $has containment > should accept a SCALAR against a jsonb-backed array column 2`] = `
+[
+  ""a"",
+]
+`;
+
+exports[`compileWhere [mysql] > $has containment > should accept a SCALAR against a native array column 1`] = `"JSON_CONTAINS(\`t0\`.\`nativeTags\`, CAST(? AS JSON))"`;
+
+exports[`compileWhere [mysql] > $has containment > should accept a SCALAR against a native array column 2`] = `
+[
+  ""a"",
+]
+`;
+
+exports[`compileWhere [mysql] > $has containment > should treat an operator nested inside $has as a literal key 1`] = `"JSON_CONTAINS(\`t0\`.\`data\`, CAST(? AS JSON))"`;
+
+exports[`compileWhere [mysql] > $has containment > should treat an operator nested inside $has as a literal key 2`] = `
+[
+  "{"city":{"$like":"L%"}}",
+]
+`;
+
+exports[`compileWhere [mysql] > $in / $nin against an array column > should compile $in on a jsonb-backed array to an overlap 1`] = `"JSON_OVERLAPS(\`t0\`.\`tags\`, ?)"`;
+
+exports[`compileWhere [mysql] > $in / $nin against an array column > should compile $in on a native array to an overlap 1`] = `"JSON_OVERLAPS(\`t0\`.\`nativeTags\`, ?)"`;
+
+exports[`compileWhere [mysql] > $in / $nin against an array column > should compile $in on a native array to an overlap 2`] = `
+[
+  "["a","b"]",
+]
+`;
+
+exports[`compileWhere [mysql] > $in / $nin against an array column > should compile $nin on an array column to the negated overlap 1`] = `"(JSON_OVERLAPS(\`t0\`.\`tags\`, ?)) IS NOT TRUE"`;
+
+exports[`compileWhere [mysql] > $length dispatches from the declared column type > should count CHARACTERS on a string column 1`] = `"(\`t0\`.\`name\` IS NOT NULL AND COALESCE(CHAR_LENGTH(\`t0\`.\`name\`), 0) = ?)"`;
+
+exports[`compileWhere [mysql] > $length dispatches from the declared column type > should count CHARACTERS on a uuid column 1`] = `"(\`t0\`.\`id\` IS NOT NULL AND COALESCE(CHAR_LENGTH(\`t0\`.\`id\`), 0) = ?)"`;
+
+exports[`compileWhere [mysql] > $length dispatches from the declared column type > should count ELEMENTS on a jsonb-backed array column 1`] = `"(\`t0\`.\`tags\` IS NOT NULL AND COALESCE(JSON_LENGTH(\`t0\`.\`tags\`), 0) = ?)"`;
+
+exports[`compileWhere [mysql] > $length dispatches from the declared column type > should count ELEMENTS on a native array column 1`] = `"(\`t0\`.\`nativeTags\` IS NOT NULL AND COALESCE(JSON_LENGTH(\`t0\`.\`nativeTags\`), 0) = ?)"`;
+
+exports[`compileWhere [mysql] > $length dispatches from the declared column type > should count KEYS on an object column 1`] = `"(\`t0\`.\`data\` IS NOT NULL AND COALESCE(JSON_LENGTH(\`t0\`.\`data\`), 0) = ?)"`;
+
+exports[`compileWhere [mysql] > bare array > should compile a bare array on a native array column 1`] = `"JSON_CONTAINS(\`t0\`.\`nativeTags\`, CAST(? AS JSON))"`;
+
+exports[`compileWhere [mysql] > bare array > should compile a bare array on a native array column 2`] = `
+[
+  "["a"]",
+]
+`;
+
+exports[`compileWhere [mysql] > bare array > should compile to containment, not to an equality 1`] = `"JSON_CONTAINS(\`t0\`.\`tags\`, CAST(? AS JSON))"`;
+
+exports[`compileWhere [mysql] > bare array > should compile to containment, not to an equality 2`] = `
+[
+  "["a","b"]",
+]
+`;
+
 exports[`compileWhere [mysql] > bare nested object > should AND a nested key with a sibling operator 1`] = `"(\`t0\`.\`data\` IS NOT NULL AND JSON_CONTAINS(\`t0\`.\`data\`, CAST(? AS JSON)))"`;
 
 exports[`compileWhere [mysql] > bare nested object > should AND a nested key with a sibling operator 2`] = `
@@ -31,6 +101,12 @@ exports[`compileWhere [mysql] > bare nested object > should negate a nested cond
   "{"city":"Oslo"}",
 ]
 `;
+
+exports[`compileWhere [mysql] > degenerate array-operator payloads > should not admit a NULL column for $all with an empty list 1`] = `"\`t0\`.\`tags\` IS NOT NULL"`;
+
+exports[`compileWhere [mysql] > degenerate array-operator payloads > should not admit a NULL column for $contained by a real set 1`] = `"JSON_CONTAINS(?, \`t0\`.\`tags\`)"`;
+
+exports[`compileWhere [mysql] > degenerate array-operator payloads > should not admit a NULL column for $contained by an empty set 1`] = `"(\`t0\`.\`tags\` IS NOT NULL AND JSON_LENGTH(\`t0\`.\`tags\`) = 0)"`;
 
 exports[`compileWhere [mysql] > field-level logical operators > should AND a field-level $or with its siblings 1`] = `"((\`t0\`.\`age\` < ? OR \`t0\`.\`age\` > ?) AND (\`t0\`.\`age\` = ?) IS NOT TRUE)"`;
 
@@ -144,6 +220,81 @@ exports[`compileWhere [mysql] > three-state compiled result > should drop an alw
 
 exports[`compileWhere [mysql] > three-state compiled result > should drop an always-true member from a conjunction 1`] = `"\`t0\`.\`name\` = ?"`;
 
+exports[`compileWhere [postgres] > $has containment > should accept a LIST of elements against an array column 1`] = `""t0"."tags" @> $1::jsonb"`;
+
+exports[`compileWhere [postgres] > $has containment > should accept a LIST of elements against an array column 2`] = `
+[
+  "["a","b"]",
+]
+`;
+
+exports[`compileWhere [postgres] > $has containment > should accept a SCALAR against a jsonb-backed array column 1`] = `""t0"."tags" @> $1::jsonb"`;
+
+exports[`compileWhere [postgres] > $has containment > should accept a SCALAR against a jsonb-backed array column 2`] = `
+[
+  ""a"",
+]
+`;
+
+exports[`compileWhere [postgres] > $has containment > should accept a SCALAR against a native array column 1`] = `""t0"."nativeTags" @> ARRAY[$1]::text[]"`;
+
+exports[`compileWhere [postgres] > $has containment > should accept a SCALAR against a native array column 2`] = `
+[
+  "a",
+]
+`;
+
+exports[`compileWhere [postgres] > $has containment > should treat an operator nested inside $has as a literal key 1`] = `""t0"."data" @> $1::jsonb"`;
+
+exports[`compileWhere [postgres] > $has containment > should treat an operator nested inside $has as a literal key 2`] = `
+[
+  "{"city":{"$like":"L%"}}",
+]
+`;
+
+exports[`compileWhere [postgres] > $in / $nin against an array column > should compile $in on a jsonb-backed array to an overlap 1`] = `"EXISTS (SELECT 1 FROM jsonb_array_elements("t0"."tags") AS _elem(value) WHERE _elem.value IN (SELECT jsonb_array_elements($1::jsonb)))"`;
+
+exports[`compileWhere [postgres] > $in / $nin against an array column > should compile $in on a native array to an overlap 1`] = `""t0"."nativeTags" && $1::text[]"`;
+
+exports[`compileWhere [postgres] > $in / $nin against an array column > should compile $in on a native array to an overlap 2`] = `
+[
+  [
+    "a",
+    "b",
+  ],
+]
+`;
+
+exports[`compileWhere [postgres] > $in / $nin against an array column > should compile $nin on an array column to the negated overlap 1`] = `"(EXISTS (SELECT 1 FROM jsonb_array_elements("t0"."tags") AS _elem(value) WHERE _elem.value IN (SELECT jsonb_array_elements($1::jsonb)))) IS NOT TRUE"`;
+
+exports[`compileWhere [postgres] > $length dispatches from the declared column type > should count CHARACTERS on a string column 1`] = `"("t0"."name" IS NOT NULL AND COALESCE(char_length("t0"."name"), 0) = $1)"`;
+
+exports[`compileWhere [postgres] > $length dispatches from the declared column type > should count CHARACTERS on a uuid column 1`] = `"("t0"."id" IS NOT NULL AND COALESCE(char_length("t0"."id"), 0) = $1)"`;
+
+exports[`compileWhere [postgres] > $length dispatches from the declared column type > should count ELEMENTS on a jsonb-backed array column 1`] = `"("t0"."tags" IS NOT NULL AND COALESCE(jsonb_array_length("t0"."tags"), 0) = $1)"`;
+
+exports[`compileWhere [postgres] > $length dispatches from the declared column type > should count ELEMENTS on a native array column 1`] = `"("t0"."nativeTags" IS NOT NULL AND COALESCE(array_length("t0"."nativeTags", 1), 0) = $1)"`;
+
+exports[`compileWhere [postgres] > $length dispatches from the declared column type > should count KEYS on an object column 1`] = `"("t0"."data" IS NOT NULL AND COALESCE((SELECT count(*) FROM jsonb_object_keys("t0"."data")), 0) = $1)"`;
+
+exports[`compileWhere [postgres] > bare array > should compile a bare array on a native array column 1`] = `""t0"."nativeTags" @> $1::text[]"`;
+
+exports[`compileWhere [postgres] > bare array > should compile a bare array on a native array column 2`] = `
+[
+  [
+    "a",
+  ],
+]
+`;
+
+exports[`compileWhere [postgres] > bare array > should compile to containment, not to an equality 1`] = `""t0"."tags" @> $1::jsonb"`;
+
+exports[`compileWhere [postgres] > bare array > should compile to containment, not to an equality 2`] = `
+[
+  "["a","b"]",
+]
+`;
+
 exports[`compileWhere [postgres] > bare nested object > should AND a nested key with a sibling operator 1`] = `"("t0"."data" IS NOT NULL AND "t0"."data" @> $1::jsonb)"`;
 
 exports[`compileWhere [postgres] > bare nested object > should AND a nested key with a sibling operator 2`] = `
@@ -175,6 +326,12 @@ exports[`compileWhere [postgres] > bare nested object > should negate a nested c
   "{"city":"Oslo"}",
 ]
 `;
+
+exports[`compileWhere [postgres] > degenerate array-operator payloads > should not admit a NULL column for $all with an empty list 1`] = `""t0"."tags" @> $1::jsonb"`;
+
+exports[`compileWhere [postgres] > degenerate array-operator payloads > should not admit a NULL column for $contained by a real set 1`] = `""t0"."tags" <@ $1::jsonb"`;
+
+exports[`compileWhere [postgres] > degenerate array-operator payloads > should not admit a NULL column for $contained by an empty set 1`] = `""t0"."tags" <@ $1::jsonb"`;
 
 exports[`compileWhere [postgres] > field-level logical operators > should AND a field-level $or with its siblings 1`] = `"(("t0"."age" < $1 OR "t0"."age" > $2) AND ("t0"."age" = $3) IS NOT TRUE)"`;
 
@@ -288,7 +445,80 @@ exports[`compileWhere [postgres] > three-state compiled result > should drop an 
 
 exports[`compileWhere [postgres] > three-state compiled result > should drop an always-true member from a conjunction 1`] = `""t0"."name" = $1"`;
 
-exports[`compileWhere [sqlite] > bare nested object > should AND a nested key with a sibling operator 1`] = `"("t0"."data" IS NOT NULL AND json_extract("t0"."data", '$."city"') = ?)"`;
+exports[`compileWhere [sqlite] > $has containment > should accept a LIST of elements against an array column 1`] = `"(EXISTS (SELECT 1 FROM json_each("t0"."tags") AS _e0 WHERE _e0.value = ?) AND EXISTS (SELECT 1 FROM json_each("t0"."tags") AS _e0 WHERE _e0.value = ?))"`;
+
+exports[`compileWhere [sqlite] > $has containment > should accept a LIST of elements against an array column 2`] = `
+[
+  "a",
+  "b",
+]
+`;
+
+exports[`compileWhere [sqlite] > $has containment > should accept a SCALAR against a jsonb-backed array column 1`] = `"EXISTS (SELECT 1 FROM json_each("t0"."tags") AS _e0 WHERE _e0.value = ?)"`;
+
+exports[`compileWhere [sqlite] > $has containment > should accept a SCALAR against a jsonb-backed array column 2`] = `
+[
+  "a",
+]
+`;
+
+exports[`compileWhere [sqlite] > $has containment > should accept a SCALAR against a native array column 1`] = `"EXISTS (SELECT 1 FROM json_each("t0"."nativeTags") AS _e0 WHERE _e0.value = ?)"`;
+
+exports[`compileWhere [sqlite] > $has containment > should accept a SCALAR against a native array column 2`] = `
+[
+  "a",
+]
+`;
+
+exports[`compileWhere [sqlite] > $has containment > should treat an operator nested inside $has as a literal key 1`] = `"(json_type("t0"."data", '$."city"') IS NOT NULL AND (json_type("t0"."data", '$."city"."$like"') IS NOT NULL AND json_extract("t0"."data", '$."city"."$like"') = ?))"`;
+
+exports[`compileWhere [sqlite] > $has containment > should treat an operator nested inside $has as a literal key 2`] = `
+[
+  "L%",
+]
+`;
+
+exports[`compileWhere [sqlite] > $in / $nin against an array column > should compile $in on a jsonb-backed array to an overlap 1`] = `"EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value IN (?, ?))"`;
+
+exports[`compileWhere [sqlite] > $in / $nin against an array column > should compile $in on a native array to an overlap 1`] = `"EXISTS (SELECT 1 FROM json_each("t0"."nativeTags") WHERE value IN (?, ?))"`;
+
+exports[`compileWhere [sqlite] > $in / $nin against an array column > should compile $in on a native array to an overlap 2`] = `
+[
+  "a",
+  "b",
+]
+`;
+
+exports[`compileWhere [sqlite] > $in / $nin against an array column > should compile $nin on an array column to the negated overlap 1`] = `"(EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value IN (?))) IS NOT TRUE"`;
+
+exports[`compileWhere [sqlite] > $length dispatches from the declared column type > should count CHARACTERS on a string column 1`] = `"("t0"."name" IS NOT NULL AND COALESCE(length("t0"."name"), 0) = ?)"`;
+
+exports[`compileWhere [sqlite] > $length dispatches from the declared column type > should count CHARACTERS on a uuid column 1`] = `"("t0"."id" IS NOT NULL AND COALESCE(length("t0"."id"), 0) = ?)"`;
+
+exports[`compileWhere [sqlite] > $length dispatches from the declared column type > should count ELEMENTS on a jsonb-backed array column 1`] = `"("t0"."tags" IS NOT NULL AND COALESCE(json_array_length("t0"."tags"), 0) = ?)"`;
+
+exports[`compileWhere [sqlite] > $length dispatches from the declared column type > should count ELEMENTS on a native array column 1`] = `"("t0"."nativeTags" IS NOT NULL AND COALESCE(json_array_length("t0"."nativeTags"), 0) = ?)"`;
+
+exports[`compileWhere [sqlite] > $length dispatches from the declared column type > should count KEYS on an object column 1`] = `"("t0"."data" IS NOT NULL AND COALESCE((SELECT count(*) FROM json_each("t0"."data")), 0) = ?)"`;
+
+exports[`compileWhere [sqlite] > bare array > should compile a bare array on a native array column 1`] = `"EXISTS (SELECT 1 FROM json_each("t0"."nativeTags") AS _e0 WHERE _e0.value = ?)"`;
+
+exports[`compileWhere [sqlite] > bare array > should compile a bare array on a native array column 2`] = `
+[
+  "a",
+]
+`;
+
+exports[`compileWhere [sqlite] > bare array > should compile to containment, not to an equality 1`] = `"(EXISTS (SELECT 1 FROM json_each("t0"."tags") AS _e0 WHERE _e0.value = ?) AND EXISTS (SELECT 1 FROM json_each("t0"."tags") AS _e0 WHERE _e0.value = ?))"`;
+
+exports[`compileWhere [sqlite] > bare array > should compile to containment, not to an equality 2`] = `
+[
+  "a",
+  "b",
+]
+`;
+
+exports[`compileWhere [sqlite] > bare nested object > should AND a nested key with a sibling operator 1`] = `"("t0"."data" IS NOT NULL AND (json_type("t0"."data", '$."city"') IS NOT NULL AND json_extract("t0"."data", '$."city"') = ?))"`;
 
 exports[`compileWhere [sqlite] > bare nested object > should AND a nested key with a sibling operator 2`] = `
 [
@@ -296,7 +526,7 @@ exports[`compileWhere [sqlite] > bare nested object > should AND a nested key wi
 ]
 `;
 
-exports[`compileWhere [sqlite] > bare nested object > should compile to JSON containment, not to always-true 1`] = `"json_extract("t0"."data", '$."city"') = ?"`;
+exports[`compileWhere [sqlite] > bare nested object > should compile to JSON containment, not to always-true 1`] = `"(json_type("t0"."data", '$."city"') IS NOT NULL AND json_extract("t0"."data", '$."city"') = ?)"`;
 
 exports[`compileWhere [sqlite] > bare nested object > should compile to JSON containment, not to always-true 2`] = `
 [
@@ -304,7 +534,7 @@ exports[`compileWhere [sqlite] > bare nested object > should compile to JSON con
 ]
 `;
 
-exports[`compileWhere [sqlite] > bare nested object > should emit ONE containment clause for several nested keys 1`] = `"(json_extract("t0"."data", '$."city"') = ? AND json_extract("t0"."data", '$."postcode"') = ?)"`;
+exports[`compileWhere [sqlite] > bare nested object > should emit ONE containment clause for several nested keys 1`] = `"((json_type("t0"."data", '$."city"') IS NOT NULL AND json_extract("t0"."data", '$."city"') = ?) AND (json_type("t0"."data", '$."postcode"') IS NOT NULL AND json_extract("t0"."data", '$."postcode"') = ?))"`;
 
 exports[`compileWhere [sqlite] > bare nested object > should emit ONE containment clause for several nested keys 2`] = `
 [
@@ -313,13 +543,19 @@ exports[`compileWhere [sqlite] > bare nested object > should emit ONE containmen
 ]
 `;
 
-exports[`compileWhere [sqlite] > bare nested object > should negate a nested condition through $not 1`] = `"(json_extract("t0"."data", '$."city"') = ?) IS NOT TRUE"`;
+exports[`compileWhere [sqlite] > bare nested object > should negate a nested condition through $not 1`] = `"((json_type("t0"."data", '$."city"') IS NOT NULL AND json_extract("t0"."data", '$."city"') = ?)) IS NOT TRUE"`;
 
 exports[`compileWhere [sqlite] > bare nested object > should negate a nested condition through $not 2`] = `
 [
   "Oslo",
 ]
 `;
+
+exports[`compileWhere [sqlite] > degenerate array-operator payloads > should not admit a NULL column for $all with an empty list 1`] = `""t0"."tags" IS NOT NULL"`;
+
+exports[`compileWhere [sqlite] > degenerate array-operator payloads > should not admit a NULL column for $contained by a real set 1`] = `"("t0"."tags" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value NOT IN (?)))"`;
+
+exports[`compileWhere [sqlite] > degenerate array-operator payloads > should not admit a NULL column for $contained by an empty set 1`] = `"("t0"."tags" IS NOT NULL AND json_array_length("t0"."tags") = 0)"`;
 
 exports[`compileWhere [sqlite] > field-level logical operators > should AND a field-level $or with its siblings 1`] = `"(("t0"."age" < ? OR "t0"."age" > ?) AND ("t0"."age" = ?) IS NOT TRUE)"`;
 
@@ -343,7 +579,7 @@ exports[`compileWhere [sqlite] > should compile $and at root level 1`] = `"WHERE
 
 exports[`compileWhere [sqlite] > should compile $between 1`] = `"WHERE "t0"."age" BETWEEN ? AND ?"`;
 
-exports[`compileWhere [sqlite] > should compile $contained (array contained-by) 1`] = `"WHERE NOT EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value NOT IN (?, ?, ?, ?))"`;
+exports[`compileWhere [sqlite] > should compile $contained (array contained-by) 1`] = `"WHERE ("t0"."tags" IS NOT NULL AND NOT EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value NOT IN (?, ?, ?, ?)))"`;
 
 exports[`compileWhere [sqlite] > should compile $eq: null to IS NULL 1`] = `"WHERE "t0"."name" IS NULL"`;
 
@@ -351,7 +587,7 @@ exports[`compileWhere [sqlite] > should compile $exists: false to IS NULL 1`] = 
 
 exports[`compileWhere [sqlite] > should compile $exists: true to IS NOT NULL 1`] = `"WHERE "t0"."email_address" IS NOT NULL"`;
 
-exports[`compileWhere [sqlite] > should compile $has (JSON containment) 1`] = `"WHERE json_extract("t0"."data", '$."key"') = ?"`;
+exports[`compileWhere [sqlite] > should compile $has (JSON containment) 1`] = `"WHERE (json_type("t0"."data", '$."key"') IS NOT NULL AND json_extract("t0"."data", '$."key"') = ?)"`;
 
 exports[`compileWhere [sqlite] > should compile $ilike 1`] = `"WHERE LOWER("t0"."name") LIKE LOWER(?)"`;
 

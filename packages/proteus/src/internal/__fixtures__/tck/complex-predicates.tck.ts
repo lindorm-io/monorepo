@@ -1021,6 +1021,344 @@ export const complexPredicatesSuite = (
       });
     });
 
+    // ─── Structured operators over a column holding a list or a document ──
+    //
+    // The operators that read INTO a column: `$length`, `$all`, `$overlap`,
+    // `$contained`, `$in` / `$nin` against a list, `$has`, and the bare array.
+    // Each dialect used to assume what the column held, and they assumed
+    // different things — so the three disagreed with each other as well as with
+    // the condition language.
+    //
+    // A NULL column is where every one of those disagreements shows, and no
+    // suite could see any of it: `TckJsonHolder` had no nullable document at all
+    // and the one nullable array was queried by a single `$length: 0`. Both
+    // gaps are closed by the `extras` columns these blocks query.
+    //
+    // Every expectation comes from running `Matcher.filter` from `@lindorm/match`
+    // over these exact rows. None of it was read off a driver.
+
+    if (caps.structuredOperators) {
+      describe("Structured operators over a NULLABLE jsonb array", () => {
+        const { TckJsonbArray } = entities;
+
+        beforeEach(async () => {
+          await getHandle().clear();
+          const repo = getHandle().repository(TckJsonbArray);
+          await repo.insert({
+            name: "ab",
+            label: "keep",
+            tags: ["a", "b"],
+            extras: ["x"],
+          });
+          await repo.insert({
+            name: "abc",
+            label: "drop",
+            tags: ["a", "b", "c"],
+            extras: [],
+          });
+          await repo.insert({ name: "cd", label: null, tags: ["c", "d"], extras: null });
+          await repo.insert({
+            name: "xy",
+            label: null,
+            tags: ["x", "y", "z"],
+            extras: null,
+          });
+        });
+
+        const names = async (criteria: unknown) => {
+          const repo = getHandle().repository(TckJsonbArray);
+          const results = await (repo.find as any)(criteria, { order: { name: "ASC" } });
+          return results.map((r: { name: string }) => r.name);
+        };
+
+        // `$all` requires an ARRAY value, so an empty required-element list is
+        // satisfied by any list and by no NULL. mysql and sqlite short-circuited
+        // to `1=1` and handed back the NULL rows; postgres was already right.
+        test("$all with an empty list excludes the NULL rows", async () => {
+          expect(await names({ extras: { $all: [] } })).toEqual(["ab", "abc"]);
+        });
+
+        test("$all with a real element", async () => {
+          expect(await names({ extras: { $all: ["x"] } })).toEqual(["ab"]);
+        });
+
+        // Contained by the empty set means the row's own list is EMPTY. mysql
+        // and sqlite emitted `col IS NULL OR len = 0` and let the NULL rows in.
+        test("$contained by an empty set matches only the empty list", async () => {
+          expect(await names({ extras: { $contained: [] } })).toEqual(["abc"]);
+        });
+
+        // sqlite's `NOT EXISTS` over `json_each(NULL)` was VACUOUSLY TRUE, so
+        // every NULL row came back — on that dialect alone.
+        test("$contained over a NULL column does not match", async () => {
+          expect(await names({ extras: { $contained: ["x"] } })).toEqual(["ab", "abc"]);
+        });
+
+        test("$overlap with an empty list matches nothing", async () => {
+          expect(await names({ extras: { $overlap: [] } })).toEqual([]);
+        });
+
+        test("$overlap with a real element", async () => {
+          expect(await names({ extras: { $overlap: ["x"] } })).toEqual(["ab"]);
+        });
+
+        // `$in` against a LIST is overlap, not a comparison against the whole
+        // array: a hard error on postgres, a silent empty result on mysql and
+        // sqlite.
+        test("$in against an array column takes the overlap", async () => {
+          expect(await names({ extras: { $in: ["x"] } })).toEqual(["ab"]);
+        });
+
+        test("$nin against an array column keeps the NULL rows", async () => {
+          expect(await names({ extras: { $nin: ["x"] } })).toEqual(["abc", "cd", "xy"]);
+        });
+
+        test("$has takes a single element", async () => {
+          expect(await names({ extras: { $has: "x" } })).toEqual(["ab"]);
+        });
+
+        // A bare ARRAY is CONTAINMENT. Bound as a plain `=` parameter it was an
+        // error on postgres and sqlite and a silent non-match on mysql.
+        test("a bare array is containment", async () => {
+          expect(await names({ extras: ["x"] })).toEqual(["ab"]);
+        });
+
+        test("a bare empty array matches every list", async () => {
+          expect(await names({ extras: [] })).toEqual(["ab", "abc"]);
+        });
+
+        test("$length counts elements and does not count a NULL", async () => {
+          expect(await names({ extras: { $length: 0 } })).toEqual(["abc"]);
+          expect(await names({ extras: { $length: 1 } })).toEqual(["ab"]);
+        });
+
+        test("negating an empty $all returns exactly the NULL rows", async () => {
+          expect(await names({ extras: { $not: { $all: [] } } })).toEqual(["cd", "xy"]);
+        });
+
+        test("$exists is unchanged over the same column", async () => {
+          expect(await names({ extras: { $exists: true } })).toEqual(["ab", "abc"]);
+        });
+
+        // ── the NOT NULL list, so the element-containment forms are proved
+        // ── independently of the null question
+
+        test("$has and the bare array are two spellings of one thing", async () => {
+          expect(await names({ tags: { $has: "a" } })).toEqual(["ab", "abc"]);
+          expect(await names({ tags: ["a"] })).toEqual(["ab", "abc"]);
+        });
+
+        test("a bare array requires EVERY listed element", async () => {
+          expect(await names({ tags: ["a", "c"] })).toEqual(["abc"]);
+        });
+
+        test("$has accepts a list of elements", async () => {
+          expect(await names({ tags: { $has: ["a", "b"] } })).toEqual(["ab", "abc"]);
+        });
+
+        test("$in over a NOT NULL list takes the overlap", async () => {
+          expect(await names({ tags: { $in: ["a", "x"] } })).toEqual(["ab", "abc", "xy"]);
+        });
+
+        test("$nin over a NOT NULL list is its complement", async () => {
+          expect(await names({ tags: { $nin: ["a"] } })).toEqual(["cd", "xy"]);
+        });
+
+        // The three-state compiled result carries across the array branch too.
+        test("an empty $in still matches nothing and an empty $nin still excludes nothing", async () => {
+          expect(await names({ tags: { $in: [] } })).toEqual([]);
+          expect(await names({ tags: { $nin: [] } })).toEqual(["ab", "abc", "cd", "xy"]);
+        });
+
+        // ── $length on a STRING column: postgres and sqlite errored, mysql
+        // ── errored, all three by measuring a character column as JSON.
+
+        test("$length counts characters on a string column", async () => {
+          expect(await names({ label: { $length: 4 } })).toEqual(["ab", "abc"]);
+        });
+
+        test("$length on a string column does not count the NULL rows", async () => {
+          expect(await names({ label: { $length: 0 } })).toEqual([]);
+        });
+
+        test("negated string $length keeps the NULL rows", async () => {
+          expect(await names({ label: { $not: { $length: 4 } } })).toEqual(["cd", "xy"]);
+        });
+
+        // ── a column with no length at all is REFUSED, rather than erroring in
+        // ── the database or silently returning nothing
+
+        // ⚠ NOT asserted here: `$has` on a SCALAR column. The SQL drivers refuse
+        // it — one spelling per meaning, and the same treatment `$all` already
+        // gets on a column it cannot apply to — while the condition language
+        // reduces it to a plain equality and MATCHES. That is a known
+        // driver-vs-oracle divergence, so it is stated rather than encoded as
+        // shared behaviour; the SQL side is asserted in the compiler's own test.
+
+        test.each([
+          ["an integer column", { version: { $length: 1 } }],
+          ["a date column", { createdAt: { $length: 1 } }],
+          ["a non-number operand", { label: { $length: "4" } }],
+        ])("refuses $length on %s", async (_label, criteria) => {
+          const repo = getHandle().repository(TckJsonbArray);
+          await expect((repo.find as any)(criteria)).rejects.toThrow();
+        });
+      });
+
+      describe("Structured operators over a NULLABLE native array", () => {
+        // `TckArrayHolder.extras` declares `arrayType`, which on postgres is a
+        // NATIVE `text[]` rather than JSONB — a different code path in every
+        // operator, and the one that hard-errors on a scalar comparison.
+        const { TckArrayHolder } = entities;
+
+        beforeEach(async () => {
+          await getHandle().clear();
+          const repo = getHandle().repository(TckArrayHolder);
+          await repo.insert({ tags: ["a"], scores: [1], extras: ["x", "y"] });
+          await repo.insert({ tags: ["b"], scores: [2], extras: [] });
+          await repo.insert({ tags: ["c"], scores: [3], extras: null });
+        });
+
+        const tags = async (criteria: unknown) => {
+          const repo = getHandle().repository(TckArrayHolder);
+          const results = await (repo.find as any)(criteria, { order: { tags: "ASC" } });
+          return results.map((r: { tags: Array<string> }) => r.tags[0]);
+        };
+
+        test("$all with an empty list excludes the NULL row", async () => {
+          expect(await tags({ extras: { $all: [] } })).toEqual(["a", "b"]);
+        });
+
+        test("$contained by an empty set matches only the empty list", async () => {
+          expect(await tags({ extras: { $contained: [] } })).toEqual(["b"]);
+        });
+
+        test("$contained over a NULL column does not match", async () => {
+          expect(await tags({ extras: { $contained: ["x", "y", "z"] } })).toEqual([
+            "a",
+            "b",
+          ]);
+        });
+
+        test("$overlap with a real element", async () => {
+          expect(await tags({ extras: { $overlap: ["x"] } })).toEqual(["a"]);
+        });
+
+        test("$has takes a single element", async () => {
+          expect(await tags({ extras: { $has: "x" } })).toEqual(["a"]);
+        });
+
+        test("a bare array is containment", async () => {
+          expect(await tags({ extras: ["x"] })).toEqual(["a"]);
+        });
+
+        test("$in against a native array takes the overlap", async () => {
+          expect(await tags({ extras: { $in: ["x", "q"] } })).toEqual(["a"]);
+        });
+
+        test("$nin against a native array keeps the NULL row", async () => {
+          expect(await tags({ extras: { $nin: ["x"] } })).toEqual(["b", "c"]);
+        });
+
+        test("$length counts elements, including the empty list", async () => {
+          expect(await tags({ extras: { $length: 2 } })).toEqual(["a"]);
+          expect(await tags({ extras: { $length: 0 } })).toEqual(["b"]);
+        });
+
+        test("$in over a NOT NULL native array", async () => {
+          expect(await tags({ tags: { $in: ["a", "c"] } })).toEqual(["a", "c"]);
+        });
+
+        test("$in over a numeric native array", async () => {
+          expect(await tags({ scores: { $in: [1, 3] } })).toEqual(["a", "c"]);
+        });
+
+        test("$has over a NOT NULL native array", async () => {
+          expect(await tags({ tags: { $has: "a" } })).toEqual(["a"]);
+        });
+      });
+
+      describe("Structured operators over a NULLABLE document", () => {
+        const { TckJsonHolder } = entities;
+
+        beforeEach(async () => {
+          await getHandle().clear();
+          const repo = getHandle().repository(TckJsonHolder);
+          await repo.insert({
+            metadata: { theme: "dark", version: 2 },
+            settings: { theme: "dark", count: 5 },
+            payload: { items: ["a"], count: 1 },
+            extras: { a: 1 },
+          });
+          await repo.insert({
+            metadata: { theme: "light", version: 1 },
+            settings: { theme: "light", count: 3 },
+            payload: { items: ["b", "c"], count: 2 },
+            extras: null,
+          });
+          await repo.insert({
+            metadata: { theme: "dark", version: 3, extra: true },
+            settings: { theme: "dark", count: 10 },
+            payload: { items: ["d"], count: 1 },
+            extras: { a: 1, b: 2 },
+          });
+        });
+
+        const versions = async (criteria: unknown) => {
+          const repo = getHandle().repository(TckJsonHolder);
+          const results = await (repo.find as any)(criteria);
+          return results
+            .map((r: { metadata: Record<string, unknown> }) => r.metadata.version)
+            .sort();
+        };
+
+        // `$length` on a DOCUMENT counts its KEYS. postgres errored ("cannot get
+        // array length of a non-array"), sqlite silently returned nothing, and
+        // mysql counted keys — right, but because `JSON_LENGTH` happens to do
+        // that, not because anything decided it.
+        test("$length counts the keys of a document", async () => {
+          expect(await versions({ metadata: { $length: 2 } })).toEqual([1, 2]);
+          expect(await versions({ metadata: { $length: 3 } })).toEqual([3]);
+        });
+
+        test("$length does not count a NULL document", async () => {
+          expect(await versions({ extras: { $length: 1 } })).toEqual([2]);
+          expect(await versions({ extras: { $length: 2 } })).toEqual([3]);
+        });
+
+        test("$has does not match a NULL document", async () => {
+          expect(await versions({ extras: { $has: { a: 1 } } })).toEqual([2, 3]);
+        });
+
+        test("a bare nested object does not match a NULL document", async () => {
+          expect(await versions({ extras: { a: 1 } })).toEqual([2, 3]);
+        });
+
+        test("$has reaches a non-string leaf", async () => {
+          expect(await versions({ payload: { $has: { count: 1 } } })).toEqual([2, 3]);
+          expect(await versions({ metadata: { $has: { extra: true } } })).toEqual([3]);
+        });
+
+        test("$has reaches into a nested array", async () => {
+          expect(await versions({ payload: { $has: { items: ["a"] } } })).toEqual([2]);
+        });
+
+        // `$has` is PLAIN containment. An operator written inside it is a
+        // LITERAL JSON key, which is what `@>` and `JSON_CONTAINS` search for —
+        // so no document has it and nothing matches. A driver that evaluated it
+        // as an operator would answer a question the other five cannot.
+        test("an operator nested inside $has is a literal key, not an operator", async () => {
+          expect(
+            await versions({ metadata: { $has: { theme: { $like: "d%" } } } }),
+          ).toEqual([]);
+        });
+
+        test("negated document $length keeps the other rows", async () => {
+          expect(await versions({ metadata: { $not: { $length: 2 } } })).toEqual([3]);
+        });
+      });
+    }
+
     // ─── Field-level condition forms ───────────────────────────────────
     //
     // Three forms that a driver could carry and none of the SQL compilers did.

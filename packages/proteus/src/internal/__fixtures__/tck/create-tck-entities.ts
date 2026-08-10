@@ -964,6 +964,16 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Field("array")
     tags!: Array<string>;
+
+    // A NULLABLE jsonb-backed array. `tags` above is NOT NULL, and every
+    // divergence the structured operators still carry is a NULL-row divergence:
+    // `$all: []` and `$contained: []` include one dialect's NULL rows and not
+    // another's, and `$contained` over a NULL column is vacuously true on
+    // sqlite. A suite that only ever queries a NOT NULL column cannot see any
+    // of it.
+    @Nullable()
+    @Field("array")
+    extras!: Array<string> | null;
   }
 
   @Entity({ name: "TckJsonHolder" })
@@ -989,6 +999,14 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Field("object")
     payload!: { items: Array<string>; count: number };
+
+    // The one NULLABLE document column. Every other column here is NOT NULL, so
+    // a `$has` or a bare nested condition never had a null document to exclude
+    // and a `$length` never had one to refuse to count — which is exactly where
+    // the dialects disagreed.
+    @Nullable()
+    @Field("object")
+    extras!: Record<string, unknown> | null;
   }
 
   // @TypedJson — lossless type fidelity via a sidecar type-metadata column.

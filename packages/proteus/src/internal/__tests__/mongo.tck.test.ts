@@ -55,6 +55,7 @@ const factory: TckDriverFactory = {
     // exact subdocument match, has no branch for a field-level $and / $or, and
     // coerces a malformed operator payload instead of refusing it.
     fieldConditions: false,
+    structuredOperators: false,
     encryption: true,
     inheritance: { singleTable: true, joined: false },
     transactions: { rollback: true, savepoints: false },

@@ -25,6 +25,10 @@ const metadata = {
     makeField("score", { type: "float" }),
     makeField("data", { type: "object" }),
     makeField("published", { type: "boolean" }),
+    // Postgres emits a NATIVE `text[]` for an array that declares `arrayType`
+    // and JSONB for one that does not. They are different SQL in every
+    // structured operator, so both have to be in the fixture.
+    makeField("nativeTags", { type: "array", arrayType: "string" }),
   ],
   relations: [],
 } as unknown as EntityMetadata;
@@ -1087,6 +1091,406 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
           `requires an object-typed column, but field "${fieldKey}" has type "${fieldType}"`,
         ),
       );
+    });
+  });
+
+  // ── The STRUCTURED operators ──
+  //
+  // Every operator that reads INTO a column holding a list or a document. Each
+  // dialect used to ASSUME what the column held — and they assumed different
+  // things, so the three disagreed with each other as well as with the condition
+  // language. The declared column type is what removes the assumption.
+
+  describe("$length dispatches from the declared column type", () => {
+    // The dispatch itself, asserted without naming any dialect's function.
+    // Every dialect used to emit ONE expression for every column type — that is
+    // the assumption being removed — so a CHARACTER column must now compile to
+    // something other than a structured one.
+    //
+    // Array and object are deliberately NOT required to differ: mysql's
+    // `JSON_LENGTH` genuinely counts elements and keys alike, which is why its
+    // object behaviour was right all along. postgres and sqlite need two
+    // expressions; mysql needs one, and one is not a wrong answer there.
+    const lengthOf = (fieldKey: string) =>
+      renderCondition(
+        compilePredicate({ [fieldKey]: { $length: 1 } }, metadata, "t0", [], dialect),
+      ).replace(new RegExp(`"?\`?t0"?\`?\\."?\`?${fieldKey}"?\`?`, "g"), "<col>");
+
+    test("should measure a character column differently from a structured one", () => {
+      expect(lengthOf("name")).not.toBe(lengthOf("tags"));
+      expect(lengthOf("name")).not.toBe(lengthOf("data"));
+      expect(lengthOf("name")).toBe(lengthOf("id"));
+    });
+
+    test("should count ELEMENTS on a jsonb-backed array column", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { tags: { $length: 3 } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual([3]);
+    });
+
+    test("should count ELEMENTS on a native array column", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { nativeTags: { $length: 3 } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual([3]);
+    });
+
+    // postgres raised "cannot get array length of a non-array" and sqlite
+    // silently returned nothing. mysql was right, but because `JSON_LENGTH`
+    // happens to count keys — nothing had decided it.
+    test("should count KEYS on an object column", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { data: { $length: 2 } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual([2]);
+    });
+
+    // All three measured a character column as JSON and errored on it.
+    test("should count CHARACTERS on a string column", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { name: { $length: 4 } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual([4]);
+    });
+
+    // A column with no length is REFUSED here rather than reaching a dialect
+    // that would error in the database or silently match nothing.
+    test.each([
+      ["an integer column", "age", "integer"],
+      ["a float column", "score", "float"],
+      ["a boolean column", "published", "boolean"],
+    ])("should refuse $length on %s", (_label, fieldKey, fieldType) => {
+      expect(() =>
+        compilePredicate({ [fieldKey]: { $length: 1 } }, metadata, "t0", [], dialect),
+      ).toThrow(new RegExp(`cannot measure field "${fieldKey}" of type "${fieldType}"`));
+    });
+
+    // A uuid is stored as characters, so it has one.
+    test("should count CHARACTERS on a uuid column", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { id: { $length: 36 } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual([36]);
+    });
+
+    test("should refuse a non-number operand", () => {
+      expect(() =>
+        compilePredicate({ tags: { $length: "3" } }, metadata, "t0", [], dialect),
+      ).toThrow(/requires a number/);
+    });
+  });
+
+  describe("$has containment", () => {
+    // pg and mysql already carried this; sqlite compared each element to the
+    // JSON RENDERING of the operand, so `json_each.value` ('a') never equalled
+    // `json('"a"')` ('"a"') and a scalar matched nothing at all.
+    test("should accept a SCALAR against a jsonb-backed array column", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { tags: { $has: "a" } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toMatchSnapshot();
+    });
+
+    test("should accept a SCALAR against a native array column", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { nativeTags: { $has: "a" } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toMatchSnapshot();
+    });
+
+    test("should accept a LIST of elements against an array column", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { tags: { $has: ["a", "b"] } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toMatchSnapshot();
+    });
+
+    // PLAIN containment. `$like` is a literal JSON key here, on every dialect —
+    // the operator is not evaluated, which is what makes the operand something
+    // a driver can actually implement.
+    test("should treat an operator nested inside $has as a literal key", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { data: { $has: { city: { $like: "L%" } } } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).not.toContain("LIKE");
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toMatchSnapshot();
+    });
+
+    // ⚠ A KNOWN driver-vs-oracle divergence, asserted here rather than in the
+    // shared TCK because it is SQL's answer and not the language's. On a scalar
+    // column the condition language reduces `$has` to a plain equality and
+    // MATCHES; the SQL drivers refuse it, because that equality is `$eq`
+    // spelled a second way, and because the alternative is what the three
+    // dialects did before — a postgres error, a mysql error, and a silent empty
+    // result on sqlite. Same treatment `$all` already gets on a column it
+    // cannot apply to.
+    test.each([
+      ["a string column", "name", "string"],
+      ["an integer column", "age", "integer"],
+    ])("should refuse $has on %s", (_label, fieldKey, fieldType) => {
+      expect(() =>
+        compilePredicate({ [fieldKey]: { $has: "x" } }, metadata, "t0", [], dialect),
+      ).toThrow(
+        new RegExp(
+          `requires a structured column, but field "${fieldKey}" has type "${fieldType}"`,
+        ),
+      );
+    });
+  });
+
+  // ── A bare ARRAY value ──
+  //
+  // `{ tags: ["a"] }` means CONTAINMENT. Bound as a plain `=` parameter it was a
+  // hard error on postgres and sqlite and a silent non-match on mysql. Together
+  // with the bare nested object it is ONE rule: a bare composite value means
+  // "contained in", never "equal to".
+
+  describe("bare array", () => {
+    test("should compile to containment, not to an equality", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { tags: ["a", "b"] },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).not.toMatch(/"t0"\."tags" = /);
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toMatchSnapshot();
+    });
+
+    test("should compile to exactly what the same $has compiles to", () => {
+      const bareParams: Array<unknown> = [];
+      const bare = compilePredicate(
+        { tags: ["a", "b"] },
+        metadata,
+        "t0",
+        bareParams,
+        dialect,
+      );
+
+      const hasParams: Array<unknown> = [];
+      const has = compilePredicate(
+        { tags: { $has: ["a", "b"] } },
+        metadata,
+        "t0",
+        hasParams,
+        dialect,
+      );
+
+      expect(bare).toEqual(has);
+      expect(bareParams).toEqual(hasParams);
+    });
+
+    test("should compile a bare array on a native array column", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { nativeTags: ["a"] },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toMatchSnapshot();
+    });
+
+    test.each([
+      ["a string column", "name", "string"],
+      ["an object column", "data", "object"],
+      ["an integer column", "age", "integer"],
+    ])("should refuse a bare array on %s", (_label, fieldKey, fieldType) => {
+      expect(() =>
+        compilePredicate({ [fieldKey]: ["a"] }, metadata, "t0", [], dialect),
+      ).toThrow(
+        new RegExp(
+          `A bare array condition requires an array-typed column, but field "${fieldKey}" has type "${fieldType}"`,
+        ),
+      );
+    });
+  });
+
+  // ── `$in` / `$nin` against a column that holds a LIST ──
+  //
+  // A scalar `IN` asked whether the whole array equals one of the listed values:
+  // a hard ERROR on postgres and a silent empty result on mysql and sqlite. The
+  // condition language reads membership between two lists as OVERLAP.
+
+  describe("$in / $nin against an array column", () => {
+    test("should compile $in on a jsonb-backed array to an overlap", () => {
+      const inParams: Array<unknown> = [];
+      const asIn = compilePredicate(
+        { tags: { $in: ["a", "b"] } },
+        metadata,
+        "t0",
+        inParams,
+        dialect,
+      );
+
+      const overlapParams: Array<unknown> = [];
+      const asOverlap = compilePredicate(
+        { tags: { $overlap: ["a", "b"] } },
+        metadata,
+        "t0",
+        overlapParams,
+        dialect,
+      );
+
+      expect(asIn).toEqual(asOverlap);
+      expect(inParams).toEqual(overlapParams);
+      expect(renderCondition(asIn)).toMatchSnapshot();
+    });
+
+    test("should compile $in on a native array to an overlap", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { nativeTags: { $in: ["a", "b"] } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toMatchSnapshot();
+    });
+
+    test("should compile $nin on an array column to the negated overlap", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { tags: { $nin: ["a"] } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toContain("IS NOT TRUE");
+      expect(renderCondition(result)).toMatchSnapshot();
+    });
+
+    // The three-state result carries across the array branch unchanged.
+    test("should keep the empty-list states on an array column", () => {
+      expect(
+        compilePredicate({ tags: { $in: [] } }, metadata, "t0", [], dialect),
+      ).toEqual({ kind: "always-false" });
+      expect(
+        compilePredicate({ tags: { $nin: [] } }, metadata, "t0", [], dialect),
+      ).toEqual({ kind: "always-true" });
+    });
+
+    test("should leave a scalar column on the scalar membership test", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { name: { $in: ["Alice"] } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toContain("IN (");
+      expect(params).toEqual(["Alice"]);
+    });
+
+    test("should refuse a non-array $in operand", () => {
+      expect(() =>
+        compilePredicate({ tags: { $in: "a" } }, metadata, "t0", [], dialect),
+      ).toThrow(/requires an array/);
+    });
+  });
+
+  // ── The degenerate array-operator payloads over a NULL column ──
+  //
+  // `$all` and `$contained` require an ARRAY value, so a NULL column satisfies
+  // neither — not even in the empty-list forms, where mysql short-circuited to
+  // `1=1` and both mysql and sqlite emitted an explicit `IS NULL` alternative.
+
+  describe("degenerate array-operator payloads", () => {
+    test.each([
+      ["$all with an empty list", { tags: { $all: [] } }],
+      ["$contained by an empty set", { tags: { $contained: [] } }],
+      ["$contained by a real set", { tags: { $contained: ["a"] } }],
+    ])("should not admit a NULL column for %s", (_label, predicate) => {
+      const params: Array<unknown> = [];
+      const rendered = renderCondition(
+        compilePredicate(predicate, metadata, "t0", params, dialect),
+      );
+
+      // The two shapes that ADMITTED a NULL column. Postgres needs no explicit
+      // guard — `NULL @> …` and `NULL <@ …` are NULL, so the row drops — which
+      // is why the positive proof is in the TCK, against real databases.
+      expect(rendered).not.toBe("");
+      expect(rendered).not.toContain("1=1");
+      expect(rendered).not.toContain("IS NULL OR");
+      expect(rendered).toMatchSnapshot();
     });
   });
 

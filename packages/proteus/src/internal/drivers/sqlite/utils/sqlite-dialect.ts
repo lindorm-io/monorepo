@@ -1,7 +1,7 @@
-import { isArray, isObject, isObjectLike } from "@lindorm/is";
 import type { SqlDialect } from "../../../utils/sql/sql-dialect.js";
 import { NotSupportedError, ProteusError } from "../../../../errors/index.js";
 import type { LockMode } from "../../../../types/find-options.js";
+import { compileJsonContains } from "./compile-json-contains.js";
 
 const quoteIdentifier = (name: string): string => {
   if (!name) {
@@ -53,32 +53,15 @@ export const sqliteDialect: SqlDialect = {
     );
   },
 
-  compileHas: (col, params, value) => {
-    if (isObject(value) && Object.keys(value as Record<string, unknown>).length > 0) {
-      // Object containment: check each key/value pair via json_extract
-      // Returns multiple clauses joined with AND — caller must handle
-      const clauses: Array<string> = [];
-      for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-        const escapedKey = k.replace(/"/g, '""');
-        if (isObjectLike(v) || isArray(v)) {
-          params.push(JSON.stringify(v));
-          clauses.push(`json_extract(${col}, '$."${escapedKey}"') = json(?)`);
-        } else {
-          params.push(v);
-          clauses.push(`json_extract(${col}, '$."${escapedKey}"') = ?`);
-        }
-      }
-      return clauses.length === 1 ? clauses[0] : `(${clauses.join(" AND ")})`;
-    }
-
-    // Primitive or array containment: use json_each
-    params.push(JSON.stringify(value));
-    return `EXISTS(SELECT 1 FROM json_each(${col}) WHERE json_each.value = json(?))`;
-  },
+  compileHas: compileJsonContains,
 
   compileAll: (col, params, arr) => {
+    // Every element of an empty list is trivially present — but only in a row
+    // that HAS a list. `1=1` said "every row", which handed back the rows whose
+    // column is NULL: postgres excludes them (`NULL @> '[]'` is NULL) and so
+    // does the condition language, whose `$all` requires an array value.
     if (arr.length === 0) {
-      return "1=1";
+      return `${col} IS NOT NULL`;
     }
     const clauses: Array<string> = [];
     for (const v of arr) {
@@ -102,8 +85,12 @@ export const sqliteDialect: SqlDialect = {
   },
 
   compileContained: (col, params, arr) => {
+    // Contained by the empty set means the row's own list is empty — an EMPTY
+    // array, not a missing one. `IS NULL OR` let the NULL rows through, where
+    // postgres (`NULL <@ '[]'` is NULL) and the condition language both exclude
+    // them.
     if (arr.length === 0) {
-      return `(${col} IS NULL OR json_array_length(${col}) = 0)`;
+      return `(${col} IS NOT NULL AND json_array_length(${col}) = 0)`;
     }
     const placeholders = arr
       .map((v) => {
@@ -111,12 +98,25 @@ export const sqliteDialect: SqlDialect = {
         return "?";
       })
       .join(", ");
-    return `NOT EXISTS (SELECT 1 FROM json_each(${col}) WHERE value NOT IN (${placeholders}))`;
+    // The NOT NULL guard is what a `NOT EXISTS` over `json_each` cannot supply
+    // for itself: `json_each(NULL)` yields no rows, so the negation was
+    // VACUOUSLY TRUE and every NULL row came back — the one dialect that let
+    // them through where postgres and mysql do not.
+    return `(${col} IS NOT NULL AND NOT EXISTS (SELECT 1 FROM json_each(${col}) WHERE value NOT IN (${placeholders})))`;
   },
 
-  compileLength: (col, params, value, _field) => {
+  // `json_array_length` is not a general length function: it raises "malformed
+  // JSON" on a character column and returns 0 for an object, so measuring every
+  // column as an array errored on one and silently matched nothing on the other.
+  compileLength: (col, params, value, measure) => {
+    const lengthExpr =
+      measure === "object"
+        ? `(SELECT count(*) FROM json_each(${col}))`
+        : measure === "string"
+          ? `length(${col})`
+          : `json_array_length(${col})`;
     params.push(value);
-    return `(${col} IS NOT NULL AND COALESCE(json_array_length(${col}), 0) = ?)`;
+    return `(${col} IS NOT NULL AND COALESCE(${lengthExpr}, 0) = ?)`;
   },
 
   joinedDeleteSyntax: "subquery",

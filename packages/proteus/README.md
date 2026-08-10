@@ -2010,16 +2010,21 @@ All `where` and `criteria` parameters accept a `Predicate<E>` — a type-safe qu
 // Set membership
 { status: { $in: ["active", "pending"] } }
 { status: { $nin: ["banned", "deleted"] } }
+{ tags: { $in: ["node", "deno"] } }           // against a LIST: overlap
 
 // Array operators
 { tags: { $all: ["typescript", "orm"] } }     // contains all
 { tags: { $overlap: ["node", "deno"] } }      // contains any
 { tags: { $contained: ["a", "b", "c"] } }     // subset of
-{ tags: { $length: 3 } }
+{ tags: { $length: 3 } }                      // elements
+{ name: { $length: 3 } }                      // characters
+{ metadata: { $length: 3 } }                  // keys
 
-// JSON containment
+// Containment
 { metadata: { $has: { role: "admin" } } }
 { metadata: { role: "admin" } }               // the same thing, written bare
+{ tags: { $has: "orm" } }
+{ tags: ["orm"] }                             // the same thing, written bare
 
 // Modulo
 { age: { $mod: [2, 0] } }
@@ -2150,8 +2155,11 @@ is no longer indistinguishable from "there was nothing to emit".
 A bare nested object on a structured column means PARTIAL MATCH:
 `{ address: { city: "Oslo" } }` matches any row whose `address.city` is Oslo,
 whatever else the document holds. It compiles to the same JSON containment
-`$has` does, so the two are one semantic written two ways. Ask for the whole
-document instead with `{ address: { $eq: { … } } }`.
+`$has` does, so the two are one semantic written two ways.
+
+⚠ Asking for the WHOLE document — `{ address: { $eq: { … } } }` — carries the
+same open gap as the whole-list form below: the SQL compiler binds the operand as
+a plain parameter, which no dialect accepts for a composite.
 
 The column has to be declared `@Field("object")`. On the SQL drivers a nested
 condition on any other column raises — it used to fall through and emit no
@@ -2167,6 +2175,59 @@ containment.
 bare nested object as an EXACT subdocument match, has no branch for a
 field-level `$and` / `$or`, and coerces a malformed operator payload instead of
 refusing it.
+
+### Bare array
+
+A bare array means the same thing one level over: CONTAINMENT. `{ tags: ["a"] }`
+matches a row whose `tags` contain "a", and compiles to what `{ tags: { $has: ["a"] } }`
+compiles to.
+
+⚠ Asking for the WHOLE list — `{ tags: { $eq: ["a"] } }` — is the language's
+spelling for it and works on the in-memory drivers, but the SQL compiler binds
+the operand as a plain parameter and no dialect accepts a composite there. It is
+an open gap, not a supported query.
+
+`$has` takes a single element as well as a list, so `{ tags: { $has: "a" } }` and
+`{ tags: ["a"] }` are the same question written two ways — the same relationship
+a bare scalar has with `$eq`.
+
+`$has` is PLAIN containment. An operator written inside it is a **literal JSON
+key**, not an operator: `{ payload: { $has: { city: { $like: "L%" } } } }` looks
+for a document holding a `"$like"` key and matches nothing. Reaching into a
+document with an operator is a dotted path, which is not supported.
+
+The column has to be declared `@Field("array")`; a bare array on any other column
+raises.
+
+### Structured columns and the declared type
+
+`@Field("object")` and `@Field("array")` are distinct declarations, and every
+operator that reads INTO a column dispatches on which one it is. There is no
+runtime inspection of the stored value and no `json` type to blur them.
+
+| condition                      | `array` column            | `object` column       | character column |
+| ------------------------------ | ------------------------- | --------------------- | ---------------- |
+| `$length`                      | element count             | key count             | character count  |
+| `$has`                         | contained by some ELEMENT | contained by the KEYS | ✗ raises         |
+| bare array                     | contained by some ELEMENT | ✗ raises              | ✗ raises         |
+| bare object                    | ✗ raises                  | partial key match     | ✗ raises         |
+| `$all`/`$overlap`/`$contained` | element sets              | ✗ raises              | ✗ raises         |
+| `$in` / `$nin`                 | overlap and its negation  | value comparison      | value comparison |
+
+`$length` on a column that has no length — a number, a boolean, a date, a binary
+— raises. Every dialect used to measure every column as a JSON array: on a
+character column postgres, mysql and sqlite all errored; on a document postgres
+errored, sqlite silently returned nothing, and only mysql happened to be right.
+
+⚠ `$has` on a scalar column is a documented divergence: the SQL drivers raise,
+while the in-memory drivers reduce it to an equality and match. Raising keeps one
+spelling per meaning — that equality is `$eq` — and the alternative on SQL was a
+database error or a silent empty result.
+
+A NULL column satisfies none of them. `{ tags: { $all: [] } }` matches every row
+that HAS a list and no row whose column is null; `{ tags: { $contained: [] } }`
+matches only the empty list. mysql and sqlite used to admit the null rows in both,
+and sqlite's `$contained` over a null column was vacuously true.
 
 ### Field-level `$and` / `$or`
 

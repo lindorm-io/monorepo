@@ -1,4 +1,4 @@
-import { isObject } from "@lindorm/is";
+import { isArray, isObject } from "@lindorm/is";
 import type { MetaField } from "../../../entity/types/metadata.js";
 import type { SqlDialect } from "../../../utils/sql/sql-dialect.js";
 import { ProteusError } from "../../../../errors/index.js";
@@ -100,9 +100,25 @@ export const postgresDialect: SqlDialect = {
     return `${col} % $${params.length}`;
   },
 
-  compileHas: (col, params, value) => {
-    params.push(JSON.stringify(value));
-    return `${col} @> $${params.length}::jsonb`;
+  // `@>` is containment for jsonb AND for native arrays, and on both it already
+  // means what the condition language means: against an array it tests the
+  // ELEMENTS, against an object it tests the KEYS, and it is partial in both
+  // cases.
+  //
+  // The native branch is the one that had to be added. A `T[]` column cannot
+  // take a jsonb operand at all, and a SCALAR operand — `{ tags: { $has: "a" } }`
+  // — has to be lifted into a one-element array before `@>` will accept it.
+  compileHas: (col, params, value, field) => {
+    if (!field?.arrayType) {
+      params.push(JSON.stringify(value));
+      return `${col} @> $${params.length}::jsonb`;
+    }
+    if (isArray(value)) {
+      params.push(value);
+      return `${col} @> $${params.length}${pgArrayCast(field)}`;
+    }
+    params.push(value);
+    return `${col} @> ARRAY[$${params.length}]${pgArrayCast(field)}`;
   },
 
   compileAll: (col, params, arr, field) => {
@@ -135,11 +151,23 @@ export const postgresDialect: SqlDialect = {
     return `${col} <@ $${params.length}${pgArrayCast(field)}`;
   },
 
-  compileLength: (col, params, value, field) => {
-    // `array_length` rejects jsonb — use `jsonb_array_length` for jsonb-backed arrays.
-    const lengthExpr = field?.arrayType
-      ? `array_length(${col}, 1)`
-      : `jsonb_array_length(${col})`;
+  compileLength: (col, params, value, measure, field) => {
+    // `array_length` rejects jsonb — use `jsonb_array_length` for jsonb-backed
+    // arrays — and `jsonb_array_length` in turn rejects an object ("cannot get
+    // array length of a non-array") and a text column outright, which is what
+    // measuring every column as an array used to do.
+    //
+    // COALESCE covers the empty NATIVE array: `array_length('{}', 1)` is NULL,
+    // not 0. The two counting expressions never return NULL for a non-null
+    // column, but the wrapper is harmless and keeps one shape.
+    const lengthExpr =
+      measure === "object"
+        ? `(SELECT count(*) FROM jsonb_object_keys(${col}))`
+        : measure === "string"
+          ? `char_length(${col})`
+          : field?.arrayType
+            ? `array_length(${col}, 1)`
+            : `jsonb_array_length(${col})`;
     params.push(value);
     return `(${col} IS NOT NULL AND COALESCE(${lengthExpr}, 0) = $${params.length})`;
   },
