@@ -3,6 +3,7 @@ import { AegisDomainError } from "../../errors/index.js";
 import { accessTokenProfile } from "../profiles/definitions/access-token.js";
 import { defaultProfile } from "../profiles/definitions/default.js";
 import { delegationProfile } from "../profiles/definitions/delegation.js";
+import { externalAccessTokenProfile } from "../profiles/definitions/external-access-token.js";
 import { securityEventProfile } from "../profiles/definitions/security-event.js";
 import { enforceVerifyFloor } from "./enforce-verify-floor.js";
 
@@ -225,6 +226,75 @@ describe("enforceVerifyFloor", () => {
           data: { missing: ["tokenId"] },
         }),
       );
+    });
+  });
+
+  // `forbidden` is the mirror of `required` and bites at verify for the same
+  // reason: a profile verifying tokens minted elsewhere gets nothing from a
+  // mint-time policy.
+  describe("forbidden claims", () => {
+    test("rejects a token carrying a claim the profile forbids", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...base,
+          payload: { ...validPayload, federationAssuranceLevel: "fal2" },
+        }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "jwt_forbidden_claims_present",
+          data: { forbidden: ["federationAssuranceLevel"] },
+        }),
+      );
+    });
+
+    test("lists ALL forbidden claims present", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          audience: RESOURCE,
+          decodedTyp: undefined,
+          expectedIssuer: ISSUER,
+          profile: externalAccessTokenProfile,
+          payload: {
+            ...validPayload,
+            clientId: undefined,
+            nonce: "n-0S6",
+            codeHash: "TT-mXNvl57l-BcINg6sBWQ",
+          },
+        }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "jwt_forbidden_claims_present",
+          data: { forbidden: ["nonce", "codeHash"] },
+        }),
+      );
+    });
+
+    test("treats an empty string and null as absent", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...base,
+          payload: { ...validPayload, federationAssuranceLevel: "" },
+        }),
+      ).not.toThrow();
+
+      expect(() =>
+        enforceVerifyFloor({
+          ...base,
+          payload: { ...validPayload, federationAssuranceLevel: null },
+        }),
+      ).not.toThrow();
+    });
+
+    test("passes a profile whose forbidden list is empty", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          audience: RESOURCE,
+          decodedTyp: "application/delegation+jwt",
+          expectedIssuer: "client-1",
+          profile: delegationProfile,
+          payload: { ...delegationPayload, nonce: "n-0S6" },
+        }),
+      ).not.toThrow();
     });
   });
 });

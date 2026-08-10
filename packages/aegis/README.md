@@ -523,7 +523,28 @@ A name that is not a built-in — a profile registered at runtime with `register
 
 **`typ` presence.** Each profile declares a `typ` policy: `required` (the header must carry exactly the profile's typ) or `none` (no typ mandated). Mint always stamps the profile's typ value — presence only governs verify.
 
-**Required claims on verify.** Profiled verify enforces the profile's `required` claims (the same domain-keyed names enforced at mint) — a token missing one is rejected with `jwt_required_claims_missing`. Missing means absent, `null`, or an empty string.
+**Required and forbidden claims on verify.** Profiled verify enforces the profile's `required` claims (the same domain-keyed names enforced at mint) — a token missing one is rejected with `jwt_required_claims_missing`. It enforces `forbidden` the same way: a token CARRYING one is rejected with `jwt_forbidden_claims_present`. Present/missing means absent, `null`, or an empty string. A mint-time policy alone buys nothing for a profile that verifies tokens minted elsewhere.
+
+### `external_access_token` — third-party access tokens
+
+`access_token` is RFC 9068 strict and stays that way. Because its `required` list is enforced at MINT as well as verify, loosening it to admit another issuer's token would also let us ISSUE a degraded one — so a resource server accepting third-party tokens selects `external_access_token` instead.
+
+|             | `access_token`               | `external_access_token`              |
+| ----------- | ---------------------------- | ------------------------------------ |
+| `typ`       | exactly `application/at+jwt` | none mandated                        |
+| `client_id` | required                     | not required                         |
+| `aud`       | exactly one resource         | any number                           |
+| `iss`       | the deployment's own         | per-token — the verifier declares it |
+| signature   | asymmetric                   | asymmetric                           |
+| `exp`       | required                     | required                             |
+
+Everything else is unchanged: `iss` / `sub` / `aud` / `iat` / `jti` / `exp` are still required, `aud` must still contain the verifier's own `audience`, and the profile still forbids `nonce` / `at_hash` / `c_hash` / `s_hash`.
+
+⚠ **That `forbidden` list is the id_token defence.** With no `typ` mandated there is no structural discriminator left, and `typ: JWT` is exactly what an id_token carries — so the id_token-only claims are what keeps one out. The second defence is the verifier's required `audience`: an id_token's `aud` is the CLIENT, not the resource server.
+
+⚠ A `typ` the WIRE layer refuses never reaches the profile: `JwtKit.verify` rejects a present `typ` that is neither `JWT` nor `<type>+jwt` (`jwt_invalid_typ`), so an issuer stamping something else — Keycloak's `typ: Bearer` — is refused before any profile floor runs.
+
+The profile is verify-shaped: `autoInject` is empty, so `mint("external_access_token", …)` fails on the `iss` / `iat` / `jti` it will not generate.
 
 ## COSE / CWT
 

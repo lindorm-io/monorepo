@@ -2,6 +2,7 @@ import type { accessTokenProfile } from "./definitions/access-token.js";
 import type { defaultProfile } from "./definitions/default.js";
 import type { delegationProfile } from "./definitions/delegation.js";
 import type { erasureTokenProfile } from "./definitions/erasure-token.js";
+import type { externalAccessTokenProfile } from "./definitions/external-access-token.js";
 import type { idTokenProfile } from "./definitions/id-token.js";
 import type { introspectionProfile } from "./definitions/introspection.js";
 import type { jarmProfile } from "./definitions/jarm.js";
@@ -23,6 +24,7 @@ export type BuiltInProfiles = {
   default: typeof defaultProfile;
   delegation: typeof delegationProfile;
   erasure_token: typeof erasureTokenProfile;
+  external_access_token: typeof externalAccessTokenProfile;
   id_token: typeof idTokenProfile;
   introspection: typeof introspectionProfile;
   jarm: typeof jarmProfile;

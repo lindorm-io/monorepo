@@ -47,8 +47,9 @@ const typMismatch = (
  *   - `aud` contains the verifier's identity (`audience`),
  *   - `exp` PRESENT when `profile.lifetime !== null` (no `$exists:false`
  *     escape — unlike the optional-when-present standard verify),
- *   - every claim in `profile.required` is PRESENT (mint/verify symmetry —
- *     the same domain-keyed names `enforceProfilePolicy` enforces at mint).
+ *   - every claim in `profile.required` is PRESENT, and every claim in
+ *     `profile.forbidden` is ABSENT (mint/verify symmetry — the same
+ *     domain-keyed names `enforceProfilePolicy` enforces at mint).
  *
  * `nbf`/`exp` value enforcement (with clock tolerance) is handled by the
  * standard verify; this floor only adds the presence + identity assertions.
@@ -131,6 +132,28 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
       title: "JWT Required Claims Missing",
       details:
         "The token is missing claims that the profile being verified requires to be present.",
+    });
+  }
+
+  // `forbidden` is the mirror of `required`, and it has to bite HERE as well as
+  // at mint: a profile that verifies tokens minted elsewhere gets no benefit
+  // from a mint-time policy. It is what separates two artifact KINDS whose
+  // envelopes no longer separate them — an `external_access_token` accepts any
+  // typ, so `nonce`/`at_hash`/`c_hash`/`s_hash` (id_token claims an access
+  // token never carries) are the discriminator that keeps an id_token out.
+  const present = profile.forbidden.filter((key) => {
+    const value = payload[key];
+    return value !== undefined && value !== null && value !== "";
+  });
+
+  if (present.length > 0) {
+    throw new AegisDomainError("Invalid token", {
+      code: "jwt_forbidden_claims_present",
+      data: { forbidden: present },
+      debug: { forbidden: present, profile: profile.name },
+      title: "JWT Forbidden Claims Present",
+      details:
+        "The token carries claims the profile being verified forbids, so it is not a token of that kind.",
     });
   }
 };
