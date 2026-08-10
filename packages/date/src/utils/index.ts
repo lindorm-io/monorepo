@@ -6,6 +6,7 @@ export * from "./expires-in.js";
 export * from "./is-after-or-equal.js";
 export * from "./is-before-or-equal.js";
 export * from "./is-cron.js";
+export * from "./is-date-string.js";
 export * from "./is-expired.js";
 export * from "./is-live.js";
 export * from "./is-readable-time.js";

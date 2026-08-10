@@ -2,6 +2,8 @@
 
 exports[`isString > should resolve TEST_ARRAY 1`] = `false`;
 
+exports[`isString > should resolve TEST_ARRAY_BUFFER 1`] = `false`;
+
 exports[`isString > should resolve TEST_BIGINT 1`] = `false`;
 
 exports[`isString > should resolve TEST_BOOLEAN 1`] = `false`;
@@ -11,6 +13,8 @@ exports[`isString > should resolve TEST_BOOLEAN_STRING 1`] = `true`;
 exports[`isString > should resolve TEST_BUFFER 1`] = `false`;
 
 exports[`isString > should resolve TEST_CLASS 1`] = `false`;
+
+exports[`isString > should resolve TEST_DATA_VIEW 1`] = `false`;
 
 exports[`isString > should resolve TEST_DATE 1`] = `false`;
 
@@ -36,6 +40,8 @@ exports[`isString > should resolve TEST_JWS 1`] = `true`;
 
 exports[`isString > should resolve TEST_JWT 1`] = `true`;
 
+exports[`isString > should resolve TEST_MAP 1`] = `false`;
+
 exports[`isString > should resolve TEST_NAN 1`] = `false`;
 
 exports[`isString > should resolve TEST_NEGATIVE_INFINITY 1`] = `false`;
@@ -56,6 +62,8 @@ exports[`isString > should resolve TEST_PROMISE 1`] = `false`;
 
 exports[`isString > should resolve TEST_REGEXP 1`] = `false`;
 
+exports[`isString > should resolve TEST_SET 1`] = `false`;
+
 exports[`isString > should resolve TEST_STRING 1`] = `true`;
 
 exports[`isString > should resolve TEST_UNDEFINED 1`] = `false`;
@@ -63,3 +71,7 @@ exports[`isString > should resolve TEST_UNDEFINED 1`] = `false`;
 exports[`isString > should resolve TEST_URL 1`] = `false`;
 
 exports[`isString > should resolve TEST_URL_STRING 1`] = `true`;
+
+exports[`isString > should resolve TEST_WEAK_MAP 1`] = `false`;
+
+exports[`isString > should resolve TEST_WEAK_SET 1`] = `false`;

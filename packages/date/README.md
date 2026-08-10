@@ -19,6 +19,7 @@ This package is **ESM-only**. It cannot be `require()`'d from CommonJS.
 - `isExpired` / `isLive` — RFC 7519 aligned expiry predicates, each implemented as a positive comparison rather than a negation of the other.
 - `isAfterOrEqual` / `isBeforeOrEqual` — the `>=` / `<=` comparisons date-fns does not ship.
 - `isReadableTime` type guard.
+- `isDateString` — guards an ISO 8601 instant with an explicit offset, rejecting values that match the shape but are not real dates.
 - `cronNext` / `isCron` — resolve the next fire time for a cron expression (timezone-aware, via [croner](https://github.com/hexagon/croner)), and guard a cron string.
 - Re-exports the entire `date-fns` API from the same module entry point.
 
@@ -219,6 +220,29 @@ Returns `true` when `value` is a valid cron expression, `false` otherwise.
 ```ts
 isCron("0 0 * * *"); // true
 isCron("not a cron"); // false
+```
+
+#### `isDateString(value)`
+
+Returns `true` for an ISO 8601 instant — `YYYY-MM-DDTHH:MM:SS`, optional fractional seconds, and a **mandatory** `Z` or `±HH:MM` offset.
+
+```ts
+isDateString("2026-08-10T12:00:00Z"); // true
+isDateString("2026-08-10T12:00:00.123+02:00"); // true
+
+isDateString("2026-08-10"); // false — date only
+isDateString("2026-08-10T12:00:00"); // false — no offset
+isDateString("2026-08-10T12:00:00+0200"); // false — offset needs a colon
+```
+
+The guard is deliberately narrower than `Date` and `parseISO`, which all accept the last three. Callers convert a match straight to a `Date`, so accepting a bare `2026-08-10` would silently turn arbitrary strings into timestamps.
+
+Matching the shape is not sufficient — the value must also denote a real instant:
+
+```ts
+isDateString("2026-13-45T99:99:99Z"); // false
+isDateString("2026-02-30T00:00:00Z"); // false — new Date() rolls this over to March 2
+isDateString("2026-08-10T12:00:00+99:00"); // false — parseISO() accepts this offset
 ```
 
 ### Cron
