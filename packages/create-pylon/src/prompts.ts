@@ -1,8 +1,9 @@
-import { checkbox, confirm, input, select } from "@inquirer/prompts";
+import { checkbox, confirm, select } from "@inquirer/prompts";
 import { isHttpUrl } from "@lindorm/is";
 import { existsSync, readdirSync, rmSync } from "fs";
 import { resolve } from "path";
 import { isValidProjectName, parseProjectName } from "./project-name.js";
+import { promptTrimmedInput } from "./prompt-trimmed-input.js";
 import type {
   Answers,
   DbDriver,
@@ -21,14 +22,19 @@ const NAME_HINT =
   "Use a plain name (my-app) or an npm scope (@acme/my-app); lowercase, no spaces";
 
 const promptProjectName = async (initial?: string): Promise<string> => {
-  if (initial && initial.trim().length > 0) {
-    if (!isValidProjectName(initial)) {
-      throw new Error(`Invalid project name "${initial.trim()}". ${NAME_HINT}.`);
+  // Normalise the positional argument once, for the same reason the prompt
+  // normalises its answer: the name that is validated has to be the name that
+  // becomes the package.json `name` and the target directory.
+  const positional = initial?.trim() ?? "";
+
+  if (positional.length > 0) {
+    if (!isValidProjectName(positional)) {
+      throw new Error(`Invalid project name "${positional}". ${NAME_HINT}.`);
     }
-    return initial.trim();
+    return positional;
   }
 
-  return input({
+  return promptTrimmedInput({
     message: "Project name (plain or @scope/name):",
     default: "my-app",
     validate: (value) => (isValidProjectName(value) ? true : NAME_HINT),
@@ -42,12 +48,12 @@ const promptProjectName = async (initial?: string): Promise<string> => {
 // than re-deriving the rule here: a hand-rolled `/^https?:\/\/.+/` let
 // `http://#x` through, which carries no authority.
 const promptIssuer = async (): Promise<string> =>
-  input({
+  promptTrimmedInput({
     message:
       "Issuer URL (this service's identity — becomes the Amphora issuer for JWKS):",
     default: "http://localhost:3000",
     validate: (value) =>
-      isHttpUrl(value.trim())
+      isHttpUrl(value)
         ? true
         : "Enter a fully-qualified URL with a host, e.g. https://auth.example.com",
   });

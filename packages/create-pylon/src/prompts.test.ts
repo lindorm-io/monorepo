@@ -1,3 +1,4 @@
+import { isHttpUrl } from "@lindorm/is";
 import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -265,6 +266,75 @@ describe("runPrompts", () => {
 
       expect(validate("ftp://example.com")).toEqual(expect.any(String));
       expect(validate("ws://example.com")).toEqual(expect.any(String));
+    });
+  });
+
+  /**
+   * `@inquirer/prompts` returns the raw keystrokes (`value || defaultValue`, no
+   * trim), so a prompt that validates `value.trim()` validates one string and
+   * hands back another. Everything downstream (package.json `name`, the Amphora
+   * issuer written to config yaml) uses the returned string, so the value that
+   * was validated has to BE the value that is returned.
+   */
+  describe("input normalisation", () => {
+    test("trims the issuer before it reaches the answers", async () => {
+      mockedInput.mockResolvedValueOnce("  https://auth.example.com  ");
+      queueSequence(mockedCheckbox, [["http"]]);
+      queueSequence(mockedSelect, ["none", "none", "none"]);
+      queueSequence(mockedConfirm, [false]);
+
+      const answers = await runPrompts({
+        positionalName: "issuer-trim-app",
+        cwd: sandboxDir,
+      });
+
+      expect(answers.issuer).toBe("https://auth.example.com");
+    });
+
+    test("trims a prompted project name before it reaches the answers", async () => {
+      // First input call is the name prompt, second is the issuer.
+      mockedInput.mockResolvedValueOnce("  prompted-trim-name  ");
+      queueSequence(mockedCheckbox, [["http"]]);
+      queueSequence(mockedSelect, ["none", "none", "none"]);
+      queueSequence(mockedConfirm, [false]);
+
+      const answers = await runPrompts({ cwd: sandboxDir });
+
+      expect(answers.projectName).toBe("prompted-trim-name");
+      expect(answers.projectDir.endsWith("/prompted-trim-name")).toBe(true);
+    });
+
+    test("trims a positional project name", async () => {
+      queueSequence(mockedCheckbox, [["http"]]);
+      queueSequence(mockedSelect, ["none", "none", "none"]);
+      queueSequence(mockedConfirm, [false]);
+
+      const answers = await runPrompts({
+        positionalName: "  positional-trim-app  ",
+        cwd: sandboxDir,
+      });
+
+      expect(answers.projectName).toBe("positional-trim-app");
+      expect(answers.projectDir.endsWith("/positional-trim-app")).toBe(true);
+    });
+
+    test("validates the same trimmed string it returns", async () => {
+      mockedInput.mockResolvedValueOnce("  https://auth.example.com  ");
+      queueSequence(mockedCheckbox, [["http"]]);
+      queueSequence(mockedSelect, ["none", "none", "none"]);
+      queueSequence(mockedConfirm, [false]);
+
+      const answers = await runPrompts({
+        positionalName: "issuer-validate-app",
+        cwd: sandboxDir,
+      });
+
+      const call = mockedInput.mock.calls.find(([options]) =>
+        String(options.message).startsWith("Issuer URL"),
+      );
+
+      expect(call![0].validate("  https://auth.example.com  ")).toBe(true);
+      expect(isHttpUrl(answers.issuer)).toBe(true);
     });
   });
 
