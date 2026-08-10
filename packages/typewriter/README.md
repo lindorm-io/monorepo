@@ -31,13 +31,13 @@ Files are emitted to `<write>/<PascalCaseName>.typewriter.ts`.
 
 ### CLI Options
 
-| Flag                      | Description                                                                |
-| ------------------------- | -------------------------------------------------------------------------- |
-| `-f, --files <paths>`     | Comma-separated list of input file or directory paths. Required.           |
-| `-n, --name <name>`       | Type name to generate. Pascal-cased automatically. Required.               |
-| `-w, --write <directory>` | Directory to write the generated type into. Required.                      |
-| `-o, --output <type>`     | Output target: `typescript` or `typescript-zod`. Defaults to `typescript`. |
-| `-v, --verbose`           | Enable verbose logging. Defaults to `false`.                               |
+| Flag                      | Description                                                                                                               |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `-f, --files <paths>`     | Comma-separated list of input file or directory paths. Required.                                                          |
+| `-n, --name <name>`       | Type name to generate. Pascal-cased automatically. Required.                                                              |
+| `-w, --write <directory>` | Directory to write the generated type into. Required.                                                                     |
+| `-o, --output <type>`     | Output target: `typescript` or `typescript-zod`. Case-insensitive; any other value is rejected. Defaults to `typescript`. |
+| `-v, --verbose`           | Enable verbose logging. Defaults to `false`.                                                                              |
 
 Inputs may be:
 
