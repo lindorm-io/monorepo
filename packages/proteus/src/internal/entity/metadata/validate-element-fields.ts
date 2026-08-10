@@ -25,7 +25,7 @@ import type { MetaField } from "../types/metadata.js";
  * Sealing the value while leaving the key selection implicit is the hazard the
  * package already legislated against, and closing it properly means a new
  * public addressing surface. So: refuse at metadata build. Encrypt the whole
- * collection as an `@Encrypted @Field("json")` column on the parent, or use
+ * collection as an `@Encrypted @Field("object")` column on the parent, or use
  * @Embedded if a single instance will do.
  *
  * @TypedJson is refused for a different reason, but with the same outcome. It is
@@ -55,7 +55,7 @@ export const validateElementFields = (
         {
           code: "unsupported_element_field_encryption",
           title: "Unsupported Element Field Encryption",
-          details: `"${embeddableName}.${field.key}" is @Encrypted, but "${targetName}.${listKey}" stores it as an @EmbeddedList element column, which cannot name an encryption key — the source-level "encryption" default and source.stageFieldDecorator both address entity fields only. Store the collection as an @Encrypted @Field("json") column on "${targetName}", or drop @Encrypted from the element.`,
+          details: `"${embeddableName}.${field.key}" is @Encrypted, but "${targetName}.${listKey}" stores it as an @EmbeddedList element column, which cannot name an encryption key — the source-level "encryption" default and source.stageFieldDecorator both address entity fields only. Store the collection as an @Encrypted @Field("object") column on "${targetName}", or drop @Encrypted from the element.`,
           debug: {
             target: targetName,
             property: listKey,
@@ -72,7 +72,7 @@ export const validateElementFields = (
         {
           code: "unsupported_element_field_typed_json",
           title: "Unsupported Element Field Typed Json",
-          details: `"${embeddableName}.${field.key}" is @TypedJson, but "${targetName}.${listKey}" stores it as an @EmbeddedList element column, and a collection table carries no sidecar column — the type metadata would be dropped and nested Date/Buffer/BigInt values would come back as plain JSON. Store the collection as a @TypedJson @Field("json") column on "${targetName}", or drop @TypedJson from the element.`,
+          details: `"${embeddableName}.${field.key}" is @TypedJson, but "${targetName}.${listKey}" stores it as an @EmbeddedList element column, and a collection table carries no sidecar column — the type metadata would be dropped and nested Date/Buffer/BigInt values would come back as plain JSON. Store the collection as a @TypedJson @Field("object") column on "${targetName}", or drop @TypedJson from the element.`,
           debug: {
             target: targetName,
             property: listKey,

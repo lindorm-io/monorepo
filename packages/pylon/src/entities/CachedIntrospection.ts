@@ -58,6 +58,6 @@ export class CachedIntrospection {
    * unresolvable key fails loudly at setup instead of silently storing plaintext.
    */
   @Encrypted()
-  @Field("json")
+  @Field("object")
   payload!: CachedIntrospectionPayload;
 }

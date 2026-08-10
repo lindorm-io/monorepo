@@ -128,8 +128,7 @@ export const deserialise = (
     }
 
     case "array":
-    case "object":
-    case "json": {
+    case "object": {
       let parsed = value;
 
       if (isString(value)) {

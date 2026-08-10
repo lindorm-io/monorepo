@@ -34,6 +34,6 @@ export class CachedResponse {
   @ExpiryDateField()
   expiresAt!: Date | null;
 
-  @Field("json")
+  @Field("object")
   payload!: CachedResponsePayload;
 }

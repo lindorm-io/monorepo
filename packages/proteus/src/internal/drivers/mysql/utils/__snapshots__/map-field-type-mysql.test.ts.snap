@@ -60,6 +60,4 @@ exports[`mapFieldTypeMysql > string types > varchar without max -> VARCHAR(255) 
 
 exports[`mapFieldTypeMysql > structured types > array -> JSON 1`] = `"JSON"`;
 
-exports[`mapFieldTypeMysql > structured types > json -> JSON 1`] = `"JSON"`;
-
 exports[`mapFieldTypeMysql > structured types > object -> JSON 1`] = `"JSON"`;

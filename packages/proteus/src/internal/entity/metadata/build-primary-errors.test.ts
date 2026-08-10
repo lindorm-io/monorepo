@@ -2,7 +2,7 @@
  * Tests for build-primary error guards:
  * - B7: nested @Embeddable within @Embeddable throws EntityMetadataError
  * - B11: duplicate collection table names throw EntityMetadataError
- * - B13: structured element types ("object", "json", "array") in @EmbeddedList throw EntityMetadataError
+ * - B13: structured element types ("object", "array") in @EmbeddedList throw EntityMetadataError
  * - C7: parentFkColumn uses column name (from @Field name option), not property key
  * - C8: validateFields is called on embeddable element fields in @EmbeddedList
  * - C9: @EmbeddedList key colliding with a @Field key throws EntityMetadataError
@@ -196,20 +196,6 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
     }).toThrow(/not supported/);
   });
 
-  test("should throw for element type 'json'", () => {
-    expect(() => {
-      @Entity({ name: "B13JsonTypeEntity" })
-      class B13JsonTypeEntity {
-        @PrimaryKeyField() @Generated("uuid") id!: string;
-
-        @EmbeddedList("json" as any)
-        payload!: Array<object>;
-      }
-
-      getEntityMetadata(B13JsonTypeEntity);
-    }).toThrow(/not supported/);
-  });
-
   test("should throw for element type 'array'", () => {
     expect(() => {
       @Entity({ name: "B13ArrayTypeEntity" })
@@ -231,7 +217,7 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
       class B13ErrorMsgEntity {
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
-        @EmbeddedList("json" as any)
+        @EmbeddedList("object" as any)
         configs!: Array<object>;
       }
 
@@ -242,7 +228,7 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
 
     expect(caughtError).toBeDefined();
     expect(caughtError!.message).toMatchSnapshot();
-    expect(caughtError!.message).toContain("json");
+    expect(caughtError!.message).toContain("object");
     expect(caughtError!.message).toMatch(/@Embeddable/);
   });
 

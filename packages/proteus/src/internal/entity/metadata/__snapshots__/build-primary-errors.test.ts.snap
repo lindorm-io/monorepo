@@ -12,4 +12,4 @@ exports[`build-primary — parentFkColumn uses column name not property key (C7)
 
 exports[`build-primary — parentFkColumn uses column name not property key (C7) > parentFkColumn uses the pk field column name when @Field has an explicit name override 1`] = `"c7_custom_pk_entity_id"`;
 
-exports[`build-primary — reject structured @EmbeddedList element types (B13) > error message should include the element type and mention @Embeddable alternative 1`] = `"@EmbeddedList property "configs" uses element type "json" which is not supported. Use an @Embeddable class for structured elements, or a primitive type (string, integer, etc.) for scalar elements."`;
+exports[`build-primary — reject structured @EmbeddedList element types (B13) > error message should include the element type and mention @Embeddable alternative 1`] = `"@EmbeddedList property "configs" uses element type "object" which is not supported. Use an @Embeddable class for structured elements, or a primitive type (string, integer, etc.) for scalar elements."`;

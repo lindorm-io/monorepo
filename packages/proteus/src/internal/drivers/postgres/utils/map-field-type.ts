@@ -93,7 +93,6 @@ export const mapFieldType = (
       return "BYTEA";
 
     // structured
-    case "json":
     case "object":
       return "JSONB";
     case "array":

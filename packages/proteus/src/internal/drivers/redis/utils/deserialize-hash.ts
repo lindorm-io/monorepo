@@ -159,7 +159,6 @@ const coerceFromString = (
     }
 
     case "array":
-    case "json":
     case "object":
       return JSON.parse(raw);
 

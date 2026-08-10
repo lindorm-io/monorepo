@@ -22,7 +22,7 @@ const metadata = {
     makeField("age", { type: "integer" }),
     makeField("tags", { type: "array" }),
     makeField("score", { type: "float" }),
-    makeField("data", { type: "json" }),
+    makeField("data", { type: "object" }),
   ],
   relations: [],
 } as unknown as EntityMetadata;

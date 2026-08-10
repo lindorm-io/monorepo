@@ -46,7 +46,7 @@ export class WebhookSubscription implements IWebhookSubscription {
   @Field("enum")
   method!: WebhookMethod;
 
-  @Field("json")
+  @Field("object")
   headers!: Dict<string>;
 
   @Field("string")
@@ -61,7 +61,7 @@ export class WebhookSubscription implements IWebhookSubscription {
 
   // auth headers
 
-  @Field("json")
+  @Field("object")
   authHeaders!: Dict<string>;
 
   // basic auth

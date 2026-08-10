@@ -55,7 +55,7 @@ export class RequestAuditLog {
   sourceIp!: string;
 
   @Nullable()
-  @Field("json")
+  @Field("object")
   requestBody!: Record<string, unknown> | null;
 
   @Nullable()
@@ -63,7 +63,7 @@ export class RequestAuditLog {
   sessionId!: string | null;
 
   @Nullable()
-  @Field("json")
+  @Field("object")
   client!: PylonClientContext | null;
 
   /**

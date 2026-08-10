@@ -412,7 +412,7 @@ class FieldSchemaJson {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Schema(settingsSchema)
-  @Field("json")
+  @Field("object")
   settings!: { theme: string; fontSize: number };
 }
 
@@ -422,7 +422,7 @@ class FieldSchemaNullable {
 
   @Schema(settingsSchema)
   @Nullable()
-  @Field("json")
+  @Field("object")
   settings!: { theme: string; fontSize: number } | null;
 }
 
@@ -450,7 +450,7 @@ class FieldSchemaEmbeddablePrefs {
   locale!: string;
 
   @Schema(settingsSchema)
-  @Field("json")
+  @Field("object")
   settings!: { theme: string; fontSize: number };
 }
 
@@ -486,7 +486,7 @@ class FieldSchemaBothKinds {
   end!: number;
 
   @Schema(settingsSchema)
-  @Field("json")
+  @Field("object")
   settings!: { theme: string; fontSize: number };
 }
 
@@ -779,5 +779,58 @@ describe("defaultValidateEntity — non-nullable object zero-value", () => {
       settings: null,
     } as unknown as ValidateEntityObjects;
     expect(() => defaultValidateEntity(ValidateEntityObjects, entity)).toThrow();
+  });
+});
+
+// A structured column declares which shape it holds, and the write is validated
+// against that declaration. This is what makes the shape statically knowable —
+// every structured operator ($has key- vs element-containment, $all/$overlap/
+// $contained, $length) dispatches from the declared type, so a column that
+// accepted either shape would make them undecidable.
+describe("defaultValidateEntity — structured shape is enforced", () => {
+  const id = "550e8400-e29b-41d4-a716-446655440000";
+
+  test("rejects an array in an object column", () => {
+    const entity = {
+      id,
+      meta: [{ a: 1 }],
+      settings: null,
+    } as unknown as ValidateEntityObjects;
+    expect(() => defaultValidateEntity(ValidateEntityObjects, entity)).toThrow();
+  });
+
+  test("rejects an array in a nullable object column", () => {
+    const entity = { id, meta: {}, settings: [] } as unknown as ValidateEntityObjects;
+    expect(() => defaultValidateEntity(ValidateEntityObjects, entity)).toThrow();
+  });
+
+  test("rejects an object in an array column", () => {
+    const entity = {
+      id,
+      tags: { a: 1 },
+      labels: null,
+    } as unknown as ValidateEntityArrays;
+    expect(() => defaultValidateEntity(ValidateEntityArrays, entity)).toThrow();
+  });
+
+  test("rejects an object in a nullable array column", () => {
+    const entity = { id, tags: [], labels: {} } as unknown as ValidateEntityArrays;
+    expect(() => defaultValidateEntity(ValidateEntityArrays, entity)).toThrow();
+  });
+
+  test("rejects a bare JSON scalar in an object column", () => {
+    // A number or string stored as JSON has no home — a structured column is
+    // one of the two containers.
+    const entity = { id, meta: 42, settings: null } as unknown as ValidateEntityObjects;
+    expect(() => defaultValidateEntity(ValidateEntityObjects, entity)).toThrow();
+  });
+
+  test("rejects a bare JSON scalar in an array column", () => {
+    const entity = {
+      id,
+      tags: "not-a-list",
+      labels: null,
+    } as unknown as ValidateEntityArrays;
+    expect(() => defaultValidateEntity(ValidateEntityArrays, entity)).toThrow();
   });
 });

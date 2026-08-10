@@ -66,7 +66,6 @@ export const mapFieldTypeSqlite = (field: MetaField): string => {
       return "TEXT";
 
     // JSON — stored as TEXT
-    case "json":
     case "object":
     case "array":
       return "TEXT";

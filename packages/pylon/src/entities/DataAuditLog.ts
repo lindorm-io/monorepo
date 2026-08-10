@@ -50,6 +50,6 @@ export class DataAuditLog {
   // flattening a Date to a string or rejecting a BigInt.
   @Nullable()
   @TypedJson()
-  @Field("json")
+  @Field("object")
   changes!: Record<string, { from: unknown; to: unknown }> | null;
 }

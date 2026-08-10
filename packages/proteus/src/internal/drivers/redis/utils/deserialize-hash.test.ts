@@ -148,7 +148,7 @@ describe("deserializeHash", () => {
     });
 
     test("should deserialize json from JSON", () => {
-      const fields = [makeField({ key: "config", type: "json" })];
+      const fields = [makeField({ key: "config", type: "object" })];
       expect(
         deserializeHash({ config: '{"nested":{"value":1}}' }, fields, []),
       ).toMatchSnapshot();

@@ -77,7 +77,6 @@ export const mapFieldTypeMysql = (field: MetaField): string => {
       return "BLOB";
 
     // structured — MySQL has native JSON
-    case "json":
     case "object":
     case "array":
       return "JSON";

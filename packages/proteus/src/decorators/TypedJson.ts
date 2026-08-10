@@ -6,9 +6,9 @@ export type TypedJsonOptions = {
 };
 
 /**
- * Mark a `json` / `object` / `array` field for lossless type fidelity.
+ * Mark an `object` / `array` field for lossless type fidelity.
  *
- * Applied alongside `@Field("json" | "object" | "array")`. The JSON-safe payload
+ * Applied alongside `@Field("object" | "array")`. The JSON-safe payload
  * is written to the normal (queryable) data column while the JsonKit type metadata
  * is written to a separate sidecar column, so Date/Buffer/BigInt/undefined round-trip
  * without polluting the queryable column.

@@ -981,13 +981,13 @@ export const createTckEntities = (hookCallback: Mock) => {
     @UpdateDateField()
     updatedAt!: Date;
 
-    @Field("json")
+    @Field("object")
     metadata!: Record<string, unknown>;
 
     @Field("object")
     settings!: { theme: string; count: number };
 
-    @Field("json")
+    @Field("object")
     payload!: { items: Array<string>; count: number };
   }
 
@@ -1011,7 +1011,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     name!: string;
 
     @TypedJson()
-    @Field("json")
+    @Field("object")
     payload!: Record<string, unknown>;
 
     @TypedJson({ name: "meta_types" })
@@ -1020,7 +1020,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Nullable()
     @TypedJson()
-    @Field("json")
+    @Field("object")
     optional!: Record<string, unknown> | null;
 
     // @TypedJson + @Transform: the write path splits BEFORE it transforms
@@ -1043,7 +1043,7 @@ export const createTckEntities = (hookCallback: Mock) => {
       }),
     })
     @TypedJson()
-    @Field("json")
+    @Field("object")
     transformed!: Record<string, unknown> | null;
   }
 
@@ -1070,13 +1070,13 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Encrypted()
     @TypedJson()
-    @Field("json")
+    @Field("object")
     payload!: Record<string, unknown>;
 
     @Nullable()
     @Encrypted()
     @TypedJson()
-    @Field("json")
+    @Field("object")
     optional!: Record<string, unknown> | null;
   }
 
@@ -1180,7 +1180,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     verified!: boolean;
 
     @Encrypted()
-    @Field("json")
+    @Field("object")
     metadata!: Record<string, unknown>;
 
     @Nullable()

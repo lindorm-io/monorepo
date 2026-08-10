@@ -46,7 +46,7 @@ class SchemaFieldLevel {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Schema(settingsSchema)
-  @Field("json")
+  @Field("object")
   settings!: { theme: string };
 
   @Schema(z.array(z.string()))
@@ -107,7 +107,7 @@ describe("Schema", () => {
     }
 
     expect(() => getEntityMetadata(SchemaInvalidFieldType)).toThrow(
-      '@Schema on "name" requires a "json", "object", or "array" field',
+      '@Schema on "name" requires an "object" or "array" field',
     );
   });
 
@@ -118,7 +118,7 @@ describe("Schema", () => {
 
       @Schema(settingsSchema)
       @Schema(settingsSchema)
-      @Field("json")
+      @Field("object")
       settings!: { theme: string };
     }
 

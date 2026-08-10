@@ -115,10 +115,6 @@ describe("mapFieldTypeMysql", () => {
   });
 
   describe("structured types", () => {
-    test("json -> JSON", () => {
-      expect(mapFieldTypeMysql(makeField("x", { type: "json" }))).toMatchSnapshot();
-    });
-
     test("object -> JSON", () => {
       expect(mapFieldTypeMysql(makeField("x", { type: "object" }))).toMatchSnapshot();
     });

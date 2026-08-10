@@ -39,7 +39,7 @@ export const coerceHashValue = (value: unknown, field: MetaField | null): string
   // Bigint-hardened stringify: a typed bigint array (@Field("array", { arrayType:
   // "bigint" })) stores each element as a decimal string rather than throwing;
   // deserialise restores the exact BigInt on read.
-  if (field?.type === "array" || field?.type === "json" || field?.type === "object") {
+  if (field?.type === "array" || field?.type === "object") {
     return stringifyForStorage(value);
   }
 

@@ -183,12 +183,6 @@ describe("mapFieldType", () => {
   });
 
   describe("structured types", () => {
-    test("json → JSONB", () => {
-      expect(
-        mapFieldType(makeField("testField", { type: "json" }), TABLE, NS),
-      ).toMatchSnapshot();
-    });
-
     test("object → JSONB", () => {
       expect(
         mapFieldType(makeField("testField", { type: "object" }), TABLE, NS),

@@ -421,7 +421,7 @@ const resolveEmbeddedLists = (
       });
     } else {
       // Reject structured types — they cannot be serialized into a single column
-      const rejectedTypes = ["object", "json", "array"];
+      const rejectedTypes = ["object", "array"];
       if (entry.elementType && rejectedTypes.includes(entry.elementType)) {
         throw new EntityMetadataError(
           `@EmbeddedList property "${entry.key}" uses element type "${entry.elementType}" which is not supported. Use an @Embeddable class for structured elements, or a primitive type (string, integer, etc.) for scalar elements.`,
@@ -671,8 +671,8 @@ export const buildPrimaryMetadata = <
   // validate sees a populated container. Only when the author set no explicit
   // @Default; @Nullable containers keep defaulting to / permitting null. A
   // function default is skipped by DDL generation, so the underlying NOT NULL
-  // column stays DEFAULT-less. `json` is intentionally excluded — the line is
-  // drawn at the two container types with an unambiguous empty zero-value.
+  // column stays DEFAULT-less. `array` and `object` are the whole structured
+  // set, and each has an unambiguous empty zero-value.
   for (const field of fields) {
     if (field.embedded || field.nullable || field.default !== null) continue;
     if (field.type === "array") {

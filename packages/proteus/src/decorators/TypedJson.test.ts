@@ -13,7 +13,7 @@ class TypedJsonDefault {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @TypedJson()
-  @Field("json")
+  @Field("object")
   payload!: Record<string, unknown>;
 }
 
@@ -40,7 +40,7 @@ class TypedJsonNullable {
 class TypedJsonNotDecorated {
   @PrimaryKeyField() @Generated("uuid") id!: string;
 
-  @Field("json")
+  @Field("object")
   plain!: Record<string, unknown>;
 }
 

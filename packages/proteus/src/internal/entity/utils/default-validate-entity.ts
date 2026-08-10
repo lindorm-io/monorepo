@@ -78,7 +78,6 @@ const getValidator = (field: MetaField): z.ZodType | undefined => {
       return z.array(z.any());
 
     case "object":
-    case "json":
       return z.looseObject({});
 
     case "binary":

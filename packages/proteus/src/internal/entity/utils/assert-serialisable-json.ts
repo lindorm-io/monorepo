@@ -2,7 +2,7 @@ import { isBigInt, isDate, isObjectLike } from "@lindorm/is";
 import { ProteusError } from "../../../errors/index.js";
 import type { EntityMetadata } from "../types/metadata.js";
 
-const JSON_FIELD_TYPES = new Set(["json", "object", "array"]);
+const JSON_FIELD_TYPES = new Set(["object", "array"]);
 
 type Offence = { type: string; path: string };
 

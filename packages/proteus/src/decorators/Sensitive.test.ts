@@ -137,7 +137,7 @@ describe("Sensitive", () => {
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Sensitive({ digest: "sha256" })
-        @Field("json")
+        @Field("object")
         payload!: Record<string, unknown>;
       }
 
@@ -152,7 +152,7 @@ describe("Sensitive", () => {
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Sensitive()
-        @Field("json")
+        @Field("object")
         payload!: Record<string, unknown>;
       }
 

@@ -273,14 +273,14 @@ describe("deserialise", () => {
     });
   });
 
-  describe("json", () => {
+  describe("object", () => {
     test("should return object as-is", () => {
       const obj = { a: 1 };
-      expect(deserialise(obj, "json")).toBe(obj);
+      expect(deserialise(obj, "object")).toBe(obj);
     });
 
     test("should parse JSON string", () => {
-      expect(deserialise('{"x":42}', "json")).toEqual({ x: 42 });
+      expect(deserialise('{"x":42}', "object")).toEqual({ x: 42 });
     });
   });
 

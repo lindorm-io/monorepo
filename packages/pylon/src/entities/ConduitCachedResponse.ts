@@ -28,6 +28,6 @@ export class ConduitCachedResponse {
   @ExpiryDateField()
   expiresAt!: Date | null;
 
-  @Field("json")
+  @Field("object")
   payload!: ConduitResponse;
 }

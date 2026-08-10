@@ -13,7 +13,6 @@ export const requiresIndexPrefix = (field: MetaField | undefined): boolean => {
   if (field.type === "url") return true;
   if (field.type === "text") return true;
   if (field.type === "binary") return true;
-  if (field.type === "json" || field.type === "object" || field.type === "array")
-    return true;
+  if (field.type === "object" || field.type === "array") return true;
   return false;
 };

@@ -111,7 +111,7 @@ describe("serializeHash", () => {
     });
 
     test("should serialize json value as JSON", () => {
-      const fields = [makeField({ key: "config", type: "json" })];
+      const fields = [makeField({ key: "config", type: "object" })];
       const row = { config: { nested: { value: 1 } } };
       expect(serializeHash(row, fields, [])).toMatchSnapshot();
     });
@@ -305,7 +305,7 @@ describe("serialize/deserialize round-trip", () => {
   });
 
   test("should round-trip json object", () => {
-    const fields = [makeField({ key: "cfg", type: "json" })];
+    const fields = [makeField({ key: "cfg", type: "object" })];
     const obj = { nested: { a: 1, b: [2, 3] }, flag: true };
     const result = roundTrip({ cfg: obj }, fields);
     expect(result).not.toBeNull();
@@ -313,7 +313,7 @@ describe("serialize/deserialize round-trip", () => {
   });
 
   test("should round-trip json array", () => {
-    const fields = [makeField({ key: "cfg", type: "json" })];
+    const fields = [makeField({ key: "cfg", type: "object" })];
     const arr = [1, "two", { three: 3 }];
     const result = roundTrip({ cfg: arr }, fields);
     expect(result).not.toBeNull();
@@ -393,7 +393,7 @@ describe("serialize/deserialize round-trip", () => {
 describe("typedJson sidecar", () => {
   const field = makeField({
     key: "payload",
-    type: "json",
+    type: "object",
     typedJson: { name: null, column: "payload__typemeta" },
   });
 

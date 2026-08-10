@@ -474,7 +474,7 @@ The `@Field(type)` decorator accepts these type strings:
 | Logical        | `email`, `lindorm_id`, `url`                                          |
 | Date/Time      | `date`, `interval`, `time`, `timestamp`                               |
 | Binary         | `binary`                                                              |
-| Structured     | `array`, `json`, `object`                                             |
+| Structured     | `array`, `object`                                                     |
 | Network        | `cidr`, `inet`, `macaddr`                                             |
 | Geometric      | `box`, `circle`, `line`, `lseg`, `path`, `point`, `polygon`, `vector` |
 | XML            | `xml`                                                                 |
@@ -487,7 +487,7 @@ width from `@Max`, else derived from a paired `@Generated`, else 255.
 ### Examples
 
 ```typescript
-@Field("json")
+@Field("object")
 metadata!: Record<string, unknown>;
 
 @Field("array", { arrayType: "string" })
@@ -582,7 +582,7 @@ class Invoice {
 Attaches a Zod schema for runtime validation. Evaluated automatically before every insert/update and manually via `repository.validate()`. Works at two levels:
 
 - **Class-level** — cross-field rules parsed against the whole entity.
-- **Field-level** — replaces the default loose-object validator for a `json`, `object`, or `array` field. Composes with `@Nullable`. Orthogonal to `@TypedJson` (serialization fidelity vs validation).
+- **Field-level** — replaces the default container validator for an `object` or `array` field. Composes with `@Nullable`. Orthogonal to `@TypedJson` (serialization fidelity vs validation).
 
 ```typescript
 import { z } from "zod";
@@ -593,7 +593,7 @@ class User {
   /* ... */
 
   @Schema(z.object({ theme: z.enum(["light", "dark"]) }))
-  @Field("json")
+  @Field("object")
   settings!: { theme: string };
 }
 ```
@@ -800,7 +800,7 @@ tags!: string[];
 
 **Arguments:** `(type: MetaFieldType, options?: { name?: string, arrayType?: MetaFieldType })`.
 
-A non-nullable `array` or `object` field with no `@Default` zero-coerces to its empty container — `[]` / `{}` — mirroring how a non-nullable `boolean` coerces to `false`. Omitting it on `create()` / `insert()` yields the empty container, never `null`; add `@Nullable()` for a field that should default to / permit `null`, or `@Default(...)` for a different seed. `json` is deliberately excluded (no unambiguous empty zero-value). Enforcing that a container is actually supplied is an application concern, not an ORM one.
+A non-nullable `array` or `object` field with no `@Default` zero-coerces to its empty container — `[]` / `{}` — mirroring how a non-nullable `boolean` coerces to `false`. Omitting it on `create()` / `insert()` yields the empty container, never `null`; add `@Nullable()` for a field that should default to / permit `null`, or `@Default(...)` for a different seed. Enforcing that a container is actually supplied is an application concern, not an ORM one.
 
 #### `@PrimaryKeyField`
 
@@ -1066,13 +1066,13 @@ tags!: string[];
 
 #### `@TypedJson`
 
-Gives a `json` / `object` / `array` field lossless type fidelity. Plain JSON storage flattens a nested `Date` to an ISO string, a `Buffer` to `{type,data}` and rejects a `BigInt` outright; `@TypedJson` writes JSON-safe data to the field's own column and the type metadata to a sidecar column, then recombines them on read.
+Gives an `object` / `array` field lossless type fidelity. Plain JSON storage flattens a nested `Date` to an ISO string, a `Buffer` to `{type,data}` and rejects a `BigInt` outright; `@TypedJson` writes JSON-safe data to the field's own column and the type metadata to a sidecar column, then recombines them on read.
 
 Supported on every driver — SQL drivers add a companion column, MongoDB a companion document key, Redis a companion hash field.
 
 ```typescript
 @TypedJson()
-@Field("json")
+@Field("object")
 payload!: Record<string, unknown>;   // sidecar column: payload__typemeta
 
 @TypedJson({ name: "meta_types" })   // explicit sidecar column name
@@ -1080,7 +1080,7 @@ payload!: Record<string, unknown>;   // sidecar column: payload__typemeta
 meta!: Record<string, unknown>;
 ```
 
-Without it, a `json` field holding a `Date`, `Buffer`, `BigInt`, `Map` or `Set` is rejected on write rather than silently corrupted. The data column stays the source of truth: a missing or stale sidecar degrades to plain parsed JSON, it never throws.
+Without it, an `object` or `array` field holding a `Date`, `Buffer`, `BigInt`, `Map` or `Set` is rejected on write rather than silently corrupted. The data column stays the source of truth: a missing or stale sidecar degrades to plain parsed JSON, it never throws.
 
 **Options:** `{ name? }` — sidecar column name, default `<column>__typemeta`.
 
@@ -1091,7 +1091,7 @@ The two compose. The value is **split first, then both halves are sealed** — t
 ```typescript
 @Encrypted()
 @TypedJson()
-@Field("json")
+@Field("object")
 payload!: Record<string, unknown>;   // both `payload` and `payload__typemeta` are ciphertext
 ```
 
@@ -1106,7 +1106,7 @@ payload!: Record<string, unknown>;   // both `payload` and `payload__typemeta` a
 
 ##### Not on an `@EmbeddedList` element
 
-An `@Embeddable` may carry `@TypedJson` fields when it is flattened by [`@Embedded`](#embedded) — the sidecar becomes an entity column like any other, and it follows the `@Embedded` prefix its data column gets (`@Embedded(() => Payload) request` → `request_payload` plus `request_payload__typemeta`), so the same `@Embeddable` can be embedded twice. An **explicit** `@TypedJson({ name })` is verbatim by design and therefore is NOT prefixed — embedding such an `@Embeddable` twice is refused at metadata build with `duplicate_column`. As an [`@EmbeddedList`](#embeddedlist) **element** it cannot: a collection table projects one column per element field and has no sidecar, so the type metadata would be dropped and nested `Date` / `Buffer` / `BigInt` values would come back as plain JSON. That combination is refused at metadata build with `unsupported_element_field_typed_json`. Store the collection as a `@TypedJson @Field("json")` column on the parent instead.
+An `@Embeddable` may carry `@TypedJson` fields when it is flattened by [`@Embedded`](#embedded) — the sidecar becomes an entity column like any other, and it follows the `@Embedded` prefix its data column gets (`@Embedded(() => Payload) request` → `request_payload` plus `request_payload__typemeta`), so the same `@Embeddable` can be embedded twice. An **explicit** `@TypedJson({ name })` is verbatim by design and therefore is NOT prefixed — embedding such an `@Embeddable` twice is refused at metadata build with `duplicate_column`. As an [`@EmbeddedList`](#embeddedlist) **element** it cannot: a collection table projects one column per element field and has no sidecar, so the type metadata would be dropped and nested `Date` / `Buffer` / `BigInt` values would come back as plain JSON. That combination is refused at metadata build with `unsupported_element_field_typed_json`. Store the collection as a `@TypedJson @Field("object")` column on the parent instead.
 
 #### `@Encrypted`
 
@@ -1122,7 +1122,7 @@ ssn!: string;
 
 // Or query the vault for one.
 @Encrypted({ condition: { purpose: "pii", ownerId: "userId" } })
-@Field("json")
+@Field("object")
 medicalRecord!: Record<string, unknown>;
 
 // Or hand the key over outright.
@@ -1170,7 +1170,7 @@ ssnDigest!: string; // queried instead of `ssn`
 
 Proteus does no hashing — compute the digest in application code (`@lindorm/sha`) and write it alongside the sealed value. [`@Sensitive`](#sensitive) only redacts the column from proteus' own error output and validates that what you stored looks like the declared digest. The trade is explicit: the digest column _does_ reveal which rows share a value, which is exactly what a random IV hides — so add it only where equality lookup is worth that.
 
-An `@Embeddable` may carry `@Encrypted` fields when it is flattened by [`@Embedded`](#embedded) — they become entity columns like any other. As an [`@EmbeddedList`](#embeddedlist) **element** they cannot: those are a different table's columns, and neither the source-level `encryption` default nor `source.stageFieldDecorator` can address them, so the field would seal under a key nothing ever named. That combination is refused at metadata build with `unsupported_element_field_encryption`. Encrypt the whole collection as an `@Encrypted @Field("json")` column on the parent instead.
+An `@Embeddable` may carry `@Encrypted` fields when it is flattened by [`@Embedded`](#embedded) — they become entity columns like any other. As an [`@EmbeddedList`](#embeddedlist) **element** they cannot: those are a different table's columns, and neither the source-level `encryption` default nor `source.stageFieldDecorator` can address them, so the field would seal under a key nothing ever named. That combination is refused at metadata build with `unsupported_element_field_encryption`. Encrypt the whole collection as an `@Encrypted @Field("object")` column on the parent instead.
 
 #### `@Hide`
 
@@ -2563,7 +2563,7 @@ class Patient {
   ssn!: string;
 
   @Encrypted()
-  @Field("json")
+  @Field("object")
   medicalRecord!: Record<string, unknown>;
 }
 

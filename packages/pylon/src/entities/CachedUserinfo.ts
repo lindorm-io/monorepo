@@ -24,7 +24,7 @@ import type { PylonUserinfo } from "../types/index.js";
  * `{ streetAddress }` — an answer that differs by cache state, the worst shape a
  * bug can take. `@TypedJson` avoids the translation entirely: it carries the JS
  * types (`updatedAt` stays a `Date`) in a sidecar column, which `@Encrypted`
- * seals alongside the payload. A PLAIN `@Field("json")` would not do — proteus
+ * seals alongside the payload. A PLAIN `@Field("object")` would not do — proteus
  * rejects a `Date` inside one outright.
  *
  * There is no `active` field and no negative entry: userinfo returns a profile
@@ -64,6 +64,6 @@ export class CachedUserinfo {
    */
   @Encrypted()
   @TypedJson()
-  @Field("json")
+  @Field("object")
   payload!: CachedUserinfoPayload;
 }

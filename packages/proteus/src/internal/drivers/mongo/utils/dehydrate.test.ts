@@ -224,7 +224,7 @@ describe("dehydrateEntity", () => {
 
 describe("typedJson", () => {
   const typedField = makeField("payload", {
-    type: "json",
+    type: "object",
     typedJson: { name: null, column: "payload__typemeta" },
   } as Partial<MetaField>);
 

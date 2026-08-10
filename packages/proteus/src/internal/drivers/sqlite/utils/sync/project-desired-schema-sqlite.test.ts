@@ -284,7 +284,7 @@ class GoldTyped {
   id!: string;
 
   @TypedJson()
-  @Field("json")
+  @Field("object")
   payload!: unknown;
 }
 

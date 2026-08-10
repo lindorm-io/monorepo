@@ -375,7 +375,7 @@ class TypedPayloadHolder {
   label!: string;
 
   @TypedJson()
-  @Field("json")
+  @Field("object")
   payload!: Record<string, unknown>;
 }
 

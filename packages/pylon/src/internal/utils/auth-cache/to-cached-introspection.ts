@@ -8,7 +8,7 @@ import type { PylonIntrospection } from "../../../types/index.js";
  * The claims are written in WIRE form (`Aegis.toWire`) rather than domain form,
  * because the column is plain JSON: `DomainClaims` carries real `Date` values
  * (`expiresAt`, `issuedAt`, `notBefore`, `authTime`), and proteus REJECTS a Date
- * inside a plain `@Field("json")` value outright (`assertSerialisableJsonFields`)
+ * inside a plain `@Field("object")` value outright (`assertSerialisableJsonFields`)
  * — it does not silently degrade to an ISO string. The wire form is dates-as-
  * unix-seconds, which is exactly what `Aegis.toDomain` reads back.
  *

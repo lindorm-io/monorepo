@@ -13,7 +13,7 @@ const UNIQUE_FIELDS: Array<MetaFieldDecorator> = [
 
 const PRECISION_TYPES: Array<MetaFieldType> = ["decimal", "float", "real"];
 
-const TYPED_JSON_TYPES: Array<MetaFieldType> = ["array", "json", "object"];
+const TYPED_JSON_TYPES: Array<MetaFieldType> = ["array", "object"];
 
 const SENSITIVE_DIGEST_TYPES: Array<MetaFieldType> = ["string", "text", "varchar"];
 
@@ -43,11 +43,11 @@ const validateModifierFieldTypes = (targetName: string, field: MetaField): void 
 
   if (field.typedJson && (!type || !TYPED_JSON_TYPES.includes(type))) {
     throw new EntityMetadataError(
-      `@TypedJson on "${field.key}" requires a "json", "object", or "array" field`,
+      `@TypedJson on "${field.key}" requires an "object" or "array" field`,
       {
         code: "invalid_typed_json_type",
         title: "Invalid TypedJson Type",
-        details: `@TypedJson on "${field.key}" requires the @Field type to be "json", "object", or "array", but it is "${type ?? "unset"}" — change the field type or remove @TypedJson.`,
+        details: `@TypedJson on "${field.key}" requires the @Field type to be "object" or "array", but it is "${type ?? "unset"}" — change the field type or remove @TypedJson.`,
         debug: { target: targetName, field: field.key, actualType: type },
       },
     );
@@ -79,11 +79,11 @@ const validateModifierFieldTypes = (targetName: string, field: MetaField): void 
 
   if (field.schema && (!type || !TYPED_JSON_TYPES.includes(type))) {
     throw new EntityMetadataError(
-      `@Schema on "${field.key}" requires a "json", "object", or "array" field`,
+      `@Schema on "${field.key}" requires an "object" or "array" field`,
       {
         code: "invalid_schema_type",
         title: "Invalid Schema Type",
-        details: `Field-level @Schema on "${field.key}" requires the @Field type to be "json", "object", or "array", but it is "${type ?? "unset"}" — change the field type or remove @Schema (class-level @Schema covers scalar fields).`,
+        details: `Field-level @Schema on "${field.key}" requires the @Field type to be "object" or "array", but it is "${type ?? "unset"}" — change the field type or remove @Schema (class-level @Schema covers scalar fields).`,
         debug: { target: targetName, field: field.key, actualType: type },
       },
     );

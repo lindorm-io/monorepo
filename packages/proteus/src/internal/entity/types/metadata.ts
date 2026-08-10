@@ -31,9 +31,10 @@ export type MetaFieldType =
   | "timestamp"
   // binary
   | "binary"
-  // structured
+  // structured — `object` and `array` are distinct on purpose: every structured
+  // operator ($has, $all, $overlap, $contained, $length) needs to know which
+  // shape the column holds, and writes are validated against the declaration.
   | "array"
-  | "json"
   | "object"
   // network
   | "cidr"

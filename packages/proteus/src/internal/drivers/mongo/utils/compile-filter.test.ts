@@ -31,7 +31,7 @@ const defaultMetadata = makeMetadata([
   makeField("email", { name: "email_address" }),
   makeField("price", { type: "decimal" }),
   makeField("tags", { type: "array" }),
-  makeField("data", { type: "json" }),
+  makeField("data", { type: "object" }),
   makeField("createdAt", { type: "timestamp" }),
 ]);
 

@@ -39,7 +39,7 @@ describe("validateElementFields", () => {
       validateElementFields("Order", "lines", "OrderLine", [
         makeField("sku", { type: "string" }),
         makeField("payload", {
-          type: "json",
+          type: "object",
           typedJson: { name: null, column: "payload__typemeta" },
         }),
       ]),

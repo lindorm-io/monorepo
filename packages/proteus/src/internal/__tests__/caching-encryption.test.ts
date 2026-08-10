@@ -63,7 +63,7 @@ class CachedSecret {
 
   @Encrypted()
   @TypedJson()
-  @Field("json")
+  @Field("object")
   payload!: Record<string, unknown>;
 
   @Nullable()

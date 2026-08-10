@@ -27,7 +27,7 @@ const makeField = (overrides: Partial<MetaField> = {}): MetaField =>
   ({
     key: "payload",
     name: "payload",
-    type: "json",
+    type: "object",
     encrypted: null,
     transform: null,
     typedJson: { name: null, column: "payload__typemeta" },

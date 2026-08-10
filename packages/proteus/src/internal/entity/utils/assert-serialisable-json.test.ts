@@ -8,7 +8,7 @@ const meta = (
   >,
 ) => ({ fields }) as unknown as EntityMetadata;
 
-const plainJson = meta([{ key: "payload", type: "json" }]);
+const plainJson = meta([{ key: "payload", type: "object" }]);
 
 describe("assertSerialisableJsonFields", () => {
   test("allows plain JSON-native structures (objects, arrays, primitives, null)", () => {
@@ -59,7 +59,7 @@ describe("assertSerialisableJsonFields", () => {
 
   test("skips @TypedJson fields (handled losslessly via the sidecar)", () => {
     const typed = meta([
-      { key: "payload", type: "json", typedJson: { column: "payload__typemeta" } },
+      { key: "payload", type: "object", typedJson: { column: "payload__typemeta" } },
     ]);
     expect(() =>
       assertSerialisableJsonFields(typed, { payload: { when: new Date() } }),
@@ -74,7 +74,7 @@ describe("assertSerialisableJsonFields", () => {
   });
 
   test("ignores embedded fields", () => {
-    const embedded = meta([{ key: "address.city", type: "json", embedded: {} }]);
+    const embedded = meta([{ key: "address.city", type: "object", embedded: {} }]);
     expect(() =>
       assertSerialisableJsonFields(embedded, { address: { city: new Date() } }),
     ).not.toThrow();

@@ -60,7 +60,7 @@ describe("compileProjection", () => {
       makeField("id"),
       {
         ...makeField("payload"),
-        type: "json",
+        type: "object",
         typedJson: { name: null, column: "payload__typemeta" },
       } as unknown as MetaField,
     ]);

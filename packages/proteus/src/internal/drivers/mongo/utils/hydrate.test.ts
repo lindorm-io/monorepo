@@ -164,7 +164,7 @@ describe("hydrateEntity typedJson", () => {
     const typedField = {
       key: "payload",
       name: "payload",
-      type: "json",
+      type: "object",
       typedJson: { name: null, column: "payload__typemeta" },
     } as unknown as MetaField;
     const metadata = makeMetadata([makeField("id"), typedField]);

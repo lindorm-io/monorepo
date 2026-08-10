@@ -35,7 +35,6 @@ export const coerceReadValue = (
       // Stored as ISO 8601 TEXT; parse back to Date
       return isString(value) ? new Date(value) : value;
 
-    case "json":
     case "object":
     case "array":
       // Stored as JSON TEXT; parse back

@@ -86,8 +86,6 @@ exports[`mapFieldType > structured types > array with uuid arrayType → UUID[] 
 
 exports[`mapFieldType > structured types > array without arrayType → JSONB fallback 1`] = `"JSONB"`;
 
-exports[`mapFieldType > structured types > json → JSONB 1`] = `"JSONB"`;
-
 exports[`mapFieldType > structured types > object → JSONB 1`] = `"JSONB"`;
 
 exports[`mapFieldType > vector type > vector with max → VECTOR(n) 1`] = `"VECTOR(1536)"`;

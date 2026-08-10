@@ -409,7 +409,7 @@ describe("defaultHydrateEntity", () => {
       fields: [
         makeField("id", { type: "uuid" }),
         makeField("tags", { type: "array", arrayType: "string" }),
-        makeField("meta", { type: "json" }),
+        makeField("meta", { type: "object" }),
         makeField("seenAt", { type: "timestamp", name: "seen_at" }),
         makeField("address.zip", {
           type: "string",

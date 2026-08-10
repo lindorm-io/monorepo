@@ -219,14 +219,14 @@ class PgGoldKitchen {
   secret!: string;
 
   @TypedJson()
-  @Field("json")
+  @Field("object")
   payload!: unknown;
 
   // Sealed typed-json: BOTH the data column and the sidecar hold ciphertext, so
   // BOTH must project to "text" — a JSONB sidecar would reject the ciphertext.
   @Encrypted()
   @TypedJson()
-  @Field("json")
+  @Field("object")
   sealedPayload!: unknown;
 
   @Deferrable({ initially: true })

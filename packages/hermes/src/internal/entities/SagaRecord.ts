@@ -32,7 +32,7 @@ export class SagaRecord {
   @Default(() => [])
   messagesToDispatch: Array<unknown> = [];
 
-  @Field("json")
+  @Field("object")
   @Default(() => ({}))
   state: Record<string, unknown> = {};
 

@@ -255,7 +255,7 @@ describe("dehydrateToRow typedJson", () => {
   const typedField = makeField({
     key: "payload",
     name: "payload",
-    type: "json",
+    type: "object",
     typedJson: { name: null, column: "payload__typemeta" },
   });
 

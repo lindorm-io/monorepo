@@ -631,21 +631,28 @@ describe("buildPrimaryMetadata — non-nullable array default", () => {
     expect(field.default).toBe(seed);
   });
 
-  test("leaves a non-nullable json field defaulting to null (json is excluded)", () => {
-    @Entity({ name: "BpJsonNoDefault" })
-    class BpJsonNoDefault {
+  test("zero-coerces every structured type — no container escapes the rule", () => {
+    @Entity({ name: "BpStructuredNoDefault" })
+    class BpStructuredNoDefault {
       @PrimaryKeyField() @Generated("uuid") id!: string;
 
-      @Field("json")
-      payload!: unknown;
+      @Field("object")
+      payload!: Record<string, unknown>;
+
+      @Field("array")
+      entries!: Array<unknown>;
     }
 
-    const built = buildPrimaryMetadata(BpJsonNoDefault);
-    const field = built.fields.find((f) => f.key === "payload")!;
+    const built = buildPrimaryMetadata(BpStructuredNoDefault);
+    const payload = built.fields.find((f) => f.key === "payload")!;
+    const entries = built.fields.find((f) => f.key === "entries")!;
 
-    // json is deliberately NOT a container zero-value type — non-nullable and
-    // no @Default, yet the staging loop leaves its default null.
-    expect(field.default).toBeNull();
+    // `object` and `array` are the whole structured set, and each has an
+    // unambiguous empty zero-value — so a non-nullable structured column with
+    // no @Default always gets one, and none is left to fail validation on an
+    // omitted write.
+    expect((payload.default as () => unknown)()).toEqual({});
+    expect((entries.default as () => unknown)()).toEqual([]);
   });
 });
 
@@ -656,7 +663,7 @@ describe("buildPrimaryMetadata — @TypedJson sidecar under @Embedded", () => {
     @Embeddable()
     class BpTypedJsonEmbeddable {
       @TypedJson()
-      @Field("json")
+      @Field("object")
       payload!: Record<string, unknown>;
     }
 
@@ -697,11 +704,11 @@ describe("buildPrimaryMetadata — @TypedJson sidecar under @Embedded", () => {
       @PrimaryKeyField() @Generated("uuid") id!: string;
 
       @TypedJson()
-      @Field("json")
+      @Field("object")
       payload!: Record<string, unknown>;
 
       @TypedJson({ name: "meta_types" })
-      @Field("json", { name: "body" })
+      @Field("object", { name: "body" })
       other!: Record<string, unknown>;
     }
 
@@ -721,7 +728,7 @@ describe("buildPrimaryMetadata — @TypedJson sidecar under @Embedded", () => {
     @Embeddable()
     class BpNamedSidecarEmbeddable {
       @TypedJson({ name: "payload_types" })
-      @Field("json")
+      @Field("object")
       payload!: Record<string, unknown>;
     }
 
@@ -750,7 +757,7 @@ describe("buildPrimaryMetadata — @TypedJson sidecar under @Embedded", () => {
         @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @TypedJson()
-        @Field("json")
+        @Field("object")
         payload!: Record<string, unknown>;
 
         @Field("string", { name: "payload__typemeta" })

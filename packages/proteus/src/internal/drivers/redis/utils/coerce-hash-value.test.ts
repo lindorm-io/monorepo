@@ -19,7 +19,7 @@ const makeField = (overrides: Partial<MetaField> = {}): MetaField =>
 
 describe("coerceHashValue", () => {
   test.each([
-    ["json", { a: 1, b: { c: 2 } }],
+    ["object", { a: 1, b: { c: 2 } }],
     ["object", { theme: "dark", count: 1 }],
     ["array", ["a", "b"]],
   ] as const)(
@@ -68,7 +68,7 @@ describe("coerceHashValue", () => {
 
   test("should pass encrypted ciphertext through untouched", () => {
     // The ciphertext is a string; the json branch would stringify it a second time.
-    const field = makeField({ type: "json", encrypted: { condition: {} } as any });
+    const field = makeField({ type: "object", encrypted: { condition: {} } as any });
 
     expect(coerceHashValue("aes:abc123", field)).toBe("aes:abc123");
   });

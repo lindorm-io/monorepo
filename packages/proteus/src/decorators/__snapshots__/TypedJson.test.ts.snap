@@ -52,7 +52,7 @@ exports[`TypedJson > should match full metadata snapshot for a typed-json entity
       "comment": null,
       "computed": null,
       "decorator": "Field",
-      "default": null,
+      "default": [Function],
       "embedded": null,
       "encrypted": null,
       "enum": null,
@@ -71,7 +71,7 @@ exports[`TypedJson > should match full metadata snapshot for a typed-json entity
       "schema": null,
       "sensitive": null,
       "transform": null,
-      "type": "json",
+      "type": "object",
       "typedJson": {
         "column": "payload__typemeta",
         "name": null,

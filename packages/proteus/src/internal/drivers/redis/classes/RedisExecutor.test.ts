@@ -1712,7 +1712,7 @@ describe("RedisExecutor", () => {
     test("should store a plain json value as JSON, not [object Object]", async () => {
       const jsonMetadata = {
         ...baseMetadata,
-        fields: [...baseFields, makeField("payload", "json")],
+        fields: [...baseFields, makeField("payload", "object")],
       } as unknown as EntityMetadata;
       const jsonExecutor = new RedisExecutor<TestEntity>(
         jsonMetadata,
