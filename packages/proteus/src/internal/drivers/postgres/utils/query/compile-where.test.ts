@@ -1,6 +1,7 @@
 import { makeField } from "../../../../__fixtures__/make-field.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../../../types/query.js";
+import { renderCondition } from "../../../../utils/sql/compiled-condition.js";
 import { compilePredicate, compileWhere } from "./compile-where.js";
 import { describe, expect, test } from "vitest";
 
@@ -484,7 +485,9 @@ describe("compileWhere", () => {
     test("omits table alias prefix when tableAlias is null (compilePredicate)", () => {
       // compilePredicate is exported and accepts null tableAlias
       const params: Array<unknown> = [];
-      const result = compilePredicate({ name: "Alice" }, metadata, null, params);
+      const result = renderCondition(
+        compilePredicate({ name: "Alice" }, metadata, null, params),
+      );
       expect(result).toMatchSnapshot();
       // Should NOT contain any alias prefix like "t0"."name"; just "name" = $1
       expect(result).not.toContain('"t0".');
@@ -495,7 +498,9 @@ describe("compileWhere", () => {
     test("omits alias prefix for column name mapping when tableAlias is null", () => {
       const params: Array<unknown> = [];
       // email maps to email_address — verify no alias prefix in result
-      const result = compilePredicate({ email: "x@x.com" }, metadata, null, params);
+      const result = renderCondition(
+        compilePredicate({ email: "x@x.com" }, metadata, null, params),
+      );
       expect(result).toMatchSnapshot();
       expect(result).not.toContain('"t0".');
       expect(result).toContain('"email_address"');
@@ -503,7 +508,9 @@ describe("compileWhere", () => {
 
     test("omits alias prefix for operator clauses when tableAlias is null", () => {
       const params: Array<unknown> = [];
-      const result = compilePredicate({ age: { $gt: 18 } }, metadata, null, params);
+      const result = renderCondition(
+        compilePredicate({ age: { $gt: 18 } }, metadata, null, params),
+      );
       expect(result).toMatchSnapshot();
       expect(result).not.toContain('"t0".');
       expect(result).toContain('"age" >');
@@ -511,7 +518,9 @@ describe("compileWhere", () => {
 
     test("omits alias prefix for IS NULL when tableAlias is null", () => {
       const params: Array<unknown> = [];
-      const result = compilePredicate({ name: null }, metadata, null, params);
+      const result = renderCondition(
+        compilePredicate({ name: null }, metadata, null, params),
+      );
       expect(result).toMatchSnapshot();
       expect(result).not.toContain('"t0".');
       expect(result).toContain('"name" IS NULL');
@@ -524,7 +533,7 @@ describe("compileWhere", () => {
     // The fix: use `clauses.length === 0` instead of `i === 0` to decide whether to prefix.
 
     test("should not emit conjunction when first entry compiles to empty", () => {
-      // entries[0] has an empty predicate {}, which compilePredicate returns "" for
+      // entries[0] has an empty predicate {}, which compiles to always-true (skipped)
       // entries[1] has a valid predicate — must be the FIRST clause (no AND/OR prefix)
       const entries: Array<PredicateEntry<any>> = [
         { predicate: {}, conjunction: "and" },

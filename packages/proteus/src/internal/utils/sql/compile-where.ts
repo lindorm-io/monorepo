@@ -1,44 +1,37 @@
 import type { Condition, ConditionOperator } from "@lindorm/match";
+import {
+  ConditionOperatorKey,
+  LogicalOperatorKey,
+  isConditionOperatorKey,
+  isLogicalOperatorKey,
+} from "@lindorm/match";
 import { isObject, isObjectLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../types/query.js";
 import { NotSupportedError, ProteusError } from "../../../errors/index.js";
+import type { CompiledCondition } from "./compiled-condition.js";
+import {
+  ALWAYS_FALSE,
+  ALWAYS_TRUE,
+  compiledClause,
+  conjoin,
+  disjoin,
+  negate,
+  renderCondition,
+} from "./compiled-condition.js";
 import { resolveColumnName } from "./resolve-column-name.js";
 import type { SqlDialect } from "./sql-dialect.js";
 
-const ARRAY_OPERATORS = ["$all", "$overlap", "$contained"] as const;
-
-const PREDICATE_OP_PREFIXES = [
-  "$eq",
-  "$neq",
-  "$gt",
-  "$gte",
-  "$lt",
-  "$lte",
-  "$in",
-  "$nin",
-  "$like",
-  "$ilike",
-  "$similar",
-  "$between",
-  "$all",
-  "$overlap",
-  "$contained",
-  "$length",
-  "$mod",
-  "$exists",
-  "$regex",
-  "$has",
-  "$and",
-  "$or",
-  "$not",
-] as const;
-
+/**
+ * The operator vocabulary comes from `@lindorm/match`, which OWNS the condition
+ * language. A hand-maintained copy here was a third list across two packages,
+ * and it is how `$and` / `$or` came to have no branch at all.
+ */
 const hasPredicateOperator = (obj: Record<string, unknown>): boolean =>
-  Object.keys(obj).some((k) =>
-    (PREDICATE_OP_PREFIXES as ReadonlyArray<string>).includes(k),
+  Object.keys(obj).some(
+    (key) => isConditionOperatorKey(key) || isLogicalOperatorKey(key),
   );
 
 const guardArrayField = (
@@ -80,13 +73,17 @@ export const compileWhere = <E extends IEntity>(
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
-    const compiled = compilePredicate(
-      entry.predicate as Condition<Dict>,
-      metadata,
-      tableAlias,
-      params,
-      dialect,
-      fieldAliasOverrides,
+    // An empty render means ONE thing now — the entry places no restriction — so
+    // skipping it is correct rather than accidentally correct.
+    const compiled = renderCondition(
+      compilePredicate(
+        entry.predicate as Condition<Dict>,
+        metadata,
+        tableAlias,
+        params,
+        dialect,
+        fieldAliasOverrides,
+      ),
     );
     if (!compiled) continue;
 
@@ -109,68 +106,33 @@ export const compilePredicate = (
   params: Array<unknown>,
   dialect: SqlDialect,
   fieldAliasOverrides?: FieldAliasOverrides,
-): string => {
-  const parts: Array<string> = [];
+): CompiledCondition => {
+  const parts: Array<CompiledCondition> = [];
 
-  if (predicate.$and) {
-    const subClauses = predicate.$and
-      .map((sub) =>
-        compilePredicate(
-          sub as Condition<Dict>,
-          metadata,
-          tableAlias,
-          params,
-          dialect,
-          fieldAliasOverrides,
-        ),
-      )
-      .filter(Boolean);
-    if (subClauses.length > 0) {
-      parts.push(`(${subClauses.join(" AND ")})`);
-    }
-  }
-
-  if (predicate.$or) {
-    const subClauses = predicate.$or
-      .map((sub) =>
-        compilePredicate(
-          sub as Condition<Dict>,
-          metadata,
-          tableAlias,
-          params,
-          dialect,
-          fieldAliasOverrides,
-        ),
-      )
-      .filter(Boolean);
-    if (subClauses.length > 0) {
-      parts.push(`(${subClauses.join(" OR ")})`);
-    }
-  }
-
-  if (predicate.$not) {
-    const sub = compilePredicate(
-      predicate.$not as Condition<Dict>,
+  const compileSub = (sub: unknown): CompiledCondition =>
+    compilePredicate(
+      sub as Condition<Dict>,
       metadata,
       tableAlias,
       params,
       dialect,
       fieldAliasOverrides,
     );
-    // The criteria language is the JS matcher's, so `$not` means the matcher's
-    // TWO-valued negation: `!matches(row, sub)`. SQL's `NOT (…)` is three-valued
-    // — for a NULL column `NOT (col = 'x')` is UNKNOWN, which drops the row,
-    // while the matcher keeps it (`undefined !== 'x'`). `IS NOT TRUE` collapses
-    // false and unknown into true, which is exactly the matcher's semantic.
-    //
-    // An empty sub-predicate compiles to NO clause, i.e. "matches every row"
-    // (`$not: {}`, `$not: { col: { $nin: [] } }`), so its negation matches none.
-    // Emitting nothing would instead drop the `$not` and match everything.
-    parts.push(sub ? `(${sub}) IS NOT TRUE` : "FALSE");
+
+  if (predicate.$and) {
+    parts.push(conjoin(predicate.$and.map(compileSub)));
+  }
+
+  if (predicate.$or) {
+    parts.push(disjoin(predicate.$or.map(compileSub)));
+  }
+
+  if (predicate.$not) {
+    parts.push(negate(compileSub(predicate.$not)));
   }
 
   for (const [key, value] of Object.entries(predicate)) {
-    if (key === "$and" || key === "$or" || key === "$not") continue;
+    if (isLogicalOperatorKey(key)) continue;
 
     // Embedded parent key expansion — must run BEFORE resolveColumnName
     // which would throw for parent keys like "address" that have no direct column.
@@ -191,7 +153,7 @@ export const compilePredicate = (
           ? `${dialect.quoteIdentifier(effectiveChildAlias)}.${dialect.quoteIdentifier(childField.name)}`
           : dialect.quoteIdentifier(childField.name);
         if (childValue === null || childValue === undefined) {
-          parts.push(`${qualifiedChildCol} IS NULL`);
+          parts.push(compiledClause(`${qualifiedChildCol} IS NULL`));
         } else if (isObject(childValue) && !(childValue instanceof RegExp)) {
           parts.push(
             ...compileOperator(
@@ -205,7 +167,9 @@ export const compilePredicate = (
           );
         } else {
           params.push(childValue);
-          parts.push(`${qualifiedChildCol} = ${dialect.placeholder(params)}`);
+          parts.push(
+            compiledClause(`${qualifiedChildCol} = ${dialect.placeholder(params)}`),
+          );
         }
       }
       continue;
@@ -219,31 +183,21 @@ export const compilePredicate = (
       : dialect.quoteIdentifier(colName);
 
     if (value === null || value === undefined) {
-      parts.push(`${qualifiedCol} IS NULL`);
+      parts.push(compiledClause(`${qualifiedCol} IS NULL`));
       continue;
     }
 
     if (isObject(value) && !(value instanceof RegExp)) {
       const ops = value as ConditionOperator<unknown>;
       const field = metadata.fields.find((f) => f.key === key) ?? null;
-      const operatorClauses = compileOperator(
-        qualifiedCol,
-        ops,
-        params,
-        field,
-        key,
-        dialect,
-      );
-      parts.push(...operatorClauses);
+      parts.push(...compileOperator(qualifiedCol, ops, params, field, key, dialect));
     } else {
       params.push(value);
-      parts.push(`${qualifiedCol} = ${dialect.placeholder(params)}`);
+      parts.push(compiledClause(`${qualifiedCol} = ${dialect.placeholder(params)}`));
     }
   }
 
-  if (parts.length === 0) return "";
-  if (parts.length === 1) return parts[0];
-  return `(${parts.join(" AND ")})`;
+  return conjoin(parts);
 };
 
 const compileOperator = (
@@ -253,177 +207,230 @@ const compileOperator = (
   field: MetaField | null,
   fieldKey: string,
   dialect: SqlDialect,
-): Array<string> => {
-  const clauses: Array<string> = [];
+): Array<CompiledCondition> => {
+  const compiled: Array<CompiledCondition> = [];
 
-  // Validate array operators are only used on array-typed columns
-  for (const op of ARRAY_OPERATORS) {
-    if (op in ops) {
-      guardArrayField(op, field, fieldKey);
+  for (const [key, operand] of Object.entries(ops)) {
+    if (isConditionOperatorKey(key) || isLogicalOperatorKey(key)) {
+      compiled.push(
+        compileOperatorKey(qualifiedCol, key, operand, params, field, fieldKey, dialect),
+      );
+      continue;
     }
-  }
 
-  if ("$eq" in ops) {
-    if (ops.$eq === null || ops.$eq === undefined) {
-      clauses.push(`${qualifiedCol} IS NULL`);
-    } else {
-      params.push(ops.$eq);
-      clauses.push(`${qualifiedCol} = ${dialect.placeholder(params)}`);
+    if (key.startsWith("$")) {
+      throw new NotSupportedError(`Unknown operator "${key}"`, {
+        code: "unknown_operator",
+        title: "Unknown Operator",
+        details:
+          "The operator is not part of the condition language. An unrecognised operator used to compile to no clause at all, which matched every row.",
+        data: { operator: key, field: fieldKey },
+      });
     }
+
+    // A bare nested object on a NON-embedded column (`{ payload: { city: "x" } }`).
+    // It compiles to no clause and therefore matches every row — a real gap, and
+    // one that belongs with the containment work rather than here, because
+    // closing it means emitting JSON containment rather than choosing a
+    // representation.
   }
 
-  if ("$neq" in ops) {
-    if (ops.$neq === null || ops.$neq === undefined) {
-      clauses.push(`${qualifiedCol} IS NOT NULL`);
-    } else {
-      params.push(ops.$neq);
-      clauses.push(`${qualifiedCol} <> ${dialect.placeholder(params)}`);
+  return compiled;
+};
+
+const compileOperatorKey = (
+  qualifiedCol: string,
+  key: ConditionOperatorKey | LogicalOperatorKey,
+  operand: any,
+  params: Array<unknown>,
+  field: MetaField | null,
+  fieldKey: string,
+  dialect: SqlDialect,
+): CompiledCondition => {
+  switch (key) {
+    case ConditionOperatorKey.Eq: {
+      if (operand === null || operand === undefined) {
+        return compiledClause(`${qualifiedCol} IS NULL`);
+      }
+      params.push(operand);
+      return compiledClause(`${qualifiedCol} = ${dialect.placeholder(params)}`);
     }
-  }
 
-  if ("$gt" in ops) {
-    params.push(ops.$gt);
-    clauses.push(`${qualifiedCol} > ${dialect.placeholder(params)}`);
-  }
+    case ConditionOperatorKey.Neq: {
+      if (operand === null || operand === undefined) {
+        return compiledClause(`${qualifiedCol} IS NOT NULL`);
+      }
+      params.push(operand);
+      return compiledClause(`${qualifiedCol} <> ${dialect.placeholder(params)}`);
+    }
 
-  if ("$gte" in ops) {
-    params.push(ops.$gte);
-    clauses.push(`${qualifiedCol} >= ${dialect.placeholder(params)}`);
-  }
+    case ConditionOperatorKey.Gt:
+      params.push(operand);
+      return compiledClause(`${qualifiedCol} > ${dialect.placeholder(params)}`);
 
-  if ("$lt" in ops) {
-    params.push(ops.$lt);
-    clauses.push(`${qualifiedCol} < ${dialect.placeholder(params)}`);
-  }
+    case ConditionOperatorKey.Gte:
+      params.push(operand);
+      return compiledClause(`${qualifiedCol} >= ${dialect.placeholder(params)}`);
 
-  if ("$lte" in ops) {
-    params.push(ops.$lte);
-    clauses.push(`${qualifiedCol} <= ${dialect.placeholder(params)}`);
-  }
+    case ConditionOperatorKey.Lt:
+      params.push(operand);
+      return compiledClause(`${qualifiedCol} < ${dialect.placeholder(params)}`);
 
-  if ("$between" in ops) {
-    const [low, high] = ops.$between as [unknown, unknown];
-    params.push(low);
-    const lowPlaceholder = dialect.placeholder(params);
-    params.push(high);
-    const highPlaceholder = dialect.placeholder(params);
-    clauses.push(`${qualifiedCol} BETWEEN ${lowPlaceholder} AND ${highPlaceholder}`);
-  }
+    case ConditionOperatorKey.Lte:
+      params.push(operand);
+      return compiledClause(`${qualifiedCol} <= ${dialect.placeholder(params)}`);
 
-  if ("$in" in ops) {
-    const array = ops.$in as Array<unknown>;
-    if (array.length === 0) {
-      clauses.push("FALSE");
-    } else {
+    case ConditionOperatorKey.Between: {
+      const [low, high] = operand as [unknown, unknown];
+      params.push(low);
+      const lowPlaceholder = dialect.placeholder(params);
+      params.push(high);
+      const highPlaceholder = dialect.placeholder(params);
+      return compiledClause(
+        `${qualifiedCol} BETWEEN ${lowPlaceholder} AND ${highPlaceholder}`,
+      );
+    }
+
+    case ConditionOperatorKey.In: {
+      const array = operand as Array<unknown>;
+      // `$in: []` can never hold. It is well-formed and useful — "match nothing"
+      // — so it is a state of its own rather than a clause that happens to say
+      // FALSE.
+      if (array.length === 0) return ALWAYS_FALSE;
+
       const placeholders = array.map((value) => {
         params.push(value);
         return dialect.placeholder(params);
       });
-      clauses.push(`${qualifiedCol} IN (${placeholders.join(", ")})`);
+      return compiledClause(`${qualifiedCol} IN (${placeholders.join(", ")})`);
     }
-  }
 
-  if ("$nin" in ops) {
-    const array = ops.$nin as Array<unknown>;
-    if (array.length === 0) {
-      // NOT IN (empty) is always true — no-op
-    } else {
+    case ConditionOperatorKey.Nin: {
+      const array = operand as Array<unknown>;
+      // `$nin: []` excludes nothing, so EVERY row satisfies it. That is not the
+      // same as "nothing to emit", and conflating the two turned
+      // `deleteMany({ tag: { $nin: [] } })` into `DELETE FROM t`.
+      if (array.length === 0) return ALWAYS_TRUE;
+
       const placeholders = array.map((value) => {
         params.push(value);
         return dialect.placeholder(params);
       });
-      clauses.push(`${qualifiedCol} NOT IN (${placeholders.join(", ")})`);
+      return compiledClause(`${qualifiedCol} NOT IN (${placeholders.join(", ")})`);
     }
-  }
 
-  if ("$like" in ops) {
-    params.push(ops.$like);
-    clauses.push(`${qualifiedCol} LIKE ${dialect.placeholder(params)}`);
-  }
+    case ConditionOperatorKey.Like:
+      params.push(operand);
+      return compiledClause(`${qualifiedCol} LIKE ${dialect.placeholder(params)}`);
 
-  if ("$ilike" in ops) {
-    clauses.push(dialect.compileIlike(qualifiedCol, params, ops.$ilike));
-  }
+    case ConditionOperatorKey.Ilike:
+      return compiledClause(dialect.compileIlike(qualifiedCol, params, operand));
 
-  if ("$similar" in ops) {
-    clauses.push(dialect.compileSimilar(qualifiedCol, params, ops.$similar));
-  }
+    case ConditionOperatorKey.Similar:
+      return compiledClause(dialect.compileSimilar(qualifiedCol, params, operand));
 
-  if ("$regex" in ops) {
-    const raw = ops.$regex;
-    const regex = raw instanceof RegExp ? raw : new RegExp(String(raw));
-    const result = dialect.compileRegex(qualifiedCol, params, regex);
-    if (result === null) {
-      throw new NotSupportedError("The $regex operator is not supported by this driver", {
-        code: "unsupported_operator",
-        title: "Unsupported Operator",
-        details: "The $regex operator is not supported by the active database driver.",
-        data: { operator: "$regex" },
+    case ConditionOperatorKey.Regex: {
+      const regex = operand instanceof RegExp ? operand : new RegExp(String(operand));
+      const result = dialect.compileRegex(qualifiedCol, params, regex);
+      if (result === null) {
+        throw new NotSupportedError(
+          "The $regex operator is not supported by this driver",
+          {
+            code: "unsupported_operator",
+            title: "Unsupported Operator",
+            details:
+              "The $regex operator is not supported by the active database driver.",
+            data: { operator: "$regex" },
+          },
+        );
+      }
+      return compiledClause(result);
+    }
+
+    case ConditionOperatorKey.Exists:
+      return compiledClause(
+        operand ? `${qualifiedCol} IS NOT NULL` : `${qualifiedCol} IS NULL`,
+      );
+
+    case ConditionOperatorKey.All:
+      guardArrayField(key, field, fieldKey);
+      return compiledClause(
+        dialect.compileAll(qualifiedCol, params, operand as Array<unknown>, field),
+      );
+
+    case ConditionOperatorKey.Overlap:
+      guardArrayField(key, field, fieldKey);
+      return compiledClause(
+        dialect.compileOverlap(qualifiedCol, params, operand as Array<unknown>, field),
+      );
+
+    case ConditionOperatorKey.Contained:
+      guardArrayField(key, field, fieldKey);
+      return compiledClause(
+        dialect.compileContained(qualifiedCol, params, operand as Array<unknown>, field),
+      );
+
+    case ConditionOperatorKey.Length:
+      return compiledClause(dialect.compileLength(qualifiedCol, params, operand, field));
+
+    case ConditionOperatorKey.Has:
+      return compiledClause(dialect.compileHas(qualifiedCol, params, operand));
+
+    case ConditionOperatorKey.Mod: {
+      const [divisor, remainder] = operand as [number, number];
+      params.push(divisor);
+      const divisorPlaceholder = dialect.placeholder(params);
+      params.push(remainder);
+      const remainderPlaceholder = dialect.placeholder(params);
+      return compiledClause(
+        `(${qualifiedCol} % ${divisorPlaceholder}) = ${remainderPlaceholder}`,
+      );
+    }
+
+    case LogicalOperatorKey.Not: {
+      // A FIELD-level `$not` negates ONE column's condition — a different
+      // operator from the criteria-level `$not` handled in `compilePredicate`.
+      //
+      // The falsy short-circuit and the non-object coercion are BOTH kept as
+      // they were. The language now says a non-object `$not` is malformed and
+      // must throw; that is an operator change and lands with the other operator
+      // changes, not with the representation.
+      if (!operand) return ALWAYS_TRUE;
+
+      const inner = isObject(operand)
+        ? (operand as ConditionOperator<unknown>)
+        : ({ $eq: operand } as ConditionOperator<unknown>);
+
+      return negate(
+        conjoin(compileOperator(qualifiedCol, inner, params, field, fieldKey, dialect)),
+      );
+    }
+
+    case LogicalOperatorKey.And:
+    case LogicalOperatorKey.Or:
+      // Declared by the language, never implemented here. The if-chain this
+      // switch replaced had no branch for either, so they compiled to NOTHING
+      // and matched every row. Throwing is strictly better than that, and the
+      // branches land with the other operator work.
+      throw new NotSupportedError(
+        `Field-level operator "${key}" is not supported by the SQL compiler`,
+        {
+          code: "unsupported_operator",
+          title: "Unsupported Operator",
+          details:
+            "Field-level logical operators are not compiled to SQL. Use a criteria-level $and / $or instead.",
+          data: { operator: key, field: fieldKey },
+        },
+      );
+
+    default: {
+      const exhaustive: never = key;
+      throw new NotSupportedError(`Unknown operator "${String(exhaustive)}"`, {
+        code: "unknown_operator",
+        title: "Unknown Operator",
+        details: "The operator is not part of the condition language.",
+        data: { operator: String(exhaustive), field: fieldKey },
       });
     }
-    clauses.push(result);
   }
-
-  if ("$exists" in ops) {
-    if (ops.$exists) {
-      clauses.push(`${qualifiedCol} IS NOT NULL`);
-    } else {
-      clauses.push(`${qualifiedCol} IS NULL`);
-    }
-  }
-
-  if ("$all" in ops) {
-    const arr = ops.$all as Array<unknown>;
-    clauses.push(dialect.compileAll(qualifiedCol, params, arr, field));
-  }
-
-  if ("$overlap" in ops) {
-    const arr = ops.$overlap as Array<unknown>;
-    clauses.push(dialect.compileOverlap(qualifiedCol, params, arr, field));
-  }
-
-  if ("$contained" in ops) {
-    const arr = ops.$contained as Array<unknown>;
-    clauses.push(dialect.compileContained(qualifiedCol, params, arr, field));
-  }
-
-  if ("$length" in ops) {
-    clauses.push(dialect.compileLength(qualifiedCol, params, ops.$length, field));
-  }
-
-  if ("$has" in ops) {
-    clauses.push(dialect.compileHas(qualifiedCol, params, ops.$has));
-  }
-
-  if ("$mod" in ops) {
-    const [divisor, remainder] = ops.$mod as [number, number];
-    params.push(divisor);
-    const divisorPlaceholder = dialect.placeholder(params);
-    params.push(remainder);
-    const remainderPlaceholder = dialect.placeholder(params);
-    clauses.push(`(${qualifiedCol} % ${divisorPlaceholder}) = ${remainderPlaceholder}`);
-  }
-
-  // A FIELD-level `$not` negates ONE column's condition — a different operator
-  // from the criteria-level `$not` handled in `compilePredicate`. It carries the
-  // same TWO-valued meaning, because the criteria language is the JS matcher's:
-  // `!matchConditionOperator(value, inner)`. So the negation must be
-  // `(…) IS NOT TRUE`, not SQL's three-valued `NOT (…)` — for a NULL column
-  // `NOT (col = 'x')` is UNKNOWN and drops the row, while the matcher keeps it.
-  //
-  // An inner object every operator of which compiles to NO clause matches every
-  // row (`$not: {}`, `$not: { $nin: [] }`), so its negation matches none;
-  // emitting nothing would instead drop the `$not` and match everything.
-  //
-  // A non-object `$not` value is outside the declared type but the matcher
-  // accepts it as `value !== inner`, so read it as a negated equality.
-  if (ops.$not) {
-    const inner = isObject(ops.$not)
-      ? (ops.$not as ConditionOperator<unknown>)
-      : ({ $eq: ops.$not } as ConditionOperator<unknown>);
-    const sub = compileOperator(qualifiedCol, inner, params, field, fieldKey, dialect);
-    clauses.push(sub.length > 0 ? `(${sub.join(" AND ")}) IS NOT TRUE` : "FALSE");
-  }
-
-  return clauses;
 };

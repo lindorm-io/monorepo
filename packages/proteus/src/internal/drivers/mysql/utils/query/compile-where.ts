@@ -3,6 +3,7 @@ import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../../../types/query.js";
+import type { CompiledCondition } from "../../../../utils/sql/compiled-condition.js";
 import {
   compileWhere as sharedCompileWhere,
   compilePredicate as sharedCompilePredicate,
@@ -10,7 +11,7 @@ import {
 } from "../../../../utils/sql/compile-where.js";
 import { mysqlDialect } from "../mysql-dialect.js";
 
-export type { FieldAliasOverrides };
+export type { CompiledCondition, FieldAliasOverrides };
 
 export const compileWhere = <E extends IEntity>(
   entries: Array<PredicateEntry<E>>,
@@ -34,7 +35,7 @@ export const compilePredicate = (
   tableAlias: string | null,
   params: Array<unknown>,
   fieldAliasOverrides?: FieldAliasOverrides,
-): string =>
+): CompiledCondition =>
   sharedCompilePredicate(
     predicate,
     metadata,

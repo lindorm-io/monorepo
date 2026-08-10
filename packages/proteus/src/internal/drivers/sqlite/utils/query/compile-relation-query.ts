@@ -13,6 +13,7 @@ import { resolveFilters } from "../../../../utils/query/resolve-filters.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 import { resolveColumnNameSafe } from "../resolve-column-name.js";
 import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
+import { renderCondition } from "../../../../utils/sql/compiled-condition.js";
 import { compilePredicate } from "./compile-where.js";
 
 export type CompiledRelationQuery = {
@@ -267,11 +268,8 @@ const buildFilters = (
   const filterOverrides = mergeSystemFilterOverrides(undefined, ctx.withDeleted);
   const resolved = resolveFilters(metaFilters, new Map(), filterOverrides);
   for (const filter of resolved) {
-    const compiled = compilePredicate(
-      filter.predicate,
-      foreignMeta,
-      tableAlias ?? null,
-      params,
+    const compiled = renderCondition(
+      compilePredicate(filter.predicate, foreignMeta, tableAlias ?? null, params),
     );
     if (compiled) conditions.push(compiled);
   }
@@ -293,11 +291,8 @@ const buildFilters = (
 
   // User-provided WHERE
   if (include.where) {
-    const extra = compilePredicate(
-      include.where,
-      foreignMeta,
-      tableAlias ?? null,
-      params,
+    const extra = renderCondition(
+      compilePredicate(include.where, foreignMeta, tableAlias ?? null, params),
     );
     if (extra) conditions.push(extra);
   }

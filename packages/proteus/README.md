@@ -2051,6 +2051,23 @@ An inner condition that constrains nothing matches every row, so negating it
 matches none: `{ $not: {} }`, `{ label: { $not: {} } }` and
 `{ label: { $not: { $nin: [] } } }` all return nothing.
 
+### Empty operands
+
+`$in: []` can never hold and `$nin: []` excludes nothing, so the first matches no
+rows and the second matches every row. `$or: []` is the empty disjunction and
+matches nothing; `$and: []` constrains nothing. These are compiled as constants
+rather than as clauses, so the query planner sees `WHERE FALSE` or no `WHERE` at
+all — and, more importantly, "matches every row" is no longer indistinguishable
+from "there was nothing to emit".
+
+### Field-level `$and` / `$or`
+
+`{ age: { $and: [...] } }` and `{ age: { $or: [...] } }` are declared by the
+condition language but are **not compiled to SQL** — they raise
+`NotSupportedError` naming the operator. They previously compiled to no clause at
+all, which returned every row. Use a criteria-level `$and` / `$or` instead. An
+unrecognised `$`-prefixed operator raises for the same reason.
+
 ## Relations
 
 ### One-to-One

@@ -1,5 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`compileWhere [mysql] > operator dispatch > should emit clauses in the order the operators are written 1`] = `"(\`t0\`.\`age\` <= ? AND \`t0\`.\`age\` > ?)"`;
+
 exports[`compileWhere [mysql] > should compile $all (array containment) 1`] = `"WHERE JSON_CONTAINS(\`t0\`.\`tags\`, ?)"`;
 
 exports[`compileWhere [mysql] > should compile $and at root level 1`] = `"WHERE (\`t0\`.\`name\` = ? AND \`t0\`.\`age\` >= ?)"`;
@@ -54,7 +56,7 @@ exports[`compileWhere [mysql] > should compile a field-level $not over an array 
 
 exports[`compileWhere [mysql] > should compile a field-level $not over an operator object 1`] = `"WHERE (\`t0\`.\`name\` = ?) IS NOT TRUE"`;
 
-exports[`compileWhere [mysql] > should compile a field-level $not over several operators as one negation 1`] = `"WHERE (\`t0\`.\`age\` > ? AND \`t0\`.\`age\` <= ?) IS NOT TRUE"`;
+exports[`compileWhere [mysql] > should compile a field-level $not over several operators as one negation 1`] = `"WHERE ((\`t0\`.\`age\` > ? AND \`t0\`.\`age\` <= ?)) IS NOT TRUE"`;
 
 exports[`compileWhere [mysql] > should compile a nested $not inside $and 1`] = `"WHERE (\`t0\`.\`age\` >= ? AND (\`t0\`.\`name\` = ?) IS NOT TRUE)"`;
 
@@ -83,6 +85,12 @@ exports[`compileWhere [mysql] > should not emit conjunction when first entry com
 exports[`compileWhere [mysql] > should use column name mapping 1`] = `"WHERE \`t0\`.\`email_address\` = ?"`;
 
 exports[`compileWhere [mysql] > tableAlias = null > omits table alias prefix when tableAlias is null 1`] = `"\`name\` = ?"`;
+
+exports[`compileWhere [mysql] > three-state compiled result > should drop an always-false member from a disjunction 1`] = `"\`t0\`.\`name\` = ?"`;
+
+exports[`compileWhere [mysql] > three-state compiled result > should drop an always-true member from a conjunction 1`] = `"\`t0\`.\`name\` = ?"`;
+
+exports[`compileWhere [postgres] > operator dispatch > should emit clauses in the order the operators are written 1`] = `"("t0"."age" <= $1 AND "t0"."age" > $2)"`;
 
 exports[`compileWhere [postgres] > should compile $all (array containment) 1`] = `"WHERE "t0"."tags" @> $1::jsonb"`;
 
@@ -138,7 +146,7 @@ exports[`compileWhere [postgres] > should compile a field-level $not over an arr
 
 exports[`compileWhere [postgres] > should compile a field-level $not over an operator object 1`] = `"WHERE ("t0"."name" = $1) IS NOT TRUE"`;
 
-exports[`compileWhere [postgres] > should compile a field-level $not over several operators as one negation 1`] = `"WHERE ("t0"."age" > $1 AND "t0"."age" <= $2) IS NOT TRUE"`;
+exports[`compileWhere [postgres] > should compile a field-level $not over several operators as one negation 1`] = `"WHERE (("t0"."age" > $1 AND "t0"."age" <= $2)) IS NOT TRUE"`;
 
 exports[`compileWhere [postgres] > should compile a nested $not inside $and 1`] = `"WHERE ("t0"."age" >= $1 AND ("t0"."name" = $2) IS NOT TRUE)"`;
 
@@ -167,6 +175,12 @@ exports[`compileWhere [postgres] > should not emit conjunction when first entry 
 exports[`compileWhere [postgres] > should use column name mapping 1`] = `"WHERE "t0"."email_address" = $1"`;
 
 exports[`compileWhere [postgres] > tableAlias = null > omits table alias prefix when tableAlias is null 1`] = `""name" = $1"`;
+
+exports[`compileWhere [postgres] > three-state compiled result > should drop an always-false member from a disjunction 1`] = `""t0"."name" = $1"`;
+
+exports[`compileWhere [postgres] > three-state compiled result > should drop an always-true member from a conjunction 1`] = `""t0"."name" = $1"`;
+
+exports[`compileWhere [sqlite] > operator dispatch > should emit clauses in the order the operators are written 1`] = `"("t0"."age" <= ? AND "t0"."age" > ?)"`;
 
 exports[`compileWhere [sqlite] > should compile $all (array containment) 1`] = `"WHERE (EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value = ?) AND EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value = ?))"`;
 
@@ -222,7 +236,7 @@ exports[`compileWhere [sqlite] > should compile a field-level $not over an array
 
 exports[`compileWhere [sqlite] > should compile a field-level $not over an operator object 1`] = `"WHERE ("t0"."name" = ?) IS NOT TRUE"`;
 
-exports[`compileWhere [sqlite] > should compile a field-level $not over several operators as one negation 1`] = `"WHERE ("t0"."age" > ? AND "t0"."age" <= ?) IS NOT TRUE"`;
+exports[`compileWhere [sqlite] > should compile a field-level $not over several operators as one negation 1`] = `"WHERE (("t0"."age" > ? AND "t0"."age" <= ?)) IS NOT TRUE"`;
 
 exports[`compileWhere [sqlite] > should compile a nested $not inside $and 1`] = `"WHERE ("t0"."age" >= ? AND ("t0"."name" = ?) IS NOT TRUE)"`;
 
@@ -251,6 +265,10 @@ exports[`compileWhere [sqlite] > should not emit conjunction when first entry co
 exports[`compileWhere [sqlite] > should use column name mapping 1`] = `"WHERE "t0"."email_address" = ?"`;
 
 exports[`compileWhere [sqlite] > tableAlias = null > omits table alias prefix when tableAlias is null 1`] = `""name" = ?"`;
+
+exports[`compileWhere [sqlite] > three-state compiled result > should drop an always-false member from a disjunction 1`] = `""t0"."name" = ?"`;
+
+exports[`compileWhere [sqlite] > three-state compiled result > should drop an always-true member from a conjunction 1`] = `""t0"."name" = ?"`;
 
 exports[`compileWhere dialect-specific: $regex > mysql: case-sensitive regex uses REGEXP without (?i) 1`] = `"WHERE \`t0\`.\`name\` REGEXP ?"`;
 

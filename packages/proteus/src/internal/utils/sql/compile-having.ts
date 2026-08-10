@@ -3,6 +3,8 @@ import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
 import type { PredicateEntry, RawWhereEntry } from "../../types/query.js";
+import type { CompiledCondition } from "./compiled-condition.js";
+import { renderCondition } from "./compiled-condition.js";
 import type { SqlDialect } from "./sql-dialect.js";
 
 export type CompilePredicateFn = (
@@ -10,7 +12,7 @@ export type CompilePredicateFn = (
   metadata: EntityMetadata,
   tableAlias: string,
   params: Array<unknown>,
-) => string;
+) => CompiledCondition;
 
 export const compileHaving = <E extends IEntity>(
   entries: Array<PredicateEntry<E>>,
@@ -27,11 +29,8 @@ export const compileHaving = <E extends IEntity>(
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
-    const compiled = compilePredicate(
-      entry.predicate as Condition<Dict>,
-      metadata,
-      tableAlias,
-      params,
+    const compiled = renderCondition(
+      compilePredicate(entry.predicate as Condition<Dict>, metadata, tableAlias, params),
     );
     if (!compiled) continue;
 

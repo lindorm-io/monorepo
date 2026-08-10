@@ -11,6 +11,7 @@ import type { ResolvedFilter } from "../../../../utils/query/resolve-filters.js"
 import { resolveFilters } from "../../../../utils/query/resolve-filters.js";
 import { quoteIdentifier } from "../quote-identifier.js";
 import { resolveColumnName } from "../resolve-column-name.js";
+import { renderCondition } from "../../../../utils/sql/compiled-condition.js";
 import {
   compilePredicate,
   compileWhere,
@@ -165,12 +166,14 @@ const appendFilters = (
   let result = current;
 
   for (const filter of filters) {
-    const compiled = compilePredicate(
-      filter.predicate,
-      metadata,
-      tableAlias,
-      params,
-      fieldAliasOverrides,
+    const compiled = renderCondition(
+      compilePredicate(
+        filter.predicate,
+        metadata,
+        tableAlias,
+        params,
+        fieldAliasOverrides,
+      ),
     );
     if (!compiled) continue;
 

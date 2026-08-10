@@ -6,6 +6,7 @@ import { mysqlDialect } from "../../drivers/mysql/utils/mysql-dialect.js";
 import { sqliteDialect } from "../../drivers/sqlite/utils/sqlite-dialect.js";
 import type { SqlDialect } from "./sql-dialect.js";
 import { compileWhere, compilePredicate } from "./compile-where.js";
+import { renderCondition } from "./compiled-condition.js";
 import { describe, expect, test } from "vitest";
 
 const dialects: Array<[string, SqlDialect]> = [
@@ -365,8 +366,10 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
     expect(result).toMatchSnapshot();
   });
 
-  test("compilePredicate returns an empty string for an empty predicate", () => {
-    expect(compilePredicate({}, metadata, "t0", [], dialect)).toBe("");
+  test("compilePredicate returns always-true for an empty predicate", () => {
+    expect(compilePredicate({}, metadata, "t0", [], dialect)).toEqual({
+      kind: "always-true",
+    });
   });
 
   // ── Field-level `$not` ──
@@ -568,7 +571,246 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
     test("omits table alias prefix when tableAlias is null", () => {
       const params: Array<unknown> = [];
       const result = compilePredicate({ name: "Alice" }, metadata, null, params, dialect);
-      expect(result).toMatchSnapshot();
+      expect(renderCondition(result)).toMatchSnapshot();
+    });
+  });
+
+  // ── The three-state compiled result ──
+  //
+  // "This places no restriction" and "there is nothing to emit" used to share
+  // the empty string, and every call site read the empty string as *skip*. The
+  // two are now different values, which is what lets a destructive operation
+  // refuse the first one.
+
+  describe("three-state compiled result", () => {
+    test("should compile $nin: [] to always-true, not to nothing", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { name: { $nin: [] } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(result).toEqual({ kind: "always-true" });
+      expect(params).toEqual([]);
+    });
+
+    test("should compile $in: [] to always-false", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { name: { $in: [] } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(result).toEqual({ kind: "always-false" });
+      expect(params).toEqual([]);
+    });
+
+    // The live wipe this phase exists for: both compiled to a WHERE clause that
+    // restricts nothing, so `deleteMany({ name: { $nin: [] } })` ran
+    // `DELETE FROM t`. The SQL is unchanged — what changed is that the compiled
+    // result now SAYS which of the two it is.
+    test("should distinguish an unrestricted criterion from an empty one", () => {
+      const unrestricted = compilePredicate(
+        { name: { $nin: [] } },
+        metadata,
+        "t0",
+        [],
+        dialect,
+      );
+      const empty = compilePredicate({}, metadata, "t0", [], dialect);
+      const impossible = compilePredicate(
+        { name: { $in: [] } },
+        metadata,
+        "t0",
+        [],
+        dialect,
+      );
+
+      expect(renderCondition(unrestricted)).toBe("");
+      expect(renderCondition(empty)).toBe("");
+      expect(renderCondition(impossible)).toBe("FALSE");
+    });
+
+    test("should emit no WHERE for an always-true criterion", () => {
+      const entries: Array<PredicateEntry<any>> = [
+        { predicate: { name: { $nin: [] } }, conjunction: "and" },
+      ];
+
+      expect(compileWhere(entries, metadata, "t0", [], dialect)).toBe("");
+    });
+
+    test("should emit WHERE FALSE for an always-false criterion", () => {
+      const entries: Array<PredicateEntry<any>> = [
+        { predicate: { name: { $in: [] } }, conjunction: "and" },
+      ];
+
+      expect(compileWhere(entries, metadata, "t0", [], dialect)).toBe("WHERE FALSE");
+    });
+
+    test("should drop an always-true member from a conjunction", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { $and: [{ name: "Alice" }, { age: { $nin: [] } }] },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual(["Alice"]);
+    });
+
+    test("should collapse a conjunction holding an always-false member", () => {
+      const result = compilePredicate(
+        { $and: [{ name: "Alice" }, { age: { $in: [] } }] },
+        metadata,
+        "t0",
+        [],
+        dialect,
+      );
+
+      expect(result).toEqual({ kind: "always-false" });
+    });
+
+    test("should collapse a disjunction holding an always-true member", () => {
+      const result = compilePredicate(
+        { $or: [{ name: "Alice" }, { age: { $nin: [] } }] },
+        metadata,
+        "t0",
+        [],
+        dialect,
+      );
+
+      expect(result).toEqual({ kind: "always-true" });
+    });
+
+    // An empty sub-condition used to be dropped by `.filter(Boolean)`, so the
+    // disjunction UNDER-matched: `$or: [{}, x]` compiled to `x`.
+    test("should collapse a disjunction holding an empty sub-condition", () => {
+      const result = compilePredicate(
+        { $or: [{}, { name: "Alice" }] },
+        metadata,
+        "t0",
+        [],
+        dialect,
+      );
+
+      expect(result).toEqual({ kind: "always-true" });
+    });
+
+    test("should drop an always-false member from a disjunction", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { $or: [{ name: "Alice" }, { age: { $in: [] } }] },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual(["Alice"]);
+    });
+
+    test("should compile an empty $and to always-true", () => {
+      expect(compilePredicate({ $and: [] }, metadata, "t0", [], dialect)).toEqual({
+        kind: "always-true",
+      });
+    });
+
+    // `$or: []` is the empty disjunction, which nothing satisfies. It used to
+    // compile to no clause at all and therefore matched every row.
+    test("should compile an empty $or to always-false", () => {
+      expect(compilePredicate({ $or: [] }, metadata, "t0", [], dialect)).toEqual({
+        kind: "always-false",
+      });
+    });
+
+    test("should flip the constant states through $not", () => {
+      expect(
+        compilePredicate({ $not: { name: { $nin: [] } } }, metadata, "t0", [], dialect),
+      ).toEqual({ kind: "always-false" });
+
+      expect(
+        compilePredicate({ $not: { name: { $in: [] } } }, metadata, "t0", [], dialect),
+      ).toEqual({ kind: "always-true" });
+    });
+
+    test("should flip the constant states through a field-level $not", () => {
+      expect(
+        compilePredicate({ name: { $not: { $nin: [] } } }, metadata, "t0", [], dialect),
+      ).toEqual({ kind: "always-false" });
+
+      expect(
+        compilePredicate({ name: { $not: { $in: [] } } }, metadata, "t0", [], dialect),
+      ).toEqual({ kind: "always-true" });
+    });
+  });
+
+  // ── The operator switch ──
+
+  describe("operator dispatch", () => {
+    test("should throw for an unknown operator instead of matching every row", () => {
+      const entries: Array<PredicateEntry<any>> = [
+        { predicate: { name: { $ne: "Alice" } }, conjunction: "and" },
+      ];
+
+      expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+        /Unknown operator "\$ne"/,
+      );
+    });
+
+    test("should throw and name the operator for a field-level $and", () => {
+      const entries: Array<PredicateEntry<any>> = [
+        { predicate: { age: { $and: [{ $gt: 18 }, { $lt: 65 }] } }, conjunction: "and" },
+      ];
+
+      expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+        /Field-level operator "\$and" is not supported/,
+      );
+    });
+
+    test("should throw and name the operator for a field-level $or", () => {
+      const entries: Array<PredicateEntry<any>> = [
+        { predicate: { age: { $or: [{ $lt: 18 }, { $gt: 65 }] } }, conjunction: "and" },
+      ];
+
+      expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+        /Field-level operator "\$or" is not supported/,
+      );
+    });
+
+    // Emission follows the ORDER THE CONDITION IS WRITTEN IN, where the
+    // replaced if-chain imposed its own fixed order. Placeholders are numbered
+    // as clauses are emitted, so the parameter order follows too.
+    test("should emit clauses in the order the operators are written", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { age: { $lte: 65, $gt: 18 } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual([65, 18]);
+    });
+
+    // A bare nested object on a NON-embedded column still compiles to no clause,
+    // so it matches every row. Pinned deliberately: it is a known gap that
+    // belongs with the containment work, not with the representation change.
+    test("should still compile a bare nested object on a plain column to always-true", () => {
+      expect(
+        compilePredicate({ data: { city: "Oslo" } }, metadata, "t0", [], dialect),
+      ).toEqual({ kind: "always-true" });
     });
   });
 });

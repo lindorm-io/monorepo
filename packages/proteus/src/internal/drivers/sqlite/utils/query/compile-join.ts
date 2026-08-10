@@ -5,6 +5,7 @@ import { ProteusError } from "../../../../../errors/ProteusError.js";
 import { quoteIdentifier } from "../quote-identifier.js";
 import { resolveColumnNameSafe } from "../resolve-column-name.js";
 import type { AliasMap } from "./compile-select.js";
+import { renderCondition } from "../../../../utils/sql/compiled-condition.js";
 import { compilePredicate } from "./compile-where.js";
 import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
 
@@ -167,11 +168,8 @@ const compileManyToManyJoin = (
   if (versionCond) joinToTargetConditions.push(versionCond);
 
   if (inc.where) {
-    const extra = compilePredicate(
-      inc.where,
-      foreignMeta,
-      targetAlias.tableAlias,
-      params,
+    const extra = renderCondition(
+      compilePredicate(inc.where, foreignMeta, targetAlias.tableAlias, params),
     );
     if (extra) joinToTargetConditions.push(extra);
   }
@@ -225,11 +223,8 @@ const compileOwningJoin = (
   if (versionCond) conditions.push(versionCond);
 
   if (inc.where) {
-    const extra = compilePredicate(
-      inc.where,
-      foreignMeta,
-      targetAlias.tableAlias,
-      params,
+    const extra = renderCondition(
+      compilePredicate(inc.where, foreignMeta, targetAlias.tableAlias, params),
     );
     if (extra) conditions.push(extra);
   }
@@ -280,11 +275,8 @@ const compileInverseJoin = (
   if (versionCond) conditions.push(versionCond);
 
   if (inc.where) {
-    const extra = compilePredicate(
-      inc.where,
-      foreignMeta,
-      targetAlias.tableAlias,
-      params,
+    const extra = renderCondition(
+      compilePredicate(inc.where, foreignMeta, targetAlias.tableAlias, params),
     );
     if (extra) conditions.push(extra);
   }
