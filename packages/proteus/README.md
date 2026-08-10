@@ -2019,6 +2019,7 @@ All `where` and `criteria` parameters accept a `Predicate<E>` — a type-safe qu
 
 // JSON containment
 { metadata: { $has: { role: "admin" } } }
+{ metadata: { role: "admin" } }               // the same thing, written bare
 
 // Modulo
 { age: { $mod: [2, 0] } }
@@ -2029,7 +2030,36 @@ All `where` and `criteria` parameters accept a `Predicate<E>` — a type-safe qu
 { $not: { status: "banned" } }
 { $not: { $or: [{ role: "admin" }, { role: "moderator" }] } }
 { status: { $not: { $eq: "banned" } } }
+{ age: { $or: [{ $lt: 18 }, { $gt: 65 }] } }  // over ONE column
 ```
+
+### A field's operator object is a conjunction
+
+Every key present must hold, and a logical operator sitting among condition
+operators does not take over the object:
+`{ score: { $not: { $lt: 15 }, $lt: 25 } }` means both — 15 ≤ score < 25.
+
+### Payload shapes are validated
+
+Presence decides that an operator applies; a payload of the wrong shape raises
+rather than being coerced or dropped. `$not` needs an object, `$regex` needs a
+`RegExp`, `$and` / `$or` need a non-empty array, and an unrecognised
+`$`-prefixed key raises too.
+
+| written                                   |                                              |
+| ----------------------------------------- | -------------------------------------------- |
+| `{ published: { $not: false } }`          | ✗ raises — write `{ published: true }`       |
+| `{ published: { $not: { $eq: false } } }` | ✓                                            |
+| `{ name: { $regex: "^Ali" } }`            | ✗ raises — the language declares a `RegExp`  |
+| `{ name: { $regex: /^Ali/ } }`            | ✓                                            |
+| `{ age: { $or: [] } }`                    | ✗ raises — omit the key to constrain nothing |
+
+This matters beyond tidiness: a payload the compiler could not read used to
+compile to no clause at all, so `delete({ published: { $not: false } })` — which
+typechecks, and is the natural way to write "published is true" — ran an
+unfiltered `DELETE`.
+
+### `$not`
 
 `$not` is two operators. As a criteria KEY it negates a whole sub-predicate; as
 a FIELD's operator — `{ field: { $not: … } }` — it negates that one column's
@@ -2048,25 +2078,50 @@ drivers compile to `(…) IS NOT TRUE` rather than `NOT (…)` — SQL's three-v
 making one literal condition mean different things per driver.
 
 An inner condition that constrains nothing matches every row, so negating it
-matches none: `{ $not: {} }`, `{ label: { $not: {} } }` and
-`{ label: { $not: { $nin: [] } } }` all return nothing.
+matches none: `{ $not: {} }` and `{ label: { $not: { $nin: [] } } }` both return
+nothing.
 
 ### Empty operands
 
 `$in: []` can never hold and `$nin: []` excludes nothing, so the first matches no
-rows and the second matches every row. `$or: []` is the empty disjunction and
-matches nothing; `$and: []` constrains nothing. These are compiled as constants
-rather than as clauses, so the query planner sees `WHERE FALSE` or no `WHERE` at
-all — and, more importantly, "matches every row" is no longer indistinguishable
-from "there was nothing to emit".
+rows and the second matches every row. At criteria level `$or: []` is the empty
+disjunction and matches nothing, and `$and: []` constrains nothing. These are
+compiled as constants rather than as clauses, so the query planner sees
+`WHERE FALSE` or no `WHERE` at all — and, more importantly, "matches every row"
+is no longer indistinguishable from "there was nothing to emit".
+
+### Bare nested object
+
+A bare nested object on a structured column means PARTIAL MATCH:
+`{ address: { city: "Oslo" } }` matches any row whose `address.city` is Oslo,
+whatever else the document holds. It compiles to the same JSON containment
+`$has` does, so the two are one semantic written two ways. Ask for the whole
+document instead with `{ address: { $eq: { … } } }`.
+
+The column has to be declared `@Field("object")`. On the SQL drivers a nested
+condition on any other column raises — it used to fall through and emit no
+clause at all, so a fully typed, natural-reading condition returned the whole
+table; the in-memory drivers simply match nothing. Dotted paths
+(`{ "address.city": … }`) are not supported.
+
+For an `@Embedded` parent key the same shape means the same thing by a different
+mechanism: the nested keys expand to the embedded columns rather than to JSON
+containment.
+
+⚠ **MongoDB has not been brought over yet** — its filter compiler still reads a
+bare nested object as an EXACT subdocument match, has no branch for a
+field-level `$and` / `$or`, and coerces a malformed operator payload instead of
+refusing it.
 
 ### Field-level `$and` / `$or`
 
-`{ age: { $and: [...] } }` and `{ age: { $or: [...] } }` are declared by the
-condition language but are **not compiled to SQL** — they raise
-`NotSupportedError` naming the operator. They previously compiled to no clause at
-all, which returned every row. Use a criteria-level `$and` / `$or` instead. An
-unrecognised `$`-prefixed operator raises for the same reason.
+`{ age: { $and: [...] } }` and `{ age: { $or: [...] } }` combine conditions over
+ONE column, and are AND-ed with their siblings like any other key. Each member is
+read exactly as a field's own condition value is, so a bare value member is an
+equality and `null` is a null check — `{ age: { $or: [{ $lt: 18 }, { $gt: 65 }] } }`,
+`{ name: { $or: ["Alice", "Bob"] } }`, `{ label: { $or: [{ $eq: null }, { $eq: "keep" }] } }`.
+
+An unrecognised `$`-prefixed operator raises rather than compiling to nothing.
 
 ## Relations
 

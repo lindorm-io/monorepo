@@ -53,15 +53,15 @@ describe("compileWhere", () => {
     expect(params).toEqual(["%alice%"]);
   });
 
-  test("should compile $regex as REGEXP (string pattern)", () => {
+  // The language declares a `RegExp`, so a string is a malformed payload — it
+  // used to be coerced here and refused by the matcher over the same data.
+  test("should refuse a string $regex pattern", () => {
     const entries: Array<PredicateEntry<any>> = [
       { predicate: { name: { $regex: "^A.*e$" } }, conjunction: "and" },
     ];
-    const params: Array<unknown> = [];
-    const result = compileWhere(entries, metadata, "t0", params);
-    expect(result).toMatchSnapshot();
-    expect(result).toContain("REGEXP");
-    expect(params).toEqual(["^A.*e$"]);
+    expect(() => compileWhere(entries, metadata, "t0", [])).toThrow(
+      /Operator "\$regex" on field "name" requires a RegExp/,
+    );
   });
 
   test("should compile $regex with RegExp object by extracting .source", () => {

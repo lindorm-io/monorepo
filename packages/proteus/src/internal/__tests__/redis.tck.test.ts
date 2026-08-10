@@ -53,6 +53,7 @@ const factory: TckDriverFactory = {
     bigintIdentity: true,
     // Redis's driver rejects conflictOn by design (NotSupportedError).
     upsertConflictColumns: false,
+    fieldConditions: true,
     encryption: true,
     inheritance: { singleTable: true, joined: false },
     transactions: { rollback: false, savepoints: false },

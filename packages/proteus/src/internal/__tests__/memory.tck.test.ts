@@ -45,6 +45,7 @@ const factory: TckDriverFactory = {
     typedJson: true,
     bigintIdentity: true,
     upsertConflictColumns: true,
+    fieldConditions: true,
     encryption: true,
     inheritance: { singleTable: true, joined: true },
     transactions: { rollback: true, savepoints: true },

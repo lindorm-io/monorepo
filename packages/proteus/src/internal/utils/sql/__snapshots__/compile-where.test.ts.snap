@@ -1,5 +1,51 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`compileWhere [mysql] > bare nested object > should AND a nested key with a sibling operator 1`] = `"(\`t0\`.\`data\` IS NOT NULL AND JSON_CONTAINS(\`t0\`.\`data\`, CAST(? AS JSON)))"`;
+
+exports[`compileWhere [mysql] > bare nested object > should AND a nested key with a sibling operator 2`] = `
+[
+  "{"city":"Oslo"}",
+]
+`;
+
+exports[`compileWhere [mysql] > bare nested object > should compile to JSON containment, not to always-true 1`] = `"JSON_CONTAINS(\`t0\`.\`data\`, CAST(? AS JSON))"`;
+
+exports[`compileWhere [mysql] > bare nested object > should compile to JSON containment, not to always-true 2`] = `
+[
+  "{"city":"Oslo"}",
+]
+`;
+
+exports[`compileWhere [mysql] > bare nested object > should emit ONE containment clause for several nested keys 1`] = `"JSON_CONTAINS(\`t0\`.\`data\`, CAST(? AS JSON))"`;
+
+exports[`compileWhere [mysql] > bare nested object > should emit ONE containment clause for several nested keys 2`] = `
+[
+  "{"city":"Oslo","postcode":"0150"}",
+]
+`;
+
+exports[`compileWhere [mysql] > bare nested object > should negate a nested condition through $not 1`] = `"(JSON_CONTAINS(\`t0\`.\`data\`, CAST(? AS JSON))) IS NOT TRUE"`;
+
+exports[`compileWhere [mysql] > bare nested object > should negate a nested condition through $not 2`] = `
+[
+  "{"city":"Oslo"}",
+]
+`;
+
+exports[`compileWhere [mysql] > field-level logical operators > should AND a field-level $or with its siblings 1`] = `"((\`t0\`.\`age\` < ? OR \`t0\`.\`age\` > ?) AND \`t0\`.\`age\` <> ?)"`;
+
+exports[`compileWhere [mysql] > field-level logical operators > should AND a field-level logical operator with its siblings 1`] = `"((\`t0\`.\`score\` < ?) IS NOT TRUE AND \`t0\`.\`score\` < ?)"`;
+
+exports[`compileWhere [mysql] > field-level logical operators > should compile a field-level $and 1`] = `"(\`t0\`.\`age\` > ? AND \`t0\`.\`age\` < ?)"`;
+
+exports[`compileWhere [mysql] > field-level logical operators > should compile a field-level $or 1`] = `"(\`t0\`.\`age\` < ? OR \`t0\`.\`age\` > ?)"`;
+
+exports[`compileWhere [mysql] > field-level logical operators > should nest a field-level $and inside a field-level $or 1`] = `"((\`t0\`.\`age\` > ? AND \`t0\`.\`age\` < ?) OR \`t0\`.\`age\` > ?)"`;
+
+exports[`compileWhere [mysql] > field-level logical operators > should read a bare value member as an equality 1`] = `"(\`t0\`.\`name\` = ? OR \`t0\`.\`name\` = ?)"`;
+
+exports[`compileWhere [mysql] > field-level logical operators > should read a null member as IS NULL 1`] = `"(\`t0\`.\`name\` IS NULL OR \`t0\`.\`name\` = ?)"`;
+
 exports[`compileWhere [mysql] > operator dispatch > should emit clauses in the order the operators are written 1`] = `"(\`t0\`.\`age\` <= ? AND \`t0\`.\`age\` > ?)"`;
 
 exports[`compileWhere [mysql] > should compile $all (array containment) 1`] = `"WHERE JSON_CONTAINS(\`t0\`.\`tags\`, ?)"`;
@@ -48,8 +94,6 @@ exports[`compileWhere [mysql] > should compile a field-level $not over $eq: null
 
 exports[`compileWhere [mysql] > should compile a field-level $not over $in 1`] = `"WHERE (\`t0\`.\`name\` IN (?, ?)) IS NOT TRUE"`;
 
-exports[`compileWhere [mysql] > should compile a field-level $not over a bare value 1`] = `"WHERE (\`t0\`.\`name\` = ?) IS NOT TRUE"`;
-
 exports[`compileWhere [mysql] > should compile a field-level $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 
 exports[`compileWhere [mysql] > should compile a field-level $not over an array operator 1`] = `"WHERE (JSON_CONTAINS(\`t0\`.\`tags\`, ?)) IS NOT TRUE"`;
@@ -89,6 +133,52 @@ exports[`compileWhere [mysql] > tableAlias = null > omits table alias prefix whe
 exports[`compileWhere [mysql] > three-state compiled result > should drop an always-false member from a disjunction 1`] = `"\`t0\`.\`name\` = ?"`;
 
 exports[`compileWhere [mysql] > three-state compiled result > should drop an always-true member from a conjunction 1`] = `"\`t0\`.\`name\` = ?"`;
+
+exports[`compileWhere [postgres] > bare nested object > should AND a nested key with a sibling operator 1`] = `"("t0"."data" IS NOT NULL AND "t0"."data" @> $1::jsonb)"`;
+
+exports[`compileWhere [postgres] > bare nested object > should AND a nested key with a sibling operator 2`] = `
+[
+  "{"city":"Oslo"}",
+]
+`;
+
+exports[`compileWhere [postgres] > bare nested object > should compile to JSON containment, not to always-true 1`] = `""t0"."data" @> $1::jsonb"`;
+
+exports[`compileWhere [postgres] > bare nested object > should compile to JSON containment, not to always-true 2`] = `
+[
+  "{"city":"Oslo"}",
+]
+`;
+
+exports[`compileWhere [postgres] > bare nested object > should emit ONE containment clause for several nested keys 1`] = `""t0"."data" @> $1::jsonb"`;
+
+exports[`compileWhere [postgres] > bare nested object > should emit ONE containment clause for several nested keys 2`] = `
+[
+  "{"city":"Oslo","postcode":"0150"}",
+]
+`;
+
+exports[`compileWhere [postgres] > bare nested object > should negate a nested condition through $not 1`] = `"("t0"."data" @> $1::jsonb) IS NOT TRUE"`;
+
+exports[`compileWhere [postgres] > bare nested object > should negate a nested condition through $not 2`] = `
+[
+  "{"city":"Oslo"}",
+]
+`;
+
+exports[`compileWhere [postgres] > field-level logical operators > should AND a field-level $or with its siblings 1`] = `"(("t0"."age" < $1 OR "t0"."age" > $2) AND "t0"."age" <> $3)"`;
+
+exports[`compileWhere [postgres] > field-level logical operators > should AND a field-level logical operator with its siblings 1`] = `"(("t0"."score" < $1) IS NOT TRUE AND "t0"."score" < $2)"`;
+
+exports[`compileWhere [postgres] > field-level logical operators > should compile a field-level $and 1`] = `"("t0"."age" > $1 AND "t0"."age" < $2)"`;
+
+exports[`compileWhere [postgres] > field-level logical operators > should compile a field-level $or 1`] = `"("t0"."age" < $1 OR "t0"."age" > $2)"`;
+
+exports[`compileWhere [postgres] > field-level logical operators > should nest a field-level $and inside a field-level $or 1`] = `"(("t0"."age" > $1 AND "t0"."age" < $2) OR "t0"."age" > $3)"`;
+
+exports[`compileWhere [postgres] > field-level logical operators > should read a bare value member as an equality 1`] = `"("t0"."name" = $1 OR "t0"."name" = $2)"`;
+
+exports[`compileWhere [postgres] > field-level logical operators > should read a null member as IS NULL 1`] = `"("t0"."name" IS NULL OR "t0"."name" = $1)"`;
 
 exports[`compileWhere [postgres] > operator dispatch > should emit clauses in the order the operators are written 1`] = `"("t0"."age" <= $1 AND "t0"."age" > $2)"`;
 
@@ -138,8 +228,6 @@ exports[`compileWhere [postgres] > should compile a field-level $not over $eq: n
 
 exports[`compileWhere [postgres] > should compile a field-level $not over $in 1`] = `"WHERE ("t0"."name" IN ($1, $2)) IS NOT TRUE"`;
 
-exports[`compileWhere [postgres] > should compile a field-level $not over a bare value 1`] = `"WHERE ("t0"."name" = $1) IS NOT TRUE"`;
-
 exports[`compileWhere [postgres] > should compile a field-level $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 
 exports[`compileWhere [postgres] > should compile a field-level $not over an array operator 1`] = `"WHERE ("t0"."tags" @> $1::jsonb) IS NOT TRUE"`;
@@ -179,6 +267,53 @@ exports[`compileWhere [postgres] > tableAlias = null > omits table alias prefix 
 exports[`compileWhere [postgres] > three-state compiled result > should drop an always-false member from a disjunction 1`] = `""t0"."name" = $1"`;
 
 exports[`compileWhere [postgres] > three-state compiled result > should drop an always-true member from a conjunction 1`] = `""t0"."name" = $1"`;
+
+exports[`compileWhere [sqlite] > bare nested object > should AND a nested key with a sibling operator 1`] = `"("t0"."data" IS NOT NULL AND json_extract("t0"."data", '$."city"') = ?)"`;
+
+exports[`compileWhere [sqlite] > bare nested object > should AND a nested key with a sibling operator 2`] = `
+[
+  "Oslo",
+]
+`;
+
+exports[`compileWhere [sqlite] > bare nested object > should compile to JSON containment, not to always-true 1`] = `"json_extract("t0"."data", '$."city"') = ?"`;
+
+exports[`compileWhere [sqlite] > bare nested object > should compile to JSON containment, not to always-true 2`] = `
+[
+  "Oslo",
+]
+`;
+
+exports[`compileWhere [sqlite] > bare nested object > should emit ONE containment clause for several nested keys 1`] = `"(json_extract("t0"."data", '$."city"') = ? AND json_extract("t0"."data", '$."postcode"') = ?)"`;
+
+exports[`compileWhere [sqlite] > bare nested object > should emit ONE containment clause for several nested keys 2`] = `
+[
+  "Oslo",
+  "0150",
+]
+`;
+
+exports[`compileWhere [sqlite] > bare nested object > should negate a nested condition through $not 1`] = `"(json_extract("t0"."data", '$."city"') = ?) IS NOT TRUE"`;
+
+exports[`compileWhere [sqlite] > bare nested object > should negate a nested condition through $not 2`] = `
+[
+  "Oslo",
+]
+`;
+
+exports[`compileWhere [sqlite] > field-level logical operators > should AND a field-level $or with its siblings 1`] = `"(("t0"."age" < ? OR "t0"."age" > ?) AND "t0"."age" <> ?)"`;
+
+exports[`compileWhere [sqlite] > field-level logical operators > should AND a field-level logical operator with its siblings 1`] = `"(("t0"."score" < ?) IS NOT TRUE AND "t0"."score" < ?)"`;
+
+exports[`compileWhere [sqlite] > field-level logical operators > should compile a field-level $and 1`] = `"("t0"."age" > ? AND "t0"."age" < ?)"`;
+
+exports[`compileWhere [sqlite] > field-level logical operators > should compile a field-level $or 1`] = `"("t0"."age" < ? OR "t0"."age" > ?)"`;
+
+exports[`compileWhere [sqlite] > field-level logical operators > should nest a field-level $and inside a field-level $or 1`] = `"(("t0"."age" > ? AND "t0"."age" < ?) OR "t0"."age" > ?)"`;
+
+exports[`compileWhere [sqlite] > field-level logical operators > should read a bare value member as an equality 1`] = `"("t0"."name" = ? OR "t0"."name" = ?)"`;
+
+exports[`compileWhere [sqlite] > field-level logical operators > should read a null member as IS NULL 1`] = `"("t0"."name" IS NULL OR "t0"."name" = ?)"`;
 
 exports[`compileWhere [sqlite] > operator dispatch > should emit clauses in the order the operators are written 1`] = `"("t0"."age" <= ? AND "t0"."age" > ?)"`;
 
@@ -227,8 +362,6 @@ exports[`compileWhere [sqlite] > should compile a $not over a no-op sub-clause t
 exports[`compileWhere [sqlite] > should compile a field-level $not over $eq: null to IS NOT NULL 1`] = `"WHERE ("t0"."name" IS NULL) IS NOT TRUE"`;
 
 exports[`compileWhere [sqlite] > should compile a field-level $not over $in 1`] = `"WHERE ("t0"."name" IN (?, ?)) IS NOT TRUE"`;
-
-exports[`compileWhere [sqlite] > should compile a field-level $not over a bare value 1`] = `"WHERE ("t0"."name" = ?) IS NOT TRUE"`;
 
 exports[`compileWhere [sqlite] > should compile a field-level $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 

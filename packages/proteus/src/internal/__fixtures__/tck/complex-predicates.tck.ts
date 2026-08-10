@@ -2,12 +2,13 @@ import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Complex Predicates Suite
 // Tests $all, $overlap, $contained, $length, $has, and embedded criteria.
 
-import type { TckDriverHandle } from "./types.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
 
 export const complexPredicatesSuite = (
   getHandle: () => TckDriverHandle,
   entities: TckEntities,
+  caps: TckCapabilities,
 ) => {
   describe("Complex Predicates", () => {
     // ─── Array operators on TckArrayHolder ─────────────────────────────
@@ -825,5 +826,239 @@ export const complexPredicatesSuite = (
         });
       });
     });
+
+    // ─── Field-level condition forms ───────────────────────────────────
+    //
+    // Three forms that a driver could carry and none of the SQL compilers did.
+    // All three USED TO MATCH EVERY ROW: a bare nested object emitted no clause,
+    // a field-level `$and`/`$or` had no branch, and a `$not` payload that was
+    // merely falsy was dropped — so `delete({ published: { $not: false } })`,
+    // which typechecks and is the natural way to write "published is true",
+    // compiled to `DELETE FROM t`.
+    //
+    // Every expectation below comes from running `Matcher.filter` from
+    // `@lindorm/match` over these exact rows. None of it was read off a driver.
+
+    if (caps.fieldConditions) {
+      describe("Field-level $and / $or", () => {
+        const { TckJsonbArray } = entities;
+
+        beforeEach(async () => {
+          await getHandle().clear();
+          const repo = getHandle().repository(TckJsonbArray);
+          await repo.insert({ name: "ab", label: "keep", tags: ["a", "b"] });
+          await repo.insert({ name: "abc", label: "drop", tags: ["a", "b", "c"] });
+          await repo.insert({ name: "cd", label: null, tags: ["c", "d"] });
+          await repo.insert({ name: "xy", label: null, tags: ["x", "y", "z"] });
+        });
+
+        test("$or takes the union of its members", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+          const results = await repo.find(
+            { name: { $or: [{ $eq: "ab" }, { $eq: "cd" }] } } as any,
+            { order: { name: "ASC" } },
+          );
+          expect(results.map((r) => r.name)).toEqual(["ab", "cd"]);
+        });
+
+        test("$and takes the intersection of its members", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+          const results = await repo.find(
+            { tags: { $and: [{ $all: ["a"] }, { $length: 2 }] } } as any,
+            { order: { name: "ASC" } },
+          );
+          expect(results.map((r) => r.name)).toEqual(["ab"]);
+        });
+
+        // A member is read exactly as a field's own condition value is.
+        test("reads a bare value member as an equality", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+          const results = await repo.find({ name: { $or: ["ab", "xy"] } } as any, {
+            order: { name: "ASC" },
+          });
+          expect(results.map((r) => r.name)).toEqual(["ab", "xy"]);
+        });
+
+        // NULL rows: SQL's `IN`/`=` drop them, so a driver borrowing three-valued
+        // logic for the members would lose "cd" and "xy" here.
+        test("a null member matches the NULL rows", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+          const results = await repo.find({ label: { $or: [{ $eq: null }] } } as any, {
+            order: { name: "ASC" },
+          });
+          expect(results.map((r) => r.name)).toEqual(["cd", "xy"]);
+        });
+
+        test("mixes a null member with a value member", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+          const results = await repo.find(
+            { label: { $or: [{ $eq: null }, { $eq: "keep" }] } } as any,
+            { order: { name: "ASC" } },
+          );
+          expect(results.map((r) => r.name)).toEqual(["ab", "cd", "xy"]);
+        });
+
+        test("$or over array operators", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+          const results = await repo.find(
+            { tags: { $or: [{ $length: 3 }, { $all: ["a", "b"] }] } } as any,
+            { order: { name: "ASC" } },
+          );
+          expect(results.map((r) => r.name)).toEqual(["ab", "abc", "xy"]);
+        });
+
+        test("nests $and inside $or", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+          const results = await repo.find(
+            { name: { $or: [{ $and: [{ $eq: "ab" }] }, { $eq: "xy" }] } } as any,
+            { order: { name: "ASC" } },
+          );
+          expect(results.map((r) => r.name)).toEqual(["ab", "xy"]);
+        });
+
+        // A logical operator among condition operators does not take over the
+        // bag — every key present must hold.
+        test("AND-s a field-level logical operator with its siblings", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+          const results = await repo.find(
+            {
+              label: {
+                $or: [{ $eq: "keep" }, { $eq: "drop" }],
+                $not: { $eq: "drop" },
+              },
+            } as any,
+            { order: { name: "ASC" } },
+          );
+          expect(results.map((r) => r.name)).toEqual(["ab"]);
+        });
+      });
+
+      describe("Bare nested object", () => {
+        const { TckJsonHolder } = entities;
+
+        beforeEach(async () => {
+          await getHandle().clear();
+          const repo = getHandle().repository(TckJsonHolder);
+          await repo.insert({
+            metadata: { theme: "dark", version: 2 },
+            settings: { theme: "dark", count: 5 },
+            payload: { items: ["a"], count: 1 },
+          });
+          await repo.insert({
+            metadata: { theme: "light", version: 1 },
+            settings: { theme: "light", count: 3 },
+            payload: { items: ["b", "c"], count: 2 },
+          });
+          await repo.insert({
+            metadata: { theme: "dark", version: 3, extra: true },
+            settings: { theme: "dark", count: 10 },
+            payload: { items: ["d"], count: 1 },
+          });
+        });
+
+        const versions = (rows: Array<{ metadata: Record<string, unknown> }>) =>
+          rows.map((r) => r.metadata.version).sort();
+
+        // The headline: PARTIAL, not exact. Both matching documents hold keys the
+        // condition never mentions, and one holds an extra key the other lacks.
+        test("matches a document that holds keys the condition never mentions", async () => {
+          const repo = getHandle().repository(TckJsonHolder);
+          const results = await repo.find({ metadata: { theme: "dark" } } as any);
+          expect(versions(results)).toEqual([2, 3]);
+        });
+
+        test("requires every key of the condition", async () => {
+          const repo = getHandle().repository(TckJsonHolder);
+          const results = await repo.find({
+            metadata: { theme: "dark", version: 3 },
+          } as any);
+          expect(versions(results)).toEqual([3]);
+        });
+
+        test("matches on a non-string leaf", async () => {
+          const repo = getHandle().repository(TckJsonHolder);
+          const results = await repo.find({ payload: { count: 1 } } as any);
+          expect(versions(results)).toEqual([2, 3]);
+        });
+
+        test("returns nothing when no document holds the value", async () => {
+          const repo = getHandle().repository(TckJsonHolder);
+          const results = await (repo.find as any)({ metadata: { theme: "sepia" } });
+          expect(results).toHaveLength(0);
+        });
+
+        test("intersects nested conditions across two columns", async () => {
+          const repo = getHandle().repository(TckJsonHolder);
+          const results = await repo.find({
+            metadata: { theme: "dark" },
+            settings: { count: 10 },
+          } as any);
+          expect(versions(results)).toEqual([3]);
+        });
+
+        // The bare form and `$has` are two spellings of ONE semantic.
+        test("means the same as the equivalent $has", async () => {
+          const repo = getHandle().repository(TckJsonHolder);
+          const bare = await repo.find({ metadata: { theme: "dark" } } as any);
+          const has = await repo.find({ metadata: { $has: { theme: "dark" } } } as any);
+          expect(versions(bare)).toEqual(versions(has));
+        });
+
+        test("AND-s a nested key with a sibling operator", async () => {
+          const repo = getHandle().repository(TckJsonHolder);
+          const results = await repo.find({
+            metadata: { $exists: true, theme: "dark" },
+          } as any);
+          expect(versions(results)).toEqual([2, 3]);
+        });
+
+        test("negates through $not", async () => {
+          const repo = getHandle().repository(TckJsonHolder);
+          const results = await repo.find({
+            metadata: { $not: { theme: "dark" } },
+          } as any);
+          expect(versions(results)).toEqual([1]);
+        });
+      });
+
+      describe("Malformed operator payloads", () => {
+        const { TckJsonbArray } = entities;
+
+        beforeEach(async () => {
+          await getHandle().clear();
+          const repo = getHandle().repository(TckJsonbArray);
+          await repo.insert({ name: "ab", label: "keep", tags: ["a", "b"] });
+          await repo.insert({ name: "abc", label: "drop", tags: ["a", "b", "c"] });
+          await repo.insert({ name: "cd", label: null, tags: ["c", "d"] });
+          await repo.insert({ name: "xy", label: null, tags: ["x", "y", "z"] });
+        });
+
+        test.each([
+          ["a falsy $not", { label: { $not: false } }],
+          ["a truthy non-object $not", { label: { $not: "drop" } }],
+          ["a Date $not", { label: { $not: new Date("2026-08-09T00:00:00.000Z") } }],
+          ["a string $regex", { label: { $regex: "keep" } }],
+          ["an empty $or", { label: { $or: [] } }],
+          ["an empty $and", { label: { $and: [] } }],
+        ])("refuses %s", async (_label, criteria) => {
+          const repo = getHandle().repository(TckJsonbArray);
+          await expect((repo.find as any)(criteria)).rejects.toThrow();
+        });
+
+        // The wipe this phase exists for. `{ label: { $not: false } }` has ONE
+        // criteria key, so the empty-criteria guard passed it, and it compiled to
+        // a DELETE with no WHERE clause at all.
+        test("refuses a delete written with a falsy $not, and every row survives", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+
+          await expect(
+            (repo.delete as any)({ label: { $not: false } }),
+          ).rejects.toThrow();
+
+          const survivors = await repo.find({} as any, { order: { name: "ASC" } });
+          expect(survivors.map((r) => r.name)).toEqual(["ab", "abc", "cd", "xy"]);
+        });
+      });
+    }
   });
 };

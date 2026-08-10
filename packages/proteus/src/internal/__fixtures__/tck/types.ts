@@ -69,6 +69,25 @@ export type TckCapabilities = {
    * column. Mongo and Redis reject conflictOn by design (NotSupportedError).
    */
   upsertConflictColumns: boolean;
+  /**
+   * The three FIELD-level condition forms behave as the condition language
+   * defines them:
+   *
+   * - a bare nested object (`{ payload: { city: "Oslo" } }`) is a PARTIAL
+   *   match — any row whose `payload.city` is Oslo, whatever else it holds;
+   * - a field-level `$and` / `$or` combines conditions over ONE column and is
+   *   AND-ed with its siblings;
+   * - a malformed operator payload is REFUSED — `$not` needs an object,
+   *   `$regex` needs a `RegExp`, `$and` / `$or` need a non-empty array.
+   *
+   * ⚠ This is an OPEN BUG on the drivers that carry `false`, not a design
+   * choice. Mongo's filter compiler predates all three: it reads a bare nested
+   * object as an EXACT subdocument match, forwards a field-level `$and` / `$or`
+   * to the server as if it were a field operator, and negates a non-object
+   * `$not` by reference rather than refusing it — so a condition written to
+   * exclude can match every document.
+   */
+  fieldConditions: boolean;
   /** Table inheritance strategies */
   inheritance: {
     /** Single-table inheritance: all subtypes share one table with discriminator column */

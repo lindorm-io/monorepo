@@ -24,6 +24,7 @@ const metadata = {
     makeField("tags", { type: "array" }),
     makeField("score", { type: "float" }),
     makeField("data", { type: "object" }),
+    makeField("published", { type: "boolean" }),
   ],
   relations: [],
 } as unknown as EntityMetadata;
@@ -429,16 +430,55 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
     expect(params).toEqual([]);
   });
 
-  // Outside the declared type, but the matcher reads a non-object `$not` as
-  // `value !== inner`, so compile it as a negated equality rather than dropping.
-  test("should compile a field-level $not over a bare value", () => {
+  // ── A malformed `$not` payload ──
+  //
+  // `{ published: { $not: false } }` is the natural way to write "published is
+  // true" and it TYPECHECKS. The truthiness test it used to meet emitted no
+  // clause at all, so the criterion placed no restriction — and
+  // `deleteMany` with it ran `DELETE FROM t` while `guardEmptyCriteria`
+  // counted one key and passed.
+
+  test("should refuse a falsy $not payload instead of emitting nothing", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { published: { $not: false } }, conjunction: "and" },
+    ];
+    expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+      /Operator "\$not" on field "published" requires an object payload/,
+    );
+  });
+
+  test("should refuse a $not payload of undefined", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { published: { $not: undefined } }, conjunction: "and" },
+    ];
+    expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+      /requires an object payload/,
+    );
+  });
+
+  test("should refuse the undeclared $not: <primitive> shorthand", () => {
     const entries: Array<PredicateEntry<any>> = [
       { predicate: { name: { $not: "Alice" } }, conjunction: "and" },
     ];
-    const params: Array<unknown> = [];
-    const result = compileWhere(entries, metadata, "t0", params, dialect);
-    expect(result).toMatchSnapshot();
-    expect(params).toEqual(["Alice"]);
+    expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+      /Operator "\$not" on field "name" requires an object payload/,
+    );
+  });
+
+  // `isObject` is decided by prototype, so these are values rather than
+  // operator bags — and comparing them by reference is what made a `$not` over
+  // one always true.
+  test.each([
+    ["a Date", new Date("2026-08-09T00:00:00.000Z")],
+    ["an array", ["Alice"]],
+    ["a Buffer", Buffer.from("Alice")],
+  ])("should refuse a $not payload that is %s", (_label, payload) => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: payload } }, conjunction: "and" },
+    ];
+    expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+      /requires an object payload/,
+    );
   });
 
   test("should compile a nested field-level $not as a double negation", () => {
@@ -767,23 +807,25 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
       );
     });
 
-    test("should throw and name the operator for a field-level $and", () => {
+    // The language declares a `RegExp`. A string used to be coerced with
+    // `new RegExp(String(operand))` — accepted here, refused by the matcher.
+    test("should refuse a $regex payload that is a string", () => {
       const entries: Array<PredicateEntry<any>> = [
-        { predicate: { age: { $and: [{ $gt: 18 }, { $lt: 65 }] } }, conjunction: "and" },
+        { predicate: { name: { $regex: "^Alice" } }, conjunction: "and" },
       ];
 
       expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
-        /Field-level operator "\$and" is not supported/,
+        /Operator "\$regex" on field "name" requires a RegExp/,
       );
     });
 
-    test("should throw and name the operator for a field-level $or", () => {
+    test("should refuse a $regex payload of undefined rather than matching /undefined/", () => {
       const entries: Array<PredicateEntry<any>> = [
-        { predicate: { age: { $or: [{ $lt: 18 }, { $gt: 65 }] } }, conjunction: "and" },
+        { predicate: { name: { $regex: undefined } }, conjunction: "and" },
       ];
 
       expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
-        /Field-level operator "\$or" is not supported/,
+        /requires a RegExp/,
       );
     });
 
@@ -803,14 +845,283 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
       expect(renderCondition(result)).toMatchSnapshot();
       expect(params).toEqual([65, 18]);
     });
+  });
 
-    // A bare nested object on a NON-embedded column still compiles to no clause,
-    // so it matches every row. Pinned deliberately: it is a known gap that
-    // belongs with the containment work, not with the representation change.
-    test("should still compile a bare nested object on a plain column to always-true", () => {
+  // ── A bare nested object on a NON-embedded column ──
+  //
+  // `{ data: { city: "Oslo" } }` is fully typed and reads naturally, and it used
+  // to emit NO clause at all — silently returning the whole table. It means
+  // PARTIAL MATCH, which is JSON containment, which is what `$has` already
+  // compiles to on every dialect.
+
+  describe("bare nested object", () => {
+    test("should compile to JSON containment, not to always-true", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { data: { city: "Oslo" } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(result).not.toEqual({ kind: "always-true" });
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toMatchSnapshot();
+    });
+
+    test("should compile to exactly what the same $has compiles to", () => {
+      const bareParams: Array<unknown> = [];
+      const bare = compilePredicate(
+        { data: { city: "Oslo" } },
+        metadata,
+        "t0",
+        bareParams,
+        dialect,
+      );
+
+      const hasParams: Array<unknown> = [];
+      const has = compilePredicate(
+        { data: { $has: { city: "Oslo" } } },
+        metadata,
+        "t0",
+        hasParams,
+        dialect,
+      );
+
+      expect(bare).toEqual(has);
+      expect(bareParams).toEqual(hasParams);
+    });
+
+    test("should emit ONE containment clause for several nested keys", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { data: { city: "Oslo", postcode: "0150" } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toMatchSnapshot();
+    });
+
+    // A nested key and an operator in one bag are conjoined, like any two keys.
+    test("should AND a nested key with a sibling operator", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { data: { $exists: true, city: "Oslo" } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toMatchSnapshot();
+    });
+
+    test("should negate a nested condition through $not", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { data: { $not: { city: "Oslo" } } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toContain("IS NOT TRUE");
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toMatchSnapshot();
+    });
+
+    // Silent fall-through is the bug. A column with no nested shape must say so.
+    test.each([
+      ["a string column", "name", "string"],
+      ["an array column", "tags", "array"],
+      ["an integer column", "age", "integer"],
+    ])("should refuse a nested condition on %s", (_label, fieldKey, fieldType) => {
+      expect(() =>
+        compilePredicate({ [fieldKey]: { city: "Oslo" } }, metadata, "t0", [], dialect),
+      ).toThrow(
+        new RegExp(
+          `requires an object-typed column, but field "${fieldKey}" has type "${fieldType}"`,
+        ),
+      );
+    });
+  });
+
+  // ── Field-level `$and` / `$or` ──
+  //
+  // Declared by the language and previously unimplemented, so they compiled to
+  // nothing and matched every row (then, for one release, threw). Both combine
+  // conditions over ONE column and are AND-ed with their siblings.
+
+  describe("field-level logical operators", () => {
+    test("should compile a field-level $and", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { age: { $and: [{ $gt: 18 }, { $lt: 65 }] } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual([18, 65]);
+    });
+
+    test("should compile a field-level $or", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { age: { $or: [{ $lt: 18 }, { $gt: 65 }] } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toContain(" OR ");
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual([18, 65]);
+    });
+
+    // A member is read exactly as a field's own condition value is, so a bare
+    // value is an equality and `null` is `IS NULL`.
+    test("should read a bare value member as an equality", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { name: { $or: ["Alice", "Bob"] } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual(["Alice", "Bob"]);
+    });
+
+    test("should read a null member as IS NULL", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { name: { $or: [null, { $eq: "Alice" }] } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual(["Alice"]);
+    });
+
+    // R15's rule: a logical operator among condition operators does not take
+    // over the bag — every key present must hold.
+    test("should AND a field-level logical operator with its siblings", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { score: { $not: { $lt: 15 }, $lt: 25 } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toContain("IS NOT TRUE");
+      expect(renderCondition(result)).toContain(" AND ");
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual([15, 25]);
+    });
+
+    test("should AND a field-level $or with its siblings", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { age: { $or: [{ $lt: 18 }, { $gt: 65 }], $neq: 30 } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual([18, 65, 30]);
+    });
+
+    test("should nest a field-level $and inside a field-level $or", () => {
+      const params: Array<unknown> = [];
+      const result = compilePredicate(
+        { age: { $or: [{ $and: [{ $gt: 18 }, { $lt: 30 }] }, { $gt: 65 }] } },
+        metadata,
+        "t0",
+        params,
+        dialect,
+      );
+
+      expect(renderCondition(result)).toMatchSnapshot();
+      expect(params).toEqual([18, 30, 65]);
+    });
+
+    // The constant states flow through, so a member that constrains nothing
+    // cannot silently disappear from the algebra.
+    test("should collapse a field-level $or holding an always-true member", () => {
       expect(
-        compilePredicate({ data: { city: "Oslo" } }, metadata, "t0", [], dialect),
+        compilePredicate(
+          { name: { $or: [{ $eq: "Alice" }, { $nin: [] }] } },
+          metadata,
+          "t0",
+          [],
+          dialect,
+        ),
       ).toEqual({ kind: "always-true" });
+    });
+
+    test("should collapse a field-level $and holding an always-false member", () => {
+      expect(
+        compilePredicate(
+          { name: { $and: [{ $eq: "Alice" }, { $in: [] }] } },
+          metadata,
+          "t0",
+          [],
+          dialect,
+        ),
+      ).toEqual({ kind: "always-false" });
+    });
+
+    // The array-typed guard must still fire from inside a logical operator.
+    test("should reject an array operator on a non-array column inside $or", () => {
+      expect(() =>
+        compilePredicate(
+          { name: { $or: [{ $all: ["a"] }] } },
+          metadata,
+          "t0",
+          [],
+          dialect,
+        ),
+      ).toThrow(/requires an array-typed column/);
+    });
+
+    test.each([
+      ["$and", { age: { $and: [] } }],
+      ["$or", { age: { $or: [] } }],
+    ])("should refuse an empty %s member list", (operator, predicate) => {
+      expect(() => compilePredicate(predicate, metadata, "t0", [], dialect)).toThrow(
+        new RegExp(
+          `Operator "\\${operator}" on field "age" requires at least one member`,
+        ),
+      );
+    });
+
+    test.each([
+      ["$and", { age: { $and: { $gt: 18 } } }],
+      ["$or", { age: { $or: "Alice" } }],
+    ])("should refuse a non-array %s payload", (operator, predicate) => {
+      expect(() => compilePredicate(predicate, metadata, "t0", [], dialect)).toThrow(
+        new RegExp(`Operator "\\${operator}" on field "age" requires an array`),
+      );
     });
   });
 });

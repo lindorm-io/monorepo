@@ -5,7 +5,7 @@ import {
   isConditionOperatorKey,
   isLogicalOperatorKey,
 } from "@lindorm/match";
-import { isObject, isObjectLike } from "@lindorm/is";
+import { isArray, isObject, isObjectLike, isRegExp } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
@@ -51,6 +51,90 @@ const guardArrayField = (
       data: { operator, field: fieldKey, fieldType: field.type },
     },
   );
+};
+
+/**
+ * A bare nested object is JSON containment, so the column has to hold JSON
+ * KEYS. An `array` column does not: the condition language reads
+ * `{ tags: { city: "Oslo" } }` as "the value is an object whose `city` is
+ * Oslo", which an array value never is. Every other type has no nested shape
+ * at all.
+ *
+ * Refusing is the point — falling through emitted NO clause, so a fully typed
+ * condition returned the whole table.
+ */
+const guardObjectField = (field: MetaField | null, fieldKey: string): void => {
+  if (field?.type === "object") return;
+  throw new ProteusError(
+    `A nested condition requires an object-typed column, but field "${fieldKey}" has type "${field?.type ?? "unknown"}"`,
+    {
+      code: "invalid_nested_condition",
+      title: "Invalid Nested Condition",
+      details:
+        "A bare nested object matches by JSON containment and needs a column declared as an object. Use an operator instead, or declare the column as an object.",
+      data: { field: fieldKey, fieldType: field?.type ?? null },
+    },
+  );
+};
+
+/**
+ * A malformed operator payload is an ERROR, not a clause that quietly goes
+ * missing. Presence decides that an operator applies; shape decides whether it
+ * can be compiled at all.
+ */
+const malformedPayload = (
+  operator: string,
+  fieldKey: string,
+  expected: string,
+): never => {
+  throw new ProteusError(
+    `Operator "${operator}" on field "${fieldKey}" requires ${expected}`,
+    {
+      code: "invalid_operator_payload",
+      title: "Invalid Operator Payload",
+      details:
+        "The operator was given a payload of the wrong shape. A payload the compiler cannot read used to be coerced or dropped, which placed no restriction on the query at all.",
+      data: { operator, field: fieldKey, expected },
+    },
+  );
+};
+
+/**
+ * A field-level `$and` / `$or` payload must be a NON-EMPTY array. An empty one
+ * is an error rather than an identity element: omitting the key already spells
+ * "no constraint", and it spells it the same way under either operator — where
+ * `[]` would mean "everything" under `$and` and "nothing" under `$or`.
+ */
+const requireMembers = (
+  operator: string,
+  fieldKey: string,
+  operand: unknown,
+): Array<unknown> => {
+  if (!isArray<unknown>(operand)) {
+    return malformedPayload(operator, fieldKey, "an array");
+  }
+  if (operand.length === 0) {
+    return malformedPayload(
+      operator,
+      fieldKey,
+      "at least one member — omit the key to place no constraint",
+    );
+  }
+  return operand;
+};
+
+/**
+ * The non-`$` keys of an operator bag, which together form one nested
+ * condition. Collected up front so `{ payload: { city, postcode } }` emits ONE
+ * containment clause rather than one per key.
+ */
+const collectNestedKeys = (ops: Record<string, unknown>): Dict => {
+  const nested: Dict = {};
+  for (const [key, operand] of Object.entries(ops)) {
+    if (key.startsWith("$")) continue;
+    nested[key] = operand;
+  }
+  return nested;
 };
 
 /**
@@ -152,25 +236,16 @@ export const compilePredicate = (
         const qualifiedChildCol = effectiveChildAlias
           ? `${dialect.quoteIdentifier(effectiveChildAlias)}.${dialect.quoteIdentifier(childField.name)}`
           : dialect.quoteIdentifier(childField.name);
-        if (childValue === null || childValue === undefined) {
-          parts.push(compiledClause(`${qualifiedChildCol} IS NULL`));
-        } else if (isObject(childValue) && !(childValue instanceof RegExp)) {
-          parts.push(
-            ...compileOperator(
-              qualifiedChildCol,
-              childValue as ConditionOperator<unknown>,
-              params,
-              childField,
-              childField.key,
-              dialect,
-            ),
-          );
-        } else {
-          params.push(childValue);
-          parts.push(
-            compiledClause(`${qualifiedChildCol} = ${dialect.placeholder(params)}`),
-          );
-        }
+        parts.push(
+          ...compileFieldCondition(
+            qualifiedChildCol,
+            childValue,
+            params,
+            childField,
+            childField.key,
+            dialect,
+          ),
+        );
       }
       continue;
     }
@@ -182,22 +257,53 @@ export const compilePredicate = (
       ? `${dialect.quoteIdentifier(effectiveAlias)}.${dialect.quoteIdentifier(colName)}`
       : dialect.quoteIdentifier(colName);
 
-    if (value === null || value === undefined) {
-      parts.push(compiledClause(`${qualifiedCol} IS NULL`));
-      continue;
-    }
+    const field = metadata.fields.find((f) => f.key === key) ?? null;
 
-    if (isObject(value) && !(value instanceof RegExp)) {
-      const ops = value as ConditionOperator<unknown>;
-      const field = metadata.fields.find((f) => f.key === key) ?? null;
-      parts.push(...compileOperator(qualifiedCol, ops, params, field, key, dialect));
-    } else {
-      params.push(value);
-      parts.push(compiledClause(`${qualifiedCol} = ${dialect.placeholder(params)}`));
-    }
+    parts.push(
+      ...compileFieldCondition(qualifiedCol, value, params, field, key, dialect),
+    );
   }
 
   return conjoin(parts);
+};
+
+/**
+ * Compile ONE column's condition value — the unit a field name maps to, and the
+ * same unit a member of a field-level `$and` / `$or` is. Both call sites read a
+ * value the same way, so `{ score: { $gt: 5 } }` and
+ * `{ score: { $or: [{ $gt: 5 }, 0] } }` agree on what each member means.
+ *
+ * An ARRAY of conditions rather than one is returned so that a multi-operator
+ * bag stays flat in its parent conjunction: `{ name: "x", age: { $gt: 1, $lt: 9 } }`
+ * is one three-way AND, not an AND holding an AND.
+ */
+const compileFieldCondition = (
+  qualifiedCol: string,
+  value: unknown,
+  params: Array<unknown>,
+  field: MetaField | null,
+  fieldKey: string,
+  dialect: SqlDialect,
+): Array<CompiledCondition> => {
+  if (value === null || value === undefined) {
+    return [compiledClause(`${qualifiedCol} IS NULL`)];
+  }
+
+  // `isObject` is decided by PROTOTYPE, so a Date, a Buffer and a RegExp are
+  // values here rather than operator bags.
+  if (isObject(value)) {
+    return compileOperator(
+      qualifiedCol,
+      value as ConditionOperator<unknown>,
+      params,
+      field,
+      fieldKey,
+      dialect,
+    );
+  }
+
+  params.push(value);
+  return [compiledClause(`${qualifiedCol} = ${dialect.placeholder(params)}`)];
 };
 
 const compileOperator = (
@@ -209,6 +315,7 @@ const compileOperator = (
   dialect: SqlDialect,
 ): Array<CompiledCondition> => {
   const compiled: Array<CompiledCondition> = [];
+  let nestedEmitted = false;
 
   for (const [key, operand] of Object.entries(ops)) {
     if (isConditionOperatorKey(key) || isLogicalOperatorKey(key)) {
@@ -228,11 +335,20 @@ const compileOperator = (
       });
     }
 
-    // A bare nested object on a NON-embedded column (`{ payload: { city: "x" } }`).
-    // It compiles to no clause and therefore matches every row — a real gap, and
-    // one that belongs with the containment work rather than here, because
-    // closing it means emitting JSON containment rather than choosing a
-    // representation.
+    // A bare nested object on a NON-embedded column — `{ payload: { city: "x" } }`
+    // — means PARTIAL MATCH: any row whose `payload.city` is "x", whatever else
+    // the document holds. That is exactly JSON containment, which every dialect
+    // already emits for `$has`, so the two spell one semantic.
+    //
+    // For an EMBEDDED parent key the same semantic is column expansion instead,
+    // and it is resolved before this function is reached.
+    if (nestedEmitted) continue;
+
+    guardObjectField(field, fieldKey);
+    compiled.push(
+      compiledClause(dialect.compileHas(qualifiedCol, params, collectNestedKeys(ops))),
+    );
+    nestedEmitted = true;
   }
 
   return compiled;
@@ -330,8 +446,13 @@ const compileOperatorKey = (
       return compiledClause(dialect.compileSimilar(qualifiedCol, params, operand));
 
     case ConditionOperatorKey.Regex: {
-      const regex = operand instanceof RegExp ? operand : new RegExp(String(operand));
-      const result = dialect.compileRegex(qualifiedCol, params, regex);
+      // The language declares a `RegExp`. A string used to be handed to
+      // `new RegExp(String(operand))`, which silently accepted a payload the
+      // matcher refuses — and turned `undefined` into the pattern
+      // `/undefined/`.
+      if (!isRegExp(operand)) return malformedPayload(key, fieldKey, "a RegExp");
+
+      const result = dialect.compileRegex(qualifiedCol, params, operand);
       if (result === null) {
         throw new NotSupportedError(
           "The $regex operator is not supported by this driver",
@@ -391,36 +512,50 @@ const compileOperatorKey = (
       // A FIELD-level `$not` negates ONE column's condition — a different
       // operator from the criteria-level `$not` handled in `compilePredicate`.
       //
-      // The falsy short-circuit and the non-object coercion are BOTH kept as
-      // they were. The language now says a non-object `$not` is malformed and
-      // must throw; that is an operator change and lands with the other operator
-      // changes, not with the representation.
-      if (!operand) return ALWAYS_TRUE;
-
-      const inner = isObject(operand)
-        ? (operand as ConditionOperator<unknown>)
-        : ({ $eq: operand } as ConditionOperator<unknown>);
+      // PRESENCE decides it applies; the payload must be an object. The
+      // truthiness test this replaces emitted NOTHING for a falsy payload, so
+      // `{ published: { $not: false } }` — the natural way to write "published
+      // is true", and fully typed — placed no restriction at all and turned
+      // `deleteMany` into `DELETE FROM t`. The non-object coercion it also
+      // replaces implemented an undeclared `$not: <primitive>` shorthand.
+      if (!isObject(operand)) {
+        return malformedPayload(key, fieldKey, "an object payload");
+      }
 
       return negate(
-        conjoin(compileOperator(qualifiedCol, inner, params, field, fieldKey, dialect)),
+        conjoin(
+          compileOperator(
+            qualifiedCol,
+            operand as ConditionOperator<unknown>,
+            params,
+            field,
+            fieldKey,
+            dialect,
+          ),
+        ),
       );
     }
 
+    // A field-level `$and` / `$or` combines conditions over THE SAME column, and
+    // is AND-ed with its siblings like any other key — `{ score: { $not: { $lt: 15 },
+    // $lt: 25 } }` means both. Each member is read exactly as a field's own
+    // condition value is, so a bare value member is an equality.
     case LogicalOperatorKey.And:
+      return conjoin(
+        requireMembers(key, fieldKey, operand).map((member) =>
+          conjoin(
+            compileFieldCondition(qualifiedCol, member, params, field, fieldKey, dialect),
+          ),
+        ),
+      );
+
     case LogicalOperatorKey.Or:
-      // Declared by the language, never implemented here. The if-chain this
-      // switch replaced had no branch for either, so they compiled to NOTHING
-      // and matched every row. Throwing is strictly better than that, and the
-      // branches land with the other operator work.
-      throw new NotSupportedError(
-        `Field-level operator "${key}" is not supported by the SQL compiler`,
-        {
-          code: "unsupported_operator",
-          title: "Unsupported Operator",
-          details:
-            "Field-level logical operators are not compiled to SQL. Use a criteria-level $and / $or instead.",
-          data: { operator: key, field: fieldKey },
-        },
+      return disjoin(
+        requireMembers(key, fieldKey, operand).map((member) =>
+          conjoin(
+            compileFieldCondition(qualifiedCol, member, params, field, fieldKey, dialect),
+          ),
+        ),
       );
 
     default: {

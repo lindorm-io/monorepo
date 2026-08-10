@@ -51,6 +51,10 @@ const factory: TckDriverFactory = {
     bigintIdentity: true,
     // Mongo's driver rejects conflictOn by design (NotSupportedError).
     upsertConflictColumns: false,
+    // OPEN: the mongo filter compiler still reads a bare nested object as an
+    // exact subdocument match, has no branch for a field-level $and / $or, and
+    // coerces a malformed operator payload instead of refusing it.
+    fieldConditions: false,
     encryption: true,
     inheritance: { singleTable: true, joined: false },
     transactions: { rollback: true, savepoints: false },

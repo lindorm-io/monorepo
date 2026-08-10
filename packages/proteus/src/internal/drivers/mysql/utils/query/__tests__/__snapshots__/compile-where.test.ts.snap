@@ -20,8 +20,6 @@ exports[`compileWhere > should compile $or groups 1`] = `"WHERE (\`t0\`.\`name\`
 
 exports[`compileWhere > should compile $overlap using JSON_OVERLAPS 1`] = `"WHERE JSON_OVERLAPS(\`t0\`.\`tags\`, ?)"`;
 
-exports[`compileWhere > should compile $regex as REGEXP (string pattern) 1`] = `"WHERE \`t0\`.\`name\` REGEXP ?"`;
-
 exports[`compileWhere > should compile $regex with RegExp object by extracting .source 1`] = `"WHERE \`t0\`.\`name\` REGEXP ?"`;
 
 exports[`compileWhere > should compile comparison operators 1`] = `"WHERE (\`t0\`.\`age\` > ? AND \`t0\`.\`age\` <= ?)"`;

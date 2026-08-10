@@ -235,7 +235,7 @@ const runTckForNaming = (
   relationsOneToManySuite(getHandle, entities);
   relationsManyToManySuite(getHandle, entities);
   upsertSuite(getHandle, entities, caps);
-  complexPredicatesSuite(getHandle, entities);
+  complexPredicatesSuite(getHandle, entities, caps);
   arrayTypeSuite(getHandle, entities);
   renamedColumnsSuite(getHandle, entities);
   transformSuite(getHandle, entities, caps);
