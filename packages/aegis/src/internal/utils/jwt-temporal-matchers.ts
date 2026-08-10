@@ -1,5 +1,6 @@
 import type { ConditionOperator } from "@lindorm/match";
 import { addSeconds, subSeconds } from "@lindorm/date";
+import type { Dict } from "@lindorm/types";
 import { AegisError } from "../../errors/index.js";
 import type { AegisClaimsWire } from "../../types/index.js";
 import { claimsWith } from "../claims/claims-registry.js";
@@ -46,11 +47,31 @@ const temporalBound = (
 };
 
 /**
- * Temporal matcher builder (the KIT half — Phase 8 relocates this into JwtKit).
- * Range-checks the registry's temporal claims (`iat`/`nbf`/`exp`/`auth_time`)
- * against "now" with `clockTolerance`. Every claim is validated IF PRESENT: an
- * absent claim is tolerated (the `$exists: false` escape), a PRESENT value is
- * bounded per its direction.
+ * The per-call temporal window — identical on both key namespaces, because it is
+ * the same question asked of the same instants.
+ */
+export type TemporalMatcherOptions = {
+  clockTolerance: number;
+  currentDate?: Date;
+  maxTokenAge?: number;
+  verifyExpiration?: boolean;
+  verifyNotBefore?: boolean;
+  verifyIssuedAt?: boolean;
+  verifyAuthTime?: boolean;
+};
+
+/**
+ * The temporal RANGE check, in ONE implementation and two key namespaces —
+ * exactly the split the identity matchers already have. `verify` matches the
+ * WIRE payload, so it keys by `spec.jose` (`exp`/`nbf`/`iat`/`auth_time`);
+ * `assert` matches a DOMAIN claim dict, so it keys by `spec.domain`
+ * (`expiresAt`/`notBefore`/`issuedAt`/`authTime`). Nothing else differs — which
+ * is what makes an assert and a verify with the same options answer the same.
+ *
+ * Range-checks the registry's temporal claims against "now" with
+ * `clockTolerance`. Every claim is validated IF PRESENT: an absent claim is
+ * tolerated (the `$exists: false` escape), a PRESENT value is bounded per its
+ * direction.
  *
  * "now" is the effective clock (R10): `currentDate` when the caller overrides it,
  * otherwise the real wall-clock. When `maxTokenAge` (seconds) is supplied, `iat`
@@ -69,29 +90,26 @@ const temporalBound = (
  * `maxTokenAge` iat bound is INDEPENDENT of `verifyIssuedAt`: it still applies
  * its own lower bound + presence even when the iat range flag is `false`.
  */
-export const createTemporalMatchers = ({
-  clockTolerance,
-  currentDate,
-  maxTokenAge,
-  verifyExpiration,
-  verifyNotBefore,
-  verifyIssuedAt,
-  verifyAuthTime,
-}: {
-  clockTolerance: number;
-  currentDate?: Date;
-  maxTokenAge?: number;
-  verifyExpiration?: boolean;
-  verifyNotBefore?: boolean;
-  verifyIssuedAt?: boolean;
-  verifyAuthTime?: boolean;
-}): Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> => {
+const buildTemporalMatchers = (
+  naming: "jose" | "domain",
+  {
+    clockTolerance,
+    currentDate,
+    maxTokenAge,
+    verifyExpiration,
+    verifyNotBefore,
+    verifyIssuedAt,
+    verifyAuthTime,
+  }: TemporalMatcherOptions,
+): Dict<ConditionOperator<any>> => {
   const now = currentDate ?? new Date();
-  const predicate: Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> = {};
+  const predicate: Dict<ConditionOperator<any>> = {};
 
-  // Wire claim → its range flag being explicitly OFF. Only the four registry
-  // temporal claims carry a flag; any other temporal claim is always bounded.
-  const skipByClaim: Partial<Record<keyof AegisClaimsWire, boolean>> = {
+  // The flag→claim association is by claim IDENTITY, so it is keyed by the
+  // registry's JOSE name in both namespaces; only what is WRITTEN changes. Only
+  // the four registry temporal claims carry a flag; any other temporal claim is
+  // always bounded.
+  const skipByClaim: Dict<boolean> = {
     exp: verifyExpiration === false,
     nbf: verifyNotBefore === false,
     iat: verifyIssuedAt === false,
@@ -99,13 +117,13 @@ export const createTemporalMatchers = ({
   };
 
   for (const spec of TEMPORAL_SPECS) {
-    if (skipByClaim[spec.jose as keyof AegisClaimsWire]) continue;
+    if (skipByClaim[spec.jose]) continue;
     // `$or: [{ $exists: false }, bound]` is how the condition language spells
     // OPTIONAL, and that is what this needs: a claim is range-checked only when
     // it is present. A plain bound would REQUIRE it — a null or absent value
     // with a comparison operator does not match — so `nbf`/`auth_time`, which
     // most tokens omit, would start failing verification.
-    predicate[spec.jose as keyof AegisClaimsWire] = {
+    predicate[spec[naming]] = {
       $or: [{ $exists: false }, temporalBound(spec.temporal, clockTolerance, now)],
     };
   }
@@ -115,7 +133,18 @@ export const createTemporalMatchers = ({
   // adds the lower bound AND requires presence — every operator in one object
   // must hold, so the three sit side by side as a conjunction.
   if (maxTokenAge !== undefined) {
-    predicate.iat = {
+    const issuedAt = TEMPORAL_SPECS.find((spec) => spec.jose === "iat");
+
+    if (issuedAt === undefined) {
+      throw new AegisError("Missing temporal claim: iat", {
+        code: "temporal_missing_issued_at",
+        title: "Missing Temporal Claim",
+        details:
+          "maxTokenAge bounds the issued-at claim, but the registry declares no temporal iat claim to bound.",
+      });
+    }
+
+    predicate[issuedAt[naming]] = {
       $exists: true,
       $lte: addSeconds(now, clockTolerance),
       $gte: subSeconds(now, maxTokenAge + clockTolerance),
@@ -124,3 +153,14 @@ export const createTemporalMatchers = ({
 
   return predicate;
 };
+
+/** The WIRE-keyed temporal matchers — what `verify` runs over a JOSE/COSE payload. */
+export const createTemporalMatchers = (
+  options: TemporalMatcherOptions,
+): Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> =>
+  buildTemporalMatchers("jose", options);
+
+/** The DOMAIN-keyed twin — what `Aegis.assert` runs over a flat claim dict. */
+export const createDomainTemporalMatchers = (
+  options: TemporalMatcherOptions,
+): Dict<ConditionOperator<any>> => buildTemporalMatchers("domain", options);

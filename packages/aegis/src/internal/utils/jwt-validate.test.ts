@@ -67,12 +67,14 @@ describe("createJwtValidate", () => {
     // not into the option key, and not into the wire name (which is the verify
     // half's vocabulary, because that half matches a wire payload).
     test("should key the hash by the domain claim, not the option key", () => {
-      const predicate = createJwtValidate({
-        algorithm: "ES256",
-        accessToken: "the-access-token",
-        authCode: "the-auth-code",
-        authState: "the-auth-state",
-      });
+      const predicate = createJwtValidate(
+        {
+          accessToken: "the-access-token",
+          authCode: "the-auth-code",
+          authState: "the-auth-state",
+        },
+        "ES256",
+      );
 
       expect(Object.keys(predicate)).toEqual([
         "accessTokenHash",
@@ -83,10 +85,10 @@ describe("createJwtValidate", () => {
     });
 
     test("should hash each source with the token algorithm", () => {
-      expect(createJwtValidate({ algorithm: "ES256", accessToken: "raw" })).toEqual({
+      expect(createJwtValidate({ accessToken: "raw" }, "ES256")).toEqual({
         accessTokenHash: { $eq: createHash("ES256", "raw") },
       });
-      expect(createJwtValidate({ algorithm: "RS512", accessToken: "raw" })).toEqual({
+      expect(createJwtValidate({ accessToken: "raw" }, "RS512")).toEqual({
         accessTokenHash: { $eq: createHash("RS512", "raw") },
       });
     });
@@ -106,9 +108,39 @@ describe("createJwtValidate", () => {
     });
 
     test("should not emit a predicate key for the algorithm knob", () => {
-      expect(createJwtValidate({ algorithm: "ES256", subject: "s" })).toEqual({
+      expect(createJwtValidate({ subject: "s" }, "ES256")).toEqual({
         subject: { $eq: "s" },
       });
+    });
+
+    // Without `algorithm` there is no hash to compare, and the value used to
+    // fall through to the ordinary lift — producing `{ accessToken: { $eq:
+    // "raw" } }`, a key no claim set carries. Fails closed, but silently.
+    test.each(["accessToken", "authCode", "authState"] as const)(
+      "should throw when %s is given without an algorithm",
+      (key) => {
+        expect(() => createJwtValidate({ [key]: "raw" })).toThrowError(
+          /Missing algorithm/,
+        );
+      },
+    );
+
+    test("should name the offending key and the claim it would derive", () => {
+      try {
+        createJwtValidate({ accessToken: "raw" });
+        throw new Error("expected createJwtValidate to throw");
+      } catch (err: any) {
+        expect(err.code).toBe("jwt_validate_missing_algorithm");
+        expect(err.data).toEqual({ key: "accessToken", claim: "accessTokenHash" });
+      }
+    });
+
+    // The source of a hash matcher is a RAW string. Anything else cannot be
+    // hashed, and lifting it would key the predicate by the source name again.
+    test("should throw when a hash-derive input is not a string", () => {
+      expect(() =>
+        createJwtValidate({ accessToken: { $eq: "raw" } } as never, "ES256"),
+      ).toThrowError(/Unsupported value/);
     });
   });
 
@@ -189,7 +221,7 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
     });
 
     test("should hash to the same value under each half's own claim name", () => {
-      const assertPredicate = createJwtValidate({ algorithm: "ES256", ...sources });
+      const assertPredicate = createJwtValidate(sources, "ES256");
       const verifyPredicate = createIdentityMatchers("ES256", sources);
 
       for (const [key, domain] of Object.entries(HASH_MATCHERS)) {

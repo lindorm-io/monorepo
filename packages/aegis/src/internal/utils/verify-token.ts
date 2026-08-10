@@ -158,6 +158,7 @@ export const verifyToken = async <C extends Dict = Dict>({
       const {
         wire,
         decoded,
+        typ,
         encrypted: coseEncrypted,
       } = await coseVerifyCore({
         input: bytes,
@@ -172,12 +173,13 @@ export const verifyToken = async <C extends Dict = Dict>({
         issuer,
       });
       if (options || assert) {
-        validateCwtClaims(
+        validateCwtClaims({
           wire,
-          decoded.algorithm as KryptosAlgorithm,
+          typ,
+          algorithm: decoded.algorithm as KryptosAlgorithm,
           assert,
-          options ?? {},
-        );
+          options: options ?? {},
+        });
       }
 
       const verified = buildCoseVerifiedToken({

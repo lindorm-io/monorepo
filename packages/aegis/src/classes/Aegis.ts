@@ -44,7 +44,7 @@ import { registerProfile as registerProfileFn } from "../internal/profiles/regis
 import type { AegisDeps, ResolveVerifyKeyOptions } from "../internal/utils/aegis-deps.js";
 import { decryptToken } from "../internal/utils/decrypt-token.js";
 import { encryptToken } from "../internal/utils/encrypt-token.js";
-import { createJwtValidate } from "../internal/utils/jwt-validate.js";
+import { createAssertPredicate } from "../internal/utils/create-assert-predicate.js";
 import { matches } from "../internal/utils/matches.js";
 import { mintToken } from "../internal/utils/mint-token.js";
 import { parseToken } from "../internal/utils/parse-token.js";
@@ -78,6 +78,7 @@ import type {
   AegisVerifyKey,
   AesDecryptOptions,
   AesEncryptOptions,
+  AssertOptions,
   CertificateBindingMode,
   CweEncryptOptions,
   CwtClaimsWire,
@@ -104,7 +105,6 @@ import type {
   SignUnstructuredTokenOptions,
   TokenContent,
   TokenProfile,
-  ValidateJwtOptions,
   VerifiedStructuredToken,
   VerifiedToken,
   VerifiedUnstructuredToken,
@@ -449,26 +449,37 @@ export class Aegis implements IAegis {
   // format, or the INSTANCE `aegis.parse` for an unknown one.
 
   /**
-   * Test a flat claim dict against a {@link DomainAssert}-based declarative
-   * matcher ({@link ValidateJwtOptions} adds the `algorithm`/`tokenType` knobs
-   * and the hash-derive inputs) — the boolean form of {@link Aegis.assert}, for
-   * a caller that BRANCHES on the answer rather than rejecting the token.
+   * Test a flat claim dict against a {@link DomainAssert} — the boolean form of
+   * {@link Aegis.assert}, for a caller that BRANCHES on the answer rather than
+   * rejecting the token. Same arguments, same vocabulary, same temporal window.
    *
    * Works on any flat claim source — a parsed domain claim set or any
    * structurally-compatible dict.
    */
-  static matches(claims: Dict, matchers: ValidateJwtOptions): boolean {
-    return matches(claims, createJwtValidate(matchers));
+  static matches(claims: Dict, assert: DomainAssert, options?: AssertOptions): boolean {
+    return matches(claims, createAssertPredicate(assert, options));
   }
 
   /**
-   * Validate a flat claim dict against the same matcher {@link Aegis.matches}
-   * tests — the throwing layer over it. Throws LindormError("Invalid token")
-   * with details about every failing key when the claims don't match.
+   * `assert` is VERIFY'S CLAIM CHECKING, WITHOUT THE SIGNATURE — the same
+   * matcher argument (`DomainAssert`) and the same temporal window
+   * ({@link AssertOptions}) `aegis.verify` applies, run over a flat claim dict
+   * that arrived some other way (an introspection response, a cached credential).
+   * That is why the temporal range is checked here by DEFAULT: a claim set inside
+   * verify's skew window must not pass one surface and fail the other.
+   *
+   * ⚠ The tolerances agree at the DEFAULT only. This is a STATIC method, so it
+   * cannot read a deployment's `AegisSettings.clockTolerance` — that is stored
+   * `private` on the instance and reaches `verify` alone. Both default to `0`, so
+   * they match until a deployment configures a non-zero tolerance, at which point
+   * `verify` widens and this does not. A caller with an instance must pass the
+   * same value explicitly; there is no way to read it back off `IAegis`.
+   *
+   * The throwing layer over {@link Aegis.matches}: throws
+   * LindormError("Invalid token") naming every failing key.
    */
-  static assert(claims: Dict, matchers: ValidateJwtOptions): void {
-    const predicate = createJwtValidate(matchers);
-    validate(claims, predicate);
+  static assert(claims: Dict, assert: DomainAssert, options?: AssertOptions): void {
+    validate(claims, createAssertPredicate(assert, options));
   }
 
   // private raw namespaces — each a ONE-LINE delegator to its

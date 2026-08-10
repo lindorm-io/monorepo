@@ -18,10 +18,11 @@ import { liftClaimMatcher } from "./lift-claim-matcher.js";
  * a domain policy enforced separately (`expPresence`, at the verify sites).
  *
  * The input `matchers` is a CLEAN claim-matcher bag — the domain `assert`
- * (named-8 + folded-14 equality claims) merged with the three hash-derive inputs
- * (`accessToken`/`authCode`/`authState`) lifted from verify OPTIONS. It carries
- * no verify knobs (those never reach here), so there is nothing to skip; every
- * key maps to a JOSE claim via the registry (or the hash table).
+ * (named-8 + folded-14 equality claims + the three hash-derive inputs
+ * `accessToken`/`authCode`/`authState`), less `tokenType`, which asserts the
+ * token's TYPE HEADER and is enforced by the caller before this builds. It
+ * carries no verify knobs (those never reach here), so there is nothing to
+ * skip; every key maps to a JOSE claim via the registry (or the hash table).
  */
 export const createIdentityMatchers = (
   algorithm: KryptosAlgorithm,

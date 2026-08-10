@@ -64,20 +64,15 @@ describe("Aegis verify — relocated domain policy", () => {
       const { token } = await mint(content);
 
       await expect(
-        aegis.verify(
-          token,
-          {
-            audience: "427d8455-7d5a-59d3-afb6-7ef2b5bba226",
-            authTime: { $lte: new Date("2022-01-01T08:00:00.000Z") },
-            vectorOfTrust: "P1.Cc.Ce.Aa",
-            vectorTrustMark: { $eq: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa" },
-          },
-          {
-            accessToken: content.accessToken,
-            authCode: content.authCode,
-            authState: content.authState,
-          },
-        ),
+        aegis.verify(token, {
+          accessToken: content.accessToken,
+          audience: "427d8455-7d5a-59d3-afb6-7ef2b5bba226",
+          authCode: content.authCode,
+          authState: content.authState,
+          authTime: { $lte: new Date("2022-01-01T08:00:00.000Z") },
+          vectorOfTrust: "P1.Cc.Ce.Aa",
+          vectorTrustMark: { $eq: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa" },
+        }),
       ).resolves.toBeDefined();
     });
 
@@ -89,7 +84,7 @@ describe("Aegis verify — relocated domain policy", () => {
       });
 
       await expect(
-        aegis.verify(token, undefined, { accessToken: "a-different-access-token" }),
+        aegis.verify(token, { accessToken: "a-different-access-token" }),
       ).rejects.toThrow();
     });
   });

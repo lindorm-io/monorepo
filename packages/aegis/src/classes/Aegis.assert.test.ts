@@ -3,7 +3,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
-import type { ValidateJwtOptions } from "../types/index.js";
+import type { DomainAssert } from "../types/index.js";
 import { Aegis } from "./Aegis.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -26,8 +26,8 @@ const ARRAY_CLAIMS = [
 ] as const;
 
 const claims = (key: string, value: unknown): Dict => ({ [key]: value });
-const matchers = (key: string, value: unknown): ValidateJwtOptions =>
-  ({ [key]: value }) as ValidateJwtOptions;
+const matchers = (key: string, value: unknown): DomainAssert =>
+  ({ [key]: value }) as DomainAssert;
 
 describe("Aegis.assert / Aegis.matches", () => {
   // The four reported repro cases, verbatim.
@@ -49,7 +49,7 @@ describe("Aegis.assert / Aegis.matches", () => {
       expect(() =>
         Aegis.assert({ audience: ["https://tyr.test"] }, {
           audience: ["https://tyr.test"],
-        } as unknown as ValidateJwtOptions),
+        } as unknown as DomainAssert),
       ).not.toThrow();
     });
 
@@ -159,11 +159,11 @@ describe("Aegis.assert / Aegis.matches", () => {
     });
 
     test("should agree with matches on every case", () => {
-      const cases: Array<[Dict, ValidateJwtOptions]> = [
+      const cases: Array<[Dict, DomainAssert]> = [
         [{ audience: ["https://tyr.test"] }, { audience: "https://tyr.test" }],
         [
           { audience: ["https://tyr.test"] },
-          { audience: ["https://tyr.test"] } as unknown as ValidateJwtOptions,
+          { audience: ["https://tyr.test"] } as unknown as DomainAssert,
         ],
         [{ scope: ["openid"] }, { scope: "openid" }],
         [{ scope: ["openid"] }, { scope: "profile" }],
@@ -227,17 +227,19 @@ describe("Aegis.assert / Aegis.matches", () => {
         const verified = await mintVerified();
 
         expect(() =>
-          Aegis.assert(verified.claims as Dict, {
-            algorithm: verified.header.algorithm,
-            [key]: sources[key],
-          }),
+          Aegis.assert(
+            verified.claims as Dict,
+            { [key]: sources[key] },
+            { algorithm: verified.header.algorithm },
+          ),
         ).not.toThrow();
 
         expect(
-          Aegis.matches(verified.claims as Dict, {
-            algorithm: verified.header.algorithm,
-            [key]: "a-different-source-value",
-          }),
+          Aegis.matches(
+            verified.claims as Dict,
+            { [key]: "a-different-source-value" },
+            { algorithm: verified.header.algorithm },
+          ),
         ).toBe(false);
       },
     );
@@ -246,9 +248,8 @@ describe("Aegis.assert / Aegis.matches", () => {
       const verified = await mintVerified();
 
       expect(
-        Aegis.matches(verified.claims as Dict, {
+        Aegis.matches(verified.claims as Dict, sources, {
           algorithm: verified.header.algorithm,
-          ...sources,
         }),
       ).toBe(true);
     });
@@ -263,7 +264,7 @@ describe("Aegis.assert / Aegis.matches", () => {
           verified.claims as Dict,
           {
             accessTokenHash: (verified.claims as Dict).accessTokenHash,
-          } as unknown as ValidateJwtOptions,
+          } as unknown as DomainAssert,
         ),
       ).toBe(true);
     });

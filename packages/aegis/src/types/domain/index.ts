@@ -1,3 +1,4 @@
+export * from "./assert-options.js";
 export * from "./decrypted-token.js";
 export * from "./delegation.js";
 export * from "./domain-assert.js";
@@ -5,6 +6,5 @@ export * from "./encrypt.js";
 export * from "./encrypted-token.js";
 export * from "./parsed-token.js";
 export * from "./sign.js";
-export * from "./validate.js";
 export * from "./verify.js";
 export * from "./verified-token.js";

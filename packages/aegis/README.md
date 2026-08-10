@@ -367,8 +367,8 @@ Aegis.isCwe(token); // COSE_Encrypt0
 
 Aegis.toDomain(wire); // wire claim dict → { claims, custom } domain claims
 Aegis.toWire(claims); // domain claims → JOSE-keyed wire dict
-Aegis.matches(claims, matchers); // boolean — same question, no throw
-Aegis.assert(claims, matchers); // the throwing layer over `matches`
+Aegis.matches(claims, assert, options?); // boolean — same question, no throw
+Aegis.assert(claims, assert, options?); // the throwing layer over `matches`
 
 Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew? });
 ```
@@ -377,7 +377,7 @@ The JOSE guards decide on the **wire grammar** — segment count plus the header
 
 ⚠ These are **wire-family** guards — they say which kit `verify` would select, not whether the token carries claims. A `jws` / `cws` passes `isJose` / `isCose` and verifies to an EMPTY claims set. To route a credential between local verification and introspection, use [`isClaimsBearingToken`](#isclaimsbearingtoken--verify-locally-or-introspect).
 
-`Aegis.matches` and `Aegis.assert` run the [verify matcher vocabulary](#verify-assert--options) over any flat, domain-keyed claim dict — `matches` returns the answer, `assert` is the throwing layer over it and names every failing key (`jwt_claims_invalid`). One vocabulary, so a **scalar** against an array-valued claim (`audience`, `scope`, `authMethods`, `roles`, `permissions`, `groups`, `entitlements`) means CONTAINS, not equals:
+**`assert` is verify's claim checking, without the signature.** It takes the same `DomainAssert` matcher argument as [`aegis.verify`](#verify-assert--options), applied to any flat, domain-keyed claim dict — a set of claims that arrived some other way (an introspection response, a cached credential). `matches` returns the answer, `assert` is the throwing layer over it and names every failing key (`jwt_claims_invalid`). One vocabulary, so a **scalar** against an array-valued claim (`audience`, `scope`, `authMethods`, `roles`, `permissions`, `groups`, `entitlements`) means CONTAINS, not equals:
 
 ```typescript
 Aegis.matches(
@@ -388,15 +388,35 @@ Aegis.matches({ scope: ["openid", "profile"] }, { scope: "openid" }); // true
 Aegis.matches({ scope: ["openid"] }, { scope: ["openid", "profile"] }); // false — an array requires ALL
 ```
 
-Both also take the three hash-derive inputs, exactly as `mint` and `verify` do: you supply the RAW value and aegis hashes it with the token's `algorithm` into the claim `mint` wrote — `accessToken` → `accessTokenHash`, `authCode` → `codeHash`, `authState` → `stateHash`. A hash you already hold is an ordinary equality claim under that same name and needs no `algorithm`.
+Both also take the three hash-derive matchers, exactly as `mint` and `verify` do: you supply the RAW value and aegis hashes it with the token's `algorithm` into the claim `mint` wrote — `accessToken` → `accessTokenHash`, `authCode` → `codeHash`, `authState` → `stateHash`. A hash you already hold is an ordinary equality claim under that same name and needs no `algorithm`.
 
 ```typescript
-Aegis.assert(verified.claims, {
-  algorithm: verified.header.algorithm,
-  accessToken: presentedAccessToken, // hashed, then compared to accessTokenHash
-});
+Aegis.assert(
+  verified.claims,
+  { accessToken: presentedAccessToken }, // hashed, then compared to accessTokenHash
+  { algorithm: verified.header.algorithm },
+);
 Aegis.matches(verified.claims, { accessTokenHash: knownHash }); // plain equality
 ```
+
+The third argument (`AssertOptions`) is the rest of what verify's options mean for claims alone — `algorithm` plus the whole temporal family:
+
+```typescript
+Aegis.assert(
+  claims,
+  { audience: "https://api.example.com" },
+  {
+    clockTolerance: 30,
+    currentDate,
+    maxTokenAge: 300,
+    verifyExpiration: true, // and verifyNotBefore / verifyIssuedAt / verifyAuthTime
+  },
+);
+```
+
+The temporal range is checked **by default**, with the same builder and the same `0`-second default `aegis.verify` uses — `expiresAt` / `notBefore` / `issuedAt` / `authTime` are bounded if present, tolerated if absent. That is what makes the two substitutable: a claim set inside verify's skew window cannot pass one surface and fail the other, so nothing downstream needs a hand-rolled `exp > now` that quietly carries no tolerance.
+
+`algorithm` is REQUIRED for a hash-derive input and cannot be defaulted — OIDC Core §3.1.3.6 ties the digest to the token's signing `alg` (`…256` → SHA-256, `…384` → SHA-384, `…512` → SHA-512, left half), unlike PKCE's fixed SHA-256. Supplying a raw source without it throws `jwt_validate_missing_algorithm` rather than silently building a matcher that can never match.
 
 `verifyDpopProof` runs the RFC 9449 proof checks standalone — signature over the proof's embedded `jwk`, `typ: dpop+jwt`, the RFC 7638 thumbprint against the token's bound `cnf.jkt`, the §7 `ath` hash of the presented access token, and `iat` freshness (default skew 60s). It needs no key resolution because the proof carries its own key, and it returns the `ParsedDpopProof`.
 
@@ -691,14 +711,21 @@ positional arguments (the wire namespaces resolve the key and check
 structure/temporal only — named matchers, DPoP and actor chains are the domain
 surface's job):
 
-- **`assert`** (`DomainAssert`) — the declarative claim matcher. Eight named
+The split is one rule: **a MATCHER asserts what must be true, an OPTION changes
+how the check runs.**
+
+- **`assert`** (`DomainAssert`) — everything asserted. Eight named claim
   matchers earn non-equality semantics (`audience` is contains-self; `scope` /
   `authMethods` / `roles` / `permissions` / `groups` / `entitlements` are
   array-contains; `issuer` is identity). For all seven a bare string means the
   claim must CONTAIN it, an array means it must contain ALL of them, and a
-  `ConditionOperator` (`{ $in }`) matches any. Every other domain claim folds
-  into a free condition, each field accepting a literal value or a
-  `ConditionOperator`. The same vocabulary drives the standalone
+  `ConditionOperator` (`{ $in }`) matches any — `issuer` takes an operator too,
+  which is how an OPTIONAL bound is expressed
+  (`{ $or: [{ $exists: false }, { $eq: iss }] }`). Four further matchers assert
+  something about the TOKEN rather than a claim value: `tokenType` and the three
+  hash-derive inputs (below). Every other domain claim folds into a free
+  condition, each field accepting a literal value or a `ConditionOperator`. The
+  same vocabulary drives the standalone
   [`Aegis.matches` / `Aegis.assert`](#static-helpers).
 - **`options`** (`VerifyOptions`) — the verify KNOBS (format-agnostic).
 
@@ -711,23 +738,29 @@ await aegis.verify(
     subject: { $in: ["user-1", "user-2"] },
     levelOfAssurance: { $gte: 2 },
     authTime: { $gte: new Date("2024-01-01") },
-  },
-  {
-    tokenType: "access_token",
+    tokenType: "access_token", // the JOSE typ / COSE type
     accessToken: "the-presented-access-token", // at_hash check
   },
+  { maxTokenAge: 300 },
 );
 ```
 
+`DomainAssert`'s four token matchers:
+
+- `tokenType` — asserts the JOSE `typ` (`application/at+jwt`) or the COSE type
+  (`application/at+cwt`); on a flat claim dict (`Aegis.assert`) it is the
+  `tokenType` field
+- `accessToken` / `authCode` / `authState` — `at_hash` / `c_hash` / `s_hash`
+  checks. The RAW source value is hashed with the token's signing algorithm, not
+  compared literally
+
 `VerifyOptions` fields:
 
-- `tokenType` — asserts the JOSE `typ` / COSE type
-- `accessToken` / `authCode` / `authState` — verify-time `at_hash` / `c_hash` /
-  `s_hash` checks (the source value is hashed with the token's algorithm)
 - `actor` — controls token-delegation (`act`) chain enforcement
 - `dpopProof` — when present, the verifier requires a `cnf.jkt` binding and validates the supplied DPoP proof
 - `trustBoundThumbprint` — when `true`, allow a bound token without an inline DPoP proof (for cases where the binding is enforced out-of-band)
 - `key` — per-call verification key policy; `typPresence` / `expPresence` — presence policy for the `typ` / `exp` claims
+- `clockTolerance` — widen every temporal range check by N seconds in both directions, overriding the deployment-wide `clockTolerance` for this call. Applies to profiled and profile-less verify, JOSE and COSE alike
 - `currentDate` — override "now" for the temporal range checks (a token expired against the real clock still verifies against a past `currentDate`); `maxTokenAge` — reject a token whose `iat` is older than N seconds (adds an independent `iat` lower bound + presence)
 - `verifyExpiration` / `verifyNotBefore` / `verifyIssuedAt` / `verifyAuthTime` — per-claim temporal RANGE toggles, default `true`. Setting one to `false` skips ONLY that claim's range bound. `verifyExpiration: false` verifies an EXPIRED token (OIDC `id_token_hint`, Core §3.1.2.1: the OP must verify the signature but accept an expired id_token). Presence is independent — `expPresence: "required"` still rejects an exp-LESS token. Signature, `iss` / `aud` / `nonce` and the `*_hash` checks stay enforced; `maxTokenAge` still applies even with `verifyIssuedAt: false`
 

@@ -1,5 +1,4 @@
 import type { Condition } from "@lindorm/match";
-import type { TokenType } from "../../constants/token-type.js";
 import type { AegisVerifyKey } from "../keys/key-selectors.js";
 import type { ActClaim } from "../claims/domain/act-claim.js";
 
@@ -23,12 +22,14 @@ export type VerifyActorOptions = {
 
 /**
  * The verify-time KNOBS for `aegis.verify(token, assert, options)` — format
- * agnostic (JOSE + COSE share it). No claim matchers live here anymore: the
- * declarative claim assertions moved to the positional {@link DomainAssert}
- * argument. What stays are the structural/policy knobs plus the three
- * hash-DERIVE inputs (`accessToken`/`authCode`/`authState`) — verify-time
- * at_hash/c_hash/s_hash checks, computed (not name-mapped), so they belong with
- * verify options, not the claim matchers.
+ * agnostic (JOSE + COSE share it).
+ *
+ * A MATCHER asserts what must be true; an OPTION changes how the check runs.
+ * Everything here is the latter: key policy, presence policy, the temporal
+ * window, DPoP and actor-chain enforcement. Every ASSERTION — including
+ * `tokenType` and the three hash-derive inputs, which verify always read out of
+ * the matcher bag internally — lives on the positional {@link DomainAssert}
+ * argument.
  */
 export type VerifyOptions = {
   actor?: VerifyActorOptions;
@@ -92,7 +93,6 @@ export type VerifyOptions = {
    * a proof is rejected.
    */
   trustBoundThumbprint?: boolean;
-  tokenType?: TokenType;
   /**
    * Per-call verification key policy — a CHECK on the key the token's `kid`
    * names, applied before the signature is checked, or a `kryptos` supplied
@@ -119,20 +119,4 @@ export type VerifyOptions = {
    * value is always range-checked (with clock tolerance) regardless of this option.
    */
   expPresence?: "required" | "optional";
-  /**
-   * The access token whose SHA left-half must equal the token's `at_hash`
-   * (OIDC Core §3.1.3.6). Hashed with the token's signing algorithm at verify
-   * time, not compared literally.
-   */
-  accessToken?: string;
-  /**
-   * The authorization code whose SHA left-half must equal the token's `c_hash`
-   * (OIDC Core §3.3.2.11). Hashed at verify time.
-   */
-  authCode?: string;
-  /**
-   * The state whose SHA left-half must equal the token's `s_hash`
-   * (OIDC financial-grade). Hashed at verify time.
-   */
-  authState?: string;
 };

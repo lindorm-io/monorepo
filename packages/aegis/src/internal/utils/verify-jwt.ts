@@ -70,6 +70,11 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
     logger: deps.logger,
   });
 
+  // `tokenType` asserts the token's TYPE, which JOSE carries in the `typ`
+  // HEADER — so the kit enforces it, and it must NOT reach the claim predicate
+  // (no claim holds it). The rest of `assert` is claim matchers.
+  const { tokenType, ...claimMatchers } = assert ?? {};
+
   // The kit asserts the header typ from a bare PREFIX it re-wraps; derive that
   // prefix from the domain `tokenType`.
   kit.verify<C>(token, undefined, {
@@ -81,8 +86,8 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
     verifyIssuedAt: options.verifyIssuedAt,
     verifyAuthTime: options.verifyAuthTime,
     tokenType:
-      options.tokenType !== undefined
-        ? extractTypPrefix(computeTypHeader(options.tokenType, "jwt"))
+      tokenType !== undefined
+        ? extractTypPrefix(computeTypHeader(tokenType, "jwt"))
         : undefined,
   });
 
@@ -136,16 +141,17 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   }
 
   // Named-claim identity matchers (aud/iss/sub/hashes/…) — the AEGIS half of the
-  // old `createJwtVerify`. The matcher bag is the domain `assert` merged with the
-  // three hash-derive inputs lifted from verify OPTIONS.
-  const matchers = omitUndefined({
-    ...assert,
-    accessToken: options.accessToken,
-    authCode: options.authCode,
-    authState: options.authState,
-  });
+  // old `createJwtVerify`. The bag is the domain `assert` less `tokenType`,
+  // which the kit already asserted against the header.
+  //
+  // Built OUTSIDE the try: a matcher the builder REFUSES (an unknown key, a
+  // hash source it cannot hash) is a caller mistake with its own message, and
+  // folding it into `jwt_claims_invalid` reported "claims invalid" with an
+  // EMPTY invalid list — the failure that names nothing.
+  const predicate = createIdentityMatchers(kit.algorithm, omitUndefined(claimMatchers));
+
   try {
-    validate(withDates, createIdentityMatchers(kit.algorithm, matchers) as never);
+    validate(withDates, predicate as never);
   } catch (err) {
     throw new AegisDomainError("Invalid token", {
       code: "jwt_claims_invalid",
