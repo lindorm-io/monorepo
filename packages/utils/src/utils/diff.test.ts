@@ -185,4 +185,31 @@ describe("diffObject", () => {
       },
     });
   });
+
+  // A changed exotic used to VANISH from the patch: `isEqual` said "different",
+  // both sides were treated as data bags, and the nested diff over zero own keys
+  // came back empty.
+  test("should emit a changed exotic value wholesale", () => {
+    const map = new Map([["a", 2]]);
+    const set = new Set([3]);
+    const bytes = new Uint8Array([9]);
+
+    const patch = diffObject(
+      { map: new Map([["a", 1]]), set: new Set([1]), bytes: new Uint8Array([1]) },
+      { map, set, bytes },
+    );
+
+    expect(patch.map).toBe(map);
+    expect(patch.set).toBe(set);
+    expect(patch.bytes).toBe(bytes);
+  });
+
+  test("should not emit an unchanged exotic value", () => {
+    const patch = diffObject(
+      { map: new Map([["a", 1]]), regExp: /^a/i, bytes: new Uint8Array([1]) },
+      { map: new Map([["a", 1]]), regExp: /^a/i, bytes: new Uint8Array([1]) },
+    );
+
+    expect(patch).toEqual({});
+  });
 });

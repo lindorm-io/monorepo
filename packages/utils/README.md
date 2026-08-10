@@ -106,6 +106,15 @@ sortKeys({ b: 1, a: { d: 1, c: 1 } });
 
 `omitEmpty` strips `null`, `undefined`, `""`, `[]`, and `{}` recursively. `omitUndefined` strips only `undefined`. Both accept either an array or an object and throw `TypeError` for other inputs.
 
+Recursion descends into plain objects and arrays only — the values `isObject` calls a data bag. A
+`Map`, `Set`, `RegExp`, `URL`, `Date`, typed array or buffer is carried through **as it is**, never
+rebuilt. That matters: these types keep their state somewhere `Object.entries` cannot see, so
+rebuilding one key-by-key would yield `{}` and silently destroy it.
+
+Being carried through is not the same as being exempt from the empty test. `isEmpty` reads a
+`Map`/`Set`'s `size`, so `omitEmpty` strips an empty one just as it strips `[]` and `{}`, and keeps a
+populated one. Every other exotic is opaque to `isEmpty` and is always kept.
+
 ### Parsing string records
 
 ```ts
@@ -195,11 +204,11 @@ The `Predicate<T>` type lives in `@lindorm/types` — import it from there if yo
 
 ### Object/array cleanup
 
-| Export          | Signature          | Description                                                                                                             |
-| --------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `omitEmpty`     | `<T>(arg: T) => T` | Recursively strips `null`, `undefined`, `""`, `[]`, and `{}`. Accepts an array or object; throws `TypeError` otherwise. |
-| `omitUndefined` | `<T>(arg: T) => T` | Recursively strips `undefined` only. Same input rules as `omitEmpty`.                                                   |
-| `sortKeys`      | `<T>(arg: T) => T` | Returns a new object with keys sorted alphabetically at every depth.                                                    |
+| Export          | Signature          | Description                                                                                                                                                                                                                             |
+| --------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `omitEmpty`     | `<T>(arg: T) => T` | Recursively strips `null`, `undefined`, `""`, `[]`, and `{}`. Recurses into plain objects and arrays only; a `Map`/`Set`/`RegExp`/`Date`/buffer is carried through untouched. Accepts an array or object; throws `TypeError` otherwise. |
+| `omitUndefined` | `<T>(arg: T) => T` | Recursively strips `undefined` only. Same recursion and input rules as `omitEmpty`.                                                                                                                                                     |
+| `sortKeys`      | `<T>(arg: T) => T` | Returns a new object with keys sorted alphabetically at every depth.                                                                                                                                                                    |
 
 ### String parsing
 

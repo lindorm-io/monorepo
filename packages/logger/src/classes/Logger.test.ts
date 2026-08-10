@@ -679,14 +679,20 @@ describe("Logger", () => {
       expect(context().error).toBe(error);
     });
 
-    test("should filter plain content that duck-types as an error", () => {
+    test("should filter plain content that merely looks like an error", () => {
       logger.filterKey("password");
 
-      // `isError` duck-types on string name + message, so extractErrorData wraps this
-      // shape as an error — and it used to slip past the filters entirely because of it
+      // A record carrying `name` + `message` is ORDINARY DATA — a contact, a form
+      // field. `isError` requires a real Error, so `extractErrorData` leaves this
+      // alone instead of rebuilding it as `{ error, name, message, stack }` and
+      // dropping every other field. It is still filtered: `getFilteredContent`
+      // admits it as an object rather than as an error.
       logger.info("message", { name: "alice", message: "hi", password: "hunter2" });
 
-      expect(context().error.password).toBe("[Filtered]");
+      expect(context()).not.toHaveProperty("error");
+      expect(context().name).toBe("alice");
+      expect(context().message).toBe("hi");
+      expect(context().password).toBe("[Filtered]");
       expect(JSON.stringify(context())).not.toContain("hunter2");
     });
 
