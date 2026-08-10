@@ -1,11 +1,12 @@
 import type { ConditionOperator } from "@lindorm/match";
-import { isArray, isNumber, isObject, isString } from "@lindorm/is";
+import { isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
 import type { AegisClaimsWire } from "../../types/index.js";
 import { claimByDomain } from "../claims/claims-registry.js";
 import { createHash } from "./create-hash.js";
+import { liftClaimMatcher } from "./lift-claim-matcher.js";
 
 /**
  * The hash-DERIVE matchers — the ONLY matchers the registry can't resolve by a
@@ -65,27 +66,14 @@ export const createIdentityMatchers = (
       predicate[mapped] = { $eq: createHash(algorithm, value) };
       continue;
     }
-    if (isArray<string>(value)) {
-      predicate[mapped] = { $all: value };
-      continue;
-    }
-    if (isNumber(value)) {
-      predicate[mapped] = { $eq: value };
-      continue;
-    }
-    if (isString(value)) {
-      // The registry owns which claims are array-valued (`value: "array"`): for
-      // those, a scalar verifier means "at least this one must be present", so
-      // lift to a single-element $all rather than $eq (array ≠ string).
-      if (spec?.value === "array") {
-        predicate[mapped] = { $all: [value] };
-        continue;
-      }
-      predicate[mapped] = { $eq: value };
-      continue;
-    }
-    if (isObject(value)) {
-      predicate[mapped] = value as ConditionOperator<any>;
+
+    // The VALUE lift is shared with the assert path (`createJwtValidate`) — the
+    // registry is the single owner of which claims are array-valued, so a scalar
+    // matcher for one lifts to a single-element $all there exactly as here.
+    const operator = liftClaimMatcher(spec, value);
+
+    if (operator !== undefined) {
+      predicate[mapped] = operator;
       continue;
     }
 

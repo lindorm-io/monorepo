@@ -1,0 +1,117 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createJwtValidate / createIdentityMatchers parity > should build the assert predicate 1`] = `
+{
+  "audience": {
+    "$all": [
+      "https://tyr.test",
+    ],
+  },
+  "authMethods": {
+    "$all": [
+      "pwd",
+      "otp",
+    ],
+  },
+  "entitlements": {
+    "$all": [
+      "premium",
+    ],
+  },
+  "groups": {
+    "$all": [
+      "staff",
+    ],
+  },
+  "issuer": {
+    "$eq": "https://idp.test",
+  },
+  "levelOfAssurance": {
+    "$eq": 3,
+  },
+  "permissions": {
+    "$all": [
+      "read",
+    ],
+  },
+  "roles": {
+    "$in": [
+      "admin",
+      "editor",
+    ],
+  },
+  "scope": {
+    "$all": [
+      "openid",
+    ],
+  },
+  "subject": {
+    "$eq": "user-1",
+  },
+}
+`;
+
+exports[`createJwtValidate / createIdentityMatchers parity > should build the verify predicate unchanged 1`] = `
+{
+  "amr": {
+    "$all": [
+      "pwd",
+      "otp",
+    ],
+  },
+  "aud": {
+    "$all": [
+      "https://tyr.test",
+    ],
+  },
+  "entitlements": {
+    "$all": [
+      "premium",
+    ],
+  },
+  "groups": {
+    "$all": [
+      "staff",
+    ],
+  },
+  "iss": {
+    "$eq": "https://idp.test",
+  },
+  "loa": {
+    "$eq": 3,
+  },
+  "permissions": {
+    "$all": [
+      "read",
+    ],
+  },
+  "roles": {
+    "$in": [
+      "admin",
+      "editor",
+    ],
+  },
+  "scope": {
+    "$all": [
+      "openid",
+    ],
+  },
+  "sub": {
+    "$eq": "user-1",
+  },
+}
+`;
+
+exports[`createJwtValidate > hash-derive inputs > should hash the assert-only derive inputs before the lift 1`] = `
+{
+  "accessToken": {
+    "$eq": "uby9Z8Gb_H_x4fPjwNzguw",
+  },
+  "authCode": {
+    "$eq": "TT-mXNvl57l-BcINg6sBWQ",
+  },
+  "authState": {
+    "$eq": "sRiXnuhZcAIVMpbUvyTPtw",
+  },
+}
+`;

@@ -1,10 +1,23 @@
-import type { Condition, ConditionOperator } from "@lindorm/match";
-import { isArray, isNumber, isObject, isString } from "@lindorm/is";
+import type { Condition } from "@lindorm/match";
+import { isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
 import type { ValidateJwtOptions } from "../../types/index.js";
+import { claimByDomain } from "../claims/claims-registry.js";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
+import { liftClaimMatcher } from "./lift-claim-matcher.js";
 
+/**
+ * Assert matcher builder — the flat-dict twin of `createIdentityMatchers`. It
+ * keys the predicate by the caller's OWN key (the claims it matches are domain
+ * -keyed), where the verify half re-keys to the wire name; the per-claim VALUE
+ * lift is shared, so the registry stays the only thing that knows which claims
+ * are array-valued.
+ *
+ * The hash-derive inputs (`accessToken`/`authCode`/`authState` → `at_hash`/
+ * `c_hash`/`s_hash`) are assert-only and resolve BEFORE the lift: they name a
+ * SOURCE value that is hashed with `algorithm`, not a claim value to match.
+ */
 export const createJwtValidate = (validate: ValidateJwtOptions): Condition<Dict> => {
   const algorithm = validate.algorithm;
   const predicate: Condition<Dict> = {};
@@ -24,20 +37,11 @@ export const createJwtValidate = (validate: ValidateJwtOptions): Condition<Dict>
       predicate[key] = { $eq: createStateHash(algorithm, value) };
       continue;
     }
-    if (isArray<string>(value)) {
-      predicate[key] = { $all: value };
-      continue;
-    }
-    if (isNumber(value)) {
-      predicate[key] = { $eq: value };
-      continue;
-    }
-    if (isString(value)) {
-      predicate[key] = { $eq: value };
-      continue;
-    }
-    if (isObject(value)) {
-      predicate[key] = value as ConditionOperator<any>;
+
+    const operator = liftClaimMatcher(claimByDomain(key), value);
+
+    if (operator !== undefined) {
+      predicate[key] = operator;
       continue;
     }
 

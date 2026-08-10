@@ -45,6 +45,7 @@ import type { AegisDeps, ResolveVerifyKeyOptions } from "../internal/utils/aegis
 import { decryptToken } from "../internal/utils/decrypt-token.js";
 import { encryptToken } from "../internal/utils/encrypt-token.js";
 import { createJwtValidate } from "../internal/utils/jwt-validate.js";
+import { matches } from "../internal/utils/matches.js";
 import { mintToken } from "../internal/utils/mint-token.js";
 import { parseToken } from "../internal/utils/parse-token.js";
 import { rawDecryptAes } from "../internal/utils/raw-decrypt-aes.js";
@@ -448,13 +449,22 @@ export class Aegis implements IAegis {
   // format, or the INSTANCE `aegis.parse` for an unknown one.
 
   /**
-   * Validate a flat claim dict against a {@link DomainAssert}-based declarative
+   * Test a flat claim dict against a {@link DomainAssert}-based declarative
    * matcher ({@link ValidateJwtOptions} adds the `algorithm`/`tokenType` knobs
-   * and the hash-derive inputs). Throws LindormError("Invalid token") with
-   * details about every failing key when the claims don't match.
+   * and the hash-derive inputs) — the boolean form of {@link Aegis.assert}, for
+   * a caller that BRANCHES on the answer rather than rejecting the token.
    *
    * Works on any flat claim source — a parsed domain claim set or any
    * structurally-compatible dict.
+   */
+  static matches(claims: Dict, matchers: ValidateJwtOptions): boolean {
+    return matches(claims, createJwtValidate(matchers));
+  }
+
+  /**
+   * Validate a flat claim dict against the same matcher {@link Aegis.matches}
+   * tests — the throwing layer over it. Throws LindormError("Invalid token")
+   * with details about every failing key when the claims don't match.
    */
   static assert(claims: Dict, matchers: ValidateJwtOptions): void {
     const predicate = createJwtValidate(matchers);

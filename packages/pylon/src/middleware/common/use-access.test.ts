@@ -71,6 +71,35 @@ describe("useAccess", () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
+    // A SCALAR matcher against an array-valued claim means "must contain this
+    // one value" — the form a resource server writes for its own audience, and
+    // the one this suite never exercised while it only ever passed arrays.
+    test("should accept a scalar audience the token contains", async () => {
+      ctx.state.access = access("verified", {
+        audience: ["https://api.test", "https://other.test"],
+      });
+      const next = vi.fn();
+
+      await expect(
+        useAccess({ audience: "https://api.test", scope: "openid" })(ctx, next),
+      ).resolves.toBeUndefined();
+
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    test("should throw 403 when the token audience lacks the scalar matcher", async () => {
+      ctx.state.access = access("verified", { audience: ["https://other.test"] });
+
+      try {
+        await useAccess({ audience: "https://api.test" })(ctx, vi.fn());
+        throw new Error("expected useAccess to throw");
+      } catch (err: any) {
+        expect(err).toBeInstanceOf(ClientError);
+        expect(err.status).toBe(403);
+        expect(err.data.invalid).toEqual(["audience"]);
+      }
+    });
+
     test("should throw 401 when the access token middleware has not run", async () => {
       ctx.state.access = null;
 

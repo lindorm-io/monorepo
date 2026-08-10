@@ -367,7 +367,8 @@ Aegis.isCwe(token); // COSE_Encrypt0
 
 Aegis.toDomain(wire); // wire claim dict → { claims, custom } domain claims
 Aegis.toWire(claims); // domain claims → JOSE-keyed wire dict
-Aegis.assert(claims, matchers); // throws on mismatch
+Aegis.matches(claims, matchers); // boolean — same question, no throw
+Aegis.assert(claims, matchers); // the throwing layer over `matches`
 
 Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew? });
 ```
@@ -375,6 +376,17 @@ Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew? });
 The JOSE guards decide on the **wire grammar** — segment count plus the header parameters the RFCs make REQUIRED (`alg`; `enc` for a JWE) — and on aegis's algorithm allowlist. `typ` is a hint, never the discriminant: RFC 7515 §4.1.9 and RFC 7519 §5.1 both make it optional, so a typ-less id_token, an RFC 9068 `at+jwt`, and an RFC 9449 `dpop+jwt` all read as a JWT. What separates a JWT from an opaque JWS is the payload being a JSON claims object — a signed handle stays a `jws`, including one that DECLARES `typ: JWT` over a non-claims payload. Because every JWT is a JWS (RFC 7519 §3), `isJws` is TRUE for a claims token as well; ask `isJwt` first when you need the narrow answer.
 
 ⚠ These are **wire-family** guards — they say which kit `verify` would select, not whether the token carries claims. A `jws` / `cws` passes `isJose` / `isCose` and verifies to an EMPTY claims set. To route a credential between local verification and introspection, use [`isClaimsBearingToken`](#isclaimsbearingtoken--verify-locally-or-introspect).
+
+`Aegis.matches` and `Aegis.assert` run the [verify matcher vocabulary](#verify-assert--options) over any flat, domain-keyed claim dict — `matches` returns the answer, `assert` is the throwing layer over it and names every failing key (`jwt_claims_invalid`). One vocabulary, so a **scalar** against an array-valued claim (`audience`, `scope`, `authMethods`, `roles`, `permissions`, `groups`, `entitlements`) means CONTAINS, not equals:
+
+```typescript
+Aegis.matches(
+  { audience: ["https://api.example.com"] },
+  { audience: "https://api.example.com" },
+); // true
+Aegis.matches({ scope: ["openid", "profile"] }, { scope: "openid" }); // true
+Aegis.matches({ scope: ["openid"] }, { scope: ["openid", "profile"] }); // false — an array requires ALL
+```
 
 `verifyDpopProof` runs the RFC 9449 proof checks standalone — signature over the proof's embedded `jwk`, `typ: dpop+jwt`, the RFC 7638 thumbprint against the token's bound `cnf.jkt`, the §7 `ath` hash of the presented access token, and `iat` freshness (default skew 60s). It needs no key resolution because the proof carries its own key, and it returns the `ParsedDpopProof`.
 
@@ -672,8 +684,12 @@ surface's job):
 - **`assert`** (`DomainAssert`) — the declarative claim matcher. Eight named
   matchers earn non-equality semantics (`audience` is contains-self; `scope` /
   `authMethods` / `roles` / `permissions` / `groups` / `entitlements` are
-  array-contains; `issuer` is identity). Every other domain claim folds into a
-  free condition, each field accepting a literal value or a `ConditionOperator`.
+  array-contains; `issuer` is identity). For all seven a bare string means the
+  claim must CONTAIN it, an array means it must contain ALL of them, and a
+  `ConditionOperator` (`{ $in }`) matches any. Every other domain claim folds
+  into a free condition, each field accepting a literal value or a
+  `ConditionOperator`. The same vocabulary drives the standalone
+  [`Aegis.matches` / `Aegis.assert`](#static-helpers).
 - **`options`** (`VerifyOptions`) — the verify KNOBS (format-agnostic).
 
 ```typescript

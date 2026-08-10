@@ -1,17 +1,17 @@
 import type { Condition } from "@lindorm/match";
-import { Matcher } from "@lindorm/match";
 import { LindormError } from "@lindorm/errors";
 import type { Dict } from "@lindorm/types";
+import { matches } from "./matches.js";
 
 export const validate = <C extends Dict = Dict>(
   dict: C,
   predicate: Condition<C>,
 ): void => {
-  if (Matcher.match(dict, predicate)) return;
+  if (matches(dict, predicate)) return;
 
   const invalid: Array<{ key: string; value: any }> = [];
   for (const [key, ops] of Object.entries(predicate)) {
-    if (!Matcher.match({ [key]: dict[key] }, { [key]: ops } as any)) {
+    if (!matches({ [key]: dict[key] }, { [key]: ops } as any)) {
       invalid.push({ key, value: dict[key] });
     }
   }
