@@ -33,5 +33,5 @@ export const createAssertPredicate = (
     verifyIssuedAt: options.verifyIssuedAt,
     verifyAuthTime: options.verifyAuthTime,
   }),
-  ...createJwtValidate(assert, options.algorithm),
+  ...createJwtValidate(assert),
 });

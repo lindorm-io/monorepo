@@ -388,18 +388,14 @@ Aegis.matches({ scope: ["openid", "profile"] }, { scope: "openid" }); // true
 Aegis.matches({ scope: ["openid"] }, { scope: ["openid", "profile"] }); // false — an array requires ALL
 ```
 
-Both also take the three hash-derive matchers, exactly as `mint` and `verify` do: you supply the RAW value and aegis hashes it with the token's `algorithm` into the claim `mint` wrote — `accessToken` → `accessTokenHash`, `authCode` → `codeHash`, `authState` → `stateHash`. A hash you already hold is an ordinary equality claim under that same name and needs no `algorithm`.
+The three hash-DERIVE matchers (`accessToken` / `authCode` / `authState`) are **not** part of this vocabulary — they are `verify`-only (`VerifyAssert`). Deriving a digest needs the token's signing algorithm, `alg` is a HEADER parameter rather than a claim, and this surface is handed a flat claim dict with no header to read one from. Nothing is lost: `accessTokenHash` / `codeHash` / `stateHash` are ordinary domain claims, so a digest you already hold matches by name.
 
 ```typescript
-Aegis.assert(
-  verified.claims,
-  { accessToken: presentedAccessToken }, // hashed, then compared to accessTokenHash
-  { algorithm: verified.header.algorithm },
-);
 Aegis.matches(verified.claims, { accessTokenHash: knownHash }); // plain equality
+await aegis.verify(token, { accessToken: presented }); // verify derives; it holds the key
 ```
 
-The third argument (`AssertOptions`) is the rest of what verify's options mean for claims alone — `algorithm` plus the whole temporal family:
+The third argument (`AssertOptions`) is the rest of what verify's options mean for claims alone — the temporal family, and nothing else:
 
 ```typescript
 Aegis.assert(
@@ -415,8 +411,6 @@ Aegis.assert(
 ```
 
 The temporal range is checked **by default**, with the same builder and the same `0`-second default `aegis.verify` uses — `expiresAt` / `notBefore` / `issuedAt` / `authTime` are bounded if present, tolerated if absent. That is what makes the two substitutable: a claim set inside verify's skew window cannot pass one surface and fail the other, so nothing downstream needs a hand-rolled `exp > now` that quietly carries no tolerance.
-
-`algorithm` is REQUIRED for a hash-derive input and cannot be defaulted — OIDC Core §3.1.3.6 ties the digest to the token's signing `alg` (`…256` → SHA-256, `…384` → SHA-384, `…512` → SHA-512, left half), unlike PKCE's fixed SHA-256. Supplying a raw source without it throws `jwt_validate_missing_algorithm` rather than silently building a matcher that can never match.
 
 `verifyDpopProof` runs the RFC 9449 proof checks standalone — signature over the proof's embedded `jwk`, `typ: dpop+jwt`, the RFC 7638 thumbprint against the token's bound `cnf.jkt`, the §7 `ath` hash of the presented access token, and `iat` freshness (default skew 60s). It needs no key resolution because the proof carries its own key, and it returns the `ParsedDpopProof`.
 
@@ -714,7 +708,7 @@ surface's job):
 The split is one rule: **a MATCHER asserts what must be true, an OPTION changes
 how the check runs.**
 
-- **`assert`** (`DomainAssert`) — everything asserted. Eight named claim
+- **`assert`** (`VerifyAssert`) — everything asserted. Eight named claim
   matchers earn non-equality semantics (`audience` is contains-self; `scope` /
   `authMethods` / `roles` / `permissions` / `groups` / `entitlements` are
   array-contains; `issuer` is identity). For all seven a bare string means the
@@ -724,9 +718,9 @@ how the check runs.**
   (`{ $or: [{ $exists: false }, { $eq: iss }] }`). Four further matchers assert
   something about the TOKEN rather than a claim value: `tokenType` and the three
   hash-derive inputs (below). Every other domain claim folds into a free
-  condition, each field accepting a literal value or a `ConditionOperator`. The
-  same vocabulary drives the standalone
-  [`Aegis.matches` / `Aegis.assert`](#static-helpers).
+  condition, each field accepting a literal value or a `ConditionOperator`.
+  `DomainAssert` — the same vocabulary less the hash-derive inputs — drives the
+  standalone [`Aegis.matches` / `Aegis.assert`](#static-helpers).
 - **`options`** (`VerifyOptions`) — the verify KNOBS (format-agnostic).
 
 ```typescript
@@ -745,14 +739,17 @@ await aegis.verify(
 );
 ```
 
-`DomainAssert`'s four token matchers:
+`VerifyAssert`'s four token matchers:
 
-- `tokenType` — asserts the JOSE `typ` (`application/at+jwt`) or the COSE type
-  (`application/at+cwt`); on a flat claim dict (`Aegis.assert`) it is the
-  `tokenType` field
-- `accessToken` / `authCode` / `authState` — `at_hash` / `c_hash` / `s_hash`
-  checks. The RAW source value is hashed with the token's signing algorithm, not
-  compared literally
+- `tokenType` (`DomainAssert`, so both surfaces) — asserts the JOSE `typ`
+  (`application/at+jwt`) or the COSE type (`application/at+cwt`); on a flat
+  claim dict (`Aegis.assert`) it is the `tokenType` field
+- `accessToken` / `authCode` / `authState` (`DomainHashMatchers`, **verify
+  only**) — `at_hash` / `c_hash` / `s_hash` checks. The RAW source value is
+  hashed with the token's signing algorithm, not compared literally, and verify
+  is the only surface that resolves that algorithm (from the verifying key).
+  `Aegis.assert` matches an already-computed digest under its own claim name
+  instead
 
 `VerifyOptions` fields:
 

@@ -183,11 +183,11 @@ describe("Aegis.assert / Aegis.matches", () => {
     });
   });
 
-  // The round trip nobody exercised: mint hashes a RAW source into a domain
-  // claim, and assert must hash the same raw source into the same claim name.
-  // The assert half used to key the predicate by the option name
-  // (`accessToken`), which is neither the domain claim nor the wire one, so this
-  // could never match a token aegis had just minted.
+  // Mint hashes a RAW source into a domain claim; `assert` matches that claim
+  // by name. It does NOT derive the digest itself — hashing is tied to the
+  // token's signing `alg` (OIDC Core §3.1.3.6), `alg` is a HEADER parameter,
+  // and this surface is handed a flat claim dict with no header to read one
+  // from. `verify` holds a key, so it derives; `assert` matches what mint wrote.
   describe("mint → assert round trip", () => {
     const issuer = "https://test.lindorm.io/";
 
@@ -210,63 +210,76 @@ describe("Aegis.assert / Aegis.matches", () => {
       amphora.add(TEST_EC_KEY_SIG);
     });
 
-    const mintVerified = async () => {
-      const { token } = await aegis.mint("default", {
+    const mint = () =>
+      aegis.mint("default", {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
         ...sources,
       });
 
+    const mintVerified = async () => {
+      const { token } = await mint();
+
       return aegis.verify(token);
     };
 
-    test.each(["accessToken", "authCode", "authState"] as const)(
-      "should assert a minted token with the raw %s",
-      async (key) => {
+    const HASH_CLAIMS = {
+      accessToken: "accessTokenHash",
+      authCode: "codeHash",
+      authState: "stateHash",
+    } as const;
+
+    // Mint writes the digest under its domain claim name; assert matches it as
+    // an ordinary equality claim. No `algorithm`, no derivation.
+    test.each(Object.values(HASH_CLAIMS))(
+      "should assert a minted token by its %s claim",
+      async (claim) => {
         const verified = await mintVerified();
+        const digest = (verified.claims as Dict)[claim];
+
+        expect(digest).toEqual(expect.any(String));
 
         expect(() =>
-          Aegis.assert(
-            verified.claims as Dict,
-            { [key]: sources[key] },
-            { algorithm: verified.header.algorithm },
-          ),
+          Aegis.assert(verified.claims as Dict, { [claim]: digest }),
         ).not.toThrow();
 
         expect(
-          Aegis.matches(
-            verified.claims as Dict,
-            { [key]: "a-different-source-value" },
-            { algorithm: verified.header.algorithm },
-          ),
+          Aegis.matches(verified.claims as Dict, { [claim]: "a-different-digest" }),
         ).toBe(false);
       },
     );
 
-    test("should assert all three raw sources at once", async () => {
+    test("should assert all three hash claims at once", async () => {
       const verified = await mintVerified();
+      const claims = verified.claims as Dict;
 
       expect(
-        Aegis.matches(verified.claims as Dict, sources, {
-          algorithm: verified.header.algorithm,
+        Aegis.matches(claims, {
+          accessTokenHash: claims.accessTokenHash,
+          codeHash: claims.codeHash,
+          stateHash: claims.stateHash,
         }),
       ).toBe(true);
     });
 
-    // Mint accepts a PRE-COMPUTED hash as an option; assert matches it as an
-    // ordinary equality claim, needing no algorithm.
-    test("should assert a minted token with the pre-computed hash", async () => {
-      const verified = await mintVerified();
+    // The division this surface exists to make: a RAW source is verify's
+    // matcher — it needs the signing algorithm, which only the key-holding
+    // surface has. `verify` accepts it; `assert` has no such matcher, and a key
+    // cast past the type is an unmapped one that matches nothing.
+    test.each(["accessToken", "authCode", "authState"] as const)(
+      "should derive %s on verify while assert does not",
+      async (key) => {
+        const { token } = await mint();
 
-      expect(
-        Aegis.matches(
-          verified.claims as Dict,
-          {
-            accessTokenHash: (verified.claims as Dict).accessTokenHash,
-          } as unknown as DomainAssert,
-        ),
-      ).toBe(true);
-    });
+        await expect(aegis.verify(token, { [key]: sources[key] })).resolves.toBeDefined();
+
+        const verified = await aegis.verify(token);
+
+        expect(
+          Aegis.matches(verified.claims as Dict, { [key]: sources[key] } as never),
+        ).toBe(false);
+      },
+    );
   });
 });

@@ -4,7 +4,7 @@ import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { JwtKit } from "../../classes/JwtKit.js";
 import { AegisDomainError } from "../../errors/index.js";
-import type { DomainAssert, VerifiedToken, VerifyOptions } from "../../types/index.js";
+import type { VerifiedToken, VerifyAssert, VerifyOptions } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { computeTypHeader, extractTypPrefix } from "./compute-typ-header.js";
 import { extractTokenDelegation } from "./extract-token-delegation.js";
@@ -37,7 +37,7 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   issuer,
 }: {
   token: string;
-  assert?: DomainAssert;
+  assert?: VerifyAssert;
   options?: VerifyOptions;
   deps: AegisDeps;
   // Whether the JWT was the inner token of an ENCRYPTED outer (jwe). Drives the

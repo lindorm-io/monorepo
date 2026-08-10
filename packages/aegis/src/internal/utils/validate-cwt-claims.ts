@@ -2,7 +2,7 @@ import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { AegisDomainError } from "../../errors/index.js";
-import type { DomainAssert, VerifyOptions } from "../../types/index.js";
+import type { VerifyAssert, VerifyOptions } from "../../types/index.js";
 import { coseTyp } from "../cose/cose-typ.js";
 import { computeTypHeader } from "./compute-typ-header.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
@@ -32,7 +32,7 @@ export const validateCwtClaims = ({
   /** The verified COSE `typ` (label 16, RFC 9596) — the CWT's own type header. */
   typ: string | undefined;
   algorithm: KryptosAlgorithm;
-  assert: DomainAssert | undefined;
+  assert: VerifyAssert | undefined;
   options: VerifyOptions;
 }): void => {
   const payload = wire;

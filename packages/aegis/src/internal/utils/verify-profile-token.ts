@@ -1,8 +1,8 @@
 import { JweKit } from "../../classes/JweKit.js";
 import type {
-  DomainAssert,
   ProfileVerifyOptions,
   VerifiedToken,
+  VerifyAssert,
 } from "../../types/index.js";
 import { isCose } from "../cose/is-cose.js";
 import { resolveProfile } from "../profiles/registry.js";
@@ -30,7 +30,7 @@ export const verifyProfileToken = async ({
 }: {
   name: string;
   token: string;
-  assert?: DomainAssert;
+  assert?: VerifyAssert;
   options: ProfileVerifyOptions;
   deps: AegisDeps;
 }): Promise<VerifiedToken> => {

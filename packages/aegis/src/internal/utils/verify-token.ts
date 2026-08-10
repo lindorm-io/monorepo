@@ -6,9 +6,9 @@ import { JwsKit } from "../../classes/JwsKit.js";
 import { JwtKit } from "../../classes/JwtKit.js";
 import { AegisDomainError, AegisError } from "../../errors/index.js";
 import type {
-  DomainAssert,
   TokenContent,
   VerifiedToken,
+  VerifyAssert,
   VerifyOptions,
 } from "../../types/index.js";
 import { isCose } from "../cose/is-cose.js";
@@ -42,7 +42,7 @@ export const verifyToken = async <C extends Dict = Dict>({
   issuer,
 }: {
   token: string;
-  assert?: DomainAssert;
+  assert?: VerifyAssert;
   options?: VerifyOptions;
   deps: AegisDeps;
   // True once an encrypting outer (jwe/cwe) has been peeled: the inner token was

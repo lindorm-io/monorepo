@@ -108,6 +108,7 @@ import type {
   VerifiedStructuredToken,
   VerifiedToken,
   VerifiedUnstructuredToken,
+  VerifyAssert,
   VerifyDpopProofOptions,
   VerifyOptions,
   VerifyStructuredTokenOptions,
@@ -312,24 +313,24 @@ export class Aegis implements IAegis {
   verify<P extends keyof BuiltInProfiles>(
     profile: P,
     token: string,
-    assert: DomainAssert | undefined,
+    assert: VerifyAssert | undefined,
     options: ProfileVerifyOptions,
   ): Promise<NarrowedToken<BuiltInProfiles[P]>>;
   verify(
     profile: string & {},
     token: string,
-    assert: DomainAssert | undefined,
+    assert: VerifyAssert | undefined,
     options: ProfileVerifyOptions,
   ): Promise<VerifiedToken>;
   verify<C extends Dict = Dict>(
     token: string,
-    assert?: DomainAssert,
+    assert?: VerifyAssert,
     options?: VerifyOptions,
   ): Promise<VerifiedToken<C>>;
   async verify(
     tokenOrProfile: string,
-    assertOrToken?: DomainAssert | string,
-    optionsOrAssert?: DomainAssert | VerifyOptions,
+    assertOrToken?: VerifyAssert | string,
+    optionsOrAssert?: VerifyAssert | VerifyOptions,
     profileOptions?: ProfileVerifyOptions,
   ): Promise<VerifiedToken> {
     // Profiled overload: the 2nd positional is the token (a string); the 3rd is
@@ -339,7 +340,7 @@ export class Aegis implements IAegis {
       return verifyProfileToken({
         name: tokenOrProfile,
         token: assertOrToken,
-        assert: optionsOrAssert as DomainAssert | undefined,
+        assert: optionsOrAssert as VerifyAssert | undefined,
         options: profileOptions ?? ({} as ProfileVerifyOptions),
         deps: this.deps,
       });

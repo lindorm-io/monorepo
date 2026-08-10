@@ -172,7 +172,8 @@ export type ProfileMintOptions = {
  * (§4.4) needs the verifier's own identity (`audience`) to assert the token's
  * `aud` contains self. `issuer` may override the configured/profile issuer
  * source (per-token profiles). Declarative claim matching beyond the floor is
- * the separate positional `assert` ({@link DomainAssert}) argument.
+ * the separate positional `assert`
+ * ({@link import("../domain/domain-assert.js").VerifyAssert}) argument.
  */
 export type ProfileVerifyOptions = VerifyOptions & {
   audience: string;

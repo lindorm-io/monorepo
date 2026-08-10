@@ -62,86 +62,39 @@ describe("createJwtValidate", () => {
     });
   });
 
-  describe("hash-derive inputs", () => {
-    // The raw source value is hashed into the DOMAIN claim mint wrote it to —
-    // not into the option key, and not into the wire name (which is the verify
-    // half's vocabulary, because that half matches a wire payload).
-    test("should key the hash by the domain claim, not the option key", () => {
-      const predicate = createJwtValidate(
-        {
-          accessToken: "the-access-token",
-          authCode: "the-auth-code",
-          authState: "the-auth-state",
-        },
-        "ES256",
-      );
-
-      expect(Object.keys(predicate)).toEqual([
-        "accessTokenHash",
-        "codeHash",
-        "stateHash",
-      ]);
-      expect(predicate).toMatchSnapshot();
-    });
-
-    test("should hash each source with the token algorithm", () => {
-      expect(createJwtValidate({ accessToken: "raw" }, "ES256")).toEqual({
-        accessTokenHash: { $eq: createHash("ES256", "raw") },
-      });
-      expect(createJwtValidate({ accessToken: "raw" }, "RS512")).toEqual({
-        accessTokenHash: { $eq: createHash("RS512", "raw") },
-      });
-    });
-
-    // A caller holding the hash already matches it as an ordinary equality
-    // claim through the normal path — no `algorithm` needed.
+  // Hashing a raw source needs the token's signing algorithm, and `alg` is a
+  // HEADER parameter — never a claim. This surface is handed a flat claim dict,
+  // so it has nothing to resolve one from: the hash-DERIVE matchers belong to
+  // verify alone (`DomainHashMatchers`), and this builder has neither a branch
+  // nor an `algorithm` parameter for them.
+  describe("hash claims", () => {
+    // Nothing is lost in expressiveness: the digest claims are ordinary
+    // equality claims, matched under their own domain name through the lift.
     test("should accept a pre-computed hash as a plain equality matcher", () => {
-      expect(createJwtValidate({ accessTokenHash: "precomputed" } as never)).toEqual({
+      expect(createJwtValidate({ accessTokenHash: "precomputed" })).toEqual({
         accessTokenHash: { $eq: "precomputed" },
       });
-      expect(createJwtValidate({ codeHash: "precomputed" } as never)).toEqual({
+      expect(createJwtValidate({ codeHash: "precomputed" })).toEqual({
         codeHash: { $eq: "precomputed" },
       });
-      expect(createJwtValidate({ stateHash: "precomputed" } as never)).toEqual({
+      expect(createJwtValidate({ stateHash: "precomputed" })).toEqual({
         stateHash: { $eq: "precomputed" },
       });
     });
 
-    test("should not emit a predicate key for the algorithm knob", () => {
-      expect(createJwtValidate({ subject: "s" }, "ES256")).toEqual({
-        subject: { $eq: "s" },
-      });
-    });
-
-    // Without `algorithm` there is no hash to compare, and the value used to
-    // fall through to the ordinary lift — producing `{ accessToken: { $eq:
-    // "raw" } }`, a key no claim set carries. Fails closed, but silently.
+    // `accessToken` is not a member of `DomainAssert`, so reaching this needs a
+    // cast. Past the type it is simply an unmapped key, and gets exactly the
+    // semantics any MISSPELLED claim name gets — a literal `$eq` under the key
+    // as written, which no claim set carries. The type is the guard; a cast
+    // past it buys typo behaviour, not a special case.
     test.each(["accessToken", "authCode", "authState"] as const)(
-      "should throw when %s is given without an algorithm",
+      "should treat a cast %s as an ordinary unmapped key",
       (key) => {
-        expect(() => createJwtValidate({ [key]: "raw" })).toThrowError(
-          /Missing algorithm/,
-        );
+        expect(createJwtValidate({ [key]: "raw" } as never)).toEqual({
+          [key]: { $eq: "raw" },
+        });
       },
     );
-
-    test("should name the offending key and the claim it would derive", () => {
-      try {
-        createJwtValidate({ accessToken: "raw" });
-        throw new Error("expected createJwtValidate to throw");
-      } catch (err: any) {
-        expect(err.code).toBe("jwt_validate_missing_algorithm");
-        expect(err.data).toEqual({ key: "accessToken", claim: "accessTokenHash" });
-      }
-    });
-
-    // The source of a hash matcher is a RAW string. Anything else cannot be
-    // hashed, and lifting it would key the predicate by the source name again.
-    test("should throw when a hash-derive input is not a string", () => {
-      expect(() =>
-        createJwtValidate({ accessToken: { $eq: "raw" } } as never, "ES256"),
-      ).toThrowError(/Unsupported value/);
-    });
   });
 
   describe("boolean and Date matchers", () => {
@@ -204,32 +157,33 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
     expect(createJwtValidate(matchers as never)).toMatchSnapshot();
   });
 
-  // The hash-derive inputs are the one place the two halves legitimately write
-  // different KEYS from the same table — the wire name on the verify side, the
-  // domain name on the assert side — but the hashed VALUE must be identical.
-  describe("hash-derive inputs", () => {
+  // The hash-derive matchers are VERIFY-only, so the halves are asymmetric by
+  // design: verify DERIVES the digest from a raw source, assert matches a
+  // digest the caller already holds. What must still agree is the VALUE — the
+  // two reach the same `$eq`, each under the claim name its own surface speaks.
+  describe("hash claims", () => {
     const sources = {
       accessToken: "the-access-token",
       authCode: "the-auth-code",
       authState: "the-auth-state",
     };
 
-    test("should map every option key to a registry domain claim", () => {
+    test("should map every hash matcher key to a registry domain claim", () => {
       for (const [key, domain] of Object.entries(HASH_MATCHERS)) {
         expect(claimByDomain(domain), `${key} → ${domain}`).toBeDefined();
       }
     });
 
-    test("should hash to the same value under each half's own claim name", () => {
-      const assertPredicate = createJwtValidate(sources, "ES256");
+    test("should reach the same digest through verify's derive and assert's claim", () => {
       const verifyPredicate = createIdentityMatchers("ES256", sources);
 
       for (const [key, domain] of Object.entries(HASH_MATCHERS)) {
         const jose = claimByDomain(domain)?.jose as keyof typeof verifyPredicate;
-        const hashed = { $eq: createHash("ES256", sources[key as keyof typeof sources]) };
+        const digest = createHash("ES256", sources[key as keyof typeof sources]);
+        const assertPredicate = createJwtValidate({ [domain]: digest } as never);
 
-        expect(assertPredicate[domain]).toEqual(hashed);
-        expect(verifyPredicate[jose]).toEqual(hashed);
+        expect(verifyPredicate[jose]).toEqual({ $eq: digest });
+        expect(assertPredicate[domain]).toEqual({ $eq: digest });
       }
     });
   });

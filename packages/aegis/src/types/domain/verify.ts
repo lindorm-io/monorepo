@@ -28,8 +28,8 @@ export type VerifyActorOptions = {
  * Everything here is the latter: key policy, presence policy, the temporal
  * window, DPoP and actor-chain enforcement. Every ASSERTION — including
  * `tokenType` and the three hash-derive inputs, which verify always read out of
- * the matcher bag internally — lives on the positional {@link DomainAssert}
- * argument.
+ * the matcher bag internally — lives on the positional
+ * {@link import("./domain-assert.js").VerifyAssert} argument.
  */
 export type VerifyOptions = {
   actor?: VerifyActorOptions;

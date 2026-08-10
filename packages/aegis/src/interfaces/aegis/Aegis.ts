@@ -22,7 +22,6 @@ import type {
   DecryptedToken,
   DecryptOptions,
   DecryptTokenOptions,
-  DomainAssert,
   EncryptData,
   EncryptedToken,
   EncryptOptions,
@@ -42,6 +41,7 @@ import type {
   VerifiedStructuredToken,
   VerifiedToken,
   VerifiedUnstructuredToken,
+  VerifyAssert,
   VerifyOptions,
   VerifyStructuredTokenOptions,
   VerifyUnstructuredTokenOptions,
@@ -212,18 +212,18 @@ export interface IAegis {
   verify<P extends keyof BuiltInProfiles>(
     profile: P,
     token: string,
-    assert: DomainAssert | undefined,
+    assert: VerifyAssert | undefined,
     options: ProfileVerifyOptions,
   ): Promise<NarrowedToken<BuiltInProfiles[P]>>;
   verify(
     profile: string & {},
     token: string,
-    assert: DomainAssert | undefined,
+    assert: VerifyAssert | undefined,
     options: ProfileVerifyOptions,
   ): Promise<VerifiedToken>;
   verify<C extends Dict = Dict>(
     token: string,
-    assert?: DomainAssert,
+    assert?: VerifyAssert,
     options?: VerifyOptions,
   ): Promise<VerifiedToken<C>>;
 }
