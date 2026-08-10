@@ -1,26 +1,12 @@
-import { parseTokenHeader } from "../internal/index.js";
+import { isJwe } from "./is-jwe.js";
+import { isJws } from "./is-jws.js";
 
-const JWE_LENGTH = 5;
-const JWE_REGEX =
-  /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
-
-const JWT_LENGTH = 3;
-const JWT_REGEX = /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+$/;
-
-export const isWebToken = (input: any): input is string => {
-  if (typeof input !== "string") return false;
-
-  if (!JWE_REGEX.test(input) && !JWT_REGEX.test(input)) return false;
-
-  const header = parseTokenHeader(input);
-  if (!header) return false;
-
-  const split = input.split(".");
-  if (split.length !== JWE_LENGTH && split.length !== JWT_LENGTH) return false;
-
-  try {
-    return header && typeof header.alg === "string" && typeof header.typ === "string";
-  } catch {
-    return false;
-  }
-};
+/**
+ * Is this a JOSE compact token of either family — the JWS Compact Serialization
+ * (RFC 7515 §7.1) or the JWE Compact Serialization (RFC 7516 §7.1)?
+ *
+ * The umbrella over `isJws` and `isJwe`, and therefore over `isJwt` too, since a
+ * JWT is a JWS. Decided by the wire grammar and the REQUIRED header parameters,
+ * never by `typ` — both RFCs make it optional.
+ */
+export const isWebToken = (input: any): input is string => isJws(input) || isJwe(input);
