@@ -1,7 +1,9 @@
-import { Aegis, type IAegis } from "@lindorm/aegis";
+import { Aegis, type IAegis, type ProfileMintOptions } from "@lindorm/aegis";
 import { Amphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
+import type { Dict } from "@lindorm/types";
+import { ACCESS_TEST_AUDIENCE } from "./tokens.js";
 
 export const ACCESS_TEST_ISSUER = "http://access.test.lindorm.io";
 
@@ -35,6 +37,33 @@ export const createTestAegis = (logger: ILogger): IAegis => {
 
   return new Aegis({ amphora, issuer: ACCESS_TEST_ISSUER, logger });
 };
+
+/**
+ * Mint a REAL access token under the `access_token` profile (RFC 9068) — the
+ * only thing `useAccessToken` verifies, so a test token must be one. The profile
+ * floor demands `typ: application/at+jwt`, a URI issuer, exactly one resource
+ * `aud`, and a present `client_id`/`jti`/`iat`/`exp`; the last three are
+ * auto-injected at mint.
+ *
+ * `format: "cwt"` mints the COSE twin, whose floor typ is `application/at+cwt`.
+ */
+export const mintTestAccessToken = async (
+  aegis: IAegis,
+  content: Dict = {},
+  options: ProfileMintOptions = {},
+): Promise<string> =>
+  (
+    await aegis.mint(
+      "access_token",
+      {
+        audience: [ACCESS_TEST_AUDIENCE],
+        clientId: "client-a",
+        subject: "alice",
+        ...content,
+      },
+      options,
+    )
+  ).token;
 
 /**
  * A REAL opaque handle that IS a valid COSE token: a signed COSE_Sign1 over an

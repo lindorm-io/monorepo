@@ -11,7 +11,11 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusSource } from "@lindorm/proteus";
 import MockDate from "mockdate";
 import { afterEach, beforeEach, describe, expect, type Mock, test, vi } from "vitest";
-import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
+import {
+  ACCESS_MOUNT,
+  ACCESS_TEST_AUDIENCE,
+  OPAQUE_TOKEN,
+} from "../../__fixtures__/access/tokens.js";
 import {
   createTestAppConfig,
   createTestAuthConfig,
@@ -25,9 +29,19 @@ import { useAccessToken } from "./use-access-token.js";
 const ISSUER = "https://test.lindorm.io/";
 const NOW = new Date("2026-08-06T10:00:00.000Z");
 
+/**
+ * ⚠ `tokenType`, `issuer` and `audience` are not decoration. The introspected arm
+ * now asserts that the answer declared a `token_type` at all (RFC 7662 §2.2), and
+ * the shared assert pins `iss` with a hard `$eq` and applies the mount's
+ * `audience` — so an answer missing any of the three is refused before the cache
+ * behaviour under test here can be observed.
+ */
 const ACTIVE_INTROSPECTION = {
   active: true,
   custom: {},
+  tokenType: "Bearer",
+  issuer: ISSUER,
+  audience: [ACCESS_TEST_AUDIENCE],
   subject: "alice",
   scope: ["openid"],
   permissions: ["users:read"],
@@ -175,7 +189,7 @@ describe("useAccessToken introspection cache", () => {
   });
 
   test("should introspect once across two requests for the same token", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     const first = createContext({ kv, introspect });
     await middleware(first, next);
@@ -193,7 +207,7 @@ describe("useAccessToken introspection cache", () => {
   // translation that column stores in would re-key them — so a HIT must hand the
   // bucket back exactly as the MISS produced it, key for key.
   test("should round-trip the custom claims through the stored entry", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     introspect.mockResolvedValue({
       ...ACTIVE_INTROSPECTION,
@@ -217,7 +231,7 @@ describe("useAccessToken introspection cache", () => {
   // RFC 7662 §2.2 — the AS may answer the same token differently per client, so
   // one pylon must never be served another's answer out of a shared namespace.
   test("should not share an entry across clientIds", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     await middleware(createContext({ kv, introspect }), next);
     await middleware(createContext({ kv, introspect, clientId: "client-b" }), next);
@@ -226,20 +240,24 @@ describe("useAccessToken introspection cache", () => {
   });
 
   test("should not share an entry across issuers", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
+    const other = "https://other.lindorm.io/";
 
     await middleware(createContext({ kv, introspect }), next);
-    await middleware(
-      createContext({ kv, introspect, issuer: "https://other.lindorm.io/" }),
-      next,
-    );
+
+    // The second pylon pins a different issuer, and the shared assert compares
+    // the answer's `iss` against it with a hard `$eq` — so its authorization
+    // server has to name itself, or the request is refused before the cache
+    // keying under test here can be observed.
+    introspect.mockResolvedValue({ ...ACTIVE_INTROSPECTION, issuer: other });
+    await middleware(createContext({ kv, introspect, issuer: other }), next);
 
     expect(introspect).toHaveBeenCalledTimes(2);
   });
 
   // The TTL IS the revocation window (RFC 7662 §5) — it must actually elapse.
   test("should introspect again once the entry has expired", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     await middleware(createContext({ kv, introspect }), next);
 
@@ -253,7 +271,7 @@ describe("useAccessToken introspection cache", () => {
   });
 
   test("should honour a per-mount ttl over the deployment default", async () => {
-    const middleware = useAccessToken({ cache: { ttl: "2 seconds" } });
+    const middleware = useAccessToken({ ...ACCESS_MOUNT, cache: { ttl: "2 seconds" } });
 
     await middleware(createContext({ kv, introspect, ttl: "60 seconds" }), next);
 
@@ -264,7 +282,7 @@ describe("useAccessToken introspection cache", () => {
   });
 
   test("should honour the deployment ttl over the built-in default", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     await middleware(createContext({ kv, introspect, ttl: "60 seconds" }), next);
 
@@ -278,8 +296,8 @@ describe("useAccessToken introspection cache", () => {
   // Mounts share one key, so a strict mount must re-check the AGE of whatever a
   // lenient mount left behind — otherwise its carve-out is decorative.
   test("should not serve a strict mount an entry a lenient mount wrote", async () => {
-    const lenient = useAccessToken();
-    const strict = useAccessToken({ cache: { ttl: "2 seconds" } });
+    const lenient = useAccessToken(ACCESS_MOUNT);
+    const strict = useAccessToken({ ...ACCESS_MOUNT, cache: { ttl: "2 seconds" } });
 
     await lenient(createContext({ kv, introspect, ttl: "60 seconds" }), next);
 
@@ -294,7 +312,7 @@ describe("useAccessToken introspection cache", () => {
 
   // The sensitive-route carve-out: tier one may only ever NARROW.
   test("should introspect every request when the mount opts out", async () => {
-    const middleware = useAccessToken({ cache: false });
+    const middleware = useAccessToken({ ...ACCESS_MOUNT, cache: false });
 
     await middleware(createContext({ kv, introspect }), next);
     await middleware(createContext({ kv, introspect }), next);
@@ -303,7 +321,7 @@ describe("useAccessToken introspection cache", () => {
   });
 
   test("should never let an entry outlive the token's own expiry", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     introspect.mockResolvedValueOnce({
       ...ACTIVE_INTROSPECTION,
@@ -331,13 +349,14 @@ describe("useAccessToken introspection cache", () => {
    * `active: true` beside an `exp` already in the past is not a live token, and
    * serving it would extend every such grant indefinitely.
    *
-   * ⚠ No clock tolerance here, deliberately. An introspection answer is fetched
-   * live from the authority rather than carried across a clock boundary — the
-   * tolerance that a structured token's `exp` gets inside `aegis.verify` has
-   * nothing to apply to.
+   * ⚠ The window is `Aegis.matches`'s DEFAULT one — the same builder verify
+   * runs — not a hand-rolled `exp > now`, which would carry no clock tolerance at
+   * all and so reject claims the structured arm accepts inside its skew window.
+   * The default tolerance is zero, which is why one second past `exp` is enough
+   * to refuse the answer here.
    */
   test("should reject an active answer whose own exp has already passed", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     introspect.mockResolvedValue({
       ...ACTIVE_INTROSPECTION,
@@ -355,7 +374,7 @@ describe("useAccessToken introspection cache", () => {
   });
 
   test("should reject an active answer whose nbf has not yet been reached", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     introspect.mockResolvedValue({
       ...ACTIVE_INTROSPECTION,
@@ -374,7 +393,7 @@ describe("useAccessToken introspection cache", () => {
   // Neither claim is required by RFC 7662 §2.2 — every member is a MAY — so an
   // answer carrying no temporal claims at all must still be accepted.
   test("should accept an active answer that carries no temporal claims", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     introspect.mockResolvedValue({ ...ACTIVE_INTROSPECTION });
 
@@ -387,7 +406,7 @@ describe("useAccessToken introspection cache", () => {
   // A negative is a real entry — it saves the AS the same load, under the same
   // short window — and it still rejects the request.
   test("should cache an inactive answer and still reject", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
     introspect.mockResolvedValue({ active: false });
 
     const first = createContext({ kv, introspect });
@@ -407,7 +426,7 @@ describe("useAccessToken introspection cache", () => {
   // `kv` is optional on PylonSettings — a service without one must keep working
   // exactly as it did before the cache existed.
   test("should work uncached when no source is configured", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     const first = createContext({ introspect });
     await middleware(first, next);
@@ -428,7 +447,7 @@ describe("useAccessToken introspection cache", () => {
    * operator — on the hot path for every opaque token.
    */
   test("should cache nothing and propagate when introspection fails", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
     introspect.mockRejectedValue(new Error("authorization server is down"));
 
     await expect(middleware(createContext({ kv, introspect }), next)).rejects.toThrow(
@@ -453,7 +472,7 @@ describe("useAccessToken introspection cache", () => {
    * "rethrow those two, wrap everything else" catch laundered it into a 401.
    */
   test("should propagate a driver storage failure instead of reporting a bad credential", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     // The shape of a `ProteusError`: a LindormError that is neither of the two
     // the old catch recognised. Constructed here rather than imported so the
@@ -475,21 +494,30 @@ describe("useAccessToken introspection cache", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  // No client identity ⇒ no key that is safe to share (RFC 7662 §2.2), so the
-  // cache steps aside rather than key on the token alone.
-  test("should skip the cache when the deployment resolved no issuer", async () => {
-    const middleware = useAccessToken();
+  // ⚠ EXPECTATION FLIPPED. This asserted that a deployment with no settled issuer
+  // still introspected, uncached, on every request. `resolveAccessIssuer` now runs
+  // BEFORE either arm and both require its answer, so such a deployment refuses
+  // the request outright — the authorization server is never asked at all, and the
+  // cache's own "no issuer ⇒ no safe key" branch is unreachable through this
+  // middleware. (Cache keying by issuer stays covered by the cross-issuer test.)
+  test("should refuse the request when the deployment resolved no issuer", async () => {
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
-    await middleware(createContext({ kv, introspect, issuer: null }), next);
-    await middleware(createContext({ kv, introspect, issuer: null }), next);
+    await expect(
+      middleware(createContext({ kv, introspect, issuer: null }), next),
+    ).rejects.toMatchObject({
+      code: "access_issuer_unresolved",
+      data: { auth: "unresolved" },
+    });
 
-    expect(introspect).toHaveBeenCalledTimes(2);
+    expect(introspect).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
   // A VERIFY-ONLY driver is nobody's OAuth client, and an empty client id would
   // key every such pylon's entries together.
   test("should skip the cache when the driver exposes no client id", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
 
     await middleware(createContext({ kv, introspect, clientId: null }), next);
     await middleware(createContext({ kv, introspect, clientId: null }), next);
@@ -499,7 +527,7 @@ describe("useAccessToken introspection cache", () => {
 
   // A storage outage must degrade to an introspection, never fail the request.
   test("should serve the request when the cache backend fails", async () => {
-    const middleware = useAccessToken();
+    const middleware = useAccessToken(ACCESS_MOUNT);
     const broken = {
       session: () => ({
         repository: () => ({

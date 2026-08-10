@@ -1,9 +1,17 @@
 import type { IAegis, VerifiedToken } from "@lindorm/aegis";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ACCESS_TEST_ISSUER, createTestAegis } from "../../__fixtures__/access/aegis.js";
+import {
+  ACCESS_TEST_ISSUER,
+  createTestAegis,
+  mintTestAccessToken,
+} from "../../__fixtures__/access/aegis.js";
+import { ACCESS_TEST_AUDIENCE } from "../../__fixtures__/access/tokens.js";
 import type { PylonResolvedAccess } from "../../types/index.js";
 import { resolveActor } from "./resolve-actor.js";
 import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
+
+/** The relying party an id_token is audienced to — its `aud` IS the client id. */
+const CLIENT_ID = "client-a";
 
 /**
  * The default resolver is proved against a REAL minted-and-verified token, not a
@@ -19,25 +27,28 @@ describe("resolveActor", () => {
   let idToken: VerifiedToken;
   let ctx: any;
 
-  const mintAndVerify = async (
-    subject: string,
-    tokenType: "access_token" | "id_token",
-  ): Promise<VerifiedToken> => {
-    const { token } = await aegis.mint("default", {
-      audience: [ACCESS_TEST_ISSUER],
-      expires: "1 hour",
-      subject,
-      tokenType,
-    });
-
-    return aegis.verify(token, { issuer: ACCESS_TEST_ISSUER }, { tokenType });
-  };
-
+  // ⚠ Minted and verified under their PROFILES. `tokenType` is no longer a
+  // verify knob — the profile owns the `typ` floor — so the two credentials are
+  // distinguished by which profile issued them, not by an option the caller
+  // passes to verify. `aud` differs accordingly: an access token is audienced to
+  // the resource server (RFC 9068 §4), an id_token to the client (OIDC Core §2).
   beforeAll(async () => {
     aegis = createTestAegis(createMockLogger());
 
-    accessToken = await mintAndVerify("alice", "access_token");
-    idToken = await mintAndVerify("bob", "id_token");
+    const access = await mintTestAccessToken(aegis);
+    accessToken = await aegis.verify("access_token", access, undefined, {
+      audience: ACCESS_TEST_AUDIENCE,
+      issuer: ACCESS_TEST_ISSUER,
+    });
+
+    const { token: id } = await aegis.mint("id_token", {
+      audience: [CLIENT_ID],
+      subject: "bob",
+    });
+    idToken = await aegis.verify("id_token", id, undefined, {
+      audience: CLIENT_ID,
+      issuer: ACCESS_TEST_ISSUER,
+    });
   });
 
   beforeEach(() => {

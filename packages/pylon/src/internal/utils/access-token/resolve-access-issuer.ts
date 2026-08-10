@@ -9,14 +9,15 @@ import type { PylonAnyContext } from "../../../types/index.js";
  * the answer. A per-mount issuer option would be a second copy of a constant,
  * free to disagree with the keys verification actually runs against.
  *
- * ⚠ Called ONLY where a token is verified LOCALLY. The introspected path never
- * reaches it — RFC 7662 makes the authorization server the authority on an
- * opaque credential, so a deployment whose driver could not settle an issuer
- * still resolves opaque tokens, exactly as it did before.
+ * Required on BOTH credential arms. Throwing beats resolving without one: an
+ * absent `issuer` matcher is not a weaker check, it is NO check, and every token
+ * from every issuer whose key amphora happens to hold would be accepted.
  *
- * Throws rather than verifying without an issuer: an absent `issuer` matcher is
- * not a weaker check, it is NO check, and every token from every issuer whose
- * key amphora happens to hold would be accepted.
+ * ⚠ The introspected arm reaches this too. RFC 7662 makes the authorization
+ * server the authority on an opaque credential, but "the authority answered" is
+ * not "the answer came from OUR authority" — the structured arm rejects an `iss`
+ * that is not ours unconditionally, and an opaque credential that skipped the
+ * comparison would be the laxer of two arms serving the same mount.
  */
 export const resolveAccessIssuer = (ctx: PylonAnyContext): string => {
   const issuer = ctx.state.app.config.auth?.issuer;

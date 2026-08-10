@@ -51,7 +51,12 @@ amphora.add([
 // It takes no issuer. The driver below names a SCOPE, amphora settles the issuer
 // for that scope while fetching its keys, and pylon records the answer on
 // `ctx.state.app.config.auth` at boot — so no mount restates it.
-const accessToken = useAccessToken();
+//
+// It DOES take an audience, and it is required: that is this API's own
+// identifier, the value a token must carry in `aud`. RFC 9068 §4 makes a
+// resource server validating `aud` mandatory, and only the mount knows what this
+// deployment answers to — there is no boot-time constant to derive it from.
+const accessToken = useAccessToken({ audience: "http://test.lindorm.io/api" });
 
 const authorizedNamespaceOnly: PylonConnectionMiddleware = async (ctx, next) => {
   if (ctx.io.socket.nsp.name === "/authorized") {

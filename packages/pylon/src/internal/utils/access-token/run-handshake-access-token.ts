@@ -1,6 +1,6 @@
-import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import type {
+  AccessTokenMatchers,
   HandshakeDpopMode,
   PylonAuthCacheEntry,
   PylonSocketAuth,
@@ -11,14 +11,19 @@ import { createSessionRefreshHandler } from "../refresh/create-session-refresh-h
 import { extractTokenFromSession } from "../tokens/extract-token-from-session.js";
 import { resolveHandshakeTokenSource } from "../tokens/resolve-handshake-token-source.js";
 import { sessionResolvedAccess } from "../tokens/session-resolved-access.js";
+import { assertResolvedAccess } from "./assert-resolved-access.js";
+import { resolveAccessIssuer } from "./resolve-access-issuer.js";
 
 type Options = {
   cache: PylonAuthCacheEntry | undefined;
   dpopMode: HandshakeDpopMode;
-  matchers: DomainAssert;
-  verifyOptions: VerifyOptions;
+  matchers: AccessTokenMatchers;
 };
 
+/**
+ * The socket-handshake layer that OBTAINS a credential — the twin of
+ * `runHttpAccessToken`, differing only in where the credential is read from.
+ */
 export const runHandshakeAccessToken = async (
   ctx: PylonSocketHandshakeContext,
   options: Options,
@@ -33,7 +38,6 @@ export const runHandshakeAccessToken = async (
       dpopProof: source.kind === "dpop" ? source.dpopProof : undefined,
       matchers: options.matchers,
       token: source.token,
-      verifyOptions: options.verifyOptions,
     });
     return;
   }
@@ -46,11 +50,21 @@ export const runHandshakeAccessToken = async (
 
     const parsed = await extractTokenFromSession(ctx.aegis, source.session);
     if (parsed) {
+      const access = sessionResolvedAccess(source.session.accessToken, parsed);
+
+      // The SAME assert the header arms run — see the HTTP session arm.
+      assertResolvedAccess(access, {
+        issuer: resolveAccessIssuer(ctx),
+        matchers: options.matchers,
+      });
+
+      // ⚠ No binding check, for the same reason as the HTTP session arm: a
+      // cookie credential carries no proof, and `extractTokenFromSession`
+      // verifies with aegis's RFC 9449-strict default, which refuses a
+      // `cnf.jkt`-bound token outright — so a bound credential never reaches
+      // here and a check placed after it would be unreachable.
       socket.data.tokens.bearer = parsed;
-      socket.data.pylon.access = sessionResolvedAccess(
-        source.session.accessToken,
-        parsed,
-      );
+      socket.data.pylon.access = access;
     }
 
     const auth: PylonSocketAuth = {

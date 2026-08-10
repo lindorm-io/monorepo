@@ -3,6 +3,10 @@
 exports[`useAccessToken > HTTP context > falls back to session.accessToken when no header present 1`] = `
 {
   "claims": {
+    "audience": [
+      "https://api.test.lindorm.io",
+    ],
+    "issuer": "https://test.lindorm.io/",
     "subject": "alice",
   },
   "custom": {},
@@ -14,6 +18,10 @@ exports[`useAccessToken > HTTP context > falls back to session.accessToken when 
 exports[`useAccessToken > HTTP context > falls back to session.accessToken when no header present 2`] = `
 {
   "claims": {
+    "audience": [
+      "https://api.test.lindorm.io",
+    ],
+    "issuer": "https://test.lindorm.io/",
     "subject": "alice",
   },
   "custom": {},
@@ -25,6 +33,10 @@ exports[`useAccessToken > HTTP context > falls back to session.accessToken when 
 exports[`useAccessToken > HTTP context > introspects an OPAQUE bearer token and resolves introspected access 1`] = `
 {
   "claims": {
+    "audience": [
+      "https://api.test.lindorm.io",
+    ],
+    "issuer": "https://test.lindorm.io/",
     "permissions": [
       "users:read",
     ],
@@ -42,19 +54,29 @@ exports[`useAccessToken > HTTP context > introspects an OPAQUE bearer token and 
 exports[`useAccessToken > HTTP context > verifies a JOSE bearer token and resolves verified access 1`] = `
 {
   "claims": {
-    "subject": "verified_subject",
+    "audience": [
+      "https://api.test.lindorm.io",
+    ],
+    "issuer": "https://test.lindorm.io/",
+    "subject": "alice",
   },
   "custom": {},
   "format": "jwt",
-  "header": {},
-  "token": "mocked_token",
+  "header": {
+    "tokenType": "access_token",
+  },
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSJ9.signature",
 }
 `;
 
 exports[`useAccessToken > HTTP context > verifies a JOSE bearer token and resolves verified access 2`] = `
 {
   "claims": {
-    "subject": "verified_subject",
+    "audience": [
+      "https://api.test.lindorm.io",
+    ],
+    "issuer": "https://test.lindorm.io/",
+    "subject": "alice",
   },
   "custom": {},
   "provenance": "verified",

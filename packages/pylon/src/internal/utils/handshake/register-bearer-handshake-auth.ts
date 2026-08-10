@@ -1,4 +1,3 @@
-import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
 import { assertResolvedAccess } from "../access-token/assert-resolved-access.js";
@@ -7,6 +6,7 @@ import { assertDpopBinding } from "../dpop/assert-dpop-binding.js";
 import { createBearerRefreshHandler } from "../refresh/create-bearer-refresh-handler.js";
 import { reconstructHandshakeHtu } from "./reconstruct-handshake-htu.js";
 import type {
+  AccessTokenMatchers,
   HandshakeDpopMode,
   PylonAuthCacheEntry,
   PylonSocketAuth,
@@ -17,9 +17,8 @@ type RegisterBearerHandshakeAuthOptions = {
   cache: PylonAuthCacheEntry | undefined;
   dpopMode: HandshakeDpopMode;
   dpopProof: string | undefined;
-  matchers: DomainAssert;
+  matchers: AccessTokenMatchers;
   token: string;
-  verifyOptions: VerifyOptions;
 };
 
 /**
@@ -40,14 +39,7 @@ type RegisterBearerHandshakeAuthOptions = {
  */
 export const registerBearerHandshakeAuth = async (
   ctx: PylonSocketHandshakeContext,
-  {
-    cache,
-    dpopMode,
-    dpopProof,
-    matchers,
-    token,
-    verifyOptions,
-  }: RegisterBearerHandshakeAuthOptions,
+  { cache, dpopMode, dpopProof, matchers, token }: RegisterBearerHandshakeAuthOptions,
 ): Promise<void> => {
   const socket = ctx.io.socket;
 
@@ -65,8 +57,8 @@ export const registerBearerHandshakeAuth = async (
   }
 
   const { access, issuer, verified } = await resolveAccess(ctx, token, {
+    audience: matchers.audience,
     cache,
-    verifyOptions,
   });
 
   assertResolvedAccess(access, { issuer, matchers });
@@ -123,13 +115,13 @@ export const registerBearerHandshakeAuth = async (
     authExpiredEmittedAt: null,
   };
   auth.refresh = createBearerRefreshHandler({
-    aegis: ctx.aegis,
+    cache,
     capturedJkt: dpopValidated ? thumbprint : undefined,
+    ctx,
     issuer,
     matchers,
     socket,
     subject: access.claims.subject,
-    verifyOptions,
   });
   socket.data.pylon.auth = auth;
 };

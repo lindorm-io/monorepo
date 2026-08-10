@@ -1,10 +1,18 @@
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError, LindormError, ServerError } from "@lindorm/errors";
 import { beforeEach, describe, expect, test, type Mock } from "vitest";
-import { joseShapedToken } from "../../../__fixtures__/access/tokens.js";
+import {
+  ACCESS_TEST_APP_ISSUER,
+  ACCESS_TEST_AUDIENCE,
+  joseShapedToken,
+  verifiedAccess,
+} from "../../../__fixtures__/access/tokens.js";
 import { verifyAccessToken } from "./verify-access-token.js";
 
 const TOKEN = joseShapedToken();
+
+/** Everything this function takes: the resource server's identity, and ours. */
+const OPTIONS = { audience: ACCESS_TEST_AUDIENCE, issuer: ACCESS_TEST_APP_ISSUER };
 
 /**
  * The conversion BOUNDARY. Everything inside this call is a verdict on bytes the
@@ -19,31 +27,33 @@ describe("verifyAccessToken", () => {
     aegis = createMockAegis();
   });
 
-  test("passes the access-token typ and the caller's knobs", async () => {
-    (aegis.verify as Mock).mockResolvedValue({ claims: {}, custom: {}, token: TOKEN });
+  // ⚠ The PROFILED overload. The profile NAME carries the `typ` floor
+  // (`application/at+jwt`, RFC 9068 §2.2), so an id_token or a logout token
+  // presented as a bearer credential is refused by the profile rather than by an
+  // option a deployment could override — there is no `tokenType` knob left to
+  // override it WITH, which is the point.
+  //
+  // `assert` is `undefined`: the claim matchers are one later pass shared with
+  // the introspected arm. `issuer` scopes the KEY lookup, not just the claim
+  // comparison. `trustBoundThumbprint` says pylon validates the DPoP binding
+  // itself, uniformly, for both arms.
+  test("verifies against the access_token profile, with no assert", async () => {
+    (aegis.verify as Mock).mockResolvedValue(verifiedAccess({}, TOKEN));
 
-    await verifyAccessToken(aegis, TOKEN, {
-      trustBoundThumbprint: true,
-      maxTokenAge: 60,
-    });
+    await verifyAccessToken(aegis, TOKEN, OPTIONS);
 
-    expect(aegis.verify).toHaveBeenCalledWith(TOKEN, undefined, {
-      tokenType: "access_token",
+    expect(aegis.verify).toHaveBeenCalledWith("access_token", TOKEN, undefined, {
+      audience: ACCESS_TEST_AUDIENCE,
+      issuer: ACCESS_TEST_APP_ISSUER,
       trustBoundThumbprint: true,
-      maxTokenAge: 60,
     });
   });
 
-  test("lets the caller override the typ knob", async () => {
-    (aegis.verify as Mock).mockResolvedValue({ claims: {}, custom: {}, token: TOKEN });
+  test("returns the verified token unchanged", async () => {
+    const verified = verifiedAccess({}, TOKEN);
+    (aegis.verify as Mock).mockResolvedValue(verified);
 
-    await verifyAccessToken(aegis, TOKEN, { tokenType: "refresh_token" });
-
-    expect(aegis.verify).toHaveBeenCalledWith(
-      TOKEN,
-      undefined,
-      expect.objectContaining({ tokenType: "refresh_token" }),
-    );
+    await expect(verifyAccessToken(aegis, TOKEN, OPTIONS)).resolves.toBe(verified);
   });
 
   // The crypto layer beneath aegis throws its OWN classes — a signature of the
@@ -61,7 +71,7 @@ describe("verifyAccessToken", () => {
   ])("converts %s into a named 401", async (_label, thrown) => {
     (aegis.verify as Mock).mockRejectedValue(thrown);
 
-    await expect(verifyAccessToken(aegis, TOKEN, {})).rejects.toMatchObject({
+    await expect(verifyAccessToken(aegis, TOKEN, OPTIONS)).rejects.toMatchObject({
       status: 401,
       code: "access_token_verification_failed",
       type: "urn:lindorm:pylon:error:access_token_verification_failed",
@@ -73,7 +83,7 @@ describe("verifyAccessToken", () => {
     (aegis.verify as Mock).mockRejectedValue(cause);
 
     try {
-      await verifyAccessToken(aegis, TOKEN, {});
+      await verifyAccessToken(aegis, TOKEN, OPTIONS);
       expect.fail("expected verifyAccessToken to throw");
     } catch (error: any) {
       expect(error.details).toBe("invalid signature");
@@ -88,6 +98,6 @@ describe("verifyAccessToken", () => {
   ])("passes a %s through unchanged", async (_label, thrown) => {
     (aegis.verify as Mock).mockRejectedValue(thrown);
 
-    await expect(verifyAccessToken(aegis, TOKEN, {})).rejects.toBe(thrown);
+    await expect(verifyAccessToken(aegis, TOKEN, OPTIONS)).rejects.toBe(thrown);
   });
 });

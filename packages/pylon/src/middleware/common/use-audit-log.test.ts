@@ -1,6 +1,11 @@
 import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ACCESS_TEST_ISSUER, createTestAegis } from "../../__fixtures__/access/aegis.js";
+import {
+  ACCESS_TEST_ISSUER,
+  createTestAegis,
+  mintTestAccessToken,
+} from "../../__fixtures__/access/aegis.js";
+import { ACCESS_TEST_AUDIENCE } from "../../__fixtures__/access/tokens.js";
 import { createTestAppConfig } from "../../__fixtures__/app-config.js";
 import { useAuditLog } from "./use-audit-log.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
@@ -294,19 +299,17 @@ describe("useAuditLog", () => {
   // ⚠ A REAL minted-and-verified token, not a `{ claims: { … } }` literal: the
   // audit record's `actor` is only worth anything if it survives aegis's
   // wire→domain claim translation, and a literal cannot prove that.
+  //
+  // Minted and verified under the `access_token` PROFILE (RFC 9068) — the only
+  // shape `useAccessToken` puts on `ctx.state.tokens.accessToken`, so the token
+  // the actor resolver is handed here is the one it is handed in production.
   test("should resolve actor from a real verified access token when ctx.state.actor is 'unknown'", async () => {
     const aegis = createTestAegis(createMockLogger());
-    const { token } = await aegis.mint("default", {
-      audience: [ACCESS_TEST_ISSUER],
-      expires: "1 hour",
-      subject: "bob",
-      tokenType: "access_token",
+    const token = await mintTestAccessToken(aegis, { subject: "bob" });
+    const verified = await aegis.verify("access_token", token, undefined, {
+      audience: ACCESS_TEST_AUDIENCE,
+      issuer: ACCESS_TEST_ISSUER,
     });
-    const verified = await aegis.verify(
-      token,
-      { issuer: ACCESS_TEST_ISSUER },
-      { tokenType: "access_token" },
-    );
 
     ctx.state.actor = "unknown";
     ctx.state.tokens = { accessToken: verified };

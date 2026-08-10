@@ -199,7 +199,10 @@ describe("socket auth (dpop-bearer) e2e", () => {
       socket: {
         enabled: true,
         listeners: join(__dirname, "..", "__fixtures__", "socket-auth", "listeners"),
-        connectionMiddleware: [useAccessToken()],
+        // The mount states the resource server's own identifier (RFC 9068 §4);
+        // this pylon mints the tokens it verifies, so that is its own issuer —
+        // the `aud` `mintTestAccessToken` stamps.
+        connectionMiddleware: [useAccessToken({ audience: SOCKET_AUTH_TEST_ISSUER })],
       },
       name: "@lindorm/pylon-socket-auth-dpop-test",
       // Bind the SAME address the clients below dial. Production binds the
@@ -467,7 +470,9 @@ describe("socket auth (dpop-bearer) e2e", () => {
       socket: {
         enabled: true,
         listeners: join(__dirname, "..", "__fixtures__", "socket-auth", "listeners"),
-        connectionMiddleware: [useAccessToken({ dpop: "required" })],
+        connectionMiddleware: [
+          useAccessToken({ audience: SOCKET_AUTH_TEST_ISSUER, dpop: "required" }),
+        ],
       },
       name: "@lindorm/pylon-socket-auth-dpop-required-test",
       // Bind the SAME address the clients below dial. Production binds the
@@ -563,7 +568,12 @@ describe("socket auth (dpop-bearer) e2e", () => {
     const initial = await loginDpop("alice", 3600);
 
     // Mint a token bound to a rotated jkt using the helper directly.
-    const rotatedJkt = `${clientJkt}-rotated`;
+    //
+    // ⚠ A WELL-FORMED thumbprint that is simply a different one — 32 bytes,
+    // base64url. Suffixing the real jkt produced a string RFC 7800 does not
+    // permit, and the `access_token` profile validates `cnf` at MINT, so the
+    // fixture failed before the refresh under test ever ran.
+    const rotatedJkt = Buffer.alloc(32, 7).toString("base64url");
     const rotatedMint = await mintTestAccessToken(aegis, {
       subject: "alice",
       expiresIn: 3600,

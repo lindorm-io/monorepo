@@ -54,4 +54,38 @@ describe("splitVerifyInput", () => {
       verifyAuthTime: false,
     });
   });
+
+  /**
+   * The four keys that MOVED from `VerifyOptions` to `DomainAssert`. Routing
+   * them to `options` was the whole failure mode: aegis accepts an unknown
+   * option and DROPS it, so `tokenType` went on being sent and stopped being
+   * asserted, with nothing — not a typecheck, not a test asserting the call
+   * shape — able to see it.
+   */
+  test("routes the four MATCHERS to assert, never to options", () => {
+    const { assert, options } = splitVerifyInput({
+      tokenType: "access_token",
+      accessToken: "raw-access-token",
+      authCode: "raw-code",
+      authState: "raw-state",
+    } as any);
+
+    expect(assert).toEqual({
+      tokenType: "access_token",
+      accessToken: "raw-access-token",
+      authCode: "raw-code",
+      authState: "raw-state",
+    });
+    expect(options).toEqual({});
+  });
+
+  // The drift in the other direction: `clockTolerance` is declared on
+  // `VerifyOptions` and was missing from the list, so a per-call tolerance was
+  // routed to `assert` and rejected as an unknown claim matcher.
+  test("routes clockTolerance to options, not assert", () => {
+    const { assert, options } = splitVerifyInput({ clockTolerance: 30 } as any);
+
+    expect(assert).toEqual({});
+    expect(options).toEqual({ clockTolerance: 30 });
+  });
 });

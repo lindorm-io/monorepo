@@ -71,7 +71,10 @@ describe("socket auth (bearer) e2e", () => {
       socket: {
         enabled: true,
         listeners: join(__dirname, "..", "__fixtures__", "socket-auth", "listeners"),
-        connectionMiddleware: [useAccessToken()],
+        // The mount states the resource server's own identifier (RFC 9068 §4);
+        // this pylon mints the tokens it verifies, so that is its own issuer —
+        // the `aud` `mintTestAccessToken` stamps.
+        connectionMiddleware: [useAccessToken({ audience: SOCKET_AUTH_TEST_ISSUER })],
       },
       name: "@lindorm/pylon-socket-auth-bearer-test",
       // Bind the SAME address the clients below dial. Production binds the

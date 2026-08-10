@@ -16,6 +16,10 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusSource } from "@lindorm/proteus";
 import { afterEach, beforeEach, describe, expect, type Mock, test, vi } from "vitest";
+import {
+  ACCESS_MOUNT,
+  ACCESS_TEST_AUDIENCE,
+} from "../../../__fixtures__/access/tokens.js";
 import { CachedIntrospection } from "../../../entities/CachedIntrospection.js";
 import { CachedUserinfo } from "../../../entities/CachedUserinfo.js";
 import type { IPylonAuthDriver } from "../../../interfaces/index.js";
@@ -29,10 +33,17 @@ import { stageEncryptedField } from "../stage-encrypted-field.js";
 const ISSUER = "https://test.lindorm.io/";
 const TOKEN = "opaque-access-token";
 
+// The answer must clear the shared claim floor, not just say `active: true`: the
+// mount pins `issuer` and `audience` on BOTH arms, and an active answer that
+// names no `token_type` (RFC 7662 §2.2) is refused. The subject of this file is
+// caching, so the floor is stated once and never varied.
 const INTROSPECTION = {
   active: true,
-  subject: "alice",
+  audience: [ACCESS_TEST_AUDIENCE],
+  issuer: ISSUER,
   scope: ["openid"],
+  subject: "alice",
+  tokenType: "Bearer",
 };
 
 const PROFILE = { subject: "alice", name: "Alice Andersson" };
@@ -110,8 +121,10 @@ describe("auth cache capability", () => {
 
   const createCtx = (auth: PylonAuthSettings): any => {
     const aegis = createMockAegis();
-    // Opaque credential: nothing to verify locally, so the middleware must go to
-    // the authorization server (RFC 7662).
+    // Opaque credential. The MIDDLEWARE routes by sniffing the wire, so it never
+    // asks aegis at all — but `ctx.auth.introspect` and `ctx.auth.userinfo` each
+    // try a local verify of an explicitly passed token first, and that fast path
+    // must decline for the driver (and its cache) to be reached.
     aegis.verify.mockRejectedValue(new Error("unsupported_token_type"));
 
     return {
@@ -153,7 +166,7 @@ describe("auth cache capability", () => {
       cache: (source ?? undefined) as any,
     })(ctx, vi.fn());
 
-    await useAccessToken()(ctx, vi.fn());
+    await useAccessToken(ACCESS_MOUNT)(ctx, vi.fn());
     await ctx.auth.userinfo(TOKEN);
   };
 

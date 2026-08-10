@@ -20,19 +20,28 @@ export const mintTestAccessToken = async (
 ): Promise<MintTestAccessTokenResult> => {
   const expiresIn = input.expiresIn ?? 3600;
 
-  const signed = await aegis.mint("default", {
+  // Minted under the `access_token` PROFILE, because that is what
+  // `useAccessToken` verifies against (RFC 9068). The `default` profile stamps
+  // no `at+jwt` typ and requires no `client_id`, so a token from it is refused
+  // by the profile floor — an e2e suite minting one would be testing a
+  // credential no deployment can present.
+  //
+  // `aud` is the socket-auth pylon's own issuer: this fixture deployment mints
+  // the tokens it verifies, so its resource identity IS its issuer, and the
+  // mounts state the same constant as their `audience`.
+  const signed = await aegis.mint("access_token", {
     audience: [SOCKET_AUTH_TEST_ISSUER],
+    clientId: "socket-auth-test-client",
     expires: `${expiresIn} seconds`,
     subject: input.subject,
-    tokenType: "access_token",
     ...(input.jkt ? { confirmation: { thumbprint: input.jkt } } : {}),
   });
 
   return {
     token: signed.token,
     expiresIn,
-    // The "default" profile always derives `exp` (and therefore expiresAt)
-    // when `expires` is supplied, so this is non-null here.
+    // `expires` is always supplied above, so `exp` — and therefore expiresAt —
+    // is always derived here.
     expiresAt: signed.expiresAt!,
     signed,
   };

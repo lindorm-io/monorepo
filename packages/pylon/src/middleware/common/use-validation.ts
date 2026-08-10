@@ -1,11 +1,11 @@
-import { Aegis, type ValidateJwtOptions } from "@lindorm/aegis";
+import { Aegis, type DomainAssert } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import objectPath from "object-path";
 import type { PylonMiddleware } from "../../types/index.js";
 
 export const useValidation = (
   tokenPath: string,
-  options: ValidateJwtOptions,
+  options: DomainAssert,
 ): PylonMiddleware =>
   async function validationMiddleware(ctx, next) {
     const timer = ctx.logger.timer();

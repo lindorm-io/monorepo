@@ -1,9 +1,30 @@
-import type { IAegis, VerifiedToken, VerifyOptions } from "@lindorm/aegis";
+import type { IAegis, VerifiedToken } from "@lindorm/aegis";
 import { ClientError, ServerError } from "@lindorm/errors";
+
+export type VerifyAccessTokenOptions = {
+  /** The resource server's own identifier — the `aud` the token must contain. */
+  audience: string;
+  /** The one issuer this deployment is a party to. */
+  issuer: string;
+};
 
 /**
  * The ONE place a locally-verified access token is checked, and the ONE place a
  * verification failure becomes a 401.
+ *
+ * Verified against the `access_token` PROFILE (RFC 9068), not the profile-less
+ * verify. Three things follow, and each of them was previously either absent or
+ * a mount's to weaken:
+ *
+ * - the `typ` floor is `application/at+jwt` (RFC 9068 §2.2) — so an id_token, a
+ *   logout token or a refresh artifact presented as a bearer credential is
+ *   refused by the profile rather than by an option a deployment could override,
+ * - `aud` MUST contain this resource server's identifier (RFC 9068 §4), which is
+ *   why `audience` is a required mount option,
+ * - `iss` SCOPES the verification key lookup, not just the claim comparison, so
+ *   a colliding `kid` from another registered issuer can never produce a valid
+ *   signature. The profile-less path takes no issuer at all and had no such
+ *   scoping.
  *
  * ⚠ The conversion is scoped to THIS CALL rather than to a list of error
  * classes, because the class list cannot be kept honest: aegis's own contract is
@@ -25,14 +46,25 @@ import { ClientError, ServerError } from "@lindorm/errors";
 export const verifyAccessToken = async (
   aegis: IAegis,
   token: string,
-  options: VerifyOptions,
+  options: VerifyAccessTokenOptions,
 ): Promise<VerifiedToken> => {
   try {
     // `assert` is `undefined`: the claim matchers run once, afterwards, over the
     // resolved claims of BOTH arms.
-    return await aegis.verify(token, undefined, {
-      tokenType: "access_token",
-      ...options,
+    //
+    // ⚠ That is also what keeps pylon clear of the profiled-verify defect where a
+    // COSE token's `assert` argument is dropped: there is no assert to drop here,
+    // and a CWT access token IS reachable (`isClaimsBearingToken` accepts one).
+    //
+    // `trustBoundThumbprint` tells aegis the CALLER validates the DPoP binding —
+    // which pylon does, uniformly, in `assertDpopBinding`. Without it aegis would
+    // reject every bound token for want of a proof it was not given, and handing
+    // it the proof as well would mean verifying the same proof twice on the
+    // verified path and once on the introspected one.
+    return await aegis.verify("access_token", token, undefined, {
+      audience: options.audience,
+      issuer: options.issuer,
+      trustBoundThumbprint: true,
     });
   } catch (error: any) {
     // A named pylon error thrown from inside (nothing does today, but a future

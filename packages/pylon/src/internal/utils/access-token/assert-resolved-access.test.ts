@@ -1,57 +1,64 @@
 import { ClientError } from "@lindorm/errors";
+import type { Dict } from "@lindorm/types";
 import { describe, expect, test } from "vitest";
-import type { PylonResolvedAccess } from "../../../types/index.js";
+import {
+  ACCESS_TEST_APP_ISSUER,
+  ACCESS_TEST_AUDIENCE,
+  accessClaims,
+} from "../../../__fixtures__/access/tokens.js";
+import type { AccessTokenMatchers, PylonResolvedAccess } from "../../../types/index.js";
 import { assertResolvedAccess } from "./assert-resolved-access.js";
 
 const access = (
   provenance: PylonResolvedAccess["provenance"],
-  claims: Record<string, unknown> = {},
+  claims: Dict = {},
 ): PylonResolvedAccess =>
   ({ provenance, custom: {}, token: "the-token", claims }) as PylonResolvedAccess;
 
-describe("assertResolvedAccess", () => {
-  const ISSUER = "https://idp.test.lindorm.io";
+/** The floor every mount states: its own identity, and nothing else. */
+const MATCHERS: AccessTokenMatchers = { audience: ACCESS_TEST_AUDIENCE };
 
-  describe("issuer — the optional-bound idiom", () => {
+describe("assertResolvedAccess", () => {
+  describe("issuer — the hard match", () => {
     test("accepts a matching issuer", () => {
       expect(() =>
-        assertResolvedAccess(access("verified", { issuer: ISSUER }), {
-          issuer: ISSUER,
-          matchers: {},
+        assertResolvedAccess(access("verified", accessClaims()), {
+          issuer: ACCESS_TEST_APP_ISSUER,
+          matchers: MATCHERS,
         }),
       ).not.toThrow();
     });
 
     test("refuses a different issuer", () => {
       expect(() =>
-        assertResolvedAccess(access("verified", { issuer: "https://elsewhere.test" }), {
-          issuer: ISSUER,
-          matchers: {},
-        }),
+        assertResolvedAccess(
+          access("verified", accessClaims({ issuer: "https://elsewhere.test" })),
+          { issuer: ACCESS_TEST_APP_ISSUER, matchers: MATCHERS },
+        ),
       ).toThrow(expect.objectContaining({ code: "access_token_claims_invalid" }));
     });
 
-    // RFC 7662 §2.2 makes every introspection response member a MAY, `iss`
-    // included, and the issuer is established by which endpoint was called.
-    test("accepts an ABSENT issuer", () => {
+    // ⚠ EXPECTATION FLIPPED. An absent `iss` used to pass: the predicate was the
+    // optional-bound idiom (`$or: [{ $exists: false }, { $eq }]`) because RFC
+    // 7662 §2.2 makes `iss` a MAY. It is now a hard `{ $eq: issuer }`, and the
+    // reason is the asymmetry it created — the structured arm's profile floor
+    // rejects a mismatched `iss` unconditionally, so tolerating an ABSENT one
+    // here made the opaque arm the laxer of two arms serving the same mount. An
+    // authorization server that will not name itself cannot be pinned.
+    test("refuses an ABSENT issuer", () => {
       expect(() =>
-        assertResolvedAccess(access("introspected", { subject: "alice" }), {
-          issuer: ISSUER,
-          matchers: {},
+        assertResolvedAccess(
+          access("introspected", {
+            audience: [ACCESS_TEST_AUDIENCE],
+            subject: "alice",
+          }),
+          { issuer: ACCESS_TEST_APP_ISSUER, matchers: MATCHERS },
+        ),
+      ).toThrow(
+        expect.objectContaining({
+          data: { invalid: ["issuer"], provenance: "introspected" },
         }),
-      ).not.toThrow();
-    });
-
-    // A deployment that settled no issuer has nothing to pin an opaque
-    // credential to — so no matcher is emitted at all, rather than one that
-    // matches everything.
-    test("emits no issuer matcher when the deployment settled none", () => {
-      expect(() =>
-        assertResolvedAccess(access("introspected", { issuer: "https://whoever.test" }), {
-          issuer: null,
-          matchers: {},
-        }),
-      ).not.toThrow();
+      );
     });
   });
 
@@ -62,18 +69,21 @@ describe("assertResolvedAccess", () => {
     test("accepts a scalar audience the claim array contains", () => {
       expect(() =>
         assertResolvedAccess(
-          access("introspected", { audience: ["https://a.test", "https://b.test"] }),
-          { issuer: null, matchers: { audience: "https://a.test" } },
+          access(
+            "introspected",
+            accessClaims({ audience: ["https://a.test", ACCESS_TEST_AUDIENCE] }),
+          ),
+          { issuer: ACCESS_TEST_APP_ISSUER, matchers: MATCHERS },
         ),
       ).not.toThrow();
     });
 
     test("refuses a scalar audience the claim array lacks", () => {
       expect(() =>
-        assertResolvedAccess(access("introspected", { audience: ["https://b.test"] }), {
-          issuer: null,
-          matchers: { audience: "https://a.test" },
-        }),
+        assertResolvedAccess(
+          access("introspected", accessClaims({ audience: ["https://b.test"] })),
+          { issuer: ACCESS_TEST_APP_ISSUER, matchers: MATCHERS },
+        ),
       ).toThrow(
         expect.objectContaining({
           data: { invalid: ["audience"], provenance: "introspected" },
@@ -83,17 +93,20 @@ describe("assertResolvedAccess", () => {
 
     test("requires EVERY listed scope, not any", () => {
       expect(() =>
-        assertResolvedAccess(access("verified", { scope: ["openid", "profile"] }), {
-          issuer: null,
-          matchers: { scope: ["openid", "orders:write"] },
-        }),
+        assertResolvedAccess(
+          access("verified", accessClaims({ scope: ["openid", "profile"] })),
+          {
+            issuer: ACCESS_TEST_APP_ISSUER,
+            matchers: { ...MATCHERS, scope: ["openid", "orders:write"] },
+          },
+        ),
       ).toThrow(expect.objectContaining({ code: "access_token_claims_invalid" }));
     });
 
     test("reports EVERY failing key, not just the first", () => {
       try {
-        assertResolvedAccess(access("verified", { issuer: ISSUER, scope: ["openid"] }), {
-          issuer: ISSUER,
+        assertResolvedAccess(access("verified", accessClaims({ scope: ["openid"] })), {
+          issuer: ACCESS_TEST_APP_ISSUER,
           matchers: { audience: "https://a.test", scope: "orders:write" },
         });
         expect.fail("expected assertResolvedAccess to throw");
@@ -103,23 +116,29 @@ describe("assertResolvedAccess", () => {
     });
 
     // A caller matcher named `issuer` would be a second opinion on a value the
-    // deployment already settled. It cannot be written — `UseAccessTokenOptions`
+    // deployment already settled. It cannot be written — `AccessTokenMatchers`
     // omits it — but the spread order is what enforces it, so pin the order.
     test("a caller matcher wins the spread, so the order is pinned", () => {
       expect(() =>
-        assertResolvedAccess(access("verified", { issuer: "https://caller.test" }), {
-          issuer: ISSUER,
-          matchers: { issuer: "https://caller.test" } as any,
-        }),
+        assertResolvedAccess(
+          access("verified", accessClaims({ issuer: "https://caller.test" })),
+          {
+            issuer: ACCESS_TEST_APP_ISSUER,
+            matchers: {
+              ...MATCHERS,
+              issuer: "https://caller.test",
+            } as unknown as AccessTokenMatchers,
+          },
+        ),
       ).not.toThrow();
     });
   });
 
   test("throws a ClientError with a 401 status", () => {
     try {
-      assertResolvedAccess(access("verified", { audience: [] }), {
-        issuer: null,
-        matchers: { audience: "https://a.test" },
+      assertResolvedAccess(access("verified", accessClaims({ audience: [] })), {
+        issuer: ACCESS_TEST_APP_ISSUER,
+        matchers: MATCHERS,
       });
       expect.fail("expected assertResolvedAccess to throw");
     } catch (error: any) {
@@ -129,9 +148,15 @@ describe("assertResolvedAccess", () => {
     }
   });
 
-  test("passes an empty matcher set", () => {
+  // The narrowest matcher set a mount can express — `audience` is required, so
+  // an EMPTY one no longer type-checks and the issuer floor always runs beside
+  // it. Nothing beyond the two is asserted.
+  test("passes when the mount states only the required audience", () => {
     expect(() =>
-      assertResolvedAccess(access("verified", {}), { issuer: null, matchers: {} }),
+      assertResolvedAccess(access("verified", accessClaims()), {
+        issuer: ACCESS_TEST_APP_ISSUER,
+        matchers: MATCHERS,
+      }),
     ).not.toThrow();
   });
 });

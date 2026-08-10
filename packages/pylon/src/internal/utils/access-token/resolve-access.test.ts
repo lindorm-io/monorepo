@@ -1,15 +1,25 @@
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ServerError } from "@lindorm/errors";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
-import { OPAQUE_TOKEN, joseShapedToken } from "../../../__fixtures__/access/tokens.js";
+import {
+  ACCESS_TEST_APP_ISSUER,
+  ACCESS_TEST_AUDIENCE,
+  OPAQUE_TOKEN,
+  accessClaims,
+  introspectionAnswer,
+  joseShapedToken,
+  verifiedAccess,
+} from "../../../__fixtures__/access/tokens.js";
 import {
   createTestAppConfig,
   createTestAuthConfig,
 } from "../../../__fixtures__/app-config.js";
 import { resolveAccess } from "./resolve-access.js";
 
-const ISSUER = "https://test.lindorm.io/";
 const TOKEN = joseShapedToken();
+
+/** The one thing a caller states; the issuer is the deployment's, not the mount's. */
+const OPTIONS = { audience: ACCESS_TEST_AUDIENCE, cache: undefined };
 
 /**
  * The two arms, in ONE place — which is the whole point of the file. Everything
@@ -31,39 +41,39 @@ describe("resolveAccess", () => {
   describe("structured arm", () => {
     beforeEach(() => {
       (ctx.aegis.verify as Mock).mockResolvedValue({
-        claims: { subject: "alice", issuer: ISSUER },
+        ...verifiedAccess({ subject: "alice" }, TOKEN),
         custom: { tier: "gold" },
-        format: "jwt",
-        token: TOKEN,
       });
     });
 
     test("verifies locally and never introspects", async () => {
-      const result = await resolveAccess(ctx, TOKEN, {
-        cache: undefined,
-        verifyOptions: {},
-      });
+      const result = await resolveAccess(ctx, TOKEN, OPTIONS);
 
       expect(ctx.auth.introspect).not.toHaveBeenCalled();
       expect(result.access.provenance).toBe("verified");
-      expect(result.access.claims).toEqual({ subject: "alice", issuer: ISSUER });
+      expect(result.access.claims).toEqual(accessClaims({ subject: "alice" }));
+      // The custom bucket travels beside the registered claims on both arms.
       expect(result.access.custom).toEqual({ tier: "gold" });
       expect(result.access.token).toBe(TOKEN);
-      expect(result.issuer).toBe(ISSUER);
+      expect(result.issuer).toBe(ACCESS_TEST_APP_ISSUER);
       expect(result.verified).toBeDefined();
     });
 
-    // ⚠ `assert` is undefined and `trustBoundThumbprint` is on: the matchers are
-    // a later, shared pass, and pylon owns the DPoP binding check for both arms.
-    test("passes the verify KNOBS only, and no assert", async () => {
-      await resolveAccess(ctx, TOKEN, {
-        cache: undefined,
-        verifyOptions: { maxTokenAge: 300 },
-      });
+    // ⚠ The PROFILED overload, and the three things that follow from it: the
+    // profile NAME pins the `typ` floor (`application/at+jwt`, RFC 9068 §2.2)
+    // beyond a mount's reach, the mount's own `audience` and the deployment's
+    // resolved `issuer` are handed to the floor rather than compared afterwards
+    // (`iss` scopes the KEY lookup), and `assert` is `undefined` because the
+    // claim matchers are a later pass shared with the opaque arm.
+    //
+    // `trustBoundThumbprint` says pylon validates the DPoP binding itself, so
+    // aegis must not reject a bound token for want of a proof it was not given.
+    test("verifies against the access_token profile, with no assert", async () => {
+      await resolveAccess(ctx, TOKEN, OPTIONS);
 
-      expect(ctx.aegis.verify).toHaveBeenCalledWith(TOKEN, undefined, {
-        tokenType: "access_token",
-        maxTokenAge: 300,
+      expect(ctx.aegis.verify).toHaveBeenCalledWith("access_token", TOKEN, undefined, {
+        audience: ACCESS_TEST_AUDIENCE,
+        issuer: ACCESS_TEST_APP_ISSUER,
         trustBoundThumbprint: true,
       });
     });
@@ -75,31 +85,23 @@ describe("resolveAccess", () => {
         auth: createTestAuthConfig({ issuer: null }),
       });
 
-      await expect(
-        resolveAccess(ctx, TOKEN, { cache: undefined, verifyOptions: {} }),
-      ).rejects.toThrow(ServerError);
+      await expect(resolveAccess(ctx, TOKEN, OPTIONS)).rejects.toThrow(ServerError);
       expect(ctx.aegis.verify).not.toHaveBeenCalled();
     });
   });
 
   describe("opaque arm", () => {
     test("introspects and never verifies locally", async () => {
-      ctx.auth.introspect.mockResolvedValue({
-        active: true,
-        custom: { tier: "gold" },
-        subject: "alice",
-        tokenType: "Bearer",
-      });
+      ctx.auth.introspect.mockResolvedValue(
+        introspectionAnswer({ custom: { tier: "gold" } }),
+      );
 
-      const result = await resolveAccess(ctx, OPAQUE_TOKEN, {
-        cache: undefined,
-        verifyOptions: {},
-      });
+      const result = await resolveAccess(ctx, OPAQUE_TOKEN, OPTIONS);
 
       expect(ctx.aegis.verify).not.toHaveBeenCalled();
       expect(result.access.provenance).toBe("introspected");
       expect(result.access.custom).toEqual({ tier: "gold" });
-      expect(result.issuer).toBe(ISSUER);
+      expect(result.issuer).toBe(ACCESS_TEST_APP_ISSUER);
       // No VerifiedToken exists behind an introspection answer.
       expect(result.verified).toBeUndefined();
     });
@@ -107,25 +109,20 @@ describe("resolveAccess", () => {
     // `active` and `tokenType` describe the ANSWER, not the token. Neither has a
     // counterpart on the verified arm, so neither may reach the resolved claims.
     test("keeps the RFC 7662 response members out of the claims", async () => {
-      ctx.auth.introspect.mockResolvedValue({
-        active: true,
-        custom: {},
-        subject: "alice",
-        tokenType: "Bearer",
-      });
+      ctx.auth.introspect.mockResolvedValue(introspectionAnswer());
 
-      const result = await resolveAccess(ctx, OPAQUE_TOKEN, {
-        cache: undefined,
-        verifyOptions: {},
-      });
+      const result = await resolveAccess(ctx, OPAQUE_TOKEN, OPTIONS);
 
-      expect(result.access.claims).toEqual({ subject: "alice" });
+      expect(result.access.claims).toEqual(accessClaims());
     });
 
     test("passes the mount's cache carve-out through", async () => {
-      ctx.auth.introspect.mockResolvedValue({ active: true, custom: {} });
+      ctx.auth.introspect.mockResolvedValue(introspectionAnswer());
 
-      await resolveAccess(ctx, OPAQUE_TOKEN, { cache: false, verifyOptions: {} });
+      await resolveAccess(ctx, OPAQUE_TOKEN, {
+        audience: ACCESS_TEST_AUDIENCE,
+        cache: false,
+      });
 
       expect(ctx.auth.introspect).toHaveBeenCalledWith(OPAQUE_TOKEN, { cache: false });
     });
@@ -133,9 +130,25 @@ describe("resolveAccess", () => {
     test("refuses an inactive answer", async () => {
       ctx.auth.introspect.mockResolvedValue({ active: false });
 
-      await expect(
-        resolveAccess(ctx, OPAQUE_TOKEN, { cache: undefined, verifyOptions: {} }),
-      ).rejects.toThrow(expect.objectContaining({ code: "token_not_active" }));
+      await expect(resolveAccess(ctx, OPAQUE_TOKEN, OPTIONS)).rejects.toThrow(
+        expect.objectContaining({ code: "token_not_active" }),
+      );
+    });
+
+    // An active answer that names no `token_type` (RFC 7662 §2.2) is refused at
+    // the arm that produced it — the structured arm can never produce a
+    // credential whose type went unstated.
+    test("refuses an active answer that states no token type", async () => {
+      ctx.auth.introspect.mockResolvedValue(
+        introspectionAnswer({ tokenType: undefined }),
+      );
+
+      await expect(resolveAccess(ctx, OPAQUE_TOKEN, OPTIONS)).rejects.toThrow(
+        expect.objectContaining({
+          code: "introspection_token_type_missing",
+          status: 401,
+        }),
+      );
     });
 
     test("refuses by name when the driver cannot introspect", async () => {
@@ -145,81 +158,72 @@ describe("resolveAccess", () => {
         }),
       });
 
-      await expect(
-        resolveAccess(ctx, OPAQUE_TOKEN, { cache: undefined, verifyOptions: {} }),
-      ).rejects.toThrow(
+      await expect(resolveAccess(ctx, OPAQUE_TOKEN, OPTIONS)).rejects.toThrow(
         expect.objectContaining({ code: "opaque_token_not_supported", status: 401 }),
       );
       expect(ctx.auth.introspect).not.toHaveBeenCalled();
     });
 
-    // RFC 7662 makes the authorization server the authority on an opaque
-    // credential, so a deployment that settled no issuer still resolves one.
-    test("resolves with a null issuer when the deployment settled none", async () => {
+    // ⚠ EXPECTATION FLIPPED. This arm used to resolve with `issuer: null` — RFC
+    // 7662 makes the authorization server the authority, so an unpinned
+    // deployment was let through. That made the opaque arm the laxer of the two:
+    // the structured arm refuses the same deployment outright, and "the
+    // authority answered" is not "the answer came from OUR authority". The
+    // issuer is now resolved BEFORE the arms, so the driver is never even asked.
+    test("refuses when the deployment settled no issuer", async () => {
       ctx.state.app.config = createTestAppConfig({
         auth: createTestAuthConfig({ issuer: null }),
       });
-      ctx.auth.introspect.mockResolvedValue({ active: true, custom: {}, subject: "a" });
+      ctx.auth.introspect.mockResolvedValue(introspectionAnswer());
 
-      const result = await resolveAccess(ctx, OPAQUE_TOKEN, {
-        cache: undefined,
-        verifyOptions: {},
-      });
-
-      expect(result.issuer).toBeNull();
-      expect(result.access.provenance).toBe("introspected");
+      await expect(resolveAccess(ctx, OPAQUE_TOKEN, OPTIONS)).rejects.toThrow(
+        expect.objectContaining({ code: "access_issuer_unresolved", status: 500 }),
+      );
+      expect(ctx.auth.introspect).not.toHaveBeenCalled();
     });
 
-    // `currentDate` is a verify KNOB, and the introspected arm honours it for its
-    // own temporal check so a test (or a replay) can pin "now" for both arms.
-    test("honours currentDate for the introspect-only temporal check", async () => {
-      ctx.auth.introspect.mockResolvedValue({
-        active: true,
-        custom: {},
-        expiresAt: new Date("2026-08-10T12:00:00.000Z"),
+    // The temporal check is `Aegis.matches`'s DEFAULT window — the same builder
+    // `aegis.verify` runs — so there is no `currentDate` knob left to pin it
+    // with: the two arms read one clock. Stated against wall-clock offsets,
+    // which is what a live introspection answer is measured against anyway.
+    test("refuses an answer whose own exp has passed", async () => {
+      ctx.auth.introspect.mockResolvedValue(
+        introspectionAnswer({ expiresAt: new Date(Date.now() - 60_000) }),
+      );
+
+      await expect(resolveAccess(ctx, OPAQUE_TOKEN, OPTIONS)).rejects.toThrow(
+        expect.objectContaining({ code: "token_not_active" }),
+      );
+    });
+
+    test("accepts an answer whose own exp is still ahead", async () => {
+      ctx.auth.introspect.mockResolvedValue(
+        introspectionAnswer({ expiresAt: new Date(Date.now() + 60_000) }),
+      );
+
+      await expect(resolveAccess(ctx, OPAQUE_TOKEN, OPTIONS)).resolves.toMatchObject({
+        access: { provenance: "introspected" },
       });
-
-      await expect(
-        resolveAccess(ctx, OPAQUE_TOKEN, {
-          cache: undefined,
-          verifyOptions: { currentDate: new Date("2026-08-10T11:59:00.000Z") },
-        }),
-      ).resolves.toMatchObject({ access: { provenance: "introspected" } });
-
-      await expect(
-        resolveAccess(ctx, OPAQUE_TOKEN, {
-          cache: undefined,
-          verifyOptions: { currentDate: new Date("2026-08-10T12:01:00.000Z") },
-        }),
-      ).rejects.toThrow(expect.objectContaining({ code: "token_not_active" }));
     });
   });
 
   // Both arms produce the SAME four fields, keyed the same way. This is the
   // assumption every shared step downstream is built on.
   test("both arms produce the same access shape", async () => {
-    const claims = { subject: "alice", scope: ["openid"], issuer: ISSUER };
+    const claims = accessClaims({ scope: ["openid"] });
 
-    (ctx.aegis.verify as Mock).mockResolvedValue({
-      claims,
-      custom: {},
-      format: "jwt",
-      token: TOKEN,
-    });
-    const verified = await resolveAccess(ctx, TOKEN, {
-      cache: undefined,
-      verifyOptions: {},
-    });
+    (ctx.aegis.verify as Mock).mockResolvedValue(
+      verifiedAccess({ scope: ["openid"] }, TOKEN),
+    );
+    const verified = await resolveAccess(ctx, TOKEN, OPTIONS);
 
-    ctx.auth.introspect.mockResolvedValue({ active: true, custom: {}, ...claims });
-    const introspected = await resolveAccess(ctx, OPAQUE_TOKEN, {
-      cache: undefined,
-      verifyOptions: {},
-    });
+    ctx.auth.introspect.mockResolvedValue(introspectionAnswer({ scope: ["openid"] }));
+    const introspected = await resolveAccess(ctx, OPAQUE_TOKEN, OPTIONS);
 
     expect(Object.keys(verified.access).sort()).toEqual(
       Object.keys(introspected.access).sort(),
     );
+    expect(verified.access.claims).toEqual(claims);
     expect(introspected.access.claims).toEqual(verified.access.claims);
     expect(introspected.issuer).toBe(verified.issuer);
   });

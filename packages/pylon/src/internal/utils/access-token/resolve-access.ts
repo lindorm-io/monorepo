@@ -1,8 +1,4 @@
-import {
-  isClaimsBearingToken,
-  type VerifiedToken,
-  type VerifyOptions,
-} from "@lindorm/aegis";
+import { isClaimsBearingToken, type VerifiedToken } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import type {
   PylonAnyContext,
@@ -14,24 +10,26 @@ import { resolveAccessIssuer } from "./resolve-access-issuer.js";
 import { verifyAccessToken } from "./verify-access-token.js";
 
 export type ResolveAccessOptions = {
-  cache: PylonAuthCacheEntry | undefined;
   /**
-   * The `aegis.verify` KNOBS only — the claim matchers are asserted AFTER
-   * resolution, once, on whichever claims the arm produced
-   * ({@link import("./assert-resolved-access.js").assertResolvedAccess}).
+   * The resource server's own identifier. The structured arm hands it to the
+   * profile floor (RFC 9068 §4); the introspected arm gets it as an ordinary
+   * matcher in the shared assert, which is what makes ONE stated audience apply
+   * to both.
    */
-  verifyOptions: VerifyOptions;
+  audience: string;
+  cache: PylonAuthCacheEntry | undefined;
 };
 
 export type ResolvedAccess = {
   access: PylonResolvedAccess;
   /**
-   * The issuer the credential is pinned to. Never `null` on the structured arm —
-   * `resolveAccessIssuer` refuses to verify without one. `null` on the opaque arm
-   * of a deployment that settled no issuer, where RFC 7662 makes the
-   * authorization server the authority and there is nothing to pin.
+   * The issuer the credential is pinned to — settled at boot, required on BOTH
+   * arms. The structured arm scopes its key lookup by it; the introspected arm
+   * compares the answer's `iss` against it, because an introspection response
+   * that declines to name an issuer must not pass a check the structured arm
+   * enforces unconditionally.
    */
-  issuer: string | null;
+  issuer: string;
   /**
    * The `VerifiedToken` the STRUCTURED arm produced, and `undefined` on the
    * opaque one — there is no VerifiedToken behind an introspection answer, and
@@ -60,27 +58,28 @@ export type ResolvedAccess = {
  * server about a string it never issued.
  *
  * Each arm owns its own TEMPORAL reasoning — aegis range-checks a structured
- * token's `exp`/`nbf` with clock tolerance inside verify, while the introspected
- * arm gets `assertIntrospectionLive` — and NEITHER owns the claim matchers,
- * which are one shared pass over the result.
+ * token's `exp`/`nbf` inside verify, while the introspected arm gets
+ * `assertIntrospectionLive` — and NEITHER owns the claim matchers, which are one
+ * shared pass over the result.
+ *
+ * The ISSUER is resolved BEFORE the arms and required by both. A settled issuer
+ * is what the structured arm scopes its key lookup by and what the introspected
+ * arm compares the answer's `iss` against; letting the opaque arm run without
+ * one made "the authorization server is the authority" (RFC 7662) into "no
+ * issuer check at all", which is the laxer of the two arms and the one an
+ * attacker picks.
  */
 export const resolveAccess = async (
   ctx: PylonAnyContext,
   token: string,
   options: ResolveAccessOptions,
 ): Promise<ResolvedAccess> => {
-  if (isClaimsBearingToken(token)) {
-    const issuer = resolveAccessIssuer(ctx);
+  const issuer = resolveAccessIssuer(ctx);
 
-    // `trustBoundThumbprint` tells aegis the CALLER validates the DPoP binding
-    // — which pylon does, uniformly, in `assertDpopBinding`. Without it aegis
-    // would reject every bound token for want of a proof it was not given, and
-    // handing it the proof as well would mean verifying the same proof twice on
-    // the verified path and once on the introspected one — two implementations
-    // of one check, free to drift.
+  if (isClaimsBearingToken(token)) {
     const verified = await verifyAccessToken(ctx.aegis, token, {
-      ...options.verifyOptions,
-      trustBoundThumbprint: true,
+      audience: options.audience,
+      issuer,
     });
 
     return {
@@ -127,14 +126,15 @@ export const resolveAccess = async (
     });
   }
 
-  assertIntrospectionLive(introspection, options.verifyOptions.currentDate ?? new Date());
+  assertIntrospectionLive(introspection);
 
   // `active` and `tokenType` are RFC 7662 §2.2 facts about the ANSWER, not
   // claims of the token, so neither reaches the resolved credential: `active` is
   // a rejection signal already consumed above (it would be permanently `true`
-  // here), and `tokenType` has no counterpart on the verified path — leaving it
-  // in would put a field in `claims` that only ever appears on one provenance
-  // and that `DomainClaims` does not declare.
+  // here), and `tokenType` — RFC 6749 §7.1's presentation scheme, a homonym of
+  // the JOSE `typ` the structured arm asserts — has no counterpart in
+  // `DomainClaims`. Both are asserted BEFORE the strip — `active` just above,
+  // `tokenType` in `assertIntrospectionLive` — so dropping them loses no check.
   const { active: _active, custom, tokenType: _tokenType, ...claims } = introspection;
 
   return {
@@ -144,10 +144,7 @@ export const resolveAccess = async (
       custom,
       token,
     },
-    // RFC 7662 makes the authorization server the authority on an opaque
-    // credential, so a deployment whose driver could not settle an issuer still
-    // resolves one — there is simply nothing to pin it to.
-    issuer: ctx.state.app.config.auth.issuer,
+    issuer,
     verified: undefined,
   };
 };

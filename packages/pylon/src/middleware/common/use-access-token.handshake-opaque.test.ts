@@ -10,11 +10,17 @@ import {
   createDpopTestClient,
   type DpopTestClient,
 } from "../../__fixtures__/access/dpop.js";
-import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
+import {
+  ACCESS_MOUNT,
+  ACCESS_TEST_AUDIENCE,
+  OPAQUE_TOKEN,
+  introspectionAnswer,
+} from "../../__fixtures__/access/tokens.js";
 import {
   createTestAppConfig,
   createTestAuthConfig,
 } from "../../__fixtures__/app-config.js";
+import type { PylonIntrospectionActive } from "../../types/index.js";
 import { useAccessToken } from "./use-access-token.js";
 
 const APP_CONFIG = createTestAppConfig({
@@ -22,6 +28,23 @@ const APP_CONFIG = createTestAppConfig({
 });
 
 const HANDSHAKE_HTU = "https://api.example.com/socket.io/";
+
+const LIVE_EXPIRY = new Date("2099-01-01T00:00:00.000Z");
+
+/**
+ * An RFC 7662 answer that clears the floor for THIS suite. It restates `issuer`
+ * because the deployment here pins the real-Aegis issuer, not the one
+ * `accessClaims` defaults to — and the issuer predicate is a hard `$eq` on both
+ * arms now, so an answer that names the wrong one (or none) is refused.
+ */
+const answer = (
+  overrides: Partial<PylonIntrospectionActive> = {},
+): PylonIntrospectionActive =>
+  introspectionAnswer({
+    issuer: ACCESS_TEST_ISSUER,
+    expiresAt: LIVE_EXPIRY,
+    ...overrides,
+  });
 
 /**
  * BUG 3 — an opaque credential could not authenticate over a socket handshake AT
@@ -73,21 +96,13 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
 
   test("introspects a bare opaque handle and registers auth", async () => {
     const ctx = makeCtx(OPAQUE_TOKEN);
-    ctx.auth.introspect.mockResolvedValue({
-      active: true,
-      custom: {},
-      subject: "alice",
-      scope: ["openid"],
-      expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-    });
+    ctx.auth.introspect.mockResolvedValue(answer({ scope: ["openid"] }));
 
-    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.auth.introspect).toHaveBeenCalledWith(OPAQUE_TOKEN, { cache: undefined });
     expect(ctx.io.socket.data.pylon.auth.strategy).toBe("bearer");
-    expect(ctx.io.socket.data.pylon.auth.getExpiresAt()).toEqual(
-      new Date("2099-01-01T00:00:00.000Z"),
-    );
+    expect(ctx.io.socket.data.pylon.auth.getExpiresAt()).toEqual(LIVE_EXPIRY);
     expect(ctx.io.socket.data.pylon.access.provenance).toBe("introspected");
     expect(ctx.io.socket.data.pylon.access.claims.subject).toBe("alice");
     // No VerifiedToken exists behind an introspection answer — never synthesise one.
@@ -101,12 +116,7 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
   test("introspects a signed opaque handle (CWS) it could not even parse before", async () => {
     const cws = await mintOpaqueCws(aegis);
     const ctx = makeCtx(cws);
-    ctx.auth.introspect.mockResolvedValue({
-      active: true,
-      custom: {},
-      subject: "alice",
-      expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-    });
+    ctx.auth.introspect.mockResolvedValue(answer());
 
     // The preflight the old handshake arm ran, still refusing this credential —
     // so the test states WHY the old path could not serve it.
@@ -114,7 +124,7 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
       expect.objectContaining({ code: "parse_requires_claims" }),
     );
 
-    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
     expect(ctx.io.socket.data.pylon.access.provenance).toBe("introspected");
     expect(next).toHaveBeenCalledTimes(1);
   });
@@ -123,11 +133,25 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
     const ctx = makeCtx(OPAQUE_TOKEN);
     ctx.auth.introspect.mockResolvedValue({ active: false });
 
-    await expect(useAccessToken()(ctx, next)).rejects.toMatchObject({
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toMatchObject({
       status: 401,
       code: "token_not_active",
     });
     expect(ctx.io.socket.data.pylon.auth).toBeUndefined();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  // ⚠ NEW REFUSAL. RFC 7662 §2.2 `token_type` is asserted PRESENT: the structured
+  // arm can never produce a credential whose type went unstated, so an answer of
+  // bare `{ active: true, … }` must not be the one shape that slips past.
+  test("refuses an active handle whose answer declares no token_type", async () => {
+    const ctx = makeCtx(OPAQUE_TOKEN);
+    ctx.auth.introspect.mockResolvedValue({ ...answer(), tokenType: undefined });
+
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toMatchObject({
+      status: 401,
+      code: "introspection_token_type_missing",
+    });
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -140,7 +164,7 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
       }),
     });
 
-    await expect(useAccessToken()(ctx, next)).rejects.toMatchObject({
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toMatchObject({
       status: 401,
       code: "opaque_token_not_supported",
     });
@@ -149,16 +173,12 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
 
   test("applies the mount's matchers to the introspected handshake credential", async () => {
     const ctx = makeCtx(OPAQUE_TOKEN);
-    ctx.auth.introspect.mockResolvedValue({
-      active: true,
-      custom: {},
-      subject: "alice",
-      audience: ["https://other.test.lindorm.io"],
-      expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-    });
+    ctx.auth.introspect.mockResolvedValue(
+      answer({ audience: ["https://other.test.lindorm.io"] }),
+    );
 
     await expect(
-      useAccessToken({ audience: "https://api.test.lindorm.io" })(ctx, next),
+      useAccessToken({ audience: ACCESS_TEST_AUDIENCE })(ctx, next),
     ).rejects.toMatchObject({
       status: 401,
       code: "access_token_claims_invalid",
@@ -169,14 +189,9 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
 
   test("honours the mount's introspection cache carve-out", async () => {
     const ctx = makeCtx(OPAQUE_TOKEN);
-    ctx.auth.introspect.mockResolvedValue({
-      active: true,
-      custom: {},
-      subject: "alice",
-      expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-    });
+    ctx.auth.introspect.mockResolvedValue(answer());
 
-    await useAccessToken({ cache: false })(ctx, next);
+    await useAccessToken({ ...ACCESS_MOUNT, cache: false })(ctx, next);
 
     expect(ctx.auth.introspect).toHaveBeenCalledWith(OPAQUE_TOKEN, { cache: false });
   });
@@ -196,13 +211,9 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
     });
 
     const introspectsBound = (ctx: any): void => {
-      ctx.auth.introspect.mockResolvedValue({
-        active: true,
-        custom: {},
-        subject: "alice",
-        confirmation: { thumbprint: client.jkt },
-        expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-      });
+      ctx.auth.introspect.mockResolvedValue(
+        answer({ confirmation: { thumbprint: client.jkt } }),
+      );
     };
 
     test("accepts a valid proof and records the dpop-bearer strategy", async () => {
@@ -214,7 +225,7 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
       const ctx = makeCtx(OPAQUE_TOKEN, proof);
       introspectsBound(ctx);
 
-      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
       expect(ctx.io.socket.data.pylon.auth.strategy).toBe("dpop-bearer");
       expect(next).toHaveBeenCalledTimes(1);
@@ -224,7 +235,7 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
       const ctx = makeCtx(OPAQUE_TOKEN);
       introspectsBound(ctx);
 
-      await expect(useAccessToken()(ctx, next)).rejects.toMatchObject({
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toMatchObject({
         code: "missing_dpop_proof",
         data: { provenance: "introspected" },
       });
@@ -239,7 +250,7 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
       const ctx = makeCtx(OPAQUE_TOKEN, proof);
       introspectsBound(ctx);
 
-      await expect(useAccessToken()(ctx, next)).rejects.toMatchObject({
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toMatchObject({
         code: "dpop_htu_mismatch",
       });
     });
@@ -254,7 +265,7 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
       introspectsBound(ctx);
 
       await expect(
-        useAccessToken({ dpop: "required" })(ctx, next),
+        useAccessToken({ ...ACCESS_MOUNT, dpop: "required" })(ctx, next),
       ).resolves.toBeUndefined();
       expect(ctx.io.socket.data.pylon.auth.strategy).toBe("dpop-bearer");
     });
@@ -266,16 +277,11 @@ describe("useAccessToken — handshake with an OPAQUE credential", () => {
         accessToken: OPAQUE_TOKEN,
       });
       const ctx = makeCtx(OPAQUE_TOKEN, proof);
-      ctx.auth.introspect.mockResolvedValue({
-        active: true,
-        custom: {},
-        subject: "alice",
-        expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-      });
+      ctx.auth.introspect.mockResolvedValue(answer());
 
-      await expect(useAccessToken({ dpop: "required" })(ctx, next)).rejects.toMatchObject(
-        { code: "handshake_dpop_binding_missing" },
-      );
+      await expect(
+        useAccessToken({ ...ACCESS_MOUNT, dpop: "required" })(ctx, next),
+      ).rejects.toMatchObject({ code: "handshake_dpop_binding_missing" });
     });
   });
 });

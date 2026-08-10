@@ -1,4 +1,3 @@
-import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { logResolvedAccess } from "../../internal/utils/access-token/log-resolved-access.js";
 import { runHandshakeAccessToken } from "../../internal/utils/access-token/run-handshake-access-token.js";
@@ -9,15 +8,21 @@ import {
   isSocketEventContext,
   isSocketHandshakeContext,
 } from "../../internal/utils/is-context.js";
-import { splitVerifyInput } from "../../internal/utils/tokens/split-verify-input.js";
 import type {
+  AccessTokenMatchers,
   HandshakeDpopMode,
   PylonAnyContext,
   PylonAnyMiddleware,
   PylonAuthCacheEntry,
 } from "../../types/index.js";
 
-export type UseAccessTokenOptions = Omit<DomainAssert & VerifyOptions, "issuer"> & {
+/**
+ * Almost 1:1 the `useAccess` surface — the same {@link AccessTokenMatchers}
+ * vocabulary — plus the two knobs that are genuinely pylon's own. See
+ * {@link AccessTokenMatchers} for why `audience` is required and why the other
+ * five matcher keys are not a mount's to state.
+ */
+export type UseAccessTokenOptions = AccessTokenMatchers & {
   /**
    * Per-mount control of the RFC 7662 introspection cache — tier ONE of the TTL
    * resolution (`cache.ttl` ?? `settings.auth.cache.introspection.ttl` ?? ten
@@ -68,24 +73,18 @@ export type UseAccessTokenOptions = Omit<DomainAssert & VerifyOptions, "issuer">
  * `createTokenMiddleware({ issuer })` is the DIFFERENT case and keeps its
  * option: it accepts tokens from issuers that are not ours, of which amphora
  * carries an array.
+ *
+ * ⚠ It REQUIRES an audience — the resource server's own identifier. Only the
+ * mount knows it, RFC 9068 §4 makes validating it mandatory, and it is what
+ * lets the structured arm verify against the `access_token` profile at all.
  */
-export const useAccessToken = (
-  options: UseAccessTokenOptions = {},
-): PylonAnyMiddleware => {
-  // `cache` and `dpop` are pylon's own knobs and are split off HERE:
-  // `splitVerifyInput` routes every key it does not recognise as a verify option
-  // into the aegis `assert` bag, where an unknown key is rejected as a claim
-  // matcher.
-  const { cache, dpop, ...verifyInput } = options;
+export const useAccessToken = (options: UseAccessTokenOptions): PylonAnyMiddleware => {
+  // `cache` and `dpop` are pylon's own knobs; EVERYTHING else on this surface is
+  // a claim matcher, so the rest travels down as one bag. There is no
+  // knob/matcher partition to compute — the option type draws that line, instead
+  // of a hand-maintained key list restating an aegis type pylon does not own.
+  const { cache, dpop, ...matchers } = options;
   const dpopMode: HandshakeDpopMode = dpop ?? "optional";
-
-  // Split ONCE, at mount time. The two halves then travel apart all the way
-  // down: the KNOBS are per-arm (aegis owns a structured token's temporal range
-  // check; the introspected arm owns its own), while the MATCHERS are shared and
-  // run once over whichever claims came back.
-  const { assert: matchers, options: verifyOptions } = splitVerifyInput(
-    verifyInput as DomainAssert & VerifyOptions,
-  );
 
   return async function useAccessTokenMiddleware(
     ctx: PylonAnyContext,
@@ -95,7 +94,7 @@ export const useAccessToken = (
 
     try {
       if (isSocketHandshakeContext(ctx)) {
-        await runHandshakeAccessToken(ctx, { cache, dpopMode, matchers, verifyOptions });
+        await runHandshakeAccessToken(ctx, { cache, dpopMode, matchers });
         timer.debug("Access token verified (handshake)", {
           strategy: ctx.io.socket.data.pylon.auth?.strategy,
         });
@@ -104,7 +103,7 @@ export const useAccessToken = (
         timer.debug("Access token fast-path accepted", { expiresAt, strategy });
         logResolvedAccess(ctx);
       } else if (isHttpContext(ctx)) {
-        await runHttpAccessToken(ctx, { cache, matchers, verifyOptions });
+        await runHttpAccessToken(ctx, { cache, matchers });
         timer.debug("Access token verified (http)");
         logResolvedAccess(ctx);
       } else {

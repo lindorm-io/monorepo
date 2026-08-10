@@ -1,8 +1,16 @@
 import type { IAegis } from "@lindorm/aegis";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeAll, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
-import { ACCESS_TEST_ISSUER, createTestAegis } from "../../__fixtures__/access/aegis.js";
-import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
+import {
+  ACCESS_TEST_ISSUER,
+  createTestAegis,
+  mintTestAccessToken,
+} from "../../__fixtures__/access/aegis.js";
+import {
+  ACCESS_TEST_AUDIENCE,
+  OPAQUE_TOKEN,
+  introspectionAnswer,
+} from "../../__fixtures__/access/tokens.js";
 import {
   createTestAppConfig,
   createTestAuthConfig,
@@ -13,7 +21,8 @@ const APP_CONFIG = createTestAppConfig({
   auth: createTestAuthConfig({ issuer: ACCESS_TEST_ISSUER }),
 });
 
-const SELF = "https://api.test.lindorm.io";
+/** This resource server's own identity — what every mount here declares. */
+const SELF = ACCESS_TEST_AUDIENCE;
 const ELSEWHERE = "https://other.test.lindorm.io";
 
 /**
@@ -32,13 +41,20 @@ const ELSEWHERE = "https://other.test.lindorm.io";
  * Every test here is written as a PAIR — the same claim, the same matcher, once
  * per provenance — because a check that holds on only one arm is the bug.
  *
+ * ⚠ The two arms now refuse a wrong AUDIENCE for different reasons, and the pair
+ * is what proves both do it. `audience` is a REQUIRED mount option and is handed
+ * to the `access_token` profile floor, so the structured arm refuses inside
+ * verify (RFC 9068 §4); the introspected arm has no profile, so its audience is
+ * an ordinary matcher in the shared assert. Same verdict, two mechanisms, one
+ * stated audience.
+ *
  * ⚠ `audience` is a SCALAR matcher against an ARRAY-valued claim ("aud contains
- * this one identity", RFC 9068 §4). That is the form a resource server writes
- * for itself, and it is the form `Aegis.assert` refused until the registry-driven
- * lift landed — so an audience gate applied to `ctx.state.access.claims` would
- * have refused every correctly self-audienced token. Both halves had to be true
- * before this could be closed, which is why the ACCEPT cases below matter as
- * much as the REJECT ones.
+ * this one identity"). That is the form a resource server writes for itself, and
+ * it is the form `Aegis.assert` refused until the registry-driven lift landed —
+ * so an audience gate applied to `ctx.state.access.claims` would have refused
+ * every correctly self-audienced token. Both halves had to be true before this
+ * could be closed, which is why the ACCEPT cases below matter as much as the
+ * REJECT ones.
  */
 describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
   let aegis: IAegis;
@@ -58,26 +74,22 @@ describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
     },
   });
 
-  /** A REAL signed JWT — the structured arm resolves it locally. */
-  const mintJwt = async (claims: Record<string, unknown>): Promise<string> =>
-    (
-      await aegis.mint("default", {
-        expires: "1 hour",
-        subject: "alice",
-        tokenType: "access_token",
-        ...claims,
-      } as any)
-    ).token;
+  /**
+   * A REAL signed access token — the structured arm resolves it locally.
+   *
+   * ⚠ Exactly ONE audience. The `access_token` profile resolves `aud` to a single
+   * resource (RFC 9068 + ADR-0014) and refuses to MINT a multi-audience token, so
+   * the "aud contains this one among several" shape is only expressible on the
+   * introspected arm below.
+   */
+  const mintJwt = (claims: Record<string, unknown>): Promise<string> =>
+    mintTestAccessToken(aegis, claims);
 
   /** The introspection answer for the opaque handle, in domain form. */
   const introspects = (ctx: any, claims: Record<string, unknown>): void => {
-    ctx.auth.introspect.mockResolvedValue({
-      active: true,
-      custom: {},
-      issuer: ACCESS_TEST_ISSUER,
-      subject: "alice",
-      ...claims,
-    });
+    ctx.auth.introspect.mockResolvedValue(
+      introspectionAnswer({ issuer: ACCESS_TEST_ISSUER, ...claims }),
+    );
   };
 
   beforeAll(() => {
@@ -89,13 +101,17 @@ describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
   });
 
   describe("audience", () => {
+    // ⚠ EXPECTATION FLIPPED — same refusal, different reason. `audience` is now
+    // handed to the profiled verify, so RFC 9068 §4's "aud MUST contain the
+    // resource server's identity" refuses the token inside `verifyAccessToken`,
+    // before the shared assert ever sees it. It used to reach the assert and come
+    // back as `access_token_claims_invalid`.
     test("VERIFIED: refuses a token audienced elsewhere", async () => {
       const ctx = makeCtx(await mintJwt({ audience: [ELSEWHERE] }));
 
       await expect(useAccessToken({ audience: SELF })(ctx, next)).rejects.toMatchObject({
         status: 401,
-        code: "access_token_claims_invalid",
-        data: { invalid: ["audience"], provenance: "verified" },
+        code: "access_token_verification_failed",
       });
       expect(ctx.state.access).toBeNull();
       expect(next).not.toHaveBeenCalled();
@@ -116,8 +132,8 @@ describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    test("VERIFIED: accepts a token whose aud contains this resource", async () => {
-      const ctx = makeCtx(await mintJwt({ audience: [SELF, ELSEWHERE] }));
+    test("VERIFIED: accepts a token whose aud is this resource", async () => {
+      const ctx = makeCtx(await mintJwt({ audience: [SELF] }));
 
       await expect(
         useAccessToken({ audience: SELF })(ctx, next),
@@ -139,18 +155,25 @@ describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
 
     // A credential carrying NO audience satisfies no audience gate. The matcher
     // is "contains this one identity", and an absent claim contains nothing.
-    test.each(["verified", "introspected"] as const)(
-      "%s: refuses a credential with no audience at all",
-      async (provenance) => {
-        const ctx =
-          provenance === "verified" ? makeCtx(await mintJwt({})) : makeCtx(OPAQUE_TOKEN);
-        if (provenance === "introspected") introspects(ctx, {});
+    //
+    // ⚠ INTROSPECTED ONLY, and not by choice: the structured arm cannot present
+    // this shape at all. `audience` is in the `access_token` profile's `required`
+    // set, so a token without one cannot be minted, and the verify floor rejects
+    // one unconditionally before any matcher runs.
+    test("INTROSPECTED: refuses a handle with no audience at all", async () => {
+      const ctx = makeCtx(OPAQUE_TOKEN);
+      const { audience: _none, ...noAudience } = introspectionAnswer({
+        issuer: ACCESS_TEST_ISSUER,
+      });
+      ctx.auth.introspect.mockResolvedValue(noAudience);
 
-        await expect(useAccessToken({ audience: SELF })(ctx, next)).rejects.toMatchObject(
-          { status: 401, data: { invalid: ["audience"] } },
-        );
-      },
-    );
+      await expect(useAccessToken({ audience: SELF })(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        code: "access_token_claims_invalid",
+        data: { invalid: ["audience"] },
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
   });
 
   describe("scope", () => {
@@ -191,51 +214,50 @@ describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
   });
 
   /**
-   * The issuer matcher is the OPTIONAL-BOUND idiom, and it is correct for both
-   * arms for different reasons — strict where the claim is guaranteed, tolerant
-   * where the RFC makes it optional.
+   * ⚠ The issuer is a HARD `$eq` on BOTH arms now. It used to be the
+   * optional-bound idiom (`$or: [{ $exists: false }, { $eq }]`) on the grounds
+   * that RFC 7662 §2.2 makes every response member a MAY — but the structured
+   * arm's profile floor rejects a mismatched `iss` unconditionally, so tolerating
+   * an absent one made the opaque arm the laxer of two arms serving one mount.
+   * An authorization server that will not name itself is one this deployment
+   * cannot pin, and pinning is the whole point.
    */
   describe("issuer", () => {
-    test("VERIFIED: a structured token always carries iss, so the check is hard", async () => {
-      // Minted by a DIFFERENT aegis, so its `iss` is not the one this deployment
-      // pins. The signature still verifies — the key is registered under the
-      // other issuer — so what refuses it is the issuer matcher, not the crypto.
-      const other = createTestAegis(createMockLogger());
-      const foreign = await other.mint("default", {
-        audience: [SELF],
-        expires: "1 hour",
-        subject: "alice",
-        tokenType: "access_token",
-      });
-
-      const ctx = makeCtx(foreign.token);
+    test("VERIFIED: a token from another issuer is refused inside verify", async () => {
+      // The deployment pins an issuer this token does not carry. That issuer now
+      // SCOPES the key lookup as well as the floor's `iss` comparison, so the
+      // refusal happens inside `verifyAccessToken` rather than in the shared
+      // assert — a colliding `kid` from another registered issuer can never
+      // produce a valid signature.
+      const ctx = makeCtx(await mintJwt({ audience: [SELF] }));
       ctx.state.app.config = createTestAppConfig({
         auth: createTestAuthConfig({ issuer: "https://elsewhere.test.lindorm.io" }),
       });
 
-      await expect(useAccessToken()(ctx, next)).rejects.toMatchObject({ status: 401 });
+      await expect(useAccessToken({ audience: SELF })(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        code: "access_token_verification_failed",
+      });
       expect(next).not.toHaveBeenCalled();
     });
 
-    // RFC 7662 §2.2 makes every response member a MAY, `iss` included — and the
-    // issuer is already established by WHICH endpoint was called. An answer that
-    // omits it is not a mismatch.
-    test("INTROSPECTED: an answer with no iss is accepted", async () => {
+    // ⚠ EXPECTATION FLIPPED. This used to accept an answer with no `iss`. The
+    // predicate is a hard `$eq` now, so an answer that declines to name an issuer
+    // is refused — see the note above.
+    test("INTROSPECTED: an answer with no iss is refused", async () => {
       const ctx = makeCtx(OPAQUE_TOKEN);
-      ctx.auth.introspect.mockResolvedValue({
-        active: true,
-        custom: {},
-        subject: "alice",
-        audience: [SELF],
-      });
+      const { issuer: _none, ...noIssuer } = introspectionAnswer({ audience: [SELF] });
+      ctx.auth.introspect.mockResolvedValue(noIssuer);
 
-      await expect(
-        useAccessToken({ audience: SELF })(ctx, next),
-      ).resolves.toBeUndefined();
-      expect(ctx.state.access.provenance).toBe("introspected");
+      await expect(useAccessToken({ audience: SELF })(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        code: "access_token_claims_invalid",
+        data: { invalid: ["issuer"], provenance: "introspected" },
+      });
+      expect(next).not.toHaveBeenCalled();
     });
 
-    // …but an answer that DOES state an issuer must state ours.
+    // …and an answer that states a DIFFERENT issuer is refused the same way.
     test("INTROSPECTED: an answer naming a different iss is refused", async () => {
       const ctx = makeCtx(OPAQUE_TOKEN);
       introspects(ctx, { issuer: "https://elsewhere.test.lindorm.io", audience: [SELF] });
@@ -247,20 +269,25 @@ describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    // A deployment that settled no issuer still resolves opaque credentials —
-    // there is simply nothing to pin them to — and must not start failing now
-    // that the assert is shared.
-    test("INTROSPECTED: no issuer resolved means no issuer matcher", async () => {
+    // ⚠ EXPECTATION FLIPPED. A deployment that settled no issuer used to resolve
+    // opaque credentials with no issuer matcher at all. `resolveAccessIssuer` now
+    // runs BEFORE both arms and refuses the request by name: an absent issuer is
+    // not a weaker check, it is NO check, and it is a deployment fault (500), not
+    // a bad credential.
+    test("INTROSPECTED: no issuer resolved refuses the request outright", async () => {
       const ctx = makeCtx(OPAQUE_TOKEN);
       ctx.state.app.config = createTestAppConfig({
         auth: createTestAuthConfig({ issuer: null }),
       });
       introspects(ctx, { issuer: "https://whoever.test.lindorm.io", audience: [SELF] });
 
-      await expect(
-        useAccessToken({ audience: SELF })(ctx, next),
-      ).resolves.toBeUndefined();
-      expect(next).toHaveBeenCalledTimes(1);
+      await expect(useAccessToken({ audience: SELF })(ctx, next)).rejects.toMatchObject({
+        code: "access_issuer_unresolved",
+        type: "urn:lindorm:pylon:error:access_issuer_unresolved",
+        data: { auth: "unresolved" },
+      });
+      expect(ctx.auth.introspect).not.toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
     });
   });
 

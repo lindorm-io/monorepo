@@ -1,19 +1,28 @@
-import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import type { PylonAuthCacheEntry, PylonHttpContext } from "../../../types/index.js";
+import type {
+  AccessTokenMatchers,
+  PylonAuthCacheEntry,
+  PylonHttpContext,
+} from "../../../types/index.js";
 import { assertDpopBinding } from "../dpop/assert-dpop-binding.js";
 import { extractTokenFromSession } from "../tokens/extract-token-from-session.js";
 import { resolveHttpTokenSource } from "../tokens/resolve-http-token-source.js";
 import { sessionResolvedAccess } from "../tokens/session-resolved-access.js";
 import { assertResolvedAccess } from "./assert-resolved-access.js";
 import { resolveAccess } from "./resolve-access.js";
+import { resolveAccessIssuer } from "./resolve-access-issuer.js";
 
 type Options = {
   cache: PylonAuthCacheEntry | undefined;
-  matchers: DomainAssert;
-  verifyOptions: VerifyOptions;
+  matchers: AccessTokenMatchers;
 };
 
+/**
+ * The HTTP layer that OBTAINS a credential. Everything after the obtain is the
+ * shared code — `resolveAccess`, then the ONE `assertResolvedAccess` pass — so a
+ * matcher stated on the mount applies the same way whichever way the credential
+ * arrived, header or cookie.
+ */
 export const runHttpAccessToken = async (
   ctx: PylonHttpContext,
   options: Options,
@@ -38,8 +47,8 @@ export const runHttpAccessToken = async (
     }
 
     const { access, issuer, verified } = await resolveAccess(ctx, source.token, {
+      audience: options.matchers.audience,
       cache: options.cache,
-      verifyOptions: options.verifyOptions,
     });
 
     assertResolvedAccess(access, { issuer, matchers: options.matchers });
@@ -72,17 +81,28 @@ export const runHttpAccessToken = async (
       });
     }
 
+    const access = sessionResolvedAccess(source.session.accessToken, parsed);
+
+    // The cookie-session arm answers to the SAME assert as the header arms.
+    // There are no sessions without a settled issuer — the session was minted by
+    // this deployment — so it has no reason to sit outside: leaving it out meant
+    // a mount's `audience` (and every other matcher) silently did not apply to a
+    // browser-presented credential.
+    assertResolvedAccess(access, {
+      issuer: resolveAccessIssuer(ctx),
+      matchers: options.matchers,
+    });
+
     ctx.state.tokens.accessToken = parsed;
-    // A cookie-session credential is presented by the browser, not by a DPoP
-    // client — there is no proof to bind it to, so no binding check runs (the
-    // pre-existing behaviour: the session path never passed a proof to aegis).
-    //
-    // ⚠ It does not run the shared assert either, and that is a KNOWN gap rather
-    // than a decision: `extractTokenFromSession` verifies with no issuer matcher
-    // and no mount matchers at all, so making it answer to them is a change of
-    // its own (a deployment that settled no issuer but serves cookie sessions
-    // would start failing here). It is left exactly as it was.
-    ctx.state.access = sessionResolvedAccess(source.session.accessToken, parsed);
+    ctx.state.access = access;
+
+    // ⚠ No `assertDpopBinding` here, and that is not an omission. A cookie
+    // credential carries no proof, and `extractTokenFromSession` verifies with
+    // aegis's RFC 9449-strict default (no `trustBoundThumbprint`), which REFUSES
+    // a `cnf.jkt`-bound token outright — so a bound credential never reaches this
+    // line and a binding check placed after it would be unreachable. The header
+    // arms need their own check precisely because they DO pass
+    // `trustBoundThumbprint` in order to own the proof comparison themselves.
     return;
   }
 

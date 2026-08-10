@@ -587,15 +587,15 @@ const app = new Pylon({
   socket: {
     enabled: true,
     listeners: "./src/listeners",
-    connectionMiddleware: [useAccessToken()],
+    connectionMiddleware: [useAccessToken({ audience: "https://api.example.com" })],
   },
   // …
 });
 ```
 
 `useAccessToken` is the SAME mount used on an http router and on a socket
-listener — it dispatches on the context it is handed, and takes no issuer (see
-[Authentication](#authentication)).
+listener — it dispatches on the context it is handed. It takes no issuer and
+requires an audience (see [Authentication](#authentication)).
 
 ### Auth refresh protocol
 
@@ -678,8 +678,9 @@ import {
   useAccessToken,
 } from "@lindorm/pylon";
 
-// No issuer: it verifies against `auth.driver`'s, resolved once at boot.
-const accessAuth = useAccessToken({ audience: "my-api" });
+// No issuer — it verifies against `auth.driver`'s, resolved once at boot.
+// The audience is REQUIRED: it is this service's own identifier.
+const accessAuth = useAccessToken({ audience: "https://my-api.example.com" });
 
 const basicAuth = createBasicAuthMiddleware([{ username: "admin", password: "secret" }]);
 
@@ -712,13 +713,21 @@ One mount, because a deployment that had to mount a request/event middleware and
 
 ⚠ **It takes no `issuer`.** The issuer is `ctx.state.app.config.auth.issuer`, settled once at boot by amphora for the scope `auth.driver` named — a per-mount issuer would restate a deployment constant, free to disagree with the keys verification actually runs against. A service that mints the tokens it verifies configures `new JwtDriver({ issuer: "self" })`; a resource server pinning an upstream with no discovery document uses `"idp"`.
 
-Verifying with no issuer matcher is not a weaker check but NO check, so the LOCAL paths refuse by name (`access_issuer_unresolved`, 500) when no `auth` block resolved one. The opaque path never asks — RFC 7662 makes the authorization server the authority there — so a deployment that only accepts opaque tokens mounts this legitimately with no issuer resolved.
+Verifying with no issuer matcher is not a weaker check but NO check, so a mount refuses by name (`access_issuer_unresolved`, 500) when no `auth` block resolved one — on **both** credential routes. RFC 7662 makes the authorization server the authority on an opaque credential, but "the authority answered" is not "the answer came from OUR authority", and letting the opaque route skip the comparison made it the laxer of two routes serving one mount.
+
+⚠ **It REQUIRES an `audience`** — this service's own identifier. Only the mount knows it, RFC 9068 §4 has a resource server validate `aud`, and it is what lets the local route verify against the access-token profile at all. A mount that stated one used to have it applied on the locally-verified route alone, so a JWT audienced elsewhere was refused while the opaque handle for the same wrong audience was served.
 
 `{ dpop: "required" | "optional" | "disabled" }` sets how strictly the HANDSHAKE treats DPoP (default `"optional"`). It is handshake-only: on HTTP the scheme states the intent per request.
 
 `{ cache }` narrows the RFC 7662 introspection cache for this mount, and applies wherever an opaque credential is resolved — the socket handshake as well as HTTP.
 
-Every other option is an aegis **claim matcher** (`audience`, `scope`, `roles`, …) or an aegis **verify knob** (`maxTokenAge`, `currentDate`, …). The knobs go to the local verify; the matchers are asserted once, afterwards, over the resolved claims — see below.
+Every other option is an aegis **claim matcher** (`audience`, `scope`, `roles`, …), asserted once over the resolved claims — see below. There are **no verify knobs**: they change how the check runs, and a route is not the place to loosen a deployment's verification policy. Five matcher keys are excluded for their own reasons:
+
+| Excluded                                 | Why                                                                                                                                          |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `issuer`                                 | derived from the resolved auth issuer; a per-mount copy of a deployment constant is free to disagree with the keys verification runs against |
+| `tokenType`                              | overridable only by letting a deployment accept an **id token** as a bearer credential. The `at+jwt` profile floor is the only answer        |
+| `accessToken` / `authCode` / `authState` | the OIDC Core §3.1.3.6 hash-derive inputs — an id token's question; on an access-token mount there is no second artifact to hash             |
 
 `createTokenMiddleware({ issuer })` is the DIFFERENT job and keeps its per-mount issuer: it accepts tokens from issuers that are **not** ours — `amphora.external`, of which a service may hold several — while `useAccessToken` pins the one issuer this deployment is a party to.
 
@@ -732,6 +741,8 @@ The sniff asks whether aegis can establish the credential's **claims** locally (
 | ------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------- |
 | JWT / CWT / CWM, or a sign-then-encrypt JWE / CWE | verified locally against your keys      | `ctx.state.access` **and** `ctx.state.tokens.accessToken`        |
 | opaque — a handle, or a signed JWS / CWS          | `ctx.auth.introspect(token)` (RFC 7662) | `ctx.state.access` only — there is no `VerifiedToken` to publish |
+
+The local verify is the **`access_token` profile** (RFC 9068), not a bare signature check: the artifact must declare `typ: application/at+jwt` (`application/at+cwt` on the COSE wire), name this deployment's issuer, contain the mount's `audience`, and carry `sub`/`client_id`/`iat`/`jti`/`exp`. That is what makes the credential's TYPE unforgeable by configuration — an id token presented as a bearer credential is refused by the profile floor, not by an option a deployment could relax — and it scopes the verification key lookup to the pinned issuer, so a colliding `kid` from another registered issuer can never produce a valid signature.
 
 Both paths produce the same four-field shape, so every downstream gate reads one place:
 
@@ -751,13 +762,13 @@ ctx.state.access; // PylonResolvedAccess | null
 const { tenantTier } = ctx.state.access!.custom as { tenantTier?: string };
 ```
 
-The RFC 7662 response members that describe the ANSWER rather than the token — `active` and `token_type` — are kept out of the bucket, and off the resolved credential entirely. RFC 7662 `username` is the opposite case: an authorization server that can report one means a token can carry one, so it is a registered aegis claim and arrives at `access.claims.username` on **both** paths. (It is not OIDC's `preferred_username`, which is a profile field — see below.) And `custom` is reserved at the top level of an introspection answer: a server returning a member literally named `custom` gets it back at `access.custom.custom`, not shadowing the bucket.
+The RFC 7662 response members that describe the ANSWER rather than the token — `active` and `token_type` — are kept out of the bucket, and off the resolved credential entirely. They are still ASSERTED first: an answer that states no `token_type` is refused (`introspection_token_type_missing`, 401), because the local route can never produce a credential whose type went unstated and a bare `{ active: true }` must not be the one shape that slips past. RFC 7662 `username` is the opposite case: an authorization server that can report one means a token can carry one, so it is a registered aegis claim and arrives at `access.claims.username` on **both** paths. (It is not OIDC's `preferred_username`, which is a profile field — see below.) And `custom` is reserved at the top level of an introspection answer: a server returning a member literally named `custom` gets it back at `access.custom.custom`, not shadowing the bucket.
 
 `cnf` lives inside `claims.confirmation`, so it is not repeated on the outside; there is no `header` field (an opaque token has none, and a JWT's is derivable from `token`) and no `active` field (an inactive token throws `token_not_active` instead of resolving).
 
-##### Claim matchers apply to BOTH routes
+##### Claim matchers apply to BOTH routes, and to every way a credential arrives
 
-A matcher stated on the mount is asserted **after** resolution, over `access.claims`:
+A matcher stated on the mount is asserted **after** resolution, over `access.claims` — for a bearer, a DPoP-presented credential, an introspected handle, and a cookie SESSION alike. The session arm used to sit outside it, so a mount's `audience` silently did not apply to a browser-presented credential:
 
 ```typescript
 router.use(
@@ -769,9 +780,9 @@ A credential failing it is refused with `access_token_claims_invalid` (401), car
 
 ⚠ This is one pass over one claim set precisely because applying it inside the local verify made it a **silent no-op for an opaque credential** — a JWT audienced elsewhere was refused while the opaque handle for the same wrong audience was served. Since the token format is the client's choice, such a gate covered whichever clients happened to pick JWT.
 
-The `issuer` matcher is pylon's own and is not yours to state: it is `$exists: false` OR equals the deployment's issuer. A structured token always carries `iss` (aegis refuses one without), so that is a hard check there; RFC 7662 makes `iss` optional in an introspection response, and the issuer is already established by which endpoint was called.
+The `issuer` matcher is pylon's own and is not yours to state: it is an EXACT match against the deployment's issuer, on both routes. RFC 7662 makes `iss` OPTIONAL in an introspection response, and tolerating its absence is exactly what made the opaque route laxer — the local route's profile floor rejects a foreign `iss` unconditionally. An authorization server that will not name itself is one this deployment cannot pin, so its answer is refused.
 
-Temporal claims are **not** in that shared pass. A structured token's `exp`/`nbf`/`iat` are range-checked inside `aegis.verify` with its clock tolerance; an introspection answer gets its own check — `active` is primary, and an answer reporting `active: true` beside an `exp` already gone is refused as `token_not_active`. A single shared `exp > now` would have rejected tokens the local verify accepts inside its tolerance window.
+Temporal claims are in that pass too, through the same builder `aegis.verify` runs — `Aegis.assert` applies the range by default and with the same clock tolerance, so the two surfaces cannot answer differently. The introspected route keeps its OWN check ahead of it: `active` is primary, and an answer reporting `active: true` beside an `exp` already gone is refused as `token_not_active`. What is gone is the hand-rolled `exp > now` that carried no tolerance and so rejected tokens the local verify accepts inside its window.
 
 There is also no `profile` and no `sensitive`, deliberately. The resolved credential answers one question — may this request do this — and a name, an email, a picture or a national identity number bear on none of it. Identity is read where identity is wanted (`ctx.auth.userinfo()`, `ctx.state.tokens.idToken`); the introspection parser drops the profile claims **and** the sensitive-identity claims (`nationalIdentityNumber`, `socialSecurityNumber`, …) outright, so an authorization server cannot volunteer personal data into an authorization decision. That matches the local-verify path, which surfaces sensitive claims only on an encrypted token (OIDC Core §13.3) and never into `claims`.
 
@@ -825,6 +836,8 @@ Nothing is cached when either call fails — a stale answer served over an unrea
 Both payloads are encrypted at rest. The cached profile is stored as the domain object under `@TypedJson`, not in claim wire form: the wire translation snake-keys the nested OIDC Core §5.1 `address` on the way out and returns it verbatim on the way in, so a wire-form payload would answer a cache hit differently from a miss.
 
 **DPoP (RFC 9449)** is checked from `(proof, claims.confirmation.thumbprint, token)`, so it runs identically on both credential routes AND on both transports — RFC 9449 §6.2 conveys `cnf.jkt` in the introspection response precisely so a resource server can validate the binding locally for an opaque token. A token carrying `cnf.jkt` is refused without a matching proof (`missing_dpop_proof`), a token _without_ `cnf.jkt` presented under the `DPoP` scheme is refused as `token_not_dpop_bound`, and a proof that fails its own verification is `invalid_dpop_proof`. Only `htm`/`htu` are transport-specific: HTTP reads them off the request, a handshake reconstructs them from the upgrade (`GET`, the socket.io path).
+
+The COOKIE-SESSION route carries no proof and runs no binding check of its own — it does not need one. It verifies with aegis's RFC 9449-strict default, so a `cnf.jkt` token with no proof never verifies at all and is refused as `invalid_session_access_token`. The header routes need their own check precisely because they tell aegis to TRUST the binding (`trustBoundThumbprint`) in order to own the proof comparison themselves — verifying one proof once, on both credential routes, rather than twice on one and once on the other.
 
 **Errors are not laundered.** The middleware converts a failure into a 401 only where a verdict on the presented credential is actually reached — the local verify and the DPoP proof check. Anything else propagates as itself, so a driver's storage or transport failure inside `ctx.auth.introspect` surfaces as the 500 it is instead of telling the caller its token was bad.
 

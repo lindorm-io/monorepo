@@ -3,20 +3,30 @@
 exports[`useAccessToken — socket handshake > bearer path > bearer refresh handler swaps token and clears authExpiredEmittedAt 1`] = `
 {
   "claims": {
+    "audience": [
+      "https://api.test.lindorm.io",
+    ],
     "expiresAt": 2026-04-11T23:59:59.000Z,
+    "issuer": "https://test.lindorm.io/",
     "subject": "alice",
   },
+  "custom": {},
   "header": {},
-  "token": "new-jwt",
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsInJlZnJlc2hlZCI6dHJ1ZX0.signature",
 }
 `;
 
 exports[`useAccessToken — socket handshake > bearer path > verifies bearer and registers bearer strategy auth 1`] = `
 {
   "claims": {
+    "audience": [
+      "https://api.test.lindorm.io",
+    ],
     "expiresAt": 2026-04-11T12:05:00.000Z,
+    "issuer": "https://test.lindorm.io/",
     "subject": "alice",
   },
+  "custom": {},
   "header": {
     "tokenType": "access_token",
   },
@@ -27,9 +37,14 @@ exports[`useAccessToken — socket handshake > bearer path > verifies bearer and
 exports[`useAccessToken — socket handshake > session fallback path > registers session strategy when socket.data.session present 1`] = `
 {
   "claims": {
+    "audience": [
+      "https://api.test.lindorm.io",
+    ],
     "expiresAt": 2099-01-01T00:00:00.000Z,
+    "issuer": "https://test.lindorm.io/",
     "subject": "alice",
   },
+  "custom": {},
   "format": "jwt",
   "token": "session-jwt",
 }

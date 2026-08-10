@@ -16,8 +16,16 @@ import axios from "axios";
 import nock from "nock";
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import type { Mock } from "vitest";
-import { ACCESS_TEST_ISSUER, createTestAegis } from "../../__fixtures__/access/aegis.js";
-import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
+import {
+  ACCESS_TEST_ISSUER,
+  createTestAegis,
+  mintTestAccessToken,
+} from "../../__fixtures__/access/aegis.js";
+import {
+  ACCESS_MOUNT,
+  ACCESS_TEST_AUDIENCE,
+  OPAQUE_TOKEN,
+} from "../../__fixtures__/access/tokens.js";
 import {
   createTestAppConfig,
   createTestAuthConfig,
@@ -79,28 +87,40 @@ describe("useAccessToken — custom claims", () => {
 
   // --- verified: a real signature over real custom claims ---
 
+  // Minted under the `access_token` PROFILE (RFC 9068) — the only thing
+  // `useAccessToken` verifies, and the reason `aud` is this resource server
+  // rather than the issuer.
   const createVerifiedContext = async (
     claims?: Record<string, unknown>,
     content?: Record<string, unknown>,
-  ): Promise<any> => {
-    const signed = await aegis.mint("default", {
-      audience: [ACCESS_TEST_ISSUER],
-      expires: "1 hour",
-      subject: "alice",
-      tokenType: "access_token",
-      ...content,
-      ...(claims ? { claims } : {}),
-    });
-
-    return createContext(signed.token);
-  };
+  ): Promise<any> =>
+    createContext(
+      await mintTestAccessToken(aegis, {
+        ...content,
+        ...(claims ? { claims } : {}),
+      }),
+    );
 
   // --- introspected: a real RFC 7662 response through the real auth client ---
 
-  const createIntrospectedContext = (body: Record<string, unknown>): any => {
+  /**
+   * The wire members every answer must carry now: `token_type` is asserted
+   * PRESENT (RFC 7662 §2.2), and the shared assert pins `iss` with a hard `$eq`
+   * and applies the mount's `audience` — so a body stating none of them is
+   * refused before the claim BUCKETS under test here can be inspected.
+   */
+  const activeBody = (extra: Record<string, unknown>): Record<string, unknown> => ({
+    active: true,
+    token_type: "Bearer",
+    iss: ACCESS_TEST_ISSUER,
+    aud: [ACCESS_TEST_AUDIENCE],
+    ...extra,
+  });
+
+  const createIntrospectedContext = (extra: Record<string, unknown>): any => {
     const ctx = createContext(OPAQUE_TOKEN);
 
-    nock(ACCESS_TEST_ISSUER).post("/introspect").reply(200, body);
+    nock(ACCESS_TEST_ISSUER).post("/introspect").reply(200, activeBody(extra));
 
     // The REAL client over the REAL driver — the response is parsed by the same
     // code path a deployment runs, not by a stub standing in for it.
@@ -124,7 +144,7 @@ describe("useAccessToken — custom claims", () => {
         featureFlags: ["beta-search"],
       });
 
-      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
       expect(ctx.state.access.provenance).toBe("verified");
       expect(ctx.state.access.custom).toEqual({
@@ -141,7 +161,7 @@ describe("useAccessToken — custom claims", () => {
     test("should resolve an empty object when the token carries none", async () => {
       const ctx = await createVerifiedContext();
 
-      await useAccessToken()(ctx, next);
+      await useAccessToken(ACCESS_MOUNT)(ctx, next);
 
       expect(ctx.state.access.custom).toEqual({});
       expect(ctx.state.access.custom).not.toBeUndefined();
@@ -151,13 +171,12 @@ describe("useAccessToken — custom claims", () => {
   describe("introspected provenance", () => {
     test("should carry the response's custom members onto ctx.state.access.custom", async () => {
       const ctx = createIntrospectedContext({
-        active: true,
         sub: "alice",
         tenant_tier: "gold",
         feature_flags: ["beta-search"],
       });
 
-      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
       expect(ctx.state.access.provenance).toBe("introspected");
       expect(ctx.state.access.custom).toEqual({
@@ -169,9 +188,9 @@ describe("useAccessToken — custom claims", () => {
     });
 
     test("should resolve an empty object when the response carries none", async () => {
-      const ctx = createIntrospectedContext({ active: true, sub: "alice" });
+      const ctx = createIntrospectedContext({ sub: "alice" });
 
-      await useAccessToken()(ctx, next);
+      await useAccessToken(ACCESS_MOUNT)(ctx, next);
 
       expect(ctx.state.access.custom).toEqual({});
       expect(ctx.state.access.custom).not.toBeUndefined();
@@ -184,12 +203,11 @@ describe("useAccessToken — custom claims", () => {
     // separately below.)
     test("should keep the RFC 7662 response members out of the bucket", async () => {
       const ctx = createIntrospectedContext({
-        active: true,
         sub: "alice",
         token_type: "Bearer",
       });
 
-      await useAccessToken()(ctx, next);
+      await useAccessToken(ACCESS_MOUNT)(ctx, next);
 
       expect(ctx.state.access.custom).toEqual({});
     });
@@ -199,12 +217,11 @@ describe("useAccessToken — custom claims", () => {
     // any other, so it lands INSIDE the bucket.
     test("should nest a member literally named custom inside the bucket", async () => {
       const ctx = createIntrospectedContext({
-        active: true,
         sub: "alice",
         custom: "a-literal-value",
       });
 
-      await useAccessToken()(ctx, next);
+      await useAccessToken(ACCESS_MOUNT)(ctx, next);
 
       expect(ctx.state.access.custom).toEqual({ custom: "a-literal-value" });
     });
@@ -218,7 +235,7 @@ describe("useAccessToken — custom claims", () => {
         username: "alice@lindorm.io",
       });
 
-      await useAccessToken()(ctx, next);
+      await useAccessToken(ACCESS_MOUNT)(ctx, next);
 
       expect(ctx.state.access.provenance).toBe("verified");
       expect(ctx.state.access.claims.username).toBe("alice@lindorm.io");
@@ -227,12 +244,11 @@ describe("useAccessToken — custom claims", () => {
 
     test("should reach claims.username from an introspection response", async () => {
       const ctx = createIntrospectedContext({
-        active: true,
         sub: "alice",
         username: "alice@lindorm.io",
       });
 
-      await useAccessToken()(ctx, next);
+      await useAccessToken(ACCESS_MOUNT)(ctx, next);
 
       expect(ctx.state.access.provenance).toBe("introspected");
       expect(ctx.state.access.claims.username).toBe("alice@lindorm.io");
@@ -243,14 +259,13 @@ describe("useAccessToken — custom claims", () => {
       const verified = await createVerifiedContext(undefined, {
         username: "alice@lindorm.io",
       });
-      await useAccessToken()(verified, next);
+      await useAccessToken(ACCESS_MOUNT)(verified, next);
 
       const introspected = createIntrospectedContext({
-        active: true,
         sub: "alice",
         username: "alice@lindorm.io",
       });
-      await useAccessToken()(introspected, next);
+      await useAccessToken(ACCESS_MOUNT)(introspected, next);
 
       expect(introspected.state.access.claims.username).toBe(
         verified.state.access.claims.username,
@@ -259,10 +274,10 @@ describe("useAccessToken — custom claims", () => {
 
     test("should yield no username when neither credential carries one", async () => {
       const verified = await createVerifiedContext();
-      await useAccessToken()(verified, next);
+      await useAccessToken(ACCESS_MOUNT)(verified, next);
 
-      const introspected = createIntrospectedContext({ active: true, sub: "alice" });
-      await useAccessToken()(introspected, next);
+      const introspected = createIntrospectedContext({ sub: "alice" });
+      await useAccessToken(ACCESS_MOUNT)(introspected, next);
 
       expect(verified.state.access.claims).not.toHaveProperty("username");
       expect(introspected.state.access.claims).not.toHaveProperty("username");
@@ -275,13 +290,12 @@ describe("useAccessToken — custom claims", () => {
     // NEITHER bucket, while `username` reaches `claims`.
     test("should not confuse username with preferred_username", async () => {
       const ctx = createIntrospectedContext({
-        active: true,
         sub: "alice",
         username: "alice@lindorm.io",
         preferred_username: "Alice",
       });
 
-      await useAccessToken()(ctx, next);
+      await useAccessToken(ACCESS_MOUNT)(ctx, next);
 
       expect(ctx.state.access.claims.username).toBe("alice@lindorm.io");
       expect(ctx.state.access.claims).not.toHaveProperty("preferredUsername");
@@ -296,12 +310,11 @@ describe("useAccessToken — custom claims", () => {
   describe("RFC 7662 response members", () => {
     test("should keep active and tokenType off the resolved credential", async () => {
       const ctx = createIntrospectedContext({
-        active: true,
         sub: "alice",
         token_type: "Bearer",
       });
 
-      await useAccessToken()(ctx, next);
+      await useAccessToken(ACCESS_MOUNT)(ctx, next);
 
       expect(ctx.state.access.claims).not.toHaveProperty("active");
       expect(ctx.state.access.claims).not.toHaveProperty("tokenType");
@@ -316,14 +329,13 @@ describe("useAccessToken — custom claims", () => {
   // The whole point of the shape: one read, whatever established the credential.
   test("should surface the SAME custom claim on both provenances", async () => {
     const verified = await createVerifiedContext({ tenantTier: "gold" });
-    await useAccessToken()(verified, next);
+    await useAccessToken(ACCESS_MOUNT)(verified, next);
 
     const introspected = createIntrospectedContext({
-      active: true,
       sub: "alice",
       tenant_tier: "gold",
     });
-    await useAccessToken()(introspected, next);
+    await useAccessToken(ACCESS_MOUNT)(introspected, next);
 
     expect(verified.state.access.provenance).toBe("verified");
     expect(introspected.state.access.provenance).toBe("introspected");

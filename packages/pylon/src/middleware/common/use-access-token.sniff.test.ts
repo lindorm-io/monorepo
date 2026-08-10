@@ -5,21 +5,34 @@ import {
   ACCESS_TEST_ISSUER,
   createTestAegis,
   mintOpaqueCws,
+  mintTestAccessToken,
   tamperPayload,
 } from "../../__fixtures__/access/aegis.js";
-import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
+import {
+  ACCESS_MOUNT,
+  ACCESS_TEST_AUDIENCE,
+  OPAQUE_TOKEN,
+  introspectionAnswer,
+} from "../../__fixtures__/access/tokens.js";
 import { useAccessToken } from "./use-access-token.js";
 import { beforeAll, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import {
   createTestAppConfig,
   createTestAuthConfig,
 } from "../../__fixtures__/app-config.js";
+import type { PylonIntrospectionActive } from "../../types/index.js";
 
 /** Auth configured with a driver that CAN introspect — the ordinary resource
  *  server, so the opaque arm is reachable. */
 const APP_CONFIG = createTestAppConfig({
   auth: createTestAuthConfig({ issuer: ACCESS_TEST_ISSUER }),
 });
+
+/** An RFC 7662 answer that clears the floor this deployment pins. */
+const answer = (
+  overrides: Partial<PylonIntrospectionActive> = {},
+): PylonIntrospectionActive =>
+  introspectionAnswer({ issuer: ACCESS_TEST_ISSUER, ...overrides });
 
 /**
  * The format sniff, proved against a REAL Aegis and a REAL signature. The point
@@ -36,15 +49,10 @@ describe("useAccessToken — format sniff", () => {
   beforeAll(async () => {
     aegis = createTestAegis(createMockLogger());
 
-    const signed = await aegis.mint("default", {
-      audience: [ACCESS_TEST_ISSUER],
-      expires: "1 hour",
-      permissions: ["users:read"],
-      subject: "alice",
-      tokenType: "access_token",
-    });
-
-    token = signed.token;
+    // Under the `access_token` PROFILE (RFC 9068) — the only thing this
+    // middleware verifies, so anything else fails for a reason that is not the
+    // sniff.
+    token = await mintTestAccessToken(aegis, { permissions: ["users:read"] });
   });
 
   beforeEach(() => {
@@ -65,7 +73,7 @@ describe("useAccessToken — format sniff", () => {
   });
 
   test("verifies a genuine JWT locally and never introspects it", async () => {
-    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.auth.introspect).not.toHaveBeenCalled();
     expect(ctx.state.access.provenance).toBe("verified");
@@ -81,13 +89,16 @@ describe("useAccessToken — format sniff", () => {
       value: tamperPayload(token, {
         sub: "mallory",
         iss: ACCESS_TEST_ISSUER,
-        aud: [ACCESS_TEST_ISSUER],
+        aud: [ACCESS_TEST_AUDIENCE],
+        client_id: "client-a",
+        jti: "tampered",
+        iat: Math.floor(Date.now() / 1000),
         exp: Math.floor(Date.now() / 1000) + 3600,
         permissions: ["users:read", "users:delete"],
       }),
     };
 
-    await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toThrow(ClientError);
 
     // The security-critical assertion: no fall-through to the authorization
     // server, so a forged token can never be laundered into an active answer.
@@ -104,7 +115,7 @@ describe("useAccessToken — format sniff", () => {
       value: [header, payload, "AAAA"].join("."),
     };
 
-    await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toThrow(ClientError);
 
     expect(ctx.auth.introspect).not.toHaveBeenCalled();
     expect(ctx.state.access).toBeNull();
@@ -113,9 +124,9 @@ describe("useAccessToken — format sniff", () => {
   test("an opaque credential is introspected, never handed to aegis", async () => {
     const verify = vi.spyOn(aegis, "verify");
     ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
-    ctx.auth.introspect.mockResolvedValue({ active: true, subject: "alice" });
+    ctx.auth.introspect.mockResolvedValue(answer());
 
-    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
     expect(verify).not.toHaveBeenCalled();
     expect(ctx.auth.introspect).toHaveBeenCalledWith(OPAQUE_TOKEN, {
@@ -140,7 +151,7 @@ describe("useAccessToken — format sniff", () => {
     });
     ctx.state.authorization = { type: "bearer", value: OPAQUE_TOKEN };
 
-    await expect(useAccessToken()(ctx, next)).rejects.toMatchObject({
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toMatchObject({
       code: "opaque_token_not_supported",
       type: "urn:lindorm:pylon:error:opaque_token_not_supported",
       status: 401,
@@ -174,20 +185,16 @@ describe("useAccessToken — claims-bearing sniff", () => {
   beforeAll(async () => {
     aegis = createTestAegis(createMockLogger());
 
-    const content = {
-      audience: [ACCESS_TEST_ISSUER],
-      expires: "1 hour" as const,
-      permissions: ["users:read"],
-      subject: "alice",
-      tokenType: "access_token" as const,
-    };
+    const content = { permissions: ["users:read"] };
 
-    jwt = (await aegis.mint("default", content)).token;
-    cwt = (await aegis.mint("default", content, { format: "cwt" })).token;
+    jwt = await mintTestAccessToken(aegis, content);
+    cwt = await mintTestAccessToken(aegis, content, { format: "cwt" });
 
     // Sign-then-encrypt: the outer JWE declares `cty: JWT` (RFC 7519 §5.2), so
     // its plaintext IS a claims-bearing token — verify decrypts and re-verifies
-    // the inner JWT, which is the whole point of the format.
+    // the inner JWT, which is the whole point of the format. Wrapped by hand
+    // because the access-token profile is `encryptable: false` at MINT; what is
+    // under test is the SNIFF, which must route the wrapper to local verify.
     jwe = (await aegis.jwe.encrypt(jwt, { header: { cty: "JWT" } })).token;
 
     // The two opaque handles: same signature guarantee, no claims layer.
@@ -219,9 +226,9 @@ describe("useAccessToken — claims-bearing sniff", () => {
   test("an opaque COSE handle (CWS) is introspected, never verified locally", async () => {
     const verify = vi.spyOn(aegis, "verify");
     present(cws);
-    ctx.auth.introspect.mockResolvedValue({ active: true, subject: "alice" });
+    ctx.auth.introspect.mockResolvedValue(answer());
 
-    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
     expect(verify).not.toHaveBeenCalled();
     expect(ctx.auth.introspect).toHaveBeenCalledWith(cws, { cache: undefined });
@@ -234,9 +241,9 @@ describe("useAccessToken — claims-bearing sniff", () => {
   test("an opaque JOSE handle (JWS) is introspected, never verified locally", async () => {
     const verify = vi.spyOn(aegis, "verify");
     present(jws);
-    ctx.auth.introspect.mockResolvedValue({ active: true, subject: "alice" });
+    ctx.auth.introspect.mockResolvedValue(answer());
 
-    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
     expect(verify).not.toHaveBeenCalled();
     expect(ctx.auth.introspect).toHaveBeenCalledWith(jws, { cache: undefined });
@@ -254,7 +261,7 @@ describe("useAccessToken — claims-bearing sniff", () => {
     });
     present(cws);
 
-    await expect(useAccessToken()(ctx, next)).rejects.toMatchObject({
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toMatchObject({
       code: "opaque_token_not_supported",
       status: 401,
     });
@@ -266,7 +273,7 @@ describe("useAccessToken — claims-bearing sniff", () => {
   test("a JWT verifies locally and is never introspected", async () => {
     present(jwt);
 
-    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.auth.introspect).not.toHaveBeenCalled();
     expect(ctx.state.access.provenance).toBe("verified");
@@ -276,7 +283,7 @@ describe("useAccessToken — claims-bearing sniff", () => {
   test("a CWT verifies locally and is never introspected", async () => {
     present(cwt);
 
-    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.auth.introspect).not.toHaveBeenCalled();
     expect(ctx.state.access.provenance).toBe("verified");
@@ -286,7 +293,7 @@ describe("useAccessToken — claims-bearing sniff", () => {
   test("a sign-then-encrypt JWE verifies locally and is never introspected", async () => {
     present(jwe);
 
-    await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+    await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.auth.introspect).not.toHaveBeenCalled();
     expect(ctx.state.access.provenance).toBe("verified");

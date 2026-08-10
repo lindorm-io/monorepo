@@ -2,18 +2,27 @@ import type { IAegis } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
-import { ACCESS_TEST_ISSUER, createTestAegis } from "../../__fixtures__/access/aegis.js";
+import {
+  ACCESS_TEST_ISSUER,
+  createTestAegis,
+  mintTestAccessToken,
+} from "../../__fixtures__/access/aegis.js";
 import {
   createDpopTestClient,
   type DpopTestClient,
 } from "../../__fixtures__/access/dpop.js";
-import { OPAQUE_TOKEN } from "../../__fixtures__/access/tokens.js";
+import {
+  ACCESS_MOUNT,
+  OPAQUE_TOKEN,
+  introspectionAnswer,
+} from "../../__fixtures__/access/tokens.js";
 import { useAccessToken } from "./use-access-token.js";
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   createTestAppConfig,
   createTestAuthConfig,
 } from "../../__fixtures__/app-config.js";
+import type { PylonIntrospectionActive } from "../../types/index.js";
 
 /** Auth configured with a driver that CAN introspect — the ordinary resource
  *  server, so the opaque arm is reachable. */
@@ -66,22 +75,14 @@ describe("useAccessToken — DPoP binding", () => {
     aegis = createTestAegis(createMockLogger());
     client = await createDpopTestClient();
 
-    const bound = await aegis.mint("default", {
-      audience: [ACCESS_TEST_ISSUER],
+    // ⚠ Minted under the `access_token` PROFILE — the only thing `useAccessToken`
+    // verifies. A `mint("default", …)` token carries the wrong `typ` and none of
+    // the RFC 9068 required claims, so it no longer verifies at all and would
+    // fail every case here for a reason that is not the binding.
+    boundToken = await mintTestAccessToken(aegis, {
       confirmation: { thumbprint: client.jkt },
-      expires: "1 hour",
-      subject: "alice",
-      tokenType: "access_token",
     });
-    boundToken = bound.token;
-
-    const unbound = await aegis.mint("default", {
-      audience: [ACCESS_TEST_ISSUER],
-      expires: "1 hour",
-      subject: "alice",
-      tokenType: "access_token",
-    });
-    unboundToken = unbound.token;
+    unboundToken = await mintTestAccessToken(aegis);
   });
 
   beforeEach(() => {
@@ -101,7 +102,7 @@ describe("useAccessToken — DPoP binding", () => {
       });
       ctx = makeCtx({ type: "dpop", value: boundToken }, proof);
 
-      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
       expect(ctx.state.access.provenance).toBe("verified");
       expect(next).toHaveBeenCalledTimes(1);
@@ -115,7 +116,7 @@ describe("useAccessToken — DPoP binding", () => {
       });
       ctx = makeCtx({ type: "dpop", value: boundToken }, proof);
 
-      await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toThrow(ClientError);
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -123,7 +124,7 @@ describe("useAccessToken — DPoP binding", () => {
       ctx = makeCtx({ type: "bearer", value: boundToken });
 
       try {
-        await useAccessToken()(ctx, next);
+        await useAccessToken(ACCESS_MOUNT)(ctx, next);
         expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err.status).toBe(401);
@@ -141,7 +142,7 @@ describe("useAccessToken — DPoP binding", () => {
       ctx = makeCtx({ type: "dpop", value: unboundToken }, proof);
 
       try {
-        await useAccessToken()(ctx, next);
+        await useAccessToken(ACCESS_MOUNT)(ctx, next);
         expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err.status).toBe(401);
@@ -152,17 +153,23 @@ describe("useAccessToken — DPoP binding", () => {
     test("accepts an unbound token presented as bearer", async () => {
       ctx = makeCtx({ type: "bearer", value: unboundToken });
 
-      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
       expect(next).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("introspected provenance", () => {
-    const active = (thumbprint?: string) => ({
-      active: true,
-      subject: "alice",
-      ...(thumbprint ? { confirmation: { thumbprint } } : {}),
-    });
+    /**
+     * The answer restates `issuer` because this deployment pins the real-Aegis
+     * one, and it carries `tokenType` because RFC 7662 §2.2's `token_type` is now
+     * asserted PRESENT — a bare `{ active: true }` is refused before any binding
+     * check is reached.
+     */
+    const active = (thumbprint?: string): PylonIntrospectionActive =>
+      introspectionAnswer({
+        issuer: ACCESS_TEST_ISSUER,
+        ...(thumbprint ? { confirmation: { thumbprint } } : {}),
+      });
 
     test("accepts a matching proof against cnf.jkt from the introspection response", async () => {
       const proof = await client.sign({
@@ -173,7 +180,7 @@ describe("useAccessToken — DPoP binding", () => {
       ctx = makeCtx({ type: "dpop", value: OPAQUE_TOKEN }, proof);
       ctx.auth.introspect.mockResolvedValue(active(client.jkt));
 
-      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
 
       expect(ctx.state.access.provenance).toBe("introspected");
       expect(next).toHaveBeenCalledTimes(1);
@@ -189,7 +196,7 @@ describe("useAccessToken — DPoP binding", () => {
       ctx.auth.introspect.mockResolvedValue(active(client.jkt));
 
       try {
-        await useAccessToken()(ctx, next);
+        await useAccessToken(ACCESS_MOUNT)(ctx, next);
         expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err.status).toBe(401);
@@ -207,7 +214,7 @@ describe("useAccessToken — DPoP binding", () => {
       ctx = makeCtx({ type: "dpop", value: OPAQUE_TOKEN }, proof);
       ctx.auth.introspect.mockResolvedValue(active(client.jkt));
 
-      await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toThrow(ClientError);
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -220,7 +227,7 @@ describe("useAccessToken — DPoP binding", () => {
       ctx = makeCtx({ type: "dpop", value: OPAQUE_TOKEN }, proof);
       ctx.auth.introspect.mockResolvedValue(active(client.jkt));
 
-      await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toThrow(ClientError);
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -235,7 +242,7 @@ describe("useAccessToken — DPoP binding", () => {
 
       MockDate.set(new Date(Date.now() + 10 * 60 * 1000));
 
-      await expect(useAccessToken()(ctx, next)).rejects.toThrow(ClientError);
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).rejects.toThrow(ClientError);
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -244,7 +251,7 @@ describe("useAccessToken — DPoP binding", () => {
       ctx.auth.introspect.mockResolvedValue(active(client.jkt));
 
       try {
-        await useAccessToken()(ctx, next);
+        await useAccessToken(ACCESS_MOUNT)(ctx, next);
         expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err.status).toBe(401);
@@ -256,7 +263,7 @@ describe("useAccessToken — DPoP binding", () => {
       ctx = makeCtx({ type: "bearer", value: OPAQUE_TOKEN });
       ctx.auth.introspect.mockResolvedValue(active());
 
-      await expect(useAccessToken()(ctx, next)).resolves.toBeUndefined();
+      await expect(useAccessToken(ACCESS_MOUNT)(ctx, next)).resolves.toBeUndefined();
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -264,7 +271,7 @@ describe("useAccessToken — DPoP binding", () => {
       ctx = makeCtx({ type: "dpop", value: OPAQUE_TOKEN });
 
       try {
-        await useAccessToken()(ctx, next);
+        await useAccessToken(ACCESS_MOUNT)(ctx, next);
         expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err.status).toBe(401);

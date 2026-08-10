@@ -1,7 +1,12 @@
 import type { IAegis, VerifiedToken } from "@lindorm/aegis";
 import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ACCESS_TEST_ISSUER, createTestAegis } from "../../__fixtures__/access/aegis.js";
+import {
+  ACCESS_TEST_ISSUER,
+  createTestAegis,
+  mintTestAccessToken,
+} from "../../__fixtures__/access/aegis.js";
+import { ACCESS_TEST_AUDIENCE } from "../../__fixtures__/access/tokens.js";
 import { createTestAppConfig } from "../../__fixtures__/app-config.js";
 import type { PylonResolvedAccess } from "../../types/index.js";
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
@@ -310,19 +315,16 @@ describe("useCache", () => {
     beforeAll(async () => {
       aegis = createTestAegis(createMockLogger());
 
+      // Minted and verified under the `access_token` PROFILE (RFC 9068) — the
+      // only shape `useAccessToken` puts on `ctx.state.tokens.accessToken`, so
+      // the token the actor resolver keys on here is the production one.
       const mint = async (subject: string): Promise<VerifiedToken> => {
-        const { token } = await aegis.mint("default", {
-          audience: [ACCESS_TEST_ISSUER],
-          expires: "1 hour",
-          subject,
-          tokenType: "access_token",
-        });
+        const token = await mintTestAccessToken(aegis, { subject });
 
-        return aegis.verify(
-          token,
-          { issuer: ACCESS_TEST_ISSUER },
-          { tokenType: "access_token" },
-        );
+        return aegis.verify("access_token", token, undefined, {
+          audience: ACCESS_TEST_AUDIENCE,
+          issuer: ACCESS_TEST_ISSUER,
+        });
       };
 
       alice = await mint("alice");

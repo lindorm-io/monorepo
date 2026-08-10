@@ -1,32 +1,59 @@
-import type { DomainAssert, IAegis, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { isNumber, isObject, isString } from "@lindorm/is";
-import type { PylonSocket } from "../../../types/index.js";
+import type {
+  AccessTokenMatchers,
+  PylonAuthCacheEntry,
+  PylonSocket,
+  PylonSocketHandshakeContext,
+} from "../../../types/index.js";
 import { assertResolvedAccess } from "../access-token/assert-resolved-access.js";
-import { verifyAccessToken } from "../access-token/verify-access-token.js";
+import { resolveAccess } from "../access-token/resolve-access.js";
 import { assertJktUnchanged } from "./assert-jkt-unchanged.js";
 import { assertSubjectUnchanged } from "./assert-subject-unchanged.js";
 
 type CreateBearerRefreshHandlerOptions = {
-  aegis: IAegis;
+  /** The mount's introspection-cache carve-out, carried forward for the opaque arm. */
+  cache: PylonAuthCacheEntry | undefined;
   capturedJkt?: string;
+  /** The handshake context the connection was established on — see below. */
+  ctx: PylonSocketHandshakeContext;
   /** The issuer the handshake pinned — the refreshed token answers to the same one. */
-  issuer: string | null;
+  issuer: string;
   /** The mount's claim matchers, re-applied so a refresh cannot widen the grant. */
-  matchers: DomainAssert;
+  matchers: AccessTokenMatchers;
   socket: PylonSocket;
   subject: string | undefined;
-  verifyOptions: VerifyOptions;
 };
 
+/**
+ * Swap the credential a live socket runs on.
+ *
+ * ⚠ It goes through the SAME `resolveAccess` the handshake ran, so a connection
+ * established with an OPAQUE credential can refresh onto another one. It used to
+ * call the structured verify directly, which meant the one credential kind that
+ * cannot be re-verified locally was also the one kind that could never be
+ * refreshed — a socket that authenticated fine at handshake time was dropped the
+ * moment its token rotated.
+ *
+ * The handshake CONTEXT is captured rather than just `ctx.aegis`, because the
+ * opaque arm needs the auth driver and the resolved app config to introspect
+ * with. That is the same context the connection's own auth state was established
+ * on; a refresh is a continuation of that handshake, not a new request.
+ *
+ * DPoP is propagated, not re-proved: refresh events carry no proof, so
+ * `resolveAccess` trusts the handshake's binding and `assertJktUnchanged`
+ * compares the new credential's `cnf.jkt` against the captured one — which now
+ * covers an introspected credential too, since the thumbprint travels with the
+ * resolution (RFC 9449 §6.2) rather than with a locally verified artifact.
+ */
 export const createBearerRefreshHandler = ({
-  aegis,
+  cache,
   capturedJkt,
+  ctx,
   issuer,
   matchers,
   socket,
   subject,
-  verifyOptions,
 }: CreateBearerRefreshHandlerOptions) => {
   return async (payload: unknown): Promise<void> => {
     if (
@@ -48,34 +75,29 @@ export const createBearerRefreshHandler = ({
     const token = (payload as any).bearer as string;
     const expiresIn = (payload as any).expiresIn as number;
 
-    // The DPoP binding is established once at handshake time; refresh events do
-    // not re-present a DPoP proof. Tell aegis to trust the existing jkt binding
-    // for this verify call, then compare the new token's cnf.jkt against the
-    // captured one below.
-    //
-    // ⚠ Refresh stays STRUCTURED-only: it re-verifies locally rather than going
-    // through `resolveAccess`, so a socket that handshook with an opaque
-    // credential cannot swap in a new one mid-connection. Introspecting on a
-    // refresh event would need the caching policy the connection never carried.
-    const verified = await verifyAccessToken(aegis, token, {
-      ...verifyOptions,
-      trustBoundThumbprint: capturedJkt !== undefined,
+    const { access, verified } = await resolveAccess(ctx, token, {
+      audience: matchers.audience,
+      cache,
     });
-
-    const access = {
-      provenance: "verified" as const,
-      claims: verified.claims,
-      custom: verified.custom,
-      token,
-    };
 
     assertResolvedAccess(access, { issuer, matchers });
 
-    assertSubjectUnchanged(subject, verified.claims.subject);
+    assertSubjectUnchanged(subject, access.claims.subject);
 
-    assertJktUnchanged(capturedJkt, verified.claims.confirmation?.thumbprint);
+    assertJktUnchanged(capturedJkt, access.claims.confirmation?.thumbprint);
 
-    socket.data.tokens.bearer = verified;
+    // CLEARED, not left alone, for an opaque credential: there is no
+    // VerifiedToken behind an introspection answer, and a socket that refreshed
+    // from a structured token onto an opaque one would otherwise keep publishing
+    // the replaced token's claims at `ctx.state.tokens.accessToken` beside a
+    // fresh `ctx.state.access`. The connection's own record is `pylon.access`,
+    // which both arms produce.
+    if (verified) {
+      socket.data.tokens.bearer = verified;
+    } else {
+      delete socket.data.tokens.bearer;
+    }
+
     socket.data.pylon.access = access;
 
     const auth = socket.data.pylon.auth;

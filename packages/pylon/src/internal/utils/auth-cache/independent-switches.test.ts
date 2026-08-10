@@ -16,6 +16,10 @@ import type { IPylonAuthDriver } from "../../../interfaces/index.js";
 import type { PylonAuthCacheConfig, PylonAuthConfig } from "../../../types/index.js";
 import { useAccessToken } from "../../../middleware/common/use-access-token.js";
 import {
+  ACCESS_MOUNT,
+  ACCESS_TEST_AUDIENCE,
+} from "../../../__fixtures__/access/tokens.js";
+import {
   createTestAppConfig,
   createTestAuthConfig,
 } from "../../../__fixtures__/app-config.js";
@@ -26,11 +30,17 @@ const ISSUER = "https://test.lindorm.io/";
 const NOW = new Date("2026-08-06T10:00:00.000Z");
 const TOKEN = "opaque-access-token";
 
+// Clears the shared claim floor — the mount pins `issuer` and `audience` on
+// both arms, and an active answer with no `token_type` (RFC 7662 §2.2) is
+// refused. The subject here is the two cache switches, so the floor never varies.
 const INTROSPECTION = {
   active: true,
-  subject: "alice",
-  scope: ["openid"],
+  audience: [ACCESS_TEST_AUDIENCE],
   expiresAt: new Date("2026-08-06T11:00:00.000Z"),
+  issuer: ISSUER,
+  scope: ["openid"],
+  subject: "alice",
+  tokenType: "Bearer",
 };
 
 const PROFILE = { subject: "alice", name: "Alice Andersson" };
@@ -94,6 +104,9 @@ const createContext = (
   amphora: IAmphora,
 ): any => {
   const aegis = createMockAegis();
+  // The middleware routes an opaque credential by sniffing the wire and never
+  // asks aegis — but `ctx.auth.introspect`/`userinfo` each try a local verify of
+  // an explicit token first, and that fast path must decline to reach the driver.
   aegis.verify.mockRejectedValue(new Error("unsupported_token_type"));
 
   const ctx: any = {
@@ -166,7 +179,7 @@ describe("auth cache independent switches", () => {
   const request = async (cache: PylonAuthCacheConfig): Promise<void> => {
     const ctx = createContext(cache, kv, introspect, userinfo, amphora);
 
-    await useAccessToken()(ctx, next);
+    await useAccessToken(ACCESS_MOUNT)(ctx, next);
     await ctx.auth.userinfo(TOKEN);
   };
 
