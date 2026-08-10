@@ -1,6 +1,7 @@
 import { ClientError } from "@lindorm/errors";
 import type {
   AccessTokenMatchers,
+  AccessTokenProfile,
   HandshakeDpopMode,
   PylonAuthCacheEntry,
   PylonSocketAuth,
@@ -18,6 +19,7 @@ type Options = {
   cache: PylonAuthCacheEntry | undefined;
   dpopMode: HandshakeDpopMode;
   matchers: AccessTokenMatchers;
+  profile: AccessTokenProfile;
 };
 
 /**
@@ -37,6 +39,7 @@ export const runHandshakeAccessToken = async (
       dpopMode: options.dpopMode,
       dpopProof: source.kind === "dpop" ? source.dpopProof : undefined,
       matchers: options.matchers,
+      profile: options.profile,
       token: source.token,
     });
     return;

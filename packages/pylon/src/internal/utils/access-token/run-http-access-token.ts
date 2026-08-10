@@ -1,6 +1,7 @@
 import { ClientError } from "@lindorm/errors";
 import type {
   AccessTokenMatchers,
+  AccessTokenProfile,
   PylonAuthCacheEntry,
   PylonHttpContext,
 } from "../../../types/index.js";
@@ -15,6 +16,7 @@ import { resolveAccessIssuer } from "./resolve-access-issuer.js";
 type Options = {
   cache: PylonAuthCacheEntry | undefined;
   matchers: AccessTokenMatchers;
+  profile: AccessTokenProfile;
 };
 
 /**
@@ -49,6 +51,7 @@ export const runHttpAccessToken = async (
     const { access, issuer, verified } = await resolveAccess(ctx, source.token, {
       audience: options.matchers.audience,
       cache: options.cache,
+      profile: options.profile,
       // The one transport that HAS an RFC 6749 §7.1 presentation scheme — the
       // caller chose it in the `Authorization` header, and `resolveHttpTokenSource`
       // already normalised it to this pair.

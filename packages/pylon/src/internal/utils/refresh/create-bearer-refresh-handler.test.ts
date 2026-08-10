@@ -39,6 +39,7 @@ describe("createBearerRefreshHandler", () => {
       ctx,
       issuer: ACCESS_TEST_APP_ISSUER,
       matchers: MATCHERS,
+      profile: "access_token" as const,
       socket,
       subject: "alice",
       ...overrides,

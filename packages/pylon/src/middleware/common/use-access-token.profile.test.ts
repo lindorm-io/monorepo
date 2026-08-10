@@ -4,7 +4,9 @@ import { beforeAll, beforeEach, describe, expect, test, vi, type Mock } from "vi
 import {
   ACCESS_TEST_ISSUER,
   createTestAegis,
+  mintExternalAccessToken,
   mintTestAccessToken,
+  mintTestIdToken,
 } from "../../__fixtures__/access/aegis.js";
 import {
   ACCESS_TEST_AUDIENCE,
@@ -147,6 +149,125 @@ describe("useAccessToken — what a credential must be", () => {
       expect(ctx.state.access.provenance).toBe("verified");
       expect(ctx.state.access.claims.subject).toBe("alice");
       expect(ctx.state.access.claims.issuer).toBe(ACCESS_TEST_ISSUER);
+    });
+  });
+
+  /**
+   * `profile` picks WHICH floor the structured arm applies. The strict
+   * `access_token` (RFC 9068) is the default and stays strict — its `required`
+   * list is enforced at MINT as well as verify, so loosening it to admit another
+   * issuer's token would also let this deployment ISSUE a degraded one. A
+   * resource server accepting a third party's tokens names the second profile.
+   */
+  describe("profile — which floor the structured arm applies", () => {
+    const EXTERNAL = { ...MOUNT, profile: "external_access_token" as const };
+
+    // The default, stated by OMITTING the option: the same third-party wire the
+    // lenient mount serves below is refused here. Anything less would mean the
+    // default had quietly widened.
+    //
+    // `data` names WHICH floor refused it — the strict profile's `typ` floor,
+    // over the bare `JWT` this token carries. It is the aegis error's own data,
+    // merged into the 401 the caller receives, so it is part of the answer and
+    // not an internal read.
+    test("a third-party-shaped token is refused when no profile is named", async () => {
+      present(await mintExternalAccessToken(aegis));
+
+      await expect(useAccessToken(MOUNT)(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        code: "access_token_verification_failed",
+        data: { typ: "JWT" },
+      });
+
+      expect(ctx.state.access).toBeNull();
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    // All three relaxations at once — bare `typ: JWT` (RFC 7515 §4.1.9 makes typ
+    // optional and `application/at+jwt` is far from universal), two audiences
+    // rather than the one our own ADR pins, and no `client_id` (REQUIRED by RFC
+    // 9068 §2.2 and routinely absent elsewhere).
+    test("the lenient profile serves a bare typ, several audiences and no client_id", async () => {
+      present(await mintExternalAccessToken(aegis));
+
+      await expect(useAccessToken(EXTERNAL)(ctx, next)).resolves.toBeUndefined();
+
+      expect(ctx.state.access.provenance).toBe("verified");
+      expect(ctx.state.access.claims.subject).toBe("alice");
+      expect(ctx.state.access.claims.clientId).toBeUndefined();
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    /**
+     * ⚠ THE ID-TOKEN DEFENCE, at the composition that matters. With no typ
+     * mandated there is no structural discriminator left — `typ: JWT` is exactly
+     * what an id_token carries — so `nonce`/`at_hash`/`c_hash`/`s_hash` are what
+     * keeps one out. The token below is a REAL id_token from this same issuer,
+     * live, carrying `jti`/`iat`/`exp`/`sub`, and audienced at the RESOURCE
+     * SERVER rather than at the client, so it defeats the mount's audience check
+     * on purpose. Nothing but the profile's `forbidden` list stands in its way.
+     */
+    test("a well-formed id_token is refused on a lenient mount", async () => {
+      present(await mintTestIdToken(aegis));
+
+      await expect(useAccessToken(EXTERNAL)(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        code: "access_token_verification_failed",
+        // The forbidden list, named — not "refused for some reason".
+        data: { forbidden: ["nonce"] },
+      });
+
+      expect(ctx.state.access).toBeNull();
+      expect(ctx.auth.introspect).not.toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    // The control that makes the refusal above MEAN something: the SAME mint,
+    // minus the one id_token claim, clears every other floor check. So the
+    // refusal is the forbidden list biting, not an incidental failure over a
+    // missing `jti` or a typ this profile never mandated.
+    test("...and it is the id_token claim doing it, not an incidental miss", async () => {
+      present(await mintTestIdToken(aegis, { nonce: undefined }));
+
+      await expect(useAccessToken(EXTERNAL)(ctx, next)).resolves.toBeUndefined();
+
+      expect(ctx.state.access.provenance).toBe("verified");
+    });
+
+    // The SECOND id_token defence, and the half that lives in pylon: an
+    // id_token's `aud` is the CLIENT, not the resource server. `audience` is
+    // required on every mount, and the lenient profile does not relax it — `aud`
+    // must still contain the verifier's own identity.
+    test("a token audienced elsewhere is refused on the lenient profile too", async () => {
+      present(
+        await mintExternalAccessToken(aegis, {
+          aud: ["https://other.example.com", "account"],
+        }),
+      );
+
+      await expect(useAccessToken(EXTERNAL)(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        code: "access_token_verification_failed",
+        data: { audience: ["https://other.example.com", "account"] },
+      });
+
+      expect(ctx.state.access).toBeNull();
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    // The shared claim pass runs on this arm unchanged: relaxing the ENVELOPE
+    // floor relaxes nothing a mount stated for itself.
+    test("the mount's other matchers still apply on the lenient profile", async () => {
+      present(await mintExternalAccessToken(aegis));
+
+      await expect(
+        useAccessToken({ ...EXTERNAL, scope: "orders:write" })(ctx, next),
+      ).rejects.toMatchObject({
+        status: 401,
+        code: "access_token_claims_invalid",
+      });
+
+      expect(next).not.toHaveBeenCalled();
     });
   });
 

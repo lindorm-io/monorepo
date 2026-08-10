@@ -26,6 +26,7 @@ const TOKEN = joseShapedToken();
 const OPTIONS = {
   audience: ACCESS_TEST_AUDIENCE,
   cache: undefined,
+  profile: "access_token" as const,
   scheme: "bearer" as const,
 };
 

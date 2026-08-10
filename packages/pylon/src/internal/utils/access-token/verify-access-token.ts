@@ -1,30 +1,41 @@
 import type { IAegis, VerifiedToken } from "@lindorm/aegis";
 import { ClientError, ServerError } from "@lindorm/errors";
+import type { AccessTokenProfile } from "../../../types/index.js";
 
 export type VerifyAccessTokenOptions = {
   /** The resource server's own identifier — the `aud` the token must contain. */
   audience: string;
   /** The one issuer this deployment is a party to. */
   issuer: string;
+  /**
+   * The aegis profile whose floor the credential must clear. Resolved at the
+   * mount, never defaulted here — a use-time default is the one thing that could
+   * put a token under a floor nobody chose.
+   */
+  profile: AccessTokenProfile;
 };
 
 /**
  * The ONE place a locally-verified access token is checked, and the ONE place a
  * verification failure becomes a 401.
  *
- * Verified against the `access_token` PROFILE (RFC 9068), not the profile-less
- * verify. Three things follow, and each of them was previously either absent or
- * a mount's to weaken:
+ * Verified against a PROFILE, not the profile-less verify. Three things follow,
+ * and each of them was previously either absent or a mount's to weaken:
  *
- * - the `typ` floor is `application/at+jwt` (RFC 9068 §2.2) — so an id_token, a
- *   logout token or a refresh artifact presented as a bearer credential is
- *   refused by the profile rather than by an option a deployment could override,
+ * - the `typ` floor is the profile's — `application/at+jwt` on `access_token`
+ *   (RFC 9068 §2.2), so an id_token, a logout token or a refresh artifact
+ *   presented as a bearer credential is refused by the profile rather than by an
+ *   option a deployment could override,
  * - `aud` MUST contain this resource server's identifier (RFC 9068 §4), which is
  *   why `audience` is a required mount option,
  * - `iss` SCOPES the verification key lookup, not just the claim comparison, so
  *   a colliding `kid` from another registered issuer can never produce a valid
  *   signature. The profile-less path takes no issuer at all and had no such
  *   scoping.
+ *
+ * ⚠ `external_access_token` mandates no `typ`, so the first of those three is
+ * carried by that profile's `forbidden` list instead — see
+ * {@link AccessTokenProfile}.
  *
  * ⚠ The conversion is scoped to THIS CALL rather than to a list of error
  * classes, because the class list cannot be kept honest: aegis's own contract is
@@ -61,7 +72,7 @@ export const verifyAccessToken = async (
     // reject every bound token for want of a proof it was not given, and handing
     // it the proof as well would mean verifying the same proof twice on the
     // verified path and once on the introspected one.
-    return await aegis.verify("access_token", token, undefined, {
+    return await aegis.verify(options.profile, token, undefined, {
       audience: options.audience,
       issuer: options.issuer,
       trustBoundThumbprint: true,

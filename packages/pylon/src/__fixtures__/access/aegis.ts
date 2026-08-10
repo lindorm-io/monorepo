@@ -66,6 +66,66 @@ export const mintTestAccessToken = async (
   ).token;
 
 /**
+ * A THIRD-PARTY-shaped access token — bare `typ: JWT`, SEVERAL audiences and no
+ * `client_id`, which is what an authorization server that does not follow RFC
+ * 9068 §2.2 routinely emits. All three are refused by the strict `access_token`
+ * profile, and all three are what `external_access_token` exists to accept.
+ *
+ * Signed through `aegis.jwt.sign`, which is POLICY-FREE: it serializes the wire
+ * claims verbatim and injects no envelope (`iat`/`jti`/`iss`), so the token's
+ * SHAPE is the third party's. Only the KEY is ours, so the signature resolves —
+ * a test cannot hold another issuer's private key, and the shape is what is
+ * under test.
+ */
+export const mintExternalAccessToken = async (
+  aegis: IAegis,
+  claims: Dict = {},
+): Promise<string> => {
+  const issuedAt = Math.floor(Date.now() / 1000);
+
+  return (
+    await aegis.jwt.sign({
+      iss: ACCESS_TEST_ISSUER,
+      sub: "alice",
+      aud: [ACCESS_TEST_AUDIENCE, "account"],
+      iat: issuedAt,
+      exp: issuedAt + 3600,
+      jti: "external-token-1",
+      scope: "openid profile",
+      ...claims,
+    })
+  ).token;
+};
+
+/**
+ * A REAL, WELL-FORMED id_token, minted under aegis's own `id_token` profile —
+ * the credential-confusion candidate. It carries `typ: JWT` (OIDC Core §2), the
+ * `nonce` an authorization-code flow binds it to, and an explicit `jti`, so it
+ * clears every `external_access_token` floor check except the one that matters.
+ *
+ * `audience` defaults to the RESOURCE SERVER rather than the client, which is
+ * deliberately wrong for an id_token: it defeats the mount's audience check on
+ * purpose, leaving the profile's `forbidden` list as the only thing between it
+ * and acceptance.
+ */
+export const mintTestIdToken = async (
+  aegis: IAegis,
+  content: Dict = {},
+): Promise<string> =>
+  (
+    await aegis.mint(
+      "id_token",
+      {
+        audience: [ACCESS_TEST_AUDIENCE],
+        nonce: "n-0S6_WzA2Mj",
+        subject: "alice",
+        ...content,
+      },
+      { sign: { tokenId: "id-token-1" } },
+    )
+  ).token;
+
+/**
  * A REAL opaque handle that IS a valid COSE token: a signed COSE_Sign1 over an
  * opaque payload, stamped with the `+cws` media type — no claims layer at all.
  * This is the shape an authorization server's opaque access-token handle has by

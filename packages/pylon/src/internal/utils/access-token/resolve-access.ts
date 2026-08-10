@@ -1,6 +1,7 @@
 import { isClaimsBearingToken, type VerifiedToken } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import type {
+  AccessTokenProfile,
   PylonAnyContext,
   PylonAuthCacheEntry,
   PylonResolvedAccess,
@@ -22,6 +23,12 @@ export type ResolveAccessOptions = {
    */
   audience: string;
   cache: PylonAuthCacheEntry | undefined;
+  /**
+   * The aegis profile the STRUCTURED arm verifies against. Only that arm reads
+   * it: an introspection answer is the authorization server's own assertion, and
+   * there is no JOSE envelope on it for a profile floor to judge.
+   */
+  profile: AccessTokenProfile;
   /**
    * The RFC 6749 §7.1 scheme the credential was PRESENTED under, or `undefined`
    * on a transport that carries no authorization scheme at all. Required — not
@@ -95,6 +102,7 @@ export const resolveAccess = async (
     const verified = await verifyAccessToken(ctx.aegis, token, {
       audience: options.audience,
       issuer,
+      profile: options.profile,
     });
 
     return {

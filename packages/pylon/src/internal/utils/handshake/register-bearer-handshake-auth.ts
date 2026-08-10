@@ -7,6 +7,7 @@ import { createBearerRefreshHandler } from "../refresh/create-bearer-refresh-han
 import { reconstructHandshakeHtu } from "./reconstruct-handshake-htu.js";
 import type {
   AccessTokenMatchers,
+  AccessTokenProfile,
   HandshakeDpopMode,
   PylonAuthCacheEntry,
   PylonSocketAuth,
@@ -18,6 +19,8 @@ type RegisterBearerHandshakeAuthOptions = {
   dpopMode: HandshakeDpopMode;
   dpopProof: string | undefined;
   matchers: AccessTokenMatchers;
+  /** The mount's profile, carried into the refresh handler so a rotation answers to the same floor. */
+  profile: AccessTokenProfile;
   token: string;
 };
 
@@ -39,7 +42,14 @@ type RegisterBearerHandshakeAuthOptions = {
  */
 export const registerBearerHandshakeAuth = async (
   ctx: PylonSocketHandshakeContext,
-  { cache, dpopMode, dpopProof, matchers, token }: RegisterBearerHandshakeAuthOptions,
+  {
+    cache,
+    dpopMode,
+    dpopProof,
+    matchers,
+    profile,
+    token,
+  }: RegisterBearerHandshakeAuthOptions,
 ): Promise<void> => {
   const socket = ctx.io.socket;
 
@@ -59,6 +69,7 @@ export const registerBearerHandshakeAuth = async (
   const { access, issuer, verified } = await resolveAccess(ctx, token, {
     audience: matchers.audience,
     cache,
+    profile,
     // ⚠ `undefined`, and stated rather than defaulted. A socket handshake has no
     // `Authorization` header and therefore no RFC 6749 §7.1 scheme to present:
     // the credential arrives in the socket.io `auth.bearer` payload whatever it
@@ -130,6 +141,7 @@ export const registerBearerHandshakeAuth = async (
     ctx,
     issuer,
     matchers,
+    profile,
     socket,
     subject: access.claims.subject,
   });

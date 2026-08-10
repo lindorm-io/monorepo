@@ -56,6 +56,10 @@ amphora.add([
 // identifier, the value a token must carry in `aud`. RFC 9068 §4 makes a
 // resource server validating `aud` mandatory, and only the mount knows what this
 // deployment answers to — there is no boot-time constant to derive it from.
+//
+// No `profile` either, so the strict RFC 9068 `access_token` floor applies —
+// right for a service that mints what it verifies. A resource server accepting a
+// THIRD PARTY's access tokens states `profile: "external_access_token"`.
 const accessToken = useAccessToken({ audience: "http://test.lindorm.io/api" });
 
 const authorizedNamespaceOnly: PylonConnectionMiddleware = async (ctx, next) => {

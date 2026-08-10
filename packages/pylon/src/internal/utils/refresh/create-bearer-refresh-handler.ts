@@ -2,6 +2,7 @@ import { ClientError } from "@lindorm/errors";
 import { isNumber, isObject, isString } from "@lindorm/is";
 import type {
   AccessTokenMatchers,
+  AccessTokenProfile,
   PylonAuthCacheEntry,
   PylonSocket,
   PylonSocketHandshakeContext,
@@ -21,6 +22,8 @@ type CreateBearerRefreshHandlerOptions = {
   issuer: string;
   /** The mount's claim matchers, re-applied so a refresh cannot widen the grant. */
   matchers: AccessTokenMatchers;
+  /** The mount's profile, re-applied for the same reason — a rotation answers to the same floor. */
+  profile: AccessTokenProfile;
   socket: PylonSocket;
   subject: string | undefined;
 };
@@ -52,6 +55,7 @@ export const createBearerRefreshHandler = ({
   ctx,
   issuer,
   matchers,
+  profile,
   socket,
   subject,
 }: CreateBearerRefreshHandlerOptions) => {
@@ -78,6 +82,7 @@ export const createBearerRefreshHandler = ({
     const { access, verified } = await resolveAccess(ctx, token, {
       audience: matchers.audience,
       cache,
+      profile,
       // ⚠ `undefined`, for the same reason the handshake states it: a refresh is
       // a socket EVENT carrying `{ bearer, expiresIn }` — there is no
       // `Authorization` header on it and never was one on the handshake it

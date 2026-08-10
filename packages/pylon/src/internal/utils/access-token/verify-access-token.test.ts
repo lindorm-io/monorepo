@@ -11,8 +11,15 @@ import { verifyAccessToken } from "./verify-access-token.js";
 
 const TOKEN = joseShapedToken();
 
-/** Everything this function takes: the resource server's identity, and ours. */
-const OPTIONS = { audience: ACCESS_TEST_AUDIENCE, issuer: ACCESS_TEST_APP_ISSUER };
+/**
+ * Everything this function takes: the resource server's identity, ours, and the
+ * profile the mount resolved (`"access_token"` unless it said otherwise).
+ */
+const OPTIONS = {
+  audience: ACCESS_TEST_AUDIENCE,
+  issuer: ACCESS_TEST_APP_ISSUER,
+  profile: "access_token" as const,
+};
 
 /**
  * The conversion BOUNDARY. Everything inside this call is a verdict on bytes the

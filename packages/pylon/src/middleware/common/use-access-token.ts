@@ -10,6 +10,7 @@ import {
 } from "../../internal/utils/is-context.js";
 import type {
   AccessTokenMatchers,
+  AccessTokenProfile,
   HandshakeDpopMode,
   PylonAnyContext,
   PylonAnyMiddleware,
@@ -18,9 +19,9 @@ import type {
 
 /**
  * Almost 1:1 the `useAccess` surface — the same {@link AccessTokenMatchers}
- * vocabulary — plus the two knobs that are genuinely pylon's own. See
+ * vocabulary — plus the three knobs that are genuinely pylon's own. See
  * {@link AccessTokenMatchers} for why `audience` is required and why the other
- * five matcher keys are not a mount's to state.
+ * two matcher keys are not a mount's to state.
  */
 export type UseAccessTokenOptions = AccessTokenMatchers & {
   /**
@@ -48,6 +49,21 @@ export type UseAccessTokenOptions = AccessTokenMatchers & {
    * mount-wide mode to decide.
    */
   dpop?: HandshakeDpopMode;
+  /**
+   * Which aegis profile the locally-verified credential must clear. Defaults to
+   * `"access_token"` — RFC 9068 strict, the right floor for a service verifying
+   * tokens its own authorization server issued. A resource server accepting a
+   * THIRD PARTY's access tokens states `"external_access_token"` instead; see
+   * {@link AccessTokenProfile} for what the two differ on and why the strict one
+   * is not simply loosened.
+   *
+   * ⚠ Only the STRUCTURED arm reads it. An introspection answer carries no JOSE
+   * envelope for a floor to judge — RFC 7662 makes the authorization server the
+   * authority — and a cookie SESSION holds a credential this deployment minted
+   * and stored itself, verified without a profile. The mount's matchers still
+   * apply to all three.
+   */
+  profile?: AccessTokenProfile;
 };
 
 /**
@@ -76,15 +92,23 @@ export type UseAccessTokenOptions = AccessTokenMatchers & {
  *
  * ⚠ It REQUIRES an audience — the resource server's own identifier. Only the
  * mount knows it, RFC 9068 §4 makes validating it mandatory, and it is what
- * lets the structured arm verify against the `access_token` profile at all.
+ * lets the structured arm verify against a profile at all. On the lenient
+ * `external_access_token` profile it carries a second job — see
+ * {@link AccessTokenProfile}.
  */
 export const useAccessToken = (options: UseAccessTokenOptions): PylonAnyMiddleware => {
-  // `cache` and `dpop` are pylon's own knobs; EVERYTHING else on this surface is
-  // a claim matcher, so the rest travels down as one bag. There is no
+  // `cache`, `dpop` and `profile` are pylon's own knobs; EVERYTHING else on this
+  // surface is a claim matcher, so the rest travels down as one bag. There is no
   // knob/matcher partition to compute — the option type draws that line, instead
   // of a hand-maintained key list restating an aegis type pylon does not own.
-  const { cache, dpop, ...matchers } = options;
+  //
+  // Both defaults are resolved HERE, once, and travel down as explicit values:
+  // everything below takes them as required, so no consumer can re-derive a
+  // different answer — which for `profile` would mean a credential judged
+  // against a floor nobody chose.
+  const { cache, dpop, profile, ...matchers } = options;
   const dpopMode: HandshakeDpopMode = dpop ?? "optional";
+  const tokenProfile: AccessTokenProfile = profile ?? "access_token";
 
   return async function useAccessTokenMiddleware(
     ctx: PylonAnyContext,
@@ -94,7 +118,12 @@ export const useAccessToken = (options: UseAccessTokenOptions): PylonAnyMiddlewa
 
     try {
       if (isSocketHandshakeContext(ctx)) {
-        await runHandshakeAccessToken(ctx, { cache, dpopMode, matchers });
+        await runHandshakeAccessToken(ctx, {
+          cache,
+          dpopMode,
+          matchers,
+          profile: tokenProfile,
+        });
         timer.debug("Access token verified (handshake)", {
           strategy: ctx.io.socket.data.pylon.auth?.strategy,
         });
@@ -103,7 +132,7 @@ export const useAccessToken = (options: UseAccessTokenOptions): PylonAnyMiddlewa
         timer.debug("Access token fast-path accepted", { expiresAt, strategy });
         logResolvedAccess(ctx);
       } else if (isHttpContext(ctx)) {
-        await runHttpAccessToken(ctx, { cache, matchers });
+        await runHttpAccessToken(ctx, { cache, matchers, profile: tokenProfile });
         timer.debug("Access token verified (http)");
         logResolvedAccess(ctx);
       } else {
