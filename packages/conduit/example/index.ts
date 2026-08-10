@@ -12,7 +12,7 @@ const main = async (): Promise<void> => {
     baseUrl: "https://api.scryfall.com",
     logger,
     middleware: [conduitChangeResponseDataMiddleware("camel")],
-    timeout: 500,
+    timeout: 5000,
   });
 
   await conduit.get("/bulk-data");

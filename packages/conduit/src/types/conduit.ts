@@ -4,6 +4,7 @@ import type { RetryOptions } from "@lindorm/retry";
 import type { Dict, Environment } from "@lindorm/types";
 import type { ConduitAdapter } from "./adapter.js";
 import type { ConduitAppContext, ConduitRequestContext } from "./context.js";
+import type { ExpectedResponse } from "./expected-response.js";
 import type { ConduitLookup } from "./lookup.js";
 import type { ConduitAxiosOverrides } from "./overrides.js";
 import type { ConduitResponse } from "./response.js";
@@ -38,6 +39,12 @@ export type ConduitSettings = {
   baseUrl?: URL | string;
   config?: ConduitAxiosOverrides;
   environment?: Environment;
+  /**
+   * How every response body is parsed — forwarded to the axios `responseType`.
+   * Defaults to `"json"` (axios's own default). A per-request
+   * `expectedResponse` overrides it. See {@link ExpectedResponse}.
+   */
+  expectedResponse?: ExpectedResponse;
   headers?: Dict;
   logger?: ILogger;
   /**

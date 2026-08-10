@@ -3,6 +3,7 @@ import type { HttpMethod } from "@lindorm/types";
 
 type RawAxiosRequestConfigOptions = Omit<
   RawAxiosRequestConfig,
+  | "adapter"
   | "auth"
   | "baseURL"
   | "data"
@@ -10,6 +11,7 @@ type RawAxiosRequestConfigOptions = Omit<
   | "method"
   | "params"
   | "paramsSerializer"
+  | "responseType"
   | "timeout"
   | "transformRequest"
   | "transformResponse"

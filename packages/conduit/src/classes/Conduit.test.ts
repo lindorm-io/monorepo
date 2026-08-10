@@ -5,9 +5,33 @@ import {
   conduitChangeRequestQueryMiddleware,
   createConduitCacheMiddleware,
 } from "../middleware/index.js";
-import type { ConduitLookup, ConduitMiddleware } from "../types/index.js";
+import type {
+  ConduitConfigContext,
+  ConduitLookup,
+  ConduitMiddleware,
+  ConduitRequestOptions,
+  ConduitSettings,
+} from "../types/index.js";
 import { Conduit } from "./Conduit.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+
+// Several options have no observable effect on the transport, so the assertion
+// has to be on the composed request config instead.
+const captureConfig =
+  (captured: Array<Partial<ConduitConfigContext>>): ConduitMiddleware =>
+  async (ctx, next) => {
+    captured.push(ctx.req.config);
+
+    await next();
+  };
+
+// Same, but stops the chain before the transport runs — for adapters nock
+// cannot intercept.
+const captureConfigAndStop =
+  (captured: Array<Partial<ConduitConfigContext>>): ConduitMiddleware =>
+  async (ctx) => {
+    captured.push(ctx.req.config);
+  };
 
 describe("Conduit", () => {
   describe("constructor", () => {
@@ -359,6 +383,246 @@ describe("Conduit", () => {
       // Second request is served from the client cache — nock is only hit once.
       const second = await conduit.get("/test/path", { middleware: [cache] });
       expect(second.cached).toBe("client");
+    });
+  });
+
+  describe("timeout", () => {
+    // A retryCallback that never retries keeps the assertion on the timeout
+    // itself — an aborted request is a NetworkError, which the default callback
+    // would otherwise retry.
+    const conduitWithTimeout = (timeout?: number): Conduit =>
+      new Conduit({
+        baseUrl: "http://test.lindorm.io",
+        retryCallback: () => false,
+        timeout,
+      });
+
+    afterEach(() => {
+      nock.cleanAll();
+    });
+
+    test("should apply the Conduit-level timeout to a request that sets none", async () => {
+      nock("http://test.lindorm.io").get("/test/path").delay(500).times(1).reply(200, {});
+
+      await expect(conduitWithTimeout(50).get("/test/path")).rejects.toThrow(
+        "timeout of 50ms exceeded",
+      );
+    });
+
+    test("should let a per-request timeout override a shorter Conduit-level one", async () => {
+      nock("http://test.lindorm.io")
+        .get("/test/path")
+        .delay(200)
+        .times(1)
+        .reply(200, { responseBody: 1 });
+
+      await expect(
+        conduitWithTimeout(50).get("/test/path", { timeout: 5000 }),
+      ).resolves.toEqual(
+        expect.objectContaining({ data: { responseBody: 1 }, status: 200 }),
+      );
+    });
+
+    test("should let a per-request timeout override a longer Conduit-level one", async () => {
+      nock("http://test.lindorm.io").get("/test/path").delay(500).times(1).reply(200, {});
+
+      await expect(
+        conduitWithTimeout(5000).get("/test/path", { timeout: 50 }),
+      ).rejects.toThrow("timeout of 50ms exceeded");
+    });
+
+    test("should apply a per-request timeout when the Conduit sets none", async () => {
+      nock("http://test.lindorm.io").get("/test/path").delay(500).times(1).reply(200, {});
+
+      await expect(
+        conduitWithTimeout().get("/test/path", { timeout: 50 }),
+      ).rejects.toThrow("timeout of 50ms exceeded");
+    });
+  });
+
+  describe("withCredentials", () => {
+    // `withCredentials` has no observable effect on the node http adapter, so
+    // the assertion is on the composed request config the transport receives.
+    let scope: nock.Scope;
+
+    afterEach(() => {
+      scope.done();
+    });
+
+    test("should apply the Conduit-level withCredentials to a request that sets none", async () => {
+      scope = nock("http://test.lindorm.io").get("/test/path").times(1).reply(204);
+
+      const captured: Array<Partial<ConduitConfigContext>> = [];
+      const conduit = new Conduit({
+        baseUrl: "http://test.lindorm.io",
+        withCredentials: true,
+      });
+
+      await conduit.get("/test/path", { middleware: [captureConfig(captured)] });
+
+      expect(captured[0]?.withCredentials).toBe(true);
+    });
+
+    test("should let a per-request withCredentials override the Conduit-level one", async () => {
+      scope = nock("http://test.lindorm.io").get("/test/path").times(1).reply(204);
+
+      const captured: Array<Partial<ConduitConfigContext>> = [];
+      const conduit = new Conduit({
+        baseUrl: "http://test.lindorm.io",
+        withCredentials: true,
+      });
+
+      await conduit.get("/test/path", {
+        middleware: [captureConfig(captured)],
+        withCredentials: false,
+      });
+
+      expect(captured[0]?.withCredentials).toBe(false);
+    });
+  });
+
+  describe("expectedResponse", () => {
+    afterEach(() => {
+      nock.cleanAll();
+    });
+
+    test("should apply the Conduit-level expectedResponse to a request that sets none", async () => {
+      nock("http://test.lindorm.io").get("/test/path").times(1).reply(204);
+
+      const captured: Array<Partial<ConduitConfigContext>> = [];
+      const conduit = new Conduit({
+        baseUrl: "http://test.lindorm.io",
+        expectedResponse: "arraybuffer",
+      });
+
+      await conduit.get("/test/path", { middleware: [captureConfig(captured)] });
+
+      expect(captured[0]?.responseType).toBe("arraybuffer");
+    });
+
+    test("should normalise an arraybuffer response to a Buffer from the Conduit-level expectedResponse", async () => {
+      nock("http://test.lindorm.io")
+        .get("/test/path")
+        .times(1)
+        .reply(200, Buffer.from("binary payload"), {
+          "content-type": "application/octet-stream",
+        });
+
+      const conduit = new Conduit({
+        baseUrl: "http://test.lindorm.io",
+        expectedResponse: "arraybuffer",
+      });
+
+      const { data } = await conduit.get("/test/path");
+
+      expect(Buffer.isBuffer(data)).toBe(true);
+      expect(data.toString()).toBe("binary payload");
+    });
+
+    test("should let a per-request expectedResponse override the Conduit-level one", async () => {
+      nock("http://test.lindorm.io")
+        .get("/test/path")
+        .times(1)
+        .reply(200, Buffer.from("binary payload"), {
+          "content-type": "application/octet-stream",
+        });
+
+      const captured: Array<Partial<ConduitConfigContext>> = [];
+      const conduit = new Conduit({
+        baseUrl: "http://test.lindorm.io",
+        expectedResponse: "arraybuffer",
+      });
+
+      const { data } = await conduit.get("/test/path", {
+        expectedResponse: "text",
+        middleware: [captureConfig(captured)],
+      });
+
+      expect(captured[0]?.responseType).toBe("text");
+      expect(Buffer.isBuffer(data)).toBe(false);
+      expect(data).toBe("binary payload");
+    });
+  });
+
+  describe("adapter", () => {
+    test("should apply the Conduit-level adapter to a request that sets none", async () => {
+      const captured: Array<Partial<ConduitConfigContext>> = [];
+      const conduit = new Conduit({
+        adapter: "fetch",
+        baseUrl: "http://test.lindorm.io",
+        config: { maxRedirects: 0 },
+      });
+
+      await conduit.get("/test/path", { middleware: [captureConfigAndStop(captured)] });
+
+      expect(captured[0]?.adapter).toBe("fetch");
+    });
+
+    test("should let a per-request adapter override the Conduit-level one", async () => {
+      const captured: Array<Partial<ConduitConfigContext>> = [];
+      const conduit = new Conduit({
+        adapter: "http",
+        baseUrl: "http://test.lindorm.io",
+        config: { maxRedirects: 0 },
+      });
+
+      await conduit.get("/test/path", {
+        adapter: "fetch",
+        middleware: [captureConfigAndStop(captured)],
+      });
+
+      expect(captured[0]?.adapter).toBe("fetch");
+    });
+  });
+
+  describe("Conduit-owned axios config", () => {
+    // `adapter` and `responseType` are owned by the first-class `adapter` and
+    // `expectedResponse` options at BOTH levels, so the axios pass-through bag
+    // must not be able to express them — a value there was silently dead, and
+    // for `adapter` it also resolved differently per level.
+
+    test("should not accept adapter in the Conduit-level config bag", () => {
+      const settings: ConduitSettings = {
+        config: {
+          // @ts-expect-error `adapter` is the first-class Conduit option.
+          adapter: "http",
+        },
+      };
+
+      expect(new Conduit(settings)).toBeInstanceOf(Conduit);
+    });
+
+    test("should not accept responseType in the Conduit-level config bag", () => {
+      const settings: ConduitSettings = {
+        config: {
+          // @ts-expect-error `expectedResponse` is the first-class Conduit option.
+          responseType: "arraybuffer",
+        },
+      };
+
+      expect(new Conduit(settings)).toBeInstanceOf(Conduit);
+    });
+
+    test("should not accept adapter in the per-request config bag", () => {
+      const options: ConduitRequestOptions = {
+        config: {
+          // @ts-expect-error `adapter` is the first-class request option.
+          adapter: "http",
+        },
+      };
+
+      expect(options.config).toBeDefined();
+    });
+
+    test("should not accept responseType in the per-request config bag", () => {
+      const options: ConduitRequestOptions = {
+        config: {
+          // @ts-expect-error `expectedResponse` is the first-class request option.
+          responseType: "arraybuffer",
+        },
+      };
+
+      expect(options.config).toBeDefined();
     });
   });
 

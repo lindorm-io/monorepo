@@ -47,7 +47,10 @@ export class Conduit implements IConduit {
     this.baseUrl = options.baseUrl ? getPlainUrl(options.baseUrl) : undefined;
 
     this.config = {
+      // Every field set here is omitted from ConduitAxiosOverrides, so the
+      // `config` bag spread below cannot contradict it.
       adapter: options.adapter ?? "http",
+      responseType: options.expectedResponse,
       timeout: options.timeout ?? TIMEOUT,
       validateStatus: defaultValidateStatus,
       withCredentials: options.withCredentials,
@@ -299,13 +302,15 @@ export class Conduit implements IConduit {
       config: {
         ...this.config,
         ...config,
+        // Every first-class option overrides the Conduit-level value carried in
+        // `this.config` — but only when the caller actually supplied one, or an
+        // absent per-request value would overwrite it with `undefined`.
         ...(adapter !== undefined ? { adapter } : {}),
-        // Per-request `lookup` overrides the Conduit-level one carried in `this.config`.
+        ...(expectedResponse !== undefined ? { responseType: expectedResponse } : {}),
         ...(lookup !== undefined ? { lookup } : {}),
+        ...(timeout !== undefined ? { timeout } : {}),
+        ...(withCredentials !== undefined ? { withCredentials } : {}),
         method: method.toUpperCase() as Uppercase<HttpMethod>,
-        responseType: expectedResponse,
-        timeout,
-        withCredentials,
       },
       contentType,
       filename,
