@@ -480,6 +480,59 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
     expect(params).toEqual(["Alice", "Bob"]);
   });
 
+  // `$neq` and `$nin` are ALREADY negations, so negating one is a DOUBLE
+  // negation and must emit both `IS NOT TRUE`s. Collapsing them back to the
+  // inner comparison — `(col = ?)` for `$not: { $neq }` — looks equivalent and
+  // is not: it re-introduces the three-valued UNKNOWN that the outer negation
+  // is what turns back into a definite FALSE. The pair is what makes
+  // `{ label: { $not: { $neq: "x" } } }` the exact complement of
+  // `{ label: { $neq: "x" } }`, NULL rows included.
+  test("should compile a field-level $not over $neq as a double negation", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: { $neq: "Alice" } } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result.match(/IS NOT TRUE/g)).toHaveLength(2);
+    expect(result).not.toContain("<>");
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice"]);
+  });
+
+  test("should compile a field-level $not over $nin as a double negation", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $not: { $nin: ["Alice", "Bob"] } } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result.match(/IS NOT TRUE/g)).toHaveLength(2);
+    expect(result).not.toContain("NOT IN");
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice", "Bob"]);
+  });
+
+  test("should compile a criteria-level $not over $neq as a double negation", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { $not: { name: { $neq: "Alice" } } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result.match(/IS NOT TRUE/g)).toHaveLength(2);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice"]);
+  });
+
+  test("should compile a criteria-level $not over $nin as a double negation", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { $not: { name: { $nin: ["Alice"] } } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, dialect);
+    expect(result.match(/IS NOT TRUE/g)).toHaveLength(2);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["Alice"]);
+  });
+
   // The matcher ANDs every operator present in one operator object, so negating
   // it negates the conjunction — one `IS NOT TRUE` over both clauses.
   test("should compile a field-level $not over several operators as one negation", () => {

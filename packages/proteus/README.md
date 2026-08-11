@@ -2180,6 +2180,10 @@ SQL drivers compile to `(…) IS NOT TRUE` rather than `NOT (…)`, `<>` or
 silently drop the row, which would make one literal condition mean different
 things per driver.
 
+They compose, so `$not` over a `$neq` or a `$nin` returns the exact complement:
+`{ label: { $not: { $neq: "x" } } }` is `{ label: "x" }`, null rows excluded from
+both sides.
+
 ### Nulls
 
 `null` is a value, and the language respects it. It is **not** interchangeable

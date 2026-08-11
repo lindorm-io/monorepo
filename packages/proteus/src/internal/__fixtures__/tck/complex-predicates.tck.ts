@@ -570,6 +570,25 @@ export const complexPredicatesSuite = (
         expect(results.map((r) => r.name)).toEqual(["abc"]);
       });
 
+      // The same double negation one operator over. `$nin` is already a
+      // negation, so negating it must give back the inclusion it excludes —
+      // which only holds while `$nin` itself is two-valued.
+      test("a criteria-level $not over $nin returns the complement", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ $not: { label: { $nin: ["drop"] } } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["abc"]);
+      });
+
+      test("a field-level $not over $nin returns the complement", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ label: { $not: { $nin: ["drop"] } } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["abc"]);
+      });
+
       // A null MEMBER of the list is a value like any other: `$in: [null]`
       // selects the NULL rows and `$nin: [null]` excludes them. `col IN (NULL)`
       // is UNKNOWN for every row, so both used to return nothing at all.

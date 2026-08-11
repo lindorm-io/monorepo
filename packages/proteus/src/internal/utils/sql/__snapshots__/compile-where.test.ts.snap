@@ -172,9 +172,17 @@ exports[`compileWhere [mysql] > should compile a $in of only null to IS NULL 1`]
 
 exports[`compileWhere [mysql] > should compile a $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 
+exports[`compileWhere [mysql] > should compile a criteria-level $not over $neq as a double negation 1`] = `"WHERE ((\`t0\`.\`name\` = ?) IS NOT TRUE) IS NOT TRUE"`;
+
+exports[`compileWhere [mysql] > should compile a criteria-level $not over $nin as a double negation 1`] = `"WHERE ((\`t0\`.\`name\` IN (?)) IS NOT TRUE) IS NOT TRUE"`;
+
 exports[`compileWhere [mysql] > should compile a field-level $not over $eq: null to IS NOT NULL 1`] = `"WHERE (\`t0\`.\`name\` IS NULL) IS NOT TRUE"`;
 
 exports[`compileWhere [mysql] > should compile a field-level $not over $in 1`] = `"WHERE (\`t0\`.\`name\` IN (?, ?)) IS NOT TRUE"`;
+
+exports[`compileWhere [mysql] > should compile a field-level $not over $neq as a double negation 1`] = `"WHERE ((\`t0\`.\`name\` = ?) IS NOT TRUE) IS NOT TRUE"`;
+
+exports[`compileWhere [mysql] > should compile a field-level $not over $nin as a double negation 1`] = `"WHERE ((\`t0\`.\`name\` IN (?, ?)) IS NOT TRUE) IS NOT TRUE"`;
 
 exports[`compileWhere [mysql] > should compile a field-level $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 
@@ -395,9 +403,17 @@ exports[`compileWhere [postgres] > should compile a $in of only null to IS NULL 
 
 exports[`compileWhere [postgres] > should compile a $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 
+exports[`compileWhere [postgres] > should compile a criteria-level $not over $neq as a double negation 1`] = `"WHERE (("t0"."name" = $1) IS NOT TRUE) IS NOT TRUE"`;
+
+exports[`compileWhere [postgres] > should compile a criteria-level $not over $nin as a double negation 1`] = `"WHERE (("t0"."name" IN ($1)) IS NOT TRUE) IS NOT TRUE"`;
+
 exports[`compileWhere [postgres] > should compile a field-level $not over $eq: null to IS NOT NULL 1`] = `"WHERE ("t0"."name" IS NULL) IS NOT TRUE"`;
 
 exports[`compileWhere [postgres] > should compile a field-level $not over $in 1`] = `"WHERE ("t0"."name" IN ($1, $2)) IS NOT TRUE"`;
+
+exports[`compileWhere [postgres] > should compile a field-level $not over $neq as a double negation 1`] = `"WHERE (("t0"."name" = $1) IS NOT TRUE) IS NOT TRUE"`;
+
+exports[`compileWhere [postgres] > should compile a field-level $not over $nin as a double negation 1`] = `"WHERE (("t0"."name" IN ($1, $2)) IS NOT TRUE) IS NOT TRUE"`;
 
 exports[`compileWhere [postgres] > should compile a field-level $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 
@@ -617,9 +633,17 @@ exports[`compileWhere [sqlite] > should compile a $in of only null to IS NULL 1`
 
 exports[`compileWhere [sqlite] > should compile a $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 
+exports[`compileWhere [sqlite] > should compile a criteria-level $not over $neq as a double negation 1`] = `"WHERE (("t0"."name" = ?) IS NOT TRUE) IS NOT TRUE"`;
+
+exports[`compileWhere [sqlite] > should compile a criteria-level $not over $nin as a double negation 1`] = `"WHERE (("t0"."name" IN (?)) IS NOT TRUE) IS NOT TRUE"`;
+
 exports[`compileWhere [sqlite] > should compile a field-level $not over $eq: null to IS NOT NULL 1`] = `"WHERE ("t0"."name" IS NULL) IS NOT TRUE"`;
 
 exports[`compileWhere [sqlite] > should compile a field-level $not over $in 1`] = `"WHERE ("t0"."name" IN (?, ?)) IS NOT TRUE"`;
+
+exports[`compileWhere [sqlite] > should compile a field-level $not over $neq as a double negation 1`] = `"WHERE (("t0"."name" = ?) IS NOT TRUE) IS NOT TRUE"`;
+
+exports[`compileWhere [sqlite] > should compile a field-level $not over $nin as a double negation 1`] = `"WHERE (("t0"."name" IN (?, ?)) IS NOT TRUE) IS NOT TRUE"`;
 
 exports[`compileWhere [sqlite] > should compile a field-level $not over a no-op sub-clause to FALSE 1`] = `"WHERE FALSE"`;
 
