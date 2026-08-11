@@ -13,9 +13,9 @@ import type { PylonKeySelectors, PylonResolvedKeys } from "./types.js";
  * different blast radius, or an asymmetric signature for session cookies
  * specifically).
  *
- * `signature` and `encryption` chain plainly: `session.<role> ?? cookies.<role>`.
- * No merging of conditions, no partial inheritance — a role is either the
- * deployment's session choice or its cookie choice, never a blend of the two.
+ * `signature` chains plainly: `session.signature ?? cookies.signature`. No merging
+ * of conditions, no partial inheritance — the role is either the deployment's
+ * session choice or its cookie choice, never a blend of the two.
  *
  * `verification` does NOT chain plainly, because it is not independent of
  * `signature`: it is the CHECK on the key a signature produced. It resolves
@@ -23,9 +23,13 @@ import type { PylonKeySelectors, PylonResolvedKeys } from "./types.js";
  * `session.signature` alone is sufficient and cannot leave the session cookie
  * unreadable.
  *
- * An `encryption` that resolves to NOTHING through this chain is what
- * `validateSessionEncryption` refuses to boot on — in BOTH modes. Cookie-only, the
- * cookie IS the token set; kv-backed, it carries the key that opens the stored one.
+ * ⚠ `encryption` does NOT chain at all — it is REQUIRED on `PylonSessionSettings`
+ * and read straight off it. Sessions used to inherit `cookies.encryption`, which
+ * meant the type could not demand a key (it might arrive from the sibling object)
+ * and a boot check had to report the missing one instead. Requiring it here makes
+ * the unsealed session unrepresentable rather than merely rejected, and the check
+ * is gone. `signature` keeps inheriting because an absent signature is a real
+ * choice — signing off — while an absent encryption never was.
  */
 export const resolveSessionKeys = (
   session?: PylonKeySelectors,
@@ -34,5 +38,5 @@ export const resolveSessionKeys = (
   omitUndefined<PylonResolvedKeys>({
     signature: session?.signature ?? cookie?.signature,
     verification: resolveVerificationKey(session?.signature, cookie?.signature),
-    encryption: session?.encryption ?? cookie?.encryption,
+    encryption: session?.encryption,
   });

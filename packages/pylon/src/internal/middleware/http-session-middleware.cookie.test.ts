@@ -1,3 +1,6 @@
+import { Aegis } from "@lindorm/aegis";
+import { Amphora } from "@lindorm/amphora";
+import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { IPylonSession } from "../../interfaces/index.js";
@@ -17,7 +20,13 @@ import { createHttpSessionMiddleware } from "./http-session-middleware.js";
  *   only disagree with the record it addresses — a cookie outliving it points at
  *   nothing, a record outliving the cookie is unreachable — so there is one
  *   value and no way to make two.
+ *
+ * A session's `encryption` is REQUIRED, so the value the attributes hang off is
+ * always a sealed blob — which means a real vault and a real aegis, or the write
+ * never reaches the header at all.
  */
+const ISSUER = "http://test.lindorm.io";
+
 const EXPIRES_AT = new Date("2024-06-01T12:00:00.000Z");
 
 const buildSession = (expiresAt: Date | null): IPylonSession => ({
@@ -56,14 +65,34 @@ describe("httpSessionMiddleware — session cookie attributes", () => {
   };
 
   beforeEach(() => {
-    options = { enabled: true, sameSite: "lax", secure: true };
+    options = {
+      enabled: true,
+      encryption: { condition: { purpose: "session", publish: false } },
+      sameSite: "lax",
+      secure: true,
+    };
+
+    const logger = createMockLogger();
+    const amphora = new Amphora({ internal: { issuer: ISSUER }, logger });
+
+    // The key the session's `encryption` selector names. Without it the write
+    // fails closed before any header is produced — there is no plaintext mode to
+    // fall back to.
+    amphora.add(
+      KryptosKit.generate.auto({
+        algorithm: "dir",
+        issuer: ISSUER,
+        publish: false,
+        purpose: "session",
+      }),
+    );
 
     ctx = {
-      aegis: { verify: vi.fn().mockResolvedValue({ format: "opaque" }) },
-      amphora: { canDecrypt: vi.fn().mockReturnValue(false) },
+      aegis: new Aegis({ amphora, logger }),
+      amphora,
       get: vi.fn().mockReturnValue(""),
       set: vi.fn(),
-      logger: createMockLogger(),
+      logger,
       state: { metadata: {}, session: null, tokens: {} },
     };
   });

@@ -3,7 +3,10 @@ import type { PylonSessionSettings } from "../../../types/index.js";
 import { assertSameSiteForSockets } from "./assert-same-site-for-sockets.js";
 import { describe, expect, test } from "vitest";
 
-const base: PylonSessionSettings = { enabled: true };
+const base: PylonSessionSettings = {
+  enabled: true,
+  encryption: { condition: { purpose: "session", publish: false } },
+};
 
 describe("assertSameSiteForSockets", () => {
   test("should pass when session is unset", () => {

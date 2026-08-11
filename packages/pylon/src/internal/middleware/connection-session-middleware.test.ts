@@ -1,17 +1,43 @@
+import { Aegis } from "@lindorm/aegis";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
+import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   createMockProteusSource,
   createMockRepository,
 } from "@lindorm/proteus/mocks/vitest";
 import type { Next } from "@lindorm/middleware";
-import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import type { IPylonSession, PylonSessionHandle } from "../../interfaces/index.js";
-import type { PylonSessionSettings } from "../../types/index.js";
+import type { PylonEncKey, PylonSessionSettings } from "../../types/index.js";
+import { encryptCookie } from "../utils/cookies/encrypt-cookie.js";
 import { createSessionSecret } from "../utils/session/create-session-secret.js";
 import { sessionRecordKit } from "../utils/session/session-record-key.js";
 import { createConnectionSessionMiddleware } from "./connection-session-middleware.js";
 
+const ISSUER = "http://test.lindorm.io";
+
 const SESSION_ID = "cad4002a-bd04-52f1-9733-58866f421686";
+
+/**
+ * The session's encryption key is REQUIRED and does not inherit, so there is no
+ * mode in which the handshake cookie arrives in the clear — the middleware reads
+ * it `encrypted: true` always, and an unsealed value is refused outright.
+ *
+ * The fixture therefore seals through the SAME `encryptCookie` the cookie
+ * middleware writes with, against a real vault holding the key this selector
+ * names: the planted cookie is the artifact pylon itself would have written, not
+ * a hand-rolled approximation of it.
+ */
+const SESSION_ENCRYPTION: PylonEncKey = {
+  condition: { purpose: "session", publish: false },
+};
+
+let amphora: IAmphora;
+let aegis: Aegis;
+
+const seal = (value: unknown): Promise<string> =>
+  encryptCookie({ aegis, amphora }, value as any, SESSION_ENCRYPTION);
 
 /**
  * The handle the browser carries. It is the WHOLE cookie now — the row's name and
@@ -43,9 +69,9 @@ const buildRow = (session: IPylonSession, sec = HANDLE.sec) => ({
   expiresAt: session.expiresAt,
 });
 
-/** The cookie as it arrives on the handshake — unsealed here, base64url encoded. */
-const cookieFor = (handle: PylonSessionHandle): string =>
-  `pylon_session=${Buffer.from(JSON.stringify(handle)).toString("base64url")}`;
+/** The cookie as it arrives on the handshake — sealed, exactly as pylon wrote it. */
+const cookieFor = async (handle: PylonSessionHandle): Promise<string> =>
+  `pylon_session=${await seal(handle)}`;
 
 const buildCtx = (cookieHeader: string | undefined, kv?: any): any => {
   const socket: any = {
@@ -64,12 +90,12 @@ const buildCtx = (cookieHeader: string | undefined, kv?: any): any => {
     io: { app: {}, socket },
     logger: createMockLogger(),
     kv,
-    amphora: {
-      canEncrypt: vi.fn().mockReturnValue(false),
-      canDecrypt: vi.fn().mockReturnValue(false),
-    },
+    amphora,
     aegis: {
-      aes: { encrypt: vi.fn(), decrypt: vi.fn() },
+      // REAL aes — the cookie is sealed, so the read path's decrypt is part of
+      // what the handshake is being tested on. `verify` stays mocked: the
+      // session's access token here is an opaque fixture string, not a JWT.
+      aes: aegis.aes,
       verify: vi.fn((token: string) =>
         Promise.resolve({
           token,
@@ -90,6 +116,23 @@ describe("createConnectionSessionMiddleware", () => {
   let mockRepo: Awaited<ReturnType<typeof createMockRepository>>;
   let mockProteus: Awaited<ReturnType<typeof createMockProteusSource>>;
 
+  beforeAll(() => {
+    const logger = createMockLogger();
+
+    amphora = new Amphora({ internal: { issuer: ISSUER }, logger });
+
+    amphora.add(
+      KryptosKit.generate.auto({
+        algorithm: "dir",
+        issuer: ISSUER,
+        publish: false,
+        purpose: "session",
+      }),
+    );
+
+    aegis = new Aegis({ amphora, logger });
+  });
+
   beforeEach(async () => {
     mockRepo = await createMockRepository();
     mockProteus = await createMockProteusSource();
@@ -102,8 +145,11 @@ describe("createConnectionSessionMiddleware", () => {
 
     (mockRepo.findOne as Mock).mockResolvedValue(buildRow(buildSession()));
 
+    // The SAME selector the fixture seals with — the middleware and the cookie it
+    // is handed cannot drift onto different keys.
     options = {
       enabled: true,
+      encryption: SESSION_ENCRYPTION,
       sameSite: "lax",
     };
 
@@ -130,15 +176,14 @@ describe("createConnectionSessionMiddleware", () => {
   });
 
   /**
-   * A cookie written under the pre-handle scheme carried a bare id STRING. It is
-   * not an error to report — the shape check simply refuses it and the handshake
-   * proceeds unauthenticated.
+   * A cookie written under the pre-handle scheme carried a bare id STRING. Sealed
+   * with this deployment's own session key — so it passes every policy check the
+   * read applies and reaches the shape check with a legitimately opened value. It
+   * is not an error to report: the shape check simply refuses it and the
+   * handshake proceeds unauthenticated.
    */
   test("should proceed without session when the cookie is not a handle", async () => {
-    const ctx = buildCtx(
-      `pylon_session=${Buffer.from(SESSION_ID).toString("base64url")}`,
-      mockProteus,
-    );
+    const ctx = buildCtx(`pylon_session=${await seal(SESSION_ID)}`, mockProteus);
 
     await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
@@ -148,7 +193,7 @@ describe("createConnectionSessionMiddleware", () => {
   });
 
   test("should load session, register auth, and parse bearer when cookie valid", async () => {
-    const ctx = buildCtx(cookieFor(HANDLE), mockProteus);
+    const ctx = buildCtx(await cookieFor(HANDLE), mockProteus);
 
     await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
@@ -166,7 +211,7 @@ describe("createConnectionSessionMiddleware", () => {
   // and the presented secret is the only thing that decides whether it opens.
   test("should proceed without session when the handle's secret does not open the row", async () => {
     const ctx = buildCtx(
-      cookieFor({ id: SESSION_ID, sec: createSessionSecret() }),
+      await cookieFor({ id: SESSION_ID, sec: createSessionSecret() }),
       mockProteus,
     );
 
@@ -181,7 +226,7 @@ describe("createConnectionSessionMiddleware", () => {
   test("should proceed without session when store returns null", async () => {
     (mockRepo.findOne as Mock).mockResolvedValue(null);
 
-    const ctx = buildCtx(cookieFor(HANDLE), mockProteus);
+    const ctx = buildCtx(await cookieFor(HANDLE), mockProteus);
 
     await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
@@ -195,7 +240,7 @@ describe("createConnectionSessionMiddleware", () => {
       buildRow(buildSession({ expiresAt: new Date("2000-01-01T00:00:00.000Z") })),
     );
 
-    const ctx = buildCtx(cookieFor(HANDLE), mockProteus);
+    const ctx = buildCtx(await cookieFor(HANDLE), mockProteus);
 
     await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
@@ -205,7 +250,7 @@ describe("createConnectionSessionMiddleware", () => {
   });
 
   test("should not overwrite existing socket.data.pylon.auth", async () => {
-    const ctx = buildCtx(cookieFor(HANDLE), mockProteus);
+    const ctx = buildCtx(await cookieFor(HANDLE), mockProteus);
     const existing = {
       strategy: "bearer" as const,
       getExpiresAt: () => new Date("2099-01-01T00:00:00.000Z"),
@@ -225,7 +270,7 @@ describe("createConnectionSessionMiddleware", () => {
   // No `kv` source ⇒ no store, so the handshake has nowhere to resolve the handle
   // the cookie carries. It proceeds unauthenticated rather than guessing.
   test("should proceed without session when no kv source is configured", async () => {
-    const ctx = buildCtx(cookieFor(HANDLE), mockProteus);
+    const ctx = buildCtx(await cookieFor(HANDLE), mockProteus);
 
     await createConnectionSessionMiddleware(undefined, options)(ctx, next);
 
@@ -239,7 +284,7 @@ describe("createConnectionSessionMiddleware", () => {
    * takes no argument: the whole handle rides in the closure.
    */
   test("should use store-backed refresh closure that re-reads store", async () => {
-    const ctx = buildCtx(cookieFor(HANDLE), mockProteus);
+    const ctx = buildCtx(await cookieFor(HANDLE), mockProteus);
 
     await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
@@ -266,7 +311,7 @@ describe("createConnectionSessionMiddleware", () => {
    * secret would buy nothing and cost the one place it is contained.
    */
   test("should keep the handle secret out of socket.data", async () => {
-    const ctx = buildCtx(cookieFor(HANDLE), mockProteus);
+    const ctx = buildCtx(await cookieFor(HANDLE), mockProteus);
 
     await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
@@ -274,7 +319,7 @@ describe("createConnectionSessionMiddleware", () => {
   });
 
   test("should reject refresh when store returns null", async () => {
-    const ctx = buildCtx(cookieFor(HANDLE), mockProteus);
+    const ctx = buildCtx(await cookieFor(HANDLE), mockProteus);
 
     await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 
@@ -284,7 +329,7 @@ describe("createConnectionSessionMiddleware", () => {
   });
 
   test("should reject refresh when reloaded session is past expiry", async () => {
-    const ctx = buildCtx(cookieFor(HANDLE), mockProteus);
+    const ctx = buildCtx(await cookieFor(HANDLE), mockProteus);
 
     await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
 

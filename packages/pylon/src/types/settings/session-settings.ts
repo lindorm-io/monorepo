@@ -7,11 +7,17 @@ import type { PylonEncKey, PylonSignKey } from "./keys.js";
  * same two FLAT key selectors as `PylonCookieSettings`
  * (`signature`/`encryption`).
  *
- * Each key selector defaults to the cookie one:
- * `auth.session.<role> ?? cookies.<role>` (see `resolveSessionKeys`). Name only
- * `cookies` and one set of keys does everything; name `auth.session` keys too and
- * the session cookie is signed / sealed with its OWN key. Verification is derived
- * from the resolved `signature` condition, never declared.
+ * `signature` defaults to the cookie one — `auth.session.signature ??
+ * cookies.signature` (see `resolveSessionKeys`) — so naming `cookies` alone signs
+ * session cookies too, and naming `auth.session.signature` gives them their own
+ * key. Verification is derived from the resolved `signature` condition, never
+ * declared.
+ *
+ * `encryption` does NOT inherit. It is REQUIRED here and declared here, because
+ * the two roles are not symmetric: an absent `signature` means signing is off,
+ * which is a deployment's to choose, while an absent `encryption` is not a choice
+ * a session can make in either mode. Making it required is what lets the compiler
+ * refuse the state instead of a boot check reporting it.
  *
  * The `Session` entity lives in the AUTHORITATIVE `kv` source, never in `cache`:
  * evicting a session logs the user out. With no `kv` source the session is
@@ -29,16 +35,11 @@ import type { PylonEncKey, PylonSignKey } from "./keys.js";
  * middleware is simply never mounted. Presence IS the intent — omit the block to
  * turn sessions off.
  *
- * ⚠ `encryption` — resolved as `auth.session.encryption ?? cookies.encryption` —
- * is REQUIRED in BOTH modes; a session with no key resolvable on either tier is a
- * boot failure (`session_encryption_not_configured`). It cannot be a required
- * member of this type because it legitimately inherits from `cookies.encryption`.
- *
- * Its job is the COOKIE alone. Cookie-only, the cookie IS the token set. Kv-backed,
- * the cookie holds `sec` — the key that opens the stored session — and an unsealed
- * cookie puts that key in the browser jar and in every log that dumps `Cookie`
- * headers. The at-rest seal takes no configuration: it is the holder's key, derived
- * per session, with no server key to rotate or lose. See `validateSessionEncryption`.
+ * ⚠ `encryption`'s job is the COOKIE alone. Cookie-only, the cookie IS the token
+ * set. Kv-backed, the cookie holds `sec` — the key that opens the stored session —
+ * and an unsealed cookie puts that key in the browser jar and in every log that
+ * dumps `Cookie` headers. The at-rest seal takes no configuration: it is the
+ * holder's key, derived per session, with no server key to rotate or lose.
  *
  * ⚠ Four cookie attributes are DELIBERATELY absent, because none of them is the
  * deployment's to choose:
@@ -62,6 +63,6 @@ export type PylonSessionSettings = Pick<
   "domain" | "path" | "priority" | "sameSite" | "secure"
 > & {
   enabled: true;
-  encryption?: PylonEncKey;
+  encryption: PylonEncKey;
   signature?: PylonSignKey;
 };

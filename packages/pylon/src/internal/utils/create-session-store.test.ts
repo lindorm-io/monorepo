@@ -6,7 +6,16 @@ import {
 } from "@lindorm/proteus/mocks/vitest";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import type { IPylonSession, PylonSessionHandle } from "../../interfaces/index.js";
+import type { PylonSessionSettings } from "../../types/index.js";
 import { createSessionStore } from "./create-session-store.js";
+
+// The store reads only `enabled` — the at-rest seal is the holder's key, derived
+// per session — but `encryption` is required on the settings because it seals the
+// COOKIE. Declared once here so the fixtures state it without repeating it.
+const SESSION: PylonSessionSettings = {
+  enabled: true,
+  encryption: { condition: { purpose: "session", publish: false } },
+};
 import { createSessionSecret } from "./session/create-session-secret.js";
 import { sessionRecordKit } from "./session/session-record-key.js";
 
@@ -90,7 +99,7 @@ describe("createSessionStore", () => {
    * object in the cookie instead.
    */
   test("should resolve undefined when no kv source is configured", () => {
-    expect(createSessionStore(undefined, { enabled: true })).toBeUndefined();
+    expect(createSessionStore(undefined, SESSION)).toBeUndefined();
   });
 
   describe("at rest", () => {
@@ -101,7 +110,7 @@ describe("createSessionStore", () => {
      * thing that is supposed to see plaintext.
      */
     test("stores no token material and no scope", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await store!.set(ctx, handle, session);
 
@@ -130,7 +139,7 @@ describe("createSessionStore", () => {
     });
 
     test("keeps the four holder-less columns readable", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await store!.set(ctx, handle, session);
 
@@ -152,7 +161,7 @@ describe("createSessionStore", () => {
      * provider as a bearer credential.
      */
     test("leaves the caller's session object untouched", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await store!.set(ctx, handle, session);
 
@@ -167,7 +176,7 @@ describe("createSessionStore", () => {
     // The secret is NOT stored, in any form: no copy, no digest. That is what
     // makes the dump inert — there is nothing to grind offline.
     test("stores nothing derived from the handle secret", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await store!.set(ctx, handle, session);
 
@@ -177,7 +186,7 @@ describe("createSessionStore", () => {
 
   describe("round trip", () => {
     test("reads back exactly what was written", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await store!.set(ctx, handle, session);
 
@@ -187,7 +196,7 @@ describe("createSessionStore", () => {
     // No id token, no refresh token — the two optional members must come back
     // ABSENT, not as `undefined` keys standing beside a session that has none.
     test("omits the optional tokens the session never had", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       const minimal: IPylonSession = {
         id: "ses_00000000000000000002",
@@ -211,7 +220,7 @@ describe("createSessionStore", () => {
     // A second `get` in another process re-derives the SAME key from the SAME
     // secret. The kid is deterministic only because the derivation names a path.
     test("re-derives the key from the secret alone", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await store!.set(ctx, handle, session);
 
@@ -225,7 +234,7 @@ describe("createSessionStore", () => {
     });
 
     test("answers null for a row that is not there", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await expect(store!.get(ctx, handle)).resolves.toBeNull();
     });
@@ -239,7 +248,7 @@ describe("createSessionStore", () => {
      * cookie and the request proceeds unauthenticated.
      */
     test("answers null — never a throw, never a partial read — for a wrong secret", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await store!.set(ctx, handle, session);
 
@@ -252,7 +261,7 @@ describe("createSessionStore", () => {
     // shape check — `decryptAes` never inspects the ciphertext's kid, so the only
     // thing standing between a wrong secret and the plaintext is the GCM tag.
     test("refuses it on the GCM tag", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await store!.set(ctx, handle, session);
 
@@ -270,7 +279,7 @@ describe("createSessionStore", () => {
 
     // The same tag refuses a tampered blob under the RIGHT secret.
     test("answers null for a tampered ciphertext", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await store!.set(ctx, handle, session);
 
@@ -292,7 +301,7 @@ describe("createSessionStore", () => {
      * only the `payload.id === row.id` assert can refuse this.
      */
     test("answers null when the payload names a different row", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       const sec = createSessionSecret();
       const first = { id: "ses_first", sec };
@@ -322,7 +331,7 @@ describe("createSessionStore", () => {
     // `ctx.session.del()` deletes by id. Destroying a session must not require
     // opening it.
     test("deletes by id", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await expect(store!.del(ctx, session.id)).resolves.toBeUndefined();
 
@@ -332,7 +341,7 @@ describe("createSessionStore", () => {
     // Back-channel logout is server-to-server with NO cookie in hand at all, so
     // `subject` is the one column that cannot be sealed.
     test("logs out by subject", async () => {
-      const store = createSessionStore(kv, { enabled: true });
+      const store = createSessionStore(kv, SESSION);
 
       await expect(store!.logout(ctx, session.subject)).resolves.toBeUndefined();
 

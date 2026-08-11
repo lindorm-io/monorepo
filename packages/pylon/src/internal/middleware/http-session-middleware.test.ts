@@ -79,6 +79,7 @@ describe("httpSessionMiddleware", () => {
 
     options = {
       enabled: true,
+      encryption: { condition: { purpose: "session", publish: false } },
       sameSite: "strict",
     };
 

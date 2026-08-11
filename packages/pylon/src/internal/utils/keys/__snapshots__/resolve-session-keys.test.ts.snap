@@ -1,0 +1,47 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`resolveSessionKeys > should derive verification from the resolved signature, not declare it 1`] = `
+{
+  "encryption": {
+    "condition": {
+      "publish": false,
+      "purpose": "session",
+    },
+  },
+  "signature": {
+    "condition": {
+      "publish": false,
+      "purpose": "cookie",
+    },
+  },
+  "verification": {
+    "condition": {
+      "publish": false,
+      "purpose": "cookie",
+    },
+  },
+}
+`;
+
+exports[`resolveSessionKeys > should take the session's own keys over the cookie's 1`] = `
+{
+  "encryption": {
+    "condition": {
+      "publish": false,
+      "purpose": "session",
+    },
+  },
+  "signature": {
+    "condition": {
+      "publish": false,
+      "purpose": "session",
+    },
+  },
+  "verification": {
+    "condition": {
+      "publish": false,
+      "purpose": "session",
+    },
+  },
+}
+`;

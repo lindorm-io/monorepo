@@ -51,6 +51,14 @@ const SESSION_KEYS: PylonCookieSettings = {
   encryption: { condition: { purpose: "session", publish: false } },
 };
 
+// `encryption` is REQUIRED on a session and does NOT inherit from `cookies`, so a
+// session that wants the cookie key must NAME it. `signature` still inherits, so
+// leaving it off is what these fixtures exercise.
+const SESSION_COOKIE_ENC: PylonSessionSettings = {
+  enabled: true,
+  encryption: COOKIE_KEYS.encryption!,
+};
+
 const session = (): IPylonSession => ({
   id: "4f38fec0-70cb-53cb-b82b-42b41e7f986e",
   accessToken: "access-token",
@@ -212,11 +220,13 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
   });
 
   describe("the chain", () => {
-    // No `session` block at all: one set of keys does everything.
-    test("a session with NO session keys signs and seals with the COOKIE keys", async () => {
+    // No session SIGNATURE: that role inherits, so one signing key does
+    // everything. The encryption key is named — it never inherits — and here it
+    // names the cookie key, which is how a deployment keeps one key for both.
+    test("a session with no session SIGNATURE signs with the COOKIE key, and seals with the key it names", async () => {
       const ctx = buildCtx();
 
-      await run(ctx, { cookie: COOKIE_KEYS }, { enabled: true }, async () => {
+      await run(ctx, { cookie: COOKIE_KEYS }, SESSION_COOKIE_ENC, async () => {
         await ctx.session.set(session());
       });
 
@@ -238,7 +248,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       await run(
         ctx,
         { cookie: COOKIE_KEYS, session: SESSION_KEYS },
-        { enabled: true },
+        SESSION_COOKIE_ENC,
         async () => {
           await ctx.session.set(session());
           await ctx.cookies.set(
@@ -269,7 +279,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       await run(
         ctx,
         { cookie: COOKIE_KEYS, session: { encryption: SESSION_KEYS!.encryption } },
-        { enabled: true },
+        SESSION_COOKIE_ENC,
         async () => {
           await ctx.session.set(session());
         },
@@ -292,7 +302,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     test("rotating the signing key does not invalidate live cookies", async () => {
       const before = buildCtx();
 
-      await run(before, { cookie: COOKIE_KEYS }, { enabled: true }, async () => {
+      await run(before, { cookie: COOKIE_KEYS }, SESSION_COOKIE_ENC, async () => {
         await before.session.set(session());
       });
 
@@ -312,7 +322,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const after = buildCtx(cookieHeader(before));
 
-      await run(after, { cookie: COOKIE_KEYS }, { enabled: true }, async () => {
+      await run(after, { cookie: COOKIE_KEYS }, SESSION_COOKIE_ENC, async () => {
         // A fresh write picks the rotated key…
         await after.session.set(session());
       });
@@ -336,7 +346,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const write = buildCtx();
 
-      await run(write, keys, { enabled: true }, async () => {
+      await run(write, keys, SESSION_COOKIE_ENC, async () => {
         await write.session.set(session());
       });
 
@@ -344,7 +354,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const read = buildCtx(cookieHeader(write));
 
-      await run(read, keys, { enabled: true }, async () => {});
+      await run(read, keys, SESSION_COOKIE_ENC, async () => {});
 
       expect(read.state.session).toEqual(
         expect.objectContaining({ id: session().id, subject: session().subject }),
@@ -373,7 +383,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const write = buildCtx();
 
-      await run(write, keys, { enabled: true }, async () => {
+      await run(write, keys, SESSION_COOKIE_ENC, async () => {
         await write.session.set(session());
       });
 
@@ -381,7 +391,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const read = buildCtx(cookieHeader(write));
 
-      await run(read, keys, { enabled: true }, async () => {});
+      await run(read, keys, SESSION_COOKIE_ENC, async () => {});
 
       expect(read.state.session).toEqual(expect.objectContaining({ id: session().id }));
     });
@@ -396,7 +406,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       await run(
         ctx,
         { cookie: COOKIE_KEYS, session: SESSION_KEYS },
-        { enabled: true },
+        SESSION_COOKIE_ENC,
         async () => {
           await ctx.session.set(session());
         },
@@ -439,7 +449,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       await run(
         ctx,
         { cookie: COOKIE_KEYS, session: SESSION_KEYS },
-        { enabled: true },
+        SESSION_COOKIE_ENC,
         async () => {
           await ctx.session.set(session());
         },
@@ -493,7 +503,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       run(
         ctx,
         { cookie: { signature: { condition: { purpose: "no-such-purpose" } } } },
-        { enabled: true },
+        SESSION_COOKIE_ENC,
         async () => {
           await ctx.session.set(session());
         },
@@ -505,15 +515,17 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
   // FAIL-CLOSED (the #13 contract, under the split): a session whose encryption
   // key is NAMED but unresolvable must reach the THROWING resolver, never fall
-  // through to a silent plaintext write.
+  // through to a silent plaintext write. The unresolvable key is named on the
+  // SESSION, because that is now the only place a session's encryption can be
+  // named at all — it is required there and does not inherit from `cookies`.
   test("throws loudly when the named session encryption key cannot be resolved", async () => {
     const ctx = buildCtx();
 
     await expect(
       run(
         ctx,
-        { cookie: { encryption: { condition: { purpose: "no-such-purpose" } } } },
-        { enabled: true },
+        { cookie: COOKIE_KEYS },
+        { enabled: true, encryption: { condition: { purpose: "no-such-purpose" } } },
         async () => {
           await ctx.session.set(session());
         },

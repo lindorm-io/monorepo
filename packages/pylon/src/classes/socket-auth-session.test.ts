@@ -531,6 +531,7 @@ describe("PylonIo constructor enforces CORS safety net when session is enabled",
       }),
       session: {
         enabled: true as const,
+        encryption: { condition: { purpose: "session", publish: false } },
         sameSite: "lax" as const,
       },
     },
