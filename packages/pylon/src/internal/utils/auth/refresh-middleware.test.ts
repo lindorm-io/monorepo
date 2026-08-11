@@ -1,3 +1,4 @@
+import { AegisError } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
@@ -31,7 +32,14 @@ describe("createRefreshMiddleware", async () => {
 
     ctx = {
       aegis: {
-        verify: vi.fn(),
+        // The fixture's tokens are opaque strings, and a real aegis answers an
+        // opaque credential with an `AegisError` — which is what leaves
+        // `ctx.state.tokens` empty rather than half-parsed.
+        verify: vi
+          .fn()
+          .mockRejectedValue(
+            new AegisError("opaque credential", { code: "invalid_token" }),
+          ),
       },
       amphora: {},
       logger: createMockLogger(),
@@ -45,6 +53,9 @@ describe("createRefreshMiddleware", async () => {
         app: { environment: "test" },
         metadata: { correlationId: "test-correlation" },
         sessionRefreshed: false,
+        // The parse of the session's tokens, as the session middleware left it.
+        // A grant replaces the session, so these have to be re-derived from it.
+        tokens: {},
         session: {
           id: "a6d36ab7-ab36-52a8-b366-5f5f21f8280e",
           accessToken: "accessToken",
@@ -76,6 +87,80 @@ describe("createRefreshMiddleware", async () => {
     expect(ctx.session.del).not.toHaveBeenCalled();
     expect(ctx.state.session).toBe("parsedTokenData");
     expect(ctx.state.sessionRefreshed).toBe(true);
+  });
+
+  /**
+   * `ctx.state.tokens` is a PARSE of the session's tokens, made by the session
+   * middleware before this one ran. A grant REPLACES the session, so a bucket
+   * still holding the retired token must not survive into the handler:
+   * `ctx.auth.introspect()` and `.userinfo()` answer from those buckets in
+   * preference to the session itself, so `/introspect` reported the replaced
+   * token's claims — its `exp` included — for a session that no longer held it.
+   */
+  describe("parsed tokens re-derived from the new session", () => {
+    const stale = {
+      accessToken: { format: "jwt", token: "stale-access" },
+      idToken: { format: "jwt", token: "stale-id" },
+    };
+
+    beforeEach(() => {
+      ctx.state.tokens = { ...stale };
+
+      parseTokenData.mockResolvedValue({
+        ...ctx.state.session,
+        accessToken: "refreshed-access",
+        idToken: "refreshed-id",
+      });
+    });
+
+    test("should publish the refreshed session's parse", async () => {
+      (ctx.aegis.verify as Mock).mockImplementation(async (token: string) => ({
+        claims: { subject: "alice" },
+        custom: {},
+        format: "jwt",
+        header: {},
+        token,
+      }));
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.state.tokens.accessToken.token).toBe("refreshed-access");
+      expect(ctx.state.tokens.idToken.token).toBe("refreshed-id");
+    });
+
+    // Refreshing a structured credential onto an OPAQUE one is legitimate
+    // provider behaviour, and it is the case a stale bucket survives silently:
+    // there is no new parse to overwrite it with.
+    test("should clear the buckets when the new credentials are opaque", async () => {
+      (ctx.aegis.verify as Mock).mockRejectedValue(
+        new AegisError("opaque credential", { code: "invalid_token" }),
+      );
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.state.tokens).toEqual({});
+    });
+
+    test("should clear the buckets when a failed grant destroyed the session", async () => {
+      refresh.mockRejectedValue(new Error("invalid_grant"));
+
+      await createRefreshMiddleware(authConfig, { deleteSessionOnFailedGrant: true })(
+        ctx,
+        vi.fn(),
+      );
+
+      expect(ctx.state.tokens).toEqual({});
+    });
+
+    // Nothing replaced the session, so nothing may be re-derived. A session that
+    // has not reached its refresh point still holds the tokens these describe.
+    test("should leave the buckets alone when no grant was attempted", async () => {
+      authConfig.refresh.mode = "none";
+
+      await createRefreshMiddleware(authConfig)(ctx, vi.fn());
+
+      expect(ctx.state.tokens).toEqual(stale);
+    });
   });
 
   // The middleware records WHAT IT DID, never why it ran. `/refresh` synthesises

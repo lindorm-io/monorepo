@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parseSessionTokens > should publish the session's structured tokens 1`] = `
+{
+  "claims": {
+    "subject": "alice",
+  },
+  "custom": {},
+  "format": "jwt",
+  "header": {},
+  "token": "access-token",
+}
+`;
+
+exports[`parseSessionTokens > should publish the session's structured tokens 2`] = `
+{
+  "claims": {
+    "subject": "alice",
+  },
+  "custom": {},
+  "format": "jwt",
+  "header": {},
+  "token": "id-token",
+}
+`;

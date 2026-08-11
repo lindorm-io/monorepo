@@ -10,6 +10,7 @@ import {
   PYLON_SESSION_EXPIRES_AT_HEADER,
   PYLON_SESSION_REFRESHED_HEADER,
 } from "../../constants/headers.js";
+import { parseSessionTokens } from "../parse-session-tokens.js";
 import { createAuthDriverContext } from "./create-auth-driver-context.js";
 import { parseTokenData } from "./parse-token-data.js";
 
@@ -110,6 +111,15 @@ export const createRefreshMiddleware = <C extends PylonHttpContext>(
 
             await ctx.session.set(ctx.state.session);
 
+            // `ctx.state.tokens` is a PARSE of the session's tokens, done by
+            // the session middleware before this ran — so replacing the session
+            // without re-deriving them left them describing the token the grant
+            // just retired. `ctx.auth.introspect()` / `.userinfo()` answer from
+            // those buckets in preference to the session, so `/introspect`
+            // reported the replaced token's claims — its `exp` included — for a
+            // session that no longer held it.
+            await parseSessionTokens(ctx, ctx.state.session);
+
             // Recorded HERE and only here — one exchange with the token
             // endpoint, one `true`. An opportunistic refresh on `/introspect` or
             // `/userinfo` records the same fact because it IS the same fact.
@@ -119,6 +129,10 @@ export const createRefreshMiddleware = <C extends PylonHttpContext>(
               ctx.logger.warn("Token refresh failed, deleting session", { error });
               await ctx.session.del();
               ctx.state.session = null;
+
+              // Same invariant on the destructive branch: the buckets described
+              // the session this just deleted.
+              await parseSessionTokens(ctx, null);
             } else {
               ctx.logger.warn(
                 "Token refresh failed, keeping session until its own expiry",
