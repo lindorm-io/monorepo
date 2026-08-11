@@ -7,7 +7,8 @@ import type {
   SignedToken,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
-import { buildSignedCwt } from "./cwt-payload.js";
+import { coseName } from "../claims/claims-registry.js";
+import { buildSignedToken } from "./build-signed-token.js";
 
 /**
  * The raw CWM sign namespace (`aegis.cwm.sign`) — the COSE_Mac0 (symmetric) twin
@@ -35,5 +36,11 @@ export const rawSignCwm = async <C extends Dict = Dict>({
 
   const token = new CwmKit({ kryptos, logger: deps.logger }).sign<C>(claims, rest);
 
-  return buildSignedCwt(token.toString("base64url"), claims, rest.header?.oid, "cwm");
+  return buildSignedToken(
+    token.toString("base64url"),
+    claims,
+    rest.header?.oid,
+    "cwm",
+    coseName,
+  );
 };

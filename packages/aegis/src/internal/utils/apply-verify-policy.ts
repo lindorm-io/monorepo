@@ -9,7 +9,7 @@ import type {
   VerifyOptions,
 } from "../../types/index.js";
 import { coseName, joseName, type NameSelector } from "../claims/claims-registry.js";
-import type { DomainClaims } from "./extract-claims.js";
+import type { DomainClaims } from "../../types/claims/domain/domain-claims.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { validate } from "./validate.js";
 import { validateActor } from "./validate-actor.js";

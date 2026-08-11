@@ -3,7 +3,7 @@ import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
 import { JwtKit } from "../../classes/JwtKit.js";
-import { buildDomainClaims, buildSignedJwt } from "./jwt-payload.js";
+import { buildDomainClaims } from "./jwt-payload.js";
 import { parseJwtToDomain } from "./parse-jwt.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
@@ -103,36 +103,6 @@ describe("buildDomainClaims", () => {
     expect(sensitive).toBeUndefined();
     expect(claims).not.toHaveProperty("nationalIdentityNumber");
     expect(custom).not.toHaveProperty("nationalIdentityNumber");
-  });
-});
-
-describe("buildSignedJwt (domain sugar over the wire kit's { token })", () => {
-  const token = "header.payload.signature";
-
-  test("derives the expiry bundle from the wire exp and tokenId from jti", () => {
-    expect(
-      buildSignedJwt(token, { exp: 1704099600, jti: "jti-1" }, "obj-1", "jwt"),
-    ).toEqual({
-      expiresAt: new Date("2024-01-01T09:00:00.000Z"),
-      expiresIn: 3600,
-      expiresOn: 1704099600,
-      format: "jwt",
-      objectId: "obj-1",
-      token,
-      tokenId: "jti-1",
-    });
-  });
-
-  test("leaves the expiry bundle and tokenId undefined when exp/jti are absent", () => {
-    expect(buildSignedJwt(token, { sub: "s" }, undefined, "jws")).toEqual({
-      expiresAt: undefined,
-      expiresIn: undefined,
-      expiresOn: undefined,
-      format: "jws",
-      objectId: undefined,
-      token,
-      tokenId: undefined,
-    });
   });
 });
 

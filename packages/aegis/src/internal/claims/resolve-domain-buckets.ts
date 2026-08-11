@@ -1,12 +1,17 @@
 import type { Dict } from "@lindorm/types";
 import type { AegisProfile, AegisSensitive } from "../../types/index.js";
-import type { DomainClaims } from "../utils/extract-claims.js";
+import type { DomainClaims } from "../../types/claims/domain/domain-claims.js";
 import { extractAegisProfile } from "../utils/extract-aegis-profile.js";
 import { extractSensitiveClaims } from "../utils/extract-sensitive-claims.js";
 import { coseName, joseName, type NameSelector } from "./claims-registry.js";
 import { wireToDomain } from "./translate.js";
 
-/** The four-bucket read shape — what BOTH doors onto the registry resolve to. */
+/**
+ * The four-bucket read shape — what BOTH doors onto the registry resolve to, and
+ * what a {@link VerifiedToken} carries for a JWT/CWT: the registered `claims`
+ * (minus profile/sensitive), the non-domain `custom` bucket, the `profile` bag,
+ * and the `sensitive` bag (surfaced only when the outer token was encrypted).
+ */
 export type DomainBuckets<C extends Dict = Dict> = {
   claims: DomainClaims;
   custom: C;

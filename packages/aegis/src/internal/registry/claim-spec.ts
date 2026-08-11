@@ -42,18 +42,6 @@ export type BespokeKind =
   | "address";
 
 /**
- * Read-side EXTRACTION subset a claim belongs to — the curated groups
- * `extract-claims.ts` derives (`FIELD_KEYS`/`RFC8693_KEYS`/`POP_KEYS`). The three
- * are DISJOINT (a claim is in at most one), so a single mark suffices; a claim in
- * NONE (SET-only `events`, `txn`, the profile and sensitive sets) carries no mark
- * and is not extracted into `DomainClaims`.
- *   - `"core"`     the flat `FIELD_KEYS` field set (StdClaims & OidcClaims & …).
- *   - `"rfc8693"`  the recursive delegation claims (`act`/`mayAct`).
- *   - `"pop"`      the recursive confirmation claim (`confirmation`).
- */
-export type ClaimSubset = "core" | "rfc8693" | "pop";
-
-/**
  * How a claim's VALUE is shaped. A CLOSED union, kept separate from the header
  * codec union so both translators keep an exhaustive `switch` with a `never`
  * default.
@@ -98,12 +86,21 @@ export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec> & {
    */
   bucket: "claims" | "profile";
   /**
-   * Read-side extraction subset. Absent ⇒ the claim is not extracted into
-   * `DomainClaims` (SET-only `events`/`txn`, profile, sensitive).
+   * The claim is part of `DomainClaims`, so the verify-FLOOR read resolves it to
+   * its domain name. Absent ⇒ it is not (SET-only `events`/`txn`, profile,
+   * sensitive), and the floor leaves it in `custom` under its wire spelling.
    *
-   * ⚠ NOT part of the shared {@link ParamSpec} base and not in the target shape:
-   * it describes the CURRENT `extract-claims.ts` grouping, which the one codec
-   * tree replaces. It is carried unchanged so this step stays a shape port.
+   * ⚠ NOT part of the shared {@link ParamSpec} base: it is a CLAIM-only fact,
+   * and it is what the verify-floor read scopes itself by. It survived the codec
+   * unification because that read genuinely resolves a narrower set than the
+   * domain read does — see `ClaimReadMode` — and collapsing the two is a policy
+   * decision belonging to the verify rewrite, not a codec change.
+   *
+   * ⚠ A single mark, deliberately: it once grouped its members three ways
+   * (`core`/`rfc8693`/`pop`) for a hand-written extractor that needed three key
+   * tables, and that extractor is gone. The mark and the `DomainClaims` type
+   * describe the same set from two sides; `claims-registry.test.ts` binds them to
+   * each other in both directions, so they cannot drift apart silently.
    */
-  subset?: ClaimSubset;
+  domainClaim?: true;
 };

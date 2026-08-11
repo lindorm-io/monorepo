@@ -1,65 +1,15 @@
 import { B64 } from "@lindorm/b64";
 import { isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
-import { getUnixTime } from "@lindorm/date";
 import { JwtError } from "../../errors/index.js";
-import type {
-  AegisProfile,
-  AegisSensitive,
-  AegisClaimsWire,
-  SignedToken,
-  TokenFormatTag,
-} from "../../types/index.js";
-import { joseToBuckets } from "../claims/resolve-domain-buckets.js";
-import type { DomainClaims } from "./extract-claims.js";
+import type { AegisClaimsWire } from "../../types/index.js";
+import { type DomainBuckets, joseToBuckets } from "../claims/resolve-domain-buckets.js";
 
 type DecodeClaims<C extends Dict = Dict> = AegisClaimsWire & C;
-
-/**
- * Enrich the wire kit's bare `{ token }` into the domain `SignedToken` — the
- * DOMAIN sugar the transform-free kit no longer computes. The expiry bundle is
- * derived from the wire `exp`, the `tokenId` from the wire `jti`, and `format`
- * records the JOSE wire the token is (`jwt`/`jws`; the mint sign-then-encrypt
- * path re-stamps `jwe`).
- */
-export const buildSignedJwt = (
-  token: string,
-  claims: Dict,
-  objectId: string | undefined,
-  format: TokenFormatTag,
-): SignedToken => {
-  const expiresOn =
-    typeof claims.exp === "number" && Number.isFinite(claims.exp)
-      ? claims.exp
-      : undefined;
-
-  return {
-    expiresAt: expiresOn !== undefined ? new Date(expiresOn * 1000) : undefined,
-    expiresIn: expiresOn !== undefined ? expiresOn - getUnixTime(new Date()) : undefined,
-    expiresOn,
-    format,
-    objectId,
-    token,
-    tokenId: typeof claims.jti === "string" ? claims.jti : undefined,
-  };
-};
 
 export const decodeJwtPayload = <C extends Dict = Dict<never>>(
   payload: string,
 ): DecodeClaims<C> => JSON.parse(B64.toString(payload)) as DecodeClaims<C>;
-
-/**
- * The domain-keyed READ buckets carried by a {@link VerifiedToken} for a JWT/CWT:
- * the registered `claims` (minus profile/sensitive), the non-domain `custom`
- * bucket, the `profile` bag, and the `sensitive` bag (surfaced only when the
- * outer token was encrypted).
- */
-export type DomainBuckets<C extends Dict = Dict> = {
-  claims: DomainClaims;
-  custom: C;
-  profile: AegisProfile | undefined;
-  sensitive: AegisSensitive | undefined;
-};
 
 /**
  * Build the DOMAIN buckets for a `VerifiedToken.claims`/`custom`/`profile`/

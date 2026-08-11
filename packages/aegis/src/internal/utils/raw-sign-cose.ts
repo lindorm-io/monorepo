@@ -11,7 +11,8 @@ import { Tag, decodeCbor, encodeCbor } from "../cose/cbor.js";
 import { COSE_TAG } from "../cose/structures.js";
 import type { OmitMode } from "./apply-omit.js";
 import { applyOmit } from "./apply-omit.js";
-import { buildSignedCwt } from "./cwt-payload.js";
+import { coseName } from "../claims/claims-registry.js";
+import { buildSignedToken } from "./build-signed-token.js";
 import type { AegisDeps } from "./aegis-deps.js";
 
 /**
@@ -73,5 +74,11 @@ export const rawSignCose = async ({
   // A CWS secures OPAQUE content (no wire-claim interpretation), so the
   // expiry/`tokenId` sugar is `undefined`; only `objectId` (from the header bag)
   // is carried.
-  return buildSignedCwt(token.toString("base64url"), {}, signOptions.header?.oid, "cws");
+  return buildSignedToken(
+    token.toString("base64url"),
+    {},
+    signOptions.header?.oid,
+    "cws",
+    coseName,
+  );
 };

@@ -8,11 +8,10 @@ import {
   isString,
 } from "@lindorm/is";
 import { describe, expect, test } from "vitest";
-import type { AegisProfile, AegisSensitive } from "../../types/index.js";
+import type { AegisProfile, AegisSensitive, DomainClaims } from "../../types/index.js";
 import type { BespokeKind, ClaimCodec } from "../registry/claim-spec.js";
 import { codecFor } from "../registry/param-spec.js";
 import { WIRE_TAGS } from "../registry/wire.js";
-import { DOMAIN_CLAIM_KEYS } from "../utils/extract-claims.js";
 import {
   CLAIM_SPECS,
   CLAIMS_REGISTRY,
@@ -129,6 +128,75 @@ const sampleMatchesBespoke = (bespoke: BespokeKind, sample: unknown): boolean =>
   }
 };
 
+// The frozen `[domain, jose]` pairs the verify-FLOOR read resolves — the claims
+// carrying a `domainClaim` mark. These literals are the INDEPENDENT side of the
+// guard: not derived from the registry, so a registry edit that changes a name
+// or drops a mark fails the test below instead of silently redefining what the
+// floor can see.
+//
+// ⚠ Two further bindings stop this being a table asserted against itself: the
+// keys are bound to the `DomainClaims` TYPE by `satisfies` (a renamed claim is a
+// compile error), and `UnmarkedDomainClaim` below binds the REVERSE direction.
+const FROZEN_DOMAIN_CLAIM_KEYS = {
+  subject: ["subject", "sub"],
+  expiresAt: ["expiresAt", "exp"],
+  issuedAt: ["issuedAt", "iat"],
+  notBefore: ["notBefore", "nbf"],
+  issuer: ["issuer", "iss"],
+  audience: ["audience", "aud"],
+  tokenId: ["tokenId", "jti"],
+  accessTokenHash: ["accessTokenHash", "at_hash"],
+  authContextClassReference: ["authContextClassReference", "acr"],
+  authMethods: ["authMethods", "amr"],
+  authorizedParty: ["authorizedParty", "azp"],
+  authTime: ["authTime", "auth_time"],
+  codeHash: ["codeHash", "c_hash"],
+  nonce: ["nonce"],
+  stateHash: ["stateHash", "s_hash"],
+  vectorOfTrust: ["vectorOfTrust", "vot"],
+  vectorTrustMark: ["vectorTrustMark", "vtm"],
+  entitlements: ["entitlements"],
+  groups: ["groups"],
+  roles: ["roles"],
+  username: ["username"],
+  authorizationDetails: ["authorizationDetails", "authorization_details"],
+  authenticatorAssuranceLevel: ["authenticatorAssuranceLevel", "aal"],
+  authFactorCategories: ["authFactorCategories", "afc"],
+  authFactorReference: ["authFactorReference", "afr"],
+  clientId: ["clientId", "client_id"],
+  conformsTo: ["conformsTo", "conforms_to"],
+  federationAssuranceLevel: ["federationAssuranceLevel", "fal"],
+  grantType: ["grantType", "gty"],
+  identityAssuranceLevel: ["identityAssuranceLevel", "ial"],
+  levelOfAssurance: ["levelOfAssurance", "loa"],
+  permissions: ["permissions"],
+  scope: ["scope"],
+  sessionHint: ["sessionHint", "sih"],
+  sessionId: ["sessionId", "sid"],
+  subjectHint: ["subjectHint", "suh"],
+  tenantId: ["tenantId", "tenant_id"],
+  subjectId: ["subjectId", "sub_id"],
+  // RFC 8693 delegation and RFC 7800 proof-of-possession: recursive shapes, but
+  // the floor resolves them by exactly the same rule as every flat claim above.
+  act: ["act"],
+  mayAct: ["mayAct", "may_act"],
+  confirmation: ["confirmation", "cnf"],
+} satisfies Partial<Record<keyof DomainClaims, ReadonlyArray<string>>>;
+
+type FrozenDomainClaim = keyof typeof FROZEN_DOMAIN_CLAIM_KEYS;
+
+/**
+ * The REVERSE binding, enforced by the compiler: add a claim to `DomainClaims`
+ * without freezing it above and `UnmarkedDomainClaim` stops being `never`, so
+ * this assignment no longer accepts `true` and the build fails. Without it the
+ * frozen table could only ever catch claims it already knows about — which is
+ * how a table ends up asserting itself.
+ */
+type UnmarkedDomainClaim = Exclude<keyof DomainClaims, FrozenDomainClaim>;
+const EVERY_DOMAIN_CLAIM_IS_FROZEN: UnmarkedDomainClaim extends never
+  ? true
+  : UnmarkedDomainClaim = true;
+
 describe("CLAIM_REGISTRY", () => {
   // --- shared ParamSpec base ------------------------------------------------
 
@@ -244,29 +312,6 @@ describe("CLAIM_REGISTRY", () => {
       expect(differs, `${spec.domain}: selectors disagree unexpectedly`).toBe(
         spec.domain === "tokenId",
       );
-    }
-  });
-
-  test("every domain claim from extract-claims FIELD_KEYS is in the registry", () => {
-    for (const domain of Object.keys(DOMAIN_CLAIM_KEYS)) {
-      expect(
-        claimByDomain(domain),
-        `missing registry entry for "${domain}"`,
-      ).toBeDefined();
-    }
-  });
-
-  test("where a registry claim is also extracted, its jose name matches extract-claims (no drift)", () => {
-    // The registry is a SUPERSET of extract-claims: it also covers SET claims
-    // (sub_id/events/txn) that mint emits but parsing does not extract. For the
-    // overlapping claims, the jose name must agree with extract-claims.
-    for (const spec of CLAIM_SPECS) {
-      const acceptedNames = DOMAIN_CLAIM_KEYS[spec.domain];
-      if (acceptedNames === undefined) continue; // SET-only claim, not extracted
-      expect(
-        acceptedNames.includes(joseName(spec)),
-        `registry jose "${joseName(spec)}" not in extract-claims keys for "${spec.domain}"`,
-      ).toBe(true);
     }
   });
 
@@ -480,11 +525,11 @@ describe("CLAIM_REGISTRY", () => {
 
     expect(username && joseName(username)).toBe("username");
     expect(username?.bucket).toBe("claims");
-    expect(username?.subset).toBe("core");
+    expect(username?.domainClaim).toBe(true);
 
     expect(preferred && joseName(preferred)).toBe("preferred_username");
     expect(preferred?.bucket).toBe("profile");
-    expect(preferred?.subset).toBeUndefined();
+    expect(preferred?.domainClaim).toBeUndefined();
 
     expect(claimByJose("username")?.domain).toBe("username");
     expect(claimByJose("preferred_username")?.domain).toBe("preferredUsername");
@@ -586,78 +631,43 @@ describe("CLAIM_REGISTRY", () => {
     expect(withBespoke("act")).toEqual(new Set(FROZEN_ACT_DOMAINS));
   });
 
-  // --- Subset-membership drift guards --------------------------------------
+  // --- DomainClaims-membership drift guards --------------------------------
 
-  test("the three extraction subsets derive to their frozen membership", () => {
-    // Freeze the previously-hardcoded FIELD_KEYS / RFC8693_KEYS / POP_KEYS from
-    // extract-claims.ts. DOMAIN_CLAIM_KEYS is DERIVED from the registry's
-    // `subset` marks; asserting it equals the frozen merge proves the derivation
-    // is byte-identical to the old hand-maintained lists (both key sets AND the
-    // per-claim accepted-name arrays, in [domain, jose] order).
-    const FROZEN_FIELD_KEYS: Record<string, ReadonlyArray<string>> = {
-      subject: ["subject", "sub"],
-      expiresAt: ["expiresAt", "exp"],
-      issuedAt: ["issuedAt", "iat"],
-      notBefore: ["notBefore", "nbf"],
-      issuer: ["issuer", "iss"],
-      audience: ["audience", "aud"],
-      tokenId: ["tokenId", "jti"],
-      accessTokenHash: ["accessTokenHash", "at_hash"],
-      authContextClassReference: ["authContextClassReference", "acr"],
-      authMethods: ["authMethods", "amr"],
-      authorizedParty: ["authorizedParty", "azp"],
-      authTime: ["authTime", "auth_time"],
-      codeHash: ["codeHash", "c_hash"],
-      nonce: ["nonce"],
-      stateHash: ["stateHash", "s_hash"],
-      vectorOfTrust: ["vectorOfTrust", "vot"],
-      vectorTrustMark: ["vectorTrustMark", "vtm"],
-      entitlements: ["entitlements"],
-      groups: ["groups"],
-      roles: ["roles"],
-      username: ["username"],
-      authorizationDetails: ["authorizationDetails", "authorization_details"],
-      authenticatorAssuranceLevel: ["authenticatorAssuranceLevel", "aal"],
-      authFactorCategories: ["authFactorCategories", "afc"],
-      authFactorReference: ["authFactorReference", "afr"],
-      clientId: ["clientId", "client_id"],
-      conformsTo: ["conformsTo", "conforms_to"],
-      federationAssuranceLevel: ["federationAssuranceLevel", "fal"],
-      grantType: ["grantType", "gty"],
-      identityAssuranceLevel: ["identityAssuranceLevel", "ial"],
-      levelOfAssurance: ["levelOfAssurance", "loa"],
-      permissions: ["permissions"],
-      scope: ["scope"],
-      sessionHint: ["sessionHint", "sih"],
-      sessionId: ["sessionId", "sid"],
-      subjectHint: ["subjectHint", "suh"],
-      tenantId: ["tenantId", "tenant_id"],
-      subjectId: ["subjectId", "sub_id"],
-    };
-    const FROZEN_RFC8693_KEYS: Record<string, ReadonlyArray<string>> = {
-      act: ["act"],
-      mayAct: ["mayAct", "may_act"],
-    };
-    const FROZEN_POP_KEYS: Record<string, ReadonlyArray<string>> = {
-      confirmation: ["confirmation", "cnf"],
-    };
+  test("the domain-claim mark derives to its frozen membership", () => {
+    // The frozen table lives at module scope so the compile-time reverse binding
+    // (`UnmarkedDomainClaim`) can reach it; see the comment there.
+    expect(EVERY_DOMAIN_CLAIM_IS_FROZEN).toBe(true);
 
-    expect(DOMAIN_CLAIM_KEYS).toEqual({
-      ...FROZEN_FIELD_KEYS,
-      ...FROZEN_RFC8693_KEYS,
-      ...FROZEN_POP_KEYS,
-    });
+    const FROZEN_KEYS: Record<string, ReadonlyArray<string>> = FROZEN_DOMAIN_CLAIM_KEYS;
 
-    // The disjoint `subset` marks partition those domains exactly as the frozen
-    // lists group them (registry-side view of the same fact).
-    const domainsWithSubset = (subset: string) =>
-      new Set(
-        CLAIM_SPECS.filter((spec) => spec.subset === subset).map((spec) => spec.domain),
+    // Every marked spec resolves under exactly the frozen accepted names: its
+    // domain name, plus its jose name when the two differ. That pair is what the
+    // floor read looks up, in that precedence.
+    for (const spec of CLAIM_SPECS) {
+      if (spec.domainClaim === undefined) continue;
+      const jose = joseName(spec);
+      const accepted = spec.domain === jose ? [spec.domain] : [spec.domain, jose];
+
+      expect(FROZEN_KEYS[spec.domain], `unfrozen domain claim "${spec.domain}"`).toEqual(
+        accepted,
       );
-    expect(domainsWithSubset("core")).toEqual(new Set(Object.keys(FROZEN_FIELD_KEYS)));
-    expect(domainsWithSubset("rfc8693")).toEqual(
-      new Set(Object.keys(FROZEN_RFC8693_KEYS)),
+    }
+
+    // …and nothing frozen has lost its registry entry or its mark.
+    for (const domain of Object.keys(FROZEN_KEYS)) {
+      expect(
+        claimByDomain(domain)?.domainClaim,
+        `"${domain}" lost its domainClaim mark`,
+      ).toBeDefined();
+    }
+
+    // Both directions over the same fact: the marked set is EXACTLY the frozen
+    // set, so a mark added to a claim nobody froze fails here too.
+    const marked = new Set(
+      CLAIM_SPECS.filter((spec) => spec.domainClaim !== undefined).map(
+        (spec) => spec.domain,
+      ),
     );
-    expect(domainsWithSubset("pop")).toEqual(new Set(Object.keys(FROZEN_POP_KEYS)));
+    expect(marked).toEqual(new Set(Object.keys(FROZEN_KEYS)));
   });
 });

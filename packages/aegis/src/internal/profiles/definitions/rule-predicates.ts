@@ -1,5 +1,5 @@
 import type { Condition } from "@lindorm/match";
-import type { DomainClaims } from "../../utils/extract-claims.js";
+import type { DomainClaims } from "../../../types/claims/domain/domain-claims.js";
 
 // RFC 3986 scheme prefix: `scheme:` where scheme starts with a letter and is
 // followed by letters/digits/`+`/`-`/`.`. A StringOrURI (RFC 7519 §4.1.1) that

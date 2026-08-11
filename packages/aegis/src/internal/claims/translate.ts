@@ -16,13 +16,19 @@ import {
 } from "./claims-registry.js";
 
 /**
- * The ONE claim translator (DESIGN §3). It consolidates the mappers that existed
- * before — `map-content-to-claims.ts` (domain -> jose, write), `extract-claims.ts`
+ * The ONE claim translator. It consolidates every claim mapper that existed
+ * before — `map-content-to-claims.ts` (domain -> jose, write), the hand-written
  * `extractDomainClaims` (jose/camel -> domain, read), and the `domain <-> jose`
  * remap loops around `CWT_CLAIMS_KIT` in `cwt-claims.ts` — into a single
  * registry-driven, single-PASS pair per direction.
  *
- * Four public functions over TWO parameterized cores (write / read). The ONLY
+ * ⚠ The read half of `extract-claims.ts` was not merely a second caller: it held
+ * FIVE value decoders character-identical to the ones below (`toDate`,
+ * `toStringArray`, `toAudience`, `toActClaim`, `toConfirmation`) plus a
+ * hand-listed field-by-field extraction of ~45 claims. All of it is gone; what
+ * genuinely differed survives as {@link ClaimReadMode}, and nothing else.
+ *
+ * Public functions over TWO parameterized cores (write / read). The ONLY
  * thing that varies between the JOSE and COSE variants is the wire NAME emitted
  * or looked up — `joseName` for JOSE, `coseName` for COSE
  * (the RFC 8392 divergence set, today just `jti` <-> `cti`). The VALUE transforms
@@ -76,7 +82,7 @@ const confirmationToWire = (claim: ConfirmationClaim): Dict | undefined => {
   return Object.keys(cnf).length > 0 ? cnf : undefined;
 };
 
-// --- Value decoders (read side), lifted from extract-claims.ts ----------------
+// --- Value decoders (read side) ----------------------------------------------
 
 const toDate = (value: unknown): Date | undefined => {
   if (value instanceof Date) return value;
@@ -342,7 +348,7 @@ const decodeArray = (spec: ClaimSpec, scalar: ArrayScalar, value: unknown): unkn
 
 // Decode ONE registered claim's value from its wire form to the domain form
 // (exhaustive over ClaimCodec; an unknown kind throws), reproducing
-// extract-claims.ts's per-claim decoders exactly. The `array` case refines by the
+// hand-written per-claim decoders exactly. The `array` case refines by the
 // codec's own scalar-tolerance policy — `wrap` for `aud` (RFC 7519 string-OR-
 // array), `spaced` for the space-delimited sets, `strict` for the rest — which
 // used to be a hardcoded `spec.domain === "audience"` branch here.
@@ -381,31 +387,102 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
 };
 
 /**
+ * WHICH claims a read pass resolves, and what becomes of the keys it does not.
+ *
+ * ⚠ The two modes exist because the two read doors genuinely disagree TODAY, and
+ * a refactor may not silently pick a winner. They are the whole surviving delta
+ * between the two read surfaces this file replaced; everything else — every
+ * per-claim decoder — is now shared.
+ *
+ *   - `"domain"`  the FULL registry read: every registered claim resolves to its
+ *                 domain name, and an unregistered key flips snake -> camelCase
+ *                 into `custom` (R18). This is what `Aegis.toDomain` and the
+ *                 token read path want: a domain-shaped view of the payload.
+ *   - `"floor"`   the profiled verify-FLOOR read: only `domainClaim`-marked claims
+ *                 resolve (the {@link DomainClaims} set), and every other key
+ *                 stays in `custom` VERBATIM — NOT case-converted.
+ *
+ * ⚠⚠ `"floor"`'s verbatim rule is LOAD-BEARING, not an oversight. The floor asks
+ * "is this claim present ON THE WIRE"; case-converting first would let a custom
+ * claim answer for a registered one it merely resembles. A wire `expires_at`
+ * camelCases to `expiresAt` and would then satisfy an `exp`-presence floor — the
+ * JOSE path is correct today precisely BECAUSE this read leaves it alone. Two
+ * profiles also name their required claims in wire spelling
+ * (`token_introspection`), which only resolves against a verbatim `custom`.
+ *
+ * Collapsing the two into one read is a POLICY decision about the floor, not a
+ * codec change, so it belongs with the verify rewrite — not here.
+ */
+export type ClaimReadMode = "domain" | "floor";
+
+/**
+ * What a {@link ClaimReadMode} decides, resolved ONCE per read.
+ *   - `resolves`   whether the pass looks this registered claim up at all.
+ *   - `customKey`  how a key the pass did not consume is spelled in `custom`.
+ *
+ * The two facts travel together because they are one policy: the floor resolves
+ * a narrower set AND must leave everything else untouched, so a mode that got one
+ * without the other would be incoherent. Deciding them in a single `switch` is
+ * also what makes a third mode a COMPILE error rather than a silent fall into the
+ * domain behaviour — the failure a pair of `mode === "floor"` ternaries invites.
+ */
+type ClaimReadRules = {
+  resolves: (spec: ClaimSpec) => boolean;
+  customKey: (key: string) => string;
+};
+
+const claimReadRules = (mode: ClaimReadMode): ClaimReadRules => {
+  switch (mode) {
+    case "domain":
+      return { resolves: () => true, customKey: camelCase };
+    case "floor":
+      return {
+        resolves: (spec) => spec.domainClaim !== undefined,
+        customKey: (key) => key,
+      };
+    default: {
+      const exhaustive: never = mode;
+      throw new AegisDomainError("Unhandled claim read mode", {
+        code: "translate_unhandled_read_mode",
+        data: { mode: String(exhaustive) },
+        title: "Unhandled Claim Read Mode",
+        details: "A ClaimReadMode member has no rules in the claim read core.",
+      });
+    }
+  }
+};
+
+/**
  * The read core (wire -> `{ claims, custom }`), single-pass over the registry.
  * Registered claims resolve to `spec.domain` with their value decoded, tolerating
  * either the selected wire name or the camelCase domain name in the input (domain
- * form takes precedence, matching `extractDomainClaims`). Unregistered keys flip
- * to camelCase into `custom` with their value untouched. The VALUE decoding is
- * identical for JOSE and COSE — only `nameOf` differs (`iss`/`exp`/… agree, so
- * only a name-diverging claim like `cti` is looked up differently).
- */
-/**
- * The registry pass: wire dict -> `{ claims, custom }`, with the wire spelling
- * chosen by `nameOf`. Exported because `resolve-domain-buckets.ts` continues
- * from here to the four-bucket shape both read doors share.
+ * form takes precedence). The VALUE decoding is identical for JOSE and COSE and
+ * for both read modes — only `nameOf` and {@link ClaimReadMode} differ.
  *
- * ⚠ This TWO-bucket form is still the right one for the profiled verify FLOOR,
- * which needs every domain claim flat in one dict: `profile.required` may name a
+ * Exported because `resolve-domain-buckets.ts` continues from here to the
+ * four-bucket shape both read doors share.
+ *
+ * ⚠ This TWO-bucket form is the right one for the profiled verify FLOOR, which
+ * needs every domain claim flat in one dict: `profile.required` may name a
  * profile-category claim, and bucketing it away would report a present claim as
  * missing.
  */
-export const wireToDomain = (wire: Dict, nameOf: NameSelector): JoseToDomainResult => {
+export const wireToDomain = (
+  wire: Dict,
+  nameOf: NameSelector,
+  mode: ClaimReadMode = "domain",
+): JoseToDomainResult => {
+  const rules = claimReadRules(mode);
   const consumed = new Set<string>();
   const claims: Dict = {};
 
   for (const spec of CLAIM_SPECS) {
+    // The floor read resolves ONLY the extracted set; every other registered
+    // claim is left for `custom`, verbatim, exactly as it arrived.
+    if (!rules.resolves(spec)) continue;
+
     const wireName = nameOf(spec);
-    // Domain (camel) form takes precedence over the wire name, per extract-claims.
+    // Domain (camel) form takes precedence over the wire name.
     const key =
       spec.domain in wire ? spec.domain : wireName in wire ? wireName : undefined;
     if (key === undefined) continue;
@@ -418,11 +495,26 @@ export const wireToDomain = (wire: Dict, nameOf: NameSelector): JoseToDomainResu
   const custom: Dict = {};
   for (const [key, value] of Object.entries(wire)) {
     if (consumed.has(key)) continue;
-    custom[camelCase(key)] = value;
+    custom[rules.customKey(key)] = value;
   }
 
   return { claims: omitUndefined(claims), custom };
 };
+
+/**
+ * The verify-FLOOR read: raw wire claims -> `{ claims, custom }` where `claims`
+ * is the {@link DomainClaims} set and `custom` holds every remaining key under
+ * its ORIGINAL spelling. The single caller is the profiled JOSE verify pipeline,
+ * which flattens the two back together and asks the floor what is present.
+ *
+ * JOSE-named because that caller reads `verified.wire.payload` off a JWT/JWE — a
+ * COSE token is routed to `verifyCoseToken` before this point and never arrives
+ * here. That split is the COSE floor's own second extractor, which the verify
+ * rewrite removes; this function is deliberately not generalised to meet it,
+ * because doing so would decide the policy question that rewrite owns.
+ */
+export const wireToFloorClaims = (wire: Dict): JoseToDomainResult =>
+  wireToDomain(wire, joseName, "floor");
 
 /**
  * JOSE/camel-keyed wire dict -> `{ claims, custom }`.

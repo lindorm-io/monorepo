@@ -6,7 +6,8 @@ import type {
   TokenContent,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
-import { buildSignedJwt } from "./jwt-payload.js";
+import { joseName } from "../claims/claims-registry.js";
+import { buildSignedToken } from "./build-signed-token.js";
 
 /**
  * The raw JWS sign namespace (`aegis.jws.sign`): resolve the signing key and sign
@@ -38,5 +39,5 @@ export const rawSignJws = async ({
       certificateThumbprintSha1 ?? deps.certificateThumbprintSha1,
   });
 
-  return buildSignedJwt(token, {}, options.header?.oid, "jws");
+  return buildSignedToken(token, {}, options.header?.oid, "jws", joseName);
 };

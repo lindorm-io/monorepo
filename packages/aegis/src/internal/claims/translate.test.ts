@@ -1,10 +1,9 @@
 import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import { describe, expect, test } from "vitest";
-import { extractDomainClaims } from "../utils/extract-claims.js";
 import type { TokenProfile } from "../../types/index.js";
 import { assembleCommonClaims } from "../utils/assemble-common-claims.js";
-import { domainToJose, joseToDomain } from "./translate.js";
+import { domainToJose, joseToDomain, wireToFloorClaims } from "./translate.js";
 
 // Freeze time so the `expires("1h")` / `new Date()` calls resolve to a stable
 // instant (the pinned snapshot, not a race).
@@ -160,9 +159,9 @@ describe("domainToJose — content -> wire mapping", () => {
   });
 });
 
-describe("joseToDomain — read parity with extractDomainClaims", () => {
-  // A wire dict of ONLY the claims extractDomainClaims extracts, so both parse
-  // the SAME set (txn/events/profile/sensitive are the intended extension —
+describe("joseToDomain — the two read modes decode identically", () => {
+  // A wire dict of ONLY the claims the FLOOR mode resolves, so both modes parse
+  // the SAME set (txn/events/profile/sensitive are the domain mode's extension —
   // covered separately below).
   const wire: Dict = {
     iss: "https://issuer.lindorm.io/",
@@ -207,9 +206,27 @@ describe("joseToDomain — read parity with extractDomainClaims", () => {
     authorization_details: [{ type: "payment" }],
   };
 
-  test("registered claims decode IDENTICALLY to extractDomainClaims", () => {
-    const { claims: expected } = extractDomainClaims(wire);
-    expect(joseToDomain(wire).claims).toEqual(expected);
+  // The READ direction's frozen record. Its write twin is snapshotted above; this
+  // is the only thing pinning the DECODED OUTPUT, so every per-claim decoder —
+  // date, array scalar-tolerance, audience wrap, every bespoke builder — is
+  // covered over the full 38-key wire dict at once.
+  //
+  // ⚠ It exists because the mode-equality test below CANNOT stand in for it: both
+  // sides of that comparison run the same `decodeValue`, so a decoder change moves
+  // them together and it stays green. Flipping `roles` from `array/"spaced"` to
+  // `array/"strict"` — a wire `"admin editor"` silently decoding to `undefined` —
+  // is exactly that shape, and it is this snapshot that catches it.
+  test("the decoded claims match their frozen record", () => {
+    expect(joseToDomain(wire).claims).toMatchSnapshot();
+  });
+
+  // The two modes share ONE set of per-claim decoders; the only things that may
+  // differ are WHICH claims are resolved and how the leftovers are keyed. Over a
+  // dict both modes fully resolve, the decoded claims must be equal — that is
+  // what makes the floor mode a scope restriction rather than a second codec.
+  // A SECONDARY check: it pins the scope-restriction property, not the decoders.
+  test("the floor mode decodes registered claims IDENTICALLY to the domain mode", () => {
+    expect(wireToFloorClaims(wire).claims).toEqual(joseToDomain(wire).claims);
   });
 
   test("value decoders match (dates → Date, string arrays split, audience wraps)", () => {
@@ -295,17 +312,120 @@ describe("custom claim case flip (R18 — Aegis-side, kits verbatim)", () => {
 });
 
 describe("registry-complete extension (intentional, inert until Phase 4/13)", () => {
-  test("joseToDomain now extracts txn/events that extractDomainClaims left in rest", () => {
+  test("the domain mode extracts txn/events that the floor mode leaves in custom", () => {
     const wire: Dict = { iss: "https://i/", txn: "txn-1", events: { "urn:e": {} } };
 
-    // Old mapper: txn/events fall through to `rest` (unextracted).
-    const { rest } = extractDomainClaims(wire);
-    expect(rest).toEqual({ txn: "txn-1", events: { "urn:e": {} } });
+    // Floor mode: txn/events carry no `domainClaim` mark, so they fall through to
+    // `custom` — unresolved and, crucially, under their ORIGINAL keys.
+    expect(wireToFloorClaims(wire).custom).toEqual({
+      txn: "txn-1",
+      events: { "urn:e": {} },
+    });
 
-    // Translator: they are registered, so they resolve to their domain names.
+    // Domain mode: they are registered, so they resolve to their domain names.
     const { claims, custom } = joseToDomain(wire);
     expect(claims.transactionId).toBe("txn-1");
     expect(claims.events).toEqual({ "urn:e": {} });
     expect(custom).toEqual({});
+  });
+});
+
+/**
+ * The floor read is what the profiled verify pipeline asks "is this claim present
+ * ON THE WIRE". Its two divergences from the domain read are deliberate and
+ * load-bearing, so they are pinned here rather than left to be discovered by a
+ * later simplification.
+ */
+describe("wireToFloorClaims — the verify-floor read mode", () => {
+  const ISSUER = "https://test.lindorm.io/";
+
+  test("leaves an UNRESOLVED key in custom VERBATIM, never case-converted", () => {
+    // The whole point: a wire `expires_at` that camelCased to `expiresAt` would
+    // satisfy an exp-presence floor it has no business satisfying.
+    const { claims, custom } = wireToFloorClaims({
+      iss: ISSUER,
+      expires_at: 978307200,
+      token_introspection: { active: true },
+      acme_flag: "x",
+    });
+
+    expect(claims.expiresAt).toBeUndefined();
+    expect(custom).toEqual({
+      expires_at: 978307200,
+      token_introspection: { active: true },
+      acme_flag: "x",
+    });
+  });
+
+  test("resolves ONLY the domainClaim-marked claims; a profile claim stays in custom", () => {
+    const { claims, custom } = wireToFloorClaims({
+      iss: ISSUER,
+      given_name: "Given",
+      email: "user@example.com",
+    });
+
+    expect(claims).toEqual({ issuer: ISSUER });
+    expect(custom).toEqual({ given_name: "Given", email: "user@example.com" });
+  });
+
+  test("maps the wire sub_id to the domain subjectId (RFC 9493)", () => {
+    const { claims, custom } = wireToFloorClaims({
+      iss: ISSUER,
+      sub_id: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+    });
+
+    expect(claims).toMatchObject({
+      issuer: ISSUER,
+      subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+    });
+    expect(custom).toEqual({});
+  });
+
+  test("accepts the camelCase domain form", () => {
+    const { claims, custom } = wireToFloorClaims({
+      subjectId: { format: "opaque", id: "abc" },
+    });
+
+    expect(claims).toMatchObject({ subjectId: { format: "opaque", id: "abc" } });
+    expect(custom).toEqual({});
+  });
+
+  test("drops a non-object sub_id", () => {
+    expect(
+      wireToFloorClaims({ sub_id: "not-an-object" }).claims.subjectId,
+    ).toBeUndefined();
+  });
+
+  test("maps the wire conforms_to to the domain conformsTo", () => {
+    const { claims, custom } = wireToFloorClaims({
+      conforms_to: ["urn:lindorm:profile:fapi", "urn:lindorm:profile:pci"],
+    });
+
+    expect(claims.conformsTo).toEqual([
+      "urn:lindorm:profile:fapi",
+      "urn:lindorm:profile:pci",
+    ]);
+    expect(custom).toEqual({});
+  });
+
+  test("accepts the camelCase conformsTo and a space-delimited string", () => {
+    expect(wireToFloorClaims({ conformsTo: ["a", "b"] }).claims.conformsTo).toEqual([
+      "a",
+      "b",
+    ]);
+    expect(wireToFloorClaims({ conforms_to: "a b" }).claims.conformsTo).toEqual([
+      "a",
+      "b",
+    ]);
+  });
+
+  test("marks a wrongly-typed claim CONSUMED, so it lands in neither bucket", () => {
+    // Preserved defect (finding #10): the key is consumed before decoding, so a
+    // numeric `nonce` is invisible to a forbidden-claim check. Pinned so the
+    // repair is a deliberate change, not an accident of a later refactor.
+    const { claims, custom } = wireToFloorClaims({ iss: ISSUER, nonce: 12345 });
+
+    expect(claims.nonce).toBeUndefined();
+    expect(custom.nonce).toBeUndefined();
   });
 });

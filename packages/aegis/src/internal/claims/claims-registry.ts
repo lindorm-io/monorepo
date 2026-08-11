@@ -11,10 +11,10 @@
  * COSE encoder `domain → wire.cose`. Keeping it in one table is the anti-drift
  * mechanism: a claim is defined exactly once.
  *
- * Provenance: the registry is the SOURCE OF TRUTH for the `domain ↔ jose` set —
- * `extract-claims.ts` derives its `FIELD_KEYS`/`RFC8693_KEYS`/`POP_KEYS` from the
- * `subset` marks below, and a drift-guard test freezes the old lists and asserts
- * the derived sets still equal them.
+ * Provenance: the registry is the SOURCE OF TRUTH for the `domain ↔ jose` set.
+ * The `domainClaim` marks below ARE the `DomainClaims` set — what the verify-floor
+ * read resolves — and a drift-guard test freezes those names and binds them to the
+ * `DomainClaims` type in both directions.
  *
  * --- The COSE map-key rule (byte-size minimisation) ---
  *
@@ -112,7 +112,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "https://issuer.lindorm.test",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "subject",
@@ -124,7 +124,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "subject_sample",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "audience",
@@ -139,7 +139,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["https://api.lindorm.test"],
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "expiresAt",
@@ -152,7 +152,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sample: SAMPLE_DATE,
     bucket: "claims",
     temporal: "future",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "notBefore",
@@ -165,7 +165,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sample: SAMPLE_DATE,
     bucket: "claims",
     temporal: "past",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "issuedAt",
@@ -178,7 +178,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sample: SAMPLE_DATE,
     bucket: "claims",
     temporal: "past",
-    subset: "core",
+    domainClaim: true,
   },
   // CWT cti (RFC 8392 label 7). The one genuine PER-WIRE codec: a text string on
   // JOSE, its raw UTF-8 bytes on COSE. That divergence used to be spelled as a
@@ -193,7 +193,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "token_id_sample",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   // RFC 8747
   {
@@ -209,7 +209,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     // CBOR canonicalisation, so it is a different value, not a translation).
     sample: { keyId: "key_sample" },
     bucket: "claims",
-    subset: "pop",
+    domainClaim: true,
   },
   // RFC 8693
   {
@@ -222,7 +222,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["openid", "profile"],
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
 
   // --- (b) No registered integer label AND a short JOSE name (≤ 4 chars):
@@ -239,7 +239,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "urn:lindorm:acr:mfa",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "authMethods",
@@ -251,7 +251,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["pwd", "otp"],
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "authorizedParty",
@@ -263,7 +263,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "client_sample",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "vectorOfTrust",
@@ -275,7 +275,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "P1.Cc.Cd",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "vectorTrustMark",
@@ -287,7 +287,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "https://issuer.lindorm.test/vtm",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   // RFC 8693
   {
@@ -300,7 +300,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: { subject: "actor_sample" },
     bucket: "claims",
-    subset: "rfc8693",
+    domainClaim: true,
   },
   {
     domain: "grantType",
@@ -312,7 +312,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "authorization_code",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   // OIDC front-channel logout
   {
@@ -325,9 +325,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "session_sample",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
-  // RFC 8417 txn — emitted but NOT extracted into DomainClaims (no subset mark).
+  // RFC 8417 txn — emitted but NOT extracted into DomainClaims (no domainClaim).
   {
     domain: "transactionId",
     wire: named("txn"),
@@ -350,7 +350,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   // NIST SP 800-63B
   {
@@ -363,7 +363,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   // NIST SP 800-63A
   {
@@ -376,7 +376,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   // NIST SP 800-63C
   {
@@ -389,7 +389,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   // The resolved (primary) auth factor — ONE value (1fa/2fa/phr/phrh), not the
   // categories it was made of; `afc` below carries those.
@@ -403,7 +403,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "2fa",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   // PSD2 SCA categories (knowledge/possession/inherence) — the axes exercised.
   {
@@ -416,7 +416,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["knowledge", "possession"],
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "sessionHint",
@@ -428,7 +428,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "session_hint_sample",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "subjectHint",
@@ -440,7 +440,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "subject_hint_sample",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
 
   // --- (c) No registered integer label but a long JOSE name (≥ 5 chars):
@@ -459,7 +459,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "codeHash",
@@ -471,7 +471,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "stateHash",
@@ -483,7 +483,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "nonce",
@@ -495,7 +495,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "nonce_sample",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "authTime",
@@ -508,7 +508,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sample: SAMPLE_DATE,
     bucket: "claims",
     temporal: "past",
-    subset: "core",
+    domainClaim: true,
   },
   // RFC 9396
   {
@@ -521,7 +521,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: [{ type: "payment_initiation" }],
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   // RFC 8693
   {
@@ -534,7 +534,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: { subject: "actor_sample" },
     bucket: "claims",
-    subset: "rfc8693",
+    domainClaim: true,
   },
   {
     domain: "entitlements",
@@ -546,7 +546,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["entitlement_sample"],
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "groups",
@@ -558,7 +558,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["group_sample"],
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "roles",
@@ -570,7 +570,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["role_sample"],
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "permissions",
@@ -582,7 +582,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["permission_sample"],
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   {
     domain: "clientId",
@@ -594,12 +594,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "client_sample",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
 
   // --- SET claims (RFC 8417 / RFC 9493). `subjectId` (RFC 9493) IS extracted
-  //     (subset "core"); `events` is SET-token-specific and NOT extracted, so it
-  //     carries no subset mark.
+  //     (`domainClaim`); `events` is SET-token-specific and NOT extracted, so it
+  //     carries no mark.
   // RFC 9493
   {
     domain: "subjectId",
@@ -611,7 +611,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: { format: "opaque", id: "subject_sample" },
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
   // RFC 8417 SET events
   {
@@ -636,7 +636,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "tenant_sample",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
 
   // RS-facing posture signal: the profiles the token's issuing client clears
@@ -652,7 +652,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["strict"],
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
 
   // --- SENSITIVE identity claims (government-issued personal identifiers) ---
@@ -1086,7 +1086,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "sam",
     bucket: "claims",
-    subset: "core",
+    domainClaim: true,
   },
 ];
 

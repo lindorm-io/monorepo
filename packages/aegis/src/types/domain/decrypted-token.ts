@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { DomainClaims } from "../../internal/utils/extract-claims.js";
+import type { DomainClaims } from "../claims/domain/domain-claims.js";
 import type { DomainTokenHeader } from "../header/domain-header.js";
 
 /**

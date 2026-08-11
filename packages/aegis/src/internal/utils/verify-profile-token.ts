@@ -5,11 +5,11 @@ import type {
   VerifiedToken,
   VerifyAssert,
 } from "../../types/index.js";
+import { wireToFloorClaims } from "../claims/translate.js";
 import { isCose } from "../cose/is-cose.js";
 import { resolveProfile } from "../profiles/registry.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { enforceVerifyFloor } from "./enforce-verify-floor.js";
-import { extractDomainClaims } from "./extract-claims.js";
 import { verifyCoseToken } from "./verify-cose-token.js";
 import { verifyJwtToken } from "./verify-jwt.js";
 import { verifyToken } from "./verify-token.js";
@@ -99,12 +99,10 @@ export const verifyProfileToken = async ({
       });
 
   // DOMAIN-keyed floor payload from the RAW wire claims (`verified.wire.payload`),
-  // not `verified.claims`: extractDomainClaims reports true wire presence and
-  // leaves non-domain claims flat in `rest`, which the floor's required-claims
-  // presence check needs.
-  const { claims: domain, rest: custom } = extractDomainClaims(
-    verified.wire?.payload ?? {},
-  );
+  // not `verified.claims`: the floor read reports true wire presence and leaves
+  // every non-domain claim flat in `custom` under its ORIGINAL spelling, which is
+  // what the floor's required-claims presence check needs.
+  const { claims: domain, custom } = wireToFloorClaims(verified.wire?.payload ?? {});
 
   enforceVerifyFloor({
     // The header alg AFTER a successful verify, which the kit has already

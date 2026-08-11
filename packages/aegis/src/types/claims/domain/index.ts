@@ -3,6 +3,7 @@ export * from "./aegis-profile.js";
 export * from "./aegis-sensitive.js";
 export * from "./confirmation-claim.js";
 export * from "./delegation-claims.js";
+export * from "./domain-claims.js";
 export * from "./level-of-assurance.js";
 export * from "./lindorm-claims.js";
 export * from "./oauth-claims.js";

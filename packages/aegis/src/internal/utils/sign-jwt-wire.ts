@@ -9,7 +9,8 @@ import type {
   SignedToken,
 } from "../../types/index.js";
 import { computeTypHeader, extractTypPrefix } from "./compute-typ-header.js";
-import { buildSignedJwt } from "./jwt-payload.js";
+import { joseName } from "../claims/claims-registry.js";
+import { buildSignedToken } from "./build-signed-token.js";
 
 /**
  * Serialize an ALREADY-WIRE jose-keyed claim dict into a `SignedToken` via the
@@ -54,5 +55,5 @@ export const signJwtWire = ({
     },
   );
 
-  return buildSignedJwt(token, wireClaims, options.header?.oid, "jwt");
+  return buildSignedToken(token, wireClaims, options.header?.oid, "jwt", joseName);
 };

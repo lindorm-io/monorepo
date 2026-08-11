@@ -463,6 +463,15 @@ export const joseByCose = (label: number): string | undefined => {
  * truth the COSE kits emit onto the wire. THROWS if COSE does not carry the
  * parameter, reporting the registry's stated `reason`, which is the drift guard
  * against a caller asking for a label that does not exist.
+ *
+ * ⚠ There is deliberately NO header twin of the claim registry's `NameSelector`.
+ * The claim translator needs one because its two cores are SHARED between the
+ * wires and differ only in the emitted name; the header translator's passes are
+ * not shared — the JOSE passes key by `headerJoseName`, the COSE pass by this
+ * function, and neither is ever the other. A `(spec) => string | number` selector
+ * over both only buys a cast back to `number` at the one COSE call site, which
+ * RFC 9052 §1.5 (`label = int / tstr`) makes an unsafe cast the day a parameter
+ * gets a COSE STRING key.
  */
 export const coseByJose = (jose: string): number => {
   const spec = byJose.get(jose);

@@ -90,3 +90,86 @@ exports[`domainToJose — content -> wire mapping > the full domain vocabulary m
   "vtm": "https://vtm/",
 }
 `;
+
+exports[`joseToDomain — the two read modes decode identically > the decoded claims match their frozen record 1`] = `
+{
+  "accessTokenHash": "at-hash-value",
+  "act": {
+    "clientId": "c-2",
+    "issuer": "https://delegator/",
+    "subject": "actor",
+  },
+  "audience": [
+    "https://rs.lindorm.io/",
+  ],
+  "authContextClassReference": "urn:acr:high",
+  "authFactorCategories": [
+    "knowledge",
+    "possession",
+  ],
+  "authFactorReference": "2fa",
+  "authMethods": [
+    "pwd",
+  ],
+  "authTime": 2024-01-01T07:55:00.000Z,
+  "authenticatorAssuranceLevel": 2,
+  "authorizationDetails": [
+    {
+      "type": "payment",
+    },
+  ],
+  "authorizedParty": "client-1",
+  "clientId": "client-1",
+  "codeHash": "c-hash-value",
+  "confirmation": {
+    "keyId": "kid-1",
+    "thumbprint": "jkt-1",
+  },
+  "conformsTo": [
+    "urn:lindorm:profile:fapi",
+  ],
+  "entitlements": [
+    "e1",
+  ],
+  "expiresAt": 2024-01-01T09:00:00.000Z,
+  "federationAssuranceLevel": 1,
+  "grantType": "authorization_code",
+  "groups": [
+    "g1",
+  ],
+  "identityAssuranceLevel": 3,
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "issuer": "https://issuer.lindorm.io/",
+  "levelOfAssurance": 3,
+  "mayAct": {
+    "subject": "may-actor",
+  },
+  "nonce": "n-1",
+  "notBefore": 2024-01-01T07:59:00.000Z,
+  "permissions": [
+    "read",
+  ],
+  "roles": [
+    "admin",
+    "editor",
+  ],
+  "scope": [
+    "read",
+    "write",
+  ],
+  "sessionHint": "sih-1",
+  "sessionId": "sid-1",
+  "stateHash": "s-hash-value",
+  "subject": "user-1",
+  "subjectHint": "suh-1",
+  "subjectId": {
+    "format": "iss_sub",
+    "iss": "https://i/",
+    "sub": "u",
+  },
+  "tenantId": "tenant-1",
+  "tokenId": "jti-1",
+  "vectorOfTrust": "P1.Cc",
+  "vectorTrustMark": "https://vtm/",
+}
+`;

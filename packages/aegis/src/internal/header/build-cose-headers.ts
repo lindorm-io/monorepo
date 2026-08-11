@@ -1,7 +1,7 @@
 import type { CoseError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
 import { joseByCose } from "./header-registry.js";
-import { wireHeaderToCoseMap } from "./wire-header-to-cose-map.js";
+import { wireHeaderToCoseMap } from "../utils/token-header.js";
 
 /**
  * Translate and VALIDATE the two caller-controlled COSE header bags (`header` →

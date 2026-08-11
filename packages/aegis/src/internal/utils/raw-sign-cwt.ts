@@ -7,7 +7,8 @@ import type {
   SignedToken,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
-import { buildSignedCwt } from "./cwt-payload.js";
+import { coseName } from "../claims/claims-registry.js";
+import { buildSignedToken } from "./build-signed-token.js";
 
 /**
  * The raw CWT sign namespace (`aegis.cwt.sign`) — the generic-CWT mirror of the
@@ -37,5 +38,11 @@ export const rawSignCwt = async <C extends Dict = Dict>({
 
   const token = new CwtKit({ kryptos, logger: deps.logger }).sign<C>(claims, rest);
 
-  return buildSignedCwt(token.toString("base64url"), claims, rest.header?.oid, "cwt");
+  return buildSignedToken(
+    token.toString("base64url"),
+    claims,
+    rest.header?.oid,
+    "cwt",
+    coseName,
+  );
 };

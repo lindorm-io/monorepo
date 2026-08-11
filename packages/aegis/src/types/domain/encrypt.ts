@@ -1,6 +1,6 @@
 import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
-import type { DomainClaims } from "../../internal/utils/extract-claims.js";
+import type { DomainClaims } from "../claims/domain/domain-claims.js";
 import type { AegisDecryptKey, AegisEncKey } from "../keys/key-selectors.js";
 import type { DomainTokenEnvelope } from "./domain-envelope.js";
 

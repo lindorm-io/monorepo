@@ -1,5 +1,6 @@
 import type { WireTokenHeader, DomainTokenHeaderOptions } from "../../types/index.js";
-import { mapTokenHeader, parseTokenHeader } from "./token-header.js";
+import { headerCoseLabel, headerByJose } from "../header/header-registry.js";
+import { mapTokenHeader, parseTokenHeader, wireHeaderToCoseMap } from "./token-header.js";
 import { describe, expect, test } from "vitest";
 
 describe("data-driven header codec", () => {
@@ -162,5 +163,52 @@ describe("parseTokenHeader", () => {
 
       expect(parsed.critical).toEqual(["alpha", "bravo", "zulu"]);
     });
+  });
+});
+
+/**
+ * The COSE write pass, folded into this translator from the separate
+ * `wire-header-to-cose-map.ts`. It had no test of its own there — which is part
+ * of how the COSE header path drifted from the JOSE one.
+ */
+describe("wireHeaderToCoseMap (the COSE write pass)", () => {
+  test("resolves each wire name to the registry's COSE label", () => {
+    const map = wireHeaderToCoseMap({ typ: "application/at+jwt", cty: "JWT" });
+
+    // Asserted against the REGISTRY, not against a copy of it here: the label
+    // values themselves are frozen by `header-registry.test.ts`.
+    expect(map.get(headerCoseLabel(headerByJose("typ")!)!)).toBe("application/at+jwt");
+    expect(map.get(headerCoseLabel(headerByJose("cty")!)!)).toBe("JWT");
+    expect(map.size).toBe(2);
+  });
+
+  test("returns an empty map for an absent bag", () => {
+    expect(wireHeaderToCoseMap(undefined).size).toBe(0);
+  });
+
+  test("skips an undefined value rather than emitting a null label entry", () => {
+    expect(wireHeaderToCoseMap({ typ: undefined, cty: "JWT" }).size).toBe(1);
+  });
+
+  test("passes values through UNSHAPED — crit members stay wire names, unsorted", () => {
+    // The deliberate asymmetry with `mapTokenHeader`: the COSE pass does not
+    // guard, remap or sort. A change here moves the protected-header bytes.
+    const crit = ["zulu", "alpha"];
+    const map = wireHeaderToCoseMap({ crit });
+
+    expect(map.get(headerCoseLabel(headerByJose("crit")!)!)).toEqual(["zulu", "alpha"]);
+  });
+
+  test("REFUSES a parameter COSE cannot carry, with the registry's stated reason", () => {
+    // `apu` is `wireAbsent` — a drop here would silently lose a caller's header.
+    expect(() => wireHeaderToCoseMap({ apu: "cGFydHktdQ" } as never)).toThrow(
+      expect.objectContaining({ code: "header_no_cose_label" }),
+    );
+  });
+
+  test("REFUSES an unregistered wire key rather than dropping it", () => {
+    expect(() => wireHeaderToCoseMap({ nonsense: "x" } as never)).toThrow(
+      expect.objectContaining({ code: "header_no_cose_label" }),
+    );
   });
 });

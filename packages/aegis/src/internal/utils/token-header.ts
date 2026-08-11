@@ -14,21 +14,33 @@ import {
   type HeaderSpec,
   headerByDomain,
   headerByJose,
+  coseByJose,
   headerJoseName,
 } from "../header/header-registry.js";
 import { getBaseFormat } from "./compute-typ-header.js";
 
 /**
  * The header translator (the header-side twin of `claims/translate.ts`): the ONE
- * place the JOSE wire<->domain header NAME map is applied, driven entirely by
- * `HEADER_REGISTRY`. Both directions are a single DATA-DRIVEN pass — over the
- * actual header data, not a curated subset: {@link mapTokenHeader} (write,
- * `domain -> jose`) iterates the domain-keyed source and looks each key up via
- * `headerByDomain`; {@link parseTokenHeader} (read, `jose -> domain`) iterates the
- * decoded wire claims and looks each key up via `headerByJose`. Unlike custom
- * claims, headers are a CLOSED set: a key with no registry entry is dropped (no
- * passthrough) — the registry states that once, as `unregistered: "drop"`. The
- * registry's `HeaderCodec` drives the value shaping below.
+ * place a header parameter's name is translated, in ANY direction, on EITHER
+ * wire, driven entirely by `HEADER_REGISTRY`. Every pass is DATA-DRIVEN — it
+ * iterates the actual header data, not a curated subset, and looks each key up in
+ * the registry:
+ *
+ *   - {@link mapTokenHeader}       write, `domain -> jose`  (via `headerByDomain`)
+ *   - {@link parseTokenHeader}     read,  `jose -> domain`  (via `headerByJose`)
+ *   - {@link wireHeaderToCoseMap}  write, `jose -> cose label` (via `coseByJose`)
+ *
+ * Unlike custom claims, headers are a CLOSED set: a key with no registry entry is
+ * dropped (no passthrough) — the registry states that once, as
+ * `unregistered: "drop"`. The registry's `HeaderCodec` drives the value shaping.
+ *
+ * ⚠ ONE asymmetry survives, deliberately, and it is a WRITE-side one: the JOSE
+ * pass SHAPES values through the codec (guards, `crit` member remap, canonical
+ * key sort) while the COSE pass is value-PASSTHROUGH. That is what the COSE write
+ * path does today — the caller-settable COSE params already carry their wire
+ * representation — and shaping them here would change the bytes. Closing it means
+ * rebuilding the COSE header write path, which belongs with the kits, not with
+ * the codec unification.
  */
 
 // --- `crit` member remap (the one member-transforming parameter) ------------
@@ -197,4 +209,38 @@ export const parseTokenHeader = <T extends DomainTokenHeader = DomainTokenHeader
   result.baseFormat = getBaseFormat(decoded.typ);
 
   return omitUndefined(result) as T;
+};
+
+/**
+ * The COSE write pass: a caller's WIRE-named partial header bag -> a COSE
+ * integer-label map, each wire name resolved through the registry by
+ * {@link coseByJose} (which THROWS for a parameter COSE has no integer label).
+ * Undefined values are skipped.
+ *
+ * The inverse of `mergeCoseWireHeader`'s read direction, and — per the file
+ * docstring — value-PASSTHROUGH: the caller-settable COSE params
+ * (`typ`/`cty`/`crit`/`x5c`/`x5u`) already carry the wire representation that
+ * round-trips back through `mergeCoseWireHeader` on read.
+ */
+export const wireHeaderToCoseMap = (
+  bag: Partial<WireTokenHeader> | undefined,
+): Map<number, unknown> => {
+  const map = new Map<number, unknown>();
+
+  if (!bag) return map;
+
+  for (const [jose, value] of Object.entries(bag)) {
+    if (value === undefined) continue;
+
+    // ⚠ An UNREGISTERED wire key is NOT dropped here, unlike the two JOSE passes:
+    // `coseByJose` refuses it with `header_no_cose_label`. A caller naming a
+    // parameter COSE cannot carry must hear so, not watch it vanish — this is the
+    // one place the closed-set rule refuses instead of drops. That is also why
+    // there is no registry lookup first: a registered parameter and an
+    // unregistered one take the SAME call, which is the only one that can type
+    // the map key as the `number` the map declares.
+    map.set(coseByJose(jose), value);
+  }
+
+  return map;
 };

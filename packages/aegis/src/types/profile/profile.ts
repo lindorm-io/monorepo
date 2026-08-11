@@ -3,7 +3,7 @@ import type { Expiry } from "@lindorm/date";
 import type { KryptosAlgClass } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
-import type { DomainClaims } from "../../internal/utils/extract-claims.js";
+import type { DomainClaims } from "../claims/domain/domain-claims.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { TokenFormat } from "../../internal/utils/select-encoder.js";
 import type { AegisEncKey, AegisSignKey } from "../keys/key-selectors.js";

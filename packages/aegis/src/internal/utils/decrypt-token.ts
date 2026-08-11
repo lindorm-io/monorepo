@@ -13,7 +13,7 @@ import {
 } from "../cose/cose-encryption.js";
 import { decodeCwtClaims } from "../cose/cwt-claims.js";
 import type { AegisDeps } from "./aegis-deps.js";
-import type { DomainClaims } from "./extract-claims.js";
+import type { DomainClaims } from "../../types/claims/domain/domain-claims.js";
 import { COSE_CLAIMS_TYP } from "./encrypt-token.js";
 import { joseDomainHeader } from "./jose-domain-header.js";
 import { rawDecryptJwe } from "./raw-decrypt-jwe.js";

@@ -1,6 +1,6 @@
 import type { Condition, ConditionOperator } from "@lindorm/match";
 import type { TokenType } from "../../constants/token-type.js";
-import type { DomainClaims } from "../../internal/utils/extract-claims.js";
+import type { DomainClaims } from "../claims/domain/domain-claims.js";
 
 /**
  * The trimmed domain matcher set (DESIGN §6 — the 25 → 8 audit). This is the
