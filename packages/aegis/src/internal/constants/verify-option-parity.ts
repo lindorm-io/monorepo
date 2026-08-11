@@ -125,7 +125,6 @@ export const VERIFY_OPTION_PARITY = {
   expPresence: {
     wires: "both",
     default: { jose: "required", cose: "required" },
-    bug: "cose: skipped entirely when verify is called with neither options nor assert (F2)",
   },
 } satisfies VerifyOptionParity;
 

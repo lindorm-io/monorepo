@@ -1,7 +1,13 @@
 import { describe, expect, test } from "vitest";
 import type { AegisProfile, AegisSensitive } from "../../types/index.js";
 import { DOMAIN_CLAIM_KEYS } from "../utils/extract-claims.js";
-import { CLAIMS_REGISTRY, claimByDomain, claimByJose } from "./claims-registry.js";
+import {
+  CLAIMS_REGISTRY,
+  claimByDomain,
+  claimByJose,
+  coseName,
+  joseName,
+} from "./claims-registry.js";
 
 // Witness whose keys ARE the AegisSensitive field set. Typed as
 // `Record<keyof AegisSensitive, true>`, so adding OR removing a field
@@ -53,6 +59,20 @@ const PROFILE_FIELDS: Record<keyof AegisProfile, true> = {
 };
 
 describe("CLAIM_REGISTRY", () => {
+  // The divergence SET is already pinned below ("coseName is present exactly
+  // for the JOSE↔COSE name divergences"). What that test does not cover is the
+  // two SELECTORS built on it, which are what every wire-keyed consumer now
+  // routes through — so bind them to the same fact.
+  test("should give the two name selectors the same answer except where they diverge", () => {
+    for (const spec of CLAIMS_REGISTRY) {
+      const differs = joseName(spec) !== coseName(spec);
+
+      expect(differs, `${spec.domain}: selectors disagree unexpectedly`).toBe(
+        spec.coseName !== undefined && spec.coseName !== spec.jose,
+      );
+    }
+  });
+
   test("every domain claim from extract-claims FIELD_KEYS is in the registry", () => {
     for (const domain of Object.keys(DOMAIN_CLAIM_KEYS)) {
       expect(

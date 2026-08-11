@@ -25,7 +25,6 @@ exports[`verify option parity > should list the rows still awaiting a fix 1`] = 
   "trustBoundThumbprint",
   "key",
   "typPresence",
-  "expPresence",
 ]
 `;
 
@@ -63,7 +62,6 @@ exports[`verify option parity > should match the recorded contract 1`] = `
     "wires": "both",
   },
   "expPresence": {
-    "bug": "cose: skipped entirely when verify is called with neither options nor assert (F2)",
     "default": {
       "cose": "required",
       "jose": "required",

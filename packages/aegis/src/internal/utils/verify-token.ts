@@ -172,15 +172,18 @@ export const verifyToken = async <C extends Dict = Dict>({
         deps,
         issuer,
       });
-      if (options || assert) {
-        validateCwtClaims({
-          wire,
-          typ,
-          algorithm: decoded.algorithm as KryptosAlgorithm,
-          assert,
-          options: options ?? {},
-        });
-      }
+      // UNCONDITIONAL, exactly as the JOSE twin is: `verifyJwtToken` defaults
+      // `options = {}` and always runs the presence policy. Gating this on
+      // `options || assert` made the empty object meaningful — a bare
+      // `verify(cwt)` skipped claim validation entirely while
+      // `verify(cwt, undefined, {})` enforced it.
+      validateCwtClaims({
+        wire,
+        typ,
+        algorithm: decoded.algorithm as KryptosAlgorithm,
+        assert,
+        options: options ?? {},
+      });
 
       const verified = buildCoseVerifiedToken({
         wire,

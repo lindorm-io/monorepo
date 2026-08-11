@@ -854,6 +854,27 @@ export const claimByCoseName = (coseName: string): ClaimSpec | undefined =>
   byCoseName.get(coseName);
 
 /**
+ * Which WIRE NAME a claim spec carries — the one parameter that separates the
+ * JOSE and COSE variants of everything that keys a dict by claim name: the
+ * translator cores, and the identity-matcher builder.
+ *
+ * It lives HERE, beside the registry that owns the divergence, because it is a
+ * registry fact rather than a translator one. It was previously private to
+ * `translate.ts`, and the matcher builder — which keys a predicate the same way —
+ * hardcoded `spec.jose` instead. That predicate was then applied to a COSE-keyed
+ * wire, so an `assert: { tokenId }` looked for `jti` in a dict that spells it
+ * `cti`: an exact match rejected a legitimate token, and `$exists: false` passed
+ * on a token that HAS one.
+ */
+export type NameSelector = (spec: ClaimSpec) => string;
+
+/** The JOSE wire name. */
+export const joseName: NameSelector = (spec) => spec.jose;
+
+/** The COSE wire name: the registry's `coseName` where it diverges, else JOSE. */
+export const coseName: NameSelector = (spec) => spec.coseName ?? spec.jose;
+
+/**
  * The registry SUBSET carrying an optional mark, narrowed so the mark is REQUIRED
  * on each returned spec — the one canonical way to derive a mark-based claim set.
  * `specsWith("temporal")` yields specs whose `temporal` is `"past" | "future"`

@@ -3,6 +3,7 @@ import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { AegisDomainError } from "../../errors/index.js";
 import type { VerifyAssert, VerifyOptions } from "../../types/index.js";
+import { coseName } from "../claims/claims-registry.js";
 import { coseTyp } from "../cose/cose-typ.js";
 import { computeTypHeader } from "./compute-typ-header.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
@@ -16,10 +17,17 @@ import { validate } from "./validate.js";
  * (`CwtKit`/`CwmKit`.verify, Phase 9 R10), so this layer is identity-only — the
  * exact COSE mirror of `verifyJwtToDomain`.
  *
- * The input is the CWT's COSE-name-keyed WIRE (`CoseVerifyResult.wire`). The
- * matcher claims (`iss`/`aud`/`sub`/…) share the JOSE names, so the JOSE identity
- * matchers apply directly — no domain re-keying. The only name-diverging claim
- * (`cti`) is not a matcher claim, so it is irrelevant here.
+ * The input is the CWT's COSE-name-keyed WIRE (`CoseVerifyResult.wire`), so the
+ * predicate is BUILT with the COSE name selector. Most matcher claims
+ * (`iss`/`aud`/`sub`/…) spell the same on both wires, but `tokenId` does not —
+ * `jti` on JOSE, `cti` here.
+ *
+ * ⚠ This comment previously claimed `cti` "is not a matcher claim, so it is
+ * irrelevant here". It is one: `tokenId` is `keyof DomainClaims` and typechecks.
+ * The predicate was built with JOSE names and applied to this COSE-keyed wire, so
+ * an exact `tokenId` match rejected a legitimate token and, worse,
+ * `{ tokenId: { $exists: false } }` PASSED on a token that carries a `cti` — a
+ * replay guard getting a silent yes.
  */
 export const validateCwtClaims = ({
   wire,
@@ -73,7 +81,13 @@ export const validateCwtClaims = ({
     }
   }
 
-  const predicate = createIdentityMatchers(algorithm, omitUndefined(claimMatchers));
+  // The wire this predicate is applied to is COSE-name-keyed, so it must be
+  // BUILT that way — `cti`, not `jti`.
+  const predicate = createIdentityMatchers(
+    algorithm,
+    omitUndefined(claimMatchers),
+    coseName,
+  );
 
   try {
     validate(payload, predicate as never);

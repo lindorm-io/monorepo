@@ -804,9 +804,7 @@ A verify knob should mean the same thing whether the token arrived as a JWT or a
 CWT. Five do not yet: **`key`, `dpopProof`, `trustBoundThumbprint`, `actor` and
 `typPresence` are read on the JOSE path and dropped on the COSE claims path** —
 accepted and ignored rather than rejected, so a caller pinning a verification key
-or requiring a DPoP proof on a CWT silently gets neither. `expPresence` is read on
-COSE, but skipped entirely when `verify` is called with neither an assert nor an
-options argument.
+or requiring a DPoP proof on a CWT silently gets neither.
 
 The contract is a value, not prose: every field has a row in the internal wire-parity
 table stating which wires read it and what it resolves to per wire, and a row still

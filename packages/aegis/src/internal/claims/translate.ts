@@ -10,6 +10,9 @@ import {
   CLAIMS_REGISTRY,
   claimByDomain,
   claimsWith,
+  coseName,
+  joseName,
+  type NameSelector,
 } from "./claims-registry.js";
 
 /**
@@ -43,11 +46,8 @@ import {
  */
 
 // The wire-name selector — the ONE parameter that separates the JOSE and COSE
-// variants of both cores. COSE uses the registry's `coseName` where it diverges
-// (`jti` -> `cti`), else the JOSE name.
-type NameSelector = (spec: ClaimSpec) => string;
-const joseName: NameSelector = (spec) => spec.jose;
-const coseName: NameSelector = (spec) => spec.coseName ?? spec.jose;
+// variants of both cores — now lives on the registry that owns the divergence,
+// so the identity-matcher builder keys its predicate by the same rule.
 
 // --- Bespoke builders (write side), lifted from map-content-to-claims.ts -----
 

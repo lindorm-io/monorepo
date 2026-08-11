@@ -212,25 +212,30 @@ describe("Aegis — COSE", () => {
     });
 
     test("SUPPRESSES flat sensitive claims carried by an UNENCRYPTED CWT", async () => {
-      // A raw (unencrypted) CWT that carries the sensitive fields FLAT.
+      // The raw namespace is a PASSTHROUGH — it signs the payload verbatim — so
+      // the claims go on in their WIRE spelling. That is what puts genuinely flat
+      // sensitive claims on an unencrypted wire, which `mint` will never do:
+      // it encrypts or strips them. `exp` is set because the domain verify
+      // enforces exp presence by default, on this wire as on the other.
       const { token } = await aegis.cwt.sign({
-        subject: "user-1",
-        expires: "1h",
-        sensitive: {
-          nationalIdentityNumber: "ABC-123",
-          nationalIdentityNumberVerified: true,
-        },
+        sub: "user-1",
+        exp: Math.floor(new Date("2024-01-01T09:00:00.000Z").getTime() / 1000),
+        national_identity_number: "ABC-123",
+        national_identity_number_verified: true,
       });
 
       // The DOMAIN surface suppresses sensitive claims on an unencrypted token
-      // (§13.3); the raw `cwt.verify` would return them flat on the wire.
-      const verified = (await aegis.verify(token)) as unknown as {
-        claims: Record<string, unknown>;
-        sensitive: unknown;
-      };
+      // (§13.3); the raw `cwt.verify` returns them flat on the wire.
+      const verified = await aegis.verify(token);
 
-      expect(verified.claims).not.toHaveProperty("nationalIdentityNumber");
+      expect(verified.claims.subject).toBe("user-1");
       expect(verified.sensitive).toBeUndefined();
+
+      // Suppressed means GONE, not relocated — assert the absence in `custom`
+      // too, or a sensitive claim merely demoted out of `sensitive` still reads
+      // as a pass.
+      expect(verified.claims).not.toHaveProperty("nationalIdentityNumber");
+      expect(verified.custom).toEqual({});
     });
   });
 

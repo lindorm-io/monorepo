@@ -9,6 +9,7 @@ import type { AegisDeps } from "./aegis-deps.js";
 import { computeTypHeader, extractTypPrefix } from "./compute-typ-header.js";
 import { extractTokenDelegation } from "./extract-token-delegation.js";
 import { joseDomainHeader } from "./jose-domain-header.js";
+import { joseName } from "../claims/claims-registry.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { buildDomainClaims } from "./jwt-payload.js";
 import { validate } from "./validate.js";
@@ -148,7 +149,11 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   // hash source it cannot hash) is a caller mistake with its own message, and
   // folding it into `jwt_claims_invalid` reported "claims invalid" with an
   // EMPTY invalid list — the failure that names nothing.
-  const predicate = createIdentityMatchers(kit.algorithm, omitUndefined(claimMatchers));
+  const predicate = createIdentityMatchers(
+    kit.algorithm,
+    omitUndefined(claimMatchers),
+    joseName,
+  );
 
   try {
     validate(withDates, predicate as never);

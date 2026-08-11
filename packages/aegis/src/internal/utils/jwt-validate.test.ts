@@ -2,7 +2,7 @@ import { createHash } from "./create-hash.js";
 import { HASH_MATCHERS } from "./hash-matchers.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { createJwtValidate } from "./jwt-validate.js";
-import { claimByDomain } from "../claims/claims-registry.js";
+import { claimByDomain, joseName } from "../claims/claims-registry.js";
 import { describe, expect, test } from "vitest";
 
 // The claims the registry marks `value: "array"` AND the domain matcher surface
@@ -137,7 +137,7 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
 
   test("should produce the same condition for every matcher, keyed by wire name", () => {
     const assertPredicate = createJwtValidate(matchers as never);
-    const verifyPredicate = createIdentityMatchers("ES256", matchers);
+    const verifyPredicate = createIdentityMatchers("ES256", matchers, joseName);
 
     for (const key of Object.keys(matchers)) {
       const jose = claimByDomain(key)?.jose as keyof typeof verifyPredicate;
@@ -150,7 +150,7 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
   });
 
   test("should build the verify predicate unchanged", () => {
-    expect(createIdentityMatchers("ES256", matchers)).toMatchSnapshot();
+    expect(createIdentityMatchers("ES256", matchers, joseName)).toMatchSnapshot();
   });
 
   test("should build the assert predicate", () => {
@@ -175,7 +175,7 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
     });
 
     test("should reach the same digest through verify's derive and assert's claim", () => {
-      const verifyPredicate = createIdentityMatchers("ES256", sources);
+      const verifyPredicate = createIdentityMatchers("ES256", sources, joseName);
 
       for (const [key, domain] of Object.entries(HASH_MATCHERS)) {
         const jose = claimByDomain(domain)?.jose as keyof typeof verifyPredicate;

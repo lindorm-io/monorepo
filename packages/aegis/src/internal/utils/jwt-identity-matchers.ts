@@ -3,8 +3,7 @@ import { isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
-import type { AegisClaimsWire } from "../../types/index.js";
-import { claimByDomain } from "../claims/claims-registry.js";
+import { claimByDomain, type NameSelector } from "../claims/claims-registry.js";
 import { createHash } from "./create-hash.js";
 import { HASH_MATCHERS } from "./hash-matchers.js";
 import { liftClaimMatcher } from "./lift-claim-matcher.js";
@@ -22,25 +21,36 @@ import { liftClaimMatcher } from "./lift-claim-matcher.js";
  * `accessToken`/`authCode`/`authState`), less `tokenType`, which asserts the
  * token's TYPE HEADER and is enforced by the caller before this builds. It
  * carries no verify knobs (those never reach here), so there is nothing to
- * skip; every key maps to a JOSE claim via the registry (or the hash table).
+ * skip; every key maps to a claim via the registry (or the hash table).
+ *
+ * `nameOf` picks the WIRE SPELLING, and it is REQUIRED rather than defaulted to
+ * JOSE: the predicate this returns is applied to a wire-keyed dict, and the two
+ * wires disagree about `tokenId` (`jti` vs `cti`). A default is precisely how the
+ * COSE caller silently inherited JOSE keys — an exact match then rejected a
+ * legitimate token, and `$exists: false` passed on a token that had one. Making
+ * it explicit forces any new call site to answer the question.
  */
 export const createIdentityMatchers = (
   algorithm: KryptosAlgorithm,
   matchers: Dict,
-): Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> => {
-  const predicate: Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> = {};
+  nameOf: NameSelector,
+): Record<string, ConditionOperator<any>> => {
+  // String-keyed, not `keyof AegisClaimsWire`: the key space is whatever `nameOf`
+  // yields, and the COSE selector produces `cti`, which is not a JOSE wire name.
+  const predicate: Record<string, ConditionOperator<any>> = {};
 
   for (const [key, value] of Object.entries(matchers)) {
-    // The wire (JOSE) name comes from the registry — the single source of truth
-    // for the domain->wire claim-name map. The three hash-derive matchers are the
-    // sole exception (they compute a hash, not a name lookup). An unmapped key
-    // has no claim to build a predicate for and throws (the exhaustive-mapping
-    // throwing default the `mapVerify` switch used to provide).
+    // The wire name comes from the registry — the single source of truth for the
+    // domain->wire claim-name map — spelled for the wire `nameOf` selects. The
+    // three hash-derive matchers are the sole exception (they compute a hash, not
+    // a name lookup). An unmapped key has no claim to build a predicate for and
+    // throws (the exhaustive-mapping throwing default the `mapVerify` switch used
+    // to provide).
     const hashDomain = HASH_MATCHERS[key];
     const spec = claimByDomain(key);
-    const mapped = (hashDomain ? claimByDomain(hashDomain)?.jose : spec?.jose) as
-      | keyof AegisClaimsWire
-      | undefined;
+    const hashSpec = hashDomain ? claimByDomain(hashDomain) : undefined;
+    const target = hashDomain ? hashSpec : spec;
+    const mapped = target ? nameOf(target) : undefined;
 
     if (mapped === undefined) {
       throw new AegisDomainError(`Unsupported key: ${key} for JWT verification`, {
