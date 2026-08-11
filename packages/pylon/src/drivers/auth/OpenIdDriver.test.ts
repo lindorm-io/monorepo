@@ -268,7 +268,9 @@ describe("OpenIdDriver", () => {
       expect(observed.authorization).toBeUndefined();
       expect(fields().client_secret).toBeUndefined();
       expect(fields().client_assertion_type).toBe(ASSERTION_TYPE);
-      expect(JwtKit.decode(fields().client_assertion).header.kid).toBe(assertionKey.id);
+      expect(JwtKit.decode(fields().client_assertion).protectedHeader.kid).toBe(
+        assertionKey.id,
+      );
     });
 
     test("should negotiate client_secret_jwt over the plaintext-secret methods", async () => {
@@ -289,7 +291,7 @@ describe("OpenIdDriver", () => {
       expect(fields().client_assertion_type).toBe(ASSERTION_TYPE);
       // OIDC Core §9 — the MAC key is the secret's UTF-8 octets, so the `kid`
       // names the client rather than a key the provider could look up.
-      expect(JwtKit.decode(fields().client_assertion).header.alg).toBe("HS256");
+      expect(JwtKit.decode(fields().client_assertion).protectedHeader.alg).toBe("HS256");
     });
 
     // RFC 7662 §2.1 — the introspection request authenticates too, so it

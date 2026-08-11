@@ -500,7 +500,7 @@ describe("PylonAuthDriverBase", () => {
           tokenEndpointAuthMethod: "client_secret_jwt",
         }).refresh(context, { refreshToken: "rt", scope: null });
 
-        const { header, payload } = assertion();
+        const { protectedHeader: header, payload } = assertion();
 
         expect(payload.iss).toBe("client-id");
         expect(payload.sub).toBe("client-id");
@@ -602,7 +602,7 @@ describe("PylonAuthDriverBase", () => {
           tokenEndpointAuthMethod: "private_key_jwt",
         }).refresh(context, { refreshToken: "rt", scope: null });
 
-        const { header, payload } = assertion();
+        const { protectedHeader: header, payload } = assertion();
 
         expect(payload.iss).toBe("client-id");
         expect(payload.sub).toBe("client-id");
