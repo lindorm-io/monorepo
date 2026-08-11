@@ -5,8 +5,8 @@ import { buildCoseVerifiedToken } from "./build-cose-verified-token.js";
 
 /**
  * The keyless, UNVERIFIED parse of a claims-bearing COSE token — a CWT
- * (COSE_Sign1) or a CWM (COSE_Mac0). Decodes the header triple + the wire claims
- * map WITHOUT checking the signature/MAC, then reuses the shared
+ * (COSE_Sign1) or a CWM (COSE_Mac0). Decodes the protected header + the wire
+ * claims map WITHOUT checking the signature/MAC, then reuses the shared
  * {@link buildCoseVerifiedToken} plumbing to split the wire into the domain
  * `claims`/`custom`/`profile` buckets and report `cwt` vs `cwm` from the COSE
  * structure tag. The COSE twin of `parseJwtToDomain`. `encrypted: false` (a bare
@@ -18,11 +18,12 @@ export const parseCoseClaimsToDomain = <C extends Dict = Dict>(
   bytes: Buffer,
 ): ParsedToken<C> => {
   const decoded = decodeCwt(bytes);
-  const { payload } = decodeCwtWire(bytes);
+  const { payload, protectedHeader } = decodeCwtWire(bytes);
 
   return buildCoseVerifiedToken({
     wire: payload,
     decoded,
+    protectedHeader,
     token,
     encrypted: false,
   }) as ParsedToken<C>;

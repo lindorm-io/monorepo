@@ -92,12 +92,15 @@ export const verifyToken = async <C extends Dict = Dict>({
     // A JWE genuinely wrapping an opaque JWS is unaffected: it declares
     // `text/plain` (the only cty that reconstructs an opaque compact token), not
     // a claims media type, and still resolves to `{ format: "jwe", inner: "jws" }`.
-    if (isClaimsContentType(decrypt.header.cty) && !JwtKit.isJwt(decrypt.payload)) {
+    if (
+      isClaimsContentType(decrypt.protectedHeader.cty) &&
+      !JwtKit.isJwt(decrypt.payload)
+    ) {
       throw new AegisDomainError(
         "Encrypted token does not contain the declared claims token",
         {
           code: "verify_inner_type_mismatch",
-          data: { cty: decrypt.header.cty },
+          data: { cty: decrypt.protectedHeader.cty },
           debug: { token: sanitiseToken(token) },
           title: "Verify Inner Type Mismatch",
           details:
@@ -129,7 +132,7 @@ export const verifyToken = async <C extends Dict = Dict>({
       format: "jws",
       // The raw kit verify returns the WIRE header; the domain result carries the
       // DOMAIN-named header (the JOSE twin of coseDomainHeader for the CWS path).
-      header: joseDomainHeader(parsed.header, "JWS"),
+      header: joseDomainHeader(parsed.protectedHeader, "JWS"),
       claims: {},
       custom: {} as C,
       raw: parsed.payload,
@@ -147,7 +150,7 @@ export const verifyToken = async <C extends Dict = Dict>({
       const parsed = await rawVerifyCws({ token, options: { key: options?.key }, deps });
       return {
         format: "cws",
-        header: coseDomainHeader(parsed.header),
+        header: coseDomainHeader(parsed.protectedHeader, parsed.unprotectedHeader.kid),
         claims: {},
         custom: {} as C,
         raw: parsed.payload,
@@ -159,6 +162,7 @@ export const verifyToken = async <C extends Dict = Dict>({
       const {
         wire,
         decoded,
+        protectedHeader,
         typ,
         encrypted: coseEncrypted,
       } = await coseVerifyCore({
@@ -180,6 +184,7 @@ export const verifyToken = async <C extends Dict = Dict>({
       const built = buildCoseVerifiedToken({
         wire,
         decoded,
+        protectedHeader,
         token,
         encrypted: coseEncrypted || encrypted,
       });

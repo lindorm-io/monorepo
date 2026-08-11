@@ -52,8 +52,8 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   // (`ResolveKeyOptions.issuer`). The `iss` claim itself is still checked, and
   // only ever after the signature.
   const kryptos = await deps.resolveVerifyKey({
-    id: decode.header.kid,
-    algorithm: decode.header.alg as KryptosSigAlgorithm,
+    id: decode.protectedHeader.kid,
+    algorithm: decode.protectedHeader.alg as KryptosSigAlgorithm,
     issuer: issuer ?? (isString(decode.payload.iss) ? decode.payload.iss : undefined),
     verify: options.key,
   });
@@ -92,7 +92,7 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
 
   // The raw kit verify returns the WIRE header; the domain `VerifiedToken` carries
   // the DOMAIN-named header, so translate here (the JOSE twin of coseDomainHeader).
-  const header = joseDomainHeader(decoded.header, "JWT");
+  const header = joseDomainHeader(decoded.protectedHeader, "JWT");
 
   // Domain buckets (enforces the `iss` presence gate) + the delegation summary.
   const { claims, custom, profile, sensitive } = buildDomainClaims<C>(
@@ -120,7 +120,7 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
     wireClaims: withDates,
     claims,
     delegation,
-    decodedTyp: decoded.header.typ,
+    decodedTyp: decoded.protectedHeader.typ,
     algorithm: kit.algorithm,
     assert: claimMatchers,
     options,

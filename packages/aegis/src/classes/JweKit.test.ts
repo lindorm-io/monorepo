@@ -60,7 +60,8 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "ECDH-ES",
           cty: "text/plain",
           enc: "A256GCM",
@@ -88,7 +89,8 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "dir",
           cty: "text/plain",
           enc: "A256GCM",
@@ -115,7 +117,8 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "A128KW",
           cty: "text/plain",
           enc: "A256GCM",
@@ -139,7 +142,8 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "PBES2-HS512+A256KW",
           cty: "text/plain",
           enc: "A256GCM",
@@ -164,7 +168,8 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "A128GCMKW",
           cty: "text/plain",
           enc: "A256GCM",
@@ -187,7 +192,8 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "ECDH-ES",
           cty: "text/plain",
           enc: "A256GCM",
@@ -214,7 +220,8 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "RSA-OAEP-256",
           cty: "text/plain",
           enc: "A256GCM",
@@ -238,7 +245,8 @@ describe("JweKit", () => {
       // decode is encrypted: it exposes only the protected header and the
       // original compact token — never the ciphertext segments.
       expect(JweKit.decode(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "ECDH-ES",
           cty: "text/plain",
           enc: "A256GCM",
@@ -312,7 +320,7 @@ describe("JweKit", () => {
       // extension parameters.
       const decoded = JweKit.decode(token);
       const headerWithCrit = {
-        ...decoded.header,
+        ...decoded.protectedHeader,
         crit: ["lindorm_ext"],
         lindorm_ext: "some-value",
       };
@@ -334,7 +342,7 @@ describe("JweKit", () => {
       });
 
       const decoded = JweKit.decode(token);
-      const headerWithCrit = { ...decoded.header, crit: ["missing_ext"] };
+      const headerWithCrit = { ...decoded.protectedHeader, crit: ["missing_ext"] };
 
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
@@ -351,7 +359,7 @@ describe("JweKit", () => {
       });
 
       const decoded = JweKit.decode(token);
-      const headerWithCrit = { ...decoded.header, crit: ["enc"] };
+      const headerWithCrit = { ...decoded.protectedHeader, crit: ["enc"] };
 
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
@@ -368,7 +376,7 @@ describe("JweKit", () => {
       });
 
       const decoded = JweKit.decode(token);
-      const headerWithCrit = { ...decoded.header, crit: [] };
+      const headerWithCrit = { ...decoded.protectedHeader, crit: [] };
 
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
@@ -397,7 +405,7 @@ describe("JweKit", () => {
       // Splice zip: "DEF" into the protected header to simulate an attacker
       // attempting to compress-then-encrypt. Aegis must reject this outright.
       const decoded = JweKit.decode(token);
-      const headerWithZip = { ...decoded.header, zip: "DEF" };
+      const headerWithZip = { ...decoded.protectedHeader, zip: "DEF" };
 
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerWithZip))
@@ -427,13 +435,13 @@ describe("JweKit", () => {
         const token = jweKit.encrypt("data", { partyProducer, partyRecipient });
 
         // The base64url party info rides the protected header (apu/apv).
-        expect(JweKit.decode(token).header.apu).toBe(partyProducer);
-        expect(JweKit.decode(token).header.apv).toBe(partyRecipient);
+        expect(JweKit.decode(token).protectedHeader.apu).toBe(partyProducer);
+        expect(JweKit.decode(token).protectedHeader.apv).toBe(partyRecipient);
 
         const decrypted = jweKit.decrypt(token);
         expect(decrypted.payload).toBe("data");
-        expect(decrypted.header.apu).toBe(partyProducer);
-        expect(decrypted.header.apv).toBe(partyRecipient);
+        expect(decrypted.protectedHeader.apu).toBe(partyProducer);
+        expect(decrypted.protectedHeader.apv).toBe(partyRecipient);
       },
     );
 
@@ -443,8 +451,8 @@ describe("JweKit", () => {
 
       const token = jweKit.encrypt("data");
 
-      expect(JweKit.decode(token).header.apu).toBeUndefined();
-      expect(JweKit.decode(token).header.apv).toBeUndefined();
+      expect(JweKit.decode(token).protectedHeader.apu).toBeUndefined();
+      expect(JweKit.decode(token).protectedHeader.apv).toBeUndefined();
       expect(jweKit.decrypt(token).payload).toBe("data");
     });
 
@@ -455,13 +463,13 @@ describe("JweKit", () => {
 
       const token = jweKit.encrypt("data", { partyProducer, partyRecipient });
 
-      expect(JweKit.decode(token).header.apu).toBeUndefined();
-      expect(JweKit.decode(token).header.apv).toBeUndefined();
+      expect(JweKit.decode(token).protectedHeader.apu).toBeUndefined();
+      expect(JweKit.decode(token).protectedHeader.apv).toBeUndefined();
 
       const decrypted = jweKit.decrypt(token);
       expect(decrypted.payload).toBe("data");
-      expect(decrypted.header.apu).toBeUndefined();
-      expect(decrypted.header.apv).toBeUndefined();
+      expect(decrypted.protectedHeader.apu).toBeUndefined();
+      expect(decrypted.protectedHeader.apv).toBeUndefined();
     });
 
     test("should decrypt when the configured partyRecipient matches the token apv", () => {
@@ -512,7 +520,7 @@ describe("JweKit", () => {
 
       const decrypted = kit.decrypt(token);
 
-      expect(decrypted.header.typ).toBe("application/logout_token+jwe");
+      expect(decrypted.protectedHeader.typ).toBe("application/logout_token+jwe");
     });
 
     test("should surface erasure_token on decrypted header when signed with it", () => {
@@ -523,7 +531,7 @@ describe("JweKit", () => {
 
       const decrypted = kit.decrypt(token);
 
-      expect(decrypted.header.typ).toBe("application/erasure_token+jwe");
+      expect(decrypted.protectedHeader.typ).toBe("application/erasure_token+jwe");
     });
 
     test("should leave tokenType undefined when not supplied", () => {
@@ -533,7 +541,7 @@ describe("JweKit", () => {
 
       const decrypted = kit.decrypt(token);
 
-      expect(decrypted.header.typ).toBe("JWE");
+      expect(decrypted.protectedHeader.typ).toBe("JWE");
     });
   });
 });

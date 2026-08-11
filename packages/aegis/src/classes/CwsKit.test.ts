@@ -47,7 +47,7 @@ describe("CwsKit — symmetric key produces a COSE_Mac0 (tag 17)", () => {
     const mac0 = decodeCbor<Tag>(bytes);
     expect(mac0.tag).toBe(COSE_TAG.mac0);
 
-    const { payload: out, header } = kit.verify(bytes);
+    const { payload: out, protectedHeader: header } = kit.verify(bytes);
     expect(out.equals(payload)).toBe(true);
     expect(header.alg).toBe("HS256"); // HS256 wire alg name
   });
@@ -79,12 +79,13 @@ describe("CwsKit — caller-controlled protected / unprotected header bags", () 
       unprotected: { x5u },
     });
 
-    // Merged wire view surfaces both, plus the always-present derived params.
-    const { header } = kit.verify(token);
-    expect(header.cty).toBe("application/example");
-    expect(header.x5u).toBe(x5u);
-    expect(header.alg).toBe("ES512");
-    expect(header.kid).toBe(TEST_EC_KEY_SIG.id);
+    // The verify result reports the two buckets SEPARATELY, so a caller can see
+    // which of these the signature covers and which it does not.
+    const { protectedHeader, unprotectedHeader } = kit.verify(token);
+    expect(protectedHeader.cty).toBe("application/example");
+    expect(protectedHeader.alg).toBe("ES512");
+    expect(unprotectedHeader.x5u).toBe(x5u);
+    expect(unprotectedHeader.kid).toBe(TEST_EC_KEY_SIG.id);
 
     // The raw CBOR maps prove the placement: cty (label 3) + alg (1) protected;
     // x5u (35) + kid (4) unprotected.

@@ -1,6 +1,6 @@
 import type { TokenData } from "@lindorm/types";
+import type { WireHeaderBuckets } from "../header/wire-buckets.js";
 import type { WireTokenEnvelope } from "../header/wire-envelope.js";
-import type { WireTokenHeader } from "../header/wire-header.js";
 import type { TokenContent } from "./content.js";
 
 /**
@@ -46,12 +46,12 @@ export type DecryptTokenOptions = Record<never, never>;
 
 /**
  * The NATIVE WIRE result of decrypting an ENCRYPTED token (`JweKit.decrypt` /
- * `CweKit.decrypt`). The COSE-and-JOSE-uniform decrypt result: the unified WIRE
- * header ({@link WireTokenHeader} for BOTH — R1: no domain-shaped JWE header),
- * the plaintext `payload` — the negotiated content reconstructed from the cty
- * header (a `Dict` for `application/json`, a `string` for `text/plain`, else a
- * `Buffer` — the fallback when cty is absent/unknown) — and the NATIVE token
- * (`string` JOSE / `Buffer` COSE).
+ * `CweKit.decrypt`). The COSE-and-JOSE-uniform decrypt result: the two WIRE
+ * header buckets ({@link WireHeaderBuckets} for BOTH — R1: no domain-shaped JWE
+ * header), the plaintext `payload` — the negotiated content reconstructed from
+ * the PROTECTED cty header (a `Dict` for `application/json`, a `string` for
+ * `text/plain`, else a `Buffer` — the fallback when cty is absent/unknown) — and
+ * the NATIVE token (`string` JOSE / `Buffer` COSE).
  *
  * Named distinctly from the DOMAIN `DecryptedToken` (the `aegis.decrypt`
  * claims/custom result, which pairs with `VerifiedToken`) — this is the wire tier.
@@ -59,20 +59,19 @@ export type DecryptTokenOptions = Record<never, never>;
 export type DecryptedEncryptedToken<
   P extends TokenContent = Buffer,
   T extends TokenData = Buffer,
-> = {
-  header: WireTokenHeader;
+> = WireHeaderBuckets & {
   payload: P;
   token: T;
 };
 
 /**
- * The uniform `decode` result for an ENCRYPTED token — JWE ≡ CWE: the unified
- * WIRE header ONLY (the content stays ciphertext; reading it needs the key). A
+ * The uniform `decode` result for an ENCRYPTED token — JWE ≡ CWE: the two WIRE
+ * header buckets ONLY (the content stays ciphertext; reading it needs the key). A
  * JWE protected header carries a key-management `alg` alongside the content
  * `enc`, whereas a COSE_Encrypt0 carries only `enc` — so `alg` is present for JWE
- * and absent for CWE, though both share this ONE result type.
+ * and absent for CWE, though both share this ONE result type. The COSE_Encrypt0
+ * IV and `kid` ride the UNPROTECTED bucket (RFC 9052 §5.2).
  */
-export type DecodedEncryptedToken<T extends TokenData = Buffer> = {
-  header: WireTokenHeader;
+export type DecodedEncryptedToken<T extends TokenData = Buffer> = WireHeaderBuckets & {
   token: T;
 };

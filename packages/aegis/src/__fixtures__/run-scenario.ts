@@ -378,7 +378,7 @@ const act = async (
           return {
             token: current.token,
             claims: result.payload as Dict,
-            header: result.header as unknown as Dict,
+            header: result.protectedHeader as unknown as Dict,
           };
         }
         case "cwt": {
@@ -386,16 +386,22 @@ const act = async (
           return {
             token: current.token,
             claims: result.payload as Dict,
-            header: result.header as unknown as Dict,
+            header: result.protectedHeader as unknown as Dict,
           };
         }
         case "jws": {
           const result = await ctx.aegis.jws.verify(current.token);
-          return { token: current.token, header: result.header as unknown as Dict };
+          return {
+            token: current.token,
+            header: result.protectedHeader as unknown as Dict,
+          };
         }
         case "cws": {
           const result = await ctx.aegis.cws.verify(current.token);
-          return { token: current.token, header: result.header as unknown as Dict };
+          return {
+            token: current.token,
+            header: result.protectedHeader as unknown as Dict,
+          };
         }
       }
     }

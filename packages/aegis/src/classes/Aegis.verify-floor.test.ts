@@ -195,7 +195,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
 
     const parsed = await aegis.jwt.verify(token);
     expect(parsed.payload.iss).toBe(ISSUER);
-    expect(parsed.header.typ).toBeUndefined();
+    expect(parsed.protectedHeader.typ).toBeUndefined();
   });
 
   describe("mint → profiled verify round trips", () => {

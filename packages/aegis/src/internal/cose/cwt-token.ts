@@ -6,7 +6,7 @@ import type { Dict } from "@lindorm/types";
 import { CwsKit } from "../../classes/CwsKit.js";
 import { CoseError, CwmError, CwtError } from "../../errors/index.js";
 import { coseByJose } from "../header/header-registry.js";
-import { mergeCoseWireHeader } from "../header/merge-cose-wire-header.js";
+import { coseWireHeader } from "../header/cose-wire-header.js";
 import { applyOmit } from "../utils/apply-omit.js";
 import { buildMediaType } from "../utils/compute-typ-header.js";
 import { createTemporalMatchers } from "../utils/jwt-temporal-matchers.js";
@@ -22,6 +22,7 @@ import { coseLabelToAlg } from "./alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "./cbor.js";
 import { decodeCwtClaims, encodeCwtClaims } from "./cwt-claims.js";
 import { COSE_TAG, decodeProtectedHeader } from "./structures.js";
+import { stripCwtTag, unwrapCose } from "./unwrap-cose.js";
 
 /**
  * The CWT (RFC 8392) token core shared by the two claims-bearing kits — `CwtKit`
@@ -82,10 +83,6 @@ export type CwtDecoded = {
   payload: CwtClaimsWire | undefined;
 };
 
-// A CWT may be the bare COSE object or wrapped in the CWT tag (61). Strip it.
-const unwrapCwt = (value: unknown): unknown =>
-  value instanceof Tag && value.tag === COSE_TAG.cwt ? value.contents : value;
-
 /**
  * TRANSFORM-FREE sign (R18): serialize the already-wire, COSE-name-keyed `claims`
  * dict verbatim (modulo the `omit` knob) into a CWT claims map, secure it with a
@@ -115,10 +112,11 @@ export const signCwt = (
 
   // `CwsKit.sign` returns the BARE encoded COSE_Sign1/Mac0 bytes; decode them back
   // to the COSE structure to frame it in the outer CWT tag (61). Verify accepts
-  // tagged or untagged. The `typFormat` tells the shared opaque signer to stamp the
-  // CWT media-type family (`+cwt`), not the opaque `+cws` one; the `tokenType`
-  // prefix is threaded through and the kit computes the full media type.
-  const cose = new CwsKit({ kryptos, logger, typFormat: format }).sign(payload, {
+  // tagged or untagged. `format` tells the shared opaque signer which COSE signed
+  // format it is serving, so it stamps the CWT media-type family (`+cwt`) rather
+  // than the opaque `+cws` one and namespaces its refusals `cwt_*`/`cwm_*`; the
+  // `tokenType` prefix is threaded through and the kit computes the media type.
+  const cose = new CwsKit({ kryptos, logger, format }).sign(payload, {
     tokenType: options.tokenType,
     proprietary: options.proprietary,
     header: options.header,
@@ -197,20 +195,15 @@ export const verifyCwt = <C extends Dict = Dict>(
     }
   }
 
-  if (decoded.algorithm !== kryptos.algorithm) {
-    throw new CWT_ERROR[format]("Invalid token", {
-      code: `${format}_algorithm_mismatch`,
-      data: { algorithm: decoded.algorithm },
-      debug: { expected: kryptos.algorithm },
-      title: "CWT Algorithm Mismatch",
-      details:
-        "The protected header alg does not match the algorithm of the configured kryptos key.",
-    });
-  }
-
   // R2: `CwsKit.verify` takes the ENCODED bytes and strips the outer CWT tag (61)
-  // itself; hand it the token verbatim.
-  const { payload, header } = new CwsKit({ kryptos, logger }).verify(token);
+  // itself; hand it the token verbatim. It owns the algorithm-match and the
+  // `crit` enforcement, off the PROTECTED bucket — this used to re-check the
+  // algorithm here, off its own header decode, while `crit` was checked nowhere.
+  const { payload, protectedHeader, unprotectedHeader } = new CwsKit({
+    kryptos,
+    logger,
+    format,
+  }).verify(token);
 
   // preferMap:false so nested claim objects (act, sub_id, events, custom) decode
   // as plain objects; the top CWT map keeps integer keys so it stays a Map. The
@@ -238,7 +231,8 @@ export const verifyCwt = <C extends Dict = Dict>(
   logger.debug("CWT verified");
 
   return {
-    header,
+    protectedHeader,
+    unprotectedHeader,
     payload: wire as CwtClaimsWire & C,
     token,
   };
@@ -255,10 +249,9 @@ export const verifyCwt = <C extends Dict = Dict>(
 export const decodeCwtWire = <C extends Dict = Dict>(
   token: Buffer,
 ): DecodedStructuredToken<CwtClaimsWire & C> => {
-  const cose = unwrapCwt(decodeCbor(token));
-  const contents = cose instanceof Tag ? cose.contents : cose;
+  const contents = unwrapCose(decodeCbor(token), { arity: { atLeast: 3 } });
 
-  if (!Array.isArray(contents) || contents.length < 3) {
+  if (!contents) {
     throw new CoseError("Malformed CWT", {
       code: "cose_malformed",
       title: "Malformed CWT",
@@ -284,8 +277,10 @@ export const decodeCwtWire = <C extends Dict = Dict>(
     });
   }
 
-  const header = mergeCoseWireHeader(
-    decodeProtectedHeader(protectedBstr),
+  // The two buckets travel SEPARATELY: an unprotected parameter is covered by no
+  // signature, so a reader has to name the bucket it is willing to trust.
+  const protectedHeader = coseWireHeader(decodeProtectedHeader(protectedBstr), "sig");
+  const unprotectedHeader = coseWireHeader(
     unprotected instanceof Map ? unprotected : undefined,
     "sig",
   );
@@ -297,7 +292,8 @@ export const decodeCwtWire = <C extends Dict = Dict>(
   );
 
   return {
-    header,
+    protectedHeader,
+    unprotectedHeader,
     payload: payload as CwtClaimsWire & C,
     signature: signature ? Buffer.from(signature) : Buffer.alloc(0),
     token,
@@ -337,10 +333,10 @@ const decodeUnverifiedClaims = (
  * Both are UNVERIFIED; see {@link CwtDecoded}.
  */
 export const decodeCwt = (token: Buffer): CwtDecoded => {
-  const cose = unwrapCwt(decodeCbor(token));
-  const contents = cose instanceof Tag ? cose.contents : cose;
+  const cose = stripCwtTag(decodeCbor(token));
+  const contents = unwrapCose(cose, { arity: { atLeast: 2 } });
 
-  if (!Array.isArray(contents) || contents.length < 2) {
+  if (!contents) {
     throw new CoseError("Malformed CWT", {
       code: "cose_malformed",
       title: "Malformed CWT",

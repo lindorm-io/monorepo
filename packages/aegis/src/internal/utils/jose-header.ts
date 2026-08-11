@@ -2,6 +2,7 @@ import { B64 } from "@lindorm/b64";
 import { B64U } from "../constants/format.js";
 import { TOKEN_HEADER_ALGORITHMS } from "../constants/header.js";
 import { JoseError } from "../../errors/index.js";
+import { KIT_CAPABILITIES } from "../registry/kit-capabilities.js";
 import type {
   CertificateHeaderFields,
   WireTokenHeader,
@@ -85,6 +86,21 @@ export const decodeJoseHeader = (header: string): WireTokenHeader => {
       title: "JOSE Header Unsupported Algorithm",
       details:
         "The decoded header alg is not in the allowlist of supported algorithms, rejecting weak or disallowed algorithms such as none.",
+    });
+  }
+  // The `enc` twin of the allowlist above, which did not exist: `alg` was checked
+  // and the CONTENT encryption was not, so a header naming an unsupported (or
+  // invented) AEAD passed the keyless read untouched and was refused only later,
+  // by a kit's encryption-MISMATCH check, which says something else. The
+  // allowlist is the `jwe` kit's declared `contentEncryption` capability.
+  // Presence-gated: `enc` is a JWE parameter, and a JWS/JWT carries none.
+  if (json.enc !== undefined && !KIT_CAPABILITIES.jwe.contentEncryption.has(json.enc)) {
+    throw new JoseError(`Unsupported encryption: ${json.enc}`, {
+      code: "jose_header_unsupported_encryption",
+      data: { enc: json.enc },
+      title: "JOSE Header Unsupported Encryption",
+      details:
+        "The decoded header enc is not one of the content-encryption algorithms this wire can carry.",
     });
   }
   // typ is OPTIONAL per RFC 7515 Section 4.1.9

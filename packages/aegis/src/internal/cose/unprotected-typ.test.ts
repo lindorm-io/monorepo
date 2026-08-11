@@ -48,9 +48,10 @@ const TYP = coseByJose("typ");
  * from the unprotected map. Everything an attacker cannot touch — the key, the
  * algorithm, the claims — is genuine; only the typ's LOCATION differs.
  *
- * ⚠ KNOWN DEFECT (delete this paragraph when these go green): the `typ` that
- * drives the profile floor and the `tokenType` assertion is read off the MERGED
- * COSE header, and `mergeCoseWireHeader` includes the unprotected bucket.
+ * The rule holds because the kits report the two buckets SEPARATELY
+ * ({@link WireHeaderBuckets}) and the COSE verify path reads `typ` off the
+ * PROTECTED one alone. It used to read the MERGED header, so the unprotected
+ * copy answered for the signed one.
  */
 describe("COSE typ integrity", () => {
   let logger: ILogger;
@@ -133,27 +134,23 @@ describe("COSE typ integrity", () => {
   // The rule itself, through the `tokenType` assertion door.
   //
   // ⚠ Both unsigned-typ assertions here name `AegisError`, not a bare `toThrow()`
-  // and not a narrower class. Bare would go green after a repair on ANY throw — a
-  // TypeError from a botched one, or a bare `LindormError`, which `AegisError`
-  // EXTENDS and is therefore not an instance of. `AegisError` excludes both and
-  // is what a consumer actually catches.
+  // and not a narrower class. Bare would go green on ANY throw — a TypeError from
+  // a botched repair, or a bare `LindormError`, which `AegisError` EXTENDS and is
+  // therefore not an instance of. `AegisError` excludes both and is what a
+  // consumer actually catches.
   //
-  // Narrower would be a guess about a decision nobody has taken. Two repairs are
-  // live and they throw different classes: teach the COSE readers to ignore the
-  // unprotected bucket and the typ comparisons fail as they already do —
-  // `AegisDomainError` (assert-cose-token-type.ts `cwt_typ_mismatch` here,
-  // enforce-verify-floor.ts `jwt_typ_mismatch` at the floor); refuse the token at
-  // DECODE instead, because a `typ` the SIGNATURE DOES NOT COVER cannot route
-  // anything, and it is a `CoseError`. ⚠ Scope that reasoning to `typ` alone —
-  // "a kit-derived header has no business in an unsigned bag" would be false
-  // here: `CwsKit.buildHeaders` puts the kit-derived `kid` in the UNPROTECTED map
-  // on every CWT/CWS aegis mints (CwsKit.ts:352, reserved at :366, deliberate
-  // COSE convention per :332-335) and `decodeCwt` reads it back from there
-  // (cwt-token.ts:358), so the broad form would refuse every token this package
-  // produces — including the signed-typ case above. `AegisError` is the broadest
-  // class the contract promises and the only one that survives either repair. No
-  // `data` for the same reason: the error does not exist yet, so its `data`
-  // cannot be read off anything — pin it once the fix lands.
+  // It stays the BROAD class deliberately. The repair that landed reads `typ` off
+  // the protected bucket alone, so the typ comparisons fail exactly as they
+  // already do for a wrong typ — `AegisDomainError` here
+  // (`assert-cose-token-type.ts`) and at the floor (`enforce-verify-floor.ts`).
+  // Narrowing to that would pin WHICH check happens to notice, which is not the
+  // rule: the rule is that an unsigned typ answers nothing. ⚠ Scope that
+  // reasoning to `typ` alone — "a kit-derived header has no business in an
+  // unsigned bag" would be false here: `CwsKit.buildHeaders` puts the kit-derived
+  // `kid` in the UNPROTECTED map on every CWT/CWS aegis mints (deliberate COSE
+  // convention, RFC 9052 §3.1) and `decodeCwt` reads it back from there, so the
+  // broad form would refuse every token this package produces — including the
+  // signed-typ case above.
   test("should NOT satisfy a token type assertion from an UNPROTECTED typ", async () => {
     const token = buildCwt({ typ: "application/at+cwt", protectTyp: false });
 
@@ -162,32 +159,16 @@ describe("COSE typ integrity", () => {
     );
   });
 
-  // Where the two readers of `typ` currently disagree, pinned rather than
-  // asserted-against. `cwt-token.ts` reads the PROTECTED map alone when it builds
-  // the parsed header, so `header.tokenType` comes back undefined; `CwsKit` reads
-  // the MERGED map, so the typ-driven checks above are satisfied by the
-  // unprotected copy. One token, two answers.
-  //
-  // ⚠ This records TODAY's behaviour, so it is GREEN. It exists because it
-  // survives a PARTIAL repair: teach only the merged reader to ignore the
-  // unprotected bucket and the two assertions above go green while this stays
-  // green; teach only the parsed-header reader to merge and this goes RED with
-  // those two still failing. Either way the remaining half is named.
-  //
-  // ⚠ LIFECYCLE — this pin covers ONE of the two live repairs. Under the OTHER
-  // (refuse the token at DECODE, `CoseError`) the bare verify below THROWS and
-  // this pin fails. That is RETIREMENT, not regression: the decode refusal
-  // subsumes what this pin exists to say, because a token whose typ the
-  // signature does not cover no longer reaches a reader at all. Disposal in that
-  // case is to DELETE this test — do not wrap the verify in a rejection
-  // assertion, which would silently convert a divergence pin into a duplicate of
-  // the rule above.
+  // The two readers of `typ` now AGREE, and this is what says so. Both build the
+  // parsed header off the PROTECTED bucket alone, so an unsigned typ produces no
+  // `tokenType` at all — where they used to disagree, one reading the protected
+  // map and the other the merged one, giving one token two answers.
   //
   // ⚠ The verify is DELIBERATELY assertion-free. Passing `{ tokenType: … }` here
-  // would route this pin through the very acceptance the rule above says must be
-  // REFUSED, so the repair that turns that green would turn this ERROR — a pin
-  // that cannot survive the repair it claims to survive. The parsed header is
-  // reachable without asking the merged reader anything, so ask it nothing.
+  // would route this through the very acceptance the rule above says must be
+  // REFUSED, and it would then be a duplicate of that rule rather than a
+  // statement about what the parsed header REPORTS. The parsed header is
+  // reachable without asserting anything, so assert nothing.
   test("should report NO token type on the parsed header when the typ is UNPROTECTED", async () => {
     const token = buildCwt({ typ: "application/at+cwt", protectTyp: false });
 

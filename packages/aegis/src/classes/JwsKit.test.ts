@@ -38,7 +38,7 @@ describe("JwsKit", () => {
     test("should sign token without objectId and omit oid from header", () => {
       const token = kit.sign("test data in plain text");
 
-      const { header } = JwsKit.decode(token);
+      const { protectedHeader: header } = JwsKit.decode(token);
       expect(header).not.toHaveProperty("oid");
     });
   });
@@ -50,7 +50,8 @@ describe("JwsKit", () => {
       });
 
       expect(kit.verify(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "ES512",
           cty: "text/plain",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -69,7 +70,8 @@ describe("JwsKit", () => {
       });
 
       expect(kit.verify(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "ES512",
           cty: "application/octet-stream",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -92,7 +94,7 @@ describe("JwsKit", () => {
 
       const parsed = kit.verify(token);
 
-      expect(parsed.header.typ).toBe("application/rt+jws");
+      expect(parsed.protectedHeader.typ).toBe("application/rt+jws");
     });
 
     test("should round-trip a custom tokenType as its media-type typ", () => {
@@ -103,7 +105,7 @@ describe("JwsKit", () => {
 
       const parsed = kit.verify(token);
 
-      expect(parsed.header.typ).toBe("application/my_custom_thing+jws");
+      expect(parsed.protectedHeader.typ).toBe("application/my_custom_thing+jws");
     });
 
     test("should floor to the bare JWS typ when no tokenType is supplied on sign", () => {
@@ -113,7 +115,7 @@ describe("JwsKit", () => {
 
       const parsed = kit.verify(token);
 
-      expect(parsed.header.typ).toBe("JWS");
+      expect(parsed.protectedHeader.typ).toBe("JWS");
     });
   });
 
@@ -126,7 +128,8 @@ describe("JwsKit", () => {
       // decode reconstructs the content from the cty (string for text/plain);
       // signature is the raw b64url segment and token is the original compact.
       expect(JwsKit.decode(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "ES512",
           cty: "text/plain",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -146,7 +149,8 @@ describe("JwsKit", () => {
       });
 
       expect(JwsKit.decode(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "ES512",
           cty: "application/octet-stream",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -178,7 +182,7 @@ describe("JwsKit", () => {
 
         const token = akpKit.sign("post-quantum payload");
 
-        expect(JwsKit.decode(token).header.alg).toBe(algorithm);
+        expect(JwsKit.decode(token).protectedHeader.alg).toBe(algorithm);
 
         expect(akpKit.verify(token).payload).toBe("post-quantum payload");
       },
@@ -214,7 +218,7 @@ describe("JwsKit", () => {
       // should still reject it because it does not understand the extension.
       const decoded = JwsKit.decode(token);
       const headerWithCrit = {
-        ...decoded.header,
+        ...decoded.protectedHeader,
         crit: ["lindorm_ext"],
         lindorm_ext: "some-value",
       };
@@ -239,7 +243,7 @@ describe("JwsKit", () => {
       // RFC 7515 §4.1.11 well-formedness rules.
       const decoded = JwsKit.decode(token);
       const headerWithCrit = {
-        ...decoded.header,
+        ...decoded.protectedHeader,
         crit: ["missing_ext"],
       };
 
@@ -259,7 +263,7 @@ describe("JwsKit", () => {
 
       // crit must not contain registered params per RFC 7515 §4.1.11.
       const decoded = JwsKit.decode(token);
-      const headerWithCrit = { ...decoded.header, crit: ["alg"] };
+      const headerWithCrit = { ...decoded.protectedHeader, crit: ["alg"] };
 
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
@@ -276,7 +280,7 @@ describe("JwsKit", () => {
       });
 
       const decoded = JwsKit.decode(token);
-      const headerWithCrit = { ...decoded.header, crit: [] };
+      const headerWithCrit = { ...decoded.protectedHeader, crit: [] };
 
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))

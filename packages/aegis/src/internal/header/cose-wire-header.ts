@@ -17,12 +17,20 @@ export type CoseAlgKind = "sig" | "enc";
 const ALG_LABEL = coseByJose("alg");
 
 /**
- * Translate a COSE `crit` (label 2) array into its JOSE wire form: each member is
- * an integer header LABEL (or a tstr), so an integer is mapped to its JOSE wire
- * NAME via the header registry (`joseByCose`) — the COSE twin of the JOSE crit
- * member remap. An unregistered integer has no wire name, so it is stringified;
- * a string member is already a name and passes through. Order is preserved to
- * mirror the raw JOSE wire header (which carries `crit` verbatim).
+ * Translate a COSE `crit` (label 2) array into its JOSE wire form: RFC 9052 §1.5
+ * defines `label = int / tstr`, so a member is an integer header LABEL or a text
+ * one. An integer is mapped to its JOSE wire NAME via the header registry
+ * (`joseByCose`) — the COSE twin of the JOSE crit member remap; an unregistered
+ * integer has no wire name, so it is stringified; a tstr member is already a name
+ * and passes through. Order is preserved to mirror the raw JOSE wire header
+ * (which carries `crit` verbatim).
+ *
+ * This is the exact inverse of the write side (`wireHeaderToCoseMap`), which
+ * emits each member as the LABEL the parameter itself is keyed under. The two
+ * disagreed until 2026-08-11: the writer emitted wire NAMES while a parameter sat
+ * at its integer label, so a token aegis minted named, in its own `crit`, a label
+ * that was not in its own protected bucket — RFC 9052 §3.1's explicit fatal
+ * error, on our own output.
  */
 const coseCritToWire = (value: unknown): unknown => {
   if (!Array.isArray(value)) return value;
@@ -98,27 +106,27 @@ const assignCoseParam = (
 };
 
 /**
- * Merge a COSE protected + unprotected header map into ONE unified WIRE header
- * ({@link WireTokenHeader}), translating each integer label to its JOSE wire
- * name via the header registry (`joseByCose`). PROTECTED wins on conflict: the
- * unprotected map is applied first, then the protected map overwrites it. This
- * is the COSE twin of a decoded JOSE protected header — same wire vocabulary.
+ * Translate ONE COSE header map — a protected bucket or an unprotected one — into
+ * the JOSE WIRE vocabulary ({@link WireTokenHeader}), each integer label resolved
+ * to its JOSE wire name via the header registry (`joseByCose`). The COSE twin of
+ * a decoded JOSE protected header — same wire vocabulary.
+ *
+ * ⚠ It translates ONE BUCKET. This used to merge the two, protected last, which
+ * is what made an unsigned parameter indistinguishable from a signed one in every
+ * COSE kit result: a `typ` no signature covered decided token-type routing and
+ * the profile floor. The buckets now travel separately all the way out
+ * ({@link WireHeaderBuckets}), so a reader has to name the one it trusts.
  */
-export const mergeCoseWireHeader = (
-  protectedMap: Map<number, unknown>,
-  unprotectedMap: Map<number, unknown> | undefined,
+export const coseWireHeader = (
+  map: Map<number, unknown> | undefined,
   algKind: CoseAlgKind,
 ): WireTokenHeader => {
   const wire: Dict = {};
 
-  if (unprotectedMap) {
-    for (const [label, value] of unprotectedMap) {
+  if (map) {
+    for (const [label, value] of map) {
       assignCoseParam(wire, label, value, algKind);
     }
-  }
-
-  for (const [label, value] of protectedMap) {
-    assignCoseParam(wire, label, value, algKind);
   }
 
   return wire as WireTokenHeader;

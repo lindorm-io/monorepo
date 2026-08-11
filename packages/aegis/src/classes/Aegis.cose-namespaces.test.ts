@@ -52,10 +52,10 @@ describe("Aegis — COSE namespaces", () => {
       // `+cws` media type so it is a CWS, not a CWT.
       expect(parsed.payload.tid).toBe("at_abc");
       expect(parsed.payload.sec).toBe("s3cr3t");
-      expect(parsed.header.alg).toBe("ES512");
-      expect(parsed.header.typ).toBe("application/at+cws");
-      expect(parsed.header.cty).toBe("application/json");
-      expect(parsed.header.kid).toEqual(expect.any(String));
+      expect(parsed.protectedHeader.alg).toBe("ES512");
+      expect(parsed.protectedHeader.typ).toBe("application/at+cws");
+      expect(parsed.protectedHeader.cty).toBe("application/json");
+      expect(parsed.unprotectedHeader.kid).toEqual(expect.any(String));
       // The COSE verify result's `.token` is the NATIVE Buffer; the sign result's
       // `.token` is its base64url string — same bytes, compared verbatim.
       expect(parsed.token.equals(Buffer.from(signed.token, "base64url"))).toBe(true);
@@ -67,7 +67,7 @@ describe("Aegis — COSE namespaces", () => {
       const parsed = await aegis.cws.verify<string>(signed.token);
 
       expect(parsed.payload).toBe("not-a-map");
-      expect(parsed.header.cty).toBe("text/plain");
+      expect(parsed.protectedHeader.cty).toBe("text/plain");
     });
 
     test("signs a Buffer and round-trips it faithfully (octet, cty reconstructed)", async () => {
@@ -77,7 +77,7 @@ describe("Aegis — COSE namespaces", () => {
 
       expect(Buffer.isBuffer(parsed.payload)).toBe(true);
       expect(parsed.payload.equals(Buffer.from("deadbeef", "hex"))).toBe(true);
-      expect(parsed.header.cty).toBe("application/octet-stream");
+      expect(parsed.protectedHeader.cty).toBe("application/octet-stream");
     });
 
     // Regression: the RAW `aegis.cws.sign` wrapper (via `rawSignCws` →
@@ -96,8 +96,8 @@ describe("Aegis — COSE namespaces", () => {
 
       const parsed = await aegis.cws.verify<Record<string, unknown>>(signed.token);
 
-      expect(parsed.header.x5u).toBe(x5u);
-      expect(parsed.header.typ).toBe("application/at+cws");
+      expect(parsed.unprotectedHeader.x5u).toBe(x5u);
+      expect(parsed.protectedHeader.typ).toBe("application/at+cws");
     });
   });
 
@@ -136,10 +136,10 @@ describe("Aegis — COSE namespaces", () => {
         unprotected: { x5u },
       });
 
-      const { header } = await aegis.cwe.decrypt(token);
+      const { protectedHeader, unprotectedHeader } = await aegis.cwe.decrypt(token);
 
-      expect(header.x5u).toBe(x5u);
-      expect(header.typ).toBe("application/at+cwe");
+      expect(unprotectedHeader.x5u).toBe(x5u);
+      expect(protectedHeader.typ).toBe("application/at+cwe");
     });
   });
 
@@ -174,7 +174,7 @@ describe("Aegis — COSE namespaces", () => {
       expect(parsed.payload.scope).toEqual(["read", "write"]);
       expect(parsed.payload.cti).toBe("jti-1");
       expect(parsed.payload.exp).toBeInstanceOf(Date);
-      expect(parsed.header.alg).toBe("ES512");
+      expect(parsed.protectedHeader.alg).toBe("ES512");
     });
 
     test("a wire assert predicate rejects a non-matching claim", async () => {
@@ -275,8 +275,8 @@ describe("Aegis — COSE namespaces", () => {
 
       // The unprotected header param must survive the raw forward and merge on
       // verify — without the structural forward a future option is dropped here.
-      expect(parsed.header.x5u).toBe(x5u);
-      expect(parsed.header.typ).toBe("application/at+cwt");
+      expect(parsed.unprotectedHeader.x5u).toBe(x5u);
+      expect(parsed.protectedHeader.typ).toBe("application/at+cwt");
     });
   });
 
@@ -326,7 +326,7 @@ describe("Aegis — COSE namespaces", () => {
       expect(parsed.payload.iss).toBe("https://test.lindorm.io/");
       expect(parsed.payload.aud).toEqual(["https://rs.lindorm.io/"]);
       expect(parsed.payload.cti).toBe("jti-1");
-      expect(parsed.header.typ).toBe("application/at+cwt"); // CWM shares the CWT typ
+      expect(parsed.protectedHeader.typ).toBe("application/at+cwt"); // CWM shares the CWT typ
     });
 
     test("a wire assert predicate rejects a non-matching claim", async () => {
@@ -391,8 +391,8 @@ describe("Aegis — COSE namespaces", () => {
 
       const parsed = await macAegis.cwm.verify(signed.token);
 
-      expect(parsed.header.x5u).toBe(x5u);
-      expect(parsed.header.typ).toBe("application/at+cwt"); // CWM shares the CWT typ
+      expect(parsed.unprotectedHeader.x5u).toBe(x5u);
+      expect(parsed.protectedHeader.typ).toBe("application/at+cwt"); // CWM shares the CWT typ
     });
   });
 
@@ -459,23 +459,30 @@ describe("Aegis — COSE namespaces", () => {
       const cwtVerified = await aegis.cwt.verify(cwt.token);
       const jwtVerified = await aegis.jwt.verify(jwt.token);
 
-      // Both raw verify results carry the WIRE header — the protected + unprotected
-      // maps merged and translated to JOSE wire names (`alg`/`kid`/`typ`), NEVER the
-      // domain-named header (`algorithm`/`keyId`/`headerType`/`baseFormat`) and never
-      // the former narrow triple type. Identical shape across COSE and JOSE.
-      for (const header of [cwtVerified.header, jwtVerified.header]) {
+      // Both raw verify results carry the WIRE header — COSE integer labels
+      // translated to JOSE wire names (`alg`/`kid`/`typ`), NEVER the domain-named
+      // header (`algorithm`/`keyId`/`headerType`/`baseFormat`) and never the
+      // former narrow triple type. Identical shape across COSE and JOSE.
+      for (const header of [cwtVerified.protectedHeader, jwtVerified.protectedHeader]) {
         expect(header.alg).toBe("ES512");
-        expect(typeof header.kid).toBe("string");
         expect(header).not.toHaveProperty("algorithm");
         expect(header).not.toHaveProperty("keyId");
         expect(header).not.toHaveProperty("headerType");
         expect(header).not.toHaveProperty("baseFormat");
       }
 
-      // typ is the wire media type (the merged protected-header value), read the
-      // same way on both.
-      expect(cwtVerified.header.typ).toBe("application/at+cwt");
-      expect(jwtVerified.header.typ).toBe("application/at+jwt");
+      // The ONE placement divergence, and it is a fact about the wires rather
+      // than about aegis: JOSE has a single protected header and carries `kid`
+      // there, COSE convention puts that advisory routing hint in the bucket the
+      // signature does not cover (RFC 9052 §3.1). Merging the buckets hid it.
+      expect(typeof jwtVerified.protectedHeader.kid).toBe("string");
+      expect(typeof cwtVerified.unprotectedHeader.kid).toBe("string");
+      expect(cwtVerified.protectedHeader.kid).toBeUndefined();
+
+      // typ is the wire media type off the PROTECTED header, read the same way
+      // on both.
+      expect(cwtVerified.protectedHeader.typ).toBe("application/at+cwt");
+      expect(jwtVerified.protectedHeader.typ).toBe("application/at+jwt");
     });
   });
 });

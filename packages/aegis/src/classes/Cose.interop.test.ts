@@ -118,7 +118,7 @@ describe("COSE interop — @auth0/cose", () => {
     });
 
     // Our mint stamped the full CWT media type…
-    expect(CwtKit.decode(token).header.typ).toBe("application/at+cwt");
+    expect(CwtKit.decode(token).protectedHeader.typ).toBe("application/at+cwt");
 
     // …and @auth0/cose still verifies it WITHOUT throwing: RFC 9596 says the
     // typ is passed through to the application, never validated by the library.
@@ -348,7 +348,7 @@ describe("COSE decode — foreign header parameters shape to the JOSE wire form"
       ),
     );
 
-    expect(decoded.header.crit).toEqual(["x5c", "cty", "custom-ext"]);
+    expect(decoded.protectedHeader.crit).toEqual(["x5c", "cty", "custom-ext"]);
   });
 
   test("x5chain bstr chain decodes to an Array<base64-string> (standard base64)", () => {
@@ -364,7 +364,7 @@ describe("COSE decode — foreign header parameters shape to the JOSE wire form"
     );
 
     // Standard base64 (RFC 7515 §4.1.6), NOT base64url — matches JOSE x5c.
-    expect(decoded.header.x5c).toEqual([B64.encode(der1), B64.encode(der2)]);
+    expect(decoded.protectedHeader.x5c).toEqual([B64.encode(der1), B64.encode(der2)]);
   });
 
   test("a single x5chain bstr (one cert) still decodes to a one-element Array", () => {
@@ -379,7 +379,7 @@ describe("COSE decode — foreign header parameters shape to the JOSE wire form"
       ),
     );
 
-    expect(decoded.header.x5c).toEqual([B64.encode(der1)]);
+    expect(decoded.protectedHeader.x5c).toEqual([B64.encode(der1)]);
   });
 
   test("x5t (label 34) is ABSENT — its COSE_CertHash has no faithful JOSE-wire form", () => {
@@ -397,7 +397,7 @@ describe("COSE decode — foreign header parameters shape to the JOSE wire form"
       ),
     );
 
-    expect(decoded.header.x5t).toBeUndefined();
+    expect(decoded.protectedHeader.x5t).toBeUndefined();
   });
 
   test("a detached / nil payload is rejected with the clean Malformed CWT error", () => {
@@ -416,11 +416,11 @@ describe("COSE decode — foreign header parameters shape to the JOSE wire form"
   test("an aegis-minted CWT is unaffected — it emits none of these parameters", () => {
     const decoded = CwtKit.decode(signDomain(TEST_EC_KEY_SIG, common));
 
-    expect(decoded.header.crit).toBeUndefined();
-    expect(decoded.header.x5c).toBeUndefined();
-    expect(decoded.header.x5t).toBeUndefined();
+    expect(decoded.protectedHeader.crit).toBeUndefined();
+    expect(decoded.protectedHeader.x5c).toBeUndefined();
+    expect(decoded.protectedHeader.x5t).toBeUndefined();
     // …the standard parameters our kits DO emit are shaped as before.
-    expect(decoded.header.alg).toBe("ES512");
-    expect(decoded.header.kid).toBe(TEST_EC_KEY_SIG.id);
+    expect(decoded.protectedHeader.alg).toBe("ES512");
+    expect(decoded.unprotectedHeader.kid).toBe(TEST_EC_KEY_SIG.id);
   });
 });

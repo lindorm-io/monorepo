@@ -20,7 +20,7 @@ npm install @lindorm/amphora @lindorm/logger
 
 `Aegis` is an async façade over an `IAmphora` key store — it resolves keys by `kid` and runs the operation. It offers **two surfaces**, and the difference is the return shape:
 
-- **Domain verbs** — `aegis.sign` / `mint` / `encrypt` / `verify` / `decrypt` / `parse`. These speak the aegis domain vocabulary. `verify` returns a unified `VerifiedToken`: domain-keyed claims split into buckets — `.claims` (registered), `.custom` (everything else), plus `.profile` / `.sensitive` — a domain `.header`, and a `.format` discriminant. **No `.payload`.**
+- **Domain verbs** — `aegis.sign` / `mint` / `encrypt` / `verify` / `decrypt` / `parse`. These speak the aegis domain vocabulary. `verify` returns a unified `VerifiedToken`: domain-keyed claims split into buckets — `.claims` (registered), `.custom` (everything else), plus `.profile` / `.sensitive` — a domain `.header`, and a `.format` discriminant. **No `.payload`.** (The kit tier below reports its wire header as two buckets, `.protectedHeader` / `.unprotectedHeader`; the domain `.header` carries what the signature covers, plus the COSE `kid` routing hint.)
 - **Wire namespaces** — `aegis.jwt` / `jws` / `jwe` / `cwt` / `cwm` / `cws` / `cwe`. Each resolves the key then delegates to its kit. `sign` / `encrypt` return the same domain `SignedToken` / `EncryptedToken` sugar the verbs do (`.token`, `.format`); `verify` / `decrypt` return the kit's **native wire shape** — a `.payload` with wire claim names (`sub` / `exp` / `jti`, never `subject` / `expiresAt` / `tokenId`), exactly what a standalone JOSE / COSE library reads.
 
 The same token reads either way: `aegis.jwt.verify(t)` hands you the raw wire; `aegis.verify(t)` hands you the domain `VerifiedToken`.
@@ -201,7 +201,7 @@ const signed = await aegis.jwt.sign(
 
 const parsed = await aegis.jwt.verify(signed.token);
 // parsed.payload → { sub: "user-123", exp: 1737000000, aud: [...], scope: [...] }  (WIRE names)
-// parsed.header (WireTokenHeader), parsed.token
+// parsed.protectedHeader / parsed.unprotectedHeader (WireTokenHeader), parsed.token
 
 // matching is a positional WIRE assert condition (no named domain matchers here):
 const checked = await aegis.jwt.verify(signed.token, { iss: "https://idp.example.com" });
@@ -229,7 +229,8 @@ const cwt = await aegis.cwt.sign(
   { tokenType: "at" }, // → application/at+cwt
 );
 const parsedCwt = await aegis.cwt.verify(cwt.token);
-// parsedCwt.payload → COSE-name-keyed wire ({ cti, exp, ... }); parsedCwt.header, .token
+// parsedCwt.payload → COSE-name-keyed wire ({ cti, exp, ... });
+// parsedCwt.protectedHeader / .unprotectedHeader, .token
 
 // cwm — the same, as a COSE_Mac0 (symmetric key)
 const cwm = await aegis.cwm.sign({
@@ -241,7 +242,8 @@ const parsedCwm = await aegis.cwm.verify(cwm.token);
 
 // cws — raw COSE_Sign1, the opaque COSE mirror of jws
 const cws = await aegis.cws.sign({ tid: "at_abc" }, { tokenType: "access_token" });
-const parsedCws = await aegis.cws.verify(cws.token); // { header, payload: Buffer, token }
+const parsedCws = await aegis.cws.verify(cws.token);
+// { protectedHeader, unprotectedHeader, payload: Buffer, token }
 
 // cwe — COSE_Encrypt0, the COSE mirror of jwe (direct AEAD to a symmetric enc key)
 const cwe = await aegis.cwe.encrypt("secret");
@@ -447,7 +449,8 @@ const parsed = kit.verify(token, { iss: "https://example.com" });
 // parsed.payload → wire claims ({ iss, sub, exp, jti }); parsed.header, parsed.token
 
 JwtKit.isJwt(token); // static
-JwtKit.decode(token); // static → { header, payload, signature, token } — no verification
+JwtKit.decode(token);
+// static → { protectedHeader, unprotectedHeader, payload, signature, token } — no verification
 ```
 
 `verify` runs crit, typ well-formedness, algorithm-match, signature, cert-binding, reserved-claim type checks, and the temporal range (`exp` / `nbf` / `iat`, validated if present) — plus the optional `assert` condition over the wire claims.
@@ -468,7 +471,8 @@ const parsed = kit.verify<string>(token);
 // parsed.payload === "hello world" (the cty header round-trips the native type)
 
 JwsKit.isJws(token); // static
-JwsKit.decode(token); // static → { header, payload, signature, token } — no verification
+JwsKit.decode(token);
+// static → { protectedHeader, unprotectedHeader, payload, signature, token } — no verification
 ```
 
 ## JweKit
@@ -488,10 +492,11 @@ const token = kit.encrypt("secret data", { header: { oid: "msg-002" } });
 // → the compact JWE string
 
 const decrypted = kit.decrypt<string>(token);
-// → { header, payload, token }
+// → { protectedHeader, unprotectedHeader, payload, token }
 
 JweKit.isJwe(token); // static
-JweKit.decode(token); // static → { header, token } — header only, no decryption
+JweKit.decode(token);
+// static → { protectedHeader, unprotectedHeader, token } — headers only, no decryption
 ```
 
 Compressed payloads (`zip` header) are explicitly rejected.
@@ -601,7 +606,7 @@ The COSE structure follows the key and the profile:
 
 - **Signed** — an asymmetric key produces a `COSE_Sign1` (the `cwt` namespace; the default).
 - **MAC'd** — a symmetric `oct` key produces a `COSE_Mac0` (the `cwm` namespace — HMAC is a MAC algorithm, never a `COSE_Sign1` signature). The same `algClass` policy applies as for JWTs.
-- **Encrypted** — an encryptable profile minted with `encrypt` (or carrying `sensitive` fields) is sign-then-encrypted into a `COSE_Encrypt0`. Direct AES-GCM and AES-CCM (all eight RFC 9053 variants) are supported.
+- **Encrypted** — an encryptable profile minted with `encrypt` (or carrying `sensitive` fields) is sign-then-encrypted into a `COSE_Encrypt0`. Direct AES-GCM and AES-CCM (all eight RFC 9053 variants) are supported. ⚠ A `COSE_Encrypt0` is **direct encryption** (RFC 9052 §5.2): the recipient key IS the content-encryption key, so only a `dir` key can seal one. The nineteen other JWE key-management algorithms have no `COSE_Encrypt0` form, and the kit refuses such a key by name rather than letting it fail deeper down.
 
 ### `typ` and proprietary encoding
 
@@ -624,7 +629,8 @@ const { token } = await aegis.cws.sign(
   { tid: "ref-1", sec: "…" },
   { tokenType: "access_token" },
 );
-const parsed = await aegis.cws.verify(token); // { header, payload: Buffer, token } — opaque
+const parsed = await aegis.cws.verify(token);
+// { protectedHeader, unprotectedHeader, payload: Buffer, token } — opaque
 ```
 
 ### Generic CWT and COSE encryption (`cwt` / `cwm` / `cwe`)
@@ -933,7 +939,9 @@ import {
 - Signature/decryption keys are always sourced from the supplied `IAmphora`. The `jku`, `jwk`, `x5u`, `x5c`, `x5t`, and `x5t#S256` JOSE header parameters are never trusted as key sources during verification — only `kid` is used as a lookup key into Amphora. The COSE verify path is the same: the signing/encryption key is resolved only by the COSE `kid` (unprotected header, label 4), never from anything embedded in the token.
 - A `kid` lookup is scoped to the issuer the verifier expects, or the one the artifact claims — see [Verification keys are scoped to an issuer](#verification-keys-are-scoped-to-an-issuer). Without it, a registered peer publishing a colliding `kid` could sign a token claiming another issuer's `iss` and have it verify.
 - JWE payload compression (`zip` header) is rejected outright.
-- Critical header parameters are enforced **on the JOSE paths only**, per RFC 7515 §4.1.11: unknown `crit` entries cause verification to fail. ⚠ **COSE does not enforce `crit` on any read path**, although RFC 9052 §3.1 makes an unrecognised critical parameter fatal. A CWT/CWS/CWE carrying a `crit` header aegis does not understand verifies successfully — do not rely on this guarantee for COSE.
+- Critical header parameters are enforced on **both** wires by one implementation: RFC 7515 §4.1.11 (JOSE) and RFC 9052 §3.1 (COSE) state the same rule, and aegis implements no `crit` extension, so any `crit` a producer sets causes verification to fail. On COSE the check reads the **protected bucket only** — the one the signature or AEAD covers — which is also where §3.1 requires every crit-listed parameter to live. On the write side a COSE `crit` member is emitted as the integer **label** its parameter is keyed under, because RFC 9052 §1.5 makes a crit member a label (`int / tstr`) and §3.1 makes a member naming a label absent from the protected bucket a fatal error.
+- The COSE kits report the **protected and unprotected header buckets separately** (`protectedHeader` / `unprotectedHeader`), rather than merging them. Nothing read from the unprotected bucket may decide whether a token is accepted: `typ` — which routes the token and selects the profile floor — is read from the protected bucket alone, and a `typ` the signature does not cover answers nothing. The JOSE kits report an empty unprotected bucket: compact serialisation has one header and it is protected.
+- A COSE confirmation (`cnf`) that the wire cannot carry fails **closed at mint**. RFC 8747 defines no `jkt` member for a COSE confirmation, and a JOSE thumbprint cannot be relabelled as a COSE one — RFC 7638 hashes a key's canonical JSON, RFC 9679 its canonical CBOR — so a `jkt`-bound token has no COSE form and minting one is refused rather than silently downgraded to a bearer CWT.
 - DPoP-bound tokens (`cnf.jkt`) require either a matching DPoP proof or `trustBoundThumbprint: true` on verify.
 - Tokens are never logged whole. Every log line and error payload carries a token as `header.payload` — the signature is dropped, so a logged token stays debuggable but unusable. A JWE is logged as its protected header only; a token with no safely-showable structure (opaque, COSE/CWT) is logged as `[Filtered]`. This applies to DPoP proofs passed on verify as well.
 

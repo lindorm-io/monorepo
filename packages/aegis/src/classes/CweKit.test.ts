@@ -18,7 +18,7 @@ describe("CweKit (COSE_Encrypt0)", () => {
     const payload = Buffer.from("the cwt claims bytes");
 
     const token = kit.encrypt(payload, { tokenType: "at" });
-    const { payload: out, header } = kit.decrypt(token);
+    const { payload: out, protectedHeader: header } = kit.decrypt(token);
 
     expect(out.equals(payload)).toBe(true);
     expect(header.enc).toBe("A256GCM"); // A256GCM wire enc name
@@ -58,13 +58,13 @@ describe("CweKit — caller-controlled protected / unprotected header bags", () 
       unprotected: { x5u },
     });
 
-    const { header } = kit.decrypt(token);
-    expect(header.cty).toBe("application/example");
-    expect(header.x5u).toBe(x5u);
-    // enc (label 1, kit-computed) + kid + iv are always present.
-    expect(header.enc).toBe("A256GCM");
-    expect(header.kid).toBe(kryptos.id);
-    expect(header.iv).toEqual(expect.any(String));
+    // The two BUCKETS, kept apart: what the AEAD covers, and what it does not.
+    const { protectedHeader, unprotectedHeader } = kit.decrypt(token);
+    expect(protectedHeader.cty).toBe("application/example");
+    expect(protectedHeader.enc).toBe("A256GCM"); // enc (label 1, kit-computed)
+    expect(unprotectedHeader.x5u).toBe(x5u);
+    expect(unprotectedHeader.kid).toBe(kryptos.id);
+    expect(unprotectedHeader.iv).toEqual(expect.any(String));
 
     const [protectedBstr, unprotected] = decodeCbor<Tag>(token).contents as [
       Buffer,
@@ -185,7 +185,7 @@ describe("CweKit — proprietary alg/enc gate (D5)", () => {
 
       // Decrypt is ALWAYS lenient — it reads the private-use label back with no
       // proprietary flag and reconstructs the plaintext (correct tag slice).
-      const { payload: out, header } = kit.decrypt(token);
+      const { payload: out, protectedHeader: header } = kit.decrypt(token);
 
       expect(out.equals(payload)).toBe(true);
       // The private-use CBC-HMAC encryption round-trips to its wire enc name.

@@ -110,12 +110,12 @@ describe("Aegis cert binding", () => {
 
       const decoded = JwtKit.decode(token);
       const stripped = {
-        alg: decoded.header.alg,
-        kid: decoded.header.kid,
-        typ: decoded.header.typ,
-        x5c: (decoded.header as any).x5c,
-        x5t: (decoded.header as any).x5t,
-        "x5t#S256": (decoded.header as any)["x5t#S256"],
+        alg: decoded.protectedHeader.alg,
+        kid: decoded.protectedHeader.kid,
+        typ: decoded.protectedHeader.typ,
+        x5c: (decoded.protectedHeader as any).x5c,
+        x5t: (decoded.protectedHeader as any).x5t,
+        "x5t#S256": (decoded.protectedHeader as any)["x5t#S256"],
       };
 
       expect(stripped).toMatchSnapshot();
@@ -132,12 +132,12 @@ describe("Aegis cert binding", () => {
 
       const decoded = JwtKit.decode(token);
       const stripped = {
-        alg: decoded.header.alg,
-        kid: decoded.header.kid,
-        typ: decoded.header.typ,
-        x5c: (decoded.header as any).x5c,
-        x5t: (decoded.header as any).x5t,
-        "x5t#S256": (decoded.header as any)["x5t#S256"],
+        alg: decoded.protectedHeader.alg,
+        kid: decoded.protectedHeader.kid,
+        typ: decoded.protectedHeader.typ,
+        x5c: (decoded.protectedHeader as any).x5c,
+        x5t: (decoded.protectedHeader as any).x5t,
+        "x5t#S256": (decoded.protectedHeader as any)["x5t#S256"],
       };
 
       expect(stripped).toMatchSnapshot();
@@ -152,12 +152,12 @@ describe("Aegis cert binding", () => {
 
       const decoded = JwtKit.decode(token);
       const stripped = {
-        alg: decoded.header.alg,
-        kid: decoded.header.kid,
-        typ: decoded.header.typ,
-        x5c: (decoded.header as any).x5c,
-        x5t: (decoded.header as any).x5t,
-        "x5t#S256": (decoded.header as any)["x5t#S256"],
+        alg: decoded.protectedHeader.alg,
+        kid: decoded.protectedHeader.kid,
+        typ: decoded.protectedHeader.typ,
+        x5c: (decoded.protectedHeader as any).x5c,
+        x5t: (decoded.protectedHeader as any).x5t,
+        "x5t#S256": (decoded.protectedHeader as any)["x5t#S256"],
       };
 
       expect(stripped).toMatchSnapshot();
@@ -172,8 +172,8 @@ describe("Aegis cert binding", () => {
       });
 
       const decoded = JwtKit.decode(token);
-      expect(decoded.header).not.toHaveProperty("x5t");
-      expect((decoded.header as any)["x5t#S256"]).toEqual(expect.any(String));
+      expect(decoded.protectedHeader).not.toHaveProperty("x5t");
+      expect((decoded.protectedHeader as any)["x5t#S256"]).toEqual(expect.any(String));
     });
 
     test("deployment-level certificateThumbprintSha1: false suppresses x5t by default", async () => {
@@ -195,14 +195,14 @@ describe("Aegis cert binding", () => {
       });
 
       const decoded = JwtKit.decode(token);
-      expect(decoded.header).not.toHaveProperty("x5t");
-      expect((decoded.header as any)["x5t#S256"]).toEqual(expect.any(String));
+      expect(decoded.protectedHeader).not.toHaveProperty("x5t");
+      expect((decoded.protectedHeader as any)["x5t#S256"]).toEqual(expect.any(String));
 
       // A per-call override wins over the deployment default.
       const { token: reenabled } = await localAegis.mint("default", signContent, {
         sign: { bindCertificate: "thumbprint", certificateThumbprintSha1: true },
       });
-      expect((JwtKit.decode(reenabled).header as any).x5t).toBe(
+      expect((JwtKit.decode(reenabled).protectedHeader as any).x5t).toBe(
         buildCertBoundKryptos().certificateThumbprintSha1,
       );
     });
@@ -213,9 +213,9 @@ describe("Aegis cert binding", () => {
       });
 
       const decoded = JwtKit.decode(token);
-      expect(decoded.header).not.toHaveProperty("x5c");
-      expect(decoded.header).not.toHaveProperty("x5t");
-      expect(decoded.header).not.toHaveProperty("x5t#S256");
+      expect(decoded.protectedHeader).not.toHaveProperty("x5c");
+      expect(decoded.protectedHeader).not.toHaveProperty("x5t");
+      expect(decoded.protectedHeader).not.toHaveProperty("x5t#S256");
     });
 
     test("verify with matching header x5t#S256 succeeds", async () => {
@@ -241,7 +241,7 @@ describe("Aegis cert binding", () => {
 
       const decoded = JwtKit.decode(token);
       const tampered = {
-        ...decoded.header,
+        ...decoded.protectedHeader,
         "x5t#S256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
       };
 
@@ -272,7 +272,7 @@ describe("Aegis cert binding", () => {
       });
       const decoded = JwtKit.decode(good.token);
       const kryptos = buildCertBoundKryptos();
-      expect(decoded.header["x5t#S256"]).toBe(kryptos.certificateThumbprint);
+      expect(decoded.protectedHeader["x5t#S256"]).toBe(kryptos.certificateThumbprint);
 
       // Directly exercise verifyCertBinding for the "mismatch" branch by
       // constructing a header with a fake thumbprint.
@@ -308,7 +308,7 @@ describe("Aegis cert binding", () => {
       const { token } = await aegis.mint("default", signContent);
       const decoded = JwtKit.decode(token);
       const malicious = {
-        ...decoded.header,
+        ...decoded.protectedHeader,
         x5c: ["MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA"],
       };
 
@@ -343,9 +343,9 @@ describe("Aegis cert binding", () => {
         sign: { bindCertificate: "none" },
       });
       const decoded = JwtKit.decode(token);
-      expect(decoded.header).not.toHaveProperty("x5c");
-      expect(decoded.header).not.toHaveProperty("x5t");
-      expect(decoded.header).not.toHaveProperty("x5t#S256");
+      expect(decoded.protectedHeader).not.toHaveProperty("x5c");
+      expect(decoded.protectedHeader).not.toHaveProperty("x5t");
+      expect(decoded.protectedHeader).not.toHaveProperty("x5t#S256");
 
       await expect(aegis.jwt.verify(token)).resolves.toBeDefined();
     });
@@ -353,9 +353,9 @@ describe("Aegis cert binding", () => {
     test("sign without bindCertificate succeeds (regression: base path unchanged)", async () => {
       const { token } = await aegis.mint("default", signContent);
       const decoded = JwtKit.decode(token);
-      expect(decoded.header).not.toHaveProperty("x5c");
-      expect(decoded.header).not.toHaveProperty("x5t");
-      expect(decoded.header).not.toHaveProperty("x5t#S256");
+      expect(decoded.protectedHeader).not.toHaveProperty("x5c");
+      expect(decoded.protectedHeader).not.toHaveProperty("x5t");
+      expect(decoded.protectedHeader).not.toHaveProperty("x5t#S256");
 
       await expect(aegis.jwt.verify(token)).resolves.toBeDefined();
     });
@@ -522,7 +522,7 @@ describe("Aegis cert binding", () => {
 
       const { token } = await localAegis.mint("default", signContent);
       const decoded = JwtKit.decode(token);
-      expect(decoded.header).not.toHaveProperty("x5t#S256");
+      expect(decoded.protectedHeader).not.toHaveProperty("x5t#S256");
 
       await expect(localAegis.jwt.verify(token)).resolves.toBeDefined();
     });

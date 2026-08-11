@@ -2,10 +2,13 @@
  * The kit capability table — one row per {@link TokenFormatTag}, i.e. one row per
  * kit (`jwt` → JwtKit, `cwm` → CwmKit, …).
  *
- * ⚠ It records what each kit CAN do, read off the kits at this commit. Where a
- * kit does not yet ENFORCE its own row, that is called out inline rather than
- * silently corrected here — a capability table that quietly disagreed with the
- * code would be the same defect it exists to close.
+ * It records what each kit CAN do, and each kit now READS its own row: the COSE
+ * kits derive their reserved-parameter set from `reserved`, `CweKit` gates its
+ * key management on `keyManagement` and its AEAD on `contentEncryption`, and the
+ * JOSE header decoder allowlists `enc` against the `jwe` row. That is the point
+ * of the table — before it, "a CWE is `dir`-only" was enforced nowhere, so a
+ * non-`dir` key surfaced `@lindorm/aes`'s own "Content primitive requires a
+ * direct key" from several layers down instead of an aegis refusal.
  */
 
 import {
@@ -89,10 +92,11 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     // is what the kit can do; the ACCEPT-and-ignore is the defect above it.
     certificateBinding: false,
     unprotectedBucket: true,
-    // ⚠ `typ` is NOT in the reserved set the kit passes to `buildCoseHeaders`
-    // (`CwsKit.ts:366`), even though the kit computes it — `...options.header`
-    // spreads last, so a caller `typ` wins. Recorded as-is.
-    reserved: ["alg", "kid"],
+    // `typ` is what routes a COSE token — `isCwt`/`isCws` and the profile floor
+    // read it — so a caller value for it is refused, not merged. It used to be
+    // absent from this list AND overridable: the kit spread `...options.header`
+    // last over its own computed `typ`.
+    reserved: ["alg", "kid", "typ"],
   },
   cwm: {
     wire: "cose",
@@ -101,7 +105,7 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     cnfMembers: COSE_CNF,
     certificateBinding: false,
     unprotectedBucket: true,
-    reserved: ["alg", "kid"],
+    reserved: ["alg", "kid", "typ"],
   },
   cws: {
     wire: "cose",
@@ -110,7 +114,7 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     cnfMembers: NO_CNF,
     certificateBinding: false,
     unprotectedBucket: true,
-    reserved: ["alg", "kid"],
+    reserved: ["alg", "kid", "typ"],
   },
   cwe: {
     wire: "cose",
@@ -118,11 +122,8 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     // encryption key, so `alg` (label 1) carries the content encryption and no
     // key management happens at all. The nineteen other JWE key managements have
     // no COSE_Encrypt0 form.
-    // ⚠ CweKit does not yet REFUSE a non-`dir` key ITSELF. The mint still fails,
-    // but only once the key reaches `@lindorm/aes`, which throws its own
-    // "Content primitive requires a direct key" several layers down — a FOREIGN
-    // error, which is precisely what this row exists to replace with an aegis
-    // refusal raised before key resolution.
+    // `CweKit` refuses a non-`dir` key in its CONSTRUCTOR, off this set, before
+    // any content reaches `@lindorm/aes`.
     keyManagement: new Set<KryptosAlgorithm>(["dir"]),
     // The official COSE labels (AES-GCM + the eight AES-CCM variants) plus the
     // private-use AES-CBC-HMAC labels, which together are the whole kryptos set;
@@ -131,7 +132,6 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     cnfMembers: COSE_CNF,
     certificateBinding: false,
     unprotectedBucket: true,
-    // ⚠ Same `typ` gap as the signing kits (`CweKit.ts:120`).
-    reserved: ["alg", "kid", "iv"],
+    reserved: ["alg", "kid", "iv", "typ"],
   },
 };

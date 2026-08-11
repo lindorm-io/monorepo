@@ -1,8 +1,8 @@
 import type { Dict, TokenData } from "@lindorm/types";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { CertificateBindingMode } from "../header/domain-header.js";
+import type { WireHeaderBuckets } from "../header/wire-buckets.js";
 import type { WireTokenEnvelope } from "../header/wire-envelope.js";
-import type { WireTokenHeader } from "../header/wire-header.js";
 
 /**
  * The STRUCTURED (claims-bearing) sign options — shared by JWT, CWT, CWM. The
@@ -63,29 +63,27 @@ export type VerifyStructuredTokenOptions = {
 /**
  * The NATIVE WIRE result of verifying a STRUCTURED token (`JwtKit`/`CwtKit`/
  * `CwmKit` verify). Carries the WIRE-keyed `payload` (`sub`/`exp`/`jti`|`cti`,
- * never the domain `subject`/`expiresAt`/`tokenId`), the unified WIRE header
- * ({@link WireTokenHeader} — identical in TYPE across JOSE and COSE), and the
+ * never the domain `subject`/`expiresAt`/`tokenId`), the two WIRE header BUCKETS
+ * ({@link WireHeaderBuckets} — identical in TYPE across JOSE and COSE), and the
  * NATIVE token (`string` JOSE / `Buffer` COSE). The domain claim + header
  * translation is Aegis-side (`aegis.verify` → `VerifiedToken`).
  */
 export type VerifiedStructuredToken<
   C extends Dict = Dict,
   T extends TokenData = Buffer,
-> = {
-  header: WireTokenHeader;
+> = WireHeaderBuckets & {
   payload: C;
   token: T;
 };
 
 /**
- * The uniform `decode` result for a STRUCTURED token — JWT ≡ CWT ≡ CWM: the
- * unified WIRE header + cleartext WIRE claims, NO signature/MAC verification.
+ * The uniform `decode` result for a STRUCTURED token — JWT ≡ CWT ≡ CWM: the two
+ * WIRE header buckets + cleartext WIRE claims, NO signature/MAC verification.
  */
 export type DecodedStructuredToken<
   C extends Dict = Dict,
   T extends TokenData = Buffer,
-> = {
-  header: WireTokenHeader;
+> = WireHeaderBuckets & {
   payload: C;
   signature: T;
   token: T;

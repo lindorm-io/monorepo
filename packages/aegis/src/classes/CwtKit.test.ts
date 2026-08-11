@@ -42,7 +42,9 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
   });
 
   test("round-trips the WIRE claims through sign -> verify (no domain translation)", () => {
-    const { payload: claims, header } = kit.verify(kit.sign(wire, { tokenType: "at" }));
+    const { payload: claims, protectedHeader: header } = kit.verify(
+      kit.sign(wire, { tokenType: "at" }),
+    );
 
     // WIRE names only — jose/cose keys, NOT domain (`issuer`/`subject`/`tokenId`).
     expect(claims.iss).toBe("https://issuer.lindorm.io/");
@@ -60,9 +62,9 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
   test("decode exposes kid / alg / typ without verifying", () => {
     const decoded = CwtKit.decode(kit.sign(wire, { tokenType: "at" }));
 
-    expect(decoded.header.kid).toBe(TEST_EC_KEY_SIG.id);
-    expect(decoded.header.alg).toBe("ES512"); // TEST_EC_KEY_SIG is P-521
-    expect(decoded.header.typ).toBe("application/at+cwt");
+    expect(decoded.unprotectedHeader.kid).toBe(TEST_EC_KEY_SIG.id);
+    expect(decoded.protectedHeader.alg).toBe("ES512"); // TEST_EC_KEY_SIG is P-521
+    expect(decoded.protectedHeader.typ).toBe("application/at+cwt");
   });
 
   test("rejects a tampered payload", () => {
@@ -120,7 +122,7 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
     test("non-proprietary sign is accepted and round-trips the WIRE claims", () => {
       const mldsaKit = new CwtKit({ logger: createMockLogger(), kryptos: mldsa });
 
-      const { header, payload: claims } = mldsaKit.verify(
+      const { protectedHeader: header, payload: claims } = mldsaKit.verify(
         mldsaKit.sign(wire, { tokenType: "at" }),
       );
 
@@ -131,9 +133,9 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
   });
 
   describe("caller-controlled protected / unprotected header bags", () => {
-    test("header params land protected, unprotected params unprotected — both merge on verify", () => {
+    test("header params land protected, unprotected params unprotected — reported apart", () => {
       const x5u = "https://certs.lindorm.io/leaf.pem";
-      const { header } = kit.verify(
+      const { protectedHeader, unprotectedHeader } = kit.verify(
         kit.sign(wire, {
           tokenType: "at",
           header: { cty: "application/example" },
@@ -141,12 +143,15 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
         }),
       );
 
-      expect(header.cty).toBe("application/example");
-      expect(header.x5u).toBe(x5u);
+      expect(protectedHeader.cty).toBe("application/example");
       // The always-present derived params are still there.
-      expect(header.typ).toBe("application/at+cwt");
-      expect(header.alg).toBe("ES512");
-      expect(header.kid).toBe(TEST_EC_KEY_SIG.id);
+      expect(protectedHeader.typ).toBe("application/at+cwt");
+      expect(protectedHeader.alg).toBe("ES512");
+
+      // The unsigned bucket: the caller's x5u and the advisory kid routing hint.
+      expect(unprotectedHeader.x5u).toBe(x5u);
+      expect(unprotectedHeader.kid).toBe(TEST_EC_KEY_SIG.id);
+      expect(protectedHeader.x5u).toBeUndefined();
     });
 
     test("a derived param (alg) smuggled into the bag throws cose_reserved_header", () => {

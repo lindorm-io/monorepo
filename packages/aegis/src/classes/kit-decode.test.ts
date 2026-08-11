@@ -56,7 +56,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       const kit = new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
       const token = kit.sign({ ...jwtWire, jti: "the-jti" }, { tokenType: "at" });
 
-      const { header, payload } = JwtKit.decode(token);
+      const { protectedHeader: header, payload } = JwtKit.decode(token);
 
       expect(header.alg).toBe("ES512");
       expect(header.kid).toBe(TEST_EC_KEY_SIG.id);
@@ -71,12 +71,15 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       const kit = new CwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
       const token = kit.sign(cwtWire, { tokenType: "at" });
 
-      const { header, payload } = CwtKit.decode(token);
+      const { protectedHeader, unprotectedHeader, payload } = CwtKit.decode(token);
 
-      // COSE integer labels translated to their JOSE wire names + string values.
-      expect(header.alg).toBe("ES512");
-      expect(header.kid).toBe(TEST_EC_KEY_SIG.id);
-      expect(header.typ).toBe("application/at+cwt");
+      // COSE integer labels translated to their JOSE wire names + string values,
+      // and the two buckets kept APART: `kid` is an advisory routing hint COSE
+      // convention puts in the bucket no signature covers (RFC 9052 §3.1).
+      expect(protectedHeader.alg).toBe("ES512");
+      expect(protectedHeader.typ).toBe("application/at+cwt");
+      expect(protectedHeader.kid).toBeUndefined();
+      expect(unprotectedHeader.kid).toBe(TEST_EC_KEY_SIG.id);
       expect(payload.iss).toBe("https://issuer.lindorm.io/");
       expect(payload.sub).toBe("user-1");
       expect(payload.cti).toBe("the-cti");
@@ -87,11 +90,11 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       const kit = new CwmKit({ logger, kryptos: TEST_OCT_KEY_SIG });
       const token = kit.sign(cwtWire, { tokenType: "at" });
 
-      const { header, payload } = CwmKit.decode(token);
+      const { protectedHeader, unprotectedHeader, payload } = CwmKit.decode(token);
 
-      expect(header.alg).toBe("HS256");
-      expect(header.kid).toBe(TEST_OCT_KEY_SIG.id);
-      expect(header.typ).toBe("application/at+cwt");
+      expect(protectedHeader.alg).toBe("HS256");
+      expect(protectedHeader.typ).toBe("application/at+cwt");
+      expect(unprotectedHeader.kid).toBe(TEST_OCT_KEY_SIG.id);
       expect(payload.iss).toBe("https://issuer.lindorm.io/");
       expect(payload.cti).toBe("the-cti");
     });
@@ -101,7 +104,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       // A Buffer stays opaque (octet cty), so decode reconstructs it as a Buffer.
       const token = kit.sign(Buffer.from("the opaque payload"));
 
-      const { header, payload } = JwsKit.decode<Buffer>(token);
+      const { protectedHeader: header, payload } = JwsKit.decode<Buffer>(token);
 
       expect(header.alg).toBe("ES512");
       expect(header.kid).toBe(TEST_EC_KEY_SIG.id);
@@ -114,32 +117,37 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       const bytes = Buffer.from("the opaque payload");
       const token = kit.sign(bytes, { tokenType: "at" });
 
-      const { header, payload } = CwsKit.decode(token);
+      const { protectedHeader, unprotectedHeader, payload } = CwsKit.decode(token);
 
-      expect(header.alg).toBe("ES512");
-      expect(header.kid).toBe(TEST_EC_KEY_SIG.id);
-      expect(header.typ).toBe("application/at+cws");
+      expect(protectedHeader.alg).toBe("ES512");
+      expect(protectedHeader.typ).toBe("application/at+cws");
+      expect(unprotectedHeader.kid).toBe(TEST_EC_KEY_SIG.id);
       expect(payload.equals(bytes)).toBe(true);
     });
   });
 
-  describe("COSE header MERGE + integer-label -> wire-name translation", () => {
-    test("a CWT merges protected (alg/typ) + unprotected (kid) into ONE wire header", () => {
+  describe("COSE header BUCKETS + integer-label -> wire-name translation", () => {
+    test("a CWT reports protected (alg/typ) and unprotected (kid) SEPARATELY", () => {
       const kit = new CwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
-      const { header } = CwtKit.decode(kit.sign(cwtWire, { tokenType: "at" }));
+      const { protectedHeader, unprotectedHeader } = CwtKit.decode(
+        kit.sign(cwtWire, { tokenType: "at" }),
+      );
 
-      // alg + typ come off the PROTECTED map, kid off the UNPROTECTED map — all
-      // land on one header under their JOSE wire names.
-      expect(header).toMatchObject({
+      // alg + typ come off the PROTECTED map, kid off the UNPROTECTED one, and
+      // they stay apart: merging them made a parameter no signature covers
+      // indistinguishable from one it does.
+      expect(protectedHeader).toMatchObject({
         alg: "ES512",
-        kid: TEST_EC_KEY_SIG.id,
         typ: "application/at+cwt",
       });
+      expect(protectedHeader.kid).toBeUndefined();
+      expect(unprotectedHeader).toEqual({ kid: TEST_EC_KEY_SIG.id });
     });
 
-    test("protected wins on conflict (same label in both maps)", () => {
-      // Craft a COSE_Sign1 whose kid (label 4) sits in BOTH the protected and the
-      // unprotected map with different values — protected must win.
+    test("a parameter in BOTH maps is reported once per bucket, not resolved", () => {
+      // Craft a COSE_Sign1 whose kid (label 4) sits in BOTH maps with different
+      // values. There is no precedence to state any more — the buckets are
+      // different statements about the token, and only one of them is signed.
       const protectedMap = new Map<number, unknown>();
       protectedMap.set(1, algToCoseLabel("ES512")); // alg (label 1)
       protectedMap.set(4, Buffer.from("protected-kid", "utf8")); // kid (label 4)
@@ -155,10 +163,11 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
         Buffer.from("signature"),
       ]);
 
-      const { header } = CwsKit.decode(encodeCbor(structure));
+      const { protectedHeader, unprotectedHeader } = CwsKit.decode(encodeCbor(structure));
 
-      expect(header.alg).toBe("ES512");
-      expect(header.kid).toBe("protected-kid");
+      expect(protectedHeader.alg).toBe("ES512");
+      expect(protectedHeader.kid).toBe("protected-kid");
+      expect(unprotectedHeader.kid).toBe("unprotected-kid");
     });
 
     test("a CWE maps the COSE_Encrypt0 content-encryption label (1) to `enc`", () => {
@@ -167,14 +176,15 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
         tokenType: "at",
       });
 
-      const { header } = CweKit.decode(token);
+      const { protectedHeader, unprotectedHeader } = CweKit.decode(token);
 
       // Label 1 in Encrypt0 is the AEAD, translated to the JOSE `enc` name (not
-      // a key-management `alg`); kid + iv come off the unprotected map.
-      expect(header.enc).toBe("A256GCM");
-      expect(header.kid).toBe(coseEncKey.id);
-      expect(typeof header.iv).toBe("string");
-      expect(header.typ).toBe("application/at+cwe");
+      // a key-management `alg`); kid + iv come off the unprotected map, which is
+      // where RFC 9052 §5.2 puts them.
+      expect(protectedHeader.enc).toBe("A256GCM");
+      expect(protectedHeader.typ).toBe("application/at+cwe");
+      expect(unprotectedHeader.kid).toBe(coseEncKey.id);
+      expect(typeof unprotectedHeader.iv).toBe("string");
     });
   });
 
@@ -192,17 +202,22 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       );
 
       expect(Object.keys(jwt).sort()).toEqual([
-        "header",
         "payload",
+        "protectedHeader",
         "signature",
         "token",
+        "unprotectedHeader",
       ]);
       expect(Object.keys(cwt).sort()).toEqual(Object.keys(jwt).sort());
 
+      // A compact JOSE token has ONE header and it is protected, so its
+      // unprotected bucket is empty — the same result SHAPE, a true answer.
+      expect(jwt.unprotectedHeader).toEqual({});
+
       // Shared header wire keys.
-      expect(typeof jwt.header.alg).toBe("string");
-      expect(typeof cwt.header.alg).toBe("string");
-      expect(jwt.header.kid).toBe(cwt.header.kid);
+      expect(typeof jwt.protectedHeader.alg).toBe("string");
+      expect(typeof cwt.protectedHeader.alg).toBe("string");
+      expect(jwt.protectedHeader.kid).toBe(cwt.unprotectedHeader.kid);
 
       // Shared payload claim keys (jti/cti diverge by RFC and are excluded).
       const shared = ["iss", "sub", "aud", "exp", "iat", "client_id", "scope"];
@@ -223,19 +238,23 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       );
 
       expect(Object.keys(jws).sort()).toEqual([
-        "header",
         "payload",
+        "protectedHeader",
         "signature",
         "token",
+        "unprotectedHeader",
       ]);
       expect(Object.keys(cws).sort()).toEqual(Object.keys(jws).sort());
+      expect(jws.unprotectedHeader).toEqual({});
 
       expect(Buffer.isBuffer(jws.payload)).toBe(true);
       expect(Buffer.isBuffer(cws.payload)).toBe(true);
       expect(jws.payload.equals(bytes)).toBe(true);
       expect(cws.payload.equals(bytes)).toBe(true);
-      expect(jws.header.alg).toBe(cws.header.alg);
-      expect(jws.header.kid).toBe(cws.header.kid);
+      expect(jws.protectedHeader.alg).toBe(cws.protectedHeader.alg);
+      // JOSE carries the kid protected, COSE unprotected — the ONE placement
+      // divergence, now visible in the result rather than merged away.
+      expect(jws.protectedHeader.kid).toBe(cws.unprotectedHeader.kid);
     });
 
     test("JWE ≡ CWE — header only, content NOT exposed", () => {
@@ -250,16 +269,21 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
 
       // Both decode to the SAME result shape: the header + the native token (the
       // content stays ciphertext — never a plaintext payload field).
-      expect(Object.keys(jwe).sort()).toEqual(["header", "token"]);
-      expect(Object.keys(cwe).sort()).toEqual(["header", "token"]);
+      expect(Object.keys(jwe).sort()).toEqual([
+        "protectedHeader",
+        "token",
+        "unprotectedHeader",
+      ]);
+      expect(Object.keys(cwe).sort()).toEqual(Object.keys(jwe).sort());
+      expect(jwe.unprotectedHeader).toEqual({});
 
       // The content is ciphertext — the plaintext must not appear anywhere.
       expect(JSON.stringify(jwe)).not.toContain(secret);
       expect(JSON.stringify(cwe)).not.toContain(secret);
 
       // Both expose the content-encryption under the JOSE `enc` wire name.
-      expect(jwe.header.enc).toBe("A256GCM");
-      expect(cwe.header.enc).toBe("A256GCM");
+      expect(jwe.protectedHeader.enc).toBe("A256GCM");
+      expect(cwe.protectedHeader.enc).toBe("A256GCM");
     });
   });
 });

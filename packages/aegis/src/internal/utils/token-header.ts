@@ -34,13 +34,11 @@ import { getBaseFormat } from "./compute-typ-header.js";
  * dropped (no passthrough) — the registry states that once, as
  * `unregistered: "drop"`. The registry's `HeaderCodec` drives the value shaping.
  *
- * ⚠ ONE asymmetry survives, deliberately, and it is a WRITE-side one: the JOSE
- * pass SHAPES values through the codec (guards, `crit` member remap, canonical
- * key sort) while the COSE pass is value-PASSTHROUGH. That is what the COSE write
- * path does today — the caller-settable COSE params already carry their wire
- * representation — and shaping them here would change the bytes. Closing it means
- * rebuilding the COSE header write path, which belongs with the kits, not with
- * the codec unification.
+ * ⚠ The COSE pass is value-PASSTHROUGH for every parameter but ONE: the
+ * caller-settable COSE params (`typ`/`cty`/`x5c`/`x5u`) already carry the wire
+ * representation that round-trips back on read, so shaping them here would only
+ * change the bytes. `crit` is the exception, and has to be — see
+ * {@link critToCoseLabels}.
  */
 
 // --- `crit` member remap (the one member-transforming parameter) ------------
@@ -212,15 +210,36 @@ export const parseTokenHeader = <T extends DomainTokenHeader = DomainTokenHeader
 };
 
 /**
+ * Translate `crit`'s members from JOSE wire NAMES to the COSE integer LABELS the
+ * parameters are actually keyed under.
+ *
+ * RFC 9052 §1.5 defines `label = int / tstr`, so the tstr `"oid"` and the int
+ * `-70000` the lindorm `oid` parameter rides under are DIFFERENT labels. RFC 9052
+ * §3.1: *"if the crit value list includes a label for which the header parameter
+ * is not in the protected-header-parameters bucket, this is a fatal error in
+ * processing the message."* Emitting the NAME while keying the parameter by its
+ * LABEL therefore produced a token that was fatally malformed by its own
+ * `crit` — which is exactly what this pass did until 2026-08-11.
+ *
+ * So a crit member is translated through the SAME `coseByJose` its parameter is,
+ * and refused the same way: a parameter COSE cannot carry cannot be marked
+ * critical on the COSE wire, because there is no label to name it by.
+ */
+const critToCoseLabels = (value: unknown): unknown => {
+  if (!Array.isArray(value)) return value;
+
+  return value.map((member) => (isString(member) ? coseByJose(member) : member));
+};
+
+/**
  * The COSE write pass: a caller's WIRE-named partial header bag -> a COSE
  * integer-label map, each wire name resolved through the registry by
  * {@link coseByJose} (which THROWS for a parameter COSE has no integer label).
  * Undefined values are skipped.
  *
- * The inverse of `mergeCoseWireHeader`'s read direction, and — per the file
- * docstring — value-PASSTHROUGH: the caller-settable COSE params
- * (`typ`/`cty`/`crit`/`x5c`/`x5u`) already carry the wire representation that
- * round-trips back through `mergeCoseWireHeader` on read.
+ * The inverse of `coseWireHeader`'s read direction, and — per the file docstring
+ * — value-PASSTHROUGH except for `crit`, whose MEMBERS are labels in their own
+ * right and are translated by {@link critToCoseLabels}.
  */
 export const wireHeaderToCoseMap = (
   bag: Partial<WireTokenHeader> | undefined,
@@ -239,7 +258,7 @@ export const wireHeaderToCoseMap = (
     // there is no registry lookup first: a registered parameter and an
     // unregistered one take the SAME call, which is the only one that can type
     // the map key as the `number` the map declares.
-    map.set(coseByJose(jose), value);
+    map.set(coseByJose(jose), jose === "crit" ? critToCoseLabels(value) : value);
   }
 
   return map;

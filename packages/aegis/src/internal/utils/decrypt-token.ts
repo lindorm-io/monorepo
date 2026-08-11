@@ -38,7 +38,7 @@ export const decryptToken = async <C extends Dict = Dict>({
 }): Promise<DecryptedToken<C>> => {
   if (JweKit.isJwe(token)) {
     const {
-      header: wireHeader,
+      protectedHeader: wireHeader,
       payload,
       token: echoed,
     } = await rawDecryptJwe<TokenContent>({

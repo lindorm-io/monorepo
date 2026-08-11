@@ -1,6 +1,6 @@
 import type { CoseError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
-import { joseByCose } from "./header-registry.js";
+import { coseByJose, joseByCose } from "./header-registry.js";
 import { wireHeaderToCoseMap } from "../utils/token-header.js";
 
 /**
@@ -12,10 +12,13 @@ import { wireHeaderToCoseMap } from "../utils/token-header.js";
  * kit's concern (COSE_Encrypt0 finalizes its protected header before the IV
  * exists, so it cannot be a single write here).
  *
- * `reserved` is the set of COSE labels the kit derives/computes itself (a signed
- * kit: `alg`+`kid`; the encrypt kit: `enc`/label-1 + `kid` + `iv`) — the runtime
- * backstop for the type-level Omit, since an `as any`/untyped dict can smuggle a
- * derived param past the compiler.
+ * `reserved` is the kit's own `KitCapabilities.reserved` row — the JOSE wire
+ * names of the parameters the kit stamps itself (a signed kit: `alg`+`kid`+`typ`;
+ * the encrypt kit: `alg`/label-1 + `kid` + `iv` + `typ`) — resolved to COSE labels
+ * here. It is the runtime backstop for the type-level Omit, since an `as
+ * any`/untyped dict can smuggle a derived param past the compiler, and taking it
+ * from the capability table rather than a hand-built set is what stops a kit's
+ * declared capability and its enforcement from drifting apart.
  *
  * The rules:
  *  1. a reserved/derived param set in EITHER bag → throw (it is key-derived);
@@ -29,7 +32,7 @@ export const buildCoseHeaders = ({
   unprotected,
   error,
 }: {
-  reserved: Set<number>;
+  reserved: ReadonlyArray<string>;
   header: Partial<WireTokenHeader> | undefined;
   unprotected: Partial<WireTokenHeader> | undefined;
   error: typeof CoseError;
@@ -38,7 +41,10 @@ export const buildCoseHeaders = ({
   unprotectedEntries: Map<number, unknown>;
 } => {
   // Rule 2 — crit ⊆ protected (RFC 9052 §3.1). Checked on the raw wire-named bags,
-  // before label translation: crit's members are wire names.
+  // BEFORE label translation, which is why it compares JOSE names on both sides:
+  // a caller writes `crit: ["oid"]` and `oid: "1.2.3.4"` in the same vocabulary.
+  // `wireHeaderToCoseMap` then translates the members to the integer labels the
+  // parameters are keyed under, because on the wire a crit member IS a label.
   if (unprotected && "crit" in unprotected) {
     throw new error("crit cannot be an unprotected COSE header parameter", {
       code: "cose_crit_unprotected",
@@ -66,6 +72,8 @@ export const buildCoseHeaders = ({
   const protectedEntries = wireHeaderToCoseMap(header);
   const unprotectedEntries = wireHeaderToCoseMap(unprotected);
 
+  const reservedLabels = new Set(reserved.map(coseByJose));
+
   // Rule 1 — a kit-derived/computed param cannot be set by the caller in EITHER
   // bag (the runtime backstop for untyped paths; the bag TYPES already Omit these).
   for (const [entries, bucket] of [
@@ -73,7 +81,7 @@ export const buildCoseHeaders = ({
     [unprotectedEntries, "unprotected"],
   ] as const) {
     for (const label of entries.keys()) {
-      if (!reserved.has(label)) continue;
+      if (!reservedLabels.has(label)) continue;
       const jose = joseByCose(label) ?? String(label);
       throw new error(`Header parameter "${jose}" is key-derived and cannot be set`, {
         code: "cose_reserved_header",

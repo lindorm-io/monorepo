@@ -45,7 +45,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       // carries `cty: JWT` (RFC 7519 §5.2) — stamped explicitly so the read side
       // reconstructs the plaintext back to the inner token string, not an opaque
       // Buffer, and the verify recursion re-verifies it.
-      const { header } = JweKit.decode(token);
+      const { protectedHeader: header } = JweKit.decode(token);
       expect(header.cty).toBe("JWT");
     });
 
@@ -77,7 +77,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       const { token } = await aegis.mint("id_token", content, { encrypt: {} });
 
       const decrypted = await aegis.jwe.decrypt<string>(token);
-      const { header } = JwtKit.decode(decrypted.payload);
+      const { protectedHeader: header } = JwtKit.decode(decrypted.payload);
 
       expect(header.typ).toBe("JWT");
     });
@@ -160,7 +160,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
       // The outer JWE carries apu/apv, proving mint's sign-then-encrypt step
       // forwarded the wrapper's party info to JweKit.encrypt.
-      const { header } = JweKit.decode(token);
+      const { protectedHeader: header } = JweKit.decode(token);
       expect(header.apu).toBe(partyProducer);
       expect(header.apv).toBe(partyRecipient);
 
@@ -193,7 +193,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
       // apu/apv on the wire prove the raw wrapper forwarded the party info to
       // JweKit.encrypt; typ proves tokenType threaded through the same rest.
-      const { header } = JweKit.decode(token);
+      const { protectedHeader: header } = JweKit.decode(token);
       expect(header.apu).toBe(partyProducer);
       expect(header.apv).toBe(partyRecipient);
       expect(header.typ).toBe("application/at+jwe");

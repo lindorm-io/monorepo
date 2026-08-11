@@ -14,8 +14,8 @@ import {
   createJoseSignature,
   verifyJoseSignature,
 } from "../internal/utils/jose-signature.js";
+import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
-import { validateCrit } from "../internal/utils/validate-crit.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import { wireHeaderToDomainOptions } from "../internal/utils/wire-header-to-domain.js";
 import type {
@@ -95,7 +95,7 @@ export class JwsKit implements IJwsKit {
     // typ well-formedness: a PRESENT typ must be a JWS media type so a JWT/JWE
     // cannot be verified as a JWS. A typ-LESS token is accepted here — presence
     // requiredness is a DOMAIN/profile policy.
-    const typ = decoded.header.typ;
+    const typ = decoded.protectedHeader.typ;
     if (
       typ !== undefined &&
       typ !== "JWS" &&
@@ -110,34 +110,18 @@ export class JwsKit implements IJwsKit {
       });
     }
 
-    const critError = validateCrit(decoded.header);
-    if (critError) {
-      throw new JwsError(`Invalid crit header: ${critError}`, {
-        code: "jws_invalid_crit",
-        data: { crit: decoded.header.crit },
-        title: "JWS Invalid Crit",
-        details:
-          "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
-      });
-    }
+    // `crit` (RFC 7515 §4.1.11), the SAME enforcement the COSE kits run — one
+    // implementation, so the two wires cannot disagree about a hostile token.
+    rejectUnknownCritical({
+      header: decoded.protectedHeader,
+      format: "jws",
+      error: JwsError,
+    });
 
-    // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
-    if (decoded.header.crit?.length) {
-      for (const param of decoded.header.crit) {
-        throw new JwsError(`Unsupported critical header parameter: ${param}`, {
-          code: "jws_unsupported_crit_param",
-          data: { param },
-          title: "JWS Unsupported Crit Param",
-          details:
-            "The crit header marks an extension parameter as critical that Aegis does not understand, so the JWS must be rejected.",
-        });
-      }
-    }
-
-    if (this.kryptos.algorithm !== decoded.header.alg) {
+    if (this.kryptos.algorithm !== decoded.protectedHeader.alg) {
       throw new JwsError("Invalid token", {
         code: "jws_algorithm_mismatch",
-        data: { algorithm: decoded.header.alg },
+        data: { algorithm: decoded.protectedHeader.alg },
         debug: { expected: this.kryptos.algorithm },
         title: "JWS Algorithm Mismatch",
         details:
@@ -162,7 +146,7 @@ export class JwsKit implements IJwsKit {
     // cert fields remain forbidden as key sources — see the SECURITY
     // INVARIANT in Aegis.kryptosSig.
     verifyCertBinding({
-      header: { certificateThumbprint: decoded.header["x5t#S256"] },
+      header: { certificateThumbprint: decoded.protectedHeader["x5t#S256"] },
       kryptos: this.kryptos,
       logger: this.logger,
       mode: options.certBindingMode ?? this.certBindingMode,
@@ -172,7 +156,12 @@ export class JwsKit implements IJwsKit {
     // above, so the reconstructed content is now trustworthy.
     this.logger.debug("Token verified");
 
-    return { header: decoded.header, payload: decoded.payload, token };
+    return {
+      protectedHeader: decoded.protectedHeader,
+      unprotectedHeader: decoded.unprotectedHeader,
+      payload: decoded.payload,
+      token,
+    };
   }
 
   // public static
@@ -200,7 +189,10 @@ export class JwsKit implements IJwsKit {
     const header = decodeJoseHeader(h);
 
     return {
-      header: header,
+      protectedHeader: header,
+      // Compact JOSE serialisation has ONE header and it is protected — there is
+      // no unprotected bucket to report (`KIT_CAPABILITIES.jws.unprotectedBucket`).
+      unprotectedHeader: {},
       payload: reconstructContent<T>(B64.toBuffer(payload, B64U), header.cty),
       signature,
       token,

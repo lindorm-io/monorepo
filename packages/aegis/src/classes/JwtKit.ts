@@ -23,7 +23,7 @@ import {
   redactVerifyOptions,
 } from "../internal/utils/redact-sensitive-identity.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
-import { validateCrit } from "../internal/utils/validate-crit.js";
+import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
 import { validate } from "../internal/utils/validate.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import { wireHeaderToDomainOptions } from "../internal/utils/wire-header-to-domain.js";
@@ -140,10 +140,12 @@ export class JwtKit implements IJwtKit {
     // kid fail-fast: a token that names a kid different from the configured key
     // cannot verify, so reject it before the (expensive) signature cycle. Via
     // Aegis the handed key already matches; this protects the standalone case.
-    if (decoded.header.kid && this.kryptos.id && decoded.header.kid !== this.kryptos.id) {
+    const decodedHeader = decoded.protectedHeader;
+
+    if (decodedHeader.kid && this.kryptos.id && decodedHeader.kid !== this.kryptos.id) {
       throw new JwtError("Invalid token", {
         code: "jwt_kid_mismatch",
-        data: { kid: decoded.header.kid },
+        data: { kid: decodedHeader.kid },
         debug: { expected: this.kryptos.id },
         title: "JWT Kid Mismatch",
         details:
@@ -154,7 +156,7 @@ export class JwtKit implements IJwtKit {
     // typ well-formedness (folded from the removed `parse`): a PRESENT typ must
     // be a JWT media type so a JWS/JWE cannot be verified as a JWT. A typ-LESS
     // token is accepted here — presence requiredness is a DOMAIN/profile policy.
-    const typ = decoded.header.typ;
+    const typ = decodedHeader.typ;
     if (typ !== undefined && typ !== "JWT" && !typ.endsWith("+jwt")) {
       throw new JwtError("Invalid token", {
         code: "jwt_invalid_typ",
@@ -165,34 +167,14 @@ export class JwtKit implements IJwtKit {
       });
     }
 
-    const critError = validateCrit(decoded.header);
-    if (critError) {
-      throw new JwtError(`Invalid crit header: ${critError}`, {
-        code: "jwt_invalid_crit",
-        data: { crit: decoded.header.crit },
-        title: "JWT Invalid Crit",
-        details:
-          "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
-      });
-    }
+    // `crit` (RFC 7515 §4.1.11), the SAME enforcement the COSE kits run — one
+    // implementation, so the two wires cannot disagree about a hostile token.
+    rejectUnknownCritical({ header: decodedHeader, format: "jwt", error: JwtError });
 
-    // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
-    if (decoded.header.crit?.length) {
-      for (const param of decoded.header.crit) {
-        throw new JwtError(`Unsupported critical header parameter: ${param}`, {
-          code: "jwt_unsupported_crit_param",
-          data: { param },
-          title: "JWT Unsupported Crit Param",
-          details:
-            "The crit header marks an extension parameter as critical that Aegis does not understand, so the JWT must be rejected.",
-        });
-      }
-    }
-
-    if (this.kryptos.algorithm !== decoded.header.alg) {
+    if (this.kryptos.algorithm !== decodedHeader.alg) {
       throw new JwtError("Invalid token", {
         code: "jwt_algorithm_mismatch",
-        data: { algorithm: decoded.header.alg },
+        data: { algorithm: decodedHeader.alg },
         debug: { expected: this.kryptos.algorithm },
         title: "JWT Algorithm Mismatch",
         details:
@@ -231,7 +213,7 @@ export class JwtKit implements IJwtKit {
     // configured kryptos. NOT a key selection step — header cert fields are
     // never trusted as key sources (see the SECURITY INVARIANT in Aegis).
     verifyCertBinding({
-      header: { certificateThumbprint: decoded.header["x5t#S256"] },
+      header: { certificateThumbprint: decodedHeader["x5t#S256"] },
       kryptos: this.kryptos,
       logger: this.logger,
       mode: options.certBindingMode ?? this.certBindingMode,
@@ -267,7 +249,8 @@ export class JwtKit implements IJwtKit {
     this.logger.debug("Token verified");
 
     return {
-      header: decoded.header,
+      protectedHeader: decodedHeader,
+      unprotectedHeader: decoded.unprotectedHeader,
       payload: decoded.payload,
       token,
     };
@@ -302,7 +285,10 @@ export class JwtKit implements IJwtKit {
     const [header, payload, signature] = token.split(".");
 
     return {
-      header: decodeJoseHeader(header),
+      protectedHeader: decodeJoseHeader(header),
+      // Compact JOSE serialisation has ONE header and it is protected — there is
+      // no unprotected bucket to report (`KIT_CAPABILITIES.jwt.unprotectedBucket`).
+      unprotectedHeader: {},
       payload: decodeJwtPayload<C>(payload) as JwtClaimsWire & C,
       signature,
       token,

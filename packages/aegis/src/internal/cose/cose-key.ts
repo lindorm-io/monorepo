@@ -2,6 +2,15 @@ import { B64 } from "@lindorm/b64";
 import type { Dict } from "@lindorm/types";
 import { B64U } from "../constants/format.js";
 import { CoseError } from "../../errors/index.js";
+import type { CnfMember } from "../registry/capabilities.js";
+import { KIT_CAPABILITIES } from "../registry/kit-capabilities.js";
+
+/**
+ * The confirmation members a COSE cnf map can carry, read off the kit capability
+ * table rather than restated here — `cwt` and `cwm` declare the same set, which
+ * is what a COSE_Sign1 and a COSE_Mac0 sharing one claims codec means.
+ */
+const COSE_CNF_MEMBERS = KIT_CAPABILITIES.cwt.cnfMembers;
 
 // COSE_Key parameter labels (RFC 9052 §7).
 const KEY = { kty: 1, kid: 2, alg: 3, crv: -1, x: -2, y: -3 } as const;
@@ -121,6 +130,26 @@ export const coseKeyToJwk = (key: Map<number, unknown>): Dict => {
  * are rejected.
  */
 export const encodeCnf = (cnf: Dict): Map<number, unknown> => {
+  // Refuse PER MEMBER, not per map. The refusal used to fire only when the output
+  // map came out EMPTY, so a MIXED confirmation — a thumbprint alongside a key id
+  // — silently dropped the thumbprint, kept the key id, and minted an UNBOUND
+  // BEARER CWT that verify never asked for a proof of possession for. A token
+  // that claims to be bound but is not is strictly worse than a bearer token,
+  // because the verifier stops asking.
+  const unsupported = Object.keys(cnf).filter(
+    (member) => !COSE_CNF_MEMBERS.has(member as CnfMember),
+  );
+
+  if (unsupported.length) {
+    throw new CoseError("Confirmation has no COSE-representable member", {
+      code: "cose_cnf_unsupported",
+      data: { members: unsupported, supported: [...COSE_CNF_MEMBERS] },
+      title: "COSE Confirmation Unsupported",
+      details:
+        "Only an embedded key (jwk -> COSE_Key) or kid (-> kid) can go in a COSE cnf; jkt/x5t#S256/jku have no COSE form. A JOSE thumbprint cannot be relabelled as a COSE one — RFC 7638 hashes a key's canonical JSON and RFC 9679 its canonical CBOR, so the same key yields different bytes — so a confirmation this wire cannot carry fails closed rather than being dropped.",
+    });
+  }
+
   const out = new Map<number, unknown>();
 
   if (cnf.jwk && typeof cnf.jwk === "object") {
@@ -133,9 +162,10 @@ export const encodeCnf = (cnf: Dict): Map<number, unknown> => {
   if (out.size === 0) {
     throw new CoseError("Confirmation has no COSE-representable member", {
       code: "cose_cnf_unsupported",
+      data: { members: Object.keys(cnf), supported: [...COSE_CNF_MEMBERS] },
       title: "COSE Confirmation Unsupported",
       details:
-        "Only an embedded key (jwk -> COSE_Key) or kid (-> kid) can go in a COSE cnf; jkt/x5t#S256/jku have no COSE form (jkt ≠ ckt).",
+        "Only an embedded key (jwk -> COSE_Key) or kid (-> kid) can go in a COSE cnf, and neither was present in a usable shape.",
     });
   }
 

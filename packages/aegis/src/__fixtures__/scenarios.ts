@@ -468,8 +468,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       "a CWT mint refuses a confirmation whose thumbprint the COSE wire cannot carry",
     rationale:
       "A token that claims to be bound but is not is strictly worse than a bearer token, because the verifier stops asking for a proof. RFC 8747 defines no `jkt` member for a COSE confirmation, and a JOSE thumbprint cannot be re-labelled as a COSE one: RFC 7638 hashes a key's canonical JSON, RFC 9679 its canonical CBOR, so the same key yields DIFFERENT bytes and emitting one under the other's label would mislabel the digest and fail against any conformant verifier. A confirmation the wire cannot carry must therefore fail closed at mint rather than be dropped on the way out. ⚠ This row consequently asserts that the MINT refuses, not that a bound CWT verifies — under the fail-closed rule a proof-of-possession CWT is not mintable at all until a real COSE key thumbprint can be derived from the confirmed key, which is a separate capability.",
-    knownDefect:
-      "cose-key.ts encodeCnf only throws when out.size === 0, so a MIXED confirmation (thumbprint + keyId) silently drops the thumbprint and keeps the keyId — the token mints as an UNBOUND BEARER CWT and verify never asks for a proof. The settled repair is to extend the existing cose_cnf_unsupported throw at cose-key.ts:133-140 to fire when ANY supplied confirmation member has no COSE representation. Deriving a real COSE thumbprint from confirmation.key (wiring the dead computeCoseKeyThumbprint) is a NEW capability, deferred, and no row here presumes it.",
     given: [
       {
         step: "token",
@@ -485,7 +483,12 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     when: [{ step: "mint" }],
-    then: [{ step: "rejects", error: "CoseError" }],
+    // The `data` names the member the refusal READ, so it is attributable to the
+    // thumbprint having no COSE form rather than to the confirmation being
+    // unusable for some other reason. `keyId` IS representable and is absent
+    // from the list, which is what makes this a per-MEMBER refusal rather than
+    // the old all-or-nothing one.
+    then: [{ step: "rejects", error: "CoseError", data: { members: ["jkt"] } }],
   },
   {
     id: "a-bound-token-without-a-proof-is-refused",
@@ -660,8 +663,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title: "a CWT marking an unrecognised header parameter critical is refused",
     rationale:
       "RFC 9052 §3.1 — `crit` names the protected header parameters a processor is REQUIRED to understand; refusing the message is the only way to honour that for a parameter it does not understand (RFC 7515 §4.1.11 states the JOSE twin explicitly: a JWS whose `crit` names an extension the recipient does not understand and support is invalid). The requirement is identical on both wires, and an enforcement present on one but absent on the other means the same hostile token is refused or accepted depending only on its encoding, which is a choice the attacker makes.",
-    knownDefect:
-      'no COSE read path enforces `crit` at all: validateCrit has four importers and all four are JOSE (JwtKit / JwsKit / JweKit / parse-jwt). ⚠ The refusal this row asks for does NOT live in validateCrit — that helper checks array-ness, non-emptiness, string members, the IANA-registered ban and presence-in-the-header, then returns null, and validate-crit.test.ts:59-75 pins it ACCEPTING `oid`. The unrecognised-extension refusal is the KIT\'s: JwtKit.ts:179-190 throws jwt_unsupported_crit_param (the source of the `data: { param: "oid" }` its JOSE twin below pins), with siblings in JwsKit.ts / JweKit.ts, because aegis implements no crit extension at all. ⚠⚠ REPAIR CONSTRAINT: that branch is reachable on this row ONLY IF a COSE enforcement runs on the NAME-TRANSLATED merged header. On the wire the protected bucket reads `[[1,-36],[2,["oid"]],[3,…],[16,…],[-70000,"1.2.3.4"]]` — `crit` (label 2) holds the TSTR "oid" while the parameter it names sits at the INT label -70000 (the lindorm private-use label `oid` rides COSE under). RFC 9052 §1.5 defines `label = int / tstr` and the §3.1 CDDL is `? 2 => [+label]`, so those are DIFFERENT labels and, read literally, the protected bucket holds no parameter for the label `crit` names: this token IS §3.1\'s own fatal-error case ("if the crit value list includes a label for which the header parameter is not in the protected-header-parameters bucket, this is a fatal error in processing the message"). The mismatch is an aegis WRITE/READ asymmetry, not the row\'s: the writer emits crit members as WIRE NAMES (wireHeaderToCoseMap, token-header.ts:225-246, passes bag values through unshaped; build-cose-headers.ts:41 states it outright — "crit\'s members are wire names"), while the reader documents them as an integer header LABEL or a tstr and maps integers back to JOSE names (merge-cose-wire-header.ts:19-34, coseCritToWire). So a spec-faithful LABEL-based check would refuse this row through the MALFORMED-crit branch and turn it GREEN while the required-to-understand rule stayed unimplemented — that is the trap. Settle the crit spelling on both sides first, then enforce the unrecognised-extension rule on the translated header.',
     given: [
       {
         step: "token",
@@ -679,7 +680,13 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     when: [{ step: "verify" }],
-    then: [{ step: "rejects", error: "CoseError" }],
+    // The same `data` its JOSE twin pins, which is the point: ONE enforcement
+    // serves both wires, so the refusal is attributable to the
+    // unrecognised-extension branch on either. Reaching that branch on this wire
+    // required settling what a COSE crit MEMBER is — RFC 9052 §1.5 makes it a
+    // label, so the writer emits the integer label the parameter is keyed under
+    // and the reader translates it back to the JOSE name the enforcement reads.
+    then: [{ step: "rejects", error: "CoseError", data: { param: "oid" } }],
   },
   {
     id: "an-unrecognised-critical-parameter-is-refused",
@@ -790,8 +797,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       "a CWT's integrity-protected object identifier reaches the verified domain header",
     rationale:
       "The verified domain header is what a caller inspects to route, audit and police a token, so every parameter the signature covers has to reach it. A protected parameter dropped on the way out is a statement the issuer signed and the consuming code can never see.",
-    knownDefect:
-      'a protected-header parameter other than { alg, kid, typ } is dropped TWICE on the COSE verify path. A profile-less verify runs decodeCwt (cwt-token.ts:339-370), and `CwtDecoded` (cwt-token.ts:55-83) has NO FIELD to carry anything but that triple, so `oid` is lost THERE FIRST; build-cose-verified-token.ts:92-96 then hands `coseDomainHeader` the same triple. ⚠ `decodeCwtWire` is the kit `decode` entry point (CwtKit.ts:88) and is NEVER called on the verify path — it is cited only as PROOF the wire carries the value (`header.oid: "1.2.3.4"`), not as the site to repair. ⚠⚠ REPAIR CONSTRAINT: widen the PROTECTED map only. `decodeCwtWire` surfaces `oid` via mergeCoseWireHeader, which merges protected AND unprotected — routing verify through that merged reader would satisfy this row while making the unsigned-typ defect WORSE and turning the green pin in internal/cose/unprotected-typ.test.ts RED.',
     given: [
       {
         step: "token",

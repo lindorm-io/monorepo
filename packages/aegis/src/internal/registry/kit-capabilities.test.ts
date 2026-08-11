@@ -26,6 +26,7 @@ import { B64U } from "../constants/format.js";
 import { Tag, decodeCbor } from "../cose/cbor.js";
 import { encodeCnf } from "../cose/cose-key.js";
 import { coseByJose } from "../header/header-registry.js";
+import { decodeJoseHeader } from "../utils/jose-header.js";
 import { KIT_CAPABILITIES } from "./kit-capabilities.js";
 import { WIRE_TAGS } from "./wire.js";
 
@@ -161,11 +162,8 @@ describe("KIT_CAPABILITIES", () => {
   test("a CWE is dir-ONLY while a JWE carries the full kryptos key-management set", () => {
     // COSE_Encrypt0 is direct encryption: `alg` (label 1) carries the CONTENT
     // encryption, so no key management happens. The other twenty kryptos
-    // key managements have no COSE_Encrypt0 form.
-    // ⚠ CweKit does not yet refuse a non-`dir` key itself — see the
-    // `keyManagement (cwe)` binding below, which pins the foreign `@lindorm/aes`
-    // error that surfaces instead. This row is the gate that makes an aegis
-    // refusal expressible rather than an `if (wire === "cose")`.
+    // key managements have no COSE_Encrypt0 form. `CweKit`'s constructor reads
+    // this row — see the `keyManagement (cwe)` binding below.
     expect([...KIT_CAPABILITIES.cwe.keyManagement]).toEqual(["dir"]);
     expect(KIT_CAPABILITIES.jwe.keyManagement).toEqual(new Set(KRYPTOS_ENC_ALGORITHMS));
     expect(KIT_CAPABILITIES.jwe.keyManagement.size).toBeGreaterThan(
@@ -231,16 +229,16 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
-  test("the COSE kits do NOT reserve typ, though they compute it", () => {
-    // ⚠ Recorded as-is, not corrected: `CwsKit.ts:366` / `CweKit.ts:120` pass
-    // only `{alg, kid}` (`{alg, kid, iv}` for CWE) to `buildCoseHeaders`, and
-    // `...options.header` spreads LAST — so a caller `typ` wins and defeats the
-    // isCwt/isCws routing. The JOSE kits spread kit-last and are safe.
-    for (const format of ["cwt", "cwm", "cws", "cwe"] as const) {
-      expect(KIT_CAPABILITIES[format].reserved).not.toContain("typ");
-    }
-    for (const format of ["jwt", "jws", "jwe"] as const) {
-      expect(KIT_CAPABILITIES[format].reserved).toContain("typ");
+  test("every row reserves typ, because typ is what routes a token", () => {
+    // `typ` decides which format a token IS (`isCwt`/`isCws`) and which profile
+    // floor applies to it, so a caller must never be able to state it. The COSE
+    // rows used to omit it AND the kits used to spread `...options.header` last
+    // over their own computed value, so a caller `typ` won on that wire.
+    for (const format of FORMATS) {
+      expect(
+        KIT_CAPABILITIES[format].reserved,
+        `${format} does not reserve typ`,
+      ).toContain("typ");
     }
   });
 
@@ -314,8 +312,9 @@ describe("KIT_CAPABILITIES", () => {
 
     test("reserved (COSE): the kit refuses exactly the labels its row lists", () => {
       // `buildCoseHeaders` throws `cose_reserved_header` for a kit-derived label
-      // in either bag. Both directions: a listed param MUST throw, and `typ` —
-      // deliberately NOT listed, the recorded gap — must NOT.
+      // in either bag, off the row itself. Both directions: a listed param MUST
+      // throw, and a param the row does NOT list must NOT — otherwise a kit that
+      // refuses everything would satisfy the first half vacuously.
       for (const format of ["cwt", "cwm", "cws", "cwe"] as const) {
         for (const param of KIT_CAPABILITIES[format].reserved) {
           expect(
@@ -325,8 +324,8 @@ describe("KIT_CAPABILITIES", () => {
         }
 
         expect(
-          () => MINT[format]({ header: { typ: "application/probe" } }),
-          `${format} now reserves typ — the row must say so`,
+          () => MINT[format]({ header: { oid: "1.2.3.4" } }),
+          `${format} refuses a param its row does not reserve`,
         ).not.toThrow();
       }
     });
@@ -416,12 +415,11 @@ describe("KIT_CAPABILITIES", () => {
       expect(new Set(representable)).toEqual(new Set(KIT_CAPABILITIES.cwt.cnfMembers));
     });
 
-    test("keyManagement (cwe): a dir key mints, and a non-dir key fails FOREIGN", () => {
-      // The dir-only row is real — but nothing in aegis enforces it. A non-`dir`
-      // key is not refused by the kit; it reaches `@lindorm/aes`, which throws its
-      // own `Content primitive requires a direct key` several layers down. That
-      // foreign error is exactly what the capability table exists to replace with
-      // aegis's own named refusal, so it is pinned here rather than described.
+    test("keyManagement (cwe): the kit refuses a key its row does not list", () => {
+      // The gate the table exists for. A non-`dir` key used to reach
+      // `@lindorm/aes`, which threw its own `Content primitive requires a direct
+      // key` several layers down — a foreign error naming neither the wire nor
+      // the reason. `CweKit`'s constructor now reads the row and refuses first.
       expect([...KIT_CAPABILITIES.cwe.keyManagement]).toEqual(["dir"]);
       expect(() =>
         new CweKit({ kryptos: CWE_KEY, logger }).encrypt(BYTES, {}),
@@ -431,28 +429,45 @@ describe("KIT_CAPABILITIES", () => {
         algorithm: "A256KW",
         encryption: "A256GCM",
       });
+
       let thrown: unknown;
       try {
-        new CweKit({ kryptos: nonDir, logger }).encrypt(BYTES, {});
+        new CweKit({ kryptos: nonDir, logger });
       } catch (error) {
         thrown = error;
       }
 
-      expect(thrown, "CweKit now accepts a non-dir key").toBeDefined();
-      expect(
-        thrown instanceof AegisError,
-        "CweKit now refuses a non-dir key ITSELF — the row can become the gate",
-      ).toBe(false);
+      expect(thrown, "CweKit accepts a key its row does not list").toBeInstanceOf(
+        AegisError,
+      );
+      expect(thrown).toMatchObject({
+        code: "cose_key_management_unsupported",
+        data: { algorithm: "A256KW", supported: ["dir"] },
+      });
     });
 
-    test("NOT YET BINDABLE: contentEncryption and the jwe keyManagement row", () => {
-      // Stated rather than faked. `JweKit` delegates the whole key-management and
-      // AEAD matrix to `@lindorm/aes` without consulting a row, so neither column
-      // has a runtime witness on the JOSE side; `contentEncryption` has none on
-      // either wire. The declared values were hand-checked against
-      // `KRYPTOS_ENC_ALGORITHMS` / `AES_ENCRYPTION_ALGORITHMS` in the tests above
-      // — which is a DECLARATION check, not a binding, and stays that way until
-      // the kits query the table.
+    test("contentEncryption (jwe): the JOSE header decoder allowlists enc off the row", () => {
+      // The read-side binding. `enc` arrives as an arbitrary wire STRING, so this
+      // is where the row can bite: a header naming an encryption the row does not
+      // list is refused at decode, before any key or AEAD work. `alg` had this
+      // allowlist and `enc` did not.
+      const [supported] = [...KIT_CAPABILITIES.jwe.contentEncryption];
+
+      const header = (enc: string): string =>
+        B64.encode(JSON.stringify({ alg: "ES512", enc, typ: "JWE" }), B64U);
+
+      expect(() => decodeJoseHeader(header(supported))).not.toThrow();
+      expect(() => decodeJoseHeader(header("A128CBC-HS128"))).toThrow(
+        /Unsupported encryption/,
+      );
+    });
+
+    test("NOT YET BINDABLE: the jwe keyManagement row", () => {
+      // Stated rather than faked. `JweKit` delegates the whole key-management
+      // matrix to `@lindorm/aes` without consulting a row, so that column has no
+      // runtime witness on the JOSE side; the declared value was hand-checked
+      // against `KRYPTOS_ENC_ALGORITHMS` in the tests above, which is a
+      // DECLARATION check, not a binding.
       //
       // The same applies to `cnfMembers` on the OPAQUE rows (jws/cws): they carry
       // no claims layer at all, so there is no cnf producer to probe — the empty

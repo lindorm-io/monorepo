@@ -27,8 +27,8 @@ export const rawVerifyJws = async <T extends TokenContent = Buffer>({
   // with no claims layer, so there is no `iss` to narrow the kid lookup by. Not
   // an oversight; see the unscoped-paths note in `resolve-key.ts`.
   const kryptos = await deps.resolveVerifyKey({
-    id: decode.header.kid,
-    algorithm: decode.header.alg as KryptosSigAlgorithm,
+    id: decode.protectedHeader.kid,
+    algorithm: decode.protectedHeader.alg as KryptosSigAlgorithm,
     verify: options.key,
   });
 

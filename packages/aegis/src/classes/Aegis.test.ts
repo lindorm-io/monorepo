@@ -56,7 +56,8 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.jwe.decrypt(res.token)).resolves.toEqual({
-      header: {
+      unprotectedHeader: {},
+      protectedHeader: {
         alg: "ECDH-ES",
         cty: "text/plain",
         enc: "A256GCM",
@@ -87,7 +88,8 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.jws.verify(res.token)).resolves.toEqual({
-      header: {
+      unprotectedHeader: {},
+      protectedHeader: {
         alg: "ES512",
         cty: "text/plain",
         jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -125,7 +127,8 @@ describe("Aegis", () => {
       // The raw namespace returns the NATIVE WIRE shape: both `.header` (wire-named
       // `alg`/`kid`/`typ`) and `.payload` (wire-keyed `sub`/`exp`) — NOT the domain
       // header/buckets. The domain-named header + claims are `aegis.verify`.
-      header: {
+      unprotectedHeader: {},
+      protectedHeader: {
         alg: "ES512",
         cty: "application/json",
         jku: "https://test.lindorm.io/.well-known/jwks.json",

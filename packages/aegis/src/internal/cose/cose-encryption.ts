@@ -2,21 +2,15 @@ import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CweKit } from "../../classes/CweKit.js";
 import { coseByJose } from "../header/header-registry.js";
-import { Tag, decodeCbor } from "./cbor.js";
+import { decodeCbor } from "./cbor.js";
 import { COSE_TAG } from "./structures.js";
+import { coseStructure } from "./unwrap-cose.js";
 
 /**
  * The COSE_Encrypt0 operations the dropped `CoseKit` façade owned — the COSE
  * analogue of `JweKit`, now standalone functions the Aegis COSE path and the
  * `mintCoseToken` sign-then-encrypt composition call directly.
  */
-
-// Strip an optional outer CWT tag (61) to reach the COSE structure.
-const innerCose = (value: unknown): Tag | undefined => {
-  const cose =
-    value instanceof Tag && value.tag === COSE_TAG.cwt ? value.contents : value;
-  return cose instanceof Tag ? cose : undefined;
-};
 
 /**
  * Wrap already-secured CWT bytes in a bare COSE_Encrypt0 (sign-then-encrypt) —
@@ -74,11 +68,11 @@ export const decryptCose = ({
 
 /** True if the COSE token is an encrypted CWT (COSE_Encrypt0, tag 16). */
 export const isEncryptedCose = (token: Buffer): boolean =>
-  innerCose(decodeCbor(token))?.tag === COSE_TAG.encrypt0;
+  coseStructure(decodeCbor(token))?.tag === COSE_TAG.encrypt0;
 
 /** Read the COSE_Encrypt0 kid (unprotected, label 4) WITHOUT decrypting. */
 export const decodeEncryptedCoseKid = (token: Buffer): string | undefined => {
-  const cose = innerCose(decodeCbor(token));
+  const cose = coseStructure(decodeCbor(token));
   const unprotected = Array.isArray(cose?.contents)
     ? (cose.contents[1] as Map<number, unknown>)
     : undefined;

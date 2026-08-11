@@ -190,13 +190,37 @@ describe("wireHeaderToCoseMap (the COSE write pass)", () => {
     expect(wireHeaderToCoseMap({ typ: undefined, cty: "JWT" }).size).toBe(1);
   });
 
-  test("passes values through UNSHAPED — crit members stay wire names, unsorted", () => {
+  test("passes values through UNSHAPED, except crit — order is preserved either way", () => {
     // The deliberate asymmetry with `mapTokenHeader`: the COSE pass does not
-    // guard, remap or sort. A change here moves the protected-header bytes.
-    const crit = ["zulu", "alpha"];
-    const map = wireHeaderToCoseMap({ crit });
+    // guard or sort. A change here moves the protected-header bytes.
+    const map = wireHeaderToCoseMap({ x5u: "https://b.test", cty: "application/json" });
 
-    expect(map.get(headerCoseLabel(headerByJose("crit")!)!)).toEqual(["zulu", "alpha"]);
+    expect(map.get(headerCoseLabel(headerByJose("x5u")!)!)).toBe("https://b.test");
+    expect(map.get(headerCoseLabel(headerByJose("cty")!)!)).toBe("application/json");
+  });
+
+  test("translates crit's MEMBERS to the labels their parameters are keyed under", () => {
+    // RFC 9052 §1.5 makes `label = int / tstr`, so the tstr "oid" and the int
+    // -70000 the `oid` parameter rides under are DIFFERENT labels — and §3.1
+    // makes a crit member naming a label absent from the protected bucket a
+    // FATAL error. Emitting the name while keying the parameter by its label
+    // produced a token that was malformed by its own crit, which is what this
+    // pass did until 2026-08-11. Order is preserved (the reader mirrors it).
+    const map = wireHeaderToCoseMap({ crit: ["x5u", "oid"], oid: "1.2.3.4" } as never);
+
+    expect(map.get(headerCoseLabel(headerByJose("crit")!)!)).toEqual([
+      headerCoseLabel(headerByJose("x5u")!),
+      headerCoseLabel(headerByJose("oid")!),
+    ]);
+  });
+
+  test("REFUSES a crit member naming a parameter COSE cannot carry", () => {
+    // `apu` has no COSE label at all, so there is no label a crit member could
+    // name it by — the parameter cannot be marked critical on this wire, and
+    // saying so is better than emitting a member that names nothing.
+    expect(() => wireHeaderToCoseMap({ crit: ["apu"] } as never)).toThrow(
+      expect.objectContaining({ code: "header_no_cose_label" }),
+    );
   });
 
   test("REFUSES a parameter COSE cannot carry, with the registry's stated reason", () => {

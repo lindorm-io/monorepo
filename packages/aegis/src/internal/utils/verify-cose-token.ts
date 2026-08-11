@@ -57,24 +57,32 @@ export const verifyCoseToken = async ({
     options.issuer ??
     (profile.issuer === "platform" ? (deps.issuer ?? undefined) : undefined);
 
-  const { claims, wire, decoded, typ, encrypted } = await coseVerifyCore({
-    input: Buffer.from(token, "base64url"),
-    clockTolerance: options.clockTolerance,
-    currentDate: options.currentDate,
-    maxTokenAge: options.maxTokenAge,
-    verifyExpiration: options.verifyExpiration,
-    verifyNotBefore: options.verifyNotBefore,
-    verifyIssuedAt: options.verifyIssuedAt,
-    verifyAuthTime: options.verifyAuthTime,
-    deps,
-    issuer: expectedIssuer,
-    verify: options.key,
-  });
+  const { claims, wire, decoded, protectedHeader, typ, encrypted } = await coseVerifyCore(
+    {
+      input: Buffer.from(token, "base64url"),
+      clockTolerance: options.clockTolerance,
+      currentDate: options.currentDate,
+      maxTokenAge: options.maxTokenAge,
+      verifyExpiration: options.verifyExpiration,
+      verifyNotBefore: options.verifyNotBefore,
+      verifyIssuedAt: options.verifyIssuedAt,
+      verifyAuthTime: options.verifyAuthTime,
+      deps,
+      issuer: expectedIssuer,
+      verify: options.key,
+    },
+  );
 
   // Built BEFORE the policy runs, because the policy needs the DOMAIN claims (the
   // cnf thumbprint the DPoP check binds to) and the act chain. Building throws
   // nothing — it only buckets what the kit already verified.
-  const verified = buildCoseVerifiedToken({ wire, decoded, token, encrypted });
+  const verified = buildCoseVerifiedToken({
+    wire,
+    decoded,
+    protectedHeader,
+    token,
+    encrypted,
+  });
 
   const { tokenType, ...claimMatchers } = assert ?? {};
 

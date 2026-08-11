@@ -159,7 +159,7 @@ describe("JwtKit", () => {
         tokenType: "test_token",
       });
 
-      const { header } = JwtKit.decode(token);
+      const { protectedHeader: header } = JwtKit.decode(token);
       expect(header).not.toHaveProperty("oid");
     });
 
@@ -187,17 +187,17 @@ describe("JwtKit", () => {
     test("constructs the full media type from a typ PREFIX; absent/null floors to JWT", () => {
       // "at" (prefix) → application/at+jwt (the kit knows its format).
       const withTyp = kit.sign({ iss: issuer, exp: 1704099600 }, { tokenType: "at" });
-      expect(JwtKit.decode(withTyp).header.typ).toBe("application/at+jwt");
+      expect(JwtKit.decode(withTyp).protectedHeader.typ).toBe("application/at+jwt");
 
       // A JWT always carries a typ header, so null/absent floors to "JWT".
       const nullTyp = kit.sign(
         { iss: issuer, exp: 1704099600 },
         { tokenType: undefined },
       );
-      expect(JwtKit.decode(nullTyp).header.typ).toBe("JWT");
+      expect(JwtKit.decode(nullTyp).protectedHeader.typ).toBe("JWT");
 
       const bare = kit.sign({ iss: issuer, exp: 1704099600 });
-      expect(JwtKit.decode(bare).header.typ).toBe("JWT");
+      expect(JwtKit.decode(bare).protectedHeader.typ).toBe("JWT");
     });
 
     test("should carry authorization_details (RFC 9396) verbatim on the wire", () => {
@@ -311,7 +311,8 @@ describe("JwtKit", () => {
       };
 
       expect(kit.verify(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "ES512",
           cty: "application/json",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -469,7 +470,7 @@ describe("JwtKit", () => {
       const decoded = JwtKit.decode(token);
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(
-        JSON.stringify({ ...decoded.header, typ: "not-a-jwt-typ" }),
+        JSON.stringify({ ...decoded.protectedHeader, typ: "not-a-jwt-typ" }),
       )
         .toString("base64url")
         .replace(/=/g, "");
@@ -483,7 +484,7 @@ describe("JwtKit", () => {
       // presence is enforced Aegis-side.
       const token = kit.sign({ iss: issuer, sub: "s", exp: 1704099600 });
       const decoded = JwtKit.decode(token);
-      const { typ: _typ, ...headerNoTyp } = decoded.header;
+      const { typ: _typ, ...headerNoTyp } = decoded.protectedHeader;
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerNoTyp))
         .toString("base64url")
@@ -505,7 +506,8 @@ describe("JwtKit", () => {
       });
 
       expect(JwtKit.decode(token)).toEqual({
-        header: {
+        unprotectedHeader: {},
+        protectedHeader: {
           alg: "ES512",
           cty: "application/json",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -703,7 +705,7 @@ describe("JwtKit", () => {
       // unknown to it, even though the header itself is RFC-compliant.
       const decoded = JwtKit.decode(token);
       const headerWithCrit = {
-        ...decoded.header,
+        ...decoded.protectedHeader,
         crit: ["lindorm_ext"],
         lindorm_ext: "some-value",
       };
@@ -727,7 +729,7 @@ describe("JwtKit", () => {
       });
 
       const decoded = JwtKit.decode(token);
-      const headerWithCrit = { ...decoded.header, crit: ["missing_ext"] };
+      const headerWithCrit = { ...decoded.protectedHeader, crit: ["missing_ext"] };
 
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
@@ -746,7 +748,7 @@ describe("JwtKit", () => {
       });
 
       const decoded = JwtKit.decode(token);
-      const headerWithCrit = { ...decoded.header, crit: ["alg"] };
+      const headerWithCrit = { ...decoded.protectedHeader, crit: ["alg"] };
 
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
@@ -765,7 +767,7 @@ describe("JwtKit", () => {
       });
 
       const decoded = JwtKit.decode(token);
-      const headerWithCrit = { ...decoded.header, crit: [] };
+      const headerWithCrit = { ...decoded.protectedHeader, crit: [] };
 
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
@@ -801,7 +803,7 @@ describe("JwtKit", () => {
 
       const decoded = JwtKit.decode(token);
       const headerWithJwk = {
-        ...decoded.header,
+        ...decoded.protectedHeader,
         jwk: {
           kty: "EC",
           crv: "P-521",
@@ -828,7 +830,7 @@ describe("JwtKit", () => {
 
       const decoded = JwtKit.decode(token);
       const headerWithX5c = {
-        ...decoded.header,
+        ...decoded.protectedHeader,
         x5c: ["MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA"],
       };
 
@@ -850,7 +852,7 @@ describe("JwtKit", () => {
 
       const decoded = JwtKit.decode(token);
       const headerWithX5u = {
-        ...decoded.header,
+        ...decoded.protectedHeader,
         x5u: "https://attacker.example/evil-cert.pem",
       };
 
@@ -946,7 +948,7 @@ describe("JwtKit", () => {
         });
 
         // The wire protected header carries the exact RFC 9964 alg string.
-        expect(JwtKit.decode(token).header.alg).toBe(algorithm);
+        expect(JwtKit.decode(token).protectedHeader.alg).toBe(algorithm);
 
         // Self round-trip: the ML-DSA signature verifies against the key.
         expect(() => akpKit.verify(token)).not.toThrow();

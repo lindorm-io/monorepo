@@ -128,7 +128,7 @@ describe("Aegis verify — relocated domain policy", () => {
       const parsed = await aegis.jwt.verify(signTypLess());
       expect(parsed.payload.iss).toBe(issuer);
       expect(parsed.payload.sub).toBe("s");
-      expect(parsed.header.typ).toBeUndefined();
+      expect(parsed.protectedHeader.typ).toBeUndefined();
     });
   });
 

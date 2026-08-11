@@ -24,8 +24,8 @@ export const rawDecryptJwe = async <T extends TokenContent = Buffer>({
   const decode = JweKit.decode(jwe);
 
   const kryptos = await deps.resolveDecryptKey(
-    decode.header.kid,
-    decode.header.alg as KryptosEncAlgorithm,
+    decode.protectedHeader.kid,
+    decode.protectedHeader.alg as KryptosEncAlgorithm,
     options.key,
   );
 

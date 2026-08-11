@@ -43,8 +43,8 @@ export const rawVerifyJwt = async <C extends Dict = Dict>({
   // unique only per issuer, so without this any registered issuer's colliding
   // key could answer for a forged `iss`. Narrowing only, no fallback.
   const kryptos = await deps.resolveVerifyKey({
-    id: decode.header.kid,
-    algorithm: decode.header.alg as KryptosSigAlgorithm,
+    id: decode.protectedHeader.kid,
+    algorithm: decode.protectedHeader.alg as KryptosSigAlgorithm,
     issuer: isString(decode.payload.iss) ? decode.payload.iss : undefined,
     verify: key,
   });

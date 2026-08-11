@@ -413,15 +413,12 @@ describe("Aegis — JOSE/COSE wire parity", () => {
 
       expect(jose.header.objectId).toBe("obj_abc");
 
-      // ⚠ COSE is asserted on the WIRE, not the domain header, and the reason is
-      // a SECOND gap this does not close: `coseDomainHeader` is built from a
-      // hand-picked {alg, kid, typ} triple, so the COSE domain header cannot
-      // surface any other parameter no matter what is on the wire. The bag now
-      // reaches the wire — which is what `sign.header` promises — but reading it
-      // back through `.header` needs that triple replaced by the full merged
-      // wire header.
-      expect(cose.header.objectId).toBeUndefined();
-      expect((await aegis.cwt.verify(cwt.token)).header.oid).toBe("obj_abc");
+      // COSE now answers the same way. `coseDomainHeader` used to be built from
+      // a hand-picked {alg, kid, typ} triple, so a parameter the issuer had
+      // SIGNED could reach the wire and then exist nowhere a caller could see
+      // it; it is built from the whole protected bucket now.
+      expect(cose.header.objectId).toBe("obj_abc");
+      expect((await aegis.cwt.verify(cwt.token)).protectedHeader.oid).toBe("obj_abc");
     });
 
     // `omit` is a MODE, not a claim list: "empty" (the default) prunes empty

@@ -88,7 +88,7 @@ export const coseVerifyCore = async ({
     issuer: issuer ?? (isString(decoded.payload?.iss) ? decoded.payload.iss : undefined),
     verify,
   });
-  const { claims, wire, typ } = verifyCose({
+  const { claims, wire, protectedHeader, typ } = verifyCose({
     kryptos,
     logger: deps.logger,
     token: bytes,
@@ -101,5 +101,5 @@ export const coseVerifyCore = async ({
     verifyAuthTime,
   });
 
-  return { claims, wire, decoded, typ, encrypted };
+  return { claims, wire, decoded, protectedHeader, typ, encrypted };
 };

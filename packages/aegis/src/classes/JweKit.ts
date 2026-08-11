@@ -17,8 +17,8 @@ import { reconstructContent, serialiseContent } from "../internal/utils/content-
 import { isSupportedJoseAlgorithm } from "../internal/utils/is-supported-jose-algorithm.js";
 import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
+import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
 import { parseTokenHeader } from "../internal/utils/token-header.js";
-import { validateCrit } from "../internal/utils/validate-crit.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import { verifyPartyBinding } from "../internal/utils/verify-party-binding.js";
 import { wireHeaderToDomainOptions } from "../internal/utils/wire-header-to-domain.js";
@@ -197,16 +197,11 @@ export class JweKit implements IJweKit {
       });
     }
 
-    const critError = validateCrit(decoded.header);
-    if (critError) {
-      throw new JweError(`Invalid crit header: ${critError}`, {
-        code: "jwe_invalid_crit",
-        data: { crit: decoded.header.crit },
-        title: "JWE Invalid Crit",
-        details:
-          "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
-      });
-    }
+    // `crit` (RFC 7515 §4.1.11), the SAME enforcement the COSE kits run. It used
+    // to be split in two here — malformed BEFORE the algorithm-match, unrecognised
+    // AFTER the encryption-match — so a JWE marking an unrecognised extension
+    // critical was answered by whichever of the three checks happened to be first.
+    rejectUnknownCritical({ header: decoded.header, format: "jwe", error: JweError });
 
     if (this.kryptos.algorithm !== decoded.header.alg) {
       throw new JweError("Invalid token", {
@@ -232,19 +227,6 @@ export class JweKit implements IJweKit {
         details:
           "The header enc does not match the content-encryption algorithm this kit is configured to accept.",
       });
-    }
-
-    // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
-    if (header.critical?.length) {
-      for (const param of header.critical) {
-        throw new JweError(`Unsupported critical header parameter: ${param}`, {
-          code: "jwe_unsupported_crit_param",
-          data: { param },
-          title: "JWE Unsupported Crit Param",
-          details:
-            "The crit header marks an extension parameter as critical that Aegis does not understand, so the JWE must be rejected.",
-        });
-      }
     }
 
     // ECDH-ES party info (RFC 7518 §4.6): the recipient MUST re-derive with the
@@ -331,7 +313,15 @@ export class JweKit implements IJweKit {
 
     this.logger.debug("Token decrypted");
 
-    return { header: decoded.header, payload, token };
+    return {
+      protectedHeader: decoded.header,
+      // Compact JOSE serialisation has ONE header and it is protected — a compact
+      // JWE carries no per-recipient unprotected header
+      // (`KIT_CAPABILITIES.jwe.unprotectedBucket`).
+      unprotectedHeader: {},
+      payload,
+      token,
+    };
   }
 
   // public static
@@ -355,7 +345,11 @@ export class JweKit implements IJweKit {
    * `CweKit` decode.
    */
   static decode(token: string): DecodedEncryptedToken<string> {
-    return { header: JweKit.splitCompact(token).header, token };
+    return {
+      protectedHeader: JweKit.splitCompact(token).header,
+      unprotectedHeader: {},
+      token,
+    };
   }
 
   // private static

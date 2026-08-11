@@ -26,6 +26,12 @@ export const rawVerifyCws = async <T extends TokenContent = Buffer>({
   options?: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
 }): Promise<VerifiedUnstructuredToken<T, Buffer>> => {
+  // `key` is the aegis-only external-key injection (it resolves the kryptos);
+  // every other field IS the kit's VerifyUnstructuredTokenOptions and is
+  // forwarded structurally, so a new verify option threads through with no change
+  // here — the same shape `rawVerifyCwt` uses.
+  const { key, ...verifyOptions } = options;
+
   const bytes = Buffer.from(token, "base64url");
   const decoded = decodeCwt(bytes);
 
@@ -36,8 +42,8 @@ export const rawVerifyCws = async <T extends TokenContent = Buffer>({
   const kryptos = await deps.resolveVerifyKey({
     id: decoded.kid,
     algorithm: decoded.algorithm as KryptosSigAlgorithm,
-    verify: options.key,
+    verify: key,
   });
 
-  return new CwsKit({ kryptos, logger: deps.logger }).verify<T>(bytes);
+  return new CwsKit({ kryptos, logger: deps.logger }).verify<T>(bytes, verifyOptions);
 };

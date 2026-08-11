@@ -34,13 +34,15 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
 
     expect(token.subarray(0, 2).toString("hex")).toBe("d83d");
     const decoded = CwmKit.decode(token);
-    expect(decoded.header.alg).toBe("HS256"); // HMAC -> COSE_Mac0, never Sign1
-    expect(decoded.header.kid).toBe(kryptos.id);
-    expect(decoded.header.typ).toBe("application/at+cwt");
+    expect(decoded.protectedHeader.alg).toBe("HS256"); // HMAC -> COSE_Mac0, never Sign1
+    expect(decoded.unprotectedHeader.kid).toBe(kryptos.id);
+    expect(decoded.protectedHeader.typ).toBe("application/at+cwt");
   });
 
   test("round-trips the WIRE claims through sign -> verify (no domain translation)", () => {
-    const { payload: claims, header } = kit.verify(kit.sign(wire, { tokenType: "at" }));
+    const { payload: claims, protectedHeader: header } = kit.verify(
+      kit.sign(wire, { tokenType: "at" }),
+    );
 
     expect(claims.iss).toBe("https://issuer.lindorm.io/");
     expect(claims.sub).toBe("user-1");

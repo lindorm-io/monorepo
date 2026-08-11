@@ -44,7 +44,7 @@ describe("Aegis profiles", () => {
 
     test("happy path produces a conformant application/at+jwt", async () => {
       const { token } = await aegis.mint("access_token", content);
-      const { header, payload } = JwtKit.decode(token);
+      const { protectedHeader: header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/at+jwt");
       expect(payload).toMatchObject({
@@ -121,7 +121,7 @@ describe("Aegis profiles", () => {
 
       const { token } = await aegis.mint("access_token", content);
 
-      expect(JwtKit.decode(token).header.alg).not.toBe("HS256");
+      expect(JwtKit.decode(token).protectedHeader.alg).not.toBe("HS256");
     });
   });
 
@@ -133,7 +133,7 @@ describe("Aegis profiles", () => {
 
     test("happy path produces a bare JWT typ", async () => {
       const { token } = await aegis.mint("id_token", content);
-      const { header, payload } = JwtKit.decode(token);
+      const { protectedHeader: header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("JWT");
       expect(payload).toMatchObject({ iss: ISSUER, sub: "user-1", aud: ["client-1"] });
@@ -266,7 +266,7 @@ describe("Aegis profiles", () => {
 
     test("happy path produces a application/logout+jwt with events", async () => {
       const { token } = await aegis.mint("logout_token", content);
-      const { header, payload } = JwtKit.decode(token);
+      const { protectedHeader: header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/logout+jwt");
       expect(payload).toMatchObject({
@@ -301,7 +301,7 @@ describe("Aegis profiles", () => {
 
     test("happy path produces a application/secevent+jwt with no exp/sub", async () => {
       const { token } = await aegis.mint("security_event", content);
-      const { header, payload } = JwtKit.decode(token);
+      const { protectedHeader: header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/secevent+jwt");
       expect(payload.exp).toBeUndefined();
@@ -333,7 +333,7 @@ describe("Aegis profiles", () => {
         subject: "user-1",
         events: { "urn:lindorm:event:rtbf": { rtbf_request_id: "r-1" } },
       });
-      const { header, payload } = JwtKit.decode(token);
+      const { protectedHeader: header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/erasure+jwt");
       expect(payload).toMatchObject({ sub: "user-1" });
@@ -347,7 +347,7 @@ describe("Aegis profiles", () => {
         audience: ["https://rs"],
         claims: { token_introspection: { active: true } },
       });
-      const { header, payload } = JwtKit.decode(token);
+      const { protectedHeader: header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/token-introspection+jwt");
       expect(payload.token_introspection).toMatchObject({ active: true });
@@ -398,7 +398,7 @@ describe("Aegis profiles", () => {
       });
 
       // The wire alg header is the exact RFC 9964 JOSE string.
-      expect(JwtKit.decode(token).header.alg).toBe("ML-DSA-65");
+      expect(JwtKit.decode(token).protectedHeader.alg).toBe("ML-DSA-65");
 
       // Full domain verify path resolves the AKP key by kid and validates.
       const parsed = await akpAegis.verify(token);
@@ -425,7 +425,7 @@ describe("Aegis profiles", () => {
         subject: "customer-sub",
         audience: [ISSUER],
       });
-      const { header, payload } = JwtKit.decode(token);
+      const { protectedHeader: header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("application/delegation+jwt");
       expect(payload.iss).toBe("client-1");

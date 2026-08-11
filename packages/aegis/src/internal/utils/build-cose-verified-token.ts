@@ -32,26 +32,36 @@ const coseTokenType = (typ: string | undefined): string | undefined => {
 };
 
 /**
- * Build the full-breadth DOMAIN header for a COSE token from its wire alg/kid/typ
- * triple (the COSE protected/unprotected map values). Shared by the CWT/CWM
- * claims path and the opaque CWS path.
+ * Build the full-breadth DOMAIN header for a COSE token from its INTEGRITY-
+ * PROTECTED wire header. Shared by the CWT/CWM claims path and the opaque CWS
+ * path.
+ *
+ * ⚠ It used to be handed an `{ alg, kid, typ }` TRIPLE, and everything else the
+ * issuer had signed was dropped on the way out: a protected `oid` reached the
+ * wire, survived verification, and then existed nowhere a caller could see it.
+ * The whole protected bucket is passed through the registry now.
+ *
+ * `kid` is the ONE value taken from the unprotected bucket, and only when the
+ * protected one carries none. That is not a loophole: RFC 9052 §3.1 makes `kid`
+ * an advisory routing hint, aegis emits it unprotected on every COSE token it
+ * signs, and the key it names has already been superseded by the key the
+ * signature actually verified against. Nothing else from that bucket is
+ * admitted, because nothing else there is covered by anything.
  */
-export const coseDomainHeader = (triple: {
-  alg?: string | undefined;
-  kid?: string | undefined;
-  typ?: string | undefined;
-}): DomainTokenHeader => {
+export const coseDomainHeader = (
+  protectedHeader: WireTokenHeader,
+  unprotectedKid?: string,
+): DomainTokenHeader => {
   const header = parseTokenHeader({
-    alg: triple.alg,
-    kid: triple.kid,
-    typ: triple.typ,
+    kid: unprotectedKid,
+    ...protectedHeader,
   } as WireTokenHeader);
 
   // A COSE token is not a JOSE family member, so `baseFormat` stays undefined
   // (the `format` discriminant tells JOSE from COSE); the tokenType is derived
   // from the COSE `typ`.
   header.baseFormat = undefined;
-  header.tokenType = coseTokenType(triple.typ);
+  header.tokenType = coseTokenType(protectedHeader.typ);
 
   return header;
 };
@@ -66,11 +76,14 @@ export const coseDomainHeader = (triple: {
 export const buildCoseVerifiedToken = ({
   wire,
   decoded,
+  protectedHeader,
   token,
   encrypted,
 }: {
   wire: Dict;
   decoded: CwtDecoded;
+  /** The VERIFIED protected header — the only bucket the signature/MAC covers. */
+  protectedHeader: WireTokenHeader;
   token: string;
   encrypted: boolean;
   // `delegation` is narrowed to REQUIRED on the way out: a claims-bearing COSE
@@ -89,11 +102,7 @@ export const buildCoseVerifiedToken = ({
 
   return {
     format: coseFormatOf(decoded.cose),
-    header: coseDomainHeader({
-      alg: decoded.algorithm,
-      kid: decoded.kid,
-      typ: decoded.typ,
-    }),
+    header: coseDomainHeader(protectedHeader, decoded.kid),
     claims,
     custom,
     profile,

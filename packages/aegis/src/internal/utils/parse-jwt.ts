@@ -20,7 +20,7 @@ export const parseJwtToDomain = <C extends Dict = Dict>(
 ): ParsedToken<C> => {
   const decoded = JwtKit.decode<C>(token);
 
-  const typ = decoded.header.typ;
+  const typ = decoded.protectedHeader.typ;
   if (typ !== undefined && typ !== "JWT" && !typ.endsWith("+jwt")) {
     throw new JwtError("Invalid token", {
       code: "jwt_invalid_typ",
@@ -31,18 +31,18 @@ export const parseJwtToDomain = <C extends Dict = Dict>(
     });
   }
 
-  const critError = validateCrit(decoded.header);
+  const critError = validateCrit(decoded.protectedHeader);
   if (critError) {
     throw new JwtError(`Invalid crit header: ${critError}`, {
       code: "jwt_invalid_crit",
-      data: { crit: decoded.header.crit },
+      data: { crit: decoded.protectedHeader.crit },
       title: "JWT Invalid Crit",
       details:
         "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
     });
   }
 
-  const header = joseDomainHeader(decoded.header, "JWT");
+  const header = joseDomainHeader(decoded.protectedHeader, "JWT");
 
   const { claims, custom, profile, sensitive } = buildDomainClaims<C>(
     decoded.payload,

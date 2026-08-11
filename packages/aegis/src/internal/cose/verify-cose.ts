@@ -1,6 +1,7 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
+import type { WireTokenHeader } from "../../types/index.js";
 import { coseToDomain } from "../claims/translate.js";
 import { selectCoseClaimsKit } from "./cose-claims-kit.js";
 
@@ -14,6 +15,15 @@ export type CoseVerifyResult = {
    * are `Date`s here (the codec's "date" kind).
    */
   wire: Dict;
+  /**
+   * The VERIFIED, INTEGRITY-PROTECTED wire header. The unprotected bucket is
+   * deliberately NOT surfaced here: every consumer of this result decides
+   * something — token-type routing, the profile floor, the domain header a caller
+   * inspects — and none of those may be decided by a parameter no signature
+   * covers.
+   */
+  protectedHeader: WireTokenHeader;
+  /** The PROTECTED `typ`, which is the only one that may route a token. */
   typ: string | undefined;
 };
 
@@ -53,7 +63,7 @@ export const verifyCose = ({
   /** Range-check `auth_time` (default true). */
   verifyAuthTime?: boolean;
 }): CoseVerifyResult => {
-  const { payload: wire, header } = selectCoseClaimsKit({
+  const { payload: wire, protectedHeader } = selectCoseClaimsKit({
     kryptos,
     logger,
     clockTolerance,
@@ -69,5 +79,10 @@ export const verifyCose = ({
 
   const { claims, custom } = coseToDomain(wire);
 
-  return { claims: { ...claims, ...custom }, wire, typ: header.typ };
+  return {
+    claims: { ...claims, ...custom },
+    wire,
+    protectedHeader,
+    typ: protectedHeader.typ,
+  };
 };

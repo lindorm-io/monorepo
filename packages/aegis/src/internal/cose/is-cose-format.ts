@@ -1,7 +1,9 @@
 import { isString } from "@lindorm/is";
 import { coseByJose } from "../header/header-registry.js";
-import { Tag, decodeCbor } from "./cbor.js";
+import type { Tag } from "./cbor.js";
+import { decodeCbor } from "./cbor.js";
 import { COSE_TAG, decodeProtectedHeader } from "./structures.js";
+import { coseStructure } from "./unwrap-cose.js";
 
 /**
  * The COSE sub-format detectors — the wire-family twins of `isJwt`/`isJws`/`isJwe`
@@ -18,19 +20,12 @@ import { COSE_TAG, decodeProtectedHeader } from "./structures.js";
  * throw: malformed / non-COSE input is simply `false`.
  */
 
-// Unwrap an optional outer CWT tag (61) to the inner COSE structure Tag.
-const innerCose = (value: unknown): Tag | undefined => {
-  const cose =
-    value instanceof Tag && value.tag === COSE_TAG.cwt ? value.contents : value;
-  return cose instanceof Tag ? cose : undefined;
-};
-
 // The inner COSE structure tag (Sign1 / Mac0 / Encrypt0), or `undefined`. The
 // CBOR tag number widens to bigint, so keep it untyped-narrow and compare against
 // the numeric COSE_TAG constants (exactly as `is-cose.ts` does).
 const structureTag = (bytes: Buffer): Tag["tag"] | undefined => {
   try {
-    return innerCose(decodeCbor(bytes))?.tag;
+    return coseStructure(decodeCbor(bytes))?.tag;
   } catch {
     return undefined;
   }
@@ -41,7 +36,7 @@ const structureTag = (bytes: Buffer): Tag["tag"] | undefined => {
 // on every COSE structure, encrypted ones included.
 const coseProtected = (bytes: Buffer, jose: string): string | undefined => {
   try {
-    const contents = innerCose(decodeCbor(bytes))?.contents;
+    const contents = coseStructure(decodeCbor(bytes))?.contents;
     const protectedBstr = Array.isArray(contents) ? contents[0] : undefined;
     if (!(protectedBstr instanceof Uint8Array)) return undefined;
     const value = decodeProtectedHeader(protectedBstr).get(coseByJose(jose));
