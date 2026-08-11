@@ -36,7 +36,7 @@ export const verifyProfileToken = async ({
   deps: AegisDeps;
 }): Promise<VerifiedToken> => {
   if (!token.includes(".") && isCose(Buffer.from(token, "base64url"))) {
-    return verifyCoseToken({ name, token, options, deps });
+    return verifyCoseToken({ name, token, assert, options, deps });
   }
 
   const profile = resolveProfile(name);

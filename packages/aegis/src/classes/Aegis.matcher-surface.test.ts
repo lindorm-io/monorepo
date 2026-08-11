@@ -130,6 +130,93 @@ describe("Aegis verify — the assert matcher surface", () => {
     });
   });
 
+  // The PROFILED verify takes the same matcher argument (third positional), and
+  // it has to mean the same thing on the COSE wire as on the JOSE one. It did
+  // not: the profiled path short-circuited to the COSE reader without the
+  // `assert` argument, so every matcher a caller passed was dropped and the
+  // verify reported success on the profile floor alone.
+  describe("profiled COSE verify — assert", () => {
+    const RESOURCE = "https://rs.lindorm.io/";
+
+    const mintCwt = () =>
+      aegis.mint(
+        "access_token",
+        {
+          audience: [RESOURCE],
+          clientId: "client-1",
+          scope: ["read", "write"],
+          subject: "user-1",
+        },
+        { format: "cwt" },
+      );
+
+    test("should accept matchers the token satisfies", async () => {
+      const { token } = await mintCwt();
+
+      await expect(
+        aegis.verify(
+          "access_token",
+          token,
+          { audience: RESOURCE, scope: ["read"], subject: "user-1" },
+          { audience: RESOURCE },
+        ),
+      ).resolves.toBeDefined();
+    });
+
+    test("should reject an audience matcher the token does not satisfy", async () => {
+      const { token } = await mintCwt();
+
+      // The floor's `audience` (the verifier's own identity) is satisfied — only
+      // the caller's matcher is false, so a pass here would be the floor alone.
+      await expect(
+        aegis.verify(
+          "access_token",
+          token,
+          { audience: "https://other.lindorm.io/" },
+          { audience: RESOURCE },
+        ),
+      ).rejects.toMatchObject({ code: "cwt_claims_invalid" });
+    });
+
+    test("should reject a subject matcher the token does not satisfy", async () => {
+      const { token } = await mintCwt();
+
+      await expect(
+        aegis.verify(
+          "access_token",
+          token,
+          { subject: "another-user" },
+          { audience: RESOURCE },
+        ),
+      ).rejects.toMatchObject({ code: "cwt_claims_invalid" });
+    });
+
+    // `tokenType` is asserted against the COSE typ header, and the profile floor
+    // asserts its OWN typ against the same `coseTyp` mapping — so the two can
+    // only ever agree or expose a matcher the caller asked for and that is false.
+    test("should honour the tokenType matcher beside the profile's own typ", async () => {
+      const { token } = await mintCwt();
+
+      await expect(
+        aegis.verify(
+          "access_token",
+          token,
+          { tokenType: "access_token" },
+          { audience: RESOURCE },
+        ),
+      ).resolves.toBeDefined();
+
+      await expect(
+        aegis.verify(
+          "access_token",
+          token,
+          { tokenType: "refresh_token" },
+          { audience: RESOURCE },
+        ),
+      ).rejects.toMatchObject({ code: "cwt_typ_mismatch" });
+    });
+  });
+
   // `issuer` is an identity matcher like `scope`/`roles`, and the condition
   // language already evaluated an operator here — only the declared type refused
   // one, which forced consumers into a cast to express an OPTIONAL issuer bound.

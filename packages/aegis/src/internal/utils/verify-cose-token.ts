@@ -1,27 +1,35 @@
+import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import { AegisDomainError } from "../../errors/index.js";
-import type { ProfileVerifyOptions, VerifiedToken } from "../../types/index.js";
+import type {
+  ProfileVerifyOptions,
+  VerifiedToken,
+  VerifyAssert,
+} from "../../types/index.js";
 import { coseTyp } from "../cose/cose-typ.js";
 import { resolveProfile } from "../profiles/registry.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { buildCoseVerifiedToken } from "./build-cose-verified-token.js";
 import { coseVerifyCore } from "./cose-verify-core.js";
 import { enforceVerifyFloor } from "./enforce-verify-floor.js";
+import { validateCwtClaims } from "./validate-cwt-claims.js";
 
 /**
  * Profiled COSE verify: the COSE sibling of the JOSE `verifyProfileToken` path.
- * Verify the CWT/CWM integrity (via `coseVerifyCore`), apply the profile floor
- * against the profile's expected COSE typ + issuer, then assemble the unified
- * {@link VerifiedToken}. A COSE_Encrypt0 (cwe) outer reports `format: "cwe"` with
- * the inner claims-format under `inner`.
+ * Verify the CWT/CWM integrity (via `coseVerifyCore`), apply the caller's `assert`
+ * matchers and the profile floor against the profile's expected COSE typ + issuer,
+ * then assemble the unified {@link VerifiedToken}. A COSE_Encrypt0 (cwe) outer
+ * reports `format: "cwe"` with the inner claims-format under `inner`.
  */
 export const verifyCoseToken = async ({
   name,
   token,
+  assert,
   options,
   deps,
 }: {
   name: string;
   token: string;
+  assert?: VerifyAssert;
   options: ProfileVerifyOptions;
   deps: AegisDeps;
 }): Promise<VerifiedToken> => {
@@ -59,6 +67,28 @@ export const verifyCoseToken = async ({
     verifyAuthTime: options.verifyAuthTime,
     deps,
     issuer: expectedIssuer,
+  });
+
+  // The caller's matchers, applied by the SAME site the profile-less COSE path
+  // uses — the mirror of the JOSE half, where `verifyJwtToken` applies `assert`
+  // before the floor runs. `validateCwtClaims` owns the domain->wire naming (via
+  // the claims registry) and the COSE spelling of the `tokenType` assertion, so
+  // the profiled path adds no second assertion site.
+  //
+  // `expPresence` is pinned "optional" because the floor below owns the profile's
+  // exp policy (`profile.lifetime`) and covers exactly the same tokens; letting
+  // the matcher check it too would give one condition two error codes.
+  //
+  // A caller asserting `tokenType` gets that check HERE and the profile's own typ
+  // at the floor. Both derive through the one `coseTyp` mapping mint stamps with,
+  // so an agreeing pair both pass and a disagreeing one is a matcher the caller
+  // asked for and that is false — the same answer the JOSE half gives.
+  validateCwtClaims({
+    wire,
+    typ,
+    algorithm: decoded.algorithm as KryptosAlgorithm,
+    assert,
+    options: { expPresence: "optional" },
   });
 
   enforceVerifyFloor({
