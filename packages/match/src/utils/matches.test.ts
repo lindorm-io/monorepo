@@ -37,8 +37,14 @@ describe("R6/R3 — undefined is ABSENT, and it is stripped BEFORE shape validat
     expect(matches(row(), { name: undefined })).toBe(true);
   });
 
-  test("an operator value of undefined makes the whole criterion absent", () => {
-    expect(matches(row({ age: 20 }), { age: { $eq: undefined } })).toBe(true);
+  // The strip and the empty-bag throw are ONE rule: stripping does not produce
+  // "no clause", it produces the degenerate shape R20 already rules an error.
+  // Returning true here left `{ age: { $eq: undefined } }` unconstrained, which
+  // on a destructive operation is every row.
+  test("an operator bag left empty by the strip throws, like one written empty", () => {
+    expect(() => matches(row({ age: 20 }), { age: { $eq: undefined } })).toThrow(
+      /constrains nothing/,
+    );
   });
 
   test("an undefined operator is stripped, its defined siblings still apply", () => {
@@ -46,8 +52,12 @@ describe("R6/R3 — undefined is ABSENT, and it is stripped BEFORE shape validat
     expect(matches(row({ age: 50 }), { age: { $gt: undefined, $lt: 40 } })).toBe(false);
   });
 
-  test("stripping happens BEFORE shape validation — an undefined $exists does not throw", () => {
-    expect(matches(row(), { age: { $exists: undefined } })).toBe(true);
+  // Stripping still happens BEFORE shape validation: this raises the empty-bag
+  // error, NOT "$exists requires a boolean".
+  test("stripping happens BEFORE shape validation — an undefined $exists is not a payload error", () => {
+    expect(() => matches(row(), { age: { $exists: undefined } })).toThrow(
+      /constrains nothing/,
+    );
   });
 
   test("stripping happens BEFORE shape validation — an undefined $and does not throw", () => {

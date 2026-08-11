@@ -98,19 +98,20 @@ export const matchValue = (value: unknown, condition: unknown, path: string): bo
   // `isObject` excludes Date and Buffer, so those fall through to `isEqual` and
   // compare by VALUE rather than by reference.
   if (isObject<Dict>(condition)) {
-    const keys = Object.keys(condition);
+    // `undefined` is stripped BEFORE any shape is validated: it means "not
+    // specified", so it must not be able to trip a payload check.
+    const defined = Object.keys(condition).filter((key) => !isUndefined(condition[key]));
 
-    if (keys.length === 0) {
+    // The strip and this throw are ONE rule. A bag left empty by the strip is
+    // the SAME degenerate shape as one written empty — a field named with
+    // nothing constraining it — and it has to end the same way. Returning true
+    // instead made `{ x: { $eq: undefined } }` place no constraint, which on a
+    // destructive operation is every row.
+    if (defined.length === 0) {
       throw new TypeError(
         `Condition for [ ${path} ] constrains nothing — omit the key or pass undefined to place no constraint`,
       );
     }
-
-    // `undefined` is stripped BEFORE any shape is validated: it means "not
-    // specified", so it must not be able to trip a payload check. A bag whose
-    // every value was undefined leaves the field unconstrained.
-    const defined = keys.filter((key) => !isUndefined(condition[key]));
-    if (defined.length === 0) return true;
 
     return defined.every((key) => matchValueKey(value, key, condition[key], path));
   }
