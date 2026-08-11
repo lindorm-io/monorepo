@@ -255,12 +255,18 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
       // worker). `auth.session.<role> ?? cookies.<role>` means dropping these
       // lines chains the session onto the cookie keys.
       //
-      // ⚠ An encryption key is NOT optional without a primary source, because
-      // no primary source means no `kv`, and a session with no store puts the
-      // WHOLE session — access, id and refresh token — in the cookie itself.
-      // Pylon refuses to boot such a deployment unsealed. The env-imported
-      // bootstrap KEK is the one key a sourceless scaffold holds, so the session
-      // seals with that until there is a rotation worker to mint its own.
+      // ⚠ An encryption key is NOT optional in EITHER mode, and pylon refuses to
+      // boot without one. With no primary source there is no `kv`, so the WHOLE
+      // session — access, id and refresh token — travels in the cookie. With a
+      // `kv` source the cookie carries `{ id, sec }`, and `sec` is the key that
+      // decrypts the stored session: unsealed, it would sit in the browser jar
+      // and in every proxy log that dumps `Cookie` headers.
+      //
+      // The AT-REST seal takes no configuration — it is HKDF-derived from `sec`
+      // per session, so there is no server key here to rotate or lose. The key
+      // named below seals the COOKIE. The env-imported bootstrap KEK is the one
+      // key a sourceless scaffold holds, so it seals with that until there is a
+      // rotation worker to mint its own.
       if (primaryExists) {
         lines.push(
           `      // Session's own keys — separate blast radius from other cookies.`,
