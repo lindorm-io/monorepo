@@ -13,7 +13,9 @@ import {
  * - `always-true` — every row satisfies it. `{}`, `{ id: undefined }` and
  *   `{ tag: { $nin: [] } }` are all this: well-formed, correctly typed, and
  *   satisfied by every row.
- * - `always-false` — no row can satisfy it. `{ tag: { $in: [] } }` is this.
+ * - `always-false` — no row can satisfy it. `{ tag: { $in: [] } }` and
+ *   `{ tag: { $overlap: [] } }` are this — and both matter through `$not`,
+ *   which turns either into "every row".
  * - `restricts` — some rows match and some do not.
  */
 export type ConditionRestriction = "always-true" | "always-false" | "restricts";
@@ -92,6 +94,18 @@ const analyzeOperator = (
     case ConditionOperatorKey.Nin:
       return negate(analyzeOperator(ConditionOperatorKey.In, operand));
 
+    // The array twin of `$in: []`. "Shares an element with nothing" holds for no
+    // row at all — not for a list, not for an empty list, and not for a NULL
+    // column — so its NEGATION is the same wipe `$nin: []` is, and reading it as
+    // restricting let `delete({ tags: { $not: { $overlap: excluded } } })`
+    // through with an empty exclusion list. Verified against `Matcher.filter`:
+    // `$overlap: []` selected none of three rows and `$not: { $overlap: [] }`
+    // selected all three, the NULL-column row included.
+    case ConditionOperatorKey.Overlap:
+      return isArray<unknown>(operand) && operand.length === 0
+        ? "always-false"
+        : "restricts";
+
     case LogicalOperatorKey.Not:
       return negate(analyzeFieldCondition(operand));
 
@@ -105,6 +119,19 @@ const analyzeOperator = (
         ? disjoin(operand.map(analyzeFieldCondition))
         : "restricts";
 
+    // ⚠ The OTHER empty-containment forms are NOT constant, however much they
+    // look like `$nin: []`. Each is worth stating, because rating any of them
+    // `always-true` would refuse a legitimate delete and would contradict the
+    // matcher on two of the three column shapes. All read off `Matcher.filter`
+    // over rows holding a list, an empty list and a NULL:
+    //
+    // - `$all: []`, `$has: []` and the bare `[]` all require the value to BE a
+    //   list, so they select every list and no NULL — the same rows
+    //   `$exists: true` selects, which this analysis deliberately calls
+    //   restricting. Over a SCALAR column they select nothing at all. Neither
+    //   answer is "every row".
+    // - `$contained: []` — contained by the empty set — holds only for a row
+    //   whose own list is EMPTY. It is the most restrictive of the family.
     case ConditionOperatorKey.Eq:
     case ConditionOperatorKey.Neq:
     case ConditionOperatorKey.Gt:
@@ -118,7 +145,6 @@ const analyzeOperator = (
     case ConditionOperatorKey.Similar:
     case ConditionOperatorKey.Exists:
     case ConditionOperatorKey.All:
-    case ConditionOperatorKey.Overlap:
     case ConditionOperatorKey.Contained:
     case ConditionOperatorKey.Length:
     case ConditionOperatorKey.Has:
@@ -141,7 +167,10 @@ const analyzeFieldCondition = (value: unknown): ConditionRestriction => {
   if (isUndefined(value)) return "always-true";
 
   // `isObject` is decided by PROTOTYPE, so a Date, a Buffer and a RegExp are
-  // values here rather than operator bags — as are arrays, which are containment.
+  // values here rather than operator bags — as are arrays, which are
+  // containment. An EMPTY one still restricts: containment requires the value to
+  // be a list, so `{ tags: [] }` selects every list and no NULL, exactly as
+  // `{ tags: { $exists: true } }` does.
   if (!isObject<Record<string, unknown>>(value)) return "restricts";
 
   return conjoin(

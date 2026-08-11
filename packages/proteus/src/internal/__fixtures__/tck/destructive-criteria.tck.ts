@@ -77,6 +77,90 @@ export const destructiveCriteriaSuite = (
       });
     });
 
+    // ─── The containment operators, whose empty operand is the same trap ────
+    //
+    // An empty list reaching a CONTAINMENT operator is the identical accident
+    // `$nin: []` is — a caller-supplied list that came back empty — and the
+    // guard's analysis rated every one of them as restricting whatever the
+    // operand held. Only one of them is actually unrestricted, and which one is
+    // not guessable: every expectation below is `Matcher.filter` from
+    // `@lindorm/match` over three rows holding `["a","b"]`, `["a","b","c"]` and
+    // `["c","d"]`.
+    //
+    // - `$overlap: []` selects NO row, so `$not: { $overlap: [] }` selects EVERY
+    //   row — including one whose column is NULL. That is the wipe.
+    // - `$all: []`, `$has: []` and the bare `[]` select every row holding a
+    //   LIST and no NULL, which is the restriction `$exists: true` places, so
+    //   they stay allowed.
+    // - `$contained: []` selects only a row whose own list is EMPTY.
+    describe("empty containment operands", () => {
+      const { TckJsonbArray } = entities;
+
+      const seedTags = async (): Promise<void> => {
+        const repo = getHandle().repository(TckJsonbArray);
+        await repo.insert({ name: "ab", tags: ["a", "b"], extras: ["x"] });
+        await repo.insert({ name: "abc", tags: ["a", "b", "c"], extras: [] });
+        await repo.insert({ name: "cd", tags: ["c", "d"], extras: null });
+      };
+
+      beforeEach(async () => {
+        await getHandle().clear();
+        await seedTags();
+      });
+
+      // Reproduced before the fix on the memory driver: three rows in, ZERO
+      // out, no error — the guard rated `$overlap: []` as restricting whatever
+      // its operand held, so the negation looked restrictive too.
+      test.each([
+        ["a negated empty $overlap", { tags: { $not: { $overlap: [] } } }],
+        ["a criteria-level negated empty $overlap", { $not: { tags: { $overlap: [] } } }],
+      ])("delete refuses %s and leaves every row", async (_label, criteria) => {
+        const repo = getHandle().repository(TckJsonbArray);
+
+        const outcome = await settle(repo.delete(criteria as any));
+
+        expect(await repo.find()).toHaveLength(3);
+        expect(outcome).toBe("rejected");
+      });
+
+      // The other empty forms are RESTRICTIVE, and refusing them would make the
+      // guard fail closed on a legitimate delete. The guard lets them through on
+      // every driver; what they then REMOVE is the structured-operator question,
+      // so the row counts — each one `Matcher.filter` over the same rows — are
+      // asserted only where those operators are conformant.
+      if (caps.structuredOperators) {
+        test("delete accepts an empty $overlap and removes nothing", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+
+          await repo.delete({ tags: { $overlap: [] } } as any);
+
+          expect(await repo.find()).toHaveLength(3);
+        });
+
+        test("delete accepts an empty $contained and removes only the empty list", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+
+          const outcome = await settle(
+            repo.delete({ extras: { $contained: [] } } as any),
+          );
+
+          expect(outcome).toBe("resolved");
+          const rows = await repo.find();
+          expect(rows.map((r) => r.name).sort()).toEqual(["ab", "cd"]);
+        });
+
+        test("delete accepts a bare empty array and removes every row holding a list", async () => {
+          const repo = getHandle().repository(TckJsonbArray);
+
+          const outcome = await settle(repo.delete({ extras: [] } as any));
+
+          expect(outcome).toBe("resolved");
+          const rows = await repo.find();
+          expect(rows.map((r) => r.name)).toEqual(["cd"]);
+        });
+      }
+    });
+
     // `$in: []` can never hold, so it deletes nothing — a legitimate outcome,
     // and the opposite state from `$nin: []`. Refusing it would make "match
     // nothing" harder to write than "match everything".
