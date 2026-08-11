@@ -828,7 +828,7 @@ import { VERIFY_OPTION_KEYS } from "@lindorm/aegis";
 
 ## Type guards
 
-`aegis.verify` returns a single `VerifiedToken` — discriminate on `.format` (and read `.raw` for the opaque `jws` / `cws`), no guard needed:
+`aegis.verify` returns a single `VerifiedToken` whose `.format` is one of seven tags. To read the opaque payload, discriminate on the two that have one:
 
 ```typescript
 const v = await aegis.verify(token);
@@ -836,6 +836,8 @@ if (v.format === "jws" || v.format === "cws") {
   // v.raw holds the opaque payload; v.claims / v.custom are empty
 }
 ```
+
+⚠ **To ask the opposite question — "does this carry claims?" — use [`isStructuredToken`](#isstructuredtoken--does-this-result-carry-claims), not a hand-rolled `format === "jwt"`.** That shorthand is wrong in two directions at once, and both are silent.
 
 For a raw string, `isJwtToken` / `isJwsToken` test the wire shape without an `Aegis` instance (they never throw):
 
@@ -872,6 +874,35 @@ if (isClaimsBearingToken(token)) {
 ⚠ **Do not use a wire-family check (`Aegis.isJose` / `Aegis.isCose`) for this decision.** They answer "can `verify` select a kit", which is a different question: `verify` dispatches a `jws`/`cws` perfectly happily and hands back its `raw` payload beside an **empty** `claims`. That is the right answer for `aegis.jws.verify` and a dangerous one for an authorization decision — an authorization server's opaque handle is routinely a signed token, and treating it as verified accepts it with no expiry, no revocation and no grant, while never asking the issuer that holds all three.
 
 The encrypted rule reads the **declared** `cty` off the cleartext protected header — `JWT` / `application/jwt` / `…+jwt` (RFC 7519 §5.2) and `application/cwt` / `…+cwt` / `…+cwm` (RFC 8392), the same declarations `mint(profile, content, { encrypt })` stamps. That matches what `verify` accepts: a JWE/CWE whose plaintext is not a signed token is refused with `verify_requires_signature`, and one that declares a claims token but delivers something else with `verify_inner_type_mismatch` — so a token this predicate admits is one `verify` resolves to real claims or rejects outright, never one it resolves to an empty claims set.
+
+### `isStructuredToken` — does this RESULT carry claims?
+
+`isClaimsBearingToken` asks the question BEFORE verifying, of a wire string. `isStructuredToken` asks it AFTER, of a `VerifiedToken`, and narrows the result to `StructuredVerifiedToken`:
+
+```typescript
+import { isStructuredToken } from "@lindorm/aegis";
+
+const verified = await aegis.verify(token, assert, options);
+
+if (isStructuredToken(verified)) {
+  // verified.claims / verified.custom are populated, whatever the wire
+  return verified.claims.subject;
+}
+```
+
+It exists because `format === "jwt"` — the obvious shorthand — drops two whole categories of valid credential, and drops them silently:
+
+| `format`                           | Structured | Why                                                                                |
+| ---------------------------------- | ---------- | ---------------------------------------------------------------------------------- |
+| `jwt` / `cwt` / `cwm`              | yes        | the claims layer is on the wire (`cwt`/`cwm` are COSE_Sign1 / COSE_Mac0)           |
+| `jwe` / `cwe` + structured `inner` | yes        | `verify` peeled it; `claims` is **fully populated**, only the outer tag says `jwe` |
+| `jws` / `cws`                      | **no**     | a signature over an opaque payload — `claims` is `{}` by contract                  |
+| `jwe` / `cwe` + opaque `inner`     | **no**     | the plaintext was a `jws`/`cws`, so there is still nothing to read                 |
+| `null` / `undefined`               | **no**     | swallowed deliberately — see below                                                 |
+
+The second row is the one that bites in production: an **encrypted id_token** (OIDC `id_token_encrypted_response_alg`) verifies to `{ format: "jwe", inner: "jwt", claims: { … } }`. Every claim is there; only the outer tag differs, so a `format === "jwt"` check discards a perfectly good identity assertion and reports the user as unauthenticated.
+
+Nullish input returns `false` rather than throwing, because the check it replaces is `if (!token || token.format !== "jwt")` — collapsing both halves into one guard is the point.
 
 ## Errors
 

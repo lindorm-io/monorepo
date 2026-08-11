@@ -69,6 +69,26 @@ export type VerifiedToken<C extends Dict = Dict> = {
 };
 
 /**
+ * A {@link VerifiedToken} PROVEN to carry a readable claims layer — the narrowed
+ * result of {@link import("../../utils/is-structured-token.js").isStructuredToken}.
+ *
+ * Two shapes qualify, and the second is the one hand-rolled `format === "jwt"`
+ * checks miss:
+ *
+ * - a bare structured format (`jwt`/`cwt`/`cwm`), and
+ * - an ENCRYPTING outer (`jwe`/`cwe`) that wrapped a structured inner. `verify`
+ *   peels such a token and returns `{ ...inner, format: "jwe", inner: <format> }`,
+ *   so `claims`/`custom` are FULLY POPULATED and only the outer tag says `jwe`.
+ *   An encrypted id_token (OIDC `id_token_encrypted_response_alg`) is exactly
+ *   this shape.
+ *
+ * Intersecting narrows both fields: `format` collapses to the qualifying subset,
+ * and on the encrypting arm `inner` stops being optional.
+ */
+export type StructuredVerifiedToken<C extends Dict = Dict> = VerifiedToken<C> &
+  ({ format: StructuredFormat } | { format: "jwe" | "cwe"; inner: StructuredFormat });
+
+/**
  * The profile's `required` domain claims that are ALSO {@link DomainClaims}
  * fields — `Extract` intersects the profile's `required` tuple with the actual
  * claim keys, so required entries that are not domain claims (e.g. `events`,

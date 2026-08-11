@@ -1,0 +1,46 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`isStructuredToken > should match the recorded format matrix 1`] = `
+[
+  {
+    "format": "jwt",
+    "inner": undefined,
+    "structured": true,
+  },
+  {
+    "format": "cwt",
+    "inner": undefined,
+    "structured": true,
+  },
+  {
+    "format": "cwm",
+    "inner": undefined,
+    "structured": true,
+  },
+  {
+    "format": "jws",
+    "inner": undefined,
+    "structured": false,
+  },
+  {
+    "format": "cws",
+    "inner": undefined,
+    "structured": false,
+  },
+  {
+    "format": "jwe",
+    "inner": "jwt",
+    "structured": true,
+  },
+  {
+    "format": "cwe",
+    "inner": "cwt",
+    "structured": true,
+  },
+  {
+    "format": "jwe",
+    "inner": "jws",
+    "structured": false,
+  },
+]
+`;
