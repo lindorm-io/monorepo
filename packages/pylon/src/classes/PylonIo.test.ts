@@ -8,6 +8,9 @@ import {
 import { Server as HttpServer } from "http";
 import { join } from "path";
 import { PylonListenerScanner } from "../internal/classes/PylonListenerScanner.js";
+import type { PylonSessionHandle } from "../interfaces/index.js";
+import { createSessionSecret } from "../internal/utils/session/create-session-secret.js";
+import { sessionRecordKit } from "../internal/utils/session/session-record-key.js";
 import { PylonError } from "../errors/PylonError.js";
 import { PylonListener } from "./PylonListener.js";
 import { JwtDriver } from "../drivers/auth/JwtDriver.js";
@@ -199,14 +202,21 @@ describe("PylonIo (handshake chain)", () => {
     };
     const validCors = { allowOrigins: ["https://app.example.com"] };
 
+    // The cookie carries the whole handle at the handshake — the row's name AND
+    // the secret that opens it — so the stored row is the sealed envelope.
+    const handle: PylonSessionHandle = { id: "sid-1", sec: createSessionSecret() };
+
     const buildProteus = async () => {
       const mockRepo = await createMockRepository();
       (mockRepo.findOne as Mock).mockResolvedValue({
-        id: "sid-1",
-        accessToken: "access_token",
+        id: handle.id,
+        payloadEncrypted: sessionRecordKit(handle.sec).encrypt({
+          id: handle.id,
+          accessToken: "access_token",
+          scope: [],
+        }),
         expiresAt: new Date("2099-01-01T00:00:00.000Z"),
         issuedAt: new Date("2024-01-01T00:00:00.000Z"),
-        scope: [],
         subject: "sub-1",
       });
 
@@ -309,7 +319,7 @@ describe("PylonIo (handshake chain)", () => {
           headers: {
             host: "api.example.com",
             origin: "https://app.example.com",
-            cookie: "pylon_session=sid-1",
+            cookie: `pylon_session=${Buffer.from(JSON.stringify(handle)).toString("base64url")}`,
           },
         },
       };

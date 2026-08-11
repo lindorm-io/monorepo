@@ -10,7 +10,6 @@ import {
   SOCKET_AUTH_TEST_ISSUER,
   SOCKET_AUTH_TEST_KEY_ID,
 } from "../__fixtures__/socket-auth/shared.js";
-import type { IPylonSession } from "../interfaces/index.js";
 import { IDP_SETTINGS, nockIdp } from "../__fixtures__/idp.js";
 import { OpenIdResourceDriver } from "../drivers/auth/OpenIdResourceDriver.js";
 import { Pylon } from "./Pylon.js";
@@ -28,7 +27,7 @@ nockIdp();
  * `tough-cookie`/`fetch-cookie` (heavy machinery for one test suite), we:
  *
  *   1. Hit the HTTP login route via supertest, read `Set-Cookie`, extract the
- *      raw `pylon_session=<encoded-id>` pair.
+ *      raw `pylon_session=<sealed-handle>` pair.
  *   2. Pass that cookie to Zephyr via `socketOptions.extraHeaders.cookie` so
  *      the socket.io websocket upgrade sends it — this is exactly what a
  *      browser would do with `withCredentials: true`.
@@ -43,20 +42,30 @@ nockIdp();
  * transport avoids this by upgrading to a persistent connection after the
  * initial handshake.
  *
- * The cookie value is base64url-encoded by Pylon's cookie middleware, so
- * `extractSessionCookie` decodes it to recover the raw session UUID for
- * direct store assertions.
+ * The cookie value is SEALED by Pylon's cookie middleware — it carries
+ * `{ id, sec }`, and `sec` is the key that opens the stored row — so the test
+ * cannot read the session id out of it. The login route echoes the id instead,
+ * for the direct store assertions.
  */
 
 const ALLOWED_ORIGIN = "http://allowed.test.lindorm.io";
 
+/** The stored ENVELOPE: cleartext id/subject/timestamps plus the sealed blob. */
+type StoredRow = {
+  id: string;
+  payloadEncrypted: string;
+  subject: string;
+  issuedAt: Date;
+  expiresAt: Date | null;
+};
+
 const buildInMemoryProteus = async () => {
-  const store = new Map<string, IPylonSession>();
+  const store = new Map<string, StoredRow>();
 
   const repo = {
-    upsert: vi.fn(async (session: IPylonSession) => {
-      store.set(session.id, { ...session });
-      return { ...session };
+    upsert: vi.fn(async (row: StoredRow) => {
+      store.set(row.id, { ...row });
+      return { ...row };
     }),
     findOne: vi.fn(async (criteria: { id: string }) => {
       const hit = store.get(criteria.id);
@@ -98,7 +107,7 @@ describe("socket auth (session / cookie) e2e", () => {
   let pylon: Pylon;
   let amphora: IAmphora;
   let logger: ILogger;
-  let store: Map<string, IPylonSession>;
+  let store: Map<string, StoredRow>;
 
   beforeAll(async () => {
     logger = createMockLogger();
@@ -125,6 +134,17 @@ describe("socket auth (session / cookie) e2e", () => {
       }),
     );
 
+    // The session cookie carries `{ id, sec }` and `sec` opens the stored row, so
+    // a session encryption key is mandatory — the cookie must not travel with a
+    // decryption key in the clear.
+    amphora.add(
+      KryptosKit.generate.enc.oct({
+        algorithm: "A256GCMKW",
+        publish: false,
+        purpose: "pylon:kek",
+      }),
+    );
+
     const inMemory = await buildInMemoryProteus();
     store = inMemory.store;
 
@@ -141,6 +161,7 @@ describe("socket auth (session / cookie) e2e", () => {
         session: {
           enabled: true,
           sameSite: "lax",
+          encryption: { condition: { purpose: "pylon:kek", publish: false } },
         },
       },
       routes: join(__dirname, "..", "__fixtures__", "socket-auth", "routes"),
@@ -171,16 +192,12 @@ describe("socket auth (session / cookie) e2e", () => {
     return `http://127.0.0.1:${addr.port}`;
   };
 
-  const extractSessionCookie = (
-    setCookieHeaders: Array<string>,
-  ): { cookiePair: string; sessionId: string } => {
+  // The cookie is an OPAQUE `aes:` blob now — it seals `{ id, sec }`, and the test
+  // holds no key to open it. The id comes back on the login response instead.
+  const extractSessionCookie = (setCookieHeaders: Array<string>): string => {
     for (const header of setCookieHeaders) {
       const pair = header.split(";")[0];
-      if (pair.startsWith("pylon_session=")) {
-        const encoded = pair.slice("pylon_session=".length);
-        const decoded = Buffer.from(encoded, "base64url").toString();
-        return { cookiePair: pair, sessionId: decoded };
-      }
+      if (pair.startsWith("pylon_session=")) return pair;
     }
     throw new Error("pylon_session cookie not set on login response");
   };
@@ -199,9 +216,12 @@ describe("socket auth (session / cookie) e2e", () => {
       .expect(200);
 
     const setCookie = response.get("Set-Cookie") as unknown as Array<string>;
-    const { cookiePair, sessionId } = extractSessionCookie(setCookie ?? []);
 
-    return { cookie: cookiePair, sessionId, subject };
+    return {
+      cookie: extractSessionCookie(setCookie ?? []),
+      sessionId: response.body.id,
+      subject,
+    };
   };
 
   const createZephyrFor = (loginResult: LoginResult): Zephyr =>
@@ -286,6 +306,39 @@ describe("socket auth (session / cookie) e2e", () => {
     }
   }, 10_000);
 
+  /**
+   * ⚠ The point of the design, end to end. What a kv dump of a LIVE session
+   * yields: an id, a subject, two timestamps and an opaque blob. The minted
+   * access token — a real signed JWT — must not be recoverable from it.
+   */
+  test("the stored row holds no token material", async () => {
+    const creds = await login("alice");
+
+    const row = store.get(creds.sessionId)!;
+
+    expect(Object.keys(row).sort()).toEqual([
+      "expiresAt",
+      "id",
+      "issuedAt",
+      "payloadEncrypted",
+      "subject",
+    ]);
+    expect(row.payloadEncrypted.startsWith("aes:")).toBe(true);
+
+    // The whole token, and each of its three segments, are absent from the blob.
+    const login2 = await loopback
+      .request(pylon.callback)
+      .post("/login-session")
+      .send({ subject: "bob" })
+      .expect(200);
+
+    const bob = store.get(login2.body.id)!;
+
+    for (const value of ["eyJ", "alice", "bob"]) {
+      expect(bob.payloadEncrypted).not.toContain(value);
+    }
+  });
+
   test("refresh via cookie strategy: HTTP extends store, socket event re-reads", async () => {
     const creds = await login("alice", 3600);
     const client = createZephyrFor(creds);
@@ -295,12 +348,18 @@ describe("socket auth (session / cookie) e2e", () => {
 
       const before = store.get(creds.sessionId);
       const beforeExpiresAt = before?.expiresAt?.getTime() ?? 0;
+      const beforeBlob = before!.payloadEncrypted;
 
       await client.refresh();
 
       const after = store.get(creds.sessionId);
       expect(after).toBeDefined();
       expect(after!.expiresAt!.getTime()).toBeGreaterThan(beforeExpiresAt);
+
+      // The row was RE-SEALED — a fresh IV, so a different blob — and it is still
+      // the same row id.
+      expect(after!.payloadEncrypted).not.toBe(beforeBlob);
+      expect(after!.id).toBe(creds.sessionId);
 
       const response = await client.request<any>("secure:echo", {
         text: "after-refresh",
@@ -309,6 +368,38 @@ describe("socket auth (session / cookie) e2e", () => {
       expect(response.authenticated).toBe(true);
       expect(response.subject).toBe("alice");
       expect(response.text).toBe("after-refresh");
+    } finally {
+      await client.disconnect();
+    }
+  });
+
+  /**
+   * ⚠ The secret does NOT rotate on refresh, and this is what depends on it.
+   *
+   * The socket captured `{ id, sec }` at the handshake and has no cookie
+   * afterwards. An HTTP refresh re-seals the row — if that write had minted a new
+   * secret, the socket's captured one would no longer open the row and the very
+   * next `$pylon/auth/refresh` would fail and disconnect a perfectly live session.
+   */
+  test("the socket's captured handle still opens the row after an HTTP refresh", async () => {
+    const creds = await login("alice", 3600);
+    const client = createZephyrFor(creds);
+
+    try {
+      await client.connect();
+
+      await client.refresh();
+
+      const socket = (client as any).socket;
+      const ack = await socket.timeout(5000).emitWithAck("$pylon/auth/refresh", {});
+
+      expect(ack.__pylon).toBe(true);
+      expect(ack.ok).toBe(true);
+
+      // And the connection is still usable.
+      const response = await client.request<any>("secure:echo", { text: "still-here" });
+
+      expect(response.authenticated).toBe(true);
     } finally {
       await client.disconnect();
     }

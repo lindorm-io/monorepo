@@ -9,8 +9,9 @@ import {
   createMockRepository,
 } from "@lindorm/proteus/mocks/vitest";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
-import type { IPylonSession } from "../../interfaces/index.js";
+import type { IPylonSession, PylonSessionHandle } from "../../interfaces/index.js";
 import type { PylonCookieSettings, PylonSessionSettings } from "../../types/index.js";
+import { sessionRecordKit } from "../utils/session/session-record-key.js";
 import { createHttpCookiesMiddleware } from "./http-cookies-middleware.js";
 import { createHttpSessionMiddleware } from "./http-session-middleware.js";
 
@@ -417,12 +418,18 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       );
     });
 
-    // With a store: the cookie carries only the id, and the tokens are sealed at
-    // rest — with the SAME resolved session key. Same secret, two places. Under
-    // the new model a configured session enc key seals the ID-carrying cookie too
-    // (the toggle is the key's presence, not a separate `encrypted` boolean), so
-    // the cookie value is a sealed token that decrypts back to the session id.
-    test("kv session — the cookie carries the (sealed) id, the record's tokens are sealed with the resolved session enc key", async () => {
+    /**
+     * With a store the cookie carries `{ id, sec }`, and the two keys do two
+     * different jobs.
+     *
+     * The deployment's resolved session enc key seals the COOKIE — its only job
+     * now, and the reason it is mandatory: `sec` IS a decryption key, and unsealed
+     * it would sit in the browser jar and in any log that captures `Cookie`
+     * headers. The AT-REST seal takes no configuration at all: it is HKDF-derived
+     * from `sec`, so the row names a key id no vault holds and the deployment's
+     * keys cannot open it.
+     */
+    test("kv session — the cookie seals the HANDLE with the session enc key, the row is sealed with the holder's derived key", async () => {
       const ctx = buildCtx();
       const kv = await createMockProteusSource();
       kv.session.mockReturnValue({
@@ -443,20 +450,35 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       expect(AesKit.isAesString(value)).toBe(true);
       expect(AesKit.parse(value).keyId).toBe(sessionEncKey.id);
-      await expect(ctx.aegis.aes.decrypt(value)).resolves.toBe(session().id);
       expect(setCookies(ctx)["pylon_session.kid"]).toBe(sessionSigKey.id);
 
-      const [persisted] = (repository.upsert as Mock).mock.calls[0] as [IPylonSession];
+      const handle = await ctx.aegis.aes.decrypt<PylonSessionHandle>(value);
 
-      for (const token of [
-        persisted.accessToken,
-        persisted.idToken,
-        persisted.refreshToken,
-      ]) {
-        expect(AesKit.isAesString(token)).toBe(true);
-        expect(AesKit.parse(token!).keyId).toBe(sessionEncKey.id);
-        expect(AesKit.parse(token!).keyId).not.toBe(tokenEncKey.id);
-      }
+      expect(handle.id).toBe(session().id);
+      expect(handle.sec).toHaveLength(86);
+
+      const [persisted] = (repository.upsert as Mock).mock.calls[0] as [
+        { payloadEncrypted: string; subject: string },
+      ];
+
+      // The row's key is NOT a vault key — not the session key, not the token key.
+      // It is derived from the cookie's `sec` and exists nowhere else.
+      const derived = sessionRecordKit(handle.sec);
+
+      expect(AesKit.parse(persisted.payloadEncrypted).keyId).toBe(derived.kryptos.id);
+      expect(AesKit.parse(persisted.payloadEncrypted).keyId).not.toBe(sessionEncKey.id);
+      expect(AesKit.parse(persisted.payloadEncrypted).keyId).not.toBe(tokenEncKey.id);
+
+      expect(derived.decrypt<any>(persisted.payloadEncrypted)).toEqual({
+        id: session().id,
+        accessToken: "access-token",
+        idToken: "id-token",
+        refreshToken: "refresh-token",
+        scope: ["openid"],
+      });
+
+      // And the deployment's own aegis — every key it holds — cannot open it.
+      await expect(ctx.aegis.aes.decrypt(persisted.payloadEncrypted)).rejects.toThrow();
     });
   });
 

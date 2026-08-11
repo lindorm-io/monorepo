@@ -1,24 +1,31 @@
-import { Aegis } from "@lindorm/aegis";
-import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { AesKit } from "@lindorm/aes";
-import { Amphora, type IAmphora } from "@lindorm/amphora";
-import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
-import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   createMockProteusSource,
   createMockRepository,
 } from "@lindorm/proteus/mocks/vitest";
-import type { IPylonSession } from "../../interfaces/index.js";
-import type { PylonCookieSettings } from "../../types/index.js";
-import { createSessionStore } from "./create-session-store.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import type { IPylonSession, PylonSessionHandle } from "../../interfaces/index.js";
+import { createSessionStore } from "./create-session-store.js";
+import { createSessionSecret } from "./session/create-session-secret.js";
+import { sessionRecordKit } from "./session/session-record-key.js";
+
+/** The row as the store actually hands it to the repository. */
+type StoredRow = {
+  id: string;
+  payloadEncrypted: string;
+  subject: string;
+  issuedAt: Date;
+  expiresAt: Date | null;
+};
 
 describe("createSessionStore", () => {
   let ctx: any;
   let kv: Awaited<ReturnType<typeof createMockProteusSource>>;
   let session: IPylonSession;
+  let handle: PylonSessionHandle;
   let mockRepo: Awaited<ReturnType<typeof createMockRepository>>;
+  let stored: Record<string, StoredRow>;
 
   beforeEach(async () => {
     mockRepo = await createMockRepository();
@@ -33,57 +40,52 @@ describe("createSessionStore", () => {
     } as any);
 
     ctx = {
-      aegis: createMockAegis(),
-      amphora: createMockAmphora(),
       logger: createMockLogger(),
       state: { metadata: { correlationId: "test-correlation-id" } },
     };
 
     session = {
-      id: "4f38fec0-70cb-53cb-b82b-42b41e7f986e",
+      id: "ses_00000000000000000001",
       accessToken: "access-token",
-      expiresAt: new Date(Date.now() + 3600000),
+      expiresAt: new Date("2024-06-01T00:00:00.000Z"),
       idToken: "id-token",
-      issuedAt: new Date(),
+      issuedAt: new Date("2024-01-01T00:00:00.000Z"),
       refreshToken: "refresh-token",
       scope: ["openid", "profile", "email", "offline_access"],
-      subject: "643881f8-f6b0-5a18-9396-6fbe29ebfec8",
+      subject: "usr_00000000000000000001",
     };
 
-    (mockRepo.upsert as Mock).mockResolvedValue(session);
-    (mockRepo.findOne as Mock).mockResolvedValue(session);
+    handle = { id: session.id, sec: createSessionSecret() };
+
+    // The repository actually STORES, so `get` reads back what `set` wrote
+    // instead of a fixture. The read side clones, the way a real driver hydrates
+    // a fresh entity per read.
+    stored = {};
+
+    (mockRepo.upsert as Mock).mockImplementation(async (entity: StoredRow) => {
+      stored[entity.id] = entity;
+      return entity;
+    });
+
+    (mockRepo.findOne as Mock).mockImplementation(async ({ id }: { id: string }) =>
+      stored[id] ? structuredClone(stored[id]) : null,
+    );
+
     (mockRepo.delete as Mock).mockResolvedValue(undefined);
   });
+
+  /** The row `set` actually handed the repository. */
+  const upsertedRow = (): StoredRow =>
+    ((mockRepo.upsert as Mock).mock.calls.at(-1) as [StoredRow])[0];
 
   test("should resolve undefined when no options", () => {
     expect(createSessionStore(kv)).toBeUndefined();
   });
 
-  test("should resolve store when enabled with a kv source", async () => {
-    const store = createSessionStore(kv, { enabled: true });
-
-    expect(store).toBeDefined();
-
-    await expect(store!.set(ctx, session)).resolves.toEqual(
-      "4f38fec0-70cb-53cb-b82b-42b41e7f986e",
-    );
-
-    await expect(store!.get(ctx, session.id)).resolves.toEqual(
-      expect.objectContaining({
-        id: session.id,
-      }),
-    );
-
-    await expect(store!.del(ctx, session.id)).resolves.toBeUndefined();
-
-    await expect(store!.logout(ctx, session.subject)).resolves.toBeUndefined();
-  });
-
   /**
    * NO store when there is no `kv` source — that is what makes the session
    * cookie-only. A store that exists with nowhere to write would be write-only:
-   * `set` hands back an id nothing holds and `get` answers null for it, so the
-   * caller would put a pointer in the cookie and never read a session back.
+   * the caller would put a handle in the cookie and never read a session back.
    * `undefined` is what tells the session middleware to put the whole session
    * object in the cookie instead.
    */
@@ -91,260 +93,250 @@ describe("createSessionStore", () => {
     expect(createSessionStore(undefined, { enabled: true })).toBeUndefined();
   });
 
-  /**
-   * Session ENCRYPTION, against a REAL vault and a REAL aegis. A mocked `find`
-   * cannot select the wrong key — which is why this bug survived: the store's
-   * `aes.encrypt` took no selector, so it resolved through aegis's
-   * deployment-wide enc policy, which queries the PUBLISHED set. The internal
-   * session key was unreachable and the JWKS token key sealed every session's
-   * bearer tokens.
-   *
-   * The token key is deliberately NEWER than the session key: `amphora.find`
-   * returns the newest match, so a vacuous selector resolves to it.
-   */
-  describe("encryption key selection (real vault)", () => {
-    const OLDER = new Date("2024-01-01T00:00:00.000Z");
-    const NEWER = new Date("2024-06-01T00:00:00.000Z");
-    const ISSUER = "http://test.lindorm.io";
-
-    const sessionKeys: PylonCookieSettings = {
-      encryption: { condition: { purpose: "session", publish: false } },
-    };
-
-    let amphora: IAmphora;
-    let sessionKey: IKryptos;
-    let tokenKey: IKryptos;
-    let realCtx: any;
-
-    beforeEach(() => {
-      const logger = createMockLogger();
-
-      amphora = new Amphora({ internal: { issuer: ISSUER }, logger });
-
-      sessionKey = KryptosKit.generate.auto({
-        algorithm: "ECDH-ES",
-        createdAt: OLDER,
-        curve: "X448",
-        issuer: ISSUER,
-        publish: false,
-        purpose: "session",
-      });
-
-      tokenKey = KryptosKit.generate.auto({
-        algorithm: "ECDH-ES+A256GCMKW",
-        createdAt: NEWER,
-        curve: "X448",
-        issuer: ISSUER,
-        publish: true,
-        purpose: "token",
-      });
-
-      amphora.add([sessionKey, tokenKey]);
-
-      realCtx = {
-        aegis: new Aegis({ amphora, logger }),
-        amphora,
-        logger,
-        state: { metadata: { correlationId: "test-correlation-id" } },
-      };
-    });
-
-    test("seals the session's tokens with the INTERNAL session key, not the newer PUBLISHED token key", async () => {
-      const store = createSessionStore(kv, { enabled: true, ...sessionKeys });
-
-      await store!.set(realCtx, session);
-
-      for (const token of [session.accessToken, session.idToken, session.refreshToken]) {
-        expect(AesKit.isAesString(token)).toBe(true);
-        expect(AesKit.parse(token!).keyId).toBe(sessionKey.id);
-        expect(AesKit.parse(token!).keyId).not.toBe(tokenKey.id);
-      }
-    });
-
-    // The fail-closed guard: with NO session/cookie enc key configured, encryption
-    // at rest is simply OFF — the tokens are stored verbatim. They must never be
-    // silently sealed with the vault's default (published) JWKS token key, which
-    // is what the old `|| canEncrypt()` fallback did. Asserted so the fix cannot
-    // silently revert.
-    test("without a configured key the tokens are stored unencrypted, never sealed with the token key", async () => {
+  describe("at rest", () => {
+    /**
+     * ⚠ The point of the whole design. A kv dump must yield an id, a subject, two
+     * timestamps and an opaque blob — nothing else. Asserted on the ROW the store
+     * handed the repository, not on what `get` answers, because `get` is the one
+     * thing that is supposed to see plaintext.
+     */
+    test("stores no token material and no scope", async () => {
       const store = createSessionStore(kv, { enabled: true });
 
-      await store!.set(realCtx, session);
+      await store!.set(ctx, handle, session);
 
-      for (const token of [session.accessToken, session.idToken, session.refreshToken]) {
-        expect(AesKit.isAesString(token!)).toBe(false);
+      const row = upsertedRow();
+
+      expect(Object.keys(row).sort()).toEqual([
+        "expiresAt",
+        "id",
+        "issuedAt",
+        "payloadEncrypted",
+        "subject",
+      ]);
+
+      // The blob is opaque: no token, no scope value, survives anywhere in it.
+      for (const secret of [
+        "access-token",
+        "id-token",
+        "refresh-token",
+        "openid",
+        "offline_access",
+      ]) {
+        expect(row.payloadEncrypted).not.toContain(secret);
       }
+
+      expect(AesKit.isAesString(row.payloadEncrypted)).toBe(true);
+    });
+
+    test("keeps the four holder-less columns readable", async () => {
+      const store = createSessionStore(kv, { enabled: true });
+
+      await store!.set(ctx, handle, session);
+
+      const row = upsertedRow();
+
+      expect(row.id).toBe(session.id);
+      expect(row.subject).toBe(session.subject);
+      expect(row.issuedAt).toEqual(session.issuedAt);
+      expect(row.expiresAt).toEqual(session.expiresAt);
+    });
+
+    /**
+     * ⚠ `set` seals into a NEW record and never writes to its argument.
+     *
+     * It is handed `ctx.state.session` — the live session for the request — and
+     * `ctx.auth.introspect()` / `.userinfo()` read `ctx.state.session.accessToken`
+     * lazily, in the handler that runs after it. Sealing in place made those
+     * reads answer with the ciphertext, which pylon then presented to the
+     * provider as a bearer credential.
+     */
+    test("leaves the caller's session object untouched", async () => {
+      const store = createSessionStore(kv, { enabled: true });
+
+      await store!.set(ctx, handle, session);
 
       expect(session.accessToken).toBe("access-token");
       expect(session.idToken).toBe("id-token");
       expect(session.refreshToken).toBe("refresh-token");
+      expect(session.scope).toEqual(["openid", "profile", "email", "offline_access"]);
+
+      expect(upsertedRow()).not.toBe(session);
     });
 
-    // Ciphertext names its own key, so aegis resolves the read side by kid: a
-    // session sealed with the OLD key still decrypts after the change.
-    test("a session sealed with the OLD key still decrypts", async () => {
-      const stale = await realCtx.aegis.aes.encrypt(session.accessToken, {
-        key: { condition: { purpose: "token" } },
-      });
+    // The secret is NOT stored, in any form: no copy, no digest. That is what
+    // makes the dump inert — there is nothing to grind offline.
+    test("stores nothing derived from the handle secret", async () => {
+      const store = createSessionStore(kv, { enabled: true });
 
-      expect(AesKit.parse(stale).keyId).toBe(tokenKey.id);
+      await store!.set(ctx, handle, session);
 
-      (mockRepo.findOne as Mock).mockResolvedValue({ ...session, accessToken: stale });
-
-      const store = createSessionStore(kv, { enabled: true, ...sessionKeys });
-      const read = await store!.get(realCtx, session.id);
-
-      expect(read!.accessToken).toBe("access-token");
-    });
-
-    // Fail LOUDLY, not silently — a named key the vault does not hold must never
-    // degrade into persisting a bearer token in the clear.
-    test("throws when the named session enc key is not in the vault", async () => {
-      const store = createSessionStore(kv, {
-        enabled: true,
-        encryption: { condition: { purpose: "no-such-purpose" } },
-      });
-
-      await expect(store!.set(realCtx, session)).rejects.toThrow();
-      expect(mockRepo.upsert).not.toHaveBeenCalled();
+      expect(JSON.stringify(upsertedRow())).not.toContain(handle.sec);
     });
   });
 
-  /**
-   * ⚠ The whole round trip, on the vault shape a real deployment runs: the ONLY
-   * enc key is an INTERNAL, UNPUBLISHED KEK (`purpose: "pylon:kek"`,
-   * `publish: false`) — what pylon's own docs and `create-pylon`'s scaffold
-   * configure, and what a kv-backed encrypted session is.
-   *
-   * `get` used to gate the decrypt on `amphora.canDecrypt()`, which runs
-   * amphora's default publish gate and therefore could not see that KEK. The
-   * gate answered false, decryption was skipped, and the store handed the
-   * CIPHERTEXT back as `accessToken` — a bearer token that is not one. It went
-   * on to `/introspect`, `/userinfo` and the refresh grant as the user's token.
-   *
-   * The at-rest assertion is not decoration: without it this suite would pass
-   * just as happily if encryption had silently stopped happening, which is the
-   * other way to make plaintext come back out.
-   */
-  describe("encrypted round trip through an internal unpublished KEK", () => {
-    const ISSUER = "http://kek.test.lindorm.io";
+  describe("round trip", () => {
+    test("reads back exactly what was written", async () => {
+      const store = createSessionStore(kv, { enabled: true });
 
-    let amphora: IAmphora;
-    let kek: IKryptos;
-    let realCtx: any;
-    let stored: Record<string, IPylonSession>;
+      await store!.set(ctx, handle, session);
 
-    // Verbatim the scaffold `create-pylon` writes and the shape the README
-    // documents. The WRITE side is a SELECTION; `publish: false` is now its
-    // default, and stating it keeps this fixture pinned to the same key
-    // regardless. The read side names nothing — the ciphertext names its key.
-    const kekSettings = {
-      enabled: true as const,
-      encryption: { condition: { purpose: "pylon:kek", publish: false } },
-    };
+      await expect(store!.get(ctx, handle)).resolves.toEqual(session);
+    });
 
-    beforeEach(() => {
-      const logger = createMockLogger();
+    // No id token, no refresh token — the two optional members must come back
+    // ABSENT, not as `undefined` keys standing beside a session that has none.
+    test("omits the optional tokens the session never had", async () => {
+      const store = createSessionStore(kv, { enabled: true });
 
-      amphora = new Amphora({ internal: { issuer: ISSUER }, logger });
-
-      kek = KryptosKit.generate.enc.oct({
-        algorithm: "A256GCMKW",
-        publish: false,
-        purpose: "pylon:kek",
-      });
-
-      amphora.add(kek);
-
-      realCtx = {
-        aegis: new Aegis({ amphora, logger }),
-        amphora,
-        logger,
-        state: { metadata: { correlationId: "test-correlation-id" } },
+      const minimal: IPylonSession = {
+        id: "ses_00000000000000000002",
+        accessToken: "access-token",
+        expiresAt: null,
+        issuedAt: new Date("2024-01-01T00:00:00.000Z"),
+        scope: [],
+        subject: "usr_00000000000000000002",
       };
+      const minimalHandle = { id: minimal.id, sec: createSessionSecret() };
 
-      // The repository now actually STORES, so `get` reads back what `set`
-      // wrote instead of a fixture. Cloned on both sides: the store mutates the
-      // session object in place, so a shared reference would let the read's
-      // decryption rewrite "the row" and hide a skipped decrypt.
-      stored = {};
+      await store!.set(ctx, minimalHandle, minimal);
 
-      (mockRepo.upsert as Mock).mockImplementation(async (entity: IPylonSession) => {
-        stored[entity.id] = structuredClone(entity);
-        return entity;
-      });
+      const read = await store!.get(ctx, minimalHandle);
 
-      (mockRepo.findOne as Mock).mockImplementation(async ({ id }: { id: string }) =>
-        stored[id] ? structuredClone(stored[id]) : null,
+      expect(read).toEqual(minimal);
+      expect(read).not.toHaveProperty("idToken");
+      expect(read).not.toHaveProperty("refreshToken");
+    });
+
+    // A second `get` in another process re-derives the SAME key from the SAME
+    // secret. The kid is deterministic only because the derivation names a path.
+    test("re-derives the key from the secret alone", async () => {
+      const store = createSessionStore(kv, { enabled: true });
+
+      await store!.set(ctx, handle, session);
+
+      const row = upsertedRow();
+      const reopened = sessionRecordKit(handle.sec).decrypt<any>(row.payloadEncrypted);
+
+      expect(reopened.accessToken).toBe("access-token");
+      expect(AesKit.parse(row.payloadEncrypted).keyId).toBe(
+        sessionRecordKit(handle.sec).kryptos.id,
       );
     });
 
-    test("the KEK is exactly the key the default selection gate hides", () => {
-      expect(kek.internal).toBe(true);
-      expect(kek.publish).toBe(false);
-      expect(kek.hasPrivateKey).toBe(true);
+    test("answers null for a row that is not there", async () => {
+      const store = createSessionStore(kv, { enabled: true });
 
-      // Unreachable by a vacuous query — which is correct, and is why the read
-      // side must not ask the vault a question at all.
-      expect(amphora.filterSync({ use: "enc" })).toEqual([]);
+      await expect(store!.get(ctx, handle)).resolves.toBeNull();
+    });
+  });
+
+  describe("the decrypt IS the authentication", () => {
+    /**
+     * ⚠ No digest is stored and none is compared. A wrong `sec` derives a wrong
+     * key and the AES-GCM tag refuses it — and the outcome is `null`, not a
+     * throw: a holder-key failure is a CLIENT fact, so the middleware clears the
+     * cookie and the request proceeds unauthenticated.
+     */
+    test("answers null — never a throw, never a partial read — for a wrong secret", async () => {
+      const store = createSessionStore(kv, { enabled: true });
+
+      await store!.set(ctx, handle, session);
+
+      const wrong = { id: handle.id, sec: createSessionSecret() };
+
+      await expect(store!.get(ctx, wrong)).resolves.toBeNull();
     });
 
-    test("writes ciphertext at rest and reads the ORIGINAL tokens back", async () => {
-      const store = createSessionStore(kv, kekSettings);
+    // It is the AEAD TAG that refuses it, not a key lookup, a kid comparison or a
+    // shape check — `decryptAes` never inspects the ciphertext's kid, so the only
+    // thing standing between a wrong secret and the plaintext is the GCM tag.
+    test("refuses it on the GCM tag", async () => {
+      const store = createSessionStore(kv, { enabled: true });
 
-      await store!.set(realCtx, { ...session });
+      await store!.set(ctx, handle, session);
 
-      // AT REST: every token is sealed, and sealed with the KEK.
-      const row = stored[session.id];
+      await store!.get(ctx, { id: handle.id, sec: createSessionSecret() });
 
-      for (const field of ["accessToken", "idToken", "refreshToken"] as const) {
-        expect(AesKit.isAesString(row[field])).toBe(true);
-        expect(AesKit.parse(row[field]!).keyId).toBe(kek.id);
-      }
+      const [message, data] = (ctx.logger.warn as Mock).mock.calls[0];
 
-      expect(row.accessToken).not.toBe("access-token");
+      expect(message).toBe("Stored session did not open with the presented key");
+      expect(data.error.name).toBe("AesError");
+      expect(data.error.code).toBe("decryption_failed");
+      expect(data.error.errors).toEqual([
+        "Error: Unsupported state or unable to authenticate data",
+      ]);
+    });
 
-      // READ BACK: the plaintext the caller handed in, not the ciphertext.
-      const read = await store!.get(realCtx, session.id);
+    // The same tag refuses a tampered blob under the RIGHT secret.
+    test("answers null for a tampered ciphertext", async () => {
+      const store = createSessionStore(kv, { enabled: true });
 
-      expect(read!.accessToken).toBe("access-token");
-      expect(read!.idToken).toBe("id-token");
-      expect(read!.refreshToken).toBe("refresh-token");
+      await store!.set(ctx, handle, session);
+
+      const row = stored[handle.id]!;
+      const bytes = Buffer.from(row.payloadEncrypted.slice(4), "base64url");
+      bytes[bytes.length - 5] ^= 0xff;
+      row.payloadEncrypted = `aes:${bytes.toString("base64url")}`;
+
+      await expect(store!.get(ctx, handle)).resolves.toBeNull();
     });
 
     /**
-     * A session sealed with a key this deployment no longer holds. Aegis cannot
-     * resolve the kid, and the answer is a THROW — never the ciphertext.
-     * Returning it is precisely the bug this suite exists for: the caller gets
-     * a value shaped like a token, and nothing downstream can tell.
+     * ⚠ The ciphertext↔row binding, and the reason it is stated in the PLAINTEXT
+     * rather than passed as an `aad`: `AesKit`'s caller `aad` is a silent no-op in
+     * cbor mode (verified — a value sealed WITH an `aad` decrypts with none, and
+     * with a different one), so an `aad` would look like a binding and be none.
+     *
+     * Two rows sealed under the SAME secret, blobs swapped. The decrypt succeeds —
+     * only the `payload.id === row.id` assert can refuse this.
      */
-    test("throws, naming the key, when the sealing key is gone from the vault", async () => {
-      const store = createSessionStore(kv, kekSettings);
+    test("answers null when the payload names a different row", async () => {
+      const store = createSessionStore(kv, { enabled: true });
 
-      await store!.set(realCtx, { ...session });
+      const sec = createSessionSecret();
+      const first = { id: "ses_first", sec };
+      const second = { id: "ses_second", sec };
 
-      const logger = createMockLogger();
-      const emptied = new Amphora({ internal: { issuer: ISSUER }, logger });
+      await store!.set(ctx, first, { ...session, id: first.id });
+      await store!.set(ctx, second, { ...session, id: second.id });
 
-      emptied.add(
-        KryptosKit.generate.enc.oct({
-          algorithm: "A256GCMKW",
-          publish: false,
-          purpose: "pylon:kek",
-        }),
+      // The blob from the SECOND row, moved onto the FIRST.
+      stored[first.id]!.payloadEncrypted = stored[second.id]!.payloadEncrypted;
+
+      // The decrypt itself succeeds — proving the assert, not the tag, refuses it.
+      expect(
+        sessionRecordKit(sec).decrypt<any>(stored[first.id]!.payloadEncrypted).id,
+      ).toBe(second.id);
+
+      await expect(store!.get(ctx, first)).resolves.toBeNull();
+
+      expect(ctx.logger.warn).toHaveBeenCalledWith(
+        "Stored session payload names a different record",
+        { sessionId: first.id, payloadId: second.id },
       );
+    });
+  });
 
-      const staleCtx = {
-        ...realCtx,
-        aegis: new Aegis({ amphora: emptied, logger }),
-        amphora: emptied,
-      };
+  describe("destructive writes need no holder", () => {
+    // `ctx.session.del()` deletes by id. Destroying a session must not require
+    // opening it.
+    test("deletes by id", async () => {
+      const store = createSessionStore(kv, { enabled: true });
 
-      await expect(store!.get(staleCtx, session.id)).rejects.toMatchObject({
-        code: "session_decryption_failed",
-        type: "urn:lindorm:pylon:error:session_decryption_failed",
-        data: { id: session.id, field: "accessToken", kid: kek.id },
-      });
+      await expect(store!.del(ctx, session.id)).resolves.toBeUndefined();
+
+      expect(mockRepo.delete).toHaveBeenCalledWith({ id: session.id });
+    });
+
+    // Back-channel logout is server-to-server with NO cookie in hand at all, so
+    // `subject` is the one column that cannot be sealed.
+    test("logs out by subject", async () => {
+      const store = createSessionStore(kv, { enabled: true });
+
+      await expect(store!.logout(ctx, session.subject)).resolves.toBeUndefined();
+
+      expect(mockRepo.delete).toHaveBeenCalledWith({ subject: session.subject });
     });
   });
 });

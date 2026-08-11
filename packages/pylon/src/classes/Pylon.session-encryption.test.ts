@@ -172,18 +172,33 @@ describe("Pylon session encryption", () => {
   });
 
   describe("kv-backed", () => {
-    // The cookie carries an opaque id; the tokens sit behind the store's own
-    // access boundary. Weaker, but a workable deployment — so it warns and runs.
-    test("should boot with a warning when no key resolves", async () => {
+    /**
+     * ⚠ This used to WARN and boot. The cookie carried an opaque store id, so an
+     * unsealed one leaked nothing the store did not already protect.
+     *
+     * It now carries `{ id, sec }` — and `sec` HKDF-derives the key that opens the
+     * stored payload. Unsealed, that key travels base64url ENCODED, sits in the
+     * browser jar, and lands in every proxy or access log that captures `Cookie`
+     * headers. One rule, both modes: no key resolvable ⇒ no boot.
+     */
+    test("should refuse to boot when no key resolves on either tier", async () => {
       const logged: Array<string> = [];
       const pylon = createPylon({ logged, kv: true });
 
-      await expect(pylon.setup()).resolves.toBeUndefined();
-
-      expect(countWarnings(logged)).toBe(1);
+      await expect(pylon.setup()).rejects.toThrow(PylonError);
     });
 
-    test("should stay silent when a key resolves", async () => {
+    test("should name the settings to add", async () => {
+      const logged: Array<string> = [];
+      const pylon = createPylon({ logged, kv: true });
+
+      await expect(pylon.setup()).rejects.toMatchObject({
+        code: "session_encryption_not_configured",
+        details: expect.stringContaining("auth.session.encryption"),
+      });
+    });
+
+    test("should boot on the session's own key", async () => {
       const logged: Array<string> = [];
       const pylon = createPylon({ logged, kv: true, sessionKey: SESSION_KEY });
 
@@ -192,22 +207,20 @@ describe("Pylon session encryption", () => {
       expect(countWarnings(logged)).toBe(0);
     });
 
-    // ⚠ Boot config, warned about at BOOT. A per-request repeat of a static
-    // configuration warning is noise that teaches operators to filter warnings —
-    // and the session middleware runs on every request, so this is not free.
-    test("should warn ONCE, not per request", async () => {
+    // ⚠ Boot config, checked at BOOT and nowhere else. The session middleware runs
+    // on every request, so a per-request repeat of a static configuration
+    // complaint would be noise that teaches operators to filter warnings.
+    test("should stay silent per request", async () => {
       const logged: Array<string> = [];
-      const pylon = createPylon({ logged, kv: true });
+      const pylon = createPylon({ logged, kv: true, sessionKey: SESSION_KEY });
 
       await pylon.setup();
 
-      expect(countWarnings(logged)).toBe(1);
-
       await loopback.request(pylon.callback).get("/health").expect(204);
       await loopback.request(pylon.callback).get("/health").expect(204);
       await loopback.request(pylon.callback).get("/health").expect(204);
 
-      expect(countWarnings(logged)).toBe(1);
+      expect(countWarnings(logged)).toBe(0);
     });
   });
 });

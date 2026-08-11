@@ -117,7 +117,13 @@ const createPylon = (
         clientSecret: "client-secret",
       }),
       cache: { enabled: true },
-      session: { enabled: true },
+      // The session cookie carries `{ id, sec }`, and `sec` is the key that opens
+      // the stored session — so a session enc key is mandatory in kv-backed mode
+      // too, not only cookie-only.
+      session: {
+        enabled: true,
+        encryption: { condition: { purpose: "pylon:kek", publish: false } },
+      },
     },
     kryptos: { enabled: true },
     queue: { enabled: true },

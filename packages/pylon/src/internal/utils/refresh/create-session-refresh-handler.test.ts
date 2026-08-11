@@ -48,7 +48,6 @@ describe("createSessionRefreshHandler", () => {
     const handler = createSessionRefreshHandler({
       aegis,
       lookup: async () => futureSession,
-      sessionId: "sess-1",
       socket,
     });
 
@@ -75,7 +74,6 @@ describe("createSessionRefreshHandler", () => {
     const handler = createSessionRefreshHandler({
       aegis,
       lookup: async () => futureSession,
-      sessionId: "sess-1",
       socket,
     });
 
@@ -91,7 +89,6 @@ describe("createSessionRefreshHandler", () => {
     const handler = createSessionRefreshHandler({
       aegis,
       lookup: async () => null,
-      sessionId: "sess-1",
       socket,
     });
 
@@ -111,7 +108,6 @@ describe("createSessionRefreshHandler", () => {
     const handler = createSessionRefreshHandler({
       aegis,
       lookup: async () => pastSession,
-      sessionId: "sess-1",
       socket,
     });
 

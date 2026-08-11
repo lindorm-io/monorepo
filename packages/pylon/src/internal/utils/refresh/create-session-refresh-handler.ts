@@ -1,26 +1,31 @@
-import { AegisError, type IAegis } from "@lindorm/aegis";
+import { AegisError, type IAegis, isStructuredToken } from "@lindorm/aegis";
 import type { IPylonSession } from "../../../interfaces/index.js";
 import type { PylonSocket } from "../../../types/index.js";
 import { sessionResolvedAccess } from "../tokens/session-resolved-access.js";
 import { assertSessionStillValid } from "./assert-session-still-valid.js";
 
-export type SessionLookup = (sessionId: string) => Promise<IPylonSession | null>;
+/**
+ * Takes NOTHING. Reading a stored session needs the holder's secret as well as its
+ * id, and the socket refresh path has no cookie in hand — so the whole handle is
+ * captured in the closure the caller hands over, rather than a bare id being passed
+ * back in. The `sessionId` option went with it: it existed ONLY to be handed back to
+ * `lookup`, and the refreshed session carries its own id onto `socket.data.session`.
+ */
+export type SessionLookup = () => Promise<IPylonSession | null>;
 
 type CreateSessionRefreshHandlerOptions = {
   aegis: IAegis;
   lookup: SessionLookup;
-  sessionId: string;
   socket: PylonSocket;
 };
 
 export const createSessionRefreshHandler = ({
   aegis,
   lookup,
-  sessionId,
   socket,
 }: CreateSessionRefreshHandlerOptions) => {
   return async (_payload: unknown): Promise<void> => {
-    const session = await lookup(sessionId);
+    const session = await lookup();
     const now = new Date();
 
     assertSessionStillValid(session, now);
@@ -29,7 +34,9 @@ export const createSessionRefreshHandler = ({
 
     try {
       const verified = await aegis.verify(session.accessToken);
-      if (verified.format === "jwt") {
+      // Domain-keyed claims, so a rotated CWT re-arms the socket's expiry the
+      // same way a JWT does — under the old gate it silently did not.
+      if (isStructuredToken(verified)) {
         socket.data.tokens.bearer = verified;
         // Republished alongside the parsed token, or the socket fast path would
         // keep serving the claims of the token this refresh replaced.

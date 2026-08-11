@@ -80,7 +80,6 @@ export const runHandshakeAccessToken = async (
     auth.refresh = createSessionRefreshHandler({
       aegis: ctx.aegis,
       lookup: async () => source.session,
-      sessionId: source.session.id,
       socket,
     });
     socket.data.pylon.auth = auth;

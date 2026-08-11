@@ -59,7 +59,7 @@ For scaffolding a new project, see `@lindorm/create-pylon` (`npm create @lindorm
 - WebSocket gateway built on Socket.IO with file-based and programmatic listeners
 - Unified per-request context shared across HTTP and socket transports (logger, aegis, amphora, conduits, sessions)
 - OpenID Connect Relying Party with auto-mounted login/logout/refresh/userinfo/introspect routes
-- Cookie session store backed by a `Session` Proteus entity — signed and sealed when a cookie key is named
+- Cookie session store backed by a `Session` Proteus entity — the stored token set is sealed under a key derived from a secret only the cookie carries
 - Bearer / DPoP / session token verification, plus role / permission / scope / claim matchers
 - Rate limiting with fixed-window, sliding-window, and token-bucket strategies
 - Multi-tenancy hooks (`useTenant`, `useScope`) that drive Proteus filter params
@@ -1311,15 +1311,14 @@ The assertion carries `iss` = `sub` = the client id, a fresh `jti`, `exp`, `iat`
 
 At `setup()` pylon holds the configuration against what the driver can serve. The test is whether there is a coherent thing to do without the capability:
 
-| Configuration                                                     | Result                                                                             |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `router` set, driver has no `authorize`/`exchange`                | **Throws** `auth_driver_cannot_serve_router` — `/login` is mounted and cannot work |
-| `session` on, **no `kv`**, no encryption key resolvable           | **Throws** `session_encryption_not_configured` — the cookie IS the token set       |
-| `session` on, `kv` configured, no encryption key resolvable       | Warns once. Tokens are stored in the clear                                         |
-| `refresh.mode` **written** as non-`none`, driver has no `refresh` | Warns once. Refresh is off                                                         |
-| `cache.introspection` on, driver has no `introspect`              | Warns once. That half of the cache is dead, not broken                             |
-| `cache.userinfo` on, driver has no `userinfo`                     | Warns once. That half of the cache is dead, not broken                             |
-| Driver pins `issuerScope`, amphora holds no such scope            | **Throws** `self_issuer_not_configured` / `idp_not_configured` — see below         |
+| Configuration                                                     | Result                                                                                         |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `router` set, driver has no `authorize`/`exchange`                | **Throws** `auth_driver_cannot_serve_router` — `/login` is mounted and cannot work             |
+| `session` on, no encryption key resolvable                        | **Throws** `session_encryption_not_configured` — the cookie is the token set, or the key to it |
+| `refresh.mode` **written** as non-`none`, driver has no `refresh` | Warns once. Refresh is off                                                                     |
+| `cache.introspection` on, driver has no `introspect`              | Warns once. That half of the cache is dead, not broken                                         |
+| `cache.userinfo` on, driver has no `userinfo`                     | Warns once. That half of the cache is dead, not broken                                         |
+| Driver pins `issuerScope`, amphora holds no such scope            | **Throws** `self_issuer_not_configured` / `idp_not_configured` — see below                     |
 
 Every warning is about config the deployment **wrote**. A default pylon derived from the driver cannot contradict that driver, so it never warns.
 
@@ -1364,6 +1363,8 @@ X-Pylon-Session-Expires-At: 2026-08-08T13:00:00.000Z
 Both are in `Access-Control-Expose-Headers` by default, so a browser can read them — see [CORS](#cors).
 
 The outcome is also on `ctx.state.sessionRefreshed` for a handler of your own. The middleware never learns why it ran — `/refresh` synthesises `mode: "force"`, but `force` is also a legitimate configured mode on `/introspect` and `/userinfo` — so an opportunistic refresh on any mounted route records the same fact, because it is the same fact.
+
+A refresh replaces `ctx.state.session` **and** re-derives `ctx.state.tokens.accessToken` / `.idToken` from it, so everything downstream reads the new credentials rather than the ones the grant retired. A bucket the new tokens cannot fill — a provider that rotates onto an opaque credential — is **cleared**, not left holding the previous parse.
 
 ### The refresh route
 
@@ -1416,7 +1417,37 @@ The named errors are thrown at the point of use, so the local fast paths still w
 
 `ctx.session` is an auth-focused store keyed by `id`, `accessToken`, `idToken?`, `refreshToken?`, `subject`, and `scope`. It is populated by Pylon's OIDC flow but the same shape works for any OAuth2 provider. It is **not** a general-purpose state bag — for anonymous data, use `ctx.cookies` directly or model the data as a domain entity.
 
-The session lives under `auth`, next to the flow that fills it — `Session` is eight fields (`id`, `accessToken`, `expiresAt`, `idToken?`, `issuedAt`, `refreshToken?`, `scope`, `subject`) and carries no consumer payload, so it is an OAuth artifact store and the cookie is only how it is addressed.
+The session lives under `auth`, next to the flow that fills it — `IPylonSession` is eight fields (`id`, `accessToken`, `expiresAt`, `idToken?`, `issuedAt`, `refreshToken?`, `scope`, `subject`) and carries no consumer payload, so it is an OAuth artifact store and the cookie is only how it is addressed.
+
+### The stored session is sealed with a key the cookie carries
+
+With a `kv` source the session cookie carries **two** things — the row's name and the key that opens it:
+
+```json
+{ "id": "ses_01J9QZ4M7XTB0K", "sec": "…86 base64url characters…" }
+```
+
+`sec` is minted with the session id, HKDF-SHA256 derives an AES-256-GCM key from it under a fixed domain path, and that key seals the token set and the scope into the row's `payloadEncrypted` column. **Pylon keeps no copy of `sec`** — not the value, not a digest — so the stored row is inert without the browser: a kv dump, a leaked replica or a stale backup yields an id, a subject, two timestamps and ciphertext. The refresh tokens are unrecoverable.
+
+The `Session` row therefore has five columns, and every cleartext one is there because pylon must read it **with no holder present**:
+
+| Column             | Cleartext | Read with no holder by                                    |
+| ------------------ | --------- | --------------------------------------------------------- |
+| `id`               | yes       | the lookup itself, and `metadata.sessionId` correlation   |
+| `subject`          | yes       | back-channel logout — `delete({ subject })`               |
+| `issuedAt`         | yes       | the refresh middleware's `half_life` / `max_age`          |
+| `expiresAt`        | yes       | expiry reaping, and the socket refresh validity check     |
+| `payloadEncrypted` | **no**    | holds `accessToken`, `idToken?`, `refreshToken?`, `scope` |
+
+**The decrypt IS the authentication.** No digest is stored and none is compared: a wrong `sec` derives a wrong key and the AES-GCM tag refuses it. A cookie that does not resolve to a live session — stale shape, deleted row, or a secret that does not open it — is one outcome, not three: `get` answers `null`, the middleware clears the session cookie and logs a warning, **the row is left alone**, and the request proceeds unauthenticated so whatever guards the route produces the 401.
+
+**The secret does not rotate on refresh.** It is minted when the session id is, and every update re-seals under it. Rotating per write would re-seal the row under a key the deployment's other tabs do not hold, turning every concurrent refresh into a hard logout race with no grace window.
+
+There is no flag: this is the only mode for a kv-backed session. What is genuinely lost is any read of a session's **tokens or scope** without the holder's cookie — an offline job acting on a stored refresh token, or `redis-cli GET` as a debugging tool.
+
+⚠ **Upgrading:** flush the pylon session namespace in `kv`. Rows written under the previous scheme have columns the entity no longer declares and none of the one it needs, and no key exists that could open them. Old cookies carry a bare id string, which the shape check rejects — the cookie is cleared and the next login establishes a new session, so it is self-healing.
+
+**Cookie-only sessions are unchanged.** With no `kv` source there is no store and no handle: the whole session object travels in the cookie, sealed with the configured key.
 
 ```typescript
 const app = new Pylon({
@@ -1451,10 +1482,10 @@ Four cookie attributes are deliberately not settings, because none of them is th
 | ---------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`     | `pylon_session`           | `pylon_login_session` / `pylon_logout_session` never were configurable either, and one settable name of three does not solve a two-pylons-on-one-domain collision |
 | `httpOnly` | `true`                    | The cookie addresses an access token, an id token and a refresh token — `httpOnly: false` hands all three to any XSS                                              |
-| `encoding` | `base64url`               | The value is a store id or a sealed blob, both pylon's own opaque handle                                                                                          |
+| `encoding` | `base64url`               | The value is pylon's own opaque handle, or the whole session — never the deployment's to encode                                                                   |
 | `expiry`   | the session's `expiresAt` | A separate max-age can only disagree with the record it addresses. `expiresAt: null` ⇒ no expiry attribute ⇒ a browser-session cookie                             |
 
-The session cookie is **signed / sealed when a key is configured** for it — `auth.session.<role> ?? cookies.<role>` (see [Keys](#keys)). There is no separate `signed` / `encrypted` toggle: naming the key turns the role on. When `auth.session.enabled` is true, Pylon registers the `Session` entity on the `kv` source — never on `cache`, since evicting a session logs the user out. With no `kv` configured the session is cookie-only: the whole session object travels in the cookie — which is why an encryption key is a **boot requirement** in that case and a boot **warning** when a `kv` source is configured.
+The session cookie is **signed / sealed when a key is configured** for it — `auth.session.<role> ?? cookies.<role>` (see [Keys](#keys)). There is no separate `signed` / `encrypted` toggle: naming the key turns the role on. When `auth.session.enabled` is true, Pylon registers the `Session` entity on the `kv` source — never on `cache`, since evicting a session logs the user out. An `encryption` key that resolves on either tier is a **boot requirement in both modes**: cookie-only, the cookie IS the token set; kv-backed, it carries `sec`, the key that opens the stored session.
 
 ## Webhooks
 
@@ -1635,15 +1666,17 @@ Verification has **no selector**: it is derived from the resolved `signature`'s 
 
 ### A session IS a cookie
 
-There is no separate session key taxonomy, because there is no separate artifact. With a session store the cookie carries the session id and the tokens are sealed **at rest**; without one the **whole session object — tokens and all — travels in the cookie**. Either way it is a cookie, so each `session` selector is a per-role override of its `cookies` counterpart:
+There is no separate session key taxonomy, because there is no separate artifact. With a session store the cookie carries `{ id, sec }` and the tokens are sealed **at rest** under a key derived from that `sec`; without one the **whole session object — tokens and all — travels in the cookie**. Either way it is a cookie, so each `session` selector is a per-role override of its `cookies` counterpart:
 
 ```
 auth.session.<role> ?? cookies.<role>
 ```
 
-⚠ **`encryption` is mandatory for a cookie-only session.** With no `kv` source the cookie carries the access, id and refresh token themselves, base64url **encoded** rather than encrypted, and re-sends them on every request — so a resolvable `auth.session.encryption ?? cookies.encryption` is a boot requirement, `session_encryption_not_configured`. With a `kv` source the cookie carries only an opaque id and the tokens sit behind the store's own access boundary: a missing key warns once at boot and the deployment runs. The fallback counts either way — one key on `cookies` satisfies both.
+⚠ **`encryption` is mandatory in both modes**, `session_encryption_not_configured` at boot. Cookie-only, the cookie carries the access, id and refresh token themselves. Kv-backed, it carries `sec` — the key that decrypts the stored session — and an unsealed cookie puts that key in the browser jar and in every proxy or access log that dumps `Cookie` headers. Sealing does not stop replay, but it stops the secret being _read_ out of a captured header. The fallback counts either way: one key on `cookies` satisfies both.
 
-**Writing names a key; reading names nothing.** The selector is a vault query, and it defaults to `publish: false` — a KEK is unpublished by definition — so `{ condition: { purpose: "pylon:kek" } }` reaches it without saying so. The read side asks the vault nothing at all: the stored ciphertext carries its own `kid`, which is what lets a session written before a key rotation still open. A stored token whose key this deployment no longer holds is a **throw** (`session_decryption_failed`, naming the `kid`) — restore the key or evict the session. Ciphertext is never handed back as a token.
+**The configured key's job is the COOKIE alone.** The at-rest seal takes no configuration — it is HKDF-derived from the holder's `sec` per session, so there is no server key to rotate, lose, or fail to resolve. A stored session that will not open is a client fact, answered with `null` and a cleared cookie, never a 500.
+
+**Writing names a key; reading names nothing.** The selector is a vault query, and it defaults to `publish: false` — a KEK is unpublished by definition — so `{ condition: { purpose: "pylon:kek" } }` reaches it without saying so. The read side asks the vault nothing at all: the sealed cookie carries its own `kid`, which is what lets a cookie written before a key rotation still open.
 
 Name only `cookies` and one key set does everything. Name `auth.session` too and the session cookie is signed / sealed with its **own** key — a smaller blast radius, or an asymmetric signature for session cookies specifically — while every ordinary cookie keeps using the `cookies` keys. Any cookie can do the same, per call — `signature` and `encryption` each take `true` (the deployment cookie key) or a selector (its own key): `ctx.cookies.set(name, value, { signature, encryption: true })`.
 

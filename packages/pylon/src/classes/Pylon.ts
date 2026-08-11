@@ -142,7 +142,7 @@ export class Pylon<
     // Whether the session's tokens are sealed, and how badly it matters. Not part
     // of `validateAuthSettings`: that one is handed the auth block alone, and the
     // answer here needs the `cookies` fallback key and the `kv` source too.
-    validateSessionEncryption(this.options, this.logger);
+    validateSessionEncryption(this.options);
 
     await this.loadSources();
 

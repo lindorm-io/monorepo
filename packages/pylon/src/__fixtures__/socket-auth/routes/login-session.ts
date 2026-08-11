@@ -18,7 +18,10 @@ export const POST = async (ctx: any) => {
 
   await ctx.session.set(session);
 
+  // The id is echoed because it is no longer recoverable from the cookie: that
+  // now carries a SEALED `{ id, sec }`, and the test has no key to open it.
   ctx.body = {
+    id: session.id,
     subject,
     expiresIn: minted.expiresIn,
   };

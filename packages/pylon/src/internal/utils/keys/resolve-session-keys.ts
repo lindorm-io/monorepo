@@ -5,9 +5,10 @@ import type { PylonKeySelectors, PylonResolvedKeys } from "./types.js";
 /**
  * The session cookie's resolved keys.
  *
- * A pylon session IS a cookie — with a kv store the cookie carries the id and
- * the tokens are sealed at rest, without one the whole session travels IN the
- * cookie — so the session's keys DEFAULT to the cookie's, and a deployment names
+ * A pylon session IS a cookie — with a kv store the cookie carries `{ id, sec }`
+ * and the tokens are sealed at rest under a key derived from that `sec`, without
+ * one the whole session travels IN the cookie — so the session's keys DEFAULT to
+ * the cookie's, and a deployment names
  * `session.signature`/`session.encryption` only when it wants a different key (a
  * different blast radius, or an asymmetric signature for session cookies
  * specifically).
@@ -23,8 +24,8 @@ import type { PylonKeySelectors, PylonResolvedKeys } from "./types.js";
  * unreadable.
  *
  * An `encryption` that resolves to NOTHING through this chain is what
- * `validateSessionEncryption` reports at boot — fatally for a cookie-only
- * session, whose cookie IS the token set.
+ * `validateSessionEncryption` refuses to boot on — in BOTH modes. Cookie-only, the
+ * cookie IS the token set; kv-backed, it carries the key that opens the stored one.
  */
 export const resolveSessionKeys = (
   session?: PylonKeySelectors,

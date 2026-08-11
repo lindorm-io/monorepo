@@ -17,20 +17,28 @@ import type { PylonEncKey, PylonSignKey } from "./keys.js";
  * evicting a session logs the user out. With no `kv` source the session is
  * cookie-only — the whole session object travels in the cookie.
  *
+ * With a `kv` source the cookie carries `{ id, sec }`: the row's name, and a
+ * per-session secret that HKDF-derives the key sealing the row's token set and
+ * scope. Pylon keeps no copy of `sec`, so a kv dump is inert — and the decrypt is
+ * the authentication, no digest is stored and none is compared. The secret is
+ * minted with the session id and does NOT rotate on refresh. There is no flag:
+ * this is the only mode for a kv-backed session.
+ *
  * ⚠ `enabled` is the literal `true`, not a boolean. A present block that does
  * nothing is a trap: `{ enabled: false }` reads as configured-and-off while the
  * middleware is simply never mounted. Presence IS the intent — omit the block to
  * turn sessions off.
  *
  * ⚠ `encryption` — resolved as `auth.session.encryption ?? cookies.encryption` —
- * is REQUIRED for a COOKIE-ONLY session and merely recommended for a `kv`-backed
- * one, and the difference is what the cookie holds. With a `kv` source the cookie
- * carries an opaque store id and the tokens sit at rest behind that store's
- * access boundary; with none, the WHOLE session object — access token, id token,
- * refresh token — is what goes into the cookie, base64url ENCODED rather than
- * encrypted, and is re-sent on every request. So a cookie-only session with no
- * key resolvable is a boot failure (`session_encryption_not_configured`), and a
- * kv-backed one warns once and runs. See `validateSessionEncryption`.
+ * is REQUIRED in BOTH modes; a session with no key resolvable on either tier is a
+ * boot failure (`session_encryption_not_configured`). It cannot be a required
+ * member of this type because it legitimately inherits from `cookies.encryption`.
+ *
+ * Its job is the COOKIE alone. Cookie-only, the cookie IS the token set. Kv-backed,
+ * the cookie holds `sec` — the key that opens the stored session — and an unsealed
+ * cookie puts that key in the browser jar and in every log that dumps `Cookie`
+ * headers. The at-rest seal takes no configuration: it is the holder's key, derived
+ * per session, with no server key to rotate or lose. See `validateSessionEncryption`.
  *
  * ⚠ Four cookie attributes are DELIBERATELY absent, because none of them is the
  * deployment's to choose:

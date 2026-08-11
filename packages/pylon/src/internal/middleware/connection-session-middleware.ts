@@ -1,6 +1,7 @@
 import { isExpired } from "@lindorm/date";
 import type { IProteusSource } from "@lindorm/proteus";
 import { omitUndefined } from "@lindorm/utils";
+import type { PylonSessionHandle } from "../../interfaces/index.js";
 import type {
   PylonConnectionMiddleware,
   PylonCookieSettings,
@@ -15,6 +16,7 @@ import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
 import { createSessionStore } from "../utils/create-session-store.js";
 import { resolveSessionKeys } from "../utils/keys/resolve-session-keys.js";
 import { createSessionRefreshHandler } from "../utils/refresh/create-session-refresh-handler.js";
+import { isSessionHandle } from "../utils/session/is-session-handle.js";
 import { extractTokenFromSession } from "../utils/tokens/extract-token-from-session.js";
 import { sessionResolvedAccess } from "../utils/tokens/session-resolved-access.js";
 
@@ -42,7 +44,7 @@ export const createConnectionSessionMiddleware = <
     signed: sk.verification,
   });
 
-  const store = createSessionStore(kv, options, cookies);
+  const store = createSessionStore(kv, options);
 
   return async function connectionSessionMiddleware(ctx, next): Promise<void> {
     const socket = ctx.io.socket;
@@ -61,9 +63,11 @@ export const createConnectionSessionMiddleware = <
       encryption: cookies?.encryption,
     });
 
-    const sessionId = await getCookie<string>(SESSION_COOKIE_NAME);
+    // The cookie IS available at the handshake, and it carries the full handle —
+    // the id AND the secret that opens the row.
+    const handle = await getCookie<PylonSessionHandle>(SESSION_COOKIE_NAME);
 
-    if (!sessionId || typeof sessionId !== "string") {
+    if (!isSessionHandle(handle)) {
       return next();
     }
 
@@ -71,7 +75,7 @@ export const createConnectionSessionMiddleware = <
       return next();
     }
 
-    const session = await store.get(ctx, sessionId);
+    const session = await store.get(ctx, handle);
 
     if (!session) {
       return next();
@@ -98,10 +102,13 @@ export const createConnectionSessionMiddleware = <
     const initialExpiresAt: Date =
       session.expiresAt ?? parsedToken?.claims.expiresAt ?? new Date(0);
 
+    // ⚠ The handle is CAPTURED in this closure and is NOT written to
+    // `socket.data`. The socket refresh path runs long after the handshake with
+    // no cookie in hand, so it needs the secret — but putting it on `socket.data`
+    // would expose it to every listener and to any log line that dumps it.
     const refresh = createSessionRefreshHandler({
       aegis: ctx.aegis,
-      lookup: (id) => store.get(ctx, id),
-      sessionId: session.id,
+      lookup: () => store.get(ctx, handle),
       socket,
     });
 
