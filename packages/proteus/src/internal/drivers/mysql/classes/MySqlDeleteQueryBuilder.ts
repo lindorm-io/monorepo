@@ -1,3 +1,4 @@
+import { withPredicates } from "../../../utils/sql/compile-where.js";
 import type { Condition } from "@lindorm/match";
 import type {
   IEntity,
@@ -118,7 +119,6 @@ export class MySqlDeleteQueryBuilder<
 
     // Inject discriminator predicate for single-table inheritance children
     const discPredicate = buildDiscriminatorPredicateUnqualified(this.metadata, params);
-    const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
     let text: string;
 
@@ -136,9 +136,9 @@ export class MySqlDeleteQueryBuilder<
           },
         );
       }
-      text = `UPDATE ${tableName} SET ${quoteIdentifier(deleteField.name)} = NOW(3) ${whereClause}${discClause}`;
+      text = `UPDATE ${tableName} SET ${quoteIdentifier(deleteField.name)} = NOW(3) ${withPredicates(whereClause, discPredicate)}`;
     } else {
-      text = `DELETE FROM ${tableName} ${whereClause}${discClause}`;
+      text = `DELETE FROM ${tableName} ${withPredicates(whereClause, discPredicate)}`;
     }
 
     const result = await this.client.query(text, params);

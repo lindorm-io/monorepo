@@ -194,8 +194,6 @@ exports[`compileWhere [mysql] > should compile a null member of $in to an IS NUL
 
 exports[`compileWhere [mysql] > should compile an empty $not to FALSE 1`] = `"WHERE FALSE"`;
 
-exports[`compileWhere [mysql] > should compile an empty field-level $not to FALSE 1`] = `"WHERE FALSE"`;
-
 exports[`compileWhere [mysql] > should compile comparison operators ($gt, $lte) 1`] = `"WHERE (\`t0\`.\`age\` > ? AND \`t0\`.\`age\` <= ?)"`;
 
 exports[`compileWhere [mysql] > should compile complex nested predicates 1`] = `"WHERE ((\`t0\`.\`name\` = ? AND \`t0\`.\`age\` >= ?) OR (\`t0\`.\`name\` = ? AND \`t0\`.\`age\` < ?))"`;
@@ -419,8 +417,6 @@ exports[`compileWhere [postgres] > should compile a null member of $in to an IS 
 
 exports[`compileWhere [postgres] > should compile an empty $not to FALSE 1`] = `"WHERE FALSE"`;
 
-exports[`compileWhere [postgres] > should compile an empty field-level $not to FALSE 1`] = `"WHERE FALSE"`;
-
 exports[`compileWhere [postgres] > should compile comparison operators ($gt, $lte) 1`] = `"WHERE ("t0"."age" > $1 AND "t0"."age" <= $2)"`;
 
 exports[`compileWhere [postgres] > should compile complex nested predicates 1`] = `"WHERE (("t0"."name" = $1 AND "t0"."age" >= $2) OR ("t0"."name" = $3 AND "t0"."age" < $4))"`;
@@ -642,8 +638,6 @@ exports[`compileWhere [sqlite] > should compile a nested field-level $not as a d
 exports[`compileWhere [sqlite] > should compile a null member of $in to an IS NULL alternative 1`] = `"WHERE ("t0"."name" IN (?) OR "t0"."name" IS NULL)"`;
 
 exports[`compileWhere [sqlite] > should compile an empty $not to FALSE 1`] = `"WHERE FALSE"`;
-
-exports[`compileWhere [sqlite] > should compile an empty field-level $not to FALSE 1`] = `"WHERE FALSE"`;
 
 exports[`compileWhere [sqlite] > should compile comparison operators ($gt, $lte) 1`] = `"WHERE ("t0"."age" > ? AND "t0"."age" <= ?)"`;
 

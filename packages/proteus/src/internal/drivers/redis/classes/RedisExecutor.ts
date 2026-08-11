@@ -12,7 +12,6 @@ import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
-import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
 import {
   matchesRow,
   applySelect,
@@ -49,6 +48,7 @@ import {
   typedJsonMetaDictKey,
 } from "../../../entity/utils/typed-json.js";
 import { redactSensitive } from "../../../entity/utils/redact-sensitive.js";
+import { suppliedUpdateEntries } from "../../../utils/repository/supplied-update-entries.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
 import { resolveStorageMetadata } from "../../../entity/utils/resolve-storage-metadata.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
@@ -203,7 +203,6 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Delete ───────────────────────────────────────────────────────────
 
   async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
-    guardEmptyCriteria(criteria, "delete", RedisDriverError);
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     let keys: Array<string>;
@@ -253,7 +252,6 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       );
     }
 
-    guardEmptyCriteria(criteria, "soft delete", RedisDriverError);
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const dfk = this.deleteFieldKey;
@@ -289,7 +287,6 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       );
     }
 
-    guardEmptyCriteria(criteria, "restore", RedisDriverError);
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const dfk = this.deleteFieldKey;
@@ -714,7 +711,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
     for (const { key } of keyRowPairs) {
       const updateHash: Record<string, string> = {};
-      for (const [fieldKey, value] of Object.entries(update as Record<string, unknown>)) {
+      for (const [fieldKey, value] of suppliedUpdateEntries(update)) {
         const field = this.metadata.fields.find((f) => f.key === fieldKey);
         if (value == null) {
           // Remove the field from the hash for null values — a @TypedJson field

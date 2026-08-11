@@ -71,7 +71,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await userRepo.clear();
+  await userRepo.truncate();
 });
 
 // ─── connect / ping / disconnect ──────────────────────────────────────────────

@@ -116,9 +116,9 @@ describe("flushCache integration", () => {
 
   beforeEach(async () => {
     await client.flushdb();
-    await source.repository(FlushCacheProduct).clear();
-    await source.repository(FlushCacheBillingInvoice).clear();
-    await source.repository(FlushCacheLegalInvoice).clear();
+    await source.repository(FlushCacheProduct).truncate();
+    await source.repository(FlushCacheBillingInvoice).truncate();
+    await source.repository(FlushCacheLegalInvoice).truncate();
   });
 
   test("a raw client() write leaves reads stale until flushCache evicts the entry", async () => {

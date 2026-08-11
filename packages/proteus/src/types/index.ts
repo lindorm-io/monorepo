@@ -1,4 +1,4 @@
-export * from "./clear-options.js";
+export * from "./truncate-options.js";
 export * from "./event-map.js";
 export * from "./cursor-options.js";
 export * from "./delete-options.js";

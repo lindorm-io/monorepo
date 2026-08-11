@@ -41,7 +41,9 @@ const REPO_METHODS = [
   "increment",
   "decrement",
   "delete",
+  "deleteAll",
   "updateMany",
+  "updateAll",
   "softDestroy",
   "softDelete",
   "restore",
@@ -56,7 +58,7 @@ const REPO_METHODS = [
   "findPaginated",
   "cursor",
   "stream",
-  "clear",
+  "truncate",
   "queryBuilder",
   "setup",
 ] as const;
@@ -295,7 +297,9 @@ export const createBareRepository = <E extends IEntity = IEntity>(
 
     // With Criteria
     delete: mockFn(),
+    deleteAll: mockFn(),
     updateMany: mockFn(),
+    updateAll: mockFn(),
 
     // With Soft Deletes
     softDestroy: mockFn(),
@@ -337,7 +341,7 @@ export const createBareRepository = <E extends IEntity = IEntity>(
     stream: mockFn(),
 
     // Truncate
-    clear: mockFn(),
+    truncate: mockFn(),
 
     // Global
     queryBuilder: mockFn(),

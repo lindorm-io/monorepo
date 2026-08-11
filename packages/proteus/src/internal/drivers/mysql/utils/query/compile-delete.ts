@@ -1,3 +1,4 @@
+import { withPredicates } from "../../../../utils/sql/compile-where.js";
 import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
@@ -49,12 +50,11 @@ export const compileDelete = <E extends IEntity>(
     );
 
     const discPredicate = buildDiscriminatorPredicate(metadata, "t0", params);
-    const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
     const joinCond = joinedCtx.joinConditions.join(" AND ");
 
     // MySQL multi-table DELETE: DELETE t0 FROM root AS t0 INNER JOIN child AS t1 ON ... WHERE ...
-    const text = `DELETE ${quoteIdentifier("t0")} FROM ${tableName} AS ${quoteIdentifier("t0")} INNER JOIN ${joinedCtx.childTableQualified} AS ${quoteIdentifier(joinedCtx.childAlias)} ON ${joinCond} ${whereClause}${discClause}`;
+    const text = `DELETE ${quoteIdentifier("t0")} FROM ${tableName} AS ${quoteIdentifier("t0")} INNER JOIN ${joinedCtx.childTableQualified} AS ${quoteIdentifier(joinedCtx.childAlias)} ON ${joinCond} ${withPredicates(whereClause, discPredicate)}`;
     return { text, params };
   }
 
@@ -64,9 +64,8 @@ export const compileDelete = <E extends IEntity>(
 
   // Add discriminator predicate for single-table inheritance children
   const discPredicate = buildDiscriminatorPredicateUnqualified(metadata, params);
-  const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
-  const text = `DELETE FROM ${tableName} ${whereClause}${discClause}`;
+  const text = `DELETE FROM ${tableName} ${withPredicates(whereClause, discPredicate)}`;
 
   return { text, params };
 };

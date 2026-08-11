@@ -133,10 +133,11 @@ describe("compileUpdateMany", () => {
     expect(result.text).toContain('"name"');
   });
 
-  test("should throw ProteusRepositoryError when criteria is empty", () => {
-    // Non-empty update so we pass the first guard, but empty criteria produces no WHERE clause
-    expect(() => compileUpdateMany({} as any, { name: "Bob" } as any, metadata)).toThrow(
-      ProteusRepositoryError,
-    );
+  // Refusing "every row" is the repository's call, not the compiler's —
+  // `updateAll()` says it on purpose.
+  test("should compile an unfiltered UPDATE when the criteria are empty", () => {
+    const result = compileUpdateMany({} as any, { name: "Bob" } as any, metadata);
+
+    expect(result.text).not.toContain("WHERE");
   });
 });

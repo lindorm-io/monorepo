@@ -78,7 +78,9 @@ const createMockInner = (): Mocked<IProteusRepository<TestEntity>> =>
     increment: vi.fn().mockResolvedValue(undefined),
     decrement: vi.fn().mockResolvedValue(undefined),
     delete: vi.fn().mockResolvedValue(undefined),
+    deleteAll: vi.fn().mockResolvedValue(undefined),
     updateMany: vi.fn().mockResolvedValue(undefined),
+    updateAll: vi.fn().mockResolvedValue(undefined),
     softDelete: vi.fn().mockResolvedValue(undefined),
     restore: vi.fn().mockResolvedValue(undefined),
     versions: vi.fn().mockResolvedValue([]),
@@ -90,7 +92,7 @@ const createMockInner = (): Mocked<IProteusRepository<TestEntity>> =>
     deleteExpired: vi.fn().mockResolvedValue(undefined),
     cursor: vi.fn().mockResolvedValue({}),
     stream: vi.fn().mockReturnValue({ [Symbol.asyncIterator]: vi.fn() }),
-    clear: vi.fn().mockResolvedValue(undefined),
+    truncate: vi.fn().mockResolvedValue(undefined),
     queryBuilder: vi.fn().mockReturnValue({}),
     setup: vi.fn().mockResolvedValue(undefined),
   }) as unknown as Mocked<IProteusRepository<TestEntity>>;
@@ -1045,12 +1047,12 @@ describe("CachingRepository", () => {
       expect(adapter.delByPrefix).toHaveBeenCalledTimes(1);
     });
 
-    it("clear() should call inner.clear then invalidate", async () => {
+    it("truncate() should call inner.truncate then invalidate", async () => {
       const { repo, inner, adapter } = createRepo();
 
-      await repo.clear();
+      await repo.truncate();
 
-      expect(inner.clear).toHaveBeenCalledTimes(1);
+      expect(inner.truncate).toHaveBeenCalledTimes(1);
       expect(adapter.delByPrefix).toHaveBeenCalledTimes(1);
     });
   });

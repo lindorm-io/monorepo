@@ -109,7 +109,7 @@ import type {
   IProteusQueryBuilder,
 } from "../../interfaces/index.js";
 import type {
-  ClearOptions,
+  TruncateOptions,
   CursorOptions,
   FindOptions,
   UpsertOptions,
@@ -275,7 +275,7 @@ const abstractMethods = {
   find: vi.fn(),
   versions: vi.fn(),
   cursor: vi.fn(),
-  clear: vi.fn(),
+  truncate: vi.fn(),
   buildLazyLoader: vi.fn<() => LazyRelationLoader>(),
   executeAggregate: vi.fn(),
   isDuplicateKeyError: vi.fn(),
@@ -296,7 +296,7 @@ class ConcreteRepository extends DriverRepositoryBase<TestEntity> {
   public find = abstractMethods.find;
   public versions = abstractMethods.versions;
   public cursor = abstractMethods.cursor;
-  public clear = abstractMethods.clear;
+  public truncate = abstractMethods.truncate;
   protected buildLazyLoader = abstractMethods.buildLazyLoader;
   protected executeAggregate = abstractMethods.executeAggregate;
   protected isDuplicateKeyError = abstractMethods.isDuplicateKeyError;

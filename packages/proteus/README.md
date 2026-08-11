@@ -678,7 +678,7 @@ Marks an entity as append-only. Insert and read operations are allowed; update, 
 
 **Allowed:** `insert`, `clone`, `find*`, `count`, `exists`, `aggregate`, `cursor`, `paginate`.
 
-**Blocked:** `update`, `destroy`, `softDestroy`, `updateMany`, `softDelete`, `delete`, `upsert`, `clear`, `restore`. Each throws a `ProteusRepositoryError` with code `append_only_violation`, on every driver, before any statement reaches the store.
+**Blocked:** `update`, `destroy`, `softDestroy`, `updateMany`, `updateAll`, `softDelete`, `delete`, `deleteAll`, `upsert`, `truncate`, `restore`. Each throws a `ProteusRepositoryError` with code `append_only_violation`, on every driver, before any statement reaches the store.
 
 Cannot be combined with `@DeleteDateField` or `@ExpiryDateField` — an append-only row is neither soft-deleted nor expired, so metadata build rejects either pairing.
 
@@ -1656,9 +1656,19 @@ const updated = await repo.update(user);
 const updated = await repo.update([user1, user2]);
 
 await repo.updateMany({ age: { $lt: 18 } }, { status: "minor" });
+await repo.updateAll({ status: "minor" }); // EVERY row, on purpose
 
 await repo.increment({ id: user.id }, "loginCount", 1);
 await repo.decrement({ id: user.id }, "credits", 5);
+```
+
+A field whose value is `undefined` is **not in the update set** — it means "the
+key was not supplied", so the column is left alone. `null` is a real value and
+clears the column. That is what lets a spread-built partial update stay partial:
+
+```typescript
+await repo.updateMany({ id }, { name: patch.name, email: patch.email });
+// a key absent from `patch` leaves its column untouched, not nulled
 ```
 
 #### Change detection
@@ -1702,7 +1712,30 @@ const rows = await repo.find({ status: "active" }, { snapshot: false });
 await repo.destroy(user); // single
 await repo.destroy([user1, user2]); // batch
 await repo.delete({ status: "expired" }); // criteria-based
+await repo.deleteAll(); // EVERY row, on purpose
 ```
+
+#### Criteria that restrict nothing are refused
+
+`delete()` and `updateMany()` reject criteria that place no restriction, because
+they would affect every row. The check runs on what the criteria RESTRICT, not
+on how many keys they have — each of these has at least one key and every one of
+them matched the whole table:
+
+```typescript
+await repo.delete({}); // ✗ refused
+await repo.delete({ $and: [] }); // ✗ refused
+await repo.delete({ name: {} }); // ✗ refused
+await repo.delete({ name: undefined }); // ✗ refused — undefined is "not supplied"
+await repo.delete({ tag: { $nin: [] } }); // ✗ refused — excluding nothing excludes nothing
+await repo.delete({ tag: { $in: [] } }); // ✓ allowed — matches nothing, deletes nothing
+```
+
+Use `deleteAll()` / `updateAll()` to say "every row" on purpose. Reads are not
+guarded: `find({})` still means every row.
+
+`softDelete()` and `restore()` are **not** guarded — both are reversible, so the
+blast radius that justifies the guard does not reach them.
 
 ### Upsert
 
@@ -1774,9 +1807,18 @@ try {
 ### Truncate
 
 ```typescript
-await repo.clear();
-await repo.clear({ cascade: true, restartIdentity: true });
+await repo.truncate();
+await repo.truncate({ cascade: true, restartIdentity: true });
 ```
+
+`truncate()` and `deleteAll()` both leave the table empty, but they are
+different operations:
+
+|                            | `truncate()`        | `deleteAll()`       |
+| -------------------------- | ------------------- | ------------------- |
+| row triggers               | bypassed            | fire                |
+| identity / sequences       | reset (opt-in)      | untouched           |
+| MySQL inside a transaction | **implicit commit** | rolls back normally |
 
 ## Query Builder
 
@@ -2058,12 +2100,30 @@ orderable operand, and an unrecognised `$`-prefixed key raises too.
 | `{ name: { $regex: "^Ali" } }`            | ✗ raises — the language declares a `RegExp`  |
 | `{ name: { $regex: /^Ali/ } }`            | ✓                                            |
 | `{ age: { $or: [] } }`                    | ✗ raises — omit the key to constrain nothing |
+| `{ $and: [] }`                            | ✗ raises — same rule at criteria level       |
+| `{ age: {} }`                             | ✗ raises — a named field constrains nothing  |
 | `{ age: { $gte: null } }`                 | ✗ raises — null is not orderable             |
+| `{ age: { $gte: undefined } }`            | ✗ raises — stripped, leaving an empty bag    |
+| `{ age: undefined }`                      | ✓ the key is not there at all                |
+| `{}`                                      | ✓ the root is where "no constraint" lives    |
 
 This matters beyond tidiness: a payload the compiler could not read used to
 compile to no clause at all, so `delete({ published: { $not: false } })` — which
 typechecks, and is the natural way to write "published is true" — ran an
 unfiltered `DELETE`.
+
+### `undefined` means "the key was not supplied"
+
+Everywhere, and with no exceptions — in a condition, in an update payload, in a
+create payload. It is never a synonym for `null`, which is a real value and is
+respected as one.
+
+In a CONDITION, an undefined value is stripped before any shape is read, so it
+can never trip a payload check. A field left with nothing constraining it is
+then the empty-bag error above — `{ age: { $gte: undefined } }` raises, rather
+than quietly matching every row. The ROOT is the one place "no constraint" is
+legitimate: `find({})` returns every row, and destructive operations are guarded
+separately.
 
 ### `$not`
 
@@ -2077,7 +2137,8 @@ Both are two-valued on every driver — see below.
 
 An inner condition that constrains nothing matches every row, so negating it
 matches none: `{ $not: {} }` and `{ label: { $not: { $nin: [] } } }` both return
-nothing.
+nothing. (A field-level `$not` over an EMPTY bag — `{ label: { $not: {} } }` —
+raises instead: the bag itself is the error.)
 
 ### Negation is two-valued on every driver
 

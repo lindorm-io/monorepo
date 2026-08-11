@@ -1,7 +1,7 @@
 import type { Condition } from "@lindorm/match";
 import type { DeepPartial } from "@lindorm/types";
 import type {
-  ClearOptions,
+  TruncateOptions,
   CursorOptions,
   DeleteOptions,
   FindOptions,
@@ -92,10 +92,31 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
 
   // With Criteria
 
-  /** Delete all entities matching the criteria (criteria-based, no entity instances needed). */
+  /**
+   * Delete all entities matching the criteria (criteria-based, no entity instances needed).
+   *
+   * Refuses criteria that restrict nothing — `{}`, `{ id: undefined }`,
+   * `{ tag: { $nin: [] } }` — because they would delete every row. Use
+   * `deleteAll()` to say that on purpose.
+   */
   delete(criteria: Condition<E>, options?: DeleteOptions): Promise<void>;
-  /** Update fields on all entities matching the criteria. */
+  /**
+   * Delete EVERY row, as a DELETE: row triggers fire, foreign keys cascade, and
+   * it rolls back with the surrounding transaction.
+   *
+   * NOT a synonym for `truncate()`, which bypasses row triggers, can reset
+   * identity sequences, and commits implicitly on MySQL.
+   */
+  deleteAll(options?: DeleteOptions): Promise<void>;
+  /**
+   * Update fields on all entities matching the criteria.
+   *
+   * Refuses criteria that restrict nothing, as `delete()` does. Use
+   * `updateAll()` to update every row on purpose.
+   */
   updateMany(criteria: Condition<E>, update: DeepPartial<E>): Promise<void>;
+  /** Apply the same update to EVERY row. The unguarded twin of `updateMany`. */
+  updateAll(update: DeepPartial<E>): Promise<void>;
 
   // With Soft Deletes
 
@@ -109,6 +130,9 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
    * Note: This is a criteria-based bulk operation. It does NOT load individual entities
    * and therefore does NOT fire per-entity lifecycle hooks (@BeforeSoftDestroy, etc.)
    * or subscriber events. Use softDestroy() for per-entity lifecycle support.
+   *
+   * Unlike `delete()`, this is NOT guarded against unrestricted criteria — a
+   * soft delete is reversible, so `softDelete({})` is allowed.
    */
   softDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void>;
   /**
@@ -117,6 +141,8 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
    * Note: This is a criteria-based bulk operation. It does NOT load individual entities
    * and therefore does NOT fire per-entity lifecycle hooks (@BeforeRestore, etc.)
    * or subscriber events. Use individual entity restore workflows for per-entity lifecycle support.
+   *
+   * NOT guarded against unrestricted criteria — see `softDelete()`.
    */
   restore(criteria: Condition<E>, options?: DeleteOptions): Promise<void>;
 
@@ -186,8 +212,14 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
 
   // Truncate
 
-  /** Truncate the entity table, removing all rows. */
-  clear(options?: ClearOptions): Promise<void>;
+  /**
+   * TRUNCATE the entity table, removing all rows.
+   *
+   * Row triggers are bypassed, identity sequences can be reset, and on MySQL it
+   * COMMITS the open transaction implicitly. Use `deleteAll()` when those
+   * matter.
+   */
+  truncate(options?: TruncateOptions): Promise<void>;
 
   // Global
 

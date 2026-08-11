@@ -150,8 +150,8 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await repo.clear();
-  await versionedRepo.clear();
+  await repo.truncate();
+  await versionedRepo.truncate();
 });
 
 const seed = () =>

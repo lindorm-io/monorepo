@@ -586,7 +586,7 @@ describe("caching integration", () => {
       const setSpy = vi.spyOn(adapter, "set");
 
       // Clear all records
-      await repo.clear();
+      await repo.truncate();
 
       setSpy.mockClear();
 

@@ -54,7 +54,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await repo.clear();
+  await repo.truncate();
 });
 
 // ─── repository() ─────────────────────────────────────────────────────────────

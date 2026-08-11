@@ -15,7 +15,7 @@ import { buildIncrementKey } from "./build-increment-key.js";
  *
  * The counter key (`{ns:}seq:{name}:{field}`) uses Redis INCR for atomic
  * monotonic increment. Counter keys persist independently of entity data —
- * they are NOT deleted by `RedisRepository.clear()` to ensure monotonic
+ * they are NOT deleted by `RedisRepository.truncate()` to ensure monotonic
  * correctness across clear/repopulate cycles.
  */
 export const applyRedisAutoIncrement = async (

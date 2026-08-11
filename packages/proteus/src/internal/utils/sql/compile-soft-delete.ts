@@ -1,3 +1,4 @@
+import { withPredicates } from "./compile-where.js";
 import type { Condition } from "@lindorm/match";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
@@ -48,10 +49,9 @@ export const compileSoftDelete = <E extends IEntity>(
   const discPredicate = alias
     ? buildDiscriminatorPredicateQualified(metadata, alias, params, dialect)
     : buildDiscriminatorPredicateUnqualified(metadata, params, dialect);
-  const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
   const aliasSuffix = alias ? ` AS ${dialect.quoteIdentifier(alias)}` : "";
-  const text = `UPDATE ${tableName}${aliasSuffix} SET ${dialect.quoteIdentifier(deleteField.name)} = ${dialect.dateNowExpression()} ${whereClause}${discClause}`;
+  const text = `UPDATE ${tableName}${aliasSuffix} SET ${dialect.quoteIdentifier(deleteField.name)} = ${dialect.dateNowExpression()} ${withPredicates(whereClause, discPredicate)}`;
 
   return { text, params };
 };
@@ -89,10 +89,9 @@ export const compileRestore = <E extends IEntity>(
   const discPredicate = alias
     ? buildDiscriminatorPredicateQualified(metadata, alias, params, dialect)
     : buildDiscriminatorPredicateUnqualified(metadata, params, dialect);
-  const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
   const aliasSuffix = alias ? ` AS ${dialect.quoteIdentifier(alias)}` : "";
-  const text = `UPDATE ${tableName}${aliasSuffix} SET ${dialect.quoteIdentifier(deleteField.name)} = NULL ${whereClause}${discClause}`;
+  const text = `UPDATE ${tableName}${aliasSuffix} SET ${dialect.quoteIdentifier(deleteField.name)} = NULL ${withPredicates(whereClause, discPredicate)}`;
 
   return { text, params };
 };

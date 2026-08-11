@@ -9,7 +9,6 @@ import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import { OptimisticLockError } from "../../../errors/OptimisticLockError.js";
 import { PostgresExecutorError } from "../errors/PostgresExecutorError.js";
 import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug.js";
-import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
 import type { PostgresQueryClient } from "../types/postgres-query-client.js";
 import {
   compileDelete,
@@ -132,8 +131,6 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
   }
 
   async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
-    guardEmptyCriteria(criteria, "delete", PostgresExecutorError);
-
     // For joined inheritance children, explicitly delete child table rows first.
     // This avoids orphan rows when FK CASCADE constraints are missing (e.g. synchronize: false).
     // When limit is set, skip the explicit child DELETE to avoid data corruption:
@@ -168,13 +165,11 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
   }
 
   async executeSoftDelete(criteria: Condition<E>): Promise<void> {
-    guardEmptyCriteria(criteria, "soft delete", PostgresExecutorError);
     const { text, params } = compileSoftDelete(criteria, this.metadata, this.namespace);
     await this.client.query(text, params);
   }
 
   async executeRestore(criteria: Condition<E>): Promise<void> {
-    guardEmptyCriteria(criteria, "restore", PostgresExecutorError);
     const { text, params } = compileRestore(criteria, this.metadata, this.namespace);
     await this.client.query(text, params);
   }

@@ -6,7 +6,7 @@ import type {
   IProteusQueryBuilder,
 } from "../../../../interfaces/index.js";
 import type {
-  ClearOptions,
+  TruncateOptions,
   CursorOptions,
   FindOptions,
   UpsertOptions,
@@ -304,8 +304,8 @@ export class MemoryRepository<
     return new MemoryCursor<E>(entities);
   }
 
-  async clear(_options?: ClearOptions): Promise<void> {
-    guardAppendOnly(this.metadata, "clear");
+  async truncate(_options?: TruncateOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "truncate");
 
     // For inheritance children, the store table is always keyed by the ROOT entity name.
     const isInheritanceChild = this.metadata.inheritance?.discriminatorValue != null;

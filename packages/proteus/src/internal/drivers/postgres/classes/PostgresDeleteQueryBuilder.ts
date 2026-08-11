@@ -1,3 +1,4 @@
+import { withPredicates } from "../../../utils/sql/compile-where.js";
 import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type {
@@ -113,7 +114,6 @@ export class PostgresDeleteQueryBuilder<
 
     // Inject discriminator predicate for single-table inheritance children
     const discPredicate = buildDiscriminatorPredicate(this.metadata, "t0", params);
-    const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
     let text: string;
 
@@ -130,9 +130,9 @@ export class PostgresDeleteQueryBuilder<
           },
         );
       }
-      text = `UPDATE ${tableName} AS "t0" SET ${quoteIdentifier(deleteField.name)} = NOW() ${whereClause}${discClause}`;
+      text = `UPDATE ${tableName} AS "t0" SET ${quoteIdentifier(deleteField.name)} = NOW() ${withPredicates(whereClause, discPredicate)}`;
     } else {
-      text = `DELETE FROM ${tableName} AS "t0" ${whereClause}${discClause}`;
+      text = `DELETE FROM ${tableName} AS "t0" ${withPredicates(whereClause, discPredicate)}`;
     }
 
     if (this.returningFields === "*") {

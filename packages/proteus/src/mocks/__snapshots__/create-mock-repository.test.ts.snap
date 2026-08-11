@@ -3,7 +3,6 @@
 exports[`createMockRepository > bare stub (no entity) > should create a mock with all methods as vi.fn() 1`] = `
 {
   "average": [MockFunction],
-  "clear": [MockFunction],
   "clone": [MockFunction],
   "copy": [MockFunction],
   "count": [MockFunction],
@@ -11,6 +10,7 @@ exports[`createMockRepository > bare stub (no entity) > should create a mock wit
   "cursor": [MockFunction],
   "decrement": [MockFunction],
   "delete": [MockFunction],
+  "deleteAll": [MockFunction],
   "deleteExpired": [MockFunction],
   "destroy": [MockFunction],
   "exists": [MockFunction],
@@ -33,8 +33,10 @@ exports[`createMockRepository > bare stub (no entity) > should create a mock wit
   "softDestroy": [MockFunction],
   "stream": [MockFunction],
   "sum": [MockFunction],
+  "truncate": [MockFunction],
   "ttl": [MockFunction],
   "update": [MockFunction],
+  "updateAll": [MockFunction],
   "updateMany": [MockFunction],
   "upsert": [MockFunction],
   "validate": [MockFunction],

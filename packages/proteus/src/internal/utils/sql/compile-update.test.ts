@@ -149,16 +149,21 @@ describe.each(dialects)("compileUpdateMany [%s]", (_name, dialect) => {
     ).toThrow(/no valid columns in update object/);
   });
 
-  test("should throw ProteusRepositoryError when criteria is empty", () => {
-    expect(() =>
-      compileUpdateMany(
-        {} as any,
-        { name: "Bob" } as any,
-        metadata,
-        dialect,
-        makeDeps(dialect),
-      ),
-    ).toThrow(ProteusRepositoryError);
+  // The compiler no longer refuses an empty WHERE. Deciding whether "every
+  // row" is allowed is the repository's call — `updateAll()` says it on
+  // purpose — and two guards for one rule meant the escape hatch was blocked by
+  // the one nobody could see.
+  test("should compile an unfiltered UPDATE when the criteria are empty", () => {
+    const result = compileUpdateMany(
+      {} as any,
+      { name: "Bob" } as any,
+      metadata,
+      dialect,
+      makeDeps(dialect),
+    );
+
+    expect(result.text).toContain("SET");
+    expect(result.text).not.toContain("WHERE");
   });
 
   test("should compile the joined inheritance strategy for the dialect", () => {

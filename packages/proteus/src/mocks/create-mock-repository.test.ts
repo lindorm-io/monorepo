@@ -356,7 +356,7 @@ describe("createMockRepository", () => {
         { id: "row_2", artistId: "b", year: 2 },
       ] as any);
 
-      await repo.clear();
+      await repo.truncate();
       expect(await repo.count()).toBe(0);
     });
 

@@ -1,6 +1,6 @@
 import type { Condition } from "@lindorm/match";
 import type { ILogger } from "@lindorm/logger";
-import type { Constructor, DeepPartial } from "@lindorm/types";
+import type { Constructor, DeepPartial, Dict } from "@lindorm/types";
 import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError.js";
 import type {
   IEntity,
@@ -9,7 +9,7 @@ import type {
   IProteusRepository,
 } from "../../interfaces/index.js";
 import type {
-  ClearOptions,
+  TruncateOptions,
   CursorOptions,
   DeleteOptions,
   FindOptions,
@@ -43,6 +43,7 @@ import {
   guardExpiryDateField,
   guardUpsertBlocked,
 } from "../utils/repository/repository-guards.js";
+import { guardUnrestrictedCriteria } from "../utils/repository/guard-unrestricted-criteria.js";
 import { installLazyRelations } from "../entity/utils/install-lazy-relations.js";
 import { isLazyRelation } from "../entity/utils/lazy-relation.js";
 import { isLazyCollection } from "../entity/utils/lazy-collection.js";
@@ -140,7 +141,7 @@ export abstract class DriverRepositoryBase<
   ): Promise<Array<E>>;
   abstract versions(criteria: Condition<E>, options?: FindOptions<E>): Promise<Array<E>>;
   abstract cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>>;
-  abstract clear(options?: ClearOptions): Promise<void>;
+  abstract truncate(options?: TruncateOptions): Promise<void>;
   protected abstract buildLazyLoader(): LazyRelationLoader;
   /**
    * Driver hook that loads the rows for a single entity's `@EmbeddedList`
@@ -576,8 +577,22 @@ export abstract class DriverRepositoryBase<
   async delete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "delete");
     guardEncryptedCriteria(this.metadata, criteria, "delete");
+    guardUnrestrictedCriteria(criteria as Condition<Dict>, "delete");
 
     await this.performDelete(criteria, options);
+  }
+
+  /**
+   * Delete EVERY row, as a DELETE — triggers fire, foreign keys cascade, and it
+   * rolls back with the surrounding transaction.
+   *
+   * Not a synonym for `truncate()`: that is a TRUNCATE, which bypasses row
+   * triggers and, on MySQL, commits the open transaction implicitly.
+   */
+  async deleteAll(options?: DeleteOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "deleteAll");
+
+    await this.performDelete({} as Condition<E>, options);
   }
 
   async updateMany(criteria: Condition<E>, update: DeepPartial<E>): Promise<void> {
@@ -585,22 +600,40 @@ export abstract class DriverRepositoryBase<
     // CRITERIA only — the `update` payload re-encrypts on the way in, so
     // writing a sealed field is fine; matching on one is not.
     guardEncryptedCriteria(this.metadata, criteria, "updateMany");
-
-    if (this.entityManager.updateStrategy === "version") {
-      throw new ProteusRepositoryError(
-        `updateMany is not supported for versioned entity "${this.metadata.entity.name}". Use update() for individual version updates.`,
-        {
-          code: "update_many_not_supported",
-          title: "Update Many Not Supported",
-          details: `updateMany cannot batch-update the versioned entity "${this.metadata.entity.name}"; use update() per row.`,
-          debug: { entityName: this.metadata.entity.name },
-        },
-      );
-    }
+    guardUnrestrictedCriteria(criteria as Condition<Dict>, "updateMany");
+    this.guardVersionedBulkUpdate("updateMany");
 
     this.entityManager.verifyReadonly(update);
 
     await this.performUpdateMany(criteria, update);
+  }
+
+  /** Apply the same update to EVERY row. The unguarded twin of `updateMany`. */
+  async updateAll(update: DeepPartial<E>): Promise<void> {
+    guardAppendOnly(this.metadata, "updateAll");
+    this.guardVersionedBulkUpdate("updateAll");
+
+    this.entityManager.verifyReadonly(update);
+
+    await this.performUpdateMany({} as Condition<E>, update);
+  }
+
+  /**
+   * A versioned entity keeps history per row, so there is no single row a bulk
+   * SET could write — the new version has to be inserted and the old one closed.
+   */
+  private guardVersionedBulkUpdate(method: string): void {
+    if (this.entityManager.updateStrategy !== "version") return;
+
+    throw new ProteusRepositoryError(
+      `${method} is not supported for versioned entity "${this.metadata.entity.name}". Use update() for individual version updates.`,
+      {
+        code: "update_many_not_supported",
+        title: "Update Many Not Supported",
+        details: `${method} cannot batch-update the versioned entity "${this.metadata.entity.name}"; use update() per row.`,
+        debug: { entityName: this.metadata.entity.name },
+      },
+    );
   }
 
   // ─── Soft Deletes ─────────────────────────────────────────────────
@@ -626,7 +659,11 @@ export abstract class DriverRepositoryBase<
    *
    * Note: This is a criteria-based bulk operation. It does NOT load individual entities
    * and therefore does NOT fire per-entity lifecycle hooks (@BeforeSoftDestroy, etc.)
-   * or subscriber events. Use softDestroy() for per-entity lifecycle support.
+   * or subscriber events. Use softDestroy() for per-entity lifecycle support.   *
+   * NOT guarded against unrestricted criteria, unlike `delete()`: a soft delete
+   * is reversible by construction, so the blast-radius argument does not reach
+   * it — and a guard whose only escape is a criterion that tricks it is worse
+   * than no guard.
    */
   async softDelete(criteria: Condition<E>, _options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "softDelete");
@@ -642,6 +679,8 @@ export abstract class DriverRepositoryBase<
    * Note: This is a criteria-based bulk operation. It does NOT load individual entities
    * and therefore does NOT fire per-entity lifecycle hooks (@BeforeRestore, etc.)
    * or subscriber events. Use individual entity restore workflows for per-entity lifecycle support.
+   *
+   * NOT guarded against unrestricted criteria — see `softDelete()`.
    */
   async restore(criteria: Condition<E>, _options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "restore");

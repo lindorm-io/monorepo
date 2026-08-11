@@ -730,7 +730,7 @@ describe("RedisRepository.clear (no relations)", () => {
     const { repository } = createRepositoryFor(RepoItem);
     mockedScanEntityKeys.mockResolvedValue([]);
 
-    await repository.clear();
+    await repository.truncate();
 
     expect(mockedScanEntityKeys).toHaveBeenCalledTimes(1);
   });
@@ -739,7 +739,7 @@ describe("RedisRepository.clear (no relations)", () => {
     const { repository, client } = createRepositoryFor(RepoItem);
     mockedScanEntityKeys.mockResolvedValue([]);
 
-    await repository.clear();
+    await repository.truncate();
 
     expect(client.pipeline).not.toHaveBeenCalled();
   });
@@ -751,7 +751,7 @@ describe("RedisRepository.clear (no relations)", () => {
       "entity:repo_test_item:2",
     ]);
 
-    await repository.clear();
+    await repository.truncate();
 
     expect(client.pipeline).toHaveBeenCalledTimes(1);
     expect(mockPipeline.del).toHaveBeenCalledTimes(2);
@@ -763,7 +763,7 @@ describe("RedisRepository.clear (no relations)", () => {
     mockedScanEntityKeys.mockResolvedValue(["entity:repo_test_item:1"]);
     mockPipeline.exec.mockResolvedValueOnce(null);
 
-    await expect(repository.clear()).rejects.toThrow(RedisDriverError);
+    await expect(repository.truncate()).rejects.toThrow(RedisDriverError);
   });
 
   test("error message mentions clear() on null pipeline result", async () => {
@@ -771,7 +771,7 @@ describe("RedisRepository.clear (no relations)", () => {
     mockedScanEntityKeys.mockResolvedValue(["entity:repo_test_item:1"]);
     mockPipeline.exec.mockResolvedValueOnce(null);
 
-    await expect(repository.clear()).rejects.toThrow(
+    await expect(repository.truncate()).rejects.toThrow(
       "Pipeline execution returned null during clear()",
     );
   });
@@ -784,7 +784,7 @@ describe("RedisRepository.clear (no relations)", () => {
       "entity:repo_test_item:2",
     ]);
 
-    await repository.clear();
+    await repository.truncate();
 
     // Only 2 unique keys — Set deduplication applied
     expect(mockPipeline.del).toHaveBeenCalledTimes(2);
@@ -802,7 +802,7 @@ describe("RedisRepository.clear (with ManyToMany relations)", () => {
       .mockResolvedValueOnce(["join:m2m:forward:1"]) // forward join keys
       .mockResolvedValueOnce(["join:m2m:rev:1"]); // reverse join keys
 
-    await repository.clear();
+    await repository.truncate();
 
     // 3 SCAN calls: entity + forward + reverse for the M2M relation
     expect(mockedScanEntityKeys).toHaveBeenCalledTimes(3);
@@ -816,7 +816,7 @@ describe("RedisRepository.clear (with ManyToMany relations)", () => {
       .mockResolvedValueOnce(["join:m2m:forward:1"])
       .mockResolvedValueOnce(["join:m2m:rev:1"]);
 
-    await repository.clear();
+    await repository.truncate();
 
     // 3 unique keys — 3 DEL calls
     expect(mockPipeline.del).toHaveBeenCalledTimes(3);
@@ -827,7 +827,7 @@ describe("RedisRepository.clear (with ManyToMany relations)", () => {
 
     mockedScanEntityKeys.mockResolvedValue([]);
 
-    await repository.clear();
+    await repository.truncate();
 
     expect(client.pipeline).not.toHaveBeenCalled();
   });
@@ -840,7 +840,7 @@ describe("RedisRepository.clear (with ManyToMany relations)", () => {
       .mockResolvedValueOnce(["shared-key"]) // overlap with entity key
       .mockResolvedValueOnce([]);
 
-    await repository.clear();
+    await repository.truncate();
 
     // Only 2 unique keys despite 3 raw scan results
     expect(mockPipeline.del).toHaveBeenCalledTimes(2);
@@ -851,7 +851,7 @@ describe("RedisRepository.clear (with ManyToMany relations)", () => {
 
     mockedScanEntityKeys.mockResolvedValueOnce([]);
 
-    await repository.clear();
+    await repository.truncate();
 
     // Only 1 scan call for entity keys — OneToMany has no join table to scan
     expect(mockedScanEntityKeys).toHaveBeenCalledTimes(1);
@@ -862,7 +862,7 @@ describe("RedisRepository.clear (with ManyToMany relations)", () => {
 
     mockedScanEntityKeys.mockResolvedValue([]);
 
-    await repository.clear();
+    await repository.truncate();
 
     // 3 SCAN calls: entity keys, then forward join pattern, then reverse join pattern
     expect(mockedScanEntityKeys).toHaveBeenCalledTimes(3);

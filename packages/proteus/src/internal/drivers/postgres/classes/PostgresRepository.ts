@@ -9,7 +9,7 @@ import type {
   IProteusQueryBuilder,
 } from "../../../../interfaces/index.js";
 import type {
-  ClearOptions,
+  TruncateOptions,
   CursorOptions,
   DeleteOptions,
   FindOptions,
@@ -400,8 +400,8 @@ export class PostgresRepository<
     });
   }
 
-  async clear(options?: ClearOptions): Promise<void> {
-    guardAppendOnly(this.metadata, "clear");
+  async truncate(options?: TruncateOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "truncate");
 
     // For inheritance children, always use the ROOT entity's table.
     const { schema, name } = resolveTableName(this.metadata, this.namespace);

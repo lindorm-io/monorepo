@@ -328,8 +328,23 @@ describe("compileFilter", () => {
       expect(compileFilter({}, defaultMetadata)).toMatchSnapshot();
     });
 
-    test("should handle undefined value as null", () => {
-      expect(compileFilter({ name: undefined }, defaultMetadata)).toMatchSnapshot();
+    // `undefined` means "not supplied", so the key is not there at all. Reading
+    // it as `null` compiled a criterion nobody wrote, and every other driver
+    // reads it the same way — this was the outlier.
+    test("should ignore a key whose value is undefined", () => {
+      expect(compileFilter({ name: undefined }, defaultMetadata)).toEqual({});
+    });
+
+    test("should refuse a named field with an empty operator bag", () => {
+      expect(() => compileFilter({ name: {} } as any, defaultMetadata)).toThrow(
+        /requires at least one operator/,
+      );
+    });
+
+    test.each([["$and"], ["$or"]])("should refuse an empty %s", (operator) => {
+      expect(() => compileFilter({ [operator]: [] } as any, defaultMetadata)).toThrow(
+        /requires at least one member/,
+      );
     });
   });
 

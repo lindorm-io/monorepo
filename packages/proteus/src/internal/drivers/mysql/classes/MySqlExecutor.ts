@@ -12,7 +12,6 @@ import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryErro
 import { MySqlExecutorError } from "../errors/MySqlExecutorError.js";
 import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug.js";
 import { wrapMysqlError } from "../utils/repository/wrap-mysql-error.js";
-import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
 import {
   compileDelete,
   compileJoinedChildDelete,
@@ -179,8 +178,6 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   }
 
   async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
-    guardEmptyCriteria(criteria, "delete", MySqlExecutorError);
-
     try {
       // For joined inheritance children, explicitly delete child table rows first.
       // This avoids orphan rows when FK CASCADE constraints are missing (e.g. synchronize: false).
@@ -224,7 +221,6 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   }
 
   async executeSoftDelete(criteria: Condition<E>): Promise<void> {
-    guardEmptyCriteria(criteria, "soft delete", MySqlExecutorError);
     try {
       const { text, params } = compileSoftDelete(criteria, this.metadata, this.namespace);
       await this.client.query(text, params);
@@ -239,7 +235,6 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   }
 
   async executeRestore(criteria: Condition<E>): Promise<void> {
-    guardEmptyCriteria(criteria, "restore", MySqlExecutorError);
     try {
       const { text, params } = compileRestore(criteria, this.metadata, this.namespace);
       await this.client.query(text, params);

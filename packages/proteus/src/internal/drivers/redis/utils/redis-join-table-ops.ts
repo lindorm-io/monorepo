@@ -223,6 +223,6 @@ export const createRedisJoinTableOps = (
 });
 
 /**
- * Exported for use by RedisRepository.clear() to SCAN+DEL all join SET keys.
+ * Exported for use by RedisRepository.truncate() to SCAN+DEL all join SET keys.
  */
 export { buildForwardJoinScanPattern, buildReverseJoinScanPattern };

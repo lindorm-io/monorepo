@@ -1,3 +1,4 @@
+import { withPredicates } from "../../../utils/sql/compile-where.js";
 import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type {
@@ -111,7 +112,6 @@ export class SqliteDeleteQueryBuilder<
 
     // Inject discriminator predicate for single-table inheritance children
     const discPredicate = buildDiscriminatorPredicateUnqualified(this.metadata, params);
-    const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
     let text: string;
 
@@ -128,9 +128,9 @@ export class SqliteDeleteQueryBuilder<
           },
         );
       }
-      text = `UPDATE ${tableName} SET ${quoteIdentifier(deleteField.name)} = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') ${whereClause}${discClause}`;
+      text = `UPDATE ${tableName} SET ${quoteIdentifier(deleteField.name)} = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') ${withPredicates(whereClause, discPredicate)}`;
     } else {
-      text = `DELETE FROM ${tableName} ${whereClause}${discClause}`;
+      text = `DELETE FROM ${tableName} ${withPredicates(whereClause, discPredicate)}`;
     }
 
     if (this.returningFields === "*") {

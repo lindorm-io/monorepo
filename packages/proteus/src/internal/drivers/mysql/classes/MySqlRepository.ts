@@ -9,7 +9,7 @@ import type {
   IProteusQueryBuilder,
 } from "../../../../interfaces/index.js";
 import type {
-  ClearOptions,
+  TruncateOptions,
   CursorOptions,
   DeleteOptions,
   FindOptions,
@@ -356,8 +356,8 @@ export class MySqlRepository<
     });
   }
 
-  async clear(_options?: ClearOptions): Promise<void> {
-    guardAppendOnly(this.metadata, "clear");
+  async truncate(_options?: TruncateOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "truncate");
 
     // For inheritance children, always use the ROOT entity's table.
     const isInheritanceChild = this.metadata.inheritance?.discriminatorValue != null;

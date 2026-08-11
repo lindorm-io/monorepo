@@ -129,16 +129,6 @@ vi.mock("../../../entity/utils/default-hydrate-entity.js", () => ({
   }),
 }));
 
-vi.mock("../../../utils/repository/guard-empty-criteria.js", () => ({
-  guardEmptyCriteria: vi.fn(
-    (criteria: Record<string, unknown>, operation: string, ErrorClass: any) => {
-      if (Object.keys(criteria).length === 0) {
-        throw new ErrorClass(`${operation} requires non-empty criteria`);
-      }
-    },
-  ),
-}));
-
 vi.mock("../../../utils/query/resolve-filters.js", () => ({
   resolveFilters: vi.fn(() => []),
 }));
@@ -605,10 +595,6 @@ describe("RedisExecutor", () => {
       expect(delPipeline.del).not.toHaveBeenCalledWith("entity:test_entity:2");
     });
 
-    test("should throw on empty criteria", async () => {
-      await expect(executor.executeDelete({} as any)).rejects.toThrow(RedisDriverError);
-    });
-
     test("should respect delete limit", async () => {
       mockedScanEntityKeys.mockResolvedValueOnce([
         "entity:test_entity:1",
@@ -699,18 +685,6 @@ describe("RedisExecutor", () => {
       expect(hsetCall).toBeDefined();
       expect(() => new Date(hsetCall![2])).not.toThrow();
     });
-
-    test("should throw on empty criteria", async () => {
-      const sdExecutor = new RedisExecutor<SoftDeleteEntity>(
-        softDeleteMetadata,
-        redis.client,
-        null,
-      );
-
-      await expect(sdExecutor.executeSoftDelete({} as any)).rejects.toThrow(
-        RedisDriverError,
-      );
-    });
   });
 
   // ─── executeRestore ─────────────────────────────────────────────────
@@ -735,18 +709,6 @@ describe("RedisExecutor", () => {
       expect(redis.mockPipeline.hdel).toHaveBeenCalledWith(
         expect.any(String),
         "deletedAt",
-      );
-    });
-
-    test("should throw on empty criteria", async () => {
-      const sdExecutor = new RedisExecutor<SoftDeleteEntity>(
-        softDeleteMetadata,
-        redis.client,
-        null,
-      );
-
-      await expect(sdExecutor.executeRestore({} as any)).rejects.toThrow(
-        RedisDriverError,
       );
     });
   });

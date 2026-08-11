@@ -1,3 +1,4 @@
+import { withPredicates } from "../../../utils/sql/compile-where.js";
 import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type { DeepPartial, Dict } from "@lindorm/types";
@@ -161,9 +162,8 @@ export class PostgresUpdateQueryBuilder<
 
     // Inject discriminator predicate for single-table inheritance children
     const discPredicate = buildDiscriminatorPredicate(this.metadata, "t0", params);
-    const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
-    let text = `UPDATE ${tableName} AS "t0" SET ${setClauses.join(", ")} ${whereClause}${discClause}`;
+    let text = `UPDATE ${tableName} AS "t0" SET ${setClauses.join(", ")} ${withPredicates(whereClause, discPredicate)}`;
 
     if (this.returningFields === "*") {
       text += " RETURNING *";

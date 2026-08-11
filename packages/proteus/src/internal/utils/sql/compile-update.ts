@@ -14,7 +14,12 @@ import {
   buildPrimaryKeyConditionsQualified,
   getDiscriminatorColumnName,
 } from "./compile-helpers.js";
-import { compileWhere, type FieldAliasOverrides } from "./compile-where.js";
+import {
+  compileWhere,
+  withPredicates,
+  type FieldAliasOverrides,
+} from "./compile-where.js";
+import { suppliedUpdateEntries } from "../repository/supplied-update-entries.js";
 import type { CompiledSql } from "./compiled-sql.js";
 import { resolveTableName } from "./resolve-table-name.js";
 import type { SqlDialect } from "./sql-dialect.js";
@@ -184,7 +189,7 @@ export const compileUpdateMany = <E extends IEntity>(
   const discriminatorColName = getDiscriminatorColumnName(metadata);
 
   const setClauses: Array<string> = [];
-  for (const [key, value] of Object.entries(update as Record<string, unknown>)) {
+  for (const [key, value] of suppliedUpdateEntries(update)) {
     const field = metadata.fields.find((f) => f.key === key);
     if (!field) continue;
     if (discriminatorColName && field.name === discriminatorColName) continue;
@@ -219,18 +224,13 @@ export const compileUpdateMany = <E extends IEntity>(
   const entries: Array<PredicateEntry<E>> = [{ predicate: criteria, conjunction: "and" }];
   const whereClause = compileWhere(entries, metadata, alias, params, dialect);
 
-  if (!whereClause) {
-    throwEmptyCriteria(metadata, false);
-  }
-
   // Add discriminator predicate for single-table inheritance children
   const discPredicate = alias
     ? buildDiscriminatorPredicateQualified(metadata, alias, params, dialect)
     : buildDiscriminatorPredicateUnqualified(metadata, params, dialect);
-  const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
   const aliasSuffix = alias ? ` AS ${dialect.quoteIdentifier(alias)}` : "";
-  const text = `UPDATE ${tableName}${aliasSuffix} SET ${setClauses.join(", ")} ${whereClause}${discClause}`;
+  const text = `UPDATE ${tableName}${aliasSuffix} SET ${setClauses.join(", ")} ${withPredicates(whereClause, discPredicate)}`;
 
   return { text, params };
 };
@@ -301,10 +301,6 @@ const compileJoinedUpdateManyFrom = <E extends IEntity>(
     aliasOverrides,
   );
 
-  if (!whereClause) {
-    throwEmptyCriteria(metadata, true);
-  }
-
   // PK join condition: t0.pk = t1.pk
   const pkJoinConditions = metadata.primaryKeys.map((pk) => {
     const field = metadata.fields.find((f) => f.key === pk);
@@ -320,13 +316,12 @@ const compileJoinedUpdateManyFrom = <E extends IEntity>(
     params,
     dialect,
   );
-  const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
   const text = [
     `UPDATE ${targetTable} AS ${dialect.quoteIdentifier("t0")}`,
     `SET ${setClauses.join(", ")}`,
     `FROM ${fromTable} AS ${dialect.quoteIdentifier(fromAlias)}`,
-    `${whereClause} AND ${pkJoinConditions.join(" AND ")}${discClause}`,
+    withPredicates(whereClause, ...pkJoinConditions, discPredicate),
   ].join(" ");
 
   return { text, params };
@@ -356,7 +351,7 @@ const compileJoinedUpdateManyMultiTable = <E extends IEntity>(
   // Both tables are updated in place, so SET clauses carry qualified column names
   const setClauses: Array<string> = [];
 
-  for (const [key, value] of Object.entries(update as Record<string, unknown>)) {
+  for (const [key, value] of suppliedUpdateEntries(update)) {
     const field = metadata.fields.find((f) => f.key === key);
     if (!field) continue;
     if (discriminatorColName && field.name === discriminatorColName) continue;
@@ -400,10 +395,6 @@ const compileJoinedUpdateManyMultiTable = <E extends IEntity>(
     ctx.fieldAliasOverrides,
   );
 
-  if (!whereClause) {
-    throwEmptyCriteria(metadata, true);
-  }
-
   // Discriminator predicate on root table
   const discPredicate = buildDiscriminatorPredicateQualified(
     metadata,
@@ -411,12 +402,11 @@ const compileJoinedUpdateManyMultiTable = <E extends IEntity>(
     params,
     dialect,
   );
-  const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
   // Multi-table UPDATE syntax
   const joinCond = ctx.joinConditions.join(" AND ");
 
-  const text = `UPDATE ${rootQualified} AS ${dialect.quoteIdentifier("t0")} INNER JOIN ${childQualified} AS ${dialect.quoteIdentifier("t1")} ON ${joinCond} SET ${setClauses.join(", ")} ${whereClause}${discClause}`;
+  const text = `UPDATE ${rootQualified} AS ${dialect.quoteIdentifier("t0")} INNER JOIN ${childQualified} AS ${dialect.quoteIdentifier("t1")} ON ${joinCond} SET ${setClauses.join(", ")} ${withPredicates(whereClause, discPredicate)}`;
 
   return { text, params };
 };
@@ -475,10 +465,6 @@ const compileJoinedUpdateManySubquery = <E extends IEntity>(
     aliasOverrides,
   );
 
-  if (!whereClause) {
-    throwEmptyCriteria(metadata, true);
-  }
-
   // PK columns for the subquery SELECT
   const pkCols = metadata.primaryKeys.map((pk) => {
     const field = metadata.fields.find((f) => f.key === pk);
@@ -502,10 +488,9 @@ const compileJoinedUpdateManySubquery = <E extends IEntity>(
     subqueryParams,
     dialect,
   );
-  const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
   // Build the subquery
-  const subquery = `SELECT ${pkCols.join(", ")} FROM ${targetTable} AS ${dialect.quoteIdentifier("t0")} INNER JOIN ${fromTable} AS ${dialect.quoteIdentifier("t1")} ON ${pkJoinConditions.join(" AND ")} ${whereClause}${discClause}`;
+  const subquery = `SELECT ${pkCols.join(", ")} FROM ${targetTable} AS ${dialect.quoteIdentifier("t0")} INNER JOIN ${fromTable} AS ${dialect.quoteIdentifier("t1")} ON ${pkJoinConditions.join(" AND ")} ${withPredicates(whereClause, discPredicate)}`;
 
   // Build the outer UPDATE with WHERE pk IN (subquery)
   params.push(...subqueryParams);
@@ -564,7 +549,7 @@ const partitionSetClauses = <E extends IEntity>(
   const rootSetClauses: Array<string> = [];
   const childSetClauses: Array<string> = [];
 
-  for (const [key, value] of Object.entries(update as Record<string, unknown>)) {
+  for (const [key, value] of suppliedUpdateEntries(update)) {
     const field = metadata.fields.find((f) => f.key === key);
     if (!field) continue;
     if (discriminatorColName && field.name === discriminatorColName) continue;
@@ -642,20 +627,6 @@ const throwNoUpdatableColumns = (
       debug: {
         updateKeys: Object.keys(update as Record<string, unknown>),
       },
-    },
-  );
-};
-
-const throwEmptyCriteria = (metadata: EntityMetadata, joined: boolean): never => {
-  throw new ProteusRepositoryError(
-    `updateMany: criteria must not be empty for entity "${metadata.entity.name}"`,
-    {
-      code: "invalid_query",
-      title: "Invalid Query",
-      details: joined
-        ? `updateMany on joined-inheritance entity "${metadata.entity.name}" was rejected because its criteria compiled to an empty WHERE clause, which would update every row.`
-        : `updateMany on "${metadata.entity.name}" was rejected because its criteria compiled to an empty WHERE clause, which would update every row.`,
-      data: { entity: metadata.entity.name },
     },
   );
 };

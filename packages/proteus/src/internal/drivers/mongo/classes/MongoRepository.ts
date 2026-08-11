@@ -10,7 +10,7 @@ import type {
   IProteusQueryBuilder,
 } from "../../../../interfaces/index.js";
 import type {
-  ClearOptions,
+  TruncateOptions,
   CursorOptions,
   FindOptions,
   UpsertOptions,
@@ -313,8 +313,8 @@ export class MongoRepository<
     return new MongoCursor<E>(mongoCursor, this.metadata, this.amphora);
   }
 
-  async clear(_options?: ClearOptions): Promise<void> {
-    guardAppendOnly(this.metadata, "clear");
+  async truncate(_options?: TruncateOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "truncate");
 
     const collectionName = resolveCollectionName(this.metadata);
     const collection = this.db.collection(collectionName);

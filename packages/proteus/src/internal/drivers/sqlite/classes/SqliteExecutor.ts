@@ -10,7 +10,6 @@ import type { SqliteQueryClient } from "../types/sqlite-query-client.js";
 import { OptimisticLockError } from "../../../errors/OptimisticLockError.js";
 import { SqliteExecutorError } from "../errors/SqliteExecutorError.js";
 import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug.js";
-import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
 import {
   compileDelete,
   compileDeleteExpired,
@@ -130,8 +129,6 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
-    guardEmptyCriteria(criteria, "delete", SqliteExecutorError);
-
     // For joined inheritance children, explicitly delete child table rows first.
     // This avoids orphan rows when FK CASCADE constraints are missing (e.g. synchronize: false).
     // When limit is set, skip the explicit child DELETE to avoid data corruption:
@@ -166,13 +163,11 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeSoftDelete(criteria: Condition<E>): Promise<void> {
-    guardEmptyCriteria(criteria, "soft delete", SqliteExecutorError);
     const { text, params } = compileSoftDelete(criteria, this.metadata, this.namespace);
     this.client.run(text, params);
   }
 
   async executeRestore(criteria: Condition<E>): Promise<void> {
-    guardEmptyCriteria(criteria, "restore", SqliteExecutorError);
     const { text, params } = compileRestore(criteria, this.metadata, this.namespace);
     this.client.run(text, params);
   }

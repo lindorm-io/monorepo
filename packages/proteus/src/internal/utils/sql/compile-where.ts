@@ -116,11 +116,13 @@ const guardObjectField = (field: MetaField | null, fieldKey: string): void => {
  */
 const malformedPayload = (
   operator: string,
-  fieldKey: string,
+  fieldKey: string | null,
   expected: string,
 ): never => {
   throw new ProteusError(
-    `Operator "${operator}" on field "${fieldKey}" requires ${expected}`,
+    fieldKey
+      ? `Operator "${operator}" on field "${fieldKey}" requires ${expected}`
+      : `Operator "${operator}" requires ${expected}`,
     {
       code: "invalid_operator_payload",
       title: "Invalid Operator Payload",
@@ -139,15 +141,15 @@ const malformedPayload = (
  * the row. A null OPERAND is not orderable: `$gte: null` asks for "greater than
  * or equal to nothing", so it is a malformed payload rather than a query.
  *
- * `undefined` is refused alongside it. The condition language reads `undefined`
- * as "not specified" and strips it, but that strip is only safe together with
- * the named-field empty-bag throw — until both land, refusing is the direction
- * that cannot turn a mistyped criterion into an unrestricted one.
+ * A top-level `undefined` operand is stripped before dispatch and never arrives
+ * here. One nested INSIDE a tuple — `$between: [1, undefined]` — is not: the
+ * tuple's shape is the payload, and a hole in it is malformed rather than
+ * unspecified.
  */
 const isAbsent = (operand: unknown): boolean => isNull(operand) || isUndefined(operand);
 
 const requireOrderable = (operator: string, fieldKey: string, operand: unknown): void => {
-  if (!isAbsent(operand)) return;
+  if (!isNull(operand)) return;
   malformedPayload(operator, fieldKey, "an orderable operand");
 };
 
@@ -210,14 +212,14 @@ const compileMembership = (
 };
 
 /**
- * A field-level `$and` / `$or` payload must be a NON-EMPTY array. An empty one
- * is an error rather than an identity element: omitting the key already spells
- * "no constraint", and it spells it the same way under either operator — where
- * `[]` would mean "everything" under `$and` and "nothing" under `$or`.
+ * An `$and` / `$or` payload must be a NON-EMPTY array. An empty one is an error
+ * rather than an identity element: omitting the key already spells "no
+ * constraint", and it spells it the same way under either operator — where `[]`
+ * would mean "everything" under `$and` and "nothing" under `$or`.
  */
 const requireMembers = (
   operator: string,
-  fieldKey: string,
+  fieldKey: string | null,
   operand: unknown,
 ): Array<unknown> => {
   if (!isArray<unknown>(operand)) {
@@ -236,11 +238,12 @@ const requireMembers = (
 /**
  * The non-`$` keys of an operator bag, which together form one nested
  * condition. Collected up front so `{ payload: { city, postcode } }` emits ONE
- * containment clause rather than one per key.
+ * containment clause rather than one per key. Takes the SUPPLIED entries, so a
+ * key whose value was `undefined` is not searched for as a literal `undefined`.
  */
-const collectNestedKeys = (ops: Record<string, unknown>): Dict => {
+const collectNestedKeys = (supplied: Array<[string, unknown]>): Dict => {
   const nested: Dict = {};
-  for (const [key, operand] of Object.entries(ops)) {
+  for (const [key, operand] of supplied) {
     if (key.startsWith("$")) continue;
     nested[key] = operand;
   }
@@ -313,20 +316,48 @@ export const compilePredicate = (
       fieldAliasOverrides,
     );
 
-  if (predicate.$and) {
-    parts.push(conjoin(predicate.$and.map(compileSub)));
+  // PRESENCE decides a logical operator applies, and `undefined` is not
+  // presence — it means "not specified". A truthiness test here read an EMPTY
+  // array as present and compiled `{ $and: [] }` to no clause at all, so
+  // `delete({ $and: [] })` ran `DELETE FROM t` (reproduced against sqlite).
+  if (!isUndefined(predicate.$and)) {
+    parts.push(
+      conjoin(
+        requireMembers(LogicalOperatorKey.And, null, predicate.$and).map(compileSub),
+      ),
+    );
   }
 
-  if (predicate.$or) {
-    parts.push(disjoin(predicate.$or.map(compileSub)));
+  if (!isUndefined(predicate.$or)) {
+    parts.push(
+      disjoin(requireMembers(LogicalOperatorKey.Or, null, predicate.$or).map(compileSub)),
+    );
   }
 
-  if (predicate.$not) {
+  if (!isUndefined(predicate.$not)) {
+    if (!isObject(predicate.$not)) {
+      throw new ProteusError(
+        `Operator "${LogicalOperatorKey.Not}" requires an object payload`,
+        {
+          code: "invalid_operator_payload",
+          title: "Invalid Operator Payload",
+          details:
+            "A criteria-level $not negates a whole sub-condition, so it takes a condition object. A payload the compiler cannot read used to be coerced or dropped.",
+          data: { operator: LogicalOperatorKey.Not },
+        },
+      );
+    }
     parts.push(negate(compileSub(predicate.$not)));
   }
 
   for (const [key, value] of Object.entries(predicate)) {
     if (isLogicalOperatorKey(key)) continue;
+
+    // `undefined` means "the key was not supplied", so the field is not
+    // constrained at all. It is NOT `null`, which asks for rows whose column IS
+    // null — reading the two as the same turned `delete({ name: undefined })`
+    // into a criterion nobody wrote.
+    if (isUndefined(value)) continue;
 
     // Embedded parent key expansion — must run BEFORE resolveColumnName
     // which would throw for parent keys like "address" that have no direct column.
@@ -336,9 +367,23 @@ export const compilePredicate = (
       isObjectLike(value) &&
       !hasPredicateOperator(value as Record<string, unknown>)
     ) {
-      for (const [childKey, childValue] of Object.entries(
-        value as Record<string, unknown>,
-      )) {
+      // The same strip and the same empty-bag rule a non-embedded column gets.
+      // Expansion is a DIFFERENT mechanism for the same semantic, so it must not
+      // be a second set of rules — falling through an empty bag here emitted no
+      // clause at all, which is the hole `{ label: {} }` used to be.
+      const suppliedChildren = Object.entries(value as Record<string, unknown>).filter(
+        ([, childValue]) => !isUndefined(childValue),
+      );
+
+      if (suppliedChildren.length === 0) {
+        malformedPayload(
+          "condition",
+          key,
+          "at least one constrained property — omit the key or pass undefined to place no constraint",
+        );
+      }
+
+      for (const [childKey, childValue] of suppliedChildren) {
         const childField = embeddedChildren.find((f) => f.key === `${key}.${childKey}`);
         if (!childField) continue;
         const effectiveChildAlias =
@@ -395,7 +440,15 @@ const compileFieldCondition = (
   fieldKey: string,
   dialect: SqlDialect,
 ): Array<CompiledCondition> => {
-  if (value === null || value === undefined) {
+  // `undefined` never reaches here as a FIELD's value — it means "not supplied"
+  // and is stripped where the field key is read. Reaching here means it is a
+  // MEMBER of a field-level `$and` / `$or`, where "not supplied" has no meaning
+  // and silently dropping it would change the member count of the combinator.
+  if (isUndefined(value)) {
+    return [malformedPayload("$and/$or", fieldKey, "a condition for every member")];
+  }
+
+  if (isNull(value)) {
     return [compiledClause(`${qualifiedCol} IS NULL`)];
   }
 
@@ -441,7 +494,30 @@ const compileOperator = (
   const compiled: Array<CompiledCondition> = [];
   let nestedEmitted = false;
 
-  for (const [key, operand] of Object.entries(ops)) {
+  // `undefined` is stripped BEFORE any shape is validated: it means "not
+  // specified", so it must never be able to trip a payload check. The strip and
+  // the empty-bag throw below are ONE change — stripping alone turns
+  // `{ x: { $eq: undefined } }` into an unconstrained field, which on a delete
+  // is a table wipe, and throwing alone leaves `$eq: undefined` compiling to
+  // `IS NULL` when the language says it was never specified.
+  const supplied = Object.entries(ops as Record<string, unknown>).filter(
+    ([, operand]) => !isUndefined(operand),
+  );
+
+  // Naming a field is a statement that you are constraining it; an empty
+  // operator bag contradicts that. Root `{}` is the opposite and stays
+  // legitimate — it names no field, so `find({})` still means "every row".
+  if (supplied.length === 0) {
+    return [
+      malformedPayload(
+        "condition",
+        fieldKey,
+        "at least one operator — omit the key or pass undefined to place no constraint",
+      ),
+    ];
+  }
+
+  for (const [key, operand] of supplied) {
     if (isConditionOperatorKey(key) || isLogicalOperatorKey(key)) {
       compiled.push(
         compileOperatorKey(qualifiedCol, key, operand, params, field, fieldKey, dialect),
@@ -471,7 +547,7 @@ const compileOperator = (
     guardObjectField(field, fieldKey);
     compiled.push(
       compiledClause(
-        dialect.compileHas(qualifiedCol, params, collectNestedKeys(ops), field),
+        dialect.compileHas(qualifiedCol, params, collectNestedKeys(supplied), field),
       ),
     );
     nestedEmitted = true;
@@ -491,7 +567,7 @@ const compileOperatorKey = (
 ): CompiledCondition => {
   switch (key) {
     case ConditionOperatorKey.Eq: {
-      if (operand === null || operand === undefined) {
+      if (isNull(operand)) {
         return compiledClause(`${qualifiedCol} IS NULL`);
       }
       params.push(operand);
@@ -499,7 +575,7 @@ const compileOperatorKey = (
     }
 
     case ConditionOperatorKey.Neq: {
-      if (operand === null || operand === undefined) {
+      if (isNull(operand)) {
         return compiledClause(`${qualifiedCol} IS NOT NULL`);
       }
       // NOT `<>`. SQL's inequality is three-valued: against a NULL column it is
@@ -724,4 +800,25 @@ const compileOperatorKey = (
       });
     }
   }
+};
+
+/**
+ * Attach FRAMEWORK predicates — a discriminator, a joined-inheritance join
+ * condition — to a compiled WHERE clause that may be EMPTY.
+ *
+ * Concatenating `${whereClause}${discClause}` was safe only while every
+ * destructive statement was guaranteed a non-empty WHERE. It no longer is:
+ * `deleteAll()` and `updateAll()` say "every row" on purpose, and `softDelete`
+ * / `restore` are no longer guarded at all — so a single-table-inheritance
+ * child would have compiled `DELETE FROM t  AND "kind" = ?`, which is not SQL.
+ */
+export const withPredicates = (
+  whereClause: string,
+  ...predicates: Array<string | null | undefined>
+): string => {
+  const extra = predicates.filter((predicate): predicate is string => Boolean(predicate));
+  if (extra.length === 0) return whereClause;
+
+  const joined = extra.join(" AND ");
+  return whereClause ? `${whereClause} AND ${joined}` : `WHERE ${joined}`;
 };

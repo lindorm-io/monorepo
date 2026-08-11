@@ -86,8 +86,8 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await repo.clear();
-  await softRepo.clear();
+  await repo.truncate();
+  await softRepo.truncate();
 });
 
 // ─── Not-supported raw methods ────────────────────────────────────────────────
@@ -357,7 +357,7 @@ describe("MemoryQueryBuilder aggregates", () => {
   });
 
   test("aggregates return null for empty result set", async () => {
-    await repo.clear();
+    await repo.truncate();
     expect(await source.queryBuilder(QbTestProduct).sum("price")).toBeNull();
     expect(await source.queryBuilder(QbTestProduct).average("price")).toBeNull();
     expect(await source.queryBuilder(QbTestProduct).minimum("price")).toBeNull();
@@ -365,7 +365,7 @@ describe("MemoryQueryBuilder aggregates", () => {
   });
 
   test("sum ignores null values", async () => {
-    await repo.clear();
+    await repo.truncate();
     await repo.insert(repo.create({ name: "WithNull", price: null, category: "agg" }));
     await repo.insert(repo.create({ name: "WithValue", price: 50, category: "agg" }));
 

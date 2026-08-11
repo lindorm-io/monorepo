@@ -300,12 +300,6 @@ exports[`compileFilter > decimal field comparisons > should use $expr + $toDoubl
 }
 `;
 
-exports[`compileFilter > empty and edge cases > should handle undefined value as null 1`] = `
-{
-  "name": null,
-}
-`;
-
 exports[`compileFilter > empty and edge cases > should return empty filter for empty criteria 1`] = `{}`;
 
 exports[`compileFilter > field name mapping > should use metadata name for mapped fields 1`] = `

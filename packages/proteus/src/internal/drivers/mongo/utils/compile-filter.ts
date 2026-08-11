@@ -1,7 +1,8 @@
-import { isObjectLike } from "@lindorm/is";
+import { isArray, isNull, isObject, isObjectLike, isUndefined } from "@lindorm/is";
 import type { Condition } from "@lindorm/match";
 import type { Filter, Document } from "mongodb";
 import type { Dict } from "@lindorm/types";
+import { ProteusError } from "../../../../errors/ProteusError.js";
 import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
@@ -29,6 +30,37 @@ const resolveMongoFieldName = (fieldKey: string, metadata: EntityMetadata): stri
 
 const findField = (fieldKey: string, metadata: EntityMetadata): MetaField | undefined => {
   return metadata.fields.find((f) => f.key === fieldKey);
+};
+
+/**
+ * An `$and` / `$or` payload must be a NON-EMPTY array. An empty one is an error
+ * rather than an identity element: omitting the key already spells "no
+ * constraint", and it spells it the same way under either operator — where `[]`
+ * would mean "everything" under `$and` and "nothing" under `$or`. MongoDB also
+ * rejects an empty one outright, so it could never reach the server.
+ */
+const requireMembers = (operator: string, payload: unknown): Array<unknown> => {
+  if (!isArray<unknown>(payload)) {
+    throw new ProteusError(`Operator "${operator}" requires an array`, {
+      code: "invalid_operator_payload",
+      title: "Invalid Operator Payload",
+      details: "The operator was given a payload of the wrong shape.",
+      data: { operator },
+    });
+  }
+  if (payload.length === 0) {
+    throw new ProteusError(
+      `Operator "${operator}" requires at least one member — omit the key to place no constraint`,
+      {
+        code: "invalid_operator_payload",
+        title: "Invalid Operator Payload",
+        details:
+          "An empty logical array is not an identity element. Omit the key, or pass undefined, to place no constraint.",
+        data: { operator },
+      },
+    );
+  }
+  return payload;
 };
 
 const isDecimalField = (field: MetaField | undefined): boolean => {
@@ -126,7 +158,7 @@ const compileOperator = (
       // `$has`, `$contained`) cannot pass through it. `$nor` also keeps
       // documents whose field is null or missing, which is the two-valued
       // negation the criteria language means.
-      return { $nor: [compileValue(mongoField, value, field)] };
+      return { $nor: [compileValue(mongoField, value, field, mongoField)] };
     }
 
     case "$regex": {
@@ -186,14 +218,21 @@ const compileValue = (
   mongoField: string,
   value: unknown,
   field: MetaField | undefined,
+  fieldKey: string,
 ): Filter<Document> => {
-  if (value === null || value === undefined) {
+  if (isNull(value)) {
     return { [mongoField]: null };
   }
 
   if (isObjectLike(value) && !(value instanceof Date) && !(value instanceof RegExp)) {
     const obj = value as Record<string, unknown>;
-    const keys = Object.keys(obj);
+
+    // `undefined` is stripped BEFORE any shape is read: it means "not
+    // specified". The strip and the empty-bag throw below are ONE change —
+    // stripping alone leaves a field unconstrained, which on a delete is a
+    // table wipe.
+    const supplied = Object.entries(obj).filter(([, operand]) => !isUndefined(operand));
+    const keys = supplied.map(([key]) => key);
 
     // Check if it's an operator object (all keys start with $)
     if (keys.length > 0 && keys.every((k) => k.startsWith("$"))) {
@@ -204,6 +243,22 @@ const compileValue = (
       // Multiple operators on same field -> $and
       const conditions = keys.map((k) => compileOperator(mongoField, k, obj[k], field));
       return { $and: conditions };
+    }
+
+    // Naming a field is a statement that you are constraining it; an empty
+    // operator bag contradicts that. Root `{}` is the opposite and stays
+    // legitimate — it names no field, so `find({})` still means every document.
+    if (keys.length === 0) {
+      throw new ProteusError(
+        `Condition on field "${fieldKey}" requires at least one operator`,
+        {
+          code: "invalid_operator_payload",
+          title: "Invalid Operator Payload",
+          details:
+            "A named field with an empty operator bag constrains nothing. Omit the key, or pass undefined, to place no constraint.",
+          data: { field: fieldKey },
+        },
+      );
     }
   }
 
@@ -232,17 +287,22 @@ export const compileFilter = <E extends Dict = Dict>(
   const andConditions: Array<Filter<Document>> = [];
 
   for (const [key, value] of Object.entries(criteria as Record<string, unknown>)) {
+    // `undefined` means "the key was not supplied", so the field is not
+    // constrained. It is NOT `null`, which asks for documents whose field IS
+    // null.
+    if (isUndefined(value)) continue;
+
     if (key === "$and") {
-      const subConditions = (value as Array<Condition<E>>).map((c) =>
-        compileFilter(c, metadata),
+      const subConditions = requireMembers(key, value).map((c) =>
+        compileFilter(c as Condition<E>, metadata),
       );
       andConditions.push({ $and: subConditions });
       continue;
     }
 
     if (key === "$or") {
-      const subConditions = (value as Array<Condition<E>>).map((c) =>
-        compileFilter(c, metadata),
+      const subConditions = requireMembers(key, value).map((c) =>
+        compileFilter(c as Condition<E>, metadata),
       );
       andConditions.push({ $or: subConditions });
       continue;
@@ -255,13 +315,22 @@ export const compileFilter = <E extends Dict = Dict>(
     // documented way to negate one. The FIELD-level `{ field: { $not: … } }` form
     // is a different operator and stays in `compileOperator`.
     if (key === "$not") {
+      if (!isObject(value)) {
+        throw new ProteusError(`Operator "${key}" requires an object payload`, {
+          code: "invalid_operator_payload",
+          title: "Invalid Operator Payload",
+          details:
+            "A criteria-level $not negates a whole sub-condition, so it takes a condition object.",
+          data: { operator: key },
+        });
+      }
       andConditions.push({ $nor: [compileFilter(value as Condition<E>, metadata)] });
       continue;
     }
 
     const mongoField = resolveMongoFieldName(key, metadata);
     const field = findField(key, metadata);
-    const compiled = compileValue(mongoField, value, field);
+    const compiled = compileValue(mongoField, value, field, key);
 
     // Merge compiled conditions. `$nor` joins the operator-keyed list: a
     // field-level `$not` compiles to one, and two of them in the same criteria

@@ -75,9 +75,11 @@ describe("compileUpdateMany", () => {
     ).toThrow(/no valid columns in update object/);
   });
 
-  test("should throw when criteria resolves to empty WHERE", () => {
-    expect(() => compileUpdateMany({} as any, { name: "Bob" }, metadata)).toThrow(
-      /criteria must not be empty/,
+  // Refusing "every row" is the repository's call, not the compiler's —
+  // `updateAll()` says it on purpose.
+  test("should compile an unfiltered UPDATE when the criteria are empty", () => {
+    expect(compileUpdateMany({} as any, { name: "Bob" }, metadata).text).not.toContain(
+      "WHERE",
     );
   });
 });

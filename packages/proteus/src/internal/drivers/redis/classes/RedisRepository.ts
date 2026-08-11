@@ -9,7 +9,7 @@ import type {
   IProteusQueryBuilder,
 } from "../../../../interfaces/index.js";
 import type {
-  ClearOptions,
+  TruncateOptions,
   CursorOptions,
   FindOptions,
   UpsertOptions,
@@ -266,8 +266,8 @@ export class RedisRepository<
     return new RedisCursor<E>(entities);
   }
 
-  async clear(_options?: ClearOptions): Promise<void> {
-    guardAppendOnly(this.metadata, "clear");
+  async truncate(_options?: TruncateOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "truncate");
 
     // NOTE: Auto-increment counter keys ({ns:}seq:*) are NOT deleted by clear() —
     // counters persist across clear() calls for monotonic correctness.

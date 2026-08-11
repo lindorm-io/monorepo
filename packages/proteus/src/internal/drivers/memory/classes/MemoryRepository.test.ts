@@ -204,13 +204,13 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await categoryRepo.clear();
-  await itemRepo.clear();
-  await softRepo.clear();
-  await readonlyRepo.clear();
-  await lindormIdRepo.clear();
-  await hideRepo.clear();
-  await multiOnlyRepo.clear();
+  await categoryRepo.truncate();
+  await itemRepo.truncate();
+  await softRepo.truncate();
+  await readonlyRepo.truncate();
+  await lindormIdRepo.truncate();
+  await hideRepo.truncate();
+  await multiOnlyRepo.truncate();
 });
 
 // ─── create ───────────────────────────────────────────────────────────────────
@@ -719,14 +719,14 @@ describe("MemoryRepository.clear", () => {
     await itemRepo.insert(itemRepo.create({ label: "P1" }));
     await itemRepo.insert(itemRepo.create({ label: "P2" }));
 
-    await itemRepo.clear();
+    await itemRepo.truncate();
 
     const results = await itemRepo.find();
     expect(results).toHaveLength(0);
   });
 
   test("no-op when table is already empty", async () => {
-    await expect(itemRepo.clear()).resolves.toBeUndefined();
+    await expect(itemRepo.truncate()).resolves.toBeUndefined();
   });
 });
 

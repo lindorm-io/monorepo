@@ -831,7 +831,7 @@ export const inheritanceSingleTableSuite = (
       await carRepo.insert({ type: "car", make: "ClearMe2", seatCount: 5 });
       await truckRepo.insert({ type: "truck", make: "Survivor", payloadCapacity: 10.0 });
 
-      await carRepo.clear();
+      await carRepo.truncate();
 
       // All cars must be gone
       const cars = await carRepo.find();
@@ -1741,7 +1741,7 @@ export const inheritanceJoinedSuite = (
       await dogRepo.insert({ kind: "dog", name: "ClearDog2", breed: "Pug" });
       await catRepo.insert({ kind: "cat", name: "SurvivorCat", isIndoor: true });
 
-      await dogRepo.clear();
+      await dogRepo.truncate();
 
       // All dogs must be gone
       const dogs = await dogRepo.find();

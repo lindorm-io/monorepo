@@ -141,10 +141,10 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await nullSortRepo.clear();
-  await filteredRepo.clear();
-  await scopeRepo.clear();
-  await expiryRepo.clear();
+  await nullSortRepo.truncate();
+  await filteredRepo.truncate();
+  await scopeRepo.truncate();
+  await expiryRepo.truncate();
 });
 
 // ─── FIX-3: Null sort ordering ────────────────────────────────────────────────

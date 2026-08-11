@@ -168,14 +168,6 @@ describe("PostgresExecutor", () => {
 
       expect(queries[0].sql).toContain("DELETE FROM");
     });
-
-    test("should throw on empty criteria", async () => {
-      const { client } = createMockClient();
-      const executor = new PostgresExecutor(client, metadata);
-      await expect(executor.executeDelete({} as any)).rejects.toThrow(
-        "requires non-empty criteria",
-      );
-    });
   });
 
   describe("executeSoftDelete", () => {
@@ -187,14 +179,6 @@ describe("PostgresExecutor", () => {
       expect(queries[0].sql).toContain("SET");
       expect(queries[0].sql).toContain("NOW()");
     });
-
-    test("should throw on empty criteria", async () => {
-      const { client } = createMockClient();
-      const executor = new PostgresExecutor(client, metadata);
-      await expect(executor.executeSoftDelete({} as any)).rejects.toThrow(
-        "requires non-empty criteria",
-      );
-    });
   });
 
   describe("executeRestore", () => {
@@ -204,14 +188,6 @@ describe("PostgresExecutor", () => {
       await executor.executeRestore({ id: "abc-123" } as any);
 
       expect(queries[0].sql).toContain("NULL");
-    });
-
-    test("should throw on empty criteria", async () => {
-      const { client } = createMockClient();
-      const executor = new PostgresExecutor(client, metadata);
-      await expect(executor.executeRestore({} as any)).rejects.toThrow(
-        "requires non-empty criteria",
-      );
     });
   });
 

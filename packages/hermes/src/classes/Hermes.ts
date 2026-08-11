@@ -453,7 +453,7 @@ export class Hermes implements IHermes {
 
       // 3. Truncate the view table
       const viewRepo = viewSource.repository(view.entity);
-      await viewRepo.clear();
+      await viewRepo.truncate();
 
       // 4. Delete related causation records from the source that stores them
       const causationSource = viewSource === this.proteus ? this.proteus : viewSource;

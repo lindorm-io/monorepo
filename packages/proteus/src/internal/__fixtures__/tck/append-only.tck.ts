@@ -54,6 +54,29 @@ export const appendOnlySuite = (
       ).rejects.toMatchObject({ code: APPEND_ONLY_CODE });
     });
 
+    // The explicit escape hatches skip the unrestricted-criteria guard, so they
+    // are exactly where an append-only entity could have been wiped by a method
+    // that never mentions criteria at all.
+    test("deleteAll refuses an append-only entity", async () => {
+      const repo = getHandle().repository(TckAppendOnly);
+
+      await expect(repo.deleteAll()).rejects.toMatchObject({ code: APPEND_ONLY_CODE });
+    });
+
+    test("updateAll refuses an append-only entity", async () => {
+      const repo = getHandle().repository(TckAppendOnly);
+
+      await expect(repo.updateAll({ name: "Changed" })).rejects.toMatchObject({
+        code: APPEND_ONLY_CODE,
+      });
+    });
+
+    test("truncate refuses an append-only entity", async () => {
+      const repo = getHandle().repository(TckAppendOnly);
+
+      await expect(repo.truncate()).rejects.toMatchObject({ code: APPEND_ONLY_CODE });
+    });
+
     // An append-only entity cannot carry a @DeleteDateField — metadata build
     // rejects the pair — so these two can never mutate anything either way.
     // What is at stake is WHICH refusal comes back: append-only is the reason
@@ -82,6 +105,14 @@ export const appendOnlySuite = (
       await expect(
         repo.updateMany({ name: "Anything" }, { name: "Changed" }),
       ).rejects.toMatchObject({ code: "update_many_not_supported" });
+    });
+
+    test("updateAll refuses a versioned entity for the same reason", async () => {
+      const repo = getHandle().repository(entities.TckVersionKeyed);
+
+      await expect(repo.updateAll({ name: "Changed" })).rejects.toMatchObject({
+        code: "update_many_not_supported",
+      });
     });
 
     test("softDelete still refuses an entity with no delete date", async () => {

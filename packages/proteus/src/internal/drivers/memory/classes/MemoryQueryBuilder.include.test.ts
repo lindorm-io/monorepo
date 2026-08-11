@@ -119,9 +119,9 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await books.clear();
-  await tags.clear();
-  await authors.clear();
+  await books.truncate();
+  await tags.truncate();
+  await authors.truncate();
 
   written = await authors.insert({ name: "Written" });
   unwritten = await authors.insert({ name: "Unwritten" });

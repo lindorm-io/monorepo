@@ -378,7 +378,7 @@ describe("Hermes", () => {
       await proteus.disconnect();
     });
 
-    // EventRecord is @AppendOnly so repo.clear() is blocked.
+    // EventRecord is @AppendOnly so repo.truncate() is blocked.
     // Disconnect + reconnect the memory driver to reset all tables instead.
     const resetStore = async (): Promise<void> => {
       await proteus.disconnect();
@@ -899,7 +899,7 @@ describe("Hermes", () => {
       await proteus.disconnect();
     });
 
-    // EventRecord is @AppendOnly so repo.clear() is blocked.
+    // EventRecord is @AppendOnly so repo.truncate() is blocked.
     // Disconnect + reconnect the memory driver to reset all tables instead.
     const resetStore = async (): Promise<void> => {
       await proteus.disconnect();

@@ -52,7 +52,7 @@ class BigIntPkChild {
 
 // ─── Setup ────────────────────────────────────────────────────────────────────
 //
-// A FRESH source per test: MemoryRepository.clear() does NOT reset the driver's
+// A FRESH source per test: MemoryRepository.truncate() does NOT reset the driver's
 // auto-increment counters, so a new source is the only way to guarantee the
 // counter starts at 0 and the minted ids are deterministically 1n, 2n, …
 

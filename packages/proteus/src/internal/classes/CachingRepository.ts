@@ -11,7 +11,7 @@ import type {
   IProteusRepository,
 } from "../../interfaces/index.js";
 import type {
-  ClearOptions,
+  TruncateOptions,
   CursorOptions,
   DeleteOptions,
   FindOptions,
@@ -338,6 +338,11 @@ export class CachingRepository<
     await this.invalidate();
   }
 
+  async deleteAll(options?: DeleteOptions): Promise<void> {
+    await this.inner.deleteAll(options);
+    await this.invalidate();
+  }
+
   async softDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     await this.inner.softDelete(criteria, options);
     await this.invalidate();
@@ -350,6 +355,11 @@ export class CachingRepository<
 
   async updateMany(criteria: Condition<E>, update: DeepPartial<E>): Promise<void> {
     await this.inner.updateMany(criteria, update);
+    await this.invalidate();
+  }
+
+  async updateAll(update: DeepPartial<E>): Promise<void> {
+    await this.inner.updateAll(update);
     await this.invalidate();
   }
 
@@ -376,8 +386,8 @@ export class CachingRepository<
     await this.invalidate();
   }
 
-  async clear(options?: ClearOptions): Promise<void> {
-    await this.inner.clear(options);
+  async truncate(options?: TruncateOptions): Promise<void> {
+    await this.inner.truncate(options);
     await this.invalidate();
   }
 

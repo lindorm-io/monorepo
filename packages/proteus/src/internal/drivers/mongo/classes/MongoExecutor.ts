@@ -23,7 +23,7 @@ import { MongoDriverError } from "../errors/MongoDriverError.js";
 import { MongoDuplicateKeyError } from "../errors/MongoDuplicateKeyError.js";
 import { MongoOptimisticLockError } from "../errors/MongoOptimisticLockError.js";
 import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug.js";
-import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
+import { suppliedUpdateEntries } from "../../../utils/repository/supplied-update-entries.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
 import { resolveCollectionName } from "../utils/resolve-collection-name.js";
 
@@ -232,7 +232,6 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
     this.checkSignal();
-    guardEmptyCriteria(criteria, "delete", MongoDriverError);
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const collection = this.db.collection(this.collectionName);
@@ -272,7 +271,6 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       );
     }
 
-    guardEmptyCriteria(criteria, "soft delete", MongoDriverError);
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const collection = this.db.collection(this.collectionName);
@@ -305,7 +303,6 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       );
     }
 
-    guardEmptyCriteria(criteria, "restore", MongoDriverError);
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const collection = this.db.collection(this.collectionName);
@@ -617,7 +614,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
     const setFields: Record<string, unknown> = {};
 
-    for (const [fieldKey, value] of Object.entries(update as Record<string, unknown>)) {
+    for (const [fieldKey, value] of suppliedUpdateEntries(update)) {
       const field = this.metadata.fields.find((f) => f.key === fieldKey);
       if (this.metadata.primaryKeys.includes(fieldKey)) continue; // Can't update PKs
 

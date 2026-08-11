@@ -95,8 +95,8 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await repo.clear();
-  await scopedRepo.clear();
+  await repo.truncate();
+  await scopedRepo.truncate();
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────

@@ -64,7 +64,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await repo.clear();
+  await repo.truncate();
 });
 
 describe("memory driver — non-nullable array default", () => {

@@ -36,7 +36,7 @@ import { MemoryOptimisticLockError } from "../errors/MemoryOptimisticLockError.j
 import { MemoryDriverError } from "../errors/MemoryDriverError.js";
 import { applyOrdering } from "../../../utils/query/apply-ordering.js";
 import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug.js";
-import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
+import { suppliedUpdateEntries } from "../../../utils/repository/supplied-update-entries.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
 import { applyAutoIncrement } from "../utils/memory-auto-increment.js";
 import { checkUniqueConstraints } from "../utils/memory-unique-check.js";
@@ -269,7 +269,6 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeDelete(criteria: Condition<E>, options?: DeleteOptions): Promise<void> {
-    guardEmptyCriteria(criteria, "delete", MemoryDriverError);
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const table = this.getTable();
@@ -324,7 +323,6 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeSoftDelete(criteria: Condition<E>): Promise<void> {
-    guardEmptyCriteria(criteria, "soft delete", MemoryDriverError);
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const table = this.getTable();
@@ -342,7 +340,6 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   }
 
   async executeRestore(criteria: Condition<E>): Promise<void> {
-    guardEmptyCriteria(criteria, "restore", MemoryDriverError);
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const table = this.getTable();
@@ -646,7 +643,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     for (const row of rows) {
       if (matchesRow(row, flatCriteria)) {
         const staged: Dict = {};
-        for (const [key, value] of Object.entries(update as Record<string, unknown>)) {
+        for (const [key, value] of suppliedUpdateEntries(update)) {
           const field = this.metadata.fields.find((f) => f.key === key);
           // @TypedJson: stage both halves. Overwriting the data half alone would
           // leave the previous sidecar behind, and fresh data joined against

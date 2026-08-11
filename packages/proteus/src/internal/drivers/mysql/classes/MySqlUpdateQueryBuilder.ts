@@ -1,3 +1,4 @@
+import { withPredicates } from "../../../utils/sql/compile-where.js";
 import type { IAmphora } from "@lindorm/amphora";
 import type { Condition } from "@lindorm/match";
 import type { DeepPartial, Dict } from "@lindorm/types";
@@ -168,9 +169,8 @@ export class MySqlUpdateQueryBuilder<
 
     // Inject discriminator predicate for single-table inheritance children
     const discPredicate = buildDiscriminatorPredicateUnqualified(this.metadata, params);
-    const discClause = discPredicate ? ` AND ${discPredicate}` : "";
 
-    const text = `UPDATE ${tableName} SET ${setClauses.join(", ")} ${whereClause}${discClause}`;
+    const text = `UPDATE ${tableName} SET ${setClauses.join(", ")} ${withPredicates(whereClause, discPredicate)}`;
 
     const result = await this.client.query(text, params);
 

@@ -519,12 +519,15 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
     );
   });
 
-  test("should refuse a $not payload of undefined", () => {
+  // `undefined` is stripped BEFORE any shape is read, so this is not a
+  // malformed `$not` — it is a field named with nothing left to constrain it,
+  // which is the degenerate shape an empty operator bag already is.
+  test("should refuse a $not payload of undefined as an unconstrained field", () => {
     const entries: Array<PredicateEntry<any>> = [
       { predicate: { published: { $not: undefined } }, conjunction: "and" },
     ];
     expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
-      /requires an object payload/,
+      /requires at least one operator/,
     );
   });
 
@@ -563,14 +566,13 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
     expect(params).toEqual(["Alice"]);
   });
 
-  test("should compile an empty field-level $not to FALSE", () => {
+  test("should refuse an empty field-level $not payload", () => {
     const entries: Array<PredicateEntry<any>> = [
       { predicate: { name: { $not: {} } }, conjunction: "and" },
     ];
-    const params: Array<unknown> = [];
-    const result = compileWhere(entries, metadata, "t0", params, dialect);
-    expect(result).toMatchSnapshot();
-    expect(params).toEqual([]);
+    expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+      /requires at least one operator/,
+    );
   });
 
   test("should compile a field-level $not over a no-op sub-clause to FALSE", () => {
@@ -696,8 +698,6 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
       ["$gte", { age: { $gte: null } }],
       ["$lt", { age: { $lt: null } }],
       ["$lte", { age: { $lte: null } }],
-      ["$gt undefined", { age: { $gt: undefined } }],
-      ["$lte undefined", { age: { $lte: undefined } }],
     ])(
       "should refuse %s rather than bind an unorderable operand",
       (_label, predicate) => {
@@ -710,7 +710,6 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
 
     test.each([
       ["a null payload", { age: { $between: null } }],
-      ["an undefined payload", { age: { $between: undefined } }],
       ["a null lower bound", { age: { $between: [null, 65] } }],
       ["a null upper bound", { age: { $between: [18, null] } }],
       ["an undefined bound", { age: { $between: [18, undefined] } }],
@@ -723,13 +722,43 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
 
     test.each([
       ["a null payload", { age: { $mod: null } }],
-      ["an undefined payload", { age: { $mod: undefined } }],
       ["a null divisor", { age: { $mod: [null, 0] } }],
       ["a null remainder", { age: { $mod: [3, null] } }],
     ])("should refuse a $mod with %s", (_label, predicate) => {
       const entries: Array<PredicateEntry<any>> = [{ predicate, conjunction: "and" }];
       expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
         /requires a divisor and a remainder/,
+      );
+    });
+
+    // An `undefined` OPERAND is a different thing from a null one: it means the
+    // operand was never supplied, so the operator is stripped rather than
+    // refused for its shape. What is left is a field named with nothing
+    // constraining it, and that is what the throw says.
+    test.each([
+      ["$gt", { age: { $gt: undefined } }],
+      ["$lte", { age: { $lte: undefined } }],
+      ["$between", { age: { $between: undefined } }],
+      ["$mod", { age: { $mod: undefined } }],
+      ["$regex", { name: { $regex: undefined } }],
+    ])(
+      "should strip an undefined %s operand and refuse the empty bag",
+      (_l, predicate) => {
+        const entries: Array<PredicateEntry<any>> = [{ predicate, conjunction: "and" }];
+        expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+          /requires at least one operator/,
+        );
+      },
+    );
+
+    // A hole INSIDE a tuple is still malformed: the tuple's shape is the
+    // payload, so a missing bound is not "unspecified", it is wrong.
+    test("should still refuse an undefined bound inside a $between tuple", () => {
+      const entries: Array<PredicateEntry<any>> = [
+        { predicate: { age: { $between: [18, undefined] } }, conjunction: "and" },
+      ];
+      expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
+        /requires two orderable bounds/,
       );
     });
 
@@ -900,18 +929,40 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
       expect(params).toEqual(["Alice"]);
     });
 
-    test("should compile an empty $and to always-true", () => {
-      expect(compilePredicate({ $and: [] }, metadata, "t0", [], dialect)).toEqual({
-        kind: "always-true",
-      });
+    // `{ $and: [] }` compiled to NO CLAUSE, so `delete({ $and: [] })` ran
+    // `DELETE FROM t` — reproduced against a real sqlite database, three rows in
+    // and zero out. `[]` is not an identity element: omitting the key already
+    // spells "no constraint", and spells it the same way under either operator.
+    test.each([["$and"], ["$or"]])("should refuse an empty %s", (operator) => {
+      expect(() =>
+        compilePredicate({ [operator]: [] }, metadata, "t0", [], dialect),
+      ).toThrow(/requires at least one member/);
     });
 
-    // `$or: []` is the empty disjunction, which nothing satisfies. It used to
-    // compile to no clause at all and therefore matched every row.
-    test("should compile an empty $or to always-false", () => {
-      expect(compilePredicate({ $or: [] }, metadata, "t0", [], dialect)).toEqual({
-        kind: "always-false",
-      });
+    test.each([["$and"], ["$or"]])("should refuse a non-array %s", (operator) => {
+      expect(() =>
+        compilePredicate({ [operator]: { name: "Alice" } }, metadata, "t0", [], dialect),
+      ).toThrow(/requires an array/);
+    });
+
+    test("should refuse a non-object criteria-level $not", () => {
+      expect(() =>
+        compilePredicate({ $not: "Alice" } as any, metadata, "t0", [], dialect),
+      ).toThrow(/requires an object payload/);
+    });
+
+    // `undefined` is "not supplied", so the key is not there at all — NOT a
+    // request for rows whose column is null, which is what it used to compile to.
+    test("should ignore a criteria key whose value is undefined", () => {
+      expect(
+        compilePredicate({ name: undefined } as any, metadata, "t0", [], dialect),
+      ).toEqual({ kind: "always-true" });
+    });
+
+    test("should refuse a named field with an empty operator bag", () => {
+      expect(() =>
+        compilePredicate({ name: {} } as any, metadata, "t0", [], dialect),
+      ).toThrow(/requires at least one operator/);
     });
 
     test("should flip the constant states through $not", () => {
@@ -957,16 +1008,6 @@ describe.each(dialects)("compileWhere [%s]", (_name, dialect) => {
 
       expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
         /Operator "\$regex" on field "name" requires a RegExp/,
-      );
-    });
-
-    test("should refuse a $regex payload of undefined rather than matching /undefined/", () => {
-      const entries: Array<PredicateEntry<any>> = [
-        { predicate: { name: { $regex: undefined } }, conjunction: "and" },
-      ];
-
-      expect(() => compileWhere(entries, metadata, "t0", [], dialect)).toThrow(
-        /requires a RegExp/,
       );
     });
 
