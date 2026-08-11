@@ -44,6 +44,38 @@ describe("validateProfileClaims", () => {
     ).toThrow(AegisDomainError);
   });
 
+  // The CODE, not just the class. A profile-policy failure has its own code on
+  // both mint and verify, so `jwt_claims_invalid` means one thing only: the
+  // CALLER's assert matchers failed. Pinning it here is what stops the two
+  // drifting back together — every other test in this file asserts the error
+  // class alone, which a rename passes straight through.
+  test("throws profile_policy_invalid, carrying the failing claim entries", () => {
+    const error = (() => {
+      try {
+        validateProfileClaims(
+          accessTokenProfile,
+          {
+            issuer: "https://test.lindorm.io/",
+            audience: ["https://a", "https://b"],
+            issuedAt: d(100),
+            expiresAt: d(200),
+          },
+          { algorithm: "ES512" },
+        );
+        return undefined;
+      } catch (err) {
+        return err as AegisDomainError;
+      }
+    })();
+
+    expect(error?.code).toBe("profile_policy_invalid");
+    // `data.invalid` on THIS code is the entry shape ({ key, message }), never
+    // the bare key list the matcher tier publishes under jwt_claims_invalid.
+    expect(error?.data.invalid).toEqual([
+      { key: "audience", message: expect.any(String) },
+    ]);
+  });
+
   test("throws when the issuer is not a URI (iss-uri flat predicate)", () => {
     // iss-uri is a FLAT `rules` predicate (`{ issuer: { $regex } }`).
     expect(() =>

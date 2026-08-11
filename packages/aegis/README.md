@@ -526,7 +526,9 @@ await aegis.mint("access_token", {
 
 A name that is not a built-in — a profile registered at runtime with `registerProfile` — falls back to the open `SignContent` vocabulary, so custom profiles keep working unconstrained.
 
-**Direction (`use`).** A profile declares which side it is used on — `"mint"`, `"verify"`, or `"both"` — ONCE, on the profile itself rather than a marker per policy field. `forbidden`, `algClass`, `rules` and `validate` then apply on whichever side the profile is used, the same mint/verify symmetry the verification floor already keeps for `required`.
+**Direction (`use`).** A profile declares which side it is used on — `"mint"`, `"verify"`, or `"both"` — ONCE, on the profile itself rather than a marker per policy field. `forbidden`, `algClass`, `rules` and `validate` then apply on whichever side the profile is used, the same mint/verify symmetry the verification floor already keeps for `required`. A `rules` or `validate` failure raises `profile_policy_invalid`, on both sides and both wires; its `data.invalid` is a list of `{ key, message }` entries. (That code is distinct from `jwt_claims_invalid`, which means the CALLER's `assert` matchers failed and lists bare claim keys.)
+
+⚠ `requiredWhen` and `atLeastOneOf` are the exception and stay MINT-only: their conditions read the `SignContext`, which holds facts only the issuer has — `id_token`'s asks whether an access token was co-issued, which a verifier cannot know from the token in front of it.
 
 `use` is optional when you write a profile and resolves to `"both"`, so every built-in and every `registerProfile` call behaves exactly as before; only a deliberate narrowing changes anything. `mint` refuses a `"verify"` profile with `jwt_profile_not_mintable`, profiled `verify` refuses a `"mint"` one with `jwt_profile_not_verifiable` — and the narrowing is enforced by the compiler too: a verify-only name resolves to `never` as `mint`'s content type, so the call site does not typecheck either.
 

@@ -48,10 +48,10 @@ export const enforceProfilePolicy = (
 
   if (invalid.length > 0) {
     throw new AegisDomainError("Invalid token", {
-      code: "jwt_claims_invalid",
+      code: "profile_policy_invalid",
       data: { invalid },
       debug: { invalid, profile: profile.name },
-      title: "JWT Claims Invalid",
+      title: "Profile Policy Invalid",
       details:
         "The assembled claims do not satisfy the profile's required/forbidden/conditional rules.",
     });

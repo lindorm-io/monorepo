@@ -1,5 +1,6 @@
 import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { importJWK, SignJWT } from "jose";
 import type { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
@@ -142,6 +143,132 @@ describe("Aegis — JOSE/COSE wire parity", () => {
       await expect(
         aegis.verify(cwt.token, { tokenId: { $exists: false } }),
       ).rejects.toMatchObject({ code: "cwt_claims_invalid" });
+    });
+  });
+
+  /**
+   * A profile's `rules` and `validate` are its STRUCTURAL policy, and the
+   * profile type says all its policy fields "apply on whichever side the profile
+   * is used". They ran at mint only.
+   *
+   * `external_access_token` is the profile that makes this matter: it is
+   * `use: "verify"`, so its policy block had never executed on ANY path — the
+   * profile written specifically to police a token from an issuer we do not
+   * control was the one whose policy was dead.
+   *
+   * Every token here is built OUTSIDE aegis's mint (signed with `jose`, or via
+   * the raw passthrough namespace for COSE), because a token aegis minted would
+   * already have passed the very rules under test.
+   */
+  describe("profile rules + validate on verify", () => {
+    const RESOURCE = "https://rs.lindorm.io/";
+    const NOT_A_URI = "acme-corp-not-a-uri";
+    const now = Math.floor(new Date("2024-01-01T08:00:00.000Z").getTime() / 1000);
+
+    // Both raw namespaces are PASSTHROUGHS — they sign the payload verbatim in
+    // its own wire spelling. That is why the token id is written `jti` for JOSE
+    // and `cti` for COSE (RFC 8392): the identical domain claim, spelled per
+    // wire, which is precisely the divergence these tests exist to police.
+    const signJose = async (claims: Record<string, unknown>): Promise<string> => {
+      const key = await importJWK(
+        TEST_EC_KEY_SIG.export("jwk") as never,
+        TEST_EC_KEY_SIG.algorithm,
+      );
+
+      return new SignJWT({ ...claims, jti: "token-1" })
+        .setProtectedHeader({ alg: TEST_EC_KEY_SIG.algorithm, kid: TEST_EC_KEY_SIG.id })
+        .sign(key);
+    };
+
+    const signCose = async (claims: Record<string, unknown>): Promise<string> =>
+      (await aegis.cwt.sign({ ...claims, cti: "token-1" })).token;
+
+    // `rules` — ISSUER_IS_URI. A third-party token whose `iss` is a bare
+    // identifier rather than a URI must not verify under a profile that demands
+    // one.
+    test("should enforce profile rules on both wires", async () => {
+      const claims = {
+        iss: NOT_A_URI,
+        sub: "user-1",
+        aud: [RESOURCE],
+        exp: now + 3600,
+        iat: now,
+      };
+
+      await expect(
+        aegis.verify("external_access_token", await signJose(claims), undefined, {
+          audience: RESOURCE,
+        }),
+      ).rejects.toMatchObject({ code: "profile_policy_invalid" });
+
+      await expect(
+        aegis.verify("external_access_token", await signCose(claims), undefined, {
+          audience: RESOURCE,
+        }),
+      ).rejects.toMatchObject({ code: "profile_policy_invalid" });
+    });
+
+    // `validate` — crossField. An envelope that expires BEFORE it was issued is
+    // incoherent whatever else is true of it (RFC 7519 §4.1.4/§4.1.6).
+    //
+    // `verifyIssuedAt: false` lifts the kit's iat upper bound so the structural
+    // rule is what rejects the token rather than the temporal range check —
+    // that option is honoured identically on both wires, so the two sides stay
+    // comparable.
+    //
+    // ⚠ cnfShape and actChainShape would be the more obvious `validate` rules to
+    // test, and neither can be reached from here: the read-side extractor
+    // DISCARDS a malformed `cnf`/`act` before any rule sees it, and the COSE
+    // encoder refuses to emit one at all. See the note in the findings file —
+    // wiring `validate` in makes the rule live, but most of its inputs are
+    // sanitised upstream.
+    test("should enforce profile validate on both wires", async () => {
+      const claims = {
+        iss: ISSUER,
+        sub: "user-1",
+        aud: [RESOURCE],
+        exp: now + 3600,
+        iat: now + 7200,
+      };
+
+      await expect(
+        aegis.verify("external_access_token", await signJose(claims), undefined, {
+          audience: RESOURCE,
+          verifyIssuedAt: false,
+        }),
+      ).rejects.toMatchObject({ code: "profile_policy_invalid" });
+
+      await expect(
+        aegis.verify("external_access_token", await signCose(claims), undefined, {
+          audience: RESOURCE,
+          verifyIssuedAt: false,
+        }),
+      ).rejects.toMatchObject({ code: "profile_policy_invalid" });
+    });
+
+    // The control: the same shape, conformant, must still verify on both wires.
+    // Without this the pair above would pass just as well if the profile
+    // rejected everything.
+    test("should accept a policy-conformant token on both wires", async () => {
+      const claims = {
+        iss: ISSUER,
+        sub: "user-1",
+        aud: [RESOURCE],
+        exp: now + 3600,
+        iat: now,
+      };
+
+      await expect(
+        aegis.verify("external_access_token", await signJose(claims), undefined, {
+          audience: RESOURCE,
+        }),
+      ).resolves.toMatchObject({ format: "jwt" });
+
+      await expect(
+        aegis.verify("external_access_token", await signCose(claims), undefined, {
+          audience: RESOURCE,
+        }),
+      ).resolves.toMatchObject({ format: "cwt" });
     });
   });
 });

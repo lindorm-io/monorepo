@@ -2,6 +2,7 @@ import { isArray } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
 import type { TokenProfile } from "../../types/index.js";
+import { applyProfilePolicy } from "./apply-profile-policy.js";
 import { algPermitted } from "./rules/alg-permitted.js";
 
 export type VerifyFloorInput = {
@@ -196,6 +197,28 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
       title: "JWT Forbidden Claims Present",
       details:
         "The token carries claims the profile being verified forbids, so it is not a token of that kind.",
+    });
+  }
+
+  // LAST, because it is the most specific: a claim that is absent should report
+  // as missing rather than as a rule it could not satisfy.
+  //
+  // `rules` and `validate` are the same policy mint applies, and they belong
+  // here for the same reason `forbidden` does — a profile that verifies tokens
+  // minted elsewhere gets NOTHING from a mint-time-only check. The profile that
+  // proves it is `external_access_token`: `use: "verify"`, so before this its
+  // `ISSUER_IS_URI` rule and its cnf/act structural checks had never run on any
+  // path at all.
+  const failed = applyProfilePolicy(profile, payload);
+
+  if (failed.length > 0) {
+    throw new AegisDomainError("Invalid token", {
+      code: "profile_policy_invalid",
+      data: { invalid: failed },
+      debug: { invalid: failed, profile: profile.name },
+      title: "Profile Policy Invalid",
+      details:
+        "The token's claims do not satisfy the structural rules the profile being verified requires.",
     });
   }
 };

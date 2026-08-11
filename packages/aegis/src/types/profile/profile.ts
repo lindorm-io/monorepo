@@ -71,6 +71,11 @@ export type TokenProfileTyp =
  * be four things to keep in agreement, and the question they would answer is
  * the same question every time.
  *
+ * ⚠ `requiredWhen` and `atLeastOneOf` are the exception, and MINT-ONLY on
+ * purpose: their conditions read the {@link SignContext}, which holds facts only
+ * the issuer has. `id_token`'s asks whether an access token was co-issued — not
+ * something a verifier can determine from the token in front of it.
+ *
  * - `"both"` (the default) — mint and verify, the mint/verify symmetry the
  *   verification floor already documents for `required`.
  * - `"verify"` — the profile exists to check ANOTHER issuer's token
