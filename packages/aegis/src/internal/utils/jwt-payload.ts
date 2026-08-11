@@ -11,10 +11,8 @@ import type {
   SignedToken,
   TokenFormatTag,
 } from "../../types/index.js";
-import { joseToDomain } from "../claims/translate.js";
+import { joseToBuckets } from "../claims/resolve-domain-buckets.js";
 import type { DomainClaims } from "./extract-claims.js";
-import { extractAegisProfile } from "./extract-aegis-profile.js";
-import { extractSensitiveClaims } from "./extract-sensitive-claims.js";
 
 type DecodeClaims<C extends Dict = Dict> = AegisClaimsWire & C;
 
@@ -103,25 +101,20 @@ export const buildDomainClaims = <C extends Dict = Dict>(
     });
   }
 
-  // The ONE `jose -> domain` translator (registry-complete): registered claims
-  // resolve to their domain names, unregistered custom claims flip snake_case ->
-  // camelCase into `custom` (R18).
-  const { claims: domainAll, custom } = joseToDomain(wire);
+  // The ONE `jose -> domain` resolution, all the way to the four buckets — the
+  // same step `Aegis.toDomain` runs. Registered claims resolve to their domain
+  // names, unregistered custom claims flip snake_case -> camelCase into `custom`
+  // (R18), and the profile / sensitive categories are partitioned off.
+  const { claims, custom, profile, sensitive } = joseToBuckets<C>(wire);
 
-  // AegisProfile fields are REGISTERED, so the translator resolves them into the
-  // domain layer (camelCased). Bucket them off.
-  const { profile, rest: afterProfile } = extractAegisProfile(domainAll);
-
-  // Sensitive-category claims travel FLAT and resolve into the domain layer like
-  // any other registered claim. Partition them off, then honour OIDC Core §13.3:
-  // SURFACE them into the `sensitive` bucket ONLY when the outer token was
-  // encrypted (jwe/cwe); on an unencrypted token they are SUPPRESSED — stripped
-  // from `claims` and never re-attached.
-  const { sensitive, rest: claims } = extractSensitiveClaims(afterProfile);
-
+  // OIDC Core §13.3 — the one thing this path adds, and the reason the gate is
+  // NOT in the shared step: sensitive claims are SURFACED only when the outer
+  // token was encrypted (jwe/cwe). On an unencrypted token they are suppressed.
+  // `claims` has them stripped either way, so a cleartext token leaks nothing
+  // regardless of this line.
   return {
-    claims: claims as DomainClaims,
-    custom: custom as C,
+    claims,
+    custom,
     profile,
     sensitive: encrypted ? sensitive : undefined,
   };

@@ -345,7 +345,17 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
  * identical for JOSE and COSE — only `nameOf` differs (`iss`/`exp`/… agree, so
  * only a name-diverging claim like `cti` is looked up differently).
  */
-const wireToDomain = (wire: Dict, nameOf: NameSelector): JoseToDomainResult => {
+/**
+ * The registry pass: wire dict -> `{ claims, custom }`, with the wire spelling
+ * chosen by `nameOf`. Exported because `resolve-domain-buckets.ts` continues
+ * from here to the four-bucket shape both read doors share.
+ *
+ * ⚠ This TWO-bucket form is still the right one for the profiled verify FLOOR,
+ * which needs every domain claim flat in one dict: `profile.required` may name a
+ * profile-category claim, and bucketing it away would report a present claim as
+ * missing.
+ */
+export const wireToDomain = (wire: Dict, nameOf: NameSelector): JoseToDomainResult => {
   const consumed = new Set<string>();
   const claims: Dict = {};
 

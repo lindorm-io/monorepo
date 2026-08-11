@@ -3,7 +3,8 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG, TEST_OCT_KEY_ENC } from "../__fixtures__/keys.js";
-import { domainToJose, joseToDomain } from "../internal/claims/translate.js";
+import { joseToBuckets } from "../internal/claims/resolve-domain-buckets.js";
+import { domainToJose } from "../internal/claims/translate.js";
 import { Aegis } from "./Aegis.js";
 import { CwsKit } from "./CwsKit.js";
 
@@ -91,7 +92,9 @@ describe("Aegis — COSE format guards", () => {
 describe("Aegis — toDomain / toWire statics", () => {
   test("ARE the claim translator functions (source of truth, Bit 8)", () => {
     expect(Aegis.toWire).toBe(domainToJose);
-    expect(Aegis.toDomain).toBe(joseToDomain);
+    // `toDomain` resolves the FULL four-bucket read shape — the same one the
+    // token read path produces — not the translator's two-bucket intermediate.
+    expect(Aegis.toDomain).toBe(joseToBuckets);
   });
 
   test("round-trips domain claims through wire and back", () => {

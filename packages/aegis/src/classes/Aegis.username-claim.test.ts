@@ -170,23 +170,27 @@ describe("Aegis username claim", () => {
   });
 
   describe("toDomain", () => {
+    // `username` is a plain registered claim; `preferred_username` is an OIDC
+    // standard claim, so it buckets into `profile` — the same split the token
+    // read path makes, which is the point of `toDomain` resolving the full shape.
     test("should route both usernames out of the custom bucket", () => {
-      const { claims, custom } = Aegis.toDomain({
+      const { claims, custom, profile } = Aegis.toDomain({
         sub: "user-1",
         username: "alice@lindorm.io",
         preferred_username: "Alice",
       });
 
       expect(claims.username).toBe("alice@lindorm.io");
-      expect(claims.preferredUsername).toBe("Alice");
+      expect(profile?.preferredUsername).toBe("Alice");
+      expect(claims).not.toHaveProperty("preferredUsername");
       expect(custom).toEqual({});
     });
 
     test("should yield neither username when the input carries neither", () => {
-      const { claims, custom } = Aegis.toDomain({ sub: "user-1" });
+      const { claims, custom, profile } = Aegis.toDomain({ sub: "user-1" });
 
       expect(claims).not.toHaveProperty("username");
-      expect(claims).not.toHaveProperty("preferredUsername");
+      expect(profile).toBeUndefined();
       expect(custom).toEqual({});
     });
   });

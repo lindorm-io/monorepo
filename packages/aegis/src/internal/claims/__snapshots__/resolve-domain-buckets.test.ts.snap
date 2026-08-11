@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`resolveDomainBuckets > should bucket profile and sensitive claims off the domain layer 1`] = `
+{
+  "claims": {
+    "issuer": "https://test.lindorm.io/",
+    "subject": "user-1",
+  },
+  "custom": {
+    "tenant": "acme",
+  },
+  "profile": {
+    "email": "user@example.com",
+    "emailVerified": true,
+    "givenName": "Ada",
+  },
+  "sensitive": {
+    "nationalIdentityNumber": "ABC-123",
+    "nationalIdentityNumberVerified": true,
+  },
+}
+`;

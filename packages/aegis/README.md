@@ -370,13 +370,17 @@ Aegis.isCwm(token); // COSE_Mac0 CWT (symmetric)
 Aegis.isCws(token); // opaque COSE_Sign1
 Aegis.isCwe(token); // COSE_Encrypt0
 
-Aegis.toDomain(wire); // wire claim dict → { claims, custom } domain claims
+Aegis.toDomain(wire); // wire claim dict → { claims, custom, profile, sensitive }
 Aegis.toWire(claims); // domain claims → JOSE-keyed wire dict
 Aegis.matches(claims, assert, options?); // boolean — same question, no throw
 Aegis.assert(claims, assert, options?); // the throwing layer over `matches`
 
 Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew? });
 ```
+
+`toDomain` resolves the **same four buckets a verified token carries** — registered `claims`, unregistered `custom`, the OIDC standard-claims `profile` bag, and `sensitive` — so a consumer reading an introspection or userinfo response never re-derives the split from its own copy of the claim categories. It previously stopped at `{ claims, custom }`, leaving profile and sensitive claims flat inside `claims`, which is exactly the gap consumers were papering over with hand-kept mirror lists.
+
+⚠ It does **not** apply the OIDC Core §13.3 encryption gate. §13.3 is a rule about _tokens_ — sensitive claims may surface only from an encrypted one — and `toDomain`'s input is a claim dict of unknown provenance, typically an issuer response over TLS where the release decision was already made according to granted scope. Applying a token rule there would silently drop data the issuer deliberately released. The gate stays in the token read path, the only layer that knows whether a token was encrypted: `aegis.verify` still returns `sensitive: undefined` for an unencrypted token on both wires.
 
 The JOSE guards decide on the **wire grammar** — segment count plus the header parameters the RFCs make REQUIRED (`alg`; `enc` for a JWE) — and on aegis's algorithm allowlist. `typ` is a hint, never the discriminant: RFC 7515 §4.1.9 and RFC 7519 §5.1 both make it optional, so a typ-less id_token, an RFC 9068 `at+jwt`, and an RFC 9449 `dpop+jwt` all read as a JWT. What separates a JWT from an opaque JWS is the payload being a JSON claims object — a signed handle stays a `jws`, including one that DECLARES `typ: JWT` over a non-claims payload. Because every JWT is a JWS (RFC 7519 §3), `isJws` is TRUE for a claims token as well; ask `isJwt` first when you need the narrow answer.
 

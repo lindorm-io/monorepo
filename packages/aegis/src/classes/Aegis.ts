@@ -30,7 +30,8 @@ import type {
   IAegisJws,
   IAegisJwt,
 } from "../interfaces/index.js";
-import { domainToJose, joseToDomain } from "../internal/claims/translate.js";
+import { joseToBuckets } from "../internal/claims/resolve-domain-buckets.js";
+import { domainToJose } from "../internal/claims/translate.js";
 import { isCose } from "../internal/cose/is-cose.js";
 import {
   isCwe as isCweBytes,
@@ -442,10 +443,12 @@ export class Aegis implements IAegis {
   // 8). These ARE the internal translator functions — pylon's relocated
   // userinfo/introspection parsing and tyr build their claim mapping on them
   // without re-deriving the registry. `toWire`: domain-keyed common claims →
-  // jose-keyed wire dict; `toDomain`: jose/camel-keyed wire → `{ claims, custom }`.
+  // jose-keyed wire dict; `toDomain`: jose/camel-keyed wire →
+  // `{ claims, custom, profile, sensitive }` — the SAME four buckets the token
+  // read path resolves, so a consumer never re-derives the split itself.
   static toWire = domainToJose;
 
-  static toDomain = joseToDomain;
+  static toDomain = joseToBuckets;
 
   // `Aegis.decode` is DROPPED (Bit 2) — use `aegis.<fmt>.decode` for a known
   // format, or the INSTANCE `aegis.parse` for an unknown one.

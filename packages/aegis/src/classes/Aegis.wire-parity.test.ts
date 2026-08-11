@@ -4,7 +4,11 @@ import { importJWK, SignJWT } from "jose";
 import type { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
-import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
+import {
+  TEST_EC_KEY_ENC,
+  TEST_EC_KEY_SIG,
+  TEST_OCT_KEY_ENC,
+} from "../__fixtures__/keys.js";
 import { Aegis } from "./Aegis.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
@@ -143,6 +147,88 @@ describe("Aegis — JOSE/COSE wire parity", () => {
       await expect(
         aegis.verify(cwt.token, { tokenId: { $exists: false } }),
       ).rejects.toMatchObject({ code: "cwt_claims_invalid" });
+    });
+  });
+
+  /**
+   * OIDC Core §13.3 — sensitive claims surface only from an ENCRYPTED token.
+   *
+   * The gate lives in the token read path rather than the shared claim
+   * resolution, because that is the only layer that knows whether a token was
+   * encrypted. All four combinations belong together: two of them passing is
+   * what a gate stuck in either position looks like.
+   */
+  describe("sensitive claims — the §13.3 encryption gate", () => {
+    const content = {
+      subject: "user-1",
+      audience: ["client-1"],
+      sensitive: { nationalIdentityNumber: "ABC-123" },
+    };
+
+    test("should SURFACE sensitive claims from an encrypted token on both wires", async () => {
+      amphora.add(TEST_EC_KEY_ENC);
+      amphora.add(TEST_OCT_KEY_ENC);
+
+      const jwe = await aegis.mint("id_token", content, { encrypt: {} });
+      const cwe = await aegis.mint("id_token", content, {
+        format: "cwt",
+        encrypt: {},
+      });
+
+      const verifiedJose = await aegis.verify("id_token", jwe.token, undefined, {
+        audience: "client-1",
+      });
+      const verifiedCose = await aegis.verify("id_token", cwe.token, undefined, {
+        audience: "client-1",
+      });
+
+      expect(verifiedJose.sensitive).toEqual({ nationalIdentityNumber: "ABC-123" });
+      expect(verifiedCose.sensitive).toEqual({ nationalIdentityNumber: "ABC-123" });
+    });
+
+    // ⚠ Built OUTSIDE mint, deliberately. Mint STRIPS sensitive fields it cannot
+    // encrypt rather than emitting them in clear, so a plain `mint` token never
+    // carries them and a test using one passes whether the gate works or not —
+    // this test WAS written that way and proved nothing. The raw namespaces are
+    // passthroughs, so they can put the flat claims on an unencrypted wire that
+    // no mint path would ever produce, which is the only input that exercises
+    // the read-side gate at all.
+    test("should SUPPRESS sensitive claims on an unencrypted token on both wires", async () => {
+      const now = Math.floor(new Date("2024-01-01T08:00:00.000Z").getTime() / 1000);
+      const flat = {
+        iss: ISSUER,
+        sub: "user-1",
+        aud: ["client-1"],
+        exp: now + 3600,
+        national_identity_number: "ABC-123",
+      };
+
+      const key = await importJWK(
+        TEST_EC_KEY_SIG.export("jwk") as never,
+        TEST_EC_KEY_SIG.algorithm,
+      );
+      const jwt = await new SignJWT(flat)
+        .setProtectedHeader({
+          alg: TEST_EC_KEY_SIG.algorithm,
+          kid: TEST_EC_KEY_SIG.id,
+          typ: "JWT",
+        })
+        .sign(key);
+      const cwt = (await aegis.cwt.sign(flat)).token;
+
+      const verifiedJose = await aegis.verify(jwt);
+      const verifiedCose = await aegis.verify(cwt);
+
+      expect(verifiedJose.sensitive).toBeUndefined();
+      expect(verifiedCose.sensitive).toBeUndefined();
+
+      // Suppressed means GONE, not relocated: absent from `claims` AND `custom`,
+      // or a sensitive claim merely demoted out of the bucket still reads as a
+      // pass.
+      expect(verifiedJose.claims).not.toHaveProperty("nationalIdentityNumber");
+      expect(verifiedCose.claims).not.toHaveProperty("nationalIdentityNumber");
+      expect(verifiedJose.custom).toEqual({});
+      expect(verifiedCose.custom).toEqual({});
     });
   });
 

@@ -7,11 +7,8 @@ import type {
 import { Tag } from "../cose/cbor.js";
 import type { CwtDecoded } from "../cose/cwt-token.js";
 import { COSE_TAG } from "../cose/structures.js";
-import { coseToDomain } from "../claims/translate.js";
+import { coseToBuckets } from "../claims/resolve-domain-buckets.js";
 import { decodeTokenTypeFromTyp } from "./compute-typ-header.js";
-import type { DomainClaims } from "./extract-claims.js";
-import { extractAegisProfile } from "./extract-aegis-profile.js";
-import { extractSensitiveClaims } from "./extract-sensitive-claims.js";
 import { parseTokenHeader } from "./token-header.js";
 
 // The COSE structure tag (Sign1 / Mac0) decides `cwt` vs `cwm` on READ (D6): a
@@ -75,9 +72,10 @@ export const buildCoseVerifiedToken = ({
   token: string;
   encrypted: boolean;
 }): VerifiedToken => {
-  const { claims: domainAll, custom } = coseToDomain(wire);
-  const { profile, rest: afterProfile } = extractAegisProfile(domainAll);
-  const { sensitive, rest: claims } = extractSensitiveClaims(afterProfile);
+  // The same shared resolution the JOSE read path and `Aegis.toDomain` run —
+  // one step, so the two doors onto the registry cannot resolve different
+  // surfaces again.
+  const { claims, custom, profile, sensitive } = coseToBuckets(wire);
 
   return {
     format: coseFormatOf(decoded.cose),
@@ -86,7 +84,7 @@ export const buildCoseVerifiedToken = ({
       kid: decoded.kid,
       typ: decoded.typ,
     }),
-    claims: claims as DomainClaims,
+    claims,
     custom,
     profile,
     sensitive: encrypted ? sensitive : undefined,
