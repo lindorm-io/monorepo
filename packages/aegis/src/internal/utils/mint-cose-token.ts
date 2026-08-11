@@ -109,6 +109,10 @@ export const mintCoseToken = async ({
     logger: deps.logger,
     common: commonWithContent,
     tokenType: typPrefix,
+    // The caller's protected header bag. `ProfileMintOptions.sign` is the JOSE
+    // envelope, which has no `unprotected` bucket — that one is reachable only
+    // through the raw `aegis.cwt` namespace.
+    header: options.sign?.header,
     proprietary: options.proprietary,
     // mint's own `omit` controls the wire; a per-sign omit is a fallback — the
     // JOSE encoder has always honoured both.

@@ -4,6 +4,7 @@ import type { Dict } from "@lindorm/types";
 import { CwmKit } from "../../classes/CwmKit.js";
 import { CwtKit } from "../../classes/CwtKit.js";
 import { domainToCose } from "../claims/translate.js";
+import type { SignStructuredTokenOptions } from "../../types/index.js";
 import type { OmitMode } from "../utils/apply-omit.js";
 
 /**
@@ -23,6 +24,8 @@ export const signCose = ({
   tokenType,
   proprietary,
   omit,
+  header,
+  unprotected,
   format,
 }: {
   kryptos: IKryptos;
@@ -32,10 +35,25 @@ export const signCose = ({
   tokenType?: string;
   proprietary?: boolean;
   omit?: OmitMode;
+  /**
+   * Caller-controlled PROTECTED / UNPROTECTED wire header params. The kit has
+   * always accepted these; this wrapper simply never passed them on, so
+   * `sign.header` was accepted and dropped on every COSE mint and `objectId`
+   * came back undefined — even though `oid` HAS a COSE label (private-use
+   * -70000, in the header registry).
+   */
+  header?: SignStructuredTokenOptions["header"];
+  unprotected?: SignStructuredTokenOptions["unprotected"];
   format: "cwt" | "cwm";
 }): Buffer => {
   const kit =
     format === "cwm" ? new CwmKit({ kryptos, logger }) : new CwtKit({ kryptos, logger });
 
-  return kit.sign(domainToCose(common), { tokenType, proprietary, omit });
+  return kit.sign(domainToCose(common), {
+    header,
+    omit,
+    proprietary,
+    tokenType,
+    unprotected,
+  });
 };

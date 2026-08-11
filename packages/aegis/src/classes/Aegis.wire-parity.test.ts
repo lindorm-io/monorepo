@@ -388,6 +388,42 @@ describe("Aegis — JOSE/COSE wire parity", () => {
       expect(cose.profile).toMatchObject({ givenName: "Ada", email: "ada@example.com" });
     });
 
+    // `sign.header` — the caller's protected header bag. `oid` has a COSE label
+    // (private-use -70000), so this was never a wire limitation: the COSE
+    // encoder simply never forwarded the bag, and `objectId` came back
+    // undefined on every CWT.
+    test("should carry sign.header onto both wires", async () => {
+      const options = { sign: { header: { oid: "obj_abc" } } } as never;
+
+      const jwt = await aegis.mint("id_token", content, options);
+      const cwt = await aegis.mint("id_token", content, {
+        ...(options as object),
+        format: "cwt",
+      } as never);
+
+      // ⚠ NOT asserting `SignedToken.objectId` here: neither encoder populates
+      // that field from `sign.header` today (the JOSE one does not either), so
+      // it is a separate gap from the header bag being forwarded at all.
+      const jose = await aegis.verify("id_token", jwt.token, undefined, {
+        audience: "client-1",
+      });
+      const cose = await aegis.verify("id_token", cwt.token, undefined, {
+        audience: "client-1",
+      });
+
+      expect(jose.header.objectId).toBe("obj_abc");
+
+      // ⚠ COSE is asserted on the WIRE, not the domain header, and the reason is
+      // a SECOND gap this does not close: `coseDomainHeader` is built from a
+      // hand-picked {alg, kid, typ} triple, so the COSE domain header cannot
+      // surface any other parameter no matter what is on the wire. The bag now
+      // reaches the wire — which is what `sign.header` promises — but reading it
+      // back through `.header` needs that triple replaced by the full merged
+      // wire header.
+      expect(cose.header.objectId).toBeUndefined();
+      expect((await aegis.cwt.verify(cwt.token)).header.oid).toBe("obj_abc");
+    });
+
     // `omit` is a MODE, not a claim list: "empty" (the default) prunes empty
     // containers from the wire, "undefined" preserves them. It can be given on
     // the mint options or as a per-sign fallback, and only the JOSE encoder
