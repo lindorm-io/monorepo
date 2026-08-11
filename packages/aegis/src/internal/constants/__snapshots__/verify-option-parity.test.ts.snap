@@ -1,0 +1,134 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`verify option parity > should derive the key set from the table 1`] = `
+[
+  "actor",
+  "clockTolerance",
+  "currentDate",
+  "maxTokenAge",
+  "verifyExpiration",
+  "verifyNotBefore",
+  "verifyIssuedAt",
+  "verifyAuthTime",
+  "dpopProof",
+  "trustBoundThumbprint",
+  "key",
+  "typPresence",
+  "expPresence",
+]
+`;
+
+exports[`verify option parity > should list the rows still awaiting a fix 1`] = `
+[
+  "actor",
+  "dpopProof",
+  "trustBoundThumbprint",
+  "key",
+  "typPresence",
+  "expPresence",
+]
+`;
+
+exports[`verify option parity > should match the recorded contract 1`] = `
+{
+  "actor": {
+    "bug": "cose: buildCoseVerifiedToken never extracts the act chain, so validateActor is never reached (F5)",
+    "default": {
+      "cose": undefined,
+      "jose": undefined,
+    },
+    "wires": "both",
+  },
+  "clockTolerance": {
+    "default": {
+      "cose": undefined,
+      "jose": undefined,
+    },
+    "wires": "both",
+  },
+  "currentDate": {
+    "default": {
+      "cose": undefined,
+      "jose": undefined,
+    },
+    "wires": "both",
+  },
+  "dpopProof": {
+    "bug": "cose: no DPoP check on any COSE claims path",
+    "default": {
+      "cose": undefined,
+      "jose": undefined,
+    },
+    "reason": "RFC 9449 defines only the JWT proof form, but the PROOF's wire is independent of the bound token's: a cnf.jkt in a CWT binds exactly as it does in a JWT",
+    "wires": "both",
+  },
+  "expPresence": {
+    "bug": "cose: skipped entirely when verify is called with neither options nor assert (F2)",
+    "default": {
+      "cose": "required",
+      "jose": "required",
+    },
+    "wires": "both",
+  },
+  "key": {
+    "bug": "cose: coseVerifyCore takes no key parameter, so the claims path resolves unscoped by kid alone — the opaque CWS branch does thread it",
+    "default": {
+      "cose": undefined,
+      "jose": undefined,
+    },
+    "wires": "both",
+  },
+  "maxTokenAge": {
+    "default": {
+      "cose": undefined,
+      "jose": undefined,
+    },
+    "wires": "both",
+  },
+  "trustBoundThumbprint": {
+    "bug": "cose: the bound-but-unproven refusal it waives is not made on COSE, so the waiver has nothing to waive",
+    "default": {
+      "cose": false,
+      "jose": false,
+    },
+    "wires": "both",
+  },
+  "typPresence": {
+    "bug": "cose: typ presence is not checked at all, so the option is neither honoured nor defaulted",
+    "default": {
+      "cose": "optional",
+      "jose": "required",
+    },
+    "reason": "RFC 8725 §3.11 mandates explicit typing for JOSE; RFC 9596 leaves the COSE typ (label 16) optional. An explicit value behaves identically on both wires — only the unstated default follows each RFC",
+    "wires": "both",
+  },
+  "verifyAuthTime": {
+    "default": {
+      "cose": true,
+      "jose": true,
+    },
+    "wires": "both",
+  },
+  "verifyExpiration": {
+    "default": {
+      "cose": true,
+      "jose": true,
+    },
+    "wires": "both",
+  },
+  "verifyIssuedAt": {
+    "default": {
+      "cose": true,
+      "jose": true,
+    },
+    "wires": "both",
+  },
+  "verifyNotBefore": {
+    "default": {
+      "cose": true,
+      "jose": true,
+    },
+    "wires": "both",
+  },
+}
+`;

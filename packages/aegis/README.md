@@ -753,7 +753,8 @@ how the check runs.**
   condition, each field accepting a literal value or a `ConditionOperator`.
   `DomainAssert` — the same vocabulary less the hash-derive inputs — drives the
   standalone [`Aegis.matches` / `Aegis.assert`](#static-helpers).
-- **`options`** (`VerifyOptions`) — the verify KNOBS (format-agnostic).
+- **`options`** (`VerifyOptions`) — the verify KNOBS. ⚠ Not yet uniform across the
+  two wires: see [wire parity](#wire-parity-of-verifyoptions) below.
 
 ```typescript
 await aegis.verify(
@@ -796,6 +797,34 @@ await aegis.verify(
 For a **profiled** verify the audience/issuer floor lives in the options object,
 so the assert is the (optional) third argument and options the fourth:
 `aegis.verify("access_token", token, assert?, { audience })`.
+
+### Wire parity of `VerifyOptions`
+
+A verify knob should mean the same thing whether the token arrived as a JWT or a
+CWT. Five do not yet: **`key`, `dpopProof`, `trustBoundThumbprint`, `actor` and
+`typPresence` are read on the JOSE path and dropped on the COSE claims path** —
+accepted and ignored rather than rejected, so a caller pinning a verification key
+or requiring a DPoP proof on a CWT silently gets neither. `expPresence` is read on
+COSE, but skipped entirely when `verify` is called with neither an assert nor an
+options argument.
+
+The contract is a value, not prose: every field has a row in the internal wire-parity
+table stating which wires read it and what it resolves to per wire, and a row still
+awaiting its fix carries the reason it is outstanding. Adding a field to
+`VerifyOptions` fails to compile until it has a row.
+
+One default legitimately differs per wire and always will: `typPresence` resolves to
+`"required"` on JOSE (RFC 8725 §3.11 explicit typing) and `"optional"` on COSE
+(RFC 9596 leaves the `typ` header optional). Passing an explicit value behaves
+identically on both.
+
+`VERIFY_OPTION_KEYS` is the exported key set, derived from that table — use it
+instead of hand-listing the knobs when partitioning a flat bag of matchers and
+options, so the split moves with the type:
+
+```typescript
+import { VERIFY_OPTION_KEYS } from "@lindorm/aegis";
+```
 
 ## Type guards
 

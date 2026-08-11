@@ -6,6 +6,11 @@ export * from "./types/index.js";
 
 export { FAPI_SIG_ALGS } from "./constants/fapi.js";
 
+// The `VerifyOptions` knob keys, derived from the wire-parity table. Public so a
+// consumer splitting a flat matcher-and-knob bag reads the set from its owner
+// instead of copying it (pylon's copy drifted twice).
+export { VERIFY_OPTION_KEYS } from "./internal/constants/verify-option-parity.js";
+
 export type { TokenType } from "./constants/token-type.js";
 
 // The unified domain claim set carried by `VerifiedToken.claims` / `ParsedToken.claims`.
