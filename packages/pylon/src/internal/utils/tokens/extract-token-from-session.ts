@@ -1,4 +1,10 @@
-import { AegisError, type IAegis, type VerifiedToken } from "@lindorm/aegis";
+import {
+  AegisError,
+  type IAegis,
+  isStructuredToken,
+  type VerifiedToken,
+} from "@lindorm/aegis";
+import { isString } from "@lindorm/is";
 import type { IPylonSession } from "../../../interfaces/index.js";
 
 export const extractTokenFromSession = async (
@@ -6,12 +12,13 @@ export const extractTokenFromSession = async (
   session: IPylonSession | null | undefined,
 ): Promise<VerifiedToken | null> => {
   if (!session) return null;
-  if (typeof session.accessToken !== "string" || session.accessToken.length === 0) {
+  if (!isString(session.accessToken) || session.accessToken.length === 0) {
     return null;
   }
   try {
     const verified = await aegis.verify(session.accessToken);
-    return verified.format === "jwt" ? verified : null;
+    // Claims-bearing, not "is a JWT" — see `parseSessionTokens`.
+    return isStructuredToken(verified) ? verified : null;
   } catch (err) {
     if (!(err instanceof AegisError)) throw err;
     return null;

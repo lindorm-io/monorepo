@@ -35,6 +35,32 @@ const createJwsVerifyResult = () => ({
   token: "jws-token",
 });
 
+// Claims-bearing COSE (COSE_Sign1). `claims` is domain-keyed and identical to a
+// JWT's, so identity must resolve from it exactly as from a JWT.
+const createCwtVerifyResult = (overrides: Record<string, any> = {}) => ({
+  ...createJwtVerifyResult(overrides),
+  format: "cwt" as const,
+  token: "cwt-token",
+});
+
+// An ENCRYPTED id token: the outer tag reads `jwe`, `inner` names the structured
+// format, and `claims` carries the inner's fully-populated set.
+const createJweWrappingJwtVerifyResult = (overrides: Record<string, any> = {}) => ({
+  ...createJwtVerifyResult(overrides),
+  format: "jwe" as const,
+  inner: "jwt" as const,
+  token: "jwe-token",
+});
+
+// An encrypting outer that wrapped an OPAQUE inner carries no claims — it must
+// stay excluded, or the guard would be trusting `inner` without reading it.
+const createJweWrappingJwsVerifyResult = () => ({
+  format: "jwe" as const,
+  inner: "jws" as const,
+  raw: "some-payload",
+  token: "jwe-jws-token",
+});
+
 describe("parseTokenData", () => {
   let aegis: any;
   let data: any;
@@ -62,6 +88,40 @@ describe("parseTokenData", () => {
   test("should resolve subject and expiresAt from JWT access token", async () => {
     data.idToken = undefined;
     data.refreshToken = undefined;
+
+    const result = await parseTokenData(aegis, data);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should resolve subject and expiresAt from a CWT access token", async () => {
+    data.idToken = undefined;
+    data.refreshToken = undefined;
+    aegis.verify.mockResolvedValueOnce(createCwtVerifyResult());
+
+    const result = await parseTokenData(aegis, data);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should resolve subject and expiresAt from an ENCRYPTED access token wrapping a JWT", async () => {
+    data.idToken = undefined;
+    data.refreshToken = undefined;
+    aegis.verify.mockResolvedValueOnce(createJweWrappingJwtVerifyResult());
+
+    const result = await parseTokenData(aegis, data);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should resolve subject from a CWT id_token when the access token is opaque", async () => {
+    aegis.verify.mockRejectedValueOnce(new AegisError("Invalid token type"));
+    aegis.verify.mockResolvedValueOnce(createCwtVerifyResult());
+
+    const result = await parseTokenData(aegis, data);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should fall through when an encrypting outer wrapped an OPAQUE inner", async () => {
+    aegis.verify.mockResolvedValueOnce(createJweWrappingJwsVerifyResult());
+    aegis.verify.mockResolvedValueOnce(createJwtVerifyResult());
 
     const result = await parseTokenData(aegis, data);
     expect(result).toMatchSnapshot();

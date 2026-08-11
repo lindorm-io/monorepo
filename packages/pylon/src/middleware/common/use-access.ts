@@ -1,4 +1,4 @@
-import { Aegis, type DomainAssert } from "@lindorm/aegis";
+import { Aegis, type DomainAssert, isStructuredToken } from "@lindorm/aegis";
 import { ClientError, LindormError } from "@lindorm/errors";
 import type { Dict } from "@lindorm/types";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
@@ -37,9 +37,12 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
       // session's token set, so it keeps reading `tokens`.
       const token = ctx.state.tokens[tokenKey];
 
-      if (!token || token.format !== "jwt") {
+      // The guard answers nullish too, so the two arms collapse into one. It
+      // asks whether the token CARRIES CLAIMS — a CWT/CWM does, as does a
+      // JWE/CWE that wrapped one — rather than whether it is a JWT.
+      if (!isStructuredToken(token)) {
         throw new ClientError("Token not found", {
-          details: `Expected a parsed JWT at token [${tokenKey}] on context`,
+          details: `Expected a claims-bearing token at [${tokenKey}] on context`,
           status: ClientError.Status.Unauthorized,
           code: "token_not_found",
           type: "urn:lindorm:pylon:error:token_not_found",

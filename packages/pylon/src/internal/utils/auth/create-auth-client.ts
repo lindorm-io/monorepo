@@ -1,3 +1,4 @@
+import { isStructuredToken } from "@lindorm/aegis";
 import { ServerError } from "@lindorm/errors";
 import { PKCE } from "@lindorm/pkce";
 import type { CodeChallengeMethod } from "@lindorm/openid";
@@ -25,7 +26,7 @@ import { cacheIntrospection } from "../auth-cache/cache-introspection.js";
 import { cacheUserinfo } from "../auth-cache/cache-userinfo.js";
 import { assertAuthorizeUrl } from "./assert-authorize-url.js";
 import { createAuthDriverContext } from "./create-auth-driver-context.js";
-import { parseUserinfo } from "./parse-userinfo.js";
+import { userinfoFromVerified } from "./userinfo-from-verified.js";
 
 // --- Claims client (works on both HTTP and socket) ---
 
@@ -51,12 +52,12 @@ export const createClaimsClient = (
     const cached = userinfoCache.get(cacheKey);
     if (cached) return cached;
 
-    // Fast path: explicit token — try local verify (id_token-style JWT).
+    // Fast path: explicit token — try local verify. Built from the verified
+    // token's own buckets, exactly as the introspection fast path below is.
     if (token) {
       try {
-        const verified = await ctx.aegis.verify(token);
-        if (verified.format === "jwt") {
-          const result = parseUserinfo(verified.wire?.payload ?? {});
+        const result = userinfoFromVerified(await ctx.aegis.verify(token));
+        if (result) {
           userinfoCache.set(cacheKey, result);
           return result;
         }
@@ -65,9 +66,8 @@ export const createClaimsClient = (
       }
     } else {
       // Fast path: no-arg — use the parsed id_token from context if available.
-      const idToken = ctx.state.tokens?.idToken;
-      if (idToken && idToken.format === "jwt") {
-        const result = parseUserinfo(idToken.wire?.payload ?? {});
+      const result = userinfoFromVerified(ctx.state.tokens?.idToken);
+      if (result) {
         userinfoCache.set(cacheKey, result);
         return result;
       }
@@ -123,7 +123,9 @@ export const createClaimsClient = (
     if (token) {
       try {
         const verified = await ctx.aegis.verify(token);
-        if (verified.format === "jwt") {
+        // Domain-keyed `claims`/`custom`, so a CWT introspects locally exactly
+        // as a JWT does — the gate is claims-bearing, not JWT.
+        if (isStructuredToken(verified)) {
           const result: PylonIntrospectionActive = {
             ...verified.claims,
             active: true,
@@ -138,7 +140,7 @@ export const createClaimsClient = (
     } else {
       // Fast path: no-arg — use the parsed access token from context if available.
       const accessTokenParsed = ctx.state.tokens?.accessToken;
-      if (accessTokenParsed && accessTokenParsed.format === "jwt") {
+      if (isStructuredToken(accessTokenParsed)) {
         // The domain `claims` bucket holds only the registered claims — the
         // custom-claim and profile buckets are kept separate on VerifiedToken.
         // The introspection shape keeps that same split, so `custom` carries

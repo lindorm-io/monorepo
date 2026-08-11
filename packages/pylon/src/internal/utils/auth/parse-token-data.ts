@@ -1,4 +1,4 @@
-import { AegisError, type IAegis } from "@lindorm/aegis";
+import { AegisError, type IAegis, isStructuredToken } from "@lindorm/aegis";
 import { type ReadableTime, ms } from "@lindorm/date";
 import { lindormId } from "@lindorm/random";
 import type { AuthorizeResponseQuery, TokenResponse } from "@lindorm/openid";
@@ -38,7 +38,9 @@ export const parseTokenData = async (
     try {
       const verified = await aegis.verify(data.accessToken);
 
-      if (verified.format === "jwt") {
+      // `claims` is DOMAIN-keyed and uniform across JOSE and COSE, so this reads
+      // a CWT identically to a JWT. Gate on claims-bearing, not on the wire.
+      if (isStructuredToken(verified)) {
         session.id = verified.claims.sessionId || session.id;
         session.issuedAt = verified.claims.issuedAt ?? session.issuedAt;
         session.expiresAt = verified.claims.expiresAt ?? session.expiresAt;
@@ -79,7 +81,9 @@ export const parseTokenData = async (
     try {
       const verified = await aegis.verify(data.idToken);
 
-      if (verified.format === "jwt") {
+      // Same as the access-token arm: domain-keyed claims, so a CWT id token
+      // reads identically to a JWT one.
+      if (isStructuredToken(verified)) {
         session.id = verified.claims.sessionId || session.id;
         session.issuedAt = verified.claims.issuedAt ?? session.issuedAt;
         session.subject = verified.claims.subject || session.subject;

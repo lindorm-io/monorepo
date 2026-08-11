@@ -248,20 +248,120 @@ describe("createAuthClient", () => {
   });
 
   describe("userinfo", () => {
+    // `verify` returns claims already domain-keyed and bucketed — `claims` is
+    // non-optional (`{}` for an opaque format) and profile claims arrive under
+    // `profile`. The fast path reads those buckets, never `wire`.
+    const idTokenResult = (format: string, extra: Record<string, any> = {}) => ({
+      format,
+      claims: { subject: "user-123" },
+      custom: {},
+      profile: { name: "Alice" },
+      ...extra,
+    });
+
     test("should return userinfo from the parsed id_token (fast path)", async () => {
+      const ctx = createCtx({
+        state: { tokens: { idToken: idTokenResult("jwt") } },
+      });
+
+      await expect(
+        createAuthClient(ctx as any, createConfig(driver)).userinfo(),
+      ).resolves.toMatchObject({ subject: "user-123", name: "Alice" });
+
+      expect(driver.userinfo).not.toHaveBeenCalled();
+    });
+
+    test("should return userinfo from a CWT id_token", async () => {
+      const ctx = createCtx({
+        state: { tokens: { idToken: idTokenResult("cwt") } },
+      });
+
+      await expect(
+        createAuthClient(ctx as any, createConfig(driver)).userinfo(),
+      ).resolves.toMatchObject({ subject: "user-123", name: "Alice" });
+
+      expect(driver.userinfo).not.toHaveBeenCalled();
+    });
+
+    test("should return userinfo from an ENCRYPTED id_token wrapping a JWT", async () => {
+      const ctx = createCtx({
+        state: { tokens: { idToken: idTokenResult("jwe", { inner: "jwt" }) } },
+      });
+
+      await expect(
+        createAuthClient(ctx as any, createConfig(driver)).userinfo(),
+      ).resolves.toMatchObject({ subject: "user-123", name: "Alice" });
+
+      expect(driver.userinfo).not.toHaveBeenCalled();
+    });
+
+    // Aegis populates `sensitive` ONLY from an encrypted token (OIDC Core
+    // §13.3) and suppresses it everywhere else, so this is the one arm that
+    // carries government-issued identifiers — and it only became reachable when
+    // the gate stopped being `format === "jwt"`.
+    test("should include SENSITIVE claims from an encrypted id_token", async () => {
       const ctx = createCtx({
         state: {
           tokens: {
-            idToken: { format: "jwt", wire: { payload: { sub: "user-123" } } },
+            idToken: idTokenResult("jwe", {
+              inner: "jwt",
+              sensitive: {
+                nationalIdentityNumber: "19900101-1234",
+                nationalIdentityNumberVerified: true,
+              },
+            }),
           },
         },
       });
 
       await expect(
         createAuthClient(ctx as any, createConfig(driver)).userinfo(),
-      ).resolves.toMatchObject({ subject: "user-123" });
+      ).resolves.toMatchObject({
+        subject: "user-123",
+        name: "Alice",
+        nationalIdentityNumber: "19900101-1234",
+        nationalIdentityNumberVerified: true,
+      });
+    });
 
-      expect(driver.userinfo).not.toHaveBeenCalled();
+    test("should carry no sensitive claims when the id_token is not encrypted", async () => {
+      const ctx = createCtx({
+        state: { tokens: { idToken: idTokenResult("jwt") } },
+      });
+
+      const result = await createAuthClient(ctx as any, createConfig(driver)).userinfo();
+
+      expect(result).not.toHaveProperty("nationalIdentityNumber");
+      expect(result).not.toHaveProperty("socialSecurityNumber");
+    });
+
+    test("should fall through to the driver when the id_token is OPAQUE", async () => {
+      const ctx = createCtx({
+        state: {
+          tokens: { idToken: { format: "jws", claims: {}, custom: {} } },
+          session: { accessToken: "opaque-token-xyz" },
+        },
+      });
+
+      await createAuthClient(ctx as any, createConfig(driver)).userinfo();
+
+      expect(driver.userinfo).toHaveBeenCalled();
+    });
+
+    // A structured token with no `subject` cannot answer a userinfo request, so
+    // the fast path declines rather than raising `UserinfoEndpointFailed` for a
+    // request that never reached an endpoint.
+    test("should fall through to the driver when the id_token carries no subject", async () => {
+      const ctx = createCtx({
+        state: {
+          tokens: { idToken: { format: "jwt", claims: {}, custom: {} } },
+          session: { accessToken: "opaque-token-xyz" },
+        },
+      });
+
+      await createAuthClient(ctx as any, createConfig(driver)).userinfo();
+
+      expect(driver.userinfo).toHaveBeenCalled();
     });
 
     test("should delegate to the driver when no id_token is parsed", async () => {

@@ -1,3 +1,4 @@
+import { isStructuredToken } from "@lindorm/aegis";
 import { ClientError, ServerError } from "@lindorm/errors";
 import type { AuthorizeResponseQuery } from "@lindorm/openid";
 import type {
@@ -135,8 +136,13 @@ export const createLoginCallbackHandler = (
     if (ctx.state.session.idToken) {
       const verified = await ctx.aegis.verify(ctx.state.session.idToken);
 
+      // ⚠ This gate is NEGATIVE — the throw only fires for a token it admits, so
+      // a format it does not admit skips the replay check ENTIRELY. Under
+      // `format === "jwt"` a CWT or encrypted id_token carried its nonce past
+      // this test unexamined. `claims.nonce` is domain-keyed and present on both
+      // wires, so the check applies to every claims-bearing id_token.
       if (
-        verified.format === "jwt" &&
+        isStructuredToken(verified) &&
         cookie.nonce &&
         cookie.nonce !== verified.claims.nonce
       ) {
