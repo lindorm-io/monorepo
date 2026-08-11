@@ -313,7 +313,9 @@ describe("createAuthClient userinfo cache", () => {
     });
 
     expect(wire.address).toEqual({ street_address: "1 Storgatan" });
-    expect(Aegis.toDomain(wire).claims.address).toEqual({
+    // `address` is an OIDC standard profile claim, so `toDomain` buckets it
+    // under `profile` rather than leaving it flat in `claims`.
+    expect(Aegis.toDomain(wire).profile?.address).toEqual({
       streetAddress: "1 Storgatan",
     });
   });

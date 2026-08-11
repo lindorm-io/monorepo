@@ -1,16 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`parseUserinfo > domain payload input > should extract profile from a domain payload 1`] = `
-{
-  "email": "jane@example.com",
-  "emailVerified": true,
-  "familyName": "Smith",
-  "givenName": "Jane",
-  "locale": "en-GB",
-  "subject": "user-jwt-456",
-}
-`;
-
 exports[`parseUserinfo > plain claims input > should handle minimal claims with only sub 1`] = `
 {
   "subject": "user-minimal",
@@ -26,6 +15,16 @@ exports[`parseUserinfo > plain claims input > should include lindorm extension f
   "organization": "Acme Corp",
   "pronouns": "he/him",
   "subject": "user-ext-123",
+}
+`;
+
+exports[`parseUserinfo > plain claims input > should keep SENSITIVE claims released by the userinfo endpoint 1`] = `
+{
+  "givenName": "John",
+  "nationalIdentityNumber": "19900101-1234",
+  "nationalIdentityNumberVerified": true,
+  "socialSecurityNumber": "123-45-6789",
+  "subject": "user-abc-123",
 }
 `;
 

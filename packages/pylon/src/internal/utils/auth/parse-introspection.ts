@@ -7,29 +7,11 @@ import type {
   PylonIntrospection,
   PylonIntrospectionActive,
 } from "../../../types/index.js";
-import { PROFILE_CLAIM_KEYS } from "./profile-claim-keys.js";
-import { SENSITIVE_CLAIM_KEYS } from "./sensitive-claim-keys.js";
 
 // Permissive structural input — a consumer's `IntrospectResponse` or a plain
 // JSON body from the introspection endpoint passes through without a cast.
 export type IntrospectClaimsInput = Dict & {
   active?: unknown;
-};
-
-// Drop the IDENTITY claims the translator surfaced: the AegisProfile category
-// (an introspection response is not a profile — RFC 7662 vs OIDC §5.3) and the
-// AegisSensitive category (which `DomainClaims` does not declare, and which the
-// locally-verified path suppresses on an unencrypted token per OIDC Core §13.3).
-// Both are identity, and `ctx.state.access.claims` answers an authorization
-// question; keeping either would make the introspected arm resolve a wider claim
-// set than the verified one.
-const omitIdentityClaims = (claims: Dict): Dict => {
-  const result: Dict = {};
-  for (const key of Object.keys(claims)) {
-    if (PROFILE_CLAIM_KEYS.has(key) || SENSITIVE_CLAIM_KEYS.has(key)) continue;
-    result[key] = claims[key];
-  }
-  return result;
 };
 
 // RFC 7662 §2.2 response members that describe the ANSWER, not the token: they
@@ -71,10 +53,15 @@ export const parseIntrospection = (data: IntrospectClaimsInput): PylonIntrospect
     return { active: false };
   }
 
+  // The IDENTITY claims are DROPPED by not spreading them: `toDomain` buckets
+  // the AegisProfile category into `profile` and the AegisSensitive category
+  // into `sensitive`, and neither belongs in an authorization answer (RFC 7662
+  // vs OIDC §5.3). `ctx.state.access.claims` answers ONE question — may this
+  // request do this — so taking `claims` alone is the whole filter.
   const { claims, custom } = Aegis.toDomain(data);
 
   return omitUndefined({
-    ...omitIdentityClaims(claims),
+    ...claims,
     active: true as const,
     custom: pickCustomClaims(custom),
     tokenType: isString(data.tokenType)

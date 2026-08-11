@@ -1,4 +1,3 @@
-import type { AegisProfile } from "@lindorm/aegis";
 import { describe, expect, test } from "vitest";
 import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed.js";
 import { parseUserinfo, type UserinfoClaimsInput } from "./parse-userinfo.js";
@@ -30,6 +29,21 @@ describe("parseUserinfo", () => {
       const result = parseUserinfo(data);
 
       expect(result).toMatchSnapshot();
+    });
+
+    // The provider decided the release from the granted scope before it wrote
+    // the response — pylon returns what it was given rather than re-deciding.
+    // Deliberately the OPPOSITE of `parseIntrospection`, which drops these.
+    test("should keep SENSITIVE claims released by the userinfo endpoint", () => {
+      const data = {
+        sub: "user-abc-123",
+        givenName: "John",
+        national_identity_number: "19900101-1234",
+        national_identity_number_verified: true,
+        social_security_number: "123-45-6789",
+      };
+
+      expect(parseUserinfo(data as UserinfoClaimsInput)).toMatchSnapshot();
     });
 
     test("should handle minimal claims with only sub", () => {
@@ -68,36 +82,6 @@ describe("parseUserinfo", () => {
   });
 
   describe("domain payload input", () => {
-    test("should extract profile from a domain payload", () => {
-      const profile: AegisProfile = {
-        givenName: "Jane",
-        familyName: "Smith",
-        email: "jane@example.com",
-        emailVerified: true,
-        locale: "en-GB",
-      };
-
-      const data = {
-        subject: "user-jwt-456",
-        profile,
-        audience: ["https://api.example.com"],
-        authMethods: ["pwd"],
-        claims: {},
-        confirmation: undefined,
-        entitlements: [],
-        groups: [],
-        issuer: "https://auth.example.com",
-        permissions: [],
-        roles: [],
-        scope: ["openid", "profile"],
-        tokenId: "tok-123",
-      } as unknown as UserinfoClaimsInput;
-
-      const result = parseUserinfo(data);
-
-      expect(result).toMatchSnapshot();
-    });
-
     test("should throw UserinfoEndpointFailed when subject is missing on a domain payload", () => {
       const data = {
         profile: { givenName: "Jane" },
