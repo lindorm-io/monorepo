@@ -1,4 +1,5 @@
 import { isString } from "@lindorm/is";
+import type { AegisVerifyKey } from "../../types/index.js";
 import {
   decodeEncryptedCoseKid,
   decryptCose,
@@ -25,6 +26,7 @@ export const coseVerifyCore = async ({
   verifyAuthTime,
   deps,
   issuer,
+  verify,
 }: {
   input: Buffer;
   /** Widen the temporal range checks by this many seconds. Overrides the deployment default. */
@@ -47,6 +49,14 @@ export const coseVerifyCore = async ({
    * Takes precedence over the CWT's own `iss` when scoping the key lookup.
    */
   issuer?: string;
+  /**
+   * The per-call verification key POLICY (`VerifyOptions.key`) — a check on the
+   * key the token's `kid` names, or a kryptos supplied outright. This parameter
+   * did not exist: the COSE claims path called `resolveVerifyKey` with no
+   * `verify` field at all, so a caller pinning which key may verify a CWT was
+   * accepted and ignored. The opaque CWS branch always threaded it.
+   */
+  verify?: AegisVerifyKey;
 }) => {
   let bytes = input;
 
@@ -76,6 +86,7 @@ export const coseVerifyCore = async ({
     id: decoded.kid,
     algorithm: undefined,
     issuer: issuer ?? (isString(decoded.payload?.iss) ? decoded.payload.iss : undefined),
+    verify,
   });
   const { claims, wire, typ } = verifyCose({
     kryptos,

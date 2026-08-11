@@ -14,6 +14,8 @@ import type {
 import { isCose } from "../cose/is-cose.js";
 import { isCws as isCwsBytes } from "../cose/is-cose-format.js";
 import type { AegisDeps } from "./aegis-deps.js";
+import { applyVerifyPolicy, COSE_VERIFY_CODEC } from "./apply-verify-policy.js";
+import { assertCoseTokenType } from "./assert-cose-token-type.js";
 import { buildCoseVerifiedToken, coseDomainHeader } from "./build-cose-verified-token.js";
 import { coseVerifyCore } from "./cose-verify-core.js";
 import { isClaimsContentType } from "./is-claims-content-type.js";
@@ -21,7 +23,6 @@ import { joseDomainHeader } from "./jose-domain-header.js";
 import { rawDecryptJwe } from "./raw-decrypt-jwe.js";
 import { rawVerifyCws } from "./raw-verify-cws.js";
 import { rawVerifyJws } from "./raw-verify-jws.js";
-import { validateCwtClaims } from "./validate-cwt-claims.js";
 import { verifyJwtToken } from "./verify-jwt.js";
 
 /**
@@ -171,26 +172,38 @@ export const verifyToken = async <C extends Dict = Dict>({
         verifyAuthTime: options?.verifyAuthTime,
         deps,
         issuer,
-      });
-      // UNCONDITIONAL, exactly as the JOSE twin is: `verifyJwtToken` defaults
-      // `options = {}` and always runs the presence policy. Gating this on
-      // `options || assert` made the empty object meaningful — a bare
-      // `verify(cwt)` skipped claim validation entirely while
-      // `verify(cwt, undefined, {})` enforced it.
-      validateCwtClaims({
-        wire,
-        typ,
-        algorithm: decoded.algorithm as KryptosAlgorithm,
-        assert,
-        options: options ?? {},
+        // The per-call key POLICY, which this branch used to drop while the
+        // opaque CWS branch twenty lines above threaded it.
+        verify: options?.key,
       });
 
-      const verified = buildCoseVerifiedToken({
+      const built = buildCoseVerifiedToken({
         wire,
         decoded,
         token,
         encrypted: coseEncrypted || encrypted,
-      }) as VerifiedToken<C>;
+      });
+
+      const { tokenType, ...claimMatchers } = assert ?? {};
+
+      assertCoseTokenType(typ, tokenType);
+
+      // The SAME domain policy the JOSE branch applies — one implementation, so
+      // a knob cannot be honoured on one wire and dropped on the other.
+      const { dpop } = applyVerifyPolicy({
+        wireClaims: wire,
+        claims: built.claims,
+        delegation: built.delegation,
+        decodedTyp: typ,
+        algorithm: decoded.algorithm as KryptosAlgorithm,
+        assert: claimMatchers,
+        options: options ?? {},
+        codec: COSE_VERIFY_CODEC,
+        token,
+        dpopMaxSkew: deps.dpopMaxSkew,
+      });
+
+      const verified = { ...built, dpop } as VerifiedToken<C>;
 
       // A COSE_Encrypt0 (cwe) wrapped a signed inner CWT/CWM: report the OUTER
       // `cwe` format with the inner claims-format under `inner`.

@@ -1,20 +1,14 @@
 import { isString } from "@lindorm/is";
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
-import { omitUndefined } from "@lindorm/utils";
 import { JwtKit } from "../../classes/JwtKit.js";
-import { AegisDomainError } from "../../errors/index.js";
 import type { VerifiedToken, VerifyAssert, VerifyOptions } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
+import { applyVerifyPolicy, JOSE_VERIFY_CODEC } from "./apply-verify-policy.js";
 import { computeTypHeader, extractTypPrefix } from "./compute-typ-header.js";
 import { extractTokenDelegation } from "./extract-token-delegation.js";
 import { joseDomainHeader } from "./jose-domain-header.js";
-import { joseName } from "../claims/claims-registry.js";
-import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { buildDomainClaims } from "./jwt-payload.js";
-import { validate } from "./validate.js";
-import { validateActor } from "./validate-actor.js";
-import { verifyDpopProof } from "./verify-dpop-proof.js";
 
 /**
  * The domain JWT verify (`aegis.verify(token)` JWT branch → `VerifiedToken`).
@@ -100,18 +94,6 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   // the DOMAIN-named header, so translate here (the JOSE twin of coseDomainHeader).
   const header = joseDomainHeader(decoded.header, "JWT");
 
-  // typ PRESENCE policy (default "required") — the RFC 8725 explicit-typing
-  // defense. Profiled verify relaxes to "optional" (the floor owns it).
-  if (options.typPresence !== "optional" && decoded.header.typ === undefined) {
-    throw new AegisDomainError("Invalid token", {
-      code: "jwt_invalid_typ",
-      data: { typ: decoded.header.typ },
-      title: "JWT Invalid Typ",
-      details:
-        "Header typ is absent; a typ of JWT or a <type>+jwt media type is required to verify as a JWT.",
-    });
-  }
-
   // Domain buckets (enforces the `iss` presence gate) + the delegation summary.
   const { claims, custom, profile, sensitive } = buildDomainClaims<C>(
     decoded.payload,
@@ -119,6 +101,9 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
   );
   const delegation = extractTokenDelegation(decoded.payload as { act?: any });
 
+  // The matcher input: the wire payload with its temporal claims as `Date`s. The
+  // COSE kit already hands its wire back in that shape, so both wires reach the
+  // shared policy with the same kind of dict.
   const withDates = {
     ...decoded.payload,
     exp: decoded.payload.exp ? new Date(decoded.payload.exp * 1000) : undefined,
@@ -129,89 +114,20 @@ export const verifyJwtToken = async <C extends Dict = Dict>({
       : undefined,
   };
 
-  // `exp` PRESENCE is policy (default "required"). Surface the dedicated code
-  // before the generic matcher pass; "optional" (profiled SETs) skips it. When
-  // present, the range was already checked by the kit's temporal matcher.
-  if (options.expPresence !== "optional" && withDates.exp === undefined) {
-    throw new AegisDomainError("Missing claim: exp", {
-      code: "jwt_missing_claim_exp",
-      title: "JWT Missing Claim Exp",
-      details:
-        'The token has no exp claim, but exp is required for this verification (expPresence is not "optional").',
-    });
-  }
-
-  // Named-claim identity matchers (aud/iss/sub/hashes/…) — the AEGIS half of the
-  // old `createJwtVerify`. The bag is the domain `assert` less `tokenType`,
-  // which the kit already asserted against the header.
-  //
-  // Built OUTSIDE the try: a matcher the builder REFUSES (an unknown key, a
-  // hash source it cannot hash) is a caller mistake with its own message, and
-  // folding it into `jwt_claims_invalid` reported "claims invalid" with an
-  // EMPTY invalid list — the failure that names nothing.
-  const predicate = createIdentityMatchers(
-    kit.algorithm,
-    omitUndefined(claimMatchers),
-    joseName,
-  );
-
-  try {
-    validate(withDates, predicate as never);
-  } catch (err) {
-    throw new AegisDomainError("Invalid token", {
-      code: "jwt_claims_invalid",
-      data: { invalid: (err as any).data?.invalid },
-      debug: { invalid: (err as any).debug?.invalid },
-      title: "JWT Claims Invalid",
-      details:
-        "One or more claims (such as a verifier-supplied claim) failed the validation predicate.",
-    });
-  }
-
-  const actorError = validateActor(delegation, options.actor);
-  if (actorError) {
-    throw new AegisDomainError(actorError.message, {
-      code: "jwt_actor_not_allowed",
-      debug: actorError.debug,
-      title: "JWT Actor Not Allowed",
-      details:
-        "The token's act delegation chain does not satisfy the expected actor supplied to verify.",
-    });
-  }
-
-  const boundThumbprint = claims.confirmation?.thumbprint;
-
-  let dpop;
-  if (options.dpopProof !== undefined) {
-    if (!boundThumbprint) {
-      throw new AegisDomainError(
-        "Invalid token: DPoP proof provided but token is not bound",
-        {
-          code: "jwt_dpop_token_not_bound",
-          debug: { confirmation: claims.confirmation },
-          title: "JWT DPoP Token Not Bound",
-          details:
-            "A DPoP proof was supplied but the token carries no cnf.jkt thumbprint, so it cannot be DPoP-bound.",
-        },
-      );
-    }
-    dpop = verifyDpopProof({
-      proof: options.dpopProof,
-      accessToken: token,
-      expectedThumbprint: boundThumbprint,
-      dpopMaxSkew: deps.dpopMaxSkew,
-    });
-  } else if (boundThumbprint && !options.trustBoundThumbprint) {
-    throw new AegisDomainError(
-      "Invalid token: token is DPoP-bound but no DPoP proof was provided",
-      {
-        code: "jwt_dpop_proof_required",
-        title: "JWT DPoP Proof Required",
-        details:
-          "The token carries a cnf.jkt thumbprint, so a matching DPoP proof must be supplied unless trustBoundThumbprint is set.",
-      },
-    );
-  }
+  // typ/exp presence, the identity matchers, the actor chain and the DPoP
+  // binding — ONE implementation, shared with the COSE path.
+  const { dpop } = applyVerifyPolicy({
+    wireClaims: withDates,
+    claims,
+    delegation,
+    decodedTyp: decoded.header.typ,
+    algorithm: kit.algorithm,
+    assert: claimMatchers,
+    options,
+    codec: JOSE_VERIFY_CODEC,
+    token,
+    dpopMaxSkew: deps.dpopMaxSkew,
+  });
 
   return {
     format: "jwt",

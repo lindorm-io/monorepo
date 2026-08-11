@@ -233,6 +233,132 @@ describe("Aegis — JOSE/COSE wire parity", () => {
   });
 
   /**
+   * The verify KNOBS that reached only the JOSE path. Each was accepted and
+   * dropped on a CWT — the caller asked for a check and silently got none — and
+   * each corresponds to a `bug` row that this closes in the wire-parity table.
+   */
+  describe("verify options that the COSE path used to drop", () => {
+    const now = Math.floor(new Date("2024-01-01T08:00:00.000Z").getTime() / 1000);
+
+    // A DPoP-bound token, built through the raw namespaces so the binding is on
+    // an ordinary access token without mint's cnf plumbing. `jkt` must be a real
+    // 32-byte base64url thumbprint or the COSE encoder refuses to emit it.
+    const JKT = Buffer.alloc(32, 7).toString("base64url");
+    const bound = {
+      iss: ISSUER,
+      sub: "user-1",
+      aud: ["https://rs.lindorm.io/"],
+      exp: now + 3600,
+      iat: now,
+      cnf: { jkt: JKT },
+    };
+
+    const signJose = async (claims: Record<string, unknown>): Promise<string> => {
+      const key = await importJWK(
+        TEST_EC_KEY_SIG.export("jwk") as never,
+        TEST_EC_KEY_SIG.algorithm,
+      );
+
+      return new SignJWT(claims)
+        .setProtectedHeader({
+          alg: TEST_EC_KEY_SIG.algorithm,
+          kid: TEST_EC_KEY_SIG.id,
+          typ: "JWT",
+        })
+        .sign(key);
+    };
+
+    const signCose = async (claims: Record<string, unknown>): Promise<string> =>
+      (await aegis.cwt.sign(claims)).token;
+
+    // ⚠ The DPoP binding is enforced by the SHARED policy now, so the rule is
+    // identical on both wires — but it is currently UNREACHABLE on COSE, and not
+    // because of anything aegis chose. RFC 8747's COSE `cnf` map has members for
+    // an embedded COSE_Key and a `kid` and nothing else: there is no COSE
+    // equivalent of `jkt` (jkt is not ckt). So the encoder refuses to emit a
+    // thumbprint confirmation at all, and no CWT can carry the binding the DPoP
+    // check would police.
+    //
+    // Pinned rather than skipped: if a COSE `jkt` representation is ever added,
+    // this test fails and the DPoP pair below it becomes constructible.
+    test("should refuse to put a jkt confirmation on a COSE wire at all", async () => {
+      await expect(signCose(bound)).rejects.toMatchObject({
+        code: "cose_cnf_unsupported",
+      });
+    });
+
+    test("should refuse a DPoP-bound JWT with no proof", async () => {
+      await expect(aegis.verify(await signJose(bound))).rejects.toMatchObject({
+        code: "jwt_dpop_proof_required",
+      });
+    });
+
+    test("should honour trustBoundThumbprint", async () => {
+      await expect(
+        aegis.verify(await signJose(bound), undefined, { trustBoundThumbprint: true }),
+      ).resolves.toMatchObject({ format: "jwt" });
+    });
+
+    // `actor` — the act-chain policy. It needs `delegation` populated, which the
+    // COSE result never carried at all.
+    test("should enforce the actor policy on both wires", async () => {
+      const delegated = {
+        iss: ISSUER,
+        sub: "user-1",
+        aud: ["https://rs.lindorm.io/"],
+        exp: now + 3600,
+        iat: now,
+        act: { sub: "service-a" },
+      };
+      const options = { actor: { forbidden: true } };
+
+      await expect(
+        aegis.verify(await signJose(delegated), undefined, options),
+      ).rejects.toMatchObject({ code: "jwt_actor_not_allowed" });
+      await expect(
+        aegis.verify(await signCose(delegated), undefined, options),
+      ).rejects.toMatchObject({ code: "cwt_actor_not_allowed" });
+    });
+
+    test("should report the act chain in the result on both wires", async () => {
+      const delegated = {
+        iss: ISSUER,
+        sub: "user-1",
+        aud: ["https://rs.lindorm.io/"],
+        exp: now + 3600,
+        iat: now,
+        act: { sub: "service-a" },
+      };
+
+      const jose = await aegis.verify(await signJose(delegated));
+      const cose = await aegis.verify(await signCose(delegated));
+
+      expect(jose.delegation?.isDelegated).toBe(true);
+      expect(cose.delegation?.isDelegated).toBe(true);
+    });
+
+    // `key` — the per-call verification key POLICY. A condition no key in the
+    // vault satisfies must fail the lookup, not be ignored.
+    test("should apply the per-call key policy on both wires", async () => {
+      const plain = {
+        iss: ISSUER,
+        sub: "user-1",
+        aud: ["https://rs.lindorm.io/"],
+        exp: now + 3600,
+        iat: now,
+      };
+      const options = { key: { condition: { id: "no-such-key-id" } } };
+
+      await expect(
+        aegis.verify(await signJose(plain), undefined, options),
+      ).rejects.toThrow();
+      await expect(
+        aegis.verify(await signCose(plain), undefined, options),
+      ).rejects.toThrow();
+    });
+  });
+
+  /**
    * A profile's `rules` and `validate` are its STRUCTURAL policy, and the
    * profile type says all its policy fields "apply on whichever side the profile
    * is used". They ran at mint only.

@@ -56,7 +56,6 @@ export const VERIFY_OPTION_PARITY = {
   actor: {
     wires: "both",
     default: { jose: undefined, cose: undefined },
-    bug: "cose: buildCoseVerifiedToken never extracts the act chain, so validateActor is never reached (F5)",
   },
 
   clockTolerance: {
@@ -98,28 +97,26 @@ export const VERIFY_OPTION_PARITY = {
     wires: "both",
     default: { jose: undefined, cose: undefined },
     reason:
-      "RFC 9449 defines only the JWT proof form, but the PROOF's wire is independent of the bound token's: a cnf.jkt in a CWT binds exactly as it does in a JWT",
-    bug: "cose: no DPoP check on any COSE claims path",
+      "RFC 9449 defines only the JWT proof form, but the PROOF's wire is independent of the bound token's: a cnf.jkt in a CWT binds exactly as it does in a JWT, and the shared verify policy enforces it on both. ⚠ UNOBSERVABLE on COSE today — RFC 8747's cnf map has members for an embedded COSE_Key and a kid only, with no jkt equivalent (jkt is not ckt), so no CWT can carry the binding in the first place",
   },
 
   trustBoundThumbprint: {
     wires: "both",
     default: { jose: false, cose: false },
-    bug: "cose: the bound-but-unproven refusal it waives is not made on COSE, so the waiver has nothing to waive",
+    reason:
+      "Shared with dpopProof: it waives the bound-but-unproven refusal, so it is unobservable on COSE for the same RFC 8747 reason",
   },
 
   key: {
     wires: "both",
     default: { jose: undefined, cose: undefined },
-    bug: "cose: coseVerifyCore takes no key parameter, so the claims path resolves unscoped by kid alone — the opaque CWS branch does thread it",
   },
 
   typPresence: {
     wires: "both",
     default: { jose: "required", cose: "optional" },
     reason:
-      "RFC 8725 §3.11 mandates explicit typing for JOSE; RFC 9596 leaves the COSE typ (label 16) optional. An explicit value behaves identically on both wires — only the unstated default follows each RFC",
-    bug: "cose: typ presence is not checked at all, so the option is neither honoured nor defaulted",
+      "RFC 8725 §3.11 mandates explicit typing for JOSE; RFC 9596 leaves the COSE typ (label 16) optional. An explicit value behaves identically on both wires — only the unstated default follows each RFC. ⚠ The required case is unobservable on COSE today: every COSE writer stamps a typ (a bare CWT gets application/cwt), so a typ-less CWT cannot be produced to reject",
   },
 
   expPresence: {

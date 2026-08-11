@@ -1,6 +1,7 @@
 import type { Dict } from "@lindorm/types";
 import type {
   DomainTokenHeader,
+  TokenDelegation,
   VerifiedToken,
   WireTokenHeader,
 } from "../../types/index.js";
@@ -9,6 +10,7 @@ import type { CwtDecoded } from "../cose/cwt-token.js";
 import { COSE_TAG } from "../cose/structures.js";
 import { coseToBuckets } from "../claims/resolve-domain-buckets.js";
 import { decodeTokenTypeFromTyp } from "./compute-typ-header.js";
+import { extractTokenDelegation } from "./extract-token-delegation.js";
 import { parseTokenHeader } from "./token-header.js";
 
 // The COSE structure tag (Sign1 / Mac0) decides `cwt` vs `cwm` on READ (D6): a
@@ -71,11 +73,19 @@ export const buildCoseVerifiedToken = ({
   decoded: CwtDecoded;
   token: string;
   encrypted: boolean;
-}): VerifiedToken => {
+  // `delegation` is narrowed to REQUIRED on the way out: a claims-bearing COSE
+  // token always has an act summary (an absent `act` yields `isDelegated:
+  // false`, not `undefined`), and the verify policy needs it non-optional.
+}): VerifiedToken & { delegation: TokenDelegation } => {
   // The same shared resolution the JOSE read path and `Aegis.toDomain` run —
   // one step, so the two doors onto the registry cannot resolve different
   // surfaces again.
   const { claims, custom, profile, sensitive } = coseToBuckets(wire);
+
+  // The act-chain summary, which this used to omit entirely — so a COSE result
+  // reported `delegation.isDelegated: false` for a token that WAS delegated, on
+  // a field `VerifiedToken` documents as uniform across all six formats.
+  const delegation = extractTokenDelegation(wire as { act?: any });
 
   return {
     format: coseFormatOf(decoded.cose),
@@ -87,6 +97,7 @@ export const buildCoseVerifiedToken = ({
     claims,
     custom,
     profile,
+    delegation,
     sensitive: encrypted ? sensitive : undefined,
     wire: { payload: wire },
     token,
