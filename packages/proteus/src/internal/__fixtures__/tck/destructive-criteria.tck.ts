@@ -97,6 +97,47 @@ export const destructiveCriteriaSuite = (
       expect(rows.map((r) => r.name).sort()).toEqual(["A", "C"]);
     });
 
+    // A field-level `$and` / `$or` is the one criteria shape the guard CANNOT
+    // vouch for. The analysis reads the CALLER's condition, so an operator the
+    // caller wrote is counted as restricting whether or not the driver honours
+    // it — a compiler that dropped the key would sail through the guard and
+    // then emit an unbounded DELETE. Reproduced by removing the two branches
+    // from the SQL compiler: three rows in, ZERO out, no error raised.
+    //
+    // The read-path cases for these operators live in the complex-predicates
+    // suite; only a row count on the DESTRUCTIVE path catches this, and a
+    // compiled-SQL assertion never would.
+    if (caps.fieldConditions) {
+      test("delete honours a field-level $and", async () => {
+        const repo = getHandle().repository(TckUnversioned);
+
+        await repo.delete({ name: { $and: [{ $eq: "B" }] } } as any);
+
+        const rows = await repo.find();
+        expect(rows.map((r) => r.name).sort()).toEqual(["A", "C"]);
+      });
+
+      test("delete honours a field-level $or", async () => {
+        const repo = getHandle().repository(TckUnversioned);
+
+        await repo.delete({ name: { $or: [{ $eq: "A" }, { $eq: "C" }] } } as any);
+
+        const rows = await repo.find();
+        expect(rows.map((r) => r.name)).toEqual(["B"]);
+      });
+
+      test("updateMany honours a field-level $or", async () => {
+        const repo = getHandle().repository(TckUnversioned);
+
+        await repo.updateMany({ name: { $or: [{ $eq: "A" }, { $eq: "C" }] } } as any, {
+          score: 99,
+        });
+
+        const rows = await repo.find(undefined, { order: { name: "ASC" } });
+        expect(rows.map((r) => r.score)).toEqual([99, 2, 99]);
+      });
+    }
+
     // Root `{}` is how you ask a READ for everything, and it must keep working.
     // The destructive path is guarded separately, so preserving it costs
     // nothing.
