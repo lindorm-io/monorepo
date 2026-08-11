@@ -1,4 +1,3 @@
-import { isObject } from "@lindorm/is";
 import { omitUndefined } from "@lindorm/utils";
 import { AegisDomainError } from "../../errors/index.js";
 import type {
@@ -12,7 +11,7 @@ import { resolveProfile } from "../profiles/registry.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { encryptJwe } from "./encrypt-jwe.js";
-import { withSensitiveDomain } from "./jwt-payload.js";
+import { mergeContentClaims } from "./merge-content-claims.js";
 import { mintCoseToken } from "./mint-cose-token.js";
 import { selectEncoder } from "./select-encoder.js";
 import { signJwtWire } from "./sign-jwt-wire.js";
@@ -126,12 +125,7 @@ export const mintToken = async ({
   // `domainToJose` maps each by the registry (the sensitive fields become their
   // individual wire claims, not a nested wrapper); the emit boundary makes no
   // case decision (R18).
-  const claims = domainToJose(
-    withSensitiveDomain(
-      isObject(signContent.profile) ? { ...common, ...signContent.profile } : common,
-      signContent,
-    ),
-  );
+  const claims = domainToJose(mergeContentClaims(common, signContent));
 
   // A profile typ value stamps the header verbatim (e.g. `at+jwt`) — for
   // BOTH optional and required presence (presence is a verify-side knob

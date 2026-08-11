@@ -1,5 +1,5 @@
 import { getUnixTime } from "@lindorm/date";
-import { isDate, isObject, isString } from "@lindorm/is";
+import { isDate, isString } from "@lindorm/is";
 import { omitUndefined } from "@lindorm/utils";
 import { AegisDomainError } from "../../errors/index.js";
 import type { ProfileMintOptions, SignContent, SignedToken } from "../../types/index.js";
@@ -10,6 +10,7 @@ import { resolveProfile } from "../profiles/registry.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { extractTypPrefix } from "./compute-typ-header.js";
+import { mergeContentClaims } from "./merge-content-claims.js";
 import { validateProfileClaims } from "./validate-profile-claims.js";
 
 /**
@@ -89,12 +90,9 @@ export const mintCoseToken = async ({
     algorithm: kryptos.algorithm as any,
   });
 
-  // Merge the FLAT sensitive claims into the domain layer so `domainToCose`
-  // emits each as its individual CWT label (not a nested wrapper). Kept off the
-  // policy-validated `common` above — sensitive fields carry no profile policy.
-  const commonWithSensitive = isObject(signContent.sensitive)
-    ? { ...common, ...signContent.sensitive }
-    : common;
+  // The SAME merge the JOSE encoder runs — both content buckets, not just
+  // `sensitive`. This used to drop `content.profile` entirely.
+  const commonWithContent = mergeContentClaims(common, signContent);
 
   // D6: the WRITE path selects the COSE kit by the explicit format (`cwt` =
   // COSE_Sign1 / asymmetric, `cwm` = COSE_Mac0 / symmetric). `mintToken` routes
@@ -109,10 +107,12 @@ export const mintCoseToken = async ({
   let token = signCose({
     kryptos,
     logger: deps.logger,
-    common: commonWithSensitive,
+    common: commonWithContent,
     tokenType: typPrefix,
     proprietary: options.proprietary,
-    omit: options.omit,
+    // mint's own `omit` controls the wire; a per-sign omit is a fallback — the
+    // JOSE encoder has always honoured both.
+    omit: options.omit ?? options.sign?.omit,
     format,
   });
 

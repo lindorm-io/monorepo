@@ -1,5 +1,5 @@
 import { B64 } from "@lindorm/b64";
-import { isObject, isString } from "@lindorm/is";
+import { isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { getUnixTime } from "@lindorm/date";
 import { JwtError } from "../../errors/index.js";
@@ -7,7 +7,6 @@ import type {
   AegisProfile,
   AegisSensitive,
   AegisClaimsWire,
-  SignJwtContent,
   SignedToken,
   TokenFormatTag,
 } from "../../types/index.js";
@@ -15,19 +14,6 @@ import { joseToBuckets } from "../claims/resolve-domain-buckets.js";
 import type { DomainClaims } from "./extract-claims.js";
 
 type DecodeClaims<C extends Dict = Dict> = AegisClaimsWire & C;
-
-/**
- * Merge the FLAT sensitive-identity fields (registry `category: "sensitive"`)
- * into the DOMAIN layer so `domainToJose` maps each to its individual wire claim
- * (`nationalIdentityNumber` -> `national_identity_number`, …). They are ordinary
- * registered claims — NOT nested under a wrapper (OIDC Core §13.3 is enforced by
- * the mint encryption-forcing + the read-side honor-only-when-encrypted gate,
- * not by a wire envelope).
- */
-export const withSensitiveDomain = (
-  domain: Dict,
-  content: Pick<SignJwtContent, "sensitive">,
-): Dict => (isObject(content.sensitive) ? { ...domain, ...content.sensitive } : domain);
 
 /**
  * Enrich the wire kit's bare `{ token }` into the domain `SignedToken` — the

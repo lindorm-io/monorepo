@@ -359,6 +359,57 @@ describe("Aegis — JOSE/COSE wire parity", () => {
   });
 
   /**
+   * The MINT side of the same problem: the two encoders assemble the domain claim
+   * layer separately, so a content bucket one of them merges and the other does
+   * not is lost silently — the token mints, and the claims are simply gone.
+   */
+  describe("mint content buckets", () => {
+    const content = {
+      subject: "user-1",
+      audience: ["client-1"],
+      profile: { givenName: "Ada", email: "ada@example.com" },
+    };
+
+    // Live DATA LOSS: the COSE encoder merged `sensitive` and not `profile`,
+    // while COSE verify reads a `profile` bucket back — so the claims were
+    // written nowhere and read from a bucket nothing had filled.
+    test("should carry content.profile onto both wires", async () => {
+      const jwt = await aegis.mint("id_token", content);
+      const cwt = await aegis.mint("id_token", content, { format: "cwt" });
+
+      const jose = await aegis.verify("id_token", jwt.token, undefined, {
+        audience: "client-1",
+      });
+      const cose = await aegis.verify("id_token", cwt.token, undefined, {
+        audience: "client-1",
+      });
+
+      expect(jose.profile).toMatchObject({ givenName: "Ada", email: "ada@example.com" });
+      expect(cose.profile).toMatchObject({ givenName: "Ada", email: "ada@example.com" });
+    });
+
+    // `omit` is a MODE, not a claim list: "empty" (the default) prunes empty
+    // containers from the wire, "undefined" preserves them. It can be given on
+    // the mint options or as a per-sign fallback, and only the JOSE encoder
+    // honoured the fallback.
+    test("should honour the sign.omit fallback on both wires", async () => {
+      const withEmpty = { ...content, authMethods: [] as Array<string> };
+      const options = { sign: { omit: "undefined" } } as never;
+
+      const jwt = await aegis.mint("id_token", withEmpty, options);
+      const cwt = await aegis.mint("id_token", withEmpty, {
+        ...(options as object),
+        format: "cwt",
+      } as never);
+
+      // The empty array survives the prune on BOTH wires because the per-sign
+      // mode reached both encoders.
+      expect((await aegis.jwt.verify(jwt.token)).payload).toHaveProperty("amr");
+      expect((await aegis.cwt.verify(cwt.token)).payload).toHaveProperty("amr");
+    });
+  });
+
+  /**
    * A profile's `rules` and `validate` are its STRUCTURAL policy, and the
    * profile type says all its policy fields "apply on whichever side the profile
    * is used". They ran at mint only.
