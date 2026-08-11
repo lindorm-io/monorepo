@@ -617,7 +617,7 @@ Either way the signature itself is plain RFC 9052 — verified in interop tests 
 
 ### Opaque handles (raw COSE sign — `cws`)
 
-`aegis.cws.sign(payload, options)` (equivalently `aegis.sign({ format: "cws", payload })`) is the profile-less sibling of the raw JWS `sign` — it secures an arbitrary CBOR claims map as a `COSE_Sign1` CWT. Because the token is base64url CBOR with no JOSE dot structure, a consumer cannot split it and read it as a JWT: it is an **opaque handle** (e.g. an internal reference `{ tid, sec }` signed with an unpublished key). The payload MUST be a plain object — a pre-serialised string/Buffer is a JWS-only shape and is rejected (`cose_payload_not_object`); `typ` derives from the bare `tokenType`. `verify` auto-detects it like any COSE token.
+`aegis.cws.sign(payload, options)` (equivalently `aegis.sign({ format: "cws", payload })`) is the profile-less sibling of the raw JWS `sign` — it secures an arbitrary CBOR claims map as a `COSE_Sign1` CWT. Because the token is base64url CBOR with no JOSE dot structure, a consumer cannot split it and read it as a JWT: it is an **opaque handle** (e.g. an internal reference `{ tid, sec }` signed with an unpublished key). The payload is a CBOR claims map; `typ` derives from the bare `tokenType`. `verify` auto-detects it like any COSE token.
 
 ```typescript
 const { token } = await aegis.cws.sign(
@@ -933,7 +933,7 @@ import {
 - Signature/decryption keys are always sourced from the supplied `IAmphora`. The `jku`, `jwk`, `x5u`, `x5c`, `x5t`, and `x5t#S256` JOSE header parameters are never trusted as key sources during verification — only `kid` is used as a lookup key into Amphora. The COSE verify path is the same: the signing/encryption key is resolved only by the COSE `kid` (unprotected header, label 4), never from anything embedded in the token.
 - A `kid` lookup is scoped to the issuer the verifier expects, or the one the artifact claims — see [Verification keys are scoped to an issuer](#verification-keys-are-scoped-to-an-issuer). Without it, a registered peer publishing a colliding `kid` could sign a token claiming another issuer's `iss` and have it verify.
 - JWE payload compression (`zip` header) is rejected outright.
-- Critical header parameters are enforced per RFC 7515 §4.1.11; unknown `crit` entries cause verification to fail.
+- Critical header parameters are enforced **on the JOSE paths only**, per RFC 7515 §4.1.11: unknown `crit` entries cause verification to fail. ⚠ **COSE does not enforce `crit` on any read path**, although RFC 9052 §3.1 makes an unrecognised critical parameter fatal. A CWT/CWS/CWE carrying a `crit` header aegis does not understand verifies successfully — do not rely on this guarantee for COSE.
 - DPoP-bound tokens (`cnf.jkt`) require either a matching DPoP proof or `trustBoundThumbprint: true` on verify.
 - Tokens are never logged whole. Every log line and error payload carries a token as `header.payload` — the signature is dropped, so a logged token stays debuggable but unusable. A JWE is logged as its protected header only; a token with no safely-showable structure (opaque, COSE/CWT) is logged as `[Filtered]`. This applies to DPoP proofs passed on verify as well.
 
