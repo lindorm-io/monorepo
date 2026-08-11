@@ -28,11 +28,11 @@ export const liftClaimMatcher = (
   if (isArray<string>(value)) return { $all: value };
   if (isObject(value)) return value as ConditionOperator<any>;
 
-  // The array lift is string-only on purpose: a registry `value: "array"` claim
+  // The array lift is string-only on purpose: a registry `array` claim
   // is an array of STRINGS, so a non-string matcher for one is malformed input
   // and keeps its literal-equality reading rather than being silently lifted.
   if (isString(value)) {
-    return spec?.value === "array" ? { $all: [value] } : { $eq: value };
+    return spec?.codec.kind === "array" ? { $all: [value] } : { $eq: value };
   }
 
   // The remaining scalar claim kinds are plain equality. A `bool` claim

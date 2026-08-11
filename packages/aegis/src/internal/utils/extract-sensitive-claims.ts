@@ -1,12 +1,14 @@
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import type { AegisSensitive } from "../../types/index.js";
-import { CLAIMS_REGISTRY } from "../claims/claims-registry.js";
+import { CLAIM_SPECS } from "../claims/claims-registry.js";
 
-// The DOMAIN names of the sensitive-category claims, DERIVED from the registry
-// (`category: "sensitive"`) — the single source of truth, never a hand-kept list.
-const SENSITIVE_DOMAINS: ReadonlyArray<string> = CLAIMS_REGISTRY.filter(
-  (spec) => spec.category === "sensitive",
+// The DOMAIN names of the sensitive claims, DERIVED from the registry
+// (`sensitivity: "sensitive"`) — the single source of truth, never a hand-kept
+// list. Sensitivity is its OWN column now, independent of which read-side bucket
+// the claim lands in, so the §13.3 gate has one unambiguous input.
+const SENSITIVE_DOMAINS: ReadonlyArray<string> = CLAIM_SPECS.filter(
+  (spec) => spec.sensitivity === "sensitive",
 ).map((spec) => spec.domain);
 
 /**

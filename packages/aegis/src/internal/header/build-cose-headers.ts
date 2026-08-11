@@ -1,6 +1,6 @@
 import type { CoseError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
-import { headerByCose } from "./header-registry.js";
+import { joseByCose } from "./header-registry.js";
 import { wireHeaderToCoseMap } from "./wire-header-to-cose-map.js";
 
 /**
@@ -74,7 +74,7 @@ export const buildCoseHeaders = ({
   ] as const) {
     for (const label of entries.keys()) {
       if (!reserved.has(label)) continue;
-      const jose = headerByCose(label)?.jose ?? String(label);
+      const jose = joseByCose(label) ?? String(label);
       throw new error(`Header parameter "${jose}" is key-derived and cannot be set`, {
         code: "cose_reserved_header",
         data: { parameter: jose, bucket },
@@ -88,7 +88,7 @@ export const buildCoseHeaders = ({
   // Rule 3 — the same non-reserved param cannot appear in BOTH buckets.
   for (const label of protectedEntries.keys()) {
     if (!unprotectedEntries.has(label)) continue;
-    const jose = headerByCose(label)?.jose ?? String(label);
+    const jose = joseByCose(label) ?? String(label);
     throw new error(`Header parameter "${jose}" set in both header and unprotected`, {
       code: "cose_duplicate_header",
       data: { parameter: jose },

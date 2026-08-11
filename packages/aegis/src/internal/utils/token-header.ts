@@ -10,9 +10,11 @@ import type {
   DomainTokenHeaderOptions,
 } from "../../types/index.js";
 import {
+  type HeaderCodec,
   type HeaderSpec,
   headerByDomain,
   headerByJose,
+  headerJoseName,
 } from "../header/header-registry.js";
 import { getBaseFormat } from "./compute-typ-header.js";
 
@@ -25,7 +27,8 @@ import { getBaseFormat } from "./compute-typ-header.js";
  * `headerByDomain`; {@link parseTokenHeader} (read, `jose -> domain`) iterates the
  * decoded wire claims and looks each key up via `headerByJose`. Unlike custom
  * claims, headers are a CLOSED set: a key with no registry entry is dropped (no
- * passthrough). The registry's `HeaderValueKind` drives the value shaping below.
+ * passthrough) — the registry states that once, as `unregistered: "drop"`. The
+ * registry's `HeaderCodec` drives the value shaping below.
  */
 
 // --- `crit` member remap (the one member-transforming parameter) ------------
@@ -33,7 +36,12 @@ import { getBaseFormat } from "./compute-typ-header.js";
 /** Remap `crit` members DOMAIN -> WIRE; unregistered members pass through. */
 const criticalToWire = (members: unknown): Array<string> | undefined => {
   if (!Array.isArray(members)) return undefined;
-  return members.map((member): string => headerByDomain(member)?.jose ?? member).sort();
+  return members
+    .map((member): string => {
+      const spec = headerByDomain(member);
+      return spec ? headerJoseName(spec) : member;
+    })
+    .sort();
 };
 
 /** Remap `crit` members WIRE -> DOMAIN; unregistered members pass through. */
@@ -42,7 +50,7 @@ const criticalToDomain = (members: unknown): Array<string> => {
   return members.map((member): string => headerByJose(member)?.domain ?? member).sort();
 };
 
-// --- value shaping (registry `HeaderValueKind` dispatch) --------------------
+// --- value shaping (registry `HeaderCodec` dispatch) ------------------------
 
 /**
  * Shape a header value for the WIRE: read it from the domain-keyed source, apply
@@ -52,7 +60,9 @@ const criticalToDomain = (members: unknown): Array<string> => {
  */
 const encodeHeaderValue = (spec: HeaderSpec, source: Dict): unknown => {
   const value = source[spec.domain];
-  switch (spec.value) {
+  const codec = spec.codec;
+
+  switch (codec.kind) {
     case "critical":
       return criticalToWire(value);
     case "string":
@@ -68,13 +78,21 @@ const encodeHeaderValue = (spec: HeaderSpec, source: Dict): unknown => {
     case "array":
       return Array.isArray(value) ? value : undefined;
     default: {
-      const exhaustive: never = spec.value;
+      // The `never` binding is on `codec` — that is what makes the compiler bite
+      // on a new HeaderCodec member. The REPORTED fact must be the `kind` STRING:
+      // stringifying the codec OBJECT yields "[object Object]" and loses the one
+      // fact this handler exists to name.
+      const exhaustive: never = codec;
       throw new JoseError("Unhandled header value kind", {
         code: "token_header_unhandled_value_kind",
-        data: { jose: spec.jose, domain: spec.domain, value: String(exhaustive) },
+        data: {
+          jose: headerJoseName(spec),
+          domain: spec.domain,
+          kind: String((exhaustive as HeaderCodec).kind),
+        },
         title: "Token Header Unhandled Value Kind",
         details:
-          "The header registry produced a value kind the encoder does not handle; a HeaderSpec value kind is missing an encode branch.",
+          "The header registry produced a value kind the encoder does not handle; a HeaderSpec codec kind is missing an encode branch.",
       });
     }
   }
@@ -85,7 +103,9 @@ const encodeHeaderValue = (spec: HeaderSpec, source: Dict): unknown => {
  * verbatim, except `crit`, whose members are remapped wire -> domain.
  */
 const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
-  switch (spec.value) {
+  const codec = spec.codec;
+
+  switch (codec.kind) {
     case "critical":
       return criticalToDomain(decoded.crit);
     case "string":
@@ -94,15 +114,22 @@ const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
     case "jwk":
     case "buffer":
     case "array":
-      return decoded[spec.jose];
+      return decoded[headerJoseName(spec)];
     default: {
-      const exhaustive: never = spec.value;
+      // See `encodeHeaderValue`: the `never` binding is the compiler backstop,
+      // but the REPORTED fact must be the string discriminant — `String(codec)`
+      // on the codec object reads "[object Object]".
+      const exhaustive: never = codec;
       throw new JoseError("Unhandled header value kind", {
         code: "token_header_unhandled_value_kind",
-        data: { jose: spec.jose, domain: spec.domain, value: String(exhaustive) },
+        data: {
+          jose: headerJoseName(spec),
+          domain: spec.domain,
+          kind: String((exhaustive as HeaderCodec).kind),
+        },
         title: "Token Header Unhandled Value Kind",
         details:
-          "The header registry produced a value kind the parser does not handle; a HeaderSpec value kind is missing a decode branch.",
+          "The header registry produced a value kind the parser does not handle; a HeaderSpec codec kind is missing a decode branch.",
       });
     }
   }
@@ -136,7 +163,7 @@ export const mapTokenHeader = (
     if (!spec) continue;
 
     const encoded = encodeHeaderValue(spec, source);
-    if (encoded !== undefined) emitted.push([spec.jose, encoded]);
+    if (encoded !== undefined) emitted.push([headerJoseName(spec), encoded]);
   }
   emitted.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 

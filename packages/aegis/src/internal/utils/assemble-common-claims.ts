@@ -9,7 +9,7 @@ import type {
   SignJwtOptions,
   TokenProfile,
 } from "../../types/index.js";
-import { CLAIMS_REGISTRY } from "../claims/claims-registry.js";
+import { CLAIM_SPECS } from "../claims/claims-registry.js";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
 import { enforceProfilePolicy } from "./enforce-profile-policy.js";
 import { generateTokenId } from "./generate-token-id.js";
@@ -103,15 +103,21 @@ export const assembleCommonClaims = (
   // Registry-driven pick of the standard-claim domain fields present on the
   // content (content uses domain names). Non-claim inputs (`expires`,
   // `accessToken`, `tokenType`…) are not registry domains, so they are excluded.
-  // Only `category: "claims"` is picked from the top level: profile/sensitive
-  // claims arrive in the `content.profile` / `content.sensitive` containers,
-  // merged into the domain layer at the encoder edge — NOT as top-level fields —
-  // and the OIDC `profile` URL claim
-  // (registry domain `profile`) would otherwise collide with the `content.profile`
-  // container object, leaking it onto the wire as a nested `profile` claim.
+  // Only the PUBLIC claims bucket is picked from the top level: profile and
+  // sensitive claims arrive in the `content.profile` / `content.sensitive`
+  // containers, merged into the domain layer at the encoder edge — NOT as
+  // top-level fields — and the OIDC `profile` URL claim (registry domain
+  // `profile`) would otherwise collide with the `content.profile` container
+  // object, leaking it onto the wire as a nested `profile` claim.
+  //
+  // The two conditions were one three-way `category` before. They are separate
+  // columns now (a sensitive claim is `bucket: "claims"` AND
+  // `sensitivity: "sensitive"`), so this asks for both explicitly rather than
+  // relying on a category that could only say one thing at a time.
   const picked: Dict = {};
-  for (const spec of CLAIMS_REGISTRY) {
-    if (spec.category !== "claims") continue;
+  for (const spec of CLAIM_SPECS) {
+    if (spec.bucket !== "claims") continue;
+    if (spec.sensitivity !== "public") continue;
     const value = (content as Dict)[spec.domain];
     if (value !== undefined) picked[spec.domain] = value;
   }

@@ -4,7 +4,7 @@ import type { WireTokenHeader } from "../../types/index.js";
 import { B64U } from "../constants/format.js";
 import { coseLabelToAlg } from "../cose/alg-labels.js";
 import { coseLabelToEnc } from "../cose/enc-labels.js";
-import { coseByJose, headerByCose } from "./header-registry.js";
+import { coseByJose, joseByCose } from "./header-registry.js";
 
 /**
  * How the COSE `alg` label (1) is interpreted: a signature/MAC algorithm (the
@@ -19,7 +19,7 @@ const ALG_LABEL = coseByJose("alg");
 /**
  * Translate a COSE `crit` (label 2) array into its JOSE wire form: each member is
  * an integer header LABEL (or a tstr), so an integer is mapped to its JOSE wire
- * NAME via the header registry (`headerByCose`) — the COSE twin of the JOSE crit
+ * NAME via the header registry (`joseByCose`) — the COSE twin of the JOSE crit
  * member remap. An unregistered integer has no wire name, so it is stringified;
  * a string member is already a name and passes through. Order is preserved to
  * mirror the raw JOSE wire header (which carries `crit` verbatim).
@@ -27,9 +27,7 @@ const ALG_LABEL = coseByJose("alg");
 const coseCritToWire = (value: unknown): unknown => {
   if (!Array.isArray(value)) return value;
   return value.map((member): string =>
-    typeof member === "number"
-      ? (headerByCose(member)?.jose ?? String(member))
-      : String(member),
+    typeof member === "number" ? (joseByCose(member) ?? String(member)) : String(member),
   );
 };
 
@@ -93,16 +91,16 @@ const assignCoseParam = (
     return;
   }
 
-  const spec = headerByCose(label);
-  if (!spec) return;
+  const jose = joseByCose(label);
+  if (jose === undefined) return;
 
-  wire[spec.jose] = coseValueToWire(spec.jose, value);
+  wire[jose] = coseValueToWire(jose, value);
 };
 
 /**
  * Merge a COSE protected + unprotected header map into ONE unified WIRE header
  * ({@link WireTokenHeader}), translating each integer label to its JOSE wire
- * name via the header registry (`headerByCose`). PROTECTED wins on conflict: the
+ * name via the header registry (`joseByCose`). PROTECTED wins on conflict: the
  * unprotected map is applied first, then the protected map overwrites it. This
  * is the COSE twin of a decoded JOSE protected header — same wire vocabulary.
  */

@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { CLAIMS_REGISTRY } from "../../../internal/claims/claims-registry.js";
+import {
+  CLAIM_SPECS,
+  coseName,
+  joseName,
+} from "../../../internal/claims/claims-registry.js";
 import type { JwtClaimsWire } from "./jwt-claims-wire.js";
 import type { CwtClaimsWire } from "./cwt-claims-wire.js";
 
@@ -52,10 +56,10 @@ const _noCwtDivergenceDrift: [DivergenceDrift] extends [never] ? true : Divergen
 void _noCwtDivergenceDrift;
 
 describe("CwtClaimsWire drift guard", () => {
-  test("witness divergences == registry coseName divergences", () => {
-    const registryDivergences = CLAIMS_REGISTRY.filter(
-      (spec) => spec.coseName && spec.coseName !== spec.jose,
-    ).map((spec) => `${spec.jose}->${spec.coseName}`);
+  test("witness divergences == the registry's COSE-name divergences", () => {
+    const registryDivergences = CLAIM_SPECS.filter(
+      (spec) => coseName(spec) !== joseName(spec),
+    ).map((spec) => `${joseName(spec)}->${coseName(spec)}`);
 
     const witnessDivergences = Object.entries(COSE_NAME_DIVERGENCES).map(
       ([jose, cose]) => `${jose}->${cose}`,
@@ -65,9 +69,9 @@ describe("CwtClaimsWire drift guard", () => {
   });
 
   test("the only JOSE↔COSE name divergence is RFC 8392 jti↔cti", () => {
-    const registryDivergences = CLAIMS_REGISTRY.filter(
-      (spec) => spec.coseName && spec.coseName !== spec.jose,
-    ).map((spec) => ({ jose: spec.jose, coseName: spec.coseName }));
+    const registryDivergences = CLAIM_SPECS.filter(
+      (spec) => coseName(spec) !== joseName(spec),
+    ).map((spec) => ({ jose: joseName(spec), coseName: coseName(spec) }));
 
     expect(registryDivergences).toEqual([{ jose: "jti", coseName: "cti" }]);
   });

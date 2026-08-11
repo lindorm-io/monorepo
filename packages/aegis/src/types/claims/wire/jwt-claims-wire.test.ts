@@ -1,24 +1,28 @@
 import { describe, expect, test } from "vitest";
-import type { ClaimValueKind } from "../../../internal/claims/claims-registry.js";
 import {
-  CLAIMS_REGISTRY,
+  CLAIM_SPECS,
   claimByJose,
+  joseName,
 } from "../../../internal/claims/claims-registry.js";
+import type { ClaimCodec } from "../../../internal/registry/claim-spec.js";
 import type { AegisClaimsWire } from "./aegis-claims-wire.js";
 
 /**
  * Drift guard (a): the REGISTERED members of `AegisClaimsWire` (the wire intersection
  * behind `JwtClaimsWire`) must stay in lock-step with `CLAIM_REGISTRY`:
- *   1. their names == the registry `category:"claims"` jose names, and
- *   2. each TS member type matches its `ClaimValueKind` wire form
+ *   1. their names == the jose names of the registry's PUBLIC claims bucket, and
+ *   2. each TS member type matches its codec kind's wire form
  *      (`date`/`int`→number, `array`→Array<string>, `text`/`bstr`→string,
  *      `bool`→boolean; `bespoke` = per-claim object shape, not uniformly typed).
  *
- * The witness below is `Record<keyof AegisClaimsWire, ClaimValueKind>`, so a claim
- * added to / removed from `AegisClaimsWire` breaks compilation. Every member is a flat
- * registry claim (`category: "claims"`); the sensitive identity claims travel
- * FLAT too but are `category: "sensitive"`, a separate bucket, so they are NOT
- * `AegisClaimsWire` members.
+ * The witness below is `Record<keyof AegisClaimsWire, ClaimCodec["kind"]>`, so a
+ * claim added to / removed from `AegisClaimsWire` breaks compilation. Every member
+ * is a flat registry claim in `bucket: "claims"` with `sensitivity: "public"`; the
+ * sensitive identity claims travel FLAT too but are `sensitivity: "sensitive"`, so
+ * they are NOT `AegisClaimsWire` members.
+ *
+ * ⚠ `jti` is `text` here, not `bstr`: the byte-string form is a COSE-ONLY
+ * per-wire codec (`cti`), and this witness describes the JOSE wire.
  *
  * `satisfies` (not a type annotation) is deliberate: it enforces exact-key
  * coverage of `keyof AegisClaimsWire` yet PRESERVES each entry's literal kind, so the
@@ -32,7 +36,7 @@ const JWT_CLAIMS_WIRE_KINDS = {
   exp: "date",
   nbf: "date",
   iat: "date",
-  jti: "bstr",
+  jti: "text",
   // OIDC Core
   acr: "text",
   amr: "array",
@@ -77,7 +81,7 @@ const JWT_CLAIMS_WIRE_KINDS = {
   sih: "text",
   suh: "text",
   tenant_id: "text",
-} satisfies Record<keyof AegisClaimsWire, ClaimValueKind>;
+} satisfies Record<keyof AegisClaimsWire, ClaimCodec["kind"]>;
 
 // --- Compile-time binding: witness kind -> actual AegisClaimsWire member type ------
 //
@@ -121,21 +125,23 @@ void _noJwtClaimTypeDrift;
 
 describe("JwtClaimsWire / AegisClaimsWire drift guard", () => {
   const registeredClaimsJose = new Set(
-    CLAIMS_REGISTRY.filter((spec) => spec.category === "claims").map((spec) => spec.jose),
+    CLAIM_SPECS.filter(
+      (spec) => spec.bucket === "claims" && spec.sensitivity === "public",
+    ).map(joseName),
   );
 
-  test("AegisClaimsWire keys == registry category:claims jose names", () => {
+  test("AegisClaimsWire keys == the public claims bucket's jose names", () => {
     const witnessKeys = new Set(
       Object.keys(JWT_CLAIMS_WIRE_KINDS) as Array<keyof AegisClaimsWire>,
     );
     expect(witnessKeys).toEqual(registeredClaimsJose);
   });
 
-  test("each AegisClaimsWire member's declared wire kind matches its registry value kind", () => {
+  test("each AegisClaimsWire member's declared wire kind matches its registry codec kind", () => {
     for (const [jose, kind] of Object.entries(JWT_CLAIMS_WIRE_KINDS)) {
       const spec = claimByJose(jose);
       expect(spec, `no registry entry for jose "${jose}"`).toBeDefined();
-      expect(spec?.value, `wire-kind drift for jose "${jose}"`).toBe(kind);
+      expect(spec?.codec.kind, `wire-kind drift for jose "${jose}"`).toBe(kind);
     }
   });
 });

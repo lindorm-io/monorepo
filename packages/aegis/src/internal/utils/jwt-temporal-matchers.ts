@@ -3,13 +3,13 @@ import { addSeconds, subSeconds } from "@lindorm/date";
 import type { Dict } from "@lindorm/types";
 import { AegisError } from "../../errors/index.js";
 import type { AegisClaimsWire } from "../../types/index.js";
-import { claimsWith } from "../claims/claims-registry.js";
+import { type ClaimSpec, claimsWith, joseName } from "../claims/claims-registry.js";
 
 /**
  * The VALIDATION-temporal claims and their direction, DERIVED from the registry
- * `temporal` marks — the single source of truth. NOT every `value: "date"` claim:
+ * `temporal` marks — the single source of truth. NOT every `date` claim:
  * `updatedAt` is a date but a profile timestamp, not validation-temporal, so it
- * carries no mark and is absent here. `specsWith` narrows `spec.temporal` to
+ * carries no mark and is absent here. `claimsWith` narrows `spec.temporal` to
  * `"past" | "future"` (never `undefined`). (Phase 8's in-kit temporal check
  * derives from the same set.)
  */
@@ -63,7 +63,7 @@ export type TemporalMatcherOptions = {
 /**
  * The temporal RANGE check, in ONE implementation and two key namespaces —
  * exactly the split the identity matchers already have. `verify` matches the
- * WIRE payload, so it keys by `spec.jose` (`exp`/`nbf`/`iat`/`auth_time`);
+ * WIRE payload, so it keys by `joseName` (`exp`/`nbf`/`iat`/`auth_time`);
  * `assert` matches a DOMAIN claim dict, so it keys by `spec.domain`
  * (`expiresAt`/`notBefore`/`issuedAt`/`authTime`). Nothing else differs — which
  * is what makes an assert and a verify with the same options answer the same.
@@ -90,8 +90,13 @@ export type TemporalMatcherOptions = {
  * `maxTokenAge` iat bound is INDEPENDENT of `verifyIssuedAt`: it still applies
  * its own lower bound + presence even when the iat range flag is `false`.
  */
+// The DOMAIN key namespace — the `assert` half of the two namespaces below. It
+// is deliberately NOT a `NameSelector`: that type means "which WIRE name", and a
+// domain name is not a wire name.
+const domainName = (spec: ClaimSpec): string => spec.domain;
+
 const buildTemporalMatchers = (
-  naming: "jose" | "domain",
+  nameOf: (spec: ClaimSpec) => string,
   {
     clockTolerance,
     currentDate,
@@ -117,13 +122,13 @@ const buildTemporalMatchers = (
   };
 
   for (const spec of TEMPORAL_SPECS) {
-    if (skipByClaim[spec.jose]) continue;
+    if (skipByClaim[joseName(spec)]) continue;
     // `$or: [{ $exists: false }, bound]` is how the condition language spells
     // OPTIONAL, and that is what this needs: a claim is range-checked only when
     // it is present. A plain bound would REQUIRE it — a null or absent value
     // with a comparison operator does not match — so `nbf`/`auth_time`, which
     // most tokens omit, would start failing verification.
-    predicate[spec[naming]] = {
+    predicate[nameOf(spec)] = {
       $or: [{ $exists: false }, temporalBound(spec.temporal, clockTolerance, now)],
     };
   }
@@ -133,7 +138,7 @@ const buildTemporalMatchers = (
   // adds the lower bound AND requires presence — every operator in one object
   // must hold, so the three sit side by side as a conjunction.
   if (maxTokenAge !== undefined) {
-    const issuedAt = TEMPORAL_SPECS.find((spec) => spec.jose === "iat");
+    const issuedAt = TEMPORAL_SPECS.find((spec) => joseName(spec) === "iat");
 
     if (issuedAt === undefined) {
       throw new AegisError("Missing temporal claim: iat", {
@@ -144,7 +149,7 @@ const buildTemporalMatchers = (
       });
     }
 
-    predicate[issuedAt[naming]] = {
+    predicate[nameOf(issuedAt)] = {
       $exists: true,
       $lte: addSeconds(now, clockTolerance),
       $gte: subSeconds(now, maxTokenAge + clockTolerance),
@@ -158,9 +163,9 @@ const buildTemporalMatchers = (
 export const createTemporalMatchers = (
   options: TemporalMatcherOptions,
 ): Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> =>
-  buildTemporalMatchers("jose", options);
+  buildTemporalMatchers(joseName, options);
 
 /** The DOMAIN-keyed twin — what `Aegis.assert` runs over a flat claim dict. */
 export const createDomainTemporalMatchers = (
   options: TemporalMatcherOptions,
-): Dict<ConditionOperator<any>> => buildTemporalMatchers("domain", options);
+): Dict<ConditionOperator<any>> => buildTemporalMatchers(domainName, options);

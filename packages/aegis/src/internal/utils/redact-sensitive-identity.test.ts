@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { CLAIMS_REGISTRY } from "../claims/claims-registry.js";
+import { CLAIM_SPECS, joseName } from "../claims/claims-registry.js";
 import {
   redactSensitiveIdentity,
   redactVerifyOptions,
@@ -9,15 +9,15 @@ const NIN = "19900101-1234";
 const SSN = "078-05-1120";
 
 describe("redactSensitiveIdentity — registry drift guard", () => {
-  // The redacted key set is DERIVED from the claim registry (sensitive-category
+  // The redacted key set is DERIVED from the claim registry (the sensitive
   // claims whose value is the number string). Pin that derivation to the exact
   // keys it previously carried as a hand-kept list, so a registry edit (a new
   // sensitive text claim, a renamed jose key) can't silently change what is
   // filtered from a logged payload.
   test("the derived redaction key set equals the frozen number-claim keys", () => {
-    const derived = CLAIMS_REGISTRY.filter(
-      (spec) => spec.category === "sensitive" && spec.value === "text",
-    ).flatMap((spec) => [spec.domain, spec.jose]);
+    const derived = CLAIM_SPECS.filter(
+      (spec) => spec.sensitivity === "sensitive" && spec.codec.kind === "text",
+    ).flatMap((spec) => [spec.domain, joseName(spec)]);
 
     expect(derived).toEqual([
       "nationalIdentityNumber",

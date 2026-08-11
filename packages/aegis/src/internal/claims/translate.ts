@@ -5,11 +5,11 @@ import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { AegisDomainError } from "../../errors/index.js";
 import type { ActClaim, ActClaimWire, ConfirmationClaim } from "../../types/index.js";
+import type { ArrayScalar, BespokeKind, ClaimCodec } from "../registry/claim-spec.js";
 import {
+  CLAIM_SPECS,
   type ClaimSpec,
-  CLAIMS_REGISTRY,
   claimByDomain,
-  claimsWith,
   coseName,
   joseName,
   type NameSelector,
@@ -24,7 +24,7 @@ import {
  *
  * Four public functions over TWO parameterized cores (write / read). The ONLY
  * thing that varies between the JOSE and COSE variants is the wire NAME emitted
- * or looked up — `spec.jose` for JOSE, `spec.coseName ?? spec.jose` for COSE
+ * or looked up — `joseName` for JOSE, `coseName` for COSE
  * (the RFC 8392 divergence set, today just `jti` <-> `cti`). The VALUE transforms
  * are identical at the translator level (only the downstream CWT codec turns the
  * jose-shaped values into COSE labels / CBOR bytes). So `domainToCose` is a
@@ -32,7 +32,7 @@ import {
  * rename — which is what subsumes the old `cose-names.ts` name bridge.
  *
  * It is the ONLY domain-aware claim code: both the JOSE and the COSE format
- * paths meet here. Value transforms come from the registry's `ClaimValueKind`; a
+ * paths meet here. Value transforms come from the registry's `ClaimCodec`; a
  * small co-located BESPOKE builder table (below) holds the per-claim shapes
  * (`cnf`, `act`/`may_act`, `sub_id`, `events`, `authorization_details`, the OIDC
  * hashes). All case/name conversion is Aegis-side (R18): a registered claim
@@ -141,24 +141,18 @@ const toConfirmation = (value: unknown): ConfirmationClaim | undefined => {
   return Object.keys(result).length > 0 ? result : undefined;
 };
 
-// Claims whose "array" value is space-delimited-string-tolerant on read (they
-// accept `"a b"` and split it); the other array claims (`amr`, `entitlements`,
-// `groups`, `afc`, …) take arrays only. DERIVED from the registry `array: "spaced"`
-// marks — the single source of truth — not a hand-maintained list.
-const STRING_ARRAY_DOMAINS = new Set(
-  claimsWith("array")
-    .filter((spec) => spec.array === "spaced")
-    .map((spec) => spec.domain),
-);
-
 // -----------------------------------------------------------------------------
 
 // Dispatch ONE `bespoke` claim's value to its per-claim JOSE builder, keyed by
-// the registry `spec.bespoke` sub-kind. Every {@link BespokeKind} is enumerated
-// here; an unhandled sub-kind (the `undefined` fall-through of a registry/
-// translator drift) throws loudly (the house exhaustive-switch idiom).
-const encodeBespoke = (spec: ClaimSpec, value: unknown): unknown => {
-  switch (spec.bespoke) {
+// the registry codec's `bespoke` sub-kind. Every {@link BespokeKind} is
+// enumerated here; an unhandled sub-kind (the `undefined` fall-through of a
+// registry/translator drift) throws loudly (the house exhaustive-switch idiom).
+const encodeBespoke = (
+  spec: ClaimSpec,
+  bespoke: BespokeKind,
+  value: unknown,
+): unknown => {
+  switch (bespoke) {
     case "hash":
       return value; // already-derived b64url string
     case "confirmation":
@@ -175,7 +169,7 @@ const encodeBespoke = (spec: ClaimSpec, value: unknown): unknown => {
       // `snakeKeys(profile)` write path.
       return isObject(value) ? snakeKeys(value) : value;
     default: {
-      const exhaustive: undefined = spec.bespoke;
+      const exhaustive: never = bespoke;
       throw new AegisDomainError("Unhandled bespoke claim sub-kind", {
         code: "translate_unhandled_bespoke_domain",
         data: { domain: spec.domain, bespoke: String(exhaustive) },
@@ -187,10 +181,18 @@ const encodeBespoke = (spec: ClaimSpec, value: unknown): unknown => {
   }
 };
 
-// Encode ONE registered claim's value to its JOSE wire form per the registry's
-// value kind (exhaustive over ClaimValueKind; an unknown kind throws).
+// Encode ONE registered claim's value to its JOSE wire form per the registry
+// codec (exhaustive over ClaimCodec; an unknown kind throws).
+//
+// The translator reads the BASE codec, never a per-wire override: it produces
+// the jose-shaped values BOTH wires start from, and the COSE byte layer
+// (`cose/cwt-spec.ts`) applies the per-wire codec when it turns those values into
+// labels and CBOR bytes. That is why `bstr` — a COSE-only codec — returns the
+// value untouched here.
 const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
-  switch (spec.value) {
+  const codec = spec.codec;
+
+  switch (codec.kind) {
     case "text":
     case "int":
     case "array":
@@ -201,12 +203,16 @@ const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
     case "bstr":
       return value; // JOSE keeps the string; only COSE turns cti into bytes
     case "bespoke":
-      return encodeBespoke(spec, value);
+      return encodeBespoke(spec, codec.bespoke, value);
     default: {
-      const exhaustive: never = spec.value;
+      // The `never` binding is on `codec` — that is what makes the compiler bite
+      // on a new ClaimCodec member. The REPORTED fact must be the `kind` STRING:
+      // stringifying the codec OBJECT yields "[object Object]" and loses the one
+      // fact this handler exists to name.
+      const exhaustive: never = codec;
       throw new AegisDomainError("Unhandled claim value kind", {
         code: "translate_unhandled_value_kind",
-        data: { kind: String(exhaustive) },
+        data: { kind: String((exhaustive as ClaimCodec).kind) },
         title: "Unhandled Claim Value Kind",
         details:
           "The claim registry declared a value kind the translator has no encoder for.",
@@ -260,12 +266,16 @@ export type JoseToDomainResult = {
 export type CoseToDomainResult = JoseToDomainResult;
 
 // Dispatch ONE `bespoke` claim's value to its per-claim DOMAIN decoder, keyed by
-// the registry `spec.bespoke` sub-kind — the read-side twin of `encodeBespoke`.
-// Every {@link BespokeKind} is enumerated here; an unhandled sub-kind (the
-// `undefined` fall-through of a registry/translator drift) throws loudly (the
-// house exhaustive-switch idiom).
-const decodeBespoke = (spec: ClaimSpec, value: unknown): unknown => {
-  switch (spec.bespoke) {
+// the registry codec's `bespoke` sub-kind — the read-side twin of
+// `encodeBespoke`. Every {@link BespokeKind} is enumerated here; an unhandled
+// sub-kind (a registry/translator drift) throws loudly (the house
+// exhaustive-switch idiom).
+const decodeBespoke = (
+  spec: ClaimSpec,
+  bespoke: BespokeKind,
+  value: unknown,
+): unknown => {
+  switch (bespoke) {
     case "hash":
       return isString(value) ? value : undefined; // b64url hash string
     case "confirmation":
@@ -288,7 +298,7 @@ const decodeBespoke = (spec: ClaimSpec, value: unknown): unknown => {
       // is asymmetric and hands snake keys back into a camel-typed shape.
       return isObject(value) ? camelKeys(value) : value;
     default: {
-      const exhaustive: undefined = spec.bespoke;
+      const exhaustive: never = bespoke;
       throw new AegisDomainError("Unhandled bespoke claim sub-kind", {
         code: "translate_unhandled_bespoke_domain",
         data: { domain: spec.domain, bespoke: String(exhaustive) },
@@ -300,13 +310,46 @@ const decodeBespoke = (spec: ClaimSpec, value: unknown): unknown => {
   }
 };
 
+// How an array claim tolerates a SCALAR on read, per the codec's own policy.
+// This used to be a hardcoded `spec.domain === "audience"` branch plus a set
+// derived from the registry; it is one exhaustive switch over registry data now.
+//
+// The `default` is NOT redundant: the declared return type is `unknown`, so
+// falling off the end is legal and a new {@link ArrayScalar} member would compile
+// clean and DROP the claim on read. The `never` binding is what makes the
+// compiler bite instead (the house exhaustive-switch idiom, as in
+// `encodeBespoke`/`decodeBespoke`).
+const decodeArray = (spec: ClaimSpec, scalar: ArrayScalar, value: unknown): unknown => {
+  switch (scalar) {
+    case "wrap":
+      return toAudience(value); // RFC 7519 aud: string-OR-array
+    case "spaced":
+      return toStringArray(value); // scope, roles, permissions, conformsTo
+    case "strict":
+      return isArray(value) ? value : undefined; // amr, entitlements, groups, afc
+    default: {
+      const exhaustive: never = scalar;
+      throw new AegisDomainError("Unhandled array scalar policy", {
+        code: "translate_unhandled_array_scalar",
+        data: { domain: spec.domain, scalar: String(exhaustive) },
+        title: "Unhandled Array Scalar Policy",
+        details:
+          "The claim registry declared an array scalar-tolerance policy the translator has no decoder for.",
+      });
+    }
+  }
+};
+
 // Decode ONE registered claim's value from its wire form to the domain form
-// (exhaustive over ClaimValueKind; an unknown kind throws), reproducing
-// extract-claims.ts's per-claim decoders exactly. The `array` case refines by
-// domain (audience wraps a scalar, the space-delimited set splits a string, the
-// rest take arrays only); `bespoke` dispatches to the per-claim decoder table.
+// (exhaustive over ClaimCodec; an unknown kind throws), reproducing
+// extract-claims.ts's per-claim decoders exactly. The `array` case refines by the
+// codec's own scalar-tolerance policy — `wrap` for `aud` (RFC 7519 string-OR-
+// array), `spaced` for the space-delimited sets, `strict` for the rest — which
+// used to be a hardcoded `spec.domain === "audience"` branch here.
 const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
-  switch (spec.value) {
+  const codec = spec.codec;
+
+  switch (codec.kind) {
     case "text":
       return isString(value) ? value : undefined;
     case "int":
@@ -318,16 +361,17 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
     case "bstr":
       return isString(value) ? value : undefined; // jti
     case "array":
-      if (spec.domain === "audience") return toAudience(value);
-      if (STRING_ARRAY_DOMAINS.has(spec.domain)) return toStringArray(value);
-      return isArray(value) ? value : undefined; // amr, entitlements, groups, afc
+      return decodeArray(spec, codec.scalar, value);
     case "bespoke":
-      return decodeBespoke(spec, value);
+      return decodeBespoke(spec, codec.bespoke, value);
     default: {
-      const exhaustive: never = spec.value;
+      // See `encodeValue`: the `never` binding is the compiler backstop, but the
+      // REPORTED fact must be the string discriminant — `String(codec)` on the
+      // codec object reads "[object Object]".
+      const exhaustive: never = codec;
       throw new AegisDomainError("Unhandled claim value kind", {
         code: "translate_unhandled_value_kind",
-        data: { kind: String(exhaustive) },
+        data: { kind: String((exhaustive as ClaimCodec).kind) },
         title: "Unhandled Claim Value Kind",
         details:
           "The claim registry declared a value kind the translator has no decoder for.",
@@ -359,7 +403,7 @@ export const wireToDomain = (wire: Dict, nameOf: NameSelector): JoseToDomainResu
   const consumed = new Set<string>();
   const claims: Dict = {};
 
-  for (const spec of CLAIMS_REGISTRY) {
+  for (const spec of CLAIM_SPECS) {
     const wireName = nameOf(spec);
     // Domain (camel) form takes precedence over the wire name, per extract-claims.
     const key =

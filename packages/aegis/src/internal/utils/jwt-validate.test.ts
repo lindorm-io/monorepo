@@ -140,7 +140,8 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
     const verifyPredicate = createIdentityMatchers("ES256", matchers, joseName);
 
     for (const key of Object.keys(matchers)) {
-      const jose = claimByDomain(key)?.jose as keyof typeof verifyPredicate;
+      const spec = claimByDomain(key);
+      const jose = (spec && joseName(spec)) as keyof typeof verifyPredicate;
 
       expect(jose).toBeDefined();
       expect(verifyPredicate[jose]).toEqual(
@@ -178,7 +179,8 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
       const verifyPredicate = createIdentityMatchers("ES256", sources, joseName);
 
       for (const [key, domain] of Object.entries(HASH_MATCHERS)) {
-        const jose = claimByDomain(domain)?.jose as keyof typeof verifyPredicate;
+        const domainSpec = claimByDomain(domain);
+        const jose = (domainSpec && joseName(domainSpec)) as keyof typeof verifyPredicate;
         const digest = createHash("ES256", sources[key as keyof typeof sources]);
         const assertPredicate = createJwtValidate({ [domain]: digest } as never);
 

@@ -1,9 +1,14 @@
 /**
- * The single claim registry: the one place that maps each aegis DOMAIN claim
- * to its JOSE wire name, its COSE/CWT label, and how its value is encoded.
+ * The single claim registry: the one place that maps each aegis DOMAIN claim to
+ * its spelling on EVERY wire and to how its value is shaped.
  *
- * Both encoders consume this — the JOSE encoder maps `domain → jose`, the COSE
- * encoder maps `domain → cose`. Keeping it in one table is the anti-drift
+ * It is built on the shared {@link ParamSpec} base (`internal/registry/`), which
+ * the header registry shares — a claim and a header parameter are the same kind
+ * of thing (a named parameter with a wire spelling, a value shape, a provenance)
+ * and used to be described by two unrelated types.
+ *
+ * Both encoders consume this — the JOSE encoder maps `domain → wire.jose`, the
+ * COSE encoder `domain → wire.cose`. Keeping it in one table is the anti-drift
  * mechanism: a claim is defined exactly once.
  *
  * Provenance: the registry is the SOURCE OF TRUTH for the `domain ↔ jose` set —
@@ -13,153 +18,53 @@
  *
  * --- The COSE map-key rule (byte-size minimisation) ---
  *
- * The `cose` field decides the CBOR map key for a claim, governed by one rule:
- * pick whichever key is smaller on the wire.
+ * `wire.cose` decides the CBOR map key for a claim, governed by one rule: pick
+ * whichever key is smaller on the wire.
  *   - A private-use integer label (`< -65536`) always encodes to 5 CBOR bytes.
  *   - An N-character string key always encodes to N + 1 CBOR bytes.
  * So the integer wins only when it saves bytes — i.e. when the JOSE name is
  * 5 characters or longer (≥ 6 string bytes). For names of 4 characters or
  * fewer the string is the same size or smaller, so the claim stays string-keyed.
  *
- * The three cases for `cose`:
+ * The three cases for `wire.cose`:
  *   (a) a registered integer label (RFC 8392 / IANA CWT registry, 1–9): always
  *       that integer — untouched by the byte-size rule;
- *   (b) `cose: null` ⇒ no registered integer label AND a short JOSE name
+ *   (b) `wireName(...)` ⇒ no registered integer label AND a short JOSE name
  *       (≤ 4 chars, e.g. acr/amr/loa/aal): the JOSE string name is the CBOR map
  *       key, on- and off-platform (interoperable; a stock verifier reads it);
  *   (c) a private-use integer label (`< -65536`, via `P(n)`) ⇒ no registered
  *       integer label but a long JOSE name (≥ 5 chars): the compact integer
  *       label is used on-platform; off-platform (mint option `proprietary:
- *       false`) it degrades to its JOSE string key (see cwt-claims.ts). Such a
+ *       false`) it degrades to the WireKey's `name` (see cwt-claims.ts). Such a
  *       claim is NEVER dropped from a token.
+ *
+ * No claim is `absent` on either wire — every claim rides both. The `absent`
+ * arm of {@link WireKey} is exercised by the header registry.
+ *
+ * --- Columns that are currently CONSTANT ---
+ *
+ * `direction` and `matchable` are the same for all 78 entries, and that is an
+ * honest reading of the code rather than an omission: every registered claim
+ * flows through the translator in BOTH directions (`domainToWire` /
+ * `wireToDomain` iterate the same table), and `jwt-identity-matchers.ts` builds a
+ * predicate for ANY key that resolves via `claimByDomain`, so every claim is
+ * assertable. They are declared per entry anyway — the columns exist so a future
+ * claim that is mint-only or non-assertable has somewhere to say so, and a
+ * default would let it stay silent.
  */
 
-/** How a claim's VALUE is encoded on each wire. */
-export type ClaimValueKind =
-  | "text" // string scalar (iss, sub, acr…)
-  | "int" // plain number, no transform (loa…)
-  | "date" // NumericDate: domain Date <-> wire/COSE Unix-seconds int (exp, iat, nbf, auth_time)
-  | "bool" // boolean scalar (national_identity_number_verified…)
-  | "array" // array of strings (aud, scope, roles…)
-  | "bstr" // byte string on the COSE wire (cti…)
-  | "bespoke"; // needs a per-claim builder (cnf, hashes, act, sub_id, events…)
+import type { ClaimSpec } from "../registry/claim-spec.js";
+import type { Directions, Registry } from "../registry/param-spec.js";
+import type { Wire } from "../registry/wire.js";
+import {
+  type WireKey,
+  wireKeyLabel,
+  wireKeyName,
+  wireLabel,
+  wireName,
+} from "../registry/wire-key.js";
 
-/**
- * Sub-kind of a `value: "bespoke"` claim — the discriminator that tells the
- * translator (encode/decode) and the COSE byte-shaper WHICH per-claim builder a
- * bespoke claim uses. Present EXACTLY on `value: "bespoke"` entries (a drift
- * guard asserts the iff). Claims sharing a builder share a sub-kind:
- *   - `"hash"`         the OIDC hashes (`at_hash`/`c_hash`/`s_hash`): a b64url
- *                      string on JOSE, a COSE byte string.
- *   - `"confirmation"` RFC 7800 `cnf` (proof-of-possession key).
- *   - `"act"`          RFC 8693 delegation `act`/`may_act` (recursive actor).
- *   - `"subId"`        RFC 9493 `sub_id` subject identifier.
- *   - `"events"`       RFC 8417 SET `events` map (carried verbatim).
- *   - `"authDetails"`  RFC 9396 `authorization_details` array (carried verbatim).
- *   - `"address"`      OIDC §5.1 `address` (nested object; snake its inner keys).
- */
-export type BespokeKind =
-  | "hash"
-  | "confirmation"
-  | "act"
-  | "subId"
-  | "events"
-  | "authDetails"
-  | "address";
-
-/**
- * Read-side SUBSET a claim belongs to — the curated extraction groups that
- * `extract-claims.ts` derives (`FIELD_KEYS`/`RFC8693_KEYS`/`POP_KEYS`). The three
- * are DISJOINT (a claim is in at most one), so a single mark suffices; a claim in
- * NONE (SET-only `events`, `txn`, the profile and sensitive sets) carries no mark
- * and is not extracted into `DomainClaims`.
- *   - `"core"`     the flat `FIELD_KEYS` field set (StdClaims & OidcClaims & …).
- *   - `"rfc8693"`  the recursive delegation claims (`act`/`mayAct`).
- *   - `"pop"`      the recursive confirmation claim (`confirmation`).
- */
-export type ClaimSubset = "core" | "rfc8693" | "pop";
-
-/**
- * Which read-side bucket a claim belongs to. Every registry entry declares
- * exactly one:
- *   - `"claims"`   — the standard/protocol claim set (RFC / OIDC top-level).
- *   - `"profile"`  — the OIDC Core §5.1 profile set (`AegisProfile`).
- *   - `"sensitive"`— government-issued personal identifiers (`AegisSensitive`).
- * A claim NOT in the registry buckets to `custom` — so `custom` is the ABSENCE
- * of an entry, never a category value. The `"sensitive"` category is read at
- * runtime (extract-sensitive-claims.ts) to gate the §13.3 honour-only-when-
- * encrypted read behaviour; `"profile"` still buckets via extract-aegis-profile.
- */
-export type ClaimCategory = "claims" | "profile" | "sensitive";
-
-export type TemporalClaimSpec = {
-  /**
-   * VALIDATION-temporal direction — set ONLY on the time claims the verifier
-   * range-checks against "now", the single source of truth for the temporal
-   * matcher set. NOT every `value: "date"` claim: `updatedAt` is a date but a
-   * profile timestamp, not validation-temporal, so it carries no mark.
-   *   - `"past"`    must not be in the future (value <= now + tolerance):
-   *                 `nbf`/`iat`/`auth_time`.
-   *   - `"future"`  must not be in the past (value >= now - tolerance): `exp`.
-   */
-  temporal?: "past" | "future";
-};
-
-export type ClaimSpec = {
-  /** Common-layer key (the domain vocabulary). */
-  domain: string;
-  /** JOSE wire claim name. */
-  jose: string;
-  /**
-   * COSE/CWT string name, present ONLY when it differs from `jose` (RFC 8392's
-   * registered set diverges only at `jti` → `cti`). Absent ⇒ the COSE name
-   * equals `jose`. This is the source of truth for the JOSE↔COSE NAME
-   * divergence set: `domainToCose`/`coseToDomain` emit/look up this name, and it
-   * drives `CwtClaimsWire`. The numeric label lives in `cose`, the string name here.
-   */
-  coseName?: string;
-  /**
-   * COSE/CWT map key. A number is an integer label (RFC-registered, or a
-   * private-use `< -65536` label chosen when the byte-size rule favours it).
-   * `null` ⇒ no integer label; the COSE encoder uses the `jose` string as the
-   * CBOR map key.
-   */
-  cose: number | null;
-  value: ClaimValueKind;
-  /**
-   * Bespoke sub-kind — REQUIRED on and ONLY on `value: "bespoke"` entries (drift
-   * guard: `bespoke` present iff `value === "bespoke"`). The single source of
-   * truth the translator's bespoke encode/decode switch and the COSE byte-shaper
-   * (`HASH_DOMAINS`/`ACT_DOMAINS`) dispatch on. See {@link BespokeKind}.
-   */
-  bespoke?: BespokeKind;
-  /** Read-side bucket (exactly one per entry). See {@link ClaimCategory}. */
-  category: ClaimCategory;
-  /**
-   * Read-side extraction subset — the source of truth for extract-claims'
-   * `FIELD_KEYS`/`RFC8693_KEYS`/`POP_KEYS`. Absent ⇒ the claim is not extracted
-   * into `DomainClaims` (SET-only `events`/`txn`, profile, sensitive). See
-   * {@link ClaimSubset}.
-   */
-  subset?: ClaimSubset;
-  /**
-   * Closed-enum value→digit map for COSE (non-lossy: unknown values are written
-   * as their real string). Omitted for open-valued claims.
-   */
-  values?: Readonly<Record<string, number>>;
-  /**
-   * How an array claim tolerates a scalar on READ — meaningful ONLY on
-   * `value: "array"` entries, the single source of truth for the read-side split:
-   *   - `"spaced"`  a space-delimited STRING is accepted and SPLIT into the array
-   *                 (`"a b"` -> `["a","b"]`): `roles`/`scope`/`permissions`/
-   *                 `conformsTo`.
-   *   - `"strict"`  arrays ONLY; a scalar decodes to `undefined`: `amr`/`afc`/
-   *                 `entitlements`/`groups`/`preferredAccessibility`.
-   * `audience` is the deliberate exception (no mark): RFC 7519 `aud` is
-   * string-OR-array, so a scalar wraps to a single-element array (its own decoder).
-   */
-  array?: "spaced" | "strict";
-} & TemporalClaimSpec;
+export type { ClaimCodec, ClaimSpec } from "../registry/claim-spec.js";
 
 // First private-use COSE label is the first integer below the -65536 boundary.
 // Claims with no registered CWT label but a long JOSE name (≥ 5 chars) get a
@@ -168,91 +73,155 @@ export type ClaimSpec = {
 // they degrade to their JOSE string key (never dropped).
 const P = (n: number): number => -65537 - n;
 
+// --- entry shorthands --------------------------------------------------------
+
+/** JOSE name; string-keyed on COSE under the same name (the byte-size rule). */
+const named = (jose: string): Record<Wire, WireKey> => ({
+  jose: wireName(jose),
+  cose: wireName(jose),
+});
+
+/**
+ * JOSE name + COSE integer label. `cose` is the COSE STRING name, which differs
+ * from the JOSE name only where RFC 8392 renamed the claim (`jti` → `cti`); it is
+ * both the off-platform degraded key and the vocabulary `domainToCose` speaks.
+ */
+const labelled = (jose: string, label: number, cose = jose): Record<Wire, WireKey> => ({
+  jose: wireName(jose),
+  cose: wireLabel(label, cose),
+});
+
+/** Every claim flows in both directions — see the "constant columns" note above. */
+const BOTH: Directions = ["mint", "verify"];
+
+const SAMPLE_DATE = new Date("2026-01-01T00:00:00.000Z");
+
 /**
  * The registry. Order groups by COSE-key category for readability; lookups are
  * by the derived maps below, not by position.
  */
-export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
+export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // --- (a) RFC 8392 standard CWT claims (registered integer labels 1–9) ---
   {
     domain: "issuer",
-    jose: "iss",
-    cose: 1,
-    value: "text",
-    category: "claims",
+    wire: labelled("iss", 1),
+    codec: { kind: "text" },
+    provenance: "issuer",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "https://issuer.lindorm.test",
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "subject",
-    jose: "sub",
-    cose: 2,
-    value: "text",
-    category: "claims",
+    wire: labelled("sub", 2),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "subject_sample",
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "audience",
-    jose: "aud",
-    cose: 3,
-    value: "array",
-    category: "claims",
+    // RFC 7519 aud is string-OR-array, so a scalar WRAPS to a single-element
+    // array. That used to be a hardcoded `spec.domain === "audience"` branch in
+    // the translator; it is data now.
+    wire: labelled("aud", 3),
+    codec: { kind: "array", scalar: "wrap" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: ["https://api.lindorm.test"],
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "expiresAt",
-    jose: "exp",
-    cose: 4,
-    value: "date",
-    category: "claims",
+    wire: labelled("exp", 4),
+    codec: { kind: "date" },
+    provenance: "computed",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: SAMPLE_DATE,
+    bucket: "claims",
     temporal: "future",
     subset: "core",
   },
   {
     domain: "notBefore",
-    jose: "nbf",
-    cose: 5,
-    value: "date",
-    category: "claims",
+    wire: labelled("nbf", 5),
+    codec: { kind: "date" },
+    provenance: "computed",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: SAMPLE_DATE,
+    bucket: "claims",
     temporal: "past",
     subset: "core",
   },
   {
     domain: "issuedAt",
-    jose: "iat",
-    cose: 6,
-    value: "date",
-    category: "claims",
+    wire: labelled("iat", 6),
+    codec: { kind: "date" },
+    provenance: "computed",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: SAMPLE_DATE,
+    bucket: "claims",
     temporal: "past",
     subset: "core",
   },
-  // CWT cti (RFC 8392 label 7)
+  // CWT cti (RFC 8392 label 7). The one genuine PER-WIRE codec: a text string on
+  // JOSE, its raw UTF-8 bytes on COSE. That divergence used to be spelled as a
+  // `bstr` value kind the JOSE translator silently treated as text.
   {
     domain: "tokenId",
-    jose: "jti",
-    coseName: "cti",
-    cose: 7,
-    value: "bstr",
-    category: "claims",
+    wire: labelled("jti", 7, "cti"),
+    codec: { kind: "text", per: { cose: { kind: "bstr" } } },
+    provenance: "computed",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "token_id_sample",
+    bucket: "claims",
     subset: "core",
   },
   // RFC 8747
   {
     domain: "confirmation",
-    jose: "cnf",
-    cose: 8,
-    value: "bespoke",
-    bespoke: "confirmation",
-    category: "claims",
+    wire: labelled("cnf", 8),
+    codec: { kind: "bespoke", bespoke: "confirmation" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    // The `keyId` member is the one confirmation form BOTH wires carry — a
+    // thumbprint (`jkt`) has no COSE representation (RFC 9679 `ckt` hashes the
+    // CBOR canonicalisation, so it is a different value, not a translation).
+    sample: { keyId: "key_sample" },
+    bucket: "claims",
     subset: "pop",
   },
   // RFC 8693
   {
     domain: "scope",
-    jose: "scope",
-    cose: 9,
-    value: "array",
-    category: "claims",
-    array: "spaced",
+    wire: labelled("scope", 9),
+    codec: { kind: "array", scalar: "spaced" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: ["openid", "profile"],
+    bucket: "claims",
     subset: "core",
   },
 
@@ -262,150 +231,215 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
   //     (ISO/IEC 29115 / NIST SP 800-63A/B/C) and the short lindorm hints.
   {
     domain: "authContextClassReference",
-    jose: "acr",
-    cose: null,
-    value: "text",
-    category: "claims",
+    wire: named("acr"),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "urn:lindorm:acr:mfa",
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "authMethods",
-    jose: "amr",
-    cose: null,
-    value: "array",
-    category: "claims",
-    array: "strict",
+    wire: named("amr"),
+    codec: { kind: "array", scalar: "strict" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: ["pwd", "otp"],
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "authorizedParty",
-    jose: "azp",
-    cose: null,
-    value: "text",
-    category: "claims",
+    wire: named("azp"),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "client_sample",
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "vectorOfTrust",
-    jose: "vot",
-    cose: null,
-    value: "text",
-    category: "claims",
+    wire: named("vot"),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "P1.Cc.Cd",
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "vectorTrustMark",
-    jose: "vtm",
-    cose: null,
-    value: "text",
-    category: "claims",
+    wire: named("vtm"),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "https://issuer.lindorm.test/vtm",
+    bucket: "claims",
     subset: "core",
   },
   // RFC 8693
   {
     domain: "act",
-    jose: "act",
-    cose: null,
-    value: "bespoke",
-    bespoke: "act",
-    category: "claims",
+    wire: named("act"),
+    codec: { kind: "bespoke", bespoke: "act" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: { subject: "actor_sample" },
+    bucket: "claims",
     subset: "rfc8693",
   },
   {
     domain: "grantType",
-    jose: "gty",
-    cose: null,
-    value: "text",
-    category: "claims",
+    wire: named("gty"),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "authorization_code",
+    bucket: "claims",
     subset: "core",
   },
   // OIDC front-channel logout
   {
     domain: "sessionId",
-    jose: "sid",
-    cose: null,
-    value: "text",
-    category: "claims",
+    wire: named("sid"),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "session_sample",
+    bucket: "claims",
     subset: "core",
   },
   // RFC 8417 txn — emitted but NOT extracted into DomainClaims (no subset mark).
   {
     domain: "transactionId",
-    jose: "txn",
-    cose: null,
-    value: "text",
-    category: "claims",
+    wire: named("txn"),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "txn_sample",
+    bucket: "claims",
   },
   // ISO/IEC 29115
   {
     domain: "levelOfAssurance",
-    jose: "loa",
-    cose: null,
-    value: "int",
-    category: "claims",
+    wire: named("loa"),
+    codec: { kind: "int" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: 2,
+    bucket: "claims",
     subset: "core",
   },
   // NIST SP 800-63B
   {
     domain: "authenticatorAssuranceLevel",
-    jose: "aal",
-    cose: null,
-    value: "int",
-    category: "claims",
+    wire: named("aal"),
+    codec: { kind: "int" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: 2,
+    bucket: "claims",
     subset: "core",
   },
   // NIST SP 800-63A
   {
     domain: "identityAssuranceLevel",
-    jose: "ial",
-    cose: null,
-    value: "int",
-    category: "claims",
+    wire: named("ial"),
+    codec: { kind: "int" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: 2,
+    bucket: "claims",
     subset: "core",
   },
   // NIST SP 800-63C
   {
     domain: "federationAssuranceLevel",
-    jose: "fal",
-    cose: null,
-    value: "int",
-    category: "claims",
+    wire: named("fal"),
+    codec: { kind: "int" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: 2,
+    bucket: "claims",
     subset: "core",
   },
   // The resolved (primary) auth factor — ONE value (1fa/2fa/phr/phrh), not the
   // categories it was made of; `afc` below carries those.
   {
     domain: "authFactorReference",
-    jose: "afr",
-    cose: null,
-    value: "text",
-    category: "claims",
+    wire: named("afr"),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "2fa",
+    bucket: "claims",
     subset: "core",
   },
   // PSD2 SCA categories (knowledge/possession/inherence) — the axes exercised.
   {
     domain: "authFactorCategories",
-    jose: "afc",
-    cose: null,
-    value: "array",
-    category: "claims",
-    array: "strict",
+    wire: named("afc"),
+    codec: { kind: "array", scalar: "strict" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: ["knowledge", "possession"],
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "sessionHint",
-    jose: "sih",
-    cose: null,
-    value: "text",
-    category: "claims",
+    wire: named("sih"),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "session_hint_sample",
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "subjectHint",
-    jose: "suh",
-    cose: null,
-    value: "text",
-    category: "claims",
+    wire: named("suh"),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "subject_hint_sample",
+    bucket: "claims",
     subset: "core",
   },
 
@@ -417,110 +451,149 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
   // a request-binding text string with no registered CWT label.
   {
     domain: "accessTokenHash",
-    jose: "at_hash",
-    cose: P(0),
-    value: "bespoke",
-    bespoke: "hash",
-    category: "claims",
+    wire: labelled("at_hash", P(0)),
+    codec: { kind: "bespoke", bespoke: "hash" },
+    provenance: "computed",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "hAsHhAsHhAsHhAsHhAsHhA",
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "codeHash",
-    jose: "c_hash",
-    cose: P(1),
-    value: "bespoke",
-    bespoke: "hash",
-    category: "claims",
+    wire: labelled("c_hash", P(1)),
+    codec: { kind: "bespoke", bespoke: "hash" },
+    provenance: "computed",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "hAsHhAsHhAsHhAsHhAsHhA",
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "stateHash",
-    jose: "s_hash",
-    cose: P(2),
-    value: "bespoke",
-    bespoke: "hash",
-    category: "claims",
+    wire: labelled("s_hash", P(2)),
+    codec: { kind: "bespoke", bespoke: "hash" },
+    provenance: "computed",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "hAsHhAsHhAsHhAsHhAsHhA",
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "nonce",
-    jose: "nonce",
-    cose: P(3),
-    value: "text",
-    category: "claims",
+    wire: labelled("nonce", P(3)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "nonce_sample",
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "authTime",
-    jose: "auth_time",
-    cose: P(4),
-    value: "date",
-    category: "claims",
+    wire: labelled("auth_time", P(4)),
+    codec: { kind: "date" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: SAMPLE_DATE,
+    bucket: "claims",
     temporal: "past",
     subset: "core",
   },
   // RFC 9396
   {
     domain: "authorizationDetails",
-    jose: "authorization_details",
-    cose: P(5),
-    value: "bespoke",
-    bespoke: "authDetails",
-    category: "claims",
+    wire: labelled("authorization_details", P(5)),
+    codec: { kind: "bespoke", bespoke: "authDetails" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: [{ type: "payment_initiation" }],
+    bucket: "claims",
     subset: "core",
   },
   // RFC 8693
   {
     domain: "mayAct",
-    jose: "may_act",
-    cose: P(6),
-    value: "bespoke",
-    bespoke: "act",
-    category: "claims",
+    wire: labelled("may_act", P(6)),
+    codec: { kind: "bespoke", bespoke: "act" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: { subject: "actor_sample" },
+    bucket: "claims",
     subset: "rfc8693",
   },
   {
     domain: "entitlements",
-    jose: "entitlements",
-    cose: P(7),
-    value: "array",
-    category: "claims",
-    array: "strict",
+    wire: labelled("entitlements", P(7)),
+    codec: { kind: "array", scalar: "strict" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: ["entitlement_sample"],
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "groups",
-    jose: "groups",
-    cose: P(8),
-    value: "array",
-    category: "claims",
-    array: "strict",
+    wire: labelled("groups", P(8)),
+    codec: { kind: "array", scalar: "strict" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: ["group_sample"],
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "roles",
-    jose: "roles",
-    cose: P(9),
-    value: "array",
-    category: "claims",
-    array: "spaced",
+    wire: labelled("roles", P(9)),
+    codec: { kind: "array", scalar: "spaced" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: ["role_sample"],
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "permissions",
-    jose: "permissions",
-    cose: P(10),
-    value: "array",
-    category: "claims",
-    array: "spaced",
+    wire: labelled("permissions", P(10)),
+    codec: { kind: "array", scalar: "spaced" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: ["permission_sample"],
+    bucket: "claims",
     subset: "core",
   },
   {
     domain: "clientId",
-    jose: "client_id",
-    cose: P(11),
-    value: "text",
-    category: "claims",
+    wire: labelled("client_id", P(11)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "client_sample",
+    bucket: "claims",
     subset: "core",
   },
 
@@ -530,276 +603,473 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
   // RFC 9493
   {
     domain: "subjectId",
-    jose: "sub_id",
-    cose: P(12),
-    value: "bespoke",
-    bespoke: "subId",
-    category: "claims",
+    wire: labelled("sub_id", P(12)),
+    codec: { kind: "bespoke", bespoke: "subId" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: { format: "opaque", id: "subject_sample" },
+    bucket: "claims",
     subset: "core",
   },
   // RFC 8417 SET events
   {
     domain: "events",
-    jose: "events",
-    cose: P(13),
-    value: "bespoke",
-    bespoke: "events",
-    category: "claims",
+    wire: labelled("events", P(13)),
+    codec: { kind: "bespoke", bespoke: "events" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: { "https://schemas.lindorm.test/event/sample": {} },
+    bucket: "claims",
   },
 
   {
     domain: "tenantId",
-    jose: "tenant_id",
-    cose: P(14),
-    value: "text",
-    category: "claims",
+    wire: labelled("tenant_id", P(14)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "tenant_sample",
+    bucket: "claims",
     subset: "core",
   },
 
-  // RS-facing posture signal (token-claims.md §2/§3): the profiles the token's
-  // issuing client clears above the `permissive` floor. Long JOSE name, no
-  // registered CWT label ⇒ private-use label (append-only: never renumber).
+  // RS-facing posture signal: the profiles the token's issuing client clears
+  // above the `permissive` floor. Long JOSE name, no registered CWT label ⇒
+  // private-use label (append-only: never renumber).
   {
     domain: "conformsTo",
-    jose: "conforms_to",
-    cose: P(15),
-    value: "array",
-    category: "claims",
-    array: "spaced",
+    wire: labelled("conforms_to", P(15)),
+    codec: { kind: "array", scalar: "spaced" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: ["strict"],
+    bucket: "claims",
     subset: "core",
   },
 
   // --- SENSITIVE identity claims (government-issued personal identifiers) ---
   //     The `AegisSensitive` set: national identity / social-security numbers
-  //     and their OIDC §5.1 verified flags. They travel FLAT on the wire; the
-  //     `category: "sensitive"` mark drives read-side bucketing — the sensitive
-  //     claims are honoured ONLY on an encrypted token (jwe/cwe) and suppressed
-  //     otherwise (OIDC Core §13.3; extract-sensitive-claims.ts). Long JOSE names
-  //     ⇒ private-use labels (append-only).
+  //     and their OIDC §5.1 verified flags. They travel FLAT on the wire;
+  //     `sensitivity: "sensitive"` drives the OIDC Core §13.3 gate — they are
+  //     honoured ONLY on an encrypted token (jwe/cwe) and suppressed otherwise
+  //     (extract-sensitive-claims.ts). Long JOSE names ⇒ private-use labels
+  //     (append-only).
+  //     ⚠ They are `bucket: "claims"` because that is the only non-profile
+  //     bucket; the set that reaches the top-level claim pick is
+  //     `bucket "claims" AND sensitivity "public"`, which is what
+  //     assemble-common-claims.ts asks for.
   {
     domain: "nationalIdentityNumber",
-    jose: "national_identity_number",
-    cose: P(16),
-    value: "text",
-    category: "sensitive",
+    wire: labelled("national_identity_number", P(16)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "sensitive",
+    sample: "19900101-1234",
+    bucket: "claims",
   },
   {
     domain: "nationalIdentityNumberVerified",
-    jose: "national_identity_number_verified",
-    cose: P(17),
-    value: "bool",
-    category: "sensitive",
+    wire: labelled("national_identity_number_verified", P(17)),
+    codec: { kind: "bool" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "sensitive",
+    sample: true,
+    bucket: "claims",
   },
   {
     domain: "socialSecurityNumber",
-    jose: "social_security_number",
-    cose: P(18),
-    value: "text",
-    category: "sensitive",
+    wire: labelled("social_security_number", P(18)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "sensitive",
+    sample: "123-45-6789",
+    bucket: "claims",
   },
   {
     domain: "socialSecurityNumberVerified",
-    jose: "social_security_number_verified",
-    cose: P(19),
-    value: "bool",
-    category: "sensitive",
+    wire: labelled("social_security_number_verified", P(19)),
+    codec: { kind: "bool" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "sensitive",
+    sample: true,
+    bucket: "claims",
   },
 
   // --- OIDC §5.1 PROFILE claims (the `AegisProfile` set) ---
-  //     Personalization / contact-card fields. `category: "profile"` so read-side
-  //     bucketing (a later phase) can collect them into `VerifiedToken.profile`.
-  //     `value` is DERIVED from the AegisProfile field type (string→text,
-  //     boolean→bool, Date→date, Array<string>→array, nested object→bespoke).
-  //     A NumericDate claim is a `Date` in the domain layer — never a raw number
-  //     of seconds, which the `"date"` encoder drops.
-  //     Long JOSE names ⇒ private-use labels (append-only after P(19));
-  //     the 4-char `name` stays string-keyed (cose:null) per the byte-rule. No
-  //     code reads the category yet — pure metadata this phase. NOTE: the OIDC
-  //     `profile` URL claim registers under domain/jose "profile"; that is the
-  //     CLAIM name and is distinct from the `category: "profile"` bucket.
+  //     Personalization / contact-card fields, `bucket: "profile"` so read-side
+  //     bucketing collects them into `VerifiedToken.profile`. The codec kind is
+  //     DERIVED from the AegisProfile field type (string→text, boolean→bool,
+  //     Date→date, Array<string>→array, nested object→bespoke). A NumericDate
+  //     claim is a `Date` in the domain layer — never a raw number of seconds,
+  //     which the `date` codec drops. Long JOSE names ⇒ private-use labels
+  //     (append-only after P(19)); the 4-char `name` stays string-keyed per the
+  //     byte-rule. NOTE: the OIDC `profile` URL claim registers under
+  //     domain/jose "profile"; that is the CLAIM name and is distinct from the
+  //     `bucket: "profile"` group.
   {
     domain: "address",
-    jose: "address",
-    cose: P(20),
-    value: "bespoke",
-    bespoke: "address",
-    category: "profile",
+    wire: labelled("address", P(20)),
+    codec: { kind: "bespoke", bespoke: "address" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: { streetAddress: "Sample 1", postalCode: "00100", country: "SE" },
+    bucket: "profile",
   },
-  { domain: "email", jose: "email", cose: P(21), value: "text", category: "profile" },
+  {
+    domain: "email",
+    wire: labelled("email", P(21)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "sample@lindorm.test",
+    bucket: "profile",
+  },
   {
     domain: "emailVerified",
-    jose: "email_verified",
-    cose: P(22),
-    value: "bool",
-    category: "profile",
+    wire: labelled("email_verified", P(22)),
+    codec: { kind: "bool" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: true,
+    bucket: "profile",
   },
   {
     domain: "phoneNumber",
-    jose: "phone_number",
-    cose: P(23),
-    value: "text",
-    category: "profile",
+    wire: labelled("phone_number", P(23)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "+46700000000",
+    bucket: "profile",
   },
   {
     domain: "phoneNumberVerified",
-    jose: "phone_number_verified",
-    cose: P(24),
-    value: "bool",
-    category: "profile",
+    wire: labelled("phone_number_verified", P(24)),
+    codec: { kind: "bool" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: true,
+    bucket: "profile",
   },
-  { domain: "picture", jose: "picture", cose: P(25), value: "text", category: "profile" },
+  {
+    domain: "picture",
+    wire: labelled("picture", P(25)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "https://cdn.lindorm.test/sample.png",
+    bucket: "profile",
+  },
   {
     domain: "birthdate",
-    jose: "birthdate",
-    cose: P(26),
-    value: "text",
-    category: "profile",
+    wire: labelled("birthdate", P(26)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "1990-01-01",
+    bucket: "profile",
   },
   {
     domain: "familyName",
-    jose: "family_name",
-    cose: P(27),
-    value: "text",
-    category: "profile",
+    wire: labelled("family_name", P(27)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Nordmann",
+    bucket: "profile",
   },
-  { domain: "gender", jose: "gender", cose: P(28), value: "text", category: "profile" },
+  {
+    domain: "gender",
+    wire: labelled("gender", P(28)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "other",
+    bucket: "profile",
+  },
   {
     domain: "givenName",
-    jose: "given_name",
-    cose: P(29),
-    value: "text",
-    category: "profile",
+    wire: labelled("given_name", P(29)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Sam",
+    bucket: "profile",
   },
-  { domain: "locale", jose: "locale", cose: P(30), value: "text", category: "profile" },
+  {
+    domain: "locale",
+    wire: labelled("locale", P(30)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "sv-SE",
+    bucket: "profile",
+  },
   {
     domain: "middleName",
-    jose: "middle_name",
-    cose: P(31),
-    value: "text",
-    category: "profile",
+    wire: labelled("middle_name", P(31)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Lee",
+    bucket: "profile",
   },
   // "name" is 4 chars ⇒ string-keyed (the string key is the smaller CBOR encoding).
-  { domain: "name", jose: "name", cose: null, value: "text", category: "profile" },
+  {
+    domain: "name",
+    wire: named("name"),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Sam Nordmann",
+    bucket: "profile",
+  },
   {
     domain: "nickname",
-    jose: "nickname",
-    cose: P(32),
-    value: "text",
-    category: "profile",
+    wire: labelled("nickname", P(32)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Sammy",
+    bucket: "profile",
   },
   {
     domain: "preferredUsername",
-    jose: "preferred_username",
-    cose: P(33),
-    value: "text",
-    category: "profile",
+    wire: labelled("preferred_username", P(33)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "sam",
+    bucket: "profile",
   },
   // OIDC `profile` URL claim — the CLAIM named "profile" (distinct from the bucket).
-  { domain: "profile", jose: "profile", cose: P(34), value: "text", category: "profile" },
+  {
+    domain: "profile",
+    wire: labelled("profile", P(34)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "https://lindorm.test/sam",
+    bucket: "profile",
+  },
   // `updatedAt` is an OIDC Core §5.1 NumericDate: domain `Date` <-> wire unix
-  // seconds ⇒ "date", per the derive-from-type rule.
+  // seconds ⇒ "date", per the derive-from-type rule. It is NOT temporal — a
+  // profile timestamp is never range-checked against "now".
   {
     domain: "updatedAt",
-    jose: "updated_at",
-    cose: P(35),
-    value: "date",
-    category: "profile",
+    wire: labelled("updated_at", P(35)),
+    codec: { kind: "date" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: SAMPLE_DATE,
+    bucket: "profile",
   },
-  { domain: "website", jose: "website", cose: P(36), value: "text", category: "profile" },
+  {
+    domain: "website",
+    wire: labelled("website", P(36)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "https://lindorm.test",
+    bucket: "profile",
+  },
   {
     domain: "zoneinfo",
-    jose: "zoneinfo",
-    cose: P(37),
-    value: "text",
-    category: "profile",
+    wire: labelled("zoneinfo", P(37)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Europe/Stockholm",
+    bucket: "profile",
   },
   {
     domain: "displayName",
-    jose: "display_name",
-    cose: P(38),
-    value: "text",
-    category: "profile",
+    wire: labelled("display_name", P(38)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Sam N",
+    bucket: "profile",
   },
   {
     domain: "honorific",
-    jose: "honorific",
-    cose: P(39),
-    value: "text",
-    category: "profile",
+    wire: labelled("honorific", P(39)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Dr",
+    bucket: "profile",
   },
   {
     domain: "legalName",
-    jose: "legal_name",
-    cose: P(40),
-    value: "text",
-    category: "profile",
+    wire: labelled("legal_name", P(40)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Samuel Nordmann",
+    bucket: "profile",
   },
   {
     domain: "legalNameVerified",
-    jose: "legal_name_verified",
-    cose: P(41),
-    value: "bool",
-    category: "profile",
+    wire: labelled("legal_name_verified", P(41)),
+    codec: { kind: "bool" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: true,
+    bucket: "profile",
   },
   {
     domain: "namingSystem",
-    jose: "naming_system",
-    cose: P(42),
-    value: "text",
-    category: "profile",
+    wire: labelled("naming_system", P(42)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "western",
+    bucket: "profile",
   },
   {
     domain: "preferredAccessibility",
-    jose: "preferred_accessibility",
-    cose: P(43),
-    value: "array",
-    category: "profile",
-    array: "strict",
+    wire: labelled("preferred_accessibility", P(43)),
+    codec: { kind: "array", scalar: "strict" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: ["high-contrast"],
+    bucket: "profile",
   },
   {
     domain: "preferredName",
-    jose: "preferred_name",
-    cose: P(44),
-    value: "text",
-    category: "profile",
+    wire: labelled("preferred_name", P(44)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Sam",
+    bucket: "profile",
   },
   {
     domain: "pronouns",
-    jose: "pronouns",
-    cose: P(45),
-    value: "text",
-    category: "profile",
+    wire: labelled("pronouns", P(45)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "they/them",
+    bucket: "profile",
   },
   {
     domain: "department",
-    jose: "department",
-    cose: P(46),
-    value: "text",
-    category: "profile",
+    wire: labelled("department", P(46)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Engineering",
+    bucket: "profile",
   },
   {
     domain: "jobTitle",
-    jose: "job_title",
-    cose: P(47),
-    value: "text",
-    category: "profile",
+    wire: labelled("job_title", P(47)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Engineer",
+    bucket: "profile",
   },
   {
     domain: "occupation",
-    jose: "occupation",
-    cose: P(48),
-    value: "text",
-    category: "profile",
+    wire: labelled("occupation", P(48)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Engineer",
+    bucket: "profile",
   },
   {
     domain: "organization",
-    jose: "organization",
-    cose: P(49),
-    value: "text",
-    category: "profile",
+    wire: labelled("organization", P(49)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "Lindorm",
+    bucket: "profile",
   },
 
-  // --- RFC 7662 §2.2 `username`. A CLAIM about the token (category "claims",
+  // --- RFC 7662 §2.2 `username`. A CLAIM about the token (bucket "claims",
   //     extracted like any other), NOT an OIDC §5.1 profile field — it is
   //     distinct from `preferred_username` above and neither shadows the other.
   //     Appended here rather than beside the other OAuth claims because the
@@ -808,32 +1078,87 @@ export const CLAIMS_REGISTRY: ReadonlyArray<ClaimSpec> = [
   //     issued. Long JOSE name (8 chars) ⇒ private-use label.
   {
     domain: "username",
-    jose: "username",
-    cose: P(50),
-    value: "text",
-    category: "claims",
+    wire: labelled("username", P(50)),
+    codec: { kind: "text" },
+    provenance: "caller",
+    direction: BOTH,
+    matchable: true,
+    sensitivity: "public",
+    sample: "sam",
+    bucket: "claims",
     subset: "core",
   },
 ];
 
+/**
+ * The claim registry. `unregistered: "passthrough"` states ONCE what makes the
+ * claim side different from the header side: claims are an OPEN set, so a key
+ * with no entry is a CUSTOM claim carried through (case-flipped, value
+ * untouched), never dropped.
+ */
+export const CLAIMS_REGISTRY: Registry<ClaimSpec> = {
+  specs: CLAIM_SPECS,
+  unregistered: "passthrough",
+};
+
+/**
+ * Which WIRE NAME a claim spec carries — the one parameter that separates the
+ * JOSE and COSE variants of everything that keys a dict by claim name: the
+ * translator cores, and the identity-matcher builder.
+ *
+ * It lives HERE, beside the registry that owns the divergence, because it is a
+ * registry fact rather than a translator one. It was previously private to
+ * `translate.ts`, and the matcher builder — which keys a predicate the same way —
+ * hardcoded the JOSE name instead. That predicate was then applied to a
+ * COSE-keyed wire, so an `assert: { tokenId }` looked for `jti` in a dict that
+ * spells it `cti`: an exact match rejected a legitimate token, and
+ * `$exists: false` passed on a token that HAS one.
+ */
+export type NameSelector = (spec: ClaimSpec) => string;
+
+// No claim is `absent` on either wire (a claim that cannot ride a wire has never
+// existed here), and a registry test pins that. The narrowing is still explicit
+// rather than asserted, so the day one IS absent this throws at construction
+// instead of putting `undefined` on a wire.
+const requireName = (spec: ClaimSpec, wire: Wire): string => {
+  const name = wireKeyName(spec.wire[wire]);
+
+  if (name === undefined) {
+    throw new Error(`Claim "${spec.domain}" has no ${wire} wire name`);
+  }
+
+  return name;
+};
+
+/** The JOSE wire name. Every claim rides JOSE, so this is always defined. */
+export const joseName: NameSelector = (spec) => requireName(spec, "jose");
+
+/** The COSE wire name — the diverging name where declared, else the JOSE one. */
+export const coseName: NameSelector = (spec) => requireName(spec, "cose");
+
+/** The COSE integer label, or `undefined` where the claim is string-keyed. */
+export const coseLabel = (spec: ClaimSpec): number | undefined =>
+  wireKeyLabel(spec.wire.cose);
+
 const byDomain = new Map<string, ClaimSpec>(
-  CLAIMS_REGISTRY.map((spec) => [spec.domain, spec]),
+  CLAIM_SPECS.map((spec) => [spec.domain, spec]),
 );
 const byJose = new Map<string, ClaimSpec>(
-  CLAIMS_REGISTRY.map((spec) => [spec.jose, spec]),
+  CLAIM_SPECS.map((spec) => [joseName(spec), spec]),
 );
 // Integer COSE label -> spec. Only claims carrying an integer label (registered
-// or private-use) are keyed; string-keyed claims (`cose: null`) are absent.
+// or private-use) are keyed; string-keyed claims are absent.
 const byCose = new Map<number, ClaimSpec>(
-  CLAIMS_REGISTRY.filter(
-    (spec): spec is ClaimSpec & { cose: number } => spec.cose !== null,
-  ).map((spec) => [spec.cose, spec]),
+  CLAIM_SPECS.flatMap((spec) => {
+    const label = coseLabel(spec);
+    return label === undefined ? [] : [[label, spec] as const];
+  }),
 );
 // COSE string name -> spec. The COSE name equals the JOSE name unless the
-// registry declares a divergent `coseName` (RFC 8392 `jti` -> `cti`), so this
-// keys every claim by its effective COSE string name.
+// registry declares a divergent one (RFC 8392 `jti` -> `cti`), so this keys
+// every claim by its effective COSE string name.
 const byCoseName = new Map<string, ClaimSpec>(
-  CLAIMS_REGISTRY.map((spec) => [spec.coseName ?? spec.jose, spec]),
+  CLAIM_SPECS.map((spec) => [coseName(spec), spec]),
 );
 
 /** Resolve a claim spec by its domain name (or `undefined` if not registered). */
@@ -847,44 +1172,22 @@ export const claimByJose = (jose: string): ClaimSpec | undefined => byJose.get(j
 export const claimByCose = (cose: number): ClaimSpec | undefined => byCose.get(cose);
 
 /**
- * Resolve a claim spec by its COSE string name — the `coseName` where the
+ * Resolve a claim spec by its COSE string name — the diverging name where the
  * registry declares one (`cti`), else the JOSE name (`iss`, `exp`, …).
  */
-export const claimByCoseName = (coseName: string): ClaimSpec | undefined =>
-  byCoseName.get(coseName);
-
-/**
- * Which WIRE NAME a claim spec carries — the one parameter that separates the
- * JOSE and COSE variants of everything that keys a dict by claim name: the
- * translator cores, and the identity-matcher builder.
- *
- * It lives HERE, beside the registry that owns the divergence, because it is a
- * registry fact rather than a translator one. It was previously private to
- * `translate.ts`, and the matcher builder — which keys a predicate the same way —
- * hardcoded `spec.jose` instead. That predicate was then applied to a COSE-keyed
- * wire, so an `assert: { tokenId }` looked for `jti` in a dict that spells it
- * `cti`: an exact match rejected a legitimate token, and `$exists: false` passed
- * on a token that HAS one.
- */
-export type NameSelector = (spec: ClaimSpec) => string;
-
-/** The JOSE wire name. */
-export const joseName: NameSelector = (spec) => spec.jose;
-
-/** The COSE wire name: the registry's `coseName` where it diverges, else JOSE. */
-export const coseName: NameSelector = (spec) => spec.coseName ?? spec.jose;
+export const claimByCoseName = (name: string): ClaimSpec | undefined =>
+  byCoseName.get(name);
 
 /**
  * The registry SUBSET carrying an optional mark, narrowed so the mark is REQUIRED
  * on each returned spec — the one canonical way to derive a mark-based claim set.
- * `specsWith("temporal")` yields specs whose `temporal` is `"past" | "future"`
+ * `claimsWith("temporal")` yields specs whose `temporal` is `"past" | "future"`
  * (never `undefined`), so a caller iterates type-safely with no null-check and an
- * exhaustive `switch` on the mark; `specsWith("array")` narrows `array` likewise.
- * Registry declaration order is preserved.
+ * exhaustive `switch` on the mark. Registry declaration order is preserved.
  */
 export const claimsWith = <K extends keyof ClaimSpec>(
   mark: K,
 ): ReadonlyArray<ClaimSpec & Required<Pick<ClaimSpec, K>>> =>
-  CLAIMS_REGISTRY.filter(
+  CLAIM_SPECS.filter(
     (spec): spec is ClaimSpec & Required<Pick<ClaimSpec, K>> => spec[mark] !== undefined,
   );

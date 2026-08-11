@@ -2,11 +2,8 @@ import { isArray, isFinite, isObject, isString } from "@lindorm/is";
 import type { AuthorizationDetail } from "@lindorm/openid";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
-import {
-  CLAIMS_REGISTRY,
-  type ClaimSpec,
-  type ClaimSubset,
-} from "../claims/claims-registry.js";
+import { CLAIM_SPECS, type ClaimSpec, joseName } from "../claims/claims-registry.js";
+import type { ClaimSubset } from "../registry/claim-spec.js";
 import type { ActClaim } from "../../types/claims/domain/act-claim.js";
 import type { ConfirmationClaim } from "../../types/claims/domain/confirmation-claim.js";
 import type { DelegationClaims } from "../../types/claims/domain/delegation-claims.js";
@@ -54,12 +51,15 @@ export type ExtractClaimsResult = {
 //   - `RFC8693_KEYS`  the recursive delegation claims (`act`/`mayAct`) — their
 //                     own key set so we can also strip them from leftover `rest`.
 //   - `POP_KEYS`      the recursive confirmation claim.
-const acceptedKeys = (spec: ClaimSpec): ReadonlyArray<string> =>
-  spec.domain === spec.jose ? [spec.domain] : [spec.domain, spec.jose];
+const acceptedKeys = (spec: ClaimSpec): ReadonlyArray<string> => {
+  const jose = joseName(spec);
+
+  return spec.domain === jose ? [spec.domain] : [spec.domain, jose];
+};
 
 const keysForSubset = (subset: ClaimSubset): Record<string, ReadonlyArray<string>> =>
   Object.fromEntries(
-    CLAIMS_REGISTRY.filter((spec) => spec.subset === subset).map((spec) => [
+    CLAIM_SPECS.filter((spec) => spec.subset === subset).map((spec) => [
       spec.domain,
       acceptedKeys(spec),
     ]),

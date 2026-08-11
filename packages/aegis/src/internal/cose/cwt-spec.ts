@@ -2,10 +2,12 @@ import type { CborField, CborValueKind } from "@lindorm/cbor";
 import { CborKit } from "@lindorm/cbor";
 import type { Dict } from "@lindorm/types";
 import {
-  CLAIMS_REGISTRY,
+  CLAIM_SPECS,
   type ClaimSpec,
-  claimsWith,
+  coseLabel,
+  coseName,
 } from "../claims/claims-registry.js";
+import { codecFor } from "../registry/param-spec.js";
 import { decodeActCompact, encodeActCompact } from "./act-claim.js";
 import { decodeCnf, encodeCnf } from "./cose-key.js";
 import { decodeSubIdCompact, encodeSubIdCompact } from "./sub-id-claim.js";
@@ -21,16 +23,15 @@ import { decodeSubIdCompact, encodeSubIdCompact } from "./sub-id-claim.js";
 // registry `bespoke` sub-kinds — the single source of truth — never hardcoded:
 // `"hash"` are the OIDC hashes (at_hash/c_hash/s_hash), `"act"` the RFC 8693
 // delegation claims (act/may_act).
-const HASH_DOMAINS = new Set(
-  claimsWith("bespoke")
-    .filter((spec) => spec.bespoke === "hash")
-    .map((spec) => spec.domain),
-);
-const ACT_DOMAINS = new Set(
-  claimsWith("bespoke")
-    .filter((spec) => spec.bespoke === "act")
-    .map((spec) => spec.domain),
-);
+const bespokeDomains = (bespoke: string): Set<string> =>
+  new Set(
+    CLAIM_SPECS.filter(
+      (spec) => spec.codec.kind === "bespoke" && spec.codec.bespoke === bespoke,
+    ).map((spec) => spec.domain),
+  );
+
+const HASH_DOMAINS = bespokeDomains("hash");
+const ACT_DOMAINS = bespokeDomains("act");
 
 // cti (RFC 8392 label 7): the token id string is carried as its raw UTF-8 bytes.
 const encodeCti = (value: unknown): Buffer => Buffer.from(String(value), "utf8");
@@ -77,28 +78,36 @@ const shapeByDomain = (domain: string): Partial<CborField> => {
   return { kind: "bespoke", encode: (value) => value, decode: (value) => value };
 };
 
-// The codec KEYS by the COSE name (`spec.coseName ?? spec.jose`) — the vocabulary
+// The codec KEYS by the COSE wire name (`coseName`) — the vocabulary
 // `domainToCose`/`coseToDomain` speak, so a name-diverging claim is looked up under
 // its COSE name (`cti`, not `jti`); the on-wire label is unchanged (`cti` keeps
 // integer label 7), so the bytes stay identical. The label is the registered /
 // private-use integer where one exists, else the wire string (labels:"mixed"). A
 // private-use label (< -65536) is proprietary: compact integer on-platform, string
 // key off-platform.
+//
+// This is the ONE reader of the PER-WIRE codec: it asks the registry what the
+// claim's shape is on the COSE wire specifically, which is how `tokenId` — text
+// on JOSE, a byte string on COSE — resolves to `bstr` here and to `text` in the
+// translator.
 const fieldForClaim = (spec: ClaimSpec): CborField => {
-  const wireKey = spec.coseName ?? spec.jose;
+  const wireKey = coseName(spec);
+  const label = coseLabel(spec);
   const base = {
     key: wireKey,
-    label: spec.cose ?? wireKey,
-    proprietary: typeof spec.cose === "number" && spec.cose < -65536,
+    label: label ?? wireKey,
+    proprietary: label !== undefined && label < -65536,
   };
 
-  switch (spec.value) {
+  const codec = codecFor(spec, "cose");
+
+  switch (codec.kind) {
     case "text":
     case "int":
     case "array":
     case "date":
     case "bool":
-      return { ...base, kind: spec.value as CborValueKind };
+      return { ...base, kind: codec.kind as CborValueKind };
     case "bstr":
       return { ...base, kind: "bespoke", encode: encodeCti, decode: decodeCti };
     case "bespoke":
@@ -109,5 +118,5 @@ const fieldForClaim = (spec: ClaimSpec): CborField => {
 export const CWT_CLAIMS_KIT = new CborKit({
   labels: "mixed",
   mode: "lax",
-  fields: CLAIMS_REGISTRY.map(fieldForClaim),
+  fields: CLAIM_SPECS.map(fieldForClaim),
 });
