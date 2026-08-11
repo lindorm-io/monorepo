@@ -1728,8 +1728,19 @@ await repo.delete({ $and: [] }); // ✗ refused
 await repo.delete({ name: {} }); // ✗ refused
 await repo.delete({ name: undefined }); // ✗ refused — undefined is "not supplied"
 await repo.delete({ tag: { $nin: [] } }); // ✗ refused — excluding nothing excludes nothing
+await repo.delete({ tags: { $not: { $overlap: [] } } }); // ✗ refused — same shape, one level down
 await repo.delete({ tag: { $in: [] } }); // ✓ allowed — matches nothing, deletes nothing
+await repo.delete({ tags: { $all: [] } }); // ✓ allowed — every row that HAS a list
+await repo.delete({ tags: { $contained: [] } }); // ✓ allowed — only the empty lists
 ```
+
+An empty list reaching a containment operator is the same accident an empty
+`$nin` is, but the operators do not agree on what it means, so the guard answers
+per operator: `$overlap: []` shares an element with nothing and matches NO row,
+which makes its negation "every row"; `$all: []` and the bare `[]` require the
+value to BE a list, so they match every row holding one and no NULL — the same
+restriction `$exists: true` places, which is a restriction; and `$contained: []`
+matches only a row whose own list is empty.
 
 Use `deleteAll()` / `updateAll()` to say "every row" on purpose. Reads are not
 guarded: `find({})` still means every row.
@@ -2197,6 +2208,15 @@ with `undefined`, which means "not specified".
 | `{ label: { $nin: [null] } }`     | excludes the null rows                            |
 | `{ label: { $gte: "x" } }`        | a null row does not match — no error              |
 | `{ label: { $gte: null } }`       | ✗ raises — null is not orderable                  |
+| `{ label: { $exists: true } }`    | the rows whose `label` is not null                |
+| `{ label: { $exists: false } }`   | the rows whose `label` IS null                    |
+
+`$exists` is a NOT NULL test, never a key-presence test — a relational column
+always exists, so "is it null" is the only reading every driver can implement.
+An empty list or an empty string is a value and is therefore PRESENT. MongoDB
+used to receive the key verbatim, where it means its own key-presence operator:
+documents carry an explicit null for every declared field, so `$exists: true`
+matched every document and `$exists: false` matched none.
 
 The two sides are different concerns. A null on the **value** side is a row that
 does not satisfy a comparison, which is what every database already does. A null
@@ -2209,7 +2229,9 @@ returned an empty result set instead.
 ### Empty operands
 
 `$in: []` can never hold and `$nin: []` excludes nothing, so the first matches no
-rows and the second matches every row. At criteria level `$or: []` is the empty
+rows and the second matches every row. `$overlap: []` is the array twin of
+`$in: []` — sharing an element with nothing holds for no row, not even one whose
+column is null. At criteria level `$or: []` is the empty
 disjunction and matches nothing, and `$and: []` constrains nothing. These are
 compiled as constants rather than as clauses, so the query planner sees
 `WHERE FALSE` or no `WHERE` at all — and, more importantly, "matches every row"
@@ -2237,9 +2259,9 @@ mechanism: the nested keys expand to the embedded columns rather than to JSON
 containment.
 
 ⚠ **MongoDB has not been brought over yet** — its filter compiler still reads a
-bare nested object as an EXACT subdocument match, has no branch for a
-field-level `$and` / `$or`, and coerces a malformed operator payload instead of
-refusing it.
+bare nested object as an EXACT subdocument match, and coerces a malformed
+operator payload instead of refusing it. A field-level `$and` / `$or` is refused
+outright there rather than compiled.
 
 ### Bare array
 

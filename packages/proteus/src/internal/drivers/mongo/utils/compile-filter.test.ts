@@ -81,8 +81,8 @@ describe("compileFilter", () => {
       expect(compileFilter({ name: { $eq: "foo" } }, defaultMetadata)).toMatchSnapshot();
     });
 
-    test("should compile $ne", () => {
-      expect(compileFilter({ name: { $ne: "foo" } }, defaultMetadata)).toMatchSnapshot();
+    test("should compile $neq", () => {
+      expect(compileFilter({ name: { $neq: "foo" } }, defaultMetadata)).toMatchSnapshot();
     });
 
     test("should compile $gt", () => {
@@ -160,18 +160,60 @@ describe("compileFilter", () => {
     });
   });
 
-  describe("$isNull", () => {
-    test("should compile $isNull true to $eq null", () => {
-      expect(
-        compileFilter({ name: { $isNull: true } }, defaultMetadata),
-      ).toMatchSnapshot();
+  // `$exists` is the condition language's NOT NULL test, NOT MongoDB's
+  // key-presence operator. Documents are written with an explicit null for every
+  // declared field, so key presence answered `true` for every document and
+  // `false` for none — and there was no unit test here at all while `$isNull`,
+  // an operator the language never had, was the one pinned by a snapshot.
+  describe("$exists", () => {
+    test("should compile $exists true to $ne null", () => {
+      expect(compileFilter({ name: { $exists: true } }, defaultMetadata)).toEqual({
+        name: { $ne: null },
+      });
     });
 
-    test("should compile $isNull false to $ne null", () => {
+    // MongoDB's `$eq: null` is "null or missing", which is exactly the absence
+    // the condition language means on the row-value side.
+    test("should compile $exists false to $eq null", () => {
+      expect(compileFilter({ name: { $exists: false } }, defaultMetadata)).toEqual({
+        name: { $eq: null },
+      });
+    });
+
+    test("should compile $exists alongside a sibling operator", () => {
       expect(
-        compileFilter({ name: { $isNull: false } }, defaultMetadata),
+        compileFilter({ name: { $exists: true, $like: "foo%" } }, defaultMetadata),
       ).toMatchSnapshot();
     });
+  });
+
+  // An operator the condition language does not define is refused rather than
+  // forwarded to the server. `$isNull` used to be compiled here — a spelling no
+  // other driver, and no part of `@lindorm/match`, has ever carried.
+  describe("operators outside the vocabulary", () => {
+    test.each([["$isNull"], ["$ne"], ["$bogus"]])("should refuse %s", (operator) => {
+      expect(() =>
+        compileFilter({ name: { [operator]: true } } as any, defaultMetadata),
+      ).toThrow(/Unknown operator/);
+    });
+
+    test("should refuse $similar, which MongoDB cannot carry", () => {
+      expect(() =>
+        compileFilter({ name: { $similar: "foo" } } as any, defaultMetadata),
+      ).toThrow(/not supported by MongoDB/);
+    });
+
+    test.each([["$and"], ["$or"]])(
+      "should refuse a field-level %s rather than forward it",
+      (operator) => {
+        expect(() =>
+          compileFilter(
+            { name: { [operator]: [{ $eq: "foo" }] } } as any,
+            defaultMetadata,
+          ),
+        ).toThrow(/not supported by MongoDB/);
+      },
+    );
   });
 
   describe("$regex", () => {
@@ -310,6 +352,14 @@ describe("compileFilter", () => {
 
     test("should compile $length", () => {
       expect(compileFilter({ tags: { $length: 3 } }, defaultMetadata)).toMatchSnapshot();
+    });
+
+    // MongoDB's own `$mod` takes the same tuple and means the same thing — it
+    // used to reach the server only by falling through the catch-all default.
+    test("should compile $mod", () => {
+      expect(compileFilter({ age: { $mod: [3, 1] } }, defaultMetadata)).toEqual({
+        age: { $mod: [3, 1] },
+      });
     });
   });
 

@@ -1056,6 +1056,81 @@ export const complexPredicatesSuite = (
     // Every expectation comes from running `Matcher.filter` from `@lindorm/match`
     // over these exact rows. None of it was read off a driver.
 
+    // ─── `$exists` means NOT NULL, on every driver ────────────────────────
+    //
+    // UNGATED on purpose. This is basic column semantics, not a structured
+    // operator, and it sat inside the `structuredOperators` block — so the one
+    // driver that declares that capability false was never asked the question,
+    // and answered it wrong: with no `$exists` branch in its filter compiler the
+    // operator reached MongoDB verbatim, where it means KEY PRESENCE. Documents
+    // are written with an explicit null for every declared field, so the key is
+    // always there: `$exists: true` matched EVERY document and `$exists: false`
+    // matched none. The first of those is destructive, which is why the row
+    // count below is asserted on a delete as well as a read.
+    //
+    // Every expectation comes from running `Matcher.filter` from
+    // `@lindorm/match` over these exact rows.
+    describe("$exists", () => {
+      const { TckJsonbArray } = entities;
+
+      beforeEach(async () => {
+        await getHandle().clear();
+        const repo = getHandle().repository(TckJsonbArray);
+        await repo.insert({ name: "ab", label: "keep", tags: ["a"], extras: ["x"] });
+        await repo.insert({ name: "abc", label: "drop", tags: ["a", "b"], extras: [] });
+        await repo.insert({ name: "cd", label: null, tags: ["c"], extras: null });
+        await repo.insert({ name: "xy", label: null, tags: ["x"], extras: null });
+      });
+
+      const names = async (criteria: unknown) => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await (repo.find as any)(criteria, { order: { name: "ASC" } });
+        return results.map((r: { name: string }) => r.name);
+      };
+
+      test("$exists: true selects the rows whose column is not null", async () => {
+        expect(await names({ label: { $exists: true } })).toEqual(["ab", "abc"]);
+      });
+
+      test("$exists: false selects the rows whose column IS null", async () => {
+        expect(await names({ label: { $exists: false } })).toEqual(["cd", "xy"]);
+      });
+
+      // An EMPTY list is a value, not an absence — the distinction a key-presence
+      // reading cannot make either.
+      test("$exists over an array column counts the empty list as present", async () => {
+        expect(await names({ extras: { $exists: true } })).toEqual(["ab", "abc"]);
+        expect(await names({ extras: { $exists: false } })).toEqual(["cd", "xy"]);
+      });
+
+      test("$exists composes with a sibling criterion", async () => {
+        expect(await names({ label: { $exists: true }, tags: { $length: 1 } })).toEqual([
+          "ab",
+        ]);
+      });
+
+      // The destructive face. `$exists: true` is correctly rated as restricting
+      // by the destructive-criteria guard, so a compiler that reads it as key
+      // presence empties the table with the guard's blessing.
+      test("delete removes only the rows whose column is not null", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+
+        await repo.delete({ label: { $exists: true } } as any);
+
+        const rows = await repo.find(undefined, { order: { name: "ASC" } });
+        expect(rows.map((r) => r.name)).toEqual(["cd", "xy"]);
+      });
+
+      test("delete removes only the rows whose column IS null", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+
+        await repo.delete({ label: { $exists: false } } as any);
+
+        const rows = await repo.find(undefined, { order: { name: "ASC" } });
+        expect(rows.map((r) => r.name)).toEqual(["ab", "abc"]);
+      });
+    });
+
     if (caps.structuredOperators) {
       describe("Structured operators over a NULLABLE jsonb array", () => {
         const { TckJsonbArray } = entities;
@@ -1153,10 +1228,6 @@ export const complexPredicatesSuite = (
 
         test("negating an empty $all returns exactly the NULL rows", async () => {
           expect(await names({ extras: { $not: { $all: [] } } })).toEqual(["cd", "xy"]);
-        });
-
-        test("$exists is unchanged over the same column", async () => {
-          expect(await names({ extras: { $exists: true } })).toEqual(["ab", "abc"]);
         });
 
         // ── the NOT NULL list, so the element-containment forms are proved

@@ -36,6 +36,23 @@ exports[`compileFilter > $between > should compile $between to $gte + $lte 1`] =
 }
 `;
 
+exports[`compileFilter > $exists > should compile $exists alongside a sibling operator 1`] = `
+{
+  "$and": [
+    {
+      "name": {
+        "$ne": null,
+      },
+    },
+    {
+      "name": {
+        "$regex": "^foo.*$",
+      },
+    },
+  ],
+}
+`;
+
 exports[`compileFilter > $has with multiple keys > should compile $has with multiple key-value pairs as $and 1`] = `
 {
   "$and": [
@@ -46,22 +63,6 @@ exports[`compileFilter > $has with multiple keys > should compile $has with mult
       "data.b": 2,
     },
   ],
-}
-`;
-
-exports[`compileFilter > $isNull > should compile $isNull false to $ne null 1`] = `
-{
-  "name": {
-    "$ne": null,
-  },
-}
-`;
-
-exports[`compileFilter > $isNull > should compile $isNull true to $eq null 1`] = `
-{
-  "name": {
-    "$eq": null,
-  },
 }
 `;
 
@@ -188,7 +189,7 @@ exports[`compileFilter > comparison operators > should compile $lte 1`] = `
 }
 `;
 
-exports[`compileFilter > comparison operators > should compile $ne 1`] = `
+exports[`compileFilter > comparison operators > should compile $neq 1`] = `
 {
   "name": {
     "$ne": "foo",

@@ -1,7 +1,14 @@
 import { isArray, isNull, isObject, isObjectLike, isUndefined } from "@lindorm/is";
 import type { Condition } from "@lindorm/match";
+import {
+  ConditionOperatorKey,
+  LogicalOperatorKey,
+  isConditionOperatorKey,
+  isLogicalOperatorKey,
+} from "@lindorm/match";
 import type { Filter, Document } from "mongodb";
 import type { Dict } from "@lindorm/types";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
 import { ProteusError } from "../../../../errors/ProteusError.js";
 import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
@@ -84,25 +91,38 @@ const likeToRegex = (pattern: string): string => {
 
 /**
  * Compile a single operator value into a MongoDB filter condition.
+ *
+ * The `switch` is exhaustive over the vocabulary `@lindorm/match` owns, so a new
+ * operator is a BUILD failure here rather than a key forwarded verbatim to the
+ * server. A catch-all default is what let `$exists` — the condition language's
+ * NOT NULL test — arrive at MongoDB as its own KEY-PRESENCE operator, which on
+ * documents written with an explicit null for every declared field matched every
+ * document for `true` and none for `false`.
  */
 const compileOperator = (
   mongoField: string,
-  operator: string,
+  operator: ConditionOperatorKey | LogicalOperatorKey,
   value: unknown,
   field: MetaField | undefined,
 ): Filter<Document> => {
   switch (operator) {
-    case "$eq":
+    // NOT NULL, never key presence. `$eq: null` is MongoDB's own "null or
+    // missing", which is exactly the row-value absence the language means, and
+    // `$ne: null` is its complement — so an empty list or an empty string is
+    // PRESENT, where key presence could not tell the two apart.
+    case ConditionOperatorKey.Exists:
+      return value ? { [mongoField]: { $ne: null } } : { [mongoField]: { $eq: null } };
+
+    case ConditionOperatorKey.Eq:
       return { [mongoField]: { $eq: value } };
 
-    case "$ne":
-    case "$neq":
+    case ConditionOperatorKey.Neq:
       return { [mongoField]: { $ne: value } };
 
-    case "$gt":
-    case "$gte":
-    case "$lt":
-    case "$lte":
+    case ConditionOperatorKey.Gt:
+    case ConditionOperatorKey.Gte:
+    case ConditionOperatorKey.Lt:
+    case ConditionOperatorKey.Lte:
       if (isDecimalField(field)) {
         return {
           $expr: {
@@ -112,23 +132,23 @@ const compileOperator = (
       }
       return { [mongoField]: { [operator]: value } };
 
-    case "$in":
+    case ConditionOperatorKey.In:
       return { [mongoField]: { $in: value as Array<unknown> } };
 
-    case "$nin":
+    case ConditionOperatorKey.Nin:
       return { [mongoField]: { $nin: value as Array<unknown> } };
 
-    case "$like": {
+    case ConditionOperatorKey.Like: {
       const regex = likeToRegex(value as string);
       return { [mongoField]: { $regex: regex } };
     }
 
-    case "$ilike": {
+    case ConditionOperatorKey.Ilike: {
       const regex = likeToRegex(value as string);
       return { [mongoField]: { $regex: regex, $options: "i" } };
     }
 
-    case "$between": {
+    case ConditionOperatorKey.Between: {
       const [low, high] = value as [unknown, unknown];
       if (isDecimalField(field)) {
         return {
@@ -141,10 +161,7 @@ const compileOperator = (
       return { [mongoField]: { $gte: low, $lte: high } };
     }
 
-    case "$isNull":
-      return value ? { [mongoField]: { $eq: null } } : { [mongoField]: { $ne: null } };
-
-    case "$not": {
+    case LogicalOperatorKey.Not: {
       // An inner condition that constrains nothing matches every document, so
       // its negation matches none — the rule the SQL compilers apply to an empty
       // `$not`. MongoDB rejects one outright ("$not argument must be a non-empty
@@ -161,7 +178,7 @@ const compileOperator = (
       return { $nor: [compileValue(mongoField, value, field, mongoField)] };
     }
 
-    case "$regex": {
+    case ConditionOperatorKey.Regex: {
       if (value instanceof RegExp) {
         return { [mongoField]: { $regex: value.source, $options: value.flags } };
       }
@@ -169,7 +186,7 @@ const compileOperator = (
     }
 
     // Complex predicate operators
-    case "$has": {
+    case ConditionOperatorKey.Has: {
       // JSON containment — check if document field contains the given key/value pairs
       if (isObjectLike(value)) {
         const conditions: Array<Filter<Document>> = [];
@@ -182,16 +199,16 @@ const compileOperator = (
       return { [mongoField]: value };
     }
 
-    case "$all":
+    case ConditionOperatorKey.All:
       return { [mongoField]: { $all: value as Array<unknown> } };
 
-    case "$overlap": {
+    case ConditionOperatorKey.Overlap: {
       // Check if any element in the source array exists in the target
       const arr = value as Array<unknown>;
       return { [mongoField]: { $in: arr } };
     }
 
-    case "$contained": {
+    case ConditionOperatorKey.Contained: {
       // All elements of source must exist in target — no extra elements
       // MongoDB doesn't have a direct operator; use $not $elemMatch $nin
       const arr = value as Array<unknown>;
@@ -203,11 +220,52 @@ const compileOperator = (
       };
     }
 
-    case "$length":
+    case ConditionOperatorKey.Length:
       return { [mongoField]: { $size: value as number } };
 
-    default:
-      return { [mongoField]: { [operator]: value } };
+    // MongoDB's own `$mod` takes the same `[divisor, remainder]` tuple and means
+    // the same thing.
+    case ConditionOperatorKey.Mod:
+      return { [mongoField]: { $mod: value as [number, number] } };
+
+    // PostgreSQL pg_trgm trigram search. MongoDB has no equivalent, so it is
+    // refused here rather than sent to the server as an unknown key — the same
+    // treatment the non-Postgres SQL dialects give it.
+    case ConditionOperatorKey.Similar:
+      throw new NotSupportedError(`Operator "${operator}" is not supported by MongoDB`, {
+        code: "unsupported_operator",
+        title: "Unsupported Operator",
+        details:
+          "$similar is PostgreSQL trigram search and has no MongoDB equivalent. Use $regex or $ilike.",
+        data: { operator, field: mongoField },
+      });
+
+    // A FIELD-level `$and` / `$or` combines conditions over ONE column. The
+    // MongoDB compiler does not carry it — the driver declares that gap rather
+    // than forwarding the key, which the server reads as a field operator and
+    // which used to negate or match nothing at all.
+    case LogicalOperatorKey.And:
+    case LogicalOperatorKey.Or:
+      throw new NotSupportedError(
+        `Field-level operator "${operator}" is not supported by MongoDB`,
+        {
+          code: "unsupported_operator",
+          title: "Unsupported Operator",
+          details:
+            "A field-level $and / $or is not compiled by the MongoDB driver. Combine the conditions at criteria level instead.",
+          data: { operator, field: mongoField },
+        },
+      );
+
+    default: {
+      const exhaustive: never = operator;
+      throw new NotSupportedError(`Unknown operator "${String(exhaustive)}"`, {
+        code: "unknown_operator",
+        title: "Unknown Operator",
+        details: "The operator is not part of the condition language.",
+        data: { operator: String(exhaustive), field: mongoField },
+      });
+    }
   }
 };
 
@@ -236,13 +294,26 @@ const compileValue = (
 
     // Check if it's an operator object (all keys start with $)
     if (keys.length > 0 && keys.every((k) => k.startsWith("$"))) {
-      if (keys.length === 1) {
-        return compileOperator(mongoField, keys[0], obj[keys[0]], field);
-      }
+      const compile = (key: string): Filter<Document> => {
+        // An unrecognised `$` key is refused rather than forwarded. Forwarding it
+        // hands MongoDB an operator the condition language never defined — a
+        // silent mistranslation on the shapes MongoDB happens to accept, and a
+        // server error dressed as a proteus one on the rest.
+        if (!isConditionOperatorKey(key) && !isLogicalOperatorKey(key)) {
+          throw new NotSupportedError(`Unknown operator "${key}"`, {
+            code: "unknown_operator",
+            title: "Unknown Operator",
+            details: "The operator is not part of the condition language.",
+            data: { operator: key, field: fieldKey },
+          });
+        }
+        return compileOperator(mongoField, key, obj[key], field);
+      };
+
+      if (keys.length === 1) return compile(keys[0]);
 
       // Multiple operators on same field -> $and
-      const conditions = keys.map((k) => compileOperator(mongoField, k, obj[k], field));
-      return { $and: conditions };
+      return { $and: keys.map(compile) };
     }
 
     // Naming a field is a statement that you are constraining it; an empty
@@ -271,10 +342,10 @@ const compileValue = (
  *
  * Handles:
  * - Field name mapping (entity key -> DB name, PK -> _id)
- * - All comparison operators ($eq, $ne, $gt, etc.)
+ * - All comparison operators ($eq, $neq, $gt, etc.)
  * - Pattern matching ($like -> $regex, $ilike -> $regex with "i")
  * - Range operators ($between)
- * - Null checks ($isNull)
+ * - Null checks ($exists — NOT NULL, never key presence)
  * - Logical operators ($and, $or, $not)
  * - Complex predicates ($has, $all, $overlap, $contained, $length)
  * - Decimal field comparisons via $expr + $toDouble
