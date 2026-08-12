@@ -41,10 +41,17 @@ describe("resolveActor", () => {
       issuer: ACCESS_TEST_ISSUER,
     });
 
-    const { token: id } = await aegis.mint("id_token", {
-      audience: [CLIENT_ID],
-      subject: "bob",
-    });
+    const { token: id } = await aegis.mint(
+      "id_token",
+      {
+        audience: [CLIENT_ID],
+        subject: "bob",
+      },
+      // An id_token must state whether an access token was co-issued, so that
+      // the rule requiring an access-token hash can decide. No access token is
+      // issued alongside this one.
+      { context: { accessTokenIssued: false } },
+    );
     idToken = await aegis.verify("id_token", id, undefined, {
       audience: CLIENT_ID,
       issuer: ACCESS_TEST_ISSUER,

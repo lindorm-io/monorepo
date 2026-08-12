@@ -121,7 +121,13 @@ export const mintTestIdToken = async (
         subject: "alice",
         ...content,
       },
-      { sign: { tokenId: "id-token-1" } },
+      {
+        // An id_token must state whether an access token was co-issued, so that
+        // the rule requiring an access-token hash can decide. These fixtures
+        // mint the id_token on its own.
+        context: { accessTokenIssued: false },
+        sign: { tokenId: "id-token-1" },
+      },
     )
   ).token;
 
