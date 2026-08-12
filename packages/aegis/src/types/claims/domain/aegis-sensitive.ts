@@ -7,7 +7,7 @@
 // `social_security_number`, and their OIDC §5.1 verified flags), exactly
 // like any other registered claim — they are NOT nested under a wrapper.
 // The registry marks each with `category: "sensitive"`, which drives two
-// guarantees (OIDC Core §13.3, signed-and-encrypted ID tokens):
+// guarantees (surfaced only from a signed-and-encrypted token):
 //   - mint forces encryption when any sensitive field is present, and omits
 //     them entirely when no recipient key resolves (never emitted in clear);
 //   - read only surfaces them from an ENCRYPTED token (jwe/cwe) — on an

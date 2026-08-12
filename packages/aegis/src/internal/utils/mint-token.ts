@@ -1,28 +1,29 @@
-import { omitUndefined } from "@lindorm/utils";
 import { AegisDomainError } from "../../errors/index.js";
-import type {
-  ProfileMintOptions,
-  SignContent,
-  SignedToken,
-  SignJwtContent,
-} from "../../types/index.js";
-import { domainToJose } from "../claims/translate.js";
+import type { ProfileMintOptions, SignContent, SignedToken } from "../../types/index.js";
 import { resolveProfile } from "../profiles/registry.js";
+import { tokenWireFor } from "../wire/token-wire-for.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
-import { encryptJwe } from "./encrypt-jwe.js";
 import { mergeContentClaims } from "./merge-content-claims.js";
-import { mintCoseToken } from "./mint-cose-token.js";
-import { selectEncoder } from "./select-encoder.js";
-import { signJwtWire } from "./sign-jwt-wire.js";
+import { findSensitiveClaims, stripSensitiveClaims } from "./sensitive-content.js";
 import { validateProfileClaims } from "./validate-profile-claims.js";
 
 /**
- * The profiled mint pipeline (`aegis.mint`). Dispatches on the per-call format:
- * the profiled COSE path (`cwt`) is a separate encoder (`mintCoseToken`) that
- * consumes the same domain-keyed common claims; the JOSE path assembles +
- * validates the DOMAIN-keyed common layer, maps it to JOSE wire via the ONE
- * translator, signs, and optionally sign-then-encrypts.
+ * THE profiled mint pipeline (`aegis.mint`). One implementation for every wire:
+ * the profile is resolved, its policy enforced, the DOMAIN-keyed common claims
+ * assembled and validated, and only then is the token handed to the wire that
+ * emits it.
+ *
+ * It was two encoders sharing a dispatch. What genuinely differed between them:
+ * both profile guards were written out twice, the token-type derivation differed
+ * (and still does — see `TokenWire.mintTypPrefix`), each resolved its signing and
+ * encryption keys in its own order, and the COSE one hardcoded `objectId:
+ * undefined` on its result even though the header parameter reached the wire. The
+ * claim buckets and the header bag were ALREADY shared by an earlier step; this
+ * step did not repair those and must not be read as having done so. What it does
+ * add is that everything above `wire.signClaims` is now encoding-neutral by
+ * construction: there is no second place left for a rule to be written
+ * differently.
  */
 export const mintToken = async ({
   name,
@@ -35,17 +36,9 @@ export const mintToken = async ({
   options: ProfileMintOptions;
   deps: AegisDeps;
 }): Promise<SignedToken> => {
-  // Encoding seam: dispatch on the per-call format. The profiled COSE path
-  // (`cwt` = COSE_Sign1, `cwm` = COSE_Mac0 — D6) is a separate encoder that
-  // consumes the same domain-keyed common claims; everything above this branch
-  // stays encoding-neutral. The kit within `mintCoseToken` is picked by the
-  // explicit format, not the resolved key's algClass.
-  const format = selectEncoder(options.format).format;
-  if (format === "cwt" || format === "cwm") {
-    return mintCoseToken({ name, content, options, deps });
-  }
-
   const profile = resolveProfile(name);
+  const format = options.format ?? "jwt";
+  const wire = tokenWireFor(format);
 
   // A profile declares the DIRECTION it is used in. A verify-only one exists to
   // check ANOTHER issuer's token, so minting it would emit that artifact under
@@ -54,21 +47,20 @@ export const mintToken = async ({
   // never reaches this; the throw covers the untyped and cast-past-it ones.
   if (profile.use === "verify") {
     throw new AegisDomainError("Profile cannot be minted", {
-      code: "jwt_profile_not_mintable",
-      data: { profile: profile.name, use: profile.use },
-      title: "JWT Profile Not Mintable",
+      code: "profile_not_mintable",
+      data: { profile: profile.name, use: profile.use, format },
+      title: "Profile Not Mintable",
       details:
         "This token profile declares itself verify-only: it exists to verify a token issued elsewhere, so it cannot be used to mint one. Use the profile that owns the artifact you are issuing.",
     });
   }
 
-  // T5 — `options.encrypt` is only meaningful for encryptable profiles.
-  // Passing it for a non-encryptable profile (access_token / SET / logout /
-  // erasure / DPoP) is a caller error, not a silent no-op.
+  // `options.encrypt` is only meaningful for an encryptable profile. Passing it
+  // for one that is not is a caller error, not a silent no-op.
   if (options.encrypt !== undefined && !profile.encryptable) {
     throw new AegisDomainError("Encryption is not allowed for this profile", {
       code: "encryption_not_allowed",
-      data: { profile: profile.name },
+      data: { profile: profile.name, format },
       title: "Encryption Not Allowed",
       details:
         "This token profile is not encryptable, so an encrypt option cannot be supplied; remove it or use an encryptable profile.",
@@ -79,33 +71,32 @@ export const mintToken = async ({
   // key is SELECTED here rather than the wrong one being caught afterwards.
   const kryptos = await deps.resolveSignKey(options.sign ?? {}, profile);
 
-  // T5 — resolve the recipient (client) enc key when encryption is in play.
-  // Encryption fires when the profile is encryptable AND either an explicit
-  // `encrypt` option is supplied OR the content carries `sensitive` fields
-  // (forced within id_token). When no enc key is resolvable, encryption is
-  // skipped and any sensitive fields are omitted (never emitted in clear).
-  const hasSensitive = content.sensitive != null;
+  // Confidentiality is decided by the CLAIM REGISTRY, never by the container the
+  // caller reached for: encryption fires when the profile is encryptable AND
+  // either the caller asked for it or the content carries a claim the registry
+  // marks sensitive — wherever in the content that claim sits.
+  const sensitive = findSensitiveClaims(content);
   const explicitEncrypt = options.encrypt !== undefined;
-  const wantsEncryption = profile.encryptable && (explicitEncrypt || hasSensitive);
+  const wantsEncryption =
+    profile.encryptable && (explicitEncrypt || sensitive.length > 0);
 
-  // When the caller explicitly asked for encryption, a missing enc key is a
-  // hard error. When encryption is forced ONLY by the sensitive fields, a
-  // missing key is tolerated — they are omitted instead (see below).
+  // When the caller explicitly asked for encryption, a missing recipient key is a
+  // hard error. When encryption is forced ONLY by a sensitive claim, a missing key
+  // is tolerated — the claim is omitted instead (below).
   const encKryptos = wantsEncryption
     ? await deps.resolveEncKey(options.encrypt?.key, explicitEncrypt)
     : undefined;
 
-  // The sensitive fields MUST NOT travel in cleartext. If they cannot be
-  // encrypted (profile not encryptable, or no enc key resolvable), strip them
-  // from the content before signing so they are omitted entirely.
+  // A sensitive claim MUST NOT travel in cleartext. If it cannot be encrypted,
+  // strip it before signing so it is omitted from the token entirely.
   const signContent =
-    hasSensitive && !encKryptos
-      ? (omitUndefined({ ...content, sensitive: undefined }) as SignContent)
+    sensitive.length > 0 && !encKryptos
+      ? stripSensitiveClaims(content, sensitive)
       : content;
 
   // Assemble + validate on the DOMAIN-keyed common layer: presence/forbid/
-  // conditional policy (inside assembleCommonClaims) + the structural RFC
-  // rules (validateProfileClaims). Business logic lives in domain terms.
+  // conditional policy (inside assembleCommonClaims) plus the structural RFC
+  // rules. Business logic lives in domain terms, above every wire.
   const common = assembleCommonClaims(
     { algorithm: kryptos.algorithm, issuer: deps.issuer, lifetime: options.lifetime },
     profile,
@@ -115,69 +106,51 @@ export const mintToken = async ({
 
   validateProfileClaims(profile, common, {
     ...(options.context ?? {}),
-    algorithm: kryptos.algorithm as any,
+    algorithm: kryptos.algorithm as never,
   });
 
-  // JOSE wire claims via the ONE translator. `common` already carries the
-  // resolved envelope (iss/iat/jti/nbf/exp) and the custom claims, so the
-  // signed token matches the validated common layer exactly — one source of
-  // truth. Profile + FLAT sensitive claims join the domain layer so
-  // `domainToJose` maps each by the registry (the sensitive fields become their
-  // individual wire claims, not a nested wrapper); the emit boundary makes no
-  // case decision (R18).
-  const claims = domainToJose(mergeContentClaims(common, signContent));
+  const tokenType = wire.mintTypPrefix({
+    profile,
+    contentTokenType: signContent.tokenType,
+    signTyp: options.sign?.typ,
+    format,
+  });
 
-  // A profile typ value stamps the header verbatim (e.g. `at+jwt`) — for
-  // BOTH optional and required presence (presence is a verify-side knob
-  // only). Presence `none` means "none mandated": fall back to the
-  // tokenType-derived default (bare `JWT` when no tokenType), which JwtKit
-  // requires as a header floor.
-  const signed = signJwtWire({
+  const signed = wire.signClaims({
     kryptos,
-    wireClaims: claims,
-    content: signContent as SignJwtContent,
-    options: {
-      ...(options.sign ?? {}),
-      // mint's own `omit` controls the wire; a per-sign omit is a fallback.
-      omit: options.omit ?? options.sign?.omit,
-      ...(profile.typ.presence !== "none" ? { typ: profile.typ.value } : {}),
-    },
-    certBindingMode: deps.certBindingMode,
-    certificateThumbprintSha1: deps.certificateThumbprintSha1,
-    clockTolerance: deps.clockTolerance,
-    logger: deps.logger,
+    deps,
+    // The profile and sensitive buckets join the domain layer here, AFTER policy
+    // has run over `common`: neither carries profile policy, and both map to
+    // individual wire claims rather than a nested wrapper.
+    common: mergeContentClaims(common, signContent),
+    tokenType,
+    header: options.sign?.header,
+    // mint's own `omit` controls the wire; a per-sign omit is a fallback.
+    omit: options.omit ?? options.sign?.omit,
+    proprietary: options.proprietary,
+    bindCertificate: options.sign?.bindCertificate,
+    certificateThumbprintSha1: options.sign?.certificateThumbprintSha1,
+    format,
   });
 
-  if (!encKryptos) {
-    return signed;
-  }
+  if (!encKryptos) return signed;
 
-  // T5 — sign-then-encrypt. The inner signed JWT keeps the profile typ
-  // (`at+jwt` / bare `JWT`); the outer JWE carries `cty: JWT` (RFC 7519 §5.2),
-  // stamped EXPLICITLY here so caller-cty-wins overrides the string→text/plain
-  // inference the codec would otherwise apply to the compact JWS string. The read
-  // side (verify recursion) reconstructs the JWT cty to the inner token STRING,
-  // then decrypts-then-verifies it, applying the profile floor to the inner
-  // claims/typ.
-  const token = encryptJwe({
+  // Sign-then-encrypt. The inner signed token keeps the profile's type; the outer
+  // declares a nested token so the read side reconstructs the plaintext to the
+  // inner token rather than to an inferred blob, then decrypts-then-verifies it
+  // against the profile floor.
+  const token = wire.encryptOuter({
     kryptos: encKryptos,
-    data: signed.token,
-    // Forward the ECDH-ES party info (RFC 7518 §4.6) from the encrypt wrapper;
-    // JweKit gates/strips it (ECDH-ES only), so it is inert for other algorithms.
-    // `header.cty: JWT` marks the plaintext as a nested JWT.
-    options: {
-      header: { cty: "JWT" },
-      partyProducer: options.encrypt?.partyProducer,
-      partyRecipient: options.encrypt?.partyRecipient,
-    },
-    defaultEncryption: deps.defaultEncryption,
-    certBindingMode: deps.certBindingMode,
-    certificateThumbprintSha1:
-      options.encrypt?.certificateThumbprintSha1 ?? deps.certificateThumbprintSha1,
-    logger: deps.logger,
+    deps,
+    inner: signed.token,
+    tokenType,
+    proprietary: options.proprietary,
+    partyProducer: options.encrypt?.partyProducer,
+    partyRecipient: options.encrypt?.partyRecipient,
+    certificateThumbprintSha1: options.encrypt?.certificateThumbprintSha1,
   });
 
-  // The OUTER wire is now a JWE (sign-then-encrypt): re-stamp `format` to mirror
-  // the read side, which reports the outer `jwe` with the signed inner under `inner`.
-  return { ...signed, token, format: "jwe" };
+  // The OUTER wire is now the encrypting format, mirroring the read side — which
+  // reports that outer with the signed inner's format under `inner`.
+  return { ...signed, token, format: wire.encryptedFormat };
 };

@@ -9,7 +9,7 @@ import type { WireTokenHeader } from "./wire-header.js";
  * dedicated `partyProducer`/`partyRecipient` options (JWE). Removing them at the
  * TYPE level is the compile-time half of the reserved-param guard.
  */
-type KitOwnedHeaderParam =
+export type KitOwnedHeaderParam =
   | "alg"
   | "apu"
   | "apv"

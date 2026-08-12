@@ -22,8 +22,8 @@ import {
   JwtError,
 } from "../errors/index.js";
 import { decodeCwtWire } from "../internal/cose/cwt-token.js";
-import type { TokenFormat } from "../internal/utils/select-encoder.js";
-import type { TokenFormatTag } from "../types/index.js";
+import type { TokenFormat, TokenFormatTag } from "../types/index.js";
+import { inspectToken, type RawLabelMap, type TokenInspection } from "./inspect-token.js";
 import {
   TEST_EC_KEY_ENC,
   TEST_EC_KEY_SIG,
@@ -46,6 +46,8 @@ import {
   type ThenStep,
   type WhenStep,
   type Wire,
+  type WireAssertion,
+  type WireKey,
 } from "./scenarios.js";
 
 /**
@@ -160,6 +162,13 @@ type ScenarioResult = {
   claims?: Dict;
   custom?: Dict;
   header?: Dict;
+  /**
+   * The UNPROTECTED header bucket, in a CELL — `undefined` means the act produced
+   * no header at all, `{ value: undefined }` means it produced one and the bucket
+   * is ABSENT. Collapsing the two would let a row assert "no unprotected header"
+   * against an act that never reports one, which is a pass for the wrong reason.
+   */
+  unprotectedHeader?: { value: Dict | undefined };
 };
 
 /**
@@ -237,6 +246,127 @@ export const readWirePayload = (token: string, format?: string): WirePayload => 
       reason: `the token is not a decodable COSE structure (${(err as Error).message})`,
     };
   }
+};
+
+/**
+ * One RAW wire bucket in the form the assertions consume: a `has` over the wire's
+ * OWN key type, and a record for `toMatchObject`.
+ *
+ * ⚠ `has` takes the raw key. RFC 9052 §1.5 defines `label = int / tstr`, so a
+ * lookup that stringified its key would merge the integer label `4` with the text
+ * label `"4"` — two different parameters. The RECORD is stringified because that
+ * is what a JS object literal in a row already is (`{ 16: … }` has the key
+ * `"16"`), and it is only ever used for value comparison.
+ */
+type ComparableBucket = { has: (key: WireKey) => boolean; record: Dict };
+
+const joseBucket = (source: Dict): ComparableBucket => ({
+  has: (key) => Object.prototype.hasOwnProperty.call(source, String(key)),
+  record: source,
+});
+
+const coseBucket = (source: RawLabelMap): ComparableBucket => ({
+  has: (key) => source.has(key),
+  record: Object.fromEntries([...source].map(([label, value]) => [String(label), value])),
+});
+
+/**
+ * The RAW bucket a wire step names, read by the INDEPENDENT inspector.
+ *
+ * THROWS for a bucket that is not there to read — a JWE's ciphertext payload, a
+ * JOSE unprotected bucket that does not exist — rather than handing back an
+ * empty one. Every assertion below is an inclusion or an exclusion, and both pass
+ * over an empty container without checking anything, so the empty answer is the
+ * vacuous pass this whole layer exists to prevent.
+ */
+const wireBucketOf = (
+  inspection: TokenInspection,
+  bucket: "protectedHeader" | "unprotectedHeader" | "claims",
+): ComparableBucket => {
+  if (inspection.wire === "jose") {
+    switch (bucket) {
+      case "protectedHeader":
+        return joseBucket(inspection.protectedHeader);
+
+      case "unprotectedHeader":
+        throw new Error(
+          "the row asserts on the raw unprotected header, but a JOSE compact serialisation has no such bucket (RFC 7515 §7.1). " +
+            'Assert `{ step: "wireUnprotectedHeader", absent: true }` instead.',
+        );
+
+      case "claims": {
+        if (inspection.payload.readable === false) {
+          throw new Error(
+            `the row asserts on the raw wire claims, but ${inspection.payload.reason}. ` +
+              "Assert the header or the format instead — the claims cannot be checked here.",
+          );
+        }
+        return joseBucket(inspection.payload.value);
+      }
+
+      default: {
+        const exhaustive: never = bucket;
+        throw new Error(`unhandled wire bucket "${String(exhaustive)}"`);
+      }
+    }
+  }
+
+  switch (bucket) {
+    case "protectedHeader":
+      return coseBucket(inspection.protectedHeader);
+
+    case "unprotectedHeader":
+      return coseBucket(inspection.unprotectedHeader);
+
+    case "claims": {
+      if (inspection.payload.readable === false) {
+        throw new Error(
+          `the row asserts on the raw wire claims, but ${inspection.payload.reason}. ` +
+            "Assert the header or the format instead — the claims cannot be checked here.",
+        );
+      }
+      return coseBucket(inspection.payload.value);
+    }
+
+    default: {
+      const exhaustive: never = bucket;
+      throw new Error(`unhandled wire bucket "${String(exhaustive)}"`);
+    }
+  }
+};
+
+/** Apply one row's `includes`/`present`/`excludes` to a raw bucket. */
+const assertWireBucket = (assertion: WireAssertion, bucket: ComparableBucket): void => {
+  if (assertion.includes) {
+    expect(bucket.record).toMatchObject(assertion.includes);
+  }
+  for (const key of assertion.present ?? []) {
+    expect(bucket.has(key), `expected the raw wire bucket to carry ${String(key)}`).toBe(
+      true,
+    );
+  }
+  for (const key of assertion.excludes ?? []) {
+    expect(
+      bucket.has(key),
+      `expected the raw wire bucket NOT to carry ${String(key)}`,
+    ).toBe(false);
+  }
+};
+
+/**
+ * The DOMAIN header bucket a row asserts on, or the harness's own diagnostic.
+ * A row naming an act that reports no domain header at all is a row that would
+ * otherwise pass on the act's silence.
+ */
+const domainHeaderOf = (result: ScenarioResult): Dict | undefined => {
+  if (result.unprotectedHeader === undefined) {
+    throw new Error(
+      "the row asserts on the unprotected DOMAIN header, but the last act reported none. " +
+        "Only `parse` and `verify` produce the domain header pair; a kit verify reports WIRE-keyed buckets.",
+    );
+  }
+
+  return result.unprotectedHeader.value;
 };
 
 /** GIVEN — stock the vault and set the clock, then build the artifact. */
@@ -351,7 +481,10 @@ const act = async (
         format: parsed.format,
         claims: parsed.claims as Dict,
         custom: parsed.custom as Dict,
-        header: parsed.header as unknown as Dict,
+        header: parsed.protectedHeader as unknown as Dict,
+        unprotectedHeader: {
+          value: parsed.unprotectedHeader as unknown as Dict | undefined,
+        },
       };
     }
 
@@ -367,7 +500,10 @@ const act = async (
         format: verified.format,
         claims: verified.claims as Dict,
         custom: verified.custom as Dict,
-        header: verified.header as unknown as Dict,
+        header: verified.protectedHeader as unknown as Dict,
+        unprotectedHeader: {
+          value: verified.unprotectedHeader as unknown as Dict | undefined,
+        },
       };
     }
 
@@ -453,7 +589,37 @@ const assertObservation = (step: ThenStep, result: ScenarioResult): void => {
 
     case "header":
       expect(result.header).toMatchObject(step.expected);
+      for (const field of step.excludes ?? []) {
+        expect(result.header).not.toHaveProperty(field);
+      }
       return;
+
+    case "unprotectedHeader": {
+      const unprotected = domainHeaderOf(result);
+
+      if (step.absent === true) {
+        // `toBeUndefined`, not `toEqual({})`: an empty object is TRUTHY, so a
+        // consumer's `if (result.unprotectedHeader)` would read one as present.
+        expect(unprotected).toBeUndefined();
+        return;
+      }
+
+      // An assertion about what the bucket CONTAINS cannot be answered by a
+      // bucket that is not there — and `not.toHaveProperty` over `undefined`
+      // would pass, so an exclusion would check nothing.
+      expect(
+        unprotected,
+        "the row asserts on the contents of the unprotected domain header, but the result carries none",
+      ).toBeDefined();
+
+      if (step.expected) {
+        expect(unprotected).toMatchObject(step.expected);
+      }
+      for (const field of step.excludes ?? []) {
+        expect(unprotected).not.toHaveProperty(field);
+      }
+      return;
+    }
 
     case "wirePayload": {
       const wire = readWirePayload(result.token, result.format);
@@ -476,6 +642,33 @@ const assertObservation = (step: ThenStep, result: ScenarioResult): void => {
       }
       return;
     }
+
+    // The RAW-BYTES steps. They read the token through the INDEPENDENT inspector,
+    // which imports nothing from `internal/` or `classes/` — so unlike every
+    // other wire assertion here, they cannot be satisfied by a mint bug and a read
+    // bug that agree with each other.
+    case "wireProtectedHeader":
+      assertWireBucket(step, wireBucketOf(inspectToken(result.token), "protectedHeader"));
+      return;
+
+    case "wireUnprotectedHeader": {
+      const inspection = inspectToken(result.token);
+
+      if (step.absent === true) {
+        expect(
+          inspection.unprotectedHeader,
+          "expected the wire to carry no unprotected header bucket at all",
+        ).toBeUndefined();
+        return;
+      }
+
+      assertWireBucket(step, wireBucketOf(inspection, "unprotectedHeader"));
+      return;
+    }
+
+    case "wireClaims":
+      assertWireBucket(step, wireBucketOf(inspectToken(result.token), "claims"));
+      return;
 
     case "rejects":
       // Unreachable via the tuple type: a rejection is a whole THEN on its own.

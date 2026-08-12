@@ -10,7 +10,6 @@ import {
   CLAIM_SPECS,
   type ClaimSpec,
   claimByDomain,
-  coseName,
   joseName,
   type NameSelector,
 } from "./claims-registry.js";
@@ -28,14 +27,14 @@ import {
  * hand-listed field-by-field extraction of ~45 claims. All of it is gone; what
  * genuinely differed survives as {@link ClaimReadMode}, and nothing else.
  *
- * Public functions over TWO parameterized cores (write / read). The ONLY
- * thing that varies between the JOSE and COSE variants is the wire NAME emitted
- * or looked up — `joseName` for JOSE, `coseName` for COSE
- * (the RFC 8392 divergence set, today just `jti` <-> `cti`). The VALUE transforms
- * are identical at the translator level (only the downstream CWT codec turns the
- * jose-shaped values into COSE labels / CBOR bytes). So `domainToCose` is a
- * single registry pass emitting COSE names — never `domainToJose` + a separate
- * rename — which is what subsumes the old `cose-names.ts` name bridge.
+ * TWO parameterized cores (write / read), and the wire is a PARAMETER of both.
+ * The ONLY thing that varies between JOSE and COSE is the wire NAME emitted or
+ * looked up — `joseName` vs `coseName` (the RFC 8392 divergence set, today just
+ * `jti` <-> `cti`). The VALUE transforms are identical at this level; only the
+ * downstream CWT codec turns the jose-shaped values into COSE labels and CBOR
+ * bytes. There is deliberately no `domainToCose` / `coseToDomain` pair: a second
+ * named entry point per wire is a second place for a rule to be written
+ * differently, which is exactly what this file exists to remove.
  *
  * It is the ONLY domain-aware claim code: both the JOSE and the COSE format
  * paths meet here. Value transforms come from the registry's `ClaimCodec`; a
@@ -233,8 +232,12 @@ const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
  * unregistered custom claims keep their value and flip their KEY to snake_case
  * (R18). Undefined results (an absent value, an empty `cnf`) are dropped. The
  * VALUE encoding is identical for JOSE and COSE — only `nameOf` differs.
+ *
+ * EXPORTED, and the only write door: the wire is a PARAMETER, so there is no
+ * `domainToJose` / `domainToCose` pair to keep in agreement. `Aegis.toWire` binds
+ * `joseName` because the public vocabulary door speaks JOSE.
  */
-const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
+export const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
   const wire: Dict = {};
 
   for (const [key, value] of Object.entries(common)) {
@@ -252,24 +255,17 @@ const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
   return wire;
 };
 
-/** Domain-keyed common claims -> JOSE-keyed wire dict. */
+/**
+ * Domain-keyed common claims -> JOSE-keyed wire dict. The PUBLIC vocabulary door
+ * (`Aegis.toWire`), which speaks JOSE because the domain engine does; every
+ * internal write site calls {@link domainToWire} with its own codec's selector.
+ */
 export const domainToJose = (common: Dict): Dict => domainToWire(common, joseName);
 
-/**
- * Domain-keyed common claims -> COSE-name-keyed wire dict (a single registry
- * pass, NOT `domainToJose` + rename). Identical to `domainToJose` except that a
- * name-diverging claim emits its COSE name (`jti` -> `cti`); the value shapes are
- * the same jose-shaped values the CWT codec then turns into labels + CBOR bytes.
- */
-export const domainToCose = (common: Dict): Dict => domainToWire(common, coseName);
-
-export type JoseToDomainResult = {
+export type WireToDomainResult = {
   claims: Dict;
   custom: Dict;
 };
-
-/** COSE read result — same two-bucket shape as {@link JoseToDomainResult}. */
-export type CoseToDomainResult = JoseToDomainResult;
 
 // Dispatch ONE `bespoke` claim's value to its per-claim DOMAIN decoder, keyed by
 // the registry codec's `bespoke` sub-kind — the read-side twin of
@@ -387,59 +383,80 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
 };
 
 /**
- * WHICH claims a read pass resolves, and what becomes of the keys it does not.
+ * WHICH claims a read pass resolves, WHICH input names it will answer to, and
+ * what becomes of the keys it does not consume. Three facts, one closed set, so
+ * a fourth door cannot be added by accident.
  *
- * ⚠ The two modes exist because the two read doors genuinely disagree TODAY, and
- * a refactor may not silently pick a winner. They are the whole surviving delta
- * between the two read surfaces this file replaced; everything else — every
- * per-claim decoder — is now shared.
+ *   - `"token"`  reading a TOKEN's wire payload. A registered claim resolves ONLY
+ *                under its wire name; an unregistered key flips snake -> camelCase
+ *                into `custom` (R18). This is what verify/parse/decrypt read.
+ *   - `"floor"`  the profiled verify FLOOR read of a token: wire names only, only
+ *                `domainClaim`-marked claims resolve (the {@link DomainClaims}
+ *                set), and every other key stays in `custom` VERBATIM.
+ *   - `"dict"`   the PUBLIC vocabulary door (`Aegis.toDomain`), whose input is a
+ *                claim dict of unknown provenance — an introspection response, a
+ *                userinfo body, or an already-domain-shaped set. It therefore
+ *                answers to EITHER spelling, domain form winning.
  *
- *   - `"domain"`  the FULL registry read: every registered claim resolves to its
- *                 domain name, and an unregistered key flips snake -> camelCase
- *                 into `custom` (R18). This is what `Aegis.toDomain` and the
- *                 token read path want: a domain-shaped view of the payload.
- *   - `"floor"`   the profiled verify-FLOOR read: only `domainClaim`-marked claims
- *                 resolve (the {@link DomainClaims} set), and every other key
- *                 stays in `custom` VERBATIM — NOT case-converted.
+ * ⚠⚠ The wire-name-only rule on the two TOKEN modes is the load-bearing one.
+ * Which claim an ISSUER stated is decided by the registered wire claim and by
+ * nothing else; letting a look-alike custom claim answer under the domain
+ * spelling hands that decision to whoever presents the token. A token carrying
+ * both `aud: ["someone-else"]` and a custom `audience: [me]` must fail the
+ * audience floor on the `aud` it actually states.
  *
- * ⚠⚠ `"floor"`'s verbatim rule is LOAD-BEARING, not an oversight. The floor asks
- * "is this claim present ON THE WIRE"; case-converting first would let a custom
- * claim answer for a registered one it merely resembles. A wire `expires_at`
- * camelCases to `expiresAt` and would then satisfy an `exp`-presence floor — the
- * JOSE path is correct today precisely BECAUSE this read leaves it alone. Two
- * profiles also name their required claims in wire spelling
- * (`token_introspection`), which only resolves against a verbatim `custom`.
- *
- * Collapsing the two into one read is a POLICY decision about the floor, not a
- * codec change, so it belongs with the verify rewrite — not here.
+ * ⚠⚠ `"floor"`'s verbatim rule is equally load-bearing. The floor asks "is this
+ * claim present ON THE WIRE"; case-converting first would let a wire `expires_at`
+ * camelCase to `expiresAt` and satisfy an `exp`-presence floor. A profile may
+ * also name a required claim in its WIRE spelling (`introspection` names
+ * `token_introspection`), which only resolves against a verbatim `custom`.
  */
-export type ClaimReadMode = "domain" | "floor";
+export type ClaimReadMode = "token" | "floor" | "dict";
 
 /**
  * What a {@link ClaimReadMode} decides, resolved ONCE per read.
  *   - `resolves`   whether the pass looks this registered claim up at all.
+ *   - `lookup`     which input key, if any, the claim is read from.
  *   - `customKey`  how a key the pass did not consume is spelled in `custom`.
  *
- * The two facts travel together because they are one policy: the floor resolves
- * a narrower set AND must leave everything else untouched, so a mode that got one
- * without the other would be incoherent. Deciding them in a single `switch` is
- * also what makes a third mode a COMPILE error rather than a silent fall into the
- * domain behaviour — the failure a pair of `mode === "floor"` ternaries invites.
+ * The three facts travel together because they are one policy, and deciding them
+ * in a single `switch` is what makes a fourth mode a COMPILE error rather than a
+ * silent fall into another door's behaviour — the failure a scatter of
+ * `mode === "floor"` ternaries invites.
  */
 type ClaimReadRules = {
   resolves: (spec: ClaimSpec) => boolean;
+  lookup: (spec: ClaimSpec, wireName: string, wire: Dict) => string | undefined;
   customKey: (key: string) => string;
 };
 
+/** A token states a claim under its WIRE name. Nothing else answers for it. */
+const wireLookup = (
+  _spec: ClaimSpec,
+  wireName: string,
+  wire: Dict,
+): string | undefined => (wireName in wire ? wireName : undefined);
+
+/** The public dict door accepts either spelling; the domain form wins. */
+const eitherLookup = (
+  spec: ClaimSpec,
+  wireName: string,
+  wire: Dict,
+): string | undefined =>
+  spec.domain in wire ? spec.domain : wireName in wire ? wireName : undefined;
+
 const claimReadRules = (mode: ClaimReadMode): ClaimReadRules => {
   switch (mode) {
-    case "domain":
-      return { resolves: () => true, customKey: camelCase };
+    case "token":
+      return { resolves: () => true, lookup: wireLookup, customKey: camelCase };
     case "floor":
       return {
         resolves: (spec) => spec.domainClaim !== undefined,
+        lookup: wireLookup,
         customKey: (key) => key,
       };
+    case "dict":
+      return { resolves: () => true, lookup: eitherLookup, customKey: camelCase };
     default: {
       const exhaustive: never = mode;
       throw new AegisDomainError("Unhandled claim read mode", {
@@ -454,13 +471,12 @@ const claimReadRules = (mode: ClaimReadMode): ClaimReadRules => {
 
 /**
  * The read core (wire -> `{ claims, custom }`), single-pass over the registry.
- * Registered claims resolve to `spec.domain` with their value decoded, tolerating
- * either the selected wire name or the camelCase domain name in the input (domain
- * form takes precedence). The VALUE decoding is identical for JOSE and COSE and
- * for both read modes — only `nameOf` and {@link ClaimReadMode} differ.
+ * Registered claims resolve to `spec.domain` with their value decoded. The VALUE
+ * decoding is identical for JOSE and COSE and for every read mode — only `nameOf`
+ * and the {@link ClaimReadMode} differ.
  *
  * Exported because `resolve-domain-buckets.ts` continues from here to the
- * four-bucket shape both read doors share.
+ * four-bucket shape every read door shares.
  *
  * ⚠ This TWO-bucket form is the right one for the profiled verify FLOOR, which
  * needs every domain claim flat in one dict: `profile.required` may name a
@@ -470,8 +486,8 @@ const claimReadRules = (mode: ClaimReadMode): ClaimReadRules => {
 export const wireToDomain = (
   wire: Dict,
   nameOf: NameSelector,
-  mode: ClaimReadMode = "domain",
-): JoseToDomainResult => {
+  mode: ClaimReadMode,
+): WireToDomainResult => {
   const rules = claimReadRules(mode);
   const consumed = new Set<string>();
   const claims: Dict = {};
@@ -481,10 +497,7 @@ export const wireToDomain = (
     // claim is left for `custom`, verbatim, exactly as it arrived.
     if (!rules.resolves(spec)) continue;
 
-    const wireName = nameOf(spec);
-    // Domain (camel) form takes precedence over the wire name.
-    const key =
-      spec.domain in wire ? spec.domain : wireName in wire ? wireName : undefined;
+    const key = rules.lookup(spec, nameOf(spec), wire);
     if (key === undefined) continue;
 
     consumed.add(key);
@@ -502,34 +515,43 @@ export const wireToDomain = (
 };
 
 /**
- * The verify-FLOOR read: raw wire claims -> `{ claims, custom }` where `claims`
- * is the {@link DomainClaims} set and `custom` holds every remaining key under
- * its ORIGINAL spelling. The single caller is the profiled JOSE verify pipeline,
- * which flattens the two back together and asks the floor what is present.
+ * The verify-FLOOR read: a token's raw wire claims -> `{ claims, custom }` where
+ * `claims` is the {@link DomainClaims} set and `custom` holds every remaining key
+ * under its ORIGINAL spelling. The profiled verify pipeline flattens the two back
+ * together and asks the floor what is present.
  *
- * JOSE-named because that caller reads `verified.wire.payload` off a JWT/JWE — a
- * COSE token is routed to `verifyCoseToken` before this point and never arrives
- * here. That split is the COSE floor's own second extractor, which the verify
- * rewrite removes; this function is deliberately not generalised to meet it,
- * because doing so would decide the policy question that rewrite owns.
+ * The wire is a PARAMETER: both wires reach this one read, so a claim spelling a
+ * floor accepts cannot diverge between them.
  */
-export const wireToFloorClaims = (wire: Dict): JoseToDomainResult =>
-  wireToDomain(wire, joseName, "floor");
+export const wireToFloorClaims = (
+  wire: Dict,
+  nameOf: NameSelector,
+): WireToDomainResult => {
+  const { claims, custom } = wireToDomain(wire, nameOf, "floor");
 
-/**
- * JOSE/camel-keyed wire dict -> `{ claims, custom }`.
- *
- * The `{ claims, custom }` two-bucket split is the Phase-2 shape; splitting
- * `profile` / `sensitive` off `claims` is registry-category-driven and lands in
- * a later phase.
- */
-export const joseToDomain = (wire: Dict): JoseToDomainResult =>
-  wireToDomain(wire, joseName);
+  // ⚠ A key the pass did NOT consume that is spelled like a claim the floor
+  // resolves can only be a LOOK-ALIKE: the real claim would have been consumed
+  // under its wire name. The floor's caller flattens `custom` and `claims` into
+  // one dict, so leaving it in would let a presenter-supplied `audience` answer
+  // for an ABSENT `aud` — a token that states no audience clearing the audience
+  // floor. Which claim the issuer stated is decided by the registered wire claim
+  // and by nothing else, and that has to hold when the claim is missing too.
+  //
+  // Only the RESOLVED set is filtered. A profile may require a claim under its
+  // wire spelling (`introspection` requires `token_introspection`) or a claim the
+  // floor does not resolve at all (`events`), and both must survive verbatim.
+  const filtered: Dict = {};
+  for (const [key, value] of Object.entries(custom)) {
+    if (floorShadows(key)) continue;
+    filtered[key] = value;
+  }
 
-/**
- * COSE-name-keyed wire dict (the CWT codec's `decode("map")` output) -> `{ claims,
- * custom }`. The read twin of `domainToCose`: a single registry pass that reads a
- * name-diverging claim under its COSE name (`cti` -> `tokenId`).
- */
-export const coseToDomain = (wire: Dict): CoseToDomainResult =>
-  wireToDomain(wire, coseName);
+  return { claims, custom: filtered };
+};
+
+/** The DOMAIN names the floor read resolves — the set a custom key may not impersonate. */
+const FLOOR_DOMAINS = new Set(
+  CLAIM_SPECS.filter((spec) => spec.domainClaim !== undefined).map((spec) => spec.domain),
+);
+
+const floorShadows = (key: string): boolean => FLOOR_DOMAINS.has(key);

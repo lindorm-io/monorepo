@@ -127,7 +127,7 @@ describe("Aegis — the external_access_token profile", () => {
           audience: RESOURCE,
           issuer: ISSUER,
         }),
-      ).rejects.toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
+      ).rejects.toThrow(expect.objectContaining({ code: "profile_typ_mismatch" }));
     });
   });
 
@@ -167,8 +167,8 @@ describe("Aegis — the external_access_token profile", () => {
         }),
       ).rejects.toThrow(
         expect.objectContaining({
-          code: "jwt_forbidden_claims_present",
-          data: { forbidden: ["nonce", "accessTokenHash"] },
+          code: "forbidden_claims_present",
+          data: expect.objectContaining({ forbidden: ["nonce", "accessTokenHash"] }),
         }),
       );
     });
@@ -190,8 +190,8 @@ describe("Aegis — the external_access_token profile", () => {
         }),
       ).rejects.toThrow(
         expect.objectContaining({
-          code: "jwt_forbidden_claims_present",
-          data: { forbidden: [domain] },
+          code: "forbidden_claims_present",
+          data: expect.objectContaining({ forbidden: [domain] }),
         }),
       );
     });
@@ -225,7 +225,7 @@ describe("Aegis — the external_access_token profile", () => {
           audience: RESOURCE,
           issuer: ISSUER,
         }),
-      ).rejects.toThrow(expect.objectContaining({ code: "jwt_missing_claim_exp" }));
+      ).rejects.toThrow(expect.objectContaining({ code: "missing_claim_exp" }));
     });
 
     test("should require sub and jti", async () => {
@@ -243,8 +243,8 @@ describe("Aegis — the external_access_token profile", () => {
         }),
       ).rejects.toThrow(
         expect.objectContaining({
-          code: "jwt_required_claims_missing",
-          data: { missing: ["subject", "tokenId"] },
+          code: "required_claims_missing",
+          data: expect.objectContaining({ missing: ["subject", "tokenId"] }),
         }),
       );
     });
@@ -255,7 +255,7 @@ describe("Aegis — the external_access_token profile", () => {
           audience: "https://other-rs.lindorm.io/",
           issuer: ISSUER,
         }),
-      ).rejects.toThrow(expect.objectContaining({ code: "jwt_audience_mismatch" }));
+      ).rejects.toThrow(expect.objectContaining({ code: "audience_mismatch" }));
     });
 
     /**
@@ -283,8 +283,11 @@ describe("Aegis — the external_access_token profile", () => {
         aegis.mint("external_access_token", mintContent, mintOptions),
       ).rejects.toThrow(
         expect.objectContaining({
-          code: "jwt_profile_not_mintable",
-          data: { profile: "external_access_token", use: "verify" },
+          code: "profile_not_mintable",
+          data: expect.objectContaining({
+            profile: "external_access_token",
+            use: "verify",
+          }),
         }),
       );
     });
@@ -296,7 +299,7 @@ describe("Aegis — the external_access_token profile", () => {
           ...mintOptions,
           format: "cwt",
         }),
-      ).rejects.toThrow(expect.objectContaining({ code: "jwt_profile_not_mintable" }));
+      ).rejects.toThrow(expect.objectContaining({ code: "profile_not_mintable" }));
     });
 
     // `issuer: "per-token"` — the deployment's own issuer is never assumed for a

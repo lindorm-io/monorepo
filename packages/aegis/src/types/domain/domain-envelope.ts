@@ -1,12 +1,14 @@
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
-import type { BindCertificateMode } from "../header/domain-header.js";
-import type { WireProtectedHeader } from "../header/wire-envelope.js";
+import type {
+  BindCertificateMode,
+  DomainProtectedHeader,
+} from "../header/domain-header.js";
 
 /**
  * The shared DOMAIN sign/encrypt envelope — the domain twin of
  * {@link WireTokenEnvelope}. It factors the cluster every domain write option
  * hand-copied: the caller-controlled PROTECTED wire header bag, the empty-claim
- * prune mode, the cert-binding knobs, and the per-call key policy. `SignJwtOptions`,
+ * prune mode, the cert-binding knobs, and the per-call key policy. `SignTokenOptions`,
  * `EncryptOptions`, and `RawSignInput` each intersect it (adding their own extras);
  * `K` types the per-call key (an {@link AegisSignKey} on the sign paths, an
  * {@link AegisEncKey} on encrypt).
@@ -19,8 +21,13 @@ export type DomainTokenEnvelope<K> = {
    * `bindCertificate`; the read side never verifies SHA-1.
    */
   certificateThumbprintSha1?: boolean;
-  /** Caller-controlled PROTECTED wire header params (`oid` rides here, ruling 3). */
-  header?: WireProtectedHeader;
+  /**
+   * Caller-controlled PROTECTED header params, in DOMAIN vocabulary
+   * (`objectId`/`contentType`/`critical`/…). Translated to whichever wire the
+   * call ends up emitting — so the same option produces a JOSE `oid` and a COSE
+   * label -70000 without the caller choosing between them.
+   */
+  header?: DomainProtectedHeader;
   /**
    * How empty claims are pruned before signing/encoding. `"empty"` (default) drops
    * null/empty-string/empty-array/empty-object recursively; `"undefined"` drops

@@ -18,8 +18,9 @@ import {
   extractTypPrefix,
 } from "../internal/utils/compute-typ-header.js";
 import { domainToJose } from "../internal/claims/translate.js";
+import { domainHeaderToWire } from "../internal/utils/domain-header-to-wire.js";
 import { defaultProfile } from "../internal/profiles/definitions/default.js";
-import type { SignContent, SignJwtOptions } from "../types/index.js";
+import type { SignContent, SignTokenOptions } from "../types/index.js";
 import { JwtKit } from "./JwtKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -35,7 +36,7 @@ const signDefault = (
   kit: JwtKit,
   issuer: string,
   content: SignContent,
-  options: SignJwtOptions = {},
+  options: SignTokenOptions = {},
 ) => {
   const common = assembleCommonClaims(
     { algorithm: kit.algorithm, issuer },
@@ -47,7 +48,7 @@ const signDefault = (
     isObject(content.profile) ? { ...common, ...content.profile } : common,
   );
   return kit.sign(claims, {
-    header: options.header,
+    header: domainHeaderToWire(options.header),
     omit: options.omit,
     // The kit takes a bare prefix and re-wraps it into the full media type.
     tokenType: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),
@@ -76,7 +77,7 @@ describe("JwtKit", () => {
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
             tokenType: "test_token",
           },
-          { header: { oid: "test-object-id" } },
+          { header: { objectId: "test-object-id" } },
         ),
       ).toEqual(expect.any(String));
     });
@@ -93,7 +94,7 @@ describe("JwtKit", () => {
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
             tokenType: "test_token",
           },
-          { header: { oid: "test-object-id" } },
+          { header: { objectId: "test-object-id" } },
         ),
       ).toEqual(expect.any(String));
     });
@@ -110,7 +111,7 @@ describe("JwtKit", () => {
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
             tokenType: "test_token",
           },
-          { header: { oid: "test-object-id" } },
+          { header: { objectId: "test-object-id" } },
         ),
       ).toEqual(expect.any(String));
     });
@@ -127,7 +128,7 @@ describe("JwtKit", () => {
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
             tokenType: "test_token",
           },
-          { header: { oid: "test-object-id" } },
+          { header: { objectId: "test-object-id" } },
         ),
       ).toEqual(expect.any(String));
     });
@@ -143,7 +144,7 @@ describe("JwtKit", () => {
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
           tokenType: "test_token",
         },
-        { header: { oid: "test-object-id" } },
+        { header: { objectId: "test-object-id" } },
       );
 
       expect(signed).toEqual(expect.any(String));

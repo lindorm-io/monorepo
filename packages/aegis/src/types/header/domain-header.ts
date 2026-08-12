@@ -65,6 +65,50 @@ export type DomainTokenHeaderOptions = Partial<
   publicEncryptionTag?: Buffer;
 };
 
+/**
+ * Header parameters a CALLER may never set — the DOMAIN names of the params the
+ * kit derives from the signing/encrypting key (`algorithm`/`keyId`/`encryption`/
+ * the certificate fields), computes from the crypto operation
+ * (`initialisationVector`/`publicEncryptionTag`/`publicEncryptionJwk`/the PBKDF
+ * pair), stamps from the token type (`headerType`), or reserves to the dedicated
+ * `partyProducer`/`partyRecipient` options.
+ *
+ * The domain twin of the wire-named `KitOwnedHeaderParam`; `domain-header.test.ts`
+ * binds the two sets to each other through the header registry, so a parameter
+ * that becomes kit-owned on one side cannot stay caller-settable on the other.
+ */
+export type KitOwnedDomainParam =
+  | "algorithm"
+  | "certificateChain"
+  | "certificateThumbprint"
+  | "certificateThumbprintSha1"
+  | "encryption"
+  | "headerType"
+  | "initialisationVector"
+  | "keyId"
+  | "partyProducer"
+  | "partyRecipient"
+  | "pbkdfIterations"
+  | "pbkdfSalt"
+  | "publicEncryptionJwk"
+  | "publicEncryptionTag";
+
+/**
+ * The caller-settable PROTECTED header bag, in DOMAIN vocabulary — what every
+ * domain-tier write option (`SignTokenOptions`, `EncryptOptions`, `RawSignInput`)
+ * takes.
+ *
+ * ⚠ The domain tier used to take a JOSE-WIRE-named bag here, which is why a
+ * caller writing `{ oid }` was writing JOSE on a call that might emit COSE, and
+ * why every COSE write path had to translate a wire name it had already been
+ * handed. A domain surface that speaks wire names in ONE of its arguments is the
+ * type-level root of that whole family of defects: the name a caller writes now
+ * says nothing about the encoding the token ends up in.
+ */
+export type DomainProtectedHeader = Partial<
+  Omit<DomainTokenHeader, KitOwnedDomainParam | "baseFormat" | "tokenType">
+>;
+
 /** The cert-binding output — DERIVED from {@link DomainTokenHeader}. */
 export type CertificateHeaderFields = Partial<
   Pick<

@@ -24,8 +24,13 @@ import type { StructuredFormat } from "./verified-token.js";
 export type ParsedToken<C extends Dict = Dict> = {
   /** The structured format read: `jwt`, `cwt` (COSE_Sign1), or `cwm` (COSE_Mac0). */
   format: StructuredFormat;
-  /** The domain-keyed header, uniform across JOSE and COSE. */
-  header: DomainTokenHeader;
+  /** The INTEGRITY-PROTECTED header, domain-keyed and uniform across JOSE and COSE. */
+  protectedHeader: DomainTokenHeader;
+  /**
+   * The UNAUTHENTICATED header bucket — covered by nothing, empty on JOSE. Kept
+   * apart from the protected one so a reader has to name the bucket it trusts.
+   */
+  unprotectedHeader?: DomainTokenHeader;
   /** Domain-keyed registered claims — always present for a structured token. */
   claims: DomainClaims;
   /** Non-domain (custom) claim bucket — always present for a structured token. */

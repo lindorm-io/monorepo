@@ -225,7 +225,7 @@ describe("Aegis — COSE namespaces", () => {
         .verify(token, { audience: "aud-1" })
         .catch((err: Error) => err);
       expect(error).toBeInstanceOf(AegisError);
-      expect((error as AegisError).code).toBe("cwt_missing_claim_exp");
+      expect((error as AegisError).code).toBe("missing_claim_exp");
     });
 
     // Regression (bug fixed 2026-07): the RAW `aegis.cwt.verify` wrapper
@@ -403,14 +403,14 @@ describe("Aegis — COSE namespaces", () => {
       const parsed = (await aegis.verify(token)) as unknown as {
         format: string;
         raw: Record<string, unknown>;
-        header: { headerType?: string };
+        protectedHeader: { headerType?: string };
       };
 
       expect(parsed.format).toBe("cws");
       // An object is negotiated via cty `application/json`, so it round-trips back
       // to the same object beside an empty domain.
       expect(parsed.raw.tid).toBe("at_abc");
-      expect(parsed.header.headerType).toBe("application/at+cws");
+      expect(parsed.protectedHeader.headerType).toBe("application/at+cws");
     });
 
     test("verify(token, options) validates a generic CWT's standard claims", async () => {

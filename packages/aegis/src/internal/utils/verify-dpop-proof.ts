@@ -26,7 +26,7 @@ type DpopProofPayload = {
 const assertString = (value: unknown, claim: string): string => {
   if (typeof value !== "string" || value.length === 0) {
     throw new AegisDomainError(`Invalid DPoP proof: "${claim}" claim is required`, {
-      code: "jwt_dpop_claim_required",
+      code: "dpop_claim_required",
       data: { claim },
       title: "JWT DPoP Claim Required",
       details:
@@ -42,7 +42,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   const parts = proof.split(".");
   if (parts.length !== 3) {
     throw new AegisDomainError("Invalid DPoP proof: not a compact JWS", {
-      code: "jwt_dpop_not_compact_jws",
+      code: "dpop_not_compact_jws",
       title: "JWT DPoP Not Compact JWS",
       details:
         "The DPoP proof must be a compact JWS with exactly three dot-separated segments.",
@@ -54,7 +54,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
 
   if (header.typ !== "dpop+jwt") {
     throw new AegisDomainError("Invalid DPoP proof: header typ must be dpop+jwt", {
-      code: "jwt_dpop_invalid_typ",
+      code: "dpop_invalid_typ",
       data: { typ: header.typ },
       title: "JWT DPoP Invalid Typ",
       details: "The DPoP proof header typ must be exactly dpop+jwt per RFC 9449.",
@@ -63,7 +63,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
 
   if (!header.jwk) {
     throw new AegisDomainError("Invalid DPoP proof: header jwk is required", {
-      code: "jwt_dpop_jwk_required",
+      code: "dpop_jwk_required",
       title: "JWT DPoP JWK Required",
       details:
         "The DPoP proof header must carry a jwk so its thumbprint can be matched against cnf.jkt.",
@@ -78,7 +78,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
 
   if (thumbprint !== expectedThumbprint) {
     throw new AegisDomainError("Invalid DPoP proof: thumbprint does not match cnf.jkt", {
-      code: "jwt_dpop_thumbprint_mismatch",
+      code: "dpop_thumbprint_mismatch",
       debug: { expected: expectedThumbprint, actual: thumbprint },
       title: "JWT DPoP Thumbprint Mismatch",
       details:
@@ -99,7 +99,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
 
   if (!verifyJoseSignature(proofKryptos, proof)) {
     throw new AegisDomainError("Invalid DPoP proof: signature verification failed", {
-      code: "jwt_dpop_signature_invalid",
+      code: "dpop_signature_invalid",
       title: "JWT DPoP Signature Invalid",
       details:
         "The DPoP proof signature did not verify against the key embedded in its jwk header.",
@@ -114,7 +114,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
 
   if (typeof payload.iat !== "number") {
     throw new AegisDomainError("Invalid DPoP proof: iat claim is required", {
-      code: "jwt_dpop_iat_required",
+      code: "dpop_iat_required",
       title: "JWT DPoP IAT Required",
       details:
         "The DPoP proof must carry a numeric iat claim so its freshness can be checked.",
@@ -125,7 +125,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
     throw new AegisDomainError(
       "Invalid DPoP proof: iat is outside the allowed skew window",
       {
-        code: "jwt_dpop_iat_skew",
+        code: "dpop_iat_skew",
         data: { iat: payload.iat, now, dpopMaxSkew },
         title: "JWT DPoP IAT Skew",
         details:
@@ -139,7 +139,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
     throw new AegisDomainError(
       "Invalid DPoP proof: ath does not match access token hash",
       {
-        code: "jwt_dpop_ath_mismatch",
+        code: "dpop_ath_mismatch",
         title: "JWT DPoP ATH Mismatch",
         details:
           "The DPoP proof ath claim does not equal the SHA-256 hash of the presented access token.",

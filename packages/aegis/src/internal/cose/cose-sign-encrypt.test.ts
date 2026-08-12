@@ -9,8 +9,9 @@ import {
   encryptCose,
   isEncryptedCose,
 } from "./cose-encryption.js";
-import { signCose } from "./sign-cose.js";
-import { verifyCose } from "./verify-cose.js";
+import { CwtKit } from "../../classes/CwtKit.js";
+import { coseName } from "../claims/claims-registry.js";
+import { domainToWire, wireToDomain } from "../claims/translate.js";
 
 // Between the fixture's issuedAt (1700000000) and expiresAt (1700003600), so the
 // in-kit temporal check (Phase 9 R10) accepts the round-tripped CWT.
@@ -28,14 +29,21 @@ const common = {
   tokenId: "the-jti",
 };
 
-// The direct-dispatch COSE path that replaced the dropped `CoseKit` façade: the
-// verb utils sign via `signCose` (algClass → CwtKit/CwmKit), wrap in a
-// COSE_Encrypt0 via `encryptCose`, and read back with `decryptCose` + `verifyCose`.
+// The COSE sign-then-encrypt BYTE path, pinned independently of the domain layer
+// that drives it: translate the domain claims to the COSE wire, secure them as a
+// COSE_Sign1, wrap that in a COSE_Encrypt0, then read the whole thing back.
+//
+// It used to drive two wrappers (`signCose` / `verifyCose`) that no longer exist —
+// the single mint/verify pipeline calls the kit and the translator directly. The
+// test is retargeted onto those rather than deleted, because it was the only thing
+// pinning this round trip and deleting it with its subject would have left the
+// survivor unchecked.
 describe("COSE sign-then-encrypt", () => {
   const enc = KryptosKit.generate.enc.oct({ algorithm: "dir", encryption: "A256GCM" });
 
   test("round-trips through decrypt + verify", () => {
-    const inner = signCose({ kryptos: TEST_EC_KEY_SIG, logger, common, format: "cwt" });
+    const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
+    const inner = kit.sign(domainToWire(common, coseName));
     expect(isEncryptedCose(inner)).toBe(false); // a bare signed CWT (COSE_Sign1)
 
     const encrypted = encryptCose({ kryptos: enc, logger, inner });
@@ -43,8 +51,9 @@ describe("COSE sign-then-encrypt", () => {
     expect(decodeEncryptedCoseKid(encrypted)).toBe(enc.id); // recipient kid, no decrypt
 
     const decrypted = decryptCose({ kryptos: enc, logger, token: encrypted });
-    expect(
-      verifyCose({ kryptos: TEST_EC_KEY_SIG, logger, token: decrypted }).claims,
-    ).toEqual(common);
+    const { payload } = kit.verify(decrypted);
+    const { claims, custom } = wireToDomain(payload, coseName, "token");
+
+    expect({ ...claims, ...custom }).toEqual(common);
   });
 });

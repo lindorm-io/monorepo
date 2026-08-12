@@ -658,7 +658,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // --- SENSITIVE identity claims (government-issued personal identifiers) ---
   //     The `AegisSensitive` set: national identity / social-security numbers
   //     and their OIDC §5.1 verified flags. They travel FLAT on the wire;
-  //     `sensitivity: "sensitive"` drives the OIDC Core §13.3 gate — they are
+  //     `sensitivity: "sensitive"` drives the aegis confidentiality gate — they are
   //     honoured ONLY on an encrypted token (jwe/cwe) and suppressed otherwise
   //     (extract-sensitive-claims.ts). Long JOSE names ⇒ private-use labels
   //     (append-only).

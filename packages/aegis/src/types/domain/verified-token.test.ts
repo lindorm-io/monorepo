@@ -36,7 +36,7 @@ describe("VerifiedToken (type witness — not yet returned by verify, Phase 19)"
   test("a jwt result carries domain claims + custom bucket", () => {
     const verified: VerifiedToken = {
       format: "jwt",
-      header,
+      protectedHeader: header,
       claims: { subject: "user_1", issuer: "https://idp.lindorm.io/" },
       custom: { acmeFlag: true },
       token: "eyJ.body.sig",
@@ -50,7 +50,7 @@ describe("VerifiedToken (type witness — not yet returned by verify, Phase 19)"
   test("a jws result delivers raw beside empty domain buckets", () => {
     const verified: VerifiedToken = {
       format: "jws",
-      header,
+      protectedHeader: header,
       claims: {},
       custom: {},
       raw: "opaque payload",
@@ -66,6 +66,9 @@ describe("DecryptedToken (type witness)", () => {
     const decrypted: DecryptedToken = {
       format: "jwe",
       inner: "jwt",
+      // ⚠ Still ONE header, unlike the verify/parse results above: the decrypt
+      // result's COSE header merges the unprotected bucket in, and splitting it
+      // is a change with nothing behind it yet.
       header,
       claims: { subject: "user_1" },
       custom: {},
@@ -83,7 +86,7 @@ describe("NarrowedToken (type witness)", () => {
 
     const narrowed: NarrowedToken<MiniProfile> = {
       format: "jwt",
-      header,
+      protectedHeader: header,
       claims: { subject: "user_1", issuer: "https://idp.lindorm.io/" },
       custom: {},
       token: "eyJ.body.sig",

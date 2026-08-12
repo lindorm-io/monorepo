@@ -13,7 +13,7 @@
 //   - highly sensitive regulated PII (SSN, national identity numbers)
 //     — see AegisSensitive, whose fields travel as FLAT individual claims
 //       that the read side surfaces only from an encrypted token (jwe/cwe),
-//       suppressing them otherwise (OIDC Core §13.3)
+//       suppressing them otherwise (the aegis confidentiality gate)
 //   - dynamic fields (geo location) — use fresh endpoints
 //   - redundancies with OIDC Core claims (language vs locale, timeZone
 //     vs zoneinfo, gravatarUri/avatarUri vs picture)

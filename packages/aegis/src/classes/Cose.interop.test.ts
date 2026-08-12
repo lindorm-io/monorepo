@@ -14,7 +14,8 @@ import MockDate from "mockdate";
 import { describe, expect, test } from "vitest";
 import type { Dict } from "@lindorm/types";
 import { TEST_EC_KEY_SIG, TEST_OKP_KEY_SIG } from "../__fixtures__/keys.js";
-import { coseToDomain, domainToCose } from "../internal/claims/translate.js";
+import { coseName } from "../internal/claims/claims-registry.js";
+import { domainToWire, wireToDomain } from "../internal/claims/translate.js";
 import { algToCoseLabel } from "../internal/cose/alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import {
@@ -36,10 +37,10 @@ const logger = createMockLogger();
 // domain <-> wire translation is `domainToCose`/`coseToDomain`. These helpers
 // exercise the full domain round-trip the reference verifiers sit inside.
 const encodeClaims = (common: Dict, options?: EncodeCwtOptions) =>
-  encodeCwtClaims(domainToCose(common), options);
+  encodeCwtClaims(domainToWire(common, coseName), options);
 
 const decodeClaims = (map: Map<unknown, unknown> | Dict): Dict => {
-  const { claims, custom } = coseToDomain(decodeCwtClaims(map));
+  const { claims, custom } = wireToDomain(decodeCwtClaims(map), coseName, "token");
   return { ...claims, ...custom };
 };
 
@@ -47,11 +48,11 @@ const decodeClaims = (map: Map<unknown, unknown> | Dict): Dict => {
 // helpers put the domain⇆wire translation (the Aegis-side signCose/verifyCose
 // boundary) around it so the interop fixtures stay expressed in domain terms.
 const signDomain = (kryptos: IKryptos, common: Dict, options: Dict = {}): Buffer =>
-  new CwtKit({ kryptos, logger }).sign(domainToCose(common), options);
+  new CwtKit({ kryptos, logger }).sign(domainToWire(common, coseName), options);
 
 const verifyDomain = (kryptos: IKryptos, cwt: Buffer): Dict => {
   const { payload } = new CwtKit({ kryptos, logger }).verify(cwt);
-  const { claims: domain, custom } = coseToDomain(payload);
+  const { claims: domain, custom } = wireToDomain(payload, coseName, "token");
   return { ...domain, ...custom };
 };
 

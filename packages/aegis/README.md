@@ -20,7 +20,9 @@ npm install @lindorm/amphora @lindorm/logger
 
 `Aegis` is an async façade over an `IAmphora` key store — it resolves keys by `kid` and runs the operation. It offers **two surfaces**, and the difference is the return shape:
 
-- **Domain verbs** — `aegis.sign` / `mint` / `encrypt` / `verify` / `decrypt` / `parse`. These speak the aegis domain vocabulary. `verify` returns a unified `VerifiedToken`: domain-keyed claims split into buckets — `.claims` (registered), `.custom` (everything else), plus `.profile` / `.sensitive` — a domain `.header`, and a `.format` discriminant. **No `.payload`.** (The kit tier below reports its wire header as two buckets, `.protectedHeader` / `.unprotectedHeader`; the domain `.header` carries what the signature covers, plus the COSE `kid` routing hint.)
+- **Domain verbs** — `aegis.sign` / `mint` / `encrypt` / `verify` / `decrypt` / `parse`. These speak the aegis domain vocabulary. `verify` returns a unified `VerifiedToken`: domain-keyed claims split into buckets — `.claims` (registered), `.custom` (everything else), plus `.profile` / `.sensitive` — the domain `.protectedHeader`, and a `.format` discriminant. **No `.payload`.** The header keeps its PROVENANCE: `.protectedHeader` is what the signature or AEAD covers and is the only bucket that may decide anything, `.unprotectedHeader` is the unauthenticated one (COSE puts the advisory `kid` routing hint there; it is empty on JOSE). They are never merged — a parameter nothing covers must not read as though the issuer had signed it.
+- **The DOMAIN write options speak domain names too.** `aegis.sign` / `mint` / `encrypt` take their header bag in aegis vocabulary — `header: { objectId, contentType, critical, jwk, jwksUri, certificateUrl, zip }` — and translate it to whichever wire the call emits, so the same option produces a JOSE `oid` and a COSE label -70000 without the caller choosing between them. Only the **wire namespaces** below take wire-named header bags (`{ oid, cty, jku, … }`), because a kit is pure wire. Parameters the kit derives from the key or the crypto operation (`algorithm`, `keyId`, `encryption`, the certificate fields, `headerType`, the IV/tag/PBKDF pair) cannot be supplied on either tier.
+
 - **Wire namespaces** — `aegis.jwt` / `jws` / `jwe` / `cwt` / `cwm` / `cws` / `cwe`. Each resolves the key then delegates to its kit. `sign` / `encrypt` return the same domain `SignedToken` / `EncryptedToken` sugar the verbs do (`.token`, `.format`); `verify` / `decrypt` return the kit's **native wire shape** — a `.payload` with wire claim names (`sub` / `exp` / `jti`, never `subject` / `expiresAt` / `tokenId`), exactly what a standalone JOSE / COSE library reads.
 
 The same token reads either way: `aegis.jwt.verify(t)` hands you the raw wire; `aegis.verify(t)` hands you the domain `VerifiedToken`.
@@ -328,7 +330,7 @@ const result = await aegis.verify(anyToken, {
 result.format; // "jwt" | "jws" | "jwe" | "cwt" | "cwm" | "cws" | "cwe"
 result.claims.subject; // domain-keyed registered claims
 result.custom; // non-registered claims
-result.header.tokenType; // domain-keyed header
+result.protectedHeader.tokenType; // domain-keyed, integrity-protected header
 // jws/cws carry empty claims/custom and deliver the opaque payload on result.raw
 ```
 
@@ -353,7 +355,7 @@ const cwe = await aegis.encrypt(data, { format: "cwe" }); // COSE_Encrypt0 inste
 ```typescript
 const parsed = aegis.parse(idToken);
 parsed.claims.subject; // domain-keyed, unverified
-parsed.header.keyId;
+parsed.protectedHeader.keyId;
 ```
 
 ### Static helpers
@@ -382,13 +384,13 @@ Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew? });
 
 `toDomain` resolves the **same four buckets a verified token carries** — registered `claims`, unregistered `custom`, the OIDC standard-claims `profile` bag, and `sensitive` — so a consumer reading an introspection or userinfo response never re-derives the split from its own copy of the claim categories. It previously stopped at `{ claims, custom }`, leaving profile and sensitive claims flat inside `claims`, which is exactly the gap consumers were papering over with hand-kept mirror lists.
 
-⚠ It does **not** apply the OIDC Core §13.3 encryption gate. §13.3 is a rule about _tokens_ — sensitive claims may surface only from an encrypted one — and `toDomain`'s input is a claim dict of unknown provenance, typically an issuer response over TLS where the release decision was already made according to granted scope. Applying a token rule there would silently drop data the issuer deliberately released. The gate stays in the token read path, the only layer that knows whether a token was encrypted: `aegis.verify` still returns `sensitive: undefined` for an unencrypted token on both wires.
+⚠ It does **not** apply the confidentiality gate. That gate is a rule about _tokens_ — sensitive claims may surface only from an encrypted one — and `toDomain`'s input is a claim dict of unknown provenance, typically an issuer response over TLS where the release decision was already made according to granted scope. Applying a token rule there would silently drop data the issuer deliberately released. The gate stays in the token read path, the only layer that knows whether a token was encrypted: `aegis.verify` still returns `sensitive: undefined` for an unencrypted token on both wires.
 
 The JOSE guards decide on the **wire grammar** — segment count plus the header parameters the RFCs make REQUIRED (`alg`; `enc` for a JWE) — and on aegis's algorithm allowlist. `typ` is a hint, never the discriminant: RFC 7515 §4.1.9 and RFC 7519 §5.1 both make it optional, so a typ-less id_token, an RFC 9068 `at+jwt`, and an RFC 9449 `dpop+jwt` all read as a JWT. What separates a JWT from an opaque JWS is the payload being a JSON claims object — a signed handle stays a `jws`, including one that DECLARES `typ: JWT` over a non-claims payload. Because every JWT is a JWS (RFC 7519 §3), `isJws` is TRUE for a claims token as well; ask `isJwt` first when you need the narrow answer.
 
 ⚠ These are **wire-family** guards — they say which kit `verify` would select, not whether the token carries claims. A `jws` / `cws` passes `isJose` / `isCose` and verifies to an EMPTY claims set. To route a credential between local verification and introspection, use [`isClaimsBearingToken`](#isclaimsbearingtoken--verify-locally-or-introspect).
 
-**`assert` is verify's claim checking, without the signature.** It takes the same `DomainAssert` matcher argument as [`aegis.verify`](#verify-assert--options), applied to any flat, domain-keyed claim dict — a set of claims that arrived some other way (an introspection response, a cached credential). `matches` returns the answer, `assert` is the throwing layer over it and names every failing key (`jwt_claims_invalid`). One vocabulary, so a **scalar** against an array-valued claim (`audience`, `scope`, `authMethods`, `roles`, `permissions`, `groups`, `entitlements`) means CONTAINS, not equals:
+**`assert` is verify's claim checking, without the signature.** It takes the same `DomainAssert` matcher argument as [`aegis.verify`](#verify-assert--options), applied to any flat, domain-keyed claim dict — a set of claims that arrived some other way (an introspection response, a cached credential). `matches` returns the answer, `assert` is the throwing layer over it and names every failing key (`claims_invalid`). One vocabulary, so a **scalar** against an array-valued claim (`audience`, `scope`, `authMethods`, `roles`, `permissions`, `groups`, `entitlements`) means CONTAINS, not equals:
 
 ```typescript
 Aegis.matches(
@@ -427,7 +429,7 @@ The temporal range is checked **by default**, with the same builder and the same
 
 Reach for it when the access token is **not** locally verifiable: RFC 9449 §6.2 delivers `cnf.jkt` through the introspection response for an opaque token, and the resource server validates the binding itself. `htm` / `htu` are parsed but never compared — aegis does not see the HTTP request, so that comparison belongs to the consumer.
 
-`Aegis.header` and `Aegis.decode` are gone — read a verified token's `.header`, use the keyless instance `aegis.parse` for an unknown structured token (above), or a kit's keyless static `.decode` (e.g. `JwtKit.decode`) for a known format.
+`Aegis.header` and `Aegis.decode` are gone — read a verified token's `.protectedHeader`, use the keyless instance `aegis.parse` for an unknown structured token (above), or a kit's keyless static `.decode` (e.g. `JwtKit.decode`) for a known format.
 
 ## JwtKit
 
@@ -446,7 +448,7 @@ const token = kit.sign({
 }); // → the compact JWT string
 
 const parsed = kit.verify(token, { iss: "https://example.com" });
-// parsed.payload → wire claims ({ iss, sub, exp, jti }); parsed.header, parsed.token
+// parsed.payload → wire claims ({ iss, sub, exp, jti }); parsed.protectedHeader, parsed.token
 
 JwtKit.isJwt(token); // static
 JwtKit.decode(token);
@@ -535,17 +537,17 @@ await aegis.mint("access_token", {
 
 A name that is not a built-in — a profile registered at runtime with `registerProfile` — falls back to the open `SignContent` vocabulary, so custom profiles keep working unconstrained.
 
-**Direction (`use`).** A profile declares which side it is used on — `"mint"`, `"verify"`, or `"both"` — ONCE, on the profile itself rather than a marker per policy field. `forbidden`, `algClass`, `rules` and `validate` then apply on whichever side the profile is used, the same mint/verify symmetry the verification floor already keeps for `required`. A `rules` or `validate` failure raises `profile_policy_invalid`, on both sides and both wires; its `data.invalid` is a list of `{ key, message }` entries. (That code is distinct from `jwt_claims_invalid`, which means the CALLER's `assert` matchers failed and lists bare claim keys.)
+**Direction (`use`).** A profile declares which side it is used on — `"mint"`, `"verify"`, or `"both"` — ONCE, on the profile itself rather than a marker per policy field. `forbidden`, `algClass`, `rules` and `validate` then apply on whichever side the profile is used, the same mint/verify symmetry the verification floor already keeps for `required`. A `rules` or `validate` failure raises `profile_policy_invalid`, on both sides and both wires; its `data.invalid` is a list of `{ key, message }` entries. (That code is distinct from `claims_invalid`, which means the CALLER's `assert` matchers failed and lists bare claim keys.)
 
 ⚠ `requiredWhen` and `atLeastOneOf` are the exception and stay MINT-only: their conditions read the `SignContext`, which holds facts only the issuer has — `id_token`'s asks whether an access token was co-issued, which a verifier cannot know from the token in front of it.
 
-`use` is optional when you write a profile and resolves to `"both"`, so every built-in and every `registerProfile` call behaves exactly as before; only a deliberate narrowing changes anything. `mint` refuses a `"verify"` profile with `jwt_profile_not_mintable`, profiled `verify` refuses a `"mint"` one with `jwt_profile_not_verifiable` — and the narrowing is enforced by the compiler too: a verify-only name resolves to `never` as `mint`'s content type, so the call site does not typecheck either.
+`use` is optional when you write a profile and resolves to `"both"`, so every built-in and every `registerProfile` call behaves exactly as before; only a deliberate narrowing changes anything. `mint` refuses a `"verify"` profile with `profile_not_mintable`, profiled `verify` refuses a `"mint"` one with `profile_not_verifiable` — and the narrowing is enforced by the compiler too: a verify-only name resolves to `never` as `mint`'s content type, so the call site does not typecheck either.
 
 **`typ` presence.** Each profile declares a `typ` policy: `required` (the header must carry exactly the profile's typ) or `none` (no typ mandated). Mint always stamps the profile's typ value — presence only governs verify.
 
-**Required and forbidden claims on verify.** Profiled verify enforces the profile's `required` claims (the same domain-keyed names enforced at mint) — a token missing one is rejected with `jwt_required_claims_missing`. It enforces `forbidden` the same way: a token CARRYING one is rejected with `jwt_forbidden_claims_present`. Present/missing means absent, `null`, or an empty string. A mint-time policy alone buys nothing for a profile that verifies tokens minted elsewhere.
+**Required and forbidden claims on verify.** Profiled verify enforces the profile's `required` claims (the same domain-keyed names enforced at mint) — a token missing one is rejected with `required_claims_missing`. It enforces `forbidden` the same way: a token CARRYING one is rejected with `forbidden_claims_present`. Present/missing means absent, `null`, or an empty string. A mint-time policy alone buys nothing for a profile that verifies tokens minted elsewhere.
 
-**`algClass` on verify.** A profile's `algClass` is enforced on BOTH sides for the same reason. At mint it constrains key SELECTION (an asymmetric-only profile never picks an `oct` key); at verify it is checked against the algorithm the signature was verified under, and a mismatch is rejected with `jwt_algorithm_not_permitted` before any claim is looked at. `access_token`, `external_access_token` and `delegation` declare `asymmetric` because a shared MAC secret both verifies AND forges — a statement about reading someone else's token, so the verify half is the half that matters. That algorithm is not a header parameter taken on trust: every verify path refuses a header `alg` differing from the resolved key's own before it accepts the signature. A profile declaring no `algClass` is unconstrained, which is why `security_event` (RFC 8417 / SSF, whose own example header is `alg: HS256`) still verifies an HS-signed token.
+**`algClass` on verify.** A profile's `algClass` is enforced on BOTH sides for the same reason. At mint it constrains key SELECTION (an asymmetric-only profile never picks an `oct` key); at verify it is checked against the algorithm the signature was verified under, and a mismatch is rejected with `algorithm_not_permitted` before any claim is looked at. `access_token`, `external_access_token` and `delegation` declare `asymmetric` because a shared MAC secret both verifies AND forges — a statement about reading someone else's token, so the verify half is the half that matters. That algorithm is not a header parameter taken on trust: every verify path refuses a header `alg` differing from the resolved key's own before it accepts the signature. A profile declaring no `algClass` is unconstrained, which is why `security_event` (RFC 8417 / SSF, whose own example header is `alg: HS256`) still verifies an HS-signed token.
 
 ### `external_access_token` — third-party access tokens
 
@@ -566,7 +568,7 @@ Everything else is unchanged: `iss` / `sub` / `aud` / `iat` / `jti` / `exp` are 
 
 ⚠ A `typ` the WIRE layer refuses never reaches the profile: `JwtKit.verify` rejects a present `typ` that is neither `JWT` nor `<type>+jwt` (`jwt_invalid_typ`), so an issuer stamping something else — Keycloak's `typ: Bearer` — is refused before any profile floor runs.
 
-The profile declares `use: "verify"`, so `mint("external_access_token", …)` is refused outright — at the call site, where the content type resolves to `never`, and at runtime with `jwt_profile_not_mintable`. `autoInject` stays empty because nothing here is ours to generate; it was never the guard, since a caller hand-supplying `iss` / `iat` / `jti` still got a degraded access token signed by our own vault.
+The profile declares `use: "verify"`, so `mint("external_access_token", …)` is refused outright — at the call site, where the content type resolves to `never`, and at runtime with `profile_not_mintable`. `autoInject` stays empty because nothing here is ours to generate; it was never the guard, since a caller hand-supplying `iss` / `iat` / `jti` still got a degraded access token signed by our own vault.
 
 ## COSE / CWT
 

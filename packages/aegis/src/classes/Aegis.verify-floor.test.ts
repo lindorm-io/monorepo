@@ -89,7 +89,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
   // so a token whose `kid` is not registered under the pinned issuer is refused
   // before its signature is ever checked. Same verdict, sharper reason — and it
   // is the whole point of the scope (a colliding kid from another registered
-  // issuer never reaches the signature). The floor's `jwt_issuer_mismatch` still
+  // issuer never reaches the signature). The floor's `issuer_mismatch` still
   // owns the case where the key IS under the pinned issuer but the `iss` claim
   // disagrees — covered by the per-token-issuer tests below.
   test("rejects a wrong issuer, at key resolution", async () => {
@@ -129,7 +129,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
         audience: RESOURCE,
         issuer: ISSUER,
       }),
-    ).rejects.toThrow(expect.objectContaining({ code: "jwt_issuer_mismatch" }));
+    ).rejects.toThrow(expect.objectContaining({ code: "issuer_mismatch" }));
   });
 
   test("rejects a typ mismatch (id_token verified as access_token)", async () => {
@@ -154,7 +154,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
 
     await expect(
       aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
-    ).rejects.toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
+    ).rejects.toThrow(expect.objectContaining({ code: "profile_typ_mismatch" }));
   });
 
   test("rejects an access token with no iat — presence policy lives in the floor", async () => {
@@ -176,8 +176,8 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
     ).rejects.toThrow(
       expect.objectContaining({
-        code: "jwt_required_claims_missing",
-        data: { missing: ["issuedAt"] },
+        code: "required_claims_missing",
+        data: expect.objectContaining({ missing: ["issuedAt"] }),
       }),
     );
   });
@@ -287,7 +287,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
 
     test("profile-less verify REJECTS an exp-less token by default (clear error)", async () => {
       await expect(aegis.verify(explessToken())).rejects.toThrow(
-        expect.objectContaining({ code: "jwt_missing_claim_exp" }),
+        expect.objectContaining({ code: "missing_claim_exp" }),
       );
     });
 
@@ -317,7 +317,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
 
       await expect(
         aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
-      ).rejects.toThrow(expect.objectContaining({ code: "jwt_missing_claim_exp" }));
+      ).rejects.toThrow(expect.objectContaining({ code: "missing_claim_exp" }));
     });
   });
 
@@ -372,8 +372,8 @@ describe("Aegis profiled verify floor (§4.4)", () => {
         }),
       ).rejects.toThrow(
         expect.objectContaining({
-          code: "jwt_required_claims_missing",
-          data: { missing: ["tokenId"] },
+          code: "required_claims_missing",
+          data: expect.objectContaining({ missing: ["tokenId"] }),
         }),
       );
     });
@@ -386,7 +386,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
           audience: ISSUER,
           issuer: "client-1",
         }),
-      ).rejects.toThrow(expect.objectContaining({ code: "jwt_required_claims_missing" }));
+      ).rejects.toThrow(expect.objectContaining({ code: "required_claims_missing" }));
     });
   });
 
@@ -440,7 +440,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
         aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
       ).rejects.toThrow(
         expect.objectContaining({
-          code: "jwt_algorithm_not_permitted",
+          code: "algorithm_not_permitted",
           data: expect.objectContaining({ algorithm: "HS256" }),
         }),
       );
@@ -461,7 +461,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
           audience: RESOURCE,
           issuer: ISSUER,
         }),
-      ).rejects.toThrow(expect.objectContaining({ code: "jwt_algorithm_not_permitted" }));
+      ).rejects.toThrow(expect.objectContaining({ code: "algorithm_not_permitted" }));
     });
 
     test("rejects an HS-signed delegation token", async () => {
@@ -475,7 +475,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
           audience: ISSUER,
           issuer: "client-1",
         }),
-      ).rejects.toThrow(expect.objectContaining({ code: "jwt_algorithm_not_permitted" }));
+      ).rejects.toThrow(expect.objectContaining({ code: "algorithm_not_permitted" }));
     });
 
     // The rule is the profile's, not a blanket ban: a profile that declares no

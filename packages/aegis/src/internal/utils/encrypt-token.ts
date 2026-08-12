@@ -1,13 +1,15 @@
 import { isBuffer, isString } from "@lindorm/is";
 import { AegisError } from "../../errors/index.js";
 import type { EncryptData, EncryptOptions, EncryptedToken } from "../../types/index.js";
-import { domainToCose, domainToJose } from "../claims/translate.js";
+import { coseName, joseName } from "../claims/claims-registry.js";
+import { domainToWire } from "../claims/translate.js";
 import { encodeCbor } from "../cose/cbor.js";
 import { encryptCose } from "../cose/cose-encryption.js";
 import { encodeCwtClaims } from "../cose/cwt-claims.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { applyOmit } from "./apply-omit.js";
 import { domainTokenTypePrefix } from "./compute-typ-header.js";
+import { domainHeaderToWire } from "./domain-header-to-wire.js";
 import { encryptJwe } from "./encrypt-jwe.js";
 
 /**
@@ -25,11 +27,16 @@ export const COSE_CLAIMS_TYP = "application/claims+cwe";
 
 /**
  * The domain encrypt pipeline (`aegis.encrypt`) — the mirror of `signToken`, but
- * pure CONFIDENTIALITY: domain claims → wire (`domainToJose`/`domainToCose`) →
+ * pure CONFIDENTIALITY: domain claims → wire (the ONE registry translator, keyed
+ * by the target wire's own name selector) →
  * `JweKit`/`CweKit.encrypt` with NO inner signature. A `Buffer`/`string` payload
  * is opaque and passes through untouched; a plain object is pruned of empty
  * claims at this emission boundary (default `"empty"`) before it is serialised,
  * matching the mint/sign wires. The encoding seam dispatches on `format`.
+ *
+ * ⚠ RECORDED, NOT FIXED: `options.header` still reaches the JWE path only. The
+ * COSE_Encrypt0 writer takes no caller header bag, so a header supplied for a
+ * `cwe` is accepted and dropped — a pre-existing gap, unchanged here.
  */
 export const encryptToken = async ({
   data,
@@ -50,14 +57,16 @@ export const encryptToken = async ({
       // Opaque bytes/string pass through untouched (JweKit stamps octet/text);
       // a domain claims set is translated to the JOSE wire and handed over as an
       // OBJECT so JweKit stamps `application/json` — the read-side discriminant.
-      const payload = opaque ? data : domainToJose(applyOmit(data, options.omit));
+      const payload = opaque
+        ? data
+        : domainToWire(applyOmit(data, options.omit), joseName);
 
       const token = encryptJwe({
         kryptos,
         data: payload,
         options: {
           bindCertificate: options.bindCertificate,
-          header: options.header,
+          header: domainHeaderToWire(options.header),
           partyProducer: options.partyProducer,
           partyRecipient: options.partyRecipient,
           tokenType: domainTokenTypePrefix(options.type),
@@ -78,7 +87,7 @@ export const encryptToken = async ({
           : Buffer.from(data, "utf8")
         : Buffer.from(
             encodeCbor(
-              encodeCwtClaims(domainToCose(applyOmit(data, options.omit)), {
+              encodeCwtClaims(domainToWire(applyOmit(data, options.omit), coseName), {
                 proprietary: options.proprietary,
               }),
             ),

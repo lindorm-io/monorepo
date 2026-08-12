@@ -174,7 +174,7 @@ describe("COSE typ integrity", () => {
 
     const verified = await aegis.verify(token);
 
-    expect(verified.header.tokenType).toBeUndefined();
+    expect(verified.protectedHeader.tokenType).toBeUndefined();
   });
 
   // The same rule through the PROFILE floor, which compares the token's typ

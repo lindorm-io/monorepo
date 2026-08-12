@@ -5,11 +5,12 @@ import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
 import type { DomainClaims } from "../claims/domain/domain-claims.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
-import type { TokenFormat } from "../../internal/utils/select-encoder.js";
+import type { ClaimsTokenFormat } from "../domain/token-format.js";
+import type { TokenFormat } from "../domain/token-format.js";
 import type { AegisEncKey, AegisSignKey } from "../keys/key-selectors.js";
 import type { DomainTokenEnvelope } from "../domain/domain-envelope.js";
 import type { JweEncryptOptions } from "../kit/encrypted.js";
-import type { SignJwtOptions } from "../domain/sign.js";
+import type { SignTokenOptions } from "../domain/sign.js";
 import type { VerifyOptions } from "../domain/verify.js";
 
 /**
@@ -55,7 +56,8 @@ export type AutoInjectableClaim = "issuedAt" | "tokenId" | "notBefore" | "issuer
  * - `"none"` — the profile mandates no typ. Mint falls back to the
  *   tokenType-derived default (bare `JWT`); verify runs no typ check.
  * - `"required"` — mint stamps `value`; verify rejects an absent or
- *   mismatching typ (RFC 8725 explicit typing).
+ *   mismatching typ (explicit typing, RFC 8725 §3.11 — a RECOMMENDATION aegis
+ *   applies as policy).
  *
  * Presence is a verify-side knob only: mint always stamps `value` for
  * `"required"`.
@@ -126,7 +128,7 @@ export type TokenProfile<
    * rather than merely auditing its answer — and it is enforced on an injected
    * key too. At VERIFY there is no query to constrain (the key is named by the
    * token's `kid`), so `enforceVerifyFloor` checks it against the algorithm the
-   * signature was verified under and raises `jwt_algorithm_not_permitted`.
+   * signature was verified under and raises `algorithm_not_permitted`.
    *
    * In practice only `"asymmetric"` (access_token, external_access_token,
    * delegation). Absent means no constraint: with `alg: none` not being a
@@ -137,7 +139,7 @@ export type TokenProfile<
    * Flat structural rules expressed as a `Condition<DomainClaims>` over the
    * DOMAIN-keyed common layer — the SAME predicate vocabulary `assert` /
    * matchers / `Aegis.assert` use. `validateProfileClaims` evaluates it and
-   * throws `jwt_claims_invalid` on a mismatch. Only rules a flat predicate can
+   * throws `claims_invalid` on a mismatch. Only rules a flat predicate can
    * express live here (`issUri`, `audSingleResource`); genuinely recursive or
    * cross-field rules (`crossField`, `actChainShape`, `cnfShape`, `subIdShape`,
    * `eventsShape`, `authorizationDetails` element shape) stay in `validate`.
@@ -170,7 +172,7 @@ export type ProfileMintOptions = {
    * The signed JWT: its envelope options (`header`, `typ`, hash claims, …) and
    * its own per-call signing key (`sign.key`).
    */
-  sign?: SignJwtOptions;
+  sign?: SignTokenOptions;
   /**
    * The sign-then-encrypt wrapper: its envelope options and the recipient
    * (client) encryption key (`encrypt.key`). Pin it with
@@ -190,10 +192,13 @@ export type ProfileMintOptions = {
   context?: SignContext;
   /**
    * Per-call wire encoder. Defaults to `"jwt"` (a signed JWT); `"cwt"` mints the
-   * COSE counterpart — a signed CWT (COSE_Sign1 / COSE_Mac0), optionally wrapped
-   * in a COSE_Encrypt0. Applies to the whole pipeline.
+   * COSE counterpart — a signed CWT (COSE_Sign1), `"cwm"` its symmetric COSE_Mac0
+   * twin — optionally wrapped in a COSE_Encrypt0. Applies to the whole pipeline.
+   *
+   * The opaque formats are deliberately not offered: a profile is a statement
+   * about claims, and an opaque signature carries none.
    */
-  format?: TokenFormat;
+  format?: ClaimsTokenFormat;
   /**
    * Use compact private-use integer COSE labels (default `true`): claims with a
    * private-use label and the structured `act`/`subjectId` are keyed by their
@@ -236,7 +241,6 @@ export type ProfileVerifyOptions = VerifyOptions & {
  * plain object too and JSON-stringifies it before delegating to the JWS path.
  */
 export type RawSignInput = DomainTokenEnvelope<AegisSignKey> & {
-  contentType?: string;
   /**
    * Wire encoding. `"jws"`/`"jwt"` (default) signs a JWS — the payload passes through as
    * bytes. `"cws"` signs a secured CWT (COSE_Sign1) over the CBOR-encoded payload, which

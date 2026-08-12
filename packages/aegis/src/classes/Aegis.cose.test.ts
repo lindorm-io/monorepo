@@ -227,7 +227,7 @@ describe("Aegis — COSE", () => {
       });
 
       // The DOMAIN surface suppresses sensitive claims on an unencrypted token
-      // (§13.3); the raw `cwt.verify` returns them flat on the wire.
+      // (the aegis confidentiality gate); the raw `cwt.verify` returns them flat on the wire.
       const verified = await aegis.verify(token);
 
       expect(verified.claims.subject).toBe("user-1");
@@ -493,7 +493,7 @@ describe("Aegis — COSE", () => {
 
       await expect(
         aegis.verify(token, undefined, { verifyExpiration: false }),
-      ).rejects.toMatchObject({ code: "cwt_missing_claim_exp" });
+      ).rejects.toMatchObject({ code: "missing_claim_exp" });
 
       await expect(
         aegis.verify(token, undefined, {

@@ -14,6 +14,7 @@ const base = {
   // The algorithm the signature was verified UNDER (see VerifyFloorInput) — an
   // asymmetric one, so the algClass floor is satisfied unless a case says
   // otherwise.
+  format: "jwt" as const,
   algorithm: "ES512",
   audience: RESOURCE,
   decodedTyp: "application/at+jwt",
@@ -72,12 +73,13 @@ describe("enforceVerifyFloor", () => {
         ...base,
         payload: { ...validPayload, expiresAt: undefined },
       }),
-    ).toThrow(expect.objectContaining({ code: "jwt_missing_claim_exp" }));
+    ).toThrow(expect.objectContaining({ code: "missing_claim_exp" }));
   });
 
   test("does NOT require exp when the profile lifetime is null (SET)", () => {
     expect(() =>
       enforceVerifyFloor({
+        format: "jwt" as const,
         algorithm: "ES512",
         audience: RESOURCE,
         decodedTyp: "application/secevent+jwt",
@@ -99,7 +101,7 @@ describe("enforceVerifyFloor", () => {
     test("rejects an absent typ", () => {
       expect(() =>
         enforceVerifyFloor({ ...base, decodedTyp: undefined, payload: validPayload }),
-      ).toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
+      ).toThrow(expect.objectContaining({ code: "profile_typ_mismatch" }));
     });
 
     test("rejects a typ mismatch", () => {
@@ -109,7 +111,7 @@ describe("enforceVerifyFloor", () => {
           decodedTyp: "application/logout+jwt",
           payload: validPayload,
         }),
-      ).toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
+      ).toThrow(expect.objectContaining({ code: "profile_typ_mismatch" }));
     });
 
     test("passes an exact typ match", () => {
@@ -126,6 +128,7 @@ describe("enforceVerifyFloor", () => {
     };
 
     const noneBase = {
+      format: "jwt" as const,
       algorithm: "ES512",
       audience: RESOURCE,
       expectedIssuer: undefined,
@@ -147,14 +150,24 @@ describe("enforceVerifyFloor", () => {
       expect(() =>
         enforceVerifyFloor({
           ...noneBase,
+          format: "cwt",
           decodedTyp: undefined,
           expectedTyp: "application/cwt",
         }),
-      ).toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
+      ).toThrow(
+        expect.objectContaining({
+          code: "profile_typ_mismatch",
+          // The wire the failure came from is DIAGNOSTIC and travels in `data`;
+          // the code itself is neutral, so a CWT no longer reports itself as a
+          // JWT problem.
+          data: expect.objectContaining({ format: "cwt" }),
+        }),
+      );
 
       expect(() =>
         enforceVerifyFloor({
           ...noneBase,
+          format: "cwt",
           decodedTyp: "application/cwt",
           expectedTyp: "application/cwt",
         }),
@@ -171,8 +184,8 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "jwt_required_claims_missing",
-          data: { missing: ["clientId", "tokenId"] },
+          code: "required_claims_missing",
+          data: expect.objectContaining({ missing: ["clientId", "tokenId"] }),
         }),
       );
     });
@@ -185,8 +198,8 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "jwt_required_claims_missing",
-          data: { missing: ["tokenId"] },
+          code: "required_claims_missing",
+          data: expect.objectContaining({ missing: ["tokenId"] }),
         }),
       );
     });
@@ -199,8 +212,8 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "jwt_required_claims_missing",
-          data: { missing: ["subject"] },
+          code: "required_claims_missing",
+          data: expect.objectContaining({ missing: ["subject"] }),
         }),
       );
     });
@@ -208,6 +221,7 @@ describe("enforceVerifyFloor", () => {
     test("passes a compliant delegation (jti present, iat absent and not required)", () => {
       expect(() =>
         enforceVerifyFloor({
+          format: "jwt" as const,
           algorithm: "ES512",
           audience: RESOURCE,
           decodedTyp: "application/delegation+jwt",
@@ -221,6 +235,7 @@ describe("enforceVerifyFloor", () => {
     test("rejects a delegation without jti", () => {
       expect(() =>
         enforceVerifyFloor({
+          format: "jwt" as const,
           algorithm: "ES512",
           audience: RESOURCE,
           decodedTyp: "application/delegation+jwt",
@@ -230,8 +245,8 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "jwt_required_claims_missing",
-          data: { missing: ["tokenId"] },
+          code: "required_claims_missing",
+          data: expect.objectContaining({ missing: ["tokenId"] }),
         }),
       );
     });
@@ -249,8 +264,8 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "jwt_forbidden_claims_present",
-          data: { forbidden: ["federationAssuranceLevel"] },
+          code: "forbidden_claims_present",
+          data: expect.objectContaining({ forbidden: ["federationAssuranceLevel"] }),
         }),
       );
     });
@@ -258,6 +273,7 @@ describe("enforceVerifyFloor", () => {
     test("lists ALL forbidden claims present", () => {
       expect(() =>
         enforceVerifyFloor({
+          format: "jwt" as const,
           algorithm: "ES512",
           audience: RESOURCE,
           decodedTyp: undefined,
@@ -272,8 +288,8 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "jwt_forbidden_claims_present",
-          data: { forbidden: ["nonce", "codeHash"] },
+          code: "forbidden_claims_present",
+          data: expect.objectContaining({ forbidden: ["nonce", "codeHash"] }),
         }),
       );
     });
@@ -297,6 +313,7 @@ describe("enforceVerifyFloor", () => {
     test("passes a profile whose forbidden list is empty", () => {
       expect(() =>
         enforceVerifyFloor({
+          format: "jwt" as const,
           algorithm: "ES512",
           audience: RESOURCE,
           decodedTyp: "application/delegation+jwt",
@@ -317,7 +334,7 @@ describe("enforceVerifyFloor", () => {
         enforceVerifyFloor({ ...base, algorithm: "HS256", payload: validPayload }),
       ).toThrow(
         expect.objectContaining({
-          code: "jwt_algorithm_not_permitted",
+          code: "algorithm_not_permitted",
           data: expect.objectContaining({ algorithm: "HS256" }),
         }),
       );
@@ -326,13 +343,13 @@ describe("enforceVerifyFloor", () => {
     test("rejects alg none for an asymmetric-only profile", () => {
       expect(() =>
         enforceVerifyFloor({ ...base, algorithm: "none", payload: validPayload }),
-      ).toThrow(expect.objectContaining({ code: "jwt_algorithm_not_permitted" }));
+      ).toThrow(expect.objectContaining({ code: "algorithm_not_permitted" }));
     });
 
     test("rejects an absent algorithm for an asymmetric-only profile", () => {
       expect(() =>
         enforceVerifyFloor({ ...base, algorithm: undefined, payload: validPayload }),
-      ).toThrow(expect.objectContaining({ code: "jwt_algorithm_not_permitted" }));
+      ).toThrow(expect.objectContaining({ code: "algorithm_not_permitted" }));
     });
 
     test("passes an asymmetric algorithm for an asymmetric-only profile", () => {
@@ -346,6 +363,7 @@ describe("enforceVerifyFloor", () => {
     test("ignores the algorithm entirely for a profile with no algClass", () => {
       expect(() =>
         enforceVerifyFloor({
+          format: "jwt" as const,
           algorithm: "HS256",
           audience: RESOURCE,
           decodedTyp: undefined,
@@ -367,10 +385,11 @@ describe("enforceVerifyFloor", () => {
       expect(() =>
         enforceVerifyFloor({
           ...base,
+          format: "jwt" as const,
           algorithm: "HS256",
           payload: { ...validPayload, tokenId: undefined },
         }),
-      ).toThrow(expect.objectContaining({ code: "jwt_algorithm_not_permitted" }));
+      ).toThrow(expect.objectContaining({ code: "algorithm_not_permitted" }));
     });
   });
 });

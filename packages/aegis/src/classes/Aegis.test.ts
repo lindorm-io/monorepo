@@ -110,7 +110,7 @@ describe("Aegis", () => {
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
       },
-      { sign: { header: { oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad" } } },
+      { sign: { header: { objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad" } } },
     );
 
     expect(res).toEqual({
@@ -177,7 +177,7 @@ describe("Aegis", () => {
       expect.objectContaining({
         format: "jwe",
         inner: "jwt",
-        header: expect.objectContaining({
+        protectedHeader: expect.objectContaining({
           tokenType: "test_token",
         }),
         claims: expect.objectContaining({
@@ -207,7 +207,7 @@ describe("Aegis", () => {
     await expect(aegis.verify(jwt.token)).resolves.toEqual(
       expect.objectContaining({
         format: "jwt",
-        header: expect.objectContaining({
+        protectedHeader: expect.objectContaining({
           tokenType: "test_token",
         }),
         claims: expect.objectContaining({

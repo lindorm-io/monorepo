@@ -68,7 +68,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       expect(parsed.inner).toBe("jwt");
       // The profile floor runs on the INNER token: its typ is bare `JWT`,
       // not the outer JWE wrapper.
-      expect(parsed.header.headerType).toBe("JWT");
+      expect(parsed.protectedHeader.headerType).toBe("JWT");
     });
 
     test("the inner signed token keeps the profile typ", async () => {
@@ -263,7 +263,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
     test("SUPPRESSES flat sensitive claims carried by an UNENCRYPTED token", async () => {
       // A raw JWT that carries the sensitive fields FLAT in cleartext — the DOMAIN
-      // read side must refuse to surface them (OIDC Core §13.3).
+      // read side must refuse to surface them (the aegis confidentiality gate).
       const { token } = await aegis.jwt.sign({
         iss: ISSUER,
         sub: "user-1",

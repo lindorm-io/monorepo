@@ -39,17 +39,27 @@ export type SignJwtContent = Omit<
     tokenType: "Bearer" | "DPoP" | "N_A" | (string & {});
   };
 
-export type SignJwtOptions = DomainTokenEnvelope<AegisSignKey> & {
+/**
+ * The mint-time sign envelope — the caller's half of `aegis.mint`'s signing
+ * options, on EITHER wire.
+ *
+ * ⚠ It was `SignJwtOptions`, and the name was load-bearing in the wrong
+ * direction: the profiled COSE mint took the same object, so a type named for one
+ * encoding was already describing both, and the `typ` field below reads as a JOSE
+ * header when it is really the profile's token-type policy however it is spelled.
+ */
+export type SignTokenOptions = DomainTokenEnvelope<AegisSignKey> & {
   accessTokenHash?: string;
   codeHash?: string;
   issuedAt?: Date;
   stateHash?: string;
   tokenId?: string;
   /**
-   * Explicit JOSE `typ` header. Used by the profiled mint path to stamp the
-   * profile's mandated typ (e.g. `at+jwt`, bare `JWT`) verbatim, overriding the
-   * tokenType-derived value. `null` ⇒ omit `typ` (profiles with no mandated
-   * typ, e.g. userinfo/jarm).
+   * Explicit token type header — the JOSE `typ`, or the COSE `typ` (label 16)
+   * translated to the CWT media type. Used by the profiled mint path to stamp the
+   * profile's mandated type (e.g. `at+jwt` / `application/at+cwt`, bare `JWT` /
+   * `application/cwt`) verbatim, overriding the tokenType-derived value. `null` ⇒
+   * omit it (profiles with no mandated type, e.g. userinfo/jarm).
    */
   typ?: string | null;
 };

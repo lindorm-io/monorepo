@@ -484,7 +484,7 @@ describe("Aegis verify — relocated domain policy", () => {
 
       await expect(
         aegis.verify(token, undefined, { verifyExpiration: false }),
-      ).rejects.toMatchObject({ code: "jwt_missing_claim_exp" });
+      ).rejects.toMatchObject({ code: "missing_claim_exp" });
 
       // Presence is the only gate left — relaxing it lets the exp-less token through.
       await expect(

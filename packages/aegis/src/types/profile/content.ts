@@ -125,7 +125,7 @@ export type JarmContent = Required<Pick<SignContent, "audience">> &
  * A VERIFY-ONLY profile (`use: "verify"`) maps to `never`: there is no content
  * it accepts, because there is no token of that kind we are entitled to issue.
  * That is the type-level half of the runtime refusal — the compiler kills the
- * call site, and `jwt_profile_not_mintable` covers a caller who casts past it.
+ * call site, and `profile_not_mintable` covers a caller who casts past it.
  */
 export type ProfileContent = {
   default: DefaultContent;

@@ -175,7 +175,7 @@ describe("Aegis verify — the assert matcher surface", () => {
           { audience: "https://other.lindorm.io/" },
           { audience: RESOURCE },
         ),
-      ).rejects.toMatchObject({ code: "cwt_claims_invalid" });
+      ).rejects.toMatchObject({ code: "claims_invalid" });
     });
 
     test("should reject a subject matcher the token does not satisfy", async () => {
@@ -188,7 +188,7 @@ describe("Aegis verify — the assert matcher surface", () => {
           { subject: "another-user" },
           { audience: RESOURCE },
         ),
-      ).rejects.toMatchObject({ code: "cwt_claims_invalid" });
+      ).rejects.toMatchObject({ code: "claims_invalid" });
     });
 
     // `tokenType` is asserted against the COSE typ header, and the profile floor
@@ -213,7 +213,65 @@ describe("Aegis verify — the assert matcher surface", () => {
           { tokenType: "refresh_token" },
           { audience: RESOURCE },
         ),
-      ).rejects.toMatchObject({ code: "cwt_typ_mismatch" });
+        // The caller's `tokenType` is a DOMAIN matcher, so its refusal is a
+        // domain error under a wire-neutral code with the wire in `data`. It is
+        // asserted once, above the wire seam, which is what makes it total: a
+        // type whose short name is the bare conventional form (`id_token` → the
+        // bare `JWT` / `application/cwt`) has no prefix for a kit to check.
+      ).rejects.toMatchObject({
+        code: "token_type_mismatch",
+        data: { format: "cwt" },
+      });
+    });
+
+    // ⚠ THE TOTALITY CASE, and the one a prefix-based check cannot cover.
+    // `id_token`'s short name IS the bare conventional form — `JWT` on JOSE,
+    // `application/cwt` on COSE — so it reduces to NO prefix, and a check gated
+    // on a prefix being present simply does not run for it. Asserted on BOTH
+    // wires because the assertion is the caller's, not the wire's, and a matcher
+    // that holds on one encoding and not the other is a matcher an attacker
+    // chooses to be bound by.
+    test("should refuse a tokenType whose media type has no prefix, on both wires", async () => {
+      const cwt = await mintCwt();
+
+      await expect(
+        aegis.verify(
+          "access_token",
+          cwt.token,
+          { tokenType: "id_token" },
+          {
+            audience: RESOURCE,
+          },
+        ),
+      ).rejects.toMatchObject({
+        code: "token_type_mismatch",
+        data: { format: "cwt" },
+      });
+
+      const jwt = await aegis.mint(
+        "access_token",
+        {
+          audience: [RESOURCE],
+          clientId: "client-1",
+          scope: ["read", "write"],
+          subject: "user-1",
+        },
+        { format: "jwt" },
+      );
+
+      await expect(
+        aegis.verify(
+          "access_token",
+          jwt.token,
+          { tokenType: "id_token" },
+          {
+            audience: RESOURCE,
+          },
+        ),
+      ).rejects.toMatchObject({
+        code: "token_type_mismatch",
+        data: { format: "jwt" },
+      });
     });
   });
 

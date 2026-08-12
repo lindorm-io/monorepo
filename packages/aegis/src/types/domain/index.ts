@@ -6,5 +6,7 @@ export * from "./encrypt.js";
 export * from "./encrypted-token.js";
 export * from "./parsed-token.js";
 export * from "./sign.js";
+export * from "./token-format.js";
 export * from "./verify.js";
 export * from "./verified-token.js";
+export * from "./omit-mode.js";

@@ -116,7 +116,7 @@ export const VERIFY_OPTION_PARITY = {
     wires: "both",
     default: { jose: "required", cose: "optional" },
     reason:
-      "RFC 8725 §3.11 mandates explicit typing for JOSE; RFC 9596 leaves the COSE typ (label 16) optional. An explicit value behaves identically on both wires — only the unstated default follows each RFC. ⚠ The required case is unobservable on COSE today: every COSE writer stamps a typ (a bare CWT gets application/cwt), so a typ-less CWT cannot be produced to reject",
+      "Requiring a typ on JOSE is aegis POLICY, modelled on RFC 8725 §3.11, which RECOMMENDS explicit typing rather than mandating it; RFC 9596 genuinely leaves the COSE typ (label 16) optional. An explicit value behaves identically on both wires — only the unstated default follows each RFC. ⚠ The required case is unobservable on COSE today: every COSE writer stamps a typ (a bare CWT gets application/cwt), so a typ-less CWT cannot be produced to reject",
   },
 
   expPresence: {

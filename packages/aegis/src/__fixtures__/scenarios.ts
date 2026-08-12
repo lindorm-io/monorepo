@@ -296,6 +296,37 @@ export type RejectsThenStep = {
   data?: Dict;
 };
 
+/**
+ * A RAW WIRE KEY: a JOSE parameter/claim NAME (`typ`, `jti`) or a COSE integer
+ * LABEL (`4`, `-70000`). NEVER a domain name — the wire steps report and compare
+ * in the wire's own vocabulary, which is the only vocabulary an independent
+ * reader has.
+ *
+ * ⚠ RFC 9052 §1.5 defines `label = int / tstr`, so the integer `4` and the text
+ * string `"4"` are DIFFERENT COSE labels and a row naming one never matches the
+ * other. That is deliberate: conflating them is precisely the class of mistake
+ * these steps exist to catch.
+ */
+export type WireKey = string | number;
+
+/**
+ * What a row asserts about ONE raw wire bucket. All three lists are optional and
+ * every one that is present is checked.
+ *
+ * - `includes` — the bucket carries these keys with these VALUES. ⚠ Compared
+ *   against the RAW decoded value, so a parameter the wire carries as a byte
+ *   string (a COSE `kid`, a CWT `cti`) will not equal the text it spells; assert
+ *   its PRESENCE instead.
+ * - `present`  — the bucket carries these keys, whatever the value. This is how a
+ *   byte-string-valued parameter is asserted.
+ * - `excludes` — the bucket carries no such key at all.
+ */
+export type WireAssertion = {
+  includes?: Dict;
+  present?: ReadonlyArray<WireKey>;
+  excludes?: ReadonlyArray<WireKey>;
+};
+
 export type ObservationThenStep =
   /**
    * The expected DOMAIN claims, typed against the real `DomainClaims` — so a
@@ -312,8 +343,35 @@ export type ObservationThenStep =
    * would reject the very divergence a row would exist to state.
    */
   | { step: "custom"; expected: Dict }
-  /** The expected DOMAIN header fields — typed for the same reason as `claims`. */
-  | { step: "header"; expected: Partial<DomainTokenHeader> }
+  /**
+   * The expected INTEGRITY-PROTECTED domain header fields — typed for the same
+   * reason as `claims`. `excludes` names the fields that must NOT have reached
+   * it: a parameter the signature does not cover must never be readable here.
+   */
+  | {
+      step: "header";
+      expected: Partial<DomainTokenHeader>;
+      excludes?: ReadonlyArray<keyof DomainTokenHeader>;
+    }
+  /**
+   * The UNAUTHENTICATED domain header bucket. `absent: true` asserts the result
+   * carries NO such bucket, which is what a JOSE compact token must report:
+   * RFC 7515 §7.1 — "Only one signature/MAC is supported by the JWS Compact
+   * Serialization and it provides no syntax to represent a JWS Unprotected
+   * Header value."
+   *
+   * ⚠ Absence and emptiness are separate assertions on purpose. An empty object
+   * is TRUTHY, so a consumer writing `if (result.unprotectedHeader)` would read
+   * one as a bucket that exists and then read `algorithm` — a field the domain
+   * header declares NON-optional — as `undefined`.
+   */
+  | { step: "unprotectedHeader"; absent: true }
+  | {
+      step: "unprotectedHeader";
+      absent?: undefined;
+      expected?: Partial<DomainTokenHeader>;
+      excludes?: ReadonlyArray<keyof DomainTokenHeader>;
+    }
   /**
    * Assertions against the token's CLEARTEXT wire payload. ⚠ A payload the
    * interpreter cannot read (a JWE's ciphertext, a malformed token) FAILS the row
@@ -328,7 +386,30 @@ export type ObservationThenStep =
       step: "wirePayload";
       includes?: Dict;
       excludes?: ReadonlyArray<string>;
-    };
+    }
+  /**
+   * Assertions against the token's RAW BYTES, read by the INDEPENDENT wire
+   * inspector (`inspect-token.ts`) — which imports nothing from `internal/` or
+   * `classes/` and therefore cannot be fooled by a mint bug and a read bug that
+   * mirror each other. Every other wire assertion in this table goes through
+   * aegis's own decoder, so it proves self-consistency and not correctness.
+   *
+   * Keys are RAW: integer labels on COSE, wire names on JOSE.
+   *
+   * ⚠ A bucket or payload the inspector cannot read FAILS the row rather than
+   * passing vacuously — an inclusion or exclusion over an absent container never
+   * fails, so a row could claim a value never reached the wire without looking.
+   */
+  | ({ step: "wireProtectedHeader" } & WireAssertion)
+  /**
+   * The raw UNPROTECTED bucket. `absent: true` asserts the wire has NO such
+   * bucket at all, which is the JOSE compact serialisation's answer (RFC 7515
+   * §7.1); a COSE structure always carries one (RFC 9052 §3), possibly empty.
+   */
+  | { step: "wireUnprotectedHeader"; absent: true }
+  | ({ step: "wireUnprotectedHeader"; absent?: undefined } & WireAssertion)
+  /** The raw claims payload — integer CWT labels on COSE, JOSE claim names on JOSE. */
+  | ({ step: "wireClaims" } & WireAssertion);
 
 export type ThenStep = AcceptsThenStep | RejectsThenStep | ObservationThenStep;
 
@@ -391,6 +472,13 @@ export const NOW = 1704096000;
 /** A real 32-byte base64url thumbprint (`Buffer.alloc(32, 7)`) — the COSE encoder refuses a short one. */
 export const JKT = "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc";
 
+/**
+ * The id of the ES512 signing key every scenario context is built with — the
+ * value a row expects to find in a `kid`. It is the fixture's own id, restated
+ * here because a row carries literals and never reads one out of a key object.
+ */
+export const SIG_KEY_ID = "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7";
+
 const BACKCHANNEL_LOGOUT = "http://schemas.openid.net/event/backchannel-logout";
 
 const NIN = "19900101-1234";
@@ -405,8 +493,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       "a token whose wire audience names someone else is refused even when it also carries a custom audience claim",
     rationale:
       "The audience floor is what stops a token minted for one resource being replayed at another: RFC 7519 §4.1.3 requires a verifier that does not identify itself in `aud`, when that claim is present, to reject the token. Only the registered wire claim states who the issuer meant it for. An unregistered custom claim that merely spells the same word differently carries no such statement, so it must never be able to answer the check on the wire claim's behalf — otherwise the presenter, not the issuer, decides the audience.",
-    knownDefect:
-      "translate.ts wireToDomain prefers the DOMAIN name over the wire name in BOTH read modes, on the raw-token path as well as the loose door, so a custom `audience` claim shadows the wire `aud` before the floor ever reads it.",
     given: [
       {
         step: "token",
@@ -416,6 +502,31 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           iss: ISSUER,
           sub: "user-1",
           aud: ["someone-else"],
+          audience: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+      },
+    ],
+    when: [{ step: "verify", profile: "default", options: { audience: RESOURCE } }],
+    then: [{ step: "rejects", error: "AegisDomainError" }],
+  },
+  {
+    id: "audience-floor-is-not-satisfied-by-a-look-alike-when-the-wire-claim-is-absent",
+    title:
+      "a token that states no audience at all is refused, even when it carries a custom audience claim",
+    rationale:
+      "RFC 7519 §4.1.3 makes `aud` the claim by which an issuer names who a token is for. A token that omits it names nobody, so a verifier identifying itself cannot be in it. The check therefore has to fail on ABSENCE as well as on mismatch — a rule that only compares the registered claim WHEN PRESENT lets a presenter supply a look-alike of its own and be believed, which hands the audience decision to the party the check exists to constrain.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "jwt",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          // No `aud`. The look-alike is the only audience-shaped claim present.
           audience: [RESOURCE],
           exp: NOW + 3600,
           iat: NOW,
@@ -553,8 +664,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       "a claim the registry categorises as sensitive forces an encrypted token whichever container carried it",
     rationale:
       "A claim is sensitive because of WHAT IT IS, not because of which container the caller happened to put it in. A national identity number on a cleartext wire is disclosed to every intermediary that handles the token and to anything that logs it, and the disclosure is irreversible. The confidentiality decision must therefore key off the claim registry's category, so that no input shape can route a sensitive value around it.",
-    knownDefect:
-      "mint-token.ts gates encryption on the CONTAINER (content.sensitive != null), not on the registry's category: 'sensitive'; UserinfoContent admits `claims` but NOT `sensitive`, so for this profile the gate is unreachable by construction.",
     given: [
       { step: "keys", keys: ["ec-enc"] },
       {
@@ -581,6 +690,39 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     },
   },
   {
+    id: "a-sensitive-claim-is-omitted-when-it-cannot-be-encrypted",
+    title:
+      "a sensitive claim is left out of the token entirely when no recipient key is available",
+    rationale:
+      "Confidentiality has to fail CLOSED. When a sensitive claim cannot be sealed — no recipient key is resolvable — the only safe outcome is to omit it: signing it in the clear would disclose it to every intermediary and to anything that logs the token, irreversibly, while the caller believes the sensitivity marking did something. Omission costs the audience a claim; emission costs the subject the value.",
+    given: [
+      // No `keys` step: the vault holds only the signing key, so the encryption
+      // this content would otherwise force is unavailable.
+      {
+        step: "token",
+        via: "mint",
+        profile: "userinfo",
+        content: {
+          subject: "user-1",
+          audience: [CLIENT],
+          claims: { nationalIdentityNumber: NIN, nickname: "nick" },
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: "jwt" },
+      // The NON-sensitive neighbour rides the same container, so its presence is
+      // what shows the claim was removed for what it IS and not because the
+      // container was discarded wholesale.
+      { step: "wirePayload", includes: { nickname: "nick" } },
+      { step: "wirePayload", excludes: ["national_identity_number"] },
+    ],
+    absentTwin: {
+      cose: "the strip is in mint-token.ts, above the wire seam — a COSE twin would exercise the identical line",
+    },
+  },
+  {
     id: "claims-container-content-is-published-in-cleartext",
     title:
       "a claim supplied through the claims container is published on the cleartext wire",
@@ -603,31 +745,26 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           // the container is not expressible for this profile at the type level —
           // which is itself half of what this row records. The cast exercises what
           // the RUNTIME pipeline does with it; `assembleCommonClaims` spreads
-          // `content.claims` onto the domain layer verbatim, so
-          // `nationalIdentityNumber` reaches the wire as `national_identity_number`
-          // without ever meeting the encryption gate.
-          claims: { nationalIdentityNumber: NIN },
+          // `content.claims` onto the domain layer verbatim, so the value reaches
+          // the wire under its snake_case key.
+          //
+          // ⚠ The claim is deliberately one the registry does NOT categorise as
+          // sensitive. This row once carried a national identity number and was
+          // RETIRED by the move to a registry-category encryption gate: the gate
+          // is profile-independent but for `profile.encryptable`, and `id_token`
+          // is encryptable, so that mint now produces an encrypted token and the
+          // cleartext assertion could no longer be checked. Re-anchored rather
+          // than deleted, because the container boundary is still worth stating —
+          // and stating it on a NON-sensitive claim is what keeps the two
+          // capabilities from asserting the same thing.
+          claims: { favouriteColour: "green" },
         } as unknown as ProfileContent["id_token"],
       },
     ],
     when: [{ step: "mint" }],
-    // ⚠ DISPOSAL — this states TODAY's boundary and is RETIRED BY the move to a
-    // registry-category encryption gate, deliberately so. The gate is
-    // profile-independent but for `profile.encryptable` (mint-token.ts:87-96),
-    // and `id_token` is `encryptable: true` (profiles/definitions/id-token.ts:30)
-    // exactly as `userinfo` is (profiles/definitions/userinfo.ts:19) — so the
-    // moment the gate keys off `category: "sensitive"` this mint encrypts too:
-    // the format becomes `jwe`, the `format: "jwt"` assertion fails, and the wire
-    // assertion hits the interpreter's unreadable-payload guard. Its red AT THAT
-    // POINT is not a regression, it is this row having done its job. DELETE it
-    // then, or re-anchor it on a claim the registry does NOT categorise as
-    // sensitive (which states the container boundary without tripping the new
-    // gate). Do not "fix" it by flipping the format to `jwe`: that leaves a row
-    // asserting nothing the sensitive-container capability above does not
-    // already assert.
     then: [
       { step: "accepts", format: "jwt" },
-      { step: "wirePayload", includes: { national_identity_number: NIN } },
+      { step: "wirePayload", includes: { favourite_colour: "green" } },
     ],
   },
   {
@@ -727,8 +864,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       "a CWT with no exp is refused by the profile floor even when it carries a custom expires_at claim",
     rationale:
       "RFC 7519 §4.1.4 and RFC 8392 §3.1.4 — expiry is stated by the registered `exp` claim and by nothing else. A presence check that an unregistered claim can satisfy merely by resembling the registered one lets a producer hand out a token with no enforceable lifetime, which the verifier then honours indefinitely.",
-    knownDefect:
-      "verify-cose.ts spreads `custom` LAST over `claims`, and translate.ts camelCases `expires_at` -> `expiresAt`, satisfying the bare presence check in enforce-verify-floor.ts.",
     given: [
       {
         step: "token",
@@ -918,8 +1053,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       "a caller-supplied key policy is applied when verifying an opaque JOSE signature",
     rationale:
       "A key policy is the caller's constraint on which key material may verify a token — an algorithm floor is how a deployment refuses an algorithm downgrade. A policy silently dropped on one code path is worse than no policy at all, because the caller believes the constraint is in force and stops checking.",
-    knownDefect:
-      "verify-token.ts calls rawVerifyJws({ jws, deps }) with NO options, while the COSE twin threads { key: options?.key }; resolveVerifyKey folds options.verify?.condition into the key FLOOR, so dropping the options drops the policy.",
     given: [{ step: "token", via: "kit-sign", kit: "jws", claims: { hello: "world" } }],
     when: [{ step: "verify", options: { key: { condition: { algorithm: "RS256" } } } }],
     then: [{ step: "rejects", error: "AegisKeyError" }],
@@ -943,8 +1076,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title: "an expired token rejected by a kit verify throws an AegisError",
     rationale:
       "`AegisError` is the class a consumer catches — pylon branches on `instanceof AegisError` to turn a token rejection into a 401. Every failure aegis raises must therefore BE one, at every door, or the rejection falls through the consumer's guard and surfaces as a generic 500 that tells the caller nothing about the token.",
-    knownDefect:
-      "validate.ts:19 throws a bare LindormError, which is the SUPERCLASS of AegisError — so the instance satisfies no `instanceof AegisError` guard.",
     given: [
       {
         step: "token",
@@ -968,8 +1099,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title: "an expired token rejected by the domain verify verb throws an AegisError",
     rationale:
       "`AegisError` is the class a consumer catches, and the domain verify verb is the door most of them use. A failure raised there that is not an `AegisError` defeats every `instanceof` guard written against the package.",
-    knownDefect:
-      "the same bare LindormError at validate.ts:19, reached through the domain verify verb.",
     given: [
       {
         step: "token",
@@ -993,10 +1122,254 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title: "a failing static claim assertion throws an AegisError",
     rationale:
       "`AegisError` is the class a consumer catches, and the static claim-matching surface is a door like any other: a caller that wraps `Aegis.assert` in the same guard as a verify must catch the same class.",
-    knownDefect:
-      "the same bare LindormError at validate.ts:19, reached through the static claim-matching surface.",
     given: [{ step: "claims", claims: { subject: "user-1" } }],
     when: [{ step: "static-assert", assert: { subject: "someone-else" } }],
     then: [{ step: "rejects", error: "AegisError" }],
+  },
+
+  // ---------------------------------------------------------------------------
+  // The wire-neutral error contract.
+  // ---------------------------------------------------------------------------
+  {
+    id: "a-domain-refusal-names-the-wire-it-refused",
+    title: "a domain refusal of a JWT names the JWT encoding in its data",
+    rationale:
+      "A domain rule is one rule, so it raises ONE code on both encodings; but a consumer handling that refusal — logging it, rendering it, deciding whether to retry against a different endpoint — still has to know which encoding the refused token was in. That fact therefore has to travel as DATA on the error, because it is no longer in the code. This is aegis policy, not a specification requirement: no RFC says anything about the shape of an implementation's error. What makes it a rule worth pinning is the alternative it replaced — the wire baked into the code as a prefix, one spelling per encoding for a single rule, which forced every consumer to match two codes for one condition and reported a CWT's failure under a name that said JWT.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "jwt",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          // No `exp`. Expiry PRESENCE is the domain rule under test; the range
+          // check belongs to the kit and is not what refuses this token.
+          iat: NOW,
+          jti: "token-1",
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [{ step: "rejects", error: "AegisDomainError", data: { format: "jwt" } }],
+  },
+  {
+    id: "a-domain-refusal-names-the-wire-it-refused-on-the-cose-wire",
+    title: "a domain refusal of a CWT names the CWT encoding in its data",
+    rationale:
+      "The same rule refusing a COSE token must report the COSE encoding. A refusal that names the wrong encoding is worse than one that names none: it sends whoever reads it to the wrong decoder, the wrong issuer and the wrong half of the code, and it does so most convincingly when both wires share the one implementation that produced it.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "cwt",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          iat: NOW,
+          cti: "token-1",
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [{ step: "rejects", error: "AegisDomainError", data: { format: "cwt" } }],
+  },
+
+  // ---------------------------------------------------------------------------
+  // Header provenance — what the signature covers, and what it does not.
+  // ---------------------------------------------------------------------------
+  {
+    id: "an-unprotected-header-parameter-never-reads-as-signed-on-the-cose-wire",
+    title:
+      "a CWT's unprotected key identifier is reported apart from the parameters the signature covers",
+    rationale:
+      "RFC 9052 §3 gives a COSE object two header buckets: the protected one holds parameters that are 'cryptographically protected' and the unprotected one 'parameters about the current layer that are not cryptographically protected'. §3.1 puts the `kid` hint in the second — it 'is not a security-critical field. For this reason, it can be placed in the unprotected-header-parameters bucket'. Anything a verifier routes, audits or polices a token by must therefore say which bucket it came from: an unprotected parameter is written by whoever last held the token, so a reader that cannot tell the two apart decides policy on a value the PRESENTER chose while believing the issuer signed it.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "cwt",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          cti: "token-1",
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    // The two wire steps are the load-bearing half. Asserting only the domain
+    // result would prove the two buckets are reported apart — not that the
+    // parameter is in the bucket the report claims, which is the thing a reader
+    // through aegis's own decoder cannot check.
+    then: [
+      { step: "accepts", format: "cwt" },
+      { step: "header", expected: { algorithm: "ES512" }, excludes: ["keyId"] },
+      { step: "unprotectedHeader", expected: { keyId: SIG_KEY_ID } },
+      { step: "wireProtectedHeader", present: [1, 16], excludes: [4] },
+      { step: "wireUnprotectedHeader", present: [4], excludes: [1, 16] },
+    ],
+    absentTwin: {
+      jose: "JOSE compact serialisation has no unprotected bucket at all (RFC 7515 §7.1), so no parameter can arrive unsigned on that wire and there is nothing to keep apart",
+    },
+  },
+  {
+    id: "a-wire-with-no-unprotected-bucket-reports-none",
+    title: "a JWT reports no unprotected header bucket at all",
+    rationale:
+      "RFC 7515 §7.1 — 'Only one signature/MAC is supported by the JWS Compact Serialization and it provides no syntax to represent a JWS Unprotected Header value.' Every parameter on a JWT is therefore covered by the signature, and the result must say so by reporting NO unprotected bucket. An empty object would not: it is truthy, so a consumer writing `if (result.unprotectedHeader)` reads it as a bucket that exists and then reads a field the header type declares non-optional as undefined. A header the wire does not have has to be absent, not empty.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "jwt",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts", format: "jwt" },
+      // The contrast that makes the absence meaningful: the key identifier is
+      // still reported — from the bucket the signature covers.
+      { step: "header", expected: { keyId: SIG_KEY_ID } },
+      { step: "unprotectedHeader", absent: true },
+      { step: "wireProtectedHeader", present: ["kid", "alg", "typ"] },
+      { step: "wireUnprotectedHeader", absent: true },
+    ],
+    absentTwin: {
+      cose: "a COSE structure always carries an unprotected bucket (RFC 9052 §3), so the absence this row asserts cannot arise on that wire",
+    },
+  },
+
+  // ---------------------------------------------------------------------------
+  // The asserted token type.
+  // ---------------------------------------------------------------------------
+  {
+    id: "an-asserted-token-type-is-compared-as-a-whole-media-type",
+    title: "a JWT of another type is refused when the caller asserts an id token",
+    rationale:
+      "RFC 7519 §5.1 — the `typ` header parameter 'is used by JWT applications to declare the media type of this complete JWT', so a caller asserting a token IS of a given type is asserting on that whole media type. The comparison has to be made on the whole of it: a type whose media type is the bare conventional form — an id token is a plain `JWT` — has no structured prefix, so a check that compares prefixes has nothing to compare for exactly that type and silently accepts every token instead. An assertion that cannot fail is worse than an absent one, because the caller has stopped checking.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "jwt",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+        options: { tokenType: "at" },
+      },
+    ],
+    when: [{ step: "verify", assert: { tokenType: "id_token" } }],
+    // The `data` pins the typ the refusal READ, so the rejection is attributable
+    // to the type comparison rather than to any other rule this token would also
+    // have to satisfy.
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { typ: "application/at+jwt", format: "jwt" },
+      },
+    ],
+  },
+  {
+    id: "an-asserted-token-type-is-compared-as-a-whole-media-type-on-the-cose-wire",
+    title: "a CWT of another type is refused when the caller asserts an id token",
+    rationale:
+      "RFC 9596 §2 gives COSE the same parameter — `typ` (label 16) declares 'the type of this complete COSE object' — so the caller's type assertion means the same thing on this wire and must be enforced just as hard. An assertion honoured on one encoding and skipped on the other is an assertion the attacker chooses to be bound by, since the encoding is the issuer's choice and the presenter's opportunity.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "cwt",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          cti: "token-1",
+        },
+        options: { tokenType: "at" },
+      },
+    ],
+    when: [{ step: "verify", assert: { tokenType: "id_token" } }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { typ: "application/at+cwt", format: "cwt" },
+      },
+    ],
+  },
+  {
+    id: "a-token-of-the-asserted-type-verifies",
+    title: "a JWT typed as an id token verifies when the caller asserts an id token",
+    rationale:
+      "The type assertion must refuse exactly the tokens of another type and no others. An id token's media type is the bare conventional `JWT` (RFC 7519 §5.1 recommends that spelling and there is no registered structured form for it), so a comparison that got this wrong in the other direction — demanding a structured media type an id token never carries — would refuse every conformant id token in existence.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "jwt",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+      },
+    ],
+    when: [{ step: "verify", assert: { tokenType: "id_token" } }],
+    then: [
+      { step: "accepts", format: "jwt" },
+      // Read off the raw bytes: the media type the assertion matched is the one
+      // the token actually carries, not the one aegis reconstructs on the way out.
+      { step: "wireProtectedHeader", includes: { typ: "JWT" } },
+    ],
+  },
+  {
+    id: "a-token-of-the-asserted-type-verifies-on-the-cose-wire",
+    title: "a CWT typed as an id token verifies when the caller asserts an id token",
+    rationale:
+      "The COSE counterpart of the same requirement. An id token's bare `JWT` media type has one COSE equivalent — `application/cwt`, the single CWT media type registered by RFC 8392 — so the assertion must accept exactly that and no other. Getting the accepting half wrong is how a type check is discovered to be too strict only in production, by a deployment whose tokens were conformant all along.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "cwt",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          cti: "token-1",
+        },
+      },
+    ],
+    when: [{ step: "verify", assert: { tokenType: "id_token" } }],
+    then: [
+      { step: "accepts", format: "cwt" },
+      { step: "wireProtectedHeader", includes: { 16: "application/cwt" } },
+    ],
   },
 ];

@@ -34,10 +34,10 @@ export const resolveProfile = (name: string): TokenProfile => {
 
   if (!profile) {
     throw new AegisDomainError(`Unknown token profile: ${name}`, {
-      code: "jwt_unknown_profile",
+      code: "unknown_profile",
       data: { name },
       debug: { available: [...registry.keys()] },
-      title: "JWT Unknown Profile",
+      title: "Unknown Profile",
       details:
         "No token profile is registered under that name. Register a custom profile with registerProfile() or use a built-in.",
     });

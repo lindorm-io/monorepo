@@ -153,7 +153,7 @@ describe("Aegis.assert / Aegis.matches", () => {
         );
         throw new Error("expected assert to throw");
       } catch (err: any) {
-        expect(err.code).toBe("jwt_claims_invalid");
+        expect(err.code).toBe("claims_invalid");
         expect(err.data.invalid).toEqual(["audience", "subject"]);
       }
     });

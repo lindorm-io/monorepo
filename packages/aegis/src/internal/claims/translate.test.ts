@@ -3,7 +3,11 @@ import MockDate from "mockdate";
 import { describe, expect, test } from "vitest";
 import type { TokenProfile } from "../../types/index.js";
 import { assembleCommonClaims } from "../utils/assemble-common-claims.js";
-import { domainToJose, joseToDomain, wireToFloorClaims } from "./translate.js";
+import { joseName } from "./claims-registry.js";
+import { domainToJose, wireToDomain, wireToFloorClaims } from "./translate.js";
+
+// The JOSE TOKEN read — what verify/parse run over a token's wire payload.
+const joseToDomain = (wire: Dict) => wireToDomain(wire, joseName, "token");
 
 // Freeze time so the `expires("1h")` / `new Date()` calls resolve to a stable
 // instant (the pinned snapshot, not a race).
@@ -226,7 +230,7 @@ describe("joseToDomain — the two read modes decode identically", () => {
   // what makes the floor mode a scope restriction rather than a second codec.
   // A SECONDARY check: it pins the scope-restriction property, not the decoders.
   test("the floor mode decodes registered claims IDENTICALLY to the domain mode", () => {
-    expect(wireToFloorClaims(wire).claims).toEqual(joseToDomain(wire).claims);
+    expect(wireToFloorClaims(wire, joseName).claims).toEqual(joseToDomain(wire).claims);
   });
 
   test("value decoders match (dates → Date, string arrays split, audience wraps)", () => {
@@ -242,20 +246,37 @@ describe("joseToDomain — the two read modes decode identically", () => {
     expect(claims.authMethods).toEqual(["pwd"]);
   });
 
-  test("camelCase-tolerance: domain-form input parses as the wire form does", () => {
+  // ⚠ A TOKEN states a claim under its WIRE name and under nothing else. The
+  // domain spelling is a name the PRESENTER chooses, so admitting it here would
+  // let a custom claim answer for the registered one it resembles — which is how
+  // a wire `aud: ["someone-else"]` beside a custom `audience: [me]` used to pass
+  // an audience floor. Everything the pass does not resolve lands in `custom`.
+  test("a token read resolves the wire name and NOT the domain spelling", () => {
     const camel: Dict = {
       subject: "user-1",
       issuer: "https://i/",
       tokenId: "jti-1",
       authMethods: ["pwd"],
     };
-    const { claims } = joseToDomain(camel);
-    expect(claims).toEqual({
+    const { claims, custom } = joseToDomain(camel);
+
+    expect(claims).toEqual({});
+    expect(custom).toEqual(camel);
+  });
+
+  // The PUBLIC vocabulary door is the one that answers to either spelling: its
+  // input is a claim dict of unknown provenance, not a token deciding an access
+  // decision. `Aegis.toDomain` documents that tolerance as its contract.
+  test("the dict read accepts the domain spelling", () => {
+    const camel: Dict = {
       subject: "user-1",
       issuer: "https://i/",
       tokenId: "jti-1",
       authMethods: ["pwd"],
-    });
+    };
+    const { claims } = wireToDomain(camel, joseName, "dict");
+
+    expect(claims).toEqual(camel);
   });
 
   test("unregistered claims go to custom, camelCased, value untouched", () => {
@@ -317,7 +338,7 @@ describe("registry-complete extension (intentional, inert until Phase 4/13)", ()
 
     // Floor mode: txn/events carry no `domainClaim` mark, so they fall through to
     // `custom` — unresolved and, crucially, under their ORIGINAL keys.
-    expect(wireToFloorClaims(wire).custom).toEqual({
+    expect(wireToFloorClaims(wire, joseName).custom).toEqual({
       txn: "txn-1",
       events: { "urn:e": {} },
     });
@@ -342,12 +363,15 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
   test("leaves an UNRESOLVED key in custom VERBATIM, never case-converted", () => {
     // The whole point: a wire `expires_at` that camelCased to `expiresAt` would
     // satisfy an exp-presence floor it has no business satisfying.
-    const { claims, custom } = wireToFloorClaims({
-      iss: ISSUER,
-      expires_at: 978307200,
-      token_introspection: { active: true },
-      acme_flag: "x",
-    });
+    const { claims, custom } = wireToFloorClaims(
+      {
+        iss: ISSUER,
+        expires_at: 978307200,
+        token_introspection: { active: true },
+        acme_flag: "x",
+      },
+      joseName,
+    );
 
     expect(claims.expiresAt).toBeUndefined();
     expect(custom).toEqual({
@@ -358,21 +382,27 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
   });
 
   test("resolves ONLY the domainClaim-marked claims; a profile claim stays in custom", () => {
-    const { claims, custom } = wireToFloorClaims({
-      iss: ISSUER,
-      given_name: "Given",
-      email: "user@example.com",
-    });
+    const { claims, custom } = wireToFloorClaims(
+      {
+        iss: ISSUER,
+        given_name: "Given",
+        email: "user@example.com",
+      },
+      joseName,
+    );
 
     expect(claims).toEqual({ issuer: ISSUER });
     expect(custom).toEqual({ given_name: "Given", email: "user@example.com" });
   });
 
   test("maps the wire sub_id to the domain subjectId (RFC 9493)", () => {
-    const { claims, custom } = wireToFloorClaims({
-      iss: ISSUER,
-      sub_id: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
-    });
+    const { claims, custom } = wireToFloorClaims(
+      {
+        iss: ISSUER,
+        sub_id: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+      },
+      joseName,
+    );
 
     expect(claims).toMatchObject({
       issuer: ISSUER,
@@ -381,10 +411,43 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
     expect(custom).toEqual({});
   });
 
-  test("accepts the camelCase domain form", () => {
-    const { claims, custom } = wireToFloorClaims({
-      subjectId: { format: "opaque", id: "abc" },
+  // The floor asks "is this claim present ON THE WIRE". A key spelled like a
+  // claim the floor resolves, that the pass did not consume, can only be a
+  // LOOK-ALIKE — the real one would have been consumed under its wire name — so
+  // it is DROPPED, not carried through in `custom`. The floor's caller flattens
+  // the two dicts together, and leaving it in is what would let a presenter's
+  // `audience` answer for an absent `aud`.
+  test("drops a key spelled like a claim the floor resolves", () => {
+    const { claims, custom } = wireToFloorClaims(
+      { subjectId: { format: "opaque", id: "abc" } },
+      joseName,
+    );
+
+    expect(claims).toEqual({});
+    expect(custom).toEqual({});
+  });
+
+  // Only the RESOLVED set is filtered. A profile may require a claim under its
+  // WIRE spelling, or one the floor does not resolve at all, and both have to
+  // survive verbatim or the floor reports a present claim as missing.
+  test("keeps an unresolved claim and a wire-spelled required claim verbatim", () => {
+    const { custom } = wireToFloorClaims(
+      { token_introspection: { active: true }, events: { "urn:e": {} }, acme: 1 },
+      joseName,
+    );
+
+    expect(custom).toEqual({
+      token_introspection: { active: true },
+      events: { "urn:e": {} },
+      acme: 1,
     });
+  });
+
+  test("resolves the wire sub_id", () => {
+    const { claims, custom } = wireToFloorClaims(
+      { sub_id: { format: "opaque", id: "abc" } },
+      joseName,
+    );
 
     expect(claims).toMatchObject({ subjectId: { format: "opaque", id: "abc" } });
     expect(custom).toEqual({});
@@ -392,14 +455,17 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
 
   test("drops a non-object sub_id", () => {
     expect(
-      wireToFloorClaims({ sub_id: "not-an-object" }).claims.subjectId,
+      wireToFloorClaims({ sub_id: "not-an-object" }, joseName).claims.subjectId,
     ).toBeUndefined();
   });
 
   test("maps the wire conforms_to to the domain conformsTo", () => {
-    const { claims, custom } = wireToFloorClaims({
-      conforms_to: ["urn:lindorm:profile:fapi", "urn:lindorm:profile:pci"],
-    });
+    const { claims, custom } = wireToFloorClaims(
+      {
+        conforms_to: ["urn:lindorm:profile:fapi", "urn:lindorm:profile:pci"],
+      },
+      joseName,
+    );
 
     expect(claims.conformsTo).toEqual([
       "urn:lindorm:profile:fapi",
@@ -408,22 +474,20 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
     expect(custom).toEqual({});
   });
 
-  test("accepts the camelCase conformsTo and a space-delimited string", () => {
-    expect(wireToFloorClaims({ conformsTo: ["a", "b"] }).claims.conformsTo).toEqual([
-      "a",
-      "b",
-    ]);
-    expect(wireToFloorClaims({ conforms_to: "a b" }).claims.conformsTo).toEqual([
-      "a",
-      "b",
-    ]);
+  test("accepts the wire conforms_to as an array or a space-delimited string", () => {
+    expect(
+      wireToFloorClaims({ conforms_to: ["a", "b"] }, joseName).claims.conformsTo,
+    ).toEqual(["a", "b"]);
+    expect(wireToFloorClaims({ conforms_to: "a b" }, joseName).claims.conformsTo).toEqual(
+      ["a", "b"],
+    );
   });
 
   test("marks a wrongly-typed claim CONSUMED, so it lands in neither bucket", () => {
     // Preserved defect (finding #10): the key is consumed before decoding, so a
     // numeric `nonce` is invisible to a forbidden-claim check. Pinned so the
     // repair is a deliberate change, not an accident of a later refactor.
-    const { claims, custom } = wireToFloorClaims({ iss: ISSUER, nonce: 12345 });
+    const { claims, custom } = wireToFloorClaims({ iss: ISSUER, nonce: 12345 }, joseName);
 
     expect(claims.nonce).toBeUndefined();
     expect(custom.nonce).toBeUndefined();

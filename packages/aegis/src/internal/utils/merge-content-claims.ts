@@ -19,7 +19,7 @@ import type { SignContent } from "../../types/index.js";
  * Kept OFF the policy-validated `common` layer on purpose: neither bucket
  * carries profile policy, so they join after `validateProfileClaims` has run.
  *
- * ⚠ OIDC Core §13.3 is not enforced here. Mint forces encryption when
+ * ⚠ The confidentiality gate is not enforced here. Mint forces encryption when
  * `sensitive` is present and STRIPS the fields when it cannot encrypt them, and
  * the read side surfaces them only from an encrypted token. This step just maps.
  */

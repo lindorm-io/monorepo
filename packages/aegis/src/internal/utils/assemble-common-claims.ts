@@ -6,7 +6,7 @@ import { omitUndefined } from "@lindorm/utils";
 import type {
   SignContent,
   SignContext,
-  SignJwtOptions,
+  SignTokenOptions,
   TokenProfile,
 } from "../../types/index.js";
 import { CLAIM_SPECS } from "../claims/claims-registry.js";
@@ -39,9 +39,9 @@ export type AssembleCommonContext = {
  * (`issuer`, `subject`, `expiresAt`…), values are domain-shaped (`Date`s, the
  * domain `confirmation`/`act` objects, computed hash strings).
  *
- * It does NOT encode to any wire format — the JOSE encoder maps this to wire
- * claims via `domainToJose`, and the COSE encoder via `domainToCose` (the ONE
- * registry-driven translator). This is the structural guard against rebuilding a
+ * It does NOT encode to any wire format — the wire maps this to wire claims via
+ * the ONE registry-driven translator, keyed by its own name selector. This is the
+ * structural guard against rebuilding a
  * JOSE-in-CBOR shim: business logic lives here, in domain terms, and translation
  * happens only at the encoder edges.
  */
@@ -49,13 +49,12 @@ export const assembleCommonClaims = (
   ctx: AssembleCommonContext,
   profile: TokenProfile,
   content: SignContent & { claims?: Dict },
-  options: SignJwtOptions & { context?: SignContext } = {},
+  options: SignTokenOptions & { context?: SignContext } = {},
 ): Dict => {
   const now = ctx.now ?? new Date();
 
   // Envelope resolution in DOMAIN form (Date / string values), honouring the
-  // profile's auto-injection, then translated to the wire by `domainToJose` /
-  // `domainToCose`.
+  // profile's auto-injection, then translated by the ONE wire translator.
   const optIssuedAt = isDate(options.issuedAt) ? options.issuedAt : undefined;
   const issuedAt = profile.autoInject.includes("issuedAt")
     ? (optIssuedAt ?? now)

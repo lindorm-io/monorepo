@@ -1,15 +1,8 @@
 import type { Dict } from "@lindorm/types";
+import type { OmitMode } from "../../types/domain/omit-mode.js";
 import { omitEmpty, omitUndefined } from "@lindorm/utils";
 
-/**
- * How aggressively a minted token's claim dict is pruned at the emission
- * boundary:
- *
- * - `"empty"` (default) — drop `undefined`, `null`, `""`, `[]`, and `{}`
- *   recursively, so the wire stays COMPACT.
- * - `"undefined"` — drop only `undefined`, preserving explicit empty values.
- */
-export type OmitMode = "empty" | "undefined";
+export type { OmitMode } from "../../types/domain/omit-mode.js";
 
 /**
  * Claims whose empty containers are STRUCTURALLY meaningful and must survive the

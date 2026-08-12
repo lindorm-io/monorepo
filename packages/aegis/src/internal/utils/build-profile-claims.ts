@@ -2,7 +2,7 @@ import { expires, getUnixTime } from "@lindorm/date";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
-import type { SignContent, SignJwtOptions, TokenProfile } from "../../types/index.js";
+import type { SignContent, SignTokenOptions, TokenProfile } from "../../types/index.js";
 import { domainToJose } from "../claims/translate.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { generateTokenId } from "./generate-token-id.js";
@@ -55,7 +55,7 @@ export const buildProfileClaims = <C extends Dict = Dict>(
   ctx: BuildProfileContext,
   profile: TokenProfile,
   content: SignContent & { claims?: C },
-  options: SignJwtOptions = {},
+  options: SignTokenOptions = {},
 ): Dict => {
   const now = ctx.now ?? new Date();
   const nowUnix = getUnixTime(now);

@@ -103,7 +103,8 @@ export type VerifyOptions = {
   key?: AegisVerifyKey;
   /**
    * JOSE `typ` header presence policy at parse time (default `"required"`).
-   * `"required"` rejects a typ-less token (`jwt_invalid_typ`) — the RFC 8725
+   * `"required"` rejects a typ-less token (`typ_required` — distinct from the
+   * kits' `jwt_invalid_typ`, which means a typ that is PRESENT and wrong) — the RFC 8725
    * explicit-typing defense direct callers rely on. `"optional"` accepts an
    * absent typ; profiled verify sets this, because the profile floor owns the
    * real presence policy (required-presence profiles still reject an absent
@@ -112,7 +113,7 @@ export type VerifyOptions = {
   typPresence?: "required" | "optional";
   /**
    * `exp` claim presence policy (default `"required"`). `"required"` rejects an
-   * exp-less token (`jwt_missing_claim_exp`) — the default for direct/profile-less
+   * exp-less token (`missing_claim_exp`) — the default for direct/profile-less
    * callers. `"optional"` accepts an absent exp; profiled verify sets this for a
    * `lifetime: null` profile (RFC 8417 / SSF `security_event` SETs carry no exp),
    * where the profile floor owns the real presence policy. When exp IS present its

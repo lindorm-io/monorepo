@@ -233,18 +233,23 @@ export class JwtKit implements IJwtKit {
         : undefined,
     };
 
-    validate(withDates, {
-      ...createTemporalMatchers({
-        clockTolerance,
-        currentDate: options.currentDate,
-        maxTokenAge: options.maxTokenAge,
-        verifyExpiration: options.verifyExpiration,
-        verifyNotBefore: options.verifyNotBefore,
-        verifyIssuedAt: options.verifyIssuedAt,
-        verifyAuthTime: options.verifyAuthTime,
-      }),
-      ...(assert ?? {}),
-    } as Condition<Dict>);
+    validate(
+      withDates,
+      {
+        ...createTemporalMatchers({
+          clockTolerance,
+          currentDate: options.currentDate,
+          maxTokenAge: options.maxTokenAge,
+          verifyExpiration: options.verifyExpiration,
+          verifyNotBefore: options.verifyNotBefore,
+          verifyIssuedAt: options.verifyIssuedAt,
+          verifyAuthTime: options.verifyAuthTime,
+        }),
+        ...(assert ?? {}),
+      } as Condition<Dict>,
+      JwtError,
+      "jwt_claims_invalid",
+    );
 
     this.logger.debug("Token verified");
 

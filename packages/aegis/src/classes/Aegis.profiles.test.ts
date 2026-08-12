@@ -477,8 +477,11 @@ describe("Aegis profiles", () => {
         }),
       ).rejects.toThrow(
         expect.objectContaining({
-          code: "jwt_profile_not_verifiable",
-          data: { profile: "mint_only_test_profile", use: "mint" },
+          code: "profile_not_verifiable",
+          data: expect.objectContaining({
+            profile: "mint_only_test_profile",
+            use: "mint",
+          }),
         }),
       );
     });
@@ -492,7 +495,7 @@ describe("Aegis profiles", () => {
         aegis.verify("mint_only_test_profile", token, undefined, {
           audience: RESOURCE,
         }),
-      ).rejects.toThrow(expect.objectContaining({ code: "jwt_profile_not_verifiable" }));
+      ).rejects.toThrow(expect.objectContaining({ code: "profile_not_verifiable" }));
     });
 
     // The default is what keeps every other profile — built-in and

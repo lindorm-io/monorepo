@@ -16,6 +16,7 @@ import {
   VERIFY_FLOOR,
 } from "@lindorm/amphora";
 import { isString } from "@lindorm/is";
+import { AegisDomainError } from "../errors/index.js";
 import type { IKryptos, KryptosEncAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
@@ -30,7 +31,7 @@ import type {
   IAegisJws,
   IAegisJwt,
 } from "../interfaces/index.js";
-import { joseToBuckets } from "../internal/claims/resolve-domain-buckets.js";
+import { dictToBuckets } from "../internal/claims/resolve-domain-buckets.js";
 import { domainToJose } from "../internal/claims/translate.js";
 import { isCose } from "../internal/cose/is-cose.js";
 import {
@@ -69,8 +70,7 @@ import { resolveKey } from "../internal/utils/resolve-key.js";
 import { signToken } from "../internal/utils/sign-token.js";
 import { validate } from "../internal/utils/validate.js";
 import { verifyDpopProof } from "../internal/utils/verify-dpop-proof.js";
-import { verifyProfileToken } from "../internal/utils/verify-profile-token.js";
-import { verifyToken } from "../internal/utils/verify-token.js";
+import { resolveVerifyFloor, verifyToken } from "../internal/utils/verify-token.js";
 import type {
   AegisDecryptKey,
   AegisEncKey,
@@ -339,12 +339,27 @@ export class Aegis implements IAegis {
     // the optional `assert`, the 4th the profile options. Non-profiled: the 2nd
     // positional is the optional `assert` object, the 3rd the verify options.
     if (isString(assertOrToken)) {
-      return verifyProfileToken({
-        name: tokenOrProfile,
+      const options = profileOptions ?? ({} as ProfileVerifyOptions);
+      const floor = resolveVerifyFloor(tokenOrProfile, options, this.deps);
+
+      // `audience`/`issuer` are the floor's; `rest` is the pure verify-knob set.
+      const { audience: _audience, issuer: _issuer, ...rest } = options;
+
+      return verifyToken({
         token: assertOrToken,
         assert: optionsOrAssert as VerifyAssert | undefined,
-        options: profileOptions ?? ({} as ProfileVerifyOptions),
+        options: {
+          ...rest,
+          // The profile floor owns the real typ and exp presence policy, so the
+          // generic policy pass stands down: a typ-less RFC 7523 client assertion
+          // must reach the floor, and a `lifetime: null` profile (an RFC 8417 SET,
+          // introspection, userinfo) mints tokens with no exp at all.
+          typPresence: "optional",
+          expPresence: floor.profile.lifetime === null ? "optional" : "required",
+        },
         deps: this.deps,
+        floor,
+        issuer: floor.expectedIssuer,
       });
     }
 
@@ -448,7 +463,7 @@ export class Aegis implements IAegis {
   // read path resolves, so a consumer never re-derives the split itself.
   static toWire = domainToJose;
 
-  static toDomain = joseToBuckets;
+  static toDomain = dictToBuckets;
 
   // `Aegis.decode` is DROPPED (Bit 2) — use `aegis.<fmt>.decode` for a known
   // format, or the INSTANCE `aegis.parse` for an unknown one.
@@ -481,10 +496,22 @@ export class Aegis implements IAegis {
    * same value explicitly; there is no way to read it back off `IAegis`.
    *
    * The throwing layer over {@link Aegis.matches}: throws
-   * LindormError("Invalid token") naming every failing key.
+   * `AegisDomainError("Invalid token")` naming every failing key.
+   *
+   * ⚠ It used to promise a bare `LindormError`, and that promise was the defect:
+   * `AegisError` extends `LindormError`, so the instance failed every
+   * `instanceof AegisError` guard a consumer had written around it. Reversing the
+   * documented contract is deliberate — `instanceof AegisError` is what this
+   * package asks consumers to branch on, and a door that does not honour it is a
+   * door they cannot use.
    */
   static assert(claims: Dict, assert: DomainAssert, options?: AssertOptions): void {
-    validate(claims, createAssertPredicate(assert, options));
+    validate(
+      claims,
+      createAssertPredicate(assert, options),
+      AegisDomainError,
+      "claims_invalid",
+    );
   }
 
   // private raw namespaces — each a ONE-LINE delegator to its

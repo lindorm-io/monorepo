@@ -1,7 +1,7 @@
 import { isArray } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
-import type { TokenProfile } from "../../types/index.js";
+import type { TokenFormatTag, TokenProfile } from "../../types/index.js";
 import { applyProfilePolicy } from "./apply-profile-policy.js";
 import { algPermitted } from "./rules/alg-permitted.js";
 
@@ -29,6 +29,12 @@ export type VerifyFloorInput = {
   expectedTyp?: string | undefined;
   expectedIssuer: string | undefined;
   /**
+   * The wire the token actually is — DIAGNOSTIC only. Every code this floor
+   * raises is wire-neutral; a reader still needs to know which encoding produced
+   * the failure, and it used to be told `jwt_` whichever wire it was.
+   */
+  format: TokenFormatTag;
+  /**
    * The DOMAIN-keyed parsed payload (`issuer`/`audience`/`expiresAt`), NOT the
    * raw wire claims. Both the JOSE and COSE verify paths produce this shape, so
    * the floor is format-agnostic.
@@ -41,12 +47,16 @@ const typMismatch = (
   decodedTyp: string | undefined,
   expected: string | undefined,
   profile: TokenProfile,
+  format: TokenFormatTag,
 ): AegisDomainError =>
   new AegisDomainError("Invalid token", {
-    code: "jwt_typ_mismatch",
-    data: { typ: decodedTyp },
+    // NOT `typ_mismatch`: this is specifically the PROFILE's mandate, and the
+    // caller's own `assert.tokenType` mismatch is a different refusal raised by
+    // the kit.
+    code: "profile_typ_mismatch",
+    data: { typ: decodedTyp, format },
     debug: { expected, profile: profile.name },
-    title: "JWT Typ Mismatch",
+    title: "Profile Typ Mismatch",
     details:
       "The header typ does not match the typ mandated by the profile being verified.",
   });
@@ -72,7 +82,8 @@ const typMismatch = (
  * standard verify; this floor only adds the presence + identity assertions.
  */
 export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
-  const { algorithm, audience, decodedTyp, expectedIssuer, payload, profile } = input;
+  const { algorithm, audience, decodedTyp, expectedIssuer, format, payload, profile } =
+    input;
 
   // FIRST, because it decides whether the signature proves anything at all —
   // reporting a claim mismatch on a token whose signing class the profile
@@ -90,10 +101,10 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
 
     if (invalid.length > 0) {
       throw new AegisDomainError("Invalid token", {
-        code: "jwt_algorithm_not_permitted",
-        data: { algorithm, invalid },
+        code: "algorithm_not_permitted",
+        data: { algorithm, invalid, format },
         debug: { algClass: profile.algClass, invalid, profile: profile.name },
-        title: "JWT Algorithm Not Permitted",
+        title: "Algorithm Not Permitted",
         details:
           "The token was verified under an algorithm whose class the profile does not permit, so its signature cannot prove what the profile requires of it.",
       });
@@ -105,14 +116,14 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
       // No profile typ to enforce — but a caller override (the COSE path) is a
       // media type mintCose actually stamped, so it is enforced as required.
       if (input.expectedTyp !== undefined && decodedTyp !== input.expectedTyp) {
-        throw typMismatch(decodedTyp, input.expectedTyp, profile);
+        throw typMismatch(decodedTyp, input.expectedTyp, profile, format);
       }
       break;
 
     case "required": {
       const expected = input.expectedTyp ?? profile.typ.value;
       if (decodedTyp !== expected) {
-        throw typMismatch(decodedTyp, expected, profile);
+        throw typMismatch(decodedTyp, expected, profile, format);
       }
       break;
     }
@@ -120,7 +131,7 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
     default:
       throw new AegisDomainError("Unsupported typ presence", {
         code: "unsupported_typ_presence",
-        data: { typ: profile.typ },
+        data: { typ: profile.typ, format },
         debug: { profile: profile.name },
         title: "Unsupported Typ Presence",
         details:
@@ -130,10 +141,10 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
 
   if (expectedIssuer !== undefined && payload.issuer !== expectedIssuer) {
     throw new AegisDomainError("Invalid token", {
-      code: "jwt_issuer_mismatch",
-      data: { issuer: payload.issuer },
+      code: "issuer_mismatch",
+      data: { issuer: payload.issuer, format },
       debug: { expected: expectedIssuer, profile: profile.name },
-      title: "JWT Issuer Mismatch",
+      title: "Issuer Mismatch",
       details:
         "The token issuer (iss) does not exactly match the issuer expected for this profile.",
     });
@@ -143,10 +154,10 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
 
   if (!audList.includes(audience)) {
     throw new AegisDomainError("Invalid token", {
-      code: "jwt_audience_mismatch",
-      data: { audience: payload.audience },
+      code: "audience_mismatch",
+      data: { audience: payload.audience, format },
       debug: { expected: audience, profile: profile.name },
-      title: "JWT Audience Mismatch",
+      title: "Audience Mismatch",
       details:
         "The token audience (aud) does not contain the verifier's own identity supplied to verify.",
     });
@@ -154,9 +165,10 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
 
   if (profile.lifetime !== null && payload.expiresAt === undefined) {
     throw new AegisDomainError("Invalid token", {
-      code: "jwt_missing_claim_exp",
+      code: "missing_claim_exp",
+      data: { format },
       debug: { profile: profile.name },
-      title: "JWT Missing Claim Exp",
+      title: "Missing Claim Exp",
       details:
         "This profile mandates an exp claim, but the token has none; it is rejected unconditionally.",
     });
@@ -169,10 +181,10 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
 
   if (missing.length > 0) {
     throw new AegisDomainError("Invalid token", {
-      code: "jwt_required_claims_missing",
-      data: { missing },
+      code: "required_claims_missing",
+      data: { missing, format },
       debug: { missing, profile: profile.name },
-      title: "JWT Required Claims Missing",
+      title: "Required Claims Missing",
       details:
         "The token is missing claims that the profile being verified requires to be present.",
     });
@@ -191,10 +203,10 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
 
   if (present.length > 0) {
     throw new AegisDomainError("Invalid token", {
-      code: "jwt_forbidden_claims_present",
-      data: { forbidden: present },
+      code: "forbidden_claims_present",
+      data: { forbidden: present, format },
       debug: { forbidden: present, profile: profile.name },
-      title: "JWT Forbidden Claims Present",
+      title: "Forbidden Claims Present",
       details:
         "The token carries claims the profile being verified forbids, so it is not a token of that kind.",
     });
@@ -214,7 +226,7 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   if (failed.length > 0) {
     throw new AegisDomainError("Invalid token", {
       code: "profile_policy_invalid",
-      data: { invalid: failed },
+      data: { invalid: failed, format },
       debug: { invalid: failed, profile: profile.name },
       title: "Profile Policy Invalid",
       details:

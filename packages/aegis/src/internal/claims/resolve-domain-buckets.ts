@@ -3,11 +3,11 @@ import type { AegisProfile, AegisSensitive } from "../../types/index.js";
 import type { DomainClaims } from "../../types/claims/domain/domain-claims.js";
 import { extractAegisProfile } from "../utils/extract-aegis-profile.js";
 import { extractSensitiveClaims } from "../utils/extract-sensitive-claims.js";
-import { coseName, joseName, type NameSelector } from "./claims-registry.js";
+import { joseName, type NameSelector } from "./claims-registry.js";
 import { wireToDomain } from "./translate.js";
 
 /**
- * The four-bucket read shape — what BOTH doors onto the registry resolve to, and
+ * The four-bucket read shape — what EVERY door onto the registry resolves to, and
  * what a {@link VerifiedToken} carries for a JWT/CWT: the registered `claims`
  * (minus profile/sensitive), the non-domain `custom` bucket, the `profile` bag,
  * and the `sensitive` bag (surfaced only when the outer token was encrypted).
@@ -19,47 +19,53 @@ export type DomainBuckets<C extends Dict = Dict> = {
   sensitive: AegisSensitive | undefined;
 };
 
-/**
- * Resolve a wire claim dict all the way to the four domain buckets: registered
- * claims, unregistered `custom`, the OIDC standard-claims `profile` bag, and the
- * `sensitive` bag.
- *
- * ONE step, shared by both doors, because there used to be two resolutions of
- * the same registry. The token read path ran the full three-step pipeline while
- * the public `Aegis.toDomain` stopped after the translator, leaving profile and
- * sensitive claims flat inside `claims` — so every consumer of the public door
- * re-derived the split from a hand-kept mirror of `AegisProfile` /
- * `AegisSensitive`, each with a "keep in sync" comment on it. Those lists exist
- * only because this step was not shared.
- *
- * ⚠ The OIDC Core §13.3 encryption gate is deliberately NOT applied here, and
- * this is the one real design decision in the shape. §13.3 is a rule about
- * TOKENS: sensitive claims may be surfaced only from an ENCRYPTED one. The input
- * here is a claim dict of unknown provenance — an introspection response, a
- * userinfo body that arrived over TLS — where the release decision was already
- * made by the issuer according to granted scope. Applying a token rule to it
- * would silently drop data the issuer deliberately released.
- *
- * So the gate stays with the caller that knows whether a token was encrypted:
- * the token read path passes `sensitive` through `encrypted ? sensitive :
- * undefined`. `rest` always has the sensitive keys stripped either way, so an
- * unencrypted token carrying them in cleartext leaks nothing regardless.
- */
-export const resolveDomainBuckets = <C extends Dict = Dict>(
+const toBuckets = <C extends Dict = Dict>(
   wire: Dict,
   nameOf: NameSelector,
+  mode: "token" | "dict",
 ): DomainBuckets<C> => {
-  const { claims: domainAll, custom } = wireToDomain(wire, nameOf);
+  const { claims: domainAll, custom } = wireToDomain(wire, nameOf, mode);
   const { profile, rest: afterProfile } = extractAegisProfile(domainAll);
   const { sensitive, rest: claims } = extractSensitiveClaims(afterProfile);
 
   return { claims: claims as DomainClaims, custom: custom as C, profile, sensitive };
 };
 
-/** JOSE/camel-keyed wire dict -> the four domain buckets. */
-export const joseToBuckets = <C extends Dict = Dict>(wire: Dict): DomainBuckets<C> =>
-  resolveDomainBuckets<C>(wire, joseName);
+/**
+ * A TOKEN's wire claim payload -> the four domain buckets, on either wire.
+ *
+ * ⚠ Wire-name lookup only. Which claim the ISSUER stated is decided by the
+ * registered wire claim; a look-alike custom claim spelled in domain form must
+ * never answer for it, because the presenter chooses that spelling and the issuer
+ * chose the other one.
+ *
+ * ⚠ The confidentiality gate is deliberately NOT applied here. It is a rule
+ * about TOKENS — a sensitive claim is surfaced only from one that arrived
+ * ENCRYPTED — so it stays with the caller that knows whether the outer token was
+ * encrypted.
+ *
+ * ⚠ That rule is AEGIS POLICY. It carried an "OIDC Core §13.3" citation
+ * throughout this package until 2026-08-11, when the primary text was checked:
+ * OIDC Core §13 is "Serializations" and §13.3 is "JSON Serialization". No section
+ * of OIDC Core requires it. Do not re-attach a citation to it. `claims` always has the sensitive keys stripped either
+ * way, so an unencrypted token carrying them in cleartext leaks nothing
+ * regardless.
+ */
+export const tokenToBuckets = <C extends Dict = Dict>(
+  wire: Dict,
+  nameOf: NameSelector,
+): DomainBuckets<C> => toBuckets<C>(wire, nameOf, "token");
 
-/** COSE-name-keyed wire dict -> the four domain buckets. */
-export const coseToBuckets = <C extends Dict = Dict>(wire: Dict): DomainBuckets<C> =>
-  resolveDomainBuckets<C>(wire, coseName);
+/**
+ * The PUBLIC vocabulary door (`Aegis.toDomain`): a jose-keyed OR camel-keyed
+ * claim dict -> the four domain buckets.
+ *
+ * ⚠ It answers to EITHER spelling, and that is the documented contract — its
+ * input is a claim dict of unknown provenance (an introspection response, a
+ * userinfo body over TLS, an already-domain-shaped set), not a token whose
+ * audience decides an access decision. The token read above is deliberately
+ * stricter; the two are separated by a named {@link ClaimReadMode}, not by a
+ * second implementation.
+ */
+export const dictToBuckets = <C extends Dict = Dict>(wire: Dict): DomainBuckets<C> =>
+  toBuckets<C>(wire, joseName, "dict");

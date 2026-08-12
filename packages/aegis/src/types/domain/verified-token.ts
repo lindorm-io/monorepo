@@ -46,13 +46,26 @@ export type VerifiedToken<C extends Dict = Dict> = {
   /** EFFECTIVE (innermost) payload content type — how to read `raw`. */
   contentType?: string;
   /**
-   * The domain-keyed header carried by every result (R9). ADOPTS the full-breadth
-   * {@link DomainTokenHeader} directly — the wire header is translated to these
-   * domain names uniformly across JOSE and COSE, so a caller reads
-   * `.header.tokenType` / `.header.keyId` / `.header.algorithm` the same way on a
-   * JWT and a CWT (COSE-only-absent fields stay `undefined`).
+   * The INTEGRITY-PROTECTED header, domain-keyed and uniform across JOSE and
+   * COSE — the only header a signature or AEAD covers, and therefore the only one
+   * anything may route, audit or police a token by.
+   *
+   * ⚠ It was a single `header`, and on COSE it was the two buckets MERGED. That
+   * made an unsigned parameter indistinguishable from a signed one, so a reader
+   * deciding policy on `header.keyId` could not tell whether the issuer had said
+   * it or the presenter had. Splitting the two is what makes that mistake
+   * unrepresentable rather than merely fixed.
    */
-  header: DomainTokenHeader;
+  protectedHeader: DomainTokenHeader;
+  /**
+   * The UNAUTHENTICATED header bucket — present on the wire, covered by nothing.
+   * COSE convention puts the advisory `kid` routing hint here (RFC 9052 §3.1),
+   * which is the reason it is surfaced at all. Empty on JOSE, whose compact
+   * serialisation has no such bucket.
+   *
+   * Nothing read from here may decide whether a token is accepted.
+   */
+  unprotectedHeader?: DomainTokenHeader;
   /** Domain-keyed registered claims; `{}` for jws/cws (opaque). */
   claims: DomainClaims;
   /** Non-domain (custom) claim bucket; `{}` for jws/cws. */

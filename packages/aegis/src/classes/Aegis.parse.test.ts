@@ -43,8 +43,8 @@ describe("Aegis — parse (keyless, unverified)", () => {
       const parsed = aegis.parse(token);
 
       expect(parsed.format).toBe("jwt");
-      expect(parsed.header.baseFormat).toBe("JWT");
-      expect(parsed.header.algorithm).toBe("ES512");
+      expect(parsed.protectedHeader.baseFormat).toBe("JWT");
+      expect(parsed.protectedHeader.algorithm).toBe("ES512");
       expect(parsed.claims.subject).toBe("user-1");
       expect(parsed.claims.issuer).toBe(ISSUER);
     });
@@ -56,7 +56,7 @@ describe("Aegis — parse (keyless, unverified)", () => {
       const parsed = aegis.parse(token);
 
       expect(parsed.format).toBe("cwt");
-      expect(parsed.header.algorithm).toBe("ES512");
+      expect(parsed.protectedHeader.algorithm).toBe("ES512");
       expect(parsed.claims.subject).toBe("user-1");
       expect(parsed.claims.issuer).toBe(ISSUER);
     });

@@ -215,18 +215,25 @@ export const verifyCwt = <C extends Dict = Dict>(
   // Temporal range (R10) — every temporal claim validated IF PRESENT — plus the
   // caller's wire `assert`, in one pass over the Date-typed wire claims. `now` and
   // the stale-iat bound honour the per-call currentDate/maxTokenAge overrides.
-  validate(wire, {
-    ...createTemporalMatchers({
-      clockTolerance,
-      currentDate: options.currentDate,
-      maxTokenAge: options.maxTokenAge,
-      verifyExpiration: options.verifyExpiration,
-      verifyNotBefore: options.verifyNotBefore,
-      verifyIssuedAt: options.verifyIssuedAt,
-      verifyAuthTime: options.verifyAuthTime,
-    }),
-    ...(assert ?? {}),
-  } as Condition<Dict>);
+  validate(
+    wire,
+    {
+      ...createTemporalMatchers({
+        clockTolerance,
+        currentDate: options.currentDate,
+        maxTokenAge: options.maxTokenAge,
+        verifyExpiration: options.verifyExpiration,
+        verifyNotBefore: options.verifyNotBefore,
+        verifyIssuedAt: options.verifyIssuedAt,
+        verifyAuthTime: options.verifyAuthTime,
+      }),
+      ...(assert ?? {}),
+    } as Condition<Dict>,
+    // The claims kits are PURE WIRE, so a failure here is a kit failure under
+    // the kit's own wire-spelled code — never the domain's neutral one.
+    CWT_ERROR[format],
+    `${format}_claims_invalid`,
+  );
 
   logger.debug("CWT verified");
 

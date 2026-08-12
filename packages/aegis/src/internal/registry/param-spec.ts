@@ -40,7 +40,7 @@ export type Directions = readonly [Direction, ...Array<Direction>];
 export type Provenance = "caller" | "key" | "computed" | "issuer";
 
 /**
- * The ONLY input to the OIDC Core §13.3 encryption gate. A `"sensitive"`
+ * The ONLY input to the aegis confidentiality gate. A `"sensitive"`
  * parameter may be published only on an encrypted token; `"public"` is
  * unconditional. It is deliberately NOT derived from which container a caller
  * routed the value through — that is the mistake this column replaces.

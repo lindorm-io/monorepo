@@ -57,11 +57,17 @@ describe("Aegis — JOSE/COSE wire parity", () => {
       const jwt = await mintExpLess();
       const cwt = await mintExpLess("cwt");
 
+      // ⚠ The CODE is now wire-neutral, so it can no longer tell the two apart —
+      // which is exactly why `data.format` exists. Asserting it here is what
+      // keeps this file a PARITY test: without it, a routing mix-up that read a
+      // CWT through the JOSE wire would reach the same verdict and pass.
       await expect(aegis.verify(jwt)).rejects.toMatchObject({
-        code: "jwt_missing_claim_exp",
+        code: "missing_claim_exp",
+        data: { format: "jwt" },
       });
       await expect(aegis.verify(cwt)).rejects.toMatchObject({
-        code: "cwt_missing_claim_exp",
+        code: "missing_claim_exp",
+        data: { format: "cwt" },
       });
     });
 
@@ -71,10 +77,12 @@ describe("Aegis — JOSE/COSE wire parity", () => {
       const cwt = await mintExpLess("cwt");
 
       await expect(aegis.verify(cwt)).rejects.toMatchObject({
-        code: "cwt_missing_claim_exp",
+        code: "missing_claim_exp",
+        data: { format: "cwt" },
       });
       await expect(aegis.verify(cwt, undefined, {})).rejects.toMatchObject({
-        code: "cwt_missing_claim_exp",
+        code: "missing_claim_exp",
+        data: { format: "cwt" },
       });
     });
 
@@ -124,10 +132,10 @@ describe("Aegis — JOSE/COSE wire parity", () => {
 
       await expect(
         aegis.verify(jwt.token, { tokenId: "not-the-token-id" }),
-      ).rejects.toMatchObject({ code: "jwt_claims_invalid" });
+      ).rejects.toMatchObject({ code: "claims_invalid" });
       await expect(
         aegis.verify(cwt.token, { tokenId: "not-the-token-id" }),
-      ).rejects.toMatchObject({ code: "cwt_claims_invalid" });
+      ).rejects.toMatchObject({ code: "claims_invalid" });
     });
 
     // The fail-OPEN direction, and the one that matters: a replay guard asking
@@ -143,22 +151,22 @@ describe("Aegis — JOSE/COSE wire parity", () => {
 
       await expect(
         aegis.verify(jwt.token, { tokenId: { $exists: false } }),
-      ).rejects.toMatchObject({ code: "jwt_claims_invalid" });
+      ).rejects.toMatchObject({ code: "claims_invalid" });
       await expect(
         aegis.verify(cwt.token, { tokenId: { $exists: false } }),
-      ).rejects.toMatchObject({ code: "cwt_claims_invalid" });
+      ).rejects.toMatchObject({ code: "claims_invalid" });
     });
   });
 
   /**
-   * OIDC Core §13.3 — sensitive claims surface only from an ENCRYPTED token.
+   * The confidentiality gate — a sensitive claim surfaces only from an ENCRYPTED token.
    *
    * The gate lives in the token read path rather than the shared claim
    * resolution, because that is the only layer that knows whether a token was
    * encrypted. All four combinations belong together: two of them passing is
    * what a gate stuck in either position looks like.
    */
-  describe("sensitive claims — the §13.3 encryption gate", () => {
+  describe("sensitive claims — the confidentiality gate", () => {
     const content = {
       subject: "user-1",
       audience: ["client-1"],
@@ -289,7 +297,7 @@ describe("Aegis — JOSE/COSE wire parity", () => {
 
     test("should refuse a DPoP-bound JWT with no proof", async () => {
       await expect(aegis.verify(await signJose(bound))).rejects.toMatchObject({
-        code: "jwt_dpop_proof_required",
+        code: "dpop_proof_required",
       });
     });
 
@@ -314,10 +322,10 @@ describe("Aegis — JOSE/COSE wire parity", () => {
 
       await expect(
         aegis.verify(await signJose(delegated), undefined, options),
-      ).rejects.toMatchObject({ code: "jwt_actor_not_allowed" });
+      ).rejects.toMatchObject({ code: "actor_not_allowed" });
       await expect(
         aegis.verify(await signCose(delegated), undefined, options),
-      ).rejects.toMatchObject({ code: "cwt_actor_not_allowed" });
+      ).rejects.toMatchObject({ code: "actor_not_allowed" });
     });
 
     test("should report the act chain in the result on both wires", async () => {
@@ -393,7 +401,7 @@ describe("Aegis — JOSE/COSE wire parity", () => {
     // encoder simply never forwarded the bag, and `objectId` came back
     // undefined on every CWT.
     test("should carry sign.header onto both wires", async () => {
-      const options = { sign: { header: { oid: "obj_abc" } } } as never;
+      const options = { sign: { header: { objectId: "obj_abc" } } } as never;
 
       const jwt = await aegis.mint("id_token", content, options);
       const cwt = await aegis.mint("id_token", content, {
@@ -411,13 +419,13 @@ describe("Aegis — JOSE/COSE wire parity", () => {
         audience: "client-1",
       });
 
-      expect(jose.header.objectId).toBe("obj_abc");
+      expect(jose.protectedHeader.objectId).toBe("obj_abc");
 
       // COSE now answers the same way. `coseDomainHeader` used to be built from
       // a hand-picked {alg, kid, typ} triple, so a parameter the issuer had
       // SIGNED could reach the wire and then exist nowhere a caller could see
       // it; it is built from the whole protected bucket now.
-      expect(cose.header.objectId).toBe("obj_abc");
+      expect(cose.protectedHeader.objectId).toBe("obj_abc");
       expect((await aegis.cwt.verify(cwt.token)).protectedHeader.oid).toBe("obj_abc");
     });
 

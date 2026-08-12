@@ -1,0 +1,100 @@
+import type { Dict } from "@lindorm/types";
+import { isString } from "@lindorm/is";
+import { AegisDomainError } from "../../errors/index.js";
+import type {
+  TokenDelegation,
+  TokenFormatTag,
+  VerifiedToken,
+  WireTokenHeader,
+} from "../../types/index.js";
+import type { NameSelector } from "../claims/claims-registry.js";
+import { tokenToBuckets } from "../claims/resolve-domain-buckets.js";
+import { domainTokenHeader, unprotectedDomainHeader } from "./domain-header.js";
+import { extractTokenDelegation } from "./extract-token-delegation.js";
+
+/**
+ * Assemble the unified domain result for a VERIFIED or PARSED claims token, on
+ * either wire. It was two builders, one per wire, and they diverged in three
+ * ways: the COSE one MERGED the unprotected `kid` into the single header it
+ * reported, recovered the token type through its own translation, and enforced no
+ * issuer gate where the JOSE one did. Only the last is a real per-wire fact, and
+ * it is a PARAMETER here; the first is now unrepresentable, because the two
+ * buckets leave as separate fields.
+ *
+ * `delegation` is narrowed to REQUIRED on the way out: a claims-bearing token
+ * always has an act summary (an absent `act` yields `isDelegated: false`, not
+ * `undefined`), and the verify policy needs it non-optional.
+ */
+export const buildTokenResult = <C extends Dict = Dict>({
+  format,
+  wire,
+  protectedHeader,
+  unprotectedHeader,
+  token,
+  encrypted,
+  nameOf,
+  issuerPresence,
+}: {
+  /** The CLAIMS format actually read — `jwt`, `cwt` or `cwm`. */
+  format: TokenFormatTag;
+  /**
+   * The wire-keyed claim payload, EXACTLY as the wire carried it — NumericDate
+   * integers on JOSE, `Date`s on COSE (its claim codec decodes them inside the
+   * kit). The claim decoders accept both, and the matcher pass gets its own
+   * Date-normalised copy; this one is what the result reports verbatim.
+   */
+  wire: Dict;
+  /** The INTEGRITY-PROTECTED wire header — the only bucket a signature covers. */
+  protectedHeader: WireTokenHeader;
+  /**
+   * The UNPROTECTED wire header bucket (COSE only). Reported SEPARATELY, never
+   * merged: a parameter nothing covers must not be readable as though the issuer
+   * had signed it.
+   */
+  unprotectedHeader: Partial<WireTokenHeader> | undefined;
+  token: string;
+  /** Whether an ENCRYPTING outer was peeled — the aegis confidentiality gate's input. */
+  encrypted: boolean;
+  nameOf: NameSelector;
+  /**
+   * Whether this wire's read REQUIRES an `iss` claim.
+   *
+   * ⚠ PRESERVED DIVERGENCE, not a design: the JOSE read has always refused a
+   * claims token with no non-empty string `iss`, and the COSE read has always
+   * accepted one. Making them agree is a policy change with no probe behind it,
+   * so the difference is stated here as data — one boolean to flip — rather than
+   * left implicit in two functions.
+   */
+  issuerPresence: "required" | "optional";
+}): VerifiedToken<C> & { delegation: TokenDelegation } => {
+  // `iss` must be a NON-EMPTY string. Not a URI: this gate also reads RFC 7523
+  // client assertions, whose `iss` is the client_id (an opaque string, not a
+  // URL/URN). The platform-issuer exact match is enforced by the profile floor.
+  if (issuerPresence === "required" && !(isString(wire.iss) && wire.iss.length > 0)) {
+    throw new AegisDomainError("Missing claim: iss", {
+      code: "missing_claim_iss",
+      data: { format },
+      title: "Missing Claim ISS",
+      details:
+        "The payload has no non-empty string iss claim, which is required to read this token.",
+    });
+  }
+
+  const { claims, custom, profile, sensitive } = tokenToBuckets<C>(wire, nameOf);
+
+  return {
+    format,
+    protectedHeader: domainTokenHeader(protectedHeader, format),
+    unprotectedHeader: unprotectedDomainHeader(unprotectedHeader, format),
+    claims,
+    custom,
+    profile,
+    // the aegis confidentiality gate — sensitive claims are SURFACED only when the outer token
+    // was encrypted. `claims` has them stripped either way, so an unencrypted
+    // token carrying them in cleartext leaks nothing regardless of this line.
+    sensitive: encrypted ? sensitive : undefined,
+    delegation: extractTokenDelegation(wire as { act?: any }),
+    wire: { payload: wire },
+    token,
+  };
+};

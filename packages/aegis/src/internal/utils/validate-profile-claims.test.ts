@@ -45,7 +45,7 @@ describe("validateProfileClaims", () => {
   });
 
   // The CODE, not just the class. A profile-policy failure has its own code on
-  // both mint and verify, so `jwt_claims_invalid` means one thing only: the
+  // both mint and verify, so `claims_invalid` means one thing only: the
   // CALLER's assert matchers failed. Pinning it here is what stops the two
   // drifting back together — every other test in this file asserts the error
   // class alone, which a rename passes straight through.
@@ -70,7 +70,7 @@ describe("validateProfileClaims", () => {
 
     expect(error?.code).toBe("profile_policy_invalid");
     // `data.invalid` on THIS code is the entry shape ({ key, message }), never
-    // the bare key list the matcher tier publishes under jwt_claims_invalid.
+    // the bare key list the matcher tier publishes under claims_invalid.
     expect(error?.data.invalid).toEqual([
       { key: "audience", message: expect.any(String) },
     ]);

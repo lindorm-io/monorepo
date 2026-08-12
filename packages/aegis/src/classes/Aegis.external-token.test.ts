@@ -91,7 +91,10 @@ describe("Aegis — externally issued tokens", () => {
       // means the token was routed and read as a JWT, where the old
       // `unsupported_token_type` meant it was never recognised as a token.
       await expect(aegis.verify(idToken)).rejects.toMatchObject({
-        code: "jwt_invalid_typ",
+        // `typ_required` is the DOMAIN policy refusing an ABSENT typ. It is
+        // deliberately not the kit's `jwt_invalid_typ`, which means the
+        // opposite — a typ that is present and malformed.
+        code: "typ_required",
       });
     });
   });

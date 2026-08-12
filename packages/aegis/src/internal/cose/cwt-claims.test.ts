@@ -1,7 +1,8 @@
 import type { Dict } from "@lindorm/types";
 import { describe, expect, test } from "vitest";
 import { AegisError } from "../../errors/index.js";
-import { coseToDomain, domainToCose } from "../claims/translate.js";
+import { coseName } from "../claims/claims-registry.js";
+import { domainToWire, wireToDomain } from "../claims/translate.js";
 import { decodeCbor, encodeCbor } from "./cbor.js";
 import { decodeCwtClaims, type EncodeCwtOptions, encodeCwtClaims } from "./cwt-claims.js";
 
@@ -11,10 +12,10 @@ const AT_HASH = "LXEWQrcmsEQBYnyp-6wy9chTD7GQPMTbAiWHF5IaSIE"; // 32-byte b64url
 // in / wire out); the domain <-> wire translation is `domainToCose`/`coseToDomain`.
 // These helpers exercise the full domain round-trip the codec sits inside.
 const encode = (common: Dict, options?: EncodeCwtOptions) =>
-  encodeCwtClaims(domainToCose(common), options);
+  encodeCwtClaims(domainToWire(common, coseName), options);
 
 const decodeToDomain = (map: Map<unknown, unknown> | Dict): Dict => {
-  const { claims, custom } = coseToDomain(decodeCwtClaims(map));
+  const { claims, custom } = wireToDomain(decodeCwtClaims(map), coseName, "token");
   return { ...claims, ...custom };
 };
 
