@@ -51,7 +51,7 @@ export const createTokenMiddleware = <C extends PylonContext = PylonContext>(
           ctx.logger.debug("Token verification successful", {
             subject: verified.claims.subject,
             subjectHint: verified.claims.subjectHint,
-            tokenType: verified.header.tokenType,
+            tokenType: verified.protectedHeader.tokenType,
           });
 
           ctx.state.tokens[options.contextKey] = verified;
