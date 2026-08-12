@@ -9,7 +9,6 @@ import type {
   VerifyOptions,
 } from "../../types/index.js";
 import { wireToFloorClaims } from "../claims/translate.js";
-import { resolveProfile } from "../profiles/registry.js";
 import { tokenWireFor } from "../wire/token-wire-for.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { applyVerifyPolicy } from "./apply-verify-policy.js";
@@ -49,7 +48,7 @@ export const resolveVerifyFloor = (
   options: ProfileVerifyOptions,
   deps: AegisDeps,
 ): VerifyFloor => {
-  const profile = resolveProfile(name);
+  const profile = deps.resolveProfile(name);
 
   // The mirror of the mint refusal: a profile that declares itself mint-only
   // makes no statement about a token arriving from outside, so verifying against

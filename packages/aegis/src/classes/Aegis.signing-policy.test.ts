@@ -55,6 +55,7 @@ describe("Aegis signing policy", () => {
       const aegis = new Aegis({ amphora, logger });
 
       const { token } = await aegis.mint("id_token", ID_TOKEN, {
+        context: { accessTokenIssued: false },
         sign: { key: { kryptos: CLIENT_SECRET } },
       });
 
@@ -91,6 +92,7 @@ describe("Aegis signing policy", () => {
       });
 
       const { token } = await aegis.mint("id_token", ID_TOKEN, {
+        context: { accessTokenIssued: false },
         sign: { key: { kryptos: CLIENT_SECRET } },
       });
 

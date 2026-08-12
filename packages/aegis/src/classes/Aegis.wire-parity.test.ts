@@ -177,8 +177,12 @@ describe("Aegis — JOSE/COSE wire parity", () => {
       amphora.add(TEST_EC_KEY_ENC);
       amphora.add(TEST_OCT_KEY_ENC);
 
-      const jwe = await aegis.mint("id_token", content, { encrypt: {} });
+      const jwe = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
+        encrypt: {},
+      });
       const cwe = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
         format: "cwt",
         encrypt: {},
       });
@@ -382,8 +386,13 @@ describe("Aegis — JOSE/COSE wire parity", () => {
     // while COSE verify reads a `profile` bucket back — so the claims were
     // written nowhere and read from a bucket nothing had filled.
     test("should carry content.profile onto both wires", async () => {
-      const jwt = await aegis.mint("id_token", content);
-      const cwt = await aegis.mint("id_token", content, { format: "cwt" });
+      const jwt = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
+      });
+      const cwt = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
+        format: "cwt",
+      });
 
       const jose = await aegis.verify("id_token", jwt.token, undefined, {
         audience: "client-1",
@@ -401,7 +410,10 @@ describe("Aegis — JOSE/COSE wire parity", () => {
     // encoder simply never forwarded the bag, and `objectId` came back
     // undefined on every CWT.
     test("should carry sign.header onto both wires", async () => {
-      const options = { sign: { header: { objectId: "obj_abc" } } } as never;
+      const options = {
+        context: { accessTokenIssued: false },
+        sign: { header: { objectId: "obj_abc" } },
+      } as never;
 
       const jwt = await aegis.mint("id_token", content, options);
       const cwt = await aegis.mint("id_token", content, {
@@ -435,7 +447,10 @@ describe("Aegis — JOSE/COSE wire parity", () => {
     // honoured the fallback.
     test("should honour the sign.omit fallback on both wires", async () => {
       const withEmpty = { ...content, authMethods: [] as Array<string> };
-      const options = { sign: { omit: "undefined" } } as never;
+      const options = {
+        context: { accessTokenIssued: false },
+        sign: { omit: "undefined" },
+      } as never;
 
       const jwt = await aegis.mint("id_token", withEmpty, options);
       const cwt = await aegis.mint("id_token", withEmpty, {
@@ -451,20 +466,20 @@ describe("Aegis — JOSE/COSE wire parity", () => {
   });
 
   /**
-   * A profile's `rules` and `validate` are its STRUCTURAL policy, and the
-   * profile type says all its policy fields "apply on whichever side the profile
-   * is used". They ran at mint only.
+   * A profile's `match` and `shape` rules are its STRUCTURAL policy. Each names
+   * the direction(s) it runs in and the one enforcer applies whichever name the
+   * direction being enforced, so the verify half cannot be quietly omitted.
    *
    * `external_access_token` is the profile that makes this matter: it is
-   * `use: "verify"`, so its policy block had never executed on ANY path — the
-   * profile written specifically to police a token from an issuer we do not
-   * control was the one whose policy was dead.
+   * `use: "verify"`, so a mint-only structural policy would never execute on ANY
+   * path — the profile written specifically to police a token from an issuer we
+   * do not control would be the one whose policy was dead.
    *
    * Every token here is built OUTSIDE aegis's mint (signed with `jose`, or via
    * the raw passthrough namespace for COSE), because a token aegis minted would
    * already have passed the very rules under test.
    */
-  describe("profile rules + validate on verify", () => {
+  describe("profile match + shape rules on verify", () => {
     const RESOURCE = "https://rs.lindorm.io/";
     const NOT_A_URI = "acme-corp-not-a-uri";
     const now = Math.floor(new Date("2024-01-01T08:00:00.000Z").getTime() / 1000);
@@ -490,7 +505,7 @@ describe("Aegis — JOSE/COSE wire parity", () => {
     // `rules` — ISSUER_IS_URI. A third-party token whose `iss` is a bare
     // identifier rather than a URI must not verify under a profile that demands
     // one.
-    test("should enforce profile rules on both wires", async () => {
+    test("should enforce a profile match rule on both wires", async () => {
       const claims = {
         iss: NOT_A_URI,
         sub: "user-1",
@@ -526,7 +541,7 @@ describe("Aegis — JOSE/COSE wire parity", () => {
     // encoder refuses to emit one at all. See the note in the findings file —
     // wiring `validate` in makes the rule live, but most of its inputs are
     // sanitised upstream.
-    test("should enforce profile validate on both wires", async () => {
+    test("should enforce a profile shape rule on both wires", async () => {
       const claims = {
         iss: ISSUER,
         sub: "user-1",

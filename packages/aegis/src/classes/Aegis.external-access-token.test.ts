@@ -167,8 +167,16 @@ describe("Aegis — the external_access_token profile", () => {
         }),
       ).rejects.toThrow(
         expect.objectContaining({
-          code: "forbidden_claims_present",
-          data: expect.objectContaining({ forbidden: ["nonce", "accessTokenHash"] }),
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: [
+              { key: "nonce", message: 'Forbidden claim "nonce" is present' },
+              {
+                key: "accessTokenHash",
+                message: 'Forbidden claim "accessTokenHash" is present',
+              },
+            ],
+          }),
         }),
       );
     });
@@ -190,8 +198,10 @@ describe("Aegis — the external_access_token profile", () => {
         }),
       ).rejects.toThrow(
         expect.objectContaining({
-          code: "forbidden_claims_present",
-          data: expect.objectContaining({ forbidden: [domain] }),
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: [{ key: domain, message: `Forbidden claim "${domain}" is present` }],
+          }),
         }),
       );
     });
@@ -243,8 +253,13 @@ describe("Aegis — the external_access_token profile", () => {
         }),
       ).rejects.toThrow(
         expect.objectContaining({
-          code: "required_claims_missing",
-          data: expect.objectContaining({ missing: ["subject", "tokenId"] }),
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: [
+              { key: "subject", message: 'Required claim "subject" is missing' },
+              { key: "tokenId", message: 'Required claim "tokenId" is missing' },
+            ],
+          }),
         }),
       );
     });

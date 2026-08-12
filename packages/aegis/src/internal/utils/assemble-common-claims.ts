@@ -3,15 +3,9 @@ import { isDate, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
-import type {
-  SignContent,
-  SignContext,
-  SignTokenOptions,
-  TokenProfile,
-} from "../../types/index.js";
+import type { SignContent, SignTokenOptions, TokenProfile } from "../../types/index.js";
 import { CLAIM_SPECS } from "../claims/claims-registry.js";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
-import { enforceProfilePolicy } from "./enforce-profile-policy.js";
 import { generateTokenId } from "./generate-token-id.js";
 
 /**
@@ -34,8 +28,8 @@ export type AssembleCommonContext = {
 
 /**
  * Assembles the DOMAIN-keyed common claims layer — the single neutral
- * representation both the JOSE and (future) COSE encoders translate from, and
- * the layer that profile policy + RFC rules validate. Keys are domain names
+ * representation both the JOSE and COSE encoders translate from, and the layer
+ * the profile's policy is then enforced over. Keys are domain names
  * (`issuer`, `subject`, `expiresAt`…), values are domain-shaped (`Date`s, the
  * domain `confirmation`/`act` objects, computed hash strings).
  *
@@ -49,7 +43,7 @@ export const assembleCommonClaims = (
   ctx: AssembleCommonContext,
   profile: TokenProfile,
   content: SignContent & { claims?: Dict },
-  options: SignTokenOptions & { context?: SignContext } = {},
+  options: SignTokenOptions = {},
 ): Dict => {
   const now = ctx.now ?? new Date();
 
@@ -137,11 +131,9 @@ export const assembleCommonClaims = (
     ...(content.claims ?? {}),
   }) as Dict;
 
-  // Presence/forbid/atLeastOneOf/requiredWhen policy runs on the DOMAIN layer
-  // (profile arrays are domain-named). The structural RFC rules run separately
-  // via validateProfileClaims.
-  enforceProfilePolicy(profile, common, options.context ?? {});
-
+  // No policy runs here. This function ASSEMBLES the domain layer; `mintToken`
+  // enforces the profile's policy over the result in ONE call, so there is no
+  // second place a subset of the policy can be applied from.
   return common;
 };
 

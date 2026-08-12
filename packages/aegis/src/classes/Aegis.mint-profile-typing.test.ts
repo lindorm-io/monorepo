@@ -59,12 +59,16 @@ export const _mintTypeGuards = (aegis: Aegis): void => {
   // `clientId` is required on an access token and absent from an id token: OIDC
   // Core §2 makes `aud` the client id, and `azp` (authorizedParty) the claim for
   // the party. Neither direction may leak into the other.
-  void aegis.mint("id_token", {
-    subject: "user-1",
-    audience: ["client-1"],
-    // @ts-expect-error - not picked by IdTokenContent
-    clientId: "client-1",
-  });
+  void aegis.mint(
+    "id_token",
+    {
+      subject: "user-1",
+      audience: ["client-1"],
+      // @ts-expect-error - not picked by IdTokenContent
+      clientId: "client-1",
+    },
+    { context: { accessTokenIssued: false } },
+  );
 
   // A member outside the vocabulary entirely.
   void aegis.mint("access_token", {

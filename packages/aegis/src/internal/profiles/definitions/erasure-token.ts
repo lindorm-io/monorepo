@@ -1,5 +1,3 @@
-import type { Dict } from "@lindorm/types";
-import { crossField, eventsShape } from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
 import { ISSUER_IS_URI } from "./rule-predicates.js";
 
@@ -13,22 +11,27 @@ import { ISSUER_IS_URI } from "./rule-predicates.js";
 export const erasureTokenProfile = defineProfile({
   name: "erasure_token",
   typ: { presence: "required", value: "application/erasure+jwt" },
-  required: [
-    "issuer",
-    "audience",
-    "issuedAt",
-    "expiresAt",
-    "tokenId",
-    "subject",
-    "events",
+  policy: [
+    {
+      rule: "required",
+      on: ["mint", "verify"],
+      claims: [
+        "issuer",
+        "audience",
+        "issuedAt",
+        "expiresAt",
+        "tokenId",
+        "subject",
+        "events",
+      ],
+    },
+    { rule: "forbidden", on: ["mint", "verify"], claims: ["nonce"] },
+    { rule: "match", on: ["mint", "verify"], condition: ISSUER_IS_URI },
+    { rule: "shape", on: ["mint", "verify"], shape: "crossField" },
+    { rule: "shape", on: ["mint", "verify"], shape: "events" },
   ],
-  forbidden: ["nonce"],
-  requiredWhen: [],
-  atLeastOneOf: [],
   autoInject: ["issuedAt", "tokenId", "issuer"],
   issuer: "platform",
   lifetime: "2m",
   encryptable: false,
-  rules: ISSUER_IS_URI,
-  validate: (claims: Dict) => [...crossField(claims), ...eventsShape(claims)],
 });

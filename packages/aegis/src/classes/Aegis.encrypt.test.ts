@@ -37,7 +37,10 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
     test("wraps an id_token in a JWE stamped with the nested-token cty (RFC 7519 §5.2)", async () => {
       amphora.add(TEST_EC_KEY_ENC);
 
-      const { token } = await aegis.mint("id_token", content, { encrypt: {} });
+      const { token } = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
+        encrypt: {},
+      });
 
       expect(JweKit.isJwe(token)).toBe(true);
 
@@ -52,7 +55,10 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
     test("round-trips through decrypt-then-verify to the inner claims", async () => {
       amphora.add(TEST_EC_KEY_ENC);
 
-      const { token } = await aegis.mint("id_token", content, { encrypt: {} });
+      const { token } = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
+        encrypt: {},
+      });
 
       const parsed = await aegis.verify("id_token", token, undefined, {
         audience: "client-1",
@@ -74,7 +80,10 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
     test("the inner signed token keeps the profile typ", async () => {
       amphora.add(TEST_EC_KEY_ENC);
 
-      const { token } = await aegis.mint("id_token", content, { encrypt: {} });
+      const { token } = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
+        encrypt: {},
+      });
 
       const decrypted = await aegis.jwe.decrypt<string>(token);
       const { protectedHeader: header } = JwtKit.decode(decrypted.payload);
@@ -115,7 +124,9 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
     test("does not encrypt an encryptable profile when no encrypt option is given", async () => {
       amphora.add(TEST_EC_KEY_ENC);
 
-      const { token } = await aegis.mint("id_token", content);
+      const { token } = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
+      });
 
       expect(JwtKit.isJwt(token)).toBe(true);
       expect(JweKit.isJwe(token)).toBe(false);
@@ -144,7 +155,10 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
     test("propagates a missing-enc-key error when encryption is explicitly requested", async () => {
       // No enc key in the amphora — explicit encrypt must surface the failure.
       await expect(
-        aegis.mint("id_token", content, { encrypt: {} }),
+        aegis.mint("id_token", content, {
+          context: { accessTokenIssued: false },
+          encrypt: {},
+        }),
       ).rejects.toBeInstanceOf(Error);
     });
 
@@ -155,6 +169,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
       const partyRecipient = B64.encode(Buffer.from("recipient"), "b64u");
 
       const { token } = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
         encrypt: { partyProducer, partyRecipient },
       });
 
@@ -220,7 +235,9 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
     test("emits sensitive claims FLAT (individual wire keys, no wrapper) inside the JWE", async () => {
       amphora.add(TEST_EC_KEY_ENC);
 
-      const { token } = await aegis.mint("id_token", content);
+      const { token } = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
+      });
 
       // Encryption was forced by the sensitive fields even without an explicit
       // encrypt option.
@@ -237,7 +254,9 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
 
     test("omits the sensitive claims (no encryption) when no enc key is resolvable", async () => {
       // No enc key in the amphora.
-      const { token } = await aegis.mint("id_token", content);
+      const { token } = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
+      });
 
       expect(JwtKit.isJwt(token)).toBe(true);
       expect(JweKit.isJwe(token)).toBe(false);
@@ -250,7 +269,9 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
     test("HONORS sensitive claims into the sensitive bucket on an encrypted round-trip", async () => {
       amphora.add(TEST_EC_KEY_ENC);
 
-      const { token } = await aegis.mint("id_token", content);
+      const { token } = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
+      });
       const parsed = await aegis.verify("id_token", token, undefined, {
         audience: "client-1",
       });

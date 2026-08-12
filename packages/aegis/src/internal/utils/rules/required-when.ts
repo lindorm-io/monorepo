@@ -1,32 +1,29 @@
 import type { Dict } from "@lindorm/types";
 import type { InvalidEntry, SignContext } from "../../../types/index.js";
+import { isClaimAbsent } from "./is-claim-absent.js";
 
+/** The conditional-presence rule, without the direction/context bookkeeping. */
 export type RequiredWhenRule = {
   claim: string;
-  when: (claims: Dict, ctx: SignContext) => boolean;
+  when: (claims: Dict, context: SignContext) => boolean;
 };
 
 /**
- * A claim is required when its `when` predicate (evaluated against the
- * assembled claims + mint context) is true. Used for C-class claims such as
- * `at_hash` (required when an access token co-issues) or `auth_time`
- * (required when `max_age` was requested).
+ * A claim is required when its `when` predicate (evaluated against the assembled
+ * claims + the mint context) holds. The implementation behind a `requiredWhen`
+ * policy rule — the only rule that reads the context, which is why the rule type
+ * pins it to mint and makes it declare the context keys it reads.
  */
 export const requiredWhen = (
   claims: Dict,
-  ctx: SignContext,
-  rules: Array<RequiredWhenRule>,
-): Array<InvalidEntry> => {
-  const invalid: Array<InvalidEntry> = [];
-
-  for (const { claim, when } of rules) {
-    if (claims[claim] === undefined && when(claims, ctx)) {
-      invalid.push({
-        key: claim,
-        message: `Conditionally required claim "${claim}" is missing`,
-      });
-    }
-  }
-
-  return invalid;
-};
+  context: SignContext,
+  rule: RequiredWhenRule,
+): Array<InvalidEntry> =>
+  isClaimAbsent(claims[rule.claim]) && rule.when(claims, context)
+    ? [
+        {
+          key: rule.claim,
+          message: `Conditionally required claim "${rule.claim}" is missing`,
+        },
+      ]
+    : [];

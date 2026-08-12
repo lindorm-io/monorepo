@@ -133,10 +133,14 @@ describe("Aegis profiled verify floor (§4.4)", () => {
   });
 
   test("rejects a typ mismatch (id_token verified as access_token)", async () => {
-    const { token } = await aegis.mint("id_token", {
-      subject: "user-1",
-      audience: [RESOURCE],
-    });
+    const { token } = await aegis.mint(
+      "id_token",
+      {
+        subject: "user-1",
+        audience: [RESOURCE],
+      },
+      { context: { accessTokenIssued: false } },
+    );
 
     await expect(
       aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
@@ -176,8 +180,10 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       aegis.verify("access_token", token, undefined, { audience: RESOURCE }),
     ).rejects.toThrow(
       expect.objectContaining({
-        code: "required_claims_missing",
-        data: expect.objectContaining({ missing: ["issuedAt"] }),
+        code: "profile_policy_invalid",
+        data: expect.objectContaining({
+          invalid: [{ key: "issuedAt", message: 'Required claim "issuedAt" is missing' }],
+        }),
       }),
     );
   });
@@ -210,10 +216,14 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     });
 
     test("id_token", async () => {
-      const { token } = await aegis.mint("id_token", {
-        subject: "user-1",
-        audience: ["client-1"],
-      });
+      const { token } = await aegis.mint(
+        "id_token",
+        {
+          subject: "user-1",
+          audience: ["client-1"],
+        },
+        { context: { accessTokenIssued: false } },
+      );
 
       await expect(
         aegis.verify("id_token", token, undefined, { audience: "client-1" }),
@@ -372,8 +382,10 @@ describe("Aegis profiled verify floor (§4.4)", () => {
         }),
       ).rejects.toThrow(
         expect.objectContaining({
-          code: "required_claims_missing",
-          data: expect.objectContaining({ missing: ["tokenId"] }),
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: [{ key: "tokenId", message: 'Required claim "tokenId" is missing' }],
+          }),
         }),
       );
     });
@@ -386,7 +398,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
           audience: ISSUER,
           issuer: "client-1",
         }),
-      ).rejects.toThrow(expect.objectContaining({ code: "required_claims_missing" }));
+      ).rejects.toThrow(expect.objectContaining({ code: "profile_policy_invalid" }));
     });
   });
 

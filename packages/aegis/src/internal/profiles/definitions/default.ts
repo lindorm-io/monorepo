@@ -6,18 +6,17 @@ import { defineProfile } from "../define-profile.js";
  * auto-injects `iat`/`jti`/`nbf`/`iss`. `aegis.mint("default", content)` is a
  * faithful replacement for the old `aegis.jwt.sign(content)`.
  *
- * `validate` is presence-only for this chunk; deep RFC validators land in T4.
+ * Presence is its whole policy — it is the policy-free tier's floor, not an RFC
+ * artifact, so it declares no structural rules.
  */
 export const defaultProfile = defineProfile({
   name: "default",
   typ: { presence: "none" },
-  required: ["subject", "expiresAt"],
-  forbidden: [],
-  requiredWhen: [],
-  atLeastOneOf: [],
+  policy: [
+    { rule: "required", on: ["mint", "verify"], claims: ["subject", "expiresAt"] },
+  ],
   autoInject: ["issuedAt", "tokenId", "notBefore", "issuer"],
   issuer: "platform",
   lifetime: null,
   encryptable: false,
-  validate: () => [],
 });

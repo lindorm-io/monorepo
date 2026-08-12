@@ -1,5 +1,3 @@
-import type { Dict } from "@lindorm/types";
-import { actChainShape, cnfShape, crossField } from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
 import { ISSUER_IS_URI } from "./rule-predicates.js";
 
@@ -55,25 +53,31 @@ export const externalAccessTokenProfile = defineProfile({
   name: "external_access_token",
   use: "verify",
   typ: { presence: "none" },
-  required: ["issuer", "expiresAt", "audience", "subject", "issuedAt", "tokenId"],
-  forbidden: [
-    "nonce",
-    "accessTokenHash",
-    "codeHash",
-    "stateHash",
-    "federationAssuranceLevel",
+  policy: [
+    {
+      rule: "required",
+      on: ["mint", "verify"],
+      claims: ["issuer", "expiresAt", "audience", "subject", "issuedAt", "tokenId"],
+    },
+    {
+      rule: "forbidden",
+      on: ["mint", "verify"],
+      claims: [
+        "nonce",
+        "accessTokenHash",
+        "codeHash",
+        "stateHash",
+        "federationAssuranceLevel",
+      ],
+    },
+    { rule: "match", on: ["mint", "verify"], condition: ISSUER_IS_URI },
+    { rule: "shape", on: ["mint", "verify"], shape: "crossField" },
+    { rule: "shape", on: ["mint", "verify"], shape: "confirmation" },
+    { rule: "shape", on: ["mint", "verify"], shape: "actChain" },
   ],
-  requiredWhen: [],
-  atLeastOneOf: [],
   autoInject: [],
   issuer: "per-token",
   lifetime: "1h",
   encryptable: false,
   algClass: "asymmetric",
-  rules: ISSUER_IS_URI,
-  validate: (claims: Dict) => [
-    ...crossField(claims),
-    ...cnfShape(claims),
-    ...actChainShape(claims),
-  ],
 });

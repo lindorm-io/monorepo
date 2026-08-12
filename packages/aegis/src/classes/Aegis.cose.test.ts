@@ -71,7 +71,7 @@ describe("Aegis — COSE", () => {
     const { token } = await macAegis.mint(
       "id_token",
       { subject: "user-1", audience: ["client-1"] },
-      { format: "cwm" }, // D6: a symmetric key MACs via the explicit cwm format
+      { context: { accessTokenIssued: false }, format: "cwm" }, // D6: a symmetric key MACs via the explicit cwm format
     );
 
     const bytes = Buffer.from(token, "base64url");
@@ -126,7 +126,7 @@ describe("Aegis — COSE", () => {
     const { token } = await macAegis.mint(
       "id_token",
       { subject: "u", audience: ["client-1"] },
-      { format: "cwm" }, // D6: symmetric key → COSE_Mac0 via the explicit cwm format
+      { context: { accessTokenIssued: false }, format: "cwm" }, // D6: symmetric key → COSE_Mac0 via the explicit cwm format
     );
 
     expect(CwtKit.decode(Buffer.from(token, "base64url")).protectedHeader.alg).toBe(
@@ -153,7 +153,7 @@ describe("Aegis — COSE", () => {
     const { token } = await encAegis.mint(
       "id_token",
       { subject: "user-1", audience: ["client-1"] },
-      { format: "cwt", encrypt: {} },
+      { context: { accessTokenIssued: false }, format: "cwt", encrypt: {} },
     );
 
     // The outer COSE structure is a COSE_Encrypt0 (CBOR tag 16 = 0xd0), not a
@@ -197,7 +197,7 @@ describe("Aegis — COSE", () => {
             nationalIdentityNumberVerified: true,
           },
         },
-        { format: "cwt", encrypt: {} },
+        { context: { accessTokenIssued: false }, format: "cwt", encrypt: {} },
       );
 
       // Encrypted outer (COSE_Encrypt0, tag 16 = 0xd0).

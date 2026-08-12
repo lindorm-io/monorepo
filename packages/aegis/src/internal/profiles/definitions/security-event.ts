@@ -1,5 +1,3 @@
-import type { Dict } from "@lindorm/types";
-import { eventsShape, subIdShape } from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
 import { ISSUER_IS_URI } from "./rule-predicates.js";
 
@@ -15,14 +13,23 @@ import { ISSUER_IS_URI } from "./rule-predicates.js";
 export const securityEventProfile = defineProfile({
   name: "security_event",
   typ: { presence: "required", value: "application/secevent+jwt" },
-  required: ["issuer", "audience", "issuedAt", "tokenId", "subjectId", "events"],
-  forbidden: ["subject", "expiresAt", "nonce"],
-  requiredWhen: [],
-  atLeastOneOf: [],
+  policy: [
+    {
+      rule: "required",
+      on: ["mint", "verify"],
+      claims: ["issuer", "audience", "issuedAt", "tokenId", "subjectId", "events"],
+    },
+    {
+      rule: "forbidden",
+      on: ["mint", "verify"],
+      claims: ["subject", "expiresAt", "nonce"],
+    },
+    { rule: "match", on: ["mint", "verify"], condition: ISSUER_IS_URI },
+    { rule: "shape", on: ["mint", "verify"], shape: "subjectId" },
+    { rule: "shape", on: ["mint", "verify"], shape: "events" },
+  ],
   autoInject: ["issuedAt", "tokenId", "issuer"],
   issuer: "platform",
   lifetime: null,
   encryptable: false,
-  rules: ISSUER_IS_URI,
-  validate: (claims: Dict) => [...subIdShape(claims), ...eventsShape(claims)],
 });

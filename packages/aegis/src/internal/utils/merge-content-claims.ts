@@ -17,7 +17,7 @@ import type { SignContent } from "../../types/index.js";
  * at once.
  *
  * Kept OFF the policy-validated `common` layer on purpose: neither bucket
- * carries profile policy, so they join after `validateProfileClaims` has run.
+ * carries profile policy, so they join after `enforcePolicy` has run.
  *
  * ⚠ The confidentiality gate is not enforced here. Mint forces encryption when
  * `sensitive` is present and STRIPS the fields when it cannot encrypt them, and

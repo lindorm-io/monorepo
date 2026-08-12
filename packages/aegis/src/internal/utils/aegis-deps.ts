@@ -62,6 +62,14 @@ export type AegisDeps = {
   partyRecipient: string | undefined;
   logger: ILogger;
 
+  /**
+   * The instance's OWN profile table. Threaded through here rather than imported
+   * from a module-global map, so a consumer registering a custom profile — or one
+   * that shadows a built-in — changes what THIS `Aegis` mints and verifies and
+   * nothing else in the process.
+   */
+  resolveProfile: (name: string) => TokenProfile;
+
   resolveSignKey: (
     options: { key?: AegisSignKey },
     profile?: TokenProfile,

@@ -1,12 +1,11 @@
 import { AegisDomainError } from "../../errors/index.js";
 import type { ProfileMintOptions, SignContent, SignedToken } from "../../types/index.js";
-import { resolveProfile } from "../profiles/registry.js";
+import { enforcePolicy } from "../profiles/enforce-policy.js";
 import { tokenWireFor } from "../wire/token-wire-for.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { mergeContentClaims } from "./merge-content-claims.js";
 import { findSensitiveClaims, stripSensitiveClaims } from "./sensitive-content.js";
-import { validateProfileClaims } from "./validate-profile-claims.js";
 
 /**
  * THE profiled mint pipeline (`aegis.mint`). One implementation for every wire:
@@ -36,7 +35,7 @@ export const mintToken = async ({
   options: ProfileMintOptions;
   deps: AegisDeps;
 }): Promise<SignedToken> => {
-  const profile = resolveProfile(name);
+  const profile = deps.resolveProfile(name);
   const format = options.format ?? "jwt";
   const wire = tokenWireFor(format);
 
@@ -68,7 +67,10 @@ export const mintToken = async ({
   }
 
   // The profile's algClass is part of the signing FLOOR, so the right class of
-  // key is SELECTED here rather than the wrong one being caught afterwards.
+  // key is SELECTED here rather than the wrong one being caught afterwards — and
+  // `resolveKey` applies that floor to EVERY key it returns, an injected one
+  // (a client secret handed in through `sign.key`) included. That is the whole
+  // mint-side enforcement; the profile policy below is about CLAIMS only.
   const kryptos = await deps.resolveSignKey(options.sign ?? {}, profile);
 
   // Confidentiality is decided by the CLAIM REGISTRY, never by the container the
@@ -94,19 +96,23 @@ export const mintToken = async ({
       ? stripSensitiveClaims(content, sensitive)
       : content;
 
-  // Assemble + validate on the DOMAIN-keyed common layer: presence/forbid/
-  // conditional policy (inside assembleCommonClaims) plus the structural RFC
-  // rules. Business logic lives in domain terms, above every wire.
+  // Assemble the DOMAIN-keyed common layer, then enforce the profile's WHOLE
+  // policy over it in ONE call — the same call the verify floor makes, with the
+  // direction as its only difference. Business logic lives in domain terms,
+  // above every wire.
   const common = assembleCommonClaims(
     { algorithm: kryptos.algorithm, issuer: deps.issuer, lifetime: options.lifetime },
     profile,
     signContent,
-    { ...(options.sign ?? {}), context: options.context },
+    options.sign ?? {},
   );
 
-  validateProfileClaims(profile, common, {
-    ...(options.context ?? {}),
-    algorithm: kryptos.algorithm as never,
+  enforcePolicy({
+    claims: common,
+    context: options.context ?? {},
+    direction: "mint",
+    format,
+    profile,
   });
 
   const tokenType = wire.mintTypPrefix({

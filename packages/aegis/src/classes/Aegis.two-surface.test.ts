@@ -103,7 +103,7 @@ describe("Aegis — the two surfaces (Phase 19)", () => {
       const { token } = await aegis.mint(
         "id_token",
         { subject: "user-1", audience: ["client-1"] },
-        { format: "cwt", encrypt: {} },
+        { context: { accessTokenIssued: false }, format: "cwt", encrypt: {} },
       );
 
       // Sanity: it is an encrypted COSE token, not a plain CWT.
@@ -169,7 +169,7 @@ describe("Aegis — cwm explicit format (D6)", () => {
     aegis.mint(
       "id_token",
       { subject: "user-1", audience: ["client-1"] },
-      { format: "cwm" },
+      { context: { accessTokenIssued: false }, format: "cwm" },
     );
 
   test("format cwm mints a verifiable COSE_Mac0 CWT", async () => {
@@ -205,7 +205,7 @@ describe("Aegis — cwm explicit format (D6)", () => {
       aegis.mint(
         "id_token",
         { subject: "user-1", audience: ["client-1"] },
-        { format: "cwt" },
+        { context: { accessTokenIssued: false }, format: "cwt" },
       ),
     ).rejects.toThrow(CwtError);
   });

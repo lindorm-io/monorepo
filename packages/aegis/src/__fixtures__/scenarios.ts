@@ -1,6 +1,9 @@
 import type { Dict } from "@lindorm/types";
 import type { OmitMode } from "../internal/utils/apply-omit.js";
+import type { AegisProfile } from "../types/claims/domain/aegis-profile.js";
+import type { AegisSensitive } from "../types/claims/domain/aegis-sensitive.js";
 import type { DomainClaims } from "../types/claims/domain/domain-claims.js";
+import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import type {
   AegisEncKey,
   AegisSignKey,
@@ -16,6 +19,7 @@ import type {
   JwtClaimsWire,
   ProfileContent,
   ProfileMintOptions,
+  SignContext,
   ProfileVerifyOptions,
   SignStructuredTokenOptions,
   SignUnstructuredTokenOptions,
@@ -141,12 +145,40 @@ export type ClockGivenStep = { step: "clock"; at: string };
  * member and compiling as the whole `SignContent` vocabulary). Add a member if a
  * row ever needs one.
  */
+/**
+ * A mint content bag with its CLAIMS CONTAINER split in two, so a claim NAME is
+ * checked like every other key on the bag.
+ *
+ * - `claims`             — names the registry knows, whichever bucket they belong
+ *                          to, so `nationalIdentityNumbr` is a compile error. All
+ *                          three buckets are admitted on purpose: routing a
+ *                          sensitive claim through the plain container is exactly
+ *                          what the confidentiality gate has to survive.
+ * - `unregisteredClaims` — a name the registry deliberately does NOT know. Open
+ *                          by necessity: it IS the unregistered remainder, so
+ *                          there is no vocabulary to check it against. Declaring
+ *                          it separately is what makes the choice deliberate
+ *                          instead of the default.
+ *
+ * The interpreter merges the two back into the single container the public API
+ * takes. A profile whose content type carries no claims container keeps none —
+ * `IdTokenContent` does not `Pick` `claims`, and that statement survives.
+ */
+type RegisteredClaims = Partial<DomainClaims & AegisProfile & AegisSensitive>;
+
+type MintContent<C> = [C] extends [never]
+  ? never
+  : Omit<C, "claims"> &
+      ("claims" extends keyof C
+        ? { claims?: RegisteredClaims; unregisteredClaims?: Dict }
+        : Record<never, never>);
+
 export type MintGivenStep = {
   [P in keyof ProfileContent]: {
     step: "token";
     via: "mint";
     profile: P;
-    content: ProfileContent[P];
+    content: MintContent<ProfileContent[P]>;
     options?: ProfileMintOptions;
   };
 }[keyof ProfileContent];
@@ -250,7 +282,17 @@ export type Given = readonly [...ReadonlyArray<SetupGivenStep>, ArtifactGivenSte
  */
 export type ProfiledVerifyStep = {
   step: "verify";
-  profile: string;
+  /**
+   * ⚠ BOUND to the built-in names, matching the mint side. It was `string`, so
+   * `profile: "acces_token"` compiled — and nothing downstream caught it either,
+   * because `IAegis.verify`'s loose overload accepts any string. A row naming a
+   * profile that does not exist fails for a reason that has nothing to do with
+   * the capability it claims to state.
+   *
+   * A row registering a CUSTOM profile adds a member here; reopening this to
+   * `string` would restore the hole.
+   */
+  profile: keyof BuiltInProfiles;
   assert?: VerifyAssert;
   options: ProfileVerifyOptions;
 };
@@ -733,32 +775,24 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       {
         step: "token",
         via: "mint",
-        profile: "id_token",
+        profile: "userinfo",
         content: {
-          // The legal members carry their own typo guard. Only the ONE
-          // deliberately-illegal member escapes it, below.
-          ...({
-            subject: "user-1",
-            audience: [CLIENT],
-          } satisfies ProfileContent["id_token"]),
-          // ⚠ LOCAL cast, deliberate: `IdTokenContent` does not Pick `claims`, so
-          // the container is not expressible for this profile at the type level —
-          // which is itself half of what this row records. The cast exercises what
-          // the RUNTIME pipeline does with it; `assembleCommonClaims` spreads
-          // `content.claims` onto the domain layer verbatim, so the value reaches
-          // the wire under its snake_case key.
-          //
+          subject: "user-1",
+          audience: [CLIENT],
           // ⚠ The claim is deliberately one the registry does NOT categorise as
           // sensitive. This row once carried a national identity number and was
           // RETIRED by the move to a registry-category encryption gate: the gate
-          // is profile-independent but for `profile.encryptable`, and `id_token`
-          // is encryptable, so that mint now produces an encrypted token and the
-          // cleartext assertion could no longer be checked. Re-anchored rather
-          // than deleted, because the container boundary is still worth stating —
-          // and stating it on a NON-sensitive claim is what keeps the two
-          // capabilities from asserting the same thing.
-          claims: { favouriteColour: "green" },
-        } as unknown as ProfileContent["id_token"],
+          // is profile-independent but for `profile.encryptable`, so that mint now
+          // produces an encrypted token and the cleartext assertion could no
+          // longer be checked. Re-anchored rather than deleted, because the
+          // container boundary is still worth stating — and stating it on a
+          // NON-sensitive claim is what keeps the two capabilities from asserting
+          // the same thing.
+          //
+          // It is also a name the registry does not know at all, so it is
+          // declared as such rather than through the registered half.
+          unregisteredClaims: { favouriteColour: "green" },
+        },
       },
     ],
     when: [{ step: "mint" }],
@@ -784,6 +818,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           audience: [CLIENT],
           sensitive: { nationalIdentityNumber: NIN },
         },
+        options: { context: { accessTokenIssued: false } },
       },
     ],
     when: [{ step: "mint" }],
@@ -989,6 +1024,91 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
   },
 
   // ---------------------------------------------------------------------------
+  // Mint-time facts a token's claims do not carry.
+  // ---------------------------------------------------------------------------
+  {
+    id: "an-id-token-mint-must-state-whether-an-access-token-was-co-issued",
+    title:
+      "minting an id_token without stating whether an access token was co-issued is refused",
+    rationale:
+      'OIDC Core \u00a73.1.3.6 requires `at_hash` in an id_token issued from the implicit and hybrid flows, and aegis requires it whenever an access token co-issues. Whether one did is a fact only the issuer holds \u2014 it is not in the claims, and nothing about the token distinguishes "no access token was issued" from "the issuer forgot to say". Treating the unstated case as `false` therefore silently issues the exact token the rule exists to prevent, so the fact must be supplied rather than assumed.',
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "id_token",
+        content: { subject: "user-1", audience: [CLIENT], accessToken: "at-1" },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { missing: ["accessTokenIssued"] },
+      },
+    ],
+    absentTwin: {
+      cose: "the policy runs above the wire seam in mint-token.ts, so a COSE twin would exercise the identical line",
+    },
+  },
+  {
+    id: "a-misspelled-mint-context-key-does-not-answer-for-the-one-a-rule-reads",
+    title:
+      "minting an id_token with a context bag that misspells the co-issuance key is refused",
+    rationale:
+      'A rule reading a fact under a name nobody supplied evaluates the fact as absent, which for a boolean reads as false \u2014 so a misspelled key is not an error, it is a silent answer of "no". A supplied bag is therefore no evidence that the fact was supplied: the check has to be on the NAME the rule reads, or the guard against an omitted fact is defeated by any bag at all.',
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "id_token",
+        content: { subject: "user-1", audience: [CLIENT], accessToken: "at-1" },
+        options: {
+          // \u26a0 LOCAL cast, deliberate: `SignContext` is a CLOSED record, so this
+          // misspelling does not compile \u2014 which is the type-level half of the
+          // same capability. The cast is what lets the row state the RUNTIME half,
+          // for a caller reaching the API from untyped code.
+          context: { accessTokenIssud: false } as unknown as SignContext,
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { missing: ["accessTokenIssued"] },
+      },
+    ],
+  },
+  {
+    id: "a-required-claim-supplied-empty-is-not-supplied",
+    title: "minting a token whose required claim is an empty string is refused",
+    rationale:
+      'A subject identifier of `""` names nobody, so a presence rule satisfied by one guarantees nothing while reporting that it does. Presence has to mean the same thing at issue and on arrival: a verifier has always read an empty required claim as missing, and an issuer that reads it as present mints tokens its own verifier will refuse.',
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "userinfo",
+        content: { subject: "", audience: [CLIENT] },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          direction: "mint",
+          invalid: [{ key: "subject", message: 'Required claim "subject" is missing' }],
+        },
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
   // Logout tokens.
   // ---------------------------------------------------------------------------
   {
@@ -997,8 +1117,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       "a logout token naming neither a subject nor a session is refused — it identifies nothing to log out",
     rationale:
       "OpenID Connect Back-Channel Logout 1.0 §2.4 — a logout token MUST contain a `sub`, a `sid`, or both, and a relying party handed neither has nothing to terminate. The requirement is on the token a verifier RECEIVES, so it has to be checked at verify: a rule enforced only at mint constrains this issuer's own output and says nothing about the token that actually arrived.",
-    knownDefect:
-      "enforceProfilePolicy (the sole atLeastOneOf caller) runs from the MINT path only; applyProfilePolicy, the verify floor's helper, runs `rules` + `validate` and nothing else. ⚠ The descriptor's own comment justifies mint-only for BOTH `requiredWhen` and `atLeastOneOf` on the grounds that their conditions read the SignContext — true of `requiredWhen` (`when: (claims, ctx) => boolean`), FALSE of `atLeastOneOf`, which is a bare `Array<Array<string>>` with no ctx and nothing to read. So the stated reason does not cover this half.",
     given: [
       {
         step: "token",

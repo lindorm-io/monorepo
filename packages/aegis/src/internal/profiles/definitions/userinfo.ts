@@ -3,20 +3,22 @@ import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
  * Signed UserInfo response JWT (OIDC Core §5.3.2 — no `typ` mandated).
- * REQUIRED: iss, sub, aud. Server-signed; confidential-client `HS*` permitted
- * (§5); encryptable (T5).
+ * REQUIRED: iss, sub, aud. Server-signed; confidential-client `HS*` permitted;
+ * encryptable.
  */
 export const userinfoProfile = defineProfile({
   name: "userinfo",
   typ: { presence: "none" },
-  required: ["issuer", "subject", "audience"],
-  forbidden: [],
-  requiredWhen: [],
-  atLeastOneOf: [],
+  policy: [
+    {
+      rule: "required",
+      on: ["mint", "verify"],
+      claims: ["issuer", "subject", "audience"],
+    },
+    { rule: "match", on: ["mint", "verify"], condition: ISSUER_IS_URI },
+  ],
   autoInject: ["issuer"],
   issuer: "platform",
   lifetime: null,
   encryptable: true,
-  rules: ISSUER_IS_URI,
-  validate: () => [],
 });

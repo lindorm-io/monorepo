@@ -95,7 +95,10 @@ describe("isClaimsBearingToken", () => {
       const { token } = await aegis.mint(
         "id_token",
         { subject: "user-1", audience: ["client-1"] },
-        { encrypt: { key: { kryptos: TEST_EC_KEY_ENC } } },
+        {
+          context: { accessTokenIssued: false },
+          encrypt: { key: { kryptos: TEST_EC_KEY_ENC } },
+        },
       );
 
       expect(isClaimsBearingToken(token)).toBe(true);
@@ -105,7 +108,11 @@ describe("isClaimsBearingToken", () => {
       const { token } = await aegis.mint(
         "id_token",
         { subject: "user-1", audience: ["client-1"] },
-        { format: "cwt", encrypt: { key: { kryptos: TEST_OCT_KEY_ENC } } },
+        {
+          context: { accessTokenIssued: false },
+          format: "cwt",
+          encrypt: { key: { kryptos: TEST_OCT_KEY_ENC } },
+        },
       );
 
       expect(isClaimsBearingToken(token)).toBe(true);

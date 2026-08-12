@@ -268,15 +268,11 @@ describe("Aegis", () => {
     aegis.registerProfile({
       name: "custom_aegis_profile",
       typ: { presence: "required", value: "custom+jwt" },
-      required: ["subject"],
-      forbidden: [],
-      requiredWhen: [],
-      atLeastOneOf: [],
+      policy: [{ rule: "required", on: ["mint", "verify"], claims: ["subject"] }],
       autoInject: ["issuedAt", "tokenId", "issuer"],
       issuer: "platform",
       lifetime: "1h",
       encryptable: false,
-      validate: () => [],
     });
 
     const { token } = await aegis.mint("custom_aegis_profile", {

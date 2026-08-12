@@ -479,7 +479,7 @@ const claimReadRules = (mode: ClaimReadMode): ClaimReadRules => {
  * four-bucket shape every read door shares.
  *
  * ⚠ This TWO-bucket form is the right one for the profiled verify FLOOR, which
- * needs every domain claim flat in one dict: `profile.required` may name a
+ * needs every domain claim flat in one dict: a profile's `required` rules may name a
  * profile-category claim, and bucketing it away would report a present claim as
  * missing.
  */

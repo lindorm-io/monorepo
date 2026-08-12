@@ -392,6 +392,23 @@ const applySetup = (given: Given, ctx: ScenarioContext): void => {
   }
 };
 
+/**
+ * Reassemble the single claims container the public API takes from the row's two
+ * halves. A row states registered and unregistered claim names APART so the
+ * registered half can be typed; the API has one bag, and this is the only place
+ * that knows both facts.
+ */
+const mergeMintClaims = (content: Dict): Dict => {
+  const { claims, unregisteredClaims, ...rest } = content;
+
+  if (claims === undefined && unregisteredClaims === undefined) return content;
+
+  return {
+    ...rest,
+    claims: { ...(claims as Dict), ...(unregisteredClaims as Dict) },
+  };
+};
+
 const materialise = async (
   artifact: ArtifactGivenStep,
   ctx: ScenarioContext,
@@ -411,7 +428,7 @@ const materialise = async (
       // against its own member, which is where the typo guard lives.
       const signed = await ctx.aegis.mint(
         artifact.profile,
-        artifact.content as never,
+        mergeMintClaims(artifact.content as Dict) as never,
         artifact.options,
       );
       return { token: signed.token, format: signed.format };

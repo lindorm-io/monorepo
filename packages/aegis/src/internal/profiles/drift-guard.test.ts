@@ -1,6 +1,22 @@
 import { describe, expect, test } from "vitest";
-import type { ProfileContentFor } from "../../types/index.js";
-import { resolveProfile } from "./registry.js";
+import type { Direction, ProfileContentFor, TokenProfile } from "../../types/index.js";
+import { createProfileRegistry } from "./registry.js";
+
+const resolveProfile = (name: string): TokenProfile =>
+  createProfileRegistry().resolve(name);
+
+/** The claims a profile REQUIRES in a given direction, read off its policy. */
+const requiredClaims = (profile: TokenProfile, direction: Direction): Array<string> => {
+  const claims: Array<string> = [];
+
+  for (const rule of profile.policy) {
+    if (rule.rule !== "required") continue;
+    if (!(rule.on as ReadonlyArray<Direction>).includes(direction)) continue;
+    claims.push(...rule.claims);
+  }
+
+  return claims;
+};
 
 /**
  * Drift guard: the domain keys a profile's *Content type marks as REQUIRED
@@ -28,7 +44,10 @@ describe("profile content/descriptor drift guard", () => {
       const profile = resolveProfile(name);
 
       for (const domainKey of domainKeys) {
-        expect(profile.required).toContain(domainKey);
+        // Both directions: a content type's required key that the descriptor
+        // only enforced at mint would be a guarantee the verify side never makes.
+        expect(requiredClaims(profile, "mint")).toContain(domainKey);
+        expect(requiredClaims(profile, "verify")).toContain(domainKey);
       }
     });
   }

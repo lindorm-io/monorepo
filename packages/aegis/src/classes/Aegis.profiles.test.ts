@@ -132,7 +132,9 @@ describe("Aegis profiles", () => {
     };
 
     test("happy path produces a bare JWT typ", async () => {
-      const { token } = await aegis.mint("id_token", content);
+      const { token } = await aegis.mint("id_token", content, {
+        context: { accessTokenIssued: false },
+      });
       const { protectedHeader: header, payload } = JwtKit.decode(token);
 
       expect(header.typ).toBe("JWT");
@@ -151,10 +153,14 @@ describe("Aegis profiles", () => {
       okpAmphora.add(TEST_OKP_KEY_SIG);
       const okpAegis = new Aegis({ amphora: okpAmphora, logger });
 
-      const { token } = await okpAegis.mint("id_token", {
-        ...content,
-        accessToken: "the-access-token",
-      });
+      const { token } = await okpAegis.mint(
+        "id_token",
+        {
+          ...content,
+          accessToken: "the-access-token",
+        },
+        { context: { accessTokenIssued: false } },
+      );
       const { payload } = JwtKit.decode(token);
 
       expect(shaAlgorithm("EdDSA")).toBe("SHA512");
@@ -168,10 +174,14 @@ describe("Aegis profiles", () => {
       akpAmphora.add(TEST_AKP_KEY_SIG);
       const akpAegis = new Aegis({ amphora: akpAmphora, logger });
 
-      const { token } = await akpAegis.mint("id_token", {
-        ...content,
-        accessToken: "the-access-token",
-      });
+      const { token } = await akpAegis.mint(
+        "id_token",
+        {
+          ...content,
+          accessToken: "the-access-token",
+        },
+        { context: { accessTokenIssued: false } },
+      );
       const { payload } = JwtKit.decode(token);
 
       expect(shaAlgorithm("ML-DSA-65")).toBe("SHA512");
@@ -189,10 +199,14 @@ describe("Aegis profiles", () => {
       es256Amphora.add(es256Key);
       const es256Aegis = new Aegis({ amphora: es256Amphora, logger });
 
-      const { token } = await es256Aegis.mint("id_token", {
-        ...content,
-        accessToken: "the-access-token",
-      });
+      const { token } = await es256Aegis.mint(
+        "id_token",
+        {
+          ...content,
+          accessToken: "the-access-token",
+        },
+        { context: { accessTokenIssued: false } },
+      );
       const { payload } = JwtKit.decode(token);
 
       expect(shaAlgorithm("ES256")).toBe("SHA256");
@@ -234,14 +248,18 @@ describe("Aegis profiles", () => {
     });
 
     test("id_token mints and parses all four assurance levels", async () => {
-      const { token } = await aegis.mint("id_token", {
-        subject: "user-1",
-        audience: ["client-1"],
-        levelOfAssurance: 4,
-        authenticatorAssuranceLevel: 3,
-        identityAssuranceLevel: 2,
-        federationAssuranceLevel: 1,
-      });
+      const { token } = await aegis.mint(
+        "id_token",
+        {
+          subject: "user-1",
+          audience: ["client-1"],
+          levelOfAssurance: 4,
+          authenticatorAssuranceLevel: 3,
+          identityAssuranceLevel: 2,
+          federationAssuranceLevel: 1,
+        },
+        { context: { accessTokenIssued: false } },
+      );
       const { payload } = JwtKit.decode(token);
 
       expect(payload).toMatchObject({ loa: 4, aal: 3, ial: 2, fal: 1 });
@@ -450,15 +468,17 @@ describe("Aegis profiles", () => {
         name: "mint_only_test_profile",
         use: "mint",
         typ: { presence: "none" },
-        required: ["subject", "audience", "expiresAt"],
-        forbidden: [],
-        requiredWhen: [],
-        atLeastOneOf: [],
+        policy: [
+          {
+            rule: "required",
+            on: ["mint", "verify"],
+            claims: ["subject", "audience", "expiresAt"],
+          },
+        ],
         autoInject: ["issuedAt", "tokenId", "issuer"],
         issuer: "platform",
         lifetime: "1h",
         encryptable: false,
-        validate: () => [],
       });
     });
 
@@ -516,15 +536,17 @@ describe("Aegis profiles", () => {
       aegis.registerProfile({
         name: "unmarked_test_profile",
         typ: { presence: "none" },
-        required: ["subject", "audience", "expiresAt"],
-        forbidden: [],
-        requiredWhen: [],
-        atLeastOneOf: [],
+        policy: [
+          {
+            rule: "required",
+            on: ["mint", "verify"],
+            claims: ["subject", "audience", "expiresAt"],
+          },
+        ],
         autoInject: ["issuedAt", "tokenId", "issuer"],
         issuer: "platform",
         lifetime: "1h",
         encryptable: false,
-        validate: () => [],
       });
 
       const { token } = await aegis.mint("unmarked_test_profile", mintOnlyContent);

@@ -184,8 +184,14 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "required_claims_missing",
-          data: expect.objectContaining({ missing: ["clientId", "tokenId"] }),
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            direction: "verify",
+            invalid: [
+              { key: "clientId", message: 'Required claim "clientId" is missing' },
+              { key: "tokenId", message: 'Required claim "tokenId" is missing' },
+            ],
+          }),
         }),
       );
     });
@@ -198,8 +204,10 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "required_claims_missing",
-          data: expect.objectContaining({ missing: ["tokenId"] }),
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: [{ key: "tokenId", message: 'Required claim "tokenId" is missing' }],
+          }),
         }),
       );
     });
@@ -212,8 +220,10 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "required_claims_missing",
-          data: expect.objectContaining({ missing: ["subject"] }),
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: [{ key: "subject", message: 'Required claim "subject" is missing' }],
+          }),
         }),
       );
     });
@@ -245,8 +255,10 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "required_claims_missing",
-          data: expect.objectContaining({ missing: ["tokenId"] }),
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: [{ key: "tokenId", message: 'Required claim "tokenId" is missing' }],
+          }),
         }),
       );
     });
@@ -264,8 +276,15 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "forbidden_claims_present",
-          data: expect.objectContaining({ forbidden: ["federationAssuranceLevel"] }),
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: [
+              {
+                key: "federationAssuranceLevel",
+                message: 'Forbidden claim "federationAssuranceLevel" is present',
+              },
+            ],
+          }),
         }),
       );
     });
@@ -288,8 +307,13 @@ describe("enforceVerifyFloor", () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          code: "forbidden_claims_present",
-          data: expect.objectContaining({ forbidden: ["nonce", "codeHash"] }),
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: [
+              { key: "nonce", message: 'Forbidden claim "nonce" is present' },
+              { key: "codeHash", message: 'Forbidden claim "codeHash" is present' },
+            ],
+          }),
         }),
       );
     });

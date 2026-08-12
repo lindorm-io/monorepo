@@ -42,7 +42,10 @@ import {
 } from "../internal/cose/is-cose-format.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import type { OmitMode } from "../internal/utils/apply-omit.js";
-import { registerProfile as registerProfileFn } from "../internal/profiles/registry.js";
+import {
+  createProfileRegistry,
+  type ProfileRegistry,
+} from "../internal/profiles/registry.js";
 import type { AegisDeps, ResolveVerifyKeyOptions } from "../internal/utils/aegis-deps.js";
 import { decryptToken } from "../internal/utils/decrypt-token.js";
 import { encryptToken } from "../internal/utils/encrypt-token.js";
@@ -136,6 +139,7 @@ export class Aegis implements IAegis {
   private readonly defaultEncryption: KryptosEncryption | undefined;
   private readonly logger: ILogger;
   private readonly partyRecipient: string | undefined;
+  private readonly profiles: ProfileRegistry;
   private readonly signKey: AegisSignKey;
   private readonly verifyKey: AegisVerifyKey;
 
@@ -173,6 +177,13 @@ export class Aegis implements IAegis {
     this.defaultEncryption = options.defaultEncryption;
     this.partyRecipient = options.partyRecipient;
 
+    // This instance's OWN profile table, seeded with the built-ins. A registry
+    // per Aegis, not per process: `registerProfile` used to write into a
+    // module-global map, so registering a custom profile — or one named after a
+    // built-in — silently redefined what every other Aegis in the process minted
+    // and verified.
+    this.profiles = createProfileRegistry();
+
     // The DEPLOYMENT's key policy. Aegis ships no default selector of its own:
     // it does not know a deployment's `purpose` taxonomy, and an EMPTY condition
     // is already the safe one. Amphora's default gate is `!internal || publish`
@@ -202,6 +213,7 @@ export class Aegis implements IAegis {
       defaultEncryption: this.defaultEncryption,
       partyRecipient: this.partyRecipient,
       logger: this.logger,
+      resolveProfile: (name) => this.profiles.resolve(name),
       resolveSignKey: (options, profile) => this.resolveSignKey(options, profile),
       resolveVerifyKey: (options) => this.resolveVerifyKey(options),
       resolveEncryptKey: (encrypt) => this.resolveEncryptKey(encrypt),
@@ -268,7 +280,7 @@ export class Aegis implements IAegis {
   }
 
   registerProfile(profile: TokenProfileInput): void {
-    registerProfileFn(profile);
+    this.profiles.register(profile);
   }
 
   sign(input: RawSignInput): Promise<SignedToken> {

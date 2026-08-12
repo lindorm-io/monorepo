@@ -3,7 +3,8 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { importJWK, jwtVerify, SignJWT } from "jose";
 import jsonwebtoken, { type JwtPayload } from "jsonwebtoken";
 import { JwtKit } from "./JwtKit.js";
-import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
+import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
+import { domainToJose } from "../internal/claims/translate.js";
 import {
   computeTypHeader,
   extractTypPrefix,
@@ -17,10 +18,8 @@ import { describe, expect, test } from "vitest";
 // cases assemble default-profile claims (iss/iat/jti/nbf/exp) Aegis-side and
 // hand the finished wire dict to the kit.
 const signDefault = (kit: JwtKit, issuer: string, content: SignContent) => {
-  const claims = buildProfileClaims(
-    { algorithm: kit.algorithm, issuer },
-    defaultProfile,
-    content,
+  const claims = domainToJose(
+    assembleCommonClaims({ algorithm: kit.algorithm, issuer }, defaultProfile, content),
   );
   return kit.sign(claims, {
     tokenType: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),

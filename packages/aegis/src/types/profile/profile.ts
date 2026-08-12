@@ -1,9 +1,8 @@
-import type { Condition } from "@lindorm/match";
 import type { Expiry } from "@lindorm/date";
 import type { KryptosAlgClass } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
-import type { DomainClaims } from "../claims/domain/domain-claims.js";
+import type { PolicyRule, SignContext } from "./policy.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { ClaimsTokenFormat } from "../domain/token-format.js";
 import type { TokenFormat } from "../domain/token-format.js";
@@ -12,33 +11,6 @@ import type { DomainTokenEnvelope } from "../domain/domain-envelope.js";
 import type { JweEncryptOptions } from "../kit/encrypted.js";
 import type { SignTokenOptions } from "../domain/sign.js";
 import type { VerifyOptions } from "../domain/verify.js";
-
-/**
- * Mint-time facts the assembled claims object does not itself carry (e.g.
- * "an access token was co-issued", "max_age was requested"). Supplied by the
- * mint caller via {@link ProfileMintOptions.context}; consumed by
- * `requiredWhen`/`validate` in later tasks.
- */
-export type SignContext = Dict;
-
-/** A single claim that failed a profile validation rule. */
-export type InvalidEntry = {
-  key: string;
-  message: string;
-};
-
-/**
- * The DOMAIN claim keys a profile may name in its `required`/`forbidden`
- * floor. It is `keyof DomainClaims` (so a typo in a domain claim name is a
- * compile error) plus the two claims that live on the enforced common layer
- * but are NOT members of the parsed `DomainClaims` type: `events` (a SET claim
- * carried under its wire key, RFC 8417/9493) and `token_introspection` (the
- * RFC 9701 introspection-response wrapper, a custom claim with no domain
- * alias). Both are still domain vocabulary at mint — only their parse path
- * differs — so listing them here keeps the floor strongly typed without a bare
- * `string` escape hatch.
- */
-export type ProfileClaimName = keyof DomainClaims | "events" | "token_introspection";
 
 /**
  * The envelope claims a profile may auto-generate at mint. Constrained to the
@@ -67,16 +39,9 @@ export type TokenProfileTyp =
   | { presence: "required"; value: string };
 
 /**
- * The DIRECTION a profile is used in — declared ONCE, on the profile, rather
- * than per policy field. `forbidden`, `algClass`, `rules` and `validate` all
- * apply on whichever side the profile is used; a marker on each of them would
- * be four things to keep in agreement, and the question they would answer is
- * the same question every time.
- *
- * ⚠ `requiredWhen` and `atLeastOneOf` are the exception, and MINT-ONLY on
- * purpose: their conditions read the {@link SignContext}, which holds facts only
- * the issuer has. `id_token`'s asks whether an access token was co-issued — not
- * something a verifier can determine from the token in front of it.
+ * The DIRECTION a profile as a WHOLE may be used in — which door it may be
+ * handed to at all. It is not a policy switch: each {@link PolicyRule} declares
+ * its own `on`, so which rules run is the rule's own statement.
  *
  * - `"both"` (the default) — mint and verify, the mint/verify symmetry the
  *   verification floor already documents for `required`.
@@ -90,27 +55,26 @@ export type TokenProfileUse = "mint" | "verify" | "both";
 
 /**
  * Runtime descriptor that enforces a profile's policy. Types erase and are
- * bypassable, so each profile is also a runtime descriptor applied by
- * `buildProfileClaims` (presence/forbid/atLeastOneOf/requiredWhen) and
- * `validateProfileClaims` (structural RFC + crypto rules).
+ * bypassable, so each profile is also a runtime descriptor — a single ordered
+ * list of {@link PolicyRule}s applied by the ONE enforcer (`enforcePolicy`),
+ * which selects by each rule's own declared direction.
  *
  * This is the RESOLVED descriptor — what `resolveProfile` returns and what
  * every consumer reads. Authoring is {@link TokenProfileInput}, whose optional
  * fields `defineProfile` resolves; no consumer re-derives a default.
  */
 export type TokenProfile<
-  R extends ReadonlyArray<ProfileClaimName> = ReadonlyArray<ProfileClaimName>,
+  P extends ReadonlyArray<PolicyRule> = ReadonlyArray<PolicyRule>,
 > = {
   name: string;
   use: TokenProfileUse;
   typ: TokenProfileTyp;
-  required: R;
-  forbidden: ReadonlyArray<ProfileClaimName>;
-  requiredWhen: Array<{
-    claim: string;
-    when: (claims: Dict, ctx: SignContext) => boolean;
-  }>;
-  atLeastOneOf: Array<Array<string>>;
+  /**
+   * The profile's WHOLE claim policy, in evaluation order. Every rule names the
+   * direction(s) it runs in, so there is one list, one enforcer, and no call
+   * site that can enforce a subset of it.
+   */
+  policy: P;
   /**
    * The envelope claims mint auto-generates, by DOMAIN name. Membership is
    * checked with `.includes(...)` in the mint pipeline (was a per-flag object;
@@ -135,23 +99,6 @@ export type TokenProfile<
    * Kryptos algorithm, "asymmetric or HS*" is the whole algorithm space.
    */
   algClass?: KryptosAlgClass;
-  /**
-   * Flat structural rules expressed as a `Condition<DomainClaims>` over the
-   * DOMAIN-keyed common layer — the SAME predicate vocabulary `assert` /
-   * matchers / `Aegis.assert` use. `validateProfileClaims` evaluates it and
-   * throws `claims_invalid` on a mismatch. Only rules a flat predicate can
-   * express live here (`issUri`, `audSingleResource`); genuinely recursive or
-   * cross-field rules (`crossField`, `actChainShape`, `cnfShape`, `subIdShape`,
-   * `eventsShape`, `authorizationDetails` element shape) stay in `validate`.
-   */
-  rules?: Condition<DomainClaims>;
-  /**
-   * The imperative escape hatch for rules a flat predicate cannot express
-   * (recursive / cross-field / structured). Composed from the pure
-   * `internal/utils/rules/*` functions and run after `rules` by
-   * `validateProfileClaims`.
-   */
-  validate: (claims: Dict, ctx: SignContext) => Array<InvalidEntry>;
 };
 
 /**
@@ -162,8 +109,8 @@ export type TokenProfile<
  * DELIBERATE narrowing has an effect.
  */
 export type TokenProfileInput<
-  R extends ReadonlyArray<ProfileClaimName> = ReadonlyArray<ProfileClaimName>,
-> = Omit<TokenProfile<R>, "use"> & {
+  P extends ReadonlyArray<PolicyRule> = ReadonlyArray<PolicyRule>,
+> = Omit<TokenProfile<P>, "use"> & {
   use?: TokenProfileUse;
 };
 

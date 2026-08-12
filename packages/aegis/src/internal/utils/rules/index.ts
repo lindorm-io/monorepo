@@ -6,6 +6,8 @@ export * from "./cross-field.js";
 export * from "./events-shape.js";
 export * from "./every-element-has-key.js";
 export * from "./forbid-present.js";
+export * from "./is-claim-absent.js";
+export * from "./match-condition.js";
 export * from "./require-present.js";
 export * from "./required-when.js";
 export * from "./sub-id-shape.js";

@@ -6,7 +6,8 @@ import { describe, expect, test } from "vitest";
 import { B64U } from "../internal/constants/format.js";
 import { JwtKit } from "./JwtKit.js";
 import { defaultProfile } from "../internal/profiles/definitions/default.js";
-import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
+import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
+import { domainToJose } from "../internal/claims/translate.js";
 import {
   computeTypHeader,
   extractTypPrefix,
@@ -32,10 +33,12 @@ const SUBJECT = "d4e5f6a7-b8c9-4d0e-1a2b-3c4d5e6f7890";
 const logger = createMockLogger();
 
 const signDefault = (kit: JwtKit, content: SignContent) => {
-  const claims = buildProfileClaims(
-    { algorithm: kit.algorithm, issuer: ISSUER },
-    defaultProfile,
-    content,
+  const claims = domainToJose(
+    assembleCommonClaims(
+      { algorithm: kit.algorithm, issuer: ISSUER },
+      defaultProfile,
+      content,
+    ),
   );
   return kit.sign(claims, {
     tokenType: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),

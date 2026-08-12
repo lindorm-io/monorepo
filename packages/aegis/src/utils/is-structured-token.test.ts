@@ -62,7 +62,10 @@ describe("isStructuredToken", () => {
 
     test("should accept a cwm (COSE_Mac0)", async () => {
       const aegis = await createAegis(TEST_OCT_KEY_SIG);
-      const { token } = await aegis.mint("id_token", ID_TOKEN, { format: "cwm" });
+      const { token } = await aegis.mint("id_token", ID_TOKEN, {
+        context: { accessTokenIssued: false },
+        format: "cwm",
+      });
       const verified = await aegis.verify(token);
 
       expect(verified.format).toBe("cwm");
@@ -102,7 +105,10 @@ describe("isStructuredToken", () => {
     // populated — only the outer tag reads `jwe`.
     test("should accept a jwe wrapping a jwt", async () => {
       const aegis = await createAegis(TEST_EC_KEY_SIG, TEST_EC_KEY_ENC);
-      const { token } = await aegis.mint("id_token", ID_TOKEN, { encrypt: {} });
+      const { token } = await aegis.mint("id_token", ID_TOKEN, {
+        context: { accessTokenIssued: false },
+        encrypt: {},
+      });
       const verified = await aegis.verify(token);
 
       expect(verified.format).toBe("jwe");
@@ -114,6 +120,7 @@ describe("isStructuredToken", () => {
     test("should accept a cwe wrapping a cwt", async () => {
       const aegis = await createAegis(TEST_EC_KEY_SIG, TEST_OCT_KEY_ENC);
       const { token } = await aegis.mint("id_token", ID_TOKEN, {
+        context: { accessTokenIssued: false },
         format: "cwt",
         encrypt: {},
       });
@@ -189,7 +196,10 @@ describe("isStructuredToken", () => {
 
     test("should narrow an encrypting outer's inner to a required field", async () => {
       const aegis = await createAegis(TEST_EC_KEY_SIG, TEST_EC_KEY_ENC);
-      const { token } = await aegis.mint("id_token", ID_TOKEN, { encrypt: {} });
+      const { token } = await aegis.mint("id_token", ID_TOKEN, {
+        context: { accessTokenIssued: false },
+        encrypt: {},
+      });
       const verified: VerifiedToken = await aegis.verify(token);
 
       if (!isStructuredToken(verified)) throw new Error("expected structured");
@@ -216,14 +226,28 @@ describe("isStructuredToken", () => {
       sig
         .mint("access_token", ACCESS_TOKEN, { format: "cwt" })
         .then((r) => sig.verify(r.token)),
-      mac.mint("id_token", ID_TOKEN, { format: "cwm" }).then((r) => mac.verify(r.token)),
+      mac
+        .mint("id_token", ID_TOKEN, {
+          context: { accessTokenIssued: false },
+          format: "cwm",
+        })
+        .then((r) => mac.verify(r.token)),
       sig.jws.sign(Buffer.from("opaque")).then((r) => sig.verify(r.token)),
       sig
         .sign({ payload: { sec: "s" }, tokenType: "access_token", format: "cws" })
         .then((r) => sig.verify(r.token)),
-      jose.mint("id_token", ID_TOKEN, { encrypt: {} }).then((r) => jose.verify(r.token)),
+      jose
+        .mint("id_token", ID_TOKEN, {
+          context: { accessTokenIssued: false },
+          encrypt: {},
+        })
+        .then((r) => jose.verify(r.token)),
       cose
-        .mint("id_token", ID_TOKEN, { format: "cwt", encrypt: {} })
+        .mint("id_token", ID_TOKEN, {
+          context: { accessTokenIssued: false },
+          format: "cwt",
+          encrypt: {},
+        })
         .then((r) => cose.verify(r.token)),
       jose.jws
         .sign(Buffer.from("opaque"))

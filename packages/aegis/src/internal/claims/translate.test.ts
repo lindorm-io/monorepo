@@ -23,15 +23,11 @@ const permissiveProfile: TokenProfile = {
   name: "parity",
   use: "both",
   typ: { presence: "none" },
-  required: [],
-  forbidden: [],
-  requiredWhen: [],
-  atLeastOneOf: [],
+  policy: [],
   autoInject: [],
   issuer: "per-token",
   lifetime: null,
   encryptable: false,
-  validate: () => [],
 };
 
 const assembleCtx = { algorithm: ALGORITHM, issuer: null };

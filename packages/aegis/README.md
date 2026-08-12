@@ -535,17 +535,48 @@ await aegis.mint("access_token", {
 });
 ```
 
-A name that is not a built-in — a profile registered at runtime with `registerProfile` — falls back to the open `SignContent` vocabulary, so custom profiles keep working unconstrained.
+A name that is not a built-in — a profile registered at runtime with `registerProfile` — falls back to the open `SignContent` vocabulary, so custom profiles keep working unconstrained. `registerProfile` writes into THAT `Aegis` instance's own profile table: a registration (including one that shadows a built-in) never reaches another `Aegis` in the process.
 
-**Direction (`use`).** A profile declares which side it is used on — `"mint"`, `"verify"`, or `"both"` — ONCE, on the profile itself rather than a marker per policy field. `forbidden`, `algClass`, `rules` and `validate` then apply on whichever side the profile is used, the same mint/verify symmetry the verification floor already keeps for `required`. A `rules` or `validate` failure raises `profile_policy_invalid`, on both sides and both wires; its `data.invalid` is a list of `{ key, message }` entries. (That code is distinct from `claims_invalid`, which means the CALLER's `assert` matchers failed and lists bare claim keys.)
+**Policy is one declarative rule list.** A profile carries a single `policy` array; every rule names the direction(s) it runs in, and ONE enforcer applies the rules that name the direction being enforced. There is no per-call-site subset.
 
-⚠ `requiredWhen` and `atLeastOneOf` are the exception and stay MINT-only: their conditions read the `SignContext`, which holds facts only the issuer has — `id_token`'s asks whether an access token was co-issued, which a verifier cannot know from the token in front of it.
+```ts
+policy: [
+  { rule: "required", on: ["mint", "verify"], claims: ["issuer", "subject"] },
+  { rule: "forbidden", on: ["mint", "verify"], claims: ["nonce"] },
+  { rule: "atLeastOneOf", on: ["mint", "verify"], claims: ["subject", "sessionId"] },
+  { rule: "match", on: ["mint", "verify"], condition: { issuer: { $regex: /^https:/ } } },
+  { rule: "shape", on: ["mint", "verify"], shape: "crossField" },
+  {
+    rule: "requiredWhen",
+    on: ["mint"],
+    needs: ["accessTokenIssued"],
+    claim: "accessTokenHash",
+    when: (claims, context) => context.accessTokenIssued === true,
+  },
+];
+```
+
+`required` / `forbidden` / `atLeastOneOf` are presence rules; `match` is a flat `Condition` over the domain-keyed claims (the same predicate vocabulary as `assert`); `shape` names a structural validator (`actChain`, `authorizationDetails`, `confirmation`, `crossField`, `events`, `subjectId`). Absent, `null` and `""` all count as NOT PRESENT, in both directions.
+
+Any failure raises `profile_policy_invalid` with `data.direction`, `data.format` and `data.invalid` — a list of every `{ key, message }` the token failed, not just the first category. (Distinct from `claims_invalid`, which means the CALLER's `assert` matchers failed.)
+
+**Rules that read mint-time facts.** `requiredWhen` is the only rule that reads the `SignContext` — facts the claims do not carry, which only the issuer has. It is pinned to `on: ["mint"]` by its own type, and it must declare the context keys it reads in `needs`. Minting refuses with `missing_sign_context` when any of them was not supplied, so an omitted or misspelled key cannot read as `false`:
+
+```ts
+// `id_token` requires `at_hash` whenever an access token co-issues, so every
+// id_token mint states the fact — including when it is false.
+await aegis.mint("id_token", content, { context: { accessTokenIssued: false } });
+```
+
+`SignContext` is a closed record, so a key that does not exist is a compile error at the call site as well.
+
+**Direction (`use`).** Separately from the per-rule `on`, a profile declares which DOOR it may be handed to — `"mint"`, `"verify"`, or `"both"`.
 
 `use` is optional when you write a profile and resolves to `"both"`, so every built-in and every `registerProfile` call behaves exactly as before; only a deliberate narrowing changes anything. `mint` refuses a `"verify"` profile with `profile_not_mintable`, profiled `verify` refuses a `"mint"` one with `profile_not_verifiable` — and the narrowing is enforced by the compiler too: a verify-only name resolves to `never` as `mint`'s content type, so the call site does not typecheck either.
 
 **`typ` presence.** Each profile declares a `typ` policy: `required` (the header must carry exactly the profile's typ) or `none` (no typ mandated). Mint always stamps the profile's typ value — presence only governs verify.
 
-**Required and forbidden claims on verify.** Profiled verify enforces the profile's `required` claims (the same domain-keyed names enforced at mint) — a token missing one is rejected with `required_claims_missing`. It enforces `forbidden` the same way: a token CARRYING one is rejected with `forbidden_claims_present`. Present/missing means absent, `null`, or an empty string. A mint-time policy alone buys nothing for a profile that verifies tokens minted elsewhere.
+**The whole policy runs on verify.** Every rule naming the verify direction is enforced by profiled verify, through the same enforcer mint uses — a mint-time policy alone buys nothing for a profile that verifies tokens minted elsewhere. Beyond the rule list, the floor also asserts what the claims alone cannot state: the algorithm class, the header `typ`, the expected issuer, the verifier's own `audience`, and `exp` presence for a profile with a lifetime.
 
 **`algClass` on verify.** A profile's `algClass` is enforced on BOTH sides for the same reason. At mint it constrains key SELECTION (an asymmetric-only profile never picks an `oct` key); at verify it is checked against the algorithm the signature was verified under, and a mismatch is rejected with `algorithm_not_permitted` before any claim is looked at. `access_token`, `external_access_token` and `delegation` declare `asymmetric` because a shared MAC secret both verifies AND forges — a statement about reading someone else's token, so the verify half is the half that matters. That algorithm is not a header parameter taken on trust: every verify path refuses a header `alg` differing from the resolved key's own before it accepts the signature. A profile declaring no `algClass` is unconstrained, which is why `security_event` (RFC 8417 / SSF, whose own example header is `alg: HS256`) still verifies an HS-signed token.
 

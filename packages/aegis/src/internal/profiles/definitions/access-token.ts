@@ -1,10 +1,3 @@
-import type { Dict } from "@lindorm/types";
-import {
-  actChainShape,
-  cnfShape,
-  crossField,
-  everyElementHasKey,
-} from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
 import { AUD_SINGLE_RESOURCE, ISSUER_IS_URI } from "./rule-predicates.js";
 
@@ -24,28 +17,31 @@ import { AUD_SINGLE_RESOURCE, ISSUER_IS_URI } from "./rule-predicates.js";
 export const accessTokenProfile = defineProfile({
   name: "access_token",
   typ: { presence: "required", value: "application/at+jwt" },
-  required: [
-    "issuer",
-    "expiresAt",
-    "audience",
-    "subject",
-    "clientId",
-    "issuedAt",
-    "tokenId",
+  policy: [
+    {
+      rule: "required",
+      on: ["mint", "verify"],
+      claims: [
+        "issuer",
+        "expiresAt",
+        "audience",
+        "subject",
+        "clientId",
+        "issuedAt",
+        "tokenId",
+      ],
+    },
+    { rule: "forbidden", on: ["mint", "verify"], claims: ["federationAssuranceLevel"] },
+    { rule: "match", on: ["mint", "verify"], condition: ISSUER_IS_URI },
+    { rule: "match", on: ["mint", "verify"], condition: AUD_SINGLE_RESOURCE },
+    { rule: "shape", on: ["mint", "verify"], shape: "crossField" },
+    { rule: "shape", on: ["mint", "verify"], shape: "authorizationDetails" },
+    { rule: "shape", on: ["mint", "verify"], shape: "confirmation" },
+    { rule: "shape", on: ["mint", "verify"], shape: "actChain" },
   ],
-  forbidden: ["federationAssuranceLevel"],
-  requiredWhen: [],
-  atLeastOneOf: [],
   autoInject: ["issuedAt", "tokenId", "issuer"],
   issuer: "platform",
   lifetime: "1h",
   encryptable: false,
   algClass: "asymmetric",
-  rules: { ...ISSUER_IS_URI, ...AUD_SINGLE_RESOURCE },
-  validate: (claims: Dict) => [
-    ...crossField(claims),
-    ...everyElementHasKey(claims, "authorizationDetails", "type"),
-    ...cnfShape(claims),
-    ...actChainShape(claims),
-  ],
 });

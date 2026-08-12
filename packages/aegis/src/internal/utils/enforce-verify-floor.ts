@@ -2,7 +2,7 @@ import { isArray } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
 import type { TokenFormatTag, TokenProfile } from "../../types/index.js";
-import { applyProfilePolicy } from "./apply-profile-policy.js";
+import { enforcePolicy } from "../profiles/enforce-policy.js";
 import { algPermitted } from "./rules/alg-permitted.js";
 
 export type VerifyFloorInput = {
@@ -74,12 +74,16 @@ const typMismatch = (
  *   - `aud` contains the verifier's identity (`audience`),
  *   - `exp` PRESENT when `profile.lifetime !== null` (no `$exists:false`
  *     escape — unlike the optional-when-present standard verify),
- *   - every claim in `profile.required` is PRESENT, and every claim in
- *     `profile.forbidden` is ABSENT (mint/verify symmetry — the same
- *     domain-keyed names `enforceProfilePolicy` enforces at mint).
+ *   - the profile's whole declared policy, for every rule naming the verify
+ *     direction (`enforcePolicy` — the same call mint makes).
  *
  * `nbf`/`exp` value enforcement (with clock tolerance) is handled by the
  * standard verify; this floor only adds the presence + identity assertions.
+ *
+ * What lives here rather than in the policy list is exactly what the policy list
+ * cannot state: the algorithm the signature was verified under, the header typ,
+ * and the two identities the VERIFIER supplies (its expected issuer and its own
+ * audience). None of those is a property of the claims alone.
  */
 export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   const { algorithm, audience, decodedTyp, expectedIssuer, format, payload, profile } =
@@ -174,63 +178,15 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
     });
   }
 
-  const missing = profile.required.filter((key) => {
-    const value = payload[key];
-    return value === undefined || value === null || value === "";
-  });
-
-  if (missing.length > 0) {
-    throw new AegisDomainError("Invalid token", {
-      code: "required_claims_missing",
-      data: { missing, format },
-      debug: { missing, profile: profile.name },
-      title: "Required Claims Missing",
-      details:
-        "The token is missing claims that the profile being verified requires to be present.",
-    });
-  }
-
-  // `forbidden` is the mirror of `required`, and it has to bite HERE as well as
-  // at mint: a profile that verifies tokens minted elsewhere gets no benefit
-  // from a mint-time policy. It is what separates two artifact KINDS whose
-  // envelopes no longer separate them — an `external_access_token` accepts any
-  // typ, so `nonce`/`at_hash`/`c_hash`/`s_hash` (id_token claims an access
-  // token never carries) are the discriminator that keeps an id_token out.
-  const present = profile.forbidden.filter((key) => {
-    const value = payload[key];
-    return value !== undefined && value !== null && value !== "";
-  });
-
-  if (present.length > 0) {
-    throw new AegisDomainError("Invalid token", {
-      code: "forbidden_claims_present",
-      data: { forbidden: present, format },
-      debug: { forbidden: present, profile: profile.name },
-      title: "Forbidden Claims Present",
-      details:
-        "The token carries claims the profile being verified forbids, so it is not a token of that kind.",
-    });
-  }
-
-  // LAST, because it is the most specific: a claim that is absent should report
-  // as missing rather than as a rule it could not satisfy.
+  // LAST, and it is the WHOLE profile policy — the same list mint enforces, run
+  // by the same enforcer with `direction: "verify"`. Every rule that names the
+  // verify direction bites here, so nothing a profile declares can be a
+  // mint-only constraint by accident of which call site remembered it. That
+  // matters most for a profile reading someone else's token: an
+  // `external_access_token` is never minted at all, so a mint-only rule of its
+  // would never run anywhere.
   //
-  // `rules` and `validate` are the same policy mint applies, and they belong
-  // here for the same reason `forbidden` does — a profile that verifies tokens
-  // minted elsewhere gets NOTHING from a mint-time-only check. The profile that
-  // proves it is `external_access_token`: `use: "verify"`, so before this its
-  // `ISSUER_IS_URI` rule and its cnf/act structural checks had never run on any
-  // path at all.
-  const failed = applyProfilePolicy(profile, payload);
-
-  if (failed.length > 0) {
-    throw new AegisDomainError("Invalid token", {
-      code: "profile_policy_invalid",
-      data: { invalid: failed, format },
-      debug: { invalid: failed, profile: profile.name },
-      title: "Profile Policy Invalid",
-      details:
-        "The token's claims do not satisfy the structural rules the profile being verified requires.",
-    });
-  }
+  // Verify passes an EMPTY context and always can: a context-reading rule is
+  // pinned to mint by its own type.
+  enforcePolicy({ claims: payload, context: {}, direction: "verify", format, profile });
 };

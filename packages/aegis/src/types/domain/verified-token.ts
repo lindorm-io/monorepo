@@ -4,6 +4,7 @@ import type { AegisProfile } from "../claims/domain/aegis-profile.js";
 import type { AegisSensitive } from "../claims/domain/aegis-sensitive.js";
 import type { DomainTokenHeader } from "../header/domain-header.js";
 import type { ParsedDpopProof, TokenDelegation } from "./delegation.js";
+import type { VerifyGuaranteedClaims } from "../profile/policy.js";
 import type { TokenProfile } from "../profile/profile.js";
 
 /**
@@ -102,15 +103,19 @@ export type StructuredVerifiedToken<C extends Dict = Dict> = VerifiedToken<C> &
   ({ format: StructuredFormat } | { format: "jwe" | "cwe"; inner: StructuredFormat });
 
 /**
- * The profile's `required` domain claims that are ALSO {@link DomainClaims}
- * fields — `Extract` intersects the profile's `required` tuple with the actual
- * claim keys, so required entries that are not domain claims (e.g. `events`,
- * `token_introspection`, `clientId` when absent from the union) are simply
- * skipped, never over-narrowed. The domain-surface twin of `narrowed-jwt.ts`'s
- * `GuaranteedKeys`, retargeted from `ParsedJwtPayload` to `DomainClaims`.
+ * The domain claims a profile's policy GUARANTEES on a verified token — the
+ * `required` rules that name the VERIFY direction, intersected with the actual
+ * claim keys, so entries that are not domain claims (e.g. `events`,
+ * `token_introspection`) are simply skipped, never over-narrowed. The
+ * domain-surface twin of `narrowed-jwt.ts`'s `GuaranteedKeys`, retargeted from
+ * `ParsedJwtPayload` to `DomainClaims`.
+ *
+ * ⚠ The direction filter is load-bearing: a requirement a profile declares for
+ * mint alone says nothing about the token that arrived, so narrowing off it
+ * would put a guarantee in the type that no runtime check makes.
  */
 type GuaranteedClaimKeys<P extends TokenProfile> = Extract<
-  P["required"][number],
+  VerifyGuaranteedClaims<P["policy"][number]>,
   keyof DomainClaims
 >;
 

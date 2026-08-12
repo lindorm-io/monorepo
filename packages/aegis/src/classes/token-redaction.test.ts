@@ -2,7 +2,8 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TEST_EC_KEY_ENC, TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
-import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
+import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
+import { domainToJose } from "../internal/claims/translate.js";
 import { defaultProfile } from "../internal/profiles/definitions/default.js";
 import type { SignContent } from "../types/index.js";
 import { JweKit } from "./JweKit.js";
@@ -112,11 +113,12 @@ describe("token redaction", () => {
     // Aegis-side (exactly as aegis.mint("default", …) does) and hand the finished
     // dict to the kit.
     const sign = (content: SignContent) => {
-      const claims = buildProfileClaims(
-        { algorithm: kit.algorithm, issuer },
-        defaultProfile,
-        content,
-        {},
+      const claims = domainToJose(
+        assembleCommonClaims(
+          { algorithm: kit.algorithm, issuer },
+          defaultProfile,
+          content,
+        ),
       );
       return kit.sign(claims);
     };

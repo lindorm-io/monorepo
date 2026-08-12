@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import { AegisDomainError } from "../../errors/index.js";
 import { accessTokenProfile } from "../profiles/definitions/access-token.js";
 import { idTokenProfile } from "../profiles/definitions/id-token.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
@@ -94,39 +93,18 @@ describe("assembleCommonClaims", () => {
     expect(common.token_introspection).toEqual({ active: true });
   });
 
-  describe("policy enforcement (domain-keyed)", () => {
-    test("throws when a required domain claim is missing", () => {
-      // access_token requires subject — omit it
-      expect(() =>
-        assembleCommonClaims(ctx, accessTokenProfile, {
-          audience: ["a"],
-          clientId: "c",
-        } as any),
-      ).toThrow(AegisDomainError);
-    });
-
-    test("throws when a forbidden domain claim is present", () => {
-      // a profile that forbids `nonce` (domain) with nonce supplied
-      const forbidsNonce = { ...accessTokenProfile, forbidden: ["nonce"] as const };
-      expect(() =>
-        assembleCommonClaims(ctx, forbidsNonce, {
-          subject: "u",
-          audience: ["a"],
-          clientId: "c",
-          nonce: "n",
-        } as any),
-      ).toThrow(AegisDomainError);
-    });
-
-    test("passes when all required domain claims are present", () => {
-      expect(() =>
-        assembleCommonClaims(ctx, accessTokenProfile, {
-          subject: "u",
-          audience: ["a"],
-          clientId: "c",
-        } as any),
-      ).not.toThrow();
-    });
+  // NO policy runs here any more. Assembly and enforcement were two steps in one
+  // function, which is how a subset of the policy came to be enforced from one
+  // call site and the rest from another; `enforcePolicy` owns the whole of it and
+  // is tested beside itself. What this file still owes is that assembly does NOT
+  // refuse an incomplete claim set on its own.
+  test("assembles without enforcing the profile's policy", () => {
+    expect(() =>
+      assembleCommonClaims(ctx, accessTokenProfile, {
+        audience: ["a"],
+        clientId: "c",
+      } as any),
+    ).not.toThrow();
   });
 
   test("honours a per-token issuer profile (no platform injection)", () => {
