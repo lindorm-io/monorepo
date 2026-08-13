@@ -1,26 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`verify option parity > should derive the key set from the table 1`] = `
-[
-  "actor",
-  "clockTolerance",
-  "currentDate",
-  "maxTokenAge",
-  "verifyExpiration",
-  "verifyNotBefore",
-  "verifyIssuedAt",
-  "verifyAuthTime",
-  "dpopProof",
-  "trustBoundThumbprint",
-  "key",
-  "typPresence",
-  "expPresence",
-]
-`;
-
-exports[`verify option parity > should list the rows still awaiting a fix 1`] = `[]`;
-
-exports[`verify option parity > should match the recorded contract 1`] = `
+exports[`Aegis — knob matrix > should match the recorded wire-parity contract 1`] = `
 {
   "actor": {
     "default": {
@@ -117,4 +97,22 @@ exports[`verify option parity > should match the recorded contract 1`] = `
     "wires": "both",
   },
 }
+`;
+
+exports[`Aegis — knob matrix > should publish the derived verify-option key set 1`] = `
+[
+  "actor",
+  "clockTolerance",
+  "currentDate",
+  "maxTokenAge",
+  "verifyExpiration",
+  "verifyNotBefore",
+  "verifyIssuedAt",
+  "verifyAuthTime",
+  "dpopProof",
+  "trustBoundThumbprint",
+  "key",
+  "typPresence",
+  "expPresence",
+]
 `;

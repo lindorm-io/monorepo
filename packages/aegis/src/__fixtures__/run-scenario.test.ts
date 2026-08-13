@@ -9,10 +9,20 @@ import {
   DEFAULT_CLOCK,
   readWirePayload,
   runScenario,
-  wireOf,
+  selfMarkedWireOf,
+  wiresOf,
+  pinnedWireOf,
   type ScenarioContext,
 } from "./run-scenario.js";
-import { CLIENT, ISSUER, NOW, RESOURCE, type Given, type Scenario } from "./scenarios.js";
+import {
+  CLIENT,
+  ISSUER,
+  NOW,
+  RESOURCE,
+  type Given,
+  type Scenario,
+  type Wire,
+} from "./scenarios.js";
 
 MockDate.set(new Date(DEFAULT_CLOCK));
 
@@ -22,7 +32,7 @@ MockDate.set(new Date(DEFAULT_CLOCK));
  * `run-scenario.ts` is the step-definition layer, and the conformance table
  * leans on its guards as SAFETY properties: rows are written on the promise that
  * an unreadable payload fails a `wirePayload` assertion instead of satisfying it
- * vacuously, that `absentTwin` is checked against the row's real wire, and that a
+ * vacuously, that a row's wire coverage is derived from its artifact rather than declared, and that a
  * mis-shaped row is refused rather than half-run. A guard nothing exercises is a
  * promise nobody has read, so the step-definition layer meets the same bar the
  * rows do.
@@ -132,14 +142,15 @@ describe("run-scenario — the step-definition layer", () => {
     });
   });
 
-  describe("wireOf", () => {
-    const probe = (given: Given): Scenario => ({
+  describe("wiresOf", () => {
+    const probe = (given: Given, unsupported?: Scenario["unsupported"]): Scenario => ({
       id: "probe",
       title: "a probe row, for the wire derivation alone",
-      rationale: "not a capability — this row exists only to exercise `wireOf`.",
+      rationale: "not a capability — this row exists only to exercise `wiresOf`.",
       given,
       when: [{ step: "parse" }],
       then: [{ step: "accepts" }],
+      ...(unsupported ? { unsupported } : {}),
     });
 
     const MINT_CONTENT = {
@@ -148,94 +159,197 @@ describe("run-scenario — the step-definition layer", () => {
       clientId: CLIENT,
     } satisfies ProfileContent["access_token"];
 
-    test("should read a claim-only row as JOSE — it has no wire at all", () => {
-      expect(wireOf(probe([{ step: "claims", claims: { subject: "user-1" } }]))).toBe(
-        "jose",
-      );
+    // COVERAGE IS THE DEFAULT. Every case below that runs on both wires is a
+    // capability that used to need a hand-written twin to reach the second one.
+    test("should run a claim-only row on every wire — the static surface has no wire", () => {
+      const scenario = probe([{ step: "claims", claims: { subject: "user-1" } }]);
+
+      expect(pinnedWireOf(scenario)).toBeUndefined();
+      expect(wiresOf(scenario)).toEqual(["jose", "cose"]);
     });
 
+    test.each([["structured" as const], ["opaque" as const]])(
+      "should run a %s kit-sign row on every wire",
+      (kit) => {
+        const scenario = probe([
+          { step: "token", via: "kit-sign", kit, claims: { a: 1 } },
+        ]);
+
+        expect(pinnedWireOf(scenario)).toBeUndefined();
+        expect(wiresOf(scenario)).toEqual(["jose", "cose"]);
+      },
+    );
+
+    test("should run a sealed kit-encrypt row on every wire", () => {
+      const scenario = probe([
+        { step: "token", via: "kit-encrypt", kit: "sealed", data: { a: 1 } },
+      ]);
+
+      expect(pinnedWireOf(scenario)).toBeUndefined();
+      expect(wiresOf(scenario)).toEqual(["jose", "cose"]);
+    });
+
+    test("should run a mint row with no requested format on every wire", () => {
+      const scenario = probe([
+        { step: "token", via: "mint", profile: "access_token", content: MINT_CONTENT },
+      ]);
+
+      expect(pinnedWireOf(scenario)).toBeUndefined();
+      expect(wiresOf(scenario)).toEqual(["jose", "cose"]);
+    });
+
+    test("should run a domain-encrypt row with no requested format on every wire", () => {
+      const scenario = probe([{ step: "token", via: "domain-encrypt", data: { a: 1 } }]);
+
+      expect(pinnedWireOf(scenario)).toBeUndefined();
+      expect(wiresOf(scenario)).toEqual(["jose", "cose"]);
+    });
+
+    // A row MAY still pin itself — some capabilities genuinely are one-wire. It
+    // then owes the other wire a reason, which the conformance table's coverage
+    // test collects.
     test.each([
       ["jwt" as const, "jose" as const],
       ["jws" as const, "jose" as const],
       ["cwt" as const, "cose" as const],
       ["cws" as const, "cose" as const],
-    ])("should read a %s kit-sign row as %s", (kit, wire) => {
-      expect(
-        wireOf(probe([{ step: "token", via: "kit-sign", kit, claims: { a: 1 } }])),
-      ).toBe(wire);
+    ])("should pin a %s kit-sign row to %s", (kit, wire) => {
+      const scenario = probe([{ step: "token", via: "kit-sign", kit, claims: { a: 1 } }]);
+
+      expect(pinnedWireOf(scenario)).toBe(wire);
+      expect(wiresOf(scenario)).toEqual([wire]);
     });
 
     test.each([
       ["jwe" as const, "jose" as const],
       ["cwe" as const, "cose" as const],
-    ])("should read a %s kit-encrypt row as %s", (kit, wire) => {
-      expect(
-        wireOf(probe([{ step: "token", via: "kit-encrypt", kit, data: { a: 1 } }])),
-      ).toBe(wire);
+    ])("should pin a %s kit-encrypt row to %s", (kit, wire) => {
+      const scenario = probe([
+        { step: "token", via: "kit-encrypt", kit, data: { a: 1 } },
+      ]);
+
+      expect(pinnedWireOf(scenario)).toBe(wire);
+      expect(wiresOf(scenario)).toEqual([wire]);
     });
 
-    test("should read a mint row from its requested format", () => {
-      expect(
-        wireOf(
-          probe([
-            {
-              step: "token",
-              via: "mint",
-              profile: "access_token",
-              content: MINT_CONTENT,
-              options: { format: "cwt" },
-            },
-          ]),
-        ),
-      ).toBe("cose");
-    });
+    test("should pin a mint row that requests a format", () => {
+      const scenario = probe([
+        {
+          step: "token",
+          via: "mint",
+          profile: "access_token",
+          content: MINT_CONTENT,
+          options: { format: "cwt" },
+        },
+      ]);
 
-    test("should read a mint row with no requested format as JOSE", () => {
-      expect(
-        wireOf(
-          probe([
-            {
-              step: "token",
-              via: "mint",
-              profile: "access_token",
-              content: MINT_CONTENT,
-            },
-          ]),
-        ),
-      ).toBe("jose");
+      expect(pinnedWireOf(scenario)).toBe("cose");
+      expect(wiresOf(scenario)).toEqual(["cose"]);
     });
 
     test.each([
       ["cwe" as const, "cose" as const],
       ["jwe" as const, "jose" as const],
-    ])("should read a domain-encrypt row requesting %s as %s", (format, wire) => {
-      expect(
-        wireOf(
-          probe([
-            { step: "token", via: "domain-encrypt", data: { a: 1 }, options: { format } },
-          ]),
-        ),
-      ).toBe(wire);
+    ])("should pin a domain-encrypt row requesting %s to %s", (format, wire) => {
+      const scenario = probe([
+        { step: "token", via: "domain-encrypt", data: { a: 1 }, options: { format } },
+      ]);
+
+      expect(pinnedWireOf(scenario)).toBe(wire);
+      expect(wiresOf(scenario)).toEqual([wire]);
     });
 
-    test("should read a domain-encrypt row with no requested format as JOSE", () => {
-      expect(
-        wireOf(probe([{ step: "token", via: "domain-encrypt", data: { a: 1 } }])),
-      ).toBe("jose");
+    // `unsupported` is the ONLY way to run on fewer wires. Without this the
+    // field would be documentation again — the state it was in when the twin it
+    // described went unwritten.
+    test("should subtract a declared unsupported wire from an agnostic row", () => {
+      const scenario = probe(
+        [{ step: "token", via: "kit-sign", kit: "structured", claims: { a: 1 } }],
+        { cose: "a stated reason" },
+      );
+
+      expect(pinnedWireOf(scenario)).toBeUndefined();
+      expect(wiresOf(scenario)).toEqual(["jose"]);
     });
 
     // The setup steps sit AHEAD of the artifact, and the wire comes from the
     // artifact — so a row that stocks the vault first must read the same.
     test("should read the wire off the artifact, not off a preceding setup step", () => {
-      expect(
-        wireOf(
-          probe([
-            { step: "keys", keys: ["ec-enc"] },
-            { step: "clock", at: DEFAULT_CLOCK },
-            { step: "token", via: "kit-sign", kit: "cwt", claims: { sub: "user-1" } },
-          ]),
-        ),
-      ).toBe("cose");
+      const scenario = probe([
+        { step: "keys", keys: ["ec-enc"] },
+        { step: "clock", at: DEFAULT_CLOCK },
+        { step: "token", via: "kit-sign", kit: "cwt", claims: { sub: "user-1" } },
+      ]);
+
+      expect(pinnedWireOf(scenario)).toBe("cose");
+      expect(wiresOf(scenario)).toEqual(["cose"]);
+    });
+  });
+
+  // ⚠ THE NEGATIVE FIXTURE. The conformance table's self-marking test has been
+  // DEAD TWICE — first filtered on a field a row never sets, then rewritten to ask
+  // whether a wire in `wiresOf(scenario)` appeared in `unsupported`, which is the
+  // exact negation of the filter that produced that array and so returned `[]` for
+  // every table that could ever be written. The real table cannot show that the
+  // replacement can fail, because no row in it violates the rule; only a row built
+  // to violate it can. Both directions are stated here.
+  describe("selfMarkedWireOf", () => {
+    const probe = (given: Given, unsupported?: Scenario["unsupported"]): Scenario => ({
+      id: "probe",
+      title: "a probe row, for the self-marking predicate alone",
+      rationale: "not a capability — this row exists only to exercise the predicate.",
+      given,
+      when: [{ step: "parse" }],
+      then: [{ step: "accepts" }],
+      ...(unsupported ? { unsupported } : {}),
+    });
+
+    test.each([
+      ["cwt" as const, "cose" as const],
+      ["jwt" as const, "jose" as const],
+    ])(
+      "should name the wire a %s row pins itself to and then declares unsupported",
+      (kit, wire) => {
+        const scenario = probe(
+          [{ step: "token", via: "kit-sign", kit, claims: { a: 1 } }],
+          { [wire]: "a reason that contradicts the row's own artifact" },
+        );
+
+        expect(selfMarkedWireOf(scenario)).toBe(wire);
+      },
+    );
+
+    // The three legal shapes, so the predicate is not merely "always answers".
+    test("should name nothing when a pinned row declares the OTHER wire unsupported", () => {
+      const scenario = probe(
+        [{ step: "token", via: "kit-sign", kit: "cwt", claims: {} }],
+        {
+          jose: "a stated reason",
+        },
+      );
+
+      expect(selfMarkedWireOf(scenario)).toBeUndefined();
+    });
+
+    // An AGNOSTIC row declaring a wire unsupported is the declaration WORKING —
+    // that is the only way such a row runs on fewer wires — so it must never be
+    // reported. A predicate that read `wiresOf` could not tell the two apart.
+    test("should name nothing when an agnostic row declares a wire unsupported", () => {
+      const scenario = probe(
+        [{ step: "token", via: "kit-sign", kit: "structured", claims: {} }],
+        { cose: "a stated reason" },
+      );
+
+      expect(wiresOf(scenario)).toEqual(["jose"]);
+      expect(selfMarkedWireOf(scenario)).toBeUndefined();
+    });
+
+    test("should name nothing when a row declares no unsupported wire at all", () => {
+      const scenario = probe([
+        { step: "token", via: "kit-sign", kit: "cwt", claims: {} },
+      ]);
+
+      expect(selfMarkedWireOf(scenario)).toBeUndefined();
     });
   });
 
@@ -273,7 +387,7 @@ describe("run-scenario — the step-definition layer", () => {
         then: [{ step: "accepts" }],
       };
 
-      await expect(runScenario(scenario, ctx)).rejects.toThrow(
+      await expect(runScenario(scenario, ctx, "jose")).rejects.toThrow(
         /static-assert requires a \{ step: "claims" \} GIVEN/,
       );
     });
@@ -306,7 +420,7 @@ describe("run-scenario — the step-definition layer", () => {
         then: [{ step: "rejects", error: "AegisDomainError" }],
       };
 
-      await expect(runScenario(scenario, ctx)).resolves.toBeUndefined();
+      await expect(runScenario(scenario, ctx, "jose")).resolves.toBeUndefined();
     });
 
     // …and a single-act mint row still behaves exactly as before.
@@ -327,7 +441,7 @@ describe("run-scenario — the step-definition layer", () => {
         then: [{ step: "accepts", format: "jwt" }],
       };
 
-      await expect(runScenario(scenario, ctx)).resolves.toBeUndefined();
+      await expect(runScenario(scenario, ctx, "jose")).resolves.toBeUndefined();
     });
 
     // ⚠ The other half of that split, and the reason it exists: unless the first
@@ -363,7 +477,7 @@ describe("run-scenario — the step-definition layer", () => {
         then: [{ step: "rejects", error: "AegisKeyError" }],
       };
 
-      await expect(runScenario(scenario, ctx)).rejects.toThrow(AegisKeyError);
+      await expect(runScenario(scenario, ctx, "jose")).rejects.toThrow(AegisKeyError);
     });
 
     // The CONSUMING half of `readWirePayload`'s unreadability signal: a row that
@@ -388,17 +502,17 @@ describe("run-scenario — the step-definition layer", () => {
         ],
       };
 
-      await expect(runScenario(scenario, ctx)).rejects.toThrow(
+      await expect(runScenario(scenario, ctx, "jose")).rejects.toThrow(
         /asserts on the cleartext wire payload/,
       );
     });
 
-    // ⚠ LOCAL cast, deliberate: the THEN tuple type makes a verdict in any but
-    // the FIRST slot unreachable at compile time, which is exactly why the
-    // runtime guard behind it is otherwise never executed. Same treatment as
-    // `artifactStepOf`'s unreachable guard above — a guard that has never run is
-    // a guess.
-    test("should refuse a rejects step that is not the first THEN step", async () => {
+    // ⚠ LOCAL cast, deliberate: the THEN tuple type makes a verdict ALONGSIDE an
+    // `accepts` unreachable at compile time — a THEN that rejects holds nothing
+    // but rejections — which is exactly why the runtime guard behind it is
+    // otherwise never executed. Same treatment as `artifactStepOf`'s unreachable
+    // guard above — a guard that has never run is a guess.
+    test("should refuse a rejects step standing among observations", async () => {
       const scenario: Scenario = {
         id: "probe",
         title: "a probe row, for the misplaced-verdict guard alone",
@@ -411,9 +525,272 @@ describe("run-scenario — the step-definition layer", () => {
         ] as unknown as Scenario["then"],
       };
 
-      await expect(runScenario(scenario, ctx)).rejects.toThrow(
-        /may only be the first THEN step/,
+      await expect(runScenario(scenario, ctx, "jose")).rejects.toThrow(
+        /a `rejects` step is a verdict, never an observation/,
       );
+    });
+
+    // A row may spell its refusal once per wire — the error NAMESPACE and the
+    // `format` tag on the error's data are wire identifiers by construction. The
+    // selection has to pick the run's OWN verdict: picking the first would make
+    // every COSE run assert the JOSE spelling, and picking none would let the run
+    // pass on a missing expectation.
+    describe("per-wire rejection", () => {
+      // A token with no `exp` — refused by the domain floor on either wire, and
+      // the error names the encoding it refused, which is the one thing the two
+      // verdicts cannot share.
+      const probe = (then: Scenario["then"]): Scenario => ({
+        id: "probe",
+        title: "a probe row, for the per-wire verdict selection alone",
+        rationale: "not a capability — this row exists only to exercise selection.",
+        given: [
+          {
+            step: "token",
+            via: "kit-sign",
+            kit: "structured",
+            claims: { iss: ISSUER, sub: "user-1", aud: [RESOURCE], iat: NOW },
+          },
+        ],
+        when: [{ step: "verify" }],
+        then,
+      });
+
+      const scoped = (jose: Wire, cose: Wire): Scenario["then"] => [
+        { step: "rejects", on: jose, error: "AegisDomainError", data: { format: "jwt" } },
+        { step: "rejects", on: cose, error: "AegisDomainError", data: { format: "cwt" } },
+      ];
+
+      test("should assert the verdict scoped to the wire under test", async () => {
+        const scenario = probe(scoped("jose", "cose"));
+
+        await expect(runScenario(scenario, ctx, "jose")).resolves.toBeUndefined();
+        await expect(
+          runScenario(scenario, await createScenarioContext(), "cose"),
+        ).resolves.toBeUndefined();
+      });
+
+      // The vacuity this guards: a scoped verdict that matches no wire would
+      // otherwise leave the run with nothing to assert, and a row asserting
+      // nothing passes.
+      test("should fail a row whose scoped verdicts miss the wire under test", async () => {
+        const scenario = probe(scoped("jose", "jose"));
+
+        await expect(
+          runScenario(scenario, await createScenarioContext(), "cose"),
+        ).rejects.toThrow(/names none for the cose wire it runs on/);
+      });
+
+      // An UNSCOPED verdict is the fallback, so a row that states one refusal for
+      // both wires keeps behaving exactly as it did.
+      test("should fall back to an unscoped verdict on every wire", async () => {
+        const scenario = probe([{ step: "rejects", error: "AegisDomainError" }]);
+
+        await expect(runScenario(scenario, ctx, "jose")).resolves.toBeUndefined();
+        await expect(
+          runScenario(scenario, await createScenarioContext(), "cose"),
+        ).resolves.toBeUndefined();
+      });
+    });
+
+    // An observation may be scoped to ONE wire — a raw COSE label and a raw JOSE
+    // parameter name are the same fact in two vocabularies. The scope must be
+    // SKIPPED on the other wire and REFUSED on a wire the row does not run on at
+    // all, where it would assert nothing at all, silently.
+    describe("per-wire observation", () => {
+      const probe = (
+        then: Scenario["then"],
+        unsupported?: Scenario["unsupported"],
+      ): Scenario => ({
+        id: "probe",
+        title: "a probe row, for the per-wire observation scope alone",
+        rationale: "not a capability — this row exists only to exercise the scope.",
+        given: [
+          {
+            step: "token",
+            via: "kit-sign",
+            kit: "structured",
+            claims: {
+              iss: ISSUER,
+              sub: "user-1",
+              aud: [RESOURCE],
+              exp: NOW + 3600,
+              iat: NOW,
+              jti: "token-1",
+            },
+          },
+        ],
+        when: [{ step: "verify" }],
+        then,
+        ...(unsupported ? { unsupported } : {}),
+      });
+
+      // The SKIP. The JOSE-scoped step names a text key no COSE header carries, so
+      // a run that evaluated it on COSE would fail — passing there is the proof it
+      // was skipped, and passing on JOSE is the proof it is not skipped everywhere.
+      test("should skip an observation scoped to another wire the row also runs on", async () => {
+        const scenario = probe([
+          { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+          { step: "wireProtectedHeader", on: "jose", includes: { typ: "JWT" } },
+          {
+            step: "wireProtectedHeader",
+            on: "cose",
+            includes: { 16: "application/cwt" },
+          },
+        ]);
+
+        await expect(runScenario(scenario, ctx, "jose")).resolves.toBeUndefined();
+        await expect(
+          runScenario(scenario, await createScenarioContext(), "cose"),
+        ).resolves.toBeUndefined();
+      });
+
+      // The MISS, and the vacuity it guards: the row runs on COSE alone, so the
+      // JOSE-scoped step is skipped on every run there is. Without the guard the
+      // row passes on both counts having checked nothing.
+      test("should fail a row that scopes an observation to a wire it does not run on", async () => {
+        const scenario = probe(
+          [
+            { step: "accepts", format: { cose: "cwt" } },
+            { step: "wireProtectedHeader", on: "jose", includes: { typ: "JWT" } },
+          ],
+          { jose: "a stated reason" },
+        );
+
+        await expect(
+          runScenario(scenario, await createScenarioContext(), "cose"),
+        ).rejects.toThrow(
+          /scopes a THEN step to the jose wire, which it does not run on/,
+        );
+      });
+
+      // The same guard covers a scoped VERDICT: `rejectionFor` fails a wire NO
+      // verdict covers, but a verdict for a wire the row never runs on is dead in
+      // the other direction and nothing saw it.
+      test("should fail a row that scopes a verdict to a wire it does not run on", async () => {
+        const scenario = probe(
+          [
+            { step: "rejects", on: "cose", error: "AegisDomainError" },
+            { step: "rejects", on: "jose", error: "AegisDomainError" },
+          ],
+          { jose: "a stated reason" },
+        );
+
+        await expect(
+          runScenario(scenario, await createScenarioContext(), "cose"),
+        ).rejects.toThrow(
+          /scopes a THEN step to the jose wire, which it does not run on/,
+        );
+      });
+    });
+
+    // The ACCEPTED verdict's per-wire half. Its rejecting twin has three tests and
+    // this had none — and the same wire-agnostic row reaches a DIFFERENT format on
+    // each wire, so the record is the form most rows use.
+    describe("per-wire accepted format", () => {
+      const probe = (then: Scenario["then"]): Scenario => ({
+        id: "probe",
+        title: "a probe row, for the per-wire format assertion alone",
+        rationale: "not a capability — this row exists only to exercise the assertion.",
+        given: [
+          {
+            step: "token",
+            via: "kit-sign",
+            kit: "structured",
+            claims: { iss: ISSUER, sub: "user-1", aud: [RESOURCE], exp: NOW + 3600 },
+          },
+        ],
+        when: [{ step: "verify" }],
+        then,
+      });
+
+      test("should assert the format named for the wire under test", async () => {
+        const scenario = probe([
+          { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+        ]);
+
+        await expect(runScenario(scenario, ctx, "jose")).resolves.toBeUndefined();
+        await expect(
+          runScenario(scenario, await createScenarioContext(), "cose"),
+        ).resolves.toBeUndefined();
+      });
+
+      // The vacuity: a record that names no tag for the run's wire would otherwise
+      // compare `undefined` against `undefined` and pass.
+      test("should fail a record that names no format for the wire under test", async () => {
+        const scenario = probe([{ step: "accepts", format: { jose: "jwt" } }]);
+
+        await expect(
+          runScenario(scenario, await createScenarioContext(), "cose"),
+        ).rejects.toThrow(/names none for the cose wire it runs on/);
+      });
+
+      // A BARE tag claims the same format on every wire, which only a one-wire row
+      // can be right about. Refused by name rather than surfacing as a puzzling
+      // value mismatch.
+      test("should refuse a bare tag on a row that runs on more than one wire", async () => {
+        const scenario = probe([{ step: "accepts", format: "jwt" }]);
+
+        await expect(runScenario(scenario, ctx, "jose")).resolves.toBeUndefined();
+        await expect(
+          runScenario(scenario, await createScenarioContext(), "cose"),
+        ).rejects.toThrow(/the row states one format for every wire it runs on/);
+      });
+    });
+
+    // A raw kit door is named wire-agnostically for the same reason a raw kit
+    // SIGN is: naming `jwt` there would pin the row to JOSE through the WHEN,
+    // which `pinnedWireOf` reads off the GIVEN alone and would never see.
+    test("should resolve an agnostic kit-verify against the wire under test", async () => {
+      const scenario: Scenario = {
+        id: "probe",
+        title: "a probe row, for the agnostic kit-verify door alone",
+        rationale: "not a capability — this row exists only to exercise the door.",
+        given: [
+          {
+            step: "token",
+            via: "kit-sign",
+            kit: "structured",
+            claims: {
+              iss: ISSUER,
+              sub: "user-1",
+              aud: [RESOURCE],
+              exp: NOW - 3600,
+              iat: NOW - 7200,
+            },
+          },
+        ],
+        when: [{ step: "kit-verify", kit: "structured" }],
+        then: [{ step: "rejects", error: "AegisError" }],
+      };
+
+      await expect(runScenario(scenario, ctx, "jose")).resolves.toBeUndefined();
+      await expect(
+        runScenario(scenario, await createScenarioContext(), "cose"),
+      ).resolves.toBeUndefined();
+    });
+
+    // The opaque doors take `VerifyUnstructuredTokenOptions`, which has no
+    // temporal knob — there are no claims to bound. A row that named one would
+    // otherwise hand a bag to a door that ignores it, and the row would read as
+    // a statement about an option nothing consults.
+    test("should refuse verify options handed to an opaque kit door", async () => {
+      const scenario: Scenario = {
+        id: "probe",
+        title: "a probe row, for the opaque-options guard alone",
+        rationale: "not a capability — this row exists only to exercise the guard.",
+        given: [
+          { step: "token", via: "kit-sign", kit: "opaque", claims: { hello: "world" } },
+        ],
+        when: [{ step: "kit-verify", kit: "opaque", options: { clockTolerance: 60 } }],
+        then: [{ step: "accepts" }],
+      };
+
+      await expect(runScenario(scenario, ctx, "jose")).rejects.toThrow(
+        /the row hands verify options to the jws door/,
+      );
+      await expect(
+        runScenario(scenario, await createScenarioContext(), "cose"),
+      ).rejects.toThrow(/the row hands verify options to the cws door/);
     });
   });
 });

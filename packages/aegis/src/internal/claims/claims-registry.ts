@@ -94,7 +94,24 @@ const labelled = (jose: string, label: number, cose = jose): Record<Wire, WireKe
 /** Every claim flows in both directions — see the "constant columns" note above. */
 const BOTH: Directions = ["mint", "verify"];
 
-const SAMPLE_DATE = new Date("2026-01-01T00:00:00.000Z");
+/**
+ * The two representative NumericDate samples, split by {@link ClaimSpec.temporal}.
+ *
+ * ⚠ ONE sample cannot serve both marks. A `temporal: "past"` claim must not be in
+ * the future and a `temporal: "future"` claim must not be in the past
+ * (`jwt-temporal-matchers.ts`), so a single instant given to both makes at least
+ * one of them unverifiable at any clock — and it did: every `date` claim carried
+ * the SAME 2026 instant, so `iat`/`nbf`/`auth_time` samples were two years ahead
+ * of any plausible verification and refused on sight, while `exp` passed. A
+ * consumer of these samples has to be able to build a token that VERIFIES, or the
+ * column proves nothing.
+ *
+ * `updatedAt` is a `date` with NO temporal mark — a profile timestamp, never
+ * range-checked — and takes the past sample because that is the honest shape of
+ * "when this profile was last updated".
+ */
+const SAMPLE_PAST_DATE = new Date("2023-12-31T00:00:00.000Z");
+const SAMPLE_FUTURE_DATE = new Date("2026-01-01T00:00:00.000Z");
 
 /**
  * The registry. Order groups by COSE-key category for readability; lookups are
@@ -149,7 +166,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     direction: BOTH,
     matchable: true,
     sensitivity: "public",
-    sample: SAMPLE_DATE,
+    sample: SAMPLE_FUTURE_DATE,
     bucket: "claims",
     temporal: "future",
     domainClaim: true,
@@ -162,7 +179,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     direction: BOTH,
     matchable: true,
     sensitivity: "public",
-    sample: SAMPLE_DATE,
+    sample: SAMPLE_PAST_DATE,
     bucket: "claims",
     temporal: "past",
     domainClaim: true,
@@ -175,7 +192,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     direction: BOTH,
     matchable: true,
     sensitivity: "public",
-    sample: SAMPLE_DATE,
+    sample: SAMPLE_PAST_DATE,
     bucket: "claims",
     temporal: "past",
     domainClaim: true,
@@ -505,7 +522,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     direction: BOTH,
     matchable: true,
     sensitivity: "public",
-    sample: SAMPLE_DATE,
+    sample: SAMPLE_PAST_DATE,
     bucket: "claims",
     temporal: "past",
     domainClaim: true,
@@ -911,7 +928,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     direction: BOTH,
     matchable: true,
     sensitivity: "public",
-    sample: SAMPLE_DATE,
+    sample: SAMPLE_PAST_DATE,
     bucket: "profile",
   },
   {
@@ -988,7 +1005,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     direction: BOTH,
     matchable: true,
     sensitivity: "public",
-    sample: "western",
+    // The sample MUST be a member of `AegisProfileNamingSystem`. It was
+    // `"western"`, which the union has never contained — the column is typed
+    // `unknown` (`ParamSpec<D = unknown>`), so nothing rejected it, and the
+    // registry's own sample test checks the CODEC kind (`text`) rather than the
+    // domain type, which a bogus string satisfies.
+    sample: "given_family",
     bucket: "profile",
   },
   {

@@ -1,7 +1,7 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { describe, expect, test } from "vitest";
-import { AegisError } from "../errors/index.js";
+import { AegisError, CweError } from "../errors/index.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { coseByJose } from "../internal/header/header-registry.js";
 import { decodeProtectedHeader } from "../internal/cose/structures.js";
@@ -18,10 +18,15 @@ describe("CweKit (COSE_Encrypt0)", () => {
     const payload = Buffer.from("the cwt claims bytes");
 
     const token = kit.encrypt(payload, { tokenType: "at" });
-    const { payload: out, protectedHeader: header } = kit.decrypt(token);
+    const { payload: out, protectedHeader: header, token: echoed } = kit.decrypt(token);
 
     expect(out.equals(payload)).toBe(true);
     expect(header.enc).toBe("A256GCM"); // A256GCM wire enc name
+    // The result ECHOES the artifact it read. A caller that has to re-emit,
+    // forward or cache the token holds the parsed result and nothing else, so an
+    // echo that returned a different value — or none — would send it on with an
+    // artifact that is not the one it verified.
+    expect(echoed.equals(token)).toBe(true);
   });
 
   test("rejects tampered ciphertext", () => {
@@ -170,6 +175,11 @@ describe("CweKit — proprietary alg/enc gate (D5)", () => {
       }
     })();
 
+    // ⚠ The LEAF class, not only `AegisError`. `CweError` is what this kit's
+    // refusals promise, and a throw that quietly became a sibling COSE error
+    // would still satisfy the base-class assertion while breaking every consumer
+    // that branches on the namespace.
+    expect(error).toBeInstanceOf(CweError);
     expect(error).toBeInstanceOf(AegisError);
     expect(error?.code).toBe("cose_enc_not_registered");
   });

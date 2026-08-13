@@ -21,8 +21,13 @@ describe("CwsKit — asymmetric key produces a COSE_Sign1 (tag 18)", () => {
     const sign1 = decodeCbor<Tag>(bytes);
     expect(sign1.tag).toBe(COSE_TAG.sign1);
 
-    const { payload: out } = kit.verify(bytes);
+    const { payload: out, token } = kit.verify(bytes);
     expect(out.equals(payload)).toBe(true);
+    // The result ECHOES the artifact it read. A caller that has to re-emit,
+    // forward or cache the token holds the parsed result and nothing else, so an
+    // echo that returned a different value — or none — would send it on with an
+    // artifact that is not the one it verified.
+    expect(token.equals(bytes)).toBe(true);
   });
 
   test("rejects a tampered payload", () => {

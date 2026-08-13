@@ -1,5 +1,12 @@
 import { type KryptosFromString, KryptosKit } from "@lindorm/kryptos";
 import { KRYPTOS_AKP_SIG_ML_DSA_65 } from "@lindorm/kryptos/fixtures";
+import {
+  TEST_X509_INTERMEDIATE_PEM,
+  TEST_X509_LEAF_PEM,
+  TEST_X509_LEAF_PRIVATE_KEY_B64,
+  TEST_X509_LEAF_PUBLIC_KEY_B64,
+  TEST_X509_ROOT_PEM,
+} from "./x509.js";
 
 const defaults = {
   notBefore: new Date("2023-01-01T01:00:00.000Z"),
@@ -67,6 +74,50 @@ export const TEST_OCT_KEY_ENC = KryptosKit.from.b64({
   use: "enc",
 });
 
+/**
+ * A SECOND `dir` key, differing from {@link TEST_OCT_KEY_ENC} only in its content
+ * encryption (`A128GCM` rather than `A256GCM`).
+ *
+ * A COSE_Encrypt0 is single-recipient direct encryption (RFC 9052 §5.2), so every
+ * `cwe` key is a `dir` key and the recipient's `kid` travels in the UNPROTECTED
+ * bucket as a byte string — which no literal can be compared against. The content
+ * encryption is the one property of the resolved key that IS legible from the
+ * protected bucket on both wires, so a pair that differs in it is what makes "the
+ * key selector was read" observable at all.
+ */
+export const TEST_OCT_KEY_ENC_GCM128 = KryptosKit.from.b64({
+  ...defaults,
+  id: "b2d9e4c7-8a15-5f36-9c0b-4d7e2a8f1503",
+  algorithm: "dir",
+  encryption: "A128GCM",
+  createdAt: new Date("2024-01-01T00:12:00.000Z"),
+  privateKey: "0SAdXqYgUS_IPXzub2spRQ",
+  publicKey: "",
+  type: "oct",
+  use: "enc",
+});
+
+/**
+ * A `dir` key declaring an AES-CBC-HMAC content encryption.
+ *
+ * It exists for ONE distinction: RFC 7518 §5.2.5 registers `A128CBC-HS256` as a
+ * JOSE `enc` value, while RFC 9053 §4 registers only the AES-GCM and AES-CCM
+ * families for COSE — so the same encryption is standard on one wire and
+ * private-use on the other, which is the whole subject of the `proprietary`
+ * interop gate. No other fixture can put that gate in front of a call.
+ */
+export const TEST_OCT_KEY_ENC_CBC = KryptosKit.from.b64({
+  ...defaults,
+  id: "6f3b8d2a-4c1e-5a90-8b7d-2e5f9c0a1b34",
+  algorithm: "dir",
+  encryption: "A128CBC-HS256",
+  createdAt: new Date("2024-01-01T00:11:00.000Z"),
+  privateKey: "0SAdXqYgUS_IPXzub2spRQ2VLJl95iTn3wl4HIRYRZg",
+  publicKey: "",
+  type: "oct",
+  use: "enc",
+});
+
 export const TEST_OKP_KEY_SIG = KryptosKit.from.b64({
   ...defaults,
   id: "2fa52a91-7f63-5731-a55d-30d36350c642",
@@ -115,6 +166,45 @@ export const TEST_RSA_KEY_ENC = KryptosKit.from.b64({
   id: "20b09138-bab7-54ce-a491-1f4ba52e3d4e",
   algorithm: "RSA-OAEP-256",
   createdAt: new Date("2024-01-01T00:07:00.000Z"),
+  use: "enc",
+});
+
+/**
+ * The CERTIFICATE-BEARING pair — the same X.509 leaf key in both directions.
+ *
+ * Cert binding is the only write knob family whose effect is invisible without
+ * one: `resolveCertBinding` defaults to `"thumbprint"` when (and only when) the
+ * key carries a chain, and throws `cert_binding_chain_required` for a key that
+ * does not, so a probe for `bindCertificate` / `certificateThumbprintSha1`
+ * against any other fixture would measure the throw rather than the knob.
+ *
+ * The chain's own validity window (2026-04-13 .. 2126-03-20) is deliberately NOT
+ * matched by the clock: `resolveCertBinding` derives the thumbprints from the
+ * leaf and never range-checks it, so these keys are usable at the table's default
+ * clock like every other fixture.
+ */
+const X509_LEAF: KryptosFromString = {
+  ...defaults,
+  id: "8e18cf4f-1a3b-5cb1-9a2e-1c9d0a2b3c4d",
+  algorithm: "ES256",
+  curve: "P-256",
+  type: "EC",
+  use: "sig",
+  privateKey: TEST_X509_LEAF_PRIVATE_KEY_B64,
+  publicKey: TEST_X509_LEAF_PUBLIC_KEY_B64,
+  certificateChain: [TEST_X509_LEAF_PEM, TEST_X509_INTERMEDIATE_PEM, TEST_X509_ROOT_PEM],
+};
+
+export const TEST_EC_KEY_SIG_CERT = KryptosKit.from.b64({
+  ...X509_LEAF,
+  createdAt: new Date("2024-01-01T00:09:00.000Z"),
+});
+
+export const TEST_EC_KEY_ENC_CERT = KryptosKit.from.b64({
+  ...X509_LEAF,
+  id: "0c7a2b61-5d4e-59f0-b3c2-7e6d5f4a3b2c",
+  algorithm: "ECDH-ES",
+  createdAt: new Date("2024-01-01T00:10:00.000Z"),
   use: "enc",
 });
 

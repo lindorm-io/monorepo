@@ -46,3 +46,33 @@ export const TEST_X509_LEAF_PRIVATE_KEY_B64 =
 
 export const TEST_X509_LEAF_PUBLIC_KEY_B64 =
   "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEg7-PZHaGSsppBpQK2uY8RXAkqq6k2HzCx2-lLAi3sN1kLbI-JoszWHd1qUQGij0Bc7O1T9RtXMMzxPUUC1tUtw";
+
+/**
+ * The chain as RFC 7515 §4.1.6 requires it on the wire, derived from the PEMs
+ * above rather than copied out of a token.
+ *
+ * §4.1.6: "The certificate or certificate chain is represented as a JSON array
+ * of certificate value strings. Each string in the array is a base64-encoded
+ * (Section 4 of [RFC4648] -- not base64url-encoded) DER [ITU.X690.2008] PKIX
+ * certificate value. The certificate containing the public key corresponding to
+ * the key used to digitally sign the JWS MUST be the first certificate. This MAY
+ * be followed by additional certificates, with each subsequent certificate being
+ * the one used to certify the previous one."
+ *
+ * ⚠ This is an ORACLE, not a copy of what the writer produced: the PEMs are the
+ * INPUT the fixture key is built from, and the two transformations that matter —
+ * strip the armour, keep leaf-first order — are done here independently. Pinning
+ * only that an `x5c` is PRESENT would leave a truncated, reversed or
+ * PEM-armoured chain unnoticed, and every one of those is a chain a relying
+ * party cannot build a path from.
+ */
+export const TEST_X509_CHAIN_B64: ReadonlyArray<string> = [
+  TEST_X509_LEAF_PEM,
+  TEST_X509_INTERMEDIATE_PEM,
+  TEST_X509_ROOT_PEM,
+].map((pem) =>
+  pem
+    .split("\n")
+    .filter((line) => !line.startsWith("-----"))
+    .join(""),
+);

@@ -1,9 +1,22 @@
+import {
+  Algorithms,
+  COSEKey,
+  Headers,
+  Mac0,
+  MacAlgorithms,
+  ProtectedHeaders,
+  Sign1,
+  UnprotectedHeaders,
+} from "@auth0/cose";
+import { createHash } from "node:crypto";
 import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { LindormError } from "@lindorm/errors";
-import { isString } from "@lindorm/is";
+import { isArray, isDate, isObject, isString } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
+import type { ILogger } from "@lindorm/logger";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { Dict } from "@lindorm/types";
+import { CompactSign, importJWK } from "jose";
 import MockDate from "mockdate";
 import { expect } from "vitest";
 import { Aegis } from "../classes/Aegis.js";
@@ -21,13 +34,22 @@ import {
   JwsError,
   JwtError,
 } from "../errors/index.js";
+import { CLAIM_SPECS, coseName, joseName } from "../internal/claims/claims-registry.js";
+import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
+import { encodeCwtClaims } from "../internal/cose/cwt-claims.js";
 import { decodeCwtWire } from "../internal/cose/cwt-token.js";
-import type { TokenFormat, TokenFormatTag } from "../types/index.js";
+import { COSE_TAG, decodeProtectedHeader } from "../internal/cose/structures.js";
+import { WIRE_TAGS } from "../internal/registry/wire.js";
+import type { ParsedDpopProof, TokenFormat, TokenFormatTag } from "../types/index.js";
 import { inspectToken, type RawLabelMap, type TokenInspection } from "./inspect-token.js";
 import {
   TEST_EC_KEY_ENC,
+  TEST_EC_KEY_ENC_CERT,
   TEST_EC_KEY_SIG,
+  TEST_EC_KEY_SIG_CERT,
   TEST_OCT_KEY_ENC,
+  TEST_OCT_KEY_ENC_CBC,
+  TEST_OCT_KEY_ENC_GCM128,
   TEST_OCT_KEY_SIG,
   TEST_OKP_KEY_ENC,
   TEST_OKP_KEY_SIG,
@@ -37,13 +59,18 @@ import {
 import {
   ISSUER,
   type ArtifactGivenStep,
+  type DateCell,
+  type DpopProofGiven,
   type ErrorClassName,
   type Given,
   type KeyFixture,
   type PlainVerifyStep,
   type ProfiledVerifyStep,
+  type RejectsThenStep,
   type Scenario,
+  type TamperSegment,
   type ThenStep,
+  type ThumbprintCell,
   type WhenStep,
   type Wire,
   type WireAssertion,
@@ -66,8 +93,12 @@ export const DEFAULT_CLOCK = "2024-01-01T08:00:00.000Z";
 const KEY_FIXTURES: Record<KeyFixture, IKryptos> = {
   "ec-sig": TEST_EC_KEY_SIG,
   "ec-enc": TEST_EC_KEY_ENC,
+  "ec-sig-cert": TEST_EC_KEY_SIG_CERT,
+  "ec-enc-cert": TEST_EC_KEY_ENC_CERT,
   "oct-sig": TEST_OCT_KEY_SIG,
   "oct-enc": TEST_OCT_KEY_ENC,
+  "oct-enc-cbc": TEST_OCT_KEY_ENC_CBC,
+  "oct-enc-gcm128": TEST_OCT_KEY_ENC_GCM128,
   "okp-sig": TEST_OKP_KEY_SIG,
   "okp-enc": TEST_OKP_KEY_ENC,
   "rsa-sig": TEST_RSA_KEY_SIG,
@@ -91,8 +122,14 @@ const ERROR_CLASSES: Record<ErrorClassName, typeof LindormError> = {
 };
 
 export type ScenarioContext = {
+  /**
+   * ⚠ MUTABLE. A `deployment` GIVEN step REPLACES it, because the settings it
+   * states are constructor arguments — there is no other way to reach them.
+   */
   aegis: Aegis;
   amphora: IAmphora;
+  /** Kept so a rebuilt `Aegis` is the same deployment in every other respect. */
+  logger: ILogger;
 };
 
 /**
@@ -108,7 +145,56 @@ export const createScenarioContext = async (): Promise<ScenarioContext> => {
   await amphora.setup();
   amphora.add(TEST_EC_KEY_SIG);
 
-  return { aegis, amphora };
+  return { aegis, amphora, logger };
+};
+
+/**
+ * Revive every DATA CELL in a row, deeply, and CLONE everything else on the way.
+ *
+ * Two values a row needs cannot be JSON literals: a {@link DateCell} because JSON
+ * has no date, and a {@link ThumbprintCell} because a key's digest belongs to the
+ * key material rather than to the row. Both are spelled as a single-member object
+ * and resolved here; the table's serialisability test is what would otherwise
+ * catch a live `Date` written into a bag typed as `Dict`.
+ *
+ * The CLONE is what keeps a row reusable: the table is a module-level literal
+ * shared by every wire in the matrix, and by the second run the defect check
+ * performs, so a step that mutated its own input would leak across both.
+ *
+ * ⚠ A live `Date` passes through untouched. `isObject` is false for one, so the
+ * recursion never walks its properties — but the guard is explicit here because
+ * this function is also handed rows the knob interpreter has ALREADY revived.
+ */
+const reviveCells = <T>(value: T): T => {
+  if (isDate(value)) return value;
+  if (isArray(value)) return value.map(reviveCells) as unknown as T;
+
+  if (!isObject(value)) return value;
+
+  const entries = Object.entries(value as Dict);
+
+  if (entries.length === 1 && entries[0][0] === "date" && isString(entries[0][1])) {
+    return new Date((value as unknown as DateCell).date) as unknown as T;
+  }
+
+  if (
+    entries.length === 1 &&
+    entries[0][0] === "thumbprintOf" &&
+    isString(entries[0][1])
+  ) {
+    const fixture = (value as unknown as ThumbprintCell).thumbprintOf;
+    const kryptos = KEY_FIXTURES[fixture];
+
+    if (kryptos === undefined) {
+      throw new Error(`the row names a thumbprint of the unknown key "${fixture}"`);
+    }
+
+    return kryptos.thumbprint as unknown as T;
+  }
+
+  return Object.fromEntries(
+    entries.map(([key, entry]) => [key, reviveCells(entry)]),
+  ) as T;
 };
 
 /**
@@ -124,31 +210,135 @@ export const artifactStepOf = (given: Given): ArtifactGivenStep => {
 };
 
 /**
- * The wire a row targets, derived from how its artifact is built. `mint` and
- * `domain-encrypt` are told by `options.format`; a kit names its own wire. A
- * claim-only row has no wire at all, so it reads as JOSE (the default door).
+ * The wire an artifact PINS ITSELF to, or `undefined` when it is wire-agnostic.
  *
- * Used by the table's integrity test to assert `absentTwin` names the OTHER
- * wire — a row naming its own would be documenting the absence of itself.
+ * A concrete kit names its own wire; a `mint` or a `domain-encrypt` is pinned
+ * only by an explicit `options.format`. A claim-only row builds no token at all,
+ * so it is agnostic by nature — the static matcher surface has no wire.
  */
-export const wireOf = (scenario: Scenario): Wire => {
-  const artifact = artifactStepOf(scenario.given);
-
-  if (artifact.step === "claims") return "jose";
+export const artifactWireOf = (artifact: ArtifactGivenStep): Wire | undefined => {
+  if (artifact.step === "claims") return undefined;
 
   switch (artifact.via) {
     case "kit-sign":
-      return artifact.kit === "cwt" || artifact.kit === "cws" ? "cose" : "jose";
+      switch (artifact.kit) {
+        case "jwt":
+        case "jws":
+          return "jose";
+        case "cwt":
+        case "cws":
+          return "cose";
+        case "structured":
+        case "opaque":
+          return undefined;
+        default: {
+          const exhaustive: never = artifact;
+          throw new Error(`unhandled kit-sign artifact ${JSON.stringify(exhaustive)}`);
+        }
+      }
 
     case "kit-encrypt":
-      return artifact.kit === "cwe" ? "cose" : "jose";
+      switch (artifact.kit) {
+        case "jwe":
+          return "jose";
+        case "cwe":
+          return "cose";
+        case "sealed":
+          return undefined;
+        default: {
+          const exhaustive: never = artifact;
+          throw new Error(`unhandled kit-encrypt artifact ${JSON.stringify(exhaustive)}`);
+        }
+      }
+
+    // A foreign producer writes whichever wire the run is on — the step names a
+    // header, never an encoding.
+    case "foreign":
+      return undefined;
 
     case "mint":
     case "domain-encrypt": {
       const format = artifact.options?.format;
-      return isString(format) && format.startsWith("c") ? "cose" : "jose";
+      if (!isString(format)) return undefined;
+      return format.startsWith("c") ? "cose" : "jose";
+    }
+
+    default: {
+      const exhaustive: never = artifact;
+      throw new Error(`unhandled artifact ${JSON.stringify(exhaustive)}`);
     }
   }
+};
+
+/**
+ * A row's OWN wire, if it has pinned itself to one. The table's integrity test
+ * uses it to demand an `unsupported` reason for the wire such a row leaves
+ * uncovered — that debt is what makes coverage the default rather than a habit.
+ */
+export const pinnedWireOf = (scenario: Scenario): Wire | undefined =>
+  artifactWireOf(artifactStepOf(scenario.given));
+
+/**
+ * The wires a row RUNS ON: every wire aegis speaks, less the ones the row
+ * declares it cannot state the capability on.
+ *
+ * A row pinned to one wire runs on that one alone — and owes the other an
+ * `unsupported` entry, which the integrity test collects. An agnostic row runs
+ * on everything left after its own declarations.
+ */
+export const wiresOf = (scenario: Scenario): ReadonlyArray<Wire> => {
+  const pinned = pinnedWireOf(scenario);
+  const wires = pinned === undefined ? WIRE_TAGS : [pinned];
+
+  return wires.filter((wire) => scenario.unsupported?.[wire] === undefined);
+};
+
+/**
+ * The wire a row PINS ITSELF TO and then declares UNSUPPORTED — a row
+ * documenting the absence of itself, and `undefined` for every well-formed row.
+ *
+ * ⚠ Derived from the row's OWN TWO DECLARATIONS — the artifact it builds and the
+ * reasons it states — and never from {@link wiresOf}. Asking `wiresOf` is how the
+ * predecessor of this function was dead twice over: the first version filtered on
+ * a field the row never set, and its replacement asked whether any wire in
+ * `wiresOf(scenario)` appeared in `unsupported` — the exact negation of the filter
+ * that had just produced that array, so it was empty for every table that could
+ * ever be written. A check whose input is the output of the rule it is checking
+ * cannot fail.
+ *
+ * An AGNOSTIC row is not covered and must not be: `unsupported` is precisely how
+ * such a row states the wires it does not run on, so an entry there is the
+ * declaration working, not a contradiction.
+ */
+export const selfMarkedWireOf = (scenario: Scenario): Wire | undefined => {
+  const pinned = pinnedWireOf(scenario);
+
+  if (pinned === undefined) return undefined;
+
+  return scenario.unsupported?.[pinned] === undefined ? undefined : pinned;
+};
+
+/**
+ * The defect a row declares FOR ONE WIRE, or `undefined` when it declares none
+ * there.
+ *
+ * A bare string is a shortfall on every wire the row runs on; the per-wire form
+ * states it for exactly the wires that have it. Resolving the two here is what
+ * lets the table's invariant be checked per (row, wire) CELL — which it always
+ * was, against a field that could only speak for the whole row, so a capability
+ * holding on one wire and failing on the other could not be declared at all.
+ *
+ * ⚠ It reads the row's OWN declaration and never the run's verdict. A resolver
+ * that consulted the outcome would make the invariant unfalsifiable, which is
+ * the shape two other checks in this file have already been dead in.
+ */
+export const knownDefectOn = (scenario: Scenario, wire: Wire): string | undefined => {
+  const { knownDefect } = scenario;
+
+  if (knownDefect === undefined) return undefined;
+  if (isString(knownDefect)) return knownDefect;
+
+  return knownDefect[wire];
 };
 
 /**
@@ -169,6 +359,29 @@ type ScenarioResult = {
    * against an act that never reports one, which is a pass for the wrong reason.
    */
   unprotectedHeader?: { value: Dict | undefined };
+  /**
+   * The OPAQUE payload — an artifact whose body is not a claims layer, delivered
+   * beside an empty domain. In a CELL for the same reason as the header above:
+   * only `parse`/`verify`/`decrypt` report one at all, and a row asserting on the
+   * payload of an act that reports none must fail rather than pass on silence.
+   */
+  raw?: { value: Dict | string | Buffer | undefined };
+  /** The UNTRANSLATED wire claims a domain read passes through, in a cell. */
+  wire?: { value: Dict | undefined };
+  /**
+   * The read-side CATEGORY buckets, in one cell. They have no wire
+   * representation — they exist only on a domain result — so an act that
+   * produces no domain result reports no cell and a row asserting on one fails
+   * by name.
+   */
+  buckets?: { value: { profile?: Dict; sensitive?: Dict; delegation?: Dict } };
+  /**
+   * The VERIFIED proof of possession, in a cell for the same reason as the rest:
+   * only a `verify` handed a `dpopProof` reports one, so a row asserting on it
+   * against an act that reports none must fail by name rather than pass on the
+   * act's silence — which is exactly how the success path came to be unexercised.
+   */
+  dpop?: { value: ParsedDpopProof | undefined };
 };
 
 /**
@@ -354,6 +567,31 @@ const assertWireBucket = (assertion: WireAssertion, bucket: ComparableBucket): v
 };
 
 /**
+ * The thumbprint a token BINDS itself to, read off the raw wire by the
+ * INDEPENDENT inspector — RFC 7800 §3.1 `cnf`, RFC 9449 §6.1 `jkt`.
+ *
+ * ⚠ Read from the token rather than from the verify result on purpose. The
+ * possession check's whole claim is that the proof was made by the key the TOKEN
+ * names; comparing the result's reported thumbprint to the result's own bound
+ * thumbprint would be satisfied by a verifier that fabricated both, which is
+ * precisely the class of hole that left this path unexercised.
+ */
+const confirmationThumbprintOf = (token: string): string | undefined => {
+  const inspection = inspectToken(token);
+
+  if (inspection.payload.readable === false) return undefined;
+
+  const claims = inspection.payload.value as Dict;
+  const cnf = inspection.wire === "jose" ? claims.cnf : (claims.cnf ?? claims[8]);
+
+  if (!cnf || typeof cnf !== "object") return undefined;
+
+  const jkt = (cnf as Dict).jkt;
+
+  return isString(jkt) ? jkt : undefined;
+};
+
+/**
  * The DOMAIN header bucket a row asserts on, or the harness's own diagnostic.
  * A row naming an act that reports no domain header at all is a row that would
  * otherwise pass on the act's silence.
@@ -367,6 +605,24 @@ const domainHeaderOf = (result: ScenarioResult): Dict | undefined => {
   }
 
   return result.unprotectedHeader.value;
+};
+
+/**
+ * The value inside a result CELL, or the harness's own diagnostic.
+ *
+ * A row asserting on something the last act never reports would otherwise be
+ * asserting against `undefined`, and every exclusion and every absence check
+ * passes over `undefined` — the vacuous pass the cells exist to prevent. Name the
+ * acts that DO report it, so the row is repaired rather than puzzled over.
+ */
+const cellOf = <T>(cell: { value: T } | undefined, what: string, from: string): T => {
+  if (cell === undefined) {
+    throw new Error(
+      `the row asserts on ${what}, but the last act reported none — only ${from} report it.`,
+    );
+  }
+
+  return cell.value;
 };
 
 /** GIVEN — stock the vault and set the clock, then build the artifact. */
@@ -385,9 +641,26 @@ const applySetup = (given: Given, ctx: ScenarioContext): void => {
         MockDate.set(new Date(step.at));
         break;
 
+      // The settings are CONSTRUCTOR arguments, so the only way to state them is
+      // to build the deployment again. The vault is the SAME one — a `keys` step
+      // stocks it, and rebuilding around it is what keeps the two steps
+      // independent of the order a row writes them in.
+      case "deployment":
+        ctx.aegis = new Aegis({
+          amphora: ctx.amphora,
+          logger: ctx.logger,
+          ...step.settings,
+        });
+        break;
+
       case "token":
       case "claims":
         break;
+
+      default: {
+        const exhaustive: never = step;
+        throw new Error(`unhandled given step ${JSON.stringify(exhaustive)}`);
+      }
     }
   }
 };
@@ -409,9 +682,249 @@ const mergeMintClaims = (content: Dict): Dict => {
   };
 };
 
+/**
+ * The JOSE→COSE claim-name divergences, DERIVED from the claim registry — the
+ * one place that knows what a claim is called on each wire. Today it yields
+ * exactly one pair (`jti` → `cti`, RFC 8392 §3.1.7); a second registered divergence
+ * is picked up here without an edit.
+ *
+ * ⚠ Deriving rather than hand-listing is the point. A claim left under its JOSE
+ * name on a COSE wire raises no error — it is simply an unregistered custom
+ * claim — so a stale hand-copy would not fail, it would quietly stop testing the
+ * registered claim and start testing a custom one that happens to look like it.
+ * That is the same look-alike confusion several rows in this table exist to
+ * catch, and it would have been reintroduced by the harness meant to run them.
+ */
+const COSE_CLAIM_SPELLING: ReadonlyMap<string, string> = new Map(
+  CLAIM_SPECS.filter((spec) => coseName(spec) !== joseName(spec)).map((spec) => [
+    joseName(spec),
+    coseName(spec),
+  ]),
+);
+
+/** Re-spell a JOSE-spelled passthrough claims bag for the COSE wire. */
+const respellForCose = (claims: Dict): Dict =>
+  Object.fromEntries(
+    Object.entries(claims).map(([key, value]) => [
+      COSE_CLAIM_SPELLING.get(key) ?? key,
+      value,
+    ]),
+  );
+
+/**
+ * The concrete kit a wire-agnostic sign/encrypt step resolves to. Total over
+ * both wires, so a new wire is a compile error here rather than a row that
+ * silently stops running.
+ */
+const AGNOSTIC_KITS = {
+  structured: { jose: "jwt", cose: "cwt" },
+  opaque: { jose: "jws", cose: "cws" },
+  sealed: { jose: "jwe", cose: "cwe" },
+} as const satisfies Record<"structured" | "opaque" | "sealed", Record<Wire, string>>;
+
+/** The claims format a wire-agnostic `mint` / `domain-encrypt` resolves to. */
+const AGNOSTIC_FORMATS = {
+  mint: { jose: "jwt", cose: "cwt" },
+  encrypt: { jose: "jwe", cose: "cwe" },
+} as const satisfies Record<"mint" | "encrypt", Record<Wire, string>>;
+
+/**
+ * The FOREIGN producers — the write half of the foreign-token step, one per wire,
+ * each a third-party library signing with the vault's own baseline key.
+ *
+ * ⚠ Third-party ON PURPOSE, and not merely for convenience: a token aegis wrote
+ * and aegis read proves the two agree, never that either is right. These two are
+ * what put an envelope aegis cannot itself produce in front of the read path.
+ *
+ * The COSE side reuses the framing the interop suite established: `@auth0/cose`
+ * emits a BARE COSE_Sign1 (tag 18) and aegis reads `Tag(61, Tag(18, …))`
+ * (RFC 8392 §6 — the CWT CBOR tag), so their structure is re-framed rather than
+ * re-signed. The `kid` rides the UNPROTECTED bucket, which is where RFC 9052
+ * §3.1 permits a non-integrity-critical parameter to sit and where aegis's key
+ * resolution reads it from.
+ */
+const signForeignJose = async (
+  claims: Dict,
+  typ: string | undefined,
+  kryptos: IKryptos,
+): Promise<string> => {
+  const key = await importJWK(kryptos.export("jwk") as never, kryptos.algorithm);
+
+  return new CompactSign(Buffer.from(JSON.stringify(claims), "utf8"))
+    .setProtectedHeader({
+      alg: kryptos.algorithm,
+      kid: kryptos.id,
+      ...(typ === undefined ? {} : { typ }),
+    })
+    .sign(key);
+};
+
+/**
+ * The COSE `typ` header label. RFC 9596 §2 DEFINES the parameter and §4.1 is the
+ * IANA registration that assigns it label 16 — which postdates `@auth0/cose`'s
+ * `Headers` enum, hence the numeric literal and the one cast below. Stated here
+ * rather than inline so the number is not a mystery.
+ */
+const COSE_TYP_LABEL = 16;
+
+/**
+ * The COSE algorithm identifier for a key fixture's JOSE algorithm name. Only
+ * the algorithms the fixtures actually carry are mapped: an unmapped one is a
+ * row asking for a producer that does not exist, and saying so beats emitting a
+ * token under the wrong `alg`.
+ */
+const coseAlgorithmOf = (kryptos: IKryptos): number => {
+  switch (kryptos.algorithm) {
+    // RFC 9053 §2.1 Table 1 — ES512 is -36.
+    case "ES512":
+      return Algorithms.ES512;
+    // RFC 9053 §3.1 Table 7 — HMAC 256/256 is 5.
+    case "HS256":
+      return MacAlgorithms.HS256;
+    default:
+      throw new Error(
+        `the foreign COSE producer has no algorithm mapping for "${kryptos.algorithm}" — add one`,
+      );
+  }
+};
+
+const signForeignCose = async (
+  claims: Dict,
+  typ: string | undefined,
+  kryptos: IKryptos,
+): Promise<string> => {
+  const jwk = kryptos.export("jwk") as Dict;
+
+  const protectedEntries: Array<[number, unknown]> = [
+    [Headers.Algorithm, coseAlgorithmOf(kryptos)],
+  ];
+
+  if (typ !== undefined) protectedEntries.push([COSE_TYP_LABEL, typ]);
+
+  const protectedHeaders = new ProtectedHeaders(protectedEntries as never);
+  const unprotectedHeaders = new UnprotectedHeaders([
+    [Headers.KeyID, Buffer.from(kryptos.id, "utf8")],
+  ]);
+  // ⚠ `proprietary: false` — the INTEROPERABLE spelling, which is what a third
+  // party emits. A foreign producer has never heard of this package's
+  // private-use integer labels, so encoding its payload with them would put the
+  // LESS interoperable wire in front of the read path while the row's premise
+  // says the opposite: every row here exists to state what aegis must accept
+  // from somebody else.
+  //
+  // The claims are still encoded by aegis's own CWT codec rather than by
+  // `@auth0/cose`, and that is a limit of this producer: the foreign library
+  // writes COSE structures and signatures, not CWT claim labels (RFC 8392 §4),
+  // so the label mapping has no third-party implementation here to borrow. What
+  // the foreign half genuinely provides — the COSE_Sign1/COSE_Mac0 framing and
+  // the signature over it — is the half aegis cannot check against itself.
+  const payload = Buffer.from(
+    encodeCbor(encodeCwtClaims(claims as never, { proprietary: false })),
+  );
+
+  // A SHARED SECRET authenticates a CWT as a COSE_Mac0 and never as a
+  // COSE_Sign1: RFC 9052 §4.2 defines the latter as carrying a digital
+  // signature, whose whole property is that only the private-key holder could
+  // have produced it, and §6.2 defines the former as the MACed structure with an
+  // implicit key. Emitting a symmetric token under the signature structure would
+  // be the confusion the two structures exist to prevent, so the producer picks
+  // the structure the key admits.
+  if (kryptos.type === "oct") {
+    const { kty, k } = jwk;
+
+    const mac0 = await Mac0.create(
+      // ⚠ `Mac0.create` declares its own `MacProtectedHeaders`, whose value union
+      // is narrower than the signature one's; the entries here are common to
+      // both, so the cast crosses two declarations of the same bucket rather
+      // than widening anything.
+      protectedHeaders as never,
+      unprotectedHeaders,
+      payload,
+      await COSEKey.fromJWK({ kty, k } as never).toKeyLike(),
+    );
+
+    return Buffer.from(
+      encodeCbor(
+        new Tag(COSE_TAG.cwt, new Tag(COSE_TAG.mac0, mac0.getContentForEncoding())),
+      ),
+    ).toString("base64url");
+  }
+
+  const { kty, crv, x, y, d } = jwk;
+
+  const sign1 = await Sign1.sign(
+    protectedHeaders,
+    unprotectedHeaders,
+    payload,
+    await COSEKey.fromJWK({ kty, crv, x, y, d } as never).toKeyLike(),
+  );
+
+  return Buffer.from(
+    encodeCbor(
+      new Tag(COSE_TAG.cwt, new Tag(COSE_TAG.sign1, sign1.getContentForEncoding())),
+    ),
+  ).toString("base64url");
+};
+
+/**
+ * The access token a CAPTURED proof commits to — any token that is not the one
+ * presented. Its exact value is irrelevant; that it DIFFERS is the whole
+ * property, so it is spelled here once rather than restated by a row.
+ */
+const DPOP_OTHER_ACCESS_TOKEN = "an-access-token-this-proof-was-not-presented-with";
+
+/**
+ * The DPoP proof a row presents — RFC 9449 §4.2 — signed at run time over the
+ * token the GIVEN produced.
+ *
+ * Signed by the FOREIGN jose library for the same reason the foreign producers
+ * exist: a presenter is by definition not the verifier, so a proof aegis both
+ * wrote and read would show only that the two agree.
+ *
+ * The PUBLIC half of the key rides in the header as `jwk`, which is what the
+ * verifier thumbprints against the token's `cnf.jkt`; the private half never
+ * leaves this function.
+ */
+const signDpopProof = async (
+  given: DpopProofGiven,
+  presentedToken: string,
+): Promise<string> => {
+  const kryptos = KEY_FIXTURES[given.key];
+
+  if (kryptos === undefined) {
+    throw new Error(`the row presents a proof signed by the unknown key "${given.key}"`);
+  }
+
+  const key = await importJWK(kryptos.export("jwk") as never, kryptos.algorithm);
+
+  // RFC 9449 §4.2 — `ath` is the base64url SHA-256 of the ASCII access token the
+  // proof is presented with.
+  const committedToken = given.ath === "other" ? DPOP_OTHER_ACCESS_TOKEN : presentedToken;
+
+  return new CompactSign(
+    Buffer.from(
+      JSON.stringify({
+        jti: given.tokenId,
+        htm: given.httpMethod,
+        htu: given.httpUri,
+        iat: Math.floor(Date.now() / 1000),
+        ath: createHash("sha256").update(committedToken, "ascii").digest("base64url"),
+      }),
+      "utf8",
+    ),
+  )
+    .setProtectedHeader({
+      alg: kryptos.algorithm,
+      typ: "dpop+jwt",
+      jwk: kryptos.toJWK("public") as never,
+    })
+    .sign(key);
+};
+
 const materialise = async (
   artifact: ArtifactGivenStep,
   ctx: ScenarioContext,
+  wire: Wire,
 ): Promise<ScenarioResult> => {
   if (artifact.step === "claims") {
     // No artifact: the static surface operates on the flat dict directly.
@@ -426,16 +939,39 @@ const materialise = async (
       // correlation into `mint<P>(profile: P, content: ProfileContentFor<P>)` —
       // it infers `P` as the union of every name. The row itself is still checked
       // against its own member, which is where the typo guard lives.
+      // A row that names no `format` is wire-agnostic; the RUN's wire decides
+      // which claims format it mints as. A row that names one is pinned, and
+      // `wiresOf` has already restricted the run to that wire, so the two can
+      // never disagree.
       const signed = await ctx.aegis.mint(
         artifact.profile,
         mergeMintClaims(artifact.content as Dict) as never,
-        artifact.options,
+        {
+          format: AGNOSTIC_FORMATS.mint[wire],
+          ...artifact.options,
+        } as never,
       );
       return { token: signed.token, format: signed.format };
     }
 
     case "kit-sign": {
       switch (artifact.kit) {
+        case "structured": {
+          const claims =
+            wire === "cose" ? respellForCose(artifact.claims) : artifact.claims;
+          const signed =
+            AGNOSTIC_KITS.structured[wire] === "cwt"
+              ? await ctx.aegis.cwt.sign(claims, artifact.options)
+              : await ctx.aegis.jwt.sign(claims, artifact.options);
+          return { token: signed.token, format: signed.format };
+        }
+        case "opaque": {
+          const signed =
+            AGNOSTIC_KITS.opaque[wire] === "cws"
+              ? await ctx.aegis.cws.sign(artifact.claims, artifact.options)
+              : await ctx.aegis.jws.sign(artifact.claims, artifact.options);
+          return { token: signed.token, format: signed.format };
+        }
         case "jwt": {
           const signed = await ctx.aegis.jwt.sign(artifact.claims, artifact.options);
           return { token: signed.token, format: signed.format };
@@ -452,22 +988,219 @@ const materialise = async (
           const signed = await ctx.aegis.cws.sign(artifact.claims, artifact.options);
           return { token: signed.token, format: signed.format };
         }
+        default: {
+          const exhaustive: never = artifact;
+          throw new Error(`unhandled kit-sign artifact ${JSON.stringify(exhaustive)}`);
+        }
       }
     }
 
     case "kit-encrypt": {
+      const kit = artifact.kit === "sealed" ? AGNOSTIC_KITS.sealed[wire] : artifact.kit;
       const encrypted =
-        artifact.kit === "cwe"
+        kit === "cwe"
           ? await ctx.aegis.cwe.encrypt(artifact.data, artifact.options)
-          : await ctx.aegis.jwe.encrypt(artifact.data, artifact.options);
+          : await ctx.aegis.jwe.encrypt(artifact.data, artifact.options as never);
       return { token: encrypted.token, format: encrypted.format };
     }
 
     case "domain-encrypt": {
-      const encrypted = await ctx.aegis.encrypt(artifact.data, artifact.options);
+      const encrypted = await ctx.aegis.encrypt(artifact.data, {
+        format: AGNOSTIC_FORMATS.encrypt[wire],
+        ...artifact.options,
+      } as never);
       return { token: encrypted.token, format: encrypted.format };
     }
+
+    case "foreign": {
+      const claims = wire === "cose" ? respellForCose(artifact.claims) : artifact.claims;
+      const kryptos = KEY_FIXTURES[artifact.key ?? "ec-sig"];
+      const typ = isString(artifact.typ) ? artifact.typ : artifact.typ?.[wire];
+
+      return {
+        token:
+          wire === "cose"
+            ? await signForeignCose(claims, typ, kryptos)
+            : await signForeignJose(claims, typ, kryptos),
+        // The producer emits a claims token on either wire; `format` is what the
+        // READ side reports, and a foreign token is read exactly as an aegis one.
+        // A shared secret makes the COSE structure a COSE_Mac0, which reads back
+        // as `cwm` rather than `cwt`.
+        format: wire === "cose" ? (kryptos.type === "oct" ? "cwm" : "cwt") : "jwt",
+      };
+    }
+
+    default: {
+      const exhaustive: never = artifact;
+      throw new Error(`unhandled artifact ${JSON.stringify(exhaustive)}`);
+    }
   }
+};
+
+/**
+ * The member a tamper adds to a header or a claims container.
+ *
+ * Adding a member rather than editing one is deliberate: every parameter a token
+ * already carries is load-bearing somewhere on the read path — changing `alg`
+ * trips the algorithm match, changing `kid` makes the key unresolvable — and each
+ * of those refusals arrives BEFORE the signature is checked, so the row would
+ * pass while saying nothing about integrity. An unregistered member is inert on
+ * both wires: RFC 7515 §4 leaves an unrecognised JOSE Header Parameter to be
+ * ignored when it is not listed in `crit`, and an unregistered COSE label has no
+ * JOSE wire name and is skipped (`internal/header/cose-wire-header.ts`).
+ */
+const TAMPERED_MEMBER = "tampered";
+
+/** Flip every bit of the last byte — a different value, the same length. */
+const flipLastByte = (bytes: Buffer): Buffer => {
+  if (bytes.length === 0) {
+    throw new Error("the row tampers with an empty segment, so there is no byte to flip");
+  }
+
+  const copy = Buffer.from(bytes);
+  copy[copy.length - 1] ^= 0xff;
+  return copy;
+};
+
+const b64u = (value: Buffer | string): string =>
+  (isString(value) ? Buffer.from(value, "utf8") : value).toString("base64url");
+
+const tamperJose = (token: string, segment: TamperSegment): string => {
+  const parts = token.split(".");
+
+  if (parts.length !== 3) {
+    throw new Error(
+      `the row tampers with a JOSE token, but a ${parts.length}-part serialisation has no header/payload/signature triple to rewrite`,
+    );
+  }
+
+  const [header, payload, signature] = parts;
+
+  switch (segment) {
+    case "header": {
+      const decoded = JSON.parse(
+        Buffer.from(header, "base64url").toString("utf8"),
+      ) as Dict;
+      return [
+        b64u(JSON.stringify({ ...decoded, [TAMPERED_MEMBER]: true })),
+        payload,
+        signature,
+      ].join(".");
+    }
+
+    case "payload": {
+      const decoded = JSON.parse(
+        Buffer.from(payload, "base64url").toString("utf8"),
+      ) as Dict;
+      return [
+        header,
+        b64u(JSON.stringify({ ...decoded, [TAMPERED_MEMBER]: true })),
+        signature,
+      ].join(".");
+    }
+
+    case "signature":
+      return [
+        header,
+        payload,
+        b64u(flipLastByte(Buffer.from(signature, "base64url"))),
+      ].join(".");
+
+    default: {
+      const exhaustive: never = segment;
+      throw new Error(`unhandled tamper segment "${String(exhaustive)}"`);
+    }
+  }
+};
+
+const tamperCose = (token: string, segment: TamperSegment): string => {
+  let value: unknown = decodeCbor(Buffer.from(token, "base64url"));
+  const tags: Array<number> = [];
+
+  while (value instanceof Tag) {
+    tags.push(Number(value.tag));
+    value = value.contents;
+  }
+
+  if (!isArray(value)) {
+    throw new Error(
+      "the row tampers with a COSE token, but the CBOR does not decode to a COSE structure array",
+    );
+  }
+
+  const structure = [...value];
+
+  switch (segment) {
+    case "header": {
+      const header = decodeProtectedHeader(structure[0] as Uint8Array);
+      // The label is a tstr, which RFC 9052 §1.5 admits (`label = int / tstr`)
+      // alongside the integer labels the bucket already carries. The map is typed
+      // `Map<number, unknown>` because every label aegis WRITES is an integer.
+      (header as Map<number | string, unknown>).set(TAMPERED_MEMBER, true);
+      structure[0] = encodeCbor(header);
+      break;
+    }
+
+    case "payload": {
+      const payload = decodeCbor<Map<number | string, unknown>>(
+        structure[2] as Uint8Array,
+      );
+      payload.set(TAMPERED_MEMBER, true);
+      structure[2] = encodeCbor(payload);
+      break;
+    }
+
+    case "signature": {
+      if (structure.length < 4) {
+        throw new Error(
+          `the row tampers with a COSE signature, but a ${structure.length}-element structure carries none (a COSE_Encrypt0 has ciphertext, not a signature)`,
+        );
+      }
+      structure[3] = flipLastByte(Buffer.from(structure[3] as Uint8Array));
+      break;
+    }
+
+    default: {
+      const exhaustive: never = segment;
+      throw new Error(`unhandled tamper segment "${String(exhaustive)}"`);
+    }
+  }
+
+  // Re-frame in the tag chain the token arrived in, INNERMOST first. A CWT is
+  // `Tag(61, Tag(18, …))` (RFC 8392 §6), and a token that came back untagged
+  // would otherwise stop being the structure the read side routes on.
+  let rewrapped: unknown = structure;
+
+  for (const tag of [...tags].reverse()) {
+    rewrapped = new Tag(tag, rewrapped);
+  }
+
+  return encodeCbor(rewrapped).toString("base64url");
+};
+
+/**
+ * Rewrite the built artifact, when the row's artifact step asks for it.
+ *
+ * Runs OUTSIDE the outcome's try/catch on EVERY path (see {@link runScenario}),
+ * including the one where the construction is itself the act, so a tamper that
+ * cannot be applied surfaces as the harness's own diagnostic rather than as the
+ * rejection the row expects — a row asserting "the altered token is refused"
+ * would otherwise pass on the alteration having failed to happen.
+ */
+const applyTamper = (
+  result: ScenarioResult,
+  artifact: ArtifactGivenStep,
+): ScenarioResult => {
+  if (artifact.step !== "token" || artifact.tamper === undefined) return result;
+
+  const { segment } = artifact.tamper;
+
+  return {
+    ...result,
+    token: result.token.includes(".")
+      ? tamperJose(result.token, segment)
+      : tamperCose(result.token, segment),
+  };
 };
 
 /**
@@ -485,6 +1218,7 @@ const act = async (
   current: ScenarioResult,
   artifact: ArtifactGivenStep,
   ctx: ScenarioContext,
+  wire: Wire,
 ): Promise<ScenarioResult> => {
   switch (step.step) {
     // The GIVEN's own construction is the act; `materialise` already ran it.
@@ -502,15 +1236,42 @@ const act = async (
         unprotectedHeader: {
           value: parsed.unprotectedHeader as unknown as Dict | undefined,
         },
+        buckets: {
+          value: {
+            profile: parsed.profile as Dict | undefined,
+            sensitive: parsed.sensitive as Dict | undefined,
+            delegation: parsed.delegation as unknown as Dict | undefined,
+          },
+        },
       };
     }
 
     case "verify": {
+      // The proof is signed HERE, over the artifact the GIVEN just produced:
+      // RFC 9449 §4.2 makes `ath` commit to the access token it is presented
+      // with, so a conformant proof does not exist until the token does and no
+      // row could hold a finished one. The bag is left EXACTLY as the row wrote
+      // it when no proof is presented — an `options` the row omitted stays
+      // omitted rather than becoming a bag carrying `dpopProof: undefined`.
+      const dpopProof =
+        step.dpopProof === undefined
+          ? undefined
+          : await signDpopProof(step.dpopProof, current.token);
+
       // ⚠ FOUR positionals on the profiled overload — `assert` is the THIRD slot,
       // options the FOURTH. Options in the third slot become claim MATCHERS.
       const verified = isProfiledVerify(step)
-        ? await ctx.aegis.verify(step.profile, current.token, step.assert, step.options)
-        : await ctx.aegis.verify(current.token, step.assert, step.options);
+        ? await ctx.aegis.verify(
+            step.profile,
+            current.token,
+            step.assert,
+            dpopProof === undefined ? step.options : { ...step.options, dpopProof },
+          )
+        : await ctx.aegis.verify(
+            current.token,
+            step.assert,
+            dpopProof === undefined ? step.options : { ...step.options, dpopProof },
+          );
 
       return {
         token: verified.token,
@@ -521,13 +1282,45 @@ const act = async (
         unprotectedHeader: {
           value: verified.unprotectedHeader as unknown as Dict | undefined,
         },
+        raw: { value: verified.raw },
+        wire: { value: verified.wire?.payload },
+        buckets: {
+          value: {
+            profile: verified.profile as Dict | undefined,
+            sensitive: verified.sensitive as Dict | undefined,
+            delegation: verified.delegation as unknown as Dict | undefined,
+          },
+        },
+        dpop: { value: verified.dpop },
       };
     }
 
     case "kit-verify": {
-      switch (step.kit) {
+      // A wire-agnostic kit name resolves against the wire the run is on, the
+      // same table `materialise` signs through — so the door a row names is the
+      // door for the artifact it built, on every wire it runs on.
+      const kit =
+        step.kit === "structured" || step.kit === "opaque"
+          ? AGNOSTIC_KITS[step.kit][wire]
+          : step.kit;
+
+      // An OPAQUE door takes `VerifyUnstructuredTokenOptions`, which has no
+      // temporal knob at all — there are no claims to bound. A row that stated
+      // one here would be asserting against an option the door does not have, so
+      // name the mistake rather than forward a bag that is silently ignored.
+      if (step.options !== undefined && (kit === "jws" || kit === "cws")) {
+        throw new Error(
+          `the row hands verify options to the ${kit} door, which takes none beyond \`certBindingMode\` — an opaque token carries no claims layer to bound.`,
+        );
+      }
+
+      switch (kit) {
         case "jwt": {
-          const result = await ctx.aegis.jwt.verify(current.token);
+          const result = await ctx.aegis.jwt.verify(
+            current.token,
+            undefined,
+            step.options,
+          );
           return {
             token: current.token,
             claims: result.payload as Dict,
@@ -535,7 +1328,11 @@ const act = async (
           };
         }
         case "cwt": {
-          const result = await ctx.aegis.cwt.verify(current.token);
+          const result = await ctx.aegis.cwt.verify(
+            current.token,
+            undefined,
+            step.options,
+          );
           return {
             token: current.token,
             claims: result.payload as Dict,
@@ -556,6 +1353,15 @@ const act = async (
             header: result.protectedHeader as unknown as Dict,
           };
         }
+
+        // ⚠ `noFallthroughCasesInSwitch` and `noImplicitReturns` are BOTH off
+        // repo-wide, so without this an unmatched kit fell out of this switch and
+        // straight into `case "decrypt"` below — the row would have believed it
+        // was testing the kit-verify door while `aegis.decrypt` ran.
+        default: {
+          const exhaustive: never = kit;
+          throw new Error(`unhandled kit-verify door "${String(exhaustive)}"`);
+        }
       }
     }
 
@@ -566,6 +1372,12 @@ const act = async (
         format: decrypted.format,
         claims: decrypted.claims as Dict,
         custom: decrypted.custom as Dict,
+        // `decrypt` reports ONE header — the encrypting outer's, which the AEAD
+        // covers in full. There is no unprotected counterpart to report, so the
+        // cell is left unset rather than filled with an empty bucket.
+        header: decrypted.header as unknown as Dict,
+        raw: { value: decrypted.raw },
+        wire: { value: decrypted.wire?.payload },
       };
     }
 
@@ -575,8 +1387,42 @@ const act = async (
           `static-assert requires a { step: "claims" } GIVEN, received a "${artifact.via}" token`,
         );
       }
-      Aegis.assert(artifact.claims, step.assert, step.options);
+      // BOTH forms of the static matcher run, over the same claims, the same
+      // matcher and the same options — `Aegis.matches` answers the question and
+      // `Aegis.assert` throws it.
+      //
+      // ⚠ WHAT THE AGREEMENT PINS is argument FORWARDING and POLARITY, never
+      // matching semantics. The two share more than the predicate builder: they
+      // share the MATCHER, because `validate` (`src/internal/utils/validate.ts:45`)
+      // opens with `if (matches(dict, predicate)) return;` — the same call
+      // `Aegis.matches` makes. So a matcher that decided every claim set wrongly
+      // would keep the two in perfect agreement. What cannot survive is one form
+      // dropping an argument the other forwards, or inverting the answer. The
+      // SEMANTICS are pinned by each row's own declared verdict, which is an
+      // independent statement about what the matcher must decide.
+      const matched = Aegis.matches(artifact.claims, step.assert, step.options);
+
+      try {
+        Aegis.assert(artifact.claims, step.assert, step.options);
+      } catch (error) {
+        expect(
+          matched,
+          "Aegis.assert refused these claims, so Aegis.matches must answer false for them",
+        ).toBe(false);
+        throw error;
+      }
+
+      expect(
+        matched,
+        "Aegis.assert accepted these claims, so Aegis.matches must answer true for them",
+      ).toBe(true);
+
       return { token: "", claims: artifact.claims };
+    }
+
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`unhandled act ${JSON.stringify(exhaustive)}`);
     }
   }
 };
@@ -588,21 +1434,145 @@ const act = async (
  * with the verdict already settled: an `accepts` row that threw has rethrown, and
  * a `rejects` row never reaches an observation.
  */
-const assertObservation = (step: ThenStep, result: ScenarioResult): void => {
+const assertObservation = (step: ThenStep, result: ScenarioResult, wire: Wire): void => {
+  // An observation scoped to another wire is not this run's business. Skipping
+  // it is the whole reason a raw-label assertion does not pin the ROW to one
+  // wire — see `ObservationThenStep.on`.
+  if (step.step !== "accepts" && step.step !== "rejects" && step.on !== undefined) {
+    if (step.on !== wire) return;
+  }
+
   switch (step.step) {
     case "accepts":
       if (step.format !== undefined) {
-        expect(result.format).toBe(step.format);
+        // A bare tag claims the SAME format on every wire the row runs on. That
+        // is only ever true of a one-wire row, so on any other wire it would be
+        // asserting a JOSE tag against a COSE run — refuse it by name rather
+        // than let it fail as a puzzling value mismatch three lines down.
+        if (isString(step.format)) {
+          expect(
+            result.format,
+            `the row states one format for every wire it runs on; on the ${wire} wire that cannot hold. State it per wire: { ${wire}: "…" }`,
+          ).toBe(step.format);
+          return;
+        }
+
+        const expected = step.format[wire];
+
+        expect(
+          expected,
+          `the row states a per-wire format but names none for the ${wire} wire it runs on`,
+        ).toBeDefined();
+        expect(result.format).toBe(expected);
       }
       return;
 
     case "claims":
       expect(result.claims).toMatchObject(step.expected);
+      for (const field of step.excludes ?? []) {
+        // The bucket itself must exist first: `not.toHaveProperty` over
+        // `undefined` passes, so an exclusion asserted against an act that
+        // produced no claim bucket would check nothing.
+        expect(
+          result.claims,
+          "the row excludes a domain claim, but the act produced no claim bucket",
+        ).toBeDefined();
+        expect(result.claims).not.toHaveProperty(field);
+      }
       return;
 
     case "custom":
       expect(result.custom).toMatchObject(step.expected);
+      for (const field of step.excludes ?? []) {
+        expect(
+          result.custom,
+          "the row excludes a custom claim, but the act produced no custom bucket",
+        ).toBeDefined();
+        expect(result.custom).not.toHaveProperty(field);
+      }
       return;
+
+    case "raw": {
+      const raw = cellOf(result.raw, "the opaque payload", "`verify` and `decrypt`");
+
+      expect(
+        raw,
+        "the row asserts on the opaque payload, but the act delivered none",
+      ).toBeDefined();
+
+      // A string payload is compared WHOLE. `toMatchObject` over a string
+      // compares character by character and would be satisfied by a prefix, so
+      // the two shapes are not interchangeable.
+      if (isString(step.expected)) {
+        expect(raw).toBe(step.expected);
+        return;
+      }
+
+      expect(raw).toMatchObject(step.expected);
+      return;
+    }
+
+    case "untranslatedClaims": {
+      const wire = cellOf(
+        result.wire,
+        "the untranslated wire claims",
+        "`verify` and `decrypt`",
+      );
+
+      expect(
+        wire,
+        "the row asserts on the untranslated wire claims, but the act passed none through",
+      ).toBeDefined();
+      expect(wire).toMatchObject(step.expected);
+      return;
+    }
+
+    case "bucket": {
+      const buckets = cellOf(
+        result.buckets,
+        `the ${step.bucket} bucket`,
+        "`parse` and `verify`",
+      );
+      const bucket = buckets[step.bucket];
+
+      if (step.absent === true) {
+        // `toBeUndefined`, not `toEqual({})`: an empty bucket is TRUTHY, so a
+        // consumer's `if (result.sensitive)` would read one as populated.
+        expect(bucket).toBeUndefined();
+        return;
+      }
+
+      expect(
+        bucket,
+        `the row asserts on the contents of the ${step.bucket} bucket, but the result carries none`,
+      ).toBeDefined();
+      expect(bucket).toMatchObject(step.expected);
+      return;
+    }
+
+    case "wireStructure": {
+      const inspection = inspectToken(result.token);
+
+      if (step.tags !== undefined) {
+        if (inspection.wire !== "cose") {
+          throw new Error(
+            "the row asserts a CBOR tag chain, but the token is a JOSE compact serialisation, which has none. " +
+              'Scope the step with `on: "cose"`, or assert `parts` instead.',
+          );
+        }
+        expect(inspection.tags).toEqual(step.tags);
+        return;
+      }
+
+      if (inspection.wire !== "jose") {
+        throw new Error(
+          "the row asserts a compact-serialisation part count, but the token is a COSE structure, which has no parts. " +
+            'Scope the step with `on: "jose"`, or assert `tags` instead.',
+        );
+      }
+      expect(inspection.partCount).toBe(step.parts);
+      return;
+    }
 
     case "header":
       expect(result.header).toMatchObject(step.expected);
@@ -639,23 +1609,26 @@ const assertObservation = (step: ThenStep, result: ScenarioResult): void => {
     }
 
     case "wirePayload": {
-      const wire = readWirePayload(result.token, result.format);
+      // ⚠ `payload`, not `wire` — this used to SHADOW the `wire: Wire` parameter,
+      // so every mention of the run's wire inside this branch would have read a
+      // `WirePayload` instead.
+      const payload = readWirePayload(result.token, result.format);
 
       // A wire assertion against a payload that cannot be read is VACUOUS, not
       // satisfied — an exclusion over an empty dict can never fail, so a row could
       // claim "the value never reached the wire" without ever looking. Fail it.
-      if (wire.readable === false) {
+      if (payload.readable === false) {
         throw new Error(
-          `the row asserts on the cleartext wire payload, but ${wire.reason}. ` +
+          `the row asserts on the cleartext wire payload, but ${payload.reason}. ` +
             "Assert `format` instead, or drop the wire assertion — it cannot be checked here.",
         );
       }
 
       if (step.includes) {
-        expect(wire.payload).toMatchObject(step.includes);
+        expect(payload.payload).toMatchObject(step.includes);
       }
       for (const key of step.excludes ?? []) {
-        expect(wire.payload).not.toHaveProperty(key);
+        expect(payload.payload).not.toHaveProperty(key);
       }
       return;
     }
@@ -687,20 +1660,135 @@ const assertObservation = (step: ThenStep, result: ScenarioResult): void => {
       assertWireBucket(step, wireBucketOf(inspectToken(result.token), "claims"));
       return;
 
+    case "dpop": {
+      // The cell, not the value: an act that reports NO proof at all is a row
+      // asserting the possession check ran when it never did — the precise shape
+      // of the gap this step exists to close, so it fails by name.
+      if (result.dpop === undefined) {
+        throw new Error(
+          "the row asserts on the verified proof of possession, but the last act reported none. " +
+            "Only a `verify` handed a `dpopProof` produces one.",
+        );
+      }
+
+      const dpop = result.dpop.value;
+
+      expect(
+        dpop,
+        "the row asserts a proof was verified, but the result carries none — the possession check did not run",
+      ).toBeDefined();
+      if (dpop === undefined) return;
+
+      expect(dpop).toMatchObject(step.expected);
+
+      // The two DERIVED facts, asserted on EVERY such row rather than left to a
+      // row to remember, because they ARE the check: that the proof was made by
+      // the key the token names, and made for the token actually presented.
+      // A row can state neither — the thumbprint is the bound key's digest and
+      // the hash is over the token the row itself produced.
+      //
+      // ⚠ Recomputed here from the token and the wire's own `cnf`, NOT read back
+      // out of the same result: comparing the result to itself would be
+      // satisfied by a verifier that fabricated both.
+      const boundThumbprint = confirmationThumbprintOf(result.token);
+
+      expect(
+        boundThumbprint,
+        "the row asserts a proof of possession, but the token it produced carries no confirmation to be bound to",
+      ).toBeDefined();
+      expect(dpop.thumbprint).toBe(boundThumbprint);
+
+      // RFC 9449 §4.2 — `ath` is the base64url SHA-256 of the ASCII access token.
+      expect(dpop.accessTokenHash).toBe(
+        createHash("sha256").update(result.token, "ascii").digest("base64url"),
+      );
+      return;
+    }
+
     case "rejects":
-      // Unreachable via the tuple type: a rejection is a whole THEN on its own.
-      throw new Error("a `rejects` step may only be the first THEN step");
+      // Unreachable via the tuple type: a THEN holding a rejection holds nothing
+      // but rejections, and `assertOutcome` never reaches the observation loop
+      // for one.
+      throw new Error("a `rejects` step is a verdict, never an observation");
+
+    default: {
+      const exhaustive: never = step;
+      throw new Error(`unhandled observation ${JSON.stringify(exhaustive)}`);
+    }
   }
+};
+
+/**
+ * The rejection verdict that applies to THIS run — the one scoped to the wire if
+ * the row states one, otherwise the unscoped one.
+ *
+ * `undefined` means the row states per-wire verdicts and covers every wire but
+ * this one. That is a row asserting nothing on a wire it runs on, so the caller
+ * fails it by name rather than letting the run pass on a missing expectation.
+ */
+const rejectionFor = (
+  then: Scenario["then"],
+  wire: Wire,
+): RejectsThenStep | undefined => {
+  const verdicts = then.filter(
+    (step): step is RejectsThenStep => step.step === "rejects",
+  );
+
+  return (
+    verdicts.find((step) => step.on === wire) ??
+    verdicts.find((step) => step.on === undefined)
+  );
+};
+
+/** The wire a THEN step scopes itself to. `accepts` carries no scope at all. */
+const scopedWireOf = (step: ThenStep): Wire | undefined =>
+  step.step === "accepts" ? undefined : step.on;
+
+/**
+ * Refuse a row that scopes a THEN step to a wire it does not RUN on.
+ *
+ * Such a step asserts NOTHING, on every wire: the run it names never happens, and
+ * on the runs that do happen `assertObservation` skips it by name. So a row could
+ * state its whole consequence under `on: "cose"`, declare `unsupported.cose`, and
+ * pass everywhere having checked nothing.
+ *
+ * ⚠ The other two per-wire mechanisms already guard their own version of this —
+ * `rejectionFor` fails a wire no verdict covers, and a per-wire `accepts.format`
+ * fails a wire it names no tag for. This is the third, and it was the one left
+ * silent.
+ */
+const assertScopesAreRun = (scenario: Scenario): void => {
+  const running = wiresOf(scenario);
+
+  const stranded = scenario.then
+    .map(scopedWireOf)
+    .filter((on): on is Wire => on !== undefined && !running.includes(on));
+
+  if (stranded.length === 0) return;
+
+  throw new Error(
+    `the row scopes a THEN step to the ${stranded.join(", ")} wire, which it does not run on — ` +
+      "that step asserts nothing. Drop the step, or drop the `unsupported` entry that removed the wire.",
+  );
 };
 
 const assertOutcome = (
   then: Scenario["then"],
   result: ScenarioResult | undefined,
   error: unknown,
+  wire: Wire,
 ): void => {
-  const [verdict] = then;
+  const [first] = then;
 
-  if (verdict.step === "rejects") {
+  if (first.step === "rejects") {
+    const verdict = rejectionFor(then, wire);
+
+    if (verdict === undefined) {
+      throw new Error(
+        `the row states its rejection per wire but names none for the ${wire} wire it runs on`,
+      );
+    }
+
     // Name what it resolved TO when it should have thrown: "it resolved" alone
     // does not say whether the check ran and passed or never ran at all.
     const resolved = result
@@ -727,7 +1815,7 @@ const assertOutcome = (
   if (!result) throw new Error("scenario produced neither a result nor an error");
 
   for (const step of then) {
-    assertObservation(step, result);
+    assertObservation(step, result, wire);
   }
 };
 
@@ -746,9 +1834,18 @@ const assertOutcome = (
  * a `mint` branch — would silently drop every later act and assert the mint alone.
  */
 export const runScenario = async (
-  scenario: Scenario,
+  original: Scenario,
   ctx: ScenarioContext,
+  wire: Wire,
 ): Promise<void> => {
+  // ⚠ CLONE FIRST, reviving every date cell. The table is a module-level literal
+  // and every row runs at least twice — once per wire, and again for the defect
+  // check — so anything downstream that writes into a step would leak across
+  // those runs. The revival is what lets a row carry a `Date` at all.
+  const scenario = reviveCells(original);
+
+  assertScopesAreRun(scenario);
+
   applySetup(scenario.given, ctx);
 
   const artifact = artifactStepOf(scenario.given);
@@ -756,33 +1853,38 @@ export const runScenario = async (
 
   let result: ScenarioResult | undefined;
   let error: unknown;
+  let built: ScenarioResult | undefined;
 
+  // A `mint` row's ACT is the construction itself, so a build that throws IS the
+  // verdict and has to be caught. Every other row builds its artifact as a
+  // GIVEN, where a throw is the harness failing to set the world up and must
+  // surface as itself rather than as the refusal the row asserts.
   if (constructionIsTheAct) {
     try {
-      let current = await materialise(artifact, ctx);
+      built = await materialise(artifact, ctx, wire);
+    } catch (err) {
+      error = err;
+    }
+  } else {
+    built = await materialise(artifact, ctx, wire);
+  }
 
-      for (const step of scenario.when.slice(1)) {
-        current = await act(step, current, artifact, ctx);
+  if (built !== undefined) {
+    // ⚠ OUTSIDE every try, on BOTH paths. A tamper that cannot be applied is the
+    // harness's own failure, and a row asserting "the altered token is refused"
+    // would otherwise pass on the alteration never having happened. The mint
+    // path used to run it inside the catch, which is exactly that hole.
+    let current = applyTamper(built, artifact);
+
+    try {
+      for (const step of constructionIsTheAct ? scenario.when.slice(1) : scenario.when) {
+        current = await act(step, current, artifact, ctx, wire);
       }
       result = current;
     } catch (err) {
       error = err;
     }
-
-    assertOutcome(scenario.then, result, error);
-    return;
   }
 
-  let current = await materialise(artifact, ctx);
-
-  try {
-    for (const step of scenario.when) {
-      current = await act(step, current, artifact, ctx);
-    }
-    result = current;
-  } catch (err) {
-    error = err;
-  }
-
-  assertOutcome(scenario.then, result, error);
+  assertOutcome(scenario.then, result, error, wire);
 };

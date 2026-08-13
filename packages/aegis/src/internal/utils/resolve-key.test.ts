@@ -545,4 +545,55 @@ describe("resolveKey", () => {
       expect((error as AegisError).code).toBe("verify_key_policy_violation");
     });
   });
+
+  /**
+   * On the READ side the artifact names the ONE key that can read it, so an
+   * injected key naming a different `kid` is a caller error and never a
+   * preference to be resolved. Both alternatives are worse than a throw:
+   * ignoring the supplied key sends the read to a vault key that cannot open the
+   * artifact, and preferring it reads the artifact with the wrong key material.
+   */
+  describe("an injected key that names another kid", () => {
+    const other = KryptosKit.clone(TEST_OCT_KEY_SIG, {
+      id: "9a8b7c6d-0000-4000-8000-00000000000b",
+    });
+
+    test("throws on VERIFY rather than silently working", async () => {
+      const error = await resolveKey({
+        amphora,
+        floor: VERIFY_FLOOR,
+        id: TEST_OCT_KEY_SIG.id,
+        kryptos: other,
+        logger,
+        operation: "verify",
+      }).catch((err: Error) => err);
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("verify_key_mismatch");
+      expect((error as AegisError).data).toMatchObject({
+        kid: TEST_OCT_KEY_SIG.id,
+        suppliedKid: other.id,
+        operation: "verify",
+      });
+    });
+
+    test("throws on DECRYPT rather than silently working", async () => {
+      const error = await resolveKey({
+        amphora,
+        floor: DECRYPT_FLOOR,
+        id: TEST_EC_KEY_ENC.id,
+        kryptos: TEST_OCT_KEY_ENC,
+        logger,
+        operation: "decrypt",
+      }).catch((err: Error) => err);
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("decrypt_key_mismatch");
+      expect((error as AegisError).data).toMatchObject({
+        kid: TEST_EC_KEY_ENC.id,
+        suppliedKid: TEST_OCT_KEY_ENC.id,
+        operation: "decrypt",
+      });
+    });
+  });
 });

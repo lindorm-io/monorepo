@@ -1,5 +1,13 @@
+import { Amphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
-import type { KryptosAlgorithm } from "@lindorm/kryptos";
+import { type IKryptos, type KryptosAlgorithm, KryptosKit } from "@lindorm/kryptos";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import type { Dict } from "@lindorm/types";
+import MockDate from "mockdate";
+import { describe, expect, test } from "vitest";
+import { TEST_AKP_KEY_SIG, TEST_OKP_KEY_SIG } from "../../__fixtures__/keys.js";
+import { Aegis } from "../../classes/Aegis.js";
+import { JwtKit } from "../../classes/JwtKit.js";
 import { B64U } from "../constants/format.js";
 import {
   createAccessTokenHash,
@@ -7,7 +15,8 @@ import {
   createStateHash,
   shaAlgorithm,
 } from "./create-hash.js";
-import { describe, expect, test } from "vitest";
+
+MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
 const bitLength = (hash: string): number => B64.toBuffer(hash, B64U).length * 8;
 
@@ -109,6 +118,79 @@ describe("create-hash", () => {
       expect(createCodeHash("EdDSA", authCode)).toBe(
         createCodeHash("ML-DSA-65", authCode),
       );
+    });
+  });
+
+  /**
+   * The SEAM: which algorithm the mint pipeline hands to the functions above.
+   *
+   * OIDC Core §3.1.3.6 ties the digest to the token's own signature — the
+   * `at_hash` value is "the base64url encoding of the left-most half of the hash
+   * of the octets of the ASCII representation of the access_token value, where
+   * the hash algorithm used is the hash algorithm used in the alg Header
+   * Parameter of the ID Token's JOSE Header". So the size is decided by the KEY
+   * the token happened to be signed with, and a pipeline that passed a fixed
+   * algorithm would emit a digest a conformant relying party cannot reproduce —
+   * while every unit test above kept passing, because the mapping itself would
+   * still be correct.
+   */
+  describe("the signing algorithm sizes the hash a mint derives", () => {
+    const ISSUER = "https://test.lindorm.io/";
+
+    const mintIdToken = async (kryptos: IKryptos): Promise<Dict> => {
+      const logger = createMockLogger();
+      const amphora = new Amphora({ internal: { issuer: ISSUER }, logger });
+      await amphora.setup();
+      amphora.add(kryptos);
+
+      const aegis = new Aegis({ amphora, logger });
+      const { token } = await aegis.mint(
+        "id_token",
+        {
+          subject: "user-1",
+          audience: ["client-1"],
+          accessToken: "the-access-token",
+        },
+        { context: { accessTokenIssued: false } },
+      );
+
+      return JwtKit.decode(token).payload as Dict;
+    };
+
+    test.each<[string, IKryptos, number]>([
+      // A size-suffixed alg uses that digest: ES256 ⇒ SHA-256 ⇒ 128-bit half.
+      ["ES256", KryptosKit.generate.auto({ algorithm: "ES256", publish: true }), 128],
+      // A suffix-less alg falls to SHA-512 ⇒ 256-bit half.
+      ["EdDSA", TEST_OKP_KEY_SIG, 256],
+      ["ML-DSA-65", TEST_AKP_KEY_SIG, 256],
+    ])("%s", async (_name, kryptos, bits) => {
+      const payload = await mintIdToken(kryptos);
+
+      expect(bitLength(payload.at_hash as string)).toBe(bits);
+    });
+
+    // RFC 9964 registers ML-DSA for JOSE, and the domain surface has to carry a
+    // post-quantum signature end to end — the wire `alg` string a relying party
+    // matches on, and a verify that resolves the key by its `kid` and validates.
+    test("a post-quantum signature round-trips through the domain surface", async () => {
+      const logger = createMockLogger();
+      const amphora = new Amphora({ internal: { issuer: ISSUER }, logger });
+      await amphora.setup();
+      amphora.add(TEST_AKP_KEY_SIG);
+
+      const aegis = new Aegis({ amphora, logger });
+      const { token } = await aegis.mint("access_token", {
+        subject: "user-1",
+        audience: ["https://rs.lindorm.io/"],
+        clientId: "client-1",
+        scope: ["openid"],
+      });
+
+      expect(JwtKit.decode(token).protectedHeader.alg).toBe("ML-DSA-65");
+
+      await expect(aegis.verify(token)).resolves.toMatchObject({
+        claims: { subject: "user-1", clientId: "client-1" },
+      });
     });
   });
 });

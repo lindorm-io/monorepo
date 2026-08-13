@@ -1,0 +1,274 @@
+import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
+import type { KitCapabilities } from "../internal/registry/capabilities.js";
+import type { PolicyRule, ShapeRuleName, TokenFormatTag } from "../types/index.js";
+
+/**
+ * THE COVERAGE CENSUS — one entry per member of every collection this package
+ * enumerates, stating what EXERCISES it.
+ *
+ * A generated matrix decays the same way a hand-written suite does, and faster:
+ * it looks total. The scenario matrix runs 28 rows, the knob matrix one probe per
+ * option, the per-spec matrix one cell per registry entry — and none of them can
+ * say whether a PROFILE, a POLICY RULE or a KIT CAPABILITY is exercised by
+ * anything at all. This is where each of those is bound to something that runs,
+ * or carries an explicit reasoned disposition.
+ *
+ * ⚠ TWO BINDING MECHANISMS, and the choice between them is not stylistic:
+ *   - where a TYPE-LEVEL UNION exists, the census is a TOTAL MAPPED TYPE over it
+ *     (`Record<ShapeRuleName, …>`, `-?`), so a new member is a COMPILE error;
+ *   - where none exists — a policy-rule INSTANCE has no type — the census is
+ *     compared at RUNTIME against the real collection, derived from the profiles
+ *     themselves.
+ * A census compared against a re-derivation of itself would satisfy both and
+ * prove neither.
+ */
+
+/** How a census member is exercised. */
+export type CensusEntry =
+  /** A generated matrix runs it. The matrix is named and the meta suite checks it. */
+  | { exercised: "matrix"; matrix: MatrixName }
+  /** Production code READS the value, and a test observes the resulting behaviour. */
+  | { exercised: "reader"; site: string }
+  /** A test observes the kit's own behaviour, without the kit reading this value. */
+  | { exercised: "observed"; note: string }
+  /** Nothing runs it, and the reason is stated. A DECLARATION, never a default. */
+  | { exercised: "declared"; reason: string };
+
+/** The generated matrices a census entry may name. */
+export type MatrixName = "scenario" | "knob" | "spec" | "policy";
+
+/**
+ * Every built-in profile, and what exercises it.
+ *
+ * TOTAL over `keyof BuiltInProfiles`, so a twelfth profile is a compile error
+ * here; the meta suite ALSO compares this key set to the names the profile
+ * registry actually resolves, which is what catches a profile added to the
+ * registry without a type member.
+ */
+export const PROFILE_CENSUS: { [P in keyof BuiltInProfiles]-?: CensusEntry } = {
+  access_token: { exercised: "matrix", matrix: "policy" },
+  default: { exercised: "matrix", matrix: "policy" },
+  delegation: { exercised: "matrix", matrix: "policy" },
+  erasure_token: { exercised: "matrix", matrix: "policy" },
+  external_access_token: { exercised: "matrix", matrix: "policy" },
+  id_token: { exercised: "matrix", matrix: "policy" },
+  introspection: { exercised: "matrix", matrix: "policy" },
+  jarm: { exercised: "matrix", matrix: "policy" },
+  logout_token: { exercised: "matrix", matrix: "policy" },
+  security_event: { exercised: "matrix", matrix: "policy" },
+  userinfo: { exercised: "matrix", matrix: "policy" },
+};
+
+/**
+ * Every policy-rule KIND. TOTAL over the `rule` discriminant of
+ * {@link PolicyRule}, so a seventh kind is a compile error.
+ */
+export const RULE_KIND_CENSUS: { [K in PolicyRule["rule"]]-?: CensusEntry } = {
+  required: { exercised: "matrix", matrix: "policy" },
+  forbidden: { exercised: "matrix", matrix: "policy" },
+  atLeastOneOf: { exercised: "matrix", matrix: "policy" },
+  match: { exercised: "matrix", matrix: "policy" },
+  shape: { exercised: "matrix", matrix: "policy" },
+  requiredWhen: { exercised: "matrix", matrix: "policy" },
+};
+
+/** Every named structural validator. TOTAL over {@link ShapeRuleName}. */
+export const SHAPE_RULE_CENSUS: { [S in ShapeRuleName]-?: CensusEntry } = {
+  actChain: { exercised: "matrix", matrix: "policy" },
+  authorizationDetails: { exercised: "matrix", matrix: "policy" },
+  confirmation: { exercised: "matrix", matrix: "policy" },
+  crossField: { exercised: "matrix", matrix: "policy" },
+  events: { exercised: "matrix", matrix: "policy" },
+  subjectId: { exercised: "matrix", matrix: "policy" },
+};
+
+/**
+ * THE 49 KIT-CAPABILITY CELLS — seven kits × seven columns, TOTAL in both
+ * directions, so a new kit or a new column is a compile error here.
+ *
+ * ⚠ SEVEN of the forty-nine have a production reader. The other forty-two are
+ * declarations about a kit, and a declaration nothing consults is a comment with
+ * a type: the table's whole premise is that a kit reads its own row, and for
+ * six-sevenths of the table that is not yet true. Each such cell therefore says
+ * whether a test OBSERVES the kit doing what the cell claims — which is a real
+ * binding even without a reader — or states that it does not and why.
+ */
+export const KIT_CELL_CENSUS: {
+  [F in TokenFormatTag]-?: { [C in keyof KitCapabilities]-?: CensusEntry };
+} = {
+  jwt: {
+    wire: { exercised: "observed", note: "a JOSE kit mints a compact STRING" },
+    keyManagement: {
+      exercised: "declared",
+      reason:
+        "An EMPTY set on a signing kit. There is no key-management call to observe and no reader — the emptiness is what the kit's SHAPE already says, since it signs rather than seals.",
+    },
+    contentEncryption: {
+      exercised: "declared",
+      reason:
+        "Empty for the same reason as `keyManagement`: a signing kit performs no content encryption, so there is nothing to observe.",
+    },
+    cnfMembers: {
+      exercised: "observed",
+      note: "the members `domainToJose` emits for a fully-populated confirmation ARE the JOSE capability",
+    },
+    certificateBinding: {
+      exercised: "observed",
+      note: "a cert-less key makes `resolveCertBinding` throw, so a kit that calls it throws and a kit that does not mints",
+    },
+    unprotectedBucket: {
+      exercised: "observed",
+      note: "an unprotected parameter reaches the wire on a COSE kit and is ignored by a JOSE one",
+    },
+    reserved: {
+      exercised: "observed",
+      note: "the JOSE kits have no reserved SET — the guarantee is SPREAD ORDER, so a caller value for a listed param never survives",
+    },
+  },
+  jws: {
+    wire: { exercised: "observed", note: "a JOSE kit mints a compact STRING" },
+    keyManagement: {
+      exercised: "declared",
+      reason: "Empty on a signing kit — nothing to observe, no reader.",
+    },
+    contentEncryption: {
+      exercised: "declared",
+      reason: "Empty on a signing kit — nothing to observe, no reader.",
+    },
+    cnfMembers: {
+      exercised: "declared",
+      reason:
+        "Empty because an OPAQUE kit has no claims layer at all, so there is no `cnf` producer to probe. The emptiness is held by the kit's SHAPE — it signs bytes, not claims — which the type system already enforces.",
+    },
+    certificateBinding: {
+      exercised: "observed",
+      note: "the cert-less-key probe, as for `jwt`",
+    },
+    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
+    reserved: { exercised: "observed", note: "the JOSE spread-order probe" },
+  },
+  jwe: {
+    wire: { exercised: "observed", note: "a JOSE kit mints a compact STRING" },
+    keyManagement: {
+      exercised: "declared",
+      reason:
+        "NOT YET BINDABLE. `JweKit` delegates the whole key-management matrix to `@lindorm/aes` without consulting a row, so the column has no runtime witness on the JOSE side. Its declared value is `new Set(KRYPTOS_ENC_ALGORITHMS)` — built FROM kryptos's own constant, so comparing it to that constant is an identity and proves nothing either.",
+    },
+    contentEncryption: {
+      exercised: "reader",
+      site: "src/internal/utils/jose-header.ts:97",
+      // The JOSE header decoder allowlists an incoming `enc` off this row.
+    },
+    cnfMembers: {
+      exercised: "observed",
+      note: "shares the JOSE set with `jwt`, observed through `domainToJose`",
+    },
+    certificateBinding: {
+      exercised: "observed",
+      note: "the cert-less-key probe, as for `jwt`",
+    },
+    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
+    reserved: {
+      exercised: "observed",
+      note: "the row is bound to the KitOwned TYPE-level set plus `jku`, and to the spread-order probe",
+    },
+  },
+  cwt: {
+    wire: { exercised: "observed", note: "a COSE kit mints CBOR BYTES" },
+    keyManagement: {
+      exercised: "declared",
+      reason: "Empty on a signing kit — nothing to observe, no reader.",
+    },
+    contentEncryption: {
+      exercised: "declared",
+      reason: "Empty on a signing kit — nothing to observe, no reader.",
+    },
+    cnfMembers: {
+      exercised: "reader",
+      site: "src/internal/cose/cose-key.ts:13",
+      // `encodeCnf` refuses a member outside this set.
+    },
+    certificateBinding: {
+      exercised: "observed",
+      note: "`false`, and observed: the cert-less-key probe mints happily, which is the accept-and-inert the `false` records",
+    },
+    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
+    reserved: {
+      exercised: "reader",
+      site: "src/classes/CwsKit.ts:382",
+      // `buildCoseHeaders` refuses a caller value for a listed label off this row.
+    },
+  },
+  cwm: {
+    wire: { exercised: "observed", note: "a COSE kit mints CBOR BYTES" },
+    keyManagement: {
+      exercised: "declared",
+      reason: "Empty on a MAC kit — nothing to observe, no reader.",
+    },
+    contentEncryption: {
+      exercised: "declared",
+      reason: "Empty on a MAC kit — nothing to observe, no reader.",
+    },
+    cnfMembers: {
+      exercised: "declared",
+      reason:
+        "The COSE `cnf` producer reads `KIT_CAPABILITIES.cwt.cnfMembers` for BOTH claims kits — a COSE_Sign1 and a COSE_Mac0 share one claims codec — so this row is declared identical and consulted nowhere. Its value is checked against the `cwt` row's, which is a declaration check and not a binding.",
+    },
+    certificateBinding: {
+      exercised: "observed",
+      note: "the cert-less-key probe mints happily, which is what `false` records",
+    },
+    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
+    reserved: { exercised: "reader", site: "src/classes/CwsKit.ts:382" },
+  },
+  cws: {
+    wire: { exercised: "observed", note: "a COSE kit mints CBOR BYTES" },
+    keyManagement: {
+      exercised: "declared",
+      reason: "Empty on a signing kit — nothing to observe, no reader.",
+    },
+    contentEncryption: {
+      exercised: "declared",
+      reason: "Empty on a signing kit — nothing to observe, no reader.",
+    },
+    cnfMembers: {
+      exercised: "declared",
+      reason:
+        "Empty because an OPAQUE kit has no claims layer, so there is no `cnf` producer to probe — the same shape argument as `jws`.",
+    },
+    certificateBinding: {
+      exercised: "observed",
+      note: "the cert-less-key probe mints happily, which is what `false` records",
+    },
+    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
+    reserved: { exercised: "reader", site: "src/classes/CwsKit.ts:382" },
+  },
+  cwe: {
+    wire: { exercised: "observed", note: "a COSE kit mints CBOR BYTES" },
+    keyManagement: {
+      exercised: "reader",
+      site: "src/classes/CweKit.ts:67",
+      // The constructor refuses a key whose algorithm is not in this set.
+    },
+    contentEncryption: {
+      exercised: "declared",
+      reason:
+        "No reader and no witness. `CweKit` gates its KEY MANAGEMENT on its row but hands the content algorithm straight to `@lindorm/aes`, and the declared value is `new Set(AES_ENCRYPTION_ALGORITHMS)` — built from the same constant it would be compared against, so that comparison is an identity.",
+    },
+    cnfMembers: {
+      exercised: "declared",
+      reason:
+        "The COSE `cnf` producer reads the `cwt` row, not this one; this row is declared identical and consulted nowhere.",
+    },
+    certificateBinding: {
+      exercised: "observed",
+      note: "the cert-less-key probe mints happily, which is what `false` records",
+    },
+    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
+    reserved: {
+      exercised: "reader",
+      site: "src/classes/CweKit.ts:141",
+      // `buildCoseHeaders` refuses a caller value for a listed label off this row.
+    },
+  },
+};

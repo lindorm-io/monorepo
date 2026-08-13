@@ -122,7 +122,14 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     direction: BOTH,
     matchable: false,
     sensitivity: "public",
-    sample: ["oid"],
+    // ⚠ DOMAIN spelling. The `critical` column holds DOMAIN names like every
+    // other domain-keyed value here, and `criticalToWire` maps each member
+    // domain -> wire (`objectId` -> `oid`) while passing an unrecognised member
+    // through unchanged. The sample was `["oid"]` — the WIRE spelling — which
+    // therefore survived the write by falling through the passthrough arm and
+    // came back from the read as `["objectId"]`, so the one value the column
+    // exists to demonstrate did not round-trip to itself.
+    sample: ["objectId"],
     placement: "protected",
     critical: false,
   },
@@ -309,7 +316,11 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     direction: BOTH,
     matchable: false,
     sensitivity: "public",
-    sample: "at+jwt",
+    // The FULL media type. RFC 7519 §5.1 permits the `application/` prefix to be
+    // omitted on the wire, but the DOMAIN column reports what aegis reads back —
+    // and aegis always writes and reports the complete media type — so the bare
+    // `"at+jwt"` this held could never round-trip to itself.
+    sample: "application/at+jwt",
     placement: "protected",
     critical: false,
   },

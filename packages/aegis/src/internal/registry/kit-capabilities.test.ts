@@ -119,16 +119,44 @@ const KIT_OWNED: Record<KitOwnedWireParam, true> = {
 };
 
 describe("KIT_CAPABILITIES", () => {
+  // ⚠ WHAT THE TESTS IN THIS BLOCK ARE, stated once so none of them reads as
+  // coverage it does not provide.
+  //
+  // A DECLARATION check compares the table to itself: to a literal copy of one of
+  // its own values, to another COLUMN of the same row, or to the row's own KEY.
+  // It cannot tell you that a kit behaves as its row says — only that the row is
+  // internally consistent and has not been edited by accident. That is worth
+  // something (these are the change detectors for a table with 49 cells) and it is
+  // NOT a binding, so each one below says which it is.
+  //
+  // The BINDINGS are in the "bound to the kits" block, where a row is checked
+  // against the kit it describes. Seven of the forty-nine cells additionally have
+  // a PRODUCTION READER — `classes/CweKit.ts`, `classes/CwsKit.ts`,
+  // `internal/utils/jose-header.ts`, `internal/cose/cose-key.ts` — and for those,
+  // "the kit refuses exactly what its row lists" is CIRCULAR: the reader derives
+  // its behaviour FROM the row, so the test proves the WIRING (that the kit
+  // consults the row at all) and never the row's content. Each such test says so.
+  // The per-cell tally lives in `__fixtures__/coverage-census.ts`, bound by
+  // `classes/Aegis.meta-coverage.test.ts`.
+
+  // DECLARATION — and the population guard for every probe loop below, which is
+  // what makes it load-bearing rather than decorative: `FORMATS` drives them all,
+  // so a kit added to the table and not to `FORMATS` would simply never be probed.
   test("every token format has exactly one row", () => {
     expect(Object.keys(KIT_CAPABILITIES).sort()).toEqual([...FORMATS].sort());
   });
 
+  // DECLARATION — the table against the runtime wire list. `wire: Wire` already
+  // holds it at the type level; this catches a `WIRE_TAGS` that drifted from the
+  // type it is meant to enumerate.
   test("every row names a wire that exists", () => {
     for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
       expect(WIRE_TAGS, `${format} names an unknown wire`).toContain(row.wire);
     }
   });
 
+  // DECLARATION — a column against the row's own KEY. The `wire` column IS bound
+  // to behaviour, by the `wire:` probe below; this pins the naming convention.
   test("the wire a row names matches its format prefix", () => {
     for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
       expect(row.wire, `${format} is on the wrong wire`).toBe(
@@ -137,6 +165,8 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
+  // DECLARATION — one column against another. Bound to behaviour by the
+  // `unprotectedBucket:` probe below.
   test("only the COSE kits have an unprotected bucket", () => {
     // COSE_Sign1/Mac0/Encrypt0 are `[protected, unprotected, …]`; JOSE compact
     // serialisation has one header and no unauthenticated bucket at all. This is
@@ -148,6 +178,7 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
+  // DECLARATION — two columns against the row's own KEY.
   test("only the encrypting kits declare key management or content encryption", () => {
     for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
       const encrypting = format === "jwe" || format === "cwe";
@@ -159,11 +190,14 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
+  // ⚠ AN IDENTITY, said out loud rather than left to look like a check. The `jwe`
+  // row is LITERALLY `new Set(KRYPTOS_ENC_ALGORITHMS)`, so comparing it with that
+  // constant compares a value with the expression that produced it and cannot
+  // fail while the row is constructed that way. It is kept because it DOES fail
+  // the day somebody hand-lists the row instead — which is the realistic drift —
+  // and because the useful half of the assertion is the `cwe` one, whose `["dir"]`
+  // is a real literal and IS bound to behaviour by the `keyManagement (cwe)` probe.
   test("a CWE is dir-ONLY while a JWE carries the full kryptos key-management set", () => {
-    // COSE_Encrypt0 is direct encryption: `alg` (label 1) carries the CONTENT
-    // encryption, so no key management happens. The other twenty kryptos
-    // key managements have no COSE_Encrypt0 form. `CweKit`'s constructor reads
-    // this row — see the `keyManagement (cwe)` binding below.
     expect([...KIT_CAPABILITIES.cwe.keyManagement]).toEqual(["dir"]);
     expect(KIT_CAPABILITIES.jwe.keyManagement).toEqual(new Set(KRYPTOS_ENC_ALGORITHMS));
     expect(KIT_CAPABILITIES.jwe.keyManagement.size).toBeGreaterThan(
@@ -171,14 +205,22 @@ describe("KIT_CAPABILITIES", () => {
     );
   });
 
+  // ⚠ THE SAME IDENTITY, on both rows this time: each is `new Set(
+  // AES_ENCRYPTION_ALGORITHMS)`. Nothing here can fail while that holds, and the
+  // ONLY non-identity statement available — that a kit actually encrypts with
+  // every algorithm its row lists — belongs to the kits and not to the table.
+  // `jwe.contentEncryption` does have a reader and IS bound, by the
+  // `contentEncryption (jwe)` probe below; `cwe.contentEncryption` has neither a
+  // reader nor a witness, which the coverage census records as `declared`.
   test("both encrypting kits cover the whole kryptos content-encryption set", () => {
-    // COSE's official labels (AES-GCM + the eight AES-CCM variants) plus the
-    // private-use AES-CBC-HMAC labels happen to be exactly the kryptos set.
     const all = new Set(AES_ENCRYPTION_ALGORITHMS);
     expect(KIT_CAPABILITIES.jwe.contentEncryption).toEqual(all);
     expect(KIT_CAPABILITIES.cwe.contentEncryption).toEqual(all);
   });
 
+  // DECLARATION — the rows against a literal copy of the shared constants they
+  // are built from. Both sets ARE bound to behaviour, by the two `cnfMembers:`
+  // probes below (`domainToJose` for JOSE, `encodeCnf` for COSE).
   test("a COSE cnf carries only the embedded key and the key id", () => {
     // `encodeCnf` maps `jwk` -> COSE_Key (member 1) and `kid` -> kid (member 3).
     // The thumbprint forms have NO COSE representation: RFC 9679 `ckt` hashes
@@ -198,14 +240,39 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
-  test("no kit claims a ckt it cannot derive", () => {
-    // `ckt` is in the CnfMember union so the type can describe COSE's capability
-    // honestly. Nothing derives one, so nothing may claim it.
+  // OBSERVED, not declared. `ckt` (RFC 9679 — the COSE Key SHA-256 Thumbprint) is
+  // in the `CnfMember` union so the type can describe COSE's capability honestly,
+  // and aegis derives none. The old form of this test read the value out of every
+  // row and compared it with `false`, which says nothing about whether a `ckt`
+  // could be produced; the encoder is asked directly instead, and the rows are
+  // held to its answer.
+  test("no kit claims a ckt, because no producer can make one", () => {
+    const derivable = ((): boolean => {
+      try {
+        encodeCnf({ ckt: "ckt_probe" });
+        return true;
+      } catch {
+        return false;
+      }
+    })();
+
+    expect(derivable, "a producer CAN make a ckt — the rows may now claim it").toBe(
+      false,
+    );
+
     for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
       expect(row.cnfMembers.has("ckt"), `${format} claims ckt`).toBe(false);
     }
   });
 
+  // The OPAQUE rows. ⚠ Stated ONCE. It used to be here AND, verbatim, inside the
+  // "NOT YET BINDABLE" test at the end of the file — the same two assertions in
+  // two places, so deleting either would have looked safe and would have left the
+  // note at the end asserting the thing it says cannot be asserted.
+  //
+  // It is a DECLARATION and cannot be more: an opaque kit signs BYTES and has no
+  // claims layer, so there is no `cnf` producer to probe. The emptiness is held by
+  // the kit's SHAPE, which the type system already enforces.
   test("the OPAQUE formats carry no claims layer, so no confirmation", () => {
     expect(KIT_CAPABILITIES.jws.cnfMembers.size).toBe(0);
     expect(KIT_CAPABILITIES.cws.cnfMembers.size).toBe(0);
@@ -222,6 +289,9 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
+  // DECLARATION — the rows against literals. The COSE rows are bound by the
+  // (circular) reserved probe; the JOSE rows by the spread-order probe, which is
+  // not circular because no JOSE kit reads its row.
   test("every row reserves alg and the key id", () => {
     for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
       expect(row.reserved, `${format} does not reserve alg`).toContain("alg");
@@ -229,6 +299,7 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
+  // DECLARATION — same standing as the one above.
   test("every row reserves typ, because typ is what routes a token", () => {
     // `typ` decides which format a token IS (`isCwt`/`isCws`) and which profile
     // floor applies to it, so a caller must never be able to state it. The COSE
@@ -242,6 +313,7 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
+  // DECLARATION — the row against a literal list.
   test("the JWE kit reserves every key-management output it stamps", () => {
     for (const param of ["enc", "iv", "epk", "tag", "p2c", "p2s", "apu", "apv"]) {
       expect(KIT_CAPABILITIES.jwe.reserved, `jwe does not reserve ${param}`).toContain(
@@ -250,6 +322,8 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
+  // A WELL-FORMEDNESS check on the data itself, not a comparison with anything —
+  // the one test in this block that is neither declaration nor binding.
   test("no row lists a reserved parameter twice", () => {
     for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
       expect(new Set(row.reserved).size, `${format} has a duplicate reserved param`).toBe(
@@ -311,10 +385,13 @@ describe("KIT_CAPABILITIES", () => {
     });
 
     test("reserved (COSE): the kit refuses exactly the labels its row lists", () => {
-      // `buildCoseHeaders` throws `cose_reserved_header` for a kit-derived label
-      // in either bag, off the row itself. Both directions: a listed param MUST
-      // throw, and a param the row does NOT list must NOT — otherwise a kit that
-      // refuses everything would satisfy the first half vacuously.
+      // ⚠ CIRCULAR, and worth having anyway. `buildCoseHeaders` reads THIS ROW to
+      // decide what to refuse, so "the kit refuses exactly what the row lists"
+      // holds whatever the row says — it proves the WIRING (that the kit consults
+      // its row at all), never the row's content. What the row SHOULD contain is
+      // a declaration check above. The negative half is not circular: a param the
+      // row does not list must reach the wire, which a kit that refused
+      // everything would fail.
       for (const format of ["cwt", "cwm", "cws", "cwe"] as const) {
         for (const param of KIT_CAPABILITIES[format].reserved) {
           expect(
@@ -416,7 +493,9 @@ describe("KIT_CAPABILITIES", () => {
     });
 
     test("keyManagement (cwe): the kit refuses a key its row does not list", () => {
-      // The gate the table exists for. A non-`dir` key used to reach
+      // ⚠ CIRCULAR in the same way — `CweKit`'s constructor reads this row — and
+      // kept for the same reason: it proves the constructor consults the row and
+      // pins the SHAPE of the refusal a caller sees. A non-`dir` key used to reach
       // `@lindorm/aes`, which threw its own `Content primitive requires a direct
       // key` several layers down — a foreign error naming neither the wire nor
       // the reason. `CweKit`'s constructor now reads the row and refuses first.
@@ -447,6 +526,10 @@ describe("KIT_CAPABILITIES", () => {
     });
 
     test("contentEncryption (jwe): the JOSE header decoder allowlists enc off the row", () => {
+      // ⚠ CIRCULAR on the accepting half — the decoder allowlists off this row —
+      // but the REFUSING half is real: `A128CBC-HS128` is not a kryptos encryption
+      // at all, so the row could not list it however it was written, and the
+      // refusal is a fact about the decoder rather than about the row.
       // The read-side binding. `enc` arrives as an arbitrary wire STRING, so this
       // is where the row can bite: a header naming an encryption the row does not
       // list is refused at decode, before any key or AEAD work. `alg` had this
@@ -462,19 +545,19 @@ describe("KIT_CAPABILITIES", () => {
       );
     });
 
-    test("NOT YET BINDABLE: the jwe keyManagement row", () => {
-      // Stated rather than faked. `JweKit` delegates the whole key-management
-      // matrix to `@lindorm/aes` without consulting a row, so that column has no
-      // runtime witness on the JOSE side; the declared value was hand-checked
-      // against `KRYPTOS_ENC_ALGORITHMS` in the tests above, which is a
-      // DECLARATION check, not a binding.
-      //
-      // The same applies to `cnfMembers` on the OPAQUE rows (jws/cws): they carry
-      // no claims layer at all, so there is no cnf producer to probe — the empty
-      // set is bound by the SHAPE of the kit (it signs BYTES, not claims), which
-      // the type system already holds.
-      expect(KIT_CAPABILITIES.jws.cnfMembers.size).toBe(0);
-      expect(KIT_CAPABILITIES.cws.cnfMembers.size).toBe(0);
-    });
+    // ⚠ NOT A TEST, and it used to be one — it carried the two `cnfMembers` size
+    // assertions VERBATIM from the declaration block above, so the note that says
+    // "this cannot be bound" was carrying an assertion about something else
+    // entirely, and reading as though the unbindable thing had been checked.
+    //
+    // What it says stands and is stated where such statements now live: the
+    // per-cell tally in `__fixtures__/coverage-census.ts`, which records for each
+    // of the 49 capability cells whether a kit READS it, a probe OBSERVES it, or
+    // neither — and is bound to the real table by
+    // `classes/Aegis.meta-coverage.test.ts`. `jwe.keyManagement` is `declared`
+    // there: `JweKit` hands the whole key-management matrix to `@lindorm/aes`
+    // without consulting a row, so the column has no runtime witness, and its
+    // declared value is built FROM `KRYPTOS_ENC_ALGORITHMS` — so comparing the two
+    // is an identity, not a check.
   });
 });

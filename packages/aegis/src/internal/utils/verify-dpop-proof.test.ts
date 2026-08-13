@@ -2,10 +2,11 @@ import { B64 } from "@lindorm/b64";
 import { ShaKit } from "@lindorm/sha";
 import MockDate from "mockdate";
 import { TEST_AKP_KEY_SIG, TEST_RSA_KEY_SIG } from "../../__fixtures__/keys.js";
+import { Aegis } from "../../classes/Aegis.js";
 import { AegisDomainError } from "../../errors/index.js";
 import { createJoseSignature } from "./jose-signature.js";
 import { verifyDpopProof } from "./verify-dpop-proof.js";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -213,5 +214,49 @@ describe("verifyDpopProof", () => {
         dpopMaxSkew: 60,
       }),
     ).toThrow(/signature verification failed/);
+  });
+
+  /**
+   * `Aegis.verifyDpopProof` is the STANDALONE surface a resource server needs
+   * when the access token is not locally verifiable — RFC 9449 §6.2 conveys the
+   * binding through the introspection response instead of a verified JWT, and
+   * has the resource server validate it locally. It is a static because the
+   * proof carries its own key, so there is no vault to resolve against.
+   *
+   * Everything it does BEYOND this file's subject is supply the skew window, so
+   * that is all it is exercised on here: the rest of the proof check is the body
+   * above, reached through the same call. The window matters on its own because
+   * the freshness bound is the only thing that stops a captured proof being
+   * replayed, and a wrapper that dropped the caller's value would silently
+   * substitute its own.
+   */
+  describe("Aegis.verifyDpopProof — the standalone surface", () => {
+    afterEach(() => MockDate.set(MockedDate));
+
+    test("should apply the default skew when the caller states none", () => {
+      const proof = signProof();
+
+      // Two minutes on, against a 60-second default.
+      MockDate.set(new Date(MockedDate.getTime() + 120_000));
+
+      expect(() =>
+        Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint }),
+      ).toThrow(AegisDomainError);
+    });
+
+    test("should honour a skew the caller states", () => {
+      const proof = signProof();
+
+      MockDate.set(new Date(MockedDate.getTime() + 120_000));
+
+      expect(() =>
+        Aegis.verifyDpopProof({
+          proof,
+          accessToken,
+          expectedThumbprint,
+          dpopMaxSkew: 600,
+        }),
+      ).not.toThrow();
+    });
   });
 });

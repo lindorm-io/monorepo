@@ -15,19 +15,12 @@ export type ParityCase<T> =
       default: { jose: T; cose: T };
       /** Required when the two defaults differ; cite the RFCs that force it. */
       reason?: string;
-      /**
-       * Set while the row is NOT yet true of the code. Names the wire that drops
-       * the option and the finding behind it. The parity suite skips a row that
-       * carries one, so deleting the field is what turns its test on.
-       */
-      bug?: string;
     }
   | {
       /** Read on ONE wire only. Never a threading accident — state why. */
       wires: "jose" | "cose";
       default: { jose: T; cose: T };
       reason: string;
-      bug?: string;
     };
 
 /**
@@ -47,8 +40,12 @@ export type VerifyOptionParity = {
  * sites, each re-deriving which of the thirteen fields it forwards. A dropped
  * option is accepted and ignored rather than rejected, so the drift is invisible
  * to both the compiler and the caller. This table makes the contract a value:
- * `satisfies VerifyOptionParity` binds it to the type in both directions, and
- * the parity suite drives its probes off the rows.
+ * `satisfies VerifyOptionParity` binds it to the type in both directions.
+ *
+ * ⚠ It RECORDS the contract; it does not demonstrate it. What each option
+ * actually does on each wire is proved by RUNNING it — see the knob matrix
+ * (`classes/Aegis.knob-matrix.test.ts`), which drives one probe per option off
+ * the same key set and requires the two runs to disagree.
  *
  * Ordered as `VerifyOptions` declares them.
  */
