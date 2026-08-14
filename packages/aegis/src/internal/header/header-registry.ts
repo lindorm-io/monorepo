@@ -36,8 +36,11 @@
  * to say so here.
  */
 
+import { isNumber } from "@lindorm/is";
 import { CoseError } from "../../errors/index.js";
+import type { CoseLabel } from "../cose/cose-label.js";
 import type { HeaderSpec } from "../registry/header-spec.js";
+import { isPrivateUseLabel } from "../registry/is-private-use-label.js";
 import type { Directions, Registry } from "../registry/param-spec.js";
 import {
   wireAbsent,
@@ -154,7 +157,9 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "string" },
-    provenance: "caller",
+    // `JweKit.ts` writes it from the kit's own `this.encryption`, never from the
+    // caller's bag — the column said `caller` and the code has never agreed.
+    provenance: "computed",
     direction: BOTH,
     matchable: false,
     sensitivity: "public",
@@ -242,9 +247,15 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     critical: false,
   },
   // `oid` (lindorm object id) has no IANA COSE label, so it rides COSE under a
-  // lindorm PRIVATE-USE header-parameter label (RFC 9052 §16.3 private use,
-  // < -65536). Chosen well clear of the private-use CLAIM/enc label band
+  // lindorm PRIVATE-USE header-parameter label — RFC 8152 §16.2, the registry
+  // RFC 9052 §11.1 re-points: "Integer values less than -65536 are marked as
+  // private use." Chosen well clear of the private-use CLAIM/enc label band
   // (-65537…) so a grep never confuses a header label with a claim/enc label.
+  //
+  // ⚠ A private-use label is UNINTERPRETABLE to a foreign reader, so it is only
+  // written as an integer when the caller asks for the proprietary spelling; the
+  // interoperable default emits the string label `"oid"` instead. That choice is
+  // `coseWireKey` below, gated on the RANGE and never on this name.
   {
     domain: "objectId",
     wire: { jose: wireName("oid"), cose: wireLabel(-70000, "oid") },
@@ -266,7 +277,9 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "number" },
-    provenance: "caller",
+    // The PBES2 iteration count `JweKit.ts` reads back off the key-management
+    // output, beside the `p2s` salt that has always been declared `computed`.
+    provenance: "computed",
     direction: BOTH,
     matchable: false,
     sensitivity: "public",
@@ -312,7 +325,10 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "headerType",
     wire: { jose: wireName("typ"), cose: wireLabel(16, "typ") }, // RFC 9596
     codec: { kind: "string" },
-    provenance: "caller",
+    // Every kit builds the full media type itself from the `tokenType` PREFIX
+    // (`buildMediaType`/`computeTypHeader`). A caller supplies the prefix, never
+    // the parameter — which is why every row reserves it.
+    provenance: "computed",
     direction: BOTH,
     matchable: false,
     sensitivity: "public",
@@ -447,6 +463,28 @@ const byCose = new Map<number, HeaderSpec>(
     return label === undefined ? [] : [[label, spec] as const];
   }),
 );
+/**
+ * COSE TEXT label -> spec, and deliberately NOT one entry per parameter: only the
+ * parameters that can legitimately BE string-keyed on the COSE wire are here —
+ * a `name`-keyed one (none today), and a PRIVATE-USE label, whose string spelling
+ * is what the interoperable default emits.
+ *
+ * ⚠ The same {@link isPrivateUseLabel} the write side gates on, which is what
+ * keeps the two spellings a single fact. A blanket "any label may also arrive as
+ * its name" would let a foreign token deliver `typ` or `cty` under a text label
+ * aegis never writes, i.e. a second spelling for a registered parameter that no
+ * specification gives it.
+ */
+const byCoseName = new Map<string, HeaderSpec>(
+  HEADER_SPECS.flatMap((spec) => {
+    const key = spec.wire.cose;
+
+    if (key.kind === "absent") return [];
+    if (key.kind === "label" && !isPrivateUseLabel(key.label)) return [];
+
+    return [[key.name, spec] as const];
+  }),
+);
 
 /** Resolve a header spec by its JOSE wire name (or `undefined` if unregistered). */
 export const headerByJose = (jose: string): HeaderSpec | undefined => byJose.get(jose);
@@ -459,47 +497,115 @@ export const headerByDomain = (domain: string): HeaderSpec | undefined =>
 export const headerByCose = (label: number): HeaderSpec | undefined => byCose.get(label);
 
 /**
- * The JOSE wire name for a COSE integer label, or `undefined` if COSE carries no
+ * The JOSE wire name for a COSE label, or `undefined` if COSE carries no
  * registered parameter under it. The COSE read paths translate labels back to
  * JOSE names, which is the vocabulary the domain layer speaks.
+ *
+ * ⚠ It takes a {@link CoseLabel}, not an integer, because RFC 9052 §1.5 makes a
+ * text label a label too — and the interoperable default WRITES one for every
+ * private-use parameter. A token minted either way must therefore read back to
+ * the same domain header, so this is the READ half of `coseWireKey`: an integer
+ * resolves through the label table, a string through the text-label table, and
+ * neither table answers for the other.
  */
-export const joseByCose = (label: number): string | undefined => {
-  const spec = byCose.get(label);
+export const joseByCose = (label: CoseLabel): string | undefined => {
+  const spec = isNumber(label) ? byCose.get(label) : byCoseName.get(label);
 
   return spec ? headerJoseName(spec) : undefined;
 };
 
+/** The refusal both COSE resolvers give for a parameter COSE does not carry. */
+const noCoseLabel = (jose: string, spec: HeaderSpec | undefined): CoseError =>
+  new CoseError("No COSE label for header parameter", {
+    code: "header_no_cose_label",
+    data: {
+      jose,
+      reason: spec?.wire.cose.kind === "absent" ? spec.wire.cose.reason : undefined,
+    },
+    title: "No COSE Label For Header Parameter",
+    details:
+      "The header registry has no COSE integer label for this JOSE wire parameter; COSE either omits it or represents it with a non-integer structure.",
+  });
+
 /**
- * The COSE integer header label for a JOSE wire parameter — the single source of
- * truth the COSE kits emit onto the wire. THROWS if COSE does not carry the
- * parameter, reporting the registry's stated `reason`, which is the drift guard
- * against a caller asking for a label that does not exist.
+ * The COSE INTEGER header label for a JOSE wire parameter. THROWS if COSE does
+ * not carry the parameter, reporting the registry's stated `reason`, which is the
+ * drift guard against a caller asking for a label that does not exist.
  *
- * ⚠ There is deliberately NO header twin of the claim registry's `NameSelector`.
- * The claim translator needs one because its two cores are SHARED between the
- * wires and differ only in the emitted name; the header translator's passes are
- * not shared — the JOSE passes key by `headerJoseName`, the COSE pass by this
- * function, and neither is ever the other. A `(spec) => string | number` selector
- * over both only buys a cast back to `number` at the one COSE call site, which
- * RFC 9052 §1.5 (`label = int / tstr`) makes an unsafe cast the day a parameter
- * gets a COSE STRING key.
+ * ⚠ NOT the writer's resolver — that is {@link coseWireKey}. This answers the
+ * narrower question "which integer is this parameter registered at", which is
+ * what the READ paths need to look a decoded label up (`CweKit`'s `iv`,
+ * `decode-cwt`'s `kid`/`alg`/`typ`) and what the derived-parameter tables are
+ * keyed by. A writer that reaches for it instead would put a private-use integer
+ * on an interoperable wire.
  */
 export const coseByJose = (jose: string): number => {
   const spec = byJose.get(jose);
   const label = spec ? headerCoseLabel(spec) : undefined;
 
-  if (label === undefined) {
-    throw new CoseError("No COSE label for header parameter", {
-      code: "header_no_cose_label",
-      data: {
-        jose,
-        reason: spec?.wire.cose.kind === "absent" ? spec.wire.cose.reason : undefined,
-      },
-      title: "No COSE Label For Header Parameter",
-      details:
-        "The header registry has no COSE integer label for this JOSE wire parameter; COSE either omits it or represents it with a non-integer structure.",
-    });
-  }
+  if (label === undefined) throw noCoseLabel(jose, spec);
 
   return label;
+};
+
+/**
+ * THE WRITER'S RESOLVER: the COSE label a parameter is spelled by on the wire,
+ * in the interop mode the caller asked for. Every COSE write path resolves
+ * through this and nothing else, so a parameter, a `crit` member naming it and
+ * the reserved-parameter guard all agree on one spelling.
+ *
+ * RFC 9052 §1.5 defines `label = int / tstr`, so a text label is a label — which
+ * is what makes the interoperable answer possible at all:
+ *
+ *   - a REGISTERED integer label is interoperable as it stands, so it is written
+ *     as the integer in both modes;
+ *   - a PRIVATE-USE integer label ({@link isPrivateUseLabel}) means nothing to a
+ *     foreign reader, so `proprietary: false` — the default — writes the
+ *     parameter's string label instead. Nothing is dropped and nothing is
+ *     renamed; only the encoding of the key changes.
+ *   - `proprietary: true` is the on-platform token: the compact private-use
+ *     integer, which is the shorter encoding and the one aegis reads either way.
+ *
+ * That is the header twin of the promise `EncodeCwtOptions` already kept for
+ * claims — a token minted with the default carries nothing a conformant COSE
+ * reader cannot interpret.
+ *
+ * THROWS for a parameter COSE does not carry, exactly as {@link coseByJose} does
+ * and with the same verdict: a caller naming one must hear so.
+ */
+export const coseWireKey = (
+  jose: string,
+  proprietary: boolean | undefined,
+): CoseLabel => {
+  const spec = byJose.get(jose);
+
+  if (spec === undefined) throw noCoseLabel(jose, spec);
+
+  const key = spec.wire.cose;
+
+  switch (key.kind) {
+    case "absent":
+      throw noCoseLabel(jose, spec);
+    // A parameter COSE keys by its NAME is already the string on every wire; the
+    // interop mode has nothing to choose. None today — the registry's `name` cells
+    // are all interop fallbacks for a label — but `WireKey` declares the case, so
+    // the resolver answers it rather than casting it away.
+    case "name":
+      return key.name;
+    case "label":
+      return proprietary === true || !isPrivateUseLabel(key.label) ? key.label : key.name;
+    default: {
+      // `noImplicitReturns` is off repo-wide: without this a new `WireKey` member
+      // would silently resolve to `undefined` and the parameter would be written
+      // under an undefined label rather than failing the build.
+      const exhaustive: never = key;
+      throw new CoseError("Unhandled COSE wire key kind", {
+        code: "header_unhandled_wire_key_kind",
+        data: { jose, kind: String((exhaustive as { kind?: unknown }).kind) },
+        title: "Unhandled COSE Wire Key Kind",
+        details:
+          "The header registry declares a COSE wire key kind the resolver does not handle, so the parameter has no spelling on the COSE wire.",
+      });
+    }
+  }
 };

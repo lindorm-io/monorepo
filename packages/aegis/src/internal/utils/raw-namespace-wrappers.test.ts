@@ -85,54 +85,87 @@ describe("the raw namespace wrappers", () => {
   });
 
   describe("a write wrapper forwards the caller's option bag to the kit", () => {
+    // ⚠ The COSE carrier here is the PROTECTED header bag plus `tokenType`, not
+    // the unprotected bag it used to be. aegis decides which bucket a parameter
+    // travels in — the header registry's `placement` column — and `x5u` is
+    // integrity-protected only, so a wrapper handing it to the unprotected bag
+    // is refused by the kit rather than carried. That refusal is its own proof
+    // that the bag arrives, and it is the test below.
     test("cwt.sign", async () => {
       const { token } = await aegis.cwt.sign(claims, {
         tokenType: "at",
-        unprotected: { x5u: X5U },
+        header: { x5u: X5U },
       });
 
       const parsed = await aegis.cwt.verify(token);
 
-      expect(parsed.unprotectedHeader.x5u).toBe(X5U);
+      expect(parsed.protectedHeader.x5u).toBe(X5U);
       expect(parsed.protectedHeader.typ).toBe("application/at+cwt");
+      // The kit's own derived routing hint still rides the unprotected bucket.
+      expect(parsed.unprotectedHeader.kid).toBe(TEST_EC_KEY_SIG.id);
     });
 
     test("cwm.sign", async () => {
       const signed = await macAegis.cwm.sign(claims, {
         tokenType: "at",
-        unprotected: { x5u: X5U },
+        header: { x5u: X5U },
       });
 
       const parsed = await macAegis.cwm.verify(signed.token);
 
-      expect(parsed.unprotectedHeader.x5u).toBe(X5U);
+      expect(parsed.protectedHeader.x5u).toBe(X5U);
       // A COSE_Mac0 shares the CWT media type — the STRUCTURE is what tells the
       // two apart, not the typ.
       expect(parsed.protectedHeader.typ).toBe("application/at+cwt");
+      expect(parsed.unprotectedHeader.kid).toBe(TEST_OCT_KEY_SIG.id);
     });
 
     test("cws.sign", async () => {
       const signed = await aegis.cws.sign(
         { tid: "at_abc" },
-        { tokenType: "at", unprotected: { x5u: X5U } },
+        { tokenType: "at", header: { x5u: X5U } },
       );
 
       const parsed = await aegis.cws.verify<Record<string, unknown>>(signed.token);
 
-      expect(parsed.unprotectedHeader.x5u).toBe(X5U);
+      expect(parsed.protectedHeader.x5u).toBe(X5U);
       expect(parsed.protectedHeader.typ).toBe("application/at+cws");
+      expect(parsed.unprotectedHeader.kid).toBe(TEST_EC_KEY_SIG.id);
     });
 
     test("cwe.encrypt", async () => {
       const { token } = await aegis.cwe.encrypt("hello cose", {
         tokenType: "at",
-        unprotected: { x5u: X5U },
+        header: { x5u: X5U },
       });
 
       const { protectedHeader, unprotectedHeader } = await aegis.cwe.decrypt(token);
 
-      expect(unprotectedHeader.x5u).toBe(X5U);
+      expect(protectedHeader.x5u).toBe(X5U);
       expect(protectedHeader.typ).toBe("application/at+cwe");
+      expect(unprotectedHeader.kid).toBe(TEST_OCT_KEY_ENC.id);
+    });
+
+    // The `unprotected` bag reaches the kit too, and the REFUSAL is what says so:
+    // the placement rule lives inside `buildCoseHeaders`, so an error naming the
+    // parameter can only have been raised by a kit that received it. A wrapper
+    // that dropped the bag would resolve instead.
+    test("the unprotected bag reaches the kit on every COSE wrapper", async () => {
+      const refusal = { code: "cose_unprotected_placement" };
+      const unprotected = { x5u: X5U };
+
+      await expect(aegis.cwt.sign(claims, { unprotected })).rejects.toMatchObject(
+        refusal,
+      );
+      await expect(macAegis.cwm.sign(claims, { unprotected })).rejects.toMatchObject(
+        refusal,
+      );
+      await expect(
+        aegis.cws.sign({ tid: "at_abc" }, { unprotected }),
+      ).rejects.toMatchObject(refusal);
+      await expect(
+        aegis.cwe.encrypt("hello cose", { unprotected }),
+      ).rejects.toMatchObject(refusal);
     });
 
     // The JOSE compact serialisation has no unprotected bucket (RFC 7515 §7.1),

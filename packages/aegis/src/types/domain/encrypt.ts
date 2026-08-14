@@ -5,9 +5,18 @@ import type { AegisDecryptKey, AegisEncKey } from "../keys/key-selectors.js";
 import type { DomainTokenEnvelope } from "./domain-envelope.js";
 
 /**
- * The `aegis.encrypt` input (§5e) — the mirror of `sign`'s payload. A plain
- * object is a DOMAIN-keyed claims set (translated to the wire before it is
- * encrypted); a `Buffer`/`string` is OPAQUE and passes through untouched.
+ * The `aegis.encrypt` input (§5e) — the mirror of `sign`'s payload, and SEALED
+ * AS GIVEN. The value returned by `aegis.decrypt` is the value handed to
+ * `encrypt` (the `@lindorm/aes` contract, on a token wire): a `Dict` round-trips
+ * as a `Dict` under its OWN literal keys — serialised as `application/json`, so
+ * `{ subject: "x" }` stays `subject` and never becomes `sub`/label 2 — and a
+ * `Buffer`/`string` comes back as those bytes / that string.
+ *
+ * NOTHING here is translated. Domain↔wire claim translation belongs to
+ * `mint`/`verify`/`parse`, which have a claims layer and an author to attribute
+ * the claims to; encryption establishes confidentiality and says nothing about
+ * authorship, so renaming a recovered key into a registered vocabulary would
+ * assert on the caller's behalf something only a signature can carry.
  */
 export type EncryptData = (DomainClaims & Dict) | Buffer | string;
 
@@ -41,6 +50,20 @@ export type EncryptOptions = DomainTokenEnvelope<AegisEncKey> & {
    * Allow a lindorm-proprietary (private-use) COSE content encryption on the
    * `cwe` path (default `false`, D5 interop gate); threaded to `CweKit.encrypt`.
    * A no-op on the `jwe` path.
+   *
+   * ⚠ ON THIS VERB IT IS THE ENCRYPTION-REGISTRATION GATE AND NOTHING ELSE. The
+   * flag once ALSO chose the claim-label spelling; that job went with the claim
+   * codec — this verb seals the caller's value verbatim, so there are no claims
+   * to label and the flag cannot move a single plaintext byte. What is left is
+   * `assertCoseRegistered` refusing a content encryption RFC 9053 §4 does not
+   * register (the AES-CBC-HMAC family), so a caller must state that it accepts
+   * an on-platform-only artifact before one is produced.
+   *
+   * INPUT-ONLY, and deliberately so: there is no read-side twin. `decrypt`,
+   * `verify` and `parse` take no such flag — `decodeCwtClaims` normalises
+   * integer labels and string keys unconditionally — so a proprietary artifact
+   * is read back with nothing declared. Do not restore a claim-label behaviour
+   * here; there are no claims on this path to label.
    */
   proprietary?: boolean;
 };

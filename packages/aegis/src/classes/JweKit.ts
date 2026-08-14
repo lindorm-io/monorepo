@@ -1,27 +1,28 @@
 import { AesKit } from "@lindorm/aes";
-import { B64 } from "@lindorm/b64";
 import { isJwe as isJweFormat } from "@lindorm/is";
-import {
-  ECDH_ES_ALGORITHMS,
-  type IKryptos,
-  type KryptosEncAlgorithm,
-  type KryptosEncryption,
-} from "@lindorm/kryptos";
+import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { sanitiseToken } from "@lindorm/utils";
 import { JweError } from "../errors/index.js";
 import type { IJweKit } from "../interfaces/index.js";
-import { B64U } from "../internal/constants/format.js";
+import { buildJoseHeader } from "../internal/header/build-jose-header.js";
+import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
+import { assertAlgorithmMatch } from "../internal/utils/assert-algorithm-match.js";
+import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
+import { buildJweDecryptionRecord } from "../internal/utils/build-jwe-decryption-record.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
 import { isSupportedJoseAlgorithm } from "../internal/utils/is-supported-jose-algorithm.js";
-import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
+import { encodeJoseHeader } from "../internal/utils/jose-header.js";
+import { assembleJweCompact } from "../internal/utils/assemble-jwe-compact.js";
+import { isEcdhEsAlgorithm } from "../internal/utils/is-ecdh-es-algorithm.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
+import { resolveEcdhParty } from "../internal/utils/resolve-ecdh-party.js";
+import { splitJweCompact } from "../internal/utils/split-jwe-compact.js";
 import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
 import { parseTokenHeader } from "../internal/utils/token-header.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import { verifyPartyBinding } from "../internal/utils/verify-party-binding.js";
-import { wireHeaderToDomainOptions } from "../internal/utils/wire-header-to-domain.js";
 import type {
   CertificateBindingMode,
   DecodedEncryptedToken,
@@ -29,19 +30,8 @@ import type {
   JweEncryptOptions,
   JweKitSettings,
   DomainTokenHeader,
-  DomainTokenHeaderOptions,
   TokenContent,
-  WireTokenHeader,
 } from "../types/index.js";
-
-/** The JWE wire segments decoded from a compact token (internal helper shape). */
-type DecodedJweSegments = {
-  header: WireTokenHeader;
-  publicEncryptionKey: string | undefined;
-  initialisationVector: string;
-  content: string;
-  authTag: string;
-};
 
 export class JweKit implements IJweKit {
   private readonly certBindingMode: CertificateBindingMode;
@@ -59,13 +49,6 @@ export class JweKit implements IJweKit {
       options.kryptos.encryption ?? options.defaultEncryption ?? "A256GCM";
     this.certBindingMode = options.certBindingMode ?? "strict";
     this.partyRecipient = options.partyRecipient;
-  }
-
-  // RFC 7518 §4.6 — the apu/apv Concat-KDF OtherInfo is meaningful ONLY for the
-  // ECDH-ES key-management family (direct + the `+A*KW` variants). Every other
-  // algorithm ignores it, so caller-supplied party info is stripped there.
-  private get isEcdhEs(): boolean {
-    return (ECDH_ES_ALGORITHMS as ReadonlyArray<string>).includes(this.kryptos.algorithm);
   }
 
   /**
@@ -90,54 +73,51 @@ export class JweKit implements IJweKit {
     // key the caller-supplied base64url apu/apv are decoded into the Concat-KDF
     // AND kept on the protected header (so they land in the AAD); for any other
     // algorithm they are stripped — neither fed to the KDF nor emitted.
-    const partyProducer = this.isEcdhEs ? options.partyProducer : undefined;
-    const partyRecipient = this.isEcdhEs ? options.partyRecipient : undefined;
-    const apu = partyProducer ? B64.toBuffer(partyProducer, B64U) : undefined;
-    const apv = partyRecipient ? B64.toBuffer(partyRecipient, B64U) : undefined;
+    const { apu, apv, partyProducer, partyRecipient } = resolveEcdhParty(
+      this.kryptos.algorithm,
+      options,
+    );
 
     // Step 1: Prepare encryption (key management only — no content encrypted yet)
     const prepared = kit.prepareEncryption({ apu, apv });
 
-    // Step 2: Build the protected header with key management output
-    // RFC 7515 Section 4.1.11: crit MUST NOT include registered Header Parameter names.
-    // All params used here (alg, enc, epk, iv, tag, p2c, p2s) are registered JOSE params.
-    // Only genuinely non-standard extension params would go in critical.
-    // Omit crit entirely when there are no extension params.
-    const critical: Array<string> = [];
-
-    const headerOptions: DomainTokenHeaderOptions = {
-      // Default cty by inferred content type; a caller `header.cty` (folded in via
-      // the spread) wins as the WIRE label.
-      contentType,
-      ...wireHeaderToDomainOptions(options.header),
-      algorithm: this.kryptos.algorithm,
-      ...(critical.length ? { critical } : {}),
-      encryption: this.encryption,
-      headerType: buildMediaType(options.tokenType, "jwe"),
-      initialisationVector: prepared.headerParams.publicEncryptionIv,
-      jwksUri: this.kryptos.jwksUri ?? undefined,
-      keyId: this.kryptos.id,
-      partyProducer,
-      partyRecipient,
-      pbkdfIterations: prepared.headerParams.pbkdfIterations,
-      pbkdfSalt: prepared.headerParams.pbkdfSalt,
-      publicEncryptionJwk: prepared.headerParams.publicEncryptionJwk,
-      publicEncryptionTag: prepared.headerParams.publicEncryptionTag,
-    };
-
-    const cert = resolveCertBinding(
-      this.kryptos,
-      options.bindCertificate,
-      options.certificateThumbprintSha1,
+    // Step 2: Build the protected header with key management output.
+    //
+    // No `crit` is ever written: RFC 7515 §4.1.11 forbids `crit` from naming
+    // registered parameters, and every parameter the kit derives here (alg, enc,
+    // epk, iv, tag, p2c, p2s) is registered. Aegis implements no extension
+    // parameter, so the header carries no `crit` of its own at all.
+    const header = encodeJoseHeader(
+      buildJoseHeader({
+        reserved: KIT_CAPABILITIES.jwe.reserved,
+        defaults: { cty: contentType, jku: this.kryptos.jwksUri ?? undefined },
+        header: options.header,
+        derived: {
+          alg: this.kryptos.algorithm,
+          apu: partyProducer,
+          apv: partyRecipient,
+          enc: this.encryption,
+          epk: prepared.headerParams.publicEncryptionJwk,
+          iv: prepared.headerParams.publicEncryptionIv,
+          kid: this.kryptos.id,
+          p2c: prepared.headerParams.pbkdfIterations,
+          p2s: prepared.headerParams.pbkdfSalt,
+          tag: prepared.headerParams.publicEncryptionTag,
+          typ: buildMediaType(options.tokenType, "jwe"),
+        },
+        cert: resolveCertBinding(
+          this.kryptos,
+          options.bindCertificate,
+          options.certificateThumbprintSha1,
+        ),
+        error: JweError,
+      }),
     );
 
-    // Step 3: Encode header as base64url
-    const header = encodeJoseHeader(headerOptions, cert);
-
-    // Step 4: Compute AAD from the encoded protected header per RFC 7516 Section 5.1 step 14
+    // Step 3: Compute AAD from the encoded protected header per RFC 7516 Section 5.1 step 14
     const aad = Buffer.from(header, "ascii");
 
-    // Step 5: Encrypt the already-serialised OPAQUE bytes with AAD
+    // Step 4: Encrypt the already-serialised OPAQUE bytes with AAD
     const { authTag, content, initialisationVector } = prepared.encrypt(bytes, { aad });
 
     if (!authTag) {
@@ -149,14 +129,14 @@ export class JweKit implements IJweKit {
       });
     }
 
-    // Step 6: Assemble the JWE compact serialisation
-    const token = [
+    // Step 5: Assemble the JWE compact serialisation
+    const token = assembleJweCompact({
       header,
-      prepared.publicEncryptionKey ? B64.encode(prepared.publicEncryptionKey, B64U) : "",
-      B64.encode(initialisationVector, B64U),
-      B64.encode(content, B64U),
-      B64.encode(authTag, B64U),
-    ].join(".");
+      publicEncryptionKey: prepared.publicEncryptionKey,
+      initialisationVector,
+      content,
+      authTag,
+    });
 
     this.logger.debug("Token encrypted", { token: sanitiseToken(token) });
 
@@ -172,17 +152,20 @@ export class JweKit implements IJweKit {
 
     this.logger.debug("Decrypting token", { token: sanitiseToken(token) });
 
-    const decoded = JweKit.splitCompact(token);
+    const decoded = splitJweCompact(token);
 
-    const typ = decoded.header.typ;
-    if (typ !== "JWE" && !(typeof typ === "string" && typ.endsWith("+jwe"))) {
-      throw new JweError("Invalid token", {
-        code: "jwe_invalid_typ",
-        data: { typ },
-        title: "JWE Invalid Typ",
-        details: "Header typ must be JWE or a <type>+jwe media type to decrypt as a JWE.",
-      });
-    }
+    // ⚠ `presence: "required"` — unlike the JWT/JWS/CWT gates, a typ-LESS JWE has
+    // always been refused here.
+    assertWireTyp({
+      typ: decoded.header.typ,
+      accept: ["JWE"],
+      suffix: "+jwe",
+      presence: "required",
+      error: JweError,
+      code: "jwe_invalid_typ",
+      title: "JWE Invalid Typ",
+      details: "Header typ must be JWE or a <type>+jwe media type to decrypt as a JWE.",
+    });
 
     // Aegis deliberately does not support compressed payloads (RFC 7516 §4.1.3).
     // Compression-before-encryption enables oracle attacks (CVE-2016-1000031 class).
@@ -203,16 +186,16 @@ export class JweKit implements IJweKit {
     // critical was answered by whichever of the three checks happened to be first.
     rejectUnknownCritical({ header: decoded.header, format: "jwe", error: JweError });
 
-    if (this.kryptos.algorithm !== decoded.header.alg) {
-      throw new JweError("Invalid token", {
-        code: "jwe_algorithm_mismatch",
-        data: { alg: decoded.header.alg },
-        debug: { expected: this.kryptos.algorithm },
-        title: "JWE Algorithm Mismatch",
-        details:
-          "The header alg does not match the key-management algorithm of the configured kryptos key.",
-      });
-    }
+    assertAlgorithmMatch({
+      actual: decoded.header.alg,
+      expected: this.kryptos.algorithm,
+      format: "jwe",
+      error: JweError,
+      // ⚠ This wire reports the offending value under `alg`, not `algorithm`.
+      data: { alg: decoded.header.alg },
+      details:
+        "The header alg does not match the key-management algorithm of the configured kryptos key.",
+    });
 
     // Parse to the DOMAIN header for the decryption crypto (algorithm, enc,
     // party info, pbkdf/public-encryption params); the RESULT carries the WIRE
@@ -236,60 +219,30 @@ export class JweKit implements IJweKit {
     // opaque GCM error (the apv is already AAD-bound, so this is defense-in-depth).
     // Recipient addressing is an ECDH-ES concept, so it is enforced only there —
     // a non-ECDH-ES algorithm has no apv channel to verify.
-    if (this.isEcdhEs) {
+    if (isEcdhEsAlgorithm(this.kryptos.algorithm)) {
       verifyPartyBinding({
         expected: this.partyRecipient,
         actual: header.partyRecipient,
       });
     }
-    const apu = header.partyProducer
-      ? B64.toBuffer(header.partyProducer, B64U)
-      : undefined;
-    const apv = header.partyRecipient
-      ? B64.toBuffer(header.partyRecipient, B64U)
-      : undefined;
+
+    const { apu, apv } = resolveEcdhParty(this.kryptos.algorithm, header);
 
     // Reconstruct AAD from the encoded protected header per RFC 7516 Section 5.1 step 14
     const [headerB64] = token.split(".");
     const aad = Buffer.from(headerB64, "ascii");
 
-    const authTag = B64.toBuffer(decoded.authTag);
-    const content = B64.toBuffer(decoded.content);
-    const initialisationVector = B64.toBuffer(decoded.initialisationVector);
-    const pbkdfIterations = header.pbkdfIterations;
-    const pbkdfSalt = header.pbkdfSalt ? B64.toBuffer(header.pbkdfSalt, B64U) : undefined;
-    const publicEncryptionIv = header.initialisationVector
-      ? B64.toBuffer(header.initialisationVector)
-      : undefined;
-    const publicEncryptionKey = decoded.publicEncryptionKey
-      ? B64.toBuffer(decoded.publicEncryptionKey)
-      : undefined;
-    const publicEncryptionJwk = header.publicEncryptionJwk;
-    const publicEncryptionTag = header.publicEncryptionTag
-      ? B64.toBuffer(header.publicEncryptionTag)
-      : undefined;
-
     // Decrypt to the OPAQUE plaintext bytes (the AES layer treats the content as
     // octet); the JOSE cty — not the AES content type — drives reconstruction.
     const plaintext = kit.decrypt<Buffer>(
-      {
-        algorithm: header.algorithm as KryptosEncAlgorithm,
+      buildJweDecryptionRecord({
+        segments: decoded,
+        header,
+        encryption: this.encryption,
         apu,
         apv,
-        authTag,
-        content,
-        contentType: "application/octet-stream",
-        encryption: this.encryption,
-        initialisationVector,
-        keyId: header.keyId ?? this.kryptos.id,
-        pbkdfIterations,
-        pbkdfSalt,
-        publicEncryptionIv,
-        publicEncryptionJwk,
-        publicEncryptionKey,
-        publicEncryptionTag,
-        version: "1.0",
-      },
+        keyId: this.kryptos.id,
+      }),
       { aad },
     );
 
@@ -346,37 +299,9 @@ export class JweKit implements IJweKit {
    */
   static decode(token: string): DecodedEncryptedToken<string> {
     return {
-      protectedHeader: JweKit.splitCompact(token).header,
+      protectedHeader: splitJweCompact(token).header,
       unprotectedHeader: {},
       token,
-    };
-  }
-
-  // private static
-
-  /**
-   * Split a compact JWE into its five wire segments (the internal shape `decrypt`
-   * consumes). NOT public — the public keyless read is {@link JweKit.decode}.
-   */
-  private static splitCompact(jwe: string): DecodedJweSegments {
-    const parts = jwe.split(".");
-    if (parts.length !== 5) {
-      throw new JweError("Invalid JWE format: expected 5 parts", {
-        code: "jwe_invalid_format",
-        title: "JWE Invalid Format",
-        details:
-          "A compact JWE must have exactly five dot-separated segments (header, encrypted key, iv, ciphertext, tag).",
-      });
-    }
-
-    const [header, publicEncryptionKey, initialisationVector, content, authTag] = parts;
-
-    return {
-      header: decodeJoseHeader(header),
-      publicEncryptionKey: publicEncryptionKey?.length ? publicEncryptionKey : undefined,
-      initialisationVector,
-      content,
-      authTag,
     };
   }
 }

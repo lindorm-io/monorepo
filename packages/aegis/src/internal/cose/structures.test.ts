@@ -1,0 +1,86 @@
+import { describe, expect, test } from "vitest";
+import { decodeCbor, encodeCbor } from "./cbor.js";
+import {
+  COSE_TAG,
+  buildMacStructure,
+  buildSecuredStructure,
+  buildSigStructure,
+  decodeProtectedHeader,
+  encodeProtectedHeader,
+} from "./structures.js";
+
+const PROTECTED = encodeCbor(new Map<number, unknown>([[1, -7]]));
+const PAYLOAD = Buffer.from("the-claims-bytes", "utf8");
+
+/**
+ * ⚠ THE TAG→STRUCTURE CHOICE IS ASKED ONCE AND ANSWERED FOR BOTH DIRECTIONS, so
+ * no round trip can see it: `CwsKit.sign` and `CwsKit.verify` both call
+ * {@link buildSecuredStructure}, and an inverted mapping keeps them in perfect
+ * agreement while aegis emits a COSE_Sign1 signed over a `MAC_structure` — a
+ * token no conformant verifier accepts. RFC 9052 §4.4 fixes `Sig_structure` for
+ * the one and §6.3 fixes `MAC_structure` for the other; the choice used to be
+ * written twice, so an inversion needed two coordinated edits and now needs one.
+ */
+describe("buildSecuredStructure", () => {
+  test("builds the structure its tag names", () => {
+    expect(buildSecuredStructure(COSE_TAG.sign1, PROTECTED, PAYLOAD)).toEqual(
+      buildSigStructure(PROTECTED, PAYLOAD),
+    );
+    expect(buildSecuredStructure(COSE_TAG.mac0, PROTECTED, PAYLOAD)).toEqual(
+      buildMacStructure(PROTECTED, PAYLOAD),
+    );
+
+    // What makes the two rows above non-vacuous: they compare against DIFFERENT
+    // structures. Without this the pair holds for a builder that returns one
+    // structure for every tag.
+    expect(buildSigStructure(PROTECTED, PAYLOAD)).not.toEqual(
+      buildMacStructure(PROTECTED, PAYLOAD),
+    );
+  });
+
+  // The independent oracle — the context string is a LITERAL out of the RFC, not
+  // a second read of the thing under test, so this holds even if both builders
+  // were wrong together.
+  test("writes the context string the RFC fixes for each structure", () => {
+    const signed = decodeCbor<Array<unknown>>(
+      buildSecuredStructure(COSE_TAG.sign1, PROTECTED, PAYLOAD),
+    );
+    const maced = decodeCbor<Array<unknown>>(
+      buildSecuredStructure(COSE_TAG.mac0, PROTECTED, PAYLOAD),
+    );
+
+    expect(signed[0]).toBe("Signature1");
+    expect(maced[0]).toBe("MAC0");
+  });
+
+  // RFC 9052 §4.4 / §6.3 — four elements, the protected header and the payload
+  // in that order, and an EMPTY `external_aad` between them.
+  test("covers the protected header and the payload, with an empty external_aad", () => {
+    const structure = decodeCbor<Array<unknown>>(
+      buildSecuredStructure(COSE_TAG.sign1, PROTECTED, PAYLOAD),
+    );
+
+    expect(structure).toHaveLength(4);
+    expect(Buffer.from(structure[1] as Uint8Array)).toEqual(PROTECTED);
+    expect(structure[2]).toHaveLength(0);
+    expect(Buffer.from(structure[3] as Uint8Array)).toEqual(PAYLOAD);
+  });
+});
+
+describe("encodeProtectedHeader", () => {
+  // RFC 9052 §3 — an empty protected header is a zero-length byte string (`h''`),
+  // NOT the encoding of an empty map (`a0`). The encoder and the decoder are used
+  // symmetrically by sign and verify, so an inversion here also round-trips
+  // cleanly and shows up only on the wire.
+  test("writes an absent protected header as zero bytes, never as an empty map", () => {
+    expect(encodeProtectedHeader(new Map())).toHaveLength(0);
+    expect(encodeCbor(new Map())).not.toHaveLength(0);
+  });
+
+  test("round-trips a populated header and reads zero bytes back as empty", () => {
+    expect(decodeProtectedHeader(encodeProtectedHeader(new Map([[1, -7]])))).toEqual(
+      new Map([[1, -7]]),
+    );
+    expect(decodeProtectedHeader(Buffer.alloc(0))).toEqual(new Map());
+  });
+});

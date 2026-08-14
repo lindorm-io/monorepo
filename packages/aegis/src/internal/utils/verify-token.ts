@@ -13,8 +13,9 @@ import { tokenWireFor } from "../wire/token-wire-for.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { applyVerifyPolicy } from "./apply-verify-policy.js";
 import { buildTokenResult } from "./build-token-result.js";
+import { decryptOuter } from "./decrypt-outer.js";
 import { detectTokenFormat } from "./detect-token-format.js";
-import { domainTokenHeader, unprotectedDomainHeader } from "./domain-header.js";
+import { domainTokenHeader } from "./domain-header.js";
 import { enforceVerifyFloor } from "./enforce-verify-floor.js";
 import { isClaimsContentType } from "./is-claims-content-type.js";
 import { TOKEN_FORMAT_KIND } from "./token-format-kind.js";
@@ -152,7 +153,7 @@ export const verifyToken = async <C extends Dict = Dict>({
 
   // ---- the encrypting outer ------------------------------------------------
   if (TOKEN_FORMAT_KIND[format] === "encrypted") {
-    const { inner, contentType } = await wire.decryptOuter(token, deps);
+    const { inner, contentType } = await decryptOuter(wire, token, deps);
     const innerFormat = inner === undefined ? undefined : detectTokenFormat(inner);
 
     // `verify` = authenticity. A plaintext that is not one of the signed forms
@@ -245,11 +246,13 @@ export const verifyToken = async <C extends Dict = Dict>({
 
     return {
       format,
-      protectedHeader: domainTokenHeader(verified.protectedHeader, format),
-      // ABSENT on JOSE — its compact serialisation has no unprotected bucket —
-      // so a reader asking for the unsigned parameters of a JWS gets the true
-      // answer rather than an empty object that tests as present.
-      unprotectedHeader: unprotectedDomainHeader(verified.unprotectedHeader, format),
+      header: domainTokenHeader(
+        {
+          protectedHeader: verified.protectedHeader,
+          unprotectedHeader: verified.unprotectedHeader,
+        },
+        format,
+      ),
       claims: {},
       custom: {} as C,
       raw: verified.payload,

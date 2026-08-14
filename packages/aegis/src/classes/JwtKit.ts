@@ -9,8 +9,13 @@ import { JwtError } from "../errors/index.js";
 import type { IJwtKit } from "../interfaces/index.js";
 import { B64U } from "../internal/constants/format.js";
 import { applyOmit } from "../internal/utils/apply-omit.js";
+import { assertAlgorithmMatch } from "../internal/utils/assert-algorithm-match.js";
+import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
+import { buildJoseHeader } from "../internal/header/build-jose-header.js";
+import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { isSupportedJoseAlgorithm } from "../internal/utils/is-supported-jose-algorithm.js";
+import { withJoseDates } from "../internal/utils/jose-dates.js";
 import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
 import {
   createJoseSignature,
@@ -26,11 +31,9 @@ import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
 import { validate } from "../internal/utils/validate.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
-import { wireHeaderToDomainOptions } from "../internal/utils/wire-header-to-domain.js";
 import type {
   CertificateBindingMode,
   DecodedStructuredToken,
-  DomainTokenHeaderOptions,
   JwtClaimsWire,
   JwtKitSettings,
   SignStructuredTokenOptions,
@@ -88,22 +91,30 @@ export class JwtKit implements IJwtKit {
 
     const payload = B64.encode(JSON.stringify(applyOmit(claims, options.omit)), B64U);
 
-    const headerOptions: DomainTokenHeaderOptions = {
-      contentType: "application/json",
-      ...wireHeaderToDomainOptions(options.header),
-      algorithm: this.kryptos.algorithm,
-      headerType: buildMediaType(options.tokenType, "jwt"),
-      jwksUri: this.kryptos.jwksUri ?? undefined,
-      keyId: this.kryptos.id,
-    };
-
-    const cert = resolveCertBinding(
-      this.kryptos,
-      options.bindCertificate,
-      options.certificateThumbprintSha1,
+    // NO `cty` default. RFC 7519 §5.2: "In the normal case in which nested
+    // signing or encryption operations are not employed, the use of this Header
+    // Parameter is NOT RECOMMENDED." A JWT's payload is a claims set BY
+    // DEFINITION (§3), so stamping `application/json` on every one restated the
+    // format and left the parameter unavailable for the one thing it is for. A
+    // caller `header.cty` still wins — it is how a NESTED token declares itself.
+    const header = encodeJoseHeader(
+      buildJoseHeader({
+        reserved: KIT_CAPABILITIES.jwt.reserved,
+        defaults: { jku: this.kryptos.jwksUri ?? undefined },
+        header: options.header,
+        derived: {
+          alg: this.kryptos.algorithm,
+          kid: this.kryptos.id,
+          typ: buildMediaType(options.tokenType, "jwt"),
+        },
+        cert: resolveCertBinding(
+          this.kryptos,
+          options.bindCertificate,
+          options.certificateThumbprintSha1,
+        ),
+        error: JwtError,
+      }),
     );
-
-    const header = encodeJoseHeader(headerOptions, cert);
 
     const signature = createJoseSignature({
       header,
@@ -157,30 +168,30 @@ export class JwtKit implements IJwtKit {
     // be a JWT media type so a JWS/JWE cannot be verified as a JWT. A typ-LESS
     // token is accepted here — presence requiredness is a DOMAIN/profile policy.
     const typ = decodedHeader.typ;
-    if (typ !== undefined && typ !== "JWT" && !typ.endsWith("+jwt")) {
-      throw new JwtError("Invalid token", {
-        code: "jwt_invalid_typ",
-        data: { typ },
-        title: "JWT Invalid Typ",
-        details:
-          "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be verified as a JWT.",
-      });
-    }
+    assertWireTyp({
+      typ,
+      accept: ["JWT"],
+      suffix: "+jwt",
+      presence: "optional",
+      error: JwtError,
+      code: "jwt_invalid_typ",
+      title: "JWT Invalid Typ",
+      details:
+        "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be verified as a JWT.",
+    });
 
     // `crit` (RFC 7515 §4.1.11), the SAME enforcement the COSE kits run — one
     // implementation, so the two wires cannot disagree about a hostile token.
     rejectUnknownCritical({ header: decodedHeader, format: "jwt", error: JwtError });
 
-    if (this.kryptos.algorithm !== decodedHeader.alg) {
-      throw new JwtError("Invalid token", {
-        code: "jwt_algorithm_mismatch",
-        data: { algorithm: decodedHeader.alg },
-        debug: { expected: this.kryptos.algorithm },
-        title: "JWT Algorithm Mismatch",
-        details:
-          "The header alg does not match the signing algorithm of the configured kryptos key.",
-      });
-    }
+    assertAlgorithmMatch({
+      actual: decodedHeader.alg,
+      expected: this.kryptos.algorithm,
+      format: "jwt",
+      error: JwtError,
+      details:
+        "The header alg does not match the signing algorithm of the configured kryptos key.",
+    });
 
     // typ assertion: the kit builds the expected media type from the PREFIX
     // (the Aegis path derives the prefix from the domain tokenType).
@@ -223,18 +234,9 @@ export class JwtKit implements IJwtKit {
     // the caller's wire `assert` predicate, in one pass over the Date-lifted
     // wire payload.
     const clockTolerance = options.clockTolerance ?? this.clockTolerance;
-    const withDates = {
-      ...decoded.payload,
-      exp: decoded.payload.exp ? new Date(decoded.payload.exp * 1000) : undefined,
-      iat: decoded.payload.iat ? new Date(decoded.payload.iat * 1000) : undefined,
-      nbf: decoded.payload.nbf ? new Date(decoded.payload.nbf * 1000) : undefined,
-      auth_time: decoded.payload.auth_time
-        ? new Date(decoded.payload.auth_time * 1000)
-        : undefined,
-    };
 
     validate(
-      withDates,
+      withJoseDates(decoded.payload),
       {
         ...createTemporalMatchers({
           clockTolerance,

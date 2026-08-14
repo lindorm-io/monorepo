@@ -24,13 +24,15 @@ import type { StructuredFormat } from "./verified-token.js";
 export type ParsedToken<C extends Dict = Dict> = {
   /** The structured format read: `jwt`, `cwt` (COSE_Sign1), or `cwm` (COSE_Mac0). */
   format: StructuredFormat;
-  /** The INTEGRITY-PROTECTED header, domain-keyed and uniform across JOSE and COSE. */
-  protectedHeader: DomainTokenHeader;
   /**
-   * The UNAUTHENTICATED header bucket — covered by nothing, empty on JOSE. Kept
-   * apart from the protected one so a reader has to name the bucket it trusts.
+   * THE header, domain-keyed and uniform across JOSE and COSE — the two wire
+   * buckets merged under the header registry's `placement` allowlist, protected
+   * last. See {@link VerifiedToken.header} for why the domain tier reports one.
+   *
+   * ⚠ UNVERIFIED like everything else here: `parse` checks no signature, so even
+   * the protected parameters are only what the wire carried.
    */
-  unprotectedHeader?: DomainTokenHeader;
+  header: DomainTokenHeader;
   /** Domain-keyed registered claims — always present for a structured token. */
   claims: DomainClaims;
   /** Non-domain (custom) claim bucket — always present for a structured token. */

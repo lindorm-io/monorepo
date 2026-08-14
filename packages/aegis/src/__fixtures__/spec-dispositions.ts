@@ -64,9 +64,9 @@ export type SpecDoor =
   | "mint.expires"
   /** `mint("delegation", { issuer: sample, … })` -> `verify().claims.issuer`. */
   | "mint.issuer"
-  /** `mint("default", …, { sign: { header: { [domain]: sample } } })` -> `parse().protectedHeader`. */
+  /** `mint("default", …, { sign: { header: { [domain]: sample } } })` -> `parse().header`. */
   | "mint.header"
-  /** `mint("default", …, { sign: { typ: sample } })` -> `parse().protectedHeader.headerType`. */
+  /** `mint("default", …, { sign: { typ: sample } })` -> `parse().header.headerType`. */
   | "mint.typ"
   /** `jwe.encrypt(data, { [domain]: sample })` -> `decrypt().header`. */
   | "encrypt.party";
@@ -106,8 +106,10 @@ export type SpecDisposition = {
   per?: Partial<Record<Wire, Omit<SpecDisposition, "per">>>;
   /**
    * TRANSIENT. The parameter IS suppliable and does NOT come back — a code
-   * shortfall, not a specification one. Carries `file:line`, skips the wires it
-   * names, and is RUN by the matrix and required to still fail.
+   * shortfall, not a specification one. Carries `file#anchor` — the anchor a
+   * VERBATIM substring of the cited line, so the meta suite resolves it instead
+   * of trusting a line number code motion silently invalidates — skips the wires
+   * it names, and is RUN by the matrix and required to still fail.
    */
   defect?: { site: string; note: string; wires: ReadonlyArray<Wire> };
 };
@@ -271,11 +273,6 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
   jwksUri: {
     disposition: "roundTrip",
     door: "mint.header",
-    defect: {
-      site: "src/classes/JwtKit.ts:96",
-      note: "A caller `jku` never survives on JOSE: the kit spreads `...options.header` and then writes `jwksUri: this.kryptos.jwksUri ?? undefined` as a LATER key, so the caller's value is overwritten even when the key resolves no URI at all. `jku` is not in `KitOwnedHeaderParam`, so the type accepts it — the parameter is offered and silently discarded. The same shape is in JwsKit and JweKit.",
-      wires: ["jose"],
-    },
     per: {
       cose: {
         disposition: "refused",
@@ -304,7 +301,7 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
     disposition: "roundTrip",
     door: "mint.typ",
     defect: {
-      site: "src/internal/wire/cose-token-wire.ts:57",
+      site: "src/internal/wire/cose-token-wire.ts#mintTypPrefix:",
       note: "`SignTokenOptions.typ` is honoured on JOSE and SILENTLY DROPPED on COSE: `mintTypPrefix` there reads the profile and nothing else, so a caller `typ` for a `cwt`/`cwm` mint is accepted by the type, ignored by the writer, and the token carries the profile's media type instead. The COSE kits RESERVE `typ` — a caller value in the kit-tier header bag is refused — so the same option is refused at one door and silently dropped at another. The gap is recorded in the source comment above that line; this is the runnable proof it is still there.",
       wires: ["cose"],
     },

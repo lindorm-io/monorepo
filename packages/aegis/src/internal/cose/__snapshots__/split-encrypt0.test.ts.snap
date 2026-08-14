@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`splitEncrypt0 > the refusal names the COSE_Encrypt0 shape 1`] = `
+{
+  "code": "cose_malformed",
+  "details": "A COSE_Encrypt0 must be a 3-element array [protected, unprotected, ciphertext].",
+  "title": "Malformed COSE_Encrypt0",
+}
+`;

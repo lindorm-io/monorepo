@@ -2,8 +2,9 @@ import type {
   BaseTokenFormat,
   DomainTokenHeader,
   TokenFormatTag,
-  WireTokenHeader,
+  WireHeaderBuckets,
 } from "../../types/index.js";
+import { mergeHeaderBuckets } from "../header/merge-header-buckets.js";
 import { decodeTokenTypeFromTyp } from "./compute-typ-header.js";
 import { parseTokenHeader } from "./token-header.js";
 
@@ -23,59 +24,33 @@ const BASE_FORMAT: Record<TokenFormatTag, BaseTokenFormat | undefined> = {
 };
 
 /**
- * Recover the domain `tokenType` from a COSE `typ`. COSE spells the structured
- * media type `+cwt` where JOSE spells it `+jwt`, so the suffix is translated
- * before the ONE reverse lookup runs. The bare `application/cwt` — the single
- * registered CWT media type — names no type, so it recovers nothing.
- */
-const coseTokenType = (typ: string | undefined): string | undefined => {
-  if (!typ || typ === "application/cwt") return undefined;
-  if (!typ.endsWith("+cwt")) return undefined;
-  return decodeTokenTypeFromTyp(`${typ.slice(0, -4)}+jwt`, "jwt");
-};
-
-/**
  * The ONE wire-header → domain-header translation, for every format on either
- * wire. It was two functions (a JOSE one keyed by base format, a COSE one that
- * also merged the unprotected `kid` in) whose only real difference was how the
- * `tokenType` is recovered from the `typ` — a per-format FACT, not a reason for a
- * second implementation.
+ * wire, and the ONE producer of the single `header` the domain results report.
  *
- * ⚠ It translates ONE bucket. The caller says which: the protected header and
- * the unprotected header are separate parameters of the result, because a
- * parameter no signature covers must never be readable as though it were signed.
- * The merge that used to happen here is what made the two indistinguishable.
+ * It takes BOTH buckets and merges them canonically ({@link mergeHeaderBuckets}):
+ * the unprotected bucket filtered to what the header registry permits there, then
+ * overwritten by the protected one. The KIT tier keeps the two apart — that is
+ * the COSE wire and it is correct — but the domain tier speaks neither wire's
+ * vocabulary, and `protectedHeader`/`unprotectedHeader` is a COSE STRUCTURAL fact:
+ * a compact JOSE token has one header and no such bucket, so the split left every
+ * JOSE result carrying a field that could never be populated.
+ *
+ * The `tokenType` recovery is now ONE call. It was two — a JOSE branch and a COSE
+ * one that rewrote `+cwt` to `+jwt` so it could ask the JOSE question — which is
+ * why `application/at+cwe` recovered nothing: the rewrite only knew the one
+ * suffix. `decodeTokenTypeFromTyp` is already per-format (its own `FORMAT_SUFFIX`
+ * and `FORMAT_FALLBACK` tables carry every COSE spelling), so handing it the
+ * format the token actually is answers for all seven.
  */
 export const domainTokenHeader = (
-  wire: WireTokenHeader,
+  buckets: WireHeaderBuckets,
   format: TokenFormatTag,
 ): DomainTokenHeader => {
+  const wire = mergeHeaderBuckets(buckets);
   const header = parseTokenHeader(wire);
-  const baseFormat = BASE_FORMAT[format];
 
-  header.baseFormat = baseFormat;
-  header.tokenType = baseFormat
-    ? decodeTokenTypeFromTyp(wire.typ, format)
-    : coseTokenType(wire.typ);
+  header.baseFormat = BASE_FORMAT[format];
+  header.tokenType = decodeTokenTypeFromTyp(wire.typ, format);
 
   return header;
 };
-
-/**
- * The UNPROTECTED bucket as a domain header, or `undefined` when the wire
- * carried none.
- *
- * ⚠ `undefined`, not an empty header. JOSE compact serialisation has no
- * unprotected bucket at all, and its kits report `{}` — which is TRUTHY, so a
- * consumer writing `if (result.unprotectedHeader)` to detect one would get
- * `true` on every JWT and then read `algorithm`, a field `DomainTokenHeader`
- * declares NON-optional, as `undefined`. A header the wire does not have has to
- * be absent, not empty.
- */
-export const unprotectedDomainHeader = (
-  wire: Partial<WireTokenHeader> | undefined,
-  format: TokenFormatTag,
-): DomainTokenHeader | undefined =>
-  wire && Object.keys(wire).length > 0
-    ? domainTokenHeader(wire as WireTokenHeader, format)
-    : undefined;

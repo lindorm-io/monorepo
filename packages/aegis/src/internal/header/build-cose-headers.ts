@@ -1,6 +1,8 @@
 import type { CoseError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
-import { coseByJose, joseByCose } from "./header-registry.js";
+import type { CoseLabel } from "../cose/cose-label.js";
+import { coseWireKey, joseByCose } from "./header-registry.js";
+import { isProtectedOnly } from "./is-protected-only.js";
 import { wireHeaderToCoseMap } from "../utils/token-header.js";
 
 /**
@@ -24,21 +26,39 @@ import { wireHeaderToCoseMap } from "../utils/token-header.js";
  *  1. a reserved/derived param set in EITHER bag → throw (it is key-derived);
  *  2. `crit` ⊆ protected — `crit` itself, or any param it lists, placed in the
  *     unprotected bag → throw (critical params must be integrity-protected);
- *  3. the same param in BOTH bags → throw (COSE cannot carry it twice).
+ *  3. the same param in BOTH bags → throw (COSE cannot carry it twice);
+ *  4. a parameter the header registry declares `placement: "protected"` placed in
+ *     the unprotected bag → throw (aegis decides the bucket, not the caller).
+ *
+ * ⚠ Rule 4 runs LAST, after the structural ones. Rules 1-3 name facts about the
+ * COSE wire itself — a key-derived parameter, RFC 9052 §3.1's crit requirement, a
+ * structure that cannot carry one label twice — and rule 4 states an aegis
+ * POLICY, so the wire's own constraints are reported before ours. It also keeps
+ * rule 3 reachable and honestly probed: with rule 4 first, `{ header: { cty },
+ * unprotected: { cty } }` would refuse for placement and the duplicate rule would
+ * be checked by nothing.
  */
 export const buildCoseHeaders = ({
   reserved,
   header,
   unprotected,
+  proprietary,
   error,
 }: {
   reserved: ReadonlyArray<string>;
   header: Partial<WireTokenHeader> | undefined;
   unprotected: Partial<WireTokenHeader> | undefined;
+  /**
+   * The caller's INTEROP MODE, forwarded to the label resolver: it decides
+   * whether a private-use parameter is keyed by its compact integer or by its
+   * interoperable string label. It reaches the reserved set through the same
+   * resolver, so the guard below compares the spelling actually written.
+   */
+  proprietary: boolean | undefined;
   error: typeof CoseError;
 }): {
-  protectedEntries: Map<number, unknown>;
-  unprotectedEntries: Map<number, unknown>;
+  protectedEntries: Map<CoseLabel, unknown>;
+  unprotectedEntries: Map<CoseLabel, unknown>;
 } => {
   // Rule 2 — crit ⊆ protected (RFC 9052 §3.1). Checked on the raw wire-named bags,
   // BEFORE label translation, which is why it compares JOSE names on both sides:
@@ -69,10 +89,18 @@ export const buildCoseHeaders = ({
     }
   }
 
-  const protectedEntries = wireHeaderToCoseMap(header);
-  const unprotectedEntries = wireHeaderToCoseMap(unprotected);
+  const protectedEntries = wireHeaderToCoseMap(header, proprietary);
+  const unprotectedEntries = wireHeaderToCoseMap(unprotected, proprietary);
 
-  const reservedLabels = new Set(reserved.map(coseByJose));
+  // ⚠ Resolved in the SAME interop mode the entries were, not as integer labels:
+  // a reserved parameter that ever landed in the private-use range would be
+  // spelled by its string label on an interoperable token, and a set of integers
+  // would then match nothing — the guard would pass a caller-supplied
+  // key-derived parameter straight onto the wire. None is private-use today, so
+  // this is the mode agreeing with itself rather than a behaviour.
+  const reservedLabels = new Set<CoseLabel>(
+    reserved.map((jose) => coseWireKey(jose, proprietary)),
+  );
 
   // Rule 1 — a kit-derived/computed param cannot be set by the caller in EITHER
   // bag (the runtime backstop for untyped paths; the bag TYPES already Omit these).
@@ -103,6 +131,30 @@ export const buildCoseHeaders = ({
       title: "COSE Duplicate Header Parameter",
       details:
         "A header parameter may live in the protected or the unprotected bucket, not both; COSE cannot carry the same parameter twice.",
+    });
+  }
+
+  // Rule 4 — the registry's PLACEMENT column, the same datum the read-side merge
+  // consults (`is-protected-only.ts`). Checked on the raw wire-named bag, like
+  // rule 2, because that is the vocabulary `placement` is keyed in.
+  //
+  // An unprotected `typ` is the shape that makes this load-bearing: it is an
+  // unauthenticated type declaration on a token that otherwise verifies, and
+  // `typ` is what routes a COSE object (RFC 9596 §2). Today the kits reserve
+  // `typ`, so rule 1 catches that one — but `cty`, `oid`, `x5c` and `x5u` are all
+  // caller-settable and were all accepted into the unauthenticated bucket.
+  for (const [jose, value] of Object.entries(unprotected ?? {})) {
+    // An undefined value is an ABSENT parameter — `wireHeaderToCoseMap` skips it,
+    // so refusing it here would refuse a bag that emits nothing.
+    if (value === undefined) continue;
+    if (!isProtectedOnly(jose)) continue;
+
+    throw new error(`Header parameter "${jose}" cannot be unprotected`, {
+      code: "cose_unprotected_placement",
+      data: { parameter: jose, placement: "protected" },
+      title: "COSE Header Parameter Must Be Protected",
+      details:
+        "aegis decides which bucket a header parameter travels in, and this one is integrity-protected only: a recipient must be able to rely on it, so it cannot be placed in the unprotected bucket where any holder of the token could rewrite it.",
     });
   }
 

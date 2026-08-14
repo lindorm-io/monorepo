@@ -1,12 +1,14 @@
 import type { CborField, CborValueKind } from "@lindorm/cbor";
 import { CborKit } from "@lindorm/cbor";
 import type { Dict } from "@lindorm/types";
+import { CoseError } from "../../errors/index.js";
 import {
   CLAIM_SPECS,
   type ClaimSpec,
   coseLabel,
   coseName,
 } from "../claims/claims-registry.js";
+import { isPrivateUseLabel } from "../registry/is-private-use-label.js";
 import { codecFor } from "../registry/param-spec.js";
 import { decodeActCompact, encodeActCompact } from "./act-claim.js";
 import { decodeCnf, encodeCnf } from "./cose-key.js";
@@ -96,7 +98,10 @@ const fieldForClaim = (spec: ClaimSpec): CborField => {
   const base = {
     key: wireKey,
     label: label ?? wireKey,
-    proprietary: label !== undefined && label < -65536,
+    // The SAME range predicate the header side gates on (RFC 8392 §9.1.1 and
+    // RFC 8152 §16.2 state the boundary in the same words) — one fact, not two
+    // copies of `-65536` that can drift.
+    proprietary: label !== undefined && isPrivateUseLabel(label),
   };
 
   const codec = codecFor(spec, "cose");
@@ -112,6 +117,22 @@ const fieldForClaim = (spec: ClaimSpec): CborField => {
       return { ...base, kind: "bespoke", encode: encodeCti, decode: decodeCti };
     case "bespoke":
       return { ...base, ...shapeByDomain(spec.domain) } as CborField;
+    default: {
+      // `noImplicitReturns` is off repo-wide, so without this a codec kind added
+      // to the registry would silently yield `undefined` here and the claim would
+      // vanish from the CWT spec rather than failing the build.
+      const exhaustive: never = codec;
+      throw new CoseError("Unhandled CWT claim codec kind", {
+        code: "cose_unhandled_codec_kind",
+        data: {
+          claim: spec.domain,
+          kind: String((exhaustive as { kind?: unknown }).kind),
+        },
+        title: "Unhandled CWT Claim Codec Kind",
+        details:
+          "The claim registry declares a codec kind the CWT spec builder does not map to a CBOR field, so the claim has no COSE wire shape.",
+      });
+    }
   }
 };
 

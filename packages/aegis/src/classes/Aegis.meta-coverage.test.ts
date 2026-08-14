@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import {
   KIT_CELL_CENSUS,
@@ -241,7 +241,7 @@ describe("Aegis — meta coverage", () => {
       (entry) => entry.exercised === "declared" && !entry.reason.trim(),
     );
     const unsited = entries.filter(
-      (entry) => entry.exercised === "reader" && !/^src\/.+\.ts:\d+$/.test(entry.site),
+      (entry) => entry.exercised === "reader" && !/^src\/.+\.ts#.+$/.test(entry.site),
     );
 
     expect(entries.length).toBeGreaterThan(0);
@@ -249,16 +249,22 @@ describe("Aegis — meta coverage", () => {
     expect(unsited).toEqual([]);
   });
 
-  // The measurement the census exists to make VISIBLE: seven of the forty-nine
+  // The measurement the census exists to make VISIBLE: ten of the forty-nine
   // capability cells have a production reader. The table's premise is that a kit
-  // reads its own row, and for six-sevenths of it that is not yet true. Pinned so
-  // the number moves in review — up when a kit starts reading its row, and never
+  // reads its own row, and for most of it that is not yet true. Pinned so the
+  // number moves in review — up when a kit starts reading its row, and never
   // silently down.
+  //
+  // It was SEVEN until the three JOSE kits began reading their own `reserved`
+  // row through `buildJoseHeader`, the way the COSE kits read theirs through
+  // `buildCoseHeaders`. Before that the JOSE guarantee was spread ORDER, which
+  // no row governed — which is how a row could list `jku` while the type offered
+  // it to callers.
   test("should record how many capability cells a kit actually reads", () => {
     const cells = Object.values(KIT_CELL_CENSUS).flatMap((row) => Object.values(row));
 
     expect(cells.length).toBe(49);
-    expect(cells.filter((cell) => cell.exercised === "reader").length).toBe(7);
+    expect(cells.filter((cell) => cell.exercised === "reader").length).toBe(10);
     expect(cells.filter((cell) => cell.exercised === "observed").length).toBeGreaterThan(
       0,
     );
@@ -376,35 +382,71 @@ describe("Aegis — meta coverage", () => {
     expect(offenders).toEqual([]);
   });
 
-  // ⚠ EVERY `file:line` A TABLE CITES MUST RESOLVE. The per-table checks match
-  // the SHAPE of a site (`src/….ts:N`) and never the TARGET, so a citation goes
-  // on compiling and on reading correctly while the code beneath it moves — and
-  // the drift is silent, because nothing dereferences it. One defect was spelled
-  // at two different lines of the same file for exactly that reason.
+  // ⚠ EVERY SITE A TABLE CITES MUST RESOLVE — and a citation NAMES ITS TARGET
+  // rather than pointing at a line number, because a line number cannot be
+  // dereferenced. A previous version of this block checked that the cited line
+  // was IN RANGE, which code motion leaves true while moving the target out from
+  // under it: one refactor broke six of twenty-one citations and this caught the
+  // three whose file happened to shrink past the number.
+  //
+  // The grammar is `src/path.ts#<anchor>`, where the anchor is a VERBATIM
+  // substring of the cited line. It must match EXACTLY ONE line — an ambiguous
+  // anchor is as broken as an absent one, and the count catches both directions.
+  // The resolved line number goes in the failure message, computed rather than
+  // stored, so a reader still gets somewhere to look.
   //
   // Read from the FIXTURE SOURCES as text rather than from the tables as data,
   // because most citations live in PROSE — a `knownDefect` reason, an
-  // `unobservable` sentence — where no field holds them.
-  //
-  // It cannot check that the line still says what the note claims; what it can
-  // check is that the file exists and is long enough, which is the failure mode
-  // a moved or deleted target actually produces.
+  // `unobservable` sentence — where no field holds them. Every `.ts` under
+  // `__fixtures__` is scanned, DERIVED not hand-listed, so a new fixture cannot
+  // opt out of the check by being new (one already had).
   describe("every cited source site", () => {
     const ROOT = new URL("../../", import.meta.url);
+    const FIXTURES = "src/__fixtures__/";
 
-    const CITATIONS = [
-      "src/__fixtures__/scenarios.ts",
-      "src/__fixtures__/knob-probes.ts",
-      "src/__fixtures__/spec-dispositions.ts",
-      "src/__fixtures__/coverage-census.ts",
-      "src/__fixtures__/policy-exercises.ts",
-    ].flatMap((file) =>
-      [
-        ...readFileSync(new URL(file, ROOT), "utf8").matchAll(/src\/[\w./-]+\.ts:(\d+)/g),
-      ].map((match): [string, string, number] => [
-        `${file} cites ${match[0]}`,
-        match[0].slice(0, match[0].lastIndexOf(":")),
-        Number(match[1]),
+    // A citation is DELIMITED: the same quote or backtick opens and closes it, so
+    // an anchor may hold any character but that delimiter. Anchors carry neither
+    // quote, so either string style can spell one.
+    const CITATION = /(["'`])(src\/[\w./-]+\.ts)#([^\n]*?)\1/g;
+    const SOURCE_PATH = /src\/[\w./-]+\.ts/g;
+    const LINE_NUMBER = /[\w./-]+\.ts:\d+/g;
+    // A source file named WITHOUT the `src/` prefix and WITHOUT a `:N` suffix —
+    // `cwt-token.ts`, `internal/header/cose-wire-header.ts` — which is neither a
+    // `SOURCE_PATH` nor a `LINE_NUMBER` and so escaped both. Not hypothetical:
+    // three sat in the tables, one naming a predicate (`contents.length < 3`)
+    // that had not existed in the file it named for two refactors. A citation
+    // the scanner cannot see is exactly what this instrument exists to end.
+    const BARE_PATH = /(?<![\w./-])(?:[\w-]+\/)*[\w-]+\.ts(?![\w:])/g;
+
+    // ⚠ RECURSIVE. A non-recursive read let a future `__fixtures__/` subdirectory
+    // opt out of the very check whose own note says a new fixture cannot.
+    const SOURCES = readdirSync(new URL(FIXTURES, ROOT), {
+      encoding: "utf8",
+      recursive: true,
+    })
+      .filter((name) => name.endsWith(".ts"))
+      .map((name): [string, string] => [
+        `${FIXTURES}${name}`,
+        readFileSync(new URL(`${FIXTURES}${name}`, ROOT), "utf8"),
+      ]);
+
+    // A bare name is NAVIGATIONAL when it names a SIBLING FIXTURE — the row
+    // interpreter, the key bag, the corpus runner. Those point a reader at the
+    // machinery beside the tables, not at a production site a verdict rests on;
+    // nothing dereferences them, so they need no anchor. The exemption is DERIVED
+    // from the directory for the same reason `SOURCES` is — a hand list rots the
+    // moment a fixture is added or renamed — and is paired with the collision
+    // check below, without which it could quietly cover a production path that
+    // happened to share a basename.
+    const NAVIGATIONAL = new Set(
+      SOURCES.map(([fixture]) => fixture.slice(fixture.lastIndexOf("/") + 1)),
+    );
+
+    const CITATIONS = SOURCES.flatMap(([fixture, text]) =>
+      [...text.matchAll(CITATION)].map((match): [string, string, string] => [
+        `${fixture} cites ${match[2]}#${match[3]}`,
+        match[2],
+        match[3],
       ]),
     );
 
@@ -412,14 +454,76 @@ describe("Aegis — meta coverage", () => {
       expect(CITATIONS.length).toBeGreaterThan(0);
     });
 
-    test.each(CITATIONS)("%s", (_label, file, line) => {
-      const lines = readFileSync(new URL(file, ROOT), "utf8").split("\n").length;
+    // The exemption above is only safe while a fixture basename names nothing in
+    // production. The moment one did, every bare mention of that name would be
+    // waved through — including a stale citation to the production file.
+    test("no fixture basename shadows a production source file", () => {
+      const production = readdirSync(new URL("src/", ROOT), {
+        encoding: "utf8",
+        recursive: true,
+      })
+        .filter((name) => name.endsWith(".ts") && !name.startsWith("__fixtures__"))
+        .map((name) => name.slice(name.lastIndexOf("/") + 1));
 
-      expect(line).toBeGreaterThan(0);
+      expect([...NAVIGATIONAL].filter((name) => production.includes(name))).toEqual([]);
+    });
+
+    // The three ways a citation could still escape the check: written without its
+    // delimiters, so the pattern above never sees it — written as a line number,
+    // which is the grammar this replaced and which nothing can resolve — or
+    // written BARE, with neither the `src/` prefix nor a `:N`, which is invisible
+    // to both of the first two. A line number spelled without the `src/` prefix
+    // escaped the first two: three sat in a section comment naming the very sites
+    // the rows beneath it cite. Three bare names then survived all three checks.
+    test.each(SOURCES)("%s cites by anchor, never by line number", (_fixture, text) => {
+      const cited = [...text.matchAll(CITATION)].map((match) => ({
+        start: match.index,
+        end: match.index + match[0].length,
+      }));
+
+      const outsideCitation = (index: number): boolean =>
+        !cited.some((c) => index >= c.start && index < c.end);
+
+      const uncited = [...text.matchAll(SOURCE_PATH)]
+        .filter((match) => outsideCitation(match.index))
+        .map((match) => `${match[0]} at index ${match.index}`);
+
+      const numbered = [...text.matchAll(LINE_NUMBER)].map((match) => match[0]);
+
+      const bare = [...text.matchAll(BARE_PATH)]
+        .filter((match) => !match[0].startsWith("src/"))
+        .filter(
+          (match) => !NAVIGATIONAL.has(match[0].slice(match[0].lastIndexOf("/") + 1)),
+        )
+        .filter((match) => outsideCitation(match.index))
+        .map((match) => `${match[0]} at index ${match.index}`);
+
+      expect(uncited, "a source path must be cited as `src/path.ts#anchor`").toEqual([]);
+      expect(numbered, "a citation names its target, never a line number").toEqual([]);
       expect(
-        line,
-        `${file} has ${lines} lines, so the cited line does not exist`,
-      ).toBeLessThanOrEqual(lines);
+        bare,
+        "a bare `<name>.ts` is invisible to the scanner — cite it as `src/path.ts#anchor`",
+      ).toEqual([]);
+    });
+
+    test.each(CITATIONS)("%s", (_label, file, anchor) => {
+      expect(anchor, "an anchor must be a verbatim source substring").toBe(anchor.trim());
+      expect(
+        anchor,
+        "an anchor carries no quote — either string style spells one",
+      ).not.toMatch(/["']/);
+
+      const source = readFileSync(new URL(file, ROOT), "utf8").split("\n");
+      const hits = source.flatMap((line, index) =>
+        line.includes(anchor) ? [index + 1] : [],
+      );
+
+      expect(
+        hits,
+        hits.length === 0
+          ? `${file} no longer contains \`${anchor}\``
+          : `${file} contains \`${anchor}\` at lines ${hits.join(", ")} — an ambiguous citation`,
+      ).toHaveLength(1);
     });
   });
 });

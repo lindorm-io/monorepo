@@ -3,22 +3,24 @@ import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CweError } from "../errors/index.js";
 import type { ICweKit } from "../interfaces/index.js";
-import { decodeCbor, encodeCbor, Tag } from "../internal/cose/cbor.js";
+import { encodeCbor, Tag } from "../internal/cose/cbor.js";
+import type { CoseLabel } from "../internal/cose/cose-label.js";
+import { assertCoseRegistered } from "../internal/cose/assert-cose-registered.js";
 import {
   coseLabelToEnc,
   encToCoseLabel,
-  isOfficialCoseEnc,
   tagBytesForEncryption,
 } from "../internal/cose/enc-labels.js";
 import {
   COSE_TAG,
   buildEncStructure,
   decodeProtectedHeader,
-  encodeProtectedHeader,
 } from "../internal/cose/structures.js";
-import { unwrapCose } from "../internal/cose/unwrap-cose.js";
+import { splitEncrypt0 } from "../internal/cose/split-encrypt0.js";
 import { buildCoseHeaders } from "../internal/header/build-cose-headers.js";
 import { coseWireHeader } from "../internal/header/cose-wire-header.js";
+import { mergeCoseProtected } from "../internal/header/merge-cose-protected.js";
+import { mergeCoseUnprotected } from "../internal/header/merge-cose-unprotected.js";
 import { coseByJose } from "../internal/header/header-registry.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
@@ -50,6 +52,19 @@ const CAPABILITIES = KIT_CAPABILITIES.cwe;
  * JweKit. Reuses `AesKit.encryptContent`: the COSE `Enc_structure` is the AAD,
  * the IV travels unprotected (label 5), and the COSE ciphertext is `ct‖tag`.
  * AES-GCM and AES-CCM (the tag length comes from the algorithm).
+ *
+ * ONE PLAINTEXT DOOR. Whatever it is handed is serialised by the shared content
+ * codec under its own keys and comes back as the same value — a Dict declares
+ * `application/json` exactly as the three other opaque doors do (`JwsKit`,
+ * `JweKit`, `CwsKit`), so a Dict is a Dict in and a Dict out on every wire.
+ *
+ * ⚠ There was briefly a SECOND door (`encryptClaims`/`decryptClaims`) that wrote
+ * a CWT Claims Set under RFC 8392's registered INTEGER LABELS, for a domain
+ * encrypt path that translated claims on the way in. That path is gone —
+ * `aegis.encrypt` is pure confidentiality and seals the caller's value verbatim —
+ * so the second door had no caller and a COSE_Encrypt0 written by aegis never
+ * carries label-mapped claims. Signing a CWT Claims Set is still `CwtKit`/
+ * `CwmKit`, which is where the RFC 8392 Message belongs.
  */
 export class CweKit implements ICweKit {
   private readonly kryptos: IKryptos;
@@ -95,58 +110,69 @@ export class CweKit implements ICweKit {
   }
 
   /**
-   * Encrypt the content and return the BARE encoded COSE token — the CBOR-encoded
+   * Encrypt content and return the BARE encoded COSE token — the CBOR-encoded
    * COSE_Encrypt0 bytes, nothing else. Any content is faithful: the cty is
    * inferred (Dict→json, string→text, Buffer→octet), the bytes are serialised via
    * the shared codec, and the cty (label 3) rides the AAD-protected protected
-   * header so decrypt round-trips the JS type. The outer CWT tag (61) framing is a
-   * concern of the layer above.
+   * header so decrypt round-trips the JS type. The outer CWT tag (61) framing is
+   * a concern of the layer above.
+   *
+   * ⚠ A `Dict` here is OPAQUE STRUCTURE, never a claims set: it is serialised
+   * under its own literal keys, so `{ iss: "x" }` writes the key `"iss"` and never
+   * the CWT integer label 1. Promoting an arbitrary object's keys to registered
+   * claims would make a foreign reader trust an issuer its author never asserted.
    */
   encrypt(content: TokenContent, options: CweEncryptOptions = {}): Buffer {
     this.logger.debug("Encrypting COSE_Encrypt0", { options });
 
-    // Serialise the content to OPAQUE bytes; the AES layer AEADs them as octet.
-    // The cty defaults to the inferred type; a caller `header.cty` (e.g.
+    // Serialise the content to bytes; the AES layer AEADs them as octet. The cty
+    // defaults to the inferred type; a caller `header.cty` (e.g.
     // `application/cwt` for a nested token) wins as the WIRE label.
+    //
+    // The `json` FAMILY, which is the one thing this door does not decide for
+    // itself: `JwsKit`, `JweKit` and `CwsKit` all serialise a structured value as
+    // JSON, so a Dict answers `application/json` on every wire and reconstructs
+    // as a Dict — the `@lindorm/aes` contract.
     const { bytes, contentType } = serialiseContent(content, options.header?.cty);
 
     // Interop gate (D5): a non-proprietary encrypt refuses an encryption with no
     // OFFICIAL COSE-RFC registration (the AES-CBC-HMAC family) so the token stays
     // interoperable.
-    if (!options.proprietary && !isOfficialCoseEnc(this.encryption)) {
-      throw new CweError(
-        `Encryption "${this.encryption}" has no official COSE registration`,
-        {
-          code: "cose_enc_not_registered",
-          data: { encryption: this.encryption },
-          title: "COSE Encryption Not Registered",
-          details:
-            "In interoperable (non-proprietary) mode the content encryption must carry an official COSE-RFC label; the AES-CBC-HMAC family is private-use and requires proprietary mode.",
-        },
-      );
-    }
+    assertCoseRegistered({
+      kind: "enc",
+      value: this.encryption,
+      proprietary: options.proprietary,
+      error: CweError,
+    });
 
     // The content encryption sits on label 1 (the COSE_Encrypt0 analogue of `alg`),
     // `typ` (label 16) is the kit-computed media type from the `tokenType` PREFIX
     // and `cty` (label 3) the inferred content type; `kid` (derived) and `iv`
     // (computed) travel unprotected. `alg`/`kid`/`iv`/`typ` are the RESERVED set a
     // caller cannot supply — `typ` among them because it is what routes the token.
-    // `cty` stays settable, and `serialiseContent` has already honoured it above.
-    const protectedMap = new Map<number, unknown>();
-    protectedMap.set(coseByJose("alg"), encToCoseLabel(this.encryption));
-    protectedMap.set(coseByJose("typ"), buildMediaType(options.tokenType, "cwe"));
-    protectedMap.set(coseByJose("cty"), contentType);
-
+    // `cty` stays settable, and the codec above has already honoured a caller's
+    // value when resolving `contentType`, so this writes what it resolved.
+    //
+    // ⚠ `proprietary` also decides the SPELLING of a private-use label — it is
+    // the same interop promise the encryption gate above enforces, applied to the
+    // header: the default writes a caller's `oid` under its string label rather
+    // than the lindorm integer no foreign reader can interpret.
     const { protectedEntries, unprotectedEntries } = buildCoseHeaders({
       reserved: CAPABILITIES.reserved,
       header: options.header as Partial<WireTokenHeader> | undefined,
       unprotected: options.unprotected,
+      proprietary: options.proprietary,
       error: CweError,
     });
 
-    for (const [label, value] of protectedEntries) protectedMap.set(label, value);
     // The protected header must be finalized BEFORE the AEAD runs — it is the AAD.
-    const protectedHeader = encodeProtectedHeader(protectedMap);
+    const protectedHeader = mergeCoseProtected({
+      alg: encToCoseLabel(this.encryption),
+      typ: buildMediaType(options.tokenType, "cwe"),
+      cty: contentType,
+      entries: protectedEntries,
+      proprietary: options.proprietary,
+    });
 
     const aad = buildEncStructure(protectedHeader);
     const { ciphertext, iv, tag } = new AesKit({
@@ -154,10 +180,14 @@ export class CweKit implements ICweKit {
       defaultEncryption: this.encryption,
     }).encryptContent(bytes, { aad });
 
-    const unprotected = new Map<number, unknown>();
-    unprotected.set(coseByJose("iv"), iv);
-    unprotected.set(coseByJose("kid"), Buffer.from(this.kryptos.id, "utf8"));
-    for (const [label, value] of unprotectedEntries) unprotected.set(label, value);
+    // The IV only exists once the AEAD has run, which is why the unprotected
+    // bucket is written here rather than beside the protected one.
+    const unprotected = mergeCoseUnprotected({
+      kid: this.kryptos.id,
+      iv,
+      entries: unprotectedEntries,
+      proprietary: options.proprietary,
+    });
 
     return encodeCbor(
       new Tag(COSE_TAG.encrypt0, [
@@ -168,30 +198,19 @@ export class CweKit implements ICweKit {
     );
   }
 
+  /**
+   * Decrypt to the content the cty declares — the read twin of {@link encrypt}.
+   * An `application/json` plaintext reconstructs to the structure it was written
+   * from, under its own literal keys.
+   */
   decrypt<T extends TokenContent = Buffer>(
     token: Buffer,
   ): DecryptedEncryptedToken<T, Buffer> {
     // R2: the kit takes the ENCODED bytes and decodes internally (parallel to
-    // JweKit.decrypt). The outer CWT tag (61) is stripped by `unwrapCose`.
-    const contents = unwrapCose(decodeCbor(token), {
-      arity: { exactly: 3 },
-      tags: [COSE_TAG.encrypt0],
-    });
-
-    if (!contents) {
-      throw new CweError("Malformed COSE_Encrypt0", {
-        code: "cose_malformed",
-        title: "Malformed COSE_Encrypt0",
-        details:
-          "A COSE_Encrypt0 must be a 3-element array [protected, unprotected, ciphertext].",
-      });
-    }
-
-    const [protectedBstr, unprotected, coseCiphertext] = contents as [
-      Uint8Array,
-      Map<number, unknown>,
-      Uint8Array,
-    ];
+    // JweKit.decrypt). The outer CWT tag (61) is stripped by `splitEncrypt0`.
+    const segments = splitEncrypt0(token);
+    const { protectedBstr, coseCiphertext } = segments;
+    const unprotected = segments.unprotected as Map<CoseLabel, unknown>;
 
     const ivValue = unprotected.get(coseByJose("iv"));
     if (!(ivValue instanceof Uint8Array)) {
@@ -233,8 +252,8 @@ export class CweKit implements ICweKit {
     });
 
     // Reconstruct by the PROTECTED cty: the AEAD (whose AAD covers the protected
-    // header, cty included) has already been verified above. Absent/unknown cty
-    // falls back to Buffer.
+    // header, cty included) has already been verified. Absent/unknown cty falls
+    // back to Buffer.
     return {
       protectedHeader,
       unprotectedHeader: coseWireHeader(unprotected, "enc"),
@@ -254,24 +273,7 @@ export class CweKit implements ICweKit {
   static decode(token: Buffer): DecodedEncryptedToken<Buffer> {
     // The outer CWT tag (61) is stripped — symmetric with `decrypt`, which strips
     // it too. A bare, un-enveloped token passes through unchanged.
-    const contents = unwrapCose(decodeCbor(token), {
-      arity: { exactly: 3 },
-      tags: [COSE_TAG.encrypt0],
-    });
-
-    if (!contents) {
-      throw new CweError("Malformed COSE_Encrypt0", {
-        code: "cose_malformed",
-        title: "Malformed COSE_Encrypt0",
-        details:
-          "A COSE_Encrypt0 must be a 3-element array [protected, unprotected, ciphertext].",
-      });
-    }
-
-    const [protectedBstr, unprotected] = contents as [
-      Uint8Array,
-      Map<number, unknown> | undefined,
-    ];
+    const { protectedBstr, unprotected } = splitEncrypt0(token);
 
     return {
       protectedHeader: coseWireHeader(decodeProtectedHeader(protectedBstr), "enc"),

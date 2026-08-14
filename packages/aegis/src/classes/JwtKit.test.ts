@@ -21,6 +21,8 @@ import { domainToJose } from "../internal/claims/translate.js";
 import { domainHeaderToWire } from "../internal/utils/domain-header-to-wire.js";
 import { defaultProfile } from "../internal/profiles/definitions/default.js";
 import type { SignContent, SignTokenOptions } from "../types/index.js";
+import type { AegisError } from "../errors/index.js";
+import { JwtError } from "../errors/index.js";
 import { JwtKit } from "./JwtKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -315,7 +317,6 @@ describe("JwtKit", () => {
         unprotectedHeader: {},
         protectedHeader: {
           alg: "ES512",
-          cty: "application/json",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: TEST_EC_KEY_SIG.id,
           typ: "application/test_token+jwt",
@@ -480,6 +481,28 @@ describe("JwtKit", () => {
       expect(codeOf(() => kit.verify(modifiedToken))).toBe("jwt_invalid_typ");
     });
 
+    test("⚠ a NON-STRING typ is refused by the HEADER decode, before the typ gate", () => {
+      // The typ gate carries an `isString` guard, but nothing on this wire can
+      // reach it with a non-string: `decodeJoseHeader` refuses one first, under
+      // its own JOSE-level code (RFC 7515 §4.1.9 makes typ a StringOrURI). So the
+      // guard is defensive, and THIS is the error a crafted header actually gets.
+      const token = kit.sign({ iss: issuer, sub: "s", exp: 1704099600 });
+      const decoded = JwtKit.decode(token);
+      const parts = token.split(".");
+
+      for (const typ of [123, null]) {
+        const modifiedHeader = Buffer.from(
+          JSON.stringify({ ...decoded.protectedHeader, typ }),
+        )
+          .toString("base64url")
+          .replace(/=/g, "");
+
+        expect(
+          codeOf(() => kit.verify([modifiedHeader, parts[1], parts[2]].join("."))),
+        ).toBe("jose_header_typ_invalid");
+      }
+    });
+
     test("accepts a typ-less token (presence is a domain policy)", () => {
       // Strip the typ header entirely — the wire kit tolerates a typ-less token;
       // presence is enforced Aegis-side.
@@ -510,7 +533,6 @@ describe("JwtKit", () => {
         unprotectedHeader: {},
         protectedHeader: {
           alg: "ES512",
-          cty: "application/json",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
           typ: "application/test_token+jwt",
@@ -546,7 +568,6 @@ describe("JwtKit", () => {
         expect(jsonwebtoken.decode(token, { complete: true })).toEqual({
           header: {
             alg: "ES512",
-            cty: "application/json",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: TEST_EC_KEY_SIG.id,
             typ: "application/test_token+jwt",
@@ -986,5 +1007,48 @@ describe("JwtKit", () => {
       const noIat = kit.sign({ iss: issuer, exp: 1704099600 });
       expect(() => kit.verify(noIat, undefined, { maxTokenAge: 300 })).toThrow();
     });
+  });
+});
+
+/**
+ * The algorithm-match gate under the `jwt` tag.
+ *
+ * `assert-algorithm-match.test.ts` pins the shared predicate against a config it
+ * declares itself, so it stays green over a kit that stopped calling it — the
+ * call could be deleted from `JwtKit.verify` with the whole suite green. This
+ * drives the real kit, so the code and title below are what is under test: the
+ * shared predicate namespaces both off the `format` each kit hands it, and
+ * nothing else asserts which one THIS kit passes.
+ */
+describe("JwtKit — the algorithm-match gate answers under the jwt tag", () => {
+  test("refuses a token whose header alg is not the configured key's", () => {
+    // ⚠ The two keys SHARE an id on purpose: the kid fail-fast runs first, so two
+    // independently generated keys would answer `jwt_kid_mismatch` and the
+    // algorithm gate would never be reached.
+    const id = "key_algorithm_match_jwt";
+
+    const signer = new JwtKit({
+      logger: createMockLogger(),
+      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES256", id }),
+    });
+    const verifier = new JwtKit({
+      logger: createMockLogger(),
+      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES512", id }),
+    });
+
+    const token = signer.sign({ iss: "https://test.lindorm.io/", sub: "user-1" });
+
+    let thrown: AegisError | undefined;
+
+    try {
+      verifier.verify(token);
+    } catch (error) {
+      thrown = error as AegisError;
+    }
+
+    expect(thrown).toBeInstanceOf(JwtError);
+    expect(thrown?.code).toBe("jwt_algorithm_mismatch");
+    expect(thrown?.title).toBe("JWT Algorithm Mismatch");
+    expect(thrown?.data).toEqual({ algorithm: "ES256" });
   });
 });

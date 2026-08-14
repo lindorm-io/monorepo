@@ -1,6 +1,7 @@
 import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CweKit } from "../../classes/CweKit.js";
+import type { CweEncryptOptions, TokenContent } from "../../types/index.js";
 import { coseByJose } from "../header/header-registry.js";
 import { decodeCbor } from "./cbor.js";
 import { COSE_TAG } from "./structures.js";
@@ -13,45 +14,45 @@ import { coseStructure } from "./unwrap-cose.js";
  */
 
 /**
- * Wrap already-secured CWT bytes in a bare COSE_Encrypt0 (sign-then-encrypt) —
- * the inner CWT bytes are the plaintext. `proprietary` threads the interop
- * encryption gate (a private-use AES-CBC-HMAC needs it; default strict).
+ * Seal `content` in a bare COSE_Encrypt0. Two callers, one body: the
+ * sign-then-encrypt composition hands it already-secured CWT bytes (with an
+ * explicit `application/cwt` cty), and the domain encrypt path hands it the
+ * caller's own value — `CweKit` serialises whatever it is and stamps the cty
+ * that describes it. `proprietary` threads the interop encryption gate (a
+ * private-use AES-CBC-HMAC needs it; default strict).
  */
 export const encryptCose = ({
   kryptos,
   logger,
-  inner,
-  tokenType,
-  cty,
+  content,
+  options,
   defaultEncryption,
-  proprietary,
 }: {
   kryptos: IKryptos;
   logger: ILogger;
-  inner: Buffer;
-  /** The bare TYPE PREFIX; `CweKit` builds `application/<prefix>+cwe` (or bare cwe). */
-  tokenType?: string;
+  content: TokenContent;
   /**
-   * The content type (label 3) of the COSE_Encrypt0 plaintext. For a NESTED signed
-   * token (sign-then-encrypt) this is `application/cwt` so the read side round-trips
-   * the plaintext to the inner CWT/CWM bytes; omitted for opaque data, which floors
-   * to the inferred `application/octet-stream`.
+   * The kit's OWN encrypt options, forwarded STRUCTURALLY — the caller's
+   * protected/unprotected header bags, the `tokenType` PREFIX, the interop gate.
+   * A NESTED signed token's `application/cwt` cty rides `header.cty`, stamped by
+   * the sign-then-encrypt composition; opaque data carries none and floors to the
+   * inferred `application/octet-stream`.
    */
-  cty?: string;
+  options: CweEncryptOptions;
   /** Deployment fallback for a key that declares no `encryption`. */
   defaultEncryption?: KryptosEncryption;
-  proprietary?: boolean;
-}): Buffer => {
+}): Buffer =>
   // `CweKit.encrypt` returns the BARE encoded COSE_Encrypt0 bytes.
-  return new CweKit({ kryptos, logger, defaultEncryption }).encrypt(inner, {
-    tokenType,
-    proprietary,
-    ...(cty ? { header: { cty } } : {}),
-  });
-};
+  new CweKit({ kryptos, logger, defaultEncryption }).encrypt(content, options);
 
-/** Decrypt a COSE_Encrypt0 to its inner (secured) CWT bytes. */
-export const decryptCose = ({
+/**
+ * Decrypt a COSE_Encrypt0 to its plaintext, RECONSTRUCTED by the cty its own
+ * protected header declares. An `application/cwt` plaintext reconstructs to the
+ * inner secured bytes; a caller's own payload comes back as the Dict, string or
+ * `Buffer` it was sealed as, which is why the COSE wire's `decrypt` widens `T`
+ * to `TokenContent`.
+ */
+export const decryptCose = <T extends TokenContent = Buffer>({
   kryptos,
   logger,
   token,
@@ -59,10 +60,10 @@ export const decryptCose = ({
   kryptos: IKryptos;
   logger: ILogger;
   token: Buffer;
-}): Buffer => {
+}): T => {
   // R2: `CweKit.decrypt` takes the ENCODED bytes and strips the outer CWT tag (61)
   // itself; hand it the token verbatim.
-  const { payload } = new CweKit({ kryptos, logger }).decrypt(token);
+  const { payload } = new CweKit({ kryptos, logger }).decrypt<T>(token);
   return payload;
 };
 

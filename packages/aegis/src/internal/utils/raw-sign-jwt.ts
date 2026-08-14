@@ -1,5 +1,4 @@
 import type { Dict } from "@lindorm/types";
-import { JwtKit } from "../../classes/JwtKit.js";
 import type {
   AegisSignKey,
   JwtClaimsWire,
@@ -9,6 +8,7 @@ import type {
 import type { AegisDeps } from "./aegis-deps.js";
 import { joseName } from "../claims/claims-registry.js";
 import { buildSignedToken } from "./build-signed-token.js";
+import { signJwt } from "./sign-jwt.js";
 
 /**
  * The raw JWT sign namespace (`aegis.jwt.sign`): resolve the signing key, then
@@ -26,20 +26,14 @@ export const rawSignJwt = async <C extends Dict = Dict>({
   options?: SignStructuredTokenOptions & { key?: AegisSignKey };
   deps: AegisDeps;
 }): Promise<SignedToken> => {
-  const { key, certificateThumbprintSha1, ...rest } = options;
+  const { key, ...rest } = options;
 
   const kryptos = await deps.resolveSignKey({ key });
 
-  const token = new JwtKit({
-    certBindingMode: deps.certBindingMode,
-    clockTolerance: deps.clockTolerance,
-    kryptos,
-    logger: deps.logger,
-  }).sign<C>(claims, {
-    ...rest,
-    certificateThumbprintSha1:
-      certificateThumbprintSha1 ?? deps.certificateThumbprintSha1,
-  });
+  // The SAME signer the JOSE wire's `signClaims` reaches, so the deployment
+  // SHA-1 thumbprint default cannot be resolved one way for a profiled mint and
+  // another for this namespace.
+  const token = signJwt({ kryptos, deps, claims, options: rest });
 
   return buildSignedToken(token, claims, options.header?.oid, "jwt", joseName);
 };

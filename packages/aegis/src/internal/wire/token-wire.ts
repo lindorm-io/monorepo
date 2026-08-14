@@ -2,9 +2,16 @@ import type { IKryptos, KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
 import type {
-  BindCertificateMode,
-  DomainProtectedHeader,
+  AegisDecryptKey,
+  AegisSignKey,
+  DecryptTokenOptions,
+  DomainTokenHeader,
+  EncryptedToken,
+  JweEncryptOptions,
+  SignStructuredTokenOptions,
+  SignUnstructuredTokenOptions,
   SignedToken,
+  TokenContent,
   TokenFormat,
   TokenFormatTag,
   TokenProfile,
@@ -15,6 +22,7 @@ import type {
 import type { NameSelector } from "../claims/claims-registry.js";
 import type { OmitMode } from "../utils/apply-omit.js";
 import type { AegisDeps } from "../utils/aegis-deps.js";
+import type { InputDisposition } from "./wire-input-disposition.js";
 
 /**
  * A claims token read off the wire — the shape BOTH wires reduce to, so
@@ -71,27 +79,41 @@ export type VerifyOpaqueInput = {
 
 export type OpaqueVerified = {
   format: TokenFormatTag;
-  /** The opaque payload exactly as signed — a string on JOSE, bytes on COSE. */
-  payload: Buffer | string;
+  /**
+   * The opaque payload as the TYPE it was signed as — the opaque kits reconstruct
+   * it from the wire cty (`reconstructContent`), so an object signed under
+   * `application/json` comes back a Dict on either wire.
+   *
+   * ⚠ It was `Buffer | string`, which was a lie about the runtime on both wires:
+   * `CwsKit.verify`/`JwsKit.verify` have always returned whatever the codec
+   * reconstructed, and only this record narrowed it.
+   */
+  payload: TokenContent;
   protectedHeader: WireTokenHeader;
   unprotectedHeader: Partial<WireTokenHeader>;
 };
 
+/**
+ * The input to securing DOMAIN claims — the aegis-only fields intersected with
+ * `SignStructuredTokenOptions`, the claims kits' OWN option type.
+ *
+ * ⚠ The intersection is the mechanism, not a tidying. Only the aegis-only fields
+ * above the `&` can be named in a wire's destructure; the whole kit surface
+ * necessarily leaves by rest-spread, so a kit option cannot be dropped by a wire
+ * forgetting to mention it — which is how `bindCertificate`,
+ * `certificateThumbprintSha1`, `proprietary` and `unprotected` each came to be
+ * accepted and ignored on one wire or the other. A new kit sign option threads
+ * through both wires with no wire change, and {@link TokenWire.dispositions}
+ * forces each wire to state what it does with it.
+ */
 export type SignClaimsInput = {
   kryptos: IKryptos;
   deps: AegisDeps;
   /** The DOMAIN-keyed common claims; the wire translates them with its own selector. */
   common: Dict;
-  /** The bare typ PREFIX; the kit builds the full media type from it. */
-  tokenType: string | undefined;
-  header: DomainProtectedHeader | undefined;
-  omit: OmitMode | undefined;
-  proprietary: boolean | undefined;
-  bindCertificate: BindCertificateMode | undefined;
-  certificateThumbprintSha1: boolean | undefined;
   /** COSE only — which secured structure to emit (`cwt` = Sign1, `cwm` = Mac0). */
   format: TokenFormat;
-};
+} & SignStructuredTokenOptions;
 
 export type MintTypInput = {
   profile: TokenProfile;
@@ -102,19 +124,108 @@ export type MintTypInput = {
   format: TokenFormat;
 };
 
-export type EncryptOuterInput = {
+/**
+ * The input to an OPAQUE signature — `aegis.sign`. There is no claims layer, so
+ * no domain claims and no `nameOf` translation: the payload is the caller's own
+ * content and the wire hands it to its opaque kit family verbatim.
+ *
+ * Same intersection as {@link SignClaimsInput}, over the opaque kits' own
+ * `SignUnstructuredTokenOptions`. `omit` sits ABOVE the `&` because it is not a
+ * kit option here: the opaque kits secure whatever bytes they are given, and the
+ * empty-claim prune is applied aegis-side to an OBJECT payload only.
+ */
+export type SignOpaqueInput = {
+  deps: AegisDeps;
+  /** The caller's content. A `Buffer`/`string` is opaque; a Dict is serialised. */
+  payload: Buffer | string | Dict;
+  key: AegisSignKey | undefined;
+  /** The empty-claim prune mode, applied to an OBJECT payload only. */
+  omit: OmitMode | undefined;
+} & SignUnstructuredTokenOptions;
+
+/**
+ * The input to sealing arbitrary content in this wire's encrypting outer — the
+ * ONE write-side encryption entry, shared by `aegis.encrypt` and by the
+ * sign-then-encrypt composition (`encryptOuter`, which is this operation with
+ * the nested-token content and cty filled in).
+ */
+/**
+ * Same intersection as {@link SignClaimsInput}, over `JweEncryptOptions` — the
+ * WIDER of the two encrypt option types, so the JOSE-only ECDH-ES party info is
+ * expressible and the COSE wire has to state (and refuse) it rather than accept
+ * it silently.
+ *
+ * ⚠ There is no `contentType` field. A NESTED token's cty is a `header.cty` the
+ * COMPOSITION stamps (`encrypt-outer.ts`), because both wires reached the same
+ * place with it — the JOSE branch merged it into the header bag and the COSE one
+ * handed `encryptCose` a `cty` that it merged into the header bag — so it was a
+ * translation written twice below the seam instead of once above it.
+ */
+export type EncryptContentInput = {
   kryptos: IKryptos;
   deps: AegisDeps;
-  /** The signed inner token, as its own wire's native serialisation. */
-  inner: string;
-  /** The bare typ PREFIX for the encrypting outer. */
-  tokenType: string | undefined;
-  proprietary: boolean | undefined;
-  /** ECDH-ES Agreement PartyUInfo (RFC 7518 §4.6.1.2). JOSE only; COSE strips it. */
-  partyProducer: string | undefined;
-  /** ECDH-ES Agreement PartyVInfo (RFC 7518 §4.6.1.3). JOSE only; COSE strips it. */
-  partyRecipient: string | undefined;
-  certificateThumbprintSha1: boolean | undefined;
+  /**
+   * The plaintext, EXACTLY as the caller stated it. Every value is opaque to this
+   * operation — a `Dict` is serialised under its own literal keys by the kit's
+   * own codec, never label-mapped or renamed, so an `{ iss: "x" }` sealed here
+   * comes back `{ iss: "x" }` and never as a registered issuer claim.
+   */
+  content: TokenContent;
+} & JweEncryptOptions;
+
+/**
+ * `DecryptTokenOptions` has no members today — decrypt takes no wire knobs — so
+ * the intersection adds nothing YET. It is spelled anyway: the day a kit gains a
+ * decrypt option it lands on this input, and both wires' `decrypt` disposition
+ * tables stop compiling until each states what it does with it.
+ */
+export type DecryptInput = {
+  token: string;
+  deps: AegisDeps;
+  /**
+   * The per-call decryption key policy. `undefined` for the verify peel, which
+   * is not a caller's decrypt — it is one step of reading a signed token.
+   */
+  key: AegisDecryptKey | undefined;
+} & DecryptTokenOptions;
+
+/**
+ * Every wire operation's KIT OPTION surface, and what THIS wire does with each
+ * option of it. Read by the ONE shared guard (`assert-wire-input.ts`) above the
+ * seam; proved by the disposition probe beside it.
+ */
+export type WireInputDispositions = {
+  readonly signClaims: InputDisposition<SignStructuredTokenOptions>;
+  readonly signOpaque: InputDisposition<SignUnstructuredTokenOptions>;
+  readonly encryptContent: InputDisposition<JweEncryptOptions>;
+  readonly decrypt: InputDisposition<DecryptTokenOptions>;
+};
+
+/**
+ * An encrypted token read off the wire — the shape BOTH wires reduce to, so
+ * `aegis.decrypt` and the verify peel are one implementation over it.
+ */
+export type EncryptedRead = {
+  /**
+   * The encrypting outer's DOMAIN header — both wires now produce it through the
+   * ONE `domainTokenHeader` translation, over both of their header buckets. The
+   * COSE side used to read it with a hand-written 24-field domain literal that
+   * merged the unprotected `kid` with no allowlist and hardcoded `contentType`
+   * and `tokenType` to `undefined`.
+   */
+  header: DomainTokenHeader;
+  /**
+   * THE PLAINTEXT, as the reader reconstructed it from the outer's own cty.
+   *
+   * ⚠ ONE field, not a `claims`/`raw` pair. The pair existed because the encrypt
+   * path translated a domain claim set to wire names on the way in, so the read
+   * had to know which values to translate back — and each wire needed a private
+   * cty to recognise its own claims door by. Encryption is CONFIDENTIALITY: the
+   * value sealed is the value returned, so there is nothing left to discriminate.
+   */
+  payload: TokenContent;
+  /** The token exactly as this wire's reader echoes it. */
+  token: string;
 };
 
 /**
@@ -130,6 +241,16 @@ export type EncryptOuterInput = {
  * every verb this record replaces.
  */
 export type TokenWire = {
+  /**
+   * What this wire does with each KIT OPTION its four write/read operations are
+   * handed — `forwarded`, `consumed`, or `unsupported` and therefore REFUSED.
+   *
+   * The rest-spread makes a drop unexpressible; this makes the residue a
+   * decision. An option a wire cannot honour used to be dropped in silence, so
+   * the caller believed a request had taken effect and nothing reported that it
+   * had not. Declared here, the shared guard refuses it by name.
+   */
+  readonly dispositions: WireInputDispositions;
   /**
    * Which wire spelling claims are keyed by (`jti` vs `cti`). The ONE naming
    * difference between the two wires at the domain layer.
@@ -155,7 +276,7 @@ export type TokenWire = {
    */
   readonly issuerPresence: "required" | "optional";
   /** This wire's ENCRYPTING outer format. */
-  readonly encryptedFormat: TokenFormatTag;
+  readonly encryptedFormat: EncryptedToken["format"];
   /**
    * The formats this wire admits as an encrypted token's plaintext. JOSE accepts
    * a nested claims token, an opaque JWS, or another JWE; COSE accepts only a
@@ -163,6 +284,35 @@ export type TokenWire = {
    * been readable here and making it so would be a new capability.
    */
   readonly encryptedInner: ReadonlyArray<TokenFormatTag>;
+  /**
+   * The cty an encrypting outer stamps over a NESTED token, BY THE FORMAT OF THE
+   * TOKEN IT SEALS. It is what makes the read side reconstruct the plaintext to
+   * the inner TOKEN rather than to whatever value shape the bytes resemble.
+   *
+   * ⚠ A LOOKUP, not one value per wire. The two entry points that seal a token —
+   * the sign-then-encrypt composition (`encrypt-outer.ts`) and `aegis.encrypt`
+   * handed an already-minted token — resolve through THIS table, so one behaviour
+   * serves both. A single per-wire value was right only for the composition,
+   * which always wraps a claims token; `aegis.encrypt` may be handed a JWS, and
+   * declaring that `JWT` would be a false statement about the plaintext.
+   *
+   * A format with NO entry is a format this wire has no registered media type
+   * for; nothing is stamped and the kit's codec infers from the value shape. That
+   * is the honest answer and it is deliberately not filled in with an invented
+   * media type — see `application/claims+cwe`, which had to be deleted.
+   */
+  readonly nestedTokenCty: Readonly<Partial<Record<TokenFormatTag, string>>>;
+  /**
+   * Whether a sign-then-encrypt OUTER carries the inner's typ PREFIX.
+   *
+   * ⚠ PRESERVED DIVERGENCE, not a design: the mint has always handed the same
+   * prefix to both wires, the COSE outer has always stamped it, and the JOSE
+   * outer has always dropped it — in a hand-written destructure that simply did
+   * not name the field. Making them agree moves emitted bytes, so the difference
+   * is written down as ONE flippable value instead of being re-implementable by
+   * hand in a second copy of the composition.
+   */
+  readonly nestedTokenTyp: "inner" | "none";
   /**
    * How this wire spells a profile's `typ` policy — what the verify FLOOR expects
    * the token's own type header to be.
@@ -201,16 +351,43 @@ export type TokenWire = {
   verifyOpaque(input: VerifyOpaqueInput): Promise<OpaqueVerified>;
   /** Secure the domain-keyed common claims as this wire's claims token. */
   signClaims(input: SignClaimsInput): SignedToken;
-  /** Wrap a signed token in this wire's encrypting outer. */
-  encryptOuter(input: EncryptOuterInput): string;
   /**
-   * Peel this wire's encrypting outer. Returns the plaintext as a token STRING
-   * plus the outer's declared content type, or `undefined` when the plaintext is
-   * not a token at all (a reconstructed object, opaque bytes on a wire that
-   * cannot re-serialise them).
+   * Secure the caller's own content as this wire's OPAQUE signed token.
+   *
+   * ⚠ A separate operation from {@link signClaims}, not a mode of it. There is no
+   * claims layer to translate, the option set is different, and the two reach
+   * different kit families (`JwsKit`/`CwsKit` vs `JwtKit`/`CwtKit`/`CwmKit`).
+   * Folding them together would put a discriminated union in the parameter and a
+   * branch back in the body — the shape this record exists to remove.
    */
-  decryptOuter(
-    token: string,
-    deps: AegisDeps,
-  ): Promise<{ inner: string | undefined; contentType: string | undefined }>;
+  signOpaque(input: SignOpaqueInput): Promise<SignedToken>;
+  /**
+   * Seal content in this wire's encrypting outer, returning the bare token.
+   *
+   * The GENERAL operation: `aegis.encrypt` reaches it with the caller's own
+   * content, and the sign-then-encrypt composition reaches it through the shared
+   * `encryptOuter` util, which is this call with the nested-token content and cty
+   * filled in from {@link nestedTokenCty}.
+   */
+  encryptContent(input: EncryptContentInput): string;
+  /**
+   * Peel this wire's encrypting outer, reporting the outer's domain header and
+   * the plaintext the outer's own cty reconstructs to.
+   *
+   * The GENERAL operation: `aegis.decrypt` reads the whole record, and verify's
+   * peel reaches it through the shared `decryptOuter` util, which projects the
+   * plaintext back to a token string with {@link encodeToken}.
+   */
+  decrypt(input: DecryptInput): Promise<EncryptedRead>;
+  /**
+   * This wire's own token STRING as the content form it seals — a compact JOSE
+   * token is already a string, a COSE token is base64url over its bytes.
+   */
+  decodeToken(token: string): TokenContent;
+  /**
+   * The inverse: decrypted content back to this wire's token STRING, or
+   * `undefined` when the content is not a form this wire can re-serialise (a
+   * reconstructed object is not a token).
+   */
+  encodeToken(content: TokenContent | undefined): string | undefined;
 };

@@ -214,13 +214,14 @@ describe("Aegis — knob matrix", () => {
   });
 
   // `defect` is the TRANSIENT declaration, and it exists to be repaired — so it
-  // has to say where. A `file:line` under `src/` is the whole difference between
-  // a finding and a complaint.
+  // has to say where. A `src/path.ts#<verbatim substring of the cited line>` is
+  // the whole difference between a finding and a complaint — and unlike a line
+  // number the meta suite can RESOLVE it. This only checks the shape.
   test("should name a repairable site in every defect declaration", () => {
     const defects = PROBES.filter(([, , , probe]) => probe.defect !== undefined);
 
     const unsited = defects
-      .filter(([, , , probe]) => !/^src\/.+\.ts:\d+$/.test(probe.defect?.site ?? ""))
+      .filter(([, , , probe]) => !/^src\/.+\.ts#.+$/.test(probe.defect?.site ?? ""))
       .map(([label]) => label);
 
     expect(defects.length).toBeGreaterThan(0);

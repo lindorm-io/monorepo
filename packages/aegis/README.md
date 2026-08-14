@@ -20,8 +20,8 @@ npm install @lindorm/amphora @lindorm/logger
 
 `Aegis` is an async façade over an `IAmphora` key store — it resolves keys by `kid` and runs the operation. It offers **two surfaces**, and the difference is the return shape:
 
-- **Domain verbs** — `aegis.sign` / `mint` / `encrypt` / `verify` / `decrypt` / `parse`. These speak the aegis domain vocabulary. `verify` returns a unified `VerifiedToken`: domain-keyed claims split into buckets — `.claims` (registered), `.custom` (everything else), plus `.profile` / `.sensitive` — the domain `.protectedHeader`, and a `.format` discriminant. **No `.payload`.** The header keeps its PROVENANCE: `.protectedHeader` is what the signature or AEAD covers and is the only bucket that may decide anything, `.unprotectedHeader` is the unauthenticated one (COSE puts the advisory `kid` routing hint there; it is empty on JOSE). They are never merged — a parameter nothing covers must not read as though the issuer had signed it.
-- **The DOMAIN write options speak domain names too.** `aegis.sign` / `mint` / `encrypt` take their header bag in aegis vocabulary — `header: { objectId, contentType, critical, jwk, jwksUri, certificateUrl, zip }` — and translate it to whichever wire the call emits, so the same option produces a JOSE `oid` and a COSE label -70000 without the caller choosing between them. Only the **wire namespaces** below take wire-named header bags (`{ oid, cty, jku, … }`), because a kit is pure wire. Parameters the kit derives from the key or the crypto operation (`algorithm`, `keyId`, `encryption`, the certificate fields, `headerType`, the IV/tag/PBKDF pair) cannot be supplied on either tier.
+- **Domain verbs** — `aegis.sign` / `mint` / `encrypt` / `verify` / `decrypt` / `parse`. These speak the aegis domain vocabulary. `verify` returns a unified `VerifiedToken`: domain-keyed claims split into buckets — `.claims` (registered), `.custom` (everything else), plus `.profile` / `.sensitive` — ONE domain `.header`, and a `.format` discriminant. **No `.payload`.** The single header is uniform across both wires: `protected`/`unprotected` is a COSE structural fact, and a compact JOSE token has one header and no such bucket. Provenance is kept by CONSTRUCTION instead — aegis decides which bucket a parameter may travel in (the header registry's `placement`), so the only values that can reach `.header` unauthenticated are the COSE `kid` routing hint and the `iv`. Everything a verifier routes, audits or polices a token by is protected-only: refused from the unprotected bag on write, ignored there on read.
+- **The DOMAIN write options speak domain names too.** `aegis.sign` / `mint` / `encrypt` take their header bag in aegis vocabulary — `header: { objectId, contentType, critical, jwk, jwksUri, certificateUrl, zip }` — and translate it to whichever wire the call emits, so the same option produces a JOSE `oid` and the matching COSE label without the caller choosing between them. Only the **wire namespaces** below take wire-named header bags (`{ oid, cty, jku, … }`), because a kit is pure wire. Parameters the kit derives from the key or the crypto operation (`algorithm`, `keyId`, `encryption`, the certificate fields, `headerType`, the ECDH-ES party info, the IV/tag/PBKDF pair) cannot be supplied on either tier — the types omit them, and an untyped caller that names one is **refused** on both wires (`jose_reserved_header` / `cose_reserved_header`), never quietly overruled. The refusal is per KIT, not per parameter class: a JWT that stated an `enc` would advertise a content encryption that never happened, and a CWT that stated an `x5c` would carry the only certificate chain on the token — one no key backs. `jwksUri` is the one the kit only **defaults**: the signing key's own `jwksUri` is stamped when the caller states none, and a caller value overrides it.
 
 - **Wire namespaces** — `aegis.jwt` / `jws` / `jwe` / `cwt` / `cwm` / `cws` / `cwe`. Each resolves the key then delegates to its kit. `sign` / `encrypt` return the same domain `SignedToken` / `EncryptedToken` sugar the verbs do (`.token`, `.format`); `verify` / `decrypt` return the kit's **native wire shape** — a `.payload` with wire claim names (`sub` / `exp` / `jti`, never `subject` / `expiresAt` / `tokenId`), exactly what a standalone JOSE / COSE library reads.
 
@@ -254,9 +254,23 @@ const decryptedCwe = await aegis.cwe.decrypt(cwe.token); // { payload: Buffer }
 
 ### Content-type negotiation
 
-The opaque surfaces — `jws` / `cws` / `jwe` / `cwe` — secure arbitrary `TokenContent`, and the `cty` header round-trips the native JS type on read. Sign / encrypt a `Dict` and `verify` / `decrypt` hands back a `Dict` (`application/json`); a `string` round-trips as a `string` (`text/plain`); a `Buffer` as a `Buffer` (`application/octet-stream`). An absent or unknown `cty` falls back to the raw `Buffer` — aegis never guesses a parse the wire did not declare.
+The opaque surfaces — `jws` / `cws` / `jwe` / `cwe` — secure arbitrary `TokenContent`, and the `cty` header round-trips the native JS type on read. Sign / encrypt a `Dict` and `verify` / `decrypt` hands back a `Dict`; a `string` round-trips as a `string` (`text/plain`); a `Buffer` as a `Buffer` (`application/octet-stream`). An absent or unknown `cty` falls back to the raw `Buffer` — aegis never guesses a parse the wire did not declare.
 
-A **nested token** is labelled by its own `cty`: a JWT (`cty: "JWT"`) reconstructs as its compact `string`, a CWT (`cty: "application/cwt"`) as its `Buffer`, so a sign-then-encrypt chain re-reads the inner token verbatim.
+A structured value is labelled `application/json` (RFC 8259) on **every** opaque surface, JOSE and COSE alike — same input, same declaration, `Dict` in and `Dict` out wherever it is sealed.
+
+⚠ `aegis.encrypt` / `aegis.decrypt` are a **pure confidentiality pair** — the value you seal is the value you get back. There is no domain↔wire translation of the payload in either direction: `aegis.encrypt({ subject: "x" })` writes the key `subject`, not `sub` and not CWT claim key 2, and `aegis.decrypt` returns that object under those keys. The result carries ONE `payload` and no claim buckets: a claim is a statement by an issuer, and only a signature establishes one — read claims with `verify` or `parse`.
+
+The CLAIMS surfaces — `jwt` / `cwt` / `cwm`, and `mint` — stamp **no** `cty` at all. A claims token's payload is a claim set by definition, so RFC 7519 §5.2 marks the parameter NOT RECOMMENDED unless the token is nested, and RFC 8392 §7.2 reads a CWT payload as a CBOR map with no `cty` involved. Supply `header: { contentType }` (domain) / `header: { cty }` (wire) to declare a nested token; a caller value always wins.
+
+A **nested token** is labelled by its own `cty`, and `aegis.encrypt` recognises one it is handed — so `aegis.encrypt(signed.token)` and `mint(profile, content, { encrypt })` emit the same declaration:
+
+| sealed token | `cty`              | authority                                                             |
+| ------------ | ------------------ | --------------------------------------------------------------------- |
+| JWT          | `JWT`              | RFC 7519 §5.2 — a MUST for a nested JWT                               |
+| JWS, JWE     | `application/jose` | RFC 7515 §9.2.1 (§4.1.10 also permits the bare `jose`; both are read) |
+| CWT, CWM     | `application/cwt`  | RFC 8392 §9.2 — a MACed CWT is a CWT                                  |
+
+Reconstruction follows the label: a JOSE token comes back as its compact `string`, a COSE token as its `Buffer`, so a sign-then-encrypt chain re-reads the inner token verbatim and `aegis.verify` opens the outer and checks the inner signature in one call.
 
 ```typescript
 const sealed = await aegis.jwe.encrypt({ hello: "world" });
@@ -330,7 +344,7 @@ const result = await aegis.verify(anyToken, {
 result.format; // "jwt" | "jws" | "jwe" | "cwt" | "cwm" | "cws" | "cwe"
 result.claims.subject; // domain-keyed registered claims
 result.custom; // non-registered claims
-result.protectedHeader.tokenType; // domain-keyed, integrity-protected header
+result.header.tokenType; // domain-keyed; the two wire buckets merged, protected last
 // jws/cws carry empty claims/custom and deliver the opaque payload on result.raw
 ```
 
@@ -355,7 +369,7 @@ const cwe = await aegis.encrypt(data, { format: "cwe" }); // COSE_Encrypt0 inste
 ```typescript
 const parsed = aegis.parse(idToken);
 parsed.claims.subject; // domain-keyed, unverified
-parsed.protectedHeader.keyId;
+parsed.header.keyId;
 ```
 
 ### Static helpers
@@ -429,7 +443,7 @@ The temporal range is checked **by default**, with the same builder and the same
 
 Reach for it when the access token is **not** locally verifiable: RFC 9449 §6.2 delivers `cnf.jkt` through the introspection response for an opaque token, and the resource server validates the binding itself. `htm` / `htu` are parsed but never compared — aegis does not see the HTTP request, so that comparison belongs to the consumer.
 
-`Aegis.header` and `Aegis.decode` are gone — read a verified token's `.protectedHeader`, use the keyless instance `aegis.parse` for an unknown structured token (above), or a kit's keyless static `.decode` (e.g. `JwtKit.decode`) for a known format.
+`Aegis.header` and `Aegis.decode` are gone — read a verified token's `.header`, use the keyless instance `aegis.parse` for an unknown structured token (above), or a kit's keyless static `.decode` (e.g. `JwtKit.decode`) for a known format.
 
 ## JwtKit
 
@@ -645,7 +659,7 @@ The COSE structure follows the key and the profile:
 
 The COSE `typ` header carries the CWT media type — `application/at+cwt`, `application/secevent+cwt`, etc. (the JWT path's `application/at+jwt` family with the `+jwt` suffix swapped for `+cwt`; bare `JWT` → `application/cwt`, the one IANA-registered CWT type).
 
-By default the claims are fully interoperable — a string-keyed payload that a stock COSE/CWT verifier reads, with the strict alg/enc interop gate ON. Pass `proprietary: true` for the lindorm-native compact encodings (integer-keyed `act` / `sub_id`, private-use labels for lindorm-only claims, gate off), at the benefit of smaller tokens:
+By default the whole token is fully interoperable — a string-keyed payload that a stock COSE/CWT verifier reads, the same for any header parameter with no IANA COSE label (`objectId` → the text label `oid`, legal COSE per RFC 9052 §1.5's `label = int / tstr`), and the strict alg/enc interop gate ON. Pass `proprietary: true` for the lindorm-native compact encodings (integer-keyed `act` / `sub_id`, private-use integer labels for lindorm-only claims and header parameters, gate off), at the benefit of smaller tokens:
 
 ```typescript
 await aegis.mint("access_token", content, { format: "cwt", proprietary: true });
@@ -973,7 +987,7 @@ import {
 - A `kid` lookup is scoped to the issuer the verifier expects, or the one the artifact claims — see [Verification keys are scoped to an issuer](#verification-keys-are-scoped-to-an-issuer). Without it, a registered peer publishing a colliding `kid` could sign a token claiming another issuer's `iss` and have it verify.
 - JWE payload compression (`zip` header) is rejected outright.
 - Critical header parameters are enforced on **both** wires by one implementation: RFC 7515 §4.1.11 (JOSE) and RFC 9052 §3.1 (COSE) state the same rule, and aegis implements no `crit` extension, so any `crit` a producer sets causes verification to fail. On COSE the check reads the **protected bucket only** — the one the signature or AEAD covers — which is also where §3.1 requires every crit-listed parameter to live. On the write side a COSE `crit` member is emitted as the integer **label** its parameter is keyed under, because RFC 9052 §1.5 makes a crit member a label (`int / tstr`) and §3.1 makes a member naming a label absent from the protected bucket a fatal error.
-- The COSE kits report the **protected and unprotected header buckets separately** (`protectedHeader` / `unprotectedHeader`), rather than merging them. Nothing read from the unprotected bucket may decide whether a token is accepted: `typ` — which routes the token and selects the profile floor — is read from the protected bucket alone, and a `typ` the signature does not cover answers nothing. The JOSE kits report an empty unprotected bucket: compact serialisation has one header and it is protected.
+- The COSE **kits** report the **protected and unprotected header buckets separately** (`protectedHeader` / `unprotectedHeader`) — that is the COSE wire, and the kit tier speaks it. The JOSE kits report an empty unprotected bucket: compact serialisation has one header and it is protected. The DOMAIN verbs report ONE `.header`, merged under the header registry's `placement` allowlist: the unprotected bucket filtered to `kid`/`iv`, then overwritten by the protected one. Nothing else read from the unprotected bucket may decide anything — `typ`, which routes the token and selects the profile floor, is protected-only, so a `typ` the signature does not cover answers nothing on either tier.
 - A COSE confirmation (`cnf`) that the wire cannot carry fails **closed at mint**. RFC 8747 defines no `jkt` member for a COSE confirmation, and a JOSE thumbprint cannot be relabelled as a COSE one — RFC 7638 hashes a key's canonical JSON, RFC 9679 its canonical CBOR — so a `jkt`-bound token has no COSE form and minting one is refused rather than silently downgraded to a bearer CWT.
 - DPoP-bound tokens (`cnf.jkt`) require either a matching DPoP proof or `trustBoundThumbprint: true` on verify.
 - Tokens are never logged whole. Every log line and error payload carries a token as `header.payload` — the signature is dropped, so a logged token stays debuggable but unusable. A JWE is logged as its protected header only; a token with no safely-showable structure (opaque, COSE/CWT) is logged as `[Filtered]`. This applies to DPoP proofs passed on verify as well.

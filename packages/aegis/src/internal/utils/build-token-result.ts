@@ -9,17 +9,18 @@ import type {
 } from "../../types/index.js";
 import type { NameSelector } from "../claims/claims-registry.js";
 import { tokenToBuckets } from "../claims/resolve-domain-buckets.js";
-import { domainTokenHeader, unprotectedDomainHeader } from "./domain-header.js";
+import { domainTokenHeader } from "./domain-header.js";
 import { extractTokenDelegation } from "./extract-token-delegation.js";
 
 /**
  * Assemble the unified domain result for a VERIFIED or PARSED claims token, on
  * either wire. It was two builders, one per wire, and they diverged in three
- * ways: the COSE one MERGED the unprotected `kid` into the single header it
- * reported, recovered the token type through its own translation, and enforced no
- * issuer gate where the JOSE one did. Only the last is a real per-wire fact, and
- * it is a PARAMETER here; the first is now unrepresentable, because the two
- * buckets leave as separate fields.
+ * ways: the COSE one merged the two header buckets with no allowlist at all,
+ * recovered the token type through its own translation, and enforced no issuer
+ * gate where the JOSE one did. Only the last is a real per-wire fact, and it is a
+ * PARAMETER here; the other two are now one shared translation
+ * (`domainTokenHeader`), which merges the buckets under the header registry's
+ * `placement` allowlist.
  *
  * `delegation` is narrowed to REQUIRED on the way out: a claims-bearing token
  * always has an act summary (an absent `act` yields `isDelegated: false`, not
@@ -47,9 +48,17 @@ export const buildTokenResult = <C extends Dict = Dict>({
   /** The INTEGRITY-PROTECTED wire header — the only bucket a signature covers. */
   protectedHeader: WireTokenHeader;
   /**
-   * The UNPROTECTED wire header bucket (COSE only). Reported SEPARATELY, never
-   * merged: a parameter nothing covers must not be readable as though the issuer
-   * had signed it.
+   * The UNPROTECTED wire header bucket (COSE only); `undefined` where the wire
+   * carries none.
+   *
+   * ⚠ It IS merged into the one domain header, and the merge is what keeps a
+   * parameter nothing covers from reading as though the issuer had signed it:
+   * `domainTokenHeader` admits only the parameters the header registry declares
+   * placeable there (`kid`, `iv` — the COSE routing and AEAD infrastructure), and
+   * the protected bucket overwrites them. Everything a verifier decides by is
+   * `placement: "protected"` and cannot enter this way at all. Reporting the two
+   * apart instead put COSE wire vocabulary on a surface that speaks neither wire,
+   * and left every JOSE result with a field that could never be populated.
    */
   unprotectedHeader: Partial<WireTokenHeader> | undefined;
   token: string;
@@ -84,8 +93,10 @@ export const buildTokenResult = <C extends Dict = Dict>({
 
   return {
     format,
-    protectedHeader: domainTokenHeader(protectedHeader, format),
-    unprotectedHeader: unprotectedDomainHeader(unprotectedHeader, format),
+    header: domainTokenHeader(
+      { protectedHeader, unprotectedHeader: unprotectedHeader ?? {} },
+      format,
+    ),
     claims,
     custom,
     profile,

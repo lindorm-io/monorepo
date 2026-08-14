@@ -57,17 +57,17 @@ describe("CweKit — caller-controlled protected / unprotected header bags", () 
     return undefined;
   };
 
-  test("places header params protected and unprotected params unprotected", () => {
+  test("places caller params protected and the kit's derived params unprotected", () => {
     const token = kit.encrypt(Buffer.from("secret"), {
-      header: { cty: "application/example" },
-      unprotected: { x5u },
+      header: { cty: "application/example", x5u },
     });
 
     // The two BUCKETS, kept apart: what the AEAD covers, and what it does not.
     const { protectedHeader, unprotectedHeader } = kit.decrypt(token);
     expect(protectedHeader.cty).toBe("application/example");
+    expect(protectedHeader.x5u).toBe(x5u);
     expect(protectedHeader.enc).toBe("A256GCM"); // enc (label 1, kit-computed)
-    expect(unprotectedHeader.x5u).toBe(x5u);
+    expect(unprotectedHeader.x5u).toBeUndefined();
     expect(unprotectedHeader.kid).toBe(kryptos.id);
     expect(unprotectedHeader.iv).toEqual(expect.any(String));
 
@@ -77,10 +77,20 @@ describe("CweKit — caller-controlled protected / unprotected header bags", () 
     ];
     const protectedMap = decodeProtectedHeader(protectedBstr);
     expect(protectedMap.has(coseByJose("cty"))).toBe(true);
+    expect(protectedMap.has(coseByJose("x5u"))).toBe(true);
     expect(protectedMap.has(coseByJose("alg"))).toBe(true); // enc sits on label 1
-    expect(unprotected.has(coseByJose("x5u"))).toBe(true);
     expect(unprotected.has(coseByJose("iv"))).toBe(true);
     expect(unprotected.has(coseByJose("kid"))).toBe(true);
+  });
+
+  // The caller states the parameter, never its provenance: the header registry's
+  // `placement` column decides the bucket, and the read side filters an incoming
+  // unprotected bucket by the same column — so a parameter emitted there would be
+  // one no reader ever surfaces.
+  test("throws when a protected-only param is placed in the unprotected bag", () => {
+    expect(
+      codeOf(() => kit.encrypt(Buffer.from("secret"), { unprotected: { x5u } })),
+    ).toBe("cose_unprotected_placement");
   });
 
   test("throws when the computed iv is smuggled into the unprotected bag", () => {

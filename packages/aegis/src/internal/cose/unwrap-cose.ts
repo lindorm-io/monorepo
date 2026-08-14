@@ -5,8 +5,8 @@ import { COSE_TAG } from "./structures.js";
  * The ONE COSE unwrapper. Every COSE read path starts the same way — strip the
  * optional outer CWT tag (61), reach the structure inside, and check it is an
  * array of the right length — and that opening was written seven times over
- * (`CwsKit`, `CweKit`, `cwt-token`, `cose-encryption`, `cose-encrypt-header`,
- * `is-cose`, `is-cose-format`), each with its own subtly different handling of a
+ * (`CwsKit`, `CweKit`, the CWT core, `cose-encryption`, the COSE_Encrypt0 header
+ * read, `is-cose`, `is-cose-format`), each with its own subtly different handling of a
  * bare, untagged structure.
  *
  * {@link unwrapCose} RETURNS a decision and never throws: the structural verdict,

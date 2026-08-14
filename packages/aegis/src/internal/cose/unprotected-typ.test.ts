@@ -41,7 +41,7 @@ const TYP = coseByJose("typ");
  * header omits `typ` altogether — a shape only a hostile or foreign producer
  * emits, and therefore exactly the shape a verifier must not trust.
  *
- * So the structure is hand-built from the same primitives `CwsKit.signSign1`
+ * So the structure is hand-built from the same primitives `CwsKit.sign`
  * uses, with the signature computed over the PROTECTED bucket and not the
  * unprotected one — RFC 9052 §4.4 `Sig_structure`, which covers the context
  * string, the protected header, `external_aad` and the payload, and nothing
@@ -159,10 +159,12 @@ describe("COSE typ integrity", () => {
     );
   });
 
-  // The two readers of `typ` now AGREE, and this is what says so. Both build the
-  // parsed header off the PROTECTED bucket alone, so an unsigned typ produces no
-  // `tokenType` at all — where they used to disagree, one reading the protected
-  // map and the other the merged one, giving one token two answers.
+  // The two readers of `typ` now AGREE, and this is what says so. The domain
+  // header IS a merge of the two buckets, but `typ` is `placement: "protected"`
+  // in the header registry, so an unsigned one is filtered out on the way in and
+  // produces no `tokenType` at all — where the two used to disagree, one reading
+  // the protected map and the other an unfiltered merge, giving one token two
+  // answers.
   //
   // ⚠ The verify is DELIBERATELY assertion-free. Passing `{ tokenType: … }` here
   // would route this through the very acceptance the rule above says must be
@@ -174,7 +176,7 @@ describe("COSE typ integrity", () => {
 
     const verified = await aegis.verify(token);
 
-    expect(verified.protectedHeader.tokenType).toBeUndefined();
+    expect(verified.header.tokenType).toBeUndefined();
   });
 
   // The same rule through the PROFILE floor, which compares the token's typ

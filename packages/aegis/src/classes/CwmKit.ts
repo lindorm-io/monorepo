@@ -4,7 +4,9 @@ import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
 import { CwmError } from "../errors/index.js";
 import type { ICwmKit } from "../interfaces/index.js";
-import { decodeCwtWire, signCwt, verifyCwt } from "../internal/cose/cwt-token.js";
+import { decodeCwtWire } from "../internal/cose/decode-cwt-wire.js";
+import { signCwt } from "../internal/cose/sign-cwt.js";
+import { verifyCwt } from "../internal/cose/verify-cwt.js";
 import type {
   CwtClaimsWire,
   DecodedStructuredToken,

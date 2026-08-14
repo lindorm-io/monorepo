@@ -1,42 +1,47 @@
-import { isBuffer, isString } from "@lindorm/is";
-import { AegisError } from "../../errors/index.js";
+import { isBuffer, isString, isUndefined } from "@lindorm/is";
 import type { EncryptData, EncryptOptions, EncryptedToken } from "../../types/index.js";
-import { coseName, joseName } from "../claims/claims-registry.js";
-import { domainToWire } from "../claims/translate.js";
-import { encodeCbor } from "../cose/cbor.js";
-import { encryptCose } from "../cose/cose-encryption.js";
-import { encodeCwtClaims } from "../cose/cwt-claims.js";
+import { assertWireInput } from "../wire/assert-wire-input.js";
+import type { EncryptContentInput } from "../wire/token-wire.js";
+import { tokenWireFor } from "../wire/token-wire-for.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { applyOmit } from "./apply-omit.js";
 import { domainTokenTypePrefix } from "./compute-typ-header.js";
 import { domainHeaderToWire } from "./domain-header-to-wire.js";
-import { encryptJwe } from "./encrypt-jwe.js";
+import { nestedTokenContent } from "./nested-token-content.js";
 
 /**
- * The reserved `tokenType` PREFIX marking a domain-CLAIMS `cwe`. `CweKit` builds
- * `application/claims+cwe` from it — the read-side discriminant: `decryptToken`
- * translates the plaintext back to domain claims when the COSE_Encrypt0 header
- * carries {@link COSE_CLAIMS_TYP}, and returns opaque bytes otherwise (opaque
- * data with no `type` floors to the bare `application/cwe`, so it never collides).
- * A JWE tells the same two apart by the kit-computed `cty` (`application/json`).
- */
-const COSE_CLAIMS_PREFIX = "claims";
-
-/** The full COSE_Encrypt0 `typ` a domain-claims `cwe` carries (see above). */
-export const COSE_CLAIMS_TYP = "application/claims+cwe";
-
-/**
- * The domain encrypt pipeline (`aegis.encrypt`) — the mirror of `signToken`, but
- * pure CONFIDENTIALITY: domain claims → wire (the ONE registry translator, keyed
- * by the target wire's own name selector) →
- * `JweKit`/`CweKit.encrypt` with NO inner signature. A `Buffer`/`string` payload
- * is opaque and passes through untouched; a plain object is pruned of empty
- * claims at this emission boundary (default `"empty"`) before it is serialised,
- * matching the mint/sign wires. The encoding seam dispatches on `format`.
+ * The domain encrypt pipeline (`aegis.encrypt`) — PURE CONFIDENTIALITY, and pure
+ * in the `@lindorm/aes` sense: **the value sealed is the value returned**. The
+ * payload crosses NO domain↔wire translation in either direction. A `Dict` is
+ * serialised under its OWN literal keys, so `{ subject: "x" }` stays `subject`
+ * and never becomes `sub`/label 2, and `aegis.decrypt` hands the same object
+ * back. Headers and options are still domain-translated — that is aegis's job on
+ * every verb — but the payload is the caller's.
  *
- * ⚠ RECORDED, NOT FIXED: `options.header` still reaches the JWE path only. The
- * COSE_Encrypt0 writer takes no caller header bag, so a header supplied for a
- * `cwe` is accepted and dropped — a pre-existing gap, unchanged here.
+ * ⚠ IT USED TO TRANSLATE, and the read side had to undo it: `domainToWire` on the
+ * way in, `wireToDomain` on the way out, plus a private claims cty on each wire
+ * so the read could tell "a claim set I renamed" from "bytes I did not". Sealing
+ * a value verbatim removes all three at once — there is nothing left to
+ * discriminate, because nothing was renamed. A claims token with an author is
+ * `mint`/`sign`, which is where a claims vocabulary belongs.
+ *
+ * The ONE thing this verb states about the payload is when it IS a token: an
+ * encrypting outer must declare a nested token (RFC 7519 §5.2 makes it a MUST for
+ * a nested JWT), so a recognised token is sealed in its wire's native content
+ * form under the cty that wire registers for it — the SAME resolution the
+ * sign-then-encrypt composition runs, so `aegis.encrypt(signed.token)` and
+ * `mint(…, { encrypt })` emit the same declaration. A caller's own `header.cty`
+ * still wins.
+ *
+ * Two options that used to be accepted and dropped now land, and neither needed
+ * a path built for it — both fell out of the wire forwarding its kit's whole
+ * option surface: `header` reaches the COSE_Encrypt0 writer (RFC 9052 §3 gives
+ * the structure a protected bucket and `CweKit.encrypt` always took the bag),
+ * and `certificateThumbprintSha1` is now the CALLER's value rather than the
+ * deployment default the JWE writer was handed regardless. On the `cwe` path
+ * the SHA-1 flag is refused instead: RFC 9360 §2 gives COSE one `x5t` whose
+ * digest algorithm is a member of its own value, so there is no legacy
+ * thumbprint beside it for a suppression to act on.
  */
 export const encryptToken = async ({
   data,
@@ -48,75 +53,62 @@ export const encryptToken = async ({
   deps: AegisDeps;
 }): Promise<EncryptedToken> => {
   const kryptos = await deps.resolveEncryptKey(options.key);
-  const defaultEncryption = deps.defaultEncryption;
   const format = options.format ?? "jwe";
-  const opaque = isBuffer(data) || isString(data);
+  const wire = tokenWireFor(format);
 
-  switch (format) {
-    case "jwe": {
-      // Opaque bytes/string pass through untouched (JweKit stamps octet/text);
-      // a domain claims set is translated to the JOSE wire and handed over as an
-      // OBJECT so JweKit stamps `application/json` — the read-side discriminant.
-      const payload = opaque
-        ? data
-        : domainToWire(applyOmit(data, options.omit), joseName);
+  // A TOKEN is the one payload this verb says something about. Only a string can
+  // be one — every aegis surface hands a token back as a string, COSE included
+  // (base64url) — so a `Buffer` is bytes and stays bytes.
+  const nested = isString(data) ? nestedTokenContent(wire, data) : undefined;
 
-      const token = encryptJwe({
-        kryptos,
-        data: payload,
-        options: {
-          bindCertificate: options.bindCertificate,
-          header: domainHeaderToWire(options.header),
-          partyProducer: options.partyProducer,
-          partyRecipient: options.partyRecipient,
-          tokenType: domainTokenTypePrefix(options.type),
-        },
-        defaultEncryption,
-        certBindingMode: deps.certBindingMode,
-        certificateThumbprintSha1: deps.certificateThumbprintSha1,
-        logger: deps.logger,
-      });
+  // The caller's own value, pruned ONLY when the caller asks for it.
+  //
+  // ⚠ THE DEFAULT IS THE ASYMMETRY, and it is deliberate: `mint`/`sign` prune
+  // empty entries unless told otherwise, this verb prunes nothing unless told
+  // to. Pruning shapes a CLAIM SET — it is how an issuer chooses between "the
+  // authentication methods are known and none apply" (`amr: []`) and "nothing
+  // is stated" (no `amr` at all), a distinction that exists because a claim is
+  // an ASSERTION someone signed. This verb has no claims layer to shape: it
+  // seals a value and hands that exact value back, so an empty entry is part of
+  // the caller's value and dropping it unasked would break the round trip.
+  // The knob still works — an explicit mode prunes on both wires — it just
+  // never fires unrequested.
+  const payload =
+    isBuffer(data) || isString(data) || isUndefined(options.omit)
+      ? data
+      : applyOmit(data, options.omit);
 
-      return { format, token };
-    }
+  const input: EncryptContentInput = {
+    kryptos,
+    deps,
+    // The kit's codec serialises the value under its own literal keys and
+    // states what it IS, so decrypt reconstructs the same type.
+    content: nested?.content ?? payload,
+    tokenType: domainTokenTypePrefix(options.type),
+    // The nested-token declaration is a DEFAULT here, written BEFORE the caller's
+    // bag so an explicit `header.contentType` displaces it — unlike the
+    // sign-then-encrypt composition, where the outer describes a token the
+    // composition itself produced and the declaration is its own to make.
+    header: domainHeaderToWire(
+      nested === undefined
+        ? options.header
+        : { contentType: nested.cty, ...options.header },
+    ),
+    bindCertificate: options.bindCertificate,
+    // The CALLER's own request. The deployment default is resolved by the wire
+    // that can honour it (`encryptJwe`); passing the resolved value here would
+    // make every call look like one that stated something, and the guard below
+    // reads caller INTENT.
+    certificateThumbprintSha1: options.certificateThumbprintSha1,
+    partyProducer: options.partyProducer,
+    partyRecipient: options.partyRecipient,
+    proprietary: options.proprietary,
+  };
 
-    case "cwe": {
-      const inner = opaque
-        ? isBuffer(data)
-          ? data
-          : Buffer.from(data, "utf8")
-        : Buffer.from(
-            encodeCbor(
-              encodeCwtClaims(domainToWire(applyOmit(data, options.omit), coseName), {
-                proprietary: options.proprietary,
-              }),
-            ),
-          );
+  assertWireInput(wire.dispositions.encryptContent, input, {
+    format,
+    operation: "encryptContent",
+  });
 
-      const token = encryptCose({
-        kryptos,
-        logger: deps.logger,
-        inner,
-        // A claims set is marked (via the reserved `claims` prefix →
-        // `application/claims+cwe`) so decrypt can translate it back; opaque bytes
-        // keep the caller's `type` (if any) and are returned verbatim.
-        tokenType: opaque ? domainTokenTypePrefix(options.type) : COSE_CLAIMS_PREFIX,
-        defaultEncryption,
-        proprietary: options.proprietary,
-      });
-
-      return { format, token: token.toString("base64url") };
-    }
-
-    default: {
-      const exhaustive: never = format;
-      throw new AegisError("Unsupported encrypt format", {
-        code: "unsupported_encrypt_format",
-        data: { format: String(exhaustive) },
-        title: "Unsupported Encrypt Format",
-        details:
-          "aegis.encrypt supports only the jwe and cwe formats; symmetric at-rest encryption is a separate surface (aegis.aes).",
-      });
-    }
-  }
+  return { format, token: wire.encryptContent(input) };
 };

@@ -1,4 +1,5 @@
 import { encodeCbor, decodeCbor } from "./cbor.js";
+import type { CoseLabel } from "./cose-label.js";
 
 /** CBOR tags for the COSE structures we emit (RFC 9052 / RFC 8392). */
 export const COSE_TAG = {
@@ -19,11 +20,11 @@ const EMPTY = Buffer.alloc(0);
  * encoded header map. An EMPTY protected header is a zero-length byte string
  * (`h''`), NOT the encoding of an empty map (RFC 9052 §3).
  */
-export const encodeProtectedHeader = (header: Map<number, unknown>): Buffer =>
+export const encodeProtectedHeader = (header: Map<CoseLabel, unknown>): Buffer =>
   header.size === 0 ? EMPTY : encodeCbor(header);
 
-export const decodeProtectedHeader = (bstr: Uint8Array): Map<number, unknown> =>
-  bstr.length === 0 ? new Map() : decodeCbor<Map<number, unknown>>(bstr);
+export const decodeProtectedHeader = (bstr: Uint8Array): Map<CoseLabel, unknown> =>
+  bstr.length === 0 ? new Map() : decodeCbor<Map<CoseLabel, unknown>>(bstr);
 
 /**
  * The to-be-signed bytes for COSE_Sign1: `Sig_structure` =
@@ -44,6 +45,21 @@ export const buildMacStructure = (
   payload: Buffer,
   externalAad: Buffer = EMPTY,
 ): Buffer => encodeCbor(["MAC0", protectedHeader, externalAad, payload]);
+
+/**
+ * The to-be-secured bytes for ONE signed COSE structure, chosen by its tag — the
+ * `Sig_structure` for a COSE_Sign1, the `MAC_structure` for a COSE_Mac0. Both
+ * directions ask this, so both ask it here; sign and verify used to each carry
+ * their own copy of the choice.
+ */
+export const buildSecuredStructure = (
+  tag: typeof COSE_TAG.sign1 | typeof COSE_TAG.mac0,
+  protectedHeader: Buffer,
+  payload: Buffer,
+): Buffer =>
+  tag === COSE_TAG.sign1
+    ? buildSigStructure(protectedHeader, payload)
+    : buildMacStructure(protectedHeader, payload);
 
 /**
  * The AAD for COSE_Encrypt0: `Enc_structure` =

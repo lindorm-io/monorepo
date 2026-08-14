@@ -1,8 +1,10 @@
 import { B64 } from "@lindorm/b64";
+import { isNumber } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { WireTokenHeader } from "../../types/index.js";
 import { B64U } from "../constants/format.js";
 import { coseLabelToAlg } from "../cose/alg-labels.js";
+import type { CoseLabel } from "../cose/cose-label.js";
 import { coseLabelToEnc } from "../cose/enc-labels.js";
 import { coseByJose, joseByCose } from "./header-registry.js";
 
@@ -19,11 +21,11 @@ const ALG_LABEL = coseByJose("alg");
 /**
  * Translate a COSE `crit` (label 2) array into its JOSE wire form: RFC 9052 §1.5
  * defines `label = int / tstr`, so a member is an integer header LABEL or a text
- * one. An integer is mapped to its JOSE wire NAME via the header registry
- * (`joseByCose`) — the COSE twin of the JOSE crit member remap; an unregistered
- * integer has no wire name, so it is stringified; a tstr member is already a name
- * and passes through. Order is preserved to mirror the raw JOSE wire header
- * (which carries `crit` verbatim).
+ * one. BOTH go through the header registry (`joseByCose`), which resolves either
+ * spelling of the same parameter — the COSE twin of the JOSE crit member remap.
+ * A member the registry does not answer for has no wire name, so it is
+ * stringified. Order is preserved to mirror the raw JOSE wire header (which
+ * carries `crit` verbatim).
  *
  * This is the exact inverse of the write side (`wireHeaderToCoseMap`), which
  * emits each member as the LABEL the parameter itself is keyed under. The two
@@ -34,9 +36,10 @@ const ALG_LABEL = coseByJose("alg");
  */
 const coseCritToWire = (value: unknown): unknown => {
   if (!Array.isArray(value)) return value;
-  return value.map((member): string =>
-    typeof member === "number" ? (joseByCose(member) ?? String(member)) : String(member),
-  );
+  return value.map((member): string => {
+    const label: CoseLabel = isNumber(member) ? member : String(member);
+    return joseByCose(label) ?? String(member);
+  });
 };
 
 /**
@@ -87,10 +90,16 @@ const coseValueToWire = (jose: string, value: unknown): unknown => {
  * speaks only the registered vocabulary). COSE_Encrypt0 is the one special case:
  * its label 1 is the content-encryption algorithm — the JOSE analogue of `enc`,
  * not a key-management `alg` — so it lands on `enc`.
+ *
+ * ⚠ The label is a {@link CoseLabel}: a token minted with the interoperable
+ * default keys its private-use parameters by their STRING label, so the read side
+ * has to answer for both spellings or aegis would not read back the token it just
+ * wrote. `joseByCose` resolves either, and only for the parameters that can be
+ * written that way.
  */
 const assignCoseParam = (
   wire: Dict,
-  label: number,
+  label: CoseLabel,
   value: unknown,
   algKind: CoseAlgKind,
 ): void => {
@@ -118,7 +127,7 @@ const assignCoseParam = (
  * ({@link WireHeaderBuckets}), so a reader has to name the one it trusts.
  */
 export const coseWireHeader = (
-  map: Map<number, unknown> | undefined,
+  map: Map<CoseLabel, unknown> | undefined,
   algKind: CoseAlgKind,
 ): WireTokenHeader => {
   const wire: Dict = {};

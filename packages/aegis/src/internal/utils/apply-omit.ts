@@ -18,8 +18,14 @@ const PROTECTED_KEYS = new Set(["events"]);
 /**
  * The single strip applied to the final claims dict just before it is signed /
  * encoded — shared by JOSE and COSE so both wires behave identically. `"empty"`
- * is the default: emitted tokens are compact unless the caller opts back into
- * the historical undefined-only stripping with `"undefined"`.
+ * is the default THIS FUNCTION applies: emitted tokens are compact unless the
+ * caller opts back into the historical undefined-only stripping with
+ * `"undefined"`.
+ *
+ * ⚠ The default belongs to the CLAIMS callers, not to every caller. Pruning
+ * shapes a claim set, so the confidentiality verb does not reach this function
+ * unless a mode was stated (`src/internal/utils/encrypt-token.ts`) — it seals
+ * the caller's value as given.
  */
 export const applyOmit = <T extends Dict = Dict>(
   dict: T,

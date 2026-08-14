@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../../__fixtures__/keys.js";
 import { coseByJose } from "../header/header-registry.js";
 import { Tag, encodeCbor } from "./cbor.js";
-import { decodeCwt, signCwt } from "./cwt-token.js";
+import { decodeCwt } from "./decode-cwt.js";
+import { signCwt } from "./sign-cwt.js";
 import { COSE_TAG, encodeProtectedHeader } from "./structures.js";
 
 describe("decodeCwt", () => {
@@ -73,6 +74,36 @@ describe("decodeCwt", () => {
 
     expect(decoded.kid).toBe("detached-kid");
     expect(decoded.payload).toBeUndefined();
+  });
+
+  // ⚠ Where a non-string typ is actually answered on this wire. `verifyCwt`'s typ
+  // gate carries an `isString` guard, but nothing can reach it with a non-string:
+  // this decode NORMALISES anything that is not a string to `undefined`, and a
+  // typ-less CWT is well-formed. So a numeric typ is not refused — it is unread.
+  test("normalises a NON-STRING typ to undefined rather than reporting it", () => {
+    const protectedHeader = encodeProtectedHeader(
+      new Map<number, unknown>([
+        [coseByJose("alg"), -7],
+        [coseByJose("typ"), 123],
+      ]),
+    );
+    const unprotected = new Map<number, unknown>([
+      [coseByJose("kid"), Buffer.from("numeric-typ-kid", "utf8")],
+    ]);
+
+    const token = encodeCbor(
+      new Tag(
+        COSE_TAG.cwt,
+        new Tag(COSE_TAG.sign1, [
+          protectedHeader,
+          unprotected,
+          Buffer.alloc(0),
+          Buffer.alloc(8),
+        ]),
+      ),
+    );
+
+    expect(decodeCwt(token).typ).toBeUndefined();
   });
 
   // The same decode serves the OPAQUE CWS path, whose payload is arbitrary

@@ -1,0 +1,23 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assertCoseRegistered > alg > REFUSES a private-use algorithm, which COSE never registered 1`] = `
+{
+  "code": "cose_alg_not_registered",
+  "data": {
+    "algorithm": "XS256",
+  },
+  "message": "Algorithm "XS256" has no official COSE registration",
+  "title": "COSE Algorithm Not Registered",
+}
+`;
+
+exports[`assertCoseRegistered > enc > REFUSES the AES-CBC-HMAC family, which COSE never registered 1`] = `
+{
+  "code": "cose_enc_not_registered",
+  "data": {
+    "encryption": "A256CBC-HS512",
+  },
+  "message": "Encryption "A256CBC-HS512" has no official COSE registration",
+  "title": "COSE Encryption Not Registered",
+}
+`;

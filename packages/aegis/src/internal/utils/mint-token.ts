@@ -1,9 +1,13 @@
 import { AegisDomainError } from "../../errors/index.js";
 import type { ProfileMintOptions, SignContent, SignedToken } from "../../types/index.js";
 import { enforcePolicy } from "../profiles/enforce-policy.js";
+import { assertWireInput } from "../wire/assert-wire-input.js";
+import type { SignClaimsInput } from "../wire/token-wire.js";
 import { tokenWireFor } from "../wire/token-wire-for.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
+import { domainHeaderToWire } from "./domain-header-to-wire.js";
+import { encryptOuter } from "./encrypt-outer.js";
 import { mergeContentClaims } from "./merge-content-claims.js";
 import { findSensitiveClaims, stripSensitiveClaims } from "./sensitive-content.js";
 
@@ -122,22 +126,35 @@ export const mintToken = async ({
     format,
   });
 
-  const signed = wire.signClaims({
+  // The DOMAIN → WIRE assembly, done ONCE above the seam: the header bag is
+  // translated here rather than by each wire (both ran the identical
+  // `domainHeaderToWire` pass, which is duplication sitting exactly where the
+  // drops happened), and every value below is the CALLER's own — no deployment
+  // default is filled in, because the guard reads caller INTENT and a default is
+  // not a request.
+  const signInput: SignClaimsInput = {
     kryptos,
     deps,
     // The profile and sensitive buckets join the domain layer here, AFTER policy
     // has run over `common`: neither carries profile policy, and both map to
     // individual wire claims rather than a nested wrapper.
     common: mergeContentClaims(common, signContent),
+    format,
     tokenType,
-    header: options.sign?.header,
+    header: domainHeaderToWire(options.sign?.header),
     // mint's own `omit` controls the wire; a per-sign omit is a fallback.
     omit: options.omit ?? options.sign?.omit,
     proprietary: options.proprietary,
     bindCertificate: options.sign?.bindCertificate,
     certificateThumbprintSha1: options.sign?.certificateThumbprintSha1,
+  };
+
+  assertWireInput(wire.dispositions.signClaims, signInput, {
     format,
+    operation: "signClaims",
   });
+
+  const signed = wire.signClaims(signInput);
 
   if (!encKryptos) return signed;
 
@@ -145,11 +162,11 @@ export const mintToken = async ({
   // declares a nested token so the read side reconstructs the plaintext to the
   // inner token rather than to an inferred blob, then decrypts-then-verifies it
   // against the profile floor.
-  const token = wire.encryptOuter({
+  const token = encryptOuter(wire, {
     kryptos: encKryptos,
     deps,
     inner: signed.token,
-    tokenType,
+    innerTokenType: tokenType,
     proprietary: options.proprietary,
     partyProducer: options.encrypt?.partyProducer,
     partyRecipient: options.encrypt?.partyRecipient,

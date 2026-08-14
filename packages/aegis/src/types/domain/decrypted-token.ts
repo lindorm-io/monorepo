@@ -1,23 +1,46 @@
 import type { Dict } from "@lindorm/types";
-import type { DomainClaims } from "../claims/domain/domain-claims.js";
 import type { DomainTokenHeader } from "../header/domain-header.js";
 
 /**
- * The `aegis.decrypt` result (Bit 3/4) — CONFIDENTIAL but NOT sender-authenticated:
- * a decrypted claims set (or opaque plaintext) with no inner signature checked.
- * Same domain shape as {@link VerifiedToken}, minus the authenticity guarantee
- * (no `profile`/`sensitive`/`delegation`/`dpop` sugar, which the verify pipeline
- * derives). Always an encrypted outer format.
+ * The `aegis.decrypt` result — CONFIDENTIAL but NOT sender-authenticated: the
+ * plaintext of an encrypted token, with no inner signature checked.
+ *
+ * ⚠ It carries NO claims layer, and that is the verb's contract rather than a
+ * gap. `encrypt`/`decrypt` are a pure confidentiality pair — the value sealed is
+ * the value returned, unrenamed and uninterpreted — so there is nothing here for
+ * a registry to categorise. A claim is a statement by an issuer, and an issuer is
+ * something only a signature establishes; read those with `verify` (authenticated)
+ * or `parse` (keyless), both of which report `claims`/`custom`.
+ *
+ * The result used to carry FOUR payload-shaped fields — `claims`, `custom`, `raw`
+ * and `wire` — of which two were always empty, decided by a per-wire content-type
+ * discriminant over a payload the encrypt path had renamed on the way in.
  */
 export type DecryptedToken<C extends Dict = Dict> = {
   format: "jwe" | "cwe";
   /** Set when the decrypted plaintext is itself a nested token. */
   inner?: "jwt" | "cwt" | "cwm" | "jws" | "cws";
   contentType?: string;
+  /**
+   * The encrypting outer's header, domain-keyed and uniform across JOSE and COSE
+   * — the two wire buckets merged under the header registry's `placement`
+   * allowlist, protected last. See {@link VerifiedToken.header}.
+   *
+   * ⚠ The AEAD covers the protected bucket in full (it is the `Enc_structure`
+   * AAD, RFC 9052 §5.3), so on this verb the merge admits only the COSE
+   * `kid`/`iv` that RFC 9052 §3.1 puts outside it.
+   */
   header: DomainTokenHeader;
-  claims: DomainClaims;
-  custom: C;
-  raw?: Buffer | string;
-  wire?: { payload: Dict };
+  /**
+   * THE PLAINTEXT, as the TYPE it was sealed as — `TokenContent` with `C` in the
+   * object slot, so a caller that knows what it sealed can name that shape
+   * (`aegis.decrypt<Session>(token)`) instead of casting the result.
+   *
+   * Which type comes back is decided by the outer's own `cty`, which the writer
+   * stamped from the value's shape: a Dict in is a Dict out, a `string` a
+   * `string`, a `Buffer` a `Buffer`. A NESTED token comes back in its wire's
+   * native form — the compact string on JOSE, the COSE bytes on COSE.
+   */
+  payload: Array<any> | boolean | Buffer | C | number | string;
   token: string;
 };

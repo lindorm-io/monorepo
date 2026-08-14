@@ -24,8 +24,9 @@ import type {
 import { domainToJose } from "../claims/translate.js";
 import { B64U } from "../constants/format.js";
 import { Tag, decodeCbor } from "../cose/cbor.js";
+import { decodeProtectedHeader } from "../cose/structures.js";
 import { encodeCnf } from "../cose/cose-key.js";
-import { coseByJose } from "../header/header-registry.js";
+import { coseByJose, coseWireKey } from "../header/header-registry.js";
 import { decodeJoseHeader } from "../utils/jose-header.js";
 import { KIT_CAPABILITIES } from "./kit-capabilities.js";
 import { WIRE_TAGS } from "./wire.js";
@@ -56,8 +57,8 @@ const CWE_KEY = KryptosKit.generate.enc.oct({ algorithm: "dir", encryption: "A25
 const BYTES = Buffer.from("kit capability probe");
 
 // The `as never` casts hand a KitOwned wire param past the type-level Omit on
-// purpose: `buildCoseHeaders`'s reserved check and the JOSE kits' spread order are
-// the RUNTIME backstop, and the runtime is what these probes are binding.
+// purpose: `buildCoseHeaders`'s and `buildJoseHeader`'s refusals are the RUNTIME
+// backstop, and the runtime is what these probes are binding.
 const MINT: Readonly<Record<TokenFormatTag, (probe: MintProbe) => string | Buffer>> = {
   jwt: (probe) =>
     new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign({}, probe as never),
@@ -79,17 +80,20 @@ const wireHeaderOf = (token: string | Buffer): Dict =>
   JSON.parse(B64.toString(String(token).split(".")[0], B64U));
 
 /**
- * Element 1 of a COSE_Sign1/Mac0/Encrypt0 array — the UNPROTECTED bucket, keyed
- * by integer label. A CWT wraps its COSE object in the CWT tag (61), so unwrap
- * until the contents are the four-element COSE array.
+ * Elements 0 and 1 of a COSE_Sign1/Mac0/Encrypt0 array — the PROTECTED byte
+ * string and the UNPROTECTED bucket, keyed by integer label. A CWT wraps its
+ * COSE object in the CWT tag (61), so unwrap until the contents are the COSE
+ * array itself.
  */
-const unprotectedMapOf = (token: string | Buffer): Map<number, unknown> => {
+const coseArrayOf = (token: string | Buffer): [Uint8Array, Map<number, unknown>] => {
   let contents: unknown = decodeCbor(token as Buffer);
   while (contents instanceof Tag) contents = contents.contents;
 
   expect(Array.isArray(contents), "not a COSE structure").toBe(true);
 
-  return (contents as Array<unknown>)[1] as Map<number, unknown>;
+  const [protectedBstr, unprotected] = contents as Array<unknown>;
+
+  return [protectedBstr as Uint8Array, unprotected as Map<number, unknown>];
 };
 
 /**
@@ -365,21 +369,39 @@ describe("KIT_CAPABILITIES", () => {
       }
     });
 
-    test("unprotectedBucket: only the COSE kits carry an unprotected param to the wire", () => {
-      // A JOSE compact serialisation has no unauthenticated bucket, so the kit
-      // ignores the bag entirely; a COSE kit puts it in element 1 of the
-      // COSE_Sign1/Mac0/Encrypt0 array. (Comparing whole tokens would NOT work —
-      // an ECDSA signature differs on every mint.)
+    test("unprotectedBucket: the kit's own kid rides element 1 only where the row says one exists", () => {
+      // The column names a STRUCTURAL fact — "the kit's wire structure HAS an
+      // unauthenticated header bucket" — so it is measured on the parameter every
+      // kit stamps for itself: `kid`. Where it LANDS is the fact. A COSE kit puts
+      // it in element 1 of the COSE_Sign1/Mac0/Encrypt0 array (RFC 9052 §3.1); a
+      // JOSE compact serialisation has one header and nowhere else to put it
+      // (RFC 7515 §7.1).
+      //
+      // ⚠ It used to be measured with a CALLER's `unprotected: { oid }`, which
+      // stopped measuring anything once the header registry's `placement` column
+      // became enforced: `oid` is protected-only, so the kit now refuses it, and
+      // no caller-settable parameter is permitted in that bucket on any kit. The
+      // bucket still exists and the kit still writes to it — which is what the
+      // column has always claimed.
       for (const format of FORMATS) {
-        const token = MINT[format]({ unprotected: { oid: "oid_probe" } });
+        const token = MINT[format]({});
 
-        const carried =
-          KIT_CAPABILITIES[format].wire === "cose"
-            ? unprotectedMapOf(token).get(coseByJose("oid")) === "oid_probe"
-            : wireHeaderOf(token).oid === "oid_probe";
+        const bucket = ((): string => {
+          if (KIT_CAPABILITIES[format].wire === "jose") {
+            return wireHeaderOf(token).kid === undefined ? "absent" : "protected";
+          }
 
-        expect(carried, `${format} unprotected bucket`).toBe(
-          KIT_CAPABILITIES[format].unprotectedBucket,
+          const [protectedBstr, unprotected] = coseArrayOf(token);
+
+          if (unprotected.has(coseByJose("kid"))) return "unprotected";
+          if (decodeProtectedHeader(Buffer.from(protectedBstr)).has(coseByJose("kid"))) {
+            return "protected";
+          }
+          return "absent";
+        })();
+
+        expect(bucket, `${format} kid bucket`).toBe(
+          KIT_CAPABILITIES[format].unprotectedBucket ? "unprotected" : "protected",
         );
       }
     });
@@ -392,12 +414,20 @@ describe("KIT_CAPABILITIES", () => {
       // a declaration check above. The negative half is not circular: a param the
       // row does not list must reach the wire, which a kit that refused
       // everything would fail.
+      //
+      // ⚠ BOTH BAGS. The unprotected one is where the omissions actually bit:
+      // rule 4 (the registry's `placement` column) cannot speak for `iv`, which
+      // is `placement: "either"` so `CweKit` can put its own there — so on the
+      // three SIGNED formats the reserved row is the ONLY thing standing between
+      // a caller and a signature-uncovered `iv` in element 1.
       for (const format of ["cwt", "cwm", "cws", "cwe"] as const) {
         for (const param of KIT_CAPABILITIES[format].reserved) {
-          expect(
-            () => MINT[format]({ header: { [param]: "probe" } }),
-            `${format} does not reserve "${param}"`,
-          ).toThrow(/is key-derived and cannot be set/);
+          for (const bag of ["header", "unprotected"] as const) {
+            expect(
+              () => MINT[format]({ [bag]: { [param]: "probe" } }),
+              `${format} does not reserve "${param}" in the ${bag} bag`,
+            ).toThrow(/is key-derived and cannot be set/);
+          }
         }
 
         expect(
@@ -407,20 +437,34 @@ describe("KIT_CAPABILITIES", () => {
       }
     });
 
-    test("reserved (JOSE signing kits): a caller value never survives the kit's", () => {
-      // The JOSE kits have no reserved SET — the guarantee is spread order: the
-      // kit's own values are written AFTER `...options.header`. This is the probe
-      // JOSE_RESERVED previously had none of.
-      for (const format of ["jwt", "jws"] as const) {
+    test("reserved (JOSE): the kit REFUSES exactly the params its row lists", () => {
+      // ⚠ CIRCULAR in the same way the COSE probe is, and kept for the same
+      // reason: `buildJoseHeader` reads THIS ROW to decide what to refuse out of
+      // the caller's bag, so the positive half proves the WIRING (that the kit
+      // consults its row at all), never the row's content. What the row SHOULD
+      // contain is the equality check below.
+      //
+      // ⚠ It THROWS where it used to DROP, which is the whole point of the
+      // change: "if cose throws on something, jose should also throw on it".
+      // A silent drop turned `header: { enc: "A256GCM" } as never` on a JWT into
+      // a token that looked exactly like one the caller never asked for, and the
+      // caller heard nothing.
+      //
+      // The guarantee before that was spread ORDER — the kit's own values written
+      // after `...options.header` — which silently relied on the kit HAVING a
+      // value for every reserved param. It does not: an absent one wrote
+      // `undefined` over the caller's and the parameter vanished from the wire.
+      for (const format of ["jwt", "jws", "jwe"] as const) {
         for (const param of KIT_CAPABILITIES[format].reserved) {
-          const header = wireHeaderOf(MINT[format]({ header: { [param]: "probe" } }));
-          expect(header[param], `${format} let a caller "${param}" through`).not.toBe(
-            "probe",
-          );
+          expect(
+            () => MINT[format]({ header: { [param]: "probe" } }),
+            `${format} does not reserve "${param}"`,
+          ).toThrow(/is key-derived and cannot be set/);
         }
 
-        // The control: a NON-reserved param does reach the wire, so the test
-        // above is not vacuously passing on a kit that drops everything.
+        // The negative half, which is NOT circular: a param the row does not
+        // list must reach the wire, so the loop above cannot pass on a kit that
+        // refuses everything.
         const header = wireHeaderOf(
           MINT[format]({ header: { cty: "application/probe" } }),
         );
@@ -430,23 +474,134 @@ describe("KIT_CAPABILITIES", () => {
       }
     });
 
-    test("reserved (jwe): the row is the KitOwned type-level set plus jku", () => {
-      // The JWE row is the widest, and it maps onto the KitOwned params removed
-      // from `WireProtectedHeader` at the type level — plus `jku`, which the kit
-      // overwrites from `kryptos.jwksUri` but which is NOT type-Omit'd.
-      expect(new Set(KIT_CAPABILITIES.jwe.reserved)).toEqual(
-        new Set([...Object.keys(KIT_OWNED), "jku"]),
-      );
+    // ⭐ THE BINDING THAT CLOSES THE ROWS. It used to assert the JOSE signing
+    // rows were a SUBSET of the jwe row, and a subset relation is satisfied by
+    // the empty set — which is how `x5c` came to be unreserved on all four COSE
+    // rows and the eight key-management/AEAD params on `jwt`/`jws`. A caller
+    // could then forge a certificate chain onto a CWT (nothing else writes label
+    // 33, so the forgery was the only chain present) or put a
+    // signature-uncovered `iv` in a CWS's unprotected bucket.
+    //
+    // ⚠ The expected sets are LITERALS, deliberately. Reading them back out of
+    // `KIT_CAPABILITIES` — the constant the production code reads — would make
+    // the test agree with any row that was ever written.
+    test("reserved: every row IS its KitOwned set, filtered to what its wire carries", () => {
+      const JOSE_EXPECTED = [
+        "alg",
+        "apu",
+        "apv",
+        "enc",
+        "epk",
+        "iv",
+        "kid",
+        "p2c",
+        "p2s",
+        "tag",
+        "typ",
+        "x5c",
+        "x5t",
+        "x5t#S256",
+      ];
 
-      // The signing rows are the subset that a non-encrypting kit stamps: no
-      // key-management or AEAD output.
-      for (const format of ["jwt", "jws"] as const) {
+      // The five KitOwned params the COSE wire has a label for: alg (1), iv (5),
+      // kid (4), typ (16, RFC 9596) and x5c (33, RFC 9360 x5chain).
+      const COSE_EXPECTED = ["alg", "iv", "kid", "typ", "x5c"];
+
+      // JOSE carries every KitOwned param, so the JOSE literal must BE the
+      // type-level set — the runtime backstop and the compile-time Omit stating
+      // one set, not two. (`jku` is on neither: the type offers it to callers,
+      // and a row that reserved it threw a caller's value away.)
+      expect(new Set(JOSE_EXPECTED)).toEqual(new Set(Object.keys(KIT_OWNED)));
+
+      // …and the COSE literal must be exactly the part of that set the COSE wire
+      // can spell. `coseWireKey` is the writer's resolver `buildCoseHeaders`
+      // itself puts every reserved name through, so a param it refuses could not
+      // be listed on a COSE row without breaking every mint that kit makes.
+      const carriable = Object.keys(KIT_OWNED).filter((param) => {
+        try {
+          coseWireKey(param, false);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+
+      expect(new Set(COSE_EXPECTED)).toEqual(new Set(carriable));
+
+      for (const format of ["jwt", "jws", "jwe"] as const) {
         expect(
-          KIT_CAPABILITIES[format].reserved.every((param) =>
-            KIT_CAPABILITIES.jwe.reserved.includes(param),
-          ),
-          `${format} reserves something the jwe row does not`,
-        ).toBe(true);
+          new Set(KIT_CAPABILITIES[format].reserved),
+          `${format} reserves something other than its KitOwned set`,
+        ).toEqual(new Set(JOSE_EXPECTED));
+      }
+
+      for (const format of ["cwt", "cwm", "cws", "cwe"] as const) {
+        expect(
+          new Set(KIT_CAPABILITIES[format].reserved),
+          `${format} reserves something other than its carriable KitOwned set`,
+        ).toEqual(new Set(COSE_EXPECTED));
+      }
+    });
+
+    test("reserved (JOSE): jku is NOT on it, so a caller's own reaches the wire", () => {
+      // The complement of the drop probe, and the one parameter this suite has
+      // to state positively: `jku` sits in the DEFAULTS tier, so the key's
+      // `jwksUri` fills in and a caller's value outranks it.
+      //
+      // Both halves matter, and each fails on a different mistake. Every fixture
+      // key PUBLISHES a jwks uri, which is the case a reserved `jku` used to
+      // lose; a key that publishes NONE is the case the spread order lost even
+      // after that, by writing `undefined` over the caller and taking the
+      // parameter off the wire with it.
+      const KEYLESS = {
+        jwt: KryptosKit.generate.sig.ec({ algorithm: "ES512" }),
+        jws: KryptosKit.generate.sig.ec({ algorithm: "ES512" }),
+        jwe: KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES" }),
+      } as const;
+
+      const KEYLESS_MINT: Record<keyof typeof KEYLESS, (probe: MintProbe) => string> = {
+        jwt: (probe) =>
+          new JwtKit({ kryptos: KEYLESS.jwt, logger }).sign({}, probe as never),
+        jws: (probe) =>
+          new JwsKit({ kryptos: KEYLESS.jws, logger }).sign(BYTES, probe as never),
+        jwe: (probe) =>
+          new JweKit({ kryptos: KEYLESS.jwe, logger }).encrypt(BYTES, probe as never),
+      };
+
+      for (const format of ["jwt", "jws", "jwe"] as const) {
+        expect(KIT_CAPABILITIES[format].reserved, `${format} reserves jku`).not.toContain(
+          "jku",
+        );
+
+        expect(KEYLESS[format].jwksUri, `${format} probe key publishes a jwks uri`).toBe(
+          null,
+        );
+
+        expect(
+          wireHeaderOf(MINT[format]({})).jku,
+          `${format} did not default jku to the key's own`,
+        ).toBe("https://test.lindorm.io/.well-known/jwks.json");
+
+        expect(
+          wireHeaderOf(
+            MINT[format]({ header: { jku: "https://caller.lindorm.test/jwks.json" } }),
+          ).jku,
+          `${format} let the key's jwks uri overwrite the caller's`,
+        ).toBe("https://caller.lindorm.test/jwks.json");
+
+        expect(
+          wireHeaderOf(
+            KEYLESS_MINT[format]({
+              header: { jku: "https://caller.lindorm.test/jwks.json" },
+            }),
+          ).jku,
+          `${format} dropped the caller's jku for a key that publishes none`,
+        ).toBe("https://caller.lindorm.test/jwks.json");
+
+        expect(
+          wireHeaderOf(KEYLESS_MINT[format]({})).jku,
+          `${format} invented a jku for a key that publishes none`,
+        ).toBeUndefined();
       }
     });
 

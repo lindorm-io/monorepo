@@ -1,6 +1,6 @@
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import { CwsKit } from "../../classes/CwsKit.js";
-import { decodeCwt } from "../cose/cwt-token.js";
+import { decodeCwt } from "../cose/decode-cwt.js";
 import type {
   AegisVerifyKey,
   TokenContent,

@@ -63,33 +63,52 @@ describe("buildTokenResult", () => {
     });
   });
 
+  // The builder reports ONE domain header, merged from the two wire buckets
+  // under the header registry's `placement` allowlist. These tests drive the
+  // builder with hand-written buckets, which is the only way to state an
+  // arrival no aegis writer can emit.
   describe("header provenance", () => {
-    // A header the wire does not have must be ABSENT, not empty: JOSE compact
-    // serialisation has no unprotected bucket, its kits report `{}`, and `{}` is
-    // truthy — so a consumer testing `if (result.unprotectedHeader)` would get
-    // `true` on every JWT and then read `algorithm`, which the type declares
-    // non-optional, as `undefined`.
-    test("reports no unprotected header when the wire carries none", () => {
-      expect(buildTokenResult({ ...base, unprotectedHeader: {} }).unprotectedHeader).toBe(
-        undefined,
-      );
-    });
-
-    test("reports the two buckets SEPARATELY, never merged", () => {
-      const result = buildTokenResult({
+    const cose = (unprotectedHeader: Partial<WireTokenHeader>) =>
+      buildTokenResult({
         ...base,
         format: "cwt",
         nameOf: coseName,
         protectedHeader: { alg: "ES512", typ: "application/at+cwt" } as WireTokenHeader,
-        unprotectedHeader: { kid: "key-1" },
+        unprotectedHeader,
+      }).header;
+
+    // `kid` rides the UNPROTECTED bucket on every COSE token aegis signs
+    // (RFC 9052 §3.1 — an advisory routing hint), and the registry marks it
+    // `placement: "either"`, so it reaches the one domain header a caller reads.
+    test("admits a parameter the registry permits to travel unprotected", () => {
+      expect(cose({ kid: "key-1" }).keyId).toBe("key-1");
+    });
+
+    test("keeps the protected parameters", () => {
+      expect(cose({}).headerType).toBe("application/at+cwt");
+    });
+
+    // The allowlist, in the direction that matters. `typ` and `cty` are
+    // `placement: "protected"` — a verifier routes by them — so a bucket the
+    // signature does not cover cannot state either.
+    test("IGNORES a parameter that must be signed", () => {
+      const header = cose({ cty: "application/example", oid: "1.2.3.4" });
+
+      expect(header.contentType).toBe(undefined);
+      expect(header.objectId).toBe(undefined);
+    });
+
+    // The merge order: unprotected first, protected over it.
+    test("reports the PROTECTED value where both buckets state one", () => {
+      const result = buildTokenResult({
+        ...base,
+        format: "cwt",
+        nameOf: coseName,
+        protectedHeader: { alg: "ES512", kid: "signed-key" } as WireTokenHeader,
+        unprotectedHeader: { kid: "presented-key" },
       });
 
-      // `kid` rides the UNPROTECTED bucket on every COSE token aegis signs. It is
-      // the advisory routing hint nothing may decide on, so it must not be
-      // readable off the bucket the signature covers.
-      expect(result.unprotectedHeader?.keyId).toBe("key-1");
-      expect(result.protectedHeader.keyId).toBe(undefined);
-      expect(result.protectedHeader.headerType).toBe("application/at+cwt");
+      expect(result.header.keyId).toBe("signed-key");
     });
   });
 

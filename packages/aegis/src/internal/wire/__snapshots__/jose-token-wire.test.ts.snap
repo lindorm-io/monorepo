@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`JOSE_TOKEN_WIRE typ gate > the keyless wire read refuses a foreign typ in its OWN words 1`] = `
+{
+  "code": "jwt_invalid_typ",
+  "details": "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be parsed as a JWT.",
+  "title": "JWT Invalid Typ",
+}
+`;
+
+exports[`JOSE_TOKEN_WIRE typ gate > the refusal reaches an aegis.parse caller unchanged 1`] = `
+{
+  "code": "jwt_invalid_typ",
+  "details": "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be parsed as a JWT.",
+  "title": "JWT Invalid Typ",
+}
+`;

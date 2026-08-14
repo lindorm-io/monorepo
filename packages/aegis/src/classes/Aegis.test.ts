@@ -153,7 +153,6 @@ describe("Aegis", () => {
       unprotectedHeader: {},
       protectedHeader: {
         alg: "ES512",
-        cty: "application/json",
         jku: "https://test.lindorm.io/.well-known/jwks.json",
         kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
         oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -200,7 +199,7 @@ describe("Aegis", () => {
       expect.objectContaining({
         format: "jwe",
         inner: "jwt",
-        protectedHeader: expect.objectContaining({
+        header: expect.objectContaining({
           tokenType: "test_token",
         }),
         claims: expect.objectContaining({
@@ -230,7 +229,7 @@ describe("Aegis", () => {
     await expect(aegis.verify(jwt.token)).resolves.toEqual(
       expect.objectContaining({
         format: "jwt",
-        protectedHeader: expect.objectContaining({
+        header: expect.objectContaining({
           tokenType: "test_token",
         }),
         claims: expect.objectContaining({
@@ -279,11 +278,15 @@ describe("Aegis", () => {
     );
   });
 
-  test("sign({ payload }) JSON-stringifies a plain object before signing", async () => {
+  // Dict in, Dict out — the payload is handed to the kit as an OBJECT, so the
+  // codec declares `application/json` and the read reconstructs the object. The
+  // full contract, including that the COSE twin now agrees, is the sibling
+  // `what aegis.sign hands back` suite.
+  test("sign({ payload }) returns a plain object as an object", async () => {
     const res = await aegis.sign({ payload: { hello: "world" } });
 
     await expect(aegis.verify(res.token)).resolves.toEqual(
-      expect.objectContaining({ format: "jws", raw: JSON.stringify({ hello: "world" }) }),
+      expect.objectContaining({ format: "jws", raw: { hello: "world" } }),
     );
   });
 

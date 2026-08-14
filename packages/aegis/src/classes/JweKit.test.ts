@@ -1,12 +1,15 @@
+import { AesKit } from "@lindorm/aes";
 import { B64 } from "@lindorm/b64";
 import {
   ECDH_ES_ALGORITHMS,
   type EcdhEsAlgorithm,
+  type IKryptos,
   type KryptosAlgorithm,
   KryptosKit,
 } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
+import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import {
   TEST_EC_KEY_ENC,
@@ -19,6 +22,27 @@ import { beforeEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
+
+/** A five-segment JWE whose header is ours and whose body is junk. */
+const craftJwe = (header: Dict): string =>
+  [
+    Buffer.from(JSON.stringify(header)).toString("base64url"),
+    "junk",
+    "junk",
+    "junk",
+    "junk",
+  ].join(".");
+
+/** The `code` of the refusal a call produces; a call that does NOT refuse fails. */
+const codeOf = (fn: () => unknown): string | undefined => {
+  try {
+    fn();
+  } catch (error) {
+    return (error as { code?: string }).code;
+  }
+
+  throw new Error("expected a refusal");
+};
 
 describe("JweKit", () => {
   let logger: ILogger;
@@ -542,6 +566,173 @@ describe("JweKit", () => {
       const decrypted = kit.decrypt(token);
 
       expect(decrypted.protectedHeader.typ).toBe("JWE");
+    });
+  });
+
+  /**
+   * The two header gates `decrypt` runs BEFORE any AEAD — so a crafted token is
+   * enough to reach them, and a crafted token is the only way to reach them at
+   * all: `encrypt` can emit neither a typ-less JWE nor a mismatched alg.
+   */
+  describe("the pre-AEAD header gates", () => {
+    let kwKit: JweKit;
+
+    beforeEach(() => {
+      kwKit = new JweKit({
+        logger,
+        kryptos: KryptosKit.generate.enc.oct({
+          algorithm: "A256KW",
+          encryption: "A256GCM",
+        }),
+      });
+    });
+
+    describe("typ presence — REQUIRED on this wire alone", () => {
+      test("⚠ refuses a typ-LESS JWE, where JWT/JWS/CWT accept one", () => {
+        // This is what `presence: "required"` at the call site buys, and the
+        // ONLY thing that asserts it end to end. RFC 7516 leaves typ optional;
+        // requiring it here is aegis policy, so nothing but this test stops the
+        // call site being relaxed to "optional".
+        expect(
+          codeOf(() => kwKit.decrypt(craftJwe({ alg: "A256KW", enc: "A256GCM" }))),
+        ).toBe("jwe_invalid_typ");
+      });
+
+      test("refuses a typ from another family", () => {
+        expect(
+          codeOf(() =>
+            kwKit.decrypt(craftJwe({ alg: "A256KW", enc: "A256GCM", typ: "JWT" })),
+          ),
+        ).toBe("jwe_invalid_typ");
+      });
+
+      test("a JWE typ passes the gate — the refusals above are the typ's doing", () => {
+        // Same crafted token, same junk body: with a JWE typ the read gets PAST
+        // the typ gate and fails on the junk instead. Without this the two rows
+        // above would also pass if the gate refused everything.
+        expect(
+          codeOf(() =>
+            kwKit.decrypt(craftJwe({ alg: "A256KW", enc: "A256GCM", typ: "JWE" })),
+          ),
+        ).not.toBe("jwe_invalid_typ");
+      });
+    });
+
+    test("⚠ an algorithm mismatch reports the offending value under `alg`", () => {
+      // This wire answers with `data: { alg }`; JWT/JWS/CWT answer with
+      // `data: { algorithm }`. The difference is a deliberate override at the
+      // call site, and `data` is a consumer-facing contract — so the key is
+      // asserted exactly, not merely its value.
+      let thrown: { code?: string; data?: unknown } = {};
+
+      try {
+        kwKit.decrypt(craftJwe({ alg: "A128KW", enc: "A256GCM", typ: "JWE" }));
+      } catch (error) {
+        thrown = error as typeof thrown;
+      }
+
+      expect(thrown.code).toBe("jwe_algorithm_mismatch");
+      expect(thrown.data).toEqual({ alg: "A128KW" });
+    });
+  });
+
+  /**
+   * The read-side ECDH-ES gate — `resolveEcdhParty` at the `decrypt` call site,
+   * which hands the AES layer `apu`/`apv` for an ECDH-ES algorithm and
+   * `undefined` for every other one. It carries TWO separate claims, and they
+   * are provable in different places.
+   *
+   * 1. The party info a non-ECDH-ES token carries CHANGES NOTHING: that key
+   *    derivation reads neither field, so stripping them cannot change a
+   *    plaintext. That is a claim about `@lindorm/aes`, so it is asserted
+   *    against the AES layer directly (the rows below).
+   * 2. Stripping means a malformed apu is never DECODED at all. That IS
+   *    provable by forging, and the first test does it.
+   */
+  describe("apu/apv reach no non-ECDH-ES key derivation", () => {
+    const apu = Buffer.from("producer", "utf8");
+    const apv = Buffer.from("recipient", "utf8");
+
+    test("⚠ a MALFORMED apu on a non-ECDH-ES token refuses, it does not crash", () => {
+      // `resolveEcdhParty` decodes with `B64.toBuffer`, which is
+      // `Uint8Array.fromBase64` with no guard (`@lindorm/b64`
+      // `internal/decode.ts`) — a non-base64 string throws a raw `SyntaxError`.
+      // Nothing between the wire and that call inspects `apu`: `decodeJoseHeader`
+      // validates only `alg`/`enc`, the header registry types `apu` as a plain
+      // string, and `parseTokenHeader` copies it verbatim. So the ALGORITHM gate
+      // is the only thing standing between a crafted header and a `SyntaxError`
+      // escaping `decrypt` — with it, `apu` is stripped, never decoded, and the
+      // read fails in the AES layer under a proper aegis error code instead.
+      const kwKit = new JweKit({
+        logger,
+        kryptos: KryptosKit.generate.enc.oct({
+          algorithm: "A256KW",
+          encryption: "A256GCM",
+        }),
+      });
+
+      let thrown: unknown;
+
+      try {
+        kwKit.decrypt(
+          craftJwe({ typ: "JWE", alg: "A256KW", enc: "A256GCM", apu: "!!!" }),
+        );
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).not.toBeInstanceOf(SyntaxError);
+      expect(thrown).toEqual(expect.objectContaining({ code: "decryption_failed" }));
+    });
+
+    const NON_ECDH_KEYS: Array<[KryptosAlgorithm, IKryptos]> = [
+      ["dir", KryptosKit.generate.enc.oct({ algorithm: "dir", encryption: "A256GCM" })],
+      [
+        "A256KW",
+        KryptosKit.generate.enc.oct({ algorithm: "A256KW", encryption: "A256GCM" }),
+      ],
+      [
+        "RSA-OAEP",
+        KryptosKit.generate.enc.rsa({ algorithm: "RSA-OAEP", encryption: "A256GCM" }),
+      ],
+    ];
+
+    // ⚠ The three rows below and their control drive `@lindorm/aes` directly, not
+    // JweKit — they assert an `@lindorm/aes` invariant, and belong in that
+    // package's suite. They live here only because that package is frozen; move
+    // them when it is unfrozen.
+    test.each(NON_ECDH_KEYS)(
+      "%s decrypts identically with the party info present and absent",
+      (_algorithm, kryptos) => {
+        const aes = new AesKit({ kryptos });
+        const record = aes.encrypt("data", "record", { apu, apv });
+
+        expect(aes.decrypt({ ...record, apu, apv })).toBe("data");
+        expect(aes.decrypt({ ...record, apu: undefined, apv: undefined })).toBe("data");
+      },
+    );
+
+    test("⚠ CONTROL — ECDH-ES does NOT decrypt identically, so the probe can see", () => {
+      // Without this the rows above would pass even if the probe were blind to
+      // apu/apv altogether. The Concat-KDF (RFC 7518 §4.6) consumes both, so
+      // dropping them derives a different CEK and the AEAD refuses.
+      //
+      // ⚠ It refuses with the AEAD's OWN verdict, asserted by code: a bare
+      // `.toThrow()` here would be satisfied by any unrelated ECDH-ES breakage
+      // just as well as by a diverged CEK, and this control is the only thing
+      // keeping the inert rows above non-vacuous.
+      const aes = new AesKit({
+        kryptos: KryptosKit.generate.enc.ec({
+          algorithm: "ECDH-ES",
+          encryption: "A256GCM",
+        }),
+      });
+      const record = aes.encrypt("data", "record", { apu, apv });
+
+      expect(aes.decrypt({ ...record, apu, apv })).toBe("data");
+      expect(
+        codeOf(() => aes.decrypt({ ...record, apu: undefined, apv: undefined })),
+      ).toBe("decryption_failed");
     });
   });
 });

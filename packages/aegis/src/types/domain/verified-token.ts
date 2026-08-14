@@ -3,6 +3,7 @@ import type { DomainClaims } from "../claims/domain/domain-claims.js";
 import type { AegisProfile } from "../claims/domain/aegis-profile.js";
 import type { AegisSensitive } from "../claims/domain/aegis-sensitive.js";
 import type { DomainTokenHeader } from "../header/domain-header.js";
+import type { TokenContent } from "../kit/content.js";
 import type { ParsedDpopProof, TokenDelegation } from "./delegation.js";
 import type { VerifyGuaranteedClaims } from "../profile/policy.js";
 import type { TokenProfile } from "../profile/profile.js";
@@ -47,26 +48,26 @@ export type VerifiedToken<C extends Dict = Dict> = {
   /** EFFECTIVE (innermost) payload content type — how to read `raw`. */
   contentType?: string;
   /**
-   * The INTEGRITY-PROTECTED header, domain-keyed and uniform across JOSE and
-   * COSE — the only header a signature or AEAD covers, and therefore the only one
-   * anything may route, audit or police a token by.
+   * THE header, domain-keyed and uniform across JOSE and COSE.
    *
-   * ⚠ It was a single `header`, and on COSE it was the two buckets MERGED. That
-   * made an unsigned parameter indistinguishable from a signed one, so a reader
-   * deciding policy on `header.keyId` could not tell whether the issuer had said
-   * it or the presenter had. Splitting the two is what makes that mistake
-   * unrepresentable rather than merely fixed.
-   */
-  protectedHeader: DomainTokenHeader;
-  /**
-   * The UNAUTHENTICATED header bucket — present on the wire, covered by nothing.
-   * COSE convention puts the advisory `kid` routing hint here (RFC 9052 §3.1),
-   * which is the reason it is surfaced at all. Empty on JOSE, whose compact
-   * serialisation has no such bucket.
+   * ⚠ ONE header, deliberately. `protectedHeader`/`unprotectedHeader` is a COSE
+   * STRUCTURAL fact (RFC 9052 §3) — a compact JOSE token has a single header and
+   * no such bucket (RFC 7515 §7.1) — so a split here put one wire's vocabulary on
+   * a surface that speaks neither, and left every JOSE result with a field that
+   * could never be populated. The KIT tier still reports both buckets, because
+   * that tier speaks its own wire.
    *
-   * Nothing read from here may decide whether a token is accepted.
+   * What a split bought is bought here by CONSTRUCTION instead. The buckets are
+   * merged under the header registry's `placement` allowlist — the unprotected
+   * one first, filtered to the parameters permitted there, then overwritten by
+   * the protected one — so the only values that can arrive unauthenticated are
+   * `kid` and `iv`, the routing/AEAD infrastructure RFC 9052 §3.1 puts in the
+   * unprotected bucket precisely because it is not security-critical. Every
+   * parameter a verifier routes, audits or polices a token by is
+   * `placement: "protected"` and is dropped on read exactly as it is refused on
+   * write, so it cannot reach this header unsigned.
    */
-  unprotectedHeader?: DomainTokenHeader;
+  header: DomainTokenHeader;
   /** Domain-keyed registered claims; `{}` for jws/cws (opaque). */
   claims: DomainClaims;
   /** Non-domain (custom) claim bucket; `{}` for jws/cws. */
@@ -75,8 +76,14 @@ export type VerifiedToken<C extends Dict = Dict> = {
   sensitive?: AegisSensitive;
   delegation?: TokenDelegation;
   dpop?: ParsedDpopProof;
-  /** The opaque payload for jws/cws (string for JWS, Buffer for CWS). */
-  raw?: Buffer | string;
+  /**
+   * The opaque payload of a jws/cws — as the TYPE it was signed as, not as the
+   * wire's preferred shape. The content type carries that across: an object is
+   * signed under `application/json` and comes back a Dict, a string under
+   * `text/plain` comes back a string, bytes under `application/octet-stream` come
+   * back a Buffer. There is no per-wire split to state.
+   */
+  raw?: TokenContent;
   /** The untranslated jose-keyed wire payload, for pass-through / re-emit. */
   wire?: { payload: Dict };
   token: string;

@@ -2,7 +2,10 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
+import type { AegisError } from "../errors/index.js";
+import { JwsError } from "../errors/index.js";
 import { JwsKit } from "./JwsKit.js";
+import { JwtKit } from "./JwtKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -298,5 +301,68 @@ describe("JwsKit", () => {
 
       expect(() => kit.verify(token)).not.toThrow();
     });
+  });
+});
+
+/**
+ * The two verify gates whose CALL SITE nothing else drives.
+ *
+ * `assert-wire-typ.test.ts` and `assert-algorithm-match.test.ts` pin the shared
+ * PREDICATES against configs they declare themselves, so both stay green over a
+ * kit that stopped calling them: delete either call from `JwsKit.verify` and the
+ * whole suite was still green. These drive the real kit, so the WIRING is what
+ * is under test — the codes and titles below are this kit's own namespace, which
+ * is the one thing a shared predicate cannot supply.
+ */
+describe("JwsKit — the verify gates answer under the jws tag", () => {
+  test("refuses a JWT presented as a JWS, on its typ alone", () => {
+    // A real JWT, signed by the SAME key, so nothing but the typ distinguishes
+    // it: RFC 7515 §4.1.9 makes `typ` the declaration of what the whole object
+    // is, and a claims JWT is not a thing this kit reads.
+    const jwt = new JwtKit({
+      logger: createMockLogger(),
+      kryptos: TEST_EC_KEY_SIG,
+    }).sign({ iss: "https://test.lindorm.io/", sub: "user-1" });
+
+    const kit = new JwsKit({ logger: createMockLogger(), kryptos: TEST_EC_KEY_SIG });
+
+    let thrown: AegisError | undefined;
+
+    try {
+      kit.verify(jwt);
+    } catch (error) {
+      thrown = error as AegisError;
+    }
+
+    expect(thrown).toBeInstanceOf(JwsError);
+    expect(thrown?.code).toBe("jws_invalid_typ");
+    expect(thrown?.title).toBe("JWS Invalid Typ");
+    expect(thrown?.data).toEqual({ typ: "JWT" });
+  });
+
+  test("refuses a token whose header alg is not the configured key's", () => {
+    // The gate runs BEFORE the signature cycle, so two unrelated keys suffice —
+    // what is asserted is the reported algorithm, not a forged signature.
+    const signer = new JwsKit({
+      logger: createMockLogger(),
+      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES256" }),
+    });
+    const verifier = new JwsKit({
+      logger: createMockLogger(),
+      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES512" }),
+    });
+
+    let thrown: AegisError | undefined;
+
+    try {
+      verifier.verify(signer.sign("the signed bytes"));
+    } catch (error) {
+      thrown = error as AegisError;
+    }
+
+    expect(thrown).toBeInstanceOf(JwsError);
+    expect(thrown?.code).toBe("jws_algorithm_mismatch");
+    expect(thrown?.title).toBe("JWS Algorithm Mismatch");
+    expect(thrown?.data).toEqual({ algorithm: "ES256" });
   });
 });

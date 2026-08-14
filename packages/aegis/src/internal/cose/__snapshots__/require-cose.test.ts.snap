@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`requireCose > the code is \`cose_malformed\` on every wire; the words are the caller's 1`] = `
+{
+  "code": "cose_malformed",
+  "details": "A COSE_Encrypt0 must be a 3-element array [protected, unprotected, ciphertext].",
+  "message": "Malformed COSE_Encrypt0",
+  "title": "Malformed COSE_Encrypt0",
+}
+`;

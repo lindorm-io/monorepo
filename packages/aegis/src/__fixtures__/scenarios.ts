@@ -335,6 +335,28 @@ export type TamperSegment = "header" | "payload" | "signature";
 export type TamperGiven = { segment: TamperSegment };
 
 /**
+ * Extra COSE header parameters a FOREIGN producer places in each of the two
+ * buckets, stated in the JOSE wire vocabulary (`typ`, `cty`, `oid`, …) and
+ * written at the integer label the header registry gives them.
+ *
+ * ⚠ COSE ONLY, and it exists because aegis's own writers deliberately cannot
+ * produce these shapes: a caller `typ` is kit-derived in either bag, and every
+ * parameter the registry marks `placement: "protected"` is REFUSED from the
+ * unprotected bag. So the only way to state what a reader must do with an
+ * unauthenticated `typ`/`cty`/`oid` — ignore it — is to have somebody else write
+ * one. A row using this owes the JOSE wire an `unsupported` reason; the
+ * interpreter refuses it there rather than signing a token that silently drops
+ * half the row.
+ *
+ * ⚠ `unprotectedHeader` entries are written AFTER the producer's own derived
+ * `kid`, which is the routing hint aegis's COSE key resolution reads.
+ */
+export type CoseBucketsGiven = {
+  protectedHeader?: Dict;
+  unprotectedHeader?: Dict;
+};
+
+/**
  * How the artifact under test comes into existence, discriminated by `via`.
  *
  * - `mint`           — the domain profile pipeline, `aegis.mint(profile, content, options)`.
@@ -389,6 +411,7 @@ type TokenGivenShape =
       claims: JwtClaimsWire & Dict;
       typ?: string | Partial<Record<Wire, string>>;
       key?: KeyFixture;
+      coseBuckets?: CoseBucketsGiven;
     }
   /**
    * The WIRE-AGNOSTIC claims passthrough — the default form, and the one a new
@@ -806,8 +829,15 @@ type ObservationStep =
    * the only place a caller can read it. Stated as the value the payload
    * round-trips to: a `Dict` when the content type negotiated an object, the
    * string itself when it negotiated text.
+   *
+   * `excludes` names members the payload must NOT carry. An object `expected` is
+   * matched as a SUBSET — extra members pass — so a row about something being
+   * REMOVED from the sealed value (an empty entry the caller asked to prune) has
+   * no way to say so otherwise, and would hold whether or not the removal
+   * happened. A string payload is compared whole, so it takes no exclusions.
    */
-  | { step: "raw"; expected: Dict | string }
+  | { step: "raw"; expected: Dict; excludes?: ReadonlyArray<string> }
+  | { step: "raw"; expected: string; excludes?: undefined }
   /**
    * The UNTRANSLATED wire claims a domain read passes through verbatim, for a
    * caller that must re-emit or forward exactly what arrived. Wire-named by
@@ -841,32 +871,20 @@ type ObservationStep =
   | { step: "wireStructure"; tags: ReadonlyArray<number>; parts?: undefined }
   | { step: "wireStructure"; parts: number; tags?: undefined }
   /**
-   * The expected INTEGRITY-PROTECTED domain header fields — typed for the same
-   * reason as `claims`. `excludes` names the fields that must NOT have reached
-   * it: a parameter the signature does not cover must never be readable here.
+   * The expected DOMAIN header fields — the ONE header a domain result reports,
+   * typed for the same reason as `claims`.
+   *
+   * `excludes` names the fields that must NOT have reached it, and that is where
+   * the header's provenance rule is stated: the two wire buckets are merged under
+   * the header registry's `placement` allowlist, so a parameter declared
+   * `"protected"` that arrived UNAUTHENTICATED is dropped and must be excluded
+   * here. (There is no domain-tier unprotected bucket to assert on — that split
+   * is a COSE structural fact and lives on the KIT results. The raw buckets are
+   * asserted with `wireProtectedHeader` / `wireUnprotectedHeader`.)
    */
   | {
       step: "header";
       expected: Partial<DomainTokenHeader>;
-      excludes?: ReadonlyArray<keyof DomainTokenHeader>;
-    }
-  /**
-   * The UNAUTHENTICATED domain header bucket. `absent: true` asserts the result
-   * carries NO such bucket, which is what a JOSE compact token must report:
-   * RFC 7515 §7.1 — "Only one signature/MAC is supported by the JWS Compact
-   * Serialization and it provides no syntax to represent a JWS Unprotected
-   * Header value."
-   *
-   * ⚠ Absence and emptiness are separate assertions on purpose. An empty object
-   * is TRUTHY, so a consumer writing `if (result.unprotectedHeader)` would read
-   * one as a bucket that exists and then read `algorithm` — a field the domain
-   * header declares NON-optional — as `undefined`.
-   */
-  | { step: "unprotectedHeader"; absent: true }
-  | {
-      step: "unprotectedHeader";
-      absent?: undefined;
-      expected?: Partial<DomainTokenHeader>;
       excludes?: ReadonlyArray<keyof DomainTokenHeader>;
     }
   /**
@@ -1708,7 +1726,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
   //
   // The other half of this capability — a `typ` the signature does not cover —
   // cannot be expressed as a row, because its input is unmintable, and lives in
-  // `internal/cose/unprotected-typ.test.ts`. This half CAN: an `oid` in the
+  // `src/internal/cose/unprotected-typ.test.ts#COSE typ integrity`. This half
+  // CAN: an `oid` in the
   // protected header is mintable through the public surface, reaches the wire,
   // and is then dropped on the way to the domain header.
   // ---------------------------------------------------------------------------
@@ -1997,11 +2016,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
   // Header provenance — what the signature covers, and what it does not.
   // ---------------------------------------------------------------------------
   {
-    id: "an-unprotected-header-parameter-never-reads-as-signed",
+    id: "an-unprotected-routing-hint-reaches-the-domain-header",
     title:
-      "a CWT's unprotected key identifier is reported apart from the parameters the signature covers",
+      "a CWT's unprotected key identifier reaches the one header the domain result reports",
     rationale:
-      "RFC 9052 §3 gives a COSE object two header buckets: the protected one holds parameters that are 'cryptographically protected' and the unprotected one 'parameters about the current layer that are not cryptographically protected'. §3.1 puts the `kid` hint in the second — it 'is not a security-critical field. For this reason, it can be placed in the unprotected-header-parameters bucket'. Anything a verifier routes, audits or polices a token by must therefore say which bucket it came from: an unprotected parameter is written by whoever last held the token, so a reader that cannot tell the two apart decides policy on a value the PRESENTER chose while believing the issuer signed it.",
+      "RFC 9052 §3 gives a COSE object two header buckets, and §3.1 puts the `kid` hint in the unprotected one — it 'is not a security-critical field. For this reason, it can be placed in the unprotected-header-parameters bucket'. A caller reading a verified token must still be told which key identifier the token carried, and must be told it the same way on both wires: JOSE compact serialisation has no second bucket (RFC 7515 §7.1), so a domain surface that reported the COSE `kid` under a bucket name of its own would make the same fact unreadable in one place on one wire and another place on the other. `kid` is on the SHORT list of parameters the header registry permits to travel unauthenticated, which is what makes admitting it safe: it names a key, and the key is then proven by the signature rather than believed.",
     given: [
       {
         step: "token",
@@ -2019,25 +2038,25 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
     when: [{ step: "verify" }],
     // The two wire steps are the load-bearing half. Asserting only the domain
-    // result would prove the two buckets are reported apart — not that the
-    // parameter is in the bucket the report claims, which is the thing a reader
-    // through aegis's own decoder cannot check.
+    // result would prove that SOME `kid` was reported — not that the token
+    // carried it in the unprotected bucket, which is the whole premise: read
+    // through aegis's own decoder, a `kid` the kit had moved into the protected
+    // bucket would look identical.
     then: [
       { step: "accepts", format: "cwt" },
-      { step: "header", expected: { algorithm: "ES512" }, excludes: ["keyId"] },
-      { step: "unprotectedHeader", expected: { keyId: SIG_KEY_ID } },
+      { step: "header", expected: { algorithm: "ES512", keyId: SIG_KEY_ID } },
       { step: "wireProtectedHeader", present: [1, 16], excludes: [4] },
       { step: "wireUnprotectedHeader", present: [4], excludes: [1, 16] },
     ],
     unsupported: {
-      jose: "JOSE compact serialisation has no unprotected bucket at all (RFC 7515 §7.1), so no parameter can arrive unsigned on that wire and there is nothing to keep apart",
+      jose: "JOSE compact serialisation has no unprotected bucket at all (RFC 7515 §7.1), so no parameter can arrive from one and the merge this row exercises has nothing to merge",
     },
   },
   {
-    id: "a-wire-with-no-unprotected-bucket-reports-none",
-    title: "a JWT reports no unprotected header bucket at all",
+    id: "a-wire-with-no-unprotected-bucket-signs-every-parameter-it-carries",
+    title: "every parameter in a JWT's domain header is one the signature covers",
     rationale:
-      "RFC 7515 §7.1 — 'Only one signature/MAC is supported by the JWS Compact Serialization and it provides no syntax to represent a JWS Unprotected Header value.' Every parameter on a JWT is therefore covered by the signature, and the result must say so by reporting NO unprotected bucket. An empty object would not: it is truthy, so a consumer writing `if (result.unprotectedHeader)` reads it as a bucket that exists and then reads a field the header type declares non-optional as undefined. A header the wire does not have has to be absent, not empty.",
+      "RFC 7515 §7.1 — 'Only one signature/MAC is supported by the JWS Compact Serialization and it provides no syntax to represent a JWS Unprotected Header value.' A JWT therefore has exactly one header and the signature covers all of it, so the domain header's provenance question is settled by the serialisation itself: there is no second bucket for an unauthenticated parameter to arrive from. This is what makes ONE domain header the honest shape on this wire — a second, permanently empty bucket beside it would invite a reader to ask which of the two a value came from when the wire admits only one answer.",
     given: [
       {
         step: "token",
@@ -2056,16 +2075,160 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     when: [{ step: "verify" }],
     then: [
       { step: "accepts", format: "jwt" },
-      // The key identifier is still reported — from the bucket the signature
-      // covers. Without it, an absent unprotected bucket would be satisfied by a
-      // read path that reported no header at all.
-      { step: "header", expected: { keyId: SIG_KEY_ID } },
-      { step: "unprotectedHeader", absent: true },
-      { step: "wireProtectedHeader", present: ["kid", "alg", "typ"] },
+      // THE SAME PARAMETER SET ON BOTH SIDES — that is the row. Every parameter
+      // the DOMAIN header reports is one the raw PROTECTED header carries, so
+      // nothing in the domain view arrived from outside the signature. Each half
+      // alone is weaker: the domain assertion would be satisfied by a reader that
+      // fabricated the values, and the wire assertion would not say what a caller
+      // is actually handed.
+      {
+        step: "header",
+        expected: { algorithm: "ES512", keyId: SIG_KEY_ID, headerType: "JWT" },
+      },
+      { step: "wireProtectedHeader", present: ["alg", "kid", "typ"] },
+      // …and there is no second place any of them could have come from, read by
+      // the INDEPENDENT inspector: a THREE-part compact serialisation, which is
+      // the falsifiable form of RFC 7515 §7.1 — a serialisation that grew a
+      // bucket would not be three parts.
+      { step: "wireStructure", parts: 3 },
+      // The inspector's own answer for this wire. ⚠ A STATEMENT, not a check: a
+      // JOSE compact token has no unprotected bucket for the inspector to report,
+      // so this can only fail if the inspector begins fabricating one. The three
+      // assertions above are what carry the row.
       { step: "wireUnprotectedHeader", absent: true },
     ],
     unsupported: {
-      cose: "a COSE structure always carries an unprotected bucket (RFC 9052 §3), so the absence this row asserts cannot arise on that wire",
+      cose: "a COSE structure always carries an unprotected bucket (RFC 9052 §3), so the serialisation-level absence this row asserts cannot arise on that wire",
+    },
+  },
+  {
+    id: "a-parameter-that-must-be-signed-is-refused-from-the-unprotected-bucket",
+    title:
+      "placing a header parameter that must be signed in the unauthenticated bucket is refused",
+    rationale:
+      "aegis decides which bucket a header parameter travels in — a caller states the parameter, not its provenance — and the decision is the header registry's `placement` column, the SAME datum the read side filters an incoming unprotected bucket by. Enforcing it on write is what makes the two halves one rule: if a writer could emit `cty` unprotected while every reader ignored it there, aegis would issue tokens carrying a declaration nothing will ever read, and the caller would believe a statement had been made. Refusing at the call site names the mistake where it is made, and the value the caller wanted has a bucket that works — the protected one.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
+        // `cty` is caller-settable and NOT kit-derived, so the refusal can only
+        // be the placement rule: a reserved parameter would be refused by the
+        // reserved rule instead and the row would prove that one twice.
+        options: { unprotected: { cty: "application/example" } },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [{ step: "rejects", error: "CoseError" }],
+    unsupported: {
+      jose: "the JOSE compact serialisation has no unprotected bucket to refuse a parameter from (RFC 7515 §7.1) — the JOSE kits take the bag only so one option type serves both wires, and ignore it entirely",
+    },
+  },
+  {
+    id: "an-unauthenticated-parameter-cannot-restate-a-signed-one",
+    title:
+      "a parameter stated in both header buckets is reported as the issuer signed it",
+    rationale:
+      "RFC 9052 §3 covers the protected bucket with the signature and leaves the unprotected one uncovered, so where BOTH state the same parameter only one of the two values has an author a verifier can name. The signed value must therefore win, unconditionally and in that direction: resolving the other way — or by which bucket happens to be read first — would let whoever last held the token overwrite a statement its issuer signed, which is the whole property the protected bucket exists to provide.",
+    given: [
+      // A FOREIGN producer, because no aegis writer emits this shape: `kid` is
+      // kit-derived, so `buildCoseHeaders` refuses a caller value for it in
+      // either bag. A token that states one in both is what somebody else emits
+      // — or what a holder rewrites the unprotected half of in transit.
+      {
+        step: "token",
+        via: "foreign",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+        coseBuckets: { protectedHeader: { kid: "key_the_issuer_signed" } },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts", format: "cwt" },
+      // ⚠ The token VERIFIES, and that is what makes the row about the merge and
+      // not about key resolution: RFC 9052 §3.1 makes `kid` a routing hint, so
+      // aegis finds the key by the UNPROTECTED one (the real fixture id) and the
+      // signature then proves the key. What the result REPORTS is the signed
+      // value — a different question, and the one this row states.
+      { step: "header", expected: { keyId: "key_the_issuer_signed" } },
+      { step: "wireProtectedHeader", includes: { "4": "key_the_issuer_signed" } },
+      { step: "wireUnprotectedHeader", present: [4] },
+    ],
+    unsupported: {
+      jose: "JOSE compact serialisation has one header and no second bucket to restate a parameter from (RFC 7515 §7.1), so the collision this row resolves cannot be constructed on that wire",
+    },
+  },
+  {
+    id: "an-unauthenticated-parameter-a-verifier-decides-by-is-ignored",
+    title:
+      "header parameters that must be signed are ignored when they arrive unauthenticated",
+    rationale:
+      "A parameter a verifier routes, audits or polices a token by is only worth reading if the issuer said it. RFC 9052 §3.1 permits `kid` in the unprotected bucket precisely because it 'is not a security-critical field' — the rest are not so permitted, and a reader that surfaced them anyway would let whoever last held the token declare what the token IS: its type (RFC 9596 §2 makes `typ` the routing declaration for a whole COSE object), the type of its payload, the certificate it is attributable to, or an object identifier an application authorises against. aegis therefore keeps ONE allowlist for both directions — the header registry's `placement` column — and a parameter outside it is refused on write and ignored on read, so the two can never disagree about which values are trustworthy.",
+    given: [
+      // Hand-placed by a FOREIGN producer at the very labels aegis reads: this
+      // shape is unmintable here precisely BECAUSE of the rule under test, so
+      // the injection has to come from somewhere else. Each value is a lie a
+      // holder would want believed.
+      {
+        step: "token",
+        via: "foreign",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+        coseBuckets: {
+          unprotectedHeader: {
+            typ: "application/at+cwt",
+            cty: "application/json",
+            oid: "1.2.3.4",
+            x5u: "https://attacker.lindorm.test/certs.pem",
+            x5c: ["MIIBforged"],
+          },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts", format: "cwt" },
+      // Every injected parameter is absent from the domain header. ⚠ Two shapes,
+      // because the header has two: a registry-driven parameter that never
+      // arrived is not a key at all (`excludes`), while `tokenType` is DERIVED —
+      // the reader always states an answer for it, and the answer an unsigned
+      // `typ` must buy is `undefined`, which is the routing decision this whole
+      // rule exists to deny.
+      {
+        step: "header",
+        expected: { algorithm: "ES512", keyId: SIG_KEY_ID, tokenType: undefined },
+        excludes: [
+          "headerType",
+          "contentType",
+          "objectId",
+          "certificateUrl",
+          "certificateChain",
+        ],
+      },
+      // The load-bearing half: the parameters ARE on the wire, at the labels the
+      // reader looks at, read back by the independent inspector. Without it the
+      // row could pass because the producer never wrote them.
+      {
+        step: "wireUnprotectedHeader",
+        present: [16, 3, -70000, 35, 33],
+      },
+    ],
+    unsupported: {
+      jose: "JOSE compact serialisation has no unprotected bucket (RFC 7515 §7.1), so no parameter can arrive unauthenticated on that wire and there is nothing for a placement rule to ignore",
     },
   },
 
@@ -2409,15 +2572,21 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
   // ---------------------------------------------------------------------------
   // Certificate binding.
   //
-  // ⚠ The COSE shortfall below is a CHAIN of three omissions, not one: the
-  // domain forward does not destructure the cert-binding options
-  // (`cose-token-wire.ts:136`), the COSE signer never calls `resolveCertBinding`
-  // (`cwt-token.ts:119`), and the header registry maps no COSE label for the
-  // thumbprint (`header-registry.ts:364`). It costs two capabilities a consumer
-  // relies on independently — the binding is not emitted, and the refusal that
-  // protects a caller who asked for one is not raised — so each is pinned where
-  // it is owed, and each names only the sites its own repair needs (a refusal
-  // puts nothing on the wire, so it owes no registry mapping).
+  // ⚠ The COSE shortfall below is a CHAIN of two omissions, not one: the COSE
+  // signer never calls `resolveCertBinding`
+  // (`src/internal/cose/sign-cwt.ts#export const signCwt = (`),
+  // and the header registry maps no COSE label for the thumbprint
+  // (`src/internal/header/header-registry.ts#the hash algorithm is a member of the structure`).
+  // The domain forward is NO LONGER one of them: the COSE `signClaims`
+  // (`src/internal/wire/cose-token-wire.ts#signClaims: ({`) forwards its options
+  // structurally, and a caller who STATES a binding is now refused above the seam
+  // by the `unsupported` disposition
+  // (`src/internal/wire/cose-token-wire.ts#const NO_COSE_CERT_BINDING =`).
+  // That refusal is the second of the two capabilities a consumer relies on
+  // independently, and it IS raised now; the first — emitting the binding — is
+  // what the two remaining sites still owe. Each is pinned where it is owed, and
+  // each names only the sites its own repair needs (a refusal puts nothing on the
+  // wire, so it owes no registry mapping).
   //
   // The LEGACY SHA-1 thumbprint is a different question with a different answer,
   // and no repair reaches it: RFC 9360 §2 gives COSE ONE `x5t`, whose hash
@@ -2480,7 +2649,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     knownDefect: {
-      cose: 'THREE sites, and the destructure alone repairs none of it. `src/internal/wire/cose-token-wire.ts:136` — the COSE `signClaims` destructures `{ kryptos, deps, common, tokenType, header, omit, proprietary, format }`, so neither `bindCertificate` nor `certificateThumbprintSha1` reaches a writer. `src/internal/cose/cwt-token.ts:119` — `signCwt` takes the same `SignStructuredTokenOptions` the JOSE kits take, and forwards only `tokenType`/`proprietary`/`header`/`unprotected` to `CwsKit.sign`; it never calls `resolveCertBinding`, which `src/classes/JwtKit.ts:100` does, so a repaired forward has no kit door to hand the request to. And `src/internal/header/header-registry.ts:364` — `certificateThumbprint` is marked ABSENT on COSE, so `coseByJose` (`src/internal/header/header-registry.ts:492`) throws `header_no_cose_label` rather than yielding a label to write under; the entry needs mapping to label 34 with an array codec for `COSE_CertHash` (it declares `codec: { kind: "string" }` today, and a COSE_CertHash is a two-element array).',
+      cose: 'TWO sites, and the domain forward is no longer either of them. `src/internal/wire/cose-token-wire.ts#signClaims: ({` — the COSE `signClaims` no longer names its options one by one; it forwards them STRUCTURALLY, and a caller who STATES a binding is refused above the seam by the `unsupported` disposition (`src/internal/wire/cose-token-wire.ts#const NO_COSE_CERT_BINDING =`). This row states none — its key merely CARRIES a chain — so nothing is refused, the mint succeeds, and the token comes back unbound because no COSE writer derives a binding from the key. That is what the two remaining sites owe. `src/internal/cose/sign-cwt.ts#export const signCwt = (` — `signCwt` takes the same `SignStructuredTokenOptions` the JOSE kits take, and consumes `omit`/`tokenType`/`proprietary`/`header`/`unprotected` of them and neither `bindCertificate` nor `certificateThumbprintSha1`; it never calls `resolveCertBinding`, which `src/classes/JwtKit.ts#cert: resolveCertBinding(` does, so a repaired forward has no kit door to hand the request to. And `src/internal/header/header-registry.ts#the hash algorithm is a member of the structure` — `certificateThumbprint` is marked ABSENT on COSE, so `coseByJose` (`src/internal/header/header-registry.ts#header_no_cose_label`) throws `header_no_cose_label` rather than yielding a label to write under; the entry needs mapping to label 34 with an array codec for `COSE_CertHash` (it declares `codec: { kind: "string" }` today, and a COSE_CertHash is a two-element array).',
     },
   },
   {
@@ -2540,8 +2709,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
     when: [{ step: "mint" }],
     then: [{ step: "rejects", error: "AegisError" }],
-    knownDefect: {
-      cose: "TWO sites, and unlike the emission rows this one needs NO registry mapping — a refusal puts nothing on the wire. `src/internal/wire/cose-token-wire.ts:136` — `bindCertificate` is not among the fields the COSE `signClaims` destructures, so the request never reaches a writer at all and the mint succeeds, unbound, having been asked to bind. `src/internal/cose/cwt-token.ts:119` — `signCwt` forwards only `tokenType`/`proprietary`/`header`/`unprotected` to `CwsKit.sign` and never calls `resolveCertBinding`, which is the function that throws for a cert-less key (`src/classes/JwtKit.ts:100` is where the JOSE side calls it), so passing the request down the forward would still not produce the refusal.",
+    unsupported: {
+      cose: "There is no certificate binding on this wire for a chainless key to fall short of. `KIT_CAPABILITIES.cwt.certificateBinding` is `false` and no COSE writer derives a chain or a thumbprint, so `bindCertificate: \"thumbprint\"` is refused by the wire's `unsupported` disposition before any key is inspected — the SAME refusal a CERT-BEARING key gets from the same option (the sibling row `a-token-signed-with-a-certificate-bearing-key-declares-that-certificate` demonstrates it). This row's capability is that the KEY decides, and on a wire where the key is never consulted the row cannot state that: it would go green on a refusal that has nothing to do with the chain. JOSE has the capability — `resolveCertBinding` reads `kryptos.hasCertificate` — which is what gives the rule something to be about.",
     },
   },
   {
@@ -2617,7 +2786,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     knownDefect: {
-      cose: "THREE sites, the same chain the emission row names. `src/internal/wire/cose-token-wire.ts:136` — neither `bindCertificate` nor `certificateThumbprintSha1` is destructured by the COSE `signClaims`. `src/internal/cose/cwt-token.ts:119` — `signCwt` never calls `resolveCertBinding`, so there is no kit door to hand the request to. And `src/internal/header/header-registry.ts:364` — `certificateThumbprint` is marked ABSENT on COSE, so `coseByJose` (`src/internal/header/header-registry.ts:492`) throws `header_no_cose_label` and the surviving SHA-256 digest this row requires has no label to travel under until the entry is mapped to RFC 9360 §2's `x5t` (label 34) with a `COSE_CertHash` codec. ⚠ The exclusion half of this cell is VACUOUS on COSE and stays so after every repair: RFC 9360 §2 gives the wire one `x5t` whose hash algorithm is a member of the value, so there is no separate legacy digest for the deployment setting to remove.",
+      cose: "TWO sites, the same chain the emission row names, and this row does not even reach them. `src/internal/wire/cose-token-wire.ts#signClaims: ({` — the COSE `signClaims` no longer omits the cert-binding options; it forwards them structurally, and this row STATES `bindCertificate`, so the `unsupported` disposition (`src/internal/wire/cose-token-wire.ts#const NO_COSE_CERT_BINDING =`) REFUSES the mint above the seam instead of issuing a token that is silently unbound. The refusal is the honest answer to a request this wire cannot serve, but it is not the EMISSION this row asks for, so the row stays red until the two sites below exist. `src/internal/cose/sign-cwt.ts#export const signCwt = (` — `signCwt` never calls `resolveCertBinding`, so there is no kit door to hand the request to. And `src/internal/header/header-registry.ts#the hash algorithm is a member of the structure` — `certificateThumbprint` is marked ABSENT on COSE, so `coseByJose` (`src/internal/header/header-registry.ts#header_no_cose_label`) throws `header_no_cose_label` and the surviving SHA-256 digest this row requires has no label to travel under until the entry is mapped to RFC 9360 §2's `x5t` (label 34) with a `COSE_CertHash` codec. ⚠ The exclusion half of this cell is VACUOUS on COSE and stays so after every repair: RFC 9360 §2 gives the wire one `x5t` whose hash algorithm is a member of the value, so there is no separate legacy digest for the deployment setting to remove.",
     },
   },
 
@@ -2701,11 +2870,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
   // The confidentiality verb.
   // ---------------------------------------------------------------------------
   {
-    id: "the-confidentiality-verb-round-trips-a-domain-claim-set",
+    id: "the-confidentiality-verb-returns-an-object-under-the-writers-own-keys",
     title:
-      "a claim set sealed by the confidentiality verb is recovered whole by the matching read",
+      "an object sealed by the confidentiality verb is recovered under the keys its writer chose",
     rationale:
-      "Sealing a claim set is only useful if the recipient recovers the same statement, split the same way: the registered claims under their domain names and the unregistered remainder kept apart, so a caller never has to guess whether a value it reads is one the registry vouches for. A round trip that dropped the split would hand the recipient a flat bag and make every consumer re-derive the categorisation the writer already knew.",
+      "Encryption is confidentiality and nothing else: it hides a value from everyone without the key and makes no statement about what the value MEANS. A reader that renamed the recovered keys into a registered vocabulary would be asserting, on the writer's behalf, that `subject` is a subject claim and `iss` an issuer — statements only a signature can carry. So a decrypt must hand back the object it was given, key for key, and leave the vocabulary to the verbs that verify an author.",
     given: [
       { step: "keys", keys: ["ec-enc", "oct-enc"] },
       {
@@ -2717,22 +2886,42 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     when: [{ step: "decrypt" }],
     then: [
       { step: "accepts", format: { jose: "jwe", cose: "cwe" } },
-      { step: "claims", expected: { subject: "user-1", audience: [CLIENT] } },
-      // The unregistered claim is the load-bearing half: it must land OUTSIDE
-      // the registered bucket. (It cannot be excluded from `claims` by name —
-      // that bucket is typed to the registered vocabulary, so an unregistered
-      // name is not expressible there at all.)
-      { step: "custom", expected: { tenant: "acme" } },
+      // The load-bearing half is the KEYS. `subject` is a registered domain name
+      // whose wire spellings are `sub` (JOSE) and label 2 (COSE), so any
+      // translation on either leg would show up here as a missing key — on the
+      // COSE wire the value would not even be a string key.
+      {
+        step: "raw",
+        expected: { subject: "user-1", audience: [CLIENT], tenant: "acme" },
+      },
+    ],
+  },
+  {
+    id: "the-confidentiality-verb-seals-an-empty-member-with-the-rest-of-the-value",
+    title: "an empty member of a sealed object is returned with the object",
+    rationale:
+      "Pruning an empty entry is a CLAIMS decision — an issuer choosing between `amr: []` (known, none apply) and no `amr` at all (nothing stated) — and it is available to a claims verb because a claim is an assertion someone signed. The confidentiality verb asserts nothing: it seals a value and must hand that same value back, so an empty string, list or object the caller wrote is part of the value and not a statement to second-guess. A caller cannot compensate for a prune it did not ask for, because the loss is silent — the token decrypts cleanly and the member is simply gone.",
+    given: [
+      { step: "keys", keys: ["ec-enc", "oct-enc"] },
+      {
+        step: "token",
+        via: "domain-encrypt",
+        // One of each shape the `"empty"` prune drops, so a prune of any of them
+        // shows here rather than only the one that happened to be written.
+        data: { blank: "", none: [], empty: {}, kept: "x" },
+      },
+    ],
+    when: [{ step: "decrypt" }],
+    then: [
+      { step: "accepts", format: { jose: "jwe", cose: "cwe" } },
+      { step: "raw", expected: { blank: "", none: [], empty: {}, kept: "x" } },
     ],
   },
   {
     id: "the-confidentiality-verb-round-trips-an-opaque-payload",
     title: "an opaque payload sealed by the confidentiality verb is recovered verbatim",
     rationale:
-      "Not everything worth sealing is a claim set — session state, a handle, a blob of bytes the writer alone interprets. Such a payload has no claims layer, so it must come back as ITSELF rather than be coerced into claim buckets: a value silently reinterpreted as claims would be read by the recipient under names its writer never chose.",
-    knownDefect: {
-      cose: "src/internal/utils/encrypt-token.ts:87 — the `cwe` branch converts a string payload with `Buffer.from(data, \"utf8\")` BEFORE handing it to `CweKit.encrypt`, so the kit's content codec infers `application/octet-stream` instead of `text/plain` and the content type never reaches the wire. The `jwe` branch at :60 passes the string through untouched, which is why the same call answers with a string there and a Buffer here. `CweKit` itself round-trips a string correctly (kit-content-roundtrip.test.ts), so the loss is the domain wrapper's alone — and it happens at ENCRYPT time, so a token already issued cannot be repaired by fixing the read side.",
-    },
+      "Not everything worth sealing is structured — session state, a handle, a blob of bytes the writer alone interprets. Such a payload must come back as ITSELF, the same JS type and the same content, because a recipient that received a string as bytes (or bytes as a string) has to guess at a conversion the writer never performed.",
     given: [
       { step: "keys", keys: ["ec-enc", "oct-enc"] },
       { step: "token", via: "domain-encrypt", data: "session-state-opaque" },
@@ -2741,10 +2930,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [
       { step: "accepts", format: { jose: "jwe", cose: "cwe" } },
       { step: "raw", expected: "session-state-opaque" },
-      // …and it is not ALSO reinterpreted as claims. An opaque payload that
-      // reached the claim buckets would be read under names its writer never
-      // chose.
-      { step: "claims", expected: {}, excludes: ["subject"] },
     ],
   },
   {
@@ -2752,9 +2937,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title: "a decrypted token reports the token type its envelope declared",
     rationale:
       "The envelope's type parameter is what lets a recipient route an encrypted object before it has opened it, and the recipient must then be able to read that declaration back off the result — otherwise the routing decision and the object it routed cannot be correlated, and an application dispatching on the type has to re-decode the envelope with a second reader to find out what it just decrypted.",
-    knownDefect: {
-      cose: "THREE sites, and the PRIMARY one is on the WRITE side: `src/internal/utils/encrypt-token.ts:103` — the `cwe` branch stamps `tokenType: opaque ? domainTokenTypePrefix(options.type) : COSE_CLAIMS_PREFIX`, and `opaque` is `isBuffer(data) || isString(data)` (:53). This row's given is a CLAIMS payload, so `opaque` is false and the caller's `type` is DISCARDED AT ENCRYPT TIME: the envelope declares `application/claims+cwe` and never `application/at+cwe`, so no read-side repair can recover a declaration the wire does not carry. The two read-side sites are still needed once the write is repaired. `src/internal/utils/decrypt-token.ts:93` builds the `cwe` header from the bare `readCoseEncryptHeader(bytes)` instead of routing it through `domainTokenHeader(wire, \"cwe\")`, the enrichment the `jwe` branch at :62 uses and whose own comment records that a bare parse leaves `header.tokenType` permanently undefined. And `src/internal/utils/domain-header.ts:33` — `coseTokenType` returns undefined for any typ not ending `+cwt`, so an `application/at+cwe` recovers nothing even once the call is routed correctly.",
-    },
     given: [
       { step: "keys", keys: ["ec-enc", "oct-enc"] },
       {
@@ -3830,7 +4012,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     // an error that does not exist yet. So this is read off the real error and
     // states what that same field must hold, rather than guessing at a fix.
     knownDefect:
-      "src/internal/utils/apply-verify-policy.ts:116-133 — the caller's matcher bag is compiled by `createIdentityMatchers(algorithm, assert, nameOf)`, where `nameOf` is the WIRE `NameSelector`, and validated against `wireClaims`; line 127 then copies the failing key list into `data.invalid` verbatim. So the list is WIRE-spelled — `jti` on JOSE and `cti` on COSE for the same `tokenId` matcher — while `Aegis.assert` (src/classes/Aegis.ts:520-527) and the profile floor's `profile_policy_invalid` both report the same field in DOMAIN names. The failing keys need translating back through the registry before they reach the error.",
+      "`src/internal/utils/apply-verify-policy.ts#const predicate = createIdentityMatchers(` — the caller's matcher bag is compiled by `createIdentityMatchers(algorithm, assert, nameOf)`, where `nameOf` is the WIRE `NameSelector`, and validated against `wireClaims`; the catch (`src/internal/utils/apply-verify-policy.ts#data: { invalid: (err as any).data?.invalid, format },`) then copies the failing key list into `data.invalid` verbatim. So the list is WIRE-spelled — `jti` on JOSE and `cti` on COSE for the same `tokenId` matcher — while `Aegis.assert` (`src/classes/Aegis.ts#static assert(`) and the profile floor's `profile_policy_invalid` both report the same field in DOMAIN names. The failing keys need translating back through the registry before they reach the error.",
     given: [
       {
         step: "token",

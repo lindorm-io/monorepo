@@ -1,0 +1,85 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assertAlgorithmMatch > each wire refuses under its OWN code, title and words > cwm 1`] = `
+{
+  "code": "cwm_algorithm_mismatch",
+  "data": {
+    "algorithm": "RSA-OAEP",
+  },
+  "debug": {
+    "expected": "ES512",
+  },
+  "details": "The protected header alg does not match the algorithm of the configured kryptos key.",
+  "title": "CWM Algorithm Mismatch",
+}
+`;
+
+exports[`assertAlgorithmMatch > each wire refuses under its OWN code, title and words > cws 1`] = `
+{
+  "code": "cws_algorithm_mismatch",
+  "data": {
+    "algorithm": "RSA-OAEP",
+  },
+  "debug": {
+    "expected": "ES512",
+  },
+  "details": "The protected header alg does not match the algorithm of the configured kryptos key.",
+  "title": "CWS Algorithm Mismatch",
+}
+`;
+
+exports[`assertAlgorithmMatch > each wire refuses under its OWN code, title and words > cwt 1`] = `
+{
+  "code": "cwt_algorithm_mismatch",
+  "data": {
+    "algorithm": "RSA-OAEP",
+  },
+  "debug": {
+    "expected": "ES512",
+  },
+  "details": "The protected header alg does not match the algorithm of the configured kryptos key.",
+  "title": "CWT Algorithm Mismatch",
+}
+`;
+
+exports[`assertAlgorithmMatch > each wire refuses under its OWN code, title and words > jwe 1`] = `
+{
+  "code": "jwe_algorithm_mismatch",
+  "data": {
+    "alg": "RSA-OAEP",
+  },
+  "debug": {
+    "expected": "ES512",
+  },
+  "details": "The header alg does not match the key-management algorithm of the configured kryptos key.",
+  "title": "JWE Algorithm Mismatch",
+}
+`;
+
+exports[`assertAlgorithmMatch > each wire refuses under its OWN code, title and words > jws 1`] = `
+{
+  "code": "jws_algorithm_mismatch",
+  "data": {
+    "algorithm": "RSA-OAEP",
+  },
+  "debug": {
+    "expected": "ES512",
+  },
+  "details": "The header alg does not match the signing algorithm of the configured kryptos key.",
+  "title": "JWS Algorithm Mismatch",
+}
+`;
+
+exports[`assertAlgorithmMatch > each wire refuses under its OWN code, title and words > jwt 1`] = `
+{
+  "code": "jwt_algorithm_mismatch",
+  "data": {
+    "algorithm": "RSA-OAEP",
+  },
+  "debug": {
+    "expected": "ES512",
+  },
+  "details": "The header alg does not match the signing algorithm of the configured kryptos key.",
+  "title": "JWT Algorithm Mismatch",
+}
+`;

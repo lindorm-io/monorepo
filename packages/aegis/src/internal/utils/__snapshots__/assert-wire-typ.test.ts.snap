@@ -1,0 +1,56 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assertWireTyp > each wire refuses a foreign typ under its OWN code and words > cwt 1`] = `
+{
+  "code": "cwt_invalid_typ",
+  "data": {
+    "typ": "JWT",
+  },
+  "details": "Header typ is present but is not CWT or a <type>+cwt media type, so the token cannot be verified as a CWT.",
+  "title": "CWT Invalid Typ",
+}
+`;
+
+exports[`assertWireTyp > each wire refuses a foreign typ under its OWN code and words > jwe 1`] = `
+{
+  "code": "jwe_invalid_typ",
+  "data": {
+    "typ": "JWT",
+  },
+  "details": "Header typ must be JWE or a <type>+jwe media type to decrypt as a JWE.",
+  "title": "JWE Invalid Typ",
+}
+`;
+
+exports[`assertWireTyp > each wire refuses a foreign typ under its OWN code and words > jws 1`] = `
+{
+  "code": "jws_invalid_typ",
+  "data": {
+    "typ": "JWT",
+  },
+  "details": "Header typ must be JWS, JOSE, a <type>+jws media type, or undefined.",
+  "title": "JWS Invalid Typ",
+}
+`;
+
+exports[`assertWireTyp > each wire refuses a foreign typ under its OWN code and words > jwt (parse) 1`] = `
+{
+  "code": "jwt_invalid_typ",
+  "data": {
+    "typ": "JWS",
+  },
+  "details": "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be parsed as a JWT.",
+  "title": "JWT Invalid Typ",
+}
+`;
+
+exports[`assertWireTyp > each wire refuses a foreign typ under its OWN code and words > jwt 1`] = `
+{
+  "code": "jwt_invalid_typ",
+  "data": {
+    "typ": "JWS",
+  },
+  "details": "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be verified as a JWT.",
+  "title": "JWT Invalid Typ",
+}
+`;

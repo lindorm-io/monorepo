@@ -37,10 +37,16 @@ import {
 import { CLAIM_SPECS, coseName, joseName } from "../internal/claims/claims-registry.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { encodeCwtClaims } from "../internal/cose/cwt-claims.js";
-import { decodeCwtWire } from "../internal/cose/cwt-token.js";
+import { decodeCwtWire } from "../internal/cose/decode-cwt-wire.js";
 import { COSE_TAG, decodeProtectedHeader } from "../internal/cose/structures.js";
+import { coseByJose } from "../internal/header/header-registry.js";
 import { WIRE_TAGS } from "../internal/registry/wire.js";
-import type { ParsedDpopProof, TokenFormat, TokenFormatTag } from "../types/index.js";
+import type {
+  ParsedDpopProof,
+  TokenContent,
+  TokenFormat,
+  TokenFormatTag,
+} from "../types/index.js";
 import { inspectToken, type RawLabelMap, type TokenInspection } from "./inspect-token.js";
 import {
   TEST_EC_KEY_ENC,
@@ -59,6 +65,7 @@ import {
 import {
   ISSUER,
   type ArtifactGivenStep,
+  type CoseBucketsGiven,
   type DateCell,
   type DpopProofGiven,
   type ErrorClassName,
@@ -353,19 +360,12 @@ type ScenarioResult = {
   custom?: Dict;
   header?: Dict;
   /**
-   * The UNPROTECTED header bucket, in a CELL — `undefined` means the act produced
-   * no header at all, `{ value: undefined }` means it produced one and the bucket
-   * is ABSENT. Collapsing the two would let a row assert "no unprotected header"
-   * against an act that never reports one, which is a pass for the wrong reason.
-   */
-  unprotectedHeader?: { value: Dict | undefined };
-  /**
    * The OPAQUE payload — an artifact whose body is not a claims layer, delivered
    * beside an empty domain. In a CELL for the same reason as the header above:
    * only `parse`/`verify`/`decrypt` report one at all, and a row asserting on the
    * payload of an act that reports none must fail rather than pass on silence.
    */
-  raw?: { value: Dict | string | Buffer | undefined };
+  raw?: { value: TokenContent | undefined };
   /** The UNTRANSLATED wire claims a domain read passes through, in a cell. */
   wire?: { value: Dict | undefined };
   /**
@@ -410,10 +410,12 @@ export const readWirePayload = (token: string, format?: string): WirePayload => 
   // Refuse an ENCRYPTED artifact on its DECLARED format, before touching a byte.
   // Inferring unreadability from the token's SHAPE is JOSE-only reasoning: a JWE
   // is recognisable by its five parts, but a CWE is a COSE_Encrypt0 — a
-  // three-element array that satisfies `decodeCwtWire`'s arity check
-  // (cwt-token.ts `contents.length < 3`), so its CIPHERTEXT reaches the CBOR
-  // decoder and is refused only by the luck of not parsing as CBOR. Luck is not
-  // an exclusion, and when it runs out the row passes vacuously.
+  // three-element array, which satisfies the `{ atLeast: 3 }` arity
+  // `decodeCwtWire` asks for
+  // (`src/internal/cose/unwrap-cose.ts#contents.length >= arity.atLeast`), so its
+  // CIPHERTEXT reaches the CBOR decoder and is refused only by the luck of not
+  // parsing as CBOR. Luck is not an exclusion, and when it runs out the row
+  // passes vacuously.
   if (isString(format) && format in ENCRYPTED_FORMATS) {
     return {
       readable: false,
@@ -592,22 +594,6 @@ const confirmationThumbprintOf = (token: string): string | undefined => {
 };
 
 /**
- * The DOMAIN header bucket a row asserts on, or the harness's own diagnostic.
- * A row naming an act that reports no domain header at all is a row that would
- * otherwise pass on the act's silence.
- */
-const domainHeaderOf = (result: ScenarioResult): Dict | undefined => {
-  if (result.unprotectedHeader === undefined) {
-    throw new Error(
-      "the row asserts on the unprotected DOMAIN header, but the last act reported none. " +
-        "Only `parse` and `verify` produce the domain header pair; a kit verify reports WIRE-keyed buckets.",
-    );
-  }
-
-  return result.unprotectedHeader.value;
-};
-
-/**
  * The value inside a result CELL, or the harness's own diagnostic.
  *
  * A row asserting on something the last act never reports would otherwise be
@@ -747,7 +733,19 @@ const signForeignJose = async (
   claims: Dict,
   typ: string | undefined,
   kryptos: IKryptos,
+  buckets: CoseBucketsGiven | undefined,
 ): Promise<string> => {
+  // A JOSE compact serialisation has ONE header and no bucket to place a
+  // parameter in (RFC 7516/7515 §7.1), so a row that names the COSE buckets has
+  // no meaning here. Say so rather than sign a token that quietly ignores half
+  // the row.
+  if (buckets !== undefined) {
+    throw new Error(
+      "the row places parameters in named COSE header buckets, but this run is on the JOSE wire, whose compact serialisation has only one header. " +
+        "Scope the row with `unsupported: { jose: … }`.",
+    );
+  }
+
   const key = await importJWK(kryptos.export("jwk") as never, kryptos.algorithm);
 
   return new CompactSign(Buffer.from(JSON.stringify(claims), "utf8"))
@@ -788,10 +786,25 @@ const coseAlgorithmOf = (kryptos: IKryptos): number => {
   }
 };
 
+/**
+ * The row's extra COSE header entries, translated to the integer labels the
+ * parameters are keyed under.
+ *
+ * ⚠ Through `coseByJose`, i.e. through AEGIS'S OWN registry, and that is
+ * deliberate: the point of placing a parameter in the unprotected bucket is to
+ * put it exactly where aegis WOULD read it from. A hand-picked label the reader
+ * does not look at would make every such row pass for the wrong reason — the
+ * parameter would be ignored because it was invisible, not because the placement
+ * rule refused it.
+ */
+const coseBucketEntries = (bag: Dict | undefined): Array<[number, unknown]> =>
+  Object.entries(bag ?? {}).map(([jose, value]) => [coseByJose(jose), value]);
+
 const signForeignCose = async (
   claims: Dict,
   typ: string | undefined,
   kryptos: IKryptos,
+  buckets: CoseBucketsGiven | undefined,
 ): Promise<string> => {
   const jwk = kryptos.export("jwk") as Dict;
 
@@ -801,9 +814,19 @@ const signForeignCose = async (
 
   if (typ !== undefined) protectedEntries.push([COSE_TYP_LABEL, typ]);
 
+  protectedEntries.push(...coseBucketEntries(buckets?.protectedHeader));
+
   const protectedHeaders = new ProtectedHeaders(protectedEntries as never);
+  // The row's own unprotected entries are appended AFTER the derived `kid`,
+  // which is the routing hint aegis's COSE key resolution reads.
+  // ⚠ `as never` on the row's own entries, for the same reason the protected
+  // bucket above takes one: `@auth0/cose`'s `UnprotectedHeaders` types its value
+  // union per KNOWN label, and a row here places parameters at labels it has
+  // never heard of (RFC 9596's `typ` = 16, the lindorm private-use `oid`) —
+  // which is exactly the point of a foreign producer.
   const unprotectedHeaders = new UnprotectedHeaders([
     [Headers.KeyID, Buffer.from(kryptos.id, "utf8")],
+    ...(coseBucketEntries(buckets?.unprotectedHeader) as never),
   ]);
   // ⚠ `proprietary: false` — the INTEROPERABLE spelling, which is what a third
   // party emits. A foreign producer has never heard of this package's
@@ -1020,8 +1043,8 @@ const materialise = async (
       return {
         token:
           wire === "cose"
-            ? await signForeignCose(claims, typ, kryptos)
-            : await signForeignJose(claims, typ, kryptos),
+            ? await signForeignCose(claims, typ, kryptos, artifact.coseBuckets)
+            : await signForeignJose(claims, typ, kryptos, artifact.coseBuckets),
         // The producer emits a claims token on either wire; `format` is what the
         // READ side reports, and a foreign token is read exactly as an aegis one.
         // A shared secret makes the COSE structure a COSE_Mac0, which reads back
@@ -1047,7 +1070,8 @@ const materialise = async (
  * pass while saying nothing about integrity. An unregistered member is inert on
  * both wires: RFC 7515 §4 leaves an unrecognised JOSE Header Parameter to be
  * ignored when it is not listed in `crit`, and an unregistered COSE label has no
- * JOSE wire name and is skipped (`internal/header/cose-wire-header.ts`).
+ * JOSE wire name and is skipped
+ * (`src/internal/header/cose-wire-header.ts#if (jose === undefined) return;`).
  */
 const TAMPERED_MEMBER = "tampered";
 
@@ -1232,10 +1256,7 @@ const act = async (
         format: parsed.format,
         claims: parsed.claims as Dict,
         custom: parsed.custom as Dict,
-        header: parsed.protectedHeader as unknown as Dict,
-        unprotectedHeader: {
-          value: parsed.unprotectedHeader as unknown as Dict | undefined,
-        },
+        header: parsed.header as unknown as Dict,
         buckets: {
           value: {
             profile: parsed.profile as Dict | undefined,
@@ -1278,10 +1299,7 @@ const act = async (
         format: verified.format,
         claims: verified.claims as Dict,
         custom: verified.custom as Dict,
-        header: verified.protectedHeader as unknown as Dict,
-        unprotectedHeader: {
-          value: verified.unprotectedHeader as unknown as Dict | undefined,
-        },
+        header: verified.header as unknown as Dict,
         raw: { value: verified.raw },
         wire: { value: verified.wire?.payload },
         buckets: {
@@ -1370,14 +1388,16 @@ const act = async (
       return {
         token: current.token,
         format: decrypted.format,
-        claims: decrypted.claims as Dict,
-        custom: decrypted.custom as Dict,
         // `decrypt` reports ONE header — the encrypting outer's, which the AEAD
         // covers in full. There is no unprotected counterpart to report, so the
         // cell is left unset rather than filled with an empty bucket.
         header: decrypted.header as unknown as Dict,
-        raw: { value: decrypted.raw },
-        wire: { value: decrypted.wire?.payload },
+        // …and ONE payload, in the `raw` cell, because that is the cell for a
+        // value reported as itself. The claim cells are left UNSET rather than
+        // filled with `{}`: `decrypt` has no claims layer at all, and an empty
+        // bucket would let a row assert "no claims were established" against a
+        // verb that could never establish any — a vacuous pass.
+        raw: { value: decrypted.payload },
       };
     }
 
@@ -1393,7 +1413,8 @@ const act = async (
       //
       // ⚠ WHAT THE AGREEMENT PINS is argument FORWARDING and POLARITY, never
       // matching semantics. The two share more than the predicate builder: they
-      // share the MATCHER, because `validate` (`src/internal/utils/validate.ts:45`)
+      // share the MATCHER, because `validate`
+      // (`src/internal/utils/validate.ts#if (matches(dict, predicate)) return;`)
       // opens with `if (matches(dict, predicate)) return;` — the same call
       // `Aegis.matches` makes. So a matcher that decided every claim set wrongly
       // would keep the two in perfect agreement. What cannot survive is one form
@@ -1509,6 +1530,10 @@ const assertObservation = (step: ThenStep, result: ScenarioResult, wire: Wire): 
       }
 
       expect(raw).toMatchObject(step.expected);
+
+      for (const field of step.excludes ?? []) {
+        expect(raw).not.toHaveProperty(field);
+      }
       return;
     }
 
@@ -1580,33 +1605,6 @@ const assertObservation = (step: ThenStep, result: ScenarioResult, wire: Wire): 
         expect(result.header).not.toHaveProperty(field);
       }
       return;
-
-    case "unprotectedHeader": {
-      const unprotected = domainHeaderOf(result);
-
-      if (step.absent === true) {
-        // `toBeUndefined`, not `toEqual({})`: an empty object is TRUTHY, so a
-        // consumer's `if (result.unprotectedHeader)` would read one as present.
-        expect(unprotected).toBeUndefined();
-        return;
-      }
-
-      // An assertion about what the bucket CONTAINS cannot be answered by a
-      // bucket that is not there — and `not.toHaveProperty` over `undefined`
-      // would pass, so an exclusion would check nothing.
-      expect(
-        unprotected,
-        "the row asserts on the contents of the unprotected domain header, but the result carries none",
-      ).toBeDefined();
-
-      if (step.expected) {
-        expect(unprotected).toMatchObject(step.expected);
-      }
-      for (const field of step.excludes ?? []) {
-        expect(unprotected).not.toHaveProperty(field);
-      }
-      return;
-    }
 
     case "wirePayload": {
       // ⚠ `payload`, not `wire` — this used to SHADOW the `wire: Wire` parameter,

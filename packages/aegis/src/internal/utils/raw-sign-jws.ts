@@ -8,6 +8,7 @@ import type {
 import type { AegisDeps } from "./aegis-deps.js";
 import { joseName } from "../claims/claims-registry.js";
 import { buildSignedToken } from "./build-signed-token.js";
+import { resolveThumbprintSha1 } from "./resolve-thumbprint-sha1.js";
 
 /**
  * The raw JWS sign namespace (`aegis.jws.sign`): resolve the signing key and sign
@@ -35,8 +36,7 @@ export const rawSignJws = async ({
     logger: deps.logger,
   }).sign(data, {
     ...rest,
-    certificateThumbprintSha1:
-      certificateThumbprintSha1 ?? deps.certificateThumbprintSha1,
+    certificateThumbprintSha1: resolveThumbprintSha1(certificateThumbprintSha1, deps),
   });
 
   return buildSignedToken(token, {}, options.header?.oid, "jws", joseName);

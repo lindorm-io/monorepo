@@ -1,67 +1,54 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import { CwsError, CwtError, CwmError, type CoseError } from "../errors/index.js";
+import { CwsError } from "../errors/index.js";
 import type { ICwsKit } from "../interfaces/index.js";
-import { algToCoseLabel, isOfficialCoseAlg } from "../internal/cose/alg-labels.js";
-import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
+import { algToCoseLabel } from "../internal/cose/alg-labels.js";
+import { assertCoseRegistered } from "../internal/cose/assert-cose-registered.js";
+import { Tag, encodeCbor } from "../internal/cose/cbor.js";
+import type { CoseLabel } from "../internal/cose/cose-label.js";
 import {
-  COSE_TAG,
-  buildMacStructure,
-  buildSigStructure,
-  decodeProtectedHeader,
-  encodeProtectedHeader,
-} from "../internal/cose/structures.js";
-import { unwrapCose } from "../internal/cose/unwrap-cose.js";
+  type CoseStructureTag,
+  coseStructureTag,
+} from "../internal/cose/cose-structure-tag.js";
+import { ERROR_BY_FORMAT } from "../internal/cose/error-by-format.js";
+import { requireAttachedPayload } from "../internal/cose/require-attached-payload.js";
+import { requireSignature } from "../internal/cose/require-signature.js";
+import { splitSigned } from "../internal/cose/split-signed.js";
+import { COSE_TAG, buildSecuredStructure } from "../internal/cose/structures.js";
 import { buildCoseHeaders } from "../internal/header/build-cose-headers.js";
-import { coseWireHeader } from "../internal/header/cose-wire-header.js";
-import { coseByJose } from "../internal/header/header-registry.js";
+import { mergeCoseProtected } from "../internal/header/merge-cose-protected.js";
+import { mergeCoseUnprotected } from "../internal/header/merge-cose-unprotected.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
-import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
+import { assertAlgorithmMatch } from "../internal/utils/assert-algorithm-match.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
+import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
 import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
 import type {
   DecodedUnstructuredToken,
   SignUnstructuredTokenOptions,
   TokenContent,
-  TokenFormatTag,
   VerifiedUnstructuredToken,
   VerifyUnstructuredTokenOptions,
   WireTokenHeader,
 } from "../types/index.js";
 import { SignatureKit } from "./SignatureKit.js";
 
-/**
- * The three COSE signed formats this one signer serves. It is the FORMAT, not
- * merely a media-type family: it picks the `typ` the kit stamps, the capability
- * row it enforces, and the namespace of the errors it raises.
- */
-export type CwsKitFormat = Extract<TokenFormatTag, "cws" | "cwt" | "cwm">;
-
 export type CwsKitSettings = {
   kryptos: IKryptos;
   logger: ILogger;
-  /**
-   * Which COSE signed format this kit is serving: `"cws"` (default) for a direct
-   * opaque token — `typ` becomes `application/<prefix>+cws` — or `"cwt"`/`"cwm"`
-   * for the claims kits that delegate their COSE signing here, whose `typ` is
-   * `application/<prefix>+cwt`. The signer is otherwise format-agnostic: the
-   * COSE_Sign1/COSE_Mac0 split is decided by the KEY's `algClass`, not by this.
-   */
-  format?: CwsKitFormat;
-};
-
-/** The leaf error class for each signed COSE format, so a throw lands on its own namespace. */
-const COSE_ERROR: Record<CwsKitFormat, typeof CoseError> = {
-  cws: CwsError,
-  cwt: CwtError,
-  cwm: CwmError,
 };
 
 /**
- * The sole opaque COSE signer — the opaque sibling of `JwsKit`. It operates on an
+ * The OPAQUE COSE signer — the opaque sibling of `JwsKit`. It operates on an
  * opaque `Buffer` payload + the COSE STRUCTURE (a `Tag`), with no claim
  * knowledge; the CBOR encode/decode (and any outer CWT tag 61) is owned by the
  * layer above.
+ *
+ * ⚠ It serves the `cws` format and nothing else. It used to take a `format`
+ * setting so the claims core could route `cwt`/`cwm` signing through it, which
+ * made one kit the body of three and left the claims layer without a door of its
+ * own. `CwsKit`, `CwtKit` and `CwmKit` are now SIBLINGS over the same utils, the
+ * shape `JwsKit` and `JwtKit` already had.
  *
  * It GATES on the key's `algClass` itself (RFC 9052): an asymmetric key produces
  * a COSE_Sign1 (tag 18) over `Sig_structure` with the SAME primitive the JOSE ES*
@@ -74,12 +61,10 @@ const COSE_ERROR: Record<CwsKitFormat, typeof CoseError> = {
 export class CwsKit implements ICwsKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
-  private readonly format: CwsKitFormat;
 
   constructor(options: CwsKitSettings) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CwsKit"]);
-    this.format = options.format ?? "cws";
   }
 
   /**
@@ -94,42 +79,53 @@ export class CwsKit implements ICwsKit {
     token: Buffer,
   ): DecodedUnstructuredToken<T, Buffer> {
     // The outer CWT tag (61) and the structure's own tag are stripped by
-    // `unwrapCose` — symmetric with `verify`, which strips them too (aegis wraps
+    // `splitSigned` — symmetric with `verify`, which strips them too (aegis wraps
     // every signed COSE token in the CWT tag). A bare, un-enveloped token passes
     // through unchanged.
-    const contents = unwrapCose(decodeCbor(token), {
-      arity: { exactly: 4 },
-      tags: [COSE_TAG.sign1, COSE_TAG.mac0],
-    });
-
-    if (!contents) {
-      throw new CwsError("Malformed COSE structure", {
-        code: "cose_malformed",
+    const { protectedHeader, unprotectedHeader, payload, signature } = splitSigned(
+      token,
+      {
+        arity: { exactly: 4 },
+        tags: [COSE_TAG.sign1, COSE_TAG.mac0],
+        error: CwsError,
+        message: "Malformed COSE structure",
         title: "Malformed COSE Structure",
         details:
           "A COSE_Sign1/COSE_Mac0 must be a 4-element array [protected, unprotected, payload, signature/tag].",
-      });
-    }
+      },
+    );
 
-    const [protectedBstr, unprotected, payload, signature] = contents as [
-      Uint8Array,
-      Map<number, unknown> | undefined,
-      Uint8Array,
-      Uint8Array,
-    ];
+    // A DETACHED (nil) payload is legal COSE, but this kit carries no out-of-band
+    // content, so there is nothing for it to decode — refused with the structural
+    // `cose_malformed` verdict rather than a raw `Buffer.from(null)` TypeError.
+    const content = requireAttachedPayload(payload, {
+      error: CwsError,
+      message: "Malformed COSE structure",
+      title: "Malformed COSE Structure",
+      details:
+        "The COSE_Sign1/COSE_Mac0 has a detached or nil payload, so there is no content to decode.",
+    });
 
-    const protectedHeader = coseWireHeader(decodeProtectedHeader(protectedBstr), "sig");
+    // The other nil-able slot: `exactly: 4` counts ELEMENTS, so a structure
+    // carrying `null` in slot 4 arrives here intact. There is no signature to hand
+    // back, and fabricating an empty Buffer for one would be a lie a caller cannot
+    // tell from a real zero-length signature — refused with the same structural
+    // verdict `verify` gives the same bytes.
+    const secured = requireSignature(signature, {
+      error: CwsError,
+      message: "Malformed COSE structure",
+      title: "Malformed COSE Structure",
+      details:
+        "The COSE_Sign1/COSE_Mac0 has a nil signature/tag, so the structure is incomplete.",
+    });
 
     return {
       protectedHeader,
-      unprotectedHeader: coseWireHeader(
-        unprotected instanceof Map ? unprotected : undefined,
-        "sig",
-      ),
+      unprotectedHeader,
       // Reconstruct by the PROTECTED cty alone: a content type the signature does
       // not cover cannot be allowed to decide how the payload is parsed.
-      payload: reconstructContent<T>(Buffer.from(payload), protectedHeader.cty),
-      signature: Buffer.from(signature),
+      payload: reconstructContent<T>(content, protectedHeader.cty),
+      signature: secured,
       token,
     };
   }
@@ -142,6 +138,11 @@ export class CwsKit implements ICwsKit {
    * the shared codec, and the cty (label 3) rides the protected header so verify
    * round-trips the JS type. The outer CWT tag (61) framing is a concern of the
    * layer above.
+   *
+   * COSE_Sign1 and COSE_Mac0 differ in exactly three places — the tag, the
+   * to-be-secured structure, and which SignatureKit mode secures it (Sign1 signs
+   * RAW `r‖s`, Mac0 HMACs, which has no encoding to choose). Everything around
+   * those three is one path.
    */
   sign(content: TokenContent, options: SignUnstructuredTokenOptions = {}): Buffer {
     // Interop gate (D5): a non-proprietary sign refuses an algorithm with no
@@ -150,41 +151,47 @@ export class CwsKit implements ICwsKit {
     // signing algorithm is official (ML-DSA joined via RFC 9964), so this guards
     // only a future private-use algorithm; the enc-side (AES-CBC-HMAC) gate is
     // the reachable twin of this mechanism.
-    if (!options.proprietary && !isOfficialCoseAlg(this.kryptos.algorithm)) {
-      throw new CwsError(
-        `Algorithm "${this.kryptos.algorithm}" has no official COSE registration`,
-        {
-          code: "cose_alg_not_registered",
-          data: { algorithm: this.kryptos.algorithm },
-          title: "COSE Algorithm Not Registered",
-          details:
-            "In interoperable (non-proprietary) mode the signing algorithm must carry an official COSE-RFC label; a private-use algorithm requires proprietary mode.",
-        },
-      );
-    }
+    assertCoseRegistered({
+      kind: "alg",
+      value: this.kryptos.algorithm,
+      proprietary: options.proprietary,
+      error: CwsError,
+    });
 
     // The cty defaults to the inferred type; a caller `header.cty` wins as the
     // WIRE label (label 3).
+    //
+    // ⚠ `json`, not `cbor`, and it STAYS json — this is the settled answer, not
+    // a placeholder. Where a specification fixes the encoding, aegis follows it:
+    // RFC 8392 makes a CWT Claims Set a CBOR map, which is why `CwtKit`/`CwmKit`
+    // write CBOR. Nothing fixes the encoding of OPAQUE caller content, so it
+    // follows `@lindorm/aes` instead — a Dict is `application/json` and
+    // reconstructs as a Dict — and `JwsKit`, `JweKit` and `CweKit` state the same
+    // family. ONE encoding for opaque content across all four doors is what lets
+    // `aegis.sign(dict)` + `verify` hand back the same Dict on `jws` and on
+    // `cws`, with no per-wire reasoning left for a caller to do.
     const { bytes, contentType } = serialiseContent(content, options.header?.cty);
 
-    switch (this.kryptos.algClass) {
-      case "asymmetric":
-        return encodeCbor(this.signSign1(bytes, contentType, options));
-      case "symmetric":
-        return encodeCbor(this.macMac0(bytes, contentType, options));
-      default: {
-        const exhaustive: never = this.kryptos.algClass;
-        throw new CwsError("Unhandled COSE key class", {
-          code: "cose_unhandled_alg_class",
-          data: { algClass: String(exhaustive) },
-          title: "Unhandled COSE Key Class",
-          details:
-            "The resolved key's algClass is neither asymmetric nor symmetric, so no COSE integrity structure applies.",
-        });
-      }
-    }
+    const tag = this.structureTag();
+    const sign1 = tag === COSE_TAG.sign1;
+
+    this.logger.debug(sign1 ? "Signing COSE_Sign1" : "MAC'ing COSE_Mac0", { options });
+
+    const { protectedHeader, unprotected } = this.buildHeaders(contentType, options);
+
+    const secured = new SignatureKit({ kryptos: this.kryptos, raw: sign1 }).sign(
+      buildSecuredStructure(tag, protectedHeader, bytes),
+    );
+
+    return encodeCbor(new Tag(tag, [protectedHeader, unprotected, bytes, secured]));
   }
 
+  /**
+   * Verify the token and return its two WIRE header buckets beside the
+   * reconstructed content — the read twin of {@link sign}, differing in the same
+   * three places and no others. Unwrapping, the header gates and the
+   * reconstruction are ONE path for both structures.
+   */
   verify<T extends TokenContent = Buffer>(
     token: Buffer,
     options: VerifyUnstructuredTokenOptions = {},
@@ -196,124 +203,70 @@ export class CwsKit implements ICwsKit {
     // forwards its verify options structurally rather than naming fields.
     this.logger.debug("Verifying COSE structure", { options });
 
-    const decoded = decodeCbor(token);
-
-    switch (this.kryptos.algClass) {
-      case "asymmetric":
-        return this.verifyStructure<T>(decoded, token, COSE_TAG.sign1);
-      case "symmetric":
-        return this.verifyStructure<T>(decoded, token, COSE_TAG.mac0);
-      default: {
-        const exhaustive: never = this.kryptos.algClass;
-        throw new CwsError("Unhandled COSE key class", {
-          code: "cose_unhandled_alg_class",
-          data: { algClass: String(exhaustive) },
-          title: "Unhandled COSE Key Class",
-          details:
-            "The resolved key's algClass is neither asymmetric nor symmetric, so no COSE integrity structure applies.",
-        });
-      }
-    }
-  }
-
-  // private — the two integrity structures (RFC 9052 §4.4 / §6.3)
-
-  private signSign1(
-    payload: Buffer,
-    contentType: string,
-    options: SignUnstructuredTokenOptions,
-  ): Tag {
-    this.logger.debug("Signing COSE_Sign1", { options });
-
-    const { protectedHeader, unprotected } = this.buildHeaders(contentType, options);
-
-    const toBeSigned = buildSigStructure(protectedHeader, payload);
-    const signature = new SignatureKit({ kryptos: this.kryptos, raw: true }).sign(
-      toBeSigned,
-    );
-
-    return new Tag(COSE_TAG.sign1, [protectedHeader, unprotected, payload, signature]);
-  }
-
-  private macMac0(
-    payload: Buffer,
-    contentType: string,
-    options: SignUnstructuredTokenOptions,
-  ): Tag {
-    this.logger.debug("MAC'ing COSE_Mac0", { options });
-
-    const { protectedHeader, unprotected } = this.buildHeaders(contentType, options);
-
-    const toBeMaced = buildMacStructure(protectedHeader, payload);
-    const tag = new SignatureKit({ kryptos: this.kryptos }).sign(toBeMaced);
-
-    return new Tag(COSE_TAG.mac0, [protectedHeader, unprotected, payload, tag]);
-  }
-
-  /**
-   * Verify ONE signed COSE structure. COSE_Sign1 and COSE_Mac0 differ only in
-   * their tag, their to-be-secured structure and which SignatureKit mode secures
-   * it; everything around that — unwrapping, the header gates, reconstruction —
-   * is identical, and used to be written twice.
-   */
-  private verifyStructure<T extends TokenContent = Buffer>(
-    value: unknown,
-    token: Buffer,
-    tag: typeof COSE_TAG.sign1 | typeof COSE_TAG.mac0,
-  ): VerifiedUnstructuredToken<T, Buffer> {
+    const tag = this.structureTag();
     const sign1 = tag === COSE_TAG.sign1;
     const label = sign1 ? "COSE_Sign1" : "COSE_Mac0";
-    const error = COSE_ERROR[this.format];
+    const error = ERROR_BY_FORMAT.cws;
 
-    const contents = unwrapCose(value, { arity: { exactly: 4 }, tags: [tag] });
-
-    if (!contents) {
-      throw new CwsError(`Malformed ${label}`, {
-        code: "cose_malformed",
+    const { protectedBstr, payload, signature, protectedHeader, unprotectedHeader } =
+      splitSigned(token, {
+        arity: { exactly: 4 },
+        tags: [tag],
+        error: CwsError,
+        message: `Malformed ${label}`,
         title: `Malformed ${label}`,
         details: `A ${label} must be a 4-element array [protected, unprotected, payload, signature/tag].`,
       });
-    }
 
-    const [protectedBstr, unprotected, payload, signature] = contents as [
-      Uint8Array,
-      unknown,
-      Uint8Array,
-      Uint8Array,
-    ];
-
-    const protectedHeader = coseWireHeader(decodeProtectedHeader(protectedBstr), "sig");
+    // ⛔ The ORDER of the next two is the security property, so they stay HERE,
+    // inline and ahead of the signature cycle, rather than moving into a shared
+    // opener: `JwsKit.verify` runs the identical pair unextracted, and the two
+    // wires must not be able to drift on when a hostile header is answered.
 
     // Algorithm-match, the gate the three JOSE kits have and this one did not: a
     // structure whose PROTECTED `alg` names an algorithm other than the resolved
     // key's is refused before the signature cycle, so a mismatch reports what is
-    // wrong instead of surfacing as an opaque bad signature. The claims layer
-    // above used to run this same check itself, off its own header decode.
-    const algorithm = protectedHeader.alg as string | undefined;
-
-    if (algorithm !== this.kryptos.algorithm) {
-      throw new error("Invalid token", {
-        code: `${this.format}_algorithm_mismatch`,
-        data: { algorithm },
-        debug: { expected: this.kryptos.algorithm },
-        title: `${this.format.toUpperCase()} Algorithm Mismatch`,
-        details:
-          "The protected header alg does not match the algorithm of the configured kryptos key.",
-      });
-    }
+    // wrong instead of surfacing as an opaque bad signature. The claims kits run
+    // the same check on their own wire, under their own tag.
+    assertAlgorithmMatch({
+      actual: protectedHeader.alg as string | undefined,
+      expected: this.kryptos.algorithm,
+      format: "cws",
+      error,
+      details:
+        "The protected header alg does not match the algorithm of the configured kryptos key.",
+    });
 
     // `crit` (RFC 9052 §3.1), read from the PROTECTED bucket alone — the only one
     // the signature covers, and the only one the spec permits it in. Enforced
     // BEFORE the signature cycle, exactly as the JOSE kits do.
-    rejectUnknownCritical({ header: protectedHeader, format: this.format, error });
+    rejectUnknownCritical({ header: protectedHeader, format: "cws", error });
 
-    const toBeSecured = sign1
-      ? buildSigStructure(Buffer.from(protectedBstr), Buffer.from(payload))
-      : buildMacStructure(Buffer.from(protectedBstr), Buffer.from(payload));
+    // A DETACHED (nil) payload is legal COSE, but this kit carries no out-of-band
+    // content, so there is nothing for it to authenticate — refused with the
+    // structural `cose_malformed` verdict rather than a raw `Buffer.from(null)`
+    // TypeError, which would escape the `AegisError` contract entirely.
+    const content = requireAttachedPayload(payload, {
+      error: CwsError,
+      message: `Malformed ${label}`,
+      title: `Malformed ${label}`,
+      details: `The ${label} has a detached or nil payload, so there is no content to verify.`,
+    });
+
+    // The twin of the payload check on the other nil-able slot: `exactly: 4`
+    // counts ELEMENTS, so a structure with `null` in slot 4 clears the arity,
+    // algorithm and crit gates intact. Refused with the structural verdict rather
+    // than letting `Buffer.from(null)` throw a raw TypeError out of the contract.
+    const secured = requireSignature(signature, {
+      error: CwsError,
+      message: `Malformed ${label}`,
+      title: `Malformed ${label}`,
+      details: `The ${label} has a nil ${sign1 ? "signature" : "authentication tag"}, so there is nothing to verify.`,
+    });
 
     const valid = new SignatureKit({ kryptos: this.kryptos, raw: sign1 }).verify(
-      toBeSecured,
-      Buffer.from(signature),
+      buildSecuredStructure(tag, Buffer.from(protectedBstr), content),
+      secured,
     );
 
     if (!valid) {
@@ -335,16 +288,26 @@ export class CwsKit implements ICwsKit {
     // BEFORE parsing, and the unprotected bucket covers nothing.
     return {
       protectedHeader,
-      unprotectedHeader: coseWireHeader(
-        unprotected instanceof Map ? unprotected : undefined,
-        "sig",
-      ),
-      payload: reconstructContent<T>(Buffer.from(payload), protectedHeader.cty),
+      unprotectedHeader,
+      payload: reconstructContent<T>(content, protectedHeader.cty),
       token,
     };
   }
 
   // private — shared
+
+  /**
+   * Which COSE integrity structure this kit's key implies (RFC 9052 §4.4 / §6.3)
+   * — the ONE gate, asked identically by both verbs.
+   */
+  private structureTag(): CoseStructureTag {
+    return coseStructureTag({
+      algClass: this.kryptos.algClass,
+      error: CwsError,
+      details:
+        "The resolved key's algClass is neither asymmetric nor symmetric, so no COSE integrity structure applies.",
+    });
+  }
 
   /**
    * Build the COSE_Sign1/Mac0 protected + unprotected header maps. `alg` is
@@ -361,33 +324,41 @@ export class CwsKit implements ICwsKit {
     options: SignUnstructuredTokenOptions,
   ): {
     protectedHeader: Buffer;
-    unprotected: Map<number, unknown>;
+    unprotected: Map<CoseLabel, unknown>;
   } {
     // `typ` (label 16) is the kit-computed media type from the `tokenType` PREFIX
-    // (the media-type family is this kit's `format`) and `cty` (label 3) is the
+    // (the media-type family is the opaque `+cws` one) and `cty` (label 3) is the
     // codec-inferred content type; both land PROTECTED. `typ` is RESERVED — a
     // caller value for it is REFUSED by `buildCoseHeaders`, not merged, because
     // `typ` is what routes a COSE token. `cty` is not: a caller may relabel the
     // content, and `serialiseContent` has already honoured that above, so writing
     // it here and letting the caller's copy overwrite it is a no-op.
-    const protectedMap = new Map<number, unknown>();
-    protectedMap.set(coseByJose("alg"), algToCoseLabel(this.kryptos.algorithm));
-    protectedMap.set(coseByJose("typ"), buildMediaType(options.tokenType, this.format));
-    protectedMap.set(coseByJose("cty"), contentType);
-
-    const unprotected = new Map<number, unknown>();
-    unprotected.set(coseByJose("kid"), Buffer.from(this.kryptos.id, "utf8"));
-
+    //
+    // ⚠ `proprietary` decides the SPELLING of a private-use label here, the same
+    // way it does for a private-use claim label: with the interoperable default
+    // a caller's `oid` rides the string label, not the lindorm integer a foreign
+    // reader cannot interpret.
     const { protectedEntries, unprotectedEntries } = buildCoseHeaders({
-      reserved: KIT_CAPABILITIES[this.format].reserved,
+      reserved: KIT_CAPABILITIES.cws.reserved,
       header: options.header as Partial<WireTokenHeader> | undefined,
       unprotected: options.unprotected,
-      error: COSE_ERROR[this.format],
+      proprietary: options.proprietary,
+      error: ERROR_BY_FORMAT.cws,
     });
 
-    for (const [label, value] of protectedEntries) protectedMap.set(label, value);
-    for (const [label, value] of unprotectedEntries) unprotected.set(label, value);
-
-    return { protectedHeader: encodeProtectedHeader(protectedMap), unprotected };
+    return {
+      protectedHeader: mergeCoseProtected({
+        alg: algToCoseLabel(this.kryptos.algorithm),
+        typ: buildMediaType(options.tokenType, "cws"),
+        cty: contentType,
+        entries: protectedEntries,
+        proprietary: options.proprietary,
+      }),
+      unprotected: mergeCoseUnprotected({
+        kid: this.kryptos.id,
+        entries: unprotectedEntries,
+        proprietary: options.proprietary,
+      }),
+    };
   }
 }

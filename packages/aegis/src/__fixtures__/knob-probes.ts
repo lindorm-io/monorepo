@@ -81,8 +81,10 @@ export type ProbeValue<T> = T extends Date ? DateCell : T;
 /**
  * A defect: the option reaches the call and is then not read.
  *
- * `site` is `file:line` — the exact forward that omits it, so the repair has a
- * destination. `wires` narrows the drop to the wires it actually happens on; a
+ * `site` is `file#anchor`, where the anchor is a VERBATIM substring of the cited
+ * line — the exact forward that omits it, so the repair has a destination, and
+ * the meta suite resolves it rather than trusting a line number that code motion
+ * silently invalidates. `wires` narrows the drop to the wires it happens on; a
  * knob read on one wire and dropped on the other keeps its coverage on the wire
  * that works, which an all-or-nothing skip would throw away.
  */
@@ -392,7 +394,19 @@ export const MINT_KNOB_PROBES = {
     ],
     observed: [
       { step: "wireProtectedHeader", on: "jose", includes: { oid: "1.2.3.4" } },
-      { step: "wireProtectedHeader", on: "cose", includes: { "-70000": "1.2.3.4" } },
+      // ⚠ The TEXT label `oid`, not the integer -70000. `oid` has no IANA COSE
+      // parameter, so it rides a lindorm PRIVATE-USE label — RFC 8152 §16.2,
+      // "Integer values less than -65536 are marked as private use" — which a
+      // foreign reader cannot interpret. The interoperable default (`proprietary`
+      // unset here) therefore spells it as the string label RFC 9052 §1.5 permits
+      // (`label = int / tstr`); the integer is what `proprietary: true` writes.
+      // `excludes` states the two apart, since the record compares stringified keys.
+      {
+        step: "wireProtectedHeader",
+        on: "cose",
+        includes: { oid: "1.2.3.4" },
+        excludes: [-70000],
+      },
     ],
   },
 
@@ -656,7 +670,7 @@ export const MINT_SIGN_KNOB_PROBES = {
       },
     ],
     defect: {
-      site: "src/internal/wire/cose-token-wire.ts:57",
+      site: "src/internal/wire/cose-token-wire.ts#mintTypPrefix:",
       note: "`mintTypPrefix` on the COSE wire reads the PROFILE's typ and nothing else — the caller's explicit `sign.typ` and the content's own `tokenType` are both accepted and dropped, so a COSE token minted under a profile that mandates no type always carries the bare `application/cwt`.",
       wires: ["cose"],
     },
@@ -693,8 +707,8 @@ export const MINT_SIGN_KNOB_PROBES = {
       { step: "wireProtectedHeader", on: "cose", present: [33] },
     ],
     defect: {
-      site: "src/internal/wire/cose-token-wire.ts:136",
-      note: "The COSE `signClaims` destructure omits `bindCertificate` and `certificateThumbprintSha1`, so neither reaches `CwtKit`/`CwmKit` and no COSE token ever carries a certificate binding. It is not a wire limitation: RFC 9360 §2 registers `x5chain` (label 33) and `x5t` (label 34) as COSE header parameters.",
+      site: "src/internal/cose/sign-cwt.ts#export const signCwt = (",
+      note: "The COSE `signClaims` no longer OMITS the cert-binding options — it forwards its whole kit surface by rest-spread — but there is nothing to forward them to: `signCwt` never calls `resolveCertBinding`, so no COSE writer derives a binding, and the wire therefore declares `bindCertificate` `unsupported` (`src/internal/wire/cose-token-wire.ts#const NO_COSE_CERT_BINDING =`) and REFUSES this mint above the seam rather than issuing a token that is silently unbound. The refusal is the honest answer to a request this wire cannot serve; it is not the EMISSION this probe observes, so the probe stays red until the capability exists. It is not a wire limitation: RFC 9360 §2 registers `x5chain` (label 33) and `x5t` (label 34) as COSE header parameters.",
       wires: ["cose"],
     },
   },
@@ -752,7 +766,19 @@ export const MINT_SIGN_KNOB_PROBES = {
     ],
     observed: [
       { step: "wireProtectedHeader", on: "jose", includes: { oid: "1.2.3.4" } },
-      { step: "wireProtectedHeader", on: "cose", includes: { "-70000": "1.2.3.4" } },
+      // ⚠ The TEXT label `oid`, not the integer -70000. `oid` has no IANA COSE
+      // parameter, so it rides a lindorm PRIVATE-USE label — RFC 8152 §16.2,
+      // "Integer values less than -65536 are marked as private use" — which a
+      // foreign reader cannot interpret. The interoperable default (`proprietary`
+      // unset here) therefore spells it as the string label RFC 9052 §1.5 permits
+      // (`label = int / tstr`); the integer is what `proprietary: true` writes.
+      // `excludes` states the two apart, since the record compares stringified keys.
+      {
+        step: "wireProtectedHeader",
+        on: "cose",
+        includes: { oid: "1.2.3.4" },
+        excludes: [-70000],
+      },
     ],
   },
 
@@ -830,17 +856,39 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
     ],
     observed: [
       { step: "wireProtectedHeader", on: "jose", includes: { oid: "1.2.3.4" } },
-      { step: "wireProtectedHeader", on: "cose", includes: { "-70000": "1.2.3.4" } },
+      // ⚠ The TEXT label `oid`, not the integer -70000. `oid` has no IANA COSE
+      // parameter, so it rides a lindorm PRIVATE-USE label — RFC 8152 §16.2,
+      // "Integer values less than -65536 are marked as private use" — which a
+      // foreign reader cannot interpret. The interoperable default (`proprietary`
+      // unset here) therefore spells it as the string label RFC 9052 §1.5 permits
+      // (`label = int / tstr`); the integer is what `proprietary: true` writes.
+      // `excludes` states the two apart, since the record compares stringified keys.
+      {
+        step: "wireProtectedHeader",
+        on: "cose",
+        includes: { oid: "1.2.3.4" },
+        excludes: [-70000],
+      },
     ],
     defect: {
-      site: "src/internal/utils/mint-token.ts:148",
-      note: "`wire.encryptOuter` is called with a NAMED subset of the encrypt envelope — `partyProducer`, `partyRecipient`, `certificateThumbprintSha1` — so `header` never reaches the outer on either wire.",
+      site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
+      note: "`encryptOuter` is called with a NAMED subset of the encrypt envelope — `partyProducer`, `partyRecipient`, `certificateThumbprintSha1` — so `header` never reaches the outer on either wire.",
     },
   },
 
   unprotected: {
+    // ⚠ A REFUSAL probe, and it has to be. RFC 9052 §3 does give a COSE structure
+    // an unprotected bucket, but aegis — not the caller — decides which bucket a
+    // parameter travels in, and the header registry marks EVERY caller-settable
+    // parameter `placement: "protected"`; the two it marks `either` (`kid`, `iv`)
+    // are kit-derived and refused from a caller bag by the reserved rule. So no
+    // value of this bag can ever reach the wire, and an EMISSION probe would be
+    // stating an outcome that cannot exist. What the bag can do is be REFUSED —
+    // the same refusal the scenario row
+    // `a-parameter-that-must-be-signed-is-refused-from-the-unprotected-bucket`
+    // pins on the signing door.
     rationale:
-      "RFC 9052 §3 gives a COSE structure an unprotected bucket for parameters that need to travel but not to be covered by the AEAD. A caller placing one there has decided it is not integrity-critical; dropping it removes the parameter rather than promoting it, so the recipient never sees it at all.",
+      "A parameter a recipient relies on must be one the issuer authenticated, so aegis decides the bucket and refuses a caller that tries to place an integrity-protected parameter in the unauthenticated one (RFC 9052 §3 covers the protected bucket and leaves the other uncovered). Reading the bag is what makes that refusal happen. Dropped, the request simply evaporates: the caller believes a parameter is riding on the outer, the outer carries nothing, and nothing anywhere reports the difference — which is worse than either honest answer.",
     value: { oid: "1.2.3.4" },
     given: [
       { step: "keys", keys: ["oct-enc"] },
@@ -852,15 +900,14 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
         options: { context: { accessTokenIssued: false }, encrypt: {} },
       },
     ],
-    observed: [
-      { step: "wireUnprotectedHeader", on: "cose", includes: { "-70000": "1.2.3.4" } },
-    ],
+    baseline: "accepts",
+    flipped: "rejects",
     unobservable: {
-      jose: "There is no bucket to put it in. RFC 7516 §7.1 — 'Only one recipient is supported by the JWE Compact Serialization and it provides no syntax to represent JWE Shared Unprotected Header, JWE Per-Recipient Unprotected Header, or JWE AAD values.' aegis emits the compact serialisation, so the parameter has nowhere to go on the JOSE wire.",
+      jose: "There is no bucket to put it in, and so no placement for a rule to refuse. RFC 7516 §7.1 — 'Only one recipient is supported by the JWE Compact Serialization and it provides no syntax to represent JWE Shared Unprotected Header, JWE Per-Recipient Unprotected Header, or JWE AAD values.' aegis emits the compact serialisation, so the parameter has nowhere to go on the JOSE wire; the bucket the COSE refusal is about is one RFC 9052 §3 gives COSE structures alone, and the JOSE kits take the bag only so one option type serves both wires.",
     },
     defect: {
-      site: "src/internal/utils/mint-token.ts:148",
-      note: "Same named subset as `header`: the encrypt envelope's `unprotected` bag never reaches `wire.encryptOuter`, so the COSE outer's unprotected bucket carries only what the kit derives.",
+      site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
+      note: "Same named subset as `header`: the encrypt envelope's `unprotected` bag never reaches `encryptOuter`, so the mint SUCCEEDS where the placement rule would refuse it and the bag is accepted and dropped.",
       wires: ["cose"],
     },
   },
@@ -892,7 +939,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
       },
     ],
     defect: {
-      site: "src/internal/utils/mint-token.ts:148",
+      site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
       note: "`encryptOuter` is handed the tokenType derived from the PROFILE, and the encrypt envelope's own `tokenType` is not among the named fields forwarded, so a caller's outer type is accepted and dropped on both wires.",
     },
   },
@@ -919,8 +966,8 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
       cose: "A COSE_Encrypt0 has no certificate to bind. RFC 9052 §5.2 defines it as direct encryption — the recipient key IS the content-encryption key — so a `cwe` recipient is necessarily a symmetric `dir` key, and a symmetric key carries no X.509 certificate for a thumbprint or a chain to be derived from. The parameters themselves are representable (RFC 9360 §2 registers `x5chain` 33 and `x5t` 34); what cannot exist on this wire is a cert-bearing recipient.",
     },
     defect: {
-      site: "src/internal/utils/mint-token.ts:148",
-      note: "Not among the named fields forwarded to `wire.encryptOuter`, so the encrypt envelope's binding mode never reaches the JOSE outer.",
+      site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
+      note: "Not among the named fields forwarded to `encryptOuter`, so the encrypt envelope's binding mode never reaches the JOSE outer.",
       wires: ["jose"],
     },
   },
@@ -982,7 +1029,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
       jose: "There is no gate to open. RFC 7518 §5.2.3 registers `A128CBC-HS256` as a standard JOSE `enc` value, so the AES-CBC-HMAC family is fully interoperable on that wire; RFC 9053 §4 registers the COSE content-encryption algorithms — AES-GCM (§4.1), AES-CCM (§4.2) and ChaCha20/Poly1305 (§4.3) — and no AES-CBC-HMAC among them, which is what makes the same cipher private-use there and gives this knob something to decide.",
     },
     defect: {
-      site: "src/internal/utils/mint-token.ts:148",
+      site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
       note: "`encryptOuter` is handed the MINT-level `options.proprietary`; the encrypt envelope's own `proprietary` is not forwarded, so an outer-specific interop decision cannot be stated.",
       wires: ["cose"],
     },
@@ -1132,11 +1179,6 @@ export const ENCRYPT_KNOB_PROBES = {
     unobservable: {
       cose: "A COSE_Encrypt0 has no certificate to bind. RFC 9052 §5.2 defines it as direct encryption — the recipient key IS the content-encryption key — so a `cwe` recipient is necessarily a symmetric `dir` key, and a symmetric key carries no X.509 certificate for a thumbprint or a chain to be derived from. The parameters themselves are representable (RFC 9360 §2 registers `x5chain` 33 and `x5t` 34); what cannot exist on this wire is a cert-bearing recipient.",
     },
-    defect: {
-      site: "src/internal/utils/encrypt-token.ts:76",
-      note: "The `jwe` branch passes the DEPLOYMENT default `deps.certificateThumbprintSha1`; `options.certificateThumbprintSha1` appears nowhere in the file, so the per-call value is accepted and dropped.",
-      wires: ["jose"],
-    },
   },
 
   header: {
@@ -1149,19 +1191,32 @@ export const ENCRYPT_KNOB_PROBES = {
     ],
     observed: [
       { step: "wireProtectedHeader", on: "jose", includes: { oid: "1.2.3.4" } },
-      { step: "wireProtectedHeader", on: "cose", includes: { "-70000": "1.2.3.4" } },
+      // ⚠ The TEXT label `oid`, not the integer -70000. `oid` has no IANA COSE
+      // parameter, so it rides a lindorm PRIVATE-USE label — RFC 8152 §16.2,
+      // "Integer values less than -65536 are marked as private use" — which a
+      // foreign reader cannot interpret. The interoperable default (`proprietary`
+      // unset here) therefore spells it as the string label RFC 9052 §1.5 permits
+      // (`label = int / tstr`); the integer is what `proprietary: true` writes.
+      // `excludes` states the two apart, since the record compares stringified keys.
+      {
+        step: "wireProtectedHeader",
+        on: "cose",
+        includes: { oid: "1.2.3.4" },
+        excludes: [-70000],
+      },
     ],
-    defect: {
-      site: "src/internal/utils/encrypt-token.ts:96",
-      note: "The `cwe` branch takes no caller header bag — `encryptCose` has no parameter for one — so a header supplied for a COSE_Encrypt0 is accepted and dropped. RFC 9052 §3 gives the structure a protected bucket, so the parameter is representable.",
-      wires: ["cose"],
-    },
   },
 
   omit: {
     rationale:
-      "An empty claim and an absent claim are different statements about the subject, and the prune mode is how the caller chooses. Encryption does not change that: the recipient decrypts to whichever set was sealed, so a dropped mode silently alters what the sealed content says.",
-    value: "undefined",
+      "An empty entry and an absent one are different statements, and on this verb the caller alone makes the choice: the seal preserves whatever it is handed, so the only way to have an empty entry pruned is to ask. A caller assembling a payload from optional values and stating the prune gets a compact sealed value; an unread mode leaves every unset field in it, and the recipient decrypts to a value the writer did not intend to send.",
+    // ⚠ THE PRUNE IS THE FLIP, not the keep. This verb prunes NOTHING unless
+    // asked (`src/internal/utils/encrypt-token.ts#const payload =` — pruning
+    // shapes a claim set and there is no claims layer here), so the baseline
+    // already keeps the empty entry and a `"undefined"` flip would agree with
+    // it. `"empty"` is the mode with something to prove: it must REMOVE what the
+    // baseline keeps.
+    value: "empty",
     given: [
       { step: "keys", keys: ["oct-enc"] },
       {
@@ -1171,7 +1226,13 @@ export const ENCRYPT_KNOB_PROBES = {
       },
     ],
     act: { step: "decrypt" },
-    observed: [{ step: "claims", expected: { authMethods: [] } }],
+    // Observed on the PAYLOAD, under the caller's own key: `decrypt` returns the
+    // value it was handed and has no claim buckets to sort it into. The
+    // EXCLUSION is what carries the difference — an object payload is matched as
+    // a subset, so the surviving `subject` alone would hold on both runs.
+    observed: [
+      { step: "raw", expected: { subject: "user-1" }, excludes: ["authMethods"] },
+    ],
   },
 
   key: {

@@ -46,7 +46,7 @@ describe("COSE sign-then-encrypt", () => {
     const inner = kit.sign(domainToWire(common, coseName));
     expect(isEncryptedCose(inner)).toBe(false); // a bare signed CWT (COSE_Sign1)
 
-    const encrypted = encryptCose({ kryptos: enc, logger, inner });
+    const encrypted = encryptCose({ kryptos: enc, logger, content: inner, options: {} });
     expect(isEncryptedCose(encrypted)).toBe(true); // a COSE_Encrypt0
     expect(decodeEncryptedCoseKid(encrypted)).toBe(enc.id); // recipient kid, no decrypt
 

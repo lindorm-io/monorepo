@@ -112,7 +112,7 @@ const critMembersOf = (sample: unknown): Dict =>
     : {};
 
 /**
- * The two header buckets as ONE lookup, for a presence observation.
+ * A KIT result's two header buckets as ONE lookup, for a presence observation.
  *
  * ⚠ Which bucket a parameter rides is a WIRE fact, not a domain one: RFC 9052
  * §3.1 puts the `kid` hint in the unprotected bucket because it "is not a
@@ -120,6 +120,11 @@ const critMembersOf = (sample: unknown): Dict =>
  * protected one (RFC 7515 §7.1). An observation that read the protected bucket
  * alone would report a COSE `kid` as absent — which is a statement about the
  * observation, not about the token.
+ *
+ * Only the KIT doors need it. The DOMAIN doors report ONE header, already merged
+ * under the header registry's `placement` allowlist, which is the same union for
+ * every parameter a domain door can produce: the two `"either"` rows are `kid`
+ * and `iv`, and everything else is protected on both wires.
  */
 const bothBuckets = (protectedHeader: unknown, unprotectedHeader: unknown): Dict => ({
   ...((unprotectedHeader ?? {}) as Dict),
@@ -240,7 +245,7 @@ const openDoor = async (door: SpecDoor, input: DoorInput): Promise<unknown> => {
         { subject: "user-1", expires: "1h" } as never,
         { format, sign: { header: { ...named, [domain]: sample } } } as never,
       );
-      return ctx.aegis.parse(token).protectedHeader[domain as never];
+      return ctx.aegis.parse(token).header[domain as never];
     }
 
     case "mint.typ": {
@@ -249,7 +254,7 @@ const openDoor = async (door: SpecDoor, input: DoorInput): Promise<unknown> => {
         { subject: "user-1", expires: "1h" } as never,
         { format, sign: { typ: sample } } as never,
       );
-      return ctx.aegis.parse(token).protectedHeader.headerType;
+      return ctx.aegis.parse(token).header.headerType;
     }
 
     case "encrypt.party": {
@@ -304,7 +309,7 @@ const observeHeader = async (
         vocabulary: "domain",
         bucket:
           observation === "sign"
-            ? bothBuckets(parsed.protectedHeader, parsed.unprotectedHeader)
+            ? (parsed.header as unknown as Dict)
             : (parsed.claims as unknown as Dict),
       };
     }
@@ -361,7 +366,7 @@ const observeHeader = async (
 
       return {
         vocabulary: "domain",
-        bucket: bothBuckets(parsed.protectedHeader, parsed.unprotectedHeader),
+        bucket: parsed.header as unknown as Dict,
       };
     }
 

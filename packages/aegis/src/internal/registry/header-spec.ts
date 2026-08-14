@@ -41,7 +41,6 @@ export type HeaderCodec =
  * whether a given kit HAS an unprotected bucket is a kit capability, not a
  * parameter fact.
  *
- * ⚠ Not yet ENFORCED anywhere — see {@link HeaderSpec.placement}.
  *   - `"protected"`   integrity-protected only.
  *   - `"unprotected"` unauthenticated bucket only.
  *   - `"either"`      may appear in either — today `kid` (a COSE routing hint
@@ -53,16 +52,23 @@ export type HeaderSpec<D = unknown> = ParamSpec<D, HeaderCodec> & {
   /**
    * Which bucket the parameter may occupy — see {@link HeaderPlacement}.
    *
-   * ⚠ ASPIRATIONAL on 19 of the 21 entries: NOTHING enforces it today.
-   * `build-cose-headers.ts` refuses only crit-in-unprotected, crit-listed
-   * parameters, the kit's reserved labels and a param set in both bags — it never
-   * consults `placement`. So a caller may put `typ`, `cty`, `x5c`, `x5u` or `oid`
-   * in the unprotected bag right now, which is what the `unprotected-typ`
-   * scenarios pin as red. The two `"either"` rows (`kid`, `iv`) DO describe what
-   * the COSE kits emit; the 19 `"protected"` rows describe where the parameter
-   * BELONGS, not where the code keeps it. Marked inline rather than silently
-   * corrected, the same convention `kit-capabilities.ts` uses for its
-   * not-yet-enforced rows.
+   * ENFORCED IN BOTH DIRECTIONS, through the one predicate that reads this column
+   * (`internal/header/is-protected-only.ts`):
+   *
+   *   - WRITE — `build-cose-headers.ts` REFUSES a `"protected"` parameter placed
+   *     in a caller's unprotected bag (`cose_unprotected_placement`).
+   *   - READ  — `merge-header-buckets.ts` IGNORES one arriving in a token's
+   *     unprotected bucket, so it cannot reach the domain header at all.
+   *
+   * That is what lets the domain tier report ONE header without losing the
+   * provenance guarantee: the only values that can enter it unauthenticated are
+   * the two `"either"` rows, `kid` and `iv` — the COSE routing hint and the AEAD
+   * nonce, which RFC 9052 §3.1 puts outside the protected bucket precisely
+   * because they are not security-critical.
+   *
+   * ⚠ It states where a parameter is ALLOWED, never where it lands: a JOSE kit
+   * has no unprotected bucket at all, so `"either"` and `"protected"` are the
+   * same instruction there.
    */
   placement: HeaderPlacement;
   /**

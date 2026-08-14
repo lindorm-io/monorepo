@@ -169,14 +169,15 @@ describe("Aegis — per-spec matrix", () => {
 
   // `defect` is the TRANSIENT declaration — the parameter IS suppliable and does
   // NOT come back, which is a code shortfall and never a disposition. It says
-  // where, in `file:line` terms, or it is a complaint.
+  // where, as `src/path.ts#<verbatim substring of the cited line>`, or it is a
+  // complaint. The meta suite RESOLVES the anchor; this only checks the shape.
   test("should name a repairable site in every declared defect", () => {
     const defects = ROWS.filter(([, disposition]) => disposition.defect !== undefined);
 
     expect(defects.length).toBeGreaterThan(0);
     expect(
       defects
-        .filter(([, d]) => !/^src\/.+\.ts:\d+$/.test(d.defect?.site ?? ""))
+        .filter(([, d]) => !/^src\/.+\.ts#.+$/.test(d.defect?.site ?? ""))
         .map(([domain]) => domain),
     ).toEqual([]);
     expect(defects.filter(([, d]) => !d.defect?.note.trim())).toEqual([]);

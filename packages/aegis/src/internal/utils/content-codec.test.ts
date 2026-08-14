@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { decodeCbor, encodeCbor } from "../cose/cbor.js";
 import { reconstructContent, serialiseContent } from "./content-codec.js";
 
 describe("content-codec", () => {
@@ -14,6 +15,24 @@ describe("content-codec", () => {
       expect(serialiseContent(["x", "y"]).contentType).toBe("application/json");
       expect(serialiseContent(42).contentType).toBe("application/json");
       expect(serialiseContent(true).contentType).toBe("application/json");
+    });
+
+    // ⭐ ONE ENCODING FOR OPAQUE CONTENT, ON EVERY DOOR — the property that
+    // replaced the per-kit `structured: "cbor" | "json"` parameter. There was
+    // never a caller that passed `"cbor"`: the CBOR write arm existed for a CWE
+    // claims plaintext, and that plaintext went away when encrypt/decrypt became
+    // a pure confidentiality pair. A CWT's CLAIMS still reach the wire as CBOR —
+    // through `internal/cose/cwt-message.ts` and its RFC 8392 integer labels,
+    // which is a different road that never touches this codec.
+    test("the COSE doors serialise a Dict to the SAME JSON bytes the JOSE doors do", () => {
+      const json = Buffer.from(JSON.stringify({ a: 1, b: "two" }), "utf8");
+
+      expect(serialiseContent({ a: 1, b: "two" }).bytes).toEqual(json);
+      // …and they are NOT the CBOR encoding of the same value, which is what the
+      // deleted family produced.
+      expect(serialiseContent({ a: 1, b: "two" }).bytes).not.toEqual(
+        encodeCbor({ a: 1, b: "two" }),
+      );
     });
 
     test("infers text/plain for a string and serialises to utf8 bytes", () => {
@@ -53,6 +72,19 @@ describe("content-codec", () => {
       expect(reconstructContent(bytes, "application/json")).toEqual(original);
     });
 
+    // ⚠ A READ-ONLY case, and the bytes are therefore produced by `encodeCbor`
+    // rather than by the codec: aegis never WRITES `application/cbor`, so the
+    // only producer of such a payload is a FOREIGN token declaring the media type
+    // RFC 8949 §9.1 registers. Without the case it fell through to the `buffer`
+    // fallback and a caller got bytes where the producer stated an object.
+    test("a FOREIGN application/cbor payload → the deep-equal native object", () => {
+      const original = { a: 1, nested: { b: [2, 3], c: "four" } };
+      const bytes = encodeCbor(original);
+
+      expect(decodeCbor(bytes, { preferMap: false })).toEqual(original);
+      expect(reconstructContent(bytes, "application/cbor")).toEqual(original);
+    });
+
     test("text/plain → the native string", () => {
       const bytes = serialiseContent("hej").bytes;
 
@@ -73,6 +105,29 @@ describe("content-codec", () => {
       expect(reconstructContent(bytes, "JWT")).toBe(jwt);
       expect(reconstructContent(bytes, "application/jwt")).toBe(jwt);
       expect(reconstructContent(bytes, "application/at+jwt")).toBe(jwt);
+    });
+
+    /**
+     * `application/jose` is what an outer declares over a nested JWS or JWE —
+     * RFC 7515 §9.2.1 registers it for "a JWS or JWE using the JWS Compact
+     * Serialization or the JWE Compact Serialization".
+     *
+     * ⚠ BOTH spellings must resolve, and the bare one is the RFC's own preference:
+     * §4.1.10 RECOMMENDS omitting the `application/` prefix when no other `/`
+     * appears, and requires a recipient to "treat it as if 'application/' were
+     * prepended to any 'cty' value not containing a '/'". Reading only the full
+     * form would send a conformant producer's token to the `buffer` fallback,
+     * where a nested token is no longer a token.
+     */
+    test("both spellings of application/jose → the native token STRING", () => {
+      const jws = "aaa.bbb.ccc";
+      const bytes = serialiseContent(jws, "application/jose").bytes;
+
+      expect(reconstructContent(bytes, "application/jose")).toBe(jws);
+      expect(reconstructContent(bytes, "jose")).toBe(jws);
+      // Case-insensitive per RFC 2045, which `bareMediaType` lower-cases for.
+      expect(reconstructContent(bytes, "JOSE")).toBe(jws);
+      expect(reconstructContent(bytes, "application/jose; charset=utf-8")).toBe(jws);
     });
 
     test("a COSE token cty → the native token BUFFER", () => {
@@ -99,6 +154,11 @@ describe("content-codec", () => {
     test("tolerates RFC 2045 media-type parameters on the cty", () => {
       const jsonBytes = serialiseContent({ ok: true }).bytes;
       expect(reconstructContent(jsonBytes, "application/json; charset=utf-8")).toEqual({
+        ok: true,
+      });
+
+      const cborBytes = encodeCbor({ ok: true });
+      expect(reconstructContent(cborBytes, "application/cbor; charset=utf-8")).toEqual({
         ok: true,
       });
 

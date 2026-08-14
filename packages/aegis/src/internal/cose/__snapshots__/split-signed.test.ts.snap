@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`splitSigned > the refusal carries the caller's words under the shared code 1`] = `
+{
+  "code": "cose_malformed",
+  "details": "A COSE_Sign1/COSE_Mac0 must be a 4-element array.",
+  "title": "Malformed COSE Structure",
+}
+`;

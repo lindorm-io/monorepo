@@ -1,38 +1,38 @@
 import type { Dict } from "@lindorm/types";
 import { sanitiseToken } from "@lindorm/utils";
-import { JweKit } from "../../classes/JweKit.js";
 import { AegisError } from "../../errors/index.js";
-import type { DecryptOptions, DecryptedToken, TokenContent } from "../../types/index.js";
-import { coseName, joseName } from "../claims/claims-registry.js";
-import { wireToDomain } from "../claims/translate.js";
-import { decodeCbor } from "../cose/cbor.js";
-import { readCoseEncryptHeader } from "../cose/cose-encrypt-header.js";
-import {
-  decodeEncryptedCoseKid,
-  decryptCose,
-  isEncryptedCose,
-} from "../cose/cose-encryption.js";
-import { decodeCwtClaims } from "../cose/cwt-claims.js";
+import type { DecryptOptions, DecryptedToken } from "../../types/index.js";
+import { assertWireInput } from "../wire/assert-wire-input.js";
+import type { DecryptInput } from "../wire/token-wire.js";
+import { tokenWireFor } from "../wire/token-wire-for.js";
 import type { AegisDeps } from "./aegis-deps.js";
-import type { DomainClaims } from "../../types/claims/domain/domain-claims.js";
-import { COSE_CLAIMS_TYP } from "./encrypt-token.js";
-import { domainTokenHeader } from "./domain-header.js";
-import { rawDecryptJwe } from "./raw-decrypt-jwe.js";
+import { detectTokenFormat } from "./detect-token-format.js";
+import { TOKEN_FORMAT_KIND } from "./token-format-kind.js";
 
 /**
  * The domain decrypt pipeline (`aegis.decrypt`) — CONFIDENTIALITY only, with NO
  * signature check (unlike `verify`, which decrypts then REQUIRES a signed inner).
- * Auto-detects the encrypted outer format, resolves the recipient key by the
- * ciphertext's own `kid`, decrypts, and translates the plaintext back to domain
- * claims. A plaintext that was opaque bytes (not a domain claims set) is returned
- * verbatim under `raw`. A non-encrypted token is refused — decrypt is not a
- * general reader (use `verify`/`parse`).
+ * The encrypted outer's format is AUTO-DETECTED by the ONE detector every other
+ * read verb asks — this verb used to run its own two-step ladder (`isJwe`, then a
+ * private "no dot and structurally a COSE_Encrypt0" test) and so could disagree
+ * with `verify` and `parse` about what a token IS.
  *
- * ⚠ RECORDED, NOT FIXED: the COSE header this reports still MERGES the
- * unprotected `kid` into one header object, which is the defect the verify/parse
- * results no longer have. Splitting it is a change to `DecryptedToken` with no
- * probe behind it, so it stays as it was and is named here rather than quietly
- * left for a reader to discover.
+ * From there: the wire resolves the recipient key by the ciphertext's own `kid`,
+ * decrypts, and reports the plaintext AS IT WAS SEALED. A non-encrypted token is
+ * refused — decrypt is not a general reader (use `verify`/`parse`).
+ *
+ * ⚠ NO CLAIMS LAYER, and that is the whole verb. It used to run `wireToDomain`
+ * over a plaintext the encrypt path had run `domainToWire` over, and report the
+ * result split into `claims`/`custom` — so a value came back under names its
+ * author never wrote, and each wire needed a private cty to recognise its own
+ * writing by. Decryption establishes CONFIDENTIALITY, not authorship: the value
+ * returned is the value sealed, and domain claims come from `verify`/`parse`,
+ * which have a signature behind them.
+ *
+ * The ONE header it reports is the same shape `verify` and `parse` report, built
+ * by the same translation: the outer's two wire buckets merged under the header
+ * registry's `placement` allowlist, protected last. Headers ARE domain-translated
+ * — that is aegis's job on every verb; only the payload is left alone.
  */
 export const decryptToken = async <C extends Dict = Dict>({
   token,
@@ -43,97 +43,34 @@ export const decryptToken = async <C extends Dict = Dict>({
   options?: DecryptOptions;
   deps: AegisDeps;
 }): Promise<DecryptedToken<C>> => {
-  if (JweKit.isJwe(token)) {
-    const {
-      protectedHeader: wireHeader,
-      payload,
-      token: echoed,
-    } = await rawDecryptJwe<TokenContent>({
-      jwe: token,
-      options: { key: options.key },
-      deps,
+  const format = detectTokenFormat(token);
+
+  if (format === undefined || TOKEN_FORMAT_KIND[format] !== "encrypted") {
+    throw new AegisError("Token is not encrypted", {
+      code: "decrypt_requires_encrypted",
+      debug: { token: sanitiseToken(token) },
+      title: "Decrypt Requires Encrypted Token",
+      details:
+        "aegis.decrypt reads an encrypted token (a JWE or a COSE_Encrypt0). This token is neither — read a signed token with aegis.verify or aegis.parse.",
     });
-
-    // The kit returns the WIRE header (R1); the domain `DecryptedToken` carries
-    // the DOMAIN-named header, so translate here. Route through the ONE `domainTokenHeader`
-    // (NOT bare `parseTokenHeader`) so `baseFormat: "JWE"` and the typ-derived
-    // `tokenType` are stamped — verify does the same, and a bare parse left
-    // `header.tokenType` permanently `undefined`.
-    const header = domainTokenHeader(wireHeader, "jwe");
-
-    // A JWE tells a translated claims set from opaque plaintext by the
-    // kit-computed `cty`: `aegis.encrypt` hands a claims set to JweKit as an
-    // object, which the codec stamps `application/json` and reconstructs to a Dict.
-    if (header.contentType?.startsWith("application/json")) {
-      const { claims, custom } = wireToDomain(payload as Dict, joseName, "token");
-      return {
-        format: "jwe",
-        header,
-        contentType: header.contentType,
-        claims: claims as DomainClaims,
-        custom: custom as C,
-        token: echoed,
-      };
-    }
-
-    return {
-      format: "jwe",
-      header,
-      contentType: header.contentType,
-      claims: {} as DomainClaims,
-      custom: {} as C,
-      raw: payload as Buffer | string,
-      token: echoed,
-    };
   }
 
-  if (!token.includes(".")) {
-    const bytes = Buffer.from(token, "base64url");
-    if (isEncryptedCose(bytes)) {
-      const header = readCoseEncryptHeader(bytes);
+  const wire = tokenWireFor(format);
 
-      const kryptos = await deps.resolveDecryptKey(
-        decodeEncryptedCoseKid(bytes),
-        undefined,
-        options.key,
-      );
-      const payload = decryptCose({ kryptos, logger: deps.logger, token: bytes });
+  const input: DecryptInput = { token, deps, key: options.key };
 
-      // The COSE_Encrypt0 `typ` is the discriminant: a domain claims set is
-      // stamped `COSE_CLAIMS_TYP`, opaque bytes carry the caller's `type` (or none).
-      if (header.headerType === COSE_CLAIMS_TYP) {
-        const { claims, custom } = wireToDomain(
-          decodeCwtClaims(decodeCbor<Map<unknown, unknown>>(payload)),
-          coseName,
-          "token",
-        );
-        return {
-          format: "cwe",
-          header,
-          contentType: header.headerType,
-          claims: claims as DomainClaims,
-          custom: custom as C,
-          token,
-        };
-      }
+  assertWireInput(wire.dispositions.decrypt, input, { format, operation: "decrypt" });
 
-      return {
-        format: "cwe",
-        header,
-        contentType: header.headerType,
-        claims: {} as DomainClaims,
-        custom: {} as C,
-        raw: payload,
-        token,
-      };
-    }
-  }
+  const read = await wire.decrypt(input);
 
-  throw new AegisError("Token is not encrypted", {
-    code: "decrypt_requires_encrypted",
-    debug: { token: sanitiseToken(token) },
-    title: "Decrypt Requires Encrypted Token",
-    details:
-      "aegis.decrypt reads an encrypted token (a JWE or a COSE_Encrypt0). This token is neither — read a signed token with aegis.verify or aegis.parse.",
-  });
+  return {
+    format: wire.encryptedFormat,
+    header: read.header,
+    contentType: read.header.contentType,
+    // The ONE cast: `C` lets a caller NAME the object shape it sealed, and no
+    // runtime check can confirm a plaintext matches it — the reconstruction is
+    // driven by the outer's cty and answers with whatever that declares.
+    payload: read.payload as DecryptedToken<C>["payload"],
+    token: read.token,
+  };
 };

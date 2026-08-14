@@ -3,7 +3,7 @@ import { isString } from "@lindorm/is";
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { CwtKit } from "../../classes/CwtKit.js";
-import { decodeCwt } from "../cose/cwt-token.js";
+import { decodeCwt } from "../cose/decode-cwt.js";
 import type {
   AegisVerifyKey,
   CwtClaimsWire,

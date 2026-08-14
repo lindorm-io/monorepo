@@ -147,12 +147,19 @@ export type ProfileMintOptions = {
    */
   format?: ClaimsTokenFormat;
   /**
-   * Use compact private-use integer COSE labels (default `true`): claims with a
-   * private-use label and the structured `act`/`subjectId` are keyed by their
-   * compact integer form on-platform. Set `false` for off-platform tokens —
-   * those claims are emitted under their JOSE string key instead (interoperable,
-   * never dropped), and `act`/`subjectId` become string-keyed objects. (COSE
+   * Use compact private-use integer COSE labels (default `false`): set `true`
+   * for on-platform tokens, where claims with a private-use label, the
+   * structured `act`/`subjectId` and private-use HEADER parameters (`oid`) are
+   * keyed by their compact integer form. The default is the interoperable
+   * spelling — every one of those is emitted under its string key instead
+   * (never dropped), and `act`/`subjectId` become string-keyed objects. (COSE
    * only.)
+   *
+   * ⚠ The default is `false`, not `true`: `mint` forwards this value untouched
+   * (`internal/utils/mint-token.ts`) and every reader of it floors an omitted
+   * flag to the interoperable answer, which is the interop guarantee itself. The
+   * `true` this said was a leftover from before that guarantee and described no
+   * code path.
    */
   proprietary?: boolean;
   /**

@@ -3,8 +3,10 @@ import { describe, expect, test } from "vitest";
 import type { DomainTokenHeader, WireTokenHeader } from "../../types/index.js";
 import type { HeaderCodec } from "../registry/header-spec.js";
 import { WIRE_TAGS } from "../registry/wire.js";
+import { isPrivateUseLabel } from "../registry/is-private-use-label.js";
 import {
   coseByJose,
+  coseWireKey,
   HEADER_REGISTRY,
   HEADER_SPECS,
   headerByCose,
@@ -244,11 +246,27 @@ describe("HEADER_REGISTRY", () => {
     expect(new Set(key)).toEqual(new Set(["alg", "kid", "x5t", "x5t#S256", "x5c"]));
   });
 
-  test("computed-provenance params are exactly the crypto-produced set", () => {
+  test("computed-provenance params are exactly the kit-produced set", () => {
+    // `computed` means THE KIT WRITES IT, from something other than the key —
+    // the key-derived ones are the `key` row above. Three entries said `caller`
+    // while the code had never let a caller near them:
+    //
+    //  - `enc` — `JweKit` writes its own `this.encryption`;
+    //  - `p2c` — the PBES2 iteration count read back off the key-management
+    //    output, beside the `p2s` salt that was already declared `computed`;
+    //  - `typ` — every kit builds the full media type from the `tokenType`
+    //    PREFIX (`buildMediaType`), which is what the caller supplies instead.
+    //
+    // ⚠ Nothing READS this column yet, which is why the mistake survived. It
+    // matters the moment `KitCapabilities.reserved` is derived from it: all
+    // three ARE reserved on every row that can carry them, and a `caller`
+    // provenance would have derived them straight back out.
     const computed = HEADER_SPECS.filter((s) => s.provenance === "computed").map(
       headerJoseName,
     );
-    expect(new Set(computed)).toEqual(new Set(["epk", "iv", "tag", "p2s"]));
+    expect(new Set(computed)).toEqual(
+      new Set(["enc", "epk", "iv", "p2c", "p2s", "tag", "typ"]),
+    );
   });
 
   test("no header parameter is issuer-stamped, matchable, sensitive or critical", () => {
@@ -266,14 +284,19 @@ describe("HEADER_REGISTRY", () => {
   });
 
   test("kid and iv are the only entries DECLARED as either-bucket", () => {
-    // ⚠ A statement about the REGISTRY column, NOT an enforced guarantee.
-    // `build-cose-headers.ts` never reads `placement` — it refuses only
-    // crit-in-unprotected, crit-listed params, the kit's reserved labels and a
-    // param in both bags — so a caller CAN put `typ`/`cty`/`x5c`/`x5u`/`oid` in
-    // the unprotected bag today (the red `unprotected-typ` scenarios).
-    // The two `"either"` rows do describe the kits: `CwsKit` emits `kid`
-    // unprotected (an advisory routing hint read before the signature check) and
-    // `CweKit` adds `iv` (an AEAD input).
+    // ⚠ A statement about the REGISTRY column — and the column IS enforced.
+    // `build-cose-headers.ts` reads it through `isProtectedOnly` and throws
+    // `cose_unprotected_placement` for a protected-only param placed in the
+    // unprotected bag, so `cty`/`oid`/`x5u` are refused there. (An earlier
+    // version of this note said the builder "never reads placement" and listed
+    // those params as accepted; both stopped being true when the placement rule
+    // landed.)
+    //
+    // The two `"either"` rows are the ones the placement rule therefore cannot
+    // speak for, which is exactly why the kits must RESERVE them: `CwsKit` emits
+    // `kid` unprotected (an advisory routing hint read before the signature
+    // check) and `CweKit` adds `iv` (an AEAD input) — and a caller `iv` on a
+    // SIGNED COSE format is refused by `KIT_CAPABILITIES`, not by placement.
     const either = HEADER_SPECS.filter((s) => s.placement === "either").map(
       headerJoseName,
     );
@@ -359,6 +382,83 @@ describe("HEADER_REGISTRY", () => {
     expect(joseByCose(1)).toBe("alg");
     expect(joseByCose(16)).toBe("typ");
     expect(joseByCose(999)).toBeUndefined();
+  });
+
+  // --- the interop spelling of a private-use label -------------------------
+  //
+  // ⚠ These are REGISTRY INVARIANTS, stated over every entry rather than over
+  // `oid` — which is the whole point. `oid` is the only private-use header
+  // parameter today, and a rule written against its name would go on being true
+  // while the next one shipped an integer no foreign reader can interpret. What
+  // the concrete labels ARE is asserted with literals elsewhere
+  // (`classes/cose-private-use-header.test.ts`), where reading them off this
+  // registry would make the assertion agree with itself.
+
+  test("coseWireKey degrades EVERY private-use label, and only those", () => {
+    for (const spec of HEADER_SPECS) {
+      const label = headerCoseLabel(spec);
+      if (label === undefined) continue;
+
+      const jose = headerJoseName(spec);
+      const name = spec.wire.cose.kind === "absent" ? undefined : spec.wire.cose.name;
+
+      if (isPrivateUseLabel(label)) {
+        expect(coseWireKey(jose, false), `${jose} interoperable`).toBe(name);
+        expect(coseWireKey(jose, undefined), `${jose} default`).toBe(name);
+      } else {
+        expect(coseWireKey(jose, false), `${jose} interoperable`).toBe(label);
+        expect(coseWireKey(jose, undefined), `${jose} default`).toBe(label);
+      }
+
+      // Proprietary is the compact integer for every parameter that has one,
+      // private-use or not — the mode never invents a text label.
+      expect(coseWireKey(jose, true), `${jose} proprietary`).toBe(label);
+    }
+  });
+
+  test("the private-use band is non-empty, so the rule above is not vacuous", () => {
+    // An invariant quantified over an empty set passes without checking
+    // anything. At least one parameter must actually be in the band for the
+    // degrade arm to have been exercised at all.
+    const band = HEADER_SPECS.filter((spec) => {
+      const label = headerCoseLabel(spec);
+      return label !== undefined && isPrivateUseLabel(label);
+    });
+
+    expect(band.length).toBeGreaterThan(0);
+  });
+
+  test("joseByCose resolves the TEXT label of a private-use parameter", () => {
+    // The read half. A token minted with the interoperable default carries the
+    // string label, so the reader has to answer for it or aegis cannot read back
+    // what it just wrote.
+    for (const spec of HEADER_SPECS) {
+      const label = headerCoseLabel(spec);
+      if (label === undefined || !isPrivateUseLabel(label)) continue;
+
+      const jose = headerJoseName(spec);
+      expect(joseByCose(coseWireKey(jose, false))).toBe(jose);
+      expect(joseByCose(coseWireKey(jose, true))).toBe(jose);
+    }
+  });
+
+  test("joseByCose does NOT invent a text spelling for a REGISTERED parameter", () => {
+    // Answering here would give a registered parameter a second label no
+    // specification assigns it, and would let a foreign token deliver `typ` or
+    // `cty` under a text key aegis never writes.
+    expect(joseByCose("typ")).toBeUndefined();
+    expect(joseByCose("cty")).toBeUndefined();
+    expect(joseByCose("alg")).toBeUndefined();
+    // …not even the stringified integer, which RFC 9052 §1.5 makes a different
+    // label from the integer itself.
+    expect(joseByCose("16")).toBeUndefined();
+  });
+
+  test("coseWireKey refuses a parameter COSE cannot carry, in either mode", () => {
+    for (const proprietary of [false, true]) {
+      expect(() => coseWireKey("jwk", proprietary)).toThrow(/No COSE label/);
+      expect(() => coseWireKey("nonsense", proprietary)).toThrow(/No COSE label/);
+    }
   });
 
   test("every registry cose label round-trips through headerByCose", () => {

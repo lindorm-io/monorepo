@@ -118,11 +118,14 @@ export const KIT_CELL_CENSUS: {
     },
     unprotectedBucket: {
       exercised: "observed",
-      note: "an unprotected parameter reaches the wire on a COSE kit and is ignored by a JOSE one",
+      note: "the bucket the kit's OWN derived kid lands in — element 1 on a COSE structure, the sole protected header on a JOSE one",
     },
     reserved: {
-      exercised: "observed",
-      note: "the JOSE kits have no reserved SET — the guarantee is SPREAD ORDER, so a caller value for a listed param never survives",
+      exercised: "reader",
+      site: "src/classes/JwtKit.ts#reserved: KIT_CAPABILITIES.jwt.reserved",
+      // The kit hands its row to `buildJoseHeader`, which strips every param on
+      // it out of the caller's bag. It used to have no reader at all — the
+      // guarantee was SPREAD ORDER, which is what silently lost a caller `jku`.
     },
   },
   jws: {
@@ -144,8 +147,14 @@ export const KIT_CELL_CENSUS: {
       exercised: "observed",
       note: "the cert-less-key probe, as for `jwt`",
     },
-    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
-    reserved: { exercised: "observed", note: "the JOSE spread-order probe" },
+    unprotectedBucket: {
+      exercised: "observed",
+      note: "the scenario row `a-wire-with-no-unprotected-bucket-signs-every-parameter-it-carries` reads the token's raw bytes and finds no such bucket — RFC 7515 §7.1 gives the compact serialisation none, which holds for every kit on this wire",
+    },
+    reserved: {
+      exercised: "reader",
+      site: "src/classes/JwsKit.ts#reserved: KIT_CAPABILITIES.jws.reserved",
+    },
   },
   jwe: {
     wire: { exercised: "observed", note: "a JOSE kit mints a compact STRING" },
@@ -156,7 +165,7 @@ export const KIT_CELL_CENSUS: {
     },
     contentEncryption: {
       exercised: "reader",
-      site: "src/internal/utils/jose-header.ts:97",
+      site: "src/internal/utils/jose-header.ts#KIT_CAPABILITIES.jwe.contentEncryption.has(",
       // The JOSE header decoder allowlists an incoming `enc` off this row.
     },
     cnfMembers: {
@@ -167,10 +176,15 @@ export const KIT_CELL_CENSUS: {
       exercised: "observed",
       note: "the cert-less-key probe, as for `jwt`",
     },
-    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
-    reserved: {
+    unprotectedBucket: {
       exercised: "observed",
-      note: "the row is bound to the KitOwned TYPE-level set plus `jku`, and to the spread-order probe",
+      note: "the scenario row `a-wire-with-no-unprotected-bucket-signs-every-parameter-it-carries` reads the token's raw bytes and finds no such bucket — RFC 7515 §7.1 gives the compact serialisation none, which holds for every kit on this wire",
+    },
+    reserved: {
+      exercised: "reader",
+      site: "src/classes/JweKit.ts#reserved: KIT_CAPABILITIES.jwe.reserved",
+      // The widest JOSE row, and now EXACTLY the KitOwned type-level set — the
+      // runtime backstop and the compile-time Omit stating one set, not two.
     },
   },
   cwt: {
@@ -185,17 +199,20 @@ export const KIT_CELL_CENSUS: {
     },
     cnfMembers: {
       exercised: "reader",
-      site: "src/internal/cose/cose-key.ts:13",
+      site: "src/internal/cose/cose-key.ts#const COSE_CNF_MEMBERS = KIT_CAPABILITIES.cwt.cnfMembers;",
       // `encodeCnf` refuses a member outside this set.
     },
     certificateBinding: {
       exercised: "observed",
       note: "`false`, and observed: the cert-less-key probe mints happily, which is the accept-and-inert the `false` records",
     },
-    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
+    unprotectedBucket: {
+      exercised: "observed",
+      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — RFC 9052 §3 gives every COSE structure one, so the fact holds for every kit on this wire",
+    },
     reserved: {
       exercised: "reader",
-      site: "src/classes/CwsKit.ts:382",
+      site: "src/internal/cose/sign-cwt.ts#reserved: KIT_CAPABILITIES[format].reserved",
       // `buildCoseHeaders` refuses a caller value for a listed label off this row.
     },
   },
@@ -218,8 +235,14 @@ export const KIT_CELL_CENSUS: {
       exercised: "observed",
       note: "the cert-less-key probe mints happily, which is what `false` records",
     },
-    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
-    reserved: { exercised: "reader", site: "src/classes/CwsKit.ts:382" },
+    unprotectedBucket: {
+      exercised: "observed",
+      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — RFC 9052 §3 gives every COSE structure one, so the fact holds for every kit on this wire",
+    },
+    reserved: {
+      exercised: "reader",
+      site: "src/internal/cose/sign-cwt.ts#reserved: KIT_CAPABILITIES[format].reserved",
+    },
   },
   cws: {
     wire: { exercised: "observed", note: "a COSE kit mints CBOR BYTES" },
@@ -240,14 +263,20 @@ export const KIT_CELL_CENSUS: {
       exercised: "observed",
       note: "the cert-less-key probe mints happily, which is what `false` records",
     },
-    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
-    reserved: { exercised: "reader", site: "src/classes/CwsKit.ts:382" },
+    unprotectedBucket: {
+      exercised: "observed",
+      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — RFC 9052 §3 gives every COSE structure one, so the fact holds for every kit on this wire",
+    },
+    reserved: {
+      exercised: "reader",
+      site: "src/classes/CwsKit.ts#reserved: KIT_CAPABILITIES.cws.reserved",
+    },
   },
   cwe: {
     wire: { exercised: "observed", note: "a COSE kit mints CBOR BYTES" },
     keyManagement: {
       exercised: "reader",
-      site: "src/classes/CweKit.ts:67",
+      site: "src/classes/CweKit.ts#if (!CAPABILITIES.keyManagement.has(options.kryptos.algorithm))",
       // The constructor refuses a key whose algorithm is not in this set.
     },
     contentEncryption: {
@@ -264,10 +293,13 @@ export const KIT_CELL_CENSUS: {
       exercised: "observed",
       note: "the cert-less-key probe mints happily, which is what `false` records",
     },
-    unprotectedBucket: { exercised: "observed", note: "the unprotected-parameter probe" },
+    unprotectedBucket: {
+      exercised: "observed",
+      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — RFC 9052 §3 gives every COSE structure one, so the fact holds for every kit on this wire",
+    },
     reserved: {
       exercised: "reader",
-      site: "src/classes/CweKit.ts:141",
+      site: "src/classes/CweKit.ts#reserved: CAPABILITIES.reserved",
       // `buildCoseHeaders` refuses a caller value for a listed label off this row.
     },
   },

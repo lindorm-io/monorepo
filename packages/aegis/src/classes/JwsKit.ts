@@ -6,6 +6,10 @@ import { sanitiseToken } from "@lindorm/utils";
 import { JwsError } from "../errors/index.js";
 import type { IJwsKit } from "../interfaces/index.js";
 import { B64U } from "../internal/constants/format.js";
+import { buildJoseHeader } from "../internal/header/build-jose-header.js";
+import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
+import { assertAlgorithmMatch } from "../internal/utils/assert-algorithm-match.js";
+import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
 import { isSupportedJoseAlgorithm } from "../internal/utils/is-supported-jose-algorithm.js";
@@ -17,11 +21,9 @@ import {
 import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
-import { wireHeaderToDomainOptions } from "../internal/utils/wire-header-to-domain.js";
 import type {
   CertificateBindingMode,
   DecodedUnstructuredToken,
-  DomainTokenHeaderOptions,
   JwsKitSettings,
   SignUnstructuredTokenOptions,
   TokenContent,
@@ -52,22 +54,24 @@ export class JwsKit implements IJwsKit {
     // caller `header.cty` (folded in below) wins as the WIRE label.
     const { bytes, contentType } = serialiseContent(data, options.header?.cty);
 
-    const headerOptions: DomainTokenHeaderOptions = {
-      contentType,
-      ...wireHeaderToDomainOptions(options.header),
-      algorithm: this.kryptos.algorithm,
-      headerType: buildMediaType(options.tokenType, "jws"),
-      jwksUri: this.kryptos.jwksUri ?? undefined,
-      keyId: this.kryptos.id,
-    };
-
-    const cert = resolveCertBinding(
-      this.kryptos,
-      options.bindCertificate,
-      options.certificateThumbprintSha1,
+    const header = encodeJoseHeader(
+      buildJoseHeader({
+        reserved: KIT_CAPABILITIES.jws.reserved,
+        defaults: { cty: contentType, jku: this.kryptos.jwksUri ?? undefined },
+        header: options.header,
+        derived: {
+          alg: this.kryptos.algorithm,
+          kid: this.kryptos.id,
+          typ: buildMediaType(options.tokenType, "jws"),
+        },
+        cert: resolveCertBinding(
+          this.kryptos,
+          options.bindCertificate,
+          options.certificateThumbprintSha1,
+        ),
+        error: JwsError,
+      }),
     );
-
-    const header = encodeJoseHeader(headerOptions, cert);
 
     const payload = bytes.toString(B64U);
 
@@ -95,20 +99,16 @@ export class JwsKit implements IJwsKit {
     // typ well-formedness: a PRESENT typ must be a JWS media type so a JWT/JWE
     // cannot be verified as a JWS. A typ-LESS token is accepted here — presence
     // requiredness is a DOMAIN/profile policy.
-    const typ = decoded.protectedHeader.typ;
-    if (
-      typ !== undefined &&
-      typ !== "JWS" &&
-      typ !== "JOSE" &&
-      !(typeof typ === "string" && typ.endsWith("+jws"))
-    ) {
-      throw new JwsError("Invalid token", {
-        code: "jws_invalid_typ",
-        data: { typ },
-        title: "JWS Invalid Typ",
-        details: "Header typ must be JWS, JOSE, a <type>+jws media type, or undefined.",
-      });
-    }
+    assertWireTyp({
+      typ: decoded.protectedHeader.typ,
+      accept: ["JWS", "JOSE"],
+      suffix: "+jws",
+      presence: "optional",
+      error: JwsError,
+      code: "jws_invalid_typ",
+      title: "JWS Invalid Typ",
+      details: "Header typ must be JWS, JOSE, a <type>+jws media type, or undefined.",
+    });
 
     // `crit` (RFC 7515 §4.1.11), the SAME enforcement the COSE kits run — one
     // implementation, so the two wires cannot disagree about a hostile token.
@@ -118,16 +118,14 @@ export class JwsKit implements IJwsKit {
       error: JwsError,
     });
 
-    if (this.kryptos.algorithm !== decoded.protectedHeader.alg) {
-      throw new JwsError("Invalid token", {
-        code: "jws_algorithm_mismatch",
-        data: { algorithm: decoded.protectedHeader.alg },
-        debug: { expected: this.kryptos.algorithm },
-        title: "JWS Algorithm Mismatch",
-        details:
-          "The header alg does not match the signing algorithm of the configured kryptos key.",
-      });
-    }
+    assertAlgorithmMatch({
+      actual: decoded.protectedHeader.alg,
+      expected: this.kryptos.algorithm,
+      format: "jws",
+      error: JwsError,
+      details:
+        "The header alg does not match the signing algorithm of the configured kryptos key.",
+    });
 
     const verified = verifyJoseSignature(this.kryptos, token);
 
