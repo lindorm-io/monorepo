@@ -7,7 +7,6 @@ import { JweError } from "../errors/index.js";
 import type { IJweKit } from "../interfaces/index.js";
 import { buildJoseHeader } from "../internal/header/build-jose-header.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
-import { assertAlgorithmMatch } from "../internal/utils/assert-algorithm-match.js";
 import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
 import { buildJweDecryptionRecord } from "../internal/utils/build-jwe-decryption-record.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
@@ -17,9 +16,10 @@ import { encodeJoseHeader } from "../internal/utils/jose-header.js";
 import { assembleJweCompact } from "../internal/utils/assemble-jwe-compact.js";
 import { isEcdhEsAlgorithm } from "../internal/utils/is-ecdh-es-algorithm.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
+import { resolveContentEncryption } from "../internal/utils/resolve-content-encryption.js";
 import { resolveEcdhParty } from "../internal/utils/resolve-ecdh-party.js";
 import { splitJweCompact } from "../internal/utils/split-jwe-compact.js";
-import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
+import { assertProtectedHeaderGates } from "../internal/utils/assert-protected-header-gates.js";
 import { parseTokenHeader } from "../internal/utils/token-header.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import { verifyPartyBinding } from "../internal/utils/verify-party-binding.js";
@@ -43,10 +43,10 @@ export class JweKit implements IJweKit {
   constructor(options: JweKitSettings) {
     this.logger = options.logger.child(["JweKit"]);
     this.kryptos = options.kryptos;
-    // The KEY selects the cipher; `defaultEncryption` only fills in for a key
-    // that declares none.
-    this.encryption =
-      options.kryptos.encryption ?? options.defaultEncryption ?? "A256GCM";
+    this.encryption = resolveContentEncryption(
+      options.kryptos,
+      options.defaultEncryption,
+    );
     this.certBindingMode = options.certBindingMode ?? "strict";
     this.partyRecipient = options.partyRecipient;
   }
@@ -180,21 +180,20 @@ export class JweKit implements IJweKit {
       });
     }
 
-    // `crit` (RFC 7515 §4.1.11), the SAME enforcement the COSE kits run. It used
-    // to be split in two here — malformed BEFORE the algorithm-match, unrecognised
-    // AFTER the encryption-match — so a JWE marking an unrecognised extension
-    // critical was answered by whichever of the three checks happened to be first.
-    rejectUnknownCritical({ header: decoded.header, format: "jwe", error: JweError });
-
-    assertAlgorithmMatch({
-      actual: decoded.header.alg,
-      expected: this.kryptos.algorithm,
+    // `crit` (RFC 7515 §4.1.11) then algorithm-match — the ONE pair, in the ONE
+    // order, that every wire runs ahead of its signature or AEAD cycle. The crit
+    // check used to be split in two HERE — malformed BEFORE the algorithm-match,
+    // unrecognised AFTER the encryption-match — so a JWE marking an unrecognised
+    // extension critical was answered by whichever of the three ran first.
+    assertProtectedHeaderGates({
+      protectedHeader: decoded.header,
+      expectedAlgorithm: this.kryptos.algorithm,
       format: "jwe",
       error: JweError,
-      // ⚠ This wire reports the offending value under `alg`, not `algorithm`.
-      data: { alg: decoded.header.alg },
-      details:
+      algDetails:
         "The header alg does not match the key-management algorithm of the configured kryptos key.",
+      // ⚠ This wire reports the offending value under `alg`, not `algorithm`.
+      algData: { alg: decoded.header.alg },
     });
 
     // Parse to the DOMAIN header for the decryption crypto (algorithm, enc,

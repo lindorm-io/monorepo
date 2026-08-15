@@ -62,7 +62,6 @@ describe("wire input dispositions", () => {
     // a `true` reaching the kit can still only have come from here.
     certificateThumbprintSha1: true,
     proprietary: true,
-    omit: "undefined",
     partyProducer: "cHJvZHVjZXItcHJvYmU",
     partyRecipient: "cmVjaXBpZW50LXByb2Jl",
   };
@@ -98,6 +97,79 @@ describe("wire input dispositions", () => {
     expect(Object.keys(wire.dispositions.decrypt)).toEqual([]);
   });
 
+  /** How ONE row reads, for the inventory pin. `reason` is prose and is left out. */
+  const describeRule = (rule: Disposition): string => {
+    switch (rule.use) {
+      case "forwarded":
+        return "forwarded";
+
+      case "consumed":
+        return `consumed by ${rule.by}`;
+
+      case "unsupported":
+        return rule.honours === undefined
+          ? "unsupported"
+          : `unsupported honours [${[...rule.honours].map(String).sort().join(", ")}]`;
+
+      default: {
+        // `noImplicitReturns` is off repo-wide. Without this a new arm would
+        // describe as `undefined` and the inventory would pin nothing about it.
+        const exhaustive: never = rule;
+        throw new Error(`unhandled disposition: ${JSON.stringify(exhaustive)}`);
+      }
+    }
+  };
+
+  /**
+   * ⭐ THE INVENTORY, pinned as DATA OUTSIDE the generated matrices.
+   *
+   * Every `wire.operation.option -> use` triple, with the `honours` values inline.
+   * The matrices below are GENERATED from this same data, so they cannot notice it
+   * changing: a row whose `use` flips moves from one matrix to the other and both
+   * stay green, and a widened `honours` grows a NEW green test asserting the
+   * widening. Only a pin outside the generation can see either.
+   *
+   * ⚠ Iterates `Object.keys(wire.dispositions)`, NOT the hand-written OPERATIONS
+   * list, so a fourth write operation appears here rather than going unprobed.
+   */
+  test("the wire input disposition inventory", () => {
+    const inventory = WIRES.flatMap(({ name, wire }) =>
+      Object.keys(wire.dispositions).flatMap((operation) =>
+        Object.entries(
+          wire.dispositions[operation as keyof WireInputDispositions] as Dict,
+        ).map(
+          ([option, rule]) =>
+            `${name}.${operation}.${option} -> ${describeRule(rule as Disposition)}`,
+        ),
+      ),
+    ).sort();
+
+    // ⚠ A HARD COUNT beside the snapshot, deliberately NOT snapshotted: `vitest -u`
+    // rewrites a snapshot without anyone reading the diff, and this repo's own
+    // notes record `-u` doing exactly that. A plain assertion cannot be updated
+    // by `-u`, so a row that disappears has to be answered for by hand.
+    expect(inventory).toHaveLength(40);
+    expect(inventory).toMatchSnapshot();
+  });
+
+  /**
+   * The hand-written {@link OPERATIONS} list is TOTAL over the write operations
+   * the tables declare.
+   *
+   * `WireInputDispositions` is a hand-written type and the `never` default in the
+   * probes below is exhaustive over the hand-written `WriteOperation` union, not
+   * over `keyof WireInputDispositions` — so a FOURTH write operation would
+   * typecheck, ship, and never be driven by either matrix. This is what notices.
+   */
+  test.each(WIRES)(
+    "$name declares exactly OPERATIONS plus the read operation",
+    ({ wire }) => {
+      expect(Object.keys(wire.dispositions).sort()).toEqual(
+        [...OPERATIONS, "decrypt"].sort(),
+      );
+    },
+  );
+
   /**
    * ⚠ THE THIRD ARM. `consumed` says the WIRE acts on the option ITSELF and does
    * not pass it down, and neither probe below can demonstrate that: the seam
@@ -107,13 +179,28 @@ describe("wire input dispositions", () => {
    * table gains a `consumed` row, this goes red and a probe has to be written
    * before it can be relaxed.
    *
-   * The two counts beside it guard the `test.each` blocks themselves: a
-   * `test.each` over an emptied filter generates NO tests and reports nothing at
-   * all, so a renamed `use` value would silently empty both matrices.
+   * ⚠ The two counts beside it are EXACT, and they are what SIZES each matrix.
+   * They were `> 0` — enough to catch an emptied filter, nothing else — and the
+   * inventory snapshot above does not replace them: `toHaveLength(40)` guards
+   * ARITY, so flipping every `unsupported` row to `forwarded` keeps the count at
+   * 40, empties the refusal matrix, and one `vitest -u` rewrites the snapshot
+   * unread and makes it green. A plain `toBe` cannot be updated by `-u`, which is
+   * the whole reason the hard count sits beside the snapshot rather than in it.
+   *
+   * 32 + 8 = 40, so the three arms account for every row the inventory lists.
+   * (It was 34 + 8 = 42 until the per-call prune mode was deleted from the
+   * structured sign options: both wires forwarded it on `signClaims`, and the
+   * prune is now unconditional and registry-driven rather than an option.)
    */
   test("every disposition arm is probed below, or provably empty", () => {
-    expect(rows((rule) => rule.use === "forwarded").length).toBeGreaterThan(0);
-    expect(rows((rule) => rule.use === "unsupported").length).toBeGreaterThan(0);
+    expect(
+      rows((rule) => rule.use === "forwarded").length,
+      "the forwarded matrix changed size — say why, then update this",
+    ).toBe(32);
+    expect(
+      rows((rule) => rule.use === "unsupported").length,
+      "the refusal matrix changed size — say why, then update this",
+    ).toBe(8);
     expect(
       rows((rule) => rule.use === "consumed").map(
         ({ wire, operation, option }) => `${wire}.${operation}.${option}`,
@@ -228,7 +315,6 @@ describe("wire input dispositions", () => {
               deps,
               payload: "probe-payload",
               key: undefined,
-              omit: undefined,
               ...options,
             });
             break;

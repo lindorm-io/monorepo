@@ -109,7 +109,6 @@ const COSE_DISPOSITIONS: WireInputDispositions = {
       honours: [false],
     },
     proprietary: { use: "forwarded" },
-    omit: { use: "forwarded" },
   },
 
   signOpaque: {
@@ -238,7 +237,9 @@ export const COSE_TOKEN_WIRE: TokenWire = {
       presence: "optional",
       error: ERROR_BY_FORMAT[format],
       code: `${format}_invalid_typ`,
-      title: "CWT Invalid Typ",
+      // Derived alongside the code, so a COSE_Mac0 reads as a CWM here too —
+      // `coseFormatOf` above resolves `cwm` on this very path.
+      title: `${format.toUpperCase()} Invalid Typ`,
       details:
         "Header typ is present but is not CWT or a <type>+cwt media type, so the token cannot be parsed as a CWT.",
     });
@@ -250,7 +251,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
       throw new ERROR_BY_FORMAT[format](`Invalid crit header: ${critError}`, {
         code: `${format}_invalid_crit`,
         data: { crit: protectedHeader.crit },
-        title: "CWT Invalid Crit",
+        title: `${format.toUpperCase()} Invalid Crit`,
         details:
           "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
       });
@@ -348,8 +349,8 @@ export const COSE_TOKEN_WIRE: TokenWire = {
   // even though they ride the same envelope: both are `unsupported` here, so a
   // caller stating one is refused above the seam and only `undefined` (or the
   // no-op `bindCertificate: "none"`) ever arrives in the spread.
-  signOpaque: ({ deps, payload, key, omit, ...options }) =>
-    rawSignCose({ input: { payload, key, omit, ...options }, deps }),
+  signOpaque: ({ deps, payload, key, ...options }) =>
+    rawSignCose({ input: { payload, key, ...options }, deps }),
 
   // ONE door. The content reaches the kit AS THE TYPE THE CALLER PASSED — a
   // string stays a string, so the kit's codec answers `text/plain` and `decrypt`

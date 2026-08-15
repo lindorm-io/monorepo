@@ -41,6 +41,25 @@
  * No claim is `absent` on either wire — every claim rides both. The `absent`
  * arm of {@link WireKey} is exercised by the header registry.
  *
+ * --- The empty-value column ---
+ *
+ * `whenEmpty` is REQUIRED on every entry ({@link ClaimSpec.whenEmpty}) and has no
+ * default, because both answers fail open in a different direction: a blanket
+ * keep fabricates assertions the issuer never made (`amr: []` reads as "the
+ * methods are known and none applied"), and a blanket prune strips restrictions
+ * (RFC 9396 `actions: []` grants no action, while an ABSENT `actions` is not
+ * restricted by action at all). 78 cells, each a decision; the ones a reader
+ * would question carry their reason inline. The 11 `"keep"` cells are the
+ * restrictions (`aud`, RAR), the bindings (`cnf`, the OIDC hashes), the
+ * delegation pair, and the two SET claims that ARE the token — everything else
+ * prunes, the four lindorm authority lists (`roles`/`permissions`/
+ * `entitlements`/`groups`) among them. `scope` KEEPS and splits from those four
+ * on purpose — see its entry, where the reasoning is stated as AEGIS POLICY: no
+ * specification defines the absence of either, so the differentiator is that the
+ * four are our own vocabulary whose sole issuer already emits empty as absence,
+ * while `scope` is only a SHOULD (RFC 9068 §2.2.3) and an explicit empty list is
+ * therefore the one way an issuer can say "this grant conveys nothing".
+ *
  * --- Columns that are currently CONSTANT ---
  *
  * `direction` and `matchable` are the same for all 78 entries, and that is an
@@ -129,6 +148,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "https://issuer.lindorm.test",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -141,6 +161,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "subject_sample",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -156,6 +177,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["https://api.lindorm.test"],
     bucket: "claims",
+    // KEEP: `aud: []` names NOBODY, and RFC 7519 §4.1.3 makes `aud` the audience
+    // RESTRICTION — an absent one restricts nothing, so pruning turns the narrowest
+    // statement the issuer can make into the widest.
+    whenEmpty: "keep",
     domainClaim: true,
   },
   {
@@ -168,6 +193,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: SAMPLE_FUTURE_DATE,
     bucket: "claims",
+    whenEmpty: "prune",
     temporal: "future",
     domainClaim: true,
   },
@@ -181,6 +207,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: SAMPLE_PAST_DATE,
     bucket: "claims",
+    whenEmpty: "prune",
     temporal: "past",
     domainClaim: true,
   },
@@ -194,6 +221,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: SAMPLE_PAST_DATE,
     bucket: "claims",
+    whenEmpty: "prune",
     temporal: "past",
     domainClaim: true,
   },
@@ -210,6 +238,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "token_id_sample",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   // RFC 8747
@@ -226,6 +255,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     // CBOR canonicalisation, so it is a different value, not a translation).
     sample: { keyId: "key_sample" },
     bucket: "claims",
+    // KEEP: RFC 7800 `cnf` IS the proof-of-possession requirement. Pruning it hands
+    // the audience a BEARER token; an empty one confirms no key and is refused.
+    whenEmpty: "keep",
     domainClaim: true,
   },
   // RFC 8693
@@ -239,6 +271,28 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["openid", "profile"],
     bucket: "claims",
+    // KEEP. ⚠ THIS IS AEGIS POLICY, NOT A CITATION — and the reasoning matters,
+    // because an earlier version of this comment justified it with RFC 6749 §3.3
+    // and that was WRONG. §3.3 governs the AUTHORIZATION SERVER handling a CLIENT
+    // REQUEST that omits `scope` ("the authorization server MUST either process
+    // the request using a pre-defined default value or fail the request"); it says
+    // nothing about a recipient reading an absent scope CLAIM, and the server that
+    // could default has finished its work before this claim exists.
+    //
+    // The policy: RFC 9068 §2.2.3 makes `scope` only a SHOULD on an access token,
+    // so a verifier cannot tell an absent `scope` from a grant that never had one.
+    // That is exactly what gives an EXPLICIT empty list something to say — "this
+    // grant conveys nothing" — and pruning it would erase the one statement the
+    // ambiguity leaves an issuer able to make.
+    //
+    // ⚠ The four lindorm authority lists beside this one
+    // (`roles`/`permissions`/`entitlements`/`groups`) PRUNE, and the honest
+    // differentiator is NOT "spec-governed vs ours" — no specification defines the
+    // absence of either. It is that those four are our own vocabulary whose sole
+    // issuer already emits an empty list as absence
+    // (`services/tyr/src/features/tokens/utils/mint-access-token.ts:10-17`).
+    // A sixth list lands on "prune" by that rule.
+    whenEmpty: "keep",
     domainClaim: true,
   },
 
@@ -256,6 +310,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "urn:lindorm:acr:mfa",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -268,6 +323,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["pwd", "otp"],
     bucket: "claims",
+    // PRUNE: a DESCRIPTION of how the subject authenticated, not a restriction on
+    // anything — `amr: []` asserts "the methods are known and none applied", which no
+    // issuer means and no audience can act on.
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -280,6 +339,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "client_sample",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -292,6 +352,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "P1.Cc.Cd",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -304,6 +365,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "https://issuer.lindorm.test/vtm",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   // RFC 8693
@@ -317,6 +379,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: { subject: "actor_sample" },
     bucket: "claims",
+    // KEEP: RFC 8693 §4.1 `act` declares the token is wielded by an ACTOR on the
+    // subject's behalf. Pruned, the delegation is invisible and the token reads as
+    // the subject acting directly.
+    whenEmpty: "keep",
     domainClaim: true,
   },
   {
@@ -329,6 +395,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "authorization_code",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   // OIDC front-channel logout
@@ -342,6 +409,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "session_sample",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   // RFC 8417 txn — emitted but NOT extracted into DomainClaims (no domainClaim).
@@ -355,6 +423,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "txn_sample",
     bucket: "claims",
+    whenEmpty: "prune",
   },
   // ISO/IEC 29115
   {
@@ -367,6 +436,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   // NIST SP 800-63B
@@ -380,6 +450,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   // NIST SP 800-63A
@@ -393,6 +464,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   // NIST SP 800-63C
@@ -406,6 +478,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   // The resolved (primary) auth factor — ONE value (1fa/2fa/phr/phrh), not the
@@ -420,6 +493,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "2fa",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   // PSD2 SCA categories (knowledge/possession/inherence) — the axes exercised.
@@ -433,6 +507,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["knowledge", "possession"],
     bucket: "claims",
+    // PRUNE: the `amr` argument — a description of the factors used.
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -445,6 +521,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "session_hint_sample",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -457,6 +534,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "subject_hint_sample",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
 
@@ -476,6 +554,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
+    // KEEP: the OIDC Core §3.1.3.6 / §3.3.2.11 hashes BIND the id_token to another
+    // artifact. Pruned, the token is unbound — the substitution surface; an empty
+    // digest matches nothing and is refused, which is the safe direction. Provenance
+    // is `computed`, so aegis's own mint cannot reach the cell: it states the
+    // direction a caller-supplied one must fail in.
+    whenEmpty: "keep",
     domainClaim: true,
   },
   {
@@ -488,6 +572,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
+    // KEEP: the `at_hash` binding argument, for the authorization code.
+    whenEmpty: "keep",
     domainClaim: true,
   },
   {
@@ -500,6 +586,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
+    // KEEP: the `at_hash` binding argument, for the `state` value.
+    whenEmpty: "keep",
     domainClaim: true,
   },
   {
@@ -512,6 +600,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "nonce_sample",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -524,6 +613,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: SAMPLE_PAST_DATE,
     bucket: "claims",
+    whenEmpty: "prune",
     temporal: "past",
     domainClaim: true,
   },
@@ -538,6 +628,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: [{ type: "payment_initiation" }],
     bucket: "claims",
+    // KEEP: RFC 9396 — an empty RAR structure grants nothing, an absent one restricts
+    // nothing. This is the whole shape of the fail-open the column exists to prevent.
+    whenEmpty: "keep",
     domainClaim: true,
   },
   // RFC 8693
@@ -551,6 +644,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: { subject: "actor_sample" },
     bucket: "claims",
+    // KEEP: RFC 8693 §4.4 names who may BECOME the actor — the delegation policy the
+    // issuer wrote down. Symmetric with `act`, and stated by the same issuer.
+    whenEmpty: "keep",
     domainClaim: true,
   },
   {
@@ -563,6 +659,15 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["entitlement_sample"],
     bucket: "claims",
+    // PRUNE: the lindorm authority lists are the issuer's own vocabulary, and the
+    // only issuer that mints them emits an empty list as absence
+    // (`services/tyr/src/features/tokens/utils/mint-access-token.ts:10-17`), so
+    // keeping `[]` would change what tyr puts on the wire today.
+    // ⚠ THE COUNTER-ARGUMENT, on the record: `[]` can be read as "resolved, holds
+    // none" where absence invites a consumer to look the authority up elsewhere.
+    // That reading was weighed and not taken — no consumer distinguishes the two,
+    // and the sole issuer's stated intent is absence.
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -575,6 +680,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["group_sample"],
     bucket: "claims",
+    // PRUNE: the `entitlements` argument — a membership the issuer resolved is
+    // still emitted as absence when it holds none.
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -587,6 +695,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["role_sample"],
     bucket: "claims",
+    // PRUNE: the `entitlements` argument. The inert token stays legitimate — it
+    // is expressed by the claim being absent, which is what tyr already emits.
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -599,6 +710,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["permission_sample"],
     bucket: "claims",
+    // PRUNE: the `entitlements` argument.
+    whenEmpty: "prune",
     domainClaim: true,
   },
   {
@@ -611,6 +724,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "client_sample",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
 
@@ -628,6 +742,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: { format: "opaque", id: "subject_sample" },
     bucket: "claims",
+    // KEEP: RFC 9493 identifies WHO an event is about. A SET whose `sub_id` was
+    // pruned names no subject to act on.
+    whenEmpty: "keep",
     domainClaim: true,
   },
   // RFC 8417 SET events
@@ -641,6 +758,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: { "https://schemas.lindorm.test/event/sample": {} },
     bucket: "claims",
+    // KEEP: RFC 8417 §2.2 — a member's PRESENCE is the statement, and OIDC
+    // Back-Channel Logout §2.4 makes the empty object the normal payload. Pruning
+    // deletes the event itself from a token whose profile REQUIRES it.
+    whenEmpty: "keep",
   },
 
   {
@@ -653,6 +774,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "tenant_sample",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
 
@@ -669,6 +791,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["strict"],
     bucket: "claims",
+    // PRUNE: `permissive` is the floor every client clears, so "conforms to nothing
+    // above the floor" states nothing a resource server can act on.
+    whenEmpty: "prune",
     domainClaim: true,
   },
 
@@ -693,6 +818,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "sensitive",
     sample: "19900101-1234",
     bucket: "claims",
+    whenEmpty: "prune",
   },
   {
     domain: "nationalIdentityNumberVerified",
@@ -704,6 +830,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "sensitive",
     sample: true,
     bucket: "claims",
+    whenEmpty: "prune",
   },
   {
     domain: "socialSecurityNumber",
@@ -715,6 +842,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "sensitive",
     sample: "123-45-6789",
     bucket: "claims",
+    whenEmpty: "prune",
   },
   {
     domain: "socialSecurityNumberVerified",
@@ -726,6 +854,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "sensitive",
     sample: true,
     bucket: "claims",
+    whenEmpty: "prune",
   },
 
   // --- OIDC §5.1 PROFILE claims (the `AegisProfile` set) ---
@@ -749,6 +878,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: { streetAddress: "Sample 1", postalCode: "00100", country: "SE" },
     bucket: "profile",
+    // PRUNE: OIDC Core §5.1.1 defines `address` entirely by its members.
+    whenEmpty: "prune",
   },
   {
     domain: "email",
@@ -760,6 +891,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "sample@lindorm.test",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "emailVerified",
@@ -771,6 +903,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: true,
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "phoneNumber",
@@ -782,6 +915,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "+46700000000",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "phoneNumberVerified",
@@ -793,6 +927,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: true,
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "picture",
@@ -804,6 +939,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "https://cdn.lindorm.test/sample.png",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "birthdate",
@@ -815,6 +951,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "1990-01-01",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "familyName",
@@ -826,6 +963,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Nordmann",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "gender",
@@ -837,6 +975,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "other",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "givenName",
@@ -848,6 +987,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Sam",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "locale",
@@ -859,6 +999,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "sv-SE",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "middleName",
@@ -870,6 +1011,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Lee",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   // "name" is 4 chars ⇒ string-keyed (the string key is the smaller CBOR encoding).
   {
@@ -882,6 +1024,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Sam Nordmann",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "nickname",
@@ -893,6 +1036,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Sammy",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "preferredUsername",
@@ -904,6 +1048,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "sam",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   // OIDC `profile` URL claim — the CLAIM named "profile" (distinct from the bucket).
   {
@@ -916,6 +1061,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "https://lindorm.test/sam",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   // `updatedAt` is an OIDC Core §5.1 NumericDate: domain `Date` <-> wire unix
   // seconds ⇒ "date", per the derive-from-type rule. It is NOT temporal — a
@@ -930,6 +1076,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: SAMPLE_PAST_DATE,
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "website",
@@ -941,6 +1088,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "https://lindorm.test",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "zoneinfo",
@@ -952,6 +1100,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Europe/Stockholm",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "displayName",
@@ -963,6 +1112,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Sam N",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "honorific",
@@ -974,6 +1124,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Dr",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "legalName",
@@ -985,6 +1136,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Samuel Nordmann",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "legalNameVerified",
@@ -996,6 +1148,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: true,
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "namingSystem",
@@ -1012,6 +1165,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     // domain type, which a bogus string satisfies.
     sample: "given_family",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "preferredAccessibility",
@@ -1023,6 +1177,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["high-contrast"],
     bucket: "profile",
+    // PRUNE: a profile preference — "none stated" is what absence already says.
+    whenEmpty: "prune",
   },
   {
     domain: "preferredName",
@@ -1034,6 +1190,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Sam",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "pronouns",
@@ -1045,6 +1202,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "they/them",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "department",
@@ -1056,6 +1214,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Engineering",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "jobTitle",
@@ -1067,6 +1226,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Engineer",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "occupation",
@@ -1078,6 +1238,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Engineer",
     bucket: "profile",
+    whenEmpty: "prune",
   },
   {
     domain: "organization",
@@ -1089,6 +1250,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "Lindorm",
     bucket: "profile",
+    whenEmpty: "prune",
   },
 
   // --- RFC 7662 §2.2 `username`. A CLAIM about the token (bucket "claims",
@@ -1108,6 +1270,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "sam",
     bucket: "claims",
+    whenEmpty: "prune",
     domainClaim: true,
   },
 ];

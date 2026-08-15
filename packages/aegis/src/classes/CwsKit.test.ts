@@ -297,6 +297,14 @@ describe("CwsKit — a DETACHED (nil) payload is refused under the error contrac
 
     expect(thrown).toBeInstanceOf(CwsError);
     expect((thrown as CwsError).code).toBe("cose_malformed");
+    // ⚠ THE WORDS, not just the code. `verifyCoseStructure` serves this OPAQUE
+    // path and the CLAIMS one from one body and takes the wording as a
+    // parameter, declaring it "what tells a reader which door refused them" —
+    // a claim nothing checked, so the two arguments could be swapped with the
+    // suite green. This is the opaque half; `CwtKit.test.ts` is the claims half.
+    expect((thrown as CwsError).details).toBe(
+      "The COSE_Sign1 has a detached or nil payload, so there is no content to verify.",
+    );
   });
 
   test("decode refuses it as cose_malformed", () => {
@@ -346,6 +354,9 @@ describe("CwsKit — a NIL signature is refused under the error contract", () =>
 
   test("verify refuses it as cose_malformed", () => {
     const thrown = thrownBy(() => kit.verify(nilSignature()));
+    expect((thrown as CwsError).details).toBe(
+      "The COSE_Sign1 has a nil signature, so there is nothing to verify.",
+    );
 
     expect(thrown).toBeInstanceOf(CwsError);
     expect((thrown as CwsError).code).toBe("cose_malformed");

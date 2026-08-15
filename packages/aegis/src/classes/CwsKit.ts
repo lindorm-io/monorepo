@@ -6,23 +6,19 @@ import { algToCoseLabel } from "../internal/cose/alg-labels.js";
 import { assertCoseRegistered } from "../internal/cose/assert-cose-registered.js";
 import { Tag, encodeCbor } from "../internal/cose/cbor.js";
 import type { CoseLabel } from "../internal/cose/cose-label.js";
-import {
-  type CoseStructureTag,
-  coseStructureTag,
-} from "../internal/cose/cose-structure-tag.js";
 import { ERROR_BY_FORMAT } from "../internal/cose/error-by-format.js";
 import { requireAttachedPayload } from "../internal/cose/require-attached-payload.js";
 import { requireSignature } from "../internal/cose/require-signature.js";
+import { signedCoseStructureTag } from "../internal/cose/signed-cose-structure-tag.js";
 import { splitSigned } from "../internal/cose/split-signed.js";
+import { verifyCoseStructure } from "../internal/cose/verify-cose-structure.js";
 import { COSE_TAG, buildSecuredStructure } from "../internal/cose/structures.js";
 import { buildCoseHeaders } from "../internal/header/build-cose-headers.js";
 import { mergeCoseProtected } from "../internal/header/merge-cose-protected.js";
 import { mergeCoseUnprotected } from "../internal/header/merge-cose-unprotected.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
-import { assertAlgorithmMatch } from "../internal/utils/assert-algorithm-match.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
-import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
 import type {
   DecodedUnstructuredToken,
   SignUnstructuredTokenOptions,
@@ -172,7 +168,7 @@ export class CwsKit implements ICwsKit {
     // `cws`, with no per-wire reasoning left for a caller to do.
     const { bytes, contentType } = serialiseContent(content, options.header?.cty);
 
-    const tag = this.structureTag();
+    const tag = signedCoseStructureTag(this.kryptos);
     const sign1 = tag === COSE_TAG.sign1;
 
     this.logger.debug(sign1 ? "Signing COSE_Sign1" : "MAC'ing COSE_Mac0", { options });
@@ -203,86 +199,17 @@ export class CwsKit implements ICwsKit {
     // forwards its verify options structurally rather than naming fields.
     this.logger.debug("Verifying COSE structure", { options });
 
-    const tag = this.structureTag();
-    const sign1 = tag === COSE_TAG.sign1;
-    const label = sign1 ? "COSE_Sign1" : "COSE_Mac0";
-    const error = ERROR_BY_FORMAT.cws;
-
-    const { protectedBstr, payload, signature, protectedHeader, unprotectedHeader } =
-      splitSigned(token, {
-        arity: { exactly: 4 },
-        tags: [tag],
-        error: CwsError,
-        message: `Malformed ${label}`,
-        title: `Malformed ${label}`,
-        details: `A ${label} must be a 4-element array [protected, unprotected, payload, signature/tag].`,
-      });
-
-    // ⛔ The ORDER of the next two is the security property, so they stay HERE,
-    // inline and ahead of the signature cycle, rather than moving into a shared
-    // opener: `JwsKit.verify` runs the identical pair unextracted, and the two
-    // wires must not be able to drift on when a hostile header is answered.
-
-    // Algorithm-match, the gate the three JOSE kits have and this one did not: a
-    // structure whose PROTECTED `alg` names an algorithm other than the resolved
-    // key's is refused before the signature cycle, so a mismatch reports what is
-    // wrong instead of surfacing as an opaque bad signature. The claims kits run
-    // the same check on their own wire, under their own tag.
-    assertAlgorithmMatch({
-      actual: protectedHeader.alg as string | undefined,
-      expected: this.kryptos.algorithm,
+    // ⛔ ONE OPENING. The split, the two protected-header gates, the two
+    // nil-able-slot refusals and the signature/MAC cycle are the SHARED signed
+    // COSE read — byte-identical to the claims path's before it was extracted,
+    // down to the `if (!valid) throw` block. The kit's own work is what follows:
+    // reconstructing the OPAQUE content by its cty.
+    const { protectedHeader, unprotectedHeader, content } = verifyCoseStructure({
+      kryptos: this.kryptos,
+      token,
       format: "cws",
-      error,
-      details:
-        "The protected header alg does not match the algorithm of the configured kryptos key.",
+      payloadDetail: "there is no content to verify",
     });
-
-    // `crit` (RFC 9052 §3.1), read from the PROTECTED bucket alone — the only one
-    // the signature covers, and the only one the spec permits it in. Enforced
-    // BEFORE the signature cycle, exactly as the JOSE kits do.
-    rejectUnknownCritical({ header: protectedHeader, format: "cws", error });
-
-    // A DETACHED (nil) payload is legal COSE, but this kit carries no out-of-band
-    // content, so there is nothing for it to authenticate — refused with the
-    // structural `cose_malformed` verdict rather than a raw `Buffer.from(null)`
-    // TypeError, which would escape the `AegisError` contract entirely.
-    const content = requireAttachedPayload(payload, {
-      error: CwsError,
-      message: `Malformed ${label}`,
-      title: `Malformed ${label}`,
-      details: `The ${label} has a detached or nil payload, so there is no content to verify.`,
-    });
-
-    // The twin of the payload check on the other nil-able slot: `exactly: 4`
-    // counts ELEMENTS, so a structure with `null` in slot 4 clears the arity,
-    // algorithm and crit gates intact. Refused with the structural verdict rather
-    // than letting `Buffer.from(null)` throw a raw TypeError out of the contract.
-    const secured = requireSignature(signature, {
-      error: CwsError,
-      message: `Malformed ${label}`,
-      title: `Malformed ${label}`,
-      details: `The ${label} has a nil ${sign1 ? "signature" : "authentication tag"}, so there is nothing to verify.`,
-    });
-
-    const valid = new SignatureKit({ kryptos: this.kryptos, raw: sign1 }).verify(
-      buildSecuredStructure(tag, Buffer.from(protectedBstr), content),
-      secured,
-    );
-
-    if (!valid) {
-      throw sign1
-        ? new CwsError("Invalid COSE_Sign1 signature", {
-            code: "cose_signature_invalid",
-            title: "Invalid COSE Signature",
-            details: "The COSE_Sign1 signature did not verify against the resolved key.",
-          })
-        : new CwsError("Invalid COSE_Mac0 tag", {
-            code: "cose_mac_invalid",
-            title: "Invalid COSE MAC",
-            details:
-              "The COSE_Mac0 authentication tag did not verify against the resolved key.",
-          });
-    }
 
     // Reconstruct by the PROTECTED cty: the signature/MAC is verified above,
     // BEFORE parsing, and the unprotected bucket covers nothing.
@@ -295,19 +222,6 @@ export class CwsKit implements ICwsKit {
   }
 
   // private — shared
-
-  /**
-   * Which COSE integrity structure this kit's key implies (RFC 9052 §4.4 / §6.3)
-   * — the ONE gate, asked identically by both verbs.
-   */
-  private structureTag(): CoseStructureTag {
-    return coseStructureTag({
-      algClass: this.kryptos.algClass,
-      error: CwsError,
-      details:
-        "The resolved key's algClass is neither asymmetric nor symmetric, so no COSE integrity structure applies.",
-    });
-  }
 
   /**
    * Build the COSE_Sign1/Mac0 protected + unprotected header maps. `alg` is

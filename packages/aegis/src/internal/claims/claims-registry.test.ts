@@ -506,6 +506,56 @@ describe("CLAIM_REGISTRY", () => {
     ]);
   });
 
+  /**
+   * The `whenEmpty: "keep"` set, frozen by name. The column has no default, so a
+   * new claim cannot dodge the decision — but an EXISTING one can be flipped in a
+   * one-word diff, and a flip either fabricates an assertion the issuer never made
+   * or strips a restriction the issuer did make. Both are silent on the wire, so
+   * the set is pinned here and a change to it has to be a change to this list.
+   */
+  test("the claims kept when empty are exactly the stated set", () => {
+    const keep = CLAIM_SPECS.filter((s) => s.whenEmpty === "keep").map((s) => s.domain);
+
+    // Registry declaration order. Restrictions (`aud`, RAR), bindings (`cnf`, the
+    // OIDC hashes), delegation (`act`/`may_act`), and the two RFC 8417/9493 claims
+    // a SET IS.
+    //
+    // ⚠ The four lindorm authority lists — `roles`, `permissions`, `entitlements`,
+    // `groups` — are deliberately NOT here. They prune: they are our own
+    // vocabulary, no specification gives their absence a default-resolving
+    // reading, and the only issuer that mints them states that an empty list "is
+    // emitted as absence"
+    // (`services/tyr/src/features/tokens/utils/mint-access-token.ts:10-17`).
+    // `scope` IS here, and splits from them as AEGIS POLICY — see its registry
+    // entry. ⚠ Not because a specification defines its absence: RFC 6749 §3.3 is
+    // about the AUTHORIZATION SERVER defaulting a CLIENT REQUEST that omits
+    // `scope`, not about reading an absent CLAIM, and an earlier version of this
+    // comment cited it wrongly. The real reason is that RFC 9068 §2.2.3 makes
+    // `scope` only a SHOULD, so absence is indistinguishable from a grant that
+    // never had one — which is what leaves an explicit empty list something to say.
+    expect(keep).toEqual([
+      "audience",
+      "confirmation",
+      "scope",
+      "act",
+      "accessTokenHash",
+      "codeHash",
+      "stateHash",
+      "authorizationDetails",
+      "mayAct",
+      "subjectId",
+      "events",
+    ]);
+  });
+
+  test("every claim states what happens to its empty value", () => {
+    for (const spec of CLAIM_SPECS) {
+      expect(["keep", "prune"], `${spec.domain} has no whenEmpty cell`).toContain(
+        spec.whenEmpty,
+      );
+    }
+  });
+
   test('a temporal mark implies a "date" codec; updatedAt is a date but NOT temporal', () => {
     for (const spec of CLAIM_SPECS) {
       if (spec.temporal === undefined) continue;

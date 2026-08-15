@@ -4,7 +4,6 @@ import type {
   SignUnstructuredTokenOptions,
   TokenContent,
 } from "../../types/index.js";
-import type { OmitMode } from "./apply-omit.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { rawSignCose } from "./raw-sign-cose.js";
 
@@ -21,17 +20,17 @@ export const rawSignCws = ({
   deps,
 }: {
   data: TokenContent;
-  options?: SignUnstructuredTokenOptions & { key?: AegisSignKey; omit?: OmitMode };
+  options?: SignUnstructuredTokenOptions & { key?: AegisSignKey };
   deps: AegisDeps;
 }): Promise<SignedToken> => {
-  // `key`/`omit` are the aegis-side concerns; `rest` is exactly the kit's
+  // `key` is the aegis-side concern; `rest` is exactly the kit's
   // `SignUnstructuredTokenOptions` envelope and rides the `RawSignCoseInput`
   // straight through to `CwsKit.sign`, so a new kit sign option threads through
   // with no change here.
-  const { key, omit, ...rest } = options;
+  const { key, ...rest } = options;
 
   return rawSignCose({
-    input: { payload: data, key, omit, ...rest },
+    input: { payload: data, key, ...rest },
     deps,
   });
 };

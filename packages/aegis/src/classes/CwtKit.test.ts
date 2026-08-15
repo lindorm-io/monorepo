@@ -114,6 +114,9 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
     })();
 
     expect(error?.code).toBe("cwt_kid_mismatch");
+    // The title is derived from the format tag; `CwmKit` asserts its own, which
+    // is the pair that says the derivation distinguishes the two structures.
+    expect(error?.title).toBe("CWT Kid Mismatch");
   });
 
   describe("ML-DSA is official COSE (RFC 9964)", () => {
@@ -452,6 +455,14 @@ describe("CwtKit — a DETACHED (nil) payload is refused under the error contrac
 
     expect(thrown).toBeInstanceOf(CwsError);
     expect((thrown as CwsError).code).toBe("cose_malformed");
+    // ⚠ THE CLAIMS WORDING — "no CWT claims", where the opaque path says "no
+    // content". One shared body (`verifyCoseStructure`) writes both from a
+    // parameter, and the parameter is the only thing that differs, so nothing
+    // but this and its `CwsKit.test.ts` twin can tell the two apart. Without the
+    // pair, swapping the two call sites' arguments left the suite green.
+    expect((thrown as CwsError).details).toBe(
+      "The COSE_Sign1 has a detached or nil payload, so there are no CWT claims to verify.",
+    );
   });
 
   test("decode already answered the same way, and still does", () => {
@@ -700,7 +711,11 @@ describe("CwmKit — the typ gate refuses a COSE object of another shape", () =>
 
     expect(thrown).toBeInstanceOf(CwmError);
     expect(thrown?.code).toBe("cwm_invalid_typ");
-    expect(thrown?.title).toBe("CWT Invalid Typ");
+    // ⚠ Was "CWT Invalid Typ" — a `cwm` code under a `CWT` title, because this
+    // was the last refusal on the claims read path whose title was hardcoded
+    // while its code derived from the format. It derives now, both here and on
+    // the keyless wire read.
+    expect(thrown?.title).toBe("CWM Invalid Typ");
     expect(thrown?.data).toEqual({ typ: "application/cws" });
   });
 });

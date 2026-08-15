@@ -26,6 +26,7 @@ import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
+import { resolveContentEncryption } from "../internal/utils/resolve-content-encryption.js";
 import type {
   CweEncryptOptions,
   DecodedEncryptedToken,
@@ -97,10 +98,10 @@ export class CweKit implements ICweKit {
 
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CweKit"]);
-    // Same floor as JweKit and AesKit — all three wire kits resolve
-    // key-first, then the deployment fallback, then `A256GCM`.
-    this.encryption =
-      options.kryptos.encryption ?? options.defaultEncryption ?? "A256GCM";
+    this.encryption = resolveContentEncryption(
+      options.kryptos,
+      options.defaultEncryption,
+    );
 
     // No `contentEncryption` gate here: the row is the WHOLE kryptos encryption
     // set, and `KryptosEncryption` IS that set, so a gate on it could never fire.

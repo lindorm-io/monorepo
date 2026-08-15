@@ -5,7 +5,7 @@ import { JwtError } from "../../errors/index.js";
 import type { TokenContent, TokenProfileTyp } from "../../types/index.js";
 import { joseName } from "../claims/claims-registry.js";
 import { domainToWire } from "../claims/translate.js";
-import { applyOmit } from "../utils/apply-omit.js";
+import { normaliseClaims } from "../utils/normalise-claims.js";
 import { assertWireTyp } from "../utils/assert-wire-typ.js";
 import { buildSignedToken } from "../utils/build-signed-token.js";
 import { computeTypHeader, extractTypPrefix } from "../utils/compute-typ-header.js";
@@ -39,7 +39,6 @@ const JOSE_DISPOSITIONS: WireInputDispositions = {
     // a call that stated nothing. A stated value reaches the kit unchanged.
     certificateThumbprintSha1: { use: "forwarded" },
     proprietary: { use: "forwarded" },
-    omit: { use: "forwarded" },
   },
 
   signOpaque: {
@@ -251,15 +250,14 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
   // `serialiseContent` takes it as an override. The COSE twin does the identical
   // thing one level down in `rawSignCose`, so the two wires now agree.
   //
-  // `omit` is applied HERE rather than in `rawSignJws`, which the COSE twin's
-  // placement would suggest, because `rawSignJws` also serves `aegis.jws.sign`,
-  // whose options carry no `omit` — pruning there would prune a namespace that
-  // cannot opt out. `rawSignCose` may hold it because `aegis.cws.sign` does
-  // declare the option. Same expression, same default, placed where each one's
-  // callers can state it.
-  signOpaque: ({ deps, payload, key, omit, ...options }) =>
+  // The normalisation sits HERE rather than in `rawSignJws`, which the COSE
+  // twin's placement would suggest, because `rawSignJws` also serves the raw
+  // `aegis.jws.sign` namespace — the door that hands a kit whatever bytes it was
+  // given. This is the DOMAIN `sign` verb, and its object payload is normalised
+  // exactly as the COSE twin normalises its own (`raw-sign-cose.ts`).
+  signOpaque: ({ deps, payload, key, ...options }) =>
     rawSignJws({
-      data: isString(payload) || isBuffer(payload) ? payload : applyOmit(payload, omit),
+      data: isString(payload) || isBuffer(payload) ? payload : normaliseClaims(payload),
       options: { ...options, key },
       deps,
     }),

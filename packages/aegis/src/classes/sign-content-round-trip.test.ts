@@ -175,16 +175,37 @@ describe("what aegis.sign hands back", () => {
   });
 
   /**
-   * The empty-claim prune reaches an OBJECT payload on both wires and leaves a
-   * string/Buffer alone — the property the stringify used to carry on the JOSE
+   * The emission normalisation reaches an OBJECT payload on both wires and leaves
+   * a string/Buffer alone — the property the stringify used to carry on the JOSE
    * side and which had to survive its deletion. It is applied at a different
-   * DEPTH on each wire (the JOSE wire itself, the shared COSE signer) because
-   * `aegis.jws.sign` declares no `omit` option while `aegis.cws.sign` does; the
-   * expression and its default are the same, which is what these assert.
+   * DEPTH on each wire (the JOSE wire's `signOpaque`, the shared COSE signer),
+   * so the two are separate forwards and each can be dropped on its own; that the
+   * expression is the same is what these assert.
+   *
+   * ⚠ An OPAQUE payload is the caller's data, so what the normalisation may take
+   * out of it is narrow by construction: `undefined`, and the empty value of a
+   * claim aegis has DECLARED. `nonce` is the declared one — the registry prunes
+   * it when empty — and `empty` is not a claim at all, so it is never touched on
+   * either wire. That pairing is the property that keeps this door honest now
+   * that nothing has to be asked for.
    */
-  describe("the empty-claim prune reaches an object payload", () => {
-    test("on both wires by default", async () => {
-      const payload = { kept: "value", dropped: "", empty: [] };
+  describe("the emission normalisation reaches an object payload", () => {
+    test("and prunes the declared empty claim on both wires", async () => {
+      const payload = { kept: "value", nonce: "", empty: [] };
+
+      const jose = await aegis.sign({ payload, format: "jws" });
+      const cose = await aegis.sign({ payload, format: "cws" });
+
+      await expect(aegis.verify(jose.token)).resolves.toEqual(
+        expect.objectContaining({ raw: { kept: "value", empty: [] } }),
+      );
+      await expect(aegis.verify(cose.token)).resolves.toEqual(
+        expect.objectContaining({ raw: { kept: "value", empty: [] } }),
+      );
+    });
+
+    test("and drops an undefined entry on both wires", async () => {
+      const payload = { kept: "value", gone: undefined };
 
       const jose = await aegis.sign({ payload, format: "jws" });
       const cose = await aegis.sign({ payload, format: "cws" });
@@ -194,20 +215,6 @@ describe("what aegis.sign hands back", () => {
       );
       await expect(aegis.verify(cose.token)).resolves.toEqual(
         expect.objectContaining({ raw: { kept: "value" } }),
-      );
-    });
-
-    test("and honours the undefined-only mode on both wires", async () => {
-      const payload = { kept: "value", dropped: "", gone: undefined };
-
-      const jose = await aegis.sign({ payload, format: "jws", omit: "undefined" });
-      const cose = await aegis.sign({ payload, format: "cws", omit: "undefined" });
-
-      await expect(aegis.verify(jose.token)).resolves.toEqual(
-        expect.objectContaining({ raw: { kept: "value", dropped: "" } }),
-      );
-      await expect(aegis.verify(cose.token)).resolves.toEqual(
-        expect.objectContaining({ raw: { kept: "value", dropped: "" } }),
       );
     });
   });

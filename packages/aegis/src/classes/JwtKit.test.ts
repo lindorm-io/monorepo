@@ -51,7 +51,6 @@ const signDefault = (
   );
   return kit.sign(claims, {
     header: domainHeaderToWire(options.header),
-    omit: options.omit,
     // The kit takes a bare prefix and re-wraps it into the full media type.
     tokenType: extractTypPrefix(computeTypHeader(content.tokenType, "jwt")),
   });
@@ -436,13 +435,32 @@ describe("JwtKit", () => {
     return undefined;
   };
 
+  /**
+   * The refusal WITH its title, for the two gates whose title is derived from
+   * the format tag rather than written out. `CwmKit`/`CwtKit` assert the COSE
+   * spellings; these are the JOSE half of the same pair.
+   */
+  const refusalOf = (fn: () => unknown): { code?: string; title?: string } => {
+    try {
+      fn();
+    } catch (err) {
+      const { code, title } = err as { code?: string; title?: string };
+      return { code, title };
+    }
+
+    throw new Error("the call was expected to refuse and did not");
+  };
+
   describe("kid fail-fast", () => {
     test("throws before the signature cycle when the token kid differs from the key", () => {
       // Sign with a DIFFERENT key so the token carries the other key's kid.
       const other = new JwtKit({ logger, kryptos: TEST_RSA_KEY_SIG });
       const token = other.sign({ iss: issuer, sub: "s", exp: 1704099600 });
 
-      expect(codeOf(() => kit.verify(token))).toBe("jwt_kid_mismatch");
+      expect(refusalOf(() => kit.verify(token))).toEqual({
+        code: "jwt_kid_mismatch",
+        title: "JWT Kid Mismatch",
+      });
     });
 
     test("verifies when the token kid matches the configured key", () => {
@@ -460,9 +478,10 @@ describe("JwtKit", () => {
         { tokenType: "at" },
       );
 
-      expect(codeOf(() => kit.verify(token, undefined, { tokenType: "rt" }))).toBe(
-        "jwt_typ_mismatch",
-      );
+      expect(refusalOf(() => kit.verify(token, undefined, { tokenType: "rt" }))).toEqual({
+        code: "jwt_typ_mismatch",
+        title: "JWT Typ Mismatch",
+      });
       expect(() => kit.verify(token, undefined, { tokenType: "at" })).not.toThrow();
     });
 

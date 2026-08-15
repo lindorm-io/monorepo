@@ -1,23 +1,20 @@
 import type { Dict, TokenData } from "@lindorm/types";
-import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { CertificateBindingMode } from "../header/domain-header.js";
 import type { WireHeaderBuckets } from "../header/wire-buckets.js";
 import type { WireTokenEnvelope } from "../header/wire-envelope.js";
 
 /**
- * The STRUCTURED (claims-bearing) sign options — shared by JWT, CWT, CWM. The
- * wire envelope plus `omit` (empty-claim pruning, structured-only). The claims
- * dict is the positional argument (`JwtClaimsWire & C` for JWT, `CwtClaimsWire &
- * C` for CWT/CWM); these options are pure wire knobs, format-parallel.
+ * The STRUCTURED (claims-bearing) sign options — shared by JWT, CWT, CWM. Exactly
+ * the wire envelope: the claims dict is the positional argument (`JwtClaimsWire &
+ * C` for JWT, `CwtClaimsWire & C` for CWT/CWM), and these options are pure wire
+ * knobs, format-parallel.
+ *
+ * ⚠ There is deliberately NO prune knob. Whether an empty claim reaches the wire
+ * is a fact about the CLAIM, answered once by the claim registry's `whenEmpty`
+ * cell and applied on every emission (`internal/utils/normalise-claims.ts`) — a
+ * per-call mode made a per-claim question look like a caller's preference.
  */
-export type SignStructuredTokenOptions = WireTokenEnvelope & {
-  /**
-   * How empty claims are pruned before serialisation. `"empty"` (default) drops
-   * null/empty-string/empty-array/empty-object recursively; `"undefined"` drops
-   * only undefined.
-   */
-  omit?: OmitMode;
-};
+export type SignStructuredTokenOptions = WireTokenEnvelope;
 
 /**
  * The STRUCTURED verify options — shared by JWT, CWT, CWM. Pure wire structural

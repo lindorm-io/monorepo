@@ -1,0 +1,83 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`normaliseClaims > the registry-driven empty prune > should keep a registered claim the registry marks keepable 1`] = `
+{
+  "aud": [],
+  "cnf": {},
+  "events": {},
+  "scope": [],
+  "sub": "user_1",
+}
+`;
+
+exports[`normaliseClaims > the registry-driven empty prune > should keep zero and false 1`] = `
+{
+  "email_verified": false,
+  "loa": 0,
+}
+`;
+
+exports[`normaliseClaims > the registry-driven empty prune > should never prune an unregistered key 1`] = `
+{
+  "empty_list": [],
+  "empty_map": {},
+  "empty_text": "",
+  "kept": 1,
+}
+`;
+
+exports[`normaliseClaims > the registry-driven empty prune > should not recurse into a claim's own structure 1`] = `
+{
+  "authorization_details": [
+    {
+      "actions": [],
+      "locations": [],
+      "type": "pay",
+    },
+  ],
+}
+`;
+
+exports[`normaliseClaims > the registry-driven empty prune > should prune a registered claim the registry marks prunable 1`] = `
+{
+  "sub": "user_1",
+}
+`;
+
+exports[`normaliseClaims > the registry-driven empty prune > should resolve the COSE spelling of a claim as well as the JOSE one 1`] = `
+{
+  "sub": "user_1",
+}
+`;
+
+exports[`normaliseClaims > the undefined strip > should keep zero and false 1`] = `
+{
+  "a": 0,
+  "b": false,
+}
+`;
+
+exports[`normaliseClaims > the undefined strip > should leave a nested structure alone 1`] = `
+{
+  "a": {
+    "b": {
+      "c": "",
+    },
+  },
+  "d": [
+    "",
+    "",
+  ],
+  "keep": 1,
+}
+`;
+
+exports[`normaliseClaims > the undefined strip > should strip undefined and keep every other value of an unregistered key 1`] = `
+{
+  "a": 1,
+  "b": null,
+  "c": "",
+  "e": [],
+  "f": {},
+}
+`;

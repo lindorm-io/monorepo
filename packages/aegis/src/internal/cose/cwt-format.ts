@@ -1,7 +1,4 @@
-import type { IKryptos } from "@lindorm/kryptos";
-import { CwsError } from "../../errors/index.js";
 import type { CwtClaimsWire } from "../../types/index.js";
-import { type CoseStructureTag, coseStructureTag } from "./cose-structure-tag.js";
 import type { SignedCoseFormat } from "./error-by-format.js";
 
 /**
@@ -37,21 +34,6 @@ import type { SignedCoseFormat } from "./error-by-format.js";
  * the claims half of the signed COSE set the shared error table is keyed by.
  */
 export type CwtFormat = Extract<SignedCoseFormat, "cwt" | "cwm">;
-
-/**
- * Which COSE integrity structure the resolved key implies (RFC 9052 §4.4 / §6.3)
- * — the ONE gate both claims verbs ask, and the only difference between a CWT and
- * a CWM on the wire. The kits gate their key's `algClass` in their constructors,
- * so this is settled by the time either verb runs; asking it here keeps sign and
- * verify from being able to disagree about which structure a key produces.
- */
-export const claimsStructureTag = (kryptos: IKryptos): CoseStructureTag =>
-  coseStructureTag({
-    algClass: kryptos.algClass,
-    error: CwsError,
-    details:
-      "The resolved key's algClass is neither asymmetric nor symmetric, so no COSE integrity structure applies.",
-  });
 
 export type CwtDecoded = {
   /** The COSE structure inside the CWT (a COSE_Sign1 or COSE_Mac0 Tag). */

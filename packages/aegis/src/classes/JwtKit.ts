@@ -8,8 +8,9 @@ import { sanitiseToken } from "@lindorm/utils";
 import { JwtError } from "../errors/index.js";
 import type { IJwtKit } from "../interfaces/index.js";
 import { B64U } from "../internal/constants/format.js";
-import { applyOmit } from "../internal/utils/apply-omit.js";
-import { assertAlgorithmMatch } from "../internal/utils/assert-algorithm-match.js";
+import { normaliseClaims } from "../internal/utils/normalise-claims.js";
+import { assertKidMatch } from "../internal/utils/assert-kid-match.js";
+import { assertTokenTypeMatch } from "../internal/utils/assert-token-type-match.js";
 import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
 import { buildJoseHeader } from "../internal/header/build-jose-header.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
@@ -22,14 +23,13 @@ import {
   verifyJoseSignature,
 } from "../internal/utils/jose-signature.js";
 import { decodeJwtPayload } from "../internal/utils/jwt-payload.js";
-import { createTemporalMatchers } from "../internal/utils/jwt-temporal-matchers.js";
 import {
   redactSensitiveIdentity,
   redactVerifyOptions,
 } from "../internal/utils/redact-sensitive-identity.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
-import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
-import { validate } from "../internal/utils/validate.js";
+import { assertProtectedHeaderGates } from "../internal/utils/assert-protected-header-gates.js";
+import { validateWireClaims } from "../internal/utils/validate-wire-claims.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
   CertificateBindingMode,
@@ -74,11 +74,17 @@ export class JwtKit implements IJwtKit {
 
   /**
    * TRANSFORM-FREE sign (R18): serialize the already-wire jose-keyed `claims`
-   * dict verbatim (modulo the `omit` knob) and secure it. Injects NO envelope
-   * claims (`iat`/`jti`/`nbf`/`iss`), derives no hash, maps no case or name — the
-   * Aegis claim assembly owns all of that. Returns JUST the token; the expiry/id
-   * conveniences are DOMAIN sugar, derived Aegis-side. The kit constructs the
-   * full `typ` media type from the `options.typ` PREFIX (it knows its format).
+   * dict and secure it. Injects NO envelope claims (`iat`/`jti`/`nbf`/`iss`),
+   * derives no hash, maps no case or name — the Aegis claim assembly owns all of
+   * that. Returns JUST the token; the expiry/id conveniences are DOMAIN sugar,
+   * derived Aegis-side. The kit constructs the full `typ` media type from the
+   * `options.typ` PREFIX (it knows its format).
+   *
+   * The normalisation the dict passes through is none of those three: it drops
+   * `undefined` and the empty value of a claim the REGISTRY declares carries
+   * nothing (`internal/utils/normalise-claims.ts`). It renames nothing, adds
+   * nothing, and reads no key the registry has not declared — which is why the
+   * kit may consult the registry without owning a claim vocabulary.
    */
   sign<C extends Dict = Dict>(
     claims: JwtClaimsWire & C,
@@ -89,7 +95,7 @@ export class JwtKit implements IJwtKit {
       options,
     });
 
-    const payload = B64.encode(JSON.stringify(applyOmit(claims, options.omit)), B64U);
+    const payload = B64.encode(JSON.stringify(normaliseClaims(claims)), B64U);
 
     // NO `cty` default. RFC 7519 §5.2: "In the normal case in which nested
     // signing or encryption operations are not employed, the use of this Header
@@ -148,21 +154,17 @@ export class JwtKit implements IJwtKit {
 
     const decoded = JwtKit.decode<C>(token);
 
-    // kid fail-fast: a token that names a kid different from the configured key
-    // cannot verify, so reject it before the (expensive) signature cycle. Via
-    // Aegis the handed key already matches; this protects the standalone case.
     const decodedHeader = decoded.protectedHeader;
 
-    if (decodedHeader.kid && this.kryptos.id && decodedHeader.kid !== this.kryptos.id) {
-      throw new JwtError("Invalid token", {
-        code: "jwt_kid_mismatch",
-        data: { kid: decodedHeader.kid },
-        debug: { expected: this.kryptos.id },
-        title: "JWT Kid Mismatch",
-        details:
-          "The token's kid names a different key than the one configured on this kit, so it cannot be verified here.",
-      });
-    }
+    // kid fail-fast, before the (expensive) signature cycle. The COSE claims
+    // path runs the same one; the OPAQUE and ENCRYPTED doors deliberately run
+    // none.
+    assertKidMatch({
+      actual: decodedHeader.kid,
+      expected: this.kryptos.id,
+      format: "jwt",
+      error: JwtError,
+    });
 
     // typ well-formedness (folded from the removed `parse`): a PRESENT typ must
     // be a JWT media type so a JWS/JWE cannot be verified as a JWT. A typ-LESS
@@ -180,33 +182,25 @@ export class JwtKit implements IJwtKit {
         "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be verified as a JWT.",
     });
 
-    // `crit` (RFC 7515 §4.1.11), the SAME enforcement the COSE kits run — one
-    // implementation, so the two wires cannot disagree about a hostile token.
-    rejectUnknownCritical({ header: decodedHeader, format: "jwt", error: JwtError });
-
-    assertAlgorithmMatch({
-      actual: decodedHeader.alg,
-      expected: this.kryptos.algorithm,
+    // `crit` (RFC 7515 §4.1.11) then algorithm-match — the ONE pair, in the ONE
+    // order, that every wire runs ahead of its signature or AEAD cycle.
+    assertProtectedHeaderGates({
+      protectedHeader: decodedHeader,
+      expectedAlgorithm: this.kryptos.algorithm,
       format: "jwt",
       error: JwtError,
-      details:
+      algDetails:
         "The header alg does not match the signing algorithm of the configured kryptos key.",
     });
 
     // typ assertion: the kit builds the expected media type from the PREFIX
     // (the Aegis path derives the prefix from the domain tokenType).
-    if (options.tokenType !== undefined) {
-      const expected = buildMediaType(options.tokenType, "jwt");
-      if (typ !== expected) {
-        throw new JwtError("Invalid token", {
-          code: "jwt_typ_mismatch",
-          data: { typ },
-          debug: { expected },
-          title: "JWT Typ Mismatch",
-          details: "The header typ does not match the typ expected during verification.",
-        });
-      }
-    }
+    assertTokenTypeMatch({
+      typ,
+      tokenType: options.tokenType,
+      format: "jwt",
+      error: JwtError,
+    });
 
     const verified = verifyJoseSignature(this.kryptos, token);
 
@@ -232,26 +226,16 @@ export class JwtKit implements IJwtKit {
 
     // Temporal range (R10) — every temporal claim validated IF PRESENT — plus
     // the caller's wire `assert` predicate, in one pass over the Date-lifted
-    // wire payload.
-    const clockTolerance = options.clockTolerance ?? this.clockTolerance;
-
-    validate(
-      withJoseDates(decoded.payload),
-      {
-        ...createTemporalMatchers({
-          clockTolerance,
-          currentDate: options.currentDate,
-          maxTokenAge: options.maxTokenAge,
-          verifyExpiration: options.verifyExpiration,
-          verifyNotBefore: options.verifyNotBefore,
-          verifyIssuedAt: options.verifyIssuedAt,
-          verifyAuthTime: options.verifyAuthTime,
-        }),
-        ...(assert ?? {}),
-      } as Condition<Dict>,
-      JwtError,
-      "jwt_claims_invalid",
-    );
+    // wire payload. The JOSE lift happens HERE: a NumericDate is an integer on
+    // this wire and a `Date` on the COSE one, which is encoding, not policy.
+    validateWireClaims({
+      claims: withJoseDates(decoded.payload),
+      assert: assert as Condition<Dict> | undefined,
+      options,
+      clockTolerance: options.clockTolerance ?? this.clockTolerance,
+      format: "jwt",
+      error: JwtError,
+    });
 
     this.logger.debug("Token verified");
 

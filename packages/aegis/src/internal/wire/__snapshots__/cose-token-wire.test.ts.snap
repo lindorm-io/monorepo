@@ -31,3 +31,19 @@ exports[`COSE_TOKEN_WIRE keyless read gates > the keyless wire read refuses an u
   "title": "CWT Invalid Crit",
 }
 `;
+
+exports[`COSE_TOKEN_WIRE keyless read gates > the same gates, under the COSE_Mac0 tag > a foreign typ on a COSE_Mac0 is refused as a CWM 1`] = `
+{
+  "code": "cwm_invalid_typ",
+  "details": "Header typ is present but is not CWT or a <type>+cwt media type, so the token cannot be parsed as a CWT.",
+  "title": "CWM Invalid Typ",
+}
+`;
+
+exports[`COSE_TOKEN_WIRE keyless read gates > the same gates, under the COSE_Mac0 tag > an unresolvable crit on a COSE_Mac0 is refused as a CWM 1`] = `
+{
+  "code": "cwm_invalid_crit",
+  "details": "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
+  "title": "CWM Invalid Crit",
+}
+`;

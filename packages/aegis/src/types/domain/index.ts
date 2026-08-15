@@ -9,4 +9,3 @@ export * from "./sign.js";
 export * from "./token-format.js";
 export * from "./verify.js";
 export * from "./verified-token.js";
-export * from "./omit-mode.js";

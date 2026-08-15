@@ -33,7 +33,6 @@ export const signToken = async ({
     deps,
     payload: input.payload,
     key: input.key,
-    omit: input.omit,
     tokenType: domainTokenTypePrefix(input.tokenType),
     header: domainHeaderToWire(input.header),
     bindCertificate: input.bindCertificate,

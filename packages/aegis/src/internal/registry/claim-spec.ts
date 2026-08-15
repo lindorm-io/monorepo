@@ -86,6 +86,30 @@ export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec> & {
    */
   bucket: "claims" | "profile";
   /**
+   * What the emission-boundary prune does to this claim when its value is EMPTY
+   * (`""`, `null`, `[]`, `{}` — `0` and `false` are values and are never empty).
+   * REQUIRED, with no default: both polarities fail open in a different
+   * direction, so there is nothing safe to fall into and a new claim must decide.
+   *   - `"prune"` the empty value is indistinguishable from "not stated" — a
+   *               scalar with no meaningful empty form, or a descriptive
+   *               attribute whose empty list says nothing anyone can act on.
+   *   - `"keep"`  the empty value is a STATEMENT: dropping it either broadens
+   *               what the token permits (a restriction, a binding) or erases
+   *               what the token is FOR (the event, the subject of the event).
+   *
+   * ⚠ The column governs the TOP-LEVEL claim only, and it is the ONLY thing that
+   * governs it: the prune runs on every emission, with no per-call mode to state
+   * and nothing else consulted (`internal/utils/normalise-claims.ts`). A
+   * claim's INNER members are its own declared structure (RFC 9396 `actions`, an
+   * RFC 8417 event payload, an OIDC `address` member) and aegis has not declared
+   * them, so nothing recurses.
+   *
+   * ⚠ It is a CLAIM-only column. A header parameter is never pruned: the header
+   * registry is a CLOSED set whose unregistered keys are dropped outright, so
+   * there is no empty-versus-absent choice to state.
+   */
+  whenEmpty: "keep" | "prune";
+  /**
    * The claim is part of `DomainClaims`, so the verify-FLOOR read resolves it to
    * its domain name. Absent ⇒ it is not (SET-only `events`/`txn`, profile,
    * sensitive), and the floor leaves it in `custom` under its wire spelling.

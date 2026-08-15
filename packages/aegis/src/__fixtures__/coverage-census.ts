@@ -86,12 +86,12 @@ export const SHAPE_RULE_CENSUS: { [S in ShapeRuleName]-?: CensusEntry } = {
  * THE 49 KIT-CAPABILITY CELLS — seven kits × seven columns, TOTAL in both
  * directions, so a new kit or a new column is a compile error here.
  *
- * ⚠ SEVEN of the forty-nine have a production reader. The other forty-two are
+ * ⚠ NINE of the forty-nine have a production reader. The other forty are
  * declarations about a kit, and a declaration nothing consults is a comment with
  * a type: the table's whole premise is that a kit reads its own row, and for
- * six-sevenths of the table that is not yet true. Each such cell therefore says
- * whether a test OBSERVES the kit doing what the cell claims — which is a real
- * binding even without a reader — or states that it does not and why.
+ * most of the table that is not yet true. Each such cell therefore says whether
+ * a test OBSERVES the kit doing what the cell claims — which is a real binding
+ * even without a reader — or states that it does not and why.
  */
 export const KIT_CELL_CENSUS: {
   [F in TokenFormatTag]-?: { [C in keyof KitCapabilities]-?: CensusEntry };
@@ -198,9 +198,13 @@ export const KIT_CELL_CENSUS: {
       reason: "Empty on a signing kit — nothing to observe, no reader.",
     },
     cnfMembers: {
-      exercised: "reader",
-      site: "src/internal/cose/cose-key.ts#const COSE_CNF_MEMBERS = KIT_CAPABILITIES.cwt.cnfMembers;",
-      // `encodeCnf` refuses a member outside this set.
+      exercised: "observed",
+      // ⚠ It WAS a reader: `encodeCnf` read this row to decide what to refuse.
+      // The direction is now INVERTED — the row is DERIVED from the label table
+      // the codec switches over — so nothing reads it back. That is a tighter
+      // binding than the read, not a looser one: the encoder cannot represent a
+      // member the row omits because there is no second list to disagree with.
+      note: "DERIVED from `src/internal/registry/cose-cnf-labels.ts#export const COSE_CNF_LABELS`, whose own test pins that table against a hand-written literal AND NOTHING ELSE. The behaviour is driven one file over, at `src/internal/cose/cose-key.test.ts#encodeCnf({ jwk: CNF_JWK, kid: 42 })` and the rows beside it: a mixed `{ jwk, kid }` writes BOTH labels, a malformed member refuses instead of dropping, and a member with no label (`jkt`) fails the map closed",
     },
     certificateBinding: {
       exercised: "observed",
@@ -229,7 +233,7 @@ export const KIT_CELL_CENSUS: {
     cnfMembers: {
       exercised: "declared",
       reason:
-        "The COSE `cnf` producer reads `KIT_CAPABILITIES.cwt.cnfMembers` for BOTH claims kits — a COSE_Sign1 and a COSE_Mac0 share one claims codec — so this row is declared identical and consulted nowhere. Its value is checked against the `cwt` row's, which is a declaration check and not a binding.",
+        "Every COSE row derives from the ONE label table — a COSE_Sign1 and a COSE_Mac0 share one claims codec — so this row is the same object as the `cwt` row and consulted nowhere. Its value is checked against the `cwt` row's, which is an identity and not a binding.",
     },
     certificateBinding: {
       exercised: "observed",
@@ -287,7 +291,7 @@ export const KIT_CELL_CENSUS: {
     cnfMembers: {
       exercised: "declared",
       reason:
-        "The COSE `cnf` producer reads the `cwt` row, not this one; this row is declared identical and consulted nowhere.",
+        "Derived from the ONE label table the `cwt` row names, so this row IS that row's object; nothing consults it.",
     },
     certificateBinding: {
       exercised: "observed",

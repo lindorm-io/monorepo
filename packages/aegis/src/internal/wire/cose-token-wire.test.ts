@@ -1,7 +1,8 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { describe, expect, test } from "vitest";
-import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
+import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../../__fixtures__/keys.js";
+import { CwmKit } from "../../classes/CwmKit.js";
 import { CwtKit } from "../../classes/CwtKit.js";
 import { Tag, decodeCbor, encodeCbor } from "../cose/cbor.js";
 import { decodeProtectedHeader, encodeProtectedHeader } from "../cose/structures.js";
@@ -99,6 +100,61 @@ describe("COSE_TOKEN_WIRE keyless read gates", () => {
     // `parseToken` IS `aegis.parse`; the wire is the only thing that answers it.
     expect(refusalOf(() => parseToken(evilTyp()))).toMatchSnapshot();
     expect(refusalOf(() => parseToken(unknownCrit()))).toMatchSnapshot();
+  });
+
+  /**
+   * ⚠ THE COSE_Mac0 HALF. `coseFormatOf` resolves `cwm` on this very path, so
+   * both refusals above have a `cwm` spelling that nothing drove: every case in
+   * this file signs with an EC key, so every snapshot is `cwt_*`, and the two
+   * titles could be reverted to a hardcoded "CWT" with the suite still green.
+   * A `cwm` token answering under a `CWT` title is the same half-applied
+   * inconsistency `CwtKit.test.ts` pins for the keyed read.
+   */
+  describe("the same gates, under the COSE_Mac0 tag", () => {
+    const macKit = new CwmKit({ logger: createMockLogger(), kryptos: TEST_OCT_KEY_SIG });
+
+    const macRewritten = (
+      edit: (header: Map<number | string, unknown>) => void,
+    ): string => {
+      const tags: Array<number> = [];
+      let value: unknown = decodeCbor(macKit.sign({ iss: "https://test.lindorm.io/" }));
+
+      while (value instanceof Tag) {
+        tags.push(Number(value.tag));
+        value = value.contents;
+      }
+
+      const structure = value as Array<unknown>;
+      const header = decodeProtectedHeader(structure[0] as Uint8Array);
+
+      edit(header);
+
+      let rebuilt: unknown = [encodeProtectedHeader(header), ...structure.slice(1)];
+
+      for (const tag of [...tags].reverse()) rebuilt = new Tag(tag, rebuilt);
+
+      return encodeCbor(rebuilt).toString("base64url");
+    };
+
+    test("a foreign typ on a COSE_Mac0 is refused as a CWM", () => {
+      expect(
+        refusalOf(() =>
+          COSE_TOKEN_WIRE.decodeClaims(
+            macRewritten((header) => header.set(16, "application/evil+jwe")),
+          ),
+        ),
+      ).toMatchSnapshot();
+    });
+
+    test("an unresolvable crit on a COSE_Mac0 is refused as a CWM", () => {
+      expect(
+        refusalOf(() =>
+          COSE_TOKEN_WIRE.decodeClaims(
+            macRewritten((header) => header.set(2, ["fake-param"])),
+          ),
+        ),
+      ).toMatchSnapshot();
+    });
   });
 
   test("⚠ the parse-side and verify-side typ wordings DIFFER, deliberately", () => {

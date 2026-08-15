@@ -19,6 +19,7 @@ import {
 import { AES_ENCRYPTION_ALGORITHMS } from "@lindorm/types";
 import type { TokenFormatTag } from "../../types/index.js";
 import type { CnfMember, KitCapabilities } from "./capabilities.js";
+import { COSE_CNF_MEMBERS } from "./cose-cnf-labels.js";
 
 const NONE_ALG: ReadonlySet<KryptosAlgorithm> = new Set();
 const NONE_ENC: ReadonlySet<KryptosEncryption> = new Set();
@@ -34,11 +35,12 @@ const JOSE_CNF: ReadonlySet<CnfMember> = new Set([
 ]);
 
 /**
- * The confirmation members a COSE `cnf` map can carry (`cose/cose-key.ts`
- * `encodeCnf`): an embedded key (member 1) and a key id (member 3). The
- * thumbprint forms have NO COSE representation.
+ * The confirmation members a COSE `cnf` map can carry — DERIVED from the label
+ * table the codec switches over, never restated. A member is representable
+ * exactly when RFC 8747 gives it a label aegis writes, and there is one place
+ * that says so, so this row cannot claim a member the encoder would drop.
  */
-const COSE_CNF: ReadonlySet<CnfMember> = new Set(["jwk", "kid"]);
+const COSE_CNF: ReadonlySet<CnfMember> = new Set(COSE_CNF_MEMBERS);
 
 /**
  * ⭐ THE RULE EVERY `reserved` ROW OBEYS, stated once:

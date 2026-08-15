@@ -20,7 +20,6 @@ import type {
   WireTokenHeader,
 } from "../../types/index.js";
 import type { NameSelector } from "../claims/claims-registry.js";
-import type { OmitMode } from "../utils/apply-omit.js";
 import type { AegisDeps } from "../utils/aegis-deps.js";
 import type { InputDisposition } from "./wire-input-disposition.js";
 
@@ -130,17 +129,15 @@ export type MintTypInput = {
  * content and the wire hands it to its opaque kit family verbatim.
  *
  * Same intersection as {@link SignClaimsInput}, over the opaque kits' own
- * `SignUnstructuredTokenOptions`. `omit` sits ABOVE the `&` because it is not a
- * kit option here: the opaque kits secure whatever bytes they are given, and the
- * empty-claim prune is applied aegis-side to an OBJECT payload only.
+ * `SignUnstructuredTokenOptions`. The opaque kits secure whatever bytes they are
+ * given; the registry-driven claim normalisation is applied aegis-side, to an
+ * OBJECT payload only.
  */
 export type SignOpaqueInput = {
   deps: AegisDeps;
   /** The caller's content. A `Buffer`/`string` is opaque; a Dict is serialised. */
   payload: Buffer | string | Dict;
   key: AegisSignKey | undefined;
-  /** The empty-claim prune mode, applied to an OBJECT payload only. */
-  omit: OmitMode | undefined;
 } & SignUnstructuredTokenOptions;
 
 /**

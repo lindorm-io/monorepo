@@ -28,6 +28,7 @@ import { decodeProtectedHeader } from "../cose/structures.js";
 import { encodeCnf } from "../cose/cose-key.js";
 import { coseByJose, coseWireKey } from "../header/header-registry.js";
 import { decodeJoseHeader } from "../utils/jose-header.js";
+import { COSE_CNF_MEMBERS } from "./cose-cnf-labels.js";
 import { KIT_CAPABILITIES } from "./kit-capabilities.js";
 import { WIRE_TAGS } from "./wire.js";
 
@@ -223,8 +224,12 @@ describe("KIT_CAPABILITIES", () => {
   });
 
   // DECLARATION — the rows against a literal copy of the shared constants they
-  // are built from. Both sets ARE bound to behaviour, by the two `cnfMembers:`
-  // probes below (`domainToJose` for JOSE, `encodeCnf` for COSE).
+  // are built from. The JOSE set is bound to behaviour by the `cnfMembers:`
+  // probe below (`domainToJose`). The COSE half is NOT bound here any more: that
+  // probe drove `encodeCnf`, and once the row became DERIVED from the codec's
+  // own label table it could only agree with itself. `cose/cose-key.test.ts`
+  // drives the encoder now, and `registry/cose-cnf-labels.test.ts` pins the
+  // table against a literal.
   test("a COSE cnf carries only the embedded key and the key id", () => {
     // `encodeCnf` maps `jwk` -> COSE_Key (member 1) and `kid` -> kid (member 3).
     // The thumbprint forms have NO COSE representation: RFC 9679 `ckt` hashes
@@ -335,6 +340,42 @@ describe("KIT_CAPABILITIES", () => {
       );
     }
   });
+
+  /**
+   * ⭐ THE WHOLE ROW, for every format — the one pin that states what `reserved`
+   * CONTAINS rather than what it must contain.
+   *
+   * Every other assertion above is partial: `toContain("alg")`, `toContain("typ")`,
+   * the eight JWE key-management names, "no duplicates". Partial assertions cannot
+   * see a parameter LEAVING a row, and a parameter that leaves `reserved` stops
+   * being refused — a caller then writes it onto the wire under the kit's own
+   * name. The COSE binding probe below reads the row to decide what to refuse, so
+   * it agrees with the row whatever the row says.
+   *
+   * ⚠ Sorted, because `reserved` is a refusal SET: the order the two source arrays
+   * happen to be written in is not a property anything depends on, and pinning it
+   * would make a re-ordering read as a capability change.
+   *
+   * ⚠ A HARD COUNT beside the snapshot, deliberately not snapshotted: `vitest -u`
+   * rewrites a snapshot without anyone reading the diff. A plain assertion cannot
+   * be updated by `-u`.
+   *
+   * ⚠ "reserves", not "stamps". A row is the whole `KitOwnedHeaderParam` set less
+   * what its wire cannot carry — NOT the set the kit derives. `JwsKit` stamps
+   * none of `enc`/`epk`/`apu`/`apv`/`p2c`/`p2s`/`tag`/`iv` and reserves every one
+   * of them, which is the point: a signing kit derives no key-management output,
+   * so a caller value for one would ride onto a signed token advertising a
+   * content encryption that never happened.
+   */
+  test.each(FORMATS)(
+    "%s reserves exactly its KitOwned params, filtered to its wire",
+    (format) => {
+      const reserved = [...KIT_CAPABILITIES[format].reserved].sort();
+
+      expect(reserved).toHaveLength(KIT_CAPABILITIES[format].wire === "jose" ? 14 : 5);
+      expect(reserved).toMatchSnapshot();
+    },
+  );
 
   // --- BINDINGS: each row checked against the kit it describes ---------------
 
@@ -624,27 +665,19 @@ describe("KIT_CAPABILITIES", () => {
       expect(KIT_CAPABILITIES.jwe.cnfMembers).toBe(KIT_CAPABILITIES.jwt.cnfMembers);
     });
 
-    test("cnfMembers (cose): exactly the members encodeCnf can represent", () => {
-      // `encodeCnf` is the ONLY producer of a COSE `cnf`. A member it accepts
-      // ALONE is representable; one it refuses has no COSE form.
-      const value: Dict = {
-        jkt: "jkt_probe",
-        "x5t#S256": "x5t_probe",
-        jwk: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
-        kid: "key_probe",
-        jku: "https://issuer.lindorm.test/.well-known/jwks.json",
-      };
-
-      const representable = Object.keys(value).filter((member) => {
-        try {
-          encodeCnf({ [member]: value[member] });
-          return true;
-        } catch {
-          return false;
-        }
-      });
-
-      expect(new Set(representable)).toEqual(new Set(KIT_CAPABILITIES.cwt.cnfMembers));
+    test("cnfMembers (cose): the row is DERIVED from the codec's label table", () => {
+      // ⚠ CIRCULAR, and stated as such. `encodeCnf` and this row now read the
+      // same `COSE_CNF_LABELS`, so probing the encoder and comparing it with the
+      // row can only ever agree — which is the POINT: the two cannot drift, and
+      // the older probe (mint each member alone, collect what survives) was
+      // measuring a table against itself the moment the derivation landed.
+      //
+      // What the row SHOULD contain is pinned against a hand-written literal in
+      // `cose-cnf-labels.test.ts`, together with the mixed-confirmation probe
+      // that is the honest half of what this test used to do.
+      expect(new Set(KIT_CAPABILITIES.cwt.cnfMembers)).toEqual(new Set(COSE_CNF_MEMBERS));
+      expect(KIT_CAPABILITIES.cwm.cnfMembers).toBe(KIT_CAPABILITIES.cwt.cnfMembers);
+      expect(KIT_CAPABILITIES.cwe.cnfMembers).toBe(KIT_CAPABILITIES.cwt.cnfMembers);
     });
 
     test("keyManagement (cwe): the kit refuses a key its row does not list", () => {

@@ -255,7 +255,6 @@ const runMintCase = async (kase: MintCase, ctx: CorpusContext): Promise<ActResul
       format: kase.format,
       context: kase.options.context,
       lifetime: kase.options.lifetime,
-      omit: kase.options.omit,
       proprietary: kase.options.proprietary,
       sign: {
         key: { kryptos },
@@ -294,7 +293,6 @@ const runSignCase = async (kase: SignCase, ctx: CorpusContext): Promise<ActResul
     key: { kryptos },
     tokenType: kase.options?.tokenType,
     header: kase.options?.header,
-    omit: kase.options?.omit,
     bindCertificate: kase.options?.bindCertificate,
     certificateThumbprintSha1: kase.options?.certificateThumbprintSha1,
   });
@@ -326,7 +324,6 @@ const runEncryptCase = async (
     key: { kryptos },
     type: kase.options?.type,
     header: kase.options?.header,
-    omit: kase.options?.omit,
     partyProducer: kase.options?.partyProducer,
     partyRecipient: kase.options?.partyRecipient,
     proprietary: kase.options?.proprietary,

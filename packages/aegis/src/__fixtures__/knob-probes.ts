@@ -512,25 +512,6 @@ export const MINT_KNOB_PROBES = {
       jose: "A JOSE claims set is a JSON object, whose members RFC 7519 §4 calls Claim Names — 'The JWT Claims Set represents a JSON object whose members are the claims conveyed by the JWT' — and a JSON member name is a string. The compact form this knob selects is an INTEGER map key, which RFC 8392 §1.1 introduces as a property of CBOR alone: 'In JSON, maps are called objects and only have one kind of map key: a string. CBOR uses strings, negative integers, and unsigned integers as map keys.' There is no JOSE encoding for the thing being switched on.",
     },
   },
-
-  omit: {
-    rationale:
-      "An empty claim is not the same statement as an absent one: `amr: []` asserts that the authentication methods are KNOWN and none apply, while omitting `amr` asserts nothing. The prune mode is how an issuer chooses between the two, so a dropped one changes what the token says about the subject.",
-    value: "undefined",
-    given: [
-      {
-        step: "token",
-        via: "mint",
-        profile: "id_token",
-        content: { ...ID_TOKEN_CONTENT, authMethods: [] },
-        options: { context: { accessTokenIssued: false } },
-      },
-    ],
-    observed: [
-      { step: "wireClaims", on: "jose", present: ["amr"] },
-      { step: "wireClaims", on: "cose", present: ["amr"] },
-    ],
-  },
 } satisfies KnobProbes<ProfileMintOptions>;
 
 // ---------------------------------------------------------------------------
@@ -779,25 +760,6 @@ export const MINT_SIGN_KNOB_PROBES = {
         includes: { oid: "1.2.3.4" },
         excludes: [-70000],
       },
-    ],
-  },
-
-  omit: {
-    rationale:
-      "The signing envelope carries its own prune mode as the fallback for a caller that states one there rather than at the top level. A fallback that is never consulted is a surface that documents a choice the caller does not actually have.",
-    value: "undefined",
-    given: [
-      {
-        step: "token",
-        via: "mint",
-        profile: "id_token",
-        content: { ...ID_TOKEN_CONTENT, authMethods: [] },
-        options: { context: { accessTokenIssued: false } },
-      },
-    ],
-    observed: [
-      { step: "wireClaims", on: "jose", present: ["amr"] },
-      { step: "wireClaims", on: "cose", present: ["amr"] },
     ],
   },
 
@@ -1204,34 +1166,6 @@ export const ENCRYPT_KNOB_PROBES = {
         includes: { oid: "1.2.3.4" },
         excludes: [-70000],
       },
-    ],
-  },
-
-  omit: {
-    rationale:
-      "An empty entry and an absent one are different statements, and on this verb the caller alone makes the choice: the seal preserves whatever it is handed, so the only way to have an empty entry pruned is to ask. A caller assembling a payload from optional values and stating the prune gets a compact sealed value; an unread mode leaves every unset field in it, and the recipient decrypts to a value the writer did not intend to send.",
-    // ⚠ THE PRUNE IS THE FLIP, not the keep. This verb prunes NOTHING unless
-    // asked (`src/internal/utils/encrypt-token.ts#const payload =` — pruning
-    // shapes a claim set and there is no claims layer here), so the baseline
-    // already keeps the empty entry and a `"undefined"` flip would agree with
-    // it. `"empty"` is the mode with something to prove: it must REMOVE what the
-    // baseline keeps.
-    value: "empty",
-    given: [
-      { step: "keys", keys: ["oct-enc"] },
-      {
-        step: "token",
-        via: "domain-encrypt",
-        data: { subject: "user-1", authMethods: [] },
-      },
-    ],
-    act: { step: "decrypt" },
-    // Observed on the PAYLOAD, under the caller's own key: `decrypt` returns the
-    // value it was handed and has no claim buckets to sort it into. The
-    // EXCLUSION is what carries the difference — an object payload is matched as
-    // a subset, so the surviving `subject` alone would hold on both runs.
-    observed: [
-      { step: "raw", expected: { subject: "user-1" }, excludes: ["authMethods"] },
     ],
   },
 

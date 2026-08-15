@@ -3,7 +3,6 @@ import type { KryptosAlgClass } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
 import type { PolicyRule, SignContext } from "./policy.js";
-import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { ClaimsTokenFormat } from "../domain/token-format.js";
 import type { TokenFormat } from "../domain/token-format.js";
 import type { AegisEncKey, AegisSignKey } from "../keys/key-selectors.js";
@@ -162,13 +161,6 @@ export type ProfileMintOptions = {
    * code path.
    */
   proprietary?: boolean;
-  /**
-   * How empty claims are pruned before the token is emitted, threaded into both
-   * the JOSE and COSE wires so a single `mint` call controls both identically.
-   * `"empty"` (default) drops null/empty-string/empty-array/empty-object
-   * recursively; `"undefined"` drops only undefined.
-   */
-  omit?: OmitMode;
 };
 
 /**

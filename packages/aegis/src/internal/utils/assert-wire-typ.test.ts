@@ -158,13 +158,27 @@ describe("assertWireTyp", () => {
     expect(() => assertWireTyp({ ...CWT, typ: "JWT" })).toThrow(CwtError);
   });
 
-  test("the CWM format reuses the CWT words under its own code", () => {
-    // `verifyCwt` serves both claims kits, so the code is namespaced per format
-    // while the title stays the family's.
+  test("the code, class and title the caller supplies are the ones raised", () => {
+    // ⚠ This predicate REPORTS what it is handed; it decides none of it. The
+    // title used to read "CWT Invalid Typ" here beside a `cwm` code, which
+    // documented a real half-applied defect AS INTENT — `verifyCwt` hardcoded
+    // that title while deriving the code, so a COSE_Mac0 answered under two
+    // spellings depending on which typ gate fired. It derives now, so this
+    // config states what the only real `cwm` caller actually passes.
+    //
+    // ⚠ And it can only ever state it. Nothing here observes a call site, so
+    // this row cannot notice `verifyCwt` reverting: `CwtKit.test.ts` and
+    // `cose-token-wire.test.ts` are what bind the two real `cwm` doors.
     expect(() =>
-      assertWireTyp({ ...CWT, error: CwmError, code: "cwm_invalid_typ", typ: "JWT" }),
+      assertWireTyp({
+        ...CWT,
+        error: CwmError,
+        code: "cwm_invalid_typ",
+        title: "CWM Invalid Typ",
+        typ: "JWT",
+      }),
     ).toThrow(
-      expect.objectContaining({ code: "cwm_invalid_typ", title: "CWT Invalid Typ" }),
+      expect.objectContaining({ code: "cwm_invalid_typ", title: "CWM Invalid Typ" }),
     );
   });
 

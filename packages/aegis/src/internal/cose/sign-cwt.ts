@@ -7,23 +7,27 @@ import { buildCoseHeaders } from "../header/build-cose-headers.js";
 import { mergeCoseProtected } from "../header/merge-cose-protected.js";
 import { mergeCoseUnprotected } from "../header/merge-cose-unprotected.js";
 import { KIT_CAPABILITIES } from "../registry/kit-capabilities.js";
-import { applyOmit } from "../utils/apply-omit.js";
+import { normaliseClaims } from "../utils/normalise-claims.js";
 import { buildMediaType } from "../utils/compute-typ-header.js";
 import type { SignStructuredTokenOptions, WireTokenHeader } from "../../types/index.js";
 import { algToCoseLabel } from "./alg-labels.js";
 import { assertCoseRegistered } from "./assert-cose-registered.js";
 import { Tag, encodeCbor } from "./cbor.js";
 import { encodeCwtMessage } from "./cwt-message.js";
-import { type CwtFormat, claimsStructureTag } from "./cwt-format.js";
+import type { CwtFormat } from "./cwt-format.js";
+import { signedCoseStructureTag } from "./signed-cose-structure-tag.js";
 import { ERROR_BY_FORMAT } from "./error-by-format.js";
 import { COSE_TAG, buildSecuredStructure } from "./structures.js";
 
 /**
  * TRANSFORM-FREE sign (R18): serialize the already-wire, COSE-name-keyed `claims`
- * dict verbatim (modulo the `omit` knob) into a CWT claims map, secure it with a
- * COSE structure (Sign1/Mac0 chosen by the key's `algClass`), and wrap the result
- * in the CWT tag (61). Injects NO envelope claims, derives no hash, maps no name
- * or case — the Aegis-side `signCose` owns all of that.
+ * dict into a CWT claims map, secure it with a COSE structure (Sign1/Mac0 chosen
+ * by the key's `algClass`), and wrap the result in the CWT tag (61). Injects NO
+ * envelope claims, derives no hash, maps no name or case — the Aegis-side
+ * `signCose` owns all of that. The normalisation the dict passes through is none
+ * of those three: it drops `undefined` and the empty value of a claim the
+ * REGISTRY declares carries nothing (`internal/utils/normalise-claims.ts`),
+ * resolving each key under its COSE spelling as well as its JOSE one.
  *
  * COSE_Sign1 and COSE_Mac0 differ in exactly three places — the tag, the
  * to-be-secured structure, and which `SignatureKit` mode secures it (Sign1 signs
@@ -48,10 +52,7 @@ export const signCwt = (
   // emits private-use claims under their JOSE string key (`?? false`), and the
   // alg gate is strict (an omitted flag is falsy, so a private-use alg is
   // refused) — an on-platform token sets `proprietary: true` for both.
-  const claimsBstr = encodeCwtMessage(
-    applyOmit(claims, options.omit),
-    options.proprietary,
-  );
+  const claimsBstr = encodeCwtMessage(normaliseClaims(claims), options.proprietary);
 
   // Interop gate (D5): a non-proprietary sign refuses an algorithm with no
   // OFFICIAL COSE-RFC registration so the token stays interoperable. Runs before
@@ -66,7 +67,7 @@ export const signCwt = (
     error: CwsError,
   });
 
-  const tag = claimsStructureTag(kryptos);
+  const tag = signedCoseStructureTag(kryptos);
   const sign1 = tag === COSE_TAG.sign1;
 
   logger.debug(sign1 ? "Signing COSE_Sign1" : "MAC'ing COSE_Mac0", { options });

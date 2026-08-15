@@ -142,8 +142,6 @@ export const mintToken = async ({
     format,
     tokenType,
     header: domainHeaderToWire(options.sign?.header),
-    // mint's own `omit` controls the wire; a per-sign omit is a fallback.
-    omit: options.omit ?? options.sign?.omit,
     proprietary: options.proprietary,
     bindCertificate: options.sign?.bindCertificate,
     certificateThumbprintSha1: options.sign?.certificateThumbprintSha1,

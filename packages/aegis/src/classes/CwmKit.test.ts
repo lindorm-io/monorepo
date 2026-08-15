@@ -98,6 +98,29 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
     })();
 
     expect(error?.code).toBe("cwm_kid_mismatch");
+    // ⚠ THE TITLE, and specifically the `CWM` in it. The refusal is built from
+    // the format tag, the way the algorithm-match refusal already was, so a
+    // COSE_Mac0 no longer reports itself as a CWT. Nothing else in the package
+    // asserts either title, which is why the spelling could change unobserved.
+    expect(error?.title).toBe("CWM Kid Mismatch");
+  });
+
+  test("typ mismatch — the refusal names CWM, not CWT", () => {
+    const token = kit.sign(wire, { tokenType: "at" });
+
+    const error = (() => {
+      try {
+        kit.verify(token, undefined, { tokenType: "rt" });
+      } catch (err) {
+        return err as AegisError;
+      }
+    })();
+
+    expect(error?.code).toBe("cwm_typ_mismatch");
+    expect(error?.title).toBe("CWM Typ Mismatch");
+
+    // The control: the typ the kit actually stamped is accepted.
+    expect(() => kit.verify(token, undefined, { tokenType: "at" })).not.toThrow();
   });
 
   describe("temporal-in-kit (R10)", () => {

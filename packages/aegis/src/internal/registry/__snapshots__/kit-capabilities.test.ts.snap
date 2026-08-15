@@ -1,0 +1,98 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`KIT_CAPABILITIES > cwe reserves exactly its KitOwned params, filtered to its wire 1`] = `
+[
+  "alg",
+  "iv",
+  "kid",
+  "typ",
+  "x5c",
+]
+`;
+
+exports[`KIT_CAPABILITIES > cwm reserves exactly its KitOwned params, filtered to its wire 1`] = `
+[
+  "alg",
+  "iv",
+  "kid",
+  "typ",
+  "x5c",
+]
+`;
+
+exports[`KIT_CAPABILITIES > cws reserves exactly its KitOwned params, filtered to its wire 1`] = `
+[
+  "alg",
+  "iv",
+  "kid",
+  "typ",
+  "x5c",
+]
+`;
+
+exports[`KIT_CAPABILITIES > cwt reserves exactly its KitOwned params, filtered to its wire 1`] = `
+[
+  "alg",
+  "iv",
+  "kid",
+  "typ",
+  "x5c",
+]
+`;
+
+exports[`KIT_CAPABILITIES > jwe reserves exactly its KitOwned params, filtered to its wire 1`] = `
+[
+  "alg",
+  "apu",
+  "apv",
+  "enc",
+  "epk",
+  "iv",
+  "kid",
+  "p2c",
+  "p2s",
+  "tag",
+  "typ",
+  "x5c",
+  "x5t",
+  "x5t#S256",
+]
+`;
+
+exports[`KIT_CAPABILITIES > jws reserves exactly its KitOwned params, filtered to its wire 1`] = `
+[
+  "alg",
+  "apu",
+  "apv",
+  "enc",
+  "epk",
+  "iv",
+  "kid",
+  "p2c",
+  "p2s",
+  "tag",
+  "typ",
+  "x5c",
+  "x5t",
+  "x5t#S256",
+]
+`;
+
+exports[`KIT_CAPABILITIES > jwt reserves exactly its KitOwned params, filtered to its wire 1`] = `
+[
+  "alg",
+  "apu",
+  "apv",
+  "enc",
+  "epk",
+  "iv",
+  "kid",
+  "p2c",
+  "p2s",
+  "tag",
+  "typ",
+  "x5c",
+  "x5t",
+  "x5t#S256",
+]
+`;

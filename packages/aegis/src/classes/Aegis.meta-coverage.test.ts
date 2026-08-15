@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import {
   KIT_CELL_CENSUS,
@@ -237,19 +237,41 @@ describe("Aegis — meta coverage", () => {
       ...Object.values(KIT_CELL_CENSUS).flatMap((row) => censusValues(row)),
     ];
 
+    // ⚠ `observed` owes its note exactly as `declared` owes its reason. It did
+    // not, so `{ exercised: "observed", note: "" }` passed while the `declared`
+    // twin failed — and an `observed` cell is the one kind that claims a test
+    // watches the behaviour without any production reader to point at, which is
+    // precisely when the prose IS the whole justification.
     const unjustified = entries.filter(
-      (entry) => entry.exercised === "declared" && !entry.reason.trim(),
+      (entry) =>
+        (entry.exercised === "declared" && !entry.reason.trim()) ||
+        (entry.exercised === "observed" && !entry.note.trim()),
     );
     const unsited = entries.filter(
       (entry) => entry.exercised === "reader" && !/^src\/.+\.ts#.+$/.test(entry.site),
     );
 
+    // ⚠ THE PATH MUST EXIST. The shape check above says a citation LOOKS like
+    // `src/…ts#anchor`; it cannot say the file is there, and a well-formed
+    // citation pointing at the wrong file is exactly the failure this census
+    // suffered — an `observed` note credited a test file that had never
+    // imported the function it described. The anchor resolution below covers
+    // every citation written INSIDE a fixture; this covers `reader.site`, which
+    // is a bare field and not scanned as prose.
+    const packageRoot = new URL("../../", import.meta.url);
+
+    const missing = entries
+      .filter((entry) => entry.exercised === "reader")
+      .map((entry) => entry.site.split("#")[0])
+      .filter((file) => !existsSync(new URL(file, packageRoot)));
+
     expect(entries.length).toBeGreaterThan(0);
     expect(unjustified).toEqual([]);
     expect(unsited).toEqual([]);
+    expect(missing, "a cited source file does not exist").toEqual([]);
   });
 
-  // The measurement the census exists to make VISIBLE: ten of the forty-nine
+  // The measurement the census exists to make VISIBLE: nine of the forty-nine
   // capability cells have a production reader. The table's premise is that a kit
   // reads its own row, and for most of it that is not yet true. Pinned so the
   // number moves in review — up when a kit starts reading its row, and never
@@ -260,11 +282,19 @@ describe("Aegis — meta coverage", () => {
   // `buildCoseHeaders`. Before that the JOSE guarantee was spread ORDER, which
   // no row governed — which is how a row could list `jku` while the type offered
   // it to callers.
+  //
+  // ⚠ It then went from TEN to NINE, which is the direction this pin exists to
+  // stop happening quietly — so the reason is on the record. `cwt.cnfMembers`
+  // lost its reader when the COSE confirmation gained ONE source: `encodeCnf`
+  // used to read the row, and the row is now DERIVED from the label table the
+  // codec switches over (`registry/cose-cnf-labels.ts`). Nothing reads it back
+  // because there is nothing left to disagree with — the row and the encoder are
+  // the same data. A read of a second list is weaker than not having one.
   test("should record how many capability cells a kit actually reads", () => {
     const cells = Object.values(KIT_CELL_CENSUS).flatMap((row) => Object.values(row));
 
     expect(cells.length).toBe(49);
-    expect(cells.filter((cell) => cell.exercised === "reader").length).toBe(10);
+    expect(cells.filter((cell) => cell.exercised === "reader").length).toBe(9);
     expect(cells.filter((cell) => cell.exercised === "observed").length).toBeGreaterThan(
       0,
     );

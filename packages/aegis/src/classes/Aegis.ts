@@ -41,7 +41,6 @@ import {
   isCwt as isCwtBytes,
 } from "../internal/cose/is-cose-format.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
-import type { OmitMode } from "../internal/utils/apply-omit.js";
 import {
   createProfileRegistry,
   type ProfileRegistry,
@@ -603,7 +602,7 @@ export class Aegis implements IAegis {
   // private cws
   private cwsSign(
     data: TokenContent,
-    options: SignUnstructuredTokenOptions & { key?: AegisSignKey; omit?: OmitMode } = {},
+    options: SignUnstructuredTokenOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedToken> {
     return rawSignCws({ data, options, deps: this.deps });
   }

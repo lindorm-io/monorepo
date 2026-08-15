@@ -8,7 +8,6 @@ import type { IJwsKit } from "../interfaces/index.js";
 import { B64U } from "../internal/constants/format.js";
 import { buildJoseHeader } from "../internal/header/build-jose-header.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
-import { assertAlgorithmMatch } from "../internal/utils/assert-algorithm-match.js";
 import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
@@ -18,7 +17,7 @@ import {
   createJoseSignature,
   verifyJoseSignature,
 } from "../internal/utils/jose-signature.js";
-import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
+import { assertProtectedHeaderGates } from "../internal/utils/assert-protected-header-gates.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
@@ -110,20 +109,14 @@ export class JwsKit implements IJwsKit {
       details: "Header typ must be JWS, JOSE, a <type>+jws media type, or undefined.",
     });
 
-    // `crit` (RFC 7515 §4.1.11), the SAME enforcement the COSE kits run — one
-    // implementation, so the two wires cannot disagree about a hostile token.
-    rejectUnknownCritical({
-      header: decoded.protectedHeader,
+    // `crit` (RFC 7515 §4.1.11) then algorithm-match — the ONE pair, in the ONE
+    // order, that every wire runs ahead of its signature or AEAD cycle.
+    assertProtectedHeaderGates({
+      protectedHeader: decoded.protectedHeader,
+      expectedAlgorithm: this.kryptos.algorithm,
       format: "jws",
       error: JwsError,
-    });
-
-    assertAlgorithmMatch({
-      actual: decoded.protectedHeader.alg,
-      expected: this.kryptos.algorithm,
-      format: "jws",
-      error: JwsError,
-      details:
+      algDetails:
         "The header alg does not match the signing algorithm of the configured kryptos key.",
     });
 

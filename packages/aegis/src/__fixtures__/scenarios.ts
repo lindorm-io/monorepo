@@ -1,5 +1,4 @@
 import type { Dict } from "@lindorm/types";
-import type { OmitMode } from "../internal/utils/apply-omit.js";
 import type { AegisProfile } from "../types/claims/domain/aegis-profile.js";
 import type { AegisSensitive } from "../types/claims/domain/aegis-sensitive.js";
 import type { DomainClaims } from "../types/claims/domain/domain-claims.js";
@@ -214,7 +213,6 @@ export type AgnosticKit = "structured" | "opaque";
 // together or not at all.
 export type StructuredSignOptions = SignStructuredTokenOptions & { key?: AegisSignKey };
 export type JwsSignOptions = SignUnstructuredTokenOptions & { key?: AegisSignKey };
-export type CwsSignOptions = JwsSignOptions & { omit?: OmitMode };
 export type JweSealOptions = JweEncryptOptions & { key?: AegisEncKey };
 export type CweSealOptions = CweEncryptOptions & { key?: AegisEncKey };
 
@@ -452,11 +450,12 @@ type TokenGivenShape =
   /**
    * The wire-agnostic OPAQUE passthrough — `jws` on JOSE, `cws` on COSE.
    *
-   * ⚠ Typed against the NARROWER of the two bags. `cws.sign` takes everything
-   * `jws.sign` does plus `omit`, so typing this against the COSE bag let a row
-   * name `omit`, have it honoured on COSE and silently dropped on JOSE — the two
-   * wires handed different inputs with nothing to say so. A row that needs `omit`
-   * is a `cws` row, and owes JOSE an `unsupported` reason.
+   * ⚠ The two bags are now IDENTICAL, which is what makes one agnostic step
+   * honest. They were not: `cws.sign` carried a prune mode `jws.sign` did not, so
+   * an agnostic row naming it was honoured on COSE and silently dropped on JOSE,
+   * with nothing to say the two wires had been handed different inputs. If they
+   * ever diverge again, this step must be typed against the NARROWER bag and the
+   * wider one's row moved to the wire that takes it.
    */
   | {
       step: "token";
@@ -477,7 +476,7 @@ type TokenGivenShape =
       via: "kit-sign";
       kit: "cws";
       claims: TokenContent;
-      options?: CwsSignOptions;
+      options?: JwsSignOptions;
     }
   /** The wire-agnostic SEALING namespace — `jwe` on JOSE, `cwe` on COSE. */
   | {
@@ -2649,7 +2648,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     knownDefect: {
-      cose: 'TWO sites, and the domain forward is no longer either of them. `src/internal/wire/cose-token-wire.ts#signClaims: ({` — the COSE `signClaims` no longer names its options one by one; it forwards them STRUCTURALLY, and a caller who STATES a binding is refused above the seam by the `unsupported` disposition (`src/internal/wire/cose-token-wire.ts#const NO_COSE_CERT_BINDING =`). This row states none — its key merely CARRIES a chain — so nothing is refused, the mint succeeds, and the token comes back unbound because no COSE writer derives a binding from the key. That is what the two remaining sites owe. `src/internal/cose/sign-cwt.ts#export const signCwt = (` — `signCwt` takes the same `SignStructuredTokenOptions` the JOSE kits take, and consumes `omit`/`tokenType`/`proprietary`/`header`/`unprotected` of them and neither `bindCertificate` nor `certificateThumbprintSha1`; it never calls `resolveCertBinding`, which `src/classes/JwtKit.ts#cert: resolveCertBinding(` does, so a repaired forward has no kit door to hand the request to. And `src/internal/header/header-registry.ts#the hash algorithm is a member of the structure` — `certificateThumbprint` is marked ABSENT on COSE, so `coseByJose` (`src/internal/header/header-registry.ts#header_no_cose_label`) throws `header_no_cose_label` rather than yielding a label to write under; the entry needs mapping to label 34 with an array codec for `COSE_CertHash` (it declares `codec: { kind: "string" }` today, and a COSE_CertHash is a two-element array).',
+      cose: 'TWO sites, and the domain forward is no longer either of them. `src/internal/wire/cose-token-wire.ts#signClaims: ({` — the COSE `signClaims` no longer names its options one by one; it forwards them STRUCTURALLY, and a caller who STATES a binding is refused above the seam by the `unsupported` disposition (`src/internal/wire/cose-token-wire.ts#const NO_COSE_CERT_BINDING =`). This row states none — its key merely CARRIES a chain — so nothing is refused, the mint succeeds, and the token comes back unbound because no COSE writer derives a binding from the key. That is what the two remaining sites owe. `src/internal/cose/sign-cwt.ts#export const signCwt = (` — `signCwt` takes the same `SignStructuredTokenOptions` the JOSE kits take, and consumes `tokenType`/`proprietary`/`header`/`unprotected` of them and neither `bindCertificate` nor `certificateThumbprintSha1`; it never calls `resolveCertBinding`, which `src/classes/JwtKit.ts#cert: resolveCertBinding(` does, so a repaired forward has no kit door to hand the request to. And `src/internal/header/header-registry.ts#the hash algorithm is a member of the structure` — `certificateThumbprint` is marked ABSENT on COSE, so `coseByJose` (`src/internal/header/header-registry.ts#header_no_cose_label`) throws `header_no_cose_label` rather than yielding a label to write under; the entry needs mapping to label 34 with an array codec for `COSE_CertHash` (it declares `codec: { kind: "string" }` today, and a COSE_CertHash is a two-element array).',
     },
   },
   {
@@ -3498,10 +3497,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
   // The empty-claim prune.
   // ---------------------------------------------------------------------------
   {
-    id: "the-structured-signing-namespace-prunes-an-empty-claim-by-default",
-    title: "an empty claim is left off the wire unless the issuer asks for it to be kept",
+    id: "an-empty-claim-the-registry-declares-a-statement-reaches-the-wire",
+    title: "an empty claim whose emptiness is itself a statement is emitted",
     rationale:
-      "An empty claim and an absent one are different statements: `amr: []` asserts that the authentication methods are known and none apply, while omitting `amr` asserts nothing. Most callers assemble their claim bag from optional values and mean the second, so the default has to be to prune — otherwise every unset field becomes a positive assertion of emptiness that the issuer never made and the audience is entitled to act on.",
+      "An empty claim and an absent one are different statements, and for some claims the empty one is the one that restricts. An empty `scope` is a grant of nothing — the inert token. RFC 9068 §2.2.3 makes `scope` only a SHOULD on an access token, so a recipient cannot tell an ABSENT scope from a grant that never carried one; the explicit empty list is therefore the only way an issuer can state that this grant conveys nothing, and deleting it would erase that statement rather than compress it. Which claims work this way is a property of the claim, and aegis policy records it per claim rather than leaving it to the caller.",
     given: [
       {
         step: "token",
@@ -3514,22 +3513,52 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           exp: NOW + 3600,
           iat: NOW,
           jti: "token-1",
-          empty_list: [],
+          scope: [],
         },
       },
     ],
     when: [{ step: "mint" }],
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
-      { step: "wireClaims", excludes: ["empty_list"] },
+      // RFC 8392 §4 registers `scope` at integer label 9, so the two wires spell
+      // the surviving claim differently — which is exactly why the row states
+      // each rather than asserting one name on both.
+      { step: "wireClaims", on: "jose", present: ["scope"] },
+      { step: "wireClaims", on: "cose", present: [9] },
     ],
   },
   {
-    id: "the-structured-signing-namespace-keeps-an-empty-claim-when-told-to",
-    title:
-      "an empty claim survives to the wire when the issuer states the prune mode that keeps it",
+    id: "an-empty-claim-the-registry-declares-inert-is-left-off-the-wire",
+    title: "an empty claim that asserts nothing anyone can act on is not emitted",
     rationale:
-      "An issuer that means the positive statement — these are known, and none apply — must be able to make it, or the vocabulary loses a distinction the specifications rely on. The prune mode is how the choice is stated, so a mode that was accepted and not applied would silently rewrite the token's meaning while reporting success.",
+      "The mirror case, and it fails open the other way. `amr: []` reads as 'the authentication methods are known and none applied' — a statement no issuer means and no audience can act on — so emitting it puts an assertion on the wire that nobody wrote. It reaches the boundary because a claim bag assembled from optional values ends up with empty containers in it, not because an issuer chose one. Which of the two an empty value is cannot be decided per call, only per CLAIM: the same knob that dropped this one would drop the empty `scope` above, and the token would say two different things depending on a setting made for unrelated reasons.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          amr: [],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "wireClaims", excludes: ["amr"] },
+    ],
+  },
+  {
+    id: "a-claim-the-issuer-alone-defines-survives-the-empty-claim-prune",
+    title: "a claim aegis has not declared reaches the wire with its empty value intact",
+    rationale:
+      "Whether an empty value is a statement or noise is a fact about the CLAIM: an empty RFC 9396 `actions` grants no action while an absent one is not restricted by action at all, and an empty `amr` asserts something no issuer means. A library holds that fact only for the claims it has defined. For anything else — a deployment's own claim, an opaque payload's members, a wire dict handed straight to a kit — it is guessing, and both guesses are wrong in a way the wire cannot show: dropping strips a restriction, keeping fabricates an assertion. So the prune stops at the edge of what aegis has declared, and a caller pruning its own claims stays the caller's job. That edge is what makes the prune safe to run on every emission: it can only ever act where a decision has actually been recorded.",
     given: [
       {
         step: "token",
@@ -3544,7 +3573,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           jti: "token-1",
           empty_list: [],
         },
-        options: { omit: "undefined" },
       },
     ],
     when: [{ step: "mint" }],
@@ -3558,7 +3586,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a security event whose payload is the conventional empty object is kept on the wire",
     rationale:
-      "RFC 8417 §2.2 defines the `events` claim as a JSON object whose members are URIs identifying event statements, and says of each member value that 'The JSON object MAY be an empty object (\"{}\")'. OpenID Connect Back-Channel Logout 1.0 §2.4 makes that the normal case: the logout token carries the member `http://schemas.openid.net/event/backchannel-logout`, whose value 'MUST be a JSON object and SHOULD be the empty JSON object {}' — the member's presence is the whole statement. A prune that removed empty containers indiscriminately would therefore delete the event itself, leaving a logout token that names no event and identifies nothing to act on.",
+      "RFC 8417 §2.2 defines the `events` claim as a JSON object whose members are URIs identifying event statements, and says of each member value that 'The JSON object MAY be an empty object (\"{}\")'. OpenID Connect Back-Channel Logout 1.0 §2.4 makes that the normal case: the logout token carries the member `http://schemas.openid.net/event/backchannel-logout`, whose value 'MUST be a JSON object and SHOULD be the empty JSON object {}' — the member's presence is the whole statement. A prune that removed empty containers indiscriminately would therefore delete the event itself, leaving a logout token that names no event and identifies nothing to act on. This is the claim on which the whole per-claim design is load-bearing: the one claim the profile REQUIRES is the one an indiscriminate prune would take.",
     given: [
       {
         step: "token",

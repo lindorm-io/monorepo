@@ -8,7 +8,6 @@ import type {
 } from "@lindorm/aes";
 import type { Dict } from "@lindorm/types";
 import type { BuiltInProfiles } from "../../internal/profiles/built-in-profiles.js";
-import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type {
   AegisDecryptKey,
   AegisEncKey,
@@ -106,7 +105,7 @@ export interface IAegisCwe {
 export interface IAegisCws {
   sign(
     data: TokenContent,
-    options?: SignUnstructuredTokenOptions & { key?: AegisSignKey; omit?: OmitMode },
+    options?: SignUnstructuredTokenOptions & { key?: AegisSignKey },
   ): Promise<SignedToken>;
   verify<T extends TokenContent = Buffer>(
     token: string,

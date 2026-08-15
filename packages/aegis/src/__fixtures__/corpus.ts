@@ -4,7 +4,6 @@ import type {
   BindCertificateMode,
   ClaimsTokenFormat,
   DomainProtectedHeader,
-  OmitMode,
   SignContent,
   SignContext,
 } from "../types/index.js";
@@ -116,7 +115,6 @@ export type MintKnobs = {
   context?: SignContext;
   header?: DomainProtectedHeader;
   lifetime?: string;
-  omit?: OmitMode;
   proprietary?: boolean;
   /** The profile's mandated `typ`, overridden verbatim. `null` omits it. */
   typ?: string | null;
@@ -127,7 +125,6 @@ export type SignKnobs = {
   bindCertificate?: BindCertificateMode;
   certificateThumbprintSha1?: boolean;
   header?: DomainProtectedHeader;
-  omit?: OmitMode;
   tokenType?: TokenType;
 };
 
@@ -135,7 +132,6 @@ export type SignKnobs = {
 export type EncryptKnobs = {
   bindCertificate?: BindCertificateMode;
   header?: DomainProtectedHeader;
-  omit?: OmitMode;
   partyProducer?: string;
   partyRecipient?: string;
   proprietary?: boolean;
@@ -210,12 +206,26 @@ const LABELLED_CONTENT: SignContent = {
   groups: ["corpus-group"],
 };
 
-/** A content bag carrying an empty member, so the `omit` knob has something to bite on. */
-const OMITTABLE_CONTENT: SignContent = {
+/**
+ * A content bag carrying an empty member the registry PRUNES and one it KEEPS, so
+ * the emission normalisation has something to bite on and something it must not
+ * bite: `authMethods`/`nonce` are prunable when empty, `scope` is keepable (an
+ * empty grant is a grant of nothing). A flipped `whenEmpty` cell moves these rows'
+ * claims bytes and nothing else's.
+ *
+ * ⚠ `authMethods` earns its place on the COSE row specifically. An empty TEXT
+ * claim never reaches the CWT bytes at all — the claims codec treats `""` as
+ * absent independently of the prune — so a row carrying only `nonce` would be
+ * byte-identical whether the COSE forward into the normalisation existed or not.
+ * An empty ARRAY does survive the codec, so `amr` is what makes that forward
+ * observable on this wire.
+ */
+const EMPTY_CLAIM_CONTENT: SignContent = {
   subject: SUBJECT,
   expires: "1h",
   scope: [],
   nonce: "",
+  authMethods: [],
 };
 
 const OBJECT_PAYLOAD: PayloadCell = {
@@ -306,23 +316,13 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   },
   {
     verb: "mint",
-    name: "mint-default-jwt-omit-undefined",
-    note: 'The `omit` knob: "undefined" keeps the empty scope and nonce that "empty" would prune, so the claims bytes differ from the baseline.',
+    name: "mint-default-jwt-empty-claims",
+    note: "The registry's empty-claim decision on the JOSE wire: the empty `nonce` is pruned and the empty `scope` is kept, with nothing asked for. A flipped `whenEmpty` cell shows here as a claims-bytes diff.",
     profile: "default",
     format: "jwt",
-    content: OMITTABLE_CONTENT,
+    content: EMPTY_CLAIM_CONTENT,
     signKey: "ec-sig",
-    options: { tokenId: "corpus_jti_0006", omit: "undefined" },
-  },
-  {
-    verb: "mint",
-    name: "mint-default-jwt-omit-empty",
-    note: 'The same content under the default "empty" prune — the other half of the omit pair, so a change in pruning shows as a diff between two rows rather than against nothing.',
-    profile: "default",
-    format: "jwt",
-    content: OMITTABLE_CONTENT,
-    signKey: "ec-sig",
-    options: { tokenId: "corpus_jti_0007", omit: "empty" },
+    options: { tokenId: "corpus_jti_0006" },
   },
   {
     verb: "mint",
@@ -542,13 +542,13 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   },
   {
     verb: "mint",
-    name: "mint-default-cwt-omit-undefined",
-    note: "The `omit` knob on the COSE wire — the counterpart of the JOSE pair, because pruning happens above the wire and must reach both.",
+    name: "mint-default-cwt-empty-claims",
+    note: "The same registry decision on the COSE wire — its own forward into the normalisation, so a prune that reached only one wire shows as a diff on exactly one of the two rows. The empty `amr` is the claim that carries it here: an empty text claim never reaches the CWT bytes anyway.",
     profile: "default",
     format: "cwt",
-    content: OMITTABLE_CONTENT,
+    content: EMPTY_CLAIM_CONTENT,
     signKey: "ec-sig",
-    options: { tokenId: "corpus_jti_0025", omit: "undefined" },
+    options: { tokenId: "corpus_jti_0025" },
   },
   {
     verb: "mint",
