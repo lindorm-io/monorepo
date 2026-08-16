@@ -12,6 +12,8 @@ export const omitFromArray = <T extends Array<any>>(
   for (const value of array) {
     // Recurse into containers first, THEN test the cleaned result — so an empty
     // (or emptied) array/object element is dropped, matching the scalar rule.
+    // Whether it drops is the PREDICATE's call; `omitEmptyScalars` passes one
+    // that is never true of a container, so its elements always survive.
     const cleaned = isArray(value)
       ? omitFromArray(value, predicate)
       : isObject(value)

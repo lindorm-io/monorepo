@@ -1,0 +1,106 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`omitEmptyScalars > containers always survive > should keep a container that was already empty on input 1`] = `
+{
+  "a": [],
+  "b": {},
+}
+`;
+
+exports[`omitEmptyScalars > containers always survive > should keep an array that becomes empty after cleaning 1`] = `
+{
+  "a": [],
+}
+`;
+
+exports[`omitEmptyScalars > containers always survive > should keep an emptied object nested in an array 1`] = `
+[
+  {},
+]
+`;
+
+exports[`omitEmptyScalars > containers always survive > should keep an object that becomes empty after cleaning 1`] = `
+{
+  "a": {},
+}
+`;
+
+exports[`omitEmptyScalars > containers always survive > should keep containers at every level of a deep nest 1`] = `
+{
+  "a": {
+    "b": {},
+  },
+  "d": [
+    [
+      {},
+    ],
+    [],
+  ],
+  "keep": 1,
+}
+`;
+
+exports[`omitEmptyScalars > divergence from omitEmpty > should keep every container omitEmpty destroys 1`] = `
+{
+  "a": {
+    "b": {},
+  },
+  "d": [],
+  "e": {},
+  "keep": 1,
+}
+`;
+
+exports[`omitEmptyScalars > divergence from omitEmpty > should keep every container omitEmpty destroys 2`] = `
+{
+  "keep": 1,
+}
+`;
+
+exports[`omitEmptyScalars > empty scalars are removed > should remove a null property 1`] = `{}`;
+
+exports[`omitEmptyScalars > empty scalars are removed > should remove an empty-string property 1`] = `{}`;
+
+exports[`omitEmptyScalars > empty scalars are removed > should remove an undefined property 1`] = `{}`;
+
+exports[`omitEmptyScalars > empty scalars are removed > should remove empty scalars from an array and reindex 1`] = `
+{
+  "a": [
+    "pwd",
+    "otp",
+  ],
+}
+`;
+
+exports[`omitEmptyScalars > falsy values that are NOT empty > should keep false 1`] = `
+{
+  "a": false,
+}
+`;
+
+exports[`omitEmptyScalars > falsy values that are NOT empty > should keep zero 1`] = `
+{
+  "a": 0,
+}
+`;
+
+exports[`omitEmptyScalars > falsy values that are NOT empty > should keep zero, false and NaN wherever they appear 1`] = `
+{
+  "a": [
+    0,
+    false,
+    NaN,
+  ],
+  "b": {
+    "c": 0,
+    "d": false,
+  },
+}
+`;
+
+exports[`omitEmptyScalars > input handling > should clean a top-level array 1`] = `
+[
+  "a",
+  0,
+]
+`;

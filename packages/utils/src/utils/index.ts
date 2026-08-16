@@ -9,6 +9,7 @@ export * from "./lazy-factory.js";
 export * from "./lindorm-symbol.js";
 export * from "./merge.js";
 export * from "./noop.js";
+export * from "./omit-empty-scalars.js";
 export * from "./omit-empty.js";
 export * from "./omit-undefined.js";
 export * from "./parse-string-record.js";
