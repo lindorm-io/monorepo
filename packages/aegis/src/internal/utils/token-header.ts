@@ -2,6 +2,7 @@ import { isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { JoseError } from "../../errors/index.js";
+import { normaliseHeaders } from "../header/normalise-headers.js";
 import type {
   CertificateHeaderFields,
   WireTokenHeader,
@@ -11,6 +12,7 @@ import type {
 } from "../../types/index.js";
 import type { CoseLabel } from "../cose/cose-label.js";
 import { canonicalWireHeader } from "../header/canonical-wire-header.js";
+import { criticalToWire } from "../header/critical-to-wire.js";
 import {
   type HeaderCodec,
   type HeaderSpec,
@@ -46,16 +48,10 @@ import { getBaseFormat } from "./compute-typ-header.js";
 
 // --- `crit` member remap (the one member-transforming parameter) ------------
 
-/** Remap `crit` members DOMAIN -> WIRE; unregistered members pass through. */
-const criticalToWire = (members: unknown): Array<string> | undefined => {
-  if (!Array.isArray(members)) return undefined;
-  return members
-    .map((member): string => {
-      const spec = headerByDomain(member);
-      return spec ? headerJoseName(spec) : member;
-    })
-    .sort();
-};
+// The domain -> wire direction lives in `header/critical-to-wire.ts`: it is the
+// ONE vocabulary anything comparing crit members against header keys has to
+// share, and applying it here is what entitles `assert-crit-satisfied.ts` to
+// compare a bucket's `crit` members against its keys without mapping either.
 
 /** Remap `crit` members WIRE -> DOMAIN; unregistered members pass through. */
 const criticalToDomain = (members: unknown): Array<string> => {
@@ -159,8 +155,28 @@ const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
  * the kryptos, so they are folded into the domain-keyed source (their
  * `CertificateHeaderFields` keys already equal their domain names).
  *
- * The output is canonically ordered ({@link canonicalWireHeader}) — this pass is
- * the domain tier's whole crossing, so what it returns is a finished bag.
+ * The output is canonically ordered ({@link canonicalWireHeader}) and
+ * NORMALISED ({@link normaliseHeaders}) — this pass is the domain tier's whole
+ * crossing, so what it returns is a finished bag.
+ *
+ * ⚠ The normalisation is LOAD-BEARING HERE, not merely a repeat of the emission
+ * boundary's, and it is what makes the DOMAIN spelling agree with the wire one: a
+ * `contentType: ""` is resolved to an absent `cty` before the kit door below it
+ * reads the bag. It replaced a bare `omitUndefined`, whose top-level effect here
+ * was nil — the loop above never writes an `undefined`.
+ *
+ * ⚠ IT IS NOT THE ONLY EARLY CROSSING, and must not be described as one. A caller
+ * reaching a kit door directly (`aegis.jws.sign`, `aegis.cwe.encrypt`, …) never
+ * passes through here, and those doors read the caller's `cty` before the header
+ * is assembled (`serialiseContent(data, callerHeader.cty)`) — so each of them
+ * normalises the caller's bag at the door, for the same reason and with the same
+ * call. This pass answers the DOMAIN tier alone.
+ *
+ * ⚠ It knows nothing about `crit`, and needs to know nothing: a parameter the
+ * message's `crit` names can never be empty here, because the builder that owns
+ * the message refuses that header outright (`assert-crit-satisfied.ts`). This
+ * pass is a FRAGMENT of a message — the domain tier, or the cert tier alone — and
+ * a fragment cannot answer a question about the whole.
  */
 export const mapTokenHeader = (
   options: DomainTokenHeaderOptions,
@@ -184,7 +200,7 @@ export const mapTokenHeader = (
     if (encoded !== undefined) raw[headerJoseName(spec)] = encoded;
   }
 
-  return omitUndefined(canonicalWireHeader(raw)) as WireTokenHeaderOptions;
+  return normaliseHeaders(canonicalWireHeader(raw)) as WireTokenHeaderOptions;
 };
 
 /**
@@ -199,7 +215,18 @@ export const mapTokenHeader = (
  * next to the one `domain-header-to-wire.ts` claims to be.
  *
  * ⚠ Key order is NOT canonicalised here: a shaped bag is a MERGE INPUT
- * ({@link buildJoseHeader}), and only the finished header is sorted.
+ * ({@link buildJoseHeader}), and only the finished header is sorted. EMPTY VALUES
+ * are removed here, though — {@link normaliseHeaders} runs on the shaped bag, so
+ * every tier the merge unions is already normalised and the merge cannot
+ * reintroduce one.
+ *
+ * ⚠ A MERGE INPUT IS A FRAGMENT OF A MESSAGE, NOT A MESSAGE, and the prune does
+ * not care: whether a `crit` in some OTHER tier still names a value this one
+ * emits nothing for is a question about the whole message, answered once by
+ * {@link buildJoseHeader} on the merged header (`assert-crit-satisfied.ts`) and
+ * answered as a REFUSAL. A tier normalisation that had to know the message's crit
+ * members is a fragment reasoning about a whole, which is how the answer came out
+ * different in four places.
  *
  * `crit` is shaped by the same {@link criticalToWire} the domain pass uses, which
  * is sort-only on this side: a wire-named member misses `headerByDomain` (every
@@ -221,9 +248,33 @@ export const shapeWireHeader = (
     if (encoded !== undefined) raw[headerJoseName(spec)] = encoded;
   }
 
-  return raw as WireTokenHeaderOptions;
+  return normaliseHeaders(raw) as WireTokenHeaderOptions;
 };
 
+/**
+ * The READ pass: a decoded wire header -> the domain header. An unregistered wire
+ * key is dropped (the closed-set rule), and `crit`'s members are remapped wire ->
+ * domain.
+ *
+ * ⚠ IT DOES NOT NORMALISE, and the `omitUndefined` below is NOT the twin of the
+ * write passes' {@link normaliseHeaders} — do not "restore the symmetry". Three
+ * reasons, any one sufficient:
+ *
+ *   1. `crit` prunes on the write side, and a read-side prune would delete the
+ *      `critical = []` default written two lines below it — a declared invariant,
+ *      since `DomainTokenHeader.critical` is non-optional.
+ *   2. A read reports what a PRODUCER wrote. A foreign token's `cty: ""` reported
+ *      as absent is aegis misreporting someone else's header, and a caller
+ *      inspecting `contentType` could not tell the two apart.
+ *   3. The read side's own guards are louder and better: `validate-crit.ts`
+ *      refuses an empty `crit`, `JweKit.decrypt` refuses any `zip`,
+ *      `verify-cert-binding.ts` refuses a thumbprint mismatch. A prune would
+ *      delete the evidence each of them fires on.
+ *
+ * The `omitUndefined` does a DIFFERENT job: `baseFormat` is `undefined` for a
+ * token whose `typ` names no recognised format, and the strip is what makes the
+ * key ABSENT rather than present-with-`undefined`.
+ */
 export const parseTokenHeader = <T extends DomainTokenHeader = DomainTokenHeader>(
   decoded: WireTokenHeader,
 ): T => {
@@ -281,13 +332,24 @@ const critToCoseLabels = (value: unknown, proprietary: boolean | undefined): unk
 /**
  * The COSE write pass: a caller's WIRE-named partial header bag -> a COSE label
  * map, each wire name resolved through the registry by {@link coseWireKey} (which
- * THROWS for a parameter COSE does not carry). Undefined values are skipped.
+ * THROWS for a parameter COSE does not carry).
+ *
+ * The bag is NORMALISED on entry ({@link normaliseHeaders}), which is what
+ * disposes of a value that emits nothing: an `undefined`, and the empty value of
+ * a parameter the registry says prunes. That is the whole of the "skip" this pass
+ * used to spell as an inline `undefined` check.
  *
  * ⚠ `proprietary` is the INTEROP MODE, and it decides the KEY, never the
  * parameter set: with the default (falsy) a private-use parameter is written
  * under its string label so a foreign reader can interpret it, with `true` under
  * its compact private-use integer. Nothing is added or dropped either way — see
  * `header-registry.ts#coseWireKey`.
+ *
+ * ⚠ A bag reaching this pass is a BUCKET of a COSE message, not the message, and
+ * the prune does not care: whether the protected bucket's `crit` still names a
+ * value this bucket emits nothing for is a question about the whole message,
+ * answered once by `buildCoseHeaders` (`assert-crit-satisfied.ts`) and answered
+ * as a REFUSAL.
  *
  * The inverse of `coseWireHeader`'s read direction, and — per the file docstring
  * — value-PASSTHROUGH except for `crit`, whose MEMBERS are labels in their own
@@ -301,9 +363,7 @@ export const wireHeaderToCoseMap = (
 
   if (!bag) return map;
 
-  for (const [jose, value] of Object.entries(bag)) {
-    if (value === undefined) continue;
-
+  for (const [jose, value] of Object.entries(normaliseHeaders(bag as Dict))) {
     // ⚠ An UNREGISTERED wire key is NOT dropped here, unlike the two JOSE passes:
     // `coseWireKey` refuses it with `header_no_cose_label`. A caller naming a
     // parameter COSE cannot carry must hear so, not watch it vanish — this is the

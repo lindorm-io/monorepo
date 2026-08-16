@@ -480,6 +480,27 @@ describe("JweKit", () => {
       expect(jweKit.decrypt(token).payload).toBe("data");
     });
 
+    test("should leave EMPTY party info off the wire on an ECDH-ES algorithm", () => {
+      // RFC 7518 §4.6.2 defines the Concat-KDF inputs, and it makes an EMPTY
+      // apu/apv derive the same key an ABSENT one does: "If an "apu" (agreement
+      // PartyUInfo) Header Parameter is present, Data is set to the result of
+      // base64url decoding the "apu" value and Datalen is set to the number of
+      // octets in Data. Otherwise, Datalen is set to 0 and Data is set to the
+      // empty octet sequence." Decoding `""` gives the empty octet sequence and a
+      // Datalen of 0, which is the "otherwise" branch verbatim — so the two spell
+      // one derivation, and only one of them says so honestly on the wire.
+      // aegis does not even feed it in: `resolveEcdhParty` decodes the value only
+      // when it is truthy.
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES" });
+      const jweKit = new JweKit({ logger, kryptos });
+
+      const token = jweKit.encrypt("data", { partyProducer: "", partyRecipient: "" });
+
+      expect(JweKit.decode(token).protectedHeader.apu).toBeUndefined();
+      expect(JweKit.decode(token).protectedHeader.apv).toBeUndefined();
+      expect(jweKit.decrypt(token).payload).toBe("data");
+    });
+
     test("should STRIP party info for a non-ECDH-ES algorithm (not on the wire, not in the KDF)", () => {
       // dir (OCT) is not an ECDH-ES algorithm: supplied party info must be
       // dropped — neither emitted on the header nor fed to the key derivation.

@@ -18,9 +18,17 @@ const STRUCTURED: Record<StructuredFormat, true> = { jwt: true, cwt: true, cwm: 
 /** The encrypting outers — the only formats that ever carry an `inner`. */
 const ENCRYPTING: Record<"jwe" | "cwe", true> = { jwe: true, cwe: true };
 
+/**
+ * ⚠ `Object.hasOwn`, never `in`. Both tables are plain object literals and both
+ * keys come off a CALLER-SUPPLIED token — this guard narrows a value handed in
+ * from outside, so `{ format: "constructor" }` resolved through `Object.prototype`
+ * and narrowed to a claims-bearing token that carries no claims. `in` on a
+ * caller-influenced key is a BANNED construct in this package.
+ */
 const isStructuredFormat = (
   format: TokenFormatTag | undefined,
-): format is StructuredFormat => !isUndefined(format) && format in STRUCTURED;
+): format is StructuredFormat =>
+  !isUndefined(format) && Object.hasOwn(STRUCTURED, format);
 
 /**
  * Does this verified token carry a readable CLAIMS layer?
@@ -56,5 +64,5 @@ export const isStructuredToken = <C extends Dict = Dict>(
   // `inner` is only meaningful under an encrypting outer. Checking the outer too
   // means a hand-built `jws` carrying a stray `inner` stays false, rather than
   // the guard trusting a field that format never sets.
-  return token.format in ENCRYPTING && isStructuredFormat(token.inner);
+  return Object.hasOwn(ENCRYPTING, token.format) && isStructuredFormat(token.inner);
 };

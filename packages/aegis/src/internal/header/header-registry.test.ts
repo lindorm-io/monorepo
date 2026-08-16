@@ -304,6 +304,41 @@ describe("HEADER_REGISTRY", () => {
     expect(HEADER_SPECS.filter((s) => s.placement === "unprotected")).toEqual([]);
   });
 
+  /**
+   * The `whenEmpty: "keep"` set, frozen by name. The column has no default, so a
+   * new parameter cannot dodge the decision — but an EXISTING one can be flipped
+   * in a one-word diff, and a flip either puts a value on the wire that says
+   * nothing or removes one a verifier acts on. Both are silent, so the set is
+   * pinned here and a change to it has to be a change to this list.
+   */
+  test("the header parameters kept when empty are exactly the stated set", () => {
+    const keep = HEADER_SPECS.filter((s) => s.whenEmpty === "keep").map((s) => s.domain);
+
+    // ⚠ The certificate trio is NOT uniform, and this is the split. `x5t#S256` is
+    // the ONE header parameter aegis's verify enforces: `verify-cert-binding.ts`
+    // skips the check when it is ABSENT and refuses a mismatch when it is
+    // present, so presence IS the binding — an empty thumbprint matches no
+    // certificate and must be refused, where pruning it would hand the audience
+    // an unbound token. `x5t` (never verified, legacy-compat output) and `x5c`
+    // (no binding check reads it) sit beside it and PRUNE, because nothing reads
+    // either: an empty value there binds nothing and is refused by nothing.
+    expect(keep).toEqual(["certificateThumbprint"]);
+
+    // ⚠ THE COUNT IS THE ASSERTION, and it is here rather than a loop over the
+    // column because a loop CANNOT GO RED. `ParamSpec.whenEmpty` is
+    // `"keep" | "prune"`, required and non-optional (`registry/param-spec.ts`),
+    // so a missing or off-vocabulary cell is a COMPILE error before any test
+    // runs — a loop asserting the cell is one of two values only restates what
+    // the compiler already refuses, and only a deliberate cast could redden it.
+    //
+    // What the compiler CANNOT see is a parameter added with a `whenEmpty` the
+    // author never thought about. The type forces a cell; nothing forces the
+    // DECISION. A count pinned beside the frozen `keep` list is what makes that
+    // visible HERE: a twenty-second parameter fails this test, and the only way
+    // past it is to read the split above and state which side the new one is on.
+    expect(HEADER_SPECS.length).toBe(21);
+  });
+
   test("crit is the only member-transforming (critical) codec kind", () => {
     const critical = HEADER_SPECS.filter((s) => s.codec.kind === "critical").map(
       headerJoseName,

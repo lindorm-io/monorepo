@@ -1,3 +1,4 @@
+import type { Dict } from "@lindorm/types";
 import { describe, expect, test } from "vitest";
 import { AegisDomainError } from "../../errors/index.js";
 import type { PolicyRule, TokenProfile } from "../../types/index.js";
@@ -147,6 +148,43 @@ describe("enforcePolicy", () => {
         }),
       );
     });
+
+    /**
+     * ⚠ A GATE THAT FAILED OPEN. Read with `in`, a `needs` key spelled like an
+     * `Object.prototype` member resolved through the chain and was judged SUPPLIED
+     * by every context, including `{}` — so the refusal never fired and
+     * `requiredWhen` evaluated the author's predicate against a context that does
+     * not hold the fact, which is the exact silence this rule exists to break.
+     *
+     * ⚠ The RUNTIME BACKSTOP for a type-level guarantee, the same shape
+     * `buildCoseHeaders`'s reserved check has. `BoundRule.needs` is
+     * `ReadonlyArray<ContextKey>` = `keyof SignContext`, so a TYPED profile cannot
+     * spell one of these — hence the `as never` below, which states that the input
+     * is off-contract on purpose. A profile is CALLER-REGISTERED
+     * (`Aegis.registerProfile`), and an untyped registration — a JSON body, a JS
+     * consumer, an `as any` — walks straight past the compiler.
+     */
+    test.each(["constructor", "toString", "valueOf", "hasOwnProperty"])(
+      "refuses a mint whose context omits the prototype-named key %s",
+      (key) => {
+        const prototypeNeeds: ReadonlyArray<PolicyRule> = [
+          {
+            rule: "requiredWhen",
+            on: ["mint"],
+            needs: [key] as never,
+            claim: "accessTokenHash",
+            when: (_claims, context) => (context as Dict)[key] === true,
+          },
+        ];
+
+        expect(() => run(prototypeNeeds, { subject: "u" }, "mint", {})).toThrow(
+          expect.objectContaining({
+            code: "missing_sign_context",
+            data: expect.objectContaining({ missing: [key] }),
+          }),
+        );
+      },
+    );
 
     // The fact stated as FALSE is a supplied fact, and the rule does not fire.
     test("accepts the fact stated as false", () => {

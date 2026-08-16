@@ -1,10 +1,9 @@
-import { isBuffer, isString } from "@lindorm/is";
+import { isString } from "@lindorm/is";
 import type { EncryptData, EncryptOptions, EncryptedToken } from "../../types/index.js";
 import { assertWireInput } from "../wire/assert-wire-input.js";
 import type { EncryptContentInput } from "../wire/token-wire.js";
 import { tokenWireFor } from "../wire/token-wire-for.js";
 import type { AegisDeps } from "./aegis-deps.js";
-import { normaliseClaims } from "./normalise-claims.js";
 import { domainTokenTypePrefix } from "./compute-typ-header.js";
 import { domainHeaderToWire } from "./domain-header-to-wire.js";
 import { nestedTokenContent } from "./nested-token-content.js";
@@ -17,10 +16,24 @@ import { nestedTokenContent } from "./nested-token-content.js";
  * back. Headers and options are still domain-translated — that is aegis's job on
  * every verb — but the payload is the caller's.
  *
- * ⚠ The ONE thing that reaches it is the emission-boundary normalisation below,
- * which is not a translation: it renames nothing and it reads only keys the CLAIM
- * REGISTRY declares. A payload spelled in the caller's own vocabulary — which is
- * what a confidentiality payload is — passes through untouched.
+ * ⚠ NOTHING reaches the payload — not even the claim normalisation every CLAIMS
+ * door applies. WHICH DOOR THE CALLER CAME THROUGH is the distinction, not what
+ * the payload happens to be made of: `sign` and `mint` attribute claims to an
+ * author and normalise them; `encrypt` seals a value and hands that exact value
+ * back, so a `Dict` handed to the confidentiality door is opaque even when its
+ * keys are spelled like registered claims. The HEADER still normalises — it is
+ * aegis's own statement about the token, on every verb.
+ *
+ * ⚠ It USED to normalise, guarded on the payload's JS TYPE (`isBuffer(data) ||
+ * isString(data) ? data : normaliseClaims(data)`), which is the wrong question ON
+ * THIS DOOR: it made a `Dict` a claims bag by virtue of being a `Dict`, when the
+ * door had already answered that. The identical guard is CORRECT on `sign`, where
+ * the door does attribute claims to an author and the JS type is genuinely what
+ * decides between bytes and a claims set (`sign-token.ts`). The defence offered
+ * was that the registry reaches nothing in a caller-spelled payload — true of the
+ * payloads that happen to avoid the vocabulary, and false the moment one does
+ * not. `encrypt({ nonce: "" })` lost the member silently, and the caller could
+ * not compensate for a prune it never asked for.
  *
  * ⚠ IT USED TO TRANSLATE, and the read side had to undo it: `domainToWire` on the
  * way in, `wireToDomain` on the way out, plus a private claims cty on each wire
@@ -65,24 +78,13 @@ export const encryptToken = async ({
   // (base64url) — so a `Buffer` is bytes and stays bytes.
   const nested = isString(data) ? nestedTokenContent(wire, data) : undefined;
 
-  // The caller's own value, under the SAME normalisation every other emission
-  // boundary applies — one rule, not a per-verb one.
-  //
-  // ⚠ It is safe on THIS verb, which seals a value and hands that exact value
-  // back, for the reason stated in `prune-empty-claims.ts`: an UNREGISTERED key
-  // is never touched. A confidentiality payload is made of the caller's own
-  // keys, so the normalisation reaches nothing in it — the round trip is
-  // preserved by the registry rule, not by an exemption written here. What it
-  // does reach is a payload spelled in DECLARED claim names, where the registry's
-  // answer is the same one it gives the signing verbs.
-  const payload = isBuffer(data) || isString(data) ? data : normaliseClaims(data);
-
   const input: EncryptContentInput = {
     kryptos,
     deps,
     // The kit's codec serialises the value under its own literal keys and
-    // states what it IS, so decrypt reconstructs the same type.
-    content: nested?.content ?? payload,
+    // states what it IS, so decrypt reconstructs the same type. The caller's
+    // value goes in VERBATIM — see the door rule in the docstring.
+    content: nested?.content ?? data,
     tokenType: domainTokenTypePrefix(options.type),
     // The nested-token declaration is a DEFAULT here, written BEFORE the caller's
     // bag so an explicit `header.contentType` displaces it — unlike the

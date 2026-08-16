@@ -1,5 +1,8 @@
+import type { CoseError } from "../../errors/index.js";
+import type { TokenFormatTag } from "../../types/index.js";
 import type { CoseLabel } from "../cose/cose-label.js";
 import { encodeProtectedHeader } from "../cose/structures.js";
+import { assertCritSatisfied } from "./assert-crit-satisfied.js";
 import { coseWireKey } from "./header-registry.js";
 
 /**
@@ -24,6 +27,24 @@ import { coseWireKey } from "./header-registry.js";
  * preference. A COSE_Encrypt0 must finalise its protected header BEFORE the AEAD
  * runs — that header IS the AAD — and the IV only exists after, so the two
  * buckets cannot be written in one pass.
+ *
+ * ⚠ THIS IS WHERE THE COSE PROTECTED BUCKET BECOMES COMPLETE, which is why the
+ * `crit` check runs here ({@link assertCritSatisfied}) and not in
+ * `buildCoseHeaders`. A `crit` is a statement about the FINISHED bucket, and the
+ * caller's translated entries are only part of it — `alg`, `typ` and `cty` are
+ * added by this function. Asked one step earlier, on the caller's fragment,
+ * `crit: ["alg"]` was refused as naming a parameter "the message does not carry"
+ * on a message whose protected bucket carries `alg` three lines below, while the
+ * JOSE twin minted the same header: one call, two verdicts, chosen by encoding.
+ * There are three callers of this function and one of it per wire write, so the
+ * check has ONE site here — the COSE analogue of `buildJoseHeader`'s last line.
+ *
+ * ⚠ It runs on the MAP, before the bytes: the members of a COSE `crit` are LABELS
+ * (RFC 9052 §1.5; `critToCoseLabels` translated them on the way in), and the map's
+ * keys are the same labels, so the two are compared in one vocabulary. Rule 2 of
+ * `buildCoseHeaders` has already refused a crit-named parameter the caller placed
+ * in the UNPROTECTED bucket, with the accurate error; what this catches is a
+ * parameter the protected bucket provides nothing for.
  */
 export const mergeCoseProtected = ({
   alg,
@@ -31,6 +52,8 @@ export const mergeCoseProtected = ({
   cty,
   entries,
   proprietary,
+  format,
+  error,
 }: {
   /** The label-1 value: a COSE algorithm label, or an encryption label for CWE. */
   alg: number;
@@ -47,6 +70,10 @@ export const mergeCoseProtected = ({
    * uninterpretable label on an interoperable token.
    */
   proprietary: boolean | undefined;
+  /** The wire format tag, which namespaces the `crit` refusal's code. */
+  format: TokenFormatTag;
+  /** The kit's own error class, so the refusal names the format it came from. */
+  error: typeof CoseError;
 }): Buffer => {
   const map = new Map<CoseLabel, unknown>();
 
@@ -55,6 +82,17 @@ export const mergeCoseProtected = ({
   if (cty !== undefined) map.set(coseWireKey("cty", proprietary), cty);
 
   for (const [label, value] of entries) map.set(label, value);
+
+  // The bucket is complete HERE, and nothing has been encoded yet — see the
+  // docstring. `crit` rides label 2 in both interop modes (it is registered), and
+  // the resolver is asked for it anyway so this function spells every label it
+  // touches one way.
+  assertCritSatisfied({
+    bucket: map,
+    critKey: coseWireKey("crit", proprietary),
+    format,
+    error,
+  });
 
   return encodeProtectedHeader(map);
 };

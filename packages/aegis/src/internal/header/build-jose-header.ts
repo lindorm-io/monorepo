@@ -2,11 +2,14 @@ import type { Dict } from "@lindorm/types";
 import type { JoseError } from "../../errors/index.js";
 import type {
   CertificateHeaderFields,
+  TokenFormatTag,
   WireProtectedHeader,
   WireTokenHeaderOptions,
 } from "../../types/index.js";
 import { mapTokenHeader, shapeWireHeader } from "../utils/token-header.js";
+import { assertCritSatisfied } from "./assert-crit-satisfied.js";
 import { canonicalWireHeader } from "./canonical-wire-header.js";
+import { normaliseHeaders } from "./normalise-headers.js";
 
 /**
  * Assemble the JOSE protected header — the twin of {@link buildCoseHeaders}, and
@@ -47,6 +50,37 @@ import { canonicalWireHeader } from "./canonical-wire-header.js";
  *    rule (`unregistered: "drop"`), a different statement about a different
  *    problem, and the COSE side refuses it only because a parameter with no label
  *    has nowhere to go.
+ *
+ * ⚠ A PARAMETER THAT EMITS NOTHING IS NOT A PARAMETER, so the caller's bag is
+ * NORMALISED ONCE at the top and the reserved check then runs over the normalised
+ * bag. That is the rule this file already applied to `undefined` — an absent
+ * parameter cannot be a reserved one, because nothing about it reaches the wire —
+ * widened by {@link normaliseHeaders} to "`undefined`, or empty where the registry
+ * says prune". One rule, both wires (`build-cose-headers.ts` normalises the same
+ * way, before ALL of its rules), every guard.
+ *
+ * ⚠ Nothing that emits BYTES stops being guarded. A `whenEmpty: "keep"` cell
+ * survives normalisation, so an empty `x5t#S256` still reaches the refusal — the
+ * prune removes only what would have gone on the wire as noise.
+ *
+ * ⚠ `crit` IS CHECKED ON THE MERGED HEADER, LAST, and nowhere else
+ * ({@link assertCritSatisfied}). A `crit` can only be written by the caller's
+ * tier — `defaults` is the inferred `cty` plus the key's `jku`, `derived` is
+ * key/crypto output, `cert` is a thumbprint binding — but the parameter it NAMES
+ * may come from any of the four, so the question can only be asked once they are
+ * one bag. RFC 7515 §7.1 gives the compact serialisation ONE header, and the
+ * merged result is it: wire-named and normalised by construction, since
+ * `shapeWireHeader` and `mapTokenHeader` each normalise their own output — so
+ * the merge needs no normalisation call of its own.
+ *
+ * ⚠ The SHAPING is what puts the header and its `crit` MEMBERS in one vocabulary:
+ * every tier crosses through `shapeWireHeader` or `mapTokenHeader`, and both run
+ * `criticalToWire` over `crit` (`token-header.ts#encodeHeaderValue`). The check
+ * therefore compares like with like without mapping anything itself — it holds a
+ * bucket whose vocabulary it cannot know, and a JOSE name and a COSE label are
+ * different things (RFC 9052 §1.5). That makes the shaping load-bearing rather
+ * than cosmetic: a tier that stopped mapping members would refuse a satisfied
+ * `crit` written in the domain spelling.
  */
 export const buildJoseHeader = ({
   reserved,
@@ -54,6 +88,7 @@ export const buildJoseHeader = ({
   header,
   derived,
   cert,
+  format,
   error,
 }: {
   /** The kit's `KitCapabilities.reserved` row — the params a caller may not set. */
@@ -78,18 +113,15 @@ export const buildJoseHeader = ({
    * than each kit crossing it.
    */
   cert: CertificateHeaderFields | undefined;
+  /** The wire format tag, which namespaces the `crit` refusal's code. */
+  format: TokenFormatTag;
   /** The kit's own error class, so the refusal names the format it came from. */
   error: typeof JoseError;
 }): WireTokenHeaderOptions => {
   const owned = new Set(reserved);
 
   const caller: Dict = {};
-  for (const [jose, value] of Object.entries(header ?? {})) {
-    // An undefined value is an ABSENT parameter — the shaping pass below drops
-    // it, so refusing it would refuse a bag that emits nothing. The COSE twin
-    // skips it for the same reason (`wireHeaderToCoseMap` never keys it).
-    if (value === undefined) continue;
-
+  for (const [jose, value] of Object.entries(normaliseHeaders(header ?? {}))) {
     if (!owned.has(jose)) {
       caller[jose] = value;
       continue;
@@ -104,10 +136,28 @@ export const buildJoseHeader = ({
     });
   }
 
-  return canonicalWireHeader({
+  const assembled = canonicalWireHeader({
     ...shapeWireHeader(defaults),
     ...shapeWireHeader(caller),
     ...shapeWireHeader(derived),
     ...mapTokenHeader({}, cert),
   }) as WireTokenHeaderOptions;
+
+  // LAST, on the merged bag — see the docstring. This is the first point the
+  // whole message exists, and a `crit` is a statement about the whole message.
+  //
+  // ⚠ As a Map, and `Object.entries` is what builds it: the check looks a
+  // caller-controlled `crit` MEMBER up as a key, and a member looked up on a plain
+  // object resolves through `Object.prototype` — `crit: ["toString"]` was
+  // "satisfied" by a parameter no header carries. `Object.entries` yields own keys
+  // only, and a Map has no chain to walk, so the vocabulary crossing and the
+  // hazard are closed in one step rather than by remembering `Object.hasOwn` here.
+  assertCritSatisfied({
+    bucket: new Map(Object.entries(assembled)),
+    critKey: "crit",
+    format,
+    error,
+  });
+
+  return assembled;
 };

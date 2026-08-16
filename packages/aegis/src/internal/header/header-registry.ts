@@ -34,6 +34,15 @@
  * aegis implements no crit extension, so nothing is critical. They are declared
  * per entry anyway, so the first parameter that breaks one of those patterns has
  * to say so here.
+ *
+ * --- `whenEmpty` ---
+ *
+ * REQUIRED on every entry and with no default, for the same reason the claim
+ * registry gives: both polarities fail open in a different direction. Twenty
+ * prune. The ONE `keep` is `x5t#S256`, because it is the only header parameter
+ * aegis's verify enforces — presence is a binding, and pruning an empty one hands
+ * the audience an unbound token. `x5t` and `x5c` sit beside it and prune, because
+ * nothing reads them.
  */
 
 import { isNumber } from "@lindorm/is";
@@ -65,7 +74,7 @@ const BOTH: Directions = ["mint", "verify"];
  * derived from the Maps below.
  *
  * RFC references: RFC 7515 §4.1 (JWS), RFC 7516 §4.1 (JWE), RFC 7518 §4.6
- * (ECDH-ES), RFC 9052 §3.1 Table 2 (core COSE labels), RFC 9360 (X.509 COSE
+ * (ECDH-ES), RFC 9052 §3.1 Table 3 (core COSE labels), RFC 9360 (X.509 COSE
  * labels), RFC 9596 (COSE `typ`), plus the lindorm-proprietary `oid`.
  */
 export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
@@ -78,6 +87,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "ES256",
+    // PRUNE: `alg` is REQUIRED (RFC 7515 §4.1.1) and `""` names no algorithm — a
+    // missing `alg` wearing a value. Absent is the state `encodeJoseHeader`
+    // already refuses by name (`jose-header.ts:19-25`), so pruning routes the
+    // failure to the check written for it. `kryptos.algorithm` is a closed union,
+    // so aegis's own write cannot reach the cell.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -96,6 +111,18 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "cGFydHktdQ",
+    // PRUNE, and RFC 7518 §4.6.2 proves it rather than merely permitting it.
+    // PartyUInfo is Concat-KDF input, and the RFC defines the present-but-empty
+    // case to compute what the ABSENT case computes: "If an "apu" (agreement
+    // PartyUInfo) Header Parameter is present, Data is set to the result of
+    // base64url decoding the "apu" value and Datalen is set to the number of
+    // octets in Data. Otherwise, Datalen is set to 0 and Data is set to the empty
+    // octet sequence." Decoding `""` yields the empty octet sequence and a
+    // Datalen of 0 — the two branches agree exactly — so an empty `apu` derives
+    // the SAME key an absent one does. It is a header parameter that changes
+    // nothing, and aegis never even feeds it in: `resolve-ecdh-party.ts:44`
+    // decodes the value only when it is truthy.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -114,6 +141,9 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "cGFydHktdg",
+    // PRUNE: the `apu` argument, for PartyVInfo — RFC 7518 §4.6.2 states the
+    // absent/empty equivalence for this parameter in the same words.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -133,6 +163,13 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // came back from the read as `["objectId"]`, so the one value the column
     // exists to demonstrate did not round-trip to itself.
     sample: ["objectId"],
+    // PRUNE, and the only cell where both wires forbid the empty value outright.
+    // RFC 7515 §4.1.11: "Producers MUST NOT use the empty list "[]" as the "crit"
+    // value." RFC 9052 §3.1: "The array MUST have at least one value in it."
+    // aegis's own reader already refuses one (`validate-crit.ts:66-69`), so an
+    // empty `crit` that reached the wire was a token aegis minted and would not
+    // verify.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -145,6 +182,14 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "application/json",
+    // PRUNE: `cty` names the payload's media type (RFC 7515 §4.1.10) and `""` is
+    // not one. It is worse than noise here: `serialiseContent` prefers it over the
+    // inferred type (`content-codec.ts:175`, `??` passes `""` through) and
+    // `reconstructStrategy("")` falls to the raw-bytes default
+    // (`content-codec.ts:92-114`), so a sealed object came back a Buffer. Absent
+    // is the state both aegis and the RFC already define; empty is a second
+    // spelling of it, and the one nothing has a rule for.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -164,6 +209,13 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "A256GCM",
+    // PRUNE: RFC 7516 §4.1.2 makes `enc` REQUIRED on a JWE, and `""` names no
+    // content-encryption algorithm — indistinguishable from a header that never
+    // had one. Provenance is `computed` from the kit's own `this.encryption`, so
+    // aegis's own write cannot reach the cell; it states the direction a smuggled
+    // one fails in, and `decodeJoseHeader` refuses an unknown `enc` on the read
+    // (`jose-header.ts:99-107`).
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -181,6 +233,14 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
+    // PRUNE: RFC 7518 §4.6.1.1 makes `epk` the ephemeral public key "created by
+    // the originator", which the recipient agrees against — yielding the CEK
+    // directly for `ECDH-ES` and the KEY-WRAPPING key for the `+A*KW` variants
+    // (§4.6.2). `{}` carries no `kty`, `crv` or coordinates, so no key agreement
+    // can be performed from it — and "no ephemeral key was produced" is exactly
+    // what an ABSENT `epk` reports, which is the honest shape of every
+    // non-ECDH-ES token aegis writes.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -193,6 +253,14 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: Buffer.alloc(12),
+    // PRUNE. ⚠ The cell does NOT govern a zero-length Buffer: `isEmpty` treats a
+    // Buffer as non-empty by design (`is-empty.ts:18-21`), and a zero-length nonce
+    // is a crypto-layer defect that must fail in the AEAD rather than be pruned
+    // into "no IV". What it does govern is the non-Buffer empty the guardless
+    // `buffer` arm lets through (`token-header.ts:89-90` applies no guard at all)
+    // — `""`, `null`, `{}`, `[]`. None of them is a nonce; an AEAD nonce is bytes
+    // or absent.
+    whenEmpty: "prune",
     // JOSE carries it on the protected header; COSE_Encrypt0 puts it in the
     // unprotected bucket (it is an AEAD input, not integrity-protected data).
     placement: "either",
@@ -212,6 +280,11 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "https://issuer.lindorm.test/.well-known/jwks.json",
+    // PRUNE, and no empty value can reach the cell: `isUrlLike("")` is false, so
+    // the codec guard (`token-header.ts:83-84`) already drops every empty form. The
+    // cell records the same answer at the bag level rather than leaving this the
+    // one row with no verdict.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -229,6 +302,11 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
+    // PRUNE: `{}` is a JWK with no `kty`, which RFC 7517 §4.1 makes REQUIRED — it
+    // identifies no key. aegis never trusts a header-embedded key on any wire
+    // (stated on this entry's COSE absence), so an empty one is noise no recipient
+    // can act on.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -241,6 +319,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "key_sample",
+    // PRUNE: `kid` is the lookup hint a verifier resolves the key by, and `""`
+    // matches nothing — indistinguishable from a token that gave no hint.
+    // `encodeJoseHeader` already refuses a falsy `kid` (`jose-header.ts:42-49`).
+    // On COSE it also travels unprotected (`placement: "either"`), where an empty
+    // one would be a routing hint that routes nowhere.
+    whenEmpty: "prune",
     // COSE convention: kid is an advisory routing hint read BEFORE the signature
     // is checked, so the COSE kits emit it unprotected; JOSE has one header.
     placement: "either",
@@ -265,6 +349,10 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "oid_sample",
+    // PRUNE: `oid` names the domain object the token is about; `""` names none,
+    // and nothing in aegis or on the platform reads an empty object id as anything
+    // but "not stated".
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -284,6 +372,13 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: 310000,
+    // PRUNE, and no empty value exists for it to act on: `isEmpty` is false for
+    // every number (`is-empty.ts:30`) and `isFinite` rejects every non-number
+    // (`token-header.ts:85-86`). ⚠ `p2c: 0` is a VALUE, not an absence, and is never
+    // pruned — a zero iteration count is a key-management defect that must fail
+    // where the derivation happens, not vanish from the header a recipient needs
+    // to reproduce it (RFC 7518 §4.8.1.2).
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -301,6 +396,9 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: Buffer.alloc(16),
+    // PRUNE, on the `iv` argument — and with the same ⚠: a zero-length Buffer is
+    // not empty and is not governed here.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -318,12 +416,15 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: Buffer.alloc(16),
+    // PRUNE, on the `iv` argument. The key-wrap authentication tag is bytes or
+    // absent; the non-Buffer empties the guardless `buffer` arm admits are neither.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
   {
     domain: "headerType",
-    wire: { jose: wireName("typ"), cose: wireLabel(16, "typ") }, // RFC 9596
+    wire: { jose: wireName("typ"), cose: wireLabel(16, "typ") }, // RFC 9596 §4.1
     codec: { kind: "string" },
     // Every kit builds the full media type itself from the `tokenType` PREFIX
     // (`buildMediaType`/`computeTypHeader`). A caller supplies the prefix, never
@@ -337,6 +438,18 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // and aegis always writes and reports the complete media type — so the bare
     // `"at+jwt"` this held could never round-trip to itself.
     sample: "application/at+jwt",
+    // PRUNE: `typ` declares the type of the complete object, and ROUTING ON IT IS
+    // AEGIS POLICY rather than a library requirement — RFC 9596 §2 has `typ`
+    // "ignored by COSE implementations […] other than being passed through to
+    // applications using those implementations", and aegis is the application.
+    // `assertWireTyp` gates every read on it, so `""` would leave the token
+    // unroutable while looking declared. RFC 7515 §4.1.9 makes ABSENT a defined
+    // state; empty is not one.
+    // `buildMediaType` never returns `""` (`compute-typ-header.ts:47-49` floors an
+    // empty prefix to the bare conventional form) and `encodeJoseHeader` refuses a
+    // falsy `typ` (`jose-header.ts:35-41`), so aegis's own write cannot reach the
+    // cell.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -349,6 +462,14 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: ["MIIBsample"],
+    // PRUNE. ⚠ NOT a restriction, and this is where it splits from `x5t#S256`
+    // below: nothing reads `x5c` — the binding check consults the SHA-256
+    // thumbprint alone (`verify-cert-binding.ts:7,38`) — so an empty chain
+    // restricts nothing and pruning removes nothing. RFC 7515 §4.1.6 makes the
+    // first member the certificate corresponding to the key, and a chain with no
+    // members corresponds to no key. `resolve-cert-binding.ts:44-45` already
+    // refuses to emit one, so the writer has made the same call.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -370,6 +491,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "dGh1bWJwcmludC1zaGEx",
+    // PRUNE, and the split from `x5t#S256` is the whole reason the two cells
+    // differ: aegis binds on the SHA-256 thumbprint ALONE and never verifies this
+    // one (`verify-cert-binding.ts:19-21`). It is legacy-compat output, so an
+    // empty value binds nothing, is refused by nothing, and is pure noise on the
+    // wire.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -387,6 +514,19 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "dGh1bWJwcmludC1zaGEyNTY",
+    // KEEP: `x5t#S256` is the ONE header parameter aegis's verify ENFORCES —
+    // `verify-cert-binding.ts:38` skips the check when it is absent and refuses a
+    // mismatch at :60. An empty thumbprint matches no certificate and is refused,
+    // which is the safe direction; pruning it converts an unsatisfiable binding
+    // into NO binding and hands the audience an unbound token. That is the `cnf`
+    // fail-open in header form. Provenance is `key`, so aegis's own write cannot
+    // reach the cell (`resolve-cert-binding.ts:32` takes the value off the
+    // kryptos): it states the direction a value that ever did arrive must fail in.
+    //
+    // ⚠ Do NOT generalise it to the other two cert parameters. It holds because
+    // something READS the value and treats presence as a binding; nothing reads
+    // `x5t` or `x5c`, and both of them prune.
+    whenEmpty: "keep",
     placement: "protected",
     critical: false,
   },
@@ -400,6 +540,10 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "https://issuer.lindorm.test/certs.pem",
+    // PRUNE: RFC 7515 §4.1.5 makes `x5u` a URI, and `""` is not one. ⚠ Note this
+    // row carries the `string` codec, not `url` like `jku` — so unlike `jku` the
+    // guard does NOT already drop an empty value, and this cell is what stops it.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },
@@ -418,6 +562,13 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "DEF",
+    // PRUNE: RFC 7516 §4.1.3 DEFINES "DEF" as the one compression algorithm value
+    // that specification gives (the IANA registration is RFC 7518 §7.3 / §7.3.2);
+    // `""` names none. aegis compresses nothing on any write path, so an empty `zip`
+    // declares a transform that did not happen — on a token `JweKit.decrypt` then
+    // refuses for merely CARRYING the parameter (`JweKit.ts:174-182`). The refusal for
+    // a FOREIGN token's `zip` is untouched: the read path is not normalised.
+    whenEmpty: "prune",
     placement: "protected",
     critical: false,
   },

@@ -179,6 +179,41 @@ describe("isStructuredToken", () => {
     });
   });
 
+  /**
+   * ⚠ THE TABLES ARE READ AS KEYS, NOT AS PROPERTIES. Both lookups sit on plain
+   * object literals (`STRUCTURED`, `ENCRYPTING`) and both keys come off a token
+   * the CALLER handed in, so `format in STRUCTURED` resolved through
+   * `Object.prototype` and narrowed `{ format: "constructor" }` to a
+   * claims-bearing token — one this guard's eleven pylon call sites would then
+   * read `claims` off. `in` on a caller-influenced key is a BANNED construct in
+   * this package.
+   *
+   * A hand-written literal is the right input HERE, unlike every row above:
+   * `verify` cannot produce one of these, which is exactly why the guard has to
+   * survive it. `as never` states that the shape is off-contract on purpose.
+   */
+  describe("a prototype member is not a format", () => {
+    test.each(["constructor", "toString", "valueOf", "hasOwnProperty"])(
+      "should reject the outer format %s",
+      (format) => {
+        expect(isStructuredToken({ format } as never)).toBe(false);
+      },
+    );
+
+    test.each(["constructor", "toString", "valueOf", "hasOwnProperty"])(
+      "should reject the inner format %s under a real encrypting outer",
+      (inner) => {
+        expect(isStructuredToken({ format: "jwe", inner } as never)).toBe(false);
+      },
+    );
+
+    // …while the real pair it stands next to still narrows, so the guard is not
+    // simply refusing everything hand-built.
+    test("should still accept a structured inner under an encrypting outer", () => {
+      expect(isStructuredToken({ format: "jwe", inner: "jwt" } as never)).toBe(true);
+    });
+  });
+
   describe("narrowing", () => {
     // The runtime answer is only half the point — the guard has to NARROW, or a
     // consumer still needs its own cast. These assignments are the assertion:

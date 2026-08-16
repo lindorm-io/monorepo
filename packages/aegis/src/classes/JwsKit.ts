@@ -7,6 +7,7 @@ import { JwsError } from "../errors/index.js";
 import type { IJwsKit } from "../interfaces/index.js";
 import { B64U } from "../internal/constants/format.js";
 import { buildJoseHeader } from "../internal/header/build-jose-header.js";
+import { normaliseHeaders } from "../internal/header/normalise-headers.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
@@ -49,15 +50,21 @@ export class JwsKit implements IJwsKit {
   sign(data: TokenContent, options: SignUnstructuredTokenOptions = {}): string {
     this.logger.debug("Signing token", { options });
 
+    // A parameter that emits nothing is not a parameter, and the caller's bag is
+    // normalised HERE because the next line READS it — a builder normalisation is
+    // too late. An empty `cty` would be preferred over the inferred type and the
+    // payload would come back a Buffer (`normalise-headers.ts`).
+    const callerHeader = normaliseHeaders(options.header ?? {});
+
     // Serialise from the JS type; the cty defaults to the inferred type and a
     // caller `header.cty` (folded in below) wins as the WIRE label.
-    const { bytes, contentType } = serialiseContent(data, options.header?.cty);
+    const { bytes, contentType } = serialiseContent(data, callerHeader.cty);
 
     const header = encodeJoseHeader(
       buildJoseHeader({
         reserved: KIT_CAPABILITIES.jws.reserved,
         defaults: { cty: contentType, jku: this.kryptos.jwksUri ?? undefined },
-        header: options.header,
+        header: callerHeader,
         derived: {
           alg: this.kryptos.algorithm,
           kid: this.kryptos.id,
@@ -68,6 +75,7 @@ export class JwsKit implements IJwsKit {
           options.bindCertificate,
           options.certificateThumbprintSha1,
         ),
+        format: "jws",
         error: JwsError,
       }),
     );

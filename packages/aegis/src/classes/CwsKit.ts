@@ -16,6 +16,7 @@ import { COSE_TAG, buildSecuredStructure } from "../internal/cose/structures.js"
 import { buildCoseHeaders } from "../internal/header/build-cose-headers.js";
 import { mergeCoseProtected } from "../internal/header/merge-cose-protected.js";
 import { mergeCoseUnprotected } from "../internal/header/merge-cose-unprotected.js";
+import { normaliseHeaders } from "../internal/header/normalise-headers.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
@@ -154,6 +155,14 @@ export class CwsKit implements ICwsKit {
       error: CwsError,
     });
 
+    // A parameter that emits nothing is not a parameter, and the caller's bag is
+    // normalised HERE because the codec below READS it — a builder normalisation
+    // is too late. An empty `cty` would be preferred over the inferred type and
+    // the payload would come back a Buffer; it would also reach label 3 as
+    // `[3, ""]`, where the JOSE twin drops it, and the two wires would disagree
+    // about the same call (`normalise-headers.ts`).
+    const callerHeader = normaliseHeaders(options.header ?? {});
+
     // The cty defaults to the inferred type; a caller `header.cty` wins as the
     // WIRE label (label 3).
     //
@@ -166,14 +175,18 @@ export class CwsKit implements ICwsKit {
     // family. ONE encoding for opaque content across all four doors is what lets
     // `aegis.sign(dict)` + `verify` hand back the same Dict on `jws` and on
     // `cws`, with no per-wire reasoning left for a caller to do.
-    const { bytes, contentType } = serialiseContent(content, options.header?.cty);
+    const { bytes, contentType } = serialiseContent(content, callerHeader.cty);
 
     const tag = signedCoseStructureTag(this.kryptos);
     const sign1 = tag === COSE_TAG.sign1;
 
     this.logger.debug(sign1 ? "Signing COSE_Sign1" : "MAC'ing COSE_Mac0", { options });
 
-    const { protectedHeader, unprotected } = this.buildHeaders(contentType, options);
+    const { protectedHeader, unprotected } = this.buildHeaders(
+      contentType,
+      callerHeader,
+      options,
+    );
 
     const secured = new SignatureKit({ kryptos: this.kryptos, raw: sign1 }).sign(
       buildSecuredStructure(tag, protectedHeader, bytes),
@@ -232,9 +245,15 @@ export class CwsKit implements ICwsKit {
    * rules. Scalar `typ` is sugar for the media-type PREFIX, never the whole typ.
    * `contentType` is the codec-inferred cty (label 3) default — a caller
    * `header.cty` wins as the WIRE label.
+   *
+   * The caller's protected bag arrives ALREADY NORMALISED (`sign` normalises it at
+   * the door, before the codec reads its `cty`), which is why it is a parameter
+   * rather than read off `options` here — reading `options.header` again would
+   * re-admit the value the door removed.
    */
   private buildHeaders(
     contentType: string,
+    header: Partial<WireTokenHeader>,
     options: SignUnstructuredTokenOptions,
   ): {
     protectedHeader: Buffer;
@@ -254,19 +273,24 @@ export class CwsKit implements ICwsKit {
     // reader cannot interpret.
     const { protectedEntries, unprotectedEntries } = buildCoseHeaders({
       reserved: KIT_CAPABILITIES.cws.reserved,
-      header: options.header as Partial<WireTokenHeader> | undefined,
+      header,
       unprotected: options.unprotected,
       proprietary: options.proprietary,
       error: ERROR_BY_FORMAT.cws,
     });
 
     return {
+      // ⚠ The `crit` satisfaction check lives at the END of this call, on the
+      // FINISHED protected bucket — the `alg`/`typ`/`cty` written here are part of
+      // what a `crit` may name, and the caller's entries alone are not the message.
       protectedHeader: mergeCoseProtected({
         alg: algToCoseLabel(this.kryptos.algorithm),
         typ: buildMediaType(options.tokenType, "cws"),
         cty: contentType,
         entries: protectedEntries,
         proprietary: options.proprietary,
+        format: "cws",
+        error: ERROR_BY_FORMAT.cws,
       }),
       unprotected: mergeCoseUnprotected({
         kid: this.kryptos.id,

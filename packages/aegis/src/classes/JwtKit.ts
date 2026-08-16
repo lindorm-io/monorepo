@@ -118,6 +118,7 @@ export class JwtKit implements IJwtKit {
           options.bindCertificate,
           options.certificateThumbprintSha1,
         ),
+        format: "jwt",
         error: JwtError,
       }),
     );

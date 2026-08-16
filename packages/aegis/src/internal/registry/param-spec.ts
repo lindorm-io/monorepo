@@ -17,6 +17,12 @@
  *      on the claim spec alone.
  *   3. Headers are a CLOSED set and claims are an OPEN one. That is stated ONCE,
  *      at registry level, by {@link Registry.unregistered} — never per entry.
+ *
+ * ⚠ {@link ParamSpec.whenEmpty} is NOT a delta and never was. It was declared on
+ * the claim spec alone while the header registry emitted an empty value straight
+ * onto the wire with nothing recorded about it; once both registries answer the
+ * question, declaring it twice on two siblings is exactly the drift this base
+ * exists to prevent.
  */
 
 import type { Wire } from "./wire.js";
@@ -80,6 +86,56 @@ export type ParamSpec<D = unknown, C extends ValueCodec = ValueCodec> = {
   /** May a caller assert on this parameter through the matcher door. */
   matchable: boolean;
   sensitivity: Sensitivity;
+  /**
+   * What the emission-boundary prune does to this parameter when its value is
+   * EMPTY (`""`, `null`, `[]`, `{}` — `0` and `false` are values and are never
+   * empty, and neither is a zero-length Buffer). REQUIRED, with no default: both
+   * polarities fail open in a different direction, so there is nothing safe to
+   * fall into and a new parameter must decide.
+   *   - `"prune"` the empty value is indistinguishable from "not stated" — a
+   *               scalar with no meaningful empty form, or a descriptive
+   *               attribute whose empty list says nothing anyone can act on.
+   *   - `"keep"`  the empty value is a STATEMENT: dropping it either broadens
+   *               what the token permits (a restriction, a binding) or erases
+   *               what the token is FOR (the event, the subject of the event).
+   *
+   * ⚠ The column governs the TOP-LEVEL parameter only, and where the prune runs it
+   * is the ONLY thing that governs it: there is no per-call mode to state and
+   * nothing else is consulted (`internal/utils/normalise-claims.ts`,
+   * `internal/header/normalise-headers.ts`).
+   *
+   * ⚠ WHERE IT RUNS is every emission boundary, plus — ahead of it — every point
+   * that READS a caller's bag before the emission boundary would have normalised
+   * it: the claim bag at each claims door as it is serialised, and the header bag
+   * at the four opaque-content kit doors (which read `cty` to pick that
+   * serialisation) and at the domain crossing. The three CLAIMS doors take no
+   * header call, because they read nothing off that bag;
+   * `internal/header/normalise-headers.ts` states that condition and what would
+   * end it. It does NOT run on the kit-DERIVED COSE
+   * header tier: `mergeCoseProtected` writes `alg`/`typ`/`cty` straight into the
+   * label map behind a bare `!== undefined`. What makes that safe is not this
+   * column but the values: all three are COMPUTED, and the one of them a caller
+   * can influence (`cty`, through `serialiseContent`) is normalised at the door
+   * before the codec reads it. So the column is not a guarantee about every byte
+   * on the wire — it is a guarantee about every bag that crosses a normalisation.
+   *
+   * A parameter's INNER members are its
+   * own declared structure (RFC 9396 `actions`, an RFC 8417 event payload, an
+   * OIDC `address` member, a JWK's coordinates) and aegis has not declared them,
+   * so nothing recurses.
+   *
+   * ⚠ WRITE SIDE ONLY, on both registries. The prune decides what AEGIS EMITS;
+   * a read reports what a producer WROTE, and rewriting a foreign token's empty
+   * value into an absence would make aegis misreport it.
+   *
+   * ⚠ BOTH registries answer this. A claim and a header parameter each have an
+   * empty form, and each has to say whether that form is a statement or noise.
+   * What differs between the two registries is a SEPARATE column —
+   * {@link Registry.unregistered}, which decides what happens to a key with no
+   * entry at all. That the header set is CLOSED narrows how many parameters can
+   * ask this question; it does not answer it for any of them.
+   */
+  whenEmpty: "keep" | "prune";
   /**
    * A representative DOMAIN-shaped value. REQUIRED, so a new parameter cannot be
    * added without giving the generated conformance suite something to round-trip

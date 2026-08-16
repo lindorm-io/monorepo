@@ -163,6 +163,18 @@ describe("aegis.encrypt — the cwe envelope declares its own plaintext", () => 
         sub: "not-a-subject",
       });
     });
+
+    test("an EMPTY member spelled like a registered claim survives too", async () => {
+      // The door decides, not the payload's JS type. `nonce` is a declared claim
+      // whose registry cell prunes an empty value — on the CLAIMS doors, where an
+      // issuer asserts claims to an audience. This door asserts nothing: it seals
+      // a value and hands that exact value back, so an empty member is part of
+      // the value. The loss is silent and the caller cannot compensate for it —
+      // the token decrypts cleanly and the member is simply gone.
+      const { token } = await aegis.encrypt({ nonce: "", kept: "x" }, { format: "cwe" });
+
+      expect((await aegis.decrypt(token)).payload).toEqual({ nonce: "", kept: "x" });
+    });
   });
 
   /**

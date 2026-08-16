@@ -100,11 +100,18 @@ export const signCwt = (
   // protection before finding the CWT Claims Set"). Deriving one described the
   // ALREADY-CBOR byte string as `application/octet-stream`, which stated nothing
   // true and diverged from the JOSE twin for no reason but the encoding.
+  //
+  // ⚠ This call also RUNS the `crit` satisfaction check, on the finished protected
+  // bucket: `typ` (and, on the wires that derive one, `cty`) are written here, so
+  // a `crit` naming one of them is satisfied by this map and not by the caller's
+  // entries above.
   const protectedHeader = mergeCoseProtected({
     alg: algToCoseLabel(kryptos.algorithm),
     typ: buildMediaType(options.tokenType, format),
     entries: protectedEntries,
     proprietary: options.proprietary,
+    format,
+    error: ERROR_BY_FORMAT[format],
   });
 
   const unprotected = mergeCoseUnprotected({

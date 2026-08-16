@@ -1,0 +1,63 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`normaliseHeaders > the registry-driven empty prune > should keep the empty thumbprint aegis binds on, and prune the two beside it 1`] = `
+{
+  "kid": "key_test",
+  "x5t#S256": "",
+}
+`;
+
+exports[`normaliseHeaders > the registry-driven empty prune > should keep zero, false and a zero-length buffer 1`] = `
+{
+  "flag": false,
+  "iv": {
+    "data": [],
+    "type": "Buffer",
+  },
+  "p2c": 0,
+}
+`;
+
+exports[`normaliseHeaders > the registry-driven empty prune > should never prune an unregistered key 1`] = `
+{
+  "empty_list": [],
+  "empty_map": {},
+  "kept": 1,
+  "nonsense": "",
+}
+`;
+
+exports[`normaliseHeaders > the registry-driven empty prune > should prune a registered parameter the registry marks prunable 1`] = `
+{
+  "kid": "key_test",
+}
+`;
+
+exports[`normaliseHeaders > the registry-driven empty prune > should prune an empty parameter even where this header's own crit names it 1`] = `
+{
+  "crit": [
+    "oid",
+  ],
+}
+`;
+
+exports[`normaliseHeaders > the undefined strip > should leave a registered parameter's own structure alone 1`] = `
+{
+  "jwk": {
+    "crv": "P-256",
+    "kty": "EC",
+    "x": "",
+  },
+  "kid": "key_test",
+}
+`;
+
+exports[`normaliseHeaders > the undefined strip > should strip undefined and keep an unregistered key's every other value 1`] = `
+{
+  "a": 1,
+  "b": null,
+  "c": "",
+  "e": [],
+  "f": {},
+}
+`;

@@ -56,6 +56,41 @@ describe("validateCrit", () => {
     expect(validateCrit(header)).toMatch(/not present/);
   });
 
+  /**
+   * The same requirement one step further in, stated for each shape a producer
+   * can write it as. `crit` says a recipient MUST understand the parameter's
+   * VALUE, so a present-but-empty one satisfies the list no better than an absent
+   * one — and the writer refuses the identical shape at mint
+   * (`header/assert-crit-satisfied.ts`), so aegis gives one answer on both sides.
+   */
+  test("rejects crit listing a name whose value is EMPTY", () => {
+    for (const value of ["", null, [], {}]) {
+      const header = {
+        ...base,
+        crit: ["extension"],
+        extension: value,
+      } as unknown as WireTokenHeader;
+
+      expect(validateCrit(header)).toMatch(/has an empty value/);
+    }
+  });
+
+  test("accepts a crit-listed name whose value is zero, false or empty bytes", () => {
+    // The `isEmpty` boundary, and it is the same one the write-side prune uses:
+    // `0` and `false` are VALUES a recipient can act on, and a zero-length Buffer
+    // is bytes. Reading them as "nothing to understand" would refuse a token
+    // whose critical parameter says something quite specific.
+    for (const value of [0, false, Buffer.alloc(0)]) {
+      const header = {
+        ...base,
+        crit: ["extension"],
+        extension: value,
+      } as unknown as WireTokenHeader;
+
+      expect(validateCrit(header)).toBeNull();
+    }
+  });
+
   test("accepts oid-style extension as long as it is present", () => {
     // Note: this is a hypothetical test to show the mechanism — aegis should
     // never actually put `oid` in crit because it is informational, not
@@ -72,4 +107,22 @@ describe("validateCrit", () => {
     // Whether it SHOULD be marked critical is a separate policy question.
     expect(validateCrit(header)).toBeNull();
   });
+
+  /**
+   * ⚠ THE MEMBERSHIP TEST IS AN OWN-KEY TEST, and the member comes off a token a
+   * STRANGER wrote. Spelled `name in decoded`, it resolved through
+   * `Object.prototype`: `crit: ["toString"]` was "present in the header" of every
+   * token ever decoded, and `isEmpty` calls a function non-empty, so the read side
+   * accepted a `crit` naming a parameter no header carries — the same shape the
+   * writer refuses. `in` on a caller-influenced key is a BANNED construct in this
+   * package; `Object.hasOwn` is the only membership test to use.
+   */
+  test.each(["toString", "constructor", "valueOf", "hasOwnProperty", "__proto__"])(
+    "rejects crit listing the Object.prototype member %s",
+    (member) => {
+      const header = { ...base, crit: [member] } as unknown as WireTokenHeader;
+
+      expect(validateCrit(header)).toMatch(/is not present in the header/);
+    },
+  );
 });

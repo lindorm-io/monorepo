@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assertCritSatisfied > every kit namespaces the refusal with ITS OWN format tag 1`] = `
+[
+  "jws_invalid_crit",
+  "jwt_invalid_crit",
+  "jwe_invalid_crit",
+  "cws_invalid_crit",
+  "cwt_invalid_crit",
+  "cwm_invalid_crit",
+  "cwe_invalid_crit",
+]
+`;

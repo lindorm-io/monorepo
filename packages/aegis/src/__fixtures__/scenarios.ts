@@ -2905,15 +2905,26 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       {
         step: "token",
         via: "domain-encrypt",
-        // One of each shape the `"empty"` prune drops, so a prune of any of them
+        // One of each shape the empty prune drops, so a prune of any of them
         // shows here rather than only the one that happened to be written.
-        data: { blank: "", none: [], empty: {}, kept: "x" },
+        //
+        // ⚠ `nonce` is the member that makes the row REPRODUCE the rule rather
+        // than agree with it. The other four are names the claim registry has
+        // never heard of, and the prune stops at the edge of what aegis has
+        // declared — so a payload made only of those could not have been pruned
+        // whatever the verb decided. `nonce` IS declared, its cell says prune,
+        // and its domain and JOSE spellings coincide, so it is the one key here
+        // that reaches the decision under test.
+        data: { blank: "", none: [], empty: {}, kept: "x", nonce: "" },
       },
     ],
     when: [{ step: "decrypt" }],
     then: [
       { step: "accepts", format: { jose: "jwe", cose: "cwe" } },
-      { step: "raw", expected: { blank: "", none: [], empty: {}, kept: "x" } },
+      {
+        step: "raw",
+        expected: { blank: "", none: [], empty: {}, kept: "x", nonce: "" },
+      },
     ],
   },
   {
@@ -3603,6 +3614,131 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
       { step: "wireClaims", present: ["events"] },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  // The empty-header prune.
+  // ---------------------------------------------------------------------------
+  {
+    id: "an-empty-critical-list-is-left-off-the-wire",
+    title:
+      "a token whose producer marked nothing critical carries no critical-parameter list",
+    rationale:
+      'Both wires forbid the empty list outright. RFC 7515 §4.1.11: "Producers MUST NOT use the empty list \\"[]\\" as the \\"crit\\" value." RFC 9052 §3.1 says the same of COSE: "When present, the \\"crit\\" header parameter MUST be placed in the protected-header-parameters bucket. The array MUST have at least one value in it." A `crit` naming no parameter states that a recipient must understand nothing, which is what an ABSENT `crit` already states — so it adds no information and forfeits conformance to say it. It is also the shape a header bag assembled from optional values arrives in, so a writer that passed it through would emit a token its own reader refuses: aegis refuses an empty `crit` on arrival, and a library that mints what it will not verify has two answers to one question.',
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+        options: { header: { crit: [] } },
+      },
+    ],
+    // VERIFY, not merely mint: the whole point is that the token aegis produced
+    // is one aegis accepts. A `mint`-only act would leave the self-inconsistency
+    // — minted here, refused by `validateCrit` — unobserved.
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // Read off the RAW bytes by the independent inspector, per wire because the
+      // two spell the parameter differently: RFC 9052 §3.1 Table 3 registers COSE
+      // `crit` at integer label 2, and RFC 9052 §1.5 makes an integer label and a
+      // text one different labels.
+      { step: "wireProtectedHeader", on: "jose", excludes: ["crit"] },
+      { step: "wireProtectedHeader", on: "cose", excludes: [2] },
+    ],
+  },
+  {
+    id: "a-parameter-marked-critical-with-nothing-to-understand-is-refused",
+    title:
+      "a mint refuses a header that marks a parameter critical while carrying no value for it",
+    rationale:
+      'A `crit` list is a producer\'s statement that a recipient MUST understand a named parameter\'s VALUE before acting on the token — RFC 7515 §4.1.11 on JOSE, RFC 9052 §3.1 on COSE. Naming a parameter while giving nothing to understand is that statement contradicting itself, and the contradiction is unrecoverable by the time anyone reads the token: RFC 9052 §3.1 — "If the \\"crit\\" value list includes a label for which the header parameter is not in the protected-header-parameters bucket, this is a fatal error in processing the message." Such a token is refused by EVERY recipient, including the ones the producer wrote it for, which is strictly worse than the merely-unsupported token the producer was asking for. The write is therefore the only place the contradiction can be both NAMED and REPAIRED — the caller still holds the parameter, and can either supply a value or stop marking it critical, where a recipient can do neither. A value that says nothing is one fault however it is spelled: `""`, `null`, `undefined` and a parameter simply not supplied all hand the recipient the same nothing, so they get the same refusal rather than three behaviours to remember.',
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+        // `oid` is the parameter that makes this row REPRODUCE the rule rather
+        // than agree with it: it is caller-settable on both wires and the only
+        // parameter aegis owns that RFC 7515 §4.1.11 permits a `crit` to name at
+        // all (every other one is IANA-registered). So the row reaches the
+        // decision, instead of asserting about a parameter a producer could never
+        // legitimately mark critical in the first place.
+        options: { header: { crit: ["oid"], oid: "" } },
+      },
+    ],
+    // MINT is the act: the refusal IS the construction failing, and there is no
+    // later observation to make — a token in this shape must not exist.
+    when: [{ step: "mint" }],
+    // ⚠ `data` is what makes the verdict SPECIFIC. `AegisError` is the base class
+    // of every aegis error, so the row passed on ANY refusal — a reserved-parameter
+    // throw, a label-resolution throw, an unrelated regression — and would have
+    // stayed green with the crit check deleted. Naming the parameter the refusal is
+    // about ties it to this rule. The value is `oid` on BOTH wires: the COSE half
+    // reports the LABEL, and under the interoperable default `oid` rides its string
+    // label rather than the lindorm private-use integer.
+    then: [{ step: "rejects", error: "AegisError", data: { parameter: "oid" } }],
+  },
+  {
+    id: "an-empty-content-type-is-not-a-content-type",
+    title:
+      "an object sealed under an empty content type is recovered as the object it was",
+    rationale:
+      "RFC 7515 §4.1.10 defines `cty` as the media type of the secured content, and the empty string is not a media type — it is a second spelling of the ABSENT parameter, which both the specification and aegis already define. Nothing has a rule for the second spelling, so it displaces the rule written for the first: a stated content type outranks the one a writer infers from the payload, and a reader given a type it does not recognise falls back to raw bytes. The consequence is silent and unrecoverable in the direction that matters — the token decrypts cleanly and hands back a different TYPE than was sealed, so a caller has no failure to catch and no way to tell the value was reinterpreted.",
+    given: [
+      { step: "keys", keys: ["ec-enc", "oct-enc"] },
+      {
+        step: "token",
+        via: "domain-encrypt",
+        data: { subject: "user-1", tenant: "acme" },
+        options: { header: { contentType: "" } },
+      },
+    ],
+    when: [{ step: "decrypt" }],
+    then: [
+      { step: "accepts", format: { jose: "jwe", cose: "cwe" } },
+      // A Dict, key for key — not the Buffer a raw-bytes fallback yields. The
+      // `raw` step compares the recovered VALUE, so a Buffer fails it by type.
+      { step: "raw", expected: { subject: "user-1", tenant: "acme" } },
+    ],
+  },
+  {
+    id: "an-empty-cty-header-is-not-a-content-type",
+    title:
+      "an object sealed on the encryption kit under an empty cty is recovered as the object it was",
+    rationale:
+      "The same rule at the WIRE-named door, which is a public one: a caller reaches `aegis.jwe.encrypt` / `aegis.cwe.encrypt` directly and spells the parameter `cty` rather than `contentType`. Whether the empty string is a media type is a fact about the PARAMETER — RFC 7515 §4.1.10 defines `cty` as the media type of the secured content, and COSE carries the same parameter on label 3 — so it cannot depend on which door the caller used or which encoding they picked. A door that resolved it differently hands back raw bytes where its sibling hands back the object, and the caller has no failure to catch: the token decrypts cleanly and only the TYPE has changed. The two encodings must also AGREE about it, or the parameter is present on one wire and absent on the other for one call, which is a difference an attacker chooses the encoding to exploit.",
+    given: [
+      { step: "keys", keys: ["ec-enc", "oct-enc"] },
+      {
+        step: "token",
+        via: "kit-encrypt",
+        kit: "sealed",
+        data: { subject: "user-1", tenant: "acme" },
+        options: { header: { cty: "" } },
+      },
+    ],
+    when: [{ step: "decrypt" }],
+    then: [
+      { step: "accepts", format: { jose: "jwe", cose: "cwe" } },
+      { step: "raw", expected: { subject: "user-1", tenant: "acme" } },
     ],
   },
 

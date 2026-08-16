@@ -90,7 +90,15 @@ export const enforcePolicy = ({
         // it silently does not fire. Omitting `accessTokenIssued` (or misspelling
         // it) used to mint an id_token with no access-token hash and no error, so
         // the missing fact is refused rather than read as `false`.
-        const missing = rule.needs.filter((key) => !(key in context));
+        //
+        // ⚠ `Object.hasOwn`, never `in`. A profile is CALLER-REGISTERED
+        // (`Aegis.registerProfile`), so `needs` is caller data: with `in`, a key
+        // spelled `constructor`/`toString`/`valueOf` resolved through
+        // `Object.prototype` and counted as SUPPLIED — this refusal never fired
+        // and `requiredWhen` evaluated the author's predicate against a context
+        // that does not hold the fact. A gate that fails open. `in` on a
+        // caller-influenced key is a BANNED construct in this package.
+        const missing = rule.needs.filter((key) => !Object.hasOwn(context, key));
 
         if (missing.length > 0) {
           throw new AegisDomainError("Mint context is incomplete", {

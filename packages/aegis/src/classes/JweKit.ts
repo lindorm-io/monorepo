@@ -6,6 +6,7 @@ import { sanitiseToken } from "@lindorm/utils";
 import { JweError } from "../errors/index.js";
 import type { IJweKit } from "../interfaces/index.js";
 import { buildJoseHeader } from "../internal/header/build-jose-header.js";
+import { normaliseHeaders } from "../internal/header/normalise-headers.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
 import { buildJweDecryptionRecord } from "../internal/utils/build-jwe-decryption-record.js";
@@ -63,11 +64,17 @@ export class JweKit implements IJweKit {
 
     this.logger.debug("Encrypting token", { options });
 
+    // A parameter that emits nothing is not a parameter, and the caller's bag is
+    // normalised HERE because the next line READS it — a builder normalisation is
+    // too late. An empty `cty` would be preferred over the inferred type and the
+    // payload would come back a Buffer (`normalise-headers.ts`).
+    const callerHeader = normaliseHeaders(options.header ?? {});
+
     // Serialise to bytes via the shared codec and hand the OPAQUE bytes to the
     // AEAD (the AES layer treats them as octet). The cty defaults to the inferred
     // JS type; a caller `header.cty` (e.g. `JWT` for a nested token) wins. The cty
     // rides the AAD-protected protected header so decrypt round-trips the type.
-    const { bytes, contentType } = serialiseContent(data, options.header?.cty);
+    const { bytes, contentType } = serialiseContent(data, callerHeader.cty);
 
     // ECDH-ES party info (RFC 7518 §4.6): gated on the algorithm. For an ECDH-ES
     // key the caller-supplied base64url apu/apv are decoded into the Concat-KDF
@@ -91,7 +98,7 @@ export class JweKit implements IJweKit {
       buildJoseHeader({
         reserved: KIT_CAPABILITIES.jwe.reserved,
         defaults: { cty: contentType, jku: this.kryptos.jwksUri ?? undefined },
-        header: options.header,
+        header: callerHeader,
         derived: {
           alg: this.kryptos.algorithm,
           apu: partyProducer,
@@ -110,6 +117,7 @@ export class JweKit implements IJweKit {
           options.bindCertificate,
           options.certificateThumbprintSha1,
         ),
+        format: "jwe",
         error: JweError,
       }),
     );

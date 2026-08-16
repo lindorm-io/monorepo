@@ -73,6 +73,51 @@ describe("data-driven header codec", () => {
     expect("notAHeader" in raw).toBe(false);
   });
 
+  test("the DOMAIN crossing removes an empty value the registry says carries nothing", () => {
+    // ⚠ The crossing, not only the emission boundary, and that is load-bearing:
+    // every kit reads the caller's `cty` BEFORE the header is assembled
+    // (`serialiseContent(data, options.header?.cty)`), so this is the only pass
+    // early enough to stop an empty one deciding the payload's serialisation.
+    const raw = mapTokenHeader({
+      contentType: "",
+      objectId: "",
+      critical: [],
+      keyId: "key_test",
+    }) as Record<string, unknown>;
+
+    expect(raw).toEqual({ kid: "key_test" });
+  });
+
+  test("the DOMAIN crossing prunes an empty value even where crit names it", () => {
+    // This pass is a FRAGMENT of a message and makes no judgement about `crit`.
+    // The contradiction — a producer stating that a recipient must understand a
+    // parameter while giving it nothing to understand — is refused once, on the
+    // assembled header, by the builder that owns the message
+    // (`header/assert-crit-satisfied.ts`). A prune here cannot HIDE it: the
+    // absent parameter and the empty one reach that check as one verdict.
+    const raw = mapTokenHeader({
+      contentType: "",
+      objectId: "",
+      critical: ["objectId"],
+      keyId: "key_test",
+    }) as Record<string, unknown>;
+
+    expect(raw).toEqual({ crit: ["oid"], kid: "key_test" });
+  });
+
+  test("the DOMAIN crossing translates a crit member to its wire name", () => {
+    // ONE VOCABULARY: `criticalToWire` maps the member `objectId` to `oid` in the
+    // same pass that writes the parameter under `oid`, which is what lets the
+    // assembled-header check compare members against keys at all.
+    const raw = mapTokenHeader({
+      objectId: "1.2.3.4",
+      critical: ["objectId"],
+      keyId: "key_test",
+    }) as Record<string, unknown>;
+
+    expect(raw).toEqual({ crit: ["oid"], kid: "key_test", oid: "1.2.3.4" });
+  });
+
   test("an unregistered wire key is dropped on read", () => {
     const decoded = {
       alg: "ES512",
@@ -227,6 +272,27 @@ describe("shapeWireHeader (the wire-keyed write pass)", () => {
   test("returns an empty bag for an absent one", () => {
     expect(shapeWireHeader(undefined)).toEqual({});
   });
+
+  test("removes the empty value the registry says carries nothing", () => {
+    // The emission-boundary half of the same rule the `undefined` drop above
+    // states: a parameter that emits nothing is not a parameter. `crit: []` is
+    // the sharpest case — RFC 7515 §4.1.11 forbids producing it and aegis's own
+    // reader refuses one, so a shaped bag that kept it would build a token aegis
+    // would not verify.
+    const shaped = shapeWireHeader({ crit: [], cty: "", oid: "", kid: "key_test" });
+
+    expect(shaped).toEqual({ kid: "key_test" });
+  });
+
+  test("keeps the empty thumbprint aegis BINDS on, and the unregistered key beside it", () => {
+    // `x5t#S256` is the one `whenEmpty: "keep"` cell: an empty thumbprint matches
+    // no certificate and must be REFUSED by `verify-cert-binding.ts`, where
+    // pruning it would hand the audience an unbound token. The unregistered key
+    // is disposed of by the closed-set rule on the line below, not by the prune.
+    const shaped = shapeWireHeader({ "x5t#S256": "", nonsense: "" } as never);
+
+    expect(shaped).toEqual({ "x5t#S256": "" });
+  });
 });
 
 /**
@@ -353,5 +419,25 @@ describe("wireHeaderToCoseMap (the COSE write pass)", () => {
     expect(() => wireHeaderToCoseMap({ nonsense: "x" } as never, false)).toThrow(
       expect.objectContaining({ code: "header_no_cose_label" }),
     );
+  });
+
+  test("REFUSES an unregistered wire key whose value is EMPTY, too", () => {
+    // The prune must not reach an unregistered key, on this pass above all: it is
+    // the one place the closed-set rule REFUSES instead of dropping, so a prune
+    // taking the key first would turn a refusal a caller must hear into silence.
+    expect(() => wireHeaderToCoseMap({ nonsense: "" } as never, false)).toThrow(
+      expect.objectContaining({ code: "header_no_cose_label" }),
+    );
+  });
+
+  test("removes the empty value the registry says carries nothing", () => {
+    // The COSE half of the JOSE rule above, and the reason it is stated on both
+    // passes: an empty `crit` is forbidden by RFC 9052 §3.1 ("The array MUST have
+    // at least one value in it") exactly as RFC 7515 §4.1.11 forbids it on JOSE,
+    // so a wire that emitted one would be refused by aegis's own reader.
+    const map = wireHeaderToCoseMap({ crit: [], cty: "", typ: "application/cwt" }, false);
+
+    expect(map.size).toBe(1);
+    expect(map.get(16)).toBe("application/cwt");
   });
 });

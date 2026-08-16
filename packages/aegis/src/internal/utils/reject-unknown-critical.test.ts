@@ -51,6 +51,17 @@ describe("rejectUnknownCritical", () => {
     );
   });
 
+  test("refuses a crit naming a parameter carried with an EMPTY value as MALFORMED", () => {
+    // ⚠ MALFORMED, not unrecognised, and the distinction is the point. `crit`
+    // says a recipient must understand the parameter's VALUE; an empty one gives
+    // it nothing to understand, so the header is broken before the question of
+    // whether aegis implements the extension arises. Both refuse — this one says
+    // why more accurately.
+    expect(reject({ crit: ["oid"], oid: "" })).toThrow(
+      expect.objectContaining({ code: "jwt_invalid_crit" }),
+    );
+  });
+
   test("refuses a crit naming an IANA-registered parameter (crit is for extensions)", () => {
     expect(reject({ crit: ["alg"] })).toThrow(
       expect.objectContaining({ code: "jwt_invalid_crit" }),

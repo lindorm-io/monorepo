@@ -8,8 +8,20 @@ import { domainTokenTypePrefix } from "./compute-typ-header.js";
 import { SIGN_OPAQUE_FORMAT } from "./sign-opaque-format.js";
 
 /**
- * THE raw sign pipeline (`aegis.sign`) — an OPAQUE signature over caller content,
- * with no claims layer and no profile.
+ * THE raw sign pipeline (`aegis.sign`) — a signature over caller content, with no
+ * PROFILE. It is the SERIALISATION that is opaque here, not the payload's status:
+ * the JWS/CWS structures carry no claims layer of their own, so a `string` or a
+ * `Buffer` rides through as bytes and comes back as bytes.
+ *
+ * ⚠ A `Dict` handed to this door IS A CLAIMS SET, and is normalised as one —
+ * `jose-token-wire.ts:260` and `raw-sign-cose.ts:63` both apply the same
+ * `normaliseClaims` every other signing door applies. That is a statement about
+ * THE DOOR, not about the payload's JS type: `sign` attributes content to an
+ * author, and what an author asserts is a claims set whichever structure carries
+ * it. `encrypt` is the door that does NOT — it seals a value and hands that exact
+ * value back, so its payload is the caller's secret rather than aegis's assertion
+ * (`encrypt-token.ts`). The two doors differ on purpose; do not "restore the
+ * symmetry" by making either one match the other.
  *
  * There is no format branch left: the wire is resolved ONCE, and the domain
  * `tokenType` → bare prefix and domain → wire header translations run above it,

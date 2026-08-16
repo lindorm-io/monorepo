@@ -11,6 +11,7 @@ const build = (
     header: undefined,
     derived: { alg: "ES512", kid: "key_test", typ: "JWT" },
     cert: undefined,
+    format: "jwt",
     error: JoseError,
     ...overrides,
   });
@@ -79,6 +80,141 @@ describe("buildJoseHeader", () => {
       expect("jku" in header).toBe(false);
       expect("cty" in header).toBe(false);
     });
+
+    /**
+     * ⚠ THE `crit` CHECK IS ON THE MERGED HEADER, and a parameter the header does
+     * not carry is REFUSED rather than carried. RFC 7515 §7.1 gives the compact
+     * serialisation ONE header, so the message is the merged result — but it is
+     * assembled from four separately normalised tiers, and a tier cannot answer a
+     * question about the whole. Asking once, at the end, is what makes the four
+     * tiers indistinguishable to the rule.
+     */
+    test("a crit naming a parameter no tier holds is refused", () => {
+      expect(() => build({ header: { crit: ["oid"] } as never })).toThrow(
+        /crit listed parameter "oid" carries no value/,
+      );
+    });
+
+    test("a crit naming a parameter the caller's own tier empties is refused", () => {
+      // The prune has already turned `oid: ""` into an absent `oid` by the time
+      // the merged header exists — which is exactly why the check treats absent
+      // and empty as one verdict. Both refuse; there is no third state.
+      expect(() => build({ header: { crit: ["oid"], oid: "" } as never })).toThrow(
+        /crit listed parameter "oid" carries no value/,
+      );
+    });
+
+    test("a crit naming an UNDEFINED parameter is refused", () => {
+      expect(() => build({ header: { crit: ["oid"], oid: undefined } as never })).toThrow(
+        /crit listed parameter "oid" carries no value/,
+      );
+    });
+
+    test("a crit naming a NULL parameter is refused", () => {
+      // `null` reaches the bag from a caller that decoded its header options from
+      // JSON. It is the third spelling of "no value" and takes the third path
+      // through the writer — the `string` codec guard drops it before the prune
+      // ever sees it — so it is stated rather than assumed to follow from `""`.
+      expect(() => build({ header: { crit: ["oid"], oid: null } as never })).toThrow(
+        /crit listed parameter "oid" carries no value/,
+      );
+    });
+
+    /**
+     * ⚠ THE MERGE IS WHY THE CHECK RUNS LAST. `apu` is written by the DERIVED
+     * tier — `JweKit.ts:97` writes `apu: partyProducer` from `resolveEcdhParty`,
+     * which returns the caller's value verbatim — so a `crit` in the caller's bag
+     * names a parameter no other tier can see. Checked per tier, this would refuse
+     * a satisfied `crit`; checked on the merge, it accepts it.
+     */
+    test("a crit satisfied by ANOTHER tier is accepted", () => {
+      const header = build({
+        reserved: ["alg", "kid", "typ"],
+        header: { crit: ["apu"] } as never,
+        derived: {
+          alg: "ECDH-ES",
+          apu: "cGFydHkty",
+          kid: "key_1",
+          typ: "application/jwe",
+        },
+      });
+
+      expect(header.crit).toEqual(["apu"]);
+      expect(header.apu).toBe("cGFydHkty");
+    });
+
+    test("a crit satisfied by the CERT tier is accepted", () => {
+      // The cert tier crosses from DOMAIN names via `mapTokenHeader`, not
+      // `shapeWireHeader`, so it is the merge — not one shaping pass — that puts
+      // the referent and the list in the same bag.
+      const header = build({
+        header: { crit: ["x5t"] } as never,
+        derived: { alg: "ES256", kid: "key_1", typ: "application/jwt" },
+        cert: { certificateThumbprintSha1: "dGh1bWI" },
+      });
+
+      expect(header.crit).toEqual(["x5t"]);
+      expect(header.x5t).toBe("dGh1bWI");
+    });
+
+    /**
+     * ⚠ ONE VOCABULARY, AND IT IS THE SHAPING PASS THAT APPLIES IT — the check
+     * applies none. `shapeWireHeader` runs `criticalToWire` over the caller's
+     * `crit` (`token-header.ts#encodeHeaderValue`), so the merged header arrives
+     * with its members spelled the way its keys are; the check then compares like
+     * with like, which is all it can do — it holds a bucket whose vocabulary it
+     * cannot know, and a JOSE name and a COSE label are different things (RFC 9052
+     * §1.5). So this test reddens if the SHAPING stops mapping, which is exactly
+     * the assumption the check is entitled to make. The COSE twin of the same
+     * statement is `critToCoseLabels`, pinned in `build-cose-headers.test.ts`.
+     */
+    test("a DOMAIN-spelled crit member is satisfied by its wire-named parameter", () => {
+      const header = build({
+        header: { crit: ["objectId"], oid: "1.2.3.4" } as never,
+      });
+
+      expect(header.crit).toEqual(["oid"]);
+      expect(header.oid).toBe("1.2.3.4");
+    });
+
+    /**
+     * ⚠ THE MEMBER IS A KEY, AND A KEY LOOKUP IS AN OWN-KEY LOOKUP. `crit`'s
+     * members are CALLER-CONTROLLED, so `name in header` — or `header[name]` on a
+     * plain object — resolves through `Object.prototype`: `crit: ["toString"]`
+     * found a function, `isEmpty` called it non-empty, and aegis minted a header
+     * whose `crit` names a parameter it does not carry. That is the token RFC 7515
+     * §4.1.11 makes invalid for every recipient, produced by the very check written
+     * to prevent it. The merged header is handed over as a `Map` (`Object.entries`
+     * in, own keys only), so there is no chain to walk. `in` on a caller-influenced
+     * key is a BANNED construct in this package.
+     */
+    test.each(["toString", "constructor", "valueOf", "hasOwnProperty", "__proto__"])(
+      "a crit naming the Object.prototype member %s is refused",
+      (member) => {
+        expect(() => build({ header: { crit: [member] } as never })).toThrow(
+          expect.objectContaining({ code: "jwt_invalid_crit" }),
+        );
+      },
+    );
+
+    test("an UNNAMED empty value in another tier is still pruned", () => {
+      // Nothing names them, so the two values go the way every empty prune-cell
+      // value goes — the prune is not narrowed by a `crit` existing elsewhere.
+      const derivedTier = build({
+        reserved: ["alg", "apu", "kid", "typ"],
+        header: { crit: ["cty"], cty: "text/plain" },
+        derived: { alg: "ECDH-ES", apu: "", kid: "key_1", typ: "application/jwe" },
+      });
+
+      expect("apu" in derivedTier).toBe(false);
+
+      const certTier = build({
+        header: { crit: ["cty"], cty: "text/plain" },
+        cert: { certificateThumbprintSha1: "" },
+      });
+
+      expect("x5t" in certTier).toBe(false);
+    });
   });
 
   describe("the reserved row REFUSES the caller's bag", () => {
@@ -132,6 +268,28 @@ describe("buildJoseHeader", () => {
       // way. The COSE twin skips it for the same reason, so refusing here would
       // make the two wires disagree about a bag that emits nothing.
       expect(build({ header: { alg: undefined } as never }).alg).toBe("ES512");
+    });
+
+    test("an EMPTY reserved parameter the registry prunes is absent, not a refusal", () => {
+      // The same rule, widened from `undefined` to "empty where the registry says
+      // prune": a parameter that emits nothing is not a parameter, so the bag is
+      // normalised BEFORE the reserved check runs. `alg: ""` names no algorithm
+      // and reaches neither wire, so refusing it here while the COSE twin drops
+      // it would make one bag fatal or legal by its ENCODING alone — which is a
+      // choice the presenter makes, not the deployment.
+      expect(build({ header: { alg: "" } as never }).alg).toBe("ES512");
+    });
+
+    test("an empty parameter the registry KEEPS is still refused", () => {
+      // Nothing that emits BYTES stops being guarded. `x5t#S256` is the one
+      // `whenEmpty: "keep"` cell, so an empty one survives normalisation and
+      // reaches the reserved row exactly as a non-empty one does.
+      expect(() =>
+        build({
+          reserved: ["x5t#S256"],
+          header: { "x5t#S256": "" } as never,
+        }),
+      ).toThrow(/Header parameter "x5t#S256" is key-derived and cannot be set/);
     });
   });
 

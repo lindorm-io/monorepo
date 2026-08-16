@@ -4,7 +4,10 @@ import { claimByCoseName, claimByJose } from "./claims-registry.js";
 
 /**
  * Drop the claims whose EMPTY value the registry says carries nothing — the
- * second half of {@link normaliseClaims}, and the only prune aegis performs.
+ * second half of {@link normaliseClaims}, and the payload-side twin of
+ * `internal/header/prune-empty-headers.ts`. Both are registry-driven and both run
+ * on the write side only; the header one keys by JOSE name alone, because a
+ * header bag never reaches an emission boundary cose-keyed.
  *
  * TWO rules, and the registry decides both:
  *

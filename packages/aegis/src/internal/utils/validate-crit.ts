@@ -1,3 +1,5 @@
+import { isEmpty } from "@lindorm/is";
+
 /**
  * IANA-registered JOSE header parameter names.
  * Source: https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-header-parameters
@@ -82,8 +84,23 @@ export const validateCrit = (
     // the JWS Protected Header [...] The 'crit' Header Parameter MUST NOT be
     // included unless one or more extensions are actually being used [...]"
     // — enforced via the existence check below.
-    if (!(name in decoded)) {
+    //
+    // ⚠ `Object.hasOwn`, never `in`: `name` comes off a token a stranger wrote and
+    // `decoded` is a plain object, so `in` resolves through `Object.prototype` and
+    // `crit: ["toString"]` passed this test on every header ever decoded. `in` on a
+    // caller-influenced key is a BANNED construct in this package. It is reachable
+    // the moment anything reads a `crit` this function does not refuse outright.
+    if (!Object.hasOwn(decoded, name)) {
       return `crit listed parameter "${name}" is not present in the header`;
+    }
+
+    // The same requirement, one step further in: `crit` says a recipient MUST
+    // understand the parameter's VALUE, so a present-but-EMPTY value gives it
+    // nothing to understand and satisfies the list no better than an absent one.
+    // The writer refuses the same shape at mint (`assert-crit-satisfied.ts`), so
+    // the two sides of aegis give one answer.
+    if (isEmpty(decoded[name])) {
+      return `crit listed parameter "${name}" has an empty value`;
     }
   }
 

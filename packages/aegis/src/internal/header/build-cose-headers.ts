@@ -1,8 +1,10 @@
+import { isArray, isString } from "@lindorm/is";
 import type { CoseError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
 import type { CoseLabel } from "../cose/cose-label.js";
 import { coseWireKey, joseByCose } from "./header-registry.js";
 import { isProtectedOnly } from "./is-protected-only.js";
+import { normaliseHeaders } from "./normalise-headers.js";
 import { wireHeaderToCoseMap } from "../utils/token-header.js";
 
 /**
@@ -37,6 +39,51 @@ import { wireHeaderToCoseMap } from "../utils/token-header.js";
  * rule 3 reachable and honestly probed: with rule 4 first, `{ header: { cty },
  * unprotected: { cty } }` would refuse for placement and the duplicate rule would
  * be checked by nothing.
+ *
+ * ⚠ A PARAMETER THAT EMITS NOTHING IS NOT A PARAMETER, so BOTH bags are
+ * NORMALISED ONCE at the top and ALL FOUR rules then run over the normalised
+ * bags. That is the rule this file already applied to `undefined` — an absent
+ * parameter is neither reserved, nor critical, nor a duplicate, nor misplaced,
+ * because nothing about it reaches either bucket — widened by
+ * {@link normaliseHeaders} to "`undefined`, or empty where the registry says
+ * prune". One rule, both wires (`build-jose-header.ts` normalises the same way,
+ * before its reserved check), every guard.
+ *
+ * ⚠ Nothing that emits BYTES stops being guarded. A `whenEmpty: "keep"` cell
+ * survives normalisation, so an empty `x5t#S256` still reaches every rule above —
+ * the prune removes only what would have gone on the wire as noise. And a
+ * normalisation ahead of the rules is what keeps the two wires agreeing on what
+ * "emits nothing" means: refusing on COSE what JOSE silently drops (or the
+ * reverse) is a wire asymmetry an attacker chooses the encoding to exploit.
+ *
+ * ⚠ THE NORMALISATION NARROWS EVERY RULE'S REACH, AND THAT IS THE WHOLE CLASS —
+ * state it once here rather than leave five separate surprises to be rediscovered
+ * one refusal at a time. For a REGISTERED parameter whose `whenEmpty` cell says
+ * prune, an empty value now emits nothing and therefore triggers nothing:
+ * `cose_reserved_header`, `cose_duplicate_header`, `cose_unprotected_placement`,
+ * `cose_crit_unprotected`, `cose_crit_param_unprotected` and
+ * `header_no_cose_label` all fall silent, as does `jose_reserved_header` on the
+ * twin. Measured through this function: `{apu: ""}`, `{zip: ""}`, `{x5c: []}`,
+ * `unprotected: {cty: ""}`, `unprotected: {crit: []}` and `{ crit: ["oid"] }`
+ * beside `unprotected: { oid: "" }` each return two maps with no refusal from any
+ * rule here. That is the rule, not six exceptions to it — a refusal names a
+ * statement the caller made about the token, and a parameter that emits no bytes
+ * made none. The two conditions that survive are the ones where bytes or a
+ * REFERENT survive: a `whenEmpty: "keep"` cell (`x5t#S256`) is still checked by
+ * value, and an UNREGISTERED key is never pruned, so `{nonsense: ""}` still
+ * throws `header_no_cose_label`.
+ *
+ * ⚠ `crit` IS THE ONE PLACE A REFERENT OUTLIVES THE PRUNE, and it is answered by
+ * REFUSING rather than by exempting — but NOT HERE. The refusal needs the FINISHED
+ * protected bucket, and this function only has the caller's half of it, so it
+ * lives at the end of `mergeCoseProtected` ({@link assertCritSatisfied}), the
+ * COSE analogue of `buildJoseHeader`'s last line. That is why the last row above
+ * returns cleanly from here: `{ header: { crit: ["oid"] }, unprotected: { oid: "" } }`
+ * used to reach `cose_crit_param_unprotected` by way of an exemption that carried
+ * the empty value into the unprotected bucket, and now travels one step further to
+ * be refused as the empty value it is. Rule 2 still owns the case with a REAL
+ * value in the wrong bucket, and owns it here, which is why the accurate refusal
+ * still comes first.
  */
 export const buildCoseHeaders = ({
   reserved,
@@ -60,12 +107,18 @@ export const buildCoseHeaders = ({
   protectedEntries: Map<CoseLabel, unknown>;
   unprotectedEntries: Map<CoseLabel, unknown>;
 } => {
-  // Rule 2 — crit ⊆ protected (RFC 9052 §3.1). Checked on the raw wire-named bags,
+  // A parameter that emits nothing is not a parameter — see the docstring. Both
+  // bags are normalised HERE, once, so all four rules below see the same values
+  // the wire will, and neither wire refuses what the other silently drops.
+  const headerBag = normaliseHeaders(header ?? {});
+  const unprotectedBag = normaliseHeaders(unprotected ?? {});
+
+  // Rule 2 — crit ⊆ protected (RFC 9052 §3.1). Checked on the wire-named bags,
   // BEFORE label translation, which is why it compares JOSE names on both sides:
   // a caller writes `crit: ["oid"]` and `oid: "1.2.3.4"` in the same vocabulary.
   // `wireHeaderToCoseMap` then translates the members to the integer labels the
   // parameters are keyed under, because on the wire a crit member IS a label.
-  if (unprotected && "crit" in unprotected) {
+  if (Object.hasOwn(unprotectedBag, "crit")) {
     throw new error("crit cannot be an unprotected COSE header parameter", {
       code: "cose_crit_unprotected",
       title: "COSE crit Must Be Protected",
@@ -74,10 +127,18 @@ export const buildCoseHeaders = ({
     });
   }
 
-  const crit = header?.crit;
-  if (Array.isArray(crit) && unprotected) {
+  // ⚠ `Object.hasOwn`, never `in`: the member is CALLER-CONTROLLED and `in`
+  // resolves through `Object.prototype`, so `crit: ["toString"]` matched a
+  // parameter no bag holds and this rule refused a token that has no unprotected
+  // bucket at all. `in` on a caller-influenced key is a BANNED construct in this
+  // package. It is also what restored the rule's reach: the loop used to be gated
+  // on the caller having SUPPLIED an unprotected bag, and the normalisation above
+  // now makes that bag `{}` rather than `undefined` — an own-key test on an empty
+  // object states the same thing without a second condition to keep in step.
+  const crit = headerBag.crit;
+  if (isArray(crit)) {
     for (const name of crit) {
-      if (typeof name === "string" && name in unprotected) {
+      if (isString(name) && Object.hasOwn(unprotectedBag, name)) {
         throw new error(`crit-listed parameter "${name}" cannot be unprotected`, {
           code: "cose_crit_param_unprotected",
           data: { parameter: name },
@@ -89,8 +150,11 @@ export const buildCoseHeaders = ({
     }
   }
 
-  const protectedEntries = wireHeaderToCoseMap(header, proprietary);
-  const unprotectedEntries = wireHeaderToCoseMap(unprotected, proprietary);
+  // These re-normalise, idempotently — the entries are built from the same bags
+  // the rules were checked on, so nothing can be added or removed between the
+  // verdict and the wire.
+  const protectedEntries = wireHeaderToCoseMap(headerBag, proprietary);
+  const unprotectedEntries = wireHeaderToCoseMap(unprotectedBag, proprietary);
 
   // ⚠ Resolved in the SAME interop mode the entries were, not as integer labels:
   // a reserved parameter that ever landed in the private-use range would be
@@ -135,18 +199,22 @@ export const buildCoseHeaders = ({
   }
 
   // Rule 4 — the registry's PLACEMENT column, the same datum the read-side merge
-  // consults (`is-protected-only.ts`). Checked on the raw wire-named bag, like
-  // rule 2, because that is the vocabulary `placement` is keyed in.
+  // consults (`is-protected-only.ts`). Checked on the wire-named bag, like rule
+  // 2, because that is the vocabulary `placement` is keyed in.
   //
-  // An unprotected `typ` is the shape that makes this load-bearing: it is an
-  // unauthenticated type declaration on a token that otherwise verifies, and
-  // `typ` is what routes a COSE object (RFC 9596 §2). Today the kits reserve
-  // `typ`, so rule 1 catches that one — but `cty`, `oid`, `x5c` and `x5u` are all
-  // caller-settable and were all accepted into the unauthenticated bucket.
-  for (const [jose, value] of Object.entries(unprotected ?? {})) {
-    // An undefined value is an ABSENT parameter — `wireHeaderToCoseMap` skips it,
-    // so refusing it here would refuse a bag that emits nothing.
-    if (value === undefined) continue;
+  // ⚠ It reads the NORMALISED bag, like every rule here. Rule 4 asks where a
+  // parameter TRAVELS, and a pruned parameter travels nowhere: it emits no bytes
+  // and nothing else in the message points at it, so there is no statement left
+  // to be in the wrong bucket.
+  //
+  // An unprotected `typ` is the shape that makes this load-bearing, and it is the
+  // one member of the set a SPECIFICATION decides rather than the placement
+  // column: RFC 9596 §2 — *"The "typ" parameter MUST NOT be present in
+  // unprotected headers."* It is an unauthenticated type declaration on a token
+  // that otherwise verifies. Today the kits reserve `typ`, so rule 1 catches that
+  // one — but `cty`, `oid`, `x5c` and `x5u` are all caller-settable and were all
+  // accepted into the unauthenticated bucket.
+  for (const jose of Object.keys(unprotectedBag)) {
     if (!isProtectedOnly(jose)) continue;
 
     throw new error(`Header parameter "${jose}" cannot be unprotected`, {

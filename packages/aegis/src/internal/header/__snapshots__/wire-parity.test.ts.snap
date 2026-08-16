@@ -1,0 +1,66 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the JOSE and COSE wires answer the same call identically > 'crit' is present on both wires or absent from both — a real value 1`] = `
+{
+  "cose": "refused",
+  "jose": "refused",
+}
+`;
+
+exports[`the JOSE and COSE wires answer the same call identically > 'crit' is present on both wires or absent from both — the empty form 1`] = `
+{
+  "cose": "absent",
+  "jose": "absent",
+}
+`;
+
+exports[`the JOSE and COSE wires answer the same call identically > 'cty' is present on both wires or absent from both — a real value 1`] = `
+{
+  "cose": "present",
+  "jose": "present",
+}
+`;
+
+exports[`the JOSE and COSE wires answer the same call identically > 'cty' is present on both wires or absent from both — the empty form 1`] = `
+{
+  "cose": "present",
+  "jose": "present",
+}
+`;
+
+exports[`the JOSE and COSE wires answer the same call identically > 'oid' is present on both wires or absent from both — a real value 1`] = `
+{
+  "cose": "present",
+  "jose": "present",
+}
+`;
+
+exports[`the JOSE and COSE wires answer the same call identically > 'oid' is present on both wires or absent from both — the empty form 1`] = `
+{
+  "cose": "absent",
+  "jose": "absent",
+}
+`;
+
+exports[`the JOSE and COSE wires answer the same call identically > 'x5u' is present on both wires or absent from both — a real value 1`] = `
+{
+  "cose": "present",
+  "jose": "present",
+}
+`;
+
+exports[`the JOSE and COSE wires answer the same call identically > 'x5u' is present on both wires or absent from both — the empty form 1`] = `
+{
+  "cose": "absent",
+  "jose": "absent",
+}
+`;
+
+exports[`the JOSE and COSE wires answer the same call identically > the registry yields a non-empty participant set 1`] = `
+[
+  "crit",
+  "cty",
+  "oid",
+  "x5u",
+]
+`;

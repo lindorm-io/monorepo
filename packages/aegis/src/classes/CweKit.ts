@@ -21,6 +21,7 @@ import { buildCoseHeaders } from "../internal/header/build-cose-headers.js";
 import { coseWireHeader } from "../internal/header/cose-wire-header.js";
 import { mergeCoseProtected } from "../internal/header/merge-cose-protected.js";
 import { mergeCoseUnprotected } from "../internal/header/merge-cose-unprotected.js";
+import { normaliseHeaders } from "../internal/header/normalise-headers.js";
 import { coseByJose } from "../internal/header/header-registry.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
@@ -126,6 +127,14 @@ export class CweKit implements ICweKit {
   encrypt(content: TokenContent, options: CweEncryptOptions = {}): Buffer {
     this.logger.debug("Encrypting COSE_Encrypt0", { options });
 
+    // A parameter that emits nothing is not a parameter, and the caller's bag is
+    // normalised HERE because the line below READS it — a builder normalisation is
+    // too late. An empty `cty` would be preferred over the inferred type and the
+    // payload would come back a Buffer; it would also reach label 3 as `[3, ""]`,
+    // where the JOSE twin drops it, and the two wires would disagree about the
+    // same call (`normalise-headers.ts`).
+    const callerHeader = normaliseHeaders(options.header ?? {});
+
     // Serialise the content to bytes; the AES layer AEADs them as octet. The cty
     // defaults to the inferred type; a caller `header.cty` (e.g.
     // `application/cwt` for a nested token) wins as the WIRE label.
@@ -134,7 +143,7 @@ export class CweKit implements ICweKit {
     // itself: `JwsKit`, `JweKit` and `CwsKit` all serialise a structured value as
     // JSON, so a Dict answers `application/json` on every wire and reconstructs
     // as a Dict — the `@lindorm/aes` contract.
-    const { bytes, contentType } = serialiseContent(content, options.header?.cty);
+    const { bytes, contentType } = serialiseContent(content, callerHeader.cty);
 
     // Interop gate (D5): a non-proprietary encrypt refuses an encryption with no
     // OFFICIAL COSE-RFC registration (the AES-CBC-HMAC family) so the token stays
@@ -160,19 +169,24 @@ export class CweKit implements ICweKit {
     // than the lindorm integer no foreign reader can interpret.
     const { protectedEntries, unprotectedEntries } = buildCoseHeaders({
       reserved: CAPABILITIES.reserved,
-      header: options.header as Partial<WireTokenHeader> | undefined,
+      header: callerHeader as Partial<WireTokenHeader>,
       unprotected: options.unprotected,
       proprietary: options.proprietary,
       error: CweError,
     });
 
     // The protected header must be finalized BEFORE the AEAD runs — it is the AAD.
+    // That is also the point the bucket is COMPLETE, so the `crit` satisfaction
+    // check runs inside this call, before a byte is encrypted under a header the
+    // caller's own `crit` contradicts.
     const protectedHeader = mergeCoseProtected({
       alg: encToCoseLabel(this.encryption),
       typ: buildMediaType(options.tokenType, "cwe"),
       cty: contentType,
       entries: protectedEntries,
       proprietary: options.proprietary,
+      format: "cwe",
+      error: CweError,
     });
 
     const aad = buildEncStructure(protectedHeader);
