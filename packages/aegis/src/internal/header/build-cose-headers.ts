@@ -1,7 +1,8 @@
 import { isArray, isString } from "@lindorm/is";
 import type { CoseError } from "../../errors/index.js";
-import type { WireTokenHeader } from "../../types/index.js";
+import type { TokenFormatTag, WireTokenHeader } from "../../types/index.js";
 import type { CoseLabel } from "../cose/cose-label.js";
+import { assertCritEligible } from "./assert-crit-eligible.js";
 import { coseWireKey, joseByCose } from "./header-registry.js";
 import { isProtectedOnly } from "./is-protected-only.js";
 import { normaliseHeaders } from "./normalise-headers.js";
@@ -10,7 +11,8 @@ import { wireHeaderToCoseMap } from "../utils/token-header.js";
 /**
  * Translate and VALIDATE the two caller-controlled COSE header bags (`header` →
  * protected, `unprotected` → unprotected) into COSE integer-label maps, enforcing
- * the three RFC-9052 / COSE-consistency rules (all throw at the site, house
+ * the crit-eligibility gate and the four RFC-9052 / COSE-consistency rules (all
+ * throw at the site, house
  * idiom). It returns the translated entries for the kit to merge into its
  * already-derived protected/unprotected maps — the ordering of the merge is the
  * kit's concern (COSE_Encrypt0 finalizes its protected header before the IV
@@ -32,6 +34,15 @@ import { wireHeaderToCoseMap } from "../utils/token-header.js";
  *  4. a parameter the header registry declares `placement: "protected"` placed in
  *     the unprotected bag → throw (aegis decides the bucket, not the caller).
  *
+ * ⚠ THE CRIT-ELIGIBILITY GATE RUNS FIRST, ahead of all four
+ * ({@link assertCritEligible}). "May this name stand in a `crit` at all" is
+ * prior to "is it in the right bucket": a `crit: ["alg"]` beside an unprotected
+ * `alg` is a header no producer may write on either wire, and answering it with
+ * a PLACEMENT complaint would tell the caller to move a parameter it must
+ * instead stop naming. It also runs on the WIRE-NAMED bag here, before any label
+ * translation, which is what keeps it out of the label/name question entirely —
+ * see its own docstring.
+ *
  * ⚠ Rule 4 runs LAST, after the structural ones. Rules 1-3 name facts about the
  * COSE wire itself — a key-derived parameter, RFC 9052 §3.1's crit requirement, a
  * structure that cannot carry one label twice — and rule 4 states an aegis
@@ -49,9 +60,10 @@ import { wireHeaderToCoseMap } from "../utils/token-header.js";
  * prune". One rule, both wires (`build-jose-header.ts` normalises the same way,
  * before its reserved check), every guard.
  *
- * ⚠ Nothing that emits BYTES stops being guarded. A `whenEmpty: "keep"` cell
- * survives normalisation, so an empty `x5t#S256` still reaches every rule above —
- * the prune removes only what would have gone on the wire as noise. And a
+ * ⚠ Nothing that emits BYTES stops being guarded: the prune removes only what
+ * would have gone on the wire as noise, and a `whenEmpty: "keep"` cell would
+ * survive it intact (no header parameter holds one today). The one `refuse` cell
+ * never reaches the rules at all — the normalisation THROWS for it. And a
  * normalisation ahead of the rules is what keeps the two wires agreeing on what
  * "emits nothing" means: refusing on COSE what JOSE silently drops (or the
  * reverse) is a wire asymmetry an attacker chooses the encoding to exploit.
@@ -68,10 +80,11 @@ import { wireHeaderToCoseMap } from "../utils/token-header.js";
  * beside `unprotected: { oid: "" }` each return two maps with no refusal from any
  * rule here. That is the rule, not six exceptions to it — a refusal names a
  * statement the caller made about the token, and a parameter that emits no bytes
- * made none. The two conditions that survive are the ones where bytes or a
- * REFERENT survive: a `whenEmpty: "keep"` cell (`x5t#S256`) is still checked by
- * value, and an UNREGISTERED key is never pruned, so `{nonsense: ""}` still
- * throws `header_no_cose_label`.
+ * made none. What survives is where bytes or a REFERENT survive: an UNREGISTERED
+ * key is never pruned, so `{nonsense: ""}` still throws `header_no_cose_label`,
+ * and the one `whenEmpty: "refuse"` cell (`x5t#S256`) is answered by the
+ * normalisation itself with `header_empty_parameter` rather than reaching any
+ * rule below.
  *
  * ⚠ `crit` IS THE ONE PLACE A REFERENT OUTLIVES THE PRUNE, and it is answered by
  * REFUSING rather than by exempting — but NOT HERE. The refusal needs the FINISHED
@@ -90,6 +103,7 @@ export const buildCoseHeaders = ({
   header,
   unprotected,
   proprietary,
+  format,
   error,
 }: {
   reserved: ReadonlyArray<string>;
@@ -102,6 +116,8 @@ export const buildCoseHeaders = ({
    * resolver, so the guard below compares the spelling actually written.
    */
   proprietary: boolean | undefined;
+  /** The wire format tag, which namespaces the crit-eligibility refusal's code. */
+  format: TokenFormatTag;
   error: typeof CoseError;
 }): {
   protectedEntries: Map<CoseLabel, unknown>;
@@ -112,6 +128,10 @@ export const buildCoseHeaders = ({
   // the wire will, and neither wire refuses what the other silently drops.
   const headerBag = normaliseHeaders(header ?? {});
   const unprotectedBag = normaliseHeaders(unprotected ?? {});
+
+  // The NAME-side crit gate, ahead of all four rules and on the WIRE-NAMED bag —
+  // see the docstring and `assert-crit-eligible.ts`.
+  assertCritEligible({ header: headerBag, format, error });
 
   // Rule 2 — crit ⊆ protected (RFC 9052 §3.1). Checked on the wire-named bags,
   // BEFORE label translation, which is why it compares JOSE names on both sides:

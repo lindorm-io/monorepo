@@ -152,9 +152,9 @@ describe("mergeCoseProtected", () => {
       // The check reads the VALUE, not the key, so an empty value gets the same
       // verdict as an absent one.
       // ⚠ No aegis write path can hand this bucket over TODAY: `oid` prunes, and
-      // the one `whenEmpty: "keep"` cell (`x5t#S256`) has no COSE label at all, so
-      // `coseWireKey` refuses it with `header_no_cose_label` long before it could
-      // reach here. `entries` is a parameter, though — this states the contract
+      // the one `whenEmpty: "refuse"` cell (`x5t#S256`) is thrown on by the
+      // normalisation itself, and has no COSE label to travel under either, so
+      // neither could reach here. `entries` is a parameter, though — this states the contract
       // the caller of that parameter is held to, whoever it comes to be.
       expect(() =>
         merge({

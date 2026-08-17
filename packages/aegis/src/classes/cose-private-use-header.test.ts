@@ -218,10 +218,17 @@ describe("a private-use COSE header label degrades to its interoperable spelling
    * keyed `"oid"` IS that fatal error — the two are different labels — so the
    * members follow the parameters into whichever spelling the mode chose.
    *
-   * ⚠ Wire-only. aegis implements no crit extension, so its own reader refuses
-   * every crit-bearing token (`rejectUnknownCritical`); the statement here is
-   * about what the writer emits, which is what a conformant third party would
-   * process.
+   * ⚠ Wire-only BY DIVISION OF LABOUR, not because the reader refuses the
+   * token. `oid` is the header registry's one `critEligible` parameter, so
+   * aegis's own reader ACCEPTS this token in both interop modes — pinned in
+   * `CwtKit.test.ts#verify accepts the crit extension aegis implements` and in
+   * the conformance table's
+   * `a-producer-may-mark-an-implemented-extension-parameter-critical`. What is
+   * stated HERE is the thing a round trip cannot state: aegis reading back its
+   * own bytes proves the writer and the reader agree, not that either is right,
+   * and the label/name confusion this file exists for round-tripped perfectly
+   * while being fatally malformed. So this reads the RAW bytes and asserts what
+   * a conformant third party would find.
    */
   describe("crit's members are spelled the same way as the parameters they name", () => {
     const withCrit = (proprietary: boolean): RawLabelMap =>

@@ -318,20 +318,40 @@ describe("enforceVerifyFloor", () => {
       );
     });
 
-    test("treats an empty string and null as absent", () => {
+    /**
+     * A prohibition asks whether the TOKEN CARRIES THE KEY, and at verify that
+     * question is exact: neither JSON nor CBOR can express `undefined`, so a key
+     * present in the decoded payload always holds a real value and no emission
+     * prune runs on a token being read. An empty one is a claim the issuer made
+     * badly, not a claim it did not make.
+     *
+     * This previously read the other way — `""` and `null` passed the rule —
+     * which is a fail-open on the profile whose `forbidden` list carries the
+     * whole weight: `external_access_token` mandates no `typ`, so forbidding the
+     * id_token claims is all that keeps an id_token out.
+     */
+    test.each([
+      ["an empty string", ""],
+      ["null", null],
+    ])("refuses a forbidden claim carried as %s", (_label, value) => {
       expect(() =>
         enforceVerifyFloor({
           ...base,
-          payload: { ...validPayload, federationAssuranceLevel: "" },
+          payload: { ...validPayload, federationAssuranceLevel: value },
         }),
-      ).not.toThrow();
-
-      expect(() =>
-        enforceVerifyFloor({
-          ...base,
-          payload: { ...validPayload, federationAssuranceLevel: null },
+      ).toThrow(
+        expect.objectContaining({
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: [
+              {
+                key: "federationAssuranceLevel",
+                message: 'Forbidden claim "federationAssuranceLevel" is present',
+              },
+            ],
+          }),
         }),
-      ).not.toThrow();
+      );
     });
 
     test("passes a profile whose forbidden list is empty", () => {

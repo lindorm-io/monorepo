@@ -31,4 +31,17 @@ describe("everyElementHasKey", () => {
       ),
     ).toMatchSnapshot();
   });
+
+  // RFC 9396 §2 — `type` "determines the allowable contents of the object", so
+  // an element typed `""` names nothing a resource server can match against. The
+  // member is a demand, and an empty value does not satisfy one.
+  test("fails when an element's key is an empty string", () => {
+    expect(
+      everyElementHasKey(
+        { authorization_details: [{ type: "a" }, { type: "" }] },
+        "authorization_details",
+        "type",
+      ),
+    ).toMatchSnapshot();
+  });
 });

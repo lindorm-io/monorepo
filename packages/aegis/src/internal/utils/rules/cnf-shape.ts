@@ -3,6 +3,7 @@ import { isObject, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { B64U } from "../../constants/format.js";
 import type { InvalidEntry } from "../../../types/index.js";
+import { isClaimOmitted } from "./is-claim-omitted.js";
 
 // The common layer is DOMAIN-keyed: confirmation members are domain names,
 // which map to the wire cnf members (thumbprint→jkt, mtlsCertThumbprint→
@@ -18,6 +19,35 @@ const PERMITTED_MEMBERS = new Set([
 // A base64url SHA-256 thumbprint decodes to exactly 32 bytes.
 const JKT_BYTE_LENGTH = 32;
 
+// `cnf.jkt` (RFC 7638 / RFC 9449 §6.1), validated only when the confirmation
+// NAMES it — the same reading of presence the entry guard above uses.
+const validateThumbprint = (thumbprint: unknown, invalid: Array<InvalidEntry>): void => {
+  if (isClaimOmitted(thumbprint)) return;
+
+  if (!isString(thumbprint)) {
+    invalid.push({
+      key: "confirmation.thumbprint",
+      message: "confirmation.thumbprint (cnf.jkt) must be a string",
+    });
+    return;
+  }
+
+  try {
+    if (B64.toBuffer(thumbprint, B64U).length === JKT_BYTE_LENGTH) return;
+
+    invalid.push({
+      key: "confirmation.thumbprint",
+      message:
+        "confirmation.thumbprint (cnf.jkt) must be a base64url SHA-256 (32-byte) thumbprint",
+    });
+  } catch {
+    invalid.push({
+      key: "confirmation.thumbprint",
+      message: "confirmation.thumbprint (cnf.jkt) must be valid base64url",
+    });
+  }
+};
+
 /**
  * RFC 7800 / RFC 9449 — when `confirmation` is present it must be an object
  * limited to the permitted members, and `thumbprint` (the JWK SHA-256
@@ -26,7 +56,7 @@ const JKT_BYTE_LENGTH = 32;
 export const cnfShape = (claims: Dict): Array<InvalidEntry> => {
   const value = claims.confirmation;
 
-  if (value === undefined) return [];
+  if (isClaimOmitted(value)) return [];
 
   if (!isObject(value)) {
     return [{ key: "confirmation", message: "confirmation (cnf) must be an object" }];
@@ -44,29 +74,7 @@ export const cnfShape = (claims: Dict): Array<InvalidEntry> => {
     }
   }
 
-  if (cnf.thumbprint !== undefined) {
-    if (!isString(cnf.thumbprint)) {
-      invalid.push({
-        key: "confirmation.thumbprint",
-        message: "confirmation.thumbprint (cnf.jkt) must be a string",
-      });
-    } else {
-      try {
-        if (B64.toBuffer(cnf.thumbprint, B64U).length !== JKT_BYTE_LENGTH) {
-          invalid.push({
-            key: "confirmation.thumbprint",
-            message:
-              "confirmation.thumbprint (cnf.jkt) must be a base64url SHA-256 (32-byte) thumbprint",
-          });
-        }
-      } catch {
-        invalid.push({
-          key: "confirmation.thumbprint",
-          message: "confirmation.thumbprint (cnf.jkt) must be valid base64url",
-        });
-      }
-    }
-  }
+  validateThumbprint(cnf.thumbprint, invalid);
 
   return invalid;
 };

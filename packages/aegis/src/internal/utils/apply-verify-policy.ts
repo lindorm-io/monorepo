@@ -12,6 +12,8 @@ import type {
 import type { NameSelector } from "../claims/claims-registry.js";
 import type { DomainClaims } from "../../types/claims/domain/domain-claims.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
+import { isClaimOmitted } from "./rules/is-claim-omitted.js";
+import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
 import { validate } from "./validate.js";
 import { validateActor } from "./validate-actor.js";
 import { verifyDpopProof } from "./verify-dpop-proof.js";
@@ -99,7 +101,12 @@ export const applyVerifyPolicy = ({
   // `exp` PRESENCE is policy (default "required"), surfaced under its own code
   // ahead of the generic matcher pass. The exp RANGE (with clock tolerance) was
   // already checked by the kit.
-  if (options.expPresence !== "optional" && wireClaims.exp === undefined) {
+  // ⚠ `wireClaims` is the MATCHER bag, not the raw wire: `withJoseDates` has
+  // already lifted a falsy `exp` to `undefined` on JOSE, and the COSE claim
+  // codec decodes temporal claims inside the kit. So this and the profile
+  // floor's own gate see the same `Date | undefined`, and the predicate is the
+  // notion named once rather than a coverage difference.
+  if (options.expPresence !== "optional" && !isClaimSatisfied(wireClaims.exp)) {
     throw new AegisDomainError("Missing claim: exp", {
       code: "missing_claim_exp",
       data: { format },
@@ -145,10 +152,34 @@ export const applyVerifyPolicy = ({
     });
   }
 
+  /**
+   * Whether the token declares a sender constraint — the VOCABULARY question
+   * (did the issuer name `cnf.jkt`), replacing the truthiness test that stood at
+   * both sites below.
+   *
+   * ⚠ NOT a spelling change. `""` is a string AND falsy, which is exactly where
+   * truthiness and `=== undefined` part company, so both outcomes moved — for
+   * the better, and measured through the public `verify` door:
+   *   - no proof, no vouch: `cnf: { jkt: "" }` was ACCEPTED as a plain bearer
+   *     token, and is now refused `dpop_proof_required`;
+   *   - with a well-formed proof: it was refused `dpop_token_not_bound`, a false
+   *     statement about a token that IS declared bound, and now reaches the
+   *     comparison and is refused `dpop_thumbprint_mismatch`.
+   *
+   * ⚠ WHAT IS STILL OPEN, and it is a filed defect rather than an oversight:
+   * `trustBoundThumbprint: true` accepts `jkt: ""` (it short-circuits the only
+   * refusal that fires), and EVERY non-string blanking form — `null`, `42`, `{}`,
+   * or a `cnf` that is not an object — is erased to `undefined` by
+   * `toConfirmation` (`internal/claims/translate.ts`) before this gate can see
+   * that a binding was stated, so all of them are accepted as bearer tokens on
+   * every path. Closing that is a decision about what a malformed wire `cnf`
+   * MEANS — public-surface semantics, recorded with its measurements in the
+   * project's open items. Do not close it here without that decision.
+   */
   const boundThumbprint = claims.confirmation?.thumbprint;
 
   if (options.dpopProof !== undefined) {
-    if (!boundThumbprint) {
+    if (isClaimOmitted(boundThumbprint)) {
       throw new AegisDomainError(
         "Invalid token: DPoP proof provided but token is not bound",
         {
@@ -175,7 +206,9 @@ export const applyVerifyPolicy = ({
   // RFC 9449 defines only the JWT proof form, but the PROOF's wire is
   // independent of the bound token's: a `cnf.jkt` in a CWT binds exactly as it
   // does in a JWT, so the refusal applies on both.
-  if (boundThumbprint && !options.trustBoundThumbprint) {
+  if (isClaimOmitted(boundThumbprint)) return { dpop: undefined };
+
+  if (!options.trustBoundThumbprint) {
     throw new AegisDomainError(
       "Invalid token: token is DPoP-bound but no DPoP proof was provided",
       {

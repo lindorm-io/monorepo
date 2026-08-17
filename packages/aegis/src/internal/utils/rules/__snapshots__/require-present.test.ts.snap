@@ -1,5 +1,59 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`requirePresent > an empty act does not satisfy a demand for it 1`] = `
+[
+  {
+    "key": "act",
+    "message": "Required claim "act" is missing",
+  },
+]
+`;
+
+exports[`requirePresent > an empty audience does not satisfy a demand for it 1`] = `
+[
+  {
+    "key": "audience",
+    "message": "Required claim "audience" is missing",
+  },
+]
+`;
+
+exports[`requirePresent > an empty authorizationDetails does not satisfy a demand for it 1`] = `
+[
+  {
+    "key": "authorizationDetails",
+    "message": "Required claim "authorizationDetails" is missing",
+  },
+]
+`;
+
+exports[`requirePresent > an empty confirmation does not satisfy a demand for it 1`] = `
+[
+  {
+    "key": "confirmation",
+    "message": "Required claim "confirmation" is missing",
+  },
+]
+`;
+
+exports[`requirePresent > an empty mayAct does not satisfy a demand for it 1`] = `
+[
+  {
+    "key": "mayAct",
+    "message": "Required claim "mayAct" is missing",
+  },
+]
+`;
+
+exports[`requirePresent > an empty scope does not satisfy a demand for it 1`] = `
+[
+  {
+    "key": "scope",
+    "message": "Required claim "scope" is missing",
+  },
+]
+`;
+
 exports[`requirePresent > returns an entry per missing claim 1`] = `
 [
   {

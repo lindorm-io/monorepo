@@ -4,7 +4,16 @@ exports[`everyElementHasKey > fails when an element lacks the key 1`] = `
 [
   {
     "key": "authorization_details[1]",
-    "message": "Each "authorization_details" element must be an object with a "type" string member",
+    "message": "Each "authorization_details" element must be an object with a non-empty "type" string member",
+  },
+]
+`;
+
+exports[`everyElementHasKey > fails when an element's key is an empty string 1`] = `
+[
+  {
+    "key": "authorization_details[1]",
+    "message": "Each "authorization_details" element must be an object with a non-empty "type" string member",
   },
 ]
 `;

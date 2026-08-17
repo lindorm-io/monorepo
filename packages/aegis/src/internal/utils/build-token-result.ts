@@ -11,6 +11,7 @@ import type { NameSelector } from "../claims/claims-registry.js";
 import { tokenToBuckets } from "../claims/resolve-domain-buckets.js";
 import { domainTokenHeader } from "./domain-header.js";
 import { extractTokenDelegation } from "./extract-token-delegation.js";
+import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
 
 /**
  * Assemble the unified domain result for a VERIFIED or PARSED claims token, on
@@ -79,7 +80,12 @@ export const buildTokenResult = <C extends Dict = Dict>({
   // `iss` must be a NON-EMPTY string. Not a URI: this gate also reads RFC 7523
   // client assertions, whose `iss` is the client_id (an opaque string, not a
   // URL/URN). The platform-issuer exact match is enforced by the profile floor.
-  if (issuerPresence === "required" && !(isString(wire.iss) && wire.iss.length > 0)) {
+  // NON-EMPTY is the demand notion, spelled as the rules layer spells it rather
+  // than as a hand-written length test — one question, one name.
+  if (
+    issuerPresence === "required" &&
+    !(isString(wire.iss) && isClaimSatisfied(wire.iss))
+  ) {
     throw new AegisDomainError("Missing claim: iss", {
       code: "missing_claim_iss",
       data: { format },

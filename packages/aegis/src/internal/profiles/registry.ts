@@ -13,7 +13,16 @@ import { logoutTokenProfile } from "./definitions/logout-token.js";
 import { securityEventProfile } from "./definitions/security-event.js";
 import { userinfoProfile } from "./definitions/userinfo.js";
 
-const BUILT_INS: ReadonlyArray<TokenProfile> = [
+/**
+ * The built-in descriptors, in one array — the set every registry is seeded
+ * from, and the only place a profile becomes a built-in.
+ *
+ * Exported so a test can ENUMERATE the built-ins rather than restate them: a
+ * hand-written list of "every profile that does X" undercounts the moment a
+ * twelfth profile lands, and did — a list claiming every profile requiring
+ * `audience` held seven of the ten.
+ */
+export const BUILT_IN_PROFILES: ReadonlyArray<TokenProfile> = [
   accessTokenProfile,
   defaultProfile,
   delegationProfile,
@@ -49,7 +58,7 @@ export type ProfileRegistry = {
  */
 export const createProfileRegistry = (): ProfileRegistry => {
   const registry = new Map<string, TokenProfile>(
-    BUILT_INS.map((profile) => [profile.name, profile]),
+    BUILT_IN_PROFILES.map((profile) => [profile.name, profile]),
   );
 
   return {

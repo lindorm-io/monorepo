@@ -311,8 +311,8 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
   test("refuses a crit-listed param placed unprotected", () => {
     const thrown = thrownBy(() =>
       kit.sign(wire, {
-        header: { crit: ["cty"] },
-        unprotected: { cty: "application/example" },
+        header: { crit: ["oid"] },
+        unprotected: { oid: "1.2.3.4" },
       }),
     );
 
@@ -355,20 +355,69 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
     expect(thrown?.code).toBe("cose_malformed");
   });
 
-  test("verify refuses a crit extension it does not implement, under the cwt tag", () => {
-    // aegis implements NO crit extension, so a producer marking one critical is
-    // always refused — and the refusal must name the wire it came from.
+  test("verify accepts the crit extension aegis implements, under the cwt tag", () => {
+    // ⚠ THIS USED TO REFUSE, and the refusal was the defect: the token is one
+    // this very file has just minted, so aegis was declining to verify its own
+    // output. `oid` is the header registry's one `critEligible` parameter and the
+    // MINT gate and the VERIFY gate read that same cell, which is what makes a
+    // token aegis mints a token aegis verifies.
     const token = kit.sign(wire, { header: { crit: ["oid"], oid: "1.2.3.4" } });
+
+    const verified = kit.verify(token);
+
+    // ⚠ The kit is WIRE-ONLY, so the round trip is asserted in WIRE vocabulary:
+    // the member travelled as the label the parameter is keyed under on this wire
+    // (RFC 9052 §1.5 — the interoperable default writes `oid`'s private-use label
+    // as its text spelling) and comes back as the JOSE wire name, beside the
+    // parameter it names. The DOMAIN spelling of the same round trip is the
+    // conformance table's business, not the kit's.
+    expect(verified.protectedHeader.crit).toEqual(["oid"]);
+    expect(verified.protectedHeader.oid).toBe("1.2.3.4");
+  });
+
+  test("verify refuses a crit extension it does not implement, under the cwt tag", () => {
+    // The other half, and it needs a FOREIGN header: aegis can no longer mint a
+    // `crit` naming a parameter it does not implement, so the only producer of
+    // one is somebody else. The protected bucket is rewritten after the mint —
+    // the crit gate runs before the signature cycle, so the broken signature is
+    // never reached.
+    const token = kit.sign(wire, {});
+
+    let value: unknown = decodeCbor(token);
+    const tags: Array<number> = [];
+    while (value instanceof Tag) {
+      tags.push(Number(value.tag));
+      value = value.contents;
+    }
+
+    const structure = [...(value as Array<unknown>)];
+    const bucket = decodeCbor(structure[0] as Uint8Array) as Map<unknown, unknown>;
+    // Label 2 is `crit` (RFC 9052 §3.1 Table 3), naming a TEXT label the header
+    // registry has no entry for, beside the parameter itself — the header a
+    // conformant foreign producer with its own extension would write.
+    bucket.set(2, ["ext"]);
+    bucket.set("ext", "x");
+    structure[0] = encodeCbor(bucket);
+
+    let wrapped: unknown = structure;
+    for (const tag of tags.reverse()) wrapped = new Tag(tag, wrapped);
 
     let thrown: AegisError | undefined;
     try {
-      kit.verify(token);
+      kit.verify(Buffer.from(encodeCbor(wrapped)));
     } catch (error) {
       thrown = error as AegisError;
     }
 
     expect(thrown).toBeInstanceOf(CwtError);
-    expect(thrown?.code).toBe("cwt_unsupported_crit_param");
+    // ⚠ `*_invalid_crit`, not `*_unsupported_crit_param`, and that is a COSE READ
+    // fact rather than a weaker refusal: an unregistered COSE label has no JOSE
+    // wire name and is DROPPED on the way in (`internal/header/cose-wire-header.ts`),
+    // so the header aegis reads carries a `crit` naming a parameter that is not
+    // there. Both codes come from `rejectUnknownCritical`; this is its malformed
+    // branch answering first because the evidence for the other one cannot survive
+    // the COSE decode.
+    expect(thrown?.code).toBe("cwt_invalid_crit");
   });
 });
 

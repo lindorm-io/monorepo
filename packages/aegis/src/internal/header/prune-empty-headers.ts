@@ -12,9 +12,10 @@ import { headerByJose } from "./header-registry.js";
  *   1. A REGISTERED parameter is pruned when its value is empty and its
  *      {@link HeaderSpec.whenEmpty} cell says `"prune"`. The cell is required, so
  *      every one of the twenty-one has answered; there is no fallback for a
- *      parameter to land in. Twenty prune; `x5t#S256` keeps, because it is the
- *      one parameter aegis's verify BINDS on and an empty binding must fail in
- *      the verifier rather than vanish into "no binding".
+ *      parameter to land in. Twenty prune; `x5t#S256` REFUSES, because it is the
+ *      one parameter aegis's verify BINDS on and an empty binding can be neither
+ *      dropped nor emitted — that verdict is `refuse-empty-headers.ts`'s, and it
+ *      throws before this function ever sees the bag.
  *   2. An UNREGISTERED key is NEVER pruned. There is no cell to read: the
  *      registry is what says whether an empty value carries anything, and a key
  *      with no entry has not answered. The closed-set rule is what disposes of

@@ -7,6 +7,7 @@ import type {
   WireTokenHeaderOptions,
 } from "../../types/index.js";
 import { mapTokenHeader, shapeWireHeader } from "../utils/token-header.js";
+import { assertCritEligible } from "./assert-crit-eligible.js";
 import { assertCritSatisfied } from "./assert-crit-satisfied.js";
 import { canonicalWireHeader } from "./canonical-wire-header.js";
 import { normaliseHeaders } from "./normalise-headers.js";
@@ -59,9 +60,12 @@ import { normaliseHeaders } from "./normalise-headers.js";
  * says prune". One rule, both wires (`build-cose-headers.ts` normalises the same
  * way, before ALL of its rules), every guard.
  *
- * ⚠ Nothing that emits BYTES stops being guarded. A `whenEmpty: "keep"` cell
- * survives normalisation, so an empty `x5t#S256` still reaches the refusal — the
- * prune removes only what would have gone on the wire as noise.
+ * ⚠ Nothing that emits BYTES stops being guarded: the prune removes only what
+ * would have gone on the wire as noise, and a `whenEmpty: "keep"` cell would
+ * survive it intact (no header parameter holds one today — see the registry).
+ * The one `refuse` cell does not reach the checks below at all; the
+ * normalisation THROWS for it, which is the deliberate cost recorded on
+ * `x5t#S256`'s registry entry and pinned in this file's tests.
  *
  * ⚠ `crit` IS CHECKED ON THE MERGED HEADER, LAST, and nowhere else
  * ({@link assertCritSatisfied}). A `crit` can only be written by the caller's
@@ -135,6 +139,20 @@ export const buildJoseHeader = ({
         "This header parameter is derived from the signing/encrypting key or computed by the crypto operation, so the kit always sets it; it cannot be supplied in the header bag.",
     });
   }
+
+  // The NAME-side crit gate, on the caller's bag and BEFORE the shaping — see
+  // `assert-crit-eligible.ts`. It has to run here rather than beside the
+  // satisfaction check below, because `shapeWireHeader` remaps a member's
+  // spelling (`objectId` -> `oid`) and the wire doors take wire names; asked
+  // after the merge, a domain-spelled member would already have been translated
+  // for the caller on this wire and refused on the other.
+  //
+  // ⚠ The CALLER's tier is the only one that can carry a `crit`: `defaults` is
+  // the inferred `cty` plus the key's `jku`, `derived` is key/crypto output, and
+  // `cert` is a thumbprint binding. The parameter a `crit` NAMES may come from
+  // any tier — which is why the satisfaction check waits for the merge — but the
+  // `crit` itself cannot.
+  assertCritEligible({ header: caller, format, error });
 
   const assembled = canonicalWireHeader({
     ...shapeWireHeader(defaults),

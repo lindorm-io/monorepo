@@ -2,7 +2,34 @@ import type { Dict } from "@lindorm/types";
 import { describe, expect, test } from "vitest";
 import { AegisDomainError } from "../../errors/index.js";
 import type { PolicyRule, TokenProfile } from "../../types/index.js";
+import { externalAccessTokenProfile } from "./definitions/external-access-token.js";
 import { enforcePolicy } from "./enforce-policy.js";
+import { BUILT_IN_PROFILES } from "./registry.js";
+
+/**
+ * Every built-in profile that names `audience` in a PRESENCE rule — DERIVED from
+ * the registry's own list, never restated.
+ *
+ * A hand-written version of this held seven of the ten and the three it dropped
+ * were exactly the ones nothing else covered, which is the failure mode: an
+ * exhaustiveness claim in a comment is not checked by anything, so it decays
+ * silently as profiles are added.
+ */
+const namesAudience = (rule: PolicyRule): boolean => {
+  // All THREE demand-side rules, not the two obvious ones: `requiredWhen` reads
+  // the same notion and carries a single `claim`, so a future
+  // `{ rule: "requiredWhen", claim: "audience" }` would otherwise drop out of
+  // this filter silently and gain no row.
+  if (rule.rule === "required") return rule.claims.includes("audience");
+  if (rule.rule === "atLeastOneOf") return rule.claims.includes("audience");
+  if (rule.rule === "requiredWhen") return rule.claim === "audience";
+
+  return false;
+};
+
+const AUDIENCE_REQUIRING = BUILT_IN_PROFILES.filter((profile) =>
+  profile.policy.some(namesAudience),
+);
 
 const profileWith = (policy: ReadonlyArray<PolicyRule>): TokenProfile => ({
   name: "test_profile",
@@ -243,5 +270,123 @@ describe("enforcePolicy", () => {
   test("an empty policy accepts anything", () => {
     expect(() => run([], {}, "mint")).not.toThrow();
     expect(() => run([], {}, "verify")).not.toThrow();
+  });
+
+  /**
+   * The BUILT-IN profiles, resolved from a real registry rather than assembled
+   * here — a synthetic policy proves the enforcer reads a rule, not that the
+   * profiles shipped to consumers declare one that holds.
+   */
+  describe("built-in profiles", () => {
+    /**
+     * A superset satisfying every built-in `required` list at once, so a thrown
+     * `invalid` list names only the claim a test deliberately emptied.
+     *
+     * ⚠ Not usable as-is for every profile: `security_event` FORBIDS `subject`
+     * and `expiresAt` while requiring `subjectId`. {@link bagFor} removes each
+     * profile's forbidden claims, which is why the superset can name them.
+     */
+    const COMPLETE: Dict = {
+      audience: ["https://api.lindorm.test"],
+      clientId: "client_1",
+      events: { "urn:lindorm:event:sample": {} },
+      expiresAt: new Date("2099-01-01T00:00:00.000Z"),
+      issuedAt: new Date("2026-01-01T00:00:00.000Z"),
+      issuer: "https://lindorm.test",
+      sessionId: "sess_1",
+      subject: "sub_1",
+      subjectId: { format: "opaque", id: "sub_1" },
+      token_introspection: { active: true },
+      tokenId: "tok_1",
+    };
+
+    // The superset minus whatever THIS profile forbids — derived from its own
+    // policy, so a profile's demands and its prohibitions cannot be satisfied by
+    // a bag hand-tuned to one of them.
+    const bagFor = (profile: TokenProfile): Dict => {
+      const forbidden = new Set(
+        profile.policy.flatMap((rule) => (rule.rule === "forbidden" ? rule.claims : [])),
+      );
+      const claims: Dict = {};
+
+      for (const [key, value] of Object.entries(COMPLETE)) {
+        if (forbidden.has(key as never)) continue;
+
+        claims[key] = value;
+      }
+
+      return claims;
+    };
+
+    const enforce = (profile: TokenProfile, claims: Dict): void =>
+      enforcePolicy({
+        claims,
+        context: { accessTokenIssued: false },
+        direction: "verify",
+        format: "jwt",
+        profile,
+      });
+
+    // Without this the refusal tests below prove nothing: a bag that fails a
+    // profile for unrelated reasons throws whatever the audience rule does.
+    test.each(AUDIENCE_REQUIRING)("$name accepts a complete bag", (profile) => {
+      expect(() => enforce(profile, bagFor(profile))).not.toThrow();
+    });
+
+    /**
+     * `aud: []` addresses nobody, so it cannot satisfy a demand for an audience.
+     *
+     * ⚠ `access_token` IS in this set. It was also the one profile the old
+     * single predicate could not fail open on — but only because
+     * `AUD_SINGLE_RESOURCE` (`$length: 1`, `definitions/rule-predicates.ts`)
+     * rejected the empty list as a CARDINALITY violation, which is a different
+     * rule answering a different question. Relax that profile to multiple
+     * audiences and the presence rule asserted here is the only defence left.
+     */
+    test.each(AUDIENCE_REQUIRING)("$name refuses an empty audience", (profile) => {
+      expect(() => enforce(profile, { ...bagFor(profile), audience: [] })).toThrow(
+        expect.objectContaining({
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: expect.arrayContaining([
+              { key: "audience", message: 'Required claim "audience" is missing' },
+            ]),
+          }),
+        }),
+      );
+    });
+
+    // The derivation is only as good as its reach. Ten built-ins name `audience`
+    // in a presence rule; pinning the COUNT is what makes a future profile that
+    // silently drops out of the filter visible.
+    test("every built-in naming audience in a presence rule is covered", () => {
+      expect(AUDIENCE_REQUIRING.map((profile) => profile.name).sort()).toMatchSnapshot();
+    });
+
+    /**
+     * `external_access_token` has `typ: { presence: "none" }`, so its `forbidden`
+     * list is the whole of what keeps an id_token out — there is no structural
+     * discriminator behind it. `forbidden` therefore reads presence as
+     * VOCABULARY: an issuer that named `at_hash` stated an access-token hash,
+     * and the registry's `whenEmpty: "keep"` cell means the empty form is not
+     * swept up on the way to the wire either.
+     */
+    test("external_access_token refuses a named-but-empty access token hash", () => {
+      const profile = externalAccessTokenProfile;
+
+      expect(() => enforce(profile, { ...bagFor(profile), accessTokenHash: "" })).toThrow(
+        expect.objectContaining({
+          code: "profile_policy_invalid",
+          data: expect.objectContaining({
+            invalid: expect.arrayContaining([
+              {
+                key: "accessTokenHash",
+                message: 'Forbidden claim "accessTokenHash" is present',
+              },
+            ]),
+          }),
+        }),
+      );
+    });
   });
 });

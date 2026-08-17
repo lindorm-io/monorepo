@@ -96,15 +96,42 @@ type BoundRule<T> = T & {
  * `rules`, `validate`) — each of which was enforced by whichever call site
  * remembered it.
  *
- * - `required`     — every named claim must be present.
- * - `forbidden`    — no named claim may be present.
- * - `atLeastOneOf` — at least one of the named claims must be present.
+ * - `required`     — every named claim must be SATISFIED.
+ * - `forbidden`    — no named claim may be NAMED.
+ * - `atLeastOneOf` — at least one of the named claims must be SATISFIED.
  * - `match`        — a flat `Condition` over the DOMAIN-keyed claim layer, the
  *                    same predicate vocabulary `assert` / `Aegis.assert` use.
  * - `shape`        — a named structural validator (recursive / cross-field).
  * - `requiredWhen` — a claim is required when a predicate over the claims AND the
  *                    mint context holds. The only context-reading rule, hence the
  *                    only {@link BoundRule}.
+ *
+ * ⚠ `requiredWhen` SHORT-CIRCUITS: a claim that is already satisfied ends the
+ * rule, so `when` is only ever called on an EMPTY value. A predicate written as
+ * `when: (claims) => isClaimSatisfied(claims.x)` is therefore always `false` and
+ * the rule can never fire — silently, because a predicate that returns `false`
+ * is indistinguishable from a condition that did not hold. Write `when` to
+ * decide whether the claim is OWED (from the mint context, from a sibling
+ * claim), never to re-check the claim's own presence.
+ *
+ * ⚠ "SATISFIED" AND "NAMED" ARE NOT THE SAME QUESTION, and reading all three
+ * presence rules as "must be present" is the ambiguity this vocabulary removes.
+ * Both predicates are exported from the package root, so a `requiredWhen`
+ * predicate you write reads the claims exactly as the enforcer does:
+ *
+ *   - `isClaimSatisfied` — is there CONTENT to bite on? `undefined`, `null`,
+ *     `""`, `[]` and `{}` are all nothing. An `aud: []` addresses no recipient
+ *     and a `cnf: {}` binds no key, so neither satisfies a demand for it.
+ *     Backs `required` / `atLeastOneOf` / `requiredWhen`.
+ *   - `isClaimOmitted` — did the issuer NAME this key? `undefined` alone.
+ *     A prohibition is a ceiling on the issuer's vocabulary, so naming a
+ *     forbidden claim is the violation whatever value it was named with; a
+ *     `nonce: ""` on a logout token states a nonce. Backs `forbidden` and every
+ *     `shape` rule's entry guard.
+ *
+ * `0` and `false` are values on both readings. `$exists` inside a `match`
+ * condition is a THIRD question again — it means NOT NULL (`@lindorm/match`),
+ * not "the key is present".
  */
 export type PolicyRule =
   | FreeRule<{ rule: "required"; claims: ReadonlyArray<ProfileClaimName> }>

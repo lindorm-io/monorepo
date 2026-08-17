@@ -10,7 +10,7 @@
  * parameter or for none.
  *
  * THREE honest deltas, and only three:
- *   1. `placement` / `critical` are meaningless for a CLAIM (a claim has no
+ *   1. `placement` / `critEligible` are meaningless for a CLAIM (a claim has no
  *      protected/unprotected bucket and is never a critical header parameter), so
  *      they live on {@link HeaderSpec} alone.
  *   2. `temporal` / `bucket` are meaningless for a HEADER parameter, so they live
@@ -65,7 +65,21 @@ export type ValueCodec = { kind: string };
 /** A codec plus its optional PER-WIRE overrides. */
 export type WireCodec<C extends ValueCodec> = C & { per?: Partial<Record<Wire, C>> };
 
-export type ParamSpec<D = unknown, C extends ValueCodec = ValueCodec> = {
+/**
+ * The THREE verdicts a registry can pass on a parameter's EMPTY value — see
+ * {@link ParamSpec.whenEmpty} for what each one means.
+ *
+ * ⚠ The union is the WIDEST answer any registry may give; a registry narrows it
+ * through the third type parameter. {@link ClaimSpec} takes `"keep" | "prune"`,
+ * so `refuse` is a HEADER verdict and the compiler is what says so.
+ */
+export type WhenEmpty = "keep" | "prune" | "refuse";
+
+export type ParamSpec<
+  D = unknown,
+  C extends ValueCodec = ValueCodec,
+  E extends WhenEmpty = WhenEmpty,
+> = {
   /** The ONLY name domain logic uses. Unique within a registry. */
   domain: string;
   /**
@@ -89,15 +103,37 @@ export type ParamSpec<D = unknown, C extends ValueCodec = ValueCodec> = {
   /**
    * What the emission-boundary prune does to this parameter when its value is
    * EMPTY (`""`, `null`, `[]`, `{}` — `0` and `false` are values and are never
-   * empty, and neither is a zero-length Buffer). REQUIRED, with no default: both
-   * polarities fail open in a different direction, so there is nothing safe to
-   * fall into and a new parameter must decide.
-   *   - `"prune"` the empty value is indistinguishable from "not stated" — a
-   *               scalar with no meaningful empty form, or a descriptive
-   *               attribute whose empty list says nothing anyone can act on.
-   *   - `"keep"`  the empty value is a STATEMENT: dropping it either broadens
-   *               what the token permits (a restriction, a binding) or erases
-   *               what the token is FOR (the event, the subject of the event).
+   * empty, and neither is a zero-length Buffer). REQUIRED, with no default: each
+   * verdict fails open in a different direction, so there is nothing safe to fall
+   * into and a new parameter must decide.
+   *   - `"prune"`  the empty value is indistinguishable from "not stated" — a
+   *                scalar with no meaningful empty form, or a descriptive
+   *                attribute whose empty list says nothing anyone can act on.
+   *   - `"keep"`   the empty value is a STATEMENT: dropping it either broadens
+   *                what the token permits (a restriction, a binding) or erases
+   *                what the token is FOR (the event, the subject of the event).
+   *   - `"refuse"` the empty value is a statement that CANNOT BE HONOURED, so
+   *                neither disposal is a token anyone asked for: pruning it
+   *                removes a guarantee the recipient enforces, and keeping it
+   *                emits a token that same recipient must reject. The emission
+   *                boundary THROWS instead, at the one point the value is still
+   *                in the producer's hands and can be repaired
+   *                (`internal/header/refuse-empty-headers.ts`).
+   *
+   * ⚠ `"refuse"` is a HEADER verdict and the TYPE says so — {@link ClaimSpec}
+   * instantiates this base at `"keep" | "prune"`. It is not that a claim could
+   * never have an unhonourable empty form. It is that a claim reaches the
+   * emission boundary having ALREADY passed a layer that can speak about it in
+   * its own vocabulary — the profile floor, which refuses an empty value through
+   * `isClaimSatisfied` (`internal/utils/rules/`) and throws with the claim's
+   * DOMAIN name — whereas a header parameter aegis writes at assembly time has
+   * no such layer above it. ⚠ The floor only covers claims a PROFILE names; a
+   * claim no profile mentions is refused nowhere. {@link ClaimSpec} carries the
+   * full reasoning.
+   *
+   * ⚠ `"keep"` has ZERO header users and eleven claim users. The union keeps it
+   * for that reason and NOT as a placeholder — see the `header-registry.ts`
+   * docstring for what a header parameter would have to be for the cell to fit.
    *
    * ⚠ The column governs the TOP-LEVEL parameter only, and where the prune runs it
    * is the ONLY thing that governs it: there is no per-call mode to state and
@@ -135,7 +171,7 @@ export type ParamSpec<D = unknown, C extends ValueCodec = ValueCodec> = {
    * entry at all. That the header set is CLOSED narrows how many parameters can
    * ask this question; it does not answer it for any of them.
    */
-  whenEmpty: "keep" | "prune";
+  whenEmpty: E;
   /**
    * A representative DOMAIN-shaped value. REQUIRED, so a new parameter cannot be
    * added without giving the generated conformance suite something to round-trip

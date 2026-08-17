@@ -276,6 +276,7 @@ export class CwsKit implements ICwsKit {
       header,
       unprotected: options.unprotected,
       proprietary: options.proprietary,
+      format: "cws",
       error: ERROR_BY_FORMAT.cws,
     });
 

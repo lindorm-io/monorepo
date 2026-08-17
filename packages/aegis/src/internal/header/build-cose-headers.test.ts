@@ -10,6 +10,7 @@ const build = (
     header: undefined,
     unprotected: undefined,
     proprietary: false,
+    format: "cwt",
     error: CoseError,
     ...overrides,
   });
@@ -118,11 +119,13 @@ describe("buildCoseHeaders", () => {
      */
     test("a crit member named after an Object.prototype member is not 'unprotected'", () => {
       for (const member of ["toString", "constructor", "valueOf", "hasOwnProperty"]) {
-        // The member is still refused — by the LABEL RESOLVER, which is the
-        // accurate verdict for a member that is no COSE label at all — and NOT by
-        // rule 2, which had it "placed in a bucket" the caller never supplied.
+        // The member is still refused — now by the ELIGIBILITY gate, which runs
+        // ahead of all four rules and is the accurate verdict for a member that
+        // is no registered parameter at all — and NOT by rule 2, which had it
+        // "placed in a bucket" the caller never supplied. (Before the gate the
+        // refusal came one step later, from the label resolver.)
         expect(() => build({ header: { crit: [member] } })).toThrow(
-          expect.objectContaining({ code: "header_no_cose_label" }),
+          expect.objectContaining({ code: "cwt_crit_param_not_permitted" }),
         );
 
         // …and the normalisation that turned an absent bag into `{}` does not
@@ -134,7 +137,7 @@ describe("buildCoseHeaders", () => {
             header: { crit: [member] },
             unprotected: { iv: Buffer.from("iv-bytes") } as never,
           }),
-        ).toThrow(expect.objectContaining({ code: "header_no_cose_label" }));
+        ).toThrow(expect.objectContaining({ code: "cwt_crit_param_not_permitted" }));
       }
     });
 
@@ -143,19 +146,41 @@ describe("buildCoseHeaders", () => {
      * protected bucket provides the parameter is a question about the FINISHED
      * bucket, which this function does not hold — `alg`/`typ`/`cty` are written by
      * `mergeCoseProtected`, and the refusal lives at the end of it
-     * (`merge-cose-protected.test.ts`). Asked here, on the caller's fragment, it
-     * refused `crit: ["alg"]` on a message whose protected bucket carries `alg`.
+     * (`merge-cose-protected.test.ts`).
      *
-     * These three rows are the shapes that used to refuse here; they still refuse,
-     * one step later, which the kit-level matrix in `assert-crit-satisfied.test.ts`
-     * pins on both wires at once.
+     * ⚠ The case that MOTIVATED the split — `crit: ["alg"]`, refused here on the
+     * caller's fragment while the JOSE twin minted the same header — is now
+     * closed one step FURTHER upstream, by the eligibility gate, and can no
+     * longer occur (the row below states that refusal). What survives is these
+     * two rows: an eligible member whose value is empty, or whose value the
+     * caller put in the unprotected bag. Both are answered later, and the split
+     * still earns its place because the reason for it is unchanged — a fragment
+     * cannot answer a question about the message.
      */
     test("a crit the CALLER'S BAG alone cannot answer passes this stage", () => {
       expect(() =>
         build({ header: { crit: ["oid"] }, unprotected: { oid: "" } }),
       ).not.toThrow();
       expect(() => build({ header: { crit: ["oid"], oid: "" } })).not.toThrow();
-      expect(() => build({ header: { crit: ["alg"] } as never })).not.toThrow();
+    });
+
+    /**
+     * ⚠ `crit: ["alg"]` USED TO PASS THIS STAGE and now does not, and the reason
+     * is a different question rather than a stricter answer to the same one.
+     * Whether the FINISHED bucket carries a value for the member is still not
+     * this function's question — `alg` is written by `mergeCoseProtected`, which
+     * is where the satisfaction check lives. Whether the member may be named in
+     * `crit` AT ALL is answerable here, on the caller's bag, and RFC 7515
+     * §4.1.11 answers it: a producer must not name a specification-defined
+     * parameter, whatever any bucket goes on to carry.
+     */
+    test("a crit naming a specification-defined parameter is refused at this stage", () => {
+      expect(() => build({ header: { crit: ["alg"] } as never })).toThrow(
+        expect.objectContaining({
+          code: "cwt_crit_param_not_permitted",
+          data: { crit: ["alg"], parameter: "alg" },
+        }),
+      );
     });
 
     test("a crit-listed parameter the message DOES provide is emitted", () => {
@@ -173,16 +198,21 @@ describe("buildCoseHeaders", () => {
      * `label = int / tstr`), which is what lets the satisfaction check downstream
      * compare members against the protected map's keys without translating either.
      *
-     * ⚠ A DOMAIN-spelled member therefore does not reach that check at all on this
-     * door: `objectId` is no COSE label, so the resolver refuses it here. That is
-     * the standing JOSE/COSE asymmetry — the JOSE wire door maps the same member to
-     * `oid` and mints — and it is recorded rather than fixed. The DOMAIN door is
-     * unaffected on both wires: `mapTokenHeader` runs `criticalToWire` at the
-     * crossing, so `critical: ["objectId"]` arrives here already spelled `oid`.
+     * ⚠ A DOMAIN-spelled member does not reach that translation at all: the
+     * eligibility gate runs on the WIRE-NAMED bag first, and `objectId` is no
+     * JOSE wire name, so it is refused before any label is resolved. That closes
+     * the standing JOSE/COSE asymmetry this test used to record — the JOSE wire
+     * door mapped the same member to `oid` and MINTED, while this one threw
+     * `header_no_cose_label`. The DOMAIN door is unaffected on both wires:
+     * `mapTokenHeader` runs `criticalToWire` at the crossing, so
+     * `critical: ["objectId"]` arrives here already spelled `oid`.
      */
-    test("a DOMAIN-spelled crit member is refused: it is no COSE label", () => {
+    test("a DOMAIN-spelled crit member is refused at a wire door", () => {
       expect(() => build({ header: { crit: ["objectId"], oid: "1.2.3.4" } })).toThrow(
-        expect.objectContaining({ code: "header_no_cose_label" }),
+        expect.objectContaining({
+          code: "cwt_crit_param_not_permitted",
+          data: { crit: ["objectId"], parameter: "objectId" },
+        }),
       );
     });
   });

@@ -39,6 +39,20 @@ import { coseWireKey } from "./header-registry.js";
  * There are three callers of this function and one of it per wire write, so the
  * check has ONE site here — the COSE analogue of `buildJoseHeader`'s last line.
  *
+ * ⚠ THAT MOTIVATING CASE IS NOW CLOSED FURTHER UPSTREAM, and the check still
+ * earns its place — do NOT read it as unreachable and delete it. `crit: ["alg"]`
+ * cannot reach here any more: the eligibility gate
+ * (`internal/header/assert-crit-eligible.ts`) refuses a `crit` naming any
+ * specification-defined parameter at the caller's bag. And with `oid` the sole
+ * eligible member, and `oid` `provenance: "caller"`, a crit member satisfied by
+ * a tier OTHER than the caller's has no production path on this wire either. So
+ * what this call still catches is the case the eligibility gate deliberately
+ * says nothing about: an ELIGIBLE member whose VALUE the bucket does not carry —
+ * `crit: ["oid"]` with `oid` absent, empty, or placed in the unprotected bag.
+ * That is reachable from every COSE door today and is pinned per door in
+ * `assert-crit-satisfied.test.ts`. The two gates ask different questions; the
+ * upstream one narrowing its inputs does not answer this one's.
+ *
  * ⚠ It runs on the MAP, before the bytes: the members of a COSE `crit` are LABELS
  * (RFC 9052 §1.5; `critToCoseLabels` translated them on the way in), and the map's
  * keys are the same labels, so the two are compared in one vocabulary. Rule 2 of

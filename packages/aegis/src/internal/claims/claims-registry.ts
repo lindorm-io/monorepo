@@ -60,6 +60,15 @@
  * while `scope` is only a SHOULD (RFC 9068 §2.2.3) and an explicit empty list is
  * therefore the one way an issuer can say "this grant conveys nothing".
  *
+ * ⚠ A `"keep"` cell is the ONLY way an empty value reaches the wire, so its
+ * empty form must be REFUSABLE BY POLICY — a profile that cannot tolerate it
+ * names the claim in a `required` rule (`isClaimSatisfied` treats `[]`/`{}`/`""`
+ * as nothing to bite on) or in a `shape` rule. The registry deliberately does
+ * not decide that: whether an `aud: []` is acceptable is a fact about the TOKEN,
+ * not about the claim, and `whenEmpty` answers per claim. What the registry owes
+ * is that the value survives to where the profile can see it, which is what
+ * `"keep"` means.
+ *
  * --- Columns that are currently CONSTANT ---
  *
  * `direction` and `matchable` are the same for all 78 entries, and that is an

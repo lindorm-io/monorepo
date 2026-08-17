@@ -2,21 +2,21 @@
 
 exports[`the protected-header gates, on a token that trips BOTH > 'cwm' answers a crit-hostile, alg-mismatched token 1`] = `
 {
-  "code": "cwm_unsupported_crit_param",
+  "code": "cwm_invalid_crit",
   "error": "CwmError",
 }
 `;
 
 exports[`the protected-header gates, on a token that trips BOTH > 'cws' answers a crit-hostile, alg-mismatched token 1`] = `
 {
-  "code": "cws_unsupported_crit_param",
+  "code": "cws_invalid_crit",
   "error": "CwsError",
 }
 `;
 
 exports[`the protected-header gates, on a token that trips BOTH > 'cwt' answers a crit-hostile, alg-mismatched token 1`] = `
 {
-  "code": "cwt_unsupported_crit_param",
+  "code": "cwt_invalid_crit",
   "error": "CwtError",
 }
 `;

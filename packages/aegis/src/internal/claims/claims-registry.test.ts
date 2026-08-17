@@ -9,7 +9,7 @@ import {
 } from "@lindorm/is";
 import { describe, expect, test } from "vitest";
 import type { AegisProfile, AegisSensitive, DomainClaims } from "../../types/index.js";
-import type { BespokeKind, ClaimCodec } from "../registry/claim-spec.js";
+import type { BespokeKind, ClaimCodec, ClaimSpec } from "../registry/claim-spec.js";
 import { codecFor } from "../registry/param-spec.js";
 import { WIRE_TAGS } from "../registry/wire.js";
 import {
@@ -548,12 +548,45 @@ describe("CLAIM_REGISTRY", () => {
     ]);
   });
 
-  test("every claim states what happens to its empty value", () => {
-    for (const spec of CLAIM_SPECS) {
-      expect(["keep", "prune"], `${spec.domain} has no whenEmpty cell`).toContain(
-        spec.whenEmpty,
-      );
-    }
+  /**
+   * NO CLAIM MAY `refuse`, and the COMPILER is what says so — `ClaimSpec`
+   * instantiates the shared base at `"keep" | "prune"` while `HeaderSpec` takes
+   * the whole {@link WhenEmpty} vocabulary.
+   *
+   * ⚠ This replaced a runtime loop asserting every cell was one of the two, and
+   * that loop COULD NOT GO RED: the column is required and non-optional over a
+   * closed union, so a missing or off-vocabulary cell was already a compile
+   * error — the loop only restated what the compiler refuses, which is exactly
+   * the reasoning `header-registry.test.ts` gives for pinning a COUNT instead of
+   * looping a column.
+   *
+   * ⚠⚠ THIS IS A TYPECHECK ASSERTION, AND IT IS INERT UNDER `npm test`. An
+   * UNUSED `@ts-expect-error` is itself a compile error, so DELETING the
+   * narrowing on `ClaimSpec` raises `TS2578` and reddens `npm run typecheck` /
+   * `npm run build` / `npm run verify` — exit 2. Under vitest the body is
+   * `expect(spec.whenEmpty).toBe("refuse")` on a value assigned one line above:
+   * a tautology that passes whatever `ClaimSpec` says, and its only job is to
+   * stop the binding being unused. **A green `npm test` says NOTHING about this
+   * invariant** — verified red-before-green on the typecheck, not on vitest.
+   *
+   * The reason no claim needs it: a claim reaches the emission boundary having
+   * already passed a layer that speaks about it in its own vocabulary — the
+   * profile floor, which refuses an empty value through `isClaimSatisfied`
+   * (`internal/utils/rules/`) and throws with the claim's DOMAIN name. A header
+   * parameter aegis writes at assembly time has no such layer above it. ⚠ The
+   * floor covers only the claims a PROFILE names, so the coverage is a profile
+   * decision, not a registry one — `claim-spec.ts` carries the full reasoning.
+   */
+  test("no claim can state the header-only refuse verdict", () => {
+    const spec: ClaimSpec = {
+      ...CLAIM_SPECS[0]!,
+      // @ts-expect-error - "refuse" is a HEADER verdict; ClaimSpec narrows it away
+      whenEmpty: "refuse",
+    };
+
+    // The cast landed the value all the same — the guard is the DIRECTIVE above,
+    // not this assertion, which only stops the binding being unused.
+    expect(spec.whenEmpty).toBe("refuse");
   });
 
   test('a temporal mark implies a "date" codec; updatedAt is a date but NOT temporal', () => {

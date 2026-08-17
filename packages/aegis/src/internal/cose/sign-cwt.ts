@@ -87,6 +87,7 @@ export const signCwt = (
     header: options.header as Partial<WireTokenHeader> | undefined,
     unprotected: options.unprotected,
     proprietary: options.proprietary,
+    format,
     error: ERROR_BY_FORMAT[format],
   });
 

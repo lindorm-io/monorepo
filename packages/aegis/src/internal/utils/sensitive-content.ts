@@ -3,6 +3,8 @@ import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import type { SignContent } from "../../types/index.js";
 import { SENSITIVE_DOMAINS } from "./extract-sensitive-claims.js";
+import { isClaimOmitted } from "./rules/is-claim-omitted.js";
+import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
 
 /**
  * The content containers whose contents actually reach the wire as claims. The
@@ -28,10 +30,18 @@ const carrierOf = (content: SignContent, key: (typeof CARRIERS)[number]): Dict =
 export const findSensitiveClaims = (content: SignContent): Array<string> => {
   const found = new Set<string>();
 
+  // The VOCABULARY question — did the caller NAME this claim — and it reads the
+  // named predicate for the same reason every other presence check in the domain
+  // layer does. Not the demand notion: a sensitive claim the caller named with an
+  // empty value is still a sensitive claim they wrote, and the disposal below
+  // (encrypt, or strip) must see it. Deciding otherwise would let `""` route a
+  // national identity number past the confidentiality gate.
   for (const carrier of CARRIERS) {
     const values = carrierOf(content, carrier);
     for (const domain of SENSITIVE_DOMAINS) {
-      if (values[domain] !== undefined) found.add(domain);
+      if (isClaimOmitted(values[domain])) continue;
+
+      found.add(domain);
     }
   }
 
@@ -51,14 +61,18 @@ export const stripSensitiveClaims = (
 ): SignContent => {
   const stripped: Dict = { ...(content as Dict) };
 
+  // Both emptiness tests read the named predicate for the same reason the
+  // detector above does — a carrier bag and a claim value are the same question
+  // asked of the same caller data, and a hand-written key count is that question
+  // under a second name.
   for (const carrier of CARRIERS) {
     const values = carrierOf(content, carrier);
-    if (Object.keys(values).length === 0) continue;
+    if (!isClaimSatisfied(values)) continue;
 
     const kept: Dict = { ...values };
     for (const claim of claims) delete kept[claim];
 
-    stripped[carrier] = Object.keys(kept).length > 0 ? kept : undefined;
+    stripped[carrier] = isClaimSatisfied(kept) ? kept : undefined;
   }
 
   return omitUndefined(stripped) as SignContent;

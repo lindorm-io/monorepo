@@ -13,6 +13,26 @@ describe("normaliseHeaders", () => {
       ).toMatchSnapshot();
     });
 
+    /**
+     * ⭐ ABSENT IS NOT EMPTY, and the strip has to run FIRST for that to be true.
+     * `isEmpty(undefined)` is `true`, so a `refuse` cell reached before the strip
+     * would answer a bag that merely OMITS the parameter — every kit assembling a
+     * header from optional fields spreads exactly such a bag, and each one would
+     * throw for a parameter nobody asked to set.
+     *
+     * ⚠ It is the ORDER that is pinned here, not the strip: `x5t#S256` is the one
+     * `whenEmpty: "refuse"` cell, so it is the only parameter whose absence can be
+     * mistaken for an unhonourable emptiness at all. The day a second parameter
+     * takes that cell, this row already covers it — which is the point of stating
+     * the rule on the one that has it.
+     */
+    test("an ABSENT refuse-cell parameter is absent, never an empty one", () => {
+      expect(normaliseHeaders({ "x5t#S256": undefined })).toEqual({});
+      expect(normaliseHeaders({ "x5t#S256": undefined, kid: "key_test" })).toEqual({
+        kid: "key_test",
+      });
+    });
+
     test("should leave a registered parameter's own structure alone", () => {
       // TOP LEVEL only: a JWK's members are the JWK's declared structure, not the
       // registry's, so the strip that rebuilds the object must not prune inside it.
@@ -41,18 +61,27 @@ describe("normaliseHeaders", () => {
     });
 
     /**
-     * The ONE `keep`, and the test that stops a future sweep from pattern-matching
-     * the certificate trio into uniformity. `x5t#S256` is the only header
-     * parameter aegis's verify enforces (`verify-cert-binding.ts`): it skips the
-     * check when the parameter is ABSENT and refuses a mismatch when it is
-     * present, so an empty thumbprint must reach the verifier and be refused.
-     * Pruning it would convert an unsatisfiable binding into no binding at all.
-     * `x5t` and `x5c` sit beside it and prune, because nothing reads either.
+     * The ONE `refuse`, and the test that stops a future sweep from
+     * pattern-matching the certificate trio into uniformity. `x5t#S256` is the
+     * only header parameter aegis's verify enforces (`verify-cert-binding.ts`):
+     * it skips the check when the parameter is ABSENT and refuses a mismatch
+     * when it is present, so presence IS the binding. An empty thumbprint has
+     * neither disposal available — pruning it converts an unsatisfiable binding
+     * into no binding at all, and keeping it emits a token every recipient must
+     * reject — so the write refuses. `x5t` and `x5c` sit beside it and prune,
+     * because nothing reads either.
      */
-    test("should keep the empty thumbprint aegis binds on, and prune the two beside it", () => {
-      expect(
-        normaliseHeaders({ "x5t#S256": "", x5t: "", x5c: [], kid: "key_test" }),
-      ).toMatchSnapshot();
+    test("should refuse the empty thumbprint aegis binds on", () => {
+      expect(() => normaliseHeaders({ "x5t#S256": "", kid: "key_test" })).toThrow(
+        expect.objectContaining({
+          code: "header_empty_parameter",
+          data: { parameter: "x5t#S256", whenEmpty: "refuse" },
+        }),
+      );
+    });
+
+    test("should prune the two certificate parameters nothing reads", () => {
+      expect(normaliseHeaders({ x5t: "", x5c: [], kid: "key_test" })).toMatchSnapshot();
     });
 
     /**
@@ -117,7 +146,7 @@ describe("normaliseHeaders", () => {
      */
     test("the domain crossing and the emission boundary normalise identically", () => {
       // ⚠ CALLER-provenance parameters only. The certificate trio — where the one
-      // `whenEmpty: "keep"` cell lives — cannot take part: `mapTokenHeader` writes
+      // `whenEmpty: "refuse"` cell lives — cannot take part: `mapTokenHeader` writes
       // those three from its `cert` argument, which OVERRIDES anything a caller put
       // in the domain bag, so an empty `certificateThumbprint` never survives the
       // domain crossing to be compared. That is the same reachability the registry

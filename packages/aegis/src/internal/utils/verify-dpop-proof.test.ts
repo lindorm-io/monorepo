@@ -139,6 +139,81 @@ describe("verifyDpopProof", () => {
     ).toThrow(/iat is outside/);
   });
 
+  /**
+   * A DPoP proof is attacker-supplied: the presenter signs it, and the verifier
+   * has only its own type checks between the wire and the values it hands back.
+   * RFC 9449 §4.2 makes `jti`/`htm`/`htu` REQUIRED, and each is REQUIRED because
+   * something downstream acts on it — `jti` is what makes the proof single-use,
+   * `htm`/`htu` are what bind it to one request. A claim carried as an empty
+   * string satisfies "present" while naming nothing: a replay cache keyed on an
+   * empty `jti` collapses every proof onto one entry, and an empty `htu` binds
+   * the proof to no request at all.
+   */
+  test.each(["jti", "htm", "htu"])(
+    "should throw when the %s claim is an empty string",
+    (claim) => {
+      const proof = signProof({ [claim]: "" });
+
+      expect(() =>
+        verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew: 60 }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "dpop_claim_required",
+          data: { claim },
+        }),
+      );
+    },
+  );
+
+  /**
+   * `iat` is the freshness anchor: the skew window is computed from it, so a
+   * value that is not a number makes the arithmetic meaningless rather than
+   * merely wrong. `new Date(x * 1000)` on a string or an object yields an
+   * Invalid Date, whose comparisons are all false — so every skew check silently
+   * passes and the proof is accepted as fresh forever.
+   */
+  test.each([
+    ["a string", "1704096000"],
+    ["an object", {}],
+    ["null", null],
+    ["a boolean", true],
+  ])("should throw when iat is %s rather than a number", (_label, iat) => {
+    const proof = signProof({ iat });
+
+    expect(() =>
+      verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew: 60 }),
+    ).toThrow(expect.objectContaining({ code: "dpop_iat_required" }));
+  });
+
+  /**
+   * `nonce` is OPTIONAL (RFC 9449 §8), so a proof without one is conformant and
+   * the parsed result must report its absence rather than a value. A non-string
+   * on the wire is not a nonce, and passing it through would hand a caller a
+   * number or an object under a field its type declares to be a string — the
+   * caller then compares it against the nonce it issued and the comparison is
+   * meaningless.
+   */
+  test.each([
+    ["a number", 42],
+    ["an object", { nonce: "n" }],
+    ["null", null],
+    ["an array", ["n"]],
+  ])("should report no nonce when the proof carries %s", (_label, nonce) => {
+    const proof = signProof({ nonce });
+
+    expect(
+      verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew: 60 }).nonce,
+    ).toBeUndefined();
+  });
+
+  test("should report a string nonce the proof does carry", () => {
+    const proof = signProof({ nonce: "server-nonce-1" });
+
+    expect(
+      verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew: 60 }).nonce,
+    ).toBe("server-nonce-1");
+  });
+
   test("should throw when htm claim is missing", () => {
     const proof = signProof({ htm: undefined });
 

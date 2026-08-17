@@ -69,7 +69,33 @@ export type ClaimCodec =
   | { kind: "array"; scalar: ArrayScalar }
   | { kind: "bespoke"; bespoke: BespokeKind };
 
-export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec> & {
+/**
+ * ⚠ NARROWED to `"keep" | "prune"`: `refuse` is a HEADER verdict, and the third
+ * type parameter is what says so — a runtime loop over the column could only
+ * restate what the compiler already refuses, so there is none.
+ *
+ * The reason is not structural, and it is NOT that the claims side already
+ * refuses every unhonourable empty value — that was this comment's claim and it
+ * was false in exactly the cells where it mattered. The profile floor is a
+ * PROFILE's floor: it refuses an empty value only for the claims some profile
+ * names in a `required`/`forbidden`/shape rule, and the eleven `whenEmpty:
+ * "keep"` cells are the ones whose empty form survives the prune to reach the
+ * wire in the first place. `aud: []` satisfied `required: ["audience"]` in all
+ * TEN built-in profiles that name `audience` in a presence rule under the old
+ * single predicate — nine of them with nothing else catching it — and a claim no
+ * profile mentions is not refused anywhere at all, then or now.
+ *
+ * The real reason is that `refuse` is a verdict about the EMISSION BOUNDARY, and
+ * the two sides do not have the same boundary to speak from. A header parameter
+ * is written by aegis itself at the moment of assembly, so the boundary is the
+ * only place that sees it and a throw there is the earliest possible repair
+ * point. A claim arrives from a caller who was ALREADY answered a layer up, in
+ * its own vocabulary and with the claim's DOMAIN name in the error — so the
+ * emission prune is the later and blinder of the two places to speak, not the
+ * only one. Which claims that layer speaks about is a PROFILE decision, and it
+ * belongs there: see the `whenEmpty` note in `claims-registry.ts`.
+ */
+export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec, "keep" | "prune"> & {
   /**
    * VALIDATION-temporal direction — set ONLY on the time claims the verifier
    * range-checks against "now", the single source of truth for the temporal

@@ -1,3 +1,4 @@
+import { isNumber, isString } from "@lindorm/is";
 import { KryptosKit } from "@lindorm/kryptos";
 import { ShaKit } from "@lindorm/sha";
 import { AegisDomainError } from "../../errors/index.js";
@@ -6,6 +7,7 @@ import { computeJwkThumbprint } from "./compute-jwk-thumbprint.js";
 import { decodeJoseHeader } from "./jose-header.js";
 import { verifyJoseSignature } from "./jose-signature.js";
 import { decodeJwtPayload } from "./jwt-payload.js";
+import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
 
 type Options = {
   proof: string;
@@ -23,8 +25,12 @@ type DpopProofPayload = {
   nonce?: unknown;
 };
 
+// A required proof claim must be a NON-EMPTY string — the demand notion, spelled
+// as `require-present` and `every-element-has-key` spell it, so the question is
+// named once across the package rather than open-coded here as a bare `typeof`
+// plus a length test.
 const assertString = (value: unknown, claim: string): string => {
-  if (typeof value !== "string" || value.length === 0) {
+  if (!(isString(value) && isClaimSatisfied(value))) {
     throw new AegisDomainError(`Invalid DPoP proof: "${claim}" claim is required`, {
       code: "dpop_claim_required",
       data: { claim },
@@ -112,7 +118,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   const httpMethod = assertString(payload.htm, "htm");
   const httpUri = assertString(payload.htu, "htu");
 
-  if (typeof payload.iat !== "number") {
+  if (!isNumber(payload.iat)) {
     throw new AegisDomainError("Invalid DPoP proof: iat claim is required", {
       code: "dpop_iat_required",
       title: "JWT DPoP IAT Required",
@@ -154,6 +160,6 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
     httpUri,
     issuedAt: new Date(payload.iat * 1000),
     accessTokenHash: expectedAth,
-    nonce: typeof payload.nonce === "string" ? payload.nonce : undefined,
+    nonce: isString(payload.nonce) ? payload.nonce : undefined,
   };
 };

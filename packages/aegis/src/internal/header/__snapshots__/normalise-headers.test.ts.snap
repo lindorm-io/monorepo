@@ -1,12 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`normaliseHeaders > the registry-driven empty prune > should keep the empty thumbprint aegis binds on, and prune the two beside it 1`] = `
-{
-  "kid": "key_test",
-  "x5t#S256": "",
-}
-`;
-
 exports[`normaliseHeaders > the registry-driven empty prune > should keep zero, false and a zero-length buffer 1`] = `
 {
   "flag": false,
@@ -38,6 +31,12 @@ exports[`normaliseHeaders > the registry-driven empty prune > should prune an em
   "crit": [
     "oid",
   ],
+}
+`;
+
+exports[`normaliseHeaders > the registry-driven empty prune > should prune the two certificate parameters nothing reads 1`] = `
+{
+  "kid": "key_test",
 }
 `;
 

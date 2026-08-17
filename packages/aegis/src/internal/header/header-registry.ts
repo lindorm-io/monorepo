@@ -25,24 +25,41 @@
  *
  * --- Columns that are currently CONSTANT ---
  *
- * `direction`, `matchable`, `sensitivity` and `critical` are the same for all
- * twenty-one entries. That is an honest reading of the code, not an omission:
- * every registered parameter flows through the codec in BOTH directions (the
- * registry has carried no per-entry direction flag since the translator became
+ * `direction`, `matchable` and `sensitivity` are the same for all twenty-one
+ * entries. That is an honest reading of the code, not an omission: every
+ * registered parameter flows through the codec in BOTH directions (the registry
+ * has carried no per-entry direction flag since the translator became
  * data-driven); there is no header MATCHER door at all, so nothing is assertable;
- * a header parameter is never encrypted content, so nothing is sensitive; and
- * aegis implements no crit extension, so nothing is critical. They are declared
- * per entry anyway, so the first parameter that breaks one of those patterns has
- * to say so here.
+ * and a header parameter is never encrypted content, so nothing is sensitive.
+ * They are declared per entry anyway, so the first parameter that breaks one of
+ * those patterns has to say so here.
+ *
+ * ⚠ `critEligible` USED TO BE A FOURTH and is not one any more — `oid` is
+ * `true`. A constant boolean column read by nobody is a note; this one is read
+ * from both directions (the mint gate `assert-crit-eligible.ts` and the verify
+ * gate `reject-unknown-critical.ts`), so it is what decides whether a `crit`
+ * naming a parameter stands.
  *
  * --- `whenEmpty` ---
  *
  * REQUIRED on every entry and with no default, for the same reason the claim
- * registry gives: both polarities fail open in a different direction. Twenty
- * prune. The ONE `keep` is `x5t#S256`, because it is the only header parameter
- * aegis's verify enforces — presence is a binding, and pruning an empty one hands
- * the audience an unbound token. `x5t` and `x5c` sit beside it and prune, because
+ * registry gives: each verdict fails open in a different direction. TWENTY
+ * prune, ONE refuses, NONE keeps.
+ *
+ * The one `refuse` is `x5t#S256` — the only header parameter aegis's verify
+ * enforces, where presence IS the binding, so an empty value can be neither
+ * dropped (an unbound token) nor carried (a token no certificate satisfies) and
+ * the write throws instead. `x5t` and `x5c` sit beside it and prune, because
  * nothing reads them.
+ *
+ * ⚠ `keep` HAS NO HEADER USERS, and it is not dead — eleven CLAIMS hold it
+ * (`internal/claims/claims-registry.ts`), which is why the union is not narrowed
+ * to the two verdicts this registry uses. It is unused HERE because a `keep`
+ * needs an empty value a RECIPIENT can act on, and no header parameter has one:
+ * the emptiness of a header parameter is either noise (twenty of them) or an
+ * unsatisfiable guarantee (one). A header parameter whose empty form says
+ * something a recipient can honour — an explicitly empty list that narrows
+ * rather than describes — would say `keep`, and this paragraph would change.
  */
 
 import { isNumber } from "@lindorm/is";
@@ -94,7 +111,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // so aegis's own write cannot reach the cell.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   // RFC 7518 §4.6.1.2 — ECDH-ES Agreement PartyUInfo (base64url).
   {
@@ -124,7 +141,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // decodes the value only when it is truthy.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   // RFC 7518 §4.6.1.3 — ECDH-ES Agreement PartyVInfo (base64url).
   {
@@ -145,7 +162,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // absent/empty equivalence for this parameter in the same words.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "critical",
@@ -155,7 +172,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     direction: BOTH,
     matchable: false,
     sensitivity: "public",
-    // ⚠ DOMAIN spelling. The `critical` column holds DOMAIN names like every
+    // ⚠ DOMAIN spelling. This entry's own VALUE holds DOMAIN names like every
     // other domain-keyed value here, and `criticalToWire` maps each member
     // domain -> wire (`objectId` -> `oid`) while passing an unrecognised member
     // through unchanged. The sample was `["oid"]` — the WIRE spelling — which
@@ -171,7 +188,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // verify.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "contentType",
@@ -191,7 +208,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // spelling of it, and the one nothing has a rule for.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "encryption",
@@ -217,7 +234,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // (`jose-header.ts:99-107`).
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "publicEncryptionJwk",
@@ -242,7 +259,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // non-ECDH-ES token aegis writes.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "initialisationVector",
@@ -264,7 +281,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // JOSE carries it on the protected header; COSE_Encrypt0 puts it in the
     // unprotected bucket (it is an AEAD input, not integrity-protected data).
     placement: "either",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "jwksUri",
@@ -286,7 +303,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // one row with no verdict.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "jwk",
@@ -308,7 +325,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // can act on.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "keyId",
@@ -328,7 +345,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // COSE convention: kid is an advisory routing hint read BEFORE the signature
     // is checked, so the COSE kits emit it unprotected; JOSE has one header.
     placement: "either",
-    critical: false,
+    critEligible: false,
   },
   // `oid` (lindorm object id) has no IANA COSE label, so it rides COSE under a
   // lindorm PRIVATE-USE header-parameter label — RFC 8152 §16.2, the registry
@@ -354,7 +371,27 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // but "not stated".
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    // ⭐ THE ONE ELIGIBLE PARAMETER — the only name a caller may put in `crit`
+    // and the only name a verify accepts there. RFC 7515 §4.1.11: "Producers
+    // MUST NOT include Header Parameter names defined by this specification or
+    // [JWA] for use with JWS […] in the "crit" list." `oid` is the sole parameter
+    // aegis owns that neither document defines; the other twenty JOSE names here
+    // are IANA-registered JOSE header parameters, so `crit` may not name them and
+    // every one of them is `false`.
+    //
+    // ⚠ WHAT "AEGIS IMPLEMENTS IT" MEANS, said out loud because RFC 7515
+    // §4.1.11's own phrase — "understood and supported by the recipient" — reads
+    // stronger than what any library can provide for this parameter. It is AEGIS
+    // POLICY and not a reading of the RFC: aegis holds a registry entry for
+    // `oid`, translates it in BOTH directions on BOTH wires, placement-checks it,
+    // and REPORTS its value on the verified domain header as `objectId`. It does
+    // not act on the value, and no library could — the object identifier belongs
+    // to the deployment. So a producer marking it critical is asserting that the
+    // RECIPIENT'S OWN code reads `header.objectId` before acting on the token,
+    // and aegis's part of that bargain is to deliver it rather than to interpret
+    // it. That is interoperable aegis-to-aegis, which is a real deployment, and
+    // is why this is an extension rather than a dead header parameter.
+    critEligible: true,
   },
   {
     domain: "pbkdfIterations",
@@ -380,7 +417,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // to reproduce it (RFC 7518 §4.8.1.2).
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "pbkdfSalt",
@@ -400,7 +437,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // not empty and is not governed here.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "publicEncryptionTag",
@@ -420,7 +457,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // absent; the non-Buffer empties the guardless `buffer` arm admits are neither.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "headerType",
@@ -451,7 +488,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // cell.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "certificateChain",
@@ -471,7 +508,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // refuses to emit one, so the writer has made the same call.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   // RFC 7515 §4.1.7 — X.509 certificate SHA-1 thumbprint (base64url). Kit-derived
   // from the signing/encrypting kryptos (like `x5t#S256`), auto-emitted whenever a
@@ -498,7 +535,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // wire.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   {
     domain: "certificateThumbprint",
@@ -514,21 +551,30 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     matchable: false,
     sensitivity: "public",
     sample: "dGh1bWJwcmludC1zaGEyNTY",
-    // KEEP: `x5t#S256` is the ONE header parameter aegis's verify ENFORCES —
-    // `verify-cert-binding.ts:38` skips the check when it is absent and refuses a
-    // mismatch at :60. An empty thumbprint matches no certificate and is refused,
-    // which is the safe direction; pruning it converts an unsatisfiable binding
-    // into NO binding and hands the audience an unbound token. That is the `cnf`
-    // fail-open in header form. Provenance is `key`, so aegis's own write cannot
-    // reach the cell (`resolve-cert-binding.ts:32` takes the value off the
-    // kryptos): it states the direction a value that ever did arrive must fail in.
+    // REFUSE: `x5t#S256` is the ONE header parameter aegis's verify ENFORCES —
+    // `verify-cert-binding.ts` skips the check when it is absent and refuses a
+    // mismatch when it is present, so PRESENCE IS THE BINDING. That leaves an
+    // empty value with no disposal at all, which is why this is the one cell that
+    // is neither `prune` nor `keep`: pruning converts an unsatisfiable binding
+    // into NO binding and hands the audience an unbound token (the `cnf`
+    // fail-open in header form), while keeping emits a token whose binding no
+    // certificate can ever satisfy — one every conformant recipient rejects. The
+    // WRITE is the only place left where the producer still holds the value and
+    // can either supply it or drop the parameter, so the write throws
+    // (`refuse-empty-headers.ts`).
+    //
+    // ⚠ It is a BOUNDARY guard, not a repair of an aegis path. Provenance is
+    // `key`, both caller-facing header types Omit the parameter, and
+    // `resolveCertBinding` reads it off a kryptos that answers `null` or a real
+    // digest — so the one producer of `""` is a foreign `IKryptos`, an interface
+    // aegis publishes and does not implement.
     //
     // ⚠ Do NOT generalise it to the other two cert parameters. It holds because
     // something READS the value and treats presence as a binding; nothing reads
     // `x5t` or `x5c`, and both of them prune.
-    whenEmpty: "keep",
+    whenEmpty: "refuse",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   // RFC 7515 §4.1.5 — X.509 URL. COSE label 35 (RFC 9360 x5u).
   {
@@ -545,7 +591,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // guard does NOT already drop an empty value, and this cell is what stops it.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
   // RFC 7516 §4.1.3 — compression algorithm ("DEF" is the only registered value).
   {
@@ -570,7 +616,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // a FOREIGN token's `zip` is untouched: the read path is not normalised.
     whenEmpty: "prune",
     placement: "protected",
-    critical: false,
+    critEligible: false,
   },
 ];
 

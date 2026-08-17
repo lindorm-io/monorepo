@@ -7,6 +7,14 @@ import type { CoseLabel } from "../cose/cose-label.js";
  * Refuse a FINISHED protected bucket whose `crit` names a parameter the bucket
  * gives a recipient NOTHING TO UNDERSTAND — absent, `undefined`, `null`, or empty.
  *
+ * ⚠ THE VALUE-SIDE HALF OF A PAIR. `assert-crit-eligible.ts` is the NAME-side
+ * one and runs FIRST, on the caller's bag: it asks whether the member may stand
+ * in a `crit` at all (RFC 7515 §4.1.11's producer prohibition, read off the
+ * registry's `critEligible` column). This one asks whether the finished bucket
+ * carries a value for it. The two need different inputs — a name can be judged
+ * before any tier is merged, a value cannot — which is why they are two
+ * functions at two points rather than one check.
+ *
  * `crit` is a producer's statement that a recipient MUST understand a parameter's
  * VALUE (RFC 7515 §4.1.11, RFC 9052 §3.1). Saying that while supplying no value
  * is a contradiction, and it has to be named where it is MADE — at the write —
@@ -24,9 +32,19 @@ import type { CoseLabel } from "../cose/cose-label.js";
  * it run on a bucket the emission prune has already been over — the prune removes
  * the empty value of a parameter whose registry cell says it carries nothing
  * (`prune-empty-headers.ts`), so by this point `oid: ""` has BECOME an absent
- * `oid`, and there is no third state for the two to be told apart into. Reading
- * the value rather than the key is also what keeps a `whenEmpty: "keep"` cell
- * covered: an empty value that SURVIVED the prune still has nothing to understand.
+ * `oid`, and there is no third state for the two to be told apart into.
+ *
+ * ⚠ SO THE EMPTY ARM IS CURRENTLY UNREACHABLE, and saying otherwise would be a
+ * branch propped up by a sentence implying something reads it. Every reachable
+ * case here is the ABSENT one: the registry has ZERO `whenEmpty: "keep"` header
+ * cells (asserted `toEqual([])` in `header-registry.test.ts`), so nothing empty
+ * survives the prune, and the one `refuse` cell throws in `normaliseHeaders`
+ * before a bucket is ever assembled. What the value-read buys is that ABSENT,
+ * `undefined` and `null` are ONE verdict written once — `isEmpty` answers `true`
+ * for the `undefined` a missing key returns — instead of three arms to keep in
+ * step. It is kept over a key-test because a `keep` cell is one registry edit
+ * away and a key-test would silently start accepting an empty value the day one
+ * lands.
  *
  * ⚠ IT TAKES A COMPLETE BUCKET, never a fragment — that is the whole of what the
  * two call sites have in common, and each is the LAST point before its wire's

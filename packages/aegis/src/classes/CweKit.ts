@@ -172,6 +172,7 @@ export class CweKit implements ICweKit {
       header: callerHeader as Partial<WireTokenHeader>,
       unprotected: options.unprotected,
       proprietary: options.proprietary,
+      format: "cwe",
       error: CweError,
     });
 

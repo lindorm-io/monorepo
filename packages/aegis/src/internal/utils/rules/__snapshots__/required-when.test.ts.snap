@@ -1,5 +1,23 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`requiredWhen > entry when the claim is an empty array 1`] = `
+[
+  {
+    "key": "confirmation",
+    "message": "Conditionally required claim "confirmation" is missing",
+  },
+]
+`;
+
+exports[`requiredWhen > entry when the claim is an empty object 1`] = `
+[
+  {
+    "key": "confirmation",
+    "message": "Conditionally required claim "confirmation" is missing",
+  },
+]
+`;
+
 exports[`requiredWhen > entry when the claim is present but empty 1`] = `
 [
   {

@@ -107,8 +107,8 @@ describe("CweKit — caller-controlled protected / unprotected header bags", () 
     expect(
       codeOf(() =>
         kit.encrypt(Buffer.from("secret"), {
-          header: { crit: ["cty"] },
-          unprotected: { cty: "application/example" },
+          header: { crit: ["oid"] },
+          unprotected: { oid: "1.2.3.4" },
         }),
       ),
     ).toBe("cose_crit_param_unprotected");

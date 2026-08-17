@@ -4,6 +4,7 @@ import { AegisDomainError } from "../../errors/index.js";
 import type { TokenFormatTag, TokenProfile } from "../../types/index.js";
 import { enforcePolicy } from "../profiles/enforce-policy.js";
 import { algPermitted } from "./rules/alg-permitted.js";
+import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
 
 export type VerifyFloorInput = {
   /**
@@ -72,7 +73,7 @@ const typMismatch = (
  *     match, `none` runs no check (unless the COSE path overrides),
  *   - `iss` exact-match against the expected issuer,
  *   - `aud` contains the verifier's identity (`audience`),
- *   - `exp` PRESENT when `profile.lifetime !== null` (no `$exists:false`
+ *   - `exp` SATISFIED when `profile.lifetime !== null` (no `$exists:false`
  *     escape — unlike the optional-when-present standard verify),
  *   - the profile's whole declared policy, for every rule naming the verify
  *     direction (`enforcePolicy` — the same call mint makes).
@@ -167,7 +168,36 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
     });
   }
 
-  if (profile.lifetime !== null && payload.expiresAt === undefined) {
+  // The `exp` presence gate. It asks the DEMAND question in the same words
+  // `required` uses, so it reads presence through the same predicate rather than
+  // a bare comparison that could drift from it.
+  //
+  // ⚠ A SPELLING consolidation, NOT a coverage gain, and the difference matters
+  // to whoever reads this next. TWO things rule the widened arm (`null`, `""`,
+  // `[]`, `{}`) out, and BOTH are needed — `payload` is `{ ...custom, ...domain }`
+  // (`verify-token.ts`), so naming only the first is not an argument:
+  //   - the DOMAIN half comes from `toDate` (`internal/claims/translate.ts`),
+  //     which returns `Date | undefined` and nothing else, into a bag that is
+  //     then `omitUndefined`ed;
+  //   - the CUSTOM half holds unconsumed wire keys under their ORIGINAL
+  //     spelling, so a token carrying a literal `expiresAt` key would land there
+  //     — `floorShadows` (same file) is what strips it, because a custom key may
+  //     not impersonate a name the floor read resolves.
+  // So no token exhibits a difference. What the predicate buys is that the
+  // notion is named once: this was the last bare presence check in the floor.
+  //
+  // ⚠ It is NOT the only gate, nor a later-but-surer one. A profiled verify
+  // reaches `applyVerifyPolicy` first, and its `expPresence` knob — which
+  // `Aegis.verify` derives from this same `lifetime`, for a consumer-registered
+  // profile exactly as for a built-in — refuses an absent `exp` there. This gate
+  // is a duplicate that fires second and costs nothing; standing the earlier one
+  // down was tried and reverted (see the derivation for why).
+  //
+  // ⚠ The negation stands where the house guard idiom would normally remove it:
+  // this function is a flat sequence of `if (violated) throw` checks with no
+  // early return to hang a happy-side guard on, and every sibling here is
+  // likewise a negated positive test (`!audList.includes(audience)` above).
+  if (profile.lifetime !== null && !isClaimSatisfied(payload.expiresAt)) {
     throw new AegisDomainError("Invalid token", {
       code: "missing_claim_exp",
       data: { format },

@@ -284,14 +284,23 @@ describe("shapeWireHeader (the wire-keyed write pass)", () => {
     expect(shaped).toEqual({ kid: "key_test" });
   });
 
-  test("keeps the empty thumbprint aegis BINDS on, and the unregistered key beside it", () => {
-    // `x5t#S256` is the one `whenEmpty: "keep"` cell: an empty thumbprint matches
-    // no certificate and must be REFUSED by `verify-cert-binding.ts`, where
-    // pruning it would hand the audience an unbound token. The unregistered key
-    // is disposed of by the closed-set rule on the line below, not by the prune.
-    const shaped = shapeWireHeader({ "x5t#S256": "", nonsense: "" } as never);
+  test("refuses the empty thumbprint aegis BINDS on", () => {
+    // `x5t#S256` is the one `whenEmpty: "refuse"` cell: presence IS the binding
+    // (`verify-cert-binding.ts`), so an empty one can be neither pruned — that
+    // hands the audience an unbound token — nor emitted, which mints a token no
+    // certificate satisfies. The emission boundary throws instead.
+    expect(() => shapeWireHeader({ "x5t#S256": "" } as never)).toThrow(
+      expect.objectContaining({ code: "header_empty_parameter" }),
+    );
+  });
 
-    expect(shaped).toEqual({ "x5t#S256": "" });
+  test("drops an unregistered key rather than pruning or refusing it", () => {
+    // The closed-set rule, which is a DIFFERENT rule: a key with no registry
+    // entry has answered no `whenEmpty` question, so the prune never touches it
+    // and the JOSE write pass drops it on the line below.
+    expect(shapeWireHeader({ nonsense: "", kid: "key_test" } as never)).toEqual({
+      kid: "key_test",
+    });
   });
 });
 

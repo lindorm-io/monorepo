@@ -1,25 +1,55 @@
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { pruneEmptyHeaders } from "./prune-empty-headers.js";
+import { refuseEmptyHeaders } from "./refuse-empty-headers.js";
 
 /**
  * The single normalisation applied to a header bag on the way to the wire —
  * shared by JOSE and COSE so both wires behave identically, and the twin of
- * `internal/utils/normalise-claims.ts`. TWO strips, neither of them a choice:
+ * `internal/utils/normalise-claims.ts`. THREE steps, none of them a choice:
  *
  *   1. `undefined`, recursively. It is the one value with no semantic ambiguity:
  *      the absent property of a bag assembled from optional fields, on every
  *      wire, for every caller. Nobody writes `undefined` to mean something.
  *   2. The empty value of a parameter whose registry entry says that empty value
+ *      cannot be disposed of at all — THROWN ({@link refuseEmptyHeaders}).
+ *   3. The empty value of a parameter whose registry entry says that empty value
  *      carries nothing ({@link pruneEmptyHeaders}). Per PARAMETER, top level
  *      only; a key the registry does not know is never touched.
  *
+ * ⚠ ONE STEP'S POSITION IS LOAD-BEARING AND THE OTHER TWO ARE FREE — stated as
+ * two facts rather than one, because a reader who takes "the order is
+ * load-bearing" as covering all three will defend a placement nothing rests on:
+ *
+ *   - `omitUndefined` FIRST, and this one genuinely is. `isEmpty(undefined)` is
+ *     `true`, so a refusal reached before the strip would answer a bag that
+ *     merely OMITS the parameter — and `mapTokenHeader` spreads exactly such a
+ *     bag, assembled from optional fields, so every kit carrying an optional
+ *     field would throw for a parameter nobody asked to set. A parameter that is
+ *     not there is not an empty parameter; `normalise-headers.test.ts` pins it.
+ *   - REFUSE and PRUNE are INTERCHANGEABLE, with no observable consequence
+ *     either way. They read the same column for DIFFERENT answers — `"refuse"`
+ *     here, `"prune"` there — so neither can take the other's cell whichever
+ *     runs first. (An earlier version of this note claimed refusing first "means
+ *     the error names a bag nothing has yet been removed from". It does not: the
+ *     refusal's payload is `{ parameter, whenEmpty }` and never the bag, so
+ *     nothing can observe which order produced it. Refuse is written first
+ *     because it reads as the stronger verdict.)
+ *
+ * ⚠ WHAT THE INTERCHANGEABILITY RESTS ON is the two functions' NARROW cell
+ * reads, and that is why each is pinned on its own account
+ * (`refuse-empty-headers.test.ts`, `prune-empty-headers.test.ts`) rather than
+ * only through this file. Widen either one from its exact answer to "anything but
+ * keep" and the independence is gone — measured: that widening PLUS a swap of the
+ * two steps prunes the certificate binding silently, though either change alone
+ * is inert.
+ *
  * ⚠ THE REGISTRY DECIDES, NOT THE CALLER, exactly as on the claim side. Whether
- * an empty value is a statement or noise is a fact about the PARAMETER: an empty
- * `cty` is not a media type but a second spelling of "none stated" — and one
- * `serialiseContent` prefers over the inferred type, so a sealed object came back
- * a Buffer — while an empty `x5t#S256` is an unsatisfiable certificate binding
- * that must be REFUSED by the verifier rather than pruned into no binding at all.
+ * an empty value is noise, a statement, or unhonourable is a fact about the
+ * PARAMETER: an empty `cty` is not a media type but a second spelling of "none
+ * stated" — and one `serialiseContent` prefers over the inferred type, so a
+ * sealed object came back a Buffer — while an empty `x5t#S256` is a certificate
+ * binding no certificate can satisfy, which can be neither carried nor dropped.
  * One cell each, stated once, for everyone.
  *
  * ⚠ A PARAMETER THAT EMITS NOTHING IS NOT A PARAMETER. That is the rule the two
@@ -27,8 +57,10 @@ import { pruneEmptyHeaders } from "./prune-empty-headers.js";
  * normalising the caller's bag ONCE, at the top of each builder, widens "emits
  * nothing" from `undefined` to "`undefined`, or empty where the registry says
  * prune" — one rule, both wires, every guard. Nothing that emits bytes stops
- * being guarded: a `keep` cell survives normalisation, so `x5t#S256` still
- * reaches the reserved, duplicate and placement checks with its value intact.
+ * being guarded: a `keep` cell survives normalisation and still reaches the
+ * reserved, duplicate and placement checks with its value intact. No header
+ * parameter holds that cell today, and the reason is stated on the registry
+ * itself rather than here.
  *
  * ⚠ IT KNOWS NOTHING ABOUT `crit`, and must not. A parameter a message's `crit`
  * names cannot be empty by the time a normalisation runs, because the builders
@@ -84,5 +116,10 @@ import { pruneEmptyHeaders } from "./prune-empty-headers.js";
  * other. It cannot be empty because the door removed the only thing that made it
  * so — the fix is upstream of both, not a second rule at the COSE write.
  */
-export const normaliseHeaders = <T extends Dict = Dict>(dict: T): T =>
-  pruneEmptyHeaders(omitUndefined(dict));
+export const normaliseHeaders = <T extends Dict = Dict>(dict: T): T => {
+  const stripped = omitUndefined(dict);
+
+  refuseEmptyHeaders(stripped);
+
+  return pruneEmptyHeaders(stripped);
+};

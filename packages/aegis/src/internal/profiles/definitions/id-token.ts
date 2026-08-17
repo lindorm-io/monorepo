@@ -1,3 +1,4 @@
+import { isClaimOmitted } from "../../utils/rules/index.js";
 import { defineProfile } from "../define-profile.js";
 import { ISSUER_IS_URI } from "./rule-predicates.js";
 
@@ -28,8 +29,19 @@ export const idTokenProfile = defineProfile({
       on: ["mint"],
       needs: ["accessTokenIssued"],
       claim: "accessTokenHash",
-      when: (claims, context) =>
-        context.accessTokenIssued === true || claims.accessTokenHash !== undefined,
+      when: (claims, context) => {
+        // An access token co-issued: the hash is owed, full stop.
+        if (context.accessTokenIssued === true) return true;
+
+        // `requiredWhen` only reaches this predicate when `accessTokenHash` is
+        // EMPTY, so a claim the caller OMITTED here is the honest "no access
+        // token, therefore no hash" and nothing is owed.
+        if (isClaimOmitted(claims.accessTokenHash)) return false;
+
+        // What is left is a caller who NAMED `at_hash` and gave it nothing
+        // (`""`, `null`). Having stated the claim, they owe a real hash.
+        return true;
+      },
     },
     { rule: "match", on: ["mint", "verify"], condition: ISSUER_IS_URI },
     { rule: "shape", on: ["mint", "verify"], shape: "crossField" },

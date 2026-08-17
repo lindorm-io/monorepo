@@ -1,5 +1,6 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { Tag, decode as decodeCbor, encode as encodeCbor } from "cbor2";
 import MockDate from "mockdate";
 import { describe, expect, test } from "vitest";
 import { CwmKit } from "../../classes/CwmKit.js";
@@ -8,7 +9,6 @@ import { CwtKit } from "../../classes/CwtKit.js";
 import { JweKit } from "../../classes/JweKit.js";
 import { JwsKit } from "../../classes/JwsKit.js";
 import { JwtKit } from "../../classes/JwtKit.js";
-import type { Dict } from "@lindorm/types";
 import type { AegisError } from "../../errors/index.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
@@ -40,19 +40,94 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  * one row whose pre-unification value rests on the reasoning above rather than on
  * a measurement — the order-flip check is what holds it.
  *
- * The tokens are minted by aegis itself: the `crit` rides the caller's header bag
- * (no kit derives one), and the `alg` mismatch comes from verifying with a second
- * key of the same class and a different algorithm. ⚠ Both keys in a pair share an
+ * The `alg` mismatch comes from minting with one key and verifying with a second
+ * of the same class and a different algorithm. ⚠ Both keys in a pair share an
  * `id`, so the `kid` fail-fast on `JwtKit`/`verifyCwt` cannot answer first — the
  * token has to reach the pair being pinned.
+ *
+ * ⚠ THE HOSTILE `crit` IS INJECTED AFTER THE MINT, and it has to be, because
+ * AEGIS CAN NO LONGER PRODUCE ONE. The mint gate
+ * (`internal/header/assert-crit-eligible.ts`) refuses a `crit` naming anything
+ * outside the header registry's eligible set, which is exactly its purpose — a
+ * token aegis mints is a token aegis verifies — so a doubly-hostile token is by
+ * construction something only a FOREIGN producer writes. This file writes one.
+ * The `crit` used to ride the caller's header bag; that shape now fails at the
+ * mint and would never reach a verify at all.
  */
 describe("the protected-header gates, on a token that trips BOTH", () => {
   const logger = createMockLogger();
 
-  /** Named `oid` because it is a real header parameter the bag can carry. */
-  const HOSTILE_HEADER = { crit: ["oid"], oid: "1.2.3.4" };
-
   const WIRE_CLAIMS = { iss: "https://issuer.lindorm.io/", sub: "user-1" };
+
+  /**
+   * The hostile pair, written into the protected header of an ALREADY MINTED
+   * token: a `crit` naming a parameter aegis has no registry entry for, beside
+   * the parameter itself so the header is otherwise well-formed.
+   *
+   * ⚠ The two wires reach the crit gate through DIFFERENT branches of it, and
+   * that is a fact about the COSE READ rather than about this file. On JOSE a
+   * decoded protected header carries unregistered keys verbatim, so `ext` is
+   * present, `validateCrit` passes it, and the ELIGIBILITY branch answers
+   * (`*_unsupported_crit_param`). On COSE an unregistered LABEL has no JOSE wire
+   * name and is dropped on the way in (`internal/header/cose-wire-header.ts`), so
+   * the same token reads as a `crit` naming a parameter the header does not carry
+   * and the MALFORMED branch answers (`*_invalid_crit`). Both are
+   * `rejectUnknownCritical`, which is the gate whose ORDER this file pins; which
+   * of its two branches fires is not.
+   *
+   * ⚠ The SIGNATURE IS LEFT BROKEN on purpose, and the rows stay honest: both
+   * gates run on the decoded protected header BEFORE any signature or AEAD cycle,
+   * which is the property the whole file is about. A row that reached the crypto
+   * would be asserting about a different check entirely.
+   */
+  const HOSTILE_CRIT_JOSE = { crit: ["ext"], ext: "x" };
+
+  /** The COSE `crit` label (RFC 9052 §3.1 Table 3). */
+  const COSE_CRIT_LABEL = 2;
+
+  /** JOSE: rewrite the compact serialisation's first segment. */
+  const injectJose = (token: string, hostile: boolean): string => {
+    if (!hostile) return token;
+
+    const parts = token.split(".");
+    const header = JSON.parse(Buffer.from(parts[0]!, "base64url").toString("utf8"));
+
+    parts[0] = Buffer.from(
+      JSON.stringify({ ...header, ...HOSTILE_CRIT_JOSE }),
+      "utf8",
+    ).toString("base64url");
+
+    return parts.join(".");
+  };
+
+  /**
+   * COSE: rewrite the protected bstr inside the structure array, re-wrapping the
+   * tag chain it was found under. ⚠ The COSE kits take and return BYTES, not a
+   * compact string, so this hands back a `Buffer`.
+   */
+  const injectCose = (token: Buffer, hostile: boolean): Buffer => {
+    if (!hostile) return token;
+
+    let value: unknown = decodeCbor(token);
+    const tags: Array<number> = [];
+
+    while (value instanceof Tag) {
+      tags.push(Number(value.tag));
+      value = value.contents;
+    }
+
+    const structure = [...(value as Array<unknown>)];
+    const bucket = decodeCbor(structure[0] as Uint8Array) as Map<unknown, unknown>;
+
+    bucket.set(COSE_CRIT_LABEL, ["ext"]);
+    bucket.set("ext", "x");
+    structure[0] = encodeCbor(bucket);
+
+    let wrapped: unknown = structure;
+    for (const tag of tags.reverse()) wrapped = new Tag(tag, wrapped);
+
+    return Buffer.from(encodeCbor(wrapped));
+  };
 
   const thrownBy = (fn: () => unknown): AegisError => {
     try {
@@ -98,84 +173,85 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
   });
 
   /**
-   * Each row drives ONE wire with a caller header bag and hands back the refusal.
-   * It is called TWICE per test: once with no bag (only the alg gate can fire) and
-   * once with the crit bag (both can), which is what makes the order observable.
+   * Each row drives ONE wire and hands back the refusal. It is called TWICE per
+   * test: once on the token as minted (only the alg gate can fire) and once with
+   * the hostile `crit` injected (both can), which is what makes the order
+   * observable.
    */
   const verdicts: ReadonlyArray<{
     format: string;
-    refuse: (header: Dict | undefined) => AegisError;
+    refuse: (hostile: boolean) => AegisError;
   }> = [
     {
       format: "jws",
-      refuse: (header) => {
+      refuse: (hostile) => {
         const { minted, reader } = signPair("key_hostile_jws");
-        const token = new JwsKit({ kryptos: minted, logger }).sign("hostile", {
-          header,
-        });
+        const token = new JwsKit({ kryptos: minted, logger }).sign("hostile");
 
-        return thrownBy(() => new JwsKit({ kryptos: reader, logger }).verify(token));
+        return thrownBy(() =>
+          new JwsKit({ kryptos: reader, logger }).verify(injectJose(token, hostile)),
+        );
       },
     },
     {
       format: "jwt",
-      refuse: (header) => {
+      refuse: (hostile) => {
         const { minted, reader } = signPair("key_hostile_jwt");
-        const token = new JwtKit({ kryptos: minted, logger }).sign(WIRE_CLAIMS, {
-          header,
-        });
+        const token = new JwtKit({ kryptos: minted, logger }).sign(WIRE_CLAIMS);
 
-        return thrownBy(() => new JwtKit({ kryptos: reader, logger }).verify(token));
+        return thrownBy(() =>
+          new JwtKit({ kryptos: reader, logger }).verify(injectJose(token, hostile)),
+        );
       },
     },
     {
       format: "jwe",
-      refuse: (header) => {
+      refuse: (hostile) => {
         const { minted, reader } = encryptPair("key_hostile_jwe");
-        const token = new JweKit({ kryptos: minted, logger }).encrypt("hostile", {
-          header,
-        });
+        const token = new JweKit({ kryptos: minted, logger }).encrypt("hostile");
 
-        return thrownBy(() => new JweKit({ kryptos: reader, logger }).decrypt(token));
+        return thrownBy(() =>
+          new JweKit({ kryptos: reader, logger }).decrypt(injectJose(token, hostile)),
+        );
       },
     },
     {
       format: "cws",
-      refuse: (header) => {
+      refuse: (hostile) => {
         const { minted, reader } = signPair("key_hostile_cws");
         const token = new CwsKit({ kryptos: minted, logger }).sign(
           Buffer.from("hostile"),
-          { header },
         );
 
-        return thrownBy(() => new CwsKit({ kryptos: reader, logger }).verify(token));
+        return thrownBy(() =>
+          new CwsKit({ kryptos: reader, logger }).verify(injectCose(token, hostile)),
+        );
       },
     },
     {
       format: "cwt",
-      refuse: (header) => {
+      refuse: (hostile) => {
         const { minted, reader } = signPair("key_hostile_cwt");
-        const token = new CwtKit({ kryptos: minted, logger }).sign(WIRE_CLAIMS, {
-          header,
-        });
+        const token = new CwtKit({ kryptos: minted, logger }).sign(WIRE_CLAIMS);
 
-        return thrownBy(() => new CwtKit({ kryptos: reader, logger }).verify(token));
+        return thrownBy(() =>
+          new CwtKit({ kryptos: reader, logger }).verify(injectCose(token, hostile)),
+        );
       },
     },
     {
       // ⚠ THE ROW THAT WAS MISSING, and it is the one that most needed to be
-      // here: `cwm`'s verdict CHANGED when the order was unified
-      // (`cwm_algorithm_mismatch` → `cwm_unsupported_crit_param`), yet it has no
+      // here: `cwm`'s verdict CHANGED when the order was unified, yet it has no
       // kit of its own on this path — `CwmKit.verify` delegates to `verifyCwt`,
       // which `CwtKit` also uses — so counting call sites or files loses it.
       format: "cwm",
-      refuse: (header) => {
+      refuse: (hostile) => {
         const { minted, reader } = macPair("key_hostile_cwm");
-        const token = new CwmKit({ kryptos: minted, logger }).sign(WIRE_CLAIMS, {
-          header,
-        });
+        const token = new CwmKit({ kryptos: minted, logger }).sign(WIRE_CLAIMS);
 
-        return thrownBy(() => new CwmKit({ kryptos: reader, logger }).verify(token));
+        return thrownBy(() =>
+          new CwmKit({ kryptos: reader, logger }).verify(injectCose(token, hostile)),
+        );
       },
     },
   ];
@@ -189,17 +265,17 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
       // says the alg gate was ever in the running. Drive an identically
       // CONFIGURED pair — the helpers generate fresh material per call, so it is
       // the same algorithms and the same shared id, not the same bytes — with no
-      // crit bag first: the alg gate must fire on its own. If a future
+      // crit injected first: the alg gate must fire on its own. If a future
       // edit stops `signPair`/`encryptPair` producing a real mismatch, this goes
       // red here rather than leaving five green snapshots pinning an order the
       // file no longer observes.
       expect(
-        refuse(undefined).code,
+        refuse(false).code,
         "the key pair no longer produces an algorithm mismatch, so the snapshot below proves nothing about ORDER",
       ).toBe(`${format}_algorithm_mismatch`);
 
       // Now BOTH gates are live, and the snapshot records which one wins.
-      const error = refuse(HOSTILE_HEADER);
+      const error = refuse(true);
 
       // The CLASS as well as the code: the code names the gate, the class names
       // which leaf the wire raises it under, and step-order changes can move either.

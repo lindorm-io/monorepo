@@ -1,5 +1,14 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`subIdShape > fails when a required member is null 1`] = `
+[
+  {
+    "key": "sub_id.id",
+    "message": "sub_id of format "opaque" requires member "id"",
+  },
+]
+`;
+
 exports[`subIdShape > fails when a required member of the format is missing 1`] = `
 [
   {
@@ -23,6 +32,78 @@ exports[`subIdShape > fails when sub_id is not an object 1`] = `
   {
     "key": "sub_id",
     "message": "sub_id must be an object",
+  },
+]
+`;
+
+exports[`subIdShape > fails when the account format's required member is empty 1`] = `
+[
+  {
+    "key": "sub_id.uri",
+    "message": "sub_id of format "account" requires member "uri"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when the aliases format's required member is empty 1`] = `
+[
+  {
+    "key": "sub_id.identifiers",
+    "message": "sub_id of format "aliases" requires member "identifiers"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when the did format's required member is empty 1`] = `
+[
+  {
+    "key": "sub_id.url",
+    "message": "sub_id of format "did" requires member "url"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when the email format's required member is empty 1`] = `
+[
+  {
+    "key": "sub_id.email",
+    "message": "sub_id of format "email" requires member "email"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when the iss_sub format's required member is empty 1`] = `
+[
+  {
+    "key": "sub_id.sub",
+    "message": "sub_id of format "iss_sub" requires member "sub"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when the opaque format's required member is empty 1`] = `
+[
+  {
+    "key": "sub_id.id",
+    "message": "sub_id of format "opaque" requires member "id"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when the phone_number format's required member is empty 1`] = `
+[
+  {
+    "key": "sub_id.phone_number",
+    "message": "sub_id of format "phone_number" requires member "phone_number"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when the uri format's required member is empty 1`] = `
+[
+  {
+    "key": "sub_id.uri",
+    "message": "sub_id of format "uri" requires member "uri"",
   },
 ]
 `;

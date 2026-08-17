@@ -1,5 +1,5 @@
-import { isEmpty } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
+import { isClaimSatisfied } from "../utils/rules/is-claim-satisfied.js";
 import { claimByCoseName, claimByJose } from "./claims-registry.js";
 
 /**
@@ -40,7 +40,10 @@ export const pruneEmptyClaims = <T extends Dict = Dict>(dict: T): T => {
   for (const [key, value] of Object.entries(dict)) {
     const spec = claimByJose(key) ?? claimByCoseName(key);
 
-    if (spec?.whenEmpty === "prune" && isEmpty(value)) continue;
+    // `!isClaimSatisfied`, not a bare `isEmpty`: this is the same emptiness the
+    // profile floor asks about, and `is-claim-satisfied.ts` cites this column as
+    // agreeing with it — so the two must not be able to drift apart.
+    if (spec?.whenEmpty === "prune" && !isClaimSatisfied(value)) continue;
 
     result[key] = value;
   }

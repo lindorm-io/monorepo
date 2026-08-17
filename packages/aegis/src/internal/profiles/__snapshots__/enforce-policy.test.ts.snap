@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`enforcePolicy > built-in profiles > every built-in naming audience in a presence rule is covered 1`] = `
+[
+  "access_token",
+  "delegation",
+  "erasure_token",
+  "external_access_token",
+  "id_token",
+  "introspection",
+  "jarm",
+  "logout_token",
+  "security_event",
+  "userinfo",
+]
+`;

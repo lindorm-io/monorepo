@@ -365,6 +365,17 @@ export class Aegis implements IAegis {
           // generic policy pass stands down: a typ-less RFC 7523 client assertion
           // must reach the floor, and a `lifetime: null` profile (an RFC 8417 SET,
           // introspection, userinfo) mints tokens with no exp at all.
+          //
+          // ⚠ `expPresence` is DERIVED here rather than stood down to "optional"
+          // like `typPresence`, and that asymmetry is deliberate. Standing it
+          // down was tried and reverted: it changes no outcome — both gates
+          // resolve `exp` to `Date | undefined` before asking (`withJoseDates`
+          // on JOSE, the claim codec on COSE, `toDate` at the floor), so every
+          // degenerate `exp` is refused either way — while moving the refusal
+          // BEHIND the caller's `assert` matchers, the actor check and the DPoP
+          // checks, so an exp-less token that also fails an `assert` reports
+          // `claims_invalid` instead of `missing_claim_exp`. An order change on
+          // a public path with no coverage to show for it.
           typPresence: "optional",
           expPresence: floor.profile.lifetime === null ? "optional" : "required",
         },

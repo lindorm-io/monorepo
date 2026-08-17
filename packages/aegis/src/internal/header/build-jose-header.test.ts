@@ -127,54 +127,77 @@ describe("buildJoseHeader", () => {
      * names a parameter no other tier can see. Checked per tier, this would refuse
      * a satisfied `crit`; checked on the merge, it accepts it.
      */
+    /**
+     * ⚠ THE MEMBER MUST BE THE ELIGIBLE ONE. The satisfaction check runs on the
+     * MERGED header, so a `crit` in the caller's tier may be answered by a
+     * parameter another tier contributed — that is what this pins. It cannot be
+     * pinned with `apu`/`x5t`/`cty` any more: RFC 7515 §4.1.11 forbids a producer
+     * naming a specification-defined parameter in `crit`, so the eligibility gate
+     * refuses those on the caller's bag before any tier is merged.
+     *
+     * `oid` is `provenance: "caller"` in the registry, so no PRODUCTION path
+     * writes one into `derived`. It is placed there deliberately: this is a unit
+     * probe of the BUILDER, which knows nothing about provenance, and the
+     * cross-tier reach is the property under test.
+     */
     test("a crit satisfied by ANOTHER tier is accepted", () => {
       const header = build({
         reserved: ["alg", "kid", "typ"],
-        header: { crit: ["apu"] } as never,
+        header: { crit: ["oid"] },
         derived: {
-          alg: "ECDH-ES",
-          apu: "cGFydHkty",
+          alg: "ES256",
+          oid: "1.2.3.4",
           kid: "key_1",
-          typ: "application/jwe",
+          typ: "application/jwt",
         },
-      });
-
-      expect(header.crit).toEqual(["apu"]);
-      expect(header.apu).toBe("cGFydHkty");
-    });
-
-    test("a crit satisfied by the CERT tier is accepted", () => {
-      // The cert tier crosses from DOMAIN names via `mapTokenHeader`, not
-      // `shapeWireHeader`, so it is the merge — not one shaping pass — that puts
-      // the referent and the list in the same bag.
-      const header = build({
-        header: { crit: ["x5t"] } as never,
-        derived: { alg: "ES256", kid: "key_1", typ: "application/jwt" },
-        cert: { certificateThumbprintSha1: "dGh1bWI" },
-      });
-
-      expect(header.crit).toEqual(["x5t"]);
-      expect(header.x5t).toBe("dGh1bWI");
-    });
-
-    /**
-     * ⚠ ONE VOCABULARY, AND IT IS THE SHAPING PASS THAT APPLIES IT — the check
-     * applies none. `shapeWireHeader` runs `criticalToWire` over the caller's
-     * `crit` (`token-header.ts#encodeHeaderValue`), so the merged header arrives
-     * with its members spelled the way its keys are; the check then compares like
-     * with like, which is all it can do — it holds a bucket whose vocabulary it
-     * cannot know, and a JOSE name and a COSE label are different things (RFC 9052
-     * §1.5). So this test reddens if the SHAPING stops mapping, which is exactly
-     * the assumption the check is entitled to make. The COSE twin of the same
-     * statement is `critToCoseLabels`, pinned in `build-cose-headers.test.ts`.
-     */
-    test("a DOMAIN-spelled crit member is satisfied by its wire-named parameter", () => {
-      const header = build({
-        header: { crit: ["objectId"], oid: "1.2.3.4" } as never,
       });
 
       expect(header.crit).toEqual(["oid"]);
       expect(header.oid).toBe("1.2.3.4");
+    });
+
+    test("a crit naming a CERT parameter is refused before any tier is merged", () => {
+      // The cert tier crosses from DOMAIN names via `mapTokenHeader`, and all
+      // three of its parameters are defined by RFC 7515 (§4.1.6 `x5c`, §4.1.7
+      // `x5t`, §4.1.8 `x5t#S256`) — so §4.1.11 forbids a `crit` naming any of
+      // them, whatever the merge goes on to produce. The refusal is therefore at
+      // the gate, on the caller's bag, and never reaches the merge.
+      expect(() =>
+        build({
+          header: { crit: ["x5t"] } as never,
+          derived: { alg: "ES256", kid: "key_1", typ: "application/jwt" },
+          cert: { certificateThumbprintSha1: "dGh1bWI" },
+        }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "jwt_crit_param_not_permitted",
+          data: { crit: ["x5t"], parameter: "x5t" },
+        }),
+      );
+    });
+
+    /**
+     * ⚠ A WIRE DOOR TAKES WIRE NAMES, AND A `crit` MEMBER IS A PARAMETER NAME.
+     * This used to MINT: `shapeWireHeader` runs `criticalToWire` over the
+     * caller's `crit` (`token-header.ts#encodeHeaderValue`), which remapped
+     * `objectId` to `oid` and left the header satisfied — while the COSE twin
+     * refused the identical call, because a COSE `crit` member is a LABEL (RFC
+     * 9052 §1.5) and `objectId` is none. One call, two verdicts, chosen by the
+     * encoding.
+     *
+     * The eligibility gate runs on the caller's bag BEFORE that shaping, so both
+     * wires now refuse. The domain door is where a domain name is translated,
+     * and it translates this one already (`mapTokenHeader` at the crossing).
+     */
+    test("a DOMAIN-spelled crit member is refused at a wire door", () => {
+      expect(() =>
+        build({ header: { crit: ["objectId"], oid: "1.2.3.4" } as never }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "jwt_crit_param_not_permitted",
+          data: { crit: ["objectId"], parameter: "objectId" },
+        }),
+      );
     });
 
     /**
@@ -187,12 +210,18 @@ describe("buildJoseHeader", () => {
      * to prevent it. The merged header is handed over as a `Map` (`Object.entries`
      * in, own keys only), so there is no chain to walk. `in` on a caller-influenced
      * key is a BANNED construct in this package.
+     *
+     * ⚠ The ELIGIBILITY gate answers these first now (it looks the member up in a
+     * `Map` too), so the code is `jwt_crit_param_not_permitted` rather than
+     * `jwt_invalid_crit`. The refusal has moved one step earlier; what it refuses
+     * has not. The satisfaction check's own prototype defence is pinned directly
+     * in `assert-crit-satisfied.test.ts`, where no gate stands in front of it.
      */
     test.each(["toString", "constructor", "valueOf", "hasOwnProperty", "__proto__"])(
       "a crit naming the Object.prototype member %s is refused",
       (member) => {
         expect(() => build({ header: { crit: [member] } as never })).toThrow(
-          expect.objectContaining({ code: "jwt_invalid_crit" }),
+          expect.objectContaining({ code: "jwt_crit_param_not_permitted" }),
         );
       },
     );
@@ -200,16 +229,18 @@ describe("buildJoseHeader", () => {
     test("an UNNAMED empty value in another tier is still pruned", () => {
       // Nothing names them, so the two values go the way every empty prune-cell
       // value goes — the prune is not narrowed by a `crit` existing elsewhere.
+      // (`oid` is the crit member because it is the only one a producer may name;
+      // the parameters under test are the EMPTY ones in the other tiers.)
       const derivedTier = build({
         reserved: ["alg", "apu", "kid", "typ"],
-        header: { crit: ["cty"], cty: "text/plain" },
+        header: { crit: ["oid"], oid: "1.2.3.4" },
         derived: { alg: "ECDH-ES", apu: "", kid: "key_1", typ: "application/jwe" },
       });
 
       expect("apu" in derivedTier).toBe(false);
 
       const certTier = build({
-        header: { crit: ["cty"], cty: "text/plain" },
+        header: { crit: ["oid"], oid: "1.2.3.4" },
         cert: { certificateThumbprintSha1: "" },
       });
 
@@ -280,14 +311,42 @@ describe("buildJoseHeader", () => {
       expect(build({ header: { alg: "" } as never }).alg).toBe("ES512");
     });
 
-    test("an empty parameter the registry KEEPS is still refused", () => {
-      // Nothing that emits BYTES stops being guarded. `x5t#S256` is the one
-      // `whenEmpty: "keep"` cell, so an empty one survives normalisation and
-      // reaches the reserved row exactly as a non-empty one does.
+    /**
+     * ⚠ THE NORMALISATION ANSWERS FIRST, AND THAT IS A COST OF THE ORDERING
+     * RULE RATHER THAN A DEFECT IN IT. `x5t#S256` is the one `whenEmpty:
+     * "refuse"` cell, so an empty one is refused by {@link normaliseHeaders}
+     * before the reserved row is consulted at all — a caller who names it hears
+     * `header_empty_parameter` where a caller who gives it a VALUE still hears
+     * `jose_reserved_header` (the row below). The reserved message is the more
+     * useful of the two here, and it is given up on purpose.
+     *
+     * ⛔ Do NOT "fix" this by moving the reserved check ahead of the
+     * normalisation. Normalise-first is what makes "an absent parameter cannot
+     * be a reserved one" true, and reordering would make `{ alg: "" }` throw
+     * `jose_reserved_header` — wrong for twenty parameters, to improve the
+     * message for one.
+     */
+    test("an empty parameter the registry REFUSES is answered by the refusal, not the reserved row", () => {
       expect(() =>
         build({
           reserved: ["x5t#S256"],
           header: { "x5t#S256": "" } as never,
+        }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "header_empty_parameter",
+          data: { parameter: "x5t#S256", whenEmpty: "refuse" },
+        }),
+      );
+    });
+
+    test("a reserved parameter carrying a VALUE still hears the reserved row", () => {
+      // The control for the row above: the reserved check is unchanged and still
+      // reachable for this parameter. Only the EMPTY case moved.
+      expect(() =>
+        build({
+          reserved: ["x5t#S256"],
+          header: { "x5t#S256": "dGh1bWI" } as never,
         }),
       ).toThrow(/Header parameter "x5t#S256" is key-derived and cannot be set/);
     });

@@ -269,18 +269,43 @@ describe("HEADER_REGISTRY", () => {
     );
   });
 
-  test("no header parameter is issuer-stamped, matchable, sensitive or critical", () => {
-    // These four columns are CONSTANT today, and each is grounded: `issuer`
+  test("no header parameter is issuer-stamped, matchable or sensitive", () => {
+    // These three columns are CONSTANT today, and each is grounded: `issuer`
     // provenance is a claim-side concept; there is no header MATCHER door at
-    // all; a header parameter is never encrypted content; and aegis implements
-    // no crit extension. Pinning them means the first parameter that breaks one
-    // of the patterns has to change this test deliberately.
+    // all; and a header parameter is never encrypted content. Pinning them means
+    // the first parameter that breaks one of the patterns has to change this
+    // test deliberately.
+    //
+    // ⚠ `critEligible` was a FOURTH member of this list and is not one any more.
+    // It is pinned by name below instead, because it is no longer constant and a
+    // constant-column assertion would have to be weakened to admit the one `true`
+    // — which would stop saying anything about the other twenty.
     for (const spec of HEADER_SPECS) {
       expect(spec.provenance, `${spec.domain} is issuer-stamped`).not.toBe("issuer");
       expect(spec.matchable, `${spec.domain} is matchable`).toBe(false);
       expect(spec.sensitivity, `${spec.domain} is sensitive`).toBe("public");
-      expect(spec.critical, `${spec.domain} is critical`).toBe(false);
     }
+  });
+
+  /**
+   * The `critEligible` set, frozen by name — the parameters a producer may name
+   * in `crit` and a verifier will accept there.
+   *
+   * ⚠ BOTH DIRECTIONS TURN ON THIS LIST, which is what makes freezing it worth a
+   * test of its own: `assert-crit-eligible.ts` refuses a mint naming anything
+   * outside it, and `reject-unknown-critical.ts` refuses a verify naming
+   * anything outside it. Adding a name here silently widens what aegis both
+   * emits and accepts as a critical extension, and RFC 7515 §4.1.11 forbids
+   * `crit` naming a parameter that specification or JWA defines — so a name
+   * added carelessly mints tokens that are malformed for every recipient.
+   */
+  test("the crit-eligible header parameters are exactly the stated set", () => {
+    const eligible = HEADER_SPECS.filter((s) => s.critEligible).map(headerJoseName);
+
+    // `oid` alone, and it is the ONLY candidate there could be: every other JOSE
+    // name in this registry is an IANA-registered JOSE header parameter, which
+    // RFC 7515 §4.1.11 forbids a producer from naming in `crit` outright.
+    expect(eligible).toEqual(["oid"]);
   });
 
   test("kid and iv are the only entries DECLARED as either-bucket", () => {
@@ -305,35 +330,48 @@ describe("HEADER_REGISTRY", () => {
   });
 
   /**
-   * The `whenEmpty: "keep"` set, frozen by name. The column has no default, so a
-   * new parameter cannot dodge the decision — but an EXISTING one can be flipped
-   * in a one-word diff, and a flip either puts a value on the wire that says
-   * nothing or removes one a verifier acts on. Both are silent, so the set is
-   * pinned here and a change to it has to be a change to this list.
+   * The `whenEmpty: "refuse"` set, frozen by name — and the EMPTY `keep` set
+   * beside it. The column has no default, so a new parameter cannot dodge the
+   * decision — but an EXISTING one can be flipped in a one-word diff, and a flip
+   * either puts a value on the wire that says nothing, removes one a verifier
+   * acts on, or turns a refusal into one of those two. All three are silent, so
+   * the sets are pinned here and a change to them has to be a change to this
+   * list.
    */
-  test("the header parameters kept when empty are exactly the stated set", () => {
-    const keep = HEADER_SPECS.filter((s) => s.whenEmpty === "keep").map((s) => s.domain);
+  test("the header parameters refused when empty are exactly the stated set", () => {
+    const refuse = HEADER_SPECS.filter((s) => s.whenEmpty === "refuse").map(
+      (s) => s.domain,
+    );
 
     // ⚠ The certificate trio is NOT uniform, and this is the split. `x5t#S256` is
     // the ONE header parameter aegis's verify enforces: `verify-cert-binding.ts`
     // skips the check when it is ABSENT and refuses a mismatch when it is
-    // present, so presence IS the binding — an empty thumbprint matches no
-    // certificate and must be refused, where pruning it would hand the audience
-    // an unbound token. `x5t` (never verified, legacy-compat output) and `x5c`
-    // (no binding check reads it) sit beside it and PRUNE, because nothing reads
-    // either: an empty value there binds nothing and is refused by nothing.
-    expect(keep).toEqual(["certificateThumbprint"]);
+    // present, so presence IS the binding — an empty thumbprint can neither be
+    // pruned (that hands the audience an unbound token) nor emitted (that mints a
+    // token no certificate satisfies), so the write refuses. `x5t` (never
+    // verified, legacy-compat output) and `x5c` (no binding check reads it) sit
+    // beside it and PRUNE, because nothing reads either: an empty value there
+    // binds nothing and is refused by nothing.
+    expect(refuse).toEqual(["certificateThumbprint"]);
+
+    // ⚠ EMPTY, and asserted rather than left unsaid. `keep` stays in the union
+    // for the ELEVEN claims that hold it, so nothing about this registry forces
+    // it to have a user — which makes "no header parameter keeps" a fact that
+    // could be reversed by a one-word diff with nothing to notice. It is also
+    // what goes red if someone "tidies" the union down to the two verdicts this
+    // registry uses and quietly re-points this parameter at `keep`.
+    expect(HEADER_SPECS.filter((s) => s.whenEmpty === "keep")).toEqual([]);
 
     // ⚠ THE COUNT IS THE ASSERTION, and it is here rather than a loop over the
-    // column because a loop CANNOT GO RED. `ParamSpec.whenEmpty` is
-    // `"keep" | "prune"`, required and non-optional (`registry/param-spec.ts`),
-    // so a missing or off-vocabulary cell is a COMPILE error before any test
-    // runs — a loop asserting the cell is one of two values only restates what
-    // the compiler already refuses, and only a deliberate cast could redden it.
+    // column because a loop CANNOT GO RED. `ParamSpec.whenEmpty` is required and
+    // non-optional over a closed union (`registry/param-spec.ts`), so a missing
+    // or off-vocabulary cell is a COMPILE error before any test runs — a loop
+    // asserting the cell is one of three values only restates what the compiler
+    // already refuses, and only a deliberate cast could redden it.
     //
     // What the compiler CANNOT see is a parameter added with a `whenEmpty` the
     // author never thought about. The type forces a cell; nothing forces the
-    // DECISION. A count pinned beside the frozen `keep` list is what makes that
+    // DECISION. A count pinned beside the frozen lists is what makes that
     // visible HERE: a twenty-second parameter fails this test, and the only way
     // past it is to read the split above and state which side the new one is on.
     expect(HEADER_SPECS.length).toBe(21);

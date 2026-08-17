@@ -37,9 +37,10 @@ import {
 import { CLAIM_SPECS, coseName, joseName } from "../internal/claims/claims-registry.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { encodeCwtClaims } from "../internal/cose/cwt-claims.js";
+import type { CoseLabel } from "../internal/cose/cose-label.js";
 import { decodeCwtWire } from "../internal/cose/decode-cwt-wire.js";
 import { COSE_TAG, decodeProtectedHeader } from "../internal/cose/structures.js";
-import { coseByJose } from "../internal/header/header-registry.js";
+import { coseByJose, headerByJose } from "../internal/header/header-registry.js";
 import { WIRE_TAGS } from "../internal/registry/wire.js";
 import type {
   ParsedDpopProof,
@@ -65,7 +66,7 @@ import {
 import {
   ISSUER,
   type ArtifactGivenStep,
-  type CoseBucketsGiven,
+  type ForeignHeadersGiven,
   type DateCell,
   type DpopProofGiven,
   type ErrorClassName,
@@ -639,6 +640,13 @@ const applySetup = (given: Given, ctx: ScenarioContext): void => {
         });
         break;
 
+      // The public door a consumer extends the profile vocabulary through. It
+      // writes into the CURRENT deployment's own registry, so a row that also
+      // rebuilds the deployment states this step after it.
+      case "profile":
+        ctx.aegis.registerProfile(step.profile);
+        break;
+
       case "token":
       case "claims":
         break;
@@ -733,28 +741,50 @@ const signForeignJose = async (
   claims: Dict,
   typ: string | undefined,
   kryptos: IKryptos,
-  buckets: CoseBucketsGiven | undefined,
+  buckets: ForeignHeadersGiven | undefined,
 ): Promise<string> => {
-  // A JOSE compact serialisation has ONE header and no bucket to place a
-  // parameter in (RFC 7516/7515 §7.1), so a row that names the COSE buckets has
+  // A JOSE compact serialisation has ONE header (RFC 7515 §7.1) and no second
+  // bucket to place a parameter in, so a row that names the UNPROTECTED one has
   // no meaning here. Say so rather than sign a token that quietly ignores half
-  // the row.
-  if (buckets !== undefined) {
+  // the row. The PROTECTED half applies on both wires and is written below.
+  if (buckets?.unprotectedHeader !== undefined) {
     throw new Error(
-      "the row places parameters in named COSE header buckets, but this run is on the JOSE wire, whose compact serialisation has only one header. " +
+      "the row places parameters in the UNPROTECTED header bucket, but this run is on the JOSE wire, whose compact serialisation has only one header. " +
         "Scope the row with `unsupported: { jose: … }`.",
     );
   }
 
   const key = await importJWK(kryptos.export("jwk") as never, kryptos.algorithm);
 
+  const protectedHeader = buckets?.protectedHeader ?? {};
+
+  // ⚠ THE FOREIGN LIBRARY ENFORCES `crit` ON ITS OWN PRODUCER SIDE, and refuses
+  // to sign a header naming an extension it has not been told it implements
+  // (`JOSENotSupported: Extension Header Parameter "ext" is not recognized`).
+  // That is RFC 7515 §4.1.11 read from the writing end, and `jose`'s `crit`
+  // option is how a producer declares the extensions it does implement. Deriving
+  // the declaration from the row's own `crit` is what makes this a CONFORMANT
+  // third party shipping an extension rather than a malformed token: the point
+  // of the rows using it is that aegis must refuse a WELL-FORMED demand it
+  // cannot honour, which is a stronger statement than refusing a broken one.
+  const declared = protectedHeader.crit;
+  const crit = Array.isArray(declared)
+    ? Object.fromEntries(declared.map((member) => [String(member), true]))
+    : undefined;
+
   return new CompactSign(Buffer.from(JSON.stringify(claims), "utf8"))
     .setProtectedHeader({
       alg: kryptos.algorithm,
       kid: kryptos.id,
       ...(typ === undefined ? {} : { typ }),
+      // ⚠ LAST, so a row can restate a derived parameter deliberately — the same
+      // precedence the COSE producer gives its own protected entries. On this
+      // wire the JOSE name IS the key, so nothing is translated; the parameter
+      // travels exactly as the row spells it, including one aegis does not
+      // register, which is what a third party's own extension looks like.
+      ...protectedHeader,
     })
-    .sign(key);
+    .sign(key, crit === undefined ? undefined : { crit });
 };
 
 /**
@@ -787,28 +817,40 @@ const coseAlgorithmOf = (kryptos: IKryptos): number => {
 };
 
 /**
- * The row's extra COSE header entries, translated to the integer labels the
- * parameters are keyed under.
+ * The row's extra COSE header entries, translated to the labels the parameters
+ * are keyed under.
  *
- * ⚠ Through `coseByJose`, i.e. through AEGIS'S OWN registry, and that is
- * deliberate: the point of placing a parameter in the unprotected bucket is to
- * put it exactly where aegis WOULD read it from. A hand-picked label the reader
- * does not look at would make every such row pass for the wrong reason — the
- * parameter would be ignored because it was invisible, not because the placement
- * rule refused it.
+ * ⚠ A REGISTERED parameter goes through `coseByJose`, i.e. through AEGIS'S OWN
+ * registry, and that is deliberate: the point of placing a parameter is to put
+ * it exactly where aegis WOULD read it from. A hand-picked label the reader does
+ * not look at would make every such row pass for the wrong reason — the
+ * parameter would be ignored because it was invisible, not because the rule
+ * under test refused it. It still THROWS for a registered parameter COSE cannot
+ * carry (`x5t#S256`), which is a row asking for a label that does not exist.
+ *
+ * ⚠ A name the registry does not know AT ALL is written as its TEXT label
+ * instead. RFC 9052 §1.5 defines `label = int / tstr`, so that is a label in its
+ * own right, and it is how a third party's own extension parameter actually
+ * travels — there is no integer for aegis to look up, and inventing one would be
+ * the hand-picked label the paragraph above rules out. This is the only way to
+ * state a rule ABOUT a foreign extension, which is a capability aegis's own
+ * writers cannot produce (headers are a closed set).
  */
-const coseBucketEntries = (bag: Dict | undefined): Array<[number, unknown]> =>
-  Object.entries(bag ?? {}).map(([jose, value]) => [coseByJose(jose), value]);
+const coseBucketEntries = (bag: Dict | undefined): Array<[CoseLabel, unknown]> =>
+  Object.entries(bag ?? {}).map(([jose, value]) => [
+    headerByJose(jose) === undefined ? jose : coseByJose(jose),
+    value,
+  ]);
 
 const signForeignCose = async (
   claims: Dict,
   typ: string | undefined,
   kryptos: IKryptos,
-  buckets: CoseBucketsGiven | undefined,
+  buckets: ForeignHeadersGiven | undefined,
 ): Promise<string> => {
   const jwk = kryptos.export("jwk") as Dict;
 
-  const protectedEntries: Array<[number, unknown]> = [
+  const protectedEntries: Array<[CoseLabel, unknown]> = [
     [Headers.Algorithm, coseAlgorithmOf(kryptos)],
   ];
 
@@ -1043,8 +1085,8 @@ const materialise = async (
       return {
         token:
           wire === "cose"
-            ? await signForeignCose(claims, typ, kryptos, artifact.coseBuckets)
-            : await signForeignJose(claims, typ, kryptos, artifact.coseBuckets),
+            ? await signForeignCose(claims, typ, kryptos, artifact.buckets)
+            : await signForeignJose(claims, typ, kryptos, artifact.buckets),
         // The producer emits a claims token on either wire; `format` is what the
         // READ side reports, and a foreign token is read exactly as an aegis one.
         // A shared secret makes the COSE structure a COSE_Mac0, which reads back

@@ -4,7 +4,7 @@
  * claim, which is why they live here and not on the base.
  */
 
-import type { ParamSpec } from "./param-spec.js";
+import type { ParamSpec, WhenEmpty } from "./param-spec.js";
 
 /**
  * How a header parameter's VALUE is shaped, and (on the WRITE side) the
@@ -48,7 +48,13 @@ export type HeaderCodec =
  */
 export type HeaderPlacement = "protected" | "unprotected" | "either";
 
-export type HeaderSpec<D = unknown> = ParamSpec<D, HeaderCodec> & {
+/**
+ * ⚠ The whole {@link WhenEmpty} vocabulary, unnarrowed: the header side is the
+ * one that owns `refuse`. A header parameter can state a guarantee the RECIPIENT
+ * enforces (`x5t#S256`), and an empty one of those has no safe disposal — see
+ * `internal/header/refuse-empty-headers.ts`.
+ */
+export type HeaderSpec<D = unknown> = ParamSpec<D, HeaderCodec, WhenEmpty> & {
   /**
    * Which bucket the parameter may occupy — see {@link HeaderPlacement}.
    *
@@ -72,12 +78,54 @@ export type HeaderSpec<D = unknown> = ParamSpec<D, HeaderCodec> & {
    */
   placement: HeaderPlacement;
   /**
-   * Whether aegis treats this parameter as a CRITICAL extension a recipient must
-   * understand (RFC 7515 §4.1.11 / RFC 9052 §3.1) — i.e. whether it belongs in
-   * `crit`. Every entry is `false` today: aegis implements no crit extension, so
-   * any parameter a producer marks critical is by definition one aegis does not
-   * understand. The column exists so the first extension parameter has to say so
-   * here rather than in a kit branch.
+   * MAY THIS PARAMETER BE NAMED IN `crit` — i.e. is it a critical extension
+   * AEGIS IMPLEMENTS? ONE cell, read from BOTH directions through ONE predicate
+   * (`internal/header/is-crit-eligible.ts`), which is what makes it a gate
+   * rather than a note:
+   *
+   *   - MINT   `internal/header/assert-crit-eligible.ts`, at both wire builders,
+   *            refuses a caller's `crit` naming a parameter whose cell is
+   *            `false` — or a name the registry does not know at all.
+   *   - VERIFY `internal/utils/reject-unknown-critical.ts` accepts a member
+   *            whose cell is `true` and refuses every other.
+   *
+   * One column both ways is the whole point: a token aegis mints is a token
+   * aegis verifies.
+   *
+   * ⚠ THE TWO DIRECTIONS ARE NOT SYMMETRIC IN WHAT THEY CAN OBSERVE, and saying
+   * they are would overstate what the read side proves. On MINT all three
+   * outcomes are visible — `true`, `false`, and no entry — because the gate is
+   * the first thing a caller's `crit` meets. On VERIFY only `true` versus "no
+   * registry entry at all" is: `rejectUnknownCritical` runs `validateCrit`
+   * first, which refuses every IANA-registered name, and `oid` is the ONLY
+   * registered parameter that is both crit-eligible and absent from that list —
+   * so the `false` branch has no reachable input on the read path today and a
+   * loop asking merely "is this parameter registered" would behave identically.
+   *
+   * That is a fact about today's registry, not a property of the design, and it
+   * is pinned in `reject-unknown-critical.test.ts` in both directions: one test
+   * binds the two sources (an eligible parameter must survive `validateCrit`, or
+   * aegis would mint a token it refuses on arrival), and one asserts the
+   * unreachability itself — so the day a second non-IANA parameter is registered
+   * ineligible, or the IANA list is trimmed, the tripwire fires and the read
+   * side owes a probe it cannot be given now.
+   *
+   * `false` on every entry but `oid`. RFC 7515 §4.1.11 forbids a producer naming
+   * a parameter *"defined by this specification or [JWA] for use with JWS"* in
+   * `crit`, and `oid` is the only parameter aegis owns that neither document
+   * defines — the other twenty JOSE names are IANA-registered JOSE header
+   * parameters. The eligible cell itself states what aegis IMPLEMENTING an
+   * extension means; see the `oid` entry.
+   *
+   * ⚠ NAMED FOR THE QUESTION, not for the thing, and deliberately: `critical`
+   * meant three other things in this package — the `crit` PARAMETER's domain
+   * name (`header-registry.ts`), the public `DomainTokenHeader.critical` field
+   * holding the member list, and the `{ kind: "critical" }` CODEC that remaps
+   * those members — so a boolean column called `critical` sat one character from
+   * all three and read as a contradiction on the very entry it mattered on
+   * (`domain: "critical" … critical: false`). Spelled this way that line is a
+   * true sentence: the `crit` parameter may not itself be named in `crit`, which
+   * is RFC 7515 §4.1.11's first prohibition applied to `crit` itself.
    */
-  critical: boolean;
+  critEligible: boolean;
 };

@@ -61,12 +61,20 @@ import { rejectUnknownCritical } from "./reject-unknown-critical.js";
  *
  * ⚠ THE SHAPE, counted two ways, because the two numbers differ and mixing them
  * has already produced a wrong claim here: SIX read paths (`jws` `jwt` `jwe`
- * `cws` `cwt` `cwm`) reach this through FOUR call sites — the three JOSE kits
- * plus `verifyCoseStructure`, which serves `CwsKit.verify` and `verifyCwt`, and
- * `verifyCwt` in turn serves BOTH `CwtKit` and `CwmKit`. Unifying the order
+ * `cws` `cwt` `cwm`) reach THIS PAIR through FOUR call sites — the three JOSE
+ * kits plus `verifyCoseStructure`, which serves `CwsKit.verify` and `verifyCwt`,
+ * and `verifyCwt` in turn serves BOTH `CwtKit` and `CwmKit`. Unifying the order
  * changed the verdict for THREE formats (`cws`, `cwt`, `cwm`) across TWO code
  * sites. `cwm` is the one that is easy to lose: it has no kit of its own on this
  * path, so a count of files misses it and its refusal changed all the same.
+ *
+ * ⚠ THOSE NUMBERS COUNT THIS PAIR, NOT `rejectUnknownCritical`, and the two are
+ * not the same set — `CweKit.decrypt` calls the crit gate DIRECTLY, as a FIFTH
+ * site, and runs no algorithm-match at all. That is not an omission: a
+ * COSE_Encrypt0 carries the content encryption in label 1 rather than a
+ * key-management `alg` to compare against a configured one, so there is no
+ * second gate for an order to be stated between. So `cwe` is a seventh format
+ * that refuses a hostile `crit` and simply has no place in this file.
  *
  * ⚠ Both callers must pass the INTEGRITY-PROTECTED header, JOSE-named. On COSE
  * that is the protected bucket alone — the unprotected one is covered by nothing

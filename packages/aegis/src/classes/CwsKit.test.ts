@@ -142,8 +142,8 @@ describe("CwsKit — caller-controlled protected / unprotected header bags", () 
     expect(
       codeOf(() =>
         kit.sign(Buffer.from("claims"), {
-          header: { crit: ["cty"] },
-          unprotected: { cty: "application/example" },
+          header: { crit: ["oid"] },
+          unprotected: { oid: "1.2.3.4" },
         }),
       ),
     ).toBe("cose_crit_param_unprotected");
