@@ -4,8 +4,8 @@
  *
  * It is built on the shared {@link ParamSpec} base (`internal/registry/`), which
  * the header registry shares — a claim and a header parameter are the same kind
- * of thing (a named parameter with a wire spelling, a value shape, a provenance)
- * and used to be described by two unrelated types.
+ * of thing (a named parameter with a wire spelling, a value shape and an
+ * emptiness verdict) and used to be described by two unrelated types.
  *
  * Both encoders consume this — the JOSE encoder maps `domain → wire.jose`, the
  * COSE encoder `domain → wire.cose`. Keeping it in one table is the anti-drift
@@ -21,7 +21,8 @@
  * `wire.cose` decides the CBOR map key for a claim, governed by one rule: pick
  * whichever key is smaller on the wire.
  *   - A private-use integer label (`< -65536`) always encodes to 5 CBOR bytes.
- *   - An N-character string key always encodes to N + 1 CBOR bytes.
+ *   - An N-character string key encodes to N + 1 CBOR bytes for N < 24, and
+ *     N + 2 above that (CBOR switches to a 2-byte head at 24).
  * So the integer wins only when it saves bytes — i.e. when the JOSE name is
  * 5 characters or longer (≥ 6 string bytes). For names of 4 characters or
  * fewer the string is the same size or smaller, so the claim stays string-keyed.
@@ -69,20 +70,21 @@
  * is that the value survives to where the profile can see it, which is what
  * `"keep"` means.
  *
- * --- Columns that are currently CONSTANT ---
+ * --- What this registry does NOT declare ---
  *
- * `direction` and `matchable` are the same for all 78 entries, and that is an
- * honest reading of the code rather than an omission: every registered claim
- * flows through the translator in BOTH directions (`domainToWire` /
- * `wireToDomain` iterate the same table), and `jwt-identity-matchers.ts` builds a
- * predicate for ANY key that resolves via `claimByDomain`, so every claim is
- * assertable. They are declared per entry anyway — the columns exist so a future
- * claim that is mint-only or non-assertable has somewhere to say so, and a
- * default would let it stay silent.
+ * `direction`, `matchable` and `provenance` were three columns here, 78 cells
+ * each, and NOTHING read any of them. Each was constant or near-constant, so a
+ * cell restated the registry it sat in rather than describing its entry, and the
+ * question each claimed to answer is already asked in code: the translator
+ * iterates the same table in both directions (`domainToWire` / `wireToDomain`),
+ * `jwt-identity-matchers.ts` builds a predicate for ANY key resolving via
+ * `claimByDomain`, and "is there a caller door, and which one?" is executed by
+ * `__fixtures__/spec-dispositions.ts` rather than remembered. A column that
+ * answers a question the code is already asking is load-bearing; one invented to
+ * look complete is a second source of truth waiting to disagree.
  */
 
 import type { ClaimSpec } from "../registry/claim-spec.js";
-import type { Directions, Registry } from "../registry/param-spec.js";
 import type { Wire } from "../registry/wire.js";
 import {
   type WireKey,
@@ -119,9 +121,6 @@ const labelled = (jose: string, label: number, cose = jose): Record<Wire, WireKe
   cose: wireLabel(label, cose),
 });
 
-/** Every claim flows in both directions — see the "constant columns" note above. */
-const BOTH: Directions = ["mint", "verify"];
-
 /**
  * The two representative NumericDate samples, split by {@link ClaimSpec.temporal}.
  *
@@ -151,9 +150,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "issuer",
     wire: labelled("iss", 1),
     codec: { kind: "text" },
-    provenance: "issuer",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "https://issuer.lindorm.test",
     bucket: "claims",
@@ -164,9 +160,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "subject",
     wire: labelled("sub", 2),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "subject_sample",
     bucket: "claims",
@@ -180,9 +173,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     // the translator; it is data now.
     wire: labelled("aud", 3),
     codec: { kind: "array", scalar: "wrap" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: ["https://api.lindorm.test"],
     bucket: "claims",
@@ -196,9 +186,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "expiresAt",
     wire: labelled("exp", 4),
     codec: { kind: "date" },
-    provenance: "computed",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: SAMPLE_FUTURE_DATE,
     bucket: "claims",
@@ -210,9 +197,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "notBefore",
     wire: labelled("nbf", 5),
     codec: { kind: "date" },
-    provenance: "computed",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: SAMPLE_PAST_DATE,
     bucket: "claims",
@@ -224,9 +208,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "issuedAt",
     wire: labelled("iat", 6),
     codec: { kind: "date" },
-    provenance: "computed",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: SAMPLE_PAST_DATE,
     bucket: "claims",
@@ -234,16 +215,15 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     temporal: "past",
     domainClaim: true,
   },
-  // CWT cti (RFC 8392 label 7). The one genuine PER-WIRE codec: a text string on
-  // JOSE, its raw UTF-8 bytes on COSE. That divergence used to be spelled as a
-  // `bstr` value kind the JOSE translator silently treated as text.
+  // CWT cti (RFC 8392 label 7). A PER-WIRE codec: a text string on JOSE, its raw
+  // UTF-8 bytes on COSE. That divergence used to be spelled as a `bstr` value
+  // kind the JOSE translator silently treated as text. The `encoding` says WHICH
+  // bytes — `cti` is the token id's own UTF-8 (RFC 8392 §3.1.7), not a decode of
+  // some alphabet, and the three OIDC hashes take the other answer.
   {
     domain: "tokenId",
     wire: labelled("jti", 7, "cti"),
-    codec: { kind: "text", per: { cose: { kind: "bstr" } } },
-    provenance: "computed",
-    direction: BOTH,
-    matchable: true,
+    codec: { kind: "text", per: { cose: { kind: "bstr", encoding: "utf8" } } },
     sensitivity: "public",
     sample: "token_id_sample",
     bucket: "claims",
@@ -255,9 +235,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "confirmation",
     wire: labelled("cnf", 8),
     codec: { kind: "bespoke", bespoke: "confirmation" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     // The `keyId` member is the one confirmation form BOTH wires carry — a
     // thumbprint (`jkt`) has no COSE representation (RFC 9679 `ckt` hashes the
@@ -274,9 +251,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "scope",
     wire: labelled("scope", 9),
     codec: { kind: "array", scalar: "spaced" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: ["openid", "profile"],
     bucket: "claims",
@@ -313,9 +287,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "authContextClassReference",
     wire: named("acr"),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "urn:lindorm:acr:mfa",
     bucket: "claims",
@@ -326,9 +297,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "authMethods",
     wire: named("amr"),
     codec: { kind: "array", scalar: "strict" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: ["pwd", "otp"],
     bucket: "claims",
@@ -342,9 +310,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "authorizedParty",
     wire: named("azp"),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "client_sample",
     bucket: "claims",
@@ -355,9 +320,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "vectorOfTrust",
     wire: named("vot"),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "P1.Cc.Cd",
     bucket: "claims",
@@ -368,9 +330,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "vectorTrustMark",
     wire: named("vtm"),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "https://issuer.lindorm.test/vtm",
     bucket: "claims",
@@ -382,9 +341,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "act",
     wire: named("act"),
     codec: { kind: "bespoke", bespoke: "act" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: { subject: "actor_sample" },
     bucket: "claims",
@@ -398,9 +354,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "grantType",
     wire: named("gty"),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "authorization_code",
     bucket: "claims",
@@ -412,9 +365,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "sessionId",
     wire: named("sid"),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "session_sample",
     bucket: "claims",
@@ -426,9 +376,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "transactionId",
     wire: named("txn"),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "txn_sample",
     bucket: "claims",
@@ -439,9 +386,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "levelOfAssurance",
     wire: named("loa"),
     codec: { kind: "int" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
@@ -453,9 +397,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "authenticatorAssuranceLevel",
     wire: named("aal"),
     codec: { kind: "int" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
@@ -467,9 +408,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "identityAssuranceLevel",
     wire: named("ial"),
     codec: { kind: "int" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
@@ -481,9 +419,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "federationAssuranceLevel",
     wire: named("fal"),
     codec: { kind: "int" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: 2,
     bucket: "claims",
@@ -496,9 +431,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "authFactorReference",
     wire: named("afr"),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "2fa",
     bucket: "claims",
@@ -510,9 +442,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "authFactorCategories",
     wire: named("afc"),
     codec: { kind: "array", scalar: "strict" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: ["knowledge", "possession"],
     bucket: "claims",
@@ -524,9 +453,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "sessionHint",
     wire: named("sih"),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "session_hint_sample",
     bucket: "claims",
@@ -537,9 +463,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "subjectHint",
     wire: named("suh"),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "subject_hint_sample",
     bucket: "claims",
@@ -556,28 +479,30 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   {
     domain: "accessTokenHash",
     wire: labelled("at_hash", P(0)),
-    codec: { kind: "bespoke", bespoke: "hash" },
-    provenance: "computed",
-    direction: BOTH,
-    matchable: true,
+    // OIDC Core §3.1.3.6: the domain value is the base64url left-half digest. On
+    // JOSE that string IS the wire form; on COSE the bytes it decodes to are.
+    // ⚠ AEGIS POLICY, not a spec requirement: the OIDC hashes have NO registered
+    // CWT claim, so they ride private-use labels and nobody standardised a byte
+    // form. COSE is binary-native, and carrying the b64url TEXT would spend 4
+    // bytes per 3, so aegis carries the decoded bytes.
+    codec: { kind: "text", per: { cose: { kind: "bstr", encoding: "b64u" } } },
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
     // KEEP: the OIDC Core §3.1.3.6 / §3.3.2.11 hashes BIND the id_token to another
     // artifact. Pruned, the token is unbound — the substitution surface; an empty
-    // digest matches nothing and is refused, which is the safe direction. Provenance
-    // is `computed`, so aegis's own mint cannot reach the cell: it states the
-    // direction a caller-supplied one must fail in.
+    // digest matches nothing and is refused, which is the safe direction. Aegis's
+    // own mint cannot reach the cell — `assemble-common-claims.ts` derives the
+    // digest or omits the claim — so it states the direction a caller-supplied one
+    // must fail in.
     whenEmpty: "keep",
     domainClaim: true,
   },
   {
     domain: "codeHash",
     wire: labelled("c_hash", P(1)),
-    codec: { kind: "bespoke", bespoke: "hash" },
-    provenance: "computed",
-    direction: BOTH,
-    matchable: true,
+    // The `at_hash` codec argument, for the authorization code.
+    codec: { kind: "text", per: { cose: { kind: "bstr", encoding: "b64u" } } },
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
@@ -588,10 +513,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   {
     domain: "stateHash",
     wire: labelled("s_hash", P(2)),
-    codec: { kind: "bespoke", bespoke: "hash" },
-    provenance: "computed",
-    direction: BOTH,
-    matchable: true,
+    // The `at_hash` codec argument, for the `state` value.
+    codec: { kind: "text", per: { cose: { kind: "bstr", encoding: "b64u" } } },
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
@@ -603,9 +526,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "nonce",
     wire: labelled("nonce", P(3)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "nonce_sample",
     bucket: "claims",
@@ -616,9 +536,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "authTime",
     wire: labelled("auth_time", P(4)),
     codec: { kind: "date" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: SAMPLE_PAST_DATE,
     bucket: "claims",
@@ -631,9 +548,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "authorizationDetails",
     wire: labelled("authorization_details", P(5)),
     codec: { kind: "bespoke", bespoke: "authDetails" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: [{ type: "payment_initiation" }],
     bucket: "claims",
@@ -647,9 +561,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "mayAct",
     wire: labelled("may_act", P(6)),
     codec: { kind: "bespoke", bespoke: "act" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: { subject: "actor_sample" },
     bucket: "claims",
@@ -662,9 +573,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "entitlements",
     wire: labelled("entitlements", P(7)),
     codec: { kind: "array", scalar: "strict" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: ["entitlement_sample"],
     bucket: "claims",
@@ -683,9 +591,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "groups",
     wire: labelled("groups", P(8)),
     codec: { kind: "array", scalar: "strict" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: ["group_sample"],
     bucket: "claims",
@@ -698,9 +603,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "roles",
     wire: labelled("roles", P(9)),
     codec: { kind: "array", scalar: "spaced" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: ["role_sample"],
     bucket: "claims",
@@ -713,9 +615,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "permissions",
     wire: labelled("permissions", P(10)),
     codec: { kind: "array", scalar: "spaced" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: ["permission_sample"],
     bucket: "claims",
@@ -727,9 +626,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "clientId",
     wire: labelled("client_id", P(11)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "client_sample",
     bucket: "claims",
@@ -745,9 +641,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "subjectId",
     wire: labelled("sub_id", P(12)),
     codec: { kind: "bespoke", bespoke: "subId" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: { format: "opaque", id: "subject_sample" },
     bucket: "claims",
@@ -761,9 +654,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "events",
     wire: labelled("events", P(13)),
     codec: { kind: "bespoke", bespoke: "events" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: { "https://schemas.lindorm.test/event/sample": {} },
     bucket: "claims",
@@ -777,9 +667,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "tenantId",
     wire: labelled("tenant_id", P(14)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "tenant_sample",
     bucket: "claims",
@@ -794,9 +681,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "conformsTo",
     wire: labelled("conforms_to", P(15)),
     codec: { kind: "array", scalar: "spaced" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: ["strict"],
     bucket: "claims",
@@ -821,9 +705,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "nationalIdentityNumber",
     wire: labelled("national_identity_number", P(16)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "sensitive",
     sample: "19900101-1234",
     bucket: "claims",
@@ -833,9 +714,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "nationalIdentityNumberVerified",
     wire: labelled("national_identity_number_verified", P(17)),
     codec: { kind: "bool" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "sensitive",
     sample: true,
     bucket: "claims",
@@ -845,9 +723,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "socialSecurityNumber",
     wire: labelled("social_security_number", P(18)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "sensitive",
     sample: "123-45-6789",
     bucket: "claims",
@@ -857,9 +732,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "socialSecurityNumberVerified",
     wire: labelled("social_security_number_verified", P(19)),
     codec: { kind: "bool" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "sensitive",
     sample: true,
     bucket: "claims",
@@ -881,9 +753,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "address",
     wire: labelled("address", P(20)),
     codec: { kind: "bespoke", bespoke: "address" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: { streetAddress: "Sample 1", postalCode: "00100", country: "SE" },
     bucket: "profile",
@@ -894,9 +763,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "email",
     wire: labelled("email", P(21)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "sample@lindorm.test",
     bucket: "profile",
@@ -906,9 +772,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "emailVerified",
     wire: labelled("email_verified", P(22)),
     codec: { kind: "bool" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: true,
     bucket: "profile",
@@ -918,9 +781,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "phoneNumber",
     wire: labelled("phone_number", P(23)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "+46700000000",
     bucket: "profile",
@@ -930,9 +790,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "phoneNumberVerified",
     wire: labelled("phone_number_verified", P(24)),
     codec: { kind: "bool" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: true,
     bucket: "profile",
@@ -942,9 +799,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "picture",
     wire: labelled("picture", P(25)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "https://cdn.lindorm.test/sample.png",
     bucket: "profile",
@@ -954,9 +808,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "birthdate",
     wire: labelled("birthdate", P(26)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "1990-01-01",
     bucket: "profile",
@@ -966,9 +817,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "familyName",
     wire: labelled("family_name", P(27)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Nordmann",
     bucket: "profile",
@@ -978,9 +826,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "gender",
     wire: labelled("gender", P(28)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "other",
     bucket: "profile",
@@ -990,9 +835,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "givenName",
     wire: labelled("given_name", P(29)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Sam",
     bucket: "profile",
@@ -1002,9 +844,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "locale",
     wire: labelled("locale", P(30)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "sv-SE",
     bucket: "profile",
@@ -1014,9 +853,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "middleName",
     wire: labelled("middle_name", P(31)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Lee",
     bucket: "profile",
@@ -1027,9 +863,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "name",
     wire: named("name"),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Sam Nordmann",
     bucket: "profile",
@@ -1039,9 +872,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "nickname",
     wire: labelled("nickname", P(32)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Sammy",
     bucket: "profile",
@@ -1051,9 +881,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "preferredUsername",
     wire: labelled("preferred_username", P(33)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "sam",
     bucket: "profile",
@@ -1064,9 +891,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "profile",
     wire: labelled("profile", P(34)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "https://lindorm.test/sam",
     bucket: "profile",
@@ -1079,9 +903,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "updatedAt",
     wire: labelled("updated_at", P(35)),
     codec: { kind: "date" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: SAMPLE_PAST_DATE,
     bucket: "profile",
@@ -1091,9 +912,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "website",
     wire: labelled("website", P(36)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "https://lindorm.test",
     bucket: "profile",
@@ -1103,9 +921,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "zoneinfo",
     wire: labelled("zoneinfo", P(37)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Europe/Stockholm",
     bucket: "profile",
@@ -1115,9 +930,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "displayName",
     wire: labelled("display_name", P(38)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Sam N",
     bucket: "profile",
@@ -1127,9 +939,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "honorific",
     wire: labelled("honorific", P(39)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Dr",
     bucket: "profile",
@@ -1139,9 +948,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "legalName",
     wire: labelled("legal_name", P(40)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Samuel Nordmann",
     bucket: "profile",
@@ -1151,9 +957,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "legalNameVerified",
     wire: labelled("legal_name_verified", P(41)),
     codec: { kind: "bool" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: true,
     bucket: "profile",
@@ -1163,9 +966,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "namingSystem",
     wire: labelled("naming_system", P(42)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     // The sample MUST be a member of `AegisProfileNamingSystem`. It was
     // `"western"`, which the union has never contained — the column is typed
@@ -1180,9 +980,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "preferredAccessibility",
     wire: labelled("preferred_accessibility", P(43)),
     codec: { kind: "array", scalar: "strict" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: ["high-contrast"],
     bucket: "profile",
@@ -1193,9 +990,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "preferredName",
     wire: labelled("preferred_name", P(44)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Sam",
     bucket: "profile",
@@ -1205,9 +999,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "pronouns",
     wire: labelled("pronouns", P(45)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "they/them",
     bucket: "profile",
@@ -1217,9 +1008,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "department",
     wire: labelled("department", P(46)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Engineering",
     bucket: "profile",
@@ -1229,9 +1017,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "jobTitle",
     wire: labelled("job_title", P(47)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Engineer",
     bucket: "profile",
@@ -1241,9 +1026,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "occupation",
     wire: labelled("occupation", P(48)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Engineer",
     bucket: "profile",
@@ -1253,9 +1035,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "organization",
     wire: labelled("organization", P(49)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "Lindorm",
     bucket: "profile",
@@ -1273,9 +1052,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domain: "username",
     wire: labelled("username", P(50)),
     codec: { kind: "text" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: true,
     sensitivity: "public",
     sample: "sam",
     bucket: "claims",
@@ -1283,17 +1059,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domainClaim: true,
   },
 ];
-
-/**
- * The claim registry. `unregistered: "passthrough"` states ONCE what makes the
- * claim side different from the header side: claims are an OPEN set, so a key
- * with no entry is a CUSTOM claim carried through (case-flipped, value
- * untouched), never dropped.
- */
-export const CLAIMS_REGISTRY: Registry<ClaimSpec> = {
-  specs: CLAIM_SPECS,
-  unregistered: "passthrough",
-};
 
 /**
  * Which WIRE NAME a claim spec carries — the one parameter that separates the

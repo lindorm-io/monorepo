@@ -3,7 +3,7 @@ import MockDate from "mockdate";
 import { describe, expect, test } from "vitest";
 import type { TokenProfile } from "../../types/index.js";
 import { assembleCommonClaims } from "../utils/assemble-common-claims.js";
-import { joseName } from "./claims-registry.js";
+import { CLAIM_SPECS, coseName, joseName } from "./claims-registry.js";
 import { domainToJose, wireToDomain, wireToFloorClaims } from "./translate.js";
 
 // The JOSE TOKEN read — what verify/parse run over a token's wire payload.
@@ -487,5 +487,96 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
 
     expect(claims.nonce).toBeUndefined();
     expect(custom.nonce).toBeUndefined();
+  });
+});
+
+/**
+ * The claim read resolves a name by asking whether the payload CARRIES it, and
+ * the payload is a stranger's: a decoded token, or the dict a public door was
+ * handed. `in` walks the prototype chain, so it answers YES for `toString`,
+ * `constructor`, `valueOf`, `hasOwnProperty` and `__proto__` on every object
+ * literal there is.
+ *
+ * ⚠ HONEST FRAMING, and it is the whole reason the second test below exists:
+ * with `in`, this is a LATENT fault, not a live one — no registered name collides
+ * with an `Object.prototype` member, so no lookup ever asks about one. That
+ * non-collision is the load-bearing fact, so it is DERIVED from the registry
+ * rather than asserted from memory; it is what would go red the day a claim named
+ * `constructor` is registered, at which point the `in` would have been a live
+ * fail-open.
+ */
+describe("a stranger's payload cannot answer through Object.prototype", () => {
+  const PROTOTYPE_MEMBERS: ReadonlyArray<string> = Object.getOwnPropertyNames(
+    Object.prototype,
+  );
+
+  test("no registered claim's DOMAIN or WIRE name is an Object.prototype member", () => {
+    // DERIVED from the registry, both vocabularies, because both are looked up:
+    // the token read asks for the wire name, the dict door asks for the domain
+    // name first and the wire name second.
+    const collisions = CLAIM_SPECS.filter(
+      (spec) =>
+        PROTOTYPE_MEMBERS.includes(spec.domain) ||
+        PROTOTYPE_MEMBERS.includes(joseName(spec)) ||
+        PROTOTYPE_MEMBERS.includes(coseName(spec)),
+    ).map((spec) => spec.domain);
+
+    expect(collisions).toEqual([]);
+  });
+
+  test("a payload carrying prototype-member keys resolves them into custom, verbatim", () => {
+    // `__proto__` must be an OWN key, which an object literal cannot give it —
+    // `{ __proto__: x }` sets the prototype instead. JSON.parse is the door a
+    // real token comes through, and it makes the key own.
+    const wire = JSON.parse(
+      '{"iss":"https://issuer.lindorm.test","toString":"not a function","constructor":"not a constructor","__proto__":{"injected":true},"hasOwnProperty":42}',
+    ) as Dict;
+
+    const { claims, custom } = joseToDomain(wire);
+
+    expect(claims.issuer).toBe("https://issuer.lindorm.test");
+    // Every prototype-named key is UNREGISTERED, so it belongs in `custom` with
+    // its VALUE untouched — and nothing it names may reach the claims bucket.
+    //
+    // ⚠ `__proto__` arrives as `proto`, and that is the token read's ordinary
+    // `customKey: camelCase` doing its job, not a special case: `camelCase`
+    // strips the underscores. Asserted rather than glossed over, because it is
+    // the one prototype-named key whose SURVIVING SPELLING matters — a `custom`
+    // bucket handed back with a literal `__proto__` key would be a pollution
+    // hazard for whatever the consumer spreads it into.
+    expect(Object.keys(custom).sort()).toEqual([
+      "constructor",
+      "hasOwnProperty",
+      "proto",
+      "toString",
+    ]);
+    expect(custom.toString).toBe("not a function");
+    expect(custom.constructor).toBe("not a constructor");
+    expect(custom.hasOwnProperty).toBe(42);
+    expect(custom.proto).toEqual({ injected: true });
+  });
+
+  test("the DICT door — which also asks by DOMAIN name — answers the same way", () => {
+    const wire = JSON.parse(
+      '{"subject":"user-1","valueOf":"not a function","propertyIsEnumerable":["nope"]}',
+    ) as Dict;
+
+    const { claims, custom } = wireToDomain(wire, joseName, "dict");
+
+    expect(claims.subject).toBe("user-1");
+    expect(custom).toEqual({
+      valueOf: "not a function",
+      propertyIsEnumerable: ["nope"],
+    });
+  });
+
+  test("an EMPTY payload resolves no claim at all", () => {
+    // The sharpest form of the same question: with `in`, every prototype member
+    // is present on `{}`, so a registry name that collided would resolve out of
+    // an empty object. Nothing may.
+    const { claims, custom } = joseToDomain({});
+
+    expect(claims).toEqual({});
+    expect(custom).toEqual({});
   });
 });

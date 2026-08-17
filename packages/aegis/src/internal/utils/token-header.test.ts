@@ -20,7 +20,7 @@ describe("data-driven header codec", () => {
       partyRecipient: "party-v-info",
     };
 
-    // `x5t` is kit-derived (provenance: "key"), so it arrives via the cert
+    // `x5t` is derived from the signing key, so it arrives via the cert
     // argument, not the caller-supplyable options — mirroring `x5t#S256`/`x5c`.
     const raw = mapTokenHeader(options, {
       certificateThumbprintSha1: "cert-sha1-thumbprint",

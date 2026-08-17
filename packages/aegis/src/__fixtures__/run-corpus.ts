@@ -259,6 +259,9 @@ const runMintCase = async (kase: MintCase, ctx: CorpusContext): Promise<ActResul
       sign: {
         key: { kryptos },
         tokenId: kase.options.tokenId,
+        accessTokenHash: kase.options.accessTokenHash,
+        codeHash: kase.options.codeHash,
+        stateHash: kase.options.stateHash,
         typ: kase.options.typ,
         header: kase.options.header,
         bindCertificate: kase.options.bindCertificate,

@@ -14,7 +14,6 @@ import { codecFor } from "../registry/param-spec.js";
 import { WIRE_TAGS } from "../registry/wire.js";
 import {
   CLAIM_SPECS,
-  CLAIMS_REGISTRY,
   claimByCose,
   claimByCoseName,
   claimByDomain,
@@ -109,9 +108,6 @@ const sampleMatchesCodec = (codec: ClaimCodec, sample: unknown): boolean => {
 
 const sampleMatchesBespoke = (bespoke: BespokeKind, sample: unknown): boolean => {
   switch (bespoke) {
-    case "hash":
-      // The OIDC hashes are already-derived b64url strings.
-      return isString(sample);
     case "confirmation":
     case "act":
     case "subId":
@@ -200,13 +196,12 @@ const EVERY_DOMAIN_CLAIM_IS_FROZEN: UnmarkedDomainClaim extends never
 describe("CLAIM_REGISTRY", () => {
   // --- shared ParamSpec base ------------------------------------------------
 
-  test("the registry declares claims an OPEN set", () => {
-    // The one thing that separates the claim registry from the header one, and
-    // the reason an unregistered key becomes a custom claim rather than being
-    // dropped. Stated once, at registry level.
-    expect(CLAIMS_REGISTRY.unregistered).toBe("passthrough");
-    expect(CLAIMS_REGISTRY.specs).toBe(CLAIM_SPECS);
-  });
+  // ⚠ A test stood here asserting `CLAIMS_REGISTRY.unregistered === "passthrough"`
+  // and `CLAIMS_REGISTRY.specs === CLAIM_SPECS` — the literal against itself, and
+  // nothing else. The wrapper is deleted with it. What the column CLAIMED is
+  // exercised where it actually happens: `translate.test.ts` requires an
+  // unregistered claim to reach `custom` with its value untouched, on both the
+  // domain read and the floor read.
 
   test("every entry is TOTAL over the wires", () => {
     // The compile-time guarantee is `wire: Record<Wire, WireKey>`; this is the
@@ -233,12 +228,8 @@ describe("CLAIM_REGISTRY", () => {
     }
   });
 
-  test("every entry declares a non-empty direction and a required sample", () => {
+  test("every entry declares a required sample", () => {
     for (const spec of CLAIM_SPECS) {
-      expect(
-        spec.direction.length,
-        `${spec.domain} has an empty direction`,
-      ).toBeGreaterThan(0);
       expect(spec.sample, `${spec.domain} has no sample`).toBeDefined();
     }
   });
@@ -251,7 +242,8 @@ describe("CLAIM_REGISTRY", () => {
     // so a new ClaimCodec kind or BespokeKind is a COMPILE error here.
     for (const spec of CLAIM_SPECS) {
       // The BASE codec: `sample` is the DOMAIN-shaped value, and a per-wire
-      // override (tokenId's cose `bstr`) describes the wire form, not the domain.
+      // override (the token id and the three OIDC hashes, each `bstr` on COSE)
+      // describes the wire form, not the domain.
       expect(
         sampleMatchesCodec(spec.codec, spec.sample),
         `${spec.domain} sample does not match its ${describeCodec(spec.codec)} codec`,
@@ -259,15 +251,11 @@ describe("CLAIM_REGISTRY", () => {
     }
   });
 
-  test("every entry declares a valid provenance, sensitivity and bucket", () => {
-    const provenances = new Set(["caller", "key", "computed", "issuer"]);
+  test("every entry declares a valid sensitivity and bucket", () => {
     const sensitivities = new Set(["public", "sensitive"]);
     const buckets = new Set(["claims", "profile"]);
 
     for (const spec of CLAIM_SPECS) {
-      expect(provenances.has(spec.provenance), `${spec.domain} bad provenance`).toBe(
-        true,
-      );
       expect(sensitivities.has(spec.sensitivity), `${spec.domain} bad sensitivity`).toBe(
         true,
       );
@@ -275,33 +263,13 @@ describe("CLAIM_REGISTRY", () => {
     }
   });
 
-  test("the computed/issuer provenance sets are exactly the claims aegis produces itself", () => {
-    // Grounded in `assemble-common-claims.ts`: the mint clock (iat/nbf/exp), the
-    // generated token id, and the three derived OIDC hashes are produced by
-    // aegis; `iss` comes from the platform issuer identity. Everything else is
-    // caller input.
-    const withProvenance = (provenance: string) =>
-      new Set(
-        CLAIM_SPECS.filter((spec) => spec.provenance === provenance).map(
-          (spec) => spec.domain,
-        ),
-      );
-
-    expect(withProvenance("issuer")).toEqual(new Set(["issuer"]));
-    expect(withProvenance("computed")).toEqual(
-      new Set([
-        "expiresAt",
-        "notBefore",
-        "issuedAt",
-        "tokenId",
-        "accessTokenHash",
-        "codeHash",
-        "stateHash",
-      ]),
-    );
-    // No claim is derived from the signing key — that is a header-side provenance.
-    expect(withProvenance("key")).toEqual(new Set());
-  });
+  // ⚠ A `provenance` column stood here and TWO tests bound it to hand-written
+  // expected sets — mirroring, not deriving. Both are deleted with the column.
+  // Nothing is lost: the question the column claimed to answer is "is there a
+  // caller door, and which one?", and `__fixtures__/spec-dispositions.ts` answers
+  // it by NAMING the door and `Aegis.spec-matrix.test.ts` by RUNNING it. That
+  // artifact refused to derive from the column in its own words, which is the
+  // sharpest evidence the column answered a question no consumer asks.
 
   // --- name selectors --------------------------------------------------------
 
@@ -637,16 +605,53 @@ describe("CLAIM_REGISTRY", () => {
 
   // --- per-wire codec -------------------------------------------------------
 
-  test("tokenId is the ONE claim with a per-wire codec (text on JOSE, bstr on COSE)", () => {
+  test("the per-wire codec claims are frozen, in registry order (text on JOSE, bstr on COSE)", () => {
+    // EXACT and ORDERED, deliberately: a FIFTH per-wire codec has to be a
+    // decision someone took here, not something a registry edit slipped in.
+    // `toContain` would let one through.
     const perWire = CLAIM_SPECS.filter((spec) => spec.codec.per !== undefined).map(
       (spec) => spec.domain,
     );
 
-    expect(perWire).toEqual(["tokenId"]);
+    expect(perWire).toEqual(["tokenId", "accessTokenHash", "codeHash", "stateHash"]);
 
-    const tokenId = claimByDomain("tokenId")!;
-    expect(codecFor(tokenId, "jose").kind).toBe("text");
-    expect(codecFor(tokenId, "cose").kind).toBe("bstr");
+    for (const domain of perWire) {
+      const spec = claimByDomain(domain)!;
+      expect(codecFor(spec, "jose").kind, `${domain} on JOSE`).toBe("text");
+      expect(codecFor(spec, "cose").kind, `${domain} on COSE`).toBe("bstr");
+    }
+  });
+
+  test("the COSE byte ENCODING each per-wire claim declares is frozen", () => {
+    // ⚠ THE GUARD THE COLLAPSE OF `bespoke: "hash"` MADE NECESSARY. `"utf8"` and
+    // `"b64u"` are indistinguishable at the type level and produce DIFFERENT
+    // bytes on a signed wire: `cti` is the token id's own UTF-8, an OIDC hash is
+    // the 32 bytes its 43-char b64url string decodes to. Nothing else in the
+    // package would notice one flipping — `c_hash`/`s_hash` had no byte-shape
+    // assertion anywhere before this step, and the knob probes assert key
+    // PRESENCE only.
+    //
+    // DERIVED from `CLAIM_SPECS` on both sides: the SETS are computed, only the
+    // membership is frozen. A new per-wire claim lands in one of these two
+    // buckets and fails here until someone states which.
+    const byEncoding = (encoding: string): Array<string> =>
+      CLAIM_SPECS.filter((spec) => {
+        const cose = codecFor(spec, "cose");
+        return cose.kind === "bstr" && cose.encoding === encoding;
+      }).map((spec) => spec.domain);
+
+    expect(byEncoding("utf8")).toEqual(["tokenId"]);
+    expect(byEncoding("b64u")).toEqual(["accessTokenHash", "codeHash", "stateHash"]);
+
+    // And the two buckets ACCOUNT FOR EVERY `bstr` claim — otherwise a third
+    // encoding could be added and both assertions above would still pass.
+    const everyBstr = CLAIM_SPECS.filter(
+      (spec) => codecFor(spec, "cose").kind === "bstr",
+    ).map((spec) => spec.domain);
+
+    expect([...everyBstr].sort()).toEqual(
+      [...byEncoding("utf8"), ...byEncoding("b64u")].sort(),
+    );
   });
 
   test("codecFor falls back to the base codec where no override exists", () => {
@@ -671,15 +676,17 @@ describe("CLAIM_REGISTRY", () => {
 
   test("every bespoke claim maps to its frozen sub-kind (builder)", () => {
     // Frozen domain -> sub-kind mapping: claims sharing a builder share a
-    // sub-kind (act+mayAct -> "act", the three OIDC hashes -> "hash"). A future
-    // registry edit that re-routes a claim to a different builder fails here.
+    // sub-kind (act+mayAct -> "act"). A future registry edit that re-routes a
+    // claim to a different builder fails here.
+    //
+    // ⚠ The three OIDC hashes USED to be here under a `"hash"` sub-kind, and
+    // dropping out of this record is exactly why the byte-encoding guard below
+    // exists: a claim that stops being `bespoke` stops being pinned as a group
+    // by this test, so the group it moved INTO has to be pinned too.
     const FROZEN_BESPOKE: Record<string, string> = {
       confirmation: "confirmation",
       act: "act",
       mayAct: "act",
-      accessTokenHash: "hash",
-      codeHash: "hash",
-      stateHash: "hash",
       authorizationDetails: "authDetails",
       subjectId: "subId",
       events: "events",
@@ -694,24 +701,6 @@ describe("CLAIM_REGISTRY", () => {
     );
 
     expect(actual).toEqual(FROZEN_BESPOKE);
-  });
-
-  test("HASH_DOMAINS / ACT_DOMAINS derive from the registry to their frozen sets", () => {
-    // cwt-spec.ts derives these two COSE byte-shaping sets from the `bespoke`
-    // sub-kind. Freeze the previously-hardcoded literals and assert the
-    // registry-derived sets still equal them (byte-shaping must not drift).
-    const FROZEN_HASH_DOMAINS = ["accessTokenHash", "codeHash", "stateHash"];
-    const FROZEN_ACT_DOMAINS = ["act", "mayAct"];
-
-    const withBespoke = (bespoke: string) =>
-      new Set(
-        CLAIM_SPECS.filter(
-          (spec) => spec.codec.kind === "bespoke" && spec.codec.bespoke === bespoke,
-        ).map((spec) => spec.domain),
-      );
-
-    expect(withBespoke("hash")).toEqual(new Set(FROZEN_HASH_DOMAINS));
-    expect(withBespoke("act")).toEqual(new Set(FROZEN_ACT_DOMAINS));
   });
 
   // --- DomainClaims-membership drift guards --------------------------------

@@ -135,9 +135,9 @@ describe("buildJoseHeader", () => {
      * naming a specification-defined parameter in `crit`, so the eligibility gate
      * refuses those on the caller's bag before any tier is merged.
      *
-     * `oid` is `provenance: "caller"` in the registry, so no PRODUCTION path
-     * writes one into `derived`. It is placed there deliberately: this is a unit
-     * probe of the BUILDER, which knows nothing about provenance, and the
+     * `oid` is caller-supplied on every aegis path, so no PRODUCTION path writes
+     * one into `derived`. It is placed there deliberately: this is a unit probe of
+     * the BUILDER, which knows nothing about where a value came from, and the
      * cross-tier reach is the property under test.
      */
     test("a crit satisfied by ANOTHER tier is accepted", () => {

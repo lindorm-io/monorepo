@@ -7,7 +7,6 @@ import { isPrivateUseLabel } from "../registry/is-private-use-label.js";
 import {
   coseByJose,
   coseWireKey,
-  HEADER_REGISTRY,
   HEADER_SPECS,
   headerByCose,
   headerByDomain,
@@ -108,16 +107,15 @@ const sampleMatchesCodec = (codec: HeaderCodec, sample: unknown): boolean => {
   }
 };
 
-describe("HEADER_REGISTRY", () => {
+describe("HEADER_SPECS", () => {
   // --- shared ParamSpec base ------------------------------------------------
 
-  test("the registry declares headers a CLOSED set", () => {
-    // The one thing that separates the header registry from the claim one, and
-    // the reason `token-header.ts` drops an unregistered key in both directions.
-    // Stated once, at registry level.
-    expect(HEADER_REGISTRY.unregistered).toBe("drop");
-    expect(HEADER_REGISTRY.specs).toBe(HEADER_SPECS);
-  });
+  // ⚠ A test stood here asserting `HEADER_REGISTRY.unregistered === "drop"` and
+  // `HEADER_REGISTRY.specs === HEADER_SPECS` — the literal against itself, and
+  // nothing else. The wrapper is deleted with it. What the column CLAIMED is
+  // exercised where it actually happens: `token-header.test.ts` requires an
+  // unregistered key to be DROPPED on the write pass and on the read pass, and
+  // requires the prune never to reach one.
 
   test("every entry is TOTAL over the wires", () => {
     for (const spec of HEADER_SPECS) {
@@ -159,12 +157,8 @@ describe("HEADER_REGISTRY", () => {
     }
   });
 
-  test("every entry declares a non-empty direction and a required sample", () => {
+  test("every entry declares a required sample", () => {
     for (const spec of HEADER_SPECS) {
-      expect(
-        spec.direction.length,
-        `${spec.domain} has an empty direction`,
-      ).toBeGreaterThan(0);
       expect(spec.sample, `${spec.domain} has no sample`).toBeDefined();
     }
   });
@@ -239,50 +233,19 @@ describe("HEADER_REGISTRY", () => {
     }
   });
 
-  test("key-provenance params are exactly the kryptos-derived set", () => {
-    const key = HEADER_SPECS.filter((s) => s.provenance === "key").map(headerJoseName);
-    // `x5t` (SHA-1 thumbprint) is kit-derived like `x5t#S256`/`x5c` — the write
-    // side gates its emission behind a boolean, not a caller value.
-    expect(new Set(key)).toEqual(new Set(["alg", "kid", "x5t", "x5t#S256", "x5c"]));
-  });
-
-  test("computed-provenance params are exactly the kit-produced set", () => {
-    // `computed` means THE KIT WRITES IT, from something other than the key —
-    // the key-derived ones are the `key` row above. Three entries said `caller`
-    // while the code had never let a caller near them:
+  test("no header parameter is sensitive", () => {
+    // The one CONSTANT column left, and it is grounded: a header parameter is
+    // never encrypted content. Pinning it means the first parameter that breaks
+    // the pattern has to change this test deliberately.
     //
-    //  - `enc` — `JweKit` writes its own `this.encryption`;
-    //  - `p2c` — the PBES2 iteration count read back off the key-management
-    //    output, beside the `p2s` salt that was already declared `computed`;
-    //  - `typ` — every kit builds the full media type from the `tokenType`
-    //    PREFIX (`buildMediaType`), which is what the caller supplies instead.
-    //
-    // ⚠ Nothing READS this column yet, which is why the mistake survived. It
-    // matters the moment `KitCapabilities.reserved` is derived from it: all
-    // three ARE reserved on every row that can carry them, and a `caller`
-    // provenance would have derived them straight back out.
-    const computed = HEADER_SPECS.filter((s) => s.provenance === "computed").map(
-      headerJoseName,
-    );
-    expect(new Set(computed)).toEqual(
-      new Set(["enc", "epk", "iv", "p2c", "p2s", "tag", "typ"]),
-    );
-  });
-
-  test("no header parameter is issuer-stamped, matchable or sensitive", () => {
-    // These three columns are CONSTANT today, and each is grounded: `issuer`
-    // provenance is a claim-side concept; there is no header MATCHER door at
-    // all; and a header parameter is never encrypted content. Pinning them means
-    // the first parameter that breaks one of the patterns has to change this
-    // test deliberately.
-    //
-    // ⚠ `critEligible` was a FOURTH member of this list and is not one any more.
-    // It is pinned by name below instead, because it is no longer constant and a
-    // constant-column assertion would have to be weakened to admit the one `true`
-    // — which would stop saying anything about the other twenty.
+    // ⚠ `provenance`, `matchable` and `critEligible` were pinned here too. The
+    // first two are DELETED — no production code read either, and `matchable`
+    // was WRONG: every row said `false` beside a docstring claiming "there is no
+    // header MATCHER door at all", while `verify-token.ts:283` raises
+    // `token_type_mismatch` against `DomainAssert.tokenType`, which is
+    // header-derived. `critEligible` left this list earlier for the opposite
+    // reason — it stopped being constant and is pinned by name below.
     for (const spec of HEADER_SPECS) {
-      expect(spec.provenance, `${spec.domain} is issuer-stamped`).not.toBe("issuer");
-      expect(spec.matchable, `${spec.domain} is matchable`).toBe(false);
       expect(spec.sensitivity, `${spec.domain} is sensitive`).toBe("public");
     }
   });
@@ -386,18 +349,17 @@ describe("HEADER_REGISTRY", () => {
 
   test("the full RFC-registered additive set is present as normal caller entries", () => {
     // Caller-supplyable strings that the codec wires in both directions.
-    // (`x5t` is not in this set — it is `provenance: "key"`, kit-derived.)
+    // (`x5t` is not in this set — the kit derives it from the signing key.)
     for (const wire of ["x5u", "zip", "apu", "apv"]) {
       const spec = headerByJose(wire);
       expect(spec, `missing RFC param "${wire}"`).toBeDefined();
       expect(spec?.codec.kind).toBe("string");
-      expect(spec?.provenance).toBe("caller");
     }
   });
 
   test("the lindorm-proprietary oid param is registered", () => {
     expect(headerByJose("oid")?.domain).toBe("objectId");
-    expect(headerByDomain("objectId")?.provenance).toBe("caller");
+    expect(headerByDomain("objectId")).toBeDefined();
   });
 
   test("oid rides COSE under a lindorm private-use header label (< -65536, round-trips)", () => {
@@ -543,7 +505,7 @@ describe("HEADER_REGISTRY", () => {
     }
   });
 
-  test("every entry declares a valid codec kind and provenance", () => {
+  test("every entry declares a valid codec kind", () => {
     const kinds = new Set([
       "string",
       "url",
@@ -553,21 +515,18 @@ describe("HEADER_REGISTRY", () => {
       "array",
       "critical",
     ]);
-    const provenances = new Set(["caller", "key", "computed", "issuer"]);
     for (const spec of HEADER_SPECS) {
       expect(kinds.has(spec.codec.kind), `${spec.domain} has invalid codec kind`).toBe(
-        true,
-      );
-      expect(provenances.has(spec.provenance), `${spec.domain} bad provenance`).toBe(
         true,
       );
     }
   });
 
   test("no header parameter carries a per-wire codec override", () => {
-    // The per-wire codec exists for the claim side (`jti` text / `cti` bstr).
-    // No header parameter needs one today: a parameter either has the same shape
-    // on both wires or is `absent` on COSE entirely.
+    // The per-wire codec exists for the claim side (the token id and the three
+    // OIDC hashes: text on JOSE, bytes on COSE). No header parameter needs one
+    // today: a parameter either has the same shape on both wires or is `absent`
+    // on COSE entirely.
     for (const spec of HEADER_SPECS) {
       expect(spec.codec.per, `${spec.domain} has a per-wire codec`).toBeUndefined();
     }

@@ -21,8 +21,9 @@ import type { AegisClaimsWire } from "./aegis-claims-wire.js";
  * sensitive identity claims travel FLAT too but are `sensitivity: "sensitive"`, so
  * they are NOT `AegisClaimsWire` members.
  *
- * ⚠ `jti` is `text` here, not `bstr`: the byte-string form is a COSE-ONLY
- * per-wire codec (`cti`), and this witness describes the JOSE wire.
+ * ⚠ `jti` and the three OIDC hashes are `text` here, not `bstr`: the byte-string
+ * form is a COSE-ONLY per-wire codec (`cti`, `at_hash`/`c_hash`/`s_hash`), and
+ * this witness describes the JOSE wire.
  *
  * `satisfies` (not a type annotation) is deliberate: it enforces exact-key
  * coverage of `keyof AegisClaimsWire` yet PRESERVES each entry's literal kind, so the
@@ -40,12 +41,12 @@ const JWT_CLAIMS_WIRE_KINDS = {
   // OIDC Core
   acr: "text",
   amr: "array",
-  at_hash: "bespoke",
+  at_hash: "text",
   auth_time: "date",
   azp: "text",
-  c_hash: "bespoke",
+  c_hash: "text",
   nonce: "text",
-  s_hash: "bespoke",
+  s_hash: "text",
   vot: "text",
   vtm: "text",
   // RFC 7800 proof-of-possession

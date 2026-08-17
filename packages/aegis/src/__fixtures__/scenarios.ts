@@ -1418,6 +1418,91 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     },
   },
   {
+    id: "vouching-for-a-binding-cannot-supply-one-the-token-never-stated",
+    title:
+      "a caller vouching that a binding was already proven is still refused a confirmation that binds no key",
+    rationale:
+      "Vouching says the proof was checked upstream — a gateway that validated it and forwarded the token — so it substitutes for the PROOF, never for the binding the proof was checked against. A confirmation whose thumbprint names nothing gives the upstream checker nothing to have checked, so the vouch attests to something that cannot have happened, and honouring it turns the weakest possible confirmation into the widest possible acceptance. A verifier must refuse a constraint it cannot make sense of on every path that reaches it, including the paths where it is told not to look.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          iat: NOW,
+          exp: NOW + 120,
+          jti: "token-1",
+          cnf: { jkt: "" },
+        },
+        options: { tokenType: "access" },
+      },
+    ],
+    when: [{ step: "verify", options: { trustBoundThumbprint: true } }],
+    // ⚠ `data` IS pinned on a row carrying a knownDefect, against the general
+    // rule above, and for the same reason the claim-vocabulary row pins one: it
+    // is read off real errors rather than guessed at. Every refusal the policy
+    // gate throws stamps `data: { format }` — the empty-thumbprint row above is
+    // GREEN on exactly that shape — while the proof COMPARISON's own refusal
+    // carries no `data` at all
+    // (`src/internal/utils/verify-dpop-proof.ts#if (thumbprint !== expectedThumbprint) {`).
+    // So `format` is precisely the discriminator between a refusal that judged
+    // the CONFIRMATION and one that judged the presenter's PROOF, which is what
+    // these two rows are about.
+    then: [{ step: "rejects", error: "AegisDomainError", data: { format: "jwt" } }],
+    knownDefect:
+      "`src/internal/utils/apply-verify-policy.ts#if (!options.trustBoundThumbprint) {` — the vouch is honoured as the last word on this path instead of as a substitute for the PROOF alone. The bound thumbprint is the empty string, which `isClaimOmitted` correctly reports as NAMED, so the unbound short-circuit (`src/internal/utils/apply-verify-policy.ts#if (isClaimOmitted(boundThumbprint)) return { dpop: undefined };`) is not taken; the only refusal left on the no-proof path is the `dpop_proof_required` throw, and `trustBoundThumbprint: true` skips it, so the function returns and the token verifies as a plain bearer. The verdict this row states is about the CONFIRMATION rather than about the proof — NAMED but not SATISFIED, `isClaimOmitted(x) === false && isClaimSatisfied(x) === false` — and it must run as ONE check AHEAD of the three DPoP branches: a per-branch version leaves this cell open, because vouching means the proof was already checked upstream and there is nothing to have checked when the thumbprint names nothing.",
+    unsupported: {
+      cose: NO_JKT_ON_COSE,
+    },
+  },
+  {
+    id: "a-proof-cannot-be-checked-against-a-confirmation-that-binds-no-key",
+    title:
+      "presenting a real proof of possession against a confirmation that binds no key is refused",
+    rationale:
+      "A proof of possession is only meaningful against the key the token names, so a presenter offering a perfectly valid proof for a confirmation that names no key has demonstrated possession of nothing the token asked about. The refusal must come from the confirmation being unusable rather than from the comparison failing: a verifier that reaches the comparison at all has accepted the binding as something checkable, and would report the presenter's proof as the problem when the token is.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          iat: NOW,
+          exp: NOW + 120,
+          jti: "token-1",
+          cnf: { jkt: "" },
+        },
+        options: { tokenType: "access" },
+      },
+    ],
+    when: [
+      {
+        step: "verify",
+        dpopProof: {
+          key: "ec-sig",
+          tokenId: "proof-1",
+          httpMethod: "GET",
+          httpUri: "https://rs.lindorm.io/resource",
+        },
+      },
+    ],
+    // The `data` pin is what makes this row about the CONFIRMATION rather than
+    // about the proof — see the note on the vouch row above for why `format` is
+    // the discriminator and why it is read rather than guessed.
+    then: [{ step: "rejects", error: "AegisDomainError", data: { format: "jwt" } }],
+    knownDefect:
+      "The presentation IS refused, but by the wrong gate and about the wrong party. `src/internal/utils/apply-verify-policy.ts#expectedThumbprint: boundThumbprint,` — with a proof supplied, the only question asked of the confirmation is `isClaimOmitted`, which the empty string passes as NAMED, so the empty string is handed to `verifyDpopProof` as the thumbprint to match and the comparison runs. It fails at `src/internal/utils/verify-dpop-proof.ts#if (thumbprint !== expectedThumbprint) {` with `dpop_thumbprint_mismatch`, an `AegisDomainError` carrying NO `data` — a refusal that names the presenter's key as the problem when the token's confirmation is. The named-but-not-satisfied verdict (`isClaimOmitted(x) === false && isClaimSatisfied(x) === false`) must run ahead of this branch, so the refusal comes from the policy gate and carries its `format` like every other refusal there.",
+    unsupported: {
+      cose: NO_JKT_ON_COSE,
+    },
+  },
+  {
     id: "a-bound-token-verifies-when-the-caller-vouches-for-the-binding",
     title:
       "a token carrying a confirmation verifies when the caller states the binding is already proven",

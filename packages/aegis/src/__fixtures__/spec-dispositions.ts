@@ -24,12 +24,12 @@ import type { Wire } from "./scenarios.js";
  *  - `refused`       the parameter has no representation on that wire, and a
  *                    mint handed it must REFUSE rather than drop it. The matrix
  *                    requires the throw.
- *  - `notSuppliable` provenance is `key` / `computed` / `issuer`, so there is no
- *                    caller door at all. The matrix asserts what CAN be
- *                    asserted — that the parameter appears on the wire when the
- *                    operation that produces it runs — or, where even that is
- *                    unreachable, the entry says plainly that nothing is
- *                    assertable and why.
+ *  - `notSuppliable` there is no caller door at all — aegis derives the value
+ *                    from the key, the clock or the deployment identity. The
+ *                    matrix asserts what CAN be asserted — that the parameter
+ *                    appears on the wire when the operation that produces it
+ *                    runs — or, where even that is unreachable, the entry says
+ *                    plainly that nothing is assertable and why.
  *
  * ⚠ `refused` and `notSuppliable` ARE NOT ESCAPE HATCHES. A parameter a caller
  * CAN supply and that does NOT come back is neither: it is a `defect`, which
@@ -137,18 +137,25 @@ const NO_COSE_KEY_MANAGEMENT =
  * authored artifacts — so a new claim has no disposition and fails there.
  */
 export const CLAIM_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
-  // --- provenance "issuer" ---------------------------------------------------
+  // --- stamped from the deployment identity ----------------------------------
   issuer: {
     disposition: "roundTrip",
     door: "mint.issuer",
   },
 
-  // --- provenance "computed" -------------------------------------------------
+  // --- produced by aegis itself: the mint clock, the generated id, the hashes --
   //
   // ⚠ Only ONE of the seven is genuinely unsettable. The other six have a named
   // caller door — `options.sign` for the five scalars, `content.notBefore` for
-  // the sixth — so calling them notSuppliable because the registry column says
-  // "computed" would be reading the column instead of the surface.
+  // the sixth — so the door is what decides the disposition, never a summary of
+  // where the value usually comes from.
+  //
+  // ⚠ This paragraph is why the registry's `provenance` column is GONE. The
+  // column answered "where does the value usually come from?"; the only question
+  // a consumer asks is "is there a caller door, and which one?", and this table
+  // already answered it BY EXECUTION while explicitly refusing to derive from the
+  // column. A column contradicted by the one artifact organised around it is a
+  // second source of truth, not a fact.
   expiresAt: { disposition: "roundTrip", door: "mint.expires" },
   notBefore: CALLER,
   issuedAt: SIGN_OPTION,
@@ -157,7 +164,7 @@ export const CLAIM_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
   codeHash: SIGN_OPTION,
   stateHash: SIGN_OPTION,
 
-  // --- provenance "caller", bucket "claims", public --------------------------
+  // --- caller-supplied, bucket "claims", public ------------------------------
   subject: CALLER,
   audience: CALLER,
   confirmation: CALLER,
@@ -308,8 +315,8 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
   },
 
   // ⚠ NOT a caller door. `bindCertificate` is a MODE — "chain" / "thumbprint" /
-  // "none" — and the VALUE is derived from the key's own certificate, which is
-  // what `provenance: "key"` records. A disposition of `roundTrip` here would be
+  // "none" — and the VALUE is derived from the key's own certificate. A
+  // disposition of `roundTrip` here would be
   // asserting that a caller-supplied chain comes back, and no caller can supply
   // one: the sample `["MIIBsample"]` is a representative shape, never a value the
   // surface accepts. What IS assertable is that the binding appears when the mode

@@ -44,7 +44,7 @@ import { coseWireKey } from "./header-registry.js";
  * cannot reach here any more: the eligibility gate
  * (`internal/header/assert-crit-eligible.ts`) refuses a `crit` naming any
  * specification-defined parameter at the caller's bag. And with `oid` the sole
- * eligible member, and `oid` `provenance: "caller"`, a crit member satisfied by
+ * eligible member, and `oid` caller-supplied, a crit member satisfied by
  * a tier OTHER than the caller's has no production path on this wire either. So
  * what this call still catches is the case the eligibility gate deliberately
  * says nothing about: an ELIGIBLE member whose VALUE the bucket does not carry —

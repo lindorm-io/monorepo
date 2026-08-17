@@ -4,19 +4,24 @@
  * (`internal/claims/claims-registry.ts`).
  *
  * They were two DIFFERENT shapes describing the same kind of thing — a named
- * parameter with a wire spelling, a value shape and a provenance — which is why
- * a fact stated on one side (the claim registry's sensitivity mark) was never
- * consulted by the code that needed it. One base means a column exists for every
- * parameter or for none.
+ * parameter with a wire spelling, a value shape and an emptiness verdict — which
+ * is why a fact stated on one side (the claim registry's sensitivity mark) was
+ * never consulted by the code that needed it. One base means a column exists for
+ * every parameter or for none.
  *
- * THREE honest deltas, and only three:
+ * TWO honest deltas, and only two:
  *   1. `placement` / `critEligible` are meaningless for a CLAIM (a claim has no
  *      protected/unprotected bucket and is never a critical header parameter), so
  *      they live on {@link HeaderSpec} alone.
- *   2. `temporal` / `bucket` are meaningless for a HEADER parameter, so they live
- *      on the claim spec alone.
- *   3. Headers are a CLOSED set and claims are an OPEN one. That is stated ONCE,
- *      at registry level, by {@link Registry.unregistered} — never per entry.
+ *   2. `temporal` / `bucket` / `domainClaim` are meaningless for a HEADER
+ *      parameter, so they live on the claim spec alone.
+ *
+ * ⚠ There was a THIRD, and it was not a delta but a duplicate: a `Registry<S>`
+ * wrapper declaring `unregistered: "drop" | "passthrough"`. Nothing read it. The
+ * policy it named is written in the code that performs it — `translate.ts` writes
+ * every unconsumed key into `custom`, `token-header.ts` drops one in both
+ * directions — so the column was a second source of truth for a rule already
+ * stated once, and its only two readers asserted the literal against itself.
  *
  * ⚠ {@link ParamSpec.whenEmpty} is NOT a delta and never was. It was declared on
  * the claim spec alone while the header registry emitted an empty value straight
@@ -27,23 +32,6 @@
 
 import type { Wire } from "./wire.js";
 import type { WireKey } from "./wire-key.js";
-
-/** The two directions a parameter can flow: written at mint, read at verify. */
-export type Direction = "mint" | "verify";
-
-/** A NON-EMPTY direction list. No default — an entry states when it applies. */
-export type Directions = readonly [Direction, ...Array<Direction>];
-
-/**
- * Where a parameter's value comes from:
- *   - `"caller"`   supplied by the caller (content, claims bag, header options).
- *   - `"key"`      derived from the signing/encrypting kryptos (alg, kid, x5c…).
- *   - `"computed"` produced by aegis itself — the crypto operation (epk, iv, tag,
- *                  p2s), the mint clock (iat/nbf/exp), a generated id (jti), or a
- *                  derived hash (at_hash/c_hash/s_hash).
- *   - `"issuer"`   stamped from the platform issuer identity.
- */
-export type Provenance = "caller" | "key" | "computed" | "issuer";
 
 /**
  * The ONLY input to the aegis confidentiality gate. A `"sensitive"`
@@ -89,16 +77,15 @@ export type ParamSpec<
    */
   wire: Record<Wire, WireKey>;
   /**
-   * How the value is shaped. `per` overrides the base codec on one wire — the
-   * case that exists today is the token id, a text string on JOSE (`jti`) and a
-   * byte string on COSE (`cti`).
+   * How the value is shaped. `per` overrides the base codec on one wire. The
+   * case that exists today is JOSE-text/COSE-bytes: the token id (`jti`/`cti`)
+   * and the three OIDC hashes. Which claims carry an override, and which byte
+   * encoding each one declares, is frozen by a derived drift guard in
+   * `internal/claims/claims-registry.test.ts` — the two encodings are
+   * indistinguishable at the type level, so nothing but that guard would notice
+   * one flipping.
    */
   codec: WireCodec<C>;
-  provenance: Provenance;
-  /** Non-empty; no default. See {@link Directions}. */
-  direction: Directions;
-  /** May a caller assert on this parameter through the matcher door. */
-  matchable: boolean;
   sensitivity: Sensitivity;
   /**
    * What the emission-boundary prune does to this parameter when its value is
@@ -166,28 +153,34 @@ export type ParamSpec<
    *
    * ⚠ BOTH registries answer this. A claim and a header parameter each have an
    * empty form, and each has to say whether that form is a statement or noise.
-   * What differs between the two registries is a SEPARATE column —
-   * {@link Registry.unregistered}, which decides what happens to a key with no
-   * entry at all. That the header set is CLOSED narrows how many parameters can
-   * ask this question; it does not answer it for any of them.
+   * What differs between the two registries — a key with NO entry at all is
+   * dropped on the header side and carried into `custom` on the claim side — is
+   * stated by the code that performs it (`token-header.ts`, `translate.ts`) and
+   * by nothing here. That the header set is CLOSED narrows how many parameters
+   * can ask this question; it does not answer it for any of them.
    */
   whenEmpty: E;
   /**
    * A representative DOMAIN-shaped value. REQUIRED, so a new parameter cannot be
    * added without giving the generated conformance suite something to round-trip
    * — which is what stops a new parameter from dodging coverage entirely.
+   *
+   * ⚠ WHO BREAKS WHEN A SAMPLE IS WRONG, named so the question is checkable in
+   * one hop. Derived with `grep -rn "\.sample\b" src --include="*.ts"`:
+   *   - `classes/Aegis.spec-matrix.test.ts` — the PRINCIPAL consumer, and the one
+   *     the column was written for. Paired with `__fixtures__/spec-dispositions.ts`,
+   *     it supplies this value at the parameter's named public door and requires
+   *     it back under the parameter's DOMAIN name. Two samples have been caught
+   *     broken by it.
+   *   - `__fixtures__/run-policy-exercise.ts` — the META matrix builds its claim
+   *     bag out of every claim's sample, so a sample that fails its own claim's
+   *     policy rule fails there instead.
+   *   - `internal/header/wire-parity.test.ts` — carries the sample through a
+   *     synthesised parity spec.
+   *   - the two registry self-tests, which bind each sample to its codec KIND
+   *     rather than merely requiring it to be defined.
    */
   sample: D;
-};
-
-/**
- * A registry: its entries plus the ONE policy that separates the two — what
- * happens to a key that has no entry. Headers are CLOSED (`drop`); claims are
- * OPEN (`passthrough`, into the custom bucket).
- */
-export type Registry<S> = {
-  specs: ReadonlyArray<S>;
-  unregistered: "drop" | "passthrough";
 };
 
 /** The codec that applies on a given wire: the per-wire override, else the base. */

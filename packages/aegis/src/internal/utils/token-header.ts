@@ -26,7 +26,7 @@ import { getBaseFormat } from "./compute-typ-header.js";
 /**
  * The header translator (the header-side twin of `claims/translate.ts`): the ONE
  * place a header parameter's name is translated, in ANY direction, on EITHER
- * wire, driven entirely by `HEADER_REGISTRY`. Every pass is DATA-DRIVEN — it
+ * wire, driven entirely by `HEADER_SPECS`. Every pass is DATA-DRIVEN — it
  * iterates the actual header data, not a curated subset, and looks each key up in
  * the registry:
  *
@@ -36,8 +36,8 @@ import { getBaseFormat } from "./compute-typ-header.js";
  *   - {@link wireHeaderToCoseMap}  write, `jose -> cose label` (via `coseWireKey`)
  *
  * Unlike custom claims, headers are a CLOSED set: a key with no registry entry is
- * dropped (no passthrough) — the registry states that once, as
- * `unregistered: "drop"`. The registry's `HeaderCodec` drives the value shaping.
+ * dropped (no passthrough), in both directions, by the passes below. The
+ * registry's `HeaderCodec` drives the value shaping.
  *
  * ⚠ The COSE pass is value-PASSTHROUGH for every parameter but ONE: the
  * caller-settable COSE params (`typ`/`cty`/`x5c`/`x5u`) already carry the wire
@@ -151,8 +151,8 @@ const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
 /**
  * Map domain header options (+ the kit-resolved cert fields) to the raw JOSE wire
  * header. The cert fields (`certificateChain`/`certificateThumbprint`/
- * `certificateThumbprintSha1`) are `provenance: "key"` params the kit derives from
- * the kryptos, so they are folded into the domain-keyed source (their
+ * `certificateThumbprintSha1`) are derived by the kit from the kryptos rather
+ * than supplied by a caller, so they are folded into the domain-keyed source (their
  * `CertificateHeaderFields` keys already equal their domain names).
  *
  * The output is canonically ordered ({@link canonicalWireHeader}) and

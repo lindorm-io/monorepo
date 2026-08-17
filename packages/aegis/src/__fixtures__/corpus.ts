@@ -110,6 +110,16 @@ export type PayloadCell =
 export type MintKnobs = {
   /** MANDATORY. A generated token id would make the row irreproducible. */
   tokenId: string;
+  /**
+   * The three OIDC hashes. They are `SignTokenOptions` fields rather than
+   * content, which is the whole reason they are knobs here: the caller door is
+   * `options.sign`, and a corpus row that could not reach them would leave the
+   * hash claims' encoding unrecorded on both wires — a b64url string on JOSE, a
+   * COSE byte string.
+   */
+  accessTokenHash?: string;
+  codeHash?: string;
+  stateHash?: string;
   bindCertificate?: BindCertificateMode;
   certificateThumbprintSha1?: boolean;
   context?: SignContext;
@@ -226,6 +236,66 @@ const EMPTY_CLAIM_CONTENT: SignContent = {
   scope: [],
   nonce: "",
   authMethods: [],
+};
+
+/**
+ * Every STRUCTURED claim aegis declares, in one bag.
+ *
+ * A structured claim is one whose value has internal shape, and the shape is
+ * written twice — once by the domain↔JOSE translator and once by the JOSE↔COSE
+ * byte layer. These rows are the only place the corpus records the second half:
+ * a scalar claim's bytes are its value, so a shaping change cannot move them,
+ * while `cnf`, `act`, `sub_id`, `events`, `authorization_details` and `address`
+ * each reach the wire through a per-claim builder whose output IS the record.
+ *
+ * ⚠ `confirmation` carries `keyId` and NOT `thumbprint`. RFC 9679 `ckt` hashes
+ * the CBOR canonicalisation and RFC 7638 `jkt` the JSON one, so `jkt` has no COSE
+ * form at all and a `thumbprint` here would make the COSE row refuse instead of
+ * emit. `keyId` is the one confirmation member both wires carry, which is what
+ * lets ONE content bag stand in front of both. The JOSE-only member gets its own
+ * row below.
+ *
+ * ⚠ `act` NESTS an `act`. RFC 8693 §4.1 defines the actor chain recursively, and
+ * a one-level actor would let a builder that never recursed look correct.
+ */
+const STRUCTURED_CONTENT: SignContent = {
+  subject: SUBJECT,
+  expires: "1h",
+  confirmation: { keyId: "corpus_cnf_kid_0001" },
+  act: {
+    subject: "corpus_actor_0001",
+    issuer: "https://actor.corpus.lindorm.test",
+    clientId: "corpus_actor_client_0001",
+    audience: ["https://rs.corpus.lindorm.test"],
+    act: { subject: "corpus_actor_0002" },
+  },
+  mayAct: { subject: "corpus_may_actor_0001", clientId: "corpus_may_client_0001" },
+  subjectId: {
+    format: "iss_sub",
+    iss: "https://idp.corpus.lindorm.test",
+    sub: "corpus_sub_id_0001",
+  },
+  events: {
+    "urn:lindorm:event:rtbf": { subject: "corpus_event_subject_0001" },
+    "http://schemas.openid.net/event/backchannel-logout": {},
+  },
+  authorizationDetails: [
+    {
+      type: "corpus_rar_type",
+      actions: ["read", "write"],
+      locations: ["https://rs.corpus.lindorm.test"],
+    },
+  ],
+  profile: {
+    address: {
+      careOf: "Corpus Care Of",
+      country: "SE",
+      locality: "Stockholm",
+      postalCode: "111 22",
+      region: "Stockholm",
+      streetAddress: "Corpusgatan 1",
+    },
+  },
 };
 
 const OBJECT_PAYLOAD: PayloadCell = {
@@ -369,6 +439,45 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
     content: { subject: SUBJECT },
     signKey: "ec-sig",
     options: { tokenId: "corpus_jti_0010", lifetime: "15m" },
+  },
+  {
+    verb: "mint",
+    name: "mint-default-jwt-structured-claims",
+    note: "Every structured claim on the JOSE wire — `cnf`, a recursive `act`, `may_act`, `sub_id`, `events`, `authorization_details` and the nested `address`. It is the JOSE half of the pair: the domain↔JOSE translator shapes these, and its output is what the COSE byte layer then re-shapes, so a change that moved only one of the two shows on exactly one row.",
+    profile: "default",
+    format: "jwt",
+    content: STRUCTURED_CONTENT,
+    signKey: "ec-sig",
+    options: { tokenId: "corpus_jti_0033" },
+  },
+  {
+    verb: "mint",
+    name: "mint-default-jwt-confirmation-thumbprint",
+    note: "The one confirmation member the COSE wire cannot carry. RFC 9449 §6 `jkt` is the RFC 7638 JSON thumbprint, and the registry marks it absent on COSE — so this row records the JOSE spelling of a member that has no COSE twin, which the shared structured row deliberately does not carry.",
+    profile: "default",
+    format: "jwt",
+    content: {
+      subject: SUBJECT,
+      expires: "1h",
+      confirmation: { thumbprint: "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I" },
+    },
+    signKey: "ec-sig",
+    options: { tokenId: "corpus_jti_0034" },
+  },
+  {
+    verb: "mint",
+    name: "mint-default-jwt-hash-claims",
+    note: "The three OIDC hashes on the JOSE wire, where each is the base64url string verbatim. Their COSE twin decodes that alphabet to bytes, so this row is what says which of the two the JOSE wire holds.",
+    profile: "default",
+    format: "jwt",
+    content: { subject: SUBJECT, expires: "1h" },
+    signKey: "ec-sig",
+    options: {
+      tokenId: "corpus_jti_0035",
+      accessTokenHash: "T0RBd01EQXdNREF3TURBd01EQXc",
+      codeHash: "UTBSRlEwOUVSVU5QUkVWRFQwUkY",
+      stateHash: "VTFSQlZFVlRWRUZVUlZOVVFWUkY",
+    },
   },
   {
     verb: "mint",
@@ -549,6 +658,41 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
     content: EMPTY_CLAIM_CONTENT,
     signKey: "ec-sig",
     options: { tokenId: "corpus_jti_0025" },
+  },
+  {
+    verb: "mint",
+    name: "mint-default-cwt-structured-claims",
+    note: "The same structured claims on the COSE wire, INTEROPERABLE. This is the row the CWT claim shaper writes: `cnf` becomes a COSE key map, and `act`/`may_act`/`sub_id` stay string-keyed because the compact form is on-platform only. A shaper that stopped shaping a claim would leave its JOSE-shaped value here and move exactly these bytes.",
+    profile: "default",
+    format: "cwt",
+    content: STRUCTURED_CONTENT,
+    signKey: "ec-sig",
+    options: { tokenId: "corpus_jti_0036", proprietary: false },
+  },
+  {
+    verb: "mint",
+    name: "mint-default-cwt-structured-claims-proprietary",
+    note: "The on-platform half of the pair — the same structured claims with the compact encodings turned on, so `act`/`may_act`/`sub_id` collapse from string-keyed maps to integer-labelled ones. Without this row the compact builders would have no wire record at all, and a shaper that stopped reaching them would move nothing.",
+    profile: "default",
+    format: "cwt",
+    content: STRUCTURED_CONTENT,
+    signKey: "ec-sig",
+    options: { tokenId: "corpus_jti_0037", proprietary: true },
+  },
+  {
+    verb: "mint",
+    name: "mint-default-cwt-hash-claims",
+    note: "The three OIDC hashes on the COSE wire, where each is the BYTES the base64url string decodes to rather than the string itself. The JOSE twin holds the string, so the pair is what records that the two wires disagree deliberately.",
+    profile: "default",
+    format: "cwt",
+    content: { subject: SUBJECT, expires: "1h" },
+    signKey: "ec-sig",
+    options: {
+      tokenId: "corpus_jti_0038",
+      accessTokenHash: "T0RBd01EQXdNREF3TURBd01EQXc",
+      codeHash: "UTBSRlEwOUVSVU5QUkVWRFQwUkY",
+      stateHash: "VTFSQlZFVlRWRUZVUlZOVVFWUkY",
+    },
   },
   {
     verb: "mint",

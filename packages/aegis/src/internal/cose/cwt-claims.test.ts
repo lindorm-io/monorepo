@@ -50,10 +50,28 @@ describe("encodeCwtClaims", () => {
   });
 
   test("encodes OIDC hash claims as byte strings", () => {
-    const map = encode({ accessTokenHash: AT_HASH }, { proprietary: true });
-    const bytes = map.get(-65537 - 0) as Uint8Array; // at_hash private-use label
-    expect(Buffer.isBuffer(bytes) || bytes instanceof Uint8Array).toBe(true);
-    expect(Buffer.from(bytes).length).toBe(32);
+    // ⚠ ALL THREE, not just `at_hash`. They are three separate registry cells
+    // declaring the same `per: { cose: { kind: "bstr", encoding: "b64u" } }`
+    // override, and a typo in any one of them — a dropped override, or `"utf8"`
+    // — is a SILENT wrong-bytes bug: the claim still encodes, to a CBOR text
+    // string or to the 43 raw characters instead of the 32 bytes they mean.
+    // The b64url string is 43 chars; the digest it stands for is 32 bytes.
+    const map = encode(
+      { accessTokenHash: AT_HASH, codeHash: AT_HASH, stateHash: AT_HASH },
+      { proprietary: true },
+    );
+
+    // at_hash / c_hash / s_hash private-use labels (P(0)/P(1)/P(2)).
+    for (const [claim, label] of [
+      ["at_hash", -65537 - 0],
+      ["c_hash", -65537 - 1],
+      ["s_hash", -65537 - 2],
+    ] as const) {
+      const bytes = map.get(label) as Uint8Array;
+      expect(Buffer.isBuffer(bytes) || bytes instanceof Uint8Array, claim).toBe(true);
+      expect(Buffer.from(bytes).length, claim).toBe(32);
+      expect(Buffer.from(bytes).toString("base64url"), claim).toBe(AT_HASH);
+    }
   });
 
   test("keeps custom passthrough claims under their literal key", () => {

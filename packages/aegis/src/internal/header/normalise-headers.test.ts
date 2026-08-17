@@ -145,12 +145,12 @@ describe("normaliseHeaders", () => {
      * parameter up by different names (`contentType` vs `cty`).
      */
     test("the domain crossing and the emission boundary normalise identically", () => {
-      // ⚠ CALLER-provenance parameters only. The certificate trio — where the one
+      // ⚠ CALLER-SUPPLIED parameters only. The certificate trio — where the one
       // `whenEmpty: "refuse"` cell lives — cannot take part: `mapTokenHeader` writes
       // those three from its `cert` argument, which OVERRIDES anything a caller put
       // in the domain bag, so an empty `certificateThumbprint` never survives the
-      // domain crossing to be compared. That is the same reachability the registry
-      // row states (`provenance: "key"`), not a disagreement between the passes.
+      // domain crossing to be compared. That is the same reachability the write
+      // path already states, not a disagreement between the passes.
       expect(
         mapTokenHeader({
           contentType: "",

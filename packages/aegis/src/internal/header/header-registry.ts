@@ -23,18 +23,21 @@
  * reason (where there was one) in a comment. Each now carries a required
  * `reason` on its `absent` wire key, which `coseByJose` reports when it refuses.
  *
- * --- Columns that are currently CONSTANT ---
+ * --- The one column that is CONSTANT ---
  *
- * `direction`, `matchable` and `sensitivity` are the same for all twenty-one
- * entries. That is an honest reading of the code, not an omission: every
- * registered parameter flows through the codec in BOTH directions (the registry
- * has carried no per-entry direction flag since the translator became
- * data-driven); there is no header MATCHER door at all, so nothing is assertable;
- * and a header parameter is never encrypted content, so nothing is sensitive.
- * They are declared per entry anyway, so the first parameter that breaks one of
- * those patterns has to say so here.
+ * `sensitivity` is `public` on all twenty-one entries, and that is an honest
+ * reading of the code rather than an omission: a header parameter is never
+ * encrypted content, so nothing is sensitive. It is declared per entry anyway,
+ * so the first parameter that breaks the pattern has to say so here.
  *
- * ⚠ `critEligible` USED TO BE A FOURTH and is not one any more — `oid` is
+ * ⚠ `direction`, `matchable` and `provenance` USED TO SIT BESIDE IT, twenty-one
+ * cells each, and nothing read any of them. `matchable` was not merely unread but
+ * WRONG: every row said `false` and this docstring said "there is no header
+ * MATCHER door at all", while `internal/utils/verify-token.ts` raises
+ * `token_type_mismatch` against `DomainAssert.tokenType` — a header-derived
+ * assertion, through the matcher door, on every profiled verify.
+ *
+ * ⚠ `critEligible` USED TO BE A FOURTH constant and is not one any more — `oid` is
  * `true`. A constant boolean column read by nobody is a note; this one is read
  * from both directions (the mint gate `assert-crit-eligible.ts` and the verify
  * gate `reject-unknown-critical.ts`), so it is what decides whether a `crit`
@@ -67,7 +70,6 @@ import { CoseError } from "../../errors/index.js";
 import type { CoseLabel } from "../cose/cose-label.js";
 import type { HeaderSpec } from "../registry/header-spec.js";
 import { isPrivateUseLabel } from "../registry/is-private-use-label.js";
-import type { Directions, Registry } from "../registry/param-spec.js";
 import {
   wireAbsent,
   wireKeyLabel,
@@ -82,13 +84,10 @@ export type {
   HeaderSpec,
 } from "../registry/header-spec.js";
 
-/** Every header parameter flows in both directions — see the docstring. */
-const BOTH: Directions = ["mint", "verify"];
-
 /**
  * The registry. Ordered alphabetically by JOSE name for readability only — the
- * codec reads neither position nor any direction-scoped subset. Lookups are
- * derived from the Maps below.
+ * codec reads neither position nor any subset. Lookups are derived from the Maps
+ * below.
  *
  * RFC references: RFC 7515 §4.1 (JWS), RFC 7516 §4.1 (JWE), RFC 7518 §4.6
  * (ECDH-ES), RFC 9052 §3.1 Table 3 (core COSE labels), RFC 9360 (X.509 COSE
@@ -99,9 +98,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "algorithm",
     wire: { jose: wireName("alg"), cose: wireLabel(1, "alg") },
     codec: { kind: "string" },
-    provenance: "key",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "ES256",
     // PRUNE: `alg` is REQUIRED (RFC 7515 §4.1.1) and `""` names no algorithm — a
@@ -123,9 +119,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "string" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "cGFydHktdQ",
     // PRUNE, and RFC 7518 §4.6.2 proves it rather than merely permitting it.
@@ -153,9 +146,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "string" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "cGFydHktdg",
     // PRUNE: the `apu` argument, for PartyVInfo — RFC 7518 §4.6.2 states the
@@ -168,9 +158,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "critical",
     wire: { jose: wireName("crit"), cose: wireLabel(2, "crit") },
     codec: { kind: "critical" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     // ⚠ DOMAIN spelling. This entry's own VALUE holds DOMAIN names like every
     // other domain-keyed value here, and `criticalToWire` maps each member
@@ -194,9 +181,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "contentType",
     wire: { jose: wireName("cty"), cose: wireLabel(3, "cty") },
     codec: { kind: "string" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "application/json",
     // PRUNE: `cty` names the payload's media type (RFC 7515 §4.1.10) and `""` is
@@ -219,17 +203,13 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "string" },
-    // `JweKit.ts` writes it from the kit's own `this.encryption`, never from the
-    // caller's bag — the column said `caller` and the code has never agreed.
-    provenance: "computed",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "A256GCM",
     // PRUNE: RFC 7516 §4.1.2 makes `enc` REQUIRED on a JWE, and `""` names no
     // content-encryption algorithm — indistinguishable from a header that never
-    // had one. Provenance is `computed` from the kit's own `this.encryption`, so
-    // aegis's own write cannot reach the cell; it states the direction a smuggled
+    // had one. `JweKit.ts` writes it from the kit's own `this.encryption` and
+    // never from the caller's bag, so aegis's own write cannot reach the cell; it
+    // states the direction a smuggled
     // one fails in, and `decodeJoseHeader` refuses an unknown `enc` on the read
     // (`jose-header.ts:99-107`).
     whenEmpty: "prune",
@@ -245,9 +225,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "jwk" },
-    provenance: "computed",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
     // PRUNE: RFC 7518 §4.6.1.1 makes `epk` the ephemeral public key "created by
@@ -265,9 +242,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "initialisationVector",
     wire: { jose: wireName("iv"), cose: wireLabel(5, "iv") },
     codec: { kind: "buffer" },
-    provenance: "computed",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: Buffer.alloc(12),
     // PRUNE. ⚠ The cell does NOT govern a zero-length Buffer: `isEmpty` treats a
@@ -292,9 +266,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "url" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "https://issuer.lindorm.test/.well-known/jwks.json",
     // PRUNE, and no empty value can reach the cell: `isUrlLike("")` is false, so
@@ -314,9 +285,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "jwk" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
     // PRUNE: `{}` is a JWK with no `kty`, which RFC 7517 §4.1 makes REQUIRED — it
@@ -331,9 +299,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "keyId",
     wire: { jose: wireName("kid"), cose: wireLabel(4, "kid") },
     codec: { kind: "string" },
-    provenance: "key",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "key_sample",
     // PRUNE: `kid` is the lookup hint a verifier resolves the key by, and `""`
@@ -361,9 +326,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "objectId",
     wire: { jose: wireName("oid"), cose: wireLabel(-70000, "oid") },
     codec: { kind: "string" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "oid_sample",
     // PRUNE: `oid` names the domain object the token is about; `""` names none,
@@ -404,9 +366,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     codec: { kind: "number" },
     // The PBES2 iteration count `JweKit.ts` reads back off the key-management
     // output, beside the `p2s` salt that has always been declared `computed`.
-    provenance: "computed",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: 310000,
     // PRUNE, and no empty value exists for it to act on: `isEmpty` is false for
@@ -428,9 +387,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "buffer" },
-    provenance: "computed",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: Buffer.alloc(16),
     // PRUNE, on the `iv` argument — and with the same ⚠: a zero-length Buffer is
@@ -448,9 +404,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "buffer" },
-    provenance: "computed",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: Buffer.alloc(16),
     // PRUNE, on the `iv` argument. The key-wrap authentication tag is bytes or
@@ -466,9 +419,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // Every kit builds the full media type itself from the `tokenType` PREFIX
     // (`buildMediaType`/`computeTypHeader`). A caller supplies the prefix, never
     // the parameter — which is why every row reserves it.
-    provenance: "computed",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     // The FULL media type. RFC 7519 §5.1 permits the `application/` prefix to be
     // omitted on the wire, but the DOMAIN column reports what aegis reads back —
@@ -494,9 +444,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "certificateChain",
     wire: { jose: wireName("x5c"), cose: wireLabel(33, "x5c") }, // RFC 9360 x5chain
     codec: { kind: "array" },
-    provenance: "key",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: ["MIIBsample"],
     // PRUNE. ⚠ NOT a restriction, and this is where it splits from `x5t#S256`
@@ -523,9 +470,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "string" },
-    provenance: "key",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "dGh1bWJwcmludC1zaGEx",
     // PRUNE, and the split from `x5t#S256` is the whole reason the two cells
@@ -546,9 +490,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "string" },
-    provenance: "key",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "dGh1bWJwcmludC1zaGEyNTY",
     // REFUSE: `x5t#S256` is the ONE header parameter aegis's verify ENFORCES —
@@ -563,8 +504,8 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // can either supply it or drop the parameter, so the write throws
     // (`refuse-empty-headers.ts`).
     //
-    // ⚠ It is a BOUNDARY guard, not a repair of an aegis path. Provenance is
-    // `key`, both caller-facing header types Omit the parameter, and
+    // ⚠ It is a BOUNDARY guard, not a repair of an aegis path. The value is
+    // derived from the signing key, both caller-facing header types Omit it, and
     // `resolveCertBinding` reads it off a kryptos that answers `null` or a real
     // digest — so the one producer of `""` is a foreign `IKryptos`, an interface
     // aegis publishes and does not implement.
@@ -581,9 +522,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "certificateUrl",
     wire: { jose: wireName("x5u"), cose: wireLabel(35, "x5u") },
     codec: { kind: "string" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "https://issuer.lindorm.test/certs.pem",
     // PRUNE: RFC 7515 §4.1.5 makes `x5u` a URI, and `""` is not one. ⚠ Note this
@@ -603,9 +541,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "string" },
-    provenance: "caller",
-    direction: BOTH,
-    matchable: false,
     sensitivity: "public",
     sample: "DEF",
     // PRUNE: RFC 7516 §4.1.3 DEFINES "DEF" as the one compression algorithm value
@@ -619,17 +554,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     critEligible: false,
   },
 ];
-
-/**
- * The header registry. `unregistered: "drop"` states ONCE what makes the header
- * side different from the claim side: headers are a CLOSED set, so a key with no
- * entry is dropped in BOTH directions (`token-header.ts`) rather than carried
- * through as a custom parameter.
- */
-export const HEADER_REGISTRY: Registry<HeaderSpec> = {
-  specs: HEADER_SPECS,
-  unregistered: "drop",
-};
 
 /** The JOSE wire name. Every header parameter rides JOSE, so it is always defined. */
 export const headerJoseName = (spec: HeaderSpec): string => {

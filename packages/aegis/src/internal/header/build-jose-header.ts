@@ -48,9 +48,8 @@ import { normaliseHeaders } from "./normalise-headers.js";
  *    verdict. Dropping it silently was the JOSE half of the same gap the short
  *    `reserved` rows were: the request disappeared and the token looked fine.
  *  - an UNREGISTERED parameter is still DROPPED, unchanged. That is the closed-set
- *    rule (`unregistered: "drop"`), a different statement about a different
- *    problem, and the COSE side refuses it only because a parameter with no label
- *    has nowhere to go.
+ *    rule, a different statement about a different problem, and the COSE side
+ *    refuses it only because a parameter with no label has nowhere to go.
  *
  * ⚠ A PARAMETER THAT EMITS NOTHING IS NOT A PARAMETER, so the caller's bag is
  * NORMALISED ONCE at the top and the reserved check then runs over the normalised

@@ -25,7 +25,7 @@ import { headerByJose } from "./header-registry.js";
  * is still in the producer's hands and can be supplied or the parameter dropped.
  *
  * ⚠ HOW REACHABLE IT IS, stated honestly rather than oversold. `x5t#S256` is
- * `provenance: "key"` and every aegis-owned path to it is already closed:
+ * derived from the signing key and every aegis-owned path to it is already closed:
  * `DomainProtectedHeader` and `WireProtectedHeader` both Omit it, so no typed
  * caller can supply one; `mapTokenHeader` overwrites whatever a domain bag holds
  * with the cert tier's value; and `resolveCertBinding` throws before it reads a

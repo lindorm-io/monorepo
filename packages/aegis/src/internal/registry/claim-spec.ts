@@ -29,17 +29,24 @@ export type ArrayScalar = "spaced" | "strict" | "wrap";
  * Sub-kind of a `bespoke` claim — the discriminator that tells the translator
  * (encode/decode) and the COSE byte-shaper WHICH per-claim builder to use.
  * Claims sharing a builder share a sub-kind:
- *   - `"hash"`         the OIDC hashes (`at_hash`/`c_hash`/`s_hash`): a b64url
- *                      string on JOSE, a COSE byte string.
  *   - `"confirmation"` RFC 7800 `cnf` (proof-of-possession key).
  *   - `"act"`          RFC 8693 delegation `act`/`may_act` (recursive actor).
  *   - `"subId"`        RFC 9493 `sub_id` subject identifier.
  *   - `"events"`       RFC 8417 SET `events` map (carried verbatim).
  *   - `"authDetails"`  RFC 9396 `authorization_details` array (carried verbatim).
  *   - `"address"`      OIDC §5.1 `address` (nested object; snake its inner keys).
+ *
+ * ⚠ There WAS a seventh, `"hash"`, for the OIDC hashes — and it was not a
+ * builder at all. Both translator arms were byte-for-byte the `"text"` arm
+ * (`return value` on encode, `isString(value) ? value : undefined` on decode);
+ * the sub-kind existed to key ONE COSE byte shape. That is a CODEC fact, not a
+ * structure fact, and the registry already had the mechanism for it — the
+ * per-wire codec `tokenId` uses. The hashes are `kind: "text"` with a
+ * `per: { cose: { kind: "bstr", encoding: "b64u" } }` override now, and a
+ * "bespoke" kind that is a codec gap rather than a structure gap has nowhere
+ * left to hide.
  */
 export type BespokeKind =
-  | "hash"
   | "confirmation"
   | "act"
   | "subId"
@@ -55,8 +62,9 @@ export type BespokeKind =
  *   - `"int"`     plain number, no transform (loa…)
  *   - `"date"`    NumericDate: domain `Date` <-> wire Unix-seconds int
  *   - `"bool"`    boolean scalar
- *   - `"bstr"`    byte string — a PER-WIRE codec only (COSE `cti`); no claim
- *                 carries it as its base codec, because JOSE has no byte strings
+ *   - `"bstr"`    byte string — a PER-WIRE codec only; no claim carries it as its
+ *                 base codec, because JOSE has no byte strings. See the
+ *                 `encoding` note below for how the domain string becomes bytes
  *   - `"array"`   array of strings, with its scalar-tolerance policy
  *   - `"bespoke"` needs a per-claim builder, named by its sub-kind
  */
@@ -65,7 +73,19 @@ export type ClaimCodec =
   | { kind: "int" }
   | { kind: "date" }
   | { kind: "bool" }
-  | { kind: "bstr" }
+  /**
+   * Byte string. `encoding` says how the DOMAIN string maps to those bytes:
+   *   - `"utf8"` the string's OWN bytes (`tokenId` -> `cti`, RFC 8392 §3.1.7).
+   *   - `"b64u"` the string IS base64url and the bytes are what it decodes to
+   *              (the OIDC hashes — a 43-char `at_hash` is 32 bytes on COSE).
+   *
+   * ⚠ REQUIRED, with no default. The two alphabets are indistinguishable at the
+   * type level and silently produce DIFFERENT bytes on a signed wire, so there
+   * is nothing safe to fall into. It is a SELECTOR, not a value forwarded to
+   * `@lindorm/cbor`: `CborField.encoding` has no `"utf8"` member, and `"utf8"`
+   * resolves to a bespoke encode/decode pair instead (`internal/cose/cwt-spec.ts`).
+   */
+  | { kind: "bstr"; encoding: "utf8" | "b64u" }
   | { kind: "array"; scalar: ArrayScalar }
   | { kind: "bespoke"; bespoke: BespokeKind };
 

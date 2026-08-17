@@ -106,7 +106,7 @@ const JOSE_RESERVED: ReadonlyArray<string> = [
  *
  * ⚠ `x5c` and `iv` are the two that must not be dropped again:
  *
- * - `x5c` is `provenance: "key"`. No COSE kit derives one (`certificateBinding`
+ * - `x5c` is derived from the signing key. No COSE kit derives one (`certificateBinding`
  *   is `false` on every row), so a caller value would be the ONLY certificate
  *   chain on the token — a forged chain the signing key never had, reported back
  *   as `verified.header.certificateChain`.

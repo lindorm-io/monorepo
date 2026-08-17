@@ -353,6 +353,144 @@ describe("the COSE claims Message is one encoding across the claims wires", () =
     });
   });
 
+  /**
+   * THE RAW CWT DOOR BYPASSES DOMAIN TRANSLATION, NOT CBOR SHAPING.
+   *
+   * `aegis.cwt.sign` takes an ALREADY-WIRE, COSE-name-keyed bag and injects
+   * nothing, maps no name and derives no hash (`internal/utils/raw-sign-cwt.ts`).
+   * What it does NOT skip is the claim registry's COSE value shaping — the field
+   * spec still comes from `CLAIM_SPECS`, so a structured claim handed to this
+   * door is written in COSE's own vocabulary rather than JOSE's.
+   *
+   * ⚠ THIS IS THE DOOR THE SHAPERS' DRIFT GUARDS PROTECT. The DOMAIN mint path
+   * throws before an unshapable claim reaches CBOR (`translate.ts`'s
+   * `encodeBespoke` ends in its own `never`); this one has no translator in front
+   * of it, so a shaper that fell through to an identity codec would put the JOSE
+   * shape of a claim onto a signed COSE wire with nothing raised anywhere.
+   * `internal/cose/cwt-spec.test.ts` guards both fall-throughs; these rows are
+   * the same statement made at the PUBLIC door, where it is a fact about the
+   * library rather than about one function.
+   *
+   * ⚠ TWO shapers, and the rows below split between them. The `cnf`, `act` and
+   * `events` rows witness `shapeForBespoke`, which keys off a structured claim's
+   * `BespokeKind`. The hash row witnesses `shapeForBstr`, which keys off the
+   * per-wire `bstr` codec's `encoding` — a hash is a scalar and never reaches
+   * `shapeForBespoke` at all.
+   *
+   * ⚠ Read with raw `cbor2` (`claimsMapOf`), never back through `aegis.cwt.verify`.
+   * An identity ENCODE and an identity DECODE round-trip perfectly, so a
+   * round-trip assertion is satisfied by exactly the defect these rows exist to
+   * catch.
+   */
+  describe("the raw CWT door still shapes a structured claim", () => {
+    const RAW_ISSUER = "https://test.lindorm.io/";
+
+    const rawAegis = async (): Promise<Aegis> => {
+      const amphora = new Amphora({ internal: { issuer: RAW_ISSUER }, logger });
+      await amphora.setup();
+      amphora.add(TEST_EC_KEY_SIG);
+      return new Aegis({ amphora, logger });
+    };
+
+    const rawClaimsMap = async (
+      claims: Dict,
+      proprietary?: boolean,
+    ): Promise<Map<unknown, unknown>> => {
+      const { token } = await (
+        await rawAegis()
+      ).cwt.sign(claims, {
+        key: { kryptos: TEST_EC_KEY_SIG },
+        proprietary,
+      });
+
+      return claimsMapOf(payloadOf(Buffer.from(token, "base64url")));
+    };
+
+    test("writes `cnf` as a COSE key map under INTEGER members, not the JOSE object", async () => {
+      // RFC 8747 §3.1 Table 1 gives the `cnf` members their keys — `kid` is 3,
+      // value type "binary string" (§3.4 shows the form); the `cnf` claim key 8
+      // itself is registered in §7.1. The JOSE form aegis was handed is a text
+      // key with a text value, so the two are distinguishable without asking
+      // aegis anything.
+      const map = await rawClaimsMap({
+        iss: RAW_ISSUER,
+        sub: "user-1",
+        cnf: { kid: "raw-cnf-kid" },
+      });
+
+      const cnf = map.get(8);
+
+      expect(cnf).toBeInstanceOf(Map);
+      expect((cnf as Map<unknown, unknown>).get(3)).toEqual(
+        Buffer.from("raw-cnf-kid", "utf8"),
+      );
+      // …and the JOSE spelling is GONE. This is the half that fails when the
+      // shaper hands the value through untouched.
+      expect((cnf as Map<unknown, unknown>).has("kid")).toBe(false);
+    });
+
+    test("writes an OIDC hash as the BYTES its base64url decodes to", async () => {
+      // `at_hash` is `kind: "text"` with `per: { cose: { kind: "bstr",
+      // encoding: "b64u" } }` — a b64url string on JOSE, the bytes it names on
+      // COSE. An identity codec would leave the string.
+      const map = await rawClaimsMap({
+        iss: RAW_ISSUER,
+        sub: "user-1",
+        at_hash: "T0RBd01EQXdNREF3TURBd01EQXc",
+      });
+
+      expect(map.get("at_hash")).toEqual(
+        Buffer.from("T0RBd01EQXdNREF3TURBd01EQXc", "base64url"),
+      );
+    });
+
+    test("collapses `act` to integer members when the token is on-platform", async () => {
+      // The `act` sub-kind switches on `proprietary`, so BOTH halves are asserted
+      // — the compact form under it and the interoperable form without it. Either
+      // alone is satisfied by a shaper that ignored the option entirely.
+      const claims: Dict = {
+        iss: RAW_ISSUER,
+        sub: "user-1",
+        act: { sub: "actor-1", client_id: "actor-client" },
+      };
+
+      const interoperable = (await rawClaimsMap(claims, false)).get("act");
+      const compact = (await rawClaimsMap(claims, true)).get("act");
+
+      // RFC 8693 §4.1 names the members `sub`/`iss`/`aud`/`client_id`; an
+      // interoperable token keys them by those strings.
+      expect(interoperable).toBeInstanceOf(Map);
+      expect((interoperable as Map<unknown, unknown>).get("sub")).toBe("actor-1");
+      expect((interoperable as Map<unknown, unknown>).has(2)).toBe(false);
+
+      // On-platform they collapse to the compact integer members — sub=2,
+      // client_id=4 — and the string spellings are gone.
+      expect(compact).toBeInstanceOf(Map);
+      expect((compact as Map<unknown, unknown>).get(2)).toBe("actor-1");
+      expect((compact as Map<unknown, unknown>).get(4)).toBe("actor-client");
+      expect((compact as Map<unknown, unknown>).has("sub")).toBe(false);
+    });
+
+    test("carries `events` verbatim — the sub-kind that has no shaping to do", async () => {
+      // The three verbatim sub-kinds are now NAMED arms rather than a
+      // fall-through, and naming them must not have changed what they do. An
+      // RFC 8417 `events` map is keyed by event-type URI, which is not a field
+      // name and has no label to take.
+      const map = await rawClaimsMap({
+        iss: RAW_ISSUER,
+        sub: "user-1",
+        events: { "urn:lindorm:event:rtbf": { subject: "user-1" } },
+      });
+
+      const events = map.get("events");
+
+      expect(events).toBeInstanceOf(Map);
+      expect((events as Map<unknown, unknown>).get("urn:lindorm:event:rtbf")).toEqual(
+        new Map([["subject", "user-1"]]),
+      );
+    });
+  });
+
   describe("the round trip", () => {
     test("leaves an OPAQUE payload's keys alone on the way back", () => {
       const key = encryptionKey();

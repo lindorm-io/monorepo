@@ -158,8 +158,6 @@ const encodeBespoke = (
   value: unknown,
 ): unknown => {
   switch (bespoke) {
-    case "hash":
-      return value; // already-derived b64url string
     case "confirmation":
       return isObject(value) ? confirmationToWire(value as ConfirmationClaim) : undefined;
     case "act":
@@ -206,7 +204,7 @@ const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
     case "date":
       return value instanceof Date ? getUnixTime(value) : undefined;
     case "bstr":
-      return value; // JOSE keeps the string; only COSE turns cti into bytes
+      return value; // JOSE keeps the string; only COSE turns it into bytes
     case "bespoke":
       return encodeBespoke(spec, codec.bespoke, value);
     default: {
@@ -278,8 +276,6 @@ const decodeBespoke = (
   value: unknown,
 ): unknown => {
   switch (bespoke) {
-    case "hash":
-      return isString(value) ? value : undefined; // b64url hash string
     case "confirmation":
       return toConfirmation(value);
     case "act":
@@ -361,7 +357,7 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
     case "bool":
       return value;
     case "bstr":
-      return isString(value) ? value : undefined; // jti
+      return isString(value) ? value : undefined; // the JOSE string form
     case "array":
       return decodeArray(spec, codec.scalar, value);
     case "bespoke":
@@ -430,12 +426,31 @@ type ClaimReadRules = {
   customKey: (key: string) => string;
 };
 
+/**
+ * ⚠ BOTH LOOKUPS USE `Object.hasOwn`, NEVER `in`.
+ *
+ * `wire` is a STRANGER'S payload — a decoded token, or the dict a public door
+ * was handed — and `in` walks the prototype chain, so `toString`, `constructor`,
+ * `valueOf`, `hasOwnProperty` and `__proto__` are members of every object
+ * literal that ever reaches here. A registry name colliding with one of those
+ * would make the lookup answer YES for a claim the payload does not carry, and
+ * the decoder would then read a FUNCTION off `Object.prototype` as a claim value.
+ *
+ * ⚠ Stated honestly: no registered domain or wire name collides today, so this
+ * is a LATENT fault and not a live one — `translate.test.ts` derives that
+ * non-collision from the registry rather than asserting it from memory, which is
+ * what would go red the day a claim named `constructor` is registered. The house
+ * rule stands regardless: a membership test whose KEY can come from a caller uses
+ * `Object.hasOwn`, because the alternative is a fault that only announces itself
+ * through a wrong answer.
+ */
+
 /** A token states a claim under its WIRE name. Nothing else answers for it. */
 const wireLookup = (
   _spec: ClaimSpec,
   wireName: string,
   wire: Dict,
-): string | undefined => (wireName in wire ? wireName : undefined);
+): string | undefined => (Object.hasOwn(wire, wireName) ? wireName : undefined);
 
 /** The public dict door accepts either spelling; the domain form wins. */
 const eitherLookup = (
@@ -443,7 +458,11 @@ const eitherLookup = (
   wireName: string,
   wire: Dict,
 ): string | undefined =>
-  spec.domain in wire ? spec.domain : wireName in wire ? wireName : undefined;
+  Object.hasOwn(wire, spec.domain)
+    ? spec.domain
+    : Object.hasOwn(wire, wireName)
+      ? wireName
+      : undefined;
 
 const claimReadRules = (mode: ClaimReadMode): ClaimReadRules => {
   switch (mode) {
