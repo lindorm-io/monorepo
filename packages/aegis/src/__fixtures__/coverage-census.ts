@@ -75,7 +75,6 @@ export const RULE_KIND_CENSUS: { [K in PolicyRule["rule"]]-?: CensusEntry } = {
 /** Every named structural validator. TOTAL over {@link ShapeRuleName}. */
 export const SHAPE_RULE_CENSUS: { [S in ShapeRuleName]-?: CensusEntry } = {
   actChain: { exercised: "matrix", matrix: "policy" },
-  authorizationDetails: { exercised: "matrix", matrix: "policy" },
   confirmation: { exercised: "matrix", matrix: "policy" },
   crossField: { exercised: "matrix", matrix: "policy" },
   events: { exercised: "matrix", matrix: "policy" },
@@ -204,7 +203,7 @@ export const KIT_CELL_CENSUS: {
       // the codec switches over — so nothing reads it back. That is a tighter
       // binding than the read, not a looser one: the encoder cannot represent a
       // member the row omits because there is no second list to disagree with.
-      note: "DERIVED from `src/internal/registry/cose-cnf-labels.ts#export const COSE_CNF_LABELS`, whose own test pins that table against a hand-written literal AND NOTHING ELSE. The behaviour is driven one file over, at `src/internal/cose/cose-key.test.ts#encodeCnf({ jwk: CNF_JWK, kid: 42 })` and the rows beside it: a mixed `{ jwk, kid }` writes BOTH labels, a malformed member refuses instead of dropping, and a member with no label (`jkt`) fails the map closed",
+      note: "DERIVED from `src/internal/claims/cnf-members.ts#export const COSE_CNF_LABELS`, itself derived from the `wire.cose` cell of each declared member, whose test pins the resulting table against a hand-written literal AND NOTHING ELSE. The behaviour is driven one file over, at `src/internal/cose/cose-key.test.ts#encodeCnf({ jwk: CNF_JWK, kid: 42 })` and the rows beside it: a mixed `{ jwk, kid }` writes BOTH labels, a malformed member refuses instead of dropping, and a member with no label (`jkt`) fails the map closed",
     },
     certificateBinding: {
       exercised: "observed",

@@ -35,7 +35,6 @@ export const accessTokenProfile = defineProfile({
     { rule: "match", on: ["mint", "verify"], condition: ISSUER_IS_URI },
     { rule: "match", on: ["mint", "verify"], condition: AUD_SINGLE_RESOURCE },
     { rule: "shape", on: ["mint", "verify"], shape: "crossField" },
-    { rule: "shape", on: ["mint", "verify"], shape: "authorizationDetails" },
     { rule: "shape", on: ["mint", "verify"], shape: "confirmation" },
     { rule: "shape", on: ["mint", "verify"], shape: "actChain" },
   ],

@@ -34,7 +34,12 @@ import {
   JwsError,
   JwtError,
 } from "../errors/index.js";
-import { CLAIM_SPECS, coseName, joseName } from "../internal/claims/claims-registry.js";
+import {
+  CLAIM_SPECS,
+  coseLabel,
+  coseName,
+  joseName,
+} from "../internal/claims/claims-registry.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { encodeCwtClaims } from "../internal/cose/cwt-claims.js";
 import type { CoseLabel } from "../internal/cose/cose-label.js";
@@ -67,6 +72,9 @@ import {
   ISSUER,
   type ArtifactGivenStep,
   type ForeignHeadersGiven,
+  type ForgedClaim,
+  type ForgedMember,
+  type ForgedSignature,
   type DateCell,
   type DpopProofGiven,
   type ErrorClassName,
@@ -263,6 +271,12 @@ export const artifactWireOf = (artifact: ArtifactGivenStep): Wire | undefined =>
     // header, never an encoding.
     case "foreign":
       return undefined;
+
+    // A FORGED token is the opposite: it names an encoding and nothing else, so
+    // the wire is the step's own declaration. The row owes the other wire an
+    // `unsupported` reason like any other pinned artifact.
+    case "forged":
+      return artifact.wire;
 
     case "mint":
     case "domain-encrypt": {
@@ -932,6 +946,234 @@ const signForeignCose = async (
 };
 
 /**
+ * The signature bytes of a token NOBODY SIGNED — four zero bytes on COSE, and the
+ * base64url of the same on JOSE.
+ *
+ * ⚠ It has to be present and it has to be the wrong length as well as the wrong
+ * value: `aegis.parse` reports a payload WITHOUT checking a signature, which is
+ * the reach these rows are about, so what matters is only that the token PARSES
+ * as a signed structure and that nothing could have produced these bytes.
+ */
+const JUNK_SIGNATURE = Buffer.alloc(4);
+
+/**
+ * The identity a forged COSE envelope carries. Its VALUES are irrelevant — the
+ * row's statement is about the claim the table writes — so they are spelled once
+ * here rather than in every row.
+ */
+const FORGED_SUBJECT = "user-1";
+
+/** An hour ahead of the row's own clock, so a verifying door reaches the claims. */
+const FORGED_LIFETIME = 3600;
+
+/**
+ * The COSE key each registered claim travels under, DERIVED from the claim
+ * registry — the integer label where one is registered, else the interoperable
+ * text name. Hand-listing it would put a second copy of the CWT label table in
+ * the harness, and a stale copy would place a forged claim where nothing reads it
+ * while the row still went green on the refusal it expected for another reason.
+ */
+const COSE_CLAIM_KEY_BY_DOMAIN: ReadonlyMap<string, number | string> = new Map(
+  CLAIM_SPECS.map((spec) => [spec.domain, coseLabel(spec) ?? coseName(spec)]),
+);
+
+/**
+ * The CBOR key ONE forged member travels under. RFC 9052 §1.5 admits both forms
+ * ("In COSE, we use text strings, negative integers, and unsigned integers as map
+ * keys", grammar `label = int / tstr`), and CBOR keys them apart — so the row's
+ * `keyedBy` cell is what decides, never the shape of the text in `key`.
+ */
+const INTEGER_LABEL = /^-?\d+$/;
+
+const forgedMemberKey = (member: ForgedMember): number | string => {
+  if (member.keyedBy === "name") return member.key;
+
+  // ⚠⚠ THE PATTERN, NOT `Number.isInteger(Number(key))`. `Number("")` is `0` — an
+  // integer — so an EMPTY CELL resolved silently to label 0 and wrote the member
+  // at a label no row named. That is not an exotic input: a blank column is
+  // exactly what a Gherkin data table produces, and this is the one wrong form
+  // the old guard accepted. `Number` is lenient in four further ways that all
+  // reach a real label: "2.0" → 2, " 2 " → 2, "0x10" → 16, "1e3" → 1000. The
+  // digits have to BE the cell. ⚠ `-?` because RFC 9052 §1.5 admits negative
+  // labels ("we use text strings, negative integers, and unsigned integers as map
+  // keys"), and the private-use range is entirely negative.
+  if (INTEGER_LABEL.test(member.key)) return Number(member.key);
+
+  throw new Error(
+    `the row keys a forged member by the label "${member.key}", which is not an integer`,
+  );
+};
+
+/**
+ * The forged claim map itself.
+ *
+ * ⚠ A DUPLICATE RESOLVED KEY IS REFUSED. Two rows of the table that land on the
+ * same CBOR key would silently collapse into one member, and a row written to
+ * state that a member arrived TWICE would then state that it arrived once — and
+ * still go red on the refusal it expected, for a reason that has nothing to do
+ * with the capability.
+ */
+const forgedClaimMap = (
+  carries: ReadonlyArray<ForgedMember>,
+): Map<number | string, unknown> => {
+  const map = new Map<number | string, unknown>();
+
+  for (const member of carries) {
+    const key = forgedMemberKey(member);
+
+    if (map.has(key)) {
+      throw new Error(
+        `the row states the forged member ${JSON.stringify(key)} twice, so one of the two could never reach the wire`,
+      );
+    }
+
+    map.set(key, member.value);
+  }
+
+  return map;
+};
+
+/**
+ * THE FORGERS — the write half of the forged-token step, one per wire.
+ *
+ * ⭐⭐ THEY EXIST BECAUSE A CLAIMS DICT IS A CEILING. Every other producer in this
+ * file takes an object and serialises it, so the shapes it can put in front of a
+ * reader are exactly the shapes a JS object can hold — and three hostile wire
+ * shapes are not among them: a member named `__proto__` (a literal invokes the
+ * prototype setter), a CBOR map keying one member at both its integer label and
+ * its text name, and a compact COSE map with a text `__proto__` label. These two
+ * functions assemble the wire directly so a row can state one.
+ *
+ * ⛔ THE ROW STILL CARRIES NO BYTES. It states a payload text or a member table;
+ * the header, the tag chain, the algorithm identifier and the signature are
+ * written here. A row holding base64url or CBOR would be asserting against a wire
+ * it had produced itself.
+ */
+
+/**
+ * A forged JOSE token: the row's payload TEXT, byte for byte, under a header this
+ * function writes.
+ *
+ * The payload is never re-serialised — that is the whole point of the text form,
+ * since `JSON.parse(JSON.stringify(x))` cannot round-trip a `__proto__` member.
+ */
+const forgeJose = async (
+  payload: string,
+  signature: ForgedSignature,
+): Promise<string> => {
+  const bytes = Buffer.from(payload, "utf8");
+
+  if (signature === "junk") {
+    // ⚠ THE ALGORITHM IS DERIVED FROM THE BASELINE KEY, not spelled. An unsigned
+    // token still has to declare one a reader recognises, or the refusal comes
+    // from the header and the row never reaches its own claim.
+    return [
+      b64u(JSON.stringify({ alg: KEY_FIXTURES["ec-sig"].algorithm, typ: "JWT" })),
+      b64u(bytes),
+      b64u(JUNK_SIGNATURE),
+    ].join(".");
+  }
+
+  const kryptos = KEY_FIXTURES[signature];
+
+  if (kryptos === undefined) {
+    throw new Error(`the row forges a token signed by the unknown key "${signature}"`);
+  }
+
+  const key = await importJWK(kryptos.export("jwk") as never, kryptos.algorithm);
+
+  return new CompactSign(bytes)
+    .setProtectedHeader({ alg: kryptos.algorithm, kid: kryptos.id, typ: "JWT" })
+    .sign(key);
+};
+
+/**
+ * A forged CWT: the minimum envelope a reader needs to REACH the forged claim,
+ * with the row's member table written in at the claim's own COSE key.
+ *
+ * ⚠ The envelope goes through aegis's own CWT codec in its INTEROPERABLE
+ * spelling, the same limit `signForeignCose` carries and for the same reason —
+ * the CWT label mapping (RFC 8392 §4) has no third-party implementation here to
+ * borrow. Only the forged claim is hand-built, which is the half under test.
+ */
+const forgeCose = async (
+  claim: ForgedClaim,
+  carries: ReadonlyArray<ForgedMember>,
+  signature: ForgedSignature,
+): Promise<string> => {
+  const claimKey = COSE_CLAIM_KEY_BY_DOMAIN.get(claim);
+
+  if (claimKey === undefined) {
+    throw new Error(`the row forges "${claim}", which the claim registry does not know`);
+  }
+
+  const payload = encodeCwtClaims(
+    {
+      iss: ISSUER,
+      sub: FORGED_SUBJECT,
+      exp: Math.floor(Date.now() / 1000) + FORGED_LIFETIME,
+    },
+    { proprietary: false },
+  );
+
+  payload.set(claimKey, forgedClaimMap(carries));
+
+  const bytes = Buffer.from(encodeCbor(payload));
+
+  if (signature === "junk") {
+    // A COSE_Sign1 nobody signed, inside the CWT tag — assembled from raw CBOR,
+    // so nothing about the structure comes from the code under test.
+    return Buffer.from(
+      encodeCbor(
+        new Tag(
+          COSE_TAG.cwt,
+          new Tag(COSE_TAG.sign1, [
+            encodeCbor(
+              new Map<number, unknown>([
+                [Headers.Algorithm, coseAlgorithmOf(KEY_FIXTURES["ec-sig"])],
+              ]),
+            ),
+            new Map<number, unknown>(),
+            bytes,
+            JUNK_SIGNATURE,
+          ]),
+        ),
+      ),
+    ).toString("base64url");
+  }
+
+  const kryptos = KEY_FIXTURES[signature];
+
+  if (kryptos === undefined) {
+    throw new Error(`the row forges a token signed by the unknown key "${signature}"`);
+  }
+
+  // RFC 9052 §4.2 defines COSE_Sign1 as carrying a DIGITAL SIGNATURE, so a shared
+  // secret has no place in it — the foreign producer emits a COSE_Mac0 for one.
+  // A forged row asking for a signed token is asking for the signature structure.
+  if (kryptos.type === "oct") {
+    throw new Error(
+      `the row forges a signed CWT with the symmetric key "${signature}", which authenticates a COSE_Mac0 rather than signing a COSE_Sign1`,
+    );
+  }
+
+  const { kty, crv, x, y, d } = kryptos.export("jwk") as Dict;
+
+  const sign1 = await Sign1.sign(
+    new ProtectedHeaders([[Headers.Algorithm, coseAlgorithmOf(kryptos)]] as never),
+    new UnprotectedHeaders([[Headers.KeyID, Buffer.from(kryptos.id, "utf8")]]),
+    bytes,
+    await COSEKey.fromJWK({ kty, crv, x, y, d } as never).toKeyLike(),
+  );
+
+  return Buffer.from(
+    encodeCbor(
+      new Tag(COSE_TAG.cwt, new Tag(COSE_TAG.sign1, sign1.getContentForEncoding())),
+    ),
+  ).toString("base64url");
+};
+
+/**
  * The access token a CAPTURED proof commits to — any token that is not the one
  * presented. Its exact value is irrelevant; that it DIFFERS is the whole
  * property, so it is spelled here once rather than restated by a row.
@@ -1093,6 +1335,24 @@ const materialise = async (
         // as `cwm` rather than `cwt`.
         format: wire === "cose" ? (kryptos.type === "oct" ? "cwm" : "cwt") : "jwt",
       };
+    }
+
+    case "forged": {
+      // ⚠ Dispatched on the STEP's own wire rather than the run's. They are the
+      // same value — `artifactWireOf` reports this step's declaration, so
+      // `wiresOf` has already restricted the run to it — and reading the
+      // declaration is what makes the union's narrowing do the work: the payload
+      // form cannot be reached on `"cose"` and the member table cannot be reached
+      // on `"jose"`.
+      return artifact.wire === "cose"
+        ? {
+            token: await forgeCose(artifact.claim, artifact.carries, artifact.signature),
+            format: "cwt",
+          }
+        : {
+            token: await forgeJose(artifact.payload, artifact.signature),
+            format: "jwt",
+          };
     }
 
     default: {

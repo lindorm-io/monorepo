@@ -312,7 +312,13 @@ describe("COSE interop — custom logic does not break the token", () => {
       iss: "https://delegator/",
       client_id: "c-2",
     });
-    expect(map.get("sub_id")).toEqual(fullCommon.subjectId); // sub_id too (already wire-shaped)
+    // `sub_id` too. ⚠ It is TRANSLATED, not passed through: RFC 9493 declares a
+    // member set, and the `iss_sub` format's `iss`/`sub` merely happen to be
+    // spelled the same on both sides. A member whose spellings diverge —
+    // `phoneNumber` -> `phone_number` — is pinned on the raw wire by
+    // `classes/sub-id-claim-wire.test.ts`, where the equality cannot be satisfied
+    // by a passthrough.
+    expect(map.get("sub_id")).toEqual(fullCommon.subjectId);
   });
 });
 

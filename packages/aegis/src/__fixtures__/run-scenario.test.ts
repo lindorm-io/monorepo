@@ -19,6 +19,7 @@ import {
   ISSUER,
   NOW,
   RESOURCE,
+  type ForgedMember,
   type Given,
   type Scenario,
   type Wire,
@@ -240,6 +241,41 @@ describe("run-scenario — the step-definition layer", () => {
           profile: "access_token",
           content: MINT_CONTENT,
           options: { format: "cwt" },
+        },
+      ]);
+
+      expect(pinnedWireOf(scenario)).toBe("cose");
+      expect(wiresOf(scenario)).toEqual(["cose"]);
+    });
+
+    // A FORGED row names an encoding and nothing else, so its own `wire` cell is
+    // the pin. Both directions, because the two forms are different shapes and a
+    // derivation that read only one of them would leave the other unpinned —
+    // which would run a raw JSON payload text through a CBOR producer.
+    test("should pin a forged JOSE payload row to jose", () => {
+      const scenario = probe([
+        {
+          step: "token",
+          via: "forged",
+          wire: "jose",
+          payload: '{"sub":"user-1"}',
+          signature: "junk",
+        },
+      ]);
+
+      expect(pinnedWireOf(scenario)).toBe("jose");
+      expect(wiresOf(scenario)).toEqual(["jose"]);
+    });
+
+    test("should pin a forged COSE member-table row to cose", () => {
+      const scenario = probe([
+        {
+          step: "token",
+          via: "forged",
+          wire: "cose",
+          claim: "act",
+          carries: [{ key: "2", keyedBy: "label", value: "service-1" }],
+          signature: "junk",
         },
       ]);
 
@@ -505,6 +541,85 @@ describe("run-scenario — the step-definition layer", () => {
       await expect(runScenario(scenario, ctx, "jose")).rejects.toThrow(
         /asserts on the cleartext wire payload/,
       );
+    });
+
+    // THE FORGED PRODUCER'S OWN GUARDS. A forged row states a member TABLE, and
+    // the two ways that table can be written wrong are both silent: a member
+    // whose label is not an integer, and two rows landing on ONE resolved key. In
+    // each case the row would still go red on the refusal it expected — for a
+    // reason that has nothing to do with the capability — so the harness has to
+    // say which of the two happened.
+    describe("the forged COSE member table", () => {
+      const forged = (carries: ReadonlyArray<ForgedMember>): Scenario => ({
+        id: "probe",
+        title: "a probe row, for the forged member-table guards alone",
+        rationale: "not a capability — this row exists only to exercise the guards.",
+        given: [
+          {
+            step: "token",
+            via: "forged",
+            wire: "cose",
+            claim: "act",
+            carries,
+            signature: "junk",
+          },
+        ],
+        when: [{ step: "parse" }],
+        then: [{ step: "accepts" }],
+      });
+
+      // ⚠⚠ THE EMPTY CELL IS THE ONE THAT MATTERED. `Number("")` is `0`, an
+      // integer, so a `Number.isInteger` guard accepted a BLANK column — the form
+      // a Gherkin data table produces most readily — and wrote the member at label
+      // 0. The other four are `Number`'s remaining leniencies, each of which
+      // resolves to a real label a row never named, so the cell and the wire would
+      // disagree with nothing said.
+      test.each([
+        ["a text name", "sub"],
+        ["an EMPTY cell", ""],
+        ["a decimal point", "2.0"],
+        ["surrounding space", " 2 "],
+        ["hexadecimal", "0x10"],
+        ["exponent notation", "1e3"],
+      ])("should refuse a label written as %s", async (_form, key) => {
+        await expect(
+          runScenario(
+            forged([{ key, keyedBy: "label", value: "service-1" }]),
+            ctx,
+            "cose",
+          ),
+        ).rejects.toThrow(/which is not an integer/);
+      });
+
+      // The control: the guard must still admit what RFC 9052 §1.5 calls a label,
+      // negative range included, or it would refuse every row it exists to serve.
+      // The probe's verdict is `accepts` and `parse` reports a payload without
+      // checking a signature, so the row RUNS TO COMPLETION — a stronger statement
+      // than "not this error": the label reached the wire and came back.
+      test.each([["2"], ["-70000"]])("should admit the integer label %s", async (key) => {
+        await expect(
+          runScenario(
+            forged([{ key, keyedBy: "label", value: "service-1" }]),
+            ctx,
+            "cose",
+          ),
+        ).resolves.toBeUndefined();
+      });
+
+      test("should refuse two members that resolve to ONE key", async () => {
+        // Both rows land on the integer label 2, so a `Map` would keep the last
+        // and the row would state one member where it wrote two.
+        await expect(
+          runScenario(
+            forged([
+              { key: "2", keyedBy: "label", value: "audited-service" },
+              { key: "2", keyedBy: "label", value: "rogue-service" },
+            ]),
+            ctx,
+            "cose",
+          ),
+        ).rejects.toThrow(/twice, so one of the two could never reach the wire/);
+      });
     });
 
     // ⚠ LOCAL cast, deliberate: the THEN tuple type makes a verdict ALONGSIDE an

@@ -9,15 +9,29 @@ exports[`actChainShape > fails on a malformed nested act 1`] = `
 ]
 `;
 
-exports[`actChainShape > fails on an unknown member and a non-string sub 1`] = `
+exports[`actChainShape > fails on a non-string sub 1`] = `
 [
-  {
-    "key": "act.surprise",
-    "message": "Unknown member "surprise" in "act"",
-  },
   {
     "key": "act.subject",
     "message": ""act.subject" must be a string",
+  },
+]
+`;
+
+exports[`actChainShape > fails on an actor audience array holding something that is not a string 1`] = `
+[
+  {
+    "key": "act.audience",
+    "message": ""act.audience" must be a string or array of strings",
+  },
+]
+`;
+
+exports[`actChainShape > fails on an actor audience that is neither a string nor an array 1`] = `
+[
+  {
+    "key": "act.audience",
+    "message": ""act.audience" must be a string or array of strings",
   },
 ]
 `;

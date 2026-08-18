@@ -166,17 +166,123 @@ export const applyVerifyPolicy = ({
    *     statement about a token that IS declared bound, and now reaches the
    *     comparison and is refused `dpop_thumbprint_mismatch`.
    *
-   * ⚠ WHAT IS STILL OPEN, and it is a filed defect rather than an oversight:
-   * `trustBoundThumbprint: true` accepts `jkt: ""` (it short-circuits the only
-   * refusal that fires), and EVERY non-string blanking form — `null`, `42`, `{}`,
-   * or a `cnf` that is not an object — is erased to `undefined` by
-   * `toConfirmation` (`internal/claims/translate.ts`) before this gate can see
-   * that a binding was stated, so all of them are accepted as bearer tokens on
-   * every path. Closing that is a decision about what a malformed wire `cnf`
-   * MEANS — public-surface semantics, recorded with its measurements in the
-   * project's open items. Do not close it here without that decision.
+   * ⚠ THE OTHER BLANKING FORMS ARE CLOSED ELSEWHERE, and the split is the point.
+   * `42`, `{}` and a `cnf` that is not an object at all used to be erased to
+   * `undefined` by the confirmation decoder before this gate could see that a
+   * binding had been stated, so every one of them verified as a plain bearer
+   * token. They are REFUSED AT THE READ now — a member whose value contradicts
+   * its declared shape is not a member this package may drop, and neither is a
+   * `cnf` that is not an object (`internal/claims/translate.ts`) — so what
+   * reaches this gate is a confirmation that was READABLE. Whether it BINDS
+   * anything is the question below.
+   *
+   * ⚠⚠ `null` IS STILL IN THAT LIST, AND `cnf` IS THE ONE CLAIM EXEMPT FROM THE
+   * PACKAGE'S NULL-IS-ABSENCE RULE (`internal/claims/is-not-stated.ts`). The
+   * exemption was earned: with `cnf` taking the carve-out, a null `jkt` was erased
+   * in `domainToWire` before the COSE fail-closed guard could see it — the guard
+   * asks `cnf[member] !== undefined` (`internal/cose/cose-key.ts`) — and
+   * `mint("cwt", { thumbprint: null, keyId })` MINTED a CWT that verified with no
+   * proof, byte-identical to a legitimate key-id binding, where
+   * `{ thumbprint: JKT, keyId }` refuses `cose_cnf_unsupported`. RFC 7800 §3.1
+   * §6.1 types the member by MUST — the `jkt` value "MUST be the base64url
+   * encoding (as defined in [RFC7515]) of the JWK SHA-256 Thumbprint" — so a null
+   * one contradicts the declaration.
+   *
+   * ⛔ WHAT THIS GATE STILL DOES NOT SEE, stated because the sentence that stood
+   * here claimed the read path was safe by construction: `internal/claims/translate.ts`
+   * refuses an UNREADABLE confirmation, not an UNBOUND one. A `cnf` carrying
+   * `jwk`/`kid` and no `jkt` reaches here with `boundThumbprint` undefined and is
+   * treated as declaring no sender constraint — long-standing, and correct for an
+   * issuer that wrote it, but note that `Aegis.toDomain` is NOT signature-gated
+   * (`classes/Aegis.ts` documents it as the claim door, and pylon calls it on an
+   * introspection response body), so "only an issuer could have written this" is
+   * not an argument available at every door.
    */
   const boundThumbprint = claims.confirmation?.thumbprint;
+
+  /**
+   * ⭐⭐ NAMED, BUT NOT SATISFIED — ONE CHECK, AHEAD OF ALL THREE DPoP BRANCHES.
+   *
+   * RFC 7800 §3: "By including a 'cnf' (confirmation) claim in a JWT, the issuer
+   * of the JWT declares that the presenter possesses a particular key and that
+   * the recipient can cryptographically confirm that the presenter has possession
+   * of that key." So a verifier deciding whether a token is bound reads whether
+   * the issuer DECLARED a binding, not whether the declared value happens to be
+   * usable. A confirmation that names nothing is a declaration that cannot be
+   * honoured, and the only safe response to one is refusal: downgrading it to
+   * bearer semantics inverts the security property, because the WEAKEST possible
+   * confirmation would buy the WIDEST possible acceptance.
+   *
+   * ⚠⚠ IT MUST BE ONE CHECK AHEAD OF THE BRANCHES RATHER THAN THREE INSIDE THEM,
+   * and each branch shows why on its own:
+   *   - NO PROOF, VOUCHED. `trustBoundThumbprint` says the proof was already
+   *     checked upstream, so it substitutes for the PROOF and never for the
+   *     binding the proof was checked against. It used to skip the only refusal
+   *     on that path, so `cnf: { jkt: "" }` verified as a bearer token.
+   *   - A PROOF SUPPLIED. The empty thumbprint was handed to `verifyDpopProof` as
+   *     the value to match, and the comparison failed with
+   *     `dpop_thumbprint_mismatch` — a refusal naming the PRESENTER'S key as the
+   *     problem when the TOKEN'S confirmation is, and carrying no `data` at all.
+   *   - NO PROOF, NO VOUCH. This one already refused, but for the wrong reason:
+   *     `dpop_proof_required` tells a caller to go and fetch a proof for a
+   *     binding no proof could ever satisfy.
+   *
+   * ⚠ TWO VALUES, ONE PREDICATE, AND THE SCOPE IS EXACTLY THOSE TWO.
+   * `confirmation` answers for `cnf: {}` — an object binding nothing — and
+   * `thumbprint` answers for `cnf: { jkt: "" }`. `isClaimOmitted` is vocabulary
+   * presence and `isClaimSatisfied` is whether there is a value to bite on; the
+   * gap between them IS this verdict.
+   *
+   * ⚠⚠ IT DOES NOT JUDGE THE OTHER FOUR MEMBERS, and saying so is the honest
+   * version of the rule. Measured through the public `verify` door on both the
+   * bare and the vouched path: `cnf: { kid: "" }`, `{ "x5t#S256": "" }`,
+   * `{ jku: "" }` and `{ jwk: {} }` all verify. That is NOT a fail-open, and the
+   * control is what shows it — their NON-empty forms verify as plain bearer
+   * tokens too, because `jkt` is the only member aegis gates on at all. An empty
+   * `kid` therefore loosens nothing: there is no check it slips past. If aegis
+   * ever gates on a second member, that member joins this verdict on the same
+   * day, and the prose here and in the error's `details` has to widen with it.
+   *
+   * ⚠ `data: { format }`, like every sibling refusal in this gate. It is what
+   * makes the refusal attributable to the CONFIRMATION rather than to the
+   * presenter's proof, whose own refusal carries no `data`.
+   */
+  const namedButUnsatisfied = (value: unknown): boolean =>
+    !isClaimOmitted(value) && !isClaimSatisfied(value);
+
+  /**
+   * WHICH of the two values was named and unsatisfied — `cnf` for a confirmation
+   * with no member, `cnf.jkt` for one whose thumbprint is empty.
+   *
+   * ⚠⚠ IT IS IN `data` BECAUSE `format` ALONE CANNOT DISCRIMINATE THIS REFUSAL
+   * FROM ITS NEIGHBOUR, and that was measured rather than reasoned about. Every
+   * refusal in this gate stamps `data: { format }` — including
+   * `dpop_token_not_bound`, which fires on the SAME token when a proof is supplied
+   * and this verdict is absent. A scenario row pinning `format` alone therefore
+   * went green against the wrong refusal: deleting the `confirmation` half of the
+   * predicate left the proof-path row passing, because the token fell through to
+   * `dpop_token_not_bound` with an identical `data`. A refusal a row cannot tell
+   * from its neighbour is a row that proves nothing.
+   *
+   * ⭐ It is also the more useful error: a consumer repairing a token learns WHICH
+   * half of the confirmation is unusable rather than only that one of them is.
+   */
+  const unsatisfied = namedButUnsatisfied(claims.confirmation)
+    ? "cnf"
+    : namedButUnsatisfied(boundThumbprint)
+      ? "cnf.jkt"
+      : undefined;
+
+  if (unsatisfied !== undefined) {
+    throw new AegisDomainError("Invalid token: the confirmation binds no key", {
+      code: "confirmation_binds_no_key",
+      data: { format, member: unsatisfied },
+      debug: { confirmation: claims.confirmation },
+      title: "Confirmation Binds No Key",
+      details:
+        "The token carries a confirmation that is empty, or one whose thumbprint (cnf.jkt) is present but empty. RFC 7800 makes the claim the issuer's declaration that the presenter holds a particular key and that the recipient can confirm it, so a declaration naming nothing cannot be honoured and is refused on every path, including the ones where a caller vouches that the proof was checked upstream. Only those two shapes are judged here: the thumbprint is the one confirmation member this verifier acts on, so an empty value in any other member passes no gate it could otherwise have failed.",
+    });
+  }
 
   if (options.dpopProof !== undefined) {
     if (isClaimOmitted(boundThumbprint)) {

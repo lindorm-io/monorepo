@@ -1,19 +1,28 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`cnfShape > fails on an unknown cnf member 1`] = `
-[
-  {
-    "key": "confirmation.surprise",
-    "message": "Unknown confirmation member "surprise"",
-  },
-]
-`;
-
 exports[`cnfShape > fails when cnf is not an object 1`] = `
 [
   {
     "key": "confirmation",
     "message": "confirmation (cnf) must be an object",
+  },
+]
+`;
+
+exports[`cnfShape > fails when jkt is not a string 1`] = `
+[
+  {
+    "key": "confirmation.thumbprint",
+    "message": "confirmation.thumbprint (cnf.jkt) must be a string",
+  },
+]
+`;
+
+exports[`cnfShape > fails when jkt is not valid base64url 1`] = `
+[
+  {
+    "key": "confirmation.thumbprint",
+    "message": "confirmation.thumbprint (cnf.jkt) must be valid base64url",
   },
 ]
 `;

@@ -19,26 +19,30 @@ import {
 import { AES_ENCRYPTION_ALGORITHMS } from "@lindorm/types";
 import type { TokenFormatTag } from "../../types/index.js";
 import type { CnfMember, KitCapabilities } from "./capabilities.js";
-import { COSE_CNF_MEMBERS } from "./cose-cnf-labels.js";
+import { CNF_JOSE_MEMBERS, COSE_CNF_MEMBERS } from "../claims/cnf-members.js";
 
 const NONE_ALG: ReadonlySet<KryptosAlgorithm> = new Set();
 const NONE_ENC: ReadonlySet<KryptosEncryption> = new Set();
 const NO_CNF: ReadonlySet<CnfMember> = new Set();
 
-/** The confirmation members the JOSE `cnf` translator emits (`translate.ts`). */
-const JOSE_CNF: ReadonlySet<CnfMember> = new Set([
-  "jkt",
-  "x5t#S256",
-  "jwk",
-  "kid",
-  "jku",
-]);
+/**
+ * The confirmation members the JOSE `cnf` translator emits — DERIVED from the
+ * member declaration the translator itself reads (`internal/claims/cnf-members.ts`).
+ *
+ * ⚠ IT WAS A HAND-WRITTEN LITERAL, and it was the FOURTH copy of the same five
+ * names: the write table, the read table, the mint-side allow list and this row.
+ * Nothing bound them to each other, so a member added to the translator and not
+ * here would have been emitted on a wire the capability table said could not
+ * carry it.
+ */
+const JOSE_CNF: ReadonlySet<CnfMember> = new Set(CNF_JOSE_MEMBERS);
 
 /**
- * The confirmation members a COSE `cnf` map can carry — DERIVED from the label
- * table the codec switches over, never restated. A member is representable
- * exactly when RFC 8747 gives it a label aegis writes, and there is one place
- * that says so, so this row cannot claim a member the encoder would drop.
+ * The confirmation members a COSE `cnf` map can carry — DERIVED from the same
+ * declaration, through the `wire.cose` cells that carry an integer label. A
+ * member is representable exactly when RFC 8747 gives it a label aegis writes,
+ * and there is one place that says so, so this row cannot claim a member the
+ * encoder would drop.
  */
 const COSE_CNF: ReadonlySet<CnfMember> = new Set(COSE_CNF_MEMBERS);
 

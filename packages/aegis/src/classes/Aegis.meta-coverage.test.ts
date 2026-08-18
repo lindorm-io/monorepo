@@ -287,7 +287,8 @@ describe("Aegis — meta coverage", () => {
   // stop happening quietly — so the reason is on the record. `cwt.cnfMembers`
   // lost its reader when the COSE confirmation gained ONE source: `encodeCnf`
   // used to read the row, and the row is now DERIVED from the label table the
-  // codec switches over (`registry/cose-cnf-labels.ts`). Nothing reads it back
+  // codec switches over (`claims/cnf-members.ts`, where the label table is in
+  // turn derived from each member's own `wire.cose` cell). Nothing reads it back
   // because there is nothing left to disagree with — the row and the encoder are
   // the same data. A read of a second list is weaker than not having one.
   test("should record how many capability cells a kit actually reads", () => {

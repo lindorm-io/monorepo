@@ -484,8 +484,9 @@ describe("HEADER_SPECS", () => {
     expect(joseByCose("typ")).toBeUndefined();
     expect(joseByCose("cty")).toBeUndefined();
     expect(joseByCose("alg")).toBeUndefined();
-    // …not even the stringified integer, which RFC 9052 §1.5 makes a different
-    // label from the integer itself.
+    // …not even the stringified integer. RFC 9052 §1.5 admits both forms
+    // (`label = int / tstr`) and CBOR keys them apart, so the text "16" is a
+    // different label from the integer 16.
     expect(joseByCose("16")).toBeUndefined();
   });
 

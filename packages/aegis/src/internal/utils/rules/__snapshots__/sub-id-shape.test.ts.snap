@@ -1,10 +1,19 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`subIdShape > fails for the phone_number format spelled in the wire vocabulary 1`] = `
+[
+  {
+    "key": "subjectId.phoneNumber",
+    "message": "subjectId of format "phone_number" requires member "phoneNumber"",
+  },
+]
+`;
+
 exports[`subIdShape > fails when a required member is null 1`] = `
 [
   {
-    "key": "sub_id.id",
-    "message": "sub_id of format "opaque" requires member "id"",
+    "key": "subjectId.id",
+    "message": "subjectId of format "opaque" requires member "id"",
   },
 ]
 `;
@@ -12,8 +21,8 @@ exports[`subIdShape > fails when a required member is null 1`] = `
 exports[`subIdShape > fails when a required member of the format is missing 1`] = `
 [
   {
-    "key": "sub_id.sub",
-    "message": "sub_id of format "iss_sub" requires member "sub"",
+    "key": "subjectId.sub",
+    "message": "subjectId of format "iss_sub" requires member "sub"",
   },
 ]
 `;
@@ -21,17 +30,17 @@ exports[`subIdShape > fails when a required member of the format is missing 1`] 
 exports[`subIdShape > fails when format is missing 1`] = `
 [
   {
-    "key": "sub_id.format",
-    "message": "sub_id.format must be a string",
+    "key": "subjectId.format",
+    "message": "subjectId.format must be a string",
   },
 ]
 `;
 
-exports[`subIdShape > fails when sub_id is not an object 1`] = `
+exports[`subIdShape > fails when subjectId is not an object 1`] = `
 [
   {
-    "key": "sub_id",
-    "message": "sub_id must be an object",
+    "key": "subjectId",
+    "message": "subjectId must be an object",
   },
 ]
 `;
@@ -39,8 +48,8 @@ exports[`subIdShape > fails when sub_id is not an object 1`] = `
 exports[`subIdShape > fails when the account format's required member is empty 1`] = `
 [
   {
-    "key": "sub_id.uri",
-    "message": "sub_id of format "account" requires member "uri"",
+    "key": "subjectId.uri",
+    "message": "subjectId of format "account" requires member "uri"",
   },
 ]
 `;
@@ -48,8 +57,8 @@ exports[`subIdShape > fails when the account format's required member is empty 1
 exports[`subIdShape > fails when the aliases format's required member is empty 1`] = `
 [
   {
-    "key": "sub_id.identifiers",
-    "message": "sub_id of format "aliases" requires member "identifiers"",
+    "key": "subjectId.identifiers",
+    "message": "subjectId of format "aliases" requires member "identifiers"",
   },
 ]
 `;
@@ -57,8 +66,8 @@ exports[`subIdShape > fails when the aliases format's required member is empty 1
 exports[`subIdShape > fails when the did format's required member is empty 1`] = `
 [
   {
-    "key": "sub_id.url",
-    "message": "sub_id of format "did" requires member "url"",
+    "key": "subjectId.url",
+    "message": "subjectId of format "did" requires member "url"",
   },
 ]
 `;
@@ -66,8 +75,8 @@ exports[`subIdShape > fails when the did format's required member is empty 1`] =
 exports[`subIdShape > fails when the email format's required member is empty 1`] = `
 [
   {
-    "key": "sub_id.email",
-    "message": "sub_id of format "email" requires member "email"",
+    "key": "subjectId.email",
+    "message": "subjectId of format "email" requires member "email"",
   },
 ]
 `;
@@ -75,8 +84,8 @@ exports[`subIdShape > fails when the email format's required member is empty 1`]
 exports[`subIdShape > fails when the iss_sub format's required member is empty 1`] = `
 [
   {
-    "key": "sub_id.sub",
-    "message": "sub_id of format "iss_sub" requires member "sub"",
+    "key": "subjectId.sub",
+    "message": "subjectId of format "iss_sub" requires member "sub"",
   },
 ]
 `;
@@ -84,8 +93,8 @@ exports[`subIdShape > fails when the iss_sub format's required member is empty 1
 exports[`subIdShape > fails when the opaque format's required member is empty 1`] = `
 [
   {
-    "key": "sub_id.id",
-    "message": "sub_id of format "opaque" requires member "id"",
+    "key": "subjectId.id",
+    "message": "subjectId of format "opaque" requires member "id"",
   },
 ]
 `;
@@ -93,8 +102,8 @@ exports[`subIdShape > fails when the opaque format's required member is empty 1`
 exports[`subIdShape > fails when the phone_number format's required member is empty 1`] = `
 [
   {
-    "key": "sub_id.phone_number",
-    "message": "sub_id of format "phone_number" requires member "phone_number"",
+    "key": "subjectId.phoneNumber",
+    "message": "subjectId of format "phone_number" requires member "phoneNumber"",
   },
 ]
 `;
@@ -102,8 +111,8 @@ exports[`subIdShape > fails when the phone_number format's required member is em
 exports[`subIdShape > fails when the uri format's required member is empty 1`] = `
 [
   {
-    "key": "sub_id.uri",
-    "message": "sub_id of format "uri" requires member "uri"",
+    "key": "subjectId.uri",
+    "message": "subjectId of format "uri" requires member "uri"",
   },
 ]
 `;

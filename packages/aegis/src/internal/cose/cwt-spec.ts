@@ -1,5 +1,6 @@
 import type { CborField, CborValueKind } from "@lindorm/cbor";
 import { CborKit } from "@lindorm/cbor";
+import { isArray } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { CoseError } from "../../errors/index.js";
 import {
@@ -8,12 +9,13 @@ import {
   coseLabel,
   coseName,
 } from "../claims/claims-registry.js";
-import type { BespokeKind } from "../registry/claim-spec.js";
+import type { BespokeKind, ClaimMemberSpec } from "../registry/claim-spec.js";
 import { isPrivateUseLabel } from "../registry/is-private-use-label.js";
 import { codecFor } from "../registry/param-spec.js";
-import { decodeActCompact, encodeActCompact } from "./act-claim.js";
+import { wireKeyLabel } from "../registry/wire-key.js";
+import { type CompactSpec, compactDecode, compactEncode } from "./compact-map.js";
+import { compactSpecFromMembers } from "./compact-spec-from-members.js";
 import { decodeCnf, encodeCnf } from "./cose-key.js";
-import { decodeSubIdCompact, encodeSubIdCompact } from "./sub-id-claim.js";
 
 // The CWT claims layer expressed as one declarative CBOR spec over the single
 // claim registry, replacing the hand-rolled encode/decode engine while keeping the
@@ -78,33 +80,10 @@ export const shapeForBespoke = (bespoke: BespokeKind): Partial<CborField> => {
         decode: (value) => decodeCnf(value as Map<number, unknown>),
       };
 
-    // `act`/`may_act` accept the wire act (`sub`/`iss`/`aud`/`client_id`) and
-    // switch compact-vs-interoperable on the encode `proprietary` option.
-    case "act":
-      return {
-        kind: "bespoke",
-        encode: (value, options) =>
-          options.proprietary ? encodeActCompact(value as Dict) : value,
-        decode: (value) => (value instanceof Map ? decodeActCompact(value) : value),
-      };
-
-    case "subId":
-      return {
-        kind: "bespoke",
-        encode: (value, options) =>
-          options.proprietary ? encodeSubIdCompact(value as Dict) : value,
-        decode: (value) => (value instanceof Map ? decodeSubIdCompact(value) : value),
-      };
-
-    // The three that genuinely have no COSE shaping to do, each stated rather
-    // than left to a fall-through: an RFC 8417 `events` map is keyed by
-    // event-type URI, an RFC 9396 `authorization_details` element is defined by
-    // whoever registers its `type`, and an OIDC `address` was already
-    // snake-cased by the translator. All three reach the wire as the translator
-    // built them.
+    // The one that genuinely has no COSE shaping to do, stated rather than left
+    // to a fall-through: an RFC 8417 `events` map is keyed by event-type URI, so
+    // it reaches the wire as the translator built it.
     case "events":
-    case "authDetails":
-    case "address":
       return VERBATIM;
 
     default: {
@@ -121,6 +100,169 @@ export const shapeForBespoke = (bespoke: BespokeKind): Partial<CborField> => {
       });
     }
   }
+};
+
+/**
+ * Whether a member set describes ONE structure or the ELEMENTS of a collection.
+ *
+ * ⚠ REQUIRED, with no default, and that is the point. `fieldForClaim` reaches the
+ * same builder from two arms, and the compact encoder needs to know which — a
+ * default would silently give one of them the other's behaviour, which is exactly
+ * how a collection reached a signed token as an empty map.
+ */
+export type StructureForm = "single" | "collection";
+
+/** Compact ONE structure, or every element of a collection. */
+const compactValue = (value: unknown, spec: CompactSpec, form: StructureForm): unknown =>
+  form === "collection"
+    ? isArray(value)
+      ? value.map((element) => compactEncode(element as Dict, spec))
+      : value
+    : compactEncode(value as Dict, spec);
+
+/** The mirror. A value that is not the compact shape rides back untouched. */
+const decompactValue = (
+  value: unknown,
+  spec: CompactSpec,
+  form: StructureForm,
+): unknown =>
+  form === "collection"
+    ? isArray(value)
+      ? value.map((element) =>
+          element instanceof Map ? compactDecode(element, spec) : element,
+        )
+      : value
+    : value instanceof Map
+      ? compactDecode(value, spec)
+      : value;
+
+/**
+ * The value-shaping half of a claim whose COSE codec declares a STRUCTURE — the
+ * shape DERIVED from the member set, never a second hand-written table beside
+ * the registry's.
+ *
+ * The one question that decides the shape is how the members are KEYED on COSE:
+ *
+ *   - EVERY member string-keyed (`wireName`). The translator has already emitted
+ *     the structure under exactly those names, so there is nothing left to do
+ *     and the value rides verbatim: the OIDC Core §5.1.1 `address` and the
+ *     RFC 9396 `authorization_details` ELEMENT (reached through the same builder,
+ *     since an array of structures asks this question of its element).
+ *   - EVERY member carrying an INTEGER label (`wireLabel`). That is the compact
+ *     COSE form — a label map, walked by `internal/cose/compact-map.ts` off a
+ *     spec DERIVED from the very same member declarations — and it is what the
+ *     RFC 8693 actor chain takes.
+ *
+ * ⚠⚠ A MIXED SET THROWS, AND THE REASON IS NARROWER THAN IT WAS. It used to be a
+ * DATA-LOSS argument — a label map had nowhere to put an unlabelled member, so
+ * compacting a mixed set dropped it from a signed token. That is no longer true:
+ * `compactEncode` walks the VALUE and gives an unlabelled member its own string
+ * key, which RFC 9052 §1.5 permits outright ("In COSE, we use text strings,
+ * negative integers, and unsigned integers as map keys", grammar
+ * `label = int / tstr`). So a mixed set is now REPRESENTABLE, and the refusal is
+ * kept as a MIGRATION guard rather than a correctness one: a half-labelled member
+ * set is what a migration looks like halfway through, and emitting one would
+ * freeze that halfway state onto a signed wire where a later completion moves
+ * bytes. It is stated as the weaker claim it is, and it names every member on the
+ * minority side so the intended completion is obvious.
+ * ⚠ Rendering a declared integer label as a TEXT key would still be wrong outright
+ * — CBOR keys the integer `2` and the text `"2"` apart, so the token would carry a
+ * member the registry says it does not — but nothing reaches that any more.
+ *
+ * ⚠⚠ IT ASKS THE QUESTION AT EVERY DEPTH, NOT ONLY OF THE DIRECT CHILDREN. A
+ * member's own codec may declare a structure, and the two keyings cannot
+ * interleave down a tree either: `CompactSpec.nested` holds compact specs alone,
+ * and a verbatim value has nothing that would reach inside it to compact a level.
+ * So the verdict is taken over EVERY member reachable from the claim.
+ *
+ * ⚠ THE WALK NEEDS CYCLE PROTECTION AND HAS IT. RFC 8693 §4.1 defines the actor
+ * chain recursively — an `act` contains an `act` — so a member set can and does
+ * reference itself, and a naive descent would not terminate. The `children`
+ * THUNK is the stable identity to key on: a self-referential declaration is the
+ * same function object every time it is reached, whereas the arrays it returns
+ * are fresh on each call and would defeat a visited set.
+ */
+export const shapeForObject = (
+  domain: string,
+  children: ReadonlyArray<ClaimMemberSpec>,
+  form: StructureForm,
+): Partial<CborField> => {
+  const labelled: Array<string> = [];
+  const textKeyed: Array<string> = [];
+  const seen = new Set<() => ReadonlyArray<ClaimMemberSpec>>();
+
+  const visit = (members: ReadonlyArray<ClaimMemberSpec>, path: string): void => {
+    for (const member of members) {
+      // The member's path from the claim, so a refusal names WHERE the odd member
+      // is rather than only what it is called — at depth the leaf name alone
+      // ("sub") does not locate it.
+      const here = path.length === 0 ? member.domain : `${path}.${member.domain}`;
+
+      if (wireKeyLabel(member.wire.cose) === undefined) textKeyed.push(here);
+      else labelled.push(here);
+
+      // A member's own structure, whether it holds ONE (`object`) or MANY
+      // (`array` with `of`). Both descend, because the keying question is equally
+      // live at either — and reaching only the first would leave the guard silent
+      // about exactly the form this claim registry has now gained.
+      const nested =
+        member.codec.kind === "object"
+          ? member.codec.children
+          : member.codec.kind === "array"
+            ? member.codec.of?.children
+            : undefined;
+
+      if (nested === undefined) continue;
+      if (seen.has(nested)) continue;
+
+      seen.add(nested);
+      visit(nested(), here);
+    }
+  };
+
+  visit(children, "");
+
+  if (labelled.length === 0) return VERBATIM;
+
+  if (textKeyed.length === 0) {
+    // ⭐ THE SPEC IS BUILT ONCE, HERE, AND CLOSED OVER. `fieldForClaim` runs at
+    // module load, so the derivation cost is paid once per claim rather than once
+    // per token — and, more to the point, the encode and decode halves are then
+    // provably reading the SAME table rather than two derivations of it.
+    const spec = compactSpecFromMembers(domain, children);
+
+    return {
+      kind: "bespoke",
+      // The compact label map is PROPRIETARY. Two of the actor labels — the
+      // `client_id` 4 and the nested `act` 5 — are registered in no COSE or CWT
+      // registry at all, so only a verifier holding THIS registry can read the
+      // map. An interoperable token therefore keeps the string-keyed structure
+      // the translator already built.
+      //
+      // ⚠⚠ THE `form` BRANCH IS A FIX, NOT SYMMETRY. Without it the collection arm
+      // handed `compactEncode` the ARRAY: it matched no member, and the claim
+      // reached a SIGNED token as an EMPTY MAP. Measured before the fix —
+      // `shapeForObject("syntheticCollection", [labelled("sub", 2), labelled("iss", 1)])`
+      // then `.encode([{ sub: "a", iss: "b" }, { sub: "c" }], { proprietary: true })`
+      // yielded `Map(0) {}`. ⭐ IT IS NO LONGER LATENT: RFC 9493 §3.2.8's
+      // `sub_id.identifiers` is a labelled array of self, so the collection arm
+      // is now reached by a REAL claim in the proprietary encoding, and
+      // `classes/sub-id-claim-wire.test.ts` pins the resulting bytes at depth.
+      // (`authorizationDetails`'s single declared member is text-keyed, so it
+      // reaches the verbatim arm above and never gets here.)
+      encode: (value, options) =>
+        options.proprietary ? compactValue(value, spec, form) : value,
+      decode: (value) => decompactValue(value, spec, form),
+    };
+  }
+
+  throw new CoseError("Mixed COSE keying on a structured claim's members", {
+    code: "cose_mixed_member_keying",
+    data: { claim: domain, labelled, textKeyed },
+    title: "Mixed COSE Keying On A Structured Claim's Members",
+    details:
+      "The claim registry declares a structured claim whose members are not keyed the same way on COSE — some carry integer labels and some do not — and the two cannot be rendered into one map without either putting a labelled member under a text key the registry does not declare or dropping an unlabelled member from a signed token.",
+  });
 };
 
 /**
@@ -182,7 +324,20 @@ export const shapeForBstr = (encoding: "utf8" | "b64u"): Partial<CborField> => {
 // is text on JOSE and bytes on COSE — the token id and the three OIDC hashes —
 // resolves to `bstr` here and to `text` in the translator. Which BYTES is the
 // codec's `encoding`, not this function's business (see `shapeForBstr`).
-const fieldForClaim = (spec: ClaimSpec): CborField => {
+/**
+ * ⚠ EXPORTED FOR ITS DRIFT GUARD ALONE, exactly as the three shapers above are.
+ * No production caller reaches it except `CWT_CLAIMS_KIT` below.
+ *
+ * ⭐ THE GUARD HAS TO ENTER HERE, NOT AT A SHAPER. Calling `shapeForObject`
+ * directly with a claim's children proves the SHAPER refuses a labelled member;
+ * it proves nothing about whether this function still routes a structured claim
+ * to it. Measured: routing the `of` arm to cbor's native `array` kind instead
+ * leaves the corpus byte-identical and the suite green — so the routing is
+ * unobservable on the wire, and the ONLY thing that choice buys is the refusal.
+ * A guard that cannot see the routing would let a future edit take the
+ * byte-identical path and silently delete that refusal.
+ */
+export const fieldForClaim = (spec: ClaimSpec): CborField => {
   const wireKey = coseName(spec);
   const label = coseLabel(spec);
   const base = {
@@ -199,12 +354,27 @@ const fieldForClaim = (spec: ClaimSpec): CborField => {
   switch (codec.kind) {
     case "text":
     case "int":
-    case "array":
     case "date":
     case "bool":
       return { ...base, kind: codec.kind as CborValueKind };
+    // An array of STRINGS is cbor's native `array` kind. An array of DECLARED
+    // STRUCTURES asks the SAME question a single structure does — are the
+    // members string-keyed or labelled on COSE — so it is answered by the same
+    // builder rather than by a second one that could answer it differently.
+    case "array":
+      return codec.of === undefined
+        ? ({ ...base, kind: codec.kind as CborValueKind } as CborField)
+        : ({
+            ...base,
+            ...shapeForObject(spec.domain, codec.of.children(), "collection"),
+          } as CborField);
     case "bstr":
       return { ...base, ...shapeForBstr(codec.encoding) } as CborField;
+    case "object":
+      return {
+        ...base,
+        ...shapeForObject(spec.domain, codec.children(), "single"),
+      } as CborField;
     case "bespoke":
       return { ...base, ...shapeForBespoke(codec.bespoke) } as CborField;
     default: {

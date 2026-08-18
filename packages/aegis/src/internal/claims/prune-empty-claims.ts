@@ -20,10 +20,20 @@ import { claimByCoseName, claimByJose } from "./claims-registry.js";
  *      why this replaced a hardcoded protected-key set: the set could only ever
  *      name the exceptions it had thought of.
  *
- * TOP LEVEL only, deliberately. A registered claim's inner members are its own
- * declared structure (an RFC 9396 `actions` array, an RFC 8417 event payload, an
- * OIDC `address` member) which the registry does not describe, so recursing would
- * be rule 2 broken one level down.
+ * TOP LEVEL only, deliberately — and the reason CHANGED once the registry
+ * learned to describe a structure. It used to be that a claim's inner members
+ * were undeclared, so recursing here would have been rule 2 broken one level
+ * down. A claim whose codec declares `children` now states a `whenEmpty` verdict
+ * for each member, and that verdict is honoured where the structure is BUILT
+ * (`internal/claims/translate.ts`), not here: the translator is the only place
+ * that knows which member a key is, and by the time a bag reaches this boundary
+ * it is WIRE-KEYED — a key here is a wire name, and resolving it back to a
+ * member would mean re-deriving what the translator has already decided. (The
+ * bag is not FLAT: a structured claim's value is a nested object at this
+ * boundary. What is true is that this walk visits the TOP LEVEL only.) So the
+ * two levels are answered in two places on purpose, and this one still walks the
+ * top level alone — which keeps rule 2 intact for the members that remain
+ * undeclared (an RFC 9396 `actions` array, an RFC 8417 event payload).
  *
  * The dict is walked, not the registry, so insertion ORDER survives — the wire
  * bytes are order-sensitive and the corpus pins them. The registry is still the

@@ -28,7 +28,7 @@ import { decodeProtectedHeader } from "../cose/structures.js";
 import { encodeCnf } from "../cose/cose-key.js";
 import { coseByJose, coseWireKey } from "../header/header-registry.js";
 import { decodeJoseHeader } from "../utils/jose-header.js";
-import { COSE_CNF_MEMBERS } from "./cose-cnf-labels.js";
+import { COSE_CNF_MEMBERS } from "../claims/cnf-members.js";
 import { KIT_CAPABILITIES } from "./kit-capabilities.js";
 import { WIRE_TAGS } from "./wire.js";
 
@@ -228,8 +228,9 @@ describe("KIT_CAPABILITIES", () => {
   // probe below (`domainToJose`). The COSE half is NOT bound here any more: that
   // probe drove `encodeCnf`, and once the row became DERIVED from the codec's
   // own label table it could only agree with itself. `cose/cose-key.test.ts`
-  // drives the encoder now, and `registry/cose-cnf-labels.test.ts` pins the
-  // table against a literal.
+  // drives the encoder now, and `claims/cnf-members.test.ts` pins the table
+  // against a literal (it inherited that duty when the label table became a
+  // DERIVATION of the member declaration and its own file went).
   test("a COSE cnf carries only the embedded key and the key id", () => {
     // `encodeCnf` maps `jwk` -> COSE_Key (member 1) and `kid` -> kid (member 3).
     // The thumbprint forms have NO COSE representation: RFC 9679 `ckt` hashes
@@ -672,9 +673,14 @@ describe("KIT_CAPABILITIES", () => {
       // the older probe (mint each member alone, collect what survives) was
       // measuring a table against itself the moment the derivation landed.
       //
-      // What the row SHOULD contain is pinned against a hand-written literal in
-      // `cose-cnf-labels.test.ts`, together with the mixed-confirmation probe
-      // that is the honest half of what this test used to do.
+      // ⭐ WHAT MAKES THAT ACCEPTABLE RATHER THAN CIRCULAR: what the row SHOULD
+      // contain is pinned against a HAND-WRITTEN literal in
+      // `claims/cnf-members.test.ts` ("gives COSE exactly the two members RFC 8747
+      // §3.1 labels"), together with the mixed-confirmation probe that is the
+      // honest half of what this test used to do. Without that literal, this
+      // assertion would be the only statement about the set and would say nothing.
+      // ⚠ It used to name `cose-cnf-labels.test.ts`, which is gone with the table
+      // it pinned; the duty moved, it did not lapse.
       expect(new Set(KIT_CAPABILITIES.cwt.cnfMembers)).toEqual(new Set(COSE_CNF_MEMBERS));
       expect(KIT_CAPABILITIES.cwm.cnfMembers).toBe(KIT_CAPABILITIES.cwt.cnfMembers);
       expect(KIT_CAPABILITIES.cwe.cnfMembers).toBe(KIT_CAPABILITIES.cwt.cnfMembers);

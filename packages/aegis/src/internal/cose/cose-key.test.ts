@@ -6,7 +6,7 @@ import { describe, expect, test } from "vitest";
 import { B64U } from "../constants/format.js";
 import { CwtKit } from "../../classes/CwtKit.js";
 import { AegisError } from "../../errors/index.js";
-import { COSE_CNF_LABELS } from "../registry/cose-cnf-labels.js";
+import { COSE_CNF_LABELS } from "../claims/cnf-members.js";
 import { coseKeyToJwk, decodeCnf, encodeCnf, jwkToCoseKey } from "./cose-key.js";
 import { decodeCwtWire } from "./decode-cwt-wire.js";
 

@@ -60,12 +60,8 @@ export const MATCH_VIOLATIONS: Readonly<Record<string, Violation>> = {
  */
 export const SHAPE_VIOLATIONS: Readonly<Record<ShapeRuleName, Violation>> = {
   actChain: {
-    claims: { act: { nested: {} } },
-    note: "RFC 8693 §4.1 — an `act` claim identifies the acting party, so an actor with no subject at any depth of the chain identifies nobody.",
-  },
-  authorizationDetails: {
-    claims: { authorizationDetails: [{ locations: ["https://rs.lindorm.test"] }] },
-    note: "RFC 9396 §2 — `type` is the field that determines the other fields of an authorization-details element, so an element without one cannot be interpreted at all.",
+    claims: { act: { subject: 1 } },
+    note: "RFC 8693 §4.1 — an `act` claim's members 'are claims that identify the actor', and a subject identifier that is not a string identifies nobody: no verifier can match it against a principal, so the token asserts a delegation to a party that cannot be named. ⚠ THE VIOLATION USED TO BE AN UNDECLARED MEMBER (`{ act: { nested: {} } }`) AND HAD TO MOVE. RFC 8693 §4.1 defines an actor's members as \"claims that identify the actor\" and §4.4 names `email` as one, so the registry declares the actor set OPEN and an undeclared member is CARRIED by every layer — the old input violates nothing at all now, which is exactly the shape of an exercise that proves a rule enforced when it is not. ⚠ The note this replaced claimed the input violated 'an actor with no subject at any depth', and that was never what it tested: `actChainShape` has never required a subject.",
   },
   confirmation: {
     claims: { confirmation: { thumbprint: "too-short" } },

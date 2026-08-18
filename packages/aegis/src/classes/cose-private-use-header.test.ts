@@ -39,7 +39,7 @@ import { CwtKit } from "./CwtKit.js";
  * (`__fixtures__/inspect-token.ts` — raw `cbor2`, importing nothing from
  * `src/internal/`). Reading a token back through aegis's own decoder would be
  * satisfied by a writer and a reader that agree on the wrong label, which is the
- * exact shape of the defect. And because RFC 9052 §1.5 makes the integer `4` and
+ * exact shape of the defect. And because CBOR keys the integer `4` and
  * the text `"4"` DIFFERENT labels, the inspector reports them apart — so the rows
  * below assert `has(-70000)` and `has("oid")` separately rather than comparing a
  * stringified key that would conflate them.

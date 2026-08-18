@@ -142,10 +142,20 @@ export type ParamSpec<
    * before the codec reads it. So the column is not a guarantee about every byte
    * on the wire — it is a guarantee about every bag that crosses a normalisation.
    *
-   * A parameter's INNER members are its
-   * own declared structure (RFC 9396 `actions`, an RFC 8417 event payload, an
-   * OIDC `address` member, a JWK's coordinates) and aegis has not declared them,
-   * so nothing recurses.
+   * ⚠ THE COLUMN NOW EXISTS AT TWO LEVELS, AND THEY ANSWER DIFFERENT QUESTIONS.
+   * A parameter whose codec is `{ kind: "object", children }` declares its inner
+   * members, and each member answers `whenEmpty` for itself
+   * ({@link MemberSpec}). The two are not the same verdict one level apart:
+   *   - THIS cell is read at the EMISSION BOUNDARY
+   *     (`internal/claims/prune-empty-claims.ts`), about the WHOLE parameter —
+   *     `address: {}` says nothing, so `address` is `"prune"`.
+   *   - A MEMBER's cell is read by the TRANSLATOR as it walks the structure
+   *     (`internal/claims/translate.ts`), about that member alone — whether
+   *     `street_address: ""` is a statement the issuer made or noise the caller
+   *     left behind.
+   * A parameter the registry does NOT give children (every scalar, and the
+   * `jwk`/`epk` header parameters) still has no inner structure to recurse into,
+   * and nothing recurses for it.
    *
    * ⚠ WRITE SIDE ONLY, on both registries. The prune decides what AEGIS EMITS;
    * a read reports what a producer WROTE, and rewriting a foreign token's empty
@@ -182,6 +192,88 @@ export type ParamSpec<
    */
   sample: D;
 };
+
+/**
+ * A MEMBER of a parameter whose codec declares a structure — the same six
+ * columns a top-level parameter answers, MINUS ONE.
+ *
+ * ⚠ IT IS AN `Omit`, NOT A COPY, and that is the point. Writing the six columns
+ * out again would be a second source of truth for the shared base: a column
+ * added there would silently not exist here, which is the drift the base was
+ * created to remove. Derived, a new base column is a compile error in every
+ * member the same way it is in every parameter.
+ *
+ * THE ONE OMISSION IS {@link ParamSpec.sensitivity}. The aegis confidentiality
+ * gate filters TOP-LEVEL specs (`internal/claims/extract-sensitive-claims.ts`);
+ * a per-member gate would have to split a structure in half on the way to the
+ * wire and is a NEW CAPABILITY, not a restatement of an existing one.
+ *
+ * ⚠ NOT EVERY STRUCTURED PARAMETER CAN HAVE CHILDREN, and the two that cannot
+ * are on the HEADER side: `jwk` and `epk` are JWKs, and a JWK is a union
+ * DISCRIMINATED BY `kty` — `internal/cose/cose-key.ts` branches EC/OKP/AKP with
+ * different member sets, and the AKP `pub` label (-1) is the EC `crv` label (-1)
+ * under a different `kty`. A flat member set cannot express that, so declaring
+ * one would be inventing a shape rather than recording one. They stay
+ * `{ kind: "jwk" }`.
+ *
+ * ⚠ A MEMBER INHERITS `codec: WireCodec<C>`, SO IT CAN DECLARE A PER-WIRE
+ * OVERRIDE AND NOTHING READS IT. {@link codecFor} is the only reader, and its one
+ * production caller (`internal/cose/cwt-spec.ts`'s `fieldForClaim`) is handed a
+ * TOP-LEVEL spec; the structure walkers read `member.codec` directly. So a member
+ * declaring `per: { cose: … }` would be a cell with no consumer — the exact shape
+ * this sweep deleted four columns for. It is recorded rather than narrowed
+ * because narrowing means splitting the base `codec` cell in two, which
+ * reintroduces the drift the shared base exists to prevent; the fix when a member
+ * genuinely needs a per-wire codec is to route the walkers through
+ * {@link codecFor}, not to fork the type. No member declares one today
+ * (`grep -c "per:" internal/claims/*-members.ts` → 0).
+ */
+export type MemberSpec<
+  D = unknown,
+  C extends ValueCodec = ValueCodec,
+  E extends WhenEmpty = WhenEmpty,
+> = Omit<ParamSpec<D, C, E>, "sensitivity"> & {
+  /**
+   * An RFC makes this member MANDATORY whenever the structure carrying it is
+   * present (RFC 9396 §2 `authorization_details[].type`; RFC 9493 §3
+   * `sub_id.format`, at the claim AND inside every element of its
+   * `identifiers` array). Absent ⇒ optional.
+   *
+   * ⚠ IT IS A SHAPE FACT, NOT A PROFILE POLICY, and that is the whole reason it
+   * is a registry column. It holds under EVERY profile and under none, so the
+   * structure walker enforces it wherever the claim is translated
+   * (`internal/claims/translate.ts`) — where the equivalent profile `shape`
+   * rule it replaced defended only the profiles that opted in. A shape rule the
+   * caller can decline is not a statement about the structure; it is a
+   * statement about one profile's appetite.
+   *
+   * ⚠ IT REFUSES IN BOTH DIRECTIONS, unlike {@link ParamSpec.whenEmpty} (write
+   * side only). `whenEmpty` decides what aegis EMITS, and a read must report
+   * what a producer wrote — but "report it" is exactly what a structure with no
+   * required member cannot be given: RFC 9396 §2 makes `type` the field whose
+   * value "determines the allowable contents of the object that contains it",
+   * so an element without one has no defined contents to report. Dropping it on
+   * read would misreport a stranger's token (fewer authorizations than it
+   * states); keeping it would hand a consumer an authorization nobody defined.
+   * The third disposition is the only honest one, and it is a refusal.
+   *
+   * ⚠ IT DEMANDS A SATISFIED VALUE, not mere presence — `isClaimSatisfied`, the
+   * same predicate a profile `required` rule reads. An `authorization_details`
+   * element typed `""` identifies no type, so nothing can be looked up to
+   * interpret the rest of it. On the WRITE side a `whenEmpty: "prune"` member
+   * is dropped by the prune first and then refused as absent; on the READ side
+   * the prune does not run, so the empty value reaches this check itself. One
+   * predicate, both directions, same outcome.
+   */
+  required?: true;
+};
+
+/**
+ * The two columns that IDENTIFY a parameter — its domain name and its per-wire
+ * spelling. Both {@link ParamSpec} and {@link MemberSpec} carry them, which is
+ * what lets one wire-name selector serve a claim and a member alike.
+ */
+export type WireNamed = Pick<ParamSpec, "domain" | "wire">;
 
 /** The codec that applies on a given wire: the per-wire override, else the base. */
 export const codecFor = <C extends ValueCodec>(

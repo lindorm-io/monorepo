@@ -85,6 +85,7 @@
  */
 
 import type { ClaimSpec } from "../registry/claim-spec.js";
+import type { WireNamed } from "../registry/param-spec.js";
 import type { Wire } from "../registry/wire.js";
 import {
   type WireKey,
@@ -93,6 +94,14 @@ import {
   wireLabel,
   wireName,
 } from "../registry/wire-key.js";
+
+import { ACT_MEMBERS, ACT_SAMPLE } from "./act-members.js";
+import { ADDRESS_MEMBERS, ADDRESS_SAMPLE } from "./address-members.js";
+import {
+  AUTHORIZATION_DETAIL_MEMBERS,
+  AUTHORIZATION_DETAILS_SAMPLE,
+} from "./authorization-details-members.js";
+import { SUB_ID_MEMBERS, SUB_ID_SAMPLE } from "./sub-id-members.js";
 
 export type { ClaimCodec, ClaimSpec } from "../registry/claim-spec.js";
 
@@ -243,6 +252,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     bucket: "claims",
     // KEEP: RFC 7800 `cnf` IS the proof-of-possession requirement. Pruning it hands
     // the audience a BEARER token; an empty one confirms no key and is refused.
+    // ⚠ THE SECOND HALF OF THAT SENTENCE WAS FALSE FOR AS LONG AS IT STOOD HERE.
+    // The write side collapsed an all-empty confirmation to `undefined`, so the
+    // claim was DROPPED and the token minted as a plain bearer — a caller who
+    // asked for a binding silently got none. It is refused now, by the translator
+    // on the way out and by the verify policy gate on the way in
+    // (`internal/claims/translate.ts`, `internal/utils/apply-verify-policy.ts`).
     whenEmpty: "keep",
     domainClaim: true,
   },
@@ -340,9 +355,15 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   {
     domain: "act",
     wire: named("act"),
-    codec: { kind: "bespoke", bespoke: "act" },
+    // A DECLARED, RECURSIVE and OPEN member set — see `act-members.ts` for the
+    // labels and for the RFC 8693 §4.1/§4.4 sentences that make it open. The
+    // nested `act` member names ACT_MEMBERS itself, which is what the `children`
+    // thunk exists for. `"verbatim"` and not `"flip"`: a tail member is another
+    // specification's JWT claim name (§4.4 offers `email`), so the house
+    // snake_case flip would not translate it but rewrite it.
+    codec: { kind: "object", children: () => ACT_MEMBERS, open: "verbatim" },
     sensitivity: "public",
-    sample: { subject: "actor_sample" },
+    sample: ACT_SAMPLE,
     bucket: "claims",
     // KEEP: RFC 8693 §4.1 `act` declares the token is wielded by an ACTOR on the
     // subject's behalf. Pruned, the delegation is invisible and the token reads as
@@ -547,9 +568,22 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   {
     domain: "authorizationDetails",
     wire: labelled("authorization_details", P(5)),
-    codec: { kind: "bespoke", bespoke: "authDetails" },
+    // A COLLECTION of declared structures. `open: "verbatim"` is MANDATORY here
+    // and not a preference: RFC 9396 §2 makes an element's `type` determine that
+    // element's allowable contents, so the fields beside it belong to whoever
+    // registered the type and a case flip would rewrite rather than translate
+    // them. See `authorization-details-members.ts` for why `type` is the only
+    // declared member.
+    codec: {
+      kind: "array",
+      of: {
+        kind: "object",
+        children: () => AUTHORIZATION_DETAIL_MEMBERS,
+        open: "verbatim",
+      },
+    },
     sensitivity: "public",
-    sample: [{ type: "payment_initiation" }],
+    sample: AUTHORIZATION_DETAILS_SAMPLE,
     bucket: "claims",
     // KEEP: RFC 9396 — an empty RAR structure grants nothing, an absent one restricts
     // nothing. This is the whole shape of the fail-open the column exists to prevent.
@@ -560,9 +594,16 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   {
     domain: "mayAct",
     wire: labelled("may_act", P(6)),
-    codec: { kind: "bespoke", bespoke: "act" },
+    // RFC 8693 §4.4 describes `may_act` in the same words §4.1 uses for `act` —
+    // "The claim value is a JSON object, and members in the JSON object are
+    // claims that identify the party that is asserted as being eligible to act
+    // for the party identified by the JWT containing the claim." — so it declares
+    // the SAME member set object, not a copy of it. Two arrays would be two
+    // places a label could be written, and the CLAIM key is where the two
+    // genuinely differ (a private-use integer label here, a string name there).
+    codec: { kind: "object", children: () => ACT_MEMBERS, open: "verbatim" },
     sensitivity: "public",
-    sample: { subject: "actor_sample" },
+    sample: ACT_SAMPLE,
     bucket: "claims",
     // KEEP: RFC 8693 §4.4 names who may BECOME the actor — the delegation policy the
     // issuer wrote down. Symmetric with `act`, and stated by the same issuer.
@@ -640,9 +681,14 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   {
     domain: "subjectId",
     wire: labelled("sub_id", P(12)),
-    codec: { kind: "bespoke", bespoke: "subId" },
+    // ⭐ THE ARRAY-OF-SELF STRUCTURE. `identifiers` recurses as an array of
+    // Subject Identifiers (RFC 9493 §3.2.8), which is the first declared member
+    // to reach the COLLECTION arm of every walker. `open: "verbatim"` because a
+    // Subject Identifier's members are named by whoever registered its FORMAT —
+    // see `internal/claims/sub-id-members.ts`.
+    codec: { kind: "object", children: () => SUB_ID_MEMBERS, open: "verbatim" },
     sensitivity: "public",
-    sample: { format: "opaque", id: "subject_sample" },
+    sample: SUB_ID_SAMPLE,
     bucket: "claims",
     // KEEP: RFC 9493 identifies WHO an event is about. A SET whose `sub_id` was
     // pruned names no subject to act on.
@@ -752,11 +798,20 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   {
     domain: "address",
     wire: labelled("address", P(20)),
-    codec: { kind: "bespoke", bespoke: "address" },
+    // `open: "flip"` keeps an undeclared member on the wire under a snake_cased
+    // key, which is what the blanket case flip this replaced did for every key
+    // alike — an undeclared address member is a lindorm extension of a lindorm
+    // type, so the house convention is the right one for it. See
+    // `address-members.ts` for what the declaration buys, and `ObjectCodec` for
+    // why no set is closed yet and why the tail policy is a cell rather than a
+    // constant.
+    codec: { kind: "object", children: () => ADDRESS_MEMBERS, open: "flip" },
     sensitivity: "public",
-    sample: { streetAddress: "Sample 1", postalCode: "00100", country: "SE" },
+    sample: ADDRESS_SAMPLE,
     bucket: "profile",
-    // PRUNE: OIDC Core §5.1.1 defines `address` entirely by its members.
+    // PRUNE: OIDC Core §5.1.1 defines `address` entirely by its members. The
+    // MEMBERS answer the same question for themselves, and they answer it
+    // differently — see `ParamSpec.whenEmpty` for why the two levels diverge.
     whenEmpty: "prune",
   },
   {
@@ -1072,14 +1127,22 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
  * COSE-keyed wire, so an `assert: { tokenId }` looked for `jti` in a dict that
  * spells it `cti`: an exact match rejected a legitimate token, and
  * `$exists: false` passed on a token that HAS one.
+ *
+ * ⚠ IT TAKES THE IDENTITY COLUMNS, NOT A WHOLE `ClaimSpec`. A structured claim's
+ * MEMBERS are spelled per wire exactly as the claim itself is, and the
+ * translator walks into them carrying the same selector it entered the claim
+ * with — which is what stops a member from being named by one wire's rule inside
+ * a token keyed by the other's. A selector that demanded a full `ClaimSpec`
+ * could not be carried down, and member naming would have become a second rule
+ * written somewhere else.
  */
-export type NameSelector = (spec: ClaimSpec) => string;
+export type NameSelector = (spec: WireNamed) => string;
 
-// No claim is `absent` on either wire (a claim that cannot ride a wire has never
-// existed here), and a registry test pins that. The narrowing is still explicit
-// rather than asserted, so the day one IS absent this throws at construction
-// instead of putting `undefined` on a wire.
-const requireName = (spec: ClaimSpec, wire: Wire): string => {
+// Neither a claim nor a declared member is `absent` on either wire (a claim that
+// cannot ride a wire has never existed here), and a registry test pins that. The
+// narrowing is still explicit rather than asserted, so the day one IS absent this
+// throws at construction instead of putting `undefined` on a wire.
+const requireName = (spec: WireNamed, wire: Wire): string => {
   const name = wireKeyName(spec.wire[wire]);
 
   if (name === undefined) {

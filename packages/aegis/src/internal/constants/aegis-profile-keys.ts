@@ -7,10 +7,31 @@ import { CLAIM_SPECS, joseName } from "../claims/claims-registry.js";
 // DERIVED from the claim registry (`bucket: "profile"`) — the single source of
 // truth — never a hand-kept list. Aegis-owned claims that have their own
 // first-class fields on the payload (sub, permissions, roles, etc.) are
-// `bucket: "claims"`, so filtering to `"profile"` excludes them exactly. The
-// nested `address` object's inner keys are handled by camelKeys recursion
-// downstream. A drift-guard test pins the derived set to the frozen wire-name
-// list, so a registry edit can't silently change what parses as profile.
+// `bucket: "claims"`, so filtering to `"profile"` excludes them exactly. A
+// drift-guard test pins the derived set to the frozen wire-name list, so a
+// registry edit can't silently change what parses as profile.
+//
+// ⚠ THIS SET IS TOP-LEVEL KEYS ONLY, and the nested `address` object's inner
+// keys are not in it and never were.
+//
+// The sole consumer, `internal/utils/extract-aegis-profile.ts`, applies a DEEP
+// `camelKeys` to the profile bag it assembles, which does reach inside an
+// address. MEASURED, not assumed: that flip is a NO-OP on every production path.
+// `extractAegisProfile` has exactly one production caller —
+// `internal/claims/resolve-domain-buckets.ts#toBuckets` — and it is always handed
+// the `claims` half of `wireToDomain`, so the members have already been resolved
+// by the translator and are already camelCase when it runs. That holds for BOTH
+// read doors: a token payload and the public `Aegis.toDomain` dict both reach it
+// through `wireToDomain` first. The flip's wire-keyed branch is exercised only by
+// `extract-aegis-profile.test.ts` calling the function directly.
+//
+// ⛔ An earlier version of this note justified the flip by claiming
+// `extractAegisProfile` receives bags "of unknown provenance … that never passed
+// through the claim translator". That was FALSE and checkable — the
+// introspection/userinfo path is `dictToBuckets -> toBuckets -> wireToDomain ->
+// extractAegisProfile`, i.e. after the translator. It is recorded here because
+// this note exists to be checked, and a plausible-sounding justification is the
+// failure mode it was written to end.
 export const AEGIS_PROFILE_WIRE_KEYS: ReadonlySet<string> = new Set(
   CLAIM_SPECS.filter((spec) => spec.bucket === "profile").map(joseName),
 );

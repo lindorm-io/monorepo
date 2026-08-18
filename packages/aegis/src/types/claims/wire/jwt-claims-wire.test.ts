@@ -1,3 +1,4 @@
+import type { Dict } from "@lindorm/types";
 import { describe, expect, test } from "vitest";
 import {
   CLAIM_SPECS,
@@ -12,10 +13,19 @@ import type { AegisClaimsWire } from "./aegis-claims-wire.js";
  * behind `JwtClaimsWire`) must stay in lock-step with `CLAIM_REGISTRY`:
  *   1. their names == the jose names of the registry's PUBLIC claims bucket, and
  *   2. each TS member type matches its codec kind's wire form
- *      (`date`/`int`→number, `array`→Array<string>, `text`/`bstr`→string,
- *      `bool`→boolean; `bespoke` = per-claim object shape, not uniformly typed).
+ *      (`date`/`int`→number, `array`→Array<string>, `arrayOfObject`→Array<object>,
+ *      `object`→a dict, `text`/`bstr`→string, `bool`→boolean; `bespoke` = a
+ *      per-claim shape, not uniformly typed, and the ONLY tag left unbound).
  *
- * The witness below is `Record<keyof AegisClaimsWire, ClaimCodec["kind"]>`, so a
+ * ⚠ THE WITNESS SPEAKS ONE TOKEN THE CODEC UNION DOES NOT: `arrayOfObject`. The
+ * two array forms share a `kind` but NOT a wire type — `Array<string>` against
+ * `Array<AuthorizationDetail>` — so a vocabulary that could not tell them apart
+ * would have to weaken the array row to "some array" and stop checking the
+ * element type of either. {@link wireKindOf} is the one place the codec is read
+ * into this vocabulary, so the runtime row below still compares against the
+ * REGISTRY rather than against a second hand-kept table.
+ *
+ * The witness below is `Record<keyof AegisClaimsWire, WireKindTag>`, so a
  * claim added to / removed from `AegisClaimsWire` breaks compilation. Every member
  * is a flat registry claim in `bucket: "claims"` with `sensitivity: "public"`; the
  * sensitive identity claims travel FLAT too but are `sensitivity: "sensitive"`, so
@@ -29,6 +39,16 @@ import type { AegisClaimsWire } from "./aegis-claims-wire.js";
  * coverage of `keyof AegisClaimsWire` yet PRESERVES each entry's literal kind, so the
  * compile-time type binding below can read the per-claim kind.
  */
+/**
+ * The witness vocabulary: every codec kind, with the array-of-structures form
+ * named apart from the array-of-strings one.
+ */
+type WireKindTag = ClaimCodec["kind"] | "arrayOfObject";
+
+/** Read a registry codec into {@link WireKindTag}. The ONLY reader. */
+const wireKindOf = (codec: ClaimCodec): WireKindTag =>
+  codec.kind === "array" && codec.of !== undefined ? "arrayOfObject" : codec.kind;
+
 const JWT_CLAIMS_WIRE_KINDS = {
   // RFC 7519 standard claims
   iss: "text",
@@ -51,9 +71,10 @@ const JWT_CLAIMS_WIRE_KINDS = {
   vtm: "text",
   // RFC 7800 proof-of-possession
   cnf: "bespoke",
-  // RFC 8693 delegation
-  act: "bespoke",
-  may_act: "bespoke",
+  // RFC 8693 delegation — a DECLARED member set (`internal/claims/act-members.ts`),
+  // recursive: the `act` member's own codec is this same structure.
+  act: "object",
+  may_act: "object",
   // RFC 9068 authorization
   entitlements: "array",
   groups: "array",
@@ -61,10 +82,13 @@ const JWT_CLAIMS_WIRE_KINDS = {
   // RFC 7662 token introspection
   username: "text",
   // RFC 9396 rich authorization requests
-  authorization_details: "bespoke",
+  authorization_details: "arrayOfObject",
   // RFC 8417 / RFC 9493 security event token
   events: "bespoke",
-  sub_id: "bespoke",
+  // RFC 9493 §3 — a DECLARED member set whose `identifiers` member recurses as an
+  // array of Subject Identifiers (§3.2.8), so the structure is `object` at the
+  // claim and a collection one level in.
+  sub_id: "object",
   txn: "text",
   // Lindorm assurance axes + proprietary hints
   aal: "int",
@@ -82,7 +106,7 @@ const JWT_CLAIMS_WIRE_KINDS = {
   sih: "text",
   suh: "text",
   tenant_id: "text",
-} satisfies Record<keyof AegisClaimsWire, ClaimCodec["kind"]>;
+} satisfies Record<keyof AegisClaimsWire, WireKindTag>;
 
 // --- Compile-time binding: witness kind -> actual AegisClaimsWire member type ------
 //
@@ -90,7 +114,8 @@ const JWT_CLAIMS_WIRE_KINDS = {
 // enough to accept the narrowed enums (`loa: 1|2|3|4` vs `number`) and the
 // `Array<string> | string` conveniences (`scope`/`roles`), yet it rejects a
 // fundamentally wrong shape (`exp: string`). `bespoke` is skipped (no uniform
-// wire type). If any claim's type drifts from its declared kind the
+// wire type); `object` is NOT — a declared structure is a dict on the wire
+// whatever its members are. If any claim's type drifts from its declared kind the
 // mapped type below yields that claim's key instead of `never`, and the final
 // assignment fails to compile — naming the offending claim.
 type Related<A, B> = [A] extends [B] ? true : [B] extends [A] ? true : false;
@@ -99,11 +124,15 @@ type ClaimTypeOk<J extends keyof AegisClaimsWire, K> = K extends "date" | "int"
   ? Related<number, NonNullable<AegisClaimsWire[J]>>
   : K extends "array"
     ? Related<Array<string>, NonNullable<AegisClaimsWire[J]>>
-    : K extends "text" | "bstr"
-      ? Related<string, NonNullable<AegisClaimsWire[J]>>
-      : K extends "bool"
-        ? Related<boolean, NonNullable<AegisClaimsWire[J]>>
-        : true;
+    : K extends "arrayOfObject"
+      ? Related<Array<Dict>, NonNullable<AegisClaimsWire[J]>>
+      : K extends "object"
+        ? Related<Dict, NonNullable<AegisClaimsWire[J]>>
+        : K extends "text" | "bstr"
+          ? Related<string, NonNullable<AegisClaimsWire[J]>>
+          : K extends "bool"
+            ? Related<boolean, NonNullable<AegisClaimsWire[J]>>
+            : true;
 
 // `-?` strips the optional modifier every `AegisClaimsWire` member carries; without
 // it the homomorphic mapped type stays optional and indexing injects `undefined`
@@ -142,7 +171,10 @@ describe("JwtClaimsWire / AegisClaimsWire drift guard", () => {
     for (const [jose, kind] of Object.entries(JWT_CLAIMS_WIRE_KINDS)) {
       const spec = claimByJose(jose);
       expect(spec, `no registry entry for jose "${jose}"`).toBeDefined();
-      expect(spec?.codec.kind, `wire-kind drift for jose "${jose}"`).toBe(kind);
+      expect(
+        spec === undefined ? undefined : wireKindOf(spec.codec),
+        `wire-kind drift for jose "${jose}"`,
+      ).toBe(kind);
     }
   });
 });

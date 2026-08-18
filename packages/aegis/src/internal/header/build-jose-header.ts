@@ -81,7 +81,8 @@ import { normaliseHeaders } from "./normalise-headers.js";
  * `criticalToWire` over `crit` (`token-header.ts#encodeHeaderValue`). The check
  * therefore compares like with like without mapping anything itself — it holds a
  * bucket whose vocabulary it cannot know, and a JOSE name and a COSE label are
- * different things (RFC 9052 §1.5). That makes the shaping load-bearing rather
+ * different things (RFC 9052 §1.5 admits both forms — `label = int / tstr` — and
+ * CBOR keys them apart). That makes the shaping load-bearing rather
  * than cosmetic: a tier that stopped mapping members would refuse a satisfied
  * `crit` written in the domain spelling.
  */

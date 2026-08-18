@@ -64,7 +64,6 @@ export type ProfileClaimName = keyof DomainClaims | "events" | "token_introspect
  */
 export type ShapeRuleName =
   | "actChain"
-  | "authorizationDetails"
   | "confirmation"
   | "crossField"
   | "events"

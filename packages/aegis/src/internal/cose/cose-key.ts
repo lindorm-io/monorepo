@@ -7,7 +7,7 @@ import {
   COSE_CNF_LABELS,
   COSE_CNF_MEMBERS,
   type CoseCnfMember,
-} from "../registry/cose-cnf-labels.js";
+} from "../claims/cnf-members.js";
 
 // COSE_Key parameter labels (RFC 9052 §7).
 const KEY = { kty: 1, kid: 2, alg: 3, crv: -1, x: -2, y: -3 } as const;
@@ -283,6 +283,17 @@ export const encodeCnf = (cnf: Dict): Map<number, unknown> => {
     //
     // `null` is deliberately NOT absent. It is a value, and not one this codec
     // can write, so it goes to `encodeCnfMember` and is refused.
+    // ⚠⚠ THIS IS THE PACKAGE'S ONE EXCEPTION TO "null IS ABSENCE"
+    // (`internal/claims/is-not-stated.ts`), and it is stated in the presence-notion
+    // table in `internal/utils/rules/index.ts` so it is not a fifth decision
+    // outside the map. It holds only because the TRANSLATOR agrees: when `cnf`
+    // briefly took the null carve-out, the member was erased in `domainToWire`
+    // before this loop ever ran, so the fail-closed guard — the `unrepresentable`
+    // check ABOVE, at the top of this function, not below this line — saw nothing
+    // to report and `mint("cwt", { thumbprint: null, keyId })` minted an UNBOUND
+    // CWT.
+    // A guard that tests `!== undefined` cannot defend a value someone upstream
+    // already turned into `undefined`.
     // ⚠ `Object.hasOwn` HERE TOO, matching the filter above. The filter reads
     // `Reflect.ownKeys` (own keys only), so an INHERITED member is never flagged
     // unrepresentable — and if this loop then read it off the prototype the two

@@ -11,19 +11,18 @@
  */
 
 import type { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
+import type { CnfMember } from "../claims/cnf-members.js";
 import type { Wire } from "./wire.js";
 
 /**
  * The RFC 7800 / RFC 8747 confirmation members aegis can put on a wire.
  *
- * ⚠ `ckt` (RFC 9679 COSE Key SHA-256 Thumbprint, confirmation member 5) is
- * declared so the union can describe COSE's capability HONESTLY, and it is in no
- * kit's set: aegis derives no `ckt` and mints no `ckt`-bound token. It is NOT a
- * translation of `jkt` — RFC 7638 hashes the JSON canonicalisation and RFC 9679
- * the CBOR one, so the same key yields different bytes — which is why a
- * `jkt`-bound token has no COSE form at all rather than a converted one.
+ * ⚠ DERIVED, not restated. It used to be a hand-written union HERE, a third copy
+ * of the five member names beside the translator's two tables; it is now the JOSE
+ * names of `internal/claims/cnf-members.ts`'s one declaration, plus the `ckt` no
+ * kit carries. See that file for why `ckt` is named at all.
  */
-export type CnfMember = "jkt" | "ckt" | "x5t#S256" | "jwk" | "kid" | "jku";
+export type { CnfMember } from "../claims/cnf-members.js";
 
 export type KitCapabilities = {
   /** The wire this kit serialises to. */

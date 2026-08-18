@@ -26,9 +26,10 @@ type DpopProofPayload = {
 };
 
 // A required proof claim must be a NON-EMPTY string — the demand notion, spelled
-// as `require-present` and `every-element-has-key` spell it, so the question is
-// named once across the package rather than open-coded here as a bare `typeof`
-// plus a length test.
+// as `require-present` spells it, so the question is named once across the
+// package rather than open-coded here as a bare `typeof` plus a length test.
+// (It used to name `every-element-has-key` as the second example; that rule was
+// deleted when the RFC 9396 element's `type` became a `required` member cell.)
 const assertString = (value: unknown, claim: string): string => {
   if (!(isString(value) && isClaimSatisfied(value))) {
     throw new AegisDomainError(`Invalid DPoP proof: "${claim}" claim is required`, {

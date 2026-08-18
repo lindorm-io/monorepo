@@ -8,10 +8,23 @@ import {
   isString,
 } from "@lindorm/is";
 import { describe, expect, test } from "vitest";
-import type { AegisProfile, AegisSensitive, DomainClaims } from "../../types/index.js";
-import type { BespokeKind, ClaimCodec, ClaimSpec } from "../registry/claim-spec.js";
+import type {
+  ActClaimMembers,
+  AegisProfile,
+  AegisProfileAddress,
+  AegisSensitive,
+  DomainClaims,
+} from "../../types/index.js";
+import type {
+  BespokeKind,
+  ClaimCodec,
+  ClaimMemberSpec,
+  ClaimSpec,
+  ObjectCodec,
+} from "../registry/claim-spec.js";
 import { codecFor } from "../registry/param-spec.js";
-import { WIRE_TAGS } from "../registry/wire.js";
+import type { SubjectIdentifierMembers } from "./sub-id.js";
+import { type Wire, WIRE_TAGS } from "../registry/wire.js";
 import {
   CLAIM_SPECS,
   claimByCose,
@@ -80,8 +93,21 @@ const describeCodec = (codec: ClaimCodec): string =>
  * Does a `sample` carry the DOMAIN shape its codec kind implies? Both switches
  * are exhaustive with a `never` default, so a new {@link ClaimCodec} kind or a
  * new {@link BespokeKind} cannot be added without stating the shape it samples.
+ *
+ * ⚠ THE DESCENT IS CYCLE-GUARDED, and the guard is keyed on the `children`
+ * THUNK. RFC 8693 §4.1 defines the actor chain recursively — an `act` contains
+ * an `act` — so a member set can and will reference itself, and this walk would
+ * not terminate: measured, a self-referential declaration takes it to
+ * `RangeError: Maximum call stack size exceeded`. The thunk is the stable
+ * identity to key on; the arrays it returns are fresh on every call and would
+ * defeat a set keyed on them. Same guard, same reasoning, as
+ * `internal/cose/cwt-spec.ts`'s `shapeForObject`.
  */
-const sampleMatchesCodec = (codec: ClaimCodec, sample: unknown): boolean => {
+const sampleMatchesCodec = (
+  codec: ClaimCodec,
+  sample: unknown,
+  seen: Set<() => ReadonlyArray<ClaimMemberSpec>> = new Set(),
+): boolean => {
   switch (codec.kind) {
     case "text":
       return isString(sample);
@@ -96,7 +122,27 @@ const sampleMatchesCodec = (codec: ClaimCodec, sample: unknown): boolean => {
       // the COSE wire; no claim carries `bstr` as its BASE codec today.
       return isString(sample) || isBuffer(sample);
     case "array":
-      return isArray(sample) && sample.every(isString);
+      // An array of STRINGS samples strings; an array of DECLARED STRUCTURES
+      // samples the structure, at least once — a zero-element sample would
+      // satisfy `every` without ever reaching a member.
+      return codec.of === undefined
+        ? isArray(sample) && sample.every(isString)
+        : isArray(sample) &&
+            sample.length > 0 &&
+            sample.every((element) => sampleMatchesCodec(codec.of, element, seen));
+    case "object":
+      // A declared structure is checked THROUGH its members: the claim's sample
+      // must be an object, and every member's own sample must satisfy that
+      // member's own codec. That is what binds a member `sample` to something
+      // rather than letting it sit unchecked one level below the claim.
+      if (!isObject(sample)) return false;
+      if (seen.has(codec.children)) return true;
+
+      seen.add(codec.children);
+
+      return codec
+        .children()
+        .every((member) => sampleMatchesCodec(member.codec, member.sample, seen));
     case "bespoke":
       return sampleMatchesBespoke(codec.bespoke, sample);
     default: {
@@ -109,14 +155,8 @@ const sampleMatchesCodec = (codec: ClaimCodec, sample: unknown): boolean => {
 const sampleMatchesBespoke = (bespoke: BespokeKind, sample: unknown): boolean => {
   switch (bespoke) {
     case "confirmation":
-    case "act":
-    case "subId":
     case "events":
-    case "address":
       return isObject(sample);
-    case "authDetails":
-      // RFC 9396 authorization_details is an ARRAY of objects.
-      return isArray(sample) && sample.every(isObject);
     default: {
       const exhaustive: never = bespoke;
       throw new Error(`Unhandled bespoke claim sub-kind: ${String(exhaustive)}`);
@@ -435,10 +475,19 @@ describe("CLAIM_REGISTRY", () => {
   // --- codec ----------------------------------------------------------------
 
   test("the array scalar-tolerance policies are populated exactly", () => {
+    // ⚠ THE TWO ARRAY FORMS ARE COUNTED APART. An array of STRINGS answers a
+    // scalar-tolerance question; an array of declared STRUCTURES has none to
+    // answer and carries no `scalar` cell at all. A single set over
+    // `kind === "array"` would let a claim move between the two forms without
+    // this guard noticing, which is the one move that changes what the
+    // translator does with it.
     const withScalar = (scalar: string) =>
       new Set(
         CLAIM_SPECS.filter(
-          (spec) => spec.codec.kind === "array" && spec.codec.scalar === scalar,
+          (spec) =>
+            spec.codec.kind === "array" &&
+            spec.codec.of === undefined &&
+            spec.codec.scalar === scalar,
         ).map((spec) => spec.domain),
       );
 
@@ -457,6 +506,13 @@ describe("CLAIM_REGISTRY", () => {
     // RFC 7519 aud is string-OR-array and is the only wrapping claim. This used
     // to be a hardcoded `spec.domain === "audience"` branch in the translator.
     expect(withScalar("wrap")).toEqual(new Set(["audience"]));
+
+    // RFC 9396 authorization_details is the only collection of structures.
+    const structures = CLAIM_SPECS.filter(
+      (spec) => spec.codec.kind === "array" && spec.codec.of !== undefined,
+    ).map((spec) => spec.domain);
+
+    expect(structures).toEqual(["authorizationDetails"]);
   });
 
   test("the temporal claim set + directions are populated exactly", () => {
@@ -676,21 +732,20 @@ describe("CLAIM_REGISTRY", () => {
 
   test("every bespoke claim maps to its frozen sub-kind (builder)", () => {
     // Frozen domain -> sub-kind mapping: claims sharing a builder share a
-    // sub-kind (act+mayAct -> "act"). A future registry edit that re-routes a
-    // claim to a different builder fails here.
+    // sub-kind. A future registry edit that re-routes a claim to a different
+    // builder fails here.
     //
-    // ⚠ The three OIDC hashes USED to be here under a `"hash"` sub-kind, and
+    // ⚠ The three OIDC hashes USED to be here under a `"hash"` sub-kind,
+    // `address` under an `"address"` one, `authorizationDetails` under an
+    // `"authDetails"` one, `act`+`mayAct` under a shared `"act"` one, and
+    // `subjectId` under a `"subId"` one, and
     // dropping out of this record is exactly why the byte-encoding guard below
-    // exists: a claim that stops being `bespoke` stops being pinned as a group
-    // by this test, so the group it moved INTO has to be pinned too.
+    // and the structure guard after it exist: a claim that stops being `bespoke`
+    // stops being pinned as a group by this test, so the group it moved INTO has
+    // to be pinned too.
     const FROZEN_BESPOKE: Record<string, string> = {
       confirmation: "confirmation",
-      act: "act",
-      mayAct: "act",
-      authorizationDetails: "authDetails",
-      subjectId: "subId",
       events: "events",
-      address: "address",
     };
 
     const actual = Object.fromEntries(
@@ -701,6 +756,491 @@ describe("CLAIM_REGISTRY", () => {
     );
 
     expect(actual).toEqual(FROZEN_BESPOKE);
+  });
+
+  test("every declared member is frozen in EVERY cell it carries", () => {
+    // The group `address` and `authorizationDetails` moved INTO when they stopped
+    // being bespoke, pinned the same way and for the same reason: a claim that
+    // leaves one drift guard has to arrive in another, or the migration removed
+    // coverage.
+    //
+    // ⚠⚠ IT FREEZES THE WHOLE MEMBER, NOT ITS SPELLING. This table pinned
+    // `domain -> per-wire name` alone, and that left four of the five columns a
+    // declaration carries unwatched. Measured: flipping `country.whenEmpty` from
+    // `keep` to `prune` left the ENTIRE SUITE GREEN — a signed token silently
+    // dropping a member its issuer wrote. Only `postalCode` was covered, by the
+    // single wire pin that happens to mint an empty member
+    // (`classes/address-claim-wire.test.ts`), and one behavioural pin cannot
+    // stand in for seven declarations. A `whenEmpty`, a `required` or a `codec`
+    // that can change with nothing going red is a cell nothing defends.
+    //
+    // ⚠ BOTH DECLARED FORMS ARE COLLECTED. A claim declaring an ARRAY of
+    // structures declares its member set on the element, so a collector that
+    // read `kind === "object"` alone would silently stop covering the claim the
+    // moment it migrated.
+    //
+    // ⭐ DERIVED ON ONE SIDE, HAND-WRITTEN ON THE OTHER. The registry supplies
+    // the actual values; the expectation below is written out. Building the
+    // expectation FROM the registry would assert the table against itself — the
+    // trap this package has already re-committed twice inside artifacts built to
+    // cure it.
+    //
+    // ⭐ A NEW STRUCTURE MUST EXTEND THIS TABLE. The comparison is whole-object
+    // equality over every claim that declares children, so `act`, `subjectId`
+    // and `events` cannot arrive with a member that states no frozen cell.
+    //
+    // ⭐⭐ AND THE `address` HALF IS BOUND TO THE PUBLIC TYPE, which is what stops
+    // this one table from being a single point of failure. Deleting a member's
+    // DECLARATION is invisible on the wire — `open: "flip"` plus
+    // `snakeCase("careOf") === "care_of"` means the bytes are identical whether a
+    // member is declared or carried by the open tail, so the corpus, every round
+    // trip and every conformance scenario stay green — and the runtime row below
+    // is therefore the only thing that reddens. That would leave one obvious
+    // repair: delete the row too. `Record<keyof AegisProfileAddress, …>` closes
+    // it — the row cannot go while the PUBLIC type still declares the member, so
+    // the two edits that would together hide the deletion cannot both be made.
+    // ⚠ Only `address` can be bound this way. The RFC 9396 element's public type
+    // (`AuthorizationDetail`) is deliberately OPEN (`& Dict`; RFC 9396 §2 makes
+    // the `type` determine the rest), so `keyof` it is `string` and binds
+    // nothing — which is a fact about that claim, not a gap here.
+    type FrozenMember = {
+      jose: string;
+      cose: string;
+      whenEmpty: "keep" | "prune";
+      required: boolean;
+      codec: ClaimCodec["kind"];
+    };
+
+    /**
+     * TOTAL over the PUBLIC address type — see the note above. A member the type
+     * declares and the registry does not is a compile error here.
+     */
+    const FROZEN_ADDRESS: Record<keyof AegisProfileAddress, FrozenMember> = {
+      // OIDC Core §5.1.1's own six. All `keep`: §5.1.1 states no mandatory
+      // member, and the blanket case flip this replaced carried an empty member
+      // onto the wire, so `keep` is what reproduces it.
+      formatted: {
+        jose: "formatted",
+        cose: "formatted",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      streetAddress: {
+        jose: "street_address",
+        cose: "street_address",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      locality: {
+        jose: "locality",
+        cose: "locality",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      region: {
+        jose: "region",
+        cose: "region",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      postalCode: {
+        jose: "postal_code",
+        cose: "postal_code",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      country: {
+        jose: "country",
+        cose: "country",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      // The lindorm extension. It is NOT an OIDC Core §5.1.1 member, and it
+      // appears here beside the six so a reader can see which is which.
+      careOf: {
+        jose: "care_of",
+        cose: "care_of",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+    };
+
+    /**
+     * TOTAL over `ActClaimMembers`, for the same reason `FROZEN_ADDRESS` is total
+     * over `AegisProfileAddress`: a member the type declares and the registry does
+     * not is a compile error here, so the row and the declaration cannot be
+     * deleted together.
+     *
+     * ⚠⚠ IT IS `ActClaimMembers` AND NOT `ActClaim`, AND THE SPLIT EXISTS FOR THIS
+     * BINDING. `ActClaim` is `ActClaimMembers & Dict` — the RFC 8693 member set is
+     * OPEN — and `keyof (X & Dict)` widens to `string`, which would have made this
+     * `Record` accept anything and evaporated the guard silently. That is not
+     * hypothetical: it is precisely what has already happened to
+     * `AuthorizationDetail`, whose own note below says the binding buys nothing
+     * there. Splitting the DECLARED members into their own type keeps the closed
+     * half closed while the claim itself is open.
+     *
+     * ⚠ THE COSE COLUMN IS THE STRING FALLBACK, NOT THE LABEL. Every actor member
+     * is keyed by an INTEGER on COSE (`iss` 1, `sub` 2, `aud` 3 from RFC 8392 §4;
+     * `client_id` 4 and the nested `act` 5 are lindorm's own), and `coseName`
+     * reports the interoperable string a token degrades to. The labels themselves
+     * are pinned on the WIRE, by `classes/act-claim-wire.test.ts`, which is where
+     * a wrong one is a wrong token rather than a wrong table.
+     */
+    const FROZEN_ACT: Record<keyof ActClaimMembers, FrozenMember> = {
+      issuer: {
+        jose: "iss",
+        cose: "iss",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      subject: {
+        jose: "sub",
+        cose: "sub",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      // RFC 7519 §4.1.3 makes `aud` string-OR-array, so the member is an array
+      // with the `wrap` tolerance rather than a text scalar.
+      audience: {
+        jose: "aud",
+        cose: "aud",
+        whenEmpty: "keep",
+        required: false,
+        codec: "array",
+      },
+      clientId: {
+        jose: "client_id",
+        cose: "client_id",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      // ⭐ THE SELF-REFERENCE. Its codec is `object`, and the member set that
+      // codec names is the one this table describes.
+      act: {
+        jose: "act",
+        cose: "act",
+        whenEmpty: "keep",
+        required: false,
+        codec: "object",
+      },
+    };
+
+    /**
+     * TOTAL over `SubjectIdentifierMembers`, the same binding `FROZEN_ACT` has to
+     * `ActClaimMembers`: a member the public type declares and the registry does
+     * not is a compile error here, so a declaration and its row cannot be deleted
+     * together.
+     *
+     * ⚠ THE COSE COLUMN IS THE STRING FALLBACK, NOT THE LABEL. Every Subject
+     * Identifier member is keyed by an INTEGER on COSE (`iss` 1 and `sub` 2 from
+     * RFC 8392 §4; `format` 0 and 4-9 are lindorm's own, with 3 left unallocated
+     * because RFC 8392 gives it to `aud`). The labels are pinned on the WIRE, by
+     * `classes/sub-id-claim-wire.test.ts`, where a wrong one is a wrong token.
+     *
+     * ⭐ `phoneNumber` IS THE CELL THIS STEP MOVED. It was `phone_number` in the
+     * DOMAIN bag — the only structured claim that made a caller write snake_case —
+     * and the jose/cose columns show where the wire spelling now lives instead.
+     */
+    const FROZEN_SUB_ID: Record<keyof SubjectIdentifierMembers, FrozenMember> = {
+      // RFC 9493 §3: "A Subject Identifier ... MUST contain a 'format' member
+      // whose value is the name of that Identifier Format." Unconditional, so it
+      // is `required` rather than a row in the per-format table. ⚠ `whenEmpty` is
+      // INERT while `required` holds, exactly as `authorizationDetails.type`'s is.
+      format: {
+        jose: "format",
+        cose: "format",
+        whenEmpty: "prune",
+        required: true,
+        codec: "text",
+      },
+      iss: {
+        jose: "iss",
+        cose: "iss",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      sub: {
+        jose: "sub",
+        cose: "sub",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      email: {
+        jose: "email",
+        cose: "email",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      phoneNumber: {
+        jose: "phone_number",
+        cose: "phone_number",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      uri: {
+        jose: "uri",
+        cose: "uri",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      url: {
+        jose: "url",
+        cose: "url",
+        whenEmpty: "keep",
+        required: false,
+        codec: "text",
+      },
+      id: { jose: "id", cose: "id", whenEmpty: "keep", required: false, codec: "text" },
+      // ⭐ THE ARRAY OF SELF. Its codec is `array` — not `object`, which is what
+      // `act`'s self-reference carries — and the member set that array's element
+      // names is the one this table describes. RFC 9493 §3.2.8.
+      identifiers: {
+        jose: "identifiers",
+        cose: "identifiers",
+        whenEmpty: "keep",
+        required: false,
+        codec: "array",
+      },
+    };
+
+    const FROZEN_MEMBERS: Record<string, Record<string, FrozenMember>> = {
+      // ⚠ ONE MEMBER SET, TWO CLAIMS, and the table states it twice on purpose:
+      // the equality below is per CLAIM, so declaring the shared array is what
+      // makes "these two claims have the same members" checkable rather than
+      // assumed.
+      act: FROZEN_ACT,
+      mayAct: FROZEN_ACT,
+      authorizationDetails: {
+        // RFC 9396 §2's one mandatory field, and the only one it names as
+        // belonging to the specification rather than to whoever registers the
+        // `type`. ⚠ `whenEmpty` is INERT while `required` holds — both refuse an
+        // empty value — but it is frozen anyway, because the day `required` is
+        // dropped the cell goes live and this table is what notices.
+        type: {
+          jose: "type",
+          cose: "type",
+          whenEmpty: "prune",
+          required: true,
+          codec: "text",
+        },
+      },
+      subjectId: FROZEN_SUB_ID,
+      address: FROZEN_ADDRESS,
+    };
+
+    const childrenOf = (
+      codec: ClaimCodec,
+    ): (() => ReadonlyArray<ClaimMemberSpec>) | undefined =>
+      codec.kind === "object"
+        ? codec.children
+        : codec.kind === "array"
+          ? codec.of?.children
+          : undefined;
+
+    const actual = Object.fromEntries(
+      CLAIM_SPECS.map((spec) => [spec.domain, childrenOf(spec.codec)] as const)
+        .filter(
+          (entry): entry is readonly [string, () => ReadonlyArray<ClaimMemberSpec>] =>
+            entry[1] !== undefined,
+        )
+        .map(([domain, children]) => [
+          domain,
+          Object.fromEntries(
+            children().map((member) => [
+              member.domain,
+              {
+                jose: joseName(member),
+                cose: coseName(member),
+                whenEmpty: member.whenEmpty,
+                // Normalised to a boolean so EVERY member states the cell.
+                // `required?: true` makes the absent case `undefined`, and a
+                // table where six rows omit a column is a table six members are
+                // not pinned by.
+                required: member.required === true,
+                codec: member.codec.kind,
+              },
+            ]),
+          ),
+        ]),
+    );
+
+    expect(actual).toEqual(FROZEN_MEMBERS);
+  });
+
+  test("the MANDATORY members are exactly the ones a specification mandates", () => {
+    // `required` is the one member column that causes a REFUSAL rather than a
+    // transformation, in both directions and under every profile — so a cell
+    // added or dropped changes which tokens this package will issue and accept.
+    // Frozen as `claim.member` paths, derived from the registry on the other
+    // side, so neither a new required member nor a lost one can arrive quietly.
+    //
+    // ⚠⚠ IT DESCENDS, AND IT DID NOT UNTIL A NESTED `required` EXISTED. The walk
+    // read each claim's DIRECT children alone, so a mandatory member one level
+    // down was frozen nowhere — the same shallow-walk hole the tail-policy guard
+    // below was already fixed for. RFC 9493 §3.2.8 makes every element of
+    // `sub_id.identifiers` a Subject Identifier, so `format` is mandatory INSIDE
+    // an alias too, and a walk stopping at depth 1 would let that cell be dropped
+    // with nothing red. Path-keyed and cycle-guarded on the `children` thunk, so
+    // the self-referential sets terminate.
+    const required: Array<string> = [];
+    const seen = new Set<() => ReadonlyArray<ClaimMemberSpec>>();
+
+    const visit = (codec: ClaimCodec, path: string): void => {
+      const children =
+        codec.kind === "object"
+          ? codec.children
+          : codec.kind === "array"
+            ? codec.of?.children
+            : undefined;
+
+      if (children === undefined) return;
+      if (seen.has(children)) return;
+
+      seen.add(children);
+
+      // An ARRAY of structures declares its member set on the ELEMENT, and the
+      // path says so — `subjectId.identifiers[].format`.
+      const here = codec.kind === "array" ? `${path}[]` : path;
+
+      for (const member of children()) {
+        if (member.required !== undefined) required.push(`${here}.${member.domain}`);
+
+        visit(member.codec, `${here}.${member.domain}`);
+      }
+    };
+
+    for (const spec of CLAIM_SPECS) visit(spec.codec, spec.domain);
+
+    // RFC 9396 §2 on the authorization details `type`: "This field is REQUIRED."
+    // RFC 9493 §3 on the Subject Identifier `format`: a Subject Identifier "MUST
+    // conform to a specific Identifier Format and MUST contain a 'format' member
+    // whose value is the name of that Identifier Format" — unconditional, where
+    // that same section's PER-FORMAT demands (`email` for the Email format, `iss`
+    // and `sub` for `iss_sub`) are conditional and stay in
+    // `internal/utils/rules/sub-id-shape.ts`.
+    // OIDC Core §5.1.1 mandates no `address` member at all — it says an
+    // implementation "MAY return only a subset of the fields of an address" —
+    // so the address member set carries no cell, and that absence is the point.
+    // ⚠ The ACTOR set carries none either: RFC 8693 §4.1 makes an actor's members
+    // "claims that identify the actor" without mandating one.
+    // ⚠ `authorizationDetails[]`, with the brackets, is what the descending walk
+    // reports and it is the more honest path: RFC 9396 §2 makes `type` REQUIRED on
+    // an ELEMENT, not on the claim, and the tail-policy guard below already keys
+    // that structure the same way. The shallow walk said `authorizationDetails`.
+    expect(required).toEqual([
+      "authorizationDetails[].type",
+      "subjectId.format",
+      "subjectId.identifiers[].format",
+    ]);
+  });
+
+  test("each declared structure states what becomes of a member it does not declare", () => {
+    // The tail policy decides whether an UNDECLARED member survives at all, and
+    // if it does whether its key is rewritten on the way to a signed wire — so it
+    // is a byte-level fact rather than a stylistic one. `address` extends a
+    // lindorm type and takes the house case flip; an RFC 9396 element's remaining
+    // fields are named by whoever registered its `type` (RFC 9396's own Figure 2
+    // spells them `instructedAmount`, `creditorName`, `creditorAccount`), and an
+    // RFC 8693 actor's are other specifications' JWT claim names, so a flip would
+    // rewrite either into fields nobody reads.
+    //
+    // ⚠⚠ `"closed"` IS A RECORDED VALUE NOW, NOT A SENTINEL THIS TEST INVENTS.
+    // The cell was `open?:` and this test read `structure.open ?? "closed"` — one
+    // version earlier it FILTERED the undefined case out entirely, so a table
+    // built from the defined values alone said nothing at all about the strictest
+    // disposition there is, and a claim could be closed or opened with nothing
+    // going red (which is what happened when `act`/`mayAct` were closed for one
+    // step and then opened again). {@link ObjectCodec.open} is REQUIRED and
+    // three-way, so the value is simply read: a structure that states nothing does
+    // not reach this test at all, it fails to COMPILE — which is the only place a
+    // structure nobody remembered to add to a test can be caught. NO registered
+    // claim is closed today, and the table below is what says so.
+    //
+    // ⚠⚠ IT WALKS EVERY STRUCTURE, NOT EVERY CLAIM, AND THE DIFFERENCE WAS A REAL
+    // HOLE. `open` sits on the CODEC, so a nested member declares its OWN — and a
+    // walk that read only the claim's top-level codec said nothing about any
+    // structure below it. Measured on the shallow version: removing
+    // `open: "verbatim"` from the NESTED `act` member (which leaves the actor set
+    // open at depth 1 and closed below, a defect this migration actually shipped
+    // for one measurement) left this whole file 37/37 GREEN. Keyed by PATH so a
+    // nested cell is named where it sits, and cycle-guarded on the `children`
+    // thunk exactly as `internal/cose/cwt-spec.ts` does — RFC 8693's actor set
+    // names itself, so a naive descent would not terminate.
+    const tails: Record<string, string> = {};
+    const seen = new Set<ObjectCodec>();
+
+    const structureOf = (codec: ClaimCodec): ObjectCodec | undefined =>
+      codec.kind === "object"
+        ? codec
+        : codec.kind === "array" && codec.of !== undefined
+          ? codec.of
+          : undefined;
+
+    const visit = (codec: ClaimCodec, path: string): void => {
+      const structure = structureOf(codec);
+      if (structure === undefined) return;
+
+      // An ARRAY of structures declares its member set on the ELEMENT, and the
+      // path says so — `authorizationDetails[]`, not `authorizationDetails`.
+      const here = codec.kind === "array" ? `${path}[]` : path;
+
+      // ⚠ THE CYCLE GUARD IS ASKED FIRST, so a declaration reached twice is
+      // recorded ONCE — at the first path that reaches it. `act.act.act` and
+      // `mayAct.act` are the SAME member declaration as `act.act`, so recording
+      // them would grow the table with repetitions of one cell and make a
+      // genuinely new nesting harder to see. `act` and `mayAct` are each their own
+      // codec literal, so both claims still appear.
+      //
+      // ⚠ KEYED ON THE CODEC, NOT ON THE `children` THUNK — and the difference is
+      // the cell this test exists to freeze. `open` lives on the CODEC, so two
+      // codecs sharing one `children` arrow while declaring DIFFERENT `open`
+      // values would have the second silently skipped: the guard would miss
+      // exactly the drift it was written to catch. No such pair exists today, and
+      // the codec object is just as stable an identity for cutting the cycle
+      // (`internal/cose/cwt-spec.ts` keys on the thunk because it reads no
+      // per-codec cell, so either works there).
+      if (seen.has(structure)) return;
+      seen.add(structure);
+
+      tails[here] = structure.open;
+
+      for (const member of structure.children()) {
+        visit(member.codec, `${here}.${member.domain}`);
+      }
+    };
+
+    for (const spec of CLAIM_SPECS) visit(spec.codec, spec.domain);
+
+    expect(tails).toEqual({
+      act: "verbatim",
+      "act.act": "verbatim",
+      mayAct: "verbatim",
+      "authorizationDetails[]": "verbatim",
+      // ⭐ THE SECOND ROW IS THE ARRAY-OF-SELF. RFC 9493 §3.2.8 makes an aliased
+      // identifier the same kind of object as the outer one, so the element codec
+      // states its own tail; declaring it only on the claim would leave a Subject
+      // Identifier open at the top and closed inside every alias, which is the
+      // exact hole the actor set shipped for one measurement.
+      subjectId: "verbatim",
+      "subjectId.identifiers[]": "verbatim",
+      address: "flip",
+    });
   });
 
   // --- DomainClaims-membership drift guards --------------------------------

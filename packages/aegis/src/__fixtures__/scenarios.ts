@@ -4,6 +4,7 @@ import type { AegisSensitive } from "../types/claims/domain/aegis-sensitive.js";
 import type { DomainClaims } from "../types/claims/domain/domain-claims.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import type {
+  ActClaimWire,
   AegisEncKey,
   AegisSignKey,
   AssertOptions,
@@ -397,6 +398,75 @@ export type ForeignHeadersGiven = {
 };
 
 /**
+ * WHAT SECURES A FORGED TOKEN — a {@link KeyFixture} the vault holds, or `"junk"`
+ * for bytes that are not a signature at all.
+ *
+ * ⚠ REQUIRED, and the two answers reach DIFFERENT DOORS. `"junk"` states a token
+ * nobody could have signed, which is the whole reach of `aegis.parse`: it reports
+ * a payload WITHOUT checking a signature, so an attacker needs no key. A key
+ * fixture states a token that genuinely VERIFIES, which is the only way to put a
+ * hostile shape past the signature check and in front of the claims layer. A
+ * default here would silently decide which of the two a row was about.
+ */
+export type ForgedSignature = "junk" | KeyFixture;
+
+/**
+ * HOW A FORGED COSE MEMBER IS KEYED — RFC 9052 §1.5's `label = int / tstr`, as a
+ * cell.
+ *
+ * ⚠ IT IS NOT REDUNDANT WITH THE KEY'S OWN TYPE, and that is the point of
+ * spelling {@link ForgedMember.key} as a string. A Gherkin data table cell is
+ * text and has no integer type at all, so in the medium this row exists to become
+ * (`| key | keyedBy | value |`) the `2` in a cell is a string either way and this
+ * column is the ONLY thing that says whether it means the integer label 2 or the
+ * one-character text label `"2"`. CBOR keys those apart, and conflating them is
+ * exactly the class of mistake a forged row exists to catch.
+ */
+export type ForgedKeying = "label" | "name";
+
+/**
+ * What a forged member CARRIES. Any JSON value — there is no vocabulary to check
+ * a hostile value against, and one of these rows exists precisely because the
+ * value is an OBJECT (a `__proto__` member whose value is what would become the
+ * prototype).
+ *
+ * ⚠ Held as the REAL value here and rendered as JSON text in a Gherkin cell, so
+ * the migration is `JSON.stringify` per cell. The alternative — JSON text in the
+ * row too — would make this the one column in the whole table whose values are
+ * quoted strings of themselves.
+ */
+export type ForgedValue =
+  | string
+  | number
+  | boolean
+  | null
+  | Dict
+  | ReadonlyArray<unknown>;
+
+/**
+ * ONE MEMBER of a forged COSE claim map: its key, how that key is keyed, and what
+ * it carries.
+ *
+ * ⭐⭐ A LIST OF THESE IS WHAT A JS OBJECT CANNOT BE. It has ROWS, so one member
+ * may appear TWICE — once at its integer label and once under its interoperable
+ * text name — which is a legal CBOR map and an impossible object literal. That
+ * single property is why the COSE half of a forged token is a table and the JOSE
+ * half is a text blob.
+ */
+export type ForgedMember = {
+  key: string;
+  keyedBy: ForgedKeying;
+  value: ForgedValue;
+};
+
+/**
+ * The claim a forged COSE member table is written INTO, in the DOMAIN
+ * vocabulary. The interpreter resolves its COSE wire key from the claim registry
+ * — never hand-listed, for the same reason `respellForCose` is derived.
+ */
+export type ForgedClaim = keyof DomainClaims;
+
+/**
  * How the artifact under test comes into existence, discriminated by `via`.
  *
  * - `mint`           — the domain profile pipeline, `aegis.mint(profile, content, options)`.
@@ -410,6 +480,8 @@ export type ForeignHeadersGiven = {
  * - `kit-encrypt`    — a RAW sealing namespace, `aegis.<kit>.encrypt(data, options)`.
  * - `domain-encrypt` — `aegis.encrypt(data, options)`, the domain confidentiality verb.
  * - `foreign`        — a token written by SOMETHING THAT IS NOT AEGIS.
+ * - `forged`         — a token assembled AS THE WIRE, for a shape no producer
+ *                      would emit and no claims dict can hold.
  */
 type TokenGivenShape =
   | MintGivenStep
@@ -452,6 +524,78 @@ type TokenGivenShape =
       typ?: string | Partial<Record<Wire, string>>;
       key?: KeyFixture;
       buckets?: ForeignHeadersGiven;
+    }
+  /**
+   * A FORGED token — assembled as THE WIRE ITSELF, because the shape under test
+   * is one no producer would emit and one a claims dict physically cannot hold.
+   *
+   * ⭐⭐ WHY THE VERB EXISTS. Every other artifact step states its token as a
+   * claims DICT and the interpreter serialises it — `JSON.stringify` on JOSE,
+   * `cbor2` on COSE. So any wire shape a JS object cannot express is unreachable
+   * from this table, and three real capabilities live in exactly that class: a
+   * payload whose member is named `__proto__` (a literal invokes the prototype
+   * SETTER, so the dict form cannot hold the key at all), a CBOR map keying one
+   * member BOTH at its integer label and under its text name (an object holds one
+   * or the other, never both), and a compact COSE map with a text `__proto__`
+   * label. Until this verb they were pinned in hand-written test files OUTSIDE
+   * the specification, so the table could not arbitrate them.
+   *
+   * ⭐ THE TWO FORMS ARE THE TWO GHERKIN STEP ARGUMENTS, and each row is written
+   * to convert mechanically:
+   *
+   *   Scenario: a claim member named __proto__ is refused, not made a prototype
+   *     Given a forged JOSE token, unsigned, whose payload is:
+   *       """
+   *       {"iss":"…","sub":"u","act":{"__proto__":{"subject":"attacker"}}}
+   *       """
+   *
+   *   Scenario: one member keyed twice is refused rather than merged
+   *     Given a forged CWT, signed with the "ec-sig" key, whose "act" claim carries:
+   *       | key | keyedBy | value             |
+   *       | 2   | label   | "audited-service" |
+   *       | sub | name    | "rogue-service"   |
+   *
+   * A DocString is free text, which is what a raw JSON payload is; a data table
+   * has ROWS, which is what lets one member appear twice. Neither is a choice of
+   * style — each wire's hostile shape has exactly one of the two forms available
+   * to it.
+   *
+   * ⛔ THE INTERPRETER OWNS ALL ENCODING. A row never carries base64url, CBOR
+   * bytes, an algorithm identifier or a COSE label table: it states the PAYLOAD
+   * and the interpreter writes the header, the tag chain and the signature. A row
+   * that carried bytes would be asserting against a wire it had written itself.
+   *
+   * ⚠ THE COSE ENVELOPE IS THE INTERPRETER'S, exactly as the foreign producer's
+   * `alg`/`kid` are, and for the same reason: the row states the hostile CLAIM,
+   * and a token a reader could not get through at all would observe nothing. The
+   * interpreter supplies the minimum a reader needs to REACH that claim — issuer,
+   * subject, and an expiry inside the row's own clock — through aegis's own CWT
+   * codec in its interoperable spelling. A row that also had to spell an issuer
+   * would bury the one fact it states. ⚠ A hostile ENVELOPE on the COSE wire is a
+   * different capability and has no step; the JOSE form states its whole payload,
+   * so it needs none.
+   *
+   * ⚠ `wire` PINS THE ROW, and it must: a raw JSON payload text is a JOSE
+   * serialisation and a keyed CBOR map is a COSE one, so neither shape exists on
+   * the other wire. It is the single source of that fact — the union makes the
+   * payload form unwritable on `"cose"` and the table form unwritable on `"jose"`
+   * — and the row owes the wire it leaves an `unsupported` reason like any other
+   * pinned row.
+   */
+  | {
+      step: "token";
+      via: "forged";
+      wire: "jose";
+      payload: string;
+      signature: ForgedSignature;
+    }
+  | {
+      step: "token";
+      via: "forged";
+      wire: "cose";
+      claim: ForgedClaim;
+      carries: ReadonlyArray<ForgedMember>;
+      signature: ForgedSignature;
     }
   /**
    * The WIRE-AGNOSTIC claims passthrough — the default form, and the one a new
@@ -790,10 +934,10 @@ export type RejectsThenStep = {
  * in the wire's own vocabulary, which is the only vocabulary an independent
  * reader has.
  *
- * ⚠ RFC 9052 §1.5 defines `label = int / tstr`, so the integer `4` and the text
- * string `"4"` are DIFFERENT COSE labels and a row naming one never matches the
- * other. That is deliberate: conflating them is precisely the class of mistake
- * these steps exist to catch.
+ * ⚠ RFC 9052 §1.5 admits BOTH forms — `label = int / tstr` — and CBOR keys them
+ * apart, so the integer `4` and the text string `"4"` are different COSE labels
+ * and a row naming one never matches the other. That is deliberate: conflating
+ * them is precisely the class of mistake these steps exist to catch.
  */
 export type WireKey = string | number;
 
@@ -996,8 +1140,9 @@ type ObservationStep =
  *
  * `on` exists for the observations that genuinely cannot be stated once: a raw
  * COSE label (`4`) and a raw JOSE claim name (`exp`) are different assertions
- * about the same domain fact, and RFC 9052 §1.5 makes the integer and the text
- * string different labels, so neither spelling can stand for both. Scoping the
+ * about the same domain fact, and CBOR keys an integer and a text string apart
+ * (RFC 9052 §1.5 admits both: `label = int / tstr`), so neither spelling can
+ * stand for both. Scoping the
  * OBSERVATION is what keeps the ROW wire-agnostic: without it, one raw-label
  * assertion would drag the whole capability back onto a single wire and the
  * other wire would silently stop being covered.
@@ -1375,21 +1520,29 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     rationale:
       "RFC 7800 §3 — a confirmation claim is the issuer's declaration that the presenter holds a particular key and that the recipient can confirm it. A verifier deciding whether a token is bound is therefore reading whether the issuer DECLARED a binding, not whether the declared value is usable: a thumbprint nobody can match is a binding that cannot be honoured, and the only safe response to one is refusal. Downgrading it to bearer semantics inverts the security property — the weakest possible confirmation would buy the widest possible acceptance, so an attacker who can blank one field turns a sender-constrained token into one anybody holding a copy may present.",
     given: [
-      // ⚠ TWO axes bound what this row reaches, and the rationale above states
-      // the rule whole while the code delivers it only here.
+      // ⚠ THE EMPTY STRING is this row's form, and the two axes that used to
+      // BOUND it no longer do — which is worth recording, because the bound was
+      // the interesting part of the row for as long as it existed.
       //
-      // The VOUCH axis: the act below supplies no `trustBoundThumbprint`, and
-      // with `trustBoundThumbprint: true` this same token is ACCEPTED — vouching
-      // short-circuits the only refusal that fires. That is part of the same
-      // filed open item as the forms below.
+      // The VOUCH axis: `trustBoundThumbprint: true` used to ACCEPT this same
+      // token, because vouching short-circuited the only refusal that fired. Its
+      // own row states the rule now (`vouching-for-a-binding-cannot-supply-one-
+      // the-token-never-stated`), and the verdict runs ahead of all three DPoP
+      // branches rather than inside one of them.
       //
-      // The VALUE axis — the EMPTY STRING specifically: the confirmation decoder
-      // (`src/internal/claims/translate.ts#const toConfirmation = (`) keeps a wire
-      // `jkt` only when it is a string, so `""` survives to the domain claim while
-      // `null`/`42`/`{}` are erased to `undefined` before any verifier gate can
-      // see that a binding was stated at all. Those forms are an open item in the
-      // project's list, with their measurements; do not widen this row to them
-      // without the fix.
+      // The VALUE axis: `null`, `42` and `{}` used to be ERASED to `undefined` by
+      // the confirmation decoder before any verifier gate could see that a binding
+      // had been stated, so all of them verified as bearer tokens. They are
+      // refused at the READ now, which is a different capability — a member whose
+      // value contradicts its declared shape — and it has its own row
+      // (`a-confirmation-this-package-cannot-read-is-refused-not-reported-as-
+      // absent`). ⚠ `null` is in that family and STAYS in it: a confirmation
+      // member is the one position in the package where a null is a contradiction
+      // rather than an absence, because RFC 9449 §6.1 types the member by MUST —
+      // the `jkt` value "MUST be the base64url encoding (as defined in [RFC7515])
+      // of the JWK SHA-256 Thumbprint" — and an erased one mints an unbound token. This row stays on the
+      // empty string because that is the form that is perfectly READABLE and
+      // still binds nothing.
       //
       // A FOREIGN token: minting cannot produce this shape, because the
       // `confirmation` shape rule refuses a thumbprint that is not 32 base64url
@@ -1412,7 +1565,20 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     when: [{ step: "verify" }],
-    then: [{ step: "rejects", error: "AegisDomainError", data: { format: "jwt" } }],
+    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
+    // Every refusal this gate throws stamps `data: { format }` — including
+    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
+    // absent and a proof is supplied. Measured: with the confirmation half of the
+    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
+    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
+    // rows in this group are told apart from each other and from their neighbour.
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { format: "jwt", member: "cnf.jkt" },
+      },
+    ],
     unsupported: {
       cose: NO_JKT_ON_COSE,
     },
@@ -1441,19 +1607,29 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     when: [{ step: "verify", options: { trustBoundThumbprint: true } }],
-    // ⚠ `data` IS pinned on a row carrying a knownDefect, against the general
-    // rule above, and for the same reason the claim-vocabulary row pins one: it
-    // is read off real errors rather than guessed at. Every refusal the policy
-    // gate throws stamps `data: { format }` — the empty-thumbprint row above is
-    // GREEN on exactly that shape — while the proof COMPARISON's own refusal
-    // carries no `data` at all
+    // ⚠ `data` IS THE WHOLE POINT OF THIS ROW, and it is read off real errors
+    // rather than guessed at. Every refusal the policy gate throws stamps
+    // `data: { format }`, while the proof COMPARISON's own refusal carries no
+    // `data` at all
     // (`src/internal/utils/verify-dpop-proof.ts#if (thumbprint !== expectedThumbprint) {`).
     // So `format` is precisely the discriminator between a refusal that judged
     // the CONFIRMATION and one that judged the presenter's PROOF, which is what
-    // these two rows are about.
-    then: [{ step: "rejects", error: "AegisDomainError", data: { format: "jwt" } }],
-    knownDefect:
-      "`src/internal/utils/apply-verify-policy.ts#if (!options.trustBoundThumbprint) {` — the vouch is honoured as the last word on this path instead of as a substitute for the PROOF alone. The bound thumbprint is the empty string, which `isClaimOmitted` correctly reports as NAMED, so the unbound short-circuit (`src/internal/utils/apply-verify-policy.ts#if (isClaimOmitted(boundThumbprint)) return { dpop: undefined };`) is not taken; the only refusal left on the no-proof path is the `dpop_proof_required` throw, and `trustBoundThumbprint: true` skips it, so the function returns and the token verifies as a plain bearer. The verdict this row states is about the CONFIRMATION rather than about the proof — NAMED but not SATISFIED, `isClaimOmitted(x) === false && isClaimSatisfied(x) === false` — and it must run as ONE check AHEAD of the three DPoP branches: a per-branch version leaves this cell open, because vouching means the proof was already checked upstream and there is nothing to have checked when the thumbprint names nothing.",
+    // this row and the one below it are about — and it is what made both of them
+    // red for as long as the vouch was honoured as the last word on this path.
+    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
+    // Every refusal this gate throws stamps `data: { format }` — including
+    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
+    // absent and a proof is supplied. Measured: with the confirmation half of the
+    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
+    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
+    // rows in this group are told apart from each other and from their neighbour.
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { format: "jwt", member: "cnf.jkt" },
+      },
+    ],
     unsupported: {
       cose: NO_JKT_ON_COSE,
     },
@@ -1494,13 +1670,326 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
     // The `data` pin is what makes this row about the CONFIRMATION rather than
     // about the proof — see the note on the vouch row above for why `format` is
-    // the discriminator and why it is read rather than guessed.
-    then: [{ step: "rejects", error: "AegisDomainError", data: { format: "jwt" } }],
-    knownDefect:
-      "The presentation IS refused, but by the wrong gate and about the wrong party. `src/internal/utils/apply-verify-policy.ts#expectedThumbprint: boundThumbprint,` — with a proof supplied, the only question asked of the confirmation is `isClaimOmitted`, which the empty string passes as NAMED, so the empty string is handed to `verifyDpopProof` as the thumbprint to match and the comparison runs. It fails at `src/internal/utils/verify-dpop-proof.ts#if (thumbprint !== expectedThumbprint) {` with `dpop_thumbprint_mismatch`, an `AegisDomainError` carrying NO `data` — a refusal that names the presenter's key as the problem when the token's confirmation is. The named-but-not-satisfied verdict (`isClaimOmitted(x) === false && isClaimSatisfied(x) === false`) must run ahead of this branch, so the refusal comes from the policy gate and carries its `format` like every other refusal there.",
+    // the discriminator and why it is read rather than guessed. It was red on a
+    // refusal that DID fire: with a proof supplied, the empty thumbprint reached
+    // `verifyDpopProof` and failed the comparison as `dpop_thumbprint_mismatch`,
+    // naming the presenter's key as the problem and carrying no `data` at all.
+    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
+    // Every refusal this gate throws stamps `data: { format }` — including
+    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
+    // absent and a proof is supplied. Measured: with the confirmation half of the
+    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
+    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
+    // rows in this group are told apart from each other and from their neighbour.
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { format: "jwt", member: "cnf.jkt" },
+      },
+    ],
     unsupported: {
       cose: NO_JKT_ON_COSE,
     },
+  },
+  {
+    id: "a-confirmation-that-binds-no-key-is-refused-when-no-proof-is-shown",
+    title:
+      "a token whose confirmation names no key at all is refused rather than read as unbound",
+    rationale:
+      "RFC 7800 §3 — by including a `cnf` claim the issuer declares that the presenter possesses a particular key and that the recipient can cryptographically confirm that possession. A confirmation object with no member declares exactly that and names nothing to confirm, so there is no binding a verifier could check and no honest way to proceed. Reading it as an absent confirmation inverts the security property: the emptiest possible declaration would buy the widest possible acceptance, and an attacker who can strip the members of a confirmation turns a sender-constrained token into one anybody holding a copy may present.",
+    given: [
+      // ⚠⚠ `cnf: {}` — THE OTHER VALUE THE VERDICT JUDGES, and the one that had
+      // no row at all. The three sibling rows above all carry `cnf: { jkt: "" }`,
+      // so the `thumbprint` half of the predicate was pinned three times over and
+      // the `confirmation` half not once: deleting it from the check left the whole
+      // suite green while `cnf: {}` verified as a plain bearer token.
+      //
+      // A FOREIGN token: `mint` refuses an empty confirmation on the way out, so
+      // this shape can only be presented by somebody else's producer.
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          iat: NOW,
+          exp: NOW + 120,
+          jti: "token-1",
+          cnf: {},
+        },
+        options: { tokenType: "access" },
+      },
+    ],
+    when: [{ step: "verify" }],
+    // `data: { format }` like every sibling refusal in this gate — it is what
+    // makes the refusal attributable to the CONFIRMATION rather than to anything
+    // the presenter did.
+    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
+    // Every refusal this gate throws stamps `data: { format }` — including
+    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
+    // absent and a proof is supplied. Measured: with the confirmation half of the
+    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
+    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
+    // rows in this group are told apart from each other and from their neighbour.
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { format: "jwt", member: "cnf" },
+      },
+    ],
+    unsupported: {
+      cose: "there is no empty confirmation on this wire to present. A COSE `cnf` is a map of RFC 8747 §3.1 labels, and `encodeCnf` (`src/internal/cose/cose-key.ts#if (out.size === 0) {`) refuses one that comes out with no member at all — so every producer using this codec, including the raw `aegis.cwt.sign` door a forgery would go through, fails closed before a token exists. The verifier rule this row states is about a token a verifier can be handed, and on this wire there is none to hand it. ⚠ That refusal is itself pinned, by `a-confirmation-the-wire-cannot-carry-is-refused-at-mint` and by `classes/confirmation-claim-wire.test.ts`",
+    },
+  },
+  {
+    id: "vouching-cannot-supply-a-binding-for-a-confirmation-with-no-member",
+    title:
+      "a caller vouching that a binding was already proven is still refused a confirmation with no member",
+    rationale:
+      "Vouching says the proof was checked upstream — a gateway that validated it and forwarded the token — so it substitutes for the PROOF and never for the binding the proof was checked against. A confirmation naming no key gives the upstream checker nothing to have checked, so the vouch attests to something that cannot have happened. This is the path a per-branch version of the verdict leaves open, which is why it is stated as its own row rather than inferred from the bare one.",
+    given: [
+      // ⚠⚠ `cnf: {}` — THE OTHER VALUE THE VERDICT JUDGES, and the one that had
+      // no row at all. The three sibling rows above all carry `cnf: { jkt: "" }`,
+      // so the `thumbprint` half of the predicate was pinned three times over and
+      // the `confirmation` half not once: deleting it from the check left the whole
+      // suite green while `cnf: {}` verified as a plain bearer token.
+      //
+      // A FOREIGN token: `mint` refuses an empty confirmation on the way out, so
+      // this shape can only be presented by somebody else's producer.
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          iat: NOW,
+          exp: NOW + 120,
+          jti: "token-1",
+          cnf: {},
+        },
+        options: { tokenType: "access" },
+      },
+    ],
+    when: [{ step: "verify", options: { trustBoundThumbprint: true } }],
+    // `data: { format }` like every sibling refusal in this gate — it is what
+    // makes the refusal attributable to the CONFIRMATION rather than to anything
+    // the presenter did.
+    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
+    // Every refusal this gate throws stamps `data: { format }` — including
+    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
+    // absent and a proof is supplied. Measured: with the confirmation half of the
+    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
+    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
+    // rows in this group are told apart from each other and from their neighbour.
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { format: "jwt", member: "cnf" },
+      },
+    ],
+    unsupported: {
+      cose: "there is no empty confirmation on this wire to present. A COSE `cnf` is a map of RFC 8747 §3.1 labels, and `encodeCnf` (`src/internal/cose/cose-key.ts#if (out.size === 0) {`) refuses one that comes out with no member at all — so every producer using this codec, including the raw `aegis.cwt.sign` door a forgery would go through, fails closed before a token exists. The verifier rule this row states is about a token a verifier can be handed, and on this wire there is none to hand it. ⚠ That refusal is itself pinned, by `a-confirmation-the-wire-cannot-carry-is-refused-at-mint` and by `classes/confirmation-claim-wire.test.ts`",
+    },
+  },
+  {
+    id: "a-proof-cannot-be-checked-against-a-confirmation-with-no-member",
+    title:
+      "presenting a real proof of possession against a confirmation with no member is refused",
+    rationale:
+      "A proof of possession is only meaningful against the key the token names, so a presenter offering a perfectly valid proof for a confirmation that names nothing has demonstrated possession of nothing the token asked about. The refusal must come from the confirmation being unusable rather than from any comparison failing: a verifier that reaches a comparison at all has accepted the binding as something checkable, and would report the presenter's proof as the problem when the token is.",
+    given: [
+      // ⚠⚠ `cnf: {}` — THE OTHER VALUE THE VERDICT JUDGES, and the one that had
+      // no row at all. The three sibling rows above all carry `cnf: { jkt: "" }`,
+      // so the `thumbprint` half of the predicate was pinned three times over and
+      // the `confirmation` half not once: deleting it from the check left the whole
+      // suite green while `cnf: {}` verified as a plain bearer token.
+      //
+      // A FOREIGN token: `mint` refuses an empty confirmation on the way out, so
+      // this shape can only be presented by somebody else's producer.
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          iat: NOW,
+          exp: NOW + 120,
+          jti: "token-1",
+          cnf: {},
+        },
+        options: { tokenType: "access" },
+      },
+    ],
+    when: [
+      {
+        step: "verify",
+        dpopProof: {
+          key: "ec-sig",
+          tokenId: "proof-1",
+          httpMethod: "GET",
+          httpUri: "https://rs.lindorm.io/resource",
+        },
+      },
+    ],
+    // `data: { format }` like every sibling refusal in this gate — it is what
+    // makes the refusal attributable to the CONFIRMATION rather than to anything
+    // the presenter did. The proof COMPARISON's own refusal carries no `data` at all, so `format` is precisely the discriminator between a refusal that judged the CONFIRMATION and one that judged the presenter's key.
+    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
+    // Every refusal this gate throws stamps `data: { format }` — including
+    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
+    // absent and a proof is supplied. Measured: with the confirmation half of the
+    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
+    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
+    // rows in this group are told apart from each other and from their neighbour.
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { format: "jwt", member: "cnf" },
+      },
+    ],
+    unsupported: {
+      cose: "there is no empty confirmation on this wire to present. A COSE `cnf` is a map of RFC 8747 §3.1 labels, and `encodeCnf` (`src/internal/cose/cose-key.ts#if (out.size === 0) {`) refuses one that comes out with no member at all — so every producer using this codec, including the raw `aegis.cwt.sign` door a forgery would go through, fails closed before a token exists. The verifier rule this row states is about a token a verifier can be handed, and on this wire there is none to hand it. ⚠ That refusal is itself pinned, by `a-confirmation-the-wire-cannot-carry-is-refused-at-mint` and by `classes/confirmation-claim-wire.test.ts`",
+    },
+  },
+  {
+    id: "a-confirmation-this-package-cannot-read-is-refused-not-reported-as-absent",
+    title:
+      "a token whose confirmation member holds a value of the wrong shape is refused, not read as unbound",
+    rationale:
+      "RFC 7800 §3 makes the confirmation claim the issuer's declaration that the presenter holds a particular key. A reader that cannot make sense of the declared value has two honest options and one dangerous one: it may refuse, or it may report the token as stating something it cannot interpret — but it must not report the token as stating NOTHING. Erasing an unreadable member turns the issuer's binding into an absence, and an absence is precisely what a verifier reads as bearer semantics, so an attacker who can substitute one field for a value of the wrong type widens acceptance from one key-holder to anybody holding a copy of the token.",
+    given: [
+      // A FOREIGN token: `mint` cannot produce this shape, because the domain
+      // `confirmation` is typed and the same refusal fires on the way out.
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          iat: NOW,
+          exp: NOW + 120,
+          jti: "token-1",
+          // A NUMBER where RFC 9449 §6.1 defines a base64url string. It is the
+          // representative of the whole family — `null`, `42`, `{}` and a `cnf`
+          // that is not an object — which the decoder used to erase alike.
+          //
+          // ⚠ THE CAST IS THE ROW'S SUBJECT, not a convenience. `ConfirmationClaimWire`
+          // types `jkt` as a string, so aegis's OWN type system already forbids
+          // this shape — which is exactly why the rule is about a FOREIGN token
+          // and why the row has to reach past the type to state it. A stranger's
+          // wire is not bound by our declarations.
+          cnf: { jkt: 42 as unknown as string },
+        },
+        options: { tokenType: "access" },
+      },
+    ],
+    when: [{ step: "verify" }],
+    // `claim`, not `format`: this refusal comes from the claim TRANSLATOR rather
+    // than from the verify policy gate, which is what says the token was rejected
+    // for being unreadable rather than for binding nothing. The two are different
+    // faults and the sibling rows above pin the other one.
+    then: [
+      { step: "rejects", error: "AegisDomainError", data: { claim: "confirmation" } },
+    ],
+    unsupported: {
+      cose: NO_JKT_ON_COSE,
+    },
+  },
+  {
+    id: "a-confirmation-member-spelled-in-the-other-vocabulary-is-refused",
+    title:
+      "a confirmation naming a member in the wrong vocabulary is refused, not written into the declared member's slot",
+    rationale:
+      "RFC 7800 §3.1 requires a reader to ignore a confirmation member it does not understand, which is why aegis carries an undeclared member verbatim. A member it DOES understand, misspelled, is a different thing: `kid` and the domain `keyId` resolve to ONE key, so writing both into one bag lets whoever chose the order decide which binding the token states. Silence is the dangerous disposal — the caller sees the confirmation accepted, the token carries a value no grammar rule checked, and a verifier reads a binding nobody validated. The refusal must not depend on the declared member being present alongside it: a confirmation naming ONLY the misspelling has nothing to collide with, and that is precisely the case where the look-alike takes the declared member's slot uncontested.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          // `kid` is the WIRE spelling of the declared `keyId`, which a caller
+          // reading any RFC would reach for. ⚠⚠ THE DECLARED MEMBER IS ABSENT,
+          // and that is what makes this row state the rule its rationale claims:
+          // with BOTH present there is a live collision to notice, so a refusal
+          // built only from what ARRIVED passes such a row while leaving the
+          // dangerous case — the misspelling alone, taking the declared slot
+          // uncontested — wide open. ⚠ Deliberately the member BOTH wires carry
+          // (RFC 8747 §3.1 label 3), so the rule is stated on each rather than on
+          // JOSE alone.
+          confirmation: { kid: "k2" } as never,
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    // ⚠⚠ BOTH ENTRIES, IN ORDER — and a single-entry pin would NOT have been
+    // weaker by degree, it would have been satisfied by the wrong build. A
+    // confirmation naming ONLY the misspelling produces TWO violations: the
+    // collision, and then `names no key to confirm`, because with the colliding
+    // member refused there is nothing left in the bag. So a build that merely
+    // DROPPED the colliding member instead of refusing it would still fail on the
+    // second entry alone and pass a pin that named only the first. `toMatchObject`
+    // compares array length, which is what makes stating both a real constraint.
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "confirmation",
+          invalid: [
+            {
+              key: "confirmation.kid",
+              message:
+                'Members "keyId" and "kid" both resolve to "kid" in "confirmation"',
+            },
+            {
+              key: "confirmation",
+              message: 'Claim "confirmation" names no key to confirm',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-confirmation-that-names-no-key-is-refused-at-mint",
+    title:
+      "a mint asked for a confirmation that names no key is refused rather than issuing a bearer token",
+    rationale:
+      "RFC 7800 §3 — by including a `cnf` claim the issuer declares that the presenter possesses a particular key and that the recipient can cryptographically confirm it. A confirmation naming no key declares a possession nobody can confirm, so neither disposal of it is a token anyone asked for: dropping the claim hands the audience a BEARER token where the issuer asked for a bound one, and emitting it puts a binding on the wire that a conformant verifier must reject. The issuer is the one party that can still repair the request, so the refusal belongs at the mint.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          // Every member absent. A caller assembling a confirmation out of
+          // optionals it turned out not to have arrives here.
+          confirmation: {},
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "rejects", error: "AegisDomainError", data: { claim: "confirmation" } },
+    ],
   },
   {
     id: "a-bound-token-verifies-when-the-caller-vouches-for-the-binding",
@@ -2903,7 +3392,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // the token actually carries, not the one aegis reconstructs on the way
       // out. Scoped per wire because the two are the same fact in each wire's own
       // vocabulary — the JOSE parameter NAME `typ` against the COSE integer
-      // LABEL 16 (RFC 9596 §4.1), which RFC 9052 §1.5 keeps distinct from the
+      // LABEL 16 (RFC 9596 §4.1), which CBOR keeps distinct from the
       // text label "16".
       { step: "wireProtectedHeader", on: "jose", includes: { typ: "JWT" } },
       { step: "wireProtectedHeader", on: "cose", includes: { 16: "application/cwt" } },
@@ -3674,7 +4163,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [
       { step: "accepts", format: { jose: "jws", cose: "cws" } },
       // The JOSE parameter NAME against the COSE integer LABEL 16 (RFC 9596
-      // §4.1), which RFC 9052 §1.5 keeps distinct from the text label "16".
+      // §4.1), which CBOR keeps distinct from the text label "16".
       {
         step: "wireProtectedHeader",
         on: "jose",
@@ -3908,6 +4397,333 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         bucket: "profile",
         expected: { givenName: "Ada", email: "ada@example.com" },
       },
+    ],
+  },
+  {
+    id: "an-address-reaches-the-wire-under-the-member-names-its-specification-defines",
+    title: "an address is published under the member names its specification defines",
+    rationale:
+      "OIDC Core §5.1.1 defines the address claim entirely by its sub-fields and spells each one — `formatted`, `street_address`, `locality`, `region`, `postal_code`, `country` — so those spellings ARE the interoperability contract: a relying party reads `street_address` and knows nothing of any other name for it. The domain form is camelCase like every other claim, so a case conversion sits between the caller and the wire, and a conversion is exactly the kind of step that can be applied to one wire and not the other, or applied twice, or applied to a key that is an identifier rather than a field name. A token whose address members are misspelled round-trips through its own issuer perfectly and means nothing to anybody else, which is the failure mode that has no symptom on the issuing side.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "id_token",
+        content: {
+          subject: "user-1",
+          audience: [CLIENT],
+          profile: {
+            address: {
+              streetAddress: "Sample 1",
+              postalCode: "00100",
+              country: "SE",
+              careOf: "Sample Recipient",
+            },
+          },
+        },
+        options: { context: { accessTokenIssued: false } },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      { step: "verify", profile: "id_token", options: { audience: CLIENT } },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // The WRITE half, in each wire's own vocabulary. On JOSE the members are
+      // readable as a nested object; on COSE the claim rides its interoperable
+      // string key (its integer label is private-use and emitted only in
+      // proprietary mode), and the members inside it are text-keyed the same
+      // way, which the raw byte pins in `classes/address-claim-wire.test.ts`
+      // assert member by member on both wires.
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: {
+          address: { street_address: "Sample 1", care_of: "Sample Recipient" },
+        },
+      },
+      { step: "wireClaims", on: "cose", present: ["address"] },
+      // The READ half. Either alone passes over the failure: a write that
+      // misspelled a member and a read that expected the misspelling agree.
+      {
+        step: "bucket",
+        bucket: "profile",
+        expected: {
+          address: {
+            streetAddress: "Sample 1",
+            postalCode: "00100",
+            country: "SE",
+            careOf: "Sample Recipient",
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: "an-address-member-no-specification-defines-still-reaches-the-recipient",
+    title: "an address member no specification defines still reaches the recipient",
+    rationale:
+      "This is AEGIS POLICY, not a specification requirement, and it is stated rather than cited: OIDC Core §5.1.1 lists the members it defines and says nothing about a member it does not, so no specification decides the question either way. The policy is that a declared member set is a floor and not a ceiling, because silently deleting a member a caller wrote is the worse of the two failures available — an address is a physical delivery instruction, a dropped line makes it undeliverable, and the caller gets no error and no way to discover the loss. Carrying it costs a recipient that does not recognise it nothing, because a recipient reads the members it knows. Whether any structured claim's member set should instead be CLOSED is a public-surface decision that has to be taken once for all of them rather than claim by claim, and until it is taken this is what aegis does.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "id_token",
+        content: {
+          subject: "user-1",
+          audience: [CLIENT],
+          profile: {
+            address: {
+              streetAddress: "Sample 1",
+              buildingName: "Sample House",
+            },
+          },
+        } as never,
+        options: { context: { accessTokenIssued: false } },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      { step: "verify", profile: "id_token", options: { audience: CLIENT } },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // The undeclared member keeps the mechanical key flip every unregistered
+      // claim gets, so it is snake_case on the wire and camelCase on the way
+      // back — the same treatment, one level in.
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: {
+          address: { street_address: "Sample 1", building_name: "Sample House" },
+        },
+      },
+      { step: "wireClaims", on: "cose", present: ["address"] },
+      {
+        step: "bucket",
+        bucket: "profile",
+        expected: {
+          address: { streetAddress: "Sample 1", buildingName: "Sample House" },
+        },
+      },
+    ],
+  },
+  {
+    id: "a-null-claim-member-is-omitted-rather-than-refused",
+    title:
+      "a claim member whose value is null states nothing, and is omitted rather than refused",
+    rationale:
+      '`null` is how a database column, a JSON document and an unset optional all spell "there is no value here", so an issuer assembling a claim from such a source is stating the members it HAS, not asserting that the rest are null. A null member is therefore an ABSENCE, and neither of the two disposals that are not omission fits it. Refusing it turns the ordinary shape of a nullable row into an error the caller must strip out before every mint, which is work that buys the recipient nothing. Writing it puts a member on a signed wire whose value asserts nothing and which a reader typed against the declared shape cannot use. Absence already has a spelling on both wires — the member is not there — and that is what this reduces to. It is a different question from EMPTINESS: an empty string is a value a text member may hold, and whether it rides is what the registry\'s emptiness column decides. And it is the OPPOSITE question from conformance: a member holding a value that contradicts its declared shape is a statement this package cannot honour, while a null member is no statement at all.',
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          exp: NOW + 3600,
+          // ⚠⚠ THE NULL MEMBER'S CODEC IS A **STRUCTURE**, and that is what makes
+          // this row state its rule rather than a weaker one. A null at a TEXT
+          // member is indistinguishable from a null the text codec merely failed
+          // — both leave the member off — so a fixture built on one would pass
+          // whether or not absence is recognised at all. RFC 8693 §4.1 makes
+          // `act` recursive, so `act.act` is a member whose value goes to the
+          // structure walker, and that walker REFUSES a value which is not an
+          // object. Only classifying `null` as absence FIRST keeps this token
+          // readable.
+          // ⚠ THE CAST REACHES PAST `ActClaimWire`, which types the nested `act`
+          // as an actor rather than as `null` — aegis's own declarations already
+          // forbid this shape, which is exactly why the row has to state the rule
+          // for a wire nobody here declared. A stranger's token is not bound by
+          // our types, and a `null` in a JSON document is the commonest thing in
+          // one.
+          act: { sub: "service-a", act: null as unknown as ActClaimWire },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      // ⭐⭐ `accepts` IS THE LOAD-BEARING ASSERTION, and it is a real one here:
+      // with the absence classification removed, the structure walker meets
+      // `null`, refuses it, and this verify throws. A row asserting only what the
+      // result CONTAINS could not state that — a thrown verify reaches no content
+      // assertion at all.
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // The chain that WAS stated survives intact, so the omission is scoped to
+      // the null member rather than swallowing the structure holding it.
+      { step: "claims", expected: { act: { subject: "service-a" } } },
+      { step: "bucket", bucket: "delegation", expected: { isDelegated: true } },
+    ],
+  },
+  {
+    id: "a-claim-member-that-is-not-of-its-declared-kind-is-neither-written-nor-reported",
+    title:
+      "a claim member that is not of its declared kind is neither written nor reported",
+    rationale:
+      "A signature binds an issuer to what a token SAYS, so the one disagreement a token must never contain is one between its writer and its reader. A structured claim's members each have a declared value shape, and the shape is checked on the way in — so if it is not also checked on the way out, the package can sign a token asserting a member and then report that same member as never stated when it reads its own output. That is worse than either behaviour alone: a caller who supplied the value sees it accepted, a recipient of the token sees it present, and a verifier reports it absent, with nothing anywhere raising a question. The check has to be the SAME check in both directions, and the emptiness verdict is a separate question from it — an empty string is a string, and whether an empty member rides is what the registry's emptiness column decides.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "id_token",
+        content: {
+          subject: "user-1",
+          audience: [CLIENT],
+          // ⚠⚠ THE CAST IS THE POINT, AND IT IS WHY THIS ROW NEEDS ONE. `null`
+          // used to stand here, chosen because it was the one value
+          // `AegisProfileAddress` PERMITS while failing the member's declared
+          // kind — and `null` is an ABSENCE now, with its own row above. What is
+          // left in this class cannot be reached from a well-typed caller at all,
+          // so the row reaches past the type to state the rule for the doors that
+          // have no type behind them: a foreign token, an introspection response,
+          // a JavaScript caller.
+          profile: { address: { region: 42 as unknown as string } },
+        },
+        options: { context: { accessTokenIssued: false } },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      { step: "verify", profile: "id_token", options: { audience: CLIENT } },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // The member is the address's only content, so dropping it leaves an empty
+      // address, which the claim's own emptiness verdict then prunes — and the
+      // claim's ABSENCE is a top-level fact both wires can state EXACTLY.
+      //
+      // ⚠ It therefore says nothing about whether the disposal is SCOPED to the
+      // failing member — a walker that discarded the whole structure produces
+      // this same absence. That is a separate rule and it has its own row below;
+      // neither row can stand in for the other.
+      { step: "wireClaims", excludes: ["address"] },
+      // `absent`, not an empty bucket: an empty bucket is TRUTHY.
+      { step: "bucket", bucket: "profile", absent: true },
+    ],
+  },
+  {
+    id: "refusing-one-claim-member-does-not-discard-the-members-beside-it",
+    title: "refusing one claim member does not discard the members beside it",
+    rationale:
+      'OIDC Core §5.1.1 says an implementation "MAY return only a subset of the fields of an address", so the members of a structured claim are independently meaningful — a country is a fact about the end-user whether or not a postal code was available. A refusal must therefore be scoped to the value that failed: discarding the whole structure because one member was malformed destroys information the issuer had and the recipient could have used, and it does so silently, since a structure that arrives with fewer members is indistinguishable from one an issuer chose to send that way. It is also the failure a per-member check invites, because the cheapest way to reject a bad member is to abandon the walk.',
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "id_token",
+        content: {
+          subject: "user-1",
+          audience: [CLIENT],
+          // The refused member has a SURVIVING SIBLING, which is the only shape
+          // in which this rule is observable at all.
+          //
+          // ⚠ `region: null` stood here and no longer serves: `null` is an
+          // ABSENCE now, and an absent member has nothing to be scoped away from
+          // its siblings. The bad member must be a value that genuinely
+          // contradicts the declared kind, which past `AegisProfileAddress`
+          // means a cast — see the sibling row above for why that is the honest
+          // shape of this class rather than a weakness in the row.
+          profile: {
+            address: { streetAddress: "Sample 1", region: 42 as unknown as string },
+          },
+        },
+        options: { context: { accessTokenIssued: false } },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      { step: "verify", profile: "id_token", options: { audience: CLIENT } },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // The claim ARRIVES, carrying the member that passed. On COSE the value is
+      // a CBOR map rather than a JSON object, so the nested reading is stated in
+      // each wire's own vocabulary; the member-by-member byte assertions on both
+      // wires live in `classes/address-claim-wire.test.ts`.
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: { address: { street_address: "Sample 1" } },
+      },
+      { step: "wireClaims", on: "cose", present: ["address"] },
+      {
+        step: "bucket",
+        bucket: "profile",
+        expected: { address: { streetAddress: "Sample 1" } },
+      },
+    ],
+  },
+  {
+    id: "an-address-that-is-not-an-address-is-refused-not-read-as-an-absent-one",
+    title: "an address that is not an address is refused, not read as an absent one",
+    rationale:
+      'OIDC Core §5.1.1 defines the address claim as a structure of sub-fields, so a scalar under that name is not an address that happens to be short — it is a claim that does not conform to its own definition, written by an issuer this verifier does not control. Two disposals are available and only one of them is honest. Reporting the scalar hands the consumer a value in a field whose declared shape is an object, and the consumer\'s first member access is then a runtime type error in code the type checker passed. Discarding it in silence is the subtler fault and the one that matters more: the result then says the token carries no address, which is a statement about the token that is FALSE — its issuer signed one — and the consumer cannot tell "no address was sent" from "an address was sent that I could not read", though the two call for opposite responses. A reader may decline to describe what it cannot describe; what it may not do is report a stranger\'s assertion as never made. So the claim is refused, and the token with it: the value rides inside the signature, so an issuer that cannot state this claim in the shape its own specification defines has not produced a token this verifier can speak for.',
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          exp: NOW + 3600,
+          address: "Sample 1, 00100 Stockholm",
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    // ⚠ `claim` AND `invalid`, not the error class alone: every refusal in this
+    // package is an `AegisError`, and this one shares its class AND its code with
+    // the mandatory-member, key-collision and undeclared-member refusals. The
+    // entry names WHICH position decided and WHAT was wanted there, so the row
+    // cannot go green on a different fault reaching the same throw.
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "address",
+          invalid: [{ key: "address", message: 'Claim "address" must be an object' }],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-wire-claim-whose-value-is-null-is-a-claim-the-token-does-not-state",
+    title: "a claim carrying null on the wire is read as one the token does not state",
+    rationale:
+      "`null` is the only spelling of absence a JSON or CBOR payload can carry — neither encoding can express `undefined` — so it is the form an issuer's empty optional actually arrives in, and the one a reader meets on real tokens rather than in a caller's own dict. It is therefore not a value contradicting the claim's declared shape and must not be refused as one: an issuer writing `null` is an issuer stating nothing, and a reader that agrees with it reports what the issuer meant. The distinction is the whole boundary — a structured claim carrying a SCALAR is refused, because its issuer stated something the reader cannot describe, while the same claim carrying `null` was never stated at all. Collapsing the two in either direction is a fault: refuse both and ordinary nullable data becomes unreadable, drop both and a malformed claim disappears in silence.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          exp: NOW + 3600,
+          // ⚠ THE SAME CLAIM AS THE ROW ABOVE, deliberately: the pair states a
+          // boundary only if one fixture differs from the other in exactly the
+          // value under judgement and in nothing else.
+          address: null,
+          // A SECOND claim, of a different codec kind, so the rule is stated
+          // about the READ rather than about the one structured claim that
+          // prompted it. `bool` is the arm that returns its input unchecked, so
+          // it is the one that would report `null` in a field typed `boolean`.
+          email_verified: null,
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // `absent`, not an empty object: an empty bucket is TRUTHY, so a consumer
+      // writing `if (result.profile)` would read one as populated and reach for
+      // the address inside it. BOTH null claims bucket to `profile`, so the
+      // bucket's absence states both at once.
+      { step: "bucket", bucket: "profile", absent: true },
     ],
   },
 
@@ -4216,6 +5032,40 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       { step: "wireClaims", present: ["events"] },
     ],
   },
+  {
+    id: "an-event-type-reaches-the-wire-as-the-identifier-it-is",
+    title: "a security event's type URI is carried onto the wire without conversion",
+    rationale:
+      "RFC 8417 §2.2 defines the claim's members by what their NAMES are: 'The value of the \"events\" claim is a JSON object whose members are name/value pairs whose names are URIs identifying the event statements being expressed.' A URI is an identifier, not a field name, and a receiver dispatches on it character for character — so the house convention that flips a claim's key case on the way out (snake on write, camel on read) would not translate an event type but rename it, and the token would announce an event nobody is listening for. Every other structured claim in this registry either declares its member spellings or flips whatever it is handed; this one must do neither.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "logout_token",
+        content: {
+          subject: "user-1",
+          audience: [CLIENT],
+          events: { "https://schemas.lindorm.test/event/accountRecovery": {} },
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: {
+          events: { "https://schemas.lindorm.test/event/accountRecovery": {} },
+        },
+      },
+      // ⚠ SPELLING, NOT SUBSTANCE. A COSE claims map keys `events` to a CBOR map,
+      // which no object-shaped inclusion can compare against — the same split the
+      // `address` rows take. The COSE value is pinned against the raw bytes in
+      // `classes/events-claim-wire.test.ts`, which reads the map as a map.
+      { step: "wireClaims", on: "cose", present: ["events"] },
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // The empty-header normalisation — what a producer's empty header parameter
@@ -4298,8 +5148,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
       // Read off the RAW bytes by the independent inspector, per wire because the
       // two spell the parameter differently: RFC 9052 §3.1 Table 3 registers COSE
-      // `crit` at integer label 2, and RFC 9052 §1.5 makes an integer label and a
-      // text one different labels.
+      // `crit` at integer label 2, and CBOR keys an integer label and a text one
+      // apart (RFC 9052 §1.5 admits both: `label = int / tstr`).
       { step: "wireProtectedHeader", on: "jose", excludes: ["crit"] },
       { step: "wireProtectedHeader", on: "cose", excludes: [2] },
     ],
@@ -5213,6 +6063,536 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     when: [{ step: "verify", options: { actor: { maxChainDepth: 2 } } }],
     then: [{ step: "rejects", error: "AegisDomainError" }],
   },
+  {
+    id: "an-actor-carries-an-identity-claim-the-registry-does-not-declare",
+    title:
+      "a mint carries an actor member RFC 8693 permits and aegis does not declare, at every depth",
+    rationale:
+      "RFC 8693 §4.1 does not enumerate the actor's members: \"The 'act' claim value is a JSON object, and members in the JSON object are claims that identify the actor. The claims that make up the 'act' claim identify and possibly provide additional information about the actor.\" §4.4 says the same of `may_act` and NAMES one beyond the identifiers — \"the combination of the two claims 'iss' and 'sub' are sometimes necessary to uniquely identify an authorized actor, while the 'email' claim might be used to provide additional useful information about that party.\" So the set of claims that may identify an actor belongs to the deployment and to the other specifications it composes with, not to this library: an issuer that needs one more identifier must be able to write it, and a reader must report it rather than pretend the issuer said less. The member travels UNTOUCHED because its name was given by whoever registered it — a case flip would not translate it but rewrite it into a field nobody reads. ⚠ The nesting is part of the rule and not a bonus: §4.1 makes a nested `act` the same kind of object as the outer one, so a member set that opened at the top and closed one level down would be a rule about nothing.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          // Cast locally: the DECLARED five are a closed TypeScript shape
+          // (`ActClaimMembers`), and the open tail reaches the public type through
+          // an index signature — so the literal below is legal at runtime and the
+          // cast only satisfies excess-property checking on a nested literal.
+          act: {
+            subject: "service-1",
+            act: { subject: "service-2", email: "service-2@example.test" },
+          } as never,
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      { step: "verify", profile: "access_token", options: { audience: RESOURCE } },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // The RAW wire: the declared member takes its RFC 8693 spelling and the
+      // undeclared one keeps its own, at DEPTH — which is where a tail policy
+      // applied only to the top level would show.
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: {
+          act: {
+            sub: "service-1",
+            act: { sub: "service-2", email: "service-2@example.test" },
+          },
+        },
+      },
+      // …and back under the domain vocabulary, so the member survives the round
+      // trip rather than merely reaching the wire.
+      {
+        step: "claims",
+        expected: {
+          act: {
+            subject: "service-1",
+            act: { subject: "service-2", email: "service-2@example.test" },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: "a-foreign-actor-member-is-reported-rather-than-quietly-dropped",
+    title:
+      "a verify reports an actor member of somebody else's token that aegis does not declare",
+    rationale:
+      'A read reports what a PRODUCER wrote. Dropping a member the library has no declaration for makes it misreport a stranger\'s token as saying LESS than it says, and does so silently — so nothing downstream can tell an actor the issuer described in two members from one they described in three, and a deployment that depends on the extra identifier discovers the loss only where it eventually matters. That is worse than either honest alternative: refusing says the token cannot be read, reporting says what it contains. RFC 8693 §4.1 makes the extra member legitimate in the first place ("members in the JSON object are claims that identify the actor"), so refusing would reject conformant issuers, which leaves reporting as the only answer that is both honest and usable.',
+    given: [
+      {
+        // A FOREIGN token, written through the raw kit door — which performs no
+        // translation, so the wire says exactly what this row means it to say.
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          act: { sub: "service-1", email: "service-1@example.test" } as never,
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      {
+        step: "claims",
+        expected: {
+          act: { subject: "service-1", email: "service-1@example.test" },
+        },
+      },
+    ],
+  },
+  {
+    id: "an-actor-is-identified-by-the-member-rfc-8693-defines-and-by-no-look-alike",
+    title:
+      "a token whose actor carries a domain-spelled look-alike beside the real one is refused, not re-read from the look-alike",
+    rationale:
+      'RFC 8693 §4.1 identifies the acting party by the claims inside the `act` object, and its own example uses `sub`. WHICH party the issuer named is therefore decided by that member and by nothing else. The actor\'s member set is OPEN — §4.4 offers `email` as a member a deployment may add — and an open set is what makes this reachable: a member the library carries untouched can be spelled exactly like the library\'s own DOMAIN name for a member it does declare, so `sub` and `subject` both arrive at `subject` and something has to decide between them. Deciding by key order hands the identification to whoever presents the token: a chain the issuer wrote as `{"sub":"audited-service"}` is re-read as naming a different actor entirely by appending one member the issuer never wrote, and every allowlist, every scope and every audit record downstream then names the wrong party. There is no safe winner to pick — the token is self-contradictory about the one fact the claim exists to state — so the collision is refused, naming the key both members resolved to. It is the same hazard the top-level floor treats as load-bearing when it refuses to let a custom `audience` answer for the registered `aud`, one level in. ⭐ And the refusal cannot depend on the issuer having written the real member too: an actor naming ONLY the look-alike produces a domain claim BYTE-IDENTICAL to one built from a genuine `sub`, so a consumer reading `act.subject` for an allowlist or an audit record has nothing to tell the two apart. Carrying an unknown member and carrying it into a declared member\'s own slot are two different acts — §4.1 permits the first and says nothing that would permit the second.',
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          // BOTH spellings: `sub` is what the issuer wrote, `subject` is the
+          // look-alike. ⚠ This row states the PAIR; its sibling below
+          // (`an-actor-look-alike-is-refused-even-when-the-real-member-is-absent`)
+          // states the harder half, where the look-alike arrives ALONE. Two rows
+          // rather than one because the second is what a presence-dependent
+          // refusal passes: an earlier note here argued a lone look-alike "would
+          // be satisfied by a reader that simply ignored it", and that reasoning
+          // is what left the single-key form open — being ignored and being
+          // written into `subject` are not the same outcome, and only the second
+          // one happened.
+          act: { sub: "audited-service", subject: "rogue-service" },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "act",
+          invalid: [
+            {
+              key: "act.subject",
+              message: 'Members "sub" and "subject" both resolve to "subject" in "act"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "an-actor-look-alike-is-refused-even-when-the-real-member-is-absent",
+    title:
+      "a token whose actor names ONLY a domain-spelled look-alike is refused, not read as identifying that actor",
+    rationale:
+      "The dangerous form of a look-alike is the one that arrives ALONE. RFC 8693 §4.1 identifies the acting party by the claims inside the `act` object and its own example uses `sub`; a token writing `subject` instead produces a domain claim BYTE-IDENTICAL to one built from a genuine `sub`, so every consumer downstream — an allowlist, a scope decision, an audit record — reads a party the issuer never named and has nothing to tell the two apart. With BOTH members present there is a visible contradiction for a reader to refuse; with only the look-alike there is none, which makes this the case a refusal must cover rather than the one it may skip. §4.1 permits an unknown member to be carried, and permits nothing about writing one into a declared member's own slot: those are two different acts, and only the second is indistinguishable from the truth.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          // ⚠ NO `sub`. That is the whole difference from the sibling row above,
+          // and it is what a refusal built from the members that ARRIVED lets
+          // through: with nothing to collide against, the look-alike takes the
+          // declared member's slot uncontested.
+          act: { subject: "rogue-service" },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "act",
+          invalid: [
+            {
+              key: "act.subject",
+              message: 'Members "sub" and "subject" both resolve to "subject" in "act"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "an-address-member-spelled-in-the-domain-vocabulary-is-refused-on-the-wire",
+    title:
+      "a token whose address names a member in the library's own domain spelling is refused, not read as that member",
+    rationale:
+      "OIDC Core §5.1.1 spells an address member `street_address`, and the library's domain vocabulary spells the same member `streetAddress`. A token writing the domain form is writing a name no specification defines into the slot the specification's own member resolves to, and the result a consumer reads is indistinguishable from a conformant token — so the deployment cannot tell whether the issuer followed the specification. The address claim carries a case-flipped open tail precisely because an undeclared member is a lindorm extension of a lindorm type; a member that is NOT undeclared, merely spelled in the wrong vocabulary, is not that. Stated on `address` as well as on the actor chain because they take DIFFERENT tail policies — a flipped tail and a verbatim one — and a rule that held for only one of them would be a rule about the tail policy rather than about the member set.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          address: { streetAddress: "Storgatan 1" },
+        } as never,
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [{ step: "rejects", error: "AegisDomainError", data: { claim: "address" } }],
+  },
+  {
+    id: "a-caller-cannot-write-two-spellings-of-one-structured-member",
+    title:
+      "a mint refuses a structured claim whose caller wrote both spellings of one member",
+    rationale:
+      "The read-side hazard has a write-side twin, and it is the same defect from the other end: a caller who writes both the domain and the wire spelling of one member has told the library two things about one field, and an emission that picks a winner signs whichever the object's key order happened to put last. What reaches the wire then depends on how the caller's object was assembled rather than on what they meant, and the caller has no way to see which one was chosen — the token verifies, and the field is simply wrong. Refusing at the emission boundary is the last moment the value is still in the producer's hands.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          // `subject` is the DECLARED member and resolves to the wire `sub`; a
+          // caller-supplied `sub` rides the open tail verbatim and lands on the
+          // same key. Neither is nonsense on its own, which is what makes the
+          // pair a genuine ambiguity rather than a typo.
+          act: { subject: "declared-actor", sub: "shadow-actor" },
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "act",
+          invalid: [
+            {
+              key: "act.sub",
+              message: 'Members "sub" and "subject" both resolve to "sub" in "act"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-structured-member-named-__proto__-is-refused-rather-than-made-a-prototype",
+    title:
+      "a read refuses a structured claim whose member is named `__proto__`, on a token nobody signed",
+    rationale:
+      "RFC 8259 §4 makes any string a legal JSON member name — \"A name is a string\" — and JavaScript then treats the assignment of one particular name as a request to REPLACE the object's prototype rather than to add a member. So a producer who writes `act.__proto__` writes a claim whose members a consumer's `Object.keys` and `JSON.stringify` both report as absent, while `claims.act.subject` returns the value the producer put there: an actor identity that is invisible to every audit log and present at every read. The collision rule cannot see it either — no own property is created, so nothing is claimed twice. Refusing the NAME is the only defence that does not depend on noticing an effect designed to be unobservable. The door is the KEYLESS one because that is the reach: reporting a payload without checking a signature is what `parse` is for, so an attacker needs no key at all, and a token minted through this package cannot carry the member anyway — the claim bag is normalised on the way out.",
+    given: [
+      {
+        step: "token",
+        via: "forged",
+        wire: "jose",
+        // ⚠ A PAYLOAD TEXT, not a claims dict, and that is the whole reason this
+        // step exists: a TS/JS object literal spelling `__proto__` invokes the
+        // prototype setter, so the member cannot survive as data anywhere between
+        // the row and the wire. The text is written byte for byte.
+        payload: `{"iss":"${ISSUER}","sub":"user-1","exp":${NOW + 3600},"act":{"__proto__":{"subject":"attacker"},"iss":"https://x.test"}}`,
+        signature: "junk",
+      },
+    ],
+    when: [{ step: "parse" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "act",
+          invalid: [
+            {
+              key: "act.__proto__",
+              message:
+                'Member "__proto__" is not a member name any structure may use, in "act"',
+            },
+          ],
+        },
+      },
+    ],
+    unsupported: {
+      cose: 'the forgery is a raw JSON payload text, and the hazard it carries is JavaScript\'s own: RFC 8259 §4 admits `__proto__` as an ordinary member name ("A name is a string") and the language turns writing it into a prototype replacement. A COSE payload is CBOR and has no such text to write — RFC 9052 §1.5 keys a COSE map by "text strings, negative integers, and unsigned integers", so the same member reaches a COSE reader as a text LABEL in a member map, which is a different artifact travelling through a different decoder',
+    },
+  },
+  {
+    id: "a-compact-cose-member-map-refuses-a-text-__proto__-label",
+    title:
+      "a read refuses a COSE member map carrying `__proto__` as a text label, on a token nobody signed",
+    rationale:
+      'RFC 9052 §1.5 admits a text string as a COSE map label — "In COSE, we use text strings, negative integers, and unsigned integers as map keys", grammar `label = int / tstr` — and a member map is keyed by the member\'s label, so `__proto__` is a reachable key in a COSE structure exactly as it is in a JSON one. The decoder must therefore create a real own property for it and let the name rule refuse it: a decoder that assigned instead would create NO own key at all, the walker would see a structure with one member, and the token would be accepted while carrying an attacker-controlled property that every enumeration reports as absent. The refusal is the observable form of the data property having been created, which is why it is what a row can assert. The keyless door is the reach: a payload is reported without a signature check, so no key is needed to present one.',
+    given: [
+      {
+        step: "token",
+        via: "forged",
+        wire: "cose",
+        claim: "act",
+        // ⚠ THE VALUE IS AN OBJECT, and it has to be: assigning a non-object to
+        // `__proto__` is a silent no-op, so a string here would state a weaker
+        // token than the one an attacker sends.
+        carries: [
+          { key: "2", keyedBy: "label", value: "declared-actor" },
+          { key: "__proto__", keyedBy: "name", value: { subject: "attacker" } },
+        ],
+        signature: "junk",
+      },
+    ],
+    when: [{ step: "parse" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "act",
+          invalid: [
+            {
+              key: "act.__proto__",
+              message:
+                'Member "__proto__" is not a member name any structure may use, in "act"',
+            },
+          ],
+        },
+      },
+    ],
+    unsupported: {
+      jose: 'the forgery is a member map keyed by COSE labels, which RFC 9052 §1.5 defines and JSON has no counterpart for: "In JSON, maps are called objects and only have one kind of map key: a text string. In COSE, we use text strings, negative integers, and unsigned integers as map keys." A JOSE reader has no label table and no member map to key `__proto__` into — the same name reaches it as an ordinary JSON member name instead, through a different decoder',
+    },
+  },
+  {
+    id: "a-cwt-keying-one-member-by-both-its-label-and-its-name-is-refused",
+    title:
+      "a verify refuses a CWT whose member map carries one member at both its integer label and its text name",
+    rationale:
+      'RFC 9052 §1.5 gives a COSE map two kinds of key — "In COSE, we use text strings, negative integers, and unsigned integers as map keys", grammar `label = int / tstr` — and CBOR keys them apart, so a member\'s integer label and its interoperable text name are two distinct map entries. They are also two renderings of ONE declared member, so a map carrying both says two things about one field and a decoder that merges them lets the last entry win. For an identity member that hands the identification to whoever wrote the map: an actor the issuer named `2 => "audited-service"` is re-read as a different party by appending one entry, and every allowlist and audit record downstream then names the wrong one. There is no safe winner to pick — the map is self-contradictory about the one fact the member exists to state — so it is refused, naming the label and the name that resolved together. The door is the VERIFYING one because that is what the rule has to survive: the token carries a real signature over the real key, so it passes every check before the claims layer, and the refusal has to come from the decoder rather than from anything upstream of it.',
+    given: [
+      {
+        step: "token",
+        via: "forged",
+        wire: "cose",
+        claim: "act",
+        // ⚠ ONE MEMBER, TWO ROWS — the shape a JS object forbids and a CBOR map
+        // permits, which is why this half of the step is a table. `2` is the
+        // actor's `sub` label and `"sub"` is its interoperable name.
+        carries: [
+          { key: "2", keyedBy: "label", value: "audited-service" },
+          { key: "sub", keyedBy: "name", value: "rogue-service" },
+        ],
+        // A REAL signature over the forged payload: the capability is that a
+        // token which verifies is still refused, and a junk-signed one could not
+        // state it.
+        signature: "ec-sig",
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      {
+        step: "rejects",
+        error: "CoseError",
+        data: { claim: "act", member: "sub", label: 2, key: "sub" },
+      },
+    ],
+    unsupported: {
+      jose: 'the two keyings are a COSE fact. RFC 9052 §1.5 states the contrast itself — "In JSON, maps are called objects and only have one kind of map key: a text string. In COSE, we use text strings, negative integers, and unsigned integers as map keys" — so a JOSE member has ONE spelling and no second key for the same member to arrive under',
+    },
+  },
+  {
+    id: "an-address-member-cannot-be-shadowed-by-its-own-look-alike",
+    title:
+      "a verify refuses an address whose undeclared member flips onto a member the address already states",
+    rationale:
+      "The collision rule is a property of an OPEN member set, not of any one claim, and the OIDC Core §5.1.1 address is where it was first measured: an undeclared member takes the house case flip, so `streetAddress` becomes `street_address` and lands on the member §5.1.1 already spells that way. Before the rule, the token's own key order decided which value a relying party read. An address is not an identity assertion, so the stakes are lower than the actor's — which is exactly why it is worth stating separately: a rule that defended only the claim somebody happened to be looking at would be a patch, and the next open structure to arrive would inherit the defect rather than the defence.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          address: { street_address: "Storgatan 1", streetAddress: "Shadow Street 9" },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "address",
+          invalid: [
+            {
+              key: "address.streetAddress",
+              message:
+                'Members "streetAddress" and "street_address" both resolve to "streetAddress" in "address"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "an-undeclared-structured-member-survives-both-cose-encodings",
+    title:
+      "an actor member aegis does not declare rides the compact COSE encoding as well as the interoperable one",
+    rationale:
+      'The compact encoding is a SIZE decision, and a size decision must not also be a content decision. A label map holds only the members the library has labels for, so an implementation that builds one from its label table alone drops everything else — the same domain call then produces two tokens that say different things, and the one that says less is the one a deployment turns on for efficiency. Nothing in the token records the loss, and the interoperable token that would have revealed it is the one nobody is minting. RFC 9052 §1.5 is what makes the honest encoding available: "In COSE, we use text strings, negative integers, and unsigned integers as map keys", with the grammar `label = int / tstr` — so a member with no assigned label rides under its own name in the same map as the labelled ones.',
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          act: { subject: "service-1", email: "service-1@example.test" },
+        },
+        options: { format: "cwt", proprietary: true },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      { step: "verify", profile: "access_token", options: { audience: RESOURCE } },
+    ],
+    then: [
+      { step: "accepts", format: { cose: "cwt" } },
+      // The round trip THROUGH the compact encoding: the undeclared member comes
+      // back, so it was not dropped on the way out. ⚠ The raw MAP — the declared
+      // member under its integer label beside the undeclared one under its own
+      // string key, in ONE map — is pinned by `classes/act-claim-wire.test.ts`,
+      // through the independent inspector; a row's expectations are plain data
+      // (the table is machine-convertible), and a CBOR label map is not.
+      {
+        step: "claims",
+        expected: {
+          act: { subject: "service-1", email: "service-1@example.test" },
+        },
+      },
+    ],
+    unsupported: {
+      jose: 'the compact label map is a COSE encoding, and JSON has no counterpart for it. RFC 8259 §4 defines an object as "a pair of curly brackets surrounding zero or more name/value pairs (or members). A name is a string" — one kind of key, so a JOSE member has ONE spelling and no second encoding to be dropped from. RFC 9052 §1.5 is what gives COSE two ("In COSE, we use text strings, negative integers, and unsigned integers as map keys", grammar `label = int / tstr`), which is the whole of what this row is about',
+    },
+  },
+  {
+    id: "an-actor-that-identifies-nobody-is-reported-as-an-actor-stating-nothing",
+    title:
+      "an actor object carrying no member the token states is reported back as an empty actor, not as no actor",
+    rationale:
+      "An issuer and a reader of the same token must agree about what it says, and a library that writes a value it will not read back has broken that on its own output. RFC 8693 §4.1 makes `act` the claim that says a delegation occurred, so an actor object with no members is a strange thing to write — but it is a thing an issuer CAN write, and once written the honest read of it is the object that is there. Reporting the claim as ABSENT instead would say the token names no actor when it names an empty one, which is a different statement and one the wire does not support. ⚠ The consequence a consumer must know is that the reported object is TRUTHY: a delegation is stated and the acting party is not identified, so a check that cares WHO is acting has to read a member rather than the container.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          act: {},
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "claims", expected: { act: {} } },
+    ],
+  },
+  {
+    id: "an-authorized-actor-claim-states-who-may-become-the-actor",
+    title:
+      "a token naming an authorized actor carries it on the wire and reports it back under its own name",
+    rationale:
+      'RFC 8693 §4.4 — `may_act` "makes a statement that one party is authorized to become the actor and act on behalf of another party", and the authorization server reads it out of a subject token to decide whether a requested delegation may proceed. It is therefore a claim whose whole value is that a DIFFERENT party can read it later: a token that carried it under a spelling the exchange endpoint does not look for, or that lost it on the way back in, silently turns every delegation the issuer authorised into one that cannot be exercised. The claim is the mirror of `act` — one records a delegation that happened, the other permits one that has not — so it is stated separately rather than assumed to follow from its twin.',
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          mayAct: { subject: "delegate-1", clientId: "delegate-client-1" },
+        },
+      },
+    ],
+    when: [{ step: "mint" }, { step: "verify" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // The RAW WIRE, read by the INDEPENDENT inspector, in each wire's own
+      // vocabulary. The member spellings are RFC 8693's on both encodings; the
+      // CLAIM key is a separate question, and the interoperable default answers
+      // it with the string name and NOT the private-use integer label the compact
+      // encoding uses — RFC 8392 §9.1.1, the registry a CWT CLAIM KEY comes from,
+      // marks "Integer values less than -65536" as Private Use, so an
+      // interoperable token must not carry one. (RFC 8152 §16.2 says the same of a
+      // COSE HEADER PARAMETER; that is a different registry.)
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: { may_act: { sub: "delegate-1", client_id: "delegate-client-1" } },
+      },
+      {
+        step: "wireClaims",
+        on: "cose",
+        present: ["may_act"],
+        excludes: [-65543],
+      },
+      // …and back under its DOMAIN name, so the claim survives the round trip
+      // rather than merely reaching the wire.
+      {
+        step: "claims",
+        expected: { mayAct: { subject: "delegate-1", clientId: "delegate-client-1" } },
+      },
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // Temporal options that must not bleed into one another.
@@ -5589,7 +6969,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "minting a security event token whose subject identifier holds an empty member is refused",
     rationale:
-      "RFC 9493 §3.2.3 states the rule outright for the `iss_sub` format: \"Both the 'iss' member and the 'sub' member are REQUIRED and MUST NOT be null or empty\" — as §3.2.1 and §3.2.2 do for `uri` and `email`. An identifier whose required member is an empty string therefore is not one, however well-formed it looks. It matters most on a security event token, whose whole purpose is to say that something happened to a specific subject: the `security_event` profile additionally FORBIDS a plain `sub` (an aegis policy, for SSF conformance and SET/ID-token anti-confusion — RFC 8417 §2.2 itself makes `sub` OPTIONAL), which leaves the subject identifier as the entire statement of who the event is about. One that names nobody makes the event unattributable to the receiver acting on it. A demand for a member is a demand for the value, at whatever depth the member sits.",
+      "RFC 9493 §3.2.3 states the rule outright for the `iss_sub` format: \"Both the 'iss' member and the 'sub' member are REQUIRED and MUST NOT be null or empty\" — as §3.2.1 and §3.2.2 do for `uri` and `email`. An identifier whose required member is an empty string therefore is not one, however well-formed it looks. It matters most on a security event token, whose whole purpose is to say that something happened to a specific subject: the `security_event` profile additionally FORBIDS a plain `sub` (an aegis policy, for SSF conformance and SET/ID-token anti-confusion — RFC 8417 §2.2 itself makes `sub` OPTIONAL), which leaves the subject identifier as the entire statement of who the event is about. One that names nobody makes the event unattributable to the receiver acting on it. A demand for a member is a demand for the value, at whatever depth the member sits. The refusal names the position in the DOMAIN vocabulary the caller wrote the claim in — the caller stated `subjectId` and never saw `sub_id`, and the same `invalid` field carries the policy floor's own domain-named entries, so a wire-spelled position would make one field mean two things.",
     given: [
       {
         step: "token",
@@ -5611,8 +6991,259 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           direction: "mint",
           invalid: [
             {
-              key: "sub_id.sub",
-              message: 'sub_id of format "iss_sub" requires member "sub"',
+              key: "subjectId.sub",
+              message: 'subjectId of format "iss_sub" requires member "sub"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-subject-identifier-is-stated-in-the-vocabulary-the-caller-speaks",
+    title:
+      "a subject identifier member is written and read back in the domain vocabulary while the wire keeps the RFC spelling",
+    rationale:
+      "The domain surface exists so a caller states claims in ONE vocabulary and never has to know the wire's — it takes `tokenId` and returns `tokenId`, it takes `streetAddress` for OIDC Core §5.1.1's `street_address`, and RFC 9493's Subject Identifier is no different. Its `phone_number` member (§3.2.5) is the only member of any structured claim spelled with an underscore, so a caller writing it had to know that this one structure answered in the wire's words while every other one answered in the house's. The wire is what interoperability is made of and must keep the RFC's own spelling; the two are separate statements, and stating them together is what shows the translation happening rather than a value being copied. It matters beyond taste because the per-format requirement table is keyed by the DOMAIN name: a member the domain surface spells one way and the rule looks up another is a requirement RFC 9493 makes and nothing enforces.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "security_event",
+        content: {
+          audience: ["https://receiver.lindorm.io/"],
+          // The Phone Number format, whose REQUIRED member (§3.2.5) is the one
+          // this vocabulary question is about — so the profile's own shape rule
+          // has to resolve the domain spelling for the mint to succeed at all.
+          subjectId: { format: "phone_number", phoneNumber: "+46700000000" },
+          events: { "urn:lindorm:event:test": {} },
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        profile: "security_event",
+        options: { audience: "https://receiver.lindorm.io/" },
+      },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // The DOMAIN half: what the caller wrote is what the caller gets back.
+      {
+        step: "claims",
+        expected: { subjectId: { format: "phone_number", phoneNumber: "+46700000000" } },
+      },
+      // The WIRE half, read off the raw bytes: RFC 9493 §3.2.5 names the member
+      // `phone_number`, and a receiver of this token is not a lindorm consumer.
+      // Without this the row would pass for a package that never translated
+      // anything and simply echoed the caller's key onto a signed token.
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: { sub_id: { format: "phone_number", phone_number: "+46700000000" } },
+      },
+    ],
+  },
+  {
+    id: "an-identifier-format-the-issuer-does-not-model-is-carried-not-refused",
+    title:
+      "a security event token whose subject identifier names an unmodelled Identifier Format is minted and verified",
+    rationale:
+      "RFC 9493 §3 requires every Identifier Format to have a name *\"registered in the IANA 'Security Event Identifier Formats' registry established in Section 8.1 or a Collision-Resistant Name as defined in [RFC7519]\"* — and the second half needs no registration at all, so a conformant transmitter can name a format this implementation has never heard of. §3 also says an Identifier Format *\"MAY describe more members than are strictly necessary to identify a subject\"*, so what those members are is that format's business and not the reader's. A receiver that refused an unmodelled format would reject conformant security events, and the deployment's only remedy would be to stop using the profile. So an unmodelled format carries no per-format demand and the identifier travels intact. The format name is a PRODUCER'S string with no grammar constraining it, which is why this row states the rule with a name drawn from `Object.prototype`: a lookup table reached by such a name must answer \"unknown format\", and any other answer — a refusal, or a crash escaping the error contract — is the implementation's own vocabulary leaking into the specification's.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "security_event",
+        content: {
+          audience: ["https://receiver.lindorm.io/"],
+          subjectId: { format: "constructor", id: "subject-1" },
+          events: { "urn:lindorm:event:test": {} },
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        profile: "security_event",
+        options: { audience: "https://receiver.lindorm.io/" },
+      },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // Both doors, because the per-format table is consulted on the mint path AND
+      // again on the verify floor — so a row stopping at `mint` would state the
+      // rule for the data aegis writes and say nothing about the data it reads.
+      {
+        step: "claims",
+        expected: { subjectId: { format: "constructor", id: "subject-1" } },
+      },
+    ],
+  },
+  {
+    id: "a-structured-claim-refuses-a-member-that-names-an-objects-prototype",
+    title:
+      "a token whose subject identifier carries a `__proto__` member is refused before its claims are reported",
+    rationale:
+      "`__proto__` is a legal JSON member name that ordinary assignment treats as a PROTOTYPE SETTER rather than as data, so a structure carrying one produces a claim whose `Object.keys` and `JSON.stringify` show it as absent while a property read returns the value the producer chose. A consumer's natural read then returns attacker-supplied data that every audit log renders as missing, and no duplicate-key defence can see it because no own key exists to be claimed twice. It is reachable without any key at all: reading a payload does not require checking a signature, so the refusal has to sit at the structural boundary rather than behind verification. No specification defines the member — RFC 9493 §3 requires every member of a Subject Identifier to be one its Identifier Format describes — so refusing it costs a conformant producer nothing, which is why the disposal is a refusal rather than a silent drop: a drop would report a stranger's token as saying less than it says.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          // ⚠ A COMPUTED KEY, and it has to be. `{ "__proto__": … }` in an object
+          // literal invokes the prototype SETTER and creates no member at all, so
+          // the quoted form would produce a token carrying nothing and a row that
+          // passed by asserting a refusal of something else.
+          sub_id: { format: "opaque", ["__proto__"]: { id: "attacker" } },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "subjectId",
+          invalid: [
+            {
+              key: "subjectId.__proto__",
+              message:
+                'Member "__proto__" is not a member name any structure may use, in "subjectId"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-claim-carried-verbatim-refuses-a-prototype-member-at-any-depth",
+    title:
+      "a token whose subject identifier hides `__proto__` under an undeclared member is refused",
+    rationale:
+      "RFC 9493 §3 permits an Identifier Format to describe members a receiver has never heard of — an Identifier Format \"MAY describe more members than are strictly necessary to identify a subject\" — so a Subject Identifier's undeclared members are the producer's to name and are carried exactly as written, at whatever depth they nest. `__proto__` is not among the names any Identifier Format may use, and it is not data either: ordinary assignment treats it as a PROTOTYPE SETTER, so a subject identifier carrying one at any depth reads back with `Object.keys` and `JSON.stringify` showing an empty container while a property read returns the value the producer chose. A receiver then acts on data every audit log renders as missing, and no duplicate-key defence can see it because no own key survives to be claimed twice. Depth is the whole point of this row: the hazard does not care whether the name sits beside a member the receiver models or several levels below one it does not, so neither may the refusal — and the position it reports must locate the container that carries the name, since at depth `__proto__` alone identifies nothing to repair.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          // ⚠ A COMPUTED KEY, and it has to be. `{ "__proto__": … }` in an object
+          // literal invokes the prototype SETTER and creates no member at all, so
+          // the quoted form would produce a token carrying nothing and a row that
+          // passed by asserting a refusal of something else.
+          sub_id: { format: "opaque", tail: { ["__proto__"]: { id: "attacker" } } },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "subjectId",
+          invalid: [
+            {
+              key: "subjectId.tail.__proto__",
+              message:
+                'Member "__proto__" is not a member name any structure may use, in "subjectId.tail"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-claim-wrong-in-two-ways-reports-both-faults-in-one-refusal",
+    title:
+      "a token whose actor is both hostile and self-contradictory is refused for both reasons at once",
+    rationale:
+      "A refusal is a repair instruction, and one naming a single fault when the claim has two costs the presenter a round trip per fault while the token stays unusable throughout. An actor can carry two independent faults, and RFC 8693 §4.1 is why both are possible at the same time: it defines the actor by an OPEN set — \"The \'act\' claim value is a JSON object, and members in the JSON object are claims that identify the actor.\" — so a member this implementation does not model still rides. That is what lets a producer write both the RFC\'s \'sub\' and a look-alike that resolves to the same field, which cannot be honoured either way and must be refused rather than settled by key order; and it is equally what lets an element carry \'__proto__\', a name no specification defines and one that ordinary assignment treats as a prototype setter rather than as data. Neither fault makes the other moot — one is about what the actor says twice, the other about what it may not say at all — so the refusal reports them together, in a stable order with the hostile member first, exactly as a policy refusal reports a token\'s faults together.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          // ⚠ A COMPUTED KEY, and it has to be. `{ "__proto__": … }` in an object
+          // literal invokes the prototype SETTER and creates no member at all, so
+          // the quoted form would leave the actor carrying one fault and the row
+          // would assert a two-fault refusal against a one-fault token.
+          act: { ["__proto__"]: { pwn: "yes" }, sub: "audited", subject: "rogue" },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "act",
+          invalid: [
+            {
+              key: "act.__proto__",
+              message:
+                'Member "__proto__" is not a member name any structure may use, in "act"',
+            },
+            {
+              key: "act.subject",
+              message: 'Members "sub" and "subject" both resolve to "subject" in "act"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-security-event-map-refuses-a-member-that-names-an-objects-prototype",
+    title: "a token whose events map carries a `__proto__` event type is refused",
+    rationale:
+      "RFC 8417 §2.2 requires every member name of the `events` claim to be a URI identifying an event statement, and `__proto__` is not one — so refusing it costs a conformant transmitter nothing. What it costs to CARRY it is a claim whose `Object.keys` and `JSON.stringify` render the map as if the member were absent while a property read returns the transmitter's value, because ordinary assignment treats the name as a prototype setter rather than as data. A receiver's natural read then acts on data every audit log shows as missing, and no duplicate-key defence can see it: no own key survives to be claimed twice. It is reachable with no key at all, since reading a payload does not require checking a signature. The disposal is a refusal rather than a drop for the reason every other member of this family takes one — a drop reports a stranger's token as saying less than it says.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          events: { ["__proto__"]: { pwn: "yes" }, [BACKCHANNEL_LOGOUT]: {} },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "events",
+          invalid: [
+            {
+              key: "events.__proto__",
+              message:
+                'Member "__proto__" is not a member name any structure may use, in "events"',
             },
           ],
         },
@@ -5623,14 +7254,15 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "an-authorization-detail-must-name-the-type-that-scopes-it",
     title: "minting a token whose authorization detail carries an empty type is refused",
     rationale:
-      'RFC 9396 §2 makes `type` REQUIRED on every authorization details element and defines it as the field whose value "determines the allowable contents of the object that contains it" — it is the identifier a resource server dispatches on. An element typed with an empty string names no type, so nothing can be looked up to interpret the rest of the element, and a resource server matching on type finds no match while the token appears to carry a granted authorization. The element states an authorization it gives no one a way to honour.',
+      "RFC 9396 §2 makes `type` REQUIRED on every authorization details element and defines it as the field whose value \"determines the allowable contents of the object that contains it\" — it is the identifier a resource server dispatches on. An element typed with an empty string names no type, so nothing can be looked up to interpret the rest of the element, and a resource server matching on type finds no match while the token appears to carry a granted authorization. The element states an authorization it gives no one a way to honour. The demand is the claim's own shape, not one profile's appetite: it holds for every token that carries the claim, which is why this row states it under a profile that says nothing about authorization details at all.",
     given: [
       {
         step: "token",
         via: "mint",
-        profile: "access_token",
+        profile: "default",
         content: {
           subject: "user-1",
+          expires: "1h",
           audience: [RESOURCE],
           clientId: CLIENT,
           authorizationDetails: [{ type: "" }],
@@ -5643,12 +7275,194 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         step: "rejects",
         error: "AegisDomainError",
         data: {
-          direction: "mint",
+          claim: "authorizationDetails",
           invalid: [
             {
-              key: "authorizationDetails[0]",
-              message:
-                'Each "authorizationDetails" element must be an object with a non-empty "type" string member',
+              key: "authorizationDetails[0].type",
+              message: 'Member "type" is required and must not be empty',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-verifier-refuses-an-authorization-detail-that-names-no-type",
+    title:
+      "verifying a token whose authorization detail carries no type at all is refused",
+    rationale:
+      'RFC 9396 §2 makes the `type` field the one that "determines the allowable contents of the object that contains it", so a presented element without one has no defined contents to read. Neither of the two silent dispositions is honest: dropping the element reports fewer authorizations than the token states, which misrepresents what its issuer signed, and keeping it hands a resource server a grant nobody defined and that no type-specific rule can be applied to. A verifier must therefore refuse the token rather than report an interpretation of it.',
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          // A producer that is not aegis wrote this element, so the write-side
+          // refusal never saw it. Only the read can speak about it.
+          //
+          // ⚠ The cast is the point of the row, not a workaround for it:
+          // `JwtClaimsWire` types the element with a REQUIRED `type` (RFC 9396
+          // §2), so this shape cannot be written in our own vocabulary at all —
+          // which is exactly why only a foreign producer can put it in front of
+          // a verifier, and why the verifier owes an answer for it.
+          authorization_details: [
+            { locations: [RESOURCE] },
+          ] as unknown as JwtClaimsWire["authorization_details"],
+        },
+      },
+    ],
+    when: [{ step: "verify", profile: "default", options: { audience: RESOURCE } }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "authorizationDetails",
+          invalid: [
+            {
+              key: "authorizationDetails[0].type",
+              message: 'Member "type" is required and must not be empty',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "an-authorization-detail-typed-with-an-empty-string-is-refused-when-read",
+    title:
+      "verifying a token whose authorization detail is typed with an empty string is refused",
+    rationale:
+      'RFC 9396 §2 requires `type` and defines its VALUE as what "determines the allowable contents of the object that contains it" — so the demand is for an identifier, not for the key being spelled. An empty string is a present key naming no type at all: nothing can be looked up to interpret the element, and a resource server dispatching on type finds no match while the token still appears to carry a granted authorization. A reader that accepted it would let a producer satisfy the requirement by writing the field and leaving it blank, which is the requirement not existing.',
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          // PRESENT but EMPTY — the case that separates a demand for a value
+          // from a demand for a key. Cast for the same reason as the sibling
+          // rows: `JwtClaimsWire` types `type` as a required string, so only a
+          // foreign producer can put this in front of a verifier.
+          authorization_details: [
+            { type: "" },
+          ] as unknown as JwtClaimsWire["authorization_details"],
+        },
+      },
+    ],
+    when: [{ step: "verify", profile: "default", options: { audience: RESOURCE } }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "authorizationDetails",
+          invalid: [
+            {
+              key: "authorizationDetails[0].type",
+              message: 'Member "type" is required and must not be empty',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "reading-a-token-without-its-key-still-refuses-a-structure-it-cannot-state",
+    title:
+      "the keyless read of a token whose authorization detail names no type is refused, and reports no other claim either",
+    rationale:
+      "A keyless read skips the SIGNATURE and the profile floor; it does not skip deciding what the token SAYS, and that is the whole of what it returns. RFC 9396 §2 makes an element's `type` determine that element's allowable contents, so an element without one has no contents to report — and a reader that answered anyway would be publishing an interpretation of a structure it cannot interpret, with no signature check behind it to qualify the answer. The refusal is therefore owed on the unverified door exactly as on the verified one. ⚠ Its cost is stated by this row rather than discovered: the read is ALL-OR-NOTHING, so one malformed claim denies the caller every other claim in the token — a caller that needs to inspect a possibly-malformed token must read it through a surface that performs no claim translation.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          // Cast for the same reason as the sibling rows: `JwtClaimsWire` types
+          // `type` as REQUIRED, so only a foreign producer can write this.
+          authorization_details: [
+            { locations: [RESOURCE] },
+          ] as unknown as JwtClaimsWire["authorization_details"],
+        },
+      },
+    ],
+    // The KEYLESS door specifically. Every other row about this claim states
+    // `verify`, which reaches the translator through the signature check — so
+    // none of them can say whether the rule survives without one.
+    when: [{ step: "parse" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "authorizationDetails",
+          invalid: [
+            {
+              key: "authorizationDetails[0].type",
+              message: 'Member "type" is required and must not be empty',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "an-authorization-details-claim-that-is-not-a-list-of-objects-is-refused",
+    title:
+      "verifying a token whose authorization details claim is a bare string is refused",
+    rationale:
+      'RFC 9396 §2 defines the claim as containing "an array of objects", each carrying the data for one type of resource. A scalar is not a shorter form of that array — there is no element for a `type` to scope, and nothing a resource server could dispatch on — so a token stating one grants nothing that can be read, while a reader that silently discarded the claim would report a token that made no authorization statement when its issuer signed one. The mismatch between what was signed and what is reported is the failure a refusal prevents.',
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          // Not an array at all. Same reason for the cast as the row above:
+          // RFC 9396 §2 defines the claim as "an array of objects", so the type
+          // forbids the shape and only somebody else's producer can emit it.
+          authorization_details:
+            "payment_initiation" as unknown as JwtClaimsWire["authorization_details"],
+        },
+      },
+    ],
+    when: [{ step: "verify", profile: "default", options: { audience: RESOURCE } }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "authorizationDetails",
+          invalid: [
+            {
+              key: "authorizationDetails",
+              message: 'Claim "authorizationDetails" must be an array',
             },
           ],
         },

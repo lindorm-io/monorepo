@@ -5,7 +5,6 @@ import {
   cnfShape,
   crossField,
   eventsShape,
-  everyElementHasKey,
   subIdShape,
 } from "../utils/rules/index.js";
 
@@ -23,9 +22,6 @@ import {
  */
 export const SHAPE_RULES: Record<ShapeRuleName, (claims: Dict) => Array<InvalidEntry>> = {
   actChain: actChainShape,
-  // RFC 9396 — every `authorization_details` element is an object with a `type`.
-  authorizationDetails: (claims) =>
-    everyElementHasKey(claims, "authorizationDetails", "type"),
   confirmation: cnfShape,
   crossField,
   events: eventsShape,

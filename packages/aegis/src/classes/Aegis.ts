@@ -302,10 +302,23 @@ export class Aegis implements IAegis {
   }
 
   // The KEYLESS, UNVERIFIED domain read of ALL seven wire formats. It touches no
-  // key: it decodes and domain-translates whatever is readable without one — a
+  // key: it decodes and domain-translates what is readable without one — a
   // structured token's header + claims buckets, an unstructured token's header +
   // opaque payload, an encrypted token's header alone. An INSTANCE verb (uniform
   // with `verify`/`decrypt`), not a static, even though the decode needs no `deps`.
+  //
+  // ⚠ UNVERIFIED IS NOT UNCONDITIONAL. It skips the SIGNATURE and the profile
+  // floor; it does NOT skip claim translation, so a claim whose declared
+  // structure the registry can state and the token does not satisfy makes this
+  // THROW (`claim_structure_invalid`) rather than report a partial reading. That
+  // is deliberate — reporting an interpretation of a structure aegis cannot
+  // interpret is the failure the refusal exists to prevent — but the cost is
+  // real and belongs here rather than in a caller's incident: ONE malformed
+  // claim denies the caller the whole token, `sub`/`iss`/`exp` included.
+  // ⇒ To look at a token that may be malformed, use the RAW WIRE namespaces
+  // (`aegis.jwt.verify` and its COSE twins). They return the wire dict verbatim
+  // and run no claim translation at all, which is exactly what is wanted when
+  // the question is "what does this token actually say".
   parse<C extends Dict = Dict>(token: string): ParsedToken<C> {
     return parseToken<C>(token);
   }

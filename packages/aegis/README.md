@@ -572,7 +572,7 @@ policy: [
 ];
 ```
 
-`required` / `forbidden` / `atLeastOneOf` are presence rules; `match` is a flat `Condition` over the domain-keyed claims (the same predicate vocabulary as `assert`); `shape` names a structural validator (`actChain`, `authorizationDetails`, `confirmation`, `crossField`, `events`, `subjectId`).
+`required` / `forbidden` / `atLeastOneOf` are presence rules; `match` is a flat `Condition` over the domain-keyed claims (the same predicate vocabulary as `assert`); `shape` names a structural validator (`actChain`, `confirmation`, `crossField`, `events`, `subjectId`).
 
 **The presence rules read presence two different ways, and the difference is deliberate.** Both predicates are exported, so a profile you register reads the claims the same way the floor does:
 
@@ -788,7 +788,22 @@ domain name (`authorizationDetails`) is translated to the registered wire name
 (`authorization_details`) on sign and back on parse. The array **contents travel
 verbatim** — type-specific inner fields (e.g. `instructedAmount`,
 `creditorAccount`) are never key-converted, so camelCase fields defined by a
-detail's own spec are preserved exactly.
+detail's own spec are preserved exactly. RFC 9396 §2 makes the `type` field
+determine an element's allowable contents, so those fields belong to whoever
+registered that type and are not aegis's to respell.
+
+⚠ **Every element MUST carry a non-empty `type`, and the claim MUST be an
+array** — RFC 9396 §2: _"This field is REQUIRED."_ Aegis refuses a token that
+breaks either rule, with `claim_structure_invalid` carrying `data.invalid` (one
+`{ key, message }` per bad element, keyed `authorizationDetails[0].type`). The
+refusal applies **on both sign and read, under every profile and under none** —
+it is a fact about the claim's shape, not a policy a profile opts into — so it
+also fires on `aegis.verify` and `aegis.parse` for a token somebody else wrote,
+and on the static `Aegis.toWire` / `Aegis.toDomain` vocabulary doors. It does
+NOT fire on the raw wire namespaces (`aegis.jwt.sign` / `aegis.jwt.verify` and
+their COSE twins): those serialize and return the wire dict verbatim and run no
+claim translation at all, which is what makes them the way to read a
+non-conformant token when you need to see one.
 
 The `authorizationDetails` → `authorization_details` name translation is a CLAIMS feature, so it runs on `aegis.mint` and nowhere else: not on the raw wire `aegis.sign` / `aegis.jwt.sign`, and not on `aegis.encrypt`, whose payload is opaque:
 
@@ -807,6 +822,151 @@ await aegis.mint("access_token", {
   ],
 });
 ```
+
+### Delegation (RFC 8693)
+
+`act` and `mayAct` carry the RFC 8693 actor chain — who is wielding the token
+(`act`) and who is permitted to become the actor (`may_act`). Both are the same
+structure and nest without limit: `act.act` is the prior actor, `act.act.act` the
+one before that.
+
+Five members, and only five: `subject` → `sub`, `issuer` → `iss`, `audience` →
+`aud`, `clientId` → `client_id`, and the nested `act`.
+
+The member set is **open**. RFC 8693 §4.1 defines an actor's members as _"claims
+that identify the actor"_ and §4.4 names `email` as one, so a member aegis does
+not declare **rides untouched**, at every depth, in both directions. Verbatim, not
+case-flipped: the name belongs to whichever specification registered it.
+
+⚠ **One thing is refused: two members that resolve to the same key.** A token — or
+a caller — writing both `sub` and `subject` inside an actor has said two things
+about one field, and picking a winner would settle it by object key order, letting
+a presenter re-point the actor by appending a member the issuer never wrote. Aegis
+raises `claim_structure_invalid` with `data.invalid` keyed to the position and
+naming both members. This applies to every open structure, `address` included.
+
+Only the **wire** spelling is honoured on read. (Aegis used to accept either
+spelling at every depth and prefer the domain one.)
+
+On COSE the actor members carry integer labels — `iss` 1, `sub` 2, `aud` 3
+(RFC 8392 §4), plus lindorm's `client_id` 4 and nested `act` 5 — at every depth,
+under `proprietary: true`. An interoperable token keeps the RFC 8693 string names.
+A member with no label rides under **its own string key in the same map**
+(RFC 9052 §1.5: `label = int / tstr`), so the compact encoding is a size decision
+and never a content one.
+
+⚠ An empty actor object is reported as an empty actor, not as no actor: `act: {}`
+comes back as `{}`, which is truthy. Read a member, not the container, to decide
+who is acting.
+
+`aud` inside an actor is emitted where the caller supplies it, and RFC 8693 §4.1
+says it should not be: _"non-identity claims (e.g., `exp`, `nbf`, and `aud`) are
+not meaningful when used within an `act` claim and are therefore not used."_ The
+member is kept for now because removing it changes what a signed token says.
+
+### Subject identifiers (RFC 9493)
+
+`subjectId` carries a Subject Identifier — the structured statement of _who_ a
+security event is about. Every one names its Identifier Format, and the format
+decides which other members it must carry (§3):
+
+```typescript
+await aegis.mint("security_event", {
+  audience: ["https://receiver.example.com"],
+  subjectId: { format: "iss_sub", iss: "https://idp.example.com", sub: "user-123" },
+  events: { "https://schemas.openid.net/secevent/caep/event-type/session-revoked": {} },
+});
+```
+
+Nine members, spelled in the domain vocabulary and translated to RFC 9493's on the
+wire: `format`, `iss`, `sub`, `email`, **`phoneNumber` → `phone_number`**, `uri`,
+`url`, `id`, and `identifiers`.
+
+⚠ **`phoneNumber` is a rename, and the old spelling is now REFUSED.** It was
+`phone_number` in the domain bag — the one structured claim that made a caller
+write the wire's spelling. The wire is unchanged (`phoneNumber` resolves through
+the declared member to RFC 9493's own `phone_number`), a read now returns
+`phoneNumber`, and the per-format requirement check resolves the domain name
+alone. ⚠ A caller still writing `phone_number` in the domain bag used to have it
+carried on the open tail onto the declared member's own key; that is a collision
+and is refused, so the rename must be made rather than relied on to be tolerated.
+
+`format` is **required** on every Subject Identifier, and on every element of an
+`identifiers` array — §3: a Subject Identifier _"MUST contain a `format` member
+whose value is the name of that Identifier Format"_. A missing or empty one is
+refused in both directions and under every profile.
+
+The `aliases` format nests: `identifiers` is an array of Subject Identifiers
+(§3.2.8), each translated and compacted at its own depth. §3.2.8 forbids nesting
+an `aliases` identifier inside one.
+
+The member set is **open**, verbatim. §3 permits an Identifier Format named by _"a
+Collision-Resistant Name as defined in [RFC7519]"_ with no registration at all, so
+a conformant identifier can carry members aegis cannot enumerate; they ride under
+the producer's own spelling, and a member colliding with a declared one is refused
+exactly as inside an actor.
+
+On COSE the members carry integer labels under `proprietary: true` — `iss` 1 and
+`sub` 2 (RFC 8392 §4), plus lindorm's `format` 0, `email` 4, `phone_number` 5,
+`uri` 6, `url` 7, `id` 8, `identifiers` 9 — at every depth. Label 3 is left
+unallocated: RFC 8392 gives it to `aud`, which is not a Subject Identifier member.
+An interoperable token keeps the RFC 9493 string names.
+
+The per-format requirements (§3.2 — `email` for the Email format, `iss` **and**
+`sub` for `iss_sub`, and so on, each _"REQUIRED and MUST NOT be null or empty"_)
+are a profile `shape` rule (`subjectId`), because they are conditional on the
+format rather than unconditional the way `format` itself is. `security_event`
+declares it.
+
+### Security events (RFC 8417)
+
+`events` carries the SET events map. Its keys are **event-type URIs, not field
+names** — §2.2: _"The value of the `events` claim is a JSON object whose members
+are name/value pairs whose names are URIs identifying the event statements being
+expressed."_ — so they are carried onto the wire and back **without case
+conversion**, in both directions and on both encodings. A receiver dispatches on
+the URI character for character; the house snake/camel flip every other claim key
+takes would rename the event rather than translate it.
+
+An event's payload belongs to whoever defined that event type and rides verbatim
+too, empty object included — §2.2: _"The JSON object MAY be an empty object
+(`{}`), or it MAY be a JSON object containing data described by the profiling
+specification."_, and OpenID Connect Back-Channel Logout §2.4 makes the empty form
+the normal case, so it is kept rather than pruned. A value that is not an object
+at all does not resolve: the claim is reported as absent rather than handed back
+as a scalar in a field typed as a map.
+The profiles that require the claim (`logout_token`, `erasure_token`,
+`security_event`) check the URI keys and the payload shapes through their `events`
+shape rule.
+
+### `__proto__` is refused in any REGISTERED claim, at any depth
+
+`__proto__` is a legal JSON member name that ordinary assignment treats as a
+prototype **setter**. A claim carrying one therefore reads back as a value whose
+`Object.keys` and `JSON.stringify` show the member as absent while a property read
+returns whatever the producer put there — attacker data that every audit log
+renders as missing, and no duplicate-key defence can see it because no own key
+survives to be claimed twice.
+
+Aegis refuses it, with `claim_structure_invalid` carrying a `data.invalid` entry
+keyed to the position (`events.urn:e.__proto__`, `subjectId.tail.__proto__`). The
+rule is asked of **every registered claim** — structured or not, declared members
+and verbatim tails alike, at every depth — and in both directions: on `aegis.mint`,
+on `aegis.verify` and the unauthenticated `aegis.parse` for a token somebody else
+wrote, and on the `Aegis.toWire` / `Aegis.toDomain` vocabulary doors. As with the
+other structural refusals it does not fire on the raw wire namespaces
+(`aegis.jwt.sign` / `aegis.jwt.verify` and their COSE twins), which run no claim
+translation at all.
+
+⚠ **`custom` is NOT covered, and the boundary is deliberate.** An unregistered
+claim is carried through untouched, so aegis never rebuilds it and nothing is
+polluted inside this package — `parse(token).custom.myThing` hands you the member
+as a live **own** property, exactly as the producer wrote it. Refusing there would
+reject a whole token over a member name inside an extension claim aegis declines to
+interpret. **If you rebuild that bag** — `Object.assign`, a recursive clean, any
+`omit*` helper — do it with `Object.defineProperty` or a `null`-prototype target,
+or the swap happens on your side of the line. (A top-level claim key literally
+named `__proto__` is harmless: it case-converts to `proto` like any other key.)
 
 ## Verify: assert + options
 
@@ -1013,6 +1173,14 @@ import {
 - A COSE confirmation (`cnf`) that the wire cannot carry fails **closed at mint**. RFC 8747 defines no `jkt` member for a COSE confirmation, and a JOSE thumbprint cannot be relabelled as a COSE one — RFC 7638 hashes a key's canonical JSON, RFC 9679 its canonical CBOR — so a `jkt`-bound token has no COSE form and minting one is refused rather than silently downgraded to a bearer CWT.
 - The same holds for a member COSE **can** carry that arrives **malformed**: `{ jwk, kid: 42 }` is refused (`cose_cnf_member_invalid`) rather than minted with the embedded key alone. A partially-written confirmation asserts a binding narrower than its author wrote, and the verifier — satisfied by the binding it can see — stops asking about the one that vanished. A member whose value is `undefined` is **absent**, not malformed — `{ jwk: undefined, kid }` mints on the `kid` alone.
 - DPoP-bound tokens (`cnf.jkt`) require either a matching DPoP proof or `trustBoundThumbprint: true` on verify.
+- **A confirmation that names no key is refused**, at mint and at verify, on every path. RFC 7800 §3 makes the `cnf` claim the issuer's declaration that the presenter holds a particular key and that the recipient can confirm it, so a confirmation binding nothing declares a possession nobody can check. `confirmation: {}` at mint is refused instead of being dropped (which silently issued a bearer token where the caller asked for a bound one), and a token carrying `cnf: {}` or `cnf: { jkt: "" }` is refused at verify with `confirmation_binds_no_key` — including when the caller passes `trustBoundThumbprint: true`, because vouching substitutes for the PROOF and never for the binding the proof was checked against.
+- **A confirmation member whose value contradicts its declared shape is refused on read**, not dropped. `cnf: { jkt: 42 }`, `{ jkt: {} }` and a `cnf` that is not an object used to be erased to nothing, and each of them then verified as a plain bearer token; a stated binding this package cannot read now fails closed. ⚠ This means `parse` refuses such a token too, which is deliberate: reporting it as stating no binding is what made it dangerous. ⚠ `cnf: { jkt: null }` **is** in this class: `cnf` is the one claim EXEMPT from the null rule below, because a null member erased before the COSE fail-closed guard runs turns a thumbprint binding into an unbound token — measured, `mint("cwt", { thumbprint: null, keyId })` minted a CWT that verified with no proof, byte-identical to a legitimate key-id binding, while `{ thumbprint: JKT, keyId }` refused `cose_cnf_unsupported`. RFC 9449 §6.1 types the member by MUST — the `jkt` value "MUST be the base64url encoding (as defined in [RFC7515]) of the JWK SHA-256 Thumbprint (according to [RFC7638]) of the DPoP public key (in JWK format) to which the access token is bound" — so a null one contradicts the declaration rather than leaving it unstated. ⚠ `undefined` is still absence there — `{ jwk: undefined, kid }` mints on the `kid` alone — and the asymmetry is load-bearing, not the same fault respelled: `null` reaches both wires (RFC 8259 §3 makes it a JSON literal name, RFC 8949 §3.3 assigns it CBOR simple value 22), while `undefined` reaches neither — JSON cannot express it, and although CBOR can (simple value 23), the COSE `cnf` carries only `jwk` (1) and `kid` (3), neither of which the DPoP gate reads.
+- ⚠ **`Aegis.toDomain` is NOT signature-gated, and it is a claim door consumers use on unsigned input** (pylon reads an introspection response body through it). So every read-side rule below applies to data nobody signed, and a rule whose safety argument rests on "only the issuer could have written this" does not hold at that door. The JOSE path in particular still ACCEPTS a `cnf` carrying `jwk`/`kid` with no `jkt` — an unbound confirmation — exactly as it always has; what the null exemption above restores is that a THUMBPRINT the caller stated is never silently erased into that shape.
+- **A claim value that contradicts its declared STRUCTURE is refused on read, not dropped** — uniformly, across every structured claim. `address`, `act`, `may_act` and `sub_id` used to yield nothing for a non-object and `events` did the same, while `authorization_details` already refused a non-array and `cnf` a non-object: one fault class with three dispositions. ⚠ Deployment-visible at `verify` and `parse` on both wires: a foreign token carrying `address: "Sample 1, 00100 Stockholm"` used to verify with the address silently missing and now refuses (`claim_structure_invalid`, `data.claim` naming the claim, `data.invalid` naming the position). Dropping is the dangerous half — a result reporting no address for a token whose issuer signed one is a false statement about the token, and the consumer cannot tell "none was sent" from "one was sent that I could not read". The same holds at every depth, so a member whose own codec is a structure (`act.act`, `sub_id.identifiers`) is refused too. ⚠ A LEAF codec (`text`, `int`, `date`, `bool`, `bstr`, an array of strings) is unchanged by this and is **not** uniform: a member is dropped in both directions (`address: { region: 42 }` walks to `{}`), a top-level claim is dropped on read (`Aegis.toDomain({ sub: 42 })` reports no subject) but **carried** on write (`Aegis.toWire({ subject: 42 })` → `{"sub":42}`, reaching a signed wire with no codec guard). That gap is filed, not closed here.
+- **`null` means NOT STATED — omitted, never written, never refused, in both directions and at every depth.** `AegisProfileAddress` keeps its `| null` members so a caller minting from a database row does not have to strip the nulls first; `null` at a member, at an open structure's tail, or at a registered claim's own value is an ABSENCE rather than a value contradicting the declaration, and it is classified as one before any codec runs. ⚠ Deployment-visible: a null member of an OPEN structure (`address: { extraThing: null }`) used to ride onto the signed wire as a literal `null` and is now omitted; `cnf: null`, `authorization_details: null` and `address: null` used to be refused and are now read as claims the token does not state; a foreign token's `email_verified: null` used to be reported in a field typed `boolean`. ⚠ A REQUIRED member handed `null` now reports `"… is required and must not be empty"` where it said `"… must be the shape it declares"`. ⚠ Two things are deliberately NOT absence: an empty string, `[]` or `{}` is a stated empty value and stays governed by the registry's emptiness column; and an ARRAY ELEMENT is positional, so `authorization_details: [null]` is still refused. ⚠ An UNREGISTERED custom claim is untouched — aegis does not reshape what it has not declared, so `{ myThing: null }` still rides. ⚠⚠ And `cnf` MEMBERS are EXEMPT: see the confirmation bullet above.
+- **A structured claim's member spelled in the OTHER vocabulary is refused** — on every structured claim (`address`, `authorization_details`, `act`/`may_act`, `sub_id`, `cnf`), in both directions, whether or not the real member is present alongside it. A member set is open, so a name aegis does not declare rides the tail untouched; a name that resolves onto a DECLARED member's outgoing key is a different act and is refused (`claim_structure_invalid`, naming the key the two met on). ⚠ Deployment-visible in both directions: `mint`/`toWire` with `act: { sub: … }` or `address: { streetAddress: … }` in a DOMAIN bag used to reach the wire — carrying a value no codec guard ever saw, since the guard belongs to the declared member whose slot it took — and now refuses; `verify`/`parse` of a foreign token whose `act` carries only `subject` used to report it as the actor's `subject`, byte-identical to a genuine `sub`, and now refuses. Anyone who had been relying on the wire spelling working in a domain bag must switch to the domain name.
+- **A COSE map keying one member by BOTH its integer label and its interoperable name is refused** (`cose_duplicate_member_key`). RFC 9052 §1.5 makes the integer `2` and the text `"sub"` different map keys, but they are two renderings of one declared member, so a map carrying both states two values for one field and the winner was decided by map order. ⚠ Deployment-visible on the COSE wire only, and it applies to the label-mapped claims — `act`, `may_act`, `sub_id`. Measured on a real signed CWT at `parse` **and** at `verify`: an `act` of `Map { 2 => "audited-service", "sub" => "rogue-service" }` used to read back as `{ subject: "rogue-service" }`, replacing the actor the issuer named. `address` and `authorization_details` ride verbatim and `cnf` reads integer labels only, so none of them was affected.
+- **The `cnf` member set is OPEN.** RFC 7800 §3.1 requires that "all confirmation members that are not understood by implementations MUST be ignored" and §6.2 establishes an IANA registry other specifications register into, so a member aegis does not declare is carried **verbatim** — never case-flipped, since §6.2.1 makes a confirmation method name case sensitive. The five aegis declares are `thumbprint` (`jkt`), `mtlsCertThumbprint` (`x5t#S256`), `key` (`jwk`), `keyId` (`kid`) and `jwkSetUri` (`jku`). ⚠ **Reading a domain spelling out of a wire `cnf` is no longer accepted**: a token spelling a member `thumbprint` rather than `jkt` is an undeclared member now, and one that carries both is refused for the collision.
 - Tokens are never logged whole. Every log line and error payload carries a token as `header.payload` — the signature is dropped, so a logged token stays debuggable but unusable. A JWE is logged as its protected header only; a token with no safely-showable structure (opaque, COSE/CWT) is logged as `[Filtered]`. This applies to DPoP proofs passed on verify as well.
 
 ## Testing
