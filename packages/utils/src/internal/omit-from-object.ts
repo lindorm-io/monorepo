@@ -23,7 +23,18 @@ export const omitFromObject = <T extends Dict>(dict: T, predicate: Predicate): T
 
     if (predicate(cleaned)) continue;
 
-    result[key] = cleaned;
+    // ⚠ NOT `result[key] = cleaned`. `Object.entries` yields OWN keys, and a dict
+    // parsed from untrusted JSON can carry an own `"__proto__"` — assigning it
+    // invokes the prototype setter, so the returned object gets an
+    // attacker-controlled prototype. `defineProperty` writes an own data
+    // property under any key, including that one, so the value is PRESERVED
+    // rather than dropped and nothing is polluted.
+    Object.defineProperty(result, key, {
+      configurable: true,
+      enumerable: true,
+      value: cleaned,
+      writable: true,
+    });
   }
 
   return result as T;
