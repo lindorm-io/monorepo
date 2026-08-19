@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatParseError > should anchor every entry to its uri:line:column 1`] = `
+"Failed to parse feature file
+
+  (4:3): expected: #EOF, got 'rogue line'
+  at src/features/broken.feature:4:3
+
+  (5:3): expected: #EOF, got 'another rogue'
+  at src/features/broken.feature:5:3
+
+Fix the first error first — later ones are often knock-ons."
+`;
+
+exports[`formatParseError > should render the uri alone for an entry without a location 1`] = `
+"Failed to parse feature file
+
+  (-1:-1): Language not supported: xx
+  at src/features/broken.feature
+
+Fix the first error first — later ones are often knock-ons."
+`;
+
+exports[`formatParseError > should render the uri and line for an entry without a column 1`] = `
+"Failed to parse feature file
+
+  (7:0): bad ast
+  at src/features/broken.feature:7
+
+Fix the first error first — later ones are often knock-ons."
+`;

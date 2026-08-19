@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`toSnippetDecorator > should throw on a step type outside the union 1`] = `
+{
+  "code": "model_invariant",
+  "data": {
+    "type": "Bogus",
+  },
+  "details": "The StepType union gained a value this renderer does not map.",
+  "message": "Unexpected step type "Bogus"",
+  "title": "Model Invariant Violated",
+  "type": "urn:lindorm:gherkin:error:model_invariant",
+}
+`;

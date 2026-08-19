@@ -1,0 +1,62 @@
+{
+  "name": "@lindorm/gherkin",
+  "version": "0.0.0",
+  "license": "AGPL-3.0-or-later",
+  "author": "Jonn Nilsson",
+  "repository": {
+    "url": "https://github.com/lindorm-io/monorepo",
+    "directory": "packages/gherkin"
+  },
+  "bugs": "https://github.com/lindorm-io/monorepo/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "default": "./dist/runtime.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "build": "rimraf dist && tsc -b ./tsconfig.build.json",
+    "prettier": "prettier --write ./src/*",
+    "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:watch": "vitest",
+    "typecheck": "tsc",
+    "typecheck:watch": "tsc --watch",
+    "update": "ncu -i",
+    "update:auto": "ncu -u",
+    "verify": "npm run typecheck && npm run build && npm test"
+  },
+  "dependencies": {
+    "@cucumber/cucumber-expressions": "^20.1.0",
+    "@cucumber/gherkin": "^42.0.1",
+    "@cucumber/messages": "^34.2.1",
+    "@lindorm/errors": "^0.6.0",
+    "@lindorm/is": "^0.3.0",
+    "@lindorm/types": "^0.10.0",
+    "@lindorm/utils": "^0.10.0"
+  },
+  "devDependencies": {
+    "@lindorm/aes": "^0.9.0",
+    "@lindorm/kryptos": "^0.11.0"
+  },
+  "peerDependencies": {
+    "vite": ">=8.0.0",
+    "vitest": ">=4.1.4"
+  }
+}

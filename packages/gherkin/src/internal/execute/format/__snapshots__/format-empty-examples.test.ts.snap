@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatEmptyExamples > should anchor to the Examples line 1`] = `
+"Empty Examples table
+
+  every content encryption round-trips
+  at src/features/aes.feature:14:5
+
+The Examples table has a header and zero data rows, so the outline compiles to zero scenarios. Add data rows, or delete the block."
+`;

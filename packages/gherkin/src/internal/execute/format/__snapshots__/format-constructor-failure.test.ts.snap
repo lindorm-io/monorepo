@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatConstructorFailure > should name the class and preserve the original message verbatim 1`] = `
+"Binding class AesEncryptionSteps constructor threw
+
+  Given an oct key
+  at src/features/aes.feature:4:5
+
+no kms configured
+
+The remaining 2 steps in this scenario were skipped."
+`;

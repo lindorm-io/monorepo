@@ -1,0 +1,43 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildRegistry > should rethrow a malformed expression error unwrapped 1`] = `
+"This Cucumber Expression has a problem at column 4:
+
+an {
+   ^
+The '{' does not have a matching '}'.
+If you did not intend to use a parameter you can use '\\{' to escape the a parameter"
+`;
+
+exports[`buildRegistry > should wrap a duplicate parameter type name, anchored to the second declaration 1`] = `
+{
+  "code": "duplicate_parameter_type",
+  "data": {
+    "className": "DupB",
+    "methodName": "dupB",
+    "modulePath": "src/dup-b.steps.ts",
+    "name": "dup",
+  },
+  "details": "A parameter type name registers once per registry — the flat step namespace shares one registry across every step module, and the built-in names are taken too. Rename one of the two declarations.",
+  "message": "Duplicate parameter type {dup}",
+  "title": "Duplicate Parameter Type",
+  "type": "urn:lindorm:gherkin:error:duplicate_parameter_type",
+}
+`;
+
+exports[`buildRegistry > should wrap an unknown parameter type, anchored to the step definition 1`] = `
+{
+  "code": "unknown_parameter_type",
+  "data": {
+    "className": "TypoSteps",
+    "expression": "uses {nope}",
+    "methodName": "typo",
+    "modulePath": "src/typo.steps.ts",
+    "name": "nope",
+  },
+  "details": "The step expression references a parameter type that no @ParameterType declaration or built-in provides. Declare it on a static method, or fix the name in the expression.",
+  "message": "Unknown parameter type {nope}",
+  "title": "Unknown Parameter Type",
+  "type": "urn:lindorm:gherkin:error:unknown_parameter_type",
+}
+`;

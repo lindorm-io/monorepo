@@ -1,0 +1,3 @@
+# tsc-lowering test temp output — cleaned in afterAll, but a hard-killed run
+# must not leave an orphan headed for a commit
+meta-fixtures/tsc-lowering/.out-*

@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`requireStepLocation > should throw when the pickle step points at no AST step 1`] = `
+{
+  "code": "model_invariant",
+  "data": {
+    "id": "missing",
+  },
+  "details": "Every pickle step's astNodeIds[0] must resolve to an AST step — a miss means the @cucumber/gherkin dependency changed behaviour underneath the model builder.",
+  "message": "No AST step found for pickle step astNodeId "missing"",
+  "title": "Model Invariant Violated",
+  "type": "urn:lindorm:gherkin:error:model_invariant",
+}
+`;

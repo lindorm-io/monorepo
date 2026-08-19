@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assertPickleParity > should throw model_invariant for an orphaned pickle 1`] = `
+{
+  "code": "model_invariant",
+  "data": {
+    "orphans": [
+      "s2",
+    ],
+    "uri": "src/features/test.feature",
+  },
+  "details": "compile() produced a pickle the AST walk neither consumed as a scenario node nor superseded with a failing node — the model builder dropped a scenario, which would silently vanish from the emitted suite.",
+  "message": "Pickle parity violated: 1 compiled pickle(s) reached no suite node for src/features/test.feature",
+  "title": "Model Invariant Violated",
+  "type": "urn:lindorm:gherkin:error:model_invariant",
+}
+`;

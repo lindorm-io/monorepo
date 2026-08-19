@@ -1,0 +1,8 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assertFeaturesCovered > should throw feature_not_included for an uncovered feature file 1`] = `
+"Feature file(s) not covered by the configured \`features\` patterns — they would never run:
+  stray/orphan.feature
+Configured patterns:
+  src/**/*.feature"
+`;

@@ -1,0 +1,74 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ParameterType > should throw invalid_parameter_type for an empty name at decoration time 1`] = `
+{
+  "code": "invalid_parameter_type",
+  "data": {
+    "method": "anonymous",
+    "name": "",
+  },
+  "details": "Cucumber's anonymous parameter type owns the empty name, so an empty-named declaration collides with it at registration. Name the parameter type.",
+  "message": "@ParameterType requires a non-empty name",
+  "title": "Invalid Parameter Type",
+  "type": "urn:lindorm:gherkin:error:invalid_parameter_type",
+}
+`;
+
+exports[`ParameterType > should throw invalid_parameter_type for an empty regexp array at decoration time 1`] = `
+{
+  "code": "invalid_parameter_type",
+  "data": {
+    "method": "empty",
+    "name": "empty",
+  },
+  "details": "An empty regexp array compiles to a group matching only the empty string, so the parameter type can never capture a value. Provide at least one regexp.",
+  "message": "@ParameterType regexp array for "empty" is empty",
+  "title": "Invalid Parameter Type",
+  "type": "urn:lindorm:gherkin:error:invalid_parameter_type",
+}
+`;
+
+exports[`ParameterType > should throw invalid_parameter_type for an illegal name character at decoration time 1`] = `
+{
+  "code": "invalid_parameter_type",
+  "data": {
+    "character": ".",
+    "method": "bad",
+    "name": "bad.name",
+  },
+  "details": "cucumber-expressions rejects parameter type names containing '[', ']', '(', ')', '$', '.', '|', '?', '*' or '+', escaped or not. Rename the parameter type.",
+  "message": "@ParameterType name "bad.name" contains illegal character "."",
+  "title": "Invalid Parameter Type",
+  "type": "urn:lindorm:gherkin:error:invalid_parameter_type",
+}
+`;
+
+exports[`ParameterType > should throw invalid_parameter_type for an unsupported regexp flag at decoration time 1`] = `
+{
+  "code": "invalid_parameter_type",
+  "data": {
+    "flag": "i",
+    "method": "flagged",
+    "name": "flagged",
+  },
+  "details": "cucumber-expressions rejects parameter type regexps carrying the g, i, m or y flags. Remove the flag.",
+  "message": "@ParameterType regexp for "flagged" uses unsupported flag "i"",
+  "title": "Invalid Parameter Type",
+  "type": "urn:lindorm:gherkin:error:invalid_parameter_type",
+}
+`;
+
+exports[`ParameterType > should throw scope_violation for an instance method at decoration time 1`] = `
+{
+  "code": "scope_violation",
+  "data": {
+    "decorator": "ParameterType",
+    "method": "algorithm",
+    "name": "algorithm",
+  },
+  "details": "A parameter type registers once per registry — scope wider than a scenario — so its transform must be a static method.",
+  "message": "@ParameterType requires a static method",
+  "title": "Scope Violation",
+  "type": "urn:lindorm:gherkin:error:scope_violation",
+}
+`;

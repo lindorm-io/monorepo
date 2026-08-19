@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`index > should export the public surface 1`] = `
+[
+  "Binding",
+  "GherkinError",
+  "Given",
+  "ParameterType",
+  "PendingStepError",
+  "Then",
+  "When",
+]
+`;

@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatEmptyScenario > should anchor to the scenario line 1`] = `
+"Empty scenario
+
+  nothing here
+  at src/features/aes.feature:6:3
+
+The scenario has a name and zero steps — running it would report green having executed nothing. Write its steps, or delete it."
+`;

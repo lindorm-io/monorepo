@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createParseError > should carry the parse_error taxonomy code with the anchored entries as data 1`] = `
+{
+  "code": "parse_error",
+  "data": {
+    "errors": [
+      {
+        "column": 3,
+        "line": 4,
+        "message": "(4:3): unexpected token",
+      },
+    ],
+    "uri": "src/features/broken.feature",
+  },
+  "details": "The feature file is not valid Gherkin. Every location is a line in the feature file itself. Fix the first error first — later ones are often knock-ons.",
+  "message": "Failed to parse feature file
+
+  (4:3): unexpected token
+  at src/features/broken.feature:4:3
+
+Fix the first error first — later ones are often knock-ons.",
+  "title": "Gherkin Parse Error",
+  "type": "urn:lindorm:gherkin:error:parse_error",
+}
+`;

@@ -1,0 +1,18 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatAmbiguousStep > should list every candidate with its authored decorator and module path 1`] = `
+"Ambiguous step
+
+  Given an oct key with encryption "A256GCM"
+  at src/features/aes-encryption.feature:6:5
+
+2 step definitions matched:
+  AesEncryptionSteps.anOctKey     @Given("an oct key with encryption {string}")
+    at src/steps/aes.steps.ts
+  AesKeyingSteps.anOctKeyWithEnc  @When("an oct key with encryption {word}")
+    at src/steps/keying.steps.ts
+
+Remove one, or make the expressions disjoint.
+
+The remaining 1 step in this scenario was skipped."
+`;

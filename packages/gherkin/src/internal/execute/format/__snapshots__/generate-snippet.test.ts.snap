@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateSnippet > should emit @Given for an Unknown step type 1`] = `
+"@Given("a wildcard happens")
+aWildcardHappens(): void {
+  throw new PendingStepError();
+}"
+`;
+
+exports[`generateSnippet > should emit a pasteable snippet for a two-string step 1`] = `
+"@When("I encrypt {string} in record mode with aad {string}")
+iEncryptInRecordModeWithAad(string: string, string2: string): void {
+  throw new PendingStepError();
+}"
+`;
+
+exports[`generateSnippet > should include an opted-in custom parameter type as unknown 1`] = `
+"@Given("an oct key with encryption {encryption}")
+anOctKeyWithEncryption(encryption: unknown): void {
+  throw new PendingStepError();
+}"
+`;
+
+exports[`generateSnippet > should type int and float parameters as number 1`] = `
+"@When("I retry {int} times within {float} seconds")
+iRetryTimesWithinSeconds(int: number, float: number): void {
+  throw new PendingStepError();
+}"
+`;

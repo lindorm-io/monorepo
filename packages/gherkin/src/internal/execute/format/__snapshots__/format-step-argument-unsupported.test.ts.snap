@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatStepArgumentUnsupported > should anchor to the step line and say support lands later 1`] = `
+"Step argument not supported
+
+  Given the payload:
+  at src/features/aes.feature:12:5
+
+The step carries a DocString or DataTable, which this milestone cannot deliver — DataTable and DocString support lands in a later milestone. Running the step without its argument would silently drop the author's data, so it fails instead.
+
+The remaining 3 steps in this scenario were skipped."
+`;

@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatStepFailure > should prepend the step anchor and preserve the original message verbatim 1`] = `
+"Step failed
+
+  Then decrypting returns "hello"
+  at src/features/aes.feature:8:5
+
+expected 'goodbye' to be 'hello' // Object.is equality
+
+The remaining 1 step in this scenario was skipped."
+`;

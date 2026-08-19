@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatUndefinedStep > should omit the skipped line for the last step 1`] = `
+"Undefined step
+
+  When I encrypt "secret" in record mode with aad "tenant-1"
+  at src/features/aes-encryption.feature:12:5
+
+No step definition matched. Implement it:
+
+  @When("I encrypt {string} in record mode with aad {string}")
+  iEncryptInRecordModeWithAad(string: string, string2: string): void {
+    throw new PendingStepError();
+  }"
+`;
+
+exports[`formatUndefinedStep > should render the failure-contract layout 1`] = `
+"Undefined step
+
+  When I encrypt "secret" in record mode with aad "tenant-1"
+  at src/features/aes-encryption.feature:12:5
+
+No step definition matched. Implement it:
+
+  @When("I encrypt {string} in record mode with aad {string}")
+  iEncryptInRecordModeWithAad(string: string, string2: string): void {
+    throw new PendingStepError();
+  }
+
+The remaining 2 steps in this scenario were skipped."
+`;

@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PendingStepError > should use the default message 1`] = `
+{
+  "code": "pending_step",
+  "details": "The step matched a definition whose body is not implemented; the scenario is red until it is.",
+  "message": "Step is not implemented",
+  "title": "Pending Step",
+  "type": "urn:lindorm:gherkin:error:pending_step",
+}
+`;

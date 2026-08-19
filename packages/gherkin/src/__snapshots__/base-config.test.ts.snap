@@ -1,0 +1,96 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createVitestConfig (vitest.config.base.mjs) > with gherkin > should derive every mode's feature includes and excludes from the one features list 1`] = `
+{
+  "default": {
+    "exclude": [
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/*.weekly.test.ts",
+      "**/*.weekly.feature",
+    ],
+    "include": [
+      "src/**/*.test.ts",
+      "src/**/*.feature",
+    ],
+  },
+  "integration": {
+    "exclude": [
+      "**/dist/**",
+      "**/node_modules/**",
+    ],
+    "include": [
+      "src/**/*.integration.test.ts",
+      "src/**/*.integration.feature",
+    ],
+  },
+  "unit": {
+    "exclude": [
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/*.integration.test.ts",
+      "**/*.weekly.test.ts",
+      "**/*.integration.feature",
+      "**/*.weekly.feature",
+    ],
+    "include": [
+      "src/**/*.test.ts",
+      "src/**/*.feature",
+    ],
+  },
+  "weekly": {
+    "exclude": [
+      "**/dist/**",
+      "**/node_modules/**",
+    ],
+    "include": [
+      "src/**/*.weekly.test.ts",
+      "src/**/*.weekly.feature",
+    ],
+  },
+}
+`;
+
+exports[`createVitestConfig (vitest.config.base.mjs) > without gherkin > should keep the pre-gherkin shape for every mode 1`] = `
+{
+  "default": {
+    "exclude": [
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/*.weekly.test.ts",
+    ],
+    "include": [
+      "src/**/*.test.ts",
+    ],
+  },
+  "integration": {
+    "exclude": [
+      "**/dist/**",
+      "**/node_modules/**",
+    ],
+    "include": [
+      "src/**/*.integration.test.ts",
+    ],
+  },
+  "unit": {
+    "exclude": [
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/*.integration.test.ts",
+      "**/*.weekly.test.ts",
+    ],
+    "include": [
+      "src/**/*.test.ts",
+    ],
+  },
+  "weekly": {
+    "exclude": [
+      "**/dist/**",
+      "**/node_modules/**",
+    ],
+    "include": [
+      "src/**/*.weekly.test.ts",
+    ],
+  },
+}
+`;

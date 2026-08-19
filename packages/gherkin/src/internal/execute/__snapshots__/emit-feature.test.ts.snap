@@ -1,0 +1,81 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`emitFeature > feature models > should emit a failing test for an empty-examples node, anchored to the Examples line 1`] = `
+{
+  "code": "empty_examples",
+  "data": {
+    "line": 14,
+    "name": "hollow outline",
+    "uri": "src/features/emit.feature",
+  },
+  "details": "The Examples table has a header and zero data rows, so the outline compiles to zero scenarios. Add data rows, or delete the block.",
+  "message": "Empty Examples table
+
+  hollow outline
+  at src/features/emit.feature:14:5
+
+The Examples table has a header and zero data rows, so the outline compiles to zero scenarios. Add data rows, or delete the block.",
+  "title": "Empty Examples Table",
+  "type": "urn:lindorm:gherkin:error:empty_examples",
+}
+`;
+
+exports[`emitFeature > feature models > should emit a failing test for an empty-scenario node, anchored to the scenario line 1`] = `
+{
+  "code": "empty_scenario",
+  "data": {
+    "line": 6,
+    "name": "nothing here",
+    "uri": "src/features/emit.feature",
+  },
+  "details": "The scenario has a name and zero steps — running it would report green having executed nothing. Write its steps, or delete it.",
+  "message": "Empty scenario
+
+  nothing here
+  at src/features/emit.feature:6:3
+
+The scenario has a name and zero steps — running it would report green having executed nothing. Write its steps, or delete it.",
+  "title": "Empty Scenario",
+  "type": "urn:lindorm:gherkin:error:empty_scenario",
+}
+`;
+
+exports[`emitFeature > parse-error models > should emit ONE failing test carrying the anchored parser errors 1`] = `
+{
+  "code": "parse_error",
+  "data": {
+    "errors": [
+      {
+        "column": 3,
+        "line": 4,
+        "message": "expected: #EOF, got 'rogue line'",
+      },
+    ],
+    "uri": "src/features/emit.feature",
+  },
+  "details": "The feature file is not valid Gherkin. Every location is a line in the feature file itself. Fix the first error first — later ones are often knock-ons.",
+  "message": "Failed to parse feature file
+
+  expected: #EOF, got 'rogue line'
+  at src/features/emit.feature:4:3
+
+Fix the first error first — later ones are often knock-ons.",
+  "title": "Gherkin Parse Error",
+  "type": "urn:lindorm:gherkin:error:parse_error",
+}
+`;
+
+exports[`emitFeature > structural invariant > should throw stating both numbers and the uri on a mismatch 1`] = `
+{
+  "code": "structural_invariant",
+  "data": {
+    "expected": 3,
+    "registered": 1,
+    "uri": "src/features/emit.feature",
+  },
+  "details": "The number of registered tests must equal the model's expected count — a mismatch means the suite emitter dropped or doubled a scenario, a bug that would otherwise be invisible in the printed counts.",
+  "message": "Structural invariant violated: 1 tests registered, 3 expected for src/features/emit.feature",
+  "title": "Structural Invariant Violated",
+  "type": "urn:lindorm:gherkin:error:structural_invariant",
+}
+`;

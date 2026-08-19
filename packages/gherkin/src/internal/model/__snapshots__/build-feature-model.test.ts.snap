@@ -1,0 +1,323 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildFeatureModel > backgrounds > should merge a feature-level Background into every scenario, anchored to the Background lines 1`] = `
+{
+  "children": [
+    {
+      "column": 3,
+      "kind": "scenario",
+      "line": 6,
+      "name": "encrypt",
+      "steps": [
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 4,
+          "text": "an oct key",
+          "type": "Context",
+        },
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 7,
+          "text": "I encrypt "hello"",
+          "type": "Action",
+        },
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 8,
+          "text": "decrypting returns "hello"",
+          "type": "Outcome",
+        },
+      ],
+    },
+    {
+      "column": 3,
+      "kind": "scenario",
+      "line": 10,
+      "name": "another",
+      "steps": [
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 4,
+          "text": "an oct key",
+          "type": "Context",
+        },
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 11,
+          "text": "I encrypt "again"",
+          "type": "Action",
+        },
+      ],
+    },
+  ],
+  "expectedTests": 2,
+  "kind": "feature",
+  "line": 1,
+  "name": "aes encryption",
+  "uri": "src/features/test.feature",
+}
+`;
+
+exports[`buildFeatureModel > backgrounds > should stack a Rule-level Background onto the feature Background and support the Example synonym 1`] = `
+{
+  "children": [
+    {
+      "children": [
+        {
+          "column": 5,
+          "kind": "scenario",
+          "line": 11,
+          "name": "bound aad",
+          "steps": [
+            {
+              "column": 5,
+              "hasArgument": false,
+              "line": 4,
+              "text": "a feature key",
+              "type": "Context",
+            },
+            {
+              "column": 7,
+              "hasArgument": false,
+              "line": 9,
+              "text": "a rule key",
+              "type": "Context",
+            },
+            {
+              "column": 7,
+              "hasArgument": false,
+              "line": 12,
+              "text": "I encrypt "secret"",
+              "type": "Action",
+            },
+          ],
+        },
+      ],
+      "kind": "rule",
+      "line": 6,
+      "name": "record mode",
+    },
+  ],
+  "expectedTests": 1,
+  "kind": "feature",
+  "line": 1,
+  "name": "layered backgrounds",
+  "uri": "src/features/test.feature",
+}
+`;
+
+exports[`buildFeatureModel > dialects > should parse a # language: header and resolve keyword types 1`] = `
+{
+  "children": [
+    {
+      "column": 3,
+      "kind": "scenario",
+      "line": 3,
+      "name": "aller-retour",
+      "steps": [
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 4,
+          "text": "une clé",
+          "type": "Context",
+        },
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 5,
+          "text": "je chiffre "x"",
+          "type": "Action",
+        },
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 6,
+          "text": "le déchiffrement retourne "x"",
+          "type": "Outcome",
+        },
+      ],
+    },
+  ],
+  "expectedTests": 1,
+  "kind": "feature",
+  "line": 2,
+  "name": "chiffrement",
+  "uri": "src/features/test.feature",
+}
+`;
+
+exports[`buildFeatureModel > empty scenarios > should fail a zero-step scenario even when a Background exists 1`] = `
+{
+  "children": [
+    {
+      "column": 3,
+      "kind": "empty-scenario",
+      "line": 6,
+      "name": "nothing here",
+    },
+    {
+      "column": 3,
+      "kind": "scenario",
+      "line": 8,
+      "name": "real",
+      "steps": [
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 4,
+          "text": "a key",
+          "type": "Context",
+        },
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 9,
+          "text": "acting",
+          "type": "Action",
+        },
+      ],
+    },
+  ],
+  "expectedTests": 2,
+  "kind": "feature",
+  "line": 1,
+  "name": "gaps",
+  "uri": "src/features/test.feature",
+}
+`;
+
+exports[`buildFeatureModel > outlines > should emit one scenario node per Examples row with substituted names and row lines 1`] = `
+{
+  "children": [
+    {
+      "column": 7,
+      "kind": "scenario",
+      "line": 9,
+      "name": "round-trips A128GCM at $100",
+      "steps": [
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 4,
+          "text": "an oct key with encryption "A128GCM"",
+          "type": "Context",
+        },
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 5,
+          "text": "the price is "$100"",
+          "type": "Outcome",
+        },
+      ],
+    },
+    {
+      "column": 7,
+      "kind": "scenario",
+      "line": 10,
+      "name": "round-trips A256GCM at $250",
+      "steps": [
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 4,
+          "text": "an oct key with encryption "A256GCM"",
+          "type": "Context",
+        },
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 5,
+          "text": "the price is "$250"",
+          "type": "Outcome",
+        },
+      ],
+    },
+    {
+      "column": 7,
+      "kind": "scenario",
+      "line": 14,
+      "name": "round-trips A256CBC-HS512 at $9",
+      "steps": [
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 4,
+          "text": "an oct key with encryption "A256CBC-HS512"",
+          "type": "Context",
+        },
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 5,
+          "text": "the price is "$9"",
+          "type": "Outcome",
+        },
+      ],
+    },
+  ],
+  "expectedTests": 3,
+  "kind": "feature",
+  "line": 1,
+  "name": "outline",
+  "uri": "src/features/test.feature",
+}
+`;
+
+exports[`buildFeatureModel > outlines > should fail an Examples block with a header and zero data rows, anchored to the Examples line 1`] = `
+{
+  "children": [
+    {
+      "column": 5,
+      "kind": "empty-examples",
+      "line": 6,
+      "name": "uses <x>",
+    },
+    {
+      "column": 7,
+      "kind": "scenario",
+      "line": 11,
+      "name": "uses value",
+      "steps": [
+        {
+          "column": 5,
+          "hasArgument": false,
+          "line": 4,
+          "text": "a value",
+          "type": "Context",
+        },
+      ],
+    },
+  ],
+  "expectedTests": 2,
+  "kind": "feature",
+  "line": 1,
+  "name": "partial outline",
+  "uri": "src/features/test.feature",
+}
+`;
+
+exports[`buildFeatureModel > parse errors > should carry every error of a composite parse failure with its location 1`] = `
+{
+  "errors": [
+    {
+      "column": 3,
+      "line": 4,
+      "message": "(4:3): expected: #EOF, #TableRow, #DocStringSeparator, #StepLine, #TagLine, #ExamplesLine, #ScenarioLine, #RuleLine, #Comment, #Empty, got 'rogue line'",
+    },
+    {
+      "column": 3,
+      "line": 5,
+      "message": "(5:3): expected: #EOF, #TableRow, #DocStringSeparator, #StepLine, #TagLine, #ExamplesLine, #ScenarioLine, #RuleLine, #Comment, #Empty, got 'another rogue'",
+    },
+  ],
+  "kind": "parse-error",
+  "uri": "src/features/test.feature",
+}
+`;

@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`toStepType > should throw on an unmapped enum value 1`] = `
+{
+  "code": "model_invariant",
+  "data": {
+    "type": "Bogus",
+  },
+  "details": "The @cucumber/messages PickleStepType enum gained a value this model builder does not map.",
+  "message": "Unexpected pickle step type "Bogus"",
+  "title": "Model Invariant Violated",
+  "type": "urn:lindorm:gherkin:error:model_invariant",
+}
+`;
+
+exports[`toStepType > should throw on an unresolved (undefined) type 1`] = `
+{
+  "code": "model_invariant",
+  "data": {},
+  "details": "compile() resolves a keyword type for every pickle step; a step without one means the @cucumber/gherkin dependency changed behaviour underneath the model builder.",
+  "message": "Pickle step carries no keyword type",
+  "title": "Model Invariant Violated",
+  "type": "urn:lindorm:gherkin:error:model_invariant",
+}
+`;

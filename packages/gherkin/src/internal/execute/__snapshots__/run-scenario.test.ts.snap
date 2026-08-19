@@ -1,0 +1,140 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`runScenario > argument handling > should report conversion_failed for a throwing sync transform 1`] = `
+{
+  "code": "conversion_failed",
+  "data": {
+    "line": 10,
+    "parameterTypeName": "evens",
+    "raw": "3",
+    "text": "pair 3 and abc",
+    "uri": "src/features/run.feature",
+  },
+  "details": "The step matched a definition, but a parameter type's transform threw or rejected while converting the matched text. Fix the value in the feature file, or the transform.",
+  "message": "Step argument conversion failed
+
+  Given pair 3 and abc
+  at src/features/run.feature:10:5
+
+Parameter {evens} could not convert "3"
+  TransformSteps.evens (src/run.steps.ts)
+  odd: 3
+
+The step matched — the argument did not convert.
+
+The remaining 1 step in this scenario was skipped.",
+  "title": "Step Argument Conversion Failed",
+  "type": "urn:lindorm:gherkin:error:conversion_failed",
+}
+`;
+
+exports[`runScenario > failure modes > should fail a pending step naming the class.method 1`] = `
+{
+  "code": "pending_step",
+  "data": {
+    "className": "RecordSteps",
+    "line": 10,
+    "methodName": "pending",
+    "text": "a pending step",
+    "uri": "src/features/run.feature",
+  },
+  "details": "The step matched a definition whose body is not implemented; the scenario is red until it is.",
+  "message": "Pending step
+
+  Given a pending step
+  at src/features/run.feature:10:5
+
+RecordSteps.pending is pending — implement its body.",
+  "title": "Pending Step",
+  "type": "urn:lindorm:gherkin:error:pending_step",
+}
+`;
+
+exports[`runScenario > failure modes > should fail an ambiguous step listing every candidate 1`] = `
+{
+  "code": "ambiguous_step",
+  "data": {
+    "candidates": [
+      {
+        "className": "AmbiguousGiven",
+        "expression": "a duplicated step",
+        "methodName": "given",
+        "modulePath": "src/run.steps.ts",
+      },
+      {
+        "className": "AmbiguousWhen",
+        "expression": "a duplicated step",
+        "methodName": "when",
+        "modulePath": "src/run.steps.ts",
+      },
+    ],
+    "line": 10,
+    "text": "a duplicated step",
+    "uri": "src/features/run.feature",
+  },
+  "details": "More than one step definition matched the step text. Matching is text-only — the decorator keyword does not disambiguate. Remove one, or make the expressions disjoint.",
+  "message": "Ambiguous step
+
+  Given a duplicated step
+  at src/features/run.feature:10:5
+
+2 step definitions matched:
+  AmbiguousGiven.given  @Given("a duplicated step")
+    at src/run.steps.ts
+  AmbiguousWhen.when    @When("a duplicated step")
+    at src/run.steps.ts
+
+Remove one, or make the expressions disjoint.",
+  "title": "Ambiguous Step",
+  "type": "urn:lindorm:gherkin:error:ambiguous_step",
+}
+`;
+
+exports[`runScenario > failure modes > should fail an argument-bearing step BEFORE matching 1`] = `
+{
+  "code": "step_argument_unsupported",
+  "data": {
+    "line": 10,
+    "text": "a table nobody defined:",
+    "uri": "src/features/run.feature",
+  },
+  "details": "The step carries a DocString or DataTable; delivering them lands in a later milestone. Running the step without its argument would silently drop data, so it fails instead.",
+  "message": "Step argument not supported
+
+  Given a table nobody defined:
+  at src/features/run.feature:10:5
+
+The step carries a DocString or DataTable, which this milestone cannot deliver — DataTable and DocString support lands in a later milestone. Running the step without its argument would silently drop the author's data, so it fails instead.
+
+The remaining 1 step in this scenario was skipped.",
+  "title": "Step Argument Not Supported",
+  "type": "urn:lindorm:gherkin:error:step_argument_unsupported",
+}
+`;
+
+exports[`runScenario > failure modes > should fail an undefined step with a pasteable snippet 1`] = `
+{
+  "code": "undefined_step",
+  "data": {
+    "line": 12,
+    "text": "I encrypt "secret" in record mode with aad "tenant-1"",
+    "uri": "src/features/run.feature",
+  },
+  "details": "No step definition matched the step text. Paste the snippet into a @Binding class and implement it.",
+  "message": "Undefined step
+
+  When I encrypt "secret" in record mode with aad "tenant-1"
+  at src/features/run.feature:12:5
+
+No step definition matched. Implement it:
+
+  @When("I encrypt {string} in record mode with aad {string}")
+  iEncryptInRecordModeWithAad(string: string, string2: string): void {
+    throw new PendingStepError();
+  }
+
+The remaining 2 steps in this scenario were skipped.",
+  "title": "Undefined Step",
+  "type": "urn:lindorm:gherkin:error:undefined_step",
+}
+`;

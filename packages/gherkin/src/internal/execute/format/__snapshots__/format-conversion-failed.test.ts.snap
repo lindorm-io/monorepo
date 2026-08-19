@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatConversionFailed > should anchor the failing transform for a custom parameter type 1`] = `
+"Step argument conversion failed
+
+  Given an oct key with encryption "A999GCM"
+  at src/features/aes-encryption.feature:6:5
+
+Parameter {encryption} could not convert "A999GCM"
+  AesTransforms.encryption (src/steps/aes.steps.ts)
+  unknown encryption "A999GCM"
+
+The step matched — the argument did not convert.
+
+The remaining 2 steps in this scenario were skipped."
+`;
+
+exports[`formatConversionFailed > should omit the declaration line for a built-in parameter type 1`] = `
+"Step argument conversion failed
+
+  Given an oct key with encryption "A999GCM"
+  at src/features/aes-encryption.feature:6:5
+
+Parameter {int} could not convert "3"
+  boom
+
+The step matched — the argument did not convert."
+`;

@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Given > should throw scope_violation for a static method at decoration time 1`] = `
+{
+  "code": "scope_violation",
+  "data": {
+    "decorator": "Given",
+    "method": "bad",
+  },
+  "details": "Step methods run against a per-scenario instance; a static method has no scenario scope. Remove the static modifier.",
+  "message": "@Given requires an instance method",
+  "title": "Scope Violation",
+  "type": "urn:lindorm:gherkin:error:scope_violation",
+}
+`;

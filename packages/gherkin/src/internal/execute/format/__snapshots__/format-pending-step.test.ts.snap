@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatPendingStep > should name the step, its anchor and the pending class.method 1`] = `
+"Pending step
+
+  When I encrypt "hello"
+  at src/features/aes.feature:7:5
+
+AesEncryptionSteps.iEncrypt is pending — implement its body.
+
+The remaining 1 step in this scenario was skipped."
+`;
