@@ -20,19 +20,58 @@ import type {
 } from "../types/index.js";
 
 /**
- * The mock ctx is transport-free, so koa's response object is absent. Middleware that
- * writes response headers (Cache-Control, WWW-Authenticate, ...) needs one: `set` records
- * onto `response.headers` lower-cased, the way koa does, and `response.get` reads it back
- * — so a test can assert the headers a real response would carry.
+ * The mock ctx is transport-free, so koa's request/response objects are absent.
+ *
+ * `response`/`set`: middleware that writes response headers (Cache-Control,
+ * WWW-Authenticate, ...) needs one. `set` records onto `response.headers`
+ * lower-cased, the way koa does, and `response.get` reads it back — so a test can
+ * assert the headers a real response would carry.
+ *
+ * `request`: what makes the context an HTTP one. Pylon discriminates transports
+ * structurally — `isHttpContext` is `"request" in ctx && !("event" in ctx)` — so
+ * WITHOUT this every transport-aware middleware answered `unsupported_context`,
+ * and a consumer proving its own auth wiring had to hand-roll a context rather
+ * than use the mock pylon ships. The three fields are the whole of what
+ * `src/middleware/**` reads off `ctx.request`: `ip` (`useRateLimit`) and
+ * `ip`/`method`/`path` (`useAuditLog`). Nothing else is added on spec — a test
+ * needing a different value assigns it (`ctx.request.ip = "10.0.0.1"`).
+ *
+ * `auth`: each member INTERSECTED with the mock type, so `ctx.auth.introspect`
+ * is simultaneously the real `PylonAuthClaimsClient` member the middleware chain
+ * consumes and a mock a test can re-programme — `ctx.auth.introspect
+ * .mockResolvedValue(...)` with no cast. The methods were always mocks; only the
+ * TYPE said otherwise, and the cast that closed the gap is the kind a consumer
+ * writes once and then reaches for everywhere.
+ *
+ * `MockFn` is a parameter rather than a vitest import because this file serves
+ * BOTH wrappers; `mocks/vitest.ts` and `mocks/jest.ts` each bind it to their own
+ * mock type under this same name, so a consumer never spells the parameter.
+ *
+ * ⚠ The mapped type is EXHAUSTIVE over `PylonAuthClaimsClient` on purpose: a
+ * member added to that client makes the object literal in the factory below fail
+ * to compile, rather than leaving the mock quietly short of the real surface.
  */
-export type TestPylonCtx = PylonContext & {
+export type TestPylonCtx<MockFn = unknown> = PylonContext & {
+  auth: { [K in keyof PylonAuthClaimsClient]: PylonAuthClaimsClient[K] & MockFn };
   challenge: PylonChallenge;
+  request: { ip: string; method: string; path: string };
   response: { headers: Dict<string>; get: (field: string) => string };
   set: (field: string, value: string) => void;
+  /**
+   * The request-header reader, as a MOCK. Koa answers `""` for a header that is
+   * not there, so that is the default — an inert starting point, not an opinion.
+   *
+   * A test that needs a header states it: `ctx.get.mockReturnValue("DPoP …")`,
+   * or `mockImplementation` to answer per field. That is the point of this
+   * fixture — it is the BASELINE, and each test adds what it needs to prove its
+   * own case. Do not grow this factory to anticipate every header a caller might
+   * read; a field nobody sets here is not a gap.
+   */
+  get: ((field: string) => string) & MockFn;
 };
 
-export type TestPylonCtxDeps = {
-  mockFn: () => any;
+export type TestPylonCtxDeps<MockFn = any> = {
+  mockFn: () => MockFn;
   aegis: IAegis;
   amphora: IAmphora;
   logger: ILogger;
@@ -119,19 +158,37 @@ const defaultState = (): PylonState => ({
   tokens: {},
 });
 
-export const _createTestPylonCtx = (
-  deps: TestPylonCtxDeps,
+export const _createTestPylonCtx = <MockFn>(
+  deps: TestPylonCtxDeps<MockFn>,
   options: CreateTestPylonCtxOptions = {},
-): TestPylonCtx => {
-  const resolves = (value: any) => {
-    const m = deps.mockFn();
-    m.mockResolvedValue(value);
-    return m;
+): TestPylonCtx<MockFn> => {
+  /**
+   * A mock pre-set to resolve `value`, returned INTERSECTED with the call
+   * signature it stands in for — which is what lets one value satisfy both the
+   * real context member and the mock API a test drives it through.
+   *
+   * The two casts are this file's only assumption about the mock framework:
+   * `mockResolvedValue` is the one method both wrappers' mock types provide, and
+   * naming a framework here instead would mean two copies of the whole factory.
+   */
+  const resolves = <T>(value: T): MockFn & ((...args: Array<any>) => Promise<T>) => {
+    const mock = deps.mockFn() as MockFn & { mockResolvedValue(value: T): unknown };
+    mock.mockResolvedValue(value);
+    return mock as MockFn & ((...args: Array<any>) => Promise<T>);
   };
 
-  const auth: PylonAuthClaimsClient = {
-    introspect: resolves({ active: false } as PylonIntrospection),
-    userinfo: resolves({ subject: "test-actor" } as PylonUserinfo),
+  /** The synchronous twin of `resolves`, for a member that returns a value. */
+  const returns = <T>(value: T): MockFn & ((...args: Array<any>) => T) => {
+    const mock = deps.mockFn() as MockFn & { mockReturnValue(value: T): unknown };
+    mock.mockReturnValue(value);
+    return mock as MockFn & ((...args: Array<any>) => T);
+  };
+
+  // Annotated with the mapped type, NOT with `PylonAuthClaimsClient`: that is
+  // what makes a member added to the client a compile error here.
+  const auth: TestPylonCtx<MockFn>["auth"] = {
+    introspect: resolves<PylonIntrospection>({ active: false }),
+    userinfo: resolves<PylonUserinfo>({ subject: "test-actor" }),
   };
 
   const state = merge(
@@ -141,7 +198,7 @@ export const _createTestPylonCtx = (
 
   const headers: Dict<string> = {};
 
-  const ctx: TestPylonCtx = {
+  const ctx: TestPylonCtx<MockFn> = {
     aegis: options.aegis ?? deps.aegis,
     amphora: options.amphora ?? deps.amphora,
     auth,
@@ -156,6 +213,10 @@ export const _createTestPylonCtx = (
     io: {} as PylonIoContextHttp,
     params: options.params ?? {},
 
+    request: { ip: "127.0.0.1", method: "GET", path: "/" },
+    // Koa answers "" for an absent header — the inert default. A test that needs
+    // one says so itself.
+    get: returns(""),
     response: { headers, get: (field) => headers[field.toLowerCase()] ?? "" },
     set: (field, value) => {
       headers[field.toLowerCase()] = value;

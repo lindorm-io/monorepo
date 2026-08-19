@@ -78,23 +78,37 @@ describe("useAccessToken — what a credential must be", () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    // The type-confusion case, and the reason `tokenType` is not a mount option.
-    // The id_token is minted by the SAME issuer, live, and audienced at THIS
-    // resource server — so it clears every check an audience-and-issuer gate can
-    // make. What it cannot clear is its own declared type: the profile floor
-    // compares `typ` first (`JWT` vs `application/at+jwt`, RFC 9068 §2.2). A
-    // resource server that accepts an id_token as a bearer credential accepts a
-    // token the client was given to READ, not to spend.
+    /**
+     * The type-confusion case, and the reason `tokenType` is not a mount option.
+     * The id_token is minted by the SAME issuer, live, and audienced at THIS
+     * resource server — so it clears every check an audience-and-issuer gate can
+     * make. What it cannot clear is its own declared type: the profile floor
+     * compares `typ` first (`JWT` vs `application/at+jwt`, RFC 9068 §2.2). A
+     * resource server that accepts an id_token as a bearer credential accepts a
+     * token the client was given to READ, not to spend.
+     *
+     * ⚠ `data` NAMES the floor that refused it, and that is what makes this test
+     * able to fail. A bare `code: access_token_verification_failed` is pylon's
+     * wrapper over EVERY aegis refusal, so it cannot tell TYPE from anything
+     * else — and the fixture it was written against (an id_token with no `jti`)
+     * would have gone on passing under a default that had quietly widened to the
+     * lenient profile, refused on `jwt_required_claims_missing` instead. This is
+     * `mintTestIdToken`, which carries `jti` AND the `nonce` the lenient
+     * profile's `forbidden` list bites on, so every plausible loss of the type
+     * discrimination changes `data` and turns this red.
+     *
+     * ⚠ The ONE strict-floor claim this fixture cannot carry is `client_id`:
+     * `IdTokenContent` does not admit it, and no real id_token has one — its
+     * `aud` IS the client. So the assertion has to name the typ rather than rely
+     * on typ being the only check the token could fail.
+     */
     test("an ID TOKEN is refused, however well it otherwise fits", async () => {
-      const { token } = await aegis.mint("id_token", {
-        audience: [ACCESS_TEST_AUDIENCE],
-        subject: "alice",
-      });
-      present(token);
+      present(await mintTestIdToken(aegis));
 
       await expect(useAccessToken(MOUNT)(ctx, next)).rejects.toMatchObject({
         status: 401,
         code: "access_token_verification_failed",
+        data: { typ: "JWT" },
       });
 
       expect(ctx.state.access).toBeNull();
@@ -213,8 +227,11 @@ describe("useAccessToken — what a credential must be", () => {
       await expect(useAccessToken(EXTERNAL)(ctx, next)).rejects.toMatchObject({
         status: 401,
         code: "access_token_verification_failed",
-        // The forbidden list, named — not "refused for some reason".
-        data: { forbidden: ["nonce"] },
+        // The claim that bit, NAMED — not "refused for some reason". aegis
+        // reports one `invalid` array for every policy rule (a token can fail
+        // `forbidden` AND `required` at once), so the forbidden claim appears
+        // as an entry, not as a bucket of its own.
+        data: { invalid: [{ key: "nonce" }] },
       });
 
       expect(ctx.state.access).toBeNull();

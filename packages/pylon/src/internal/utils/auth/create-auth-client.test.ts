@@ -285,7 +285,7 @@ describe("createAuthClient", () => {
 
     test("should return userinfo from an ENCRYPTED id_token wrapping a JWT", async () => {
       const ctx = createCtx({
-        state: { tokens: { idToken: idTokenResult("jwe", { inner: "jwt" }) } },
+        state: { tokens: { idToken: idTokenResult("jwt", { wrapper: "jwe" }) } },
       });
 
       await expect(
@@ -303,8 +303,8 @@ describe("createAuthClient", () => {
       const ctx = createCtx({
         state: {
           tokens: {
-            idToken: idTokenResult("jwe", {
-              inner: "jwt",
+            idToken: idTokenResult("jwt", {
+              wrapper: "jwe",
               sensitive: {
                 nationalIdentityNumber: "19900101-1234",
                 nationalIdentityNumberVerified: true,

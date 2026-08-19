@@ -77,9 +77,14 @@ export const createCertificateExpiryWorker = (options: Options): LindormWorker =
       const tracked = new Map<string, Tracked>();
 
       for (const kryptos of options.amphora.vault) {
-        if (!kryptos.hasCertificate) continue;
+        // `certificate("b64")` answers `null` for a key with no chain, and its
+        // `chain` entries are the standard base64 of each DER — which is the
+        // spelling `describeCertificate` parses.
+        const certificate = kryptos.certificate("b64");
 
-        for (const der of kryptos.certificateChain) {
+        if (certificate === null) continue;
+
+        for (const der of certificate.chain) {
           const described = describeCertificate(der);
           const existing = tracked.get(described.thumbprint);
 

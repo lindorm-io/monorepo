@@ -7,12 +7,18 @@ import { createMockProteusSession } from "@lindorm/proteus/mocks/jest";
 import {
   _createTestPylonCtx,
   type CreateTestPylonCtxOptions,
+  type TestPylonCtx as BaseTestPylonCtx,
 } from "./create-test-pylon-ctx.js";
 
-export type { CreateTestPylonCtxOptions, TestPylonCtx } from "./create-test-pylon-ctx.js";
+export type { CreateTestPylonCtxOptions } from "./create-test-pylon-ctx.js";
 
-export const createTestPylonCtx = async (options?: CreateTestPylonCtxOptions) =>
-  _createTestPylonCtx(
+/** The context with its mock members bound to JEST's `Mock` — see the vitest twin. */
+export type TestPylonCtx = BaseTestPylonCtx<jest.Mock>;
+
+export const createTestPylonCtx = async (
+  options?: CreateTestPylonCtxOptions,
+): Promise<TestPylonCtx> =>
+  _createTestPylonCtx<jest.Mock>(
     {
       mockFn: jest.fn,
       aegis: createMockAegis(),

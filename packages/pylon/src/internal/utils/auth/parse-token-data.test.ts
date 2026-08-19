@@ -43,20 +43,21 @@ const createCwtVerifyResult = (overrides: Record<string, any> = {}) => ({
   token: "cwt-token",
 });
 
-// An ENCRYPTED id token: the outer tag reads `jwe`, `inner` names the structured
-// format, and `claims` carries the inner's fully-populated set.
+// An ENCRYPTED id token: `format` names the token's OWN kind, the envelope rides
+// `wrapper`, and `claims` carries the fully-populated set.
 const createJweWrappingJwtVerifyResult = (overrides: Record<string, any> = {}) => ({
   ...createJwtVerifyResult(overrides),
-  format: "jwe" as const,
-  inner: "jwt" as const,
+  format: "jwt" as const,
+  wrapper: "jwe" as const,
   token: "jwe-token",
 });
 
 // An encrypting outer that wrapped an OPAQUE inner carries no claims — it must
-// stay excluded, or the guard would be trusting `inner` without reading it.
+// stay excluded. The envelope is what differs from the row above; the token's own
+// `jws` kind is what excludes it, so a guard reading `wrapper` instead fails here.
 const createJweWrappingJwsVerifyResult = () => ({
-  format: "jwe" as const,
-  inner: "jws" as const,
+  format: "jws" as const,
+  wrapper: "jwe" as const,
   raw: "some-payload",
   token: "jwe-jws-token",
 });

@@ -18,7 +18,7 @@ describe("useTenant", () => {
       },
     });
 
-    introspect = ctx.auth.introspect as unknown as Mock;
+    introspect = ctx.auth.introspect;
     introspect.mockResolvedValue({ active: true, tenantId: "tenant-abc" });
     setFilterParams = ctx.db!.setFilterParams as unknown as Mock;
   });
@@ -226,7 +226,7 @@ describe("useTenant", () => {
       },
       db: null,
     });
-    (noDbCtx.auth.introspect as unknown as Mock).mockResolvedValue({
+    noDbCtx.auth.introspect.mockResolvedValue({
       active: true,
       tenantId: "tenant-abc",
     });
