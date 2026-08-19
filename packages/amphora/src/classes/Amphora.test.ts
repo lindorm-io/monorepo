@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockKryptos } from "@lindorm/kryptos/mocks/vitest";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
@@ -24,6 +25,15 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
+
+// A CA's own certificate, spelled as a trust anchor. The `b64` chain is standard
+// base64 DER — the encoding `verifyCertificate` matches anchors against.
+const trustAnchorOf = (ca: IKryptos): string => {
+  const anchor = ca.certificate("b64")?.chain[0];
+  if (isString(anchor)) return anchor;
+
+  throw new Error(`Test CA "${ca.id}" was generated without a certificate chain`);
+};
 
 describe("Amphora", () => {
   const issuer = "https://test.lindorm.io/";
@@ -1869,6 +1879,22 @@ describe("Amphora", () => {
         amphora.filter({ certificateThumbprint: "some-thumbprint" }),
       ).resolves.toEqual([]);
     });
+
+    // The control for the thumbprint filter above. `certificateThumbprint` is a
+    // queryable CELL on the instance, so the matcher reads it; chain MATERIAL is
+    // not, and is reached through `certificate(format)` instead. `AmphoraQuery`
+    // already excludes it at compile time — the cast states that, and pins that
+    // a query which slips past the type matches nothing rather than everything.
+    test("should match nothing when filtering by certificate material", async () => {
+      amphora.add([TEST_EC_KEY_SIG, TEST_X509_KRYPTOS_SIG]);
+
+      const chain = TEST_X509_KRYPTOS_SIG.certificate("b64")?.chain;
+      expect(chain).toHaveLength(3);
+
+      await expect(amphora.filter({ certificateChain: chain } as never)).resolves.toEqual(
+        [],
+      );
+    });
   });
 
   describe("cache freshness", () => {
@@ -2251,7 +2277,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.certificateChain[0],
+            trustAnchors: trustAnchorOf(ca),
           },
         ],
       });
@@ -2282,7 +2308,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: [caA.certificateChain[0], caB.certificateChain[0]],
+            trustAnchors: [trustAnchorOf(caA), trustAnchorOf(caB)],
           },
         ],
       });
@@ -2314,7 +2340,7 @@ describe("Amphora", () => {
             required: true,
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: trustedCa.certificateChain[0],
+            trustAnchors: trustAnchorOf(trustedCa),
           },
         ],
       });
@@ -2349,7 +2375,7 @@ describe("Amphora", () => {
             required: true,
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.certificateChain[0],
+            trustAnchors: trustAnchorOf(ca),
           },
         ],
       });
@@ -2379,7 +2405,7 @@ describe("Amphora", () => {
             required: true,
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: trustedCa.certificateChain[0],
+            trustAnchors: trustAnchorOf(trustedCa),
           },
         ],
       });
@@ -2421,7 +2447,7 @@ describe("Amphora", () => {
           {
             issuer: "https://trusted.lindorm.io/",
             jwksUri: "https://trusted.lindorm.io/.well-known/jwks.json",
-            trustAnchors: ca.certificateChain[0],
+            trustAnchors: trustAnchorOf(ca),
           },
           {
             issuer: "https://loose.lindorm.io/",
@@ -2486,7 +2512,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.certificateChain[0],
+            trustAnchors: trustAnchorOf(ca),
             trustMode: "lax",
           },
         ],
@@ -2517,7 +2543,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.certificateChain[0],
+            trustAnchors: trustAnchorOf(ca),
             trustMode: "lax",
           },
         ],
@@ -2550,7 +2576,7 @@ describe("Amphora", () => {
             required: true,
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: trustedCa.certificateChain[0],
+            trustAnchors: trustAnchorOf(trustedCa),
             trustMode: "lax",
           },
         ],
@@ -2586,7 +2612,7 @@ describe("Amphora", () => {
             required: true,
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.certificateChain[0],
+            trustAnchors: trustAnchorOf(ca),
             trustMode: "strict",
           },
         ],
@@ -2631,13 +2657,13 @@ describe("Amphora", () => {
           {
             issuer: "https://lax.lindorm.io/",
             jwksUri: "https://lax.lindorm.io/.well-known/jwks.json",
-            trustAnchors: ca.certificateChain[0],
+            trustAnchors: trustAnchorOf(ca),
             trustMode: "lax",
           },
           {
             issuer: "https://strict.lindorm.io/",
             jwksUri: "https://strict.lindorm.io/.well-known/jwks.json",
-            trustAnchors: ca.certificateChain[0],
+            trustAnchors: trustAnchorOf(ca),
             trustMode: "strict",
           },
         ],
@@ -4390,9 +4416,8 @@ describe("Amphora environment enforcement", () => {
       issuer,
       jwksUri: new URL("/.well-known/jwks.json", issuer).toString(),
       hasCertificate: true,
-      certificate: {
-        subject: { organizationalUnit: "platform-engineering" },
-      } as never,
+      parseCertificate: () =>
+        ({ subject: { organizationalUnit: "platform-engineering" } }) as never,
     });
 
     expect(() => amphora.add(foreign)).not.toThrow();

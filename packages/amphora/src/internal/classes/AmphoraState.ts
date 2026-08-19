@@ -338,7 +338,7 @@ export class AmphoraState {
   assertEnvironment(item: IKryptos): void {
     if (!this.environment || !item.hasCertificate) return;
 
-    const ou = item.certificate?.subject.organizationalUnit;
+    const ou = item.parseCertificate()?.subject.organizationalUnit;
     if (!isEnvironment(ou) || ou === this.environment) return;
 
     throw new AmphoraError("Kryptos certificate environment mismatch", {
