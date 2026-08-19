@@ -457,7 +457,9 @@ export const UPLOAD = [
 - `POST /admin/assets/gallery` — uploads any number of files into `gallery/` (subdirectories are
   created recursively; guard middleware authorizes them); the server names each file per `naming`.
   Responds `201` with `{ files: [{ name, path, size, mime_type, original_name }] }`, where `path`
-  is the serving URL when `prefix` is set (`/assets/gallery/f_….jpg`).
+  is the serving URL when `prefix` is set (`/assets/gallery/f_….jpg`). Files are written and
+  returned in the order the client sent them, so a duplicate name under `overwrite` resolves to the
+  last part on the wire.
 - `PUT /admin/assets/gallery/f_….jpg` — create-or-replace at the exact URL path, one file per
   request. `201` created, `200` replaced; replacing requires `overwrite: true`, else `409`.
 - Writes are atomic (temp file + same-dir rename/link), so a co-located `STATIC` mount never
@@ -1903,7 +1905,9 @@ const app = new Pylon({
 });
 ```
 
-The parsed body is exposed as `ctx.data` (camelCased). The raw parsed body is also available on `ctx.request.body`, and multipart uploads land on `ctx.request.files` as a formidable `Files` map.
+The parsed body is exposed as `ctx.data` (camelCased). The raw parsed body is also available on `ctx.request.body`, and multipart uploads land on `ctx.request.files` as a formidable `Files` map, ordered by the parts
+as the client sent them (formidable's own map is ordered by whichever temp file finished writing
+first).
 
 ## Type-safe socket emissions
 
