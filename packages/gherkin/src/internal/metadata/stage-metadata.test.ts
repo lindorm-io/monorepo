@@ -1,9 +1,16 @@
 import { describe, expect, test } from "vitest";
 import {
+  readOwnHooks,
+  readOwnInjects,
   readOwnParameterTypes,
+  readOwnPriorities,
   readOwnSteps,
+  stageHook,
+  stageInject,
   stageParameterType,
+  stagePriority,
   stageStep,
+  toModifierKey,
 } from "./stage-metadata.js";
 import type { StagedParameterType } from "./staged.js";
 import { PARAMETER_TYPES_METADATA, STEPS_METADATA } from "./symbols.js";
@@ -95,5 +102,66 @@ describe("stage-metadata", () => {
     const child: DecoratorMetadataObject = Object.create(parent);
 
     expect(readOwnParameterTypes(child)).toEqual([]);
+  });
+
+  test("should stage hooks with the same own-array discipline and ignore inherited arrays", () => {
+    const parent: DecoratorMetadataObject = {};
+    stageHook(parent, { kind: "BeforeScenario", methodName: "seed", static: false });
+
+    const child: DecoratorMetadataObject = Object.create(parent);
+    stageHook(child, {
+      kind: "AfterScenario",
+      methodName: "dump",
+      static: false,
+      tagExpression: "@integration",
+    });
+
+    expect(readOwnHooks(parent)).toEqual([
+      { kind: "BeforeScenario", methodName: "seed", static: false },
+    ]);
+    expect(readOwnHooks(child)).toEqual([
+      {
+        kind: "AfterScenario",
+        methodName: "dump",
+        static: false,
+        tagExpression: "@integration",
+      },
+    ]);
+    expect(readOwnHooks(Object.create(parent))).toEqual([]);
+  });
+
+  test("should stage injects with the same own-array discipline and ignore inherited arrays", () => {
+    class Token {}
+
+    const parent: DecoratorMetadataObject = {};
+    stageInject(parent, { fieldName: "aes", token: Token });
+
+    const child: DecoratorMetadataObject = Object.create(parent);
+
+    expect(readOwnInjects(parent)).toEqual([{ fieldName: "aes", token: Token }]);
+    expect(readOwnInjects(child)).toEqual([]);
+  });
+
+  test("should stage priorities with the same own-array discipline and ignore inherited arrays", () => {
+    const parent: DecoratorMetadataObject = {};
+    stagePriority(parent, {
+      key: "false:seed",
+      methodName: "seed",
+      priority: 100,
+      static: false,
+    });
+
+    const child: DecoratorMetadataObject = Object.create(parent);
+
+    expect(readOwnPriorities(parent)).toEqual([
+      { key: "false:seed", methodName: "seed", priority: 100, static: false },
+    ]);
+    expect(readOwnPriorities(child)).toEqual([]);
+  });
+
+  test("toModifierKey should separate a static and an instance member of the same name", () => {
+    expect(toModifierKey(true, "setup")).toEqual("true:setup");
+    expect(toModifierKey(false, "setup")).toEqual("false:setup");
+    expect(toModifierKey(true, "setup")).not.toEqual(toModifierKey(false, "setup"));
   });
 });

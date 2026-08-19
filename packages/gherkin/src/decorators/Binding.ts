@@ -1,35 +1,26 @@
-import { isFunction, isUndefined } from "@lindorm/is";
 import type { Constructor } from "@lindorm/types";
 import { GherkinError } from "../errors/GherkinError.js";
 import {
+  readOwnHooks,
   readOwnParameterTypes,
+  readOwnPriorities,
   readOwnSteps,
 } from "../internal/metadata/stage-metadata.js";
 import { BINDING_BRAND } from "../internal/metadata/symbols.js";
 import { addRegistration } from "../internal/registry/registrations.js";
-
-// Object.hasOwn, never `in`: the brand is a static, so a subclass inherits it
-// through the constructor chain and a chain-walking read would blame the
-// subclass itself instead of the branded ancestor.
-const findBindingAncestor = (target: Constructor): Constructor | undefined => {
-  let ancestor = Object.getPrototypeOf(target);
-
-  while (isFunction(ancestor)) {
-    if (Object.hasOwn(ancestor, BINDING_BRAND)) {
-      return ancestor as unknown as Constructor;
-    }
-    ancestor = Object.getPrototypeOf(ancestor);
-  }
-
-  return undefined;
-};
+import { assertChainGuards } from "./assert-chain-guards.js";
+import { assertNoConflictingBrand } from "./assert-no-conflicting-brand.js";
+import { collectInjects } from "./collect-injects.js";
+import { composeHooks } from "./compose-hooks.js";
 
 /**
- * Register a class's step definitions and parameter types. Registration reads
- * the class's OWN staged metadata only, and a `@Binding` class may not extend
- * another `@Binding` class — both would be instantiated with separate `this`,
- * so state set in a parent's step would be invisible to a child's. A plain
- * undecorated helper base is fine.
+ * Register a class's step definitions, hooks and parameter types.
+ * Registration reads the class's OWN staged metadata only; `@Inject` fields
+ * are collected across the class chain. A `@Binding` class may extend
+ * `@AbstractSteps` bases only — never another `@Binding` (both would be
+ * instantiated with separate `this`, so state set in a parent's step would be
+ * invisible to a child's), and never an unmarked class carrying gherkin
+ * decorators (its metadata silently drops off the chain under swc).
  */
 export const Binding =
   () =>
@@ -47,31 +38,24 @@ export const Binding =
       });
     }
 
-    const ancestor = findBindingAncestor(target);
+    assertNoConflictingBrand(target, "Binding");
+    assertChainGuards(target, "Binding");
 
-    if (isUndefined(ancestor)) {
-      // Inside a class decorator, target[Symbol.metadata] is the SUPERCLASS's
-      // metadata — the class's own level is context.metadata. Pinned:
-      // Binding.test.ts ("a subclass does not mutate its parent's staged steps").
-      addRegistration({
-        className: target.name,
-        parameterTypes: readOwnParameterTypes(context.metadata),
-        steps: readOwnSteps(context.metadata),
-        target,
-      });
+    // Inside a class decorator, target[Symbol.metadata] is the SUPERCLASS's
+    // metadata — the class's own level is context.metadata. Pinned:
+    // Binding.test.ts ("a subclass does not mutate its parent's staged steps").
+    addRegistration({
+      className: target.name,
+      hooks: composeHooks(
+        target.name,
+        readOwnHooks(context.metadata),
+        readOwnPriorities(context.metadata),
+      ),
+      injects: collectInjects(target, context.metadata),
+      parameterTypes: readOwnParameterTypes(context.metadata),
+      steps: readOwnSteps(context.metadata),
+      target,
+    });
 
-      Object.defineProperty(target, BINDING_BRAND, { value: true });
-      return;
-    }
-
-    throw new GherkinError(
-      `@Binding class ${target.name} may not extend @Binding class ${ancestor.name}`,
-      {
-        code: "inheritance_forbidden",
-        title: "Binding Inheritance Forbidden",
-        details:
-          "Each @Binding class is instantiated with its own `this`, so state set in a parent's step would be invisible to a child's. Extract shared members into an undecorated base class instead.",
-        data: { child: target.name, parent: ancestor.name },
-      },
-    );
+    Object.defineProperty(target, BINDING_BRAND, { value: true });
   };

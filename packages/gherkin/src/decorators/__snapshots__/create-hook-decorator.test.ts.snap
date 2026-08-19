@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createHookDecorator > should throw duplicate_hook for the same kind twice on one method, tag expressions notwithstanding 1`] = `
+{
+  "code": "duplicate_hook",
+  "data": {
+    "hook": "BeforeScenario",
+    "method": "seed",
+  },
+  "details": "Both decorators stage, so the method would silently run twice per match. Tag expressions support \`or\`, so stacking two of them buys nothing except double execution — combine them into one decorator.",
+  "message": "@BeforeScenario is applied twice to method seed",
+  "title": "Duplicate Hook",
+  "type": "urn:lindorm:gherkin:error:duplicate_hook",
+}
+`;

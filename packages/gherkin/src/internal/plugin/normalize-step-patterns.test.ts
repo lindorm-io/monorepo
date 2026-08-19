@@ -10,6 +10,14 @@ describe("normalizeStepPatterns", () => {
     expect(normalizeStepPatterns(["/src/**/*.steps.ts"])).toEqual(["/src/**/*.steps.ts"]);
   });
 
+  test("should strip a leading ./ before root-prefixing", () => {
+    expect(normalizeStepPatterns(["./steps/*.steps.ts"])).toEqual(["/steps/*.steps.ts"]);
+  });
+
+  test("should strip only the leading ./ — an interior one stays", () => {
+    expect(normalizeStepPatterns(["./a/./b/*.steps.ts"])).toEqual(["/a/./b/*.steps.ts"]);
+  });
+
   test("should normalize each pattern independently", () => {
     expect(normalizeStepPatterns(["a/*.steps.ts", "/b/*.steps.ts"])).toEqual([
       "/a/*.steps.ts",

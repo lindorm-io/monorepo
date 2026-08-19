@@ -1,3 +1,4 @@
+import { LindormError } from "@lindorm/errors";
 import { beforeEach, describe, expect, test } from "vitest";
 import { captureAsync, errorShape } from "../../__fixtures__/test-helpers.js";
 import { Binding } from "../../decorators/Binding.js";
@@ -54,8 +55,11 @@ class RecordSteps {
   @Given("a foreign pending step")
   foreignPending(): void {
     // The dual-install shape: a PendingStepError from a SECOND installed copy
-    // of the package — same Symbol.for brand, foreign prototype chain.
-    const error = new Error("Step is not implemented");
+    // of the package — same Symbol.for brand, foreign prototype chain, and a
+    // DRIFTED urn (an older copy spelling the code differently). The wrapper
+    // must report the canonical urn, never the inner error's.
+    const error = new Error("Step is not implemented") as Error & { type: string };
+    error.type = "urn:lindorm:gherkin:error:pending";
     Object.defineProperty(error, PENDING_STEP_BRAND, { value: true });
     throw error;
   }
@@ -147,8 +151,21 @@ class TransformSteps {
     throw `not an error: ${raw}`;
   }
 
+  @ParameterType("foreignbad", /[a-z]+/)
+  static foreignbad(raw: string): string {
+    // A consumer transform throwing its OWN lindorm urn — the wrapper's type
+    // must stay conversion_failed, never the inner error's.
+    throw new LindormError(`no such algorithm ${raw}`, {
+      code: "unknown_algorithm",
+      type: "urn:lindorm:amphora:error:unknown_algorithm",
+    });
+  }
+
   @Given("non-error conversion of {rawthrow}")
   nonErrorConversion(_value: string): void {}
+
+  @Given("foreign conversion of {foreignbad}")
+  foreignConversion(_value: string): void {}
 
   @Given("pair {evens} and {asyncbad}")
   pair(_a: number, _b: string): void {
@@ -195,10 +212,11 @@ const scenario = (steps: Array<StepModel>): ScenarioNode => ({
   line: 3,
   name: "scenario under test",
   steps,
+  tags: [],
 });
 
 const run = (steps: Array<StepModel>): Promise<void> =>
-  runScenario({ registry, scenario: scenario(steps), uri });
+  runScenario({ featureName: "run feature", registry, scenario: scenario(steps), uri });
 
 describe("runScenario", () => {
   beforeEach(() => {
@@ -287,6 +305,18 @@ describe("runScenario", () => {
 
       expect(error.message).toContain("TransformSteps.evens (src/run.steps.ts)");
     });
+
+    test("should keep the conversion_failed urn when a transform throws a FOREIGN LindormError", async () => {
+      const error = await captureAsync(() => run([step("foreign conversion of xyz")]));
+
+      // Without the wrapper's explicit type, the inner error's own urn wins
+      // (LindormError inner-type precedence) and the taxonomy lies.
+      expect(error.code).toBe("conversion_failed");
+      expect(error.type).toBe("urn:lindorm:gherkin:error:conversion_failed");
+      // The original still travels through the lineage.
+      expect(error.errors).toContain("LindormError: no such algorithm xyz");
+      expect(error.message).toContain("no such algorithm xyz");
+    });
   });
 
   describe("failure modes", () => {
@@ -358,6 +388,9 @@ describe("runScenario", () => {
       const error = await captureAsync(() => run([step("a foreign pending step")]));
 
       expect(error.code).toBe("pending_step");
+      // The CANONICAL urn even though the foreign copy carries a drifted one —
+      // the explicit type option, never the inner error's precedence.
+      expect(error.type).toBe("urn:lindorm:gherkin:error:pending_step");
       expect(error.message).toContain("Pending step");
       expect(error.message).toContain(
         "RecordSteps.foreignPending is pending — implement its body.",

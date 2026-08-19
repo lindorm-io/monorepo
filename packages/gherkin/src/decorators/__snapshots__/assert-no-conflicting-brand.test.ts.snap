@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`conflicting decorators > should refuse @Binding on a @Context-branded class 1`] = `
+{
+  "code": "conflicting_decorators",
+  "data": {
+    "className": "Both",
+    "conflicting": "Context",
+    "decorator": "Binding",
+  },
+  "details": "A class carries ONE gherkin role — @AbstractSteps marks a shared base, @Binding hosts steps and hooks, @Context is a state token. Split the class, or remove one of the decorators.",
+  "message": "@Binding class Both is already decorated @Context",
+  "title": "Conflicting Decorators",
+  "type": "urn:lindorm:gherkin:error:conflicting_decorators",
+}
+`;

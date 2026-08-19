@@ -82,8 +82,13 @@ describe("emitFeatureModule", () => {
         {
           kind: "scenario",
           column: 3,
+          examplesRow: [
+            ["__proto__", 'evil `${payload}`"'],
+            ['col "quoted"', "va\\lue"],
+          ],
           line: 3,
           name: 'hostile `name` with ${payload}, "; quotes, back\\slash,\nnewline, \u2028 separator and lone \uD800 surrogate',
+          ruleName: 'rule `${rule}` "; break',
           steps: [
             {
               column: 5,
@@ -93,12 +98,14 @@ describe("emitFeatureModule", () => {
               type: "Action",
             },
           ],
+          tags: ['@hostile`${tag}`"'],
         },
       ],
       expectedTests: 1,
       kind: "feature",
       line: 1,
       name: 'Feature ${}; import { evil } from "`x`";',
+      tags: ['@hostile`${tag}`"'],
       uri: 'src/__fixtures__/hostile".feature',
     };
 

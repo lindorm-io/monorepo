@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AbstractSteps > should throw abstract_base_declares_behaviour for a staged step, naming the member 1`] = `
+{
+  "code": "abstract_base_declares_behaviour",
+  "data": {
+    "className": "Bad",
+    "memberKind": "step",
+    "memberName": "sharedStep",
+  },
+  "details": "An @AbstractSteps base may carry @Inject fields and plain helpers only. Steps, hooks, parameter types and priorities belong on the @Binding class — an inherited hook would run once per extending class, and an inherited step either vanishes or registers once per leaf.",
+  "message": "@AbstractSteps class Bad declares step sharedStep",
+  "title": "Abstract Base Declares Behaviour",
+  "type": "urn:lindorm:gherkin:error:abstract_base_declares_behaviour",
+}
+`;
+
+exports[`AbstractSteps > should throw duplicate_abstract_steps when applied twice 1`] = `
+{
+  "code": "duplicate_abstract_steps",
+  "data": {
+    "className": "Doubled",
+  },
+  "details": "The class is already marked as a shared base; a second @AbstractSteps adds nothing. Remove the extra decorator.",
+  "message": "@AbstractSteps is applied twice to class Doubled",
+  "title": "Duplicate Abstract Steps",
+  "type": "urn:lindorm:gherkin:error:duplicate_abstract_steps",
+}
+`;

@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`BeforeFeature > should throw scope_violation for an instance method at decoration time 1`] = `
+{
+  "code": "scope_violation",
+  "data": {
+    "hook": "BeforeFeature",
+    "method": "bad",
+  },
+  "details": "The hook's scope is wider than a scenario, so it cannot run against a per-scenario instance. Add the static modifier.",
+  "message": "@BeforeFeature requires a static method",
+  "title": "Scope Violation",
+  "type": "urn:lindorm:gherkin:error:scope_violation",
+}
+`;

@@ -46,6 +46,7 @@
     "@cucumber/cucumber-expressions": "^20.1.0",
     "@cucumber/gherkin": "^42.0.1",
     "@cucumber/messages": "^34.2.1",
+    "@cucumber/tag-expressions": "^11.0.1",
     "@lindorm/errors": "^0.6.0",
     "@lindorm/is": "^0.3.0",
     "@lindorm/types": "^0.10.0",

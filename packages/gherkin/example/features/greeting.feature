@@ -6,6 +6,7 @@ Feature: Greeting
   Example: greet a name
     When I greet "World"
     Then the result is "Hello, World!"
+    And the book has recorded 3 steps
 
   Example: greet shouting
     When I greet "world" shouting

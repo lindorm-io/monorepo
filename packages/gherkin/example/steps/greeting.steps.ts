@@ -1,13 +1,43 @@
 import { expect } from "vitest";
 // In a consuming package: import { … } from "@lindorm/gherkin";
-import { Binding, Given, ParameterType, Then, When } from "../../src/index.js";
+import type { StepInfo, StepResult } from "../../src/index.js";
+import {
+  AfterStep,
+  Binding,
+  Context,
+  Given,
+  Inject,
+  ParameterType,
+  Then,
+  When,
+} from "../../src/index.js";
 
 type Volume = (value: string) => string;
 
+// One instance per scenario, shared by every class that injects it, disposed
+// after the scenario.
+@Context()
+export class GreetingBook {
+  entries: Array<string> = [];
+}
+
 @Binding()
 export class GreetingSteps {
+  @Inject(GreetingBook)
+  private readonly book!: GreetingBook;
+
   private greeting!: string;
   private result!: string;
+
+  @AfterStep()
+  record(step: StepInfo, result: StepResult): void {
+    this.book.entries.push(`${step.text}: ${result.status}`);
+  }
+
+  @Then("the book has recorded {int} steps")
+  theBookHasRecorded(count: number): void {
+    expect(this.book.entries).toHaveLength(count);
+  }
 
   @Given("the greeting {string}")
   theGreeting(greeting: string): void {

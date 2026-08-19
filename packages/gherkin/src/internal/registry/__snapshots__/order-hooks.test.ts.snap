@@ -1,0 +1,95 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`orderHooks > should group by kind, every kind ASCENDING — After* reversal belongs to the runner 1`] = `
+{
+  "AfterFeature": [
+    {
+      "className": "Hooks",
+      "injects": [],
+      "kind": "AfterFeature",
+      "matches": [Function],
+      "methodName": "af1",
+      "modulePath": "src/a.steps.ts",
+      "priority": 1,
+      "static": true,
+      "target": [Function],
+    },
+    {
+      "className": "Hooks",
+      "injects": [],
+      "kind": "AfterFeature",
+      "matches": [Function],
+      "methodName": "af2",
+      "modulePath": "src/a.steps.ts",
+      "priority": 2,
+      "static": true,
+      "target": [Function],
+    },
+  ],
+  "AfterScenario": [
+    {
+      "className": "Hooks",
+      "injects": [],
+      "kind": "AfterScenario",
+      "matches": [Function],
+      "methodName": "as",
+      "modulePath": "src/a.steps.ts",
+      "priority": 1,
+      "static": false,
+      "target": [Function],
+    },
+  ],
+  "AfterStep": [
+    {
+      "className": "Hooks",
+      "injects": [],
+      "kind": "AfterStep",
+      "matches": [Function],
+      "methodName": "ast",
+      "modulePath": "src/a.steps.ts",
+      "priority": 1,
+      "static": false,
+      "target": [Function],
+    },
+  ],
+  "BeforeFeature": [
+    {
+      "className": "Hooks",
+      "injects": [],
+      "kind": "BeforeFeature",
+      "matches": [Function],
+      "methodName": "bf",
+      "modulePath": "src/a.steps.ts",
+      "priority": 2,
+      "static": true,
+      "target": [Function],
+    },
+  ],
+  "BeforeScenario": [
+    {
+      "className": "Hooks",
+      "injects": [],
+      "kind": "BeforeScenario",
+      "matches": [Function],
+      "methodName": "bs",
+      "modulePath": "src/a.steps.ts",
+      "priority": 1,
+      "static": false,
+      "target": [Function],
+    },
+  ],
+  "BeforeStep": [
+    {
+      "className": "Hooks",
+      "injects": [],
+      "kind": "BeforeStep",
+      "matches": [Function],
+      "methodName": "bst",
+      "modulePath": "src/a.steps.ts",
+      "priority": 1,
+      "static": false,
+      "target": [Function],
+    },
+  ],
+}
+`;

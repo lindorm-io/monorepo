@@ -1,0 +1,37 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatAdditionalFailures > should align multi-line messages under their number 1`] = `
+"2 additional failures followed the one above:
+
+  1) @AfterStep hook failed
+
+       AesHooks.capture
+
+     boom
+
+  2) Context class AesContext dispose() threw
+
+     closed"
+`;
+
+exports[`formatAdditionalFailures > should number one additional failure with singular phrasing 1`] = `
+"1 additional failure followed the one above:
+
+  1) dispose failed"
+`;
+
+exports[`formatAdditionalFailures > should render the urn type above a runner-owned failure and none for a consumer error 1`] = `
+"2 additional failures followed the one above:
+
+  1) @AfterStep hook failed
+
+       AesHooks.capture
+
+     boom
+
+  2) urn:lindorm:gherkin:error:disposal_failed
+
+     Context class AesContext dispose() threw
+
+     closed"
+`;

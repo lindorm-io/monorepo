@@ -2,10 +2,20 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { capture, errorShape, metadataOf } from "../__fixtures__/test-helpers.js";
 import { GherkinError } from "../errors/GherkinError.js";
 import { STEPS_METADATA } from "../internal/metadata/symbols.js";
-import { drainRegistrations } from "../internal/registry/registrations.js";
+import {
+  drainContextRegistrations,
+  drainRegistrations,
+} from "../internal/registry/registrations.js";
+import { AbstractSteps } from "./AbstractSteps.js";
+import { AfterScenario } from "./AfterScenario.js";
+import { BeforeFeature } from "./BeforeFeature.js";
+import { BeforeScenario } from "./BeforeScenario.js";
 import { Binding } from "./Binding.js";
+import { Context } from "./Context.js";
 import { Given } from "./Given.js";
+import { Inject } from "./Inject.js";
 import { ParameterType } from "./ParameterType.js";
+import { Priority } from "./Priority.js";
 
 describe("Binding", () => {
   beforeEach(() => {
@@ -29,6 +39,8 @@ describe("Binding", () => {
     expect(registrations).toEqual([
       {
         className: "AesSteps",
+        hooks: [],
+        injects: [],
         parameterTypes: [
           {
             methodName: "algorithm",
@@ -49,7 +61,14 @@ describe("Binding", () => {
     class EmptySteps {}
 
     expect(drainRegistrations()).toEqual([
-      { className: "EmptySteps", parameterTypes: [], steps: [], target: EmptySteps },
+      {
+        className: "EmptySteps",
+        hooks: [],
+        injects: [],
+        parameterTypes: [],
+        steps: [],
+        target: EmptySteps,
+      },
     ]);
   });
 
@@ -136,6 +155,251 @@ describe("Binding", () => {
     });
 
     expect(drainRegistrations()).toEqual([]);
+  });
+
+  test("should register own hooks with the default priority 10 000 and the staged tag expression", () => {
+    @Binding()
+    class Hooks {
+      @BeforeFeature("@docker")
+      static start(): void {}
+
+      @BeforeScenario()
+      seed(): void {}
+
+      @AfterScenario()
+      dump(): void {}
+    }
+
+    const [registration] = drainRegistrations();
+
+    expect(registration.className).toEqual("Hooks");
+    expect(registration.hooks).toEqual([
+      {
+        kind: "BeforeFeature",
+        methodName: "start",
+        priority: 10_000,
+        static: true,
+        tagExpression: "@docker",
+      },
+      { kind: "BeforeScenario", methodName: "seed", priority: 10_000, static: false },
+      { kind: "AfterScenario", methodName: "dump", priority: 10_000, static: false },
+    ]);
+  });
+
+  test("should compose @Priority by the compound key — a static and an instance hook of the same name keep separate priorities", () => {
+    @Binding()
+    class Hooks {
+      @BeforeFeature()
+      @Priority(1)
+      static setup(): void {}
+
+      @BeforeScenario()
+      @Priority(999)
+      setup(): void {}
+    }
+
+    const [registration] = drainRegistrations();
+
+    expect(registration.hooks).toEqual([
+      { kind: "BeforeFeature", methodName: "setup", priority: 1, static: true },
+      { kind: "BeforeScenario", methodName: "setup", priority: 999, static: false },
+    ]);
+  });
+
+  test("should throw priority_without_hook for a @Priority on a step", () => {
+    const error = capture(() => {
+      @Binding()
+      class Bad {
+        @Given("a step")
+        @Priority(5)
+        step(): void {}
+      }
+      return Bad;
+    });
+
+    expect(error).toEqual(expect.any(GherkinError));
+    expect(error.code).toEqual("priority_without_hook");
+    expect(error.data).toEqual({ className: "Bad", method: "step", static: false });
+    expect(errorShape(error)).toMatchSnapshot();
+  });
+
+  test("should throw priority_without_hook for a @Priority on an undecorated method", () => {
+    const error = capture(() => {
+      @Binding()
+      class Bad {
+        @Priority(5)
+        helper(): void {}
+      }
+      return Bad;
+    });
+
+    expect(error.code).toEqual("priority_without_hook");
+    expect(error.data).toEqual({ className: "Bad", method: "helper", static: false });
+  });
+
+  test("should collect @Inject fields across an @AbstractSteps chain, nearest-wins on shadowing", () => {
+    class BaseToken {}
+    class LeafToken {}
+    class SharedToken {}
+
+    @AbstractSteps()
+    abstract class Base {
+      @Inject(BaseToken)
+      shadowed!: BaseToken;
+
+      @Inject(SharedToken)
+      shared!: SharedToken;
+    }
+
+    @Binding()
+    class Steps extends Base {
+      // An initializer, not `!`: a decorated shadow field cannot be `declare`d
+      // and TS2612 refuses a bare redeclaration under useDefineForClassFields.
+      @Inject(LeafToken)
+      shadowed: LeafToken = undefined!;
+    }
+
+    const [registration] = drainRegistrations();
+
+    expect(registration.injects).toEqual([
+      { fieldName: "shadowed", token: LeafToken },
+      { fieldName: "shared", token: SharedToken },
+    ]);
+  });
+
+  test("should name the UNMARKED class in a deep chain — not its already-decorated ancestor", () => {
+    class GrandToken {}
+
+    @AbstractSteps()
+    abstract class Grand {
+      @Inject(GrandToken)
+      grand!: GrandToken;
+    }
+
+    class UnmarkedMid extends Grand {
+      @Inject(GrandToken)
+      mid!: GrandToken;
+    }
+
+    const error = capture(() => {
+      @Binding()
+      class Leaf extends UnmarkedMid {}
+      return Leaf;
+    });
+
+    expect(error).toEqual(expect.any(GherkinError));
+    expect(error.code).toEqual("abstract_base_undecorated");
+    expect(error.data).toEqual({ ancestor: "UnmarkedMid", className: "Leaf" });
+    expect(errorShape(error)).toMatchSnapshot();
+  });
+
+  test("should throw abstract_base_declares_behaviour for a single undecorated base declaring a hook", () => {
+    // The severity case: a dropped hook is invisible — it never runs and
+    // nothing goes red — where a dropped step degrades to undefined_step.
+    class UnmarkedBase {
+      @BeforeScenario()
+      seed(): void {}
+    }
+
+    const error = capture(() => {
+      @Binding()
+      class Leaf extends UnmarkedBase {}
+      return Leaf;
+    });
+
+    expect(error.code).toEqual("abstract_base_declares_behaviour");
+    expect(error.data).toEqual({
+      ancestor: "UnmarkedBase",
+      className: "Leaf",
+      memberKind: "hook",
+      memberName: "seed",
+    });
+    expect(errorShape(error)).toMatchSnapshot();
+  });
+
+  test("should throw abstract_base_declares_behaviour for an undecorated base declaring a step", () => {
+    class UnmarkedBase {
+      @Given("a base step")
+      baseStep(): void {}
+    }
+
+    const error = capture(() => {
+      @Binding()
+      class Leaf extends UnmarkedBase {}
+      return Leaf;
+    });
+
+    expect(error.code).toEqual("abstract_base_declares_behaviour");
+    expect(error.data).toEqual({
+      ancestor: "UnmarkedBase",
+      className: "Leaf",
+      memberKind: "step",
+      memberName: "baseStep",
+    });
+  });
+
+  test("should throw abstract_base_undecorated for an @Inject-only undecorated base", () => {
+    class Token {}
+
+    class UnmarkedBase {
+      @Inject(Token)
+      token!: Token;
+    }
+
+    const error = capture(() => {
+      @Binding()
+      class Leaf extends UnmarkedBase {}
+      return Leaf;
+    });
+
+    expect(error.code).toEqual("abstract_base_undecorated");
+    expect(error.data).toEqual({ ancestor: "UnmarkedBase", className: "Leaf" });
+  });
+
+  test("should throw abstract_base_undecorated for a @Context-decorated base — the chain links but hooks would drop", () => {
+    @Context()
+    class TokenContext {}
+    drainContextRegistrations();
+
+    const error = capture(() => {
+      @Binding()
+      class Leaf extends TokenContext {}
+      return Leaf;
+    });
+
+    expect(error.code).toEqual("abstract_base_undecorated");
+    expect(error.data).toEqual({ ancestor: "TokenContext", className: "Leaf" });
+  });
+
+  test("should stay silent for an all-@AbstractSteps chain", () => {
+    class Token {}
+
+    @AbstractSteps()
+    abstract class Grand {
+      @Inject(Token)
+      grand!: Token;
+    }
+
+    @AbstractSteps()
+    abstract class Mid extends Grand {
+      @Inject(Token)
+      mid!: Token;
+    }
+
+    @Binding()
+    class Leaf extends Mid {
+      @Given("a leaf step")
+      leafStep(): void {}
+    }
+
+    const [registration] = drainRegistrations();
+
+    expect(registration.target).toBe(Leaf);
+    expect(registration.steps.map((step) => step.expression)).toEqual(["a leaf step"]);
+    expect(registration.injects).toEqual([
+      { fieldName: "mid", token: Token },
+      { fieldName: "grand", token: Token },
+    ]);
   });
 
   test("a subclass should NOT mutate its parent's staged steps", () => {

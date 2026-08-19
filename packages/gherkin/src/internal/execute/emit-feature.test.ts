@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { createFakeSuiteApi } from "../../__fixtures__/suite-api.js";
 import { capture, captureAsync, errorShape } from "../../__fixtures__/test-helpers.js";
+import { AfterFeature } from "../../decorators/AfterFeature.js";
+import { BeforeFeature } from "../../decorators/BeforeFeature.js";
+import { Binding } from "../../decorators/Binding.js";
 import type {
   EmptyFeatureModel,
   FeatureModel,
@@ -8,6 +11,7 @@ import type {
   SuiteNode,
 } from "../model/types.js";
 import { buildRegistry } from "../registry/build-registry.js";
+import { drainRegistrations } from "../registry/registrations.js";
 import { emitFeature } from "./emit-feature.js";
 
 const registry = buildRegistry([]);
@@ -28,6 +32,7 @@ const scenarioNode = (name: string): SuiteNode => ({
       type: "Context",
     },
   ],
+  tags: [],
 });
 
 const featureModel = (
@@ -39,6 +44,7 @@ const featureModel = (
   kind: "feature",
   line: 1,
   name: "emit feature",
+  tags: [],
   uri,
 });
 
@@ -234,6 +240,77 @@ describe("emitFeature", () => {
         uri,
       });
       expect(errorShape(error)).toMatchSnapshot();
+    });
+  });
+
+  describe("feature hooks", () => {
+    test("should register matching feature hooks INSIDE the feature suite, before its children", async () => {
+      @Binding()
+      class FeatureLifecycle {
+        static ran: Array<string> = [];
+
+        @BeforeFeature()
+        static start(): void {
+          FeatureLifecycle.ran.push("start");
+        }
+
+        @AfterFeature("@docker")
+        static stopDocker(): void {
+          FeatureLifecycle.ran.push("stopDocker");
+        }
+
+        @AfterFeature("@never")
+        static neverRuns(): void {
+          FeatureLifecycle.ran.push("neverRuns");
+        }
+      }
+
+      const hooked = buildRegistry([
+        { modulePath: "src/hooked.steps.ts", registrations: drainRegistrations() },
+      ]);
+      const fake = createFakeSuiteApi();
+      const model = { ...featureModel([scenarioNode("only")], 1), tags: ["@docker"] };
+
+      emitFeature({ api: fake.api, model, registry: hooked });
+
+      // beforeAll and the matching afterAll registered inside "emit feature";
+      // the "@never" hook registered NOTHING.
+      expect(fake.lifecycles.map(({ kind, path }) => ({ kind, path }))).toEqual([
+        { kind: "beforeAll", path: ["emit feature"] },
+        { kind: "afterAll", path: ["emit feature"] },
+      ]);
+
+      await fake.lifecycles[0].fn();
+      await fake.lifecycles[1].fn();
+
+      expect(FeatureLifecycle.ran).toEqual(["start", "stopDocker"]);
+    });
+
+    test("should keep the structural invariant green — lifecycle registrations are not tests", () => {
+      @Binding()
+      class InvariantLifecycle {
+        @BeforeFeature()
+        static start(): void {}
+      }
+
+      const hooked = buildRegistry([
+        { modulePath: "src/invariant.steps.ts", registrations: drainRegistrations() },
+      ]);
+      const fake = createFakeSuiteApi();
+
+      emitFeature({
+        api: fake.api,
+        model: featureModel([scenarioNode("only")], 1),
+        registry: hooked,
+      });
+
+      // The trailing skipped suite's factory IS the invariant check — a
+      // counted beforeAll would make it throw here.
+      expect(fake.suites.at(-1)).toEqual({
+        mode: "skip",
+        name: "gherkin structural invariant",
+        path: [],
+      });
     });
   });
 

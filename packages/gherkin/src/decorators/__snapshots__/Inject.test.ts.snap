@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Inject > should throw duplicate_inject when @Inject is applied twice to one field 1`] = `
+{
+  "code": "duplicate_inject",
+  "data": {
+    "field": "twice",
+  },
+  "details": "A field resolves one token; with two staged, resolution would silently pick one. Remove the extra decorator.",
+  "message": "@Inject is applied twice to field twice",
+  "title": "Duplicate Inject",
+  "type": "urn:lindorm:gherkin:error:duplicate_inject",
+}
+`;
+
+exports[`Inject > should throw scope_violation for a static field at decoration time 1`] = `
+{
+  "code": "scope_violation",
+  "data": {
+    "field": "bad",
+  },
+  "details": "Injection resolves from a per-scenario container; a static field outlives every scenario. Remove the static modifier.",
+  "message": "@Inject requires an instance field",
+  "title": "Scope Violation",
+  "type": "urn:lindorm:gherkin:error:scope_violation",
+}
+`;

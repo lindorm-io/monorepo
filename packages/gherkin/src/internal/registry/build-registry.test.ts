@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { capture, errorShape } from "../../__fixtures__/test-helpers.js";
+import { BeforeFeature } from "../../decorators/BeforeFeature.js";
+import { BeforeScenario } from "../../decorators/BeforeScenario.js";
 import { Binding } from "../../decorators/Binding.js";
 import { Given } from "../../decorators/Given.js";
 import { ParameterType } from "../../decorators/ParameterType.js";
+import { Priority } from "../../decorators/Priority.js";
 import { When } from "../../decorators/When.js";
 import { GherkinError } from "../../errors/GherkinError.js";
 import { buildRegistry } from "./build-registry.js";
@@ -128,6 +131,7 @@ describe("buildRegistry", () => {
       className: "AesSteps",
       decorator: "Given",
       expression: 'an oct key with algorithm "{algorithm}" and encryption "{encryption}"',
+      injects: [],
       methodName: "anOctKey",
       modulePath: "src/aes.steps.ts",
       target: AesSteps,
@@ -239,6 +243,7 @@ describe("buildRegistry", () => {
         className: "AmbiguousGivenSteps",
         decorator: "Given",
         expression: "a key is loaded",
+        injects: [],
         methodName: "given",
         modulePath: "src/ambiguous.steps.ts",
         target: AmbiguousGivenSteps,
@@ -247,6 +252,7 @@ describe("buildRegistry", () => {
         className: "AmbiguousWhenSteps",
         decorator: "When",
         expression: "a key is loaded",
+        injects: [],
         methodName: "when",
         modulePath: "src/ambiguous.steps.ts",
         target: AmbiguousWhenSteps,
@@ -348,7 +354,7 @@ describe("buildRegistry", () => {
     expect(errorShape(error)).toMatchSnapshot();
   });
 
-  test("should rethrow a malformed expression error unwrapped", () => {
+  test("should wrap a malformed expression, anchored to the step definition", () => {
     @Binding()
     class BrokenSteps {
       @Given("an {")
@@ -363,8 +369,75 @@ describe("buildRegistry", () => {
 
     const error = capture(() => buildRegistry([module]));
 
-    expect(error).toEqual(expect.any(Error));
-    expect(error).not.toEqual(expect.any(GherkinError));
-    expect(error.message).toMatchSnapshot();
+    expect(error).toEqual(expect.any(GherkinError));
+    expect(error.code).toEqual("invalid_step_expression");
+    expect(error.type).toEqual("urn:lindorm:gherkin:error:invalid_step_expression");
+    expect(error.data).toEqual({
+      className: "BrokenSteps",
+      expression: "an {",
+      methodName: "broken",
+      modulePath: "src/broken.steps.ts",
+    });
+    // The cucumber parser's own diagnosis travels in the message AND as cause.
+    expect(error.message).toContain("BrokenSteps.broken");
+    expect(error.message).toContain("src/broken.steps.ts");
+    expect(error.message).toContain("The '{' does not have a matching '}'.");
+    expect(error.cause).toEqual(expect.any(Error));
+    expect(errorShape(error)).toMatchSnapshot();
+  });
+
+  test("should expose registered hooks in the total order, grouped by kind", () => {
+    @Binding()
+    class LateHooks {
+      @BeforeScenario()
+      seedLate(): void {}
+    }
+
+    @Binding()
+    class EarlyHooks {
+      @BeforeScenario()
+      @Priority(1)
+      seedEarly(): void {}
+
+      @BeforeFeature("@docker")
+      static start(): void {}
+    }
+
+    // LateHooks declared first — priority must beat declaration order.
+    const registry = buildRegistry([
+      { modulePath: "src/z.steps.ts", registrations: drainRegistrations() },
+    ]);
+
+    expect(registry.hooks.BeforeScenario.map((hook) => hook.methodName)).toEqual([
+      "seedEarly",
+      "seedLate",
+    ]);
+    expect(registry.hooks.BeforeFeature).toEqual([
+      {
+        className: "EarlyHooks",
+        injects: [],
+        kind: "BeforeFeature",
+        matches: expect.any(Function),
+        methodName: "start",
+        modulePath: "src/z.steps.ts",
+        priority: 10_000,
+        static: true,
+        tagExpression: "@docker",
+        target: EarlyHooks,
+      },
+    ]);
+    expect(registry.hooks.AfterFeature).toEqual([]);
+  });
+
+  test("should default contexts to empty and carry drained context registrations through", () => {
+    class TokenContext {}
+
+    expect(buildRegistry([]).contexts).toEqual([]);
+    expect(
+      buildRegistry(
+        [],
+        [{ className: "TokenContext", injects: [], target: TokenContext }],
+      ).contexts,
+    ).toEqual([{ className: "TokenContext", injects: [], target: TokenContext }]);
   });
 });

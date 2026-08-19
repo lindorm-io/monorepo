@@ -25,6 +25,16 @@ export type ScenarioNode = {
   /** The `Scenario:` keyword's column — for an outline row, the row's leading `|`. */
   column: number;
   /**
+   * ENTRIES, never a `Record`: the transform bakes the model into generated
+   * module source as an object literal, where a `"__proto__"` key sets the
+   * prototype instead of an own property — the column would silently vanish
+   * on evaluation, and a JSON.parse round trip cannot catch it. Only present
+   * on outline-row scenarios: `[header, value]` pairs in column order, ready
+   * for `Object.fromEntries` (ScenarioInfo.ts). Pinned:
+   * emit-feature-module.test.ts ("__proto__ Examples column").
+   */
+  examplesRow?: Array<[string, string]>;
+  /**
    * A plain scenario anchors to its `Scenario:` line. An outline row anchors
    * to its EXAMPLES ROW line — taken from `row.location.line` during the AST
    * walk (equivalent to resolving `pickle.astNodeIds[1]`, the row's TableRow
@@ -34,7 +44,17 @@ export type ScenarioNode = {
   line: number;
   /** The pickle name — outline rows carry `<placeholder>` substitution. */
   name: string;
+  /** The enclosing `Rule:` name — absent for a feature-level scenario. */
+  ruleName?: string;
   steps: Array<StepModel>;
+  /**
+   * The pickle's fully inherited tag set (feature → rule → scenario →
+   * examples — compile() concatenates all four levels), as authored WITH the
+   * `@` prefix: pickle tags and hook tag-expression evaluation both carry it,
+   * so the model stores one spelling and only the vitest-tag mapping strips
+   * it. Duplicates survive as compile() emits them.
+   */
+  tags: Array<string>;
 };
 
 export type EmptyExamplesNode = {
@@ -94,6 +114,14 @@ export type FeatureSuiteModel = {
   kind: "feature";
   line: number;
   name: string;
+  /**
+   * The UNION of the feature's pickle tag sets — the set @BeforeFeature /
+   * @AfterFeature tag expressions evaluate against. Derived from the PICKLES,
+   * never the AST feature tags alone, which would drop scenario- and
+   * examples-level tags (pinned: build-feature-model.test.ts). Deduplicated,
+   * first-appearance order across pickles in compile order.
+   */
+  tags: Array<string>;
   uri: string;
 };
 

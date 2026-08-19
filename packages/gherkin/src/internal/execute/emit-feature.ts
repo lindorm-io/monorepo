@@ -3,28 +3,39 @@ import { createParseError } from "../model/parse-error.js";
 import type { FeatureModel, FeatureSuiteModel, SuiteNode } from "../model/types.js";
 import type { GherkinRegistry } from "../registry/types.js";
 import { createCountingSuiteApi } from "./counting-api.js";
+import { registerFeatureHooks } from "./feature-hooks.js";
 import { formatEmptyExamples } from "./format/format-empty-examples.js";
 import { formatEmptyScenario } from "./format/format-empty-scenario.js";
 import { runScenario } from "./run-scenario.js";
 import type { SuiteApi } from "./types.js";
 
+/** What a scenario test body needs to know about its enclosing feature. */
+type FeatureRef = {
+  name: string;
+  uri: string;
+};
+
 const emitNode = (
   node: SuiteNode,
   api: SuiteApi,
   registry: GherkinRegistry,
-  uri: string,
+  feature: FeatureRef,
 ): void => {
+  const { uri } = feature;
+
   switch (node.kind) {
     case "rule":
       api.describe(node.name, () => {
         for (const child of node.children) {
-          emitNode(child, api, registry, uri);
+          emitNode(child, api, registry, feature);
         }
       });
       return;
 
     case "scenario":
-      api.test(node.name, () => runScenario({ registry, scenario: node, uri }));
+      api.test(node.name, () =>
+        runScenario({ featureName: feature.name, registry, scenario: node, uri }),
+      );
       return;
 
     case "empty-examples":
@@ -76,8 +87,13 @@ const emitFeatureSuite = (
   const counting = createCountingSuiteApi(api);
 
   counting.api.describe(model.name, () => {
+    // Before the children so the beforeAll/afterAll belong to THIS suite —
+    // they register through the counting wrapper untouched: the structural
+    // invariant below counts test() registrations only (counting-api.ts).
+    registerFeatureHooks({ api: counting.api, model, registry });
+
     for (const child of model.children) {
-      emitNode(child, counting.api, registry, model.uri);
+      emitNode(child, counting.api, registry, { name: model.name, uri: model.uri });
     }
   });
 

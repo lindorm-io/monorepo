@@ -2,11 +2,22 @@
 
 exports[`index > should export the public surface 1`] = `
 [
+  "AbstractSteps",
+  "AfterFeature",
+  "AfterScenario",
+  "AfterStep",
+  "BeforeFeature",
+  "BeforeScenario",
+  "BeforeStep",
   "Binding",
+  "Context",
   "GherkinError",
   "Given",
+  "Inject",
   "ParameterType",
   "PendingStepError",
+  "Priority",
+  "ScenarioInfo",
   "Then",
   "When",
 ]

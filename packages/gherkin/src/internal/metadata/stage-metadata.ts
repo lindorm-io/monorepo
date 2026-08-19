@@ -1,5 +1,21 @@
-import type { StagedParameterType, StagedStep } from "./staged.js";
-import { PARAMETER_TYPES_METADATA, STEPS_METADATA } from "./symbols.js";
+import type {
+  StagedHook,
+  StagedInject,
+  StagedParameterType,
+  StagedPriority,
+  StagedStep,
+} from "./staged.js";
+import {
+  HOOKS_METADATA,
+  INJECTS_METADATA,
+  PARAMETER_TYPES_METADATA,
+  PRIORITIES_METADATA,
+  STEPS_METADATA,
+} from "./symbols.js";
+
+/** Compound modifier key — see StagedPriority.key for why never bare methodName. */
+export const toModifierKey = (isStatic: boolean, methodName: string): string =>
+  `${isStatic}:${methodName}`;
 
 // TC39 gives a subclass a metadata object whose PROTOTYPE is the parent's, so
 // a naive `(metadata[key] ??= []).push(...)` resolves the parent's array
@@ -28,8 +44,36 @@ export const stageParameterType = (
   );
 };
 
+export const stageHook = (metadata: DecoratorMetadataObject, hook: StagedHook): void => {
+  ensureOwnArray<StagedHook>(metadata, HOOKS_METADATA).push(hook);
+};
+
+export const stageInject = (
+  metadata: DecoratorMetadataObject,
+  inject: StagedInject,
+): void => {
+  ensureOwnArray<StagedInject>(metadata, INJECTS_METADATA).push(inject);
+};
+
+export const stagePriority = (
+  metadata: DecoratorMetadataObject,
+  priority: StagedPriority,
+): void => {
+  ensureOwnArray<StagedPriority>(metadata, PRIORITIES_METADATA).push(priority);
+};
+
 export const readOwnSteps = (metadata: DecoratorMetadataObject): Array<StagedStep> =>
   readOwnArray<StagedStep>(metadata, STEPS_METADATA);
+
+export const readOwnHooks = (metadata: DecoratorMetadataObject): Array<StagedHook> =>
+  readOwnArray<StagedHook>(metadata, HOOKS_METADATA);
+
+export const readOwnInjects = (metadata: DecoratorMetadataObject): Array<StagedInject> =>
+  readOwnArray<StagedInject>(metadata, INJECTS_METADATA);
+
+export const readOwnPriorities = (
+  metadata: DecoratorMetadataObject,
+): Array<StagedPriority> => readOwnArray<StagedPriority>(metadata, PRIORITIES_METADATA);
 
 export const readOwnParameterTypes = (
   metadata: DecoratorMetadataObject,

@@ -1,20 +1,31 @@
-import { isError, isObjectLike, isUndefined } from "@lindorm/is";
-import type { Constructor } from "@lindorm/types";
+import { isError, isUndefined } from "@lindorm/is";
+import { ScenarioInfo } from "../../classes/ScenarioInfo.js";
 import { GherkinError } from "../../errors/GherkinError.js";
 import { isPendingStepError } from "../../errors/is-pending-step-error.js";
+import type { ScenarioResult } from "../../types/scenario-result.js";
 import type { StepFn } from "../../types/step-fn.js";
+import type { StepInfo } from "../../types/step-info.js";
+import type { StepResult } from "../../types/step-result.js";
+import { createScenarioContainer } from "../container/create-scenario-container.js";
 import type { ScenarioNode, StepModel } from "../model/types.js";
-import type { GherkinRegistry, ResolvedMatch } from "../registry/types.js";
-import { formatAmbiguousStep } from "./format/format-ambiguous-step.js";
-import { formatConstructorFailure } from "./format/format-constructor-failure.js";
+import type { GherkinRegistry, RegistryHook, ResolvedMatch } from "../registry/types.js";
+import { createBindingInstances } from "./binding-instances.js";
+import { composeFailures } from "./compose-failures.js";
+import { formatAnchor } from "./format/format-anchor.js";
 import { formatConversionFailed } from "./format/format-conversion-failed.js";
+import {
+  formatScenarioHookAnchor,
+  formatStepHookAnchor,
+} from "./format/format-hook-anchor.js";
+import { formatHookFailure } from "./format/format-hook-failure.js";
 import { formatPendingStep } from "./format/format-pending-step.js";
-import { formatStepArgumentUnsupported } from "./format/format-step-argument-unsupported.js";
+import { formatStepAnchor } from "./format/format-step-anchor.js";
 import { formatStepFailure } from "./format/format-step-failure.js";
-import { formatUndefinedStep } from "./format/format-undefined-step.js";
-import { generateSnippet } from "./format/generate-snippet.js";
+import { invokeHook } from "./invoke-hook.js";
+import { resolveDispatch } from "./resolve-dispatch.js";
 
 export type RunScenarioOptions = {
+  featureName: string;
   registry: GherkinRegistry;
   scenario: ScenarioNode;
   uri: string;
@@ -60,6 +71,10 @@ const convertArguments = async (
           title: "Step Argument Conversion Failed",
           details:
             "The step matched a definition, but a parameter type's transform threw or rejected while converting the matched text. Fix the value in the feature file, or the transform.",
+          // EXPLICIT: a transform is consumer code — one throwing its own
+          // LindormError would otherwise hijack this urn via the inner
+          // error's type precedence. Pinned: run-scenario.test.ts.
+          type: "urn:lindorm:gherkin:error:conversion_failed",
           data: {
             line: step.line,
             parameterTypeName: argument.parameterTypeName,
@@ -74,57 +89,6 @@ const convertArguments = async (
   }
 
   return converted;
-};
-
-/**
- * One instance per binding class per SCENARIO, constructed lazily on the
- * first step that matches into the class — never shared across scenarios
- * (the cache lives in the scenario body).
- */
-const resolveInstance = (
-  instances: Map<Constructor, object>,
-  match: ResolvedMatch,
-  { remaining, step, uri }: StepContext,
-): object => {
-  const existing = instances.get(match.definition.target);
-
-  // isObjectLike, not isObject: a binding instance's prototype is its class,
-  // which isObject rejects — and a missed cache hit here would silently hand
-  // every step a fresh instance. Pinned: run-scenario.test.ts ("should run
-  // steps sequentially against ONE instance per class").
-  if (isObjectLike(existing)) {
-    return existing;
-  }
-
-  try {
-    const instance = new match.definition.target() as object;
-    instances.set(match.definition.target, instance);
-    return instance;
-  } catch (error) {
-    // The original error is rethrown with its message extended in place —
-    // wrapping in a new error would drop the stack and any assertion diff.
-    if (isError(error)) {
-      error.message = formatConstructorFailure({
-        className: match.definition.className,
-        message: error.message,
-        remaining,
-        step,
-        uri,
-      });
-      throw error;
-    }
-
-    throw new Error(
-      formatConstructorFailure({
-        className: match.definition.className,
-        message: String(error),
-        remaining,
-        step,
-        uri,
-      }),
-      { cause: error },
-    );
-  }
 };
 
 const invokeStep = async (
@@ -155,6 +119,12 @@ const invokeStep = async (
           title: "Pending Step",
           details:
             "The step matched a definition whose body is not implemented; the scenario is red until it is.",
+          // EXPLICIT, not coincidence: our own PendingStepError's type happens
+          // to equal this urn, but a dual-install copy's could drift — the
+          // wrapper's urn must never depend on the inner error's. Pinned:
+          // run-scenario.test.ts ("branded pending error from a second
+          // installed package copy").
+          type: "urn:lindorm:gherkin:error:pending_step",
           data: {
             className: match.definition.className,
             line: step.line,
@@ -188,90 +158,268 @@ const invokeStep = async (
 };
 
 /**
- * The body of one scenario test. Steps run SEQUENTIALLY; the first failure
- * throws, so the remaining steps are never executed (skipped, not failed) and
- * the failure message carries their count.
+ * The body of one scenario test — the full lifecycle: eager hook-class
+ * construction → `@BeforeScenario` → steps (each bracketed by step hooks) →
+ * `@AfterScenario` → container disposal. The after-phases and disposal ALWAYS
+ * run; every failure is collected and the FIRST is thrown with the rest
+ * appended to its message, never replacing it (§4; compose-failures.ts).
  */
 export const runScenario = async ({
+  featureName,
   registry,
   scenario,
   uri,
 }: RunScenarioOptions): Promise<void> => {
-  const instances = new Map<Constructor, object>();
+  const scenarioInfo = new ScenarioInfo({
+    featureName,
+    featureUri: uri,
+    line: scenario.line,
+    scenarioName: scenario.name,
+    tags: scenario.tags,
+    ...(isUndefined(scenario.examplesRow) ? {} : { examplesRow: scenario.examplesRow }),
+    ...(isUndefined(scenario.ruleName) ? {} : { ruleName: scenario.ruleName }),
+  });
 
-  for (const [index, step] of scenario.steps.entries()) {
-    const context: StepContext = {
-      registry,
-      remaining: scenario.steps.length - index - 1,
-      step,
-      uri,
-    };
+  const container = createScenarioContainer({
+    contexts: registry.contexts,
+    scenarioInfo,
+  });
+  const instances = createBindingInstances(container);
 
-    // BEFORE matching: no registry content can make a DocString/DataTable
-    // step deliverable in this milestone, so the guard is unconditional.
-    if (step.hasArgument) {
-      throw new GherkinError(formatStepArgumentUnsupported(context), {
-        code: "step_argument_unsupported",
-        title: "Step Argument Not Supported",
-        details:
-          "The step carries a DocString or DataTable; delivering them lands in a later milestone. Running the step without its argument would silently drop data, so it fails instead.",
-        data: { line: step.line, text: step.text, uri },
+  /** In lifecycle order — index 0 is the PRIMARY failure the scenario throws. */
+  const failures: Array<Error> = [];
+
+  const matched = {
+    afterScenario: registry.hooks.AfterScenario.filter((hook) =>
+      hook.matches(scenario.tags),
+    ),
+    afterStep: registry.hooks.AfterStep.filter((hook) => hook.matches(scenario.tags)),
+    beforeScenario: registry.hooks.BeforeScenario.filter((hook) =>
+      hook.matches(scenario.tags),
+    ),
+    beforeStep: registry.hooks.BeforeStep.filter((hook) => hook.matches(scenario.tags)),
+  };
+
+  const scenarioAnchor = formatAnchor(scenario.name, uri, scenario.line, scenario.column);
+
+  const stepHookFormat =
+    (hook: RegistryHook, step: StepModel, remaining: number) =>
+    (message: string): string =>
+      formatHookFailure({
+        anchor: formatStepHookAnchor(hook.className, hook.methodName, step, uri),
+        kind: hook.kind,
+        message,
+        remaining,
       });
+
+  const executeStep = async (step: StepModel, remaining: number): Promise<void> => {
+    const context: StepContext = { registry, remaining, step, uri };
+
+    let match: ResolvedMatch;
+
+    try {
+      match = resolveDispatch({ registry, remaining, step, uri });
+    } catch (error) {
+      // NOT dispatched — undefined, ambiguous or argument-bearing: no
+      // definition brackets the step, so NO step hook fires (§4 ⭐; pinned:
+      // run-scenario.lifecycle.test.ts).
+      failures.push(error as Error);
+      return;
     }
 
-    const match = registry.match(step.text);
+    const stepInfo: StepInfo = { line: step.line, text: step.text, type: step.type };
+    const position = { anchor: formatStepAnchor(step, uri), remaining };
 
-    if (isUndefined(match)) {
-      throw new GherkinError(
-        formatUndefinedStep({
-          remaining: context.remaining,
-          snippet: generateSnippet(step, registry.parameterTypeRegistry),
-          step,
-          uri,
-        }),
-        {
-          code: "undefined_step",
-          title: "Undefined Step",
-          details:
-            "No step definition matched the step text. Paste the snippet into a @Binding class and implement it.",
-          data: { line: step.line, text: step.text, uri },
-        },
-      );
+    let beforeFailure: Error | undefined;
+
+    for (const hook of matched.beforeStep) {
+      try {
+        await invokeHook({
+          args: [stepInfo],
+          format: stepHookFormat(hook, step, remaining),
+          hook,
+          instance: instances.acquire(hook, position),
+        });
+      } catch (error) {
+        // The step body does NOT run, and the remaining before-step hooks are
+        // skipped — setup halts at the first failure (§4).
+        beforeFailure = error as Error;
+        failures.push(beforeFailure);
+        break;
+      }
     }
 
-    if (match.outcome === "ambiguous") {
-      throw new GherkinError(
-        formatAmbiguousStep({
-          candidates: match.candidates,
-          remaining: context.remaining,
-          step,
-          uri,
-        }),
-        {
-          code: "ambiguous_step",
-          title: "Ambiguous Step",
-          details:
-            "More than one step definition matched the step text. Matching is text-only — the decorator keyword does not disambiguate. Remove one, or make the expressions disjoint.",
-          data: {
-            candidates: match.candidates.map(
-              ({ className, expression, methodName, modulePath }) => ({
-                className,
-                expression,
-                methodName,
-                modulePath,
-              }),
-            ),
-            line: step.line,
-            text: step.text,
-            uri,
-          },
-        },
-      );
+    let result: StepResult;
+
+    if (isUndefined(beforeFailure)) {
+      const started = performance.now();
+
+      try {
+        const converted = await convertArguments(match, context);
+        const instance = instances.acquire(match.definition, position);
+
+        await invokeStep(instance, match, converted, context);
+        result = { durationMs: performance.now() - started, status: "passed" };
+      } catch (error) {
+        failures.push(error as Error);
+        result = {
+          durationMs: performance.now() - started,
+          error: error as Error,
+          status: "failed",
+        };
+      }
+    } else {
+      // cucumber-js runs after-step hooks even when a before-step hook failed:
+      // its runner gates only the STEP BODY on the before-hook result and
+      // invokes the after-step hooks unconditionally (cucumber-js
+      // src/runtime/test_case_runner.ts `runStep`, read 2026-08-19). The body
+      // never ran, so the result the hooks observe is the hook's own failure
+      // with zero duration — never "skipped", which is reserved for
+      // undispatched steps no hook observes (§4 ⭐). Pinned:
+      // run-scenario.lifecycle.test.ts.
+      result = { durationMs: 0, error: beforeFailure, status: "failed" };
     }
 
-    const converted = await convertArguments(match, context);
-    const instance = resolveInstance(instances, match, context);
+    // REVERSED at execution: RegistryHooks serves every kind ascending
+    // (registry/types.ts) — teardown must unwind setup. EVERY after-step hook
+    // runs, pass or fail, and every throw is collected (§4).
+    for (const hook of [...matched.afterStep].reverse()) {
+      try {
+        await invokeHook({
+          args: [stepInfo, result],
+          format: stepHookFormat(hook, step, remaining),
+          hook,
+          instance: instances.acquire(hook, position),
+        });
+      } catch (error) {
+        failures.push(error as Error);
+      }
+    }
+  };
 
-    await invokeStep(instance, match, converted, context);
+  // §3.5's accepted consequence: every binding class declaring a MATCHED
+  // scenario- or step-level hook is constructed for EVERY scenario, with the
+  // contexts it injects — tag expressions are the opt-out. Construction stops
+  // at the first failure; classes after it stay unconstructed, so their
+  // after-scenario hooks cannot run (the `get` miss below).
+  for (const hook of [
+    ...matched.beforeScenario,
+    ...matched.afterScenario,
+    ...matched.beforeStep,
+    ...matched.afterStep,
+  ]) {
+    try {
+      instances.acquire(hook, {
+        anchor: scenarioAnchor,
+        remaining: scenario.steps.length,
+      });
+    } catch (error) {
+      failures.push(error as Error);
+      break;
+    }
   }
+
+  if (failures.length === 0) {
+    for (const hook of matched.beforeScenario) {
+      try {
+        await invokeHook({
+          args: [],
+          format: (message) =>
+            formatHookFailure({
+              anchor: formatScenarioHookAnchor(
+                hook.className,
+                hook.methodName,
+                scenario,
+                uri,
+              ),
+              kind: hook.kind,
+              message,
+              remaining: scenario.steps.length,
+            }),
+          hook,
+          instance: instances.acquire(hook, {
+            anchor: scenarioAnchor,
+            remaining: scenario.steps.length,
+          }),
+        });
+      } catch (error) {
+        // Remaining before-scenario hooks are SKIPPED, and so are the steps —
+        // but the after-scenario hooks and disposal below still run (§4).
+        failures.push(error as Error);
+        break;
+      }
+    }
+  }
+
+  let stepsDuration = 0;
+
+  if (failures.length === 0) {
+    const started = performance.now();
+
+    for (const [index, step] of scenario.steps.entries()) {
+      await executeStep(step, scenario.steps.length - index - 1);
+
+      if (failures.length > 0) {
+        // Remaining steps are SKIPPED, not failed — and being undispatched,
+        // they run NO step hooks (§4 ⭐).
+        break;
+      }
+    }
+
+    stepsDuration = performance.now() - started;
+  }
+
+  // Handed to @AfterScenario as an ARGUMENT — per-invocation data, never an
+  // injected token (the injection/argument split, §3.3). durationMs measures
+  // the steps phase; zero when it never ran.
+  const scenarioResult: ScenarioResult =
+    failures.length > 0
+      ? { durationMs: stepsDuration, error: failures[0], status: "failed" }
+      : { durationMs: stepsDuration, status: "passed" };
+
+  // REVERSED at execution: RegistryHooks serves every kind ascending
+  // (registry/types.ts) — teardown must unwind setup. Runs even when a step
+  // or before-hook failed; every throw is collected (§4).
+  for (const hook of [...matched.afterScenario].reverse()) {
+    const instance = instances.get(hook.target);
+
+    if (isUndefined(instance)) {
+      // The hook's class never constructed — eager construction stopped at an
+      // earlier constructor failure, so there is no instance to run against.
+      continue;
+    }
+
+    try {
+      await invokeHook({
+        args: [scenarioResult],
+        format: (message) =>
+          formatHookFailure({
+            anchor: formatScenarioHookAnchor(
+              hook.className,
+              hook.methodName,
+              scenario,
+              uri,
+            ),
+            kind: hook.kind,
+            message,
+          }),
+        hook,
+        instance,
+      });
+    } catch (error) {
+      failures.push(error as Error);
+    }
+  }
+
+  // ALWAYS last, never skipped: a leaked context is cross-scenario
+  // contamination. Disposal errors arrive anchored to their context class
+  // (create-scenario-container.ts) and are APPENDED — a scenario where ONLY
+  // disposal fails is red with the disposal failure primary (§4).
+  failures.push(...(await container.dispose()));
+
+  if (failures.length === 0) {
+    return;
+  }
+
+  throw composeFailures(failures);
 };

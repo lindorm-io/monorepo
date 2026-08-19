@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileTagExpression > should throw invalid_tag_expression for a malformed expression, anchored to the declaration 1`] = `
+{
+  "code": "invalid_tag_expression",
+  "data": {
+    "className": "LifecycleHooks",
+    "methodName": "startDocker",
+    "modulePath": "src/lifecycle.steps.ts",
+    "tagExpression": "@a and (",
+  },
+  "details": "The hook's tag expression could not be parsed. The language is \`and\` / \`or\` / \`not\` with parentheses over @-prefixed tags — fix the expression on the hook decorator.",
+  "message": "Invalid tag expression "@a and (" on LifecycleHooks.startDocker",
+  "title": "Invalid Tag Expression",
+  "type": "urn:lindorm:gherkin:error:invalid_tag_expression",
+}
+`;

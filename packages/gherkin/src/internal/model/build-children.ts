@@ -1,7 +1,8 @@
 import type { Feature, Pickle, PickleStep, Scenario } from "@cucumber/messages";
-import { isObject } from "@lindorm/is";
+import { isObject, isUndefined } from "@lindorm/is";
 import { pickleKey, requirePickle } from "./pickle-index.js";
 import { requireColumn } from "./require-column.js";
+import { requireTableHeader } from "./require-table-header.js";
 import type { StepLocation } from "./step-location-index.js";
 import { requireStepLocation } from "./step-location-index.js";
 import { toStepType } from "./to-step-type.js";
@@ -37,22 +38,40 @@ const toStepModel = (step: PickleStep, indexes: ModelIndexes): StepModel => {
   };
 };
 
+type ScenarioNodeExtras = {
+  /** `[header, value]` pairs in column order — outline rows only. */
+  examplesRow?: Array<[string, string]>;
+  ruleName?: string;
+};
+
 const toScenarioNode = (
   pickle: Pickle,
   line: number,
   column: number,
   indexes: ModelIndexes,
+  extras: ScenarioNodeExtras,
 ): SuiteNode => ({
   kind: "scenario",
   column,
+  // Conditional spread, never `key: undefined`: the transform JSON.stringifies
+  // the model into module source, and an absent key must stay absent so
+  // identical input keeps emitting byte-identical source.
+  ...(isUndefined(extras.examplesRow) ? {} : { examplesRow: extras.examplesRow }),
   line,
   name: pickle.name,
+  ...(isUndefined(extras.ruleName) ? {} : { ruleName: extras.ruleName }),
   steps: pickle.steps.map((step) => toStepModel(step, indexes)),
+  // The PICKLE's tags, never the AST scenario's — compile() concatenates
+  // feature -> rule -> scenario -> examples tags onto each pickle
+  // (compile.js compileScenario/compileScenarioOutline), and only that full
+  // set is what hook tag expressions evaluate against.
+  tags: pickle.tags.map((tag) => tag.name),
 });
 
 const buildScenarioNodes = (
   scenario: Scenario,
   indexes: ModelIndexes,
+  ruleName?: string,
 ): Array<SuiteNode> => {
   if (scenario.steps.length === 0) {
     // A Background does NOT rescue it: compile() skips background merging for
@@ -81,6 +100,7 @@ const buildScenarioNodes = (
         scenario.location.line,
         requireColumn(scenario.location),
         indexes,
+        { ruleName },
       ),
     ];
   }
@@ -102,10 +122,23 @@ const buildScenarioNodes = (
       continue;
     }
 
+    const header = requireTableHeader(examples);
+
     for (const row of examples.tableBody) {
       const pickle = consumePickle(indexes, [scenario.id, row.id]);
+      // Header/value pairing by cell index — the same pairing compile() uses
+      // for `<placeholder>` interpolation, and the parser rejects a ragged
+      // table, so every row carries exactly one cell per header column.
+      const examplesRow: Array<[string, string]> = header.cells.map((cell, index) => [
+        cell.value,
+        row.cells[index].value,
+      ]);
+
       nodes.push(
-        toScenarioNode(pickle, row.location.line, requireColumn(row.location), indexes),
+        toScenarioNode(pickle, row.location.line, requireColumn(row.location), indexes, {
+          examplesRow,
+          ruleName,
+        }),
       );
     }
   }
@@ -130,7 +163,9 @@ export const buildChildren = (
 
       for (const ruleChild of child.rule.children) {
         if (isObject(ruleChild.scenario)) {
-          ruleChildren.push(...buildScenarioNodes(ruleChild.scenario, indexes));
+          ruleChildren.push(
+            ...buildScenarioNodes(ruleChild.scenario, indexes, child.rule.name),
+          );
         }
       }
 

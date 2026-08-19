@@ -17,6 +17,13 @@ export const createCountingSuiteApi = (api: SuiteApi): CountingSuiteApi => {
 
   return {
     api: {
+      // Lifecycle registrations pass through UNCOUNTED: the structural
+      // invariant compares test() registrations against the model's pickle
+      // count (emit-feature.ts), and a beforeAll/afterAll is not a test —
+      // counting one would make every feature with a @BeforeFeature hook
+      // violate the invariant.
+      afterAll: api.afterAll,
+      beforeAll: api.beforeAll,
       describe: api.describe,
       test: (name, body) => {
         count += 1;

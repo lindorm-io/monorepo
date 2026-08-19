@@ -63,12 +63,25 @@ export const buildFeatureModel = (source: string, uri: string): FeatureModel => 
     return { kind: "empty", name: document.feature.name, uri };
   }
 
+  // Union over ALL compiled pickles (the Map preserves compile order), never
+  // the AST feature tags alone — a tag authored at scenario or Examples level
+  // reaches the feature set only through its pickle. Superseded zero-step
+  // scenarios contribute too: their pickles exist and their tests run (RED).
+  const tags = [
+    ...new Set(
+      [...indexes.pickleIndex.values()].flatMap((pickle) =>
+        pickle.tags.map((tag) => tag.name),
+      ),
+    ),
+  ];
+
   return {
     children,
     expectedTests: countExpectedTests(children),
     kind: "feature",
     line: document.feature.location.line,
     name: document.feature.name,
+    tags,
     uri,
   };
 };

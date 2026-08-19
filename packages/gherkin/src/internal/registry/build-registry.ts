@@ -10,6 +10,8 @@ import { UndefinedParameterTypeError } from "@cucumber/cucumber-expressions/dist
 import { GherkinError } from "../../errors/GherkinError.js";
 import type { CompiledStep } from "./match-step.js";
 import { matchStep } from "./match-step.js";
+import { orderHooks } from "./order-hooks.js";
+import type { ContextRegistration } from "./registrations.js";
 import type { GherkinRegistry, ParameterTypeDeclaration, StepModule } from "./types.js";
 
 /**
@@ -19,7 +21,10 @@ import type { GherkinRegistry, ParameterTypeDeclaration, StepModule } from "./ty
  * import order, so interleaving the two would make `{name}` resolution depend
  * on `import.meta.glob` key order.
  */
-export const buildRegistry = (modules: Array<StepModule>): GherkinRegistry => {
+export const buildRegistry = (
+  modules: Array<StepModule>,
+  contexts: Array<ContextRegistration> = [],
+): GherkinRegistry => {
   const parameterTypeRegistry = new ParameterTypeRegistry();
   const parameterTypeDeclarations = new Map<string, ParameterTypeDeclaration>();
 
@@ -78,7 +83,7 @@ export const buildRegistry = (modules: Array<StepModule>): GherkinRegistry => {
   const compiled: Array<CompiledStep> = [];
 
   for (const { modulePath, registrations } of modules) {
-    for (const { className, steps, target } of registrations) {
+    for (const { className, injects, steps, target } of registrations) {
       for (const staged of steps) {
         try {
           compiled.push({
@@ -86,6 +91,7 @@ export const buildRegistry = (modules: Array<StepModule>): GherkinRegistry => {
               className,
               decorator: staged.decorator,
               expression: staged.expression,
+              injects,
               methodName: staged.methodName,
               modulePath,
               target,
@@ -112,13 +118,44 @@ export const buildRegistry = (modules: Array<StepModule>): GherkinRegistry => {
               },
             );
           }
-          throw error;
+
+          // Any other constructor throw is a malformed expression — anchored
+          // like every registry error, never rethrown raw: the cucumber
+          // message alone names no class, method or module, so the author
+          // could not find the offending decorator. Always an Error: the
+          // thrower is cucumber's own parser (CucumberExpressionError et al).
+          const cause = error as Error;
+          const failure = new GherkinError(
+            [
+              `Invalid step expression "${staged.expression}"`,
+              `  ${className}.${staged.methodName} (${modulePath})`,
+              cause.message,
+            ].join("\n\n"),
+            {
+              code: "invalid_step_expression",
+              title: "Invalid Step Expression",
+              details:
+                "The step expression is not a valid Cucumber Expression — construction failed before any matching could happen. Fix the expression on the named method; the parser's own diagnosis follows the anchor.",
+              data: {
+                className,
+                expression: staged.expression,
+                methodName: staged.methodName,
+                modulePath,
+              },
+              error: cause,
+            },
+          );
+
+          failure.cause = cause;
+          throw failure;
         }
       }
     }
   }
 
   return {
+    contexts,
+    hooks: orderHooks(modules),
     match: (text: string) => matchStep(compiled, text),
     parameterTypeDeclarations,
     parameterTypeRegistry,

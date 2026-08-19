@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createBindingInstances > should anchor a throwing constructor to the class with the given position 1`] = `
+"Binding class ThrowingSteps constructor threw
+
+  under test
+  at src/features/binding.feature:3:3
+
+no store configured
+
+The remaining 2 steps in this scenario were skipped."
+`;

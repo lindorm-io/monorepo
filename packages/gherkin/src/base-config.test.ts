@@ -27,7 +27,9 @@ type CreateVitestConfig = (settings?: {
   decorators?: boolean;
   setupFiles?: Array<string>;
   serial?: boolean;
-  gherkin?: { features?: Array<string>; steps?: Array<string> };
+  // Wider than GherkinSettings on purpose: the unknown-key rejection test
+  // below passes a key the type forbids, as a JS consumer would.
+  gherkin?: { features?: Array<string>; steps?: Array<string>; tags?: string };
 }) => AnyConfig | Promise<AnyConfig>;
 
 const create = createVitestConfig as CreateVitestConfig;
@@ -147,6 +149,27 @@ describe("createVitestConfig (vitest.config.base.mjs)", () => {
       expect(second.test.include).toEqual(first.test.include);
       expect(second.test.exclude).toEqual(first.test.exclude);
       expect((create({}) as AnyConfig).test.include).toEqual(["src/**/*.test.ts"]);
+    });
+
+    test("should reject an unknown gherkin key — the spread forwards it to the plugin, which throws", async () => {
+      // `{ ...gherkin, features }` in the base config forwards every consumer
+      // key; the plugin's resolveSettings rejects the unknown ones, so a JS
+      // consumer passing `tags` fails at config time instead of getting a
+      // silent no-op.
+      await expect(
+        create({ decorators: true, gherkin: { tags: "@wip" } }),
+      ).rejects.toThrow(
+        'Unknown gherkin setting "tags" — tag-based scenario selection is not yet shipped',
+      );
+    });
+
+    test("should accept a fully-populated known-key gherkin config — the base config adds no unknown keys of its own", async () => {
+      const config = (await create({
+        decorators: true,
+        gherkin: { features: ["features/**/*.feature"], steps: ["steps/**/*.steps.ts"] },
+      })) as AnyConfig;
+
+      expect(config.plugins.map((p) => p.name)).toEqual(["lindorm-gherkin", "swc"]);
     });
 
     test("should derive suffixed includes from a custom features list", async () => {

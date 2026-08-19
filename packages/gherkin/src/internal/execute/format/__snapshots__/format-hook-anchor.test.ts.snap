@@ -1,0 +1,18 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatFeatureHookAnchor > should name the hook and the feature file without a line 1`] = `
+"  AesHooks.startDocker
+  at src/features/aes.feature"
+`;
+
+exports[`formatScenarioHookAnchor > should anchor the hook to the scenario's own line and column 1`] = `
+"  AesHooks.seed
+  at src/features/aes.feature:4:3"
+`;
+
+exports[`formatStepHookAnchor > should name the hook above the step it bracketed 1`] = `
+"  AesHooks.capture
+
+  Given an oct key
+  at src/features/aes.feature:6:5"
+`;

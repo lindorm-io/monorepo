@@ -22,7 +22,7 @@ config.plugins.unshift(
       "meta-fixtures/**/*.feature",
       "example/**/*.feature",
     ],
-    steps: ["src/__fixtures__/gherkin.steps.ts"],
+    steps: ["src/__fixtures__/*.steps.ts"],
   }),
 );
 

@@ -12,8 +12,15 @@ export type FakeSuite = {
   path: Array<string>;
 };
 
+export type FakeLifecycle = {
+  fn: () => void | Promise<void>;
+  kind: "afterAll" | "beforeAll";
+  path: Array<string>;
+};
+
 export type FakeSuiteApi = {
   api: SuiteApi;
+  lifecycles: Array<FakeLifecycle>;
   suites: Array<FakeSuite>;
   tests: Array<FakeTest>;
 };
@@ -26,6 +33,7 @@ export type FakeSuiteApi = {
  * cannot host a deliberately red test in-process.
  */
 export const createFakeSuiteApi = (): FakeSuiteApi => {
+  const lifecycles: Array<FakeLifecycle> = [];
   const suites: Array<FakeSuite> = [];
   const tests: Array<FakeTest> = [];
   const stack: Array<string> = [];
@@ -44,11 +52,18 @@ export const createFakeSuiteApi = (): FakeSuiteApi => {
 
   return {
     api: {
+      afterAll: (fn) => {
+        lifecycles.push({ fn, kind: "afterAll", path: [...stack] });
+      },
+      beforeAll: (fn) => {
+        lifecycles.push({ fn, kind: "beforeAll", path: [...stack] });
+      },
       describe,
       test: (name, body) => {
         tests.push({ body, name, path: [...stack] });
       },
     },
+    lifecycles,
     suites,
     tests,
   };

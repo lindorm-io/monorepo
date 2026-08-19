@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`registerFeatureHooks > should run EVERY after-feature hook despite a throw and compose the failures primary-first 1`] = `
+"@AfterFeature hook failed
+
+  LeakyTeardown.alsoFailing
+  at src/features/hooks.feature
+
+volume still mounted
+
+1 additional failure followed the one above:
+
+  1) @AfterFeature hook failed
+
+       LeakyTeardown.failing
+       at src/features/hooks.feature
+
+     port still bound"
+`;
+
+exports[`registerFeatureHooks > should stop the remaining before-feature hooks at the first throw, anchored to class.method and uri 1`] = `
+"@BeforeFeature hook failed
+
+  BrokenHooks.boom
+  at src/features/hooks.feature
+
+no docker daemon"
+`;

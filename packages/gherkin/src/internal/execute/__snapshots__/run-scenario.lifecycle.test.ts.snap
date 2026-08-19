@@ -1,0 +1,99 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`runScenario lifecycle > §4: @AfterScenario throws > should fail the scenario and still dispose 1`] = `
+"@AfterScenario hook failed
+
+  ThrowingHooks.asThrow
+  at src/features/lifecycle.feature:3:3
+
+after-scenario boom"
+`;
+
+exports[`runScenario lifecycle > §4: @AfterStep throws > should fail the scenario even though the step PASSED, and skip the remaining steps 1`] = `
+"@AfterStep hook failed
+
+  ThrowingHooks.astThrow
+
+  Given step one
+  at src/features/lifecycle.feature:10:5
+
+after-step boom
+
+The remaining 1 step in this scenario was skipped."
+`;
+
+exports[`runScenario lifecycle > §4: @BeforeScenario throws > should skip the remaining before-hooks and the steps, still run @AfterScenario and dispose 1`] = `
+"@BeforeScenario hook failed
+
+  ThrowingHooks.bsThrow
+  at src/features/lifecycle.feature:3:3
+
+before-scenario boom
+
+The remaining 1 step in this scenario was skipped."
+`;
+
+exports[`runScenario lifecycle > §4: @BeforeStep throws > should NOT run the step body, skip remaining steps, and STILL run @AfterStep with a failed zero-duration result 1`] = `
+"@BeforeStep hook failed
+
+  ThrowingHooks.bstThrow
+
+  Given step one
+  at src/features/lifecycle.feature:10:5
+
+before-step boom
+
+The remaining 1 step in this scenario was skipped."
+`;
+
+exports[`runScenario lifecycle > §4: constructors throw > should fail the scenario anchored to the CLASS when an eagerly constructed hook class throws 1`] = `
+"Binding class EagerThrowSteps constructor threw
+
+  lifecycle scenario
+  at src/features/lifecycle.feature:3:3
+
+eager ctor boom
+
+The remaining 1 step in this scenario was skipped."
+`;
+
+exports[`runScenario lifecycle > §4: disposal > should append hook and disposal failures to the step failure — never replacing it 1`] = `
+"Step failed
+
+  Given a failing step using the throwing dispose context
+  at src/features/lifecycle.feature:10:5
+
+leaky step boom
+
+2 additional failures followed the one above:
+
+  1) @AfterStep hook failed
+
+       ThrowingHooks.astThrow
+
+       Given a failing step using the throwing dispose context
+       at src/features/lifecycle.feature:10:5
+
+     after-step boom
+
+  2) urn:lindorm:gherkin:error:disposal_failed
+
+     Context class ThrowingDisposeContext dispose() threw
+
+     dispose boom"
+`;
+
+exports[`runScenario lifecycle > §4: disposal > should fail a scenario whose ONLY failure is disposal, as disposal_failed anchored to the context 1`] = `
+{
+  "code": "disposal_failed",
+  "data": {
+    "className": "ThrowingDisposeContext",
+  },
+  "details": "A context's dispose() threw or rejected during the scenario's teardown. Disposal continues through the remaining contexts; the failure is reported against the scenario, appended after any earlier failure.",
+  "message": "Context class ThrowingDisposeContext dispose() threw
+
+dispose boom",
+  "title": "Context Disposal Failed",
+  "type": "urn:lindorm:gherkin:error:disposal_failed",
+}
+`;

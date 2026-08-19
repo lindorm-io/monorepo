@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`composeFailures > should append later failures to the PRIMARY's message, preserving its instance 1`] = `
+"step failed
+
+2 additional failures followed the one above:
+
+  1) @AfterScenario hook failed
+
+     report upload failed
+
+  2) Context class AesContext dispose() threw
+
+     closed"
+`;

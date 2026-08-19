@@ -599,6 +599,258 @@ describe("buildFeatureModel", () => {
     });
   });
 
+  describe("tags", () => {
+    const tagged = [
+      "@feat", // 1
+      "Feature: tagged", // 2
+      "",
+      "  @plain",
+      "  Scenario: plain", // 5
+      "    Given a step", // 6
+      "",
+      "  Scenario Outline: uses <x>", // 8
+      "    Given a <x>", // 9
+      "",
+      "    @fast",
+      "    Examples: fast", // 12
+      "      | x |", // 13
+      "      | 1 |", // 14
+      "",
+      "    Examples: slow", // 16
+      "      | x |", // 17
+      "      | 2 |", // 18
+      "",
+      "  Rule: grouped", // 20
+      "",
+      "    @ruled",
+      "    Scenario: inside", // 23
+      "      Given a step", // 24
+    ];
+
+    test("should carry each pickle's fully inherited tag set as authored, with the @ prefix", () => {
+      const model = asFeature(build(tagged));
+
+      const plain = asScenario(model.children[0]);
+      const [fast, slow] = [model.children[1], model.children[2]].map(asScenario);
+      const inside = asScenario(asRule(model.children[3]).children[0]);
+
+      expect(plain.tags).toEqual(["@feat", "@plain"]);
+      // The examples-level tag reaches only ITS block's row — the wrong
+      // source (AST scenario tags) would either drop @fast or leak it into
+      // the slow row.
+      expect(fast.tags).toEqual(["@feat", "@fast"]);
+      expect(slow.tags).toEqual(["@feat"]);
+      expect(inside.tags).toEqual(["@feat", "@ruled"]);
+    });
+
+    test("should union the feature tags from the pickles, including examples-level tags", () => {
+      const model = asFeature(build(tagged));
+
+      // @fast exists on no AST feature/rule/scenario node — only its pickle
+      // carries it, so an AST-derived union would lose it.
+      expect(model.tags).toEqual(["@feat", "@plain", "@fast", "@ruled"]);
+    });
+
+    test("should include a rule-level tag in the feature union via the rule's pickles", () => {
+      const model = asFeature(
+        build([
+          "Feature: rule tagged", // 1
+          "",
+          "  @grouped",
+          "  Rule: grouped", // 4
+          "    Scenario: inside", // 5
+          "      Given a step", // 6
+        ]),
+      );
+
+      expect(model.tags).toEqual(["@grouped"]);
+      expect(asScenario(asRule(model.children[0]).children[0]).tags).toEqual([
+        "@grouped",
+      ]);
+    });
+
+    test("should deduplicate the feature union but keep a pickle's duplicates as compiled", () => {
+      const model = asFeature(
+        build([
+          "@dup", // 1
+          "Feature: duplicated", // 2
+          "",
+          "  @dup",
+          "  Scenario: twice", // 5
+          "    Given a step", // 6
+        ]),
+      );
+
+      // compile() concatenates levels without deduplication — the node stays
+      // honest to the pickle; the union is a set.
+      expect(asScenario(model.children[0]).tags).toEqual(["@dup", "@dup"]);
+      expect(model.tags).toEqual(["@dup"]);
+    });
+
+    test("should include a superseded zero-step scenario's tags in the feature union", () => {
+      const model = asFeature(
+        build([
+          "Feature: gaps", // 1
+          "",
+          "  @orphan",
+          "  Scenario: nothing here", // 4
+          "",
+          "  @real",
+          "  Scenario: real", // 7
+          "    When acting", // 8
+        ]),
+      );
+
+      // The zero-step scenario still compiles to a pickle and still runs (as
+      // a RED empty-scenario test), so its tags belong in the union.
+      expect(model.tags).toEqual(["@orphan", "@real"]);
+    });
+
+    test("should carry empty tag arrays for an untagged feature", () => {
+      const model = asFeature(
+        build([
+          "Feature: bare", // 1
+          "  Scenario: plain", // 2
+          "    Given a step", // 3
+        ]),
+      );
+
+      expect(model.tags).toEqual([]);
+      expect(asScenario(model.children[0]).tags).toEqual([]);
+    });
+  });
+
+  describe("rule names", () => {
+    test("should name the enclosing Rule on its scenarios and leave top-level scenarios bare", () => {
+      const model = asFeature(
+        build([
+          "Feature: named", // 1
+          "",
+          "  Scenario: top", // 3
+          "    Given a step", // 4
+          "",
+          "  Rule: first rule", // 6
+          "    Scenario: inside first", // 7
+          "      Given a step", // 8
+          "",
+          "  Rule: second rule", // 10
+          "    Scenario Outline: inside second <x>", // 11
+          "      Given a <x>", // 12
+          "      Examples:", // 13
+          "        | x |", // 14
+          "        | 1 |", // 15
+        ]),
+      );
+
+      const top = asScenario(model.children[0]);
+      const insideFirst = asScenario(asRule(model.children[1]).children[0]);
+      const insideSecond = asScenario(asRule(model.children[2]).children[0]);
+
+      // Absent, not empty — a top-level scenario has no enclosing Rule even
+      // when Rules exist elsewhere in the feature.
+      expect(Object.hasOwn(top, "ruleName")).toBe(false);
+      expect(insideFirst.ruleName).toEqual("first rule");
+      expect(insideSecond.ruleName).toEqual("second rule");
+    });
+  });
+
+  describe("examples rows", () => {
+    test("should pair each row's values against the header in column order", () => {
+      const model = asFeature(
+        build([
+          "Feature: pairs", // 1
+          "",
+          "  Scenario Outline: <alg> at <price> for <tenant>", // 3
+          '    Given "<alg>" and "<price>" and "<tenant>"', // 4
+          "",
+          "    Examples:", // 6
+          "      | alg     | price | tenant |", // 7
+          "      | A128GCM | $100  | t-1    |", // 8
+          "      | A256GCM | $250  | t-2    |", // 9
+        ]),
+      );
+
+      const [first, second] = model.children.map(asScenario);
+
+      // Distinct values per column: an off-by-one pairing cannot pass.
+      expect(first.examplesRow).toEqual([
+        ["alg", "A128GCM"],
+        ["price", "$100"],
+        ["tenant", "t-1"],
+      ]);
+      expect(second.examplesRow).toEqual([
+        ["alg", "A256GCM"],
+        ["price", "$250"],
+        ["tenant", "t-2"],
+      ]);
+    });
+
+    test("should pair against the OWN Examples block's header when headers differ", () => {
+      const model = asFeature(
+        build([
+          "Feature: split headers", // 1
+          "",
+          "  Scenario Outline: <a><b>", // 3
+          "    Given <a> and <b>", // 4
+          "",
+          "    Examples: ab", // 6
+          "      | a | b |", // 7
+          "      | 1 | 2 |", // 8
+          "",
+          "    Examples: ba", // 10
+          "      | b | a |", // 11
+          "      | 3 | 4 |", // 12
+        ]),
+      );
+
+      const [ab, ba] = model.children.map(asScenario);
+
+      expect(ab.examplesRow).toEqual([
+        ["a", "1"],
+        ["b", "2"],
+      ]);
+      expect(ba.examplesRow).toEqual([
+        ["b", "3"],
+        ["a", "4"],
+      ]);
+    });
+
+    test("should leave examplesRow absent on a plain scenario", () => {
+      const model = asFeature(
+        build([
+          "Feature: plain", // 1
+          "  Scenario: no rows", // 2
+          "    Given a step", // 3
+        ]),
+      );
+
+      expect(Object.hasOwn(asScenario(model.children[0]), "examplesRow")).toBe(false);
+    });
+
+    test("should carry a __proto__ header column as a plain entry", () => {
+      const model = asFeature(
+        build([
+          "Feature: hostile column", // 1
+          "",
+          "  Scenario Outline: reads <safe>", // 3
+          "    Given a <safe>", // 4
+          "",
+          "    Examples:", // 6
+          "      | __proto__ | safe |", // 7
+          "      | evil      | ok   |", // 8
+        ]),
+      );
+
+      // Entries, not a Record — a Record would lose the key when the baked
+      // module literal is evaluated (pinned end to end:
+      // gherkin-plugin.test.ts "__proto__ Examples column").
+      expect(asScenario(model.children[0]).examplesRow).toEqual([
+        ["__proto__", "evil"],
+        ["safe", "ok"],
+      ]);
+    });
+  });
+
   describe("hostile content", () => {
     test("should carry backticks, interpolation markers and quotes verbatim and survive a JSON round trip", () => {
       const model = asFeature(

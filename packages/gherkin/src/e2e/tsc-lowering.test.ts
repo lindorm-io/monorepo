@@ -4,9 +4,15 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import type { Constructor } from "@lindorm/types";
 import ts from "typescript";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { AbstractSteps } from "../decorators/AbstractSteps.js";
 import { Given } from "../decorators/Given.js";
+import { Inject } from "../decorators/Inject.js";
+import type { GherkinError } from "../errors/GherkinError.js";
 import { readOwnSteps } from "../internal/metadata/stage-metadata.js";
-import type { BindingRegistration } from "../internal/registry/registrations.js";
+import type {
+  BindingRegistration,
+  ContextRegistration,
+} from "../internal/registry/registrations.js";
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const FIXTURE_DIRECTORY = join(PACKAGE_ROOT, "meta-fixtures", "tsc-lowering");
@@ -31,6 +37,18 @@ const ownMetadata = (target: object): DecoratorMetadataObject => {
 const expressionsOf = (target: object): Array<string> =>
   readOwnSteps(ownMetadata(target)).map((step) => step.expression);
 
+const captureGherkin = (fn: () => unknown): GherkinError => {
+  try {
+    fn();
+  } catch (error) {
+    // The compiled copy throws ITS module instance of GherkinError — a
+    // different class identity than this process's import, so assertions read
+    // properties rather than instanceof.
+    return error as GherkinError;
+  }
+  throw new Error("expected function to throw");
+};
+
 // The swc twin of the fixture's undecorated chain, lowered IN-PROCESS by the
 // package's own vitest/swc pipeline (decoratorVersion 2022-03) — the probe
 // half of the divergence assertions below.
@@ -44,13 +62,37 @@ class SwcMid extends SwcGrand {
   midStep(): void {}
 }
 
+// The DECORATED swc twin: an @AbstractSteps base is the decorated-base case
+// where BOTH lowerings link the chain — the fix the marker guard steers to.
+class SwcToken {}
+
+@AbstractSteps()
+abstract class SwcAbstractBase {
+  @Inject(SwcToken)
+  protected base!: SwcToken;
+}
+
+@AbstractSteps()
+abstract class SwcAbstractLeaf extends SwcAbstractBase {
+  @Inject(SwcToken)
+  protected leaf!: SwcToken;
+}
+
 type FixtureModule = {
+  AbstractGrand: Constructor;
+  AbstractMid: Constructor;
+  FixtureContext: Constructor;
   LeafSteps: Constructor;
+  OtherContext: Constructor;
   UndecoratedGrand: Constructor;
   UndecoratedMid: Constructor;
+  defineBehaviourOffender: () => void;
+  defineContextBehaviourOffender: () => void;
+  defineInjectOnlyOffender: () => void;
 };
 
 type RegistrationsModule = {
+  drainContextRegistrations: () => Array<ContextRegistration>;
   drainRegistrations: () => Array<BindingRegistration>;
 };
 
@@ -99,7 +141,7 @@ describe("tsc lowering", () => {
       pathToFileURL(join(outDirectory, "meta-fixtures", "tsc-lowering", "fixture.js"))
         .href
     );
-    // The SAME module instance the compiled fixture's @Binding registered
+    // The SAME module instance the compiled fixture's decorators registered
     // into — native ESM caches by absolute URL.
     registrations = await import(
       pathToFileURL(join(outDirectory, "src", "internal", "registry", "registrations.js"))
@@ -126,32 +168,96 @@ describe("tsc lowering", () => {
     expect(expressionsOf(compiled.LeafSteps)).toEqual(["a leaf step"]);
   });
 
-  test("should register own steps only, even though tsc links the metadata chain", () => {
+  test("should register own steps and hooks with chain-collected injects under tsc", () => {
     const drained = registrations.drainRegistrations();
 
     expect(drained).toHaveLength(1);
     expect(drained[0].className).toBe("LeafSteps");
     expect(drained[0].steps.map((step) => step.expression)).toEqual(["a leaf step"]);
+    // The compound `${static}:${name}` key under __esDecorate: one class, two
+    // hooks named setup, two distinct priorities.
+    expect(drained[0].hooks).toEqual([
+      { kind: "BeforeFeature", methodName: "setup", priority: 1, static: true },
+      { kind: "BeforeScenario", methodName: "setup", priority: 999, static: false },
+    ]);
+    // Leaf-first chain walk with nearest-wins shadowing: the leaf's shadowed
+    // token overrides AbstractGrand's.
+    expect(drained[0].injects).toEqual([
+      { fieldName: "shadowed", token: compiled.FixtureContext },
+      { fieldName: "midContext", token: compiled.OtherContext },
+      { fieldName: "grandContext", token: compiled.FixtureContext },
+    ]);
+  });
+
+  test("should register the fixture's @Context classes as tokens", () => {
+    expect(registrations.drainContextRegistrations()).toEqual([
+      { className: "FixtureContext", injects: [], target: compiled.FixtureContext },
+      { className: "OtherContext", injects: [], target: compiled.OtherContext },
+    ]);
   });
 
   test("should chain-link an undecorated base's metadata under tsc — the TC39 semantics", () => {
     expect(Object.getPrototypeOf(ownMetadata(compiled.UndecoratedMid))).toBe(
       ownMetadata(compiled.UndecoratedGrand),
     );
+  });
+
+  test("should chain-link an @AbstractSteps base under BOTH lowerings — the decorated-base case the guard steers to", () => {
+    // tsc half: the fixture's decorated chain.
     expect(Object.getPrototypeOf(ownMetadata(compiled.LeafSteps))).toBe(
-      ownMetadata(compiled.UndecoratedMid),
+      ownMetadata(compiled.AbstractMid),
+    );
+    expect(Object.getPrototypeOf(ownMetadata(compiled.AbstractMid))).toBe(
+      ownMetadata(compiled.AbstractGrand),
+    );
+    // swc half: the in-process twin.
+    expect(Object.getPrototypeOf(ownMetadata(SwcAbstractLeaf))).toBe(
+      ownMetadata(SwcAbstractBase),
     );
   });
 
-  test("should NOT chain-link under swc — pins the divergence so an swc fix is caught deliberately", () => {
+  test("should NOT chain-link an undecorated base under swc — pins the divergence so an swc fix is caught deliberately", () => {
     // Control first: the swc twin stages normally, so a null prototype below
     // is a linking gap, not a broken probe.
     expect(expressionsOf(SwcMid)).toEqual(["an swc mid step"]);
 
     // The divergence @AbstractSteps and abstract_base_undecorated exist for:
-    // if an swc upgrade makes this non-null, that guard's error branch goes
-    // unreachable and the 100% branch gate fails — flip DELIBERATELY.
+    // if an swc upgrade makes this non-null, the undecorated-base repair the
+    // guard demands stops being load-bearing — flip DELIBERATELY.
     expect(Object.getPrototypeOf(ownMetadata(SwcMid))).toBeNull();
     expect(Object.getPrototypeOf(ownMetadata(SwcMid))).not.toBe(ownMetadata(SwcGrand));
+  });
+
+  test("should fire the behaviour marker guard identically under __esDecorate", () => {
+    const error = captureGherkin(() => compiled.defineBehaviourOffender());
+
+    expect(error.code).toEqual("abstract_base_declares_behaviour");
+    expect(error.data).toEqual({
+      ancestor: "UndecoratedMid",
+      className: "Offending",
+      memberKind: "step",
+      memberName: "midStep",
+    });
+  });
+
+  test("should fire the undecorated marker guard identically under __esDecorate", () => {
+    const error = captureGherkin(() => compiled.defineInjectOnlyOffender());
+
+    expect(error.code).toEqual("abstract_base_undecorated");
+    expect(error.data).toEqual({
+      ancestor: "UnmarkedInjectBase",
+      className: "Offending",
+    });
+  });
+
+  test("should fire the @Context own-behaviour guard identically under __esDecorate", () => {
+    const error = captureGherkin(() => compiled.defineContextBehaviourOffender());
+
+    expect(error.code).toEqual("context_declares_behaviour");
+    expect(error.data).toEqual({
+      className: "Offending",
+      memberKind: "step",
+      memberName: "contextStep",
+    });
   });
 });

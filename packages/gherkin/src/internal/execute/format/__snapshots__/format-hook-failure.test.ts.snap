@@ -1,0 +1,21 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatHookFailure > should name the kind, carry the anchor and preserve the message verbatim 1`] = `
+"@BeforeScenario hook failed
+
+  AesHooks.seed
+  at src/features/aes.feature:4:3
+
+docker is not running
+
+The remaining 3 steps in this scenario were skipped."
+`;
+
+exports[`formatHookFailure > should omit the skipped line when remaining is absent — after-the-fact hooks skip nothing 1`] = `
+"@AfterScenario hook failed
+
+  AesHooks.report
+  at src/features/aes.feature:4:3
+
+report upload failed"
+`;

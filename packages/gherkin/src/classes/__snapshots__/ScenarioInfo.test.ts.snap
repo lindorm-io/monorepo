@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ScenarioInfo > should assign every field from the settings object 1`] = `
+ScenarioInfo {
+  "examplesRow": {
+    "encryption": "A256GCM",
+  },
+  "featureName": "AES round trip",
+  "featureUri": "src/features/aes.feature",
+  "line": 12,
+  "ruleName": "content survives a round trip",
+  "scenarioName": "every content encryption round-trips",
+  "tags": [
+    "@integration",
+  ],
+}
+`;

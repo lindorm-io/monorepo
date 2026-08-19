@@ -1,19 +1,38 @@
 import type { Constructor } from "@lindorm/types";
-import type { StagedParameterType, StagedStep } from "../metadata/staged.js";
+import type {
+  ComposedHook,
+  StagedInject,
+  StagedParameterType,
+  StagedStep,
+} from "../metadata/staged.js";
 
 export type BindingRegistration = {
   className: string;
+  hooks: Array<ComposedHook>;
+  injects: Array<StagedInject>;
   parameterTypes: Array<StagedParameterType>;
   steps: Array<StagedStep>;
+  target: Constructor;
+};
+
+export type ContextRegistration = {
+  className: string;
+  injects: Array<StagedInject>;
+  /** The class IS the injection token — `@Inject(Target)` resolves by identity. */
   target: Constructor;
 };
 
 // Module-global by design: registration is a decoration-time side effect and
 // module state is per-worker (vitest isolate:true makes it per-feature-file).
 const pending: Array<BindingRegistration> = [];
+const pendingContexts: Array<ContextRegistration> = [];
 
 export const addRegistration = (registration: BindingRegistration): void => {
   pending.push(registration);
+};
+
+export const addContextRegistration = (registration: ContextRegistration): void => {
+  pendingContexts.push(registration);
 };
 
 /**
@@ -24,3 +43,6 @@ export const addRegistration = (registration: BindingRegistration): void => {
  */
 export const drainRegistrations = (): Array<BindingRegistration> =>
   pending.splice(0, pending.length);
+
+export const drainContextRegistrations = (): Array<ContextRegistration> =>
+  pendingContexts.splice(0, pendingContexts.length);

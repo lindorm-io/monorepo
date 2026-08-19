@@ -1,14 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildRegistry > should rethrow a malformed expression error unwrapped 1`] = `
-"This Cucumber Expression has a problem at column 4:
-
-an {
-   ^
-The '{' does not have a matching '}'.
-If you did not intend to use a parameter you can use '\\{' to escape the a parameter"
-`;
-
 exports[`buildRegistry > should wrap a duplicate parameter type name, anchored to the second declaration 1`] = `
 {
   "code": "duplicate_parameter_type",
@@ -22,6 +13,31 @@ exports[`buildRegistry > should wrap a duplicate parameter type name, anchored t
   "message": "Duplicate parameter type {dup}",
   "title": "Duplicate Parameter Type",
   "type": "urn:lindorm:gherkin:error:duplicate_parameter_type",
+}
+`;
+
+exports[`buildRegistry > should wrap a malformed expression, anchored to the step definition 1`] = `
+{
+  "code": "invalid_step_expression",
+  "data": {
+    "className": "BrokenSteps",
+    "expression": "an {",
+    "methodName": "broken",
+    "modulePath": "src/broken.steps.ts",
+  },
+  "details": "The step expression is not a valid Cucumber Expression — construction failed before any matching could happen. Fix the expression on the named method; the parser's own diagnosis follows the anchor.",
+  "message": "Invalid step expression "an {"
+
+  BrokenSteps.broken (src/broken.steps.ts)
+
+This Cucumber Expression has a problem at column 4:
+
+an {
+   ^
+The '{' does not have a matching '}'.
+If you did not intend to use a parameter you can use '\\{' to escape the a parameter",
+  "title": "Invalid Step Expression",
+  "type": "urn:lindorm:gherkin:error:invalid_step_expression",
 }
 `;
 

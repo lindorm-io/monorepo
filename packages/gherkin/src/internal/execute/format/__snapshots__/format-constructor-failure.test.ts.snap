@@ -1,5 +1,16 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`formatConstructorFailure > should carry a scenario anchor for the eager hook-class path 1`] = `
+"Binding class LifecycleSteps constructor threw
+
+  hooks bracket the steps
+  at src/features/aes.feature:3:3
+
+no fixture store
+
+The remaining 3 steps in this scenario were skipped."
+`;
+
 exports[`formatConstructorFailure > should name the class and preserve the original message verbatim 1`] = `
 "Binding class AesEncryptionSteps constructor threw
 

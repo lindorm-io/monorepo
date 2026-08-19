@@ -13,13 +13,23 @@ export type SuiteDescribe = {
 export type SuiteTest = (name: string, body: () => void | Promise<void>) => void;
 
 /**
+ * beforeAll/afterAll registration — the mechanism `@BeforeFeature` /
+ * `@AfterFeature` compile to (feature-hooks.ts). The returned promise is
+ * awaited by vitest, which is what lets a throwing async feature hook fail
+ * the suite instead of leaking as an unhandled rejection.
+ */
+export type SuiteLifecycle = (fn: () => void | Promise<void>) => void;
+
+/**
  * The minimal suite surface the runtime registers into. Defaults to vitest's
- * real `describe`/`test` (suite-api.ts); unit tests inject synchronous fakes
- * so every failure branch can be asserted in-process — vitest cannot host a
- * deliberately red test, which is why the reporter-level proof lives in a
- * child-process meta-test instead.
+ * real `describe`/`test`/`beforeAll`/`afterAll` (suite-api.ts); unit tests
+ * inject synchronous fakes so every failure branch can be asserted
+ * in-process — vitest cannot host a deliberately red test, which is why the
+ * reporter-level proof lives in a child-process meta-test instead.
  */
 export type SuiteApi = {
+  afterAll: SuiteLifecycle;
+  beforeAll: SuiteLifecycle;
   describe: SuiteDescribe;
   test: SuiteTest;
 };

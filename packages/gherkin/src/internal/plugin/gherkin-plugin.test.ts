@@ -10,14 +10,30 @@ import { gherkinPlugin } from "./gherkin-plugin.js";
 
 const MODEL_PREFIX = "const model = ";
 
-const extractModel = (source: string): unknown => {
+const extractModelLiteral = (source: string): string => {
   const line = source.split("\n").find((entry) => entry.startsWith(MODEL_PREFIX));
 
   if (isString(line)) {
-    return JSON.parse(line.slice(MODEL_PREFIX.length, -1));
+    return line.slice(MODEL_PREFIX.length, -1);
   }
 
   throw new Error("emitted source carries no model line");
+};
+
+const extractModel = (source: string): unknown => JSON.parse(extractModelLiteral(source));
+
+/**
+ * Evaluates a literal the way the ENGINE evaluates the generated module — as
+ * module code via a data: import, never JSON.parse, which uses own-property
+ * semantics and so cannot reproduce the object-literal `__proto__` hazard.
+ */
+const evaluateAsModule = async (literal: string): Promise<unknown> => {
+  const module = (await import(
+    /* @vite-ignore */
+    `data:text/javascript,${encodeURIComponent(`export const value = ${literal};`)}`
+  )) as { value: unknown };
+
+  return module.value;
 };
 
 const source = [
@@ -137,6 +153,48 @@ describe("gherkinPlugin", () => {
       expect(extractModel(code)).toEqual(
         buildFeatureModel(hostileSource, "src/hostile.feature"),
       );
+    });
+
+    test("should keep a __proto__ Examples column through real evaluation of the transformed module", async () => {
+      const protoSource = [
+        "Feature: proto",
+        "",
+        "  Scenario Outline: reads <safe>",
+        "    Given a <safe>",
+        "",
+        "    Examples:",
+        "      | __proto__ | safe |",
+        "      | evil      | ok   |",
+      ].join("\n");
+
+      const plugin = gherkinPlugin();
+      plugin.configResolved({ root: "/repo/pkg" });
+
+      const result = plugin.transform(protoSource, "/repo/pkg/src/proto.feature");
+      const code = result?.code as string;
+
+      // rollup's real parser accepts the module...
+      expect(parseAst(code).type).toBe("Program");
+
+      // ...and evaluating the baked literal AS MODULE CODE keeps the column,
+      // because the model carries entries. The trailing Record control shows
+      // the shape this ruling forbids losing the key under the SAME
+      // evaluation — the reason ScenarioNode.examplesRow is an entries array.
+      const evaluated = (await evaluateAsModule(extractModelLiteral(code))) as {
+        children: Array<{ examplesRow?: Array<[string, string]> }>;
+      };
+      const entries = evaluated.children[0].examplesRow;
+
+      expect(entries).toEqual([
+        ["__proto__", "evil"],
+        ["safe", "ok"],
+      ]);
+
+      const record = (await evaluateAsModule(
+        JSON.stringify(Object.fromEntries(entries as Array<[string, string]>)),
+      )) as Record<string, string>;
+
+      expect(Object.hasOwn(record, "__proto__")).toBe(false);
     });
   });
 

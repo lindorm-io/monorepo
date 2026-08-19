@@ -1,4 +1,5 @@
 import { buildRegistry } from "../registry/build-registry.js";
+import { drainContextRegistrations } from "../registry/registrations.js";
 import { emitFeature } from "./emit-feature.js";
 import { loadStepModules } from "./load-step-modules.js";
 import { resolveSuiteApi } from "./suite-api.js";
@@ -14,7 +15,10 @@ import type { RunFeatureOptions } from "./types.js";
 export const runFeature = async (options: RunFeatureOptions): Promise<void> => {
   const api = resolveSuiteApi(options.api);
   const modules = await loadStepModules(options.stepModules);
-  const registry = buildRegistry(modules);
+  // Drained ONCE after every module has loaded — a context has no module-path
+  // identity (it is a token, not a step host), so per-module association
+  // would buy nothing.
+  const registry = buildRegistry(modules, drainContextRegistrations());
 
   emitFeature({ api, model: options.model, registry });
 };

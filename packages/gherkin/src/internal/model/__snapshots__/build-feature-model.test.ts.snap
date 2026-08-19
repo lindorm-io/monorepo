@@ -31,6 +31,7 @@ exports[`buildFeatureModel > backgrounds > should merge a feature-level Backgrou
           "type": "Outcome",
         },
       ],
+      "tags": [],
     },
     {
       "column": 3,
@@ -53,12 +54,14 @@ exports[`buildFeatureModel > backgrounds > should merge a feature-level Backgrou
           "type": "Action",
         },
       ],
+      "tags": [],
     },
   ],
   "expectedTests": 2,
   "kind": "feature",
   "line": 1,
   "name": "aes encryption",
+  "tags": [],
   "uri": "src/features/test.feature",
 }
 `;
@@ -73,6 +76,7 @@ exports[`buildFeatureModel > backgrounds > should stack a Rule-level Background 
           "kind": "scenario",
           "line": 11,
           "name": "bound aad",
+          "ruleName": "record mode",
           "steps": [
             {
               "column": 5,
@@ -96,6 +100,7 @@ exports[`buildFeatureModel > backgrounds > should stack a Rule-level Background 
               "type": "Action",
             },
           ],
+          "tags": [],
         },
       ],
       "kind": "rule",
@@ -107,6 +112,7 @@ exports[`buildFeatureModel > backgrounds > should stack a Rule-level Background 
   "kind": "feature",
   "line": 1,
   "name": "layered backgrounds",
+  "tags": [],
   "uri": "src/features/test.feature",
 }
 `;
@@ -142,12 +148,14 @@ exports[`buildFeatureModel > dialects > should parse a # language: header and re
           "type": "Outcome",
         },
       ],
+      "tags": [],
     },
   ],
   "expectedTests": 1,
   "kind": "feature",
   "line": 2,
   "name": "chiffrement",
+  "tags": [],
   "uri": "src/features/test.feature",
 }
 `;
@@ -182,12 +190,14 @@ exports[`buildFeatureModel > empty scenarios > should fail a zero-step scenario 
           "type": "Action",
         },
       ],
+      "tags": [],
     },
   ],
   "expectedTests": 2,
   "kind": "feature",
   "line": 1,
   "name": "gaps",
+  "tags": [],
   "uri": "src/features/test.feature",
 }
 `;
@@ -197,6 +207,16 @@ exports[`buildFeatureModel > outlines > should emit one scenario node per Exampl
   "children": [
     {
       "column": 7,
+      "examplesRow": [
+        [
+          "enc",
+          "A128GCM",
+        ],
+        [
+          "price",
+          "$100",
+        ],
+      ],
       "kind": "scenario",
       "line": 9,
       "name": "round-trips A128GCM at $100",
@@ -216,9 +236,20 @@ exports[`buildFeatureModel > outlines > should emit one scenario node per Exampl
           "type": "Outcome",
         },
       ],
+      "tags": [],
     },
     {
       "column": 7,
+      "examplesRow": [
+        [
+          "enc",
+          "A256GCM",
+        ],
+        [
+          "price",
+          "$250",
+        ],
+      ],
       "kind": "scenario",
       "line": 10,
       "name": "round-trips A256GCM at $250",
@@ -238,9 +269,20 @@ exports[`buildFeatureModel > outlines > should emit one scenario node per Exampl
           "type": "Outcome",
         },
       ],
+      "tags": [],
     },
     {
       "column": 7,
+      "examplesRow": [
+        [
+          "enc",
+          "A256CBC-HS512",
+        ],
+        [
+          "price",
+          "$9",
+        ],
+      ],
       "kind": "scenario",
       "line": 14,
       "name": "round-trips A256CBC-HS512 at $9",
@@ -260,12 +302,14 @@ exports[`buildFeatureModel > outlines > should emit one scenario node per Exampl
           "type": "Outcome",
         },
       ],
+      "tags": [],
     },
   ],
   "expectedTests": 3,
   "kind": "feature",
   "line": 1,
   "name": "outline",
+  "tags": [],
   "uri": "src/features/test.feature",
 }
 `;
@@ -281,6 +325,12 @@ exports[`buildFeatureModel > outlines > should fail an Examples block with a hea
     },
     {
       "column": 7,
+      "examplesRow": [
+        [
+          "x",
+          "value",
+        ],
+      ],
       "kind": "scenario",
       "line": 11,
       "name": "uses value",
@@ -293,12 +343,14 @@ exports[`buildFeatureModel > outlines > should fail an Examples block with a hea
           "type": "Context",
         },
       ],
+      "tags": [],
     },
   ],
   "expectedTests": 2,
   "kind": "feature",
   "line": 1,
   "name": "partial outline",
+  "tags": [],
   "uri": "src/features/test.feature",
 }
 `;

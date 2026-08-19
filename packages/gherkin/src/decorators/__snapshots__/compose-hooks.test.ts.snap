@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`composeHooks > should throw priority_without_hook for a priority no hook consumes 1`] = `
+{
+  "code": "priority_without_hook",
+  "data": {
+    "className": "Hooks",
+    "method": "step",
+    "static": false,
+  },
+  "details": "@Priority orders hooks and nothing else — steps run in pickle order and parameter types have no order, so a priority there would be silently inert. Remove it, or add the hook decorator it was meant for.",
+  "message": "@Priority on method step of class Hooks has no hook to modify",
+  "title": "Priority Without Hook",
+  "type": "urn:lindorm:gherkin:error:priority_without_hook",
+}
+`;
