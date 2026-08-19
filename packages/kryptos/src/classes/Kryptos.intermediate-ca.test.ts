@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { IKryptos } from "../interfaces/index.js";
 import { describeCertificate } from "../internal/utils/x509/describe-certificate.js";
-import { parseX509Certificate } from "../internal/utils/x509/parse-certificate.js";
 import { KryptosKit } from "./index.js";
 
 const NB = new Date("2026-01-01T00:00:00Z");
@@ -22,8 +21,7 @@ const rootCa = (pathLengthConstraint?: number): IKryptos =>
     },
   });
 
-const parsedLeaf = (key: IKryptos) =>
-  parseX509Certificate(Buffer.from(key.certificateChain[0], "base64"));
+const parsedLeaf = (key: IKryptos) => key.parseCertificate()!;
 
 describe("intermediate-CA certificates", () => {
   test("mints a three-tier root → intermediate → leaf chain that verifies", () => {
@@ -47,12 +45,12 @@ describe("intermediate-CA certificates", () => {
       certificate: { mode: "ca-signed", ca: intermediate, subject: "tyr.lindorm.io" },
     });
 
-    expect(intermediate.certificateChain).toHaveLength(2);
-    expect(leaf.certificateChain).toHaveLength(3);
+    expect(intermediate.certificate("b64")?.chain).toHaveLength(2);
+    expect(leaf.certificate("b64")?.chain).toHaveLength(3);
 
     // Verifies against the root anchor.
     expect(() =>
-      leaf.verifyCertificate({ trustAnchors: root.certificateChain[0] }),
+      leaf.verifyCertificate({ trustAnchors: root.certificate("b64")!.chain[0] }),
     ).not.toThrow();
 
     // The intermediate is a CA with pathLen=0, critical basicConstraints, and
@@ -66,7 +64,7 @@ describe("intermediate-CA certificates", () => {
     expect(intCert.extensions.keyUsage).toContain("crlSign");
 
     // describe surfaces the same for inspect.
-    const described = describeCertificate(intermediate.certificateChain[0]);
+    const described = describeCertificate(intermediate.certificate("b64")!.chain[0]);
     expect(described.basicConstraints).toMatchObject({
       ca: true,
       pathLenConstraint: 0,
@@ -86,7 +84,7 @@ describe("intermediate-CA certificates", () => {
     // natural "generate root, generate intermediate" idiom does not throw).
     expect(intermediate.notBefore.getTime()).toBe(root.notBefore.getTime());
     expect(intermediate.expiresAt.getTime()).toBe(root.expiresAt.getTime());
-    expect(intermediate.certificateChain).toHaveLength(2);
+    expect(intermediate.certificate("b64")?.chain).toHaveLength(2);
   });
 
   describe("mint-time path-length guards (RFC 5280 §4.2.1.9)", () => {

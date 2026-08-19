@@ -53,8 +53,12 @@ describe("Kryptos (X.509 round-trip)", () => {
 
       const restored = KryptosKit.from.db(db as any);
 
-      expect(restored.certificateChain).toEqual(kryptos.certificateChain);
-      expect(restored.certificateThumbprint).toBe(kryptos.certificateThumbprint);
+      // The chain length is asserted first: `toEqual` between two `null`s holds,
+      // so without it this block would stay green if the fixture ever stopped
+      // attaching a chain. `?.` not `!` — a missing chain should fail this
+      // assertion, not throw a null-deref before any assertion runs.
+      expect(kryptos.certificate("b64")?.chain).toHaveLength(3);
+      expect(restored.certificate("b64")).toEqual(kryptos.certificate("b64"));
     });
 
     test("chain-less kryptos round-trips certificateChain as empty array", () => {
@@ -64,7 +68,7 @@ describe("Kryptos (X.509 round-trip)", () => {
       expect(db.certificateChain).toEqual([]);
 
       const restored = KryptosKit.from.db(db as any);
-      expect(restored.certificateChain).toEqual([]);
+      expect(restored.certificate("b64")).toBeNull();
     });
   });
 
@@ -94,8 +98,8 @@ describe("Kryptos (X.509 round-trip)", () => {
       expect(jwk).toMatchSnapshot();
 
       const restored = KryptosKit.from.jwk(jwk);
-      expect(restored.certificateChain).toEqual(kryptos.certificateChain);
-      expect(restored.certificateThumbprint).toBe(kryptos.certificateThumbprint);
+      expect(kryptos.certificate("b64")?.chain).toHaveLength(3);
+      expect(restored.certificate("b64")).toEqual(kryptos.certificate("b64"));
     });
 
     test("benign: fromJwk with only x5c (no thumbprint) succeeds", () => {
@@ -106,20 +110,30 @@ describe("Kryptos (X.509 round-trip)", () => {
 
       const restored = KryptosKit.from.jwk(stripped);
 
-      expect(restored.certificateChain).toEqual(kryptos.certificateChain);
-      expect(restored.certificateThumbprint).toBe(kryptos.certificateThumbprint);
+      expect(kryptos.certificate("b64")?.chain).toHaveLength(3);
+      expect(restored.certificate("b64")).toEqual(kryptos.certificate("b64"));
     });
 
-    test("silently ignores legacy x5t (SHA-1) on input", () => {
+    // Now the only guard on this round trip, since `toJWK` emits `x5t`: an
+    // incoming one is neither rejected nor believed. Both digests are recomputed
+    // from `x5c`, so a planted value reaches neither of them.
+    test("neither rejects nor trusts a legacy x5t (SHA-1) on input", () => {
       const kryptos = buildKryptosWithChain();
       const jwk = kryptos.toJWK("public");
-      const withLegacyX5t = {
-        ...(jwk as Record<string, unknown>),
-        x5t: "AAAAAAAAAAAAAAAAAAAAAAAAAAA",
-      };
+      const planted = "AAAAAAAAAAAAAAAAAAAAAAAAAAA";
+      const withLegacyX5t = { ...(jwk as Record<string, unknown>), x5t: planted };
 
       const restored = KryptosKit.from.jwk(withLegacyX5t as any);
-      expect(restored.certificateThumbprint).toBe(kryptos.certificateThumbprint);
+
+      expect(kryptos.certificate("b64")?.chain).toHaveLength(3);
+      expect(restored.certificate("b64")?.chain).toHaveLength(3);
+
+      const source = kryptos.certificate("b64")!;
+      const round = restored.certificate("b64")!;
+
+      expect(round.thumbprint).toBe(source.thumbprint);
+      expect(round.thumbprintSha1).toBe(source.thumbprintSha1);
+      expect(round.thumbprintSha1).not.toBe(planted);
     });
   });
 
@@ -128,8 +142,8 @@ describe("Kryptos (X.509 round-trip)", () => {
       const kryptos = buildKryptosWithChain();
       const cloned = KryptosKit.clone(kryptos);
 
-      expect(cloned.certificateChain).toEqual(kryptos.certificateChain);
-      expect(cloned.certificateThumbprint).toBe(kryptos.certificateThumbprint);
+      expect(kryptos.certificate("b64")?.chain).toHaveLength(3);
+      expect(cloned.certificate("b64")).toEqual(kryptos.certificate("b64"));
     });
   });
 

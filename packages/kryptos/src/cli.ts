@@ -532,9 +532,11 @@ const printKeyResult = (
     return;
   }
 
-  if (kryptos.hasCertificate) {
+  const certificate = kryptos.certificate("b64");
+
+  if (certificate) {
     console.log(
-      `\nGenerated an X.509 certificate (thumbprint ${kryptos.certificateThumbprint}). It is embedded in the env string below.`,
+      `\nGenerated an X.509 certificate (thumbprint ${certificate.thumbprint}). It is embedded in the env string below.`,
     );
   }
 

@@ -43,8 +43,11 @@ export type KryptosAttributes = {
 export type KryptosMetadata = {
   // Asymmetric or symmetric, derived from `type` — see `Kryptos.algClass`.
   algClass: KryptosAlgClass;
+  // A lookup KEY, not certificate material — it is queryable beside `id` and
+  // `algorithm`. The chain and the SHA-1 digest are material, reached through
+  // `Kryptos.certificate(format)`. There is no SHA-1 cell here: nothing queries
+  // by it, and the material record carries it for the callers that compare it.
   certificateThumbprint: string | null;
-  certificateThumbprintSha1: string | null;
   expiresIn: number;
   hasCertificate: boolean;
   hasPrivateKey: boolean;

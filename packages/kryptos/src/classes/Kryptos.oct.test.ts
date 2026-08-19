@@ -94,10 +94,10 @@ describe("Kryptos (oct)", () => {
     // An oct key's material IS `k` — the secret. It has no public half to publish,
     // so `toJWK("public")` is refused rather than answered: the only two things it
     // could return are a JWK that leaks the secret, or one that omits `k` and is
-    // malformed per RFC 7517 §6.4.1 (it used to emit the latter, silently). The
-    // default mode IS "public", so a bare `toJWK()` is refused too. Asserted as an
-    // error class + code, not a snapshot — a snapshot of the message would only
-    // re-encode the wording, not the contract.
+    // malformed per RFC 7518 §6.4.1. The default mode IS "public", so a bare
+    // `toJWK()` is refused too. Asserted as an error class + code, not a snapshot
+    // — a snapshot of the message would only re-encode the wording, not the
+    // contract.
     test("should have no public JWK", () => {
       const kryptos = KryptosKit.from.b64({ ...TEST_OCT_KEY_B64, ...options });
 

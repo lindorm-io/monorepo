@@ -1,5 +1,7 @@
+import { B64 } from "@lindorm/b64";
 import { describe, expect, test } from "vitest";
 import type { IKryptos } from "../interfaces/index.js";
+import { decodeCborEnv } from "../internal/utils/cbor/decode-cbor-env.js";
 import { KryptosKit } from "./index.js";
 
 const NOT_BEFORE = new Date("2026-01-01T00:00:00Z");
@@ -98,6 +100,57 @@ describe("Kryptos env-string format", () => {
       const garbage = "kryptos:" + Buffer.from([0x01, 0x02, 0x03]).toString("base64url");
 
       expect(() => KryptosKit.env.import(garbage)).toThrow(/env payload|kryptos/i);
+    });
+  });
+
+  // The two env formats do NOT carry the same members for a key with a chain.
+  // JSON is the private JWK verbatim, so it carries whatever `toJWK` emits —
+  // including both digests. CBOR carries only what `CBOR_ENV_SPEC.fields`
+  // declares (`internal/constants/cbor-env-spec.ts`) — a field is what reaches
+  // the wire, and there is none for either digest. Both re-derive from `x5c`.
+  describe("certificate members per env format", () => {
+    const decodeJson = (env: string): Record<string, unknown> =>
+      JSON.parse(B64.toString(env.replace("kryptos:", ""), "b64u"));
+
+    test("json carries x5c and BOTH digests for a chained key", () => {
+      const key = caSigned();
+      const payload = decodeJson(key.toEnvString("json"));
+      const certificate = key.certificate("jwk")!;
+
+      expect(payload.x5c).toEqual(certificate.x5c);
+      expect(payload.x5t).toBe(certificate.x5t);
+      expect(payload["x5t#S256"]).toBe(certificate["x5t#S256"]);
+    });
+
+    test("json carries no certificate members for a chain-less key", () => {
+      const payload = decodeJson(ec().toEnvString("json"));
+
+      expect(payload.x5c).toBeUndefined();
+      expect(payload.x5t).toBeUndefined();
+      expect(payload["x5t#S256"]).toBeUndefined();
+    });
+
+    test("cbor carries x5c and NEITHER digest for a chained key", () => {
+      const key = caSigned();
+      const decoded = decodeCborEnv(
+        B64.toBuffer(key.toEnvString("cbor").replace("kryptos:", ""), "b64u"),
+      ) as Record<string, unknown>;
+
+      expect(decoded.x5c).toEqual(key.certificate("b64")!.chain);
+      expect(decoded.x5t).toBeUndefined();
+      expect(decoded["x5t#S256"]).toBeUndefined();
+    });
+
+    test("both formats restore both digests on import", () => {
+      const key = caSigned();
+      const expected = key.certificate("b64")!;
+
+      for (const format of ["json", "cbor"] as const) {
+        const restored = KryptosKit.env.import(key.toEnvString(format));
+
+        expect(restored.certificate("b64")!.thumbprint).toBe(expected.thumbprint);
+        expect(restored.certificate("b64")!.thumbprintSha1).toBe(expected.thumbprintSha1);
+      }
     });
   });
 

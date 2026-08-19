@@ -4,6 +4,7 @@ export * from "./alg-class.js";
 export * from "./algorithm.js";
 export * from "./attributes.js";
 export * from "./auto.js";
+export * from "./certificate-format.js";
 export * from "./certificate.js";
 export * from "./curve.js";
 export * from "./encryption.js";

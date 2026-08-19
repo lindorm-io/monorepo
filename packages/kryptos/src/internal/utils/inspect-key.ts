@@ -70,10 +70,12 @@ export const inspectSummary = (key: IKryptos): string => {
     row("thumbprint", key.thumbprint),
   ];
 
-  if (key.hasCertificate) {
-    lines.push(row("x5t#S256", key.certificateThumbprint));
-    lines.push(`  certificates (${key.certificateChain.length}):`);
-    key.certificateChain.forEach((der, index) => {
+  const certificate = key.certificate("b64");
+
+  if (certificate) {
+    lines.push(row("x5t#S256", certificate.thumbprint));
+    lines.push(`  certificates (${certificate.chain.length}):`);
+    certificate.chain.forEach((der, index) => {
       lines.push(certificateBlock(describeCertificate(der), index));
     });
   }
@@ -94,8 +96,10 @@ export const inspectJson = (key: IKryptos): string => {
         : value;
   }
 
-  if (key.hasCertificate) {
-    redacted.certificates = key.certificateChain.map((der) => describeCertificate(der));
+  const certificate = key.certificate("b64");
+
+  if (certificate) {
+    redacted.certificates = certificate.chain.map((der) => describeCertificate(der));
   }
 
   return JSON.stringify(redacted, null, 2);

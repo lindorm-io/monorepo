@@ -171,7 +171,7 @@ describe("verifyX509Chain", () => {
       });
 
       expect(() =>
-        verifyX509Chain(leaf.certificateChain.map(toDer), r.certificateChain[0]),
+        verifyX509Chain(leaf.certificate("der")!.chain, r.certificate("b64")!.chain[0]),
       ).not.toThrow();
     });
 
@@ -199,7 +199,7 @@ describe("verifyX509Chain", () => {
       });
 
       expect(() =>
-        verifyX509Chain(leaf.certificateChain.map(toDer), r.certificateChain[0]),
+        verifyX509Chain(leaf.certificate("der")!.chain, r.certificate("b64")!.chain[0]),
       ).toThrow(/path length constraint exceeded/i);
     });
 
@@ -219,12 +219,12 @@ describe("verifyX509Chain", () => {
       });
 
       const badChain = [
-        leaf.certificateChain[0],
-        endEntity.certificateChain[0], // cA=false, cannot be an issuer
-        r.certificateChain[0],
+        leaf.certificate("b64")!.chain[0],
+        endEntity.certificate("b64")!.chain[0], // cA=false, cannot be an issuer
+        r.certificate("b64")!.chain[0],
       ].map(toDer);
 
-      expect(() => verifyX509Chain(badChain, r.certificateChain[0])).toThrow(
+      expect(() => verifyX509Chain(badChain, r.certificate("b64")!.chain[0])).toThrow(
         /not marked as a CA/i,
       );
     });

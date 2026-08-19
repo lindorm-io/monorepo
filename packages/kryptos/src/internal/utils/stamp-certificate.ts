@@ -118,6 +118,7 @@ const CA_KEY_USAGE: ReadonlyArray<X509KeyUsageFlag> = ["keyCertSign", "cRLSign"]
 
 type ValidatedCa = {
   ca: IKryptos;
+  caChain: Array<string>;
   caLeaf: ParsedX509Certificate;
   caSki: Buffer;
   caPrivateKey: Buffer;
@@ -137,7 +138,10 @@ const assertSigningCa = (ca: IKryptos): ValidatedCa => {
     });
   }
 
-  if (!ca.hasCertificate || !ca.certificateChain || !ca.certificate) {
+  const caChain = ca.certificate("b64");
+  const caLeaf = ca.parseCertificate();
+
+  if (!caChain || !caLeaf) {
     throw new KryptosError("CA-signing requires CA kryptos with a certificate", {
       code: "missing_ca_certificate",
       title: "Missing CA Certificate",
@@ -145,8 +149,6 @@ const assertSigningCa = (ca: IKryptos): ValidatedCa => {
         "Signing a certificate requires the CA Kryptos to have a certificate and a complete certificate chain.",
     });
   }
-
-  const caLeaf = ca.certificate;
 
   if (!caLeaf.extensions.basicConstraintsCa) {
     throw new KryptosError(
@@ -195,7 +197,7 @@ const assertSigningCa = (ca: IKryptos): ValidatedCa => {
     });
   }
 
-  return { ca, caLeaf, caSki, caPrivateKey: caDer.privateKey };
+  return { ca, caChain: caChain.chain, caLeaf, caSki, caPrivateKey: caDer.privateKey };
 };
 
 const assertValidityWithinCa = (
@@ -424,7 +426,7 @@ export const stampCertificate = (input: StampInput): Array<string> => {
         { ca: false },
         keyUsageForUse(subjectKryptos.use),
       );
-      return [der.toString("base64"), ...certificate.ca.certificateChain];
+      return [der.toString("base64"), ...validated.caChain];
     }
 
     case "intermediate-ca": {
@@ -452,7 +454,7 @@ export const stampCertificate = (input: StampInput): Array<string> => {
         },
         CA_KEY_USAGE,
       );
-      return [der.toString("base64"), ...certificate.ca.certificateChain];
+      return [der.toString("base64"), ...validated.caChain];
     }
 
     default:

@@ -6,8 +6,8 @@ import { KryptosKit } from "./KryptosKit.js";
 describe("Kryptos.toJWK — a symmetric key has no public JWK", () => {
   const oct = () => KryptosKit.generate.auto({ algorithm: "HS256" });
 
-  // It used to emit `{ kty: "oct" }` with NO `k` — malformed per RFC 7517 §6.4.1,
-  // and jose rejects it outright. The only alternative would be to emit `k`, which
+  // A `{ kty: "oct" }` with no `k` is malformed per RFC 7518 §6.4.1, and jose
+  // rejects it outright. The only alternative would be to emit `k`, which
   // publishes the secret. Neither is an answer, so the question is refused.
   test("throws rather than emitting a keyless — or secret-bearing — JWK", () => {
     expect(() => oct().toJWK("public")).toThrow(KryptosError);

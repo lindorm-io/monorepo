@@ -7,13 +7,13 @@ import {
   isExpired as isDateExpired,
   isLive,
 } from "@lindorm/date";
-import { isBuffer } from "@lindorm/is";
+import { isBuffer, isInteger } from "@lindorm/is";
 import { lindormId } from "@lindorm/random";
 import { omitEmpty, omitUndefined } from "@lindorm/utils";
 import { KryptosError } from "../errors/index.js";
 import type { IKryptos } from "../interfaces/index.js";
 import { KRYPTOS_BRAND } from "../internal/constants/brand.js";
-import type { ExportCache } from "../internal/types/export-cache.js";
+import type { CachedCertificate, ExportCache } from "../internal/types/export-cache.js";
 import { calculateAlgClass } from "../internal/utils/alg-class.js";
 import { encodeCborEnv } from "../internal/utils/cbor/encode-cbor-env.js";
 import { computeKeyId } from "../internal/utils/compute-key-id.js";
@@ -40,6 +40,12 @@ import type {
   KryptosAlgClass,
   KryptosAlgorithm,
   KryptosBuffer,
+  KryptosCertificate,
+  KryptosCertificateB64,
+  KryptosCertificateDer,
+  KryptosCertificateFormat,
+  KryptosCertificateJwk,
+  KryptosCertificatePem,
   KryptosCurve,
   KryptosDB,
   KryptosEncryption,
@@ -352,27 +358,101 @@ export class Kryptos implements IKryptos {
     return this._certificateChain !== undefined && this._certificateChain.length > 0;
   }
 
-  get certificate(): ParsedX509Certificate | null {
-    if (!this._certificateChain || this._certificateChain.length === 0) return null;
-    if (!this._cache.parsedLeaf) {
-      this._cache.parsedLeaf = parseX509Certificate(this._certificateChain[0]);
-    }
-    return this._cache.parsedLeaf;
-  }
-
-  get certificateChain(): Array<string> {
-    if (!this._certificateChain) return [];
-    return this._certificateChain.map((der) => der.toString("base64"));
-  }
-
+  /**
+   * The leaf's SHA-256 thumbprint, or `null` when this key carries no
+   * certificate. A lookup KEY rather than certificate material: a vault query
+   * reads it off an instance, beside `id` and `algorithm`. The material — the
+   * chain, and the digests in the formats that carry them — is reached through
+   * `certificate(format)`, which spells this same value out of the same
+   * memoized source.
+   */
   get certificateThumbprint(): string | null {
-    if (!this._certificateChain || this._certificateChain.length === 0) return null;
-    return x5tS256Thumbprint(this._certificateChain[0]);
+    return this.certificateSource()?.thumbprint ?? null;
   }
 
-  get certificateThumbprintSha1(): string | null {
-    if (!this._certificateChain || this._certificateChain.length === 0) return null;
-    return x5tS1Thumbprint(this._certificateChain[0]);
+  /**
+   * The X.509 chain in the requested encoding, leaf first, or `null` when this
+   * key carries no certificate. The one axis is ENCODING: every format states
+   * the chain, spelled for its own domain, and `"b64"`/`"der"`/`"jwk"` state
+   * both leaf digests beside it. `"pem"` carries the chain alone — a digest has
+   * no PEM spelling.
+   *
+   * ⚠ `"b64"` is MIXED on purpose — RFC 7515 §4.1.6 defines an `x5c` entry as
+   * standard base64 while RFC 7517 §4.8/§4.9 define the digests as base64url.
+   */
+  certificate(format: "b64"): KryptosCertificateB64 | null;
+  certificate(format: "der"): KryptosCertificateDer | null;
+  certificate(format: "jwk"): KryptosCertificateJwk | null;
+  certificate(format: "pem"): KryptosCertificatePem | null;
+  certificate(format: KryptosCertificateFormat): KryptosCertificate | null {
+    // `source` is null exactly when there is no chain, and `source && …` carries
+    // that through each branch — so an unknown format still reaches the throw on
+    // a chain-less key, rather than being answered as an absent certificate.
+    const source = this.certificateSource();
+
+    switch (format) {
+      case "b64":
+        return (
+          source && {
+            chain: [...source.chain],
+            thumbprint: source.thumbprint,
+            thumbprintSha1: source.thumbprintSha1,
+          }
+        );
+
+      case "der":
+        return (
+          source && {
+            chain: source.ders.map((der) => Buffer.from(der)),
+            thumbprint: B64.toBuffer(source.thumbprint, "b64u"),
+            thumbprintSha1: B64.toBuffer(source.thumbprintSha1, "b64u"),
+          }
+        );
+
+      case "jwk":
+        return (
+          source && {
+            x5c: [...source.chain],
+            x5t: source.thumbprintSha1,
+            "x5t#S256": source.thumbprint,
+          }
+        );
+
+      case "pem":
+        return source && { chain: source.chain.map(certDerToPem) };
+
+      default:
+        throw new KryptosError(`Invalid certificate format: ${format as string}`, {
+          code: "unsupported_certificate_format",
+          title: "Unsupported Certificate Format",
+          details: `The certificate format "${format as string}" is not supported; use b64, der, jwk, or pem.`,
+          data: { format },
+        });
+    }
+  }
+
+  /**
+   * The parsed certificate at `index` in the chain — `0`, the default, is the
+   * leaf — or `null` when this key carries no certificate or the index falls
+   * outside the chain. Each index is parsed on first read and memoized.
+   */
+  parseCertificate(index: number = 0): ParsedX509Certificate | null {
+    if (!this._certificateChain) return null;
+    // `isInteger` also rejects NaN and Infinity. Without it `chain[1.5]` is
+    // `undefined` and the parser throws a raw TypeError instead of answering
+    // null, which is what this method promises for an index off the chain.
+    if (!isInteger(index)) return null;
+    if (index < 0 || index >= this._certificateChain.length) return null;
+
+    if (!this._cache.parsedCertificates) this._cache.parsedCertificates = [];
+
+    const cached = this._cache.parsedCertificates[index];
+    if (cached) return cached;
+
+    const parsed = parseX509Certificate(this._certificateChain[index]);
+    this._cache.parsedCertificates[index] = parsed;
+
+    return parsed;
   }
 
   verifyCertificate(options: { trustAnchors: string | Array<string> }): void {
@@ -488,16 +568,10 @@ export class Kryptos implements IKryptos {
           );
         }
 
-        // Attach the certificate side (standard PEM CERTIFICATE blocks, leaf
-        // first) when a chain exists; `certificate` is the leaf.
-        const chain = this.certificateChain;
-        const certificatePem =
-          chain.length > 0
-            ? {
-                certificate: certDerToPem(chain[0]),
-                certificateChain: chain.map(certDerToPem),
-              }
-            : {};
+        const certificate = this.certificate("pem");
+        const certificatePem = certificate
+          ? { certificate: certificate.chain[0], certificateChain: certificate.chain }
+          : {};
 
         return { ...metadata, ...this._cache.pem, ...certificatePem } as KryptosPem;
       }
@@ -521,7 +595,7 @@ export class Kryptos implements IKryptos {
     return omitUndefined<KryptosDB>({
       id: this.id,
       algorithm: this.algorithm,
-      certificateChain: this.certificateChain,
+      certificateChain: this.certificate("b64")?.chain ?? [],
       createdAt: this.createdAt,
       curve: this.curve,
       encryption: this.encryption,
@@ -563,13 +637,14 @@ export class Kryptos implements IKryptos {
   }
 
   toJSON(): KryptosJSON {
+    const certificate = this.certificate("b64");
+
     return omitUndefined<KryptosJSON>({
       id: this.id,
       algClass: this.algClass,
       algorithm: this.algorithm,
-      certificateChain: this.certificateChain,
-      certificateThumbprint: this.certificateThumbprint,
-      certificateThumbprintSha1: this.certificateThumbprintSha1,
+      certificateChain: certificate?.chain ?? [],
+      certificateThumbprint: certificate?.thumbprint ?? null,
       createdAt: this.createdAt,
       curve: this.curve,
       encryption: this.encryption,
@@ -602,8 +677,9 @@ export class Kryptos implements IKryptos {
     // A PUBLIC oct JWK is a contradiction, not merely an awkward export. An oct
     // key's material IS `k` — the secret itself — so the only two things this
     // could return are a JWK that PUBLISHES YOUR SECRET, or one that omits `k`
-    // and is malformed (RFC 7517 §6.4.1 requires it). It used to do the latter,
-    // silently. There is no third answer, so asking is a programming error.
+    // and therefore carries no key at all: RFC 7518 §6.4 makes `k` the member
+    // that represents a symmetric key. There is no third answer, so asking is a
+    // programming error.
     //
     // Nothing in the toolkit reaches this: amphora's JWKS filters
     // `hasPublicKey: true`, and an oct key has no public half. The guard is for
@@ -634,6 +710,8 @@ export class Kryptos implements IKryptos {
       this._cache[cacheKey] = Object.freeze(keys);
     }
 
+    const certificate = this.certificate("jwk");
+
     return omitEmpty({
       ...this._cache[cacheKey],
       kid: this.id,
@@ -659,8 +737,9 @@ export class Kryptos implements IKryptos {
       // of CBOR buys an env string that states its own policy.
       publish: mode === "private" ? this.publish : undefined,
       purpose: this.purpose ?? undefined,
-      x5c: this.certificateChain.length > 0 ? this.certificateChain : undefined,
-      "x5t#S256": this.certificateThumbprint ?? undefined,
+      x5c: certificate?.x5c,
+      x5t: certificate?.x5t,
+      "x5t#S256": certificate?.["x5t#S256"],
     });
   }
 
@@ -669,6 +748,26 @@ export class Kryptos implements IKryptos {
   }
 
   // private methods
+
+  // The chain's base64 spelling and both leaf digests, derived once per instance.
+  // Every format, and every `to*`/`export` caller, reads this one record; the
+  // arrays are copied on the way out so no caller can reach the cached one.
+  private certificateSource(): CachedCertificate | null {
+    if (!this._certificateChain || this._certificateChain.length === 0) return null;
+
+    if (!this._cache.certificate) {
+      const ders = this._certificateChain;
+
+      this._cache.certificate = Object.freeze({
+        ders,
+        chain: Object.freeze(ders.map((der) => der.toString("base64"))),
+        thumbprint: x5tS256Thumbprint(ders[0]),
+        thumbprintSha1: x5tS1Thumbprint(ders[0]),
+      });
+    }
+
+    return this._cache.certificate;
+  }
 
   private assertNotDisposed(): void {
     if (this._disposed) {

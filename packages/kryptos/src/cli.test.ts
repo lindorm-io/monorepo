@@ -146,8 +146,8 @@ describe("kryptos generate CLI", () => {
     const key = KryptosKit.env.import(await runGenerate());
 
     expect(key.hasCertificate).toBe(true);
-    expect(key.certificateThumbprint).toBeTruthy();
-    expect(key.certificateChain.length).toBeGreaterThan(0);
+    expect(key.certificate("b64")?.thumbprint).toBeTruthy();
+    expect(key.certificate("b64")!.chain.length).toBeGreaterThan(0);
   });
 
   test("never offers a certificate for symmetric (oct) keys", async () => {
@@ -183,7 +183,7 @@ describe("kryptos generate CLI", () => {
     );
 
     expect(key.hasCertificate).toBe(true);
-    expect(key.certificateChain.length).toBeGreaterThan(0);
+    expect(key.certificate("b64")!.chain.length).toBeGreaterThan(0);
     // Zero prompts — a scripted run must not block on stdin.
     expect(mockSelect).not.toHaveBeenCalled();
     expect(mockInput).not.toHaveBeenCalled();
@@ -215,7 +215,7 @@ describe("kryptos generate CLI", () => {
 
     expect(leaf.hasCertificate).toBe(true);
     // Chain carries the signing CA cert as well as the leaf.
-    expect(leaf.certificateChain.length).toBeGreaterThanOrEqual(2);
+    expect(leaf.certificate("b64")!.chain.length).toBeGreaterThanOrEqual(2);
     expect(mockInput).not.toHaveBeenCalled();
     expect(mockConfirm).not.toHaveBeenCalled();
   });
@@ -343,7 +343,7 @@ describe("kryptos generate CLI", () => {
       }),
     );
 
-    expect(key.certificate?.subject.organizationalUnit).toBe("development");
+    expect(key.parseCertificate()?.subject.organizationalUnit).toBe("development");
   });
 
   test("rejects an invalid --environment value", async () => {
@@ -716,7 +716,7 @@ describe("kryptos CLI — .kryptos files", () => {
       const content = readFileSync(filePath, "utf8").trim();
       const restored = KryptosKit.env.import(content);
       expect(restored.id).toBe(kid);
-      expect(restored.certificate?.subject.organizationalUnit).toBe("development");
+      expect(restored.parseCertificate()?.subject.organizationalUnit).toBe("development");
 
       // Path + summary printed; the secret env string never touches stdout.
       expect(out).toContain(filePath);
@@ -794,7 +794,7 @@ describe("kryptos CLI — .kryptos files", () => {
         }),
       );
 
-      expect(leaf.certificateChain).toHaveLength(2);
+      expect(leaf.certificate("b64")?.chain).toHaveLength(2);
     });
 
     test("derive --seed accepts a file path", async () => {
@@ -895,8 +895,10 @@ describe("kryptos CLI — .kryptos files", () => {
     }
 
     const intermediate = KryptosKit.env.import(readFileSync(intPath, "utf8"));
-    expect(intermediate.certificateChain).toHaveLength(2);
-    expect(intermediate.certificate?.subject.organizationalUnit).toBe("development");
+    expect(intermediate.certificate("b64")?.chain).toHaveLength(2);
+    expect(intermediate.parseCertificate()?.subject.organizationalUnit).toBe(
+      "development",
+    );
   });
 });
 

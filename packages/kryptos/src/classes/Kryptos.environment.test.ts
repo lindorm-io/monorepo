@@ -7,7 +7,7 @@ const ROOT_EXP = new Date("2046-01-01T00:00:00Z");
 const LEAF_EXP = new Date("2036-01-01T00:00:00Z");
 
 const ou = (key: IKryptos): string | undefined =>
-  key.certificate?.subject.organizationalUnit;
+  key.parseCertificate()?.subject.organizationalUnit;
 
 const devRoot = (): IKryptos =>
   KryptosKit.generate.auto({

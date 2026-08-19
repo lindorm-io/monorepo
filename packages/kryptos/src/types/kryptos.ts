@@ -55,6 +55,7 @@ export type KryptosJwk = {
   x?: string;
   y?: string;
   x5c?: Array<string>;
+  x5t?: string;
   "x5t#S256"?: string;
 };
 

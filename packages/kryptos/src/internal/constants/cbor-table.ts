@@ -23,10 +23,12 @@ import type {
 // - Label 0 is the format version so the vocabulary can evolve without
 //   breaking strings already vaulted in password managers.
 // - DERIVABLES ARE NEVER ENCODED, and therefore carry no label at all:
-//   `x5t#S256` (recompute from x5c) and `key_ops` (`operations` is derived from
-//   the key material — see `calculateKeyOps`). Both are excluded from
-//   `CborLabelDomain` below, so sneaking one back into the encoder is a compile
-//   error.
+//   `x5t`/`x5t#S256` (both recompute from x5c — `Kryptos.certificate("jwk")`) and
+//   `key_ops` (`operations` is derived from the key material — see
+//   `calculateKeyOps`). All three are excluded from `CborLabelDomain` below, so
+//   giving one a label is a compile error — and `CBOR_ENV_SPEC`'s fields are
+//   typed to `EnvLabelKey`, so a field for one is a compile error too. It takes
+//   both: `CborField.key` is a plain string, so the spec alone would accept it.
 // - Enum values are grouped in decades by family so a raw decode is
 //   half-readable to a human who knows the table.
 //
@@ -40,12 +42,12 @@ export const CBOR_VERSION = 1;
 // --- Map labels (integer keys of the encoded map) ---------------------------
 
 // The label set must cover every member of LindormJwk (the full private-JWK
-// surface) except the deliberately-omitted DERIVABLES — `x5t#S256` (recompute
-// from x5c) and `key_ops` (derived from the key material, never emitted) — plus
-// the format-internal `version`. Adding a JWK member without a label is a
-// compile error; sneaking a derivable back in is too (excess property).
+// surface) except the DERIVABLES — `x5t`/`x5t#S256` (recompute from x5c) and
+// `key_ops` (derived from the key material, never emitted) — plus the
+// format-internal `version`. Adding a JWK member without a label is a compile
+// error; giving a derivable one is too (excess property).
 type CborLabelDomain = Record<
-  Exclude<keyof LindormJwk, "x5t#S256" | "key_ops">,
+  Exclude<keyof LindormJwk, "x5t" | "x5t#S256" | "key_ops">,
   number
 > & {
   version: number;
@@ -65,8 +67,6 @@ export const CBOR_LABEL = {
   iss: 13,
   jku: 14,
   purpose: 15,
-  // Label 16 was `hidden` (inverted polarity) in the pre-release vocabulary; the
-  // env format ships unreleased, so the label is REUSED rather than retired.
   publish: 16,
   owner_id: 17,
   x5c: 20, // array of bstr (raw DER, leaf first)
@@ -87,6 +87,10 @@ export const CBOR_LABEL = {
 } as const satisfies CborLabelDomain;
 
 // --- Value enums -------------------------------------------------------------
+
+// The keys a spec field may name: exactly the labelled members, never `version`
+// (written by the codec from `CBOR_VERSION`, not carried as a field).
+export type EnvLabelKey = Exclude<keyof typeof CBOR_LABEL, "version">;
 
 export const CBOR_KTY = {
   EC: 1,
