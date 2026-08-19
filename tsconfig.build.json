@@ -16,6 +16,7 @@
     "**/*.fixture.ts",
     "**/*.integration.ts",
     "**/*.snap",
+    "**/*.steps.ts",
     "**/*.test.ts"
   ]
 }
