@@ -180,7 +180,7 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.verify(jwe.token)).resolves.toEqual(
-      expect.objectContaining({ format: "jwe", inner: "jws", raw: "data" }),
+      expect.objectContaining({ format: "jws", wrapper: "jwe", raw: "data" }),
     );
   });
 
@@ -197,8 +197,8 @@ describe("Aegis", () => {
 
     await expect(aegis.verify(jwe.token)).resolves.toEqual(
       expect.objectContaining({
-        format: "jwe",
-        inner: "jwt",
+        format: "jwt",
+        wrapper: "jwe",
         header: expect.objectContaining({
           tokenType: "test_token",
         }),
@@ -264,8 +264,11 @@ describe("Aegis", () => {
     ).rejects.toThrow();
   });
 
-  test("sign({ payload }) signs a raw wire literal as a JWS", async () => {
-    const res = await aegis.sign({ payload: "raw-data" });
+  // ⚠ `aegis.sign` is CLAIMS-ONLY, so an opaque signature over a wire literal is
+  // the `jws` namespace. `sign({ payload: "raw-data" })` no longer compiles — the
+  // verb takes a domain claim set.
+  test("jws.sign signs a raw wire literal as a JWS", async () => {
+    const res = await aegis.jws.sign("raw-data");
 
     expect(res).toEqual({
       format: "jws",
@@ -280,14 +283,31 @@ describe("Aegis", () => {
 
   // Dict in, Dict out — the payload is handed to the kit as an OBJECT, so the
   // codec declares `application/json` and the read reconstructs the object. The
-  // full contract, including that the COSE twin now agrees, is the sibling
-  // `what aegis.sign hands back` suite.
-  test("sign({ payload }) returns a plain object as an object", async () => {
-    const res = await aegis.sign({ payload: { hello: "world" } });
+  // full contract, including that the COSE twin agrees, is the sibling
+  // `what an opaque signature hands back` suite.
+  test("jws.sign returns a plain object as an object", async () => {
+    const res = await aegis.jws.sign({ hello: "world" });
 
     await expect(aegis.verify(res.token)).resolves.toEqual(
       expect.objectContaining({ format: "jws", raw: { hello: "world" } }),
     );
+  });
+
+  /**
+   * ⭐ THE DOMAIN VERB IS CLAIMS-ONLY, and its default is `jwt`: this call shape
+   * signs a JWT with every registered claim translated to its wire spelling. A
+   * caller wanting an opaque signature reaches `aegis.jws.sign`.
+   */
+  test("sign({ payload }) signs a JWT with translated domain claims", async () => {
+    const res = await aegis.sign({ payload: { subject: "user-1" } });
+
+    expect(res.format).toBe("jwt");
+
+    const [, payload] = res.token.split(".");
+
+    expect(JSON.parse(Buffer.from(payload, "base64url").toString("utf8"))).toEqual({
+      sub: "user-1",
+    });
   });
 
   /**

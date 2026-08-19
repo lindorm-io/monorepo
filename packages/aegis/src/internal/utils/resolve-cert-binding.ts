@@ -5,7 +5,7 @@ import type { BindCertificateMode, CertificateHeaderFields } from "../../types/i
 export const resolveCertBinding = (
   kryptos: IKryptos,
   mode: BindCertificateMode | undefined,
-  certificateThumbprintSha1?: boolean,
+  thumbprintSha1: boolean,
 ): CertificateHeaderFields | undefined => {
   const resolved: BindCertificateMode =
     mode === "none"
@@ -28,21 +28,29 @@ export const resolveCertBinding = (
     });
   }
 
+  // ONE derivation, for every field below. It is non-null here — `hasCertificate`
+  // above and this accessor answer off the same chain.
+  const certificate = kryptos.certificate("b64");
+
   const fields: CertificateHeaderFields = {
-    certificateThumbprint: kryptos.certificateThumbprint ?? undefined,
+    certificateThumbprint: certificate?.thumbprint,
   };
 
-  // The SHA-1 thumbprint (`x5t`) is an INDEPENDENT emission gate, NOT a
-  // `BindCertificateMode` — it rides along whenever a cert is bound and the
-  // boolean resolves true (the default). It is a legacy-compat convenience for
-  // older clients; the read side NEVER verifies it (only `x5t#S256` binds).
-  if (certificateThumbprintSha1 ?? true) {
-    fields.certificateThumbprintSha1 = kryptos.certificateThumbprintSha1 ?? undefined;
+  // Whether the legacy SHA-1 thumbprint (`x5t`) rides beside the SHA-256 one is
+  // the WIRE's answer, not the caller's — it is NOT a `BindCertificateMode` and
+  // there is no option that turns it off. Each writer states its wire's constant:
+  // `internal/utils/jose-thumbprint-sha1.ts` (`true` — RFC 7515 §4.1.7 gives JOSE
+  // a parameter of its own) and `internal/cose/cose-thumbprint-sha1.ts` (`false` —
+  // RFC 9360 §2 gives COSE one thumbprint parameter, so the derived SHA-1 digest
+  // would have no label to travel under).
+  if (thumbprintSha1 === true) {
+    fields.certificateThumbprintSha1 = certificate?.thumbprintSha1;
   }
 
   if (resolved === "chain") {
-    fields.certificateChain =
-      kryptos.certificateChain.length > 0 ? kryptos.certificateChain : undefined;
+    // `certificate("b64")` answers `null` rather than an empty chain, so a chain
+    // that reaches here has members.
+    fields.certificateChain = certificate?.chain;
   }
 
   return fields;

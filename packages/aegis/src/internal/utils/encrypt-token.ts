@@ -50,15 +50,10 @@ import { nestedTokenContent } from "./nested-token-content.js";
  * `mint(…, { encrypt })` emit the same declaration. A caller's own `header.cty`
  * still wins.
  *
- * Two options that used to be accepted and dropped now land, and neither needed
- * a path built for it — both fell out of the wire forwarding its kit's whole
- * option surface: `header` reaches the COSE_Encrypt0 writer (RFC 9052 §3 gives
- * the structure a protected bucket and `CweKit.encrypt` always took the bag),
- * and `certificateThumbprintSha1` is now the CALLER's value rather than the
- * deployment default the JWE writer was handed regardless. On the `cwe` path
- * the SHA-1 flag is refused instead: RFC 9360 §2 gives COSE one `x5t` whose
- * digest algorithm is a member of its own value, so there is no legacy
- * thumbprint beside it for a suppression to act on.
+ * The caller's `header` reaches the COSE_Encrypt0 writer as well as the JWE one
+ * — RFC 9052 §3 gives the structure a protected bucket and `CweKit.encrypt`
+ * takes the bag — because the wire forwards its kit's whole option surface
+ * rather than naming the fields it passes on.
  */
 export const encryptToken = async ({
   data,
@@ -96,11 +91,6 @@ export const encryptToken = async ({
         : { contentType: nested.cty, ...options.header },
     ),
     bindCertificate: options.bindCertificate,
-    // The CALLER's own request. The deployment default is resolved by the wire
-    // that can honour it (`encryptJwe`); passing the resolved value here would
-    // make every call look like one that stated something, and the guard below
-    // reads caller INTENT.
-    certificateThumbprintSha1: options.certificateThumbprintSha1,
     partyProducer: options.partyProducer,
     partyRecipient: options.partyRecipient,
     proprietary: options.proprietary,

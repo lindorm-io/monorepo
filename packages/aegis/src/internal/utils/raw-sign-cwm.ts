@@ -34,7 +34,11 @@ export const rawSignCwm = async <C extends Dict = Dict>({
 
   const kryptos = await deps.resolveSignKey({ key });
 
-  const token = new CwmKit({ kryptos, logger: deps.logger }).sign<C>(claims, rest);
+  const token = new CwmKit({
+    certBindingMode: deps.certBindingMode,
+    kryptos,
+    logger: deps.logger,
+  }).sign<C>(claims, rest);
 
   return buildSignedToken(
     token.toString("base64url"),

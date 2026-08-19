@@ -16,11 +16,15 @@ import { criticalToWire } from "../header/critical-to-wire.js";
 import {
   type HeaderCodec,
   type HeaderSpec,
+  coseHeaderCodec,
   headerByDomain,
   headerByJose,
   coseWireKey,
   headerJoseName,
 } from "../header/header-registry.js";
+import { encodeCoseCertHash } from "../cose/cose-cert-hash.js";
+import { encodeCoseX509 } from "../cose/cose-x509.js";
+import type { CoseHeaderCodec } from "../registry/cose-header-codec.js";
 import { getBaseFormat } from "./compute-typ-header.js";
 
 /**
@@ -39,11 +43,10 @@ import { getBaseFormat } from "./compute-typ-header.js";
  * dropped (no passthrough), in both directions, by the passes below. The
  * registry's `HeaderCodec` drives the value shaping.
  *
- * ⚠ The COSE pass is value-PASSTHROUGH for every parameter but ONE: the
- * caller-settable COSE params (`typ`/`cty`/`x5c`/`x5u`) already carry the wire
- * representation that round-trips back on read, so shaping them here would only
- * change the bytes. `crit` is the exception, and has to be — see
- * {@link critToCoseLabels}.
+ * ⚠ The COSE pass shapes its values from the registry's own per-wire `cose`
+ * codec ({@link CoseHeaderCodec}), exhaustively — so a parameter whose COSE form
+ * is a STRUCTURE rather than the JOSE value is declared in the registry beside
+ * every other fact about it, not in a list beside this pass.
  */
 
 // --- `crit` member remap (the one member-transforming parameter) ------------
@@ -330,6 +333,53 @@ const critToCoseLabels = (value: unknown, proprietary: boolean | undefined): unk
 };
 
 /**
+ * Shape ONE header value for the COSE wire, dispatched on the registry's `cose`
+ * codec cell. The write half of the per-wire codec; `coseValueToWire` in
+ * `header/cose-wire-header.ts` is the read half.
+ *
+ * ⚠ THE THREE KIT-DERIVED REPRESENTATIONS PASS THROUGH UNCHANGED, and that is the
+ * correct answer rather than a missing one. `alg`, `kid` and `iv` are written
+ * onto their buckets by `mergeCoseProtected`/`mergeCoseUnprotected`, never by this
+ * pass; the only way one of them reaches here is in a CALLER's bag, and
+ * `buildCoseHeaders` rule 1 refuses that by NAME one step later
+ * (`cose_reserved_header`). Transforming the value first would replace that
+ * accurate refusal with whatever the transform made of a value it was never given.
+ */
+const encodeCoseHeaderValue = (
+  jose: string,
+  value: unknown,
+  proprietary: boolean | undefined,
+): unknown => {
+  const codec: CoseHeaderCodec = coseHeaderCodec(jose);
+
+  switch (codec.kind) {
+    case "critical":
+      return critToCoseLabels(value, proprietary);
+    case "certChain":
+      return encodeCoseX509(value);
+    case "certHash":
+      return encodeCoseCertHash(value);
+    case "algorithmLabel":
+    case "textBytes":
+    case "base64Bytes":
+    case "passthrough":
+      return value;
+    default: {
+      // See `encodeHeaderValue`: the `never` binding is the compiler backstop, and
+      // the REPORTED fact is the string discriminant.
+      const exhaustive: never = codec;
+      throw new JoseError("Unhandled COSE header value kind", {
+        code: "token_header_unhandled_cose_value_kind",
+        data: { jose, kind: String((exhaustive as CoseHeaderCodec).kind) },
+        title: "Token Header Unhandled COSE Value Kind",
+        details:
+          "The header registry produced a COSE value kind the encoder does not handle; a HeaderSpec cose codec kind is missing an encode branch.",
+      });
+    }
+  }
+};
+
+/**
  * The COSE write pass: a caller's WIRE-named partial header bag -> a COSE label
  * map, each wire name resolved through the registry by {@link coseWireKey} (which
  * THROWS for a parameter COSE does not carry).
@@ -351,9 +401,8 @@ const critToCoseLabels = (value: unknown, proprietary: boolean | undefined): unk
  * answered once by `buildCoseHeaders` (`assert-crit-satisfied.ts`) and answered
  * as a REFUSAL.
  *
- * The inverse of `coseWireHeader`'s read direction, and — per the file docstring
- * — value-PASSTHROUGH except for `crit`, whose MEMBERS are labels in their own
- * right and are translated by {@link critToCoseLabels}.
+ * The inverse of `coseWireHeader`'s read direction, value by value: both dispatch
+ * on the registry's `cose` codec cell.
  */
 export const wireHeaderToCoseMap = (
   bag: Partial<WireTokenHeader> | undefined,
@@ -370,10 +419,9 @@ export const wireHeaderToCoseMap = (
     // one place the closed-set rule refuses instead of drops. That is also why
     // there is no registry lookup first: a registered parameter and an
     // unregistered one take the SAME call.
-    map.set(
-      coseWireKey(jose, proprietary),
-      jose === "crit" ? critToCoseLabels(value, proprietary) : value,
-    );
+    const label = coseWireKey(jose, proprietary);
+
+    map.set(label, encodeCoseHeaderValue(jose, value, proprietary));
   }
 
   return map;

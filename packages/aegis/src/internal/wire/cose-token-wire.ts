@@ -38,40 +38,6 @@ const coseFormatOf = (cose: unknown): ClaimsCoseFormat =>
   cose instanceof Tag && cose.tag === COSE_TAG.mac0 ? "cwm" : "cwt";
 
 /**
- * The certificate-binding refusal, shared by both COSE sign operations.
- *
- * RFC 9360 §2 registers `x5chain` (label 33) and `x5t` (label 34), so the
- * PARAMETERS are representable — what does not exist is any COSE writer that
- * derives them: `signCwt`/`CwsKit` never call `resolveCertBinding`. The header
- * registry maps `x5chain` at label 33 and `x5u` at 35; the one it leaves absent
- * is `x5t`, because a COSE `x5t` is a `COSE_CertHash` (`[ hashAlg, hashValue ]`)
- * and not a relabelled JOSE thumbprint. Until the DERIVING capability exists a
- * binding REQUEST cannot be honoured, and the one thing it must not do is succeed
- * unbound: the issuer would believe its tokens are attributable to a certificate
- * when nothing on the wire says so.
- *
- * ⚠ That label 33 exists is also why every COSE kit RESERVES `x5c`
- * (`KIT_CAPABILITIES`): the parameter is carriable and nothing derives it, so an
- * unreserved `x5c` would put a caller's certificate chain — the only one on the
- * token — into the protected header of a CWT the key never certified.
- */
-const NO_COSE_CERT_BINDING =
-  "No COSE writer derives a certificate binding: neither the CWT/CWM signer nor CwsKit calls resolveCertBinding, and RFC 9360 §2's x5t (label 34) is a COSE_CertHash — a two-element [hashAlg, hashValue] structure — which the header registry does not map. Binding a COSE token to a certificate is a capability that does not exist yet.";
-
-/**
- * RFC 9360 §2 gives COSE ONE thumbprint parameter, `x5t` at label 34, and its
- * value is a `COSE_CertHash` whose FIRST ELEMENT is the hash algorithm. The
- * digest algorithm is therefore a MEMBER of the one parameter rather than part
- * of two parameter names, so there is no legacy SHA-1 parameter riding beside
- * the binding one for this flag to keep or suppress. ⚠ A naive rest-spread would
- * hand it to a COSE kit and silently reintroduce the JOSE pair's premise.
- *
- * ⚠ Only `true` is refused — see the `honours: [false]` rows below.
- */
-const NO_COSE_LEGACY_THUMBPRINT =
-  "COSE has no legacy thumbprint parameter to keep or suppress. RFC 9360 §2 registers one x5t (label 34) whose value is a COSE_CertHash — [hashAlg, hashValue] — so the digest algorithm is a member of the single parameter rather than the difference between two parameter names.";
-
-/**
  * RFC 7518 §4.6 scopes `apu`/`apv` to JOSE key-agreement algorithms, and aegis's
  * COSE outer is a COSE_Encrypt0 — RFC 9052 §5.2 defines that as single-recipient
  * DIRECT encryption. There is no key agreement for PartyUInfo/PartyVInfo to feed
@@ -80,34 +46,13 @@ const NO_COSE_LEGACY_THUMBPRINT =
 const NO_COSE_KEY_AGREEMENT =
   "A COSE_Encrypt0 performs no key agreement. RFC 9052 §5.2 defines it as single-recipient direct encryption, and RFC 7518 §4.6 scopes the ECDH-ES party info to JOSE key-agreement algorithms, so there is nothing for the value to derive and no COSE header parameter to carry it.";
 
-/**
- * What the COSE wire does with each kit option it is handed.
- *
- * ⚠ Two rows HONOUR the value that asks this wire to do NOTHING, because a wire
- * that already does nothing has satisfied exactly that request and refusing it
- * would reject something this wire does deliver:
- *
- * - `bindCertificate: "none"` — no binding emitted, which is what none means.
- *   Every other mode asks for something no COSE writer can produce.
- * - `certificateThumbprintSha1: false` — suppress the legacy digest. RFC 9360 §2
- *   gives COSE no legacy digest to begin with, so the suppression is already in
- *   force; `true`, which asks for one to be emitted, is what stays refused.
- */
+/** What the COSE wire does with each kit option it is handed. */
 const COSE_DISPOSITIONS: WireInputDispositions = {
   signClaims: {
     header: { use: "forwarded" },
     unprotected: { use: "forwarded" },
     tokenType: { use: "forwarded" },
-    bindCertificate: {
-      use: "unsupported",
-      reason: NO_COSE_CERT_BINDING,
-      honours: ["none"],
-    },
-    certificateThumbprintSha1: {
-      use: "unsupported",
-      reason: NO_COSE_LEGACY_THUMBPRINT,
-      honours: [false],
-    },
+    bindCertificate: { use: "forwarded" },
     proprietary: { use: "forwarded" },
   },
 
@@ -115,16 +60,7 @@ const COSE_DISPOSITIONS: WireInputDispositions = {
     header: { use: "forwarded" },
     unprotected: { use: "forwarded" },
     tokenType: { use: "forwarded" },
-    bindCertificate: {
-      use: "unsupported",
-      reason: NO_COSE_CERT_BINDING,
-      honours: ["none"],
-    },
-    certificateThumbprintSha1: {
-      use: "unsupported",
-      reason: NO_COSE_LEGACY_THUMBPRINT,
-      honours: [false],
-    },
+    bindCertificate: { use: "forwarded" },
     proprietary: { use: "forwarded" },
   },
 
@@ -132,16 +68,7 @@ const COSE_DISPOSITIONS: WireInputDispositions = {
     header: { use: "forwarded" },
     unprotected: { use: "forwarded" },
     tokenType: { use: "forwarded" },
-    bindCertificate: {
-      use: "unsupported",
-      reason: NO_COSE_CERT_BINDING,
-      honours: ["none"],
-    },
-    certificateThumbprintSha1: {
-      use: "unsupported",
-      reason: NO_COSE_LEGACY_THUMBPRINT,
-      honours: [false],
-    },
+    bindCertificate: { use: "forwarded" },
     proprietary: { use: "forwarded" },
     partyProducer: { use: "unsupported", reason: NO_COSE_KEY_AGREEMENT },
     partyRecipient: { use: "unsupported", reason: NO_COSE_KEY_AGREEMENT },
@@ -286,6 +213,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
     const clockTolerance = options.clockTolerance ?? deps.clockTolerance;
 
     const { payload, protectedHeader, unprotectedHeader } = selectCoseClaimsKit({
+      certBindingMode: deps.certBindingMode,
       kryptos,
       logger: deps.logger,
       clockTolerance,
@@ -331,8 +259,16 @@ export const COSE_TOKEN_WIRE: TokenWire = {
 
     const kit =
       format === "cwm"
-        ? new CwmKit({ kryptos, logger: deps.logger })
-        : new CwtKit({ kryptos, logger: deps.logger });
+        ? new CwmKit({
+            certBindingMode: deps.certBindingMode,
+            kryptos,
+            logger: deps.logger,
+          })
+        : new CwtKit({
+            certBindingMode: deps.certBindingMode,
+            kryptos,
+            logger: deps.logger,
+          });
 
     const token = kit.sign(wireClaims, options);
 
@@ -345,10 +281,8 @@ export const COSE_TOKEN_WIRE: TokenWire = {
     );
   },
 
-  // ⚠ `bindCertificate` and `certificateThumbprintSha1` do NOT reach `CwsKit`
-  // even though they ride the same envelope: both are `unsupported` here, so a
-  // caller stating one is refused above the seam and only `undefined` (or the
-  // no-op `bindCertificate: "none"`) ever arrives in the spread.
+  // `bindCertificate` is forwarded and acted on — `CwsKit.sign` resolves it
+  // against the signing key.
   signOpaque: ({ deps, payload, key, ...options }) =>
     rawSignCose({ input: { payload, key, ...options }, deps }),
 
@@ -363,6 +297,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
   // `nestedTokenCty` above the seam by whichever entry point sealed the token.
   encryptContent: ({ kryptos, deps, content, ...options }) =>
     encryptCose({
+      certBindingMode: deps.certBindingMode,
       kryptos,
       logger: deps.logger,
       defaultEncryption: deps.defaultEncryption,
@@ -392,7 +327,12 @@ export const COSE_TOKEN_WIRE: TokenWire = {
     // to and nothing about the value is re-interpreted here.
     return {
       header,
-      payload: decryptCose<TokenContent>({ kryptos, logger: deps.logger, token: bytes }),
+      payload: decryptCose<TokenContent>({
+        certBindingMode: deps.certBindingMode,
+        kryptos,
+        logger: deps.logger,
+        token: bytes,
+      }),
       token,
     };
   },

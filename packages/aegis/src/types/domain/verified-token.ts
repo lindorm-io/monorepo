@@ -1,4 +1,6 @@
 import type { Dict } from "@lindorm/types";
+import type { EncryptedToken } from "./encrypted-token.js";
+import type { TokenFormat } from "./token-format.js";
 import type { DomainClaims } from "../claims/domain/domain-claims.js";
 import type { AegisProfile } from "../claims/domain/aegis-profile.js";
 import type { AegisSensitive } from "../claims/domain/aegis-sensitive.js";
@@ -42,9 +44,21 @@ export type StructuredFormat = "jwt" | "cwt" | "cwm";
  * untranslated wire payload is available under `wire` for exact pass-through.
  */
 export type VerifiedToken<C extends Dict = Dict> = {
-  format: TokenFormatTag;
-  /** Set when `format` ∈ {jwe,cwe} wrapped a SIGNED inner token (any of the four). */
-  inner?: "jwt" | "cwt" | "cwm" | "jws" | "cws";
+  /**
+   * The token's OWN kind — the SIGNED token's format, whether or not it arrived
+   * inside an envelope. `verify` always returns a signature-verified token, so
+   * this is never an encrypting format; see {@link VerifiedToken.wrapper}.
+   */
+  format: TokenFormat;
+  /**
+   * The envelope this token arrived in, when it arrived in one.
+   *
+   * ⚠ ITS PRESENCE IS THE DISCRIMINATOR. An encrypted id_token verifies to
+   * `{ format: "jwt", wrapper: "jwe" }` and a plain one to `{ format: "jwt" }`,
+   * so a caller asking what the token IS gets one answer either way — which is
+   * the whole point. Branch on `wrapper` only when the envelope itself matters.
+   */
+  wrapper?: EncryptedToken["format"];
   /** EFFECTIVE (innermost) payload content type — how to read `raw`. */
   contentType?: string;
   /**
@@ -93,21 +107,19 @@ export type VerifiedToken<C extends Dict = Dict> = {
  * A {@link VerifiedToken} PROVEN to carry a readable claims layer — the narrowed
  * result of {@link import("../../utils/is-structured-token.js").isStructuredToken}.
  *
- * Two shapes qualify, and the second is the one hand-rolled `format === "jwt"`
- * checks miss:
+ * ⭐ ONE SHAPE. `format` is the token's own kind and `wrapper` the envelope, so
+ * one arm expresses both shapes: an encrypted id_token (OIDC
+ * `id_token_encrypted_response_alg`) verifies to `{ format: "jwt", wrapper:
+ * "jwe" }` and a plain one to `{ format: "jwt" }`. Both qualify by the same test.
  *
- * - a bare structured format (`jwt`/`cwt`/`cwm`), and
- * - an ENCRYPTING outer (`jwe`/`cwe`) that wrapped a structured inner. `verify`
- *   peels such a token and returns `{ ...inner, format: "jwe", inner: <format> }`,
- *   so `claims`/`custom` are FULLY POPULATED and only the outer tag says `jwe`.
- *   An encrypted id_token (OIDC `id_token_encrypted_response_alg`) is exactly
- *   this shape.
- *
- * Intersecting narrows both fields: `format` collapses to the qualifying subset,
- * and on the encrypting arm `inner` stops being optional.
+ * ⚠ A second arm keyed on the envelope would put the readable-claims fact in a
+ * different field depending on how the token was packaged, which is the shape a
+ * hand-rolled `format === "jwt"` check misses. `wrapper` never changes what the
+ * token IS.
  */
-export type StructuredVerifiedToken<C extends Dict = Dict> = VerifiedToken<C> &
-  ({ format: StructuredFormat } | { format: "jwe" | "cwe"; inner: StructuredFormat });
+export type StructuredVerifiedToken<C extends Dict = Dict> = VerifiedToken<C> & {
+  format: StructuredFormat;
+};
 
 /**
  * The domain claims a profile's policy GUARANTEES on a verified token — the

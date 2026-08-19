@@ -1,7 +1,11 @@
 import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CweKit } from "../../classes/CweKit.js";
-import type { CweEncryptOptions, TokenContent } from "../../types/index.js";
+import type {
+  CertificateBindingMode,
+  CweEncryptOptions,
+  TokenContent,
+} from "../../types/index.js";
 import { coseByJose } from "../header/header-registry.js";
 import { decodeCbor } from "./cbor.js";
 import { COSE_TAG } from "./structures.js";
@@ -22,12 +26,15 @@ import { coseStructure } from "./unwrap-cose.js";
  * private-use AES-CBC-HMAC needs it; default strict).
  */
 export const encryptCose = ({
+  certBindingMode,
   kryptos,
   logger,
   content,
   options,
   defaultEncryption,
 }: {
+  /** The deployment cert-binding mode, for the DECRYPT twin's read-side check. */
+  certBindingMode?: CertificateBindingMode;
   kryptos: IKryptos;
   logger: ILogger;
   content: TokenContent;
@@ -43,7 +50,10 @@ export const encryptCose = ({
   defaultEncryption?: KryptosEncryption;
 }): Buffer =>
   // `CweKit.encrypt` returns the BARE encoded COSE_Encrypt0 bytes.
-  new CweKit({ kryptos, logger, defaultEncryption }).encrypt(content, options);
+  new CweKit({ certBindingMode, kryptos, logger, defaultEncryption }).encrypt(
+    content,
+    options,
+  );
 
 /**
  * Decrypt a COSE_Encrypt0 to its plaintext, RECONSTRUCTED by the cty its own
@@ -53,17 +63,19 @@ export const encryptCose = ({
  * to `TokenContent`.
  */
 export const decryptCose = <T extends TokenContent = Buffer>({
+  certBindingMode,
   kryptos,
   logger,
   token,
 }: {
+  certBindingMode?: CertificateBindingMode;
   kryptos: IKryptos;
   logger: ILogger;
   token: Buffer;
 }): T => {
   // R2: `CweKit.decrypt` takes the ENCODED bytes and strips the outer CWT tag (61)
   // itself; hand it the token verbatim.
-  const { payload } = new CweKit({ kryptos, logger }).decrypt<T>(token);
+  const { payload } = new CweKit({ certBindingMode, kryptos, logger }).decrypt<T>(token);
   return payload;
 };
 

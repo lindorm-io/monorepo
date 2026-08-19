@@ -13,8 +13,8 @@ import type { TokenContent } from "./content.js";
 export type SignUnstructuredTokenOptions = WireTokenEnvelope;
 
 /**
- * The UNSTRUCTURED verify options — shared by JWS and CWS. Only the JOSE-side
- * cert-binding knob (COSE ignores it); JWS verify formerly took NO options.
+ * The UNSTRUCTURED verify options — shared by JWS and CWS. The cert-binding knob
+ * governs the post-verify certificate check on both wires.
  */
 export type VerifyUnstructuredTokenOptions = {
   certBindingMode?: CertificateBindingMode;

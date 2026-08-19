@@ -4,6 +4,7 @@
  * claim, which is why they live here and not on the base.
  */
 
+import type { CoseHeaderCodec } from "./cose-header-codec.js";
 import type { ParamSpec, WhenEmpty } from "./param-spec.js";
 
 /**
@@ -55,6 +56,17 @@ export type HeaderPlacement = "protected" | "unprotected" | "either";
  * `internal/header/refuse-empty-headers.ts`.
  */
 export type HeaderSpec<D = unknown> = ParamSpec<D, HeaderCodec, WhenEmpty> & {
+  /**
+   * HOW THE VALUE IS SHAPED ON THE COSE WIRE — the per-wire other half of
+   * `codec`, which describes JOSE. `null` exactly where `wire.cose` is `absent`:
+   * a parameter COSE does not carry has no COSE representation to describe, and
+   * a cell nothing can read is the defect this registry keeps out. The two are
+   * bound to each other in `header-registry.test.ts`, so neither can drift.
+   *
+   * Both COSE passes switch over it exhaustively, so neither carries a
+   * parameter-name list of its own — see {@link CoseHeaderCodec}.
+   */
+  cose: CoseHeaderCodec | null;
   /**
    * Which bucket the parameter may occupy — see {@link HeaderPlacement}.
    *

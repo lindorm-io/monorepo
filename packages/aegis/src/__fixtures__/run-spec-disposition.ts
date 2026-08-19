@@ -358,7 +358,6 @@ const observeHeader = async (
           sign: {
             key: { condition: { id: TEST_EC_KEY_SIG_CERT.id } },
             bindCertificate: "chain",
-            certificateThumbprintSha1: true,
           },
         } as never,
       );

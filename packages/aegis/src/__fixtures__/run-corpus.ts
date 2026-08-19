@@ -30,6 +30,8 @@ import {
   type PayloadCell,
   type SignCase,
 } from "./corpus.js";
+import { domainTokenTypePrefix } from "../internal/utils/compute-typ-header.js";
+import { domainHeaderToWire } from "../internal/utils/domain-header-to-wire.js";
 import { inspectToken, type TokenInspection } from "./inspect-token.js";
 import {
   TEST_AKP_KEY_SIG,
@@ -231,6 +233,8 @@ const payloadOf = (cell: PayloadCell): Buffer | string | Dict => {
 /** What a single act produced, before anything is read off it. */
 type ActResult = {
   format: string;
+  /** The envelope, when the act reported one — a sign-then-encrypt. */
+  wrapper?: string;
   token: string;
   /** The domain sugar the verb reports, minus the token itself. */
   result: Dict;
@@ -265,7 +269,6 @@ const runMintCase = async (kase: MintCase, ctx: CorpusContext): Promise<ActResul
         typ: kase.options.typ,
         header: kase.options.header,
         bindCertificate: kase.options.bindCertificate,
-        certificateThumbprintSha1: kase.options.certificateThumbprintSha1,
       },
       ...(encKryptos === undefined ? {} : { encrypt: { key: { kryptos: encKryptos } } }),
     } as never,
@@ -273,6 +276,7 @@ const runMintCase = async (kase: MintCase, ctx: CorpusContext): Promise<ActResul
 
   return {
     format: signed.format,
+    wrapper: signed.wrapper,
     token: signed.token,
     result: {
       expiresAt: signed.expiresAt,
@@ -290,18 +294,28 @@ const runMintCase = async (kase: MintCase, ctx: CorpusContext): Promise<ActResul
 const runSignCase = async (kase: SignCase, ctx: CorpusContext): Promise<ActResult> => {
   const kryptos = SIGN_KEYS[kase.signKey];
 
-  const signed = await ctx.aegis.sign({
-    format: kase.format,
-    payload: payloadOf(kase.payload),
+  // An opaque signature is a WIRE-level operation: `aegis.sign` is claims-only,
+  // so these rows go through the kit namespaces. Those take the kits' own
+  // `SignUnstructuredTokenOptions`, which is wire-named — so the two domain→wire
+  // translations the domain verb performs run HERE instead, through the same two
+  // utilities. That is what makes these rows' bytes comparable with a
+  // domain-tier caller's rather than with a second translation of their own.
+  const data = payloadOf(kase.payload);
+  const options = {
     key: { kryptos },
-    tokenType: kase.options?.tokenType,
-    header: kase.options?.header,
+    tokenType: domainTokenTypePrefix(kase.options?.tokenType),
+    header: domainHeaderToWire(kase.options?.header),
     bindCertificate: kase.options?.bindCertificate,
-    certificateThumbprintSha1: kase.options?.certificateThumbprintSha1,
-  });
+  };
+
+  const signed =
+    kase.format === "cws"
+      ? await ctx.aegis.cws.sign(data, options)
+      : await ctx.aegis.jws.sign(data, options);
 
   return {
     format: signed.format,
+    wrapper: signed.wrapper,
     token: signed.token,
     result: {
       expiresAt: signed.expiresAt,
@@ -372,6 +386,7 @@ export type RawCorpusEntry = {
   profile: string | undefined;
   requestedFormat: string;
   reportedFormat: string;
+  reportedWrapper?: string;
   wire: string;
   /**
    * The algorithm the row's signing key declares, `undefined` for a row that
@@ -411,6 +426,9 @@ export const runRawCase = async (
     profile: profileOf(kase),
     requestedFormat: requestedFormatOf(kase),
     reportedFormat: act.format,
+    // The OUTERMOST container decides the serialisation on the wire: a signed
+    // token inside an envelope is that envelope's shape, whatever the token IS.
+    reportedWrapper: act.wrapper,
     wire: inspection.wire,
     signAlgorithm: act.signAlgorithm,
     token: act.token,
@@ -567,6 +585,7 @@ export const normaliseEntry = (entry: RawCorpusEntry): Dict => ({
   profile: entry.profile,
   requestedFormat: entry.requestedFormat,
   reportedFormat: entry.reportedFormat,
+  reportedWrapper: entry.reportedWrapper,
   wire: entry.wire,
   signAlgorithm: entry.signAlgorithm,
   randomness: entry.randomness,

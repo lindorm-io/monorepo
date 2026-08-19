@@ -14,7 +14,8 @@ import type {
 } from "../claims/domain/index.js";
 import type { AegisSignKey } from "../keys/key-selectors.js";
 import type { DomainTokenEnvelope } from "./domain-envelope.js";
-import type { TokenFormatTag } from "./verified-token.js";
+import type { EncryptedToken } from "./encrypted-token.js";
+import type { TokenFormat } from "./token-format.js";
 
 export type SignJwtContent = Omit<
   StdClaims,
@@ -69,15 +70,36 @@ export type SignTokenOptions = DomainTokenEnvelope<AegisSignKey> & {
  * former byte-identical `SignedJwt` + `SignedCwt` into ONE type (both were
  * `token: string`, so the JOSE/COSE split bought nothing). `token` is always a
  * `string` (a COSE token is base64url-encoded — mint is opinionated). The
- * `format` discriminant reports the wire the token actually is, mirroring the
- * read side's `VerifiedToken.format` (a sign-then-encrypt result reports the
- * OUTER `jwe`/`cwe`).
+ * `format` discriminant reports the token's OWN kind, mirroring the read side's
+ * `VerifiedToken.format`; an envelope around it is reported under
+ * {@link SignedToken.wrapper}.
  */
 export type SignedToken = {
   expiresAt: Date | undefined;
   expiresIn: number | undefined;
   expiresOn: number | undefined;
-  format: TokenFormatTag;
+  /**
+   * The token's OWN kind. A sign-then-encrypt reports the SIGNED token's format
+   * here, not the envelope's — see {@link SignedToken.wrapper}.
+   *
+   * ⚠ {@link TokenFormat}, which EXCLUDES the encrypting outers, exactly as the
+   * read side's `VerifiedToken.format` does. `buildSignedToken` is only ever
+   * handed a signed format, and since the sign-then-encrypt composition stopped
+   * overwriting this field there is nothing left that could put `jwe`/`cwe` here
+   * — an exhaustive switch over it would otherwise still need two dead arms.
+   */
+  format: TokenFormat;
+  /**
+   * The envelope enclosing this token, when one does — set only by a
+   * sign-then-encrypt (`mint(…, { encrypt })`).
+   *
+   * ⚠ ITS PRESENCE IS THE DISCRIMINATOR, not the value of `format`. `"jwe"`
+   * appears in two different shapes: `{ format: "jwt", wrapper: "jwe" }` is a
+   * signed token in an envelope, and `{ format: "jwe" }` from `aegis.encrypt` is
+   * a bare encrypted token whose own kind IS `jwe`. Reading `format` alone
+   * cannot tell them apart.
+   */
+  wrapper?: EncryptedToken["format"];
   objectId: string | undefined;
   token: string;
   tokenId: string | undefined;

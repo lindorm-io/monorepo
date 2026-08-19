@@ -118,10 +118,7 @@ describe("normaliseClaims — emission regressions", () => {
    * normalisation reaches none of it even though it now always runs.
    */
   test("should not shred a nested opaque payload", async () => {
-    const { token } = await aegis.sign({
-      payload: { a: { b: { c: "" } }, keep: 1 },
-      format: "jws",
-    });
+    const { token } = await aegis.jws.sign({ a: { b: { c: "" } }, keep: 1 });
 
     const [, rawPayload] = token.split(".");
 
@@ -140,13 +137,10 @@ describe("normaliseClaims — emission regressions", () => {
    * every call rather than only on the ones that asked for a prune.
    */
   test("should keep an empty actions array in authorization_details", async () => {
-    const { token } = await aegis.sign({
-      payload: {
-        iss: "https://test.lindorm.io/",
-        sub: "user_1",
-        authorization_details: [{ type: "pay", actions: [], locations: ["x"] }],
-      },
-      format: "jws",
+    const { token } = await aegis.jws.sign({
+      iss: "https://test.lindorm.io/",
+      sub: "user_1",
+      authorization_details: [{ type: "pay", actions: [], locations: ["x"] }],
     });
 
     const [, rawPayload] = token.split(".");
@@ -164,10 +158,7 @@ describe("normaliseClaims — emission regressions", () => {
    * all, so the two are stated together — the prune must take exactly one.
    */
   test("should prune a registered empty claim from an opaque payload unasked", async () => {
-    const { token } = await aegis.sign({
-      payload: { kept: "value", nonce: "", empty_list: [] },
-      format: "jws",
-    });
+    const { token } = await aegis.jws.sign({ kept: "value", nonce: "", empty_list: [] });
 
     const [, rawPayload] = token.split(".");
 

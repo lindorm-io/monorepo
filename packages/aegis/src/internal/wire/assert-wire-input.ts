@@ -7,9 +7,7 @@ import type { Disposition, InputDisposition } from "./wire-input-disposition.js"
 type Unsupported = Extract<Disposition, { use: "unsupported" }>;
 
 const isRefused = (rule: Disposition, value: unknown): boolean =>
-  rule.use === "unsupported" &&
-  !isUndefined(value) &&
-  rule.honours?.includes(value) !== true;
+  rule.use === "unsupported" && !isUndefined(value);
 
 /**
  * THE guard, run ONCE above the seam: a caller that supplied an option the

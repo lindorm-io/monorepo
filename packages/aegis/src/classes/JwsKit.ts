@@ -19,6 +19,7 @@ import {
   verifyJoseSignature,
 } from "../internal/utils/jose-signature.js";
 import { assertProtectedHeaderGates } from "../internal/utils/assert-protected-header-gates.js";
+import { JOSE_THUMBPRINT_SHA1 } from "../internal/utils/jose-thumbprint-sha1.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
@@ -73,7 +74,7 @@ export class JwsKit implements IJwsKit {
         cert: resolveCertBinding(
           this.kryptos,
           options.bindCertificate,
-          options.certificateThumbprintSha1,
+          JOSE_THUMBPRINT_SHA1,
         ),
         format: "jws",
         error: JwsError,
@@ -145,7 +146,10 @@ export class JwsKit implements IJwsKit {
     // cert fields remain forbidden as key sources — see the SECURITY
     // INVARIANT in Aegis.kryptosSig.
     verifyCertBinding({
-      header: { certificateThumbprint: decoded.protectedHeader["x5t#S256"] },
+      header: {
+        certificateThumbprint: decoded.protectedHeader["x5t#S256"],
+        certificateThumbprintSha1: decoded.protectedHeader.x5t,
+      },
       kryptos: this.kryptos,
       logger: this.logger,
       mode: options.certBindingMode ?? this.certBindingMode,

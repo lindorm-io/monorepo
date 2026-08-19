@@ -13,8 +13,9 @@ import type { StructuredFormat } from "./verified-token.js";
  * (jws/cws) carry no claims layer and the encrypted ones (jwe/cwe) are ciphertext,
  * so `parse` throws for both rather than returning a degenerate result. That lets
  * this type be STRICT — `claims`/`custom` are always present, and there are no
- * optional slots for opaque payloads (`raw`), wire pass-through (`wire`), nested
- * inner formats (`inner`/`contentType`), or the verify-only DPoP binding (`dpop`).
+ * optional slots for opaque payloads (`raw`), wire pass-through (`wire`), an
+ * enclosing envelope (`wrapper`/`contentType`), or the verify-only DPoP binding
+ * (`dpop`).
  *
  * UNVERIFIED means there is NO signature guarantee: the claims are whatever the
  * wire carried and nothing here proves the token is authentic (use `aegis.verify`

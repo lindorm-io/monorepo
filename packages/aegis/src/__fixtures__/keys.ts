@@ -175,8 +175,8 @@ export const TEST_RSA_KEY_ENC = KryptosKit.from.b64({
  * Cert binding is the only write knob family whose effect is invisible without
  * one: `resolveCertBinding` defaults to `"thumbprint"` when (and only when) the
  * key carries a chain, and throws `cert_binding_chain_required` for a key that
- * does not, so a probe for `bindCertificate` / `certificateThumbprintSha1`
- * against any other fixture would measure the throw rather than the knob.
+ * does not, so a `bindCertificate` probe against any other fixture would measure
+ * the throw rather than the knob.
  *
  * The chain's own validity window (2026-04-13 .. 2126-03-20) is deliberately NOT
  * matched by the clock: `resolveCertBinding` derives the thumbprints from the

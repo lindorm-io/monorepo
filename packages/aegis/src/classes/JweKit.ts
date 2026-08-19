@@ -16,6 +16,7 @@ import { isSupportedJoseAlgorithm } from "../internal/utils/is-supported-jose-al
 import { encodeJoseHeader } from "../internal/utils/jose-header.js";
 import { assembleJweCompact } from "../internal/utils/assemble-jwe-compact.js";
 import { isEcdhEsAlgorithm } from "../internal/utils/is-ecdh-es-algorithm.js";
+import { JOSE_THUMBPRINT_SHA1 } from "../internal/utils/jose-thumbprint-sha1.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { resolveContentEncryption } from "../internal/utils/resolve-content-encryption.js";
 import { resolveEcdhParty } from "../internal/utils/resolve-ecdh-party.js";
@@ -115,7 +116,7 @@ export class JweKit implements IJweKit {
         cert: resolveCertBinding(
           this.kryptos,
           options.bindCertificate,
-          options.certificateThumbprintSha1,
+          JOSE_THUMBPRINT_SHA1,
         ),
         format: "jwe",
         error: JweError,
@@ -265,6 +266,7 @@ export class JweKit implements IJweKit {
     verifyCertBinding({
       header: {
         certificateThumbprint: header.certificateThumbprint,
+        certificateThumbprintSha1: header.certificateThumbprintSha1,
       },
       kryptos: this.kryptos,
       logger: this.logger,

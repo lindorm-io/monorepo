@@ -9,6 +9,7 @@ const build = (
     reserved: ["alg", "kid", "typ"],
     header: undefined,
     unprotected: undefined,
+    cert: undefined,
     proprietary: false,
     format: "cwt",
     error: CoseError,

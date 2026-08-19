@@ -6,6 +6,7 @@ import type { ICweKit } from "../interfaces/index.js";
 import { encodeCbor, Tag } from "../internal/cose/cbor.js";
 import type { CoseLabel } from "../internal/cose/cose-label.js";
 import { assertCoseRegistered } from "../internal/cose/assert-cose-registered.js";
+import { COSE_THUMBPRINT_SHA1 } from "../internal/cose/cose-thumbprint-sha1.js";
 import {
   coseLabelToEnc,
   encToCoseLabel,
@@ -27,24 +28,19 @@ import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
+import { resolveWideCertBinding } from "../internal/cose/cose-wide-cert-binding.js";
+import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { resolveContentEncryption } from "../internal/utils/resolve-content-encryption.js";
+import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
+  CertificateBindingMode,
   CweEncryptOptions,
+  CweKitSettings,
   DecodedEncryptedToken,
   DecryptedEncryptedToken,
   TokenContent,
   WireTokenHeader,
 } from "../types/index.js";
-
-export type CweKitSettings = {
-  kryptos: IKryptos;
-  logger: ILogger;
-  /**
-   * The content-encryption AEAD for a key that DECLARES NONE — a fallback, not
-   * an override. The key's own `encryption` wins; see `AesKitSettings`.
-   */
-  defaultEncryption?: KryptosEncryption;
-};
 
 /** The kit's own capability row — a COSE_Encrypt0 is `dir`-only and stamps four params. */
 const CAPABILITIES = KIT_CAPABILITIES.cwe;
@@ -72,6 +68,7 @@ export class CweKit implements ICweKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
   private readonly encryption: KryptosEncryption;
+  private readonly certBindingMode: CertificateBindingMode;
 
   constructor(options: CweKitSettings) {
     // The capability gate, raised in the CONSTRUCTOR so it fires before any
@@ -99,6 +96,7 @@ export class CweKit implements ICweKit {
 
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CweKit"]);
+    this.certBindingMode = options.certBindingMode ?? "strict";
     this.encryption = resolveContentEncryption(
       options.kryptos,
       options.defaultEncryption,
@@ -171,6 +169,11 @@ export class CweKit implements ICweKit {
       reserved: CAPABILITIES.reserved,
       header: callerHeader as Partial<WireTokenHeader>,
       unprotected: options.unprotected,
+      cert: resolveCertBinding(
+        this.kryptos,
+        options.bindCertificate,
+        COSE_THUMBPRINT_SHA1,
+      ),
       proprietary: options.proprietary,
       format: "cwe",
       error: CweError,
@@ -265,6 +268,24 @@ export class CweKit implements ICweKit {
       ciphertext,
       iv: Buffer.from(ivValue),
       tag,
+    });
+
+    // Content tamper check: runs AFTER decryption has succeeded (the AEAD's AAD is
+    // the protected bucket, so a rewritten binding fails the AEAD rather than
+    // steering this check). NOT a key selection step — header cert fields remain
+    // forbidden as key sources. The JOSE twin is `JweKit.decrypt`.
+    verifyCertBinding({
+      header: {
+        certificateThumbprint: protectedHeader["x5t#S256"],
+        certificateThumbprintSha1: protectedHeader.x5t,
+      },
+      // The third digest has no domain field — see `cose-wide-cert-binding.ts`.
+      // `decodedProtected` is the AEAD's own AAD, so it is the authenticated
+      // bucket exactly as the signed paths' `protectedMap` is.
+      computed: resolveWideCertBinding(decodedProtected, this.kryptos),
+      kryptos: this.kryptos,
+      logger: this.logger,
+      mode: this.certBindingMode,
     });
 
     // Reconstruct by the PROTECTED cty: the AEAD (whose AAD covers the protected

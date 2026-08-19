@@ -17,9 +17,20 @@ import type { DomainTokenHeader } from "../header/domain-header.js";
  * discriminant over a payload the encrypt path had renamed on the way in.
  */
 export type DecryptedToken<C extends Dict = Dict> = {
+  /**
+   * This token's OWN kind, which for a decrypt is always the encrypting outer —
+   * `decrypt` reads THAT token and hands back its plaintext under `payload`.
+   *
+   * ⚠ There is no `wrapper` here, and its absence is the statement: nothing
+   * encloses the token being read. That is the same shape `aegis.encrypt`
+   * returns, and it is why `format === "jwe"` alone never means "a signed token
+   * is inside" — a sign-then-encrypt reports `{ format: "jwt", wrapper: "jwe" }`
+   * from `verify` instead.
+   *
+   * ⚠ There is no `inner` field either, for the same reason: this verb does not
+   * inspect the plaintext for a nested token, so nothing could populate one.
+   */
   format: "jwe" | "cwe";
-  /** Set when the decrypted plaintext is itself a nested token. */
-  inner?: "jwt" | "cwt" | "cwm" | "jws" | "cws";
   contentType?: string;
   /**
    * The encrypting outer's header, domain-keyed and uniform across JOSE and COSE

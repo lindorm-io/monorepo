@@ -144,7 +144,6 @@ export const mintToken = async ({
     header: domainHeaderToWire(options.sign?.header),
     proprietary: options.proprietary,
     bindCertificate: options.sign?.bindCertificate,
-    certificateThumbprintSha1: options.sign?.certificateThumbprintSha1,
   };
 
   assertWireInput(wire.dispositions.signClaims, signInput, {
@@ -168,10 +167,10 @@ export const mintToken = async ({
     proprietary: options.proprietary,
     partyProducer: options.encrypt?.partyProducer,
     partyRecipient: options.encrypt?.partyRecipient,
-    certificateThumbprintSha1: options.encrypt?.certificateThumbprintSha1,
   });
 
-  // The OUTER wire is now the encrypting format, mirroring the read side — which
-  // reports that outer with the signed inner's format under `inner`.
-  return { ...signed, token, format: wire.encryptedFormat };
+  // The token's OWN kind SURVIVES the wrapping — `signed.format` rides through
+  // untouched — and the envelope is reported beside it. Mirrors the read side,
+  // which reports the same pair.
+  return { ...signed, token, wrapper: wire.encryptedFormat };
 };

@@ -126,10 +126,17 @@ export const computeTypHeader = (
   const shortName =
     (TOKEN_TYPE_TO_SHORT_NAME as Record<string, string>)[tokenType] ?? tokenType;
 
-  // Special case: id_token maps to bare "JWT", no suffix (OIDC ecosystem
-  // compatibility — there is no registered structured `id+jwt` type, and an
-  // id_token's consumer is the OIDC RP, which expects a plain JWT).
-  if (shortName === "JWT") return "JWT";
+  // Special case: a short name of `JWT` means the type has NO structured form —
+  // `id_token` (OIDC ecosystem compatibility: there is no registered `id+jwt`,
+  // and an id_token's consumer is the OIDC RP, which expects a plain JWT). It
+  // therefore floors to the bare conventional form OF THE FORMAT ASKED FOR.
+  //
+  // ⚠ `FORMAT_FALLBACK[kitFormat]`, not the literal `"JWT"`. A hardcoded `"JWT"`
+  // ignores the argument on this branch alone, so the function answers a JOSE
+  // media type for a COSE format — and `extractTypPrefix(…, "cwt")` then THROWS
+  // on it, because `"JWT"` is neither `application/cwt` nor a `+cwt` type. Every
+  // caller today passes `"jwt"`, where the two spellings are the same string.
+  if (shortName === "JWT") return FORMAT_FALLBACK[kitFormat];
 
   // A structured type carries the full media type (`application/at+jwt`); only
   // the bare conventional forms (JWT / JWS / JWE) omit the `application/` prefix.

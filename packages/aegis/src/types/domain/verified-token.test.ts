@@ -94,7 +94,9 @@ describe("DecryptedToken (type witness)", () => {
   test("an encrypted-outer result, confidential but not authenticated", () => {
     const decrypted: DecryptedToken = {
       format: "jwe",
-      inner: "jwt",
+      // ⚠ NO `wrapper`, and no field for one: `decrypt` reads the encrypting
+      // token itself, so its own kind IS `jwe` and nothing encloses it. The
+      // plaintext — a nested token or otherwise — is `payload`, uninterpreted.
       // ⚠ Still ONE header, unlike the verify/parse results above: the decrypt
       // result's COSE header merges the unprotected bucket in, and splitting it
       // is a change with nothing behind it yet.
@@ -107,8 +109,20 @@ describe("DecryptedToken (type witness)", () => {
       token: "eyJ.a.b.c.d",
     };
 
+    // ⚠ The TYPE is the assertion here, not a runtime check. `DecryptedToken`
+    // declares no `wrapper`, so adding one to the literal above fails to compile
+    // — whereas `expect(decrypted).not.toHaveProperty("wrapper")` would only be
+    // re-reading an object this test wrote three lines earlier and could never
+    // fail.
+    //
+    // The absence is proved against a REAL product result by
+    // `classes/token-wrapper.test.ts` ("a bare jwe/cwe reports its own format"),
+    // which asserts over what `aegis.encrypt` actually returns. ⚠ NOT by the
+    // scenario row of the same name: that row asserts over `ScenarioResult`,
+    // which the interpreter transcribes field by field, so it holds the FIXTURE
+    // honest — it catches an interpreter that fabricates a wrapper — and cannot
+    // see one the product emits.
     expect(decrypted.format).toBe("jwe");
-    expect(decrypted.inner).toBe("jwt");
   });
 
   test("the payload admits every shape the codec reconstructs", () => {

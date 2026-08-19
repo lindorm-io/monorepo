@@ -101,25 +101,33 @@ const JOSE_RESERVED: ReadonlyArray<string> = [
 ];
 
 /**
- * The COSE rows: the same `KitOwnedHeaderParam` set filtered to the five
- * parameters the COSE wire has a label for — `alg` (1), `iv` (5), `kid` (4),
- * `typ` (16, RFC 9596) and `x5c` (33, RFC 9360 x5chain). The other nine are
- * `wireAbsent` in the header registry, each with its stated reason: the ECDH-ES
- * and PBES2 outputs have no COSE_Encrypt0 counterpart, and COSE's `x5t` is a
- * `COSE_CertHash` structure rather than a relabelled JOSE thumbprint.
+ * The COSE rows: the same `KitOwnedHeaderParam` set filtered to the parameters the
+ * COSE wire has a label for — `alg` (1), `iv` (5), `kid` (4), `typ` (16,
+ * RFC 9596), `x5c` (33, RFC 9360 x5chain) and `x5t#S256` (34, RFC 9360 x5t). The
+ * rest are `wireAbsent` in the header registry, each with its stated reason: the
+ * ECDH-ES and PBES2 outputs have no COSE_Encrypt0 counterpart, and `x5t` — JOSE's
+ * SHA-1 parameter — has no COSE spelling because RFC 9360 §2 makes the digest
+ * algorithm a member of label 34's value rather than a second parameter name.
  *
- * ⚠ `x5c` and `iv` are the two that must not be dropped again:
+ * ⚠ `x5c`, `x5t#S256` and `iv` are the three that must not be dropped:
  *
- * - `x5c` is derived from the signing key. No COSE kit derives one (`certificateBinding`
- *   is `false` on every row), so a caller value would be the ONLY certificate
- *   chain on the token — a forged chain the signing key never had, reported back
- *   as `verified.header.certificateChain`.
+ * - `x5c` and `x5t#S256` are derived from the signing key, so a caller value
+ *   would be the ONLY certificate statement on the token — a forged chain or
+ *   digest the signing key never had, reported back as
+ *   `verified.header.certificateChain` / `.certificateThumbprint`.
  * - `iv` is `placement: "either"` so `CweKit` can put it in the unprotected
  *   bucket, which means the placement rule cannot refuse it there. On the three
  *   SIGNED formats there is no IV at all, so a caller value would be a
  *   signature-uncovered `initialisationVector` on a token that verifies.
  */
-const COSE_RESERVED: ReadonlyArray<string> = ["alg", "iv", "kid", "typ", "x5c"];
+const COSE_RESERVED: ReadonlyArray<string> = [
+  "alg",
+  "iv",
+  "kid",
+  "typ",
+  "x5c",
+  "x5t#S256",
+];
 
 export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>> = {
   jwt: {
@@ -157,10 +165,12 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     keyManagement: NONE_ALG,
     contentEncryption: NONE_ENC,
     cnfMembers: COSE_CNF,
-    // `resolveCertBinding` has ZERO COSE callers — `bindCertificate` is accepted
-    // and inert on every COSE path today. The capability is `false` because that
-    // is what the kit can do; the ACCEPT-and-ignore is the defect above it.
-    certificateBinding: false,
+    // RFC 9360 §2 gives COSE both parameters — `x5chain` (33) and `x5t` (34) —
+    // and every COSE writer derives them from the signing key through
+    // `resolveCertBinding`, exactly as the JOSE kits do. The legacy SHA-1 digest
+    // is the one thing that does not cross: the COSE writers hand the resolver
+    // `false` for it because label 34 carries its algorithm inside the value.
+    certificateBinding: true,
     unprotectedBucket: true,
     // `typ` is what routes a COSE token — `isCwt`/`isCws` and the profile floor
     // read it — so a caller value for it is refused, not merged. It used to be
@@ -173,7 +183,7 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     keyManagement: NONE_ALG,
     contentEncryption: NONE_ENC,
     cnfMembers: COSE_CNF,
-    certificateBinding: false,
+    certificateBinding: true,
     unprotectedBucket: true,
     reserved: COSE_RESERVED,
   },
@@ -182,7 +192,7 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     keyManagement: NONE_ALG,
     contentEncryption: NONE_ENC,
     cnfMembers: NO_CNF,
-    certificateBinding: false,
+    certificateBinding: true,
     unprotectedBucket: true,
     reserved: COSE_RESERVED,
   },
@@ -200,7 +210,14 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     // the CBC-HMAC family requires `proprietary` mode (`enc-labels.ts`).
     contentEncryption: new Set(AES_ENCRYPTION_ALGORITHMS),
     cnfMembers: COSE_CNF,
-    certificateBinding: false,
+    // ⚠ THE KIT CALLS THE RESOLVER — that is the sense every row of this column
+    // states, and it is what `kit-capabilities.test.ts` measures (a cert-less key
+    // makes `resolveCertBinding` throw, so a kit that never called it would mint
+    // happily). It is NOT a claim that a binding can be PRODUCED here: RFC 9052
+    // §5.2 makes a COSE_Encrypt0 direct encryption, so a `cwe` recipient is a
+    // symmetric `dir` key and carries no X.509 certificate to derive one from.
+    // `knob-probes.ts`'s `unobservable.cose` states that second fact.
+    certificateBinding: true,
     unprotectedBucket: true,
     reserved: COSE_RESERVED,
   },

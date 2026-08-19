@@ -121,7 +121,6 @@ export type MintKnobs = {
   codeHash?: string;
   stateHash?: string;
   bindCertificate?: BindCertificateMode;
-  certificateThumbprintSha1?: boolean;
   context?: SignContext;
   header?: DomainProtectedHeader;
   lifetime?: string;
@@ -133,7 +132,6 @@ export type MintKnobs = {
 /** The write knobs an opaque `sign` row may turn. */
 export type SignKnobs = {
   bindCertificate?: BindCertificateMode;
-  certificateThumbprintSha1?: boolean;
   header?: DomainProtectedHeader;
   tokenType?: TokenType;
 };
@@ -166,7 +164,7 @@ export type MintCase = {
   options: MintKnobs;
 };
 
-/** An opaque signature — `aegis.sign({ format, payload, … })`. */
+/** An opaque signature — `aegis.jws.sign(payload, options)` / `aegis.cws.sign(…)`. */
 export type SignCase = {
   verb: "sign";
   name: string;
@@ -492,7 +490,7 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   {
     verb: "mint",
     name: "mint-access-token-jwt-cert-thumbprint",
-    note: "Cert binding, thumbprint mode with the SHA-1 companion — `x5t#S256` and `x5t` on the protected header.",
+    note: "Cert binding, thumbprint mode — `x5t#S256` and its `x5t` companion on the protected header.",
     profile: "access_token",
     format: "jwt",
     content: { subject: SUBJECT, audience: AUDIENCE, clientId: CLIENT_ID },
@@ -500,13 +498,12 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
     options: {
       tokenId: "corpus_jti_0012",
       bindCertificate: "thumbprint",
-      certificateThumbprintSha1: true,
     },
   },
   {
     verb: "mint",
     name: "mint-access-token-jwt-cert-chain",
-    note: "Cert binding, chain mode with the SHA-1 companion suppressed — the whole `x5c` chain on the wire and no `x5t`.",
+    note: "Cert binding, chain mode — the whole `x5c` chain on the wire, beside both digests.",
     profile: "access_token",
     format: "jwt",
     content: { subject: SUBJECT, audience: AUDIENCE, clientId: CLIENT_ID },
@@ -514,7 +511,6 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
     options: {
       tokenId: "corpus_jti_0013",
       bindCertificate: "chain",
-      certificateThumbprintSha1: false,
     },
   },
   {
@@ -815,11 +811,11 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   {
     verb: "sign",
     name: "sign-jws-object-cert",
-    note: "Cert binding on the opaque JOSE path — `sign` and `mint` resolve the binding through the same code, so both must be held.",
+    note: "Cert binding on the opaque JOSE path — the opaque JOSE namespace and `mint` resolve the binding through the same code, so both must be held. ⚠ `chain`, not `thumbprint`: a cert-bearing key emits `x5t#S256`/`x5t` on EVERY sign, so a `thumbprint` row produces bytes identical to a row that states nothing and the recorded token shows nothing about the option. `chain` is the only mode that adds `x5c` (RFC 7515 §4.1.6), so the recorded token is attributable to the request. ⚠ The corpus RECORDS; it does not assert header contents — the capability itself is held by the disposition probe row `jose signOpaque forwards bindCertificate`. The COSE twin honours `bindCertificate` too: `CwsKit.sign` resolves it and writes RFC 9360 §2's `x5chain` (label 33).",
     format: "jws",
     payload: OBJECT_PAYLOAD,
     signKey: "ec-sig-cert",
-    options: { bindCertificate: "thumbprint", certificateThumbprintSha1: false },
+    options: { bindCertificate: "chain" },
   },
 
   // ---------------------------------------------------------------- sign / cws

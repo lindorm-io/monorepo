@@ -18,7 +18,7 @@ import { detectTokenFormat } from "./detect-token-format.js";
 import { domainTokenHeader } from "./domain-header.js";
 import { enforceVerifyFloor } from "./enforce-verify-floor.js";
 import { isClaimsContentType } from "./is-claims-content-type.js";
-import { TOKEN_FORMAT_KIND } from "./token-format-kind.js";
+import { TOKEN_FORMAT_KIND, isTokenFormatOfKind } from "./token-format-kind.js";
 
 /**
  * The profile a verification is held to, resolved once. Threaded down through an
@@ -84,7 +84,8 @@ export const resolveVerifyFloor = (
  * - ENCRYPTED (`jwe`/`cwe`): peeled, then the plaintext is re-verified. `verify`
  *   means authenticity, so the plaintext MUST itself be a signed token of this
  *   wire; confidential-but-unsigned claims are read with `aegis.decrypt`. The
- *   OUTER format is reported with the inner's under `inner`.
+ *   token's OWN kind survives the peel, and the envelope is reported beside it
+ *   under `wrapper`.
  * - OPAQUE (`jws`/`cws`): the signature is checked and the payload delivered as
  *   `raw` beside an empty domain — there is no claims layer to read.
  * - CLAIMS (`jwt`/`cwt`/`cwm`): integrity, then the domain policy, then — when
@@ -152,7 +153,7 @@ export const verifyToken = async <C extends Dict = Dict>({
   const wire = tokenWireFor(format);
 
   // ---- the encrypting outer ------------------------------------------------
-  if (TOKEN_FORMAT_KIND[format] === "encrypted") {
+  if (isTokenFormatOfKind(format, "encrypted")) {
     const { inner, contentType } = await decryptOuter(wire, token, deps);
     const innerFormat = inner === undefined ? undefined : detectTokenFormat(inner);
 
@@ -213,11 +214,10 @@ export const verifyToken = async <C extends Dict = Dict>({
       issuer,
     });
 
-    return {
-      ...verified,
-      format,
-      inner: verified.format as VerifiedToken["inner"],
-    };
+    // The token's OWN kind SURVIVES the peel — `verified.format` rides through
+    // untouched — and the envelope is reported beside it, so an encrypted
+    // id_token and a plain one both answer `"jwt"` to "what is this token".
+    return { ...verified, wrapper: format };
   }
 
   // `tokenType` asserts the token's TYPE, which BOTH wires carry in a HEADER
@@ -226,7 +226,7 @@ export const verifyToken = async <C extends Dict = Dict>({
   const { tokenType, ...claimMatchers } = assert ?? {};
 
   // ---- an opaque signed token ---------------------------------------------
-  if (TOKEN_FORMAT_KIND[format] === "opaque") {
+  if (isTokenFormatOfKind(format, "opaque")) {
     if (floor) {
       throw new AegisDomainError("Profile requires a claims token", {
         code: "profile_requires_claims",

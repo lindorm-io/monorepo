@@ -288,14 +288,13 @@ describe("KIT_CAPABILITIES", () => {
     expect(KIT_CAPABILITIES.cws.cnfMembers.size).toBe(0);
   });
 
-  test("certificate binding is a JOSE-only capability today", () => {
-    // `resolveCertBinding` has ZERO COSE callers, so `bindCertificate` is
-    // accepted and INERT on every COSE path. The row states what the kit can
-    // do; the accept-and-ignore above it is the defect this makes refusable.
+  test("certificate binding is a capability of every kit, on both wires", () => {
+    // RFC 7515 §4.1.6/§4.1.8 give JOSE `x5c`/`x5t#S256` and RFC 9360 §2 gives
+    // COSE `x5chain` (33)/`x5t` (34), and every kit derives its binding off the
+    // signing key through `resolveCertBinding`. A row that said otherwise would
+    // license the accept-and-ignore the disposition tables exist to refuse.
     for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
-      expect(row.certificateBinding, `${format} certificate binding`).toBe(
-        row.wire === "jose",
-      );
+      expect(row.certificateBinding, `${format} certificate binding`).toBe(true);
     }
   });
 
@@ -373,7 +372,7 @@ describe("KIT_CAPABILITIES", () => {
     (format) => {
       const reserved = [...KIT_CAPABILITIES[format].reserved].sort();
 
-      expect(reserved).toHaveLength(KIT_CAPABILITIES[format].wire === "jose" ? 14 : 5);
+      expect(reserved).toHaveLength(KIT_CAPABILITIES[format].wire === "jose" ? 14 : 6);
       expect(reserved).toMatchSnapshot();
     },
   );
@@ -545,9 +544,11 @@ describe("KIT_CAPABILITIES", () => {
         "x5t#S256",
       ];
 
-      // The five KitOwned params the COSE wire has a label for: alg (1), iv (5),
-      // kid (4), typ (16, RFC 9596) and x5c (33, RFC 9360 x5chain).
-      const COSE_EXPECTED = ["alg", "iv", "kid", "typ", "x5c"];
+      // The KitOwned params the COSE wire has a label for: alg (1), iv (5),
+      // kid (4), typ (16, RFC 9596), x5c (33, RFC 9360 x5chain) and x5t#S256
+      // (34, RFC 9360 x5t — one parameter whose hash algorithm is a member of
+      // its value, which is why the SHA-1-named `x5t` is NOT here).
+      const COSE_EXPECTED = ["alg", "iv", "kid", "typ", "x5c", "x5t#S256"];
 
       // JOSE carries every KitOwned param, so the JOSE literal must BE the
       // type-level set — the runtime backstop and the compile-time Omit stating

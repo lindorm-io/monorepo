@@ -141,8 +141,13 @@ describe("HEADER_SPECS", () => {
       "p2c",
       "p2s",
       "tag",
+      // ⚠ `x5t` is here and `x5t#S256` is NOT, and the asymmetry is RFC 9360 §2's,
+      // not a gap: COSE has ONE thumbprint parameter (label 34) whose hash
+      // algorithm is a member of the value. `x5t#S256` IS that parameter's COSE
+      // form and carries the `certHash` codec; the SHA-1-named JOSE parameter has
+      // no COSE spelling of its own to be written under, and is reached on READ
+      // only through label 34's `hashAlg` dispatch.
       "x5t",
-      "x5t#S256",
       "zip",
     ]);
 

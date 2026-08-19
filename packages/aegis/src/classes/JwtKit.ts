@@ -27,6 +27,7 @@ import {
   redactSensitiveIdentity,
   redactVerifyOptions,
 } from "../internal/utils/redact-sensitive-identity.js";
+import { JOSE_THUMBPRINT_SHA1 } from "../internal/utils/jose-thumbprint-sha1.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { assertProtectedHeaderGates } from "../internal/utils/assert-protected-header-gates.js";
 import { validateWireClaims } from "../internal/utils/validate-wire-claims.js";
@@ -116,7 +117,7 @@ export class JwtKit implements IJwtKit {
         cert: resolveCertBinding(
           this.kryptos,
           options.bindCertificate,
-          options.certificateThumbprintSha1,
+          JOSE_THUMBPRINT_SHA1,
         ),
         format: "jwt",
         error: JwtError,
@@ -219,7 +220,10 @@ export class JwtKit implements IJwtKit {
     // configured kryptos. NOT a key selection step — header cert fields are
     // never trusted as key sources (see the SECURITY INVARIANT in Aegis).
     verifyCertBinding({
-      header: { certificateThumbprint: decodedHeader["x5t#S256"] },
+      header: {
+        certificateThumbprint: decodedHeader["x5t#S256"],
+        certificateThumbprintSha1: decodedHeader.x5t,
+      },
       kryptos: this.kryptos,
       logger: this.logger,
       mode: options.certBindingMode ?? this.certBindingMode,

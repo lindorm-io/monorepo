@@ -1,7 +1,7 @@
 import { getUnixTime } from "@lindorm/date";
 import { isFinite, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
-import type { SignedToken, TokenFormatTag } from "../../types/index.js";
+import type { SignedToken, TokenFormat } from "../../types/index.js";
 import { claimByDomain, type NameSelector } from "../claims/claims-registry.js";
 
 /**
@@ -20,7 +20,9 @@ export const buildSignedToken = (
   token: string,
   claims: Dict,
   objectId: string | undefined,
-  format: TokenFormatTag,
+  // The SIGNED token's own kind. {@link TokenFormat} excludes the encrypting
+  // outers because no caller has one to pass: every call site is a signer.
+  format: TokenFormat,
   nameOf: NameSelector,
 ): SignedToken => {
   const wireName = (domain: string): string => {

@@ -1,6 +1,7 @@
 import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
+  extractTypPrefix,
   getBaseFormat,
 } from "./compute-typ-header.js";
 import { describe, expect, test } from "vitest";
@@ -15,9 +16,43 @@ describe("computeTypHeader", () => {
       expect(computeTypHeader("refresh_token", "jws")).toBe("application/rt+jws");
     });
 
-    test("maps id_token to bare JWT regardless of format", () => {
-      expect(computeTypHeader("id_token", "jwt")).toBe("JWT");
+    /**
+     * ⭐ A TOKEN TYPE WITH NO STRUCTURED FORM FLOORS TO THE BARE FORM OF THE
+     * FORMAT ASKED FOR — not to the JOSE one.
+     *
+     * `id_token` maps to the short name `JWT` (OIDC Core §2 — an ID Token is a
+     * plain JWT and no `id+jwt` media type is registered), so there is no
+     * `application/<prefix>+<fmt>` to build. What is left is the format's own
+     * conventional value, and the seven differ: RFC 7515 §4.1.9 abbreviates the
+     * JOSE ones, RFC 8392 §9.2 / RFC 9052 §3.1 keep `application/` on the COSE
+     * ones.
+     *
+     * ⚠ EVERY FORMAT IS EXERCISED, not just `jwt`. Answering `"JWT"` for a COSE
+     * format is not a cosmetic mis-stamp: `extractTypPrefix` THROWS on it,
+     * because `"JWT"` is neither `application/cwt` nor a `+cwt` media type.
+     */
+    test.each([
+      ["jwt", "JWT"],
+      ["jws", "JWS"],
+      ["jwe", "JWE"],
+      ["cwt", "application/cwt"],
+      ["cwm", "application/cwt"],
+      ["cws", "application/cws"],
+      ["cwe", "application/cwe"],
+    ] as const)("maps id_token to the bare %s form", (kitFormat, expected) => {
+      expect(computeTypHeader("id_token", kitFormat)).toBe(expected);
     });
+
+    // And the value it floors to is one `extractTypPrefix` can read back, on
+    // every format — the round trip is what the throw broke.
+    test.each(["jwt", "jws", "jwe", "cwt", "cwm", "cws", "cwe"] as const)(
+      "the bare %s form reduces back to no prefix",
+      (kitFormat) => {
+        expect(
+          extractTypPrefix(computeTypHeader("id_token", kitFormat), kitFormat),
+        ).toBeUndefined();
+      },
+    );
 
     test("maps security_event to application/secevent+jwt", () => {
       expect(computeTypHeader("security_event", "jwt")).toBe("application/secevent+jwt");

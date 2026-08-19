@@ -33,6 +33,7 @@ export const rawEncryptCwe = async ({
   const kryptos = await deps.resolveEncryptKey(key);
 
   const token = new CweKit({
+    certBindingMode: deps.certBindingMode,
     kryptos,
     logger: deps.logger,
     defaultEncryption: deps.defaultEncryption,

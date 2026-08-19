@@ -271,16 +271,13 @@ describe("a private-use COSE header label degrades to its interoperable spelling
       aegis = new Aegis({ amphora, logger });
     });
 
-    // ⚠ `aegis.sign` — the raw tier — has NO `proprietary` knob: `RawSignInput`
-    // intersects `DomainTokenEnvelope`, which does not declare one, so this door
-    // has only the interoperable spelling to offer. That is the right default and
-    // this row states it; whether the raw tier should be able to ask for the
-    // compact one is a surface question, not something to settle here.
-    test("aegis.sign emits the interoperable spelling on the COSE wire", async () => {
-      const { token } = await aegis.sign({
-        format: "cws",
-        payload: CONTENT,
-        header: { objectId: OBJECT_ID },
+    // The OPAQUE COSE namespace. It takes the kits' own wire-named bag, so the
+    // parameter is spelled `oid` here rather than `objectId` — `aegis.cws.sign`
+    // runs no domain→wire header translation. It has a `proprietary` knob like
+    // every kit door; this row states what the DEFAULT emits.
+    test("cws.sign emits the interoperable spelling on the COSE wire", async () => {
+      const { token } = await aegis.cws.sign(CONTENT, {
+        header: { oid: OBJECT_ID },
       });
       const bucket = protectedOf(Buffer.from(token, "base64url"));
 

@@ -3,7 +3,7 @@ import type { Dict } from "@lindorm/types";
 import type {
   StructuredFormat,
   StructuredVerifiedToken,
-  TokenFormatTag,
+  TokenFormat,
   VerifiedToken,
 } from "../types/index.js";
 
@@ -15,40 +15,32 @@ import type {
  */
 const STRUCTURED: Record<StructuredFormat, true> = { jwt: true, cwt: true, cwm: true };
 
-/** The encrypting outers — the only formats that ever carry an `inner`. */
-const ENCRYPTING: Record<"jwe" | "cwe", true> = { jwe: true, cwe: true };
-
 /**
- * ⚠ `Object.hasOwn`, never `in`. Both tables are plain object literals and both
- * keys come off a CALLER-SUPPLIED token — this guard narrows a value handed in
- * from outside, so `{ format: "constructor" }` resolved through `Object.prototype`
+ * ⚠ `Object.hasOwn`, never `in`. The table is a plain object literal and the key
+ * comes off a CALLER-SUPPLIED token — this guard narrows a value handed in from
+ * outside, so `{ format: "constructor" }` resolved through `Object.prototype`
  * and narrowed to a claims-bearing token that carries no claims. `in` on a
  * caller-influenced key is a BANNED construct in this package.
  */
-const isStructuredFormat = (
-  format: TokenFormatTag | undefined,
-): format is StructuredFormat =>
-  !isUndefined(format) && Object.hasOwn(STRUCTURED, format);
+const isStructuredFormat = (format: TokenFormat): format is StructuredFormat =>
+  Object.hasOwn(STRUCTURED, format);
 
 /**
  * Does this verified token carry a readable CLAIMS layer?
  *
- * `VerifiedToken.format` is a seven-member union, of which only `jws`/`cws` are
- * genuinely claimless (`claims`/`custom` are `{}` by contract). Everything else
- * has claims — so the widespread `format === "jwt"` shorthand silently discards
- * two whole categories of valid credential:
+ * `VerifiedToken.format` is the token's OWN kind, of which only `jws`/`cws` are
+ * genuinely claimless (`claims`/`custom` are `{}` by contract). So the widespread
+ * `format === "jwt"` shorthand still discards `cwt`/`cwm` — claims-bearing COSE
+ * (COSE_Sign1 / COSE_Mac0) — which is what this guard is for.
  *
- * - `cwt`/`cwm` — claims-bearing COSE (COSE_Sign1 / COSE_Mac0);
- * - `jwe`/`cwe` that wrapped a structured inner. `verify` decrypts such a token
- *   and re-verifies its signed inner, returning the inner's fully-populated
- *   `claims`/`custom` with only the OUTER tag reading `jwe`/`cwe` and the inner
- *   format under `inner`. An encrypted id_token is precisely this, and a
- *   `format === "jwt"` check drops it.
+ * ⚠ AN ENCRYPTED TOKEN NEEDS NO SPECIAL CASE. An encrypted id_token verifies to
+ * `{ format: "jwt", wrapper: "jwe" }`, so it answers the same test as a plain
+ * one: `wrapper` carries the envelope and never changes what the token IS.
  *
  * Nullish input is FALSE rather than a caller's problem: the check this replaces
  * is `if (!token || token.format !== "jwt")`, and collapsing both halves into one
- * guard is the point. A `jws`/`cws` is false, as is an encrypting outer that
- * wrapped one — the plaintext is opaque either way.
+ * guard is the point. A `jws`/`cws` is false whether or not it was wrapped — the
+ * plaintext is opaque either way.
  *
  * ⚠ Not to be confused with `isClaimsBearingToken`, which asks the same question
  * of an UNVERIFIED wire STRING (should this be verified locally or introspected?).
@@ -59,10 +51,5 @@ export const isStructuredToken = <C extends Dict = Dict>(
 ): token is StructuredVerifiedToken<C> => {
   if (isNull(token) || isUndefined(token)) return false;
 
-  if (isStructuredFormat(token.format)) return true;
-
-  // `inner` is only meaningful under an encrypting outer. Checking the outer too
-  // means a hand-built `jws` carrying a stray `inner` stays false, rather than
-  // the guard trusting a field that format never sets.
-  return Object.hasOwn(ENCRYPTING, token.format) && isStructuredFormat(token.inner);
+  return isStructuredFormat(token.format);
 };

@@ -1,11 +1,10 @@
-import { isBuffer, isString } from "@lindorm/is";
+import { isString } from "@lindorm/is";
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import { JwtKit } from "../../classes/JwtKit.js";
 import { JwtError } from "../../errors/index.js";
 import type { TokenContent, TokenProfileTyp } from "../../types/index.js";
 import { joseName } from "../claims/claims-registry.js";
 import { domainToWire } from "../claims/translate.js";
-import { normaliseClaims } from "../utils/normalise-claims.js";
 import { assertWireTyp } from "../utils/assert-wire-typ.js";
 import { buildSignedToken } from "../utils/build-signed-token.js";
 import { computeTypHeader, extractTypPrefix } from "../utils/compute-typ-header.js";
@@ -35,9 +34,6 @@ const JOSE_DISPOSITIONS: WireInputDispositions = {
     unprotected: { use: "forwarded" },
     tokenType: { use: "forwarded" },
     bindCertificate: { use: "forwarded" },
-    // Forwarded THROUGH `signJwt`, which fills the deployment default in behind
-    // a call that stated nothing. A stated value reaches the kit unchanged.
-    certificateThumbprintSha1: { use: "forwarded" },
     proprietary: { use: "forwarded" },
   },
 
@@ -46,8 +42,6 @@ const JOSE_DISPOSITIONS: WireInputDispositions = {
     unprotected: { use: "forwarded" },
     tokenType: { use: "forwarded" },
     bindCertificate: { use: "forwarded" },
-    // As above, through `rawSignJws`.
-    certificateThumbprintSha1: { use: "forwarded" },
     proprietary: { use: "forwarded" },
   },
 
@@ -56,8 +50,6 @@ const JOSE_DISPOSITIONS: WireInputDispositions = {
     unprotected: { use: "forwarded" },
     tokenType: { use: "forwarded" },
     bindCertificate: { use: "forwarded" },
-    // As above, through `encryptJwe`.
-    certificateThumbprintSha1: { use: "forwarded" },
     proprietary: { use: "forwarded" },
     partyProducer: { use: "forwarded" },
     partyRecipient: { use: "forwarded" },
@@ -250,17 +242,17 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
   // `serialiseContent` takes it as an override. The COSE twin does the identical
   // thing one level down in `rawSignCose`, so the two wires now agree.
   //
-  // The normalisation sits HERE rather than in `rawSignJws`, which the COSE
-  // twin's placement would suggest, because `rawSignJws` also serves the raw
-  // `aegis.jws.sign` namespace — the door that hands a kit whatever bytes it was
-  // given. This is the DOMAIN `sign` verb, and its object payload is normalised
-  // exactly as the COSE twin normalises its own (`raw-sign-cose.ts`).
+  // Reached by `aegis.jws.sign` through the shared opaque entry
+  // (`raw-sign-opaque.ts`), which runs `assertWireInput` over this wire's
+  // `signOpaque` dispositions first. This is the package's only call site for
+  // `rawSignJws`.
+  //
+  // The emission normalisation is NOT applied here. It lives in `rawSignJws`,
+  // one level down, exactly where the COSE twin puts its own (`rawSignCose`);
+  // applying it here as well would run it twice on the same payload. Its
+  // behaviour is pinned by `sign-content-round-trip.test.ts`.
   signOpaque: ({ deps, payload, key, ...options }) =>
-    rawSignJws({
-      data: isString(payload) || isBuffer(payload) ? payload : normaliseClaims(payload),
-      options: { ...options, key },
-      deps,
-    }),
+    rawSignJws({ data: payload, options: { ...options, key }, deps }),
 
   encryptContent: ({ kryptos, deps, content, ...options }) =>
     encryptJwe({
@@ -275,7 +267,6 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
       options,
       defaultEncryption: deps.defaultEncryption,
       certBindingMode: deps.certBindingMode,
-      certificateThumbprintSha1: deps.certificateThumbprintSha1,
       logger: deps.logger,
     }),
 

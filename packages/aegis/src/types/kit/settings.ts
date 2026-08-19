@@ -42,3 +42,20 @@ export type JweKitSettings = EncryptKitSettings & {
    */
   partyRecipient?: string;
 };
+
+/**
+ * The COSE kit settings — the same three tiers the JOSE kits take, and for the
+ * same reasons. `certBindingMode` reaches every one of them because a certificate
+ * binding is verified on BOTH wires: RFC 9360 §2 registers `x5chain` (label 33)
+ * and `x5t` (label 34) for COSE, and `verify-cert-binding.ts` is wire-agnostic.
+ */
+export type CwsKitSettings = SignKitSettings;
+
+export type CwtKitSettings = SignKitSettings & {
+  /** Clock skew tolerance (seconds) for the in-kit temporal range check. */
+  clockTolerance?: number;
+};
+
+export type CwmKitSettings = CwtKitSettings;
+
+export type CweKitSettings = EncryptKitSettings;

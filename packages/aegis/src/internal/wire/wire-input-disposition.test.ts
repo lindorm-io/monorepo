@@ -38,7 +38,7 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  *   matrix's subject; what the WIRE forwards is this one's.
  * - `unsupported` — driven through the REAL domain verb, because the guard runs
  *   above the seam and a caller is the only thing that can trip it. A supplied
- *   value must be REFUSED; a value the row `honours` must not be.
+ *   value must be REFUSED.
  *
  * ⛔ Delete a field from a wire's forward and this goes red. That is the whole
  * point: the rest-spread makes the drop unexpressible, and this proves the
@@ -54,13 +54,12 @@ describe("wire input dispositions", () => {
     header: { oid: "1.2.3.4" },
     unprotected: { oid: "1.2.3.5" },
     tokenType: "probe",
-    // A cert-bearing key is used throughout, so the strongest mode resolves.
+    // ⚠ The rule this file applies is DISTINGUISHABILITY FROM THE DEFAULT, not
+    // observability on the wire: the probe spies the kit call and asserts the
+    // received value, so it never inspects an emitted parameter. `"chain"` is the
+    // one mode no deployment default resolves to, which is what makes a received
+    // `"chain"` attributable to this sentinel and to nothing else.
     bindCertificate: "chain",
-    // ⚠ `true`, the value that ASKS FOR AN EMISSION — and it has to be, because
-    // `false` asks a wire to emit nothing, which the COSE wire already does and
-    // therefore `honours`. The deployment default below is flipped to `false` so
-    // a `true` reaching the kit can still only have come from here.
-    certificateThumbprintSha1: true,
     proprietary: true,
     partyProducer: "cHJvZHVjZXItcHJvYmU",
     partyRecipient: "cmVjaXBpZW50LXByb2Jl",
@@ -107,9 +106,7 @@ describe("wire input dispositions", () => {
         return `consumed by ${rule.by}`;
 
       case "unsupported":
-        return rule.honours === undefined
-          ? "unsupported"
-          : `unsupported honours [${[...rule.honours].map(String).sort().join(", ")}]`;
+        return "unsupported";
 
       default: {
         // `noImplicitReturns` is off repo-wide. Without this a new arm would
@@ -123,11 +120,10 @@ describe("wire input dispositions", () => {
   /**
    * ⭐ THE INVENTORY, pinned as DATA OUTSIDE the generated matrices.
    *
-   * Every `wire.operation.option -> use` triple, with the `honours` values inline.
-   * The matrices below are GENERATED from this same data, so they cannot notice it
-   * changing: a row whose `use` flips moves from one matrix to the other and both
-   * stay green, and a widened `honours` grows a NEW green test asserting the
-   * widening. Only a pin outside the generation can see either.
+   * Every `wire.operation.option -> use` triple. The matrices below are GENERATED
+   * from this same data, so they cannot notice it changing: a row whose `use`
+   * flips moves from one matrix to the other and both stay green. Only a pin
+   * outside the generation can see that.
    *
    * ⚠ Iterates `Object.keys(wire.dispositions)`, NOT the hand-written OPERATIONS
    * list, so a fourth write operation appears here rather than going unprobed.
@@ -148,7 +144,7 @@ describe("wire input dispositions", () => {
     // rewrites a snapshot without anyone reading the diff, and this repo's own
     // notes record `-u` doing exactly that. A plain assertion cannot be updated
     // by `-u`, so a row that disappears has to be answered for by hand.
-    expect(inventory).toHaveLength(40);
+    expect(inventory).toHaveLength(34);
     expect(inventory).toMatchSnapshot();
   });
 
@@ -187,10 +183,10 @@ describe("wire input dispositions", () => {
    * unread and makes it green. A plain `toBe` cannot be updated by `-u`, which is
    * the whole reason the hard count sits beside the snapshot rather than in it.
    *
-   * 32 + 8 = 40, so the three arms account for every row the inventory lists.
-   * (It was 34 + 8 = 42 until the per-call prune mode was deleted from the
-   * structured sign options: both wires forwarded it on `signClaims`, and the
-   * prune is now unconditional and registry-driven rather than an option.)
+   * 32 + 2 = 34, so the three arms account for every row the inventory lists. The
+   * two refusals are the COSE ECDH-ES party-info rows on `encryptContent`: RFC
+   * 9052 §5.2 makes a COSE_Encrypt0 direct encryption, so no key agreement happens
+   * for RFC 7518 §4.6's party info to feed.
    */
   test("every disposition arm is probed below, or provably empty", () => {
     expect(
@@ -200,7 +196,7 @@ describe("wire input dispositions", () => {
     expect(
       rows((rule) => rule.use === "unsupported").length,
       "the refusal matrix changed size — say why, then update this",
-    ).toBe(8);
+    ).toBe(2);
     expect(
       rows((rule) => rule.use === "consumed").map(
         ({ wire, operation, option }) => `${wire}.${operation}.${option}`,
@@ -241,8 +237,6 @@ describe("wire input dispositions", () => {
     const deps = {
       issuer: "https://test.lindorm.io/",
       certBindingMode: "strict",
-      // ⚠ The OPPOSITE of the sentinel — see `SENTINEL.certificateThumbprintSha1`.
-      certificateThumbprintSha1: false,
       clockTolerance: 0,
       dpopMaxSkew: 0,
       defaultEncryption: undefined,
@@ -402,11 +396,13 @@ describe("wire input dispositions", () => {
           );
 
         case "signOpaque":
-          return aegis.sign({
-            format: wire === "jose" ? "jws" : "cws",
-            payload: "probe-payload",
-            [option]: value,
-          } as never);
+          // The opaque KIT namespaces. They now reach `wire.signOpaque` through
+          // the shared guard (`raw-sign-opaque.ts`) instead of calling their
+          // wire's signer directly, which is what puts this operation back
+          // within reach of a public door.
+          return wire === "jose"
+            ? aegis.jws.sign("probe-payload", { [option]: value } as never)
+            : aegis.cws.sign("probe-payload", { [option]: value } as never);
 
         case "encryptContent":
           return aegis.encrypt(
@@ -433,24 +429,6 @@ describe("wire input dispositions", () => {
           code: "wire_option_unsupported",
           data: { operation, option },
         });
-      },
-    );
-
-    test.each(
-      rows(
-        (rule) => rule.use === "unsupported" && (rule.honours?.length ?? 0) > 0,
-      ).flatMap(({ wire, operation, option, rule }) =>
-        (rule.use === "unsupported" ? (rule.honours ?? []) : []).map((honoured) => ({
-          wire,
-          operation,
-          option,
-          honoured,
-        })),
-      ),
-    )(
-      "$wire $operation accepts $option: $honoured — it asks the wire to do nothing",
-      async ({ wire, operation, option, honoured }) => {
-        await expect(callWith(wire, operation, option, honoured)).resolves.toBeDefined();
       },
     );
   });

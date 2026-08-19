@@ -1,5 +1,6 @@
 import type { CoseError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
+import type { CoseLabel } from "./cose-label.js";
 import { coseWireHeader } from "../header/cose-wire-header.js";
 import { decodeCbor } from "./cbor.js";
 import { requireCose } from "./require-cose.js";
@@ -27,6 +28,17 @@ export type SignedSegments = {
   signature: Uint8Array | null | undefined;
   /** The PROTECTED bucket in the JOSE wire vocabulary — the one a signature covers. */
   protectedHeader: WireTokenHeader;
+  /**
+   * The SAME bucket as its RAW COSE label map, decoded once and handed on beside
+   * the translated one.
+   *
+   * ⚠ It exists because the translation is LOSSY BY DESIGN and cannot stop being:
+   * the JOSE wire vocabulary has no parameter for a `COSE_CertHash` under SHA-384
+   * or SHA-512 (RFC 7517 §4.8/§4.9 register two thumbprint parameters), so such a
+   * binding leaves the translated header. `cose-wide-cert-binding.ts` reads it
+   * here instead of the token being re-split to find it.
+   */
+  protectedMap: Map<CoseLabel, unknown>;
   /** The UNPROTECTED bucket in the JOSE wire vocabulary; empty when there is none. */
   unprotectedHeader: WireTokenHeader;
 };
@@ -74,11 +86,16 @@ export const splitSigned = (
     Uint8Array | null | undefined,
   ];
 
+  // Decoded ONCE and used twice — the translated bucket and the raw one describe
+  // the same bytes, so a second decode is a second chance for them to disagree.
+  const protectedMap = decodeProtectedHeader(protectedBstr);
+
   return {
     protectedBstr,
     payload,
     signature,
-    protectedHeader: coseWireHeader(decodeProtectedHeader(protectedBstr), "sig"),
+    protectedMap,
+    protectedHeader: coseWireHeader(protectedMap, "sig"),
     unprotectedHeader: coseWireHeader(
       unprotected instanceof Map ? unprotected : undefined,
       "sig",

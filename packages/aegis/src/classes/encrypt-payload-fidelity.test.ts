@@ -277,7 +277,7 @@ describe("aegis.encrypt over a signed token", () => {
   const EXPIRES = Math.floor(new Date("2024-01-01T09:00:00.000Z").getTime() / 1000);
 
   test("a JWE over a JWS declares application/jose and verifies", async () => {
-    const signed = await aegis.sign({ payload: { hello: "world" }, format: "jws" });
+    const signed = await aegis.jws.sign({ hello: "world" });
     const { token } = await aegis.encrypt(signed.token);
 
     // RFC 7515 §9.2.1 registers `application/jose` for "a JWS or JWE using the
@@ -288,8 +288,8 @@ describe("aegis.encrypt over a signed token", () => {
 
     const verified = await aegis.verify(token);
 
-    expect(verified.format).toBe("jwe");
-    expect(verified.inner).toBe("jws");
+    expect(verified.format).toBe("jws");
+    expect(verified.wrapper).toBe("jwe");
     expect(verified.raw).toEqual({ hello: "world" });
   });
 
@@ -304,8 +304,8 @@ describe("aegis.encrypt over a signed token", () => {
 
     const verified = await aegis.verify(token);
 
-    expect(verified.format).toBe("jwe");
-    expect(verified.inner).toBe("jwt");
+    expect(verified.format).toBe("jwt");
+    expect(verified.wrapper).toBe("jwe");
     expect(verified.claims).toMatchObject({ issuer: ISSUER, subject: "user-1" });
   });
 
@@ -318,8 +318,8 @@ describe("aegis.encrypt over a signed token", () => {
 
     const verified = await aegis.verify(token);
 
-    expect(verified.format).toBe("cwe");
-    expect(verified.inner).toBe("cwt");
+    expect(verified.format).toBe("cwt");
+    expect(verified.wrapper).toBe("cwe");
     expect(verified.claims).toMatchObject({ issuer: ISSUER, subject: "user-1" });
   });
 
@@ -331,7 +331,7 @@ describe("aegis.encrypt over a signed token", () => {
    * `jose`, and reading that as an opaque blob would lose the token inside.
    */
   test("a foreign JWE declaring the bare `jose` cty still verifies", async () => {
-    const signed = await aegis.sign({ payload: { hello: "world" }, format: "jws" });
+    const signed = await aegis.jws.sign({ hello: "world" });
 
     // Driven through the kit, because no aegis door writes this spelling.
     const token = new JweKit({
@@ -341,7 +341,8 @@ describe("aegis.encrypt over a signed token", () => {
 
     const verified = await aegis.verify(token);
 
-    expect(verified.inner).toBe("jws");
+    expect(verified.format).toBe("jws");
+    expect(verified.wrapper).toBe("jwe");
     expect(verified.raw).toEqual({ hello: "world" });
   });
 

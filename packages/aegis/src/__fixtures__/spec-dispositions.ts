@@ -320,34 +320,19 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
   // asserting that a caller-supplied chain comes back, and no caller can supply
   // one: the sample `["MIIBsample"]` is a representative shape, never a value the
   // surface accepts. What IS assertable is that the binding appears when the mode
-  // asks for it, which is what the observation runs.
+  // asks for it, which is what the observation runs — on BOTH wires, since
+  // RFC 9360 §2 gives COSE `x5chain` at label 33 and every COSE writer derives it.
   certificateChain: {
     disposition: "notSuppliable",
     observe: "certificate",
     reason:
       "Derived from the key's own certificate chain. RFC 7515 §4.1.6 makes `x5c` the X.509 certificate chain CORRESPONDING TO THE KEY used to digitally sign the JWS, so a caller-stated chain would be a chain that does not belong to the signature it accompanies.",
-    per: {
-      cose: {
-        disposition: "notSuppliable",
-        observe: "none",
-        reason:
-          "`resolveCertBinding` has no COSE caller — `KIT_CAPABILITIES.<cose>.certificateBinding` is `false` for every COSE row — so no COSE path produces a certificate binding to observe. The accept-and-ignore above it is recorded as a capability the COSE kits do not have.",
-      },
-    },
   },
   certificateThumbprint: {
     disposition: "notSuppliable",
     observe: "certificate",
     reason:
       "Derived from the key's own certificate. RFC 7515 §4.1.8 makes `x5t#S256` the base64url-encoded SHA-256 thumbprint of the DER encoding of the certificate corresponding to the signing key, so it is a digest of the key material and not a caller value.",
-    per: {
-      cose: {
-        disposition: "notSuppliable",
-        observe: "none",
-        reason:
-          "COSE's `x5t` (label 34, RFC 9360 §2) is a COSE_CertHash — the two-element structure `[ hashAlg, hashValue ]` — not a relabelling of the JOSE base64url thumbprint, whose hash algorithm is part of the parameter NAME. The registry leaves it unmapped so a foreign token's x5t is skipped rather than mis-shaped, and no COSE path emits one to observe.",
-      },
-    },
   },
   certificateThumbprintSha1: {
     disposition: "notSuppliable",
@@ -359,7 +344,7 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
         disposition: "notSuppliable",
         observe: "none",
         reason:
-          "Same COSE_CertHash structure as `certificateThumbprint` (RFC 9360 §2) — the SHA-1 form is no more relabellable than the SHA-256 one, and no COSE path emits one to observe.",
+          "RFC 9360 §2 gives COSE ONE thumbprint parameter, `x5t` at label 34, whose value is a COSE_CertHash `[ hashAlg, hashValue ]` — the digest algorithm is a member of the value rather than the difference between two parameter names. There is no SHA-1-NAMED parameter for a COSE writer to emit, so no COSE path produces one to observe. (A foreign token's SHA-1 COSE_CertHash DOES read back onto this domain field, through label 34's hashAlg dispatch; what is unobservable here is a write.)",
       },
     },
   },

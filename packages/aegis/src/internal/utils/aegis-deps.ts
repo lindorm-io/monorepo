@@ -52,8 +52,6 @@ export type ResolveVerifyKeyOptions = {
 export type AegisDeps = {
   issuer: string | null;
   certBindingMode: CertificateBindingMode;
-  /** Resolved deployment default for emitting the SHA-1 cert thumbprint (`x5t`). */
-  certificateThumbprintSha1: boolean;
   clockTolerance: number;
   dpopMaxSkew: number;
   /** Deployment fallback for a key that declares no `encryption`. */

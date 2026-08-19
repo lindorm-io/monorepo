@@ -23,7 +23,9 @@ const logger = createMockLogger();
 const emptyThumbprintKey = (kryptos: IKryptos): IKryptos =>
   new Proxy(kryptos, {
     get: (target, property, receiver) =>
-      property === "certificateThumbprint" ? "" : Reflect.get(target, property, receiver),
+      property === "certificate"
+        ? (format: "b64") => ({ ...kryptos.certificate(format), thumbprint: "" })
+        : Reflect.get(target, property, receiver),
   });
 
 describe("refuseEmptyHeaders", () => {
@@ -71,33 +73,39 @@ describe("refuseEmptyHeaders", () => {
    * states a binding no certificate satisfies or states none at all, and the
    * producer would learn about neither.
    *
-   * ⚠ JOSE ONLY, and NOT because the guard is wire-scoped — it lives in the
-   * normalisation both wires share, and the row below shows both refuse a
-   * caller-supplied empty thumbprint. It is because the KEY-DERIVED tier does not
-   * exist on COSE: `resolveCertBinding` has no COSE caller, so no COSE writer
-   * ever asks a kryptos for a thumbprint and there is no value for this cell to
-   * catch. When COSE gains a certificate binding, this row gains a COSE half.
+   * ⚠ BOTH WIRES, and the guard is not wire-scoped either — it lives in the
+   * normalisation both share. The KEY-DERIVED tier exists on both: `CwsKit.sign`
+   * resolves the binding off the signing key exactly as `JwsKit` does, so the same
+   * foreign kryptos reaches the same cell on either encoding.
    */
-  test("a key that reports a certificate but no thumbprint is refused at mint", () => {
-    expect(() =>
-      new JwsKit({ logger, kryptos: emptyThumbprintKey(TEST_EC_KEY_SIG_CERT) }).sign(
-        "data",
-      ),
-    ).toThrow(
-      expect.objectContaining({
-        code: "header_empty_parameter",
-        data: { parameter: "x5t#S256", whenEmpty: "refuse" },
-      }),
-    );
-  });
+  const MINT = [
+    ["jose", (kryptos: IKryptos) => new JwsKit({ logger, kryptos }).sign("data")],
+    [
+      "cose",
+      (kryptos: IKryptos) => new CwsKit({ logger, kryptos }).sign(Buffer.from("data")),
+    ],
+  ] as const;
 
-  test("the same key with its real thumbprint still mints", () => {
-    // The control. Without it the row above is satisfied by a guard that refuses
-    // every cert-bearing key, which is a different and much worse behaviour.
-    expect(() =>
-      new JwsKit({ logger, kryptos: TEST_EC_KEY_SIG_CERT }).sign("data"),
-    ).not.toThrow();
-  });
+  test.each(MINT)(
+    "a key that reports a certificate but no thumbprint is refused at mint on %s",
+    (_wire, mint) => {
+      expect(() => mint(emptyThumbprintKey(TEST_EC_KEY_SIG_CERT))).toThrow(
+        expect.objectContaining({
+          code: "header_empty_parameter",
+          data: { parameter: "x5t#S256", whenEmpty: "refuse" },
+        }),
+      );
+    },
+  );
+
+  // The control. Without it the rows above are satisfied by a guard that refuses
+  // every cert-bearing key, which is a different and much worse behaviour.
+  test.each(MINT)(
+    "the same key with its real thumbprint still mints on %s",
+    (_wire, mint) => {
+      expect(() => mint(TEST_EC_KEY_SIG_CERT)).not.toThrow();
+    },
+  );
 
   /**
    * The CALLER-SUPPLIED half, which is where both wires do meet. `x5t#S256` is

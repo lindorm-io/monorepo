@@ -64,8 +64,8 @@ describe("the nested content-type declaration on an encrypted token", () => {
 
     const verified = await aegis.verify(token);
 
-    expect(verified.format).toBe("jwe");
-    expect(verified.inner).toBe("jws");
+    expect(verified.format).toBe("jws");
+    expect(verified.wrapper).toBe("jwe");
     expect(verified.claims).toEqual({});
   });
 });

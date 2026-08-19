@@ -34,7 +34,6 @@ export const rawVerifyCwm = async <C extends Dict = Dict>({
   // `key` is the aegis-only external-key injection (resolves the kryptos); every
   // other field IS the kit's VerifyStructuredTokenOptions and is forwarded
   // structurally, so a new verify option threads through with no change here.
-  // (`certBindingMode` is JOSE-only and ignored by the COSE kit — harmless.)
   const { key, ...verifyOptions } = options;
 
   const bytes = Buffer.from(token, "base64url");
@@ -50,6 +49,7 @@ export const rawVerifyCwm = async <C extends Dict = Dict>({
   });
 
   return new CwmKit({
+    certBindingMode: deps.certBindingMode,
     kryptos,
     logger: deps.logger,
     clockTolerance: deps.clockTolerance,

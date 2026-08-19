@@ -311,7 +311,11 @@ export const runKnobProbe = async <T>({
   }
 
   const observed: Then = [
-    { step: "accepts", ...(body.format === undefined ? {} : { format: body.format }) },
+    {
+      step: "accepts",
+      ...(body.format === undefined ? {} : { format: body.format }),
+      ...(body.wrapper === undefined ? {} : { wrapper: body.wrapper }),
+    },
     ...(body.observed ?? []),
   ];
 

@@ -19,17 +19,7 @@ export type Disposition =
    * request took effect. `reason` states the specification fact that makes it
    * unhonourable.
    */
-  | {
-      use: "unsupported";
-      reason: string;
-      /**
-       * The values this wire nonetheless accepts, because they ask it to do
-       * NOTHING. A wire with no certificate binding already emits no binding, so
-       * `bindCertificate: "none"` is satisfied exactly as the caller asked —
-       * refusing it would reject a request the wire does honour.
-       */
-      honours?: ReadonlyArray<unknown>;
-    };
+  | { use: "unsupported"; reason: string };
 
 /**
  * The per-option disposition table for one wire operation's KIT OPTION surface.

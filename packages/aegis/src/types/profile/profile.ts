@@ -1,10 +1,8 @@
 import type { Expiry } from "@lindorm/date";
 import type { KryptosAlgClass } from "@lindorm/kryptos";
-import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
 import type { PolicyRule, SignContext } from "./policy.js";
 import type { ClaimsTokenFormat } from "../domain/token-format.js";
-import type { TokenFormat } from "../domain/token-format.js";
 import type { AegisEncKey, AegisSignKey } from "../keys/key-selectors.js";
 import type { DomainTokenEnvelope } from "../domain/domain-envelope.js";
 import type { JweEncryptOptions } from "../kit/encrypted.js";
@@ -183,18 +181,58 @@ export type ProfileVerifyOptions = VerifyOptions & {
 };
 
 /**
- * Raw / wire tier input. `payload` is a wire-literal. `aegis.sign` accepts a
- * plain object too and JSON-stringifies it before delegating to the JWS path.
+ * The input to `aegis.sign` — the DOMAIN sign verb, and the profile-less twin of
+ * `aegis.mint`.
+ *
+ * CLAIMS ONLY: `jwt` / `cwt` / `cwm`, defaulting to `"jwt"`, exactly as
+ * `ProfileMintOptions.format` does. A caller wanting an opaque signature reaches
+ * `aegis.jws.sign()` / `aegis.cws.sign()`, the wire-level namespaces.
+ *
+ * What `sign` does that the kit namespaces do not: it takes DOMAIN input. The
+ * payload is a domain claim set, translated to the target wire's own spelling on
+ * the way out (`subject` → `sub` on JOSE, → label `2` on COSE, RFC 8392 §3.1.2),
+ * and `tokenType`/`header` are domain-named and translated too.
+ *
+ * What `mint` does that this does not is exactly the profile floor: no policy is
+ * enforced, no envelope claim is generated, no `exp` is derived from a lifetime,
+ * no `iss` is filled in from the deployment, no algorithm class is required of
+ * the key, no profile typ is mandated, and no sensitive claim forces an
+ * encrypting outer.
  */
 export type RawSignInput = DomainTokenEnvelope<AegisSignKey> & {
+  /** The claims format to emit. Defaults to `"jwt"`, mirroring `ProfileMintOptions`. */
+  format?: ClaimsTokenFormat;
   /**
-   * Wire encoding. `"jws"`/`"jwt"` (default) signs a JWS — the payload passes through as
-   * bytes. `"cws"` signs a secured CWT (COSE_Sign1) over the CBOR-encoded payload, which
-   * MUST then be a plain object; the token is base64url CBOR with no JOSE dot structure, so
-   * it cannot be mistaken for — or parsed as — a JWT. `verify` auto-detects either format.
-   * The `cws` namespace is the ergonomic surface over `sign({ format: "cws" })`.
+   * The DOMAIN claim set. Not a wire literal — the registry re-keys every claim
+   * it knows.
+   *
+   * ⚠ `Record<string, unknown>`, NOT `Dict`. `Dict` is `Record<string, any>`,
+   * which every object type is assignable to — `Buffer` included — so the verb
+   * could be handed bytes and the translator would walk their numeric indices
+   * into claims `0`, `1`, `2`… A `Buffer` is unassignable here (no index
+   * signature), while a `Dict` still is.
    */
-  format?: TokenFormat;
-  payload: Buffer | string | Dict;
+  payload: Record<string, unknown>;
+  /**
+   * The DOMAIN token type. Reduced to the bare prefix each kit re-wraps in its
+   * own format (`access_token` → `application/at+jwt` / `application/at+cwt`).
+   */
   tokenType?: TokenType;
+  /**
+   * An explicit type header, OVERRIDING the `tokenType`-derived value. Stated in
+   * the JOSE spelling (`at+jwt`, `application/at+jwt`, or the bare `JWT`) on
+   * either wire — the kit re-wraps the prefix, so a COSE write of `at+jwt` emits
+   * `application/at+cwt`.
+   *
+   * ⚠ No `null` member, unlike `SignTokenOptions.typ`. `null` exists there to
+   * countermand a PROFILE's mandated type, and there is no profile here; omitting
+   * the option is how a caller states nothing.
+   */
+  typ?: string;
+  /**
+   * Emit lindorm private-use COSE labels — compact integer claim labels and the
+   * integer form of private-use HEADER parameters (`objectId`). Default `false`,
+   * the interoperable spelling. COSE only; the JOSE kits ignore it.
+   */
+  proprietary?: boolean;
 };

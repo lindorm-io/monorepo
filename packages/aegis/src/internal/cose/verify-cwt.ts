@@ -6,7 +6,9 @@ import { assertKidMatch } from "../utils/assert-kid-match.js";
 import { assertTokenTypeMatch } from "../utils/assert-token-type-match.js";
 import { assertWireTyp } from "../utils/assert-wire-typ.js";
 import { validateWireClaims } from "../utils/validate-wire-claims.js";
+import { verifyCertBinding } from "../utils/verify-cert-binding.js";
 import type {
+  CertificateBindingMode,
   CwtClaimsWire,
   VerifiedStructuredToken,
   VerifyStructuredTokenOptions,
@@ -15,6 +17,7 @@ import { decodeCwt } from "./decode-cwt.js";
 import { decodeCwtMessage } from "./cwt-message.js";
 import type { CwtFormat } from "./cwt-format.js";
 import { ERROR_BY_FORMAT } from "./error-by-format.js";
+import { resolveWideCertBinding } from "./cose-wide-cert-binding.js";
 import { verifyCoseStructure } from "./verify-cose-structure.js";
 
 /**
@@ -35,10 +38,12 @@ export const verifyCwt = <C extends Dict = Dict>(
     token: Buffer;
     assert?: Condition<CwtClaimsWire & C>;
     clockTolerance: number;
+    /** The kit's resolved cert-binding mode — the per-call option has already won. */
+    certBindingMode: CertificateBindingMode;
     options: VerifyStructuredTokenOptions;
   },
 ): VerifiedStructuredToken<CwtClaimsWire & C, Buffer> => {
-  const { format, token, assert, clockTolerance, options } = params;
+  const { format, token, assert, clockTolerance, certBindingMode, options } = params;
 
   logger.debug("Verifying CWT", { options });
 
@@ -90,11 +95,35 @@ export const verifyCwt = <C extends Dict = Dict>(
   // carried into a signature cycle it could never satisfy — the two
   // protected-header gates answer a hostile header before any cryptography, and
   // the signature or MAC is checked over the structure.
-  const { protectedHeader, unprotectedHeader, content } = verifyCoseStructure({
+  const { protectedHeader, unprotectedHeader, protectedMap, content } =
+    verifyCoseStructure({
+      kryptos,
+      token,
+      format,
+      payloadDetail: "there are no CWT claims to verify",
+    });
+
+  // Content tamper check: runs AFTER the signature/MAC has been verified with the
+  // resolved kryptos, exactly as `JwtKit.verify` does. NOT a key selection step —
+  // header cert fields remain forbidden as key sources.
+  //
+  // Off the PROTECTED bucket alone: a binding the signature does not cover is one
+  // any holder could rewrite. The two digests reach this bucket from ONE COSE
+  // label — RFC 9360 §2's `x5t` (34), dispatched on its `hashAlg` member by
+  // `internal/cose/cose-cert-hash.ts`.
+  // ⚠ THE THIRD DIGEST HAS NO DOMAIN FIELD. RFC 9360 §2 lets a conformant issuer
+  // bind with SHA-384 or SHA-512 (RFC 9054 marks both `Recommended: Yes`), and
+  // JOSE registers no parameter for either — so it is resolved against the raw
+  // PROTECTED bucket here and handed down as a verdict.
+  verifyCertBinding({
+    header: {
+      certificateThumbprint: protectedHeader["x5t#S256"],
+      certificateThumbprintSha1: protectedHeader.x5t,
+    },
+    computed: resolveWideCertBinding(protectedMap, kryptos),
     kryptos,
-    token,
-    format,
-    payloadDetail: "there are no CWT claims to verify",
+    logger,
+    mode: certBindingMode,
   });
 
   // The verified payload IS the CWT Claims Set, read through the ONE Message

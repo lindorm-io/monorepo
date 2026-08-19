@@ -15,12 +15,6 @@ import type {
 export type DomainTokenEnvelope<K> = {
   bindCertificate?: BindCertificateMode;
   /**
-   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
-   * cert is bound. Default `true` (older-client compat). Independent of
-   * `bindCertificate`; the read side never verifies SHA-1.
-   */
-  certificateThumbprintSha1?: boolean;
-  /**
    * Caller-controlled PROTECTED header params, in DOMAIN vocabulary
    * (`objectId`/`contentType`/`critical`/…). Translated to whichever wire the
    * call ends up emitting — so the same option produces a JOSE `oid` and the

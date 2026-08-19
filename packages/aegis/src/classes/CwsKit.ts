@@ -11,6 +11,8 @@ import { requireAttachedPayload } from "../internal/cose/require-attached-payloa
 import { requireSignature } from "../internal/cose/require-signature.js";
 import { signedCoseStructureTag } from "../internal/cose/signed-cose-structure-tag.js";
 import { splitSigned } from "../internal/cose/split-signed.js";
+import { COSE_THUMBPRINT_SHA1 } from "../internal/cose/cose-thumbprint-sha1.js";
+import { resolveWideCertBinding } from "../internal/cose/cose-wide-cert-binding.js";
 import { verifyCoseStructure } from "../internal/cose/verify-cose-structure.js";
 import { COSE_TAG, buildSecuredStructure } from "../internal/cose/structures.js";
 import { buildCoseHeaders } from "../internal/header/build-cose-headers.js";
@@ -20,7 +22,11 @@ import { normaliseHeaders } from "../internal/header/normalise-headers.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
+import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
+import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
+  CertificateBindingMode,
+  CwsKitSettings,
   DecodedUnstructuredToken,
   SignUnstructuredTokenOptions,
   TokenContent,
@@ -29,11 +35,6 @@ import type {
   WireTokenHeader,
 } from "../types/index.js";
 import { SignatureKit } from "./SignatureKit.js";
-
-export type CwsKitSettings = {
-  kryptos: IKryptos;
-  logger: ILogger;
-};
 
 /**
  * The OPAQUE COSE signer — the opaque sibling of `JwsKit`. It operates on an
@@ -58,10 +59,12 @@ export type CwsKitSettings = {
 export class CwsKit implements ICwsKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
+  private readonly certBindingMode: CertificateBindingMode;
 
   constructor(options: CwsKitSettings) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CwsKit"]);
+    this.certBindingMode = options.certBindingMode ?? "strict";
   }
 
   /**
@@ -173,8 +176,8 @@ export class CwsKit implements ICwsKit {
     // follows `@lindorm/aes` instead — a Dict is `application/json` and
     // reconstructs as a Dict — and `JwsKit`, `JweKit` and `CweKit` state the same
     // family. ONE encoding for opaque content across all four doors is what lets
-    // `aegis.sign(dict)` + `verify` hand back the same Dict on `jws` and on
-    // `cws`, with no per-wire reasoning left for a caller to do.
+    // `aegis.jws.sign(dict)` and `aegis.cws.sign(dict)` + `verify` hand back the
+    // same Dict, with no per-wire reasoning left for a caller to do.
     const { bytes, contentType } = serialiseContent(content, callerHeader.cty);
 
     const tag = signedCoseStructureTag(this.kryptos);
@@ -206,10 +209,7 @@ export class CwsKit implements ICwsKit {
     options: VerifyUnstructuredTokenOptions = {},
   ): VerifiedUnstructuredToken<T, Buffer> {
     // R2: the kit takes the ENCODED bytes and decodes internally (parallel to the
-    // JOSE kits + to `sign` returning bytes). `certBindingMode` has no COSE
-    // meaning — `KIT_CAPABILITIES.<cose>.certificateBinding` is `false` — so the
-    // bag is recorded and not acted on; the parameter exists so the layer above
-    // forwards its verify options structurally rather than naming fields.
+    // JOSE kits + to `sign` returning bytes).
     this.logger.debug("Verifying COSE structure", { options });
 
     // ⛔ ONE OPENING. The split, the two protected-header gates, the two
@@ -217,11 +217,32 @@ export class CwsKit implements ICwsKit {
     // COSE read — byte-identical to the claims path's before it was extracted,
     // down to the `if (!valid) throw` block. The kit's own work is what follows:
     // reconstructing the OPAQUE content by its cty.
-    const { protectedHeader, unprotectedHeader, content } = verifyCoseStructure({
+    const { protectedHeader, unprotectedHeader, protectedMap, content } =
+      verifyCoseStructure({
+        kryptos: this.kryptos,
+        token,
+        format: "cws",
+        payloadDetail: "there is no content to verify",
+      });
+
+    // Content tamper check: runs AFTER the signature/MAC has been verified with
+    // the configured kryptos, exactly as `JwsKit.verify` does. NOT a key
+    // selection step — header cert fields remain forbidden as key sources.
+    //
+    // Off the PROTECTED bucket alone: a binding the signature does not cover is
+    // one any holder could rewrite. The two digests reach this bucket from ONE
+    // COSE label — RFC 9360 §2's `x5t` (34), dispatched on its `hashAlg` member
+    // by `internal/cose/cose-cert-hash.ts`.
+    verifyCertBinding({
+      header: {
+        certificateThumbprint: protectedHeader["x5t#S256"],
+        certificateThumbprintSha1: protectedHeader.x5t,
+      },
+      // The third digest has no domain field — see `cose-wide-cert-binding.ts`.
+      computed: resolveWideCertBinding(protectedMap, this.kryptos),
       kryptos: this.kryptos,
-      token,
-      format: "cws",
-      payloadDetail: "there is no content to verify",
+      logger: this.logger,
+      mode: options.certBindingMode ?? this.certBindingMode,
     });
 
     // Reconstruct by the PROTECTED cty: the signature/MAC is verified above,
@@ -275,6 +296,11 @@ export class CwsKit implements ICwsKit {
       reserved: KIT_CAPABILITIES.cws.reserved,
       header,
       unprotected: options.unprotected,
+      cert: resolveCertBinding(
+        this.kryptos,
+        options.bindCertificate,
+        COSE_THUMBPRINT_SHA1,
+      ),
       proprietary: options.proprietary,
       format: "cws",
       error: ERROR_BY_FORMAT.cws,

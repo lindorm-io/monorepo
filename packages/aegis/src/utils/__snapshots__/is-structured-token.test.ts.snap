@@ -4,43 +4,43 @@ exports[`isStructuredToken > should match the recorded format matrix 1`] = `
 [
   {
     "format": "jwt",
-    "inner": undefined,
     "structured": true,
+    "wrapper": undefined,
   },
   {
     "format": "cwt",
-    "inner": undefined,
     "structured": true,
+    "wrapper": undefined,
   },
   {
     "format": "cwm",
-    "inner": undefined,
     "structured": true,
+    "wrapper": undefined,
   },
   {
     "format": "jws",
-    "inner": undefined,
     "structured": false,
+    "wrapper": undefined,
   },
   {
     "format": "cws",
-    "inner": undefined,
     "structured": false,
+    "wrapper": undefined,
   },
   {
-    "format": "jwe",
-    "inner": "jwt",
+    "format": "jwt",
     "structured": true,
+    "wrapper": "jwe",
   },
   {
-    "format": "cwe",
-    "inner": "cwt",
+    "format": "cwt",
     "structured": true,
+    "wrapper": "cwe",
   },
   {
-    "format": "jwe",
-    "inner": "jws",
+    "format": "jws",
     "structured": false,
+    "wrapper": "jwe",
   },
 ]
 `;

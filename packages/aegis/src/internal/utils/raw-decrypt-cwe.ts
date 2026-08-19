@@ -32,5 +32,9 @@ export const rawDecryptCwe = async <T extends TokenContent = Buffer>({
     options.key,
   );
 
-  return new CweKit({ kryptos, logger: deps.logger }).decrypt<T>(bytes);
+  return new CweKit({
+    certBindingMode: deps.certBindingMode,
+    kryptos,
+    logger: deps.logger,
+  }).decrypt<T>(bytes);
 };

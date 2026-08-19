@@ -1,5 +1,4 @@
-import { isBuffer, isString } from "@lindorm/is";
-import type { Dict } from "@lindorm/types";
+import { isObject } from "@lindorm/is";
 import { CwsKit } from "../../classes/CwsKit.js";
 import type {
   AegisSignKey,
@@ -29,16 +28,18 @@ export type RawSignCoseInput = {
 } & SignUnstructuredTokenOptions;
 
 /**
- * Raw OPAQUE COSE sign — the profile-less sibling of the `sign` JWS path (the
- * `signToken` util). Secures arbitrary content as an OPAQUE COSE_Sign1 /
- * COSE_Mac0 (a CWS), NOT a claims-bearing CWT: COSE_Sign1 signs a `bstr`, so
+ * Raw OPAQUE COSE sign — the COSE sibling of `rawSignJws`. Secures arbitrary
+ * content as an OPAQUE COSE_Sign1 / COSE_Mac0 (a CWS), NOT a claims-bearing CWT: COSE_Sign1 signs a `bstr`, so
  * `CwsKit` serialises the content through the shared cty codec (Dict→json,
  * string→text, Buffer→octet) and round-trips it faithfully — there is no
  * claim-label codec here (a claims-bearing COSE_Sign1 is `aegis.cwt.sign`). It
  * stamps a `+cws` / `application/cws` `typ` so the token reads as a CWS
- * (`isCws`) and never as a CWT (`isCwt`). Shared between the `sign` verb (via
- * `signToken`) and the raw `cws.sign` namespace (via `rawSignCws`). The signing
- * key is resolved exactly as the JWS path does.
+ * (`isCws`) and never as a CWT (`isCwt`). Reached ONLY through
+ * `COSE_TOKEN_WIRE.signOpaque`, which `aegis.cws.sign` gets to via the shared
+ * guard (`raw-sign-opaque.ts`) — so every caller has already been checked against
+ * `COSE_DISPOSITIONS.signOpaque`, and the options that table declares
+ * `unsupported` never arrive here. The signing key is resolved exactly as the JWS
+ * path does.
  */
 export const rawSignCose = async ({
   input,
@@ -59,10 +60,20 @@ export const rawSignCose = async ({
   // wires normalise theirs; a string/Buffer is opaque and passes through
   // untouched. `CwsKit.sign` owns the cty codec + COSE_Sign1/Mac0 split off the
   // key class; the outer CWT tag (61) frames it.
-  const content =
-    isBuffer(payload) || isString(payload) ? payload : normaliseClaims(payload as Dict);
+  // ⚠ NORMALISE ONLY A PLAIN DATA BAG. `TokenContent` also admits `number`,
+  // `boolean` and `Array`, and the normalisation is written for claim dicts:
+  // `omitUndefined` THROWS a raw `TypeError` on a scalar, and `pruneEmptyClaims`
+  // rebuilds through `Object.entries`, so an array comes back `{"0":…}`. Neither
+  // is a claim shape, so neither is the normalisation's business.
+  // `isObject` decides by PROTOTYPE, which is what excludes a Buffer (and a Map,
+  // a Date, a class instance) without naming any of them.
+  const content = isObject(payload) ? normaliseClaims(payload) : payload;
 
-  const cose = new CwsKit({ kryptos, logger: deps.logger }).sign(content, signOptions);
+  const cose = new CwsKit({
+    certBindingMode: deps.certBindingMode,
+    kryptos,
+    logger: deps.logger,
+  }).sign(content, signOptions);
 
   // `CwsKit.sign` returns the BARE encoded COSE bytes; decode back to frame the
   // structure in the outer CWT tag (61).

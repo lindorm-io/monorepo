@@ -3,7 +3,7 @@ import { isString } from "@lindorm/is";
 import { AegisDomainError } from "../../errors/index.js";
 import type {
   TokenDelegation,
-  TokenFormatTag,
+  TokenFormat,
   VerifiedToken,
   WireTokenHeader,
 } from "../../types/index.js";
@@ -37,8 +37,14 @@ export const buildTokenResult = <C extends Dict = Dict>({
   nameOf,
   issuerPresence,
 }: {
-  /** The CLAIMS format actually read — `jwt`, `cwt` or `cwm`. */
-  format: TokenFormatTag;
+  /**
+   * The CLAIMS format actually read — `jwt`, `cwt` or `cwm`.
+   *
+   * ⚠ Typed as {@link TokenFormat}, which excludes the encrypting outers: this
+   * builds a result whose `format` is the token's OWN kind, and an envelope is
+   * reported as `wrapper` by the peel above rather than as a format here.
+   */
+  format: TokenFormat;
   /**
    * The wire-keyed claim payload, EXACTLY as the wire carried it — NumericDate
    * integers on JOSE, `Date`s on COSE (its claim codec decodes them inside the

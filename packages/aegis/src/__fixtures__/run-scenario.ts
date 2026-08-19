@@ -11,7 +11,7 @@ import {
 import { createHash } from "node:crypto";
 import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { LindormError } from "@lindorm/errors";
-import { isArray, isDate, isObject, isString } from "@lindorm/is";
+import { isArray, isDate, isNull, isObject, isString, isUndefined } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
@@ -285,6 +285,13 @@ export const artifactWireOf = (artifact: ArtifactGivenStep): Wire | undefined =>
       return format.startsWith("c") ? "cose" : "jose";
     }
 
+    // `aegis.sign` names no format in a row — the run's wire resolves the claims
+    // pair (`jwt` / `cwt`), so a row is agnostic. There is no opaque pair to
+    // resolve: the verb is claims-only, and an opaque signature is
+    // `via: "kit-sign", kit: "opaque"`.
+    case "domain-sign":
+      return undefined;
+
     default: {
       const exhaustive: never = artifact;
       throw new Error(`unhandled artifact ${JSON.stringify(exhaustive)}`);
@@ -371,6 +378,8 @@ export const knownDefectOn = (scenario: Scenario, wire: Wire): string | undefine
 type ScenarioResult = {
   token: string;
   format?: string;
+  /** The envelope the act reported, when the artifact arrived in one. */
+  wrapper?: string;
   claims?: Dict;
   custom?: Dict;
   header?: Dict;
@@ -730,11 +739,15 @@ const AGNOSTIC_KITS = {
   sealed: { jose: "jwe", cose: "cwe" },
 } as const satisfies Record<"structured" | "opaque" | "sealed", Record<Wire, string>>;
 
-/** The claims format a wire-agnostic `mint` / `domain-encrypt` resolves to. */
+/** The format a wire-agnostic `mint` / `domain-sign` / `domain-encrypt` resolves to. */
 const AGNOSTIC_FORMATS = {
   mint: { jose: "jwt", cose: "cwt" },
+  // `cwm` is absent because a COSE_Mac0 needs a symmetric key (RFC 9052 §6.2) and
+  // an agnostic row states no key, so it would not be the COSE twin of `jwt` but
+  // a different artifact.
+  sign: { jose: "jwt", cose: "cwt" },
   encrypt: { jose: "jwe", cose: "cwe" },
-} as const satisfies Record<"mint" | "encrypt", Record<Wire, string>>;
+} as const satisfies Record<"mint" | "sign" | "encrypt", Record<Wire, string>>;
 
 /**
  * The FOREIGN producers — the write half of the foreign-token step, one per wire,
@@ -1258,7 +1271,17 @@ const materialise = async (
           ...artifact.options,
         } as never,
       );
-      return { token: signed.token, format: signed.format };
+      return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
+    }
+
+    case "domain-sign": {
+      const signed = await ctx.aegis.sign({
+        ...artifact.options,
+        format: AGNOSTIC_FORMATS.sign[wire],
+        payload: { ...artifact.claims, ...artifact.unregisteredClaims },
+      });
+
+      return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
     }
 
     case "kit-sign": {
@@ -1270,30 +1293,30 @@ const materialise = async (
             AGNOSTIC_KITS.structured[wire] === "cwt"
               ? await ctx.aegis.cwt.sign(claims, artifact.options)
               : await ctx.aegis.jwt.sign(claims, artifact.options);
-          return { token: signed.token, format: signed.format };
+          return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
         }
         case "opaque": {
           const signed =
             AGNOSTIC_KITS.opaque[wire] === "cws"
               ? await ctx.aegis.cws.sign(artifact.claims, artifact.options)
               : await ctx.aegis.jws.sign(artifact.claims, artifact.options);
-          return { token: signed.token, format: signed.format };
+          return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
         }
         case "jwt": {
           const signed = await ctx.aegis.jwt.sign(artifact.claims, artifact.options);
-          return { token: signed.token, format: signed.format };
+          return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
         }
         case "cwt": {
           const signed = await ctx.aegis.cwt.sign(artifact.claims, artifact.options);
-          return { token: signed.token, format: signed.format };
+          return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
         }
         case "jws": {
           const signed = await ctx.aegis.jws.sign(artifact.claims, artifact.options);
-          return { token: signed.token, format: signed.format };
+          return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
         }
         case "cws": {
           const signed = await ctx.aegis.cws.sign(artifact.claims, artifact.options);
-          return { token: signed.token, format: signed.format };
+          return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
         }
         default: {
           const exhaustive: never = artifact;
@@ -1599,6 +1622,7 @@ const act = async (
       return {
         token: verified.token,
         format: verified.format,
+        wrapper: verified.wrapper,
         claims: verified.claims as Dict,
         custom: verified.custom as Dict,
         header: verified.header as unknown as Dict,
@@ -1751,6 +1775,53 @@ const act = async (
 };
 
 /**
+ * A per-wire FORMAT TAG on an `accepts` verdict — `format` and `wrapper` are the
+ * same shape and the same rule, so they run through one function rather than two
+ * copies that could drift.
+ *
+ * A bare tag claims the SAME value on every wire the row runs on, which is only
+ * ever true of a one-wire row; on any other wire it is refused by name rather
+ * than left to fail as a puzzling value mismatch.
+ */
+const assertAcceptedTag = (
+  stated: TokenFormatTag | Partial<Record<Wire, TokenFormatTag>> | undefined | null,
+  // The RESULT side is a plain string: `ScenarioResult` carries whatever the act
+  // reported, and typing it to the union here would assert the thing under test.
+  actual: string | undefined,
+  wire: Wire,
+  field: "format" | "wrapper",
+): void => {
+  // NOT STATED — the row says nothing about this field, so nothing is checked.
+  if (isUndefined(stated)) return;
+
+  // STATED AS ABSENT. Only `wrapper` can be, and a row that says so is asserting
+  // the other half of the discriminator: that nothing encloses this token.
+  if (isNull(stated)) {
+    expect(
+      actual,
+      `the row states that NOTHING wraps this token, but the act reported ${String(actual)}`,
+    ).toBeUndefined();
+    return;
+  }
+
+  if (isString(stated)) {
+    expect(
+      actual,
+      `the row states one ${field} for every wire it runs on; on the ${wire} wire that cannot hold. State it per wire: { ${wire}: "…" }`,
+    ).toBe(stated);
+    return;
+  }
+
+  const expected = stated[wire];
+
+  expect(
+    expected,
+    `the row states a per-wire ${field} but names none for the ${wire} wire it runs on`,
+  ).toBeDefined();
+  expect(actual).toBe(expected);
+};
+
+/**
  * THEN — one observable consequence per step, asserted in the order written.
  *
  * The verdict is the FIRST step (the tuple type enforces it), so this is called
@@ -1767,27 +1838,9 @@ const assertObservation = (step: ThenStep, result: ScenarioResult, wire: Wire): 
 
   switch (step.step) {
     case "accepts":
-      if (step.format !== undefined) {
-        // A bare tag claims the SAME format on every wire the row runs on. That
-        // is only ever true of a one-wire row, so on any other wire it would be
-        // asserting a JOSE tag against a COSE run — refuse it by name rather
-        // than let it fail as a puzzling value mismatch three lines down.
-        if (isString(step.format)) {
-          expect(
-            result.format,
-            `the row states one format for every wire it runs on; on the ${wire} wire that cannot hold. State it per wire: { ${wire}: "…" }`,
-          ).toBe(step.format);
-          return;
-        }
+      assertAcceptedTag(step.wrapper, result.wrapper, wire, "wrapper");
 
-        const expected = step.format[wire];
-
-        expect(
-          expected,
-          `the row states a per-wire format but names none for the ${wire} wire it runs on`,
-        ).toBeDefined();
-        expect(result.format).toBe(expected);
-      }
+      assertAcceptedTag(step.format, result.format, wire, "format");
       return;
 
     case "claims":

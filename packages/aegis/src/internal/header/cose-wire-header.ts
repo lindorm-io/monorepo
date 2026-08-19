@@ -1,12 +1,16 @@
 import { B64 } from "@lindorm/b64";
 import { isNumber } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
+import { CoseError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
 import { B64U } from "../constants/format.js";
 import { coseLabelToAlg } from "../cose/alg-labels.js";
+import { decodeCoseCertHash } from "../cose/cose-cert-hash.js";
 import type { CoseLabel } from "../cose/cose-label.js";
+import { decodeCoseX509 } from "../cose/cose-x509.js";
 import { coseLabelToEnc } from "../cose/enc-labels.js";
-import { coseByJose, joseByCose } from "./header-registry.js";
+import type { CoseHeaderCodec } from "../registry/cose-header-codec.js";
+import { coseByJose, coseHeaderCodec, joseByCose } from "./header-registry.js";
 
 /**
  * How the COSE `alg` label (1) is interpreted: a signature/MAC algorithm (the
@@ -43,44 +47,60 @@ const coseCritToWire = (value: unknown): unknown => {
 };
 
 /**
- * Translate a COSE `x5c` (label 33, RFC 9360 x5chain) into its JOSE wire form:
- * COSE carries the certificate chain as `bstr` (one cert) or `Array<bstr>` (a
- * chain) of DER bytes, whereas JOSE `x5c` is always `Array<base64-string>`. So
- * normalise to an array and base64-encode (standard base64, per RFC 7515 §4.1.6 —
- * NOT base64url) each byte string. A non-bstr value is left untouched.
+ * Shape ONE COSE header value into its JOSE wire form and say WHICH JOSE
+ * parameter it belongs to, dispatched on the registry's `cose` codec cell. The
+ * read half of the per-wire codec; `token-header.ts#encodeCoseHeaderValue` is the
+ * write half.
+ *
+ * ⚠ IT RETURNS THE TARGET PARAMETER, not just the value, and that is the one
+ * piece of machinery COSE's certificate binding needs: RFC 9360 §2 gives COSE ONE
+ * `x5t` (label 34) whose hash algorithm is a member of the VALUE, while JOSE names
+ * the algorithm in the parameter — so a single wire label has to reach either
+ * `x5t#S256` or `x5t`. Every other codec answers with the label's own parameter.
+ *
+ * `undefined` DROPS the parameter: a `COSE_CertHash` under a hash algorithm aegis
+ * has no JOSE parameter for has no representation in this vocabulary, and a wire
+ * header reports what a producer wrote in terms this package can name.
  */
-const coseX5cToWire = (value: unknown): unknown => {
-  const members = Array.isArray(value) ? value : [value];
-  if (!members.every((member) => member instanceof Uint8Array)) return value;
-  return members.map((cert): string => B64.encode(cert));
-};
+const coseValueToWire = (
+  jose: string,
+  value: unknown,
+): { jose: string; value: unknown } | undefined => {
+  const codec: CoseHeaderCodec = coseHeaderCodec(jose);
 
-/**
- * Shape ONE COSE header value into its JOSE wire form: the `alg` label integer
- * becomes its string algorithm name, byte strings (`kid`) become their utf-8
- * text, the base64url byte fields (`iv`/`p2s`/`tag`) become base64url strings,
- * `crit`'s member labels become their JOSE wire names, and `x5c`'s DER byte
- * strings become standard base64 — the exact representation a decoded JOSE header
- * carries. (`x5t` is deliberately UNREGISTERED for COSE — its COSE form is a
- * `COSE_CertHash` structure, not a base64url thumbprint relabel — so it never
- * reaches this shaper; see the header registry.)
- */
-const coseValueToWire = (jose: string, value: unknown): unknown => {
-  switch (jose) {
-    case "alg":
-      return typeof value === "number" ? coseLabelToAlg(value) : value;
-    case "kid":
-      return value instanceof Uint8Array ? Buffer.from(value).toString("utf8") : value;
-    case "iv":
-    case "p2s":
-    case "tag":
-      return value instanceof Uint8Array ? B64.encode(Buffer.from(value), B64U) : value;
-    case "crit":
-      return coseCritToWire(value);
-    case "x5c":
-      return coseX5cToWire(value);
-    default:
-      return value;
+  switch (codec.kind) {
+    case "algorithmLabel":
+      return { jose, value: isNumber(value) ? coseLabelToAlg(value) : value };
+    case "textBytes":
+      return {
+        jose,
+        value: value instanceof Uint8Array ? Buffer.from(value).toString("utf8") : value,
+      };
+    case "base64Bytes":
+      return {
+        jose,
+        value: value instanceof Uint8Array ? B64.encode(Buffer.from(value), B64U) : value,
+      };
+    case "critical":
+      return { jose, value: coseCritToWire(value) };
+    case "certChain":
+      return { jose, value: decodeCoseX509(value) };
+    case "certHash":
+      return decodeCoseCertHash(value);
+    case "passthrough":
+      return { jose, value };
+    default: {
+      // `noImplicitReturns` is off repo-wide, so without this a new codec kind
+      // would silently yield `undefined` and DROP the parameter on read.
+      const exhaustive: never = codec;
+      throw new CoseError("Unhandled COSE header value kind", {
+        code: "header_unhandled_cose_value_kind",
+        data: { jose, kind: String((exhaustive as CoseHeaderCodec).kind) },
+        title: "Unhandled COSE Header Value Kind",
+        details:
+          "The header registry declares a COSE value kind the reader does not handle, so the parameter has no JOSE wire form.",
+      });
+    }
   }
 };
 
@@ -104,14 +124,17 @@ const assignCoseParam = (
   algKind: CoseAlgKind,
 ): void => {
   if (label === ALG_LABEL && algKind === "enc") {
-    if (typeof value === "number") wire.enc = coseLabelToEnc(value);
+    if (isNumber(value)) wire.enc = coseLabelToEnc(value);
     return;
   }
 
   const jose = joseByCose(label);
   if (jose === undefined) return;
 
-  wire[jose] = coseValueToWire(jose, value);
+  const shaped = coseValueToWire(jose, value);
+  if (shaped === undefined) return;
+
+  wire[shaped.jose] = shaped.value;
 };
 
 /**

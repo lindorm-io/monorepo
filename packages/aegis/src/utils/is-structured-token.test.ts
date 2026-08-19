@@ -86,11 +86,13 @@ describe("isStructuredToken", () => {
 
     test("should reject a cws", async () => {
       const aegis = await createAegis(TEST_EC_KEY_SIG);
-      const { token } = await aegis.sign({
-        payload: { tid: "at_abc", sec: "s3cr3t" },
-        tokenType: "access_token",
-        format: "cws",
-      });
+      // `aegis.sign` is claims-only, so an opaque COSE handle is the `cws`
+      // namespace — which takes the kits' own wire-named bag, hence the bare
+      // `at` prefix rather than the `access_token` domain enum.
+      const { token } = await aegis.cws.sign(
+        { tid: "at_abc", sec: "s3cr3t" },
+        { tokenType: "at" },
+      );
       const verified = await aegis.verify(token);
 
       expect(verified.format).toBe("cws");
@@ -111,8 +113,8 @@ describe("isStructuredToken", () => {
       });
       const verified = await aegis.verify(token);
 
-      expect(verified.format).toBe("jwe");
-      expect(verified.inner).toBe("jwt");
+      expect(verified.format).toBe("jwt");
+      expect(verified.wrapper).toBe("jwe");
       expect(verified.claims.subject).toBe("user-1");
       expect(isStructuredToken(verified)).toBe(true);
     });
@@ -126,14 +128,16 @@ describe("isStructuredToken", () => {
       });
       const verified = await aegis.verify(token);
 
-      expect(verified.format).toBe("cwe");
-      expect(verified.inner).toBe("cwt");
+      expect(verified.format).toBe("cwt");
+      expect(verified.wrapper).toBe("cwe");
       expect(verified.claims.subject).toBe("user-1");
       expect(isStructuredToken(verified)).toBe(true);
     });
 
-    // The outer says the same word; the inner is what decides. An honestly
-    // declared opaque plaintext (`cty: text/plain`) stays opaque after the peel.
+    // The envelope is the same word as the row above; the token INSIDE is what
+    // decides. An honestly declared opaque plaintext (`cty: text/plain`) stays
+    // opaque after the peel, so this reports `format: "jws"` and is not
+    // structured — for the same reason a bare `jws` is not.
     test("should reject a jwe wrapping a jws", async () => {
       const aegis = await createAegis(TEST_EC_KEY_SIG, TEST_EC_KEY_ENC);
       const jws = (await aegis.jws.sign(Buffer.from("opaque-handle"))).token;
@@ -142,29 +146,11 @@ describe("isStructuredToken", () => {
       });
       const verified = await aegis.verify(token);
 
-      expect(verified.format).toBe("jwe");
-      expect(verified.inner).toBe("jws");
+      expect(verified.format).toBe("jws");
+      expect(verified.wrapper).toBe("jwe");
       expect(verified.claims).toEqual({});
       expect(isStructuredToken(verified)).toBe(false);
     });
-  });
-
-  // The one input built by hand rather than round-tripped, because `verify`
-  // cannot produce it: `inner` is only ever set under a jwe/cwe. It is worth
-  // testing anyway — the guard is public, and a consumer's MOCK is exactly the
-  // place a stray `inner` shows up. The guard must read the outer, not trust a
-  // field that format never sets.
-  test("should reject an opaque format carrying a stray inner", () => {
-    const token = {
-      format: "jws",
-      inner: "jwt",
-      header: {},
-      claims: {},
-      custom: {},
-      token: "not-a-real-token",
-    } as unknown as VerifiedToken;
-
-    expect(isStructuredToken(token)).toBe(false);
   });
 
   describe("nullish", () => {
@@ -180,13 +166,12 @@ describe("isStructuredToken", () => {
   });
 
   /**
-   * ⚠ THE TABLES ARE READ AS KEYS, NOT AS PROPERTIES. Both lookups sit on plain
-   * object literals (`STRUCTURED`, `ENCRYPTING`) and both keys come off a token
-   * the CALLER handed in, so `format in STRUCTURED` resolved through
-   * `Object.prototype` and narrowed `{ format: "constructor" }` to a
-   * claims-bearing token — one this guard's eleven pylon call sites would then
-   * read `claims` off. `in` on a caller-influenced key is a BANNED construct in
-   * this package.
+   * ⚠ THE TABLE IS READ AS KEYS, NOT AS PROPERTIES. The lookup sits on a plain
+   * object literal (`STRUCTURED`) and its key comes off a token the CALLER handed
+   * in, so `format in STRUCTURED` resolved through `Object.prototype` and
+   * narrowed `{ format: "constructor" }` to a claims-bearing token — one every
+   * pylon call site would then read `claims` off. `in` on a caller-influenced key
+   * is a BANNED construct in this package.
    *
    * A hand-written literal is the right input HERE, unlike every row above:
    * `verify` cannot produce one of these, which is exactly why the guard has to
@@ -200,17 +185,21 @@ describe("isStructuredToken", () => {
       },
     );
 
-    test.each(["constructor", "toString", "valueOf", "hasOwnProperty"])(
-      "should reject the inner format %s under a real encrypting outer",
-      (inner) => {
-        expect(isStructuredToken({ format: "jwe", inner } as never)).toBe(false);
-      },
-    );
+    // An ENCRYPTING format is not structured on its own: `verify` never returns
+    // one now (it reports the signed inner's kind), and a hand-built one carries
+    // no claims whatever it says beside it.
+    test.each(["jwe", "cwe"] as const)("should reject the bare format %s", (format) => {
+      expect(isStructuredToken({ format } as never)).toBe(false);
+      // …and a stray `wrapper` beside it changes nothing: the guard reads the
+      // token's OWN kind and nothing else.
+      expect(isStructuredToken({ format, wrapper: "jwe" } as never)).toBe(false);
+    });
 
-    // …while the real pair it stands next to still narrows, so the guard is not
-    // simply refusing everything hand-built.
-    test("should still accept a structured inner under an encrypting outer", () => {
-      expect(isStructuredToken({ format: "jwe", inner: "jwt" } as never)).toBe(true);
+    // …while a structured format still narrows whether or not it was wrapped, so
+    // the guard is not simply refusing everything hand-built.
+    test("should accept a structured format with and without a wrapper", () => {
+      expect(isStructuredToken({ format: "jwt" } as never)).toBe(true);
+      expect(isStructuredToken({ format: "jwt", wrapper: "jwe" } as never)).toBe(true);
     });
   });
 
@@ -225,11 +214,21 @@ describe("isStructuredToken", () => {
 
       if (!isStructuredToken(verified)) throw new Error("expected structured");
 
-      const format: StructuredFormat | "jwe" | "cwe" = verified.format;
+      const format: StructuredFormat = verified.format;
       expect(format).toBe("jwt");
     });
 
-    test("should narrow an encrypting outer's inner to a required field", async () => {
+    /**
+     * ⭐ AN ENCRYPTED TOKEN NARROWS THROUGH THE SAME ARM AS A PLAIN ONE. The
+     * assignment below is the assertion: `format` narrows to `StructuredFormat`
+     * with no `"jwe" | "cwe"` in the union, even though this token arrived
+     * inside a JWE.
+     *
+     * ⚠ The narrowing is the whole assertion, so it must be read off `format`
+     * itself — reading the envelope from `wrapper` first would prove only that
+     * the token was packaged, which is not what the guard answers.
+     */
+    test("should narrow a WRAPPED structured token exactly like a bare one", async () => {
       const aegis = await createAegis(TEST_EC_KEY_SIG, TEST_EC_KEY_ENC);
       const { token } = await aegis.mint("id_token", ID_TOKEN, {
         context: { accessTokenIssued: false },
@@ -238,13 +237,12 @@ describe("isStructuredToken", () => {
       const verified: VerifiedToken = await aegis.verify(token);
 
       if (!isStructuredToken(verified)) throw new Error("expected structured");
-      if (verified.format !== "jwe" && verified.format !== "cwe") {
-        throw new Error("expected an encrypting outer");
-      }
 
-      // `inner` is optional on VerifiedToken and REQUIRED on the narrowed arm.
-      const inner: StructuredFormat = verified.inner;
-      expect(inner).toBe("jwt");
+      const format: StructuredFormat = verified.format;
+
+      expect(format).toBe("jwt");
+      // The envelope is still reported — moved, not dropped.
+      expect(verified.wrapper).toBe("jwe");
     });
   });
 
@@ -268,9 +266,7 @@ describe("isStructuredToken", () => {
         })
         .then((r) => mac.verify(r.token)),
       sig.jws.sign(Buffer.from("opaque")).then((r) => sig.verify(r.token)),
-      sig
-        .sign({ payload: { sec: "s" }, tokenType: "access_token", format: "cws" })
-        .then((r) => sig.verify(r.token)),
+      sig.cws.sign({ sec: "s" }, { tokenType: "at" }).then((r) => sig.verify(r.token)),
       jose
         .mint("id_token", ID_TOKEN, {
           context: { accessTokenIssued: false },
@@ -293,7 +289,7 @@ describe("isStructuredToken", () => {
     expect(
       verified.map((token) => ({
         format: token.format,
-        inner: token.inner,
+        wrapper: token.wrapper,
         structured: isStructuredToken(token),
       })),
     ).toMatchSnapshot();

@@ -25,6 +25,7 @@ import type {
   TokenProfileInput,
   SignContext,
   ProfileVerifyOptions,
+  RawSignInput,
   SignStructuredTokenOptions,
   SignUnstructuredTokenOptions,
   TokenContent,
@@ -56,9 +57,8 @@ import type {
  * `file:line` terms before concluding anything.
  *
  *   - aegis is wrong ⇒ the row STAYS AT FULL STRENGTH and is pinned with
- *     {@link Scenario.knownDefect} (per wire where the shortfall is per wire),
- *     recorded in the project's open items, and reported. The code is repaired
- *     later; the row is not touched now.
+ *     {@link Scenario.knownDefect} (per wire where the shortfall is per wire) and
+ *     reported. The code is repaired later; the row is not touched now.
  *   - the row is wrong ⇒ correct it, and say plainly WHAT was wrong and how
  *     reading the code established it. A corrected row is a FINDING and is
  *     reported as one, never folded in as cleanup.
@@ -251,10 +251,7 @@ export type ClockGivenStep = { step: "clock"; at: string };
  */
 export type DeploymentGivenStep = {
   step: "deployment";
-  settings: Pick<
-    AegisSettings,
-    "certificateThumbprintSha1" | "clockTolerance" | "dpopMaxSkew" | "partyRecipient"
-  >;
+  settings: Pick<AegisSettings, "clockTolerance" | "dpopMaxSkew" | "partyRecipient">;
 };
 
 /**
@@ -467,9 +464,20 @@ export type ForgedMember = {
 export type ForgedClaim = keyof DomainClaims;
 
 /**
+ * The `aegis.sign` knobs a row may state — the whole `RawSignInput` surface minus
+ * the two the step owns: `payload` (the row's own `claims`/`content`) and
+ * `format` (the run's wire chooses it, which is what keeps a row agnostic).
+ *
+ * ⚠ DERIVED from the real input type rather than re-listed, so a knob added to
+ * the verb is expressible here the same day and a knob removed stops compiling.
+ */
+export type DomainSignOptions = Omit<RawSignInput, "payload" | "format">;
+
+/**
  * How the artifact under test comes into existence, discriminated by `via`.
  *
  * - `mint`           — the domain profile pipeline, `aegis.mint(profile, content, options)`.
+ * - `domain-sign`    — `aegis.sign(input)`, the PROFILE-LESS domain sign verb.
  * - `kit-sign`       — a RAW namespace, `aegis.<kit>.sign(...)`. Passthrough: the
  *                      dict is signed verbatim in its own wire spelling, which is
  *                      the only way to put a shape mint refuses in front of verify.
@@ -485,6 +493,31 @@ export type ForgedClaim = keyof DomainClaims;
  */
 type TokenGivenShape =
   | MintGivenStep
+  /**
+   * `aegis.sign` — the DOMAIN sign verb, the profile-less twin of `mint`, and
+   * CLAIMS ONLY (`jwt` / `cwt` / `cwm`, defaulting to `jwt`). The only thing it
+   * does not do that `mint` does is apply a profile's floor, so a row here states
+   * what a signature owes with NO profile in play.
+   *
+   * ⚠ There is no `door` discriminator. There was one while the verb also signed
+   * opaque formats; a union with a single member states nothing, so the shape is
+   * flat. An opaque signature is `via: "kit-sign", kit: "opaque"`.
+   *
+   * The step names no format: the run's wire picks `jwt` or `cwt`, so ONE row
+   * states the capability on both wires. `cwm` (COSE_Mac0) is not reachable
+   * agnostically — it needs a symmetric key, so a row about it states `key`.
+   */
+  | {
+      step: "token";
+      via: "domain-sign";
+      /**
+       * DOMAIN claims, typed against the registered vocabulary — the same typo
+       * guard the mint content has. `unregisteredClaims` is the open remainder.
+       */
+      claims: RegisteredClaims;
+      unregisteredClaims?: Dict;
+      options?: DomainSignOptions;
+    }
   /**
    * A token written by a FOREIGN producer — `jose` on the JOSE wire,
    * `@auth0/cose` on the COSE wire — over the key the vault already holds, so the
@@ -892,7 +925,30 @@ export type When = readonly [WhenStep, ...ReadonlyArray<WhenStep>];
  */
 export type AcceptsThenStep = {
   step: "accepts";
+  /**
+   * The token's OWN kind. A sign-then-encrypt states the SIGNED format here and
+   * the envelope under {@link AcceptsThenStep.wrapper} — a caller asking what the
+   * token is gets the same answer either way, so a row about a capability states
+   * the same `format` whether or not it also encrypts.
+   */
   format?: TokenFormatTag | Partial<Record<Wire, TokenFormatTag>>;
+  /**
+   * The envelope enclosing the token, when one does — and `null` to assert that
+   * NOTHING does.
+   *
+   * ⚠ ITS PRESENCE IS THE DISCRIMINATOR. `"jwe"` is a legitimate `format` in its
+   * own right — a BARE `aegis.encrypt` result — so a row that stated only
+   * `format: "jwe"` could not distinguish "a signed token in an envelope" from
+   * "a sealed blob". Stating `wrapper` is how a row says which one it means.
+   *
+   * ⚠ `null` IS NOT THE SAME AS OMITTING IT, and the difference is the whole
+   * reason the member exists. Omitted means the row says nothing about the
+   * envelope and the interpreter checks nothing; `null` means the row asserts
+   * there is none. Without an absence member the ABSENT half of a discriminator
+   * this docstring calls load-bearing was inexpressible, so a row named for it
+   * could assert nothing — and a fabricated wrapper passed unnoticed.
+   */
+  wrapper?: TokenFormatTag | Partial<Record<Wire, TokenFormatTag>> | null;
 };
 
 /**
@@ -1226,8 +1282,8 @@ export type Scenario = {
    * wire cannot carry the capability — a specification that defines the
    * parameter on one wire only, a serialisation with no bucket to put it in — and
    * not merely that no row was written. A reason that amounts to "not done yet"
-   * is a gap, and a gap belongs in the project's open items, not in a field whose
-   * job is to close the question.
+   * is a gap, and a gap is what {@link Scenario.knownDefect} states — not this
+   * field, whose job is to close the question.
    */
   unsupported?: Partial<Record<Wire, string>>;
 };
@@ -2271,7 +2327,13 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     // payload is unreadable and the interpreter fails the row on principle. The
     // reachable-cleartext half is stated by
     // `claims-container-content-is-published-in-cleartext`.
-    then: [{ step: "accepts", format: { jose: "jwe", cose: "cwe" } }],
+    then: [
+      {
+        step: "accepts",
+        format: { jose: "jwt", cose: "cwt" },
+        wrapper: { jose: "jwe", cose: "cwe" },
+      },
+    ],
   },
   {
     id: "a-sensitive-claim-named-with-an-empty-value-is-still-a-sensitive-claim",
@@ -2293,7 +2355,13 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     when: [{ step: "mint" }],
-    then: [{ step: "accepts", format: { jose: "jwe", cose: "cwe" } }],
+    then: [
+      {
+        step: "accepts",
+        format: { jose: "jwt", cose: "cwt" },
+        wrapper: { jose: "jwe", cose: "cwe" },
+      },
+    ],
   },
   {
     id: "a-sensitive-claim-is-omitted-when-it-cannot-be-encrypted",
@@ -2401,7 +2469,13 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     when: [{ step: "mint" }],
     // No `wirePayload` exclusion: a JWE's payload is ciphertext, so the exclusion
     // could only ever pass vacuously. `format: "jwe"` IS the exclusion here.
-    then: [{ step: "accepts", format: { jose: "jwe", cose: "cwe" } }],
+    then: [
+      {
+        step: "accepts",
+        format: { jose: "jwt", cose: "cwt" },
+        wrapper: { jose: "jwe", cose: "cwe" },
+      },
+    ],
   },
 
   // ---------------------------------------------------------------------------
@@ -3660,28 +3734,16 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
   // ---------------------------------------------------------------------------
   // Certificate binding.
   //
-  // ⚠ The COSE shortfall below is a CHAIN of two omissions, not one: the COSE
-  // signer never calls `resolveCertBinding`
-  // (`src/internal/cose/sign-cwt.ts#export const signCwt = (`),
-  // and the header registry maps no COSE label for the thumbprint
-  // (`src/internal/header/header-registry.ts#the hash algorithm is a member of the structure`).
-  // The domain forward is NO LONGER one of them: the COSE `signClaims`
-  // (`src/internal/wire/cose-token-wire.ts#signClaims: ({`) forwards its options
-  // structurally, and a caller who STATES a binding is now refused above the seam
-  // by the `unsupported` disposition
-  // (`src/internal/wire/cose-token-wire.ts#const NO_COSE_CERT_BINDING =`).
-  // That refusal is the second of the two capabilities a consumer relies on
-  // independently, and it IS raised now; the first — emitting the binding — is
-  // what the two remaining sites still owe. Each is pinned where it is owed, and
-  // each names only the sites its own repair needs (a refusal puts nothing on the
-  // wire, so it owes no registry mapping).
+  // ⚠ THE TWO WIRES SPELL THE SAME BINDING WITH A DIFFERENT NUMBER OF PARAMETERS,
+  // which is why several rows below are scoped per wire. JOSE names the digest
+  // algorithm in the PARAMETER — RFC 7515 §4.1.7 `x5t` (SHA-1) beside §4.1.8
+  // `x5t#S256` (SHA-256) — while RFC 9360 §2 gives COSE ONE `x5t` (label 34)
+  // whose value is a `COSE_CertHash` carrying its own `hashAlg`. A CBOR map cannot
+  // key one label twice, so a COSE token names its certificate by exactly one
+  // digest and there is no legacy second one riding alongside it.
   //
-  // The LEGACY SHA-1 thumbprint is a different question with a different answer,
-  // and no repair reaches it: RFC 9360 §2 gives COSE ONE `x5t`, whose hash
-  // algorithm is a member of the value rather than part of a second parameter
-  // name, so there is nothing on that wire for a suppression or an override to
-  // act on. The rules about that setting therefore declare COSE `unsupported`
-  // rather than defective.
+  // Which digests ride is therefore the WIRE's answer and not the caller's: JOSE
+  // emits both, COSE the one its `COSE_CertHash` carries, and no option chooses.
   // ---------------------------------------------------------------------------
   {
     id: "a-token-signed-with-a-certificate-bearing-key-declares-that-certificate",
@@ -3736,9 +3798,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         expected: { certificateThumbprint: CERT_THUMBPRINT },
       },
     ],
-    knownDefect: {
-      cose: 'TWO sites, and the domain forward is no longer either of them. `src/internal/wire/cose-token-wire.ts#signClaims: ({` — the COSE `signClaims` no longer names its options one by one; it forwards them STRUCTURALLY, and a caller who STATES a binding is refused above the seam by the `unsupported` disposition (`src/internal/wire/cose-token-wire.ts#const NO_COSE_CERT_BINDING =`). This row states none — its key merely CARRIES a chain — so nothing is refused, the mint succeeds, and the token comes back unbound because no COSE writer derives a binding from the key. That is what the two remaining sites owe. `src/internal/cose/sign-cwt.ts#export const signCwt = (` — `signCwt` takes the same `SignStructuredTokenOptions` the JOSE kits take, and consumes `tokenType`/`proprietary`/`header`/`unprotected` of them and neither `bindCertificate` nor `certificateThumbprintSha1`; it never calls `resolveCertBinding`, which `src/classes/JwtKit.ts#cert: resolveCertBinding(` does, so a repaired forward has no kit door to hand the request to. And `src/internal/header/header-registry.ts#the hash algorithm is a member of the structure` — `certificateThumbprint` is marked ABSENT on COSE, so `coseByJose` (`src/internal/header/header-registry.ts#header_no_cose_label`) throws `header_no_cose_label` rather than yielding a label to write under; the entry needs mapping to label 34 with an array codec for `COSE_CertHash` (it declares `codec: { kind: "string" }` today, and a COSE_CertHash is a two-element array).',
-    },
   },
   {
     id: "a-mint-told-not-to-bind-a-certificate-emits-none",
@@ -3797,87 +3856,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
     when: [{ step: "mint" }],
     then: [{ step: "rejects", error: "AegisError" }],
-    unsupported: {
-      cose: "There is no certificate binding on this wire for a chainless key to fall short of. `KIT_CAPABILITIES.cwt.certificateBinding` is `false` and no COSE writer derives a chain or a thumbprint, so `bindCertificate: \"thumbprint\"` is refused by the wire's `unsupported` disposition before any key is inspected — the SAME refusal a CERT-BEARING key gets from the same option (the sibling row `a-token-signed-with-a-certificate-bearing-key-declares-that-certificate` demonstrates it). This row's capability is that the KEY decides, and on a wire where the key is never consulted the row cannot state that: it would go green on a refusal that has nothing to do with the chain. JOSE has the capability — `resolveCertBinding` reads `kryptos.hasCertificate` — which is what gives the rule something to be about.",
-    },
   },
-  {
-    id: "a-deployment-wide-certificate-thumbprint-default-yields-to-the-call-that-states-its-own",
-    title:
-      "a call that asks for the legacy certificate thumbprint gets it even where the deployment suppresses it by default",
-    rationale:
-      "A deployment default and a per-call option are two surfaces answering the same question, and the per-call one is the narrower statement — it is made about ONE token by the code that knows what that token is for. A deployment that has retired the SHA-1 thumbprint (RFC 7515 §4.1.7 `x5t`, whose digest is no longer collision-resistant) still has to be able to issue it for the one legacy relying party that reads nothing else; if the default won, that deployment's only option would be to turn the setting off globally and lose it everywhere.",
-    given: [
-      { step: "keys", keys: ["ec-sig-cert"] },
-      { step: "deployment", settings: { certificateThumbprintSha1: false } },
-      {
-        step: "token",
-        via: "mint",
-        profile: "id_token",
-        content: { subject: "user-1", audience: [CLIENT] },
-        options: {
-          context: { accessTokenIssued: false },
-          sign: {
-            bindCertificate: "thumbprint",
-            certificateThumbprintSha1: true,
-            key: { condition: { id: CERT_SIG_KEY_ID } },
-          },
-        },
-      },
-    ],
-    when: [{ step: "mint" }, { step: "verify" }],
-    then: [
-      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
-      {
-        step: "header",
-        expected: { certificateThumbprintSha1: CERT_THUMBPRINT_SHA1 },
-      },
-    ],
-    unsupported: {
-      cose: 'There is no legacy thumbprint on this wire for either surface to decide about. RFC 9360 §2 registers ONE thumbprint parameter for COSE — `x5t` at label 34 — and its value is a `COSE_CertHash`: "The \'x5t\' header parameter is represented as an array of two elements. The first element is an algorithm identifier that is an integer or a string containing the hash algorithm identifier corresponding to the Value column (integer or text string) of the algorithm registered in the \\"COSE Algorithms\\" registry. The second element is a binary string containing the hash value computed over the DER-encoded certificate." The digest algorithm is therefore a MEMBER of the one parameter rather than part of two parameter names, so COSE has no second, SHA-1 parameter riding beside the binding one — and a rule about which surface decides whether that second parameter is emitted cannot be stated where the parameter does not exist. JOSE has the pair (RFC 7515 §4.1.7 `x5t` beside §4.1.8 `x5t#S256`), which is what gives the rule something to be about.',
-    },
-  },
-  {
-    id: "a-deployment-that-retires-the-legacy-certificate-thumbprint-emits-none",
-    title:
-      "a deployment that suppresses the legacy certificate thumbprint issues bound tokens without it",
-    rationale:
-      "A deployment retires the SHA-1 thumbprint ONCE, at construction, because whether the estate still serves clients that read it is a property of the estate and not of any one call. A default that is accepted and never consulted is the worst outcome: the operator sees the setting, every token still carries the broken-hash digest, and nothing reports the discrepancy. The suppression is also NARROW — RFC 7515 §4.1.7 `x5t` is the legacy digest and §4.1.8 `x5t#S256` is what actually binds the token to a certificate, so a suppression that took the binding with it would silently turn every cert-bound token into an unbound one, which is a larger change than any operator asked for.",
-    given: [
-      { step: "keys", keys: ["ec-sig-cert"] },
-      { step: "deployment", settings: { certificateThumbprintSha1: false } },
-      {
-        step: "token",
-        via: "mint",
-        profile: "id_token",
-        content: { subject: "user-1", audience: [CLIENT] },
-        // No per-call `certificateThumbprintSha1`: the deployment default is the
-        // only thing that can decide here, which is what makes this a statement
-        // about the setting rather than about the override that usually rides
-        // over it.
-        options: {
-          context: { accessTokenIssued: false },
-          sign: {
-            bindCertificate: "thumbprint",
-            key: { condition: { id: CERT_SIG_KEY_ID } },
-          },
-        },
-      },
-    ],
-    when: [{ step: "mint" }, { step: "verify" }],
-    then: [
-      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
-      {
-        step: "header",
-        expected: { certificateThumbprint: CERT_THUMBPRINT },
-        excludes: ["certificateThumbprintSha1"],
-      },
-    ],
-    knownDefect: {
-      cose: "TWO sites, the same chain the emission row names, and this row does not even reach them. `src/internal/wire/cose-token-wire.ts#signClaims: ({` — the COSE `signClaims` no longer omits the cert-binding options; it forwards them structurally, and this row STATES `bindCertificate`, so the `unsupported` disposition (`src/internal/wire/cose-token-wire.ts#const NO_COSE_CERT_BINDING =`) REFUSES the mint above the seam instead of issuing a token that is silently unbound. The refusal is the honest answer to a request this wire cannot serve, but it is not the EMISSION this row asks for, so the row stays red until the two sites below exist. `src/internal/cose/sign-cwt.ts#export const signCwt = (` — `signCwt` never calls `resolveCertBinding`, so there is no kit door to hand the request to. And `src/internal/header/header-registry.ts#the hash algorithm is a member of the structure` — `certificateThumbprint` is marked ABSENT on COSE, so `coseByJose` (`src/internal/header/header-registry.ts#header_no_cose_label`) throws `header_no_cose_label` and the surviving SHA-256 digest this row requires has no label to travel under until the entry is mapped to RFC 9360 §2's `x5t` (label 34) with a `COSE_CertHash` codec. ⚠ The exclusion half of this cell is VACUOUS on COSE and stays so after every repair: RFC 9360 §2 gives the wire one `x5t` whose hash algorithm is a member of the value, so there is no separate legacy digest for the deployment setting to remove.",
-    },
-  },
-
   // ---------------------------------------------------------------------------
   // Sign-then-encrypt.
   // ---------------------------------------------------------------------------
@@ -3899,7 +3878,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
     when: [{ step: "mint" }],
     then: [
-      { step: "accepts", format: { jose: "jwe", cose: "cwe" } },
+      {
+        step: "accepts",
+        format: { jose: "jwt", cose: "cwt" },
+        wrapper: { jose: "jwe", cose: "cwe" },
+      },
       // The same declaration in each wire's own vocabulary — the JOSE parameter
       // NAME against the COSE integer LABEL 3 (RFC 9052 §3.1), which §1.5 keeps
       // distinct from the text label "3".
@@ -3928,7 +3911,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       { step: "verify", profile: "id_token", options: { audience: CLIENT } },
     ],
     then: [
-      { step: "accepts", format: { jose: "jwe", cose: "cwe" } },
+      {
+        step: "accepts",
+        format: { jose: "jwt", cose: "cwt" },
+        wrapper: { jose: "jwe", cose: "cwe" },
+      },
       { step: "claims", expected: { subject: "user-1", issuer: ISSUER } },
       // The header reported is the INNER token's — an id_token's own media type,
       // not the encrypting outer's. Stated per wire because the two are the same
@@ -4327,7 +4314,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       { step: "verify", profile: "id_token", options: { audience: CLIENT } },
     ],
     then: [
-      { step: "accepts", format: { jose: "jwe", cose: "cwe" } },
+      {
+        step: "accepts",
+        format: { jose: "jwt", cose: "cwt" },
+        wrapper: { jose: "jwe", cose: "cwe" },
+      },
       { step: "bucket", bucket: "sensitive", expected: { nationalIdentityNumber: NIN } },
     ],
   },
@@ -8053,5 +8044,270 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     then: [{ step: "accepts" }],
+  },
+  // -------------------------------------------------------------------------
+  // `aegis.sign` — the PROFILE-LESS domain sign verb
+  // -------------------------------------------------------------------------
+  {
+    id: "a-profile-less-signature-states-its-claims-in-the-wires-own-vocabulary",
+    title:
+      "a signature made without a profile still writes domain claims under the registered wire keys",
+    rationale:
+      "A claim's wire spelling is fixed by specification and not by which verb wrote it: RFC 7519 §4.1.2 names the subject `sub` and RFC 8392 §3.1.2 keys the same claim at integer label 2, with §3.1.7 keying the token id at 7 where RFC 7519 §4.1.7 spells it `jti`. An issuer that has no profile to apply is still issuing a token a third party must read, so writing the caller's domain names to the wire would produce a token that carries no registered claim at all — it would verify, and every audience would find it empty.",
+    given: [
+      { step: "keys", keys: ["ec-sig"] },
+      {
+        step: "token",
+        via: "domain-sign",
+        claims: { subject: "user-1", tokenId: "token-1", clientId: CLIENT },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // Read off the BYTES by the independent inspector. The two spellings are
+      // different assertions about one domain fact, so they are scoped per wire.
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: { sub: "user-1", jti: "token-1", client_id: CLIENT },
+        excludes: ["subject", "tokenId"],
+      },
+      {
+        step: "wireClaims",
+        on: "cose",
+        // 2 = sub, 7 = cti. `client_id` has no registered CWT label, so it keeps
+        // its text key — the honest answer, and the one a foreign reader gets.
+        present: [2, 7],
+        includes: { 2: "user-1", client_id: CLIENT },
+        excludes: ["subject", "tokenId", "sub", "jti"],
+      },
+    ],
+  },
+  {
+    id: "a-profile-less-signature-adds-no-claim-the-caller-did-not-state",
+    title: "a signature made without a profile carries exactly the claims it was given",
+    rationale:
+      "The profile is what generates an envelope — the issuer identity, the issue instant, the token id, the lifetime-derived expiry — and enforces the policy that requires them. A verb that applies no profile must therefore assert nothing on the issuer's behalf: a token that silently gained an `iss` would name this deployment as the authority for a statement it was not asked to make, and one that gained an `exp` would be honoured for a window nobody chose. Absence here is what makes the profiled floor meaningful, since a floor that also applied without a profile would not be a floor.",
+    given: [
+      { step: "keys", keys: ["ec-sig"] },
+      {
+        step: "token",
+        via: "domain-sign",
+        claims: { subject: "user-1" },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "wireClaims", on: "jose", excludes: ["iss", "iat", "exp", "jti", "nbf"] },
+      // The same five claims at their RFC 8392 §3.1 labels: 1 iss, 6 iat, 4 exp,
+      // 7 cti, 5 nbf.
+      { step: "wireClaims", on: "cose", excludes: [1, 6, 4, 7, 5] },
+    ],
+  },
+  {
+    id: "a-profile-less-signature-declares-the-callers-token-type",
+    title: "a signature made without a profile stamps the token type the caller named",
+    rationale:
+      "RFC 8725 §3.11 recommends an explicit type header so a recipient can refuse a token issued for another purpose, and RFC 9596 carries the same parameter to COSE at label 16. Without a profile there is no mandated type, so the caller's own is the only statement available — dropping it would leave every profile-less token indistinguishable from every other, which is the confusion the recommendation exists to prevent.",
+    given: [
+      { step: "keys", keys: ["ec-sig"] },
+      {
+        step: "token",
+        via: "domain-sign",
+        claims: { subject: "user-1" },
+        options: { tokenType: "access_token" },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // One media type, two registered spellings: RFC 7515 §4.1.9 abbreviates
+      // `application/`, RFC 9596 → RFC 9052 §3.1 keeps it, and a COSE object is
+      // a CWT so the structured suffix is `+cwt`.
+      {
+        step: "wireProtectedHeader",
+        on: "jose",
+        includes: { typ: "application/at+jwt" },
+      },
+      {
+        step: "wireProtectedHeader",
+        on: "cose",
+        includes: { 16: "application/at+cwt" },
+      },
+    ],
+  },
+  {
+    id: "a-profile-less-signature-verifies-as-the-token-it-declares-itself-to-be",
+    title:
+      "a token signed without a profile is read back through the ordinary verify path",
+    rationale:
+      "A signature is only worth making if the artifact can be read by the ordinary reader, and the reader is told nothing about which verb wrote a token — it detects the wire from the bytes. A profile-less token that could not travel the normal read path would be a token only its author could use, which is not a token.",
+    given: [
+      { step: "keys", keys: ["ec-sig"] },
+      {
+        step: "token",
+        via: "domain-sign",
+        // The read-side floor is the profile-less one and it still applies: the
+        // JOSE read requires an issuer and both wires require an expiry.
+        claims: {
+          issuer: ISSUER,
+          subject: "user-1",
+          // The table's date cell, cast locally as every typed claim bag does —
+          // a row holds no live `Date`, and the interpreter revives it.
+          expiresAt: { date: EXPIRES_AT } as unknown as Date,
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "claims", expected: { issuer: ISSUER, subject: "user-1" } },
+    ],
+  },
+  {
+    id: "a-token-type-with-no-structured-media-type-leaves-the-wires-own-bare-form",
+    title:
+      "a token type that has no structured media type stamps each wire's own conventional type header",
+    rationale:
+      "Not every token type has a structured media type to name. OIDC Core §2 defines an ID Token as a plain JWT, and no `id+jwt` type is registered for it, so there is no `application/<prefix>+<format>` to build and what remains is the conventional value of whichever format is being written. Those values are not one string: RFC 7515 §4.1.9 abbreviates the JOSE forms while RFC 8392 §9.2 and RFC 9052 §3.1 keep the `application/` prefix on the COSE ones. Answering the JOSE spelling on a COSE write is not a cosmetic mis-stamp — it is not a representable COSE type header at all, so the token cannot be produced and the caller loses the whole artifact rather than one parameter.",
+    given: [
+      { step: "keys", keys: ["ec-sig"] },
+      {
+        step: "token",
+        via: "domain-sign",
+        claims: { subject: "user-1" },
+        options: { tokenType: "id_token" },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "wireProtectedHeader", on: "jose", includes: { typ: "JWT" } },
+      { step: "wireProtectedHeader", on: "cose", includes: { 16: "application/cwt" } },
+    ],
+  },
+  {
+    id: "a-caller-stated-type-header-overrides-the-derived-one-on-either-wire",
+    title:
+      "an explicitly stated type header replaces the one derived from the token type, on both wires",
+    rationale:
+      "An issuer with no profile to obey is the only authority on what its token is for, and RFC 8725 §3.11 makes an explicit type the mechanism a recipient uses to refuse a token issued for something else. Honouring the statement on one encoding and dropping it on the other is worse than not offering it: the caller sets the option once and gets a typed token or an untyped one depending on a format choice made for unrelated reasons, with nothing in either result to say which happened. The value is stated in the JOSE spelling on either wire because the kits re-wrap the bare PREFIX in their own format, exactly as a profile's mandated type is rewritten from `+jwt` to `+cwt`.",
+    given: [
+      { step: "keys", keys: ["ec-sig"] },
+      {
+        step: "token",
+        via: "domain-sign",
+        claims: { subject: "user-1" },
+        // Both stated: the explicit header must WIN, so a row that named only
+        // `typ` could not tell honouring it from ignoring the other.
+        options: { tokenType: "access_token", typ: "custom+jwt" },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      {
+        step: "wireProtectedHeader",
+        on: "jose",
+        includes: { typ: "application/custom+jwt" },
+      },
+      {
+        step: "wireProtectedHeader",
+        on: "cose",
+        includes: { 16: "application/custom+cwt" },
+      },
+    ],
+  },
+  {
+    id: "an-option-a-wire-cannot-honour-is-refused-rather-than-dropped",
+    title:
+      "an encrypt refuses an option its wire cannot honour, rather than accepting and ignoring it",
+    rationale:
+      "An option a writer cannot act on has exactly two honest dispositions: do it, or say so. Accepting and ignoring is the third, and it is the worst — the caller states a requirement, receives a token, and nothing anywhere reports that the requirement is absent from it. A wire whose specification gives it no parameter for a value must therefore refuse the request rather than issue a token the caller believes carries it: RFC 9052 §5.2 defines a COSE_Encrypt0 as single-recipient DIRECT encryption, so no key agreement happens for RFC 7518 §4.6\'s PartyUInfo to feed, and COSE registers no header parameter to carry it either.",
+    given: [
+      { step: "keys", keys: ["ec-enc", "oct-enc"] },
+      {
+        step: "token",
+        via: "domain-encrypt",
+        data: { subject: "user-1" },
+        options: { partyProducer: "cHJvZHVjZXI" },
+      },
+    ],
+    when: [{ step: "mint" }],
+    // JOSE HONOURS the option — `JweKit` writes `apu` for its key-agreement
+    // algorithms — so only the COSE wire refuses. That asymmetry is the
+    // capability, not a shortfall: the row states what each wire does with the
+    // same request.
+    then: [
+      {
+        step: "rejects",
+        on: "cose",
+        // The stable discriminator, read off the real error. `AegisDomainError`
+        // is a broad base, so the class alone would be satisfied by any domain
+        // refusal at all — including one raised for an unrelated reason.
+        // `code` is deliberately NOT pinned; see the note at the head of this file.
+        error: "AegisDomainError",
+        data: {
+          format: "cwe",
+          operation: "encryptContent",
+          option: "partyProducer",
+        },
+      },
+    ],
+    unsupported: {
+      jose: "the JOSE wire CAN honour the ECDH-ES party info — RFC 7518 §4.6 registers `apu`/`apv` for its key-agreement algorithms, and `JweKit` writes them — so there is no refusal to state here. That it is honoured is held by the disposition probe row `\'jose\' \'encryptContent\' forwards \'partyProducer\'`, which spies on the kit call and therefore fails if the option stops arriving.",
+    },
+  },
+  {
+    id: "an-encrypted-token-reports-the-kind-of-the-token-inside-it",
+    title:
+      "a signed token wrapped in an encrypting envelope reports its own kind, with the envelope beside it",
+    rationale:
+      "A caller asking what a token IS must get one answer whether or not the issuer chose to encrypt it. An encrypted id_token is an id_token — OIDC Core §3.1.3.3 describes `id_token_encrypted_response_alg` as a packaging choice the RP makes, not a different credential — so a consumer routing on the token's kind must not have to know how it travelled. Reporting the envelope as the kind forces every such consumer to special-case encryption, and the ones that forget silently drop a whole class of valid credential: the claims are fully populated and only the tag says otherwise.",
+    given: [
+      { step: "keys", keys: ["ec-sig", "oct-enc"] },
+      {
+        step: "token",
+        via: "mint",
+        profile: "id_token",
+        content: { subject: "user-1", audience: [CLIENT] },
+        options: { context: { accessTokenIssued: false }, encrypt: {} },
+      },
+    ],
+    when: [{ step: "verify", profile: "id_token", options: { audience: CLIENT } }],
+    then: [
+      {
+        step: "accepts",
+        format: { jose: "jwt", cose: "cwt" },
+        wrapper: { jose: "jwe", cose: "cwe" },
+      },
+      // The claims are the inner token's, fully populated — the envelope changes
+      // how the token travelled and nothing about what it says.
+      { step: "claims", expected: { subject: "user-1" } },
+    ],
+  },
+  {
+    id: "a-bare-encrypted-token-reports-its-own-format-and-no-wrapper",
+    title:
+      "a token that seals content rather than a token reports itself, with no wrapper",
+    rationale:
+      '`encrypt` seals a value; there is no token inside it and nothing encloses it, so its own kind IS the encrypting format. This is the case that makes the wrapper field load-bearing rather than cosmetic: `jwe` is a legitimate answer to "what is this token" in its own right, so `format` alone cannot distinguish a sealed blob from a signed token in an envelope. The presence of `wrapper` is the discriminator, and a consumer that branched on `format === "jwe"` to mean "something signed is inside" would be wrong for exactly this artifact.',
+    given: [
+      { step: "keys", keys: ["oct-enc"] },
+      { step: "token", via: "domain-encrypt", data: { subject: "user-1" } },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "accepts",
+        format: { jose: "jwe", cose: "cwe" },
+        // ⚠ `null`, not omitted. The row's whole subject is the ABSENCE of a
+        // wrapper, and omitting the field asserts nothing about it — which is
+        // how a row named for a capability can prove none of it.
+        wrapper: null,
+      },
+    ],
   },
 ];

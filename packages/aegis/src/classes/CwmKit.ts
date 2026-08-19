@@ -8,19 +8,14 @@ import { decodeCwtWire } from "../internal/cose/decode-cwt-wire.js";
 import { signCwt } from "../internal/cose/sign-cwt.js";
 import { verifyCwt } from "../internal/cose/verify-cwt.js";
 import type {
+  CertificateBindingMode,
+  CwmKitSettings,
   CwtClaimsWire,
   DecodedStructuredToken,
   SignStructuredTokenOptions,
   VerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../types/index.js";
-
-export type CwmKitSettings = {
-  kryptos: IKryptos;
-  logger: ILogger;
-  /** Clock skew tolerance (seconds) for the in-kit temporal range check. */
-  clockTolerance?: number;
-};
 
 /**
  * CWT (RFC 8392) as a COSE_Mac0 — the symmetric twin of `CwtKit`. Same wire-only
@@ -35,6 +30,7 @@ export class CwmKit implements ICwmKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
   private readonly clockTolerance: number;
+  private readonly certBindingMode: CertificateBindingMode;
 
   constructor(options: CwmKitSettings) {
     if (options.kryptos.algClass !== "symmetric") {
@@ -50,6 +46,7 @@ export class CwmKit implements ICwmKit {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CwmKit"]);
     this.clockTolerance = options.clockTolerance ?? 0;
+    this.certBindingMode = options.certBindingMode ?? "strict";
   }
 
   sign<C extends Dict = Dict>(
@@ -69,6 +66,7 @@ export class CwmKit implements ICwmKit {
       token,
       assert,
       clockTolerance: options.clockTolerance ?? this.clockTolerance,
+      certBindingMode: options.certBindingMode ?? this.certBindingMode,
       options,
     });
   }

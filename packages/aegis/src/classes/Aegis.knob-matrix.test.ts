@@ -174,11 +174,17 @@ describe("Aegis — knob matrix", () => {
   // `format` is a probe that asserts the token was built, which every probe's
   // baseline already established.
   test("should observe something on every artifact knob", () => {
+    // A knob earns its row by changing SOMETHING observable: a named observation,
+    // the artifact's own format, or the envelope around it. `wrapper` counts for
+    // the same reason `format` does — a knob that only wraps the token leaves
+    // `format` identical by design, so requiring a format change would read that
+    // correct behaviour as an unobservable knob.
     const empty = PROBES.filter(
       ([, , , probe]) =>
         probe.observed !== undefined &&
         probe.observed.length === 0 &&
-        probe.format === undefined,
+        probe.format === undefined &&
+        probe.wrapper === undefined,
     ).map(([label]) => label);
 
     expect(PROBES.length).toBeGreaterThan(0);

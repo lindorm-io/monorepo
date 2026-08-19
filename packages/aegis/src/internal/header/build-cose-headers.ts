@@ -1,12 +1,16 @@
 import { isArray, isString } from "@lindorm/is";
 import type { CoseError } from "../../errors/index.js";
-import type { TokenFormatTag, WireTokenHeader } from "../../types/index.js";
+import type {
+  CertificateHeaderFields,
+  TokenFormatTag,
+  WireTokenHeader,
+} from "../../types/index.js";
 import type { CoseLabel } from "../cose/cose-label.js";
 import { assertCritEligible } from "./assert-crit-eligible.js";
-import { coseWireKey, joseByCose } from "./header-registry.js";
+import { joseByCose } from "./header-registry.js";
 import { isProtectedOnly } from "./is-protected-only.js";
 import { normaliseHeaders } from "./normalise-headers.js";
-import { wireHeaderToCoseMap } from "../utils/token-header.js";
+import { mapTokenHeader, wireHeaderToCoseMap } from "../utils/token-header.js";
 
 /**
  * Translate and VALIDATE the two caller-controlled COSE header bags (`header` →
@@ -19,15 +23,15 @@ import { wireHeaderToCoseMap } from "../utils/token-header.js";
  * exists, so it cannot be a single write here).
  *
  * `reserved` is the kit's own `KitCapabilities.reserved` row — the JOSE wire
- * names of the parameters the kit stamps itself (a signed kit: `alg`+`kid`+`typ`;
- * the encrypt kit: `alg`/label-1 + `kid` + `iv` + `typ`) — resolved to COSE labels
- * here. It is the runtime backstop for the type-level Omit, since an `as
- * any`/untyped dict can smuggle a derived param past the compiler, and taking it
- * from the capability table rather than a hand-built set is what stops a kit's
- * declared capability and its enforcement from drifting apart.
+ * names of the parameters the kit stamps itself. It is the runtime backstop for
+ * the type-level Omit, since an `as any`/untyped dict can smuggle a derived param
+ * past the compiler, and taking it from the capability table rather than a
+ * hand-built set is what stops a kit's declared capability and its enforcement
+ * from drifting apart.
  *
  * The rules:
- *  1. a reserved/derived param set in EITHER bag → throw (it is key-derived);
+ *  1. a reserved/derived param set in EITHER bag → throw (it is key-derived),
+ *     checked by JOSE name BEFORE any value is shaped;
  *  2. `crit` ⊆ protected — `crit` itself, or any param it lists, placed in the
  *     unprotected bag → throw (critical params must be integrity-protected);
  *  3. the same param in BOTH bags → throw (COSE cannot carry it twice);
@@ -102,6 +106,7 @@ export const buildCoseHeaders = ({
   reserved,
   header,
   unprotected,
+  cert,
   proprietary,
   format,
   error,
@@ -109,6 +114,17 @@ export const buildCoseHeaders = ({
   reserved: ReadonlyArray<string>;
   header: Partial<WireTokenHeader> | undefined;
   unprotected: Partial<WireTokenHeader> | undefined;
+  /**
+   * The cert-binding output of `resolveCertBinding` — the COSE twin of
+   * `buildJoseHeader`'s `cert` tier, and the one DOMAIN-named input either wire
+   * takes. It crosses to the wire vocabulary here, once, through the registry.
+   *
+   * ⚠ It is NOT subject to the reserved rule below, and must not be: `x5c` and
+   * `x5t#S256` are on `COSE_RESERVED` precisely so a CALLER cannot supply a
+   * certificate the signing key never had. This tier IS the kit deriving them
+   * from that key, which is what the reservation exists to leave room for.
+   */
+  cert: CertificateHeaderFields | undefined;
   /**
    * The caller's INTEROP MODE, forwarded to the label resolver: it decides
    * whether a private-use parameter is keyed by its compact integer or by its
@@ -170,31 +186,27 @@ export const buildCoseHeaders = ({
     }
   }
 
-  // These re-normalise, idempotently — the entries are built from the same bags
-  // the rules were checked on, so nothing can be added or removed between the
-  // verdict and the wire.
-  const protectedEntries = wireHeaderToCoseMap(headerBag, proprietary);
-  const unprotectedEntries = wireHeaderToCoseMap(unprotectedBag, proprietary);
-
-  // ⚠ Resolved in the SAME interop mode the entries were, not as integer labels:
-  // a reserved parameter that ever landed in the private-use range would be
-  // spelled by its string label on an interoperable token, and a set of integers
-  // would then match nothing — the guard would pass a caller-supplied
-  // key-derived parameter straight onto the wire. None is private-use today, so
-  // this is the mode agreeing with itself rather than a behaviour.
-  const reservedLabels = new Set<CoseLabel>(
-    reserved.map((jose) => coseWireKey(jose, proprietary)),
-  );
-
   // Rule 1 — a kit-derived/computed param cannot be set by the caller in EITHER
   // bag (the runtime backstop for untyped paths; the bag TYPES already Omit these).
-  for (const [entries, bucket] of [
-    [protectedEntries, "header"],
-    [unprotectedEntries, "unprotected"],
+  //
+  // ⚠ BY JOSE NAME AND BEFORE THE TRANSLATION — the same shape `buildJoseHeader`
+  // uses (`owned.has(jose)`), and both halves are load-bearing. The caller's bag
+  // and `reserved` are both JOSE-named, so no spelling has to be agreed; and
+  // running first is what keeps a value the kit owns out of a value CODEC, which
+  // would answer for it before this rule can. `header: { "x5t#S256": "probe" }`
+  // reaching the `COSE_CertHash` encoder fails the mint with a base64 complaint
+  // about a value the caller was never allowed to state — pinned in
+  // `kit-capabilities.test.ts`'s reserved (COSE) probe, which supplies exactly
+  // that value for every reserved parameter.
+  const owned = new Set(reserved);
+
+  for (const [bag, bucket] of [
+    [headerBag, "header"],
+    [unprotectedBag, "unprotected"],
   ] as const) {
-    for (const label of entries.keys()) {
-      if (!reservedLabels.has(label)) continue;
-      const jose = joseByCose(label) ?? String(label);
+    for (const jose of Object.keys(bag)) {
+      if (!owned.has(jose)) continue;
+
       throw new error(`Header parameter "${jose}" is key-derived and cannot be set`, {
         code: "cose_reserved_header",
         data: { parameter: jose, bucket },
@@ -204,6 +216,12 @@ export const buildCoseHeaders = ({
       });
     }
   }
+
+  // These re-normalise, idempotently — the entries are built from the same bags
+  // the rules were checked on, so nothing can be added or removed between the
+  // verdict and the wire.
+  const protectedEntries = wireHeaderToCoseMap(headerBag, proprietary);
+  const unprotectedEntries = wireHeaderToCoseMap(unprotectedBag, proprietary);
 
   // Rule 3 — the same non-reserved param cannot appear in BOTH buckets.
   for (const label of protectedEntries.keys()) {
@@ -244,6 +262,25 @@ export const buildCoseHeaders = ({
       details:
         "aegis decides which bucket a header parameter travels in, and this one is integrity-protected only: a recipient must be able to rely on it, so it cannot be placed in the unprotected bucket where any holder of the token could rewrite it.",
     });
+  }
+
+  // The cert tier, LAST — the ordering `buildJoseHeader` states: kit defaults <
+  // caller < kit-derived. It is merged AFTER the four rules because those rules
+  // are about what a CALLER stated, and this tier is the kit's own derivation.
+  //
+  // ⚠ The digests cross through `mapTokenHeader`, which is where the DOMAIN names
+  // (`certificateThumbprint`, …) become wire ones and the registry's empty-value
+  // verdicts apply — an empty `x5t#S256` throws there rather than travelling.
+  // `wireHeaderToCoseMap` then shapes each value into its COSE structure:
+  // RFC 9360 §2's `COSE_X509` for the chain and `COSE_CertHash` for the digest.
+  for (const [label, value] of wireHeaderToCoseMap(
+    // The cast is the `iv` column and nothing else: `WireTokenHeaderOptions` types
+    // it as the raw `Buffer` a caller hands in, `WireTokenHeader` as the encoded
+    // string. A cert tier carries no `iv`.
+    mapTokenHeader({}, cert) as Partial<WireTokenHeader>,
+    proprietary,
+  )) {
+    protectedEntries.set(label, value);
   }
 
   return { protectedEntries, unprotectedEntries };

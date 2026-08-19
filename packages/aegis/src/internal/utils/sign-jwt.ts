@@ -3,7 +3,6 @@ import type { Dict } from "@lindorm/types";
 import { JwtKit } from "../../classes/JwtKit.js";
 import type { SignStructuredTokenOptions } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
-import { resolveThumbprintSha1 } from "./resolve-thumbprint-sha1.js";
 
 /**
  * Sign already-wire claims as a JWT with an ALREADY-RESOLVED signing key — the
@@ -34,10 +33,4 @@ export const signJwt = ({
     clockTolerance: deps.clockTolerance,
     kryptos,
     logger: deps.logger,
-  }).sign(claims, {
-    ...options,
-    certificateThumbprintSha1: resolveThumbprintSha1(
-      options.certificateThumbprintSha1,
-      deps,
-    ),
-  });
+  }).sign(claims, options);

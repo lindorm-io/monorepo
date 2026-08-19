@@ -13,6 +13,7 @@ import type {
   SignedToken,
   TokenContent,
   TokenFormat,
+  StructuredFormat,
   TokenFormatTag,
   TokenProfile,
   TokenProfileTyp,
@@ -29,7 +30,7 @@ import type { InputDisposition } from "./wire-input-disposition.js";
  */
 export type ClaimsRead = {
   /** The CLAIMS format actually read: `jwt`, `cwt` (COSE_Sign1) or `cwm` (COSE_Mac0). */
-  format: TokenFormatTag;
+  format: StructuredFormat;
   /**
    * The wire-keyed claim payload EXACTLY as the wire carried it — what
    * `VerifiedToken.wire.payload` reports for pass-through and re-emit.
@@ -99,9 +100,8 @@ export type OpaqueVerified = {
  * ⚠ The intersection is the mechanism, not a tidying. Only the aegis-only fields
  * above the `&` can be named in a wire's destructure; the whole kit surface
  * necessarily leaves by rest-spread, so a kit option cannot be dropped by a wire
- * forgetting to mention it — which is how `bindCertificate`,
- * `certificateThumbprintSha1`, `proprietary` and `unprotected` each came to be
- * accepted and ignored on one wire or the other. A new kit sign option threads
+ * forgetting to mention it — the failure mode being that a kit option is accepted
+ * on one wire and silently ignored on the other. A new kit sign option threads
  * through both wires with no wire change, and {@link TokenWire.dispositions}
  * forces each wire to state what it does with it.
  */
@@ -114,6 +114,15 @@ export type SignClaimsInput = {
   format: TokenFormat;
 } & SignStructuredTokenOptions;
 
+/**
+ * The input to a PROFILED write's typ derivation.
+ *
+ * ⚠ There is no profile-LESS member here, and that is deliberate: with no profile
+ * to consult, nothing in the derivation differs between a JOSE and a COSE write,
+ * so `aegis.sign` resolves its prefix ABOVE this seam through the one shared
+ * `signTypPrefix` (`internal/utils/sign-typ-prefix.ts`). Only the profile makes
+ * the two wires disagree, so only the profile reaches a per-wire function.
+ */
 export type MintTypInput = {
   profile: TokenProfile;
   /** The content's own domain `tokenType`, when it carries one. */
@@ -124,9 +133,14 @@ export type MintTypInput = {
 };
 
 /**
- * The input to an OPAQUE signature — `aegis.sign`. There is no claims layer, so
- * no domain claims and no `nameOf` translation: the payload is the caller's own
- * content and the wire hands it to its opaque kit family verbatim.
+ * The input to an OPAQUE signature — a JWS or a CWS. These serialisations have no
+ * claims layer, so there are no domain claims and no `nameOf` translation: the
+ * payload is the caller's own content and the wire hands it to its opaque kit
+ * family verbatim.
+ *
+ * ⚠ `aegis.sign` does NOT reach this — it is claims-only. The opaque namespaces
+ * (`aegis.jws.sign` / `aegis.cws.sign`) do, through the shared guard
+ * (`raw-sign-opaque.ts`). See {@link TokenWire.signOpaque}.
  *
  * Same intersection as {@link SignClaimsInput}, over the opaque kits' own
  * `SignUnstructuredTokenOptions`. The opaque kits secure whatever bytes they are
@@ -135,8 +149,18 @@ export type MintTypInput = {
  */
 export type SignOpaqueInput = {
   deps: AegisDeps;
-  /** The caller's content. A `Buffer`/`string` is opaque; a Dict is serialised. */
-  payload: Buffer | string | Dict;
+  /**
+   * The caller's content, as {@link TokenContent} — the SAME type the opaque kit
+   * namespaces accept and the same one {@link EncryptContentInput.content} and
+   * {@link OpaqueVerified.payload} already use.
+   *
+   * ⚠ `Buffer | string | Dict` is NARROWER than what reaches here: `number` and
+   * `boolean` are members of `TokenContent` and are not assignable to that
+   * triple, so a narrowed field refuses two payload types the public door
+   * accepts. (`Array` passes such a triple only because `Dict` is
+   * `Record<string, any>`.)
+   */
+  payload: TokenContent;
   key: AegisSignKey | undefined;
 } & SignUnstructuredTokenOptions;
 
@@ -316,14 +340,15 @@ export type TokenWire = {
    */
   profileTyp(typ: TokenProfileTyp): string | undefined;
   /**
-   * The bare typ PREFIX a profiled MINT stamps on this wire.
+   * The bare typ PREFIX a PROFILED mint stamps on this wire.
    *
    * ⚠ PRESERVED DIVERGENCE: the JOSE mint falls back to the caller's explicit
    * `typ` and then to the content's own `tokenType` when the profile mandates
-   * none; the COSE mint has only ever consulted the profile. Both derivations are
-   * kept exactly as they were — closing that gap is a behaviour change with no
-   * probe behind it — but they now sit side by side under one name instead of in
-   * two encoders.
+   * none; the COSE mint consults the profile and nothing else, so a caller `typ`
+   * for a `cwt`/`cwm` mint is dropped. Pinned as a defect by
+   * `spec-dispositions.ts` (`headerType`) and `knob-probes.ts` (`typ`).
+   *
+   * ⚠ `aegis.sign` does NOT reach this — see {@link MintTypInput}.
    */
   mintTypPrefix(input: MintTypInput): string | undefined;
   /**
@@ -350,6 +375,14 @@ export type TokenWire = {
   signClaims(input: SignClaimsInput): SignedToken;
   /**
    * Secure the caller's own content as this wire's OPAQUE signed token.
+   *
+   * Reached by `aegis.jws.sign` / `aegis.cws.sign` through the shared entry
+   * (`raw-sign-opaque.ts`), which runs `assertWireInput` over
+   * {@link WireInputDispositions.signOpaque} first — so an option a wire declares
+   * `unsupported` is refused at the namespace door, by declaration, and
+   * `COSE_DISPOSITIONS` is the only place that fact is written down.
+   *
+   * ⚠ `aegis.sign` does NOT reach this; it is claims-only.
    *
    * ⚠ A separate operation from {@link signClaims}, not a mode of it. There is no
    * claims layer to translate, the option set is different, and the two reach

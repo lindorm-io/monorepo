@@ -36,7 +36,11 @@ export const rawSignCwt = async <C extends Dict = Dict>({
 
   const kryptos = await deps.resolveSignKey({ key });
 
-  const token = new CwtKit({ kryptos, logger: deps.logger }).sign<C>(claims, rest);
+  const token = new CwtKit({
+    certBindingMode: deps.certBindingMode,
+    kryptos,
+    logger: deps.logger,
+  }).sign<C>(claims, rest);
 
   return buildSignedToken(
     token.toString("base64url"),

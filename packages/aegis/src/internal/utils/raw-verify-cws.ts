@@ -45,5 +45,9 @@ export const rawVerifyCws = async <T extends TokenContent = Buffer>({
     verify: key,
   });
 
-  return new CwsKit({ kryptos, logger: deps.logger }).verify<T>(bytes, verifyOptions);
+  return new CwsKit({
+    certBindingMode: deps.certBindingMode,
+    kryptos,
+    logger: deps.logger,
+  }).verify<T>(bytes, verifyOptions);
 };

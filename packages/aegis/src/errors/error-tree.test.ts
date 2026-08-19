@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../__fixtures__/keys.js";
 import { CwmKit } from "../classes/CwmKit.js";
 import { CwtKit } from "../classes/CwtKit.js";
+import { JOSE_THUMBPRINT_SHA1 } from "../internal/utils/jose-thumbprint-sha1.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { verifyToken } from "../internal/utils/verify-token.js";
 import {
@@ -238,7 +239,7 @@ describe("aegis error tree — real throw-site routing", () => {
   test("resolveCertBinding without a certificate chain throws an AegisKeyError", () => {
     let caught: unknown;
     try {
-      resolveCertBinding(TEST_EC_KEY_SIG, "thumbprint");
+      resolveCertBinding(TEST_EC_KEY_SIG, "thumbprint", JOSE_THUMBPRINT_SHA1);
     } catch (error) {
       caught = error;
     }

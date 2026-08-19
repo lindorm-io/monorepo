@@ -68,12 +68,6 @@ export type WireTokenEnvelope = {
   tokenType?: string;
   bindCertificate?: BindCertificateMode;
   /**
-   * Emit the SHA-1 certificate thumbprint (`x5t`) alongside `x5t#S256` whenever a
-   * cert is bound. Default `true` (older-client compat). Independent of
-   * `bindCertificate`; the read side never verifies SHA-1. (JOSE only.)
-   */
-  certificateThumbprintSha1?: boolean;
-  /**
    * Allow a lindorm-proprietary (private-use) COSE algorithm/encryption label
    * (default `false`, the D5 interop gate) AND emit private-use compact claim
    * labels. COSE only — JOSE kits ignore it.

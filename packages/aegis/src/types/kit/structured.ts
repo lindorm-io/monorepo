@@ -19,8 +19,9 @@ export type SignStructuredTokenOptions = WireTokenEnvelope;
 /**
  * The STRUCTURED verify options — shared by JWT, CWT, CWM. Pure wire structural
  * knobs; no named domain matchers, no presence policy (those live Aegis-side).
- * `certBindingMode` is a JOSE-only knob (COSE ignores it); `tokenType` is the
- * bare PREFIX the kit re-wraps into the expected media type.
+ * `certBindingMode` governs the post-verify certificate check on BOTH wires
+ * (RFC 9360 §2 registers the COSE parameters); `tokenType` is the bare PREFIX the
+ * kit re-wraps into the expected media type.
  */
 export type VerifyStructuredTokenOptions = {
   certBindingMode?: CertificateBindingMode;

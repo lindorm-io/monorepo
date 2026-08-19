@@ -199,6 +199,15 @@ describe("run-scenario — the step-definition layer", () => {
       expect(wiresOf(scenario)).toEqual(["jose", "cose"]);
     });
 
+    test("should run a domain-sign row on every wire", () => {
+      const scenario = probe([
+        { step: "token", via: "domain-sign", claims: { subject: "user-1" } },
+      ]);
+
+      expect(pinnedWireOf(scenario)).toBeUndefined();
+      expect(wiresOf(scenario)).toEqual(["jose", "cose"]);
+    });
+
     test("should run a domain-encrypt row with no requested format on every wire", () => {
       const scenario = probe([{ step: "token", via: "domain-encrypt", data: { a: 1 } }]);
 

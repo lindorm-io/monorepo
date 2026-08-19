@@ -184,6 +184,40 @@ const aegis = new Aegis({
 });
 ```
 
+### Signing without a profile
+
+`aegis.sign(input)` is the DOMAIN sign verb — `aegis.mint` minus the profile. It is **claims-only**: `format` is `jwt` / `cwt` / `cwm` and defaults to `"jwt"`, exactly as `mint` does. The **only** thing `sign` does not do that `mint` does is apply a profile's floor — no policy is enforced, no envelope claim (`iss` / `iat` / `jti` / `exp`) is generated, no typ is mandated, no algorithm class is required of the key. The token says exactly what the caller said.
+
+The payload is a DOMAIN claim set, translated to the target wire's own spelling on the way out. So one call shape emits either wire:
+
+```typescript
+const jwt = await aegis.sign({ payload: { subject: "u1", tokenId: "t1" } });
+// → {"sub":"u1","jti":"t1"}                       (format defaults to "jwt")
+
+const cwt = await aegis.sign({
+  format: "cwt",
+  payload: { subject: "u1", tokenId: "t1" },
+});
+// → CBOR {2: "u1", 7: h'7431'}                    (RFC 8392 §3.1.2 / §3.1.7)
+```
+
+`cwm` emits a `COSE_Mac0` and therefore needs a symmetric key (RFC 9052 §6.2); `cwt` emits a `COSE_Sign1`.
+
+`tokenType` stamps the type header (`access_token` → `application/at+jwt` / `application/at+cwt`); a type with no structured form (`id_token`) leaves each kit's own bare form (`JWT` / `application/cwt`). `typ` overrides it outright — state it in the JOSE spelling on either wire (`at+jwt` on a `cwt` call emits `application/at+cwt`). `proprietary: true` switches the COSE side to lindorm private-use **integer** labels for claims and for the `objectId` header parameter; the default is the interoperable string spelling. Neither is a profile floor, which is why both are here as well as on `mint`.
+
+#### Opaque signatures are the wire namespaces
+
+There is no opaque door on `sign`. A signature over content nobody parses is `aegis.jws.sign(data, options)` / `aegis.cws.sign(data, options)`:
+
+```typescript
+const jws = await aegis.jws.sign({ subject: "u1" }); // → {"subject":"u1"}, untranslated
+const cws = await aegis.cws.sign(Buffer.from([0xca, 0xfe]));
+```
+
+⚠ **Accepted cost.** These take the kits' own `SignUnstructuredTokenOptions`, which is **wire-named**. An opaque caller spells wire names itself and gets no domain→wire translation: `tokenType` is the bare prefix (`"at"`, not `access_token`) and the header bag is `{ oid, cty, jku, … }`, not `{ objectId, contentType, jwksUri, … }`.
+
+They are **not** a byte-for-byte passthrough for an _object_ payload. Both run the shared emission-boundary normalisation on a `Dict`: `undefined` is dropped, and so is the empty value of a claim the **registry** declares carries nothing when empty (`{ nonce: "" }` does not reach the wire; `{ scope: [] }` does, and a key the registry has never heard of is never touched). Nothing is renamed and nothing is added. A `Buffer` or a `string` is untouched — there is no object for the prune to walk. `aegis.encrypt` is the door that runs none of this at all: it seals the exact value it was handed.
+
 ### Namespaced operations (wire surface)
 
 Each namespace resolves the key by `kid`, delegates to its kit, and speaks **only the wire** — input AND output. `sign` takes an already-wire claim dict (JOSE names — `sub`/`exp`/`jti`) and serializes it **verbatim**: no domain translation, no envelope auto-injection (`iat`/`jti`/`nbf`/`iss`), no hash derivation. `verify` takes a positional wire `assert` condition and returns the kit's native wire shape (`.payload` carries wire claim names). Named identity matchers, DPoP, actor chains, auto-injection and domain translation live on the domain verbs (`aegis.mint` / `aegis.verify`), not here.
@@ -242,10 +276,12 @@ const cwm = await aegis.cwm.sign({
 });
 const parsedCwm = await aegis.cwm.verify(cwm.token);
 
-// cws — raw COSE_Sign1, the opaque COSE mirror of jws
-const cws = await aegis.cws.sign({ tid: "at_abc" }, { tokenType: "access_token" });
+// cws — raw COSE_Sign1, the opaque COSE mirror of jws.
+// The bag is the KIT's, so `tokenType` is the bare prefix, not the domain enum.
+const cws = await aegis.cws.sign({ tid: "at_abc" }, { tokenType: "at" });
 const parsedCws = await aegis.cws.verify(cws.token);
-// { protectedHeader, unprotectedHeader, payload: Buffer, token }
+// { protectedHeader, unprotectedHeader, payload, token } — payload is the Dict
+// that was signed; a Buffer/string payload comes back a Buffer/string
 
 // cwe — COSE_Encrypt0, the COSE mirror of jwe (direct AEAD to a symmetric enc key)
 const cwe = await aegis.cwe.encrypt("secret");
@@ -341,7 +377,8 @@ const result = await aegis.verify(anyToken, {
   audience: "https://api.example.com",
 });
 
-result.format; // "jwt" | "jws" | "jwe" | "cwt" | "cwm" | "cws" | "cwe"
+result.format; // the token's OWN kind: "jwt" | "jws" | "cwt" | "cwm" | "cws"
+result.wrapper; // the envelope it arrived in, if any: "jwe" | "cwe" | undefined
 result.claims.subject; // domain-keyed registered claims
 result.custom; // non-registered claims
 result.header.tokenType; // domain-keyed; the two wire buckets merged, protected last
@@ -349,6 +386,8 @@ result.header.tokenType; // domain-keyed; the two wire buckets merged, protected
 ```
 
 ### Encryption
+
+⚠ **`"jwe"` is a legitimate `format` in its own right, so the PRESENCE of `wrapper` is the whole discriminator.** A bare `aegis.encrypt` result reports `{ format: "jwe" }` with no `wrapper` — its own kind IS `jwe`, and nothing encloses it. A signed token in an envelope reports `{ format: "jwt", wrapper: "jwe" }`. Reading `format === "jwe"` alone therefore never means "a signed token is inside"; check `wrapper`.
 
 `aegis.encrypt` / `aegis.decrypt` are the confidentiality mirror of `sign` — pure encryption with **no inner signature** (for sender authentication, `mint(profile, content, { encrypt })` and read it back with `verify`). `encrypt` seals the value it is handed in a JWE (or a `COSE_Encrypt0` with `format: "cwe"`); `decrypt` reverses it with **no signature check** and returns a `DecryptedToken` carrying that same value as its `payload`.
 
@@ -645,7 +684,7 @@ COSE mirrors JOSE across the board. The `cwt` / `cwm` / `cws` / `cwe` namespaces
 | `jwt`        | `cwt`        | Standard-claim token, signed (COSE_Sign1) |
 | `jwt` (HS\*) | `cwm`        | Standard-claim token, MAC'd (COSE_Mac0)   |
 | `mint` `jwt` | `mint` `cwt` | Profiled token (`format: "cwt"`)          |
-| `sign` `jws` | `sign` `cws` | Opaque handle (`format: "cws"`)           |
+| `jws`        | `cws`        | Opaque handle, signed (COSE_Sign1)        |
 
 The claims-bearing CWT is split by integrity structure: `cwt` is a `COSE_Sign1` gated to an **asymmetric** key, `cwm` is a `COSE_Mac0` gated to a **symmetric** key. `mint` / `aegis.verify` pick the right one automatically from the resolved key's class; the raw namespaces (`aegis.cwt` / `aegis.cwm`) each reject the wrong key class.
 
@@ -688,15 +727,60 @@ Either way the signature itself is plain RFC 9052 — verified in interop tests 
 
 ### Opaque handles (raw COSE sign — `cws`)
 
-`aegis.cws.sign(payload, options)` (equivalently `aegis.sign({ format: "cws", payload })`) is the profile-less sibling of the raw JWS `sign` — it secures an arbitrary CBOR claims map as a `COSE_Sign1` CWT. Because the token is base64url CBOR with no JOSE dot structure, a consumer cannot split it and read it as a JWT: it is an **opaque handle** (e.g. an internal reference `{ tid, sec }` signed with an unpublished key). The payload is a CBOR claims map; `typ` derives from the bare `tokenType`. `verify` auto-detects it like any COSE token.
+`aegis.cws.sign(payload, options)` is the opaque COSE mirror of `aegis.jws.sign`, and the only door onto an opaque COSE signature — `aegis.sign` is claims-only. It secures **arbitrary content**, not a claims map: a `COSE_Sign1` signs a `bstr`, so the content goes through the shared `cty` codec (Dict → `application/json`, string → `text/plain`, Buffer → octet-stream) and round-trips as the type it was. No claim label is applied and no claim name is translated — a claims-bearing `COSE_Sign1` is `aegis.cwt.sign`.
+
+Because the token is base64url CBOR with no JOSE dot structure, a consumer cannot split it and read it as a JWT: it is an **opaque handle** (e.g. an internal reference `{ tid, sec }` signed with an unpublished key). `typ` derives from the bare `tokenType` PREFIX, and it stamps `application/cws` / `+cws` so the token reads as a CWS and never as a CWT. `verify` auto-detects it like any COSE token.
+
+`bindCertificate` is honoured here — see **Certificate binding** below.
+
+⚠ **An option a wire cannot honour is REFUSED by name, never accepted and ignored.** Every namespace goes through a shared guard that reads each wire's declared dispositions, so a request the chosen wire has no parameter for fails with an `AegisDomainError` (`wire_option_unsupported`) carrying the specification reason the declaration states — rather than returning a token the caller believes carries it. On COSE that is the ECDH-ES party info: RFC 9052 §5.2 makes a `COSE_Encrypt0` direct encryption, so `partyProducer`/`partyRecipient` have no key agreement to feed.
 
 ```typescript
 const { token } = await aegis.cws.sign(
   { tid: "ref-1", sec: "…" },
-  { tokenType: "access_token" },
+  { tokenType: "at" }, // the bare kit PREFIX — this bag is wire-named
 );
 const parsed = await aegis.cws.verify(token);
-// { protectedHeader, unprotectedHeader, payload: Buffer, token } — opaque
+// { protectedHeader, unprotectedHeader, payload, token } — the Dict, unmodified
+```
+
+### Certificate binding
+
+`bindCertificate` binds a token to the X.509 certificate its signing key carries, on **both wires**. The mode decides how much travels: `"thumbprint"` (the default whenever the key has a chain) emits the SHA-256 digest alone, `"chain"` adds the full DER chain, `"none"` emits nothing.
+
+|                | JOSE                                                      | COSE                                                                                                          |
+| -------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| chain          | `x5c` — RFC 7515 §4.1.6, base64 DER                       | `x5chain`, label 33 — RFC 9360 §2 `COSE_X509`: one certificate is a bare `bstr`, several are an array of them |
+| SHA-256 digest | `x5t#S256` — RFC 7515 §4.1.8, base64url                   | `x5t`, label 34 — RFC 9360 §2 `COSE_CertHash`, `[ hashAlg, hashValue ]`, with `hashAlg` `-16` (RFC 9054 §3.2) |
+| SHA-1 digest   | `x5t` — RFC 7515 §4.1.7, always emitted beside `x5t#S256` | none — a CBOR map cannot key label 34 twice, so a COSE token names its certificate by exactly one digest      |
+
+How many digests name the certificate is the **wire's** answer, not the caller's — there is no option that suppresses `x5t`. Emitting it costs a reader nothing: where both ride, the SHA-256 digest is what is verified and the SHA-1 one is ignored, and a token bound by the SHA-1 digest ALONE is refused outright unless `certBindingMode` is `"lax"`.
+
+Both wires report the binding under the same domain names, so `verified.header.certificateThumbprint` and `.certificateChain` read identically whichever encoding carried the token. On the COSE read side label 34 is dispatched by its `hashAlg`: `-16` (or the registry name `"SHA-256"`) lands on `certificateThumbprint` and `-14` / `"SHA-1"` on `certificateThumbprintSha1`.
+
+**A COSE token may also bind with SHA-384 (`-43`) or SHA-512 (`-44`)** — RFC 9054 marks both `Recommended: Yes`, so a conformant issuer legitimately may. JOSE registers no parameter for either, so neither reaches the domain header; aegis instead **recomputes the digest from the verifying key's own leaf certificate** and checks it there. Such a binding is verified like any other, and a mismatch is refused in both modes. It is not reported in `verified.header` — there is no field for it. Two kinds of binding are still dropped, for different reasons: SHA-512/256 (`-17`) is registered and recognisable but has no `ShaKit` method — it is a distinct truncated variant, not SHA-512 chopped by hand — while an algorithm outside the table is not recognised at all.
+
+**`certBindingMode` decides what a verifier does with a binding it cannot confirm** (`"strict"` by default; per-call on the five `verify` doors, construction-time on `JweKit.decrypt` / `CweKit.decrypt`, whose options type declares no such field):
+
+| the header carries                                 | strict                                      | lax                                                   |
+| -------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------- |
+| the SHA-256 digest                                 | checked                                     | checked                                               |
+| both digests                                       | SHA-256 checked, SHA-1 ignored              | same                                                  |
+| SHA-384 or SHA-512 (COSE only)                     | checked, recomputed from the leaf           | checked, same                                         |
+| the SHA-1 digest alone                             | **refused** (`cert_binding_weak_algorithm`) | compared against the key's own, and warned every time |
+| a digest the verifying key has no chain to confirm | refused (`cert_binding_chain_missing`)      | warned, passed through                                |
+
+A **mismatch is a hard fail in both modes** (`cert_binding_thumbprint_mismatch`): lax widens what may go unproven, never what may be wrong.
+
+⚠ **A token bound with the SHA-1 digest ALONE is refused by default.** Third-party tokens carrying only `x5t` verify only under `certBindingMode: "lax"`.
+
+```typescript
+const { token } = await aegis.mint("default", claims, {
+  format: "cwt",
+  sign: { bindCertificate: "chain" },
+});
+const verified = await aegis.verify(token);
+// verified.header.certificateThumbprint / .certificateChain
 ```
 
 ### Generic CWT and COSE encryption (`cwt` / `cwm` / `cwe`)
@@ -722,7 +806,7 @@ const { payload } = await aegis.cwe.decrypt(cwe.token); // Buffer
 
 ## Sign content shape (domain surface)
 
-`SignJwtContent` is the DOMAIN content `aegis.mint` accepts (via each profile's `SignContent`). The raw wire tier — `aegis.sign` and the `aegis.jwt.sign` namespace — takes wire claims instead. It carries the standard, OIDC, OAuth, PoP, delegation, and Lindorm claim families plus:
+`SignJwtContent` is the DOMAIN content `aegis.mint` accepts (via each profile's `SignContent`). The raw WIRE namespaces — `aegis.jwt.sign` and its COSE twins — take wire claims instead. `aegis.sign` is a DOMAIN verb like `mint`: it takes domain claims and translates them (see "Signing without a profile"). It carries the standard, OIDC, OAuth, PoP, delegation, and Lindorm claim families plus:
 
 ```typescript
 {
@@ -805,7 +889,7 @@ their COSE twins): those serialize and return the wire dict verbatim and run no
 claim translation at all, which is what makes them the way to read a
 non-conformant token when you need to see one.
 
-The `authorizationDetails` → `authorization_details` name translation is a CLAIMS feature, so it runs on `aegis.mint` and nowhere else: not on the raw wire `aegis.sign` / `aegis.jwt.sign`, and not on `aegis.encrypt`, whose payload is opaque:
+The `authorizationDetails` → `authorization_details` name translation is a CLAIMS feature, so it runs wherever domain claims are written — `aegis.mint` and `aegis.sign` — and nowhere else: not on the raw wire namespaces (`aegis.jwt.sign`, `aegis.jws.sign` and their COSE twins), and not on `aegis.encrypt`, whose payload is opaque:
 
 ```typescript
 await aegis.mint("access_token", {
@@ -1126,17 +1210,15 @@ if (isStructuredToken(verified)) {
 }
 ```
 
-It exists because `format === "jwt"` — the obvious shorthand — drops two whole categories of valid credential, and drops them silently:
+It exists because `format === "jwt"` — the obvious shorthand — drops the COSE claims formats silently:
 
-| `format`                           | Structured | Why                                                                                |
-| ---------------------------------- | ---------- | ---------------------------------------------------------------------------------- |
-| `jwt` / `cwt` / `cwm`              | yes        | the claims layer is on the wire (`cwt`/`cwm` are COSE_Sign1 / COSE_Mac0)           |
-| `jwe` / `cwe` + structured `inner` | yes        | `verify` peeled it; `claims` is **fully populated**, only the outer tag says `jwe` |
-| `jws` / `cws`                      | **no**     | a signature over an opaque payload — `claims` is `{}` by contract                  |
-| `jwe` / `cwe` + opaque `inner`     | **no**     | the plaintext was a `jws`/`cws`, so there is still nothing to read                 |
-| `null` / `undefined`               | **no**     | swallowed deliberately — see below                                                 |
+| `format`              | Structured | Why                                                                      |
+| --------------------- | ---------- | ------------------------------------------------------------------------ |
+| `jwt` / `cwt` / `cwm` | yes        | the claims layer is on the wire (`cwt`/`cwm` are COSE_Sign1 / COSE_Mac0) |
+| `jws` / `cws`         | **no**     | a signature over an opaque payload — `claims` is `{}` by contract        |
+| `null` / `undefined`  | **no**     | swallowed deliberately — see below                                       |
 
-The second row is the one that bites in production: an **encrypted id_token** (OIDC `id_token_encrypted_response_alg`) verifies to `{ format: "jwe", inner: "jwt", claims: { … } }`. Every claim is there; only the outer tag differs, so a `format === "jwt"` check discards a perfectly good identity assertion and reports the user as unauthenticated.
+**`wrapper` does not appear in that table, and that is the point.** An **encrypted id_token** (OIDC `id_token_encrypted_response_alg`) verifies to `{ format: "jwt", wrapper: "jwe", claims: { … } }` and a plain one to `{ format: "jwt", claims: { … } }` — so both answer the same test, and an envelope can never make a readable token look unreadable. A JWE over a `jws` is `{ format: "jws", wrapper: "jwe" }`: still not structured, for the same reason a bare `jws` is not.
 
 Nullish input returns `false` rather than throwing, because the check it replaces is `if (!token || token.format !== "jwt")` — collapsing both halves into one guard is the point.
 

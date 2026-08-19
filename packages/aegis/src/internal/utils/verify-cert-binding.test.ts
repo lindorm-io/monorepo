@@ -29,21 +29,22 @@ const ISSUER = "https://test.lindorm.io/";
  * source. What it answers is narrower — does the certificate the token NAMES
  * match the certificate the verifying key actually holds.
  *
- * ⚠ The interesting cases cannot be conformance rows, and the reason is the
- * whole point of the check. Reaching the mismatch branch through a public door
- * needs a token whose header thumbprint is wrong AND whose signature is still
- * valid, and no caller can produce one — rewriting the header breaks the
- * signature, which is refused first (`a-token-whose-protected-header-was-altered
- * -after-signing-is-refused` states that). The STRANDED branch is reachable end
- * to end, and is exercised that way below, by replacing a vault key with a
- * chain-less twin that shares its material — which the scenario table has no
- * step for either.
+ * ⚠ AN ATTACKER CANNOT REACH THE MISMATCH BRANCH, and that is the point of the
+ * check rather than a gap in it: a token whose header thumbprint is wrong and
+ * whose signature is still valid requires the SIGNING KEY, since rewriting the
+ * header breaks the signature and is refused first
+ * (`a-token-whose-protected-header-was-altered-after-signing-is-refused` states
+ * that). A TEST holding the private key can produce one, and
+ * `classes/cose-cert-binding.test.ts` does — it rewrites label 34 and RE-SIGNS
+ * over the rewritten protected bucket, which is how the COSE wide-digest rows
+ * reach the mismatch end to end.
  *
- * ⚠ The predecessor of this file asserted the mismatch through `aegis.jwt.verify`
- * on a hand-rewritten header with a bare `rejects.toThrow()`, and its own comment
- * conceded the signature broke first. That test passed with this function gutted.
- * Calling the function directly and asserting the code is what makes the branch
- * observable at all.
+ * ⚠ THE ROWS BELOW CALL THIS FUNCTION DIRECTLY, and the code is asserted rather
+ * than a bare `rejects.toThrow()`. A rejection reached through a public door is
+ * satisfied by the signature check firing first, so it would pass with this
+ * function gutted. The STRANDED branch is the one that IS reachable end to end —
+ * by replacing a vault key with a chain-less twin that shares its material — and
+ * is exercised that way at the foot of this file.
  */
 const defaults = {
   notBefore: new Date("2020-01-01T00:00:00.000Z"),
@@ -102,6 +103,7 @@ describe("verifyCertBinding", () => {
           verifyCertBinding({
             header: {
               certificateThumbprint: "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+              certificateThumbprintSha1: undefined,
             },
             kryptos: CERT_KEY,
             logger,
@@ -130,7 +132,10 @@ describe("verifyCertBinding", () => {
       const error = (() => {
         try {
           verifyCertBinding({
-            header: { certificateThumbprint: "abc" },
+            header: {
+              certificateThumbprint: "abc",
+              certificateThumbprintSha1: undefined,
+            },
             kryptos: CHAINLESS_KEY,
             logger,
             mode: "strict",
@@ -148,7 +153,10 @@ describe("verifyCertBinding", () => {
     test("passes through in lax mode, and says so", () => {
       expect(() =>
         verifyCertBinding({
-          header: { certificateThumbprint: "abc" },
+          header: {
+            certificateThumbprint: "abc",
+            certificateThumbprintSha1: undefined,
+          },
           kryptos: CHAINLESS_KEY,
           logger,
           mode: "lax",
@@ -162,6 +170,269 @@ describe("verifyCertBinding", () => {
     });
   });
 
+  /**
+   * ⭐⭐ THE SHA-1-ONLY BINDING — the cell RFC 9360 §2 makes reachable on the COSE
+   * wire, where label 34's `hashAlg` decides which domain parameter a digest lands
+   * on, and which a foreign JOSE producer reaches by emitting `x5t` alone.
+   *
+   * Strict REFUSES: RFC 9054 §3.1 marks SHA-1 "Filter Only" and the digest is not
+   * collision-resistant, so a binding that rests on it alone is not the strong
+   * attribution a strict verifier expects. Lax COMPARES it — a mismatch is still
+   * a hard fail — and WARNS every time, because otherwise "binding verified" would
+   * silently mean two different strengths.
+   */
+  describe("a binding made with the SHA-1 thumbprint alone", () => {
+    const sha1Header = (value: string) => ({
+      certificateThumbprint: undefined,
+      certificateThumbprintSha1: value,
+    });
+
+    // ⚠⚠ THE NAMED BREAK. `certBindingMode` defaults to `"strict"`, so a
+    // third-party token bound this way is refused unless a consumer opts into lax.
+    test("is refused in strict mode, even when it MATCHES", () => {
+      const error = (() => {
+        try {
+          verifyCertBinding({
+            header: sha1Header(CERT_KEY.certificate("b64")!.thumbprintSha1),
+            kryptos: CERT_KEY,
+            logger,
+            mode: "strict",
+          });
+          return undefined;
+        } catch (err) {
+          return err;
+        }
+      })();
+
+      expect(error).toBeInstanceOf(AegisKeyError);
+      expect((error as AegisKeyError).code).toBe("cert_binding_weak_algorithm");
+    });
+
+    test("is compared in lax mode, and the comparison is always announced", () => {
+      expect(() =>
+        verifyCertBinding({
+          header: sha1Header(CERT_KEY.certificate("b64")!.thumbprintSha1),
+          kryptos: CERT_KEY,
+          logger,
+          mode: "lax",
+        }),
+      ).not.toThrow();
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("SHA-1"),
+        expect.objectContaining({ kryptosId: CERT_KEY.id }),
+      );
+    });
+
+    // Lax widens what may go UNPROVEN, never what may be WRONG.
+    test("is refused in lax mode when it does not match", () => {
+      const error = (() => {
+        try {
+          verifyCertBinding({
+            header: sha1Header("ZZZZZZZZZZZZZZZZZZZZZZZZZZZ"),
+            kryptos: CERT_KEY,
+            logger,
+            mode: "lax",
+          });
+          return undefined;
+        } catch (err) {
+          return err;
+        }
+      })();
+
+      expect(error).toBeInstanceOf(AegisKeyError);
+      expect((error as AegisKeyError).code).toBe("cert_binding_thumbprint_mismatch");
+    });
+
+    test("passes through in lax mode when the verifying key has no chain", () => {
+      expect(() =>
+        verifyCertBinding({
+          header: sha1Header("abc"),
+          kryptos: CHAINLESS_KEY,
+          logger,
+          mode: "lax",
+        }),
+      ).not.toThrow();
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("lax mode"),
+        expect.objectContaining({ kryptosId: CHAINLESS_KEY.id }),
+      );
+    });
+  });
+
+  /**
+   * BOTH DIGESTS — the COMMON case on JOSE, where aegis emits `x5t` beside
+   * `x5t#S256` by default. The SHA-256 binding was present and verified, so the
+   * legacy digest is neither checked nor complained about: cross-checking it would
+   * add a second failure mode with no security gain.
+   */
+  describe("a binding carrying both digests", () => {
+    test.each(["strict", "lax"] as const)(
+      "checks only the SHA-256 one, silently, in %s mode",
+      (mode) => {
+        expect(() =>
+          verifyCertBinding({
+            header: {
+              certificateThumbprint: CERT_KEY.certificate("b64")!.thumbprint,
+              // A SHA-1 value that matches nothing. If it were consulted at all,
+              // this row would fail.
+              certificateThumbprintSha1: "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+            },
+            kryptos: CERT_KEY,
+            logger,
+            mode,
+          }),
+        ).not.toThrow();
+
+        expect(logger.warn).not.toHaveBeenCalled();
+      },
+    );
+  });
+
+  /**
+   * ⭐⭐ THE VERDICT ARM — a binding the DOMAIN HEADER HAS NO FIELD FOR.
+   *
+   * RFC 9360 §2's `COSE_CertHash` carries its algorithm inside the value, so a
+   * COSE token may bind under SHA-384 or SHA-512 (RFC 9054 marks both
+   * `Recommended: Yes`); RFC 7517 §4.8/§4.9 register two JOSE parameters, so
+   * neither has a domain field. The COSE read path resolves the comparison and
+   * hands the ANSWER here, which is what lets this function stay wire-agnostic.
+   *
+   * ⚠ EVERY ARM IS EXERCISED HERE, at the unit, because each is a different
+   * DECISION and the end-to-end rows can only reach them one token at a time.
+   */
+  describe("a binding resolved by the wire to a verdict", () => {
+    const computed = (matches: boolean | undefined) => ({
+      algorithm: "SHA-512",
+      matches,
+    });
+
+    // A verified binding under an algorithm at least as strong as SHA-256 — so it
+    // passes in SILENCE. A warning here would train operators to ignore warnings.
+    test.each(["strict", "lax"] as const)(
+      "passes a MATCH silently in %s mode",
+      (mode) => {
+        expect(() =>
+          verifyCertBinding({
+            header: {
+              certificateThumbprint: undefined,
+              certificateThumbprintSha1: undefined,
+            },
+            computed: computed(true),
+            kryptos: CERT_KEY,
+            logger,
+            mode,
+          }),
+        ).not.toThrow();
+
+        expect(logger.warn).not.toHaveBeenCalled();
+      },
+    );
+
+    // A mismatch is a hard fail in BOTH modes: lax widens what may go UNPROVEN,
+    // never what may be WRONG.
+    test.each(["strict", "lax"] as const)("refuses a MISMATCH in %s mode", (mode) => {
+      const error = (() => {
+        try {
+          verifyCertBinding({
+            header: {
+              certificateThumbprint: undefined,
+              certificateThumbprintSha1: undefined,
+            },
+            computed: computed(false),
+            kryptos: CERT_KEY,
+            logger,
+            mode,
+          });
+          return undefined;
+        } catch (err) {
+          return err;
+        }
+      })();
+
+      expect(error).toBeInstanceOf(AegisKeyError);
+      expect((error as AegisKeyError).code).toBe("cert_binding_thumbprint_mismatch");
+      expect((error as AegisKeyError).debug).toMatchObject({ algorithm: "SHA-512" });
+    });
+
+    // `matches: undefined` is ASSERTED-BUT-UNPROVABLE, not a mismatch — the same
+    // state an absent chain puts a SHA-256 binding in, answered the same way.
+    test("refuses an UNPROVABLE binding in strict mode", () => {
+      const error = (() => {
+        try {
+          verifyCertBinding({
+            header: {
+              certificateThumbprint: undefined,
+              certificateThumbprintSha1: undefined,
+            },
+            computed: computed(undefined),
+            kryptos: CHAINLESS_KEY,
+            logger,
+            mode: "strict",
+          });
+          return undefined;
+        } catch (err) {
+          return err;
+        }
+      })();
+
+      expect(error).toBeInstanceOf(AegisKeyError);
+      expect((error as AegisKeyError).code).toBe("cert_binding_chain_missing");
+    });
+
+    /**
+     * ⚠ THE WARNING IS THE ASSERTION. Lax accepts a binding it cannot prove, so
+     * the log line is the only compensating control a deployment has — and it must
+     * NAME the algorithm, or an operator reading "passed through" learns nothing
+     * about what went unchecked.
+     */
+    test("passes an UNPROVABLE binding in lax mode, naming the algorithm", () => {
+      expect(() =>
+        verifyCertBinding({
+          header: {
+            certificateThumbprint: undefined,
+            certificateThumbprintSha1: undefined,
+          },
+          computed: computed(undefined),
+          kryptos: CHAINLESS_KEY,
+          logger,
+          mode: "lax",
+        }),
+      ).not.toThrow();
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("SHA-512"),
+        expect.objectContaining({ kryptosId: CHAINLESS_KEY.id }),
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining("lax mode"),
+        expect.anything(),
+      );
+    });
+
+    /**
+     * PRECEDENCE. A COSE token binds with exactly one digest (a CBOR map cannot key
+     * label 34 twice), so this pairing cannot arrive from a real wire — but the
+     * order is a decision this function makes, and an untested one drifts. SHA-256
+     * is present and verified, so the verdict is not consulted at all.
+     */
+    test("prefers a verified SHA-256 digest over the wire's verdict", () => {
+      expect(() =>
+        verifyCertBinding({
+          header: {
+            certificateThumbprint: CERT_KEY.certificate("b64")!.thumbprint,
+            certificateThumbprintSha1: undefined,
+          },
+          computed: computed(false),
+          kryptos: CERT_KEY,
+          logger,
+          mode: "strict",
+        }),
+      ).not.toThrow();
+    });
+  });
+
   // A token that makes no binding claim is not being checked for one. Treating
   // absence as a failure would refuse every ordinary token the moment a
   // deployment's keys grew a chain.
@@ -169,7 +440,10 @@ describe("verifyCertBinding", () => {
     test.each(["strict", "lax"] as const)("is a no-op in %s mode", (mode) => {
       expect(() =>
         verifyCertBinding({
-          header: { certificateThumbprint: undefined },
+          header: {
+            certificateThumbprint: undefined,
+            certificateThumbprintSha1: undefined,
+          },
           kryptos: CHAINLESS_KEY,
           logger,
           mode,

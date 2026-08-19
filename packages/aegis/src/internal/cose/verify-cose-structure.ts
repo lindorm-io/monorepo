@@ -2,6 +2,7 @@ import type { IKryptos } from "@lindorm/kryptos";
 import { SignatureKit } from "../../classes/SignatureKit.js";
 import { CwsError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
+import type { CoseLabel } from "./cose-label.js";
 import { assertProtectedHeaderGates } from "../utils/assert-protected-header-gates.js";
 import { ERROR_BY_FORMAT, type SignedCoseFormat } from "./error-by-format.js";
 import { requireAttachedPayload } from "./require-attached-payload.js";
@@ -16,6 +17,12 @@ export type VerifiedCoseStructure = {
   protectedHeader: WireTokenHeader;
   /** The UNPROTECTED bucket, JOSE-named. Covered by nothing. */
   unprotectedHeader: WireTokenHeader;
+  /**
+   * The PROTECTED bucket as its RAW COSE label map — see `split-signed.ts`. The
+   * translated header above is lossy by design, and this is what the certificate
+   * binding reads for the digests JOSE has no parameter for.
+   */
+  protectedMap: Map<CoseLabel, unknown>;
   /** The authenticated payload bytes. What they MEAN is the caller's question. */
   content: Buffer;
 };
@@ -63,15 +70,21 @@ export const verifyCoseStructure = ({
   const sign1 = tag === COSE_TAG.sign1;
   const label = sign1 ? "COSE_Sign1" : "COSE_Mac0";
 
-  const { protectedBstr, payload, signature, protectedHeader, unprotectedHeader } =
-    splitSigned(token, {
-      arity: { exactly: 4 },
-      tags: [tag],
-      error: CwsError,
-      message: `Malformed ${label}`,
-      title: `Malformed ${label}`,
-      details: `A ${label} must be a 4-element array [protected, unprotected, payload, signature/tag].`,
-    });
+  const {
+    protectedBstr,
+    payload,
+    signature,
+    protectedHeader,
+    unprotectedHeader,
+    protectedMap,
+  } = splitSigned(token, {
+    arity: { exactly: 4 },
+    tags: [tag],
+    error: CwsError,
+    message: `Malformed ${label}`,
+    title: `Malformed ${label}`,
+    details: `A ${label} must be a 4-element array [protected, unprotected, payload, signature/tag].`,
+  });
 
   // ⛔ The two PROTECTED-header gates — `crit` (RFC 9052 §3.1), then the
   // algorithm-match — ahead of the signature cycle, so a hostile header is
@@ -146,5 +159,5 @@ export const verifyCoseStructure = ({
         });
   }
 
-  return { protectedHeader, unprotectedHeader, content };
+  return { protectedHeader, unprotectedHeader, protectedMap, content };
 };

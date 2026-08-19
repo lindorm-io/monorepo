@@ -101,6 +101,7 @@ type VerdictBody = {
   baseline: Verdict;
   flipped: Verdict;
   format?: never;
+  wrapper?: never;
   observed?: never;
 };
 
@@ -109,6 +110,14 @@ type ArtifactBody = {
   flipped?: never;
   /** The artifact FORMAT the knob produces, when the format is what it changes. */
   format?: AcceptsThenStep["format"];
+  /**
+   * The artifact WRAPPER the knob produces, when the ENVELOPE is what it changes.
+   *
+   * ⚠ A knob that wraps a token does NOT change its `format`: a signed token
+   * keeps its own kind inside an envelope, so `encrypt` is observable here and
+   * not above.
+   */
+  wrapper?: AcceptsThenStep["wrapper"];
   /** Everything else the knob changes about the artifact. */
   observed: ReadonlyArray<ObservationThenStep>;
 };
@@ -424,7 +433,10 @@ export const MINT_KNOB_PROBES = {
         options: { context: { accessTokenIssued: false } },
       },
     ],
-    format: { jose: "jwe", cose: "cwe" },
+    // The knob WRAPS the token; it does not change what the token is. An
+    // encrypted id_token is still an id_token — `format` is identical with the
+    // knob set and unset, which is why the observable effect is the wrapper.
+    wrapper: { jose: "jwe", cose: "cwe" },
     observed: [],
   },
 
@@ -652,7 +664,7 @@ export const MINT_SIGN_KNOB_PROBES = {
     ],
     defect: {
       site: "src/internal/wire/cose-token-wire.ts#mintTypPrefix:",
-      note: "`mintTypPrefix` on the COSE wire reads the PROFILE's typ and nothing else — the caller's explicit `sign.typ` and the content's own `tokenType` are both accepted and dropped, so a COSE token minted under a profile that mandates no type always carries the bare `application/cwt`.",
+      note: "`mintTypPrefix` on the COSE wire reads the PROFILE's typ and nothing else — the caller's explicit `sign.typ` and the content's own `tokenType` are both accepted and dropped, so a COSE token minted under a profile that mandates no type always carries the bare `application/cwt`. ⚠ MINT ONLY: `aegis.sign` resolves its typ above the wire seam, at `src/internal/utils/sign-typ-prefix.ts#signTypPrefix`, and honours both there on both wires.",
       wires: ["cose"],
     },
   },
@@ -678,58 +690,22 @@ export const MINT_SIGN_KNOB_PROBES = {
     // `x5chain` at label 33 — so the COSE side is observed too. Without it the
     // defect declared below sits on a wire the probe never looks at.
     observed: [
-      // The CONTENTS, not merely the presence: RFC 7515 §4.1.6 fixes both the
-      // encoding (base64, not base64url, of the DER certificate) and the order
-      // ("The certificate containing the public key corresponding to the key
+      // JOSE asserts the CONTENTS, not merely the presence: RFC 7515 §4.1.6 fixes
+      // both the encoding (base64, not base64url, of the DER certificate) and the
+      // order ("The certificate containing the public key corresponding to the key
       // used to digitally sign the JWS MUST be the first certificate"). A
-      // truncated, reversed or PEM-armoured chain is still an `x5c`, and it is
-      // one no relying party can build a path from.
+      // truncated, reversed or PEM-armoured chain is still an `x5c`, and it is one
+      // no relying party can build a path from.
       { step: "wireProtectedHeader", on: "jose", includes: { x5c: TEST_X509_CHAIN_B64 } },
+      // ⚠ COSE asserts PRESENCE ONLY here, and that is the honest reading of this
+      // row: the COSE value is a `COSE_X509` of raw DER byte strings (RFC 9360
+      // §2), which this step compares as stringified record values and cannot
+      // state faithfully. What this row holds is that the knob REACHES the COSE
+      // writer. The COSE contents — the DER bytes, in order, against the same
+      // fixture — are asserted in `classes/cose-cert-binding.test.ts`, by the
+      // independent wire inspector.
       { step: "wireProtectedHeader", on: "cose", present: [33] },
     ],
-    defect: {
-      site: "src/internal/cose/sign-cwt.ts#export const signCwt = (",
-      note: "The COSE `signClaims` no longer OMITS the cert-binding options — it forwards its whole kit surface by rest-spread — but there is nothing to forward them to: `signCwt` never calls `resolveCertBinding`, so no COSE writer derives a binding, and the wire therefore declares `bindCertificate` `unsupported` (`src/internal/wire/cose-token-wire.ts#const NO_COSE_CERT_BINDING =`) and REFUSES this mint above the seam rather than issuing a token that is silently unbound. The refusal is the honest answer to a request this wire cannot serve; it is not the EMISSION this probe observes, so the probe stays red until the capability exists. It is not a wire limitation: RFC 9360 §2 registers `x5chain` (label 33) and `x5t` (label 34) as COSE header parameters.",
-      wires: ["cose"],
-    },
-  },
-
-  certificateThumbprintSha1: {
-    rationale:
-      "The SHA-1 thumbprint rides alongside the SHA-256 one purely for older clients, and the read side never verifies it. An issuer suppressing it is removing a legacy value with a broken hash from its wire; dropped, the option leaves that value on every token it was asked to keep off.",
-    value: false,
-    given: [
-      { step: "keys", keys: ["ec-sig-cert"] },
-      {
-        step: "token",
-        via: "mint",
-        profile: "id_token",
-        content: ID_TOKEN_CONTENT,
-        options: {
-          context: { accessTokenIssued: false },
-          sign: { key: { condition: { id: CERT_SIG_KEY_ID } } },
-        },
-      },
-    ],
-    // ⚠ `present` as well as `excludes`: the flag suppresses the LEGACY digest
-    // and nothing else, so a suppression that also dropped `x5t#S256` would
-    // silently unbind the token — a stronger effect than the caller asked for,
-    // and one an exclusion-only observation cannot see.
-    observed: [
-      {
-        step: "wireProtectedHeader",
-        on: "jose",
-        present: ["x5t#S256"],
-        excludes: ["x5t"],
-      },
-    ],
-    // ⚠ UNOBSERVABLE on COSE, not merely undelivered. The COSE wire does have a
-    // cert-binding shortfall — `bindCertificate` above declares it — but this
-    // knob would still have nothing to act on once that is repaired, which is a
-    // different kind of statement and belongs in a different field.
-    unobservable: {
-      cose: "COSE has ONE certificate-thumbprint parameter, not the JOSE pair this knob chooses between. RFC 9360 §2 registers `x5t` at label 34 as a COSE_CertHash — `COSE_CertHash = [ hashAlg: (int / tstr), hashValue: bstr ]` — whose 'first element is an algorithm identifier ... corresponding to the Value column (integer or text string) of the algorithm registered in the \"COSE Algorithms\" registry'. The digest algorithm is therefore a MEMBER of the one parameter rather than part of two parameter names, so there is no separate legacy thumbprint riding alongside the binding one for a suppression to remove.",
-    },
   },
 
   header: {
@@ -834,7 +810,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
     ],
     defect: {
       site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
-      note: "`encryptOuter` is called with a NAMED subset of the encrypt envelope — `partyProducer`, `partyRecipient`, `certificateThumbprintSha1` — so `header` never reaches the outer on either wire.",
+      note: "`encryptOuter` is called with a NAMED subset of the encrypt envelope — `partyProducer` and `partyRecipient` — so `header` never reaches the outer on either wire.",
     },
   },
 
@@ -931,40 +907,6 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
       site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
       note: "Not among the named fields forwarded to `encryptOuter`, so the encrypt envelope's binding mode never reaches the JOSE outer.",
       wires: ["jose"],
-    },
-  },
-
-  certificateThumbprintSha1: {
-    rationale:
-      "The SHA-1 thumbprint is emitted alongside the SHA-256 one for older recipients and is never verified. Suppressing it on the encrypting outer is the caller's call, and an option that cannot suppress it leaves a broken-hash value on every outer.",
-    value: false,
-    given: [
-      { step: "keys", keys: ["ec-enc-cert"] },
-      {
-        step: "token",
-        via: "mint",
-        profile: "id_token",
-        content: ID_TOKEN_CONTENT,
-        options: {
-          context: { accessTokenIssued: false },
-          encrypt: { key: { condition: { id: CERT_ENC_KEY_ID } } },
-        },
-      },
-    ],
-    // ⚠ `present` as well as `excludes`: the flag suppresses the LEGACY digest
-    // and nothing else, so a suppression that also dropped `x5t#S256` would
-    // silently unbind the token — a stronger effect than the caller asked for,
-    // and one an exclusion-only observation cannot see.
-    observed: [
-      {
-        step: "wireProtectedHeader",
-        on: "jose",
-        present: ["x5t#S256"],
-        excludes: ["x5t"],
-      },
-    ],
-    unobservable: {
-      cose: "A COSE_Encrypt0 has no certificate to bind. RFC 9052 §5.2 defines it as direct encryption — the recipient key IS the content-encryption key — so a `cwe` recipient is necessarily a symmetric `dir` key, and a symmetric key carries no X.509 certificate for a thumbprint or a chain to be derived from. The parameters themselves are representable (RFC 9360 §2 registers `x5chain` 33 and `x5t` 34); what cannot exist on this wire is a cert-bearing recipient.",
     },
   },
 
@@ -1108,36 +1050,6 @@ export const ENCRYPT_KNOB_PROBES = {
       },
     ],
     observed: [{ step: "wireProtectedHeader", on: "jose", present: ["x5c"] }],
-    unobservable: {
-      cose: "A COSE_Encrypt0 has no certificate to bind. RFC 9052 §5.2 defines it as direct encryption — the recipient key IS the content-encryption key — so a `cwe` recipient is necessarily a symmetric `dir` key, and a symmetric key carries no X.509 certificate for a thumbprint or a chain to be derived from. The parameters themselves are representable (RFC 9360 §2 registers `x5chain` 33 and `x5t` 34); what cannot exist on this wire is a cert-bearing recipient.",
-    },
-  },
-
-  certificateThumbprintSha1: {
-    rationale:
-      "The SHA-1 thumbprint travels beside the SHA-256 one for older recipients and is never verified by the read side. A caller suppressing it is removing a broken-hash value from its wire, and an option that cannot do so leaves that value on every token.",
-    value: false,
-    given: [
-      { step: "keys", keys: ["ec-enc-cert"] },
-      {
-        step: "token",
-        via: "domain-encrypt",
-        data: { subject: "user-1" },
-        options: { key: { condition: { id: CERT_ENC_KEY_ID } } },
-      },
-    ],
-    // ⚠ `present` as well as `excludes`: the flag suppresses the LEGACY digest
-    // and nothing else, so a suppression that also dropped `x5t#S256` would
-    // silently unbind the token — a stronger effect than the caller asked for,
-    // and one an exclusion-only observation cannot see.
-    observed: [
-      {
-        step: "wireProtectedHeader",
-        on: "jose",
-        present: ["x5t#S256"],
-        excludes: ["x5t"],
-      },
-    ],
     unobservable: {
       cose: "A COSE_Encrypt0 has no certificate to bind. RFC 9052 §5.2 defines it as direct encryption — the recipient key IS the content-encryption key — so a `cwe` recipient is necessarily a symmetric `dir` key, and a symmetric key carries no X.509 certificate for a thumbprint or a chain to be derived from. The parameters themselves are representable (RFC 9360 §2 registers `x5chain` 33 and `x5t` 34); what cannot exist on this wire is a cert-bearing recipient.",
     },

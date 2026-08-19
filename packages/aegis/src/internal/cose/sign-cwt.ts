@@ -9,6 +9,8 @@ import { mergeCoseUnprotected } from "../header/merge-cose-unprotected.js";
 import { KIT_CAPABILITIES } from "../registry/kit-capabilities.js";
 import { normaliseClaims } from "../utils/normalise-claims.js";
 import { buildMediaType } from "../utils/compute-typ-header.js";
+import { resolveCertBinding } from "../utils/resolve-cert-binding.js";
+import { COSE_THUMBPRINT_SHA1 } from "./cose-thumbprint-sha1.js";
 import type { SignStructuredTokenOptions, WireTokenHeader } from "../../types/index.js";
 import { algToCoseLabel } from "./alg-labels.js";
 import { assertCoseRegistered } from "./assert-cose-registered.js";
@@ -86,6 +88,7 @@ export const signCwt = (
     reserved: KIT_CAPABILITIES[format].reserved,
     header: options.header as Partial<WireTokenHeader> | undefined,
     unprotected: options.unprotected,
+    cert: resolveCertBinding(kryptos, options.bindCertificate, COSE_THUMBPRINT_SHA1),
     proprietary: options.proprietary,
     format,
     error: ERROR_BY_FORMAT[format],

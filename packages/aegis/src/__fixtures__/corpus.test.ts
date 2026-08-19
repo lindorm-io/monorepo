@@ -152,9 +152,13 @@ describe("wire corpus", () => {
       expect(new Set(raw.map((entry) => entry.verb))).toEqual(
         new Set(["mint", "sign", "encrypt"]),
       );
-      expect(new Set(raw.map((entry) => entry.reportedFormat))).toEqual(
-        new Set(["jwt", "jws", "jwe", "cwt", "cwm", "cws", "cwe"]),
-      );
+      // Every one of the seven appears as the OUTERMOST container of some row.
+      // `format` alone no longer covers `jwe`/`cwe` from a sign-then-encrypt —
+      // those rows report the signed token's kind and name the envelope under
+      // `wrapper` — so the union is over the outermost of each row.
+      expect(
+        new Set(raw.map((entry) => entry.reportedWrapper ?? entry.reportedFormat)),
+      ).toEqual(new Set(["jwt", "jws", "jwe", "cwt", "cwm", "cws", "cwe"]));
     });
   });
 
@@ -167,7 +171,12 @@ describe("wire corpus", () => {
           throw new Error(`the row "${entry.name}" reports the wrong wire`);
         }
 
-        const expected = entry.reportedFormat === "jwe" ? 5 : 3;
+        // ⚠ The OUTERMOST container decides the serialisation, and that is the
+        // WRAPPER when there is one: a JWT inside a JWE reports `format: "jwt"`
+        // and is still five parts on the wire. Reading `format` alone would
+        // expect three and describe the token rather than the bytes.
+        const outermost = entry.reportedWrapper ?? entry.reportedFormat;
+        const expected = outermost === "jwe" ? 5 : 3;
 
         expect({ case: entry.name, parts: entry.inspection.partCount }).toEqual({
           case: entry.name,
@@ -190,9 +199,10 @@ describe("wire corpus", () => {
       // the claims-bearing twin of that, not the only way to reach it.
       const structureTag = (entry: {
         reportedFormat: string;
+        reportedWrapper?: string;
         signAlgorithm?: string;
       }) => {
-        switch (entry.reportedFormat) {
+        switch (entry.reportedWrapper ?? entry.reportedFormat) {
           case "cwe":
             return CBOR_TAG.encrypt0;
           case "cwm":
@@ -205,7 +215,7 @@ describe("wire corpus", () => {
               : CBOR_TAG.sign1;
           default:
             throw new Error(
-              `no COSE structure is declared for "${entry.reportedFormat}"`,
+              `no COSE structure is declared for "${entry.reportedWrapper ?? entry.reportedFormat}"`,
             );
         }
       };

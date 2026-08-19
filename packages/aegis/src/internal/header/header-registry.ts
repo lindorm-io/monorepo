@@ -18,10 +18,12 @@
  *
  * --- `absent` is a STATED fact ---
  *
- * Twelve of the twenty-one parameters have no COSE form. That used to be spelled
- * as a missing `cose?: number`, indistinguishable from an oversight, with the
- * reason (where there was one) in a comment. Each now carries a required
- * `reason` on its `absent` wire key, which `coseByJose` reports when it refuses.
+ * Most parameters have no COSE form, and each states WHY: a required `reason` on
+ * its `absent` wire key, which `coseByJose` reports when it refuses. A missing
+ * optional field would be indistinguishable from an oversight. The `cose` codec
+ * cell is `null` on exactly those rows, bound to the `absent` cell in
+ * `header-registry.test.ts`, so a parameter cannot be carried by one wire and
+ * described by neither.
  *
  * --- The one column that is CONSTANT ---
  *
@@ -68,6 +70,7 @@
 import { isNumber } from "@lindorm/is";
 import { CoseError } from "../../errors/index.js";
 import type { CoseLabel } from "../cose/cose-label.js";
+import type { CoseHeaderCodec } from "../registry/cose-header-codec.js";
 import type { HeaderSpec } from "../registry/header-spec.js";
 import { isPrivateUseLabel } from "../registry/is-private-use-label.js";
 import {
@@ -83,6 +86,7 @@ export type {
   HeaderPlacement,
   HeaderSpec,
 } from "../registry/header-spec.js";
+export type { CoseHeaderCodec } from "../registry/cose-header-codec.js";
 
 /**
  * The registry. Ordered alphabetically by JOSE name for readability only — the
@@ -98,6 +102,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "algorithm",
     wire: { jose: wireName("alg"), cose: wireLabel(1, "alg") },
     codec: { kind: "string" },
+    cose: { kind: "algorithmLabel" },
     sensitivity: "public",
     sample: "ES256",
     // PRUNE: `alg` is REQUIRED (RFC 7515 §4.1.1) and `""` names no algorithm — a
@@ -119,6 +124,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "string" },
+    cose: null,
     sensitivity: "public",
     sample: "cGFydHktdQ",
     // PRUNE, and RFC 7518 §4.6.2 proves it rather than merely permitting it.
@@ -146,6 +152,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "string" },
+    cose: null,
     sensitivity: "public",
     sample: "cGFydHktdg",
     // PRUNE: the `apu` argument, for PartyVInfo — RFC 7518 §4.6.2 states the
@@ -158,6 +165,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "critical",
     wire: { jose: wireName("crit"), cose: wireLabel(2, "crit") },
     codec: { kind: "critical" },
+    cose: { kind: "critical" },
     sensitivity: "public",
     // ⚠ DOMAIN spelling. This entry's own VALUE holds DOMAIN names like every
     // other domain-keyed value here, and `criticalToWire` maps each member
@@ -181,6 +189,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "contentType",
     wire: { jose: wireName("cty"), cose: wireLabel(3, "cty") },
     codec: { kind: "string" },
+    cose: { kind: "passthrough" },
     sensitivity: "public",
     sample: "application/json",
     // PRUNE: `cty` names the payload's media type (RFC 7515 §4.1.10) and `""` is
@@ -203,6 +212,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "string" },
+    cose: null,
     sensitivity: "public",
     sample: "A256GCM",
     // PRUNE: RFC 7516 §4.1.2 makes `enc` REQUIRED on a JWE, and `""` names no
@@ -225,6 +235,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "jwk" },
+    cose: null,
     sensitivity: "public",
     sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
     // PRUNE: RFC 7518 §4.6.1.1 makes `epk` the ephemeral public key "created by
@@ -242,6 +253,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "initialisationVector",
     wire: { jose: wireName("iv"), cose: wireLabel(5, "iv") },
     codec: { kind: "buffer" },
+    cose: { kind: "base64Bytes" },
     sensitivity: "public",
     sample: Buffer.alloc(12),
     // PRUNE. ⚠ The cell does NOT govern a zero-length Buffer: `isEmpty` treats a
@@ -266,6 +278,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "url" },
+    cose: null,
     sensitivity: "public",
     sample: "https://issuer.lindorm.test/.well-known/jwks.json",
     // PRUNE, and no empty value can reach the cell: `isUrlLike("")` is false, so
@@ -285,6 +298,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "jwk" },
+    cose: null,
     sensitivity: "public",
     sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
     // PRUNE: `{}` is a JWK with no `kty`, which RFC 7517 §4.1 makes REQUIRED — it
@@ -299,6 +313,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "keyId",
     wire: { jose: wireName("kid"), cose: wireLabel(4, "kid") },
     codec: { kind: "string" },
+    cose: { kind: "textBytes" },
     sensitivity: "public",
     sample: "key_sample",
     // PRUNE: `kid` is the lookup hint a verifier resolves the key by, and `""`
@@ -326,6 +341,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "objectId",
     wire: { jose: wireName("oid"), cose: wireLabel(-70000, "oid") },
     codec: { kind: "string" },
+    cose: { kind: "passthrough" },
     sensitivity: "public",
     sample: "oid_sample",
     // PRUNE: `oid` names the domain object the token is about; `""` names none,
@@ -364,6 +380,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "number" },
+    cose: null,
     // The PBES2 iteration count `JweKit.ts` reads back off the key-management
     // output, beside the `p2s` salt that has always been declared `computed`.
     sensitivity: "public",
@@ -387,6 +404,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "buffer" },
+    cose: null,
     sensitivity: "public",
     sample: Buffer.alloc(16),
     // PRUNE, on the `iv` argument — and with the same ⚠: a zero-length Buffer is
@@ -404,6 +422,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "buffer" },
+    cose: null,
     sensitivity: "public",
     sample: Buffer.alloc(16),
     // PRUNE, on the `iv` argument. The key-wrap authentication tag is bytes or
@@ -416,6 +435,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "headerType",
     wire: { jose: wireName("typ"), cose: wireLabel(16, "typ") }, // RFC 9596 §4.1
     codec: { kind: "string" },
+    cose: { kind: "passthrough" },
     // Every kit builds the full media type itself from the `tokenType` PREFIX
     // (`buildMediaType`/`computeTypHeader`). A caller supplies the prefix, never
     // the parameter — which is why every row reserves it.
@@ -444,39 +464,39 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "certificateChain",
     wire: { jose: wireName("x5c"), cose: wireLabel(33, "x5c") }, // RFC 9360 x5chain
     codec: { kind: "array" },
+    cose: { kind: "certChain" },
     sensitivity: "public",
     sample: ["MIIBsample"],
     // PRUNE. ⚠ NOT a restriction, and this is where it splits from `x5t#S256`
-    // below: nothing reads `x5c` — the binding check consults the SHA-256
-    // thumbprint alone (`verify-cert-binding.ts:7,38`) — so an empty chain
-    // restricts nothing and pruning removes nothing. RFC 7515 §4.1.6 makes the
-    // first member the certificate corresponding to the key, and a chain with no
-    // members corresponds to no key. `resolve-cert-binding.ts:44-45` already
-    // refuses to emit one, so the writer has made the same call.
+    // below: nothing reads `x5c` — the binding check consults a THUMBPRINT alone
+    // (`verify-cert-binding.ts`) — so an empty chain restricts nothing and pruning
+    // removes nothing. RFC 7515 §4.1.6 makes the first member the certificate
+    // corresponding to the key, and a chain with no members corresponds to no key.
+    // `resolve-cert-binding.ts` already refuses to emit one, so the writer has made
+    // the same call.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
   },
   // RFC 7515 §4.1.7 — X.509 certificate SHA-1 thumbprint (base64url). Kit-derived
-  // from the signing/encrypting kryptos (like `x5t#S256`), auto-emitted whenever a
-  // cert is bound; the write side gates it behind a boolean, the read side never
-  // verifies it.
+  // from the signing/encrypting kryptos (like `x5t#S256`), auto-emitted on JOSE
+  // whenever a cert is bound and the boolean resolves true.
   {
     domain: "certificateThumbprintSha1",
     wire: {
       jose: wireName("x5t"),
       cose: wireAbsent(
-        "COSE's x5t (label 34, RFC 9360) is a COSE_CertHash structure `[algId, hashValue]`, NOT a plain relabel of JOSE's base64url thumbprint. Leaving it unmapped means a foreign COSE token's x5t is SKIPPED on decode rather than silently mis-shaped into a bogus string.",
+        "RFC 9360 \u00a72 gives COSE ONE thumbprint parameter, x5t (label 34), whose value is a COSE_CertHash `[ hashAlg, hashValue ]` — the digest algorithm is a member of the value rather than the difference between two parameter names, so COSE has no second, SHA-1-named parameter to key. This row is therefore unreachable on the WRITE side, which is what it states: a COSE token names its certificate by exactly one digest, and aegis writes SHA-256. On READ the SHA-1 digest still arrives — label 34's `certHash` codec dispatches on hashAlg and lands a -14 value on THIS domain field.",
       ),
     },
     codec: { kind: "string" },
+    cose: null,
     sensitivity: "public",
     sample: "dGh1bWJwcmludC1zaGEx",
     // PRUNE, and the split from `x5t#S256` is the whole reason the two cells
-    // differ: aegis binds on the SHA-256 thumbprint ALONE and never verifies this
-    // one (`verify-cert-binding.ts:19-21`). It is legacy-compat output, so an
-    // empty value binds nothing, is refused by nothing, and is pure noise on the
-    // wire.
+    // differ: this digest is checked only where NO SHA-256 one arrived, and only
+    // in lax mode (`verify-cert-binding.ts`), so its presence is never itself the
+    // binding. An empty value binds nothing and is pure noise on the wire.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -485,11 +505,16 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "certificateThumbprint",
     wire: {
       jose: wireName("x5t#S256"),
-      cose: wireAbsent(
-        "COSE's x5t (label 34, RFC 9360) is a COSE_CertHash structure `[algId, hashValue]`, NOT a plain relabel of JOSE's base64url thumbprint; the hash algorithm is a member of the structure rather than part of the parameter name.",
-      ),
+      // RFC 9360 §2 x5t. It carries the `certHash` codec rather than the plain
+      // relabel the other cert parameters take: a COSE x5t is a COSE_CertHash
+      // `[ hashAlg, hashValue ]`, so the digest algorithm is a member of the VALUE.
+      // That is also why ONE COSE label reaches TWO domain fields — the codec
+      // dispatches a decode on `hashAlg`, and a CBOR map cannot carry a duplicate
+      // key, so the write emits SHA-256 and nothing else.
+      cose: wireLabel(34, "x5t"),
     },
     codec: { kind: "string" },
+    cose: { kind: "certHash" },
     sensitivity: "public",
     sample: "dGh1bWJwcmludC1zaGEyNTY",
     // REFUSE: `x5t#S256` is the ONE header parameter aegis's verify ENFORCES —
@@ -511,8 +536,8 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // aegis publishes and does not implement.
     //
     // ⚠ Do NOT generalise it to the other two cert parameters. It holds because
-    // something READS the value and treats presence as a binding; nothing reads
-    // `x5t` or `x5c`, and both of them prune.
+    // presence of THIS one is the binding; `x5c` is read by nothing, and `x5t` is
+    // consulted only in lax mode when this parameter did not arrive at all.
     whenEmpty: "refuse",
     placement: "protected",
     critEligible: false,
@@ -522,6 +547,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     domain: "certificateUrl",
     wire: { jose: wireName("x5u"), cose: wireLabel(35, "x5u") },
     codec: { kind: "string" },
+    cose: { kind: "passthrough" },
     sensitivity: "public",
     sample: "https://issuer.lindorm.test/certs.pem",
     // PRUNE: RFC 7515 §4.1.5 makes `x5u` a URI, and `""` is not one. ⚠ Note this
@@ -541,6 +567,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
       ),
     },
     codec: { kind: "string" },
+    cose: null,
     sensitivity: "public",
     sample: "DEF",
     // PRUNE: RFC 7516 §4.1.3 DEFINES "DEF" as the one compression algorithm value
@@ -729,4 +756,24 @@ export const coseWireKey = (
       });
     }
   }
+};
+
+/**
+ * THE COSE VALUE CODEC for a JOSE wire parameter — the shape half of what
+ * {@link coseWireKey} answers for the key half. Both COSE passes resolve through
+ * it and switch over the result exhaustively.
+ *
+ * THROWS for a parameter COSE does not carry, with the same verdict
+ * {@link coseByJose} gives: a parameter with no COSE spelling has no COSE
+ * representation either. Reaching that from the write pass takes registry drift —
+ * `coseWireKey` has already refused the parameter one line earlier — which is the
+ * drift `header-registry.test.ts` binds the two cells against.
+ */
+export const coseHeaderCodec = (jose: string): CoseHeaderCodec => {
+  const spec = byJose.get(jose);
+  const codec = spec?.cose;
+
+  if (!codec) throw noCoseLabel(jose, spec);
+
+  return codec;
 };

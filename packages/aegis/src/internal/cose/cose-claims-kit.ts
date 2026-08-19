@@ -3,6 +3,7 @@ import type { ILogger } from "@lindorm/logger";
 import { CwmKit } from "../../classes/CwmKit.js";
 import { CwtKit } from "../../classes/CwtKit.js";
 import { CoseError } from "../../errors/index.js";
+import type { CertificateBindingMode } from "../../types/index.js";
 import { coseStructureTag } from "./cose-structure-tag.js";
 import { COSE_TAG } from "./structures.js";
 
@@ -17,10 +18,12 @@ import { COSE_TAG } from "./structures.js";
  * asked in the same place; only the kit each structure implies is decided here.
  */
 export const selectCoseClaimsKit = ({
+  certBindingMode,
   kryptos,
   logger,
   clockTolerance,
 }: {
+  certBindingMode?: CertificateBindingMode;
   kryptos: IKryptos;
   logger: ILogger;
   clockTolerance?: number;
@@ -31,5 +34,5 @@ export const selectCoseClaimsKit = ({
     details:
       "The resolved key's algClass is neither asymmetric nor symmetric, so no COSE claims kit applies.",
   }) === COSE_TAG.sign1
-    ? new CwtKit({ kryptos, logger, clockTolerance })
-    : new CwmKit({ kryptos, logger, clockTolerance });
+    ? new CwtKit({ certBindingMode, kryptos, logger, clockTolerance })
+    : new CwmKit({ certBindingMode, kryptos, logger, clockTolerance });

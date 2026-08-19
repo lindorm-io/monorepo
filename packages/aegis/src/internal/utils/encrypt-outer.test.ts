@@ -107,8 +107,12 @@ describe("encryptOuter — the type the encrypting outer declares", () => {
       } as never,
     );
 
-    expect(jose.format).toBe("jwe");
-    expect(cose.format).toBe("cwe");
+    // The signed token keeps its own kind through the wrapping; the envelope is
+    // reported beside it.
+    expect(jose.format).toBe("jwt");
+    expect(jose.wrapper).toBe("jwe");
+    expect(cose.format).toBe("cwt");
+    expect(cose.wrapper).toBe("cwe");
 
     // ⚠ The bare conventional form: the prefix the inner carries did not travel.
     expect(inspectToken(jose.token).protectedHeader).toMatchObject({ typ: "JWE" });

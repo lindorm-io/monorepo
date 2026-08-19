@@ -59,9 +59,8 @@ import { rawEncryptAes } from "../internal/utils/raw-encrypt-aes.js";
 import { rawEncryptCwe } from "../internal/utils/raw-encrypt-cwe.js";
 import { rawEncryptJwe } from "../internal/utils/raw-encrypt-jwe.js";
 import { rawSignCwm } from "../internal/utils/raw-sign-cwm.js";
-import { rawSignCws } from "../internal/utils/raw-sign-cws.js";
 import { rawSignCwt } from "../internal/utils/raw-sign-cwt.js";
-import { rawSignJws } from "../internal/utils/raw-sign-jws.js";
+import { rawSignOpaque } from "../internal/utils/raw-sign-opaque.js";
 import { rawSignJwt } from "../internal/utils/raw-sign-jwt.js";
 import { rawVerifyCwm } from "../internal/utils/raw-verify-cwm.js";
 import { rawVerifyCws } from "../internal/utils/raw-verify-cws.js";
@@ -129,7 +128,6 @@ export class Aegis implements IAegis {
 
   private readonly amphora: IAmphora;
   private readonly certBindingMode: CertificateBindingMode;
-  private readonly certificateThumbprintSha1: boolean;
   private readonly clockTolerance: number;
   private readonly decryptKey: AegisDecryptKey;
   private readonly deps: AegisDeps;
@@ -166,9 +164,6 @@ export class Aegis implements IAegis {
     }
 
     this.certBindingMode = options.certBindingMode ?? "strict";
-    // Default TRUE: a cert-bound token carries `x5t` for older clients unless the
-    // deployment (or a per-call option) opts out. Write-side emission gate only.
-    this.certificateThumbprintSha1 = options.certificateThumbprintSha1 ?? true;
     this.clockTolerance = options.clockTolerance ?? 0;
     this.dpopMaxSkew = options.dpopMaxSkew;
     // No floor here: the FLOOR lives in the wire kits, which apply it only
@@ -206,7 +201,6 @@ export class Aegis implements IAegis {
     this.deps = {
       issuer: this.issuer,
       certBindingMode: this.certBindingMode,
-      certificateThumbprintSha1: this.certificateThumbprintSha1,
       clockTolerance: this.clockTolerance,
       dpopMaxSkew: this.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW,
       defaultEncryption: this.defaultEncryption,
@@ -590,7 +584,7 @@ export class Aegis implements IAegis {
     data: TokenContent,
     options: SignUnstructuredTokenOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedToken> {
-    return rawSignJws({ data, options, deps: this.deps });
+    return rawSignOpaque({ format: "jws", data, options, deps: this.deps });
   }
 
   private jwsVerify<T extends TokenContent = Buffer>(
@@ -628,7 +622,7 @@ export class Aegis implements IAegis {
     data: TokenContent,
     options: SignUnstructuredTokenOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedToken> {
-    return rawSignCws({ data, options, deps: this.deps });
+    return rawSignOpaque({ format: "cws", data, options, deps: this.deps });
   }
 
   private cwsVerify<T extends TokenContent = Buffer>(
