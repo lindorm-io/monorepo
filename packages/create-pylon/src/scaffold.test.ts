@@ -711,7 +711,14 @@ describe("scaffold", () => {
       expect(content).toContain(
         `import type { ServerHttpContext } from "../types/context.js";`,
       );
-      expect(content).toContain(`createTestPylonCtx(options) as ServerHttpContext;`);
+      // ⚠ Asserted as AWAITED. `createTestPylonCtx` is async, and the previous
+      // synchronous form cast the promise straight to a context — every
+      // scaffolded test would have received a Promise whose state is undefined.
+      expect(content).toContain(`export const createTestCtx = async (`);
+      expect(content).toContain(
+        `(await createTestPylonCtx(options)) as unknown as ServerHttpContext;`,
+      );
+      expect(content).not.toContain(`createTestPylonCtx(options) as ServerHttpContext;`);
       // No entity dir wiring — ctx.db / ctx.kv are stateful proteus mocks.
       expect(content).not.toContain(`ENTITY_DIRS`);
       expect(content).not.toContain(`join`);

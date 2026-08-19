@@ -12,8 +12,14 @@ export const buildTestCtxFile = (_answers: Answers): string => {
     `// ctx.db / ctx.kv / ctx.cache are stateful in-memory Proteus mocks (writes`,
     `// persist, reads reflect them) — seed or override per call via the options.`,
     `// The three are DISTINCT mocks, so a test can prove which store was written.`,
-    `export const createTestCtx = (options?: CreateTestPylonCtxOptions): ServerHttpContext =>`,
-    `  createTestPylonCtx(options) as ServerHttpContext;`,
+    `// ⚠ ASYNC, and must stay async: createTestPylonCtx builds stateful in-memory`,
+    `// Proteus mocks, which are async by design. Returning it unawaited under a`,
+    `// synchronous signature type-checks — the cast hides it — and hands every`,
+    `// test a Promise whose ctx.state is undefined.`,
+    `export const createTestCtx = async (`,
+    `  options?: CreateTestPylonCtxOptions,`,
+    `): Promise<ServerHttpContext> =>`,
+    `  (await createTestPylonCtx(options)) as unknown as ServerHttpContext;`,
     ``,
   ];
 
