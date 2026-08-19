@@ -10,12 +10,10 @@ import type { SignTokenOptions } from "../domain/sign.js";
 import type { VerifyOptions } from "../domain/verify.js";
 
 /**
- * The envelope claims a profile may auto-generate at mint. Constrained to the
- * four mint-GENERATABLE domain claims — replacing the previous
- * `{ iat; jti; nbf; iss }` object whose WIRE names leaked into the profile
- * descriptor. The mint pipeline maps each to its wire claim via the ONE
- * translator (`issuedAt`→`iat`, `tokenId`→`jti`, `notBefore`→`nbf`,
- * `issuer`→`iss`).
+ * The envelope claims a profile may auto-generate at mint — the four
+ * mint-GENERATABLE claims, by DOMAIN name. The mint pipeline maps each to its
+ * wire claim through the ONE translator, so no wire name reaches a profile
+ * descriptor.
  */
 export type AutoInjectableClaim = "issuedAt" | "tokenId" | "notBefore" | "issuer";
 
@@ -73,9 +71,8 @@ export type TokenProfile<
    */
   policy: P;
   /**
-   * The envelope claims mint auto-generates, by DOMAIN name. Membership is
-   * checked with `.includes(...)` in the mint pipeline (was a per-flag object;
-   * see {@link AutoInjectableClaim}).
+   * The envelope claims mint auto-generates, by DOMAIN name — see
+   * {@link AutoInjectableClaim}. Membership is checked with `.includes(...)`.
    */
   autoInject: ReadonlyArray<AutoInjectableClaim>;
   issuer: "platform" | "per-token";
@@ -152,18 +149,16 @@ export type ProfileMintOptions = {
    * (never dropped), and `act`/`subjectId` become string-keyed objects. (COSE
    * only.)
    *
-   * ⚠ The default is `false`, not `true`: `mint` forwards this value untouched
-   * (`internal/utils/mint-token.ts`) and every reader of it floors an omitted
-   * flag to the interoperable answer, which is the interop guarantee itself. The
-   * `true` this said was a leftover from before that guarantee and described no
-   * code path.
+   * ⚠ THE DEFAULT IS `false`. `mint` forwards this value untouched
+   * (`internal/utils/mint-token.ts`) and every reader floors an omitted flag to
+   * the interoperable answer — that flooring IS the interop guarantee.
    */
   proprietary?: boolean;
 };
 
 /**
  * Options for profiled verify. Beyond the standard verify knobs, the floor
- * (§4.4) needs the verifier's own identity (`audience`) to assert the token's
+ * needs the verifier's own identity (`audience`) to assert the token's
  * `aud` contains self. `issuer` may override the configured/profile issuer
  * source (per-token profiles). Declarative claim matching beyond the floor is
  * the separate positional `assert`
@@ -172,9 +167,9 @@ export type ProfileMintOptions = {
 export type ProfileVerifyOptions = VerifyOptions & {
   audience: string;
   issuer?: string;
-  // No `clockTolerance` — it is a standard verify knob and is declared ONCE, on
-  // {@link VerifyOptions}. Re-declaring it here is what let the profiled path
-  // destructure it away as a profile-only field and drop it.
+  // ⛔ No `clockTolerance` — it is a standard verify knob, declared ONCE on
+  // {@link VerifyOptions}. Re-declared here the profiled path destructures it
+  // away as a profile-only field and drops it.
   // No `format` — unlike mint, verify is NOT told the wire encoding. It detects
   // COSE vs JOSE from the token itself (`Aegis.isCose`), so a caller never has to
   // know, or match, a token's format to verify it.

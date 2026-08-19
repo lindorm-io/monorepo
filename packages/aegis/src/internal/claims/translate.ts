@@ -874,9 +874,8 @@ const walkObject = (
      * and the top level has no walker either. So a top-level leaf claim reaches a
      * signed wire with no codec guard at all, while the member one level in is
      * guarded by {@link encodeMember}. That is the hole filed in `TODO-MONOREPO.md`
-     * with its measurement, and `internal/claims/is-not-stated.ts` carries the
-     * four-cell table. Closing it changes what EVERY registered claim writes and
-     * reports, and needs its own corpus gate.
+     * with its measurement and its per-cell dispositions. Closing it changes what
+     * EVERY registered claim writes and reports, and needs its own corpus gate.
      *
      * ⚠ `null` NEVER REACHES THIS LINE. It is classified as absence above and is
      * neither dropped-as-malformed nor refused — see {@link isNotStated}.

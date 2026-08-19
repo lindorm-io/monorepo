@@ -42,14 +42,14 @@ export type VerifyOptions = {
    */
   clockTolerance?: number;
   /**
-   * Override "now" for the temporal range checks (R10). When set, `exp`/`nbf`/
+   * Override "now" for the temporal range checks. When set, `exp`/`nbf`/
    * `iat` are validated against this instant instead of the real wall-clock — a
    * token expired relative to a PAST `currentDate` still verifies. Threaded to the
    * kit's temporal check AND the domain `exp`-presence lower bound. Per-call only.
    */
   currentDate?: Date;
   /**
-   * Reject a token whose `iat` is older than this many seconds (R10). Adds an
+   * Reject a token whose `iat` is older than this many seconds. Adds an
    * `iat >= now - maxTokenAge` lower bound (with clock tolerance) and requires
    * `iat` to be present. Per-call only. Independent of {@link verifyIssuedAt}:
    * an explicit `maxTokenAge` still applies its own bound + presence even when

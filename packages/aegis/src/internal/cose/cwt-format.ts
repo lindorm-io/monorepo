@@ -16,12 +16,11 @@ import type { SignedCoseFormat } from "./error-by-format.js";
  * here and none exists on the JOSE side, where `JwtKit` and `JwsKit` do
  * different work.
  *
- * ⚠ This layer sits BELOW the kits and composes UTILITIES ONLY. It must never
- * construct a kit: `CwtKit`/`CwmKit` import it, so reaching back up for `CwsKit`
- * (as it once did for the COSE structure) made the opaque signer serve three
- * kits and left the claims layer with no door of its own — the shortfall the
- * cert-binding rows record. `CwsKit`, `CwtKit` and `CwmKit` are SIBLINGS over
- * the same utils, exactly as `JwsKit` and `JwtKit` are.
+ * ⛔ This layer sits BELOW the kits and composes UTILITIES ONLY — it must never
+ * construct one. `CwtKit`/`CwmKit` import it, so reaching back up for `CwsKit`
+ * would make the opaque signer serve three kits and leave the claims layer with
+ * no door of its own. `CwsKit`, `CwtKit` and `CwmKit` are SIBLINGS over the same
+ * utils, exactly as `JwsKit` and `JwtKit` are.
  *
  * Everything here speaks the WIRE (COSE-name-keyed) claim dict — `cti`, not the
  * domain `tokenId` — exactly as `JwtKit` speaks the JOSE wire. The domain⇆wire

@@ -5,7 +5,7 @@ import type { AegisDecryptKey, AegisEncKey } from "../keys/key-selectors.js";
 import type { DomainTokenEnvelope } from "./domain-envelope.js";
 
 /**
- * The `aegis.encrypt` input (§5e) — the mirror of `sign`'s payload, and SEALED
+ * The `aegis.encrypt` input — the mirror of `sign`'s payload, and SEALED
  * AS GIVEN. The value returned by `aegis.decrypt` is the value handed to
  * `encrypt` (the `@lindorm/aes` contract, on a token wire): a `Dict` round-trips
  * as a `Dict` under its OWN literal keys — serialised as `application/json`, so
@@ -21,7 +21,7 @@ import type { DomainTokenEnvelope } from "./domain-envelope.js";
 export type EncryptData = (DomainClaims & Dict) | Buffer | string;
 
 /**
- * The `aegis.encrypt` options (§5e) — the mirror of the `sign` option family,
+ * The `aegis.encrypt` options — the mirror of the `sign` option family,
  * scoped to the encryption surface. `aes` is a separate surface (`aegis.aes`),
  * so `format` is only `jwe`/`cwe`. Encryption is pure confidentiality: there is
  * NO inner signature (sender auth ⇒ `mint(profile, content, { encrypt })`).
@@ -48,28 +48,27 @@ export type EncryptOptions = DomainTokenEnvelope<AegisEncKey> & {
   partyRecipient?: string;
   /**
    * Allow a lindorm-proprietary (private-use) COSE content encryption on the
-   * `cwe` path (default `false`, D5 interop gate); threaded to `CweKit.encrypt`.
+   * `cwe` path (default `false`); threaded to `CweKit.encrypt`.
    * A no-op on the `jwe` path.
    *
-   * ⚠ ON THIS VERB IT IS THE ENCRYPTION-REGISTRATION GATE AND NOTHING ELSE. The
-   * flag once ALSO chose the claim-label spelling; that job went with the claim
-   * codec — this verb seals the caller's value verbatim, so there are no claims
-   * to label and the flag cannot move a single plaintext byte. What is left is
-   * `assertCoseRegistered` refusing a content encryption RFC 9053 §4 does not
-   * register (the AES-CBC-HMAC family), so a caller must state that it accepts
-   * an on-platform-only artifact before one is produced.
+   * ⚠ ON THIS VERB IT IS THE ENCRYPTION-REGISTRATION GATE AND NOTHING ELSE: this
+   * verb seals the caller's value verbatim, so there are no claims to label and
+   * the flag cannot move a single plaintext byte. It makes
+   * `assertCoseRegistered` refuse a content encryption RFC 9053 §4 does not
+   * register (the AES-CBC-HMAC family), so a caller must state that it accepts an
+   * on-platform-only artifact before one is produced.
    *
-   * INPUT-ONLY, and deliberately so: there is no read-side twin. `decrypt`,
-   * `verify` and `parse` take no such flag — `decodeCwtClaims` normalises
-   * integer labels and string keys unconditionally — so a proprietary artifact
-   * is read back with nothing declared. Do not restore a claim-label behaviour
-   * here; there are no claims on this path to label.
+   * ⛔ INPUT-ONLY — there is no read-side twin. `decrypt`, `verify` and `parse`
+   * take no such flag (`decodeCwtClaims` normalises integer labels and string
+   * keys unconditionally), so a proprietary artifact is read back with nothing
+   * declared. Do not give it a claim-label behaviour here; there are no claims on
+   * this path to label.
    */
   proprietary?: boolean;
 };
 
 /**
- * The `aegis.decrypt` options (§5e). Confidentiality-only: it reuses the
+ * The `aegis.decrypt` options. Confidentiality-only: it reuses the
  * deployment `decrypt` key policy plus this per-call CHECK/injection.
  */
 export type DecryptOptions = {

@@ -15,16 +15,15 @@ import type { ParamSpec, WhenEmpty } from "./param-spec.js";
  *
  * A CLOSED union, kept separate from {@link ClaimCodec} so both translators keep
  * an exhaustive `switch` with a `never` default.
- *   - `"string"`   scalar string, guarded `isString` (alg, kid, typ, cty, enc,
- *                  oid, x5t#S256, x5t, x5u, zip, apu, apv)
- *   - `"url"`      URL-like string, guarded `isUrlLike` (jku)
- *   - `"number"`   finite number, guarded `isFinite` (p2c)
- *   - `"jwk"`      JWK object, guarded `isObject` (jwk, epk)
+ *   - `"string"`   scalar string, guarded `isString`
+ *   - `"url"`      URL-like string, guarded `isUrlLike`
+ *   - `"number"`   finite number, guarded `isFinite`
+ *   - `"jwk"`      JWK object, guarded `isObject`
  *   - `"buffer"`   Buffer passthrough on the raw side, base64url-encoded
- *                  downstream in `encodeJoseHeader` (iv, p2s, tag)
- *   - `"array"`    Array<string> passthrough, guarded `Array.isArray` (x5c)
+ *                  downstream in `encodeJoseHeader`
+ *   - `"array"`    Array<string> passthrough, guarded `Array.isArray`
  *   - `"critical"` the `crit` array whose MEMBERS are themselves domain<->wire
- *                  remapped (crit)
+ *                  remapped
  */
 export type HeaderCodec =
   | { kind: "string" }
@@ -44,8 +43,7 @@ export type HeaderCodec =
  *
  *   - `"protected"`   integrity-protected only.
  *   - `"unprotected"` unauthenticated bucket only.
- *   - `"either"`      may appear in either — today `kid` (a COSE routing hint
- *                     that travels unprotected) and `iv`.
+ *   - `"either"`      may appear in either — see {@link HeaderSpec.placement}.
  */
 export type HeaderPlacement = "protected" | "unprotected" | "either";
 
@@ -129,15 +127,12 @@ export type HeaderSpec<D = unknown> = ParamSpec<D, HeaderCodec, WhenEmpty> & {
    * parameters. The eligible cell itself states what aegis IMPLEMENTING an
    * extension means; see the `oid` entry.
    *
-   * ⚠ NAMED FOR THE QUESTION, not for the thing, and deliberately: `critical`
-   * meant three other things in this package — the `crit` PARAMETER's domain
-   * name (`header-registry.ts`), the public `DomainTokenHeader.critical` field
-   * holding the member list, and the `{ kind: "critical" }` CODEC that remaps
-   * those members — so a boolean column called `critical` sat one character from
-   * all three and read as a contradiction on the very entry it mattered on
-   * (`domain: "critical" … critical: false`). Spelled this way that line is a
-   * true sentence: the `crit` parameter may not itself be named in `crit`, which
-   * is RFC 7515 §4.1.11's first prohibition applied to `crit` itself.
+   * ⛔ NAMED FOR THE QUESTION, not for the thing — do not rename it `critical`.
+   * That word already means three other things here: the `crit` PARAMETER's
+   * domain name (`header-registry.ts`), the public `DomainTokenHeader.critical`
+   * field, and the `{ kind: "critical" }` CODEC. Spelled this way the `crit`
+   * entry's own row reads as a true sentence rather than a contradiction — the
+   * `crit` parameter may not itself be named in `crit`.
    */
   critEligible: boolean;
 };
