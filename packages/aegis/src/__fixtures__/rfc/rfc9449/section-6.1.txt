@@ -1,0 +1,40 @@
+6.1.  JWK Thumbprint Confirmation Method
+
+   When access tokens are represented as JWTs [RFC7519], the public key
+   information is represented using the jkt confirmation method member
+   defined herein.  To convey the hash of a public key in a JWT, this
+   specification introduces the following JWT Confirmation Method
+   [RFC7800] member for use under the cnf claim.
+
+   jkt:  JWK SHA-256 Thumbprint confirmation method.  The value of the
+      jkt member MUST be the base64url encoding (as defined in
+      [RFC7515]) of the JWK SHA-256 Thumbprint (according to [RFC7638])
+      of the DPoP public key (in JWK format) to which the access token
+      is bound.
+
+   The following example JWT in Figure 8 with a decoded JWT payload
+   shown in Figure 9 contains a cnf claim with the jkt JWK Thumbprint
+   confirmation method member.  The jkt value in these examples is the
+   hash of the public key from the DPoP proofs in the examples shown in
+   Section 5.  The example uses "\" line wrapping per [RFC8792].
+
+   eyJhbGciOiJFUzI1NiIsImtpZCI6IkJlQUxrYiJ9.eyJzdWIiOiJzb21lb25lQGV4YW1\
+   wbGUuY29tIiwiaXNzIjoiaHR0cHM6Ly9zZXJ2ZXIuZXhhbXBsZS5jb20iLCJuYmYiOjE\
+   1NjIyNjI2MTEsImV4cCI6MTU2MjI2NjIxNiwiY25mIjp7ImprdCI6IjBaY09DT1JaTll\
+   5LURXcHFxMzBqWnlKR0hUTjBkMkhnbEJWM3VpZ3VBNEkifX0.3Tyo8VTcn6u_PboUmAO\
+   YUY1kfAavomW_YwYMkmRNizLJoQzWy2fCo79Zi5yObpIzjWb5xW4OGld7ESZrh0fsrA
+
+       Figure 8: JWT Containing a JWK SHA-256 Thumbprint Confirmation
+
+   {
+     "sub":"someone@example.com",
+     "iss":"https://server.example.com",
+     "nbf":1562262611,
+     "exp":1562266216,
+     "cnf":
+     {
+       "jkt":"0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I"
+     }
+   }
+
+    Figure 9: JWT Claims Set with a JWK SHA-256 Thumbprint Confirmation

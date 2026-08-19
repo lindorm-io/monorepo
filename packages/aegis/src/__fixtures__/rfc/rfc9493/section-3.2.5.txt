@@ -1,0 +1,20 @@
+3.2.5.  Phone Number Identifier Format
+
+   The Phone Number Identifier Format identifies a subject using a
+   telephone number.  Subject Identifiers in this format MUST contain a
+   "phone_number" member whose value is a string containing the full
+   telephone number of the subject, including an international dialing
+   prefix, formatted according to E.164 [E164].  The "phone_number"
+   member is REQUIRED and MUST NOT be null or empty.  The Phone Number
+   Identifier Format is identified by the name "phone_number".
+
+   Below is a non-normative example Subject Identifier in the Phone
+   Number Identifier Format:
+
+   {
+     "format": "phone_number",
+     "phone_number": "+12065550100"
+   }
+
+         Figure 8: Example: Subject Identifier in the Phone Number
+                             Identifier Format

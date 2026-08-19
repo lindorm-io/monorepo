@@ -43,6 +43,12 @@ import { wireName } from "../registry/wire-key.js";
 export const AUTHORIZATION_DETAIL_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   {
     domain: "type",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9396",
+      section: "2",
+      url: "https://www.rfc-editor.org/rfc/rfc9396#section-2",
+    },
     /**
      * Both wires spell it `type`. RFC 8392 assigns integer CWT labels to
      * CLAIMS, not to the fields inside one, and no COSE registry names the RAR

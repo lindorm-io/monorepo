@@ -1,0 +1,21 @@
+4.2.  "scope" (Scopes) Claim
+
+   The value of the "scope" claim is a JSON string containing a space-
+   separated list of scopes associated with the token, in the format
+   described in Section 3.3 of [RFC6749].
+
+   Figure 7 illustrates the "scope" claim within a JWT Claims Set.
+
+    {
+      "aud":"https://consumer.example.com",
+      "iss":"https://issuer.example.com",
+      "exp":1443904177,
+      "nbf":1443904077,
+      "sub":"dgaf4mvfs75Fci_FL3heQA",
+      "scope":"email profile phone address"
+    }
+
+                           Figure 7: Scopes Claim
+
+   OAuth 2.0 Token Introspection [RFC7662] already defines the "scope"
+   parameter to convey the scopes associated with the token.

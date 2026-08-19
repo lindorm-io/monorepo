@@ -1,3 +1,4 @@
+import { SYNTHETIC_SPEC } from "../../__fixtures__/synthetic-spec.js";
 import { describe, expect, test } from "vitest";
 import { CoseError } from "../../errors/index.js";
 import { CLAIM_SPECS, type ClaimSpec, claimByDomain } from "../claims/claims-registry.js";
@@ -197,6 +198,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
   // if the cell ever does reach the COSE side.
   const textMember = (domain: string): ClaimMemberSpec => ({
     domain,
+    spec: SYNTHETIC_SPEC,
     wire: { jose: wireName(domain), cose: wireName(domain) },
     codec: { kind: "text" },
     whenEmpty: "keep",
@@ -205,6 +207,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
 
   const labelledMember = (domain: string, label: number): ClaimMemberSpec => ({
     domain,
+    spec: SYNTHETIC_SPEC,
     wire: { jose: wireName(domain), cose: wireLabel(label, domain) },
     codec: { kind: "text" },
     whenEmpty: "keep",
@@ -272,6 +275,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
       labelledMember("sub", 2),
       {
         domain: "act",
+        spec: SYNTHETIC_SPEC,
         wire: { jose: wireName("act"), cose: wireLabel(5, "act") },
         codec: { kind: "object", children, open: "verbatim" },
         whenEmpty: "keep",
@@ -331,6 +335,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
     // exactly the declaration the next migration step adds.
     const inner: ClaimMemberSpec = {
       domain: "actor",
+      spec: SYNTHETIC_SPEC,
       wire: { jose: wireName("actor"), cose: wireName("actor") },
       codec: {
         kind: "object",
@@ -363,6 +368,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
       textMember("iss"),
       {
         domain: "act",
+        spec: SYNTHETIC_SPEC,
         wire: { jose: wireName("act"), cose: wireName("act") },
         codec: { kind: "object", children, open: "verbatim" },
         whenEmpty: "keep",
@@ -381,6 +387,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
       labelledMember("sub", 2),
       {
         domain: "act",
+        spec: SYNTHETIC_SPEC,
         wire: { jose: wireName("act"), cose: wireName("act") },
         codec: { kind: "object", children, open: "verbatim" },
         whenEmpty: "keep",
@@ -419,6 +426,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
     // byte-identical on the wire.
     const labelledElement: ClaimSpec = {
       domain: "syntheticCollection",
+      spec: SYNTHETIC_SPEC,
       wire: { jose: wireName("synthetic"), cose: wireName("synthetic") },
       codec: {
         kind: "array",

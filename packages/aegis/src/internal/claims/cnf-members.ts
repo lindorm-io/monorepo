@@ -1,3 +1,4 @@
+import type { SpecCitation } from "../registry/spec-citation.js";
 import type { Wire } from "../registry/wire.js";
 import { type WireKey, wireAbsent, wireLabel, wireName } from "../registry/wire-key.js";
 
@@ -110,9 +111,15 @@ import { type WireKey, wireAbsent, wireLabel, wireName } from "../registry/wire-
 /**
  * One confirmation member.
  *
- * THREE columns, each with a reader — there is no fourth, because there is no
- * fourth question anything asks about a `cnf` member:
+ * FOUR columns, each with a reader:
  *   - `domain`  the aegis spelling, and the key `ConfirmationClaim` carries.
+ *   - `spec`    WHICH RULE governs the member ({@link SpecCitation}), read by
+ *               `internal/registry/spec-citations.test.ts` against the committed
+ *               corpus. ⚠ It is stated HERE rather than inherited, because this
+ *               type is NOT {@link MemberSpec} — a confirmation member has no
+ *               codec, no `whenEmpty` and no sample, so it shares the question
+ *               but not the base. The two cells cannot drift apart silently: the
+ *               same test iterates both registries.
  *   - `wire`    TOTAL over {@link Wire}, exactly as a registry entry is: a new
  *               wire is a compile error in every member rather than a silent hole.
  *               The COSE cell is a {@link WireKey}, so "COSE cannot carry this"
@@ -124,6 +131,7 @@ import { type WireKey, wireAbsent, wireLabel, wireName } from "../registry/wire-
  */
 export type CnfMemberSpec = {
   domain: string;
+  spec: SpecCitation;
   /**
    * ⚠ TOTAL over {@link Wire} through the `Record`, AND narrowed on JOSE through
    * the intersection. Both halves are load-bearing: the `Record` is what makes a
@@ -160,12 +168,24 @@ export const CNF_MEMBERS = [
     // RFC 9449 §6.1 — the base64url SHA-256 JWK thumbprint (RFC 7638) of the key
     // a DPoP-bound token is bound to.
     domain: "thumbprint",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9449",
+      section: "6.1",
+      url: "https://www.rfc-editor.org/rfc/rfc9449#section-6.1",
+    },
     wire: { jose: wireName("jkt"), cose: wireAbsent(NO_COSE_JKT) },
     value: "text",
   },
   {
     // RFC 8705 §3.1 — the mTLS client certificate thumbprint.
     domain: "mtlsCertThumbprint",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8705",
+      section: "3.1",
+      url: "https://www.rfc-editor.org/rfc/rfc8705#section-3.1",
+    },
     wire: { jose: wireName("x5t#S256"), cose: wireAbsent(NO_COSE_X5T) },
     value: "text",
   },
@@ -173,6 +193,12 @@ export const CNF_MEMBERS = [
     // RFC 7800 §3.2 / RFC 8747 §3.1 — the embedded public key. COSE label 1,
     // where the value is a COSE_Key rather than a JWK (`internal/cose/cose-key.ts`).
     domain: "key",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7800",
+      section: "3.2",
+      url: "https://www.rfc-editor.org/rfc/rfc7800#section-3.2",
+    },
     wire: { jose: wireName("jwk"), cose: wireLabel(1, "jwk") },
     value: "jwk",
   },
@@ -180,12 +206,24 @@ export const CNF_MEMBERS = [
     // RFC 7800 §3.4 / RFC 8747 §3.1 — the key identifier. COSE label 3, carried
     // as a byte string.
     domain: "keyId",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7800",
+      section: "3.4",
+      url: "https://www.rfc-editor.org/rfc/rfc7800#section-3.4",
+    },
     wire: { jose: wireName("kid"), cose: wireLabel(3, "kid") },
     value: "text",
   },
   {
     // RFC 7800 §3.5 — the JWK Set URL the confirmed key can be fetched from.
     domain: "jwkSetUri",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7800",
+      section: "3.5",
+      url: "https://www.rfc-editor.org/rfc/rfc7800#section-3.5",
+    },
     wire: { jose: wireName("jku"), cose: wireAbsent(NO_COSE_JKU) },
     value: "text",
   },

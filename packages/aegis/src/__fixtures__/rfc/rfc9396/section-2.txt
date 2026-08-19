@@ -1,0 +1,288 @@
+2.  Request Parameter "authorization_details"
+
+   The request parameter authorization_details contains, in JSON
+   notation, an array of objects.  Each JSON object contains the data to
+   specify the authorization requirements for a certain type of
+   resource.  The type of resource or access requirement is determined
+   by the type field, which is defined as follows:
+
+   type:  An identifier for the authorization details type as a string.
+      The value of the type field determines the allowable contents of
+      the object that contains it.  The value is unique for the
+      described API in the context of the AS.  This field is REQUIRED.
+
+   An authorization_details array MAY contain multiple entries of the
+   same type.
+
+   Figure 2 shows an authorization_details of type payment_initiation
+   using the example data shown above:
+
+   [
+      {
+         "type": "payment_initiation",
+         "actions": [
+            "initiate",
+            "status",
+            "cancel"
+         ],
+         "locations": [
+            "https://example.com/payments"
+         ],
+         "instructedAmount": {
+            "currency": "EUR",
+            "amount": "123.50"
+         },
+         "creditorName": "Merchant A",
+         "creditorAccount": {
+            "iban": "DE02100100109307118603"
+         },
+         "remittanceInformationUnstructured": "Ref Number Merchant"
+      }
+   ]
+
+     Figure 2: Example of "authorization_details" for a Credit Transfer
+
+   Figure 3 shows a combined request asking for access to account
+   information and permission to initiate a payment:
+
+   [
+      {
+         "type": "account_information",
+         "actions": [
+            "list_accounts",
+            "read_balances",
+            "read_transactions"
+         ],
+         "locations": [
+            "https://example.com/accounts"
+         ]
+      },
+      {
+         "type": "payment_initiation",
+         "actions": [
+            "initiate",
+            "status",
+            "cancel"
+         ],
+         "locations": [
+            "https://example.com/payments"
+         ],
+         "instructedAmount": {
+            "currency": "EUR",
+            "amount": "123.50"
+         },
+         "creditorName": "Merchant A",
+         "creditorAccount": {
+            "iban": "DE02100100109307118603"
+         },
+         "remittanceInformationUnstructured": "Ref Number Merchant"
+      }
+   ]
+
+    Figure 3: Example of "authorization_details" for a Combined Request
+
+   The JSON objects with type fields of account_information and
+   payment_initiation represent the different authorization_details to
+   be used by the AS to ask for consent.
+
+      |  Note: The AS will make this data subsequently available to the
+      |  respective RSs (see Section 9).
+
+2.1.  Authorization Details Types
+
+   The AS controls the interpretation of the value of the type parameter
+   as well as the object fields that the type parameter allows.
+   However, the value of the type parameter is also generally documented
+   and intended to be used by developers.  It is RECOMMENDED that API
+   designers choose type values that are easily copied without
+   ambiguity.  For example, some glyphs have multiple Unicode code
+   points for the same visual character, and a developer could
+   potentially type a different character than what the AS has defined.
+   Possible means of reducing potential confusion are limiting the value
+   to ASCII [RFC0020] characters, providing a machine-readable listing
+   of data type values, or instructing developers to copy and paste
+   directly from the documentation.
+
+   If an application or API is expected to be deployed across different
+   servers, such as the case in an open standard, the API designer is
+   RECOMMENDED to use a collision-resistant namespace under their
+   control, such as a URI that the API designer controls.
+
+   The following example shows how an implementation could utilize the
+   namespace https://scheme.example.org/ to ensure collision-resistant
+   type values.
+
+   {
+      "type": "https://scheme.example.org/files",
+      "locations": [
+         "https://example.com/files"
+      ],
+      "permissions": [
+         {
+            "path": "/myfiles/A",
+            "access": [
+               "read"
+            ]
+         },
+         {
+            "path": "/myfiles/A/X",
+            "access": [
+               "read",
+               "write"
+            ]
+         }
+      ]
+   }
+
+      Figure 4: Example of "authorization_details" with a URL as Type
+                                 Identifier
+
+2.2.  Common Data Fields
+
+   This specification defines a set of common data fields that are
+   designed to be usable across different types of APIs.  This
+   specification does not require the use of these common fields by an
+   API definition but, instead, provides them as reusable generic
+   components for API designers to make use of.  The allowable values of
+   all fields are determined by the API being protected, as defined by a
+   particular "type" value.
+
+   locations:  An array of strings representing the location of the
+      resource or RS.  These strings are typically URIs identifying the
+      location of the RS.  This field can allow a client to specify a
+      particular RS, as discussed in Section 12.
+
+   actions:  An array of strings representing the kinds of actions to be
+      taken at the resource.
+
+   datatypes:  An array of strings representing the kinds of data being
+      requested from the resource.
+
+   identifier:  A string identifier indicating a specific resource
+      available at the API.
+
+   privileges:  An array of strings representing the types or levels of
+      privilege being requested at the resource.
+
+   When different common data fields are used in combination, the
+   permissions the client requests are the product of all the values.
+   The object represents a request for all actions values listed within
+   the object to be used at all locations values listed within the
+   object for all datatypes values listed within the object.  In the
+   following example, the client is requesting read and write access to
+   both the contacts and photos belonging to customers in a
+   customer_information API.  If this request is granted, the client
+   would assume it would be able to use any combination of rights
+   defined by the API, such as read access to the photos and write
+   access to the contacts.
+
+   [
+      {
+         "type": "customer_information",
+         "locations": [
+            "https://example.com/customers"
+         ],
+         "actions": [
+            "read",
+            "write"
+         ],
+         "datatypes": [
+            "contacts",
+            "photos"
+         ]
+      }
+   ]
+
+    Figure 5: Example of "authorization_details" with Common Data Fields
+
+   If the client wishes to have finer control over its access, it can
+   send multiple objects.  In this example, the client is asking for
+   read access to the contacts and write access to the photos in the
+   same API endpoint.  If this request is granted, the client would not
+   be able to write to the contacts.
+
+   [
+      {
+         "type": "customer_information",
+         "locations": [
+            "https://example.com/customers"
+         ],
+         "actions": [
+            "read"
+         ],
+         "datatypes": [
+            "contacts"
+         ]
+      },
+      {
+         "type": "customer_information",
+         "locations": [
+            "https://example.com/customers"
+         ],
+         "actions": [
+            "write"
+         ],
+         "datatypes": [
+            "photos"
+         ]
+      }
+   ]
+
+       Figure 6: Example of "authorization_details" with Common Data
+                         Fields in Multiple Objects
+
+   An API MAY define its own extensions, subject to the type of the
+   respective authorization object.  It is anticipated that API
+   designers will use a combination of common data fields defined in
+   this specification as well as fields specific to the API itself.  The
+   following non-normative example shows the use of both common and API-
+   specific fields as part of two different fictitious API type values.
+   The first access request includes the actions, locations, and
+   datatypes fields specified here as well as the API-specific
+   geolocation field, indicating access to photos taken at the given
+   coordinates.  The second access request includes the actions and
+   identifier fields specified here as well as the API-specific currency
+   fields.
+
+   [
+      {
+         "type":"photo-api",
+         "actions":[
+            "read",
+            "write"
+         ],
+         "locations":[
+            "https://server.example.net/",
+            "https://resource.local/other"
+         ],
+         "datatypes":[
+            "metadata",
+            "images"
+         ],
+         "geolocation":[
+            {
+               "lat":-32.364,
+               "lng":153.207
+            },
+            {
+               "lat":-35.364,
+               "lng":158.207
+            }
+         ]
+      },
+      {
+         "type":"financial-transaction",
+         "actions":[
+            "withdraw"
+         ],
+         "identifier":"account-14-32-32-3",
+         "currency":"USD"
+      }
+   ]
+
+       Figure 7: Example of "authorization_details" Using Common and
+                           Extension Data Fields
+
+   If this request is approved, the resulting access token's access
+   rights will be the union of the requested types of access for each of
+   the two APIs, just as above.

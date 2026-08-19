@@ -1,3 +1,4 @@
+import { SYNTHETIC_SPEC } from "../../__fixtures__/synthetic-spec.js";
 import { describe, expect, test } from "vitest";
 import type { ClaimMemberSpec } from "../registry/claim-spec.js";
 import { wireLabel, wireName } from "../registry/wire-key.js";
@@ -36,6 +37,7 @@ const member = (
   cose: ClaimMemberSpec["wire"]["cose"],
 ): ClaimMemberSpec => ({
   domain,
+  spec: SYNTHETIC_SPEC,
   wire: { jose: wireName(domain), cose },
   codec: { kind: "text" },
   whenEmpty: "keep",

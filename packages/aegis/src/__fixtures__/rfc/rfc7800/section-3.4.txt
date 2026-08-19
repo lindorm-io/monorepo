@@ -1,0 +1,26 @@
+3.4.  Representation of a Key ID for a Proof-of-Possession Key
+
+   The proof-of-possession key can also be identified by the use of a
+   Key ID instead of communicating the actual key, provided the
+   recipient is able to obtain the identified key using the Key ID.  In
+   this case, the issuer of a JWT declares that the presenter possesses
+   a particular key and that the recipient can cryptographically confirm
+   proof of possession of the key by the presenter by including a "cnf"
+   claim in the JWT whose value is a JSON object with the JSON object
+   containing a "kid" member identifying the key.
+
+   The following example demonstrates such a declaration in the JWT
+   Claims Set of a JWT:
+
+     {
+      "iss": "https://server.example.com",
+      "aud": "https://client.example.org",
+      "exp": 1361398824,
+      "cnf":{
+        "kid": "dfd1aa97-6d8d-4575-a0fe-34b96de2bfad"
+       }
+     }
+
+   The content of the "kid" value is application specific.  For
+   instance, some applications may choose to use a JWK Thumbprint
+   [JWK.Thumbprint] value as the "kid" value.

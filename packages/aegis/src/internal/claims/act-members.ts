@@ -94,6 +94,12 @@ const KEEP = "keep" as const;
 export const ACT_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   {
     domain: "issuer",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8693",
+      section: "4.1",
+      url: "https://www.rfc-editor.org/rfc/rfc8693#section-4.1",
+    },
     wire: actorMember("iss", 1),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -101,6 +107,12 @@ export const ACT_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   },
   {
     domain: "subject",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8693",
+      section: "4.1",
+      url: "https://www.rfc-editor.org/rfc/rfc8693#section-4.1",
+    },
     wire: actorMember("sub", 2),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -111,6 +123,10 @@ export const ACT_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     // than being refused — the same tolerance the top-level `audience` claim
     // declares, stated by the same cell instead of by a second rule.
     domain: "audience",
+    spec: {
+      kind: "policy",
+      why: "aegis carries `aud` inside `act` for public-surface compatibility; RFC 8693 4.1 states non-identity claims including `aud` are not meaningful within an `act` claim.",
+    },
     wire: actorMember("aud", 3),
     codec: { kind: "array", scalar: "wrap" },
     whenEmpty: KEEP,
@@ -118,6 +134,12 @@ export const ACT_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   },
   {
     domain: "clientId",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8693",
+      section: "4.3",
+      url: "https://www.rfc-editor.org/rfc/rfc8693#section-4.3",
+    },
     wire: actorMember("client_id", 4),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -127,6 +149,12 @@ export const ACT_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     // ⭐ THE SELF-REFERENCE. See the file docstring: this is the whole reason the
     // registry's member sets are thunks.
     domain: "act",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8693",
+      section: "4.1",
+      url: "https://www.rfc-editor.org/rfc/rfc8693#section-4.1",
+    },
     wire: actorMember("act", 5),
     // ⚠⚠ `open` IS DECLARED HERE TOO, AND OMITTING IT WAS A LIVE DEFECT FOR THE
     // LENGTH OF ONE MEASUREMENT. `open` sits on the CODEC, and a nested member

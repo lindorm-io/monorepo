@@ -1,0 +1,170 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`registry spec citations > act members > every entry resolves to a section that names its wire spelling 1`] = `
+{
+  "act": "4.1.  "act" (Actor) Claim",
+  "audience": "POLICY",
+  "clientId": "4.3.  "client_id" (Client Identifier) Claim",
+  "issuer": "4.1.  "act" (Actor) Claim",
+  "subject": "4.1.  "act" (Actor) Claim",
+}
+`;
+
+exports[`registry spec citations > address members > every entry resolves to a section that names its wire spelling 1`] = `
+{
+  "careOf": "POLICY",
+  "country": "5.1.1. Address Claim",
+  "formatted": "5.1.1. Address Claim",
+  "locality": "5.1.1. Address Claim",
+  "postalCode": "5.1.1. Address Claim",
+  "region": "5.1.1. Address Claim",
+  "streetAddress": "5.1.1. Address Claim",
+}
+`;
+
+exports[`registry spec citations > authorization_details members > every entry resolves to a section that names its wire spelling 1`] = `
+{
+  "type": "2.  Request Parameter "authorization_details"",
+}
+`;
+
+exports[`registry spec citations > claims > every entry resolves to a section that names its wire spelling 1`] = `
+{
+  "accessTokenHash": "3.1.3.6. ID Token",
+  "act": "4.1.  "act" (Actor) Claim",
+  "address": "5.1. Standard Claims",
+  "audience": "4.1.3.  "aud" (Audience) Claim",
+  "authContextClassReference": "2. ID Token",
+  "authFactorCategories": "POLICY",
+  "authFactorReference": "POLICY",
+  "authMethods": "2. ID Token",
+  "authTime": "2. ID Token",
+  "authenticatorAssuranceLevel": "POLICY",
+  "authorizationDetails": "9.1.  JWT-Based Access Tokens",
+  "authorizedParty": "2. ID Token",
+  "birthdate": "5.1. Standard Claims",
+  "clientId": "4.3.  "client_id" (Client Identifier) Claim",
+  "codeHash": "3.3.2.11. ID Token",
+  "confirmation": "3.1.  Confirmation Claim",
+  "conformsTo": "POLICY",
+  "department": "POLICY",
+  "displayName": "POLICY",
+  "email": "5.1. Standard Claims",
+  "emailVerified": "5.1. Standard Claims",
+  "entitlements": "2.2.3.1.  Claims for Authorization Outside of Delegation Scenarios",
+  "events": "2.2.  Core SET Claims",
+  "expiresAt": "4.1.4.  "exp" (Expiration Time) Claim",
+  "familyName": "5.1. Standard Claims",
+  "federationAssuranceLevel": "POLICY",
+  "gender": "5.1. Standard Claims",
+  "givenName": "5.1. Standard Claims",
+  "grantType": "POLICY",
+  "groups": "2.2.3.1.  Claims for Authorization Outside of Delegation Scenarios",
+  "honorific": "POLICY",
+  "identityAssuranceLevel": "POLICY",
+  "issuedAt": "4.1.6.  "iat" (Issued At) Claim",
+  "issuer": "4.1.1.  "iss" (Issuer) Claim",
+  "jobTitle": "POLICY",
+  "legalName": "POLICY",
+  "legalNameVerified": "POLICY",
+  "levelOfAssurance": "POLICY",
+  "locale": "5.1. Standard Claims",
+  "mayAct": "4.4.  "may_act" (Authorized Actor) Claim",
+  "middleName": "5.1. Standard Claims",
+  "name": "5.1. Standard Claims",
+  "namingSystem": "POLICY",
+  "nationalIdentityNumber": "POLICY",
+  "nationalIdentityNumberVerified": "POLICY",
+  "nickname": "5.1. Standard Claims",
+  "nonce": "2. ID Token",
+  "notBefore": "4.1.5.  "nbf" (Not Before) Claim",
+  "occupation": "POLICY",
+  "organization": "POLICY",
+  "permissions": "POLICY",
+  "phoneNumber": "5.1. Standard Claims",
+  "phoneNumberVerified": "5.1. Standard Claims",
+  "picture": "5.1. Standard Claims",
+  "preferredAccessibility": "POLICY",
+  "preferredName": "POLICY",
+  "preferredUsername": "5.1. Standard Claims",
+  "profile": "5.1. Standard Claims",
+  "pronouns": "POLICY",
+  "roles": "2.2.3.1.  Claims for Authorization Outside of Delegation Scenarios",
+  "scope": "4.2.  "scope" (Scopes) Claim",
+  "sessionHint": "POLICY",
+  "sessionId": "3. OpenID Provider Logout Functionality",
+  "socialSecurityNumber": "POLICY",
+  "socialSecurityNumberVerified": "POLICY",
+  "stateHash": "5.1.1. ID Token as Detached Signature",
+  "subject": "4.1.2.  "sub" (Subject) Claim",
+  "subjectHint": "POLICY",
+  "subjectId": "4.1.  JWT "sub_id" Claim",
+  "tenantId": "POLICY",
+  "tokenId": "4.1.7.  "jti" (JWT ID) Claim",
+  "transactionId": "2.2.  Core SET Claims",
+  "updatedAt": "5.1. Standard Claims",
+  "username": "2.2.  Introspection Response",
+  "vectorOfTrust": "3.2.  In OpenID Connect",
+  "vectorTrustMark": "3.2.  In OpenID Connect",
+  "website": "5.1. Standard Claims",
+  "zoneinfo": "5.1. Standard Claims",
+}
+`;
+
+exports[`registry spec citations > cnf members > every entry resolves to a section that names its wire spelling 1`] = `
+{
+  "jwkSetUri": "3.5.  Representation of a URL for a Proof-of-Possession Key",
+  "key": "3.2.  Representation of an Asymmetric Proof-of-Possession Key",
+  "keyId": "3.4.  Representation of a Key ID for a Proof-of-Possession Key",
+  "mtlsCertThumbprint": "3.1.  JWT Certificate Thumbprint Confirmation Method",
+  "thumbprint": "6.1.  JWK Thumbprint Confirmation Method",
+}
+`;
+
+exports[`registry spec citations > headers > every entry resolves to a section that names its wire spelling 1`] = `
+{
+  "algorithm": "4.1.1.  "alg" (Algorithm) Header Parameter",
+  "certificateChain": "4.1.6.  "x5c" (X.509 Certificate Chain) Header Parameter",
+  "certificateThumbprint": "4.1.8.  "x5t#S256" (X.509 Certificate SHA-256 Thumbprint) Header",
+  "certificateThumbprintSha1": "4.1.7.  "x5t" (X.509 Certificate SHA-1 Thumbprint) Header Parameter",
+  "certificateUrl": "4.1.5.  "x5u" (X.509 URL) Header Parameter",
+  "contentType": "4.1.10.  "cty" (Content Type) Header Parameter",
+  "critical": "4.1.11.  "crit" (Critical) Header Parameter",
+  "encryption": "4.1.2.  "enc" (Encryption Algorithm) Header Parameter",
+  "headerType": "4.1.9.  "typ" (Type) Header Parameter",
+  "initialisationVector": "4.7.1.1.  "iv" (Initialization Vector) Header Parameter",
+  "jwk": "4.1.3.  "jwk" (JSON Web Key) Header Parameter",
+  "jwksUri": "4.1.2.  "jku" (JWK Set URL) Header Parameter",
+  "keyId": "4.1.4.  "kid" (Key ID) Header Parameter",
+  "objectId": "POLICY",
+  "partyProducer": "4.6.1.2.  "apu" (Agreement PartyUInfo) Header Parameter",
+  "partyRecipient": "4.6.1.3.  "apv" (Agreement PartyVInfo) Header Parameter",
+  "pbkdfIterations": "4.8.1.2.  "p2c" (PBES2 Count) Header Parameter",
+  "pbkdfSalt": "4.8.1.1.  "p2s" (PBES2 Salt Input) Header Parameter",
+  "publicEncryptionJwk": "4.6.1.1.  "epk" (Ephemeral Public Key) Header Parameter",
+  "publicEncryptionTag": "4.7.1.2.  "tag" (Authentication Tag) Header Parameter",
+  "zip": "4.1.3.  "zip" (Compression Algorithm) Header Parameter",
+}
+`;
+
+exports[`registry spec citations > sub_id members > every entry resolves to a section that names its wire spelling 1`] = `
+{
+  "email": "3.2.2.  Email Identifier Format",
+  "format": "3.  Subject Identifiers",
+  "id": "3.2.4.  Opaque Identifier Format",
+  "identifiers": "3.2.8.  Aliases Identifier Format",
+  "iss": "3.2.3.  Issuer and Subject Identifier Format",
+  "phoneNumber": "3.2.5.  Phone Number Identifier Format",
+  "sub": "3.2.3.  Issuer and Subject Identifier Format",
+  "uri": "3.2.1.  Account Identifier Format",
+  "url": "3.2.6.  Decentralized Identifier (DID) Format",
+}
+`;
+
+exports[`registry spec citations > the split across the three arms is what it was 1`] = `
+{
+  "oidc": 34,
+  "policy": 31,
+  "rfc": 61,
+}
+`;

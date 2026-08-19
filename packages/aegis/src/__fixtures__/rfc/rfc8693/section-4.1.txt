@@ -1,0 +1,82 @@
+4.1.  "act" (Actor) Claim
+
+   The "act" (actor) claim provides a means within a JWT to express that
+   delegation has occurred and identify the acting party to whom
+   authority has been delegated.  The "act" claim value is a JSON
+   object, and members in the JSON object are claims that identify the
+   actor.  The claims that make up the "act" claim identify and possibly
+   provide additional information about the actor.  For example, the
+   combination of the two claims "iss" and "sub" might be necessary to
+   uniquely identify an actor.
+
+   However, claims within the "act" claim pertain only to the identity
+   of the actor and are not relevant to the validity of the containing
+   JWT in the same manner as the top-level claims.  Consequently, non-
+   identity claims (e.g., "exp", "nbf", and "aud") are not meaningful
+   when used within an "act" claim and are therefore not used.
+
+   Figure 5 illustrates the "act" (actor) claim within a JWT Claims Set.
+   The claims of the token itself are about user@example.com while the
+   "act" claim indicates that admin@example.com is the current actor.
+
+    {
+      "aud":"https://consumer.example.com",
+      "iss":"https://issuer.example.com",
+      "exp":1443904177,
+      "nbf":1443904077,
+      "sub":"user@example.com",
+      "act":
+      {
+        "sub":"admin@example.com"
+      }
+    }
+
+                           Figure 5: Actor Claim
+
+   A chain of delegation can be expressed by nesting one "act" claim
+   within another.  The outermost "act" claim represents the current
+   actor while nested "act" claims represent prior actors.  The least
+   recent actor is the most deeply nested.  The nested "act" claims
+   serve as a history trail that connects the initial request and
+   subject through the various delegation steps undertaken before
+   reaching the current actor.  In this sense, the current actor is
+   considered to include the entire authorization/delegation history,
+   leading naturally to the nested structure described here.
+
+   For the purpose of applying access control policy, the consumer of a
+   token MUST only consider the token's top-level claims and the party
+   identified as the current actor by the "act" claim.  Prior actors
+   identified by any nested "act" claims are informational only and are
+   not to be considered in access control decisions.
+
+   The following example in Figure 6 illustrates nested "act" (actor)
+   claims within a JWT Claims Set.  The claims of the token itself are
+   about user@example.com while the "act" claim indicates that the
+   system <https://service16.example.com> is the current actor and
+   <https://service77.example.com> was a prior actor.  Such a token
+   might come about as the result of service16 receiving a token in a
+   call from service77 and exchanging it for a token suitable to call
+   service26 while the authorization server notes the situation in the
+   newly issued token.
+
+    {
+      "aud":"https://service26.example.com",
+      "iss":"https://issuer.example.com",
+      "exp":1443904100,
+      "nbf":1443904000,
+      "sub":"user@example.com",
+      "act":
+      {
+        "sub":"https://service16.example.com",
+        "act":
+        {
+          "sub":"https://service77.example.com"
+        }
+      }
+    }
+
+                        Figure 6: Nested Actor Claim
+
+   When included as a top-level member of an OAuth token introspection
+   response, "act" has the same semantics and format as the claim of the
+   same name.

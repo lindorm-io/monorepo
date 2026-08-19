@@ -1,0 +1,29 @@
+3.2.6.  Decentralized Identifier (DID) Format
+
+   The Decentralized Identifier (DID) Format identifies a subject using
+   a DID URL as defined in [DID].  Subject Identifiers in this format
+   MUST contain a "url" member whose value is a DID URL for the DID
+   Subject being identified.  The value of the "url" member MUST be a
+   valid DID URL and MAY be a bare DID.  The "url" member is REQUIRED
+   and MUST NOT be null or empty.  The Decentralized Identifier Format
+   is identified by the name "did".
+
+   Below are non-normative example Subject Identifiers for the
+   Decentralized Identifier Format:
+
+   {
+     "format": "did",
+     "url": "did:example:123456"
+   }
+
+        Figure 9: Example: Subject Identifier for the Decentralized
+          Identifier Format, Identifying a Subject with a Bare DID
+
+   {
+     "format": "did",
+     "url": "did:example:123456/did/url/path?versionId=1"
+   }
+
+        Figure 10: Example: Subject Identifier for the Decentralized
+     Identifier Format, Identifying a Subject with a DID URL with Non-
+                      empty Path and Query Components

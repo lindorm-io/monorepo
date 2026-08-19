@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`toCitation > should derive an openid citation and its url 1`] = `
+{
+  "doc": "OIDC Core",
+  "kind": "oidc",
+  "section": "5.1",
+  "url": "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+}
+`;
+
+exports[`toCitation > should derive an rfc citation and its url 1`] = `
+{
+  "kind": "rfc",
+  "rfc": "RFC 7519",
+  "section": "4.1.3",
+  "url": "https://www.rfc-editor.org/rfc/rfc7519#section-4.1.3",
+}
+`;

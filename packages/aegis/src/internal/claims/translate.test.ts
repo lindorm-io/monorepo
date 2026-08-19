@@ -1,3 +1,4 @@
+import { SYNTHETIC_SPEC } from "../../__fixtures__/synthetic-spec.js";
 import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import { describe, expect, test } from "vitest";
@@ -812,6 +813,7 @@ describe("walkObject — the structure walker's direction guard", () => {
     whenEmpty: "keep" | "prune",
   ): ClaimMemberSpec => ({
     domain,
+    spec: SYNTHETIC_SPEC,
     wire: { jose: wireName(wire), cose: wireName(wire) },
     codec: { kind: "text" },
     whenEmpty,
@@ -821,6 +823,7 @@ describe("walkObject — the structure walker's direction guard", () => {
   /** A synthetic structured claim carrying one member of each verdict. */
   const structured: ClaimMemberSpec = {
     domain: "synthetic",
+    spec: SYNTHETIC_SPEC,
     wire: { jose: wireName("synthetic"), cose: wireName("synthetic") },
     codec: {
       kind: "object",
@@ -889,6 +892,7 @@ describe("walkObject — the structure walker's direction guard", () => {
   describe("the path a structural refusal reports", () => {
     const required: ClaimMemberSpec = {
       domain: "subject",
+      spec: SYNTHETIC_SPEC,
       wire: { jose: wireName("subject"), cose: wireName("subject") },
       codec: { kind: "text" },
       whenEmpty: "keep",
@@ -898,6 +902,7 @@ describe("walkObject — the structure walker's direction guard", () => {
 
     const nested: ClaimMemberSpec = {
       domain: "inner",
+      spec: SYNTHETIC_SPEC,
       wire: { jose: wireName("inner"), cose: wireName("inner") },
       codec: { kind: "object", children: () => [required], open: "closed" },
       whenEmpty: "keep",
@@ -907,6 +912,7 @@ describe("walkObject — the structure walker's direction guard", () => {
     /** TWO claims over ONE member set — exactly `act`/`mayAct`'s relationship. */
     const outer = (domain: string): ClaimMemberSpec => ({
       domain,
+      spec: SYNTHETIC_SPEC,
       wire: { jose: wireName(domain), cose: wireName(domain) },
       codec: { kind: "object", children: () => [nested], open: "closed" },
       whenEmpty: "keep",
@@ -957,6 +963,7 @@ describe("walkObject — the structure walker's direction guard", () => {
      */
     const divergent: ClaimMemberSpec = {
       domain: "streetAddress",
+      spec: SYNTHETIC_SPEC,
       wire: { jose: wireName("street_address"), cose: wireName("street_address") },
       codec: { kind: "text" },
       whenEmpty: "keep",
@@ -966,6 +973,7 @@ describe("walkObject — the structure walker's direction guard", () => {
 
     const place: ClaimMemberSpec = {
       domain: "place",
+      spec: SYNTHETIC_SPEC,
       wire: { jose: wireName("place"), cose: wireName("place") },
       codec: { kind: "object", children: () => [divergent], open: "closed" },
       whenEmpty: "keep",
@@ -1053,6 +1061,7 @@ describe("walkObject — the structure walker's direction guard", () => {
 describe("a CLOSED member set", () => {
   const declared: ClaimMemberSpec = {
     domain: "subject",
+    spec: SYNTHETIC_SPEC,
     wire: { jose: wireName("sub"), cose: wireName("sub") },
     codec: { kind: "text" },
     whenEmpty: "keep",
@@ -1061,6 +1070,7 @@ describe("a CLOSED member set", () => {
 
   const closed: ClaimMemberSpec = {
     domain: "actor",
+    spec: SYNTHETIC_SPEC,
     wire: { jose: wireName("actor"), cose: wireName("actor") },
     codec: { kind: "object", children: () => [declared], open: "closed" },
     whenEmpty: "keep",
@@ -1070,6 +1080,7 @@ describe("a CLOSED member set", () => {
   /** The same set, OPEN — the control that says the refusal is the cell's doing. */
   const opened: ClaimMemberSpec = {
     domain: "actor",
+    spec: SYNTHETIC_SPEC,
     wire: { jose: wireName("actor"), cose: wireName("actor") },
     codec: { kind: "object", children: () => [declared], open: "verbatim" },
     whenEmpty: "keep",

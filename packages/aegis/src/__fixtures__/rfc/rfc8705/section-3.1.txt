@@ -1,0 +1,34 @@
+3.1.  JWT Certificate Thumbprint Confirmation Method
+
+   When access tokens are represented as JSON Web Tokens (JWT)
+   [RFC7519], the certificate hash information SHOULD be represented
+   using the "x5t#S256" confirmation method member defined herein.
+
+   To represent the hash of a certificate in a JWT, this specification
+   defines the new JWT Confirmation Method [RFC7800] member "x5t#S256"
+   for the X.509 Certificate SHA-256 Thumbprint.  The value of the
+   "x5t#S256" member is a base64url-encoded [RFC4648] SHA-256 [SHS] hash
+   (a.k.a., thumbprint, fingerprint, or digest) of the DER encoding
+   [X690] of the X.509 certificate [RFC5280].  The base64url-encoded
+   value MUST omit all trailing pad '=' characters and MUST NOT include
+   any line breaks, whitespace, or other additional characters.
+
+   The following is an example of a JWT payload containing an "x5t#S256"
+   certificate thumbprint confirmation method.  The new JWT content
+   introduced by this specification is the "cnf" confirmation method
+   claim at the bottom of the example that has the "x5t#S256"
+   confirmation method member containing the value that is the hash of
+   the client certificate to which the access token is bound.
+
+     {
+       "iss": "https://server.example.com",
+       "sub": "ty.webb@example.com",
+       "exp": 1493726400,
+       "nbf": 1493722800,
+       "cnf":{
+         "x5t#S256": "bwcK0esc3ACC3DB2Y5_lESsXE8o9ltc05O89jdN-dg2"
+       }
+     }
+
+   Figure 2: Example JWT Claims Set with an X.509 Certificate Thumbprint
+                            Confirmation Method

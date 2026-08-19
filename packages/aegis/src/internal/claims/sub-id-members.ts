@@ -126,6 +126,12 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
      * where the profile `shape` rule only defends the one profile that names it.
      */
     domain: "format",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9493",
+      section: "3",
+      url: "https://www.rfc-editor.org/rfc/rfc9493#section-3",
+    },
     wire: subIdMember("format", 0),
     codec: { kind: "text" },
     /**
@@ -142,6 +148,12 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   {
     // RFC 9493 §3.2.3 — the `iss_sub` format's issuer.
     domain: "iss",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9493",
+      section: "3.2.3",
+      url: "https://www.rfc-editor.org/rfc/rfc9493#section-3.2.3",
+    },
     wire: subIdMember("iss", 1),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -150,6 +162,12 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   {
     // RFC 9493 §3.2.3 — the `iss_sub` format's subject.
     domain: "sub",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9493",
+      section: "3.2.3",
+      url: "https://www.rfc-editor.org/rfc/rfc9493#section-3.2.3",
+    },
     wire: subIdMember("sub", 2),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -158,19 +176,31 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   {
     // RFC 9493 §3.2.2 — an addr-spec (RFC 5322 §3.4.1).
     domain: "email",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9493",
+      section: "3.2.2",
+      url: "https://www.rfc-editor.org/rfc/rfc9493#section-3.2.2",
+    },
     wire: subIdMember("email", 4),
     codec: { kind: "text" },
     whenEmpty: KEEP,
     sample: "subject.sample@lindorm.test",
   },
   {
-    // RFC 9493 §3.2.5 — an E.164 number "including an international country
-    // calling code prefix".
+    // RFC 9493 §3.2.5 — an E.164 number "including an international dialing
+    // prefix".
     //
     // ⭐ THE ONE MEMBER RULING 1 ACTUALLY MOVES. It was `phone_number` in the
     // domain bag, which is the only snake_case key any structured claim ever
     // required a caller to write. Consumer-visible break, stated as one.
     domain: "phoneNumber",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9493",
+      section: "3.2.5",
+      url: "https://www.rfc-editor.org/rfc/rfc9493#section-3.2.5",
+    },
     wire: subIdMember("phone_number", 5),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -181,6 +211,12 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     // ONE member, two formats — which is why the per-format requirement table is
     // not something a member set can express.
     domain: "uri",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9493",
+      section: "3.2.1",
+      url: "https://www.rfc-editor.org/rfc/rfc9493#section-3.2.1",
+    },
     wire: subIdMember("uri", 6),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -189,6 +225,12 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   {
     // RFC 9493 §3.2.6 — a DID URL, "and MAY be a bare DID".
     domain: "url",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9493",
+      section: "3.2.6",
+      url: "https://www.rfc-editor.org/rfc/rfc9493#section-3.2.6",
+    },
     wire: subIdMember("url", 7),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -197,6 +239,12 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   {
     // RFC 9493 §3.2.4 — the Opaque format's "string with no semantics".
     domain: "id",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9493",
+      section: "3.2.4",
+      url: "https://www.rfc-editor.org/rfc/rfc9493#section-3.2.4",
+    },
     wire: subIdMember("id", 8),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -209,6 +257,12 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
      * collection arm of every walker.
      */
     domain: "identifiers",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9493",
+      section: "3.2.8",
+      url: "https://www.rfc-editor.org/rfc/rfc9493#section-3.2.8",
+    },
     wire: subIdMember("identifiers", 9),
     /**
      * ⚠⚠ `open` IS DECLARED ON THE ELEMENT TOO, AND OMITTING IT WOULD BE A LIVE

@@ -1,0 +1,79 @@
+3. OpenID Provider Logout Functionality
+
+OPs supporting HTTP-based logout need to keep track of
+the set of logged-in RPs so that they know what RPs to contact
+at their logout URIs to cause them to log out.
+Some OPs track this state using a "visited sites" cookie.
+OPs contact them in parallel using a dynamically constructed page
+with HTML <iframe src="frontchannel_logout_uri"> tags
+rendering each logged-in RP's logout URI.
+
+If the OP supports
+OpenID Connect Discovery 1.0 ( Sakimura, N., Bradley, J., Jones, M., and E. Jay, "OpenID Connect Discovery 1.0," November 2014. ) [OpenID.Discovery],
+it uses this metadata value to advertise its support for HTTP-based logout:
+
+frontchannel_logout_supported
+
+OPTIONAL.
+Boolean value specifying whether the OP supports HTTP-based logout,
+with true indicating support.
+If omitted, the default value is false .
+
+It SHOULD also register this related metadata value:
+
+frontchannel_logout_session_supported
+
+OPTIONAL.
+Boolean value specifying whether the OP can pass
+iss (issuer)
+and sid (session ID)
+query parameters to identify the RP session with the OP
+when the frontchannel_logout_uri is used.
+If supported, the sid Claim is also included
+in ID Tokens issued by the OP.
+If omitted, the default value is false .
+
+The sid (session ID) Claim used in ID Tokens and
+as a frontchannel_logout_uri parameter has the following definition:
+
+sid
+
+OPTIONAL.
+Session ID - String identifier for a Session.
+This represents a Session of a User Agent or device
+for a logged-in End-User at an RP.
+Different sid values are used to identify
+distinct sessions at an OP.
+The sid value need only be unique
+in the context of a particular issuer.
+Its contents are opaque to the RP.
+Its syntax is the same as an OAuth 2.0 Client Identifier.
+
+TOC
+3.1.
+Example Front-Channel Logout URL Usage
+
+In this non-normative example,
+the RP has registered the frontchannel_logout_uri
+value https://rp.example.org/frontchannel_logout"
+with the OP.
+In the simple case,
+in which frontchannel_logout_session_required is false,
+the OP causes the front-channel logout to occur by rendering this URL in an iframe:
+
+https://rp.example.org/frontchannel_logout
+
+In a second example,
+in which frontchannel_logout_session_required is true,
+Issuer and Session ID values are also sent.
+This example uses an Issuer value of https://server.example.com
+and a Session ID value of 08a5019c-17e1-4977-8f42-65a12843ea02 .
+In this case,
+the OP causes the front-channel logout to occur by rendering this URL in an iframe
+(with line breaks for display purposes only):
+
+https://rp.example.org/frontchannel_logout
+?iss=https%3A%2F%2Fserver.example.com
+&sid=08a5019c-17e1-4977-8f42-65a12843ea02
+
+TOC

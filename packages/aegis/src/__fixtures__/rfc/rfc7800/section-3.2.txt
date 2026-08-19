@@ -1,0 +1,31 @@
+3.2.  Representation of an Asymmetric Proof-of-Possession Key
+
+   When the key held by the presenter is an asymmetric private key, the
+   "jwk" member is a JSON Web Key [JWK] representing the corresponding
+   asymmetric public key.  The following example demonstrates such a
+   declaration in the JWT Claims Set of a JWT:
+
+     {
+      "iss": "https://server.example.com",
+      "aud": "https://client.example.org",
+      "exp": 1361398824,
+      "cnf":{
+        "jwk":{
+          "kty": "EC",
+          "use": "sig",
+          "crv": "P-256",
+          "x": "18wHLeIgW9wVN6VD1Txgpqy2LszYkMf6J8njVAibvhM",
+          "y": "-V4dS4UaLMgP_4fY4j8ir7cl1TXlFdAgcx55o7TkcSA"
+         }
+       }
+     }
+
+   The JWK MUST contain the required key members for a JWK of that key
+   type and MAY contain other JWK members, including the "kid" (Key ID)
+   member.
+
+   The "jwk" member MAY also be used for a JWK representing a symmetric
+   key, provided that the JWT is encrypted so that the key is not
+   revealed to unintended parties.  The means of encrypting a JWT is
+   explained in [JWT].  If the JWT is not encrypted, the symmetric key
+   MUST be encrypted as described below.

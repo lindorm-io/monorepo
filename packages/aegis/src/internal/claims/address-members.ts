@@ -66,6 +66,12 @@ const KEEP = "keep" as const;
 export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   {
     domain: "formatted",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1.1",
+    },
     wire: sameOnBothWires("formatted"),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -73,6 +79,12 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   },
   {
     domain: "streetAddress",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1.1",
+    },
     wire: sameOnBothWires("street_address"),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -80,6 +92,12 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   },
   {
     domain: "locality",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1.1",
+    },
     wire: sameOnBothWires("locality"),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -87,6 +105,12 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   },
   {
     domain: "region",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1.1",
+    },
     wire: sameOnBothWires("region"),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -94,6 +118,12 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   },
   {
     domain: "postalCode",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1.1",
+    },
     wire: sameOnBothWires("postal_code"),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -101,6 +131,12 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   },
   {
     domain: "country",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1.1",
+    },
     wire: sameOnBothWires("country"),
     codec: { kind: "text" },
     whenEmpty: KEEP,
@@ -109,6 +145,10 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   // --- lindorm extension, NOT an OIDC Core §5.1.1 member ---------------------
   {
     domain: "careOf",
+    spec: {
+      kind: "policy",
+      why: "a lindorm extension of the OIDC address structure; no specification defines a `care_of` address member.",
+    },
     wire: sameOnBothWires("care_of"),
     codec: { kind: "text" },
     whenEmpty: KEEP,

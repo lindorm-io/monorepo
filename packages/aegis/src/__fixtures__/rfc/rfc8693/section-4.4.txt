@@ -1,0 +1,47 @@
+4.4.  "may_act" (Authorized Actor) Claim
+
+   The "may_act" claim makes a statement that one party is authorized to
+   become the actor and act on behalf of another party.  The claim might
+   be used, for example, when a "subject_token" is presented to the
+   token endpoint in a token exchange request and "may_act" claim in the
+   subject token can be used by the authorization server to determine
+   whether the client (or party identified in the "actor_token") is
+   authorized to engage in the requested delegation or impersonation.
+   The claim value is a JSON object, and members in the JSON object are
+   claims that identify the party that is asserted as being eligible to
+   act for the party identified by the JWT containing the claim.  The
+   claims that make up the "may_act" claim identify and possibly provide
+   additional information about the authorized actor.  For example, the
+   combination of the two claims "iss" and "sub" are sometimes necessary
+   to uniquely identify an authorized actor, while the "email" claim
+   might be used to provide additional useful information about that
+   party.
+
+   However, claims within the "may_act" claim pertain only to the
+   identity of that party and are not relevant to the validity of the
+   containing JWT in the same manner as top-level claims.  Consequently,
+   claims such as "exp", "nbf", and "aud" are not meaningful when used
+   within a "may_act" claim and are therefore not used.
+
+   Figure 9 illustrates the "may_act" claim within a JWT Claims Set.
+   The claims of the token itself are about user@example.com while the
+   "may_act" claim indicates that admin@example.com is authorized to act
+   on behalf of user@example.com.
+
+    {
+      "aud":"https://consumer.example.com",
+      "iss":"https://issuer.example.com",
+      "exp":1443904177,
+      "nbf":1443904077,
+      "sub":"user@example.com",
+      "may_act":
+      {
+        "sub":"admin@example.com"
+      }
+    }
+
+                      Figure 9: Authorized Actor Claim
+
+   When included as a top-level member of an OAuth token introspection
+   response, "may_act" has the same semantics and format as the claim of
+   the same name.

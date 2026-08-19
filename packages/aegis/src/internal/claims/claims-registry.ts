@@ -157,6 +157,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // --- (a) RFC 8392 standard CWT claims (registered integer labels 1–9) ---
   {
     domain: "issuer",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7519",
+      section: "4.1.1",
+      url: "https://www.rfc-editor.org/rfc/rfc7519#section-4.1.1",
+    },
     wire: labelled("iss", 1),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -167,6 +173,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "subject",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7519",
+      section: "4.1.2",
+      url: "https://www.rfc-editor.org/rfc/rfc7519#section-4.1.2",
+    },
     wire: labelled("sub", 2),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -177,6 +189,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "audience",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7519",
+      section: "4.1.3",
+      url: "https://www.rfc-editor.org/rfc/rfc7519#section-4.1.3",
+    },
     // RFC 7519 aud is string-OR-array, so a scalar WRAPS to a single-element
     // array. That used to be a hardcoded `spec.domain === "audience"` branch in
     // the translator; it is data now.
@@ -193,6 +211,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "expiresAt",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7519",
+      section: "4.1.4",
+      url: "https://www.rfc-editor.org/rfc/rfc7519#section-4.1.4",
+    },
     wire: labelled("exp", 4),
     codec: { kind: "date" },
     sensitivity: "public",
@@ -204,6 +228,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "notBefore",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7519",
+      section: "4.1.5",
+      url: "https://www.rfc-editor.org/rfc/rfc7519#section-4.1.5",
+    },
     wire: labelled("nbf", 5),
     codec: { kind: "date" },
     sensitivity: "public",
@@ -215,6 +245,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "issuedAt",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7519",
+      section: "4.1.6",
+      url: "https://www.rfc-editor.org/rfc/rfc7519#section-4.1.6",
+    },
     wire: labelled("iat", 6),
     codec: { kind: "date" },
     sensitivity: "public",
@@ -231,6 +267,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // some alphabet, and the three OIDC hashes take the other answer.
   {
     domain: "tokenId",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7519",
+      section: "4.1.7",
+      url: "https://www.rfc-editor.org/rfc/rfc7519#section-4.1.7",
+    },
     wire: labelled("jti", 7, "cti"),
     codec: { kind: "text", per: { cose: { kind: "bstr", encoding: "utf8" } } },
     sensitivity: "public",
@@ -242,6 +284,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // RFC 8747
   {
     domain: "confirmation",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7800",
+      section: "3.1",
+      url: "https://www.rfc-editor.org/rfc/rfc7800#section-3.1",
+    },
     wire: labelled("cnf", 8),
     codec: { kind: "bespoke", bespoke: "confirmation" },
     sensitivity: "public",
@@ -264,6 +312,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // RFC 8693
   {
     domain: "scope",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8693",
+      section: "4.2",
+      url: "https://www.rfc-editor.org/rfc/rfc8693#section-4.2",
+    },
     wire: labelled("scope", 9),
     codec: { kind: "array", scalar: "spaced" },
     sensitivity: "public",
@@ -300,6 +354,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   //     (ISO/IEC 29115 / NIST SP 800-63A/B/C) and the short lindorm hints.
   {
     domain: "authContextClassReference",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "2",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.2",
+    },
     wire: named("acr"),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -310,6 +370,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "authMethods",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "2",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.2",
+    },
     wire: named("amr"),
     codec: { kind: "array", scalar: "strict" },
     sensitivity: "public",
@@ -323,6 +389,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "authorizedParty",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "2",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.2",
+    },
     wire: named("azp"),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -333,6 +405,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "vectorOfTrust",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8485",
+      section: "3.2",
+      url: "https://www.rfc-editor.org/rfc/rfc8485#section-3.2",
+    },
     wire: named("vot"),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -343,6 +421,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "vectorTrustMark",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8485",
+      section: "3.2",
+      url: "https://www.rfc-editor.org/rfc/rfc8485#section-3.2",
+    },
     wire: named("vtm"),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -354,6 +438,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // RFC 8693
   {
     domain: "act",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8693",
+      section: "4.1",
+      url: "https://www.rfc-editor.org/rfc/rfc8693#section-4.1",
+    },
     wire: named("act"),
     // A DECLARED, RECURSIVE and OPEN member set — see `act-members.ts` for the
     // labels and for the RFC 8693 §4.1/§4.4 sentences that make it open. The
@@ -373,6 +463,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "grantType",
+    spec: {
+      kind: "policy",
+      why: "lindorm's record of the OAuth grant type the token was minted under; no registry defines `gty`.",
+    },
     wire: named("gty"),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -384,6 +478,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // OIDC front-channel logout
   {
     domain: "sessionId",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Front-Channel Logout",
+      section: "3",
+      url: "https://openid.net/specs/openid-connect-frontchannel-1_0.html#rfc.section.3",
+    },
     wire: named("sid"),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -395,6 +495,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // RFC 8417 txn — emitted but NOT extracted into DomainClaims (no domainClaim).
   {
     domain: "transactionId",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8417",
+      section: "2.2",
+      url: "https://www.rfc-editor.org/rfc/rfc8417#section-2.2",
+    },
     wire: named("txn"),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -405,6 +511,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // ISO/IEC 29115
   {
     domain: "levelOfAssurance",
+    spec: {
+      kind: "policy",
+      why: "lindorm's resolved assurance level; ISO/IEC 29115 defines the concept and its levels, never a claim name.",
+    },
     wire: named("loa"),
     codec: { kind: "int" },
     sensitivity: "public",
@@ -416,6 +526,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // NIST SP 800-63B
   {
     domain: "authenticatorAssuranceLevel",
+    spec: {
+      kind: "policy",
+      why: "lindorm's NIST SP 800-63B AAL carrier; the publication defines the level, not a claim name.",
+    },
     wire: named("aal"),
     codec: { kind: "int" },
     sensitivity: "public",
@@ -427,6 +541,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // NIST SP 800-63A
   {
     domain: "identityAssuranceLevel",
+    spec: {
+      kind: "policy",
+      why: "lindorm's NIST SP 800-63A IAL carrier; the publication defines the level, not a claim name.",
+    },
     wire: named("ial"),
     codec: { kind: "int" },
     sensitivity: "public",
@@ -438,6 +556,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // NIST SP 800-63C
   {
     domain: "federationAssuranceLevel",
+    spec: {
+      kind: "policy",
+      why: "lindorm's NIST SP 800-63C FAL carrier; the publication defines the level, not a claim name.",
+    },
     wire: named("fal"),
     codec: { kind: "int" },
     sensitivity: "public",
@@ -450,6 +572,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // categories it was made of; `afc` below carries those.
   {
     domain: "authFactorReference",
+    spec: {
+      kind: "policy",
+      why: "lindorm's single resolved auth-factor value; RFC 8176 governs `amr` values, not this name.",
+    },
     wire: named("afr"),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -461,6 +587,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // PSD2 SCA categories (knowledge/possession/inherence) — the axes exercised.
   {
     domain: "authFactorCategories",
+    spec: {
+      kind: "policy",
+      why: "lindorm's PSD2-SCA category axes; the regulation names the categories, no registry names the claim.",
+    },
     wire: named("afc"),
     codec: { kind: "array", scalar: "strict" },
     sensitivity: "public",
@@ -472,6 +602,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "sessionHint",
+    spec: { kind: "policy", why: "lindorm's opaque session correlator." },
     wire: named("sih"),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -482,6 +613,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "subjectHint",
+    spec: { kind: "policy", why: "lindorm's opaque subject correlator." },
     wire: named("suh"),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -499,6 +631,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // a request-binding text string with no registered CWT label.
   {
     domain: "accessTokenHash",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "3.1.3.6",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.3.6",
+    },
     wire: labelled("at_hash", P(0)),
     // OIDC Core §3.1.3.6: the domain value is the base64url left-half digest. On
     // JOSE that string IS the wire form; on COSE the bytes it decodes to are.
@@ -521,6 +659,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "codeHash",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "3.3.2.11",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.3.2.11",
+    },
     wire: labelled("c_hash", P(1)),
     // The `at_hash` codec argument, for the authorization code.
     codec: { kind: "text", per: { cose: { kind: "bstr", encoding: "b64u" } } },
@@ -533,6 +677,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "stateHash",
+    spec: {
+      kind: "oidc",
+      doc: "FAPI 1.0 Part 2",
+      section: "5.1.1",
+      url: "https://openid.net/specs/openid-financial-api-part-2-1_0.html#rfc.section.5.1.1",
+    },
     wire: labelled("s_hash", P(2)),
     // The `at_hash` codec argument, for the `state` value.
     codec: { kind: "text", per: { cose: { kind: "bstr", encoding: "b64u" } } },
@@ -545,6 +695,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "nonce",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "2",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.2",
+    },
     wire: labelled("nonce", P(3)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -555,6 +711,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "authTime",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "2",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.2",
+    },
     wire: labelled("auth_time", P(4)),
     codec: { kind: "date" },
     sensitivity: "public",
@@ -567,6 +729,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // RFC 9396
   {
     domain: "authorizationDetails",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9396",
+      section: "9.1",
+      url: "https://www.rfc-editor.org/rfc/rfc9396#section-9.1",
+    },
     wire: labelled("authorization_details", P(5)),
     // A COLLECTION of declared structures. `open: "verbatim"` is MANDATORY here
     // and not a preference: RFC 9396 §2 makes an element's `type` determine that
@@ -593,6 +761,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // RFC 8693
   {
     domain: "mayAct",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8693",
+      section: "4.4",
+      url: "https://www.rfc-editor.org/rfc/rfc8693#section-4.4",
+    },
     wire: labelled("may_act", P(6)),
     // RFC 8693 §4.4 describes `may_act` in the same words §4.1 uses for `act` —
     // "The claim value is a JSON object, and members in the JSON object are
@@ -612,6 +786,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "entitlements",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9068",
+      section: "2.2.3.1",
+      url: "https://www.rfc-editor.org/rfc/rfc9068#section-2.2.3.1",
+    },
     wire: labelled("entitlements", P(7)),
     codec: { kind: "array", scalar: "strict" },
     sensitivity: "public",
@@ -630,6 +810,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "groups",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9068",
+      section: "2.2.3.1",
+      url: "https://www.rfc-editor.org/rfc/rfc9068#section-2.2.3.1",
+    },
     wire: labelled("groups", P(8)),
     codec: { kind: "array", scalar: "strict" },
     sensitivity: "public",
@@ -642,6 +828,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "roles",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9068",
+      section: "2.2.3.1",
+      url: "https://www.rfc-editor.org/rfc/rfc9068#section-2.2.3.1",
+    },
     wire: labelled("roles", P(9)),
     codec: { kind: "array", scalar: "spaced" },
     sensitivity: "public",
@@ -654,6 +846,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "permissions",
+    spec: {
+      kind: "policy",
+      why: "lindorm's authority list; the only `permissions` in any specification is a type-specific field inside an example RAR object.",
+    },
     wire: labelled("permissions", P(10)),
     codec: { kind: "array", scalar: "spaced" },
     sensitivity: "public",
@@ -665,6 +861,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "clientId",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8693",
+      section: "4.3",
+      url: "https://www.rfc-editor.org/rfc/rfc8693#section-4.3",
+    },
     wire: labelled("client_id", P(11)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -680,6 +882,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // RFC 9493
   {
     domain: "subjectId",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 9493",
+      section: "4.1",
+      url: "https://www.rfc-editor.org/rfc/rfc9493#section-4.1",
+    },
     wire: labelled("sub_id", P(12)),
     // ⭐ THE ARRAY-OF-SELF STRUCTURE. `identifiers` recurses as an array of
     // Subject Identifiers (RFC 9493 §3.2.8), which is the first declared member
@@ -698,6 +906,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // RFC 8417 SET events
   {
     domain: "events",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 8417",
+      section: "2.2",
+      url: "https://www.rfc-editor.org/rfc/rfc8417#section-2.2",
+    },
     wire: labelled("events", P(13)),
     codec: { kind: "bespoke", bespoke: "events" },
     sensitivity: "public",
@@ -711,6 +925,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
 
   {
     domain: "tenantId",
+    spec: { kind: "policy", why: "lindorm's multi-tenancy identifier." },
     wire: labelled("tenant_id", P(14)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -725,6 +940,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // private-use label (append-only: never renumber).
   {
     domain: "conformsTo",
+    spec: {
+      kind: "policy",
+      why: "lindorm's posture signal naming the profiles the issuing client clears above the permissive floor.",
+    },
     wire: labelled("conforms_to", P(15)),
     codec: { kind: "array", scalar: "spaced" },
     sensitivity: "public",
@@ -749,6 +968,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   //     assemble-common-claims.ts asks for.
   {
     domain: "nationalIdentityNumber",
+    spec: {
+      kind: "policy",
+      why: "lindorm's national identity number; no specification registers this claim.",
+    },
     wire: labelled("national_identity_number", P(16)),
     codec: { kind: "text" },
     sensitivity: "sensitive",
@@ -758,6 +981,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "nationalIdentityNumberVerified",
+    spec: {
+      kind: "policy",
+      why: "lindorm's verification mark for the national identity number.",
+    },
     wire: labelled("national_identity_number_verified", P(17)),
     codec: { kind: "bool" },
     sensitivity: "sensitive",
@@ -767,6 +994,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "socialSecurityNumber",
+    spec: {
+      kind: "policy",
+      why: "lindorm's social security number; no specification registers this claim.",
+    },
     wire: labelled("social_security_number", P(18)),
     codec: { kind: "text" },
     sensitivity: "sensitive",
@@ -776,6 +1007,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "socialSecurityNumberVerified",
+    spec: {
+      kind: "policy",
+      why: "lindorm's verification mark for the social security number.",
+    },
     wire: labelled("social_security_number_verified", P(19)),
     codec: { kind: "bool" },
     sensitivity: "sensitive",
@@ -797,6 +1032,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   //     `bucket: "profile"` group.
   {
     domain: "address",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("address", P(20)),
     // `open: "flip"` keeps an undeclared member on the wire under a snake_cased
     // key, which is what the blanket case flip this replaced did for every key
@@ -816,6 +1057,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "email",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("email", P(21)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -825,6 +1072,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "emailVerified",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("email_verified", P(22)),
     codec: { kind: "bool" },
     sensitivity: "public",
@@ -834,6 +1087,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "phoneNumber",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("phone_number", P(23)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -843,6 +1102,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "phoneNumberVerified",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("phone_number_verified", P(24)),
     codec: { kind: "bool" },
     sensitivity: "public",
@@ -852,6 +1117,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "picture",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("picture", P(25)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -861,6 +1132,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "birthdate",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("birthdate", P(26)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -870,6 +1147,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "familyName",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("family_name", P(27)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -879,6 +1162,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "gender",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("gender", P(28)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -888,6 +1177,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "givenName",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("given_name", P(29)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -897,6 +1192,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "locale",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("locale", P(30)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -906,6 +1207,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "middleName",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("middle_name", P(31)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -916,6 +1223,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // "name" is 4 chars ⇒ string-keyed (the string key is the smaller CBOR encoding).
   {
     domain: "name",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: named("name"),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -925,6 +1238,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "nickname",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("nickname", P(32)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -934,6 +1253,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "preferredUsername",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("preferred_username", P(33)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -944,6 +1269,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // OIDC `profile` URL claim — the CLAIM named "profile" (distinct from the bucket).
   {
     domain: "profile",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("profile", P(34)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -956,6 +1287,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   // profile timestamp is never range-checked against "now".
   {
     domain: "updatedAt",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("updated_at", P(35)),
     codec: { kind: "date" },
     sensitivity: "public",
@@ -965,6 +1302,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "website",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("website", P(36)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -974,6 +1317,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "zoneinfo",
+    spec: {
+      kind: "oidc",
+      doc: "OIDC Core",
+      section: "5.1",
+      url: "https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.5.1",
+    },
     wire: labelled("zoneinfo", P(37)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -983,6 +1332,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "displayName",
+    spec: {
+      kind: "policy",
+      why: "lindorm's display name; SCIM spells its nearest attribute `displayName`, a different wire name in a provisioning schema.",
+    },
     wire: labelled("display_name", P(38)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -992,6 +1345,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "honorific",
+    spec: {
+      kind: "policy",
+      why: "lindorm's honorific; SCIM carries `honorificPrefix`/`honorificSuffix` as `name` sub-attributes, not this claim.",
+    },
     wire: labelled("honorific", P(39)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -1001,6 +1358,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "legalName",
+    spec: {
+      kind: "policy",
+      why: "lindorm's registered legal name, distinct from the OIDC `name` claim.",
+    },
     wire: labelled("legal_name", P(40)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -1010,6 +1371,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "legalNameVerified",
+    spec: { kind: "policy", why: "lindorm's verification mark for the legal name." },
     wire: labelled("legal_name_verified", P(41)),
     codec: { kind: "bool" },
     sensitivity: "public",
@@ -1019,6 +1381,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "namingSystem",
+    spec: { kind: "policy", why: "lindorm's enum for how the name parts compose." },
     wire: labelled("naming_system", P(42)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -1033,6 +1396,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "preferredAccessibility",
+    spec: { kind: "policy", why: "lindorm's accessibility-preference list." },
     wire: labelled("preferred_accessibility", P(43)),
     codec: { kind: "array", scalar: "strict" },
     sensitivity: "public",
@@ -1043,6 +1407,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "preferredName",
+    spec: {
+      kind: "policy",
+      why: "lindorm's self-declared preferred name, distinct from `nickname` and `preferred_username`.",
+    },
     wire: labelled("preferred_name", P(44)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -1052,6 +1420,7 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "pronouns",
+    spec: { kind: "policy", why: "lindorm's self-declared pronouns." },
     wire: labelled("pronouns", P(45)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -1061,6 +1430,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "department",
+    spec: {
+      kind: "policy",
+      why: "lindorm's department; the identical SCIM name is an Enterprise User provisioning attribute, not a token claim.",
+    },
     wire: labelled("department", P(46)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -1070,6 +1443,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "jobTitle",
+    spec: {
+      kind: "policy",
+      why: "lindorm's job title; SCIM spells the nearest concept `title`.",
+    },
     wire: labelled("job_title", P(47)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -1079,6 +1456,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "occupation",
+    spec: {
+      kind: "policy",
+      why: "lindorm's occupation; no specification registers this claim.",
+    },
     wire: labelled("occupation", P(48)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -1088,6 +1469,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   },
   {
     domain: "organization",
+    spec: {
+      kind: "policy",
+      why: "lindorm's organization; the identical SCIM name is an Enterprise User provisioning attribute, not a token claim.",
+    },
     wire: labelled("organization", P(49)),
     codec: { kind: "text" },
     sensitivity: "public",
@@ -1105,6 +1490,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
   //     issued. Long JOSE name (8 chars) ⇒ private-use label.
   {
     domain: "username",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7662",
+      section: "2.2",
+      url: "https://www.rfc-editor.org/rfc/rfc7662#section-2.2",
+    },
     wire: labelled("username", P(50)),
     codec: { kind: "text" },
     sensitivity: "public",

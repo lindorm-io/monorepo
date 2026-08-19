@@ -1,0 +1,38 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`extractOidcSection > should extract a section with its subsections 1`] = `
+{
+  "body": "2. Claims
+
+The claims section names the "mini" Claim and MUST be extracted
+together with its subsections, which is the scope a section anchor implies.
+It also names a non-breaking hyphen so folding is exercised.
+
+2.1. The mini Claim
+The mini Claim carries a value. It sits inside section 2 and travels
+with it, so a citation of the parent covers the child. Use of this
+Claim is OPTIONAL and §-adjacent.",
+  "heading": "2. Claims",
+  "span": {
+    "end": 691,
+    "start": 142,
+    "unit": "offset",
+  },
+}
+`;
+
+exports[`extractOidcSection > should extract a subsection on its own 1`] = `
+{
+  "body": "2.1. The mini Claim
+
+The mini Claim carries a value. It sits inside section 2 and travels
+with it, so a citation of the parent covers the child. Use of this
+Claim is OPTIONAL and §-adjacent.",
+  "heading": "2.1. The mini Claim",
+  "span": {
+    "end": 691,
+    "start": 445,
+    "unit": "offset",
+  },
+}
+`;

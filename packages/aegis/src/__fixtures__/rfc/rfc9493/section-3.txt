@@ -1,0 +1,299 @@
+3.  Subject Identifiers
+
+   A Subject Identifier is a JSON object [RFC8259] whose contents may be
+   used to identify a subject within some context.  An Identifier Format
+   is a named definition of a set of information that may be used to
+   identify a subject and the rules for encoding that information as a
+   Subject Identifier; these rules define the syntax and semantics of
+   Subject Identifiers.  A Subject Identifier MUST conform to a specific
+   Identifier Format and MUST contain a "format" member whose value is
+   the name of that Identifier Format.
+
+   Every Identifier Format MUST have a unique name registered in the
+   IANA "Security Event Identifier Formats" registry established in
+   Section 8.1 or a Collision-Resistant Name as defined in [RFC7519].
+   Identifier Formats that are expected to be used broadly by a variety
+   of parties SHOULD be registered in the "Security Event Identifier
+   Formats" registry.
+
+   An Identifier Format MAY describe more members than are strictly
+   necessary to identify a subject and MAY describe conditions under
+   which those members are required, optional, or prohibited.  The
+   "format" member is reserved for use as described in this
+   specification; Identifier Formats MUST NOT declare any rules
+   regarding the "format" member.
+
+   Every member within a Subject Identifier MUST match the rules
+   specified for that member by this specification or by a Subject
+   Identifier's Identifier Format.  A Subject Identifier MUST NOT
+   contain any members prohibited or not described by its Identifier
+   Format and MUST contain all members required by its Identifier
+   Format.
+
+3.1.  Identifier Formats versus Principal Types
+
+   Identifier Formats define how to encode identifying information for a
+   subject.  Unlike Principal Types, they do not define the type or
+   nature of the subject itself.  For example, while the Email
+   Identifier Format declares that the value of the "email" member is an
+   email address, a subject in a security event that is identified by an
+   Email Subject Identifier could be an end user who controls that email
+   address, the mailbox itself, or anything else that the transmitter
+   and receiver both understand to be associated with that email
+   address.  Consequently, Subject Identifiers remove ambiguity around
+   how a subject is being identified and how to parse an identifying
+   structure, but they do not remove ambiguity around how to resolve
+   that identifier for a subject.  For example, consider a directory
+   management API that allows callers to identify users and groups
+   through both opaque unique identifiers and email addresses.  Such an
+   API could use Subject Identifiers to disambiguate between which of
+   these two types of identifiers is in use.  However, the API would
+   have to determine whether the subject is a user or group via some
+   other means, such as by querying a database, interpreting other
+   parameters in the request, or inferring the type from the API
+   contract.
+
+3.2.  Identifier Format Definitions
+
+   The following Identifier Formats are registered in the IANA "Security
+   Event Identifier Formats" registry established in Section 8.1.
+
+   Since the Subject Identifier Format conveys semantic information,
+   applications SHOULD choose the most specific possible format for the
+   identifier in question.  For example, an email address can be
+   conveyed using a "mailto:" URI and the URI Identifier Format, but
+   since the value is known to be an email address, the application
+   should prefer to use the Email Identifier Format instead.
+
+3.2.1.  Account Identifier Format
+
+   The Account Identifier Format identifies a subject using an account
+   at a service provider, identified with an "acct" URI as defined in
+   [RFC7565].  An account is an arrangement or agreement through which a
+   user gets access to a service and gets a unique identity with the
+   service provider.  Subject Identifiers in this format MUST contain a
+   "uri" member whose value is the "acct" URI for the subject.  The
+   "uri" member is REQUIRED and MUST NOT be null or empty.  The Account
+   Identifier Format is identified by a value of "account" in the
+   "format" member.
+
+   Below is a non-normative example Subject Identifier for the Account
+   Identifier Format:
+
+   {
+     "format": "account",
+     "uri": "acct:example.user@service.example.com"
+   }
+
+      Figure 4: Example: Subject Identifier for the Account Identifier
+                                   Format
+
+3.2.2.  Email Identifier Format
+
+   The Email Identifier Format identifies a subject using an email
+   address.  Subject Identifiers in this format MUST contain an "email"
+   member whose value is a string containing the email address of the
+   subject, formatted as an "addr-spec" as defined in Section 3.4.1 of
+   [RFC5322].  The "email" member is REQUIRED and MUST NOT be null or
+   empty.  The value of the "email" member MUST identify a mailbox to
+   which email may be delivered, in accordance with [RFC5321].  The
+   Email Identifier Format is identified by the name "email".
+
+   Below is a non-normative example Subject Identifier in the Email
+   Identifier Format:
+
+   {
+     "format": "email",
+     "email": "user@example.com"
+   }
+
+    Figure 5: Example: Subject Identifier in the Email Identifier Format
+
+3.2.2.1.  Email Canonicalization
+
+   Many email providers will treat multiple email addresses as
+   equivalent.  While the domain portion of an email address [RFC5322]
+   is consistently treated as case-insensitive per [RFC1034], most
+   providers treat the local part of the email address as case-
+   insensitive as well and consider "user@example.com",
+   "User@example.com", and "USER@example.com" as the same email address.
+   Some providers also treat dots (".") as optional; for example,
+   "user.name@example.com", "username@example.com",
+   "u.s.e.r.name@example.com", and "u.s.e.r.n.a.m.e@example.com" might
+   all be treated as equivalent.  This has led users to view these
+   strings as equivalent, driving service providers to implement
+   proprietary email canonicalization algorithms to ensure that email
+   addresses entered by users resolve to the same canonical string.
+   Email canonicalization is not standardized, and there is no way for
+   the event recipient to determine the mail provider's canonicalization
+   method.  Therefore, the recipient SHOULD apply its own
+   canonicalization algorithm to incoming events in order to reproduce
+   the translation done by the local email system.
+
+3.2.3.  Issuer and Subject Identifier Format
+
+   The Issuer and Subject Identifier Format identifies a subject using a
+   pair of "iss" and "sub" members, analogous to how subjects are
+   identified using the JWT "iss" and "sub" Claims in OpenID Connect
+   [OpenID.Core] ID Tokens.  These members MUST follow the formats of
+   the "iss" member and "sub" member defined by [RFC7519], respectively.
+   Both the "iss" member and the "sub" member are REQUIRED and MUST NOT
+   be null or empty.  The Issuer and Subject Identifier Format is
+   identified by the name "iss_sub".
+
+   Below is a non-normative example Subject Identifier in the Issuer and
+   Subject Identifier Format:
+
+   {
+     "format": "iss_sub",
+     "iss": "https://issuer.example.com/",
+     "sub": "145234573"
+   }
+
+      Figure 6: Example: Subject Identifier in the Issuer and Subject
+                             Identifier Format
+
+3.2.4.  Opaque Identifier Format
+
+   The Opaque Identifier Format describes a subject that is identified
+   with a string with no semantics asserted beyond its usage as an
+   identifier for the subject, such as a Universally Unique Identifier
+   (UUID) or hash used as a surrogate identifier for a record in a
+   database.  Subject Identifiers in this format MUST contain an "id"
+   member whose value is a JSON string containing the opaque string
+   identifier for the subject.  The "id" member is REQUIRED and MUST NOT
+   be null or empty.  The Opaque Identifier Format is identified by the
+   name "opaque".
+
+   Below is a non-normative example Subject Identifier in the Opaque
+   Identifier Format:
+
+   {
+     "format": "opaque",
+     "id": "11112222333344445555"
+   }
+
+   Figure 7: Example: Subject Identifier in the Opaque Identifier Format
+
+3.2.5.  Phone Number Identifier Format
+
+   The Phone Number Identifier Format identifies a subject using a
+   telephone number.  Subject Identifiers in this format MUST contain a
+   "phone_number" member whose value is a string containing the full
+   telephone number of the subject, including an international dialing
+   prefix, formatted according to E.164 [E164].  The "phone_number"
+   member is REQUIRED and MUST NOT be null or empty.  The Phone Number
+   Identifier Format is identified by the name "phone_number".
+
+   Below is a non-normative example Subject Identifier in the Phone
+   Number Identifier Format:
+
+   {
+     "format": "phone_number",
+     "phone_number": "+12065550100"
+   }
+
+         Figure 8: Example: Subject Identifier in the Phone Number
+                             Identifier Format
+
+3.2.6.  Decentralized Identifier (DID) Format
+
+   The Decentralized Identifier (DID) Format identifies a subject using
+   a DID URL as defined in [DID].  Subject Identifiers in this format
+   MUST contain a "url" member whose value is a DID URL for the DID
+   Subject being identified.  The value of the "url" member MUST be a
+   valid DID URL and MAY be a bare DID.  The "url" member is REQUIRED
+   and MUST NOT be null or empty.  The Decentralized Identifier Format
+   is identified by the name "did".
+
+   Below are non-normative example Subject Identifiers for the
+   Decentralized Identifier Format:
+
+   {
+     "format": "did",
+     "url": "did:example:123456"
+   }
+
+        Figure 9: Example: Subject Identifier for the Decentralized
+          Identifier Format, Identifying a Subject with a Bare DID
+
+   {
+     "format": "did",
+     "url": "did:example:123456/did/url/path?versionId=1"
+   }
+
+        Figure 10: Example: Subject Identifier for the Decentralized
+     Identifier Format, Identifying a Subject with a DID URL with Non-
+                      empty Path and Query Components
+
+3.2.7.  Uniform Resource Identifier (URI) Format
+
+   The Uniform Resource Identifier (URI) Format identifies a subject
+   using a URI as defined in [RFC3986].  This Identifier Format makes no
+   assumptions or guarantees with regard to the content, scheme, or
+   reachability of the URI within the field.  Subject Identifiers in
+   this format MUST contain a "uri" member whose value is a URI for the
+   subject being identified.  The "uri" member is REQUIRED and MUST NOT
+   be null or empty.  The URI Format is identified by the name "uri".
+
+   Below are non-normative example Subject Identifiers for the URI
+   Format:
+
+   {
+     "format": "uri",
+     "uri": "https://user.example.com/"
+   }
+
+         Figure 11: Example: Subject Identifier for the URI Format,
+                  Identifying a Subject with a Website URI
+
+   {
+     "format": "uri",
+     "uri": "urn:uuid:4e851e98-83c4-4743-a5da-150ecb53042f"
+   }
+
+         Figure 12: Example: Subject Identifier for the URI Format,
+                  Identifying a Subject with a Random URN
+
+3.2.8.  Aliases Identifier Format
+
+   The Aliases Identifier Format describes a subject that is identified
+   with a list of different Subject Identifiers.  It is intended for use
+   when a variety of identifiers have been shared with the party that
+   will be interpreting the Subject Identifier, and it is unknown which
+   of those identifiers they will recognize or support.  Subject
+   Identifiers in this format MUST contain an "identifiers" member whose
+   value is a JSON array containing one or more Subject Identifiers.
+   Each Subject Identifier in the array MUST identify the same entity.
+   The "identifiers" member is REQUIRED and MUST NOT be null or empty.
+   It MAY contain multiple instances of the same Identifier Format
+   (e.g., multiple Email Subject Identifiers) but SHOULD NOT contain
+   exact duplicates.  This format is identified by the name "aliases".
+
+   "aliases" Subject Identifiers MUST NOT be nested, i.e., the
+   "identifiers" member of an "aliases" Subject Identifier MUST NOT
+   contain a Subject Identifier in the Aliases Identifier Format.
+
+   Below is a non-normative example Subject Identifier in the Aliases
+   Identifier Format:
+
+   {
+     "format": "aliases",
+     "identifiers": [
+       {
+         "format": "email",
+         "email": "user@example.com"
+       },
+       {
+         "format": "phone_number",
+         "phone_number": "+12065550100"
+       },
+       {
+         "format": "email",
+         "email": "user+qualifier@example.com"
+       }
+     ]
+   }
+
+      Figure 13: Example: Subject Identifier in the Aliases Identifier
+                                   Format

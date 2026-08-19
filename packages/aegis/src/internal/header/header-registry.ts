@@ -100,6 +100,12 @@ export type { CoseHeaderCodec } from "../registry/cose-header-codec.js";
 export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   {
     domain: "algorithm",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7515",
+      section: "4.1.1",
+      url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.1",
+    },
     wire: { jose: wireName("alg"), cose: wireLabel(1, "alg") },
     codec: { kind: "string" },
     cose: { kind: "algorithmLabel" },
@@ -117,6 +123,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   // RFC 7518 §4.6.1.2 — ECDH-ES Agreement PartyUInfo (base64url).
   {
     domain: "partyProducer",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7518",
+      section: "4.6.1.2",
+      url: "https://www.rfc-editor.org/rfc/rfc7518#section-4.6.1.2",
+    },
     wire: {
       jose: wireName("apu"),
       cose: wireAbsent(
@@ -145,6 +157,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   // RFC 7518 §4.6.1.3 — ECDH-ES Agreement PartyVInfo (base64url).
   {
     domain: "partyRecipient",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7518",
+      section: "4.6.1.3",
+      url: "https://www.rfc-editor.org/rfc/rfc7518#section-4.6.1.3",
+    },
     wire: {
       jose: wireName("apv"),
       cose: wireAbsent(
@@ -163,6 +181,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "critical",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7515",
+      section: "4.1.11",
+      url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.11",
+    },
     wire: { jose: wireName("crit"), cose: wireLabel(2, "crit") },
     codec: { kind: "critical" },
     cose: { kind: "critical" },
@@ -187,6 +211,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "contentType",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7515",
+      section: "4.1.10",
+      url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.10",
+    },
     wire: { jose: wireName("cty"), cose: wireLabel(3, "cty") },
     codec: { kind: "string" },
     cose: { kind: "passthrough" },
@@ -205,6 +235,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "encryption",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7516",
+      section: "4.1.2",
+      url: "https://www.rfc-editor.org/rfc/rfc7516#section-4.1.2",
+    },
     wire: {
       jose: wireName("enc"),
       cose: wireAbsent(
@@ -228,6 +264,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "publicEncryptionJwk",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7518",
+      section: "4.6.1.1",
+      url: "https://www.rfc-editor.org/rfc/rfc7518#section-4.6.1.1",
+    },
     wire: {
       jose: wireName("epk"),
       cose: wireAbsent(
@@ -251,6 +293,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "initialisationVector",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7518",
+      section: "4.7.1.1",
+      url: "https://www.rfc-editor.org/rfc/rfc7518#section-4.7.1.1",
+    },
     wire: { jose: wireName("iv"), cose: wireLabel(5, "iv") },
     codec: { kind: "buffer" },
     cose: { kind: "base64Bytes" },
@@ -271,6 +319,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "jwksUri",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7515",
+      section: "4.1.2",
+      url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.2",
+    },
     wire: {
       jose: wireName("jku"),
       cose: wireAbsent(
@@ -291,6 +345,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "jwk",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7515",
+      section: "4.1.3",
+      url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.3",
+    },
     wire: {
       jose: wireName("jwk"),
       cose: wireAbsent(
@@ -311,6 +371,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "keyId",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7515",
+      section: "4.1.4",
+      url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.4",
+    },
     wire: { jose: wireName("kid"), cose: wireLabel(4, "kid") },
     codec: { kind: "string" },
     cose: { kind: "textBytes" },
@@ -328,9 +394,10 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     critEligible: false,
   },
   // `oid` (lindorm object id) has no IANA COSE label, so it rides COSE under a
-  // lindorm PRIVATE-USE header-parameter label — RFC 8152 §16.2, the registry
-  // RFC 9052 §11.1 re-points: "Integer values less than -65536 are marked as
-  // private use." Chosen well clear of the private-use CLAIM/enc label band
+  // lindorm PRIVATE-USE header-parameter label. RFC 8152 §16.2 is where the range
+  // is stated — "Integer values less than -65536 are marked as private use." —
+  // and RFC 9052 §11.1 only re-points the IANA registry; it does not restate the
+  // range. Chosen well clear of the private-use CLAIM/enc label band
   // (-65537…) so a grep never confuses a header label with a claim/enc label.
   //
   // ⚠ A private-use label is UNINTERPRETABLE to a foreign reader, so it is only
@@ -339,6 +406,10 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   // `coseWireKey` below, gated on the RANGE and never on this name.
   {
     domain: "objectId",
+    spec: {
+      kind: "policy",
+      why: "lindorm's own object id; no specification registers an `oid` header parameter, which is why it is the one crit-eligible row.",
+    },
     wire: { jose: wireName("oid"), cose: wireLabel(-70000, "oid") },
     codec: { kind: "string" },
     cose: { kind: "passthrough" },
@@ -373,6 +444,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "pbkdfIterations",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7518",
+      section: "4.8.1.2",
+      url: "https://www.rfc-editor.org/rfc/rfc7518#section-4.8.1.2",
+    },
     wire: {
       jose: wireName("p2c"),
       cose: wireAbsent(
@@ -397,6 +474,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "pbkdfSalt",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7518",
+      section: "4.8.1.1",
+      url: "https://www.rfc-editor.org/rfc/rfc7518#section-4.8.1.1",
+    },
     wire: {
       jose: wireName("p2s"),
       cose: wireAbsent(
@@ -415,6 +498,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "publicEncryptionTag",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7518",
+      section: "4.7.1.2",
+      url: "https://www.rfc-editor.org/rfc/rfc7518#section-4.7.1.2",
+    },
     wire: {
       jose: wireName("tag"),
       cose: wireAbsent(
@@ -433,6 +522,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "headerType",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7515",
+      section: "4.1.9",
+      url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.9",
+    },
     wire: { jose: wireName("typ"), cose: wireLabel(16, "typ") }, // RFC 9596 §4.1
     codec: { kind: "string" },
     cose: { kind: "passthrough" },
@@ -440,7 +535,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // (`buildMediaType`/`computeTypHeader`). A caller supplies the prefix, never
     // the parameter — which is why every row reserves it.
     sensitivity: "public",
-    // The FULL media type. RFC 7519 §5.1 permits the `application/` prefix to be
+    // The FULL media type. RFC 7515 §4.1.9 permits the `application/` prefix to be
     // omitted on the wire, but the DOMAIN column reports what aegis reads back —
     // and aegis always writes and reports the complete media type — so the bare
     // `"at+jwt"` this held could never round-trip to itself.
@@ -462,6 +557,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "certificateChain",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7515",
+      section: "4.1.6",
+      url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.6",
+    },
     wire: { jose: wireName("x5c"), cose: wireLabel(33, "x5c") }, // RFC 9360 x5chain
     codec: { kind: "array" },
     cose: { kind: "certChain" },
@@ -483,6 +584,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   // whenever a cert is bound and the boolean resolves true.
   {
     domain: "certificateThumbprintSha1",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7515",
+      section: "4.1.7",
+      url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.7",
+    },
     wire: {
       jose: wireName("x5t"),
       cose: wireAbsent(
@@ -503,6 +610,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   },
   {
     domain: "certificateThumbprint",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7515",
+      section: "4.1.8",
+      url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.8",
+    },
     wire: {
       jose: wireName("x5t#S256"),
       // RFC 9360 §2 x5t. It carries the `certHash` codec rather than the plain
@@ -545,6 +658,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   // RFC 7515 §4.1.5 — X.509 URL. COSE label 35 (RFC 9360 x5u).
   {
     domain: "certificateUrl",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7515",
+      section: "4.1.5",
+      url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.5",
+    },
     wire: { jose: wireName("x5u"), cose: wireLabel(35, "x5u") },
     codec: { kind: "string" },
     cose: { kind: "passthrough" },
@@ -560,6 +679,12 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   // RFC 7516 §4.1.3 — compression algorithm ("DEF" is the only registered value).
   {
     domain: "zip",
+    spec: {
+      kind: "rfc",
+      rfc: "RFC 7516",
+      section: "4.1.3",
+      url: "https://www.rfc-editor.org/rfc/rfc7516#section-4.1.3",
+    },
     wire: {
       jose: wireName("zip"),
       cose: wireAbsent(

@@ -1,0 +1,63 @@
+Internet Engineering Task Force (IETF)                          M. Mini
+Request for Comments: 9999                                      Fixtures
+Category: Standards Track                                 September 2026
+ISSN: 2070-1721
+
+
+                        A Mini Fixture Document
+
+Abstract
+
+   This document exists so the corpus extractor can be exercised without
+   the network.  It is shaped like a real RFC and nothing more.
+
+Table of Contents
+
+   1.  Introduction ...............................................  1
+   2.  Claims .....................................................  1
+   2.1.  The "mini" Claim .........................................  2
+   3.  Repeated ...................................................  2
+   4.  Empty ......................................................  2
+   5.  Terminated .................................................  2
+
+1.  Introduction
+
+   The introduction is long enough to clear the plausibility floor,
+   which asks for a hundred and twenty characters and three non-blank
+   lines before an extract counts as a real section.
+
+2.  Claims
+
+   The claims section names the "mini" claim and MUST be extracted
+   together with its subsections, which is the scope a section anchor
+   implies.
+
+2.1.  The "mini" Claim
+
+   The "mini" claim carries a value.  It sits inside section 2 and
+   travels with it, so a citation of the parent covers the child.  Use
+   of this claim is OPTIONAL.
+
+3.  Repeated
+
+   A section number recurring at column 0 leaves the span undecidable.
+
+3.  Repeated
+
+   The second occurrence at column 0 is what makes it so.
+
+4.  Empty
+
+5.  Terminated
+
+   This section runs to the word heading below it rather than to the
+   end of the document, which is how a numbered body ends.  It carries
+   enough text to clear the floor.
+
+References
+
+   [MINI]     Mini, M., "A Mini Fixture Document", September 2026.
+
+Author's Address
+
+   M. Mini

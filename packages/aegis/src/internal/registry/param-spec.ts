@@ -30,6 +30,7 @@
  * exists to prevent.
  */
 
+import type { SpecCitation } from "./spec-citation.js";
 import type { Wire } from "./wire.js";
 import type { WireKey } from "./wire-key.js";
 
@@ -170,6 +171,26 @@ export type ParamSpec<
    * can ask this question; it does not answer it for any of them.
    */
   whenEmpty: E;
+  /**
+   * WHICH RULE governs this parameter, and where to read it
+   * ({@link SpecCitation}). REQUIRED, with no default, for the same reason
+   * {@link ParamSpec.whenEmpty} is: an absent cell says nobody decided, and the
+   * `policy` arm is how an entry says "lindorm's own rule" out loud instead.
+   *
+   * ⚠ It is CHECKED, which is the whole reason it is data and not a comment.
+   * `internal/registry/spec-citations.test.ts` requires every `rfc`/`oidc` cell
+   * to name a section that exists in the committed corpus
+   * (`src/__fixtures__/rfc/`) AND whose text contains this parameter's own wire
+   * spelling. A prose citation could only ever be checked by a human reading it,
+   * which is how 32 wrong ones accumulated here.
+   *
+   * ⚠ The cell names ONE section, and a parameter whose two wires are defined by
+   * different documents cites the JOSE-side one — `tokenId` is RFC 7519 §4.1.7
+   * (`jti`), while COSE spells the same claim `cti` (RFC 8392 §3.1.7). The
+   * divergence is data in {@link ParamSpec.wire}; this cell says which rule
+   * created the parameter.
+   */
+  spec: SpecCitation;
   /**
    * A representative DOMAIN-shaped value. REQUIRED, so a new parameter cannot be
    * added without giving the generated conformance suite something to round-trip
