@@ -12,6 +12,7 @@ import type {
 import type { NameSelector } from "../claims/claims-registry.js";
 import type { DomainClaims } from "../../types/claims/domain/domain-claims.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
+import { matcherWireName } from "./matcher-wire-name.js";
 import { isClaimOmitted } from "./rules/is-claim-omitted.js";
 import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
 import { validate } from "./validate.js";
@@ -120,18 +121,40 @@ export const applyVerifyPolicy = ({
   // source it cannot hash) is a caller mistake with its own message, and folding
   // it into the claims-invalid error reported "claims invalid" with an EMPTY
   // invalid list — the failure that names nothing.
-  const predicate = createIdentityMatchers(
-    algorithm,
-    omitUndefined(assert ?? {}),
-    nameOf,
+  const matchers = omitUndefined(assert ?? {});
+
+  const predicate = createIdentityMatchers(algorithm, matchers, nameOf);
+
+  /**
+   * The caller's own vocabulary, keyed by the wire name each matcher compiled to.
+   * Built from the caller's bag rather than the registry, so it answers ONLY for
+   * claims the caller actually stated and needs no jose/cose branch of its own.
+   */
+  const domainByWire = new Map<string, string>(
+    Object.keys(matchers).map((key) => [matcherWireName(key, nameOf) ?? key, key]),
   );
 
   try {
     validate(wireClaims, predicate as never, AegisDomainError, "claims_invalid");
   } catch (err) {
+    const invalid = (err as any).data?.invalid as Array<string> | undefined;
+
     throw new AegisDomainError("Invalid token", {
       code: "claims_invalid",
-      data: { invalid: (err as any).data?.invalid, format },
+      // `data` speaks the CALLER's vocabulary — pylon's HTTP error handler puts it
+      // straight in the response body, and the caller stated `tokenId`, which the
+      // wire spells `jti` on JOSE and `cti` on COSE. Pinned by the scenario row
+      // `a-domain-refusal-names-the-claims-in-the-vocabulary-the-caller-used`.
+      // ⚠ The `?? key` is the Map's `| undefined`, not a reachable branch:
+      // `validate` reports keys from the predicate `createIdentityMatchers` built
+      // out of the same bag, and that builder THROWS on a key it cannot map, so
+      // every reported key is already in `domainByWire`.
+      data: {
+        invalid: invalid?.map((key) => domainByWire.get(key) ?? key),
+        format,
+      },
+      // `debug` stays WIRE-spelled and carries the values: it says what is on the
+      // token, which is what a log reader compares the token itself against.
       debug: { invalid: (err as any).debug?.invalid },
       title: "Claims Invalid",
       details:

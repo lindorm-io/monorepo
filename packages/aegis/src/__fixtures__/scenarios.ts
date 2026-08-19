@@ -5664,8 +5664,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     // carries an `invalid` list; the shortfall is its CONTENTS, not the shape of
     // an error that does not exist yet. So this is read off the real error and
     // states what that same field must hold, rather than guessing at a fix.
-    knownDefect:
-      "`src/internal/utils/apply-verify-policy.ts#const predicate = createIdentityMatchers(` — the caller's matcher bag is compiled by `createIdentityMatchers(algorithm, assert, nameOf)`, where `nameOf` is the WIRE `NameSelector`, and validated against `wireClaims`; the catch (`src/internal/utils/apply-verify-policy.ts#data: { invalid: (err as any).data?.invalid, format },`) then copies the failing key list into `data.invalid` verbatim. So the list is WIRE-spelled — `jti` on JOSE and `cti` on COSE for the same `tokenId` matcher — while `Aegis.assert` (`src/classes/Aegis.ts#static assert(`) and the profile floor's `profile_policy_invalid` both report the same field in DOMAIN names. The failing keys need translating back through the registry before they reach the error.",
     given: [
       {
         step: "token",

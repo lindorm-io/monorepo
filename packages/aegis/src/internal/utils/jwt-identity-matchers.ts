@@ -7,6 +7,7 @@ import { claimByDomain, type NameSelector } from "../claims/claims-registry.js";
 import { createHash } from "./create-hash.js";
 import { HASH_MATCHERS } from "./hash-matchers.js";
 import { liftClaimMatcher } from "./lift-claim-matcher.js";
+import { matcherWireName } from "./matcher-wire-name.js";
 
 /**
  * Identity matcher builder (the AEGIS half). Builds the wire-keyed named-claim
@@ -40,17 +41,17 @@ export const createIdentityMatchers = (
   const predicate: Record<string, ConditionOperator<any>> = {};
 
   for (const [key, value] of Object.entries(matchers)) {
-    // The wire name comes from the registry — the single source of truth for the
-    // domain->wire claim-name map — spelled for the wire `nameOf` selects. The
-    // three hash-derive matchers are the sole exception (they compute a hash, not
-    // a name lookup). An unmapped key has no claim to build a predicate for and
-    // throws (the exhaustive-mapping throwing default the `mapVerify` switch used
-    // to provide).
-    const hashDomain = HASH_MATCHERS[key];
+    // The wire name comes from `matcherWireName`, which reads the registry — the
+    // single source of truth for the domain->wire claim-name map — and is the same
+    // resolution `applyVerifyPolicy` inverts to report a refusal in the caller's
+    // vocabulary. The three hash-derive matchers name a SOURCE value rather than a
+    // claim, so the hash branch below still needs which domain claim they land in.
+    // An unmapped key has no claim to build a predicate for and throws.
+    // ⚠ `Object.hasOwn`, never a truthy index: `key` comes from the caller, and
+    // `HASH_MATCHERS.toString` is inherited from the prototype and truthy.
+    const hashDomain = Object.hasOwn(HASH_MATCHERS, key) ? HASH_MATCHERS[key] : undefined;
     const spec = claimByDomain(key);
-    const hashSpec = hashDomain ? claimByDomain(hashDomain) : undefined;
-    const target = hashDomain ? hashSpec : spec;
-    const mapped = target ? nameOf(target) : undefined;
+    const mapped = matcherWireName(key, nameOf);
 
     if (mapped === undefined) {
       throw new AegisDomainError(`Unsupported key: ${key} for JWT verification`, {
