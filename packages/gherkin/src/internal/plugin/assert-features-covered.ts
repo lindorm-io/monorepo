@@ -1,10 +1,11 @@
 import { createFilter } from "vite";
 import { GherkinError } from "../../errors/GherkinError.js";
 import { toFeatureUri } from "./to-feature-uri.js";
-import { walkFeatureFiles } from "./walk-feature-files.js";
 
 export type AssertFeaturesCoveredOptions = {
   features: Array<string>;
+  /** The buildStart walk's `.feature` files, absolute (walk-feature-files.ts). */
+  files: Array<string>;
   root: string;
 };
 
@@ -14,16 +15,18 @@ export type AssertFeaturesCoveredOptions = {
  * a loud config failure at buildStart. Compared against the settings'
  * cadence-INDEPENDENT `features` list, never a mode's resolved includes: a
  * unit lane deliberately excluding `*.integration.feature` must not trip this.
+ * `files` comes from the ONE buildStart walk shared with
+ * assert-features-collected.ts, so the two guards judge the same file set.
  */
-export const assertFeaturesCovered = async ({
+export const assertFeaturesCovered = ({
   features,
+  files,
   root,
-}: AssertFeaturesCoveredOptions): Promise<void> => {
+}: AssertFeaturesCoveredOptions): void => {
   // resolve: root anchors the relative patterns to the project root, matching
   // absolute paths beneath it (verified against vite 8's createFilter).
   const filter = createFilter(features, [], { resolve: root });
-  const found = await walkFeatureFiles(root);
-  const orphans = found
+  const orphans = files
     .filter((file) => filter(file) === false)
     .map((file) => toFeatureUri(root, file));
 

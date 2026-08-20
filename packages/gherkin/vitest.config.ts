@@ -28,7 +28,17 @@ config.plugins.unshift(
 
 // Copy, never push: test.include IS the base's shared INCLUDES_BY_MODE array
 // (pinned by src/base-config.test.ts, which imports this module).
-config.test.include = [...config.test.include, "src/__fixtures__/features/**/*.feature"];
+// meta-fixture and example features are include-listed AND exclude-pruned:
+// buildStart's collection guard requires every features-matched file to match
+// test.include (assert-features-collected.ts), and the exclusion keeps them
+// out of THIS run — only the child processes spawned by src/e2e execute them.
+config.test.include = [
+  ...config.test.include,
+  "src/__fixtures__/features/**/*.feature",
+  "meta-fixtures/**/*.feature",
+  "example/**/*.feature",
+];
+config.test.exclude = [...config.test.exclude, "meta-fixtures/**", "example/**"];
 
 // The emitted module imports the published runtime subpath; aliasing it to
 // src makes the in-package run execute (and coverage-instrument) source

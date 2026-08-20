@@ -200,10 +200,9 @@ export const createScenarioContainer = (
               details:
                 "A context's dispose() threw or rejected during the scenario's teardown. Disposal continues through the remaining contexts; the failure is reported against the scenario, appended after any earlier failure.",
               data: { className },
-              // EXPLICIT: without it, LindormError lets the INNER error's own
-              // type win over the code-derived urn (destruct.type precedence),
-              // so a consumer dispose() throwing e.g. a conduit LindormError
-              // would hijack this wrapper's urn. Pinned:
+              // EXPLICIT: pins this wrapper's identity independently of
+              // LindormError's type-resolution semantics — a consumer
+              // dispose() may throw any foreign-urn LindormError. Pinned:
               // create-scenario-container.test.ts ("keep the disposal_failed
               // urn when dispose() throws a FOREIGN LindormError").
               type: "urn:lindorm:gherkin:error:disposal_failed",

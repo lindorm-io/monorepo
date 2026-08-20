@@ -72,9 +72,9 @@ const convertArguments = async (
           title: "Step Argument Conversion Failed",
           details:
             "The step matched a definition, but a parameter type's transform threw or rejected while converting the matched text. Fix the value in the feature file, or the transform.",
-          // EXPLICIT: a transform is consumer code — one throwing its own
-          // LindormError would otherwise hijack this urn via the inner
-          // error's type precedence. Pinned: run-scenario.test.ts.
+          // EXPLICIT: a transform is consumer code that may throw any
+          // foreign-urn LindormError — this wrapper's identity must not
+          // depend on the inner error's shape. Pinned: run-scenario.test.ts.
           type: "urn:lindorm:gherkin:error:conversion_failed",
           data: {
             line: step.line,

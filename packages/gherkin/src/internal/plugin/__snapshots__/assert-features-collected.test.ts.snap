@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assertFeaturesCollected > should throw feature_not_collected for the include-overwrite accident 1`] = `
+"Feature file(s) matched by \`features\` but never collected by vitest's \`test.include\` — the run would stay green without them:
+  src/features/a.feature (matches: src/**/*.feature)
+  src/b.feature (matches: src/**/*.feature)
+Resolved test.include:
+  src/**/*.test.ts"
+`;

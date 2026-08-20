@@ -343,7 +343,7 @@ describe("gherkinPlugin", () => {
         await writeFile(join(root, "src", "a.feature"), "Feature: a\n");
 
         const plugin = gherkinPlugin();
-        plugin.configResolved({ root });
+        plugin.configResolved({ root, test: { include: ["src/**/*.feature"] } });
 
         await expect(plugin.buildStart()).resolves.toBeUndefined();
 
@@ -353,6 +353,28 @@ describe("gherkinPlugin", () => {
 
         expect(error.code).toBe("feature_not_included");
         expect(error.data.orphans).toEqual(["orphan.feature"]);
+      } finally {
+        await rm(root, { force: true, recursive: true });
+      }
+    });
+
+    test("should reject with feature_not_collected when test.include cannot collect a covered feature", async () => {
+      const root = await mkdtemp(join(tmpdir(), "gherkin-plugin-collect-"));
+
+      try {
+        await mkdir(join(root, "src"), { recursive: true });
+        await writeFile(join(root, "src", "a.feature"), "Feature: a\n");
+
+        const plugin = gherkinPlugin();
+        // The overwrite accident: an include without the feature globs.
+        plugin.configResolved({ root, test: { include: ["src/**/*.test.ts"] } });
+
+        const error = await captureAsync(() => plugin.buildStart());
+
+        expect(error.code).toBe("feature_not_collected");
+        expect(error.data.uncollected).toEqual([
+          { pattern: "src/**/*.feature", uri: "src/a.feature" },
+        ]);
       } finally {
         await rm(root, { force: true, recursive: true });
       }

@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import type { Plugin } from "vite";
 import type { GherkinSettings } from "../../types/gherkin-settings.js";
 import { buildFeatureModel } from "../model/build-feature-model.js";
+import { assertFeaturesCollected } from "./assert-features-collected.js";
 import { assertFeaturesCovered } from "./assert-features-covered.js";
 import { cleanId } from "./clean-id.js";
 import { emitFeatureModule } from "./emit-feature-module.js";
@@ -10,6 +11,7 @@ import { resolveSettings } from "./resolve-settings.js";
 import type { GherkinTagDeclaration } from "./scan-tag-declarations.js";
 import { scanTagDeclarations } from "./scan-tag-declarations.js";
 import { toFeatureUri } from "./to-feature-uri.js";
+import { walkFeatureFiles } from "./walk-feature-files.js";
 
 export type GherkinTransformResult = {
   code: string;
@@ -42,7 +44,7 @@ export type GherkinConfigPatch = {
 export type GherkinVitePlugin = Plugin & {
   buildStart: () => Promise<void>;
   config: (config: GherkinUserConfig) => Promise<GherkinConfigPatch>;
-  configResolved: (config: { root: string }) => void;
+  configResolved: (config: { root: string; test?: { include?: Array<string> } }) => void;
   transform: (code: string, id: string) => GherkinTransformResult | null;
 };
 
@@ -52,6 +54,10 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugin => 
   // Vite calls configResolved before buildStart/transform; process.cwd() is
   // vite's own default root, kept only so the hooks are callable standalone.
   let root = process.cwd();
+  // vitest's resolved config carries test.include only when the consumer set
+  // one; absent means vitest applies its own default test globs
+  // (assert-features-collected.ts substitutes configDefaults).
+  let include: Array<string> | undefined;
 
   return {
     name: "lindorm-gherkin",
@@ -80,11 +86,26 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugin => 
       },
     }),
 
-    configResolved: (config: { root: string }): void => {
+    configResolved: (config: {
+      root: string;
+      test?: { include?: Array<string> };
+    }): void => {
       root = config.root;
+      include = config.test?.include;
     },
 
-    buildStart: async (): Promise<void> => assertFeaturesCovered({ features, root }),
+    // ONE walk feeds both guards — the same file set and the same
+    // createFilter resolve-root semantics, so "covered" and "collected"
+    // cannot disagree on what a feature file is. buildStart follows
+    // configResolved (root + include) and fires at server init, before test
+    // file globbing — pinned by the overwrite child in
+    // src/e2e/base-config-wiring.test.ts, which dies here although its
+    // include collects no feature at all.
+    buildStart: async (): Promise<void> => {
+      const files = await walkFeatureFiles(root);
+      assertFeaturesCovered({ features, files, root });
+      assertFeaturesCollected({ features, files, include, root });
+    },
 
     transform: (code: string, id: string): GherkinTransformResult | null => {
       const file = cleanId(id);

@@ -73,15 +73,14 @@ export type MetaRunResult = {
 /**
  * Spawns `vitest run --reporter=verbose [args]` as a CHILD PROCESS with the
  * given directory as cwd — its vitest.config.ts becomes the config (or the
- * one `--config` in args names) and the directory the root. Only the child's
- * PRINTED output is returned: an empty suite is a collection error invisible
- * in exit codes and counts, so the callers assert reporter text, never
- * process status.
+ * one `--config` in args names) and the directory the root — and returns the
+ * child's raw printed output with NO summary requirement: for children
+ * asserted to die at STARTUP, before any reporter summary exists.
  */
-export const runVitestChild = (
+export const runVitestChildOutput = (
   directory: string,
   args: Array<string> = [],
-): MetaRunResult => {
+): string => {
   const env = Object.fromEntries(
     // The parent IS a vitest worker; its VITEST* vars must not leak into a
     // child that is a fresh vitest CLI of its own.
@@ -103,7 +102,20 @@ export const runVitestChild = (
     throw result.error;
   }
 
-  const output = stripAnsi(`${result.stdout}\n${result.stderr}`);
+  return stripAnsi(`${result.stdout}\n${result.stderr}`);
+};
+
+/**
+ * runVitestChildOutput plus the parsed summary. Only the child's PRINTED
+ * output is returned: an empty suite is a collection error invisible in exit
+ * codes and counts, so the callers assert reporter text, never process
+ * status.
+ */
+export const runVitestChild = (
+  directory: string,
+  args: Array<string> = [],
+): MetaRunResult => {
+  const output = runVitestChildOutput(directory, args);
 
   return { output, summary: readSummary(output) };
 };
@@ -112,3 +124,6 @@ export const runMetaFixture = (
   fixture: string,
   args: Array<string> = [],
 ): MetaRunResult => runVitestChild(join(META_FIXTURES_DIRECTORY, fixture), args);
+
+export const runMetaFixtureOutput = (fixture: string, args: Array<string> = []): string =>
+  runVitestChildOutput(join(META_FIXTURES_DIRECTORY, fixture), args);

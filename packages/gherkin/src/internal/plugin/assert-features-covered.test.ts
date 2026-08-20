@@ -1,78 +1,63 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { captureAsync } from "../../__fixtures__/test-helpers.js";
+import { describe, expect, test } from "vitest";
+import { capture } from "../../__fixtures__/test-helpers.js";
 import { assertFeaturesCovered } from "./assert-features-covered.js";
 
+const ROOT = "/repo/pkg";
+
 describe("assertFeaturesCovered", () => {
-  let root: string;
-
-  beforeAll(async () => {
-    root = await mkdtemp(join(tmpdir(), "gherkin-covered-"));
-
-    await mkdir(join(root, "src", "features"), { recursive: true });
-    await mkdir(join(root, "stray"), { recursive: true });
-    await writeFile(join(root, "src", "features", "a.feature"), "Feature: a\n");
-    await writeFile(
-      join(root, "src", "features", "b.integration.feature"),
-      "Feature: b\n",
-    );
+  test("should stay silent when every feature file matches a pattern", () => {
+    expect(() =>
+      assertFeaturesCovered({
+        features: ["src/**/*.feature"],
+        files: [
+          `${ROOT}/src/features/a.feature`,
+          `${ROOT}/src/features/b.integration.feature`,
+        ],
+        root: ROOT,
+      }),
+    ).not.toThrow();
   });
 
-  afterAll(async () => {
-    await rm(root, { force: true, recursive: true });
-  });
-
-  test("should stay silent when every feature file matches a pattern", async () => {
-    await expect(
-      assertFeaturesCovered({ features: ["src/**/*.feature"], root }),
-    ).resolves.toBeUndefined();
-  });
-
-  test("should stay silent when a file matches only the second of several patterns", async () => {
-    await expect(
+  test("should stay silent when a file matches only the second of several patterns", () => {
+    expect(() =>
       assertFeaturesCovered({
         features: ["never/*.feature", "src/features/*.feature"],
-        root,
+        files: [`${ROOT}/src/features/a.feature`],
+        root: ROOT,
       }),
-    ).resolves.toBeUndefined();
+    ).not.toThrow();
   });
 
-  test("should throw feature_not_included for an uncovered feature file", async () => {
-    await writeFile(join(root, "stray", "orphan.feature"), "Feature: orphan\n");
+  test("should throw feature_not_included for an uncovered feature file", () => {
+    const error = capture(() =>
+      assertFeaturesCovered({
+        features: ["src/**/*.feature"],
+        files: [`${ROOT}/src/features/a.feature`, `${ROOT}/stray/orphan.feature`],
+        root: ROOT,
+      }),
+    );
 
-    try {
-      const error = await captureAsync(() =>
-        assertFeaturesCovered({ features: ["src/**/*.feature"], root }),
-      );
-
-      // The message lists only ROOT-RELATIVE paths, so it is deterministic
-      // across machines and snapshot-safe; `data.root` is not.
-      expect(error.message).toMatchSnapshot();
-      expect(error.code).toBe("feature_not_included");
-      expect(error.title).toBe("Feature File Not Included");
-      expect(error.data.orphans).toEqual(["stray/orphan.feature"]);
-      expect(error.data.features).toEqual(["src/**/*.feature"]);
-      expect(error.data.root).toBe(root);
-    } finally {
-      await rm(join(root, "stray", "orphan.feature"), { force: true });
-    }
+    // The message lists only ROOT-RELATIVE paths, so it is deterministic
+    // across machines and snapshot-safe; `data.root` is not.
+    expect(error.message).toMatchSnapshot();
+    expect(error.code).toBe("feature_not_included");
+    expect(error.title).toBe("Feature File Not Included");
+    expect(error.data.orphans).toEqual(["stray/orphan.feature"]);
+    expect(error.data.features).toEqual(["src/**/*.feature"]);
+    expect(error.data.root).toBe(ROOT);
   });
 
-  test("should name every uncovered file, sorted", async () => {
-    await writeFile(join(root, "second.feature"), "Feature: second\n");
-    await writeFile(join(root, "stray", "orphan.feature"), "Feature: orphan\n");
+  test("should name every uncovered file, sorted", () => {
+    // `files` arrives sorted from the buildStart walk (walk-feature-files.ts);
+    // the orphans list preserves that order.
+    const error = capture(() =>
+      assertFeaturesCovered({
+        features: ["src/**/*.feature"],
+        files: [`${ROOT}/second.feature`, `${ROOT}/stray/orphan.feature`],
+        root: ROOT,
+      }),
+    );
 
-    try {
-      const error = await captureAsync(() =>
-        assertFeaturesCovered({ features: ["src/**/*.feature"], root }),
-      );
-
-      expect(error.data.orphans).toEqual(["second.feature", "stray/orphan.feature"]);
-    } finally {
-      await rm(join(root, "second.feature"), { force: true });
-      await rm(join(root, "stray", "orphan.feature"), { force: true });
-    }
+    expect(error.data.orphans).toEqual(["second.feature", "stray/orphan.feature"]);
   });
 });

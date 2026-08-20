@@ -222,10 +222,12 @@ describe("createVitestConfig (vitest.config.base.mjs)", () => {
       })) as AnyConfig;
 
       const plugin = config.plugins[0] as unknown as GherkinVitePlugin;
-      plugin.configResolved({ root });
+      plugin.configResolved({ root, test: { include: config.test.include } });
 
       // Wired with the mode's resolved includes instead, src/plain.feature
       // would be an orphan and this would reject (assert-features-covered.ts).
+      // The lane-SUFFIXED include the mode derives must also read as
+      // collecting the plain feature (assert-features-collected.ts).
       await expect(plugin.buildStart()).resolves.toBeUndefined();
     });
 
@@ -237,11 +239,31 @@ describe("createVitestConfig (vitest.config.base.mjs)", () => {
       })) as AnyConfig;
 
       const plugin = config.plugins[0] as unknown as GherkinVitePlugin;
-      plugin.configResolved({ root });
+      plugin.configResolved({ root, test: { include: config.test.include } });
 
       await expect(plugin.buildStart()).rejects.toThrow(
         "not covered by the configured `features` patterns",
       );
+    });
+
+    test("should fail buildStart loudly when test.include is OVERWRITTEN after wiring", async () => {
+      const config = (await create({
+        mode: "default",
+        decorators: true,
+        gherkin: {},
+      })) as AnyConfig;
+
+      // The accident this guard exists for: replacing (not spreading) the
+      // wired include drops every feature glob — without the guard the run
+      // stays green with all features silently absent.
+      config.test.include = ["src/**/*.test.ts"];
+
+      const plugin = config.plugins[0] as unknown as GherkinVitePlugin;
+      plugin.configResolved({ root, test: { include: config.test.include } });
+
+      await expect(plugin.buildStart()).rejects.toMatchObject({
+        code: "feature_not_collected",
+      });
     });
   });
 });

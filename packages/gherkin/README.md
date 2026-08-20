@@ -60,7 +60,7 @@ export default defineConfig({
 
 Note that `test.include` REPLACES vitest's default test globs — a package that also has plain `*.test.ts` files must list both patterns.
 
-In the lindorm monorepo, `createVitestConfig({ decorators: true, gherkin: { features, steps } })` from the repo's `vitest.config.base.mjs` performs this wiring (test globs included), and `.feature` files follow the same cadence lanes as tests via the `*.integration.feature` / `*.weekly.feature` suffixes.
+In the lindorm monorepo, `createVitestConfig({ decorators: true, gherkin: { features, steps } })` from the repo's `vitest.config.base.mjs` performs this wiring (test globs included), and `.feature` files follow the same cadence lanes as tests via the `*.integration.feature` / `*.weekly.feature` suffixes. Extend `test.include` by spreading, never overwrite — the plugin fails the run with `feature_not_collected` when a feature file matches no `test.include` pattern in its cadence FAMILY: a lane-suffixed glob (`*.integration.feature` / `*.weekly.feature`) counts for the whole family, so an overwrite that keeps a suffixed glob still passes the guard while the plain lane runs without its features.
 
 ### 2. Write a feature
 
@@ -294,7 +294,7 @@ The remaining 2 steps in this scenario were skipped.
 
 The runner's OWN failures — undefined, ambiguous, pending, conversion, disposal, authoring errors — carry a `urn:lindorm:gherkin:error:<code>` type. A failing step or hook rethrows YOUR error with the anchor prepended, so assertion diffs survive intact. Gherkin syntax errors, empty scenarios and zero-row `Examples:` tables are authoring errors and fail red at the offending line.
 
-The plugin also fails the whole run at startup (`feature_not_included`) if any `.feature` file on disk is not matched by the configured `features` patterns — a feature file nobody runs would otherwise be a silent pass at file granularity.
+The plugin also fails the whole run at startup if any `.feature` file on disk is not matched by the configured `features` patterns (`feature_not_included`), or matches them but no `test.include` pattern in its cadence family (`feature_not_collected`) — a feature file nobody collects would otherwise be a silent pass at file granularity. The collection guard checks the FAMILY, not the mode: a lane-suffixed include glob proves the family collectable, so it cannot catch an overwrite that keeps only a suffixed glob.
 
 ## Current scope
 
