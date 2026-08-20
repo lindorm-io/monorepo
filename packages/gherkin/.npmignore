@@ -1,0 +1,12 @@
+/.claude
+/example
+/meta-fixtures
+/node_modules
+/src
+
+tsconfig.build.json
+tsconfig.build.tsbuildinfo
+tsconfig.json
+
+vitest.config.ts
+vitest.setup.ts
