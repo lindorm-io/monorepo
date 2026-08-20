@@ -25,6 +25,30 @@ Peer dependencies: `vite` >= 8, `vitest` >= 4.1.4 and `zod` >= 4.3.6.
 
 ### 1. Wire the plugin
 
+In the lindorm monorepo, that is the whole config:
+
+```js
+// vitest.config.mjs
+import { createVitestConfig } from "../../vitest.config.base.mjs";
+
+const config = await createVitestConfig({
+  decorators: true,
+  gherkin: { features: ["src/**/*.feature"], steps: ["src/__fixtures__/**/*.steps.ts"] },
+});
+
+// Extend test.include by SPREADING — overwriting drops the feature globs.
+config.test.include = [...config.test.include, "__tests__/**/*.test.ts"];
+
+export default config;
+```
+
+`createVitestConfig` adds the plugin, the decorator transform and the feature globs, and `.feature`
+files follow the same cadence lanes as tests via the `*.integration.feature` / `*.weekly.feature`
+suffixes. `@lindorm/aes` is the worked example: one `AesKit.feature` beside the class, steps in
+`src/__fixtures__`.
+
+Outside the monorepo, the same wiring by hand:
+
 ```ts
 // vitest.config.ts
 import swc from "unplugin-swc";
@@ -60,7 +84,7 @@ export default defineConfig({
 
 Note that `test.include` REPLACES vitest's default test globs — a package that also has plain `*.test.ts` files must list both patterns.
 
-In the lindorm monorepo, `createVitestConfig({ decorators: true, gherkin: { features, steps } })` from the repo's `vitest.config.base.mjs` performs this wiring (test globs included), and `.feature` files follow the same cadence lanes as tests via the `*.integration.feature` / `*.weekly.feature` suffixes. Extend `test.include` by spreading, never overwrite — the plugin fails the run with `feature_not_collected` when a feature file matches no `test.include` pattern in its cadence FAMILY: a lane-suffixed glob (`*.integration.feature` / `*.weekly.feature`) counts for the whole family, so an overwrite that keeps a suffixed glob still passes the guard while the plain lane runs without its features.
+Either way, never overwrite `test.include` once the plugin is wired: the run fails with `feature_not_collected` when a feature file matches no `test.include` pattern in its cadence FAMILY. A lane-suffixed glob (`*.integration.feature` / `*.weekly.feature`) counts for the whole family, so an overwrite that keeps a suffixed glob still passes the guard while the plain lane runs without its features.
 
 ### 2. Write a feature
 
