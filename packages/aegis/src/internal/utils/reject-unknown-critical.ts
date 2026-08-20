@@ -82,8 +82,8 @@ import { validateCrit } from "./validate-crit.js";
  * ⇒ "aegis refuses an unrecognised crit" is a statement about
  * VERIFY and DECRYPT, never about `aegis.parse`.
  *
- * ⚠ `header` MUST be the INTEGRITY-PROTECTED header, JOSE-named, and `unknown`
- * the SAME bucket's unregistered params. On COSE that is the protected bucket
+ * ⚠ `header` MUST be the INTEGRITY-PROTECTED header, JOSE-named, and `custom`
+ * the SAME bucket's params no registry row answers for. On COSE that is the protected bucket
  * alone (the unprotected one carries no crit — the writer refuses to put one
  * there) and the integer labels are already translated back to their JOSE names
  * by the read path, which is what lets one implementation serve both wires. On
@@ -98,14 +98,14 @@ import { validateCrit } from "./validate-crit.js";
  */
 export const rejectUnknownCritical = ({
   header,
-  unknown,
+  custom,
   declared,
   format,
   error,
 }: {
   header: { crit?: unknown } & Dict;
   /** The same bucket's params no registry row answers for, verbatim. */
-  unknown: Dict;
+  custom: Dict;
   /**
    * The custom parameters the CALLER takes responsibility for — its `crit`
    * verify/decrypt option. `undefined` is "nothing declared", which refuses every
@@ -120,7 +120,7 @@ export const rejectUnknownCritical = ({
 
   // The header as the producer wrote it — see `written-header.ts` for why the two
   // bags have to be rejoined before either rule below can ask about presence.
-  const written = writtenHeader(header, unknown);
+  const written = writtenHeader(header, custom);
 
   // A `Set`, never `in` or a plain object — the members compared against it are
   // TOKEN-supplied and a `Set` has no prototype chain, so `crit: ["toString"]` is

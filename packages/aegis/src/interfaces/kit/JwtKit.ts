@@ -3,7 +3,7 @@ import type { Dict } from "@lindorm/types";
 import type {
   JwtClaimsWire,
   JoseSignStructuredTokenOptions,
-  VerifiedStructuredToken,
+  JoseVerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../../types/index.js";
 
@@ -16,5 +16,5 @@ export interface IJwtKit {
     token: string,
     assert?: Condition<JwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions,
-  ): VerifiedStructuredToken<JwtClaimsWire & C, string>;
+  ): JoseVerifiedStructuredToken<JwtClaimsWire & C>;
 }

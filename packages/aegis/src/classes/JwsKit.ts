@@ -24,11 +24,11 @@ import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
   CertificateBindingMode,
-  DecodedUnstructuredToken,
+  JoseDecodedUnstructuredToken,
   JwsKitSettings,
   JoseSignUnstructuredTokenOptions,
   TokenContent,
-  VerifiedUnstructuredToken,
+  JoseVerifiedUnstructuredToken,
   VerifyUnstructuredTokenOptions,
 } from "../types/index.js";
 
@@ -100,7 +100,7 @@ export class JwsKit implements IJwsKit {
   verify<T extends TokenContent = Buffer>(
     token: string,
     options: VerifyUnstructuredTokenOptions = {},
-  ): VerifiedUnstructuredToken<T, string> {
+  ): JoseVerifiedUnstructuredToken<T> {
     this.logger.debug("Verifying token", { token: sanitiseToken(token) });
 
     const decoded = JwsKit.decode<T>(token);
@@ -109,7 +109,7 @@ export class JwsKit implements IJwsKit {
     // cannot be verified as a JWS. A typ-LESS token is accepted here — presence
     // requiredness is a DOMAIN/profile policy.
     assertWireTyp({
-      typ: decoded.protectedHeader.typ,
+      typ: decoded.header.typ,
       accept: ["JWS", "JOSE"],
       suffix: "+jws",
       presence: "optional",
@@ -122,8 +122,8 @@ export class JwsKit implements IJwsKit {
     // `crit` (RFC 7515 §4.1.11) then algorithm-match — the ONE pair, in the ONE
     // order, that every wire runs ahead of its signature or AEAD cycle.
     assertProtectedHeaderGates({
-      protectedHeader: decoded.protectedHeader,
-      unknown: decoded.unknown.protected,
+      protectedHeader: decoded.header,
+      custom: decoded.custom.header,
       declared: options.crit,
       expectedAlgorithm: this.kryptos.algorithm,
       format: "jws",
@@ -150,8 +150,8 @@ export class JwsKit implements IJwsKit {
     // INVARIANT in Aegis.kryptosSig.
     verifyCertBinding({
       header: {
-        certificateThumbprint: decoded.protectedHeader["x5t#S256"],
-        certificateThumbprintSha1: decoded.protectedHeader.x5t,
+        certificateThumbprint: decoded.header["x5t#S256"],
+        certificateThumbprintSha1: decoded.header.x5t,
       },
       kryptos: this.kryptos,
       logger: this.logger,
@@ -163,9 +163,8 @@ export class JwsKit implements IJwsKit {
     this.logger.debug("Token verified");
 
     return {
-      protectedHeader: decoded.protectedHeader,
-      unprotectedHeader: decoded.unprotectedHeader,
-      unknown: decoded.unknown,
+      header: decoded.header,
+      custom: decoded.custom,
       payload: decoded.payload,
       token,
     };
@@ -191,17 +190,13 @@ export class JwsKit implements IJwsKit {
 
   static decode<T extends TokenContent = string>(
     token: string,
-  ): DecodedUnstructuredToken<T, string> {
+  ): JoseDecodedUnstructuredToken<T> {
     const [h, payload, signature] = token.split(".");
     const decoded = decodeJoseHeader(h);
 
     return {
-      protectedHeader: decoded.header,
-      // Compact JOSE serialisation has ONE header and it is protected — there is
-      // no unprotected bucket to report, so neither the typed bag nor the unknown
-      // one has an unprotected half (`KIT_CAPABILITIES.jws.unprotectedBucket`).
-      unprotectedHeader: {},
-      unknown: { protected: decoded.unknown, unprotected: {} },
+      header: decoded.header,
+      custom: { header: decoded.custom },
       payload: reconstructContent<T>(B64.toBuffer(payload, B64U), decoded.header.cty),
       signature,
       token,

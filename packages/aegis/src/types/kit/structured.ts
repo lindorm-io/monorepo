@@ -1,6 +1,6 @@
-import type { Dict, TokenData } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import type { CertificateBindingMode } from "../header/domain-header.js";
-import type { WireHeaderBuckets } from "../header/wire-buckets.js";
+import type { CoseHeaderBuckets, JoseHeaderBuckets } from "../header/wire-buckets.js";
 import type {
   CoseWireTokenEnvelope,
   JoseWireTokenEnvelope,
@@ -83,30 +83,48 @@ export type VerifyStructuredTokenOptions = {
 };
 
 /**
- * The NATIVE WIRE result of verifying a STRUCTURED token (`JwtKit`/`CwtKit`/
- * `CwmKit` verify). Carries the WIRE-keyed `payload` (`sub`/`exp`/`jti`|`cti`,
- * never the domain `subject`/`expiresAt`/`tokenId`), the two WIRE header BUCKETS
- * ({@link WireHeaderBuckets} — identical in TYPE across JOSE and COSE), and the
- * NATIVE token (`string` JOSE / `Buffer` COSE). The domain claim + header
+ * The NATIVE WIRE result of verifying a STRUCTURED token (`JwtKit.verify`).
+ * Carries the WIRE-keyed `payload` (`sub`/`exp`/`jti`, never the domain
+ * `subject`/`expiresAt`/`tokenId`), the JOSE header buckets
+ * ({@link JoseHeaderBuckets}), and the compact token. The domain claim + header
  * translation is Aegis-side (`aegis.verify` → `VerifiedToken`).
+ *
+ * The wire is IN THE NAME rather than in a `TokenData` generic: a JOSE token is a
+ * `string`, and a generic spanning both wires lets a caller write the JOSE result
+ * of a `Buffer` token — the impossible state {@link CoseVerifiedStructuredToken}
+ * exists to keep unwritable.
  */
-export type VerifiedStructuredToken<
-  C extends Dict = Dict,
-  T extends TokenData = Buffer,
-> = WireHeaderBuckets & {
+export type JoseVerifiedStructuredToken<C extends Dict = Dict> = JoseHeaderBuckets & {
   payload: C;
-  token: T;
+  token: string;
 };
 
 /**
- * The uniform `decode` result for a STRUCTURED token — JWT ≡ CWT ≡ CWM: the two
- * WIRE header buckets + cleartext WIRE claims, NO signature/MAC verification.
+ * The NATIVE WIRE result of verifying a STRUCTURED token on COSE (`CwtKit`/
+ * `CwmKit` verify) — the {@link JoseVerifiedStructuredToken} twin, over the two
+ * COSE buckets ({@link CoseHeaderBuckets}) and the `Buffer` token COSE carries.
  */
-export type DecodedStructuredToken<
-  C extends Dict = Dict,
-  T extends TokenData = Buffer,
-> = WireHeaderBuckets & {
+export type CoseVerifiedStructuredToken<C extends Dict = Dict> = CoseHeaderBuckets & {
   payload: C;
-  signature: T;
-  token: T;
+  token: Buffer;
+};
+
+/**
+ * The `decode` result for a STRUCTURED JOSE token: the JOSE header buckets +
+ * cleartext WIRE claims, NO signature verification.
+ */
+export type JoseDecodedStructuredToken<C extends Dict = Dict> = JoseHeaderBuckets & {
+  payload: C;
+  signature: string;
+  token: string;
+};
+
+/**
+ * The `decode` result for a STRUCTURED COSE token — CWT ≡ CWM: the two COSE
+ * header buckets + cleartext WIRE claims, NO signature/MAC verification.
+ */
+export type CoseDecodedStructuredToken<C extends Dict = Dict> = CoseHeaderBuckets & {
+  payload: C;
+  signature: Buffer;
+  token: Buffer;
 };

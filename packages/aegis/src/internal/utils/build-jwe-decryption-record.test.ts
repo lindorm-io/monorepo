@@ -9,7 +9,7 @@ const b64u = (value: string): string =>
 
 const segments = (overrides: Partial<JweCompactSegments> = {}): JweCompactSegments => ({
   header: { alg: "A256KW", enc: "A256GCM" } as JweCompactSegments["header"],
-  unknown: {},
+  custom: {},
   publicEncryptionKey: b64u("wrapped-cek"),
   initialisationVector: b64u("iv-bytes"),
   content: b64u("ciphertext"),

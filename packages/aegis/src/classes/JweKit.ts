@@ -27,8 +27,8 @@ import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import { verifyPartyBinding } from "../internal/utils/verify-party-binding.js";
 import type {
   CertificateBindingMode,
-  DecodedEncryptedToken,
-  DecryptedEncryptedToken,
+  JoseDecodedEncryptedToken,
+  JoseDecryptedEncryptedToken,
   DecryptTokenOptions,
   JweEncryptOptions,
   JweKitSettings,
@@ -157,7 +157,7 @@ export class JweKit implements IJweKit {
   decrypt<T extends TokenContent = Buffer>(
     token: string,
     options: DecryptTokenOptions = {},
-  ): DecryptedEncryptedToken<T, string> {
+  ): JoseDecryptedEncryptedToken<T> {
     // Decrypt is driven by the DECRYPTION RECORD assembled below — the wire's
     // own `enc` — so the kit needs no encryption of its own.
     const kit = new AesKit({ kryptos: this.kryptos });
@@ -199,7 +199,7 @@ export class JweKit implements IJweKit {
     // extension critical was answered by whichever of the three ran first.
     assertProtectedHeaderGates({
       protectedHeader: decoded.header,
-      unknown: decoded.unknown,
+      custom: decoded.custom,
       declared: options.crit,
       expectedAlgorithm: this.kryptos.algorithm,
       format: "jwe",
@@ -281,13 +281,8 @@ export class JweKit implements IJweKit {
     this.logger.debug("Token decrypted");
 
     return {
-      protectedHeader: decoded.header,
-      // Compact JOSE serialisation has ONE header and it is protected — a compact
-      // JWE carries no per-recipient unprotected header, so neither the typed bag
-      // nor the unknown one has an unprotected half
-      // (`KIT_CAPABILITIES.jwe.unprotectedBucket`).
-      unprotectedHeader: {},
-      unknown: { protected: decoded.unknown, unprotected: {} },
+      header: decoded.header,
+      custom: { header: decoded.custom },
       payload,
       token,
     };
@@ -307,19 +302,16 @@ export class JweKit implements IJweKit {
   }
 
   /**
-   * WIRE decode (no decryption): the unified wire header ONLY — the single JOSE
-   * protected header (compact JWE carries no per-recipient unprotected header,
-   * so the merge is that one header). The content stays ciphertext; reading it
-   * needs the key (that is `decrypt`). The uniform primitive shared with
-   * `CweKit` decode.
+   * WIRE decode (no decryption): the ONE JOSE header, registered params and
+   * custom ones apart. The content stays ciphertext; reading it needs the key
+   * (that is `decrypt`). The uniform primitive `CweKit.decode` mirrors on COSE.
    */
-  static decode(token: string): DecodedEncryptedToken<string> {
+  static decode(token: string): JoseDecodedEncryptedToken {
     const segments = splitJweCompact(token);
 
     return {
-      protectedHeader: segments.header,
-      unprotectedHeader: {},
-      unknown: { protected: segments.unknown, unprotected: {} },
+      header: segments.header,
+      custom: { header: segments.custom },
       token,
     };
   }

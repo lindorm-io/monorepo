@@ -288,7 +288,7 @@ export const buildCoseHeaders = ({
   // ⛔ This registers nothing. `byCoseName` still resolves only the parameters
   // aegis can WRITE under a text label, so a foreign token cannot deliver a
   // REGISTERED parameter under one (`internal/registry/is-private-use-label.ts`);
-  // an unknown tstr label reads back into the unknown bag
+  // an unknown tstr label reads back into the `custom` bag
   // (`cose-wire-header.ts`), never into the registered vocabulary.
   for (const [key, value] of Object.entries(customProtected)) {
     protectedEntries.set(key, value);

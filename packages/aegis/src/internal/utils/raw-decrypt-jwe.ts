@@ -2,7 +2,7 @@ import type { KryptosEncAlgorithm } from "@lindorm/kryptos";
 import { JweKit } from "../../classes/JweKit.js";
 import type {
   AegisDecryptKey,
-  DecryptedEncryptedToken,
+  JoseDecryptedEncryptedToken,
   DecryptTokenOptions,
   TokenContent,
 } from "../../types/index.js";
@@ -20,7 +20,7 @@ export const rawDecryptJwe = async <T extends TokenContent = Buffer>({
   jwe: string;
   options?: DecryptTokenOptions & { key?: AegisDecryptKey };
   deps: AegisDeps;
-}): Promise<DecryptedEncryptedToken<T, string>> => {
+}): Promise<JoseDecryptedEncryptedToken<T>> => {
   // `key` is the aegis-only external-key injection (it resolves the kryptos);
   // every other field IS the kit's DecryptTokenOptions and is forwarded
   // structurally, so a new decrypt option threads through with no change here.
@@ -29,8 +29,8 @@ export const rawDecryptJwe = async <T extends TokenContent = Buffer>({
   const decode = JweKit.decode(jwe);
 
   const kryptos = await deps.resolveDecryptKey(
-    decode.protectedHeader.kid,
-    decode.protectedHeader.alg as KryptosEncAlgorithm,
+    decode.header.kid,
+    decode.header.alg as KryptosEncAlgorithm,
     key,
   );
 

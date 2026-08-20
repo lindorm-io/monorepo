@@ -48,10 +48,10 @@ const TYP = coseByJose("typ");
  * from the unprotected map. Everything an attacker cannot touch — the key, the
  * algorithm, the claims — is genuine; only the typ's LOCATION differs.
  *
- * The rule holds because the kits report the two buckets SEPARATELY
- * ({@link WireHeaderBuckets}) and the COSE verify path reads `typ` off the
- * PROTECTED one alone. It used to read the MERGED header, so the unprotected
- * copy answered for the signed one.
+ * The rule holds because the COSE kits report the two buckets SEPARATELY
+ * ({@link CoseHeaderBuckets}) and the COSE verify path reads `typ` off the
+ * PROTECTED one alone — a merged read would let the unprotected copy answer for
+ * the signed one, which is what this file is here to catch.
  */
 describe("COSE typ integrity", () => {
   let logger: ILogger;

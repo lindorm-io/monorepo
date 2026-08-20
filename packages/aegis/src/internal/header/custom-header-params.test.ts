@@ -77,13 +77,14 @@ describe("custom header parameters", () => {
 
       const decoded = JwtKit.decode(token);
 
-      expect(decoded.unknown.protected).toEqual({ [HINT]: "carried" });
+      expect(decoded.custom.header).toEqual({ [HINT]: "carried" });
       // ⚠ NOT in the typed bag. `WireTokenHeader` says an unregistered key cannot
       // exist, so a reader that found one there would be reading a typed lie.
-      expect(decoded.protectedHeader).not.toHaveProperty(HINT);
-      // A JOSE kit has one header and it is protected — there is no unprotected
-      // half of either bag (`KIT_CAPABILITIES.jwt.unprotectedBucket`).
-      expect(decoded.unknown.unprotected).toEqual({});
+      expect(decoded.header).not.toHaveProperty(HINT);
+      // ONE bucket, not an empty second one: a JOSE kit result has no unprotected
+      // half of either bag (`KIT_CAPABILITIES.jwt.unprotectedBucket: false`), which
+      // `types/header/wire-envelope.test.ts` pins at the type level.
+      expect(Object.keys(decoded.custom)).toEqual(["header"]);
     });
 
     test("the same param rides the COSE protected bucket under a TSTR label", () => {
@@ -97,8 +98,8 @@ describe("custom header parameters", () => {
 
       // The key IS the label (RFC 9052 §1.4 `label = int / tstr`): an unregistered
       // parameter has no integer label to be written under, so the two wires spell
-      // it identically and the read side keys the unknown bag by `String(label)`.
-      expect(decoded.unknown.protected).toEqual({ [HINT]: "carried" });
+      // it identically and the read side keys the custom bag by `String(label)`.
+      expect(decoded.custom.protected).toEqual({ [HINT]: "carried" });
       expect(decoded.protectedHeader).not.toHaveProperty(HINT);
     });
 
@@ -111,8 +112,8 @@ describe("custom header parameters", () => {
 
       const decoded = CwsKit.decode(token);
 
-      expect(decoded.unknown.unprotected).toEqual({ [HINT]: "advisory" });
-      expect(decoded.unknown.protected).toEqual({});
+      expect(decoded.custom.unprotected).toEqual({ [HINT]: "advisory" });
+      expect(decoded.custom.protected).toEqual({});
     });
 
     test("the JWE and CWE doors carry one too", () => {
@@ -121,12 +122,12 @@ describe("custom header parameters", () => {
 
       expect(
         JweKit.decode(jwe.encrypt("secret", { custom: { header: { [HINT]: "a" } } }))
-          .unknown.protected,
+          .custom.header,
       ).toEqual({ [HINT]: "a" });
 
       expect(
         CweKit.decode(cwe.encrypt("secret", { custom: { protected: { [HINT]: "a" } } }))
-          .unknown.protected,
+          .custom.protected,
       ).toEqual({ [HINT]: "a" });
     });
 
@@ -140,8 +141,8 @@ describe("custom header parameters", () => {
         }),
       );
 
-      expect(decoded.protectedHeader.oid).toBe("1.2.3.4");
-      expect(decoded.unknown.protected).toEqual({ [HINT]: "carried" });
+      expect(decoded.header.oid).toBe("1.2.3.4");
+      expect(decoded.custom.header).toEqual({ [HINT]: "carried" });
     });
 
     // ⛔ THE WRITE SIDE HAS THE SAME ASSIGNMENT HAZARD, from a caller's key rather
@@ -156,7 +157,7 @@ describe("custom header parameters", () => {
         custom: { header: { ["__proto__"]: "carried" } },
       });
 
-      expect(Object.keys(JwtKit.decode(token).unknown.protected)).toEqual(["__proto__"]);
+      expect(Object.keys(JwtKit.decode(token).custom.header)).toEqual(["__proto__"]);
       expect(({} as Record<string, unknown>).carried).toBeUndefined();
     });
     /**
@@ -180,7 +181,7 @@ describe("custom header parameters", () => {
 
       const token = kit.sign({ a: 1 }, { header: poisoned('{"cty":"text/plain"}') });
 
-      expect(JwsKit.decode(token).protectedHeader.cty).toBe("application/json");
+      expect(JwsKit.decode(token).header.cty).toBe("application/json");
       expect(({} as Record<string, unknown>).cty).toBeUndefined();
     });
 
@@ -208,7 +209,7 @@ describe("custom header parameters", () => {
       const jwt = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
       const token = jwt.sign(WIRE_CLAIMS, { header: poisoned('{"crit":["injected"]}') });
 
-      expect(JwtKit.decode(token).protectedHeader.crit).toBeUndefined();
+      expect(JwtKit.decode(token).header.crit).toBeUndefined();
       expect(({} as Record<string, unknown>).crit).toBeUndefined();
     });
   });
@@ -376,7 +377,7 @@ describe("custom header parameters", () => {
         custom: { header: { [HINT]: "carried" } },
       });
 
-      expect(JwtKit.decode(token).protectedHeader.crit).toEqual([HINT]);
+      expect(JwtKit.decode(token).header.crit).toEqual([HINT]);
       // ⛔ A token aegis mints is a token aegis verifies — for a recipient that
       // takes the parameter on. RFC 7515 §4.1.11 makes understanding the
       // extension the RECIPIENT's duty, and aegis is never the final recipient,
@@ -623,7 +624,7 @@ describe("custom header parameters", () => {
 
       // It IS on the wire — otherwise this row would pass by the parameter never
       // having been written, which proves nothing about the boundary.
-      expect(JwtKit.decode(token).unknown.protected).toEqual({ [HINT]: "carried" });
+      expect(JwtKit.decode(token).custom.header).toEqual({ [HINT]: "carried" });
 
       const verified = await aegis.verify(token);
 

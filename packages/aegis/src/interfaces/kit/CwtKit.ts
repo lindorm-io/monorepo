@@ -3,7 +3,7 @@ import type { Dict } from "@lindorm/types";
 import type {
   CwtClaimsWire,
   CoseSignStructuredTokenOptions,
-  VerifiedStructuredToken,
+  CoseVerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../../types/index.js";
 
@@ -22,5 +22,5 @@ export interface ICwtKit {
     token: Buffer,
     assert?: Condition<CwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions,
-  ): VerifiedStructuredToken<CwtClaimsWire & C>;
+  ): CoseVerifiedStructuredToken<CwtClaimsWire & C>;
 }

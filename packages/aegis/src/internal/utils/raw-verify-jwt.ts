@@ -6,7 +6,7 @@ import { JwtKit } from "../../classes/JwtKit.js";
 import type {
   AegisVerifyKey,
   JwtClaimsWire,
-  VerifiedStructuredToken,
+  JoseVerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
@@ -30,7 +30,7 @@ export const rawVerifyJwt = async <C extends Dict = Dict>({
   assert?: Condition<JwtClaimsWire & C>;
   options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
-}): Promise<VerifiedStructuredToken<JwtClaimsWire & C, string>> => {
+}): Promise<JoseVerifiedStructuredToken<JwtClaimsWire & C>> => {
   // `key` is the aegis-only external-key injection (resolves the kryptos); every
   // other field IS the kit's VerifyStructuredTokenOptions and is forwarded
   // structurally, so a new verify option threads through with no change here.
@@ -43,8 +43,8 @@ export const rawVerifyJwt = async <C extends Dict = Dict>({
   // unique only per issuer, so without this any registered issuer's colliding
   // key could answer for a forged `iss`. Narrowing only, no fallback.
   const kryptos = await deps.resolveVerifyKey({
-    id: decode.protectedHeader.kid,
-    algorithm: decode.protectedHeader.alg as KryptosSigAlgorithm,
+    id: decode.header.kid,
+    algorithm: decode.header.alg as KryptosSigAlgorithm,
     issuer: isString(decode.payload.iss) ? decode.payload.iss : undefined,
     verify: key,
   });

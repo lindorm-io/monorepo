@@ -11,9 +11,9 @@ import type {
   CertificateBindingMode,
   CwtKitSettings,
   CwtClaimsWire,
-  DecodedStructuredToken,
+  CoseDecodedStructuredToken,
   CoseSignStructuredTokenOptions,
-  VerifiedStructuredToken,
+  CoseVerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../types/index.js";
 
@@ -65,7 +65,7 @@ export class CwtKit implements ICwtKit {
     token: Buffer,
     assert?: Condition<CwtClaimsWire & C>,
     options: VerifyStructuredTokenOptions = {},
-  ): VerifiedStructuredToken<CwtClaimsWire & C, Buffer> {
+  ): CoseVerifiedStructuredToken<CwtClaimsWire & C> {
     return verifyCwt<C>(this.kryptos, this.logger, {
       format: "cwt",
       token,
@@ -84,7 +84,7 @@ export class CwtKit implements ICwtKit {
    */
   static decode<C extends Dict = Dict>(
     token: Buffer,
-  ): DecodedStructuredToken<CwtClaimsWire & C> {
+  ): CoseDecodedStructuredToken<CwtClaimsWire & C> {
     return decodeCwtWire<C>(token);
   }
 }

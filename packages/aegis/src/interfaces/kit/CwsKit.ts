@@ -1,7 +1,7 @@
 import type {
   CoseSignUnstructuredTokenOptions,
   TokenContent,
-  VerifiedUnstructuredToken,
+  CoseVerifiedUnstructuredToken,
   VerifyUnstructuredTokenOptions,
 } from "../../types/index.js";
 
@@ -19,5 +19,5 @@ export interface ICwsKit {
   verify<T extends TokenContent = Buffer>(
     token: Buffer,
     options?: VerifyUnstructuredTokenOptions,
-  ): VerifiedUnstructuredToken<T, Buffer>;
+  ): CoseVerifiedUnstructuredToken<T>;
 }

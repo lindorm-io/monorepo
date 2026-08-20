@@ -79,9 +79,8 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.jwe.decrypt(res.token)).resolves.toEqual({
-      unprotectedHeader: {},
-      unknown: { protected: {}, unprotected: {} },
-      protectedHeader: {
+      custom: { header: {} },
+      header: {
         alg: "ECDH-ES",
         cty: "text/plain",
         enc: "A256GCM",
@@ -112,9 +111,8 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.jws.verify(res.token)).resolves.toEqual({
-      unprotectedHeader: {},
-      unknown: { protected: {}, unprotected: {} },
-      protectedHeader: {
+      custom: { header: {} },
+      header: {
         alg: "ES512",
         cty: "text/plain",
         jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -152,9 +150,8 @@ describe("Aegis", () => {
       // The raw namespace returns the NATIVE WIRE shape: both `.header` (wire-named
       // `alg`/`kid`/`typ`) and `.payload` (wire-keyed `sub`/`exp`) — NOT the domain
       // header/buckets. The domain-named header + claims are `aegis.verify`.
-      unprotectedHeader: {},
-      unknown: { protected: {}, unprotected: {} },
-      protectedHeader: {
+      custom: { header: {} },
+      header: {
         alg: "ES512",
         jku: "https://test.lindorm.io/.well-known/jwks.json",
         kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
@@ -456,13 +453,13 @@ describe("Aegis", () => {
       });
 
       const standing = await deployment.jwt.sign({ sub: "s" });
-      expect(JwtKit.decode(standing.token).protectedHeader.alg).toBe("EdDSA");
+      expect(JwtKit.decode(standing.token).header.alg).toBe("EdDSA");
 
       const perCall = await deployment.jwt.sign(
         { sub: "s" },
         { key: { condition: { algorithm: "HS256" } } },
       );
-      expect(JwtKit.decode(perCall.token).protectedHeader.alg).toBe("HS256");
+      expect(JwtKit.decode(perCall.token).header.alg).toBe("HS256");
     });
 
     test("a per-call condition pins a key by id", async () => {
@@ -473,7 +470,7 @@ describe("Aegis", () => {
         { key: { condition: { id: TEST_OKP_KEY_SIG.id } } },
       );
 
-      expect(JwtKit.decode(token).protectedHeader.kid).toBe(TEST_OKP_KEY_SIG.id);
+      expect(JwtKit.decode(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
     });
 
     // FAPI is deployment POLICY rather than a key property: aegis publishes the
@@ -488,7 +485,7 @@ describe("Aegis", () => {
         { key: { condition: { algorithm: { $in: FAPI_SIG_ALGS } } } },
       );
 
-      expect(JwtKit.decode(token).protectedHeader.alg).toBe("EdDSA");
+      expect(JwtKit.decode(token).header.alg).toBe("EdDSA");
     });
 
     // A selector that matches nothing must fail LOUDLY. Falling back to the
@@ -522,7 +519,7 @@ describe("Aegis", () => {
         { key: { condition: { algorithm: undefined } } },
       );
 
-      expect(JwtKit.decode(token).protectedHeader.kid).toBe(TEST_OKP_KEY_SIG.id);
+      expect(JwtKit.decode(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
     });
 
     // The merge is SHALLOW: a field the caller does not mention keeps the
@@ -542,8 +539,8 @@ describe("Aegis", () => {
         { key: { condition: { algorithm: "EdDSA" } } },
       );
 
-      expect(JwtKit.decode(token).protectedHeader.alg).toBe("EdDSA");
-      expect(JwtKit.decode(token).protectedHeader.kid).toBe(TEST_OKP_KEY_SIG.id);
+      expect(JwtKit.decode(token).header.alg).toBe("EdDSA");
+      expect(JwtKit.decode(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
     });
 
     /**
@@ -604,8 +601,8 @@ describe("Aegis", () => {
           },
         );
 
-        expect(JwtKit.decode(token).protectedHeader.alg).toBe("HS256");
-        expect(JwtKit.decode(token).protectedHeader.kid).toBe(CLIENT_SECRET.id);
+        expect(JwtKit.decode(token).header.alg).toBe("HS256");
+        expect(JwtKit.decode(token).header.kid).toBe(CLIENT_SECRET.id);
       });
 
       test("is refused for an access_token, whose profile demands an asymmetric signature", async () => {

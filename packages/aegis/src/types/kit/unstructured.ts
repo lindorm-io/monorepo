@@ -1,6 +1,5 @@
-import type { TokenData } from "@lindorm/types";
 import type { CertificateBindingMode } from "../header/domain-header.js";
-import type { WireHeaderBuckets } from "../header/wire-buckets.js";
+import type { CoseHeaderBuckets, JoseHeaderBuckets } from "../header/wire-buckets.js";
 import type {
   CoseWireTokenEnvelope,
   JoseWireTokenEnvelope,
@@ -43,31 +42,50 @@ export type VerifyUnstructuredTokenOptions = {
 };
 
 /**
- * The NATIVE WIRE result of verifying an UNSTRUCTURED (opaque) token — JWS ≡ CWS.
+ * The NATIVE WIRE result of verifying an UNSTRUCTURED (opaque) JWS.
  * `payload` is the negotiated content reconstructed from the PROTECTED cty header
  * (a `Dict` for `application/json`, a `string` for `text/plain`, else a `Buffer` —
- * the fallback when cty is absent/unknown); the two WIRE header buckets are
- * {@link WireHeaderBuckets}; the token is the NATIVE form (`string` JOSE /
- * `Buffer` COSE). A claim-bearing token is a CWT/JWT, never a CWS/JWS.
+ * the fallback when cty is absent/unknown); the header buckets are
+ * {@link JoseHeaderBuckets}. A claim-bearing token is a JWT, never a JWS.
+ *
+ * The wire is IN THE NAME, not in a `TokenData` generic — see
+ * {@link JoseVerifiedStructuredToken} for why.
  */
-export type VerifiedUnstructuredToken<
-  P extends TokenContent = Buffer,
-  T extends TokenData = Buffer,
-> = WireHeaderBuckets & {
-  payload: P;
-  token: T;
-};
+export type JoseVerifiedUnstructuredToken<P extends TokenContent = Buffer> =
+  JoseHeaderBuckets & {
+    payload: P;
+    token: string;
+  };
 
 /**
- * The uniform `decode` result for an UNSTRUCTURED token — JWS ≡ CWS: the two WIRE
- * header buckets + the cty-reconstructed payload + the native token, NO
- * signature/MAC verification.
+ * The NATIVE WIRE result of verifying an UNSTRUCTURED (opaque) CWS — the
+ * {@link JoseVerifiedUnstructuredToken} twin, over the two COSE buckets
+ * ({@link CoseHeaderBuckets}) and the `Buffer` token COSE carries.
  */
-export type DecodedUnstructuredToken<
-  P extends TokenContent = Buffer,
-  T extends TokenData = Buffer,
-> = WireHeaderBuckets & {
-  payload: P;
-  signature: T;
-  token: T;
-};
+export type CoseVerifiedUnstructuredToken<P extends TokenContent = Buffer> =
+  CoseHeaderBuckets & {
+    payload: P;
+    token: Buffer;
+  };
+
+/**
+ * The `decode` result for an UNSTRUCTURED JWS: the JOSE header buckets + the
+ * cty-reconstructed payload + the compact token, NO signature verification.
+ */
+export type JoseDecodedUnstructuredToken<P extends TokenContent = Buffer> =
+  JoseHeaderBuckets & {
+    payload: P;
+    signature: string;
+    token: string;
+  };
+
+/**
+ * The `decode` result for an UNSTRUCTURED CWS: the two COSE header buckets + the
+ * cty-reconstructed payload + the native token, NO signature/MAC verification.
+ */
+export type CoseDecodedUnstructuredToken<P extends TokenContent = Buffer> =
+  CoseHeaderBuckets & {
+    payload: P;
+    signature: Buffer;
+    token: Buffer;
+  };

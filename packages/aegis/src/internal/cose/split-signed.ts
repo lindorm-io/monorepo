@@ -44,11 +44,11 @@ export type SignedSegments = {
   unprotectedHeader: WireTokenHeader;
   /**
    * Each bucket's params no registry row answers for, VERBATIM and keyed by
-   * `String(label)` — see {@link WireHeaderBuckets.unknown}. They stay out of the
+   * `String(label)` — see {@link CoseHeaderBuckets.custom}. They stay out of the
    * two translated buckets above, whose type says an unregistered key cannot
    * exist.
    */
-  unknown: { protected: Dict; unprotected: Dict };
+  custom: { protected: Dict; unprotected: Dict };
 };
 
 /**
@@ -111,6 +111,6 @@ export const splitSigned = (
     protectedMap,
     protectedHeader: protectedWire.header,
     unprotectedHeader: unprotectedWire.header,
-    unknown: { protected: protectedWire.unknown, unprotected: unprotectedWire.unknown },
+    custom: { protected: protectedWire.custom, unprotected: unprotectedWire.custom },
   };
 };

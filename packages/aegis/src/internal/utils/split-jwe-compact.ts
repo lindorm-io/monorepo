@@ -14,8 +14,8 @@ import { decodeJoseHeader } from "./jose-header.js";
  */
 export type JweCompactSegments = {
   header: WireTokenHeader;
-  /** The protected header's params no registry row answers for, verbatim. */
-  unknown: Dict;
+  /** The header's params no registry row answers for, verbatim. */
+  custom: Dict;
   publicEncryptionKey: string | undefined;
   initialisationVector: string;
   content: string;
@@ -36,7 +36,7 @@ export const splitJweCompact = (jwe: string): JweCompactSegments => {
 
     return {
       header: decoded.header,
-      unknown: decoded.unknown,
+      custom: decoded.custom,
       publicEncryptionKey: publicEncryptionKey?.length ? publicEncryptionKey : undefined,
       initialisationVector,
       content,

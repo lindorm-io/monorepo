@@ -18,7 +18,7 @@ export type VerifiedCoseStructure = {
   /** The UNPROTECTED bucket, JOSE-named. Covered by nothing. */
   unprotectedHeader: WireTokenHeader;
   /** Each bucket's params no registry row answers for — see `split-signed.ts`. */
-  unknown: SignedSegments["unknown"];
+  custom: SignedSegments["custom"];
   /**
    * The PROTECTED bucket as its RAW COSE label map — see `split-signed.ts`. The
    * translated header above is lossy by design, and this is what the certificate
@@ -84,7 +84,7 @@ export const verifyCoseStructure = ({
     signature,
     protectedHeader,
     unprotectedHeader,
-    unknown,
+    custom,
     protectedMap,
   } = splitSigned(token, {
     arity: { exactly: 4 },
@@ -119,7 +119,7 @@ export const verifyCoseStructure = ({
   // once, on `assertProtectedHeaderGates`; do not restate them here as spec.
   assertProtectedHeaderGates({
     protectedHeader,
-    unknown: unknown.protected,
+    custom: custom.protected,
     declared,
     expectedAlgorithm: kryptos.algorithm,
     format,
@@ -170,5 +170,5 @@ export const verifyCoseStructure = ({
         });
   }
 
-  return { protectedHeader, unprotectedHeader, unknown, protectedMap, content };
+  return { protectedHeader, unprotectedHeader, custom, protectedMap, content };
 };

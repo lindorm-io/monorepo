@@ -27,10 +27,10 @@ import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
   CertificateBindingMode,
   CwsKitSettings,
-  DecodedUnstructuredToken,
+  CoseDecodedUnstructuredToken,
   CoseSignUnstructuredTokenOptions,
   TokenContent,
-  VerifiedUnstructuredToken,
+  CoseVerifiedUnstructuredToken,
   VerifyUnstructuredTokenOptions,
   WireTokenHeader,
 } from "../types/index.js";
@@ -77,12 +77,12 @@ export class CwsKit implements ICwsKit {
    */
   static decode<T extends TokenContent = Buffer>(
     token: Buffer,
-  ): DecodedUnstructuredToken<T, Buffer> {
+  ): CoseDecodedUnstructuredToken<T> {
     // The outer CWT tag (61) and the structure's own tag are stripped by
     // `splitSigned` — symmetric with `verify`, which strips them too (aegis wraps
     // every signed COSE token in the CWT tag). A bare, un-enveloped token passes
     // through unchanged.
-    const { protectedHeader, unprotectedHeader, unknown, payload, signature } =
+    const { protectedHeader, unprotectedHeader, custom, payload, signature } =
       splitSigned(token, {
         arity: { exactly: 4 },
         tags: [COSE_TAG.sign1, COSE_TAG.mac0],
@@ -120,7 +120,7 @@ export class CwsKit implements ICwsKit {
     return {
       protectedHeader,
       unprotectedHeader,
-      unknown,
+      custom,
       // Reconstruct by the PROTECTED cty alone: a content type the signature does
       // not cover cannot be allowed to decide how the payload is parsed.
       payload: reconstructContent<T>(content, protectedHeader.cty),
@@ -206,7 +206,7 @@ export class CwsKit implements ICwsKit {
   verify<T extends TokenContent = Buffer>(
     token: Buffer,
     options: VerifyUnstructuredTokenOptions = {},
-  ): VerifiedUnstructuredToken<T, Buffer> {
+  ): CoseVerifiedUnstructuredToken<T> {
     // The kit takes the ENCODED bytes and decodes internally (parallel to the
     // JOSE kits + to `sign` returning bytes).
     this.logger.debug("Verifying COSE structure", { options });
@@ -216,7 +216,7 @@ export class CwsKit implements ICwsKit {
     // COSE read — byte-identical to the claims path's before it was extracted,
     // down to the `if (!valid) throw` block. The kit's own work is what follows:
     // reconstructing the OPAQUE content by its cty.
-    const { protectedHeader, unprotectedHeader, unknown, protectedMap, content } =
+    const { protectedHeader, unprotectedHeader, custom, protectedMap, content } =
       verifyCoseStructure({
         kryptos: this.kryptos,
         token,
@@ -250,7 +250,7 @@ export class CwsKit implements ICwsKit {
     return {
       protectedHeader,
       unprotectedHeader,
-      unknown,
+      custom,
       payload: reconstructContent<T>(content, protectedHeader.cty),
       token,
     };

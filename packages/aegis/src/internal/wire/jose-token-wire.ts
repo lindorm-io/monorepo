@@ -153,7 +153,7 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
     // NOT signature checks — a keyless parse still has to refuse a token whose
     // own envelope is malformed, because everything downstream reads it as a JWT.
     assertWireTyp({
-      typ: decoded.protectedHeader.typ,
+      typ: decoded.header.typ,
       accept: ["JWT"],
       suffix: "+jwt",
       presence: "optional",
@@ -167,14 +167,14 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
     // The header AS WRITTEN, not the typed bag alone — see `written-header.ts`.
     // `validateCrit` asks whether the header CARRIES what its `crit` names, and a
     // custom parameter lives in the other bag.
-    const written = writtenHeader(decoded.protectedHeader, decoded.unknown.protected);
+    const written = writtenHeader(decoded.header, decoded.custom.header);
 
     const critError = validateCrit(written);
     if (critError) {
       throw new JwtError(`Invalid crit header: ${critError}`, {
         code: "jwt_invalid_crit",
         // ⚠ `written`, not the typed bag: the verdict was decided on the header AS
-        // WRITTEN, so reporting `protectedHeader` can hand a consumer
+        // WRITTEN, so reporting `header` can hand a consumer
         // `{ crit: undefined }` while the message names a member. The COSE twin
         // and `reject-unknown-critical.ts` report the same value.
         data: { crit: written.crit },
@@ -188,7 +188,11 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
       format: "jwt",
       wire: decoded.payload,
       matcher: withJoseDates(decoded.payload),
-      protectedHeader: decoded.protectedHeader,
+      protectedHeader: decoded.header,
+      // The seam carries the COSE bucket pair, so the JOSE arms state the `{}`
+      // that compact serialisation always yields — `KIT_CAPABILITIES.jwt`/`.jws`/
+      // `.jwe` all declare `unprotectedBucket: false`, and a JOSE kit result has no
+      // such field to forward (`types/header/wire-buckets.ts`).
       unprotectedHeader: {},
     };
   },
@@ -201,8 +205,8 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
     // the candidate keys — a lie produces a miss, never a wider search. The `iss`
     // claim itself is still checked, and only ever after the signature.
     const kryptos = await deps.resolveVerifyKey({
-      id: decoded.protectedHeader.kid,
-      algorithm: decoded.protectedHeader.alg as KryptosSigAlgorithm,
+      id: decoded.header.kid,
+      algorithm: decoded.header.alg as KryptosSigAlgorithm,
       issuer: issuer ?? (isString(decoded.payload.iss) ? decoded.payload.iss : undefined),
       verify: options.key,
     });
@@ -229,7 +233,7 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
       format: "jwt",
       wire: decoded.payload,
       matcher: withJoseDates(decoded.payload),
-      protectedHeader: decoded.protectedHeader,
+      protectedHeader: decoded.header,
       unprotectedHeader: {},
       algorithm: kit.algorithm,
     };
@@ -249,8 +253,8 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
     return {
       format: "jws",
       payload: verified.payload,
-      protectedHeader: verified.protectedHeader,
-      unprotectedHeader: verified.unprotectedHeader,
+      protectedHeader: verified.header,
+      unprotectedHeader: {},
     };
   },
 
@@ -327,7 +331,7 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
     // value "is claims": a JWE's plaintext is the value its writer sealed.
     return {
       header: domainTokenHeader(
-        { protectedHeader: decrypted.protectedHeader, unprotectedHeader: {} },
+        { protectedHeader: decrypted.header, unprotectedHeader: {} },
         "jwe",
       ),
       payload: decrypted.payload,

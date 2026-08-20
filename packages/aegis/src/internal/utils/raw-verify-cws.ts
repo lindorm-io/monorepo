@@ -4,7 +4,7 @@ import { decodeCwt } from "../cose/decode-cwt.js";
 import type {
   AegisVerifyKey,
   TokenContent,
-  VerifiedUnstructuredToken,
+  CoseVerifiedUnstructuredToken,
   VerifyUnstructuredTokenOptions,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
@@ -25,7 +25,7 @@ export const rawVerifyCws = async <T extends TokenContent = Buffer>({
   token: string;
   options?: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
-}): Promise<VerifiedUnstructuredToken<T, Buffer>> => {
+}): Promise<CoseVerifiedUnstructuredToken<T>> => {
   // `key` is the aegis-only external-key injection (it resolves the kryptos);
   // every other field IS the kit's VerifyUnstructuredTokenOptions and is
   // forwarded structurally, so a new verify option threads through with no change

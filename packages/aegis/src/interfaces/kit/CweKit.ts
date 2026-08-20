@@ -1,6 +1,6 @@
 import type {
   CweEncryptOptions,
-  DecryptedEncryptedToken,
+  CoseDecryptedEncryptedToken,
   DecryptTokenOptions,
   TokenContent,
 } from "../../types/index.js";
@@ -19,5 +19,5 @@ export interface ICweKit {
   decrypt<T extends TokenContent = Buffer>(
     token: Buffer,
     options?: DecryptTokenOptions,
-  ): DecryptedEncryptedToken<T, Buffer>;
+  ): CoseDecryptedEncryptedToken<T>;
 }

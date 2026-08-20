@@ -6,7 +6,7 @@ import type {
   JwtClaimsWire,
   ProfileContentFor,
   SignContent,
-  VerifiedStructuredToken,
+  JoseVerifiedStructuredToken,
 } from "../../types/index.js";
 import type { IAegis } from "./Aegis.js";
 
@@ -119,7 +119,7 @@ const verifySecurityEvent = () =>
   aegis.verify("security_event", "token", undefined, { audience: RESOURCE });
 
 const verifyWithoutProfile = () =>
-  aegis.verify<VerifiedStructuredToken<JwtClaimsWire, string>>("token", {
+  aegis.verify<JoseVerifiedStructuredToken<JwtClaimsWire>>("token", {
     audience: RESOURCE,
   });
 

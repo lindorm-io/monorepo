@@ -45,8 +45,9 @@ import { getBaseFormat } from "./compute-typ-header.js";
  * as a whole — an unregistered parameter has its own carriage, which never crosses
  * these passes: `custom` on the write (`internal/header/build-custom-header.ts`,
  * merged verbatim by `build-jose-header.ts` / `build-cose-headers.ts`) and
- * `WireHeaderBuckets.unknown` on the read. The registry's `HeaderCodec` drives the
- * value shaping.
+ * `custom` on the read, spelled per wire ({@link JoseHeaderBuckets} /
+ * {@link CoseHeaderBuckets}). The registry's `HeaderCodec` drives the value
+ * shaping.
  *
  * ⚠ The COSE pass shapes its values from the registry's own per-wire `cose`
  * codec ({@link CoseHeaderCodec}), exhaustively — so a parameter whose COSE form

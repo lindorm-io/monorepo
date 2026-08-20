@@ -1,7 +1,7 @@
 import { CweKit } from "../../classes/CweKit.js";
 import type {
   AegisDecryptKey,
-  DecryptedEncryptedToken,
+  CoseDecryptedEncryptedToken,
   DecryptTokenOptions,
   TokenContent,
 } from "../../types/index.js";
@@ -23,7 +23,7 @@ export const rawDecryptCwe = async <T extends TokenContent = Buffer>({
   token: string;
   options?: DecryptTokenOptions & { key?: AegisDecryptKey };
   deps: AegisDeps;
-}): Promise<DecryptedEncryptedToken<T, Buffer>> => {
+}): Promise<CoseDecryptedEncryptedToken<T>> => {
   // `key` is the aegis-only external-key injection (it resolves the kryptos);
   // every other field IS the kit's DecryptTokenOptions and is forwarded
   // structurally, so a new decrypt option threads through with no change here.

@@ -173,6 +173,6 @@ describe("the media type each built-in profile stamps", () => {
     // table itself is still checked against its own member.
     const { token } = await aegis.mint(name, entry.content as never, entry.options);
 
-    expect(JwtKit.decode(token).protectedHeader.typ).toBe(entry.typ);
+    expect(JwtKit.decode(token).header.typ).toBe(entry.typ);
   });
 });

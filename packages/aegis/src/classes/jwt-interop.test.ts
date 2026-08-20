@@ -107,7 +107,7 @@ describe("JWT interop: aegis <-> jose", () => {
 
       expect(result.payload.iss).toBe(ISSUER);
       expect(result.payload.sub).toBe(SUBJECT);
-      expect(result.protectedHeader.typ).toBe("at+jwt");
+      expect(result.header.typ).toBe("at+jwt");
       expect(result.payload.exp).toEqual(expect.any(Number));
     });
   });
@@ -159,7 +159,7 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       expect(result.payload.iss).toBe(ISSUER);
       expect(result.payload.sub).toBe(SUBJECT);
-      expect(result.protectedHeader.typ).toBe("at+jwt");
+      expect(result.header.typ).toBe("at+jwt");
     });
   });
 
@@ -202,7 +202,7 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       expect(result.payload.iss).toBe(ISSUER);
       expect(result.payload.sub).toBe(SUBJECT);
-      expect(result.protectedHeader.typ).toBe("at+jwt");
+      expect(result.header.typ).toBe("at+jwt");
     });
   });
 });

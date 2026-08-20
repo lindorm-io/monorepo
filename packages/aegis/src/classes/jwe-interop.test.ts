@@ -80,8 +80,8 @@ describe("JWE interop: aegis <-> jose", () => {
       const result = kit.decrypt(token);
 
       expect(result.payload).toBe(PLAINTEXT);
-      expect(result.protectedHeader.alg).toBe("A128KW");
-      expect(result.protectedHeader.enc).toBe("A128GCM");
+      expect(result.header.alg).toBe("A128KW");
+      expect(result.header.enc).toBe("A128GCM");
     });
   });
 
@@ -171,8 +171,8 @@ describe("JWE interop: aegis <-> jose", () => {
       const result = kit.decrypt(token);
 
       expect(result.payload).toBe(PLAINTEXT);
-      expect(result.protectedHeader.alg).toBe("RSA-OAEP-256");
-      expect(result.protectedHeader.enc).toBe("A256GCM");
+      expect(result.header.alg).toBe("RSA-OAEP-256");
+      expect(result.header.enc).toBe("A256GCM");
     });
   });
 
@@ -217,7 +217,7 @@ describe("JWE interop: aegis <-> jose", () => {
       const result = kit.decrypt(token);
 
       expect(result.payload).toBe(PLAINTEXT);
-      expect(result.protectedHeader.enc).toBe("A128CBC-HS256");
+      expect(result.header.enc).toBe("A128CBC-HS256");
     });
   });
 
@@ -261,7 +261,7 @@ describe("JWE interop: aegis <-> jose", () => {
       const result = kit.decrypt(token);
 
       expect(result.payload).toBe(PLAINTEXT);
-      expect(result.protectedHeader.enc).toBe("A128CBC-HS256");
+      expect(result.header.enc).toBe("A128CBC-HS256");
     });
   });
 
@@ -306,8 +306,8 @@ describe("JWE interop: aegis <-> jose", () => {
       const result = kit.decrypt(token);
 
       expect(result.payload).toBe(PLAINTEXT);
-      expect(result.protectedHeader.alg).toBe("dir");
-      expect(result.protectedHeader.enc).toBe("A256GCM");
+      expect(result.header.alg).toBe("dir");
+      expect(result.header.enc).toBe("A256GCM");
     });
   });
 

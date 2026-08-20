@@ -17,7 +17,10 @@ import type {
   AesEncryptOptions,
   CweEncryptOptions,
   CwtClaimsWire,
-  DecryptedEncryptedToken,
+  CoseDecryptedEncryptedToken,
+  CoseVerifiedStructuredToken,
+  CoseVerifiedUnstructuredToken,
+  JoseDecryptedEncryptedToken,
   DecryptedToken,
   DecryptOptions,
   DecryptTokenOptions,
@@ -39,9 +42,9 @@ import type {
   JoseSignUnstructuredTokenOptions,
   TokenContent,
   TokenProfileInput,
-  VerifiedStructuredToken,
+  JoseVerifiedStructuredToken,
   VerifiedToken,
-  VerifiedUnstructuredToken,
+  JoseVerifiedUnstructuredToken,
   VerifyAssert,
   VerifyOptions,
   VerifyStructuredTokenOptions,
@@ -86,7 +89,7 @@ export interface IAegisJwe {
   decrypt<T extends TokenContent = Buffer>(
     token: string,
     options?: DecryptTokenOptions & { key?: AegisDecryptKey },
-  ): Promise<DecryptedEncryptedToken<T, string>>;
+  ): Promise<JoseDecryptedEncryptedToken<T>>;
 }
 
 // The COSE namespace family — the wire-for-wire COSE counterpart of the JOSE
@@ -101,7 +104,7 @@ export interface IAegisCwe {
   decrypt<T extends TokenContent = Buffer>(
     token: string,
     options?: DecryptTokenOptions & { key?: AegisDecryptKey },
-  ): Promise<DecryptedEncryptedToken<T, Buffer>>;
+  ): Promise<CoseDecryptedEncryptedToken<T>>;
 }
 
 export interface IAegisCws {
@@ -112,7 +115,7 @@ export interface IAegisCws {
   verify<T extends TokenContent = Buffer>(
     token: string,
     options?: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey },
-  ): Promise<VerifiedUnstructuredToken<T, Buffer>>;
+  ): Promise<CoseVerifiedUnstructuredToken<T>>;
 }
 
 export interface IAegisCwt {
@@ -124,7 +127,7 @@ export interface IAegisCwt {
     token: string,
     assert?: Condition<CwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey },
-  ): Promise<VerifiedStructuredToken<CwtClaimsWire & C>>;
+  ): Promise<CoseVerifiedStructuredToken<CwtClaimsWire & C>>;
 }
 
 // The COSE_Mac0 (symmetric) claims twin of `IAegisCwt`. Same ergonomic
@@ -138,7 +141,7 @@ export interface IAegisCwm {
     token: string,
     assert?: Condition<CwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey },
-  ): Promise<VerifiedStructuredToken<CwtClaimsWire & C>>;
+  ): Promise<CoseVerifiedStructuredToken<CwtClaimsWire & C>>;
 }
 
 export interface IAegisJws {
@@ -149,7 +152,7 @@ export interface IAegisJws {
   verify<T extends TokenContent = Buffer>(
     token: string,
     options?: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey },
-  ): Promise<VerifiedUnstructuredToken<T, string>>;
+  ): Promise<JoseVerifiedUnstructuredToken<T>>;
 }
 
 export interface IAegisJwt {
@@ -161,7 +164,7 @@ export interface IAegisJwt {
     token: string,
     assert?: Condition<JwtClaimsWire & C>,
     options?: VerifyStructuredTokenOptions & { key?: AegisVerifyKey },
-  ): Promise<VerifiedStructuredToken<JwtClaimsWire & C, string>>;
+  ): Promise<JoseVerifiedStructuredToken<JwtClaimsWire & C>>;
 }
 
 export interface IAegis {

@@ -165,7 +165,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
   decodeClaims: (token) => {
     const bytes = Buffer.from(token, "base64url");
     const decoded = decodeCwt(bytes);
-    const { payload, protectedHeader, unprotectedHeader, unknown } = decodeCwtWire(bytes);
+    const { payload, protectedHeader, unprotectedHeader, custom } = decodeCwtWire(bytes);
     const format = coseFormatOf(decoded.cose);
 
     // The structural invariants a CWT must satisfy to be READ as one — the twin
@@ -191,7 +191,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
     // `crit` off the PROTECTED bucket alone — the only one a signature covers and
     // the only one RFC 9052 §3.1 permits it in.
     // The header AS WRITTEN — see `written-header.ts` and the JOSE twin.
-    const written = writtenHeader(protectedHeader, unknown.protected);
+    const written = writtenHeader(protectedHeader, custom.protected);
 
     const critError = validateCrit(written);
     if (critError) {

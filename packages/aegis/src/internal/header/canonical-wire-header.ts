@@ -19,7 +19,7 @@ import type { Dict } from "@lindorm/types";
  * was written. `fromEntries` defines each key instead of setting it, so
  * `__proto__` is an ordinary own property here.
  *
- * ⚠ It stays an ORDINARY object, unlike the read side's `unknown` bags, which are
+ * ⚠ It stays an ORDINARY object, unlike the read side's `custom` bags, which are
  * `Object.create(null)`. Those are handed to a consumer that will look arbitrary
  * keys up on them; this one is spread, `JSON.stringify`d and compared throughout
  * the write path, and its prototype is nobody's lookup surface.

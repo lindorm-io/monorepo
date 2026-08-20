@@ -36,8 +36,8 @@ import type {
   CertificateBindingMode,
   CweEncryptOptions,
   CweKitSettings,
-  DecodedEncryptedToken,
-  DecryptedEncryptedToken,
+  CoseDecodedEncryptedToken,
+  CoseDecryptedEncryptedToken,
   DecryptTokenOptions,
   TokenContent,
   WireTokenHeader,
@@ -226,7 +226,7 @@ export class CweKit implements ICweKit {
   decrypt<T extends TokenContent = Buffer>(
     token: Buffer,
     options: DecryptTokenOptions = {},
-  ): DecryptedEncryptedToken<T, Buffer> {
+  ): CoseDecryptedEncryptedToken<T> {
     // The kit takes the ENCODED bytes and decodes internally (parallel to
     // JweKit.decrypt). The outer CWT tag (61) is stripped by `splitEncrypt0`.
     const segments = splitEncrypt0(token);
@@ -270,7 +270,7 @@ export class CweKit implements ICweKit {
     // decryption, exactly as JweKit does.
     rejectUnknownCritical({
       header: protectedHeader,
-      unknown: protectedWire.unknown,
+      custom: protectedWire.custom,
       declared: options.crit,
       format: "cwe",
       error: CweError,
@@ -317,9 +317,9 @@ export class CweKit implements ICweKit {
     return {
       protectedHeader,
       unprotectedHeader: unprotectedWire.header,
-      unknown: {
-        protected: protectedWire.unknown,
-        unprotected: unprotectedWire.unknown,
+      custom: {
+        protected: protectedWire.custom,
+        unprotected: unprotectedWire.custom,
       },
       payload: reconstructContent<T>(plaintext, protectedHeader.cty),
       token,
@@ -329,12 +329,12 @@ export class CweKit implements ICweKit {
   /**
    * WIRE decode (no decryption): decode the CBOR-encoded COSE_Encrypt0 (tag 16,
    * tagged or bare) and translate its protected + unprotected header maps into the
-   * two {@link DecodedEncryptedToken} WIRE header buckets (integer labels
+   * two {@link CoseDecodedEncryptedToken} WIRE header buckets (integer labels
    * translated to their JOSE wire names — the content-encryption label lands on
    * `enc`). The ciphertext stays encrypted; reading it needs the key (that is
    * `decrypt`). The uniform primitive shared with `JweKit` decode.
    */
-  static decode(token: Buffer): DecodedEncryptedToken<Buffer> {
+  static decode(token: Buffer): CoseDecodedEncryptedToken {
     // The outer CWT tag (61) is stripped — symmetric with `decrypt`, which strips
     // it too. A bare, un-enveloped token passes through unchanged.
     const { protectedBstr, unprotected } = splitEncrypt0(token);
@@ -348,9 +348,9 @@ export class CweKit implements ICweKit {
     return {
       protectedHeader: protectedWire.header,
       unprotectedHeader: unprotectedWire.header,
-      unknown: {
-        protected: protectedWire.unknown,
-        unprotected: unprotectedWire.unknown,
+      custom: {
+        protected: protectedWire.custom,
+        unprotected: unprotectedWire.custom,
       },
       token,
     };

@@ -1097,16 +1097,16 @@ export type WireKey = string | number;
  * of that bucket. The union below is the cheapest way to make it a build error.
  */
 /**
- * What a row asserts about ONE `unknown` header bag. The same TWO-ARM shape
+ * What a row asserts about ONE `custom` header bag. The same TWO-ARM shape
  * {@link WireAssertion} uses and for the same reason: with both lists optional,
- * `{ step: "unknownHeader", bucket: "protected" }` typechecks and asserts
+ * `{ step: "customHeader", bucket: "protected" }` typechecks and asserts
  * NOTHING, so a row could name the step, look thorough, and check nothing at all.
  * At least one list is required.
  *
  * Keys are the ISSUER'S own — a JOSE member name, or a COSE label stringified —
  * so there is no closed vocabulary here, unlike {@link WireKey}.
  */
-export type UnknownAssertion =
+export type CustomAssertion =
   | { includes: Dict; excludes?: ReadonlyArray<string> }
   | { includes?: Dict; excludes: ReadonlyArray<string> };
 
@@ -1256,9 +1256,9 @@ type ObservationStep =
       excludes?: ReadonlyArray<keyof DomainTokenHeader | (string & {})>;
     }
   /**
-   * The WIRE header a KIT door reports — JOSE-named and untranslated, the
-   * protected bucket exactly as {@link WireHeaderBuckets.protectedHeader} carries
-   * it.
+   * The WIRE header a KIT door reports — JOSE-named and untranslated: the
+   * integrity-protected bucket, which is {@link CoseHeaderBuckets.protectedHeader}
+   * on COSE and the ONE {@link JoseHeaderBuckets.header} on JOSE.
    *
    * ⛔ IT IS A SEPARATE STEP BECAUSE `header` IS THE DOMAIN ONE, ALWAYS. The two
    * tiers use different vocabularies for the same parameter (`crit` vs
@@ -1269,7 +1269,7 @@ type ObservationStep =
    * so a row that names the wrong one fails by name rather than silently
    * asserting against the other tier's spelling.
    */
-  | ({ step: "wireHeader" } & UnknownAssertion)
+  | ({ step: "wireHeader" } & CustomAssertion)
   /**
    * Assertions against the token's CLEARTEXT wire payload. ⚠ A payload the
    * interpreter cannot read (a JWE's ciphertext, a malformed token) FAILS the row
@@ -1309,19 +1309,23 @@ type ObservationStep =
   /** The raw claims payload — integer CWT labels on COSE, JOSE claim names on JOSE. */
   | ({ step: "wireClaims" } & WireAssertion)
   /**
-   * The WIRE-tier `unknown` header bag a KIT door reports — the parameters no
+   * The WIRE-tier `custom` header bag a KIT door reports — the parameters no
    * registry row answers for, per bucket, verbatim as the issuer wrote them.
    *
    * Keys are the ISSUER'S OWN, so no closed vocabulary exists here: a JOSE member
    * name, or a COSE label stringified (`String(label)` — a tstr label is already
    * its own key, an integer one becomes its decimal spelling).
    *
-   * ⛔ Only a `kit-verify` reports one. The DOMAIN verbs report none, by design —
-   * an unregistered wire parameter has no domain name — so a row asserting on
-   * this after `verify`/`decrypt` FAILS by name. That refusal IS the tier
-   * boundary, stated where a row can read it.
+   * ⚠ `bucket` is the COSE spelling on both wires. JOSE has ONE header and it is
+   * the protected one, so `"protected"` reads it and `"unprotected"` REFUSES a
+   * JOSE run rather than reading an empty bag (`run-scenario.ts#customBucketOf`).
+   *
+   * ⛔ Only a `kit-verify` reports one. The DOMAIN verbs report none — an
+   * unregistered wire parameter has no domain name — so a row asserting on this
+   * after `verify`/`decrypt` FAILS by name. That refusal IS the tier boundary,
+   * stated where a row can read it.
    */
-  | ({ step: "unknownHeader"; bucket: "protected" | "unprotected" } & UnknownAssertion);
+  | ({ step: "customHeader"; bucket: "protected" | "unprotected" } & CustomAssertion);
 
 /**
  * An observation, optionally scoped to ONE wire.
@@ -2766,7 +2770,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // CARRIED — in its own bag, keyed as the issuer wrote it. On COSE that is
       // the tstr label RFC 9052 §1.4 admits, which is the same spelling.
       {
-        step: "unknownHeader",
+        step: "customHeader",
         bucket: "protected",
         includes: { "x-foreign-hint": "issuer-wrote-this" },
       },

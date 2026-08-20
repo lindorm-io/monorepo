@@ -184,7 +184,7 @@ describe("the raw namespace wrappers", () => {
         key: { condition: { id: TEST_EC_KEY_ENC.id } },
       });
 
-      const { protectedHeader: header } = JweKit.decode(token);
+      const { header } = JweKit.decode(token);
 
       expect(header.apu).toBe(partyProducer);
       expect(header.apv).toBe(partyRecipient);
@@ -320,8 +320,8 @@ describe("the raw namespace wrappers", () => {
         key: { condition: { type: "oct" } },
       });
 
-      expect(JweKit.decode(token).protectedHeader.kid).toBe(TEST_OCT_KEY_ENC.id);
-      expect(JweKit.decode(token).protectedHeader.kid).not.toBe(TEST_EC_KEY_ENC.id);
+      expect(JweKit.decode(token).header.kid).toBe(TEST_OCT_KEY_ENC.id);
+      expect(JweKit.decode(token).header.kid).not.toBe(TEST_EC_KEY_ENC.id);
     });
 
     test("jwe.decrypt — an injected key the vault never held", async () => {

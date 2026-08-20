@@ -186,7 +186,7 @@ describe("create-hash", () => {
         scope: ["openid"],
       });
 
-      expect(JwtKit.decode(token).protectedHeader.alg).toBe("ML-DSA-65");
+      expect(JwtKit.decode(token).header.alg).toBe("ML-DSA-65");
 
       await expect(aegis.verify(token)).resolves.toMatchObject({
         claims: { subject: "user-1", clientId: "client-1" },

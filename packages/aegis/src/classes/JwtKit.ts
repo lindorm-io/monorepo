@@ -34,11 +34,11 @@ import { validateWireClaims } from "../internal/utils/validate-wire-claims.js";
 import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
 import type {
   CertificateBindingMode,
-  DecodedStructuredToken,
+  JoseDecodedStructuredToken,
   JwtClaimsWire,
   JwtKitSettings,
   JoseSignStructuredTokenOptions,
-  VerifiedStructuredToken,
+  JoseVerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../types/index.js";
 
@@ -149,7 +149,7 @@ export class JwtKit implements IJwtKit {
     token: string,
     assert?: Condition<JwtClaimsWire & C>,
     options: VerifyStructuredTokenOptions = {},
-  ): VerifiedStructuredToken<JwtClaimsWire & C, string> {
+  ): JoseVerifiedStructuredToken<JwtClaimsWire & C> {
     this.logger.debug("Verifying token", {
       token: sanitiseToken(token),
       options: redactVerifyOptions(options),
@@ -157,7 +157,7 @@ export class JwtKit implements IJwtKit {
 
     const decoded = JwtKit.decode<C>(token);
 
-    const decodedHeader = decoded.protectedHeader;
+    const decodedHeader = decoded.header;
 
     // kid fail-fast, before the (expensive) signature cycle. The COSE claims
     // path runs the same one; the OPAQUE and ENCRYPTED doors deliberately run
@@ -189,7 +189,7 @@ export class JwtKit implements IJwtKit {
     // order, that every wire runs ahead of its signature or AEAD cycle.
     assertProtectedHeaderGates({
       protectedHeader: decodedHeader,
-      unknown: decoded.unknown.protected,
+      custom: decoded.custom.header,
       declared: options.crit,
       expectedAlgorithm: this.kryptos.algorithm,
       format: "jwt",
@@ -248,9 +248,8 @@ export class JwtKit implements IJwtKit {
     this.logger.debug("Token verified");
 
     return {
-      protectedHeader: decodedHeader,
-      unprotectedHeader: decoded.unprotectedHeader,
-      unknown: decoded.unknown,
+      header: decodedHeader,
+      custom: decoded.custom,
       payload: decoded.payload,
       token,
     };
@@ -281,17 +280,13 @@ export class JwtKit implements IJwtKit {
    */
   static decode<C extends Dict = Dict>(
     token: string,
-  ): DecodedStructuredToken<JwtClaimsWire & C, string> {
+  ): JoseDecodedStructuredToken<JwtClaimsWire & C> {
     const [header, payload, signature] = token.split(".");
     const decoded = decodeJoseHeader(header);
 
     return {
-      protectedHeader: decoded.header,
-      // Compact JOSE serialisation has ONE header and it is protected — there is
-      // no unprotected bucket to report, so neither the typed bag nor the unknown
-      // one has an unprotected half (`KIT_CAPABILITIES.jwt.unprotectedBucket`).
-      unprotectedHeader: {},
-      unknown: { protected: decoded.unknown, unprotected: {} },
+      header: decoded.header,
+      custom: { header: decoded.custom },
       payload: decodeJwtPayload<C>(payload) as JwtClaimsWire & C,
       signature,
       token,

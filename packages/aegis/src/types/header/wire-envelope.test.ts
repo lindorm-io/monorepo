@@ -2,7 +2,9 @@ import { describe, expect, test } from "vitest";
 import type { IAegis } from "../../interfaces/index.js";
 import type {
   CoseSignStructuredTokenOptions,
+  CoseVerifiedStructuredToken,
   JoseSignStructuredTokenOptions,
+  JoseVerifiedStructuredToken,
 } from "../kit/structured.js";
 
 /**
@@ -123,5 +125,106 @@ describe("the wire envelope split", () => {
     ];
 
     expect(check).toBeInstanceOf(Function);
+  });
+});
+
+/**
+ * The READ half of the same split, asserted at the TYPE level. Same discipline as
+ * the write half above — the directives are proved by `npm run typecheck`, an
+ * unused one fails it, and every refusal is paired with a POSITIVE line so a row
+ * cannot pass by the field vanishing entirely.
+ */
+describe("the wire result split", () => {
+  const JOSE: JoseVerifiedStructuredToken = {
+    header: { alg: "ES512" },
+    custom: { header: { "x-hint": "value" } },
+    payload: {},
+    token: "header.payload.signature",
+  };
+
+  const COSE: CoseVerifiedStructuredToken = {
+    protectedHeader: { alg: "ES512" },
+    unprotectedHeader: { kid: "key-1" },
+    custom: { protected: { "x-hint": "a" }, unprotected: { "x-other": "b" } },
+    payload: {},
+    token: Buffer.from("cose-token"),
+  };
+
+  test("a COSE-shaped result is not a JOSE result, and its twin", () => {
+    // @ts-expect-error a COSE result reports two buckets and a Buffer token
+    const coseAsJose: JoseVerifiedStructuredToken = COSE;
+
+    // @ts-expect-error a JOSE result reports ONE header and a compact string token
+    const joseAsCose: CoseVerifiedStructuredToken = JOSE;
+
+    // The positive half is `JOSE` and `COSE` themselves: each compiles against
+    // its own wire's type, so the two refusals are about the CROSSING and not
+    // about either literal being malformed.
+    expect([JOSE, COSE, coseAsJose, joseAsCose]).toHaveLength(4);
+  });
+
+  test("a JOSE result has no unprotected bucket to report — not an empty one, none", () => {
+    const refusedUnprotected: JoseVerifiedStructuredToken = {
+      header: { alg: "ES512" },
+      // @ts-expect-error compact JWS/JWE carry ONE header, so there is no second bucket
+      unprotectedHeader: {},
+      custom: { header: {} },
+      payload: {},
+      token: "header.payload.signature",
+    };
+
+    const refusedProtected: JoseVerifiedStructuredToken = {
+      header: { alg: "ES512" },
+      // @ts-expect-error a JOSE result names its one header `header`, not `protectedHeader`
+      protectedHeader: { alg: "ES512" },
+      custom: { header: {} },
+      payload: {},
+      token: "header.payload.signature",
+    };
+
+    const refusedCoseCustom: JoseVerifiedStructuredToken = {
+      header: { alg: "ES512" },
+      // @ts-expect-error the JOSE custom bag has ONE bucket, named for the header it belongs to
+      custom: { protected: {}, unprotected: {} },
+      payload: {},
+      token: "header.payload.signature",
+    };
+
+    expect([refusedUnprotected, refusedProtected, refusedCoseCustom]).toHaveLength(3);
+  });
+
+  test("a COSE result carries both buckets and both custom halves", () => {
+    const refusedJoseHeader: CoseVerifiedStructuredToken = {
+      protectedHeader: { alg: "ES512" },
+      unprotectedHeader: {},
+      // @ts-expect-error the COSE buckets are named for their integrity, not `header`
+      custom: { header: {} },
+      payload: {},
+      token: Buffer.from("cose-token"),
+    };
+
+    // The positive half: `COSE` above states all four members and compiles.
+    expect([COSE, refusedJoseHeader]).toHaveLength(2);
+  });
+
+  test("the token type is pinned by the RESULT type, never by a caller's generic", () => {
+    const joseBuffer: JoseVerifiedStructuredToken = {
+      header: { alg: "ES512" },
+      custom: { header: {} },
+      payload: {},
+      // @ts-expect-error a JOSE token is the compact string, never a Buffer
+      token: Buffer.from("cose-token"),
+    };
+
+    const coseString: CoseVerifiedStructuredToken = {
+      protectedHeader: { alg: "ES512" },
+      unprotectedHeader: {},
+      custom: { protected: {}, unprotected: {} },
+      payload: {},
+      // @ts-expect-error a COSE token is the encoded bytes, never a compact string
+      token: "header.payload.signature",
+    };
+
+    expect([joseBuffer, coseString]).toHaveLength(2);
   });
 });

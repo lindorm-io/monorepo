@@ -1,8 +1,8 @@
 import type {
   BaseTokenFormat,
   DomainTokenHeader,
+  CoseHeaderBuckets,
   TokenFormatTag,
-  WireHeaderBuckets,
 } from "../../types/index.js";
 import { mergeHeaderBuckets } from "../header/merge-header-buckets.js";
 import { decodeTokenTypeFromTyp } from "./compute-typ-header.js";
@@ -27,31 +27,34 @@ const BASE_FORMAT: Record<TokenFormatTag, BaseTokenFormat | undefined> = {
  * The ONE wire-header → domain-header translation, for every format on either
  * wire, and the ONE producer of the single `header` the domain results report.
  *
- * ⛔ IT TAKES THE TWO TYPED BUCKETS ONLY, by `Pick`, never the whole
- * {@link WireHeaderBuckets}. This is the wire → domain crossing, and an
+ * ⛔ IT TAKES THE TWO TYPED BUCKETS ONLY, by `Pick`, never a kit result's whole
+ * {@link CoseHeaderBuckets}. This is the wire → domain crossing, and an
  * unregistered wire parameter has no domain name by definition — the domain
  * surface exists so a caller never learns the wire's vocabulary. `parseTokenHeader`
  * below drops one anyway (it keeps only what `headerByJose` answers for), so this
  * is the second of two independent gates; pinned in
  * `internal/header/custom-header-params.test.ts`.
  *
- * It takes BOTH buckets and merges them canonically ({@link mergeHeaderBuckets}):
- * the unprotected bucket filtered to what the header registry permits there, then
- * overwritten by the protected one. The KIT tier keeps the two apart — that is
- * the COSE wire and it is correct — but the domain tier speaks neither wire's
- * vocabulary, and `protectedHeader`/`unprotectedHeader` is a COSE STRUCTURAL fact:
- * a compact JOSE token has one header and no such bucket, so the split left every
- * JOSE result carrying a field that could never be populated.
+ * ⚠ THE PARAMETER IS THE COSE PAIR, and the JOSE arms adapt INTO it by stating
+ * `unprotectedHeader: {}` — the JOSE read arms in `internal/wire/jose-token-wire.ts`,
+ * whose `{}` then travels the seam. The pair IS the COSE shape (RFC 9052 §3);
+ * a JOSE kit result reports ONE header ({@link JoseHeaderBuckets}) because compact
+ * serialisation has no second bucket, so there is no shared two-bucket type to
+ * take instead.
  *
- * The `tokenType` recovery is now ONE call. It was two — a JOSE branch and a COSE
- * one that rewrote `+cwt` to `+jwt` so it could ask the JOSE question — which is
- * why `application/at+cwe` recovered nothing: the rewrite only knew the one
- * suffix. `decodeTokenTypeFromTyp` is already per-format (its own `FORMAT_SUFFIX`
- * and `FORMAT_FALLBACK` tables carry every COSE spelling), so handing it the
- * format the token actually is answers for all seven.
+ * It merges the two canonically ({@link mergeHeaderBuckets}): the unprotected
+ * bucket filtered to what the header registry permits there, then overwritten by
+ * the protected one. The domain tier speaks neither wire's vocabulary, so it
+ * reports ONE header regardless of how many the wire carried.
+ *
+ * The `tokenType` recovery is ONE call for all seven formats:
+ * `decodeTokenTypeFromTyp` is per-format (its own `FORMAT_SUFFIX` and
+ * `FORMAT_FALLBACK` tables carry every COSE spelling), so it is handed the format
+ * the token actually is rather than a `+cwt`→`+jwt` rewrite that knows one suffix
+ * and recovers nothing from `application/at+cwe`.
  */
 export const domainTokenHeader = (
-  buckets: Pick<WireHeaderBuckets, "protectedHeader" | "unprotectedHeader">,
+  buckets: Pick<CoseHeaderBuckets, "protectedHeader" | "unprotectedHeader">,
   format: TokenFormatTag,
 ): DomainTokenHeader => {
   const wire = mergeHeaderBuckets(buckets);

@@ -1,12 +1,12 @@
 import type { IAesKit } from "@lindorm/aes";
 import type { IAegis } from "../interfaces/index.js";
 import type {
-  DecryptedEncryptedToken,
+  CoseDecryptedEncryptedToken,
+  CoseHeaderBuckets,
+  CoseVerifiedStructuredToken,
+  CoseVerifiedUnstructuredToken,
   EncryptedToken,
   SignedToken,
-  VerifiedStructuredToken,
-  VerifiedUnstructuredToken,
-  WireHeaderBuckets,
 } from "../types/index.js";
 
 /**
@@ -31,10 +31,14 @@ export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => 
     return m;
   };
 
-  const buckets: WireHeaderBuckets = {
+  // COSE-only: the four arms that spread it are `cwe`/`cwm`/`cws`/`cwt`. A JOSE
+  // kit result reports ONE header (`types/header/wire-buckets.ts#JoseHeaderBuckets`),
+  // so this value is not assignable to a JOSE arm — the ⚠⚠ block below says why
+  // the JOSE arms are unannotated.
+  const coseBuckets: CoseHeaderBuckets = {
     protectedHeader: { alg: "HS256" },
     unprotectedHeader: {},
-    unknown: { protected: {}, unprotected: {} },
+    custom: { protected: {}, unprotected: {} },
   };
 
   const signed = (format: SignedToken["format"]): SignedToken => ({
@@ -59,32 +63,32 @@ export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => 
 
     cwe: {
       encrypt: resolves<EncryptedToken>({ format: "cwe", token: "mocked_token" }),
-      decrypt: resolves<DecryptedEncryptedToken>({
-        ...buckets,
+      decrypt: resolves<CoseDecryptedEncryptedToken>({
+        ...coseBuckets,
         payload: Buffer.from("mocked_payload"),
         token: Buffer.from("mocked_token"),
       }),
     },
     cwm: {
       sign: resolves(signed("cwm")),
-      verify: resolves<VerifiedStructuredToken>({
-        ...buckets,
+      verify: resolves<CoseVerifiedStructuredToken>({
+        ...coseBuckets,
         payload: { sub: "verified_subject" },
         token: Buffer.from("mocked_token"),
       }),
     },
     cws: {
       sign: resolves(signed("cws")),
-      verify: resolves<VerifiedUnstructuredToken>({
-        ...buckets,
+      verify: resolves<CoseVerifiedUnstructuredToken>({
+        ...coseBuckets,
         payload: Buffer.from("verified_payload"),
         token: Buffer.from("mocked_token"),
       }),
     },
     cwt: {
       sign: resolves(signed("cwt")),
-      verify: resolves<VerifiedStructuredToken>({
-        ...buckets,
+      verify: resolves<CoseVerifiedStructuredToken>({
+        ...coseBuckets,
         payload: { sub: "verified_subject" },
         token: Buffer.from("mocked_token"),
       }),
@@ -93,7 +97,7 @@ export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => 
     // ⚠⚠ THE SIX JOSE ARMS BELOW TEACH A DIFFERENT RESULT SHAPE FROM THEIR COSE
     // TWINS, and the divergence is stale rather than intended. The COSE arms above
     // resolve the real kit shape — the two wire header buckets plus a WIRE-keyed
-    // `payload` (`VerifiedStructuredToken`) — while these resolve `{ decoded,
+    // `payload` (`CoseVerifiedStructuredToken`) — while these resolve `{ decoded,
     // header, payload }` with `payload.subject` DOMAIN-keyed. `decoded` is not a
     // member of any current result type, and `jwt.verify`'s real payload is
     // wire-keyed (`sub`), so a consumer that reads the mock to learn the contract

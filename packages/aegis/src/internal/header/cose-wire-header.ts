@@ -33,12 +33,12 @@ const ALG_LABEL = coseByJose("alg");
  *
  * ⚠ AN UNRESOLVED MEMBER STRINGIFIES, so an integer member and its tstr twin come
  * back as the same wire name — the same collision {@link coseWireHeader}'s
- * `unknown` bag documents below, from the same cause (a `Record<string, unknown>`
+ * `custom` bag documents below, from the same cause (a `Record<string, unknown>`
  * cannot key both label forms apart).
  *
  * ⛔ THE NAMED CONSEQUENCE: a protected bucket carrying the integer `crit` label 2
- * = `[7]` beside a tstr parameter `"7"` reads back as `crit: ["7"]` against an
- * unknown bag keyed `"7"`, so `validateCrit`'s `Object.hasOwn` presence test
+ * = `[7]` beside a tstr parameter `"7"` reads back as `crit: ["7"]` against a
+ * custom bag keyed `"7"`, so `validateCrit`'s `Object.hasOwn` presence test
  * passes — RFC 9052 §3.1's fatal-error condition (a crit label whose parameter is
  * NOT in the protected bucket) goes unraised, and a caller that declares `"7"`
  * then accepts a member no parameter answers for. The
@@ -48,8 +48,8 @@ const ALG_LABEL = coseByJose("alg");
  * signature cycle, so a conformant issuer signing the shape carries it through.
  * Both this and the bag collision are answered by the same change: typing the bag
  * `Map<CoseLabel, unknown>`.
- * pinned: `unknown-header-params.test.ts#an INTEGER crit member is satisfied by a
- * TSTR parameter of the same numeral`.
+ * pinned: `custom-header-params.read.test.ts#an INTEGER crit member is satisfied
+ * by a TSTR parameter of the same numeral`.
  *
  * This is the exact inverse of the write side (`wireHeaderToCoseMap`), which
  * emits each member as the LABEL the parameter itself is keyed under. The two
@@ -126,7 +126,7 @@ const coseValueToWire = (
 
 /**
  * Translate a single COSE `[label, value]` into the wire header, or — when no
- * registry row answers for the label — into the UNKNOWN bag beside it, keyed by
+ * registry row answers for the label — into the CUSTOM bag beside it, keyed by
  * `String(label)`. COSE_Encrypt0 is the one special case: its label 1 is the
  * content-encryption algorithm — the JOSE analogue of `enc`, not a key-management
  * `alg` — so it lands on `enc`.
@@ -140,13 +140,13 @@ const coseValueToWire = (
  *
  * ⚠⚠ `String(label)` CONFLATES THE TWO LABEL FORMS, and that is a stated
  * limitation rather than an oversight. RFC 9052 §1.4 makes the integer `7` and
- * the tstr `"7"` different labels; {@link WireHeaderBuckets} types this bag as
+ * the tstr `"7"` different labels; {@link CoseHeaderBuckets} types this bag as
  * `Record<string, unknown>`, so an integer label has nowhere to go but its
  * decimal spelling and a bucket carrying both yields ONE key, last write winning.
- * Honouring the distinction needs {@link WireHeaderBuckets.unknown} to be typed
+ * Honouring the distinction needs {@link CoseHeaderBuckets.custom} to be typed
  * `Map<CoseLabel, unknown>` rather than `Record<string, unknown>` — a change to a
  * PUBLIC read surface, which is why it is not made here. Pinned as the limitation
- * it is in `unknown-header-params.test.ts`. `joseByCose` decides which labels
+ * it is in `custom-header-params.read.test.ts`. `joseByCose` decides which labels
  * resolve, and it is deliberately narrow on the tstr side — only parameters aegis
  * can WRITE under a text label resolve back, so a foreign token cannot deliver a
  * REGISTERED parameter under a text label aegis never emits
@@ -154,8 +154,8 @@ const coseValueToWire = (
  *
  * ⚠ A registered label whose VALUE has no JOSE form (a `COSE_CertHash` under an
  * unrecognised hash algorithm — {@link coseValueToWire} returning `undefined`) is
- * still dropped, and does NOT fall through to the unknown bag: the registry
- * answered for the label, so it is not unknown, and reporting it under an integer
+ * still dropped, and does NOT fall through to the custom bag: the registry
+ * answered for the label, so it is not custom, and reporting it under an integer
  * key would give one parameter two spellings in one result.
  *
  * ⛔ THE BAG IT WRITES INTO IS `Object.create(null)` — see {@link coseWireHeader}.
@@ -164,7 +164,7 @@ const coseValueToWire = (
  */
 const assignCoseParam = (
   wire: Dict,
-  unknown: Dict,
+  custom: Dict,
   label: CoseLabel,
   value: unknown,
   algKind: CoseAlgKind,
@@ -176,7 +176,7 @@ const assignCoseParam = (
 
   const jose = joseByCose(label);
   if (jose === undefined) {
-    unknown[String(label)] = value;
+    custom[String(label)] = value;
     return;
   }
 
@@ -194,32 +194,32 @@ const assignCoseParam = (
  * header — same wire vocabulary, same two-bag split
  * (`internal/utils/jose-header.ts#decodeJoseHeader`).
  *
- * ⛔ THE UNKNOWN BAGS ARE `Object.create(null)`: a tstr label is a key the token's
- * author chose, and `unknown["__proto__"] = value` on a plain object DROPS the
+ * ⛔ THE CUSTOM BAGS ARE `Object.create(null)`: a tstr label is a key the token's
+ * author chose, and `custom["__proto__"] = value` on a plain object DROPS the
  * parameter (this bag exists to carry it verbatim) and leaves the bag inheriting
  * whatever was assigned. A null-prototype object has no setter to hit and no
- * chain for a consumer's own `unknown[key]` lookup to walk. The JOSE twin
+ * chain for a consumer's own `custom[key]` lookup to walk. The JOSE twin
  * (`internal/utils/jose-header.ts`) states the same rule for the same reason.
  *
- * ⚠ It translates ONE BUCKET. This used to merge the two, protected last, which
- * is what made an unsigned parameter indistinguishable from a signed one in every
- * COSE kit result: a `typ` no signature covered decided token-type routing and
- * the profile floor. The buckets now travel separately all the way out
- * ({@link WireHeaderBuckets}), so a reader has to name the one it trusts — and
- * the unknown bag is per-bucket for the same reason.
+ * ⚠ IT TRANSLATES ONE BUCKET, and merging the two here would make an unsigned
+ * parameter indistinguishable from a signed one in every COSE kit result — a
+ * `typ` no signature covers decides token-type routing and the profile floor.
+ * The buckets travel separately all the way out ({@link CoseHeaderBuckets}), so a
+ * reader has to name the one it trusts, and the custom bag is per-bucket for the
+ * same reason.
  */
 export const coseWireHeader = (
   map: Map<CoseLabel, unknown> | undefined,
   algKind: CoseAlgKind,
-): { header: WireTokenHeader; unknown: Dict } => {
+): { header: WireTokenHeader; custom: Dict } => {
   const wire: Dict = {};
-  const unknown: Dict = Object.create(null);
+  const custom: Dict = Object.create(null);
 
   if (map) {
     for (const [label, value] of map) {
-      assignCoseParam(wire, unknown, label, value, algKind);
+      assignCoseParam(wire, custom, label, value, algKind);
     }
   }
 
-  return { header: wire as WireTokenHeader, unknown };
+  return { header: wire as WireTokenHeader, custom };
 };

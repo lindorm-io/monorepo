@@ -21,13 +21,13 @@ const header = (extra: Record<string, unknown>): WireTokenHeader =>
 const reject =
   (
     extra: Record<string, unknown>,
-    unknown: Record<string, unknown> = {},
+    custom: Record<string, unknown> = {},
     declared?: ReadonlyArray<string>,
   ) =>
   (): void =>
     rejectUnknownCritical({
       header: header(extra),
-      unknown,
+      custom,
       declared,
       format: "jwt",
       error: JwtError,
@@ -58,9 +58,9 @@ describe("rejectUnknownCritical", () => {
   /**
    * ⛔⛔ EVERY ROW BELOW THAT PUTS AN UNREGISTERED MEMBER IN `header` DESCRIBES A
    * STATE NO PUBLIC DOOR PRODUCES, and each says so in its name. Both read paths
-   * route a key the registry does not answer for into `unknown`
+   * route a key the registry does not answer for into `custom`
    * (`internal/utils/jose-header.ts`, `internal/header/cose-wire-header.ts`), so
-   * `header: { crit: ["ext"], ext: "x" }, unknown: {}` is reachable only by
+   * `header: { crit: ["ext"], ext: "x" }, custom: {}` is reachable only by
    * calling this function directly.
    *
    * They are kept because they probe the SPLIT the read side makes: a member that
@@ -91,7 +91,7 @@ describe("rejectUnknownCritical", () => {
    * ⭐ WHAT A REAL TOKEN DOES — the case the DIRECT-CALL rows above are NOT about.
    *
    * An unregistered member the header CARRIES is a custom parameter its issuer
-   * marked critical, and the read side reports it in `unknown`. Whether it stands
+   * marked critical, and the read side reports it in `custom`. Whether it stands
    * turns on the CALLER: RFC 7515 §4.1.11 puts the duty to understand a critical
    * extension on the recipient, and aegis is never the final recipient, so it
    * refuses until the application declares the parameter.
@@ -295,7 +295,7 @@ describe("rejectUnknownCritical", () => {
     expect(() =>
       rejectUnknownCritical({
         header: header({ crit: ["ext"], ext: "x" }),
-        unknown: {},
+        custom: {},
         declared: undefined,
         format: "cwt",
         error: CwtError,

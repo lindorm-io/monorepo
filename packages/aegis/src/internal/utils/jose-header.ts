@@ -74,26 +74,26 @@ export const encodeJoseHeader = (header: WireTokenHeaderOptions): string => {
  * ⚠ THE SPLIT IS THE POINT. `JSON.parse` keeps every member a producer wrote, and
  * returning that object as a `WireTokenHeader` is a typed lie: the type says an
  * unregistered key cannot exist and the value carries one, so every reader
- * downstream believes a bag it cannot inspect. `unknown` is where they go — a
+ * downstream believes a bag it cannot inspect. `custom` is where they go — a
  * foreign issuer may legitimately write params aegis has never heard of, and
- * dropping them would hide what the token said ({@link WireHeaderBuckets}).
+ * dropping them would hide what the token said ({@link JoseHeaderBuckets}).
  *
  * The `alg`/`enc`/`typ` checks below run on the parsed object BEFORE the split,
  * because all three are registered and their refusals are about what this library
  * can process at all.
  *
- * ⛔ THE UNKNOWN BAG IS `Object.create(null)`, and both halves of that matter.
+ * ⛔ THE CUSTOM BAG IS `Object.create(null)`, and both halves of that matter.
  * `JSON.parse` creates `__proto__` as an OWN data property, so it survives
  * `Object.entries`; assigning it onto a plain `{}` reaches `Object.prototype`'s
  * setter instead, which DROPS the parameter (breaking the verbatim carriage this
  * bag exists for) and leaves the bag inheriting attacker-chosen keys. A
  * null-prototype object has no setter to hit and no chain for a consumer's own
- * `unknown[key]` lookup to walk. This package already bans `in` on a
+ * `custom[key]` lookup to walk. This package already bans `in` on a
  * caller-influenced key for the same class; the ASSIGNMENT is the other half.
  */
 export const decodeJoseHeader = (
   header: string,
-): { header: WireTokenHeader; unknown: Dict } => {
+): { header: WireTokenHeader; custom: Dict } => {
   const string = B64.toString(header);
   const json = JSON.parse(string) as Partial<WireTokenHeader>;
 
@@ -147,11 +147,11 @@ export const decodeJoseHeader = (
   // cannot resolve through `Object.prototype`.
   const registered: Dict = {};
   // Null-prototype — see the docstring. The keys come off a token a stranger wrote.
-  const unknown: Dict = Object.create(null);
+  const custom: Dict = Object.create(null);
 
   for (const [key, value] of Object.entries(json)) {
     if (headerByJose(key) === undefined) {
-      unknown[key] = value;
+      custom[key] = value;
       continue;
     }
 
@@ -160,5 +160,5 @@ export const decodeJoseHeader = (
 
   // Values are passed through as-is; individual Kit classes validate specific
   // ones if needed.
-  return { header: registered as WireTokenHeader, unknown };
+  return { header: registered as WireTokenHeader, custom };
 };

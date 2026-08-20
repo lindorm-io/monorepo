@@ -29,7 +29,7 @@ npm install @lindorm/amphora @lindorm/logger
   - `crit` may name a custom key — `custom.header` on JOSE, `custom.protected` on COSE: RFC 7515 §4.1.11 forbids it to name spec-defined parameters, which leaves an issuer's own extension as exactly what it is for. Never a `custom.unprotected` key — RFC 9052 §3.1 requires critical parameters to be integrity-protected. Reading such a token back needs the recipient's `crit` / `critical` declaration; see the crit bullets under [Security notes](#security-notes).
   - ⛔ The **domain** verbs (`aegis.sign` / `mint` / `encrypt`) take no `custom` bag. The domain surface exists so a caller never learns the wire's vocabulary, and an unregistered wire parameter has no domain name by definition.
 
-- **On READ, unregistered parameters are CARRIED, never dropped** — every wire result (`verify` / `decrypt` / `decode` on the kits) has an `unknown: { protected, unprotected }` bag beside the two typed ones. A foreign issuer may legitimately write parameters aegis has never heard of, and dropping them would hide what the token said; merging them into the typed bags would make `WireTokenHeader` carry keys its type says cannot exist. They **stop at the wire tier** — `VerifiedToken.header` never carries one.
+- **On READ, unregistered parameters are CARRIED, never dropped** — every wire result (`verify` / `decrypt` / `decode` on the kits) has a `custom` bag beside the typed header(s), spelled per wire exactly as the write bag is: `custom: { header }` on JOSE, `custom: { protected, unprotected }` on COSE. A foreign issuer may legitimately write parameters aegis has never heard of, and dropping them would hide what the token said; merging them into the typed bags would make `WireTokenHeader` carry keys its type says cannot exist. They **stop at the wire tier** — `VerifiedToken.header` never carries one.
 
 - **Wire namespaces** — `aegis.jwt` / `jws` / `jwe` / `cwt` / `cwm` / `cws` / `cwe`. Each resolves the key then delegates to its kit. `sign` / `encrypt` return the same domain `SignedToken` / `EncryptedToken` sugar the verbs do (`.token`, `.format`); `verify` / `decrypt` return the kit's **native wire shape** — a `.payload` with wire claim names (`sub` / `exp` / `jti`, never `subject` / `expiresAt` / `tokenId`), exactly what a standalone JOSE / COSE library reads.
 
@@ -245,8 +245,8 @@ const signed = await aegis.jwt.sign(
 
 const parsed = await aegis.jwt.verify(signed.token);
 // parsed.payload → { sub: "user-123", exp: 1737000000, aud: [...], scope: [...] }  (WIRE names)
-// parsed.protectedHeader / parsed.unprotectedHeader (WireTokenHeader),
-// parsed.unknown ({ protected, unprotected } — unregistered params), parsed.token
+// parsed.header (WireTokenHeader — compact JOSE carries ONE header),
+// parsed.custom ({ header } — the params no registry row answers for), parsed.token
 
 // matching is a positional WIRE assert condition (no named domain matchers here):
 const checked = await aegis.jwt.verify(signed.token, { iss: "https://idp.example.com" });
@@ -275,7 +275,7 @@ const cwt = await aegis.cwt.sign(
 );
 const parsedCwt = await aegis.cwt.verify(cwt.token);
 // parsedCwt.payload → COSE-name-keyed wire ({ cti, exp, ... });
-// parsedCwt.protectedHeader / .unprotectedHeader, .unknown, .token
+// parsedCwt.protectedHeader / .unprotectedHeader, .custom ({ protected, unprotected }), .token
 
 // cwm — the same, as a COSE_Mac0 (symmetric key)
 const cwm = await aegis.cwm.sign({
@@ -289,7 +289,7 @@ const parsedCwm = await aegis.cwm.verify(cwm.token);
 // The bag is the KIT's, so `tokenType` is the bare prefix, not the domain enum.
 const cws = await aegis.cws.sign({ tid: "at_abc" }, { tokenType: "at" });
 const parsedCws = await aegis.cws.verify(cws.token);
-// { protectedHeader, unprotectedHeader, unknown, payload, token } — payload is the Dict
+// { protectedHeader, unprotectedHeader, custom, payload, token } — payload is the Dict
 // that was signed; a Buffer/string payload comes back a Buffer/string
 
 // cwe — COSE_Encrypt0, the COSE mirror of jwe (direct AEAD to a symmetric enc key)
@@ -513,11 +513,11 @@ const token = kit.sign({
 
 const parsed = kit.verify(token, { iss: "https://example.com" });
 // parsed.payload → wire claims ({ iss, sub, exp, jti });
-// parsed.protectedHeader, parsed.unknown, parsed.token
+// parsed.header, parsed.custom, parsed.token
 
 JwtKit.isJwt(token); // static
 JwtKit.decode(token);
-// static → { protectedHeader, unprotectedHeader, unknown, payload, signature, token } — no verification
+// static → { header, custom, payload, signature, token } — no verification
 ```
 
 `verify` runs crit, typ well-formedness, algorithm-match, signature, cert-binding, reserved-claim type checks, and the temporal range (`exp` / `nbf` / `iat`, validated if present) — plus the optional `assert` condition over the wire claims.
@@ -539,7 +539,7 @@ const parsed = kit.verify<string>(token);
 
 JwsKit.isJws(token); // static
 JwsKit.decode(token);
-// static → { protectedHeader, unprotectedHeader, unknown, payload, signature, token } — no verification
+// static → { header, custom, payload, signature, token } — no verification
 ```
 
 ## JweKit
@@ -559,11 +559,11 @@ const token = kit.encrypt("secret data", { header: { oid: "msg-002" } });
 // → the compact JWE string
 
 const decrypted = kit.decrypt<string>(token);
-// → { protectedHeader, unprotectedHeader, unknown, payload, token }
+// → { header, custom, payload, token }
 
 JweKit.isJwe(token); // static
 JweKit.decode(token);
-// static → { protectedHeader, unprotectedHeader, unknown, token } — headers only, no decryption
+// static → { header, custom, token } — headers only, no decryption
 ```
 
 Compressed payloads (`zip` header) are explicitly rejected.
@@ -751,7 +751,7 @@ const { token } = await aegis.cws.sign(
   { tokenType: "at" }, // the bare kit PREFIX — this bag is wire-named
 );
 const parsed = await aegis.cws.verify(token);
-// { protectedHeader, unprotectedHeader, unknown, payload, token } — the Dict, unmodified
+// { protectedHeader, unprotectedHeader, custom, payload, token } — the Dict, unmodified
 ```
 
 ### Certificate binding
@@ -1285,8 +1285,8 @@ import {
 - Critical header parameters are enforced on **both** wires by one implementation. The two specifications agree on the duty and differ on whether a consequence is written down: RFC 7515 §4.1.11 mandates the JOSE refusal outright, while RFC 9052 §3.1 states the COSE requirement — the parameters a processor "is required to understand" — without attaching one, so aegis derives the refusal there (see the next bullet). ⭐ **The duty is the RECIPIENT's, and aegis is never the final recipient**, so the read side refuses every critical parameter until the caller **declares** it: `aegis.verify(token, assert, { critical: ["objectId"] })` at the domain tier (DOMAIN names), `aegis.jwt.verify(token, assert, { crit: ["oid"] })` and `JweKit.decrypt(token, { crit: [...] })` at the wire tier (WIRE names). Declaring nothing is the strict default — every custom critical parameter is refused, and **`oid` gets no exception**: that aegis registers a parameter says nothing about whether the application behind aegis can act on it. A declared member is honoured and, for `objectId`, reported on the verified domain header for the application to act on. On COSE the check reads the **protected bucket only** — the one the signature or AEAD covers — which is also where §3.1 requires every crit-listed parameter to live. On the write side a COSE `crit` member is emitted as the integer **label** its parameter is keyed under, because RFC 9052 §1.5 makes a crit member a label (`int / tstr`) and §3.1 makes a member naming a label absent from the protected bucket a fatal error.
 - **A `crit` naming a parameter the header carries no value for is refused at MINT**, on both wires (`*_invalid_crit`), whether the value is absent, `undefined`, `null` or empty. Naming a parameter critical states that a recipient must understand its VALUE, so a producer supplying none is contradicting itself — and the resulting token is malformed for _every_ recipient (RFC 7515 §4.1.11, RFC 9052 §3.1) rather than merely unsupported by some, which is strictly worse than what the producer asked for. The refusal is raised where the contradiction is made, on the FINISHED protected header, because that is the only place it can still be repaired — and because a parameter a `crit` names may come from any tier the kit assembles: the JOSE header is merged from four (`buildJoseHeader`), and the COSE protected bucket carries the kit-derived `alg`, `typ` and `cty` alongside the caller's own entries (`mergeCoseProtected`). The read side applies the same rule: `crit` naming a parameter that is absent _or_ empty is malformed.
 - **A `crit` may only name a parameter aegis implements as an extension, or one the same call writes as a custom parameter** — checked at MINT on both wires (`*_crit_param_not_permitted`). RFC 7515 §4.1.11 forbids a producer naming a parameter "defined by this specification or [JWA]" — every IANA-registered JOSE header parameter — and it reserves `crit` for exactly the names no specification defines, which is what makes an unregistered custom entry (`custom.header` on JOSE, `custom.protected` on COSE) nameable. `oid` is the only eligible REGISTERED name. ⚠ **The write gate and the read gate ask different questions**: may a PRODUCER name this, versus has the RECIPIENT claimed it. Both consult the registry, but only the write gate can be satisfied by it — on the read side the registry is read solely to REFUSE (a specification-defined name is malformed in a `crit`, on either wire), and acceptance then requires the caller's declaration, which is **necessary and never sufficient**: a declared member is still refused when the header does not carry it, carries it empty, or carries it in the COSE bucket the signature does not cover. So **a token aegis mints is a token aegis verifies when the verifier declares what the producer marked critical** — see the declaration in the bullet above. Two consequences worth stating: `crit: ["alg"]`, `["typ"]`, `["cty"]` and `["kid"]` are refused at the write on every wire (they used to mint, and `cty`/`kid` used to be answered differently by the two encodings), and a **wire** door refuses a member written in domain vocabulary (`crit: ["objectId"]`) because a wire door takes wire names — the **domain** door translates `critical: ["objectId"]` to `crit: ["oid"]` at the crossing and is unaffected.
-- `crit` is answered **before** the algorithm-match, on every wire that runs both gates — the six read paths `jws`, `jwt`, `jwe`, `cws`, `cwt` and `cwm` (a `cwe` read runs `crit` and no algorithm-match at all). Both gates run ahead of the signature or AEAD cycle, so the order only decides which refusal a token tripping BOTH receives, and it is always one of the two `crit` refusals — `*_invalid_crit` when the `crit` itself is malformed, `*_unsupported_crit_param` when it is well-formed and the caller declared nothing for it. Both are reachable on both wires: an unregistered COSE label is **carried** rather than dropped (it lands in the read result's `unknown` bucket under its stringified label, and the crit gate reads the header as the producer wrote it), so a foreign token's own extension marked critical reaches the second refusal exactly as it does on JOSE. ⚠ **That precedence is aegis policy, not a specification requirement — and the two wires do not stand on the same footing.** RFC 7515 §4.1.11 states the JOSE refusal outright ("then the JWS is invalid"). RFC 9052 §3.1 does not: it says `crit` indicates the parameters a processor "is required to understand", and its only fatal-error clause covers a _different_ condition — a crit label missing from the protected-header-parameters bucket — so the COSE refusal is aegis deriving the consequence. Neither document says which of two refusals wins. aegis answers `crit` because that is the specification's own question while the algorithm-match is aegis's defence-in-depth that no RFC asks for, and because a critical extension the reader does not implement is the producer saying the header cannot be correctly read without it. Three COSE formats (`cws`, `cwt`, `cwm`) used to answer `*_algorithm_mismatch` for such a token; they now match the JOSE ones.
-- The COSE **kits** report the **protected and unprotected header buckets separately** (`protectedHeader` / `unprotectedHeader`), plus an `unknown` bag of the same two buckets carrying the parameters no registry row answers for — that is the COSE wire, and the kit tier speaks it. The JOSE kits report an empty unprotected bucket: compact serialisation has one header and it is protected. The DOMAIN verbs report ONE `.header`, merged under the header registry's `placement` allowlist: the unprotected bucket filtered to `kid`/`iv`, then overwritten by the protected one. Nothing else read from the unprotected bucket may decide anything — `typ`, which routes the token and selects the profile floor, is protected-only, so a `typ` the signature does not cover answers nothing on either tier.
+- `crit` is answered **before** the algorithm-match, on every wire that runs both gates — the six read paths `jws`, `jwt`, `jwe`, `cws`, `cwt` and `cwm` (a `cwe` read runs `crit` and no algorithm-match at all). Both gates run ahead of the signature or AEAD cycle, so the order only decides which refusal a token tripping BOTH receives, and it is always one of the two `crit` refusals — `*_invalid_crit` when the `crit` itself is malformed, `*_unsupported_crit_param` when it is well-formed and the caller declared nothing for it. Both are reachable on both wires: an unregistered COSE label is **carried** rather than dropped (it lands in the read result's `custom` bucket under its stringified label, and the crit gate reads the header as the producer wrote it), so a foreign token's own extension marked critical reaches the second refusal exactly as it does on JOSE. ⚠ **That precedence is aegis policy, not a specification requirement — and the two wires do not stand on the same footing.** RFC 7515 §4.1.11 states the JOSE refusal outright ("then the JWS is invalid"). RFC 9052 §3.1 does not: it says `crit` indicates the parameters a processor "is required to understand", and its only fatal-error clause covers a _different_ condition — a crit label missing from the protected-header-parameters bucket — so the COSE refusal is aegis deriving the consequence. Neither document says which of two refusals wins. aegis answers `crit` because that is the specification's own question while the algorithm-match is aegis's defence-in-depth that no RFC asks for, and because a critical extension the reader does not implement is the producer saying the header cannot be correctly read without it. Three COSE formats (`cws`, `cwt`, `cwm`) used to answer `*_algorithm_mismatch` for such a token; they now match the JOSE ones.
+- The COSE **kits** report the **protected and unprotected header buckets separately** (`protectedHeader` / `unprotectedHeader`), plus a `custom` bag of the same two buckets carrying the parameters no registry row answers for — that is the COSE wire, and the kit tier speaks it. The **JOSE kits report ONE `header`** and a `custom.header` beside it: compact serialisation carries a single header and it is protected, so there is no second bucket to report. Assigning either wire's result to the other's type is a compile error. The DOMAIN verbs report ONE `.header`, merged under the header registry's `placement` allowlist: the unprotected bucket filtered to `kid`/`iv`, then overwritten by the protected one. Nothing else read from the unprotected bucket may decide anything — `typ`, which routes the token and selects the profile floor, is protected-only, so a `typ` the signature does not cover answers nothing on either tier.
 - A COSE confirmation (`cnf`) that the wire cannot carry fails **closed at mint**. RFC 8747 defines no `jkt` member for a COSE confirmation, and a JOSE thumbprint cannot be relabelled as a COSE one — RFC 7638 hashes a key's canonical JSON, RFC 9679 its canonical CBOR — so a `jkt`-bound token has no COSE form and minting one is refused rather than silently downgraded to a bearer CWT.
 - The same holds for a member COSE **can** carry that arrives **malformed**: `{ jwk, kid: 42 }` is refused (`cose_cnf_member_invalid`) rather than minted with the embedded key alone. A partially-written confirmation asserts a binding narrower than its author wrote, and the verifier — satisfied by the binding it can see — stops asking about the one that vanished. A member whose value is `undefined` is **absent**, not malformed — `{ jwk: undefined, kid }` mints on the `kid` alone.
 - DPoP-bound tokens (`cnf.jkt`) require either a matching DPoP proof or `trustBoundThumbprint: true` on verify.

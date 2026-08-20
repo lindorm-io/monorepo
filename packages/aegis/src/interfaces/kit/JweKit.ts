@@ -1,5 +1,5 @@
 import type {
-  DecryptedEncryptedToken,
+  JoseDecryptedEncryptedToken,
   DecryptTokenOptions,
   JweEncryptOptions,
   TokenContent,
@@ -11,5 +11,5 @@ export interface IJweKit {
   decrypt<T extends TokenContent = Buffer>(
     token: string,
     options?: DecryptTokenOptions,
-  ): DecryptedEncryptedToken<T, string>;
+  ): JoseDecryptedEncryptedToken<T>;
 }

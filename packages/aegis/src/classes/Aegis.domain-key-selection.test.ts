@@ -147,7 +147,7 @@ describe("the domain verbs' key selection", () => {
         },
       );
 
-      expect(JwtKit.decode(token).protectedHeader.alg).toBe("HS256");
+      expect(JwtKit.decode(token).header.alg).toBe("HS256");
     });
 
     // ⚠ BOTH DIRECTIONS, and the first one is what makes the pair honest. The
@@ -175,7 +175,7 @@ describe("the domain verbs' key selection", () => {
         { context: { accessTokenIssued: false } },
       );
 
-      expect(JwtKit.decode(token).protectedHeader.kid).toBe(TEST_EC_KEY_SIG.id);
+      expect(JwtKit.decode(token).header.kid).toBe(TEST_EC_KEY_SIG.id);
     });
 
     test("should sign with the NEWER key when the deployment's query names it", async () => {
@@ -193,7 +193,7 @@ describe("the domain verbs' key selection", () => {
         { context: { accessTokenIssued: false } },
       );
 
-      expect(JwtKit.decode(token).protectedHeader.kid).toBe(TEST_OKP_KEY_SIG.id);
+      expect(JwtKit.decode(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
     });
   });
 });

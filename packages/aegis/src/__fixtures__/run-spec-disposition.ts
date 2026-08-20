@@ -334,17 +334,18 @@ const observeHeader = async (
         ...(key ? { key } : {}),
       } as never);
 
-      // Read through the KIT door, which reports BOTH wire buckets. The domain
-      // `decrypt` reports the protected header alone.
-      const opened =
+      // Read through the KIT door, which reports every bucket its wire has. The
+      // domain `decrypt` reports one merged header. JOSE has a single bucket
+      // (`src/types/header/wire-buckets.ts#export type JoseHeaderBuckets`), so the pair collapses
+      // to it rather than pairing it with an empty second bag.
+      const bucket =
         wire === "cose"
-          ? await ctx.aegis.cwe.decrypt(token)
-          : await ctx.aegis.jwe.decrypt(token);
+          ? await ctx.aegis.cwe
+              .decrypt(token)
+              .then((o) => bothBuckets(o.protectedHeader, o.unprotectedHeader))
+          : await ctx.aegis.jwe.decrypt(token).then((o) => o.header as unknown as Dict);
 
-      return {
-        vocabulary: "wire",
-        bucket: bothBuckets(opened.protectedHeader, opened.unprotectedHeader),
-      };
+      return { vocabulary: "wire", bucket };
     }
 
     case "certificate": {

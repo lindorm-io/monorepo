@@ -31,7 +31,7 @@ describe("JOSE_TOKEN_WIRE typ gate", () => {
     const signed = kit.sign({ iss: "https://test.lindorm.io/", sub: "s" });
     const [, payload, signature] = signed.split(".");
     const header = Buffer.from(
-      JSON.stringify({ ...JwtKit.decode(signed).protectedHeader, typ: "not-a-jwt-typ" }),
+      JSON.stringify({ ...JwtKit.decode(signed).header, typ: "not-a-jwt-typ" }),
     ).toString("base64url");
 
     token = [header, payload, signature].join(".");

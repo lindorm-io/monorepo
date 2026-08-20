@@ -1,7 +1,7 @@
 import type {
   JoseSignUnstructuredTokenOptions,
   TokenContent,
-  VerifiedUnstructuredToken,
+  JoseVerifiedUnstructuredToken,
   VerifyUnstructuredTokenOptions,
 } from "../../types/index.js";
 
@@ -11,5 +11,5 @@ export interface IJwsKit {
   verify<T extends TokenContent = Buffer>(
     token: string,
     options?: VerifyUnstructuredTokenOptions,
-  ): VerifiedUnstructuredToken<T, string>;
+  ): JoseVerifiedUnstructuredToken<T>;
 }

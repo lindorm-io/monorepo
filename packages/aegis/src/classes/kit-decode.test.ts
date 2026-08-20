@@ -44,7 +44,7 @@ const coseEncKey = KryptosKit.generate.enc.oct({
   encryption: "A256GCM",
 });
 
-describe("kit decode — unified wire header + uniform per-pair result", () => {
+describe("kit decode — per-wire header buckets, no signature check", () => {
   let logger: ILogger;
 
   beforeEach(() => {
@@ -56,7 +56,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       const kit = new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
       const token = kit.sign({ ...jwtWire, jti: "the-jti" }, { tokenType: "at" });
 
-      const { protectedHeader: header, payload } = JwtKit.decode(token);
+      const { header, payload } = JwtKit.decode(token);
 
       expect(header.alg).toBe("ES512");
       expect(header.kid).toBe(TEST_EC_KEY_SIG.id);
@@ -104,7 +104,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       // A Buffer stays opaque (octet cty), so decode reconstructs it as a Buffer.
       const token = kit.sign(Buffer.from("the opaque payload"));
 
-      const { protectedHeader: header, payload } = JwsKit.decode<Buffer>(token);
+      const { header, payload } = JwsKit.decode<Buffer>(token);
 
       expect(header.alg).toBe("ES512");
       expect(header.kid).toBe(TEST_EC_KEY_SIG.id);
@@ -188,8 +188,8 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
     });
   });
 
-  describe("uniform result shape across each format pair", () => {
-    test("JWT ≡ CWT — same result keys, same shared claim keys", () => {
+  describe("per-wire result shape across each format pair", () => {
+    test("JWT reports ONE header bucket, CWT two — same shared claim keys", () => {
       const jwt = JwtKit.decode(
         new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG }).sign(jwtWire, {
           tokenType: "at",
@@ -201,24 +201,33 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
         }),
       );
 
+      // ⛔ THE TWO KEY SETS DIFFER, AND THAT IS THE RULE. Compact JOSE carries ONE
+      // header (`KIT_CAPABILITIES.jwt.unprotectedBucket: false`), so a JWT result
+      // has no unprotected bucket to report — not an empty one, none at all.
       expect(Object.keys(jwt).sort()).toEqual([
+        "custom",
+        "header",
+        "payload",
+        "signature",
+        "token",
+      ]);
+      expect(Object.keys(cwt).sort()).toEqual([
+        "custom",
         "payload",
         "protectedHeader",
         "signature",
         "token",
-        "unknown",
         "unprotectedHeader",
       ]);
-      expect(Object.keys(cwt).sort()).toEqual(Object.keys(jwt).sort());
 
-      // A compact JOSE token has ONE header and it is protected, so its
-      // unprotected bucket is empty — the same result SHAPE, a true answer.
-      expect(jwt.unprotectedHeader).toEqual({});
+      // The custom bag follows its wire for the same reason.
+      expect(Object.keys(jwt.custom)).toEqual(["header"]);
+      expect(Object.keys(cwt.custom).sort()).toEqual(["protected", "unprotected"]);
 
       // Shared header wire keys.
-      expect(typeof jwt.protectedHeader.alg).toBe("string");
+      expect(typeof jwt.header.alg).toBe("string");
       expect(typeof cwt.protectedHeader.alg).toBe("string");
-      expect(jwt.protectedHeader.kid).toBe(cwt.unprotectedHeader.kid);
+      expect(jwt.header.kid).toBe(cwt.unprotectedHeader.kid);
 
       // Shared payload claim keys (jti/cti diverge by RFC and are excluded).
       const shared = ["iss", "sub", "aud", "exp", "iat", "client_id", "scope"];
@@ -228,7 +237,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       }
     });
 
-    test("JWS ≡ CWS — same result keys, both opaque Buffer payloads", () => {
+    test("JWS reports ONE header bucket, CWS two — both opaque Buffer payloads", () => {
       const bytes = Buffer.from("identical opaque payload");
 
       const jws = JwsKit.decode<Buffer>(
@@ -239,27 +248,32 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       );
 
       expect(Object.keys(jws).sort()).toEqual([
+        "custom",
+        "header",
+        "payload",
+        "signature",
+        "token",
+      ]);
+      expect(Object.keys(cws).sort()).toEqual([
+        "custom",
         "payload",
         "protectedHeader",
         "signature",
         "token",
-        "unknown",
         "unprotectedHeader",
       ]);
-      expect(Object.keys(cws).sort()).toEqual(Object.keys(jws).sort());
-      expect(jws.unprotectedHeader).toEqual({});
 
       expect(Buffer.isBuffer(jws.payload)).toBe(true);
       expect(Buffer.isBuffer(cws.payload)).toBe(true);
       expect(jws.payload.equals(bytes)).toBe(true);
       expect(cws.payload.equals(bytes)).toBe(true);
-      expect(jws.protectedHeader.alg).toBe(cws.protectedHeader.alg);
+      expect(jws.header.alg).toBe(cws.protectedHeader.alg);
       // JOSE carries the kid protected, COSE unprotected — the ONE placement
       // divergence, now visible in the result rather than merged away.
-      expect(jws.protectedHeader.kid).toBe(cws.unprotectedHeader.kid);
+      expect(jws.header.kid).toBe(cws.unprotectedHeader.kid);
     });
 
-    test("JWE ≡ CWE — header only, content NOT exposed", () => {
+    test("JWE and CWE decode to headers only — content NOT exposed", () => {
       const secret = "the-plaintext-secret-value";
 
       const jwe = JweKit.decode(
@@ -269,23 +283,22 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
         new CweKit({ logger, kryptos: coseEncKey }).encrypt(Buffer.from(secret)),
       );
 
-      // Both decode to the SAME result shape: the header + the native token (the
-      // content stays ciphertext — never a plaintext payload field).
-      expect(Object.keys(jwe).sort()).toEqual([
+      // Each decodes to its own wire's buckets + the native token; the content
+      // stays ciphertext on both, so neither carries a payload field.
+      expect(Object.keys(jwe).sort()).toEqual(["custom", "header", "token"]);
+      expect(Object.keys(cwe).sort()).toEqual([
+        "custom",
         "protectedHeader",
         "token",
-        "unknown",
         "unprotectedHeader",
       ]);
-      expect(Object.keys(cwe).sort()).toEqual(Object.keys(jwe).sort());
-      expect(jwe.unprotectedHeader).toEqual({});
 
       // The content is ciphertext — the plaintext must not appear anywhere.
       expect(JSON.stringify(jwe)).not.toContain(secret);
       expect(JSON.stringify(cwe)).not.toContain(secret);
 
       // Both expose the content-encryption under the JOSE `enc` wire name.
-      expect(jwe.protectedHeader.enc).toBe("A256GCM");
+      expect(jwe.header.enc).toBe("A256GCM");
       expect(cwe.protectedHeader.enc).toBe("A256GCM");
     });
   });

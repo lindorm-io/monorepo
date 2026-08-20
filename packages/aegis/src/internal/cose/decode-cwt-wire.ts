@@ -1,6 +1,6 @@
 import type { Dict } from "@lindorm/types";
 import { CoseError } from "../../errors/index.js";
-import type { CwtClaimsWire, DecodedStructuredToken } from "../../types/index.js";
+import type { CoseDecodedStructuredToken, CwtClaimsWire } from "../../types/index.js";
 import { decodeCwtMessage } from "./cwt-message.js";
 import { requireAttachedPayload } from "./require-attached-payload.js";
 import { requireSignature } from "./require-signature.js";
@@ -16,13 +16,13 @@ import { splitSigned } from "./split-signed.js";
  */
 export const decodeCwtWire = <C extends Dict = Dict>(
   token: Buffer,
-): DecodedStructuredToken<CwtClaimsWire & C> => {
+): CoseDecodedStructuredToken<CwtClaimsWire & C> => {
   const {
     payload: payloadBstr,
     signature,
     protectedHeader,
     unprotectedHeader,
-    unknown,
+    custom,
   } = splitSigned(token, {
     arity: { atLeast: 3 },
     error: CoseError,
@@ -69,7 +69,7 @@ export const decodeCwtWire = <C extends Dict = Dict>(
   return {
     protectedHeader,
     unprotectedHeader,
-    unknown,
+    custom,
     payload: payload as CwtClaimsWire & C,
     signature: signatureBytes,
     token,

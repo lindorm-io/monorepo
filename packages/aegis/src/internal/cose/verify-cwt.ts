@@ -10,7 +10,7 @@ import { verifyCertBinding } from "../utils/verify-cert-binding.js";
 import type {
   CertificateBindingMode,
   CwtClaimsWire,
-  VerifiedStructuredToken,
+  CoseVerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../../types/index.js";
 import { decodeCwt } from "./decode-cwt.js";
@@ -42,7 +42,7 @@ export const verifyCwt = <C extends Dict = Dict>(
     certBindingMode: CertificateBindingMode;
     options: VerifyStructuredTokenOptions;
   },
-): VerifiedStructuredToken<CwtClaimsWire & C, Buffer> => {
+): CoseVerifiedStructuredToken<CwtClaimsWire & C> => {
   const { format, token, assert, clockTolerance, certBindingMode, options } = params;
 
   logger.debug("Verifying CWT", { options });
@@ -95,7 +95,7 @@ export const verifyCwt = <C extends Dict = Dict>(
   // carried into a signature cycle it could never satisfy — the two
   // protected-header gates answer a hostile header before any cryptography, and
   // the signature or MAC is checked over the structure.
-  const { protectedHeader, unprotectedHeader, unknown, protectedMap, content } =
+  const { protectedHeader, unprotectedHeader, custom, protectedMap, content } =
     verifyCoseStructure({
       kryptos,
       token,
@@ -150,7 +150,7 @@ export const verifyCwt = <C extends Dict = Dict>(
   return {
     protectedHeader,
     unprotectedHeader,
-    unknown,
+    custom,
     payload: wire as CwtClaimsWire & C,
     token,
   };

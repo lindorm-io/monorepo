@@ -3,7 +3,7 @@ import { JwsKit } from "../../classes/JwsKit.js";
 import type {
   AegisVerifyKey,
   TokenContent,
-  VerifiedUnstructuredToken,
+  JoseVerifiedUnstructuredToken,
   VerifyUnstructuredTokenOptions,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
@@ -20,7 +20,7 @@ export const rawVerifyJws = async <T extends TokenContent = Buffer>({
   jws: string;
   options?: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
-}): Promise<VerifiedUnstructuredToken<T, string>> => {
+}): Promise<JoseVerifiedUnstructuredToken<T>> => {
   // `key` is the aegis-only external-key injection (it resolves the kryptos);
   // every other field IS the kit's VerifyUnstructuredTokenOptions and is
   // forwarded structurally, so a new verify option threads through with no change
@@ -33,8 +33,8 @@ export const rawVerifyJws = async <T extends TokenContent = Buffer>({
   // with no claims layer, so there is no `iss` to narrow the kid lookup by. Not
   // an oversight; see the unscoped-paths note in `resolve-key.ts`.
   const kryptos = await deps.resolveVerifyKey({
-    id: decode.protectedHeader.kid,
-    algorithm: decode.protectedHeader.alg as KryptosSigAlgorithm,
+    id: decode.header.kid,
+    algorithm: decode.header.alg as KryptosSigAlgorithm,
     verify: key,
   });
 

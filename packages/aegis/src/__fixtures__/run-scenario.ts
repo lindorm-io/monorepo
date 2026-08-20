@@ -50,8 +50,9 @@ import { COSE_TAG, decodeProtectedHeader } from "../internal/cose/structures.js"
 import { coseByJose, headerByJose } from "../internal/header/header-registry.js";
 import { WIRE_TAGS } from "../internal/registry/wire.js";
 import type {
+  CoseHeaderBuckets,
   CoseWireTokenEnvelope,
-  WireHeaderBuckets,
+  JoseHeaderBuckets,
   ParsedDpopProof,
   TokenContent,
   TokenFormat,
@@ -414,13 +415,19 @@ type ScenarioResult = {
    */
   dpop?: { value: ParsedDpopProof | undefined };
   /**
-   * The WIRE-tier `unknown` header bags, in a cell for the same reason as the
-   * rest: only a KIT door reports them. The DOMAIN verbs deliberately do not —
-   * an unregistered wire parameter has no domain name — so a row asserting on
-   * this against `verify`/`decrypt` fails BY NAME rather than passing on the
-   * verb's silence, which is exactly the tier boundary stated as a test.
+   * The WIRE-tier `custom` header bags, in a cell for the same reason as the
+   * rest: only a KIT door reports them. The DOMAIN verbs report none — an
+   * unregistered wire parameter has no domain name — so a row asserting on this
+   * against `verify`/`decrypt` fails BY NAME rather than passing on the verb's
+   * silence, which is exactly the tier boundary stated as a test.
+   *
+   * ⚠ THE TWO WIRES REPORT DIFFERENT SHAPES and the union is what keeps that
+   * honest: JOSE reports ONE bucket, COSE two. {@link customBucketOf} resolves a
+   * row's bucket against whichever ran, and REFUSES the pair that has no meaning.
    */
-  unknownHeader?: { value: WireHeaderBuckets["unknown"] | undefined };
+  customHeader?: {
+    value: JoseHeaderBuckets["custom"] | CoseHeaderBuckets["custom"] | undefined;
+  };
   /**
    * The WIRE protected header a KIT door reports, in a cell of its own — see the
    * `wireHeader` THEN step. A DOMAIN act reports none, so a row asserting on it
@@ -918,6 +925,37 @@ export const signCompactByHand = async (
   );
 
   return `${signingInput}.${B64.encode(Buffer.from(signature), B64U)}`;
+};
+
+/**
+ * The custom bag a row's BUCKET names, on whichever wire ran.
+ *
+ * A row states the COSE bucket spelling on both wires (the `customHeader` step in
+ * `scenarios.ts`), and JOSE names its ONE bucket `header` —
+ * compact JWS/JWE carry a single header and it is integrity-protected
+ * (`src/types/header/wire-buckets.ts#export type JoseHeaderBuckets`) — so `protected` reads it.
+ *
+ * ⚠ `unprotected` THROWS on a JOSE run rather than answering an empty bag: an
+ * `excludes`-only assertion over `{}` can never fail, so the row would report a
+ * pass having looked at nothing. Same refusal, same reason as
+ * {@link signForeignJose} on a foreign row's unprotected bucket.
+ */
+const customBucketOf = (
+  bags: JoseHeaderBuckets["custom"] | CoseHeaderBuckets["custom"],
+  bucket: "protected" | "unprotected",
+): Record<string, unknown> => {
+  // `in`, not `Object.hasOwn`: the key is this file's own literal from a CLOSED
+  // list, never a token's, and it is what narrows the union.
+  if (!("header" in bags)) return bags[bucket];
+
+  if (bucket === "unprotected") {
+    throw new Error(
+      "the row asserts on the UNPROTECTED custom header bucket, but this run is on the JOSE wire, whose compact serialisation has only one header. " +
+        "Scope the row with `unsupported: { jose: … }`.",
+    );
+  }
+
+  return bags.header;
 };
 
 const signForeignJose = async (
@@ -1625,8 +1663,8 @@ const materialise = async (
  * pass while saying nothing about integrity. An unregistered member is inert on
  * both wires: RFC 7515 §4 leaves an unrecognised JOSE Header Parameter to be
  * ignored when it is not listed in `crit`, and an unregistered COSE label has no
- * JOSE wire name so it lands in the read result's `unknown` bag rather than in a
- * typed one (`src/internal/header/cose-wire-header.ts#unknown[String(label)] = value;`).
+ * JOSE wire name so it lands in the read result's `custom` bag rather than in a
+ * typed one (`src/internal/header/cose-wire-header.ts#custom[String(label)] = value;`).
  * ⚠ That bag is NOT inert to everything: `rejectUnknownCritical` merges it into
  * the header it validates, so an added member can SATISFY a `crit` that names it
  * (`src/internal/utils/validate-crit.ts#is not present in the header`) — standing in
@@ -1912,8 +1950,8 @@ const act = async (
           return {
             token: current.token,
             claims: result.payload as Dict,
-            wireHeader: { value: result.protectedHeader as unknown as Dict },
-            unknownHeader: { value: result.unknown },
+            wireHeader: { value: result.header as unknown as Dict },
+            customHeader: { value: result.custom },
           };
         }
         case "cwt": {
@@ -1926,15 +1964,15 @@ const act = async (
             token: current.token,
             claims: result.payload as Dict,
             wireHeader: { value: result.protectedHeader as unknown as Dict },
-            unknownHeader: { value: result.unknown },
+            customHeader: { value: result.custom },
           };
         }
         case "jws": {
           const result = await ctx.aegis.jws.verify(current.token, step.options);
           return {
             token: current.token,
-            wireHeader: { value: result.protectedHeader as unknown as Dict },
-            unknownHeader: { value: result.unknown },
+            wireHeader: { value: result.header as unknown as Dict },
+            customHeader: { value: result.custom },
           };
         }
         case "cws": {
@@ -1942,7 +1980,7 @@ const act = async (
           return {
             token: current.token,
             wireHeader: { value: result.protectedHeader as unknown as Dict },
-            unknownHeader: { value: result.unknown },
+            customHeader: { value: result.custom },
           };
         }
 
@@ -2203,7 +2241,7 @@ const assertObservation = (step: ThenStep, result: ScenarioResult, wire: Wire): 
     }
 
     case "header": {
-      // The CELL, not the value — the same guard `wireHeader` and `unknownHeader`
+      // The CELL, not the value — the same guard `wireHeader` and `customHeader`
       // carry. ⚠ WHAT IT CATCHES IS NARROW AND REAL: measured on this repo's
       // `@vitest/expect`, `expect(undefined).toMatchObject({})` PASSES while
       // `expect(undefined).not.toHaveProperty(x)` THROWS — so a row with a
@@ -2294,31 +2332,31 @@ const assertObservation = (step: ThenStep, result: ScenarioResult, wire: Wire): 
       return;
     }
 
-    case "unknownHeader": {
-      // The CELL, not the value — see `ScenarioResult.unknownHeader`. A domain
-      // verb reports no unknown bag at all, and a row asserting on one there is
+    case "customHeader": {
+      // The CELL, not the value — see `ScenarioResult.customHeader`. A domain
+      // verb reports no custom bag at all, and a row asserting on one there is
       // asserting the tier boundary does not exist.
-      if (result.unknownHeader === undefined) {
+      if (result.customHeader === undefined) {
         throw new Error(
-          "the row asserts on the wire-tier `unknown` header bag, but the last act reported none. " +
-            "Only a `kit-verify` does — the DOMAIN verbs carry no unregistered parameter by design.",
+          "the row asserts on the wire-tier `custom` header bag, but the last act reported none. " +
+            "Only a `kit-verify` does — the DOMAIN verbs carry no unregistered parameter.",
         );
       }
 
-      // ⚠ THE CELL WAS GUARDED, THE VALUE WAS NOT — and an `excludes`-only row
-      // over `{}` can never fail, so a kit that stopped reporting `unknown`
-      // altogether would leave such a row green. The sibling `wirePayload` branch
-      // above throws for the same shape; this matches it.
-      const bags = result.unknownHeader.value;
+      // ⚠ THE CELL IS GUARDED AND SO IS THE VALUE — an `excludes`-only row over
+      // `{}` can never fail, so a kit that stopped reporting `custom` altogether
+      // would leave such a row green. The sibling `wirePayload` branch above
+      // throws for the same shape; this matches it.
+      const bags = result.customHeader.value;
 
       if (bags === undefined) {
         throw new Error(
-          "the row asserts on the wire-tier `unknown` header bag, but the act reported the cell with NO value — " +
+          "the row asserts on the wire-tier `custom` header bag, but the act reported the cell with NO value — " +
             "an exclusion over an absent bag can never fail, so the row would pass without looking.",
         );
       }
 
-      const bag = bags[step.bucket];
+      const bag = customBucketOf(bags, step.bucket);
 
       if (step.includes) expect(bag).toMatchObject(step.includes);
       for (const key of step.excludes ?? []) {

@@ -64,18 +64,20 @@ const injectUnprotected = (token: Buffer, entries: Array<[unknown, unknown]>): B
 /**
  * Reading a FOREIGN token's unregistered header parameters.
  *
- * ⚠ A READ CARRIES AN UNKNOWN AND NEVER REFUSES ONE. A foreign issuer may write
- * parameters aegis has never heard of, and the issuer is not ours to reject —
- * dropping them hides what the token said, which is the same defect as the typed
+ * ⚠ A READ CARRIES A CUSTOM PARAM AND NEVER REFUSES ONE. A foreign issuer may
+ * write parameters aegis has never heard of, and the issuer is not ours to reject
+ * — dropping them hides what the token said, which is the same defect as the typed
  * lie: in both cases a caller cannot tell a parameter that was absent from one
  * that was thrown away.
  *
  * ⛔ AND THEY NEVER JOIN THE TYPED BAGS. `WireTokenHeader` states which keys can
  * exist; a value carrying others under that type is a claim nothing downstream
  * can check.
+ *
+ * The WRITE half is `custom-header-params.test.ts`.
  */
-describe("unknown header parameters, on read", () => {
-  test("a JOSE header member the registry does not answer for lands in unknown.protected", () => {
+describe("custom header parameters, on read", () => {
+  test("a JOSE header member the registry does not answer for lands in custom.header", () => {
     const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
     const token = kit.sign(WIRE_CLAIMS);
 
@@ -92,20 +94,20 @@ describe("unknown header parameters, on read", () => {
 
     const decoded = JwtKit.decode(tampered);
 
-    expect(decoded.unknown.protected).toEqual({ "x-foreign": "value", 7: "numeric-key" });
+    expect(decoded.custom.header).toEqual({ "x-foreign": "value", 7: "numeric-key" });
     // NOT dropped, and not in the typed bag either.
-    expect(decoded.protectedHeader).not.toHaveProperty("x-foreign");
+    expect(decoded.header).not.toHaveProperty("x-foreign");
     // The registered members are untouched — the split moves nothing else.
-    expect(decoded.protectedHeader.alg).toBe("ES512");
-    expect(decoded.protectedHeader.typ).toBe("JWT");
+    expect(decoded.header.alg).toBe("ES512");
+    expect(decoded.header.typ).toBe("JWT");
   });
 
-  test("COSE labels the registry does not answer for land in the matching unknown bucket", () => {
+  test("COSE labels the registry does not answer for land in the matching custom bucket", () => {
     const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
     const token = kit.sign(WIRE_CLAIMS);
 
     // A tstr label AND an integer one — RFC 9052 §1.4 admits both forms, and both
-    // key the unknown bag by `String(label)`.
+    // key the custom bag by `String(label)`.
     const decoded = CwtKit.decode(
       injectUnprotected(
         injectProtected(token, [
@@ -116,11 +118,11 @@ describe("unknown header parameters, on read", () => {
       ),
     );
 
-    expect(decoded.unknown.protected).toEqual({
+    expect(decoded.custom.protected).toEqual({
       "x-foreign": "protected-value",
       "-9999": "integer-label",
     });
-    expect(decoded.unknown.unprotected).toEqual({ "x-advisory": "unprotected-value" });
+    expect(decoded.custom.unprotected).toEqual({ "x-advisory": "unprotected-value" });
 
     expect(decoded.protectedHeader).not.toHaveProperty("x-foreign");
     expect(decoded.unprotectedHeader).not.toHaveProperty("x-advisory");
@@ -143,8 +145,8 @@ describe("unknown header parameters, on read", () => {
 
     // The kit's OWN `typ`, off integer label 16, is what the typed bag reports.
     expect(decoded.protectedHeader.typ).toBe("application/at+cwt");
-    // The text-labelled impostor is carried as what it is — an unknown.
-    expect(decoded.unknown.protected).toEqual({ typ: "application/hostile+cwt" });
+    // The text-labelled impostor is carried as what it is — a custom param.
+    expect(decoded.custom.protected).toEqual({ typ: "application/hostile+cwt" });
   });
 
   /**
@@ -173,15 +175,15 @@ describe("unknown header parameters, on read", () => {
       signature,
     ].join(".");
 
-    const { unknown } = JwtKit.decode(tampered);
+    const { custom } = JwtKit.decode(tampered);
 
     // CARRIED: the bag's own contract is that a read never drops what an issuer
     // wrote, and `__proto__` is the one key a plain object cannot hold.
-    expect(Object.keys(unknown.protected)).toEqual(["__proto__"]);
+    expect(Object.keys(custom.header)).toEqual(["__proto__"]);
     // NOT POLLUTED: the value did not become the bag's prototype, so nothing a
     // consumer looks up on the bag comes from the attacker.
-    expect((unknown.protected as Record<string, unknown>).cty).toBeUndefined();
-    expect(Object.getPrototypeOf(unknown.protected)).toBeNull();
+    expect((custom.header as Record<string, unknown>).cty).toBeUndefined();
+    expect(Object.getPrototypeOf(custom.header)).toBeNull();
     // …and no OTHER object in the process inherited it either.
     expect(({} as Record<string, unknown>).cty).toBeUndefined();
   });
@@ -190,16 +192,16 @@ describe("unknown header parameters, on read", () => {
     const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
     const token = kit.sign(WIRE_CLAIMS);
 
-    const { unknown } = CwtKit.decode(
+    const { custom } = CwtKit.decode(
       injectUnprotected(injectProtected(token, [["__proto__", { cty: "text/plain" }]]), [
         ["__proto__", { typ: "application/hostile+cwt" }],
       ]),
     );
 
-    expect(Object.keys(unknown.protected)).toEqual(["__proto__"]);
-    expect(Object.keys(unknown.unprotected)).toEqual(["__proto__"]);
-    expect((unknown.protected as Record<string, unknown>).cty).toBeUndefined();
-    expect((unknown.unprotected as Record<string, unknown>).typ).toBeUndefined();
+    expect(Object.keys(custom.protected)).toEqual(["__proto__"]);
+    expect(Object.keys(custom.unprotected)).toEqual(["__proto__"]);
+    expect((custom.protected as Record<string, unknown>).cty).toBeUndefined();
+    expect((custom.unprotected as Record<string, unknown>).typ).toBeUndefined();
     expect(({} as Record<string, unknown>).cty).toBeUndefined();
   });
 
@@ -207,12 +209,12 @@ describe("unknown header parameters, on read", () => {
    * ⚠⚠ A KNOWN, DELIBERATE LIMITATION — pinned so it is visible rather than
    * discovered. RFC 9052 §1.4 makes the integer label `7` and the text label
    * `"7"` DIFFERENT labels, and CBOR keys them apart; this package states that
-   * rule elsewhere in as many words (`scenarios.ts#WireKey`). The `unknown` bag
-   * cannot honour it: {@link WireHeaderBuckets} types it as
+   * rule elsewhere in as many words (`scenarios.ts#WireKey`). The `custom` bag
+   * cannot honour it: {@link CoseHeaderBuckets} types it as
    * `Record<string, unknown>`, so an integer label can only be reported under its
    * decimal spelling and a bucket carrying both forms yields ONE key.
    *
-   * Representing both faithfully needs {@link WireHeaderBuckets.unknown} typed
+   * Representing both faithfully needs {@link CoseHeaderBuckets.custom} typed
    * `Map<CoseLabel, unknown>` rather than `Record<string, unknown>` — a change to
    * a PUBLIC read surface, which is why it is not made here. The collision is
    * stated rather than hidden: a token carrying both forms of the same numeral
@@ -221,7 +223,7 @@ describe("unknown header parameters, on read", () => {
    * ⚠ It needs a token no aegis writer produces and no sane issuer emits, which
    * is why it is a limitation rather than a defect worth a surface change.
    */
-  test("both label FORMS of one numeral collapse to a single unknown key", () => {
+  test("both label FORMS of one numeral collapse to a single custom key", () => {
     const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
     const token = kit.sign(WIRE_CLAIMS);
 
@@ -234,8 +236,8 @@ describe("unknown header parameters, on read", () => {
 
     // ONE key, and the LAST label written wins — CBOR carried two parameters,
     // the bag reports one.
-    expect(Object.keys(decoded.unknown.protected)).toEqual(["-9999"]);
-    expect(decoded.unknown.protected["-9999"]).toBe("text-label");
+    expect(Object.keys(decoded.custom.protected)).toEqual(["-9999"]);
+    expect(decoded.custom.protected["-9999"]).toBe("text-label");
   });
 
   /**
@@ -244,12 +246,12 @@ describe("unknown header parameters, on read", () => {
    * `joseByCose` resolves a tstr label only through `byCoseName`, which holds the
    * private-use parameters alone (`oid` today) — so a bucket carrying the TEXT
    * label `"alg"` or `"crit"` beside the genuine INTEGER labels 1 and 2 puts the
-   * foreign spelling in `unknown.protected` under a key that collides with the
+   * foreign spelling in `custom.protected` under a key that collides with the
    * JOSE name of the real one. `String(label)` and a JOSE name share one string
    * space; the two bags are NOT disjoint.
    *
    * ⚠ WHICH MAKES MERGE ORDER A SECURITY PROPERTY, not a formality
-   * ({@link writtenHeader}). Read with `unknown` last, a stranger appending a text
+   * ({@link writtenHeader}). Read with `custom` last, a stranger appending a text
    * `"crit"` overrides the signed one — and `aegis.parse` checks no signature at
    * all, so RFC 9052 §3.1's fatal-error rule can be satisfied by a `crit` the
    * issuer never wrote.
@@ -268,15 +270,15 @@ describe("unknown header parameters, on read", () => {
 
     const decoded = CwtKit.decode(token);
 
-    // Both spellings survive the read, in their own bags — the unknown one is
+    // Both spellings survive the read, in their own bags — the custom one is
     // CARRIED, exactly as any other unregistered parameter is.
     expect(decoded.protectedHeader.alg).toBe("ES512");
-    expect(decoded.unknown.protected.alg).toBe("HS256");
+    expect(decoded.custom.protected.alg).toBe("HS256");
 
     // ⛔ …and the REGISTERED one is what the merged view reports.
     const merged = writtenHeader(
       decoded.protectedHeader as unknown as Record<string, unknown>,
-      decoded.unknown.protected,
+      decoded.custom.protected,
     );
 
     expect(merged.alg).toBe("ES512");
@@ -308,7 +310,7 @@ describe("unknown header parameters, on read", () => {
 
     // The two labels reduce to one string on the way out…
     expect(decoded.protectedHeader.crit).toEqual(["7"]);
-    expect(decoded.unknown.protected["7"]).toBe("v");
+    expect(decoded.custom.protected["7"]).toBe("v");
 
     // …so the header AS WRITTEN carries a `"7"` the crit can name, and the
     // malformed-crit gate finds nothing to refuse. Were the labels kept apart,
@@ -317,10 +319,46 @@ describe("unknown header parameters, on read", () => {
       validateCrit(
         writtenHeader(
           decoded.protectedHeader as unknown as Record<string, unknown>,
-          decoded.unknown.protected,
+          decoded.custom.protected,
         ),
       ),
     ).toBeNull();
+  });
+
+  /**
+   * ⛔ THE VALUE TYPE IS `unknown` AND STAYS THAT WAY, which is what lets a read
+   * report the wire rather than a normalisation of it. A custom parameter whose
+   * value is a nested map is a CBOR map on COSE and a JSON object on JOSE, and the
+   * two decoders hand back the shapes their wires carry. Converting either way
+   * would invent a structure on one wire or destroy label fidelity on the other —
+   * RFC 9052 §1.4 admits non-string keys, which an object cannot hold.
+   *
+   * ⚠ A consumer therefore branches on the SHAPE, exactly as it would reading the
+   * raw wire. The reasoning lives on the type
+   * (`src/types/header/wire-buckets.ts#export type CoseHeaderBuckets`); this is
+   * the row that makes it fail if the decoders ever agree.
+   */
+  test("a nested CBOR map survives as a Map, and its JOSE twin as a plain object", () => {
+    // ONE logical input, written through both public mint doors.
+    const nested = { k: "v" };
+
+    const cose = CwtKit.decode(
+      new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(WIRE_CLAIMS, {
+        custom: { protected: { "x-nested": nested } },
+      }),
+    ).custom.protected["x-nested"];
+
+    const jose = JwtKit.decode(
+      new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(WIRE_CLAIMS, {
+        custom: { header: { "x-nested": nested } },
+      }),
+    ).custom.header["x-nested"];
+
+    expect(cose).toBeInstanceOf(Map);
+    expect([...(cose as Map<unknown, unknown>).entries()]).toEqual([["k", "v"]]);
+
+    expect(jose).not.toBeInstanceOf(Map);
+    expect(jose).toEqual({ k: "v" });
   });
 
   test("`oid` DOES resolve from its text label, because that is a label aegis writes", () => {
@@ -332,6 +370,6 @@ describe("unknown header parameters, on read", () => {
     const decoded = CwtKit.decode(kit.sign(WIRE_CLAIMS, { header: { oid: "1.2.3.4" } }));
 
     expect(decoded.protectedHeader.oid).toBe("1.2.3.4");
-    expect(decoded.unknown.protected).toEqual({});
+    expect(decoded.custom.protected).toEqual({});
   });
 });

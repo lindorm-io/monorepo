@@ -84,7 +84,10 @@ import type {
   CertificateBindingMode,
   CweEncryptOptions,
   CwtClaimsWire,
-  DecryptedEncryptedToken,
+  CoseDecryptedEncryptedToken,
+  CoseVerifiedStructuredToken,
+  CoseVerifiedUnstructuredToken,
+  JoseDecryptedEncryptedToken,
   DecryptedToken,
   DecryptOptions,
   DecryptTokenOptions,
@@ -110,9 +113,9 @@ import type {
   TokenContent,
   TokenProfile,
   TokenProfileInput,
-  VerifiedStructuredToken,
+  JoseVerifiedStructuredToken,
   VerifiedToken,
-  VerifiedUnstructuredToken,
+  JoseVerifiedUnstructuredToken,
   VerifyAssert,
   VerifyDpopProofOptions,
   VerifyOptions,
@@ -579,7 +582,7 @@ export class Aegis implements IAegis {
   private jweDecrypt<T extends TokenContent = Buffer>(
     jwe: string,
     options: DecryptTokenOptions & { key?: AegisDecryptKey } = {},
-  ): Promise<DecryptedEncryptedToken<T, string>> {
+  ): Promise<JoseDecryptedEncryptedToken<T>> {
     return rawDecryptJwe<T>({ jwe, options, deps: this.deps });
   }
 
@@ -594,7 +597,7 @@ export class Aegis implements IAegis {
   private jwsVerify<T extends TokenContent = Buffer>(
     jws: string,
     options: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey } = {},
-  ): Promise<VerifiedUnstructuredToken<T, string>> {
+  ): Promise<JoseVerifiedUnstructuredToken<T>> {
     return rawVerifyJws<T>({ jws, options, deps: this.deps });
   }
 
@@ -617,7 +620,7 @@ export class Aegis implements IAegis {
   private cweDecrypt<T extends TokenContent = Buffer>(
     token: string,
     options: DecryptTokenOptions & { key?: AegisDecryptKey } = {},
-  ): Promise<DecryptedEncryptedToken<T, Buffer>> {
+  ): Promise<CoseDecryptedEncryptedToken<T>> {
     return rawDecryptCwe<T>({ token, options, deps: this.deps });
   }
 
@@ -632,7 +635,7 @@ export class Aegis implements IAegis {
   private cwsVerify<T extends TokenContent = Buffer>(
     token: string,
     options: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey } = {},
-  ): Promise<VerifiedUnstructuredToken<T, Buffer>> {
+  ): Promise<CoseVerifiedUnstructuredToken<T>> {
     return rawVerifyCws<T>({ token, options, deps: this.deps });
   }
 
@@ -648,7 +651,7 @@ export class Aegis implements IAegis {
     token: string,
     assert?: Condition<CwtClaimsWire & C>,
     options: VerifyStructuredTokenOptions & { key?: AegisVerifyKey } = {},
-  ): Promise<VerifiedStructuredToken<CwtClaimsWire & C, Buffer>> {
+  ): Promise<CoseVerifiedStructuredToken<CwtClaimsWire & C>> {
     return rawVerifyCwt<C>({ token, assert, options, deps: this.deps });
   }
 
@@ -664,7 +667,7 @@ export class Aegis implements IAegis {
     token: string,
     assert?: Condition<CwtClaimsWire & C>,
     options: VerifyStructuredTokenOptions & { key?: AegisVerifyKey } = {},
-  ): Promise<VerifiedStructuredToken<CwtClaimsWire & C, Buffer>> {
+  ): Promise<CoseVerifiedStructuredToken<CwtClaimsWire & C>> {
     return rawVerifyCwm<C>({ token, assert, options, deps: this.deps });
   }
 
@@ -692,7 +695,7 @@ export class Aegis implements IAegis {
     jwt: string,
     assert?: Condition<JwtClaimsWire & C>,
     options: VerifyStructuredTokenOptions & { key?: AegisVerifyKey } = {},
-  ): Promise<VerifiedStructuredToken<JwtClaimsWire & C, string>> {
+  ): Promise<JoseVerifiedStructuredToken<JwtClaimsWire & C>> {
     return rawVerifyJwt<C>({ jwt, assert, options, deps: this.deps });
   }
 
