@@ -1,6 +1,7 @@
 import type {
   AegisSignKey,
   SignedToken,
+  JoseSignUnstructuredTokenOptions,
   CoseSignUnstructuredTokenOptions,
   TokenContent,
 } from "../../types/index.js";
@@ -21,21 +22,24 @@ import type { TokenFormatOfKind } from "./token-format-kind.js";
  *
  * The guard runs HERE rather than in each namespace: a check beside either door
  * is a second copy of the wire's table and can disagree with it. It takes the
- * WIDER (COSE) option type because one implementation serves both doors; the
- * PUBLIC `aegis.jws.sign` narrows to the JOSE one. `wire-input-disposition.test.ts` drives every row of
- * both wires' `signOpaque` tables through these doors.
+ * INTERSECTION of the two opaque kits' option types because one implementation
+ * serves both doors and neither type is wider on its own — the JOSE one alone has
+ * `custom.header`, the COSE one alone `custom.protected`/`custom.unprotected` and
+ * `proprietary` (`types/header/wire-envelope.ts`). The PUBLIC doors are the
+ * per-wire ones: `aegis.jws.sign` takes the JOSE type.
+ * `wire-input-disposition.test.ts` drives every row of both wires' `signOpaque`
+ * tables through these doors.
  *
  * ⚠ NO domain → wire translation happens here, and none belongs here. These
- * namespaces are the WIRE tier: `CoseSignUnstructuredTokenOptions` is
- * `CoseWireTokenEnvelope`, so `tokenType` is already the bare kit prefix and the
- * header bag is already wire-named. The DOMAIN tier (`aegis.mint`,
+ * namespaces are the WIRE tier: both opaque option types ARE their wire envelope
+ * (`types/header/wire-envelope.ts`), so `tokenType` is already the bare kit prefix
+ * and the header bag is already wire-named. The DOMAIN tier (`aegis.mint`,
  * `aegis.sign`) is where `domainTokenTypePrefix` / `domainHeaderToWire` run.
  *
  * ⚠ The kit option surface travels by REST SPREAD, not by a field-by-field copy.
- * `rest` is exactly `CoseSignUnstructuredTokenOptions`, so a new kit sign option
- * threads through with no change here and cannot be dropped by this function
- * forgetting to name it — which is the failure {@link SignClaimsInput} documents
- * on the claims side.
+ * `rest` is exactly that intersection, so a new kit sign option threads through
+ * with no change here and cannot be dropped by this function forgetting to name
+ * it — which is the failure {@link SignClaimsInput} documents on the claims side.
  */
 export const rawSignOpaque = async ({
   format,
@@ -46,7 +50,8 @@ export const rawSignOpaque = async ({
   /** DERIVED from the format-kind record, so the two cannot name different sets. */
   format: TokenFormatOfKind<"opaque">;
   data: TokenContent;
-  options?: CoseSignUnstructuredTokenOptions & { key?: AegisSignKey };
+  options?: JoseSignUnstructuredTokenOptions &
+    CoseSignUnstructuredTokenOptions & { key?: AegisSignKey };
   deps: AegisDeps;
 }): Promise<SignedToken> => {
   const wire = tokenWireFor(format);

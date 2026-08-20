@@ -77,18 +77,24 @@ export type WireTokenEnvelope = {
  * The JOSE sign/encrypt envelope — {@link WireTokenEnvelope} plus the custom bag.
  *
  * Compact JWS/JWE serialisation carries ONE header and it is integrity-protected
- * (`KIT_CAPABILITIES.<jose kit>.unprotectedBucket: false`), so there is one custom
- * bucket and no `custom.unprotected` to write.
+ * (`KIT_CAPABILITIES.<jose kit>.unprotectedBucket: false`), so the custom bucket
+ * is named `header` for that one header — `protected` would name a bucket-vs-bucket
+ * contrast this wire has no second bucket for — and there is no `custom.unprotected`
+ * to write. The COSE spelling is a compile error here (pinned: `wire-envelope.test.ts`).
  */
 export type JoseWireTokenEnvelope = WireTokenEnvelope & {
   /**
-   * UNREGISTERED header params, carried VERBATIM under their own keys. A key the
-   * header registry answers for is REFUSED here (`header_registered_in_custom`) —
-   * it belongs in `header`, where its codec and placement apply — and a kit-owned
-   * param is refused with `header_kit_owned_in_custom`.
+   * UNREGISTERED header params, carried VERBATIM under their own keys. `custom.header`
+   * and the top-level `header` are the UNREGISTERED and REGISTERED halves of that one
+   * header; `internal/header/build-jose-header.ts` merges them into one bag.
+   *
+   * A key the header registry answers for is REFUSED here
+   * (`header_registered_in_custom`) — it belongs in `header`, where its codec and
+   * placement apply — and a kit-owned param is refused with
+   * `header_kit_owned_in_custom`.
    */
   custom?: {
-    protected?: Record<string, unknown>;
+    header?: Record<string, unknown>;
   };
 };
 

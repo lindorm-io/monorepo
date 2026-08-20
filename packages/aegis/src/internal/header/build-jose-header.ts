@@ -49,7 +49,7 @@ import { normaliseHeaders } from "./normalise-headers.js";
  *    `reserved` rows were: the request disappeared and the token looked fine.
  *  - an UNREGISTERED parameter in `header` is still DROPPED by the shaping. That
  *    is the closed-set rule for THAT bag, which is what keeps a typo a compile
- *    error there; an unregistered parameter has its own door, `custom.protected`,
+ *    error there; an unregistered parameter has its own door, `custom.header`,
  *    and the two never meet.
  *
  * ⚠ A PARAMETER THAT EMITS NOTHING IS NOT A PARAMETER, so the caller's bag is
@@ -116,8 +116,8 @@ export const buildJoseHeader = ({
   /** The caller's own wire-named bag, verbatim from the kit's options. */
   header: WireProtectedHeader | undefined;
   /**
-   * The caller's UNREGISTERED parameters. JOSE has ONE header, so there is one
-   * bucket ({@link JoseWireTokenEnvelope}).
+   * The caller's UNREGISTERED parameters, in the one bucket the JOSE envelope
+   * names `header` ({@link JoseWireTokenEnvelope}).
    */
   custom: JoseWireTokenEnvelope["custom"];
   /**
@@ -179,16 +179,16 @@ export const buildJoseHeader = ({
   // keys: a `crit` member may name a custom parameter, and one naming a
   // REGISTERED key written into `custom` must hear about the misplaced parameter
   // rather than about a crit member that would have been legal in `header`.
-  const customProtected = buildCustomHeader({
-    custom: custom?.protected,
+  const customHeader = buildCustomHeader({
+    custom: custom?.header,
     owned,
-    bucket: "protected",
+    bucket: "header",
     error,
   });
 
   assertCritEligible({
     header: caller,
-    custom: new Set(Object.keys(customProtected)),
+    custom: new Set(Object.keys(customHeader)),
     format,
     error,
   });
@@ -196,7 +196,7 @@ export const buildJoseHeader = ({
   const assembled = canonicalWireHeader({
     ...shapeWireHeader(defaults),
     ...shapeWireHeader(caller),
-    ...customProtected,
+    ...customHeader,
     ...shapeWireHeader(derived),
     ...mapTokenHeader({}, cert),
   }) as WireTokenHeaderOptions;

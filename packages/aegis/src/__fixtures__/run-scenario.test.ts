@@ -3,7 +3,12 @@ import { importJWK } from "jose";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { AegisKeyError } from "../errors/index.js";
-import type { ProfileContent } from "../types/index.js";
+import type {
+  JoseSignStructuredTokenOptions,
+  JoseSignUnstructuredTokenOptions,
+  JweEncryptOptions,
+  ProfileContent,
+} from "../types/index.js";
 import { TEST_EC_KEY_ENC, TEST_EC_KEY_SIG, TEST_OCT_KEY_ENC } from "./keys.js";
 import {
   artifactStepOf,
@@ -22,9 +27,13 @@ import {
   ISSUER,
   NOW,
   RESOURCE,
+  type CwtSignOptions,
   type ForgedMember,
   type Given,
+  type OpaqueSignOptions,
   type Scenario,
+  type SealedSealOptions,
+  type StructuredSignOptions,
   type Wire,
 } from "./scenarios.js";
 
@@ -941,7 +950,7 @@ describe("run-scenario — the step-definition layer", () => {
             claims: { hello: "world" },
             options: {
               header: { crit: ["x-lindorm-hint"] },
-              custom: { protected: { "x-lindorm-hint": "carried" } },
+              custom: { header: { "x-lindorm-hint": "carried" } },
             },
           },
         ],
@@ -980,6 +989,134 @@ describe("run-scenario — the step-definition layer", () => {
           await createScenarioContext(),
           "cose",
         ),
+      ).resolves.toBeUndefined();
+    });
+
+    /**
+     * The AGNOSTIC option types, pinned at the TYPE level — the half no runtime
+     * row can reach, and the same discipline the envelope pins apply
+     * (`src/types/header/wire-envelope.test.ts#the wire envelope split`):
+     * `@ts-expect-error` only bites under `tsc` (vitest strips types without
+     * checking them), an UNUSED directive fails the typecheck, and a positive line
+     * beside each refusal stops a row passing because the member vanished
+     * entirely. It lives here rather than beside the envelope pins because the
+     * types are the fixture layer's, and nothing under `src/types/` imports it.
+     */
+    test("should refuse a COSE-only member on an agnostic row, at compile time", () => {
+      // The positive half. `unprotected` IS expressible: a row may state it when
+      // it scopes itself `unsupported: { jose: … }`, and the JOSE leg refuses it
+      // at run time (pinned by the row below this one).
+      const carried: StructuredSignOptions = {
+        tokenType: "at",
+        custom: { header: { "x-hint": "a" }, unprotected: { "x-other": "b" } },
+      };
+
+      const respelled: StructuredSignOptions = {
+        custom: {
+          // @ts-expect-error an agnostic row states the JOSE spelling; the interpreter re-spells for COSE
+          protected: { "x-hint": "a" },
+        },
+      };
+
+      // ⛔ THE MEMBER THE TYPE HAS TO REMOVE: the COSE kits honour `proprietary`
+      // and the JOSE kits ignore it, so an agnostic row stating it would be handed
+      // to the two wires meaning different things.
+      const structured: StructuredSignOptions = {
+        tokenType: "at",
+        // @ts-expect-error `proprietary` is COSE-only; an agnostic row cannot state it
+        proprietary: true,
+      };
+
+      const opaque: OpaqueSignOptions = {
+        tokenType: "at",
+        // @ts-expect-error the agnostic opaque step is gated the same way
+        proprietary: true,
+      };
+
+      const sealed: SealedSealOptions = {
+        tokenType: "at",
+        // @ts-expect-error the agnostic sealed step is gated the same way
+        proprietary: true,
+      };
+
+      // ⭐ AND THE DOOR THAT DOES TAKE IT, so the refusals above are about the
+      // AGNOSTIC step and not about the knob having been removed everywhere: a row
+      // that needs it pins to a COSE wire, where the member exists.
+      const pinned: CwtSignOptions = { proprietary: true };
+
+      expect([carried, respelled, structured, opaque, sealed, pinned]).toHaveLength(6);
+    });
+
+    /**
+     * ⭐ THE OTHER HALF OF `proprietary`, DERIVED RATHER THAN LISTED. The pin above
+     * names that ONE member, so it says nothing about the NEXT COSE-only knob:
+     * `Agnostic` omits `custom` and `proprietary` by name
+     * (`src/__fixtures__/scenarios.ts#type Agnostic<T> = Omit`), so a third would survive
+     * onto every agnostic row — and a bag is ASSIGNABLE to a narrower door when it
+     * carries extra OPTIONAL members, so handing it to `aegis.jws.sign`
+     * (`src/__fixtures__/run-scenario.ts#const joseOptionsOf`) would typecheck and
+     * the member would be honoured on COSE and ignored on JOSE. That is the exact
+     * divergence the agnostic OPAQUE step's docstring says must move the row to a
+     * pinned wire.
+     *
+     * ⚠ KEYS, not shapes. `custom` is a key of both sides and passes here whatever
+     * its buckets are — the interpreter TRANSLATES that one member
+     * (`src/__fixtures__/run-scenario.ts#const coseCustomOf`), and the row below
+     * pins the half no type can catch.
+     */
+    test("should give an agnostic row no member its JOSE door lacks", () => {
+      type NoMemberTheJoseDoorLacks<Row, Door> =
+        Exclude<keyof Row, keyof Door | "key"> extends never ? true : false;
+
+      const structured: NoMemberTheJoseDoorLacks<
+        StructuredSignOptions,
+        JoseSignStructuredTokenOptions
+      > = true;
+
+      const opaque: NoMemberTheJoseDoorLacks<
+        OpaqueSignOptions,
+        JoseSignUnstructuredTokenOptions
+      > = true;
+
+      const sealed: NoMemberTheJoseDoorLacks<SealedSealOptions, JweEncryptOptions> = true;
+
+      expect([structured, opaque, sealed]).toEqual([true, true, true]);
+    });
+
+    // ⭐ THE COSE-ONLY BUCKET, on the wire that has none. An agnostic row states
+    // its custom bag in the JOSE spelling
+    // (`src/__fixtures__/scenarios.ts#export type AgnosticCustom`), and that bag
+    // SHARES `header` with the JOSE envelope's — so a row carrying `unprotected`
+    // is assignable to a JOSE door and the bucket would drop SILENTLY. No type can
+    // catch it; only the interpreter's refusal can, and only this row proves the
+    // refusal is still there.
+    test("should refuse an agnostic row's COSE-only custom bucket on the JOSE wire", async () => {
+      const scenario: Scenario = {
+        id: "probe",
+        title: "a probe row, for the agnostic custom-bucket guard alone",
+        rationale: "not a capability — this row exists only to exercise the guard.",
+        given: [
+          {
+            step: "token",
+            via: "kit-sign",
+            kit: "opaque",
+            claims: { hello: "world" },
+            options: { custom: { unprotected: { "x-lindorm-hint": "advisory" } } },
+          },
+        ],
+        when: [{ step: "kit-verify", kit: "opaque" }],
+        then: [{ step: "accepts" }],
+      };
+
+      await expect(runScenario(scenario, ctx, "jose")).rejects.toThrow(
+        /the row places parameters in the UNPROTECTED custom bucket/,
+      );
+
+      // ⚠ BY DIFFERENCE, because the refusal above has a second explanation: a row
+      // this interpreter simply could not run would reject on both wires. The
+      // bucket is LEGAL on COSE, so the same row must go through there.
+      await expect(
+        runScenario(scenario, await createScenarioContext(), "cose"),
       ).resolves.toBeUndefined();
     });
   });

@@ -15,6 +15,8 @@ import { CwtKit } from "../../classes/CwtKit.js";
 import { JweKit } from "../../classes/JweKit.js";
 import { JwsKit } from "../../classes/JwsKit.js";
 import { JwtKit } from "../../classes/JwtKit.js";
+import type { CoseWireTokenEnvelope, JoseWireTokenEnvelope } from "../../types/index.js";
+import type { Wire } from "../registry/wire.js";
 import type { AegisDeps } from "../utils/aegis-deps.js";
 import { COSE_TOKEN_WIRE } from "./cose-token-wire.js";
 import { JOSE_TOKEN_WIRE } from "./jose-token-wire.js";
@@ -52,7 +54,6 @@ describe("wire input dispositions", () => {
    */
   const SENTINEL: Dict = {
     header: { oid: "1.2.3.4" },
-    custom: { protected: { "x-probe": "1.2.3.5" } },
     tokenType: "probe",
     // ⚠ The rule this file applies is DISTINGUISHABILITY FROM THE DEFAULT, not
     // observability on the wire: the probe spies the kit call and asserts the
@@ -65,15 +66,38 @@ describe("wire input dispositions", () => {
     partyRecipient: "cmVjaXBpZW50LXByb2Jl",
   };
 
-  const sentinelOf = (option: string): unknown => {
-    const value = SENTINEL[option];
+  /**
+   * The one sentinel whose SHAPE is per-wire: JOSE names its single custom bucket
+   * `header`, COSE has `protected`/`unprotected`
+   * (`types/header/wire-envelope.ts`). A shared value would state a bucket only
+   * one wire's kit declares, and the JOSE kits would be handed a bag they cannot
+   * be handed by a caller.
+   *
+   * ⚠ THE PER-WIRE TYPES ARE THE ASSERTION, because forwarding is a rest-spread
+   * and therefore SHAPE-BLIND: the probe below asserts the bag ARRIVED, so it
+   * passes just as green when the JOSE arm states the COSE spelling. Only the
+   * excess-property check on these two literals refuses that, which is what keeps
+   * the sentinel a shape a caller could actually have written.
+   */
+  const CUSTOM_SENTINEL: {
+    jose: JoseWireTokenEnvelope["custom"];
+    cose: CoseWireTokenEnvelope["custom"];
+  } = {
+    jose: { header: { "x-probe": "1.2.3.5" } },
+    cose: { protected: { "x-probe": "1.2.3.5" } },
+  };
+
+  const sentinelOf = (wire: Wire, option: string): unknown => {
+    const value = option === "custom" ? CUSTOM_SENTINEL[wire] : SENTINEL[option];
 
     if (value !== undefined) return value;
 
-    throw new Error(`the probe has no sentinel for the "${option}" option`);
+    throw new Error(
+      `the probe has no sentinel for the "${option}" option on the ${wire} wire`,
+    );
   };
 
-  const WIRES: ReadonlyArray<{ name: string; wire: TokenWire }> = [
+  const WIRES: ReadonlyArray<{ name: Wire; wire: TokenWire }> = [
     { name: "jose", wire: JOSE_TOKEN_WIRE },
     { name: "cose", wire: COSE_TOKEN_WIRE },
   ];
@@ -213,7 +237,7 @@ describe("wire input dispositions", () => {
   const rows = (
     pick: (rule: Disposition) => boolean,
   ): Array<{
-    wire: string;
+    wire: Wire;
     operation: WriteOperation;
     option: string;
     rule: Disposition;
@@ -258,12 +282,12 @@ describe("wire input dispositions", () => {
      * bags rather than on the forward this is about.
      */
     const kitOptionsOf = async (
-      wire: string,
+      wire: Wire,
       operation: WriteOperation,
       option: string,
     ): Promise<Dict> => {
       const record = wire === "jose" ? JOSE_TOKEN_WIRE : COSE_TOKEN_WIRE;
-      const options = { [option]: sentinelOf(option) };
+      const options = { [option]: sentinelOf(wire, option) };
 
       const spy = (() => {
         switch (`${wire}.${operation}`) {
@@ -355,7 +379,7 @@ describe("wire input dispositions", () => {
       async ({ wire, operation, option }) => {
         const received = await kitOptionsOf(wire, operation, option);
 
-        expect(received[option]).toEqual(sentinelOf(option));
+        expect(received[option]).toEqual(sentinelOf(wire, option));
       },
     );
 
@@ -419,7 +443,7 @@ describe("wire input dispositions", () => {
 
     /** The domain call that reaches one wire operation, with one option set. */
     const callWith = (
-      wire: string,
+      wire: Wire,
       operation: WriteOperation,
       option: string,
       value: unknown,
@@ -465,7 +489,7 @@ describe("wire input dispositions", () => {
       "$wire $operation refuses $option",
       async ({ wire, operation, option }) => {
         await expect(
-          callWith(wire, operation, option, sentinelOf(option)),
+          callWith(wire, operation, option, sentinelOf(wire, option)),
         ).rejects.toMatchObject({
           code: "wire_option_unsupported",
           data: { operation, option },

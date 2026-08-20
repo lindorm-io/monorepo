@@ -24,8 +24,9 @@ import type { TokenWire, WireInputDispositions } from "./token-wire.js";
  *
  * Every row is `forwarded`, and the claim that carries is the literal one: the
  * option REACHES the kit through the rest-spread. The tables are typed over the
- * COSE envelope because ONE input crosses to both wires
- * ({@link SignClaimsInput}), so the COSE-only members appear here too.
+ * INTERSECTION of the two wires' kit option types because ONE input crosses to
+ * both wires ({@link SignClaimsInput}) and neither type is wider on its own, so
+ * the COSE-only members appear here too.
  *
  * ⚠ A ROW SPEAKS FOR A TOP-LEVEL KEY AND NOTHING BELOW IT, so `forwarded` does
  * not promise every MEMBER of a nested bag is read. Two rows here are the
@@ -33,17 +34,18 @@ import type { TokenWire, WireInputDispositions } from "./token-wire.js";
  * this table:
  *
  *   - `proprietary` is a COSE interop gate the JOSE kits ignore.
- *   - `custom` is forwarded whole, and `buildJoseHeader` reads `custom.protected`
+ *   - `custom` is forwarded whole, and `buildJoseHeader` reads `custom.header`
  *     alone — compact serialisation has one header and it is protected
  *     (`KIT_CAPABILITIES.<jose kit>.unprotectedBucket: false`), so there is no
  *     `custom.unprotected` for it to read.
  *
  * ⛔ Neither is a silent drop a caller can reach: the PUBLIC JOSE doors
  * (`aegis.jwt|jws|jwe.*`, `JwtKit`, `JwsKit`, `JweKit`) take `Jose*` option types
- * that declare no `proprietary` and no `custom.unprotected` at all, so supplying
- * one is a COMPILE error, not an accepted-and-ignored request. Pinned in
- * `types/header/wire-envelope.test.ts`. They arrive here only through the
- * untyped internal seam, which is the one this table cannot speak below.
+ * that declare no `proprietary`, and whose `custom` bag declares only `header` —
+ * so `custom.unprotected` AND `custom.protected` are both COMPILE errors, not
+ * accepted-and-ignored requests. Pinned in `types/header/wire-envelope.test.ts`.
+ * They arrive here only through the untyped internal seam, which is the one this
+ * table cannot speak below.
  */
 const JOSE_DISPOSITIONS: WireInputDispositions = {
   signClaims: {

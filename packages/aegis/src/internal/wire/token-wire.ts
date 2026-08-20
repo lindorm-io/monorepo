@@ -8,6 +8,8 @@ import type {
   DomainTokenHeader,
   EncryptedToken,
   JweEncryptOptions,
+  JoseSignStructuredTokenOptions,
+  JoseSignUnstructuredTokenOptions,
   CoseSignStructuredTokenOptions,
   CoseSignUnstructuredTokenOptions,
   CweEncryptOptions,
@@ -106,13 +108,14 @@ export type OpaqueVerified = {
 
 /**
  * The input to securing DOMAIN claims — the aegis-only fields intersected with
- * `CoseSignStructuredTokenOptions`, the WIDER of the two claims-kit option types.
+ * BOTH claims-kit option types.
  *
- * ⚠ THE WIDER ONE, because ONE input crosses to BOTH wires: the COSE envelope is
- * the JOSE envelope plus `custom.unprotected` and `proprietary`, so a JOSE
- * caller's options are assignable to it and the JOSE kits answer for the members
+ * ⚠ BOTH, because ONE input crosses to BOTH wires and neither is wider on its
+ * own: `JoseSignStructuredTokenOptions` alone has `custom.header`,
+ * `CoseSignStructuredTokenOptions` alone has `custom.protected`,
+ * `custom.unprotected` and `proprietary`. Each wire's kits answer for the members
  * they do not read ({@link WireInputDispositions}). The public doors are the
- * narrow ones — `aegis.jwt.sign` takes `JoseSignStructuredTokenOptions`, so
+ * per-wire ones — `aegis.jwt.sign` takes `JoseSignStructuredTokenOptions`, so
  * `custom.unprotected` is a compile error there rather than a value this seam has
  * to refuse.
  *
@@ -131,7 +134,8 @@ export type SignClaimsInput = {
   common: Dict;
   /** COSE only — which secured structure to emit (`cwt` = Sign1, `cwm` = Mac0). */
   format: TokenFormat;
-} & CoseSignStructuredTokenOptions;
+} & JoseSignStructuredTokenOptions &
+  CoseSignStructuredTokenOptions;
 
 /**
  * The input to a PROFILED write's typ derivation.
@@ -161,9 +165,9 @@ export type MintTypInput = {
  * (`aegis.jws.sign` / `aegis.cws.sign`) do, through the shared guard
  * (`raw-sign-opaque.ts`). See {@link TokenWire.signOpaque}.
  *
- * Same intersection as {@link SignClaimsInput}, over the WIDER of the opaque
- * kits' option types (`CoseSignUnstructuredTokenOptions`) and for the same
- * reason. The opaque kits secure whatever bytes they are given; the
+ * Same intersection as {@link SignClaimsInput}, over BOTH opaque kit option
+ * types and for the same reason — neither is wider on its own. The opaque kits
+ * secure whatever bytes they are given; the
  * registry-driven claim normalisation is applied aegis-side, to an OBJECT payload
  * only.
  */
@@ -182,7 +186,8 @@ export type SignOpaqueInput = {
    */
   payload: TokenContent;
   key: AegisSignKey | undefined;
-} & CoseSignUnstructuredTokenOptions;
+} & JoseSignUnstructuredTokenOptions &
+  CoseSignUnstructuredTokenOptions;
 
 /**
  * The input to sealing arbitrary content in this wire's encrypting outer — the
@@ -193,9 +198,10 @@ export type SignOpaqueInput = {
 /**
  * Same intersection as {@link SignClaimsInput}, over BOTH encrypt option types.
  * Neither is wider on its own — `JweEncryptOptions` alone has the ECDH-ES party
- * info, `CweEncryptOptions` alone has `custom.unprotected` and `proprietary` — so
- * the seam carries the intersection and each wire's table states what it does
- * with every member. The party info is what makes this load-bearing: the COSE
+ * info and `custom.header`, `CweEncryptOptions` alone has `custom.protected`,
+ * `custom.unprotected` and `proprietary`; the two custom bags share no key at all
+ * — so the seam carries the intersection and each wire's table states what it
+ * does with every member. The party info is what makes this load-bearing: the COSE
  * wire has to REFUSE it rather than accept it silently.
  *
  * ⚠ There is no `contentType` field. A NESTED token's cty is a `header.cty` the
@@ -240,8 +246,12 @@ export type DecryptInput = {
  * seam; proved by the disposition probe beside it.
  */
 export type WireInputDispositions = {
-  readonly signClaims: InputDisposition<CoseSignStructuredTokenOptions>;
-  readonly signOpaque: InputDisposition<CoseSignUnstructuredTokenOptions>;
+  readonly signClaims: InputDisposition<
+    JoseSignStructuredTokenOptions & CoseSignStructuredTokenOptions
+  >;
+  readonly signOpaque: InputDisposition<
+    JoseSignUnstructuredTokenOptions & CoseSignUnstructuredTokenOptions
+  >;
   readonly encryptContent: InputDisposition<JweEncryptOptions & CweEncryptOptions>;
   readonly decrypt: InputDisposition<DecryptTokenOptions>;
 };

@@ -135,7 +135,7 @@ describe("rejectUnknownCritical", () => {
 
     const token = kit.sign(
       { iss: "https://issuer.lindorm.io/", sub: "user-1" },
-      { header: { crit: ["ext"] }, custom: { protected: { ext: "x" } } },
+      { header: { crit: ["ext"] }, custom: { header: { ext: "x" } } },
     );
 
     expect(() => kit.verify(token)).toThrow(

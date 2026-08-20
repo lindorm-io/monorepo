@@ -50,6 +50,7 @@ import { COSE_TAG, decodeProtectedHeader } from "../internal/cose/structures.js"
 import { coseByJose, headerByJose } from "../internal/header/header-registry.js";
 import { WIRE_TAGS } from "../internal/registry/wire.js";
 import type {
+  CoseWireTokenEnvelope,
   WireHeaderBuckets,
   ParsedDpopProof,
   TokenContent,
@@ -75,6 +76,7 @@ import {
 } from "./keys.js";
 import {
   ISSUER,
+  type AgnosticCustom,
   type ArtifactGivenStep,
   type ForeignHeadersGiven,
   type ForgedClaim,
@@ -747,6 +749,51 @@ const respellForCose = (claims: Dict): Dict =>
       value,
     ]),
   );
+
+/**
+ * A wire-agnostic row's custom bag, re-spelled for COSE — the twin of
+ * {@link respellForCose} in BOTH direction and reason. The row is written in the
+ * JOSE spelling and the interpreter re-spells for COSE, which is the one
+ * convention the agnostic steps state ({@link AgnosticCustom}); only the bucket's
+ * NAME differs, so the entries cross verbatim.
+ *
+ * ⚠ `unprotected` is COSE-only and passes through untouched — there is no JOSE
+ * bucket it could have been re-spelled from. {@link joseOptionsOf} is the other
+ * half of that rule.
+ */
+const coseCustomOf = (
+  custom: AgnosticCustom | undefined,
+): CoseWireTokenEnvelope["custom"] => {
+  if (isUndefined(custom)) return undefined;
+
+  const { header, ...rest } = custom;
+
+  return isUndefined(header) ? rest : { ...rest, protected: header };
+};
+
+/**
+ * A wire-agnostic row's options on the JOSE leg — passed through, having REFUSED
+ * the COSE-only bucket.
+ *
+ * ⚠ THE REFUSAL IS THE POINT, and a type cannot make it. `AgnosticCustom` shares
+ * `header` with the JOSE envelope's custom bag
+ * (`src/types/header/wire-envelope.ts#export type JoseWireTokenEnvelope`), so a row
+ * carrying `unprotected` is ASSIGNABLE to a JOSE door and the bucket would drop
+ * SILENTLY.
+ * This says the same thing {@link signForeignJose} says about a foreign row's
+ * unprotected bucket, for the same reason: signing a token that ignores half the
+ * row tests nothing.
+ */
+const joseOptionsOf = <T extends { custom?: AgnosticCustom }>(
+  options: T | undefined,
+): T | undefined => {
+  if (isUndefined(options?.custom?.unprotected)) return options;
+
+  throw new Error(
+    "the row places parameters in the UNPROTECTED custom bucket, but this run is on the JOSE wire, whose compact serialisation has only one header. " +
+      "Scope the row with `unsupported: { jose: … }`.",
+  );
+};
 
 /**
  * The concrete kit a wire-agnostic sign/encrypt step resolves to. Total over
@@ -1444,15 +1491,24 @@ const materialise = async (
             wire === "cose" ? respellForCose(artifact.claims) : artifact.claims;
           const signed =
             AGNOSTIC_KITS.structured[wire] === "cwt"
-              ? await ctx.aegis.cwt.sign(claims, artifact.options)
-              : await ctx.aegis.jwt.sign(claims, artifact.options);
+              ? await ctx.aegis.cwt.sign(claims, {
+                  ...artifact.options,
+                  custom: coseCustomOf(artifact.options?.custom),
+                })
+              : await ctx.aegis.jwt.sign(claims, joseOptionsOf(artifact.options));
           return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
         }
         case "opaque": {
           const signed =
             AGNOSTIC_KITS.opaque[wire] === "cws"
-              ? await ctx.aegis.cws.sign(artifact.claims, artifact.options)
-              : await ctx.aegis.jws.sign(artifact.claims, artifact.options);
+              ? await ctx.aegis.cws.sign(artifact.claims, {
+                  ...artifact.options,
+                  custom: coseCustomOf(artifact.options?.custom),
+                })
+              : await ctx.aegis.jws.sign(
+                  artifact.claims,
+                  joseOptionsOf(artifact.options),
+                );
           return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
         }
         case "jwt": {
@@ -1479,12 +1535,33 @@ const materialise = async (
     }
 
     case "kit-encrypt": {
-      const kit = artifact.kit === "sealed" ? AGNOSTIC_KITS.sealed[wire] : artifact.kit;
-      const encrypted =
-        kit === "cwe"
-          ? await ctx.aegis.cwe.encrypt(artifact.data, artifact.options)
-          : await ctx.aegis.jwe.encrypt(artifact.data, artifact.options as never);
-      return { token: encrypted.token, format: encrypted.format };
+      switch (artifact.kit) {
+        case "sealed": {
+          const encrypted =
+            AGNOSTIC_KITS.sealed[wire] === "cwe"
+              ? await ctx.aegis.cwe.encrypt(artifact.data, {
+                  ...artifact.options,
+                  custom: coseCustomOf(artifact.options?.custom),
+                })
+              : await ctx.aegis.jwe.encrypt(
+                  artifact.data,
+                  joseOptionsOf(artifact.options),
+                );
+          return { token: encrypted.token, format: encrypted.format };
+        }
+        case "jwe": {
+          const encrypted = await ctx.aegis.jwe.encrypt(artifact.data, artifact.options);
+          return { token: encrypted.token, format: encrypted.format };
+        }
+        case "cwe": {
+          const encrypted = await ctx.aegis.cwe.encrypt(artifact.data, artifact.options);
+          return { token: encrypted.token, format: encrypted.format };
+        }
+        default: {
+          const exhaustive: never = artifact;
+          throw new Error(`unhandled kit-encrypt artifact ${JSON.stringify(exhaustive)}`);
+        }
+      }
     }
 
     case "domain-encrypt": {

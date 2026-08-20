@@ -47,7 +47,18 @@ const coseFormatOf = (cose: unknown): ClaimsCoseFormat =>
 const NO_COSE_KEY_AGREEMENT =
   "A COSE_Encrypt0 performs no key agreement. RFC 9052 §5.2 defines it as single-recipient direct encryption, and RFC 7518 §4.6 scopes the ECDH-ES party info to JOSE key-agreement algorithms, so there is nothing for the value to derive and no COSE header parameter to carry it.";
 
-/** What the COSE wire does with each kit option it is handed. */
+/**
+ * What the COSE wire does with each kit option it is handed.
+ *
+ * ⚠ A ROW SPEAKS FOR A TOP-LEVEL KEY AND NOTHING BELOW IT, the same caveat the
+ * JOSE table states: `custom` is forwarded whole, and `buildCoseHeaders` reads
+ * `custom.protected`/`custom.unprotected` alone — `custom.header` is the JOSE
+ * spelling and nothing here reads it. It is no silent drop a caller can reach:
+ * the PUBLIC COSE doors take `Cose*`/`Cwe*` option types whose `custom` bag
+ * declares no `header` at all, so supplying one is a COMPILE error (pinned in
+ * `types/header/wire-envelope.test.ts`). It arrives here only through the untyped
+ * internal seam, which is the one this table cannot speak below.
+ */
 const COSE_DISPOSITIONS: WireInputDispositions = {
   signClaims: {
     header: { use: "forwarded" },

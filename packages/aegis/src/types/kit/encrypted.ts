@@ -48,7 +48,7 @@ export type CweEncryptOptions = CoseEncryptTokenOptions;
  *
  * ⚠ A DECRYPT DOOR TAKES THE `crit` DECLARATION because both wires MINT a
  * critical custom parameter on an encrypting outer ({@link JweEncryptOptions} /
- * {@link CweEncryptOptions} carry `header.crit` beside `custom.protected`), and
+ * {@link CweEncryptOptions} carry `header.crit` beside their custom bag), and
  * because `aegis.verify` peels a nested token through `JweKit.decrypt` /
  * `CweKit.decrypt` — so without it the outer's declaration has nowhere to travel
  * and the token aegis just minted becomes unreadable.

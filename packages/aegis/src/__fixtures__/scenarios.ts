@@ -216,14 +216,56 @@ export type AgnosticKit = "structured" | "opaque";
 
 // The per-namespace option types, each the EXACT bag its `IAegis` method takes.
 // Declared here rather than inlined so a row and the real signature drift
-// together or not at all.
-// The claims doors split by wire: `custom.unprotected` and `proprietary` exist on
-// the COSE envelope alone, so a row targeting both wires states the COSE shape and
-// a JOSE-only row narrows to the JOSE one.
-export type StructuredSignOptions = CoseSignStructuredTokenOptions & {
+// together or not at all. A wire-PINNED row takes its own wire's type; an
+// AGNOSTIC row takes the {@link Agnostic} form of the COSE one.
+
+/**
+ * The custom bag a WIRE-AGNOSTIC row states — ONE convention, the same one the
+ * agnostic `kit: "structured"` step states for claims: the row is written in the
+ * JOSE spelling and the interpreter re-spells for COSE
+ * (`run-scenario.ts#coseCustomOf`). JOSE names its ONE header `header`, COSE names
+ * a bucket for the integrity that covers it
+ * (`src/types/header/wire-envelope.ts#export type JoseWireTokenEnvelope`).
+ *
+ * ⚠ `unprotected` is COSE-ONLY and is NOT re-spelled — there is no JOSE bucket to
+ * re-spell it to. A row stating it must scope itself `unsupported: { jose: … }`;
+ * on a JOSE run the interpreter THROWS rather than signing a token that ignores
+ * half the row (`run-scenario.ts#joseOptionsOf`).
+ */
+export type AgnosticCustom = {
+  header?: Record<string, unknown>;
+  unprotected?: Record<string, unknown>;
+};
+
+/**
+ * A wire-agnostic row's options: its COSE kit's OWN bag with the custom bucket
+ * re-spelled and the COSE-only `proprietary` REMOVED. Derived from the kit type
+ * rather than restated, so a new kit option reaches the agnostic rows without an
+ * edit here.
+ *
+ * ⚠ THE TWO COSE-ONLY MEMBERS GET DIFFERENT ANSWERS, because they are in
+ * different situations. `proprietary` is omitted OUTRIGHT — no agnostic row needs
+ * it, and the JOSE kits read it nowhere
+ * (`src/internal/wire/jose-token-wire.ts#is a COSE interop gate the JOSE kits ignore`),
+ * so an agnostic row stating it would be honoured on COSE and silently ignored on
+ * JOSE. Removing it makes that a COMPILE error, the
+ * same way the registered `header` bag is CLOSED so a typo cannot ride the wire;
+ * a row that genuinely needs the knob pins to `cwt`/`cws`/`cwe`. `unprotected`
+ * STAYS on {@link AgnosticCustom}, because a real row does state it — paired with
+ * `unsupported: { jose: … }` — and the JOSE leg refuses it at run time
+ * (`run-scenario.ts#joseOptionsOf`) rather than dropping it.
+ */
+type Agnostic<T> = Omit<T, "custom" | "proprietary"> & { custom?: AgnosticCustom };
+
+export type StructuredSignOptions = Agnostic<CoseSignStructuredTokenOptions> & {
   key?: AegisSignKey;
 };
+export type OpaqueSignOptions = Agnostic<CoseSignUnstructuredTokenOptions> & {
+  key?: AegisSignKey;
+};
+export type SealedSealOptions = Agnostic<CweEncryptOptions> & { key?: AegisEncKey };
 export type JwtSignOptions = JoseSignStructuredTokenOptions & { key?: AegisSignKey };
+export type CwtSignOptions = CoseSignStructuredTokenOptions & { key?: AegisSignKey };
 export type JwsSignOptions = JoseSignUnstructuredTokenOptions & { key?: AegisSignKey };
 export type CwsSignOptions = CoseSignUnstructuredTokenOptions & { key?: AegisSignKey };
 export type JweSealOptions = JweEncryptOptions & { key?: AegisEncKey };
@@ -680,31 +722,36 @@ type TokenGivenShape =
       via: "kit-sign";
       kit: "jwt";
       claims: JwtClaimsWire & Dict;
-      options?: StructuredSignOptions;
+      options?: JwtSignOptions;
     }
   | {
       step: "token";
       via: "kit-sign";
       kit: "cwt";
       claims: CwtClaimsWire & Dict;
-      options?: StructuredSignOptions;
+      options?: CwtSignOptions;
     }
   /**
    * The wire-agnostic OPAQUE passthrough — `jws` on JOSE, `cws` on COSE.
    *
-   * ⚠ The two bags are now IDENTICAL, which is what makes one agnostic step
-   * honest. They were not: `cws.sign` carried a prune mode `jws.sign` did not, so
-   * an agnostic row naming it was honoured on COSE and silently dropped on JOSE,
-   * with nothing to say the two wires had been handed different inputs. If they
-   * ever diverge again, this step must be typed against the NARROWER bag and the
-   * wider one's row moved to the wire that takes it.
+   * ⚠ The bags the interpreter DELIVERS differ in exactly one member, the custom
+   * bucket, and the row states it in the JOSE spelling for the interpreter to
+   * re-spell for COSE ({@link AgnosticCustom}) — the same direction, and the same
+   * reason, as the claim re-spelling the agnostic STRUCTURED step above documents.
+   * The raw kit bags differ in `proprietary` too; {@link Agnostic} is what closes
+   * that, by removing the COSE-only knob before a row can state it.
+   *
+   * Every other member is shared, so a member this step can express is a member
+   * both wires honour. If they diverge again in a member the interpreter cannot
+   * translate, this step must be typed against the NARROWER bag and the wider
+   * one's row moved to the wire that takes it.
    */
   | {
       step: "token";
       via: "kit-sign";
       kit: "opaque";
       claims: TokenContent;
-      options?: JwsSignOptions;
+      options?: OpaqueSignOptions;
     }
   | {
       step: "token";
@@ -718,7 +765,7 @@ type TokenGivenShape =
       via: "kit-sign";
       kit: "cws";
       claims: TokenContent;
-      options?: JwsSignOptions;
+      options?: CwsSignOptions;
     }
   /** The wire-agnostic SEALING namespace — `jwe` on JOSE, `cwe` on COSE. */
   | {
@@ -726,7 +773,7 @@ type TokenGivenShape =
       via: "kit-encrypt";
       kit: "sealed";
       data: TokenContent;
-      options?: CweSealOptions;
+      options?: SealedSealOptions;
     }
   | {
       step: "token";
@@ -2676,7 +2723,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         // `alg` is the sharpest member available: every kit reserves it on both
         // wires, and it is REQUIRED on every token, so a caller value could only
         // ever contradict the signature.
-        options: { custom: { protected: { alg: "ES256" } } },
+        options: { custom: { header: { alg: "ES256" } } },
       },
     ],
     when: [{ step: "mint" }],
@@ -2739,7 +2786,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         via: "kit-sign",
         kit: "structured",
         claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
-        options: { custom: { protected: { "x-lindorm-hint": "carried" } } },
+        options: { custom: { header: { "x-lindorm-hint": "carried" } } },
       },
     ],
     when: [{ step: "verify" }],
@@ -2852,7 +2899,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         // able to disagree at all.
         options: {
           header: { crit: ["x-lindorm-hint"] },
-          custom: { protected: { "x-lindorm-hint": "carried" } },
+          custom: { header: { "x-lindorm-hint": "carried" } },
         },
       },
     ],
@@ -2883,7 +2930,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
         options: {
           header: { crit: ["x-lindorm-hint"] },
-          custom: { protected: { "x-lindorm-hint": "carried" } },
+          custom: { header: { "x-lindorm-hint": "carried" } },
         },
       },
     ],
@@ -2937,7 +2984,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         // RECIPIENT rather than about the bytes.
         options: {
           header: { crit: ["x-lindorm-hint"] },
-          custom: { protected: { "x-lindorm-hint": "carried" } },
+          custom: { header: { "x-lindorm-hint": "carried" } },
         },
       },
     ],
@@ -3051,7 +3098,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
         options: {
           header: { crit: ["x-lindorm-hint"] },
-          custom: { protected: { "x-lindorm-hint": "carried" } },
+          custom: { header: { "x-lindorm-hint": "carried" } },
         },
       },
     ],
@@ -3074,7 +3121,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         claims: { tid: "at_abc", scope: "openid" },
         options: {
           header: { crit: ["x-lindorm-hint"] },
-          custom: { protected: { "x-lindorm-hint": "carried" } },
+          custom: { header: { "x-lindorm-hint": "carried" } },
         },
       },
     ],
@@ -3112,7 +3159,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         data: "sealed-plaintext",
         options: {
           header: { crit: ["x-lindorm-hint"] },
-          custom: { protected: { "x-lindorm-hint": "carried" } },
+          custom: { header: { "x-lindorm-hint": "carried" } },
         },
       },
     ],
@@ -3940,7 +3987,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a header parameter the library knows is refused from the custom unprotected bucket",
     rationale:
-      "The custom bag exists to carry parameters NO specification defines, and the registered bag exists to carry the ones that do — one question per field. A registered name accepted into `custom` would collapse that: the parameter would travel raw, past the value codec its registry row states and past the bucket its `placement` cell assigns, while a reader gave it the meaning its specification assigns. The caller would have written something that looks like the parameter and behaves like nothing. Refusing at the call site names the mistake where it is made, and the door that does accept it is one field away. The rule is the NAME and not the bucket — what makes a parameter inadmissible is that it is defined, not where the caller tried to put it — and this row runs the UNPROTECTED half, which is the bucket a caller is likeliest to reach for. The protected half of the same rule is stated at `src/internal/header/custom-header-params.test.ts#the JOSE doors refuse a REGISTERED name in custom.protected`.",
+      "The custom bag exists to carry parameters NO specification defines, and the registered bag exists to carry the ones that do — one question per field. A registered name accepted into `custom` would collapse that: the parameter would travel raw, past the value codec its registry row states and past the bucket its `placement` cell assigns, while a reader gave it the meaning its specification assigns. The caller would have written something that looks like the parameter and behaves like nothing. Refusing at the call site names the mistake where it is made, and the door that does accept it is one field away. The rule is the NAME and not the bucket — what makes a parameter inadmissible is that it is defined, not where the caller tried to put it — and this row runs the UNPROTECTED half, which is the bucket a caller is likeliest to reach for. The protected half of the same rule is stated at `src/internal/header/custom-header-params.test.ts#the JOSE doors refuse a REGISTERED name in custom.header`.",
     given: [
       {
         step: "token",
@@ -3965,7 +4012,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     unsupported: {
-      jose: "the JOSE compact serialisation has no unprotected bucket for a parameter to be written into (RFC 7515 §7.1), so `JoseWireTokenEnvelope` declares no `custom.unprotected` at all — the shape this row states is a compile error on that wire rather than a runtime verdict. The NAME rule itself holds on both wires and is stated for JOSE by the sibling `custom.protected` rows in `internal/header/custom-header-params.test.ts`",
+      jose: "the JOSE compact serialisation has no unprotected bucket for a parameter to be written into (RFC 7515 §7.1), so `JoseWireTokenEnvelope` declares no `custom.unprotected` at all — a JOSE kit door refuses the shape at COMPILE time, and the interpreter refuses an agnostic row that states it on the JOSE leg (`run-scenario.ts#joseOptionsOf`) rather than signing a token that ignores it. The NAME rule itself holds on both wires and is stated for JOSE by the sibling `custom.header` rows in `internal/header/custom-header-params.test.ts`",
     },
   },
   {

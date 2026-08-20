@@ -248,7 +248,7 @@ export const VERIFY_KNOB_PROBES = {
         claims: LIVE_CLAIMS,
         options: {
           header: { crit: ["x-lindorm-hint"] },
-          custom: { protected: { "x-lindorm-hint": "carried" } },
+          custom: { header: { "x-lindorm-hint": "carried" } },
         },
       },
     ],

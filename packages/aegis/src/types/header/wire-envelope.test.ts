@@ -22,16 +22,24 @@ import type {
  * row asserting only the refusal would stay green if `custom` vanished entirely.
  */
 describe("the wire envelope split", () => {
-  test("a JOSE kit has custom.protected and NO custom.unprotected", () => {
-    // The positive half: `custom.protected` IS expressible on a JOSE envelope.
+  test("each wire's custom bag takes ITS OWN buckets and no other wire's", () => {
+    // The positive half: `custom.header` IS expressible on a JOSE envelope — one
+    // bucket, because compact JWS/JWE carry one header and it is protected.
     const carried: JoseSignStructuredTokenOptions = {
-      custom: { protected: { "x-hint": "value" } },
+      custom: { header: { "x-hint": "value" } },
     };
 
-    const refused: JoseSignStructuredTokenOptions = {
+    const refusedUnprotected: JoseSignStructuredTokenOptions = {
       custom: {
         // @ts-expect-error a JOSE kit has no unprotected bucket to place a param in
         unprotected: { "x-hint": "value" },
+      },
+    };
+
+    const refusedProtected: JoseSignStructuredTokenOptions = {
+      custom: {
+        // @ts-expect-error a JOSE kit spells its one bucket `header`, not `protected`
+        protected: { "x-hint": "value" },
       },
     };
 
@@ -41,7 +49,20 @@ describe("the wire envelope split", () => {
       custom: { protected: { "x-hint": "a" }, unprotected: { "x-other": "b" } },
     };
 
-    expect([carried, refused, cose]).toHaveLength(3);
+    const coseRefused: CoseSignStructuredTokenOptions = {
+      custom: {
+        // @ts-expect-error the COSE buckets are named for their integrity, not `header`
+        header: { "x-hint": "value" },
+      },
+    };
+
+    expect([
+      carried,
+      refusedUnprotected,
+      refusedProtected,
+      cose,
+      coseRefused,
+    ]).toHaveLength(5);
   });
 
   test("a typo'd REGISTERED name in `header` is still a compile error", () => {

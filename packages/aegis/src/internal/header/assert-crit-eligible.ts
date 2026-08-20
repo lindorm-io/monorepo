@@ -91,7 +91,7 @@ export const assertCritEligible = ({
    * The keys of the caller's validated custom bag(s) — the parameters this call
    * writes that no registry row answers for, and so the ones a producer may
    * legitimately mark critical. ⚠ WHICH bag is the CALLER's decision and differs
-   * per wire: JOSE passes `custom.protected` (it has no other), COSE passes BOTH
+   * per wire: JOSE passes `custom.header` (it has no other), COSE passes BOTH
    * buckets so the placement rule can answer for a misplaced one rather than this
    * gate refusing the name.
    */

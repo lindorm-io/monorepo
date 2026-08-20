@@ -7,14 +7,14 @@ import { isSpecDefinedHeaderParam } from "./is-spec-defined-header-param.js";
 /**
  * Validate ONE caller `custom` bucket and return the entries that reach the wire.
  * The ONE place either wire decides whether a key may ride as an unregistered
- * header parameter — `build-jose-header.ts` runs it over `custom.protected`,
+ * header parameter — `build-jose-header.ts` runs it over `custom.header`,
  * `build-cose-headers.ts` over both COSE buckets.
  *
  * ⚠ THE TWO REFUSALS ARE WHAT KEEPS `header` THE ONLY DOOR FOR A REGISTERED
- * PARAMETER. Without them `custom` is an override door: a caller writes
- * `custom.protected.alg` and the assembled header describes crypto that did not
- * happen, or writes `custom.protected.cty` and the parameter travels raw, past
- * the registry codec that shapes every other emission of it.
+ * PARAMETER. Without them `custom` is an override door: a caller writes `alg`
+ * into a custom bucket and the assembled header describes crypto that did not
+ * happen, or writes `cty` there and the parameter travels raw, past the registry
+ * codec that shapes every other emission of it.
  *
  *   - a KIT-OWNED name (the kit's `KitCapabilities.reserved` row) throws
  *     `header_kit_owned_in_custom`. Checked FIRST: it is a SUBSET of the next
@@ -54,7 +54,7 @@ import { isSpecDefinedHeaderParam } from "./is-spec-defined-header-param.js";
  *
  * ⚠ `Object.keys`/`Object.entries`, never `in`: every key here is
  * CALLER-CONTROLLED, and the registry lookup is a `Map` read (`headerByJose`),
- * so `custom.protected.toString` resolves to no spec rather than to
+ * so a custom bucket's `toString` key resolves to no spec rather than to
  * `Object.prototype`.
  *
  * ⛔ AND THE BAG IT BUILDS IS `Object.create(null)`, which is the ASSIGNMENT half
@@ -74,8 +74,12 @@ export const buildCustomHeader = ({
   custom: Record<string, unknown> | undefined;
   /** The kit's `KitCapabilities.reserved` row, as a set. */
   owned: ReadonlySet<string>;
-  /** Which bucket this bag is, so a refusal says where the key was written. */
-  bucket: "protected" | "unprotected";
+  /**
+   * Which bucket this bag is, so a refusal names the field the caller wrote:
+   * `header` on JOSE, `protected`/`unprotected` on COSE — the two envelopes spell
+   * their buckets differently (`types/header/wire-envelope.ts`).
+   */
+  bucket: "header" | "protected" | "unprotected";
   /** The kit's own error class, so the refusal names the format it came from. */
   error: typeof AegisError;
 }): Dict => {

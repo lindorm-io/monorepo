@@ -72,7 +72,7 @@ describe("custom header parameters", () => {
       const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
       const token = kit.sign(WIRE_CLAIMS, {
-        custom: { protected: { [HINT]: "carried" } },
+        custom: { header: { [HINT]: "carried" } },
       });
 
       const decoded = JwtKit.decode(token);
@@ -120,7 +120,7 @@ describe("custom header parameters", () => {
       const cwe = new CweKit({ kryptos: CWE_KEY, logger });
 
       expect(
-        JweKit.decode(jwe.encrypt("secret", { custom: { protected: { [HINT]: "a" } } }))
+        JweKit.decode(jwe.encrypt("secret", { custom: { header: { [HINT]: "a" } } }))
           .unknown.protected,
       ).toEqual({ [HINT]: "a" });
 
@@ -136,7 +136,7 @@ describe("custom header parameters", () => {
       const decoded = JwsKit.decode(
         kit.sign("data", {
           header: { oid: "1.2.3.4" },
-          custom: { protected: { [HINT]: "carried" } },
+          custom: { header: { [HINT]: "carried" } },
         }),
       );
 
@@ -153,7 +153,7 @@ describe("custom header parameters", () => {
       const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
       const token = kit.sign(WIRE_CLAIMS, {
-        custom: { protected: { ["__proto__"]: "carried" } },
+        custom: { header: { ["__proto__"]: "carried" } },
       });
 
       expect(Object.keys(JwtKit.decode(token).unknown.protected)).toEqual(["__proto__"]);
@@ -218,20 +218,25 @@ describe("custom header parameters", () => {
     // bucket placement apply. Accepting it in `custom` would make the split an
     // override door: the parameter would travel raw, past every rule the registry
     // row states about it.
-    test("the JOSE doors refuse a REGISTERED name in custom.protected", () => {
-      const custom = { protected: { cty: "application/json" } };
+    test("the JOSE doors refuse a REGISTERED name in custom.header", () => {
+      const custom = { header: { cty: "application/json" } };
 
-      expect(
-        codeOf(() =>
-          new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(WIRE_CLAIMS, { custom }),
-        ),
-      ).toBe("header_registered_in_custom");
+      // `data.bucket` names the field the caller wrote, so the JOSE verdict says
+      // `header` — the JOSE envelope declares no `protected` for a caller to have
+      // written (`types/header/wire-envelope.ts`). The COSE mirror of this
+      // assertion is in `build-cose-headers.test.ts`.
+      const refusal = expect.objectContaining({
+        code: "header_registered_in_custom",
+        data: { parameter: "cty", bucket: "header" },
+      });
 
-      expect(
-        codeOf(() =>
-          new JwsKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign("data", { custom }),
-        ),
-      ).toBe("header_registered_in_custom");
+      expect(() =>
+        new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(WIRE_CLAIMS, { custom }),
+      ).toThrow(refusal);
+
+      expect(() =>
+        new JwsKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign("data", { custom }),
+      ).toThrow(refusal);
     });
 
     test("the COSE doors refuse a REGISTERED name in either custom bucket", () => {
@@ -279,7 +284,7 @@ describe("custom header parameters", () => {
         expect(
           codeOf(() =>
             kit.sign(WIRE_CLAIMS, {
-              custom: { protected: { [name]: "https://attacker.example/" } },
+              custom: { header: { [name]: "https://attacker.example/" } },
             }),
           ),
         ).toBe("header_registered_in_custom");
@@ -293,7 +298,7 @@ describe("custom header parameters", () => {
 
         expect(
           codeOf(() =>
-            kit.sign(WIRE_CLAIMS, { custom: { protected: { [name]: "value" } } }),
+            kit.sign(WIRE_CLAIMS, { custom: { header: { [name]: "value" } } }),
           ),
         ).toBe("header_registered_in_custom");
       },
@@ -309,7 +314,7 @@ describe("custom header parameters", () => {
         codeOf(() =>
           kit.sign(WIRE_CLAIMS, {
             header: { crit: ["b64"] },
-            custom: { protected: { b64: false } },
+            custom: { header: { b64: false } },
           }),
         ),
       ).toBe("header_registered_in_custom");
@@ -323,13 +328,25 @@ describe("custom header parameters", () => {
       const jwt = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
       const cwt = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
-      expect(
-        codeOf(() => jwt.sign(WIRE_CLAIMS, { custom: { protected: { alg: "ES256" } } })),
-      ).toBe("header_kit_owned_in_custom");
+      // Each wire's verdict names ITS OWN field, which is why the two literals are
+      // written out rather than shared.
+      expect(() =>
+        jwt.sign(WIRE_CLAIMS, { custom: { header: { alg: "ES256" } } }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "header_kit_owned_in_custom",
+          data: { parameter: "alg", bucket: "header" },
+        }),
+      );
 
-      expect(
-        codeOf(() => cwt.sign(WIRE_CLAIMS, { custom: { protected: { alg: "ES256" } } })),
-      ).toBe("header_kit_owned_in_custom");
+      expect(() =>
+        cwt.sign(WIRE_CLAIMS, { custom: { protected: { alg: "ES256" } } }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "header_kit_owned_in_custom",
+          data: { parameter: "alg", bucket: "protected" },
+        }),
+      );
     });
 
     // BOTH BUCKETS, like the registered-name rule beside it. `buildCustomHeader`
@@ -351,12 +368,12 @@ describe("custom header parameters", () => {
   describe("crit and custom parameters", () => {
     // RFC 7515 §4.1.11 forbids `crit` to name spec-defined parameters, which
     // leaves an issuer's own extension as exactly what it is for.
-    test("a crit naming a custom.protected key mints, and a DECLARING kit verifies it", () => {
+    test("a crit naming a custom.header key mints, and a DECLARING kit verifies it", () => {
       const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
       const token = kit.sign(WIRE_CLAIMS, {
         header: { crit: [HINT] },
-        custom: { protected: { [HINT]: "carried" } },
+        custom: { header: { [HINT]: "carried" } },
       });
 
       expect(JwtKit.decode(token).protectedHeader.crit).toEqual([HINT]);
@@ -385,13 +402,25 @@ describe("custom header parameters", () => {
         amphora.add(TEST_EC_KEY_SIG);
         const aegis = new Aegis({ amphora, logger });
 
-        const { token } = await aegis[wire].sign(
-          { iss: "https://test.lindorm.io/", sub: "user-1", exp: 9999999999 },
-          {
-            header: { crit: [HINT] },
-            custom: { protected: { [HINT]: "carried" } },
-          },
-        );
+        const claims = {
+          iss: "https://test.lindorm.io/",
+          sub: "user-1",
+          exp: 9999999999,
+        };
+
+        // The custom bucket is the ONE member the two wires spell differently
+        // (`types/header/wire-envelope.ts`), so the bag is built per wire. A shared
+        // literal would state a bucket only one arm has.
+        const { token } =
+          wire === "jwt"
+            ? await aegis.jwt.sign(claims, {
+                header: { crit: [HINT] },
+                custom: { header: { [HINT]: "carried" } },
+              })
+            : await aegis.cwt.sign(claims, {
+                header: { crit: [HINT] },
+                custom: { protected: { [HINT]: "carried" } },
+              });
 
         expect(() => aegis.parse(token)).not.toThrow();
       },
@@ -468,7 +497,7 @@ describe("custom header parameters", () => {
     test("a crit naming a key NO bag carries is still refused", () => {
       const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
-      // The eligibility gate reads the caller's `custom.protected` KEYS, so a
+      // The eligibility gate reads the caller's `custom.header` KEYS, so a
       // member naming nothing at all is no more permitted than it ever was.
       expect(codeOf(() => kit.sign(WIRE_CLAIMS, { header: { crit: [HINT] } }))).toBe(
         "jwt_crit_param_not_permitted",
@@ -479,8 +508,8 @@ describe("custom header parameters", () => {
   /**
    * ⭐ EVERY READ DOOR TAKES THE DECLARATION, INCLUDING THE ENCRYPTED ONES.
    *
-   * The sealing doors MINT a critical custom parameter (`header.crit` beside
-   * `custom.protected` on `JweEncryptOptions`/`CweEncryptOptions`), so a decrypt
+   * The sealing doors MINT a critical custom parameter (`header.crit` beside the
+   * custom bag on `JweEncryptOptions`/`CweEncryptOptions`), so a decrypt
    * that could not be told about one would refuse the tokens this package itself
    * produces. And `aegis.verify` of a NESTED token runs the crit gate on the
    * OUTER envelope inside that same decrypt
@@ -509,7 +538,7 @@ describe("custom header parameters", () => {
 
       const jwe = kit.encrypt("sealed-plaintext", {
         header: { crit: [HINT] },
-        custom: { protected: { [HINT]: "carried" } },
+        custom: { header: { [HINT]: "carried" } },
       });
 
       expect(() => kit.decrypt(jwe)).toThrow(
@@ -543,7 +572,7 @@ describe("custom header parameters", () => {
         // RFC 7519 §5.2 requires the nested JWT's `cty`; the crit rides beside it
         // on the SAME protected header, which is the envelope the peel gates.
         header: { cty: "JWT", crit: [HINT] },
-        custom: { protected: { [HINT]: "carried" } },
+        custom: { header: { [HINT]: "carried" } },
       });
 
       await expect(aegis.verify(outer)).rejects.toThrow(
@@ -589,7 +618,7 @@ describe("custom header parameters", () => {
           sub: "user-1",
           exp: Math.floor(Date.now() / 1000) + 3600,
         },
-        { custom: { protected: { [HINT]: "carried" } } },
+        { custom: { header: { [HINT]: "carried" } } },
       );
 
       // It IS on the wire — otherwise this row would pass by the parameter never
