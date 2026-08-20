@@ -1,4 +1,5 @@
 export * from "./abstract-constructor.js";
+export * from "./doc-string-settings.js";
 export * from "./parameter-type-options.js";
 export * from "./scenario-info-settings.js";
 export * from "./scenario-result.js";

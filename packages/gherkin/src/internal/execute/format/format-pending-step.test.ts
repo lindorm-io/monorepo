@@ -6,7 +6,6 @@ describe("formatPendingStep", () => {
   test("should name the step, its anchor and the pending class.method", () => {
     const step: StepModel = {
       column: 5,
-      hasArgument: false,
       line: 7,
       text: 'I encrypt "hello"',
       type: "Action",

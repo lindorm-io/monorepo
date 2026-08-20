@@ -14,6 +14,7 @@ describe("assertPickleParity", () => {
     expect(() =>
       assertPickleParity({
         consumedPickleKeys: new Set(),
+        excludedPickleKeys: new Set(),
         pickleIndex: new Map(),
         supersededScenarioIds: new Set(),
         uri: "src/features/test.feature",
@@ -25,6 +26,7 @@ describe("assertPickleParity", () => {
     expect(() =>
       assertPickleParity({
         consumedPickleKeys: new Set(["s1", "s2/r1"]),
+        excludedPickleKeys: new Set(),
         pickleIndex: new Map([
           ["s1", pickle(["s1"])],
           ["s2/r1", pickle(["s2", "r1"])],
@@ -39,6 +41,7 @@ describe("assertPickleParity", () => {
     expect(() =>
       assertPickleParity({
         consumedPickleKeys: new Set(),
+        excludedPickleKeys: new Set(),
         pickleIndex: new Map([
           // A zero-step outline: one superseding empty-scenario node stands
           // in for every row pickle of scenario s1.
@@ -51,10 +54,26 @@ describe("assertPickleParity", () => {
     ).not.toThrow();
   });
 
+  test("should stay silent when an unconsumed pickle was excluded by the tags expression", () => {
+    expect(() =>
+      assertPickleParity({
+        consumedPickleKeys: new Set(["s1"]),
+        excludedPickleKeys: new Set(["s2"]),
+        pickleIndex: new Map([
+          ["s1", pickle(["s1"])],
+          ["s2", pickle(["s2"])],
+        ]),
+        supersededScenarioIds: new Set(),
+        uri: "src/features/test.feature",
+      }),
+    ).not.toThrow();
+  });
+
   test("should throw model_invariant for an orphaned pickle", () => {
     const error = capture(() =>
       assertPickleParity({
         consumedPickleKeys: new Set(["s1"]),
+        excludedPickleKeys: new Set(),
         pickleIndex: new Map([
           ["s1", pickle(["s1"])],
           ["s2", pickle(["s2"])],
@@ -67,15 +86,17 @@ describe("assertPickleParity", () => {
     expect(errorShape(error)).toMatchSnapshot();
   });
 
-  test("should list only the orphans when consumed, superseded and orphaned pickles coexist", () => {
+  test("should list only the orphans when consumed, superseded, excluded and orphaned pickles coexist", () => {
     const error = capture(() =>
       assertPickleParity({
         consumedPickleKeys: new Set(["s1"]),
+        excludedPickleKeys: new Set(["s5"]),
         pickleIndex: new Map([
           ["s1", pickle(["s1"])],
           ["s2/r1", pickle(["s2", "r1"])],
           ["s3", pickle(["s3"])],
           ["s4/r9", pickle(["s4", "r9"])],
+          ["s5", pickle(["s5"])],
         ]),
         supersededScenarioIds: new Set(["s2"]),
         uri: "src/features/test.feature",

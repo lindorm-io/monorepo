@@ -19,7 +19,7 @@ Reqnroll-style BDD for vitest. A `.feature` file **is** a vitest test file: a Vi
 npm install --save-dev @lindorm/gherkin
 ```
 
-Peer dependencies: `vite` >= 8 and `vitest` >= 4.1.4.
+Peer dependencies: `vite` >= 8, `vitest` >= 4.1.4 and `zod` >= 4.3.6.
 
 ## Quick start
 
@@ -37,6 +37,7 @@ export default defineConfig({
     gherkinPlugin({
       features: ["src/**/*.feature"], // default
       steps: ["src/**/*.steps.ts"], // default
+      // tags: "not @slow", // optional transform-time selection — see Tags
     }),
     // Step classes use stage-3 decorators; the config must lower them.
     swc.vite({
@@ -197,6 +198,71 @@ export class AesSteps extends AesBase {
 - Step hooks fire only for steps actually DISPATCHED to a definition — an undefined, ambiguous or skipped step runs no `@BeforeStep`/`@AfterStep`.
 - After-hooks and disposal always run; when several things fail, the FIRST failure is reported and the rest are appended to it, never replacing it.
 
+## DataTable and DocString
+
+A step's DataTable or DocString arrives as the **trailing argument**, after any expression parameters. The slot is always passed — `undefined` when the step carries none — so the argument position never shifts.
+
+```gherkin
+When I import the catalog for "tenant-1"
+  | name  | price |
+  | apple | 3     |
+  | pear  | 4     |
+```
+
+```ts
+import { Binding, DataTable, DocString, When } from "@lindorm/gherkin";
+import { z } from "zod";
+
+const ProductSchema = z.object({ name: z.string(), price: z.coerce.number() });
+
+@Binding()
+export class CatalogSteps {
+  @When("I import the catalog for {string}")
+  iImportTheCatalog(tenant: string, table: DataTable): void {
+    const products = table.createSet(ProductSchema); // Array<{ name: string; price: number }>
+    /* … */
+  }
+
+  @When("I read the payload")
+  iReadThePayload(doc: DocString): void {
+    doc.content; // the body, verbatim
+    doc.mediaType; // the word after """ — e.g. "json", or undefined
+  }
+}
+```
+
+`DataTable` carries cucumber-js's five methods, all values `string`: `raw()` (full matrix), `rows()` (body minus header), `hashes()` (header-keyed Records), `rowsHash()` (two-column key/value Record — any other width throws `invalid_data_table`), `transpose()` (a new DataTable). Outline `<placeholder>` values substitute into cells and DocString bodies exactly as into step text.
+
+Typed conversion is zod: `createSet(schema)` parses every `hashes()` row; `create(schema)` parses the table's **single** body row (any other count throws — never silent truncation; for vertical key/value tables use `schema.parse(table.rowsHash())`). Both are **synchronous** on purpose — they run inside your step body, where the runner cannot await them. A schema with an async refinement makes them throw zod's own "Encountered Promise during synchronous parse. Use `.parseAsync()` instead." — switch to `createAsync`/`createSetAsync` and `await`. A failed conversion is red (`table_conversion_failed`) with zod's issues and the step anchor.
+
+An undefined step that carries an argument gets its snippet with the trailing parameter typed — `dataTable: DataTable` or `docString: DocString`.
+
+## Tags
+
+Gherkin tags thread into **vitest's native tags** with the `@` stripped: `@slow` registers as `tags: ["slow"]`, so `--tagsFilter` and `--listTags` work out of the box. Scenarios inherit tags from every level (feature → rule → scenario → examples).
+
+Two filters exist, deliberately, with **different syntaxes** — this is a real wart of threading two ecosystems together, so keep them apart:
+
+|                                  | syntax                                | when           | effect                                |
+| -------------------------------- | ------------------------------------- | -------------- | ------------------------------------- |
+| `tags` in `gherkinPlugin({ … })` | **Cucumber** — `@smoke and not @slow` | transform time | the scenario **never becomes a test** |
+| `vitest --tagsFilter`            | **vitest** — `smoke && !slow`         | runtime        | the test **exists and is skipped**    |
+
+Transform-time selection is the lane decision — in config, reviewable, absent from the counts. `--tagsFilter` is ad-hoc ("just the smoke tests now") and reports what it skipped. The `tags` setting has no CLI or env path on purpose: a runtime value would read a stale Vite transform cache — `--tagsFilter` is the runtime knob.
+
+The plugin **declares every tag it finds at config time**: vitest's `strictTags` (default `true`, kept) fails collection on any undeclared tag, so the plugin scans every configured `.feature` file and injects the union into `test.tags`, merged with your own declarations. ⚠ The scan runs ONCE at config time — a tag newly added to a feature **mid-watch** fails collection until vitest restarts. That failure is loud (`strictTags` working), never a silent skip.
+
+**Reserved tags error.** No tag carries runner meaning here (matching Cucumber), and a tag that means something in another runner is never silently inert:
+
+| tag                                   | error                                                      |
+| ------------------------------------- | ---------------------------------------------------------- |
+| `@concurrent`, `@sequential`          | concurrency is not supported                               |
+| `@skip`, `@ignore`, `@todo`, `@fails` | this runner has no skip tag — exclude via `tags` in config |
+
+**Tag names must be legal vitest tag names.** Vitest rejects a name containing whitespace or `! * & | ( )`, or equal to `and` / `or` / `not` — so `@issue(1234)`, legal Gherkin and a common Cucumber convention, is refused (`invalid_tag_name`), anchored to its line in the feature file. Write `@issue-1234`.
+
+There is deliberately **no skip tag**: a per-scenario skip is a hide-a-red-row escape hatch at the point of temptation; the config `tags` expression is a centralized, reviewable lane decision. For the same reason, authoring errors (a zero-row `Examples:`, a zero-step scenario) stay RED even when a `tags` expression excludes their tags — an excludable authoring error would be a skip tag by the back door. A fully excluded file reports as a skipped suite; a Rule or outline whose every scenario is excluded is omitted quietly.
+
 ## The failure contract
 
 No scenario can silently pass. Undefined, ambiguous, pending and conversion failures are all RED in the printed counts, anchored to the `.feature` file and line:
@@ -224,7 +290,7 @@ The remaining 2 steps in this scenario were skipped.
 - **Conversion failed** — the step matched but a parameter transform threw: reported honestly as a conversion failure, never downgraded to undefined.
 - **Disposal failed** — a context's `dispose()` threw during teardown: the scenario is red (`disposal_failed`), disposal continues through the remaining contexts, and the failure is appended after any earlier one.
 - Remaining steps in a failed scenario are **skipped**, so the cause is never buried.
-- There is deliberately **no skip tag** — exclusion is a config decision, not a per-scenario escape hatch.
+- There is deliberately **no skip tag** — exclusion is a config decision, not a per-scenario escape hatch (see Tags).
 
 The runner's OWN failures — undefined, ambiguous, pending, conversion, disposal, authoring errors — carry a `urn:lindorm:gherkin:error:<code>` type. A failing step or hook rethrows YOUR error with the anchor prepended, so assertion diffs survive intact. Gherkin syntax errors, empty scenarios and zero-row `Examples:` tables are authoring errors and fail red at the offending line.
 
@@ -232,7 +298,9 @@ The plugin also fails the whole run at startup (`feature_not_included`) if any `
 
 ## Current scope
 
-Shipped: everything above. Planned, not yet shipped: DataTable/DocString arguments, and tag-based scenario SELECTION (tag expressions on hooks are shipped; selecting which scenarios run is not). A step that carries a DataTable or DocString today fails red (`step_argument_unsupported`) rather than silently dropping the data, and an unknown plugin setting — `tags` included — throws at config time (`unknown_setting`) rather than being silently ignored.
+Feature-complete for the planned set: everything above — parsing and emission, step matching with custom parameter types, lifecycle hooks and contexts, DataTable/DocString + zod, tags, and the failure contract. An unknown plugin setting throws at config time (`unknown_setting`) rather than being silently ignored.
+
+Deliberately out, for now: `RegExp` step expressions, living-doc HTML output, a `bin` that scaffolds step stubs, and richer built-in parameter types (`{email}`, `{date}`, `{list}`, …).
 
 ## License
 

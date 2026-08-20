@@ -6,7 +6,6 @@ describe("formatStepAnchor", () => {
   test("should render the resolved keyword, text and position", () => {
     const step: StepModel = {
       column: 5,
-      hasArgument: false,
       line: 12,
       text: 'I encrypt "secret"',
       type: "Action",
@@ -20,7 +19,6 @@ describe("formatStepAnchor", () => {
   test("should render * for an Unknown step", () => {
     const step: StepModel = {
       column: 5,
-      hasArgument: false,
       line: 9,
       text: "a wildcard",
       type: "Unknown",

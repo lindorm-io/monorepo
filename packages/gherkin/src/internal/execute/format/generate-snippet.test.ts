@@ -8,7 +8,6 @@ import { generateSnippet } from "./generate-snippet.js";
 
 const step = (text: string, type: StepModel["type"] = "Action"): StepModel => ({
   column: 5,
-  hasArgument: false,
   line: 12,
   text,
   type,
@@ -75,6 +74,28 @@ describe("generateSnippet", () => {
 
     expect(snippet).toContain('@Given("a wildcard happens")');
     expect(snippet).toContain("aWildcardHappens(): void {");
+    expect(snippet).toMatchSnapshot();
+  });
+
+  test("should append a typed dataTable parameter for a table-bearing step", () => {
+    const snippet = generateSnippet(
+      { ...step('I load "prices"'), argument: { kind: "data-table", rows: [["a"]] } },
+      new ParameterTypeRegistry(),
+    );
+
+    // AFTER the generated expression parameters — the runner appends the
+    // slot after every converted parameter.
+    expect(snippet).toContain("iLoad(string: string, dataTable: DataTable): void {");
+    expect(snippet).toMatchSnapshot();
+  });
+
+  test("should append a typed docString parameter for a DocString-bearing step", () => {
+    const snippet = generateSnippet(
+      { ...step("I note the payload"), argument: { kind: "doc-string", content: "x" } },
+      new ParameterTypeRegistry(),
+    );
+
+    expect(snippet).toContain("iNoteThePayload(docString: DocString): void {");
     expect(snippet).toMatchSnapshot();
   });
 });

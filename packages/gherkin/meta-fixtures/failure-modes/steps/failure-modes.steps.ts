@@ -1,4 +1,6 @@
 import { expect } from "vitest";
+import { z } from "zod";
+import type { DataTable, DocString } from "../../../src/index.js";
 import {
   Binding,
   Given,
@@ -96,6 +98,66 @@ export class AsyncSteps {
   async anAsyncStepRejects(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 1));
     throw new Error("rejected after a tick");
+  }
+}
+
+const PriceSchema = z.object({ name: z.string(), price: z.coerce.number() });
+
+const AsyncSchema = z.object({ name: z.string().refine(async () => true) });
+
+@Binding()
+export class DataDeliverySteps {
+  // Rest parameters expose the INVOCATION arity — the §3.6 stable-arity
+  // proof: the runner passes the trailing slot unconditionally, undefined
+  // when the step carries no argument.
+  @Given("a slotless sentinel step")
+  slotless(...args: Array<unknown>): void {
+    sentinel(`META_SENTINEL_SLOT_${args.length}_${String(args[0])}`);
+  }
+
+  @Given("a documented payload")
+  documented(doc: DocString): void {
+    sentinel(`META_SENTINEL_DOC_${doc.mediaType}_${doc.content.split("\n").join("|")}`);
+  }
+
+  @Given("a typed catalog")
+  typedCatalog(table: DataTable): void {
+    // Unquoted prices in the JSON prove zod coerced strings to numbers.
+    sentinel(`META_SENTINEL_SET_${JSON.stringify(table.createSet(PriceSchema))}`);
+  }
+
+  @Given("a typed product")
+  typedProduct(table: DataTable): void {
+    sentinel(`META_SENTINEL_CREATE_${JSON.stringify(table.create(PriceSchema))}`);
+  }
+
+  @Given("a sentinel table")
+  sentinelTable(table: DataTable): void {
+    sentinel(`META_SENTINEL_CELL_${table.rows()[0][0]}`);
+  }
+}
+
+@Binding()
+export class DataConversionSteps {
+  // Each body prints its CONTINUED sentinel AFTER the conversion call — its
+  // absence proves the throw stopped the body, its counterpart's presence in
+  // data-delivery proves the sentinel channel fires.
+  @Given("an async schema parsed synchronously")
+  asyncParsedSync(table: DataTable): void {
+    table.createSet(AsyncSchema);
+    sentinel("META_SENTINEL_ASYNC_SCHEMA_CONTINUED");
+  }
+
+  @Given("a violating catalog")
+  violating(table: DataTable): void {
+    table.createSet(PriceSchema);
+    sentinel("META_SENTINEL_VIOLATING_CONTINUED");
+  }
+
+  @Given("a created product")
+  createdProduct(table: DataTable): void {
+    table.create(PriceSchema);
+    sentinel("META_SENTINEL_CREATE_MULTI_CONTINUED");
   }
 }
 

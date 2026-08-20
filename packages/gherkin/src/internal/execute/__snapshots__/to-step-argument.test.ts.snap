@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`toStepArgument > should throw model_invariant on an unknown kind 1`] = `
+{
+  "code": "model_invariant",
+  "data": {
+    "argument": {
+      "kind": "unknown",
+    },
+  },
+  "details": "The StepArgumentModel union gained a kind this factory does not map.",
+  "message": "Unexpected step argument kind",
+  "title": "Model Invariant Violated",
+  "type": "urn:lindorm:gherkin:error:model_invariant",
+}
+`;

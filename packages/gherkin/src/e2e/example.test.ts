@@ -21,14 +21,20 @@ describe("meta-suite: example", () => {
     result = runVitestChild(EXAMPLE_DIRECTORY);
   }, 180_000);
 
-  test("should pass all 4 scenarios — 2 Examples + 2 Outline rows", () => {
-    expect(result.summary.tests).toBe("4 passed (4)");
+  test("should pass all 5 scenarios — 3 Examples + 2 Outline rows", () => {
+    expect(result.summary.tests).toBe("5 passed (5)");
     expect(result.summary.testFiles).toBe("1 passed (1)");
   });
 
   test("should run the custom-parameter-type scenario", () => {
     expect(result.output).toContain(
       "✓ features/greeting.feature > Greeting > greet shouting",
+    );
+  });
+
+  test("should run the DataTable scenario", () => {
+    expect(result.output).toContain(
+      "✓ features/greeting.feature > Greeting > greet a table of guests",
     );
   });
 });

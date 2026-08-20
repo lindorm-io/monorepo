@@ -1,5 +1,19 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`generateSnippet > should append a typed dataTable parameter for a table-bearing step 1`] = `
+"@When("I load {string}")
+iLoad(string: string, dataTable: DataTable): void {
+  throw new PendingStepError();
+}"
+`;
+
+exports[`generateSnippet > should append a typed docString parameter for a DocString-bearing step 1`] = `
+"@When("I note the payload")
+iNoteThePayload(docString: DocString): void {
+  throw new PendingStepError();
+}"
+`;
+
 exports[`generateSnippet > should emit @Given for an Unknown step type 1`] = `
 "@Given("a wildcard happens")
 aWildcardHappens(): void {

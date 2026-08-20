@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DataTable > cucumber-js methods > should throw invalid_data_table from rowsHash() on a non-two-column table, naming the row 1`] = `
+{
+  "code": "invalid_data_table",
+  "data": {
+    "columns": 3,
+    "row": 2,
+  },
+  "details": "rowsHash() reads a two-column table as key/value pairs; a row with any other width has no key/value reading. Reshape the table, or use hashes() for header-keyed rows.",
+  "message": "rowsHash() requires every row to have exactly two columns — row 2 has 3",
+  "title": "Invalid Data Table Shape",
+  "type": "urn:lindorm:gherkin:error:invalid_data_table",
+}
+`;
+
+exports[`DataTable > zod conversion > should throw invalid_data_table from create() on a multi-row table — never silent truncation 1`] = `
+{
+  "code": "invalid_data_table",
+  "data": {
+    "bodyRows": 2,
+  },
+  "details": "create() returns ONE object, so the table must carry a header row and exactly one body row — converting any other count would silently truncate or invent data.",
+  "message": "create() converts exactly one body row — this table has 2. Use createSet() for multi-row tables.",
+  "title": "Invalid Data Table Shape",
+  "type": "urn:lindorm:gherkin:error:invalid_data_table",
+}
+`;

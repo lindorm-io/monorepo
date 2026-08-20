@@ -1,4 +1,6 @@
+import { parse } from "@cucumber/tag-expressions";
 import { describe, expect, test } from "vitest";
+import { capture } from "../../__fixtures__/test-helpers.js";
 import { buildFeatureModel } from "./build-feature-model.js";
 import type {
   EmptyFeatureModel,
@@ -50,6 +52,16 @@ const asRule = (node: SuiteNode): RuleNode => {
 const build = (lines: Array<string>): FeatureModel =>
   buildFeatureModel(lines.join("\n"), "src/features/test.feature");
 
+// The same matcher shape resolve-settings.ts compiles from the `tags`
+// setting — built here from the raw expression so these tests stay on the
+// model layer.
+const buildSelected = (lines: Array<string>, expression: string): FeatureModel => {
+  const node = parse(expression);
+  return buildFeatureModel(lines.join("\n"), "src/features/test.feature", (tags) =>
+    node.evaluate(tags),
+  );
+};
+
 describe("buildFeatureModel", () => {
   describe("backgrounds", () => {
     test("should merge a feature-level Background into every scenario, anchored to the Background lines", () => {
@@ -78,17 +90,15 @@ describe("buildFeatureModel", () => {
       expect(first.line).toBe(6);
       expect(first.column).toBe(3);
       expect(first.steps).toEqual([
-        { column: 5, hasArgument: false, line: 4, text: "an oct key", type: "Context" },
+        { column: 5, line: 4, text: "an oct key", type: "Context" },
         {
           column: 5,
-          hasArgument: false,
           line: 7,
           text: 'I encrypt "hello"',
           type: "Action",
         },
         {
           column: 5,
-          hasArgument: false,
           line: 8,
           text: 'decrypting returns "hello"',
           type: "Outcome",
@@ -98,7 +108,6 @@ describe("buildFeatureModel", () => {
       expect(second.line).toBe(10);
       expect(second.steps[0]).toEqual({
         column: 5,
-        hasArgument: false,
         line: 4,
         text: "an oct key",
         type: "Context",
@@ -140,15 +149,13 @@ describe("buildFeatureModel", () => {
       expect(scenario.steps).toEqual([
         {
           column: 5,
-          hasArgument: false,
           line: 4,
           text: "a feature key",
           type: "Context",
         },
-        { column: 7, hasArgument: false, line: 9, text: "a rule key", type: "Context" },
+        { column: 7, line: 9, text: "a rule key", type: "Context" },
         {
           column: 7,
-          hasArgument: false,
           line: 12,
           text: 'I encrypt "secret"',
           type: "Action",
@@ -237,14 +244,12 @@ describe("buildFeatureModel", () => {
       expect(rows[0].steps).toEqual([
         {
           column: 5,
-          hasArgument: false,
           line: 4,
           text: 'an oct key with encryption "A128GCM"',
           type: "Context",
         },
         {
           column: 5,
-          hasArgument: false,
           line: 5,
           text: 'the price is "$100"',
           type: "Outcome",
@@ -281,6 +286,7 @@ describe("buildFeatureModel", () => {
         column: 5,
         line: 6,
         name: "uses <x>",
+        tags: [],
       });
 
       const row = asScenario(model.children[1]);
@@ -304,7 +310,7 @@ describe("buildFeatureModel", () => {
 
       expect(model.expectedTests).toBe(1);
       expect(model.children).toEqual([
-        { kind: "empty-examples", column: 5, line: 4, name: "never expands" },
+        { kind: "empty-examples", column: 5, line: 4, name: "never expands", tags: [] },
       ]);
     });
   });
@@ -335,6 +341,7 @@ describe("buildFeatureModel", () => {
         column: 3,
         line: 6,
         name: "nothing here",
+        tags: [],
       });
 
       const real = asScenario(model.children[1]);
@@ -360,7 +367,7 @@ describe("buildFeatureModel", () => {
 
       expect(model.expectedTests).toBe(1);
       expect(model.children).toEqual([
-        { kind: "empty-scenario", column: 3, line: 3, name: "no steps" },
+        { kind: "empty-scenario", column: 3, line: 3, name: "no steps", tags: [] },
       ]);
     });
   });
@@ -472,35 +479,119 @@ describe("buildFeatureModel", () => {
   });
 
   describe("step arguments", () => {
-    test("should flag DocString and DataTable steps with hasArgument", () => {
+    test("should carry DocString and DataTable CONTENT and omit argument on plain steps", () => {
       const model = asFeature(
         build([
           "Feature: args", // 1
           "",
           "  Scenario: docs", // 3
           "    Given a doc string", // 4
-          '      """', // 5
-          "      hello body", // 6
+          '      """json', // 5
+          '      {"note":"hello body"}', // 6
           '      """', // 7
           "    And a data table", // 8
           "      | a | b |", // 9
-          "    And a plain step", // 10
+          "      | 1 | 2 |", // 10
+          "    And a plain step", // 11
         ]),
       );
 
       const scenario = asScenario(model.children[0]);
 
       expect(scenario.steps).toEqual([
-        { column: 5, hasArgument: true, line: 4, text: "a doc string", type: "Context" },
-        { column: 5, hasArgument: true, line: 8, text: "a data table", type: "Context" },
+        {
+          argument: {
+            kind: "doc-string",
+            content: '{"note":"hello body"}',
+            mediaType: "json",
+          },
+          column: 5,
+          line: 4,
+          text: "a doc string",
+          type: "Context",
+        },
+        {
+          argument: {
+            kind: "data-table",
+            rows: [
+              ["a", "b"],
+              ["1", "2"],
+            ],
+          },
+          column: 5,
+          line: 8,
+          text: "a data table",
+          type: "Context",
+        },
         {
           column: 5,
-          hasArgument: false,
-          line: 10,
+          line: 11,
           text: "a plain step",
           type: "Context",
         },
       ]);
+      // Absent, not undefined — byte-identical emitted source depends on it.
+      expect(Object.hasOwn(scenario.steps[2], "argument")).toBe(false);
+    });
+
+    test("should substitute Examples values into table cells and DocString bodies", () => {
+      // compile() interpolates `<placeholder>` into DocString content and
+      // table cells exactly as into step text — the model gets it free from
+      // the pickles, pinned here so a regression to AST-sourced content
+      // (unsubstituted) goes red.
+      const model = asFeature(
+        build([
+          "Feature: substitution", // 1
+          "",
+          "  Scenario Outline: row <fruit>", // 3
+          "    Given a table of <fruit>", // 4
+          "      | name    | price   |", // 5
+          "      | <fruit> | <price> |", // 6
+          "    And a note about <fruit>", // 7
+          '      """', // 8
+          "      buy <fruit> for <price>", // 9
+          '      """', // 10
+          "", // 11
+          "    Examples:", // 12
+          "      | fruit | price |", // 13
+          "      | kiwi  | 9     |", // 14
+        ]),
+      );
+
+      const scenario = asScenario(model.children[0]);
+
+      expect(scenario.steps[0].argument).toEqual({
+        kind: "data-table",
+        rows: [
+          ["name", "price"],
+          ["kiwi", "9"],
+        ],
+      });
+      expect(scenario.steps[1].argument).toEqual({
+        kind: "doc-string",
+        content: "buy kiwi for 9",
+      });
+    });
+
+    test("should carry a __proto__ table cell as data", () => {
+      const model = asFeature(
+        build([
+          "Feature: hostile cells", // 1
+          "",
+          "  Scenario: proto header", // 3
+          "    Given a hostile table", // 4
+          "      | __proto__ | safe |", // 5
+          "      | evil      | ok   |", // 6
+        ]),
+      );
+
+      expect(asScenario(model.children[0]).steps[0].argument).toEqual({
+        kind: "data-table",
+        rows: [
+          ["__proto__", "safe"],
+          ["evil", "ok"],
+        ],
+      });
     });
   });
 
@@ -720,6 +811,358 @@ describe("buildFeatureModel", () => {
     });
   });
 
+  describe("transform-time selection", () => {
+    test("should omit an excluded scenario — it never becomes a node, and expectedTests counts the retained tree", () => {
+      const model = asFeature(
+        buildSelected(
+          [
+            "Feature: selected", // 1
+            "",
+            "  @keep",
+            "  Scenario: kept", // 4
+            "    Given a step", // 5
+            "",
+            "  @slow",
+            "  Scenario: dropped", // 8
+            "    Given a step", // 9
+          ],
+          "not @slow",
+        ),
+      );
+
+      // The build SUCCEEDING is the invariant half: the excluded pickle is
+      // recorded, so assert-pickle-parity does not fire, and the count is
+      // derived from the retained tree alone.
+      expect(model.children.map((child) => child.name)).toEqual(["kept"]);
+      expect(model.expectedTests).toBe(1);
+    });
+
+    test("should select outline rows per EXAMPLES block — the block's tags ride its rows' pickles", () => {
+      const model = asFeature(
+        buildSelected(
+          [
+            "Feature: outline selection", // 1
+            "",
+            "  Scenario Outline: uses <x>", // 3
+            "    Given a <x>", // 4
+            "",
+            "    @fast",
+            "    Examples: fast", // 7
+            "      | x |", // 8
+            "      | 1 |", // 9
+            "",
+            "    Examples: slow", // 11
+            "      | x |", // 12
+            "      | 2 |", // 13
+          ],
+          "not @fast",
+        ),
+      );
+
+      expect(model.children).toHaveLength(1);
+      expect(asScenario(model.children[0]).examplesRow).toEqual([["x", "2"]]);
+    });
+
+    test("should fall back to the skipped-suite empty model when EVERY scenario is excluded", () => {
+      const model = asEmpty(
+        buildSelected(
+          [
+            "@slow", // 1
+            "Feature: fully excluded", // 2
+            "",
+            "  Scenario: one", // 4
+            "    Given a step", // 5
+          ],
+          "not @slow",
+        ),
+      );
+
+      expect(model).toEqual({
+        kind: "empty",
+        name: "fully excluded",
+        uri: "src/features/test.feature",
+      });
+    });
+
+    test("should omit a Rule whose every scenario is excluded — no empty describe", () => {
+      const model = asFeature(
+        buildSelected(
+          [
+            "Feature: rule exclusion", // 1
+            "",
+            "  Scenario: survives", // 3
+            "    Given a step", // 4
+            "",
+            "  @slow",
+            "  Rule: all excluded", // 7
+            "    Scenario: inside", // 8
+            "      Given a step", // 9
+          ],
+          "not @slow",
+        ),
+      );
+
+      expect(model.children).toHaveLength(1);
+      expect(asScenario(model.children[0]).name).toBe("survives");
+      expect(model.expectedTests).toBe(1);
+    });
+
+    test("should keep the two zero-test outline cases separate — all-rows-excluded goes QUIET, zero rows stays RED", () => {
+      // Both blocks compile to zero retained pickles, so pickles alone
+      // cannot tell them apart — only the AST walk can, and it must: one is
+      // a legitimate lane exclusion, the other an authoring error.
+      const model = asFeature(
+        buildSelected(
+          [
+            "Feature: the separation", // 1
+            "",
+            "  Scenario Outline: excluded wholesale <x>", // 3
+            "    Given a <x>", // 4
+            "",
+            "    @slow",
+            "    Examples:", // 7
+            "      | x |", // 8
+            "      | 1 |", // 9
+            "",
+            "  Scenario Outline: zero rows <x>", // 11
+            "    Given a <x>", // 12
+            "",
+            "    Examples:", // 14
+            "      | x |", // 15
+          ],
+          "not @slow",
+        ),
+      );
+
+      expect(model.children).toEqual([
+        {
+          kind: "empty-examples",
+          column: 5,
+          line: 14,
+          name: "zero rows <x>",
+          tags: [],
+        },
+      ]);
+      expect(model.expectedTests).toBe(1);
+    });
+
+    test("should keep a zero-row Examples RED even when the expression excludes its tags — an excludable authoring error would be a skip tag by the back door", () => {
+      const model = asFeature(
+        buildSelected(
+          [
+            "Feature: no back door", // 1
+            "",
+            "  Scenario: survives", // 3
+            "    Given a step", // 4
+            "",
+            "  @slow",
+            "  Scenario Outline: broken <x>", // 7
+            "    Given a <x>", // 8
+            "",
+            "    Examples:", // 10
+            "      | x |", // 11
+          ],
+          "not @slow",
+        ),
+      );
+
+      expect(model.children[1]).toEqual({
+        kind: "empty-examples",
+        column: 5,
+        line: 10,
+        name: "broken <x>",
+        tags: ["@slow"],
+      });
+    });
+
+    test("should keep an empty scenario RED when the expression excludes its tags", () => {
+      const model = asFeature(
+        buildSelected(
+          [
+            "Feature: no back door", // 1
+            "",
+            "  Scenario: survives", // 3
+            "    Given a step", // 4
+            "",
+            "  @slow",
+            "  Scenario: nothing here", // 7
+          ],
+          "not @slow",
+        ),
+      );
+
+      expect(model.children[1]).toEqual({
+        kind: "empty-scenario",
+        column: 3,
+        line: 7,
+        name: "nothing here",
+        tags: ["@slow"],
+      });
+    });
+
+    test("should drop excluded pickles' tags from the feature union — a hook gated on them must not fire", () => {
+      const model = asFeature(
+        buildSelected(
+          [
+            "Feature: union after exclusion", // 1
+            "",
+            "  @keep",
+            "  Scenario: kept", // 4
+            "    Given a step", // 5
+            "",
+            "  @slow @docker",
+            "  Scenario: dropped", // 8
+            "    Given a step", // 9
+          ],
+          "not @slow",
+        ),
+      );
+
+      expect(model.tags).toEqual(["@keep"]);
+    });
+  });
+
+  describe("failing-node inherited tags", () => {
+    test("should give an empty-examples node the AST-inherited tags of all four levels", () => {
+      const model = asFeature(
+        build([
+          "@feat", // 1
+          "Feature: inherited", // 2
+          "",
+          "  @ruled",
+          "  Rule: grouped", // 5
+          "",
+          "    @lined",
+          "    Scenario Outline: hollow <x>", // 8
+          "      Given a <x>", // 9
+          "",
+          "      @exampled",
+          "      Examples:", // 12
+          "        | x |", // 13
+        ]),
+      );
+
+      expect(asRule(model.children[0]).children[0]).toEqual({
+        kind: "empty-examples",
+        column: 7,
+        line: 12,
+        name: "hollow <x>",
+        tags: ["@feat", "@ruled", "@lined", "@exampled"],
+      });
+    });
+
+    test("should give a zero-step OUTLINE's empty-scenario node its Examples-level tags too", () => {
+      // ONE node stands in for every row of the outline, so it must carry
+      // what those rows would have carried — a row-level tag dropped here
+      // makes the red invisible under a --tagsFilter for its own lane.
+      const model = asFeature(
+        build([
+          "@feat", // 1
+          "Feature: hollow outline", // 2
+          "",
+          "  @lined",
+          "  Scenario Outline: no steps <x>", // 5
+          "",
+          "    @first",
+          "    Examples:", // 8
+          "      | x |", // 9
+          "      | 1 |", // 10
+          "",
+          "    @second",
+          "    Examples:", // 13
+          "      | x |", // 14
+          "      | 2 |", // 15
+        ]),
+      );
+
+      expect(model.children).toEqual([
+        {
+          kind: "empty-scenario",
+          column: 3,
+          line: 5,
+          name: "no steps <x>",
+          tags: ["@feat", "@lined", "@first", "@second"],
+        },
+      ]);
+    });
+
+    test("should give an empty-scenario node the AST-inherited feature, rule and scenario tags", () => {
+      const model = asFeature(
+        build([
+          "@feat", // 1
+          "Feature: inherited", // 2
+          "",
+          "  @ruled",
+          "  Rule: grouped", // 5
+          "",
+          "    @lined",
+          "    Scenario: nothing here", // 8
+        ]),
+      );
+
+      expect(asRule(model.children[0]).children[0]).toEqual({
+        kind: "empty-scenario",
+        column: 5,
+        line: 8,
+        name: "nothing here",
+        tags: ["@feat", "@ruled", "@lined"],
+      });
+    });
+  });
+
+  describe("reserved tags", () => {
+    test("should fail the transform with unsupported_tag through the public door", () => {
+      const error = capture(() =>
+        build([
+          "Feature: reserved", // 1
+          "",
+          "  @skip",
+          "  Scenario: from another runner", // 4
+          "    Given a step", // 5
+        ]),
+      );
+
+      expect(error.code).toBe("unsupported_tag");
+      expect(error.message).toContain(
+        "this runner has no skip tag — exclude via `tags` in config",
+      );
+      expect(error.message).toContain("at src/features/test.feature:3:3");
+    });
+
+    test("should fail the transform with invalid_tag_name — the backstop for a file the config-time scan did not cover", () => {
+      const error = capture(() =>
+        build([
+          "Feature: invalid name", // 1
+          "",
+          "  @issue(1234)",
+          "  Scenario: a real Cucumber convention", // 4
+          "    Given a step", // 5
+        ]),
+      );
+
+      expect(error.code).toBe("invalid_tag_name");
+      expect(error.message).toContain("at src/features/test.feature:3:3");
+    });
+
+    test("should reject a reserved tag even on a scenario the tags expression excludes — never silently inert", () => {
+      const error = capture(() =>
+        buildSelected(
+          [
+            "Feature: reserved", // 1
+            "",
+            "  @slow @concurrent",
+            "  Scenario: excluded anyway", // 4
+            "    Given a step", // 5
+          ],
+          "not @slow",
+        ),
+      );
+
+      expect(error.code).toBe("unsupported_tag");
+      expect(error.message).toContain("concurrency is not supported");
+    });
+  });
+
   describe("rule names", () => {
     test("should name the enclosing Rule on its scenarios and leave top-level scenarios bare", () => {
       const model = asFeature(
@@ -871,7 +1314,10 @@ describe("buildFeatureModel", () => {
 
       expect(scenario.name).toBe('carries ` and ${payload} and "quotes"');
       expect(scenario.steps[0].text).toBe('a step with "`${danger}`" inside');
-      expect(scenario.steps[0].hasArgument).toBe(true);
+      expect(scenario.steps[0].argument).toEqual({
+        kind: "doc-string",
+        content: "body with ` backtick, ${injection}, \"double\" and 'single' quotes",
+      });
 
       // Pure data: nothing may be lost or altered by the JSON.stringify the
       // transform performs when baking the model into module source.

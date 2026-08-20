@@ -9,6 +9,7 @@ describe("formatEmptyExamples", () => {
         column: 5,
         line: 14,
         name: "every content encryption round-trips",
+        tags: [],
       },
       "src/features/aes.feature",
     );

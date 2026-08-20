@@ -3,7 +3,6 @@ import { GherkinError } from "../../errors/GherkinError.js";
 import type { StepModel } from "../model/types.js";
 import type { GherkinRegistry, ResolvedMatch } from "../registry/types.js";
 import { formatAmbiguousStep } from "./format/format-ambiguous-step.js";
-import { formatStepArgumentUnsupported } from "./format/format-step-argument-unsupported.js";
 import { formatUndefinedStep } from "./format/format-undefined-step.js";
 import { generateSnippet } from "./format/generate-snippet.js";
 
@@ -28,18 +27,6 @@ export const resolveDispatch = ({
   step,
   uri,
 }: ResolveDispatchOptions): ResolvedMatch => {
-  // BEFORE matching: no registry content can make a DocString/DataTable
-  // step deliverable in this milestone, so the guard is unconditional.
-  if (step.hasArgument) {
-    throw new GherkinError(formatStepArgumentUnsupported({ remaining, step, uri }), {
-      code: "step_argument_unsupported",
-      title: "Step Argument Not Supported",
-      details:
-        "The step carries a DocString or DataTable; delivering them lands in a later milestone. Running the step without its argument would silently drop data, so it fails instead.",
-      data: { line: step.line, text: step.text, uri },
-    });
-  }
-
   const match = registry.match(step.text);
 
   if (isUndefined(match)) {

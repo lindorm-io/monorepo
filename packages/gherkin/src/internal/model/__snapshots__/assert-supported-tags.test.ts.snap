@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assertSupportedTags > should carry the full house error shape, anchored to the tag's own line 1`] = `
+{
+  "code": "unsupported_tag",
+  "data": {
+    "column": 3,
+    "line": 3,
+    "tag": "@skip",
+    "uri": "src/features/tags.feature",
+  },
+  "details": "The tag means something in another Gherkin runner and nothing in this one — a silently ignored modifier is a lie, so it fails loudly. Tags do exactly two jobs here: selecting scenarios (\`tags\` in config at transform time, --tagsFilter at runtime) and gating hooks. Remove the tag, or express the intent through one of those.",
+  "message": "Unsupported tag
+
+  @skip
+  at src/features/tags.feature:3:3
+
+this runner has no skip tag — exclude via \`tags\` in config",
+  "title": "Unsupported Tag",
+  "type": "urn:lindorm:gherkin:error:unsupported_tag",
+}
+`;

@@ -8,7 +8,6 @@ describe("formatConstructorFailure", () => {
   test("should name the class and preserve the original message verbatim", () => {
     const step: StepModel = {
       column: 5,
-      hasArgument: false,
       line: 4,
       text: "an oct key",
       type: "Context",

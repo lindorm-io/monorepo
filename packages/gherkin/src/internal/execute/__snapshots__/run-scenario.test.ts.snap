@@ -90,28 +90,6 @@ Remove one, or make the expressions disjoint.",
 }
 `;
 
-exports[`runScenario > failure modes > should fail an argument-bearing step BEFORE matching 1`] = `
-{
-  "code": "step_argument_unsupported",
-  "data": {
-    "line": 10,
-    "text": "a table nobody defined:",
-    "uri": "src/features/run.feature",
-  },
-  "details": "The step carries a DocString or DataTable; delivering them lands in a later milestone. Running the step without its argument would silently drop data, so it fails instead.",
-  "message": "Step argument not supported
-
-  Given a table nobody defined:
-  at src/features/run.feature:10:5
-
-The step carries a DocString or DataTable, which this milestone cannot deliver — DataTable and DocString support lands in a later milestone. Running the step without its argument would silently drop the author's data, so it fails instead.
-
-The remaining 1 step in this scenario was skipped.",
-  "title": "Step Argument Not Supported",
-  "type": "urn:lindorm:gherkin:error:step_argument_unsupported",
-}
-`;
-
 exports[`runScenario > failure modes > should fail an undefined step with a pasteable snippet 1`] = `
 {
   "code": "undefined_step",

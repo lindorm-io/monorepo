@@ -4,7 +4,6 @@ import { formatUndefinedStep } from "./format-undefined-step.js";
 
 const step: StepModel = {
   column: 5,
-  hasArgument: false,
   line: 12,
   text: 'I encrypt "secret" in record mode with aad "tenant-1"',
   type: "Action",

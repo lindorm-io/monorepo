@@ -22,17 +22,17 @@ describe("meta-suite: failure modes", () => {
   }, 180_000);
 
   test("should print exact totals — every failure mode is IN the counts", () => {
-    // 12 failed = undefined 1 + ambiguous 1 + pending 1 + conversion 2 +
+    // 13 failed = undefined 1 + ambiguous 1 + pending 1 + conversion 2 +
     // constructor 1 + async 1 + empty-examples 1 + empty-scenario 1 +
-    // step-argument 2 + parse-error 1; 4 passed = green 3 + conversion
-    // control 1.
-    expect(tests).toBe("12 failed | 4 passed (16)");
+    // data-conversion 3 + parse-error 1; 9 passed = green 3 + conversion
+    // control 1 + data-delivery 5.
+    expect(tests).toBe("13 failed | 9 passed (22)");
   });
 
   test("should print exact file totals — skipped files are skipped, not failed", () => {
-    // 13 files: the 10 failed and 1 passed are enumerated by name below, so
+    // 14 files: the 10 failed and 2 passed are enumerated by name below, so
     // the remaining 2 (background-only + empty file) must be the skipped.
-    expect(testFiles).toBe("10 failed | 1 passed | 2 skipped (13)");
+    expect(testFiles).toBe("10 failed | 2 passed | 2 skipped (14)");
   });
 
   test("should report an undefined step with anchor, snippet and skipped count", () => {
@@ -193,23 +193,88 @@ describe("meta-suite: failure modes", () => {
     );
   });
 
-  test("should fail a DocString-bearing and a DataTable-bearing step", () => {
+  test("should pass the trailing slot at STABLE ARITY — undefined when no argument", () => {
+    // The §3.6 arity pin: a slotless step's rest parameters see exactly ONE
+    // argument, the undefined slot. A runner that filters the absent slot
+    // out (the @amiceli bug) prints _0_ and goes red here.
+    expect(output).toContain("META_SENTINEL_SLOT_1_undefined");
+  });
+
+  test("should deliver a DocString verbatim with its media type", () => {
+    expect(output).toContain("META_SENTINEL_DOC_markdown_# Title ${not_code}|body line");
+  });
+
+  test("should deliver a typed createSet — zod coerced the string cells to numbers", () => {
+    // Unquoted prices prove the coercion; quoting them would mean the raw
+    // strings leaked through.
+    expect(output).toContain(
+      'META_SENTINEL_SET_[{"name":"apple","price":3},{"name":"pear","price":4}]',
+    );
+  });
+
+  test("should create ONE typed object from a one-row table", () => {
+    expect(output).toContain('META_SENTINEL_CREATE_{"name":"fig","price":5}');
+  });
+
+  test("should substitute Examples values into table CELLS", () => {
+    expect(output).toContain("META_SENTINEL_CELL_substituted");
+  });
+
+  test("should run the data-delivery scenarios green in the printed counts", () => {
+    const lines = output
+      .split("\n")
+      .filter((line) => line.includes("✓ features/data-delivery.feature"));
+
+    expect(lines).toHaveLength(5);
+  });
+
+  test("should fail a sync parse of an async schema with zod's fix-naming message VERBATIM", () => {
+    // The locked §3.6 mechanism end to end: the message must survive
+    // untouched, anchored to the step.
     expect(output).toContain(
       [
-        "Step argument not supported",
+        "Step failed",
         "",
-        "  Given a documented step",
-        "  at features/step-argument.feature:4:5",
+        "  Given an async schema parsed synchronously",
+        "  at features/data-conversion.feature:4:5",
+        "",
+        "Encountered Promise during synchronous parse. Use .parseAsync() instead.",
       ].join("\n"),
     );
+    expect(output).not.toContain("META_SENTINEL_ASYNC_SCHEMA_CONTINUED");
+  });
+
+  test("should fail a violating createSet as table_conversion_failed with the anchor and zod's issues", () => {
     expect(output).toContain(
       [
-        "Step argument not supported",
+        "Step failed",
         "",
-        "  Given a tabulated step",
-        "  at features/step-argument.feature:10:5",
+        "  Given a violating catalog",
+        "  at features/data-conversion.feature:9:5",
+        "",
+        "Data table body row 1 failed schema conversion",
       ].join("\n"),
     );
+    // zod's issue details stay visible in the reporter text...
+    expect(output).toContain("Invalid input: expected number, received NaN");
+    // ...and the taxonomy code in the Serialized Error block (vitest omits
+    // `type`, so the code is the reporter-visible taxonomy signal).
+    expect(output).toContain("code: 'table_conversion_failed'");
+    expect(output).not.toContain("META_SENTINEL_VIOLATING_CONTINUED");
+  });
+
+  test("should fail create() on a multi-row table loudly — never silent truncation", () => {
+    expect(output).toContain(
+      [
+        "Step failed",
+        "",
+        "  Given a created product",
+        "  at features/data-conversion.feature:14:5",
+        "",
+        "create() converts exactly one body row — this table has 2. Use createSet() for multi-row tables.",
+      ].join("\n"),
+    );
+    expect(output).not.toContain("META_SENTINEL_CREATE_MULTI_CONTINUED");
   });
 
   test("should report a parse error as a failing TEST with an anchored parser message", () => {

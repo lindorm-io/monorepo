@@ -4,7 +4,7 @@ exports[`emitFeatureModule > should emit the spike-proven module shape 1`] = `
 "import { runFeature } from "@lindorm/gherkin/runtime";
 
 const stepModules = import.meta.glob(["/src/**/*.steps.ts"]);
-const model = {"children":[{"kind":"scenario","column":3,"line":3,"name":"one","steps":[{"column":5,"hasArgument":false,"line":4,"text":"a step \\"value\\"","type":"Context"}],"tags":[]}],"expectedTests":1,"kind":"feature","line":1,"name":"emitted module","tags":[],"uri":"src/features/emitted.feature"};
+const model = {"children":[{"kind":"scenario","column":3,"line":3,"name":"one","steps":[{"column":5,"line":4,"text":"a step \\"value\\"","type":"Context"}],"tags":[]}],"expectedTests":1,"kind":"feature","line":1,"name":"emitted module","tags":[],"uri":"src/features/emitted.feature"};
 
 await runFeature({ model, stepModules });
 "

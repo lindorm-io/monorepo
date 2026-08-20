@@ -1,5 +1,6 @@
 import { GherkinError } from "../../errors/GherkinError.js";
 import { createParseError } from "../model/parse-error.js";
+import { toVitestTags } from "../model/to-vitest-tags.js";
 import type { FeatureModel, FeatureSuiteModel, SuiteNode } from "../model/types.js";
 import type { GherkinRegistry } from "../registry/types.js";
 import { createCountingSuiteApi } from "./counting-api.js";
@@ -33,7 +34,9 @@ const emitNode = (
       return;
 
     case "scenario":
-      api.test(node.name, () =>
+      // Gherkin tags thread into vitest's NATIVE tags, `@` stripped — one
+      // registration serves both --tagsFilter and --listTags.
+      api.test(node.name, { tags: toVitestTags(node.tags) }, () =>
         runScenario({ featureName: feature.name, registry, scenario: node, uri }),
       );
       return;
@@ -41,8 +44,12 @@ const emitNode = (
     case "empty-examples":
       // An authoring error, never silent — the block compiled to zero
       // scenarios, so without this failing test it would contribute nothing
-      // to the printed counts.
-      api.test(node.name, () => {
+      // to the printed counts. Registered WITH its inherited tags: under a
+      // positive --tagsFilter vitest skips an untagged test, so a tagless
+      // registration would hide this red from every filtered lane INCLUDING
+      // its own; tagged, it goes red exactly when its lane runs (pinned:
+      // emit-feature.test.ts, meta-tags.test.ts).
+      api.test(node.name, { tags: toVitestTags(node.tags) }, () => {
         throw new GherkinError(formatEmptyExamples(node, uri), {
           code: "empty_examples",
           title: "Empty Examples Table",
@@ -56,7 +63,8 @@ const emitNode = (
     case "empty-scenario":
       // A zero-step scenario compiles to a zero-step pickle that would
       // iterate nothing and report green — the manufactured-green bug class.
-      api.test(node.name, () => {
+      // Tags carried for the same reason as empty-examples above.
+      api.test(node.name, { tags: toVitestTags(node.tags) }, () => {
         throw new GherkinError(formatEmptyScenario(node, uri), {
           code: "empty_scenario",
           title: "Empty Scenario",
@@ -143,8 +151,11 @@ export const emitFeature = ({ api, model, registry }: EmitFeatureOptions): void 
 
     case "parse-error":
       // ONE failing test carrying every parser error, anchored to the
-      // feature file's lines via the model's entries.
-      api.test("gherkin parse error", () => {
+      // feature file's lines via the model's entries. Tagless of necessity —
+      // an unparseable file yields no tags — so a positive --tagsFilter
+      // skips it (visibly, in the counts); the unfiltered run is where parse
+      // errors gate.
+      api.test("gherkin parse error", { tags: [] }, () => {
         throw createParseError(model);
       });
       return;

@@ -1,9 +1,20 @@
 import type { ParameterTypeRegistry } from "@cucumber/cucumber-expressions";
 import { CucumberExpressionGenerator } from "@cucumber/cucumber-expressions";
-import type { StepModel } from "../../model/types.js";
+import { isUndefined } from "@lindorm/is";
+import type { StepArgumentModel, StepModel } from "../../model/types.js";
 import { toMethodName } from "./to-method-name.js";
 import { toParameterTsType } from "./to-parameter-ts-type.js";
 import { toSnippetDecorator } from "./to-snippet-decorator.js";
+
+const toTrailingParameter = (argument?: StepArgumentModel): Array<string> => {
+  if (isUndefined(argument)) {
+    return [];
+  }
+
+  return argument.kind === "data-table"
+    ? ["dataTable: DataTable"]
+    : ["docString: DocString"];
+};
 
 /**
  * The pasteable snippet an undefined-step failure carries. The FIRST
@@ -29,6 +40,11 @@ export const generateSnippet = (
       (info, index) =>
         `${expression.parameterNames[index]}: ${toParameterTsType(info.type)}`,
     )
+    // The trailing slot is typed from the ARGUMENT KIND, not the generator —
+    // CucumberExpressionGenerator sees only the step text and knows nothing
+    // of DocString/DataTable. It comes last: the runner appends the slot
+    // after every converted expression parameter.
+    .concat(toTrailingParameter(step.argument))
     .join(", ");
 
   return [

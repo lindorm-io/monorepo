@@ -1,6 +1,9 @@
 import { LindormError } from "@lindorm/errors";
 import { beforeEach, describe, expect, test } from "vitest";
+import { z } from "zod";
 import { captureAsync, errorShape } from "../../__fixtures__/test-helpers.js";
+import { DataTable } from "../../classes/DataTable.js";
+import { DocString } from "../../classes/DocString.js";
 import { Binding } from "../../decorators/Binding.js";
 import { Given } from "../../decorators/Given.js";
 import { ParameterType } from "../../decorators/ParameterType.js";
@@ -179,6 +182,33 @@ class TransformSteps {
   }
 }
 
+const PriceSchema = z.object({ name: z.string(), price: z.coerce.number() });
+
+@Binding()
+class SlotSteps {
+  // Rest parameters expose the INVOCATION arity — the §3.6 stable-arity
+  // contract is about what the runner passes, not what a signature declares.
+  @Given("a slotless step")
+  slotless(...args: Array<unknown>): void {
+    events.push(`slot:${args.length}:${String(args[0])}`);
+  }
+
+  @Given("a documented step")
+  documented(doc: DocString): void {
+    events.push(`doc:${doc.content}:${String(doc.mediaType)}`);
+  }
+
+  @Given("a labelled {string} table")
+  labelledTable(label: string, table: DataTable): void {
+    events.push(`table:${label}:${JSON.stringify(table.hashes())}`);
+  }
+
+  @Given("a converting step")
+  converting(table: DataTable): void {
+    events.push(`converted:${JSON.stringify(table.createSet(PriceSchema))}`);
+  }
+}
+
 @Binding()
 class AmbiguousGiven {
   @Given("a duplicated step")
@@ -199,7 +229,6 @@ const uri = "src/features/run.feature";
 
 const step = (text: string, overrides: Partial<StepModel> = {}): StepModel => ({
   column: 5,
-  hasArgument: false,
   line: 10,
   text,
   type: "Context",
@@ -319,21 +348,88 @@ describe("runScenario", () => {
     });
   });
 
-  describe("failure modes", () => {
-    test("should fail an argument-bearing step BEFORE matching", async () => {
-      // The text matches no definition — an undefined_step here would prove
-      // the guard ran after matching.
+  describe("trailing argument slot", () => {
+    test("should ALWAYS pass the slot — undefined at stable arity when the step carries none", async () => {
+      // §3.6: filtering an absent slot out shifts every parameter's position
+      // (the @amiceli arity bug). The invocation must carry exactly one
+      // argument here: the undefined slot.
+      await run([step("a slotless step")]);
+
+      expect(events).toEqual(["slot:1:undefined"]);
+    });
+
+    test("should deliver a DocString with content and media type", async () => {
+      await run([
+        step("a documented step", {
+          argument: { kind: "doc-string", content: "payload body", mediaType: "json" },
+        }),
+      ]);
+
+      expect(events).toEqual(["doc:payload body:json"]);
+    });
+
+    test("should deliver a DataTable AFTER the converted expression parameters", async () => {
+      await run([
+        step('a labelled "prices" table', {
+          argument: {
+            kind: "data-table",
+            rows: [
+              ["name", "price"],
+              ["apple", "3"],
+            ],
+          },
+        }),
+      ]);
+
+      expect(events).toEqual(['table:prices:[{"name":"apple","price":"3"}]']);
+    });
+
+    test("should anchor a table_conversion_failed thrown in the step body to the step", async () => {
       const error = await captureAsync(() =>
-        run([step("a table nobody defined:", { hasArgument: true }), step('record "x"')]),
+        run([
+          step("a converting step", {
+            argument: {
+              kind: "data-table",
+              rows: [
+                ["name", "price"],
+                ["apple", "oops"],
+              ],
+            },
+          }),
+        ]),
       );
 
-      expect(error.code).toBe("step_argument_unsupported");
-      expect(error.message).toContain("Step argument not supported");
+      // The step-failure path prepends the anchor; the wrapper's own message
+      // (row + zod issues) survives inside it.
+      expect(error.code).toBe("table_conversion_failed");
+      expect(error.message).toContain("at src/features/run.feature:10:5");
+      expect(error.message).toContain("Data table body row 1 failed schema conversion");
+      expect(error.message).toContain("Invalid input: expected number, received NaN");
+    });
+  });
+
+  describe("failure modes", () => {
+    test("should report an UNDEFINED argument-bearing step with a table-typed snippet", async () => {
+      // The M1 guard is gone: dispatch decides on the text alone, so an
+      // unmatched table step is an ordinary undefined_step — and its snippet
+      // declares the trailing parameter.
+      const error = await captureAsync(() =>
+        run([
+          step("a table nobody defined", {
+            argument: { kind: "data-table", rows: [["a"], ["1"]] },
+          }),
+          step('record "x"'),
+        ]),
+      );
+
+      expect(error.code).toBe("undefined_step");
+      expect(error.message).toContain(
+        "aTableNobodyDefined(dataTable: DataTable): void {",
+      );
       expect(error.message).toContain(
         "The remaining 1 step in this scenario was skipped.",
       );
       expect(events).toEqual([]);
-      expect(errorShape(error)).toMatchSnapshot();
     });
 
     test("should fail an undefined step with a pasteable snippet", async () => {

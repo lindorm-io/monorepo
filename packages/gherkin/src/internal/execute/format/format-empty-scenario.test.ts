@@ -4,7 +4,7 @@ import { formatEmptyScenario } from "./format-empty-scenario.js";
 describe("formatEmptyScenario", () => {
   test("should anchor to the scenario line", () => {
     const message = formatEmptyScenario(
-      { kind: "empty-scenario", column: 3, line: 6, name: "nothing here" },
+      { kind: "empty-scenario", column: 3, line: 6, name: "nothing here", tags: [] },
       "src/features/aes.feature",
     );
 

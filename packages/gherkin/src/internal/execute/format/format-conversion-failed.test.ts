@@ -4,7 +4,6 @@ import { formatConversionFailed } from "./format-conversion-failed.js";
 
 const step: StepModel = {
   column: 5,
-  hasArgument: false,
   line: 6,
   text: 'an oct key with encryption "A999GCM"',
   type: "Context",

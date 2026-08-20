@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import type { Plugin } from "vite";
 import type { GherkinSettings } from "../../types/gherkin-settings.js";
 import { buildFeatureModel } from "../model/build-feature-model.js";
@@ -6,6 +7,8 @@ import { cleanId } from "./clean-id.js";
 import { emitFeatureModule } from "./emit-feature-module.js";
 import { normalizeStepPatterns } from "./normalize-step-patterns.js";
 import { resolveSettings } from "./resolve-settings.js";
+import type { GherkinTagDeclaration } from "./scan-tag-declarations.js";
+import { scanTagDeclarations } from "./scan-tag-declarations.js";
 import { toFeatureUri } from "./to-feature-uri.js";
 
 export type GherkinTransformResult = {
@@ -18,6 +21,17 @@ export type GherkinTransformResult = {
   map: null;
 };
 
+/** The slice of vite's UserConfig the config hook reads — kept structural so the narrowed hook type below stays assignable to vite's. */
+export type GherkinUserConfig = {
+  root?: string;
+  test?: { tags?: Array<GherkinTagDeclaration> };
+};
+
+/** What the config hook returns — vite merges it into the user config (arrays concatenate). */
+export type GherkinConfigPatch = {
+  test: { tags: Array<GherkinTagDeclaration> };
+};
+
 /**
  * Vite's Plugin narrowed to the hooks this plugin implements, as directly
  * callable functions — hooks never touch `this`, so unit tests invoke them
@@ -27,12 +41,13 @@ export type GherkinTransformResult = {
  */
 export type GherkinVitePlugin = Plugin & {
   buildStart: () => Promise<void>;
+  config: (config: GherkinUserConfig) => Promise<GherkinConfigPatch>;
   configResolved: (config: { root: string }) => void;
   transform: (code: string, id: string) => GherkinTransformResult | null;
 };
 
 export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugin => {
-  const { features, steps } = resolveSettings(settings);
+  const { features, steps, tagFilter } = resolveSettings(settings);
 
   // Vite calls configResolved before buildStart/transform; process.cwd() is
   // vite's own default root, kept only so the hooks are callable standalone.
@@ -43,6 +58,27 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugin => 
     // MUST precede unplugin-swc (spike-verified): swc would otherwise see the
     // raw .feature text and fail to parse it as TypeScript.
     enforce: "pre",
+
+    // Runs at config resolution, before any collection: the emitted tests
+    // carry vitest tags, and vitest's strictTags (default true, kept) fails
+    // collection on any UNDECLARED tag — so the union of every feature
+    // file's tags is injected into `test.tags` here, or one missed tag
+    // collapses the suite to the invisible "no tests".
+    // ⚠ Computed ONCE at config time: a tag newly added to a .feature
+    // mid-watch is undeclared until vitest restarts — strictTags then fails
+    // collection LOUDLY (that is strictTags working, never a silent skip).
+    // Documented in README.md#tags.
+    config: async (config: GherkinUserConfig): Promise<GherkinConfigPatch> => ({
+      test: {
+        tags: await scanTagDeclarations({
+          declared: (config.test?.tags ?? []).map((tag) => tag.name),
+          features,
+          // The hook runs before configResolved, so the root is derived the
+          // way vite derives it: the configured root or the cwd.
+          root: resolve(config.root ?? "."),
+        }),
+      },
+    }),
 
     configResolved: (config: { root: string }): void => {
       root = config.root;
@@ -56,7 +92,7 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugin => 
       if (file.endsWith(".feature")) {
         return {
           code: emitFeatureModule({
-            model: buildFeatureModel(code, toFeatureUri(root, file)),
+            model: buildFeatureModel(code, toFeatureUri(root, file), tagFilter),
             stepPatterns: normalizeStepPatterns(steps),
           }),
           map: null,

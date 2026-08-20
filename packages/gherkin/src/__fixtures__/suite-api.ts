@@ -4,6 +4,8 @@ export type FakeTest = {
   body: () => void | Promise<void>;
   name: string;
   path: Array<string>;
+  /** The registration's vitest tags — captured for threading assertions. */
+  tags: Array<string>;
 };
 
 export type FakeSuite = {
@@ -59,8 +61,8 @@ export const createFakeSuiteApi = (): FakeSuiteApi => {
         lifecycles.push({ fn, kind: "beforeAll", path: [...stack] });
       },
       describe,
-      test: (name, body) => {
-        tests.push({ body, name, path: [...stack] });
+      test: (name, options, body) => {
+        tests.push({ body, name, path: [...stack], tags: options.tags });
       },
     },
     lifecycles,

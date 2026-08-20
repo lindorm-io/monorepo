@@ -9,11 +9,13 @@ describe("createCountingSuiteApi", () => {
 
     expect(counting.registered()).toBe(0);
 
-    counting.api.test("first", () => {});
-    counting.api.test("second", () => {});
+    counting.api.test("first", { tags: ["smoke"] }, () => {});
+    counting.api.test("second", { tags: [] }, () => {});
 
     expect(counting.registered()).toBe(2);
     expect(fake.tests.map((entry) => entry.name)).toEqual(["first", "second"]);
+    // Options pass through untouched — the counter counts, it never rewrites.
+    expect(fake.tests.map((entry) => entry.tags)).toEqual([["smoke"], []]);
   });
 
   test("should pass describe through untouched", () => {

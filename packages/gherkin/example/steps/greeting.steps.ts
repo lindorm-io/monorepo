@@ -1,6 +1,6 @@
 import { expect } from "vitest";
 // In a consuming package: import { … } from "@lindorm/gherkin";
-import type { StepInfo, StepResult } from "../../src/index.js";
+import type { DataTable, StepInfo, StepResult } from "../../src/index.js";
 import {
   AfterStep,
   Binding,
@@ -54,6 +54,16 @@ export class GreetingSteps {
   @When("I greet {string} {volume}")
   iGreetWithVolume(name: string, volume: Volume): void {
     this.result = `${this.greeting}, ${volume(name)}!`;
+  }
+
+  // A step's DataTable arrives as the TRAILING argument, after any
+  // expression parameters.
+  @When("I greet everyone")
+  iGreetEveryone(table: DataTable): void {
+    this.result = table
+      .hashes()
+      .map(({ name }) => `${this.greeting}, ${name}!`)
+      .join(" ");
   }
 
   @Then("the result is {string}")

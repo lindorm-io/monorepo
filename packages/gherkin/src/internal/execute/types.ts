@@ -10,7 +10,22 @@ export type SuiteDescribe = {
   skip: (name: string, factory: () => void) => void;
 };
 
-export type SuiteTest = (name: string, body: () => void | Promise<void>) => void;
+export type SuiteTestOptions = {
+  /**
+   * vitest-native tags — the node's inherited Gherkin tags with the `@`
+   * stripped and deduplicated (to-vitest-tags.ts). Always present, empty when
+   * the node carries none; every name must be declared in the config's
+   * `test.tags` or strictTags fails collection — the plugin's config-time
+   * scan (scan-tag-declarations.ts) is what keeps that true.
+   */
+  tags: Array<string>;
+};
+
+export type SuiteTest = (
+  name: string,
+  options: SuiteTestOptions,
+  body: () => void | Promise<void>,
+) => void;
 
 /**
  * beforeAll/afterAll registration — the mechanism `@BeforeFeature` /

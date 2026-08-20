@@ -337,7 +337,6 @@ const uri = "src/features/lifecycle.feature";
 
 const step = (text: string, overrides: Partial<StepModel> = {}): StepModel => ({
   column: 5,
-  hasArgument: false,
   line: 10,
   text,
   type: "Context",
@@ -643,17 +642,30 @@ describe("runScenario lifecycle", () => {
       ]);
     });
 
-    test("should run NO step hook for an ARGUMENT-BEARING step", async () => {
-      const error = await captureAsync(() =>
-        run(scenario([step("step one", { hasArgument: true })], ["@ordered"])),
+    test("should bracket an ARGUMENT-BEARING step with step hooks like any dispatched step", async () => {
+      // The M1 guard is gone: an argument-bearing step dispatches on its
+      // text, so it IS a bracketed step — hooks observe it normally.
+      await run(
+        scenario(
+          [
+            step("step one", {
+              argument: { kind: "doc-string", content: "payload" },
+            }),
+          ],
+          ["@ordered"],
+        ),
       );
 
-      expect((error as { code?: string }).code).toBe("step_argument_unsupported");
       expect(log).toEqual([
         "bs:alpha",
         "bs:beta",
-        "as:beta:failed",
-        "as:alpha:failed",
+        "bst:alpha:step one",
+        "bst:beta:step one",
+        "step:one",
+        "ast:beta:passed",
+        "ast:alpha:passed",
+        "as:beta:passed",
+        "as:alpha:passed",
         "dispose:tracked",
       ]);
     });

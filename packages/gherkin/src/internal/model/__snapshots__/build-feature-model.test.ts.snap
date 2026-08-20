@@ -11,21 +11,18 @@ exports[`buildFeatureModel > backgrounds > should merge a feature-level Backgrou
       "steps": [
         {
           "column": 5,
-          "hasArgument": false,
           "line": 4,
           "text": "an oct key",
           "type": "Context",
         },
         {
           "column": 5,
-          "hasArgument": false,
           "line": 7,
           "text": "I encrypt "hello"",
           "type": "Action",
         },
         {
           "column": 5,
-          "hasArgument": false,
           "line": 8,
           "text": "decrypting returns "hello"",
           "type": "Outcome",
@@ -41,14 +38,12 @@ exports[`buildFeatureModel > backgrounds > should merge a feature-level Backgrou
       "steps": [
         {
           "column": 5,
-          "hasArgument": false,
           "line": 4,
           "text": "an oct key",
           "type": "Context",
         },
         {
           "column": 5,
-          "hasArgument": false,
           "line": 11,
           "text": "I encrypt "again"",
           "type": "Action",
@@ -80,21 +75,18 @@ exports[`buildFeatureModel > backgrounds > should stack a Rule-level Background 
           "steps": [
             {
               "column": 5,
-              "hasArgument": false,
               "line": 4,
               "text": "a feature key",
               "type": "Context",
             },
             {
               "column": 7,
-              "hasArgument": false,
               "line": 9,
               "text": "a rule key",
               "type": "Context",
             },
             {
               "column": 7,
-              "hasArgument": false,
               "line": 12,
               "text": "I encrypt "secret"",
               "type": "Action",
@@ -128,21 +120,18 @@ exports[`buildFeatureModel > dialects > should parse a # language: header and re
       "steps": [
         {
           "column": 5,
-          "hasArgument": false,
           "line": 4,
           "text": "une clé",
           "type": "Context",
         },
         {
           "column": 5,
-          "hasArgument": false,
           "line": 5,
           "text": "je chiffre "x"",
           "type": "Action",
         },
         {
           "column": 5,
-          "hasArgument": false,
           "line": 6,
           "text": "le déchiffrement retourne "x"",
           "type": "Outcome",
@@ -168,6 +157,7 @@ exports[`buildFeatureModel > empty scenarios > should fail a zero-step scenario 
       "kind": "empty-scenario",
       "line": 6,
       "name": "nothing here",
+      "tags": [],
     },
     {
       "column": 3,
@@ -177,14 +167,12 @@ exports[`buildFeatureModel > empty scenarios > should fail a zero-step scenario 
       "steps": [
         {
           "column": 5,
-          "hasArgument": false,
           "line": 4,
           "text": "a key",
           "type": "Context",
         },
         {
           "column": 5,
-          "hasArgument": false,
           "line": 9,
           "text": "acting",
           "type": "Action",
@@ -223,14 +211,12 @@ exports[`buildFeatureModel > outlines > should emit one scenario node per Exampl
       "steps": [
         {
           "column": 5,
-          "hasArgument": false,
           "line": 4,
           "text": "an oct key with encryption "A128GCM"",
           "type": "Context",
         },
         {
           "column": 5,
-          "hasArgument": false,
           "line": 5,
           "text": "the price is "$100"",
           "type": "Outcome",
@@ -256,14 +242,12 @@ exports[`buildFeatureModel > outlines > should emit one scenario node per Exampl
       "steps": [
         {
           "column": 5,
-          "hasArgument": false,
           "line": 4,
           "text": "an oct key with encryption "A256GCM"",
           "type": "Context",
         },
         {
           "column": 5,
-          "hasArgument": false,
           "line": 5,
           "text": "the price is "$250"",
           "type": "Outcome",
@@ -289,14 +273,12 @@ exports[`buildFeatureModel > outlines > should emit one scenario node per Exampl
       "steps": [
         {
           "column": 5,
-          "hasArgument": false,
           "line": 4,
           "text": "an oct key with encryption "A256CBC-HS512"",
           "type": "Context",
         },
         {
           "column": 5,
-          "hasArgument": false,
           "line": 5,
           "text": "the price is "$9"",
           "type": "Outcome",
@@ -322,6 +304,7 @@ exports[`buildFeatureModel > outlines > should fail an Examples block with a hea
       "kind": "empty-examples",
       "line": 6,
       "name": "uses <x>",
+      "tags": [],
     },
     {
       "column": 7,
@@ -337,7 +320,6 @@ exports[`buildFeatureModel > outlines > should fail an Examples block with a hea
       "steps": [
         {
           "column": 5,
-          "hasArgument": false,
           "line": 4,
           "text": "a value",
           "type": "Context",

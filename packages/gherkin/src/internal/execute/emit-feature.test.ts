@@ -18,7 +18,7 @@ const registry = buildRegistry([]);
 
 const uri = "src/features/emit.feature";
 
-const scenarioNode = (name: string): SuiteNode => ({
+const scenarioNode = (name: string, tags: Array<string> = []): SuiteNode => ({
   kind: "scenario",
   column: 3,
   line: 3,
@@ -26,13 +26,12 @@ const scenarioNode = (name: string): SuiteNode => ({
   steps: [
     {
       column: 5,
-      hasArgument: false,
       line: 4,
       text: "an unmatched step",
       type: "Context",
     },
   ],
-  tags: [],
+  tags,
 });
 
 const featureModel = (
@@ -107,7 +106,15 @@ describe("emitFeature", () => {
       emitFeature({
         api: fake.api,
         model: featureModel(
-          [{ kind: "empty-examples", column: 5, line: 14, name: "hollow outline" }],
+          [
+            {
+              kind: "empty-examples",
+              column: 5,
+              line: 14,
+              name: "hollow outline",
+              tags: ["@lane", "@slow"],
+            },
+          ],
           1,
         ),
         registry,
@@ -117,6 +124,10 @@ describe("emitFeature", () => {
 
       expect(error.code).toBe("empty_examples");
       expect(error.message).toContain("at src/features/emit.feature:14:5");
+      // Registered WITH its inherited tags, stripped — a tagless red would be
+      // skipped by EVERY positive --tagsFilter (probe-measured), hiding the
+      // authoring error from the very lane it belongs to.
+      expect(fake.tests[0].tags).toEqual(["lane", "slow"]);
       expect(errorShape(error)).toMatchSnapshot();
     });
 
@@ -126,7 +137,15 @@ describe("emitFeature", () => {
       emitFeature({
         api: fake.api,
         model: featureModel(
-          [{ kind: "empty-scenario", column: 3, line: 6, name: "nothing here" }],
+          [
+            {
+              kind: "empty-scenario",
+              column: 3,
+              line: 6,
+              name: "nothing here",
+              tags: ["@lane"],
+            },
+          ],
           1,
         ),
         registry,
@@ -136,6 +155,7 @@ describe("emitFeature", () => {
 
       expect(error.code).toBe("empty_scenario");
       expect(error.message).toContain("at src/features/emit.feature:6:3");
+      expect(fake.tests[0].tags).toEqual(["lane"]);
       expect(errorShape(error)).toMatchSnapshot();
     });
 
@@ -151,6 +171,41 @@ describe("emitFeature", () => {
       );
 
       expect(error.code).toBe("model_invariant");
+    });
+  });
+
+  describe("vitest tag threading", () => {
+    test("should register a scenario's tags stripped of @ and deduplicated", () => {
+      const fake = createFakeSuiteApi();
+
+      emitFeature({
+        api: fake.api,
+        model: featureModel(
+          // A tag inherited from feature AND scenario level arrives twice on
+          // the pickle — one vitest tag must come out.
+          [scenarioNode("tagged", ["@lane", "@smoke", "@lane"])],
+          1,
+        ),
+        registry,
+      });
+
+      expect(fake.tests[0].tags).toEqual(["lane", "smoke"]);
+    });
+
+    test("should register a parse-error test with NO tags — an unparseable file yields none", () => {
+      const fake = createFakeSuiteApi();
+
+      emitFeature({
+        api: fake.api,
+        model: {
+          errors: [{ message: "expected: #EOF" }],
+          kind: "parse-error",
+          uri,
+        },
+        registry,
+      });
+
+      expect(fake.tests[0].tags).toEqual([]);
     });
   });
 

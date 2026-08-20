@@ -91,11 +91,29 @@ describe("emitFeatureModule", () => {
           ruleName: 'rule `${rule}` "; break',
           steps: [
             {
+              argument: {
+                kind: "doc-string",
+                content:
+                  'doc with ` backtick, ${payload}, "; quote-break,\nnewline and \u2028 separator',
+                mediaType: 'md`${x}`"',
+              },
               column: 5,
-              hasArgument: false,
               line: 4,
               text: 'I write "`${evil}`; \\" injection"',
               type: "Action",
+            },
+            {
+              argument: {
+                kind: "data-table",
+                rows: [
+                  ["__proto__", 'cell `${payload}`"'],
+                  ["va\\lue", "line sep"],
+                ],
+              },
+              column: 5,
+              line: 8,
+              text: "a hostile table",
+              type: "Context",
             },
           ],
           tags: ['@hostile`${tag}`"'],

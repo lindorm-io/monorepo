@@ -23,6 +23,7 @@ import { formatStepAnchor } from "./format/format-step-anchor.js";
 import { formatStepFailure } from "./format/format-step-failure.js";
 import { invokeHook } from "./invoke-hook.js";
 import { resolveDispatch } from "./resolve-dispatch.js";
+import { toStepArgument } from "./to-step-argument.js";
 
 export type RunScenarioOptions = {
   featureName: string;
@@ -101,7 +102,15 @@ const invokeStep = async (
     // AWAITED: a step returning a rejecting promise must fail the scenario
     // here, not surface as an unhandled-rejection side note attributed to
     // whichever test happens to be running.
-    await (instance as Record<string, StepFn>)[match.definition.methodName](...converted);
+    //
+    // The TRAILING slot is passed UNCONDITIONALLY — DataTable, DocString or
+    // undefined — so the argument position never shifts with its presence
+    // (§3.6: filtering an absent slot out moves every parameter, the
+    // @amiceli arity bug). Pinned: run-scenario.test.ts ("stable arity").
+    await (instance as Record<string, StepFn>)[match.definition.methodName](
+      ...converted,
+      toStepArgument(step.argument),
+    );
   } catch (error) {
     // Brand-based, never instanceof — a PendingStepError thrown by a second
     // installed copy of this package must still report as pending.
@@ -220,9 +229,8 @@ export const runScenario = async ({
     try {
       match = resolveDispatch({ registry, remaining, step, uri });
     } catch (error) {
-      // NOT dispatched — undefined, ambiguous or argument-bearing: no
-      // definition brackets the step, so NO step hook fires (§4 ⭐; pinned:
-      // run-scenario.lifecycle.test.ts).
+      // NOT dispatched — undefined or ambiguous: no definition brackets the
+      // step, so NO step hook fires (pinned: run-scenario.lifecycle.test.ts).
       failures.push(error as Error);
       return;
     }

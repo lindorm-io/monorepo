@@ -6,7 +6,6 @@ describe("formatStepFailure", () => {
   test("should prepend the step anchor and preserve the original message verbatim", () => {
     const step: StepModel = {
       column: 5,
-      hasArgument: false,
       line: 8,
       text: 'decrypting returns "hello"',
       type: "Outcome",

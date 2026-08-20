@@ -25,9 +25,9 @@ export const createCountingSuiteApi = (api: SuiteApi): CountingSuiteApi => {
       afterAll: api.afterAll,
       beforeAll: api.beforeAll,
       describe: api.describe,
-      test: (name, body) => {
+      test: (name, options, body) => {
         count += 1;
-        api.test(name, body);
+        api.test(name, options, body);
       },
     },
     registered: () => count,

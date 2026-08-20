@@ -17,7 +17,6 @@ const scenario: ScenarioNode = {
 
 const step: StepModel = {
   column: 5,
-  hasArgument: false,
   line: 6,
   text: "an oct key",
   type: "Context",

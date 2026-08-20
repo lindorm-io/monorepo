@@ -8,28 +8,25 @@ exports[`resolveSettings > should reject an unknown key, naming it 1`] = `
     "known": [
       "features",
       "steps",
+      "tags",
     ],
   },
-  "details": "GherkinSettings carries \`features\` and \`steps\` only. An accepted-but-unimplemented key would be a silent no-op, so an unknown one fails at config time instead. Remove the key, or fix its spelling.",
+  "details": "GherkinSettings carries \`features\`, \`steps\` and \`tags\` only. An accepted-but-unimplemented key would be a silent no-op, so an unknown one fails at config time instead. Remove the key, or fix its spelling.",
   "message": "Unknown gherkin setting "featurs"",
   "title": "Unknown Gherkin Setting",
   "type": "urn:lindorm:gherkin:error:unknown_setting",
 }
 `;
 
-exports[`resolveSettings > should reject tags with the not-yet-shipped message 1`] = `
+exports[`resolveSettings > tagFilter > should throw invalid_tag_expression at construction for a malformed expression 1`] = `
 {
-  "code": "unknown_setting",
+  "code": "invalid_tag_expression",
   "data": {
-    "key": "tags",
-    "known": [
-      "features",
-      "steps",
-    ],
+    "tags": "@smoke and",
   },
-  "details": "GherkinSettings carries \`features\` and \`steps\` only. An accepted-but-unimplemented key would be a silent no-op, so an unknown one fails at config time instead. Remove the key, or fix its spelling.",
-  "message": "Unknown gherkin setting "tags" — tag-based scenario selection is not yet shipped",
-  "title": "Unknown Gherkin Setting",
-  "type": "urn:lindorm:gherkin:error:unknown_setting",
+  "details": "The \`tags\` setting selects scenarios at transform time with Cucumber's tag-expression language — \`and\` / \`or\` / \`not\` with parentheses over @-prefixed tags (NOT vitest's --tagsFilter syntax). Fix the expression.",
+  "message": "Invalid tag expression "@smoke and" in gherkin setting "tags"",
+  "title": "Invalid Tag Expression",
+  "type": "urn:lindorm:gherkin:error:invalid_tag_expression",
 }
 `;

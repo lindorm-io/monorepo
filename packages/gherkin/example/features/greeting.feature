@@ -1,3 +1,4 @@
+@greeting
 Feature: Greeting
 
   Background:
@@ -11,6 +12,13 @@ Feature: Greeting
   Example: greet shouting
     When I greet "world" shouting
     Then the result is "Hello, WORLD!"
+
+  Example: greet a table of guests
+    When I greet everyone
+      | name |
+      | Anna |
+      | Bo   |
+    Then the result is "Hello, Anna! Hello, Bo!"
 
   Scenario Outline: every greeting applies
     Given the greeting "<greeting>"

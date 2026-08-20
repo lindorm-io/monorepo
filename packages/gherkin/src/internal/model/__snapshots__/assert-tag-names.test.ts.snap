@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assertTagNames > should carry the full house error shape, anchored to the tag's own line 1`] = `
+{
+  "code": "invalid_tag_name",
+  "data": {
+    "column": 3,
+    "line": 4,
+    "tag": "@issue(1234)",
+    "uri": "src/features/tags.feature",
+  },
+  "details": "Gherkin tags are registered as vitest tags with the \`@\` stripped, and vitest rejects this name at config resolution — where no feature file is named. Rename the tag: \`@issue(1234)\` becomes e.g. \`@issue-1234\`.",
+  "message": "Invalid tag name
+
+  @issue(1234)
+  at src/features/tags.feature:4:3
+
+vitest tag names cannot contain "!", "*", "&", "|", "(" or ")"",
+  "title": "Invalid Tag Name",
+  "type": "urn:lindorm:gherkin:error:invalid_tag_name",
+}
+`;

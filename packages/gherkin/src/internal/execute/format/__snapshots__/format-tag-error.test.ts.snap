@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatTagError > should anchor a reserved tag to its own line and carry the reason 1`] = `
+"Unsupported tag
+
+  @skip
+  at src/features/aes.feature:4:3
+
+this runner has no skip tag — exclude via \`tags\` in config"
+`;
+
+exports[`formatTagError > should anchor an invalid tag NAME the same way, under its own heading 1`] = `
+"Invalid tag name
+
+  @issue(1234)
+  at src/features/aes.feature:1:1
+
+vitest tag names cannot contain "!", "*", "&", "|", "(" or ")""
+`;

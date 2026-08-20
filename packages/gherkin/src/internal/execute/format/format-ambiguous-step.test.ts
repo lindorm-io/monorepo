@@ -8,7 +8,6 @@ class AesKeyingSteps {}
 
 const step: StepModel = {
   column: 5,
-  hasArgument: false,
   line: 6,
   text: 'an oct key with encryption "A256GCM"',
   type: "Context",

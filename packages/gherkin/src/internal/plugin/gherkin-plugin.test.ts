@@ -196,6 +196,142 @@ describe("gherkinPlugin", () => {
 
       expect(Object.hasOwn(record, "__proto__")).toBe(false);
     });
+
+    test("should keep a hostile DocString and a __proto__ table cell through real evaluation", async () => {
+      const argumentSource = [
+        "Feature: arguments",
+        "",
+        "  Scenario: hostile payloads",
+        "    Given a hostile doc",
+        '      """md',
+        '      body ` ${payload} "; injection',
+        '      """',
+        "    And a hostile table",
+        "      | __proto__ | safe |",
+        "      | evil      | ok   |",
+      ].join("\n");
+
+      const plugin = gherkinPlugin();
+      plugin.configResolved({ root: "/repo/pkg" });
+
+      const result = plugin.transform(argumentSource, "/repo/pkg/src/args.feature");
+      const code = result?.code as string;
+
+      // rollup's real parser accepts the module — the DocString body is data
+      // inside the literal, never code.
+      expect(parseAst(code).type).toBe("Program");
+
+      const evaluated = (await evaluateAsModule(extractModelLiteral(code))) as {
+        children: Array<{
+          steps: Array<{
+            argument?:
+              | { kind: "doc-string"; content: string; mediaType?: string }
+              | { kind: "data-table"; rows: Array<Array<string>> };
+          }>;
+        }>;
+      };
+      const [doc, table] = evaluated.children[0].steps;
+
+      expect(doc.argument).toEqual({
+        kind: "doc-string",
+        content: 'body ` ${payload} "; injection',
+        mediaType: "md",
+      });
+      // The rows ARRAY survives evaluation verbatim — the __proto__ hazard
+      // only exists for Records, which DataTable.hashes() materializes via
+      // Object.fromEntries at runtime (DataTable.test.ts).
+      expect(table.argument).toEqual({
+        kind: "data-table",
+        rows: [
+          ["__proto__", "safe"],
+          ["evil", "ok"],
+        ],
+      });
+    });
+  });
+
+  describe("transform-time selection", () => {
+    const taggedSource = [
+      "Feature: selection",
+      "",
+      "  @keep",
+      "  Scenario: kept",
+      '    Given a step "kept"',
+      "",
+      "  @slow",
+      "  Scenario: dropped",
+      '    Given a step "dropped"',
+    ].join("\n");
+
+    test("should omit scenarios the settings tags expression excludes — they never become tests", () => {
+      const plugin = gherkinPlugin({ tags: "not @slow" });
+      plugin.configResolved({ root: "/repo/pkg" });
+
+      const result = plugin.transform(taggedSource, "/repo/pkg/src/tagged.feature");
+      const model = extractModel(result?.code as string) as {
+        children: Array<{ name: string }>;
+        expectedTests: number;
+      };
+
+      expect(model.children.map((child) => child.name)).toEqual(["kept"]);
+      expect(model.expectedTests).toBe(1);
+    });
+
+    test("should emit the full model without a tags setting", () => {
+      const plugin = gherkinPlugin();
+      plugin.configResolved({ root: "/repo/pkg" });
+
+      const result = plugin.transform(taggedSource, "/repo/pkg/src/tagged.feature");
+      const model = extractModel(result?.code as string) as {
+        children: Array<{ name: string }>;
+      };
+
+      expect(model.children.map((child) => child.name)).toEqual(["kept", "dropped"]);
+    });
+  });
+
+  describe("config", () => {
+    test("should inject the scanned tag union as test.tags, skipping user-declared names", async () => {
+      const root = await mkdtemp(join(tmpdir(), "gherkin-plugin-config-"));
+
+      try {
+        await mkdir(join(root, "src"), { recursive: true });
+        await writeFile(
+          join(root, "src", "a.feature"),
+          [
+            "@lane",
+            "Feature: a",
+            "",
+            "  @smoke",
+            "  Scenario: s",
+            "    Given a step",
+          ].join("\n"),
+        );
+
+        const plugin = gherkinPlugin();
+
+        await expect(plugin.config({ root })).resolves.toEqual({
+          test: { tags: [{ name: "lane" }, { name: "smoke" }] },
+        });
+
+        // A name the user config already declares is never re-declared —
+        // vitest rejects a duplicate test.tags name at startup.
+        await expect(
+          plugin.config({ root, test: { tags: [{ name: "smoke" }] } }),
+        ).resolves.toEqual({ test: { tags: [{ name: "lane" }] } });
+      } finally {
+        await rm(root, { force: true, recursive: true });
+      }
+    });
+
+    test("should default the scan root to the cwd — vite's own default root", async () => {
+      // The vitest worker's cwd IS this package, so the default `features`
+      // pattern finds the package's own fixture features; @lifecycle is the
+      // one tag under src/ (src/__fixtures__/features/lifecycle.feature).
+      await expect(gherkinPlugin().config({})).resolves.toEqual({
+        test: { tags: [{ name: "lifecycle" }] },
+      });
+    });
   });
 
   describe("buildStart", () => {
