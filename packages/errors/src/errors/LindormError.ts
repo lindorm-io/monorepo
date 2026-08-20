@@ -104,7 +104,19 @@ export class LindormError extends Error {
       this.type = options.type;
     } else {
       const namespace = (this.constructor as typeof LindormError).namespace;
-      this.type = destruct?.type ?? createErrorTypeUrn(this.code, this.name, namespace);
+      // `type` follows the same source as `code`. A wrapper passing its own
+      // `code` claims its own identity, so the inner error's `type` is ignored
+      // for identity (the inner ERROR stays visible via `errors`); without
+      // `code`, both inherit from the wrapped error together — one error, one
+      // identity, never the wrapper's code under the inner error's urn. The
+      // gherkin wrappers pin explicit urns via `type:`
+      // (packages/gherkin/src/internal/container/create-scenario-container.ts,
+      // internal/execute/run-scenario.ts, classes/DataTable.ts). Pinned:
+      // LindormError.test.ts "type resolution".
+      this.type =
+        isString(options.code) || isNumber(options.code)
+          ? createErrorTypeUrn(options.code, this.name, namespace)
+          : (destruct?.type ?? createErrorTypeUrn(this.code, this.name, namespace));
     }
 
     if (options.error instanceof Error && options.error.name && options.error.message) {
@@ -161,7 +173,10 @@ export class LindormError extends Error {
       data: isObject(error?.data) ? error.data : {},
       debug: isObject(error?.debug) ? error.debug : {},
       details: isString(error?.details) ? error.details : undefined,
-      errors: isArray(error?.errors) ? error.errors : [],
+      // Copy, never alias: the constructor pushes into `this.errors` after
+      // assignment, so returning the wrapped error's array by reference
+      // would mutate the wrapped error itself.
+      errors: isArray(error?.errors) ? [...error.errors] : [],
       message: isString(error?.message) ? error.message : "",
       name: isString(error?.constructor?.name) ? error.constructor.name : "Error",
       stack: error?.stack ?? undefined,

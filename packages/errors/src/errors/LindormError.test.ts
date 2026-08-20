@@ -141,6 +141,91 @@ describe("LindormError", () => {
     });
   });
 
+  describe("type resolution", () => {
+    class NamespacedError extends LindormError {
+      static override readonly namespace = "testpkg";
+    }
+
+    // Factory: each test gets a fresh inner error, keeping assertions on
+    // `errors` content independent of test order.
+    const foreignInner = () =>
+      new LindormError("inner message", {
+        type: "urn:lindorm:other:error:inner_identity",
+      });
+
+    test("should derive the wrapper's own urn when code is provided with a foreign-typed inner error", () => {
+      const wrapped = new LindormError("wrapper message", {
+        code: "wrapper_code",
+        error: foreignInner(),
+      });
+
+      expect(wrapped.code).toBe("wrapper_code");
+      expect(wrapped.type).toBe("urn:lindorm:error:wrapper_code");
+    });
+
+    test("should derive the wrapper's own urn when code is provided with a plain Error inner", () => {
+      const wrapped = new LindormError("wrapper message", {
+        code: "wrapper_code",
+        error: new Error("plain inner"),
+      });
+
+      expect(wrapped.type).toBe("urn:lindorm:error:wrapper_code");
+    });
+
+    test("should derive from the name when a numeric code is provided with a foreign-typed inner error", () => {
+      class DriverError extends LindormError {}
+
+      const wrapped = new DriverError("wrapper message", {
+        code: -11000,
+        error: foreignInner(),
+      });
+
+      expect(wrapped.code).toBe(-11000);
+      expect(wrapped.type).toBe("urn:lindorm:error:driver");
+    });
+
+    test("should inherit both code and type from the inner error when code is absent", () => {
+      const inner = new LindormError("inner message", {
+        code: "inner_code",
+        type: "urn:lindorm:other:error:inner_identity",
+      });
+
+      const rethrown = new LindormError("rethrow message", { error: inner });
+
+      expect(rethrown.code).toBe("inner_code");
+      expect(rethrown.type).toBe("urn:lindorm:other:error:inner_identity");
+    });
+
+    test("should let explicit type win over both code and inner error", () => {
+      const wrapped = new LindormError("wrapper message", {
+        code: "wrapper_code",
+        error: foreignInner(),
+        type: "urn:lindorm:explicit:error:chosen",
+      });
+
+      expect(wrapped.type).toBe("urn:lindorm:explicit:error:chosen");
+    });
+
+    test("should derive own-code urns from the subclass namespace and name", () => {
+      const wrapped = new NamespacedError("wrapper message", {
+        code: "wrapper_code",
+        error: foreignInner(),
+      });
+
+      expect(wrapped.type).toBe("urn:lindorm:testpkg:error:wrapper_code");
+    });
+
+    test("should keep the inner error's identity visible via errors", () => {
+      const wrapped = new LindormError("wrapper message", {
+        code: "wrapper_code",
+        error: foreignInner(),
+      });
+
+      expect(wrapped.type).toBe("urn:lindorm:error:wrapper_code");
+      expect(wrapped.errors).toEqual(["LindormError: inner message"]);
+    });
+  });
+
   describe("inheritance", () => {
     const error = new Error("error message");
 
@@ -182,6 +267,21 @@ describe("LindormError", () => {
           errors: ["ExternalError: external error message"],
         }),
       );
+    });
+
+    test("should copy the inner error's errors rather than aliasing them", () => {
+      const inner = new LindormError("inner message", {
+        error: new Error("root cause"),
+      });
+
+      const first = new LindormError("first wrapper", { error: inner });
+      const second = new LindormError("second wrapper", { error: inner });
+
+      expect(inner.errors).toEqual(["Error: root cause"]);
+      expect(first.errors).not.toBe(inner.errors);
+      expect(second.errors).not.toBe(inner.errors);
+      expect(first.errors).toEqual(["Error: root cause", "LindormError: inner message"]);
+      expect(second.errors).toEqual(["Error: root cause", "LindormError: inner message"]);
     });
   });
 });
