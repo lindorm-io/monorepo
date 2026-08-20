@@ -157,3 +157,51 @@ describe("CborKit — map mode", () => {
     ).toEqual("c-1");
   });
 });
+
+describe("CborKit — hostile enum values", () => {
+  const kit = new CborKit(settings);
+
+  const wireRecord = (code: unknown): Uint8Array =>
+    encode(
+      new Map<number, unknown>([
+        [0, 1],
+        [3, code],
+      ]),
+      { cde: true },
+    );
+
+  // Every one of these resolves to a member of `Object.prototype` when it is used
+  // as an index key on a plain object — "constructor" to `Object`, "__proto__" to
+  // `Object.prototype`, the rest to functions. An enum lookup indexes with a key
+  // the OTHER side chose (the wire on decode, the caller's record on encode), so
+  // an unguarded lookup returns a prototype member as the domain/wire value
+  // instead of taking the "not in the enum map" throw.
+  const prototypeKeys = ["constructor", "__proto__", "toString", "valueOf"];
+
+  test.each(prototypeKeys)("should reject the wire enum code %s", (code) => {
+    expect(() => kit.decode(wireRecord(code))).toThrowError(
+      expect.objectContaining({ code: "unknown_enum_int" }),
+    );
+    expect(() => kit.decode(wireRecord(code))).toThrow(CborError);
+  });
+
+  test("should reject a bignum-encoded enum code", () => {
+    // Tag 2 (RFC 8949 §3.4.3, bignum) wrapping 0x01 under label 3. cbor2 decodes
+    // it as a BIGINT, and `map[1n]` and `map[1]` are the same property key — so
+    // without the numeric gate this non-preferred spelling of code 1 decodes as
+    // if it were code 1. A record written by `encode` never carries it: cbor2
+    // narrows a small bigint back to a plain int.
+    const bignum = new Uint8Array([0xa2, 0x00, 0x01, 0x03, 0xc2, 0x41, 0x01]);
+
+    expect(() => kit.decode(bignum)).toThrowError(
+      expect.objectContaining({ code: "unknown_enum_int" }),
+    );
+  });
+
+  test.each(prototypeKeys)("should reject the domain enum value %s", (value) => {
+    expect(() => kit.encode({ amr: value })).toThrowError(
+      expect.objectContaining({ code: "unknown_enum_value" }),
+    );
+    expect(() => kit.encode({ amr: value })).toThrow(CborError);
+  });
+});

@@ -43,6 +43,20 @@ describe("resolveCborSpec", () => {
     expect(resolved.byLabel.get(1)?.reverseEnum).toEqual({ 1: "pwd", 2: "otp" });
   });
 
+  test("should build the enum lookup maps with no prototype", () => {
+    const resolved = resolveCborSpec({
+      fields: [{ key: "amr", label: 1, kind: "enum", enum: { pwd: 1, otp: 2 } }],
+    });
+    const field = resolved.byLabel.get(1)!;
+
+    // Both maps are indexed with a key the other side chose — the wire code on
+    // decode, the caller's domain value on encode — and an index read walks the
+    // prototype chain: on a plain object `reverse["constructor"]` is `Object`,
+    // which passes a "not undefined" check. No chain, nothing to walk.
+    expect(Object.getPrototypeOf(field.reverseEnum)).toBeNull();
+    expect(Object.getPrototypeOf(field.enum)).toBeNull();
+  });
+
   test("should throw on duplicate labels", () => {
     expect(() =>
       resolveCborSpec({

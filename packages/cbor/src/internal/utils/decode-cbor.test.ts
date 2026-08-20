@@ -1,3 +1,4 @@
+import type { Dict } from "@lindorm/types";
 import { encode } from "cbor2";
 import { describe, expect, test } from "vitest";
 import { CborError } from "../../errors/index.js";
@@ -61,6 +62,33 @@ describe("decodeCbor", () => {
     const decoded = decodeCbor(lax, withUnknown);
 
     expect(decoded).toEqual({ sub: "abc", 42: "future-field" });
+  });
+
+  test("should keep a __proto__ label as an own key and not let it choose the prototype", () => {
+    const lax = resolveCborSpec({ ...settings, mode: "lax" });
+    const hostile = encode(
+      new Map<number | string, unknown>([
+        [0, 2],
+        [1, "abc"],
+        ["__proto__", { pwn: "yes" }],
+      ]),
+      { cde: true },
+    );
+
+    const decoded = decodeCbor(lax, hostile);
+
+    // ⚠ Asserted on the PROPERTY, never on `JSON.stringify`/`toEqual` alone: a
+    // swapped prototype serialises as ABSENT, so a serialisation check reads
+    // clean on exactly the input this test exists for.
+    expect(Object.keys(decoded)).toContain("__proto__");
+    expect(Object.getOwnPropertyDescriptor(decoded, "__proto__")?.value).toEqual(
+      // `preferMap: true` (decode-cbor.ts) decodes a nested map AS a Map, and a
+      // Map is an object — so it is a value the `__proto__` setter would have
+      // accepted as a prototype, which is what makes it the right probe here.
+      new Map([["pwn", "yes"]]),
+    );
+    expect(Object.getPrototypeOf(decoded)).toBe(Object.prototype);
+    expect(({} as Dict).pwn).toBeUndefined();
   });
 
   test("should throw on an unknown label by default (strict mode)", () => {

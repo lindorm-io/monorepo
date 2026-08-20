@@ -2,8 +2,19 @@ import { CborError } from "../../errors/index.js";
 import type { CborKitSettings } from "../../types/cbor-field.js";
 import type { ResolvedCborField, ResolvedCborSpec } from "../types/resolved-cbor-spec.js";
 
-const buildReverseEnum = (map: Record<string, number>): Record<number, string> => {
-  const reverse: Record<number, string> = {};
+type EnumMaps = { forward: Record<string, number>; reverse: Record<number, string> };
+
+// ⚠ Both maps are indexed with a key the OTHER side chose — the wire code on
+// decode, the caller's record value on encode — and an index read walks the
+// prototype chain: on a plain object `reverse["constructor"]` is `Object`, not
+// `undefined`, so a "missing code" check passes it through. A null prototype
+// leaves nothing to walk; the value guards in `decode-value.ts` / `encode-value.ts`
+// close the same hole from the read side. Pinned in `CborKit.test.ts`
+// ("hostile enum values"), which asserts on the throw, not on a serialisation —
+// `JSON.stringify` renders a returned `Object.prototype` as `{}`.
+const buildEnumMaps = (map: Record<string, number>): EnumMaps => {
+  const forward: Record<string, number> = Object.create(null);
+  const reverse: Record<number, string> = Object.create(null);
 
   for (const [key, code] of Object.entries(map)) {
     if (reverse[code] !== undefined) {
@@ -14,10 +25,11 @@ const buildReverseEnum = (map: Record<string, number>): Record<number, string> =
       });
     }
 
+    forward[key] = code;
     reverse[code] = key;
   }
 
-  return reverse;
+  return { forward, reverse };
 };
 
 const validateLabel = (field: ResolvedCborField, labels: "int" | "mixed"): void => {
@@ -108,7 +120,11 @@ const resolveField = (
     });
   }
 
-  return isEnum ? { ...field, reverseEnum: buildReverseEnum(field.enum!) } : field;
+  if (!isEnum) return field;
+
+  const { forward, reverse } = buildEnumMaps(field.enum!);
+
+  return { ...field, enum: forward, reverseEnum: reverse };
 };
 
 export const resolveCborSpec = (settings: CborKitSettings): ResolvedCborSpec => {

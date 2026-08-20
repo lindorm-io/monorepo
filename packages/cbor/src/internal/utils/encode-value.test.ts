@@ -40,6 +40,16 @@ describe("encodeValue", () => {
       expect(encodeValue(enumField, "otp")).toEqual(2);
     });
 
+    test("should throw on a domain value that names an Object.prototype member", () => {
+      // `enum` here is a plain object literal, so `enum["constructor"]` is
+      // `Object`; only the numeric check on the looked-up code keeps a function
+      // from being written to the wire as the enum code.
+      expect(() => encodeValue(enumField, "constructor")).toThrowError(
+        expect.objectContaining({ code: "unknown_enum_value" }),
+      );
+      expect(() => encodeValue(enumField, "toString")).toThrow(CborError);
+    });
+
     test("should throw on an unknown enum value", () => {
       expect(() => encodeValue(enumField, "face")).toThrowError(
         expect.objectContaining({ code: "unknown_enum_value" }),

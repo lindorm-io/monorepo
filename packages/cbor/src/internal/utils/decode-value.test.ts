@@ -48,6 +48,16 @@ describe("decodeValue", () => {
       expect(decodeValue(enumField, 1)).toEqual("pwd");
     });
 
+    test("should throw on a non-numeric wire code", () => {
+      // `reverseEnum` here is a plain object literal, so "constructor" resolves
+      // to `Object` on an unguarded index read; only the numeric gate in
+      // `decode-value.ts` keeps it out of the returned domain value.
+      expect(() => decodeValue(enumField, "constructor")).toThrowError(
+        expect.objectContaining({ code: "unknown_enum_int" }),
+      );
+      expect(() => decodeValue(enumField, "__proto__")).toThrow(CborError);
+    });
+
     test("should throw on an unknown wire code", () => {
       expect(() => decodeValue(enumField, 99)).toThrowError(
         expect.objectContaining({ code: "unknown_enum_int" }),

@@ -1,6 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { getUnixTime } from "@lindorm/date";
-import { isDate } from "@lindorm/is";
+import { isDate, isNumber } from "@lindorm/is";
 import { CborError } from "../../errors/index.js";
 import type { CborEncodeOptions } from "../../types/cbor-field.js";
 import type { ResolvedCborField } from "../types/resolved-cbor-spec.js";
@@ -34,18 +34,20 @@ export const encodeValue = (
     case "date":
       return isDate(value) ? getUnixTime(value) : (value as number);
 
+    // ⚠ `value` comes from the caller's record and is used as an index key, so
+    // the looked-up code must BE a number, not merely defined: see
+    // `resolve-cbor-spec.ts` for what an index read resolves on a
+    // prototype-carrying map, and note the serializer accepts no function.
     case "enum": {
       const code = field.enum![value as string];
 
-      if (code === undefined) {
-        throw new CborError("Unknown enum value", {
-          code: "unknown_enum_value",
-          title: "Unknown Enum Value",
-          details: `Field "${field.key}" received value "${String(value)}", which is not defined in its enum map.`,
-        });
-      }
+      if (isNumber(code)) return code;
 
-      return code;
+      throw new CborError("Unknown enum value", {
+        code: "unknown_enum_value",
+        title: "Unknown Enum Value",
+        details: `Field "${field.key}" received value "${String(value)}", which is not defined in its enum map.`,
+      });
     }
 
     case "bstr":

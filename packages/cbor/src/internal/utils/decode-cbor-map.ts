@@ -36,7 +36,21 @@ export const decodeCborMap = (
     //   - "strict" (default): treat it as corruption of a closed format and throw.
     if (!field) {
       if (config.mode === "lax") {
-        out[label] = wire;
+        // ⚠ NOT `out[label] = wire`. `label` is read straight off the wire, so a
+        // record carrying the tstr label `"__proto__"` invokes the prototype
+        // setter instead of writing an own key: the member is DROPPED and the
+        // record chooses the decoded object's prototype — the inverse of this
+        // mode's contract above. `defineProperty` writes an own data property
+        // under any key, including that one. Same disposal as `@lindorm/utils`
+        // `omit-from-object.ts`. Pinned in `decode-cbor.test.ts`, which asserts
+        // on the PROPERTY: a swapped prototype serialises as absent, so a
+        // `JSON.stringify`/`toEqual` check reads clean on the hostile input.
+        Object.defineProperty(out, label, {
+          value: wire,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
         continue;
       }
 
@@ -48,6 +62,8 @@ export const decodeCborMap = (
       });
     }
 
+    // Closed key, unlike the wire label above: `field.key` is declared by the
+    // spec (`types/cbor-field.ts`), never read off the record.
     out[field.key] = decodeValue(field, wire);
   }
 
